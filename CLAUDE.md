@@ -31,6 +31,13 @@ src/
 public/           # Static assets
 ```
 
+## Environment Variables
+
+All secrets and API keys live in `.env.local` (gitignored). Key variables:
+- `TOGETHER_API_KEY` — Together.ai API for model fine-tuning and inference
+- `TWITTER_*` — Twitter API credentials
+- `DISCORD_*` — Discord bot credentials
+
 ## Conventions
 
 - Use `@/*` import alias for `src/*`
