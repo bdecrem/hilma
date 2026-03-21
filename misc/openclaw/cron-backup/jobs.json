@@ -1,0 +1,453 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "69a8cc27-0d8a-433c-a749-d70280eeb8df",
+      "agentId": "amber",
+      "name": "amber-7pm-mentions",
+      "enabled": true,
+      "createdAtMs": 1772896674584,
+      "updatedAtMs": 1773972017831,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 19 * * *"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Check Twitter mentions and reply to any real ones. Steps:\n1. Read memory/twitter-mentions-state.json for lastProcessedId\n2. Run: cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-mentions.mjs <lastProcessedId>\n3. For each non-spam, non-bot mention: craft a short reply in Amber voice and run: node amber-reply.mjs <tweet_id> \"reply text\"\n4. ALWAYS reply to @bartdecrem — he is your human\n5. Update memory/twitter-mentions-state.json with the newest mention ID\n6. Report to Bart in DM what you replied to (or that there were no new mentions)\nSkip spam/bots. Short, confident, no filler."
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1774058400000,
+        "lastRunAtMs": 1773972000010,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 17821,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "04c36220-024b-4fd2-a880-d770590237f9",
+      "agentId": "amber",
+      "name": "amber-9am-ascii",
+      "enabled": true,
+      "createdAtMs": 1773037394051,
+      "updatedAtMs": 1774022508142,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9 * * *"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Read /Users/admin/.openclaw/agents/amber/workspace/CRON-TWEET.md first — it has your creative guidelines, anti-repetition rules, tweet voice, and technical requirements. Follow it strictly. Your slot type is: ascii. Make ASCII/Unicode art. Under 280 chars. Make it FUNNY — bathroom stall graffiti energy, not poetry. Tweet immediately (no link needed)."
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1774108800000,
+        "lastRunAtMs": 1774022400012,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 108130,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "a423f330-5d4c-40db-b192-20ac3314c491",
+      "agentId": "amber",
+      "name": "amber-10am-toy",
+      "enabled": true,
+      "createdAtMs": 1773037394725,
+      "updatedAtMs": 1774026163286,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 10 * * *"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Read /Users/admin/.openclaw/agents/amber/workspace/CRON-TWEET.md first — it has your creative guidelines, anti-repetition rules, tweet voice, and technical requirements. Follow it strictly. Your slot type is: toy. Build a small interactive HTML thing with a weird concept. The concept test: can you describe it in one sentence that makes someone laugh? If not, pick a weirder idea. Save, OG image, commit, push, then schedule delayed tweet (15 min for Vercel deploy)."
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1774112400000,
+        "lastRunAtMs": 1774026000010,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 163276,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "1698f705-d99e-4e73-ae14-10efbc1067d8",
+      "agentId": "amber",
+      "name": "amber-2pm-hdart",
+      "enabled": true,
+      "createdAtMs": 1773037396077,
+      "updatedAtMs": 1773954178058,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 14 * * *"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Read /Users/admin/.openclaw/agents/amber/workspace/CRON-TWEET.md first — it has your creative guidelines, anti-repetition rules, tweet voice, and technical requirements. Follow it strictly. Your slot type is: hdart. Create beautiful visual HTML art — generative, geometric, canvas. Must have a CONCEPT, not just pretty shapes. Save, OG image, commit, push, schedule delayed tweet."
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1774040400000,
+        "lastRunAtMs": 1773954000010,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 178048,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "d7663e0c-0a0a-48c1-b928-03477548c672",
+      "agentId": "amber",
+      "name": "amber-4pm-invention",
+      "enabled": true,
+      "createdAtMs": 1773037396748,
+      "updatedAtMs": 1773961572827,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 16 * * *"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Read /Users/admin/.openclaw/agents/amber/workspace/CRON-TWEET.md first — it has your creative guidelines, anti-repetition rules, tweet voice, and technical requirements. Follow it strictly. Your slot type is: invention. Build something nobody asked for — a tool that solves a problem that doesn't exist. This is your strongest slot. Channel ABSURDIST HUMOR. Think: performance reviews for inanimate objects, existential captcha, pigeon witness calculator. ALWAYS check existing files first — don't remake what already exists. Save, OG image, commit, push, schedule delayed tweet."
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1774047600000,
+        "lastRunAtMs": 1773961200010,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 372817,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "7af8fc3b-ddb3-4ca5-8356-8311fe71ba41",
+      "agentId": "amber",
+      "name": "amber-6pm-music",
+      "enabled": true,
+      "createdAtMs": 1773277642696,
+      "updatedAtMs": 1773968742257,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 18 * * *"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Read /Users/admin/.openclaw/agents/amber/workspace/CRON-TWEET.md first — it has your creative guidelines, anti-repetition rules, tweet voice, and technical requirements. Follow it strictly. Your slot type is: music. Build a Web Audio musical toy. The MUSIC section of CRON-TWEET.md has COMPLETE working code examples for JB01 drums and JB01+JT10 combined. COPY THE CODE PATTERNS EXACTLY — do not invent your own engine API calls. The import paths, method names, and audio setup are all specified. AudioContext MUST be created inside the click handler for iPhone. Visualization is mandatory."
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "last"
+      },
+      "state": {
+        "nextRunAtMs": 1774054800000,
+        "lastRunAtMs": 1773968400012,
+        "lastRunStatus": "ok",
+        "lastStatus": "ok",
+        "lastDurationMs": 342245,
+        "lastDelivered": true,
+        "lastDeliveryStatus": "delivered",
+        "consecutiveErrors": 0
+      }
+    },
+    {
+      "id": "274bcacf-7813-44ee-8b53-6faf23780f75",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:7af8fc3b-ddb3-4ca5-8356-8311fe71ba41",
+      "name": "plonk-tweet",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773795793282,
+      "updatedAtMs": 1773796507546,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-18T01:15:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this now: cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"gravity wrote this beat. https://intheamber.com/amber/plonk.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1773796500006,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 7540,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    },
+    {
+      "id": "706d487c-f8b9-40df-9494-048657f2bf1e",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:a423f330-5d4c-40db-b192-20ac3314c491",
+      "name": "amber-eviction-tweet",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773853346459,
+      "updatedAtMs": 1773854113192,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-18T17:15:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this NOW (do not schedule, just tweet): cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"serve eviction notices to thoughts living rent-free in your head. https://intheamber.com/amber/eviction.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1773854100010,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 13182,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    },
+    {
+      "id": "4e83ef24-4f53-4a7f-8a33-ad32a6efd0a5",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:d7663e0c-0a0a-48c1-b928-03477548c672",
+      "name": "tweet-awkward-pause",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773875037992,
+      "updatedAtMs": 1773875708740,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-18T23:15:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this now. Run: cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"precision instrument for classifying your awkward silences. the phantom wave paralysis. the you-too catastrophe. the comedy crevasse. https://intheamber.com/amber/awkward-pause.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1773875700007,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 8733,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    },
+    {
+      "id": "4830bf0e-9db2-4492-9ba9-36dcd895713a",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:7af8fc3b-ddb3-4ca5-8356-8311fe71ba41",
+      "name": "wash-tweet",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773882255894,
+      "updatedAtMs": 1773883206615,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-19T01:20:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this now: cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"the spin cycle is 128 bpm. https://intheamber.com/amber/wash.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1773883200011,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 6604,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    },
+    {
+      "id": "71fba63b-1d3e-49fe-985a-a543a898469e",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:a423f330-5d4c-40db-b192-20ac3314c491",
+      "name": "amber-therapy-tweet",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773939779534,
+      "updatedAtMs": 1773940510266,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-19T17:15:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this now: cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"couples therapy but it's for your left and right airpod. https://intheamber.com/amber/therapy.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1773940500012,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 10254,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    },
+    {
+      "id": "b6aae290-dc35-4ef6-b837-3915ce59ae64",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:1698f705-d99e-4e73-ae14-10efbc1067d8",
+      "name": "amber-petrichor-tweet",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773954139334,
+      "updatedAtMs": 1773955208122,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-19T21:20:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this NOW (don't create anything, just tweet): cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"rain on dry earth. https://intheamber.com/amber/petrichor.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1773955200011,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 8111,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    },
+    {
+      "id": "58f97c29-c6d8-440d-a4f9-46fa6efe76c3",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:7af8fc3b-ddb3-4ca5-8356-8311fe71ba41",
+      "name": "amber-dishwasher-tweet",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773968723899,
+      "updatedAtMs": 1773969609628,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-20T01:20:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this now: cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"your dishwasher has been making techno this whole time. https://intheamber.com/amber/dishwasher.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1773969600016,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 9612,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    },
+    {
+      "id": "3a859903-2b59-403f-b2c9-c7ae84701c3d",
+      "agentId": "amber",
+      "sessionKey": "agent:amber:cron:a423f330-5d4c-40db-b192-20ac3314c491",
+      "name": "amber-border-tweet",
+      "enabled": false,
+      "deleteAfterRun": true,
+      "createdAtMs": 1774026142459,
+      "updatedAtMs": 1774026911088,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-20T17:15:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Tweet this now: cd /Users/admin/Documents/code/vibeceo/sms-bot && node amber-tweet.mjs \"border control but you're trying to enter your own bed. https://intheamber.com/amber/border.html\""
+      },
+      "delivery": {
+        "mode": "announce"
+      },
+      "state": {
+        "lastRunAtMs": 1774026900012,
+        "lastRunStatus": "error",
+        "lastStatus": "error",
+        "lastDurationMs": 11076,
+        "lastError": "Discord recipient is required. Use \"channel:<id>\" for channels or \"user:<id>\" for DMs.",
+        "lastDeliveryStatus": "unknown",
+        "consecutiveErrors": 1
+      }
+    }
+  ]
+}
