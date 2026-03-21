@@ -1,0 +1,2 @@
+FROM /Users/admin/Documents/code/hilma/models/hilma-writer-q4km.gguf
+PARAMETER num_ctx 2048

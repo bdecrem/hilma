@@ -160,7 +160,7 @@ export default function WriterPage() {
 
         {/* Model tag */}
         <p className="mt-8 text-[10px] text-white/15 text-center">
-          meta-llama/Meta-Llama-3-8B-Instruct-Lite via Together.ai
+          hilma-writer (fine-tuned Llama 3.1 8B) via Together.ai
         </p>
       </div>
     </div>
