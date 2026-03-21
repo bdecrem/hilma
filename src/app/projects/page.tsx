@@ -17,7 +17,7 @@ const projects: Project[] = [
   {
     name: 'claudio',
     url: 'https://claudio.la',
-    shortDesc: 'point at your openclaw server and go. no accounts, no tracking, no data collection.',
+    shortDesc: 'a simple ios client for openclaw. point at your openclaw server and go. no accounts, no tracking, no data collection.',
     fullDesc: 'native ios client for openclaw.',
     status: 'wip',
   },
@@ -158,10 +158,10 @@ const lightTheme = {
   footerHint: 'text-stone-200',
   statusConfig: {
     active: { label: 'live', color: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-400' },
-    wip: { label: 'building', color: 'text-violet-600', bg: 'bg-violet-50', dot: 'bg-violet-400' },
-    respinning: { label: 'rethinking', color: 'text-amber-600', bg: 'bg-amber-50', dot: 'bg-amber-400' },
-    neglected: { label: 'napping', color: 'text-slate-400', bg: 'bg-slate-50', dot: 'bg-slate-300' },
-    retired: { label: 'archived', color: 'text-stone-400', bg: 'bg-stone-50', dot: 'bg-stone-300' },
+    wip: { label: 'wip', color: 'text-violet-600', bg: 'bg-violet-50', dot: 'bg-violet-400' },
+    respinning: { label: 'booting up', color: 'text-amber-600', bg: 'bg-amber-50', dot: 'bg-amber-400' },
+    neglected: { label: 'neglect (benign)', color: 'text-slate-400', bg: 'bg-slate-50', dot: 'bg-slate-300' },
+    retired: { label: '\uD83E\uDED7†', color: 'text-stone-400', bg: 'bg-stone-50', dot: 'bg-stone-300' },
   },
   accent: {
     active: 'from-emerald-300 via-teal-300 to-cyan-300',
@@ -188,10 +188,10 @@ const darkTheme = {
   footerHint: 'text-neutral-600',
   statusConfig: {
     active: { label: 'live', color: 'text-emerald-400', bg: 'bg-emerald-900/30', dot: 'bg-emerald-500' },
-    wip: { label: 'building', color: 'text-violet-400', bg: 'bg-violet-900/30', dot: 'bg-violet-500' },
-    respinning: { label: 'rethinking', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
-    neglected: { label: 'napping', color: 'text-neutral-500', bg: 'bg-neutral-800', dot: 'bg-neutral-600' },
-    retired: { label: 'archived', color: 'text-neutral-600', bg: 'bg-neutral-800', dot: 'bg-neutral-700' },
+    wip: { label: 'wip', color: 'text-violet-400', bg: 'bg-violet-900/30', dot: 'bg-violet-500' },
+    respinning: { label: 'booting up', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
+    neglected: { label: 'neglect (benign)', color: 'text-neutral-500', bg: 'bg-neutral-800', dot: 'bg-neutral-600' },
+    retired: { label: '\uD83E\uDED7†', color: 'text-neutral-600', bg: 'bg-neutral-800', dot: 'bg-neutral-700' },
   },
   accent: {
     active: 'from-emerald-500/40 via-emerald-500/40 to-emerald-500/40',
