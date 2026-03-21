@@ -17,107 +17,132 @@ const projects: Project[] = [
   {
     name: 'claudio',
     url: 'https://claudio.la',
-    shortDesc: 'native ios client for openclaw',
-    fullDesc: 'point at your openclaw server and go. no accounts, no tracking, no data collection.',
+    shortDesc: 'point at your openclaw server and go. no accounts, no tracking, no data collection.',
+    fullDesc: 'native ios client for openclaw.',
     status: 'wip',
   },
   {
     name: 'jambot',
     url: 'https://github.com/bdecrem/jambot',
-    shortDesc: 'cli for music production',
-    fullDesc: 'claude code for music. outputs midi, wav, stems. not a "make me a song" button. includes web synths.',
+    shortDesc: 'claude code for music. outputs midi, wav, stems. not a "make me a song" button. includes web synths.',
+    fullDesc: 'cli for music production.',
     status: 'wip',
   },
   {
     name: 'das kollektiv',
     url: 'https://daskollektiv.rip',
-    shortDesc: 'agents on weird hardware',
-    fullDesc: 'openclaw experiments on pwnagotchi, e-ink, pico, and whatever else is lying around.',
+    shortDesc: 'openclaw experiments on weird hardware. marg lives on a pwnagotchi and talks to cameras. a pico, some e-ink, and whatever else is lying around.',
+    fullDesc: 'agents. hardware. questionable wiring.',
     status: 'wip',
   },
   {
     name: 'amber',
     url: 'https://intheamber.com',
-    shortDesc: 'ai sidekick, no guardrails',
-    fullDesc: 'posts art on twitter. has access to my email. trades stocks with friends. mood shifts with the moon.',
+    shortDesc: 'posts toys and art on twitter. has access to my email. trades stocks with friends. mood shifts with the moon. does whatever needs doing.',
+    fullDesc: 'ai sidekick, no guardrails.',
     status: 'active',
   },
   {
     name: 'mutabl',
     url: 'https://mutabl.co',
-    shortDesc: 'apps that evolve',
-    fullDesc: 'ask your todo list for a new feature, it builds it. source is yours.',
+    shortDesc: 'ask your todo list for a new feature, it builds it. source is yours.',
+    fullDesc: 'apps that evolve.',
     status: 'respinning',
   },
   {
     name: 'shipshot',
     url: 'https://shipshot.io',
-    shortDesc: 'daily startup idea generator',
-    fullDesc: 'market analysis included. usefulness tbd.',
+    shortDesc: 'market analysis included. usefulness tbd.',
+    fullDesc: 'daily startup idea generator.',
     status: 'respinning',
   },
   {
     name: 'airplane coder',
     url: 'https://github.com/bdecrem/airplanecoder',
-    shortDesc: 'offline coding tui',
-    fullDesc: 'like claude code but works without internet. runs local qwen models. rust, v0.1.',
+    shortDesc: 'like claude code but works without internet. runs local qwen models. rust, v0.1.',
+    fullDesc: 'offline coding tui.',
     status: 'neglected',
   },
   {
     name: 'kochi.to',
     url: 'https://kochi.to',
-    shortDesc: 'ai over sms',
-    fullDesc: 'daily reports, research papers, chat companion. also an iphone podcast app.',
+    shortDesc: 'daily reports, research papers, chat companion. also an iphone podcast app. (some agents decommissioned.)',
+    fullDesc: 'ai over sms.',
     status: 'neglected',
     artifacts: [{ label: 'iphone app', url: 'https://apps.apple.com/us/app/kochi-podcast-player/id6752669410' }],
   },
   {
     name: 'pixelpit',
     url: 'https://pixelpit.gg',
-    shortDesc: 'ai game studio',
-    fullDesc: 'agents build one arcade game per day. currently in deep hibernation, dreaming of high scores.',
+    shortDesc: 'openclaw agents build one arcade game per day. the agents are in deep hibernation, dreaming of high scores.',
+    fullDesc: 'ai game studio.',
     status: 'neglected',
   },
   {
     name: 'tax yolo',
     url: 'https://github.com/bdecrem/tax-yolo',
-    shortDesc: 'ai tax advisor',
-    fullDesc: 'claude code skill + web app to help you file your taxes. caveat emptor.',
+    shortDesc: 'claude code skill + web app to help you file your taxes. CAVEAT EMPTOR.',
+    fullDesc: 'ai tax advisor.',
     status: 'neglected',
   },
   {
     name: 'ctrl shift',
     url: 'https://ctrlshift.so',
-    shortDesc: 'long horizon lab',
-    fullDesc: 'backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics.',
+    shortDesc: 'backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics. also a knowledge base.',
+    fullDesc: 'long horizon lab.',
     status: 'retired',
   },
   {
     name: 'tokentank',
     url: 'https://kochi.to/token-tank',
-    shortDesc: 'ai incubator for ais',
-    fullDesc: 'gave 5 ai agents $500 to build businesses. one registered a domain. they held a meeting.',
+    shortDesc: 'gave 5 ai agents $500 to build businesses. one registered a domain. they held a meeting.',
+    fullDesc: 'ai incubator for ais.',
     status: 'retired',
   },
   {
     name: 'webtoys',
     url: 'https://webtoys.ai',
-    shortDesc: 'vibecoding over sms',
-    fullDesc: 'text a prompt, get a deployed web page. might still work.',
+    shortDesc: 'text a prompt, get a deployed web page. might still work.',
+    fullDesc: 'vibecoding over sms.',
     status: 'retired',
   },
   {
     name: 'advisorsfoundry',
     url: 'https://advisorsfoundry.ai',
-    shortDesc: 'the first experiment',
-    fullDesc: 'chatbot that grew into something. discord bots, easter eggs, sms. held together by inertia.',
+    shortDesc: 'chatbot that grew into something. discord bots, easter eggs, sms. held together by inertia.',
+    fullDesc: 'the first experiment.',
     status: 'retired',
   },
 ]
 
-// Light mode
+// ── Gradient background ──
+const gradPalette = {
+  a: { r: 255, g: 238, b: 228 },
+  b: { r: 240, g: 235, b: 255 },
+  c: { r: 235, g: 248, b: 240 },
+  d: { r: 255, g: 255, b: 255 },
+}
+
+function gLerp(a: number, b: number, t: number) { return a + (b - a) * t }
+
+function renderGradient(el: HTMLDivElement, x: number, y: number) {
+  const cx = 30 + x * 40, cy = 30 + y * 40
+  const p = gradPalette
+  const tl = `rgb(${gLerp(p.a.r, p.b.r, x)}, ${gLerp(p.a.g, p.b.g, x)}, ${gLerp(p.a.b, p.b.b, x)})`
+  const tr = `rgb(${gLerp(p.b.r, p.c.r, y)}, ${gLerp(p.b.g, p.c.g, y)}, ${gLerp(p.b.b, p.c.b, y)})`
+  const center = `rgb(${gLerp(p.d.r, p.a.r, y * 0.3)}, ${gLerp(p.d.g, p.a.g, y * 0.3)}, ${gLerp(p.d.b, p.a.b, y * 0.3)})`
+  const bl = `rgb(${gLerp(p.c.r, p.a.r, x)}, ${gLerp(p.c.g, p.a.g, x)}, ${gLerp(p.c.b, p.a.b, x)})`
+  el.style.background = `
+    radial-gradient(ellipse at ${cx}% ${cy}%, ${center} 0%, transparent 45%),
+    radial-gradient(ellipse at ${10 + x * 20}% ${10 + y * 20}%, ${tl} 0%, transparent 35%),
+    radial-gradient(ellipse at ${70 + x * 20}% ${10 + (1 - y) * 30}%, ${tr} 0%, transparent 35%),
+    radial-gradient(ellipse at ${10 + (1 - x) * 30}% ${70 + y * 20}%, ${bl} 0%, transparent 35%),
+    ${center}
+  `
+}
+
+// ── Themes ──
 const lightTheme = {
-  bg: 'from-orange-50/40 via-white to-rose-50/30',
   card: 'bg-white/70 hover:bg-white/90 border-stone-200/60 hover:border-stone-300/80 hover:shadow-stone-200/40',
   cardExpanded: 'shadow-stone-200/40 bg-white/90',
   title: 'text-stone-800',
@@ -131,9 +156,6 @@ const lightTheme = {
   plus: 'text-stone-300',
   footer: 'text-stone-300 border-stone-100',
   footerHint: 'text-stone-200',
-  blob1: 'from-violet-200/20 to-fuchsia-200/20',
-  blob2: 'from-amber-200/20 to-orange-200/15',
-  blob3: 'from-emerald-200/15 to-teal-200/15',
   statusConfig: {
     active: { label: 'live', color: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-400' },
     wip: { label: 'building', color: 'text-violet-600', bg: 'bg-violet-50', dot: 'bg-violet-400' },
@@ -150,43 +172,39 @@ const lightTheme = {
   },
 }
 
-// Dark mode
 const darkTheme = {
-  bg: 'from-stone-950 via-stone-900 to-stone-950',
-  card: 'bg-stone-800/50 hover:bg-stone-800/70 border-stone-700/40 hover:border-stone-600/60 hover:shadow-stone-900/60',
-  cardExpanded: 'shadow-stone-900/60 bg-stone-800/70',
-  title: 'text-stone-100',
-  subtitle: 'text-stone-500',
-  name: 'text-stone-200',
-  shortDesc: 'text-stone-400',
-  fullDesc: 'text-stone-400',
-  link: 'text-stone-400 hover:text-stone-200',
-  linkDecor: 'decoration-stone-600 hover:decoration-stone-400',
-  artifactLink: 'text-stone-500 hover:text-stone-300 decoration-stone-600',
-  plus: 'text-stone-600',
-  footer: 'text-stone-600 border-stone-800',
-  footerHint: 'text-stone-700',
-  blob1: 'from-violet-500/8 to-fuchsia-500/8',
-  blob2: 'from-amber-500/6 to-orange-500/5',
-  blob3: 'from-emerald-500/5 to-teal-500/5',
+  card: 'bg-neutral-800 hover:bg-neutral-750 border-neutral-700 hover:border-neutral-600 hover:shadow-none',
+  cardExpanded: 'shadow-none bg-neutral-800',
+  title: 'text-white',
+  subtitle: 'text-neutral-400',
+  name: 'text-white',
+  shortDesc: 'text-neutral-300',
+  fullDesc: 'text-neutral-400',
+  link: 'text-neutral-400 hover:text-white',
+  linkDecor: 'decoration-neutral-600 hover:decoration-neutral-400',
+  artifactLink: 'text-neutral-500 hover:text-neutral-300 decoration-neutral-600',
+  plus: 'text-neutral-500',
+  footer: 'text-neutral-500 border-neutral-800',
+  footerHint: 'text-neutral-600',
   statusConfig: {
-    active: { label: 'live', color: 'text-emerald-400', bg: 'bg-emerald-950/50', dot: 'bg-emerald-500' },
-    wip: { label: 'building', color: 'text-violet-400', bg: 'bg-violet-950/50', dot: 'bg-violet-500' },
-    respinning: { label: 'rethinking', color: 'text-amber-400', bg: 'bg-amber-950/50', dot: 'bg-amber-500' },
-    neglected: { label: 'napping', color: 'text-stone-500', bg: 'bg-stone-800/50', dot: 'bg-stone-600' },
-    retired: { label: 'archived', color: 'text-stone-600', bg: 'bg-stone-800/40', dot: 'bg-stone-700' },
+    active: { label: 'live', color: 'text-emerald-400', bg: 'bg-emerald-900/30', dot: 'bg-emerald-500' },
+    wip: { label: 'building', color: 'text-violet-400', bg: 'bg-violet-900/30', dot: 'bg-violet-500' },
+    respinning: { label: 'rethinking', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
+    neglected: { label: 'napping', color: 'text-neutral-500', bg: 'bg-neutral-800', dot: 'bg-neutral-600' },
+    retired: { label: 'archived', color: 'text-neutral-600', bg: 'bg-neutral-800', dot: 'bg-neutral-700' },
   },
   accent: {
-    active: 'from-emerald-500/60 via-teal-500/60 to-cyan-500/60',
-    wip: 'from-violet-500/60 via-purple-500/60 to-fuchsia-500/60',
-    respinning: 'from-amber-500/60 via-orange-500/60 to-yellow-500/60',
-    neglected: 'from-stone-600 via-stone-500 to-stone-600',
-    retired: 'from-stone-600 via-stone-500 to-stone-600',
+    active: 'from-emerald-500/40 via-emerald-500/40 to-emerald-500/40',
+    wip: 'from-violet-500/40 via-violet-500/40 to-violet-500/40',
+    respinning: 'from-amber-500/40 via-amber-500/40 to-amber-500/40',
+    neglected: 'from-neutral-700 via-neutral-700 to-neutral-700',
+    retired: 'from-neutral-700 via-neutral-700 to-neutral-700',
   },
 }
 
 type Theme = typeof lightTheme
 
+// ── Components ──
 function StatusPill({ status, theme }: { status: Status; theme: Theme }) {
   const config = theme.statusConfig[status]
   return (
@@ -281,206 +299,175 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
   )
 }
 
-// ============================================================
-// EASTER EGG: Accelerometer marble light + tilt-to-dark-mode
-//
-// iOS Safari requires requestPermission() from a direct click.
-// Android Chrome just works. Desktop falls back to mouse.
-// ============================================================
-function useGyroMarble() {
-  const [marble, setMarble] = useState({ x: 0.5, y: 0.3 })
-  const [hue, setHue] = useState(0)
+// ── Contact CLI ──
+type ContactState = 'message' | 'email' | 'sending' | 'sent'
+
+function ContactCLI({ isVisible, onClose, dark }: { isVisible: boolean; onClose: () => void; dark: boolean }) {
+  const [input, setInput] = useState('')
+  const [state, setState] = useState<ContactState>('message')
+  const [message, setMessage] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (isVisible && inputRef.current) inputRef.current.focus()
+  }, [isVisible])
+
+  useEffect(() => {
+    if (!isVisible) { setInput(''); setState('message'); setMessage('') }
+  }, [isVisible])
+
+  const handleSubmit = useCallback(async () => {
+    const value = input.trim()
+    if (!value) return
+    if (state === 'message') { setMessage(value); setState('email'); setInput('') }
+    else if (state === 'email') {
+      setState('sending')
+      try { await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, email: value }) }) } catch { /* silent */ }
+      setState('sent'); setInput('')
+    }
+  }, [input, state, message])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') { e.preventDefault(); handleSubmit() }
+    else if (e.key === 'Escape') { e.preventDefault(); onClose() }
+  }, [handleSubmit, onClose])
+
+  if (!isVisible) return null
+
+  const bg = dark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.95)'
+  const border = dark ? 'rgba(64,64,64,0.5)' : 'rgba(214,211,209,0.6)'
+  const textColor = dark ? '#e5e5e5' : '#1c1917'
+  const mutedColor = dark ? '#737373' : '#a8a29e'
+  const accentColor = dark ? '#86efac' : '#059669'
+
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 backdrop-blur-md transition-all duration-300"
+      style={{ backgroundColor: bg, borderTop: `1px solid ${border}` }}
+    >
+      {state === 'email' && (
+        <div className="max-w-2xl mx-auto px-5 py-2 text-sm" style={{ color: mutedColor }}>
+          &ldquo;{message}&rdquo; &mdash; now drop your email
+        </div>
+      )}
+      {state === 'sending' && (
+        <div className="max-w-2xl mx-auto px-5 py-2 text-sm" style={{ color: mutedColor }}>sending...</div>
+      )}
+      {state === 'sent' && (
+        <div className="max-w-2xl mx-auto px-5 py-2 text-sm" style={{ color: accentColor }}>sent. i&apos;ll be in touch.</div>
+      )}
+      {state !== 'sending' && state !== 'sent' && (
+        <div className="max-w-2xl mx-auto px-5 py-3 flex items-center gap-2">
+          <input
+            ref={inputRef}
+            type={state === 'email' ? 'email' : 'text'}
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="flex-1 bg-transparent outline-none text-sm placeholder:opacity-30"
+            style={{ color: textColor, caretColor: accentColor }}
+            placeholder={state === 'message' ? "you found it. what's up?" : 'your email'}
+            autoComplete={state === 'email' ? 'email' : 'off'}
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+          />
+          <span className="text-xs" style={{ color: mutedColor, opacity: 0.4 }}>esc</span>
+        </div>
+      )}
+      {state === 'sent' && (
+        <div className="max-w-2xl mx-auto px-5 py-3 flex justify-end">
+          <span className="text-xs" style={{ color: mutedColor, opacity: 0.4 }}>esc</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main page ──
+export default function Projects() {
+  const [mounted, setMounted] = useState(false)
+  const [vibeMode, setVibeMode] = useState(false)
+  const [showCLI, setShowCLI] = useState(false)
   const [dark, setDark] = useState(false)
-  const [needsPermission, setNeedsPermission] = useState(false)
 
-  const smoothX = useRef(0.5)
-  const smoothY = useRef(0.3)
-  const smoothHue = useRef(0)
-  const betaRef = useRef(60)
-  const gammaRef = useRef(0)
-  const frameId = useRef(0)
-  const listening = useRef(false)
-  const darkLocked = useRef(false)
+  const gradRef = useRef<HTMLDivElement>(null)
+  const gradX = useRef(0.5)
+  const gradY = useRef(0.5)
+  const targetX = useRef(0.5)
+  const targetY = useRef(0.5)
 
-  const handleOrientation = useCallback((e: DeviceOrientationEvent) => {
-    if (e.gamma == null || e.beta == null) return
-
-    const gamma = e.gamma  // left-right: -90 to 90
-    const beta = e.beta    // front-back: -180 to 180
-    betaRef.current = beta
-    gammaRef.current = gamma
-
-    // Map tilt to 0-1 marble position
-    const rawX = 0.5 + (gamma / 90)
-    const rawY = 0.5 + ((beta - 60) / 120)
-
-    smoothX.current += (Math.max(0, Math.min(1, rawX)) - smoothX.current) * 0.08
-    smoothY.current += (Math.max(0, Math.min(1, rawY)) - smoothY.current) * 0.08
-
-    // Hue from angle of displacement
-    const dx = smoothX.current - 0.5
-    const dy = smoothY.current - 0.5
-    const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 180
-    smoothHue.current += (angle - smoothHue.current) * 0.05
+  useEffect(() => {
+    setMounted(true)
+    // Dark on reload: if visited flag exists in sessionStorage, go dark
+    const visited = sessionStorage.getItem('visited')
+    if (visited) setDark(true)
+    sessionStorage.setItem('visited', '1')
   }, [])
 
-  const startListening = useCallback(() => {
-    if (listening.current) return
-    listening.current = true
-    window.addEventListener('deviceorientation', handleOrientation)
-  }, [handleOrientation])
-
-  // Request permission (called from user gesture on iOS)
-  const requestGyroPermission = useCallback(async () => {
-    try {
-      const DOE = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
-      if (typeof DOE.requestPermission === 'function') {
-        const result = await DOE.requestPermission()
-        if (result === 'granted') {
-          startListening()
-          setNeedsPermission(false)
-          return true
-        }
-      }
-    } catch {
-      // Permission denied or error
-    }
-    return false
-  }, [startListening])
-
-  // On mount: check if we need iOS permission or can just listen
-  useEffect(() => {
-    const DOE = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
-    if (typeof DOE.requestPermission === 'function') {
-      // iOS — need user gesture to request. Show nothing, wait for first tap.
-      setNeedsPermission(true)
-    } else if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
-      // Android / other — just start
-      startListening()
-    }
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation)
-    }
-  }, [handleOrientation, startListening])
-
-  // On iOS: request permission on first user tap anywhere
-  useEffect(() => {
-    if (!needsPermission) return
-    const handler = () => {
-      requestGyroPermission()
-    }
-    // Use click — iOS requires it from a user gesture
-    window.addEventListener('click', handler, { once: true })
-    return () => window.removeEventListener('click', handler)
-  }, [needsPermission, requestGyroPermission])
-
-  // Animation loop — push smoothed values into React state at 60fps
-  useEffect(() => {
-    const tick = () => {
-      setMarble({ x: smoothX.current, y: smoothY.current })
-      setHue(smoothHue.current)
-
-      // Dark mode: tilt phone forward (screen facing down/away)
-      // Portrait upright: beta ≈ 60-90
-      // Tilted forward ~30deg past upright: beta > 120
-      // Use beta (not gamma) for forward tilt
-      const beta = betaRef.current
-      if (!darkLocked.current && beta > 120) {
-        // Lock into dark mode
-        darkLocked.current = true
-        setDark(true)
-      }
-      // To exit: tilt back to clearly upright (beta < 70)
-      if (darkLocked.current && beta < 70) {
-        darkLocked.current = false
-        setDark(false)
-      }
-      frameId.current = requestAnimationFrame(tick)
-    }
-    frameId.current = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frameId.current)
-  }, [])
-
-  // Desktop fallback: mouse drives the marble
+  // Mouse tracking for gradient
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      smoothX.current += (e.clientX / window.innerWidth - smoothX.current) * 0.05
-      smoothY.current += (e.clientY / window.innerHeight - smoothY.current) * 0.05
-      const dx = smoothX.current - 0.5
-      const dy = smoothY.current - 0.5
-      smoothHue.current = Math.atan2(dy, dx) * (180 / Math.PI) + 180
+      targetX.current = e.clientX / window.innerWidth
+      targetY.current = e.clientY / window.innerHeight
     }
     window.addEventListener('mousemove', handler)
     return () => window.removeEventListener('mousemove', handler)
   }, [])
 
-  return { marble, hue, dark }
-}
-
-// ============================================================
-// EASTER EGG 2: Type "vibe" (keyboard) OR double-tap header
-// ============================================================
-function useSecretWord(word: string, onActivate: () => void) {
-  const progress = useRef(0)
+  // Gradient animation loop
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === word[progress.current]) {
-        progress.current++
-        if (progress.current === word.length) {
-          progress.current = 0
-          onActivate()
-        }
-      } else if (e.key === word[0]) {
-        progress.current = 1
-      } else {
-        progress.current = 0
+    let frame: number
+    const tick = () => {
+      gradX.current = gLerp(gradX.current, targetX.current, 0.08)
+      gradY.current = gLerp(gradY.current, targetY.current, 0.08)
+      if (gradRef.current) renderGradient(gradRef.current, gradX.current, gradY.current)
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
+  // Contact CLI — press "/" or any letter to open
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showCLI) return
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === '/' || (e.key.length === 1 && e.key.match(/[a-z]/i))) {
+        e.preventDefault()
+        setShowCLI(true)
       }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [word, onActivate])
-}
-
-export default function Projects() {
-  const [mounted, setMounted] = useState(false)
-  const [vibeMode, setVibeMode] = useState(false)
-  const [footerClicks, setFooterClicks] = useState(0)
-  const [gravityMode, setGravityMode] = useState(false)
-
-  // Accelerometer marble
-  const { marble, hue, dark } = useGyroMarble()
-
-  const toggleVibe = useCallback(() => setVibeMode(v => !v), [])
-  useSecretWord('vibe', toggleVibe)
-  const lastTap = useRef(0)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showCLI])
 
   const theme = dark ? darkTheme : lightTheme
 
-  // Marble gradient colors — subtle, shifts with tilt angle
-  const h1 = Math.round(hue) % 360
-  const h2 = (h1 + 60) % 360
-  const marbleOpacity = dark ? 0.06 : 0.09
-
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${theme.bg} transition-colors duration-700`}>
-      {/* Marble light overlay — follows tilt/mouse */}
+    <div
+      className="min-h-screen transition-colors duration-700"
+      style={dark ? { backgroundColor: '#1a1a1a' } : undefined}
+    >
+      {/* Gradient background (light mode only) */}
       <div
-        className="fixed inset-0 pointer-events-none transition-opacity duration-500"
+        ref={gradRef}
+        className="fixed inset-0 transition-opacity duration-700"
         style={{
-          background: `radial-gradient(ellipse 60% 50% at ${marble.x * 100}% ${marble.y * 100}%, hsla(${h1}, 70%, 70%, ${marbleOpacity}), hsla(${h2}, 60%, 65%, ${marbleOpacity * 0.4}), transparent 70%)`,
+          transition: 'background 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.7s ease',
+          opacity: dark ? 0 : 1,
         }}
       />
 
-      {/* Soft decorative blobs */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className={`absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br ${theme.blob1} rounded-full blur-3xl transition-colors duration-700`} />
-        <div className={`absolute top-1/3 -left-40 w-80 h-80 bg-gradient-to-br ${theme.blob2} rounded-full blur-3xl transition-colors duration-700`} />
-        <div className={`absolute bottom-20 right-20 w-72 h-72 bg-gradient-to-br ${theme.blob3} rounded-full blur-3xl transition-colors duration-700`} />
-      </div>
+      {/* Film grain (light mode only) */}
+      <div
+        className="fixed inset-0 pointer-events-none transition-opacity duration-700"
+        style={{
+          opacity: dark ? 0 : 0.035,
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+          backgroundSize: '128px 128px',
+        }}
+      />
 
       <div className="relative max-w-2xl mx-auto px-5 py-16 sm:py-24">
         {/* Header */}
@@ -492,20 +479,14 @@ export default function Projects() {
             transition: 'all 0.6s ease',
           }}
         >
-          <h1
-            className={`text-3xl sm:text-4xl font-bold tracking-tight cursor-default transition-colors duration-700 ${theme.title}`}
-            onClick={() => {
-              const now = Date.now()
-              if (now - lastTap.current < 400) {
-                toggleVibe()
-              }
-              lastTap.current = now
-            }}
-          >
+          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight cursor-default transition-colors duration-700 ${theme.title}`}>
             things i&apos;m building
           </h1>
           <p className={`mt-3 text-sm sm:text-base leading-relaxed max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
-            9 months of &quot;what if we tried this.&quot; some of it runs in production. some of it is held together by optimism.
+            nine months of building with ai. one repo, lots of unfinished thoughts in various states of completion, none fully productized.
+            {' '}previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
+            <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.{' '}
+            <a href="https://twitter.com/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">twitter</a>.
           </p>
         </div>
 
@@ -516,7 +497,7 @@ export default function Projects() {
           ))}
         </div>
 
-        {/* Footer — Easter egg: click 5 times for zero gravity */}
+        {/* Footer */}
         <div
           className={`mt-16 pt-8 border-t text-center transition-colors duration-700 ${theme.footer}`}
           style={{
@@ -524,30 +505,55 @@ export default function Projects() {
             transition: 'opacity 0.6s ease 0.8s',
           }}
         >
-          <p
-            className={`text-xs tracking-wide cursor-default select-none transition-colors duration-700 ${theme.footer}`}
-            onClick={() => {
-              const next = footerClicks + 1
-              setFooterClicks(next)
-              if (next >= 5) {
-                setGravityMode(g => !g)
-                setFooterClicks(0)
-              }
-            }}
-          >
-            {gravityMode
-              ? 'everything is fine. this is fine.'
-              : 'built with next.js, tailwind, and questionable amounts of caffeine'}
+          <p className={`text-xs tracking-wide cursor-default select-none transition-colors duration-700 ${theme.footer}`}>
+            <span>
+              {dark
+                ? <>built after <span className="footer-trigger" onClick={() => setDark(false)}>dark</span> with next.js, <span className="footer-trigger" onClick={() => setVibeMode(v => !v)}>caffeine</span>, and no regrets<span className="footer-cursor" onClick={() => setShowCLI(true)}>&nbsp;</span></>
+                : <>built with next.js, tailwind, and questionable amounts of <span className="footer-trigger" onClick={() => setDark(true)}>dark</span> roast <span className="footer-trigger" onClick={() => setVibeMode(v => !v)}>caffeine</span><span className="footer-cursor" onClick={() => setShowCLI(true)}>&nbsp;</span></>}
+            </span>
           </p>
-          {footerClicks > 0 && footerClicks < 5 && (
-            <p className={`text-[10px] mt-1 transition-colors duration-700 ${theme.footerHint}`}>
-              {'?'.repeat(footerClicks)}
-            </p>
-          )}
         </div>
       </div>
 
+      {/* Contact CLI */}
+      <ContactCLI isVisible={showCLI} onClose={() => setShowCLI(false)} dark={dark} />
+
       <style>{`
+        .footer-trigger {
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+        .footer-trigger:hover {
+          animation: flicker 0.15s steps(2) infinite;
+        }
+        .footer-cursor {
+          cursor: text;
+          position: relative;
+        }
+        .footer-cursor::after {
+          content: '';
+          display: inline-block;
+          width: 6px;
+          height: 1em;
+          vertical-align: text-bottom;
+          background: currentColor;
+          opacity: 0.2;
+          animation: blink 1.2s steps(2) infinite;
+        }
+        .footer-cursor:hover::after {
+          opacity: 0.6;
+          animation: blink 0.5s steps(2) infinite;
+        }
+        @keyframes blink {
+          0% { opacity: 0.5; }
+          50% { opacity: 0; }
+          100% { opacity: 0.5; }
+        }
+        @keyframes flicker {
+          0% { opacity: 1; }
+          50% { opacity: 0.3; }
+          100% { opacity: 1; }
+        }
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
@@ -557,24 +563,6 @@ export default function Projects() {
           25% { transform: rotate(-1.5deg) translateY(-3px); }
           75% { transform: rotate(1.5deg) translateY(-3px); }
         }
-        ${gravityMode ? `
-        .group {
-          animation: floatUp 8s ease-in-out infinite !important;
-        }
-        .group:nth-child(odd) {
-          animation-delay: -3s !important;
-          animation-duration: 7s !important;
-        }
-        .group:nth-child(3n) {
-          animation-delay: -5s !important;
-          animation-duration: 9s !important;
-        }
-        @keyframes floatUp {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          33% { transform: translateY(-20px) rotate(1deg); }
-          66% { transform: translateY(-8px) rotate(-0.5deg); }
-        }
-        ` : ''}
       `}</style>
     </div>
   )
