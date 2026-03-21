@@ -44,6 +44,7 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 - Keep it lean — no unnecessary dependencies
 - Server Components by default, `'use client'` only when needed
 - Deploy is push-button: `vercel --prod`
+- **Always create an `opengraph-image.tsx`** when building a new web app/page. Use Next.js built-in OG image generation.
 
 ## Sister repo: vibeceo8 (`../vibeceo8/`)
 
