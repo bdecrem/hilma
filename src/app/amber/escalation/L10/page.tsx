@@ -2,16 +2,12 @@
 
 import { useEffect, useRef } from 'react'
 
-// L10: REUNION — with asymmetry and irregularities.
-// Nothing is perfectly centered, perfectly round, or perfectly timed.
-// The shapes breathe at different rates, wobble, drift, overshoot.
+// L10: REUNION — every shape from L1-L9 together. the last sketch.
+// Circle breathes, line rotates, triangle follows cursor, shapes orbit,
+// drops bounce, rings pulse, nodes connect, charges attract/repel.
+// All on one canvas. The full vocabulary before Composition begins.
 
 const COLORS = ['#FF4E50', '#FC913A', '#F9D423', '#B4E33D', '#FF6B81']
-
-// Seeded randomness — same every load but different per shape
-function seeded(seed: number) {
-  return () => { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646 }
-}
 
 export default function L10() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -22,7 +18,6 @@ export default function L10() {
     const ctx = canvas.getContext('2d')!
     let w = 0, h = 0, t = 0, frame: number
     let mx = -1, my = -1
-    const rng = seeded(42)
 
     const resize = () => { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight }
     resize()
@@ -30,221 +25,172 @@ export default function L10() {
     window.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY })
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); mx = e.touches[0].clientX; my = e.touches[0].clientY }, { passive: false })
 
+    // Shapes from the series
     let triX = 0, triY = 0
-    const drops: { x: number; y: number; vy: number; vx: number; r: number; c: string; settled: boolean; wobble: number }[] = []
 
-    // Each element gets its own slightly off position and timing
-    const offsets = Array.from({ length: 20 }, () => ({
-      x: (rng() - 0.5) * 40,
-      y: (rng() - 0.5) * 30,
-      phase: rng() * Math.PI * 2,
-      speed: 0.8 + rng() * 0.4,
-      scale: 0.85 + rng() * 0.3,
-    }))
-
+    // Drops
+    const drops: { x: number; y: number; vy: number; r: number; c: string; settled: boolean }[] = []
     const spawnDrop = () => {
       drops.push({
-        x: w * 0.65 + (rng() - 0.5) * w * 0.25,
-        y: h * 0.05 + rng() * h * 0.08,
-        vy: rng() * 0.5, vx: (rng() - 0.5) * 0.8,
-        r: 3 + rng() * 8,
-        c: COLORS[Math.floor(rng() * COLORS.length)],
+        x: w * 0.7 + (Math.random() - 0.5) * w * 0.2,
+        y: h * 0.1,
+        vy: 0, r: 4 + Math.random() * 6,
+        c: COLORS[Math.floor(Math.random() * COLORS.length)],
         settled: false,
-        wobble: rng() * Math.PI * 2,
       })
-      if (drops.length > 35) drops.shift()
+      if (drops.length > 30) drops.shift()
     }
 
     const tick = () => {
       t++
-
-      // Gradient bg — asymmetric, not centered
-      const grad = ctx.createLinearGradient(w * 0.1, 0, w * 0.8, h)
-      grad.addColorStop(0, '#F9D423')
-      grad.addColorStop(0.6, '#FCEQ66')
-      grad.addColorStop(1, '#FFF8E7')
+      // Bold mango background — L10 is a milestone
       ctx.fillStyle = '#F9D423'
-      ctx.fillRect(0, 0, w, h)
-      // Subtle uneven wash
-      const wash = ctx.createRadialGradient(w * 0.35, h * 0.4, 0, w * 0.35, h * 0.4, w * 0.5)
-      wash.addColorStop(0, 'rgba(255,248,231,0.15)')
-      wash.addColorStop(1, 'rgba(255,248,231,0)')
-      ctx.fillStyle = wash
       ctx.fillRect(0, 0, w, h)
 
       const cx = w / 2, cy = h / 2
+      const breath = Math.sin(t * 0.02) * 0.2 + 0.8
       const unit = Math.min(w, h) * 0.03
-      const o = offsets
 
-      // ── L1: breathing circle — NOT centered in its zone, slightly egg-shaped
-      const c1x = w * 0.17 + o[0].x + Math.sin(t * 0.003) * 5
-      const c1y = h * 0.23 + o[0].y
-      const breathA = Math.sin(t * 0.018 + o[0].phase) * 0.25 + 0.8
-      const breathB = Math.sin(t * 0.022 + o[0].phase + 0.5) * 0.2 + 0.85
+      // ── L1: breathing circle (top-left quadrant)
+      const c1x = w * 0.15, c1y = h * 0.25
       ctx.beginPath()
-      ctx.ellipse(c1x, c1y, unit * breathA * o[0].scale, unit * breathB * o[0].scale, t * 0.001, 0, Math.PI * 2)
+      ctx.arc(c1x, c1y, unit * breath, 0, Math.PI * 2)
       ctx.fillStyle = COLORS[0]
       ctx.fill()
 
-      // ── L2: rotating line — uneven length, slight curve
-      const l2x = w * 0.83 + o[1].x
-      const l2y = h * 0.22 + o[1].y
-      const lineLen1 = unit * 2.3 * o[1].scale
-      const lineLen2 = unit * 1.7 * o[1].scale // asymmetric!
-      const lineAngle = t * 0.009 + o[1].phase
+      // ── L2: rotating line (top-right quadrant)
+      const l2x = w * 0.85, l2y = h * 0.2
+      const lineLen = unit * 2 * breath
+      const lineAngle = t * 0.01
       ctx.beginPath()
-      ctx.moveTo(l2x - Math.cos(lineAngle) * lineLen1, l2y - Math.sin(lineAngle) * lineLen1)
-      // Slight curve through a control point
-      const cpx = l2x + Math.sin(t * 0.015) * 3
-      const cpy = l2y + Math.cos(t * 0.012) * 4
-      ctx.quadraticCurveTo(cpx, cpy, l2x + Math.cos(lineAngle) * lineLen2, l2y + Math.sin(lineAngle) * lineLen2)
+      ctx.moveTo(l2x - Math.cos(lineAngle) * lineLen, l2y - Math.sin(lineAngle) * lineLen)
+      ctx.lineTo(l2x + Math.cos(lineAngle) * lineLen, l2y + Math.sin(lineAngle) * lineLen)
       ctx.strokeStyle = COLORS[1]
-      ctx.lineWidth = 2 + Math.sin(t * 0.03) * 0.5
+      ctx.lineWidth = 2.5
       ctx.lineCap = 'round'
       ctx.stroke()
 
-      // ── L3: triangle follows cursor — wobbly, overshoots
-      const targetX = mx > 0 ? mx : cx + Math.sin(t * 0.007) * 50
-      const targetY = my > 0 ? my : cy + Math.cos(t * 0.009) * 30
-      const ease = 0.025 + Math.sin(t * 0.01) * 0.008 // variable easing = overshoot
-      triX += (targetX - triX) * ease
-      triY += (targetY - triY) * ease
+      // ── L3: triangle follows cursor (free-roaming)
+      const targetX = mx > 0 ? mx : cx
+      const targetY = my > 0 ? my : cy
+      triX += (targetX - triX) * 0.03
+      triY += (targetY - triY) * 0.03
       const triAngle = Math.atan2(targetY - triY, targetX - triX) + Math.PI / 2
-      const triR = unit * (0.7 + Math.sin(t * 0.025 + o[2].phase) * 0.15)
+      const triR = unit * 0.8
       ctx.save()
       ctx.translate(triX, triY)
-      ctx.rotate(triAngle + Math.sin(t * 0.02) * 0.05) // slight wobble
+      ctx.rotate(triAngle)
       ctx.beginPath()
       ctx.moveTo(0, -triR)
-      ctx.lineTo(-triR * 0.55, triR * 0.55) // not equilateral
-      ctx.lineTo(triR * 0.65, triR * 0.45)
+      ctx.lineTo(-triR * 0.6, triR * 0.5)
+      ctx.lineTo(triR * 0.6, triR * 0.5)
       ctx.closePath()
       ctx.fillStyle = COLORS[2]
       ctx.fill()
       ctx.restore()
 
-      // ── L4: orbiting trio — elliptical orbit, uneven spacing
-      const orbitRx = unit * 4.5
-      const orbitRy = unit * 2.8 // ellipse, not circle
-      const orbitSpeeds = [0.0048, 0.0055, 0.0042] // different speeds!
-      const orbitPhases = [0, 2.2, 4.1] // not evenly spaced
+      // ── L4: orbiting trio (center)
+      const orbitR = unit * 4
       for (let i = 0; i < 3; i++) {
-        const a = orbitPhases[i] + t * orbitSpeeds[i]
-        const ox = cx + o[3].x + Math.cos(a) * orbitRx
-        const oy = cy + o[3].y + Math.sin(a) * orbitRy
+        const a = (i / 3) * Math.PI * 2 + t * 0.005
+        const ox = cx + Math.cos(a) * orbitR
+        const oy = cy + Math.sin(a) * orbitR * 0.5
         ctx.beginPath()
-        if (i === 0) {
-          ctx.ellipse(ox, oy, unit * 0.55, unit * 0.45, t * 0.005, 0, Math.PI * 2)
-          ctx.fillStyle = COLORS[4]; ctx.fill()
-        } else if (i === 1) {
-          ctx.moveTo(ox - unit * 0.7, oy + 1)
-          ctx.lineTo(ox + unit * 0.5, oy - 1)
-          ctx.strokeStyle = COLORS[3]; ctx.lineWidth = 2.2; ctx.stroke()
+        if (i === 0) ctx.arc(ox, oy, unit * 0.5, 0, Math.PI * 2)
+        else if (i === 1) {
+          ctx.moveTo(ox - unit * 0.6, oy)
+          ctx.lineTo(ox + unit * 0.6, oy)
+          ctx.strokeStyle = COLORS[3]
+          ctx.lineWidth = 2
+          ctx.stroke()
+          continue
         } else {
-          ctx.moveTo(ox + 1, oy - unit * 0.5)
-          ctx.lineTo(ox - unit * 0.45, oy + unit * 0.35)
-          ctx.lineTo(ox + unit * 0.4, oy + unit * 0.25)
+          ctx.moveTo(ox, oy - unit * 0.5)
+          ctx.lineTo(ox - unit * 0.4, oy + unit * 0.3)
+          ctx.lineTo(ox + unit * 0.4, oy + unit * 0.3)
           ctx.closePath()
-          ctx.fillStyle = COLORS[0]; ctx.fill()
         }
+        ctx.fillStyle = COLORS[i === 0 ? 4 : 0]
+        ctx.fill()
       }
 
-      // ── L6: concentric rings — off-center, irregular gaps
-      const ringX = w * 0.22 + o[5].x + Math.sin(t * 0.004) * 8
-      const ringY = h * 0.73 + o[5].y
-      const ringGaps = [1.5, 2.4, 3.1, 4.2] // irregular spacing
+      // ── L6: concentric rings (bottom-left)
+      const ringX = w * 0.2, ringY = h * 0.75
       for (let i = 0; i < 4; i++) {
-        const rr = unit * ringGaps[i] * (0.88 + Math.sin(t * 0.013 + i * 1.1 + o[5].phase) * 0.12)
-        const sweep = Math.PI * (1.3 + i * 0.15) // different arc lengths
+        const rr = (unit * 1.5 + i * unit * 0.8) * (0.9 + Math.sin(t * 0.015 + i) * 0.1)
         ctx.beginPath()
-        ctx.arc(ringX, ringY, rr, t * 0.003 + i * 0.8, t * 0.003 + i * 0.8 + sweep)
+        ctx.arc(ringX, ringY, rr, t * 0.003 + i, t * 0.003 + i + Math.PI * 1.5)
         ctx.strokeStyle = COLORS[i % COLORS.length]
-        ctx.lineWidth = 1.5 + i * 0.3
+        ctx.lineWidth = 2
         ctx.lineCap = 'round'
         ctx.stroke()
       }
 
-      // ── L7: bouncing drops — varied gravity, drift sideways
-      if (t % 25 === 0) spawnDrop()
+      // ── L7: bouncing drops (right side)
+      if (t % 30 === 0) spawnDrop()
       for (const d of drops) {
-        if (d.settled) {
-          ctx.beginPath()
-          ctx.ellipse(d.x, d.y, d.r, d.r * 0.7, 0, 0, Math.PI * 2) // squished when settled
-          ctx.fillStyle = d.c
-          ctx.globalAlpha = 0.6
-          ctx.fill()
-          ctx.globalAlpha = 1
-          continue
-        }
-        d.vy += 0.18 + Math.sin(d.wobble + t * 0.01) * 0.03 // uneven gravity
-        d.x += d.vx + Math.sin(t * 0.02 + d.wobble) * 0.3 // wind wobble
+        if (d.settled) continue
+        d.vy += 0.2
         d.y += d.vy
-        if (d.y > h * (0.82 + Math.sin(d.x * 0.01) * 0.03)) { // uneven ground
-          d.y = h * (0.82 + Math.sin(d.x * 0.01) * 0.03)
-          d.vy *= -0.35
-          if (Math.abs(d.vy) < 0.8) d.settled = true
-        }
+        if (d.y > h * 0.85) { d.y = h * 0.85; d.vy *= -0.4; if (Math.abs(d.vy) < 1) d.settled = true }
         ctx.beginPath()
         ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2)
         ctx.fillStyle = d.c
         ctx.fill()
         ctx.beginPath()
-        ctx.arc(d.x - d.r * 0.25, d.y - d.r * 0.25, d.r * 0.28, 0, Math.PI * 2)
-        ctx.fillStyle = 'rgba(255,255,255,0.3)'
+        ctx.arc(d.x - d.r * 0.2, d.y - d.r * 0.2, d.r * 0.3, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(255,255,255,0.35)'
         ctx.fill()
       }
 
-      // ── L8+L9: nodes — drifting, not fixed positions
-      const nodeBase = [
-        { bx: cx - unit * 3.5, by: h * 0.62, pos: true },
-        { bx: cx + unit * 1.7, by: h * 0.68, pos: true },
-        { bx: cx - unit * 0.5, by: h * 0.58, pos: false },
-        { bx: cx + unit * 4.2, by: h * 0.63, pos: false },
-        { bx: cx + unit * 0.8, by: h * 0.73, pos: true },
+      // ── L8+L9: connected/charged nodes (bottom-center)
+      const nodePositions = [
+        { x: cx - unit * 3, y: h * 0.65, pos: true },
+        { x: cx + unit * 2, y: h * 0.7, pos: true },
+        { x: cx, y: h * 0.6, pos: false },
+        { x: cx + unit * 4, y: h * 0.65, pos: false },
       ]
-      const nodePositions = nodeBase.map((n, i) => ({
-        x: n.bx + Math.sin(t * 0.003 + i * 1.7) * 8 + Math.cos(t * 0.005 + i * 2.3) * 5,
-        y: n.by + Math.cos(t * 0.004 + i * 1.3) * 6,
-        pos: n.pos,
-      }))
-
+      // Connections
       for (let i = 0; i < nodePositions.length; i++) {
         for (let j = i + 1; j < nodePositions.length; j++) {
           const a = nodePositions[i], b = nodePositions[j]
           const dist = Math.sqrt((b.x - a.x) ** 2 + (b.y - a.y) ** 2)
-          if (dist < unit * 9) {
-            const alpha = (1 - dist / (unit * 9)) * 0.25
+          if (dist < unit * 8) {
             ctx.beginPath()
-            // Slightly curved connection lines
-            const mpx = (a.x + b.x) / 2 + Math.sin(t * 0.01 + i + j) * 5
-            const mpy = (a.y + b.y) / 2 + Math.cos(t * 0.008 + i * j) * 4
             ctx.moveTo(a.x, a.y)
-            ctx.quadraticCurveTo(mpx, mpy, b.x, b.y)
-            ctx.strokeStyle = a.pos !== b.pos ? `rgba(252,145,58,${alpha})` : `rgba(45,90,39,${alpha * 0.5})`
-            ctx.setLineDash(a.pos === b.pos ? [3, 6] : [])
-            ctx.lineWidth = 1 + Math.sin(t * 0.02 + i) * 0.3
+            ctx.lineTo(b.x, b.y)
+            ctx.strokeStyle = a.pos !== b.pos ? 'rgba(252,145,58,0.2)' : 'rgba(45,90,39,0.1)'
+            ctx.setLineDash(a.pos === b.pos ? [3, 5] : [])
+            ctx.lineWidth = 1
             ctx.stroke()
             ctx.setLineDash([])
           }
         }
       }
+      // Nodes
       for (const n of nodePositions) {
-        const r = unit * (0.45 + Math.sin(t * 0.025 + n.x * 0.01) * 0.08)
+        const wobble = Math.sin(t * 0.02 + n.x * 0.01) * 2
         ctx.beginPath()
-        ctx.arc(n.x, n.y, r, 0, Math.PI * 2)
+        ctx.arc(n.x + wobble, n.y, unit * 0.5, 0, Math.PI * 2)
         ctx.fillStyle = n.pos ? COLORS[1] : '#2D5A27'
         ctx.fill()
-        ctx.fillStyle = 'rgba(255,255,255,0.35)'
-        ctx.font = `${r * 1.1}px monospace`
+        ctx.fillStyle = 'rgba(255,255,255,0.4)'
+        ctx.font = `${unit * 0.5}px monospace`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillText(n.pos ? '+' : '−', n.x + 0.5, n.y)
+        ctx.fillText(n.pos ? '+' : '−', n.x + wobble, n.y)
       }
+
+      // ── L10 label
+      ctx.fillStyle = 'rgba(0,0,0,0.04)'
+      ctx.font = `${Math.min(w * 0.015, 11)}px monospace`
+      ctx.textAlign = 'left'
+      ctx.fillText('L10', 12, h - 12)
 
       frame = requestAnimationFrame(tick)
     }
 
-    triX = w / 2 + 20; triY = h / 2 - 15 // not centered
+    triX = w / 2; triY = h / 2
     frame = requestAnimationFrame(tick)
 
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize) }
