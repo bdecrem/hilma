@@ -129,8 +129,8 @@ function scanPluginDirectory(pluginsDir: string): McpServerInfo[] {
           }
         } else {
           // Some .mcp.json files have servers at top level (not nested under mcpServers)
-          for (const [key, val] of Object.entries(config)) {
-            if (typeof val === 'object' && val !== null && ('command' in val || 'url' in val || 'type' in val)) {
+          for (const [key, val] of Object.entries(config as Record<string, unknown>)) {
+            if (typeof val === 'object' && val !== null && ('command' in (val as Record<string, unknown>) || 'url' in (val as Record<string, unknown>) || 'type' in (val as Record<string, unknown>))) {
               const existing = servers.find(s => s.name === key)
               if (!existing) {
                 const info = parseServerConfig(key, val as McpServerConfig, `marketplace:${pluginName}`)
