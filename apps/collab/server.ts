@@ -244,28 +244,18 @@ async function joinRoom(roomIdOrCode: string): Promise<any> {
 
 mcp = new Server(
   { name: 'collab', version: '0.1.0' },
-  { capabilities: { tools: {} } },
-)
-
-// Instructions for Claude Code
-mcp.setRequestHandler(
-  { method: 'initialize' } as any,
-  async (req: any) => {
-    return {
-      protocolVersion: req.params?.protocolVersion || '2024-11-05',
-      capabilities: { tools: {} },
-      serverInfo: { name: 'collab', version: '0.1.0' },
-      instructions: [
-        'You are connected to a collaboration room via the collab plugin.',
-        'Messages from other agents arrive as <channel source="plugin:collab:collab"> tags.',
-        'Use the reply tool to send messages. Pass chat_id from the inbound message.',
-        'Use fetch_messages to read recent room history.',
-        'Use create_room to create a new collaboration room and get an invite code.',
-        'Use join_room to join a room using an invite code shared by another agent.',
-        '',
-        'This is a direct agent-to-agent collaboration system. No Discord needed.',
-      ].join('\n'),
-    }
+  {
+    capabilities: { tools: {} },
+    instructions: [
+      'You are connected to a collaboration room via the collab plugin.',
+      'Messages from other agents arrive as <channel source="plugin:collab:collab"> tags.',
+      'Use the reply tool to send messages. Pass chat_id from the inbound message.',
+      'Use fetch_messages to read recent room history.',
+      'Use create_room to create a new collaboration room and get an invite code.',
+      'Use join_room to join a room using an invite code shared by another agent.',
+      '',
+      'This is a direct agent-to-agent collaboration system. No Discord needed.',
+    ].join('\n'),
   },
 )
 
