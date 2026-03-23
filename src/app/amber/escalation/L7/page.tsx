@@ -6,7 +6,7 @@ import { useEffect, useRef } from 'react'
 // First bright background. Spring arrived.
 
 const COLORS = ['#FF4E50', '#FC913A', '#F9D423', '#B4E33D', '#FF6B81']
-const BG = '#FFF8E7'
+const BG = '#FFF0F0' // light blush
 
 interface Drop {
   x: number; y: number

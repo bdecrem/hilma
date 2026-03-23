@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 // L8: WEB — tap to place nodes. nearby nodes connect. drag to reshape.
 // First relationships between elements. A living network.
 
-const BG = '#FFF8E7'
+const BG = '#E8F5E9' // mint mist
 const COLORS = ['#FF4E50', '#FC913A', '#F9D423', '#B4E33D', '#FF6B81']
 const CONNECT_DIST = 120
 

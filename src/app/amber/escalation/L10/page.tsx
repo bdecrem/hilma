@@ -43,11 +43,8 @@ export default function L10() {
 
     const tick = () => {
       t++
-      // Gradient bg: peach → lemon
-      const grad = ctx.createLinearGradient(0, 0, w, h)
-      grad.addColorStop(0, '#FFECD2')
-      grad.addColorStop(1, '#FFFDE7')
-      ctx.fillStyle = grad
+      // Bold mango background — L10 is a milestone
+      ctx.fillStyle = '#F9D423'
       ctx.fillRect(0, 0, w, h)
 
       const cx = w / 2, cy = h / 2
@@ -199,5 +196,5 @@ export default function L10() {
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize) }
   }, [])
 
-  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full" style={{ background: '#FFECD2' }} />
+  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full" style={{ background: '#F9D423' }} />
 }

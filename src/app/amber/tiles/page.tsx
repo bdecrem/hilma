@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 // TILES — living hex mosaic. touch to ripple. every frame is a screenshot.
 
 const COLORS = ['#FF4E50', '#FC913A', '#F9D423', '#B4E33D', '#FF6B81', '#FF8A65']
-const BG = '#FFE0DD'
+const BG = '#B4E33D' // bold lime field
 
 interface Hex {
   cx: number; cy: number

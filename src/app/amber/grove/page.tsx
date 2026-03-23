@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 
 // GROVE — a citrus grove in Unicode. touch a tree to shake fruit loose.
 
-const BG = '#FFF8E7'
+const BG = '#FFFDE7' // pale lemon
 const TRUNK = '#8B5E3C'
 const LEAF_COLORS = ['#B4E33D', '#7CB342', '#9CCC65', '#8BC34A']
 const FRUIT_COLORS = ['#FF4E50', '#FC913A', '#F9D423', '#FF6B81']

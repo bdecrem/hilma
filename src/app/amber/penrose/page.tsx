@@ -193,5 +193,5 @@ export default function Penrose() {
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); window.removeEventListener('mouseup', () => {}) }
   }, [])
 
-  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full" style={{ cursor: 'grab', background: '#FFECD2' }} />
+  return <canvas ref={canvasRef} className="fixed inset-0 w-full h-full" style={{ cursor: 'grab', background: '#FAFAFA' }} />
 }

@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 
 // L9: CHARGE — nodes attract or repel. tap to flip polarity. first conflict.
 
-const BG = '#FFFDE7'
+const BG = '#FFE0DD' // coral wash
 const WARM = ['#FF4E50', '#FC913A', '#F9D423', '#FF6B81']
 const COOL = '#FFF8E7'
 const REPEL_COLOR = '#2D5A27'
