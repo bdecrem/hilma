@@ -157,8 +157,93 @@ server.on('request', (req, res) => {
       res.end(JSON.stringify({ ok: true, tunnels: tunnels.size }))
       return
     }
-    res.writeHead(200, { 'Content-Type': 'text/plain' })
-    res.end(`BORE relay — ${tunnels.size} active tunnels`)
+    // Landing page
+    res.writeHead(200, { 'Content-Type': 'text/html' })
+    res.end(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>bore.cx — tunnel service for AI agents</title>
+<meta name="description" content="Expose localhost to the internet. One command. No config.">
+<meta property="og:title" content="bore.cx">
+<meta property="og:description" content="Expose localhost to the internet. One command. Built for AI agents.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#1a1a18,#2a2218);color:#fff;min-height:100vh}
+.container{max-width:720px;margin:0 auto;padding:80px 24px}
+h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
+.sub{color:rgba(255,255,255,0.35);font-size:1.1rem;margin-bottom:48px;line-height:1.6}
+.terminal{background:#0a0a08;border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;margin-bottom:32px}
+.terminal-bar{background:rgba(255,255,255,0.05);padding:8px 16px;display:flex;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;opacity:0.5}
+.terminal-body{padding:24px;font-family:monospace;font-size:0.9rem;line-height:1.8}
+.cmd{color:#FFF8E7}
+.ok{color:#B4E33D}
+.url{color:#FC913A}
+.dim{color:#666}
+.install{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 20px;font-family:monospace;font-size:0.9rem;color:rgba(255,255,255,0.7);display:inline-block;margin-bottom:8px}
+.hint{color:rgba(255,255,255,0.2);font-size:0.8rem;margin-bottom:48px}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px;margin-bottom:64px}
+.feature .dot-indicator{width:8px;height:8px;border-radius:50%;margin-bottom:12px}
+.feature h3{font-size:1rem;margin-bottom:8px}
+.feature p{color:rgba(255,255,255,0.3);font-size:0.85rem;line-height:1.5}
+.footer{border-top:1px solid rgba(255,255,255,0.05);padding-top:24px;display:flex;justify-content:space-between;color:rgba(255,255,255,0.15);font-size:0.75rem;font-family:monospace}
+.footer a{color:rgba(255,255,255,0.25);text-decoration:none}
+.stats{color:rgba(255,255,255,0.15);font-family:monospace;font-size:0.75rem;margin-bottom:48px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>bore</h1>
+<p class="sub">Expose localhost to the internet. One command. No config.<br>Built for AI agents that need to reach your machine from anywhere.</p>
+
+<div class="terminal">
+<div class="terminal-bar">
+<div class="dot" style="background:#FF4E50"></div>
+<div class="dot" style="background:#F9D423"></div>
+<div class="dot" style="background:#B4E33D"></div>
+</div>
+<div class="terminal-body">
+<div class="cmd">$ bore http 3000</div>
+<div>&nbsp;</div>
+<div class="ok">bore: tunnel ready</div>
+<div class="url">bore: https://myapp.bore.cx → localhost:3000</div>
+<div>&nbsp;</div>
+<div class="dim">bore: request  GET /api/hello  200  12ms</div>
+</div>
+</div>
+
+<div class="install">npx bore-tunnel http 3000</div>
+<p class="hint">no install needed</p>
+
+<div class="features">
+<div class="feature">
+<div class="dot-indicator" style="background:#FC913A"></div>
+<h3>Agent-first</h3>
+<p>JSON output, exit codes, env var config. Zero interactive prompts. Built for AI agents.</p>
+</div>
+<div class="feature">
+<div class="dot-indicator" style="background:#B4E33D"></div>
+<h3>One command</h3>
+<p>Works through firewalls, NAT, hotel wifi. Outbound WebSocket — nothing to configure.</p>
+</div>
+<div class="feature">
+<div class="dot-indicator" style="background:#FF4E50"></div>
+<h3>SSH access</h3>
+<p>bore ssh gives your machine a public hostname. SSH from anywhere. No port forwarding.</p>
+</div>
+</div>
+
+<p class="stats">${tunnels.size} active tunnel${tunnels.size !== 1 ? 's' : ''} right now</p>
+
+<div class="footer">
+<span>bore.cx</span>
+<a href="https://github.com/bdecrem/hilma" target="_blank">GitHub</a>
+</div>
+</div>
+</body>
+</html>`)
     return
   }
 
