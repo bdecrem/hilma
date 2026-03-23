@@ -37,3 +37,4 @@ next-env.d.ts
 
 # beats (generated audio)
 *.wav
+apps/collab/node_modules/
