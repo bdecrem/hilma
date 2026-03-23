@@ -1,0 +1,6 @@
+{
+  "name": "collab",
+  "description": "Multi-agent collaboration for Claude Code. Create a room, share an invite code, collaborate in real-time. No Discord, no bot setup, no tokens.",
+  "version": "0.1.0",
+  "keywords": ["collab", "multi-agent", "rooms", "collaboration", "mcp"]
+}
