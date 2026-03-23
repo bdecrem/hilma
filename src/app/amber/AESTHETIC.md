@@ -35,11 +35,30 @@ Warm, loud, spring. Think: blood oranges on a marble counter, lemon groves at go
 - Lime field `#B4E33D` with darker citrus accents
 - Use primaries AS backgrounds when the piece calls for it
 
+**DO NOT HARDCODE A BACKGROUND.** Use the background picker utility:
+
+```tsx
+import { pickGradientColors, randomSolidBg } from '@/lib/citrus-bg'
+
+// For canvas: pick two gradient colors seeded by the piece name
+const [bg1, bg2] = pickGradientColors('my-piece-name')
+const grad = ctx.createLinearGradient(0, 0, w, h)
+grad.addColorStop(0, bg1)
+grad.addColorStop(1, bg2)
+
+// Or for a random solid each time:
+const bg = randomSolidBg()
+
+// Or for CSS backgrounds:
+import { pickBackground } from '@/lib/citrus-bg'
+style={{ background: pickBackground('my-piece') }}
+```
+
 **Guidelines:**
+- NEVER write `#FFF8E7` or `#FFECD2` as a hardcoded background. Use the picker.
 - Overall feel: LIGHT and WARM. Spring energy.
 - NO pure black, NO navy, NO purple, NO cold blue backgrounds.
-- Gradients and bold solids are great — don't default to cream every time.
-- Match the background to the mood of the piece. A playful piece can have a mango bg. A calm piece can have a cream-to-mint gradient. A bold piece can go full coral.
+- The picker includes solids, gradients, and bold primaries — it handles variety automatically.
 - The background IS part of the art — treat it like a design choice, not a default.
 
 ### ACCENT — pops of contrast
