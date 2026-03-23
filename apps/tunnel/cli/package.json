@@ -1,0 +1,15 @@
+{
+  "name": "bore-tunnel",
+  "version": "0.1.0",
+  "description": "BORE tunnel CLI — expose localhost to the internet",
+  "type": "module",
+  "bin": {
+    "bore": "./bore.js"
+  },
+  "scripts": {
+    "start": "node bore.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
