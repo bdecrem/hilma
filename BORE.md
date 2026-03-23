@@ -5,18 +5,17 @@ Expose localhost to the internet. One command. No config.
 ## Quick Start
 
 ```bash
-# No install needed
-npx bore-tunnel http 3000
+# Install
+curl -sSf https://bore.cx/install | sh
 
-# Or install globally
-npm i -g bore-tunnel
+# Use
 bore http 3000
 ```
 
 Output:
 ```
 bore: tunnel ready
-bore: https://a7f3c912.bore.pub → localhost:3000
+bore: https://a7f3c912.bore.cx → localhost:3000
 ```
 
 ## Commands
@@ -27,7 +26,7 @@ Expose a local HTTP server.
 
 ```bash
 bore http 3000                          # random subdomain
-bore http 3000 --subdomain myapp        # custom subdomain → myapp.bore.pub
+bore http 3000 --subdomain myapp        # custom subdomain → myapp.bore.cx
 bore http 3000 --json                   # JSON output for programmatic use
 bore http 8080 --relay wss://custom.relay  # custom relay server
 ```
@@ -36,13 +35,13 @@ bore http 8080 --relay wss://custom.relay  # custom relay server
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--subdomain`, `-s` | random 8-char hex | Custom subdomain |
-| `--relay`, `-r` | `wss://relay.bore.pub` | Relay server URL |
+| `--relay`, `-r` | `wss://relay.bore.cx` | Relay server URL |
 | `--json` | false | Output JSON instead of human text |
 | `--quiet`, `-q` | false | Suppress all output except errors |
 
 **JSON output** (`--json`):
 ```json
-{"url": "https://myapp.bore.pub", "subdomain": "myapp", "relay": "wss://relay.bore.pub", "local": "http://localhost:3000"}
+{"url": "https://myapp.bore.cx", "subdomain": "myapp", "relay": "wss://relay.bore.cx", "local": "http://localhost:3000"}
 ```
 
 ### `bore ssh`
@@ -51,7 +50,7 @@ Expose local SSH server.
 
 ```bash
 bore ssh                                # random subdomain
-bore ssh --subdomain mybox              # ssh user@mybox.bore.pub
+bore ssh --subdomain mybox              # ssh user@mybox.bore.cx
 ```
 
 ### `bore login`
@@ -91,11 +90,11 @@ import { createTunnel } from 'bore-tunnel'
 const tunnel = await createTunnel({
   port: 3000,
   subdomain: 'myapp',    // optional
-  relay: 'wss://relay.bore.pub',  // optional
+  relay: 'wss://relay.bore.cx',  // optional
   token: 'bk_abc123',    // optional
 })
 
-console.log(tunnel.url)  // https://myapp.bore.pub
+console.log(tunnel.url)  // https://myapp.bore.cx
 tunnel.close()
 ```
 
@@ -114,7 +113,7 @@ Config file: `~/.bore/config.json`
 ```json
 {
   "token": "bk_abc123...",
-  "relay": "wss://relay.bore.pub",
+  "relay": "wss://relay.bore.cx",
   "defaultSubdomain": null
 }
 ```
@@ -122,8 +121,8 @@ Config file: `~/.bore/config.json`
 ## How It Works
 
 1. The bore client opens an outbound WebSocket connection to the relay server
-2. The relay assigns your subdomain (e.g., `abc123.bore.pub`)
-3. When someone visits `abc123.bore.pub`, the relay forwards the HTTP request through the WebSocket to your machine
+2. The relay assigns your subdomain (e.g., `abc123.bore.cx`)
+3. When someone visits `abc123.bore.cx`, the relay forwards the HTTP request through the WebSocket to your machine
 4. Your bore client proxies the request to `localhost:<port>` and sends the response back
 5. The connection is outbound-only — works through firewalls and NAT
 

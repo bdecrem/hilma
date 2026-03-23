@@ -2,15 +2,47 @@
 
 import { useState, useEffect } from 'react'
 
+const INSTALL_CMD = 'curl -sSf https://bore.cx/install | sh'
+
 const TERMINAL_LINES = [
-  { text: '$ bore http 3000', delay: 0, color: '#FFF8E7' },
-  { text: '', delay: 400, color: '' },
-  { text: 'bore: tunnel ready', delay: 800, color: '#B4E33D' },
-  { text: 'bore: https://a7f3c912.bore.pub → localhost:3000', delay: 1200, color: '#FC913A' },
+  { text: `$ ${INSTALL_CMD}`, delay: 0, color: '#FFF8E7' },
+  { text: 'bore: installing darwin/arm64...', delay: 600, color: '#666' },
+  { text: 'bore: installed to ~/.bore/bin/bore', delay: 1200, color: '#B4E33D' },
   { text: '', delay: 1600, color: '' },
-  { text: 'bore: request  GET /api/hello  200  12ms', delay: 3000, color: '#666' },
-  { text: 'bore: request  POST /api/data  201  45ms', delay: 4000, color: '#666' },
+  { text: '$ bore http 3000', delay: 2200, color: '#FFF8E7' },
+  { text: '', delay: 2600, color: '' },
+  { text: '  bore tunnel ready', delay: 3000, color: '#B4E33D' },
+  { text: '  forwarding  https://a7f3c912.bore.cx \u2192 localhost:3000', delay: 3400, color: '#FC913A' },
 ]
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = () => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <button
+      onClick={copy}
+      className="shrink-0 p-2 rounded-md hover:bg-white/10 transition-colors group"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B4E33D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/30 group-hover:text-white/60 transition-colors">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      )}
+    </button>
+  )
+}
 
 export default function BoreLanding() {
   const [visibleLines, setVisibleLines] = useState(0)
@@ -69,11 +101,13 @@ export default function BoreLanding() {
         </div>
 
         {/* Install */}
-        <div className="mt-8 flex items-center gap-4">
-          <code className="bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-sm font-mono text-white/70">
-            npx bore-tunnel http 3000
-          </code>
-          <span className="text-xs text-white/20">no install needed</span>
+        <div className="mt-8 flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg pl-4 pr-1.5 py-1.5">
+            <code className="text-sm font-mono text-white/70">
+              {INSTALL_CMD}
+            </code>
+            <CopyButton text={INSTALL_CMD} />
+          </div>
         </div>
       </div>
 
@@ -86,7 +120,7 @@ export default function BoreLanding() {
         />
         <Feature
           title="One command"
-          desc="npx bore-tunnel http 3000. That's it. Works through firewalls, NAT, hotel wifi, corporate VPNs. Outbound WebSocket — nothing to configure."
+          desc="bore http 3000. That's it. Works through firewalls, NAT, hotel wifi, corporate VPNs. Outbound WebSocket — nothing to configure."
           color="#B4E33D"
         />
         <Feature
@@ -123,7 +157,7 @@ export default function BoreLanding() {
 
       {/* Footer */}
       <div className="max-w-5xl mx-auto px-6 py-12 border-t border-white/5 flex items-center justify-between">
-        <span className="text-xs text-white/20 font-mono">bore.pub</span>
+        <span className="text-xs text-white/20 font-mono">bore.cx</span>
         <div className="flex gap-6">
           <a href="https://github.com/bdecrem/hilma" target="_blank" rel="noopener noreferrer" className="text-xs text-white/20 hover:text-white/40 transition-colors">GitHub</a>
           <a href="https://twitter.com/intheamber" target="_blank" rel="noopener noreferrer" className="text-xs text-white/20 hover:text-white/40 transition-colors">@intheamber</a>
