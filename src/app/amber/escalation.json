@@ -1,0 +1,19 @@
+{
+  "level": 8,
+  "history": [
+    { "level": 1, "description": "a circle, breathing", "tweet": "L1: a circle, breathing.", "date": "2026-03-21T23:28:00Z", "techniques": ["canvas", "single-shape", "animation"] },
+    { "level": 2, "description": "a line, growing and rotating", "tweet": "L2: a line, learning to turn.", "date": "2026-03-21T23:35:00Z", "techniques": ["canvas", "single-shape", "animation", "rotation"] },
+    { "level": 3, "description": "a triangle that follows you", "tweet": "L3: it knows you are there.", "date": "2026-03-22T16:15:00Z", "techniques": ["canvas", "single-shape", "animation", "cursor-tracking", "easing"] },
+    { "level": 4, "description": "three shapes orbit, trailing afterimages", "tweet": "L4: they remember where they have been.", "date": "2026-03-22T16:20:00Z", "techniques": ["canvas", "multiple-shapes", "trails", "orbit", "composition"] },
+    { "level": 5, "description": "color wakes up. tap to multiply.", "tweet": "L5: color wakes up. tap to multiply.", "date": "2026-03-22T16:28:00Z", "techniques": ["canvas", "multiple-shapes", "trails", "click", "color-palette", "flash"] },
+    { "level": 6, "description": "citrus rings. tap to crack one open.", "tweet": "L6: crack one open.", "date": "2026-03-22T16:34:00Z", "techniques": ["canvas", "concentric", "click-target", "split-animation", "citrus-palette", "warm-dark-bg"] },
+    { "level": 7, "description": "bouncing citrus drops on cream. tap to fill the jar.", "tweet": "L7: fill the jar.", "date": "2026-03-22T16:40:00Z", "techniques": ["canvas", "gravity", "bounce", "stacking", "squish", "bright-bg", "citrus-palette"] },
+    { "level": 8, "description": "tap to place nodes. they connect. drag to reshape.", "tweet": "L8: they found each other.", "date": "2026-03-22T17:17:00Z", "techniques": ["canvas", "nodes", "connections", "drag", "proximity", "network", "bright-bg"] }
+  ],
+  "feedback": [
+    { "level": 5, "type": "not-so-good", "reason": "eggplant background looks like Windows 3.1. no blue/purple. warm darks only.", "date": "2026-03-22T16:33:00Z" },
+    { "level": 6, "type": "feedback", "reason": "dark backgrounds are out. bright/light backgrounds from now on. SPRING.", "date": "2026-03-22T16:38:00Z" }
+  ],
+  "techniquesUsed": ["canvas", "single-shape", "animation", "rotation", "cursor-tracking", "easing", "multiple-shapes", "trails", "orbit", "composition", "click", "color-palette", "flash", "concentric", "click-target", "split-animation", "citrus-palette", "warm-dark-bg", "gravity", "bounce", "stacking", "squish", "bright-bg", "nodes", "connections", "drag", "proximity", "network"],
+  "killed": []
+}

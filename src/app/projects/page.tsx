@@ -446,7 +446,7 @@ export default function Projects() {
 
   return (
     <div
-      className="min-h-screen transition-colors duration-700"
+      className="min-h-dvh overflow-x-hidden transition-colors duration-700"
       style={dark ? { backgroundColor: '#1a1a1a' } : undefined}
     >
       {/* Gradient background (light mode only) */}
@@ -482,7 +482,7 @@ export default function Projects() {
           <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight cursor-default transition-colors duration-700 ${theme.title}`}>
             things i&apos;m building
           </h1>
-          <p className={`mt-3 text-sm sm:text-base leading-relaxed max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
+          <p className={`mt-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
             nine months of building with ai. one repo, lots of unfinished thoughts in various states of completion, none fully productized.
             {' '}previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
             <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.{' '}

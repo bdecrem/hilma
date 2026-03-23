@@ -5,7 +5,12 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // www.decremental.com serves the /projects page at its root
+        // decremental.com and www.decremental.com serve the /projects page at root
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'decremental.com' }],
+          destination: '/projects',
+        },
         {
           source: '/',
           has: [{ type: 'host', value: 'www.decremental.com' }],
