@@ -42,7 +42,7 @@ if (!port || isNaN(port)) {
 }
 
 let subdomain = null
-let relayUrl = process.env.BORE_RELAY || 'ws://localhost:4040/ws/connect'
+let relayUrl = process.env.BORE_RELAY || 'wss://bore.cx/ws/connect'
 let jsonMode = false
 
 for (let i = 2; i < args.length; i++) {
