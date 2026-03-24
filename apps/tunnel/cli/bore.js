@@ -181,7 +181,7 @@ function handleHttp(httpArgs) {
 
 function handleRequest(ws, msg, port) {
   const options = {
-    hostname: 'localhost',
+    hostname: '127.0.0.1',
     port,
     path: msg.url,
     method: msg.method,
