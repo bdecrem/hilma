@@ -7,6 +7,7 @@
  */
 
 import http from 'http'
+import net from 'net'
 import { WebSocketServer } from 'ws'
 import crypto from 'crypto'
 import { readFileSync } from 'fs'
@@ -26,10 +27,24 @@ try {
 const PORT = parseInt(process.env.PORT || '4040')
 const BASE_DOMAIN = process.env.BASE_DOMAIN || 'localhost'
 
-// Registry: subdomain → { ws, mode, pending, tcpStreams, requestCount, connectionId }
+// Registry: subdomain → { ws, mode, pending, tcpStreams, tcpPort, requestCount, connectionId }
 // mode: "http" (default) or "tcp"
-// tcpStreams: Map<streamId, proxyWs> — only used in tcp mode
+// tcpStreams: Map<streamId, socket> — only used in tcp mode
+// tcpPort: assigned external port for TCP tunnels
 const tunnels = new Map()
+
+// Port registry: port → subdomain (for TCP port routing)
+const portToSubdomain = new Map()
+const TCP_PORT_MIN = 10000
+const TCP_PORT_MAX = 60000
+
+function assignTcpPort() {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const port = TCP_PORT_MIN + Math.floor(Math.random() * (TCP_PORT_MAX - TCP_PORT_MIN))
+    if (!portToSubdomain.has(port)) return port
+  }
+  return null
+}
 
 function generateId() {
   return crypto.randomBytes(8).toString('hex')
@@ -90,9 +105,15 @@ wss.on('connection', (ws) => {
       const payload = buf.subarray(8)
       const tunnel = tunnels.get(registeredSubdomain)
       if (!tunnel) return
-      const proxyWs = tunnel.tcpStreams.get(streamId)
-      if (proxyWs && proxyWs.readyState === proxyWs.OPEN) {
-        proxyWs.send(payload)
+      const stream = tunnel.tcpStreams.get(streamId)
+      if (!stream) return
+      // WebSocket proxy stream
+      if (stream.send && stream.readyState === stream.OPEN) {
+        stream.send(payload)
+      }
+      // Raw TCP socket
+      else if (stream.write && !stream.destroyed) {
+        stream.write(payload)
       }
       return
     }
@@ -117,13 +138,30 @@ wss.on('connection', (ws) => {
 
       registeredSubdomain = subdomain
       const mode = msg.mode === 'tcp' ? 'tcp' : 'http'
-      const tunnel = { ws, mode, pending: new Map(), tcpStreams: new Map(), requestCount: 0, connectionId: null }
+      const tunnel = { ws, mode, pending: new Map(), tcpStreams: new Map(), tcpPort: null, requestCount: 0, connectionId: null }
+
+      // Assign a TCP port for TCP tunnels
+      if (mode === 'tcp') {
+        const tcpPort = assignTcpPort()
+        if (!tcpPort) {
+          ws.send(JSON.stringify({ type: 'error', message: 'No TCP ports available' }))
+          return
+        }
+        tunnel.tcpPort = tcpPort
+        portToSubdomain.set(tcpPort, subdomain)
+      }
+
       tunnels.set(subdomain, tunnel)
 
       const url = `https://${subdomain}.${BASE_DOMAIN}`
+      const response = { type: 'registered', subdomain, url, mode }
+      if (tunnel.tcpPort) {
+        response.tcpPort = tunnel.tcpPort
+        response.tcpHost = BASE_DOMAIN
+      }
 
-      ws.send(JSON.stringify({ type: 'registered', subdomain, url, mode }))
-      console.log(`[TUNNEL] ${subdomain} registered`)
+      ws.send(JSON.stringify(response))
+      console.log(`[TUNNEL] ${subdomain} registered (${mode}${tunnel.tcpPort ? ` port:${tunnel.tcpPort}` : ''})`)
 
       // Fire-and-forget: persist to Supabase
       upsertSubdomain(subdomain)
@@ -159,40 +197,43 @@ wss.on('connection', (ws) => {
       if (!registeredSubdomain) return
       const tunnel = tunnels.get(registeredSubdomain)
       if (!tunnel) return
-      const proxyWs = tunnel.tcpStreams.get(msg.streamId)
-      if (proxyWs && proxyWs._buffered) {
-        // Flush any data buffered while waiting for tcp-ready
-        for (const buf of proxyWs._buffered) {
+      const stream = tunnel.tcpStreams.get(msg.streamId)
+      if (!stream) return
+
+      if (stream._buffered) {
+        // WebSocket proxy stream (from bore proxy)
+        for (const buf of stream._buffered) {
           const frame = Buffer.alloc(8 + buf.length)
           frame.write(msg.streamId, 0, 8, 'ascii')
           buf.copy(frame, 8)
           ws.send(frame)
         }
-        proxyWs._buffered = null // signals "ready" — future data goes straight through
-        console.log(`[TCP] ${registeredSubdomain} stream ${msg.streamId} ready`)
+        stream._buffered = null
+      } else if (stream._tcpBuffered) {
+        // Raw TCP socket stream (from direct SSH)
+        clearTimeout(stream._readyTimer)
+        stream._waitingForReady = false
+        stream._paused = false
+        for (const buf of stream._tcpBuffered) {
+          const frame = Buffer.alloc(8 + buf.length)
+          frame.write(msg.streamId, 0, 8, 'ascii')
+          buf.copy(frame, 8)
+          ws.send(frame)
+        }
+        stream._tcpBuffered = null
+        stream.resume()
       }
+      console.log(`[TCP] ${registeredSubdomain} stream ${msg.streamId} ready`)
     }
 
-    if (msg.type === 'tcp-error') {
-      // CLI couldn't connect locally, close the proxy connection
+    if (msg.type === 'tcp-error' || msg.type === 'tcp-close') {
       if (!registeredSubdomain) return
       const tunnel = tunnels.get(registeredSubdomain)
       if (!tunnel) return
-      const proxyWs = tunnel.tcpStreams.get(msg.streamId)
-      if (proxyWs) {
-        proxyWs.close()
-        tunnel.tcpStreams.delete(msg.streamId)
-      }
-    }
-
-    if (msg.type === 'tcp-close') {
-      // CLI closed the local socket
-      if (!registeredSubdomain) return
-      const tunnel = tunnels.get(registeredSubdomain)
-      if (!tunnel) return
-      const proxyWs = tunnel.tcpStreams.get(msg.streamId)
-      if (proxyWs) {
-        proxyWs.close()
+      const stream = tunnel.tcpStreams.get(msg.streamId)
+      if (stream) {
+        if (stream.close) stream.close()
+        else if (stream.destroy) stream.destroy()
         tunnel.tcpStreams.delete(msg.streamId)
       }
     }
@@ -213,10 +254,15 @@ wss.on('connection', (ws) => {
           pending.res.end('Tunnel disconnected')
         }
         // Close all TCP proxy connections
-        for (const [, proxyWs] of tunnel.tcpStreams) {
-          proxyWs.close()
+        for (const [, stream] of tunnel.tcpStreams) {
+          if (stream.close) stream.close()
+          else if (stream.destroy) stream.destroy()
         }
         tunnel.tcpStreams.clear()
+        // Release TCP port
+        if (tunnel.tcpPort) {
+          portToSubdomain.delete(tunnel.tcpPort)
+        }
         // Fire-and-forget: record disconnect
         if (tunnel.connectionId) {
           recordDisconnect(tunnel.connectionId, { requestsServed: tunnel.requestCount || 0 })
@@ -417,10 +463,11 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
     return
   }
 
-  // TCP tunnels don't serve HTTP — tell the client to use bore proxy
+  // TCP tunnels don't serve HTTP
   if (tunnel.mode === 'tcp') {
     res.writeHead(400, { 'Content-Type': 'text/plain' })
-    res.end(`This is a TCP tunnel. Use: ssh user@${subdomain}.${BASE_DOMAIN} -o ProxyCommand="bore proxy %h %p"`)
+    const port = tunnel.tcpPort ? ` -p ${tunnel.tcpPort}` : ` -o ProxyCommand="bore proxy %h %p"`
+    res.end(`This is a TCP tunnel. Use: ssh user@${BASE_DOMAIN}${port}`)
     return
   }
 
@@ -456,11 +503,130 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
   })
 })
 
+// ─── TCP port server (for direct SSH/TCP connections) ─────────
+// Listens on TCP_PORT for raw TCP connections routed by Fly.io
+// with PROXY protocol v2 headers to identify the destination port.
+// Falls back to port-less WebSocket-based TCP proxy if not on Fly.
+
+const TCP_LISTEN_PORT = parseInt(process.env.TCP_PORT || '4041')
+
+const tcpServer = net.createServer((socket) => {
+  // Parse PROXY protocol v2 header to get destination port
+  let headerParsed = false
+  let buffered = Buffer.alloc(0)
+
+  socket.once('readable', () => {
+    const chunk = socket.read()
+    if (!chunk) { socket.destroy(); return }
+
+    buffered = Buffer.concat([buffered, chunk])
+
+    // PROXY protocol v2 signature: 12 bytes
+    const V2_SIG = Buffer.from([0x0D, 0x0A, 0x0D, 0x0A, 0x00, 0x0D, 0x0A, 0x51, 0x55, 0x49, 0x54, 0x0A])
+
+    let dstPort = null
+    let remaining = buffered
+
+    if (buffered.length >= 16 && buffered.subarray(0, 12).equals(V2_SIG)) {
+      // v2 header: 12 sig + 1 ver/cmd + 1 fam + 2 len
+      const addrLen = buffered.readUInt16BE(14)
+      const headerLen = 16 + addrLen
+      if (buffered.length >= headerLen) {
+        const family = buffered[13] & 0xF0
+        if (family === 0x10) {
+          // IPv4: 4 src + 4 dst + 2 src_port + 2 dst_port
+          dstPort = buffered.readUInt16BE(16 + 4 + 4 + 2)
+        } else if (family === 0x20) {
+          // IPv6: 16 src + 16 dst + 2 src_port + 2 dst_port
+          dstPort = buffered.readUInt16BE(16 + 16 + 16 + 2)
+        }
+        remaining = buffered.subarray(headerLen)
+        headerParsed = true
+      }
+    }
+
+    if (!dstPort) {
+      socket.destroy()
+      return
+    }
+
+    // Look up tunnel by port
+    const subdomain = portToSubdomain.get(dstPort)
+    if (!subdomain) {
+      socket.destroy()
+      return
+    }
+
+    const tunnel = tunnels.get(subdomain)
+    if (!tunnel || tunnel.mode !== 'tcp') {
+      socket.destroy()
+      return
+    }
+
+    // Create a stream and bridge to the CLI via WebSocket
+    const streamId = generateId().slice(0, 8)
+    tunnel.tcpStreams.set(streamId, socket)
+
+    // Tell CLI: new TCP connection
+    tunnel.ws.send(JSON.stringify({ type: 'tcp-open', streamId }))
+
+    // Timeout if CLI doesn't respond
+    const readyTimer = setTimeout(() => {
+      if (socket._waitingForReady) {
+        socket.destroy()
+        tunnel.tcpStreams.delete(streamId)
+      }
+    }, 10000)
+    socket._waitingForReady = true
+    socket._readyTimer = readyTimer
+    socket._streamId = streamId
+    socket._tunnel = tunnel
+
+    // Buffer data until tcp-ready
+    socket._tcpBuffered = remaining.length > 0 ? [remaining] : []
+    socket._paused = true
+    socket.pause()
+
+    // Data from TCP client → relay → CLI (after ready)
+    socket.on('data', (data) => {
+      if (socket._paused) {
+        socket._tcpBuffered.push(data)
+        return
+      }
+      const frame = Buffer.alloc(8 + data.length)
+      frame.write(streamId, 0, 8, 'ascii')
+      data.copy(frame, 8)
+      if (tunnel.ws.readyState === tunnel.ws.OPEN) {
+        tunnel.ws.send(frame)
+      }
+    })
+
+    socket.on('close', () => {
+      clearTimeout(readyTimer)
+      tunnel.tcpStreams.delete(streamId)
+      if (tunnel.ws.readyState === tunnel.ws.OPEN) {
+        tunnel.ws.send(JSON.stringify({ type: 'tcp-close', streamId }))
+      }
+    })
+
+    socket.on('error', () => {
+      tunnel.tcpStreams.delete(streamId)
+    })
+  })
+})
+
+// When CLI sends tcp-ready for a TCP port stream, flush buffered data and resume
+// This is handled in the existing wss 'connection' handler via the tcpStreams map.
+// We need to update the tcp-ready handler to also handle raw socket streams.
+
 initDb()
 
 server.listen(PORT, () => {
-  console.log(`[BORE RELAY] Listening on port ${PORT}`)
+  console.log(`[BORE RELAY] HTTP/WS on port ${PORT}`)
   console.log(`[BORE RELAY] Base domain: ${BASE_DOMAIN}`)
-  console.log(`[BORE RELAY] Control: ws://localhost:${PORT}/ws/connect`)
-  console.log(`[BORE RELAY] TCP proxy: ws://localhost:${PORT}/ws/tcp`)
+})
+
+tcpServer.listen(TCP_LISTEN_PORT, () => {
+  console.log(`[BORE RELAY] TCP port server on port ${TCP_LISTEN_PORT}`)
+  console.log(`[BORE RELAY] TCP tunnel range: ${TCP_PORT_MIN}-${TCP_PORT_MAX}`)
 })

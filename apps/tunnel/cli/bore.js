@@ -65,12 +65,7 @@ Commands:
   ssh                  Expose SSH (shorthand for: bore tcp 22)
   proxy <host> <port>  SSH ProxyCommand helper
   daemon install       Install bore as a background service
-  daemon start         Start the background service
-  daemon stop          Stop the background service
-  daemon status        Show service status
-  daemon list          List all installed daemons
-  daemon uninstall     Remove the background service
-  daemon logs          Show service logs
+  daemon start|stop|status|list|uninstall|logs
 
 Options:
   --subdomain <name>   Request a specific subdomain
@@ -79,7 +74,26 @@ Options:
   --name <name>        Daemon instance name (default: "default")
   --port <port>        Port to tunnel (daemon install)
   --mode <http|tcp>    Tunnel mode (daemon install, default: http)
-  --help               Show this help`)
+  --help               Show this help
+
+Examples:
+  bore http 3000                        # expose dev server
+  bore http 3000 --subdomain myapp      # custom URL: myapp.bore.cx
+  bore http 8080 --json                 # JSON output for scripts
+
+  bore ssh                              # expose SSH with random subdomain
+  bore ssh --subdomain mybox            # SSH via: mybox.bore.cx
+  bore tcp 5432 --subdomain mydb        # expose Postgres
+
+  # Connect to an SSH tunnel from another machine:
+  ssh user@mybox.bore.cx -o ProxyCommand="bore proxy %h %p"
+
+  # Or add to ~/.ssh/config:
+  # Host *.bore.cx
+  #   ProxyCommand bore proxy %h %p
+
+SSH setup (macOS):
+  Enable Remote Login in System Settings > General > Sharing`)
   process.exit(1)
 }
 
@@ -303,11 +317,17 @@ function handleTcp(tcpArgs) {
       if (msg.type === 'registered') {
         connected = true
         if (jsonMode) {
-          console.log(JSON.stringify({ url: msg.url, subdomain: msg.subdomain, mode: 'tcp' }))
+          const info = { url: msg.url, subdomain: msg.subdomain, mode: 'tcp' }
+          if (msg.tcpPort) { info.tcpPort = msg.tcpPort; info.tcpHost = msg.tcpHost }
+          console.log(JSON.stringify(info))
         } else {
           console.log(`\n  bore tcp tunnel ready\n`)
           console.log(`  forwarding  ${msg.url} → tcp://localhost:${port}`)
-          console.log(`  connect:    ssh user@${msg.subdomain}.bore.cx -o ProxyCommand="bore proxy %h %p"\n`)
+          if (msg.tcpPort) {
+            console.log(`  connect:    ssh user@${msg.tcpHost || 'bore.cx'} -p ${msg.tcpPort}\n`)
+          } else {
+            console.log(`  connect:    ssh user@${msg.subdomain}.bore.cx -o ProxyCommand="bore proxy %h %p"\n`)
+          }
         }
       }
 
