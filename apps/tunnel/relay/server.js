@@ -8,6 +8,19 @@
 import http from 'http'
 import { WebSocketServer } from 'ws'
 import crypto from 'crypto'
+import { readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+import { initDb, upsertSubdomain, recordConnect, recordDisconnect } from './db.js'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+let INSTALL_SCRIPT
+try {
+  INSTALL_SCRIPT = readFileSync(join(__dirname, 'install.sh'), 'utf-8')
+} catch {
+  INSTALL_SCRIPT = '#!/bin/sh\necho "Install script not found. Visit https://bore.cx for instructions."\nexit 1\n'
+}
 
 const PORT = parseInt(process.env.PORT || '4040')
 const BASE_DOMAIN = process.env.BASE_DOMAIN || 'localhost'
@@ -19,14 +32,12 @@ function generateId() {
   return crypto.randomBytes(8).toString('hex')
 }
 
+import { ADJECTIVES, NOUNS } from './words.js'
+
 function generateSubdomain() {
-  const words = ['amber', 'blue', 'coral', 'dawn', 'echo', 'fern', 'glow', 'haze', 'iris', 'jade',
-    'kite', 'lark', 'mist', 'nova', 'opal', 'pine', 'quay', 'reef', 'sage', 'tide',
-    'vale', 'wave', 'xylo', 'yew', 'zinc']
-  const w1 = words[Math.floor(Math.random() * words.length)]
-  const w2 = words[Math.floor(Math.random() * words.length)]
-  const n = Math.floor(Math.random() * 100)
-  return `${w1}-${w2}-${n}`
+  const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
+  const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]
+  return `${adj}-${noun}`
 }
 
 function extractSubdomain(host) {
@@ -81,14 +92,19 @@ wss.on('connection', (ws) => {
       }
 
       registeredSubdomain = subdomain
-      tunnels.set(subdomain, { ws, pending: new Map() })
+      const tunnel = { ws, pending: new Map(), requestCount: 0, connectionId: null }
+      tunnels.set(subdomain, tunnel)
 
-      const url = PORT === 80 || PORT === 443
-        ? `http://${subdomain}.${BASE_DOMAIN}`
-        : `http://${subdomain}.${BASE_DOMAIN}:${PORT}`
+      const url = `https://${subdomain}.${BASE_DOMAIN}`
 
       ws.send(JSON.stringify({ type: 'registered', subdomain, url }))
       console.log(`[TUNNEL] ${subdomain} registered`)
+
+      // Fire-and-forget: persist to Supabase
+      upsertSubdomain(subdomain)
+        .then(() => recordConnect(subdomain, ws._socket?.remoteAddress))
+        .then(connId => { tunnel.connectionId = connId })
+        .catch(err => console.error('[DB]', err.message))
     }
 
     if (msg.type === 'response') {
@@ -128,6 +144,11 @@ wss.on('connection', (ws) => {
           pending.res.writeHead(502)
           pending.res.end('Tunnel disconnected')
         }
+        // Fire-and-forget: record disconnect
+        if (tunnel.connectionId) {
+          recordDisconnect(tunnel.connectionId, { requestsServed: tunnel.requestCount || 0 })
+            .catch(err => console.error('[DB]', err.message))
+        }
         tunnels.delete(registeredSubdomain)
       }
       console.log(`[TUNNEL] ${registeredSubdomain} disconnected`)
@@ -150,11 +171,17 @@ wss.on('connection', (ws) => {
 server.on('request', (req, res) => {
   const subdomain = extractSubdomain(req.headers.host)
 
-  // Health check / root
+  // Health check / root / install
   if (!subdomain || subdomain === 'www') {
     if (req.url === '/health') {
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end(JSON.stringify({ ok: true, tunnels: tunnels.size }))
+      return
+    }
+
+    if (req.url === '/install') {
+      res.writeHead(200, { 'Content-Type': 'text/x-shellscript' })
+      res.end(INSTALL_SCRIPT)
       return
     }
     // Landing page
@@ -182,8 +209,10 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 .ok{color:#B4E33D}
 .url{color:#FC913A}
 .dim{color:#666}
-.install{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 20px;font-family:monospace;font-size:0.9rem;color:rgba(255,255,255,0.7);display:inline-block;margin-bottom:8px}
-.hint{color:rgba(255,255,255,0.2);font-size:0.8rem;margin-bottom:48px}
+.install{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 16px 12px 20px;font-family:monospace;font-size:0.9rem;color:rgba(255,255,255,0.7);display:inline-flex;align-items:center;gap:12px;margin-bottom:48px}
+.install code{white-space:nowrap}
+.copy-btn{background:none;border:none;padding:4px;cursor:pointer;color:rgba(255,255,255,0.3);transition:all 0.15s;display:flex;align-items:center}
+.copy-btn:hover{color:rgba(255,255,255,0.7)}
 .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px;margin-bottom:64px}
 .feature .dot-indicator{width:8px;height:8px;border-radius:50%;margin-bottom:12px}
 .feature h3{font-size:1rem;margin-bottom:8px}
@@ -205,17 +234,22 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 <div class="dot" style="background:#B4E33D"></div>
 </div>
 <div class="terminal-body">
+<div class="cmd">$ curl -sSf https://bore.cx/install | sh</div>
+<div class="dim">bore: installing darwin/arm64...</div>
+<div class="ok">bore: installed to ~/.bore/bin/bore</div>
+<div>&nbsp;</div>
 <div class="cmd">$ bore http 3000</div>
 <div>&nbsp;</div>
 <div class="ok">bore: tunnel ready</div>
 <div class="url">bore: https://myapp.bore.cx → localhost:3000</div>
-<div>&nbsp;</div>
-<div class="dim">bore: request  GET /api/hello  200  12ms</div>
 </div>
 </div>
 
-<div class="install">npx bore-tunnel http 3000</div>
-<p class="hint">no install needed</p>
+<p style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:10px">Get started:</p>
+<div class="install">
+<code>curl -sSf https://bore.cx/install | sh</code>
+<button class="copy-btn" onclick="navigator.clipboard.writeText('curl -sSf https://bore.cx/install | sh').then(()=>{this.innerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#B4E33D&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><polyline points=&quot;20 6 9 17 4 12&quot;/></svg>';setTimeout(()=>this.innerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1&quot;/></svg>',2000)})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+</div>
 
 <div class="features">
 <div class="feature">
@@ -282,8 +316,11 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
     }
 
     tunnel.ws.send(JSON.stringify(msg))
+    tunnel.requestCount = (tunnel.requestCount || 0) + 1
   })
 })
+
+initDb()
 
 server.listen(PORT, () => {
   console.log(`[BORE RELAY] Listening on port ${PORT}`)
