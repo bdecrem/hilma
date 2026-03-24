@@ -21,6 +21,19 @@ pnpm lint         # ESLint
 vercel --prod     # Deploy to production
 ```
 
+## Apps
+
+Hilma hosts 6 apps. Three are standalone in `apps/`, three are Next.js routes on Vercel.
+
+| App | Path | Deploy | What it is |
+|-----|------|--------|------------|
+| **Bore** | `apps/tunnel/` | Railway (bore.cx) | Tunnel service — expose localhost to the internet via CLI + relay server |
+| **Collab** | `apps/collab/` | — | Collaboration plugin |
+| **MCP Dashboard** | `apps/mcp-dashboard/` + `src/app/apps/mcp-dashboard/` | Vercel | MCP server dashboard |
+| **Decremental** | `src/app/projects/` | Vercel (decremental.com) | Projects page |
+| **Writer** | `src/app/writer/` | Vercel | Writing tool |
+| **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |
+
 ## Project structure
 
 ```
@@ -28,6 +41,7 @@ src/
   app/            # Routes (App Router)
   components/     # Shared UI components
   lib/            # Utilities, API helpers
+apps/             # Standalone apps (bore, collab, mcp-dashboard)
 public/           # Static assets
 ```
 
