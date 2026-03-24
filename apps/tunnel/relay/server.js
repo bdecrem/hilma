@@ -33,18 +33,11 @@ const BASE_DOMAIN = process.env.BASE_DOMAIN || 'localhost'
 // tcpPort: assigned external port for TCP tunnels
 const tunnels = new Map()
 
-// Port registry: port → subdomain (for TCP port routing)
-const portToSubdomain = new Map()
-const TCP_PORT_MIN = 10000
-const TCP_PORT_MAX = 60000
+// TCP tunnel port — fixed external port for SSH/TCP connections
+const TCP_PORT = parseInt(process.env.TCP_TUNNEL_PORT || '10000')
 
-function assignTcpPort() {
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const port = TCP_PORT_MIN + Math.floor(Math.random() * (TCP_PORT_MAX - TCP_PORT_MIN))
-    if (!portToSubdomain.has(port)) return port
-  }
-  return null
-}
+// Track the active TCP tunnel (only one at a time for port-based access)
+let activeTcpTunnel = null
 
 function generateId() {
   return crypto.randomBytes(8).toString('hex')
@@ -138,25 +131,22 @@ wss.on('connection', (ws) => {
 
       registeredSubdomain = subdomain
       const mode = msg.mode === 'tcp' ? 'tcp' : 'http'
-      const tunnel = { ws, mode, pending: new Map(), tcpStreams: new Map(), tcpPort: null, requestCount: 0, connectionId: null }
+      const tunnel = { ws, mode, pending: new Map(), tcpStreams: new Map(), requestCount: 0, connectionId: null }
 
-      // Assign a TCP port for TCP tunnels
       if (mode === 'tcp') {
-        const tcpPort = assignTcpPort()
-        if (!tcpPort) {
-          ws.send(JSON.stringify({ type: 'error', message: 'No TCP ports available' }))
+        if (activeTcpTunnel) {
+          ws.send(JSON.stringify({ type: 'error', message: 'A TCP tunnel is already active. Only one SSH/TCP tunnel at a time.' }))
           return
         }
-        tunnel.tcpPort = tcpPort
-        portToSubdomain.set(tcpPort, subdomain)
+        activeTcpTunnel = subdomain
       }
 
       tunnels.set(subdomain, tunnel)
 
       const url = `https://${subdomain}.${BASE_DOMAIN}`
       const response = { type: 'registered', subdomain, url, mode }
-      if (tunnel.tcpPort) {
-        response.tcpPort = tunnel.tcpPort
+      if (mode === 'tcp') {
+        response.tcpPort = TCP_PORT
         response.tcpHost = BASE_DOMAIN
       }
 
@@ -259,9 +249,9 @@ wss.on('connection', (ws) => {
           else if (stream.destroy) stream.destroy()
         }
         tunnel.tcpStreams.clear()
-        // Release TCP port
-        if (tunnel.tcpPort) {
-          portToSubdomain.delete(tunnel.tcpPort)
+        // Release TCP tunnel slot
+        if (tunnel.mode === 'tcp' && activeTcpTunnel === registeredSubdomain) {
+          activeTcpTunnel = null
         }
         // Fire-and-forget: record disconnect
         if (tunnel.connectionId) {
@@ -503,121 +493,64 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
   })
 })
 
-// ─── TCP port server (for direct SSH/TCP connections) ─────────
-// Listens on TCP_PORT for raw TCP connections routed by Fly.io
-// with PROXY protocol v2 headers to identify the destination port.
-// Falls back to port-less WebSocket-based TCP proxy if not on Fly.
-
-const TCP_LISTEN_PORT = parseInt(process.env.TCP_PORT || '4041')
+// ─── TCP server for SSH/TCP connections ───────────────────────
+// Single listener on TCP_PORT. Routes all connections to the active TCP tunnel.
 
 const tcpServer = net.createServer((socket) => {
-  // Parse PROXY protocol v2 header to get destination port
-  let headerParsed = false
-  let buffered = Buffer.alloc(0)
+  if (!activeTcpTunnel) {
+    socket.destroy()
+    return
+  }
 
-  socket.once('readable', () => {
-    const chunk = socket.read()
-    if (!chunk) { socket.destroy(); return }
+  const tunnel = tunnels.get(activeTcpTunnel)
+  if (!tunnel || tunnel.mode !== 'tcp') {
+    socket.destroy()
+    return
+  }
 
-    buffered = Buffer.concat([buffered, chunk])
+  const streamId = generateId().slice(0, 8)
+  tunnel.tcpStreams.set(streamId, socket)
 
-    // PROXY protocol v2 signature: 12 bytes
-    const V2_SIG = Buffer.from([0x0D, 0x0A, 0x0D, 0x0A, 0x00, 0x0D, 0x0A, 0x51, 0x55, 0x49, 0x54, 0x0A])
+  tunnel.ws.send(JSON.stringify({ type: 'tcp-open', streamId }))
+  console.log(`[TCP] ${activeTcpTunnel} stream ${streamId} opened`)
 
-    let dstPort = null
-    let remaining = buffered
-
-    if (buffered.length >= 16 && buffered.subarray(0, 12).equals(V2_SIG)) {
-      // v2 header: 12 sig + 1 ver/cmd + 1 fam + 2 len
-      const addrLen = buffered.readUInt16BE(14)
-      const headerLen = 16 + addrLen
-      if (buffered.length >= headerLen) {
-        const family = buffered[13] & 0xF0
-        if (family === 0x10) {
-          // IPv4: 4 src + 4 dst + 2 src_port + 2 dst_port
-          dstPort = buffered.readUInt16BE(16 + 4 + 4 + 2)
-        } else if (family === 0x20) {
-          // IPv6: 16 src + 16 dst + 2 src_port + 2 dst_port
-          dstPort = buffered.readUInt16BE(16 + 16 + 16 + 2)
-        }
-        remaining = buffered.subarray(headerLen)
-        headerParsed = true
-      }
-    }
-
-    if (!dstPort) {
+  const readyTimer = setTimeout(() => {
+    if (socket._waitingForReady) {
       socket.destroy()
-      return
-    }
-
-    // Look up tunnel by port
-    const subdomain = portToSubdomain.get(dstPort)
-    if (!subdomain) {
-      socket.destroy()
-      return
-    }
-
-    const tunnel = tunnels.get(subdomain)
-    if (!tunnel || tunnel.mode !== 'tcp') {
-      socket.destroy()
-      return
-    }
-
-    // Create a stream and bridge to the CLI via WebSocket
-    const streamId = generateId().slice(0, 8)
-    tunnel.tcpStreams.set(streamId, socket)
-
-    // Tell CLI: new TCP connection
-    tunnel.ws.send(JSON.stringify({ type: 'tcp-open', streamId }))
-
-    // Timeout if CLI doesn't respond
-    const readyTimer = setTimeout(() => {
-      if (socket._waitingForReady) {
-        socket.destroy()
-        tunnel.tcpStreams.delete(streamId)
-      }
-    }, 10000)
-    socket._waitingForReady = true
-    socket._readyTimer = readyTimer
-    socket._streamId = streamId
-    socket._tunnel = tunnel
-
-    // Buffer data until tcp-ready
-    socket._tcpBuffered = remaining.length > 0 ? [remaining] : []
-    socket._paused = true
-    socket.pause()
-
-    // Data from TCP client → relay → CLI (after ready)
-    socket.on('data', (data) => {
-      if (socket._paused) {
-        socket._tcpBuffered.push(data)
-        return
-      }
-      const frame = Buffer.alloc(8 + data.length)
-      frame.write(streamId, 0, 8, 'ascii')
-      data.copy(frame, 8)
-      if (tunnel.ws.readyState === tunnel.ws.OPEN) {
-        tunnel.ws.send(frame)
-      }
-    })
-
-    socket.on('close', () => {
-      clearTimeout(readyTimer)
       tunnel.tcpStreams.delete(streamId)
-      if (tunnel.ws.readyState === tunnel.ws.OPEN) {
-        tunnel.ws.send(JSON.stringify({ type: 'tcp-close', streamId }))
-      }
-    })
+    }
+  }, 10000)
+  socket._waitingForReady = true
+  socket._readyTimer = readyTimer
 
-    socket.on('error', () => {
-      tunnel.tcpStreams.delete(streamId)
-    })
+  socket._tcpBuffered = []
+  socket._paused = true
+
+  socket.on('data', (data) => {
+    if (socket._paused) {
+      socket._tcpBuffered.push(data)
+      return
+    }
+    const frame = Buffer.alloc(8 + data.length)
+    frame.write(streamId, 0, 8, 'ascii')
+    data.copy(frame, 8)
+    if (tunnel.ws.readyState === tunnel.ws.OPEN) {
+      tunnel.ws.send(frame)
+    }
+  })
+
+  socket.on('close', () => {
+    clearTimeout(readyTimer)
+    tunnel.tcpStreams.delete(streamId)
+    if (tunnel.ws.readyState === tunnel.ws.OPEN) {
+      tunnel.ws.send(JSON.stringify({ type: 'tcp-close', streamId }))
+    }
+  })
+
+  socket.on('error', () => {
+    tunnel.tcpStreams.delete(streamId)
   })
 })
-
-// When CLI sends tcp-ready for a TCP port stream, flush buffered data and resume
-// This is handled in the existing wss 'connection' handler via the tcpStreams map.
-// We need to update the tcp-ready handler to also handle raw socket streams.
 
 initDb()
 
@@ -626,7 +559,6 @@ server.listen(PORT, () => {
   console.log(`[BORE RELAY] Base domain: ${BASE_DOMAIN}`)
 })
 
-tcpServer.listen(TCP_LISTEN_PORT, () => {
-  console.log(`[BORE RELAY] TCP port server on port ${TCP_LISTEN_PORT}`)
-  console.log(`[BORE RELAY] TCP tunnel range: ${TCP_PORT_MIN}-${TCP_PORT_MAX}`)
+tcpServer.listen(TCP_PORT, () => {
+  console.log(`[BORE RELAY] TCP tunnel on port ${TCP_PORT}`)
 })
