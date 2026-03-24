@@ -1,6 +1,6 @@
 {
   "name": "bore-tunnel",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "BORE tunnel CLI — expose localhost to the internet",
   "type": "module",
   "bin": {
