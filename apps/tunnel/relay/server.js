@@ -1,8 +1,9 @@
 /**
  * BORE Relay Server
  *
- * HTTP server that upgrades to WebSocket at /ws/connect.
- * Maps subdomains to active WebSocket tunnels and relays HTTP requests.
+ * HTTP server that upgrades to WebSocket at /ws/connect (tunnel control)
+ * and /ws/tcp (inbound TCP proxy connections for SSH/TCP tunnels).
+ * Maps subdomains to active WebSocket tunnels and relays HTTP or TCP traffic.
  */
 
 import http from 'http'
@@ -25,7 +26,9 @@ try {
 const PORT = parseInt(process.env.PORT || '4040')
 const BASE_DOMAIN = process.env.BASE_DOMAIN || 'localhost'
 
-// Registry: subdomain → { ws, pending: Map<requestId, { res, timer }> }
+// Registry: subdomain → { ws, mode, pending, tcpStreams, requestCount, connectionId }
+// mode: "http" (default) or "tcp"
+// tcpStreams: Map<streamId, proxyWs> — only used in tcp mode
 const tunnels = new Map()
 
 function generateId() {
@@ -55,15 +58,20 @@ function extractSubdomain(host) {
   return null
 }
 
-// WebSocket server for tunnel connections
+// WebSocket servers: control (tunnel registration) and tcp (proxy connections)
 const server = http.createServer()
 const wss = new WebSocketServer({ noServer: true })
+const wssTcp = new WebSocketServer({ noServer: true })
 
 server.on('upgrade', (req, socket, head) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
   if (url.pathname === '/ws/connect') {
     wss.handleUpgrade(req, socket, head, (ws) => {
       wss.emit('connection', ws, req)
+    })
+  } else if (url.pathname === '/ws/tcp') {
+    wssTcp.handleUpgrade(req, socket, head, (ws) => {
+      wssTcp.emit('connection', ws, req)
     })
   } else {
     socket.destroy()
@@ -73,7 +81,23 @@ server.on('upgrade', (req, socket, head) => {
 wss.on('connection', (ws) => {
   let registeredSubdomain = null
 
-  ws.on('message', (data) => {
+  ws.on('message', (data, isBinary) => {
+    // Binary frames: TCP data from CLI → proxy
+    if (isBinary) {
+      const buf = Buffer.from(data)
+      if (buf.length < 8 || !registeredSubdomain) return
+      const streamId = buf.subarray(0, 8).toString('ascii')
+      const payload = buf.subarray(8)
+      const tunnel = tunnels.get(registeredSubdomain)
+      if (!tunnel) return
+      const proxyWs = tunnel.tcpStreams.get(streamId)
+      if (proxyWs && proxyWs.readyState === proxyWs.OPEN) {
+        proxyWs.send(payload)
+      }
+      return
+    }
+
+    // JSON messages: control protocol
     let msg
     try {
       msg = JSON.parse(data.toString())
@@ -92,12 +116,13 @@ wss.on('connection', (ws) => {
       }
 
       registeredSubdomain = subdomain
-      const tunnel = { ws, pending: new Map(), requestCount: 0, connectionId: null }
+      const mode = msg.mode === 'tcp' ? 'tcp' : 'http'
+      const tunnel = { ws, mode, pending: new Map(), tcpStreams: new Map(), requestCount: 0, connectionId: null }
       tunnels.set(subdomain, tunnel)
 
       const url = `https://${subdomain}.${BASE_DOMAIN}`
 
-      ws.send(JSON.stringify({ type: 'registered', subdomain, url }))
+      ws.send(JSON.stringify({ type: 'registered', subdomain, url, mode }))
       console.log(`[TUNNEL] ${subdomain} registered`)
 
       // Fire-and-forget: persist to Supabase
@@ -129,6 +154,49 @@ wss.on('connection', (ws) => {
       }
     }
 
+    if (msg.type === 'tcp-ready') {
+      // CLI connected to local port, start relaying
+      if (!registeredSubdomain) return
+      const tunnel = tunnels.get(registeredSubdomain)
+      if (!tunnel) return
+      const proxyWs = tunnel.tcpStreams.get(msg.streamId)
+      if (proxyWs && proxyWs._buffered) {
+        // Flush any data buffered while waiting for tcp-ready
+        for (const buf of proxyWs._buffered) {
+          const frame = Buffer.alloc(8 + buf.length)
+          frame.write(msg.streamId, 0, 8, 'ascii')
+          buf.copy(frame, 8)
+          ws.send(frame)
+        }
+        proxyWs._buffered = null // signals "ready" — future data goes straight through
+        console.log(`[TCP] ${registeredSubdomain} stream ${msg.streamId} ready`)
+      }
+    }
+
+    if (msg.type === 'tcp-error') {
+      // CLI couldn't connect locally, close the proxy connection
+      if (!registeredSubdomain) return
+      const tunnel = tunnels.get(registeredSubdomain)
+      if (!tunnel) return
+      const proxyWs = tunnel.tcpStreams.get(msg.streamId)
+      if (proxyWs) {
+        proxyWs.close()
+        tunnel.tcpStreams.delete(msg.streamId)
+      }
+    }
+
+    if (msg.type === 'tcp-close') {
+      // CLI closed the local socket
+      if (!registeredSubdomain) return
+      const tunnel = tunnels.get(registeredSubdomain)
+      if (!tunnel) return
+      const proxyWs = tunnel.tcpStreams.get(msg.streamId)
+      if (proxyWs) {
+        proxyWs.close()
+        tunnel.tcpStreams.delete(msg.streamId)
+      }
+    }
+
     if (msg.type === 'pong') {
       // Keepalive response, nothing to do
     }
@@ -138,12 +206,17 @@ wss.on('connection', (ws) => {
     if (registeredSubdomain) {
       const tunnel = tunnels.get(registeredSubdomain)
       if (tunnel) {
-        // Reject all pending requests
+        // Reject all pending HTTP requests
         for (const [, pending] of tunnel.pending) {
           clearTimeout(pending.timer)
           pending.res.writeHead(502)
           pending.res.end('Tunnel disconnected')
         }
+        // Close all TCP proxy connections
+        for (const [, proxyWs] of tunnel.tcpStreams) {
+          proxyWs.close()
+        }
+        tunnel.tcpStreams.clear()
         // Fire-and-forget: record disconnect
         if (tunnel.connectionId) {
           recordDisconnect(tunnel.connectionId, { requestsServed: tunnel.requestCount || 0 })
@@ -165,6 +238,62 @@ wss.on('connection', (ws) => {
   }, 30000)
 
   ws.on('close', () => clearInterval(pingInterval))
+})
+
+// TCP proxy connections — inbound from `bore proxy` (SSH clients)
+wssTcp.on('connection', (proxyWs, req) => {
+  const subdomain = extractSubdomain(req.headers.host)
+  if (!subdomain) {
+    proxyWs.close()
+    return
+  }
+
+  const tunnel = tunnels.get(subdomain)
+  if (!tunnel || tunnel.mode !== 'tcp') {
+    proxyWs.close()
+    return
+  }
+
+  const streamId = generateId().slice(0, 8) // 8-char hex
+  tunnel.tcpStreams.set(streamId, proxyWs)
+  proxyWs._buffered = [] // buffer data until CLI sends tcp-ready
+
+  // Tell CLI: new TCP connection arrived
+  tunnel.ws.send(JSON.stringify({ type: 'tcp-open', streamId }))
+
+  // Timeout if CLI doesn't respond with tcp-ready
+  const readyTimer = setTimeout(() => {
+    if (proxyWs._buffered !== null) {
+      proxyWs.close()
+      tunnel.tcpStreams.delete(streamId)
+      tunnel.ws.send(JSON.stringify({ type: 'tcp-close', streamId }))
+    }
+  }, 10000)
+
+  // Data from proxy (SSH client) → relay → CLI
+  proxyWs.on('message', (data) => {
+    const buf = Buffer.from(data)
+    if (proxyWs._buffered !== null) {
+      // Still waiting for tcp-ready, buffer the data
+      proxyWs._buffered.push(buf)
+      return
+    }
+    // Forward to CLI as binary frame: [streamId][payload]
+    const frame = Buffer.alloc(8 + buf.length)
+    frame.write(streamId, 0, 8, 'ascii')
+    buf.copy(frame, 8)
+    tunnel.ws.send(frame)
+  })
+
+  proxyWs.on('close', () => {
+    clearTimeout(readyTimer)
+    tunnel.tcpStreams.delete(streamId)
+    if (tunnel.ws.readyState === tunnel.ws.OPEN) {
+      tunnel.ws.send(JSON.stringify({ type: 'tcp-close', streamId }))
+    }
+  })
+
+  console.log(`[TCP] ${subdomain} stream ${streamId} opened`)
 })
 
 // HTTP request handler — relay to tunnel
@@ -288,6 +417,13 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
     return
   }
 
+  // TCP tunnels don't serve HTTP — tell the client to use bore proxy
+  if (tunnel.mode === 'tcp') {
+    res.writeHead(400, { 'Content-Type': 'text/plain' })
+    res.end(`This is a TCP tunnel. Use: ssh user@${subdomain}.${BASE_DOMAIN} -o ProxyCommand="bore proxy %h %p"`)
+    return
+  }
+
   // Collect request body
   const chunks = []
   req.on('data', (chunk) => chunks.push(chunk))
@@ -325,5 +461,6 @@ initDb()
 server.listen(PORT, () => {
   console.log(`[BORE RELAY] Listening on port ${PORT}`)
   console.log(`[BORE RELAY] Base domain: ${BASE_DOMAIN}`)
-  console.log(`[BORE RELAY] WebSocket: ws://localhost:${PORT}/ws/connect`)
+  console.log(`[BORE RELAY] Control: ws://localhost:${PORT}/ws/connect`)
+  console.log(`[BORE RELAY] TCP proxy: ws://localhost:${PORT}/ws/tcp`)
 })
