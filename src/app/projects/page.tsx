@@ -15,8 +15,8 @@ interface Project {
 
 const projects: Project[] = [
   {
-    name: 'bore',
-    url: 'https://bore.cx',
+    name: 'tunn3l',
+    url: 'https://tunn3l.sh',
     shortDesc: 'expose localhost to the internet. http and ssh tunnels. one command, no config. built for ai agents.',
     fullDesc: 'tunnel relay service. cli installs in one line, assigns a public url or ssh port instantly.',
     status: 'respinning',

@@ -374,9 +374,9 @@ server.on('request', (req, res) => {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>bore.cx — tunnel service for AI agents</title>
+<title>tunn3l.sh — tunnel service for AI agents</title>
 <meta name="description" content="Expose localhost to the internet. One command. No config.">
-<meta property="og:title" content="bore.cx">
+<meta property="og:title" content="tunn3l.sh">
 <meta property="og:description" content="Expose localhost to the internet. One command. Built for AI agents.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -407,7 +407,7 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 </head>
 <body>
 <div class="container">
-<h1>bore</h1>
+<h1>tunn3l</h1>
 <p class="sub">Expose localhost to the internet. One command. No config.<br>Built for AI agents that need to reach your machine from anywhere.</p>
 
 <div class="terminal">
@@ -417,21 +417,21 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 <div class="dot" style="background:#B4E33D"></div>
 </div>
 <div class="terminal-body">
-<div class="cmd">$ curl -sSf https://bore.cx/install | sh</div>
-<div class="dim">bore: installing darwin/arm64...</div>
-<div class="ok">bore: installed to ~/.bore/bin/bore</div>
+<div class="cmd">$ curl -sSf https://tunn3l.sh/install | sh</div>
+<div class="dim">tunn3l: installing darwin/arm64...</div>
+<div class="ok">tunn3l: installed to ~/.tunn3l/bin/tunn3l</div>
 <div>&nbsp;</div>
-<div class="cmd">$ bore http 3000</div>
+<div class="cmd">$ tunn3l http 3000</div>
 <div>&nbsp;</div>
-<div class="ok">bore: tunnel ready</div>
-<div class="url">bore: https://myapp.bore.cx → localhost:3000</div>
+<div class="ok">tunn3l: tunnel ready</div>
+<div class="url">tunn3l: https://myapp.tunn3l.sh → localhost:3000</div>
 </div>
 </div>
 
 <p style="color:rgba(255,255,255,0.5);font-size:0.85rem;margin-bottom:10px">Get started:</p>
 <div class="install">
-<code>curl -sSf https://bore.cx/install | sh</code>
-<button class="copy-btn" onclick="navigator.clipboard.writeText('curl -sSf https://bore.cx/install | sh').then(()=>{this.innerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#B4E33D&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><polyline points=&quot;20 6 9 17 4 12&quot;/></svg>';setTimeout(()=>this.innerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1&quot;/></svg>',2000)})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+<code>curl -sSf https://tunn3l.sh/install | sh</code>
+<button class="copy-btn" onclick="navigator.clipboard.writeText('curl -sSf https://tunn3l.sh/install | sh').then(()=>{this.innerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#B4E33D&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><polyline points=&quot;20 6 9 17 4 12&quot;/></svg>';setTimeout(()=>this.innerHTML='<svg width=&quot;16&quot; height=&quot;16&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;13&quot; height=&quot;13&quot; rx=&quot;2&quot;/><path d=&quot;M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1&quot;/></svg>',2000)})"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
 </div>
 
 <div class="features">
@@ -448,14 +448,14 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 <div class="feature">
 <div class="dot-indicator" style="background:#FF4E50"></div>
 <h3>SSH access</h3>
-<p>bore ssh gives your machine a public hostname. SSH from anywhere. No port forwarding.</p>
+<p>tunn3l ssh gives your machine a public hostname. SSH from anywhere. No port forwarding.</p>
 </div>
 </div>
 
 <p class="stats">${tunnels.size} active tunnel${tunnels.size !== 1 ? 's' : ''} right now</p>
 
 <div class="footer">
-<span>bore.cx</span>
+<span>tunn3l.sh</span>
 <a href="https://github.com/bdecrem/hilma" target="_blank">GitHub</a>
 </div>
 </div>
