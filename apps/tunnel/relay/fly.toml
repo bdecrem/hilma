@@ -1,11 +1,11 @@
-app = 'bore-relay'
+app = 'tunn3l-relay'
 primary_region = 'sjc'
 
 [build]
 
 [env]
   PORT = '4040'
-  BASE_DOMAIN = 'bore.cx'
+  BASE_DOMAIN = 'tunn3l.sh'
 
 [http_service]
   internal_port = 4040

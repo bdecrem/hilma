@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * BORE CLI — expose localhost to the internet via a tunnel relay.
+ * TUNN3L CLI — expose localhost to the internet via a tunnel relay.
  *
  * Usage:
- *   bore http <port> [--subdomain <name>] [--relay <url>] [--json]
- *   bore tcp <port> [--subdomain <name>] [--relay <url>] [--json]
- *   bore ssh [--subdomain <name>] [--relay <url>] [--json]
- *   bore proxy <hostname> <port>
- *   bore daemon install --port <port> [--name <name>] [--subdomain <name>] [--mode tcp]
- *   bore daemon start|stop|status|uninstall|logs [--name <name>]
- *   bore daemon list
+ *   tunn3l http <port> [--subdomain <name>] [--relay <url>] [--json]
+ *   tunn3l tcp <port> [--subdomain <name>] [--relay <url>] [--json]
+ *   tunn3l ssh [--subdomain <name>] [--relay <url>] [--json]
+ *   tunn3l proxy <hostname> <port>
+ *   tunn3l daemon install --port <port> [--name <name>] [--subdomain <name>] [--mode tcp]
+ *   tunn3l daemon start|stop|status|uninstall|logs [--name <name>]
+ *   tunn3l daemon list
  *
  * Exit codes:
  *   0 — clean shutdown
@@ -28,14 +28,14 @@ import { execSync } from 'child_process'
 import { homedir, platform } from 'os'
 
 const args = process.argv.slice(2)
-const BORE_DIR = join(homedir(), '.bore')
-const DAEMON_DIR = join(BORE_DIR, 'daemon')
+const TUNN3L_DIR = join(homedir(), '.tunn3l')
+const DAEMON_DIR = join(TUNN3L_DIR, 'daemon')
 
 // Load config for a named instance
 function loadConfig(name) {
   const path = name === 'default'
-    ? join(BORE_DIR, 'config.json')
-    : join(BORE_DIR, `config.${name}.json`)
+    ? join(TUNN3L_DIR, 'config.json')
+    : join(TUNN3L_DIR, `config.${name}.json`)
   try {
     return JSON.parse(readFileSync(path, 'utf-8'))
   } catch {
@@ -44,32 +44,32 @@ function loadConfig(name) {
 }
 
 function saveConfig(name, config) {
-  mkdirSync(BORE_DIR, { recursive: true })
+  mkdirSync(TUNN3L_DIR, { recursive: true })
   const path = name === 'default'
-    ? join(BORE_DIR, 'config.json')
-    : join(BORE_DIR, `config.${name}.json`)
+    ? join(TUNN3L_DIR, 'config.json')
+    : join(TUNN3L_DIR, `config.${name}.json`)
   writeFileSync(path, JSON.stringify(config, null, 2) + '\n')
   return path
 }
 
 function usage() {
-  console.error(`Usage: bore http <port> [options]
-       bore tcp <port> [options]
-       bore ssh [options]
-       bore proxy <hostname> <port>
-       bore daemon <command> [options]
+  console.error(`Usage: tunn3l http <port> [options]
+       tunn3l tcp <port> [options]
+       tunn3l ssh [options]
+       tunn3l proxy <hostname> <port>
+       tunn3l daemon <command> [options]
 
 Commands:
   http <port>          Expose localhost:<port> via HTTP tunnel
   tcp <port>           Expose localhost:<port> via TCP tunnel
-  ssh                  Expose SSH (shorthand for: bore tcp 22)
+  ssh                  Expose SSH (shorthand for: tunn3l tcp 22)
   proxy <host> <port>  SSH ProxyCommand helper
-  daemon install       Install bore as a background service
+  daemon install       Install tunn3l as a background service
   daemon start|stop|status|list|uninstall|logs
 
 Options:
   --subdomain <name>   Request a specific subdomain
-  --relay <url>        Relay server URL (default: wss://bore.cx/ws/connect)
+  --relay <url>        Relay server URL (default: wss://tunn3l.sh/ws/connect)
   --json               Output connection info as JSON (for agents)
   --name <name>        Daemon instance name (default: "default")
   --port <port>        Port to tunnel (daemon install)
@@ -77,20 +77,20 @@ Options:
   --help               Show this help
 
 Examples:
-  bore http 3000                        # expose dev server
-  bore http 3000 --subdomain myapp      # custom URL: myapp.bore.cx
-  bore http 8080 --json                 # JSON output for scripts
+  tunn3l http 3000                        # expose dev server
+  tunn3l http 3000 --subdomain myapp      # custom URL: myapp.tunn3l.sh
+  tunn3l http 8080 --json                 # JSON output for scripts
 
-  bore ssh                              # expose SSH with random subdomain
-  bore ssh --subdomain mybox            # SSH via: mybox.bore.cx
-  bore tcp 5432 --subdomain mydb        # expose Postgres
+  tunn3l ssh                              # expose SSH with random subdomain
+  tunn3l ssh --subdomain mybox            # SSH via: mybox.tunn3l.sh
+  tunn3l tcp 5432 --subdomain mydb        # expose Postgres
 
   # Connect to an SSH tunnel from another machine:
-  ssh user@mybox.bore.cx -o ProxyCommand="bore proxy %h %p"
+  ssh user@mybox.tunn3l.sh -o ProxyCommand="tunn3l proxy %h %p"
 
   # Or add to ~/.ssh/config:
-  # Host *.bore.cx
-  #   ProxyCommand bore proxy %h %p
+  # Host *.tunn3l.sh
+  #   ProxyCommand tunn3l proxy %h %p
 
 SSH setup (macOS):
   Enable Remote Login in System Settings > General > Sharing`)
@@ -127,7 +127,7 @@ function handleHttp(httpArgs) {
   }
 
   let subdomain = config.subdomain || null
-  let relayUrl = process.env.BORE_RELAY || config.relay || 'wss://bore.cx/ws/connect'
+  let relayUrl = process.env.TUNN3L_RELAY || config.relay || 'wss://tunn3l.sh/ws/connect'
   let jsonMode = config.json || false
 
   for (let i = 1; i < httpArgs.length; i++) {
@@ -160,7 +160,7 @@ function handleHttp(httpArgs) {
         if (jsonMode) {
           console.log(JSON.stringify({ url: msg.url, subdomain: msg.subdomain }))
         } else {
-          console.log(`\n  bore tunnel ready\n`)
+          console.log(`\n  tunn3l tunnel ready\n`)
           console.log(`  forwarding  ${msg.url} → http://localhost:${port}\n`)
         }
       }
@@ -271,7 +271,7 @@ function handleTcp(tcpArgs) {
   }
 
   let subdomain = config.subdomain || null
-  let relayUrl = process.env.BORE_RELAY || config.relay || 'wss://bore.cx/ws/connect'
+  let relayUrl = process.env.TUNN3L_RELAY || config.relay || 'wss://tunn3l.sh/ws/connect'
   let jsonMode = config.json || false
 
   for (let i = 1; i < tcpArgs.length; i++) {
@@ -321,12 +321,12 @@ function handleTcp(tcpArgs) {
           if (msg.tcpPort) { info.tcpPort = msg.tcpPort; info.tcpHost = msg.tcpHost }
           console.log(JSON.stringify(info))
         } else {
-          console.log(`\n  bore tcp tunnel ready\n`)
+          console.log(`\n  tunn3l tcp tunnel ready\n`)
           console.log(`  forwarding  ${msg.url} → tcp://localhost:${port}`)
           if (msg.tcpPort) {
-            console.log(`  connect:    ssh user@${msg.tcpHost || 'bore.cx'} -p ${msg.tcpPort}\n`)
+            console.log(`  connect:    ssh user@${msg.tcpHost || 'tunn3l.sh'} -p ${msg.tcpPort}\n`)
           } else {
-            console.log(`  connect:    ssh user@${msg.subdomain}.bore.cx -o ProxyCommand="bore proxy %h %p"\n`)
+            console.log(`  connect:    ssh user@${msg.subdomain}.tunn3l.sh -o ProxyCommand="tunn3l proxy %h %p"\n`)
           }
         }
       }
@@ -419,20 +419,20 @@ function handleTcp(tcpArgs) {
 function handleProxy(proxyArgs) {
   const hostname = proxyArgs[0]
   if (!hostname) {
-    console.error('Usage: bore proxy <hostname> <port>')
-    console.error('  Used as SSH ProxyCommand: ssh user@host -o ProxyCommand="bore proxy %h %p"')
+    console.error('Usage: tunn3l proxy <hostname> <port>')
+    console.error('  Used as SSH ProxyCommand: ssh user@host -o ProxyCommand="tunn3l proxy %h %p"')
     process.exit(1)
   }
 
-  // Extract subdomain from hostname (e.g., "mybox" from "mybox.bore.cx")
+  // Extract subdomain from hostname (e.g., "mybox" from "mybox.tunn3l.sh")
   const parts = hostname.split('.')
   const subdomain = parts[0]
 
   // Build relay URL from hostname
   let relayHost = hostname
-  // If just a subdomain was passed, assume bore.cx
+  // If just a subdomain was passed, assume tunn3l.sh
   if (!hostname.includes('.')) {
-    relayHost = `${hostname}.bore.cx`
+    relayHost = `${hostname}.tunn3l.sh`
   }
 
   // Allow --relay override
@@ -465,7 +465,7 @@ function handleProxy(proxyArgs) {
   })
 
   ws.on('error', (err) => {
-    process.stderr.write(`bore proxy: ${err.message}\n`)
+    process.stderr.write(`tunn3l proxy: ${err.message}\n`)
     process.exit(2)
   })
 
@@ -476,12 +476,12 @@ function handleProxy(proxyArgs) {
 
 // ─── Daemon ────────────────────────────────────────────────────
 
-function labelFor(name) { return name === 'default' ? 'cx.bore.tunnel' : `cx.bore.tunnel.${name}` }
+function labelFor(name) { return name === 'default' ? 'sh.tunn3l.tunnel' : `sh.tunn3l.tunnel.${name}` }
 function plistPathFor(name) { return join(homedir(), 'Library', 'LaunchAgents', `${labelFor(name)}.plist`) }
-function systemdUnitFor(name) { return name === 'default' ? 'bore-tunnel.service' : `bore-tunnel-${name}.service` }
+function systemdUnitFor(name) { return name === 'default' ? 'tunn3l-tunnel.service' : `tunn3l-tunnel-${name}.service` }
 function systemdPathFor(name) { return join(homedir(), '.config', 'systemd', 'user', systemdUnitFor(name)) }
-function logPathFor(name) { return join(DAEMON_DIR, name === 'default' ? 'bore.log' : `bore-${name}.log`) }
-function errPathFor(name) { return join(DAEMON_DIR, name === 'default' ? 'bore.err' : `bore-${name}.err`) }
+function logPathFor(name) { return join(DAEMON_DIR, name === 'default' ? 'tunn3l.log' : `tunn3l-${name}.log`) }
+function errPathFor(name) { return join(DAEMON_DIR, name === 'default' ? 'tunn3l.err' : `tunn3l-${name}.err`) }
 
 function parseName(daemonArgs) {
   for (let i = 0; i < daemonArgs.length; i++) {
@@ -493,7 +493,7 @@ function parseName(daemonArgs) {
 function handleDaemon(daemonArgs) {
   const cmd = daemonArgs[0]
   if (!cmd || cmd === '--help') {
-    console.error(`Usage: bore daemon <command> [--name <name>]
+    console.error(`Usage: tunn3l daemon <command> [--name <name>]
 
 Commands:
   install    Install as a background service
@@ -547,30 +547,30 @@ function daemonInstall(name, installArgs) {
   const configPath = saveConfig(name, config)
   mkdirSync(DAEMON_DIR, { recursive: true })
 
-  const boreBin = join(BORE_DIR, 'bin', 'bore')
+  const tunn3lBin = join(TUNN3L_DIR, 'bin', 'tunn3l')
   const mode = config.mode === 'tcp' ? 'tcp' : 'http'
-  const boreArgs = [mode, String(config.port)]
-  if (config.subdomain) boreArgs.push('--subdomain', config.subdomain)
+  const tunn3lArgs = [mode, String(config.port)]
+  if (config.subdomain) tunn3lArgs.push('--subdomain', config.subdomain)
 
   const os = platform()
   if (os === 'darwin') {
-    installLaunchd(name, boreBin, boreArgs, config)
+    installLaunchd(name, tunn3lBin, tunn3lArgs, config)
   } else if (os === 'linux') {
-    installSystemd(name, boreBin, boreArgs, config)
+    installSystemd(name, tunn3lBin, tunn3lArgs, config)
   } else {
     console.error(`Error: daemon not supported on ${os}`)
     process.exit(1)
   }
 
-  console.log(`  bore daemon "${name}" installed`)
+  console.log(`  tunn3l daemon "${name}" installed`)
   console.log(`  port:   ${config.port}`)
   if (config.subdomain) console.log(`  subdomain: ${config.subdomain}`)
   console.log(`  config: ${configPath}`)
   console.log(`  logs:   ${logPathFor(name)}`)
-  console.log(`\n  Run "bore daemon start${name !== 'default' ? ` --name ${name}` : ''}" to start`)
+  console.log(`\n  Run "tunn3l daemon start${name !== 'default' ? ` --name ${name}` : ''}" to start`)
 }
 
-function installLaunchd(name, boreBin, boreArgs, config) {
+function installLaunchd(name, tunn3lBin, tunn3lArgs, config) {
   const label = labelFor(name)
   const plist = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -580,8 +580,8 @@ function installLaunchd(name, boreBin, boreArgs, config) {
   <string>${label}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>${boreBin}</string>
-${boreArgs.map(a => `    <string>${a}</string>`).join('\n')}
+    <string>${tunn3lBin}</string>
+${tunn3lArgs.map(a => `    <string>${a}</string>`).join('\n')}
   </array>
   <key>RunAtLoad</key>
   <true/>
@@ -593,8 +593,8 @@ ${boreArgs.map(a => `    <string>${a}</string>`).join('\n')}
   <string>${errPathFor(name)}</string>
   <key>EnvironmentVariables</key>
   <dict>
-    <key>BORE_RELAY</key>
-    <string>${config.relay || 'wss://bore.cx/ws/connect'}</string>
+    <key>TUNN3L_RELAY</key>
+    <string>${config.relay || 'wss://tunn3l.sh/ws/connect'}</string>
   </dict>
 </dict>
 </plist>`
@@ -603,17 +603,17 @@ ${boreArgs.map(a => `    <string>${a}</string>`).join('\n')}
   writeFileSync(plistPathFor(name), plist)
 }
 
-function installSystemd(name, boreBin, boreArgs, config) {
+function installSystemd(name, tunn3lBin, tunn3lArgs, config) {
   const unit = `[Unit]
-Description=bore.cx tunnel (${name})
+Description=tunn3l.sh tunnel (${name})
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=${boreBin} ${boreArgs.join(' ')}
+ExecStart=${tunn3lBin} ${tunn3lArgs.join(' ')}
 Restart=always
 RestartSec=5
-Environment=BORE_RELAY=${config.relay || 'wss://bore.cx/ws/connect'}
+Environment=TUNN3L_RELAY=${config.relay || 'wss://tunn3l.sh/ws/connect'}
 StandardOutput=append:${logPathFor(name)}
 StandardError=append:${errPathFor(name)}
 
@@ -632,14 +632,14 @@ function daemonStart(name) {
     if (os === 'darwin') {
       const plist = plistPathFor(name)
       if (!existsSync(plist)) {
-        console.error(`Error: daemon "${name}" not installed. Run "bore daemon install --port <port>${name !== 'default' ? ` --name ${name}` : ''}"`)
+        console.error(`Error: daemon "${name}" not installed. Run "tunn3l daemon install --port <port>${name !== 'default' ? ` --name ${name}` : ''}"`)
         process.exit(1)
       }
       execSync(`launchctl load ${plist}`, { stdio: 'pipe' })
     } else {
       execSync(`systemctl --user start ${systemdUnitFor(name)} && systemctl --user enable ${systemdUnitFor(name)}`, { stdio: 'pipe' })
     }
-    console.log(`  bore daemon "${name}" started`)
+    console.log(`  tunn3l daemon "${name}" started`)
   } catch (err) {
     console.error(`Error starting daemon: ${err.message}`)
     process.exit(1)
@@ -654,7 +654,7 @@ function daemonStop(name) {
     } else {
       execSync(`systemctl --user stop ${systemdUnitFor(name)}`, { stdio: 'pipe' })
     }
-    console.log(`  bore daemon "${name}" stopped`)
+    console.log(`  tunn3l daemon "${name}" stopped`)
   } catch (err) {
     console.error(`Error stopping daemon: ${err.message}`)
     process.exit(1)
@@ -671,16 +671,16 @@ function daemonStatus(name) {
       const pidMatch = out.match(/"PID"\s*=\s*(\d+)/)
       const pid = pidMatch ? pidMatch[1] : null
       if (pid) {
-        console.log(`  bore daemon "${name}" running (PID ${pid})`)
+        console.log(`  tunn3l daemon "${name}" running (PID ${pid})`)
       } else {
-        console.log(`  bore daemon "${name}" installed but not running`)
+        console.log(`  tunn3l daemon "${name}" installed but not running`)
       }
     } else {
       const out = execSync(`systemctl --user is-active ${systemdUnitFor(name)} 2>&1`, { encoding: 'utf-8' }).trim()
       if (out === 'active') {
-        console.log(`  bore daemon "${name}" running`)
+        console.log(`  tunn3l daemon "${name}" running`)
       } else {
-        console.log(`  bore daemon "${name}": ${out}`)
+        console.log(`  tunn3l daemon "${name}": ${out}`)
       }
     }
     if (config.port) {
@@ -688,7 +688,7 @@ function daemonStatus(name) {
       if (config.subdomain) console.log(`  subdomain: ${config.subdomain}`)
     }
   } catch {
-    console.log(`  bore daemon "${name}" not installed`)
+    console.log(`  tunn3l daemon "${name}" not installed`)
   }
 }
 
@@ -699,20 +699,20 @@ function daemonList() {
   if (os === 'darwin') {
     const dir = join(homedir(), 'Library', 'LaunchAgents')
     try {
-      const files = readdirSync(dir).filter(f => f.startsWith('cx.bore.tunnel') && f.endsWith('.plist'))
+      const files = readdirSync(dir).filter(f => f.startsWith('sh.tunn3l.tunnel') && f.endsWith('.plist'))
       for (const f of files) {
         const base = f.replace('.plist', '')
-        const name = base === 'cx.bore.tunnel' ? 'default' : base.replace('cx.bore.tunnel.', '')
+        const name = base === 'sh.tunn3l.tunnel' ? 'default' : base.replace('sh.tunn3l.tunnel.', '')
         names.push(name)
       }
     } catch {}
   } else {
     const dir = join(homedir(), '.config', 'systemd', 'user')
     try {
-      const files = readdirSync(dir).filter(f => f.startsWith('bore-tunnel') && f.endsWith('.service'))
+      const files = readdirSync(dir).filter(f => f.startsWith('tunn3l-tunnel') && f.endsWith('.service'))
       for (const f of files) {
         const base = f.replace('.service', '')
-        const name = base === 'bore-tunnel' ? 'default' : base.replace('bore-tunnel-', '')
+        const name = base === 'tunn3l-tunnel' ? 'default' : base.replace('tunn3l-tunnel-', '')
         names.push(name)
       }
     } catch {}
@@ -742,7 +742,7 @@ function daemonUninstall(name) {
       if (existsSync(systemdPathFor(name))) unlinkSync(systemdPathFor(name))
       try { execSync('systemctl --user daemon-reload', { stdio: 'pipe' }) } catch {}
     }
-    console.log(`  bore daemon "${name}" uninstalled`)
+    console.log(`  tunn3l daemon "${name}" uninstalled`)
   } catch (err) {
     console.error(`Error uninstalling daemon: ${err.message}`)
     process.exit(1)

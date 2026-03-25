@@ -1,5 +1,5 @@
 /**
- * Supabase data layer for bore relay.
+ * Supabase data layer for tunn3l relay.
  * All methods are fire-and-forget — never block the hot path.
  */
 

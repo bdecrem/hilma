@@ -1,10 +1,10 @@
 {
-  "name": "bore-tunnel",
+  "name": "tunn3l",
   "version": "0.4.0",
-  "description": "BORE tunnel CLI — expose localhost to the internet",
+  "description": "TUNN3L tunnel CLI — expose localhost to the internet",
   "type": "module",
   "bin": {
-    "bore": "./bore.js"
+    "tunn3l": "./bore.js"
   },
   "scripts": {
     "start": "node bore.js"

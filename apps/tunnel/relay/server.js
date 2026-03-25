@@ -1,5 +1,5 @@
 /**
- * BORE Relay Server
+ * TUNN3L Relay Server
  *
  * HTTP server that upgrades to WebSocket at /ws/connect (tunnel control)
  * and /ws/tcp (inbound TCP proxy connections for SSH/TCP tunnels).
@@ -21,7 +21,7 @@ let INSTALL_SCRIPT
 try {
   INSTALL_SCRIPT = readFileSync(join(__dirname, 'install.sh'), 'utf-8')
 } catch {
-  INSTALL_SCRIPT = '#!/bin/sh\necho "Install script not found. Visit https://bore.cx for instructions."\nexit 1\n'
+  INSTALL_SCRIPT = '#!/bin/sh\necho "Install script not found. Visit https://tunn3l.sh for instructions."\nexit 1\n'
 }
 
 const PORT = parseInt(process.env.PORT || '4040')
@@ -208,7 +208,7 @@ wss.on('connection', (ws) => {
       if (!stream) return
 
       if (stream._buffered) {
-        // WebSocket proxy stream (from bore proxy)
+        // WebSocket proxy stream (from tunn3l proxy)
         for (const buf of stream._buffered) {
           const frame = Buffer.alloc(8 + buf.length)
           frame.write(msg.streamId, 0, 8, 'ascii')
@@ -294,7 +294,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => clearInterval(pingInterval))
 })
 
-// TCP proxy connections — inbound from `bore proxy` (SSH clients)
+// TCP proxy connections — inbound from `tunn3l proxy` (SSH clients)
 wssTcp.on('connection', (proxyWs, req) => {
   const subdomain = extractSubdomain(req.headers.host)
   if (!subdomain) {
@@ -474,7 +474,7 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
   // TCP tunnels don't serve HTTP
   if (tunnel.mode === 'tcp') {
     res.writeHead(400, { 'Content-Type': 'text/plain' })
-    const port = tunnel.tcpPort ? ` -p ${tunnel.tcpPort}` : ` -o ProxyCommand="bore proxy %h %p"`
+    const port = tunnel.tcpPort ? ` -p ${tunnel.tcpPort}` : ` -o ProxyCommand="tunn3l proxy %h %p"`
     res.end(`This is a TCP tunnel. Use: ssh user@${BASE_DOMAIN}${port}`)
     return
   }
@@ -590,7 +590,7 @@ function stopTcpListener(port) {
 initDb()
 
 server.listen(PORT, () => {
-  console.log(`[BORE RELAY] HTTP/WS on port ${PORT}`)
-  console.log(`[BORE RELAY] Base domain: ${BASE_DOMAIN}`)
-  console.log(`[BORE RELAY] TCP tunnel range: ${TCP_PORT_MIN}-${TCP_PORT_MAX}`)
+  console.log(`[TUNN3L RELAY] HTTP/WS on port ${PORT}`)
+  console.log(`[TUNN3L RELAY] Base domain: ${BASE_DOMAIN}`)
+  console.log(`[TUNN3L RELAY] TCP tunnel range: ${TCP_PORT_MIN}-${TCP_PORT_MAX}`)
 })

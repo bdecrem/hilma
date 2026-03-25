@@ -1,4 +1,4 @@
-name: Deploy bore relay
+name: Deploy tunn3l relay
 
 on:
   push:
@@ -18,7 +18,7 @@ jobs:
           username: root
           key: ${{ secrets.BORE_SSH_KEY }}
           source: "apps/tunnel/relay/server.js,apps/tunnel/relay/db.js,apps/tunnel/relay/words.js,apps/tunnel/relay/package.json,apps/tunnel/relay/install.sh"
-          target: /opt/bore-relay
+          target: /opt/tunn3l-relay
           strip_components: 3
       - name: Restart service
         uses: appleboy/ssh-action@v1.0.3
@@ -26,4 +26,4 @@ jobs:
           host: 137.184.127.0
           username: root
           key: ${{ secrets.BORE_SSH_KEY }}
-          script: cd /opt/bore-relay && npm install --production && systemctl restart bore-relay
+          script: cd /opt/tunn3l-relay && npm install --production && systemctl restart tunn3l-relay

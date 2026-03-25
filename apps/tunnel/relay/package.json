@@ -1,7 +1,7 @@
 {
-  "name": "bore-relay",
+  "name": "tunn3l-relay",
   "version": "0.1.0",
-  "description": "BORE tunnel relay server",
+  "description": "TUNN3L tunnel relay server",
   "type": "module",
   "main": "server.js",
   "scripts": {

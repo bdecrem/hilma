@@ -1,11 +1,11 @@
 #!/bin/sh
-# BORE installer — https://bore.cx
-# Usage: curl -sSf https://bore.cx/install | sh
+# TUNN3L installer — https://tunn3l.sh
+# Usage: curl -sSf https://tunn3l.sh/install | sh
 
 set -e
 
 REPO="bdecrem/hilma"
-INSTALL_DIR="$HOME/.bore/bin"
+INSTALL_DIR="$HOME/.tunn3l/bin"
 BASE_URL="https://github.com/$REPO/releases/latest/download"
 
 # Detect OS
@@ -30,27 +30,27 @@ case "$ARCH" in
     ;;
 esac
 
-BINARY="bore-${os}-${arch}"
+BINARY="tunn3l-${os}-${arch}"
 URL="${BASE_URL}/${BINARY}.gz"
 
-echo "bore: installing ${os}/${arch}..."
+echo "tunn3l: installing ${os}/${arch}..."
 
 # Create install directory
 mkdir -p "$INSTALL_DIR"
 
 # Download and decompress
 if command -v curl >/dev/null 2>&1; then
-  curl -sSfL "$URL" | gunzip > "$INSTALL_DIR/bore"
+  curl -sSfL "$URL" | gunzip > "$INSTALL_DIR/tunn3l"
 elif command -v wget >/dev/null 2>&1; then
-  wget -qO- "$URL" | gunzip > "$INSTALL_DIR/bore"
+  wget -qO- "$URL" | gunzip > "$INSTALL_DIR/tunn3l"
 else
   echo "Error: curl or wget required"
   exit 1
 fi
 
-chmod +x "$INSTALL_DIR/bore"
+chmod +x "$INSTALL_DIR/tunn3l"
 
-echo "bore: installed to $INSTALL_DIR/bore"
+echo "tunn3l: installed to $INSTALL_DIR/tunn3l"
 
 # Check if already in PATH
 case ":$PATH:" in
@@ -66,31 +66,31 @@ case ":$PATH:" in
       *)    RC="$HOME/.profile" ;;
     esac
 
-    EXPORT_LINE="export PATH=\"\$HOME/.bore/bin:\$PATH\""
+    EXPORT_LINE="export PATH=\"\$HOME/.tunn3l/bin:\$PATH\""
 
-    if [ -f "$RC" ] && grep -qF '.bore/bin' "$RC" 2>/dev/null; then
+    if [ -f "$RC" ] && grep -qF '.tunn3l/bin' "$RC" 2>/dev/null; then
       : # already added
     else
       echo "" >> "$RC"
-      echo "# bore tunnel" >> "$RC"
+      echo "# tunn3l tunnel" >> "$RC"
       echo "$EXPORT_LINE" >> "$RC"
-      echo "bore: added $INSTALL_DIR to PATH in $RC"
+      echo "tunn3l: added $INSTALL_DIR to PATH in $RC"
     fi
     ;;
 esac
 
 echo ""
-echo "  bore installed successfully!"
+echo "  tunn3l installed successfully!"
 echo ""
 echo "  HTTP tunnel:"
-echo "    bore http 3000"
+echo "    tunn3l http 3000"
 echo ""
 echo "  SSH tunnel (requires Remote Login enabled):"
-echo "    bore ssh"
+echo "    tunn3l ssh"
 echo ""
 echo "  Always-on (starts on boot):"
-echo "    bore daemon install --port 3000"
-echo "    bore daemon start"
+echo "    tunn3l daemon install --port 3000"
+echo "    tunn3l daemon start"
 echo ""
-echo "  More: bore --help"
+echo "  More: tunn3l --help"
 echo ""
