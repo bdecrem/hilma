@@ -407,7 +407,7 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 </head>
 <body>
 <div class="container">
-<h1>tunn3l</h1>
+<h1>tunn3l.sh</h1>
 <p class="sub">Expose localhost to the internet. One command. No config.<br>Built for AI agents that need to reach your machine from anywhere.</p>
 
 <div class="terminal">
