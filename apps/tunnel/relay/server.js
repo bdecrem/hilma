@@ -439,17 +439,17 @@ h1 .ext{color:rgba(255,255,255,0.35)}
 <div class="feature">
 <div class="dot-indicator" style="background:#FC913A"></div>
 <h3>Agent-first</h3>
-<p>JSON output, exit codes, env var config. Zero interactive prompts. Built for AI agents.</p>
+<p>JSON output, exit codes, env var config. Zero interactive prompts. Your AI agent can install and run it without help.</p>
 </div>
 <div class="feature">
 <div class="dot-indicator" style="background:#B4E33D"></div>
-<h3>One command</h3>
-<p>Works through firewalls, NAT, hotel wifi. Outbound WebSocket — nothing to configure.</p>
+<h3>Zero setup</h3>
+<p>No account. No API key. No client app on the other end. Just curl the binary and go. Unlike Tailscale or Cloudflare Tunnel, nothing needed on either side.</p>
 </div>
 <div class="feature">
 <div class="dot-indicator" style="background:#FF4E50"></div>
-<h3>SSH access</h3>
-<p>tunn3l ssh exposes port 22 on a public relay port. SSH in from anywhere — no router config needed.</p>
+<h3>Free &amp; open source</h3>
+<p>MIT licensed. Run the relay yourself or use ours. HTTP tunnels, TCP tunnels, SSH — all free.</p>
 </div>
 </div>
 
