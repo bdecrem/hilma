@@ -11,8 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --app bore-relay
-        working-directory: apps/tunnel/relay
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: Deploy to DigitalOcean droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 137.184.127.0
+          username: root
+          key: ${{ secrets.BORE_SSH_KEY }}
+          source: "apps/tunnel/relay/server.js,apps/tunnel/relay/db.js,apps/tunnel/relay/words.js,apps/tunnel/relay/package.json,apps/tunnel/relay/install.sh"
+          target: /opt/bore-relay
+          strip_components: 3
+      - name: Restart service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 137.184.127.0
+          username: root
+          key: ${{ secrets.BORE_SSH_KEY }}
+          script: cd /opt/bore-relay && npm install --production && systemctl restart bore-relay
