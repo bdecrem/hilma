@@ -50,18 +50,18 @@ public/           # Static assets
 Tunn3l exposes localhost to the internet via HTTP or SSH/TCP tunnels. See `TUNN3L.md` for user-facing docs.
 
 ### Architecture
-- **Relay server** (`apps/tunnel/relay/server.js`): Node.js on a DigitalOcean droplet (`137.184.127.0`). Handles HTTP tunneling via WebSocket, TCP/SSH tunneling via per-tunnel port listeners (range 10000-60000). Landing page is inline HTML in server.js.
+- **Relay server** (`apps/tunnel/relay/server.js`): Node.js on a DigitalOcean droplet (`64.23.144.236`). Handles HTTP tunneling via WebSocket, TCP/SSH tunneling via per-tunnel port listeners (range 10000-60000). Landing page is inline HTML in server.js.
 - **CLI** (`apps/tunnel/cli/bore.js`): Compiled with esbuild + pkg into standalone binaries. Published to GitHub Releases. Users install via `curl -sSf https://tunn3l.sh/install | sh`.
 - **Nginx**: Reverse proxy with wildcard SSL (`*.tunn3l.sh`, cert at `/etc/letsencrypt/live/tunn3l-wildcard/`). Wildcard cert expires 2026-06-23, must be manually renewed via DNS challenge.
 
 ### Deploy
 - **Auto-deploy**: GitHub Action on push to `apps/tunnel/relay/` — SCPs files + restarts systemd service.
-- **Manual deploy**: `scp -i ~/.ssh/bore-relay <files> root@137.184.127.0:/opt/tunn3l-relay/ && ssh -i ~/.ssh/bore-relay root@137.184.127.0 "systemctl restart tunn3l-relay"`
-- **SSH to droplet**: `ssh -i ~/.ssh/bore-relay root@137.184.127.0`
+- **Manual deploy**: `scp -i ~/.ssh/bore-relay <files> root@64.23.144.236:/opt/tunn3l-relay/ && ssh -i ~/.ssh/bore-relay root@64.23.144.236 "systemctl restart tunn3l-relay"`
+- **SSH to droplet**: `ssh -i ~/.ssh/bore-relay root@64.23.144.236`
 - **CLI release**: Bundle with `npx esbuild bore.js --bundle --platform=node --format=cjs`, compile with `npx pkg`, upload to GitHub Releases. Always run `gh` commands from the repo root, not `/tmp`.
 
 ### DNS
-Namecheap (tunn3l.sh): A records (`@`, `*`, `www`) → `137.184.127.0`. TXT records on `_acme-challenge` for wildcard SSL.
+Namecheap (tunn3l.sh): A records (`@`, `*`, `www`) → `64.23.144.236`. TXT records on `_acme-challenge` for wildcard SSL.
 
 ## Environment Variables
 
