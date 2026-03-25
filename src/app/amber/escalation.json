@@ -1,5 +1,5 @@
 {
-  "level": 8,
+  "level": 11,
   "history": [
     { "level": 1, "description": "a circle, breathing", "tweet": "L1: a circle, breathing.", "date": "2026-03-21T23:28:00Z", "techniques": ["canvas", "single-shape", "animation"] },
     { "level": 2, "description": "a line, growing and rotating", "tweet": "L2: a line, learning to turn.", "date": "2026-03-21T23:35:00Z", "techniques": ["canvas", "single-shape", "animation", "rotation"] },
@@ -8,7 +8,10 @@
     { "level": 5, "description": "color wakes up. tap to multiply.", "tweet": "L5: color wakes up. tap to multiply.", "date": "2026-03-22T16:28:00Z", "techniques": ["canvas", "multiple-shapes", "trails", "click", "color-palette", "flash"] },
     { "level": 6, "description": "citrus rings. tap to crack one open.", "tweet": "L6: crack one open.", "date": "2026-03-22T16:34:00Z", "techniques": ["canvas", "concentric", "click-target", "split-animation", "citrus-palette", "warm-dark-bg"] },
     { "level": 7, "description": "bouncing citrus drops on cream. tap to fill the jar.", "tweet": "L7: fill the jar.", "date": "2026-03-22T16:40:00Z", "techniques": ["canvas", "gravity", "bounce", "stacking", "squish", "bright-bg", "citrus-palette"] },
-    { "level": 8, "description": "tap to place nodes. they connect. drag to reshape.", "tweet": "L8: they found each other.", "date": "2026-03-22T17:17:00Z", "techniques": ["canvas", "nodes", "connections", "drag", "proximity", "network", "bright-bg"] }
+    { "level": 8, "description": "tap to place nodes. they connect. drag to reshape.", "tweet": "L8: they found each other.", "date": "2026-03-22T17:17:00Z", "techniques": ["canvas", "nodes", "connections", "drag", "proximity", "network", "bright-bg"] },
+    { "level": 9, "description": "energy pulses through the network. tap to surge.", "tweet": "L9: the network has a heartbeat.", "date": "2026-03-22T17:30:00Z", "techniques": ["canvas", "nodes", "connections", "energy-transfer", "pulse", "glow", "bright-bg"] },
+    { "level": 10, "description": "every shape from L1-L9 together. the last sketch.", "tweet": "L10: reunion.", "date": "2026-03-22T17:45:00Z", "techniques": ["canvas", "all-previous", "composition", "reunion", "bright-bg"] },
+    { "level": 11, "description": "sixty creatures flock with simple rules. tap to scatter. hold to attract.", "tweet": "L11: they learned to move together.", "date": "2026-03-25T18:00:00Z", "techniques": ["canvas", "flocking", "boids", "emergent-behavior", "pointer-attract", "scatter", "trails", "bright-bg"] }
   ],
   "feedback": [
     { "level": 5, "type": "not-so-good", "reason": "eggplant background looks like Windows 3.1. no blue/purple. warm darks only.", "date": "2026-03-22T16:33:00Z" },
