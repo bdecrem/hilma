@@ -383,6 +383,7 @@ server.on('request', (req, res) => {
 body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#1a1a18,#2a2218);color:#fff;min-height:100vh}
 .container{max-width:720px;margin:0 auto;padding:80px 24px}
 h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
+h1 .ext{color:#FC913A;font-weight:400}
 .sub{color:rgba(255,255,255,0.35);font-size:1.1rem;margin-bottom:48px;line-height:1.6}
 .terminal{background:#0a0a08;border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;margin-bottom:32px}
 .terminal-bar{background:rgba(255,255,255,0.05);padding:8px 16px;display:flex;gap:6px}
@@ -407,7 +408,7 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 </head>
 <body>
 <div class="container">
-<h1>tunn3l.sh</h1>
+<h1>tunn3l<span class="ext">.sh</span></h1>
 <p class="sub">Expose localhost to the internet. One command. No config.<br>Built for AI agents that need to reach your machine from anywhere.</p>
 
 <div class="terminal">
