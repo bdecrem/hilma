@@ -27,7 +27,7 @@ Hilma hosts 6 apps. Three are standalone in `apps/`, three are Next.js routes on
 
 | App | Path | Deploy | What it is |
 |-----|------|--------|------------|
-| **Bore** | `apps/tunnel/` | Railway (bore.cx) | Tunnel service — expose localhost to the internet via CLI + relay server |
+| **Bore** | `apps/tunnel/` | DigitalOcean droplet (bore.cx) | Tunnel service — expose localhost via HTTP or SSH tunnels |
 | **Collab** | `apps/collab/` | — | Collaboration plugin |
 | **MCP Dashboard** | `apps/mcp-dashboard/` + `src/app/apps/mcp-dashboard/` | Vercel | MCP server dashboard |
 | **Decremental** | `src/app/projects/` | Vercel (decremental.com) | Projects page |
@@ -45,6 +45,24 @@ apps/             # Standalone apps (bore, collab, mcp-dashboard)
 public/           # Static assets
 ```
 
+## Bore tunnel service
+
+Bore exposes localhost to the internet via HTTP or SSH/TCP tunnels. See `BORE.md` for user-facing docs.
+
+### Architecture
+- **Relay server** (`apps/tunnel/relay/server.js`): Node.js on a DigitalOcean droplet (`137.184.127.0`). Handles HTTP tunneling via WebSocket, TCP/SSH tunneling via per-tunnel port listeners (range 10000-60000). Landing page is inline HTML in server.js.
+- **CLI** (`apps/tunnel/cli/bore.js`): Compiled with esbuild + pkg into standalone binaries. Published to GitHub Releases. Users install via `curl -sSf https://bore.cx/install | sh`.
+- **Nginx**: Reverse proxy with wildcard SSL (`*.bore.cx`, cert at `/etc/letsencrypt/live/bore-wildcard/`). Wildcard cert expires 2026-06-23, must be manually renewed via DNS challenge.
+
+### Deploy
+- **Auto-deploy**: GitHub Action on push to `apps/tunnel/relay/` — SCPs files + restarts systemd service.
+- **Manual deploy**: `scp -i ~/.ssh/bore-relay <files> root@137.184.127.0:/opt/bore-relay/ && ssh -i ~/.ssh/bore-relay root@137.184.127.0 "systemctl restart bore-relay"`
+- **SSH to droplet**: `ssh -i ~/.ssh/bore-relay root@137.184.127.0`
+- **CLI release**: Bundle with `npx esbuild bore.js --bundle --platform=node --format=cjs`, compile with `npx pkg`, upload to GitHub Releases. Always run `gh` commands from the repo root, not `/tmp`.
+
+### DNS
+Namecheap: A records (`@`, `*`, `www`) → `137.184.127.0`. TXT records on `_acme-challenge` for wildcard SSL.
+
 ## Environment Variables
 
 All secrets and API keys live in `.env.local` (gitignored). Key variables:
@@ -54,6 +72,7 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 
 ## Conventions
 
+- **Always run `gh` commands from the repo root** (`/Users/bartdecrem/Documents/coding2025/hilma`), never from `/tmp` or other non-git directories. `gh release` requires a git repo context. When chaining commands that start in `/tmp` (e.g., compressing binaries), `cd` back to the repo before running `gh`.
 - Use `@/*` import alias for `src/*`
 - Keep it lean — no unnecessary dependencies
 - Server Components by default, `'use client'` only when needed
