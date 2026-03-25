@@ -15,6 +15,13 @@ interface Project {
 
 const projects: Project[] = [
   {
+    name: 'bore',
+    url: 'https://bore.cx',
+    shortDesc: 'expose localhost to the internet. http and ssh tunnels. one command, no config. built for ai agents.',
+    fullDesc: 'tunnel relay service. cli installs in one line, assigns a public url or ssh port instantly.',
+    status: 'respinning',
+  },
+  {
     name: 'claudio',
     url: 'https://claudio.la',
     shortDesc: 'a simple ios client for openclaw. point at your openclaw server and go. no accounts, no tracking, no data collection.',
