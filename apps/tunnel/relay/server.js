@@ -456,8 +456,8 @@ h1 .ext{color:rgba(255,255,255,0.35)}
 <p class="stats">${tunnels.size} active tunnel${tunnels.size !== 1 ? 's' : ''} right now</p>
 
 <div class="footer">
-<span>tunn3l.sh</span>
-<a href="https://github.com/bdecrem/hilma" target="_blank">GitHub</a>
+<span>tunn3l.sh is <a href="https://github.com/bdecrem/hilma/blob/main/apps/tunnel/LICENSE" target="_blank">open source</a></span>
+<a href="https://github.com/bdecrem/hilma/tree/main/apps/tunnel" target="_blank">GitHub</a>
 </div>
 </div>
 </body>
