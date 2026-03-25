@@ -33,11 +33,21 @@ const BASE_DOMAIN = process.env.BASE_DOMAIN || 'localhost'
 // tcpPort: assigned external port for TCP tunnels
 const tunnels = new Map()
 
-// TCP tunnel port — fixed external port for SSH/TCP connections
-const TCP_PORT = parseInt(process.env.TCP_TUNNEL_PORT || '10000')
+// Port registry: port → subdomain (for TCP port routing)
+const portToSubdomain = new Map()
+const TCP_PORT_MIN = 10000
+const TCP_PORT_MAX = 60000
 
-// Track the active TCP tunnel (only one at a time for port-based access)
-let activeTcpTunnel = null
+function assignTcpPort() {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const port = TCP_PORT_MIN + Math.floor(Math.random() * (TCP_PORT_MAX - TCP_PORT_MIN))
+    if (!portToSubdomain.has(port)) return port
+  }
+  return null
+}
+
+// Per-tunnel TCP listeners: port → net.Server
+const tcpListeners = new Map()
 
 function generateId() {
   return crypto.randomBytes(8).toString('hex')
@@ -134,19 +144,26 @@ wss.on('connection', (ws) => {
       const tunnel = { ws, mode, pending: new Map(), tcpStreams: new Map(), requestCount: 0, connectionId: null }
 
       if (mode === 'tcp') {
-        if (activeTcpTunnel) {
-          ws.send(JSON.stringify({ type: 'error', message: 'A TCP tunnel is already active. Only one SSH/TCP tunnel at a time.' }))
+        const tcpPort = assignTcpPort()
+        if (!tcpPort) {
+          ws.send(JSON.stringify({ type: 'error', message: 'No TCP ports available' }))
           return
         }
-        activeTcpTunnel = subdomain
+        tunnel.tcpPort = tcpPort
+        portToSubdomain.set(tcpPort, subdomain)
       }
 
       tunnels.set(subdomain, tunnel)
 
+      // Start TCP listener for this tunnel
+      if (mode === 'tcp' && tunnel.tcpPort) {
+        startTcpListener(tunnel.tcpPort, subdomain)
+      }
+
       const url = `https://${subdomain}.${BASE_DOMAIN}`
       const response = { type: 'registered', subdomain, url, mode }
-      if (mode === 'tcp') {
-        response.tcpPort = TCP_PORT
+      if (tunnel.tcpPort) {
+        response.tcpPort = tunnel.tcpPort
         response.tcpHost = BASE_DOMAIN
       }
 
@@ -249,9 +266,10 @@ wss.on('connection', (ws) => {
           else if (stream.destroy) stream.destroy()
         }
         tunnel.tcpStreams.clear()
-        // Release TCP tunnel slot
-        if (tunnel.mode === 'tcp' && activeTcpTunnel === registeredSubdomain) {
-          activeTcpTunnel = null
+        // Release TCP port and stop listener
+        if (tunnel.tcpPort) {
+          stopTcpListener(tunnel.tcpPort)
+          portToSubdomain.delete(tunnel.tcpPort)
         }
         // Fire-and-forget: record disconnect
         if (tunnel.connectionId) {
@@ -493,72 +511,86 @@ h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
   })
 })
 
-// ─── TCP server for SSH/TCP connections ───────────────────────
-// Single listener on TCP_PORT. Routes all connections to the active TCP tunnel.
+// ─── Per-tunnel TCP listeners ─────────────────────────────────
+// Each TCP tunnel gets its own net.Server on its assigned port.
+// Direct port binding — no proxy layer.
 
-const tcpServer = net.createServer((socket) => {
-  if (!activeTcpTunnel) {
-    socket.destroy()
-    return
-  }
-
-  const tunnel = tunnels.get(activeTcpTunnel)
-  if (!tunnel || tunnel.mode !== 'tcp') {
-    socket.destroy()
-    return
-  }
-
-  const streamId = generateId().slice(0, 8)
-  tunnel.tcpStreams.set(streamId, socket)
-
-  tunnel.ws.send(JSON.stringify({ type: 'tcp-open', streamId }))
-  console.log(`[TCP] ${activeTcpTunnel} stream ${streamId} opened`)
-
-  const readyTimer = setTimeout(() => {
-    if (socket._waitingForReady) {
+function startTcpListener(port, subdomain) {
+  const srv = net.createServer((socket) => {
+    const tunnel = tunnels.get(subdomain)
+    if (!tunnel || tunnel.mode !== 'tcp') {
       socket.destroy()
-      tunnel.tcpStreams.delete(streamId)
-    }
-  }, 10000)
-  socket._waitingForReady = true
-  socket._readyTimer = readyTimer
-
-  socket._tcpBuffered = []
-  socket._paused = true
-
-  socket.on('data', (data) => {
-    if (socket._paused) {
-      socket._tcpBuffered.push(data)
       return
     }
-    const frame = Buffer.alloc(8 + data.length)
-    frame.write(streamId, 0, 8, 'ascii')
-    data.copy(frame, 8)
-    if (tunnel.ws.readyState === tunnel.ws.OPEN) {
-      tunnel.ws.send(frame)
-    }
+
+    const streamId = generateId().slice(0, 8)
+    tunnel.tcpStreams.set(streamId, socket)
+
+    tunnel.ws.send(JSON.stringify({ type: 'tcp-open', streamId }))
+    console.log(`[TCP] ${subdomain}:${port} stream ${streamId} opened`)
+
+    const readyTimer = setTimeout(() => {
+      if (socket._waitingForReady) {
+        socket.destroy()
+        tunnel.tcpStreams.delete(streamId)
+      }
+    }, 10000)
+    socket._waitingForReady = true
+    socket._readyTimer = readyTimer
+
+    socket._tcpBuffered = []
+    socket._paused = true
+
+    socket.on('data', (data) => {
+      if (socket._paused) {
+        socket._tcpBuffered.push(data)
+        return
+      }
+      const frame = Buffer.alloc(8 + data.length)
+      frame.write(streamId, 0, 8, 'ascii')
+      data.copy(frame, 8)
+      if (tunnel.ws.readyState === tunnel.ws.OPEN) {
+        tunnel.ws.send(frame)
+      }
+    })
+
+    socket.on('close', () => {
+      clearTimeout(readyTimer)
+      tunnel.tcpStreams.delete(streamId)
+      if (tunnel.ws.readyState === tunnel.ws.OPEN) {
+        tunnel.ws.send(JSON.stringify({ type: 'tcp-close', streamId }))
+      }
+    })
+
+    socket.on('error', () => {
+      tunnel.tcpStreams.delete(streamId)
+    })
   })
 
-  socket.on('close', () => {
-    clearTimeout(readyTimer)
-    tunnel.tcpStreams.delete(streamId)
-    if (tunnel.ws.readyState === tunnel.ws.OPEN) {
-      tunnel.ws.send(JSON.stringify({ type: 'tcp-close', streamId }))
-    }
+  srv.listen(port, () => {
+    console.log(`[TCP] Listening on port ${port} for ${subdomain}`)
   })
 
-  socket.on('error', () => {
-    tunnel.tcpStreams.delete(streamId)
+  srv.on('error', (err) => {
+    console.error(`[TCP] Failed to listen on port ${port}: ${err.message}`)
   })
-})
+
+  tcpListeners.set(port, srv)
+}
+
+function stopTcpListener(port) {
+  const srv = tcpListeners.get(port)
+  if (srv) {
+    srv.close()
+    tcpListeners.delete(port)
+    console.log(`[TCP] Stopped listening on port ${port}`)
+  }
+}
 
 initDb()
 
 server.listen(PORT, () => {
   console.log(`[BORE RELAY] HTTP/WS on port ${PORT}`)
   console.log(`[BORE RELAY] Base domain: ${BASE_DOMAIN}`)
-})
-
-tcpServer.listen(TCP_PORT, () => {
-  console.log(`[BORE RELAY] TCP tunnel on port ${TCP_PORT}`)
+  console.log(`[BORE RELAY] TCP tunnel range: ${TCP_PORT_MIN}-${TCP_PORT_MAX}`)
 })
