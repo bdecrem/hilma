@@ -457,6 +457,7 @@ h1 .ext{color:rgba(255,255,255,0.35)}
 
 <div class="footer">
 <span>tunn3l.sh is <a href="https://github.com/bdecrem/hilma/blob/main/apps/tunnel/LICENSE" target="_blank">open source</a></span>
+<a href="https://github.com/bdecrem/hilma/issues/new?labels=tunn3l&title=Feature+request:+" target="_blank">Request a feature</a>
 <a href="https://github.com/bdecrem/hilma/tree/main/apps/tunnel" target="_blank">GitHub</a>
 </div>
 </div>
