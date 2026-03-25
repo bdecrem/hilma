@@ -1,6 +1,6 @@
 # BORE — Tunnel Service for AI Agents
 
-Expose localhost to the internet. One command. No config.
+Expose localhost to the internet. One command. No config. HTTP and SSH.
 
 ## Quick Start
 
