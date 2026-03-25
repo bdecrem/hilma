@@ -449,7 +449,7 @@ h1 .ext{color:rgba(255,255,255,0.35)}
 <div class="feature">
 <div class="dot-indicator" style="background:#FF4E50"></div>
 <h3>SSH access</h3>
-<p>tunn3l ssh gives your machine a public hostname. SSH from anywhere. No port forwarding.</p>
+<p>tunn3l ssh exposes port 22 on a public relay port. SSH in from anywhere — no router config needed.</p>
 </div>
 </div>
 
