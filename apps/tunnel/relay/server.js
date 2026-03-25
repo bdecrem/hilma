@@ -373,15 +373,17 @@ server.on('request', (req, res) => {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>tunn3l.sh — tunnel service for AI agents</title>
 <meta name="description" content="Expose localhost to the internet. One command. No config.">
+<meta name="theme-color" content="#1a1a18">
 <meta property="og:title" content="tunn3l.sh">
 <meta property="og:description" content="Expose localhost to the internet. One command. Built for AI agents.">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#1a1a18,#2a2218);color:#fff;min-height:100vh}
-.container{max-width:720px;margin:0 auto;padding:80px 24px}
+html{overflow-x:hidden;background:#1a1a18}
+body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#1a1a18,#2a2218);color:#fff;min-height:100dvh;overflow-x:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.container{max-width:720px;margin:0 auto;padding:80px 24px;overflow-x:hidden}
 h1{font-size:3.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px}
 h1 .ext{color:rgba(255,255,255,0.35)}
 .sub{color:rgba(255,255,255,0.35);font-size:1.1rem;margin-bottom:48px;line-height:1.6}
