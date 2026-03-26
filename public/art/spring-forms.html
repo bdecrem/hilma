@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>spring forms</title>
+<meta name="description" content="playful shapes in citrus light">
+<meta property="og:title" content="spring forms">
+<meta property="og:description" content="playful shapes in citrus light">
+<meta property="og:image" content="https://hilma-nine.vercel.app/art/spring-forms-og.png">
+<meta property="og:url" content="https://hilma-nine.vercel.app/art/spring-forms.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="spring forms">
+<meta name="twitter:image" content="https://hilma-nine.vercel.app/art/spring-forms-og.png">
+<style>
+*{margin:0;padding:0}
+html,body{overflow:hidden;background:#E8F5E9}
+canvas{display:block;width:100vw;height:100dvh}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  W = canvas.width = innerWidth * devicePixelRatio;
+  H = canvas.height = innerHeight * devicePixelRatio;
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  W /= devicePixelRatio; H /= devicePixelRatio;
+}
+resize();
+addEventListener('resize', resize);
+
+const FILLS = ['#FF4E50','#FC913A','#F9D423','#B4E33D','#FF6B81','#D4A574'];
+const ACCENTS = ['#FFF8E7','#FF4E50','#FC913A','#F9D423','#B4E33D','#2D5A27'];
+
+function rng(a,b){return a+Math.random()*(b-a)}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+class Form {
+  constructor(x, y, size) {
+    this.x = x !== null ? x : rng(size, W-size);
+    this.y = y !== null ? y : rng(size, H-size);
+    this.size = size;
+    this.color = pick(FILLS);
+    this.accent1 = pick(ACCENTS);
+    this.accent2 = pick(ACCENTS);
+    this.outlined = Math.random() > 0.4;
+    // Very slow drift — painting-like
+    this.vx = rng(-0.08, 0.08);
+    this.vy = rng(-0.08, 0.08);
+    this.rot = rng(0, Math.PI*2);
+    this.rotSpeed = rng(-0.0008, 0.0008);
+    this.breathPhase = rng(0, Math.PI*2);
+    this.breathSpeed = rng(0.004, 0.008);
+    this.shape = Math.floor(rng(0, 5));
+    this.wobble = Array.from({length:8}, ()=>rng(0.5,1.5));
+    this.alpha = Math.random() > 0.3 ? 0.85 : 0.55;
+    this.hasInner = Math.random() > 0.3;
+    this.hasCurves = Math.random() > 0.6;
+    this.hasSpots = Math.random() > 0.5;
+  }
+
+  update(t) {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.rot += this.rotSpeed;
+    this.breathPhase += this.breathSpeed;
+    const m = this.size * 1.5;
+    if (this.x < -m) this.x = W + m;
+    if (this.x > W + m) this.x = -m;
+    if (this.y < -m) this.y = H + m;
+    if (this.y > H + m) this.y = -m;
+  }
+
+  drawShape(s, t) {
+    ctx.beginPath();
+    const pts = 60;
+    for (let i = 0; i <= pts; i++) {
+      const a = (i / pts) * Math.PI * 2;
+      let r = s;
+      switch(this.shape) {
+        case 0: // soft blob
+          r *= 1 + 0.2*Math.sin(a*3) + 0.12*Math.cos(a*5);
+          break;
+        case 1: // curved form
+          r *= 1 + 0.35*Math.cos(a) - 0.2*Math.cos(a*2);
+          break;
+        case 2: // crescent
+          r *= 0.7 + 0.4*Math.sin(a + 0.5);
+          break;
+        case 3: // drop
+          r *= 0.6 + 0.5*(1+Math.cos(a))/2;
+          break;
+        case 4: // wobbly
+          for (let k = 0; k < this.wobble.length; k++) {
+            r *= 1 + 0.05*Math.sin(a*(k+2) + this.wobble[k]*0.3);
+          }
+          break;
+      }
+      const px = Math.cos(a)*r, py = Math.sin(a)*r;
+      i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  draw(t) {
+    const breath = 1 + Math.sin(this.breathPhase) * 0.04;
+    const s = this.size * breath;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    ctx.globalAlpha = this.alpha;
+
+    // Main shape
+    this.drawShape(s, t);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    if (this.outlined) {
+      ctx.strokeStyle = '#2A2218';
+      ctx.lineWidth = Math.max(1, s * 0.025);
+      ctx.stroke();
+    }
+
+    // Inner shape
+    if (this.hasInner && s > 18) {
+      ctx.beginPath();
+      const ns = s * 0.3;
+      for (let i = 0; i <= 24; i++) {
+        const a = (i/24)*Math.PI*2;
+        const r2 = ns*(1 + 0.15*Math.sin(a*3));
+        const px = Math.cos(a)*r2, py = Math.sin(a)*r2;
+        i === 0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = this.accent1;
+      ctx.globalAlpha = 0.65;
+      ctx.fill();
+    }
+
+    // Curved lines inside
+    if (this.hasCurves && s > 30) {
+      ctx.globalAlpha = 0.3;
+      ctx.strokeStyle = this.accent2;
+      ctx.lineWidth = Math.max(1, s * 0.03);
+      for (let b = -2; b <= 2; b++) {
+        ctx.beginPath();
+        ctx.moveTo(-s*0.5, b*s*0.14);
+        ctx.quadraticCurveTo(0, b*s*0.14 + s*0.08, s*0.5, b*s*0.14);
+        ctx.stroke();
+      }
+    }
+
+    // Small dots
+    if (this.hasSpots && s > 22) {
+      ctx.globalAlpha = 0.5;
+      const count = Math.floor(s / 15);
+      for (let d = 0; d < count; d++) {
+        const da = d * (Math.PI*2/count) + 0.5;
+        const dr = rng(0.15, 0.55)*s;
+        ctx.beginPath();
+        ctx.arc(Math.cos(da)*dr, Math.sin(da)*dr, rng(1.5,3.5), 0, Math.PI*2);
+        ctx.fillStyle = pick(ACCENTS);
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+}
+
+// Tiny scattered marks
+class Mark {
+  constructor() {
+    this.x = rng(0,W); this.y = rng(0,H);
+    this.size = rng(1.5,5);
+    this.color = pick(FILLS);
+    this.type = Math.floor(rng(0,4));
+    this.rot = rng(0,Math.PI*2);
+    // Nearly still
+    this.vx = rng(-0.02,0.02);
+    this.vy = rng(-0.02,0.02);
+  }
+  update() {
+    this.x += this.vx; this.y += this.vy;
+    if (this.x<0) this.x=W; if (this.x>W) this.x=0;
+    if (this.y<0) this.y=H; if (this.y>H) this.y=0;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+    ctx.fillStyle = this.color;
+    ctx.globalAlpha = 0.5;
+    switch(this.type) {
+      case 0: ctx.beginPath(); ctx.arc(0,0,this.size,0,Math.PI*2); ctx.fill(); break;
+      case 1: ctx.fillRect(-this.size*1.5,-this.size*0.3,this.size*3,this.size*0.6); break;
+      case 2: ctx.beginPath(); ctx.moveTo(0,-this.size); ctx.lineTo(this.size,this.size); ctx.lineTo(-this.size,this.size); ctx.closePath(); ctx.fill(); break;
+      case 3: ctx.beginPath(); ctx.arc(0,0,this.size,0.3,Math.PI-0.3); ctx.strokeStyle=this.color; ctx.lineWidth=1; ctx.stroke(); break;
+    }
+    ctx.restore();
+  }
+}
+
+// Composition: mix of large and small forms
+const forms = [];
+// Large anchor forms
+for (let i = 0; i < 4; i++) {
+  forms.push(new Form(rng(W*0.1,W*0.9), rng(H*0.1,H*0.9), rng(70, 130)));
+}
+// Medium forms
+for (let i = 0; i < 8; i++) {
+  forms.push(new Form(null, null, rng(25, 65)));
+}
+// Small forms
+for (let i = 0; i < 6; i++) {
+  forms.push(new Form(null, null, rng(10, 25)));
+}
+// Scattered marks
+const marks = Array.from({length: 35}, () => new Mark());
+
+// Touch: nearby shapes glow briefly
+let touchX = -999, touchY = -999, touchFade = 0;
+canvas.addEventListener('pointerdown', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  touchX = e.clientX - rect.left;
+  touchY = e.clientY - rect.top;
+  touchFade = 1;
+});
+
+let t = 0;
+function draw() {
+  t++;
+  touchFade *= 0.97;
+
+  // Gradient background
+  const grad = ctx.createLinearGradient(0, 0, W*0.3, H);
+  grad.addColorStop(0, '#E8F5E9');
+  grad.addColorStop(0.5, '#FFFDE7');
+  grad.addColorStop(1, '#FFF0F0');
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Marks behind
+  for (const m of marks) { m.update(); m.draw(); }
+
+  // Sort large behind small
+  forms.sort((a,b) => b.size - a.size);
+
+  for (const f of forms) {
+    f.update(t);
+
+    // Touch glow: shapes near touch point breathe a little more
+    if (touchFade > 0.05) {
+      const d = Math.hypot(f.x - touchX, f.y - touchY);
+      if (d < 200) {
+        f.breathPhase += 0.03 * touchFade * (1 - d/200);
+      }
+    }
+
+    f.draw(t);
+  }
+
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>
