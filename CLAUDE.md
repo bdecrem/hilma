@@ -34,16 +34,37 @@ Hilma hosts 6 apps. Three are standalone in `apps/`, three are Next.js routes on
 | **Writer** | `src/app/writer/` | Vercel | Writing tool |
 | **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |
 
-## Project structure
+## Project structure — where things go
 
-```
-src/
-  app/            # Routes (App Router)
-  components/     # Shared UI components
-  lib/            # Utilities, API helpers
-apps/             # Standalone apps (tunn3l, collab, mcp-dashboard)
-public/           # Static assets
-```
+**Do NOT create files at the repo root.** Everything has a home:
+
+| Folder | What goes here | Examples |
+|--------|---------------|---------|
+| `src/app/` | Next.js pages and routes (React, server-rendered) | `/amber/`, `/projects/`, `/writer/`, `/art-agent/` |
+| `src/components/` | Shared React components | UI primitives used across pages |
+| `src/lib/` | Shared utilities and helpers | `citrus-bg.ts` |
+| `apps/` | Standalone apps with their own runtime (not Next.js) | `tunnel/`, `collab/`, `design-agent/` |
+| `public/` | Static files served as-is (HTML, images, fonts) | `art/spring-curves.html` |
+| `scripts/` | One-off scripts and build tools | `tweet.ts`, `adjectives.js` |
+| `docs/` | Documentation, plans, proposals | `amber-daily-schedule.md` |
+| `misc/` | Random stuff, experiments, archives | `openclaw/`, `collab.zip` |
+
+**Rules:**
+- If it's a web page with React → `src/app/`
+- If it's a standalone service/CLI → `apps/`
+- If it's a raw HTML/static file → `public/`
+- If it's a throwaway script → `scripts/`
+- If you're unsure, ask — don't dump it at root
+
+## Deploying
+
+**Always commit and push to `main`.** Never run `vercel --prod` or deploy directly.
+
+| What | How it deploys |
+|------|---------------|
+| **Next.js app** (`src/`, `public/`) | Vercel auto-deploys on push to `main` |
+| **Tunn3l relay** (`apps/tunnel/relay/`) | GitHub Action auto-deploys to DigitalOcean droplet on push to `main` |
+| **Tunn3l CLI binaries** | Manual: esbuild bundle → pkg compile → GitHub Release (see Tunn3l section below) |
 
 ## Tunn3l tunnel service
 
