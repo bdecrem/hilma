@@ -52,6 +52,27 @@ chmod +x "$INSTALL_DIR/tunn3l"
 
 echo "tunn3l: installed to $INSTALL_DIR/tunn3l"
 
+# Generate config with API key and device ID if not present
+CONFIG_FILE="$HOME/.tunn3l/config.json"
+if [ ! -f "$CONFIG_FILE" ]; then
+  API_KEY="tk_$(od -An -tx1 -N16 /dev/urandom | tr -d ' \n')"
+  DEVICE_ID="dv_$(od -An -tx1 -N12 /dev/urandom | tr -d ' \n')"
+  cat > "$CONFIG_FILE" <<CONF
+{
+  "api_key": "$API_KEY",
+  "device_id": "$DEVICE_ID"
+}
+CONF
+  echo "tunn3l: API key generated"
+  echo "tunn3l: device ID generated"
+elif ! grep -q '"device_id"' "$CONFIG_FILE" 2>/dev/null; then
+  # Existing config without device_id — add one
+  DEVICE_ID="dv_$(od -An -tx1 -N12 /dev/urandom | tr -d ' \n')"
+  # Use a temp file to inject device_id before the closing brace
+  sed -i.bak 's/}$/,\n  "device_id": "'"$DEVICE_ID"'"\n}/' "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
+  echo "tunn3l: device ID generated"
+fi
+
 # Check if already in PATH
 case ":$PATH:" in
   *":$INSTALL_DIR:"*)

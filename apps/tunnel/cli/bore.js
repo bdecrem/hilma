@@ -22,14 +22,25 @@
 import WebSocket from 'ws'
 import http from 'http'
 import net from 'net'
+import crypto from 'crypto'
 import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { execSync } from 'child_process'
-import { homedir, platform } from 'os'
+import { homedir, platform, hostname as osHostname } from 'os'
 
 const args = process.argv.slice(2)
 const TUNN3L_DIR = join(homedir(), '.tunn3l')
 const DAEMON_DIR = join(TUNN3L_DIR, 'daemon')
+
+// Ensure device_id exists in config
+function ensureDeviceId() {
+  const config = loadConfig('default')
+  if (!config.device_id) {
+    config.device_id = 'dv_' + crypto.randomBytes(12).toString('hex')
+    saveConfig('default', config)
+  }
+  return config.device_id
+}
 
 // Load config for a named instance
 function loadConfig(name) {
@@ -119,6 +130,8 @@ if (args[0] === 'daemon') {
 
 function handleHttp(httpArgs) {
   const config = loadConfig('default')
+  const deviceId = ensureDeviceId()
+  const token = config.api_key || process.env.TUNN3L_TOKEN || null
 
   const port = parseInt(httpArgs[0]) || config.port
   if (!port || isNaN(port)) {
@@ -144,7 +157,10 @@ function handleHttp(httpArgs) {
 
     ws.on('open', () => {
       backoff = 1000
-      ws.send(JSON.stringify({ type: 'register', subdomain }))
+      const reg = { type: 'register', subdomain }
+      if (token) reg.token = token
+      if (deviceId) { reg.device_id = deviceId; reg.hostname = osHostname(); reg.os = platform() }
+      ws.send(JSON.stringify(reg))
     })
 
     ws.on('message', (data) => {
@@ -167,8 +183,12 @@ function handleHttp(httpArgs) {
 
       if (msg.type === 'error') {
         if (msg.code === 3) {
-          console.error(`Error: subdomain '${subdomain}' is already taken`)
+          console.error(`Error: subdomain '${subdomain}' is already in use`)
           process.exit(3)
+        }
+        if (msg.code === 4) {
+          console.error(`Error: ${msg.message}`)
+          process.exit(1)
         }
         console.error(`Error: ${msg.message}`)
         process.exit(2)
@@ -263,6 +283,8 @@ function handleRequest(ws, msg, port) {
 
 function handleTcp(tcpArgs) {
   const config = loadConfig('default')
+  const deviceId = ensureDeviceId()
+  const token = config.api_key || process.env.TUNN3L_TOKEN || null
 
   const port = parseInt(tcpArgs[0]) || config.port
   if (!port || isNaN(port)) {
@@ -289,7 +311,10 @@ function handleTcp(tcpArgs) {
 
     ws.on('open', () => {
       backoff = 1000
-      ws.send(JSON.stringify({ type: 'register', subdomain, mode: 'tcp' }))
+      const reg = { type: 'register', subdomain, mode: 'tcp' }
+      if (token) reg.token = token
+      if (deviceId) { reg.device_id = deviceId; reg.hostname = osHostname(); reg.os = platform() }
+      ws.send(JSON.stringify(reg))
     })
 
     ws.on('message', (data, isBinary) => {
@@ -333,8 +358,12 @@ function handleTcp(tcpArgs) {
 
       if (msg.type === 'error') {
         if (msg.code === 3) {
-          console.error(`Error: subdomain '${subdomain}' is already taken`)
+          console.error(`Error: subdomain '${subdomain}' is already in use`)
           process.exit(3)
+        }
+        if (msg.code === 4) {
+          console.error(`Error: ${msg.message}`)
+          process.exit(1)
         }
         console.error(`Error: ${msg.message}`)
         process.exit(2)

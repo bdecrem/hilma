@@ -55,11 +55,41 @@ export async function recordDisconnect(connectionId, stats = {}) {
 }
 
 export async function isSubdomainReserved(name) {
-  if (!supabase) return false
+  if (!supabase) return { reserved: false }
   const { data } = await supabase
     .from('subdomains')
-    .select('reserved, owner_token')
+    .select('reserved, owner_token, device_id')
     .eq('name', name)
     .single()
-  return data?.reserved || false
+  if (!data || !data.reserved) return { reserved: false }
+  return { reserved: true, owner_token: data.owner_token, device_id: data.device_id }
+}
+
+export async function getDeviceSubdomain(token, deviceId) {
+  if (!supabase || !token || !deviceId) return null
+  const { data } = await supabase
+    .from('subdomains')
+    .select('name')
+    .eq('owner_token', token)
+    .eq('device_id', deviceId)
+    .eq('reserved', true)
+    .single()
+  return data?.name || null
+}
+
+export async function registerDevice(token, deviceId, hostname, os) {
+  if (!supabase || !token || !deviceId) return null
+  const { data, error } = await supabase
+    .from('devices')
+    .upsert({
+      device_id: deviceId,
+      owner_token: token,
+      hostname: hostname || null,
+      os: os || null,
+      last_seen: new Date().toISOString(),
+    }, { onConflict: 'device_id' })
+    .select('id')
+    .single()
+  if (error) throw error
+  return data?.id
 }

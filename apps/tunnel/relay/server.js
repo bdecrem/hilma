@@ -13,7 +13,7 @@ import crypto from 'crypto'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import { initDb, upsertSubdomain, recordConnect, recordDisconnect } from './db.js'
+import { initDb, upsertSubdomain, recordConnect, recordDisconnect, isSubdomainReserved, getDeviceSubdomain, registerDevice } from './db.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -99,7 +99,7 @@ server.on('upgrade', (req, socket, head) => {
 wss.on('connection', (ws) => {
   let registeredSubdomain = null
 
-  ws.on('message', (data, isBinary) => {
+  ws.on('message', async (data, isBinary) => {
     // Binary frames: TCP data from CLI → proxy
     if (isBinary) {
       const buf = Buffer.from(data)
@@ -131,16 +131,53 @@ wss.on('connection', (ws) => {
     }
 
     if (msg.type === 'register') {
-      let subdomain = msg.subdomain || generateSubdomain()
+      const token = msg.token || null
+      const deviceId = msg.device_id || null
+      const mode = msg.mode === 'tcp' ? 'tcp' : 'http'
 
-      // Check if subdomain is taken
+      // Register device if token + device_id provided
+      if (token && deviceId) {
+        registerDevice(token, deviceId, msg.hostname, msg.os)
+          .catch(err => console.error('[DB]', err.message))
+      }
+
+      // Resolve subdomain: explicit > device reservation > random
+      let subdomain = msg.subdomain || null
+      if (!subdomain && token && deviceId) {
+        try {
+          subdomain = await getDeviceSubdomain(token, deviceId)
+          if (subdomain) console.log(`[TUNNEL] Auto-assigned reserved subdomain '${subdomain}' for device ${deviceId}`)
+        } catch (err) {
+          console.error('[DB]', err.message)
+        }
+      }
+      if (!subdomain) subdomain = generateSubdomain()
+
+      // Check if subdomain is currently active
       if (tunnels.has(subdomain)) {
-        ws.send(JSON.stringify({ type: 'error', code: 3, message: `Subdomain '${subdomain}' is already taken` }))
+        ws.send(JSON.stringify({ type: 'error', code: 3, message: `Subdomain '${subdomain}' is already in use` }))
         return
       }
 
+      // Check if subdomain is reserved by someone else
+      try {
+        const reservation = await isSubdomainReserved(subdomain)
+        if (reservation.reserved) {
+          if (!token || token !== reservation.owner_token) {
+            ws.send(JSON.stringify({ type: 'error', code: 4, message: `Subdomain '${subdomain}' is reserved by another account` }))
+            return
+          }
+          if (reservation.device_id && deviceId && deviceId !== reservation.device_id) {
+            ws.send(JSON.stringify({ type: 'error', code: 4, message: `Subdomain '${subdomain}' is reserved for a different device` }))
+            return
+          }
+        }
+      } catch (err) {
+        console.error('[DB] Reservation check failed:', err.message)
+        // Allow through if DB is down — don't block tunnels
+      }
+
       registeredSubdomain = subdomain
-      const mode = msg.mode === 'tcp' ? 'tcp' : 'http'
       const tunnel = { ws, mode, pending: new Map(), tcpStreams: new Map(), requestCount: 0, connectionId: null }
 
       if (mode === 'tcp') {
@@ -168,7 +205,7 @@ wss.on('connection', (ws) => {
       }
 
       ws.send(JSON.stringify(response))
-      console.log(`[TUNNEL] ${subdomain} registered (${mode}${tunnel.tcpPort ? ` port:${tunnel.tcpPort}` : ''})`)
+      console.log(`[TUNNEL] ${subdomain} registered (${mode}${tunnel.tcpPort ? ` port:${tunnel.tcpPort}` : ''}${token ? ` token:${token.slice(0, 8)}...` : ''})`)
 
       // Fire-and-forget: persist to Supabase
       upsertSubdomain(subdomain)

@@ -72,15 +72,32 @@ Show active tunnels.
 
 Clear stored credentials.
 
+## Reserved Subdomains
+
+Reserve a subdomain on the dashboard to permanently attach it to a device. When your device connects, the relay auto-assigns its reserved subdomain — no `--subdomain` flag needed.
+
+**How it works:**
+- Each CLI install has a unique **device ID** (`dv_xxx`) stored in `~/.tunn3l/config.json`
+- Your **account token** (`tk_xxx`) owns reserved subdomains
+- Each reserved subdomain is bound to a specific device
+- When a device connects, the relay looks up: token + device → subdomain
+- If someone else tries to use your reserved subdomain, they get rejected (exit code 4)
+
+**Reservation is enforced:**
+- Reserved subdomain + wrong token → rejected
+- Reserved subdomain + right token but wrong device → rejected
+- Reserved subdomain + right token + right device → allowed
+- Unreserved subdomain → first come, first served (same as always)
+
 ## Exit Codes
 
 | Code | Meaning |
 |------|---------|
 | 0 | Success (tunnel closed gracefully) |
-| 1 | Authentication error (invalid or expired token) |
+| 1 | Authentication error (invalid token or reserved subdomain conflict) |
 | 2 | Connection failed (relay unreachable) |
-| 3 | Subdomain taken |
-| 4 | Local port not responding |
+| 3 | Subdomain currently in use |
+| 4 | Subdomain reserved by another account/device |
 
 ## Programmatic Usage
 
@@ -112,9 +129,9 @@ Config file: `~/.tunn3l/config.json`
 
 ```json
 {
-  "token": "bk_abc123...",
-  "relay": "wss://relay.tunn3l.sh",
-  "defaultSubdomain": null
+  "api_key": "tk_abc123...",
+  "device_id": "dv_abc123...",
+  "relay": "wss://relay.tunn3l.sh"
 }
 ```
 
