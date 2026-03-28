@@ -6,20 +6,30 @@
  * Mondrian, Kandinsky, Malevich, Hilma af Klint, Vera Molnár — but with
  * motion, physics, and interactivity. Canvas-based, self-contained HTML.
  *
+ * Uses Playwright to render each iteration in a headless browser and
+ * capture screenshots at multiple timestamps, so the evaluator critiques
+ * what the art actually LOOKS like — not just what the code says.
+ *
  * Usage:
  *   npx tsx apps/design-agent/art-agent.ts "geometric meditation on balance"
  *   npx tsx apps/design-agent/art-agent.ts "Kandinsky-inspired sound visualization" --iterations 6
  *   npx tsx apps/design-agent/art-agent.ts "Mondrian meets particle physics" --open
+ *   npx tsx apps/design-agent/art-agent.ts --preset amber --no-screenshots
  *
  * Env:
- *   ANTHROPIC_API_KEY  — uses Claude (preferred)
- *   TOGETHER_API_KEY   — fallback to Together.ai
- *   OPENAI_API_KEY     — fallback to OpenAI
+ *   ANTHROPIC_API_KEY  — uses Claude (preferred, required for vision eval)
+ *   TOGETHER_API_KEY   — fallback to Together.ai (code-only eval)
+ *   OPENAI_API_KEY     — fallback to OpenAI (supports vision eval)
+ *
+ * Deps:
+ *   npm install playwright
+ *   npx playwright install chromium
  */
 
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { chromium, type Browser, type Page } from 'playwright'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -122,7 +132,102 @@ async function callLLM(config: LLMConfig, messages: Message[], maxTokens = 8192)
   return data.choices?.[0]?.message?.content || ''
 }
 
-// ── Art-specific Criteria ───────────────────────────────────────
+// ── Playwright Screenshot Capture ───────────────────────────────
+
+interface ArtCapture {
+  screenshots: Buffer[]   // multiple frames to show temporal evolution
+  timestamps: number[]    // when each frame was captured (seconds)
+}
+
+let _browser: Browser | null = null
+
+async function getBrowser(): Promise<Browser> {
+  if (!_browser) {
+    _browser = await chromium.launch({ headless: true })
+  }
+  return _browser
+}
+
+async function closeBrowser(): Promise<void> {
+  if (_browser) {
+    await _browser.close()
+    _browser = null
+  }
+}
+
+async function captureArt(htmlPath: string, frameDelays = [1, 3, 8]): Promise<ArtCapture> {
+  const browser = await getBrowser()
+  const page = await browser.newPage({ viewport: { width: 1280, height: 960 } })
+
+  const fileUrl = `file://${path.resolve(htmlPath)}`
+  await page.goto(fileUrl, { waitUntil: 'domcontentloaded' })
+
+  const screenshots: Buffer[] = []
+  const timestamps: number[] = []
+
+  for (const delay of frameDelays) {
+    await page.waitForTimeout(delay === frameDelays[0] ? delay * 1000 : (delay - (frameDelays[frameDelays.indexOf(delay) - 1] || 0)) * 1000)
+    const buf = await page.screenshot({ type: 'png' })
+    screenshots.push(buf)
+    timestamps.push(delay)
+  }
+
+  await page.close()
+  return { screenshots, timestamps }
+}
+
+// ── Vision-capable LLM call (Anthropic only) ──────────────────
+
+interface ContentBlock {
+  type: 'text' | 'image'
+  text?: string
+  source?: { type: 'base64'; media_type: string; data: string }
+}
+
+async function callLLMWithVision(
+  config: LLMConfig,
+  systemPrompt: string,
+  contentBlocks: ContentBlock[],
+  maxTokens = 2048,
+): Promise<string> {
+  if (config.provider === 'anthropic') {
+    const res = await fetch(`${config.baseUrl}/v1/messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: config.model,
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: contentBlocks }],
+      }),
+    })
+    const data = await res.json() as { content?: { text: string }[]; error?: { message: string } }
+    if (data.error) throw new Error(data.error.message)
+    return data.content?.[0]?.text || ''
+  }
+
+  if (config.provider === 'openai') {
+    const oaiContent = contentBlocks.map(b => {
+      if (b.type === 'text') return { type: 'text' as const, text: b.text! }
+      return { type: 'image_url' as const, image_url: { url: `data:${b.source!.media_type};base64,${b.source!.data}` } }
+    })
+    const res = await fetch(`${config.baseUrl}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
+      body: JSON.stringify({ model: config.model, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: oaiContent }], max_tokens: maxTokens }),
+    })
+    const data = await res.json() as { choices?: { message: { content: string } }[]; error?: { message: string } }
+    if (data.error) throw new Error(data.error.message)
+    return data.choices?.[0]?.message?.content || ''
+  }
+
+  // Together / non-vision providers: fall back to code-only eval
+  return ''
+}
 
 interface Scores {
   composition: number
@@ -136,6 +241,8 @@ interface Scores {
 
 const EVALUATOR_SYSTEM = `You are an abstract art critic with deep knowledge of 20th century modernism, generative art, and interactive media. You evaluate HTML canvas art pieces against four criteria, each scored 1-10.
 
+You will receive SCREENSHOTS of the running art piece captured at different moments (typically ~1s, ~3s, and ~8s after load) so you can assess temporal evolution. You may also receive the source code for additional context. Judge primarily from the visual evidence — what you SEE — not what the code intends.
+
 ## Scoring Criteria
 
 **Composition** (1-10): Does the piece demonstrate intentional spatial organization? Look for:
@@ -147,12 +254,12 @@ const EVALUATOR_SYSTEM = `You are an abstract art critic with deep knowledge of 
 - Does it feel composed or merely scattered?
 
 **Movement** (1-10): How effectively does the piece use animation and time?
+- Compare the screenshots: is there visible evolution between frames?
 - Is motion purposeful or just decorative?
 - Do elements relate to each other dynamically (not just independent particles)?
 - Is there a sense of forces — gravity, attraction, repulsion, flow?
 - Temporal composition: does the piece evolve, or just loop?
-- Frame rate and smoothness of animation
-- If interactive: does interaction feel meaningful, not just "drag to move"?
+- Does the 8-second frame show something the 1-second frame didn't?
 
 **Palette** (1-10): Color as an artistic decision, not decoration.
 - Is the palette intentional and limited (not random rainbow)?
@@ -313,6 +420,7 @@ ${c.dim}Options:${c.reset}
   --iterations <n>   Max iterations (default: 5)
   --open             Open final result in browser
   --out <dir>        Output directory (default: apps/design-agent/art-output)
+  --no-screenshots   Skip Playwright rendering, use code-only evaluation
 `)
     process.exit(0)
   }
@@ -320,12 +428,14 @@ ${c.dim}Options:${c.reset}
   let prompt = ''
   let maxIterations = 5
   let openBrowser = false
+  let noScreenshots = false
   let outDir = path.join(__dirname, 'art-output')
 
   const nonFlagArgs: string[] = []
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--iterations' && args[i + 1]) { maxIterations = parseInt(args[++i]); continue }
     if (args[i] === '--open') { openBrowser = true; continue }
+    if (args[i] === '--no-screenshots') { noScreenshots = true; continue }
     if (args[i] === '--out' && args[i + 1]) { outDir = args[++i]; continue }
     if (args[i] === '--preset' && args[i + 1]) {
       const preset = args[++i]
@@ -356,6 +466,7 @@ ${c.dim}Options:${c.reset}
   console.log()
   console.log(`  ${c.dim}Concept:${c.reset}    ${prompt.slice(0, 80)}${prompt.length > 80 ? '...' : ''}`)
   console.log(`  ${c.dim}Provider:${c.reset}   ${llm.provider} (${llm.model})`)
+  console.log(`  ${c.dim}Eval mode:${c.reset}  ${noScreenshots ? 'code-only' : 'visual (Playwright screenshots)'}`)
   console.log(`  ${c.dim}Iterations:${c.reset} ${maxIterations}`)
   console.log(`  ${c.dim}Output:${c.reset}     ${outDir}`)
   console.log()
@@ -453,25 +564,82 @@ Create an improved version. Output ONLY the complete HTML file.`,
     fs.writeFileSync(iterFile, currentHTML)
     console.log(`  ${c.green}✓ Created${c.reset} ${c.dim}(${genTime}s, ${(currentHTML.length / 1024).toFixed(1)}KB) → ${iterFile}${c.reset}`)
 
+    // ── CAPTURE ──
+    let capture: ArtCapture | null = null
+
+    if (!noScreenshots) {
+      console.log(`  ${c.blue}⟳ Rendering & capturing...${c.reset}`)
+
+      const capStart = Date.now()
+      try {
+        capture = await captureArt(iterFile)
+        const capTime = ((Date.now() - capStart) / 1000).toFixed(1)
+
+        // Save screenshots alongside HTML
+        for (let f = 0; f < capture.screenshots.length; f++) {
+          const shotFile = path.join(outDir, `iteration-${i}-frame-${capture.timestamps[f]}s.png`)
+          fs.writeFileSync(shotFile, capture.screenshots[f])
+        }
+        console.log(`  ${c.green}✓ Captured${c.reset} ${c.dim}(${capTime}s, ${capture.screenshots.length} frames)${c.reset}`)
+      } catch (err: any) {
+        console.log(`  ${c.yellow}⚠ Screenshot failed: ${err.message} — falling back to code-only eval${c.reset}`)
+      }
+    }
+
     // ── EVALUATE ──
     console.log(`  ${c.magenta}⟳ Critiquing...${c.reset}`)
 
-    const evalMessages: Message[] = [
-      { role: 'system', content: EVALUATOR_SYSTEM },
-      {
-        role: 'user',
-        content: `Evaluate this abstract generative art piece. The artist's concept was: "${prompt}"
+    let evalResponse: string
+    const evalStart = Date.now()
+
+    if (capture && (llm.provider === 'anthropic' || llm.provider === 'openai')) {
+      // Vision-based evaluation: send screenshots + source
+      const contentBlocks: ContentBlock[] = []
+
+      contentBlocks.push({
+        type: 'text',
+        text: `Evaluate this abstract generative art piece. The artist's concept was: "${prompt}"\n\nBelow are screenshots captured at different moments, followed by the source code.`,
+      })
+
+      for (let f = 0; f < capture.screenshots.length; f++) {
+        contentBlocks.push({
+          type: 'text',
+          text: `Screenshot at ${capture.timestamps[f]}s:`,
+        })
+        contentBlocks.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: 'image/png',
+            data: capture.screenshots[f].toString('base64'),
+          },
+        })
+      }
+
+      contentBlocks.push({
+        type: 'text',
+        text: `Source code for reference:\n\n${currentHTML}\n\nScore each criterion 1-10 as a serious art critic. Respond with JSON only.`,
+      })
+
+      evalResponse = await callLLMWithVision(llm, EVALUATOR_SYSTEM, contentBlocks)
+    } else {
+      // Fallback: code-only evaluation
+      const evalMessages: Message[] = [
+        { role: 'system', content: EVALUATOR_SYSTEM },
+        {
+          role: 'user',
+          content: `Evaluate this abstract generative art piece. The artist's concept was: "${prompt}"
 
 Here is the complete HTML source (Canvas API art):
 
 ${currentHTML}
 
 Score each criterion 1-10 as a serious art critic. Respond with JSON only.`,
-      },
-    ]
+        },
+      ]
+      evalResponse = await callLLM(llm, evalMessages, 2048)
+    }
 
-    const evalStart = Date.now()
-    const evalResponse = await callLLM(llm, evalMessages, 2048)
     const evalTime = ((Date.now() - evalStart) / 1000).toFixed(1)
 
     const scores = extractScores(evalResponse)
@@ -557,9 +725,12 @@ Score each criterion 1-10 as a serious art critic. Respond with JSON only.`,
   }
 
   console.log()
+
+  await closeBrowser()
 }
 
-main().catch(err => {
+main().catch(async err => {
+  await closeBrowser()
   console.error(`${c.red}Error: ${err.message}${c.reset}`)
   process.exit(1)
 })

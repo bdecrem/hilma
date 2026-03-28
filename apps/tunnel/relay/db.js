@@ -30,11 +30,13 @@ export async function upsertSubdomain(name) {
   return data.id
 }
 
-export async function recordConnect(subdomain, clientIp) {
+export async function recordConnect(subdomain, clientIp, token) {
   if (!supabase) return null
+  const row = { subdomain, client_ip: clientIp }
+  if (token) row.token = token
   const { data, error } = await supabase
     .from('connections')
-    .insert({ subdomain, client_ip: clientIp })
+    .insert(row)
     .select('id')
     .single()
   if (error) throw error
@@ -92,4 +94,95 @@ export async function registerDevice(token, deviceId, hostname, os) {
     .single()
   if (error) throw error
   return data?.id
+}
+
+// Get the reserved subdomain for a token (if any)
+export async function getReservedSubdomain(token) {
+  if (!supabase || !token) return null
+  const { data } = await supabase
+    .from('subdomains')
+    .select('name')
+    .eq('owner_token', token)
+    .eq('reserved', true)
+    .limit(1)
+    .single()
+  return data?.name || null
+}
+
+// Check if a subdomain is reserved by a different token
+export async function isSubdomainReservedByOther(name, token) {
+  if (!supabase) return false
+  const { data } = await supabase
+    .from('subdomains')
+    .select('owner_token')
+    .eq('name', name)
+    .eq('reserved', true)
+    .single()
+  if (!data) return false
+  return data.owner_token !== token
+}
+
+// Get token claim status and info
+export async function getTokenInfo(token) {
+  if (!supabase || !token) return null
+  const { data } = await supabase
+    .from('tokens')
+    .select('*')
+    .eq('api_key', token)
+    .single()
+  return data || null
+}
+
+// Get all reserved subdomains for a token
+export async function getReservedSubdomains(token) {
+  if (!supabase || !token) return []
+  const { data } = await supabase
+    .from('subdomains')
+    .select('name, last_seen')
+    .eq('owner_token', token)
+    .eq('reserved', true)
+  return data || []
+}
+
+// Claim a token (link to email)
+export async function claimToken(token, email) {
+  if (!supabase || !token) return null
+  const { data, error } = await supabase
+    .from('tokens')
+    .upsert({
+      api_key: token,
+      email,
+      claimed_at: new Date().toISOString()
+    }, { onConflict: 'api_key' })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+// Reserve a subdomain for a token
+export async function reserveSubdomain(token, subdomain) {
+  if (!supabase || !token || !subdomain) return false
+  const { error } = await supabase
+    .from('subdomains')
+    .upsert({
+      name: subdomain,
+      owner_token: token,
+      reserved: true,
+      last_seen: new Date().toISOString()
+    }, { onConflict: 'name' })
+  if (error) throw error
+  return true
+}
+
+// Unreserve a subdomain
+export async function unreserveSubdomain(token, subdomain) {
+  if (!supabase || !token || !subdomain) return false
+  const { error } = await supabase
+    .from('subdomains')
+    .update({ reserved: false, owner_token: null })
+    .eq('name', subdomain)
+    .eq('owner_token', token)
+  if (error) throw error
+  return true
 }

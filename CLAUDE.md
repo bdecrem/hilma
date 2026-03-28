@@ -102,6 +102,11 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 - Server Components by default, `'use client'` only when needed
 - Deploy is push-button: `vercel --prod`
 - **Always create an `opengraph-image.tsx`** when building a new web app/page. Use Next.js built-in OG image generation.
+- **Check your visual work.** When creating or modifying anything visual (HTML pages, art, promo images, layouts):
+  1. **Do the math.** Never eyeball spacing. Count elements, measure heights, calculate gaps arithmetically. Write the math in a comment before setting positions.
+  2. **Screenshot and verify.** Use Playwright MCP to render the result. Actually look at the screenshot and ask: "Is this evenly spaced? Is this centered? Would a designer approve this?"
+  3. **Fix before showing.** If anything looks off, fix it. Don't send broken work and iterate with Bart — iterate with yourself first.
+- **Don't make empty promises.** Never say "it won't happen again" or "I'll do better" without backing it up with a concrete action (a code change, a CLAUDE.md rule, a new process). Words without action are noise.
 
 ## Sister repo: vibeceo8 (`../vibeceo8/`)
 

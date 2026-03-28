@@ -4,6 +4,17 @@
 
 set -e
 
+# Parse arguments
+EXISTING_KEY=""
+for arg in "$@"; do
+  case "$arg" in
+    --key=*) EXISTING_KEY="${arg#--key=}" ;;
+    --key) ;; # next arg handled below
+    *) if [ "$prev_arg" = "--key" ]; then EXISTING_KEY="$arg"; fi ;;
+  esac
+  prev_arg="$arg"
+done
+
 REPO="bdecrem/hilma"
 INSTALL_DIR="$HOME/.tunn3l/bin"
 BASE_URL="https://github.com/$REPO/releases/latest/download"
@@ -50,19 +61,37 @@ fi
 
 chmod +x "$INSTALL_DIR/tunn3l"
 
+# macOS: codesign so Gatekeeper doesn't kill the binary
+if [ "$(uname -s)" = "Darwin" ] && command -v codesign >/dev/null 2>&1; then
+  codesign --force --sign - "$INSTALL_DIR/tunn3l" 2>/dev/null || true
+fi
+
 echo "tunn3l: installed to $INSTALL_DIR/tunn3l"
 
-# Generate config with API key and device ID if not present
-CONFIG_FILE="$HOME/.tunn3l/config.json"
-if [ ! -f "$CONFIG_FILE" ]; then
+# Set up API key
+CONFIG_DIR="$HOME/.tunn3l"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+mkdir -p "$CONFIG_DIR"
+if [ -n "$EXISTING_KEY" ]; then
+  # Use provided key
+  API_KEY="$EXISTING_KEY"
+  if [ -f "$CONFIG_FILE" ] && grep -q '"api_key"' "$CONFIG_FILE" 2>/dev/null; then
+    # Replace existing key
+    sed -i.bak "s/\"api_key\":.*\"tk_[^\"]*\"/\"api_key\": \"$API_KEY\"/" "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
+  elif [ -f "$CONFIG_FILE" ]; then
+    sed -i.bak 's/}$/,\n  "api_key": "'"$API_KEY"'"\n}/' "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
+  else
+    printf '{\n  "api_key": "%s"\n}\n' "$API_KEY" > "$CONFIG_FILE"
+  fi
+  echo "tunn3l: using existing API key"
+elif [ ! -f "$CONFIG_FILE" ] || ! grep -q '"api_key"' "$CONFIG_FILE" 2>/dev/null; then
+  # Generate new key
   API_KEY="tk_$(od -An -tx1 -N16 /dev/urandom | tr -d ' \n')"
-  DEVICE_ID="dv_$(od -An -tx1 -N12 /dev/urandom | tr -d ' \n')"
-  cat > "$CONFIG_FILE" <<CONF
-{
-  "api_key": "$API_KEY",
-  "device_id": "$DEVICE_ID"
-}
-CONF
+  if [ -f "$CONFIG_FILE" ]; then
+    sed -i.bak 's/}$/,\n  "api_key": "'"$API_KEY"'"\n}/' "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
+  else
+    printf '{\n  "api_key": "%s"\n}\n' "$API_KEY" > "$CONFIG_FILE"
+  fi
   echo "tunn3l: API key generated"
   echo "tunn3l: device ID generated"
 else
@@ -116,7 +145,7 @@ case ":$PATH:" in
 esac
 
 echo ""
-echo "  tunn3l installed successfully!"
+echo "  tunn3l installed! Open a new terminal, then:"
 echo ""
 echo "  HTTP tunnel:"
 echo "    tunn3l http 3000"
