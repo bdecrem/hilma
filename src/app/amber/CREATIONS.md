@@ -117,3 +117,9 @@
 - **Prompt:** One-line story — spring citrus
 - **What:** "every app on your phone is a tiny mouth asking to be fed." A phone with 12 app icons that are literal mouths — colored squares with eyes, lips that chomp at different rhythms, some yawning. Red notification badges as crumbs. Phone vibrates occasionally. Peach→lemon gradient.
 - **Tweeted:** "every app on your phone is a tiny mouth asking to be fed."
+
+### L12 (escalation — field)
+- **URL:** /amber/escalation/L12
+- **Prompt:** Escalation L12 — composition tier, wave interference
+- **What:** A dot grid covering the entire canvas. Each tap sends a radial wave outward at 3.8px/frame. Multiple waves interfere — where crests meet, dots swell and glow in citrus colors; where they cancel, dots shrink to near-invisible amber. A slow ambient oscillation keeps the field alive between taps. Staggered hex grid for visual density. Peach→blush gradient background.
+- **Tweeted:** "L12: tap anywhere. the field remembers."
