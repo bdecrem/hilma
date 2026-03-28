@@ -117,3 +117,11 @@
 - **Prompt:** One-line story — spring citrus
 - **What:** "every app on your phone is a tiny mouth asking to be fed." A phone with 12 app icons that are literal mouths — colored squares with eyes, lips that chomp at different rhythms, some yawning. Red notification badges as crumbs. Phone vibrates occasionally. Peach→lemon gradient.
 - **Tweeted:** "every app on your phone is a tiny mouth asking to be fed."
+
+## 2026-03-28
+
+### vortex
+- **URL:** /amber/vortex
+- **Prompt:** HD generative art — spring citrus
+- **What:** Fluid vortex simulation. 600 citrus particles (blood orange, tangerine, mango, lime, grapefruit) swirl around rotating vortex centers. Tap anywhere to spawn a new vortex — particles accelerate, absorb the vortex's color, trace trails that fade into the warm background. Vortices slowly decay; new ones auto-spawn to keep the system alive. Peach→lemon gradient background, amber particles as watermark.
+- **Tweeted:** "tap to spin the citrus."
