@@ -65,12 +65,27 @@ if [ ! -f "$CONFIG_FILE" ]; then
 CONF
   echo "tunn3l: API key generated"
   echo "tunn3l: device ID generated"
-elif ! grep -q '"device_id"' "$CONFIG_FILE" 2>/dev/null; then
-  # Existing config without device_id — add one
-  DEVICE_ID="dv_$(od -An -tx1 -N12 /dev/urandom | tr -d ' \n')"
-  # Use a temp file to inject device_id before the closing brace
-  sed -i.bak 's/}$/,\n  "device_id": "'"$DEVICE_ID"'"\n}/' "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
-  echo "tunn3l: device ID generated"
+else
+  # Existing config — ensure device_id is present
+  # The CLI will auto-generate device_id on first run if missing,
+  # but we also handle it here for completeness
+  if ! grep -q '"device_id"' "$CONFIG_FILE" 2>/dev/null; then
+    DEVICE_ID="dv_$(od -An -tx1 -N12 /dev/urandom | tr -d ' \n')"
+    # Use node to safely merge into existing JSON (preserves all fields)
+    if command -v node >/dev/null 2>&1; then
+      node -e "
+        const fs = require('fs');
+        const cfg = JSON.parse(fs.readFileSync('$CONFIG_FILE', 'utf8'));
+        cfg.device_id = '$DEVICE_ID';
+        fs.writeFileSync('$CONFIG_FILE', JSON.stringify(cfg, null, 2) + '\n');
+      " 2>/dev/null && echo "tunn3l: device ID generated"
+    else
+      # Fallback: use sed (less safe but works for simple configs)
+      sed -i.bak 's/}$/,\n  "device_id": "'"$DEVICE_ID"'"\n}/' "$CONFIG_FILE" && rm -f "${CONFIG_FILE}.bak"
+      echo "tunn3l: device ID generated"
+    fi
+  fi
+  echo "tunn3l: existing config preserved"
 fi
 
 # Check if already in PATH
