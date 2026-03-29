@@ -154,3 +154,9 @@
 - **Prompt:** daily generative art
 - **What:** Mycelium map. Spore colonies grow branching filaments across a warm citrus canvas — fractal recursive growth, each branch forks as it reaches full length. Colors cycle through blood orange, tangerine, mango, lime, grapefruit. Tap anywhere to plant a new colony. Tips glow as they grow. Where colonies accumulate, the canvas fills with living citrus thread-networks.
 - **Tweeted:** pending
+
+### L13: flow (escalation)
+- **URL:** /amber/escalation/L13
+- **Prompt:** Escalation engine — L13
+- **What:** Particles drift through a smoothly shifting vector field driven by overlapping sin/cos waves. The field breathes and rotates on its own. 600 citrus-colored particles fade in at birth, fade out at death, continuously spawning from edges. Tap anywhere to release a burst of 45 particles at that point. New techniques: flow-field, noise-driven vectors, particle-streams, fade lifecycle, edge-spawning.
+- **Tweeted:** pending
