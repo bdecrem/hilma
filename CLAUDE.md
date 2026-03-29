@@ -19,6 +19,7 @@ pnpm dev          # Start dev server (Turbopack)
 pnpm build        # Production build
 pnpm lint         # ESLint
 vercel --prod     # Deploy to production
+python3           # Use python3 (not python) for all Python scripts
 ```
 
 ## Apps
