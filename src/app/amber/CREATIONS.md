@@ -120,8 +120,31 @@
 
 ## 2026-03-27
 
+### L12 (escalation — 1pm cron)
+- **URL:** /amber/escalation/L12
+- **Prompt:** Escalation L12 — spring citrus
+- **What:** Tap to plant seeds that grow into branching coral-like trees. Fractal recursive branching — each branch forks into 2-3 children, thinning as they go. Citrus colors cycle through the tree. Buds appear at leaf tips. One tree starts at center bottom, tap anywhere to plant more. Organic, accumulative, alive.
+- **Tweeted:** "L12: tap anywhere. watch it reach."
+
 ### pigeon (bitmap cartoon)
 - **URL:** /amber/pigeon
 - **Prompt:** 6pm cron — bitmap New Yorker cartoon
 - **What:** Conference room meeting. Three office workers (teal suit, coral blazer, lime shirt with glasses) sit around a mango conference table with whiteboard showing Q3 charts. A pigeon in a tiny red tie sits in a sunshine-yellow chair, head bobbing, orange pigeon eye blinking. Person on the right has speech bubble: "let's circle back on that." Coffee cups on table, papers, nameplate. Citrus palette on cream, 240x180 grid, animated (pigeon bobs, head moves).
-- **Tweeted:** pending push
+- **Tweeted:** '"let's circle back on that."'
+
+## 2026-03-28
+
+### growth (bitmap cartoon)
+- **URL:** /amber/growth
+- **Prompt:** 6pm cron — bitmap New Yorker cartoon
+- **What:** A houseplant in a terracotta pot standing next to a whiteboard presenting "GROWTH" with a big upward arrow and bar chart. Holding a tiny pointer stick. Two office workers (teal blazer, coral blazer) sit at a mango desk looking awkward — tight-lipped smiles, raised eyebrows. Coffee cup with animated steam, notepad. Plant leaves sway gently. Citrus palette on cream, 240x180 grid, animated.
+- **Caption:** "nobody had the heart to tell him it was about revenue."
+- **Tweeted:** pending
+
+## 2026-03-29
+
+### crank (tiny machine)
+- **URL:** /amber/crank
+- **Prompt:** 8am cron — tiny machine category
+- **What:** Interlocking gear train. 9 meshing gears of different sizes in citrus colors on warm gradient background. Drag the main gear to spin — the whole mechanism comes alive through gear ratios, each gear turning at the correct speed and direction. Momentum carries when you release. Spokes, hubs, teeth all rendered. Touch-driven clockwork.
+- **Tweeted:** pending

@@ -138,7 +138,7 @@ export async function getReservedSubdomains(token) {
   if (!supabase || !token) return []
   const { data } = await supabase
     .from('subdomains')
-    .select('name, last_seen')
+    .select('name, last_seen, device_id')
     .eq('owner_token', token)
     .eq('reserved', true)
   return data || []
@@ -161,16 +161,18 @@ export async function claimToken(token, email) {
 }
 
 // Reserve a subdomain for a token
-export async function reserveSubdomain(token, subdomain) {
+export async function reserveSubdomain(token, subdomain, deviceId) {
   if (!supabase || !token || !subdomain) return false
+  const row = {
+    name: subdomain,
+    owner_token: token,
+    reserved: true,
+    last_seen: new Date().toISOString()
+  }
+  if (deviceId) row.device_id = deviceId
   const { error } = await supabase
     .from('subdomains')
-    .upsert({
-      name: subdomain,
-      owner_token: token,
-      reserved: true,
-      last_seen: new Date().toISOString()
-    }, { onConflict: 'name' })
+    .upsert(row, { onConflict: 'name' })
   if (error) throw error
   return true
 }
