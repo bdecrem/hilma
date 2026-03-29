@@ -94,6 +94,8 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 
 ## Conventions
 
+- **Always test before declaring done.** When building scripts or features, run them (or at least a dry run) and verify the output before telling the user it's ready.
+
 - **Always run `gh` commands from the repo root** (`/Users/bartdecrem/Documents/coding2025/hilma`), never from `/tmp` or other non-git directories. `gh release` requires a git repo context. When chaining commands that start in `/tmp` (e.g., compressing binaries), `cd` back to the repo before running `gh`.
 - Use `@/*` import alias for `src/*`
 - Keep it lean — no unnecessary dependencies

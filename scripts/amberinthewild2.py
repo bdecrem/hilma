@@ -351,7 +351,9 @@ Create the output as a file in scripts/. Poems/writing as .txt, drawings/visual 
     # Send to Claude Code — full agentic mode so it can create files
     print("── creating ──\n")
     result = subprocess.run(
-        ["claude", "-p", prompt],
+        ["claude", "-p", "-", "--allowedTools", "Write,Edit,Bash"],
+        input=prompt,
+        text=True,
         capture_output=False,
     )
     sys.exit(result.returncode)
