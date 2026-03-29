@@ -23,7 +23,7 @@ import WebSocket from 'ws'
 import http from 'http'
 import net from 'net'
 import crypto from 'crypto'
-import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync, readdirSync } from 'fs'
+import { readFileSync, writeFileSync, mkdirSync, unlinkSync, existsSync, readdirSync, chmodSync } from 'fs'
 import { join } from 'path'
 import { execSync } from 'child_process'
 import { homedir, platform, hostname as osHostname } from 'os'
@@ -59,7 +59,8 @@ function saveConfig(name, config) {
   const path = name === 'default'
     ? join(TUNN3L_DIR, 'config.json')
     : join(TUNN3L_DIR, `config.${name}.json`)
-  writeFileSync(path, JSON.stringify(config, null, 2) + '\n')
+  writeFileSync(path, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 })
+  try { chmodSync(path, 0o600) } catch {} // chmod needed when file already exists
   return path
 }
 
@@ -321,9 +322,9 @@ function handleTcp(tcpArgs) {
       // Binary frames: TCP data from relay → local socket
       if (isBinary) {
         const buf = Buffer.from(data)
-        if (buf.length < 8) return
-        const streamId = buf.subarray(0, 8).toString('ascii')
-        const payload = buf.subarray(8)
+        if (buf.length < 16) return
+        const streamId = buf.subarray(0, 16).toString('ascii')
+        const payload = buf.subarray(16)
         const sock = streams.get(streamId)
         if (sock && !sock.destroyed) {
           sock.write(payload)
@@ -383,9 +384,9 @@ function handleTcp(tcpArgs) {
 
         sock.on('data', (chunk) => {
           if (ws.readyState !== ws.OPEN) return
-          const frame = Buffer.alloc(8 + chunk.length)
-          frame.write(msg.streamId, 0, 8, 'ascii')
-          chunk.copy(frame, 8)
+          const frame = Buffer.alloc(16 + chunk.length)
+          frame.write(msg.streamId, 0, 16, 'ascii')
+          chunk.copy(frame, 16)
           ws.send(frame)
         })
 
@@ -512,9 +513,18 @@ function systemdPathFor(name) { return join(homedir(), '.config', 'systemd', 'us
 function logPathFor(name) { return join(DAEMON_DIR, name === 'default' ? 'tunn3l.log' : `tunn3l-${name}.log`) }
 function errPathFor(name) { return join(DAEMON_DIR, name === 'default' ? 'tunn3l.err' : `tunn3l-${name}.err`) }
 
+const DAEMON_NAME_RE = /^[a-zA-Z0-9_-]+$/
+
 function parseName(daemonArgs) {
   for (let i = 0; i < daemonArgs.length; i++) {
-    if (daemonArgs[i] === '--name' && daemonArgs[i + 1]) return daemonArgs[i + 1]
+    if (daemonArgs[i] === '--name' && daemonArgs[i + 1]) {
+      const name = daemonArgs[i + 1]
+      if (!DAEMON_NAME_RE.test(name)) {
+        console.error('Error: daemon name must be alphanumeric, hyphens, or underscores only')
+        process.exit(1)
+      }
+      return name
+    }
   }
   return 'default'
 }

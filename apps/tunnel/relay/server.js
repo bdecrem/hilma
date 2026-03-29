@@ -26,12 +26,18 @@ try {
 
 const PORT = parseInt(process.env.PORT || '4040')
 const BASE_DOMAIN = process.env.BASE_DOMAIN || 'localhost'
+const MAX_REQUEST_BODY = 50 * 1024 * 1024 // 50MB max request body
+const MAX_TUNNELS_PER_TOKEN = 20 // max concurrent tunnels per token
+const SUBDOMAIN_RE = /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/ // valid subdomain format
 
-// Registry: subdomain → { ws, mode, pending, tcpStreams, tcpPort, requestCount, connectionId }
+// Registry: subdomain → { ws, mode, pending, tcpStreams, tcpPort, requestCount, connectionId, token }
 // mode: "http" (default) or "tcp"
 // tcpStreams: Map<streamId, socket> — only used in tcp mode
 // tcpPort: assigned external port for TCP tunnels
 const tunnels = new Map()
+
+// Track tunnels per token for rate limiting
+const tunnelsPerToken = new Map() // token → Set<subdomain>
 
 // Port registry: port → subdomain (for TCP port routing)
 const portToSubdomain = new Map()
@@ -50,7 +56,7 @@ function assignTcpPort() {
 const tcpListeners = new Map()
 
 function generateId() {
-  return crypto.randomBytes(8).toString('hex')
+  return crypto.randomBytes(8).toString('hex') // 16-char hex = 64 bits
 }
 
 import { ADJECTIVES, NOUNS } from './words.js'
@@ -103,9 +109,9 @@ wss.on('connection', (ws) => {
     // Binary frames: TCP data from CLI → proxy
     if (isBinary) {
       const buf = Buffer.from(data)
-      if (buf.length < 8 || !registeredSubdomain) return
-      const streamId = buf.subarray(0, 8).toString('ascii')
-      const payload = buf.subarray(8)
+      if (buf.length < 16 || !registeredSubdomain) return
+      const streamId = buf.subarray(0, 16).toString('ascii')
+      const payload = buf.subarray(16)
       const tunnel = tunnels.get(registeredSubdomain)
       if (!tunnel) return
       const stream = tunnel.tcpStreams.get(streamId)
@@ -141,8 +147,25 @@ wss.on('connection', (ws) => {
           .catch(err => console.error('[DB]', err.message))
       }
 
+      // Per-token concurrent tunnel limit
+      if (token) {
+        const active = tunnelsPerToken.get(token)
+        if (active && active.size >= MAX_TUNNELS_PER_TOKEN) {
+          console.log(`[AUTH] Token ${token.slice(0, 8)}... exceeded max tunnels (${MAX_TUNNELS_PER_TOKEN})`)
+          ws.send(JSON.stringify({ type: 'error', code: 5, message: `Too many active tunnels (max ${MAX_TUNNELS_PER_TOKEN})` }))
+          return
+        }
+      }
+
       // Resolve subdomain: explicit > device reservation > random
       let subdomain = msg.subdomain || null
+
+      // Validate subdomain format if explicitly requested
+      if (subdomain && !SUBDOMAIN_RE.test(subdomain)) {
+        ws.send(JSON.stringify({ type: 'error', code: 6, message: 'Invalid subdomain. Use lowercase letters, numbers, and hyphens (max 63 chars).' }))
+        return
+      }
+
       if (!subdomain && token && deviceId) {
         try {
           subdomain = await getDeviceSubdomain(token, deviceId)
@@ -164,10 +187,12 @@ wss.on('connection', (ws) => {
         const reservation = await isSubdomainReserved(subdomain)
         if (reservation.reserved) {
           if (!token || token !== reservation.owner_token) {
+            console.log(`[AUTH] Rejected: token ${token ? token.slice(0, 8) + '...' : 'none'} tried reserved subdomain '${subdomain}' (device: ${deviceId || 'none'}, ip: ${ws._socket?.remoteAddress})`)
             ws.send(JSON.stringify({ type: 'error', code: 4, message: `Subdomain '${subdomain}' is reserved by another account` }))
             return
           }
           if (reservation.device_id && deviceId && deviceId !== reservation.device_id) {
+            console.log(`[AUTH] Rejected: device ${deviceId} tried subdomain '${subdomain}' reserved for ${reservation.device_id} (token: ${token.slice(0, 8)}..., ip: ${ws._socket?.remoteAddress})`)
             ws.send(JSON.stringify({ type: 'error', code: 4, message: `Subdomain '${subdomain}' is reserved for a different device` }))
             return
           }
@@ -190,7 +215,14 @@ wss.on('connection', (ws) => {
         portToSubdomain.set(tcpPort, subdomain)
       }
 
+      tunnel.token = token
       tunnels.set(subdomain, tunnel)
+
+      // Track per-token tunnel count
+      if (token) {
+        if (!tunnelsPerToken.has(token)) tunnelsPerToken.set(token, new Set())
+        tunnelsPerToken.get(token).add(subdomain)
+      }
 
       // Start TCP listener for this tunnel
       if (mode === 'tcp' && tunnel.tcpPort) {
@@ -247,9 +279,9 @@ wss.on('connection', (ws) => {
       if (stream._buffered) {
         // WebSocket proxy stream (from tunn3l proxy)
         for (const buf of stream._buffered) {
-          const frame = Buffer.alloc(8 + buf.length)
-          frame.write(msg.streamId, 0, 8, 'ascii')
-          buf.copy(frame, 8)
+          const frame = Buffer.alloc(16 + buf.length)
+          frame.write(msg.streamId, 0, 16, 'ascii')
+          buf.copy(frame, 16)
           ws.send(frame)
         }
         stream._buffered = null
@@ -259,9 +291,9 @@ wss.on('connection', (ws) => {
         stream._waitingForReady = false
         stream._paused = false
         for (const buf of stream._tcpBuffered) {
-          const frame = Buffer.alloc(8 + buf.length)
-          frame.write(msg.streamId, 0, 8, 'ascii')
-          buf.copy(frame, 8)
+          const frame = Buffer.alloc(16 + buf.length)
+          frame.write(msg.streamId, 0, 16, 'ascii')
+          buf.copy(frame, 16)
           ws.send(frame)
         }
         stream._tcpBuffered = null
@@ -313,6 +345,14 @@ wss.on('connection', (ws) => {
           recordDisconnect(tunnel.connectionId, { requestsServed: tunnel.requestCount || 0 })
             .catch(err => console.error('[DB]', err.message))
         }
+        // Clean up per-token tracking
+        if (tunnel.token) {
+          const active = tunnelsPerToken.get(tunnel.token)
+          if (active) {
+            active.delete(registeredSubdomain)
+            if (active.size === 0) tunnelsPerToken.delete(tunnel.token)
+          }
+        }
         tunnels.delete(registeredSubdomain)
       }
       console.log(`[TUNNEL] ${registeredSubdomain} disconnected`)
@@ -345,7 +385,7 @@ wssTcp.on('connection', (proxyWs, req) => {
     return
   }
 
-  const streamId = generateId().slice(0, 8) // 8-char hex
+  const streamId = generateId() // 16-char hex
   tunnel.tcpStreams.set(streamId, proxyWs)
   proxyWs._buffered = [] // buffer data until CLI sends tcp-ready
 
@@ -370,9 +410,9 @@ wssTcp.on('connection', (proxyWs, req) => {
       return
     }
     // Forward to CLI as binary frame: [streamId][payload]
-    const frame = Buffer.alloc(8 + buf.length)
-    frame.write(streamId, 0, 8, 'ascii')
-    buf.copy(frame, 8)
+    const frame = Buffer.alloc(16 + buf.length)
+    frame.write(streamId, 0, 16, 'ascii')
+    buf.copy(frame, 16)
     tunnel.ws.send(frame)
   })
 
@@ -520,10 +560,25 @@ h1 .ext{color:rgba(255,255,255,0.35)}
     return
   }
 
-  // Collect request body
+  // Collect request body (with size limit)
   const chunks = []
-  req.on('data', (chunk) => chunks.push(chunk))
+  let bodySize = 0
+  let aborted = false
+  req.on('data', (chunk) => {
+    if (aborted) return
+    bodySize += chunk.length
+    if (bodySize > MAX_REQUEST_BODY) {
+      aborted = true
+      req.removeAllListeners('data')
+      res.writeHead(413, { 'Content-Type': 'text/plain' })
+      res.end('Request body too large')
+      req.destroy()
+      return
+    }
+    chunks.push(chunk)
+  })
   req.on('end', () => {
+    if (aborted) return
     const body = Buffer.concat(chunks)
     const requestId = generateId()
 
@@ -564,7 +619,7 @@ function startTcpListener(port, subdomain) {
       return
     }
 
-    const streamId = generateId().slice(0, 8)
+    const streamId = generateId()
     tunnel.tcpStreams.set(streamId, socket)
 
     tunnel.ws.send(JSON.stringify({ type: 'tcp-open', streamId }))
@@ -587,9 +642,9 @@ function startTcpListener(port, subdomain) {
         socket._tcpBuffered.push(data)
         return
       }
-      const frame = Buffer.alloc(8 + data.length)
-      frame.write(streamId, 0, 8, 'ascii')
-      data.copy(frame, 8)
+      const frame = Buffer.alloc(16 + data.length)
+      frame.write(streamId, 0, 16, 'ascii')
+      data.copy(frame, 16)
       if (tunnel.ws.readyState === tunnel.ws.OPEN) {
         tunnel.ws.send(frame)
       }
