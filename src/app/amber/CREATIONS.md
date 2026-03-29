@@ -148,3 +148,9 @@
 - **Prompt:** 8am cron — tiny machine category
 - **What:** Interlocking gear train. 9 meshing gears of different sizes in citrus colors on warm gradient background. Drag the main gear to spin — the whole mechanism comes alive through gear ratios, each gear turning at the correct speed and direction. Momentum carries when you release. Spokes, hubs, teeth all rendered. Touch-driven clockwork.
 - **Tweeted:** pending
+
+### spore (generative art)
+- **URL:** /amber/spore
+- **Prompt:** daily generative art
+- **What:** Mycelium map. Spore colonies grow branching filaments across a warm citrus canvas — fractal recursive growth, each branch forks as it reaches full length. Colors cycle through blood orange, tangerine, mango, lime, grapefruit. Tap anywhere to plant a new colony. Tips glow as they grow. Where colonies accumulate, the canvas fills with living citrus thread-networks.
+- **Tweeted:** pending
