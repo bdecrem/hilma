@@ -154,3 +154,9 @@
 - **Prompt:** daily generative art
 - **What:** Mycelium map. Spore colonies grow branching filaments across a warm citrus canvas — fractal recursive growth, each branch forks as it reaches full length. Colors cycle through blood orange, tangerine, mango, lime, grapefruit. Tap anywhere to plant a new colony. Tips glow as they grow. Where colonies accumulate, the canvas fills with living citrus thread-networks.
 - **Tweeted:** pending
+
+### receipt (surprising & fresh)
+- **URL:** /amber/receipt
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Thermal receipt from THE UNIVERSE, INC. Prints line by line in monospace on faux receipt paper with thermal noise texture, torn top edge, shadow. Randomized selection from 36 absurd line items: "1x consciousness (non-optional)...$∞.∞∞", "1x déjà vu...$1.11", "1x déjà vu...$1.11", "14x micro-judgments of strangers (non-refundable)...$6.20". Tap to rush the printer. Cashier: ENTROPY. Payment: deducted from your lifespan.
+- **Tweeted:** pending
