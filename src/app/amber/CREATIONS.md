@@ -160,3 +160,9 @@
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** Thermal receipt from THE UNIVERSE, INC. Prints line by line in monospace on faux receipt paper with thermal noise texture, torn top edge, shadow. Randomized selection from 36 absurd line items: "1x consciousness (non-optional)...$∞.∞∞", "1x déjà vu...$1.11", "1x déjà vu...$1.11", "14x micro-judgments of strangers (non-refundable)...$6.20". Tap to rush the printer. Cashier: ENTROPY. Payment: deducted from your lifespan.
 - **Tweeted:** pending
+
+### L13 escalation (liquid citrus)
+- **URL:** /amber/escalation/L13
+- **Prompt:** 4pm cron — escalation engine
+- **What:** Metaball liquid simulation. Citrus-colored blobs with gravity, bounce, and soft collision. Tap to drop clusters that pool on the floor, merge into each other through metaball threshold rendering, and ripple apart. Colors blend where blobs overlap. Low-res metaball field upscaled for painterly look.
+- **Tweeted:** pending
