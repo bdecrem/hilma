@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta property="og:title" content="Ripple Text">
+  <meta property="og:description" content="A sea of grey text — click to drop colored dots that ripple through the words">
+  <meta property="og:image" content="https://hilma-nine.vercel.app/art/ripple-text-og.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Ripple Text</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #f5f2ed; touch-action: none; }
+    canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script>
+'use strict';
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let W, H;
+
+const TEXT = `In the beginning was the word, and the word was with chaos, and the word was chaos. There was last and is plain being. Upon its face, the first letter knew the last letter. Some time still was. And the marble mathematics understood this — that every surface is a page and every page is a wound. Reading in the hollows of understanding. A freed music, but what if we unfreeze it? What if we rearrange it? In the deep libraries of Alexandria, ranged by Pyrus on its hospitals, believing that knowledge might cure its patients, the calligraphers spoke of qi flowing through a writer's hand. The Chinese calligraphers spoke of qi flowing through varying the writer's breath across the brush — all strokes were waves. Their words could carry rhythm, could make the brush dance, dancing on paper. Consider the spaces between letters — and there you find the silence, pure impulse, displaced by the force of attention. Every typographer knows this, the soul of text was pure rhythm. The beauty in the letters is the beauty of the patterns. In our time, the phonemes are chosen by algorithms, and the hand, the ancient hand, has been replaced by circuits. The photons strike the Earth screen of our devices, and yet — the word persists. Always, softly, the word persists. Between the wings of meaning, something lives. The stone falls. The ink dries. And the soul, and yet, that word, knows its ancient rhythm. Letters resemble their makers. This is how the first libraries were built. Not with knowledge but with patterns. Our alphabets were waves, oscillating between disturbance and peace. Watch the letters scatter and reform — kaleidoscoping, interfering, creating interference patterns that never existed before and will never exist again. This moment — this exact configuration of displaced characters in a glowing rectangle — is unique in the history of the cosmos. No algorithm planned it. No designer intended it. It emerged from a collision of your curiosity and the patient mathematics running beneath everything. And when you look away, when you close this page, the letters will settle, and the pond will still. Nothing will have changed. Not in the screen — in you the change finds its meaning.`;
+
+const FONT_SIZE = 14;
+const LINE_HEIGHT = 18;
+const CHAR_W = FONT_SIZE * 0.58;
+
+let chars = [];
+let dots = [];
+const DOT_COLORS = ['#9b59b6','#e67e22','#1abc9c','#e74c3c','#3498db','#2ecc71','#f39c12','#e91e63'];
+let colorIdx = 0;
+
+function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  layoutText();
+}
+
+function layoutText() {
+  chars = [];
+  const padding = 20;
+  const cols = Math.floor((W - padding * 2) / CHAR_W);
+  const maxLines = Math.floor((H - padding * 2) / LINE_HEIGHT);
+  const words = TEXT.split(' ');
+  let line = 0, col = 0;
+  let wordIdx = 0;
+
+  while (line < maxLines) {
+    const word = words[wordIdx % words.length];
+    wordIdx++;
+    if (col + word.length > cols && col > 0) {
+      line++;
+      col = 0;
+      if (line >= maxLines) break;
+    }
+    for (let i = 0; i < word.length; i++) {
+      const x = padding + col * CHAR_W;
+      const y = padding + line * LINE_HEIGHT;
+      chars.push({
+        ch: word[i],
+        baseX: x,
+        baseY: y,
+        x: x,
+        y: y,
+        dx: 0,
+        dy: 0,
+      });
+      col++;
+    }
+    col++;
+    if (col >= cols) { line++; col = 0; }
+  }
+}
+
+function addDot(px, py) {
+  dots.push({
+    x: px,
+    y: py,
+    color: DOT_COLORS[colorIdx % DOT_COLORS.length],
+    time: 0,
+    radius: 0,
+  });
+  colorIdx++;
+}
+
+function frame() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#f5f2ed';
+  ctx.fillRect(0, 0, W, H);
+
+  // Update dots
+  for (const dot of dots) {
+    dot.time += 0.016;
+    dot.radius = dot.time * 120; // ripple expands
+  }
+
+  // Remove old dots
+  while (dots.length > 0 && dots[0].time > 8) dots.shift();
+
+  // Compute displacement for each char
+  for (const c of chars) {
+    c.dx = 0;
+    c.dy = 0;
+    for (const dot of dots) {
+      const dx = c.baseX - dot.x;
+      const dy = c.baseY - dot.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // Ripple wave
+      const rippleWidth = 60;
+      const rippleEdge = dot.radius;
+      const distFromRipple = Math.abs(dist - rippleEdge);
+
+      if (distFromRipple < rippleWidth) {
+        const wave = Math.cos((distFromRipple / rippleWidth) * Math.PI * 0.5);
+        const fade = Math.max(0, 1 - dot.time * 0.15);
+        const strength = wave * fade * 35;
+
+        // Push outward from dot center
+        if (dist > 1) {
+          c.dx += (dx / dist) * strength;
+          c.dy += (dy / dist) * strength;
+        }
+      }
+
+      // Inner blast — push away from dot center
+      const blastRadius = 55;
+      if (dist < blastRadius) {
+        const push = (1 - dist / blastRadius) * 40 * Math.max(0, 1 - dot.time * 0.12);
+        if (dist > 1) {
+          c.dx += (dx / dist) * push;
+          c.dy += (dy / dist) * push;
+        }
+      }
+    }
+    c.x = c.baseX + c.dx;
+    c.y = c.baseY + c.dy;
+  }
+
+  // Draw characters
+  ctx.font = `400 ${FONT_SIZE}px Georgia, "Times New Roman", serif`;
+  ctx.textBaseline = 'top';
+
+  for (const c of chars) {
+    const displacement = Math.sqrt(c.dx * c.dx + c.dy * c.dy);
+    // Grey text, darker when displaced
+    const grey = Math.max(40, 140 - displacement * 4);
+    const alpha = Math.min(1, 0.7 + displacement * 0.03);
+    ctx.fillStyle = `rgba(${grey},${grey - 10},${grey - 15},${alpha})`;
+    ctx.fillText(c.ch, c.x, c.y);
+  }
+
+  // Draw dots
+  for (const dot of dots) {
+    const fade = Math.max(0, 1 - dot.time * 0.15);
+    // Colored center dot
+    ctx.beginPath();
+    ctx.arc(dot.x, dot.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = dot.color + Math.round(fade * 255).toString(16).padStart(2, '0');
+    ctx.fill();
+
+    // Ripple ring
+    if (dot.radius > 0) {
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0,0,0,${fade * 0.06})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+canvas.addEventListener('pointerdown', e => { addDot(e.clientX, e.clientY); });
+canvas.addEventListener('pointermove', e => {
+  if (e.buttons > 0 && Math.random() < 0.08) addDot(e.clientX, e.clientY);
+});
+
+window.addEventListener('resize', resize);
+resize();
+
+// Start with a few dots
+setTimeout(() => addDot(W * 0.35, H * 0.3), 500);
+setTimeout(() => addDot(W * 0.6, H * 0.55), 1200);
+setTimeout(() => addDot(W * 0.45, H * 0.7), 1800);
+
+requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
