@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta property="og:title" content="Tender Geology">
+  <meta property="og:description" content="Text under three forces — wind erodes, clicks crystallize, drag creates gravity wells. The words want to go home but the landscape keeps shifting.">
+  <meta property="og:image" content="https://hilma-nine.vercel.app/art/tender-geology-og.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Tender Geology</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #f0ece4; touch-action: none; }
+    canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <script>
+'use strict';
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let W, H;
+
+const TEXT = `In the beginning the land was soft. Every surface remembered the pressure that made it. The rivers wrote cursive through the valleys and the valleys wrote back in a slower hand. Geology is patient calligraphy — the planet writing letters to itself across millions of years. Each stratum is a sentence. Each fold is a paragraph break. The fossils are footnotes. When you press your thumb into wet clay you are collaborating with the same force that pushed the Himalayas through the crust. Scale is the only difference. The clay remembers your thumb the way the mountain remembers the subcontinent. Erosion is editing. Wind is a reader skimming too fast, taking pieces of the text with it. Rain is a more careful reader — it follows the lines, deepens the grooves, makes the words more legible before it washes them away entirely. Every canyon is a sentence that was read too many times. Every delta is a paragraph that was moved to the end of the essay. The crystals grow differently. They are not erosion but accretion — the text thickening, locking into geometry, becoming rigid where it was once fluid. A crystal is a word that decided what it meant and refused to mean anything else. Somewhere between the wind and the crystal, between erosion and accretion, the text finds its temporary shape. This is the tender geology — the landscape that exists only while you are watching it, that shifts when you touch it, that remembers your pressure the way clay remembers a thumb. The words want to go home but the landscape keeps shifting beneath them.`;
+
+const FONT_SIZE = 13;
+const LINE_HEIGHT = 17;
+const CHAR_W = FONT_SIZE * 0.52;
+
+let chars = [];
+let crystals = [];
+let gravity = null; // { x, y } when dragging
+let t = 0;
+
+// Wind field
+function wind(x, y, time) {
+  const wx = Math.sin(y * 0.008 + time * 0.3) * 0.4 + Math.sin(x * 0.005 + time * 0.15) * 0.2 + 0.15;
+  const wy = Math.cos(x * 0.01 + time * 0.2) * 0.15 + Math.sin(y * 0.006 + time * 0.25) * 0.1;
+  return { x: wx, y: wy };
+}
+
+function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  layoutText();
+}
+
+function layoutText() {
+  chars = [];
+  const padding = 24;
+  const cols = Math.floor((W - padding * 2) / CHAR_W);
+  const maxLines = Math.floor((H - padding * 2) / LINE_HEIGHT);
+  const words = TEXT.split(' ');
+  let line = 0, col = 0, wordIdx = 0;
+
+  while (line < maxLines) {
+    const word = words[wordIdx % words.length];
+    wordIdx++;
+    if (col + word.length > cols && col > 0) { line++; col = 0; if (line >= maxLines) break; }
+    for (let i = 0; i < word.length; i++) {
+      const x = padding + col * CHAR_W;
+      const y = padding + line * LINE_HEIGHT;
+      chars.push({
+        ch: word[i],
+        homeX: x, homeY: y,
+        x: x, y: y,
+        vx: 0, vy: 0,
+        frozen: 0, // 0-1, how crystallized
+        frozenAngle: 0,
+      });
+      col++;
+    }
+    col++;
+    if (col >= cols) { line++; col = 0; }
+  }
+}
+
+function addCrystal(px, py) {
+  crystals.push({
+    x: px, y: py,
+    radius: 0,
+    maxRadius: 80 + Math.random() * 60,
+    growth: 0.4 + Math.random() * 0.3,
+    age: 0,
+    color: ['#c0392b','#8e44ad','#2980b9','#16a085','#d35400','#2c3e50'][crystals.length % 6],
+    sides: 5 + Math.floor(Math.random() * 4), // pentagon to octagon
+  });
+}
+
+function frame() {
+  t += 0.016;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#f0ece4';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grow crystals
+  for (const cr of crystals) {
+    cr.age += 0.016;
+    if (cr.radius < cr.maxRadius) cr.radius += cr.growth;
+  }
+  // Remove very old crystals (slowly dissolve)
+  for (let i = crystals.length - 1; i >= 0; i--) {
+    if (crystals[i].age > 15) { crystals[i].maxRadius -= 0.3; }
+    if (crystals[i].maxRadius < 0) crystals.splice(i, 1);
+  }
+
+  // Physics for each char
+  for (const c of chars) {
+    // Spring back to home
+    const springX = (c.homeX - c.x) * 0.02;
+    const springY = (c.homeY - c.y) * 0.02;
+
+    // Wind
+    const w = wind(c.x, c.y, t);
+
+    // Gravity well
+    let gx = 0, gy = 0;
+    if (gravity) {
+      const dx = gravity.x - c.x, dy = gravity.y - c.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) + 1;
+      const force = 120 / (dist + 20);
+      // Spiral: mostly tangential + some radial pull
+      gx = (-dy / dist * force * 0.7 + dx / dist * force * 0.4);
+      gy = (dx / dist * force * 0.7 + dy / dist * force * 0.4);
+    }
+
+    // Crystal freeze
+    let crystalForce = 0;
+    c.frozen *= 0.995; // slowly thaw
+    for (const cr of crystals) {
+      const dx = c.x - cr.x, dy = c.y - cr.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < cr.radius) {
+        const depth = 1 - dist / cr.radius;
+        c.frozen = Math.min(1, c.frozen + depth * 0.05);
+        // Snap toward hexagonal grid positions
+        const angle = Math.atan2(dy, dx);
+        const snapAngle = Math.round(angle / (Math.PI * 2 / cr.sides)) * (Math.PI * 2 / cr.sides);
+        const snapDist = Math.round(dist / 20) * 20;
+        const targetX = cr.x + Math.cos(snapAngle) * snapDist;
+        const targetY = cr.y + Math.sin(snapAngle) * snapDist;
+        c.vx += (targetX - c.x) * 0.01 * depth;
+        c.vy += (targetY - c.y) * 0.01 * depth;
+        c.frozenAngle = snapAngle;
+      }
+    }
+
+    const freeze = c.frozen;
+    const fluid = 1 - freeze;
+
+    c.vx += (springX + w.x * 0.8 + gx) * fluid;
+    c.vy += (springY + w.y * 0.5 + gy) * fluid;
+    c.vx *= 0.92 - freeze * 0.15;
+    c.vy *= 0.92 - freeze * 0.15;
+    c.x += c.vx * fluid + c.vx * freeze * 0.1;
+    c.y += c.vy * fluid + c.vy * freeze * 0.1;
+  }
+
+  // Draw crystal structures (subtle geometric guides)
+  for (const cr of crystals) {
+    const alpha = Math.min(0.12, cr.age * 0.02) * Math.min(1, cr.maxRadius / 40);
+    ctx.strokeStyle = cr.color + Math.round(alpha * 255).toString(16).padStart(2, '0');
+    ctx.lineWidth = 0.5;
+    for (let ring = 20; ring < cr.radius; ring += 20) {
+      ctx.beginPath();
+      for (let i = 0; i <= cr.sides; i++) {
+        const a = (i / cr.sides) * Math.PI * 2;
+        const px = cr.x + Math.cos(a) * ring;
+        const py = cr.y + Math.sin(a) * ring;
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cr.x, cr.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = cr.color;
+    ctx.globalAlpha = Math.min(0.8, cr.age * 0.3);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Draw characters
+  ctx.font = `400 ${FONT_SIZE}px Georgia, "Times New Roman", serif`;
+  ctx.textBaseline = 'top';
+
+  for (const c of chars) {
+    const displacement = Math.sqrt((c.x - c.homeX) ** 2 + (c.y - c.homeY) ** 2);
+    const speed = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
+
+    if (c.frozen > 0.5) {
+      // Crystallized: darker, more opaque
+      const darkness = Math.round(40 + (1 - c.frozen) * 80);
+      ctx.fillStyle = `rgba(${darkness},${darkness - 5},${darkness + 5},${0.7 + c.frozen * 0.3})`;
+    } else {
+      // Fluid: grey, lighter when displaced
+      const grey = Math.min(200, 130 + displacement * 1.5);
+      const alpha = Math.max(0.3, 0.65 - displacement * 0.005 + speed * 0.1);
+      ctx.fillStyle = `rgba(${grey},${grey - 8},${grey - 15},${alpha})`;
+    }
+
+    // Slight rotation when frozen
+    if (c.frozen > 0.3) {
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.rotate((c.frozenAngle - Math.PI / 2) * c.frozen * 0.15);
+      ctx.fillText(c.ch, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.fillText(c.ch, c.x, c.y);
+    }
+  }
+
+  // Draw gravity well indicator
+  if (gravity) {
+    ctx.beginPath();
+    ctx.arc(gravity.x, gravity.y, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    // Spiral indicator
+    ctx.beginPath();
+    for (let a = 0; a < Math.PI * 4; a += 0.1) {
+      const r = a * 5;
+      const px = gravity.x + Math.cos(a + t * 3) * r;
+      const py = gravity.y + Math.sin(a + t * 3) * r;
+      a === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)';
+    ctx.stroke();
+  }
+
+  requestAnimationFrame(frame);
+}
+
+canvas.addEventListener('pointerdown', e => {
+  if (e.shiftKey || e.ctrlKey) {
+    // Shift/ctrl+click = crystal
+    addCrystal(e.clientX, e.clientY);
+  } else {
+    // Click = crystal, hold = gravity well
+    const startTime = Date.now();
+    const startX = e.clientX, startY = e.clientY;
+
+    const onMove = ev => { gravity = { x: ev.clientX, y: ev.clientY }; };
+    const onUp = ev => {
+      canvas.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointerup', onUp);
+      canvas.removeEventListener('pointercancel', onUp);
+      if (Date.now() - startTime < 300 && Math.abs(ev.clientX - startX) < 10) {
+        // Short click = crystal
+        addCrystal(ev.clientX, ev.clientY);
+      }
+      gravity = null;
+    };
+
+    gravity = { x: e.clientX, y: e.clientY };
+    canvas.addEventListener('pointermove', onMove);
+    canvas.addEventListener('pointerup', onUp);
+    canvas.addEventListener('pointercancel', onUp);
+  }
+});
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
