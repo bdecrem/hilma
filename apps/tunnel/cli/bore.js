@@ -60,7 +60,7 @@ function saveConfig(name, config) {
     ? join(TUNN3L_DIR, 'config.json')
     : join(TUNN3L_DIR, `config.${name}.json`)
   writeFileSync(path, JSON.stringify(config, null, 2) + '\n', { mode: 0o600 })
-  try { chmodSync(path, 0o600) } catch {}
+  try { chmodSync(path, 0o600) } catch {} // chmod needed when file already exists
   return path
 }
 

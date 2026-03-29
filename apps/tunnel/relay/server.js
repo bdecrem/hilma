@@ -563,9 +563,13 @@ h1 .ext{color:rgba(255,255,255,0.35)}
   // Collect request body (with size limit)
   const chunks = []
   let bodySize = 0
+  let aborted = false
   req.on('data', (chunk) => {
+    if (aborted) return
     bodySize += chunk.length
     if (bodySize > MAX_REQUEST_BODY) {
+      aborted = true
+      req.removeAllListeners('data')
       res.writeHead(413, { 'Content-Type': 'text/plain' })
       res.end('Request body too large')
       req.destroy()
@@ -574,7 +578,7 @@ h1 .ext{color:rgba(255,255,255,0.35)}
     chunks.push(chunk)
   })
   req.on('end', () => {
-    if (bodySize > MAX_REQUEST_BODY) return
+    if (aborted) return
     const body = Buffer.concat(chunks)
     const requestId = generateId()
 
