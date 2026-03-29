@@ -95,13 +95,13 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 ## Conventions
 
 - **Always test before declaring done.** When building scripts or features, run them (or at least a dry run) and verify the output before telling the user it's ready.
-
+- **When sharing web pages with Bart over iMessage**, always use `https://bart-mini.tunn3l.sh/` URLs. Run `tunn3l http 3000` (auto-assigns the reserved subdomain) and serve files on port 3000. This machine's reserved subdomain is `bart-mini`.
 - **Always run `gh` commands from the repo root** (`/Users/bartdecrem/Documents/coding2025/hilma`), never from `/tmp` or other non-git directories. `gh release` requires a git repo context. When chaining commands that start in `/tmp` (e.g., compressing binaries), `cd` back to the repo before running `gh`.
 - Use `@/*` import alias for `src/*`
 - Keep it lean — no unnecessary dependencies
 - Server Components by default, `'use client'` only when needed
 - Deploy is push-button: `vercel --prod`
-- **Always create an `opengraph-image.tsx`** when building a new web app/page. Use Next.js built-in OG image generation.
+- **Every web page MUST have a nice, matching OpenGraph image.** For Next.js routes, use built-in `opengraph-image.tsx`. For standalone HTML pages, add `<meta property="og:image">` with a matching preview image. The OG image should reflect the page's visual style and content.
 - **Check your visual work.** When creating or modifying anything visual (HTML pages, art, promo images, layouts):
   1. **Do the math.** Never eyeball spacing. Count elements, measure heights, calculate gaps arithmetically. Write the math in a comment before setting positions.
   2. **Screenshot and verify.** Use Playwright MCP to render the result. Actually look at the screenshot and ask: "Is this evenly spaced? Is this centered? Would a designer approve this?"
