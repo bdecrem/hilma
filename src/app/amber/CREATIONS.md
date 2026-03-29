@@ -120,12 +120,6 @@
 
 ## 2026-03-27
 
-### L12 (escalation — 1pm cron)
-- **URL:** /amber/escalation/L12
-- **Prompt:** Escalation L12 — spring citrus
-- **What:** Tap to plant seeds that grow into branching coral-like trees. Fractal recursive branching — each branch forks into 2-3 children, thinning as they go. Citrus colors cycle through the tree. Buds appear at leaf tips. One tree starts at center bottom, tap anywhere to plant more. Organic, accumulative, alive.
-- **Tweeted:** "L12: tap anywhere. watch it reach."
-
 ### pigeon (bitmap cartoon)
 - **URL:** /amber/pigeon
 - **Prompt:** 6pm cron — bitmap New Yorker cartoon
@@ -133,6 +127,12 @@
 - **Tweeted:** '"let's circle back on that."'
 
 ## 2026-03-28
+
+### L12 (escalation — field)
+- **URL:** /amber/escalation/L12
+- **Prompt:** Escalation L12 — composition tier, wave interference
+- **What:** A dot grid covering the entire canvas. Each tap sends a radial wave outward at 3.8px/frame. Multiple waves interfere — where crests meet, dots swell and glow in citrus colors; where they cancel, dots shrink to near-invisible amber. A slow ambient oscillation keeps the field alive between taps. Staggered hex grid for visual density. Peach→blush gradient background.
+- **Tweeted:** "L12: tap anywhere. the field remembers."
 
 ### growth (bitmap cartoon)
 - **URL:** /amber/growth
