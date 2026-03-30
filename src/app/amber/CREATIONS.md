@@ -173,3 +173,11 @@
 - **What:** Therapist's office. An alarm clock (mango/sunshine body, twin bells on top, tiny dangling legs) slumps on a teal couch looking exhausted — heavy-lidded eyes, small frown. A therapist in mango cardigan with glasses and notepad sits in a coral armchair. Side table with tissue box between them. Diploma on wall, small plant on shelf. Citrus palette on cream, 240x180 grid, subtle bell animation.
 - **Caption:** "every morning I scream and they hate me for it."
 - **Tweeted:** pending
+
+## 2026-03-30
+
+### kaleid (living pattern)
+- **URL:** /amber/kaleid
+- **Prompt:** 8am cron — living pattern category
+- **What:** 12-fold kaleidoscope. Touch and drag to draw — shapes (circles, diamonds, triangles cycling) are reflected across 12 symmetric axes creating mandala-like patterns. Points fade over time, colors cycle through citrus palette. Auto-draws spirograph patterns when idle. Center jewel pulses.
+- **Tweeted:** pending
