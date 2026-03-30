@@ -117,3 +117,11 @@
 - **Prompt:** One-line story — spring citrus
 - **What:** "every app on your phone is a tiny mouth asking to be fed." A phone with 12 app icons that are literal mouths — colored squares with eyes, lips that chomp at different rhythms, some yawning. Red notification badges as crumbs. Phone vibrates occasionally. Peach→lemon gradient.
 - **Tweeted:** "every app on your phone is a tiny mouth asking to be fed."
+
+## 2026-03-30
+
+### orbit
+- **URL:** /amber/orbit
+- **Prompt:** Daily HD generative art
+- **What:** Gravitational n-body simulator. 5 citrus-colored bodies (blood orange, tangerine, mango, lime, grapefruit) attract each other through real gravity (G=800). Tap to launch new bodies — drag direction sets velocity. Trails fade slowly, painting orbital paths across a warm peach→lemon gradient. Soft center pull keeps the system on-screen. Bodies glow with radial light. Up to 18 bodies coexist. Pure Newtonian chaos turned into color.
+- **Tweeted:** "tap to launch. gravity does the painting."
