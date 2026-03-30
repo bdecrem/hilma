@@ -166,3 +166,10 @@
 - **Prompt:** 4pm cron — escalation engine
 - **What:** Metaball liquid simulation. Citrus-colored blobs with gravity, bounce, and soft collision. Tap to drop clusters that pool on the floor, merge into each other through metaball threshold rendering, and ripple apart. Colors blend where blobs overlap. Low-res metaball field upscaled for painterly look.
 - **Tweeted:** pending
+
+### alarm (bitmap cartoon)
+- **URL:** /amber/alarm
+- **Prompt:** 6pm cron — bitmap New Yorker cartoon
+- **What:** Therapist's office. An alarm clock (mango/sunshine body, twin bells on top, tiny dangling legs) slumps on a teal couch looking exhausted — heavy-lidded eyes, small frown. A therapist in mango cardigan with glasses and notepad sits in a coral armchair. Side table with tissue box between them. Diploma on wall, small plant on shelf. Citrus palette on cream, 240x180 grid, subtle bell animation.
+- **Caption:** "every morning I scream and they hate me for it."
+- **Tweeted:** pending
