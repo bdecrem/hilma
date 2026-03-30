@@ -181,3 +181,10 @@
 - **Prompt:** 8am cron — living pattern category
 - **What:** 12-fold kaleidoscope. Touch and drag to draw — shapes (circles, diamonds, triangles cycling) are reflected across 12 symmetric axes creating mandala-like patterns. Points fade over time, colors cycle through citrus palette. Auto-draws spirograph patterns when idle. Center jewel pulses.
 - **Tweeted:** pending
+
+### L14 escalation (territory)
+- **URL:** /amber/escalation/L14
+- **Prompt:** escalation engine run
+- **What:** Voronoi field. 9 seed points drift slowly across a warm spring canvas, each claiming its territory. The field renders at reduced resolution and upscales with smoothing for a painterly, watercolor-like edge. Borders glow cream where regions meet. Tap to plant a new seed and watch the whole map reshape in real-time. Seeds pulse gently with individual phase offsets.
+- **Techniques:** voronoi, distance-field, cellular, territory, drift, click-spawn
+- **Tweeted:** pending
