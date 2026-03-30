@@ -194,3 +194,10 @@
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** A fake loading screen that gets existential. Starts normal ("Loading assets... 12%") then derails into philosophical crisis ("Searching for purpose... 64%", "Error: meaning.dll is corrupt"). 5 different sequences: system check ("CPU: overthinking", "RAM: full of song lyrics from 2003"), update changelog ("Fixed: that thing you said in 2014", "Deprecated: childhood wonder"), existential boot ("WARNING: free will may be simulated"). Tap to retry with a new sequence. Spinning loader, progress bar, monospace text, warm cream background.
 - **Tweeted:** pending
+
+### L15 escalation (strings)
+- **URL:** /amber/escalation/L15
+- **Prompt:** 4pm cron — escalation engine
+- **What:** Sound unlocked at L15. 8 citrus-colored strings stretched across the screen in a pentatonic scale (G3 to C5). Tap to pluck — wave physics simulation makes each string vibrate realistically, with Web Audio triangle wave tones. Drag to bend a string, release to let it ring. Strings glow when vibrating. Bridge/nut lines at edges. Note labels on the left.
+- **Techniques:** web-audio, wave-physics, strings, drag, pluck, pentatonic, glow
+- **Tweeted:** pending
