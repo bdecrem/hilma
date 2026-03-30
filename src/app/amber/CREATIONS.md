@@ -188,3 +188,9 @@
 - **What:** Voronoi field. 9 seed points drift slowly across a warm spring canvas, each claiming its territory. The field renders at reduced resolution and upscales with smoothing for a painterly, watercolor-like edge. Borders glow cream where regions meet. Tap to plant a new seed and watch the whole map reshape in real-time. Seeds pulse gently with individual phase offsets.
 - **Techniques:** voronoi, distance-field, cellular, territory, drift, click-spawn
 - **Tweeted:** pending
+
+### loading (surprising & fresh)
+- **URL:** /amber/loading
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** A fake loading screen that gets existential. Starts normal ("Loading assets... 12%") then derails into philosophical crisis ("Searching for purpose... 64%", "Error: meaning.dll is corrupt"). 5 different sequences: system check ("CPU: overthinking", "RAM: full of song lyrics from 2003"), update changelog ("Fixed: that thing you said in 2014", "Deprecated: childhood wonder"), existential boot ("WARNING: free will may be simulated"). Tap to retry with a new sequence. Spinning loader, progress bar, monospace text, warm cream background.
+- **Tweeted:** pending
