@@ -1,5 +1,5 @@
 {
-  "level": 14,
+  "level": 15,
   "history": [
     { "level": 1, "description": "a circle, breathing", "tweet": "L1: a circle, breathing.", "date": "2026-03-21T23:28:00Z", "techniques": ["canvas", "single-shape", "animation"] },
     { "level": 2, "description": "a line, growing and rotating", "tweet": "L2: a line, learning to turn.", "date": "2026-03-21T23:35:00Z", "techniques": ["canvas", "single-shape", "animation", "rotation"] },
@@ -14,12 +14,13 @@
     { "level": 11, "description": "sixty creatures flock with simple rules. tap to scatter. hold to attract.", "tweet": "L11: they learned to move together.", "date": "2026-03-25T18:00:00Z", "techniques": ["canvas", "flocking", "boids", "emergent-behavior", "pointer-attract", "scatter", "trails", "bright-bg"] },
     { "level": 12, "description": "tap to plant. branches fork and reach.", "tweet": "L12: tap anywhere. watch it reach.", "date": "2026-03-28T13:00:00Z", "techniques": ["canvas", "fractal", "branching", "growth", "recursion", "click-spawn", "organic", "bright-bg"] },
     { "level": 13, "description": "liquid citrus. tap to drop. blobs pool, merge, ripple.", "tweet": "L13: they learned to flow.", "date": "2026-03-29T23:11:00Z", "techniques": ["canvas", "metaballs", "physics", "gravity", "soft-collision", "color-blending", "click-spawn", "bright-bg"] },
-    { "level": 14, "description": "tap to claim territory. seeds drift, regions shift, borders breathe.", "tweet": "L14: everything claims its space.", "date": "2026-03-30T00:00:00Z", "techniques": ["canvas", "voronoi", "distance-field", "cellular", "territory", "drift", "click-spawn", "bright-bg"] }
+    { "level": 14, "description": "tap to claim territory. seeds drift, regions shift, borders breathe.", "tweet": "L14: everything claims its space.", "date": "2026-03-30T00:00:00Z", "techniques": ["canvas", "voronoi", "distance-field", "cellular", "territory", "drift", "click-spawn", "bright-bg"] },
+    { "level": 15, "description": "sound unlocked. 8 strings, pentatonic scale. tap to pluck, drag to bend. wave physics.", "tweet": "L15: they learned to sing.", "date": "2026-03-30T23:11:00Z", "techniques": ["canvas", "web-audio", "wave-physics", "strings", "drag", "pluck", "pentatonic", "glow", "bright-bg"] }
   ],
   "feedback": [
     { "level": 5, "type": "not-so-good", "reason": "eggplant background looks like Windows 3.1. no blue/purple. warm darks only.", "date": "2026-03-22T16:33:00Z" },
     { "level": 6, "type": "feedback", "reason": "dark backgrounds are out. bright/light backgrounds from now on. SPRING.", "date": "2026-03-22T16:38:00Z" }
   ],
-  "techniquesUsed": ["canvas", "single-shape", "animation", "rotation", "cursor-tracking", "easing", "multiple-shapes", "trails", "orbit", "composition", "click", "color-palette", "flash", "concentric", "click-target", "split-animation", "citrus-palette", "warm-dark-bg", "gravity", "bounce", "stacking", "squish", "bright-bg", "nodes", "connections", "drag", "proximity", "network", "flocking", "boids", "emergent-behavior", "pointer-attract", "scatter", "fractal", "branching", "growth", "recursion", "click-spawn", "organic", "metaballs", "physics", "soft-collision", "color-blending", "voronoi", "distance-field", "cellular", "territory", "drift"],
+  "techniquesUsed": ["canvas", "single-shape", "animation", "rotation", "cursor-tracking", "easing", "multiple-shapes", "trails", "orbit", "composition", "click", "color-palette", "flash", "concentric", "click-target", "split-animation", "citrus-palette", "warm-dark-bg", "gravity", "bounce", "stacking", "squish", "bright-bg", "nodes", "connections", "drag", "proximity", "network", "flocking", "boids", "emergent-behavior", "pointer-attract", "scatter", "fractal", "branching", "growth", "recursion", "click-spawn", "organic", "metaballs", "physics", "soft-collision", "color-blending", "voronoi", "distance-field", "cellular", "territory", "drift", "web-audio", "wave-physics", "strings", "pluck", "pentatonic", "glow"],
   "killed": []
 }
