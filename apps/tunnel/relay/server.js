@@ -158,7 +158,7 @@ wss.on('connection', (ws) => {
       }
 
       // Resolve subdomain: explicit > device reservation > random
-      let subdomain = msg.subdomain || null
+      let subdomain = msg.subdomain ? msg.subdomain.toLowerCase() : null
 
       // Validate subdomain format if explicitly requested
       if (subdomain && !SUBDOMAIN_RE.test(subdomain)) {
