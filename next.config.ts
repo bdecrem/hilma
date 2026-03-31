@@ -16,6 +16,28 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.decremental.com' }],
           destination: '/projects',
         },
+        // intheamber.com serves the /amber feed at root
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'intheamber.com' }],
+          destination: '/amber',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.intheamber.com' }],
+          destination: '/amber',
+        },
+        // intheamber.com/anything → /amber/anything
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'intheamber.com' }],
+          destination: '/amber/:path+',
+        },
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'www.intheamber.com' }],
+          destination: '/amber/:path+',
+        },
       ],
       afterFiles: [],
       fallback: [],
@@ -28,6 +50,13 @@ const nextConfig: NextConfig = {
         source: '/:path+',
         has: [{ type: 'host', value: 'www.decremental.com' }],
         destination: 'https://decremental.com/:path+',
+        permanent: true,
+      },
+      // www.intheamber.com → intheamber.com
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.intheamber.com' }],
+        destination: 'https://intheamber.com/:path*',
         permanent: true,
       },
     ]
