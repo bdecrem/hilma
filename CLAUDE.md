@@ -113,6 +113,9 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 
 Amber tweets 3 creations per day from @intheamber. At the start of each session, run `/amber-schedule` to activate the cron jobs (8am, 12pm, 4pm PT). They run in-session only — they stop when the terminal closes.
 
+- **All Amber creation URLs use `intheamber.com`** — in tweets, CREATIONS.md, creations.json, and anywhere else. The domain routes to `/amber/` via host-based rewrites, so `intheamber.com/kaleid` serves `/amber/kaleid`. Never use `hilma-nine.vercel.app/amber/` in public-facing links.
+- **Test canvas creations on iPhone.** Cap devicePixelRatio at 2 (`Math.min(window.devicePixelRatio || 1, 2)`) — DPR 3 canvases can be too large and cause performance issues or crashes on mobile.
+
 ## Sister repo: vibeceo8 (`../vibeceo8/`)
 
 Hilma's big sibling. A monorepo that grew like a vine — 6+ months of experiments, tools, agents, and products. Hilma can reach into vibeceo8 to use its tools and reference its code. Read `../vibeceo8/PLATFORM-OVERVIEW.md` for the full map.
