@@ -48,7 +48,7 @@ function hash(s: string): number {
 function Card({ c, idx }: { c: Creation; idx: number }) {
   const [loaded, setLoaded] = useState(false)
   const accent = CITRUS[hash(c.name) % CITRUS.length]
-  const ogUrl = `${c.url}/opengraph-image`
+  const ogUrl = `${c.url}/opengraph-image.png`
 
   return (
     <Link
