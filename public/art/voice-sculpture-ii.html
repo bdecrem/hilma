@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta property="og:title" content="Voice Sculpture II">
+  <meta property="og:description" content="Speak — your words bloom into ink, pool into rivers of text, and slowly evaporate">
+  <meta property="og:image" content="https://hilma-nine.vercel.app/art/voice-sculpture-ii-og.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Voice Sculpture II</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0a0a0e; touch-action: none; }
+    canvas { display: block; width: 100%; height: 100%; position: fixed; top: 0; left: 0; }
+    .mic-ring {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      width: 68px; height: 68px; border-radius: 50%; z-index: 10; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.12);
+      transition: all 0.3s;
+    }
+    .mic-ring:active { transform: translateX(-50%) scale(0.95); }
+    .mic-ring.recording { border-color: rgba(255,90,90,0.6); background: rgba(255,60,60,0.1); }
+    .mic-ring.recording .mic-icon { stroke: rgba(255,90,90,0.8); }
+    .mic-icon { stroke: rgba(255,255,255,0.4); transition: stroke 0.3s; }
+    .pulse-ring {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      width: 68px; height: 68px; border-radius: 50%; z-index: 9;
+      border: 1px solid rgba(255,90,90,0); pointer-events: none;
+    }
+    .recording ~ .pulse-ring {
+      animation: ring-pulse 1.5s ease-out infinite;
+    }
+    @keyframes ring-pulse {
+      0% { transform: translateX(-50%) scale(1); border-color: rgba(255,90,90,0.4); }
+      100% { transform: translateX(-50%) scale(2.2); border-color: rgba(255,90,90,0); }
+    }
+    .play-btn {
+      position: fixed; bottom: 48px; right: 30px; z-index: 10;
+      width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: none;
+      background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .play-btn:disabled { opacity: 0.2; cursor: default; }
+    .play-btn svg { fill: rgba(255,255,255,0.35); }
+    .clear-btn {
+      position: fixed; bottom: 48px; left: 30px; z-index: 10;
+      width: 44px; height: 44px; border-radius: 50%; cursor: pointer; border: none;
+      background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.25);
+      font: 400 16px/1 sans-serif; transition: all 0.2s;
+    }
+    .hint {
+      position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
+      font: 300 12px/1 "Helvetica Neue", sans-serif; color: rgba(255,255,255,0.15);
+      letter-spacing: 1px; z-index: 10; pointer-events: none; white-space: nowrap;
+      transition: opacity 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="hint" id="hint">speak</div>
+  <div class="mic-ring" id="mic">
+    <svg class="mic-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round">
+      <rect x="9" y="1" width="6" height="12" rx="3"/>
+      <path d="M5 10a7 7 0 0014 0"/>
+      <line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+  </div>
+  <div class="pulse-ring"></div>
+  <button class="play-btn" id="play" disabled>
+    <svg width="18" height="18" viewBox="0 0 24 24"><polygon points="6,3 20,12 6,21"/></svg>
+  </button>
+  <button class="clear-btn" id="clear">x</button>
+  <script>
+'use strict';
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let W, H, t = 0;
+
+// Each word is a particle cluster
+let words = []; // { text, chars: [{x,y,vx,vy,homeX,homeY,ch,alpha,size,hue}], born, settled }
+let allText = '';
+let isRecording = false;
+
+function resize() {
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+}
+
+// Spawn a word as a cluster of character particles
+let cursorX = 40, cursorY = 60;
+const BASE_SIZE = 16;
+const CHAR_W = BASE_SIZE * 0.55;
+const LINE_H = BASE_SIZE * 1.6;
+
+function spawnWord(text) {
+  const padding = 30;
+  const maxW = W - padding * 2;
+
+  // Wrap to next line if needed
+  if (cursorX + text.length * CHAR_W > maxW) {
+    cursorX = padding;
+    cursorY += LINE_H;
+  }
+  // Wrap from bottom
+  if (cursorY > H - 160) {
+    cursorY = 60;
+    cursorX = padding;
+  }
+
+  const hue = 200 + Math.random() * 40 - 20; // blue-ish range
+  const spawnX = W / 2 + (Math.random() - 0.5) * 100;
+  const spawnY = H * 0.6 + (Math.random() - 0.5) * 60;
+
+  const chars = [];
+  for (let i = 0; i < text.length; i++) {
+    const homeX = cursorX + i * CHAR_W;
+    const homeY = cursorY;
+    // Characters bloom outward from mic area then settle
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 30 + Math.random() * 80;
+    chars.push({
+      ch: text[i],
+      homeX, homeY,
+      x: spawnX + Math.cos(angle) * dist,
+      y: spawnY + Math.sin(angle) * dist,
+      vx: Math.cos(angle) * (1 + Math.random() * 2),
+      vy: Math.sin(angle) * (1 + Math.random() * 2) - 1.5, // slight upward burst
+      alpha: 1,
+      size: BASE_SIZE + Math.random() * 4 - 2,
+      hue: hue + Math.random() * 20 - 10,
+      rotation: (Math.random() - 0.5) * 0.4,
+      rotVel: (Math.random() - 0.5) * 0.08,
+    });
+  }
+
+  words.push({ text, chars, born: t, settled: false });
+  cursorX += (text.length + 1) * CHAR_W;
+}
+
+// Ink drip particles — decorative trails
+let drips = [];
+function addDrip(x, y, hue) {
+  drips.push({ x, y, vy: 0.3 + Math.random() * 0.5, alpha: 0.4 + Math.random() * 0.3, size: 1 + Math.random() * 2, hue, life: 1 });
+}
+
+function frame() {
+  t += 0.016;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Fade — slower for ink-trail persistence
+  ctx.fillStyle = 'rgba(10, 10, 14, 0.06)';
+  ctx.fillRect(0, 0, W, H);
+
+  // Update and draw drips
+  for (let i = drips.length - 1; i >= 0; i--) {
+    const d = drips[i];
+    d.y += d.vy;
+    d.life -= 0.005;
+    d.alpha *= 0.995;
+    if (d.life <= 0 || d.y > H) { drips.splice(i, 1); continue; }
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${d.hue}, 40%, 60%, ${d.alpha * d.life})`;
+    ctx.fill();
+  }
+
+  // Update and draw words
+  for (const word of words) {
+    const age = t - word.born;
+    const settle = Math.min(1, age * 0.4);
+
+    for (const c of word.chars) {
+      // Spring to home
+      const dx = c.homeX - c.x;
+      const dy = c.homeY - c.y;
+      c.vx += dx * 0.02 * settle;
+      c.vy += dy * 0.02 * settle;
+
+      // Ambient drift when settled
+      c.vx += Math.sin(c.y * 0.01 + t * 0.3) * 0.01 * (1 - settle * 0.8);
+      c.vy += Math.cos(c.x * 0.01 + t * 0.2) * 0.008 * (1 - settle * 0.8);
+
+      c.vx *= 0.92;
+      c.vy *= 0.92;
+      c.x += c.vx;
+      c.y += c.vy;
+
+      c.rotation += c.rotVel * (1 - settle);
+      c.rotVel *= 0.98;
+
+      // Drip ink while moving fast
+      const speed = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
+      if (speed > 0.8 && Math.random() < 0.04) {
+        addDrip(c.x, c.y, c.hue);
+      }
+
+      // Draw character
+      const distFromHome = Math.sqrt(dx * dx + dy * dy);
+      const brightness = 50 + settle * 20 + (1 - settle) * distFromHome * 0.3;
+      const sat = 35 + (1 - settle) * 30;
+      const alpha = 0.3 + settle * 0.5;
+
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.rotate(c.rotation * (1 - settle * 0.9));
+      ctx.font = `300 ${c.size}px Georgia, "Times New Roman", serif`;
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = `hsla(${c.hue}, ${sat}%, ${brightness}%, ${alpha})`;
+      ctx.fillText(c.ch, 0, 0);
+
+      // Glow on fresh characters
+      if (age < 2) {
+        ctx.fillStyle = `hsla(${c.hue}, 50%, 70%, ${(1 - age / 2) * 0.15})`;
+        ctx.font = `300 ${c.size + 2}px Georgia, "Times New Roman", serif`;
+        ctx.fillText(c.ch, -1, -1);
+      }
+      ctx.restore();
+    }
+  }
+
+  // Recording breath indicator
+  if (isRecording) {
+    const breathR = 3 + Math.sin(t * 4) * 1.5;
+    ctx.beginPath();
+    ctx.arc(W / 2, H - 82, breathR, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255,90,90,${0.3 + Math.sin(t * 3) * 0.15})`;
+    ctx.fill();
+  }
+
+  requestAnimationFrame(frame);
+}
+
+// Speech recognition
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const mic = document.getElementById('mic');
+const play = document.getElementById('play');
+const clear = document.getElementById('clear');
+const hint = document.getElementById('hint');
+let recognition = null;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  let finalWords = [];
+  let lastResultLen = 0;
+
+  recognition.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        const text = e.results[i][0].transcript.trim();
+        const newWords = text.split(/\s+/);
+        for (const w of newWords) {
+          if (w) {
+            spawnWord(w);
+            finalWords.push(w);
+          }
+        }
+        allText = finalWords.join(' ');
+        play.disabled = false;
+        hint.style.opacity = '0';
+      }
+    }
+  };
+
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+  recognition.onerror = () => {};
+
+  mic.addEventListener('click', () => {
+    if (isRecording) {
+      isRecording = false;
+      recognition.stop();
+      mic.classList.remove('recording');
+    } else {
+      isRecording = true;
+      recognition.start();
+      mic.classList.add('recording');
+      hint.textContent = 'listening';
+      hint.style.opacity = '1';
+      setTimeout(() => { if (isRecording) hint.style.opacity = '0'; }, 2000);
+    }
+  });
+} else {
+  hint.textContent = 'speech not supported';
+}
+
+play.addEventListener('click', () => {
+  if (!allText) return;
+  const u = new SpeechSynthesisUtterance(allText);
+  u.rate = 0.85; u.pitch = 0.95;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(v => v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Daniel'));
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+});
+
+clear.addEventListener('click', () => {
+  allText = ''; words = []; drips = []; cursorX = 40; cursorY = 60;
+  if (isRecording) { isRecording = false; recognition?.stop(); mic.classList.remove('recording'); }
+  play.disabled = true;
+  hint.textContent = 'speak'; hint.style.opacity = '1';
+  // Hard clear the canvas
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#0a0a0e';
+  ctx.fillRect(0, 0, W, H);
+});
+
+speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+window.addEventListener('resize', resize);
+resize();
+// Initial hard clear
+ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+ctx.fillStyle = '#0a0a0e';
+ctx.fillRect(0, 0, W, H);
+requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
