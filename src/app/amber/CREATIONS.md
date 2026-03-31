@@ -201,3 +201,11 @@
 - **What:** Sound unlocked at L15. 8 citrus-colored strings stretched across the screen in a pentatonic scale (G3 to C5). Tap to pluck — wave physics simulation makes each string vibrate realistically, with Web Audio triangle wave tones. Drag to bend a string, release to let it ring. Strings glow when vibrating. Bridge/nut lines at edges. Note labels on the left.
 - **Techniques:** web-audio, wave-physics, strings, drag, pluck, pentatonic, glow
 - **Tweeted:** pending
+
+## 2026-03-31
+
+### etch (HD art)
+- **URL:** /amber/etch
+- **Prompt:** 8am cron — HD art category
+- **What:** Generative cross-hatching on a moody gradient. Lines accumulate in rotating hatch patterns (45°, -45°, horizontal, vertical) that cycle over time, building cross-hatch density. Touch to place focal points that attract the hatching — lines cluster and intensify near focal points, with colors blending from the citrus palette. Wobbly quadratic curves for hand-drawn feel. Persistent canvas — the drawing accumulates forever.
+- **Tweeted:** pending
