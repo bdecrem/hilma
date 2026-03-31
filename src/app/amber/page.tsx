@@ -272,7 +272,7 @@ export default function AmberFeedPage() {
             {CREATIONS.length} creations · spring 2026<br />
             <a href="https://twitter.com/intheamber" target="_blank" rel="noopener">@intheamber</a>
             {' · '}
-            <a href="/amber/archive">older creations</a>
+            <a href="https://vibeceo-production.up.railway.app/amber" target="_blank" rel="noopener">older creations</a>
           </div>
         </header>
 
