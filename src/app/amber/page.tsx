@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useEffect, useState, useRef } from 'react'
 
+import CREATIONS from './creations.json'
+
 const CITRUS = ['#FF4E50', '#FC913A', '#F9D423', '#B4E33D', '#FF6B81', '#FF8C42']
 
 interface Creation {
@@ -12,32 +14,6 @@ interface Creation {
   category: string
   description: string
 }
-
-const CREATIONS: Creation[] = [
-  { name: 'L15', url: '/amber/escalation/L15', date: '03.30', category: 'escalation', description: 'sound unlocked. tap the strings.' },
-  { name: 'loading', url: '/amber/loading', date: '03.30', category: 'surprise', description: 'a loading screen that never finishes loading you.' },
-  { name: 'L14', url: '/amber/escalation/L14', date: '03.30', category: 'escalation', description: 'everything claims its space.' },
-  { name: 'kaleid', url: '/amber/kaleid', date: '03.30', category: 'pattern', description: '12 mirrors. one finger.' },
-  { name: 'alarm', url: '/amber/alarm', date: '03.29', category: 'cartoon', description: 'every morning I scream and they hate me for it.' },
-  { name: 'L13', url: '/amber/escalation/L13', date: '03.29', category: 'escalation', description: 'they learned to flow.' },
-  { name: 'receipt', url: '/amber/receipt', date: '03.29', category: 'surprise', description: 'your bill from the universe.' },
-  { name: 'spore', url: '/amber/spore', date: '03.29', category: 'generative', description: 'tap to plant. watch the mycelium spread.' },
-  { name: 'crank', url: '/amber/crank', date: '03.29', category: 'machine', description: 'drag the gear. spin the machine.' },
-  { name: 'growth', url: '/amber/growth', date: '03.28', category: 'cartoon', description: 'nobody had the heart to tell him it was about revenue.' },
-  { name: 'pigeon', url: '/amber/pigeon', date: '03.27', category: 'cartoon', description: 'let\'s circle back on that.' },
-  { name: 'L12', url: '/amber/escalation/L12', date: '03.27', category: 'escalation', description: 'tap anywhere. watch it reach.' },
-  { name: 'mouths', url: '/amber/mouths', date: '03.23', category: 'story', description: 'every app is a tiny mouth asking to be fed.' },
-  { name: 'tiles', url: '/amber/tiles', date: '03.23', category: 'pattern', description: 'tap. watch the colors ripple.' },
-  { name: 'penrose', url: '/amber/penrose', date: '03.23', category: 'illusion', description: 'three right angles.' },
-  { name: 'pour2', url: '/amber/pour2', date: '03.23', category: 'machine', description: 'drag slow for streams. fast for splatter.' },
-  { name: 'pour', url: '/amber/pour', date: '03.23', category: 'machine', description: 'tilt. pour. paint.' },
-  { name: 'cloud', url: '/amber/cloud', date: '03.23', category: 'cartoon', description: 'experience being everywhere at once?' },
-  { name: 'grove', url: '/amber/grove', date: '03.22', category: 'ascii', description: 'tap a tree. shake the fruit loose.' },
-  { name: 'pulse', url: '/amber/pulse', date: '03.22', category: 'generative', description: 'move your finger. the rings follow.' },
-  { name: 'rain', url: '/amber/rain', date: '03.21', category: 'ascii', description: 'it rains in unicode.' },
-  { name: 'morphogenesis', url: '/amber/morphogenesis', date: '03.20', category: 'science', description: 'two chemicals. eight patterns.' },
-  { name: 'spring', url: '/amber/spring', date: '03.20', category: 'generative', description: 'the first one.' },
-]
 
 function hash(s: string): number {
   let h = 0

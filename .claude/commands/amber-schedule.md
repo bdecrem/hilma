@@ -66,8 +66,12 @@ git commit -m "Amber: [name] — [short description]"
 git push
 ```
 
-### Step 6: Update CREATIONS.md
-Append the new creation with date, URL, prompt, description. Commit and push.
+### Step 6: Update CREATIONS.md and creations.json
+Append the new creation to CREATIONS.md. Also prepend a new entry to `src/app/amber/creations.json` (this powers the feed at intheamber.com):
+```json
+{ "name": "[name]", "url": "/amber/[name]", "date": "MM.DD", "category": "[category]", "description": "[short description]" }
+```
+Add it as the FIRST item in the JSON array (newest first). Commit and push.
 
 ### Step 7: Tweet
 ```bash
@@ -138,8 +142,12 @@ git commit -m "Amber: L[N+1] escalation — [description]"
 git push
 ```
 
-### Step 5: Update CREATIONS.md and tweet
-Append to CREATIONS.md. Commit and push. Then tweet:
+### Step 5: Update CREATIONS.md, creations.json, and tweet
+Append to CREATIONS.md. Also prepend to `src/app/amber/creations.json`:
+```json
+{ "name": "L[N+1]", "url": "/amber/escalation/L[N+1]", "date": "MM.DD", "category": "escalation", "description": "[short description]" }
+```
+Add as FIRST item in the array. Commit and push. Then tweet:
 ```bash
 source .env.local && npx tsx scripts/tweet.ts "L[N+1]: [your tweet] https://intheamber.com/escalation/L[N+1]"
 ```
