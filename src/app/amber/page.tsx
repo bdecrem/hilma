@@ -104,6 +104,7 @@ export default function AmberFeedPage() {
           min-height: 100dvh;
           background: #FFF8E7;
           font-family: "Courier New", Courier, monospace;
+          padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         .feed-header {
