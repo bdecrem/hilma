@@ -13,7 +13,7 @@ import crypto from 'crypto'
 import { readFileSync } from 'fs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
-import { initDb, upsertSubdomain, recordConnect, recordDisconnect, isSubdomainReserved, getDeviceSubdomain, registerDevice } from './db.js'
+import { initDb, upsertSubdomain, recordConnect, recordDisconnect, isSubdomainReserved, getDeviceSubdomain, registerDevice, getReservedSubdomains, isSubdomainReservedByOther, getTokenInfo, claimToken, reserveSubdomain, unreserveSubdomain } from './db.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -428,7 +428,7 @@ wssTcp.on('connection', (proxyWs, req) => {
 })
 
 // HTTP request handler — relay to tunnel
-server.on('request', (req, res) => {
+server.on('request', async (req, res) => {
   const subdomain = extractSubdomain(req.headers.host)
 
   // Health check / root / install
@@ -444,6 +444,192 @@ server.on('request', (req, res) => {
       res.end(INSTALL_SCRIPT)
       return
     }
+
+    // API: get token info
+    if (req.url.startsWith('/api/token-info')) {
+      const token = new URL(req.url, 'http://localhost').searchParams.get('token')
+      if (!token) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'token required' })); return }
+      try {
+        const info = await getTokenInfo(token)
+        const subdomains = await getReservedSubdomains(token)
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ claimed: !!(info && info.claimed_at), email: info?.email, subdomains }))
+      } catch (err) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })) }
+      return
+    }
+
+    // API: list active tunnels for a token
+    if (req.url.startsWith('/api/tunnels')) {
+      const token = new URL(req.url, 'http://localhost').searchParams.get('token')
+      if (!token) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'token required' })); return }
+      const active = []
+      for (const [sub, tunnel] of tunnels) {
+        if (tunnel.token === token) {
+          active.push({ subdomain: sub, url: `https://${sub}.${BASE_DOMAIN}`, mode: tunnel.mode, tcpPort: tunnel.tcpPort || null, device_id: tunnel.deviceId || null })
+        }
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify({ tunnels: active }))
+      return
+    }
+
+    // API: kill a tunnel
+    if (req.url === '/api/kill' && req.method === 'POST') {
+      const chunks = []
+      req.on('data', c => chunks.push(c))
+      req.on('end', () => {
+        try {
+          const { token, subdomain } = JSON.parse(Buffer.concat(chunks).toString())
+          if (!token || !subdomain) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'token and subdomain required' })); return }
+          const tunnel = tunnels.get(subdomain)
+          if (!tunnel || tunnel.token !== token) { res.writeHead(404, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'tunnel not found or not owned by this token' })); return }
+          tunnel.ws.close()
+          res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: true, subdomain }))
+        } catch (err) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })) }
+      })
+      return
+    }
+
+    // API: claim a token
+    if (req.url === '/api/claim' && req.method === 'POST') {
+      const chunks = []
+      req.on('data', c => chunks.push(c))
+      req.on('end', async () => {
+        try {
+          const { token, email } = JSON.parse(Buffer.concat(chunks).toString())
+          if (!token || !email) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'token and email required' })); return }
+          const result = await claimToken(token, email)
+          res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: true, claimed_at: result.claimed_at }))
+        } catch (err) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })) }
+      })
+      return
+    }
+
+    // API: reserve a subdomain
+    if (req.url === '/api/reserve' && req.method === 'POST') {
+      const chunks = []
+      req.on('data', c => chunks.push(c))
+      req.on('end', async () => {
+        try {
+          const { token, subdomain: sub, device_id } = JSON.parse(Buffer.concat(chunks).toString())
+          if (!token || !sub) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'token and subdomain required' })); return }
+          if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(sub) || sub.length > 63) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Invalid subdomain format' })); return }
+          if (await isSubdomainReservedByOther(sub, token)) { res.writeHead(409, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'Subdomain reserved by another user' })); return }
+          await reserveSubdomain(token, sub, device_id)
+          res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: true, subdomain: sub }))
+        } catch (err) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })) }
+      })
+      return
+    }
+
+    // API: unreserve a subdomain
+    if (req.url === '/api/unreserve' && req.method === 'POST') {
+      const chunks = []
+      req.on('data', c => chunks.push(c))
+      req.on('end', async () => {
+        try {
+          const { token, subdomain: sub } = JSON.parse(Buffer.concat(chunks).toString())
+          if (!token || !sub) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: 'token and subdomain required' })); return }
+          await unreserveSubdomain(token, sub)
+          res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: true }))
+        } catch (err) { res.writeHead(500, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ error: err.message })) }
+      })
+      return
+    }
+
+    // Claim redirect → dashboard
+    if (req.url.startsWith('/claim/')) {
+      const key = req.url.slice(7)
+      res.writeHead(302, { Location: `/dashboard?key=${encodeURIComponent(key)}` })
+      res.end()
+      return
+    }
+
+    // Dashboard
+    if (req.url.startsWith('/dashboard')) {
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>tunn3l — dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(135deg,#FFF5E6,#FFFDE7,#FFF0F0);min-height:100vh;color:#292524}
+.wrap{max-width:640px;margin:0 auto;padding:48px 24px}
+h1{font-size:2rem;font-weight:800;letter-spacing:-0.02em}
+.sub{font-size:.85rem;color:#a8a29e;font-family:monospace;margin-top:4px;margin-bottom:32px}
+.card{background:rgba(255,255,255,0.7);backdrop-filter:blur(8px);border:1px solid #e7e5e4;border-radius:16px;padding:24px;margin-bottom:16px}
+.card h2{font-size:1.1rem;font-weight:600;margin-bottom:12px}
+.card p{font-size:.85rem;color:#78716c;margin-bottom:12px;line-height:1.5}
+.row{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid #f5f5f4;border-radius:12px;padding:12px 16px;margin-bottom:8px}
+.row .url{font-family:monospace;font-size:.85rem}
+.row .meta{font-size:.75rem;color:#a8a29e}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:.75rem}
+.dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.form-row{display:flex;gap:8px}
+.input-wrap{flex:1;display:flex;align-items:center;background:#fff;border:1px solid #e7e5e4;border-radius:12px;overflow:hidden}
+.input-wrap:focus-within{box-shadow:0 0 0 2px #fdba74}
+.input-wrap input{flex:1;border:none;outline:none;padding:10px 16px;font-size:.85rem;background:transparent;font-family:monospace}
+.input-wrap .suffix{padding-right:12px;font-size:.85rem;color:#a8a29e;white-space:nowrap}
+input[type=email]{flex:1;border:1px solid #e7e5e4;border-radius:12px;padding:10px 16px;font-size:.85rem;outline:none}
+input[type=email]:focus{box-shadow:0 0 0 2px #fdba74}
+.btn{padding:10px 20px;border:none;border-radius:12px;font-size:.85rem;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-orange{background:#f97316;color:#fff}.btn-orange:hover{background:#ea580c}
+.btn-dark{background:#292524;color:#fff}.btn-dark:hover{background:#44403c}
+.btn-ghost{background:none;border:none;color:#a8a29e;font-size:.75rem;cursor:pointer}.btn-ghost:hover{color:#ef4444}
+.btn:disabled{opacity:.5;cursor:default}
+.claimed-bar{background:rgba(255,255,255,0.5);border:1px solid #bbf7d0;border-radius:16px;padding:12px 20px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:.85rem}
+.claimed-dot{width:8px;height:8px;border-radius:50%;background:#22c55e}
+.error{background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:.85rem;color:#b91c1c}
+.key-bar{display:flex;align-items:center;gap:12px}
+.key-chip{font-family:monospace;font-size:.75rem;color:#a8a29e;background:rgba(255,255,255,0.6);padding:6px 12px;border-radius:8px}
+.empty{font-size:.85rem;color:#a8a29e}
+code{background:#f5f5f4;padding:2px 8px;border-radius:4px;font-size:.8rem}
+#no-key{text-align:center;padding:80px 24px}
+#no-key input{width:100%;max-width:320px;margin:0 auto;display:block;border:1px solid #e7e5e4;border-radius:12px;padding:12px 16px;font-family:monospace;font-size:.9rem;outline:none;text-align:center}
+#no-key input:focus{box-shadow:0 0 0 2px #fdba74}
+</style></head><body>
+<div class="wrap" id="app"></div>
+<script>
+const RELAY = ''
+const params = new URLSearchParams(location.search)
+let apiKey = params.get('key') || localStorage.getItem('tunn3l_api_key') || ''
+if (apiKey) localStorage.setItem('tunn3l_api_key', apiKey)
+const app = document.getElementById('app')
+function render() { if (!apiKey) { renderNoKey(); return }; app.innerHTML = '<div style="text-align:center;padding:80px;color:#a8a29e">Loading...</div>'; fetchData() }
+function renderNoKey() {
+  app.innerHTML = '<div id="no-key"><h1><a href="/" style="color:inherit;text-decoration:none">tunn3l<span style="color:#a8a29e">.sh</span></a></h1><p style="color:#a8a29e;margin:8px 0 24px">Enter your API key to manage your tunnels.</p><input type="text" placeholder="tk_..." id="key-input"><p style="font-size:.75rem;color:#a8a29e;margin-top:16px">Install tunn3l to get a key: <code>curl -sSf https://tunn3l.sh/install | sh</code></p></div>'
+  document.getElementById('key-input').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.value.trim()) { apiKey = e.target.value.trim(); localStorage.setItem('tunn3l_api_key', apiKey); render() } })
+}
+async function fetchData() {
+  try {
+    const [infoR, tunR] = await Promise.all([fetch(RELAY + '/api/token-info?token=' + encodeURIComponent(apiKey)), fetch(RELAY + '/api/tunnels?token=' + encodeURIComponent(apiKey))])
+    const info = await infoR.json(); const tun = await tunR.json()
+    renderDashboard(info, tun.tunnels || [])
+  } catch (e) { app.innerHTML = '<div class="error">Failed to connect: ' + e.message + '</div>' }
+}
+function renderDashboard(info, tunnels) {
+  let html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:32px"><div><h1><a href="/" style="color:inherit;text-decoration:none">tunn3l<span style="color:#a8a29e">.sh</span></a></h1><p class="sub">dashboard</p></div><div class="key-bar"><span class="key-chip">' + apiKey.slice(0,12) + '...</span><button class="btn-ghost" onclick="apiKey=&#39;&#39;;localStorage.removeItem(&#39;tunn3l_api_key&#39;);render()">switch key</button></div></div>'
+  if (!info.claimed) { html += '<div class="card" style="border-color:#fdba74"><h2>Claim your account</h2><p>Link an email to your API key.</p><form class="form-row" onsubmit="handleClaim(event)"><input type="email" placeholder="you@example.com" id="claim-email" required style="flex:1"><button type="submit" class="btn btn-orange" id="claim-btn">Claim</button></form></div>' }
+  else { html += '<div class="claimed-bar"><div class="claimed-dot"></div>Claimed by <strong>' + info.email + '</strong></div>' }
+  html += '<div class="card"><h2>Active tunnels</h2>'
+  if (tunnels.length === 0) { html += '<p class="empty">No active tunnels. Start one with <code>tunn3l http 3000</code></p>' }
+  else { tunnels.forEach(t => { html += '<div class="row"><div><div class="url">' + t.url + '</div><div class="meta">' + t.mode + ' tunnel' + (t.device_id ? ' · ' + t.device_id : '') + '</div></div><div style="display:flex;align-items:center;gap:12px"><div class="badge"><div class="dot"></div>live</div><button class="btn-ghost" onclick="handleKill(&#39;' + t.subdomain + '&#39;)" style="color:#ef4444">kill</button></div></div>' }) }
+  html += '</div>'
+  html += '<div class="card"><h2>Reserved subdomains</h2><p>Reserved subdomains are automatically assigned when your tunnel connects.</p>'
+  if (info.subdomains && info.subdomains.length > 0) { info.subdomains.forEach(s => { html += '<div class="row"><div><span class="url">' + s.name + '</span><span style="color:#a8a29e">.tunn3l.sh</span>' + (s.device_id ? '<div class="meta">' + s.device_id + '</div>' : '') + '</div><button class="btn-ghost" onclick="handleUnreserve(&#39;' + s.name + '&#39;)">release</button></div>' }) }
+  html += '<p class="empty" style="margin-top:8px">Reserve subdomains from the CLI: <code>tunn3l reserve my-name</code></p></div>'
+  app.innerHTML = html
+}
+async function handleClaim(e) { e.preventDefault(); const btn = document.getElementById('claim-btn'); const email = document.getElementById('claim-email').value; btn.disabled = true; btn.textContent = 'Claiming...'; try { const r = await fetch(RELAY + '/api/claim', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:apiKey,email}) }); if (!r.ok) throw new Error((await r.json()).error); fetchData() } catch(e) { alert(e.message); btn.disabled=false; btn.textContent='Claim' } }
+async function handleUnreserve(sub) { try { const r = await fetch(RELAY + '/api/unreserve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:apiKey,subdomain:sub}) }); if (!r.ok) throw new Error((await r.json()).error); fetchData() } catch(e) { alert(e.message) } }
+async function handleKill(sub) { try { const r = await fetch(RELAY + '/api/kill', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({token:apiKey,subdomain:sub}) }); if (!r.ok) throw new Error((await r.json()).error); fetchData() } catch(e) { alert(e.message) } }
+setInterval(() => { if (apiKey) fetchData() }, 10000)
+render()
+</script></body></html>`)
+      return
+    }
+
     // Landing page
     res.writeHead(200, { 'Content-Type': 'text/html' })
     res.end(`<!DOCTYPE html>
