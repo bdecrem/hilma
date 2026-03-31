@@ -483,6 +483,8 @@ h1 .ext{color:rgba(255,255,255,0.35)}
 .footer{border-top:1px solid rgba(255,255,255,0.05);padding-top:24px;display:flex;justify-content:space-between;color:rgba(255,255,255,0.15);font-size:0.75rem;font-family:monospace}
 .footer a{color:rgba(255,255,255,0.25);text-decoration:none}
 .stats{color:rgba(255,255,255,0.15);font-family:monospace;font-size:0.75rem;margin-bottom:48px}
+.stats a{color:rgba(255,255,255,0.3);text-decoration:none;transition:color 0.15s}
+.stats a:hover{color:rgba(255,255,255,0.6)}
 </style>
 </head>
 <body>
@@ -532,7 +534,9 @@ h1 .ext{color:rgba(255,255,255,0.35)}
 </div>
 </div>
 
-<p class="stats">${tunnels.size} active tunnel${tunnels.size !== 1 ? 's' : ''} right now</p>
+<p class="stats"><a href="/features">See everything tunn3l can do →</a></p>
+
+<p class="stats">${tunnels.size} tunnel${tunnels.size !== 1 ? 's' : ''} live right now · <a href="/dashboard">manage yours →</a></p>
 
 <div class="footer">
 <span>tunn3l.sh is <a href="https://github.com/bdecrem/hilma/blob/main/apps/tunnel/LICENSE" target="_blank">open source</a></span>
