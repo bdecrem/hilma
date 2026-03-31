@@ -215,3 +215,9 @@
 - **Prompt:** 8am cron — HD art category
 - **What:** Generative cross-hatching on a moody gradient. Lines accumulate in rotating hatch patterns (45°, -45°, horizontal, vertical) that cycle over time, building cross-hatch density. Touch to place focal points that attract the hatching — lines cluster and intensify near focal points, with colors blending from the citrus palette. Wobbly quadratic curves for hand-drawn feel. Persistent canvas — the drawing accumulates forever.
 - **Tweeted:** pending
+
+### interview (surprising & fresh)
+- **URL:** /amber/interview
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Exit interview for being alive. 8 absurd questions ("On a scale of 1-10, how would you rate gravity?", "Would you recommend consciousness to a friend?", "How often do you use your skeleton?"). Tap to answer, each option secretly scored. At the end: a performance review of your existence with star rating and written evaluation. Four tiers from NEEDS IMPROVEMENT to OUTSTANDING. Frosted glass card UI on warm citrus gradient. Tap "request re-evaluation" to retry.
+- **Tweeted:** pending
