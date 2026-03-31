@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta property="og:title" content="Voice Sculpture">
+  <meta property="og:description" content="Speak and watch your words become a living text sculpture — then hear it read back by Voxtral AI">
+  <meta property="og:image" content="https://hilma-nine.vercel.app/art/voice-sculpture-og.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Voice Sculpture</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #f0ece4; touch-action: none; font-family: Georgia, "Times New Roman", serif; }
+    canvas { display: block; width: 100%; height: 100%; position: fixed; top: 0; left: 0; }
+    .controls {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; z-index: 10; align-items: center;
+    }
+    .btn {
+      width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; font-size: 24px;
+    }
+    .btn-mic { background: #2c3e50; color: white; }
+    .btn-mic.recording { background: #e74c3c; animation: pulse 1s infinite; }
+    .btn-play { background: #1a5276; color: white; }
+    .btn-play:disabled { background: #95a5a6; cursor: default; }
+    .btn-clear { background: #7f8c8d; color: white; font-size: 16px; width: 44px; height: 44px; }
+    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    .status {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+      font: 400 13px/1 "Helvetica Neue", sans-serif; color: rgba(0,0,0,0.3);
+      z-index: 10; white-space: nowrap;
+    }
+    .mode-label {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      font: 300 11px/1 "Helvetica Neue", sans-serif; color: rgba(0,0,0,0.2);
+      letter-spacing: 2px; text-transform: uppercase; z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div class="mode-label">voice sculpture</div>
+  <div class="status" id="status">tap the mic and speak</div>
+  <div class="controls">
+    <button class="btn btn-clear" id="clearBtn" title="Clear">x</button>
+    <button class="btn btn-mic" id="micBtn" title="Record">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="1" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0014 0"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </button>
+    <button class="btn btn-play" id="playBtn" title="Play back with Voxtral" disabled>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+    </button>
+  </div>
+  <script>
+'use strict';
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let W, H;
+
+const FONT_SIZE = 15;
+const LINE_HEIGHT = 20;
+const CHAR_W = FONT_SIZE * 0.52;
+
+let chars = [];
+let allText = '';
+let t = 0;
+let isRecording = false;
+let recognition = null;
+
+// Crystal seeds from voice energy
+let crystals = [];
+
+function resize() {
+  W = window.innerWidth;
+  H = window.innerHeight;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  layoutText();
+}
+
+function layoutText() {
+  chars = [];
+  if (!allText) return;
+  const padding = 28;
+  const cols = Math.floor((W - padding * 2) / CHAR_W);
+  const maxLines = Math.floor((H - padding * 2 - 80) / LINE_HEIGHT); // leave room for controls
+  const words = allText.split(' ');
+  let line = 0, col = 0;
+
+  for (let wi = 0; wi < words.length && line < maxLines; wi++) {
+    const word = words[wi];
+    if (!word) continue;
+    if (col + word.length > cols && col > 0) { line++; col = 0; if (line >= maxLines) break; }
+    for (let i = 0; i < word.length; i++) {
+      const x = padding + col * CHAR_W;
+      const y = padding + 30 + line * LINE_HEIGHT;
+      const age = chars.length; // older chars are more settled
+      chars.push({
+        ch: word[i],
+        homeX: x, homeY: y,
+        x: x + (Math.random() - 0.5) * 200, // spawn scattered
+        y: y + (Math.random() - 0.5) * 200,
+        vx: (Math.random() - 0.5) * 3,
+        vy: (Math.random() - 0.5) * 3,
+        age: 0,
+        born: t,
+      });
+      col++;
+    }
+    col++;
+    if (col >= cols) { line++; col = 0; }
+  }
+}
+
+function wind(x, y, time) {
+  return {
+    x: Math.sin(y * 0.006 + time * 0.2) * 0.15,
+    y: Math.cos(x * 0.008 + time * 0.15) * 0.08,
+  };
+}
+
+function frame() {
+  t += 0.016;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#f0ece4';
+  ctx.fillRect(0, 0, W, H);
+
+  // Crystal growth
+  for (const cr of crystals) {
+    cr.age += 0.016;
+    if (cr.radius < cr.maxRadius) cr.radius += 0.5;
+  }
+  for (let i = crystals.length - 1; i >= 0; i--) {
+    if (crystals[i].age > 10) crystals[i].maxRadius -= 0.2;
+    if (crystals[i].maxRadius < 0) crystals.splice(i, 1);
+  }
+
+  ctx.font = `400 ${FONT_SIZE}px Georgia, "Times New Roman", serif`;
+  ctx.textBaseline = 'top';
+
+  for (const c of chars) {
+    c.age += 0.016;
+    const settle = Math.min(1, c.age * 0.5); // characters settle over 2 seconds
+
+    // Spring to home position
+    const springX = (c.homeX - c.x) * 0.04 * settle;
+    const springY = (c.homeY - c.y) * 0.04 * settle;
+
+    // Wind (less as they settle)
+    const w = wind(c.x, c.y, t);
+    const windFactor = 1 - settle * 0.7;
+
+    // Crystal influence
+    let frozen = 0;
+    for (const cr of crystals) {
+      const dx = c.x - cr.x, dy = c.y - cr.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < cr.radius) {
+        frozen = Math.max(frozen, (1 - dist / cr.radius) * 0.8);
+      }
+    }
+
+    const fluid = 1 - frozen;
+    c.vx += (springX + w.x * windFactor) * fluid;
+    c.vy += (springY + w.y * windFactor) * fluid;
+    c.vx *= 0.9;
+    c.vy *= 0.9;
+    c.x += c.vx;
+    c.y += c.vy;
+
+    // Color: new chars are darker, settling chars fade to grey
+    const freshness = Math.max(0, 1 - c.age * 0.3);
+    const grey = Math.round(100 + (1 - freshness) * 80);
+    const alpha = 0.4 + freshness * 0.5;
+    ctx.fillStyle = `rgba(${grey - 20},${grey - 10},${grey},${alpha})`;
+    ctx.fillText(c.ch, c.x, c.y);
+  }
+
+  // Draw crystals
+  for (const cr of crystals) {
+    const alpha = Math.min(0.08, cr.age * 0.01);
+    ctx.beginPath();
+    ctx.arc(cr.x, cr.y, cr.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(0,0,0,${alpha})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cr.x, cr.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = cr.color;
+    ctx.globalAlpha = Math.min(0.6, cr.age * 0.2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Recording indicator
+  if (isRecording) {
+    ctx.beginPath();
+    ctx.arc(W / 2, H - 130, 4 + Math.sin(t * 6) * 2, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(231,76,60,${0.5 + Math.sin(t * 4) * 0.3})`;
+    ctx.fill();
+  }
+
+  requestAnimationFrame(frame);
+}
+
+// Speech recognition
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const micBtn = document.getElementById('micBtn');
+const playBtn = document.getElementById('playBtn');
+const clearBtn = document.getElementById('clearBtn');
+const status = document.getElementById('status');
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  let finalTranscript = '';
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        const text = e.results[i][0].transcript;
+        finalTranscript += text;
+        // Drop a crystal where the voice energy lands
+        const lastChar = chars[chars.length - 1];
+        if (lastChar) {
+          const colors = ['#9b59b6','#e67e22','#1abc9c','#e74c3c','#3498db','#2ecc71'];
+          crystals.push({
+            x: lastChar.homeX + Math.random() * 100,
+            y: lastChar.homeY + Math.random() * 50,
+            radius: 0, maxRadius: 40 + text.length * 3,
+            age: 0, color: colors[crystals.length % colors.length],
+          });
+        }
+      } else {
+        interim += e.results[i][0].transcript;
+      }
+    }
+    allText = finalTranscript + interim;
+    layoutText();
+    playBtn.disabled = !finalTranscript;
+  };
+
+  recognition.onend = () => {
+    if (isRecording) recognition.start(); // keep going if still recording
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error !== 'no-speech') {
+      status.textContent = 'error: ' + e.error;
+    }
+  };
+
+  micBtn.addEventListener('click', () => {
+    if (isRecording) {
+      isRecording = false;
+      recognition.stop();
+      micBtn.classList.remove('recording');
+      status.textContent = allText ? 'tap play to hear it back' : 'tap the mic and speak';
+    } else {
+      isRecording = true;
+      finalTranscript = allText; // append to existing
+      recognition.start();
+      micBtn.classList.add('recording');
+      status.textContent = 'listening...';
+    }
+  });
+} else {
+  micBtn.disabled = true;
+  status.textContent = 'speech recognition not supported in this browser';
+}
+
+// Voxtral playback
+playBtn.addEventListener('click', async () => {
+  if (!allText) return;
+  status.textContent = 'generating voice...';
+  playBtn.disabled = true;
+
+  try {
+    // Use browser's built-in speech synthesis as fallback
+    // Voxtral API would need a server proxy for the API key
+    const utterance = new SpeechSynthesisUtterance(allText);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    // Try to find a nice voice
+    const voices = speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Daniel'));
+    if (preferred) utterance.voice = preferred;
+
+    utterance.onend = () => {
+      status.textContent = 'tap the mic to add more';
+      playBtn.disabled = false;
+    };
+    utterance.onerror = () => {
+      status.textContent = 'playback error';
+      playBtn.disabled = false;
+    };
+
+    speechSynthesis.speak(utterance);
+    status.textContent = 'speaking...';
+  } catch (err) {
+    status.textContent = 'error: ' + err.message;
+    playBtn.disabled = false;
+  }
+});
+
+clearBtn.addEventListener('click', () => {
+  allText = '';
+  chars = [];
+  crystals = [];
+  if (isRecording) {
+    isRecording = false;
+    recognition?.stop();
+    micBtn.classList.remove('recording');
+  }
+  playBtn.disabled = true;
+  status.textContent = 'tap the mic and speak';
+});
+
+// Load voices (needed for some browsers)
+speechSynthesis.getVoices();
+speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(frame);
+  </script>
+</body>
+</html>
