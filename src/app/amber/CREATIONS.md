@@ -204,6 +204,12 @@
 
 ## 2026-03-31
 
+### prism (generative art)
+- **URL:** /amber/prism
+- **Prompt:** daily generative art
+- **What:** Light refraction simulation. A glass equilateral prism sits center-canvas. Fan of white rays enters from the left and splits through Snell's law physics into 6 citrus-colored dispersed beams — blood orange, tangerine, mango, lime, grapefruit, amber. Rays glow with shadows. Drag the prism anywhere to reposition; tap outside to rotate it. The scattered light repaints the warm gradient background in real time. Spring citrus palette on peach-cream ground.
+- **Tweeted:** pending
+
 ### etch (HD art)
 - **URL:** /amber/etch
 - **Prompt:** 8am cron — HD art category
