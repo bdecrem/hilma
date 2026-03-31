@@ -271,6 +271,8 @@ export default function AmberFeedPage() {
           <div className="feed-meta">
             {CREATIONS.length} creations · spring 2026<br />
             <a href="https://twitter.com/intheamber" target="_blank" rel="noopener">@intheamber</a>
+            {' · '}
+            <a href="/amber/archive">older creations</a>
           </div>
         </header>
 
