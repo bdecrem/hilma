@@ -2,32 +2,49 @@
 // Import this and call pickBackground() — it returns a CSS background value
 
 const SOLIDS = [
+  // Light grounds (keep a few, but not dominant)
   '#FFF8E7', // warm cream
   '#FFECD2', // soft peach
-  '#FFFDE7', // pale lemon
   '#FFF0F0', // light blush
-  '#FFE0DD', // coral wash
-  '#E8F5E9', // mint mist
-  '#FAFAFA', // warm white
-  '#F9D423', // bold mango
-  '#FF6B81', // bold grapefruit
-  '#B4E33D', // bold lime
-  '#FF4E50', // bold coral
-  '#FC913A', // bold tangerine
+  // Bold primaries — these should show up often
+  '#F9D423', // mango
+  '#FF6B81', // grapefruit pink
+  '#B4E33D', // lime zest
+  '#FF4E50', // blood orange
+  '#FC913A', // tangerine
+  // Deeper / moodier grounds
+  '#1A1A2E', // midnight ink
+  '#2D5A27', // deep leaf green
+  '#4A1942', // plum shadow
+  '#0D3B66', // deep ocean
+  '#F5E6CC', // parchment
+  '#E8D5B7', // sandstone
+  '#C1E1C1', // sage
+  '#FFB347', // warm amber
+  '#E0BBE4', // soft lavender
+  '#FFDAB9', // peach puff
 ]
 
 const GRADIENTS = [
+  // Warm light
   'linear-gradient(135deg, #FFECD2, #FFFDE7)',
   'linear-gradient(135deg, #FFF0F0, #FFFDE7)',
-  'linear-gradient(180deg, #E8F5E9, #FFF8E7)',
-  'linear-gradient(135deg, #FFE0DD, #FFECD2)',
-  'linear-gradient(180deg, #FFFDE7, #FFF0F0)',
-  'linear-gradient(135deg, #FFF8E7, #E8F5E9)',
-  'linear-gradient(180deg, #FFECD2, #FFF0F0)',
+  // Bold citrus
   'linear-gradient(135deg, #F9D423, #FC913A)',
   'linear-gradient(135deg, #FF6B81, #FC913A)',
-  'linear-gradient(180deg, #B4E33D, #FFF8E7)',
   'linear-gradient(135deg, #FF4E50, #F9D423)',
+  'linear-gradient(180deg, #B4E33D, #F9D423)',
+  // Deeper / richer
+  'linear-gradient(135deg, #1A1A2E, #4A1942)',
+  'linear-gradient(180deg, #0D3B66, #1A1A2E)',
+  'linear-gradient(135deg, #2D5A27, #1A1A2E)',
+  'linear-gradient(135deg, #FF4E50, #4A1942)',
+  'linear-gradient(180deg, #FC913A, #FF4E50)',
+  // Unexpected combos
+  'linear-gradient(135deg, #E0BBE4, #FFECD2)',
+  'linear-gradient(135deg, #C1E1C1, #F9D423)',
+  'linear-gradient(180deg, #0D3B66, #B4E33D)',
+  'linear-gradient(135deg, #FFB347, #FF6B81)',
 ]
 
 // Pick a background based on a seed (use the page name or level number)
@@ -57,17 +74,25 @@ export function randomSolidBg(): string {
 // For canvas: pick two colors for a gradient
 export function pickGradientColors(seed: string | number): [string, string] {
   const pairs: [string, string][] = [
+    // Light
     ['#FFECD2', '#FFFDE7'],
     ['#FFF0F0', '#FFFDE7'],
-    ['#E8F5E9', '#FFF8E7'],
-    ['#FFE0DD', '#FFECD2'],
-    ['#FFFDE7', '#FFF0F0'],
-    ['#FFF8E7', '#E8F5E9'],
+    // Bold citrus
     ['#F9D423', '#FC913A'],
     ['#FF6B81', '#FC913A'],
-    ['#B4E33D', '#FFF8E7'],
-    ['#FFE0DD', '#E8F5E9'],
-    ['#FFECD2', '#FFF0F0'],
+    ['#FF4E50', '#F9D423'],
+    ['#B4E33D', '#F9D423'],
+    ['#FC913A', '#FF4E50'],
+    // Dark / moody
+    ['#1A1A2E', '#4A1942'],
+    ['#0D3B66', '#1A1A2E'],
+    ['#2D5A27', '#1A1A2E'],
+    ['#FF4E50', '#4A1942'],
+    // Unexpected
+    ['#E0BBE4', '#FFECD2'],
+    ['#C1E1C1', '#F9D423'],
+    ['#0D3B66', '#B4E33D'],
+    ['#FFB347', '#FF6B81'],
   ]
   const s = typeof seed === 'number' ? seed : hashString(seed)
   return pairs[Math.abs(s) % pairs.length]

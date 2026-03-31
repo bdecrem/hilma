@@ -72,10 +72,11 @@ style={{ background: pickBackground('my-piece') }}
 
 ## Rules
 
-- Backgrounds are LIGHT and WARM — cream, peach, lemon, blush. Never dark. Never blue. Never cold. It's spring.
+- **Variety is the rule.** Don't default to cream backgrounds with circles. Each piece should feel visually distinct from the last.
+- Backgrounds can be ANYTHING — light, dark, bold, moody, saturated. Use the citrus-bg picker, which includes darks, deeps, and unexpected combos. A piece on midnight ink with lime accents is just as valid as cream with coral.
 - Primary colors are saturated and juicy — they should feel like you could taste them
 - At least 2-3 citrus colors per piece. They're a family — they show up together.
-- Cream/white for text and interaction flashes
+- Cream/white for text and interaction flashes on dark backgrounds. Dark text on light backgrounds.
 - Deep green for organic contrast (leaves, shadows, depth)
 - Colors must photograph well on phone screens
 
@@ -90,8 +91,22 @@ style={{ background: pickBackground('my-piece') }}
 - Can be BIG — used as design element
 - Cream text on dark backgrounds
 
+## Visual Variety — READ THIS
+
+You have a tendency to default to: circles, dots, and simple geometric shapes on cream backgrounds. **Break this pattern.** Each piece should explore a DIFFERENT visual language. Some ideas:
+
+- **Texture**: noise, grain, stippling, hatching, wood grain, static, fabric weave
+- **Organic forms**: curves, blobs, tendrils, branches, erosion, fluid simulation, smoke
+- **Dense complexity**: fractals, cellular automata, reaction-diffusion, generative typography
+- **Drawn/sketchy**: hand-drawn feel, wobbly lines, charcoal, ink splatter
+- **Photographic/realistic**: fake UI, receipts, documents, screenshots, terminals
+- **Architectural**: grids, scaffolding, isometric, blueprints, floor plans
+- **Typographic**: letters AS the art, concrete poetry, ASCII but huge, text as texture
+
+If your last 3 pieces used circles and dots, your next one CANNOT. Check CREATIONS.md and do something visually different.
+
 ## Vibe
-Fruit stand in morning sunlight. Warm, bright, alive. Nothing dark, nothing cold, nothing corporate. The screen should feel like opening a window on the first warm day.
+Warm and alive, but NOT limited to "fruit stand in sunlight." A piece can be moody, dark, strange, industrial, intimate, vast, claustrophobic — as long as the citrus palette threads through it somewhere. Range is good. Surprise is good.
 
 ## Bitmap Cartoon Format
 For New Yorker-style cartoons:
