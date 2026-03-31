@@ -59,6 +59,122 @@ function distToSegment(px: number, py: number, wire: Wire): { dist: number; t: n
   return { dist: Math.sqrt(minDist), t: minT }
 }
 
+// --- Audio engine ---
+// Noise bed of detuned oscillators + filtered noise.
+// Each cut: snip sound + one dissonant voice drops out.
+// Final state: clean warm chord, no noise.
+
+interface AudioEngine {
+  ctx: AudioContext
+  noiseGain: GainNode
+  noiseFilter: BiquadFilterNode
+  voices: { osc: OscillatorNode; gain: GainNode; baseFreq: number; detune: number }[]
+  masterGain: GainNode
+  started: boolean
+}
+
+// Cmaj7 chord frequencies — the destination
+const CHORD_FREQS = [130.81, 164.81, 196.00, 246.94, 261.63, 329.63]
+
+function createAudioEngine(): AudioEngine | null {
+  try {
+    const ctx = new AudioContext()
+    const masterGain = ctx.createGain()
+    masterGain.gain.value = 0.25
+    masterGain.connect(ctx.destination)
+
+    // White noise through low-pass filter
+    const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate)
+    const data = noiseBuffer.getChannelData(0)
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+    const noiseSrc = ctx.createBufferSource()
+    noiseSrc.buffer = noiseBuffer
+    noiseSrc.loop = true
+
+    const noiseFilter = ctx.createBiquadFilter()
+    noiseFilter.type = 'lowpass'
+    noiseFilter.frequency.value = 400 // starts muffled
+
+    const noiseGain = ctx.createGain()
+    noiseGain.gain.value = 0.15
+
+    noiseSrc.connect(noiseFilter)
+    noiseFilter.connect(noiseGain)
+    noiseGain.connect(masterGain)
+    noiseSrc.start()
+
+    // 6 oscillator voices — start detuned (dissonant), resolve to chord
+    const voices = CHORD_FREQS.map((freq) => {
+      const osc = ctx.createOscillator()
+      osc.type = 'sine'
+      // Start with heavy random detune (dissonant cluster)
+      const detune = (Math.random() - 0.5) * 300
+      osc.frequency.value = freq
+      osc.detune.value = detune
+
+      const gain = ctx.createGain()
+      gain.gain.value = 0.06
+      osc.connect(gain)
+      gain.connect(masterGain)
+      osc.start()
+
+      return { osc, gain, baseFreq: freq, detune }
+    })
+
+    return { ctx, noiseGain, noiseFilter, voices, masterGain, started: true }
+  } catch {
+    return null
+  }
+}
+
+function updateAudioProgress(engine: AudioEngine | null, progress: number) {
+  if (!engine || !engine.started) return
+  const t = engine.ctx.currentTime
+
+  // Noise fades out as progress increases
+  engine.noiseGain.gain.linearRampToValueAtTime(0.15 * (1 - progress), t + 0.1)
+  // Filter opens as we clear — noise gets brighter before it vanishes
+  engine.noiseFilter.frequency.linearRampToValueAtTime(400 + progress * 2000, t + 0.1)
+
+  // Oscillators detune toward 0 (resolving the chord)
+  for (const voice of engine.voices) {
+    const targetDetune = voice.detune * (1 - progress)
+    voice.osc.detune.linearRampToValueAtTime(targetDetune, t + 0.3)
+    // Voices get slightly louder as chord resolves
+    voice.gain.gain.linearRampToValueAtTime(0.06 + progress * 0.04, t + 0.3)
+  }
+}
+
+function playSnip(engine: AudioEngine | null) {
+  if (!engine) return
+  const ctx = engine.ctx
+  const t = ctx.currentTime
+
+  // Short percussive click — filtered noise burst
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.05, ctx.sampleRate)
+  const data = buffer.getChannelData(0)
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.008))
+  }
+  const src = ctx.createBufferSource()
+  src.buffer = buffer
+
+  const filter = ctx.createBiquadFilter()
+  filter.type = 'bandpass'
+  filter.frequency.value = 3000 + Math.random() * 2000
+  filter.Q.value = 2
+
+  const gain = ctx.createGain()
+  gain.gain.setValueAtTime(0.4, t)
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08)
+
+  src.connect(filter)
+  filter.connect(gain)
+  gain.connect(engine.masterGain)
+  src.start(t)
+  src.stop(t + 0.1)
+}
+
 export default function Shed() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wiresRef = useRef<Wire[]>([])
@@ -66,6 +182,7 @@ export default function Shed() {
   const frameRef = useRef(0)
   const cursorVisibleRef = useRef(false)
   const sparkRef = useRef<{ x: number; y: number; t: number; color: string }[]>([])
+  const audioRef = useRef<AudioEngine | null>(null)
 
   const initWires = useCallback((w: number, h: number) => {
     const wires: Wire[] = []
@@ -148,6 +265,9 @@ export default function Shed() {
       const targetProgress = cutCount / wires.length
       progressRef.current = lerp(progressRef.current, targetProgress, 0.02)
       const p = progressRef.current
+
+      // Update audio to match visual progress
+      updateAudioProgress(audioRef.current, p)
 
       // Background: grey → warm citrus gradient
       const bg1R = lerp(40, 255, p), bg1G = lerp(40, 236, p), bg1B = lerp(48, 210, p)
@@ -301,6 +421,15 @@ export default function Shed() {
   }, [initWires])
 
   const handleTap = useCallback((clientX: number, clientY: number) => {
+    // Init audio on first interaction (required for iOS)
+    if (!audioRef.current) {
+      audioRef.current = createAudioEngine()
+    }
+    // Resume if suspended (iOS requirement)
+    if (audioRef.current?.ctx.state === 'suspended') {
+      audioRef.current.ctx.resume()
+    }
+
     const wires = wiresRef.current
     const hitRadius = 30
 
@@ -322,6 +451,9 @@ export default function Shed() {
       closest.cut = true
       closest.cutPoint = closestT
       closest.cutTime = Date.now()
+
+      // Snip sound
+      playSnip(audioRef.current)
 
       // Spawn sparks at cut point
       const cx = cubicBezier(closestT, closest.x1, closest.cx1, closest.cx2, closest.x2)
