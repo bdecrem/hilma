@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 
 import CREATIONS from './creations.json'
 
@@ -30,11 +30,8 @@ function Card({ c, idx }: { c: Creation; idx: number }) {
     <Link
       href={c.url}
       className="card"
-      style={{
-        animationDelay: `${idx * 50}ms`,
-      }}
+      style={{ animationDelay: `${idx * 50}ms` }}
     >
-      {/* OG Image */}
       <div className="card-img">
         <img
           src={ogUrl}
@@ -50,8 +47,6 @@ function Card({ c, idx }: { c: Creation; idx: number }) {
           <div className="card-placeholder" style={{ background: accent + '20' }} />
         )}
       </div>
-
-      {/* Info strip */}
       <div className="card-info">
         <div className="card-top">
           <span className="card-name">{c.name}</span>
@@ -61,6 +56,77 @@ function Card({ c, idx }: { c: Creation; idx: number }) {
         <span className="card-date">{c.date}</span>
       </div>
     </Link>
+  )
+}
+
+function LiveCard({ c, idx }: { c: Creation; idx: number }) {
+  const [visible, setVisible] = useState(false)
+  const [iframeLoaded, setIframeLoaded] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const accent = CITRUS[hash(c.name) % CITRUS.length]
+  const ogUrl = `${c.url}/opengraph-image.png`
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setVisible(true)
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      className="card live-card"
+      style={{ animationDelay: `${idx * 50}ms` }}
+    >
+      <div className="card-img live-card-img">
+        {/* Static OG as fallback/placeholder */}
+        {!iframeLoaded && (
+          <img
+            src={ogUrl}
+            alt={c.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+        )}
+        {/* Live iframe — mounted when scrolled into view */}
+        {visible && (
+          <iframe
+            src={c.url}
+            title={c.name}
+            onLoad={() => setIframeLoaded(true)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              border: 'none',
+              opacity: iframeLoaded ? 1 : 0,
+              transition: 'opacity 0.6s ease',
+            }}
+          />
+        )}
+        {/* Live badge */}
+        <div className="live-badge">
+          <span className="live-dot" />
+          live
+        </div>
+      </div>
+      {/* Info strip — links to full page */}
+      <Link href={c.url} className="card-info" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
+        <div className="card-top">
+          <span className="card-name">{c.name}</span>
+          <span className="card-cat" style={{ color: accent }}>{c.category}</span>
+        </div>
+        <p className="card-desc">{c.description}</p>
+        <span className="card-date">{c.date}</span>
+      </Link>
+    </div>
   )
 }
 
@@ -160,12 +226,25 @@ export default function AmberFeedPage() {
           box-shadow: 0 8px 24px rgba(42,34,24,0.1);
         }
 
+        .live-card {
+          grid-column: 1 / -1;
+          cursor: default;
+        }
+
+        .live-card:hover {
+          transform: none;
+        }
+
         .card-img {
           position: relative;
           width: 100%;
           aspect-ratio: 1200 / 630;
           overflow: hidden;
           background: #f5f0e8;
+        }
+
+        .live-card-img {
+          aspect-ratio: 16 / 9;
         }
 
         .card-img img {
@@ -178,6 +257,37 @@ export default function AmberFeedPage() {
         .card-placeholder {
           position: absolute;
           inset: 0;
+        }
+
+        .live-badge {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          background: rgba(0,0,0,0.5);
+          backdrop-filter: blur(4px);
+          color: #fff;
+          font-size: 0.6rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          padding: 4px 10px;
+          border-radius: 20px;
+          z-index: 2;
+        }
+
+        .live-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #22c55e;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
         }
 
         .card-info {
@@ -238,6 +348,9 @@ export default function AmberFeedPage() {
           .feed-grid {
             padding: 20px 16px 60px;
           }
+          .live-card-img {
+            aspect-ratio: 4 / 3;
+          }
         }
       `}</style>
 
@@ -258,7 +371,9 @@ export default function AmberFeedPage() {
 
         <section className="feed-grid">
           {CREATIONS.map((c, idx) => (
-            <Card key={c.name} c={c} idx={idx} />
+            idx % 4 === 0
+              ? <LiveCard key={c.name} c={c} idx={idx} />
+              : <Card key={c.name} c={c} idx={idx} />
           ))}
         </section>
 
