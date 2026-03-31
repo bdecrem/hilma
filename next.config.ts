@@ -52,13 +52,6 @@ const nextConfig: NextConfig = {
         destination: 'https://decremental.com/:path+',
         permanent: true,
       },
-      // www.intheamber.com → intheamber.com
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.intheamber.com' }],
-        destination: 'https://intheamber.com/:path*',
-        permanent: true,
-      },
     ]
   },
 }
