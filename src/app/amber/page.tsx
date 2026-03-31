@@ -63,6 +63,7 @@ function Card({ c, idx }: { c: Creation; idx: number }) {
         <img
           src={ogUrl}
           alt={c.name}
+          loading="lazy"
           onLoad={() => setLoaded(true)}
           style={{
             opacity: loaded ? 1 : 0,
