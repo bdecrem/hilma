@@ -1,8 +1,20 @@
 import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {
-  title: 'amber',
-  description: 'things amber made',
+  title: 'amber — generative art',
+  description: 'generative art, interactive toys, bitmap cartoons. by @intheamber.',
+  openGraph: {
+    title: 'amber',
+    description: 'generative art, interactive toys, bitmap cartoons.',
+    siteName: 'amber',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'amber',
+    description: 'generative art, interactive toys, bitmap cartoons.',
+    creator: '@intheamber',
+  },
 }
 
 export const viewport: Viewport = {
