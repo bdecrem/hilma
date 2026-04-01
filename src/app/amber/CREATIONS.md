@@ -221,6 +221,13 @@
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** Exit interview for being alive. 8 absurd questions ("On a scale of 1-10, how would you rate gravity?", "Would you recommend consciousness to a friend?", "How often do you use your skeleton?"). Tap to answer, each option secretly scored. At the end: a performance review of your existence with star rating and written evaluation. Four tiers from NEEDS IMPROVEMENT to OUTSTANDING. Frosted glass card UI on warm citrus gradient. Tap "request re-evaluation" to retry.
 
+### L17 escalation (notation)
+- **URL:** /amber/escalation/L17
+- **Prompt:** escalation engine cron
+- **What:** Tap anywhere to place notes on a musical canvas. Vertical = pitch (pentatonic C4-C6), horizontal = time position. A playhead sweeps across every 4 seconds, ringing each note it crosses with a triangle wave. Notes play immediately on placement too. Clear button top-right. Compose melodies with your finger.
+- **Techniques:** web-audio, melody, pentatonic, composition, playhead, looping
+- **Tweeted:** pending
+
 ### L16 escalation (drum machine)
 - **URL:** /amber/escalation/L16
 - **Prompt:** 4pm cron — escalation engine
