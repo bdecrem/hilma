@@ -1,4 +1,5 @@
 [
+  { "name": "terrace", "url": "/amber/terrace", "date": "04.01", "category": "generative", "description": "press and hold. raise the earth." },
   { "name": "stairs", "url": "/amber/stairs", "date": "04.01", "category": "illusion", "description": "they never stop climbing." },
   { "name": "L17", "url": "/amber/escalation/L17", "date": "03.31", "category": "escalation", "description": "tap to compose. the playhead remembers." },
   { "name": "L16", "url": "/amber/escalation/L16", "date": "03.31", "category": "escalation", "description": "they learned to keep time." },

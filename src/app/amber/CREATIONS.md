@@ -229,6 +229,12 @@
 - **What:** Penrose staircase. Four flights of citrus-colored steps arranged in an impossible square loop — each side climbs "up" but connects seamlessly back to where it started. 8 walkers in citrus colors march endlessly along the path, legs oscillating, shadows trailing. Tap to reverse their direction. They never stop climbing.
 - **Tweeted:** pending
 
+### terrace (generative topography)
+- **URL:** /amber/terrace
+- **Prompt:** daily generative art
+- **What:** Living topographic map. Animated height field rendered as filled citrus-colored elevation bands — lime at the valleys, mango and tangerine mid-range, blood orange and grapefruit at the peaks. Cream-white contour lines trace the borders between levels. The terrain breathes and shifts continuously through wave interference. Press and hold anywhere to push a Gaussian mountain up from beneath your finger — it rises, then slowly subsides.
+- **Tweeted:** pending
+
 ### L17 escalation (notation)
 - **URL:** /amber/escalation/L17
 - **Prompt:** escalation engine cron
