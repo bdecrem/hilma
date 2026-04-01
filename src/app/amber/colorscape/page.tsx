@@ -2,136 +2,126 @@
 
 import { useEffect, useRef } from 'react'
 
-// Full citrus spring palette — saturated, juicy, LOUD
 const PALETTE = [
   '#FF4E50', '#FC913A', '#F9D423', '#B4E33D', '#FF6B81',
   '#FF7043', '#FFCA28', '#8BC34A', '#FF8A80', '#FFD54F',
   '#E040FB', '#FF6E40', '#EEFF41', '#69F0AE', '#FF80AB',
 ]
 
-type ShapeKind = 'circle' | 'rect' | 'triangle' | 'ring' | 'arc' | 'diamond'
-const KINDS: ShapeKind[] = ['circle', 'rect', 'triangle', 'ring', 'arc', 'diamond']
-
-interface Shape {
+interface Splash {
   x: number; y: number
   vx: number; vy: number
   size: number
-  targetSize: number
+  maxSize: number
+  color: string
+  opacity: number
+  // Irregular blob shape — offsets from circle
+  bumps: number[]
   rotation: number
   rotSpeed: number
+  drips: Drip[]
+  age: number
+  growing: boolean
+}
+
+interface Drip {
+  x: number; y: number
+  vy: number
+  vx: number
+  size: number
   color: string
-  kind: ShapeKind
   opacity: number
-  targetOpacity: number
-  born: number
-  phase: number
-  phaseSpeed: number
-  blend: GlobalCompositeOperation
 }
 
-function hexToRgba(hex: string, a: number) {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${a})`
-}
+function randomSplash(x: number, y: number, burst?: boolean): Splash {
+  const angle = Math.random() * Math.PI * 2
+  const force = burst ? 2 + Math.random() * 5 : 0.2 + Math.random() * 0.5
+  // 8-16 bumps for irregular blob edge
+  const bumpCount = 8 + Math.floor(Math.random() * 8)
+  const bumps: number[] = []
+  for (let i = 0; i < bumpCount; i++) {
+    bumps.push(0.6 + Math.random() * 0.8) // radius multiplier per vertex
+  }
 
-function randomShape(W: number, H: number, x?: number, y?: number): Shape {
-  const blends: GlobalCompositeOperation[] = ['screen', 'multiply', 'overlay', 'source-over', 'lighter']
+  const color = PALETTE[Math.floor(Math.random() * PALETTE.length)]
+  const maxSize = 30 + Math.random() * 140
+
+  // Spawn drips
+  const drips: Drip[] = []
+  const dripCount = 2 + Math.floor(Math.random() * 5)
+  for (let i = 0; i < dripCount; i++) {
+    const da = Math.random() * Math.PI * 2
+    const df = 1 + Math.random() * 3
+    drips.push({
+      x, y,
+      vx: Math.cos(da) * df + (Math.random() - 0.5),
+      vy: Math.sin(da) * df + Math.random() * 2,
+      size: 3 + Math.random() * 8,
+      color,
+      opacity: 0.4 + Math.random() * 0.4,
+    })
+  }
+
   return {
-    x: x ?? Math.random() * W,
-    y: y ?? Math.random() * H,
-    vx: (Math.random() - 0.5) * 1.2,
-    vy: (Math.random() - 0.5) * 1.2,
+    x, y,
+    vx: Math.cos(angle) * force,
+    vy: Math.sin(angle) * force,
     size: 0,
-    targetSize: 30 + Math.random() * 180,
+    maxSize,
+    color,
+    opacity: 0.3 + Math.random() * 0.5,
+    bumps,
     rotation: Math.random() * Math.PI * 2,
-    rotSpeed: (Math.random() - 0.5) * 0.015,
-    color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
-    kind: KINDS[Math.floor(Math.random() * KINDS.length)],
-    opacity: 0,
-    targetOpacity: 0.15 + Math.random() * 0.45,
-    born: Date.now(),
-    phase: Math.random() * Math.PI * 2,
-    phaseSpeed: 0.005 + Math.random() * 0.02,
-    blend: blends[Math.floor(Math.random() * blends.length)],
+    rotSpeed: (Math.random() - 0.5) * 0.003,
+    drips,
+    age: 0,
+    growing: true,
   }
 }
 
-function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
-  ctx.save()
-  ctx.translate(s.x, s.y)
-  ctx.rotate(s.rotation)
-  ctx.globalCompositeOperation = s.blend
-  ctx.globalAlpha = s.opacity
+function drawBlob(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, bumps: number[], rot: number) {
+  const n = bumps.length
+  ctx.beginPath()
+  for (let i = 0; i <= n; i++) {
+    const idx = i % n
+    const nextIdx = (i + 1) % n
+    const angle = (idx / n) * Math.PI * 2 + rot
+    const nextAngle = (nextIdx / n) * Math.PI * 2 + rot
+    const r1 = r * bumps[idx]
+    const r2 = r * bumps[nextIdx]
+    const px = x + Math.cos(angle) * r1
+    const py = y + Math.sin(angle) * r1
 
-  const r = s.size / 2
-
-  switch (s.kind) {
-    case 'circle':
-      ctx.beginPath()
-      ctx.arc(0, 0, r, 0, Math.PI * 2)
-      ctx.fillStyle = s.color
-      ctx.fill()
-      break
-
-    case 'rect':
-      ctx.fillStyle = s.color
-      ctx.fillRect(-r, -r * 0.7, r * 2, r * 1.4)
-      break
-
-    case 'triangle':
-      ctx.beginPath()
-      ctx.moveTo(0, -r)
-      ctx.lineTo(r * 0.87, r * 0.5)
-      ctx.lineTo(-r * 0.87, r * 0.5)
-      ctx.closePath()
-      ctx.fillStyle = s.color
-      ctx.fill()
-      break
-
-    case 'ring':
-      ctx.beginPath()
-      ctx.arc(0, 0, r, 0, Math.PI * 2)
-      ctx.strokeStyle = s.color
-      ctx.lineWidth = r * 0.2
-      ctx.stroke()
-      break
-
-    case 'arc':
-      ctx.beginPath()
-      ctx.arc(0, 0, r, 0, Math.PI * 1.3)
-      ctx.strokeStyle = s.color
-      ctx.lineWidth = r * 0.25
-      ctx.lineCap = 'round'
-      ctx.stroke()
-      break
-
-    case 'diamond':
-      ctx.beginPath()
-      ctx.moveTo(0, -r)
-      ctx.lineTo(r * 0.6, 0)
-      ctx.lineTo(0, r)
-      ctx.lineTo(-r * 0.6, 0)
-      ctx.closePath()
-      ctx.fillStyle = s.color
-      ctx.fill()
-      break
+    if (i === 0) {
+      ctx.moveTo(px, py)
+    } else {
+      // Smooth curve between points
+      const midAngle = (angle + nextAngle) / 2
+      const midR = (r1 + r2) / 2
+      const cpx = x + Math.cos(midAngle) * midR * 1.1
+      const cpy = y + Math.sin(midAngle) * midR * 1.1
+      ctx.quadraticCurveTo(cpx, cpy, px, py)
+    }
   }
-
-  ctx.restore()
+  ctx.closePath()
 }
 
 export default function Colorscape() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const shapesRef = useRef<Shape[]>([])
-  const bgHueRef = useRef(0)
+  const splashesRef = useRef<Splash[]>([])
+  const persistRef = useRef<HTMLCanvasElement | null>(null)
+  const bgPhaseRef = useRef(0)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     let W = 0, H = 0
+
+    // Persistent paint layer
+    const persist = document.createElement('canvas')
+    persistRef.current = persist
+    const pctx = persist.getContext('2d')!
 
     const resize = () => {
       W = window.innerWidth
@@ -140,126 +130,169 @@ export default function Colorscape() {
       canvas.height = H * dpr
       canvas.style.width = W + 'px'
       canvas.style.height = H + 'px'
+      persist.width = W * dpr
+      persist.height = H * dpr
+      pctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resize()
     window.addEventListener('resize', resize)
 
     const ctx = canvas.getContext('2d')!
-
-    // Seed initial shapes
-    for (let i = 0; i < 35; i++) {
-      const s = randomShape(W, H)
-      s.size = s.targetSize // start visible
-      s.opacity = s.targetOpacity
-      shapesRef.current.push(s)
-    }
-
     let raf: number
-    let spawnTimer = 0
+    let autoTimer = 0
+
+    // Seed some initial splashes
+    for (let i = 0; i < 12; i++) {
+      const s = randomSplash(
+        W * 0.15 + Math.random() * W * 0.7,
+        H * 0.15 + Math.random() * H * 0.7
+      )
+      s.size = s.maxSize
+      s.growing = false
+      splashesRef.current.push(s)
+      // Paint initial splashes to persist layer
+      pctx.globalCompositeOperation = Math.random() < 0.5 ? 'source-over' : 'multiply'
+      pctx.globalAlpha = s.opacity * 0.8
+      pctx.fillStyle = s.color
+      drawBlob(pctx, s.x, s.y, s.maxSize / 2, s.bumps, s.rotation)
+      pctx.fill()
+      pctx.globalAlpha = 1
+      pctx.globalCompositeOperation = 'source-over'
+    }
 
     const draw = () => {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      // Slowly shifting warm background
-      bgHueRef.current += 0.08
-      const bgHue = bgHueRef.current % 360
-      // Warm tones only: cycle through peach/cream/lemon/blush
-      const bgR = 255
-      const bgG = Math.floor(235 + Math.sin(bgHue * 0.01) * 15)
-      const bgB = Math.floor(210 + Math.sin(bgHue * 0.015 + 1) * 25)
-      ctx.fillStyle = `rgb(${bgR},${bgG},${bgB})`
+      // Warm shifting background
+      bgPhaseRef.current += 0.003
+      const p = bgPhaseRef.current
+      const r = 255
+      const g = Math.floor(240 + Math.sin(p) * 12)
+      const b = Math.floor(215 + Math.sin(p * 0.7 + 1) * 20)
+      ctx.fillStyle = `rgb(${r},${g},${b})`
       ctx.fillRect(0, 0, W, H)
 
-      const now = Date.now()
+      // Draw persist layer
+      ctx.drawImage(persist, 0, 0, W, H)
 
-      // Spawn new shapes periodically
-      spawnTimer++
-      if (spawnTimer > 40 && shapesRef.current.length < 55) {
-        spawnTimer = 0
-        shapesRef.current.push(randomShape(W, H))
+      // Auto-spawn splashes
+      autoTimer++
+      if (autoTimer > 80) {
+        autoTimer = 0
+        const s = randomSplash(
+          W * 0.1 + Math.random() * W * 0.8,
+          H * 0.1 + Math.random() * H * 0.8
+        )
+        splashesRef.current.push(s)
       }
 
-      const shapes = shapesRef.current
+      // Update splashes
+      const splashes = splashesRef.current
+      for (let i = splashes.length - 1; i >= 0; i--) {
+        const s = splashes[i]
+        s.age++
 
-      // Update and draw
-      for (let i = shapes.length - 1; i >= 0; i--) {
-        const s = shapes[i]
-        const age = (now - s.born) / 1000
-
-        // Grow in
-        s.size += (s.targetSize - s.size) * 0.03
-        s.opacity += (s.targetOpacity - s.opacity) * 0.02
-
-        // Breathe
-        s.phase += s.phaseSpeed
-        const breathe = Math.sin(s.phase)
-        const drawSize = s.size + breathe * s.size * 0.15
-
-        // Move
-        s.x += s.vx
-        s.y += s.vy
-        s.rotation += s.rotSpeed
-
-        // Gentle pull toward center (prevents clustering at edges)
-        s.vx += (W / 2 - s.x) * 0.00003
-        s.vy += (H / 2 - s.y) * 0.00003
-
-        // Damping
-        s.vx *= 0.999
-        s.vy *= 0.999
-
-        // Wrap at edges with margin
-        const margin = s.size
-        if (s.x < -margin) s.x = W + margin
-        if (s.x > W + margin) s.x = -margin
-        if (s.y < -margin) s.y = H + margin
-        if (s.y > H + margin) s.y = -margin
-
-        // Slowly fade and replace old shapes
-        if (age > 20) {
-          s.targetOpacity -= 0.002
-          if (s.opacity < 0.01) {
-            shapes.splice(i, 1)
-            continue
+        // Grow
+        if (s.growing) {
+          s.size += (s.maxSize - s.size) * 0.08
+          if (s.size > s.maxSize * 0.95) {
+            s.growing = false
+            // Stamp onto persist layer
+            pctx.globalCompositeOperation = Math.random() < 0.4 ? 'multiply' : 'source-over'
+            pctx.globalAlpha = s.opacity * 0.6
+            pctx.fillStyle = s.color
+            drawBlob(pctx, s.x, s.y, s.size / 2, s.bumps, s.rotation)
+            pctx.fill()
+            pctx.globalAlpha = 1
+            pctx.globalCompositeOperation = 'source-over'
           }
         }
 
-        // Occasional color shift
-        if (Math.random() < 0.001) {
-          s.color = PALETTE[Math.floor(Math.random() * PALETTE.length)]
+        // Move (slight)
+        s.x += s.vx
+        s.y += s.vy
+        s.vx *= 0.98
+        s.vy *= 0.98
+        s.rotation += s.rotSpeed
+
+        // Draw active splash (while growing)
+        if (s.growing) {
+          ctx.globalCompositeOperation = 'multiply'
+          ctx.globalAlpha = s.opacity
+          ctx.fillStyle = s.color
+          drawBlob(ctx, s.x, s.y, s.size / 2, s.bumps, s.rotation)
+          ctx.fill()
+          ctx.globalCompositeOperation = 'source-over'
+          ctx.globalAlpha = 1
         }
 
-        // Occasional size pulse
-        if (Math.random() < 0.002) {
-          s.targetSize = 30 + Math.random() * 180
+        // Drips
+        for (const d of s.drips) {
+          d.x += d.vx
+          d.y += d.vy
+          d.vy += 0.05 // gravity
+          d.vx *= 0.99
+          d.opacity -= 0.003
+          d.size *= 0.998
+
+          if (d.opacity > 0.01) {
+            ctx.beginPath()
+            ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2)
+            ctx.fillStyle = d.color
+            ctx.globalAlpha = d.opacity
+            ctx.fill()
+            ctx.globalAlpha = 1
+
+            // Drips leave marks on persist layer
+            if (s.age % 3 === 0) {
+              pctx.beginPath()
+              pctx.arc(d.x, d.y, d.size * 0.6, 0, Math.PI * 2)
+              pctx.fillStyle = d.color
+              pctx.globalAlpha = 0.08
+              pctx.fill()
+              pctx.globalAlpha = 1
+            }
+          }
         }
 
-        const drawShape2 = { ...s, size: drawSize }
-        drawShape(ctx, drawShape2)
+        // Remove old splashes
+        if (s.age > 300 && !s.growing) {
+          splashes.splice(i, 1)
+        }
+      }
+
+      // Very slow fade of persist layer (so it doesn't get muddy)
+      if (autoTimer === 0) {
+        pctx.globalAlpha = 0.003
+        pctx.fillStyle = `rgb(${r},${g},${b})`
+        pctx.fillRect(0, 0, W, H)
+        pctx.globalAlpha = 1
       }
 
       raf = requestAnimationFrame(draw)
     }
 
-    // Touch: burst of shapes
+    // Touch: big splat
     const handleTap = (cx: number, cy: number) => {
-      for (let i = 0; i < 8; i++) {
-        const s = randomShape(W, H,
-          cx + (Math.random() - 0.5) * 80,
-          cy + (Math.random() - 0.5) * 80
+      for (let i = 0; i < 5; i++) {
+        const s = randomSplash(
+          cx + (Math.random() - 0.5) * 60,
+          cy + (Math.random() - 0.5) * 60,
+          true
         )
-        s.targetSize = 40 + Math.random() * 120
-        // Burst outward from tap point
-        const angle = Math.random() * Math.PI * 2
-        const force = 1 + Math.random() * 3
-        s.vx = Math.cos(angle) * force
-        s.vy = Math.sin(angle) * force
-        s.blend = Math.random() < 0.5 ? 'screen' : 'lighter'
-        s.targetOpacity = 0.3 + Math.random() * 0.4
-        shapesRef.current.push(s)
+        splashesRef.current.push(s)
       }
-      // Cap
-      while (shapesRef.current.length > 80) shapesRef.current.shift()
+      while (splashesRef.current.length > 100) splashesRef.current.shift()
+    }
+
+    // Drag: paint trail
+    const handleMove = (cx: number, cy: number) => {
+      if (splashesRef.current.length < 100) {
+        const s = randomSplash(cx + (Math.random() - 0.5) * 20, cy + (Math.random() - 0.5) * 20)
+        s.maxSize = 15 + Math.random() * 50
+        s.opacity = 0.2 + Math.random() * 0.3
+        splashesRef.current.push(s)
+      }
     }
 
     canvas.addEventListener('touchstart', (e: TouchEvent) => {
@@ -268,20 +301,12 @@ export default function Colorscape() {
     }, { passive: false })
     canvas.addEventListener('click', (e: MouseEvent) => handleTap(e.clientX, e.clientY))
 
-    // Drag spawns continuously
-    const handleMove = (cx: number, cy: number) => {
-      if (Math.random() < 0.3 && shapesRef.current.length < 80) {
-        const s = randomShape(W, H, cx, cy)
-        s.targetSize = 20 + Math.random() * 60
-        s.blend = 'screen'
-        shapesRef.current.push(s)
-      }
-    }
-    let dragging = false
     canvas.addEventListener('touchmove', (e: TouchEvent) => {
       e.preventDefault()
       handleMove(e.touches[0].clientX, e.touches[0].clientY)
     }, { passive: false })
+
+    let dragging = false
     canvas.addEventListener('mousedown', () => { dragging = true })
     canvas.addEventListener('mouseup', () => { dragging = false })
     canvas.addEventListener('mousemove', (e: MouseEvent) => {
