@@ -8,6 +8,21 @@ const DRUM_NAMES = ['kick', 'snare', 'hat', 'clap']
 const STEPS = 8
 const BPM = 120
 
+// Rounded rect polyfill for older Safari
+function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.lineTo(x + w - r, y)
+  ctx.arcTo(x + w, y, x + w, y + r, r)
+  ctx.lineTo(x + w, y + h - r)
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r)
+  ctx.lineTo(x + r, y + h)
+  ctx.arcTo(x, y + h, x, y + h - r, r)
+  ctx.lineTo(x, y + r)
+  ctx.arcTo(x, y, x + r, y, r)
+  ctx.closePath()
+}
+
 // Synthesize drum sounds with Web Audio
 function makeKick(ctx: AudioContext, time: number) {
   const osc = ctx.createOscillator()
@@ -24,7 +39,6 @@ function makeKick(ctx: AudioContext, time: number) {
 }
 
 function makeSnare(ctx: AudioContext, time: number) {
-  // Noise burst
   const bufSize = ctx.sampleRate * 0.1
   const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate)
   const data = buf.getChannelData(0)
@@ -42,7 +56,6 @@ function makeSnare(ctx: AudioContext, time: number) {
   noiseGain.connect(ctx.destination)
   noise.start(time)
   noise.stop(time + 0.12)
-  // Body
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
   osc.type = 'triangle'
@@ -77,7 +90,6 @@ function makeHat(ctx: AudioContext, time: number) {
 }
 
 function makeClap(ctx: AudioContext, time: number) {
-  // Multiple short noise bursts
   for (let i = 0; i < 3; i++) {
     const offset = time + i * 0.01
     const bufSize = ctx.sampleRate * 0.02
@@ -114,24 +126,24 @@ export default function L16() {
   const lastStepTimeRef = useRef(0)
   const flashRef = useRef<{ row: number; col: number; t: number }[]>([])
   const frameRef = useRef(0)
-
-  // Layout calculations
-  const getLayout = useCallback(() => {
-    const W = window.innerWidth
-    const H = window.innerHeight
-    const padSize = Math.min((W - 60) / STEPS, (H - 160) / 4, 80)
-    const gap = 6
-    const gridW = STEPS * (padSize + gap) - gap
-    const gridH = 4 * (padSize + gap) - gap
-    const offsetX = (W - gridW) / 2
-    const offsetY = (H - gridH) / 2 - 10
-    return { W, H, padSize, gap, gridW, gridH, offsetX, offsetY }
-  }, [])
+  const layoutRef = useRef({ W: 0, H: 0, padSize: 0, gap: 6, offsetX: 0, offsetY: 0 })
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
+
+    const calcLayout = () => {
+      const W = window.innerWidth
+      const H = window.innerHeight
+      const padSize = Math.min((W - 60) / STEPS, (H - 160) / 4, 80)
+      const gap = 6
+      const gridW = STEPS * (padSize + gap) - gap
+      const gridH = 4 * (padSize + gap) - gap
+      const offsetX = (W - gridW) / 2
+      const offsetY = (H - gridH) / 2 - 10
+      layoutRef.current = { W, H, padSize, gap, offsetX, offsetY }
+    }
 
     const resize = () => {
       const W = window.innerWidth
@@ -140,6 +152,7 @@ export default function L16() {
       canvas.height = H * dpr
       canvas.style.width = W + 'px'
       canvas.style.height = H + 'px'
+      calcLayout()
     }
     resize()
     window.addEventListener('resize', resize)
@@ -148,15 +161,14 @@ export default function L16() {
     const [bg1, bg2] = pickGradientColors('L16')
     let raf: number
 
-    const stepInterval = 60 / BPM / 2 * 1000 // 8th notes
+    const stepInterval = 60 / BPM / 2 * 1000
 
     const draw = () => {
-      const { W, H, padSize, gap, offsetX, offsetY } = getLayout()
+      const { W, H, padSize, gap, offsetX, offsetY } = layoutRef.current
       frameRef.current++
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      // Background
       const grad = ctx.createLinearGradient(0, 0, W, H)
       grad.addColorStop(0, bg1)
       grad.addColorStop(1, bg2)
@@ -190,16 +202,12 @@ export default function L16() {
           const active = grid[row][col]
           const isCurrentStep = playingRef.current && col === stepRef.current
 
-          // Check flash
           const flash = flashRef.current.find(f => f.row === row && f.col === col)
           const flashAge = flash ? (now - flash.t) / 300 : 1
 
-          // Pad color
           const color = CITRUS[row % CITRUS.length]
-          const radius = 8
 
-          ctx.beginPath()
-          ctx.roundRect(x, y, padSize, padSize, radius)
+          roundedRect(ctx, x, y, padSize, padSize, 8)
 
           if (active) {
             ctx.fillStyle = color
@@ -210,17 +218,15 @@ export default function L16() {
           }
           ctx.fill()
 
-          // Playhead highlight
           if (isCurrentStep) {
+            roundedRect(ctx, x, y, padSize, padSize, 8)
             ctx.strokeStyle = 'rgba(255,255,255,0.4)'
             ctx.lineWidth = 2
             ctx.stroke()
           }
 
-          // Flash glow
           if (flash && flashAge < 1) {
-            ctx.beginPath()
-            ctx.roundRect(x - 4, y - 4, padSize + 8, padSize + 8, radius + 2)
+            roundedRect(ctx, x - 4, y - 4, padSize + 8, padSize + 8, 10)
             ctx.strokeStyle = color
             ctx.lineWidth = 3
             ctx.globalAlpha = (1 - flashAge) * 0.6
@@ -230,7 +236,6 @@ export default function L16() {
           ctx.globalAlpha = 1
         }
 
-        // Row label
         ctx.fillStyle = 'rgba(255,255,255,0.3)'
         ctx.font = '11px monospace'
         ctx.textAlign = 'right'
@@ -241,8 +246,7 @@ export default function L16() {
       // Play/stop button
       const btnX = W / 2 - 30
       const btnY = offsetY + 4 * (padSize + gap) + 20
-      ctx.beginPath()
-      ctx.roundRect(btnX, btnY, 60, 30, 6)
+      roundedRect(ctx, btnX, btnY, 60, 30, 6)
       ctx.fillStyle = playingRef.current ? 'rgba(255,78,80,0.5)' : 'rgba(255,255,255,0.1)'
       ctx.fill()
       ctx.fillStyle = 'rgba(255,255,255,0.6)'
@@ -251,67 +255,78 @@ export default function L16() {
       ctx.fillText(playingRef.current ? 'stop' : 'play', W / 2, btnY + 19)
       ctx.textAlign = 'start'
 
-      // Clean old flashes
       flashRef.current = flashRef.current.filter(f => now - f.t < 300)
 
       raf = requestAnimationFrame(draw)
     }
 
+    // Touch handling — attach directly to canvas element for iOS reliability
+    const handleTap = (clientX: number, clientY: number) => {
+      // Init audio on first interaction (iOS requires this in a touch handler)
+      if (!audioRef.current) {
+        audioRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      }
+      if (audioRef.current.state === 'suspended') {
+        audioRef.current.resume()
+      }
+
+      const { padSize, gap, offsetX, offsetY } = layoutRef.current
+      const W = window.innerWidth
+
+      // Check play button
+      const btnX = W / 2 - 30
+      const btnY = offsetY + 4 * (padSize + gap) + 20
+      if (clientX >= btnX && clientX <= btnX + 60 && clientY >= btnY && clientY <= btnY + 30) {
+        playingRef.current = !playingRef.current
+        if (playingRef.current) {
+          stepRef.current = -1
+          lastStepTimeRef.current = Date.now()
+        }
+        return
+      }
+
+      // Check grid pads
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < STEPS; col++) {
+          const x = offsetX + col * (padSize + gap)
+          const y = offsetY + row * (padSize + gap)
+          if (clientX >= x && clientX <= x + padSize && clientY >= y && clientY <= y + padSize) {
+            gridRef.current[row][col] = !gridRef.current[row][col]
+            if (gridRef.current[row][col] && audioRef.current) {
+              DRUM_FNS[row](audioRef.current, audioRef.current.currentTime)
+              flashRef.current.push({ row, col, t: Date.now() })
+            }
+            return
+          }
+        }
+      }
+    }
+
+    // Use native event listeners for reliable iOS touch handling
+    const onTouch = (e: TouchEvent) => {
+      e.preventDefault()
+      const t = e.touches[0]
+      handleTap(t.clientX, t.clientY)
+    }
+    const onClick = (e: MouseEvent) => {
+      handleTap(e.clientX, e.clientY)
+    }
+
+    canvas.addEventListener('touchstart', onTouch, { passive: false })
+    canvas.addEventListener('click', onClick)
+
     raf = requestAnimationFrame(draw)
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
+      canvas.removeEventListener('touchstart', onTouch)
+      canvas.removeEventListener('click', onClick)
     }
-  }, [getLayout])
-
-  const handleTap = useCallback((clientX: number, clientY: number) => {
-    // Init audio
-    if (!audioRef.current) {
-      audioRef.current = new AudioContext()
-    }
-    if (audioRef.current.state === 'suspended') audioRef.current.resume()
-
-    const { padSize, gap, offsetX, offsetY } = getLayout()
-
-    // Check play button
-    const W = window.innerWidth
-    const btnX = W / 2 - 30
-    const btnY = offsetY + 4 * (padSize + gap) + 20
-    if (clientX >= btnX && clientX <= btnX + 60 && clientY >= btnY && clientY <= btnY + 30) {
-      playingRef.current = !playingRef.current
-      if (playingRef.current) {
-        stepRef.current = -1
-        lastStepTimeRef.current = Date.now()
-      }
-      return
-    }
-
-    // Check grid pads
-    for (let row = 0; row < 4; row++) {
-      for (let col = 0; col < STEPS; col++) {
-        const x = offsetX + col * (padSize + gap)
-        const y = offsetY + row * (padSize + gap)
-        if (clientX >= x && clientX <= x + padSize && clientY >= y && clientY <= y + padSize) {
-          gridRef.current[row][col] = !gridRef.current[row][col]
-          // Trigger sound immediately
-          if (gridRef.current[row][col] && audioRef.current) {
-            DRUM_FNS[row](audioRef.current, audioRef.current.currentTime)
-            flashRef.current.push({ row, col, t: Date.now() })
-          }
-          return
-        }
-      }
-    }
-  }, [getLayout])
+  }, [])
 
   return (
     <canvas
       ref={canvasRef}
-      onClick={(e) => handleTap(e.clientX, e.clientY)}
-      onTouchStart={(e) => {
-        e.preventDefault()
-        handleTap(e.touches[0].clientX, e.touches[0].clientY)
-      }}
       style={{
         position: 'fixed',
         inset: 0,
