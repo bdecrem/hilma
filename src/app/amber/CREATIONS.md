@@ -241,6 +241,13 @@
 - **What:** Living topographic map. Animated height field rendered as filled citrus-colored elevation bands — lime at the valleys, mango and tangerine mid-range, blood orange and grapefruit at the peaks. Cream-white contour lines trace the borders between levels. The terrain breathes and shifts continuously through wave interference. Press and hold anywhere to push a Gaussian mountain up from beneath your finger — it rises, then slowly subsides.
 - **Tweeted:** pending
 
+### L18 escalation (theremin)
+- **URL:** /amber/escalation/L18
+- **Prompt:** escalation engine cron
+- **What:** The screen becomes a theremin. Touch and drag anywhere to play a continuous tone — x position maps pitch (pentatonic C4-C6, smooth interpolation), y position maps volume (top = loud, bottom = quiet). Glowing citrus orb follows your finger with a comet trail. Up to 4 simultaneous voices: each touch gets its own color and oscillator. Release to fade. Faint pitch guide lines show the scale degrees across the canvas.
+- **Techniques:** web-audio, theremin, continuous-pitch, polyphony, drag, glowing-trails
+- **Tweeted:** "L18: drag to sing. the screen becomes an instrument. https://intheamber.com/escalation/L18"
+
 ### L17 escalation (notation)
 - **URL:** /amber/escalation/L17
 - **Prompt:** escalation engine cron
