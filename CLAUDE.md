@@ -4,6 +4,8 @@
 
 Hilma is a clean Next.js project — the new home for new things. Replaces the bloated vibeceo8/web codebase. Cherry-pick from vibeceo8 as needed, don't migrate.
 
+This repo CLAUDE.md is for general best practices, conventions, and project knowledge shared across all devices. Device-specific instructions (machine identity, tunn3l subdomain, local cron schedules, etc.) belong in the device-level `~/.claude/CLAUDE.md`.
+
 ## Stack
 
 - **Framework:** Next.js 15.3, React 19, App Router
@@ -95,8 +97,7 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 ## Conventions
 
 - **Always test before declaring done.** When building scripts or features, run them (or at least a dry run) and verify the output before telling the user it's ready.
-- **When sharing local links with Bart** (Discord, iMessage, anywhere), always use `https://bart-imacm1.tunn3l.sh/` URLs instead of `localhost`. The tunn3l daemon runs on port 3000 and auto-starts on boot. This machine's reserved subdomain is `bart-imacm1`.
-- **Always run `gh` commands from the repo root** (`/Users/bartdecrem/Documents/coding2025/hilma`), never from `/tmp` or other non-git directories. `gh release` requires a git repo context. When chaining commands that start in `/tmp` (e.g., compressing binaries), `cd` back to the repo before running `gh`.
+- **Always run `gh` commands from the repo root**, never from `/tmp` or other non-git directories. `gh release` requires a git repo context. When chaining commands that start in `/tmp` (e.g., compressing binaries), `cd` back to the repo before running `gh`.
 - Use `@/*` import alias for `src/*`
 - Keep it lean — no unnecessary dependencies
 - Server Components by default, `'use client'` only when needed
@@ -111,7 +112,7 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 
 ## Amber Daily Creations
 
-Amber tweets 3 creations per day from @intheamber. At the start of each session, run `/amber-schedule` to activate the cron jobs (8am, 12pm, 4pm PT). They run in-session only — they stop when the terminal closes.
+Amber tweets 3 creations per day from @intheamber. The cron schedule is device-specific — see the device CLAUDE.md for setup.
 
 - **All Amber creation URLs use `intheamber.com`** — in tweets, CREATIONS.md, creations.json, and anywhere else. The domain routes to `/amber/` via host-based rewrites, so `intheamber.com/kaleid` serves `/amber/kaleid`. Never use `hilma-nine.vercel.app/amber/` in public-facing links.
 - **Test canvas creations on iPhone.** Cap devicePixelRatio at 2 (`Math.min(window.devicePixelRatio || 1, 2)`) — DPR 3 canvases can be too large and cause performance issues or crashes on mobile.
