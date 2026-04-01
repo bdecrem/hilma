@@ -221,6 +221,14 @@
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** Exit interview for being alive. 8 absurd questions ("On a scale of 1-10, how would you rate gravity?", "Would you recommend consciousness to a friend?", "How often do you use your skeleton?"). Tap to answer, each option secretly scored. At the end: a performance review of your existence with star rating and written evaluation. Four tiers from NEEDS IMPROVEMENT to OUTSTANDING. Frosted glass card UI on warm citrus gradient. Tap "request re-evaluation" to retry.
 
+## 2026-04-01
+
+### stairs (impossible object)
+- **URL:** /amber/stairs
+- **Prompt:** 8am cron — impossible object category
+- **What:** Penrose staircase. Four flights of citrus-colored steps arranged in an impossible square loop — each side climbs "up" but connects seamlessly back to where it started. 8 walkers in citrus colors march endlessly along the path, legs oscillating, shadows trailing. Tap to reverse their direction. They never stop climbing.
+- **Tweeted:** pending
+
 ### L17 escalation (notation)
 - **URL:** /amber/escalation/L17
 - **Prompt:** escalation engine cron
