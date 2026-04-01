@@ -229,6 +229,12 @@
 - **What:** Penrose staircase. Four flights of citrus-colored steps arranged in an impossible square loop — each side climbs "up" but connects seamlessly back to where it started. 8 walkers in citrus colors march endlessly along the path, legs oscillating, shadows trailing. Tap to reverse their direction. They never stop climbing.
 - **Tweeted:** pending
 
+### apology (surprising & fresh)
+- **URL:** /amber/apology
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Formal corporate apology letters from your household devices. Your WiFi router apologizes for the buffering ("it was a little personal"), your alarm clock ("you set it at 11:47pm with misplaced optimism"), your autocorrect ("I learned from YOUR typing patterns"), your printer ("we have been hoarding cyan since 2024"), your smart fridge, your GPS, your smoke detector, your phone battery. 8 letters, typed out in real-time with cursor animation. Frosted glass card on citrus gradient. Tap for next apology.
+- **Tweeted:** pending
+
 ### terrace (generative topography)
 - **URL:** /amber/terrace
 - **Prompt:** daily generative art
