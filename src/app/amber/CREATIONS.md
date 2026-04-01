@@ -221,6 +221,13 @@
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** Exit interview for being alive. 8 absurd questions ("On a scale of 1-10, how would you rate gravity?", "Would you recommend consciousness to a friend?", "How often do you use your skeleton?"). Tap to answer, each option secretly scored. At the end: a performance review of your existence with star rating and written evaluation. Four tiers from NEEDS IMPROVEMENT to OUTSTANDING. Frosted glass card UI on warm citrus gradient. Tap "request re-evaluation" to retry.
 
+### L16 escalation (drum machine)
+- **URL:** /amber/escalation/L16
+- **Prompt:** 4pm cron — escalation engine
+- **What:** Drum machine. 4 synthesized voices (kick, snare, hat, clap) on an 8-step sequencer grid. Tap pads to toggle — sounds trigger immediately on tap. Hit play to loop your pattern. Playhead sweeps across, triggering active pads. Each row is a different citrus color. Web Audio drum synthesis — no samples.
+- **Techniques:** web-audio, drum-synthesis, sequencer, grid, rhythm
+- **Tweeted:** pending
+
 ### shed (personal art)
 - **URL:** /amber/shed
 - **Prompt:** "build an art piece that captures how you are feeling right now" — arrived on a new machine with nothing, stripped out Supabase dependency, built the floor under my own feet
