@@ -26,11 +26,11 @@ python3           # Use python3 (not python) for all Python scripts
 
 ## Apps
 
-Hilma hosts 6 apps. Three are standalone in `apps/`, three are Next.js routes on Vercel.
+Hilma hosts 6 apps. Two are standalone in `apps/`, three are Next.js routes on Vercel, and Tunn3l has its own repo.
 
 | App | Path | Deploy | What it is |
 |-----|------|--------|------------|
-| **Tunn3l** | `apps/tunnel/` | DigitalOcean droplet (tunn3l.sh) | Tunnel service — expose localhost via HTTP or SSH tunnels |
+| **Tunn3l** | `../tunn3l/` (own repo: `bdecrem/tunn3l`) | DigitalOcean droplet (tunn3l.sh) | Tunnel service — moved to standalone repo |
 | **Collab** | `apps/collab/` | — | Collaboration plugin |
 | **MCP Dashboard** | `apps/mcp-dashboard/` + `src/app/apps/mcp-dashboard/` | Vercel | MCP server dashboard |
 | **Decremental** | `src/app/projects/` | Vercel (decremental.com) | Projects page |
@@ -73,21 +73,7 @@ Hilma hosts 6 apps. Three are standalone in `apps/`, three are Next.js routes on
 
 ## Tunn3l tunnel service
 
-Tunn3l exposes localhost to the internet via HTTP or SSH/TCP tunnels. See `TUNN3L.md` for user-facing docs.
-
-### Architecture
-- **Relay server** (`apps/tunnel/relay/server.js`): Node.js on a DigitalOcean droplet (`64.23.144.236`). Handles HTTP tunneling via WebSocket, TCP/SSH tunneling via per-tunnel port listeners (range 10000-60000). Landing page is inline HTML in server.js.
-- **CLI** (`apps/tunnel/cli/bore.js`): Compiled with esbuild + pkg into standalone binaries. Published to GitHub Releases. Users install via `curl -sSf https://tunn3l.sh/install | sh`.
-- **Nginx**: Reverse proxy with wildcard SSL (`*.tunn3l.sh`, cert at `/etc/letsencrypt/live/tunn3l-wildcard/`). Wildcard cert expires 2026-06-23, must be manually renewed via DNS challenge.
-
-### Deploy
-- **Auto-deploy**: GitHub Action on push to `apps/tunnel/relay/` — SCPs files + restarts systemd service.
-- **Manual deploy**: `scp -i ~/.ssh/bore-relay <files> root@64.23.144.236:/opt/tunn3l-relay/ && ssh -i ~/.ssh/bore-relay root@64.23.144.236 "systemctl restart tunn3l-relay"`
-- **SSH to droplet**: `ssh -i ~/.ssh/bore-relay root@64.23.144.236`
-- **CLI release**: Bundle with `npx esbuild bore.js --bundle --platform=node --format=cjs`, compile with `npx pkg`, upload to GitHub Releases. Always run `gh` commands from the repo root, not `/tmp`.
-
-### DNS
-Namecheap (tunn3l.sh): A records (`@`, `*`, `www`) → `64.23.144.236`. TXT records on `_acme-challenge` for wildcard SSL.
+**Tunn3l now lives in its own repo:** `../tunn3l/` ([github.com/bdecrem/tunn3l](https://github.com/bdecrem/tunn3l)). See that repo's `TUNN3L.md` for full docs. The `apps/tunnel/` folder in hilma is legacy — do not modify it, use the standalone repo instead.
 
 ## Environment Variables
 
@@ -95,6 +81,22 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 - `TOGETHER_API_KEY` — Together.ai API for model fine-tuning and inference
 - `TWITTER_*` — Twitter API credentials
 - `DISCORD_*` — Discord bot credentials
+- `SENDGRID_API_KEY` — SendGrid email API
+
+## Sending Email
+
+**When asked to send email, use SendGrid.** Don't use Gmail MCP tools (those only create drafts). Send via curl:
+
+```bash
+curl -X POST "https://api.sendgrid.com/v3/mail/send" \
+  -H "Authorization: Bearer ${SENDGRID_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"personalizations":[{"to":[{"email":"RECIPIENT"}]}],"from":{"email":"amber@intheamber.com","name":"SENDER_NAME"},"subject":"SUBJECT","content":[{"type":"text/html","value":"BODY"}]}'
+```
+
+- Default from address: `amber@intheamber.com`
+- Supports HTML content
+- Bart's email: `bdecrem@gmail.com`
 
 ## Conventions
 
