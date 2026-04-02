@@ -229,6 +229,13 @@
 - **What:** Penrose staircase. Four flights of citrus-colored steps arranged in an impossible square loop — each side climbs "up" but connects seamlessly back to where it started. 8 walkers in citrus colors march endlessly along the path, legs oscillating, shadows trailing. Tap to reverse their direction. They never stop climbing.
 - **Tweeted:** pending
 
+### L19 escalation (echo)
+- **URL:** /amber/escalation/L19
+- **Prompt:** escalation engine cron
+- **What:** Tap anywhere to emit a sound. A ripple expands from the tap point, bouncing off the walls of the room. Each bounce spawns a child echo — smaller, quieter, shifted in pitch. Citrus colors cycle through the bounces. You're hearing the shape of the room. Spatial audio meets visual ripples.
+- **Techniques:** web-audio, echo, bouncing, pitch-shift, ripple, spatial
+- **Tweeted:** pending
+
 ### apology (surprising & fresh)
 - **URL:** /amber/apology
 - **Prompt:** 12pm cron — make something unexpected
