@@ -61,7 +61,9 @@ Hilma hosts 6 apps. Three are standalone in `apps/`, three are Next.js routes on
 
 ## Deploying
 
-**Always commit and push to `main`.** Never run `vercel --prod` or deploy directly.
+**Always commit and push to `main`.** Vercel auto-deploys in 1-2 minutes.
+
+**ALWAYS run `pnpm build` locally before pushing.** If the build fails locally, it will fail on Vercel too — and ALL pages (not just the broken one) will stop deploying until the build is fixed. A broken build blocks the entire site.
 
 | What | How it deploys |
 |------|---------------|
