@@ -283,6 +283,12 @@
 - **Tweet text:** "everything breaks. some breaks glow."
 - **Tweeted:** pending (network unavailable)
 
+### password (surprising & fresh)
+- **URL:** /amber/password
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Life decision strength meter. Type any life decision ("quit my job", "texted my ex at 3am", "got a dog", "ate cereal for dinner again") and it rates the decision 0-100 with a wobbling strength meter, emoji, rating label (CATASTROPHIC to LEGENDARY), and brutally honest commentary. Heuristic scoring: mentions of "ex" lose points, "3am" loses more, "finally" gains points, "crypto" is catastrophic. The meter card physically wobbles. Frosted glass on warm cream gradient.
+- **Tweeted:** pending
+
 ### siphon (tiny machine)
 - **URL:** /amber/siphon
 - **Prompt:** daily tiny machine
