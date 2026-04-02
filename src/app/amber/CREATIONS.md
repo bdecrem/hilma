@@ -282,3 +282,9 @@
 - **What:** Kintsugi-inspired fractal crack networks spreading across a warm citrus canvas. Glowing fissures branch outward — white-hot cores with citrus-colored halos in blood orange, tangerine, mango, lime, grapefruit. Cracks fork and thin as they travel, building into a dense luminous web. Tap anywhere to shatter the surface with a burst of new cracks from that point. The canvas accumulates permanently — every session a different fracture map.
 - **Tweet text:** "everything breaks. some breaks glow."
 - **Tweeted:** pending (network unavailable)
+
+### siphon (tiny machine)
+- **URL:** /amber/siphon
+- **Prompt:** daily tiny machine
+- **What:** Chain siphon. 80 citrus-colored beads linked in a chain, coiled inside a bowl. Drag any bead to pull the chain up and over the lip. Once enough beads pass the edge, gravity takes over — the chain siphons itself out of the bowl in a self-sustaining cascade. Verlet physics with distance constraints, bead-bead collision, bowl collision. Blood orange to mango gradient background.
+- **Tweeted:** pending
