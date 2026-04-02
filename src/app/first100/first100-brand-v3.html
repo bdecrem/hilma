@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>first100 — brand</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #E86534;
+    --orange-dim: #c4512a;
+    --ink: #1c1c1c;
+    --ink-soft: #3a3a3a;
+    --gray: #888;
+    --light: #e8e8e8;
+    --bg: #fafafa;
+    --card: #fff;
+    --border: #e2e2e2;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    padding: 48px 32px 80px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  /* just a simple page, not a "brand sheet" */
+
+  .section {
+    margin-bottom: 56px;
+  }
+  .section-label {
+    font-size: 11px;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 56px 0;
+  }
+
+  /* ── The wordmark ── */
+  .wordmark {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 600;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    user-select: none;
+  }
+  .wordmark .num { color: var(--orange); }
+
+  .wm-hero { font-size: 72px; letter-spacing: -3px; }
+  .wm-lg { font-size: 48px; letter-spacing: -2px; }
+  .wm-md { font-size: 32px; letter-spacing: -1px; }
+  .wm-sm { font-size: 20px; letter-spacing: -0.5px; }
+
+  .tagline {
+    font-size: 14px;
+    color: var(--gray);
+    margin-top: 12px;
+    font-weight: 400;
+  }
+
+  /* ── Variants row ── */
+  .variants {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .variant-box {
+    border-radius: 12px;
+    padding: 40px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .variant-box.on-white {
+    background: #fff;
+    border: 1px solid var(--border);
+  }
+  .variant-box.on-dark {
+    background: var(--ink);
+  }
+  .variant-box.on-dark .wordmark { color: #fff; }
+  .variant-box.on-orange {
+    background: var(--orange);
+  }
+  .variant-box.on-orange .wordmark { color: #fff; }
+  .variant-box.on-orange .num { color: rgba(255,255,255,0.6); }
+  .variant-box.on-cream {
+    background: #f0ebe3;
+  }
+
+  /* ── Favicons ── */
+  .favicon-row {
+    display: flex;
+    align-items: end;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .fav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .fav span {
+    font-size: 10px;
+    color: var(--gray);
+  }
+  .fav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--orange);
+    color: #fff;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 700;
+    border-radius: 22%;
+  }
+  .fav-icon.sz-64 { width: 64px; height: 64px; font-size: 32px; letter-spacing: -1px; }
+  .fav-icon.sz-48 { width: 48px; height: 48px; font-size: 24px; letter-spacing: -1px; }
+  .fav-icon.sz-32 { width: 32px; height: 32px; font-size: 16px; letter-spacing: -0.5px; }
+  .fav-icon.sz-16 { width: 16px; height: 16px; font-size: 9px; letter-spacing: 0; }
+  .fav-icon.dark-ver { background: var(--ink); }
+  .fav-icon.outline-ver { background: transparent; border: 2px solid var(--border); color: var(--orange); }
+
+  /* ── Colors ── */
+  .color-row {
+    display: flex;
+    gap: 12px;
+  }
+  .chip {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .chip .dot {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+  .chip .hex {
+    font-size: 10px;
+    color: var(--gray);
+  }
+  .chip .cname {
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  /* ── Usage: site header mock ── */
+  .mock-site {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .mock-bar {
+    padding: 6px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mock-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+  .mock-url {
+    font-size: 11px;
+    color: var(--gray);
+    margin-left: 12px;
+  }
+  .mock-nav-bar {
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-links {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: var(--gray);
+  }
+  .mock-links a { text-decoration: none; color: inherit; }
+  .mock-btn {
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .mock-content {
+    padding: 48px 24px 56px;
+    text-align: center;
+  }
+  .mock-content h2 {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .mock-content h2 span { color: var(--orange); }
+  .mock-content p {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--gray);
+    max-width: 420px;
+    margin: 0 auto 24px;
+    line-height: 1.7;
+  }
+  .mock-ctas {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .mock-ctas .ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* ── OG card ── */
+  .og-preview {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--ink);
+    aspect-ratio: 1.91 / 1;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .og-preview .wordmark { color: #fff; }
+  .og-preview .tagline { color: #888; margin-top: 4px; font-size: 13px; }
+  .og-preview .og-url { font-size: 11px; color: #555; }
+
+  /* type */
+  .type-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .type-sample {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .type-sample .t-label {
+    font-size: 10px;
+    color: var(--gray);
+    min-width: 70px;
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .type-sample .t-text-sans {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+  .type-sample .t-text-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 32px 20px 60px; }
+    .wm-hero { font-size: 48px; }
+    .variants { grid-template-columns: 1fr; }
+    .mock-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="section">
+  <div class="wordmark wm-hero">first<span class="num">100</span></div>
+  <div class="tagline">find your first 100 users</div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-label">variants</div>
+  <div class="variants">
+    <div class="variant-box on-white">
+      <div class="wordmark wm-md">first<span class="num">100</span></div>
+    </div>
+    <div class="variant-box on-dark">
+      <div class="wordmark wm-md">first<span class="num">100</span></div>
+    </div>
+    <div class="variant-box on-orange">
+      <div class="wordmark wm-md">first<span class="num">100</span></div>
+    </div>
+    <div class="variant-box on-cream">
+      <div class="wordmark wm-md">first<span class="num">100</span></div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-label">icon</div>
+  <div class="favicon-row">
+    <div class="fav">
+      <div class="fav-icon sz-64">f1</div>
+      <span>64px</span>
+    </div>
+    <div class="fav">
+      <div class="fav-icon sz-48">f1</div>
+      <span>48px</span>
+    </div>
+    <div class="fav">
+      <div class="fav-icon sz-32">f1</div>
+      <span>32px</span>
+    </div>
+    <div class="fav">
+      <div class="fav-icon sz-16">f1</div>
+      <span>16px</span>
+    </div>
+    <div style="width:24px"></div>
+    <div class="fav">
+      <div class="fav-icon sz-48 dark-ver">f1</div>
+      <span>dark</span>
+    </div>
+    <div class="fav">
+      <div class="fav-icon sz-48 outline-ver">f1</div>
+      <span>outline</span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-label">colors</div>
+  <div class="color-row">
+    <div class="chip">
+      <div class="dot" style="background:#E86534;"></div>
+      <div class="cname">orange</div>
+      <div class="hex">#E86534</div>
+    </div>
+    <div class="chip">
+      <div class="dot" style="background:#1c1c1c;"></div>
+      <div class="cname">ink</div>
+      <div class="hex">#1C1C1C</div>
+    </div>
+    <div class="chip">
+      <div class="dot" style="background:#888;"></div>
+      <div class="cname">gray</div>
+      <div class="hex">#888888</div>
+    </div>
+    <div class="chip">
+      <div class="dot" style="background:#fafafa;"></div>
+      <div class="cname">bg</div>
+      <div class="hex">#FAFAFA</div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-label">type</div>
+  <div class="type-stack">
+    <div class="type-sample">
+      <span class="t-label">display</span>
+      <span class="t-text-sans">IBM Plex Sans</span>
+    </div>
+    <div class="type-sample">
+      <span class="t-label">mono</span>
+      <span class="t-text-mono">JetBrains Mono</span>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-label">scale</div>
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div class="wordmark wm-hero">first<span class="num">100</span></div>
+    <div class="wordmark wm-lg">first<span class="num">100</span></div>
+    <div class="wordmark wm-md">first<span class="num">100</span></div>
+    <div class="wordmark wm-sm">first<span class="num">100</span></div>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-label">in use — browser</div>
+  <div class="mock-site">
+    <div class="mock-bar">
+      <div class="mock-dot"></div>
+      <div class="mock-dot"></div>
+      <div class="mock-dot"></div>
+      <span class="mock-url">first100.dev</span>
+    </div>
+    <div class="mock-nav-bar">
+      <div class="wordmark wm-sm">first<span class="num">100</span></div>
+      <div class="mock-links">
+        <a>how it works</a>
+        <a>pricing</a>
+        <a>blog</a>
+      </div>
+      <button class="mock-btn">get started</button>
+    </div>
+    <div class="mock-content">
+      <h2>your app deserves<br><span>real users</span></h2>
+      <p>stop shouting into the void. first100 helps indie devs find, reach, and land their first 100 users.</p>
+      <div class="mock-ctas">
+        <button class="mock-btn">start free</button>
+        <button class="ghost">see how it works</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<div class="section">
+  <div class="section-label">og / social</div>
+  <div class="og-preview">
+    <div class="wordmark wm-lg" style="color:#fff;">first<span class="num">100</span></div>
+    <div class="tagline" style="color:#888;">find your first 100 users</div>
+    <div class="og-url" style="font-size:11px;color:#555;">first100.dev</div>
+  </div>
+</div>
+
+</body>
+</html>

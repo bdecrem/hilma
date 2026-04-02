@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>tunn3l — profile pic</title>
+<style>
+  * { margin: 0; padding: 0; }
+  body {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="800" height="800"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 800;
+const H = 800;
+const CX = W / 2;
+const CY = H / 2;
+const R = W / 2;
+
+// Colors from the tunn3l.sh site
+const BG = '#1e1a17';       // dark warm brown
+const GREEN = '#7fbf4f';    // the "3l" accent green
+const AMBER = '#c8a050';    // warm amber/gold from "tunn"
+const GRAY = '#888';        // muted text
+const TERM_BG = '#151210';  // terminal block bg
+
+// Circle clip
+ctx.beginPath();
+ctx.arc(CX, CY, R, 0, Math.PI * 2);
+ctx.clip();
+
+// Background — match site
+ctx.fillStyle = BG;
+ctx.fillRect(0, 0, W, H);
+
+// Subtle radial glow from center
+const glow = ctx.createRadialGradient(CX, CY, 0, CX, CY, R);
+glow.addColorStop(0, 'rgba(127,191,79,0.06)');
+glow.addColorStop(0.5, 'rgba(127,191,79,0.02)');
+glow.addColorStop(1, 'rgba(0,0,0,0)');
+ctx.fillStyle = glow;
+ctx.fillRect(0, 0, W, H);
+
+// Draw the "t3" mark — big, bold, centered
+// "t" in amber/gold, "3" in green — like the logo treatment
+ctx.font = 'bold 420px monospace';
+ctx.textBaseline = 'middle';
+
+// Measure combined width, then position so the pair is optically centered
+const tWidth = ctx.measureText('t').width;
+const threeWidth = ctx.measureText('3').width;
+const totalWidth = tWidth + threeWidth;
+const startX = CX - totalWidth / 2;
+
+// Nudge down 30px — monospace glyphs sit high with textBaseline 'middle'
+const textY = CY + 30;
+
+// "t" in warm amber
+ctx.textAlign = 'left';
+ctx.fillStyle = AMBER;
+ctx.fillText('t', startX, textY);
+
+// "3" in green
+ctx.fillStyle = GREEN;
+ctx.fillText('3', startX + tWidth, textY);
+
+// Subtle terminal cursor blink line under the text
+const cursorY = CY + 210;
+const cursorW = 28;
+const cursorH = 6;
+ctx.fillStyle = GREEN;
+ctx.globalAlpha = 0.7;
+ctx.fillRect(CX - cursorW / 2, cursorY, cursorW, cursorH);
+ctx.globalAlpha = 1;
+
+// Thin ring at the edge — like a tunnel opening
+ctx.beginPath();
+ctx.arc(CX, CY, R - 12, 0, Math.PI * 2);
+ctx.strokeStyle = GREEN;
+ctx.lineWidth = 1.5;
+ctx.globalAlpha = 0.15;
+ctx.stroke();
+ctx.globalAlpha = 1;
+
+// Inner ring
+ctx.beginPath();
+ctx.arc(CX, CY, R - 24, 0, Math.PI * 2);
+ctx.strokeStyle = AMBER;
+ctx.lineWidth = 0.5;
+ctx.globalAlpha = 0.1;
+ctx.stroke();
+ctx.globalAlpha = 1;
+</script>
+</body>
+</html>
