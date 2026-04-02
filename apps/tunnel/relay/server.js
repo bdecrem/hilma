@@ -545,6 +545,186 @@ server.on('request', async (req, res) => {
       return
     }
 
+    // Features page
+    if (req.url === '/features') {
+      res.writeHead(200, { 'Content-Type': 'text/html' })
+      res.end(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>tunn3l.sh — features</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html{overflow-x:hidden;background:#1a1a18}
+body{font-family:system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#1a1a18,#2a2218);color:#fff;min-height:100dvh;overflow-x:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.container{max-width:720px;margin:0 auto;padding:60px 24px}
+a{color:#FC913A;text-decoration:none}
+a:hover{text-decoration:underline}
+h1{font-size:2.5rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:8px}
+h1 .ext{color:rgba(255,255,255,0.35)}
+.back{font-family:monospace;font-size:0.8rem;color:rgba(255,255,255,0.3);margin-bottom:48px;display:block}
+.back:hover{color:rgba(255,255,255,0.6)}
+h2{font-size:1.4rem;font-weight:700;margin:48px 0 8px;letter-spacing:-0.01em}
+h2:first-of-type{margin-top:0}
+.lead{color:rgba(255,255,255,0.4);font-size:1rem;margin-bottom:32px;line-height:1.6}
+p{color:rgba(255,255,255,0.5);font-size:0.9rem;line-height:1.7;margin-bottom:16px}
+.terminal{background:#0a0a08;border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;margin:16px 0 24px}
+.terminal-bar{background:rgba(255,255,255,0.05);padding:8px 16px;display:flex;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;opacity:0.5}
+.terminal pre{padding:20px;font-family:monospace;font-size:0.85rem;line-height:1.8;overflow-x:auto}
+.cmd{color:#FFF8E7}
+.ok{color:#B4E33D}
+.url{color:#FC913A}
+.dim{color:#555}
+.divider{border:none;border-top:1px solid rgba(255,255,255,0.06);margin:48px 0}
+.footer{border-top:1px solid rgba(255,255,255,0.05);padding-top:24px;margin-top:64px;color:rgba(255,255,255,0.15);font-size:0.75rem;font-family:monospace}
+.footer a{color:rgba(255,255,255,0.25)}
+</style>
+</head>
+<body>
+<div class="container">
+
+<a href="/" class="back">\u2190 tunn3l.sh</a>
+
+<h1>Features</h1>
+<p class="lead">Everything tunn3l does, from one-liners to always-on tunnels with permanent URLs.</p>
+
+<h2>One-command install</h2>
+<p>A single curl downloads a standalone binary. No Node, no Python, no Docker, no package manager. Works on macOS and Linux, ARM and x64.</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim">$</span> <span class="cmd">curl -sSf https://tunn3l.sh/install | sh</span>
+<span class="ok">tunn3l installed! Open a new terminal, then:</span>
+  tunn3l http 3000</pre>
+</div>
+
+<h2>HTTP tunnels</h2>
+<p>Expose any local port to the internet. Your dev server, your API, your webhook receiver \u2014 instantly reachable at a <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">*.tunn3l.sh</code> URL.</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim">$</span> <span class="cmd">tunn3l http 3000</span>
+
+  <span class="ok">tunn3l tunnel ready</span>
+
+  forwarding  <span class="url">https://glass-moss.tunn3l.sh</span> \u2192 http://localhost:3000</pre>
+</div>
+
+<h2>SSH &amp; TCP tunnels</h2>
+<p>Expose SSH, databases, or any TCP service. Each tunnel gets its own port on the relay. Connect from anywhere without VPNs or firewall changes.</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim">$</span> <span class="cmd">tunn3l ssh</span>
+
+  <span class="ok">tunn3l tcp tunnel ready</span>
+
+  forwarding  <span class="url">https://my-box.tunn3l.sh</span> \u2192 tcp://localhost:22
+  connect:    ssh user@tunn3l.sh -p 34821</pre>
+</div>
+
+<h2>Always-on daemon</h2>
+<p>Install tunn3l as a system service. It starts on boot, reconnects automatically, and stays up forever. One command to install, one to start.</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim">$</span> <span class="cmd">tunn3l daemon install --port 3000 --subdomain my-server</span>
+  tunn3l daemon "default" installed
+
+<span class="dim">$</span> <span class="cmd">tunn3l daemon start</span>
+  tunn3l daemon "default" started
+
+  forwarding  <span class="url">https://my-server.tunn3l.sh</span></pre>
+</div>
+<p>Uses launchd on macOS, systemd on Linux. Check on it anytime with <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">tunn3l daemon status</code>.</p>
+
+<hr class="divider">
+
+<h2>Permanent URLs</h2>
+<p>Reserve a subdomain and it's yours. Every time your tunnel connects, it gets the same name \u2014 no more random URLs that change on every restart.</p>
+<p>Reserve subdomains from the <a href="/dashboard">dashboard</a> or let your daemon config lock one in with <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">--subdomain</code>.</p>
+
+<h2>Multi-device, one account</h2>
+<p>Install tunn3l on every machine with the same API key. Each device gets its own reserved subdomain, all managed from one dashboard.</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim"># On your second machine:</span>
+<span class="dim">$</span> <span class="cmd">curl -sSf https://tunn3l.sh/install | sh -s -- --key tk_your_key</span>
+<span class="dim">$</span> <span class="cmd">tunn3l daemon install --port 3000 --subdomain my-laptop</span>
+<span class="dim">$</span> <span class="cmd">tunn3l daemon start</span>
+
+  forwarding  <span class="url">https://my-laptop.tunn3l.sh</span></pre>
+</div>
+
+<h2>Dashboard</h2>
+<p>See all your active tunnels, reserve and release subdomains, claim your account \u2014 all from <a href="/dashboard">tunn3l.sh/dashboard</a>. No signup required to start. Claim with an email whenever you're ready.</p>
+
+<h2>Built for AI agents</h2>
+<p>Every command supports <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">--json</code> for machine-readable output. Clean exit codes (0 = clean, 1 = auth, 2 = connection, 3 = subdomain taken). Fully configurable via environment variables. Zero interactive prompts \u2014 agents can install, connect, and manage tunnels without human intervention.</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim">$</span> <span class="cmd">tunn3l http 3000 --json</span>
+<span class="dim">{"url":"https://glass-moss.tunn3l.sh","subdomain":"glass-moss"}</span></pre>
+</div>
+
+<h2>CLI management commands</h2>
+<p>Everything you can do in the dashboard, you can do from the terminal. No browser needed.</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim">$</span> <span class="cmd">tunn3l status</span>
+
+  API key:  tk_d99c...
+  claimed:  you@example.com
+
+  Reserved subdomains:
+    my-server.tunn3l.sh
+    my-laptop.tunn3l.sh
+
+  Active tunnels:
+    <span class="url">https://my-server.tunn3l.sh</span>  (http)
+
+<span class="dim">$</span> <span class="cmd">tunn3l reserve my-new-box</span>
+  Reserved: <span class="url">my-new-box.tunn3l.sh</span>
+
+<span class="dim">$</span> <span class="cmd">tunn3l unreserve my-new-box</span>
+  Released: my-new-box.tunn3l.sh
+
+<span class="dim">$</span> <span class="cmd">tunn3l claim you@example.com</span>
+  Account claimed: you@example.com
+
+<span class="dim">$</span> <span class="cmd">tunn3l status --json</span>
+<span class="dim">{"api_key":"tk_d99c...","claimed":true,...}</span></pre>
+</div>
+<p>The <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">--json</code> flag on <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">status</code> returns structured data \u2014 perfect for agents that need to read account state programmatically.</p>
+
+<hr class="divider">
+
+<h2>API key flexibility</h2>
+<p>Your API key lives in <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">~/.tunn3l/config.json</code> by default. Move it to an environment variable or a dotenv file if you prefer:</p>
+<div class="terminal">
+<div class="terminal-bar"><div class="dot" style="background:#FF4E50"></div><div class="dot" style="background:#F9D423"></div><div class="dot" style="background:#B4E33D"></div></div>
+<pre><span class="dim">// ~/.tunn3l/config.json</span>
+{
+  <span class="url">"api_key_source"</span>: <span class="ok">"env:TUNN3L_API_KEY"</span>
+}
+
+<span class="dim">// or read from a file:</span>
+{
+  <span class="url">"api_key_source"</span>: <span class="ok">"file:~/.env.local:TUNN3L_API_KEY"</span>
+}</pre>
+</div>
+
+<h2>Open source</h2>
+<p>MIT licensed. The relay, the CLI, the installer \u2014 everything is on <a href="https://github.com/bdecrem/hilma/tree/main/apps/tunnel" target="_blank">GitHub</a>. Run your own relay if you want. Point the CLI at it with <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px">--relay wss://your-server/ws/connect</code>.</p>
+
+<div class="footer">
+<a href="/">\u2190 back to tunn3l.sh</a>
+</div>
+
+</div>
+</body>
+</html>`)
+      return
+    }
+
     // Dashboard
     if (req.url.startsWith('/dashboard')) {
       res.writeHead(200, { 'Content-Type': 'text/html' })
