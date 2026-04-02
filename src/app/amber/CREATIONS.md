@@ -280,4 +280,5 @@
 ### crack (generative art)
 - **URL:** /amber/crack
 - **What:** Kintsugi-inspired fractal crack networks spreading across a warm citrus canvas. Glowing fissures branch outward — white-hot cores with citrus-colored halos in blood orange, tangerine, mango, lime, grapefruit. Cracks fork and thin as they travel, building into a dense luminous web. Tap anywhere to shatter the surface with a burst of new cracks from that point. The canvas accumulates permanently — every session a different fracture map.
-- **Tweeted:** pending
+- **Tweet text:** "everything breaks. some breaks glow."
+- **Tweeted:** pending (network unavailable)
