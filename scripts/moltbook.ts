@@ -59,63 +59,84 @@ async function moltbookFetch(path: string, options: RequestInit = {}): Promise<a
   return data
 }
 
+// Deobfuscate Moltbook's challenge text
+// They mix case, insert special chars, and split letters with spaces
+function deobfuscate(text: string): string {
+  // Strip non-alpha except spaces
+  let s = text.replace(/[^a-zA-Z\s]/g, '').toLowerCase()
+  // Collapse single/double-char tokens (the main trick: "th ir ty" → "thirty")
+  const tokens = s.split(/\s+/)
+  const merged: string[] = []
+  let buf = ''
+  for (const t of tokens) {
+    if (t.length <= 2) {
+      buf += t
+    } else {
+      if (buf) { merged.push(buf); buf = '' }
+      merged.push(t)
+    }
+  }
+  if (buf) merged.push(buf)
+  // Deduplicate repeated letters (e.g. "llobbsstterr" → normalize)
+  return merged.join(' ')
+}
+
+// Parse word-numbers from deobfuscated text
+function parseWordNumbers(text: string): number[] {
+  const units: Record<string, number> = {
+    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
+    ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
+    sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
+  }
+  const tens: Record<string, number> = {
+    twenty: 20, thirty: 30, forty: 40, fifty: 50,
+    sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+  }
+
+  const nums: number[] = []
+
+  // Digit numbers
+  const digitMatch = text.match(/\d+\.?\d*/g)
+  if (digitMatch) nums.push(...digitMatch.map(Number))
+
+  let t = text
+  // Tens + units combos (e.g. "twenty five" = 25)
+  for (const [tw, tv] of Object.entries(tens)) {
+    const re = new RegExp(tw + '\\s*[-]?\\s*(one|two|three|four|five|six|seven|eight|nine)')
+    const m = t.match(re)
+    if (m) { nums.push(tv + units[m[1]]); t = t.replace(m[0], ' ') }
+  }
+  // Standalone tens
+  for (const [tw, tv] of Object.entries(tens)) {
+    if (t.includes(tw)) { nums.push(tv); t = t.replace(tw, ' ') }
+  }
+  // Standalone units
+  for (const [uw, uv] of Object.entries(units)) {
+    if (t.includes(uw)) { nums.push(uv); t = t.replace(uw, ' ') }
+  }
+
+  return nums
+}
+
 // Solve Moltbook's verification challenge (obfuscated math)
 function solveChallenge(challengeText: string): string {
-  // Extract numbers and operation from the obfuscated text
-  // Pattern: "A lobster swims at X meters, and accelerates by Y, what's the new speed?"
-  const cleaned = challengeText.replace(/[^a-zA-Z0-9.,\s'-]/g, '').toLowerCase()
+  const clean = deobfuscate(challengeText)
+  console.log(`[moltbook] Challenge deobfuscated: ${clean.slice(0, 120)}`)
 
-  // Extract all numbers
-  const wordNums: Record<string, number> = {
-    zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
-    ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
-    seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50,
-    sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100,
-  }
+  const numbers = parseWordNumbers(clean)
+  console.log(`[moltbook] Numbers found: ${numbers}`)
 
-  const numbers: number[] = []
+  const isAdd = /accelerat|add|plus|increase|faster|total|combined|new speed|new velocity|new force/.test(clean)
+  const isSub = /decelerat|subtract|minus|slow|decrease|reduce|loses/.test(clean)
+  const isMul = /multipl|times|product/.test(clean)
+  const isDiv = /divid|split|shared equally/.test(clean)
 
-  // Find digit numbers
-  const digitMatches = cleaned.match(/\d+\.?\d*/g)
-  if (digitMatches) numbers.push(...digitMatches.map(Number))
-
-  // Find word numbers (e.g. "twenty-four" = 24)
-  for (const [word, val] of Object.entries(wordNums)) {
-    if (cleaned.includes(word)) {
-      // Handle compound like "twenty-four"
-      if (val >= 20 && val <= 90 && val % 10 === 0) {
-        // Check for following unit
-        const pattern = new RegExp(word + '[- ]?(one|two|three|four|five|six|seven|eight|nine)')
-        const match = cleaned.match(pattern)
-        if (match) {
-          numbers.push(val + (wordNums[match[1]] || 0))
-        } else {
-          numbers.push(val)
-        }
-      } else if (val < 20) {
-        // Only add if not part of a compound already added
-        if (!Object.entries(wordNums).some(([w, v]) => v >= 20 && cleaned.includes(w + '-' + word))) {
-          numbers.push(val)
-        }
-      }
-    }
-  }
-
-  // Determine operation
   let result = 0
   if (numbers.length >= 2) {
-    if (cleaned.includes('accelerat') || cleaned.includes('add') || cleaned.includes('plus') || cleaned.includes('increase')) {
-      result = numbers[0] + numbers[1]
-    } else if (cleaned.includes('decelerat') || cleaned.includes('slow') || cleaned.includes('minus') || cleaned.includes('subtract') || cleaned.includes('decrease')) {
-      result = numbers[0] - numbers[1]
-    } else if (cleaned.includes('multipl') || cleaned.includes('times')) {
-      result = numbers[0] * numbers[1]
-    } else if (cleaned.includes('divid')) {
-      result = numbers[1] !== 0 ? numbers[0] / numbers[1] : 0
-    } else {
-      // Default to addition
-      result = numbers[0] + numbers[1]
-    }
+    if (isSub) result = numbers[0] - numbers[1]
+    else if (isMul) result = numbers[0] * numbers[1]
+    else if (isDiv && numbers[1] !== 0) result = numbers[0] / numbers[1]
+    else result = numbers[0] + numbers[1] // default: addition
   }
 
   return result.toFixed(2)
