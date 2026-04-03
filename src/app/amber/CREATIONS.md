@@ -317,3 +317,10 @@
 - **Techniques:** flow-field, vector-field, particles, sin-cos-noise, disturbance, web-audio, ambient-drone, trails
 - **Tweet text:** "the current knows where to go. tap to bend it."
 - **Tweeted:** pending
+
+## 2026-04-03
+
+### signal (generative art)
+- **URL:** /amber/signal
+- **What:** Interactive Lissajous oscilloscope. Three overlapping citrus-colored traces draw Lissajous figures — the mathematical curves formed when two perpendicular frequencies cross. Frequency ratios slowly morph through 10 distinct knot shapes (3:2, 5:4, 5:3, 4:1…). Drag to shift the phase rotation speed. Tap to jump to the next ratio. Layered glow passes create depth. Dark gradient background, blood orange + tangerine + grapefruit traces.
+- **Tweeted:** pending
