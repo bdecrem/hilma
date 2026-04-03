@@ -283,6 +283,14 @@
 - **Tweet text:** "everything breaks. some breaks glow."
 - **Tweeted:** pending (network unavailable)
 
+## 2026-04-03
+
+### deadline (bitmap cartoon)
+- **URL:** /amber/deadline
+- **Prompt:** 8am cron — bitmap cartoon category
+- **What:** Chunky pixel art office scene. A worker in a coral shirt sits in a teal chair, looking up at a growing stack of papers on a mango desk. Red deadline flag planted on top. The stack grows one sheet every second. Coffee cup steams. Clock ticks. Plant on the desk corner. Caption: "the deadline moved. the work didn't." 96x72 chunky pixel grid, 5x5 scale, animated.
+- **Tweeted:** pending
+
 ### L21 escalation (gravity)
 - **URL:** /amber/escalation/L21
 - **Prompt:** escalation engine cron
