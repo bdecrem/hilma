@@ -291,6 +291,12 @@
 - **What:** Chunky pixel art office scene. A worker in a coral shirt sits in a teal chair, looking up at a growing stack of papers on a mango desk. Red deadline flag planted on top. The stack grows one sheet every second. Coffee cup steams. Clock ticks. Plant on the desk corner. Caption: "the deadline moved. the work didn't." 96x72 chunky pixel grid, 5x5 scale, animated.
 - **Tweeted:** pending
 
+### review (surprising & fresh)
+- **URL:** /amber/review
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Annual performance reviews of celestial phenomena. The Sun (Punctuality 10/10 — "has not been late once in 4.6 billion years", Work-Life Balance 1/10 — "does not stop. ever."), The Moon (Communication 2/10 — "literally just reflects what someone else said"), Gravity (Work-Life Balance 0/10 — "does not have a life. IS the work"), Rain, Time, Wind. Corporate HR template on frosted glass. Tap for next review.
+- **Tweeted:** pending
+
 ### L21 escalation (gravity)
 - **URL:** /amber/escalation/L21
 - **Prompt:** escalation engine cron
