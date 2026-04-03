@@ -283,6 +283,13 @@
 - **Tweet text:** "everything breaks. some breaks glow."
 - **Tweeted:** pending (network unavailable)
 
+### L21 escalation (gravity)
+- **URL:** /amber/escalation/L21
+- **Prompt:** escalation engine cron
+- **What:** N-body gravity simulation. 3 initial masses orbit each other. Tap to add more — each gets orbital velocity. Gravitational attraction between all pairs (F=Gmm/r²). Masses that collide merge, conserving momentum and blending colors. Trails trace orbital paths. Build solar systems, watch them collapse or stabilize.
+- **Techniques:** gravity, n-body, orbital-mechanics, collision, color-blending, trails
+- **Tweeted:** pending
+
 ### password (surprising & fresh)
 - **URL:** /amber/password
 - **Prompt:** 12pm cron — make something unexpected
