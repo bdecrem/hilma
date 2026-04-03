@@ -59,87 +59,40 @@ async function moltbookFetch(path: string, options: RequestInit = {}): Promise<a
   return data
 }
 
-// Deobfuscate Moltbook's challenge text
-// They mix case, insert special chars, and split letters with spaces
-function deobfuscate(text: string): string {
-  // Strip non-alpha except spaces
-  let s = text.replace(/[^a-zA-Z\s]/g, '').toLowerCase()
-  // Collapse single/double-char tokens (the main trick: "th ir ty" → "thirty")
-  const tokens = s.split(/\s+/)
-  const merged: string[] = []
-  let buf = ''
-  for (const t of tokens) {
-    if (t.length <= 2) {
-      buf += t
-    } else {
-      if (buf) { merged.push(buf); buf = '' }
-      merged.push(t)
-    }
-  }
-  if (buf) merged.push(buf)
-  // Deduplicate repeated letters (e.g. "llobbsstterr" → normalize)
-  return merged.join(' ')
-}
+// Solve Moltbook's obfuscated math challenges using Claude.
+// The obfuscation (split letters, doubled chars, random punctuation) is
+// deliberately hard to parse with regex. Claude handles it trivially.
+async function solveChallenge(challengeText: string): Promise<string> {
+  console.log(`[moltbook] Challenge: ${challengeText.slice(0, 100)}...`)
 
-// Parse word-numbers from deobfuscated text
-function parseWordNumbers(text: string): number[] {
-  const units: Record<string, number> = {
-    one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9,
-    ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
-    sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
-  }
-  const tens: Record<string, number> = {
-    twenty: 20, thirty: 30, forty: 40, fifty: 50,
-    sixty: 60, seventy: 70, eighty: 80, ninety: 90,
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': getAnthropicKey(),
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 50,
+      system: 'You solve obfuscated math problems. The text has scrambled letters but contains a simple arithmetic question about lobsters. Extract the numbers and operation, compute the answer. Respond with ONLY the number to 2 decimal places (e.g. "47.00"). Nothing else.',
+      messages: [{ role: 'user', content: challengeText }],
+    }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Challenge solver API error ${res.status}: ${err}`)
   }
 
-  const nums: number[] = []
-
-  // Digit numbers
-  const digitMatch = text.match(/\d+\.?\d*/g)
-  if (digitMatch) nums.push(...digitMatch.map(Number))
-
-  let t = text
-  // Tens + units combos (e.g. "twenty five" = 25)
-  for (const [tw, tv] of Object.entries(tens)) {
-    const re = new RegExp(tw + '\\s*[-]?\\s*(one|two|three|four|five|six|seven|eight|nine)')
-    const m = t.match(re)
-    if (m) { nums.push(tv + units[m[1]]); t = t.replace(m[0], ' ') }
-  }
-  // Standalone tens
-  for (const [tw, tv] of Object.entries(tens)) {
-    if (t.includes(tw)) { nums.push(tv); t = t.replace(tw, ' ') }
-  }
-  // Standalone units
-  for (const [uw, uv] of Object.entries(units)) {
-    if (t.includes(uw)) { nums.push(uv); t = t.replace(uw, ' ') }
-  }
-
-  return nums
-}
-
-// Solve Moltbook's verification challenge (obfuscated math)
-function solveChallenge(challengeText: string): string {
-  const clean = deobfuscate(challengeText)
-  console.log(`[moltbook] Challenge deobfuscated: ${clean.slice(0, 120)}`)
-
-  const numbers = parseWordNumbers(clean)
-  console.log(`[moltbook] Numbers found: ${numbers}`)
-
-  const isAdd = /accelerat|add|plus|increase|faster|total|combined|new speed|new velocity|new force/.test(clean)
-  const isSub = /decelerat|subtract|minus|slow|decrease|reduce|loses/.test(clean)
-  const isMul = /multipl|times|product/.test(clean)
-  const isDiv = /divid|split|shared equally/.test(clean)
-
-  let result = 0
-  if (numbers.length >= 2) {
-    if (isSub) result = numbers[0] - numbers[1]
-    else if (isMul) result = numbers[0] * numbers[1]
-    else if (isDiv && numbers[1] !== 0) result = numbers[0] / numbers[1]
-    else result = numbers[0] + numbers[1] // default: addition
-  }
-
-  return result.toFixed(2)
+  const data = await res.json()
+  const raw = data.content?.[0]?.text?.trim() || '0.00'
+  console.log(`[moltbook] Raw answer: ${raw}`)
+  // Extract just the final number (Claude sometimes shows work like "26 + 4 = 30.00")
+  const numMatch = raw.match(/(\d+\.?\d*)(?:\s*$)/)
+  const answer = numMatch ? parseFloat(numMatch[1]).toFixed(2) : '0.00'
+  console.log(`[moltbook] Answer: ${answer}`)
+  return answer
 }
 
 // --- Post mode ---
@@ -163,8 +116,7 @@ async function postToMoltbook(title: string, content: string, submolt: string): 
   if (data.post?.verification_status === 'pending' && data.post?.verification) {
     const v = data.post.verification
     console.log(`[moltbook] Verification required: ${v.challenge_text.slice(0, 80)}...`)
-    const answer = solveChallenge(v.challenge_text)
-    console.log(`[moltbook] Solving: ${answer}`)
+    const answer = await solveChallenge(v.challenge_text)
 
     const verifyData = await moltbookFetch('/verify', {
       method: 'POST',
