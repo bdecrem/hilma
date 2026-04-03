@@ -324,3 +324,11 @@
 - **URL:** /amber/signal
 - **What:** Interactive Lissajous oscilloscope. Three overlapping citrus-colored traces draw Lissajous figures — the mathematical curves formed when two perpendicular frequencies cross. Frequency ratios slowly morph through 10 distinct knot shapes (3:2, 5:4, 5:3, 4:1…). Drag to shift the phase rotation speed. Tap to jump to the next ratio. Layered glow passes create depth. Dark gradient background, blood orange + tangerine + grapefruit traces.
 - **Tweeted:** pending
+
+### L22 escalation (reaction-diffusion)
+- **URL:** /amber/escalation/L22
+- **Prompt:** escalation engine
+- **What:** Gray-Scott reaction-diffusion simulation. Two chemical species react and diffuse across a grid — one feeds in, one forms patterns. Drag to seed B chemical at any point; watch organic spots, coral branches, or maze-like labyrinths grow from nothing. Double-tap to cycle through three chemistry presets: coral (fingerprint-like branching), spots (mitosis-style division), maze (worm tunnels). Smooth bilinear upscaling from the sim grid gives an organic texture. Citrus-colored patterns on a warm background, 8 sim steps per frame on first load for fast startup.
+- **Techniques:** reaction-diffusion, gray-scott, simulation, organic-texture, drag, double-tap, lut-coloring
+- **Tweet text:** "drag to seed. the chemistry decides the pattern."
+- **Tweeted:** pending
