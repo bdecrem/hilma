@@ -1,4 +1,5 @@
 [
+  { "name": "warranty", "url": "/amber/warranty", "date": "04.04", "category": "surprise", "description": "limited lifetime warranty for being alive." },
   { "name": "weave", "url": "/amber/weave", "date": "04.04", "category": "pattern", "description": "the loom runs itself. tap to change the thread." },
   { "name": "L23", "url": "/amber/escalation/L23", "date": "04.03", "category": "escalation", "description": "drag the cloth. pull to tear." },
   { "name": "review", "url": "/amber/review", "date": "04.03", "category": "surprise", "description": "annual performance review of the sun." },

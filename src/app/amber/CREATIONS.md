@@ -356,6 +356,12 @@
 
 ## 2026-04-04
 
+### warranty (surprising & fresh)
+- **URL:** /amber/warranty
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Limited lifetime warranty cards for being alive. Product: YOU (Human, Current Revision). Covered: 1x skeleton (non-transferable), 2x eyes (no refunds), 1x consciousness (warranty void if examined too closely). Not covered: heartbreak, existential dread, that thing you said in 2014. Plus warranty cards for Your Sleep, Your Attention Span, Your Memory, and Your Confidence. Tap for next warranty. Random serial numbers.
+- **Tweeted:** pending
+
 ### bloom (generative art)
 - **URL:** /amber/bloom
 - **What:** Diffusion-limited aggregation crystal growth. Random-walking particles drift across the canvas and stick the moment they touch the growing structure, building fractal crystal branches radiating outward from a center seed. Colors cycle through the citrus palette — blood orange at the core out through tangerine, mango, lime, grapefruit at the tips. Tap anywhere to plant a new seed and watch a second crystal bloom from that point. The structure accumulates permanently; no two sessions look alike.
