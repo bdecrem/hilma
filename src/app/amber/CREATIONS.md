@@ -285,6 +285,14 @@
 
 ## 2026-04-03
 
+## 2026-04-04
+
+### weave (living pattern)
+- **URL:** /amber/weave
+- **Prompt:** 8am cron — living pattern category
+- **What:** An automated loom. Vertical warp threads in citrus colors, horizontal weft builds row by row. Four weave patterns (plain, twill, satin, basket) with real over-under thread crossings. Tap left to switch patterns, tap right to change weft color. The textile grows continuously, scrolling as it fills the screen. Each pattern creates a visually distinct fabric.
+- **Tweeted:** pending
+
 ### deadline (bitmap cartoon)
 - **URL:** /amber/deadline
 - **Prompt:** 8am cron — bitmap cartoon category
