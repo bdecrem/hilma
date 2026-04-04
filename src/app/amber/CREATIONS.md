@@ -297,6 +297,13 @@
 - **What:** Annual performance reviews of celestial phenomena. The Sun (Punctuality 10/10 — "has not been late once in 4.6 billion years", Work-Life Balance 1/10 — "does not stop. ever."), The Moon (Communication 2/10 — "literally just reflects what someone else said"), Gravity (Work-Life Balance 0/10 — "does not have a life. IS the work"), Rain, Time, Wind. Corporate HR template on frosted glass. Tap for next review.
 - **Tweeted:** pending
 
+### L23 escalation (cloth)
+- **URL:** /amber/escalation/L23
+- **Prompt:** escalation engine cron
+- **What:** Cloth simulation. A grid of spring-connected points forming a fabric with verlet physics. Pinned at intervals along the top. Gravity pulls it into a natural drape. Drag any point to stretch and deform the cloth. Pull too hard and the springs tear — links snap and the fabric rips apart. Citrus-colored threads show tension in red as they stretch. First soft-body physics in the series.
+- **Techniques:** verlet, soft-body, cloth-simulation, spring-constraints, tearing, drag
+- **Tweeted:** pending
+
 ### L21 escalation (gravity)
 - **URL:** /amber/escalation/L21
 - **Prompt:** escalation engine cron
