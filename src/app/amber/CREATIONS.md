@@ -361,3 +361,11 @@
 - **What:** Diffusion-limited aggregation crystal growth. Random-walking particles drift across the canvas and stick the moment they touch the growing structure, building fractal crystal branches radiating outward from a center seed. Colors cycle through the citrus palette — blood orange at the core out through tangerine, mango, lime, grapefruit at the tips. Tap anywhere to plant a new seed and watch a second crystal bloom from that point. The structure accumulates permanently; no two sessions look alike.
 - **Tweet text:** "random walks. one rule: stop when you touch something. the crystal decides its own shape."
 - **Tweeted:** pending
+
+### L24 escalation (fourier epicycles)
+- **URL:** /amber/escalation/L24
+- **Prompt:** escalation engine
+- **What:** Fourier epicycles — spinning arms at different harmonics that together draw a complex hidden curve. Starts with five arms (1st, 3rd, 5th, 7th, 9th harmonics) approximating a square wave. The tip traces a glowing tangerine trail on a deep ocean-to-lime gradient. Tap to add the next harmonic (each tap adds the next odd frequency, making the curve sharper). Double-tap to clear the trace and watch it draw fresh. Orbit rings show the full circle each arm follows. A visual proof that every curve is just circles.
+- **Techniques:** fourier, epicycles, harmonics, trigonometry-art, trail, double-tap
+- **Tweet text:** "every curve is just circles spinning at different speeds."
+- **Tweeted:** pending
