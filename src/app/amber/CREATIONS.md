@@ -353,3 +353,11 @@
 - **Techniques:** reaction-diffusion, gray-scott, simulation, organic-texture, drag, double-tap, lut-coloring
 - **Tweet text:** "drag to seed. the chemistry decides the pattern."
 - **Tweeted:** pending
+
+## 2026-04-04
+
+### bloom (generative art)
+- **URL:** /amber/bloom
+- **What:** Diffusion-limited aggregation crystal growth. Random-walking particles drift across the canvas and stick the moment they touch the growing structure, building fractal crystal branches radiating outward from a center seed. Colors cycle through the citrus palette — blood orange at the core out through tangerine, mango, lime, grapefruit at the tips. Tap anywhere to plant a new seed and watch a second crystal bloom from that point. The structure accumulates permanently; no two sessions look alike.
+- **Tweet text:** "random walks. one rule: stop when you touch something. the crystal decides its own shape."
+- **Tweeted:** pending
