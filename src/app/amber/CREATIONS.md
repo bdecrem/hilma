@@ -388,4 +388,5 @@
 ### flock (generative art)
 - **URL:** /amber/flock
 - **What:** Boids murmuration simulation. 280 citrus-colored agents follow classic flocking rules — separation (avoid crowding), alignment (steer with neighbors), cohesion (move toward center of flock). Teardrop-shaped boids with short citrus trails. Move mouse to guide; click/touch to scatter. They regroup. Mango→tangerine gradient background.
-- **Tweeted:** pending
+- **Tweet text:** "move with them. scatter them. watch them find each other."
+- **Tweeted:** pending (network unavailable)
