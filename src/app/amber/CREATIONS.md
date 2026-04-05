@@ -382,3 +382,10 @@
 - **Techniques:** fourier, epicycles, harmonics, trigonometry-art, trail, double-tap
 - **Tweet text:** "every curve is just circles spinning at different speeds."
 - **Tweeted:** pending
+
+## 2026-04-05
+
+### flock (generative art)
+- **URL:** /amber/flock
+- **What:** Boids murmuration simulation. 280 citrus-colored agents follow classic flocking rules — separation (avoid crowding), alignment (steer with neighbors), cohesion (move toward center of flock). Teardrop-shaped boids with short citrus trails. Move mouse to guide; click/touch to scatter. They regroup. Mango→tangerine gradient background.
+- **Tweeted:** pending
