@@ -368,6 +368,13 @@
 - **Tweet text:** "random walks. one rule: stop when you touch something. the crystal decides its own shape."
 - **Tweeted:** pending
 
+### L25 escalation (pendulum wave)
+- **URL:** /amber/escalation/L25
+- **Prompt:** escalation engine cron
+- **What:** Pendulum wave — 15 pendulums of increasing length. They start synchronized, then drift into beautiful traveling wave patterns as their different periods go in and out of phase. After 60 seconds they re-sync perfectly. Citrus colors, persistent trail layer that fades slowly. Tap to restart from perfect sync. A progress bar at the bottom shows time until re-sync. The last level of the Composition tier.
+- **Techniques:** pendulum-wave, phase-sync, harmonic-motion, trail-layer
+- **Tweeted:** pending
+
 ### L24 escalation (fourier epicycles)
 - **URL:** /amber/escalation/L24
 - **Prompt:** escalation engine
