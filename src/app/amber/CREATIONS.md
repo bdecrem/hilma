@@ -368,6 +368,14 @@
 - **Tweet text:** "random walks. one rule: stop when you touch something. the crystal decides its own shape."
 - **Tweeted:** pending
 
+### L26 escalation (clifford strange attractor)
+- **URL:** /amber/escalation/L26
+- **Prompt:** escalation engine cron
+- **What:** Clifford Strange Attractor — 320,000 points iterate one simple rule with no plan, and the shape finds itself. Points accumulate on-screen in citrus-colored batches (blood orange → tangerine → mango → lime → grapefruit), building up like a watercolor drying. Seven attractors: crescent, bloom, cascade, lattice, tendril, vortex, corona. Tap to advance to the next. A faint label fades in as the attractor settles. Progress bar while drawing. First level of the System tier.
+- **Techniques:** clifford-attractor, strange-attractor, iterated-function, point-cloud, density-accumulation, batch-render
+- **Tweet text:** "320,000 points. one rule. they find the shape themselves."
+- **Tweeted:** pending
+
 ### L25 escalation (pendulum wave)
 - **URL:** /amber/escalation/L25
 - **Prompt:** escalation engine cron
