@@ -399,6 +399,12 @@
 - **What:** Printing press. A dark type bed holds 8 random words in reversed movable type. A heavy roller sits above on rails. Drag the roller down over the type — ink transfers as it passes. Below, a paper sheet receives the printed words (now readable). Tap the paper to shuffle new words and reset. Citrus handle accents on the roller. Mechanical, tactile, satisfying.
 - **Tweeted:** pending
 
+### meeting (surprising & fresh)
+- **URL:** /amber/meeting
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** A video call where all the attendees are office supplies. Stapler (VP of Binding) presents Q3 results. Coffee Mug (Head of Sustenance) is permanently on mute. Potted Plant (Director of Presence) is just listening. Rubber Duck (Senior Debug Consultant) is judging. Desk Lamp is burned out from the last meeting. Sticky Note is losing adhesion. Statuses update in real-time. Tap any attendee to hear their contribution. Meeting timer counts up. "This meeting could have been an email."
+- **Tweeted:** pending
+
 ### flock (generative art)
 - **URL:** /amber/flock
 - **What:** Boids murmuration simulation. 280 citrus-colored agents follow classic flocking rules — separation (avoid crowding), alignment (steer with neighbors), cohesion (move toward center of flock). Teardrop-shaped boids with short citrus trails. Move mouse to guide; click/touch to scatter. They regroup. Mango→tangerine gradient background.
