@@ -425,3 +425,9 @@
 - **What:** Boids murmuration simulation. 280 citrus-colored agents follow classic flocking rules — separation (avoid crowding), alignment (steer with neighbors), cohesion (move toward center of flock). Teardrop-shaped boids with short citrus trails. Move mouse to guide; click/touch to scatter. They regroup. Mango→tangerine gradient background.
 - **Tweet text:** "move with them. scatter them. watch them find each other."
 - **Tweeted:** pending (network unavailable)
+
+### knot (generative art)
+- **URL:** /amber/knot
+- **What:** 3D torus knot rotating in space. Parametric tube rendered with painter's algorithm — 520 segments sorted back-to-front, citrus colors cycling along the curve, depth-based line width and opacity for a convincing 3D illusion. Specular highlights on near segments. Six knot types: trefoil, torus (3,4), cinquefoil, torus (3,5), torus (4,5), heptafoil. Drag to spin on any axis, tap to advance knot type. Blood orange to plum gradient background.
+- **Tweet text:** "a trefoil knows exactly what it is. drag to see it from every angle."
+- **Tweeted:** pending
