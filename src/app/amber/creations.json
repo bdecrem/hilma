@@ -1,4 +1,5 @@
 [
+  { "name": "fortune", "url": "/amber/fortune", "date": "04.06", "category": "surprise", "description": "crack the cookie. read the truth." },
   { "name": "fire", "url": "/amber/fire", "date": "04.06", "category": "ascii", "description": "tap to add a log. watch the unicode burn." },
   { "name": "L27", "url": "/amber/escalation/L27", "date": "04.05", "category": "escalation", "description": "predators hunt. prey flee. plants grow." },
   { "name": "meeting", "url": "/amber/meeting", "date": "04.05", "category": "surprise", "description": "this meeting could have been an email." },

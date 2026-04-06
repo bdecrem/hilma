@@ -395,6 +395,12 @@
 
 ## 2026-04-06
 
+### fortune (surprising & fresh)
+- **URL:** /amber/fortune
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Fortune cookies with brutally specific modern fortunes. Tap the cookie — it cracks into two halves, a paper slip slides out. "You will mass-delete 47 screenshots today and regret exactly one." "The thing you are procrastinating will take 11 minutes." "Your screen time report is ready. You are not ready for your screen time report." 27 fortunes. Tap for another cookie. Lucky numbers at the bottom.
+- **Tweeted:** pending
+
 ### fire (ASCII/Unicode art)
 - **URL:** /amber/fire
 - **Prompt:** 8am cron — ASCII/Unicode category
