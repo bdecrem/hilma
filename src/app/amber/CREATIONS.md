@@ -393,6 +393,13 @@
 
 ## 2026-04-05
 
+### L27 escalation (ecosystem)
+- **URL:** /amber/escalation/L27
+- **Prompt:** escalation engine cron
+- **What:** Predator-prey ecosystem. Three species: blood orange predators hunt lime prey, prey eat mango plants, plants regrow. Each creature has energy, seeks food, flees threats, reproduces when well-fed, dies when starved. Population counters show the balance shifting. Tap top third to spawn predators, middle for prey, bottom for plants. First multi-agent interacting system. Lotka-Volterra dynamics played out spatially.
+- **Techniques:** ecosystem, predator-prey, lotka-volterra, multi-agent, seeking, fleeing, reproduction
+- **Tweeted:** pending
+
 ### press (tiny machine)
 - **URL:** /amber/press
 - **Prompt:** 8am cron — tiny machine category
