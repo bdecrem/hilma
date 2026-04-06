@@ -393,6 +393,14 @@
 
 ## 2026-04-05
 
+## 2026-04-06
+
+### fire (ASCII/Unicode art)
+- **URL:** /amber/fire
+- **Prompt:** 8am cron — ASCII/Unicode category
+- **What:** A campfire built from Unicode characters. Flames dance upward (⠁⠃⠇⡇↑⇡▲♦), embers drift (·∘○◦), smoke trails off (⠄⠂⠁░). Block-element logs at the base (▓▒░). Stars twinkle above. Warm glow radiates from the fire center. Tap to add a log — burst of embers on each tap. Dark warm ground. Citrus flame colors on near-black background.
+- **Tweeted:** pending
+
 ### L27 escalation (ecosystem)
 - **URL:** /amber/escalation/L27
 - **Prompt:** escalation engine cron
