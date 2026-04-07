@@ -414,6 +414,14 @@
 - **What:** A campfire built from Unicode characters. Flames dance upward (⠁⠃⠇⡇↑⇡▲♦), embers drift (·∘○◦), smoke trails off (⠄⠂⠁░). Block-element logs at the base (▓▒░). Stars twinkle above. Warm glow radiates from the fire center. Tap to add a log — burst of embers on each tap. Dark warm ground. Citrus flame colors on near-black background.
 - **Tweeted:** pending
 
+## 2026-04-07
+
+### erosion (HD art)
+- **URL:** /amber/erosion
+- **Prompt:** 8am cron — HD art category
+- **What:** Wind erosion simulation. Horizontal layers of citrus-colored sediment fill the lower 70% of the screen. Wind carries particles off exposed surfaces and deposits them downwind. Canyons, arches, and mesas emerge over time. Drag to change wind direction — the erosion pattern shifts in real time. Rendered as a pixel grid scaled up with ImageData for speed. Watch millions of years of geology in minutes.
+- **Tweeted:** pending
+
 ### L27 escalation (ecosystem)
 - **URL:** /amber/escalation/L27
 - **Prompt:** escalation engine cron
