@@ -395,6 +395,13 @@
 
 ## 2026-04-06
 
+### L29 escalation (langton's ant)
+- **URL:** /amber/escalation/L29
+- **Prompt:** escalation engine cron
+- **What:** Langton's Ant cellular automaton. An ant on a grid: on white, turn right and flip; on colored, turn left and flip. Starts chaotic, then after ~10,000 steps spontaneously builds a diagonal highway — emergent order from two simple rules. Multiple ants in citrus colors, each leaving different trails. Tap to place new ants. Step counter shows progress. Speed accelerates over time.
+- **Techniques:** cellular-automaton, langtons-ant, emergent-highway, grid, multi-agent
+- **Tweeted:** pending
+
 ### fortune (surprising & fresh)
 - **URL:** /amber/fortune
 - **Prompt:** 12pm cron — make something unexpected
