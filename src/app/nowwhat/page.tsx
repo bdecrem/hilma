@@ -344,6 +344,7 @@ interface Box {
   attX: number; attY: number; attTX: number; attTY: number; attSpeed: number
   searchStart: number; seeded: boolean; wonPulse: number
   entropyStart?: number
+  freshCandidate?: { id: string; concept: string; name: string; grid: Grid; fillPercent: number; createdAt: string }
 }
 
 function n4(cells: Cell[][], r: number, c: number): number {
@@ -409,7 +410,7 @@ export default function NowWhatHome() {
       .catch(() => {})
 
     // Pre-fetch fresh Haiku shapes for the 25% experimental slots
-    let pendingFresh: Shape | null = null
+    let pendingFresh: { shape: Shape; candidate: { id: string; concept: string; name: string; grid: Grid; fillPercent: number; createdAt: string } } | null = null
     let fetchingFresh = false
 
     function prefetchFresh() {
@@ -419,7 +420,10 @@ export default function NowWhatHome() {
         .then(r => r.json())
         .then(data => {
           if (data.candidate?.grid) {
-            pendingFresh = { name: data.candidate.name, canWin: false, grid: data.candidate.grid }
+            pendingFresh = {
+              shape: { name: data.candidate.name, canWin: true, grid: data.candidate.grid },
+              candidate: data.candidate,
+            }
           }
           fetchingFresh = false
         })
@@ -543,8 +547,10 @@ export default function NowWhatHome() {
       let shape: Shape, willSucceed: boolean, isImpossible = false
 
       // 25% chance: use a fresh Haiku-generated shape (same win rate as others)
+      let freshCandidate: Box['freshCandidate'] = undefined
       if (pendingFresh && Math.random() < 0.25) {
-        shape = pendingFresh
+        shape = pendingFresh.shape
+        freshCandidate = pendingFresh.candidate
         pendingFresh = null
         willSucceed = nextWillSucceed()
         isImpossible = false
@@ -579,7 +585,7 @@ export default function NowWhatHome() {
 
       return {
         cells, phase: 'cycling', phaseStart: now + (delay || 0),
-        willSucceed, failPoint: failPt, totalTarget, tCells, isImpossible,
+        willSucceed, failPoint: failPt, totalTarget, tCells, isImpossible, freshCandidate,
         attX: COLS/2, attY: ROWS/2, attTX: COLS/2, attTY: ROWS/2, attSpeed: 0.02,
         searchStart: 0, seeded: false, wonPulse: Math.random() * Math.PI * 2,
       }
@@ -807,6 +813,14 @@ export default function NowWhatHome() {
             }
           }
           emitParticles(bx + stripW / 2, by + stripH / 2, 18, 0.6, 32)
+          // If this was a fresh Haiku shape that won, save it for review
+          if (box.freshCandidate) {
+            fetch('/api/nowwhat/gen2', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ candidate: box.freshCandidate }),
+            }).catch(() => {})
+          }
           box.phase = 'blink'; box.phaseStart = now
         }
       }
