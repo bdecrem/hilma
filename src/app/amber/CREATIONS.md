@@ -395,6 +395,12 @@
 
 ## 2026-04-06
 
+### excuse (surprising & fresh)
+- **URL:** /amber/excuse
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Excuse generator for why you can't come to the thing. Each excuse has two parts: what you send ("Something came up at work") and the real reason ("nothing came up at work. I just don't want to put on pants"). 22 excuses. Tap "the real reason" to reveal the truth. Tap for next excuse. Frosted glass card on citrus gradient.
+- **Tweeted:** pending
+
 ### L29 escalation (langton's ant)
 - **URL:** /amber/escalation/L29
 - **Prompt:** escalation engine cron
