@@ -59,6 +59,16 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.nowwhat.wtf' }],
           destination: '/nowwhat',
         },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'nowwhat.cc' }],
+          destination: '/nowwhat',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.nowwhat.cc' }],
+          destination: '/nowwhat',
+        },
       ],
       afterFiles: [
         // intheamber.com/anything → /amber/anything (only if no file matched above)
@@ -102,6 +112,16 @@ const nextConfig: NextConfig = {
         {
           source: '/:path+',
           has: [{ type: 'host', value: 'www.nowwhat.wtf' }],
+          destination: '/nowwhat/:path+',
+        },
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'nowwhat.cc' }],
+          destination: '/nowwhat/:path+',
+        },
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat/:path+',
         },
       ],

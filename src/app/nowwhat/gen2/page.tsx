@@ -51,6 +51,12 @@ export default function Gen2Dashboard() {
   const [stats, setStats] = useState({ total: 0, approved: 0, rejected: 0, pending: 0 })
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [loading, setLoading] = useState(true)
+  const [howExpanded, setHowExpanded] = useState(false)
+  const [seeding, setSeeding] = useState(false)
+  const [seedCount, setSeedCount] = useState<number | null>(null)
+  const [seedSources, setSeedSources] = useState<string[]>([])
+  const [seedWords, setSeedWords] = useState<string[]>([])
+  const [showWords, setShowWords] = useState(false)
 
   const fetchData = useCallback(() => {
     fetch('/api/nowwhat/gen2')
@@ -71,9 +77,24 @@ export default function Gen2Dashboard() {
 
   useEffect(() => {
     fetchData()
+    fetch('/api/nowwhat/gen2/words').then(r => r.json()).then(d => { setSeedCount(d.count); setSeedWords(d.words || []) }).catch(() => {})
     const interval = setInterval(fetchData, 4000)
     return () => clearInterval(interval)
   }, [fetchData])
+
+  const regenerateSeeds = async () => {
+    setSeeding(true)
+    setSeedSources([])
+    try {
+      const res = await fetch('/api/nowwhat/gen2/words', { method: 'POST' })
+      const data = await res.json()
+      setSeedCount(data.count || 0)
+      setSeedSources(data.sources || [])
+      setSeedWords(data.words || [])
+      setShowWords(false)
+    } catch { /* silent */ }
+    setSeeding(false)
+  }
 
   const judge = async (id: string, approved: boolean) => {
     await fetch('/api/nowwhat/gen2', {
@@ -98,8 +119,25 @@ export default function Gen2Dashboard() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-light text-white tracking-wide">gen2 dashboard</h1>
-          <p className="text-neutral-500 text-sm mt-1">concept-driven shape generation</p>
+          <h1 className="text-2xl font-light text-white tracking-wide">Dashboard</h1>
+        </div>
+
+        {/* How this works */}
+        <div className="mb-8 text-sm text-neutral-400 leading-relaxed">
+          <span>
+            The big question behind <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">Now what?</a> is how humanity thrives after AGI arrives.{' '}
+          </span>
+          {!howExpanded ? (
+            <button
+              onClick={() => setHowExpanded(true)}
+              className="text-neutral-500 hover:text-neutral-300 transition-colors"
+            >[...]</button>
+          ) : (
+            <span>
+              It starts by pulling recent articles from the web — stories about AGI, democracy, creativity, meaning — and extracting concrete, visual concepts from them: <em>campfire</em>, <em>paper crane</em>, <em>raised fist</em>. An AI then draws each concept as a tiny pixel silhouette. Each drawing enters a physics simulation where momentum tries to assemble it and entropy tries to tear it apart. Most attempts fail. The shapes that survive land here, waiting for a human to decide if they&apos;re worth keeping. The ones you approve join the living display on the{' '}
+              <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">homepage</a>.
+            </span>
+          )}
         </div>
 
         {/* Stats */}
@@ -109,6 +147,47 @@ export default function Gen2Dashboard() {
           <div><span className="text-neutral-500">approved</span> <span className="text-green-400/70">{stats.approved}</span></div>
           <div><span className="text-neutral-500">rejected</span> <span className="text-red-400/70">{stats.rejected}</span></div>
         </div>
+
+        {/* Seed words */}
+        <div className="mb-6 flex items-center gap-3">
+          <button
+            onClick={regenerateSeeds}
+            disabled={seeding}
+            className={`px-4 py-2 rounded-lg text-xs tracking-wide transition-all ${
+              seeding
+                ? 'bg-white/[0.03] text-neutral-600 cursor-wait'
+                : 'bg-white/[0.06] text-neutral-300 hover:bg-white/[0.12] hover:text-white active:scale-95'
+            }`}
+          >
+            {seeding ? 'dreaming up new words...' : 'new seed words'}
+          </button>
+          {seedCount !== null && (
+            <button
+              onClick={() => setShowWords(!showWords)}
+              className="text-neutral-600 text-[11px] hover:text-neutral-400 transition-colors"
+            >{seedCount} concepts in the pool</button>
+          )}
+        </div>
+        {showWords && seedWords.length > 0 && (
+          <div className="mb-6 -mt-4 text-[11px] text-neutral-500 leading-relaxed">
+            {seedWords.join(' · ')}
+          </div>
+        )}
+        {seedSources.length > 0 && (
+          <div className="mb-6 -mt-4 text-[10px] text-neutral-600 leading-relaxed">
+            <span className="text-neutral-500">sourced from: </span>
+            {seedSources.map((s, i) => (
+              <span key={i}>
+                {s.startsWith('http') ? (
+                  <a href={s} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 decoration-neutral-700 hover:text-neutral-400 transition-colors">
+                    {new URL(s).hostname}
+                  </a>
+                ) : s}
+                {i < seedSources.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex gap-2 mb-6">

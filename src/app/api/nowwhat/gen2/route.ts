@@ -1,87 +1,55 @@
 import { NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
+import { createClient } from '@supabase/supabase-js'
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
-const CANDIDATES_PATH = path.join(process.cwd(), 'data', 'nowwhat-gen2-candidates.json')
 const COLS = 26
 const ROWS = 10
 
-// Word dictionary — built once, lives in memory
-let wordPool: string[] | null = null
+// Lazy Supabase client (untyped — we cast as needed)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _sb: any = null
+function getSupabase() {
+  if (!_sb) {
+    _sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
+  }
+  return _sb
+}
 
-const THEME_WORDS = [
-  // Human connection
-  'handshake', 'embrace', 'gathering', 'family', 'conversation', 'circle of people',
-  'holding hands', 'crowd', 'village', 'neighborhood', 'playground', 'classroom',
-  // Nature & growth
-  'tree', 'flower', 'sunrise', 'river', 'mountain', 'garden', 'bloom', 'seedling',
-  'forest', 'ocean wave', 'bird in flight', 'nest', 'rain', 'rainbow',
-  // Building & shelter
-  'house', 'bridge', 'tower', 'arch', 'door', 'window', 'staircase', 'lighthouse',
-  'city skyline', 'tent', 'dome', 'wall with opening',
-  // Knowledge & light
-  'lightbulb', 'book', 'candle', 'beacon', 'telescope', 'microscope', 'lamp',
-  'torch', 'eye', 'magnifying glass', 'scroll',
-  // Community & democracy
-  'ballot box', 'scale of justice', 'podium', 'round table', 'raised fist',
-  'helping hand', 'open hand', 'megaphone', 'flag',
-  // Movement & progress
-  'arrow up', 'rocket', 'bicycle', 'sailboat', 'compass', 'footprints',
-  'ladder', 'ascending steps', 'wave', 'spiral',
-  // Abstract symbols
-  'question mark', 'exclamation mark', 'heart', 'star', 'infinity',
-  'plus sign', 'peace sign', 'yin yang', 'diamond',
-  // Everyday life
-  'cup of tea', 'campfire', 'piano keys', 'clock', 'key', 'umbrella',
-  'bread', 'chair', 'pen', 'hammer',
-  // Space & cosmos
-  'planet', 'crescent moon', 'constellation', 'galaxy', 'comet',
-  // Connection & networks
-  'web', 'chain links', 'puzzle piece', 'knot', 'crossroads',
+// Fallback words
+const FALLBACK_WORDS = [
+  'handshake', 'embrace', 'gathering', 'family', 'tree', 'flower', 'sunrise',
+  'house', 'bridge', 'lighthouse', 'lightbulb', 'book', 'telescope',
+  'ballot box', 'rocket', 'bicycle', 'compass', 'heart', 'star', 'spiral',
+  'campfire', 'planet', 'constellation', 'puzzle piece', 'garden',
 ]
 
-function getWordPool(): string[] {
-  if (!wordPool) {
-    wordPool = [...THEME_WORDS].sort(() => Math.random() - 0.5)
+let wordPool: string[] | null = null
+
+async function loadWords(): Promise<string[]> {
+  const sb = getSupabase()
+  const { data } = await sb.from('nowwhat_words').select('words').eq('id', 1).single()
+  if (data?.words && Array.isArray(data.words) && data.words.length > 0) {
+    return data.words
   }
-  if (wordPool.length === 0) {
-    wordPool = [...THEME_WORDS].sort(() => Math.random() - 0.5)
+  return FALLBACK_WORDS
+}
+
+async function getWordPool(): Promise<string[]> {
+  if (!wordPool || wordPool.length === 0) {
+    const words = await loadWords()
+    wordPool = [...words].sort(() => Math.random() - 0.5)
   }
   return wordPool
 }
 
-function pickConcept(): string {
-  const pool = getWordPool()
-  return pool.pop()!
-}
-
-interface Candidate {
-  id: string
-  concept: string
-  name: string
-  grid: number[][]
-  fillPercent: number
-  createdAt: string
-  approved?: boolean
-}
-
-interface CandidatePool {
-  candidates: Candidate[]
-  totalGenerated: number
-}
-
-async function readPool(): Promise<CandidatePool> {
-  try {
-    const data = await fs.readFile(CANDIDATES_PATH, 'utf-8')
-    return JSON.parse(data)
-  } catch {
-    return { candidates: [], totalGenerated: 0 }
+async function pickConcept(): Promise<string> {
+  const pool = await getWordPool()
+  if (pool.length === 0) {
+    const words = await loadWords()
+    wordPool = [...words].sort(() => Math.random() - 0.5)
+    return wordPool!.pop()!
   }
-}
-
-async function writePool(pool: CandidatePool) {
-  await fs.writeFile(CANDIDATES_PATH, JSON.stringify(pool, null, 2))
+  return pool.pop()!
 }
 
 function fillPercent(grid: number[][]): number {
@@ -92,8 +60,14 @@ function fillPercent(grid: number[][]): number {
 
 // GET — return all candidates
 export async function GET() {
-  const pool = await readPool()
-  return NextResponse.json(pool)
+  const sb = getSupabase()
+  const { data, error } = await sb
+    .from('nowwhat_candidates')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ candidates: [], totalGenerated: 0 })
+  return NextResponse.json({ candidates: data || [], totalGenerated: data?.length || 0 })
 }
 
 // POST — generate a new shape from the next concept
@@ -101,7 +75,7 @@ export async function POST() {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return NextResponse.json({ error: 'No API key' }, { status: 500 })
 
-  const concept = pickConcept()
+  const concept = await pickConcept()
 
   const system = `You are a pixel artist. You draw simple, iconic shapes on a grid that is ${COLS} columns wide and ${ROWS} rows tall. Each cell is either filled (1) or empty (0).
 
@@ -149,7 +123,6 @@ No explanation, just the JSON.`
     const parsed = JSON.parse(match[0])
     const grid = parsed.grid
 
-    // Validate
     if (!Array.isArray(grid) || grid.length !== ROWS) {
       return NextResponse.json({ error: 'Invalid grid dimensions', concept }, { status: 422 })
     }
@@ -164,23 +137,23 @@ No explanation, just the JSON.`
       return NextResponse.json({ error: `Fill ${fp}% out of range`, concept }, { status: 422 })
     }
 
-    const candidate: Candidate = {
+    const candidate = {
       id: `g2-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       concept,
       name: parsed.name || concept,
       grid,
-      fillPercent: fp,
-      createdAt: new Date().toISOString(),
+      fill_percent: fp,
+      created_at: new Date().toISOString(),
     }
 
-    // Don't save yet — only saved when alive2 reports a win via PUT
-    return NextResponse.json({ candidate, concept })
+    // Don't save yet — only saved when the page reports a win via PUT
+    return NextResponse.json({ candidate: { ...candidate, fillPercent: fp, createdAt: candidate.created_at }, concept })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message, concept }, { status: 500 })
   }
 }
 
-// PUT — save a shape that survived entropy (called by alive2 on win)
+// PUT — save a shape that survived entropy (called on win)
 export async function PUT(request: Request) {
   const body = await request.json()
   const { candidate } = body
@@ -188,13 +161,15 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Missing candidate data' }, { status: 400 })
   }
 
-  const pool = await readPool()
-  // Avoid duplicates
-  if (!pool.candidates.find(c => c.id === candidate.id)) {
-    pool.candidates.push(candidate)
-    pool.totalGenerated++
-    await writePool(pool)
-  }
+  const sb = getSupabase()
+  await sb.from('nowwhat_candidates').upsert({
+    id: candidate.id,
+    concept: candidate.concept,
+    name: candidate.name,
+    grid: candidate.grid,
+    fill_percent: candidate.fillPercent || candidate.fill_percent,
+    created_at: candidate.createdAt || candidate.created_at || new Date().toISOString(),
+  })
 
   return NextResponse.json({ ok: true })
 }
@@ -204,12 +179,14 @@ export async function PATCH(request: Request) {
   const body = await request.json()
   const { id, approved } = body
 
-  const pool = await readPool()
-  const candidate = pool.candidates.find(c => c.id === id)
-  if (!candidate) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const sb = getSupabase()
+  const { data, error } = await sb
+    .from('nowwhat_candidates')
+    .update({ approved })
+    .eq('id', id)
+    .select()
+    .single()
 
-  candidate.approved = approved
-  await writePool(pool)
-
-  return NextResponse.json({ ok: true, candidate })
+  if (error) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json({ ok: true, candidate: data })
 }

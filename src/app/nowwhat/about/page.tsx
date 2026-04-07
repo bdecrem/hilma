@@ -2,34 +2,14 @@ import fs from 'fs'
 import path from 'path'
 import Markdown from 'react-markdown'
 
-const LOCAL_PATH = path.join(process.cwd(), '..', 'docsrepo', 'wiki', 'nowwhat', 'overview.md')
-const GITHUB_URL = 'https://api.github.com/repos/bdecrem/docsrepo/contents/wiki/nowwhat/overview.md'
+const CONTENT_PATH = path.join(process.cwd(), 'src', 'app', 'nowwhat', 'about', 'content.md')
 
-async function getMarkdown(): Promise<string> {
-  // Local filesystem (dev)
-  try {
-    return fs.readFileSync(LOCAL_PATH, 'utf-8')
-  } catch {
-    // Fall through to GitHub
-  }
-
-  // GitHub API (production)
-  const token = process.env.GITHUB_TOKEN
-  if (!token) return '*Content unavailable*'
-
-  const res = await fetch(GITHUB_URL, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github.raw+json',
-    },
-    next: { revalidate: 60 },
-  })
-  if (!res.ok) return '*Content unavailable*'
-  return res.text()
+function getMarkdown(): string {
+  return fs.readFileSync(CONTENT_PATH, 'utf-8')
 }
 
-export default async function NowWhatAbout() {
-  const md = await getMarkdown()
+export default function NowWhatAbout() {
+  const md = getMarkdown()
 
   return (
     <div className="min-h-dvh bg-[#0a0a0a] text-neutral-300 overflow-x-hidden">
@@ -44,7 +24,26 @@ export default async function NowWhatAbout() {
 
       <div className="relative max-w-xl mx-auto px-6 py-20 sm:py-32">
         <article className="prose-nowwhat">
-          <Markdown>{md}</Markdown>
+          <Markdown components={{
+            h2: ({ children, ...props }) => {
+              const text = String(children).toLowerCase()
+              if (text.includes('about me')) {
+                return (
+                  <>
+                    <a
+                      href="/nowwhat/gen2"
+                      className="block my-8 px-4 py-3 rounded-lg border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 hover:bg-neutral-800/50 transition-all no-underline"
+                    >
+                      <span className="text-neutral-400 text-sm">How the homepage art works</span>
+                      <span className="text-neutral-600 text-xs block mt-0.5">AI-generated pixel shapes, curated by humans &rarr;</span>
+                    </a>
+                    <h2 {...props}>{children}</h2>
+                  </>
+                )
+              }
+              return <h2 {...props}>{children}</h2>
+            }
+          }}>{md}</Markdown>
         </article>
 
         {/* Footer */}
