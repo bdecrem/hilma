@@ -318,8 +318,8 @@ const ALL_SHAPES: Shape[] = [
   })},
 ]
 
-const ACHIEVABLE = ALL_SHAPES.filter(s => s.canWin)
-const IMPOSSIBLE = ALL_SHAPES.filter(s => !s.canWin)
+const BASE_ACHIEVABLE = ALL_SHAPES.filter(s => s.canWin)
+const BASE_IMPOSSIBLE = ALL_SHAPES.filter(s => !s.canWin)
 
 type Fill = 'solid' | 'checker' | 'stripe_h' | 'stripe_v' | 'dots'
 const FILLS: Fill[] = ['solid', 'checker', 'stripe_h', 'stripe_v', 'dots']
@@ -390,6 +390,43 @@ export default function NowWhatHome() {
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
+    // Dynamic shape pools — start with hardcoded, merge approved winners on load
+    const ACHIEVABLE = [...BASE_ACHIEVABLE]
+    const IMPOSSIBLE = [...BASE_IMPOSSIBLE]
+
+    // Load approved gen2 winners into ACHIEVABLE
+    fetch('/api/nowwhat/gen2')
+      .then(r => r.json())
+      .then(data => {
+        const approved = (data.candidates || []).filter((c: { approved?: boolean }) => c.approved === true)
+        for (const c of approved) {
+          if (c.grid && c.grid.length === ROWS && c.grid[0]?.length === COLS) {
+            ACHIEVABLE.push({ name: c.name, canWin: true, grid: c.grid })
+          }
+        }
+      })
+      .catch(() => {})
+
+    // Pre-fetch fresh Haiku shapes for the 25% experimental slots
+    let pendingFresh: Shape | null = null
+    let fetchingFresh = false
+
+    function prefetchFresh() {
+      if (fetchingFresh) return
+      fetchingFresh = true
+      fetch('/api/nowwhat/gen2', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.candidate?.grid) {
+            pendingFresh = { name: data.candidate.name, canWin: false, grid: data.candidate.grid }
+          }
+          fetchingFresh = false
+        })
+        .catch(() => { fetchingFresh = false })
+    }
+    // Start first pre-fetch
+    prefetchFresh()
 
     const SCALE = Math.max(2, Math.min(3, Math.floor(Math.min(window.innerWidth, window.innerHeight) / 200)))
     let W = 0, H = 0
@@ -503,12 +540,23 @@ export default function NowWhatHome() {
     }
 
     function planBox(now: number, delay: number): Box {
-      // Pick shape: ~30% chance of impossible shape
       let shape: Shape, willSucceed: boolean, isImpossible = false
-      if (Math.random() < 0.3 && IMPOSSIBLE.length > 0) {
+
+      // 25% chance: use a fresh Haiku-generated shape (always fails)
+      if (pendingFresh && Math.random() < 0.25) {
+        shape = pendingFresh
+        pendingFresh = null
+        willSucceed = false
+        isImpossible = true
+        prefetchFresh() // queue the next one
+      }
+      // ~22% chance (of remaining 75%): impossible shape from hardcoded pool
+      else if (Math.random() < 0.3 && IMPOSSIBLE.length > 0) {
         shape = IMPOSSIBLE[Math.floor(Math.random() * IMPOSSIBLE.length)]
         willSucceed = false; isImpossible = true
-      } else {
+      }
+      // ~52%: achievable shape (original 43 + approved winners)
+      else {
         let idx: number
         do { idx = Math.floor(Math.random() * ACHIEVABLE.length) } while (ACHIEVABLE.length > 1 && idx === lastIdx)
         lastIdx = idx; shape = ACHIEVABLE[idx]
@@ -886,42 +934,64 @@ export default function NowWhatHome() {
   }, [])
 
   return (
-    <div className="min-h-dvh bg-black overflow-hidden relative">
-      <canvas
-        ref={canvasRef}
-        className="fixed inset-0"
-        style={{ imageRendering: 'pixelated' }}
-      />
-      <div className="fixed inset-0 z-10 flex items-center justify-center pointer-events-none">
-        <div className="text-center" style={{ marginTop: '-14vh' }}>
-          <div
-            ref={titleRef}
-            className="font-light tracking-[0.14em] text-white"
-            style={{
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              fontSize: 'clamp(30px, 7.5vw, 62px)',
-              opacity: 0,
-            }}
-          >
-            Now what?
+    <div className="bg-black relative">
+      <div className="h-dvh overflow-hidden relative">
+        <canvas
+          ref={canvasRef}
+          className="fixed inset-0"
+          style={{ imageRendering: 'pixelated' }}
+        />
+        <div className="fixed inset-0 z-10 flex items-center justify-center pointer-events-none">
+          <div className="text-center" style={{ marginTop: '-14vh' }}>
+            <div
+              ref={titleRef}
+              className="font-light tracking-[0.14em] text-white"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 'clamp(30px, 7.5vw, 62px)',
+                opacity: 0,
+              }}
+            >
+              Now what?
+            </div>
+            <div
+              ref={subtitleRef}
+              className="font-light tracking-[0.08em]"
+              style={{
+                fontFamily: "'DM Sans', system-ui, sans-serif",
+                fontSize: 'clamp(9px, 2vw, 13px)',
+                color: 'rgba(255,255,255,0.3)',
+                marginTop: '1.4vh',
+                opacity: 0,
+              }}
+            >
+              a research project
+            </div>
           </div>
-          <div
-            ref={subtitleRef}
-            className="font-light tracking-[0.08em]"
+        </div>
+      </div>
+      {/* Hidden admin tile — just below the fold, right-aligned with strip */}
+      <div className="mx-auto" style={{ width: '94%', maxWidth: '100%', paddingTop: '40px', paddingBottom: '24px' }}>
+        <div className="flex justify-end">
+          <a
+            href="/nowwhat/gen2"
+            className="block rounded-[1px]"
             style={{
-              fontFamily: "'DM Sans', system-ui, sans-serif",
-              fontSize: 'clamp(9px, 2vw, 13px)',
-              color: 'rgba(255,255,255,0.3)',
-              marginTop: '1.4vh',
-              opacity: 0,
+              width: '18px',
+              height: '18px',
+              background: 'rgba(255,255,255,0.35)',
+              animation: 'tilePulse 3s ease-in-out infinite',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), inset 1px 0 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.28), inset -1px 0 0 rgba(0,0,0,0.28)',
             }}
-          >
-            a research project
-          </div>
+          />
         </div>
       </div>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');
+        @keyframes tilePulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.7; }
+        }
       `}</style>
     </div>
   )
