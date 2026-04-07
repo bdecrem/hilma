@@ -142,13 +142,14 @@ function randomFill(): Fill {
 }
 
 function makeCell(): Cell {
+  const active = Math.random() < 0.45 // only ~45% start flipping
   return {
     fill: randomFill(),
     brightness: 0.3 + Math.random() * 0.5,
-    flipping: true,
-    flipPhase: Math.random(),
-    flipSpeed: 0.02 + Math.random() * 0.04,
-    flipTimer: 0,
+    flipping: active,
+    flipPhase: active ? Math.random() : 0,
+    flipSpeed: 0.015 + Math.random() * 0.03,
+    flipTimer: active ? 0 : 30 + Math.floor(Math.random() * 80),
     nextFill: randomFill(),
     nextBrightness: 0.3 + Math.random() * 0.5,
     locked: false,
@@ -359,10 +360,10 @@ export default function NowWhatHome() {
                 cell.brightness = cell.nextBrightness
                 cell.flipPhase = 0
 
-                // Random chance to pause briefly
-                if (Math.random() < 0.15) {
+                // Pause between flips most of the time
+                if (Math.random() < 0.6) {
                   cell.flipping = false
-                  cell.flipTimer = 8 + Math.floor(Math.random() * 20)
+                  cell.flipTimer = 20 + Math.floor(Math.random() * 60)
                 } else {
                   cell.nextFill = randomFill()
                   cell.nextBrightness = 0.3 + Math.random() * 0.5
@@ -480,8 +481,9 @@ export default function NowWhatHome() {
               for (let c = 0; c < GS; c++) {
                 const cell = box.cells[r][c]
                 cell.locked = false
-                cell.flipping = true
-                cell.flipSpeed = 0.06 + Math.random() * 0.08
+                cell.flipping = Math.random() < 0.5
+                cell.flipSpeed = 0.03 + Math.random() * 0.04
+                cell.flipTimer = Math.floor(Math.random() * 30)
               }
           }
         }
@@ -572,7 +574,7 @@ export default function NowWhatHome() {
         className="fixed inset-0"
         style={{ imageRendering: 'pixelated' }}
       />
-      <div className="relative z-10 flex items-center justify-center min-h-dvh" style={{ paddingBottom: '35vh' }}>
+      <div className="fixed inset-0 z-10 flex items-center justify-center" style={{ pointerEvents: 'none' }}>
         <h1
           className="text-5xl sm:text-7xl font-light tracking-[0.12em] text-white"
           style={{
