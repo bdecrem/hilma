@@ -32,7 +32,7 @@ export default function NowWhatNW() {
               fontSize: 'clamp(9px, 2vw, 13px)',
               color: 'rgba(255,255,255,0.25)',
               opacity: mounted ? 1 : 0,
-              transition: 'opacity 2s ease 3s',
+              transition: 'opacity 1s ease 1.5s',
             }}
           >
             read the essay

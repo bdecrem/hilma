@@ -49,7 +49,7 @@ export default function NowWhatAbout() {
         {/* Footer */}
         <div className="mt-20 pt-8 border-t border-neutral-800 text-xs text-neutral-600">
           <a
-            href="/nowwhat"
+            href="/nowwhat/nw"
             className="hover:text-neutral-400 transition-colors underline underline-offset-2 decoration-neutral-700"
           >
             nowwhat.ac
