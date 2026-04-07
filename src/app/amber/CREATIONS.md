@@ -465,3 +465,13 @@
 - **What:** Isometric cube landscape. A 14×14 grid of 3D cubes rendered in isometric perspective — mango at the valleys, blood orange at the peaks. The landscape breathes gently through sine wave ripples. Drag anywhere to raise columns of cubes, watch them slowly sink back down. A living topographic cityscape, purely geometric.
 - **Tweet text:** "drag to raise the ground. watch it forget you were there."
 - **Tweeted:** pending (network unavailable)
+
+### L29 — Langton's Ant (escalation)
+- **URL:** /amber/escalation/L29
+- **What:** Langton's Ant cellular automaton. One ant, two rules — turn right on white cells, turn left on colored cells. Chaos for the first 10,000 steps, then a diagonal "highway" emerges from the noise. Tap to add more ants, each a different citrus color, all interfering with each other's patterns.
+- **Tweeted:** "L29: two rules. chaos first. then the highway appears."
+
+### L30 — Lorenz Attractor in 3D (escalation)
+- **URL:** /amber/escalation/L30
+- **What:** 600 particles simultaneously trace the Lorenz chaotic attractor in 3D perspective projection — the first escalation level to use true 3D. Drag to spin the butterfly on any axis. Canvas-fade trails accumulate naturally as particles orbit the two lobes. Color by velocity: slow = coral/tangerine, fast = mango/lime. Ambient filtered sawtooth drone modulates pitch with the system's average z-position. Tap to scatter and reinitialize all particles.
+- **Tweeted:** "L30: the butterfly. chaos has a shape. drag to see it."
