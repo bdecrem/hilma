@@ -457,3 +457,11 @@
 - **URL:** /amber/escalation/L28
 - **What:** DLA crystal growth. Particles wander randomly until they touch the growing crystal, then freeze. Chaos becomes coral, one step at a time. 280 simultaneous walkers on a mango/tangerine gradient background. Crystal colors from deep leaf green at the seed to lime to cream at the branching tips. Tap anywhere to add new seeds and accelerate growth. Soft chime sounds on each freeze event. The screen fills slowly with fractal branching structure.
 - **Tweeted:** "L28: every branch, chosen by accident."
+
+## 2026-04-07
+
+### grid (generative art)
+- **URL:** /amber/grid
+- **What:** Isometric cube landscape. A 14×14 grid of 3D cubes rendered in isometric perspective — mango at the valleys, blood orange at the peaks. The landscape breathes gently through sine wave ripples. Drag anywhere to raise columns of cubes, watch them slowly sink back down. A living topographic cityscape, purely geometric.
+- **Tweet text:** "drag to raise the ground. watch it forget you were there."
+- **Tweeted:** pending
