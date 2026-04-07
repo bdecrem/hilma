@@ -542,12 +542,12 @@ export default function NowWhatHome() {
     function planBox(now: number, delay: number): Box {
       let shape: Shape, willSucceed: boolean, isImpossible = false
 
-      // 25% chance: use a fresh Haiku-generated shape (always fails)
+      // 25% chance: use a fresh Haiku-generated shape (same win rate as others)
       if (pendingFresh && Math.random() < 0.25) {
         shape = pendingFresh
         pendingFresh = null
-        willSucceed = false
-        isImpossible = true
+        willSucceed = nextWillSucceed()
+        isImpossible = false
         prefetchFresh() // queue the next one
       }
       // ~22% chance (of remaining 75%): impossible shape from hardcoded pool
