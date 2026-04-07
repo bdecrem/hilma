@@ -38,6 +38,27 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.first100.dev' }],
           destination: '/first100',
         },
+        // nowwhat.ac and nowwhat.wtf root → /nowwhat
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'nowwhat.ac' }],
+          destination: '/nowwhat',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.nowwhat.ac' }],
+          destination: '/nowwhat',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'nowwhat.wtf' }],
+          destination: '/nowwhat',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.nowwhat.wtf' }],
+          destination: '/nowwhat',
+        },
       ],
       afterFiles: [
         // intheamber.com/anything → /amber/anything (only if no file matched above)

@@ -154,6 +154,7 @@ Python agents (Claude Agent SDK) for autonomous research: arxiv papers, medical 
 - **Shared services**: Same Supabase/Redis instances can be used if needed (credentials in vibeceo8/.env)
 - **Don't modify vibeceo8 from hilma** — it has its own deploy pipeline
 
-## Polsia Dashboard
+## Sister repo: docsrepo (`../docsrepo/`)
 
-When asked to "check polsia" or "check the polsia dashboard", navigate to https://polsia.com/dashboard/userscout using Chrome browser tools and read/summarize what's on the dashboard.
+Our knowledge base. Reference for documentation, notes, and institutional knowledge.
+
