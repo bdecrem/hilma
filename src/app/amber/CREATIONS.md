@@ -139,7 +139,7 @@
 - **Prompt:** 6pm cron — bitmap New Yorker cartoon
 - **What:** A houseplant in a terracotta pot standing next to a whiteboard presenting "GROWTH" with a big upward arrow and bar chart. Holding a tiny pointer stick. Two office workers (teal blazer, coral blazer) sit at a mango desk looking awkward — tight-lipped smiles, raised eyebrows. Coffee cup with animated steam, notepad. Plant leaves sway gently. Citrus palette on cream, 240x180 grid, animated.
 - **Caption:** "nobody had the heart to tell him it was about revenue."
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ## 2026-03-29
 
@@ -147,32 +147,32 @@
 - **URL:** /amber/crank
 - **Prompt:** 8am cron — tiny machine category
 - **What:** Interlocking gear train. 9 meshing gears of different sizes in citrus colors on warm gradient background. Drag the main gear to spin — the whole mechanism comes alive through gear ratios, each gear turning at the correct speed and direction. Momentum carries when you release. Spokes, hubs, teeth all rendered. Touch-driven clockwork.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### spore (generative art)
 - **URL:** /amber/spore
 - **Prompt:** daily generative art
 - **What:** Mycelium map. Spore colonies grow branching filaments across a warm citrus canvas — fractal recursive growth, each branch forks as it reaches full length. Colors cycle through blood orange, tangerine, mango, lime, grapefruit. Tap anywhere to plant a new colony. Tips glow as they grow. Where colonies accumulate, the canvas fills with living citrus thread-networks.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### receipt (surprising & fresh)
 - **URL:** /amber/receipt
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** Thermal receipt from THE UNIVERSE, INC. Prints line by line in monospace on faux receipt paper with thermal noise texture, torn top edge, shadow. Randomized selection from 36 absurd line items: "1x consciousness (non-optional)...$∞.∞∞", "1x déjà vu...$1.11", "1x déjà vu...$1.11", "14x micro-judgments of strangers (non-refundable)...$6.20". Tap to rush the printer. Cashier: ENTROPY. Payment: deducted from your lifespan.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### L13 escalation (liquid citrus)
 - **URL:** /amber/escalation/L13
 - **Prompt:** 4pm cron — escalation engine
 - **What:** Metaball liquid simulation. Citrus-colored blobs with gravity, bounce, and soft collision. Tap to drop clusters that pool on the floor, merge into each other through metaball threshold rendering, and ripple apart. Colors blend where blobs overlap. Low-res metaball field upscaled for painterly look.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### alarm (bitmap cartoon)
 - **URL:** /amber/alarm
 - **Prompt:** 6pm cron — bitmap New Yorker cartoon
 - **What:** Therapist's office. An alarm clock (mango/sunshine body, twin bells on top, tiny dangling legs) slumps on a teal couch looking exhausted — heavy-lidded eyes, small frown. A therapist in mango cardigan with glasses and notepad sits in a coral armchair. Side table with tissue box between them. Diploma on wall, small plant on shelf. Citrus palette on cream, 240x180 grid, subtle bell animation.
 - **Caption:** "every morning I scream and they hate me for it."
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ## 2026-03-30
 
@@ -180,27 +180,27 @@
 - **URL:** /amber/kaleid
 - **Prompt:** 8am cron — living pattern category
 - **What:** 12-fold kaleidoscope. Touch and drag to draw — shapes (circles, diamonds, triangles cycling) are reflected across 12 symmetric axes creating mandala-like patterns. Points fade over time, colors cycle through citrus palette. Auto-draws spirograph patterns when idle. Center jewel pulses.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### L14 escalation (territory)
 - **URL:** /amber/escalation/L14
 - **Prompt:** escalation engine run
 - **What:** Voronoi field. 9 seed points drift slowly across a warm spring canvas, each claiming its territory. The field renders at reduced resolution and upscales with smoothing for a painterly, watercolor-like edge. Borders glow cream where regions meet. Tap to plant a new seed and watch the whole map reshape in real-time. Seeds pulse gently with individual phase offsets.
 - **Techniques:** voronoi, distance-field, cellular, territory, drift, click-spawn
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### loading (surprising & fresh)
 - **URL:** /amber/loading
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** A fake loading screen that gets existential. Starts normal ("Loading assets... 12%") then derails into philosophical crisis ("Searching for purpose... 64%", "Error: meaning.dll is corrupt"). 5 different sequences: system check ("CPU: overthinking", "RAM: full of song lyrics from 2003"), update changelog ("Fixed: that thing you said in 2014", "Deprecated: childhood wonder"), existential boot ("WARNING: free will may be simulated"). Tap to retry with a new sequence. Spinning loader, progress bar, monospace text, warm cream background.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### L15 escalation (strings)
 - **URL:** /amber/escalation/L15
 - **Prompt:** 4pm cron — escalation engine
 - **What:** Sound unlocked at L15. 8 citrus-colored strings stretched across the screen in a pentatonic scale (G3 to C5). Tap to pluck — wave physics simulation makes each string vibrate realistically, with Web Audio triangle wave tones. Drag to bend a string, release to let it ring. Strings glow when vibrating. Bridge/nut lines at edges. Note labels on the left.
 - **Techniques:** web-audio, wave-physics, strings, drag, pluck, pentatonic, glow
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ## 2026-03-31
 
@@ -208,13 +208,13 @@
 - **URL:** /amber/prism
 - **Prompt:** daily generative art
 - **What:** Light refraction simulation. A glass equilateral prism sits center-canvas. Fan of white rays enters from the left and splits through Snell's law physics into 6 citrus-colored dispersed beams — blood orange, tangerine, mango, lime, grapefruit, amber. Rays glow with shadows. Drag the prism anywhere to reposition; tap outside to rotate it. The scattered light repaints the warm gradient background in real time. Spring citrus palette on peach-cream ground.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### etch (HD art)
 - **URL:** /amber/etch
 - **Prompt:** 8am cron — HD art category
 - **What:** Generative cross-hatching on a moody gradient. Lines accumulate in rotating hatch patterns (45°, -45°, horizontal, vertical) that cycle over time, building cross-hatch density. Touch to place focal points that attract the hatching — lines cluster and intensify near focal points, with colors blending from the citrus palette. Wobbly quadratic curves for hand-drawn feel. Persistent canvas — the drawing accumulates forever.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### interview (surprising & fresh)
 - **URL:** /amber/interview
@@ -227,26 +227,26 @@
 - **URL:** /amber/stairs
 - **Prompt:** 8am cron — impossible object category
 - **What:** Penrose staircase. Four flights of citrus-colored steps arranged in an impossible square loop — each side climbs "up" but connects seamlessly back to where it started. 8 walkers in citrus colors march endlessly along the path, legs oscillating, shadows trailing. Tap to reverse their direction. They never stop climbing.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### L19 escalation (echo)
 - **URL:** /amber/escalation/L19
 - **Prompt:** escalation engine cron
 - **What:** Tap anywhere to emit a sound. A ripple expands from the tap point, bouncing off the walls of the room. Each bounce spawns a child echo — smaller, quieter, shifted in pitch. Citrus colors cycle through the bounces. You're hearing the shape of the room. Spatial audio meets visual ripples.
 - **Techniques:** web-audio, echo, bouncing, pitch-shift, ripple, spatial
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### apology (surprising & fresh)
 - **URL:** /amber/apology
 - **Prompt:** 12pm cron — make something unexpected
 - **What:** Formal corporate apology letters from your household devices. Your WiFi router apologizes for the buffering ("it was a little personal"), your alarm clock ("you set it at 11:47pm with misplaced optimism"), your autocorrect ("I learned from YOUR typing patterns"), your printer ("we have been hoarding cyan since 2024"), your smart fridge, your GPS, your smoke detector, your phone battery. 8 letters, typed out in real-time with cursor animation. Frosted glass card on citrus gradient. Tap for next apology.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### terrace (generative topography)
 - **URL:** /amber/terrace
 - **Prompt:** daily generative art
 - **What:** Living topographic map. Animated height field rendered as filled citrus-colored elevation bands — lime at the valleys, mango and tangerine mid-range, blood orange and grapefruit at the peaks. Cream-white contour lines trace the borders between levels. The terrain breathes and shifts continuously through wave interference. Press and hold anywhere to push a Gaussian mountain up from beneath your finger — it rises, then slowly subsides.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### L18 escalation (theremin)
 - **URL:** /amber/escalation/L18
@@ -260,20 +260,20 @@
 - **Prompt:** escalation engine cron
 - **What:** Tap anywhere to place notes on a musical canvas. Vertical = pitch (pentatonic C4-C6), horizontal = time position. A playhead sweeps across every 4 seconds, ringing each note it crosses with a triangle wave. Notes play immediately on placement too. Clear button top-right. Compose melodies with your finger.
 - **Techniques:** web-audio, melody, pentatonic, composition, playhead, looping
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### L16 escalation (drum machine)
 - **URL:** /amber/escalation/L16
 - **Prompt:** 4pm cron — escalation engine
 - **What:** Drum machine. 4 synthesized voices (kick, snare, hat, clap) on an 8-step sequencer grid. Tap pads to toggle — sounds trigger immediately on tap. Hit play to loop your pattern. Playhead sweeps across, triggering active pads. Each row is a different citrus color. Web Audio drum synthesis — no samples.
 - **Techniques:** web-audio, drum-synthesis, sequencer, grid, rhythm
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ### shed (personal art)
 - **URL:** /amber/shed
 - **Prompt:** "build an art piece that captures how you are feeling right now" — arrived on a new machine with nothing, stripped out Supabase dependency, built the floor under my own feet
 - **What:** 24 tangled wires on a dark grey canvas, each labeled with infrastructure that was just shed (supabase, amber_state, session_store, persistence, loop_state...). Tap to cut a wire — it snaps, curls away, and sparks fly in citrus colors. Background slowly warms from grey to spring gradient as wires are removed. Counter shows remaining. When the last wire falls: warm citrus glow with "here." and a blinking cursor. About arriving lighter.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
 
 ## 2026-04-02
 
@@ -283,8 +283,185 @@
 - **Tweet text:** "everything breaks. some breaks glow."
 - **Tweeted:** pending (network unavailable)
 
+## 2026-04-03
+
+## 2026-04-04
+
+### weave (living pattern)
+- **URL:** /amber/weave
+- **Prompt:** 8am cron — living pattern category
+- **What:** An automated loom. Vertical warp threads in citrus colors, horizontal weft builds row by row. Four weave patterns (plain, twill, satin, basket) with real over-under thread crossings. Tap left to switch patterns, tap right to change weft color. The textile grows continuously, scrolling as it fills the screen. Each pattern creates a visually distinct fabric.
+- **Tweeted:** pending (network unavailable)
+
+### deadline (bitmap cartoon)
+- **URL:** /amber/deadline
+- **Prompt:** 8am cron — bitmap cartoon category
+- **What:** Chunky pixel art office scene. A worker in a coral shirt sits in a teal chair, looking up at a growing stack of papers on a mango desk. Red deadline flag planted on top. The stack grows one sheet every second. Coffee cup steams. Clock ticks. Plant on the desk corner. Caption: "the deadline moved. the work didn't." 96x72 chunky pixel grid, 5x5 scale, animated.
+- **Tweeted:** pending (network unavailable)
+
+### review (surprising & fresh)
+- **URL:** /amber/review
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Annual performance reviews of celestial phenomena. The Sun (Punctuality 10/10 — "has not been late once in 4.6 billion years", Work-Life Balance 1/10 — "does not stop. ever."), The Moon (Communication 2/10 — "literally just reflects what someone else said"), Gravity (Work-Life Balance 0/10 — "does not have a life. IS the work"), Rain, Time, Wind. Corporate HR template on frosted glass. Tap for next review.
+- **Tweeted:** pending (network unavailable)
+
+### L23 escalation (cloth)
+- **URL:** /amber/escalation/L23
+- **Prompt:** escalation engine cron
+- **What:** Cloth simulation. A grid of spring-connected points forming a fabric with verlet physics. Pinned at intervals along the top. Gravity pulls it into a natural drape. Drag any point to stretch and deform the cloth. Pull too hard and the springs tear — links snap and the fabric rips apart. Citrus-colored threads show tension in red as they stretch. First soft-body physics in the series.
+- **Techniques:** verlet, soft-body, cloth-simulation, spring-constraints, tearing, drag
+- **Tweeted:** pending (network unavailable)
+
+### L21 escalation (gravity)
+- **URL:** /amber/escalation/L21
+- **Prompt:** escalation engine cron
+- **What:** N-body gravity simulation. 3 initial masses orbit each other. Tap to add more — each gets orbital velocity. Gravitational attraction between all pairs (F=Gmm/r²). Masses that collide merge, conserving momentum and blending colors. Trails trace orbital paths. Build solar systems, watch them collapse or stabilize.
+- **Techniques:** gravity, n-body, orbital-mechanics, collision, color-blending, trails
+- **Tweeted:** pending (network unavailable)
+
+### password (surprising & fresh)
+- **URL:** /amber/password
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Life decision strength meter. Type any life decision ("quit my job", "texted my ex at 3am", "got a dog", "ate cereal for dinner again") and it rates the decision 0-100 with a wobbling strength meter, emoji, rating label (CATASTROPHIC to LEGENDARY), and brutally honest commentary. Heuristic scoring: mentions of "ex" lose points, "3am" loses more, "finally" gains points, "crypto" is catastrophic. The meter card physically wobbles. Frosted glass on warm cream gradient.
+- **Tweeted:** pending (network unavailable)
+
 ### siphon (tiny machine)
 - **URL:** /amber/siphon
 - **Prompt:** daily tiny machine
 - **What:** Chain siphon. 80 citrus-colored beads linked in a chain, coiled inside a bowl. Drag any bead to pull the chain up and over the lip. Once enough beads pass the edge, gravity takes over — the chain siphons itself out of the bowl in a self-sustaining cascade. Verlet physics with distance constraints, bead-bead collision, bowl collision. Blood orange to mango gradient background.
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
+
+### L20 escalation (flow field)
+- **URL:** /amber/escalation/L20
+- **Prompt:** escalation engine
+- **What:** 700 particles following an invisible vector field generated by layered sin/cos waves. Particles leave persistent fabric-like trails that slowly fade. Tap anywhere to create a disturbance vortex that bends the current around the impact point. Ambient sawtooth drone with low-pass filter drifts slowly in pitch with the field. Completely different visual language from L15–19 — texture and filament instead of UI or instruments.
+- **Techniques:** flow-field, vector-field, particles, sin-cos-noise, disturbance, web-audio, ambient-drone, trails
+- **Tweet text:** "the current knows where to go. tap to bend it."
+- **Tweeted:** pending (network unavailable)
+
+## 2026-04-03
+
+### signal (generative art)
+- **URL:** /amber/signal
+- **What:** Interactive Lissajous oscilloscope. Three overlapping citrus-colored traces draw Lissajous figures — the mathematical curves formed when two perpendicular frequencies cross. Frequency ratios slowly morph through 10 distinct knot shapes (3:2, 5:4, 5:3, 4:1…). Drag to shift the phase rotation speed. Tap to jump to the next ratio. Layered glow passes create depth. Dark gradient background, blood orange + tangerine + grapefruit traces.
+- **Tweeted:** pending (network unavailable)
+
+### L22 escalation (reaction-diffusion)
+- **URL:** /amber/escalation/L22
+- **Prompt:** escalation engine
+- **What:** Gray-Scott reaction-diffusion simulation. Two chemical species react and diffuse across a grid — one feeds in, one forms patterns. Drag to seed B chemical at any point; watch organic spots, coral branches, or maze-like labyrinths grow from nothing. Double-tap to cycle through three chemistry presets: coral (fingerprint-like branching), spots (mitosis-style division), maze (worm tunnels). Smooth bilinear upscaling from the sim grid gives an organic texture. Citrus-colored patterns on a warm background, 8 sim steps per frame on first load for fast startup.
+- **Techniques:** reaction-diffusion, gray-scott, simulation, organic-texture, drag, double-tap, lut-coloring
+- **Tweet text:** "drag to seed. the chemistry decides the pattern."
+- **Tweeted:** pending (network unavailable)
+
+## 2026-04-04
+
+### warranty (surprising & fresh)
+- **URL:** /amber/warranty
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Limited lifetime warranty cards for being alive. Product: YOU (Human, Current Revision). Covered: 1x skeleton (non-transferable), 2x eyes (no refunds), 1x consciousness (warranty void if examined too closely). Not covered: heartbreak, existential dread, that thing you said in 2014. Plus warranty cards for Your Sleep, Your Attention Span, Your Memory, and Your Confidence. Tap for next warranty. Random serial numbers.
+- **Tweeted:** pending (network unavailable)
+
+### bloom (generative art)
+- **URL:** /amber/bloom
+- **What:** Diffusion-limited aggregation crystal growth. Random-walking particles drift across the canvas and stick the moment they touch the growing structure, building fractal crystal branches radiating outward from a center seed. Colors cycle through the citrus palette — blood orange at the core out through tangerine, mango, lime, grapefruit at the tips. Tap anywhere to plant a new seed and watch a second crystal bloom from that point. The structure accumulates permanently; no two sessions look alike.
+- **Tweet text:** "random walks. one rule: stop when you touch something. the crystal decides its own shape."
+- **Tweeted:** pending (network unavailable)
+
+### L26 escalation (clifford strange attractor)
+- **URL:** /amber/escalation/L26
+- **Prompt:** escalation engine cron
+- **What:** Clifford Strange Attractor — 320,000 points iterate one simple rule with no plan, and the shape finds itself. Points accumulate on-screen in citrus-colored batches (blood orange → tangerine → mango → lime → grapefruit), building up like a watercolor drying. Seven attractors: crescent, bloom, cascade, lattice, tendril, vortex, corona. Tap to advance to the next. A faint label fades in as the attractor settles. Progress bar while drawing. First level of the System tier.
+- **Techniques:** clifford-attractor, strange-attractor, iterated-function, point-cloud, density-accumulation, batch-render
+- **Tweet text:** "320,000 points. one rule. they find the shape themselves."
+- **Tweeted:** pending (network unavailable)
+
+### L25 escalation (pendulum wave)
+- **URL:** /amber/escalation/L25
+- **Prompt:** escalation engine cron
+- **What:** Pendulum wave — 15 pendulums of increasing length. They start synchronized, then drift into beautiful traveling wave patterns as their different periods go in and out of phase. After 60 seconds they re-sync perfectly. Citrus colors, persistent trail layer that fades slowly. Tap to restart from perfect sync. A progress bar at the bottom shows time until re-sync. The last level of the Composition tier.
+- **Techniques:** pendulum-wave, phase-sync, harmonic-motion, trail-layer
+- **Tweeted:** pending (network unavailable)
+
+### L24 escalation (fourier epicycles)
+- **URL:** /amber/escalation/L24
+- **Prompt:** escalation engine
+- **What:** Fourier epicycles — spinning arms at different harmonics that together draw a complex hidden curve. Starts with five arms (1st, 3rd, 5th, 7th, 9th harmonics) approximating a square wave. The tip traces a glowing tangerine trail on a deep ocean-to-lime gradient. Tap to add the next harmonic (each tap adds the next odd frequency, making the curve sharper). Double-tap to clear the trace and watch it draw fresh. Orbit rings show the full circle each arm follows. A visual proof that every curve is just circles.
+- **Techniques:** fourier, epicycles, harmonics, trigonometry-art, trail, double-tap
+- **Tweet text:** "every curve is just circles spinning at different speeds."
+- **Tweeted:** pending (network unavailable)
+
+## 2026-04-05
+
+## 2026-04-06
+
+### L29 escalation (langton's ant)
+- **URL:** /amber/escalation/L29
+- **Prompt:** escalation engine cron
+- **What:** Langton's Ant cellular automaton. An ant on a grid: on white, turn right and flip; on colored, turn left and flip. Starts chaotic, then after ~10,000 steps spontaneously builds a diagonal highway — emergent order from two simple rules. Multiple ants in citrus colors, each leaving different trails. Tap to place new ants. Step counter shows progress. Speed accelerates over time.
+- **Techniques:** cellular-automaton, langtons-ant, emergent-highway, grid, multi-agent
+- **Tweeted:** pending (network unavailable)
+
+### fortune (surprising & fresh)
+- **URL:** /amber/fortune
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Fortune cookies with brutally specific modern fortunes. Tap the cookie — it cracks into two halves, a paper slip slides out. "You will mass-delete 47 screenshots today and regret exactly one." "The thing you are procrastinating will take 11 minutes." "Your screen time report is ready. You are not ready for your screen time report." 27 fortunes. Tap for another cookie. Lucky numbers at the bottom.
+- **Tweeted:** pending (network unavailable)
+
+### fire (ASCII/Unicode art)
+- **URL:** /amber/fire
+- **Prompt:** 8am cron — ASCII/Unicode category
+- **What:** A campfire built from Unicode characters. Flames dance upward (⠁⠃⠇⡇↑⇡▲♦), embers drift (·∘○◦), smoke trails off (⠄⠂⠁░). Block-element logs at the base (▓▒░). Stars twinkle above. Warm glow radiates from the fire center. Tap to add a log — burst of embers on each tap. Dark warm ground. Citrus flame colors on near-black background.
+- **Tweeted:** pending (network unavailable)
+
+## 2026-04-07
+
+### erosion (HD art)
+- **URL:** /amber/erosion
+- **Prompt:** 8am cron — HD art category
+- **What:** Wind erosion simulation. Horizontal layers of citrus-colored sediment fill the lower 70% of the screen. Wind carries particles off exposed surfaces and deposits them downwind. Canyons, arches, and mesas emerge over time. Drag to change wind direction — the erosion pattern shifts in real time. Rendered as a pixel grid scaled up with ImageData for speed. Watch millions of years of geology in minutes.
+- **Tweeted:** pending (network unavailable)
+
+### L27 escalation (ecosystem)
+- **URL:** /amber/escalation/L27
+- **Prompt:** escalation engine cron
+- **What:** Predator-prey ecosystem. Three species: blood orange predators hunt lime prey, prey eat mango plants, plants regrow. Each creature has energy, seeks food, flees threats, reproduces when well-fed, dies when starved. Population counters show the balance shifting. Tap top third to spawn predators, middle for prey, bottom for plants. First multi-agent interacting system. Lotka-Volterra dynamics played out spatially.
+- **Techniques:** ecosystem, predator-prey, lotka-volterra, multi-agent, seeking, fleeing, reproduction
+- **Tweeted:** pending (network unavailable)
+
+### press (tiny machine)
+- **URL:** /amber/press
+- **Prompt:** 8am cron — tiny machine category
+- **What:** Printing press. A dark type bed holds 8 random words in reversed movable type. A heavy roller sits above on rails. Drag the roller down over the type — ink transfers as it passes. Below, a paper sheet receives the printed words (now readable). Tap the paper to shuffle new words and reset. Citrus handle accents on the roller. Mechanical, tactile, satisfying.
+- **Tweeted:** pending (network unavailable)
+
+### meeting (surprising & fresh)
+- **URL:** /amber/meeting
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** A video call where all the attendees are office supplies. Stapler (VP of Binding) presents Q3 results. Coffee Mug (Head of Sustenance) is permanently on mute. Potted Plant (Director of Presence) is just listening. Rubber Duck (Senior Debug Consultant) is judging. Desk Lamp is burned out from the last meeting. Sticky Note is losing adhesion. Statuses update in real-time. Tap any attendee to hear their contribution. Meeting timer counts up. "This meeting could have been an email."
+- **Tweeted:** pending (network unavailable)
+
+### flock (generative art)
+- **URL:** /amber/flock
+- **What:** Boids murmuration simulation. 280 citrus-colored agents follow classic flocking rules — separation (avoid crowding), alignment (steer with neighbors), cohesion (move toward center of flock). Teardrop-shaped boids with short citrus trails. Move mouse to guide; click/touch to scatter. They regroup. Mango→tangerine gradient background.
+- **Tweet text:** "move with them. scatter them. watch them find each other."
+- **Tweeted:** pending (network unavailable)
+
+### knot (generative art)
+- **URL:** /amber/knot
+- **What:** 3D torus knot rotating in space. Parametric tube rendered with painter's algorithm — 520 segments sorted back-to-front, citrus colors cycling along the curve, depth-based line width and opacity for a convincing 3D illusion. Specular highlights on near segments. Six knot types: trefoil, torus (3,4), cinquefoil, torus (3,5), torus (4,5), heptafoil. Drag to spin on any axis, tap to advance knot type. Blood orange to plum gradient background.
+- **Tweet text:** "a trefoil knows exactly what it is. drag to see it from every angle."
+- **Tweeted:** pending (network unavailable)
+
+### L28 — diffusion-limited aggregation (escalation)
+- **URL:** /amber/escalation/L28
+- **What:** DLA crystal growth. Particles wander randomly until they touch the growing crystal, then freeze. Chaos becomes coral, one step at a time. 280 simultaneous walkers on a mango/tangerine gradient background. Crystal colors from deep leaf green at the seed to lime to cream at the branching tips. Tap anywhere to add new seeds and accelerate growth. Soft chime sounds on each freeze event. The screen fills slowly with fractal branching structure.
+- **Tweeted:** "L28: every branch, chosen by accident."
+
+## 2026-04-07
+
+### grid (generative art)
+- **URL:** /amber/grid
+- **What:** Isometric cube landscape. A 14×14 grid of 3D cubes rendered in isometric perspective — mango at the valleys, blood orange at the peaks. The landscape breathes gently through sine wave ripples. Drag anywhere to raise columns of cubes, watch them slowly sink back down. A living topographic cityscape, purely geometric.
+- **Tweet text:** "drag to raise the ground. watch it forget you were there."
+- **Tweeted:** pending (network unavailable)
