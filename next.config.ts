@@ -83,6 +83,27 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.first100.dev' }],
           destination: '/first100/:path+',
         },
+        // nowwhat.ac/anything → /nowwhat/anything
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'nowwhat.ac' }],
+          destination: '/nowwhat/:path+',
+        },
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'www.nowwhat.ac' }],
+          destination: '/nowwhat/:path+',
+        },
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'nowwhat.wtf' }],
+          destination: '/nowwhat/:path+',
+        },
+        {
+          source: '/:path+',
+          has: [{ type: 'host', value: 'www.nowwhat.wtf' }],
+          destination: '/nowwhat/:path+',
+        },
       ],
       fallback: [],
     }
