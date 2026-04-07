@@ -59,13 +59,19 @@ export default async function NowWhatAbout() {
       </div>
 
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');
+        .prose-nowwhat {
+          font-family: 'DM Sans', system-ui, sans-serif;
+          font-weight: 400;
+        }
         .prose-nowwhat h1,
         .prose-nowwhat h2,
         .prose-nowwhat h3 {
           color: #fff;
-          font-weight: 600;
-          letter-spacing: -0.02em;
+          font-weight: 300;
+          letter-spacing: -0.01em;
         }
+        .prose-nowwhat h1 { font-size: 2.25rem; margin-bottom: 1.5rem; }
         .prose-nowwhat h2 { font-size: 1.5rem; margin-top: 2.5rem; margin-bottom: 1rem; }
         .prose-nowwhat h3 { font-size: 1.25rem; margin-top: 2rem; margin-bottom: 0.75rem; }
         .prose-nowwhat p {
@@ -83,6 +89,17 @@ export default async function NowWhatAbout() {
           transition: color 0.2s;
         }
         .prose-nowwhat a:hover { color: #fff; }
+        .prose-nowwhat ul {
+          list-style: disc;
+          padding-left: 1.5rem;
+          margin-top: -1rem;
+          margin-bottom: 1.5rem;
+        }
+        .prose-nowwhat li {
+          line-height: 1.75;
+          font-size: 1.0625rem;
+          margin-bottom: 0.5rem;
+        }
       `}</style>
     </div>
   )
