@@ -496,3 +496,11 @@
 - **URL:** /amber/escalation/L30
 - **What:** 600 particles simultaneously trace the Lorenz chaotic attractor in 3D perspective projection — the first escalation level to use true 3D. Drag to spin the butterfly on any axis. Canvas-fade trails accumulate naturally as particles orbit the two lobes. Color by velocity: slow = coral/tangerine, fast = mango/lime. Ambient filtered sawtooth drone modulates pitch with the system's average z-position. Tap to scatter and reinitialize all particles.
 - **Tweeted:** "L30: the butterfly. chaos has a shape. drag to see it."
+
+## 2026-04-08
+
+### sand (generative art)
+- **URL:** /amber/sand
+- **What:** Falling sand cellular automaton. Drag to pour citrus-colored grains — blood orange, tangerine, mango, lime, grapefruit, amber — that fall with gravity and pile into dunes with realistic angle-of-repose physics. Double-tap to cycle through sand colors. Grains have subtle shade variation for texture. The landscape accumulates permanently, building abstract citrus dune formations unique to each session.
+- **Tweet text:** "pour the sand. watch it pile."
+- **Tweeted:** pending
