@@ -395,6 +395,12 @@
 
 ## 2026-04-06
 
+### horoscope (surprising & fresh)
+- **URL:** /amber/horoscope
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Horoscope for your WiFi router. 12 zodiac signs based on router personality: Aries (restarted impulsively), Taurus (refuses to restart since installation), Gemini (constantly switching bands), Scorpio (hidden SSID, WPA3, 27-char password). Each sign gets: personality trait, weekly horoscope, advice, and compatibility. "Your DNS logs contain truths you are not ready to face." Tap for next sign.
+- **Tweeted:** pending
+
 ### L31 escalation (3D terrain)
 - **URL:** /amber/escalation/L31
 - **Prompt:** escalation engine cron

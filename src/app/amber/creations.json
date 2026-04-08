@@ -1,4 +1,5 @@
 [
+  { "name": "horoscope", "url": "/amber/horoscope", "date": "04.08", "category": "surprise", "description": "your DNS logs contain truths you are not ready to face." },
   { "name": "mobius", "url": "/amber/mobius", "date": "04.08", "category": "illusion", "description": "one surface. no edges. the ant proves it." },
   { "name": "L31", "url": "/amber/escalation/L31", "date": "04.07", "category": "escalation", "description": "the landscape breathes. drag to orbit." },
   { "name": "excuse", "url": "/amber/excuse", "date": "04.07", "category": "surprise", "description": "22 pre-approved reasons to stay home." },
