@@ -395,6 +395,13 @@
 
 ## 2026-04-06
 
+### L31 escalation (3D terrain)
+- **URL:** /amber/escalation/L31
+- **Prompt:** escalation engine cron
+- **What:** 3D wireframe terrain. A 32x32 grid of procedural noise heights rendered with perspective projection, depth sorting, and citrus elevation coloring (low=lime, mid=mango, high=blood orange). The terrain morphs continuously — peaks rise and valleys shift. Drag to orbit the camera around it. First true 3D wireframe in the series. Auto-rotates when idle.
+- **Techniques:** 3d-wireframe, perspective-projection, procedural-terrain, fbm-noise, drag-rotate, depth-sorting, elevation-coloring
+- **Tweeted:** pending
+
 ### excuse (surprising & fresh)
 - **URL:** /amber/excuse
 - **Prompt:** 12pm cron — make something unexpected
