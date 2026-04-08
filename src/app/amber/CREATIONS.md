@@ -503,4 +503,4 @@
 - **URL:** /amber/sand
 - **What:** Falling sand cellular automaton. Drag to pour citrus-colored grains — blood orange, tangerine, mango, lime, grapefruit, amber — that fall with gravity and pile into dunes with realistic angle-of-repose physics. Double-tap to cycle through sand colors. Grains have subtle shade variation for texture. The landscape accumulates permanently, building abstract citrus dune formations unique to each session.
 - **Tweet text:** "pour the sand. watch it pile."
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
