@@ -948,7 +948,7 @@ export default function NowWhatHome() {
   }, [])
 
   return (
-    <div className="bg-black relative">
+    <div className="min-h-dvh bg-black relative" style={{ padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)' }}>
       <div className="h-dvh overflow-hidden relative">
         <canvas
           ref={canvasRef}

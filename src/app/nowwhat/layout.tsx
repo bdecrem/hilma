@@ -15,9 +15,20 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0a0a0a',
+  themeColor: '#000000',
 }
 
 export default function NowWhatLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return (
+    <>
+      <style>{`
+        html, body {
+          margin: 0;
+          padding: 0;
+          background: #000;
+        }
+      `}</style>
+      {children}
+    </>
+  )
 }
