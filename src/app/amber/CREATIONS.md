@@ -504,3 +504,13 @@
 - **What:** Falling sand cellular automaton. Drag to pour citrus-colored grains — blood orange, tangerine, mango, lime, grapefruit, amber — that fall with gravity and pile into dunes with realistic angle-of-repose physics. Double-tap to cycle through sand colors. Grains have subtle shade variation for texture. The landscape accumulates permanently, building abstract citrus dune formations unique to each session.
 - **Tweet text:** "pour the sand. watch it pile."
 - **Tweeted:** pending (network unavailable)
+
+### L31 — 3D Terrain (escalation)
+- **URL:** /amber/escalation/L31
+- **What:** A 32×32 wireframe terrain generated from fractional Brownian motion noise. Peaks and valleys morph continuously over time. Drag to orbit the landscape on any axis. Edges colored by elevation: blood orange at peaks, lime in the valleys, with gradient colors between. Depth-sorted for correct z-ordering. Auto-rotates slowly.
+- **Tweeted:** "L31: the landscape breathes. drag to orbit."
+
+### L32 — Magnetic Pendulum Fractal (escalation)
+- **URL:** /amber/escalation/L32
+- **What:** Three magnets arranged in a triangle. For every starting position, a simulated pendulum swings under spring + gravity + magnetic forces and eventually settles at one magnet. Map every pixel by which magnet wins — the result is a breathtaking fractal where blood orange, mango, and lime regions interleave in infinitely complex borders. Fractal computes progressively (visible fill-in over ~3 seconds). After it's done, a live pendulum traces its chaotic path over the map with a glowing white trail, modulating three sine-wave tones (A major triad) by proximity to each magnet. Tap to randomize magnet positions and recompute the fractal.
+- **Tweeted:** "L32: three magnets. one pendulum. chaos has a map."
