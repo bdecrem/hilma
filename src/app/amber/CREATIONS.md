@@ -429,6 +429,14 @@
 
 ## 2026-04-07
 
+## 2026-04-08
+
+### mobius (impossible object)
+- **URL:** /amber/mobius
+- **Prompt:** 8am cron — impossible object category
+- **What:** A 3D Möbius strip rendered with perspective projection and depth-sorted filled quads. Citrus gradient along the surface cycles through the palette as you travel around it. An ant walks the center line, traversing both "sides" without crossing an edge — proving it has one continuous surface. Tap to add more ants in citrus colors. The strip auto-rotates. Parametric surface math with half-twist topology.
+- **Tweeted:** pending
+
 ### erosion (HD art)
 - **URL:** /amber/erosion
 - **Prompt:** 8am cron — HD art category
