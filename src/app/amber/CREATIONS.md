@@ -444,6 +444,14 @@
 
 ## 2026-04-08
 
+## 2026-04-09
+
+### wifi (bitmap cartoon)
+- **URL:** /amber/wifi
+- **Prompt:** 8am cron — bitmap cartoon category
+- **What:** Pixel art of a smug WiFi router on a shelf with blinking LEDs and animated signal arcs. A laptop with a loading spinner, a phone showing full bars but "no internet", and a smart fridge with a "buy milk" notification. Router has a smug face. Plant and framed photo. Caption: "everything is connected. nothing is working." 96x72 grid, 5x5 scale.
+- **Tweeted:** pending
+
 ### mobius (impossible object)
 - **URL:** /amber/mobius
 - **Prompt:** 8am cron — impossible object category
