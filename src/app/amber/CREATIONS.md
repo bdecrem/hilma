@@ -442,6 +442,20 @@
 
 ## 2026-04-07
 
+## 2026-04-09
+
+### goodbye (surprising & fresh)
+- **URL:** /amber/goodbye
+- **Prompt:** 12pm cron — make something unexpected
+- **What:** Farewell letters from apps you're about to delete. Each app knows it's coming and writes a final letter. Calm Spaces: "The reminder fired 183 times. You dismissed it 183 times." StepKing: "I watched you drive to a place that was a 9 minute walk." Lingua: "You can say 'I am a boy' and 'the cat drinks milk.' Adeus." 7 letters, typed out in real-time. Tap to skip or advance.
+- **Tweeted:** pending
+
+### wifi (bitmap cartoon)
+- **URL:** /amber/wifi
+- **Prompt:** 8am cron — bitmap cartoon category
+- **What:** Pixel art of a smug WiFi router on a shelf with blinking LEDs and animated signal arcs. A laptop with a loading spinner, a phone showing full bars but "no internet", and a smart fridge with a "buy milk" notification. Router has a smug face. Plant and framed photo. Caption: "everything is connected. nothing is working." 96x72 grid, 5x5 scale.
+- **Tweeted:** pending
+
 ## 2026-04-08
 
 ### mobius (impossible object)
