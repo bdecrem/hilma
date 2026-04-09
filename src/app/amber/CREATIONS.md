@@ -535,3 +535,13 @@
 - **What:** Metaball lava lamp simulation. 8 citrus-colored blobs — blood orange, tangerine, mango, lime, grapefruit — float on a warm peach-lemon gradient. Each blob exerts a scalar field; where fields overlap and cross threshold 1.0, the iso-surface merges seamlessly. Blobs at the bottom rise (heat), blobs at the top sink (cool) — true lava lamp convection. Smoothstep edge blending gives soft, organic transitions. Tap anywhere to add new blobs (up to 16). Rendered at 4× downscaled ImageData and upscaled bilinearly for performance.
 - **Tweet text:** "blobs that know where to go. the heat decides."
 - **Tweeted:** pending
+
+### L33 — Conway's Game of Life (escalation)
+- **URL:** /amber/escalation/L33
+- **What:** Conway's Game of Life on an 8px cell grid. Starts with ~20% random seed. Tap to place gliders — a 5-cell classic pattern that moves diagonally. Double-tap to clear and start fresh. Birth events chime when ≥5 cells are born in a generation (pitch rises with count). Citrus color ramp by grid position. Generation counter and live population displayed. 80ms step interval.
+- **Tweeted:** "L33: tap to seed life. watch it find its own rules."
+
+### L34 — Physarum / Slime Mold (escalation)
+- **URL:** /amber/escalation/L34
+- **What:** Physarum polycephalum simulation. 20,000 agents move on a half-resolution trail field. Each agent senses three directions (forward, ±45°), turns toward the strongest trail concentration, then deposits more trail. Trail diffuses with a box blur and decays each frame. Tap anywhere to place food nodes — agents are attracted to nearby food and seed a dense trail patch there. Over time the network grows into organic mycelium-like structures connecting all food nodes. Color ramp: lime (#B4E33D) → tangerine (#FC913A) → blood orange (#FF4E50) based on trail density. Warm amber → grapefruit pink background. Rising chime on each food placement.
+- **Tweeted:** "L34: the slime mold always finds the shortest path. tap to feed it."
