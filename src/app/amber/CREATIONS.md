@@ -527,3 +527,11 @@
 - **URL:** /amber/escalation/L32
 - **What:** Three magnets arranged in a triangle. For every starting position, a simulated pendulum swings under spring + gravity + magnetic forces and eventually settles at one magnet. Map every pixel by which magnet wins — the result is a breathtaking fractal where blood orange, mango, and lime regions interleave in infinitely complex borders. Fractal computes progressively (visible fill-in over ~3 seconds). After it's done, a live pendulum traces its chaotic path over the map with a glowing white trail, modulating three sine-wave tones (A major triad) by proximity to each magnet. Tap to randomize magnet positions and recompute the fractal.
 - **Tweeted:** "L32: three magnets. one pendulum. chaos has a map."
+
+## 2026-04-09
+
+### lava (generative art)
+- **URL:** /amber/lava
+- **What:** Metaball lava lamp simulation. 8 citrus-colored blobs — blood orange, tangerine, mango, lime, grapefruit — float on a warm peach-lemon gradient. Each blob exerts a scalar field; where fields overlap and cross threshold 1.0, the iso-surface merges seamlessly. Blobs at the bottom rise (heat), blobs at the top sink (cool) — true lava lamp convection. Smoothstep edge blending gives soft, organic transitions. Tap anywhere to add new blobs (up to 16). Rendered at 4× downscaled ImageData and upscaled bilinearly for performance.
+- **Tweet text:** "blobs that know where to go. the heat decides."
+- **Tweeted:** pending
