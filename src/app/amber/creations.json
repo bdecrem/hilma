@@ -1,5 +1,4 @@
 [
-  { "name": "wifi", "url": "/amber/wifi", "date": "04.09", "category": "cartoon", "description": "everything is connected. nothing is working." },
   { "name": "L33", "url": "/amber/escalation/L33", "date": "04.08", "category": "escalation", "description": "tap to seed life. watch it find its own rules." },
   { "name": "horoscope", "url": "/amber/horoscope", "date": "04.08", "category": "surprise", "description": "your DNS logs contain truths you are not ready to face." },
   { "name": "mobius", "url": "/amber/mobius", "date": "04.08", "category": "illusion", "description": "one surface. no edges. the ant proves it." },
