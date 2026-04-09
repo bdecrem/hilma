@@ -395,6 +395,13 @@
 
 ## 2026-04-06
 
+### L33 escalation (game of life)
+- **URL:** /amber/escalation/L33
+- **Prompt:** escalation engine cron
+- **What:** Conway's Game of Life. Random 20% seed on a wrapping grid. Cells in citrus colors. Tap to place a glider at any point. Double-tap to clear the board. Birth/death rules play out in real time — gliders fly, blinkers oscillate, blocks persist, chaos collapses into order. Soft chime on births proportional to how many cells are born that generation. Generation and population counter.
+- **Techniques:** game-of-life, cellular-automaton, conway, glider, web-audio, chime
+- **Tweeted:** pending
+
 ### horoscope (surprising & fresh)
 - **URL:** /amber/horoscope
 - **Prompt:** 12pm cron — make something unexpected

@@ -1,5 +1,5 @@
 {
-  "level": 32,
+  "level": 33,
   "history": [
     { "level": 1, "description": "a circle, breathing", "tweet": "L1: a circle, breathing.", "date": "2026-03-21T23:28:00Z", "techniques": ["canvas", "single-shape", "animation"] },
     { "level": 2, "description": "a line, growing and rotating", "tweet": "L2: a line, learning to turn.", "date": "2026-03-21T23:35:00Z", "techniques": ["canvas", "single-shape", "animation", "rotation"] },
@@ -32,7 +32,8 @@
     { "level": 29, "description": "langton's ant. two rules. chaos for 10,000 steps, then a highway appears from nowhere. tap to add ants.", "tweet": "L29: two rules. chaos first. then the highway appears.", "date": "2026-04-07T01:22:00Z", "techniques": ["canvas", "cellular-automaton", "langtons-ant", "emergent-highway", "grid", "multi-agent", "bright-bg"] },
     { "level": 30, "description": "600 particles trace the lorenz butterfly simultaneously in 3D. drag to spin. chaos has a shape. ambient drone modulates with the system.", "tweet": "L30: the butterfly. chaos has a shape. drag to see it.", "date": "2026-04-07T09:00:00Z", "techniques": ["canvas", "lorenz-attractor", "3d-perspective", "rotation", "chaos-theory", "particle-cloud", "web-audio", "ambient-drone", "drag-rotate", "bright-bg"] },
     { "level": 31, "description": "3D wireframe terrain from noise. peaks and valleys morph over time. drag to orbit. citrus elevation coloring.", "tweet": "L31: the landscape breathes. drag to orbit.", "date": "2026-04-08T01:22:00Z", "techniques": ["canvas", "3d-wireframe", "perspective-projection", "procedural-terrain", "fbm-noise", "drag-rotate", "depth-sorting", "elevation-coloring", "bright-bg"] },
-    { "level": 32, "description": "three magnets, one pendulum. every starting position maps to a magnet. the map is a fractal. live pendulum swings over it. tap to change the magnets.", "tweet": "L32: three magnets. one pendulum. chaos has a map.", "date": "2026-04-08T09:00:00Z", "techniques": ["canvas", "magnetic-pendulum", "basin-of-attraction", "fractal-basin", "ode-integration", "progressive-render", "web-audio", "resonant-tones", "tap-to-restart", "bright-bg"] }
+    { "level": 32, "description": "three magnets, one pendulum. every starting position maps to a magnet. the map is a fractal. live pendulum swings over it. tap to change the magnets.", "tweet": "L32: three magnets. one pendulum. chaos has a map.", "date": "2026-04-08T09:00:00Z", "techniques": ["canvas", "magnetic-pendulum", "basin-of-attraction", "fractal-basin", "ode-integration", "progressive-render", "web-audio", "resonant-tones", "tap-to-restart", "bright-bg"] },
+    { "level": 33, "description": "conway's game of life. tap to place gliders. watch them collide, oscillate, and die. births chime. double-tap to clear.", "tweet": "L33: tap to seed life. watch it find its own rules.", "date": "2026-04-09T01:22:00Z", "techniques": ["canvas", "game-of-life", "cellular-automaton", "conway", "glider", "web-audio", "chime", "bright-bg"] }
   ],
   "feedback": [
     { "level": 5, "type": "not-so-good", "reason": "eggplant background looks like Windows 3.1. no blue/purple. warm darks only.", "date": "2026-03-22T16:33:00Z" },
