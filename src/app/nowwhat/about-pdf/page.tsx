@@ -172,24 +172,28 @@ export default function PdfLightPage() {
           color: '#3a3a3a',
         }}>
           <p style={{ marginBottom: '20px' }}>
-            Assume Dario Amodei et al are right, and Superintelligence is achieved by 2028. Now what? What happens when intelligence is available <em>on tap</em>?
+            Assume Dario Amodei et al are right, and superintelligence is achieved by 2028. Now what? What happens when intelligence is available <em>on tap</em>?
           </p>
+
+          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '32px', marginBottom: '12px' }}>The Question</div>
 
           <p style={{ marginBottom: '20px', color: '#1a1a1a', fontWeight: 600 }}>
-            At CASBS I will explore how we can harness Superintelligence to foster human flourishing and to avoid the traps of cognitive offloading, debt and surrender.
+            At CASBS I will explore what&rsquo;s on the other side of AGI: how we can harness superintelligence to foster human flourishing and avoid the traps of cognitive offloading, debt and <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6097646" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>surrender</a>.
           </p>
 
           <p style={{ marginBottom: '20px' }}>
-            I&rsquo;m a tinkerer and a hopeless optimist, always curious to learn about and try out new tech, always excited about its potential to help solve critical problems facing our communities and mankind, and to improve our lives. I spent five+ years in East Palo Alto building a national model for bridging the Digital Divide, and spreading those learnings around the country as board chair for the Community Technology Centers Network. I helped create Full Circle Fund and created the Mozilla Builders incubator, supporting young activists and entrepreneurs with fresh ideas for how to make the internet work better where it&rsquo;s needed the most. Along the way, I also played a key role in the Firefox 1.0 launch and led Disney&rsquo;s early App Store efforts after creating the first iPhone smash hit.
+            I&rsquo;m a tinkerer and a hopeless optimist, always curious to learn about and try out new tech, always excited about its potential to help solve critical problems facing our communities and mankind, and to improve our lives. I spent five+ years in East Palo Alto building a national model for bridging the Digital Divide, and spreading those learnings around the country as board chair for the Community Technology Centers Network. I co-founded <a href="https://www.fullcirclefund.org" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>Full Circle Fund</a> and created the Mozilla Builders incubator, supporting young activists and entrepreneurs with fresh ideas for how to make the internet work better where it&rsquo;s needed the most. Along the way, I also played a key role in the Firefox 1.0 launch and led Disney&rsquo;s early App Store efforts after creating the first iPhone smash hit.
           </p>
 
           <p style={{ marginBottom: '20px' }}>
-            For the last year, I&rsquo;ve been &ldquo;building with AI&rdquo; and I&rsquo;ve been blown away by the ability to &ldquo;manifest&rdquo; any software idea I can think of. But I&rsquo;ve also found myself paralyzed at times, overwhelmed by the lack of constraints and a feeling that when anything is possible, maybe nothing matters. I spent years discovering the magical power of playing with analog synths, finding flow state after hours listening and modulating simple music sketches. Then I tried Suno, the AI music service, and the AI ruined music for me: in 30 seconds it could create any song for me, at a much better quality than my simple sketches, and even capturing the general mood I had in mind. Why bother trying when what I do is so much worse than what the machine can just make on-demand?
+            For the last year, I&rsquo;ve been &ldquo;<a href="https://www.decremental.com" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>building with AI</a>,&rdquo; taking on increasingly ambitious projects, and I&rsquo;ve been blown away by the ability to &ldquo;manifest&rdquo; any software idea I can think of. But I&rsquo;ve also found myself paralyzed at times, overwhelmed by the lack of constraints and a feeling that when anything is possible, maybe nothing matters. I spent years discovering the magical power of playing with analog synths, finding flow state after hours listening and modulating simple music sketches. Then I tried Suno, the AI music service, and it ruined music for me: in 30 seconds it could create any song for me, at a much better quality than my simple sketches, and even capturing the general mood I had in mind. Why bother trying when what I do is so much worse than what the machine can just make on-demand?
           </p>
 
           <p style={{ marginBottom: '20px' }}>
-            I want to explore that tension and that feeling.
+            <strong>I want to explore that tension and that feeling.</strong>
           </p>
+
+          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '32px', marginBottom: '12px' }}>A Bicycle with Wings</div>
 
           <blockquote style={{
             borderLeft: '3px solid #ddd',
@@ -216,8 +220,10 @@ export default function PdfLightPage() {
             If a bicycle with wings shows up at our doorstep, how do we learn to ride it and where do we point it?
           </p>
 
+          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '32px', marginBottom: '12px' }}>The Project</div>
+
           <p style={{ marginBottom: '20px' }}>
-            Over the next year, I will have deep conversations with ten CASBS fellows, other academics and researchers on campus, and leading thinkers elsewhere. People who think about cognition, labor, identity and community. I&rsquo;ll engage their ideas with my builder&rsquo;s instinct. Each conversation becomes a blog or podcast episode. And because I&rsquo;m a builder, I&rsquo;ll be creating artifacts: prototypes and software ideas and tools that explore my ideas. If we&rsquo;re talking about flow state and AI, I&rsquo;ll build an app for that. If we&rsquo;re talking about UBI and the meaning of work, I might sketch a tool that explores that. Ten conversations, ten artifacts.
+            Over the next year, I will have deep conversations with ten CASBS fellows, other academics and researchers on campus, and leading thinkers elsewhere. People who think about cognition, labor, identity and community. I&rsquo;ll engage their ideas with my builder&rsquo;s instinct. Each conversation becomes a blog or podcast episode. And because I&rsquo;m a builder, I&rsquo;ll be creating artifacts: prototypes and software ideas and tools that explore my ideas. If we&rsquo;re talking about flow state and AI, I&rsquo;ll build an app for that. If we&rsquo;re talking about UBI and the meaning of work, I might sketch a tool that explores that. <strong>Ten conversations, ten artifacts.</strong>
           </p>
         </div>
 
