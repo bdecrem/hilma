@@ -57,6 +57,17 @@ export default function Gen2Dashboard() {
   const [seedSources, setSeedSources] = useState<string[]>([])
   const [seedWords, setSeedWords] = useState<string[]>([])
   const [showWords, setShowWords] = useState(false)
+  const [backHref, setBackHref] = useState('/nowwhat')
+
+  useEffect(() => {
+    if (typeof document !== 'undefined' && document.referrer) {
+      try {
+        const url = new URL(document.referrer)
+        if (url.pathname.startsWith('/nowwhat/nw')) setBackHref('/nowwhat/nw')
+        else if (url.pathname === '/nowwhat' || url.pathname === '/nowwhat/') setBackHref('/nowwhat')
+      } catch { /* ignore */ }
+    }
+  }, [])
 
   const fetchData = useCallback(() => {
     fetch('/api/nowwhat/gen2')
@@ -117,6 +128,14 @@ export default function Gen2Dashboard() {
   return (
     <div className="min-h-dvh bg-[#0a0a0a] text-neutral-300" style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}>
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Back link */}
+        <a
+          href={backHref}
+          className="inline-block text-xs text-neutral-500 hover:text-neutral-300 transition-colors mb-4 tracking-wide"
+        >
+          &larr; back
+        </a>
+
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-light text-white tracking-wide">Dashboard</h1>
