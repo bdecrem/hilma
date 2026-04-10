@@ -140,6 +140,7 @@ export default function PdfLightPage() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
       <style>{`
         @page { margin: 0; size: letter; }
+        @media print { html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { background: #fff; color: #1a1a1a; }
       `}</style>
@@ -148,17 +149,17 @@ export default function PdfLightPage() {
         background: '#fff',
         color: '#1a1a1a',
         minHeight: '100vh',
-        padding: '64px 64px',
+        padding: '40px 56px 32px',
         maxWidth: '780px',
         margin: '0 auto',
       }}>
         {/* Title — textmark style */}
         <h1 style={{
-          fontSize: '48px',
+          fontSize: '36px',
           fontWeight: 300,
           letterSpacing: '0.08em',
           color: '#1a1a1a',
-          marginBottom: '56px',
+          marginBottom: '28px',
           lineHeight: 1,
         }}>
           Now what?
@@ -166,70 +167,70 @@ export default function PdfLightPage() {
 
         {/* Body text */}
         <div style={{
-          fontSize: '14px',
+          fontSize: '11.5px',
           fontWeight: 400,
-          lineHeight: 1.65,
+          lineHeight: 1.55,
           color: '#3a3a3a',
         }}>
-          <p style={{ marginBottom: '20px' }}>
+          <p style={{ marginBottom: '12px' }}>
             Assume Dario Amodei et al are right, and superintelligence is achieved by 2028. Now what? What happens when intelligence is available <em>on tap</em>?
           </p>
 
-          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '32px', marginBottom: '12px' }}>The Question</div>
+          <div style={{ fontSize: '9px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '16px', marginBottom: '8px' }}>The Question</div>
 
-          <p style={{ marginBottom: '20px', color: '#1a1a1a', fontWeight: 600 }}>
-            At CASBS I will explore what&rsquo;s on the other side of AGI: how we can harness superintelligence to foster human flourishing and avoid the traps of cognitive offloading, debt and <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6097646" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>surrender</a>.
+          <p style={{ marginBottom: '12px', color: '#1a1a1a', fontWeight: 600 }}>
+            At CASBS I will explore what&rsquo;s on the other side of AGI: how we can harness superintelligence to help people thrive and avoid the traps of <a href="https://www.sciencedirect.com/science/article/abs/pii/S1364661316300985" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>offloading</a>, <a href="https://arxiv.org/abs/2506.08872" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>debt</a> and <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6097646" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>surrender</a>.
           </p>
 
-          <p style={{ marginBottom: '20px' }}>
-            I&rsquo;m a tinkerer and a hopeless optimist, always curious to learn about and try out new tech, always excited about its potential to help solve critical problems facing our communities and mankind, and to improve our lives. I spent five+ years in East Palo Alto building a national model for bridging the Digital Divide, and spreading those learnings around the country as board chair for the Community Technology Centers Network. I co-founded <a href="https://www.fullcirclefund.org" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>Full Circle Fund</a> and created the Mozilla Builders incubator, supporting young activists and entrepreneurs with fresh ideas for how to make the internet work better where it&rsquo;s needed the most. Along the way, I also played a key role in the Firefox 1.0 launch and led Disney&rsquo;s early App Store efforts after creating the first iPhone smash hit.
+          <p style={{ marginBottom: '12px' }}>
+            I&rsquo;m a tinkerer and a hopeless optimist, always curious about new tech and its potential to solve real problems. I spent five+ years in East Palo Alto building a national model for bridging the digital divide, then helped share those learnings nationally as board chair of the Community Technology Centers Network. I co-founded <a href="https://www.fullcirclefund.org" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>Full Circle Fund</a> and created the Mozilla Builders incubator, supporting activists and founders building a better internet. Along the way, I also played a key role in the Firefox 1.0 launch and led Disney&rsquo;s early App Store efforts after creating the first iPhone smash hit.
           </p>
 
-          <p style={{ marginBottom: '20px' }}>
-            For the last year, I&rsquo;ve been &ldquo;<a href="https://www.decremental.com" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>building with AI</a>,&rdquo; taking on increasingly ambitious projects, and I&rsquo;ve been blown away by the ability to &ldquo;manifest&rdquo; any software idea I can think of. But I&rsquo;ve also found myself paralyzed at times, overwhelmed by the lack of constraints and a feeling that when anything is possible, maybe nothing matters. I spent years discovering the magical power of playing with analog synths, finding flow state after hours listening and modulating simple music sketches. Then I tried Suno, the AI music service, and it ruined music for me: in 30 seconds it could create any song for me, at a much better quality than my simple sketches, and even capturing the general mood I had in mind. Why bother trying when what I do is so much worse than what the machine can just make on-demand?
+          <p style={{ marginBottom: '12px' }}>
+            For the last year, I&rsquo;ve been &ldquo;<a href="https://www.decremental.com" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>building with AI</a>,&rdquo; taking on increasingly ambitious projects, and I&rsquo;ve been blown away by the ability to &ldquo;manifest&rdquo; any software idea I can think of. But I&rsquo;ve also found myself paralyzed at times, overwhelmed by the lack of constraints and a feeling that when anything is possible, maybe nothing matters. I spent years discovering the magical power of playing with analog synths, finding flow state after hours listening and modulating simple music sketches. Then I tried Suno, the AI music service, and it ruined music for me: in 30 seconds it could create any song for me, better than anything I&rsquo;d made, and capturing the exact mood I had in mind. Why bother trying when what I do is so much worse than what the machine can just make on-demand?
           </p>
 
-          <p style={{ marginBottom: '20px' }}>
+          <p style={{ marginBottom: '12px' }}>
             <strong>I want to explore that tension and that feeling.</strong>
           </p>
 
-          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '32px', marginBottom: '12px' }}>A Bicycle with Wings</div>
+          <div style={{ fontSize: '9px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '16px', marginBottom: '8px' }}>A Bicycle with Wings</div>
 
           <blockquote style={{
-            borderLeft: '3px solid #ddd',
-            paddingLeft: '20px',
-            margin: '28px 0',
+            borderLeft: '2px solid #ddd',
+            paddingLeft: '16px',
+            margin: '14px 0',
             color: '#777',
             fontStyle: 'italic',
-            fontSize: '13px',
-            lineHeight: 1.85,
+            fontSize: '10.5px',
+            lineHeight: 1.65,
           }}>
-            &ldquo;I read a study that measured the efficiency of locomotion for various species on the planet. The condor used the least energy to move a kilometer. And humans came in with a rather unimpressive showing, about a third of the way down the list. [&hellip;] But then somebody at Scientific American had the insight to test the efficiency of locomotion for a man on a bicycle. And a man on a bicycle blew the condor away, completely off the top of the charts. And that&rsquo;s what a computer is to me. [&hellip;] It&rsquo;s the most remarkable tool that we&rsquo;ve ever come up with, and it&rsquo;s the equivalent of a bicycle for our minds.&rdquo;
+            &ldquo;I read a study that measured the efficiency of locomotion for various species on the planet. The condor used the least energy to move a kilometer. And humans came in with a rather unimpressive showing. [&hellip;] But then somebody at Scientific American had the insight to test the efficiency of locomotion for a man on a bicycle. And a man on a bicycle blew the condor away, completely off the top of the charts. And that&rsquo;s what a computer is to me. [&hellip;] It&rsquo;s the most remarkable tool that we&rsquo;ve ever come up with, and it&rsquo;s the equivalent of a bicycle for our minds.&rdquo;
             <br /><span style={{ fontStyle: 'normal', color: '#aaa' }}>&mdash; Steve Jobs, 1990</span>
           </blockquote>
 
-          <p style={{ marginBottom: '20px' }}>
-            Steve Jobs set out to build a bicycle for the mind. AGI can be a bicycle with wings, allowing us to soar.
+          <p style={{ marginBottom: '12px' }}>
+            Steve Jobs set out to build a bicycle for the mind. AGI can be a bicycle with wings, letting us fly.
           </p>
 
-          <p style={{ marginBottom: '20px' }}>
+          <p style={{ marginBottom: '12px' }}>
             But it won&rsquo;t just happen by itself. Faced with superintelligent technology that can deliver the perfectly addictive immersive entertainment experiences that we won&rsquo;t be able to pull away from, that can do our jobs for us, answer any question, how do we resist cognitive surrender or avoid just becoming carbon-based DoorDash delivery drivers for the AI?
           </p>
 
-          <p style={{ marginBottom: '20px', color: '#1a1a1a', fontWeight: 500 }}>
+          <p style={{ marginBottom: '12px', color: '#1a1a1a', fontWeight: 500 }}>
             If a bicycle with wings shows up at our doorstep, how do we learn to ride it and where do we point it?
           </p>
 
-          <div style={{ fontSize: '11px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '32px', marginBottom: '12px' }}>The Project</div>
+          <div style={{ fontSize: '9px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '16px', marginBottom: '8px' }}>The Project</div>
 
-          <p style={{ marginBottom: '20px' }}>
+          <p style={{ marginBottom: '12px' }}>
             Over the next year, I will have deep conversations with ten CASBS fellows, other academics and researchers on campus, and leading thinkers elsewhere. People who think about cognition, labor, identity and community. I&rsquo;ll engage their ideas with my builder&rsquo;s instinct. Each conversation becomes a blog or podcast episode. And because I&rsquo;m a builder, I&rsquo;ll be creating artifacts: prototypes and software ideas and tools that explore my ideas. If we&rsquo;re talking about flow state and AI, I&rsquo;ll build an app for that. If we&rsquo;re talking about UBI and the meaning of work, I might sketch a tool that explores that. <strong>Ten conversations, ten artifacts.</strong>
           </p>
         </div>
 
         {/* Art piece — bicycle with wings */}
         <div style={{
-          marginTop: '48px',
+          marginTop: '20px',
           display: 'flex',
           justifyContent: 'center',
         }}>
@@ -238,7 +239,7 @@ export default function PdfLightPage() {
             src="/nowwhat/bicycle_with_wings_light.svg"
             alt="Bicycle with wings"
             style={{
-              width: '250px',
+              width: '180px',
               height: 'auto',
             }}
           />
@@ -246,13 +247,13 @@ export default function PdfLightPage() {
 
         {/* Footer */}
         <div style={{
-          marginTop: '28px',
+          marginTop: '12px',
           textAlign: 'center',
           fontSize: '11px',
           letterSpacing: '0.15em',
         }}>
           <a
-            href="https://nowwhat.cc"
+            href="https://nowwhat.cc/nw"
             style={{
               color: '#555',
               textDecoration: 'underline',
@@ -260,7 +261,7 @@ export default function PdfLightPage() {
               textDecorationColor: '#bbb',
             }}
           >
-            nowwhat.cc &rarr;
+            nowwhat.cc/nw &rarr;
           </a>
         </div>
       </div>
