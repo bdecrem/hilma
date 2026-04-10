@@ -444,6 +444,13 @@
 
 ## 2026-04-09
 
+### L35 escalation (cymatics)
+- **URL:** /amber/escalation/L35
+- **Prompt:** escalation engine cron
+- **What:** Cymatics — Chladni figures. 2000 particles on a vibrating circular plate settle into standing wave nodal patterns. Each frequency mode produces a different geometric figure. Tap to change frequency — particles scatter then resettle into a new pattern. Sine wave tone plays at the matching frequency. 9 modes from simple (1:2) to complex (3:7). Sound and vision coupled as one system.
+- **Techniques:** cymatics, chladni, standing-waves, nodal-lines, particle-settling, web-audio, frequency
+- **Tweeted:** pending
+
 ### goodbye (surprising & fresh)
 - **URL:** /amber/goodbye
 - **Prompt:** 12pm cron — make something unexpected

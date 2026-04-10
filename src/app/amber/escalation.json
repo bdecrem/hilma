@@ -1,5 +1,5 @@
 {
-  "level": 34,
+  "level": 35,
   "history": [
     { "level": 1, "description": "a circle, breathing", "tweet": "L1: a circle, breathing.", "date": "2026-03-21T23:28:00Z", "techniques": ["canvas", "single-shape", "animation"] },
     { "level": 2, "description": "a line, growing and rotating", "tweet": "L2: a line, learning to turn.", "date": "2026-03-21T23:35:00Z", "techniques": ["canvas", "single-shape", "animation", "rotation"] },
@@ -34,7 +34,8 @@
     { "level": 31, "description": "3D wireframe terrain from noise. peaks and valleys morph over time. drag to orbit. citrus elevation coloring.", "tweet": "L31: the landscape breathes. drag to orbit.", "date": "2026-04-08T01:22:00Z", "techniques": ["canvas", "3d-wireframe", "perspective-projection", "procedural-terrain", "fbm-noise", "drag-rotate", "depth-sorting", "elevation-coloring", "bright-bg"] },
     { "level": 32, "description": "three magnets, one pendulum. every starting position maps to a magnet. the map is a fractal. live pendulum swings over it. tap to change the magnets.", "tweet": "L32: three magnets. one pendulum. chaos has a map.", "date": "2026-04-08T09:00:00Z", "techniques": ["canvas", "magnetic-pendulum", "basin-of-attraction", "fractal-basin", "ode-integration", "progressive-render", "web-audio", "resonant-tones", "tap-to-restart", "bright-bg"] },
     { "level": 33, "description": "conway's game of life. tap to place gliders. watch them collide, oscillate, and die. births chime. double-tap to clear.", "tweet": "L33: tap to seed life. watch it find its own rules.", "date": "2026-04-09T01:22:00Z", "techniques": ["canvas", "game-of-life", "cellular-automaton", "conway", "glider", "web-audio", "chime", "bright-bg"] },
-    { "level": 34, "description": "20,000 agents trace the slime mold's path. tap to place food. the network grows to connect everything.", "tweet": "L34: the slime mold always finds the shortest path. tap to feed it.", "date": "2026-04-09T09:00:00Z", "techniques": ["canvas", "physarum", "slime-mold", "agent-simulation", "trail-following", "diffusion", "bio-inspired", "food-nodes", "web-audio", "chime", "warm-bg"] }
+    { "level": 34, "description": "20,000 agents trace the slime mold's path. tap to place food. the network grows to connect everything.", "tweet": "L34: the slime mold always finds the shortest path. tap to feed it.", "date": "2026-04-09T09:00:00Z", "techniques": ["canvas", "physarum", "slime-mold", "agent-simulation", "trail-following", "diffusion", "bio-inspired", "food-nodes", "web-audio", "chime", "warm-bg"] },
+    { "level": 35, "description": "2000 particles settle into Chladni figures — standing wave patterns on a vibrating plate. tap to change frequency. sound and vision coupled.", "tweet": "L35: sound makes patterns. tap to change the frequency.", "date": "2026-04-10T01:22:00Z", "techniques": ["canvas", "cymatics", "chladni", "standing-waves", "nodal-lines", "particle-settling", "web-audio", "frequency", "bright-bg"] }
   ],
   "feedback": [
     { "level": 5, "type": "not-so-good", "reason": "eggplant background looks like Windows 3.1. no blue/purple. warm darks only.", "date": "2026-03-22T16:33:00Z" },
