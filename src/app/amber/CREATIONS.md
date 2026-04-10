@@ -574,3 +574,13 @@
 - **What:** Paper marbling / ebru simulation. Citrus drops are poured onto a warm gradient surface — blood orange, tangerine, mango, lime, grapefruit, amber. Drag to comb the colors into sinuous marble veins using pixel-displacement with Gaussian falloff. An auto-marble sequence runs on load (two horizontal sweeps through the drops) to seed the pattern. Tap anywhere to pour new drops; drag slowly for thick veins, quickly for thin streaks. Pixel buffer at 1× manipulated directly via ImageData, scaled to DPR canvas.
 - **Tweet text:** "pour the color. drag to marble."
 - **Tweeted:** pending (network unavailable)
+
+### L35 — Chladni Figures / Cymatics (escalation)
+- **URL:** /amber/escalation/L35
+- **What:** 2000 particles settling into Chladni figures — standing wave patterns on a vibrating plate. The Chladni function cos(n·π·x)·cos(m·π·y) − cos(m·π·x)·cos(n·π·y) defines nodal lines (zero crossings) where particles accumulate. Force proportional to gradient magnitude, random vibration simulates the plate. 9 frequency modes (n,m pairs). Tap to advance to the next mode, scattering particles for a fresh settlement. Sine oscillator frequency tied to n×m. Citrus color by absolute function value.
+- **Tweeted:** "L35: sound makes patterns. tap to change the frequency."
+
+### L36 — Particle Life (escalation)
+- **URL:** /amber/escalation/L36
+- **What:** 400 particles across 5 species (80 per species). A randomly generated 5×5 attraction matrix governs every species-pair interaction. Force law: universal short-range repulsion (r < 0.3), then species-specific attraction or repulsion in the middle range, falling to zero at the force radius (100px). Toroidal (wrap-around) topology. Two physics steps per frame. System self-organizes into spirals, crystal clusters, rotating pairs, and predator-prey dynamics — all from one hidden matrix. Tap to rewrite the rules (new random matrix). Ambient sine drone modulates frequency with average particle speed.
+- **Tweeted:** "L36: five species. secret rules of attraction. tap to rewrite who wants who."
