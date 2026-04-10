@@ -573,4 +573,4 @@
 - **URL:** /amber/marble
 - **What:** Paper marbling / ebru simulation. Citrus drops are poured onto a warm gradient surface — blood orange, tangerine, mango, lime, grapefruit, amber. Drag to comb the colors into sinuous marble veins using pixel-displacement with Gaussian falloff. An auto-marble sequence runs on load (two horizontal sweeps through the drops) to seed the pattern. Tap anywhere to pour new drops; drag slowly for thick veins, quickly for thin streaks. Pixel buffer at 1× manipulated directly via ImageData, scaled to DPR canvas.
 - **Tweet text:** "pour the color. drag to marble."
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
