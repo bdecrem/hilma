@@ -1003,7 +1003,7 @@ export default function NowWhatHome() {
         onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
         onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.2)')}
       >
-        about exhibit
+        about this artifact
       </a>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');

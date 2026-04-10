@@ -172,11 +172,11 @@ export default function PdfLightPage() {
           color: '#3a3a3a',
         }}>
           <p style={{ marginBottom: '20px' }}>
-            Assume Dario Amodei et al are right, and Superintelligence is achieved by 2028. Now what? What happens when intelligence is available <em>on tap</em>? How can we use that to foster human flourishing?
+            Assume Dario Amodei et al are right, and Superintelligence is achieved by 2028. Now what? What happens when intelligence is available <em>on tap</em>?
           </p>
 
           <p style={{ marginBottom: '20px', color: '#1a1a1a', fontWeight: 600 }}>
-            At CASBS I will explore how to avoid the traps of cognitive offloading, debt and surrender and how I want to contribute to that quest.
+            At CASBS I will explore how we can harness Superintelligence to foster human flourishing and to avoid the traps of cognitive offloading, debt and surrender.
           </p>
 
           <p style={{ marginBottom: '20px' }}>
