@@ -566,3 +566,11 @@
 - **URL:** /amber/escalation/L34
 - **What:** Physarum polycephalum simulation. 20,000 agents move on a half-resolution trail field. Each agent senses three directions (forward, ±45°), turns toward the strongest trail concentration, then deposits more trail. Trail diffuses with a box blur and decays each frame. Tap anywhere to place food nodes — agents are attracted to nearby food and seed a dense trail patch there. Over time the network grows into organic mycelium-like structures connecting all food nodes. Color ramp: lime (#B4E33D) → tangerine (#FC913A) → blood orange (#FF4E50) based on trail density. Warm amber → grapefruit pink background. Rising chime on each food placement.
 - **Tweeted:** "L34: the slime mold always finds the shortest path. tap to feed it."
+
+## 2026-04-10
+
+### marble (generative art)
+- **URL:** /amber/marble
+- **What:** Paper marbling / ebru simulation. Citrus drops are poured onto a warm gradient surface — blood orange, tangerine, mango, lime, grapefruit, amber. Drag to comb the colors into sinuous marble veins using pixel-displacement with Gaussian falloff. An auto-marble sequence runs on load (two horizontal sweeps through the drops) to seed the pattern. Tap anywhere to pour new drops; drag slowly for thick veins, quickly for thin streaks. Pixel buffer at 1× manipulated directly via ImageData, scaled to DPR canvas.
+- **Tweet text:** "pour the color. drag to marble."
+- **Tweeted:** pending
