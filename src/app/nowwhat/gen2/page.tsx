@@ -51,7 +51,7 @@ export default function Gen2Dashboard() {
   const [stats, setStats] = useState({ total: 0, approved: 0, rejected: 0, pending: 0 })
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
   const [loading, setLoading] = useState(true)
-  const [howExpanded, setHowExpanded] = useState(false)
+
   const [seeding, setSeeding] = useState(false)
   const [seedCount, setSeedCount] = useState<number | null>(null)
   const [seedSources, setSeedSources] = useState<string[]>([])
@@ -68,7 +68,7 @@ export default function Gen2Dashboard() {
           total: c.length,
           approved: c.filter(x => x.approved === true).length,
           rejected: c.filter(x => x.approved === false).length,
-          pending: c.filter(x => x.approved === undefined).length,
+          pending: c.filter(x => x.approved == null).length,
         })
         setLoading(false)
       })
@@ -107,7 +107,7 @@ export default function Gen2Dashboard() {
 
   const filtered = candidates
     .filter(c => {
-      if (filter === 'pending') return c.approved === undefined
+      if (filter === 'pending') return c.approved == null
       if (filter === 'approved') return c.approved === true
       if (filter === 'rejected') return c.approved === false
       return true
@@ -124,49 +124,52 @@ export default function Gen2Dashboard() {
 
         {/* How this works */}
         <div className="mb-8 text-sm text-neutral-400 leading-relaxed">
-          <span>
-            The big question behind <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">Now what?</a> is how humanity thrives after AGI arrives.{' '}
-          </span>
-          {!howExpanded ? (
+          The big question behind <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">Now what?</a> is how humanity thrives after AGI arrives. It starts by pulling recent articles from the web — stories about AGI, democracy, creativity, meaning — and extracting concrete, visual concepts from them: <em>campfire</em>, <em>paper crane</em>, <em>raised fist</em>. An AI then draws each concept as a tiny pixel silhouette. Each drawing enters a physics simulation where momentum tries to assemble it and entropy tries to tear it apart. Most attempts fail. The shapes that survive land here, waiting for a human to decide if they&apos;re worth keeping. The ones you approve join the living display on the{' '}
+          <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">homepage</a>.
+        </div>
+
+        {/* Word cloud */}
+        <div className="text-sm font-semibold text-neutral-400 tracking-wide mb-2">Keywords / Concepts</div>
+        <div className="mb-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1 max-h-[5.5em] overflow-hidden">
+          {[
+            'Handshake','Tree','House','Lightbulb','Vote','Arrow','Question mark',
+            'Cup of tea','Embrace','Bloom','Bridge','Book','Circle','Path','Spiral',
+            'Bicycle','Gathering','River','Arch','Beacon','Assembly','Wave','Campfire',
+            'Sunrise','Tower','Telescope','Commons','Rocket','Infinity','Garden',
+            'Shelter','Seed','Heart','Horizon','Candle','Mountain','Door','Gear',
+            'Star','Network','Crown','Root','Window','Ladder','Knot','Flame','Leaf',
+            'Bell','Sprout','Well','Staircase','Compass','Nest','Lantern','Grove',
+            'Portal','Threshold','Crossroads','Harvest','Weave','Footprint','Anchor',
+            'Flourish','Fountain','Prism','Fellowship','Resonance','Confluence',
+            'Ascend','Rooted','Boundless','Illuminated','Awakened','Interconnected',
+          ].map((w, i) => (
+            <span
+              key={w}
+              className="text-neutral-600 transition-colors hover:text-neutral-300"
+              style={{ fontSize: `${9 + (i * 7) % 11}px`, opacity: 0.4 + ((i * 13) % 10) / 16 }}
+            >{w}</span>
+          ))}
+        </div>
+        {seedCount !== null && (
+          <div className="mb-6">
             <button
-              onClick={() => setHowExpanded(true)}
-              className="text-neutral-500 hover:text-neutral-300 transition-colors"
-            >[...]</button>
-          ) : (
-            <span>
-              It starts by pulling recent articles from the web — stories about AGI, democracy, creativity, meaning — and extracting concrete, visual concepts from them: <em>campfire</em>, <em>paper crane</em>, <em>raised fist</em>. An AI then draws each concept as a tiny pixel silhouette. Each drawing enters a physics simulation where momentum tries to assemble it and entropy tries to tear it apart. Most attempts fail. The shapes that survive land here, waiting for a human to decide if they&apos;re worth keeping. The ones you approve join the living display on the{' '}
-              <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">homepage</a>.
-            </span>
-          )}
-        </div>
-
-        {/* Stats */}
-        <div className="flex gap-6 mb-6 text-sm">
-          <div><span className="text-neutral-500">total</span> <span className="text-white">{stats.total}</span></div>
-          <div><span className="text-neutral-500">pending</span> <span className="text-yellow-400/70">{stats.pending}</span></div>
-          <div><span className="text-neutral-500">approved</span> <span className="text-green-400/70">{stats.approved}</span></div>
-          <div><span className="text-neutral-500">rejected</span> <span className="text-red-400/70">{stats.rejected}</span></div>
-        </div>
-
-        {/* Seed words */}
-        <div className="mb-6 flex items-center gap-3">
+              onClick={() => setShowWords(!showWords)}
+              className="text-neutral-500 text-[11px] hover:text-neutral-300 transition-colors underline underline-offset-2 decoration-neutral-700"
+            >View all {seedCount} concepts in the pool</button>
+          </div>
+        )}
+        <div className="mb-6">
           <button
             onClick={regenerateSeeds}
             disabled={seeding}
             className={`px-4 py-2 rounded-lg text-xs tracking-wide transition-all ${
               seeding
                 ? 'bg-white/[0.03] text-neutral-600 cursor-wait'
-                : 'bg-white/[0.06] text-neutral-300 hover:bg-white/[0.12] hover:text-white active:scale-95'
+                : 'bg-white/[0.06] text-neutral-300 rounded-lg hover:bg-white/[0.12] hover:text-white active:scale-95'
             }`}
           >
             {seeding ? 'dreaming up new words...' : 'new seed words'}
           </button>
-          {seedCount !== null && (
-            <button
-              onClick={() => setShowWords(!showWords)}
-              className="text-neutral-600 text-[11px] hover:text-neutral-400 transition-colors"
-            >{seedCount} concepts in the pool</button>
-          )}
         </div>
         {showWords && seedWords.length > 0 && (
           <div className="mb-6 -mt-4 text-[11px] text-neutral-500 leading-relaxed">
@@ -189,21 +192,27 @@ export default function Gen2Dashboard() {
           </div>
         )}
 
-        {/* Filters */}
+        {/* Creations header */}
+        <div className="mt-8 text-sm font-semibold text-neutral-400 tracking-wide mb-3">Creations</div>
+
+        {/* Filters with inline stats */}
         <div className="flex gap-2 mb-6">
-          {(['all', 'pending', 'approved', 'rejected'] as const).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded text-xs transition-colors ${
-                filter === f
-                  ? 'bg-white/10 text-white'
-                  : 'bg-white/[0.03] text-neutral-500 hover:text-neutral-300'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+          {(['all', 'pending', 'approved', 'rejected'] as const).map(f => {
+            const count = f === 'all' ? stats.total : f === 'pending' ? stats.pending : f === 'approved' ? stats.approved : stats.rejected
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                  filter === f
+                    ? 'bg-white/10 text-white'
+                    : 'bg-white/[0.03] text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                {f} <span className={filter === f ? 'text-white/50' : 'text-neutral-600'}>{count}</span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Grid of candidates */}
@@ -238,7 +247,7 @@ export default function Gen2Dashboard() {
                   <GridPreview grid={c.grid} size={7} />
                 </div>
 
-                {c.approved === undefined && (
+                {c.approved == null && (
                   <div className="flex gap-2">
                     <button
                       onClick={() => judge(c.id, true)}
@@ -255,7 +264,7 @@ export default function Gen2Dashboard() {
                   </div>
                 )}
 
-                <div className="text-neutral-600 text-[10px] mt-2">
+                <div className="text-neutral-500 text-[10px] mt-2">
                   {new Date(c.createdAt).toLocaleString()}
                 </div>
               </div>
@@ -263,12 +272,6 @@ export default function Gen2Dashboard() {
           </div>
         )}
 
-        {/* Links */}
-        <div className="mt-8 pt-6 border-t border-neutral-800 flex gap-4 text-xs text-neutral-500">
-          <a href="/nowwhat/alive2" className="hover:text-neutral-300 transition-colors underline underline-offset-2">alive2</a>
-          <a href="/nowwhat/judge" className="hover:text-neutral-300 transition-colors underline underline-offset-2">old judge</a>
-          <a href="/nowwhat" className="hover:text-neutral-300 transition-colors underline underline-offset-2">landing page</a>
-        </div>
       </div>
 
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');`}</style>

@@ -984,28 +984,29 @@ export default function NowWhatHome() {
           </div>
         </div>
       </div>
-      {/* Hidden admin tile — just below the fold, right-aligned with strip */}
-      <div className="mx-auto" style={{ width: '94%', maxWidth: '100%', paddingTop: '40px', paddingBottom: '24px' }}>
-        <div className="flex justify-end">
-          <a
-            href="/nowwhat/gen2"
-            className="block rounded-[1px]"
-            style={{
-              width: '18px',
-              height: '18px',
-              background: 'rgba(255,255,255,0.35)',
-              animation: 'tilePulse 3s ease-in-out infinite',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), inset 1px 0 0 rgba(255,255,255,0.16), inset 0 -1px 0 rgba(0,0,0,0.28), inset -1px 0 0 rgba(0,0,0,0.28)',
-            }}
-          />
-        </div>
-      </div>
+      {/* Dashboard link — bottom of viewport */}
+      <a
+        href="/nowwhat/gen2"
+        style={{
+          position: 'fixed',
+          bottom: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontSize: '11px',
+          letterSpacing: '0.08em',
+          color: 'rgba(255,255,255,0.4)',
+          textDecoration: 'none',
+          zIndex: 20,
+          transition: 'color 0.3s',
+        }}
+        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.2)')}
+      >
+        about exhibit
+      </a>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');
-        @keyframes tilePulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.7; }
-        }
       `}</style>
     </div>
   )
