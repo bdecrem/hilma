@@ -149,7 +149,7 @@ export default function PdfLightPage() {
         background: '#fff',
         color: '#1a1a1a',
         minHeight: '100vh',
-        padding: '40px 56px 32px',
+        padding: '32px 40px 36px 54px',
         maxWidth: '780px',
         margin: '0 auto',
       }}>
@@ -159,7 +159,7 @@ export default function PdfLightPage() {
           fontWeight: 300,
           letterSpacing: '0.08em',
           color: '#1a1a1a',
-          marginBottom: '28px',
+          marginBottom: '20px',
           lineHeight: 1,
         }}>
           Now what?
@@ -169,7 +169,7 @@ export default function PdfLightPage() {
         <div style={{
           fontSize: '11.5px',
           fontWeight: 400,
-          lineHeight: 1.55,
+          lineHeight: 1.5,
           color: '#3a3a3a',
         }}>
           <p style={{ marginBottom: '12px' }}>
@@ -179,15 +179,15 @@ export default function PdfLightPage() {
           <div style={{ fontSize: '9px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '16px', marginBottom: '8px' }}>The Question</div>
 
           <p style={{ marginBottom: '12px', color: '#1a1a1a', fontWeight: 600 }}>
-            At CASBS I will explore what&rsquo;s on the other side of AGI: how we can harness superintelligence to help people thrive and avoid the traps of <a href="https://www.sciencedirect.com/science/article/abs/pii/S1364661316300985" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>offloading</a>, <a href="https://arxiv.org/abs/2506.08872" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>debt</a> and <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6097646" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>surrender</a>.
+            At CASBS I will explore what&rsquo;s on the other side of AGI: my own take on how to harness superintelligence to help people thrive and avoid the traps of cognitive <a href="https://pubmed.ncbi.nlm.nih.gov/27542527/" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>offloading</a>, <a href="https://arxiv.org/abs/2506.08872" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>debt</a> and <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6097646" style={{ color: '#1a1a1a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#999' }}>surrender</a>.
           </p>
 
           <p style={{ marginBottom: '12px' }}>
-            I&rsquo;m a tinkerer and a hopeless optimist, always curious about new tech and its potential to solve real problems. I spent five+ years in East Palo Alto building a national model for bridging the digital divide, then helped share those learnings nationally as board chair of the Community Technology Centers Network. I co-founded <a href="https://www.fullcirclefund.org" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>Full Circle Fund</a> and created the Mozilla Builders incubator, supporting activists and founders building a better internet. Along the way, I also played a key role in the Firefox 1.0 launch and led Disney&rsquo;s early App Store efforts after creating the first iPhone smash hit.
+            I&rsquo;m a tinkerer and a hopeless optimist, always curious about new tech and its potential to solve real problems. I spent five+ years in East Palo Alto building a national model for bridging the digital divide, then helped share those learnings nationally from the Steering Committee of the Community Technology Centers Network. I co-founded <a href="https://www.fullcirclefund.org" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>Full Circle Fund</a> and created the Mozilla Builders incubator, supporting activists and founders building a better internet. Along the way, I also played a key role in the Firefox 1.0 launch and led Disney&rsquo;s early App Store efforts after creating the first iPhone smash hit.
           </p>
 
           <p style={{ marginBottom: '12px' }}>
-            For the last year, I&rsquo;ve been &ldquo;<a href="https://www.decremental.com" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>building with AI</a>,&rdquo; taking on increasingly ambitious projects, and I&rsquo;ve been blown away by the ability to &ldquo;manifest&rdquo; any software idea I can think of. But I&rsquo;ve also found myself paralyzed at times, overwhelmed by the lack of constraints and a feeling that when anything is possible, maybe nothing matters. I spent years discovering the magical power of playing with analog synths, finding flow state after hours listening and modulating simple music sketches. Then I tried Suno, the AI music service, and it ruined music for me: in 30 seconds it could create any song for me, better than anything I&rsquo;d made, and capturing the exact mood I had in mind. Why bother trying when what I do is so much worse than what the machine can just make on-demand?
+            For the last year, I&rsquo;ve been &ldquo;<a href="https://www.decremental.com" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>building with AI</a>,&rdquo; taking on increasingly ambitious projects, and I&rsquo;ve been blown away by the ability to &ldquo;manifest&rdquo; any software idea I can think of. But I&rsquo;ve also found myself paralyzed at times, overwhelmed by the lack of constraints and a feeling that when anything is possible, maybe nothing matters. I spent years discovering the magic of mashing knobs on analog synths, finding flow state after hours listening and modulating simple music sketches. Then I tried Suno, the AI music app, and it ruined music for me: in 30 seconds it could create any song for me, better than anything I could ever make, often capturing the exact mood I had in mind. I haven&rsquo;t touched the knobs since.
           </p>
 
           <p style={{ marginBottom: '12px' }}>
@@ -203,7 +203,7 @@ export default function PdfLightPage() {
             color: '#777',
             fontStyle: 'italic',
             fontSize: '10.5px',
-            lineHeight: 1.65,
+            lineHeight: 1.45,
           }}>
             &ldquo;I read a study that measured the efficiency of locomotion for various species on the planet. The condor used the least energy to move a kilometer. And humans came in with a rather unimpressive showing. [&hellip;] But then somebody at Scientific American had the insight to test the efficiency of locomotion for a man on a bicycle. And a man on a bicycle blew the condor away, completely off the top of the charts. And that&rsquo;s what a computer is to me. [&hellip;] It&rsquo;s the most remarkable tool that we&rsquo;ve ever come up with, and it&rsquo;s the equivalent of a bicycle for our minds.&rdquo;
             <br /><span style={{ fontStyle: 'normal', color: '#aaa' }}>&mdash; Steve Jobs, 1990</span>
@@ -214,7 +214,7 @@ export default function PdfLightPage() {
           </p>
 
           <p style={{ marginBottom: '12px' }}>
-            But it won&rsquo;t just happen by itself. Faced with superintelligent technology that can deliver the perfectly addictive immersive entertainment experiences that we won&rsquo;t be able to pull away from, that can do our jobs for us, answer any question, how do we resist cognitive surrender or avoid just becoming carbon-based DoorDash delivery drivers for the AI?
+            But it&rsquo;s not inevitable, or even the most likely outcome. We already can&rsquo;t put our phones down, and the feed algorithms and synthetic content are about to get a lot more addictive. Why work when we can &ldquo;vibe-work&rdquo;? (Microsoft is marketing that right now.) Why deal with our imperfect friends when we can have AI companions who are always there, always on our side? (<a href="https://www.commonsensemedia.org/press-releases/nearly-3-in-4-teens-have-used-ai-companions-new-national-survey-finds" style={{ color: '#3a3a3a', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#ccc' }}>Three in four teens are already trying it</a>.) How do we resist cognitive surrender, or avoid becoming carbon-based DoorDash delivery drivers for the AI?
           </p>
 
           <p style={{ marginBottom: '12px', color: '#1a1a1a', fontWeight: 500 }}>
@@ -224,13 +224,13 @@ export default function PdfLightPage() {
           <div style={{ fontSize: '9px', letterSpacing: '0.12em', color: '#aaa', textTransform: 'uppercase', marginTop: '16px', marginBottom: '8px' }}>The Project</div>
 
           <p style={{ marginBottom: '12px' }}>
-            Over the next year, I will have deep conversations with ten CASBS fellows, other academics and researchers on campus, and leading thinkers elsewhere. People who think about cognition, labor, identity and community. I&rsquo;ll engage their ideas with my builder&rsquo;s instinct. Each conversation becomes a blog or podcast episode. And because I&rsquo;m a builder, I&rsquo;ll be creating artifacts: prototypes and software ideas and tools that explore my ideas. If we&rsquo;re talking about flow state and AI, I&rsquo;ll build an app for that. If we&rsquo;re talking about UBI and the meaning of work, I might sketch a tool that explores that. <strong>Ten conversations, ten artifacts.</strong>
+            Over my year at CASBS, I will have in-depth conversations with CASBS fellows and other academics and researchers on campus about cognition, labor, identity and community. I&rsquo;ll engage their ideas with my builder&rsquo;s instinct. Each conversation becomes a blog or podcast episode. And because I&rsquo;m a builder, I&rsquo;ll be creating artifacts: prototypes and tools that explore my ideas. If we&rsquo;re talking about flow state and AI, I&rsquo;ll build an app for that. If we&rsquo;re talking about UBI and the meaning of work, I might sketch a tool that explores that. <strong>Ten conversations, ten artifacts.</strong>
           </p>
         </div>
 
         {/* Art piece — bicycle with wings */}
         <div style={{
-          marginTop: '20px',
+          marginTop: '-20px',
           display: 'flex',
           justifyContent: 'center',
         }}>
@@ -239,7 +239,7 @@ export default function PdfLightPage() {
             src="/nowwhat/bicycle_with_wings_light.svg"
             alt="Bicycle with wings"
             style={{
-              width: '180px',
+              width: '153px',
               height: 'auto',
             }}
           />
@@ -247,7 +247,7 @@ export default function PdfLightPage() {
 
         {/* Footer */}
         <div style={{
-          marginTop: '12px',
+          marginTop: '4px',
           textAlign: 'center',
           fontSize: '11px',
           letterSpacing: '0.15em',
