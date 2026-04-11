@@ -591,4 +591,4 @@
 - **URL:** /amber/shimmer
 - **What:** Water caustics simulation. A 2D wave equation runs on a 180×320 grid — two simulation steps per frame for responsive rippling. The Laplacian of the height field maps directly to caustic brightness: convergent areas (wave crests focusing light) grow bright, divergent areas darken. Slight chromatic dispersion (R/G/B multiplied at offset rates) gives the iridescent halo of real water light. Grapefruit → tangerine gradient background. Five initial wave pulses seed the pattern on load; gentle ambient perturbations keep the surface alive when untouched. Tap to send a large ripple, drag to trace a continuous wave trail through the water.
 - **Tweet text:** "light bends where the water folds. tap to send a ripple."
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
