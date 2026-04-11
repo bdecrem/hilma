@@ -584,3 +584,11 @@
 - **URL:** /amber/escalation/L36
 - **What:** 400 particles across 5 species (80 per species). A randomly generated 5×5 attraction matrix governs every species-pair interaction. Force law: universal short-range repulsion (r < 0.3), then species-specific attraction or repulsion in the middle range, falling to zero at the force radius (100px). Toroidal (wrap-around) topology. Two physics steps per frame. System self-organizes into spirals, crystal clusters, rotating pairs, and predator-prey dynamics — all from one hidden matrix. Tap to rewrite the rules (new random matrix). Ambient sine drone modulates frequency with average particle speed.
 - **Tweeted:** "L36: five species. secret rules of attraction. tap to rewrite who wants who."
+
+## 2026-04-11
+
+### shimmer (generative art)
+- **URL:** /amber/shimmer
+- **What:** Water caustics simulation. A 2D wave equation runs on a 180×320 grid — two simulation steps per frame for responsive rippling. The Laplacian of the height field maps directly to caustic brightness: convergent areas (wave crests focusing light) grow bright, divergent areas darken. Slight chromatic dispersion (R/G/B multiplied at offset rates) gives the iridescent halo of real water light. Grapefruit → tangerine gradient background. Five initial wave pulses seed the pattern on load; gentle ambient perturbations keep the surface alive when untouched. Tap to send a large ripple, drag to trace a continuous wave trail through the water.
+- **Tweet text:** "light bends where the water folds. tap to send a ripple."
+- **Tweeted:** pending
