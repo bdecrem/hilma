@@ -44,14 +44,14 @@ export default function NowWhatNW() {
           fontFamily: "'DM Sans', system-ui, sans-serif",
           fontSize: '11px',
           letterSpacing: '0.08em',
-          color: 'rgba(255,255,255,0.5)',
+          color: 'rgba(255,255,255,0.4)',
           textDecoration: 'none',
           zIndex: 20,
           opacity: mounted ? 1 : 0,
           transition: 'opacity 1s ease 1.2s, color 0.3s',
         }}
         onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
-        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.5)')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
       >
         about the artifact
       </a>
