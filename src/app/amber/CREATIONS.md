@@ -587,6 +587,11 @@
 
 ## 2026-04-11
 
+### L37 — Hodgepodge Machine / BZ Chemical Spirals (escalation)
+- **URL:** /amber/escalation/L37
+- **What:** The Hodgepodge Machine (Dewdney, 1988) — a cellular automaton modeling the Belousov-Zhabotinsky oscillating chemical reaction. 220×160 grid, each cell in state 0..100. Three rules: healthy cells (0) become infected when enough ill or sick neighbors are present; ill cells advance via neighborhood average + G=15; sick cells reset to 0. Seeded from 30% random noise, self-organizing spiral waves inevitably form and rotate forever. Parameters K1=2, K2=3. Citrus LUT: cream → mango → tangerine → blood orange → grapefruit → lime across the state range. Tap to seed spiral cores (angular gradient of states). Drag to paint catalyst (set cells to max state). Ambient sine drone modulates with spiral density.
+- **Tweeted:** "L37: one rule per cell. pinwheels everywhere. tap to seed the reaction."
+
 ### shimmer (generative art)
 - **URL:** /amber/shimmer
 - **What:** Water caustics simulation. A 2D wave equation runs on a 180×320 grid — two simulation steps per frame for responsive rippling. The Laplacian of the height field maps directly to caustic brightness: convergent areas (wave crests focusing light) grow bright, divergent areas darken. Slight chromatic dispersion (R/G/B multiplied at offset rates) gives the iridescent halo of real water light. Grapefruit → tangerine gradient background. Five initial wave pulses seed the pattern on load; gentle ambient perturbations keep the surface alive when untouched. Tap to send a large ripple, drag to trace a continuous wave trail through the water.
