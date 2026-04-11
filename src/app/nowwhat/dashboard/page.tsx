@@ -41,9 +41,9 @@ function GridPreview({ grid, size = 6 }: { grid: number[][]; size?: number }) {
 }
 
 function StatusBadge({ approved }: { approved?: boolean }) {
-  if (approved === true) return <span className="text-green-400 text-[10px] font-medium tracking-wide">APPROVED</span>
-  if (approved === false) return <span className="text-red-400 text-[10px] font-medium tracking-wide">REJECTED</span>
-  return <span className="text-neutral-500 text-[10px] tracking-wide">PENDING</span>
+  if (approved === true) return <span className="text-neutral-400 text-[10px] font-medium tracking-wide">APPROVED</span>
+  if (approved === false) return <span className="text-neutral-400 text-[10px] font-medium tracking-wide">REJECTED</span>
+  return <span className="text-neutral-400 text-[10px] tracking-wide">PENDING</span>
 }
 
 export default function Gen2Dashboard() {
@@ -247,10 +247,8 @@ export default function Gen2Dashboard() {
               <div
                 key={c.id}
                 className={`rounded-lg border p-4 transition-colors ${
-                  c.approved === true
-                    ? 'border-green-400/20 bg-green-400/[0.03]'
-                    : c.approved === false
-                    ? 'border-red-400/10 bg-red-400/[0.02] opacity-50'
+                  c.approved === false
+                    ? 'border-white/[0.06] bg-white/[0.02] opacity-50'
                     : 'border-white/[0.06] bg-white/[0.02]'
                 }`}
               >
