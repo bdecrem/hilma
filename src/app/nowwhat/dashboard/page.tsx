@@ -143,7 +143,7 @@ export default function Gen2Dashboard() {
 
         {/* How this works */}
         <div className="mb-8 text-sm text-neutral-400 leading-relaxed">
-          The big question behind <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">Now what?</a> is how humanity thrives after AGI arrives. This artifact plays with that question in pixels — concepts assembling, mostly falling apart. Here&apos;s how it works: it pulls recent articles from the web (stories about AGI, democracy, creativity, meaning) and extracts concrete, visual concepts from them: <em>campfire</em>, <em>paper crane</em>, <em>raised fist</em>. An AI then draws each concept as a tiny pixel silhouette. Each drawing enters a physics simulation where momentum tries to assemble it and entropy tries to tear it apart. Most attempts fail. The shapes that survive land here, waiting for a human to decide if they&apos;re worth keeping. The ones you approve join the living display on the{' '}
+          <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">Now what?</a> examines how humanity can thrive after superintelligence. This artifact plays with that question: concepts assembling, mostly falling apart. Here&apos;s how it works: it pulls recent articles from the web (stories about AGI, creativity, meaning, democracy) and extracts keywords and concepts from them: <em>campfire</em>, <em>paper crane</em>, <em>raised fist</em>. An AI then draws each concept as a tiny pixel silhouette. Each drawing enters a physics simulation where momentum tries to assemble it and entropy tries to tear it apart. Most attempts fail. The shapes that survive land here, waiting for a human to decide if they&apos;re worth keeping. The ones you approve join the living display on the{' '}
           <a href="/nowwhat" className="underline underline-offset-2 decoration-neutral-600 hover:text-neutral-200 transition-colors">homepage</a>.
         </div>
 
@@ -270,13 +270,13 @@ export default function Gen2Dashboard() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => judge(c.id, true)}
-                      className="flex-1 px-3 py-1.5 rounded text-xs bg-green-400/10 text-green-400 hover:bg-green-400/20 transition-colors"
+                      className="flex-1 px-3 py-1.5 rounded text-xs border border-white/[0.08] text-neutral-500 hover:border-white/[0.15] hover:text-neutral-300 transition-colors"
                     >
                       approve
                     </button>
                     <button
                       onClick={() => judge(c.id, false)}
-                      className="flex-1 px-3 py-1.5 rounded text-xs bg-red-400/10 text-red-400 hover:bg-red-400/20 transition-colors"
+                      className="flex-1 px-3 py-1.5 rounded text-xs border border-white/[0.08] text-neutral-500 hover:border-white/[0.15] hover:text-neutral-300 transition-colors"
                     >
                       reject
                     </button>

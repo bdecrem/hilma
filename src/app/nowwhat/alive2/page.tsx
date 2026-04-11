@@ -519,7 +519,7 @@ export default function Alive2Page() {
           </div>
 
           <div className="text-center mt-2">
-            <a href="/nowwhat/gen2" className="text-white/20 text-[10px] hover:text-white/40 transition-colors pointer-events-auto">
+            <a href="/nowwhat/dashboard" className="text-white/20 text-[10px] hover:text-white/40 transition-colors pointer-events-auto">
               open dashboard &rarr;
             </a>
           </div>

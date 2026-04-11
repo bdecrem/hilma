@@ -94,7 +94,7 @@ export default function OG() {
         {/* Title */}
         <div style={{
           display: 'flex',
-          fontSize: 144,
+          fontSize: 96,
           fontWeight: 300,
           color: '#fff',
           letterSpacing: '0.04em',
