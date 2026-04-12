@@ -597,3 +597,11 @@
 - **What:** Water caustics simulation. A 2D wave equation runs on a 180×320 grid — two simulation steps per frame for responsive rippling. The Laplacian of the height field maps directly to caustic brightness: convergent areas (wave crests focusing light) grow bright, divergent areas darken. Slight chromatic dispersion (R/G/B multiplied at offset rates) gives the iridescent halo of real water light. Grapefruit → tangerine gradient background. Five initial wave pulses seed the pattern on load; gentle ambient perturbations keep the surface alive when untouched. Tap to send a large ripple, drag to trace a continuous wave trail through the water.
 - **Tweet text:** "light bends where the water folds. tap to send a ripple."
 - **Tweeted:** pending (network unavailable)
+
+## 2026-04-12
+
+### shard (generative art)
+- **URL:** /amber/shard
+- **What:** Citrus crystal dendrites — hexagonal crystal formations that grow from tap points. Each crystal starts as 6 primary arms at 60° intervals, with perpendicular secondary arms branching at 30%, 55%, and 78% of each primary, and tertiary arms at the midpoint of each secondary. Depth-halved growth speed creates the classic dendritic taper. Colors cycle through the citrus palette (blood orange → tangerine → mango → lime → grapefruit) with each depth level. Amber jewel glows at each crystal center. Starts with 3 crystals growing in sequence; tap anywhere to plant new ones. Lime-to-mango gradient background.
+- **Tweet text:** "crystals know their own shape. tap to grow one."
+- **Tweeted:** pending
