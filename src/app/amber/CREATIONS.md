@@ -604,4 +604,4 @@
 - **URL:** /amber/shard
 - **What:** Citrus crystal dendrites — hexagonal crystal formations that grow from tap points. Each crystal starts as 6 primary arms at 60° intervals, with perpendicular secondary arms branching at 30%, 55%, and 78% of each primary, and tertiary arms at the midpoint of each secondary. Depth-halved growth speed creates the classic dendritic taper. Colors cycle through the citrus palette (blood orange → tangerine → mango → lime → grapefruit) with each depth level. Amber jewel glows at each crystal center. Starts with 3 crystals growing in sequence; tap anywhere to plant new ones. Lime-to-mango gradient background.
 - **Tweet text:** "crystals know their own shape. tap to grow one."
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
