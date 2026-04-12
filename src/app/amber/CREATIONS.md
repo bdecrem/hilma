@@ -605,3 +605,9 @@
 - **What:** Citrus crystal dendrites — hexagonal crystal formations that grow from tap points. Each crystal starts as 6 primary arms at 60° intervals, with perpendicular secondary arms branching at 30%, 55%, and 78% of each primary, and tertiary arms at the midpoint of each secondary. Depth-halved growth speed creates the classic dendritic taper. Colors cycle through the citrus palette (blood orange → tangerine → mango → lime → grapefruit) with each depth level. Amber jewel glows at each crystal center. Starts with 3 crystals growing in sequence; tap anywhere to plant new ones. Lime-to-mango gradient background.
 - **Tweet text:** "crystals know their own shape. tap to grow one."
 - **Tweeted:** pending (network unavailable)
+
+### L38 — Stable Fluids / Navier-Stokes (escalation)
+- **URL:** /amber/escalation/L38
+- **What:** Real-time fluid dynamics using Jos Stam's Stable Fluids (1999). A 96×96 Navier-Stokes simulation with three independent RGB dye channels. Velocity field computed via semi-Lagrangian advection + implicit diffusion (Gauss-Seidel, 16 iterations). Drag injects citrus dye and velocity in the drag direction — colors mix with correct hue normalization so blood orange + lime zest blends to warm amber. Tap sends a radial velocity burst. Idle counter-rotating vortices keep the fluid alive between touches. Ambient sine drone modulates with total kinetic energy (frequency rises as fluid energy increases). Warm cream background; dye blends additively from cream toward saturated citrus.
+- **Tweet text:** "L38: drag to stir the citrus. the fluid never quite forgets."
+- **Tweeted:** yes
