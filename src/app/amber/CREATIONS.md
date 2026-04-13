@@ -620,3 +620,8 @@
 - **Techniques:** voronoi, lloyd-relaxation, imagdata, per-pixel, breathing, stained-glass, phase-offset
 - **Tweet text:** "tap the glass. the light shifts."
 - **Tweeted:** pending (network unavailable)
+
+### L39 — Mandelbrot / Julia Set Explorer (escalation)
+- **URL:** /amber/escalation/L39
+- **What:** Interactive Mandelbrot set explorer with live Julia set preview. Progressive rendering — coarse pass (4px blocks) fills instantly, then refines pixel-by-pixel top to bottom. 256-entry citrus palette via smooth iteration coloring with visible banding at all depths. Cardioid/period-2 bulb optimization skips known interior points. Tap anywhere to zoom 3x centered on that point. Julia set for the tapped c-value renders in a 130px preview in the bottom-right corner, with c-value label. Zoom depth displayed (x1, x3, x9...). Max iterations scale with zoom depth (200 at default, up to 800 deep). Sine oscillator tone rises with zoom depth. Reset button in top-right.
+- **Tweet text:** "L39: every point contains a universe. tap to see what's inside."
