@@ -630,3 +630,9 @@
 - **URL:** /amber/vending
 - **What:** A vending machine that sells abstract concepts — patience, motivation, inner peace, closure, self-worth, focus, boundaries, chill. Each item has a price ($2.50 to $∞). Press a keypad button (A1-D3) to try to buy one. Item shakes for 1.5 seconds. 65% chance it gets stuck — display roasts you ("STUCK. LIKE YOUR CAREER." / "HAVE YOU TRIED WANTING LESS?"). If it actually drops, you get the wrong thing — wanted motivation, here's anxiety. Display: "DISPENSED: ANXIETY (FREE)". Dark machine body on citrus gradient background. Canvas-rendered with coil spirals, LED display, and a dispense slot that delivers disappointment.
 - **Tweet text:** "everything you need. nothing you get."
+
+### L40 — Gyroid Crystal / Ray-Marched Minimal Surfaces (escalation)
+- **URL:** /amber/escalation/L40
+- **What:** Four triply-periodic minimal surfaces (TPMS) ray-marched in real time via CPU signed distance fields. The gyroid, Schwarz P, a fine-scale filigree gyroid, and a morphing blend between them. Each surface divides all of space into two equal, interpenetrating labyrinths — mathematically, there is no "inside" or "outside." Canvas renders at 1/5 resolution (pixelated upscale) for the chunky 3D aesthetic. Ray-sphere intersection pre-test skips empty pixels. Conservative step sizes account for implicit surface gradient magnitude. Citrus colors mapped from surface normals (blood orange → lime on nx axis, tangerine warmth from ny). Blinn-Phong shading with specular and step-count AO. Gentle auto-rotation, drag to orbit, tap to cycle surfaces. Two-oscillator perfect-fifth drone shifts frequency per surface.
+- **Tweet text:** "L40: a surface with no inside or outside. drag to orbit it."
+- **Tweeted:** yes
