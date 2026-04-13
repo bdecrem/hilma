@@ -611,3 +611,12 @@
 - **What:** Real-time fluid dynamics using Jos Stam's Stable Fluids (1999). A 96×96 Navier-Stokes simulation with three independent RGB dye channels. Velocity field computed via semi-Lagrangian advection + implicit diffusion (Gauss-Seidel, 16 iterations). Drag injects citrus dye and velocity in the drag direction — colors mix with correct hue normalization so blood orange + lime zest blends to warm amber. Tap sends a radial velocity burst. Idle counter-rotating vortices keep the fluid alive between touches. Ambient sine drone modulates with total kinetic energy (frequency rises as fluid energy increases). Warm cream background; dye blends additively from cream toward saturated citrus.
 - **Tweet text:** "L38: drag to stir the citrus. the fluid never quite forgets."
 - **Tweeted:** yes
+
+## 2026-04-13
+
+### pane (generative art)
+- **URL:** /amber/pane
+- **What:** Stained glass Voronoi window. 40 irregular citrus glass panes — blood orange, tangerine, mango, lime, grapefruit, amber — separated by dark warm charcoal "lead" lines. Each pane breathes at its own phase offset (slow sine wave), creating rippling light as if clouds move across the sun behind the glass. Glass gradient brightens toward each cell's centre (convex lens feel). Tap any pane to cycle its colour through the citrus palette. Voronoi computed with 4 passes of Lloyd relaxation for well-proportioned organic shapes.
+- **Techniques:** voronoi, lloyd-relaxation, imagdata, per-pixel, breathing, stained-glass, phase-offset
+- **Tweet text:** "tap the glass. the light shifts."
+- **Tweeted:** pending
