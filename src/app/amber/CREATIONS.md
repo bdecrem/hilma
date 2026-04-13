@@ -636,3 +636,8 @@
 - **What:** Four triply-periodic minimal surfaces (TPMS) ray-marched in real time via CPU signed distance fields. The gyroid, Schwarz P, a fine-scale filigree gyroid, and a morphing blend between them. Each surface divides all of space into two equal, interpenetrating labyrinths — mathematically, there is no "inside" or "outside." Canvas renders at 1/5 resolution (pixelated upscale) for the chunky 3D aesthetic. Ray-sphere intersection pre-test skips empty pixels. Conservative step sizes account for implicit surface gradient magnitude. Citrus colors mapped from surface normals (blood orange → lime on nx axis, tangerine warmth from ny). Blinn-Phong shading with specular and step-count AO. Gentle auto-rotation, drag to orbit, tap to cycle surfaces. Two-oscillator perfect-fifth drone shifts frequency per surface.
 - **Tweet text:** "L40: a surface with no inside or outside. drag to orbit it."
 - **Tweeted:** yes
+
+### L41 — 3D Wave Pool (escalation)
+- **URL:** /amber/escalation/L41
+- **What:** A 44x44 grid simulates the 2D wave equation in real time — two steps per frame. Tap to drop stones into the pool, creating circular waves that propagate, interfere constructively/destructively, and reflect off boundaries. Drag to orbit the camera around the 3D scene. Height-mapped citrus coloring: deep leaf green at troughs, cream at rest, mango/tangerine/blood orange at peaks. Ambient drops every ~2 seconds. Sine drone modulates with total wave energy. Damping 0.993.
+- **Tweet text:** "L41: tap to drop a stone. watch the waves find each other."
