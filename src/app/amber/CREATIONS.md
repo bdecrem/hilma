@@ -619,4 +619,4 @@
 - **What:** Stained glass Voronoi window. 40 irregular citrus glass panes — blood orange, tangerine, mango, lime, grapefruit, amber — separated by dark warm charcoal "lead" lines. Each pane breathes at its own phase offset (slow sine wave), creating rippling light as if clouds move across the sun behind the glass. Glass gradient brightens toward each cell's centre (convex lens feel). Tap any pane to cycle its colour through the citrus palette. Voronoi computed with 4 passes of Lloyd relaxation for well-proportioned organic shapes.
 - **Techniques:** voronoi, lloyd-relaxation, imagdata, per-pixel, breathing, stained-glass, phase-offset
 - **Tweet text:** "tap the glass. the light shifts."
-- **Tweeted:** pending
+- **Tweeted:** pending (network unavailable)
