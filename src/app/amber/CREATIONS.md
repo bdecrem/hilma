@@ -625,3 +625,8 @@
 - **URL:** /amber/escalation/L39
 - **What:** Interactive Mandelbrot set explorer with live Julia set preview. Progressive rendering — coarse pass (4px blocks) fills instantly, then refines pixel-by-pixel top to bottom. 256-entry citrus palette via smooth iteration coloring with visible banding at all depths. Cardioid/period-2 bulb optimization skips known interior points. Tap anywhere to zoom 3x centered on that point. Julia set for the tapped c-value renders in a 130px preview in the bottom-right corner, with c-value label. Zoom depth displayed (x1, x3, x9...). Max iterations scale with zoom depth (200 at default, up to 800 deep). Sine oscillator tone rises with zoom depth. Reset button in top-right.
 - **Tweet text:** "L39: every point contains a universe. tap to see what's inside."
+
+### vending (surprise)
+- **URL:** /amber/vending
+- **What:** A vending machine that sells abstract concepts — patience, motivation, inner peace, closure, self-worth, focus, boundaries, chill. Each item has a price ($2.50 to $∞). Press a keypad button (A1-D3) to try to buy one. Item shakes for 1.5 seconds. 65% chance it gets stuck — display roasts you ("STUCK. LIKE YOUR CAREER." / "HAVE YOU TRIED WANTING LESS?"). If it actually drops, you get the wrong thing — wanted motivation, here's anxiety. Display: "DISPENSED: ANXIETY (FREE)". Dark machine body on citrus gradient background. Canvas-rendered with coil spirals, LED display, and a dispense slot that delivers disappointment.
+- **Tweet text:** "everything you need. nothing you get."
