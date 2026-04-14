@@ -197,8 +197,8 @@ const darkTheme = {
     active: { label: 'live', color: 'text-emerald-400', bg: 'bg-emerald-900/30', dot: 'bg-emerald-500' },
     wip: { label: 'wip', color: 'text-violet-400', bg: 'bg-violet-900/30', dot: 'bg-violet-500' },
     respinning: { label: 'booting up', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
-    neglected: { label: 'neglect (benign)', color: 'text-neutral-500', bg: 'bg-neutral-800', dot: 'bg-neutral-600' },
-    retired: { label: '\uD83E\uDED7†', color: 'text-neutral-600', bg: 'bg-neutral-800', dot: 'bg-neutral-700' },
+    neglected: { label: 'neglect (benign)', color: 'text-neutral-400', bg: 'bg-neutral-700', dot: 'bg-neutral-500' },
+    retired: { label: '\uD83E\uDED7†', color: 'text-neutral-400', bg: 'bg-neutral-700', dot: 'bg-neutral-500' },
   },
   accent: {
     active: 'from-emerald-500/40 via-emerald-500/40 to-emerald-500/40',
