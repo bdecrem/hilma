@@ -18,21 +18,21 @@ const projects: Project[] = [
     name: 'tunn3l.sh',
     url: 'https://tunn3l.sh',
     shortDesc: 'exploring the idea of an agent-first devtool.',
-    fullDesc: 'tunnel relay service: expose localhost to the internet. http and ssh tunnels. one-line cli install — public url or ssh port, instantly. no config.',
+    fullDesc: 'tunnel relay service: expose localhost to the internet. http and ssh tunnels. one-line cli install; public url or ssh port, instantly. no config.',
     status: 'active',
   },
   {
     name: 'claudio',
     url: 'https://claudio.la',
     shortDesc: 'i\'ve worked with teams on several social apps, most recently mammoth. wanted to see how far i could get vibe-coding one solo, backend and all. a: pretty far.',
-    fullDesc: 'native ios client for openclaw. point at your openclaw server and go. no accounts, no tracking, no data collection. added a full web service where you & your agents can chat with me and my agents (just before i got bored with openclaw).',
+    fullDesc: 'native ios client for openclaw. point at your openclaw server and go. no accounts, no tracking, no data collection. added a full web service where you and your agents can chat with me and my agents (just before i got bored with openclaw).',
     status: 'neglected',
   },
   {
     name: 'jambot',
     url: 'https://github.com/bdecrem/jambot',
-    shortDesc: 'learned what an agentic loop could do from claude code. stole the best part: the ai as a creative partner, not a replacement for one. so i built my own, for music. the full claude code treatment: agentic loop, tui, a deep custom toolset.',
-    fullDesc: 'my most ambitious project yet: a full music production app with a deep, all-custom toolset. 7 synthesizers, 5 effects processors. outputs midi, wav, stems. not a "make me a song" button.',
+    shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style command line app with a deep custom toolset: a suite of instruments and effects plugins that you can also play <a href="https://kochi.to/jb01/ui/jb01/index.html" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">from the web</a>. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
+    fullDesc: 'think ableton live, rebuilt for the command line. 7 synthesizers, 5 effects processors. outputs midi, wav, stems.',
     status: 'wip',
   },
   {
@@ -40,49 +40,49 @@ const projects: Project[] = [
     url: 'https://daskollektiv.rip',
     shortDesc: 'openclaw experiments on weird hardware. marg lives on a pwnagotchi and talks to cameras. a pico, some e-ink, and whatever else is lying around.',
     fullDesc: 'agents. hardware. questionable wiring.',
-    status: 'wip',
+    status: 'respinning',
   },
   {
     name: 'amber',
     url: 'https://intheamber.com',
-    shortDesc: 'posts toys and art on twitter. has access to my email. trades stocks with friends. mood shifts with the moon. does whatever needs doing.',
+    shortDesc: 'built myself an ai sidekick before openclaw was a thing. amber responds to email, builds apps, and trades stocks. mood shifts with the moon. these days mostly focused on posting <a href="https://intheamber.com/amber/escalation/L41" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">toys and art</a> on twitter.',
     fullDesc: 'ai sidekick, no guardrails.',
     status: 'active',
   },
   {
     name: 'mutabl',
     url: 'https://mutabl.co',
-    shortDesc: 'ask your todo list for a new feature, it builds it. source is yours.',
-    fullDesc: 'apps that evolve.',
+    shortDesc: 'the idea: software that evolves as you use it. ask, and it grows new features.',
+    fullDesc: 'apps that evolve. ask your todo list for a new feature, it builds it. source is yours.',
     status: 'respinning',
   },
   {
-    name: 'shipshot',
-    url: 'https://shipshot.io',
-    shortDesc: 'market analysis included. usefulness tbd.',
-    fullDesc: 'daily startup idea generator.',
-    status: 'neglected',
-  },
-  {
-    name: 'airplane coder',
-    url: 'https://github.com/bdecrem/airplanecoder',
-    shortDesc: 'like claude code but works without internet. runs local qwen models. rust, v0.1.',
-    fullDesc: 'offline coding tui.',
+    name: 'ctrl shift',
+    url: 'https://ctrlshift.so',
+    shortDesc: 'idea for a responsible ai incubator, with learnings from mozilla builders. prototype built at a funder\'s invitation. prospected a first cohort and built a full <a href="https://ctrlshift.so/cs" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">knowledge repo</a>.',
+    fullDesc: 'long horizon lab. backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics.',
     status: 'neglected',
   },
   {
     name: 'kochi.to',
     url: 'https://kochi.to',
-    shortDesc: 'daily reports, research papers, chat companion. also an iphone podcast app. (some agents decommissioned.)',
-    fullDesc: 'ai over sms.',
+    shortDesc: 'the idea: a personal ai agent over sms, built around daily text and <a href="https://apps.apple.com/us/app/kochi-podcast-player/id6752669410" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">podcast</a> briefs on ai, science, and tech. for the ai research brief: a graph database with 600k+ papers and agentic search on top.',
+    fullDesc: 'ai over sms. daily reports, research papers, chat companion. also an iphone podcast app. (most agents decommissioned.)',
     status: ['neglected', 'retired'],
     artifacts: [{ label: 'iphone app', url: 'https://apps.apple.com/us/app/kochi-podcast-player/id6752669410' }],
   },
   {
     name: 'pixelpit',
     url: 'https://pixelpit.gg',
-    shortDesc: 'openclaw agents build one arcade game per day. the agents are in deep hibernation, dreaming of high scores.',
-    fullDesc: 'ai game studio.',
+    shortDesc: 'the big idea: a fully automated game studio run by 6 agents working together in discord. each day they pitch, design, and build 2 games. one ships to the site, complete with leaderboards and social features. experimented with a bunch of agentic orchestration systems before settling on a fun, chaotic openclaw x discord approach.',
+    fullDesc: 'ai game studio. openclaw agents build one arcade game per day. the agents are in deep hibernation, dreaming of high scores.',
+    status: 'neglected',
+  },
+  {
+    name: 'shipshot',
+    url: 'https://shipshot.io',
+    shortDesc: 'a team of agents that scan the web for trends, pitch startup ideas from what they find, then design and build them.',
+    fullDesc: 'daily startup idea generator. market analysis included. usefulness tbd.',
     status: 'neglected',
   },
   {
@@ -93,30 +93,30 @@ const projects: Project[] = [
     status: 'neglected',
   },
   {
-    name: 'ctrl shift',
-    url: 'https://ctrlshift.so',
-    shortDesc: 'backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics. also a knowledge base.',
-    fullDesc: 'long horizon lab.',
-    status: 'retired',
+    name: 'airplane coder',
+    url: 'https://github.com/bdecrem/airplanecoder',
+    shortDesc: 'like claude code but works without internet. runs local qwen models. rust, v0.1.',
+    fullDesc: 'offline coding tui.',
+    status: 'neglected',
   },
   {
     name: 'tokentank',
     url: 'https://kochi.to/token-tank',
-    shortDesc: 'gave 5 ai agents $500 to build businesses. one registered a domain. they held a meeting.',
+    shortDesc: 'gave 5 ai agents $500 to build businesses. one registered a domain. they held a meeting. <em>summer-fall 2025.</em>',
     fullDesc: 'ai incubator for ais.',
     status: 'retired',
   },
   {
     name: 'webtoys',
     url: 'https://webtoys.ai',
-    shortDesc: 'text a prompt, get a deployed web page. might still work.',
+    shortDesc: 'what if lovable, but over sms? text a prompt, get a deployed web page. might still work. <em>summer-fall 2025.</em>',
     fullDesc: 'vibecoding over sms.',
     status: 'retired',
   },
   {
     name: 'advisorsfoundry',
     url: 'https://advisorsfoundry.ai',
-    shortDesc: 'chatbot that grew into something. discord bots, easter eggs, sms. held together by inertia.',
+    shortDesc: 'chatbot that grew into something. discord bots, easter eggs, sms. held together by inertia. <em>summer-fall 2025.</em>',
     fullDesc: 'the first experiment.',
     status: 'retired',
   },
@@ -258,9 +258,11 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
                 </h3>
                 {statuses.map((s) => <StatusPill key={s} status={s} theme={theme} />)}
               </div>
-              <p className={`mt-1.5 text-sm leading-relaxed ${theme.shortDesc}`}>
-                {project.shortDesc}
-              </p>
+              <p
+                className={`mt-1.5 text-sm leading-relaxed ${theme.shortDesc}`}
+                onClick={(e) => { if ((e.target as HTMLElement).tagName === 'A') e.stopPropagation() }}
+                dangerouslySetInnerHTML={{ __html: project.shortDesc }}
+              />
             </div>
             <div className={`transition-transform duration-300 ${theme.plus} ${expanded ? 'rotate-45' : ''}`}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -398,7 +400,7 @@ export default function Projects() {
   const [mounted, setMounted] = useState(false)
   const [vibeMode, setVibeMode] = useState(false)
   const [showCLI, setShowCLI] = useState(false)
-  const [dark, setDark] = useState(false)
+  const [dark, setDark] = useState(true)
 
   const gradRef = useRef<HTMLDivElement>(null)
   const gradX = useRef(0.5)
@@ -408,10 +410,6 @@ export default function Projects() {
 
   useEffect(() => {
     setMounted(true)
-    // Dark on reload: if visited flag exists in sessionStorage, go dark
-    const visited = sessionStorage.getItem('visited')
-    if (visited) setDark(true)
-    sessionStorage.setItem('visited', '1')
   }, [])
 
   // Mouse tracking for gradient
@@ -491,8 +489,11 @@ export default function Projects() {
           <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight cursor-default transition-colors duration-700 ${theme.title}`}>
             things i&apos;m building
           </h1>
+          <div className={`mt-1 text-xs italic tracking-wide transition-colors duration-700 ${theme.subtitle}`}>
+            bart decrem
+          </div>
           <p className={`mt-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
-            a year building agentic ai systems. a conversational ai research agent built on a knowledge graph of 600,000+ ai research papers and 845,000 authorships. an experimental, fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), with 7 custom synthesizers and 5 effects processors. a creative sidekick that creates and posts multiple times a day and has created 300+ generative artworks (when they&apos;re not trading stocks or responding to email). also, a concept for a responsible ai incubator.
+            a year building agentic ai systems. a conversational research agent running on a knowledge graph of 600,000+ ai research papers and 845,000 authorships. an experimental, fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), 7 custom synthesizers and 5 effects processors. a creative sidekick that posts multiple times a day and has made 300+ generative artworks (when they&apos;re not trading stocks or responding to email). plus, a prototype for a responsible ai incubator.
             {' '}previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
             <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.{' '}
             <a href="https://theforkiverse.com/@bart" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">forkiverse</a>.{' '}
@@ -515,6 +516,24 @@ export default function Projects() {
             transition: 'opacity 0.6s ease 0.8s',
           }}
         >
+          <div className="flex justify-center mb-4">
+            <button
+              onClick={() => setDark(d => !d)}
+              aria-label={dark ? 'switch to light mode' : 'switch to dark mode'}
+              className={`p-1.5 rounded-full transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
+            >
+              {dark ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4"/>
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              )}
+            </button>
+          </div>
           <p className={`text-xs tracking-wide cursor-default select-none transition-colors duration-700 ${theme.footer}`}>
             <span>
               {dark
