@@ -647,4 +647,5 @@
 ### aurora (generative art)
 - **URL:** /amber/aurora
 - **What:** Five sinusoidal curtains of citrus light dancing against a warm near-black sky. Each band — blood orange, tangerine, mango, lime, grapefruit — waves at its own frequency and speed, layered with secondary harmonics for organic undulation. Multi-pass additive glow rendering (4 strokes per band, widest dim corona to tight bright core) gives genuine luminous depth. 280 twinkling stars in the upper sky. Tap anywhere to send a ripple disturbance that propagates outward through all bands as a circular wavefront, disturbing each curtain as it passes.
+- **Tweet text:** "five curtains. each one its own frequency. tap to send a ripple."
 - **Tweeted:** pending (network unavailable)
