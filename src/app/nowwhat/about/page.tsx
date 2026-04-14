@@ -224,6 +224,28 @@ export default function PdfLightPage() {
           <p style={{ marginBottom: '20px' }}>
             Over my year at CASBS, I will have in-depth conversations with CASBS fellows and other academics and researchers on campus about cognition, labor, identity and community. I&rsquo;ll engage their ideas with my builder&rsquo;s instinct. Each conversation becomes a blog or podcast episode. And because I&rsquo;m a builder, I&rsquo;ll be creating artifacts: prototypes and tools that explore my ideas. If we&rsquo;re talking about flow state and AI, I&rsquo;ll build an app for that. If we&rsquo;re talking about UBI and the meaning of work, I might sketch a tool that explores that. <strong>Ten conversations, ten artifacts.</strong>
           </p>
+
+          {/* About-the-author callout */}
+          <aside style={{
+            marginTop: '64px',
+            paddingLeft: '24px',
+            borderLeft: '1px solid #2a2a2a',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}>
+            <div style={{
+              fontSize: '10px',
+              letterSpacing: '0.18em',
+              color: '#444',
+              textTransform: 'uppercase',
+            }}>
+              About the author
+            </div>
+            <div style={{ fontSize: '13px', color: '#999', lineHeight: 1.7 }}>
+              <span style={{ color: '#d0d0d0' }}>Bart Decrem</span>. Entrepreneur. Firefox 1.0 launch team, Tapulous / Tap Tap Revenge, Disney Mobile, and the Mozilla Builders incubator. These days: building agentic AI systems. <a href="https://www.decremental.com" target="_blank" rel="noopener noreferrer" style={{ color: '#999', textDecoration: 'underline', textUnderlineOffset: '2px', textDecorationColor: '#333' }}>decremental.com</a>.
+            </div>
+          </aside>
         </div>
 
         {/* Footer */}
