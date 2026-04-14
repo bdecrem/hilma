@@ -33,28 +33,51 @@ export default function NowWhatNW() {
         </div>
       </div>
 
-      {/* Dashboard link — bottom of viewport */}
-      <a
-        href="/nowwhat/dashboard"
+      {/* Bottom links */}
+      <div
         style={{
           position: 'fixed',
           bottom: '16px',
           left: '50%',
           transform: 'translateX(-50%)',
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: '11px',
-          letterSpacing: '0.08em',
-          color: 'rgba(255,255,255,0.4)',
-          textDecoration: 'none',
+          display: 'flex',
+          gap: '24px',
           zIndex: 20,
           opacity: mounted ? 1 : 0,
-          transition: 'opacity 1s ease 1.2s, color 0.3s',
+          transition: 'opacity 1s ease 1.2s',
         }}
-        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
-        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
       >
-        about the artifact
-      </a>
+        <a
+          href="/nowwhat/dashboard"
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: '11px',
+            letterSpacing: '0.08em',
+            color: 'rgba(255,255,255,0.4)',
+            textDecoration: 'none',
+            transition: 'color 0.3s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+        >
+          about the artifact
+        </a>
+        <a
+          href="https://www.decremental.com"
+          style={{
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: '11px',
+            letterSpacing: '0.08em',
+            color: 'rgba(255,255,255,0.4)',
+            textDecoration: 'none',
+            transition: 'color 0.3s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}
+        >
+          about me
+        </a>
+      </div>
     </CanvasArt>
   )
 }
