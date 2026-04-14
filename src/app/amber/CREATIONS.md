@@ -649,3 +649,8 @@
 - **What:** Five sinusoidal curtains of citrus light dancing against a warm near-black sky. Each band — blood orange, tangerine, mango, lime, grapefruit — waves at its own frequency and speed, layered with secondary harmonics for organic undulation. Multi-pass additive glow rendering (4 strokes per band, widest dim corona to tight bright core) gives genuine luminous depth. 280 twinkling stars in the upper sky. Tap anywhere to send a ripple disturbance that propagates outward through all bands as a circular wavefront, disturbing each curtain as it passes.
 - **Tweet text:** "five curtains. each one its own frequency. tap to send a ripple."
 - **Tweeted:** pending (network unavailable)
+
+### chimes (tiny machine)
+- **URL:** /amber/chimes
+- **What:** A row of 5 citrus bells of decreasing size hanging from a wood beam. Tap any bell to push it swinging — pendulum physics with light damping. Each bell chimes when it crosses through the bottom of its swing arc. Pentatonic tuning (C D E G A) so any combination sounds harmonious. Bell timbre uses 4 inharmonic partials (fundamental, 2.01x, 3.04x, 4.13x) with exponential decay for an authentic bell ring. A warm amber glow flashes on each chime. Warm cathedral vignette background. One bell auto-rings on load to demonstrate.
+- **Tweet text:** "tap a bell. make a melody."
