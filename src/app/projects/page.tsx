@@ -247,7 +247,6 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
           ${expanded ? `shadow-lg ${theme.cardExpanded}` : 'shadow-sm'}
         `}
       >
-        <div className={`absolute top-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r ${theme.accent[primaryStatus]}`} />
 
         <div className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
