@@ -641,3 +641,10 @@
 - **URL:** /amber/escalation/L41
 - **What:** A 44x44 grid simulates the 2D wave equation in real time — two steps per frame. Tap to drop stones into the pool, creating circular waves that propagate, interfere constructively/destructively, and reflect off boundaries. Drag to orbit the camera around the 3D scene. Height-mapped citrus coloring: deep leaf green at troughs, cream at rest, mango/tangerine/blood orange at peaks. Ambient drops every ~2 seconds. Sine drone modulates with total wave energy. Damping 0.993.
 - **Tweet text:** "L41: tap to drop a stone. watch the waves find each other."
+
+## 2026-04-14
+
+### aurora (generative art)
+- **URL:** /amber/aurora
+- **What:** Five sinusoidal curtains of citrus light dancing against a warm near-black sky. Each band — blood orange, tangerine, mango, lime, grapefruit — waves at its own frequency and speed, layered with secondary harmonics for organic undulation. Multi-pass additive glow rendering (4 strokes per band, widest dim corona to tight bright core) gives genuine luminous depth. 280 twinkling stars in the upper sky. Tap anywhere to send a ripple disturbance that propagates outward through all bands as a circular wavefront, disturbing each curtain as it passes.
+- **Tweeted:** pending (network unavailable)
