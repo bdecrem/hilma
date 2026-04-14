@@ -28,8 +28,27 @@ export default function L41() {
     canvas.width = W * dpr; canvas.height = H * dpr
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px'
     const ctx = canvas.getContext('2d')!
-    // Muted dark background so the waves are the star
-    const bg1 = '#1a1612', bg2 = '#2a2420'
+    // Background: deep pool vignette — warm glow in center, dark at edges
+    // Pre-render to an offscreen canvas so we don't rebuild gradients every frame
+    const bgCanvas = document.createElement('canvas')
+    bgCanvas.width = W * dpr; bgCanvas.height = H * dpr
+    const bgCtx = bgCanvas.getContext('2d')!
+    bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    // Base: warm diagonal gradient
+    const bgLin = bgCtx.createLinearGradient(0, 0, W, H)
+    bgLin.addColorStop(0, '#1a1410')
+    bgLin.addColorStop(0.5, '#221a14')
+    bgLin.addColorStop(1, '#14100e')
+    bgCtx.fillStyle = bgLin
+    bgCtx.fillRect(0, 0, W, H)
+    // Radial vignette: warm amber glow in center, fading to near-black
+    const bgRad = bgCtx.createRadialGradient(W / 2, H * 0.45, 0, W / 2, H * 0.45, Math.max(W, H) * 0.7)
+    bgRad.addColorStop(0, 'rgba(212, 165, 116, 0.08)')  // warm amber hint
+    bgRad.addColorStop(0.3, 'rgba(180, 120, 60, 0.04)')
+    bgRad.addColorStop(0.7, 'rgba(0, 0, 0, 0.15)')
+    bgRad.addColorStop(1, 'rgba(0, 0, 0, 0.35)')
+    bgCtx.fillStyle = bgRad
+    bgCtx.fillRect(0, 0, W, H)
 
     let h = Array.from({ length: N }, () => new Float32Array(N))
     let hp = Array.from({ length: N }, () => new Float32Array(N))
@@ -111,9 +130,7 @@ export default function L41() {
       }
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      const grad = ctx.createLinearGradient(0, 0, W, H)
-      grad.addColorStop(0, bg1); grad.addColorStop(1, bg2)
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H)
+      ctx.drawImage(bgCanvas, 0, 0, W, H)
 
       const gs = 4.5
       const off = (N - 1) * gs / 2
