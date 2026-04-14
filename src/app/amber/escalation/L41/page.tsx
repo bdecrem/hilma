@@ -12,8 +12,8 @@ const CITRUS_RGB: [number, number, number][] = [
   [255, 78, 80],   // blood orange (peak)
 ]
 
-const N = 44 // grid resolution
-const C = 0.38 // wave speed
+const N = 44
+const C = 0.38
 const DAMP = 0.993
 
 export default function L41() {
@@ -31,11 +31,9 @@ export default function L41() {
     const ctx = canvas.getContext('2d')!
     const [bg1, bg2] = pickGradientColors('L41')
 
-    // Wave: two height buffers
     let h = Array.from({ length: N }, () => new Float32Array(N))
     let hp = Array.from({ length: N }, () => new Float32Array(N))
 
-    // Audio
     let actx: AudioContext | null = null
     let osc: OscillatorNode | null = null
 
@@ -61,10 +59,10 @@ export default function L41() {
       }
     }
 
-    // Seed
-    drop(Math.floor(N * 0.3), Math.floor(N * 0.3), 6)
-    drop(Math.floor(N * 0.7), Math.floor(N * 0.5), 5)
-    drop(Math.floor(N * 0.5), Math.floor(N * 0.7), 4)
+    // Seed with visible initial waves
+    drop(Math.floor(N * 0.3), Math.floor(N * 0.3), 8)
+    drop(Math.floor(N * 0.7), Math.floor(N * 0.5), 7)
+    drop(Math.floor(N * 0.5), Math.floor(N * 0.7), 6)
 
     function stepWave() {
       const hn = Array.from({ length: N }, () => new Float32Array(N))
@@ -77,7 +75,9 @@ export default function L41() {
       hp = h; h = hn
     }
 
-    // Project 3D → 2D screen
+    // Compute view scale so grid fills ~75% of shortest screen dimension
+    const viewScale = Math.min(W, H) * 0.0038
+
     function proj(x: number, y: number, z: number): [number, number] {
       const ct = Math.cos(thetaRef.current), st = Math.sin(thetaRef.current)
       const cp = Math.cos(phiRef.current), sp = Math.sin(phiRef.current)
@@ -85,9 +85,9 @@ export default function L41() {
       const z1 = x * st + z * ct
       const y2 = y * cp - z1 * sp
       const z2 = y * sp + z1 * cp
-      const fov = 350
-      const d = fov + z2 + 180
-      const s = fov / Math.max(d, 1)
+      const fov = 300
+      const d = fov + z2 + 160
+      const s = (fov / Math.max(d, 1)) * viewScale
       return [W / 2 + x1 * s, H / 2 - y2 * s]
     }
 
@@ -106,9 +106,8 @@ export default function L41() {
       stepWave(); stepWave()
       frameCount++
 
-      // Ambient drops every ~120 frames
-      if (frameCount % 120 === 0) {
-        drop(5 + Math.floor(Math.random() * (N - 10)), 5 + Math.floor(Math.random() * (N - 10)), 2 + Math.random() * 3)
+      if (frameCount % 90 === 0) {
+        drop(5 + Math.floor(Math.random() * (N - 10)), 5 + Math.floor(Math.random() * (N - 10)), 3 + Math.random() * 4)
       }
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -116,54 +115,53 @@ export default function L41() {
       grad.addColorStop(0, bg1); grad.addColorStop(1, bg2)
       ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H)
 
-      // Project grid
-      const gs = 4.5 // grid spacing in world
+      const gs = 4.5
       const off = (N - 1) * gs / 2
       const pts: [number, number][][] = []
       for (let i = 0; i < N; i++) {
         pts[i] = []
         for (let j = 0; j < N; j++) {
-          pts[i][j] = proj(i * gs - off, h[i][j] * 3.5, j * gs - off)
+          pts[i][j] = proj(i * gs - off, h[i][j] * 4, j * gs - off)
         }
       }
 
-      ctx.lineWidth = 1
+      // Draw grid — per-segment coloring for visible wave patterns
+      ctx.lineWidth = 1.2
 
-      // Draw grid lines — along j (horizontal strands)
+      // Horizontal strands
       for (let i = 0; i < N; i++) {
-        ctx.beginPath()
-        ctx.moveTo(pts[i][0][0], pts[i][0][1])
-        for (let j = 1; j < N; j++) {
-          ctx.lineTo(pts[i][j][0], pts[i][j][1])
+        for (let j = 0; j < N - 1; j++) {
+          const avgH = (h[i][j] + h[i][j + 1]) / 2
+          ctx.strokeStyle = hColor(avgH)
+          ctx.globalAlpha = 0.7
+          ctx.beginPath()
+          ctx.moveTo(pts[i][j][0], pts[i][j][1])
+          ctx.lineTo(pts[i][j + 1][0], pts[i][j + 1][1])
+          ctx.stroke()
         }
-        const avgH = h[i][Math.floor(N / 2)]
-        ctx.strokeStyle = hColor(avgH)
-        ctx.globalAlpha = 0.6
-        ctx.stroke()
       }
 
-      // Along i (vertical strands)
+      // Vertical strands
       for (let j = 0; j < N; j++) {
-        ctx.beginPath()
-        ctx.moveTo(pts[0][j][0], pts[0][j][1])
-        for (let i = 1; i < N; i++) {
-          ctx.lineTo(pts[i][j][0], pts[i][j][1])
+        for (let i = 0; i < N - 1; i++) {
+          const avgH = (h[i][j] + h[i + 1][j]) / 2
+          ctx.strokeStyle = hColor(avgH)
+          ctx.globalAlpha = 0.5
+          ctx.beginPath()
+          ctx.moveTo(pts[i][j][0], pts[i][j][1])
+          ctx.lineTo(pts[i + 1][j][0], pts[i + 1][j][1])
+          ctx.stroke()
         }
-        const avgH = h[Math.floor(N / 2)][j]
-        ctx.strokeStyle = hColor(avgH)
-        ctx.globalAlpha = 0.4
-        ctx.stroke()
       }
       ctx.globalAlpha = 1
 
       // Labels
-      ctx.font = '11px monospace'
-      ctx.fillStyle = 'rgba(255,248,231,0.2)'
+      ctx.font = '12px monospace'
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'
       ctx.textAlign = 'left'
       ctx.fillText('tap to drop a stone', 14, H - 28)
       ctx.fillText('drag to orbit', 14, H - 12)
 
-      // Audio
       if (actx && osc) {
         let e = 0
         for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) e += h[i][j] * h[i][j]
@@ -174,9 +172,10 @@ export default function L41() {
       raf = requestAnimationFrame(draw)
     }
 
-    // Interaction: pointer events for unified mouse/touch
+    // Pointer interaction — threshold 15px so taps work on touch screens
     let pStart: { x: number; y: number; theta: number; phi: number } | null = null
     let didDrag = false
+    const DRAG_THRESHOLD = 15
 
     canvas.addEventListener('pointerdown', e => {
       pStart = { x: e.clientX, y: e.clientY, theta: thetaRef.current, phi: phiRef.current }
@@ -185,7 +184,7 @@ export default function L41() {
     window.addEventListener('pointermove', e => {
       if (!pStart) return
       const dx = e.clientX - pStart.x, dy = e.clientY - pStart.y
-      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) didDrag = true
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) didDrag = true
       if (didDrag) {
         thetaRef.current = pStart.theta + dx * 0.005
         phiRef.current = Math.max(0.1, Math.min(1.4, pStart.phi + dy * 0.005))
@@ -195,17 +194,16 @@ export default function L41() {
       if (pStart && !didDrag) {
         initAudio()
         if (actx?.state === 'suspended') actx.resume()
-        // Find closest grid point to tap
         const gs = 4.5, off = (N - 1) * gs / 2
         let best = Infinity, bi = 0, bj = 0
         for (let i = 0; i < N; i += 2) {
           for (let j = 0; j < N; j += 2) {
-            const [sx, sy] = proj(i * gs - off, h[i][j] * 3.5, j * gs - off)
+            const [sx, sy] = proj(i * gs - off, h[i][j] * 4, j * gs - off)
             const d = (sx - e.clientX) ** 2 + (sy - e.clientY) ** 2
             if (d < best) { best = d; bi = i; bj = j }
           }
         }
-        drop(bi, bj, 5 + Math.random() * 5)
+        drop(bi, bj, 6 + Math.random() * 5)
       }
       pStart = null
     })
