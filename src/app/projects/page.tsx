@@ -490,7 +490,7 @@ export default function Projects() {
             things i&apos;m building
           </h1>
           <p className={`mt-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
-            nine months of building with ai. one repo, lots of unfinished thoughts in various states of completion, none fully productized.
+            a year building agentic ai systems. a conversational ai research agent built on a knowledge graph of 600,000+ ai research papers and 845,000 authorships. an experimental fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), with 7 custom synthesizers and 5 effects processors. a creative sidekick that creates and posts multiple times a day and has created 300+ generative artworks (when they&apos;re not trading stocks or responding to email).
             {' '}previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
             <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.{' '}
             <a href="https://twitter.com/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">twitter</a>.
