@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { pickGradientColors } from '@/lib/citrus-bg'
 
 const CITRUS_RGB: [number, number, number][] = [
   [45, 90, 39],    // deep leaf green (trough)
@@ -18,8 +17,8 @@ const DAMP = 0.993
 
 export default function L41() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const thetaRef = useRef(0.7)
-  const phiRef = useRef(0.5)
+  const thetaRef = useRef(0.3)
+  const phiRef = useRef(1.1) // near top-down
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -29,7 +28,8 @@ export default function L41() {
     canvas.width = W * dpr; canvas.height = H * dpr
     canvas.style.width = W + 'px'; canvas.style.height = H + 'px'
     const ctx = canvas.getContext('2d')!
-    const [bg1, bg2] = pickGradientColors('L41')
+    // Muted dark background so the waves are the star
+    const bg1 = '#1a1612', bg2 = '#2a2420'
 
     let h = Array.from({ length: N }, () => new Float32Array(N))
     let hp = Array.from({ length: N }, () => new Float32Array(N))
@@ -157,7 +157,7 @@ export default function L41() {
 
       // Labels
       ctx.font = '12px monospace'
-      ctx.fillStyle = 'rgba(0,0,0,0.2)'
+      ctx.fillStyle = 'rgba(255,248,231,0.2)'
       ctx.textAlign = 'left'
       ctx.fillText('tap to drop a stone', 14, H - 28)
       ctx.fillText('drag to orbit', 14, H - 12)
