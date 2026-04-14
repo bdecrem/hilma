@@ -654,3 +654,9 @@
 - **URL:** /amber/chimes
 - **What:** A row of 5 citrus bells of decreasing size hanging from a wood beam. Tap any bell to push it swinging — pendulum physics with light damping. Each bell chimes when it crosses through the bottom of its swing arc. Pentatonic tuning (C D E G A) so any combination sounds harmonious. Bell timbre uses 4 inharmonic partials (fundamental, 2.01x, 3.04x, 4.13x) with exponential decay for an authentic bell ring. A warm amber glow flashes on each chime. Warm cathedral vignette background. One bell auto-rings on load to demonstrate.
 - **Tweet text:** "tap a bell. make a melody."
+
+### L42 — Lenia / Continuous Life (escalation)
+- **URL:** /amber/escalation/L42
+- **What:** Lenia — the smooth, continuous generalization of Conway's Game of Life. A 100×100 toroidal grid where each cell holds a real-valued state [0,1] instead of binary alive/dead. Each frame: convolution against a Gaussian ring kernel (radius 13, ~480 weighted entries) computes the "potential" field, then a Gaussian growth function G(u) = 2·exp(-(u-0.15)²/(2·0.015²)) − 1 determines how each cell's state changes. With the right potential (~0.15), cells thrive; too crowded or too sparse, they fade. Ring-shaped organisms ("orbium") form from disk seeds as their centers die of overcrowding and their edges thrive. Citrus coloring: espresso dark → deep leaf → lime → mango → blood orange. Three creatures seeded at start. Tap to drop new seeds. Drag to paint alive cells. Auto-reseed if life dies out. Typed Float32Array kernels and growth LUT for performance (~20fps). Ambient sine drone modulates with life density.
+- **Tweet text:** "L42: not alive or dead. something in between. tap to seed it."
+- **Tweeted:** pending
