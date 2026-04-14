@@ -9,7 +9,7 @@ interface Project {
   url: string
   shortDesc: string
   fullDesc: string
-  status: Status
+  status: Status | Status[]
   artifacts?: { label: string; url: string }[]
 }
 
@@ -17,22 +17,22 @@ const projects: Project[] = [
   {
     name: 'tunn3l.sh',
     url: 'https://tunn3l.sh',
-    shortDesc: 'expose localhost to the internet. http and ssh tunnels. one command, no config. built for ai agents.',
-    fullDesc: 'tunnel relay service. cli installs in one line, assigns a public url or ssh port instantly.',
-    status: 'respinning',
+    shortDesc: 'exploring the idea of an agent-first devtool.',
+    fullDesc: 'tunnel relay service: expose localhost to the internet. http and ssh tunnels. one-line cli install — public url or ssh port, instantly. no config.',
+    status: 'active',
   },
   {
     name: 'claudio',
     url: 'https://claudio.la',
-    shortDesc: 'a simple ios client for openclaw. point at your openclaw server and go. no accounts, no tracking, no data collection.',
-    fullDesc: 'native ios client for openclaw.',
-    status: 'wip',
+    shortDesc: 'i\'ve worked with teams on several social apps, most recently mammoth. wanted to see how far i could get vibe-coding one solo, backend and all. a: pretty far.',
+    fullDesc: 'native ios client for openclaw. point at your openclaw server and go. no accounts, no tracking, no data collection. added a full web service where you & your agents can chat with me and my agents (just before i got bored with openclaw).',
+    status: 'neglected',
   },
   {
     name: 'jambot',
     url: 'https://github.com/bdecrem/jambot',
-    shortDesc: 'claude code for music. outputs midi, wav, stems. not a "make me a song" button. includes web synths.',
-    fullDesc: 'cli for music production.',
+    shortDesc: 'learned what an agentic loop could do from claude code. stole the best part: the ai as a creative partner, not a replacement for one. so i built my own, for music. the full claude code treatment: agentic loop, tui, a deep custom toolset.',
+    fullDesc: 'my most ambitious project yet: a full music production app with a deep, all-custom toolset. 7 synthesizers, 5 effects processors. outputs midi, wav, stems. not a "make me a song" button.',
     status: 'wip',
   },
   {
@@ -61,7 +61,7 @@ const projects: Project[] = [
     url: 'https://shipshot.io',
     shortDesc: 'market analysis included. usefulness tbd.',
     fullDesc: 'daily startup idea generator.',
-    status: 'respinning',
+    status: 'neglected',
   },
   {
     name: 'airplane coder',
@@ -75,7 +75,7 @@ const projects: Project[] = [
     url: 'https://kochi.to',
     shortDesc: 'daily reports, research papers, chat companion. also an iphone podcast app. (some agents decommissioned.)',
     fullDesc: 'ai over sms.',
-    status: 'neglected',
+    status: ['neglected', 'retired'],
     artifacts: [{ label: 'iphone app', url: 'https://apps.apple.com/us/app/kochi-podcast-player/id6752669410' }],
   },
   {
@@ -224,6 +224,8 @@ function StatusPill({ status, theme }: { status: Status; theme: Theme }) {
 
 function ProjectCard({ project, index, vibeMode, theme }: { project: Project; index: number; vibeMode: boolean; theme: Theme }) {
   const [expanded, setExpanded] = useState(false)
+  const statuses: Status[] = Array.isArray(project.status) ? project.status : [project.status]
+  const primaryStatus: Status = statuses[0]
 
   return (
     <div
@@ -245,7 +247,7 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
           ${expanded ? `shadow-lg ${theme.cardExpanded}` : 'shadow-sm'}
         `}
       >
-        <div className={`absolute top-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r ${theme.accent[project.status]}`} />
+        <div className={`absolute top-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r ${theme.accent[primaryStatus]}`} />
 
         <div className="p-5 sm:p-6">
           <div className="flex items-start justify-between gap-3">
@@ -254,7 +256,7 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
                 <h3 className={`text-base sm:text-lg font-semibold tracking-tight ${theme.name}`}>
                   {project.name}
                 </h3>
-                <StatusPill status={project.status} theme={theme} />
+                {statuses.map((s) => <StatusPill key={s} status={s} theme={theme} />)}
               </div>
               <p className={`mt-1.5 text-sm leading-relaxed ${theme.shortDesc}`}>
                 {project.shortDesc}
@@ -490,9 +492,10 @@ export default function Projects() {
             things i&apos;m building
           </h1>
           <p className={`mt-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
-            a year building agentic ai systems. a conversational ai research agent built on a knowledge graph of 600,000+ ai research papers and 845,000 authorships. an experimental fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), with 7 custom synthesizers and 5 effects processors. a creative sidekick that creates and posts multiple times a day and has created 300+ generative artworks (when they&apos;re not trading stocks or responding to email).
+            a year building agentic ai systems. a conversational ai research agent built on a knowledge graph of 600,000+ ai research papers and 845,000 authorships. an experimental, fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), with 7 custom synthesizers and 5 effects processors. a creative sidekick that creates and posts multiple times a day and has created 300+ generative artworks (when they&apos;re not trading stocks or responding to email). also, a concept for a responsible ai incubator.
             {' '}previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
             <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.{' '}
+            <a href="https://theforkiverse.com/@bart" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">forkiverse</a>.{' '}
             <a href="https://twitter.com/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">twitter</a>.
           </p>
         </div>
