@@ -7,17 +7,25 @@ const NIGHT = '#0A0A0A'
 const CREAM = '#E8E8E8'
 const LIME = '#C6FF3C'
 
-const N = 72              // grid resolution
-const P_CRIT = 0.5927     // site percolation threshold for 2D square lattice
+const N = 72
+const P_CRIT = 0.5927
 const DIRS: readonly (readonly number[])[] = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+
+const AUTO_START = 0.40      // starting p during auto-play
+const AUTO_END = 0.62        // ending p during auto-play (just above p_c)
+const AUTO_DURATION = 9000   // ms
 
 export default function L45() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const pRef = useRef(0.45)              // start below critical
+  const pRef = useRef(AUTO_START)
   const thresholdsRef = useRef<Float32Array | null>(null)
   const spanIdRef = useRef(-1)
   const compsRef = useRef<Int16Array | null>(null)
   const draggingRef = useRef(false)
+  const autoStartTimeRef = useRef<number | null>(null)
+  const autoDoneRef = useRef(false)
+  const flashStartRef = useRef<number | null>(null)
+  const hadSpannedRef = useRef(false)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -30,7 +38,7 @@ export default function L45() {
     canvas.style.height = H + 'px'
     const ctx = canvas.getContext('2d')!
 
-    // Fixed per-site thresholds — dragging p reveals/hides deterministically
+    // Fixed per-site thresholds
     const thresholds = new Float32Array(N * N)
     for (let i = 0; i < thresholds.length; i++) thresholds[i] = Math.random()
     thresholdsRef.current = thresholds
@@ -38,8 +46,6 @@ export default function L45() {
     const comps = new Int16Array(N * N)
     compsRef.current = comps
 
-    // Flood-fill to label connected components of "filled" sites.
-    // Also detect the spanning component (touches both top AND bottom).
     function recomputeComponents(p: number) {
       comps.fill(-1)
       let nextId = 0
@@ -49,8 +55,7 @@ export default function L45() {
         for (let x = 0; x < N; x++) {
           const idx = y * N + x
           if (comps[idx] !== -1) continue
-          if (thresholds[idx] >= p) continue      // empty site
-          // BFS
+          if (thresholds[idx] >= p) continue
           comps[idx] = nextId
           stack.length = 0
           stack.push(idx)
@@ -81,6 +86,7 @@ export default function L45() {
     }
 
     recomputeComponents(pRef.current)
+    autoStartTimeRef.current = performance.now()
 
     let raf = 0
 
@@ -88,58 +94,114 @@ export default function L45() {
       const now = performance.now()
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
+      // Auto-play: drive p from AUTO_START to AUTO_END over AUTO_DURATION,
+      // UNLESS the user has started dragging.
+      if (!autoDoneRef.current && !draggingRef.current && autoStartTimeRef.current !== null) {
+        const t = Math.min(1, (now - autoStartTimeRef.current) / AUTO_DURATION)
+        // Ease in-out for a gentler approach
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+        const autoP = AUTO_START + (AUTO_END - AUTO_START) * ease
+        pRef.current = autoP
+        recomputeComponents(autoP)
+        if (t >= 1) autoDoneRef.current = true
+      }
+
+      // Detect first-ever spanning → trigger flash
+      const spanId = spanIdRef.current
+      if (spanId !== -1 && !hadSpannedRef.current) {
+        hadSpannedRef.current = true
+        flashStartRef.current = now
+      }
+
       // Field
       ctx.fillStyle = NIGHT
       ctx.fillRect(0, 0, W, H)
 
-      // Temporal grain
-      ctx.fillStyle = CREAM
-      ctx.globalAlpha = 0.015
-      for (let i = 0; i < 90; i++) {
-        ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1)
-      }
-      ctx.globalAlpha = 1
-
-      // Grid layout — square, centered in upper portion
+      // Grid layout
       const padTop = Math.max(50, H * 0.08)
-      const padBot = Math.max(180, H * 0.26)  // leaves space for label + dial
+      const padBot = Math.max(180, H * 0.26)
       const available = Math.min(W - 60, H - padTop - padBot)
       const cellSize = Math.floor(available / N)
       const gridSize = cellSize * N
       const gx = Math.floor((W - gridSize) / 2)
       const gy = Math.floor(padTop + (H - padTop - padBot - gridSize) / 2)
 
-      const p = pRef.current
-      const spanId = spanIdRef.current
+      // Flash overlay (lime wash when spanning first happens)
+      let flashAlpha = 0
+      if (flashStartRef.current !== null) {
+        const age = now - flashStartRef.current
+        if (age < 600) {
+          flashAlpha = Math.max(0, 1 - age / 600) * 0.35
+        }
+      }
 
-      // Render cells
+      const p = pRef.current
       const gap = cellSize >= 6 ? 1 : 0
       const fillSize = cellSize - gap
+
+      // 1) Render non-spanning cells at very low opacity — ghosts, not signal
       for (let y = 0; y < N; y++) {
         for (let x = 0; x < N; x++) {
           const idx = y * N + x
           if (thresholds[idx] >= p) continue
-          const cid = comps[idx]
-          const isSpan = cid === spanId && spanId !== -1
-          ctx.fillStyle = isSpan ? LIME : CREAM
-          ctx.globalAlpha = isSpan ? 0.95 : 0.55
+          if (comps[idx] === spanId && spanId !== -1) continue
+          ctx.fillStyle = CREAM
+          ctx.globalAlpha = 0.12
           ctx.fillRect(gx + x * cellSize, gy + y * cellSize, fillSize, fillSize)
         }
       }
       ctx.globalAlpha = 1
 
-      // Grid frame — hairline
-      ctx.strokeStyle = 'rgba(232, 232, 232, 0.08)'
+      // 2) Render spanning cluster with GLOW HALO + full-opacity core
+      if (spanId !== -1) {
+        // Halo pass — dim lime at larger size
+        ctx.fillStyle = LIME
+        ctx.globalAlpha = 0.25
+        const haloPad = Math.max(2, cellSize * 0.45)
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            const idx = y * N + x
+            if (comps[idx] !== spanId) continue
+            ctx.fillRect(
+              gx + x * cellSize - haloPad,
+              gy + y * cellSize - haloPad,
+              cellSize + haloPad * 2,
+              cellSize + haloPad * 2,
+            )
+          }
+        }
+        ctx.globalAlpha = 1
+
+        // Core pass — full lime
+        ctx.fillStyle = LIME
+        for (let y = 0; y < N; y++) {
+          for (let x = 0; x < N; x++) {
+            const idx = y * N + x
+            if (comps[idx] !== spanId) continue
+            ctx.fillRect(gx + x * cellSize, gy + y * cellSize, fillSize, fillSize)
+          }
+        }
+      }
+
+      // Flash wash
+      if (flashAlpha > 0) {
+        ctx.fillStyle = LIME
+        ctx.globalAlpha = flashAlpha
+        ctx.fillRect(0, 0, W, H)
+        ctx.globalAlpha = 1
+      }
+
+      // Grid frame — very faint
+      ctx.strokeStyle = 'rgba(232, 232, 232, 0.06)'
       ctx.lineWidth = 1
       ctx.strokeRect(gx - 2, gy - 2, gridSize + 4, gridSize + 4)
 
-      // Dial (p slider) — below grid, centered
+      // Dial
       const dialY = gy + gridSize + 60
       const dialX1 = gx
       const dialX2 = gx + gridSize
       const dialLen = dialX2 - dialX1
 
-      // Track
       ctx.strokeStyle = CREAM
       ctx.globalAlpha = 0.35
       ctx.lineWidth = 1
@@ -149,7 +211,7 @@ export default function L45() {
       ctx.stroke()
       ctx.globalAlpha = 1
 
-      // Tick marks at 0, 0.25, 0.5, 0.75, 1
+      // Tick marks
       for (let i = 0; i <= 4; i++) {
         const tx = dialX1 + (i / 4) * dialLen
         ctx.strokeStyle = CREAM
@@ -161,7 +223,7 @@ export default function L45() {
         ctx.globalAlpha = 1
       }
 
-      // Critical marker (p_c) — lime hairline
+      // p_c marker
       const pcX = dialX1 + P_CRIT * dialLen
       ctx.strokeStyle = LIME
       ctx.globalAlpha = 0.65
@@ -171,7 +233,6 @@ export default function L45() {
       ctx.lineTo(pcX, dialY + 10)
       ctx.stroke()
       ctx.globalAlpha = 1
-      // Small "pc" label
       ctx.fillStyle = 'rgba(198, 255, 60, 0.7)'
       ctx.font = '700 10px "Courier Prime", "Courier New", monospace'
       ctx.textAlign = 'center'
@@ -196,13 +257,13 @@ export default function L45() {
       ctx.textAlign = 'center'
       ctx.fillText(`p = ${p.toFixed(3)}`, indX, dialY - 28)
 
-      // Status: spans / does not span
+      // Status
       ctx.font = '700 10px "Courier Prime", "Courier New", monospace'
       ctx.fillStyle = locked ? LIME : 'rgba(232, 232, 232, 0.4)'
       ctx.textAlign = 'left'
       ctx.fillText(locked ? 'spans ◆' : 'does not span', dialX1, dialY + 44)
 
-      // Museum label — lower left
+      // Museum label
       const labelX = Math.max(20, Math.floor(W * 0.055))
       const labelY = H - 30
       ctx.textAlign = 'left'
@@ -221,33 +282,40 @@ export default function L45() {
       ctx.textAlign = 'right'
       ctx.fillText('L45 · percolation · 04.15.26', W - labelX, labelY + 10)
 
-      // Quiet hint if pre-interaction
-      if (!draggingRef.current && spanId === -1) {
+      // Hint only if still auto-playing
+      if (!autoDoneRef.current && !draggingRef.current) {
         const age = (now / 1000) % 4
         if (age < 2) {
           ctx.globalAlpha = Math.min(1, 2 - age) * 0.35
           ctx.fillStyle = CREAM
           ctx.font = '700 11px "Courier Prime", "Courier New", monospace'
           ctx.textAlign = 'center'
-          ctx.fillText('drag the dial', (dialX1 + dialX2) / 2, dialY - 48)
+          ctx.fillText('watch', (dialX1 + dialX2) / 2, dialY - 48)
           ctx.globalAlpha = 1
         }
+      } else if (autoDoneRef.current) {
+        // Quiet "drag to replay" nudge after auto-play ends
+        ctx.globalAlpha = 0.28
+        ctx.fillStyle = CREAM
+        ctx.font = '700 10px "Courier Prime", "Courier New", monospace'
+        ctx.textAlign = 'center'
+        ctx.fillText('drag the dial', (dialX1 + dialX2) / 2, dialY - 48)
+        ctx.globalAlpha = 1
       }
 
       raf = requestAnimationFrame(draw)
     }
 
     function setPFromEvent(clientX: number, clientY: number) {
-      // Only accept if pointer is in the dial zone OR clearly below the grid
       const p = Math.max(0, Math.min(1, (clientX - 20) / (W - 40)))
       pRef.current = p
       recomputeComponents(p)
-      // Prevent unused warning
       void clientY
     }
 
     canvas.addEventListener('pointerdown', (e) => {
       draggingRef.current = true
+      autoDoneRef.current = true // user interruption ends auto-play
       setPFromEvent(e.clientX, e.clientY)
     })
     window.addEventListener('pointermove', (e) => {
