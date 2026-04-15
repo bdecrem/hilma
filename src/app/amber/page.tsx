@@ -143,6 +143,17 @@ export default function AmberV3FeedPage() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
+  // Today's mood — programmatic label from public/amber-noon/YYYY-MM-DD.json.
+  const [todayMood, setTodayMood] = useState<string | null>(null)
+  useEffect(() => {
+    const d = new Date()
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    fetch(`/amber-noon/${date}.json`)
+      .then(r => r.ok ? r.json() : null)
+      .then(j => { if (j?.mood?.name) setTodayMood(String(j.mood.name).toLowerCase()) })
+      .catch(() => {})
+  }, [])
+
   return (
     <>
       <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap" rel="stylesheet" />
@@ -445,8 +456,10 @@ export default function AmberV3FeedPage() {
             <span className="mark-letter">amber</span><span className="mark-dot" aria-hidden="true" />
           </h1>
           <div className="feed-meta">
-            spec 001 · {CREATIONS.length} pieces<br />
+            {todayMood ?? 'spec 001'} · {CREATIONS.length} pieces<br />
             <a href="https://twitter.com/intheamber" target="_blank" rel="noopener">@intheamber</a>
+            {' · '}
+            <a href="/amber/noon/archive">today</a>
             {' · '}
             <a href="https://vibeceo-production.up.railway.app/amber" target="_blank" rel="noopener">archive</a>
           </div>
@@ -459,11 +472,12 @@ export default function AmberV3FeedPage() {
         <div className="feed-divider"><hr /></div>
 
         <section className="feed-grid">
-          {CREATIONS.map((c, idx) => (
-            idx % 4 === 0
-              ? <LiveCard key={c.name} c={c} idx={idx} />
-              : <Card key={c.name} c={c} idx={idx} />
-          ))}
+          {CREATIONS.map((c, idx) => {
+            const key = `${c.name}-${c.date}-${idx}`
+            return idx % 4 === 0
+              ? <LiveCard key={key} c={c} idx={idx} />
+              : <Card key={key} c={c} idx={idx} />
+          })}
         </section>
 
         <footer className="feed-footer">
