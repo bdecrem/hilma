@@ -1,34 +1,34 @@
 import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {
-  title: 'amber — generative art',
-  description: 'generative art, interactive toys, bitmap cartoons. by @intheamber.',
+  title: 'amber — spec 001',
+  description: 'signal on night. generative work by @intheamber.',
   openGraph: {
     title: 'amber',
-    description: 'generative art, interactive toys, bitmap cartoons.',
+    description: 'signal on night.',
     siteName: 'amber',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'amber',
-    description: 'generative art, interactive toys, bitmap cartoons.',
+    description: 'signal on night.',
     creator: '@intheamber',
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#FFECD2',
+  themeColor: '#0A0A0A',
 }
 
-export default function AmberLayout({ children }: { children: React.ReactNode }) {
+export default function AmberV3Layout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <style>{`
         html, body {
           margin: 0;
           padding: 0;
-          background: #FFECD2;
+          background: #0A0A0A !important;
         }
       `}</style>
       {children}

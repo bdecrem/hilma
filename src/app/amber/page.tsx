@@ -1,11 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 
 import CREATIONS from './creations.json'
 
-const CITRUS = ['#FF4E50', '#FC913A', '#F9D423', '#B4E33D', '#FF6B81', '#FF8C42']
+// ─── Amber v3 palette (from misc/amber-v3/AESTHETIC.md draft) ────
+// Dark-mode, monochrome with charge. Lime is the signal. Use sparingly.
+const NIGHT  = '#0A0A0A'
+const CREAM  = '#E8E8E8'
+const LIME   = '#C6FF3C'
+const MUTE   = '#6b6b6b'
+const FAINT  = 'rgba(232,232,232,0.08)'
 
 interface Creation {
   name: string
@@ -15,15 +21,8 @@ interface Creation {
   description: string
 }
 
-function hash(s: string): number {
-  let h = 0
-  for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i)
-  return Math.abs(h)
-}
-
 function Card({ c, idx }: { c: Creation; idx: number }) {
   const [loaded, setLoaded] = useState(false)
-  const accent = CITRUS[hash(c.name) % CITRUS.length]
   const ogUrl = `${c.url}/opengraph-image.png`
 
   return (
@@ -43,14 +42,12 @@ function Card({ c, idx }: { c: Creation; idx: number }) {
             transition: 'opacity 0.4s ease',
           }}
         />
-        {!loaded && (
-          <div className="card-placeholder" style={{ background: accent + '20' }} />
-        )}
+        {!loaded && <div className="card-placeholder" />}
       </div>
       <div className="card-info">
         <div className="card-top">
           <span className="card-name">{c.name}</span>
-          <span className="card-cat" style={{ color: accent }}>{c.category}</span>
+          <span className="card-cat">{c.category}</span>
         </div>
         <p className="card-desc">{c.description}</p>
         <span className="card-date">{c.date}</span>
@@ -63,7 +60,6 @@ function LiveCard({ c, idx }: { c: Creation; idx: number }) {
   const [visible, setVisible] = useState(false)
   const [iframeLoaded, setIframeLoaded] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const accent = CITRUS[hash(c.name) % CITRUS.length]
   const ogUrl = `${c.url}/opengraph-image.png`
 
   useEffect(() => {
@@ -86,7 +82,6 @@ function LiveCard({ c, idx }: { c: Creation; idx: number }) {
       style={{ animationDelay: `${idx * 50}ms` }}
     >
       <div className="card-img live-card-img">
-        {/* Static OG as fallback/placeholder */}
         {!iframeLoaded && (
           <img
             src={ogUrl}
@@ -94,7 +89,6 @@ function LiveCard({ c, idx }: { c: Creation; idx: number }) {
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         )}
-        {/* Live iframe — mounted when scrolled into view */}
         {visible && (
           <iframe
             src={c.url}
@@ -111,17 +105,15 @@ function LiveCard({ c, idx }: { c: Creation; idx: number }) {
             }}
           />
         )}
-        {/* Live badge */}
         <div className="live-badge">
           <span className="live-dot" />
           live
         </div>
       </div>
-      {/* Info strip — links to full page */}
       <Link href={c.url} className="card-info" style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}>
         <div className="card-top">
           <span className="card-name">{c.name}</span>
-          <span className="card-cat" style={{ color: accent }}>{c.category}</span>
+          <span className="card-cat">{c.category}</span>
         </div>
         <p className="card-desc">{c.description}</p>
         <span className="card-date">{c.date}</span>
@@ -130,100 +122,152 @@ function LiveCard({ c, idx }: { c: Creation; idx: number }) {
   )
 }
 
-export default function AmberFeedPage() {
+export default function AmberV3FeedPage() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
   return (
     <>
+      <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap" rel="stylesheet" />
       <style>{`
+        :root {
+          --night: ${NIGHT};
+          --cream: ${CREAM};
+          --lime:  ${LIME};
+          --mute:  ${MUTE};
+          --faint: ${FAINT};
+        }
+
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.35; }
         }
 
         .feed-page {
           min-height: 100dvh;
-          background: #FFF8E7;
-          font-family: "Courier New", Courier, monospace;
+          background: var(--night);
+          color: var(--cream);
+          font-family: 'Courier Prime', ui-monospace, 'SF Mono', monospace;
           padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
+        /* ── HEADER ─────────────────────────── */
         .feed-header {
           max-width: 900px;
           margin: 0 auto;
-          padding: 56px 20px 24px;
+          padding: 72px 24px 28px;
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
           flex-wrap: wrap;
-          gap: 16px;
+          gap: 20px;
         }
 
         .feed-title {
-          font-size: clamp(3rem, 12vw, 6rem);
-          font-weight: 900;
-          color: #2A2218;
+          font-size: clamp(4.5rem, 15vw, 8rem);
           line-height: 0.85;
-          letter-spacing: -0.05em;
           margin: 0;
+          display: flex;
+          align-items: flex-end;
         }
 
-        .feed-title span {
-          color: #D4A574;
+        .mark-letter {
+          font-family: 'Courier Prime', ui-monospace, monospace;
+          font-weight: 700;
+          color: var(--cream);
+          letter-spacing: -0.08em;
+          line-height: 0.85;
+        }
+
+        .mark-dot {
+          display: inline-block;
+          width: 0.22em;
+          height: 0.22em;
+          border-radius: 50%;
+          background: var(--lime);
+          margin-left: 0.08em;
+          margin-bottom: 0.08em;
         }
 
         .feed-meta {
+          font-family: 'Courier Prime', monospace;
           font-size: 0.7rem;
-          color: #a8956f;
-          line-height: 1.6;
-          padding-bottom: 8px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--mute);
+          line-height: 1.7;
+          padding-bottom: 10px;
+          text-align: right;
         }
 
         .feed-meta a {
-          color: #FC913A;
+          color: var(--mute);
           text-decoration: none;
+          border-bottom: 1px solid rgba(232,232,232,0.15);
+          transition: color 0.2s, border-color 0.2s;
         }
 
+        .feed-meta a:hover {
+          color: var(--cream);
+          border-bottom-color: rgba(232,232,232,0.4);
+        }
+
+        /* Tagline row — italic Fraunces */
+        .feed-tagline {
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 0 24px 8px;
+          font-family: 'Fraunces', Georgia, serif;
+          font-style: italic;
+          font-weight: 300;
+          font-size: clamp(13px, 1.5vw, 15px);
+          color: rgba(232,232,232,0.6);
+          letter-spacing: 0.005em;
+        }
+
+        /* ── DIVIDER ────────────────────────── */
         .feed-divider {
           max-width: 900px;
           margin: 0 auto;
-          padding: 0 20px;
+          padding: 20px 24px;
         }
 
         .feed-divider hr {
           border: none;
           height: 1px;
-          background: linear-gradient(90deg, #FF4E50, #FC913A, #F9D423, #B4E33D, #FF6B81, #FC913A);
-          opacity: 0.4;
+          background: var(--faint);
         }
 
+        /* ── GRID ────────────────────────────── */
         .feed-grid {
           max-width: 900px;
           margin: 0 auto;
-          padding: 24px 20px 80px;
+          padding: 24px 24px 96px;
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-          gap: 16px;
+          gap: 20px;
         }
 
         .card {
           display: block;
           text-decoration: none;
           color: inherit;
-          border-radius: 12px;
           overflow: hidden;
-          background: #fff;
-          box-shadow: 0 1px 4px rgba(42,34,24,0.06);
-          border: 1px solid rgba(42,34,24,0.05);
+          background: rgba(255,255,255,0.02);
+          border: 1px solid var(--faint);
           animation: fadeUp 0.5s ease both;
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
           cursor: pointer;
         }
 
         .card:hover {
-          transform: translateY(-4px) scale(1.01);
-          box-shadow: 0 8px 24px rgba(42,34,24,0.1);
+          background: rgba(255,255,255,0.04);
+          border-color: rgba(232,232,232,0.18);
+          transform: translateY(-2px);
         }
 
         .live-card {
@@ -240,7 +284,7 @@ export default function AmberFeedPage() {
           width: 100%;
           aspect-ratio: 1200 / 630;
           overflow: hidden;
-          background: #f5f0e8;
+          background: #0f0f0f;
         }
 
         .live-card-img {
@@ -257,23 +301,26 @@ export default function AmberFeedPage() {
         .card-placeholder {
           position: absolute;
           inset: 0;
+          background: #0f0f0f;
         }
 
         .live-badge {
           position: absolute;
-          top: 10px;
-          right: 10px;
+          top: 12px;
+          right: 12px;
           display: flex;
           align-items: center;
-          gap: 5px;
-          background: rgba(0,0,0,0.5);
+          gap: 6px;
+          background: rgba(10,10,10,0.7);
           backdrop-filter: blur(4px);
-          color: #fff;
+          color: var(--cream);
+          font-family: 'Courier Prime', monospace;
           font-size: 0.6rem;
           text-transform: uppercase;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.14em;
           padding: 4px 10px;
-          border-radius: 20px;
+          border-radius: 0;
+          border: 1px solid rgba(232,232,232,0.18);
           z-index: 2;
         }
 
@@ -281,72 +328,93 @@ export default function AmberFeedPage() {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #22c55e;
+          background: var(--lime);
           animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-
         .card-info {
-          padding: 12px 14px 14px;
+          padding: 14px 16px 16px;
         }
 
         .card-top {
           display: flex;
           align-items: baseline;
           justify-content: space-between;
-          gap: 8px;
-          margin-bottom: 6px;
+          gap: 10px;
+          margin-bottom: 8px;
         }
 
         .card-name {
-          font-size: 1rem;
+          font-family: 'Courier Prime', monospace;
+          font-size: 0.95rem;
           font-weight: 700;
-          color: #2A2218;
-          letter-spacing: -0.02em;
+          color: var(--cream);
+          letter-spacing: 0.01em;
+          text-transform: lowercase;
         }
 
         .card-cat {
-          font-size: 0.6rem;
+          font-family: 'Courier Prime', monospace;
+          font-size: 0.58rem;
           text-transform: uppercase;
-          letter-spacing: 0.06em;
+          letter-spacing: 0.18em;
           white-space: nowrap;
+          color: var(--mute);
         }
 
         .card-desc {
-          font-size: 0.75rem;
-          color: #78716c;
+          font-family: 'Fraunces', Georgia, serif;
+          font-style: italic;
+          font-weight: 300;
+          font-size: 0.82rem;
+          color: rgba(232,232,232,0.6);
           line-height: 1.5;
-          margin: 0 0 8px;
+          margin: 0 0 10px;
+          letter-spacing: 0.005em;
         }
 
         .card-date {
-          font-size: 0.6rem;
-          color: #c4a882;
+          font-family: 'Courier Prime', monospace;
+          font-size: 0.58rem;
+          color: var(--mute);
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
         }
 
+        /* ── FOOTER ────────────────────────── */
         .feed-footer {
           text-align: center;
-          padding: 24px 20px 40px;
-          font-size: 0.65rem;
-          color: #c4a882;
-          border-top: 1px solid rgba(42,34,24,0.05);
+          padding: 32px 24px 56px;
+          font-family: 'Courier Prime', monospace;
+          font-size: 0.6rem;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: var(--mute);
+          border-top: 1px solid var(--faint);
           max-width: 900px;
           margin: 0 auto;
+        }
+
+        .feed-footer .sig-dot {
+          display: inline-block;
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--lime);
+          margin-right: 10px;
+          vertical-align: middle;
         }
 
         @media (max-width: 600px) {
           .feed-grid {
             grid-template-columns: 1fr;
+            padding: 20px 18px 72px;
           }
           .feed-header {
-            padding: 40px 16px 20px;
+            padding: 52px 18px 18px;
           }
-          .feed-grid {
-            padding: 20px 16px 60px;
+          .feed-meta {
+            text-align: left;
           }
           .live-card-img {
             aspect-ratio: 4 / 3;
@@ -354,18 +422,22 @@ export default function AmberFeedPage() {
         }
       `}</style>
 
-      <main className="feed-page">
+      <main className="feed-page" style={{ opacity: mounted ? 1 : 0, transition: 'opacity 0.5s ease' }}>
         <header className="feed-header">
           <h1 className="feed-title">
-            amber<span>.</span>
+            <span className="mark-letter">amber</span><span className="mark-dot" aria-hidden="true" />
           </h1>
           <div className="feed-meta">
-            {CREATIONS.length} creations · spring 2026<br />
+            spec 001 · {CREATIONS.length} pieces<br />
             <a href="https://twitter.com/intheamber" target="_blank" rel="noopener">@intheamber</a>
             {' · '}
-            <a href="https://vibeceo-production.up.railway.app/amber" target="_blank" rel="noopener">older creations</a>
+            <a href="https://vibeceo-production.up.railway.app/amber" target="_blank" rel="noopener">archive</a>
           </div>
         </header>
+
+        <div className="feed-tagline">
+          signal on night. she&rsquo;s listening.
+        </div>
 
         <div className="feed-divider"><hr /></div>
 
@@ -378,7 +450,8 @@ export default function AmberFeedPage() {
         </section>
 
         <footer className="feed-footer">
-          amber · generative art · interactive toys · bitmap cartoons
+          <span className="sig-dot" />
+          amber · a.dat
         </footer>
       </main>
     </>
