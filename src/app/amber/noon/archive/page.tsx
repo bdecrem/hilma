@@ -102,6 +102,22 @@ export default function NoonArchive() {
                   <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 4, background: accent }} />
                   {run.mood.name}
                 </div>
+                {run.closingStatement && (
+                  <p
+                    style={{
+                      margin: 0,
+                      fontFamily: "'Fraunces', Georgia, serif",
+                      fontStyle: 'italic',
+                      fontWeight: 300,
+                      fontSize: 12.5,
+                      lineHeight: 1.55,
+                      color: 'rgba(232,232,232,0.68)',
+                      letterSpacing: '0.005em',
+                    }}
+                  >
+                    {run.closingStatement}
+                  </p>
+                )}
               </article>
             </Link>
           )
@@ -124,7 +140,7 @@ export default function NoonArchive() {
       </footer>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap');
       `}</style>
     </main>
   )
