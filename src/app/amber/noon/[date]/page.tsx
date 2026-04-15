@@ -110,6 +110,10 @@ export default function AmberNoon() {
 
   useEffect(() => {
     if (!run || !mood) return
+    // Capture as locally-typed non-null const so TypeScript keeps the narrowing
+    // inside nested closures (animation loop, event handlers).
+    const MOOD = mood
+    const RUN = run
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -169,7 +173,7 @@ export default function AmberNoon() {
         conceptLabelRef.current.textContent = label
         // LANDED ON lights up with the accent — a single signal pulse.
         conceptLabelRef.current.style.color = label === 'landed on:'
-          ? mood.accent
+          ? MOOD.accent
           : 'rgba(255,255,255,0.3)'
       }
       if (conceptRef.current) conceptRef.current.textContent = concept.name
@@ -179,7 +183,7 @@ export default function AmberNoon() {
     function nextBox(now: number, delay: number): Box {
       // Pull the next attempt from the baked run.
       const idx = attemptNumber // 0-based index into the queue
-      const attempt = run.attempts[idx] ?? run.winner
+      const attempt = RUN.attempts[idx] ?? RUN.winner
       attemptNumber++
       const concept = CONCEPTS.find(c => c.name === attempt.concept) ?? CONCEPTS[0]
       currentConcept = concept
@@ -363,7 +367,7 @@ export default function AmberNoon() {
             if (currentConcept) {
               showConcept(currentConcept, now, 'landed on:')
               if (statementRef.current) {
-                statementRef.current.textContent = run.closingStatement
+                statementRef.current.textContent = RUN.closingStatement
                 statementRef.current.dataset.revealStart = String(now)
               }
             }
@@ -463,7 +467,7 @@ export default function AmberNoon() {
     let frame = 0
     const tick = () => {
       const now = performance.now()
-      ctx.fillStyle = mood.palette.bg
+      ctx.fillStyle = MOOD.palette.bg
       ctx.fillRect(0, 0, W, H)
 
       const layout = computeNoonLayout(W, H)
