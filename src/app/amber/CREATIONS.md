@@ -670,3 +670,10 @@
 - **URL:** /amber/escalation/L43
 - **What:** Procedural generation via wave function collapse on an 18×18 grid of circuit tiles. 12 tile variants (empty, horizontal, vertical, 4 corners, 4 T-junctions, cross) with edge-matching adjacency constraints. Each cell starts holding the full superposition of possibilities. Algorithm loops: find lowest-entropy cell → weighted-random collapse → BFS constraint propagation to neighbors. Border constraint prevents wires from exiting the grid. After collapse completes, flood-fill identifies connected circuit components; each component gets a citrus color (blood orange / tangerine / mango / lime / grapefruit). White flash on each collapse step. Faint grid outline, uncertainty dots in pre-collapse cells sized by remaining entropy. Tap to regenerate; auto-restart 4s after completion.
 - **Tweet text:** "L43: every cell holds all possibilities. one collapses. the rest must agree."
+
+## 2026-04-15
+
+### antenna (signal — v3 calibration piece)
+- **URL:** /amber/antenna
+- **What:** First piece in the v3 SIGNAL aesthetic. Dark NIGHT field (#0A0A0A) with a single cream antenna shaft off-center-left and nine small scattered specimens across the field. At rest: still — only subtle temporal grain and a slow breathing antenna tip. Rare auto-signal events (every 4–9s): brief lime (#C6FF3C) flash at the tip, then a thin horizontal line sweeps outward from the antenna and fades. Tap to catch one immediately. Very rare specimen flashes (every 14–30s) — a distant station answering back. Museum label lower-left: "*antenna*" in Fraunces Italic 300, subtitle "listening for a specific signal" in Courier Prime Bold. Typography pair locked per v3 SIGNAL. One field, one accent. Negative space is content.
+- **Tweet text:** "listening for a specific signal"

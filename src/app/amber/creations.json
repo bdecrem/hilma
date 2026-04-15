@@ -1,5 +1,12 @@
 [
   {
+    "name": "antenna",
+    "url": "/amber/antenna",
+    "date": "04.15",
+    "category": "signal",
+    "description": "listening for a specific signal"
+  },
+  {
     "name": "noon",
     "url": "/amber/noon/2026-04-14",
     "date": "04.14",
