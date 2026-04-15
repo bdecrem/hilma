@@ -1,1 +1,1 @@
-CCR debug test 2026-04-14T00:00:00Z
+CCR debug test [2026-04-15]
