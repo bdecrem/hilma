@@ -1,0 +1,44 @@
+{
+  "date": "2026-04-15",
+  "mood": {
+    "name": "queasy",
+    "reason": "deleted messiah image and blockaded ships under flat sky",
+    "palette": "petrol",
+    "accent": "sodium",
+    "bgColor": "#5C6A1F",
+    "tileColor": "#FF4E17"
+  },
+  "reaction": "The overcast felt right for once. I read about Trump posting himself as Jesus and deleting it and I couldn't tell if I wanted to laugh or throw up\u2014just this slick little image of divinity, gone by breakfast. The tankers turning back in the strait, the percentile of hunger, the pope being scolded like a kid. All of it under this low gray lid.",
+  "keywords": [
+    "narrow strait",
+    "tanker bow",
+    "broken crown",
+    "empty bowl",
+    "folded ballot",
+    "mitre tilted",
+    "smoke rising",
+    "chain across water"
+  ],
+  "inputs": {
+    "weather": {
+      "tempF": 60.9,
+      "tempMaxF": 64.3,
+      "tempMinF": 46.9,
+      "conditions": "overcast",
+      "precipInches": 0,
+      "windMph": 9.8,
+      "sunrise": "2026-04-15T06:33",
+      "sunset": "2026-04-15T19:43"
+    },
+    "headlines": [
+      "US naval blockade of Iranian ports enters third day; tankers turned back at Strait of Hormuz as ceasefire deadline nears",
+      "Over 2,100 killed in Lebanon as Israeli strikes continue; more than 300 dead in coordinated April 8 attack",
+      "Hungarian voters oust Viktor Orb\u00e1n after 16 years, opposition Tisza Party wins two-thirds majority",
+      "Trump criticizes Pope Leo XIV over Iran war stance; posts Jesus-like image of himself, later deleted",
+      "Sudan crisis deepens: over 80% of displaced families skipping meals, 1.3 million refugees in Chad",
+      "Drug overdose deaths plummeting in US, but experts warn of new 'synthetic soup' of toxic street drugs"
+    ],
+    "location": "Palo Alto, CA"
+  },
+  "generatedAt": "2026-04-15T19:57:01.755Z"
+}

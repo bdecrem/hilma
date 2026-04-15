@@ -2,9 +2,23 @@ import { COLS, ROWS } from './shapes'
 import { type Fill, n4 } from './cells'
 import { type Box } from './simulation'
 
+// Optional tile tint. When unset (default), tiles render as grayscale based on
+// brightness — preserving original behavior for all existing callers. When set,
+// tiles use this RGB triple, still modulated by brightness so shading works.
+let TILE_TINT: [number, number, number] | null = null
+export function setTileTint(rgb: [number, number, number] | null) {
+  TILE_TINT = rgb
+}
+
 export function drawPixelBlock(ctx: CanvasRenderingContext2D, x: number, y: number, size: number, fill: Fill, brightness: number, alpha: number) {
-  const v = Math.floor(brightness * 255)
-  ctx.fillStyle = `rgba(${v},${v},${v},${alpha})`
+  if (TILE_TINT) {
+    const [tr, tg, tb] = TILE_TINT
+    const b = Math.max(0.25, brightness)
+    ctx.fillStyle = `rgba(${Math.floor(tr*b)},${Math.floor(tg*b)},${Math.floor(tb*b)},${alpha})`
+  } else {
+    const v = Math.floor(brightness * 255)
+    ctx.fillStyle = `rgba(${v},${v},${v},${alpha})`
+  }
   switch (fill) {
     case 'solid': ctx.fillRect(x+1,y+1,size-2,size-2); break
     case 'checker':

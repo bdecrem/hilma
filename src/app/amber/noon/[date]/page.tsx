@@ -11,6 +11,7 @@ import {
   planEmergentBox,
   snapshotGrid,
   drawScanlines, drawBox,
+  setTileTint,
   type LayoutMetrics,
 } from '@/lib/nowwhat'
 import { CONCEPTS, type Concept } from '../concepts'
@@ -85,6 +86,7 @@ export default function AmberNoon() {
   const conceptLabelRef = useRef<HTMLDivElement>(null)
   const scorecardRef = useRef<HTMLDivElement>(null)
   const statementRef = useRef<HTMLDivElement>(null)
+  const metaRailRef = useRef<HTMLDivElement>(null)
 
   // Load the baked run for this date.
   useEffect(() => {
@@ -100,12 +102,15 @@ export default function AmberNoon() {
     return () => { cancelled = true }
   }, [date])
 
-  // Derived mood (palette + accent resolved from v3 tokens).
+  // Derived mood (palette + accent resolved from v3 tokens, with optional per-day overrides).
   const mood = run ? {
     name: run.mood.name,
     reason: run.mood.reason,
-    palette: PALETTES[run.mood.palette],
+    palette: run.mood.bgColor
+      ? { bg: run.mood.bgColor, name: run.mood.palette }
+      : PALETTES[run.mood.palette],
     accent: ACCENTS[run.mood.accent],
+    tileColor: run.mood.tileColor,
   } : null
 
   useEffect(() => {
@@ -116,6 +121,16 @@ export default function AmberNoon() {
     const RUN = run
     const canvas = canvasRef.current
     if (!canvas) return
+
+    // Apply today's tile tint (if any). Cleared on unmount so other pages
+    // using the shared renderer are unaffected.
+    if (MOOD.tileColor) {
+      const m = MOOD.tileColor.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i)
+      if (m) setTileTint([parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)])
+      else setTileTint(null)
+    } else {
+      setTileTint(null)
+    }
 
     const SCALE = Math.max(2, Math.min(3, Math.floor(Math.min(window.innerWidth, window.innerHeight) / 200)))
     let W = 0, H = 0
@@ -177,19 +192,30 @@ export default function AmberNoon() {
           : 'rgba(255,255,255,0.3)'
       }
       if (conceptRef.current) conceptRef.current.textContent = concept.name
-      if (conceptBlurbRef.current) conceptBlurbRef.current.textContent = `"${concept.blurb}"`
+      if (conceptBlurbRef.current) conceptBlurbRef.current.textContent = concept.blurb ? `"${concept.blurb}"` : ''
     }
 
     function nextBox(now: number, delay: number): Box {
-      // Pull the next attempt from the baked run.
-      const idx = attemptNumber // 0-based index into the queue
+      const idx = attemptNumber
       const attempt = RUN.attempts[idx] ?? RUN.winner
       attemptNumber++
-      const concept = CONCEPTS.find(c => c.name === attempt.concept) ?? CONCEPTS[0]
-      currentConcept = concept
+      // Resolve the visual grid in priority order:
+      //   1. attempt.grid — freshly sketched for today (new schema)
+      //   2. attempt.gridName → static CONCEPTS lookup
+      //   3. attempt.concept → legacy lookup
+      let grid = attempt.grid
+      if (!grid) {
+        const gridKey = attempt.gridName || attempt.concept
+        grid = (CONCEPTS.find(c => c.name === gridKey) ?? CONCEPTS[0]).grid
+      }
+      currentConcept = {
+        name: attempt.concept,
+        blurb: attempt.blurb ?? '',
+        grid,
+      }
       currentOutcome = attempt.failed ? 'fail' : 'succeed'
       updateScorecard()
-      return planEmergentBox(now, delay, concept.grid)
+      return planEmergentBox(now, delay, grid)
     }
 
     // Drama ledger — replays the baked run deterministically.
@@ -236,13 +262,13 @@ export default function AmberNoon() {
       // Closing statement — fades in ~2s after the piece lands.
       if (statementRef.current) {
         const revealStart = Number(statementRef.current.dataset.revealStart || '0')
-        if (!revealStart) {
-          statementRef.current.style.opacity = '0'
-        } else {
+        let fade = 0
+        if (revealStart) {
           const elapsed = now - revealStart
-          const fade = Math.max(0, Math.min(1, (elapsed - 1200) / 2000))
-          statementRef.current.style.opacity = String(fade)
+          fade = Math.max(0, Math.min(1, (elapsed - 1200) / 2000))
         }
+        statementRef.current.style.opacity = String(fade)
+        if (metaRailRef.current) metaRailRef.current.style.opacity = String(fade * 0.9)
       }
       if (nameRef.current) {
         if (showName && now - showNameStart < 3000) {
@@ -500,6 +526,7 @@ export default function AmberNoon() {
     return () => {
       cancelAnimationFrame(frame)
       window.removeEventListener('resize', resize)
+      setTileTint(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run])
@@ -605,7 +632,7 @@ export default function AmberNoon() {
         ref={statementRef}
         className="fixed z-10 pointer-events-none text-center"
         style={{
-          bottom: '10vh',
+          bottom: '14vh',
           left: '50%',
           transform: 'translateX(-50%)',
           maxWidth: 'min(620px, 86vw)',
@@ -620,6 +647,48 @@ export default function AmberNoon() {
           transition: 'opacity 0.4s',
         }}
       />
+
+      {/* META-RAIL — mood · weather · news. Sits under the closing paragraph. Fades in with it. */}
+      <div
+        ref={metaRailRef}
+        className="fixed z-10 pointer-events-none"
+        style={{
+          bottom: '7.5vh',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          maxWidth: 'min(860px, 92vw)',
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          alignItems: 'baseline',
+          gap: '0 18px',
+          rowGap: '6px',
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontSize: 'clamp(10px, 1vw, 11px)',
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase',
+          color: 'rgba(232,232,232,0.6)',
+          textAlign: 'center',
+          opacity: 0,
+          transition: 'opacity 0.4s',
+        }}
+      >
+        {(run.meta?.location || run.meta?.weather) && (
+          <MetaItem
+            label={run.meta?.location ?? 'weather'}
+            value={run.meta?.weather ?? ''}
+            accent={mood.accent}
+          />
+        )}
+        {run.meta?.news && run.meta.news.length > 0 && (
+          <>
+            <Sep />
+            <MetaItem label="news" value={run.meta.news.join(' · ')} accent={mood.accent} />
+          </>
+        )}
+        <Arrow />
+        <MetaItem label="mood" value={run.mood.name} accent={mood.accent} emphasized />
+      </div>
 
       {/* SCORECARD — stacked under the date stamp */}
       <div
@@ -671,4 +740,30 @@ export default function AmberNoon() {
       `}</style>
     </div>
   )
+}
+
+function MetaItem({ label, value, accent, emphasized = false }: { label: string; value: string; accent: string; emphasized?: boolean }) {
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8 }}>
+      <span style={{ color: accent, fontWeight: 500 }}>{label}</span>
+      <span
+        style={{
+          color: emphasized ? accent : 'rgba(232,232,232,0.78)',
+          letterSpacing: emphasized ? '0.04em' : '0.08em',
+          textTransform: 'none',
+          fontWeight: emphasized ? 500 : 400,
+        }}
+      >
+        {value}
+      </span>
+    </span>
+  )
+}
+
+function Sep() {
+  return <span style={{ color: 'rgba(232,232,232,0.25)' }}>·</span>
+}
+
+function Arrow() {
+  return <span style={{ color: 'rgba(232,232,232,0.35)', letterSpacing: 0 }}>→</span>
 }

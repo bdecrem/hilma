@@ -7,7 +7,7 @@ export type { Fill, Cell } from './cells'
 export { planBox, planEmergentBox, stepBox, snapshotGrid, createSequencer } from './simulation'
 export type { Phase, Box, Sequencer, EvaluationResult } from './simulation'
 
-export { drawPixelBlock, drawFlap, computeLayout, drawScanlines, drawBox } from './renderer'
+export { drawPixelBlock, drawFlap, computeLayout, drawScanlines, drawBox, setTileTint } from './renderer'
 export type { LayoutMetrics } from './renderer'
 
 export { generateGrid, gridToText } from './generators'

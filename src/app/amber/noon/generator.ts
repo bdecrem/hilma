@@ -3,33 +3,58 @@ import { CONCEPTS } from './concepts'
 // ─────────────────────────────────────────────────────────────────
 // Amber's Noon — the generator
 //
-// Given a date, deterministically produces the run for that day:
-//   - mood (for now hardcoded; later from LLM + weather/news)
-//   - an ordered sequence of attempts, each with a concept + outcome
-//   - the winning concept
-//   - the closing statement paragraph
+// Given a date + (optionally) Amber's mood-of-the-day, deterministically
+// produces the run for that day:
+//   - mood (from the mood synthesizer; falls back to a hardcoded default)
+//   - keywords (Amber's sensory images — drive the attempt concepts)
+//   - an ordered sequence of attempts
+//   - the winner
+//   - a closing statement (woven from Amber's first-person reaction)
 //
-// Deterministic: the same date string always yields the same run, so
-// the page is a faithful replay of what happened at noon.
+// Deterministic: same date (+ same mood input) always yields the same run.
 // ─────────────────────────────────────────────────────────────────
 
 export interface Attempt {
-  concept: string
-  blurb: string
-  failed: boolean // the last attempt is always a success (failed=false)
+  concept: string        // the keyword shown to the viewer
+  blurb: string          // short caption
+  gridName: string       // name of the grid used (keyword, or one of the static CONCEPTS)
+  grid?: number[][]     // inline grid (ROWS × COLS), when drawn freshly for the day
+  failed: boolean        // the last attempt is always a success (failed=false)
 }
 
 export interface NoonRun {
-  date: string              // 'YYYY-MM-DD'
+  date: string
   mood: {
     name: string
     reason: string
     palette: 'night' | 'hearth' | 'ink' | 'petrol' | 'bruise' | 'oxblood'
     accent: 'lime' | 'sodium' | 'uv'
+    bgColor?: string    // optional hex override — takes precedence over palette
+    tileColor?: string  // optional hex override — tints the tiles
   }
+  reaction?: string
+  keywords?: string[]
   attempts: Attempt[]
   winner: Attempt
   closingStatement: string
+  meta?: {
+    weather?: string
+    location?: string
+    news?: string[]
+  }
+}
+
+export interface DailyConcept {
+  name: string
+  blurb: string
+  grid: number[][]
+}
+
+export interface MoodInput {
+  mood: NoonRun['mood']
+  reaction?: string
+  keywords?: string[]
+  dailyConcepts?: DailyConcept[]  // fresh grids sketched for today
 }
 
 // ─── Seeded PRNG (Mulberry32) ────────────────────────────────────
@@ -52,74 +77,118 @@ function seededRandom(seed: number) {
   }
 }
 
-// ─── Mood selection ──────────────────────────────────────────────
-// For now: hardcoded. Later this is synthesized by an LLM from the
-// day's weather + news. The structure is already the one the page consumes.
-function pickMoodForDate(_date: string) {
-  return {
-    name: 'uneasy',
-    reason: 'bright sky, tense world',
-    palette: 'petrol' as const,
-    accent: 'lime' as const,
-  }
+const DEFAULT_MOOD: NoonRun['mood'] = {
+  name: 'uneasy',
+  reason: 'bright sky, tense world',
+  palette: 'petrol',
+  accent: 'lime',
 }
 
-// ─── Closing statement ───────────────────────────────────────────
-// Template for now. Later: LLM-generated each day, matched to mood + winner.
-function composeClosingStatement(moodName: string, winner: Attempt): string {
-  const winnerBlurb = winner.blurb.replace(/\.$/, '').toLowerCase()
-  return `The sky was too bright for the news. Amber reached for a few things and let most of them slip. She ended on ${winner.concept} — ${winnerBlurb}. Take that as today.`
-  // moodName available for per-mood variants later
+// Map a keyword → one of the existing grids, deterministically.
+function gridForKeyword(keyword: string): string {
+  const idx = hashString(keyword) % CONCEPTS.length
+  return CONCEPTS[idx].name
+}
+
+// Closing statement: if Amber wrote a reaction today, use it (first person) + the winner.
+// Otherwise fall back to the original template.
+function composeClosingStatement(
+  moodName: string,
+  winner: Attempt,
+  reaction?: string,
+): string {
+  if (reaction && reaction.trim()) {
+    return `${reaction.trim()} I ended on ${winner.concept}.`
+  }
   void moodName
+  const wb = winner.blurb ? ` — ${winner.blurb.replace(/\.$/, '').toLowerCase()}` : ''
+  return `The sky was too bright for the news. Amber reached for a few things and let most of them slip. She ended on ${winner.concept}${wb}. Take that as today.`
 }
 
 // ─── Attempt sequence ────────────────────────────────────────────
-// Rules (MVP):
+// Rules:
 //   - first attempt ALWAYS fails
-//   - each subsequent attempt has 25% chance of success
+//   - subsequent attempts have 25% chance of success
 //   - max 6 attempts; if none has succeeded by then, force success on #6
-//   - concepts picked without immediate repeat (no two in a row the same)
-function planAttempts(rng: () => number): Attempt[] {
+//   - no two in a row the same
+interface PoolEntry { concept: string; blurb: string; gridName: string; grid?: number[][] }
+
+function planAttempts(rng: () => number, pool: PoolEntry[]): Attempt[] {
   const attempts: Attempt[] = []
   const MAX = 6
   const SUCCESS_PROB = 0.25
-  let lastConceptName = ''
-
+  let lastConcept = ''
   for (let i = 0; i < MAX; i++) {
-    // Pick a concept different from the previous one
-    let c = CONCEPTS[Math.floor(rng() * CONCEPTS.length)]
+    let c = pool[Math.floor(rng() * pool.length)]
     let guard = 0
-    while (c.name === lastConceptName && guard++ < 8) {
-      c = CONCEPTS[Math.floor(rng() * CONCEPTS.length)]
+    while (c.concept === lastConcept && guard++ < 8) {
+      c = pool[Math.floor(rng() * pool.length)]
     }
-    lastConceptName = c.name
-
+    lastConcept = c.concept
     const isFirst = i === 0
     const isLastChance = i === MAX - 1
     let failed: boolean
     if (isFirst) failed = true
     else if (isLastChance) failed = false
     else failed = rng() >= SUCCESS_PROB
-
-    attempts.push({ concept: c.name, blurb: c.blurb, failed })
+    const a: Attempt = { concept: c.concept, blurb: c.blurb, gridName: c.gridName, failed }
+    if (c.grid) a.grid = c.grid
+    attempts.push(a)
     if (!failed) break
   }
   return attempts
 }
 
-// ─── Public: generate a full run for a date ──────────────────────
-// Optional `salt` lets us re-roll the same date (for testing or a fresh take).
-export function generateRun(date: string, salt?: string): NoonRun {
+export function generateRun(date: string, saltOrMood?: string | MoodInput, maybeMood?: MoodInput): NoonRun {
+  // Back-compat: generateRun(date, salt?) still works.
+  let salt: string | undefined
+  let moodInput: MoodInput | undefined
+  if (typeof saltOrMood === 'string') { salt = saltOrMood; moodInput = maybeMood }
+  else { moodInput = saltOrMood }
+
   const seedKey = salt ? `amber-noon-${date}-${salt}` : `amber-noon-${date}`
   const rng = seededRandom(hashString(seedKey))
-  const mood = pickMoodForDate(date)
-  const attempts = planAttempts(rng)
+
+  const mood = moodInput?.mood ?? DEFAULT_MOOD
+  const reaction = moodInput?.reaction
+
+  // Build the pool of attempt candidates.
+  // Preference order:
+  //   1. dailyConcepts (Amber sketched fresh grids for today's keywords)
+  //   2. keywords only (grid hash-mapped to the static library)
+  //   3. static CONCEPTS list
+  let pool: PoolEntry[]
+  if (moodInput?.dailyConcepts && moodInput.dailyConcepts.length > 0) {
+    pool = moodInput.dailyConcepts.map(dc => ({
+      concept: dc.name,
+      blurb: dc.blurb,
+      gridName: dc.name,
+      grid: dc.grid,
+    }))
+  } else if (moodInput?.keywords && moodInput.keywords.length > 0) {
+    pool = moodInput.keywords.map(kw => ({
+      concept: kw,
+      blurb: '',
+      gridName: gridForKeyword(kw),
+    }))
+  } else {
+    pool = CONCEPTS.map(c => ({ concept: c.name, blurb: c.blurb, gridName: c.name }))
+  }
+
+  const attempts = planAttempts(rng, pool)
   const winner = attempts[attempts.length - 1]
-  const closingStatement = composeClosingStatement(mood.name, winner)
-  return { date, mood, attempts, winner, closingStatement }
+  const closingStatement = composeClosingStatement(mood.name, winner, reaction)
+  return {
+    date,
+    mood,
+    reaction,
+    keywords: moodInput?.keywords,
+    attempts,
+    winner,
+    closingStatement,
+  }
 }
 
-// Convenience: today's date as YYYY-MM-DD
 export function todayDate(): string {
   const d = new Date()
   const yyyy = d.getFullYear()

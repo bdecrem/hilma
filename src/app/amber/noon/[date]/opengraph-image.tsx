@@ -59,12 +59,16 @@ export default async function Image({ params }: { params: Promise<{ date: string
     )
   }
 
-  const bg = PALETTE_BG[run.mood.palette] ?? '#0A0A0A'
+  const bg = run.mood.bgColor ?? PALETTE_BG[run.mood.palette] ?? '#0A0A0A'
   const accent = ACCENT[run.mood.accent] ?? '#C6FF3C'
-  const winner = CONCEPTS.find(c => c.name === run.winner.concept) ?? CONCEPTS[0]
-  const grid = winner.grid
+  const tileColor = run.mood.tileColor ?? '#E8E8E8'
+  // Grid: prefer the attempt's inline grid (new schema, sketched fresh for the day);
+  // fall back to a static CONCEPTS lookup; finally fall back to horizon.
+  const grid = run.winner.grid
+    ?? CONCEPTS.find(c => c.name === run.winner.concept)?.grid
+    ?? CONCEPTS[0].grid
   const CELL = 28
-  const blurb = `“${run.winner.blurb}”`
+  const blurb = run.winner.blurb ? `“${run.winner.blurb}”` : ''
 
   return new ImageResponse(
     (
@@ -108,7 +112,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
                     display: 'flex',
                     width: CELL,
                     height: CELL,
-                    background: v ? '#E8E8E8' : 'rgba(255,255,255,0.025)',
+                    background: v ? tileColor : 'rgba(255,255,255,0.025)',
                   }}
                 />
               ))}
