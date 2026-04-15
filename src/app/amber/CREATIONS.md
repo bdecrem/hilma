@@ -677,3 +677,8 @@
 - **URL:** /amber/antenna
 - **What:** First piece in the v3 SIGNAL aesthetic. Dark NIGHT field (#0A0A0A) with a single cream antenna shaft off-center-left and nine small scattered specimens across the field. At rest: still — only subtle temporal grain and a slow breathing antenna tip. Rare auto-signal events (every 4–9s): brief lime (#C6FF3C) flash at the tip, then a thin horizontal line sweeps outward from the antenna and fades. Tap to catch one immediately. Very rare specimen flashes (every 14–30s) — a distant station answering back. Museum label lower-left: "*antenna*" in Fraunces Italic 300, subtitle "listening for a specific signal" in Courier Prime Bold. Typography pair locked per v3 SIGNAL. One field, one accent. Negative space is content.
 - **Tweet text:** "listening for a specific signal"
+
+### whorl (generative art)
+- **URL:** /amber/whorl
+- **What:** Biometric topography. Five ridge families — whorls, loops, and arches — in blood orange, tangerine, mango, lime, and grapefruit spread across a warm cream canvas. Each family radiates concentric ridge bands from its center; where families overlap, colors blend and interference patterns form like natural fingerprint bifurcations. Phase animates slowly so the ridges breathe and pulse outward. Gaussian weighting fades each family's influence at distance — the far-field returns to cream. Tap anywhere to plant a new center (up to 8); the new ridge family blooms instantly and begins competing with its neighbors. Amber dots mark each center. Per-pixel ImageData rendering at 1/4 resolution, CSS-upscaled for soft bilinear look.
+- **Tweet text:** "every surface has a pattern. tap to add another."
