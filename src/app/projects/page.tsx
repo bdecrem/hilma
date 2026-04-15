@@ -66,7 +66,7 @@ const projects: Project[] = [
   {
     name: 'kochi.to',
     url: 'https://kochi.to',
-    shortDesc: 'the idea: a personal ai agent over sms, built around daily text and <a href="https://apps.apple.com/us/app/kochi-podcast-player/id6752669410" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">podcast</a> briefs on ai, science, and tech. for the ai research brief: a graph database with 600k+ papers and agentic search on top.',
+    shortDesc: 'the idea: a personal ai agent over sms, built around daily text and <a href="https://apps.apple.com/us/app/kochi-podcast-player/id6752669410" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">podcast</a> briefs on ai, science, and tech. for the ai research brief: a graph database with 200k+ papers and agentic search on top.',
     fullDesc: 'ai over sms. daily reports, research papers, chat companion. also an iphone podcast app. (most agents decommissioned.)',
     status: ['neglected', 'retired'],
     artifacts: [{ label: 'iphone app', url: 'https://apps.apple.com/us/app/kochi-podcast-player/id6752669410' }],
@@ -492,7 +492,7 @@ export default function Projects() {
             bart decrem
           </div>
           <p className={`mt-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
-            a year building agentic ai systems. a conversational research agent running on a knowledge graph of 600,000+ ai research papers and 845,000 authorships. an experimental, fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), 7 custom synthesizers and 5 effects processors. a creative sidekick that posts multiple times a day and has made 300+ generative artworks (when they&apos;re not trading stocks or responding to email). plus, a prototype for a responsible ai incubator.
+            a year building agentic ai systems. a conversational research agent running on a knowledge graph of 200,000+ ai research papers and 845,000 authorships. an experimental, fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), 7 custom synthesizers and 5 effects processors. a creative sidekick that posts multiple times a day and has made 300+ generative artworks (when they&apos;re not trading stocks or responding to email). plus, a prototype for a responsible ai incubator.
             {' '}previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
             <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.{' '}
             <a href="https://theforkiverse.com/@bart" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">forkiverse</a>.{' '}
