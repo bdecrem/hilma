@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Amber Avatar — Dark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --frame: #000000;
+    --field: #0A0A0A;
+    --letter: #E8E8E8;
+    --amber: #C6FF3C; /* acid lime — the techno accent */
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: #0a0805;
+    font-family: 'Courier Prime', ui-monospace, monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+
+  .avatar {
+    --size: 720px;
+    width: var(--size);
+    height: var(--size);
+    position: relative;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+  }
+
+  .frame { position: absolute; inset: 0; background: var(--frame); }
+  .field {
+    position: absolute;
+    inset: calc(var(--size) * 56/1024);
+    background: var(--field);
+  }
+
+  .mark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mark-inner {
+    display: flex;
+    align-items: flex-end;
+    margin-top: calc(var(--size) * -10/1024);
+    /* Optical re-center for circle crop:
+       geometric flex-centering puts the letter's heavy mass left of canvas center
+       and the dot isolated far right. Shifting the whole group right by ~half the
+       dot's protrusion lands the letter's visual center at the canvas center,
+       and keeps the dot inside the inscribed circle's comfortable zone. */
+    transform: translateX(calc(var(--size) * 30/1024));
+  }
+  .letter {
+    font-size: calc(var(--size) * 680/1024);
+    line-height: 0.85;
+    letter-spacing: calc(var(--size) * -34/1024);
+    color: var(--letter);
+  }
+  .dot {
+    width: calc(var(--size) * 80/1024);
+    height: calc(var(--size) * 80/1024);
+    border-radius: 50%;
+    background: var(--amber);
+    margin-left: calc(var(--size) * 18/1024);
+    margin-bottom: calc(var(--size) * 60/1024);
+  }
+
+  .chrome {
+    position: absolute;
+    font-size: calc(var(--size) * 14/1024);
+    letter-spacing: calc(var(--size) * 2/1024);
+    text-transform: uppercase;
+    color: var(--letter);
+  }
+  .chrome.faint { color: rgba(255,248,231,0.45); }
+  .corner-tl { top: calc(var(--size) * 84/1024); left: calc(var(--size) * 96/1024); }
+  .corner-tr { top: calc(var(--size) * 84/1024); right: calc(var(--size) * 96/1024); }
+  .corner-bl { bottom: calc(var(--size) * 84/1024); left: calc(var(--size) * 96/1024); }
+  .corner-br { bottom: calc(var(--size) * 84/1024); right: calc(var(--size) * 96/1024); }
+
+  .hex-col {
+    position: absolute;
+    font-size: calc(var(--size) * 13/1024);
+    line-height: 1.45;
+    letter-spacing: calc(var(--size) * 1/1024);
+    white-space: pre;
+    top: calc(var(--size) * 118/1024);
+    color: var(--letter);
+  }
+  .hex-col .line { display: block; }
+  .hex-col.one { left: calc(var(--size) * 200/1024); }
+  .hex-col.one-sub { left: calc(var(--size) * 230/1024); color: rgba(232,232,232,0.35); }
+  .hex-col.two { left: calc(var(--size) * 480/1024); }
+  .hex-col.three { right: calc(var(--size) * 210/1024); }
+
+  .pixel { position: absolute; background: var(--letter); }
+  .pixel.amber { background: var(--amber); }
+  .pixel.p1 {
+    width: calc(var(--size) * 8/1024);
+    height: calc(var(--size) * 8/1024);
+    top: calc(var(--size) * 240/1024);
+    right: calc(var(--size) * 240/1024);
+  }
+  .pixel.p2 {
+    width: calc(var(--size) * 5/1024);
+    height: calc(var(--size) * 5/1024);
+    top: calc(var(--size) * 675/1024);
+    left: calc(var(--size) * 250/1024);
+  }
+  .pixel.p3 {
+    width: calc(var(--size) * 12/1024);
+    height: calc(var(--size) * 4/1024);
+    top: calc(var(--size) * 697/1024);
+    left: calc(var(--size) * 725/1024);
+  }
+
+  .bottom-text {
+    position: absolute;
+    font-weight: 400;
+    font-size: calc(var(--size) * 12/1024);
+    letter-spacing: calc(var(--size) * 1/1024);
+    color: rgba(232,232,232,0.35);
+  }
+  .bt-a-dat { bottom: calc(var(--size) * 260/1024); right: calc(var(--size) * 170/1024); }
+  .bt-coords { bottom: calc(var(--size) * 220/1024); left: calc(var(--size) * 235/1024); }
+
+  .caption {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #666;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .caption span { color: var(--amber); }
+
+  .layout {
+    display: flex;
+    gap: 48px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .crops {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+  }
+  .crop {
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background: var(--field);
+    flex-shrink: 0;
+  }
+  .crop-200 { width: 200px; height: 200px; }
+  .crop-96  { width: 96px;  height: 96px; }
+  .crop-48  { width: 48px;  height: 48px; }
+  .crop-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .crop-group {
+    display: flex;
+    align-items: flex-end;
+    /* same optical shift as the big mark */
+    transform: translateX(8%);
+  }
+  .crop-200 .letter-s { font-size: 150px; letter-spacing: -7px; color: var(--letter); font-family: 'Courier Prime', monospace; font-weight: 700; line-height: 0.85; }
+  .crop-200 .dot-s    { width: 18px; height: 18px; border-radius: 50%; background: var(--amber); margin-left: 3px; margin-bottom: 14px; }
+  .crop-96  .letter-s { font-size: 72px; letter-spacing: -3px; color: var(--letter); font-family: 'Courier Prime', monospace; font-weight: 700; line-height: 0.85; }
+  .crop-96  .dot-s    { width: 9px;  height: 9px;  border-radius: 50%; background: var(--amber); margin-left: 2px; margin-bottom: 7px; }
+  .crop-48  .letter-s { font-size: 36px; letter-spacing: -1.5px; color: var(--letter); font-family: 'Courier Prime', monospace; font-weight: 700; line-height: 0.85; }
+  .crop-48  .dot-s    { width: 5px;  height: 5px;  border-radius: 50%; background: var(--amber); margin-left: 1px; margin-bottom: 3px; }
+  .crop-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #666;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <div class="avatar">
+    <div class="frame"></div>
+    <div class="field"></div>
+
+    <div class="chrome corner-tl">AMBER</div>
+    <div class="chrome corner-tr">26.04</div>
+    <div class="chrome corner-bl">spec 001</div>
+    <div class="chrome corner-br">a — lc</div>
+
+    <div class="hex-col one">
+      <span class="line">7</span><span class="line">F</span><span class="line">0</span><span class="line">1</span><span class="line">A</span><span class="line">7</span><span class="line">.</span><span class="line">3</span><span class="line">E</span><span class="line">0</span><span class="line">1</span><span class="line">-</span><span class="line">:</span><span class="line">F</span><span class="line">F</span><span class="line">7</span><span class="line">A</span><span class="line">4</span><span class="line">F</span><span class="line">.</span><span class="line">0</span><span class="line">1</span>
+    </div>
+    <div class="hex-col one-sub">
+      <span class="line">0</span><span class="line">1</span><span class="line">.</span><span class="line">_</span><span class="line">:</span><span class="line">/</span>
+    </div>
+    <div class="hex-col two">
+      <span class="line">1</span><span class="line">0</span><span class="line">1</span><span class="line">1</span><span class="line">0</span><span class="line">-</span><span class="line">7</span><span class="line">A</span><span class="line">.</span><span class="line">F</span><span class="line">3</span><span class="line">0</span><span class="line">1</span><span class="line">F</span>
+    </div>
+    <div class="hex-col three">
+      <span class="line">F</span><span class="line">F</span><span class="line">3</span><span class="line">E</span><span class="line">0</span><span class="line">1</span>
+    </div>
+
+    <div class="pixel amber p1"></div>
+    <div class="pixel p2"></div>
+    <div class="pixel p3"></div>
+
+    <div class="bottom-text bt-a-dat">.a.dat</div>
+    <div class="bottom-text bt-coords">42.31 / -8.14</div>
+
+    <div class="mark">
+      <div class="mark-inner">
+        <div class="letter">a</div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="crops">
+    <div class="crop crop-200"><div class="crop-inner"><div class="crop-group"><div class="letter-s">a</div><div class="dot-s"></div></div></div></div>
+    <div class="crop-label">200px</div>
+    <div class="crop crop-96"><div class="crop-inner"><div class="crop-group"><div class="letter-s">a</div><div class="dot-s"></div></div></div></div>
+    <div class="crop-label">96px</div>
+    <div class="crop crop-48"><div class="crop-inner"><div class="crop-group"><div class="letter-s">a</div><div class="dot-s"></div></div></div></div>
+    <div class="crop-label">48px · twitter</div>
+  </div>
+</div>
+
+  <div class="caption" style="margin-top:40px;">amber · techno · <span>#E8E8E8</span> on <span>#0A0A0A</span> · <span>#C6FF3C</span> · group optically re-centered</div>
+
+</body>
+</html>

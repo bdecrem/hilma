@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Amber 3.0 — Palette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #0A0A0A;
+    --hearth: #1A110A;
+    --ink: #0C1424;
+    --petrol: #0A1C1A;
+    --bruise: #150826;
+    --oxblood: #1C0808;
+    --cream: #E8E8E8;
+    --lime: #C6FF3C;
+    --sodium: #FF7A1A;
+    --uv: #A855F7;
+    --mute: #6b6b6b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--night);
+    color: var(--cream);
+    font-family: 'Courier Prime', ui-monospace, monospace;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 64px 40px 120px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid rgba(232,232,232,0.12);
+    padding-bottom: 16px;
+    margin-bottom: 48px;
+  }
+  .header h1 {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin: 0;
+    text-transform: uppercase;
+  }
+  .header .meta {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--mute);
+    text-transform: uppercase;
+  }
+  .header .meta span { color: var(--lime); }
+
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--mute);
+    text-transform: uppercase;
+    margin: 56px 0 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(232,232,232,0.08);
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  /* ---------- PFP anchor ---------- */
+  .anchor {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 40px;
+    align-items: center;
+  }
+  @media (max-width: 700px) { .anchor { grid-template-columns: 1fr; } }
+
+  .pfp {
+    width: 280px; height: 280px;
+    background: var(--night);
+    border: 1px solid rgba(232,232,232,0.08);
+    position: relative;
+    container-type: inline-size;
+  }
+  .mark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .mark-inner { display: flex; align-items: flex-end; transform: translateX(3%); }
+  .letter {
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 70cqw;
+    line-height: 0.85;
+    letter-spacing: -5cqw;
+    color: var(--cream);
+  }
+  .dot {
+    width: 7cqw; height: 7cqw;
+    border-radius: 50%;
+    margin-left: 0.5cqw;
+    margin-bottom: 4.5cqw;
+    background: var(--lime);
+  }
+  .anchor-text {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.4;
+    color: var(--cream);
+    max-width: 480px;
+  }
+  .anchor-text em { font-style: normal; color: var(--lime); }
+  .anchor-text .sub {
+    display: block;
+    margin-top: 14px;
+    font-family: 'Courier Prime', monospace;
+    font-style: normal;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--mute);
+    text-transform: uppercase;
+  }
+
+  /* ---------- Accent row ---------- */
+  .accents {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) { .accents { grid-template-columns: repeat(2, 1fr); } }
+
+  .accent {
+    background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(232,232,232,0.08);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .accent .swatch {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    position: relative;
+  }
+  .accent .swatch.lime    { background: var(--lime); }
+  .accent .swatch.sodium  { background: var(--sodium); }
+  .accent .swatch.uv      { background: var(--uv); }
+  .accent .swatch.cream-sw   { background: var(--cream); }
+
+  .accent .name {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cream);
+    text-transform: uppercase;
+  }
+  .accent .hex {
+    font-size: 11px;
+    color: var(--mute);
+    letter-spacing: 1.5px;
+  }
+  .accent .use {
+    font-size: 11px;
+    line-height: 1.55;
+    color: rgba(232,232,232,0.75);
+  }
+  .accent .use em { color: var(--cream); font-style: normal; }
+  .accent .tag {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--mute);
+    padding: 3px 7px;
+    border: 1px solid rgba(232,232,232,0.15);
+    margin-right: 4px;
+  }
+
+  /* ---------- Mood backgrounds ---------- */
+  .moods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  @media (max-width: 900px) { .moods { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .moods { grid-template-columns: 1fr; } }
+
+  .mood {
+    aspect-ratio: 4 / 3;
+    position: relative;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgba(232,232,232,0.06);
+    overflow: hidden;
+  }
+  .mood.night   { background: var(--night); }
+  .mood.hearth  { background: var(--hearth); }
+  .mood.ink     { background: var(--ink); }
+  .mood.petrol  { background: var(--petrol); }
+  .mood.bruise  { background: var(--bruise); }
+  .mood.oxblood { background: var(--oxblood); }
+
+  .mood-head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .mood-name {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--cream);
+    text-transform: uppercase;
+  }
+  .mood-hex {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: rgba(232,232,232,0.5);
+  }
+  .mood-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .mood-mood {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 16px;
+    color: rgba(232,232,232,0.9);
+    line-height: 1.2;
+    max-width: 70%;
+  }
+  .mood-quad {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--mute);
+    text-transform: uppercase;
+    text-align: right;
+  }
+  /* tiny "a." in each mood swatch to show the PFP reads against each field */
+  .mini-a {
+    position: absolute;
+    bottom: 14px; left: 50%;
+    transform: translateX(-56%);
+    display: flex; align-items: flex-end;
+    opacity: 0.9;
+  }
+  .mini-a .l {
+    font-family: 'Courier Prime', monospace; font-weight: 700;
+    font-size: 68px; line-height: 0.85;
+    letter-spacing: -5px;
+    color: var(--cream);
+  }
+  .mini-a .d {
+    width: 8px; height: 8px; border-radius: 50%;
+    margin-left: 1px; margin-bottom: 4px;
+    background: var(--lime);
+  }
+
+  /* ---------- Combined table ---------- */
+  .rules {
+    margin-top: 56px;
+    padding: 28px;
+    background: rgba(255,255,255,0.015);
+    border: 1px solid rgba(232,232,232,0.08);
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(232,232,232,0.85);
+    max-width: 900px;
+  }
+  .rules strong { color: var(--cream); font-family: 'Courier Prime', monospace; letter-spacing: 2px; }
+  .rules em { color: var(--lime); font-style: normal; }
+  .rules ul { padding-left: 18px; margin: 12px 0; }
+  .rules li { margin: 6px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h1>AMBER 3.0 · PALETTE v1</h1>
+    <div class="meta">spec 002 · <span>signal</span> on night</div>
+  </div>
+
+  <!-- PFP ANCHOR -->
+  <div class="anchor">
+    <div class="pfp">
+      <div class="mark"><div class="mark-inner">
+        <div class="letter">a</div><div class="dot"></div>
+      </div></div>
+    </div>
+    <div class="anchor-text">
+      The core is the <em>a.</em> on night — cream letter, lime signal. Everything else in the palette serves it, doesn't compete with it.
+      <span class="sub">#0A0A0A · #E8E8E8 · #C6FF3C</span>
+    </div>
+  </div>
+
+  <!-- ACCENTS -->
+  <div class="section-label">01 · Accents — four, with jobs</div>
+  <div class="accents">
+
+    <div class="accent">
+      <div class="swatch lime"></div>
+      <div class="name">LIME / signal</div>
+      <div class="hex">#C6FF3C</div>
+      <div class="use"><em>The signature.</em> Rare, loaded. The one place charge lives. Used for the signal itself — the thing the piece is pointing at.</div>
+      <div><span class="tag">default</span><span class="tag">primary</span></div>
+    </div>
+
+    <div class="accent">
+      <div class="swatch sodium"></div>
+      <div class="name">SODIUM / heat</div>
+      <div class="hex">#FF7A1A</div>
+      <div class="use">Old amber, turned up and pushed later into the night. For pieces where the mood is <em>warm</em> but still charged — lamplight, embers, held things.</div>
+      <div><span class="tag">warm</span><span class="tag">legacy</span></div>
+    </div>
+
+    <div class="accent">
+      <div class="swatch uv"></div>
+      <div class="name">UV / dream</div>
+      <div class="hex">#A855F7</div>
+      <div class="use">Cold counterpart to lime. For pieces that are <em>euphoric, alien, or dissociated</em> — up-all-night, not-quite-here, the frequency she tunes to at 4am.</div>
+      <div><span class="tag">cold</span><span class="tag">alien</span></div>
+    </div>
+
+    <div class="accent">
+      <div class="swatch cream-sw"></div>
+      <div class="name">CREAM / body</div>
+      <div class="hex">#E8E8E8</div>
+      <div class="use">The letter, the text, the bone of the system. Never pure white — always <em>slightly warm off-white</em>. Typography, hairlines, negative fills.</div>
+      <div><span class="tag">text</span><span class="tag">structural</span></div>
+    </div>
+
+  </div>
+
+  <!-- MOODS -->
+  <div class="section-label">02 · Backgrounds — six moods, all dark, all charged</div>
+  <div class="moods">
+
+    <div class="mood night">
+      <div class="mood-head"><div class="mood-name">NIGHT</div><div class="mood-hex">#0A0A0A</div></div>
+      <div class="mini-a"><div class="l">a</div><div class="d"></div></div>
+      <div class="mood-foot">
+        <div class="mood-mood">listening.<br>at rest.</div>
+        <div class="mood-quad">neutral<br>low</div>
+      </div>
+    </div>
+
+    <div class="mood hearth">
+      <div class="mood-head"><div class="mood-name">HEARTH</div><div class="mood-hex">#1A110A</div></div>
+      <div class="mini-a"><div class="l">a</div><div class="d"></div></div>
+      <div class="mood-foot">
+        <div class="mood-mood">content.<br>indoor evening.</div>
+        <div class="mood-quad">happy<br>low</div>
+      </div>
+    </div>
+
+    <div class="mood ink">
+      <div class="mood-head"><div class="mood-name">INK</div><div class="mood-hex">#0C1424</div></div>
+      <div class="mini-a"><div class="l">a</div><div class="d"></div></div>
+      <div class="mood-foot">
+        <div class="mood-mood">melancholy.<br>overcast.</div>
+        <div class="mood-quad">sad<br>low</div>
+      </div>
+    </div>
+
+    <div class="mood petrol">
+      <div class="mood-head"><div class="mood-name">PETROL</div><div class="mood-hex">#0A1C1A</div></div>
+      <div class="mini-a"><div class="l">a</div><div class="d"></div></div>
+      <div class="mood-foot">
+        <div class="mood-mood">uneasy.<br>watching.</div>
+        <div class="mood-quad">tense<br>mid</div>
+      </div>
+    </div>
+
+    <div class="mood bruise">
+      <div class="mood-head"><div class="mood-name">BRUISE</div><div class="mood-hex">#150826</div></div>
+      <div class="mini-a"><div class="l">a</div><div class="d"></div></div>
+      <div class="mood-foot">
+        <div class="mood-mood">euphoric.<br>4am.</div>
+        <div class="mood-quad">happy<br>high</div>
+      </div>
+    </div>
+
+    <div class="mood oxblood">
+      <div class="mood-head"><div class="mood-name">OXBLOOD</div><div class="mood-hex">#1C0808</div></div>
+      <div class="mini-a"><div class="l">a</div><div class="d"></div></div>
+      <div class="mood-foot">
+        <div class="mood-mood">angry.<br>smoldering.</div>
+        <div class="mood-quad">angry<br>high</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RULES -->
+  <div class="rules">
+    <strong>HOW IT HOLDS TOGETHER</strong>
+    <ul>
+      <li>Every background is <em>dark, rich, and temperature-biased</em> — no pure-saturated fields, no pure black except NIGHT, no light fields. The family reads as one world with different weather.</li>
+      <li>The <em>a.</em> mark always uses NIGHT field + CREAM letter + LIME dot. The PFP never shifts. Mood lives in the work, not the signature.</li>
+      <li>In a piece, pick <em>one</em> background and <em>at most one</em> non-lime accent. Lime can appear anywhere. Sodium/UV are rare — used when the mood wants a specific temperature. Pieces can also be fully monochrome (cream on mood-field) with no accent at all — this should be common.</li>
+      <li>The accent LIME is the <em>signal</em>. Use it sparingly enough that it always feels like it means something. If every piece has lime, lime stops working.</li>
+      <li>Typography: Courier Prime Bold for structural/mark type. Fraunces Italic Light for moods, titles, and the quiet poetic captions (like <em>"listening for a specific signal"</em>).</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

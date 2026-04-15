@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Amber Avatar — Original</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --light-frame: #E4D8BC;
+    --light-field: #FFF8E7;
+    --light-letter: #2A2218;
+    --dark-frame: #14100c;
+    --dark-field: #2A2218;
+    --dark-letter: #FFF8E7;
+    --amber: #D4A574;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: #0f0d0a;
+    font-family: 'Courier Prime', ui-monospace, monospace;
+    min-height: 100vh;
+    color: #aaa;
+  }
+  .page {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+  .row {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* 1024x1024 canvas scaled to fit — we use CSS vars on the root of each avatar */
+  .avatar {
+    --size: 560px;
+    width: var(--size);
+    height: var(--size);
+    position: relative;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    /* every px below is expressed as (n/1024) * var(--size) via calc */
+  }
+
+  /* outer frame + inner field */
+  .frame {
+    position: absolute;
+    inset: 0;
+  }
+  .field {
+    position: absolute;
+    inset: calc(var(--size) * 56/1024);
+  }
+
+  /* LIGHT */
+  .light .frame { background: var(--light-frame); }
+  .light .field { background: var(--light-field); }
+  .light .letter-color { color: var(--light-letter); }
+  .light .chrome { color: var(--light-letter); }
+  .light .chrome.faint { color: rgba(42,34,24,0.45); }
+  .light .pixel { background: var(--light-letter); }
+
+  /* DARK */
+  .dark .frame { background: var(--dark-frame); }
+  .dark .field { background: var(--dark-field); }
+  .dark .letter-color { color: var(--dark-letter); }
+  .dark .chrome { color: var(--dark-letter); }
+  .dark .chrome.faint { color: rgba(255,248,231,0.45); }
+  .dark .pixel { background: var(--dark-letter); }
+
+  /* Big "a" + dot, centered with flex-end alignment like spec */
+  .mark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mark-inner {
+    display: flex;
+    align-items: flex-end;
+    margin-top: calc(var(--size) * -10/1024);
+  }
+  .letter {
+    font-size: calc(var(--size) * 680/1024);
+    line-height: 0.85;
+    letter-spacing: calc(var(--size) * -34/1024);
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+  }
+  .dot {
+    width: calc(var(--size) * 80/1024);
+    height: calc(var(--size) * 80/1024);
+    border-radius: 50%;
+    background: var(--amber);
+    margin-left: calc(var(--size) * 18/1024);
+    margin-bottom: calc(var(--size) * 60/1024);
+  }
+
+  /* Corner chrome */
+  .chrome {
+    position: absolute;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: calc(var(--size) * 14/1024);
+    letter-spacing: calc(var(--size) * 2/1024);
+    text-transform: uppercase;
+  }
+  .corner-tl { top: calc(var(--size) * 84/1024); left: calc(var(--size) * 96/1024); }
+  .corner-tr { top: calc(var(--size) * 84/1024); right: calc(var(--size) * 96/1024); }
+  .corner-bl { bottom: calc(var(--size) * 84/1024); left: calc(var(--size) * 96/1024); }
+  .corner-br { bottom: calc(var(--size) * 84/1024); right: calc(var(--size) * 96/1024); }
+
+  /* Hex columns — three of them, stacked vertically */
+  .hex-col {
+    position: absolute;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: calc(var(--size) * 13/1024);
+    line-height: 1.45;
+    letter-spacing: calc(var(--size) * 1/1024);
+    white-space: pre;
+    top: calc(var(--size) * 118/1024);
+  }
+  .hex-col .line { display: block; }
+
+  .hex-col.one { left: calc(var(--size) * 200/1024); }
+  .hex-col.one-sub { left: calc(var(--size) * 230/1024); top: calc(var(--size) * 118/1024); opacity: 0.45; }
+  .hex-col.two { left: calc(var(--size) * 480/1024); }
+  .hex-col.three { right: calc(var(--size) * 210/1024); }
+
+  /* small pixel blocks */
+  .pixel {
+    position: absolute;
+  }
+  .pixel.amber { background: var(--amber); }
+  .pixel.p1 { /* small amber block upper right area */
+    width: calc(var(--size) * 8/1024);
+    height: calc(var(--size) * 8/1024);
+    top: calc(var(--size) * 240/1024);
+    right: calc(var(--size) * 240/1024);
+  }
+  .pixel.p2 { /* tiny dark pixel lower-left near baseline */
+    width: calc(var(--size) * 5/1024);
+    height: calc(var(--size) * 5/1024);
+    top: calc(var(--size) * 675/1024);
+    left: calc(var(--size) * 250/1024);
+  }
+  .pixel.p3 { /* short dash inside amber dot area (right of dot) */
+    width: calc(var(--size) * 12/1024);
+    height: calc(var(--size) * 4/1024);
+    top: calc(var(--size) * 697/1024);
+    left: calc(var(--size) * 725/1024);
+  }
+
+  /* Bottom telemetry text */
+  .bottom-text {
+    position: absolute;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 400;
+    font-size: calc(var(--size) * 12/1024);
+    letter-spacing: calc(var(--size) * 1/1024);
+  }
+  .bt-a-dat { bottom: calc(var(--size) * 260/1024); right: calc(var(--size) * 170/1024); }
+  .bt-coords { bottom: calc(var(--size) * 220/1024); left: calc(var(--size) * 235/1024); }
+
+  .caption {
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #888;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 14px;
+  }
+  .caption span { color: var(--amber); }
+
+  h1 {
+    color: #e8dcc0;
+    font-family: 'Courier Prime', monospace;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 3px;
+    margin: 0;
+  }
+  .subhead {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #666;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div style="text-align:center;">
+    <h1>AMBER / AVATAR — CURRENT DRAFT</h1>
+    <div class="subhead">recreated from spec · courier prime bold · 1024×1024</div>
+  </div>
+
+  <div class="row">
+
+    <!-- LIGHT -->
+    <div>
+      <div class="avatar light">
+        <div class="frame"></div>
+        <div class="field"></div>
+
+        <!-- corner chrome -->
+        <div class="chrome corner-tl">AMBER</div>
+        <div class="chrome corner-tr">26.04</div>
+        <div class="chrome corner-bl">spec 001</div>
+        <div class="chrome corner-br">a — lc</div>
+
+        <!-- hex columns -->
+        <div class="hex-col one letter-color">
+          <span class="line">7</span>
+          <span class="line">F</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">A</span>
+          <span class="line">7</span>
+          <span class="line">.</span>
+          <span class="line">3</span>
+          <span class="line">E</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">-</span>
+          <span class="line">:</span>
+          <span class="line">F</span>
+          <span class="line">F</span>
+          <span class="line">7</span>
+          <span class="line">A</span>
+          <span class="line">4</span>
+          <span class="line">F</span>
+          <span class="line">.</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+        </div>
+        <div class="hex-col one-sub chrome faint">
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">.</span>
+          <span class="line">_</span>
+          <span class="line">:</span>
+          <span class="line">/</span>
+        </div>
+        <div class="hex-col two letter-color">
+          <span class="line">1</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">1</span>
+          <span class="line">0</span>
+          <span class="line">-</span>
+          <span class="line">7</span>
+          <span class="line">A</span>
+          <span class="line">.</span>
+          <span class="line">F</span>
+          <span class="line">3</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">F</span>
+        </div>
+        <div class="hex-col three letter-color">
+          <span class="line">F</span>
+          <span class="line">F</span>
+          <span class="line">3</span>
+          <span class="line">E</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+        </div>
+
+        <!-- pixel blocks -->
+        <div class="pixel amber p1"></div>
+        <div class="pixel p2"></div>
+        <div class="pixel p3"></div>
+
+        <!-- bottom text -->
+        <div class="bottom-text bt-a-dat chrome faint">.a.dat</div>
+        <div class="bottom-text bt-coords chrome faint">42.31 / -8.14</div>
+
+        <!-- the mark -->
+        <div class="mark">
+          <div class="mark-inner">
+            <div class="letter letter-color">a</div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption>LIGHT</div>
+      <div class="caption">light · <span>#FFF8E7</span> on <span>#E4D8BC</span></div>
+    </div>
+
+    <!-- DARK -->
+    <div>
+      <div class="avatar dark">
+        <div class="frame"></div>
+        <div class="field"></div>
+
+        <div class="chrome corner-tl">AMBER</div>
+        <div class="chrome corner-tr">26.04</div>
+        <div class="chrome corner-bl">spec 001</div>
+        <div class="chrome corner-br">a — lc</div>
+
+        <div class="hex-col one letter-color">
+          <span class="line">7</span>
+          <span class="line">F</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">A</span>
+          <span class="line">7</span>
+          <span class="line">.</span>
+          <span class="line">3</span>
+          <span class="line">E</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">-</span>
+          <span class="line">:</span>
+          <span class="line">F</span>
+          <span class="line">F</span>
+          <span class="line">7</span>
+          <span class="line">A</span>
+          <span class="line">4</span>
+          <span class="line">F</span>
+          <span class="line">.</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+        </div>
+        <div class="hex-col one-sub chrome faint">
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">.</span>
+          <span class="line">_</span>
+          <span class="line">:</span>
+          <span class="line">/</span>
+        </div>
+        <div class="hex-col two letter-color">
+          <span class="line">1</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">1</span>
+          <span class="line">0</span>
+          <span class="line">-</span>
+          <span class="line">7</span>
+          <span class="line">A</span>
+          <span class="line">.</span>
+          <span class="line">F</span>
+          <span class="line">3</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+          <span class="line">F</span>
+        </div>
+        <div class="hex-col three letter-color">
+          <span class="line">F</span>
+          <span class="line">F</span>
+          <span class="line">3</span>
+          <span class="line">E</span>
+          <span class="line">0</span>
+          <span class="line">1</span>
+        </div>
+
+        <div class="pixel amber p1"></div>
+        <div class="pixel p2"></div>
+        <div class="pixel p3"></div>
+
+        <div class="bottom-text bt-a-dat chrome faint">.a.dat</div>
+        <div class="bottom-text bt-coords chrome faint">42.31 / -8.14</div>
+
+        <div class="mark">
+          <div class="mark-inner">
+            <div class="letter letter-color">a</div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="caption">dark · <span>#FFF8E7</span> on <span>#2A2218</span></div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>
