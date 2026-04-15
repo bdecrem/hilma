@@ -1,0 +1,32 @@
+{
+  "date": "2026-04-14",
+  "mood": {
+    "name": "uneasy",
+    "reason": "bright sky, tense world",
+    "palette": "petrol",
+    "accent": "lime"
+  },
+  "attempts": [
+    {
+      "concept": "key",
+      "blurb": "not sure what it opens anymore.",
+      "failed": true
+    },
+    {
+      "concept": "wave",
+      "blurb": "slow tide. change happening anyway.",
+      "failed": true
+    },
+    {
+      "concept": "ladder",
+      "blurb": "ascent that may not finish.",
+      "failed": false
+    }
+  ],
+  "winner": {
+    "concept": "ladder",
+    "blurb": "ascent that may not finish.",
+    "failed": false
+  },
+  "closingStatement": "The sky was too bright for the news. Amber reached for a few things and let most of them slip. She ended on ladder — ascent that may not finish. Take that as today."
+}
