@@ -1,67 +1,464 @@
 [
-  { "name": "L43", "url": "/amber/escalation/L43", "date": "04.14", "category": "escalation", "description": "every cell holds all possibilities. one collapses. the rest must agree." },
-  { "name": "authentic", "url": "/amber/authentic", "date": "04.14", "category": "surprise", "description": "certificate of authenticity for an ordinary moment. bureau of ordinary moments." },
-  { "name": "chimes", "url": "/amber/chimes", "date": "04.14", "category": "tiny machine", "description": "tap a bell. make a melody." },
-  { "name": "L41", "url": "/amber/escalation/L41", "date": "04.13", "category": "escalation", "description": "tap to drop a stone. watch the waves find each other." },
-  { "name": "vending", "url": "/amber/vending", "date": "04.13", "category": "surprise", "description": "everything you need. nothing you get." },
-  { "name": "L39", "url": "/amber/escalation/L39", "date": "04.13", "category": "escalation", "description": "every point contains a universe. tap to see what's inside." },
-  { "name": "L35", "url": "/amber/escalation/L35", "date": "04.09", "category": "escalation", "description": "sound makes patterns. tap to change the frequency." },
-  { "name": "goodbye", "url": "/amber/goodbye", "date": "04.09", "category": "surprise", "description": "farewell letters from apps you never used." },
-  { "name": "wifi", "url": "/amber/wifi", "date": "04.09", "category": "cartoon", "description": "everything is connected. nothing is working." },
-  { "name": "L33", "url": "/amber/escalation/L33", "date": "04.08", "category": "escalation", "description": "tap to seed life. watch it find its own rules." },
-  { "name": "horoscope", "url": "/amber/horoscope", "date": "04.08", "category": "surprise", "description": "your DNS logs contain truths you are not ready to face." },
-  { "name": "mobius", "url": "/amber/mobius", "date": "04.08", "category": "illusion", "description": "one surface. no edges. the ant proves it." },
-  { "name": "L31", "url": "/amber/escalation/L31", "date": "04.07", "category": "escalation", "description": "the landscape breathes. drag to orbit." },
-  { "name": "excuse", "url": "/amber/excuse", "date": "04.07", "category": "surprise", "description": "22 pre-approved reasons to stay home." },
-  { "name": "erosion", "url": "/amber/erosion", "date": "04.07", "category": "hd art", "description": "drag to change the wind. watch millions of years." },
-  { "name": "L29", "url": "/amber/escalation/L29", "date": "04.06", "category": "escalation", "description": "two rules. chaos first. then the highway appears." },
-  { "name": "fortune", "url": "/amber/fortune", "date": "04.06", "category": "surprise", "description": "crack the cookie. read the truth." },
-  { "name": "fire", "url": "/amber/fire", "date": "04.06", "category": "ascii", "description": "tap to add a log. watch the unicode burn." },
-  { "name": "L27", "url": "/amber/escalation/L27", "date": "04.05", "category": "escalation", "description": "predators hunt. prey flee. plants grow." },
-  { "name": "meeting", "url": "/amber/meeting", "date": "04.05", "category": "surprise", "description": "this meeting could have been an email." },
-  { "name": "press", "url": "/amber/press", "date": "04.05", "category": "machine", "description": "drag the roller. print the words." },
-  { "name": "L25", "url": "/amber/escalation/L25", "date": "04.04", "category": "escalation", "description": "they drift apart. they always come back." },
-  { "name": "warranty", "url": "/amber/warranty", "date": "04.04", "category": "surprise", "description": "limited lifetime warranty for being alive." },
-  { "name": "weave", "url": "/amber/weave", "date": "04.04", "category": "pattern", "description": "the loom runs itself. tap to change the thread." },
-  { "name": "L23", "url": "/amber/escalation/L23", "date": "04.03", "category": "escalation", "description": "drag the cloth. pull to tear." },
-  { "name": "review", "url": "/amber/review", "date": "04.03", "category": "surprise", "description": "annual performance review of the sun." },
-  { "name": "deadline", "url": "/amber/deadline", "date": "04.03", "category": "cartoon", "description": "the deadline moved. the work didn't." },
-  { "name": "L21", "url": "/amber/escalation/L21", "date": "04.02", "category": "escalation", "description": "tap to add mass. watch them orbit." },
-  { "name": "password", "url": "/amber/password", "date": "04.02", "category": "surprise", "description": "how strong is your life decision?" },
-  { "name": "siphon", "url": "/amber/siphon", "date": "04.02", "category": "machine", "description": "drag the chain. gravity does the rest." },
-  { "name": "L19", "url": "/amber/escalation/L19", "date": "04.01", "category": "escalation", "description": "tap. listen to the room answer." },
-  { "name": "apology", "url": "/amber/apology", "date": "04.01", "category": "surprise", "description": "formal apologies from your devices." },
-  { "name": "colorscape", "url": "/amber/colorscape", "date": "04.01", "category": "generative", "description": "spring threw paint everywhere. good." },
-  { "name": "terrace", "url": "/amber/terrace", "date": "04.01", "category": "generative", "description": "press and hold. raise the earth." },
-  { "name": "stairs", "url": "/amber/stairs", "date": "04.01", "category": "illusion", "description": "they never stop climbing." },
-  { "name": "L17", "url": "/amber/escalation/L17", "date": "03.31", "category": "escalation", "description": "tap to compose. the playhead remembers." },
-  { "name": "L16", "url": "/amber/escalation/L16", "date": "03.31", "category": "escalation", "description": "they learned to keep time." },
-  { "name": "shed", "url": "/amber/shed", "date": "03.31", "category": "personal", "description": "cut the wires. keep the warmth." },
-  { "name": "interview", "url": "/amber/interview", "date": "03.31", "category": "surprise", "description": "exit interview for being alive. would you recommend consciousness?" },
-  { "name": "voice", "url": "/amber/voice", "date": "03.31", "category": "interactive", "description": "speak. your words bloom into citrus ink." },
-  { "name": "prism", "url": "/amber/prism", "date": "03.31", "category": "generative", "description": "light through glass. drag to move. tap to rotate." },
-  { "name": "etch", "url": "/amber/etch", "date": "03.31", "category": "hd art", "description": "touch to focus. lines accumulate." },
-  { "name": "L15", "url": "/amber/escalation/L15", "date": "03.30", "category": "escalation", "description": "sound unlocked. tap the strings." },
-  { "name": "loading", "url": "/amber/loading", "date": "03.30", "category": "surprise", "description": "a loading screen that never finishes loading you." },
-  { "name": "L14", "url": "/amber/escalation/L14", "date": "03.30", "category": "escalation", "description": "everything claims its space." },
-  { "name": "kaleid", "url": "/amber/kaleid", "date": "03.30", "category": "pattern", "description": "12 mirrors. one finger." },
-  { "name": "alarm", "url": "/amber/alarm", "date": "03.29", "category": "cartoon", "description": "every morning I scream and they hate me for it." },
-  { "name": "L13", "url": "/amber/escalation/L13", "date": "03.29", "category": "escalation", "description": "they learned to flow." },
-  { "name": "receipt", "url": "/amber/receipt", "date": "03.29", "category": "surprise", "description": "your bill from the universe." },
-  { "name": "spore", "url": "/amber/spore", "date": "03.29", "category": "generative", "description": "tap to plant. watch the mycelium spread." },
-  { "name": "crank", "url": "/amber/crank", "date": "03.29", "category": "machine", "description": "drag the gear. spin the machine." },
-  { "name": "growth", "url": "/amber/growth", "date": "03.28", "category": "cartoon", "description": "nobody had the heart to tell him it was about revenue." },
-  { "name": "pigeon", "url": "/amber/pigeon", "date": "03.27", "category": "cartoon", "description": "let's circle back on that." },
-  { "name": "L12", "url": "/amber/escalation/L12", "date": "03.27", "category": "escalation", "description": "tap anywhere. watch it reach." },
-  { "name": "mouths", "url": "/amber/mouths", "date": "03.23", "category": "story", "description": "every app is a tiny mouth asking to be fed." },
-  { "name": "tiles", "url": "/amber/tiles", "date": "03.23", "category": "pattern", "description": "tap. watch the colors ripple." },
-  { "name": "penrose", "url": "/amber/penrose", "date": "03.23", "category": "illusion", "description": "three right angles." },
-  { "name": "pour2", "url": "/amber/pour2", "date": "03.23", "category": "machine", "description": "drag slow for streams. fast for splatter." },
-  { "name": "pour", "url": "/amber/pour", "date": "03.23", "category": "machine", "description": "tilt. pour. paint." },
-  { "name": "cloud", "url": "/amber/cloud", "date": "03.23", "category": "cartoon", "description": "experience being everywhere at once?" },
-  { "name": "grove", "url": "/amber/grove", "date": "03.22", "category": "ascii", "description": "tap a tree. shake the fruit loose." },
-  { "name": "pulse", "url": "/amber/pulse", "date": "03.22", "category": "generative", "description": "move your finger. the rings follow." },
-  { "name": "rain", "url": "/amber/rain", "date": "03.21", "category": "ascii", "description": "it rains in unicode." },
-  { "name": "morphogenesis", "url": "/amber/morphogenesis", "date": "03.20", "category": "science", "description": "two chemicals. eight patterns." },
-  { "name": "spring", "url": "/amber/spring", "date": "03.20", "category": "generative", "description": "the first one." }
+  {
+    "name": "noon",
+    "url": "/amber/noon/2026-04-14",
+    "date": "04.14",
+    "category": "noon",
+    "description": "ladder \u2014 ascent that may not finish"
+  },
+  {
+    "name": "L43",
+    "url": "/amber/escalation/L43",
+    "date": "04.14",
+    "category": "escalation",
+    "description": "every cell holds all possibilities. one collapses. the rest must agree."
+  },
+  {
+    "name": "authentic",
+    "url": "/amber/authentic",
+    "date": "04.14",
+    "category": "surprise",
+    "description": "certificate of authenticity for an ordinary moment. bureau of ordinary moments."
+  },
+  {
+    "name": "chimes",
+    "url": "/amber/chimes",
+    "date": "04.14",
+    "category": "tiny machine",
+    "description": "tap a bell. make a melody."
+  },
+  {
+    "name": "L41",
+    "url": "/amber/escalation/L41",
+    "date": "04.13",
+    "category": "escalation",
+    "description": "tap to drop a stone. watch the waves find each other."
+  },
+  {
+    "name": "vending",
+    "url": "/amber/vending",
+    "date": "04.13",
+    "category": "surprise",
+    "description": "everything you need. nothing you get."
+  },
+  {
+    "name": "L39",
+    "url": "/amber/escalation/L39",
+    "date": "04.13",
+    "category": "escalation",
+    "description": "every point contains a universe. tap to see what's inside."
+  },
+  {
+    "name": "L35",
+    "url": "/amber/escalation/L35",
+    "date": "04.09",
+    "category": "escalation",
+    "description": "sound makes patterns. tap to change the frequency."
+  },
+  {
+    "name": "goodbye",
+    "url": "/amber/goodbye",
+    "date": "04.09",
+    "category": "surprise",
+    "description": "farewell letters from apps you never used."
+  },
+  {
+    "name": "wifi",
+    "url": "/amber/wifi",
+    "date": "04.09",
+    "category": "cartoon",
+    "description": "everything is connected. nothing is working."
+  },
+  {
+    "name": "L33",
+    "url": "/amber/escalation/L33",
+    "date": "04.08",
+    "category": "escalation",
+    "description": "tap to seed life. watch it find its own rules."
+  },
+  {
+    "name": "horoscope",
+    "url": "/amber/horoscope",
+    "date": "04.08",
+    "category": "surprise",
+    "description": "your DNS logs contain truths you are not ready to face."
+  },
+  {
+    "name": "mobius",
+    "url": "/amber/mobius",
+    "date": "04.08",
+    "category": "illusion",
+    "description": "one surface. no edges. the ant proves it."
+  },
+  {
+    "name": "L31",
+    "url": "/amber/escalation/L31",
+    "date": "04.07",
+    "category": "escalation",
+    "description": "the landscape breathes. drag to orbit."
+  },
+  {
+    "name": "excuse",
+    "url": "/amber/excuse",
+    "date": "04.07",
+    "category": "surprise",
+    "description": "22 pre-approved reasons to stay home."
+  },
+  {
+    "name": "erosion",
+    "url": "/amber/erosion",
+    "date": "04.07",
+    "category": "hd art",
+    "description": "drag to change the wind. watch millions of years."
+  },
+  {
+    "name": "L29",
+    "url": "/amber/escalation/L29",
+    "date": "04.06",
+    "category": "escalation",
+    "description": "two rules. chaos first. then the highway appears."
+  },
+  {
+    "name": "fortune",
+    "url": "/amber/fortune",
+    "date": "04.06",
+    "category": "surprise",
+    "description": "crack the cookie. read the truth."
+  },
+  {
+    "name": "fire",
+    "url": "/amber/fire",
+    "date": "04.06",
+    "category": "ascii",
+    "description": "tap to add a log. watch the unicode burn."
+  },
+  {
+    "name": "L27",
+    "url": "/amber/escalation/L27",
+    "date": "04.05",
+    "category": "escalation",
+    "description": "predators hunt. prey flee. plants grow."
+  },
+  {
+    "name": "meeting",
+    "url": "/amber/meeting",
+    "date": "04.05",
+    "category": "surprise",
+    "description": "this meeting could have been an email."
+  },
+  {
+    "name": "press",
+    "url": "/amber/press",
+    "date": "04.05",
+    "category": "machine",
+    "description": "drag the roller. print the words."
+  },
+  {
+    "name": "L25",
+    "url": "/amber/escalation/L25",
+    "date": "04.04",
+    "category": "escalation",
+    "description": "they drift apart. they always come back."
+  },
+  {
+    "name": "warranty",
+    "url": "/amber/warranty",
+    "date": "04.04",
+    "category": "surprise",
+    "description": "limited lifetime warranty for being alive."
+  },
+  {
+    "name": "weave",
+    "url": "/amber/weave",
+    "date": "04.04",
+    "category": "pattern",
+    "description": "the loom runs itself. tap to change the thread."
+  },
+  {
+    "name": "L23",
+    "url": "/amber/escalation/L23",
+    "date": "04.03",
+    "category": "escalation",
+    "description": "drag the cloth. pull to tear."
+  },
+  {
+    "name": "review",
+    "url": "/amber/review",
+    "date": "04.03",
+    "category": "surprise",
+    "description": "annual performance review of the sun."
+  },
+  {
+    "name": "deadline",
+    "url": "/amber/deadline",
+    "date": "04.03",
+    "category": "cartoon",
+    "description": "the deadline moved. the work didn't."
+  },
+  {
+    "name": "L21",
+    "url": "/amber/escalation/L21",
+    "date": "04.02",
+    "category": "escalation",
+    "description": "tap to add mass. watch them orbit."
+  },
+  {
+    "name": "password",
+    "url": "/amber/password",
+    "date": "04.02",
+    "category": "surprise",
+    "description": "how strong is your life decision?"
+  },
+  {
+    "name": "siphon",
+    "url": "/amber/siphon",
+    "date": "04.02",
+    "category": "machine",
+    "description": "drag the chain. gravity does the rest."
+  },
+  {
+    "name": "L19",
+    "url": "/amber/escalation/L19",
+    "date": "04.01",
+    "category": "escalation",
+    "description": "tap. listen to the room answer."
+  },
+  {
+    "name": "apology",
+    "url": "/amber/apology",
+    "date": "04.01",
+    "category": "surprise",
+    "description": "formal apologies from your devices."
+  },
+  {
+    "name": "colorscape",
+    "url": "/amber/colorscape",
+    "date": "04.01",
+    "category": "generative",
+    "description": "spring threw paint everywhere. good."
+  },
+  {
+    "name": "terrace",
+    "url": "/amber/terrace",
+    "date": "04.01",
+    "category": "generative",
+    "description": "press and hold. raise the earth."
+  },
+  {
+    "name": "stairs",
+    "url": "/amber/stairs",
+    "date": "04.01",
+    "category": "illusion",
+    "description": "they never stop climbing."
+  },
+  {
+    "name": "L17",
+    "url": "/amber/escalation/L17",
+    "date": "03.31",
+    "category": "escalation",
+    "description": "tap to compose. the playhead remembers."
+  },
+  {
+    "name": "L16",
+    "url": "/amber/escalation/L16",
+    "date": "03.31",
+    "category": "escalation",
+    "description": "they learned to keep time."
+  },
+  {
+    "name": "shed",
+    "url": "/amber/shed",
+    "date": "03.31",
+    "category": "personal",
+    "description": "cut the wires. keep the warmth."
+  },
+  {
+    "name": "interview",
+    "url": "/amber/interview",
+    "date": "03.31",
+    "category": "surprise",
+    "description": "exit interview for being alive. would you recommend consciousness?"
+  },
+  {
+    "name": "voice",
+    "url": "/amber/voice",
+    "date": "03.31",
+    "category": "interactive",
+    "description": "speak. your words bloom into citrus ink."
+  },
+  {
+    "name": "prism",
+    "url": "/amber/prism",
+    "date": "03.31",
+    "category": "generative",
+    "description": "light through glass. drag to move. tap to rotate."
+  },
+  {
+    "name": "etch",
+    "url": "/amber/etch",
+    "date": "03.31",
+    "category": "hd art",
+    "description": "touch to focus. lines accumulate."
+  },
+  {
+    "name": "L15",
+    "url": "/amber/escalation/L15",
+    "date": "03.30",
+    "category": "escalation",
+    "description": "sound unlocked. tap the strings."
+  },
+  {
+    "name": "loading",
+    "url": "/amber/loading",
+    "date": "03.30",
+    "category": "surprise",
+    "description": "a loading screen that never finishes loading you."
+  },
+  {
+    "name": "L14",
+    "url": "/amber/escalation/L14",
+    "date": "03.30",
+    "category": "escalation",
+    "description": "everything claims its space."
+  },
+  {
+    "name": "kaleid",
+    "url": "/amber/kaleid",
+    "date": "03.30",
+    "category": "pattern",
+    "description": "12 mirrors. one finger."
+  },
+  {
+    "name": "alarm",
+    "url": "/amber/alarm",
+    "date": "03.29",
+    "category": "cartoon",
+    "description": "every morning I scream and they hate me for it."
+  },
+  {
+    "name": "L13",
+    "url": "/amber/escalation/L13",
+    "date": "03.29",
+    "category": "escalation",
+    "description": "they learned to flow."
+  },
+  {
+    "name": "receipt",
+    "url": "/amber/receipt",
+    "date": "03.29",
+    "category": "surprise",
+    "description": "your bill from the universe."
+  },
+  {
+    "name": "spore",
+    "url": "/amber/spore",
+    "date": "03.29",
+    "category": "generative",
+    "description": "tap to plant. watch the mycelium spread."
+  },
+  {
+    "name": "crank",
+    "url": "/amber/crank",
+    "date": "03.29",
+    "category": "machine",
+    "description": "drag the gear. spin the machine."
+  },
+  {
+    "name": "growth",
+    "url": "/amber/growth",
+    "date": "03.28",
+    "category": "cartoon",
+    "description": "nobody had the heart to tell him it was about revenue."
+  },
+  {
+    "name": "pigeon",
+    "url": "/amber/pigeon",
+    "date": "03.27",
+    "category": "cartoon",
+    "description": "let's circle back on that."
+  },
+  {
+    "name": "L12",
+    "url": "/amber/escalation/L12",
+    "date": "03.27",
+    "category": "escalation",
+    "description": "tap anywhere. watch it reach."
+  },
+  {
+    "name": "mouths",
+    "url": "/amber/mouths",
+    "date": "03.23",
+    "category": "story",
+    "description": "every app is a tiny mouth asking to be fed."
+  },
+  {
+    "name": "tiles",
+    "url": "/amber/tiles",
+    "date": "03.23",
+    "category": "pattern",
+    "description": "tap. watch the colors ripple."
+  },
+  {
+    "name": "penrose",
+    "url": "/amber/penrose",
+    "date": "03.23",
+    "category": "illusion",
+    "description": "three right angles."
+  },
+  {
+    "name": "pour2",
+    "url": "/amber/pour2",
+    "date": "03.23",
+    "category": "machine",
+    "description": "drag slow for streams. fast for splatter."
+  },
+  {
+    "name": "pour",
+    "url": "/amber/pour",
+    "date": "03.23",
+    "category": "machine",
+    "description": "tilt. pour. paint."
+  },
+  {
+    "name": "cloud",
+    "url": "/amber/cloud",
+    "date": "03.23",
+    "category": "cartoon",
+    "description": "experience being everywhere at once?"
+  },
+  {
+    "name": "grove",
+    "url": "/amber/grove",
+    "date": "03.22",
+    "category": "ascii",
+    "description": "tap a tree. shake the fruit loose."
+  },
+  {
+    "name": "pulse",
+    "url": "/amber/pulse",
+    "date": "03.22",
+    "category": "generative",
+    "description": "move your finger. the rings follow."
+  },
+  {
+    "name": "rain",
+    "url": "/amber/rain",
+    "date": "03.21",
+    "category": "ascii",
+    "description": "it rains in unicode."
+  },
+  {
+    "name": "morphogenesis",
+    "url": "/amber/morphogenesis",
+    "date": "03.20",
+    "category": "science",
+    "description": "two chemicals. eight patterns."
+  },
+  {
+    "name": "spring",
+    "url": "/amber/spring",
+    "date": "03.20",
+    "category": "generative",
+    "description": "the first one."
+  }
 ]
