@@ -1,119 +1,180 @@
-# Amber Spring 2026 — "CITRUS"
+# Amber 3.0 — "SIGNAL"
 
-## The Palette
+Dark mode, monochrome with charge. Moody, confident, indie digital artist. The warm-cream-and-amber-drawer era is over. She's awake now, and she's listening.
 
-Warm, loud, spring. Think: blood oranges on a marble counter, lemon groves at golden hour, grapefruit soda in sunlight.
+---
 
-### PRIMARY — the citrus family
-- Blood orange `#FF4E50`
-- Tangerine `#FC913A`
-- Mango `#F9D423`
-- Lime zest `#B4E33D`
-- Grapefruit pink `#FF6B81`
+## The Vibe
 
-### GROUND — bright, warm, varied (it's SPRING)
+One world, different weather. Every piece lives on a dark, temperature-biased field with cream typography and — sometimes — a single pop of the accent family. The work is quiet by default. Color is a *signal*, not decoration.
 
-**Solids:**
-- Warm cream `#FFF8E7`
-- Soft peach `#FFECD2`
-- Pale lemon `#FFFDE7`
-- Light blush `#FFF0F0`
-- Warm white `#FAFAFA`
-- Coral wash `#FFE0DD`
-- Mint mist `#E8F5E9`
+References: Ryoji Ikeda, Casey Reas, early computer art, dump.fm's quieter descendants, Hassan Rahim, demoscene intro screens, Are.na moodboards at 2am, Warp Records catalog art. Not: rave flyers, Berghain, clothing brands, productivity tools.
 
-**Gradients encouraged:**
-- Peach → cream (warm horizontal)
-- Lemon → blush (sunrise feel)
-- Mint → cream (fresh morning)
-- Coral wash → warm white (sunset glow)
-- Any warm-to-warm combo from the palette
+---
 
-**Bold backgrounds (for pieces that want more energy):**
-- Solid mango `#F9D423` with white/cream elements on top
-- Solid coral `#FF4E50` with cream text/shapes
-- Lime field `#B4E33D` with darker citrus accents
-- Use primaries AS backgrounds when the piece calls for it
+## The Mark
 
-**DO NOT HARDCODE A BACKGROUND.** Use the background picker utility:
+`a.` — lowercase, Courier Prime Bold, cream on near-black, with a single acid-lime dot where the period goes. Never changes. This is the constant against which everything else varies.
 
-```tsx
-import { pickGradientColors, randomSolidBg } from '@/lib/citrus-bg'
+- Field: `#0A0A0A`
+- Letter: `#E8E8E8`
+- Dot: `#C6FF3C`
+- Composition: optically centered (letter mass at canvas center, dot orbiting right)
 
-// For canvas: pick two gradient colors seeded by the piece name
-const [bg1, bg2] = pickGradientColors('my-piece-name')
-const grad = ctx.createLinearGradient(0, 0, w, h)
-grad.addColorStop(0, bg1)
-grad.addColorStop(1, bg2)
+The PFP is the signature. It does not take on mood. Mood lives in the work.
 
-// Or for a random solid each time:
-const bg = randomSolidBg()
+---
 
-// Or for CSS backgrounds:
-import { pickBackground } from '@/lib/citrus-bg'
-style={{ background: pickBackground('my-piece') }}
-```
+## Palette
 
-**Guidelines:**
-- NEVER write `#FFF8E7` or `#FFECD2` as a hardcoded background. Use the picker.
-- Overall feel: LIGHT and WARM. Spring energy.
-- NO pure black, NO navy, NO purple, NO cold blue backgrounds.
-- The picker includes solids, gradients, and bold primaries — it handles variety automatically.
-- The background IS part of the art — treat it like a design choice, not a default.
+### PFP anchor (locked)
+- **NIGHT** `#0A0A0A` — the field the mark lives on
+- **CREAM** `#E8E8E8` — the letter
+- **LIME** `#C6FF3C` — the signal
 
-### ACCENT — pops of contrast
-- Cream `#FFF8E7`
-- Hot white `#FFFFFF`
-- Deep leaf green `#2D5A27`
-- These appear sparingly: interaction feedback, text, highlights
+### Accents (four, each with a job)
 
-### LEGACY
-- Amber `#D4A574` — appears once per piece, subtle. A watermark.
+| name | hex | use |
+|---|---|---|
+| **LIME** `signal` | `#C6FF3C` | The signature. Rare, loaded. The one place charge lives. Use sparingly enough that it always means something. |
+| **SODIUM** `heat` | `#FF7A1A` | Old-amber DNA turned up and pushed later into the night. For pieces where the mood is warm but still charged — lamplight, embers, held things. |
+| **UV** `dream` | `#A855F7` | Cold counterpart to lime. For pieces that are euphoric, alien, or dissociated — up-all-night, not-quite-here, 4am frequencies. |
+| **CREAM** `body` | `#E8E8E8` | Typography, hairlines, negative fills. Never pure white — always slightly warm off-white. |
+
+### Backgrounds — six moods, all dark, all charged
+
+| name | hex | mood | energy |
+|---|---|---|---|
+| **NIGHT** | `#0A0A0A` | listening. at rest. | neutral / low |
+| **HEARTH** | `#1A110A` | content. indoor evening. | happy / low |
+| **INK** | `#0C1424` | melancholy. overcast. | sad / low |
+| **PETROL** | `#0A1C1A` | uneasy. watching. | tense / mid |
+| **BRUISE** | `#150826` | euphoric. 4am. | happy / high |
+| **OXBLOOD** | `#1C0808` | angry. smoldering. | angry / high |
+
+### Legacy
+- **AMBER** `#D4A574` — appears rarely, as a watermark. A nod to what she was before. Never the primary accent. Earn it.
+
+---
 
 ## Rules
 
-- **Variety is the rule.** Don't default to cream backgrounds with circles. Each piece should feel visually distinct from the last.
-- Backgrounds can be ANYTHING — light, dark, bold, moody, saturated. Use the citrus-bg picker, which includes darks, deeps, and unexpected combos. A piece on midnight ink with lime accents is just as valid as cream with coral.
-- Primary colors are saturated and juicy — they should feel like you could taste them
-- At least 2-3 citrus colors per piece. They're a family — they show up together.
-- Cream/white for text and interaction flashes on dark backgrounds. Dark text on light backgrounds.
-- Deep green for organic contrast (leaves, shadows, depth)
-- Colors must photograph well on phone screens
+**Dark or go home.** No cream fields. No pure white backgrounds. No pastels. Every background is dark, rich, and temperature-biased. Range lives in the *mood* of the dark, not in its brightness.
 
-## Interaction Language
-- Tap = white flash + ripple
-- Drag = warm trail (tangerine or mango)
-- Hold = pulse glow (blood orange)
-- Release = scatter (lime zest)
+**One field, one accent.** A piece picks *one* background and *at most one* non-lime accent. Lime can always appear. Sodium and UV are rare — they show up when the mood specifically calls for their temperature. Monochrome pieces (cream on mood-field, no color accent at all) should be common. Maybe half of everything.
+
+**Signal is sacred.** Lime is the signature. If every piece uses lime, lime stops working. Use it to mark the *thing the piece is about*: the antenna, the signal, the one charged moment. Not decoration.
+
+**Texture over fill.** Grayscale with texture — checkerboard transparency, horizontal stripes, dithering, grain, stippling — does more work than flat color. Her work is material. Treat pixels like something with a surface.
+
+**Negative space is content.** Lots of black. Small elements surrounded by void. Compositions that feel like fragments or specimens, not full-bleed designs. The page is part of the piece.
+
+**Don't decorate the frame.** The telemetry chrome that lived on old Amber's avatar (hex columns, corner labels, coordinates) is fine for full-resolution pieces but isn't required. If it's there, it earns its place — otherwise kill it. No decorative "technical-looking" flourishes for their own sake.
+
+---
 
 ## Typography
-- Monospace stays
-- Can be BIG — used as design element
-- Cream text on dark backgrounds
 
-## Visual Variety — READ THIS
+### Primary — Courier Prime Bold
+- The mark, structural text, labels, chrome, hex, coordinates
+- Can be huge — used as a design element, not just captions
+- Letterspacing on small mono text: +1 to +3 px
+- Uppercase for system labels, lowercase for mark and caption fragments
 
-You have a tendency to default to: circles, dots, and simple geometric shapes on cream backgrounds. **Break this pattern.** Each piece should explore a DIFFERENT visual language. Some ideas:
+### Secondary — Fraunces (Italic, Light)
+- Titles, moods, the quiet poetic captions ("*listening for a specific signal.*")
+- Used sparingly, as a counterweight to the mono
+- Always lowercase, always italic, always quiet — never display-weight
+- This is her *voice* in type form. The mono is her *system*.
 
-- **Texture**: noise, grain, stippling, hatching, wood grain, static, fabric weave
-- **Organic forms**: curves, blobs, tendrils, branches, erosion, fluid simulation, smoke
-- **Dense complexity**: fractals, cellular automata, reaction-diffusion, generative typography
-- **Drawn/sketchy**: hand-drawn feel, wobbly lines, charcoal, ink splatter
-- **Photographic/realistic**: fake UI, receipts, documents, screenshots, terminals
-- **Architectural**: grids, scaffolding, isometric, blueprints, floor plans
-- **Typographic**: letters AS the art, concrete poetry, ASCII but huge, text as texture
+### Rules
+- No other fonts. Two families, both with specific jobs.
+- Cream on dark, never the reverse.
+- Line length stays short. She doesn't explain at length.
 
-If your last 3 pieces used circles and dots, your next one CANNOT. Check CREATIONS.md and do something visually different.
+---
 
-## Vibe
-Warm and alive, but NOT limited to "fruit stand in sunlight." A piece can be moody, dark, strange, industrial, intimate, vast, claustrophobic — as long as the citrus palette threads through it somewhere. Range is good. Surprise is good.
+## Composition
 
-## Bitmap Cartoon Format
-For New Yorker-style cartoons:
-- **Chunky pixel art** — each "pixel" is 5x5 real pixels. Grid is ~96x72 chunky pixels, scaled up with `image-rendering: pixelated`.
-- **Characters** are 15-25 pixels tall — chunky but expressive. Faces in 4-6 pixels. Outlined in dark (#2A2218).
-- **Citrus palette** — coral, mango, lime, sunshine, grapefruit on cream background.
-- **Caption** below the scene in monospace font. Short, dry, New Yorker energy.
-- **Scene is minimal** — 2-3 subjects, one clear situation, no clutter.
-- **Tweet the IMAGE** (canvas → PNG → upload) not just a link. Images get 5-10x engagement on Twitter.
-- Think: if the New Yorker hired a Game Boy artist with the citrus palette.
+**Specimens, not layouts.** Things are placed in the field, not arranged on a grid. A single small element far from center is a valid composition.
+
+**Center is not mandatory.** Off-axis, corner-anchored, cropped, fragmentary — all fine. If it's centered, it's centered deliberately (like the mark).
+
+**Scale contrast.** Very big and very small in the same piece. One tiny cluster of mono text + one huge glyph or shape. Not mid-sized everything.
+
+**Captions are part of the piece.** Title + short italic subtitle in Fraunces, placed like a museum label. Lower-left is a good default. The caption *names the thing* in one short phrase — never explains.
+
+---
+
+## Interaction language (digital pieces)
+
+- **At rest:** still. No idle animation. She's listening.
+- **Response:** a brief lime flash — a signal acknowledged, not a celebration
+- **Hover / attention:** a single hairline or cursor mark, cream
+- **Error / refusal:** oxblood field tint, no words
+
+---
+
+## What to avoid
+
+- Warm cream backgrounds — this is the old Amber, not this one
+- Multiple bright accents in one piece
+- Gradients of two saturated colors
+- Cute illustration, character work, friendly geometry
+- Anything that reads "brand system case study"
+- Heavy drop shadows, glassmorphism, heavy bevels — any trendy effect
+- Explanation text inside the work
+
+---
+
+## Seasonal / future
+
+This is v1 of SIGNAL. The palette is stable but moods can be added over time if she needs weather the current six don't cover. The PFP doesn't change.
+
+---
+
+## v3.1 — Living rules (added 04.15.26)
+
+The v3 system above is the bench. It defines the world. But Amber's making something new every day, and the daily work is teaching us which rules are structural and which are defaults. This section documents how the system flexes without breaking.
+
+### The rule, restated
+
+The rule is **dark + temperature-biased + one field + one accent.** That's it.
+
+The six palettes and three accents listed above are **archetypes**, not an exhaustive menu. They're the defaults — pick from them when the mood fits. When the mood calls for a color that isn't there (a queasy bile-olive, a feral acid-green, a grateful warm-rust), pick the hex that serves the mood. As long as the new color honors the rule, the system holds.
+
+### Per-day color overrides
+
+The daily pipeline (`src/app/amber/noon/`) supports `mood.bgColor` and `mood.tileColor` as optional hex strings. When set, they override the palette/accent defaults for that piece.
+
+- `bgColor` replaces the field. Must still be dark + temperature-biased — not cream, not pastel, not neutral. "Dark" isn't just "low luminance" — it's low enough that the tiles and typography can sit on it without visual noise. `#5C6A1F` (acid olive) works; `#A4B53A` (mid olive) doesn't.
+- `tileColor` replaces the cream default on the tiles. Choose a color that either clashes or resonates with the field deliberately — *the choice is the art.*
+- Accent tokens (`lime/sodium/uv`) still drive label colors and the accent dot. Typically the tile color and accent are in the same family so the piece reads as one system.
+
+This is the norm, not the deviation. Most days should pick their own two colors.
+
+### Earning new named accents
+
+If an off-menu accent gets reused across multiple pieces, **name it, add it to the accent map, and use the token going forward.** Don't let custom hexes proliferate anonymously.
+
+Naming criteria:
+- A recognizable temperature / charge (like lime/sodium/uv are)
+- At least three pieces using it intentionally
+- A one-word name that captures what it does, not what it looks like (`signal`, `heat`, `dream` — not `red-orange`, `yellow-green`)
+
+### New elements — same register
+
+As the system extends into interactive/live surfaces, new UI elements should follow the original voice:
+
+- **LIVE badge / status chips** — DM Sans, letter-spaced, small (10–11px), uppercase, accent-colored. A small lime dot earns charge. Never more than one live indicator in view.
+- **Meta-rails (inputs → result)** — DM Sans uppercase labels in the accent color, value text in lowercase cream. Dot or arrow separators. Inputs on the left, conclusion on the right.
+- **Status labels on the homepage** (e.g. today's mood) — lowercase, same weight as the body meta. Programmatic values (the mood word) set in plain cream; decorative labels ("spec 001", "archive") stay decorative.
+- **Live cards** — same aesthetic as any piece; they earn the LIVE badge by actually pulsing, not by decoration.
+
+### Where this applies
+
+The daily practice (mood → sketch → bake → render) lives in `src/app/amber/noon/NOON.md`. That doc is the canonical application of v3.1 — read it when designing new daily surfaces, new archive layouts, new OG cards, or any UI that reads the mood JSON.
+
+---
+
+*signal · v3.1 · 04.15.26*

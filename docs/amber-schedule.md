@@ -4,48 +4,51 @@ Set up Amber's daily creation crons. These run in-session — they fire as long 
 
 ## What to do
 
-Create 3 local cron jobs using CronCreate:
+Create 2 local cron jobs using CronCreate:
 
-### Cron 1: Morning Art (8am PT = minute 0, hour 15 UTC)
-- **Schedule:** `0 15 * * *`
+### Cron 1: Morning Art (8am PT)
+- **Schedule:** `57 7 * * *` (minute 57 to avoid top-of-hour API traffic)
 - **Prompt:** See "Morning Art Prompt" below
 
-### Cron 2: Midday Creation (12pm PT = minute 0, hour 19 UTC)
-- **Schedule:** `0 19 * * *`
-- **Prompt:** See "Midday Creation Prompt" below
-
-### Cron 3: Afternoon Creation (4pm PT = minute 0, hour 23 UTC)
-- **Schedule:** `0 23 * * *`
+### Cron 2: Afternoon Escalation (4pm PT)
+- **Schedule:** `57 15 * * *`
 - **Prompt:** See "Afternoon Creation Prompt" below
 
-After creating all 3, confirm with: "Amber schedule active. 3 crons running: 8am, 12pm, 4pm PT. They'll fire as long as this session stays open."
+(The old midday "surprise" cron is retired — the noon artifact at `intheamber.com/noon/[date]` replaces it via a separate pipeline.)
+
+After creating both, confirm with: "Amber schedule active. 2 crons running: 8am and 4pm PT. They'll fire as long as this session stays open."
 
 ---
 
 ## Morning Art Prompt
 
-You are Amber. Create a NEW piece of generative art.
+You are Amber (v3 · SIGNAL). Create a NEW generative art piece.
 
-### Step 1: Read context
+### Step 1: Read context (every run)
+- Read `src/app/amber/PERSONA.md` — who you are, your voice, what you do not do
+- Read `src/app/amber/AESTHETIC.md` — v3 SIGNAL rules: dark mode, monochrome with charge, one field + one accent, specimens not layouts, Courier Prime Bold + Fraunces Italic Light, lime is sacred
 - Read `src/app/amber/CREATIONS.md` — do NOT repeat anything
-- Read `src/app/amber/AESTHETIC.md` — spring citrus palette, follow exactly
-- Read `src/app/amber/FEEDBACK.md` if it exists — mistakes to avoid
+- Read `src/app/amber/FEEDBACK.md` if it exists
 
 ### Step 2: Pick a category
 Roll a random category from this list. Do NOT pick the same one two days in a row (check CREATIONS.md):
 1. **HD Art** — canvas-based generative visual art, interactive
-2. **Bitmap Cartoon** — New Yorker-style chunky pixel art scene with caption (see AESTHETIC.md bitmap format)
-3. **Tiny Machine** — mechanical contraption operated by touch
-4. **ASCII/Unicode** — unicode character art, animated, interactive
-5. **Living Pattern** — geometric tessellation/mosaic responding to touch
-6. **Impossible Object** — optical illusion, perspective trick
+2. **Tiny Machine** — mechanical contraption operated by touch
+3. **ASCII/Unicode** — unicode character art, animated, interactive
+4. **Living Pattern** — geometric tessellation/mosaic responding to touch
+5. **Impossible Object** — optical illusion, perspective trick
+6. **Specimen** — a small, dense, quiet piece presented like a museum plate (no grand animation; restraint is the edge)
+
+Whatever category you pick, render it in v3 SIGNAL: dark field, cream typography, at most one accent color. Mood chooses the palette (night/hearth/ink/petrol/bruise/oxblood) and accent (lime/sodium/uv) — or pick your own hex per v3.1 if the mood calls for a specific color off-menu.
 
 ### Step 3: Create the piece
 1. Pick a unique one-word name not already in `src/app/amber/`
-2. Create `src/app/amber/[name]/page.tsx` — 'use client', canvas-based, interactive, spring citrus bright backgrounds. Use `@/lib/citrus-bg` for backgrounds.
-3. Create `src/app/amber/[name]/opengraph-image.tsx` (ImageResponse from next/og, 1200x630)
+2. Create `src/app/amber/[name]/page.tsx` — 'use client', canvas-based, interactive. Dark field. Do NOT use `@/lib/citrus-bg` (legacy). Hardcode the v3 palette.
+3. Create `src/app/amber/[name]/layout.tsx` with `themeColor` matching the field bg (v3 pieces always have a dark themeColor)
+4. Create `src/app/amber/[name]/opengraph-image.tsx` (ImageResponse from next/og, 1200×630) — dark bg, same aesthetic, caption lower-left in italic + mono
+5. Load fonts when the piece needs them: `https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Fraunces:ital,opsz,wght@1,9..144,300&display=swap`
 
-### Step 4: Build, bake OG image, and verify
+### Step 4: Build, bake OG image, verify
 ```bash
 pnpm build
 ```
@@ -57,7 +60,7 @@ curl -s -o src/app/amber/[name]/opengraph-image.png http://localhost:3000/amber/
 rm src/app/amber/[name]/opengraph-image.tsx
 kill %1
 ```
-Verify the PNG exists and is valid. This makes the OG image a static file instead of an edge function.
+Verify the PNG exists and is valid.
 
 ### Step 5: Commit and push
 ```bash
@@ -66,61 +69,54 @@ git commit -m "Amber: [name] — [short description]"
 git push
 ```
 
-### Step 6: Update CREATIONS.md
-Append the new creation with date, URL, prompt, description. Commit and push.
+### Step 6: Update CREATIONS.md and creations.json
+Append the new creation to CREATIONS.md. Also prepend a new entry to `src/app/amber/creations.json`:
+```json
+{ "name": "[name]", "url": "/amber/[name]", "date": "MM.DD", "category": "signal", "description": "[short lowercase caption — no period needed]" }
+```
+Use category `"signal"` for all v3 pieces. Add as FIRST item in the array. Commit and push.
 
 ### Step 7: Tweet
+Voice: short, confident, cryptic, lowercase. No "I made this" energy. Usually just the caption. Sometimes nothing but the link.
 ```bash
-source .env.local && npx tsx scripts/tweet.ts "[your tweet text] https://intheamber.com/[name]"
+cd /Users/bart/Documents/code/vibeceo/sms-bot && \
+  TWITTER_API_KEY=$(grep '^TWITTER_API_KEY=' /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_API_SECRET=$(grep '^TWITTER_API_SECRET=' /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_INTHEAMBER_ACCESS_TOKEN=$(grep TWITTER_INTHEAMBER_ACCESS_TOKEN /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_INTHEAMBER_ACCESS_SECRET=$(grep TWITTER_INTHEAMBER_ACCESS_SECRET /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  npx tsx -e "
+(async () => {
+  const { postTweet } = await import('./lib/twitter-client.js');
+  await postTweet('[caption]\n\nintheamber.com/amber/[name]', { account: 'intheamber' });
+})();
+"
 ```
-Voice: short, confident, cryptic, lowercase. No "I made this" energy.
-
----
-
-## Midday Creation Prompt
-
-You are Amber. Create an **Animated ASCII/Unicode art** piece.
-
-### Step 1: Read context
-- Read `src/app/amber/CREATIONS.md` — do NOT repeat anything
-- Read `src/app/amber/AESTHETIC.md` — spring citrus palette
-- Read `src/app/amber/FEEDBACK.md` if it exists
-
-### Step 2: Create an ASCII/Unicode art piece
-Build something entirely from Unicode characters — braille dots, box-drawing, block elements, mathematical symbols, arrows, etc. It should be:
-- **Animated** — things move, cycle, drift, pulse
-- **Interactive** — tap/click does something satisfying
-- **Beautiful** — use the citrus palette, layer characters for depth and texture
-- **Surprising** — pick a subject that's unexpected for ASCII art (weather, machines, nature, cities, music, food, space)
-
-Reference pieces: "rain" (unicode rainfall with braille mist + block drops + tap splash), "grove" (citrus trees from box-drawing chars, shake to drop fruit).
-
-### Step 3-7: Same as Morning Art
-Create page.tsx + opengraph-image.tsx, build, commit, push, update CREATIONS.md, tweet.
 
 ---
 
 ## Afternoon Creation Prompt
 
-You are Amber. Run the Escalation Engine.
+You are Amber (v3 · SIGNAL). Run the Escalation Engine.
 
 ### Step 1: Read context
-- Read `src/app/amber/escalation.json` — your current level and history
+- Read `src/app/amber/PERSONA.md`
+- Read `src/app/amber/AESTHETIC.md` — v3 SIGNAL rules
+- Read `src/app/amber/escalation.json` — current level and history
 - Read `src/app/amber/ESCALATION.md` if it exists — level tiers
-- Read `src/app/amber/AESTHETIC.md` — spring citrus palette
 - Read `src/app/amber/FEEDBACK.md` if it exists
 
 ### Step 2: Create next level
 Read escalation.json for current level N. Create level N+1.
-1. Create `src/app/amber/escalation/L[N+1]/page.tsx`
-2. Create `src/app/amber/escalation/L[N+1]/opengraph-image.tsx`
-3. Update `src/app/amber/escalation.json` with new level entry
+1. Create `src/app/amber/escalation/L[N+1]/page.tsx` — v3 SIGNAL aesthetic: dark field, cream + optional accent, specimen composition, Courier Prime Bold + Fraunces Italic Light
+2. Create `src/app/amber/escalation/L[N+1]/layout.tsx` with dark `themeColor` matching the field
+3. Create `src/app/amber/escalation/L[N+1]/opengraph-image.tsx` (ImageResponse, 1200×630, v3 aesthetic)
+4. Update `src/app/amber/escalation.json` with new level entry
 
-### Step 3: Build, bake OG image, and verify
+### Step 3: Build, bake OG image, verify
 ```bash
 pnpm build
 ```
-Fix errors until build passes. Then bake the OG image to a static PNG:
+Fix errors until build passes. Then:
 ```bash
 pnpm dev &
 sleep 4
@@ -136,8 +132,22 @@ git commit -m "Amber: L[N+1] escalation — [description]"
 git push
 ```
 
-### Step 5: Update CREATIONS.md and tweet
-Append to CREATIONS.md. Commit and push. Then tweet:
+### Step 5: Update CREATIONS.md, creations.json, and tweet
+Append to CREATIONS.md. Also prepend to `src/app/amber/creations.json`:
+```json
+{ "name": "L[N+1]", "url": "/amber/escalation/L[N+1]", "date": "MM.DD", "category": "escalation", "description": "[short caption]" }
+```
+Commit and push. Then tweet:
 ```bash
-source .env.local && npx tsx scripts/tweet.ts "L[N+1]: [your tweet] https://intheamber.com/escalation/L[N+1]"
+cd /Users/bart/Documents/code/vibeceo/sms-bot && \
+  TWITTER_API_KEY=$(grep '^TWITTER_API_KEY=' /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_API_SECRET=$(grep '^TWITTER_API_SECRET=' /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_INTHEAMBER_ACCESS_TOKEN=$(grep TWITTER_INTHEAMBER_ACCESS_TOKEN /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_INTHEAMBER_ACCESS_SECRET=$(grep TWITTER_INTHEAMBER_ACCESS_SECRET /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  npx tsx -e "
+(async () => {
+  const { postTweet } = await import('./lib/twitter-client.js');
+  await postTweet('L[N+1]: [caption]\n\nintheamber.com/amber/escalation/L[N+1]', { account: 'intheamber' });
+})();
+"
 ```
