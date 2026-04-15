@@ -1,5 +1,12 @@
 [
   {
+    "name": "tuning",
+    "url": "/amber/tuning",
+    "date": "04.15",
+    "category": "signal",
+    "description": "drag the dial. most of it is noise."
+  },
+  {
     "name": "antenna",
     "url": "/amber/antenna",
     "date": "04.15",
