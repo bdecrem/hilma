@@ -709,7 +709,7 @@ export default function AmberNoon() {
 
       {/* ARCHIVE LINK — bottom-right */}
       <a
-        href="/amber"
+        href="/amber/noon/archive"
         className="fixed z-10"
         style={{
           bottom: '3vh',
