@@ -23,7 +23,11 @@ interface Creation {
 
 function Card({ c, idx }: { c: Creation; idx: number }) {
   const [loaded, setLoaded] = useState(false)
-  const ogUrl = `${c.url}/opengraph-image.png`
+  // Static OG images live at `${url}/opengraph-image.png`; dynamic
+  // (opengraph-image.tsx) routes serve at `${url}/opengraph-image`.
+  // Try the static path first, fall back to the dynamic path on 404.
+  const [ogUrl, setOgUrl] = useState(`${c.url}/opengraph-image.png`)
+  const [triedFallback, setTriedFallback] = useState(false)
 
   return (
     <Link
@@ -37,6 +41,12 @@ function Card({ c, idx }: { c: Creation; idx: number }) {
           alt={c.name}
           loading="lazy"
           onLoad={() => setLoaded(true)}
+          onError={() => {
+            if (!triedFallback) {
+              setTriedFallback(true)
+              setOgUrl(`${c.url}/opengraph-image`)
+            }
+          }}
           style={{
             opacity: loaded ? 1 : 0,
             transition: 'opacity 0.4s ease',
@@ -60,7 +70,8 @@ function LiveCard({ c, idx }: { c: Creation; idx: number }) {
   const [visible, setVisible] = useState(false)
   const [iframeLoaded, setIframeLoaded] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
-  const ogUrl = `${c.url}/opengraph-image.png`
+  const [ogUrl, setOgUrl] = useState(`${c.url}/opengraph-image.png`)
+  const [triedFallback, setTriedFallback] = useState(false)
 
   useEffect(() => {
     const el = ref.current
@@ -86,6 +97,12 @@ function LiveCard({ c, idx }: { c: Creation; idx: number }) {
           <img
             src={ogUrl}
             alt={c.name}
+            onError={() => {
+              if (!triedFallback) {
+                setTriedFallback(true)
+                setOgUrl(`${c.url}/opengraph-image`)
+              }
+            }}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         )}
