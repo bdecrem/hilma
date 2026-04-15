@@ -133,4 +133,48 @@ This is v1 of SIGNAL. The palette is stable but moods can be added over time if 
 
 ---
 
-*signal · v1 · 04.14.26*
+## v3.1 — Living rules (added 04.15.26)
+
+The v3 system above is the bench. It defines the world. But Amber's making something new every day, and the daily work is teaching us which rules are structural and which are defaults. This section documents how the system flexes without breaking.
+
+### The rule, restated
+
+The rule is **dark + temperature-biased + one field + one accent.** That's it.
+
+The six palettes and three accents listed above are **archetypes**, not an exhaustive menu. They're the defaults — pick from them when the mood fits. When the mood calls for a color that isn't there (a queasy bile-olive, a feral acid-green, a grateful warm-rust), pick the hex that serves the mood. As long as the new color honors the rule, the system holds.
+
+### Per-day color overrides
+
+The daily pipeline (`src/app/amber/noon/`) supports `mood.bgColor` and `mood.tileColor` as optional hex strings. When set, they override the palette/accent defaults for that piece.
+
+- `bgColor` replaces the field. Must still be dark + temperature-biased — not cream, not pastel, not neutral. "Dark" isn't just "low luminance" — it's low enough that the tiles and typography can sit on it without visual noise. `#5C6A1F` (acid olive) works; `#A4B53A` (mid olive) doesn't.
+- `tileColor` replaces the cream default on the tiles. Choose a color that either clashes or resonates with the field deliberately — *the choice is the art.*
+- Accent tokens (`lime/sodium/uv`) still drive label colors and the accent dot. Typically the tile color and accent are in the same family so the piece reads as one system.
+
+This is the norm, not the deviation. Most days should pick their own two colors.
+
+### Earning new named accents
+
+If an off-menu accent gets reused across multiple pieces, **name it, add it to the accent map, and use the token going forward.** Don't let custom hexes proliferate anonymously.
+
+Naming criteria:
+- A recognizable temperature / charge (like lime/sodium/uv are)
+- At least three pieces using it intentionally
+- A one-word name that captures what it does, not what it looks like (`signal`, `heat`, `dream` — not `red-orange`, `yellow-green`)
+
+### New elements — same register
+
+As the system extends into interactive/live surfaces, new UI elements should follow the original voice:
+
+- **LIVE badge / status chips** — DM Sans, letter-spaced, small (10–11px), uppercase, accent-colored. A small lime dot earns charge. Never more than one live indicator in view.
+- **Meta-rails (inputs → result)** — DM Sans uppercase labels in the accent color, value text in lowercase cream. Dot or arrow separators. Inputs on the left, conclusion on the right.
+- **Status labels on the homepage** (e.g. today's mood) — lowercase, same weight as the body meta. Programmatic values (the mood word) set in plain cream; decorative labels ("spec 001", "archive") stay decorative.
+- **Live cards** — same aesthetic as any piece; they earn the LIVE badge by actually pulsing, not by decoration.
+
+### Where this applies
+
+The daily practice (mood → sketch → bake → render) lives in `src/app/amber/noon/NOON.md`. That doc is the canonical application of v3.1 — read it when designing new daily surfaces, new archive layouts, new OG cards, or any UI that reads the mood JSON.
+
+---
+
+*signal · v3.1 · 04.15.26*
