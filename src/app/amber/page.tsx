@@ -176,10 +176,10 @@ export default function AmberV3FeedPage() {
         }
 
         .mark-letter {
-          font-family: 'Courier Prime', ui-monospace, monospace;
-          font-weight: 700;
+          font-family: "Courier New", Courier, monospace;
+          font-weight: 900;
           color: var(--cream);
-          letter-spacing: -0.08em;
+          letter-spacing: -0.05em;
           line-height: 0.85;
         }
 
