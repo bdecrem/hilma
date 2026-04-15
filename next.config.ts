@@ -72,15 +72,18 @@ const nextConfig: NextConfig = {
       ],
       afterFiles: [
         // intheamber.com/anything → /amber/anything (only if no file matched above)
+        // Exclude paths already under /amber/* — those resolve to actual routes;
+        // without this, dynamic routes (e.g. /amber/noon/[date]) get caught by this
+        // rewrite and become /amber/amber/... which 404s.
         {
-          source: '/:path+',
+          source: '/:path((?!amber(?:/|$)).*)',
           has: [{ type: 'host', value: 'intheamber.com' }],
-          destination: '/amber/:path+',
+          destination: '/amber/:path',
         },
         {
-          source: '/:path+',
+          source: '/:path((?!amber(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.intheamber.com' }],
-          destination: '/amber/:path+',
+          destination: '/amber/:path',
         },
         // first100.dev/anything → /first100/anything
         {
