@@ -1,7 +1,8 @@
 import { ImageResponse } from 'next/og'
-import bakedToday from '../../../../data/amber-noon/2026-04-14.json'
-import { CONCEPTS } from './concepts'
-import type { NoonRun } from './generator'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { CONCEPTS } from '../concepts'
+import type { NoonRun } from '../generator'
 
 export const alt = 'amber — noon'
 export const size = { width: 1200, height: 630 }
@@ -21,15 +22,48 @@ const ACCENT: Record<string, string> = {
   uv:     '#A855F7',
 }
 
-export default async function Image() {
-  const run = bakedToday as NoonRun
+function loadRun(date: string): NoonRun | null {
+  try {
+    const p = join(process.cwd(), 'public', 'amber-noon', `${date}.json`)
+    return JSON.parse(readFileSync(p, 'utf8')) as NoonRun
+  } catch {
+    return null
+  }
+}
+
+function formatDate(iso: string): string {
+  const m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (!m) return iso
+  const [, y, mm, dd] = m
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December']
+  return `${months[parseInt(mm, 10) - 1] || mm} ${parseInt(dd, 10)}, ${y}`
+}
+
+export default async function Image({ params }: { params: Promise<{ date: string }> }) {
+  const { date } = await params
+  const run = loadRun(date)
+
+  // Fallback: black card with the date only.
+  if (!run) {
+    return new ImageResponse(
+      (
+        <div style={{
+          width: '100%', height: '100%', background: '#0A0A0A',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontFamily: 'sans-serif', color: '#E8E8E8', fontSize: 28, letterSpacing: 2,
+        }}>
+          noon · {date}
+        </div>
+      ),
+      { ...size }
+    )
+  }
+
   const bg = PALETTE_BG[run.mood.palette] ?? '#0A0A0A'
   const accent = ACCENT[run.mood.accent] ?? '#C6FF3C'
-
   const winner = CONCEPTS.find(c => c.name === run.winner.concept) ?? CONCEPTS[0]
   const grid = winner.grid
   const CELL = 28
-
   const blurb = `“${run.winner.blurb}”`
 
   return new ImageResponse(
@@ -61,7 +95,7 @@ export default async function Image() {
             color: 'rgba(232,232,232,0.55)',
           }}
         >
-          April 14, 2026
+          {formatDate(run.date)}
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 24 }}>

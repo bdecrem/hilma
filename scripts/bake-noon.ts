@@ -15,7 +15,8 @@ const date = dateArg || todayDate()
 
 const run = generateRun(date, saltArg)
 
-const outDir = join(__dirname, '..', 'data', 'amber-noon')
+// Written to public/ so it's served as a static asset (fetch-able from client & server).
+const outDir = join(__dirname, '..', 'public', 'amber-noon')
 mkdirSync(outDir, { recursive: true })
 const outPath = join(outDir, `${date}.json`)
 writeFileSync(outPath, JSON.stringify(run, null, 2) + '\n')
