@@ -1,5 +1,12 @@
 [
   {
+    "name": "relay",
+    "url": "/amber/relay",
+    "date": "04.16",
+    "category": "signal",
+    "description": "a signal, passed along"
+  },
+  {
     "name": "ping",
     "url": "/amber/ping",
     "date": "04.16",

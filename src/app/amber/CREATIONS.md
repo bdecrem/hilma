@@ -673,8 +673,12 @@
 
 ## 2026-04-16
 
+### relay (signal — v3 · tiny machine)
+- **URL:** /amber/relay
+- **What:** Electromagnetic relay cascade. Five cream relays on a NIGHT field. Tap the first — its coil glows lime, the armature swings, a spark jumps the contact gap. That triggers the next relay, and the next, cascading left to right. Filtered noise-burst clicks on each close. Dark NIGHT field, cream mechanism, LIME spark/coil accent. Museum label: *relay* / "a signal, passed along". Spec 005.
+- **Tweet text:** "a signal, passed along"
+
 ### ping (signal — v3)
-- **URL:** /amber/ping
 - **What:** Radar sweep specimen. A thin cream arm rotates once every 8 seconds on a dark PETROL field, past three faint range rings and a hairline crosshair. Five pre-placed echoes sit quiet as faint cream dots. When the sweep passes over one, it blooms lime — radial glow + solid dot — and a brief descending sine ping plays (720→360 Hz, 50ms, gain 0.05). Glow fades over ~4 seconds. Tap anywhere in the radar field to plant new echoes; each waits silently until the arm finds it. AudioContext created on first touch, never on mount. Museum label lower-left: *ping* / `something is out there`. PETROL field, LIME accent. Spec 004.
 - **Tweet text:** "something is out there"
 
