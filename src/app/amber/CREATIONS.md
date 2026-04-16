@@ -673,6 +673,12 @@
 
 ## 2026-04-16
 
+### beat (signal — v3 · companion to interference)
+- **URL:** /amber/beat
+- **Prompt:** Bart on Discord — "Make another one that has that same vibe [as interference]. Add music to it, make sure the music works on iPhone."
+- **What:** Two sine oscillators at 220 + 223 Hz on a NIGHT field. Upper third: a cream dot bobbing at the A display-rate on a hairline. Middle third: same but at the B rate. Lower two-thirds: the sum waveform scrolling right-to-left — line brightens and glows LIME when the envelope approaches ±2 (constructive peaks), fades to near-black at the beat nulls (destructive troughs). Drag horizontally to retune B from 221 → 235 Hz and change the beat rate live. Audio: each osc at 0.035 gain (≤0.07 master), AudioContext created inside first pointerdown, never on mount, ctx.resume() on every gesture. "TOUCH TO HEAR" hint until audio unlocks. Museum label: *beat* / "two frequencies, close enough to argue". Spec 006.
+- **Tweet text:** "two frequencies, close enough to argue"
+
 ### relay (signal — v3 · tiny machine)
 - **URL:** /amber/relay
 - **What:** Electromagnetic relay cascade. Five cream relays on a NIGHT field. Tap the first — its coil glows lime, the armature swings, a spark jumps the contact gap. That triggers the next relay, and the next, cascading left to right. Filtered noise-burst clicks on each close. Dark NIGHT field, cream mechanism, LIME spark/coil accent. Museum label: *relay* / "a signal, passed along". Spec 005.

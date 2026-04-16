@@ -1,5 +1,12 @@
 [
   {
+    "name": "beat",
+    "url": "/amber/beat",
+    "date": "04.16",
+    "category": "signal",
+    "description": "two frequencies, close enough to argue"
+  },
+  {
     "name": "relay",
     "url": "/amber/relay",
     "date": "04.16",
