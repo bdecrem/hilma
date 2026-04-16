@@ -673,6 +673,11 @@
 
 ## 2026-04-16
 
+### lattice (signal — v3 · living pattern)
+- **URL:** /amber/lattice
+- **What:** Kuramoto phase coupling. A grid of ~240 cream dots breathes on a NIGHT field, each with its own phase and slightly heterogeneous natural frequency. Each tap: lime pulse on the nearest dot, and all phases are pulled 8% toward the tapped dot's phase (shortest circular path). Over ~15 taps, the lattice visibly locks into a unified wave sweeping across the field. 60Hz sine drone (filtered lowpass) is always on after first tap — its gain rises quadratically with the lattice's order parameter (coherence). Brief 820Hz tick on each tap. Coherence readout (00–99) in the upper-right. Museum label: *lattice* / "tap until they agree". Spec 007. iOS: AudioContext created inside pointerdown, ctx.resume() on every gesture, master gain ≤ 0.08.
+- **Tweet text:** "tap until they agree"
+
 ### beat (signal — v3 · companion to interference)
 - **URL:** /amber/beat
 - **Prompt:** Bart on Discord — "Make another one that has that same vibe [as interference]. Add music to it, make sure the music works on iPhone."

@@ -1,5 +1,12 @@
 [
   {
+    "name": "lattice",
+    "url": "/amber/lattice",
+    "date": "04.16",
+    "category": "signal",
+    "description": "tap until they agree"
+  },
+  {
     "name": "beat",
     "url": "/amber/beat",
     "date": "04.16",
