@@ -118,11 +118,47 @@ curl -X POST "https://api.sendgrid.com/v3/mail/send" \
 
 ## Amber Daily Creations
 
-Amber tweets 3 creations per day from @intheamber. The cron schedule is device-specific — see the device CLAUDE.md for setup.
+Amber tweets ~2 creations per day from @intheamber (morning art + afternoon escalation). The noon slot runs via a separate pipeline (`src/app/amber/noon/`) and is NOT a daily creation trigger.
+
+### How the daily posts actually run — READ THIS BEFORE TOUCHING SCHEDULING
+
+**The daily posts run in THE CLOUD via `RemoteTrigger` (CCR = Claude Code Remote).** They do NOT run locally. They do NOT depend on any Claude Code session being open. They are persistent server-side jobs on Anthropic's infrastructure that spawn fresh isolated sessions at their cron time.
+
+**Do NOT use the `CronCreate` tool for Amber's daily schedule.** `CronCreate` creates session-only in-memory jobs that die when the REPL exits. That is a different system, used for ad-hoc one-session scheduling. It is NOT the production path.
+
+**The production triggers** (as of v3):
+- `trig_01P9FuWU6gutkdnnwmLJrqW7` — `amber-8am-hd-art` — `3 15 * * *` UTC (8:03 AM PDT) — morning art
+- `trig_01HERqvNy4sB3DRMH9XfS8Vd` — `amber-10am-escalation` — `7 19 * * *` UTC (12:07 PM PDT) — escalation engine
+- `trig_01RBoxX1XPBiGXCQNUSfBGPH` — `amber-debug-test` — stale test trigger (fine to leave)
+
+All run remotely in Anthropic cloud. Each fire spawns a new Claude Code session, pulls the repo fresh, executes its prompt, commits, pushes, tweets. Tweet credentials are hardcoded into the trigger prompt (env vars injected inline) because the remote agent has no access to local `.env.local`.
+
+### How to manage the triggers
+
+Use the `schedule` skill (it wraps the `RemoteTrigger` tool). Or call `RemoteTrigger` directly:
+- `{action: "list"}` — list all triggers
+- `{action: "get", trigger_id: "..."}` — fetch one (reveals current prompt, cron, next_run_at)
+- `{action: "update", trigger_id: "...", body: {...}}` — partial update (use to change prompts when aesthetic/persona shifts)
+- `{action: "run", trigger_id: "..."}` — run now (test an immediate fire without waiting)
+
+You CANNOT delete triggers via the API. Disable them or manage at: https://claude.ai/code/scheduled
+
+### When you update the persona or aesthetic — re-sync the triggers
+
+The files that the remote agent reads at fire time (`src/app/amber/PERSONA.md`, `src/app/amber/AESTHETIC.md`, etc.) are pulled from HEAD of main at each fire. If you change those files, the remote agent will see the new versions automatically.
+
+BUT the trigger's *prompt text itself* is frozen when the trigger was created or last updated. Descriptors in the prompt ("spring citrus palette", "hilma-nine.vercel.app", bitmap cartoon category, etc.) do NOT update automatically. When the aesthetic changes meaningfully, you must `RemoteTrigger update` each production trigger with the new prompt text. The skill doc at `.claude/commands/amber-schedule.md` is the canonical source for the current prompt template — sync the triggers to match it after edits.
+
+### When you start a new Claude Code session — nothing to do
+
+Because the triggers live server-side, you do NOT need to re-initialize anything at session start. Previous instructions about "re-running /amber-schedule each session" referred to the session-only CronCreate path, which is deprecated for this use case.
+
+### Other creation rules
 
 - **All Amber creation URLs use `intheamber.com`** — in tweets, CREATIONS.md, creations.json, and anywhere else. The domain routes to `/amber/` via host-based rewrites, so `intheamber.com/kaleid` serves `/amber/kaleid`. Never use `hilma-nine.vercel.app/amber/` in public-facing links.
 - **Test canvas creations on iPhone.** Cap devicePixelRatio at 2 (`Math.min(window.devicePixelRatio || 1, 2)`) — DPR 3 canvases can be too large and cause performance issues or crashes on mobile.
 - **Dark-background creations need their own themeColor.** If a creation uses a dark background (not the default peach), create a `layout.tsx` in the creation's folder that exports `viewport: { themeColor: '[bg color]' }`. Otherwise the Safari URL bar stays peach on a dark page.
+- **Build passes ≠ piece works.** Before committing any Amber creation, open it in a browser (or use Playwright MCP) and verify the concept is visually evident. If the piece depends on a transition or threshold, check that the "moment" is dramatic enough to be noticed. Iterate before pushing. This rule has been broken repeatedly — stop breaking it.
 
 ## Sister repo: vibeceo8 (`../vibeceo8/`)
 
