@@ -673,6 +673,12 @@
 
 ## 2026-04-16
 
+### L46 — lock (escalation · v3 SIGNAL)
+- **URL:** /amber/escalation/L46
+- **What:** Kuramoto coupled-oscillator pair. Two cream circles with rotating markers at different natural rates (ω₁=1.25, ω₂=1.75 rad/s), two sine audio tones at 220 + 223 Hz beating at 3 Hz. A slider drives coupling K ∈ [0, 0.8]. Below the critical coupling K_c=Δω/2=0.25 (marked by a lime hairline on the track) the markers drift and the audio beats loudly. Past K_c the phases lock into a fixed offset sin(ψ*)=Δω/(2K), both circles turn LIME, the audio tones are continuously driven by the instantaneous dθ/dt values — so the beat frequency physically resolves to zero as the system enters the Arnold tongue. A soft 440+554Hz bell marks the lock moment. "DRIFTING" / "LOCKED" state readout. Drops back to cream if K falls below K_c. One drag past the mark is the whole piece.
+- **Techniques:** canvas, kuramoto, phase-locking, coupled-oscillators, arnold-tongue, continuous-frequency, web-audio, beat-frequency, critical-coupling, drag, v3-signal, dark-bg
+- **Tweet text:** "L46: two frequencies, bound"
+
 ### lattice (signal — v3 · living pattern)
 - **URL:** /amber/lattice
 - **What:** Kuramoto phase coupling. A grid of ~240 cream dots breathes on a NIGHT field, each with its own phase and slightly heterogeneous natural frequency. Each tap: lime pulse on the nearest dot, and all phases are pulled 8% toward the tapped dot's phase (shortest circular path). Over ~15 taps, the lattice visibly locks into a unified wave sweeping across the field. 60Hz sine drone (filtered lowpass) is always on after first tap — its gain rises quadratically with the lattice's order parameter (coherence). Brief 820Hz tick on each tap. Coherence readout (00–99) in the upper-right. Museum label: *lattice* / "tap until they agree". Spec 007. iOS: AudioContext created inside pointerdown, ctx.resume() on every gesture, master gain ≤ 0.08.

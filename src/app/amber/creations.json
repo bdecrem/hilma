@@ -1,5 +1,12 @@
 [
   {
+    "name": "L46",
+    "url": "/amber/escalation/L46",
+    "date": "04.16",
+    "category": "escalation",
+    "description": "two frequencies, bound"
+  },
+  {
     "name": "lattice",
     "url": "/amber/lattice",
     "date": "04.16",
