@@ -8,9 +8,13 @@ const NIGHT = '#0A0A0A'
 const CREAM = '#E8E8E8'
 const LIME = '#C6FF3C'
 
-const CELL_TARGET = 48
-const BASE_R = 1.4
-const AMP_R = 1.8
+const CELL_TARGET = 52
+const BASE_R = 2.2
+const AMP_R = 3.8
+const PER_TAP_PULL = 0.22
+const PASSIVE_PULL_RATE = 0.009 // per frame at coherence 1.0
+const SYNC_THRESHOLD = 0.92
+const SYNC_RESET_THRESHOLD = 0.75
 
 interface Dot {
   x: number
@@ -29,6 +33,7 @@ export default function Lattice() {
   const animRef = useRef(0)
   const lastTimeRef = useRef(performance.now())
   const coherenceRef = useRef(0)
+  const syncEventFiredRef = useRef(false)
 
   const buildDots = useCallback((vw: number, vh: number) => {
     const cols = Math.max(8, Math.floor(vw / CELL_TARGET))
@@ -44,7 +49,7 @@ export default function Lattice() {
           x: cellW * (c + 1),
           y: startY + cellH * (r + 0.5),
           phase: Math.random() * Math.PI * 2,
-          rate: 1 + (Math.random() - 0.5) * 0.35, // natural freq heterogeneity
+          rate: 1 + (Math.random() - 0.5) * 0.06, // tiny natural freq heterogeneity
           limeAlpha: 0,
         })
       }
@@ -90,12 +95,33 @@ export default function Lattice() {
     osc.frequency.value = 820
     const gain = ctx.createGain()
     gain.gain.setValueAtTime(0, now)
-    gain.gain.linearRampToValueAtTime(0.045, now + 0.003)
+    gain.gain.linearRampToValueAtTime(0.02, now + 0.003)
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12)
     osc.connect(gain)
     gain.connect(ctx.destination)
     osc.start(now)
     osc.stop(now + 0.14)
+  }, [])
+
+  const playSyncChime = useCallback(() => {
+    const ctx = audioRef.current
+    if (!ctx || ctx.state === 'suspended') return
+    const now = ctx.currentTime
+    // Soft two-tone bell, quiet — marks the moment without celebrating it
+    const freqs = [440, 660]
+    for (const freq of freqs) {
+      const osc = ctx.createOscillator()
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      const gain = ctx.createGain()
+      gain.gain.setValueAtTime(0, now)
+      gain.gain.linearRampToValueAtTime(0.014, now + 0.008)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4)
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.start(now)
+      osc.stop(now + 1.5)
+    }
   }, [])
 
   const handlePointerDown = useCallback((e: PointerEvent) => {
@@ -128,8 +154,7 @@ export default function Lattice() {
     const target = dots[nearest]
     target.limeAlpha = 1
 
-    // Pull all phases toward the tapped dot's phase by a small factor (circular)
-    const pullStrength = 0.08
+    // Pull all phases toward the tapped dot's phase by a strong factor (circular)
     const targetPhase = target.phase
     for (let i = 0; i < dots.length; i++) {
       const d = dots[i]
@@ -137,7 +162,7 @@ export default function Lattice() {
       // Wrap to [-π, π] for shortest path
       while (delta > Math.PI) delta -= Math.PI * 2
       while (delta < -Math.PI) delta += Math.PI * 2
-      d.phase += delta * pullStrength
+      d.phase += delta * PER_TAP_PULL
     }
 
     playTick()
@@ -174,20 +199,52 @@ export default function Lattice() {
       const dots = dotsRef.current
       const n = dots.length
 
-      // Advance phases
+      // Pass 1: advance phases, decay lime
       const speed = 2.0 // radians per second base rate
-      let cxSum = 0
-      let cySum = 0
       for (let i = 0; i < n; i++) {
         const d = dots[i]
         d.phase += dtSec * speed * d.rate
         if (d.phase > Math.PI * 2) d.phase -= Math.PI * 2
-        cxSum += Math.cos(d.phase)
-        cySum += Math.sin(d.phase)
         d.limeAlpha *= 0.93
       }
+
+      // Compute mean phase and coherence
+      let cxSum = 0
+      let cySum = 0
+      for (let i = 0; i < n; i++) {
+        cxSum += Math.cos(dots[i].phase)
+        cySum += Math.sin(dots[i].phase)
+      }
       const coherence = Math.sqrt(cxSum * cxSum + cySum * cySum) / n
+      const meanPhase = Math.atan2(cySum, cxSum)
+
+      // Pass 2: passive coupling — pull each phase toward the group mean,
+      // scaled by current coherence so it only holds them once they've agreed.
+      // Normalize by frame time so behavior is consistent across framerates.
+      const passiveStep = PASSIVE_PULL_RATE * coherence * (dtSec * 60)
+      for (let i = 0; i < n; i++) {
+        const d = dots[i]
+        let delta = meanPhase - d.phase
+        while (delta > Math.PI) delta -= Math.PI * 2
+        while (delta < -Math.PI) delta += Math.PI * 2
+        d.phase += delta * passiveStep
+      }
+
+      // Smooth coherence for readout + drone
       coherenceRef.current += (coherence - coherenceRef.current) * 0.06
+
+      // Sync event — the quiet "they agree" moment. Fires once when coherence
+      // crosses the threshold upward; re-arms only when it falls below the
+      // reset threshold. Soft dot brightening + soft bell. No confetti.
+      if (!syncEventFiredRef.current && coherence > SYNC_THRESHOLD) {
+        syncEventFiredRef.current = true
+        for (let i = 0; i < n; i++) {
+          dots[i].limeAlpha = Math.max(dots[i].limeAlpha, 0.55)
+        }
+        playSyncChime()
+      } else if (syncEventFiredRef.current && coherence < SYNC_RESET_THRESHOLD) {
+        syncEventFiredRef.current = false
+      }
 
       // Update drone gain based on smoothed coherence (0.003 → 0.028)
       if (droneRef.current && audioRef.current) {
@@ -279,7 +336,7 @@ export default function Lattice() {
       droneRef.current = null
       audioStartedRef.current = false
     }
-  }, [buildDots, handlePointerDown])
+  }, [buildDots, handlePointerDown, playSyncChime])
 
   return (
     <>
