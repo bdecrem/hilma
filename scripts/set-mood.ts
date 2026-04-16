@@ -1,14 +1,16 @@
 // Set Amber's mood for a given date (default: today).
 // Inputs: Palo Alto weather + one of two substrates:
-//   - 'news'   → today's world headlines via Claude web_search (default)
+//   - 'news'   → today's world headlines via Claude web_search
 //   - 'reddit' → top posts from r/all hot
+// When no source is specified, one is picked deterministically from the date
+// (roughly 50/50 across days), so the daily pipeline alternates on its own.
 // Output: public/amber-noon/mood-YYYY-MM-DD.json
 //
 // Usage:
-//   npx tsx scripts/set-mood.ts                         (today, news)
-//   npx tsx scripts/set-mood.ts 2026-04-16              (date, news)
-//   npx tsx scripts/set-mood.ts reddit                  (today, reddit)
-//   npx tsx scripts/set-mood.ts 2026-04-16 reddit       (date, reddit)
+//   npx tsx scripts/set-mood.ts                         (today, date-picked source)
+//   npx tsx scripts/set-mood.ts 2026-04-17              (date, date-picked source)
+//   npx tsx scripts/set-mood.ts reddit                  (force reddit)
+//   npx tsx scripts/set-mood.ts 2026-04-17 news         (force news for a date)
 
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -280,19 +282,31 @@ async function synthesizeMood(date: string, weather: WeatherSnapshot, source: So
   }
 }
 
-function parseArgs(argv: string[]): { date: string; source: Source } {
+// Stable coin flip from the date — same day always picks the same source,
+// but the distribution is ~50/50 across days so the pipeline alternates.
+function pickSourceForDate(date: string): Source {
+  let h = 2166136261 >>> 0
+  for (let i = 0; i < date.length; i++) {
+    h ^= date.charCodeAt(i)
+    h = Math.imul(h, 16777619) >>> 0
+  }
+  return (h % 2) === 0 ? 'news' : 'reddit'
+}
+
+function parseArgs(argv: string[]): { date: string; source: Source; sourceExplicit: boolean } {
   let date = todayDate()
-  let source: Source = 'news'
+  let source: Source | null = null
   for (const a of argv) {
     if (SOURCES.includes(a as Source)) source = a as Source
     else if (/^\d{4}-\d{2}-\d{2}$/.test(a)) date = a
   }
-  return { date, source }
+  const sourceExplicit = source !== null
+  return { date, source: source ?? pickSourceForDate(date), sourceExplicit }
 }
 
 async function main() {
-  const { date, source } = parseArgs(process.argv.slice(2))
-  console.log(`Setting mood for ${date} (source: ${source})...`)
+  const { date, source, sourceExplicit } = parseArgs(process.argv.slice(2))
+  console.log(`Setting mood for ${date} (source: ${source}${sourceExplicit ? '' : ', auto-picked from date'})...`)
 
   const weather = await fetchWeather(date)
   console.log(`Weather: ${weather.conditions}, ${weather.tempF}°F (H${weather.tempMaxF}/L${weather.tempMinF})`)
