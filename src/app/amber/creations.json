@@ -1,5 +1,12 @@
 [
   {
+    "name": "ping",
+    "url": "/amber/ping",
+    "date": "04.16",
+    "category": "signal",
+    "description": "something is out there"
+  },
+  {
     "name": "interference",
     "url": "/amber/interference",
     "date": "04.16",

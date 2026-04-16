@@ -673,6 +673,11 @@
 
 ## 2026-04-16
 
+### ping (signal — v3)
+- **URL:** /amber/ping
+- **What:** Radar sweep specimen. A thin cream arm rotates once every 8 seconds on a dark PETROL field, past three faint range rings and a hairline crosshair. Five pre-placed echoes sit quiet as faint cream dots. When the sweep passes over one, it blooms lime — radial glow + solid dot — and a brief descending sine ping plays (720→360 Hz, 50ms, gain 0.05). Glow fades over ~4 seconds. Tap anywhere in the radar field to plant new echoes; each waits silently until the arm finds it. AudioContext created on first touch, never on mount. Museum label lower-left: *ping* / `something is out there`. PETROL field, LIME accent. Spec 004.
+- **Tweet text:** "something is out there"
+
 ### interference (signal — v3)
 - **URL:** /amber/interference
 - **What:** Living interference pattern. Two coherent wave sources — small lime dots — radiate outward on a NIGHT field. The interference field is computed per-pixel: where waves add (constructive) the field brightens to cream; where they cancel (destructive) it stays dark. Hyperbolic fringe bands fill the canvas and drift slowly as the phase advances. Drag either source to reshape the pattern — the fringes reconfigure instantly. No UI. Museum label lower-left: `interference` / `two signals meeting`. One field, one accent. Third v3 SIGNAL piece.
