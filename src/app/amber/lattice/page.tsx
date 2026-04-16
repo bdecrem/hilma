@@ -11,10 +11,10 @@ const LIME = '#C6FF3C'
 const CELL_TARGET = 52
 const BASE_R = 2.2
 const AMP_R = 3.8
-const PER_TAP_PULL = 0.22
-const PASSIVE_PULL_RATE = 0.009 // per frame at coherence 1.0
-const SYNC_THRESHOLD = 0.92
-const SYNC_RESET_THRESHOLD = 0.75
+const PER_TAP_PULL = 0.10
+const PASSIVE_PULL_RATE = 0.003 // per frame at coherence 1.0
+const SYNC_THRESHOLD = 0.85
+const SYNC_RESET_THRESHOLD = 0.70
 
 interface Dot {
   x: number
