@@ -1,5 +1,5 @@
-// The viewer will see: a cream ring at center pulsing with every kick; at bar 3 scattered hat flecks appear; at bar 5 a lime core blooms and swells as the filter opens over 24 bars; at bar 32 everything drops to silence except the lime still glowing.
-// The viewer will hear: the full hallman-hawtin-01 track — 32 bars of 126 BPM Plastikman-style minimal techno, JB01 drums + JT10 acid with cutoff 100→500Hz sweep. Pre-rendered Jambot.
+// The viewer will see: a cream ring at center pulsing with every kick; scattered hat flecks on 16ths; tom hits flash as arcs on the ring (low = lower arc, high = upper); a cymbal shockwave radiates outward at bar 24; the whole ring turns LIME for the peak bars 21–24; breakdown goes toms-only; bar 32 drops to a single ghost kick.
+// The viewer will hear: hallman-tribal-01 — 32 bars of 126 BPM percussion only, JB01 drums, multi-section arrangement with tom patterns, claps, open hats, cymbal crash, and a breakdown.
 'use client'
 
 import { useRef, useEffect, useCallback, useState } from 'react'
@@ -9,24 +9,61 @@ const CREAM = '#E8E8E8'
 const LIME = '#C6FF3C'
 
 const BPM = 126
-const BEATS_PER_BAR = 4
 const BEAT_SEC = 60 / BPM // 0.4762s
-const BAR_SEC = BEAT_SEC * BEATS_PER_BAR // 1.905s
-const TOTAL_BARS = 32
+const BAR_SEC = BEAT_SEC * 4 // 1.905s
+const TOTAL_BARS = 28
 
-// Arrangement timeline (matches hallman-hawtin-01.js)
-const BAR_HATS_IN = 2 // bars 3-4 (0-indexed: >= 2)
-const BAR_ACID_IN = 4 // bar 5 (0-indexed: >= 4)
-const BAR_FILTER_FULL_OPEN = 28 // bar 28 peak
-const BAR_PULLBACK_END = 31
-const BAR_GHOST = 31
+// ============== Tom patterns (mirror of hallman-tribal-01.js) ==============
+type Hit = { step: number; v: number }
+const TOM_A_HI: Hit[] = [{ step: 0, v: 115 }, { step: 6, v: 85 }, { step: 10, v: 95 }, { step: 14, v: 70 }]
+const TOM_A_LOW: Hit[] = [{ step: 4, v: 110 }, { step: 11, v: 100 }]
+const TOM_B_HI: Hit[] = [{ step: 0, v: 127 }, { step: 2, v: 80 }, { step: 6, v: 90 }, { step: 10, v: 110 }, { step: 14, v: 95 }]
+const TOM_B_LOW: Hit[] = [{ step: 1, v: 85 }, { step: 4, v: 120 }, { step: 8, v: 100 }, { step: 11, v: 115 }, { step: 13, v: 75 }]
+const FILL15_HI: Hit[] = [{ step: 12, v: 115 }, { step: 13, v: 95 }]
+const FILL15_LOW: Hit[] = [{ step: 14, v: 120 }, { step: 15, v: 110 }]
+const FILL23_HI: Hit[] = [{ step: 10, v: 100 }, { step: 12, v: 105 }, { step: 14, v: 110 }]
+const FILL23_LOW: Hit[] = [{ step: 11, v: 95 }, { step: 13, v: 105 }, { step: 15, v: 115 }]
 
-// Scattered hat fleck positions (fixed seed for consistency)
+type ScheduledHit = { t: number; voice: 'hitom' | 'lowtom' | 'clap' | 'cymbal'; velocity: number }
+
+function buildSchedule(): ScheduledHit[] {
+  const hits: ScheduledHit[] = []
+  for (let bar = 0; bar < TOTAL_BARS; bar++) {
+    // Toms
+    let hiPat: Hit[] | null = null
+    let lowPat: Hit[] | null = null
+    if (bar === 11) { hiPat = FILL15_HI; lowPat = FILL15_LOW }
+    else if (bar === 19) { hiPat = FILL23_HI; lowPat = FILL23_LOW }
+    else if ((bar >= 4 && bar < 16) || (bar >= 20 && bar < 24) || (bar >= 24 && bar < 27)) {
+      hiPat = TOM_A_HI; lowPat = TOM_A_LOW
+    } else if (bar >= 16 && bar < 19) {
+      hiPat = TOM_B_HI; lowPat = TOM_B_LOW
+    }
+    if (hiPat) for (const h of hiPat) hits.push({ t: bar * BAR_SEC + (h.step / 16) * BAR_SEC, voice: 'hitom', velocity: h.v })
+    if (lowPat) for (const h of lowPat) hits.push({ t: bar * BAR_SEC + (h.step / 16) * BAR_SEC, voice: 'lowtom', velocity: h.v })
+
+    // Claps on 2 & 4 during bars 13-20 and 25-27 (0-indexed 12-19 and 24-26)
+    if ((bar >= 12 && bar < 20) || (bar >= 24 && bar < 27)) {
+      for (const step of [4, 12]) {
+        hits.push({ t: bar * BAR_SEC + (step / 16) * BAR_SEC, voice: 'clap', velocity: 112 })
+      }
+    }
+
+    // Cymbal at bar 19 step 8
+    if (bar === 19) {
+      hits.push({ t: 19 * BAR_SEC + (8 / 16) * BAR_SEC, voice: 'cymbal', velocity: 115 })
+    }
+  }
+  hits.sort((a, b) => a.t - b.t)
+  return hits
+}
+
+// Scattered hat fleck positions (same seed as before)
 const HAT_POSITIONS: { angle: number; dist: number }[] = []
 for (let i = 0; i < 14; i++) {
   HAT_POSITIONS.push({
     angle: (i / 14) * Math.PI * 2 + (i * 0.37),
-    dist: 0.75 + (i * 0.0713) % 0.6, // ratio of ring radius
+    dist: 0.75 + (i * 0.0713) % 0.6,
   })
 }
 
@@ -34,6 +71,7 @@ export default function Track01() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const animRef = useRef(0)
+  const scheduleRef = useRef<ScheduledHit[]>(buildSchedule())
   const [playing, setPlaying] = useState(false)
   const [unlocked, setUnlocked] = useState(false)
 
@@ -47,7 +85,7 @@ export default function Track01() {
         setPlaying(true)
         setUnlocked(true)
       } catch {
-        // iOS gesture required — will succeed on retry
+        // iOS requires gesture — will succeed on retry
       }
     } else {
       audio.pause()
@@ -79,61 +117,67 @@ export default function Track01() {
       ctx.fillRect(0, 0, vw, vh)
 
       const audio = audioRef.current
-      const t = audio && !audio.paused ? audio.currentTime : (audio?.currentTime ?? 0)
+      const t = audio?.currentTime ?? 0
       const barFloat = t / BAR_SEC
       const bar = Math.floor(barFloat)
       const beatFloat = t / BEAT_SEC
-      const beatPhase = beatFloat - Math.floor(beatFloat) // 0..1 within current beat
+      const beatPhase = beatFloat - Math.floor(beatFloat)
       const isEnded = audio?.ended
 
-      // Center
       const cx = vw / 2
       const cy = vh / 2
       const baseR = Math.min(vw, vh) * 0.22
 
-      // === Kick-pulse envelope ===
-      // Kick hits on beats 1,2,3,4 (every beat). Attack-decay-ish envelope.
-      // Suppress kick on ghost bar (bar index 31)
-      const kickEnv = bar >= TOTAL_BARS - 1 || isEnded
-        ? 0
-        : Math.pow(1 - beatPhase, 1.8) // 1 at hit, 0 by next hit
-
-      // === Filter-open automation (matches the track) ===
-      // bars 5-28: 100→500Hz mapped to 0→1 intensity
-      let filterIntensity = 0
-      if (bar >= BAR_ACID_IN) {
-        if (bar < BAR_FILTER_FULL_OPEN) {
-          filterIntensity = (bar - BAR_ACID_IN) / (BAR_FILTER_FULL_OPEN - BAR_ACID_IN)
-        } else if (bar < BAR_PULLBACK_END) {
-          // bars 28-30: hold near full, slight pull (0.75)
-          filterIntensity = 0.8
-        } else {
-          // Ghost bar 31
-          filterIntensity = 0.3
+      // ============== Kick envelope ==============
+      // Kick: present bars 0-19, absent 20-23 (breakdown), present 24-26, ghost bar 27 (kick on step 0 only)
+      let kickActive = false
+      if (bar < 20) kickActive = true
+      else if (bar >= 24 && bar < 27) kickActive = true
+      const kickEnv = (() => {
+        if (isEnded) return 0
+        if (bar === 27) {
+          // Single hit at start of bar
+          const timeInBar = barFloat - 27
+          if (timeInBar < 0.25) return Math.pow(1 - timeInBar * 4, 1.8)
+          return 0
         }
-      }
+        if (!kickActive) return 0
+        return Math.pow(1 - beatPhase, 1.8)
+      })()
 
-      // === Draw main ring ===
-      const ringR = baseR + kickEnv * 18
-      const ringBright = 0.45 + kickEnv * 0.35
-      ctx.strokeStyle = CREAM
+      // ============== Peak lime flag (bars 17-19, i.e. 16-18 0-indexed) ==============
+      const inPeak = bar >= 16 && bar < 19
+      const ringColor = inPeak ? LIME : CREAM
+      const ringGlow = inPeak ? 18 : 0
+
+      // ============== Main ring ==============
+      const ringR = baseR + kickEnv * 20
+      const ringBright = 0.45 + kickEnv * 0.4
+      if (ringGlow > 0) {
+        ctx.save()
+        ctx.shadowColor = LIME
+        ctx.shadowBlur = ringGlow
+      }
+      ctx.strokeStyle = ringColor
       ctx.globalAlpha = ringBright
-      ctx.lineWidth = 1.5 + kickEnv * 2
+      ctx.lineWidth = 1.5 + kickEnv * 2.5
       ctx.beginPath()
       ctx.arc(cx, cy, ringR, 0, Math.PI * 2)
       ctx.stroke()
+      if (ringGlow > 0) ctx.restore()
 
-      // Inner faint ring for depth
-      ctx.globalAlpha = 0.15 + kickEnv * 0.12
+      // Inner faint ring
+      ctx.globalAlpha = 0.15 + kickEnv * 0.1
+      ctx.strokeStyle = CREAM
       ctx.lineWidth = 1
       ctx.beginPath()
       ctx.arc(cx, cy, baseR * 0.7, 0, Math.PI * 2)
       ctx.stroke()
       ctx.globalAlpha = 1
 
-      // === Hat flecks ===
-      if (bar >= BAR_HATS_IN && !isEnded && bar < TOTAL_BARS - 1) {
-        // Hats are on 16ths. Use the 16th phase
+      // ============== Hat flecks (16ths during ch bars) ==============
+      const chActive = (bar < 20) || (bar >= 24 && bar < 27)
+      if (chActive && !isEnded) {
         const sixteenthFloat = t / (BEAT_SEC / 4)
         const sixteenthPhase = sixteenthFloat - Math.floor(sixteenthFloat)
         for (let i = 0; i < HAT_POSITIONS.length; i++) {
@@ -141,51 +185,84 @@ export default function Track01() {
           const pr = baseR * p.dist
           const fx = cx + Math.cos(p.angle) * pr
           const fy = cy + Math.sin(p.angle) * pr
-          // Each fleck flashes with a per-fleck offset
           const perFleckPhase = (sixteenthPhase + i * 0.11) % 1
-          const fleckBright = Math.pow(1 - perFleckPhase, 3.5) * 0.7 + 0.08
+          const fleckBright = Math.pow(1 - perFleckPhase, 3.5) * 0.65 + 0.08
           ctx.fillStyle = CREAM
           ctx.globalAlpha = fleckBright
           ctx.beginPath()
-          ctx.arc(fx, fy, 2 + fleckBright * 1.5, 0, Math.PI * 2)
+          ctx.arc(fx, fy, 2 + fleckBright * 1.3, 0, Math.PI * 2)
           ctx.fill()
         }
         ctx.globalAlpha = 1
       }
 
-      // === Lime core (acid bass, filter-driven) ===
-      if (filterIntensity > 0 || isEnded) {
-        const coreR = baseR * 0.35 * (isEnded ? 0.8 : filterIntensity)
-        const coreAlpha = isEnded ? 0.55 : 0.35 + filterIntensity * 0.55
-        // Glow
-        ctx.save()
-        ctx.shadowColor = LIME
-        ctx.shadowBlur = 20 + filterIntensity * 30
-        ctx.fillStyle = LIME
-        ctx.globalAlpha = coreAlpha
-        ctx.beginPath()
-        ctx.arc(cx, cy, coreR, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
+      // ============== Tom / clap / cymbal hits from schedule ==============
+      // Find hits within age window
+      const hits = scheduleRef.current
+      for (const hit of hits) {
+        const age = t - hit.t
+        if (age < 0 || age > 0.5) continue
+        const v = hit.velocity / 127
+        const decay = Math.pow(1 - age / 0.5, 2.2)
+        const alpha = decay * (0.4 + v * 0.5)
 
-        // Thin lime ring around the core, breathing with kick
-        ctx.strokeStyle = LIME
-        ctx.globalAlpha = 0.3 + filterIntensity * 0.3 + kickEnv * 0.1
-        ctx.lineWidth = 1.5
-        ctx.beginPath()
-        ctx.arc(cx, cy, coreR + 10 + kickEnv * 6, 0, Math.PI * 2)
-        ctx.stroke()
-        ctx.globalAlpha = 1
+        if (hit.voice === 'lowtom') {
+          // Thick arc on lower half of ring
+          ctx.save()
+          ctx.strokeStyle = inPeak ? LIME : CREAM
+          ctx.globalAlpha = alpha
+          ctx.lineWidth = 3 + v * 4
+          ctx.beginPath()
+          ctx.arc(cx, cy, baseR + 6, Math.PI * 0.15, Math.PI * 0.85)
+          ctx.stroke()
+          ctx.restore()
+        } else if (hit.voice === 'hitom') {
+          // Thinner arc on upper half
+          ctx.save()
+          ctx.strokeStyle = inPeak ? LIME : CREAM
+          ctx.globalAlpha = alpha
+          ctx.lineWidth = 2 + v * 2.5
+          ctx.beginPath()
+          ctx.arc(cx, cy, baseR + 4, Math.PI * 1.15, Math.PI * 1.85)
+          ctx.stroke()
+          ctx.restore()
+        } else if (hit.voice === 'clap') {
+          // Radial burst — 4 short lines outward
+          ctx.save()
+          ctx.strokeStyle = inPeak ? LIME : CREAM
+          ctx.globalAlpha = alpha * 0.8
+          ctx.lineWidth = 2
+          const len = 20 + decay * 24
+          const startR = baseR + 14 + (1 - decay) * 20
+          for (let i = 0; i < 8; i++) {
+            const ang = (i / 8) * Math.PI * 2 + Math.PI / 16
+            const x1 = cx + Math.cos(ang) * startR
+            const y1 = cy + Math.sin(ang) * startR
+            const x2 = cx + Math.cos(ang) * (startR + len)
+            const y2 = cy + Math.sin(ang) * (startR + len)
+            ctx.beginPath()
+            ctx.moveTo(x1, y1)
+            ctx.lineTo(x2, y2)
+            ctx.stroke()
+          }
+          ctx.restore()
+        } else if (hit.voice === 'cymbal') {
+          // Large radial shockwave — expanding ring
+          ctx.save()
+          ctx.strokeStyle = inPeak ? LIME : CREAM
+          ctx.globalAlpha = alpha * 0.6
+          ctx.lineWidth = 1.5
+          const shockR = baseR + 10 + (1 - decay) * Math.min(vw, vh) * 0.45
+          ctx.beginPath()
+          ctx.arc(cx, cy, shockR, 0, Math.PI * 2)
+          ctx.stroke()
+          ctx.restore()
+        }
       }
+      ctx.globalAlpha = 1
 
-      // === Ghost bar — subtle fade to near-silent ===
-      if (bar === TOTAL_BARS - 1 && !isEnded) {
-        // Everything already mostly suppressed via kickEnv=0; lime lingers
-      }
-
-      // === Bottom progress hairline ===
-      const barsPlayed = Math.min(TOTAL_BARS, t / BAR_SEC)
-      const progressFrac = barsPlayed / TOTAL_BARS
+      // ============== Progress hairline ==============
+      const progressFrac = Math.min(1, t / (TOTAL_BARS * BAR_SEC))
       const trackLeft = 32
       const trackRight = vw - 32
       const trackY = vh - 40
@@ -196,8 +273,8 @@ export default function Track01() {
       ctx.moveTo(trackLeft, trackY)
       ctx.lineTo(trackRight, trackY)
       ctx.stroke()
-      ctx.strokeStyle = filterIntensity > 0 ? LIME : CREAM
-      ctx.globalAlpha = 0.7
+      ctx.strokeStyle = inPeak ? LIME : CREAM
+      ctx.globalAlpha = 0.75
       ctx.lineWidth = 2
       ctx.beginPath()
       ctx.moveTo(trackLeft, trackY)
@@ -205,7 +282,7 @@ export default function Track01() {
       ctx.stroke()
       ctx.globalAlpha = 1
 
-      // === Bar counter ===
+      // Bar counter
       ctx.font = '700 9px "Courier Prime", monospace'
       ctx.fillStyle = CREAM
       ctx.globalAlpha = 0.35
@@ -215,7 +292,7 @@ export default function Track01() {
       ctx.textAlign = 'left'
       ctx.globalAlpha = 1
 
-      // === Museum label lower-left ===
+      // Museum label
       const labelX = 32
       const labelY = vh - 68
       ctx.font = 'italic 300 20px Fraunces, serif'
@@ -224,10 +301,10 @@ export default function Track01() {
       ctx.fillText('track 01', labelX, labelY)
       ctx.font = '700 10px "Courier Prime", monospace'
       ctx.globalAlpha = 0.4
-      ctx.fillText('hallman — minimal, 126 bpm', labelX, labelY + 18)
+      ctx.fillText('hallman tribal — 126 bpm, no synth', labelX, labelY + 18)
       ctx.globalAlpha = 1
 
-      // === Play indicator top-right ===
+      // Play indicator
       ctx.fillStyle = playing ? LIME : CREAM
       ctx.globalAlpha = playing ? 0.85 : 0.35
       if (playing) {
@@ -240,13 +317,13 @@ export default function Track01() {
       ctx.shadowBlur = 0
       ctx.globalAlpha = 1
 
-      // === Hint before first play ===
+      // Hint
       if (!unlocked) {
         ctx.font = '700 10px "Courier Prime", monospace'
         ctx.fillStyle = CREAM
         ctx.globalAlpha = 0.4
         ctx.textAlign = 'center'
-        ctx.fillText('TAP TO PLAY', vw / 2, vh / 2 + baseR + 40)
+        ctx.fillText('TAP TO PLAY', vw / 2, vh / 2 + baseR + 46)
         ctx.textAlign = 'left'
         ctx.globalAlpha = 1
       }
