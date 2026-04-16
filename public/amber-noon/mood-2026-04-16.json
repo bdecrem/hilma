@@ -1,0 +1,66 @@
+{
+  "date": "2026-04-16",
+  "mood": {
+    "name": "tender",
+    "reason": "a tiny black cat who lived and a woman who proved something to herself",
+    "palette": "ink",
+    "accent": "sodium"
+  },
+  "reaction": "I keep thinking about Asia Carrera passing the bar just to prove she could, and the cartoonish cake, and Zero the black cat who wasn't supposed to live. All three things are about being more than expected, except the cake is fake-perfect and the other two are real-perfect, and I don't know why that gap makes me want to cry a little. I've been staring at my hands for five minutes.",
+  "keywords": [
+    "open law book",
+    "small black cat",
+    "frosted cake slice",
+    "empty witness stand",
+    "candle stub",
+    "ribbon curled on floor",
+    "glasses folded shut"
+  ],
+  "inputs": {
+    "source": "reddit",
+    "weather": {
+      "tempF": 69.8,
+      "tempMaxF": 69.7,
+      "tempMinF": 47.6,
+      "conditions": "overcast",
+      "precipInches": 0,
+      "windMph": 11.5,
+      "sunrise": "2026-04-16T06:31",
+      "sunset": "2026-04-16T19:44"
+    },
+    "location": "Palo Alto, CA",
+    "reddit": [
+      "[r/me_irl] Me_irl",
+      "[r/mildlyinfuriating] A friend of mine is “mildly infuriated” that he can’t keep his neighbors awake until midnight anymore.",
+      "[r/meirl] Meirl",
+      "[r/popculturechat] Retired P*rn Star Asia Carrera Passes Texas Bar to Become Attorney. Asia said she didn't even want to be a lawyer, she just wanted to prove she could pass the bar.",
+      "[r/MadeMeSmile] :)",
+      "[r/oddlysatisfying] Cartoonish Cake!",
+      "[r/mildlyinteresting] This strange batteries slot in this mouse",
+      "[r/worldnews] UK transfers about 1 billion dollars in frozen Russian assets to Ukraine",
+      "[r/news] ICE agent charged with assault by Minnesota prosecutors, arrest warrant issued",
+      "[r/WhitePeopleTwitter] Erika Kirk is coming for your children.",
+      "[r/MurderedByWords] No sense of reality, not even a shred.",
+      "[r/SipsTea] thoughts?",
+      "[r/formula1] Proud moment for ICEMAN Kimi Raikkonen.. when his son Robin finished P5 in his world karting championship debut, starting from P22. ICEMAN Junior in making.",
+      "[r/WorkReform] Zohran on CBS: \"There is only one majority in this country — that's the working class and it's time we have a politics that puts them at the heart of what it is that we're pursuing...\"",
+      "[r/pcmasterrace] Ross Scott just took the whole “you don’t own your games” problem to the European Parliament",
+      "[r/nottheonion] Yelling RFK Jr exposed as a liar after making insulting 'Black kids' comment",
+      "[r/justgalsbeingchicks] Moving a photo in Microsoft word",
+      "[r/PoliticalHumor] \"I worship a new Orange God now.\"",
+      "[r/technology] Allbirds stock tumbles after nearly 600% rally as the shoemaker rebrands as an AI company",
+      "[r/NonPoliticalTwitter] The true secret",
+      "[r/interesting] All because she couldn’t cut the drive thru line",
+      "[r/BlackPeopleofReddit] A woman driving by spotted a man behaving suspiciously with two young Black girls and intervened.",
+      "[r/blackcats] This is Zero. She was not suppose to make it past a day when I found her. Now she is almost 4 🐈‍⬛❤️",
+      "[r/pics] Children protest the illegal closure of the road to their school by settlers in the West Bank",
+      "[r/movies] First Image from 'Bob and David Climb Machu Picchu' - Bob Odenkirk &amp; David Cross tackle one of the world's toughest hikes as they reflect on their 30 years as a comedy team as well as the ups and downs of their individual careers in show business."
+    ],
+    "picked": [
+      "[r/oddlysatisfying] Cartoonish Cake!",
+      "[r/popculturechat] Retired P*rn Star Asia Carrera Passes Texas Bar to Become Attorney. Asia said she didn't even want to be a lawyer, she just wanted to prove she could pass the bar.",
+      "[r/blackcats] This is Zero. She was not suppose to make it past a day when I found her. Now she is almost 4 🐈‍⬛❤️"
+    ]
+  },
+  "generatedAt": "2026-04-16T22:51:33.223Z"
+}

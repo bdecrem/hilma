@@ -59,15 +59,19 @@ function formatNoonDate(iso: string): string {
   return `${month} ${parseInt(dd, 10)}, ${y}`
 }
 
-// Local layout: same cell rules as the shared computeLayout, but center the grid vertically.
-function computeNoonLayout(W: number, H: number): LayoutMetrics {
+// Local layout: same cell rules as the shared computeLayout, but bias the grid upward
+// so the bottom text stack (closing statement + meta rail) has breathing room — matters
+// especially on narrow portrait viewports (iPhone).
+function computeNoonLayout(W: number, H: number, bare = false): LayoutMetrics {
   const maxCellW = Math.floor(W * 0.94 / COLS)
   const maxCellH = Math.floor(H * 0.40 / ROWS)
   const CELL = Math.max(4, Math.min(10, Math.min(maxCellW, maxCellH)))
   const stripW = COLS * CELL
   const stripH = ROWS * CELL
   const bx = Math.floor((W - stripW) / 2)
-  const by = Math.floor((H - stripH) / 2)
+  // In bare mode (iframe thumbnail) no text — center vertically. Otherwise bias upward.
+  const bias = bare ? 0 : Math.floor(H * 0.08)
+  const by = Math.floor((H - stripH) / 2 - bias)
   return { CELL, stripW, stripH, bx, by }
 }
 
@@ -76,6 +80,23 @@ export default function AmberNoon() {
   const date = params?.date || ''
   const [run, setRun] = useState<NoonRun | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  // Bare mode: when the page is rendered inside an iframe (e.g. the homepage
+  // live-card thumbnail), suppress all overlay text and let the artwork breathe.
+  const [isBare, setIsBare] = useState(false)
+  useEffect(() => {
+    try { setIsBare(window.self !== window.top) } catch { setIsBare(true) }
+  }, [])
+  // Narrow viewport (iPhone portrait etc.): clamp the closing paragraph and
+  // offer a [...] expander so the text doesn't smash into the meta rail.
+  const [isNarrow, setIsNarrow] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 720px)')
+    const apply = () => setIsNarrow(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
+  const [statementExpanded, setStatementExpanded] = useState(false)
 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const titleRef = useRef<HTMLDivElement>(null)
@@ -145,7 +166,7 @@ export default function AmberNoon() {
 
       // Position the caption just below the lower-left corner of the artifact.
       // Canvas coords × SCALE = CSS display pixels.
-      const layout = computeNoonLayout(W, H)
+      const layout = computeNoonLayout(W, H, isBare)
       const { bx, by, stripH } = layout
       if (subtitleRef.current) {
         subtitleRef.current.style.left = `${bx * SCALE}px`
@@ -241,6 +262,8 @@ export default function AmberNoon() {
     let showName = '', showNameStart = 0
 
     function updateText(now: number) {
+      // Bare mode (iframe thumbnail): leave all overlay text at opacity 0.
+      if (isBare) return
       if (!textFadedIn && now - now0 > 1500) { textFadedIn = true; textStart = now }
       if (textFadedIn) {
         const age = (now - textStart) / 1000
@@ -250,10 +273,18 @@ export default function AmberNoon() {
         if (titleRef.current) titleRef.current.style.opacity = String(fadeIn * breath * 0.9)
       }
       // Concept caption — hidden until a concept has failed (or won).
-      // When shown, fades in over ~1s from displayStart.
+      // When shown, fades in over ~1s. After the piece lands, the closing statement
+      // takes over, so fade the caption back out so the two don't stack and overlap
+      // (matters on narrow viewports where the bottom stack is tight).
       if (subtitleRef.current) {
         if (!displayShown) {
           subtitleRef.current.style.opacity = '0'
+        } else if (hasWon && statementRef.current?.dataset.revealStart) {
+          const rs = Number(statementRef.current.dataset.revealStart)
+          const elapsed = now - rs
+          // Hold briefly so the viewer sees "landed on: X", then fade out.
+          const fadeOut = elapsed < 1800 ? 1 : Math.max(0, 1 - (elapsed - 1800) / 1400)
+          subtitleRef.current.style.opacity = String(fadeOut * 0.9)
         } else {
           const fade = Math.min(1, (now - displayStart) / 1000)
           subtitleRef.current.style.opacity = String(fade * 0.9)
@@ -496,7 +527,7 @@ export default function AmberNoon() {
       ctx.fillStyle = MOOD.palette.bg
       ctx.fillRect(0, 0, W, H)
 
-      const layout = computeNoonLayout(W, H)
+      const layout = computeNoonLayout(W, H, isBare)
       const { CELL, bx, by } = layout
 
       const elapsed = now - box.phaseStart
@@ -529,7 +560,7 @@ export default function AmberNoon() {
       setTileTint(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [run])
+  }, [run, isBare])
 
   // Loading / error state — match the palette if we know it, otherwise black.
   if (!run || !mood) {
@@ -627,67 +658,104 @@ export default function AmberNoon() {
         </div>
       </div>
 
-      {/* CLOSING STATEMENT — italic, centered below the artifact; appears only after the piece lands */}
+      {/* BOTTOM TEXT STACK — closing statement + (narrow-only [...] expander) + meta-rail.
+          Grouped into a single flex column pinned to the bottom center so the items share
+          vertical space and never smash into each other (iPhone portrait etc.). */}
       <div
-        ref={statementRef}
-        className="fixed z-10 pointer-events-none text-center"
+        className="fixed z-10"
         style={{
-          bottom: '14vh',
+          bottom: '4vh',
           left: '50%',
           transform: 'translateX(-50%)',
-          maxWidth: 'min(620px, 86vw)',
-          fontFamily: "'Fraunces', Georgia, serif",
-          fontStyle: 'italic',
-          fontWeight: 300,
-          fontSize: 'clamp(13px, 1.6vw, 16px)',
-          lineHeight: 1.55,
-          letterSpacing: '0.005em',
-          color: 'rgba(232,232,232,0.82)',
-          opacity: 0,
-          transition: 'opacity 0.4s',
-        }}
-      />
-
-      {/* META-RAIL — mood · weather · news. Sits under the closing paragraph. Fades in with it. */}
-      <div
-        ref={metaRailRef}
-        className="fixed z-10 pointer-events-none"
-        style={{
-          bottom: '7.5vh',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          maxWidth: 'min(860px, 92vw)',
+          width: isNarrow ? '88vw' : 'min(620px, 86vw)',
           display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          alignItems: 'baseline',
-          gap: '0 18px',
-          rowGap: '6px',
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: 'clamp(10px, 1vw, 11px)',
-          letterSpacing: '0.16em',
-          textTransform: 'uppercase',
-          color: 'rgba(232,232,232,0.6)',
-          textAlign: 'center',
-          opacity: 0,
-          transition: 'opacity 0.4s',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '14px',
+          pointerEvents: 'none',
         }}
       >
-        {(run.meta?.location || run.meta?.weather) && (
-          <MetaItem
-            label={run.meta?.location ?? 'weather'}
-            value={run.meta?.weather ?? ''}
-            accent={mood.accent}
-          />
+        <div
+          ref={statementRef}
+          className="text-center"
+          style={{
+            fontFamily: "'Fraunces', Georgia, serif",
+            fontStyle: 'italic',
+            fontWeight: 300,
+            fontSize: 'clamp(13px, 1.6vw, 16px)',
+            lineHeight: 1.55,
+            letterSpacing: '0.005em',
+            color: 'rgba(232,232,232,0.82)',
+            opacity: 0,
+            transition: 'opacity 0.4s',
+            ...(isNarrow && !statementExpanded
+              ? {
+                  display: '-webkit-box',
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }
+              : {}),
+          }}
+        />
+        {isNarrow && (
+          <button
+            type="button"
+            onClick={() => setStatementExpanded(v => !v)}
+            style={{
+              pointerEvents: 'auto',
+              background: 'transparent',
+              border: '1px solid rgba(232,232,232,0.25)',
+              borderRadius: 999,
+              padding: '4px 12px',
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontSize: 11,
+              letterSpacing: '0.12em',
+              color: 'rgba(232,232,232,0.6)',
+              cursor: 'pointer',
+              opacity: 0.85,
+            }}
+            aria-label={statementExpanded ? 'collapse' : 'expand'}
+          >
+            {statementExpanded ? '— less —' : '…'}
+          </button>
         )}
-        {run.meta?.news && run.meta.news.length > 0 && (
-          <>
-            <Sep />
-            <MetaItem label="news" value={run.meta.news.join(' · ')} accent={mood.accent} />
-          </>
-        )}
-        <Arrow />
-        <MetaItem label="mood" value={run.mood.name} accent={mood.accent} emphasized />
+        <div
+          ref={metaRailRef}
+          style={{
+            width: '100%',
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            alignItems: 'baseline',
+            gap: '0 14px',
+            rowGap: '6px',
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: 'clamp(10px, 1vw, 11px)',
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+            color: 'rgba(232,232,232,0.6)',
+            textAlign: 'center',
+            opacity: 0,
+            transition: 'opacity 0.4s',
+          }}
+        >
+          {(run.meta?.location || run.meta?.weather) && (
+            <MetaItem
+              label={run.meta?.location ?? 'weather'}
+              value={run.meta?.weather ?? ''}
+              accent={mood.accent}
+            />
+          )}
+          {run.meta?.news && run.meta.news.length > 0 && (
+            <>
+              <Sep />
+              <MetaItem label="news" value={run.meta.news.join(' · ')} accent={mood.accent} />
+            </>
+          )}
+          <Arrow />
+          <MetaItem label="mood" value={run.mood.name} accent={mood.accent} emphasized />
+        </div>
       </div>
 
       {/* SCORECARD — stacked under the date stamp */}
@@ -707,26 +775,29 @@ export default function AmberNoon() {
         }}
       />
 
-      {/* ARCHIVE LINK — bottom-right */}
-      <a
-        href="/amber/noon/archive"
-        className="fixed z-10"
-        style={{
-          bottom: '3vh',
-          right: '3vw',
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-          fontSize: '10px',
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.28)',
-          textDecoration: 'none',
-          transition: 'color 0.3s',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
-        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.28)')}
-      >
-        archive &rarr;
-      </a>
+      {/* ARCHIVE LINK — bottom-right. Hidden in bare mode (iframe thumbnail)
+          and on narrow viewports (where the bottom text stack already uses that space). */}
+      {!isBare && !isNarrow && (
+        <a
+          href="/amber/noon/archive"
+          className="fixed z-10"
+          style={{
+            bottom: '3vh',
+            right: '3vw',
+            fontFamily: "'DM Sans', system-ui, sans-serif",
+            fontSize: '10px',
+            letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.28)',
+            textDecoration: 'none',
+            transition: 'color 0.3s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.28)')}
+        >
+          archive &rarr;
+        </a>
+      )}
 
       {/* Reserved placeholder (future ceremony) */}
       <div

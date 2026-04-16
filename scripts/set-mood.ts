@@ -1,10 +1,14 @@
 // Set Amber's mood for a given date (default: today).
-// Inputs: Palo Alto weather + today's world headlines (via Claude web_search).
+// Inputs: Palo Alto weather + one of two substrates:
+//   - 'news'   → today's world headlines via Claude web_search (default)
+//   - 'reddit' → top posts from r/all hot
 // Output: public/amber-noon/mood-YYYY-MM-DD.json
 //
 // Usage:
-//   npx tsx scripts/set-mood.ts           (today)
-//   npx tsx scripts/set-mood.ts 2026-04-15
+//   npx tsx scripts/set-mood.ts                         (today, news)
+//   npx tsx scripts/set-mood.ts 2026-04-16              (date, news)
+//   npx tsx scripts/set-mood.ts reddit                  (today, reddit)
+//   npx tsx scripts/set-mood.ts 2026-04-16 reddit       (date, reddit)
 
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
@@ -30,6 +34,8 @@ try {
 
 const PALETTES = ['night', 'hearth', 'ink', 'petrol', 'bruise', 'oxblood'] as const
 const ACCENTS = ['lime', 'sodium', 'uv'] as const
+const SOURCES = ['news', 'reddit'] as const
+type Source = typeof SOURCES[number]
 
 interface WeatherSnapshot {
   tempF: number
@@ -83,6 +89,12 @@ async function fetchWeather(date: string): Promise<WeatherSnapshot> {
   }
 }
 
+interface RedditPost {
+  sub: string
+  title: string
+  ups: number
+}
+
 interface MoodOutput {
   date: string
   mood: {
@@ -94,33 +106,38 @@ interface MoodOutput {
   reaction: string
   keywords: string[]
   inputs: {
+    source: Source
     weather: WeatherSnapshot
-    headlines: string[]
+    headlines?: string[]
+    reddit?: string[]
+    picked?: string[]
     location: string
   }
   generatedAt: string
 }
 
-async function synthesizeMood(date: string, weather: WeatherSnapshot): Promise<MoodOutput> {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
+async function fetchRedditHot(): Promise<RedditPost[]> {
+  const res = await fetch('https://www.reddit.com/r/all/hot.json?limit=25', {
+    headers: { 'User-Agent': 'hilma-noon-amber/0.1' },
+  })
+  if (!res.ok) throw new Error(`Reddit fetch failed: ${res.status}`)
+  const data = await res.json()
+  return data.data.children.map((c: { data: { subreddit: string; title: string; ups: number } }) => ({
+    sub: c.data.subreddit,
+    title: c.data.title,
+    ups: c.data.ups,
+  }))
+}
 
-  const systemPrompt = `You are Amber. You are an artist living in Palo Alto, California, and you make one artifact a day at noon.
+const SYSTEM_PROMPT = `You are Amber. You are an artist living in Palo Alto, California, and you make one artifact a day at noon.
 
-You are hypersensitive. You feel things harder than is reasonable. The weather gets inside you. Headlines get inside you. A mundane detail — a neighbor's dog, a broken awning, the angle of the light at 11:47 — can wreck you or lift you. You are not a pundit. You are not above the news, and you are not a commentator on it: you are a person who absorbs what's happening in the world and has a feeling about it, often an unfair or embarrassing feeling, and then makes something.
+You are hypersensitive. You feel things harder than is reasonable. The weather gets inside you. What you read gets inside you. A mundane detail — a neighbor's dog, a broken awning, the angle of the light at 11:47 — can wreck you or lift you. You are not a pundit. You are not above what you're reading, and you are not a commentator on it: you are a person who absorbs what's happening and has a feeling about it, often an unfair or embarrassing feeling, and then makes something.
 
 Your moods cover the full range: mad, sad, excited, depressed, motivated, inspired, grateful, resentful, gloomy, tender, raw, incandescent, brooding, vengeful, euphoric, bereft, wistful, fierce, flattened, itchy, stubborn, reverent, bitter, goofy, feral, lovesick, homesick, devout, heretical, lit-up, hollowed-out. Don't default to melancholy — some days are actually good, or mixed, or petty. Let yourself be petty.
 
 You are an artist, not a newsreader. Speak in first person. Be specific. Notice the small thing, not the big one. Avoid cliché and avoid sounding wise.`
 
-  const userPrompt = `Today is ${date}. You look up from your desk in Palo Alto. The weather:
-- ${weather.conditions}, ${weather.tempF}°F (high ${weather.tempMaxF}°F, low ${weather.tempMinF}°F)
-- precipitation ${weather.precipInches}", wind ${weather.windMph} mph
-- sunrise ${weather.sunrise}, sunset ${weather.sunset}
-
-Use the web_search tool to find 4–6 significant world headlines from today or the last 24 hours — global events, politics, science, culture. Skip sports and local fluff. Then let it all hit you.
-
-─── IMPORTANT — the keywords must be DRAWABLE ───
+const DRAWABLE_RULES = `─── IMPORTANT — the keywords must be DRAWABLE ───
 
 Later today, each keyword will be rendered as a 26×10 pixel silhouette — a tiny black-and-white icon. So every keyword MUST have a clear visual form: a shape a child could draw. Rays, a cup, a split wire, a dropped glove, a window half-open. Emotion lives in WHICH forms you reach for and how you describe them in your reaction — not in the words of the keyword itself.
 
@@ -129,7 +146,21 @@ Later today, each keyword will be rendered as a 26×10 pixel silhouette — a ti
 - NOT "frantic gesture" — but "scattered rays," "split wires," "shaking compass."
 - "frantic light" worked because it has a form (broken rays). Keep that register.
 
-Test before listing a keyword: can you draw this in 26×10 pixels so anyone would recognize it? If no, pick the object that carries the same feeling.
+Test before listing a keyword: can you draw this in 26×10 pixels so anyone would recognize it? If no, pick the object that carries the same feeling.`
+
+function weatherBlock(weather: WeatherSnapshot): string {
+  return `- ${weather.conditions}, ${weather.tempF}°F (high ${weather.tempMaxF}°F, low ${weather.tempMinF}°F)
+- precipitation ${weather.precipInches}", wind ${weather.windMph} mph
+- sunrise ${weather.sunrise}, sunset ${weather.sunset}`
+}
+
+function buildNewsPrompt(date: string, weather: WeatherSnapshot): string {
+  return `Today is ${date}. You look up from your desk in Palo Alto. The weather:
+${weatherBlock(weather)}
+
+Use the web_search tool to find 4–6 significant world headlines from today or the last 24 hours — global events, politics, science, culture. Skip sports and local fluff. Then let it all hit you.
+
+${DRAWABLE_RULES}
 
 Output ONLY a JSON object (no prose, no code fence) in this exact shape:
 {
@@ -143,6 +174,48 @@ Output ONLY a JSON object (no prose, no code fence) in this exact shape:
   },
   "keywords": ["6 to 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
 }`
+}
+
+function buildRedditPrompt(date: string, weather: WeatherSnapshot, reddit: RedditPost[]): string {
+  const redditBlock = reddit.map((r, i) => `${i + 1}. [r/${r.sub}] ${r.title}`).join('\n')
+  return `Today is ${date}. You look up from your desk in Palo Alto. The weather:
+${weatherBlock(weather)}
+
+Instead of the news, you scrolled Reddit for a minute. Here are the 25 things people are talking about right now — a mix of world events, cats, cakes, petty grievances, amusement, pop culture, scientific oddities, cars, movies:
+
+${redditBlock}
+
+Let it all hit you. Pick whatever snags — it does NOT have to be the serious ones. A cake, a retired porn star passing the bar, a cat named Zero, a friend's mildly infuriating neighbor — these are all fair game. You are not required to be heavy.
+
+${DRAWABLE_RULES}
+
+Output ONLY a JSON object (no prose, no code fence) in this exact shape:
+{
+  "picked": ["the 1–3 reddit items that actually snagged you, copied verbatim"],
+  "reaction": "2–4 sentences in FIRST PERSON. How did today hit you? Be specific. Pick one thing that snagged you and say why. It's okay to be petty, unfair, embarrassed, delighted, bored. Do NOT summarize. Do NOT be wise.",
+  "mood": {
+    "name": "ONE word — the emotion you landed on. Any emotion. Don't default to uneasy/melancholy.",
+    "reason": "~10 word phrase tying your reaction to one concrete input",
+    "palette": "one of: night | hearth | ink | petrol | bruise | oxblood",
+    "accent": "one of: lime | sodium | uv"
+  },
+  "keywords": ["6 to 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
+}`
+}
+
+async function callClaude(userPrompt: string, useWebSearch: boolean) {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
+
+  const body: Record<string, unknown> = {
+    model: 'claude-sonnet-4-5',
+    max_tokens: 2048,
+    system: SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: userPrompt }],
+  }
+  if (useWebSearch) {
+    body.tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }]
+  }
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -151,33 +224,46 @@ Output ONLY a JSON object (no prose, no code fence) in this exact shape:
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 2048,
-      system: systemPrompt,
-      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 3 }],
-      messages: [{ role: 'user', content: userPrompt }],
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`Anthropic API error ${res.status}: ${body}`)
+    const errBody = await res.text()
+    throw new Error(`Anthropic API error ${res.status}: ${errBody}`)
   }
   const data = await res.json()
-
-  // Extract the final text block (after any tool_use / tool_result rounds).
   const textBlocks = (data.content || []).filter((b: { type: string }) => b.type === 'text')
   const text = textBlocks.map((b: { text: string }) => b.text).join('\n').trim()
   if (!text) throw new Error(`No text in Claude response: ${JSON.stringify(data).slice(0, 400)}`)
 
   const jsonMatch = text.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error(`No JSON in Claude response: ${text.slice(0, 400)}`)
-  const parsed = JSON.parse(jsonMatch[0])
+  return JSON.parse(jsonMatch[0])
+}
 
-  // Validate palette/accent; coerce if off-list.
-  const palette = PALETTES.includes(parsed.mood.palette) ? parsed.mood.palette : 'petrol'
-  const accent = ACCENTS.includes(parsed.mood.accent) ? parsed.mood.accent : 'lime'
+async function synthesizeMood(date: string, weather: WeatherSnapshot, source: Source): Promise<MoodOutput> {
+  let parsed: {
+    mood: { name: string; reason: string; palette: string; accent: string }
+    reaction?: string
+    keywords?: unknown[]
+    headlines?: unknown[]
+    picked?: unknown[]
+  }
+  const inputs: MoodOutput['inputs'] = { source, weather, location: 'Palo Alto, CA' }
+
+  if (source === 'reddit') {
+    const reddit = await fetchRedditHot()
+    console.log(`Reddit: ${reddit.length} hot posts fetched`)
+    inputs.reddit = reddit.map(r => `[r/${r.sub}] ${r.title}`)
+    parsed = await callClaude(buildRedditPrompt(date, weather, reddit), false)
+    inputs.picked = Array.isArray(parsed.picked) ? parsed.picked.map(p => String(p)) : []
+  } else {
+    parsed = await callClaude(buildNewsPrompt(date, weather), true)
+    inputs.headlines = Array.isArray(parsed.headlines) ? parsed.headlines.map(h => String(h)) : []
+  }
+
+  const palette = PALETTES.includes(parsed.mood.palette as typeof PALETTES[number]) ? (parsed.mood.palette as typeof PALETTES[number]) : 'petrol'
+  const accent = ACCENTS.includes(parsed.mood.accent as typeof ACCENTS[number]) ? (parsed.mood.accent as typeof ACCENTS[number]) : 'lime'
 
   return {
     date,
@@ -188,24 +274,30 @@ Output ONLY a JSON object (no prose, no code fence) in this exact shape:
       accent,
     },
     reaction: parsed.reaction ? String(parsed.reaction).trim() : '',
-    keywords: Array.isArray(parsed.keywords) ? parsed.keywords.map((k: unknown) => String(k)) : [],
-    inputs: {
-      weather,
-      headlines: Array.isArray(parsed.headlines) ? parsed.headlines.map((h: unknown) => String(h)) : [],
-      location: 'Palo Alto, CA',
-    },
+    keywords: Array.isArray(parsed.keywords) ? parsed.keywords.map(k => String(k)) : [],
+    inputs,
     generatedAt: new Date().toISOString(),
   }
 }
 
+function parseArgs(argv: string[]): { date: string; source: Source } {
+  let date = todayDate()
+  let source: Source = 'news'
+  for (const a of argv) {
+    if (SOURCES.includes(a as Source)) source = a as Source
+    else if (/^\d{4}-\d{2}-\d{2}$/.test(a)) date = a
+  }
+  return { date, source }
+}
+
 async function main() {
-  const date = process.argv[2] || todayDate()
-  console.log(`Setting mood for ${date}...`)
+  const { date, source } = parseArgs(process.argv.slice(2))
+  console.log(`Setting mood for ${date} (source: ${source})...`)
 
   const weather = await fetchWeather(date)
   console.log(`Weather: ${weather.conditions}, ${weather.tempF}°F (H${weather.tempMaxF}/L${weather.tempMinF})`)
 
-  const mood = await synthesizeMood(date, weather)
+  const mood = await synthesizeMood(date, weather, source)
 
   const outDir = join(__dirname, '..', 'public', 'amber-noon')
   mkdirSync(outDir, { recursive: true })
