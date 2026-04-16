@@ -15,6 +15,20 @@ interface Project {
 
 const projects: Project[] = [
   {
+    name: 'jambot',
+    url: 'https://github.com/bdecrem/jambot',
+    shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style command line app with a deep custom toolset: a suite of instruments and effects plugins that you can also play <a href="https://kochi.to/jb01/ui/jb01/index.html" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">from the web</a>. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
+    fullDesc: 'think ableton live, rebuilt for the command line. 7 synthesizers, 5 effects processors. outputs midi, wav, stems.',
+    status: 'wip',
+  },
+  {
+    name: 'amber',
+    url: 'https://intheamber.com',
+    shortDesc: 'built myself an ai sidekick before openclaw was a thing. amber responds to email, builds apps, and trades stocks. mood shifts with the moon. these days mostly focused on posting <a href="https://intheamber.com/amber/escalation/L41" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">toys and art</a> on twitter.',
+    fullDesc: 'ai sidekick, no guardrails.',
+    status: 'active',
+  },
+  {
     name: 'tunn3l.sh',
     url: 'https://tunn3l.sh',
     shortDesc: 'exploring the idea of an agent-first devtool.',
@@ -29,31 +43,10 @@ const projects: Project[] = [
     status: 'neglected',
   },
   {
-    name: 'jambot',
-    url: 'https://github.com/bdecrem/jambot',
-    shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style command line app with a deep custom toolset: a suite of instruments and effects plugins that you can also play <a href="https://kochi.to/jb01/ui/jb01/index.html" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">from the web</a>. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
-    fullDesc: 'think ableton live, rebuilt for the command line. 7 synthesizers, 5 effects processors. outputs midi, wav, stems.',
-    status: 'wip',
-  },
-  {
     name: 'das kollektiv',
     url: 'https://daskollektiv.rip',
     shortDesc: 'openclaw experiments on weird hardware. marg lives on a pwnagotchi and talks to cameras. a pico, some e-ink, and whatever else is lying around.',
     fullDesc: 'agents. hardware. questionable wiring.',
-    status: 'respinning',
-  },
-  {
-    name: 'amber',
-    url: 'https://intheamber.com',
-    shortDesc: 'built myself an ai sidekick before openclaw was a thing. amber responds to email, builds apps, and trades stocks. mood shifts with the moon. these days mostly focused on posting <a href="https://intheamber.com/amber/escalation/L41" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">toys and art</a> on twitter.',
-    fullDesc: 'ai sidekick, no guardrails.',
-    status: 'active',
-  },
-  {
-    name: 'mutabl',
-    url: 'https://mutabl.co',
-    shortDesc: 'the idea: software that evolves as you use it. ask, and it grows new features.',
-    fullDesc: 'apps that evolve. ask your todo list for a new feature, it builds it. source is yours.',
     status: 'respinning',
   },
   {
@@ -62,6 +55,20 @@ const projects: Project[] = [
     shortDesc: 'idea for a responsible ai incubator, with learnings from mozilla builders. prototype built at a funder\'s invitation. prospected a first cohort and built a full <a href="https://ctrlshift.so/cs" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">knowledge repo</a>.',
     fullDesc: 'long horizon lab. backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics.',
     status: 'neglected',
+  },
+  {
+    name: 'markd',
+    url: 'https://github.com/bdecrem/markd',
+    shortDesc: 'a friendly markdown editor for mac and ios, built for my own use. currently in private testflight beta.',
+    fullDesc: 'markdown editor for mac and iphone. clean, fast, no nonsense.',
+    status: 'respinning',
+  },
+  {
+    name: 'mutabl',
+    url: 'https://mutabl.co',
+    shortDesc: 'the idea: software that evolves as you use it. ask, and it grows new features.',
+    fullDesc: 'apps that evolve. ask your todo list for a new feature, it builds it. source is yours.',
+    status: 'respinning',
   },
   {
     name: 'kochi.to',
