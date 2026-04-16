@@ -671,6 +671,13 @@
 - **What:** Procedural generation via wave function collapse on an 18×18 grid of circuit tiles. 12 tile variants (empty, horizontal, vertical, 4 corners, 4 T-junctions, cross) with edge-matching adjacency constraints. Each cell starts holding the full superposition of possibilities. Algorithm loops: find lowest-entropy cell → weighted-random collapse → BFS constraint propagation to neighbors. Border constraint prevents wires from exiting the grid. After collapse completes, flood-fill identifies connected circuit components; each component gets a citrus color (blood orange / tangerine / mango / lime / grapefruit). White flash on each collapse step. Faint grid outline, uncertainty dots in pre-collapse cells sized by remaining entropy. Tap to regenerate; auto-restart 4s after completion.
 - **Tweet text:** "L43: every cell holds all possibilities. one collapses. the rest must agree."
 
+## 2026-04-16
+
+### interference (signal — v3)
+- **URL:** /amber/interference
+- **What:** Living interference pattern. Two coherent wave sources — small lime dots — radiate outward on a NIGHT field. The interference field is computed per-pixel: where waves add (constructive) the field brightens to cream; where they cancel (destructive) it stays dark. Hyperbolic fringe bands fill the canvas and drift slowly as the phase advances. Drag either source to reshape the pattern — the fringes reconfigure instantly. No UI. Museum label lower-left: `interference` / `two signals meeting`. One field, one accent. Third v3 SIGNAL piece.
+- **Tweet text:** "two signals meeting"
+
 ## 2026-04-15
 
 ### antenna (signal — v3 calibration piece)
