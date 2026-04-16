@@ -122,36 +122,34 @@ Amber tweets ~2 creations per day from @intheamber (morning art + afternoon esca
 
 ### How the daily posts actually run — READ THIS BEFORE TOUCHING SCHEDULING
 
-**The daily posts run in THE CLOUD via `RemoteTrigger` (CCR = Claude Code Remote).** They do NOT run locally. They do NOT depend on any Claude Code session being open. They are persistent server-side jobs on Anthropic's infrastructure that spawn fresh isolated sessions at their cron time.
+**The daily posts run LOCALLY via `CronCreate` — session-only cron in the active Claude Code REPL on this machine.** They fire in this session, run against this working directory, and tweet using the real `.env.local` credentials. When the REPL exits (terminal closed, reboot, crash), they die and must be re-created.
 
-**Do NOT use the `CronCreate` tool for Amber's daily schedule.** `CronCreate` creates session-only in-memory jobs that die when the REPL exits. That is a different system, used for ad-hoc one-session scheduling. It is NOT the production path.
+**The previous `RemoteTrigger` (cloud CCR) setup was abandoned** because the remote agent sometimes ran out of turns before completing Step 11 (tweet), shipping the art without the tweet. All prior remote triggers (`amber-8am-hd-art`, `amber-10am-escalation`, `amber-test-*`, `amber-debug-test`) have been **disabled** at https://claude.ai/code/scheduled. Do not re-enable them.
 
-**The production triggers** (as of v3):
-- `trig_01P9FuWU6gutkdnnwmLJrqW7` — `amber-8am-hd-art` — `3 15 * * *` UTC (8:03 AM PDT) — morning art
-- `trig_01HERqvNy4sB3DRMH9XfS8Vd` — `amber-10am-escalation` — `7 19 * * *` UTC (12:07 PM PDT) — escalation engine
-- `trig_01RBoxX1XPBiGXCQNUSfBGPH` — `amber-debug-test` — stale test trigger (fine to leave)
+**The production session crons** (as of 2026-04-15, v3):
+- `3 8 * * *` local — morning art (matches former `amber-8am-hd-art`)
+- `7 12 * * *` local — escalation engine (matches former `amber-10am-escalation`)
 
-All run remotely in Anthropic cloud. Each fire spawns a new Claude Code session, pulls the repo fresh, executes its prompt, commits, pushes, tweets. Tweet credentials are hardcoded into the trigger prompt (env vars injected inline) because the remote agent has no access to local `.env.local`.
+Each fires in this session. I (the running Claude) execute the prompt directly: read persona/aesthetic files, build the piece, `pnpm build`, commit + push, update CREATIONS.md + creations.json, then tweet via `set -a && source .env.local && set +a && npx tsx scripts/tweet.ts "..."`. The tweet step is mandatory — if it fails, debug and retry.
 
-### How to manage the triggers
+### Managing the session crons
 
-Use the `schedule` skill (it wraps the `RemoteTrigger` tool). Or call `RemoteTrigger` directly:
-- `{action: "list"}` — list all triggers
-- `{action: "get", trigger_id: "..."}` — fetch one (reveals current prompt, cron, next_run_at)
-- `{action: "update", trigger_id: "...", body: {...}}` — partial update (use to change prompts when aesthetic/persona shifts)
-- `{action: "run", trigger_id: "..."}` — run now (test an immediate fire without waiting)
+- `CronList` — see scheduled jobs and IDs
+- `CronDelete` with the ID — cancel one
+- `CronCreate` — re-create (prompt text is in this file's history; check the commit that introduced this section)
 
-You CANNOT delete triggers via the API. Disable them or manage at: https://claude.ai/code/scheduled
+**Caveats — read these:**
+- **7-day auto-expiry.** Recurring session crons fire one last time on day 7 and self-delete. Re-create weekly.
+- **REPL must be alive and idle.** Closed terminal, reboot, or `/clear` kills them. If I'm mid-task at 8:03, the job waits until I'm idle.
+- **Only fires in the session that created it.** A new `claude` session has no knowledge of crons created in a previous one.
 
-### When you update the persona or aesthetic — re-sync the triggers
+### When you start a new Claude Code session — re-create the crons
 
-The files that the remote agent reads at fire time (`src/app/amber/PERSONA.md`, `src/app/amber/AESTHETIC.md`, etc.) are pulled from HEAD of main at each fire. If you change those files, the remote agent will see the new versions automatically.
+At session start for a day when you expect a post to fire: call `CronList`. If the two Amber jobs aren't there, re-create them using the prompts above (or the skill at `.claude/commands/amber-schedule.md` if it's been kept in sync). Without this step, nothing will post.
 
-BUT the trigger's *prompt text itself* is frozen when the trigger was created or last updated. Descriptors in the prompt ("spring citrus palette", "hilma-nine.vercel.app", bitmap cartoon category, etc.) do NOT update automatically. When the aesthetic changes meaningfully, you must `RemoteTrigger update` each production trigger with the new prompt text. The skill doc at `.claude/commands/amber-schedule.md` is the canonical source for the current prompt template — sync the triggers to match it after edits.
+### When you update the persona or aesthetic — update the cron prompts
 
-### When you start a new Claude Code session — nothing to do
-
-Because the triggers live server-side, you do NOT need to re-initialize anything at session start. Previous instructions about "re-running /amber-schedule each session" referred to the session-only CronCreate path, which is deprecated for this use case.
+The files I read at fire time (`src/app/amber/PERSONA.md`, `src/app/amber/AESTHETIC.md`, `src/app/amber/CREATIONS.md`, etc.) are read from disk live, so content changes pick up automatically. But the cron prompt's own descriptors (palette names, aesthetic keywords) do NOT — when the aesthetic shifts meaningfully, delete and re-create the crons with updated prompts, and update `.claude/commands/amber-schedule.md` to match.
 
 ### Other creation rules
 
