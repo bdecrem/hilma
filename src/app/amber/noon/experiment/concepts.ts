@@ -247,15 +247,20 @@ const SWING: Grid = mk((c, r) => {
   return false
 })
 
-export const CONCEPTS: { name: string; grid: Grid }[] = [
-  { name: 'sun', grid: SUN },
-  { name: 'kite', grid: KITE },
-  { name: 'tulip', grid: TULIP },
-  { name: 'butterfly', grid: BUTTERFLY },
-  { name: 'bicycle', grid: BICYCLE },
-  { name: 'bird on a wire', grid: BIRD_WIRE },
-  { name: 'cloud', grid: CLOUD },
-  { name: 'watering can', grid: WATERING_CAN },
-  { name: 'blossom branch', grid: BLOSSOM },
-  { name: 'swing', grid: SWING },
+// Per-concept physics tuning. `radius` = how far the "magnet" reaches out
+// from target cells; `bias` = how strongly a target cell is pulled up.
+// Values chosen via scripts/bio-engine-sweep-2d.ts to give every concept
+// a ~20–40% per-attempt land rate (chunky shapes stay near 100%,
+// which is fine — the wiry ones are the ones that needed help).
+export const CONCEPTS: { name: string; grid: Grid; radius: number; bias: number }[] = [
+  { name: 'sun',            grid: SUN,          radius: 2.8, bias: 0.40 },
+  { name: 'kite',           grid: KITE,         radius: 2.0, bias: 0.40 },
+  { name: 'tulip',          grid: TULIP,        radius: 1.2, bias: 0.22 },
+  { name: 'butterfly',      grid: BUTTERFLY,    radius: 1.2, bias: 0.22 },
+  { name: 'bicycle',        grid: BICYCLE,      radius: 3.6, bias: 1.10 },
+  { name: 'bird on a wire', grid: BIRD_WIRE,    radius: 2.0, bias: 0.40 },
+  { name: 'cloud',          grid: CLOUD,        radius: 1.2, bias: 0.22 },
+  { name: 'watering can',   grid: WATERING_CAN, radius: 2.0, bias: 0.40 },
+  { name: 'blossom branch', grid: BLOSSOM,      radius: 2.8, bias: 0.22 },
+  { name: 'swing',          grid: SWING,        radius: 2.0, bias: 0.40 },
 ]

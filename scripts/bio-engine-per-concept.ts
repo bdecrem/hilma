@@ -6,10 +6,9 @@
 import { CONCEPTS, COLS, ROWS, type Grid } from '../src/app/amber/noon/experiment/concepts'
 
 // ── page params (must stay in sync with src/app/amber/noon/experiment/page.tsx) ──
+// radius & bias are per-concept (see concepts.ts).
 const J = 0.4
-const BIAS_STRENGTH = 0.22
 const OFF_BIAS = -0.9
-const AFFINITY_RADIUS = 1.2
 const T_START = 2.0
 const T_END = 0.03
 const DT = 0.07
@@ -49,8 +48,8 @@ function computeAffinity(grid: Grid, radius: number): number[][] {
   return aff
 }
 
-function makeBias(grid: Grid, BIAS: number, OFF: number): number[][] {
-  const aff = computeAffinity(grid, AFFINITY_RADIUS)
+function makeBias(grid: Grid, radius: number, BIAS: number, OFF: number): number[][] {
+  const aff = computeAffinity(grid, radius)
   return aff.map(row => row.map(a => a * BIAS + (1 - a) * OFF))
 }
 
@@ -80,9 +79,9 @@ function step(s: number[][], bias: number[][], T: number) {
   for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) s[r][c] = sNew[r][c]
 }
 
-function runAttempt(grid: Grid): { annealCrisp: number; finalCrisp: number; landed: boolean } {
-  const bias = makeBias(grid, BIAS_STRENGTH, OFF_BIAS)
-  const crystalBias = makeBias(grid, CRYSTAL_BIAS, CRYSTAL_OFF)
+function runAttempt(grid: Grid, radius: number, biasStrength: number): { annealCrisp: number; finalCrisp: number; landed: boolean } {
+  const bias = makeBias(grid, radius, biasStrength, OFF_BIAS)
+  const crystalBias = makeBias(grid, radius, CRYSTAL_BIAS, CRYSTAL_OFF)
   const s: number[][] = Array.from({ length: ROWS }, () => Array(COLS).fill(0).map(() => gauss() * 0.25))
   let t = 0
   const annealSteps = Math.floor(ATTEMPT_SECONDS / DT)
@@ -111,7 +110,7 @@ function main() {
     const cells = concept.grid.flat().reduce((s, v) => s + v, 0)
     const anneal: number[] = [], fin: number[] = [], landed: boolean[] = []
     for (let i = 0; i < TRIALS; i++) {
-      const r = runAttempt(concept.grid)
+      const r = runAttempt(concept.grid, concept.radius, concept.bias)
       anneal.push(r.annealCrisp); fin.push(r.finalCrisp); landed.push(r.landed)
     }
     const landRate = landed.filter(x => x).length / TRIALS

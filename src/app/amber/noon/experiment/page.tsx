@@ -43,9 +43,11 @@ const TILE = '#E8B86B'
 //   - 4% full-session fails (baker filters)
 //   - LANDED attempts: final crispness mean=0.995, min=0.98 — pristine
 const J = 0.4                   // neighbor coupling
-const BIAS_STRENGTH = 0.22      // on-target pull (anneal)
-const OFF_BIAS = -0.9           // off-target push (anneal)
-const AFFINITY_RADIUS = 1.2     // bias falloff radius
+// Anneal bias & affinity are PER-CONCEPT now (see CONCEPTS in concepts.ts):
+// chunky shapes use the originals (radius 1.2, bias 0.22); thin/wiry shapes
+// get a wider affinity radius and stronger bias so neighbor coupling can't
+// wipe them out. Tuned via scripts/bio-engine-sweep-2d.ts.
+const OFF_BIAS = -0.9           // off-target push (anneal, shared)
 const T_START = 2.0             // initial T (above critical)
 const T_END = 0.03              // final T before landing check
 const DT = 0.07                 // integration step (physics-time units)
@@ -113,8 +115,8 @@ function computeAffinity(grid: Grid, radius: number): number[][] {
   return aff
 }
 
-function makeBias(grid: Grid, strength: number, off: number): number[][] {
-  const aff = computeAffinity(grid, AFFINITY_RADIUS)
+function makeBias(grid: Grid, radius: number, strength: number, off: number): number[][] {
+  const aff = computeAffinity(grid, radius)
   return aff.map(row => row.map(a => a * strength + (1 - a) * off))
 }
 
@@ -252,8 +254,8 @@ export default function ExperimentPage() {
     function initAttempt() {
       const conceptIdx = session[attemptIdx]
       const concept = CONCEPTS[conceptIdx]
-      bias = makeBias(concept.grid, BIAS_STRENGTH, OFF_BIAS)
-      crystalBias = makeBias(concept.grid, CRYSTAL_BIAS, CRYSTAL_OFF)
+      bias = makeBias(concept.grid, concept.radius, concept.bias, OFF_BIAS)
+      crystalBias = makeBias(concept.grid, concept.radius, CRYSTAL_BIAS, CRYSTAL_OFF)
       fills = makeFillMap()
       // Fresh noise field.
       for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
