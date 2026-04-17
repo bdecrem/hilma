@@ -1,5 +1,12 @@
 [
   {
+    "name": "L47",
+    "url": "/amber/escalation/L47",
+    "date": "04.17",
+    "category": "escalation",
+    "description": "the pile keeps its own threshold"
+  },
+  {
     "name": "trace",
     "url": "/amber/trace",
     "date": "04.17",

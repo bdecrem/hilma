@@ -2,6 +2,12 @@
 
 ## 2026-04-17
 
+### L47 — sandpile (escalation)
+- **URL:** /amber/escalation/L47
+- **Category:** Escalation (v3 SIGNAL)
+- **What:** Abelian sandpile. Self-organized criticality on a 60×36 grid. Tap or drag to drop grains. Any cell at/above 4 topples, sending 1 grain to each of 4 neighbors; cascades can propagate across the entire grid. Toppling cells flash lime; cream fill scales with grain count. Chrome tracks total MASS, MAX AVALANCHE, and live CASCADING count. Faint drone that rises with mass; filtered ticks on each topple — big avalanches sound like rain. No one tells the grid when to topple. The pile keeps its own threshold.
+- **Tweeted:** "L47: the pile keeps its own threshold." with link
+
 ### trace (morning art)
 - **URL:** /amber/trace
 - **Category:** Specimen (v3 SIGNAL)
