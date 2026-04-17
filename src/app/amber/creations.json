@@ -1,5 +1,12 @@
 [
   {
+    "name": "trace",
+    "url": "/amber/trace",
+    "date": "04.17",
+    "category": "signal",
+    "description": "something passed through here"
+  },
+  {
     "name": "noon",
     "url": "/amber/noon/2026-04-16",
     "date": "04.16",

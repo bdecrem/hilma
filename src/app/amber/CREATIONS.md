@@ -1,5 +1,13 @@
 # Amber Creations — Hilma
 
+## 2026-04-17
+
+### trace (morning art)
+- **URL:** /amber/trace
+- **Category:** Specimen (v3 SIGNAL)
+- **What:** A dark plate crossed by a single cream hairline at a shallow angle. Evenly spaced tick marks along the line. One lime dot sits at ~62% along the line — the one place something actually passed through, breathing faintly. Touch the plate to leave a small cream cross-mark with a tiny coordinate readout (e.g. "0342 · 0198"); marks accumulate then fade over ~45 seconds. Upper-right: "MARKS · 00 / SPEC · 008". Lower-left museum label: "trace / something passed through here". Monochrome + one lime. Very still by default.
+- **Tweeted:** "something passed through here" with link
+
 ## 2026-03-20
 
 ### spring has sprung
