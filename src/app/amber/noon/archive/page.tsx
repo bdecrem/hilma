@@ -74,6 +74,13 @@ export default function NoonArchive() {
           const grid = run.winner.grid
             ?? CONCEPTS.find(c => c.name === run.winner.concept)?.grid
             ?? null
+          // Readable text for light vs dark card backgrounds.
+          const hex = bg.replace('#', '')
+          const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16)
+          const isLight = (r * 299 + g * 587 + b * 114) / 1000 > 140
+          const txt = isLight ? '#2A2A2A' : '#E8E8E8'
+          const txtDim = isLight ? 'rgba(42,42,42,0.55)' : 'rgba(232,232,232,0.55)'
+          const txtMid = isLight ? 'rgba(42,42,42,0.70)' : 'rgba(232,232,232,0.68)'
           return (
             <Link
               key={run.date}
@@ -93,12 +100,12 @@ export default function NoonArchive() {
               >
                 {grid && <GridSvg grid={grid} tile={tile} />}
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-                  <span style={{ fontSize: 16, fontWeight: 400 }}>{run.winner.concept}</span>
-                  <span style={{ fontSize: 11, letterSpacing: '0.12em', color: 'rgba(232,232,232,0.5)' }}>
+                  <span style={{ fontSize: 16, fontWeight: 400, color: txt }}>{run.winner.concept}</span>
+                  <span style={{ fontSize: 11, letterSpacing: '0.12em', color: txtDim }}>
                     {formatDate(run.date)}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'rgba(232,232,232,0.55)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: txtDim }}>
                   <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 4, background: accent }} />
                   {run.mood.name}
                 </div>
@@ -111,7 +118,7 @@ export default function NoonArchive() {
                       fontWeight: 300,
                       fontSize: 12.5,
                       lineHeight: 1.55,
-                      color: 'rgba(232,232,232,0.68)',
+                      color: txtMid,
                       letterSpacing: '0.005em',
                     }}
                   >

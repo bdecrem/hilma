@@ -120,6 +120,34 @@ Per-concept tuning (`radius`, `bias`) balances landing rates so thin shapes land
 
 Typical use: a pale cream + graphite combo (`#E8DFD0` / `#6A6460`) for a hollowed-out mood — inverting the usual dark-on-dark default.
 
+## Manual steps still to automate
+
+Three things were done by hand for 2026-04-17. Next noon will produce a workable-but-flatter piece unless these are scripted:
+
+### 1. Custom per-day palette (`bgColor` / `tileColor`)
+`set-mood.ts` only returns the 6 palette tokens + 3 accent tokens. It does NOT ask Amber to propose hex overrides. Today's cream + graphite (`#E8DFD0` / `#6A6460`) was proposed in chat and written into `mood-2026-04-17.json` by hand.
+
+**To automate:** extend the `set-mood.ts` prompt to give Amber license to return optional `bgColor` / `tileColor` hexes when the mood calls for something outside the 6 dark presets (e.g. pale/overexposed for hollowed-out, bile green for queasy). Engine already honors the overrides — just need the prompt to produce them.
+
+### 2. Reconciling closing statement
+`bake-noon-bio.ts` writes a generic closing (`"it came through. {winner}."`). When the physics-picked winner doesn't match what Amber's reaction is actually about (e.g. reaction fixates on "child's desk" but Ising lands on "tanker at anchor"), the piece reads incoherent. Today's closing was hand-authored via a one-off Claude API call that gave Amber the reaction + winner and asked her to reconcile.
+
+**To automate:** at the end of `bake-noon-bio.ts` (after the winner is determined), call Claude once with:
+- the full reaction paragraph
+- the attempted concepts in order
+- the winner concept
+- Amber persona
+
+and ask for a 2–3 sentence closing in Amber's voice that honestly bridges what she was fixated on in the reaction to whatever shape actually landed. Write it into `closingStatement`.
+
+### 3. Homepage `creations.json` entry
+The amber homepage (`/amber`) reads `src/app/amber/creations.json` for its live-card grid. New pieces don't auto-surface — today's entry was added by hand:
+```json
+{ "name": "noon", "url": "/amber/noon/2026-04-17", "date": "04.17", "category": "noon", "description": "hollowed-out · tanker at anchor" }
+```
+
+**To automate:** at the end of `bake-noon-bio.ts`, read `src/app/amber/creations.json`, prepend a new entry built from `mood.name + winner.concept`, write it back. Date format is `MM.DD` (2-digit, dot-separated). Skip if an entry for today already exists.
+
 ## Adding a day (quick reference)
 
 ```bash

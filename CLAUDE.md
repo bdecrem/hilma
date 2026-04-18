@@ -61,9 +61,11 @@ Hilma hosts 6 apps. Two are standalone in `apps/`, three are Next.js routes on V
 
 ## Deploying
 
-**Always commit and push to `main`.** Vercel auto-deploys in 1-2 minutes.
+**NEVER push without Bart explicitly asking.** Pushing triggers a live Vercel deploy — that's a production action, not a routine one. Commit when asked to commit; push ONLY when asked to push. "Commit and push" is two actions; "commit" is one. If Bart says "commit," commit and stop. If Bart says "push," then push. Treat every push as needing its own explicit go-ahead, even if you just finished committing on his request.
 
 **ALWAYS run `pnpm build` locally before pushing.** If the build fails locally, it will fail on Vercel too — and ALL pages (not just the broken one) will stop deploying until the build is fixed. A broken build blocks the entire site.
+
+**Vercel auto-deploys from `main` in 1-2 minutes** once a push lands.
 
 | What | How it deploys |
 |------|---------------|
