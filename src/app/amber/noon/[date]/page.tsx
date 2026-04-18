@@ -16,6 +16,7 @@ import {
 } from '@/lib/nowwhat'
 import { CONCEPTS, type Concept } from '../concepts'
 import type { NoonRun } from '../generator'
+import BioRenderer from './BioRenderer'
 
 // ─────────────────────────────────────────────────────────────────
 // Amber's Noon Artifact — MVP
@@ -122,6 +123,8 @@ export default function AmberNoon() {
       .catch(err => { if (!cancelled) setLoadError(err.message) })
     return () => { cancelled = true }
   }, [date])
+
+  const isBioEngine = !!(run as NoonRun & { meta?: { engine?: string } } | null)?.meta?.engine?.startsWith('bio-engine')
 
   // Derived mood (palette + accent resolved from v3 tokens, with optional per-day overrides).
   const mood = run ? {
@@ -561,6 +564,11 @@ export default function AmberNoon() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, isBare])
+
+  // Bio-engine artifacts render with the 52×20 static renderer.
+  if (run && isBioEngine) {
+    return <BioRenderer run={run as Parameters<typeof BioRenderer>[0]['run']} />
+  }
 
   // Loading / error state — match the palette if we know it, otherwise black.
   if (!run || !mood) {

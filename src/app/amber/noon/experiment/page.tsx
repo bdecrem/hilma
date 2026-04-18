@@ -19,8 +19,15 @@
 // and filter for "good" sessions before serving them to viewers. Here we
 // just watch the physics play out live.
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CONCEPTS, COLS, ROWS, type Grid } from './concepts'
+
+type ConceptEntry = { name: string; grid: Grid; radius: number; bias: number; blurb?: string }
+
+function todayISO(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 const BG = '#0C1424'
 const TILE = '#E8B86B'
@@ -130,14 +137,14 @@ function makeFillMap(): Fill[][] {
   return m
 }
 
-function planSession(): number[] {
+function planSession(poolSize: number): number[] {
   // Pick MAX_ATTEMPTS concept indices, no two in a row.
   const seq: number[] = []
   let last = -1
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
-    let idx = Math.floor(Math.random() * CONCEPTS.length)
+    let idx = Math.floor(Math.random() * poolSize)
     let guard = 0
-    while (idx === last && guard++ < 8) idx = Math.floor(Math.random() * CONCEPTS.length)
+    while (idx === last && guard++ < 8) idx = Math.floor(Math.random() * poolSize)
     seq.push(idx)
     last = idx
   }
@@ -205,6 +212,31 @@ export default function ExperimentPage() {
   const outcomeLabelRef = useRef<HTMLDivElement>(null)
   const sessionLabelRef = useRef<HTMLDivElement>(null)
 
+  const [pool, setPool] = useState<ConceptEntry[]>(CONCEPTS)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/amber-noon/concepts-${todayISO()}.json`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (cancelled || !data?.concepts?.length) return
+        const entries: ConceptEntry[] = data.concepts.map((c: { name: string; blurb: string; grid: number[][] }) => {
+          const cells = c.grid.flat().reduce((a, b) => a + b, 0)
+          const thin = cells < 70
+          return {
+            name: c.name,
+            blurb: c.blurb,
+            grid: c.grid,
+            radius: thin ? 2.8 : 2.0,
+            bias: thin ? 0.60 : 0.40,
+          }
+        })
+        setPool(entries)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -234,7 +266,7 @@ export default function ExperimentPage() {
     let bias: number[][] = makeField(0)  // target bias field
     let fills: Fill[][] = makeFillMap()
 
-    let session = planSession()
+    let session = planSession(pool.length)
     let attemptIdx = 0
     let sessionNum = 1
 
@@ -253,7 +285,7 @@ export default function ExperimentPage() {
 
     function initAttempt() {
       const conceptIdx = session[attemptIdx]
-      const concept = CONCEPTS[conceptIdx]
+      const concept = pool[conceptIdx]
       bias = makeBias(concept.grid, concept.radius, concept.bias, OFF_BIAS)
       crystalBias = makeBias(concept.grid, concept.radius, CRYSTAL_BIAS, CRYSTAL_OFF)
       fills = makeFillMap()
@@ -275,7 +307,7 @@ export default function ExperimentPage() {
       sessionSucceeded = false
       void successful
       sessionNum++
-      session = planSession()
+      session = planSession(pool.length)
       attemptIdx = 0
       initAttempt()
     }
@@ -363,7 +395,7 @@ export default function ExperimentPage() {
       lastNow = now
       let T = T_START
 
-      const currentGrid = CONCEPTS[session[attemptIdx]].grid
+      const currentGrid = pool[session[attemptIdx]].grid
 
       if (phase === 'running') {
         stepAccumulator += wallDelta * PHYSICS_RATE
@@ -466,7 +498,7 @@ export default function ExperimentPage() {
       window.removeEventListener('resize', resize)
       void lastNow
     }
-  }, [])
+  }, [pool])
 
   const labelStyle: React.CSSProperties = {
     fontFamily: "'DM Sans', system-ui, sans-serif",

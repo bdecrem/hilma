@@ -67,6 +67,15 @@ const WMO: Record<number, string> = {
 }
 
 async function fetchWeather(date: string): Promise<WeatherSnapshot> {
+  if (process.env.MOOD_WEATHER_OVERRIDE) {
+    const [tempF, conditions] = process.env.MOOD_WEATHER_OVERRIDE.split('|')
+    return {
+      tempF: Number(tempF), tempMaxF: Number(tempF) + 2, tempMinF: Number(tempF) - 20,
+      conditions: conditions || 'clear sky',
+      precipInches: 0, windMph: 5,
+      sunrise: `${date}T06:30`, sunset: `${date}T19:45`,
+    }
+  }
   // Palo Alto, CA
   const lat = 37.4419
   const lon = -122.143
@@ -78,7 +87,7 @@ async function fetchWeather(date: string): Promise<WeatherSnapshot> {
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Weather fetch failed: ${res.status}`)
   const data = await res.json()
-  const code = data.daily?.weather_code?.[0] ?? data.current?.weather_code ?? 0
+  const code = data.current?.weather_code ?? data.daily?.weather_code?.[0] ?? 0
   return {
     tempF: data.current?.temperature_2m,
     tempMaxF: data.daily?.temperature_2m_max?.[0],
@@ -174,7 +183,7 @@ Output ONLY a JSON object (no prose, no code fence) in this exact shape:
     "palette": "one of: night | hearth | ink | petrol | bruise | oxblood",
     "accent": "one of: lime | sodium | uv"
   },
-  "keywords": ["6 to 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
+  "keywords": ["exactly 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
 }`
 }
 
@@ -201,7 +210,7 @@ Output ONLY a JSON object (no prose, no code fence) in this exact shape:
     "palette": "one of: night | hearth | ink | petrol | bruise | oxblood",
     "accent": "one of: lime | sodium | uv"
   },
-  "keywords": ["6 to 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
+  "keywords": ["exactly 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
 }`
 }
 
@@ -210,7 +219,7 @@ async function callClaude(userPrompt: string, useWebSearch: boolean) {
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
 
   const body: Record<string, unknown> = {
-    model: 'claude-sonnet-4-5',
+    model: 'claude-sonnet-4-6',
     max_tokens: 2048,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],

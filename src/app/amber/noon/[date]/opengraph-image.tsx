@@ -67,7 +67,17 @@ export default async function Image({ params }: { params: Promise<{ date: string
   const grid = run.winner.grid
     ?? CONCEPTS.find(c => c.name === run.winner.concept)?.grid
     ?? CONCEPTS[0].grid
-  const CELL = 28
+  // Size CELL to fit whatever grid width we have (52 cols at 52×20, 26 at 26×10).
+  const gridCols = grid[0]?.length || 52
+  const CELL = gridCols > 40 ? 18 : 28
+  // Auto-select readable text color for the palette.
+  const hex = bg.replace('#', '')
+  const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16)
+  const isLight = (r * 299 + g * 587 + b * 114) / 1000 > 140
+  const fg = isLight ? '#2A2A2A' : '#E8E8E8'
+  const fgDim = isLight ? 'rgba(42,42,42,0.55)' : 'rgba(232,232,232,0.55)'
+  const fgDimmer = isLight ? 'rgba(42,42,42,0.45)' : 'rgba(232,232,232,0.45)'
+  const fgFaint = isLight ? 'rgba(42,42,42,0.1)' : 'rgba(255,255,255,0.025)'
   const blurb = run.winner.blurb ? `“${run.winner.blurb}”` : ''
 
   return new ImageResponse(
@@ -82,7 +92,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
           alignItems: 'center',
           justifyContent: 'center',
           fontFamily: 'sans-serif',
-          color: '#E8E8E8',
+          color: fg,
           position: 'relative',
         }}
       >
@@ -96,7 +106,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
             justifyContent: 'center',
             fontSize: 18,
             letterSpacing: 2,
-            color: 'rgba(232,232,232,0.55)',
+            color: fgDim,
           }}
         >
           {formatDate(run.date)}
@@ -112,7 +122,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
                     display: 'flex',
                     width: CELL,
                     height: CELL,
-                    background: v ? tileColor : 'rgba(255,255,255,0.025)',
+                    background: v ? tileColor : fgFaint,
                   }}
                 />
               ))}
@@ -148,7 +158,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
             marginTop: 12,
             fontSize: 20,
             fontStyle: 'italic',
-            color: 'rgba(232,232,232,0.65)',
+            color: fg,
           }}
         >
           {blurb}
@@ -162,7 +172,7 @@ export default async function Image({ params }: { params: Promise<{ date: string
             right: 44,
             fontSize: 14,
             letterSpacing: 2,
-            color: 'rgba(232,232,232,0.45)',
+            color: fgDimmer,
           }}
         >
           amber · noon
