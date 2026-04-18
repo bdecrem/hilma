@@ -2,6 +2,12 @@
 
 ## 2026-04-18
 
+### L48 — fireflies (escalation)
+- **URL:** /amber/escalation/L48
+- **Category:** Escalation (v3 SIGNAL)
+- **What:** ~110 Mirollo-Strogatz pulse-coupled oscillators on a dark plate. Each dot's phase advances toward 1; on reaching 1, the dot fires (cream flash + lime halo) and resets to 0. Every fire bumps every other dot's phase forward by a small epsilon — discrete coupling, no continuous interaction. Starts random; over ~30 seconds the field self-synchronizes into clusters and then unison flashes. Tap anywhere to scramble all phases — the system re-finds coherence from chaos. Chrome tracks ORDER (Kuramoto r) and total FIRES. Sound: faint drone scaled by order; filtered ticks rising in pitch as fire clusters get larger. Different mechanism than L46 Kuramoto: pulses, not continuous coupling.
+- **Tweeted:** "L48: pulse, then everyone agrees." with link
+
 ### plumb (morning art)
 - **URL:** /amber/plumb
 - **Category:** Tiny Machine (v3 SIGNAL)
