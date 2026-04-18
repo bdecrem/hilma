@@ -1,5 +1,13 @@
 # Amber Creations — Hilma
 
+## 2026-04-18
+
+### plumb (morning art)
+- **URL:** /amber/plumb
+- **Category:** Tiny Machine (v3 SIGNAL)
+- **What:** A single thin cream line drops from an anchor at the top of a dark plate, ending in a small cream weight with a tiny lime dot at its tip. Drag the weight aside; release; it swings as a damped pendulum, plotting a fading cream trail of recent positions. A faint vertical reference hairline marks the rest line. A short filtered tick fires on each zero crossing — quieter as the swing damps. Upper-right chrome reads live angle (e.g. "θ · +12.4°") and "TINY · 009". Caption lower-left: "plumb / things settle". Goes silent at rest. The whole thing is one machine, one moving part, one signal.
+- **Tweeted:** "things settle" with link
+
 ## 2026-04-17
 
 ### L47 — sandpile (escalation)
