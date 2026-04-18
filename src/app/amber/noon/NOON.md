@@ -1,6 +1,10 @@
 # Amber's Noon — Pipeline
 
-One artifact a day at noon. The weather + the world's headlines get filtered through Amber's hypersensitive artist persona, which produces a mood, a first-person reaction, and sensory keywords. Amber then sketches each keyword as a tiny 26×10 silhouette. A deterministic "attempts" sequence (first attempt always fails; last always lands) picks one keyword to be the winner. The page animates the emergence and displays the winner with Amber's paragraph + a meta-rail showing the inputs that led to the mood.
+One artifact a day at noon. The weather + the world's headlines (or Reddit's hot feed) get filtered through Amber's hypersensitive artist persona, which produces a mood, a first-person reaction, and sensory keywords. Amber then sketches each keyword as a **52×20 silhouette**. A headless **bio-engine** (Langevin Ising physics) runs multiple attempts against those sketches — most fail, one lands — and that session is frozen into the day's artifact. The page replays the session live with the real physics, crystallizes the winner, then fades in Amber's paragraph.
+
+## Grid
+
+**52 columns × 20 rows.** Upgraded from the original 26×10. All new pieces use 52×20; archive pieces at 26×10 still render via the legacy emergent renderer.
 
 ## The three-step daily bake
 
@@ -9,120 +13,122 @@ Each day runs three scripts in order. Each writes a JSON file under `public/ambe
 ```
 scripts/set-mood.ts          →  mood-YYYY-MM-DD.json
 scripts/sketch-concepts.ts   →  concepts-YYYY-MM-DD.json
-scripts/bake-noon.ts         →  YYYY-MM-DD.json   ← what the page loads
+scripts/bake-noon-bio.ts     →  YYYY-MM-DD.json   ← what the page loads
 ```
 
 ### 1. `scripts/set-mood.ts`
 
 Reads nothing, writes `public/amber-noon/mood-YYYY-MM-DD.json`.
 
-- Pulls **Palo Alto weather** from Open-Meteo (no key needed): conditions, temps, precip, wind, sunrise/sunset.
-- One call to **Claude Sonnet 4.5 with the `web_search` tool**, system prompt = Amber's artist persona (hypersensitive, full emotional range, first-person, notices small things).
-- Claude searches for 4–6 significant world headlines, then lets the weather + news hit her and returns:
-  - `mood` — `name` (any emotion word, not just uneasy/melancholy), `reason` (~10-word phrase), `palette` (one of `night/hearth/ink/petrol/bruise/oxblood`), `accent` (one of `lime/sodium/uv`).
-  - `reaction` — 2–4 first-person sentences. This becomes the on-screen paragraph.
-  - `keywords` — 6–8 **drawable** sensory images. Prompt constrains these to things with clear silhouettes (a rag on a line, broken rays, tanker bow) rather than abstract feelings (clammy hands, queasy).
-- Optionally carries `bgColor` / `tileColor` hex overrides if Amber picks custom colors for the day.
+- Pulls **Palo Alto weather** from Open-Meteo (no key needed). Prefers the `current` weather code over the `daily` dominant code — a sunny afternoon reads as "clear sky" even if the day also had morning fog.
+- Two substrates, one picked by a date-seeded coin flip (so the pipeline alternates ~50/50 across days):
+  - `news` → Claude Sonnet with `web_search` tool pulls 4–6 global headlines from the last 24h.
+  - `reddit` → direct pull of 25 hot posts from r/all; Amber picks 1–3 that snag her.
+- One call to Claude with the Amber persona (hypersensitive, full emotional range, first-person, notices small things). Returns:
+  - `mood` — `name`, `reason` (~10 words), `palette` (one of `night/hearth/ink/petrol/bruise/oxblood`), `accent` (one of `lime/sodium/uv`), plus optional `bgColor` / `tileColor` hex overrides.
+  - `reaction` — 2–4 first-person sentences. Becomes the on-screen paragraph.
+  - `keywords` — exactly 8 **drawable** sensory images (clear silhouettes, not abstract feelings).
 
-Run: `npx tsx scripts/set-mood.ts [YYYY-MM-DD]` (defaults to today).
+Run:
+```bash
+npx tsx scripts/set-mood.ts                    # today, source auto-picked from date
+npx tsx scripts/set-mood.ts reddit             # force reddit
+npx tsx scripts/set-mood.ts 2026-04-17 news    # specific date + source
+```
+
+Env overrides:
+- `MOOD_WEATHER_OVERRIDE="73|clear sky"` — bypass Open-Meteo with a fixed temp + condition.
 
 ### 2. `scripts/sketch-concepts.ts`
 
 Reads `mood-YYYY-MM-DD.json`, writes `concepts-YYYY-MM-DD.json`.
 
-- One call to Claude Sonnet 4.5 in the Amber persona, carrying today's mood + reason for context.
-- Asks Amber to sketch each keyword as a 26×10 ASCII silhouette (`#` = filled, `.` = empty).
-- Prompt includes `frantic light` (reference artifact in `public/amber-noon/archive/frantic-light.json`) as the in-prompt example of the target register: asymmetric, gestural, negative space > filled area.
-- Returns a JSON array of `{ name, blurb, ascii }`. Each ASCII block is parsed into a `number[][]` grid (ROWS × COLS).
+- One call to Claude in the Amber persona, carrying today's mood + reason for context.
+- Asks Amber to sketch each of the 8 keywords as a **52×20 ASCII silhouette** (`#` = filled, `.` = empty).
+- Prompt includes a worked example ("frantic light" — asymmetric, gestural, heavy negative space) as the target register.
+- Tolerant parser: accepts any line ≥ 70% width that isn't prose; non-`#` chars become `.`. This lets Opus slip an occasional `~` or `V` without breaking the bake.
+- Returns a JSON array of `{ name, blurb, ascii }` → each ASCII block is parsed into a `number[][]` grid (20 × 52).
+
+Env overrides:
+- `SKETCH_MODEL=claude-opus-4-7` — swap the default Sonnet for Opus. Opus gives more varied compositions (letters on the sign, a dragon mid-curve) where Sonnet converges on safe silhouettes.
 
 Run: `npx tsx scripts/sketch-concepts.ts [YYYY-MM-DD]`.
 
-### 3. `scripts/bake-noon.ts`
+### 3. `scripts/bake-noon-bio.ts` — the new bio-engine baker
 
-Reads the mood + concepts files (if present), writes `YYYY-MM-DD.json`.
+Reads mood + concepts files, writes `YYYY-MM-DD.json`.
 
-- Calls `generateRun(date, { mood, reaction, keywords, dailyConcepts })` in `src/app/amber/noon/generator.ts`.
-- Builds a deterministic attempt sequence from a date-seeded PRNG:
-  - first attempt always fails; each subsequent has 25% chance of success; max 6 attempts; if none succeed by #6, force success.
-  - no two in-a-row the same concept.
-- Each attempt carries the inline grid sketched for that keyword, so the page can render without any external lookup.
-- `closingStatement` = Amber's first-person reaction + `I ended on <winner>.` (falls back to a template if no reaction).
+This is the **current** baker. It runs the same Ising physics the experiment page uses, headlessly, and captures one honest session:
 
-Run: `npx tsx scripts/bake-noon.ts [YYYY-MM-DD] [optional-salt]`.
+- **Params (G3, from `bio-engine-tune.ts`):** 4-neighbor coupling `J=0.4`, anneal temperature cools `T=2.0 → 0.03` over 12s, crystallization phase `T=0.005` for 3s. Landing threshold: crispness ≥ 0.80.
+- **Per-concept tuning:** `inferTuning(grid)` picks radius + bias from cell count. Chunky shapes (> 120 cells) use narrow affinity + low bias (land rarely); thinner shapes get wider affinity + stronger bias (to survive neighbor coupling).
+- **Session:** up to 10 attempts, pick a concept at random (no two in a row), run the full anneal, measure crispness. Break on first landing. If no session lands across 3 retries, keep the best-we-got. Target: mean ~3.5 attempts per session.
+- **Output:** writes each attempt's target grid, the final spin field, the final thresholded grid (0/1), crispness scores, landed flag. `winner` = last attempt. Sets `meta.engine = 'bio-engine/G3'` and `meta.landed`.
+
+Closing statement is currently a simple template; days with tight semantic coupling to the winner get a hand-written closing.
+
+Run: `npx tsx scripts/bake-noon-bio.ts [YYYY-MM-DD]`.
+
+### 3-legacy: `scripts/bake-noon.ts`
+
+The old deterministic-attempts baker (no physics — predetermined success pattern, `planAttempts` from `generator.ts`). Still present for regenerating 26×10 archive pieces. New pieces should use `bake-noon-bio.ts`.
 
 ## Data files (per-day)
 
 All under `public/amber-noon/`:
 
-- `mood-YYYY-MM-DD.json` — mood + reaction + keywords + raw inputs (weather, headlines) + optional color overrides.
-- `concepts-YYYY-MM-DD.json` — array of `{ name, blurb, grid }` — Amber's sketches for today's keywords.
-- `YYYY-MM-DD.json` — the baked run the page actually loads. Contains mood, reaction, keywords, attempts (each with inline grid), winner, closingStatement, and optional `meta` block for the on-screen rail.
-- `archive/` — reference artifacts preserved across days (e.g. `frantic-light.json` — the "this is what good looks like" example used in the sketch prompt).
+- `mood-YYYY-MM-DD.json` — mood + reaction + keywords + raw inputs + optional color overrides.
+- `concepts-YYYY-MM-DD.json` — array of `{ name, blurb, grid }` — Amber's 52×20 sketches.
+- `YYYY-MM-DD.json` — the baked run the page loads. Contains mood, reaction, keywords, attempts (each with `grid`, `finalGrid`, `finalSpin`, crispness), winner, closingStatement, and `meta.engine`.
 
 ## Routes
 
 - `/amber/noon` — redirects to today's dated URL.
-- `/amber/noon/YYYY-MM-DD` — the piece itself. Loads `public/amber-noon/{date}.json` client-side, animates the attempt sequence, ends on the winner with Amber's paragraph and the meta-rail (PALO ALTO · NEWS → MOOD).
-- `/amber/noon/sketches` — developer/preview view of today's keywords + grids. Shows the mood header, Amber's reaction, and an SVG rendering of each sketched concept. Useful for sanity-checking the sketch pass before the bake.
-- `/amber/noon/[date]/opengraph-image` — 1200×630 OG card for the day's piece. Source: `src/app/amber/noon/[date]/opengraph-image.tsx`. Currently renders a static version of the winner's grid in the day's `tileColor` on the day's `bgColor`, with the date, concept name, blurb, and wordmark. Honors per-day color overrides. **Today's version is a simplified preview, not a real representation of the animated artifact** — see Tomorrow list.
+- `/amber/noon/YYYY-MM-DD` — the piece. Loads `public/amber-noon/{date}.json` client-side.
+  - If `meta.engine` starts with `bio-engine` → renders via `BioRenderer.tsx` (live 52×20 Ising physics replay).
+  - Otherwise → renders via the legacy 26×10 emergent pipeline in the main `[date]/page.tsx`.
+- `/amber/noon/sketches` — developer preview of today's 8 concepts as SVGs.
+- `/amber/noon/archive` — grid of all dated pieces; auto-picks up any `YYYY-MM-DD.json`.
+- `/amber/noon/experiment` — live playground of the bio-engine. Fetches today's concepts if baked; falls back to a static 10-concept spring library otherwise.
+- `/amber/noon/[date]/opengraph-image` — 1200×630 OG card. Auto-fits CELL to grid width (52-col grids use CELL=18; 26-col use 28). Auto-adapts text color to light vs dark palettes.
 
 ## Engine modules
 
-- `src/app/amber/noon/generator.ts` — types (`NoonRun`, `Attempt`, `MoodInput`, `DailyConcept`) + `generateRun()`. Deterministic from the date seed; accepts keyword + daily-concept overrides or falls back to the static `CONCEPTS` library.
-- `src/app/amber/noon/concepts.ts` — static 10-concept library (horizon, window, antenna, bird, key, ladder, wave, candle, tower, compass). Used as fallback when no daily concepts exist.
-- `src/app/amber/noon/[date]/page.tsx` — client-side renderer. Reads the baked run, sets up the emergent canvas via `@/lib/nowwhat`, applies per-day tile tint via `setTileTint()`, plays the attempts, fades in the paragraph + meta-rail after the piece lands.
-- `src/lib/nowwhat/renderer.ts` — shared engine. `setTileTint(rgb | null)` is the hook that lets the noon page recolor tiles without affecting other routes.
+- `src/app/amber/noon/[date]/BioRenderer.tsx` — **the 52×20 renderer.** Ports the experiment's Ising physics client-side, driven by the baked attempt sequence. Plays each attempt through anneal → landing check → crystallize → hold, then fades in the mood + reaction + closing when the winner crystallizes. Respects `isBare` (iframe thumbnail — static winner grid, no animation, no text) and `isNarrow` (iPhone portrait — smaller title stack). Auto-picks readable text color based on bg brightness.
+- `src/app/amber/noon/experiment/page.tsx` — live playground version of the same engine. Fetches today's concepts on mount; defaults to the static spring library.
+- `src/app/amber/noon/experiment/concepts.ts` — static 10-concept spring library (sun, kite, tulip, butterfly, bicycle, bird on a wire, cloud, watering can, blossom branch, swing) with hand-tuned per-concept `radius` + `bias`.
+- `src/app/amber/noon/generator.ts` — legacy types + `generateRun()` for the pre-bio-engine pipeline. Used by `bake-noon.ts` (legacy).
+- `src/app/amber/noon/concepts.ts` — legacy static 10-concept library at 26×10.
+- `src/app/amber/noon/[date]/page.tsx` — dispatch layer. Reads the artifact; if bio-engine, delegates to `BioRenderer`; else runs the legacy 26×10 emergent renderer.
+
+## Bio-engine physics (short version)
+
+Each cell has a continuous spin `s ∈ [-1, 1]`. Update rule (Langevin):
+
+```
+h   = J · (up + down + left + right) + bias[r,c]
+s  ← s + DT · (tanh(h/T) - s) + gauss() · sqrt(2·T·DT)
+```
+
+`bias[r,c]` = affinity-softened mask of the target grid (1 on target cells, smooth falloff over `radius` cells outside). Temperature `T` anneals from 2.0 → 0.03 over 12 seconds. At end of anneal, crispness (fraction of target cells ≥ 0.5 ∪ fraction of off cells < 0.2, averaged) is measured. If ≥ 0.80 → land → crystallize phase (strong bias, near-zero T, 3s) → snap to clean target. If < 0.80 → dissolve, next attempt.
+
+Per-concept tuning (`radius`, `bias`) balances landing rates so thin shapes land occasionally and chunky shapes don't land every time.
 
 ## Per-day color overrides
 
-`mood.bgColor` and `mood.tileColor` (hex strings) are optional. When set, they override the palette/accent presets for the day:
-- `bgColor` replaces the palette background (on canvas and in the OG image).
-- `tileColor` tints the emergent tiles via `setTileTint()`, still modulated by brightness so shading works.
+`mood.bgColor` and `mood.tileColor` (hex strings) are optional. When set, they override the palette/accent presets for the day. Both `BioRenderer` and `opengraph-image` honor them and auto-select readable text color.
 
-Accent tokens (`lime/sodium/uv`) still drive the label and accent dot color. Typical use: bias the field further from the default dark palette when the mood calls for it (e.g. queasy → acid olive `#5C6A1F` + hot sodium tiles `#FF4E17`).
-
-## Tomorrow / to-do
-
-Things hand-edited today that still need to be automated. Each is a small, contained change to one script + optionally the baked run schema.
-
-### 1. Automate color picking in `set-mood.ts`
-Amber currently returns `palette` + `accent` tokens (v3 presets), but the richer per-day hexes (`bgColor`, `tileColor`) were written by hand into today's mood JSON. The engine already honors them — we just need the prompt to produce them.
-
-- Extend the `mood` JSON shape Amber returns to include optional `bgColor` and `tileColor` hex strings.
-- In the prompt, give Amber license to pick vivid, non-default colors when the mood calls for it. Remind her: not every bad mood is dark; nauseated has bile green, excited has sodium orange, reverent has UV. Pair a bg and a tile color that clash or resonate deliberately.
-- Keep the token fallback (`palette` + `accent`) for days she doesn't want to override.
-
-### 2. Thread `meta` through `bake-noon.ts`
-The on-screen rail (`PALO ALTO · NEWS → MOOD`) reads `run.meta.location`, `run.meta.weather`, `run.meta.news[]`. None of that is auto-populated yet — I hand-wrote short hooks into today's baked JSON.
-
-- Have `set-mood.ts` also return a `newsHooks` array: 3 short hooks (2–4 words each) derived from the same headlines it already finds. Prompt should ask for things like "Iran blockade day 3" or "Orbán out" — not full headline sentences.
-- Have `set-mood.ts` produce a short weather string like "overcast · 61°F" alongside the full weather snapshot.
-- In `bake-noon.ts`, build the `meta` block from those fields and write it into the run JSON:
-  ```ts
-  run.meta = {
-    location: 'Palo Alto',
-    weather: mood.weatherShort,
-    news: mood.newsHooks,
-  }
-  ```
-
-### 3. Upgrade the OG image to represent the actual creation
-The current OG card renders a static, symmetric grid of the winner's sketch — it looks nothing like what visitors see on the live page. Goal: make the OG feel like a snapshot of the real artifact.
-
-- Match the live canvas's tile rendering: pattern fills (checker, stripe, dots), brightness variation, scanlines, the subtle cell-border highlight/shadow from `drawPixelBlock`.
-- Sample the "won" phase: only target cells lit (in `tileColor`), non-target cells completely dark/recessed (no faint border grid across the whole card).
-- Consider including Amber's closing-statement snippet underneath, or just the winner + blurb — but the *visual* should read like a frame grab, not a schematic.
-- Keep the 1200×630 size, wordmark, and date.
-
-### 4. Optional: per-day closing-statement coda
-Today I hand-appended "The lid stays. Take that as today." to the end of the baked closing statement. Not clear this should be automated — it's per-day poetry and often the best version is written by hand. Leave manual for now; revisit if it becomes a pattern.
+Typical use: a pale cream + graphite combo (`#E8DFD0` / `#6A6460`) for a hollowed-out mood — inverting the usual dark-on-dark default.
 
 ## Adding a day (quick reference)
 
 ```bash
-npx tsx scripts/set-mood.ts          # weather + news → mood, reaction, keywords
-npx tsx scripts/sketch-concepts.ts   # Amber sketches the keywords
-npx tsx scripts/bake-noon.ts         # deterministic attempt sequence → final run
+npx tsx scripts/set-mood.ts                     # weather + news/reddit → mood, reaction, keywords
+npx tsx scripts/sketch-concepts.ts              # Amber sketches 8 keywords at 52×20
+SKETCH_MODEL=claude-opus-4-7 npx tsx scripts/sketch-concepts.ts   # Opus for richer sketches
+npx tsx scripts/bake-noon-bio.ts                # bio-engine session → final run
 # then open: http://localhost:3000/amber/noon/YYYY-MM-DD
 # preview sketches:  http://localhost:3000/amber/noon/sketches
 ```
+
+Don't forget to add the day to `src/app/amber/creations.json` so it surfaces on the amber homepage.
