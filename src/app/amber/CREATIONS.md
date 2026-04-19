@@ -1,5 +1,13 @@
 # Amber Creations — Hilma
 
+## 2026-04-19
+
+### grain (morning art)
+- **URL:** /amber/grain
+- **Category:** Living Pattern (v3 SIGNAL)
+- **What:** 28 evenly spaced horizontal cream hairlines across a dark plate — wood grain. A single lime dot sits off-center (the knot). The lines bend permanently around the knot: nearby points are pushed apart radially, creating the signature curve of grain flowing around a defect. Touch or drag to add local ripples — nearby points on nearby lines get a velocity kick, they oscillate, spring-damp back to rest over ~2 seconds. The knot's distortion never fades. Soft low triangle-wave thunk on each touch. Chrome: DISPLACEMENT, GRAIN · 28L, SPEC · 010. Caption: "grain / the shape it has to keep".
+- **Tweeted:** "the shape it has to keep" with link
+
 ## 2026-04-18
 
 ### L48 — fireflies (escalation)
