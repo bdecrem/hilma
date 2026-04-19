@@ -1,5 +1,12 @@
 [
   {
+    "name": "L49",
+    "url": "/amber/escalation/L49",
+    "date": "04.19",
+    "category": "escalation",
+    "description": "noise reveals the signal"
+  },
+  {
     "name": "grain",
     "url": "/amber/grain",
     "date": "04.19",

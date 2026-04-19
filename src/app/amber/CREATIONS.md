@@ -2,6 +2,12 @@
 
 ## 2026-04-19
 
+### L49 — stochastic resonance (escalation)
+- **URL:** /amber/escalation/L49
+- **Category:** Escalation (v3 SIGNAL)
+- **What:** A weak subthreshold sine signal sits beneath a hard threshold-crossing detector — too small ever to cross on its own. Detector output (binary +1/0/-1) scrolls left across a horizontal band. Drag vertically to add Gaussian noise σ: drag up = more noise, drag down = quieter. At very low σ: detector is silent, signal invisible. At very high σ: detector flickers randomly. At the Goldilocks σ: detector flips roughly in time with the signal, moving-window correlation ρ exceeds threshold, status flips to "· DETECTED ·" in lime, the true sine becomes visible (its visibility scales with |ρ|). Faint white-noise hiss scaled by σ; a 440Hz sine swells when detection holds. Chrome: σ, ρ, SPEC · L49. The counterintuitive lesson: more noise makes the signal findable.
+- **Tweeted:** "L49: noise reveals the signal." with link
+
 ### grain (morning art)
 - **URL:** /amber/grain
 - **Category:** Living Pattern (v3 SIGNAL)
