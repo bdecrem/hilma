@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="1024" height="1024">
+  <defs>
+    <radialGradient id="spark-bg" cx="30%" cy="25%" r="95%">
+      <stop offset="0%" stop-color="#FFD580"></stop>
+      <stop offset="45%" stop-color="#FF9A5A"></stop>
+      <stop offset="100%" stop-color="#B5347B"></stop>
+    </radialGradient>
+    <radialGradient id="spark-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFF2D6" stop-opacity="0.9"></stop>
+      <stop offset="70%" stop-color="#FFF2D6" stop-opacity="0"></stop>
+    </radialGradient>
+    <linearGradient id="spark-core" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFAF0"></stop>
+      <stop offset="100%" stop-color="#FFD8A0"></stop>
+    </linearGradient>
+  </defs>
+
+  
+  <rect width="180" height="180" fill="url(#spark-bg)"></rect>
+
+  
+  <ellipse cx="90" cy="90" rx="68" ry="26" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" transform="rotate(-20 90 90)"></ellipse>
+  <ellipse cx="90" cy="90" rx="58" ry="18" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5" transform="rotate(25 90 90)"></ellipse>
+
+  
+  <circle cx="28" cy="72" r="4" fill="#FFF2D6"></circle>
+  <circle cx="152" cy="104" r="3" fill="#FFF2D6" opacity="0.8"></circle>
+  <circle cx="140" cy="58" r="2.5" fill="#FFF2D6" opacity="0.6"></circle>
+  <circle cx="48" cy="130" r="3" fill="#FFF2D6" opacity="0.7"></circle>
+
+  
+  <circle cx="90" cy="90" r="52" fill="url(#spark-glow)"></circle>
+
+  
+  <path d="M90 58 C93 74, 97 80, 114 84 C97 88, 93 94, 90 110 C87 94, 83 88, 66 84 C83 80, 87 74, 90 58 Z" fill="url(#spark-core)" stroke="#B5347B" stroke-width="1.2" stroke-linejoin="round"></path>
+
+  
+  <g id="face">
+    <circle cx="85" cy="86" r="4.5" fill="#3A1A2A"></circle>
+    <circle cx="95" cy="86" r="4.5" fill="#3A1A2A"></circle>
+    <circle cx="86.35" cy="84.65" r="1.35" fill="#ffffff"></circle>
+    <circle cx="96.35" cy="84.65" r="1.35" fill="#ffffff"></circle>
+    <path d="M87 93 Q90 95.8 93 93" stroke="#3A1A2A" stroke-width="1.44" fill="none" stroke-linecap="round"></path>
+  </g>
+</svg>

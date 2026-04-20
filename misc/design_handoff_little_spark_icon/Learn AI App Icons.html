@@ -1,0 +1,717 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Learn AI — App Icon Concepts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  html, body { margin: 0; padding: 0; background: #f0eee9; }
+  * { box-sizing: border-box; }
+  @keyframes float-orbit {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(2px, -2px); }
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+// ───────────────────────────────────────────────────────────
+// Design canvas (panning + zooming)
+// ───────────────────────────────────────────────────────────
+const DC = {
+  bg: '#f0eee9',
+  grid: 'rgba(0,0,0,0.06)',
+  label: 'rgba(60,50,40,0.7)',
+  title: 'rgba(40,30,20,0.85)',
+  subtitle: 'rgba(60,50,40,0.6)',
+};
+
+function DesignCanvas({ children }) {
+  const vpRef = React.useRef(null);
+  const worldRef = React.useRef(null);
+  const tf = React.useRef({ x: 0, y: 0, scale: 1 });
+  const apply = () => {
+    const { x, y, scale } = tf.current;
+    if (worldRef.current) worldRef.current.style.transform = `translate3d(${x}px,${y}px,0) scale(${scale})`;
+  };
+  React.useEffect(() => {
+    const vp = vpRef.current;
+    const zoomAt = (cx, cy, factor) => {
+      const r = vp.getBoundingClientRect();
+      const px = cx - r.left, py = cy - r.top;
+      const t = tf.current;
+      const next = Math.min(6, Math.max(0.2, t.scale * factor));
+      const k = next / t.scale;
+      t.x = px - (px - t.x) * k;
+      t.y = py - (py - t.y) * k;
+      t.scale = next;
+      apply();
+    };
+    const isMouseWheel = (e) => e.deltaMode !== 0 || (e.deltaX === 0 && Number.isInteger(e.deltaY) && Math.abs(e.deltaY) >= 40);
+    const onWheel = (e) => {
+      e.preventDefault();
+      if (e.ctrlKey) zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.01));
+      else if (isMouseWheel(e)) zoomAt(e.clientX, e.clientY, Math.exp(-Math.sign(e.deltaY) * 0.18));
+      else { tf.current.x -= e.deltaX; tf.current.y -= e.deltaY; apply(); }
+    };
+    let drag = null;
+    const onPD = (e) => {
+      const onBg = e.target === vp || e.target === worldRef.current;
+      if (!(e.button === 1 || (e.button === 0 && onBg))) return;
+      e.preventDefault();
+      vp.setPointerCapture(e.pointerId);
+      drag = { id: e.pointerId, lx: e.clientX, ly: e.clientY };
+      vp.style.cursor = 'grabbing';
+    };
+    const onPM = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      tf.current.x += e.clientX - drag.lx;
+      tf.current.y += e.clientY - drag.ly;
+      drag.lx = e.clientX; drag.ly = e.clientY;
+      apply();
+    };
+    const onPU = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      vp.releasePointerCapture(e.pointerId);
+      drag = null;
+      vp.style.cursor = '';
+    };
+    vp.addEventListener('wheel', onWheel, { passive: false });
+    vp.addEventListener('pointerdown', onPD);
+    vp.addEventListener('pointermove', onPM);
+    vp.addEventListener('pointerup', onPU);
+    vp.addEventListener('pointercancel', onPU);
+    return () => {
+      vp.removeEventListener('wheel', onWheel);
+      vp.removeEventListener('pointerdown', onPD);
+      vp.removeEventListener('pointermove', onPM);
+      vp.removeEventListener('pointerup', onPU);
+      vp.removeEventListener('pointercancel', onPU);
+    };
+  }, []);
+  const gridSvg = `url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M120 0H0v120' fill='none' stroke='${encodeURIComponent(DC.grid)}' stroke-width='1'/%3E%3C/svg%3E")`;
+  return (
+    <div ref={vpRef} style={{
+      height: '100vh', width: '100vw', background: DC.bg, overflow: 'hidden',
+      overscrollBehavior: 'none', touchAction: 'none', position: 'relative',
+      fontFamily: '-apple-system, system-ui, sans-serif',
+    }}>
+      <div ref={worldRef} style={{
+        position: 'absolute', top: 0, left: 0, transformOrigin: '0 0',
+        willChange: 'transform', width: 'max-content', minWidth: '100%', minHeight: '100%',
+        padding: '60px 0 80px',
+        backgroundImage: gridSvg, backgroundSize: '120px 120px',
+      }}>{children}</div>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Icon: Spark — an orbit of ideas around a friendly spark.
+// Playful: the spark has eyes. Depth: nested rings = layers of depth.
+// ───────────────────────────────────────────────────────────
+function SparkIcon({ size = 180, r: rBase }) {
+  const r = rBase ?? size * 0.224;
+  const eye = size * 0.025;
+  return (
+    <svg width={size} height={size} viewBox="0 0 180 180" style={{ display: 'block' }}>
+      <defs>
+        <radialGradient id={`spark-bg-${size}`} cx="30%" cy="25%" r="95%">
+          <stop offset="0%" stopColor="#FFD580" />
+          <stop offset="45%" stopColor="#FF9A5A" />
+          <stop offset="100%" stopColor="#B5347B" />
+        </radialGradient>
+        <radialGradient id={`spark-glow-${size}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#FFF2D6" stopOpacity="0.9" />
+          <stop offset="70%" stopColor="#FFF2D6" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={`spark-core-${size}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#FFFAF0" />
+          <stop offset="100%" stopColor="#FFD8A0" />
+        </linearGradient>
+      </defs>
+      {/* background */}
+      <rect width="180" height="180" fill={`url(#spark-bg-${size})`} />
+      {/* orbit rings */}
+      <ellipse cx="90" cy="90" rx="68" ry="26" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" transform="rotate(-20 90 90)" />
+      <ellipse cx="90" cy="90" rx="58" ry="18" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.5" transform="rotate(25 90 90)" />
+      {/* orbit nodes */}
+      <circle cx="28" cy="72" r="4" fill="#FFF2D6" />
+      <circle cx="152" cy="104" r="3" fill="#FFF2D6" opacity="0.8" />
+      <circle cx="140" cy="58" r="2.5" fill="#FFF2D6" opacity="0.6" />
+      <circle cx="48" cy="130" r="3" fill="#FFF2D6" opacity="0.7" />
+      {/* glow behind spark */}
+      <circle cx="90" cy="90" r="52" fill={`url(#spark-glow-${size})`} />
+      {/* spark — 4-point star */}
+      <path
+        d="M90 58 C93 74, 97 80, 114 84 C97 88, 93 94, 90 110 C87 94, 83 88, 66 84 C83 80, 87 74, 90 58 Z"
+        fill={`url(#spark-core-${size})`}
+        stroke="#B5347B" strokeWidth="1.2" strokeLinejoin="round"
+      />
+      {/* cute eyes — only at sizes where they read */}
+      {size >= 60 && (
+        <g>
+          <circle cx="85" cy="86" r={eye} fill="#3A1A2A" />
+          <circle cx="95" cy="86" r={eye} fill="#3A1A2A" />
+          {/* eye shines */}
+          <circle cx={85 + eye*0.3} cy={86 - eye*0.3} r={eye*0.3} fill="#fff" />
+          <circle cx={95 + eye*0.3} cy={86 - eye*0.3} r={eye*0.3} fill="#fff" />
+          {/* tiny smile */}
+          <path d={`M87 ${92 + size*0.005} Q90 ${95 + size*0.01} 93 ${92 + size*0.005}`}
+            stroke="#3A1A2A" strokeWidth={size*0.008} fill="none" strokeLinecap="round" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Icon: Bookworm — a pink worm poking out of a book/video thumb.
+// Playful: the worm is the tutor. The "book" is a play button.
+// ───────────────────────────────────────────────────────────
+function BookwormIcon({ size = 180 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 180 180" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id={`worm-bg-${size}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#D5ECFF" />
+          <stop offset="100%" stopColor="#7EA9E8" />
+        </linearGradient>
+        <linearGradient id={`worm-play-${size}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2D2A3E" />
+          <stop offset="100%" stopColor="#1A1729" />
+        </linearGradient>
+        <radialGradient id={`worm-body-${size}`} cx="30%" cy="30%">
+          <stop offset="0%" stopColor="#FFC4D4" />
+          <stop offset="100%" stopColor="#E84E88" />
+        </radialGradient>
+      </defs>
+      {/* bg */}
+      <rect width="180" height="180" fill={`url(#worm-bg-${size})`} />
+      {/* little clouds */}
+      <circle cx="30" cy="28" r="8" fill="#fff" opacity="0.5" />
+      <circle cx="42" cy="32" r="6" fill="#fff" opacity="0.5" />
+      <circle cx="150" cy="40" r="5" fill="#fff" opacity="0.45" />
+
+      {/* play-button "screen" — rounded rect with triangle */}
+      <rect x="30" y="55" width="120" height="90" rx="14" fill={`url(#worm-play-${size})`} />
+      <rect x="30" y="55" width="120" height="90" rx="14" fill="none"
+        stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+      {/* play triangle */}
+      <path d="M80 82 L80 118 L112 100 Z" fill="#FFD580" />
+
+      {/* hole the worm pokes through — dark oval */}
+      <ellipse cx="132" cy="100" rx="18" ry="14" fill="#0F0A18" />
+      {/* worm body emerging — curved tube */}
+      <path
+        d="M132 100 C 132 82, 118 70, 126 54 C 133 40, 150 40, 154 50"
+        fill="none"
+        stroke={`url(#worm-body-${size})`}
+        strokeWidth={size * 0.1}
+        strokeLinecap="round"
+      />
+      {/* worm head */}
+      <circle cx="154" cy="50" r={size * 0.065} fill={`url(#worm-body-${size})`} />
+      {size >= 60 && (
+        <g>
+          <circle cx="152" cy="48" r={size * 0.014} fill="#2A0E1E" />
+          <circle cx="158" cy="48" r={size * 0.014} fill="#2A0E1E" />
+          <circle cx={152 + size*0.005} cy={48 - size*0.003} r={size*0.005} fill="#fff" />
+          <circle cx={158 + size*0.005} cy={48 - size*0.003} r={size*0.005} fill="#fff" />
+          {/* mortarboard tassel — tiny antenna */}
+          <line x1="154" y1={50 - size*0.065} x2="158" y2={50 - size*0.11}
+            stroke="#2A0E1E" strokeWidth={size*0.008} strokeLinecap="round" />
+          <circle cx="158" cy={50 - size*0.11} r={size*0.014} fill="#FFD580" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Icon: Neuron — the friendly letter "a" as a neuron cell,
+// with dendrites that look like thought wires. Monospace-ish.
+// Playful without being cartoony.
+// ───────────────────────────────────────────────────────────
+function NeuronIcon({ size = 180 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 180 180" style={{ display: 'block' }}>
+      <defs>
+        <linearGradient id={`neu-bg-${size}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#0E1410" />
+          <stop offset="100%" stopColor="#1F3026" />
+        </linearGradient>
+        <radialGradient id={`neu-glow-${size}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#9FFFBF" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#9FFFBF" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id={`neu-cell-${size}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#B8FFC8" />
+          <stop offset="100%" stopColor="#4ADB7B" />
+        </linearGradient>
+      </defs>
+      <rect width="180" height="180" fill={`url(#neu-bg-${size})`} />
+      {/* grid dots */}
+      {[[30,30],[60,30],[90,30],[120,30],[150,30],
+        [30,60],[150,60],
+        [30,150],[60,150],[90,150],[120,150],[150,150]].map(([x,y],i) =>
+        <circle key={i} cx={x} cy={y} r="1" fill="#7FD67F" opacity="0.18" />
+      )}
+
+      {/* incoming dendrites */}
+      <g stroke="#4ADB7B" strokeWidth={size*0.012} fill="none" strokeLinecap="round" opacity="0.8">
+        <path d="M20 60 Q 45 70 60 84" />
+        <path d="M20 120 Q 45 115 60 100" />
+        <path d="M60 24 Q 70 45 82 64" />
+      </g>
+      {/* outgoing axon */}
+      <path d="M120 100 Q 140 110 160 100" stroke="#FFD580" strokeWidth={size*0.014}
+        fill="none" strokeLinecap="round" />
+      {/* synapse nodes */}
+      <circle cx="20" cy="60" r={size*0.02} fill="#4ADB7B" />
+      <circle cx="20" cy="120" r={size*0.02} fill="#4ADB7B" />
+      <circle cx="60" cy="24" r={size*0.02} fill="#4ADB7B" />
+      <circle cx="160" cy="100" r={size*0.025} fill="#FFD580" />
+
+      {/* glow under cell */}
+      <circle cx="90" cy="92" r="44" fill={`url(#neu-glow-${size})`} />
+
+      {/* neuron cell = lowercase "a" blob */}
+      <g>
+        {/* round body */}
+        <circle cx="84" cy="92" r="28" fill={`url(#neu-cell-${size})`} />
+        {/* the counter — the "eye" of the a */}
+        <circle cx="79" cy="94" r="9" fill="#0E1410" />
+        {/* stem/tail on the right — makes it an 'a' */}
+        <path d="M112 76 L112 116 Q 112 122 106 122 Q 100 120 104 108"
+          fill="#4ADB7B" stroke="#0E1410" strokeWidth="0" />
+        {/* small highlight */}
+        <ellipse cx="72" cy="78" rx="9" ry="5" fill="#fff" opacity="0.3" />
+      </g>
+
+      {/* if big enough, cute dot inside the counter */}
+      {size >= 80 && (
+        <circle cx="79" cy="94" r={size*0.012} fill="#B8FFC8" />
+      )}
+    </svg>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// iOS home-screen app tile (continuous rounded corners ≈ squircle)
+// ───────────────────────────────────────────────────────────
+function AppTile({ Icon, size = 120, label }) {
+  // iOS 17 icon radius ratio ~22.37%
+  const radius = size * 0.2237;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+      <div style={{
+        width: size, height: size, borderRadius: radius,
+        overflow: 'hidden', position: 'relative',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.1), 0 10px 30px -10px rgba(0,0,0,0.25)',
+      }}>
+        <Icon size={size} />
+      </div>
+      {label && (
+        <div style={{ fontSize: 13, color: '#2a2a2a', fontWeight: 500,
+          fontFamily: '-apple-system, system-ui' }}>{label}</div>
+      )}
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Home-screen preview — shows icon on a realistic wallpaper grid
+// ───────────────────────────────────────────────────────────
+function HomeScreen({ Icon, name }) {
+  const apps = [
+    { label: 'Messages', c: '#3DD65C', g: 'svg-bubble' },
+    { label: 'Photos',   c: 'linear-gradient(135deg,#FFD54F,#FF6E7B,#9969F5,#4FC3F7)', g: 'svg-photos' },
+    { label: 'Safari',   c: '#F2F4F7', g: 'svg-safari' },
+    { label: 'Notes',    c: '#FFF3B0', g: 'svg-notes' },
+    { label: 'Maps',     c: '#EAF2E4', g: 'svg-maps' },
+    { label: 'Music',    c: '#FF5E7E', g: 'svg-music' },
+    { label: 'Calendar', c: '#fff',    g: 'svg-cal' },
+    { label: 'Mail',     c: '#F2F4F7', g: 'svg-mail' },
+  ];
+  const sz = 62;
+  const rad = sz * 0.2237;
+  const renderGeneric = (a) => {
+    const common = { width: sz, height: sz };
+    switch (a.g) {
+      case 'svg-photos':
+        return <div style={{ ...common, borderRadius: rad, background: a.c }} />;
+      case 'svg-bubble':
+        return (
+          <div style={{ ...common, borderRadius: rad, background: a.c,
+            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 34, height: 26, borderRadius: 12, background: '#fff' }} />
+          </div>
+        );
+      case 'svg-safari':
+        return (
+          <div style={{ ...common, borderRadius: rad, background: '#F2F4F7',
+            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 40, height: 40, borderRadius: '50%',
+              background: 'conic-gradient(#147BE6 0deg, #147BE6 180deg, #E8F0FA 180deg, #E8F0FA 360deg)',
+              border: '2px solid #fff', boxShadow: '0 0 0 1px #d1d6dc' }} />
+          </div>
+        );
+      case 'svg-notes':
+        return <div style={{ ...common, borderRadius: rad,
+          background: `linear-gradient(180deg, #fff 0%, #fff 25%, ${a.c} 25%)` }} />;
+      case 'svg-maps':
+        return <div style={{ ...common, borderRadius: rad, background: a.c }} />;
+      case 'svg-music':
+        return <div style={{ ...common, borderRadius: rad,
+          background: 'linear-gradient(135deg,#FF5E7E,#FA2D48)' }} />;
+      case 'svg-cal':
+        return (
+          <div style={{ ...common, borderRadius: rad, background: '#fff',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ fontSize: 9, color: '#FF3B30', fontWeight: 700,
+              textTransform: 'uppercase', letterSpacing: 1 }}>wed</div>
+            <div style={{ fontSize: 28, fontWeight: 300, color: '#000',
+              lineHeight: 1, marginTop: -2 }}>22</div>
+          </div>
+        );
+      case 'svg-mail':
+        return (
+          <div style={{ ...common, borderRadius: rad, background: a.c,
+            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 36, height: 24, border: '2px solid #147BE6',
+              borderRadius: 3, position: 'relative' }}>
+              <div style={{ position: 'absolute', inset: 0,
+                borderTop: '12px solid #147BE6', borderLeft: '18px solid transparent',
+                borderRight: '18px solid transparent' }} />
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div style={{
+      width: 260, height: 480, borderRadius: 42, overflow: 'hidden',
+      position: 'relative', background: 'linear-gradient(180deg,#FAD0C4 0%, #FFD1A4 35%, #E0C3FC 100%)',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.15), 0 0 0 8px #1a1a1a, 0 0 0 9px #2a2a2a',
+      padding: 20, paddingTop: 50,
+      fontFamily: '-apple-system, system-ui',
+    }}>
+      {/* dynamic island */}
+      <div style={{ position: 'absolute', top: 12, left: '50%',
+        transform: 'translateX(-50%)', width: 90, height: 27,
+        borderRadius: 20, background: '#000' }} />
+      {/* status bar */}
+      <div style={{ position: 'absolute', top: 16, left: 24, right: 24,
+        display: 'flex', justifyContent: 'space-between',
+        color: '#fff', fontSize: 11, fontWeight: 600 }}>
+        <span>9:41</span>
+        <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span>••••</span><span>100%</span>
+        </span>
+      </div>
+
+      {/* App grid — our icon first + filler apps */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '14px 10px', marginTop: 6 }}>
+        {/* our icon (highlighted) */}
+        <div style={{ display: 'flex', flexDirection: 'column',
+          alignItems: 'center', gap: 4 }}>
+          <div style={{ width: sz, height: sz, borderRadius: rad,
+            overflow: 'hidden',
+            boxShadow: '0 3px 8px rgba(0,0,0,0.15)' }}>
+            <Icon size={sz} />
+          </div>
+          <div style={{ fontSize: 10, color: '#fff', fontWeight: 500,
+            textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{name}</div>
+        </div>
+        {apps.map(a => (
+          <div key={a.label} style={{ display: 'flex', flexDirection: 'column',
+            alignItems: 'center', gap: 4 }}>
+            {renderGeneric(a)}
+            <div style={{ fontSize: 10, color: '#fff', fontWeight: 500,
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>{a.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* dock */}
+      <div style={{ position: 'absolute', bottom: 22, left: 18, right: 18,
+        height: 66, borderRadius: 26, background: 'rgba(255,255,255,0.2)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-around',
+        padding: '0 12px' }}>
+        {[
+          { c: '#3DD65C' },
+          { c: '#147BE6' },
+          { c: '#0B84FE' },
+          { c: '#FA2D48' },
+        ].map((a, i) => (
+          <div key={i} style={{ width: 44, height: 44, borderRadius: 10,
+            background: a.c }} />
+        ))}
+      </div>
+      {/* home indicator */}
+      <div style={{ position: 'absolute', bottom: 6, left: '50%',
+        transform: 'translateX(-50%)', width: 100, height: 4,
+        borderRadius: 100, background: 'rgba(255,255,255,0.8)' }} />
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Notification preview — shows icon on a standard iOS notification
+// ───────────────────────────────────────────────────────────
+function Notification({ Icon, name, title, body, time = '9:41 AM' }) {
+  return (
+    <div style={{
+      width: 340, borderRadius: 22,
+      background: 'rgba(255,255,255,0.75)',
+      backdropFilter: 'blur(40px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+      boxShadow: '0 10px 40px -8px rgba(0,0,0,0.2), 0 0 0 0.5px rgba(0,0,0,0.08)',
+      padding: '12px 16px', display: 'flex', gap: 12,
+      fontFamily: '-apple-system, system-ui', color: '#000',
+      border: '0.5px solid rgba(255,255,255,0.6)',
+    }}>
+      <div style={{ width: 42, height: 42, borderRadius: 9.5,
+        overflow: 'hidden', flexShrink: 0,
+        boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+        <Icon size={42} />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between',
+          alignItems: 'baseline', marginBottom: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: -0.2 }}>
+            {name}
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(0,0,0,0.5)' }}>{time}</div>
+        </div>
+        <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: -0.3,
+          marginBottom: 1 }}>{title}</div>
+        <div style={{ fontSize: 14, color: 'rgba(0,0,0,0.85)',
+          letterSpacing: -0.3, lineHeight: 1.3 }}>{body}</div>
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Settings-row preview
+// ───────────────────────────────────────────────────────────
+function SettingsRow({ Icon, name }) {
+  return (
+    <div style={{ width: 320, background: '#fff',
+      borderRadius: 13, overflow: 'hidden',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05), 0 8px 24px -8px rgba(0,0,0,0.08)',
+      fontFamily: '-apple-system, system-ui' }}>
+      {['Notifications', name, 'Focus'].map((r, i) => (
+        <div key={r} style={{ display: 'flex', alignItems: 'center',
+          gap: 12, padding: '10px 14px',
+          borderBottom: i < 2 ? '0.5px solid rgba(60,60,67,0.12)' : 'none',
+          marginLeft: 44, paddingLeft: 0 }}>
+          <div style={{ marginLeft: -44, width: 28, height: 28, borderRadius: 6.5,
+            overflow: 'hidden', flexShrink: 0 }}>
+            {r === name
+              ? <Icon size={28} />
+              : <div style={{ width: '100%', height: '100%',
+                  background: r === 'Notifications' ? '#FF3B30' : '#A2845E' }} />}
+          </div>
+          <div style={{ flex: 1, fontSize: 17, color: '#000',
+            letterSpacing: -0.43 }}>{r}</div>
+          <svg width="7" height="12" viewBox="0 0 7 12">
+            <path d="M1 1l5 5-5 5" stroke="rgba(60,60,67,0.3)"
+              strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Concept card — wraps one concept with all the previews
+// ───────────────────────────────────────────────────────────
+function ConceptCard({ Icon, index, name, codename, tagline, swatches, rationale }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28,
+      flexShrink: 0 }}>
+      {/* header */}
+      <div style={{ width: 920 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'rgba(60,50,40,0.5)',
+            letterSpacing: 2, textTransform: 'uppercase' }}>
+            Concept 0{index}
+          </div>
+          <div style={{ fontSize: 30, fontWeight: 700, color: '#1a1814',
+            letterSpacing: -0.8 }}>{codename}</div>
+        </div>
+        <div style={{ fontSize: 17, color: 'rgba(60,50,40,0.75)',
+          marginTop: 6, maxWidth: 640, lineHeight: 1.45 }}>{tagline}</div>
+      </div>
+
+      {/* main row — hero + previews */}
+      <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
+        {/* Hero tile at 3 sizes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24,
+          alignItems: 'flex-start' }}>
+          {/* large hero */}
+          <div style={{
+            padding: 32, background: '#fff', borderRadius: 24,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 16px 48px -16px rgba(0,0,0,0.1)',
+          }}>
+            <AppTile Icon={Icon} size={220} />
+          </div>
+          {/* size ladder */}
+          <div style={{ padding: '20px 24px', background: '#fff', borderRadius: 16,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            display: 'flex', alignItems: 'flex-end', gap: 20 }}>
+            <AppTile Icon={Icon} size={120} />
+            <AppTile Icon={Icon} size={78} />
+            <AppTile Icon={Icon} size={40} />
+          </div>
+          {/* scale labels */}
+          <div style={{ display: 'flex', gap: 20, padding: '0 24px',
+            fontSize: 11, color: 'rgba(60,50,40,0.6)',
+            fontWeight: 500, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+            <div style={{ width: 120, textAlign: 'center' }}>Home</div>
+            <div style={{ width: 78, textAlign: 'center' }}>Spotlight</div>
+            <div style={{ width: 40, textAlign: 'center' }}>Notif</div>
+          </div>
+        </div>
+
+        {/* right column: contextual previews */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22,
+          alignItems: 'flex-start' }}>
+          <HomeScreen Icon={Icon} name={name} />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 22,
+          alignItems: 'flex-start' }}>
+          <Notification Icon={Icon} name={name}
+            title="Today's 15 minutes"
+            body="A gentle intro to transformers — Welch Labs, 12 min." />
+          <SettingsRow Icon={Icon} name={name} />
+          {/* Palette + rationale */}
+          <div style={{ width: 340, padding: 20,
+            background: '#fff', borderRadius: 16,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2,
+              color: 'rgba(60,50,40,0.55)', textTransform: 'uppercase',
+              marginBottom: 10 }}>Palette</div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+              {swatches.map(s => (
+                <div key={s.hex} style={{ flex: 1 }}>
+                  <div style={{ height: 40, borderRadius: 8, background: s.hex,
+                    boxShadow: 'inset 0 0 0 0.5px rgba(0,0,0,0.1)' }} />
+                  <div style={{ fontSize: 10, color: 'rgba(60,50,40,0.7)',
+                    marginTop: 4, fontFamily: 'ui-monospace, Menlo, monospace' }}>
+                    {s.hex}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.2,
+              color: 'rgba(60,50,40,0.55)', textTransform: 'uppercase',
+              marginBottom: 8 }}>Idea</div>
+            <div style={{ fontSize: 14, color: '#1a1814', lineHeight: 1.5 }}>
+              {rationale}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────────────────────────────────────────
+// Page
+// ───────────────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas>
+      {/* header */}
+      <div style={{ padding: '0 60px 56px', maxWidth: 1100 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2,
+          color: 'rgba(60,50,40,0.55)', textTransform: 'uppercase' }}>
+          App icon exploration · iOS 17 squircle · 1024×1024 @ viewBox
+        </div>
+        <div style={{ fontSize: 44, fontWeight: 700, letterSpacing: -1.2,
+          color: 'rgba(40,30,20,0.9)', marginTop: 8, lineHeight: 1.05 }}>
+          Learn AI — three playful icons
+        </div>
+        <div style={{ fontSize: 16, color: 'rgba(60,50,40,0.7)',
+          marginTop: 14, maxWidth: 760, lineHeight: 1.55 }}>
+          Each concept shown at four scales, on a home screen beside real
+          apps, in a notification, and in a settings row. Playful ≠ cartoony —
+          these earn the smile, then hold up when the icon is 40px tall.
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 100,
+        padding: '0 60px' }}>
+        <ConceptCard
+          Icon={SparkIcon}
+          index={1}
+          name="Learn"
+          codename="Little Spark"
+          tagline="A friendly 4-point spark with shy eyes, orbited by tiny idea nodes. Warm sunset gradient. Says: 'a spark of understanding, on a schedule.'"
+          swatches={[
+            { hex: '#FFD580' }, { hex: '#FF9A5A' },
+            { hex: '#B5347B' }, { hex: '#FFFAF0' },
+          ]}
+          rationale="The spark is the classic metaphor for insight — adding eyes makes it a companion, not an icon. The orbit hints at 'knowledge map' without spelling it out. Reads as a single warm shape from across the home screen."
+        />
+
+        <ConceptCard
+          Icon={BookwormIcon}
+          index={2}
+          name="Learn"
+          codename="Study Buddy"
+          tagline="A tiny pink worm in a graduation cap pokes its head out of a video's play button. Literal storytelling: the tutor lives inside the video."
+          swatches={[
+            { hex: '#D5ECFF' }, { hex: '#2D2A3E' },
+            { hex: '#E84E88' }, { hex: '#FFD580' },
+          ]}
+          rationale="Most explicit of the three — if the app's job is 'a tutor that interrupts videos to explain,' this draws the relationship directly. The play-button base is universally legible; the worm is the surprise. Highest personality, lowest abstraction."
+        />
+
+        <ConceptCard
+          Icon={NeuronIcon}
+          index={3}
+          name="Learn"
+          codename="Friendly a"
+          tagline="The lowercase letter 'a' redrawn as a neuron — dendrites as inputs, axon as output. A quiet nod to 'AI' without the letters AI."
+          swatches={[
+            { hex: '#0E1410' }, { hex: '#4ADB7B' },
+            { hex: '#B8FFC8' }, { hex: '#FFD580' },
+          ]}
+          rationale="Most restrained and technical — the one you'd pick if you didn't want your AI-learning app to look like a toy. Doubles as a mark: the 'a' could appear standalone on splash, loading, voice orb. Scales beautifully because it's essentially a single glyph."
+        />
+      </div>
+
+      {/* footnote */}
+      <div style={{ padding: '90px 60px 40px', maxWidth: 900 }}>
+        <div style={{ fontSize: 13, color: 'rgba(60,50,40,0.6)',
+          lineHeight: 1.6 }}>
+          <b style={{ color: 'rgba(40,30,20,0.85)' }}>Next moves:</b> pick a
+          direction and I'll produce a 1024×1024 export, a monochrome tinted
+          version for iOS 18 dark/tinted home-screens, and a splash/launch
+          treatment.
+        </div>
+      </div>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -38,7 +38,7 @@ final class RealtimeSession {
     """
 
     init() {
-        self.conversation = Conversation()
+        self.conversation = Conversation(debug: true)
     }
 
     func start() async {
@@ -50,7 +50,7 @@ final class RealtimeSession {
             await conversation.waitForConnection()
             try conversation.updateSession { session in
                 session.instructions = systemInstructions
-                session.audio.input.transcription = .init()
+                session.audio.input.transcription = .init(model: .gpt4oMini)
                 session.tools = [
                     .function(.init(
                         name: "ask_opus",
@@ -63,6 +63,11 @@ final class RealtimeSession {
             }
             phase = .ready
             Task { await observeFunctionCalls() }
+
+            // Trigger an initial greeting so we can verify audio playback
+            // even before mic input is known to work.
+            try? conversation.send(from: .user, text: "Please greet me briefly and ask what I want to learn about AI today.")
+            try? conversation.send(event: .createResponse())
         } catch {
             phase = .failed(String(describing: error))
         }

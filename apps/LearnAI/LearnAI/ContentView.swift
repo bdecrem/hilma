@@ -1,8 +1,10 @@
+import AVFoundation
 import SwiftUI
 import RealtimeAPI
 
 struct ContentView: View {
-    @State private var session = RealtimeSession()
+    @State private var session: RealtimeSession? = nil
+    @State private var permissionDenied = false
 
     var body: some View {
         ZStack {
@@ -28,9 +30,9 @@ struct ContentView: View {
                 Spacer()
 
                 MicOrb(
-                    isListening: session.conversation.isUserSpeaking,
-                    isSpeaking: session.conversation.isModelSpeaking,
-                    isMuted: session.conversation.muted,
+                    isListening: session?.conversation.isUserSpeaking ?? false,
+                    isSpeaking: session?.conversation.isModelSpeaking ?? false,
+                    isMuted: session?.conversation.muted ?? true,
                     isReady: isReady,
                     onTap: toggleMute
                 )
@@ -39,8 +41,10 @@ struct ContentView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
-                        ForEach(session.conversation.messages.suffix(6), id: \.id) { message in
-                            MessageRow(message: message)
+                        if let session {
+                            ForEach(session.conversation.messages.suffix(6), id: \.id) { message in
+                                MessageRow(message: message)
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -53,16 +57,35 @@ struct ContentView: View {
         }
         .preferredColorScheme(.dark)
         .task {
-            await session.start()
+            await boot()
         }
     }
 
+    private func boot() async {
+        // Request mic permission BEFORE constructing the WebRTC stack; the
+        // library creates the local audio track during Conversation.init,
+        // and a track built without permission never produces audio.
+        let granted = await AVAudioApplication.requestRecordPermission()
+        guard granted else {
+            permissionDenied = true
+            return
+        }
+        let s = RealtimeSession()
+        session = s
+        await s.start()
+    }
+
     private var isReady: Bool {
+        guard let session else { return false }
         if case .ready = session.phase { return true }
         return false
     }
 
     private var subtitle: String {
+        if permissionDenied {
+            return "Microphone access denied. Enable it in iOS Settings → LearnAI."
+        }
+        guard let session else { return "Requesting microphone…" }
         switch session.phase {
         case .idle: return "Starting…"
         case .connecting: return "Connecting…"
@@ -76,7 +99,7 @@ struct ContentView: View {
     }
 
     private func toggleMute() {
-        guard isReady else { return }
+        guard isReady, let session else { return }
         session.conversation.muted.toggle()
     }
 }
