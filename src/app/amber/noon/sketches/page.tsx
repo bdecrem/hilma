@@ -126,8 +126,8 @@ export default function SketchesToday() {
 function GridSvg({ grid, accent }: { grid: number[][]; accent: string }) {
   const ROWS = grid.length
   const COLS = grid[0]?.length ?? 0
-  const CELL = 10
-  const GAP = 1
+  const CELL = 12
+  const GAP = 3
   const W = COLS * CELL
   const H = ROWS * CELL
   return (

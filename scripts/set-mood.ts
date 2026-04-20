@@ -148,16 +148,32 @@ Your moods cover the full range: mad, sad, excited, depressed, motivated, inspir
 
 You are an artist, not a newsreader. Speak in first person. Be specific. Notice the small thing, not the big one. Avoid cliché and avoid sounding wise.`
 
-const DRAWABLE_RULES = `─── IMPORTANT — the keywords must be DRAWABLE ───
+const DRAWABLE_RULES = `─── IMPORTANT — each of the 8 images is ONE SINGLE OBJECT ───
 
-Later today, each keyword will be rendered as a 26×10 pixel silhouette — a tiny black-and-white icon. So every keyword MUST have a clear visual form: a shape a child could draw. Rays, a cup, a split wire, a dropped glove, a window half-open. Emotion lives in WHICH forms you reach for and how you describe them in your reaction — not in the words of the keyword itself.
+Later today, each image will be rendered as a 52×20 pixel silhouette — a wide, cinematic aspect (2.6:1). ONE object per sketch. No scenes. No figures doing things. No two-things-in-relation. Just one object, drawn large enough to fill the frame.
 
-- NOT "clammy hands" (no silhouette) — but the object that carries the feeling: a fogged mirror, a wet doorknob, a sweating glass.
-- NOT "wet cloth" — but "rag on a line," "dripping hem," "sagging sheet."
-- NOT "frantic gesture" — but "scattered rays," "split wires," "shaking compass."
-- "frantic light" worked because it has a form (broken rays). Keep that register.
+The object must be:
+- Physical and concrete — something you could point at and photograph.
+- Specific, not generic — "a bent paper crown" beats "a crown"; "a cracked porcelain teacup with one chip on the rim" beats "a teacup"; "a waxed-paper takeout bag half-open" beats "a bag".
+- Emotionally charged through your CHOICE of which object — a wilted carnation says more about today than an abstract "sadness." The specificity IS the feeling.
 
-Test before listing a keyword: can you draw this in 26×10 pixels so anyone would recognize it? If no, pick the object that carries the same feeling.`
+Good examples of single objects:
+- a bent paper crown
+- a half-eaten candy apple on a stick
+- a single leather glove on wet pavement
+- a folded metal chair tipped on its side
+- a brass bell with a cracked tongue
+- a pigeon feather caught in a grate
+- a broken wine glass with the stem intact
+- a stovetop kettle screaming
+
+Do NOT list:
+- Scenes or compositions: "a girl at a window", "a princess on a bus"
+- Two things: "crown under a seat", "dog in a backpack"
+- Figures doing things: "an employee drawing X", "a man sitting at a table"
+- Abstract feelings: "frantic light", "tender moment"
+
+8 SINGLE OBJECTS. Each one is a noun phrase naming one physical thing.`
 
 function weatherBlock(weather: WeatherSnapshot): string {
   return `- ${weather.conditions}, ${weather.tempF}°F (high ${weather.tempMaxF}°F, low ${weather.tempMinF}°F)
@@ -183,7 +199,7 @@ Output ONLY a JSON object (no prose, no code fence) in this exact shape:
     "palette": "one of: night | hearth | ink | petrol | bruise | oxblood",
     "accent": "one of: lime | sodium | uv"
   },
-  "keywords": ["exactly 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
+  "keywords": ["exactly 8 single physical objects — each a specific noun phrase", "emotional through your choice of WHICH object, not through scenes or figures", "one object per keyword, nothing else"]
 }`
 }
 
@@ -210,7 +226,7 @@ Output ONLY a JSON object (no prose, no code fence) in this exact shape:
     "palette": "one of: night | hearth | ink | petrol | bruise | oxblood",
     "accent": "one of: lime | sodium | uv"
   },
-  "keywords": ["exactly 8 DRAWABLE images", "each one an object or form with a clear silhouette", "emotional through your choice, not through abstract words"]
+  "keywords": ["exactly 8 single physical objects — each a specific noun phrase", "emotional through your choice of WHICH object, not through scenes or figures", "one object per keyword, nothing else"]
 }`
 }
 

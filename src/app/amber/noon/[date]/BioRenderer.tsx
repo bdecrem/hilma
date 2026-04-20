@@ -45,9 +45,10 @@ const FILLS: Fill[] = ['solid', 'checker', 'hstripe', 'vstripe', 'dots']
 
 interface Attempt {
   concept: string
-  blurb: string
+  blurb?: string
   grid?: Grid
   finalGrid?: Grid
+  finalSpin?: number[][]
   failed: boolean
   landed?: boolean
 }
@@ -59,7 +60,16 @@ interface NoonRun {
   attempts: Attempt[]
   winner: Attempt
   closingStatement: string
-  meta?: { engine?: string; landed?: boolean }
+  meta?: {
+    engine?: string
+    landed?: boolean
+    weather?: string
+    location?: string
+    news?: string[]
+    // A prose explanation of the stories Amber reacted to today.
+    // When present, it replaces the all-caps meta rail on the final screen.
+    explanation?: string
+  }
 }
 
 function gauss(): number {
@@ -166,7 +176,14 @@ function formatNoonDate(iso: string): string {
 export default function BioRenderer({ run }: { run: NoonRun }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [showText, setShowText] = useState(false)
-  const [currentConcept, setCurrentConcept] = useState<string>('')
+  const [showDate, setShowDate] = useState(false)
+  // Performance concept ticker — "last attempt:" during failures, "landed on:" on win.
+  const [conceptDisplay, setConceptDisplay] = useState<{
+    label: 'last attempt:' | 'landed on:'
+    name: string
+    blurb: string
+    visible: boolean
+  }>({ label: 'last attempt:', name: '', blurb: '', visible: false })
   const [isBare, setIsBare] = useState(false)
   const [isNarrow, setIsNarrow] = useState(false)
   useEffect(() => {
@@ -242,11 +259,21 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       }
     }
 
-    // Build attempt sequence from the baked run.
+    // Build attempt sequence from the baked run. We carry the baked finalSpin
+    // through so the renderer can snap to it at end-of-physics — this is what
+    // makes the artifact reproducible. The physics animation is cosmetic;
+    // the outcome came from the bake and is frozen there.
     const attempts = run.attempts.map(a => {
       const grid = (a.grid ?? a.finalGrid) as Grid
       const tuning = inferTuning(grid)
-      return { concept: a.concept, grid, ...tuning, landed: !a.failed || !!a.landed }
+      return {
+        concept: a.concept,
+        blurb: a.blurb ?? '',
+        grid,
+        finalSpin: a.finalSpin,
+        ...tuning,
+        landed: !a.failed,
+      }
     })
     if (!attempts.length) return
 
@@ -273,7 +300,6 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       crystalTime = 0
       phase = 'running'
       phaseStart = performance.now()
-      setCurrentConcept(a.concept)
     }
 
     function step(dt: number, T: number, biasField: number[][]) {
@@ -312,6 +338,9 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       ctx.globalAlpha = 1
     }
 
+    const pieceStart = performance.now()
+    let dateShown = false
+
     let raf = 0
     const loop = () => {
       const now = performance.now()
@@ -319,6 +348,12 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       lastNow = now
       const isLastAttempt = attemptIdx === attempts.length - 1
       const a = attempts[attemptIdx]
+
+      // Fade in the top-center datestamp eyebrow ~1.5s after the piece starts.
+      if (!dateShown && now - pieceStart > 1500) {
+        dateShown = true
+        setShowDate(true)
+      }
 
       if (phase === 'running') {
         stepAccumulator += wallDelta * PHYSICS_RATE
@@ -331,15 +366,29 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
           stepsThisFrame++
         }
         if (physicsTime >= ATTEMPT_SECONDS * PHYSICS_RATE) {
-          const crisp = measureCrisp(s, a.grid)
-          const landed = isLastAttempt || crisp >= LANDING_THRESHOLD
+          // Snap to the baked finalSpin so the visual at end-of-anneal matches
+          // what the bake recorded. Stochastic live physics is just cosmetic
+          // motion — the actual recorded state is authoritative.
+          if (a.finalSpin) {
+            for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+              s[r][c] = a.finalSpin[r][c]
+            }
+          }
+          // The bake already decided which attempt is the winner (the last one).
+          // Use that — do not re-adjudicate via live crispness.
+          const landed = !!a.landed
           if (landed) {
             phase = 'crystallizing'
             phaseStart = now
             stepAccumulator = 0
+            // Show "landed on: [concept]" — highlights with accent color.
+            setConceptDisplay({ label: 'landed on:', name: a.concept, blurb: a.blurb, visible: true })
           } else {
             phase = 'holding'
             phaseStart = now
+            // Show "last attempt: [concept]" — neutral color, so the viewer sees
+            // which concept just dissolved before the next one begins.
+            setConceptDisplay({ label: 'last attempt:', name: a.concept, blurb: a.blurb, visible: true })
           }
         }
       } else if (phase === 'crystallizing') {
@@ -389,6 +438,12 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [run, isBare])
 
+  // Concept ticker fades out once the closing statement takes over.
+  const conceptFadeOut = showText
+  const conceptOpacity = conceptDisplay.visible && !conceptFadeOut ? 1 : 0
+  const conceptIsWinner = conceptDisplay.label === 'landed on:'
+  const meta = run.meta
+
   return (
     <main style={{
       minHeight: '100dvh', background: bg, color: fg,
@@ -397,63 +452,119 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
     }}>
       <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0 }} />
 
-      {/* Running state: tiny concept label — hidden in bare (iframe) mode */}
+      {/* TOP EYEBROW — datestamp, fades in once ~1.5s into the piece. */}
       {!isBare && (
-      <div style={{
-        position: 'fixed', top: '4vh', left: '5vw',
-        fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase',
-        color: fgDim,
-        opacity: showText ? 0 : 1, transition: 'opacity 0.6s',
-        pointerEvents: 'none',
-      }}>
-        amber · noon · {formatNoonDate(run.date)} · {currentConcept}
-      </div>
+        <div style={{
+          position: 'fixed', top: '5vh', left: '50%', transform: 'translateX(-50%)',
+          fontSize: 'clamp(11px, 1.5vw, 13px)', letterSpacing: '0.06em',
+          color: fgDim, whiteSpace: 'nowrap',
+          opacity: showDate ? 0.9 : 0, transition: 'opacity 1.4s ease-in',
+          pointerEvents: 'none',
+        }}>
+          {formatNoonDate(run.date)}
+        </div>
       )}
 
-      {/* Final text panel — hidden in bare (iframe) mode */}
+      {/* CONCEPT TICKER — "last attempt:" during failures, "landed on:" on win.
+          Anchored top-left so viewers see which concept is dissolving/landing. */}
       {!isBare && (
-      <div style={{
-        position: 'fixed', inset: 0,
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-        padding: isNarrow ? '4vh 5vw' : '5vh 5vw',
-        opacity: showText ? 1 : 0, transition: 'opacity 1.4s ease-in',
-        pointerEvents: showText ? 'auto' : 'none',
-      }}>
-        <div>
+        <div style={{
+          position: 'fixed', top: '12vh', left: '5vw',
+          maxWidth: 320, pointerEvents: 'none',
+          opacity: conceptOpacity,
+          transition: 'opacity 0.8s',
+        }}>
           <div style={{
-            fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase',
-            color: fgDim,
+            fontSize: 10, letterSpacing: '0.06em',
+            color: conceptIsWinner ? tile : fgDimmer,
+            marginBottom: 6,
+            textTransform: 'lowercase',
           }}>
-            amber · noon · {formatNoonDate(run.date)}
+            {conceptDisplay.label}
           </div>
-          <h1 style={{
-            marginTop: 10,
-            fontSize: isNarrow ? 22 : 32,
-            fontWeight: 300, letterSpacing: '0.01em', color: fg,
-            display: isNarrow ? 'flex' : 'inline', flexDirection: 'column', gap: isNarrow ? 4 : 0,
-          }}>
-            <span>{run.mood.name}</span>
-            <span style={{ color: fgDim, fontSize: isNarrow ? 14 : 20, marginLeft: isNarrow ? 0 : 12 }}>
-              {isNarrow ? '' : '— '}{run.mood.reason}
-            </span>
-          </h1>
-        </div>
-        <div style={{ maxWidth: 780, fontSize: isNarrow ? 13 : 14, lineHeight: 1.6, color: fg }}>
-          {run.reaction && <p style={{ marginBottom: 14 }}>{run.reaction}</p>}
-          <p style={{ color: tile, fontStyle: 'italic' }}>{run.closingStatement}</p>
           <div style={{
-            marginTop: 12, fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+            fontSize: 15, fontWeight: 300, letterSpacing: '0.02em',
+            color: conceptIsWinner ? tile : fg,
+            lineHeight: 1.3,
+          }}>
+            {conceptDisplay.name}
+          </div>
+          {conceptDisplay.blurb && (
+            <div style={{
+              fontSize: 12, fontStyle: 'italic',
+              color: fgDim,
+              marginTop: 4, letterSpacing: '0.01em', lineHeight: 1.4,
+            }}>
+              &ldquo;{conceptDisplay.blurb}&rdquo;
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* BOTTOM STACK — closing statement (Fraunces) + either a prose
+          explanation (when meta.explanation is present) or the legacy
+          all-caps meta rail. Fades in ~1.4s after the piece lands. */}
+      {!isBare && (
+        <div style={{
+          position: 'fixed', bottom: '4vh', left: '50%', transform: 'translateX(-50%)',
+          width: isNarrow ? '90vw' : 'min(640px, 86vw)',
+          maxHeight: '56vh', overflowY: 'auto',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isNarrow ? 12 : 14,
+          opacity: showText ? 1 : 0, transition: 'opacity 1.4s ease-in',
+          pointerEvents: showText ? 'auto' : 'none',
+        }}>
+          <p style={{
+            fontFamily: "'Fraunces', Georgia, serif",
+            fontStyle: 'italic', fontWeight: 300,
+            fontSize: 'clamp(13px, 1.6vw, 16px)', lineHeight: 1.55, letterSpacing: '0.005em',
+            color: fg, textAlign: 'center', margin: 0,
+          }}>
+            {run.closingStatement}
+          </p>
+          {(meta?.location || meta?.weather || run.mood?.name) && (
+            <div style={{
+              width: '100%',
+              display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+              alignItems: 'baseline', columnGap: 14, rowGap: 6,
+              fontSize: 'clamp(10px, 1vw, 11px)', letterSpacing: '0.16em',
+              textTransform: 'uppercase', color: fgDim, textAlign: 'center',
+            }}>
+              {meta?.location && (
+                <MetaItem label={meta.location} value={meta.weather ?? ''} accent={tile} />
+              )}
+              <MetaItem label="mood" value={run.mood.name} accent={tile} />
+            </div>
+          )}
+          {meta?.explanation && (
+            <p style={{
+              fontFamily: "'DM Sans', system-ui, sans-serif",
+              fontWeight: 300,
+              fontSize: 'clamp(12px, 1.25vw, 14px)', lineHeight: 1.6,
+              color: fgDim, textAlign: 'left', margin: 0, width: '100%',
+            }}>
+              {meta.explanation}
+            </p>
+          )}
+          <div style={{
+            fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
             color: fgDimmer,
-            display: 'flex', gap: 14, flexWrap: 'wrap',
           }}>
-            <span>{run.meta?.engine ?? 'bio-engine'} · winner: {run.winner.concept}</span>
-            <a href="/amber/noon/archive" style={{ color: fgDimmer, textDecoration: 'underline', textUnderlineOffset: 3 }}>
-              archive
-            </a>
+            <a href="/amber/noon/archive" style={{
+              color: fgDimmer, textDecoration: 'underline', textUnderlineOffset: 3,
+            }}>archive</a>
           </div>
         </div>
-      </div>
       )}
     </main>
+  )
+}
+
+function MetaItem({ label, value, accent }: { label: string; value: string; accent: string }) {
+  if (!value) return null
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+      {label && <span style={{ color: accent, opacity: 0.8 }}>{label}</span>}
+      <span>{value}</span>
+    </span>
   )
 }

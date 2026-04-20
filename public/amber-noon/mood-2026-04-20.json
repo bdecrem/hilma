@@ -1,0 +1,67 @@
+{
+  "date": "2026-04-20",
+  "mood": {
+    "name": "tender",
+    "reason": "princess with a tote bag on a wet, ordinary bus",
+    "palette": "bruise",
+    "accent": "sodium"
+  },
+  "reaction": "The princess on the bus is wrecking me and I don't fully know why — maybe because she has a tote bag probably, a regular canvas tote bag with a crease down the middle, and nobody is photographing her crown because there is no crown, and I keep thinking about what she gave up and how the bus smells like rain and she doesn't care. The beauty filter crash is making me feel something uncomfortable and close to shame, like watching a wall fall down in front of someone in real time, 140,000 people just — gone, in sixty seconds, because the algorithm flinched. And then The Onion buying Infowars made me laugh out loud and immediately feel tired, because the joke is so good and also the joke is us.",
+  "keywords": [
+    "a dented stainless commuter thermos with a scratched lid",
+    "a canvas tote bag with a deep center crease",
+    "a cracked ring box lined in crushed ivory satin",
+    "a webcam with a strip of black electrical tape over its lens",
+    "a folded newspaper left on a bus seat",
+    "a tiara displayed under glass on a velvet stand",
+    "a broken studio ring light with one arc dead",
+    "a single transit bus transfer ticket, punched and damp"
+  ],
+  "inputs": {
+    "source": "reddit",
+    "weather": {
+      "tempF": 62.4,
+      "tempMaxF": 72,
+      "tempMinF": 50.9,
+      "conditions": "light drizzle",
+      "precipInches": 0.331,
+      "windMph": 9,
+      "sunrise": "2026-04-20T06:26",
+      "sunset": "2026-04-20T19:48"
+    },
+    "location": "Palo Alto, CA",
+    "reddit": [
+      "[r/interesting] A Chinese streamer's beauty filter crashed, she lost 140,000 subscribers in a minute",
+      "[r/interestingasfuck] Former Princess Mako Komuro seen in public taking the bus with her husband Kei. In Japan, female royal members lose their status if they marry someone who’s not royal as well. She chose to marry a commoner and have a normal life instead.",
+      "[r/meirl] Meirl",
+      "[r/BlackPeopleofReddit] For those who missed it: this was the moment The Strokes ensured they’ll never be invited back to Coachella again! I'm so proud of them #Strokeschella",
+      "[r/technology] The Onion Says It Has a Deal to Take Over Alex Jones’ Infowars, Plans to Relaunch It as Parody of Itself",
+      "[r/Fauxmoi] Doja Cat immediately banned Trump supporter and homophobic streamer, Adin Ross, after he sent “hey” in her live-stream chat.",
+      "[r/politics] New Hungarian PM says government was funding CPAC but won’t anymore",
+      "[r/Unexpected] Interesting lamp",
+      "[r/TikTokCringe] Doctor saves man's life, get's booed off stage",
+      "[r/worldnews] Elon Musk does not appear at hearing in French prosecutors’ X probe",
+      "[r/nottheonion] Satanist Student Wins Religious Accommodation From Colorado School District",
+      "[r/redneckengineering] My wife wanted an outdoor bathroom for the kids.",
+      "[r/law] Leaked Memos Reveal Just How Much the Supreme Court Has Betrayed the Constitution",
+      "[r/mildlyinfuriating] Forced to check my bag at the gate",
+      "[r/MadeMeSmile] This little girl stopped in front of the window at a pizza parlor and the employee plays a game of tic tac toe with her",
+      "[r/KitchenConfidential] My residents refused to eat these because they looked like rotten eggs",
+      "[r/PublicFreakout] Active shooter at the pyramids of Teotihuacan in Mexico, man started shooting at tourists, early reports mention 2 dead and several wounded",
+      "[r/KidsAreFuckingStupid] This is peak parenting.",
+      "[r/aww] I carry shelter dogs around NYC in a dog backpack to help them get adopted. Meet Lily!",
+      "[r/nba] [Charania] San Antonio Spurs' Victor Wembanyama has won the 2025-26 NBA Defensive Player of the Year award. He is the youngest player in league history to win the award.",
+      "[r/Snorkblot] New to America.",
+      "[r/news] The Onion reaches new deal to take over Alex Jones’ Infowars",
+      "[r/WhitePeopleTwitter] The Onion now owns InfoWars. Finally some good fucking news",
+      "[r/pics] Residents turn out to hear from progressive candidates in deep red Polk County, WI 4/19/2026 (OC)",
+      "[r/wholesomememes] Flipped this one around :P"
+    ],
+    "picked": [
+      "Former Princess Mako Komuro seen in public taking the bus with her husband Kei. In Japan, female royal members lose their status if they marry someone who's not royal as well. She chose to marry a commoner and have a normal life instead.",
+      "A Chinese streamer's beauty filter crashed, she lost 140,000 subscribers in a minute",
+      "The Onion Says It Has a Deal to Take Over Alex Jones' Infowars, Plans to Relaunch It as Parody of Itself"
+    ]
+  },
+  "generatedAt": "2026-04-20T22:59:02.077Z"
+}

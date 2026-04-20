@@ -13,11 +13,36 @@
 //   npx tsx scripts/bake-noon-bio.ts             (today)
 //   npx tsx scripts/bake-noon-bio.ts 2026-04-17
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// Load .env.local so ANTHROPIC_API_KEY is available for the proposeExplanation
+// and proposePalette calls below. Silent on failure — those calls check for
+// the key themselves and degrade gracefully.
+try {
+  const raw = readFileSync(join(__dirname, '..', '.env.local'), 'utf8')
+  for (const line of raw.split('\n')) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/)
+    if (!m || process.env[m[1]]) continue
+    let v = m[2]
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1)
+    process.env[m[1]] = v
+  }
+} catch {}
+
+// Same token → hex maps the set-mood/renderer pipeline uses. We resolve
+// archive colors here so Claude can reason about them as concrete hex values
+// rather than opaque palette tokens.
+const PALETTE_HEX: Record<string, string> = {
+  night: '#0A0A0A', hearth: '#1A110A', ink: '#0C1424',
+  petrol: '#0A1C1A', bruise: '#150826', oxblood: '#1C0808',
+}
+const ACCENT_HEX: Record<string, string> = {
+  lime: '#C6FF3C', sodium: '#FF7A1A', uv: '#A855F7',
+}
 
 const COLS = 52
 const ROWS = 20
@@ -37,6 +62,11 @@ const CRYSTAL_T = 0.005
 
 const MAX_ATTEMPTS = 10
 const MAX_SESSIONS = 3
+// Performance drama — require this many failures before accepting a landing.
+// Matches the legacy 26×10 pieces, which typically had 4–5 failed attempts
+// before the winner. An early lander is forced to fail (its result.landed
+// flipped) and the session continues until we've accumulated enough misses.
+const MIN_FAILURES = 3
 
 type Grid = number[][]
 
@@ -145,7 +175,155 @@ function inferTuning(grid: Grid): { radius: number; bias: number } {
   return { radius: 1.2, bias: 0.18 }
 }
 
-function main() {
+// ──────────────────────────────────────────────────────────────────────────
+// Claude helpers — authoring the final-screen prose and picking a palette.
+// Both degrade gracefully if the API key is missing or the call fails.
+// ──────────────────────────────────────────────────────────────────────────
+
+interface ArchiveEntry { date: string; mood: string; bg: string; tile: string }
+
+function scanArchive(dir: string, todayDate: string): ArchiveEntry[] {
+  const entries: ArchiveEntry[] = []
+  let files: string[] = []
+  try { files = readdirSync(dir) } catch { return [] }
+  for (const f of files) {
+    if (!/^\d{4}-\d{2}-\d{2}\.json$/.test(f)) continue
+    const d = f.replace(/\.json$/, '')
+    if (d === todayDate) continue
+    try {
+      const r = JSON.parse(readFileSync(join(dir, f), 'utf8'))
+      const bg = r.mood?.bgColor ?? PALETTE_HEX[r.mood?.palette] ?? ''
+      const tile = r.mood?.tileColor ?? ACCENT_HEX[r.mood?.accent] ?? ''
+      if (bg && tile) entries.push({ date: d, mood: String(r.mood?.name ?? ''), bg, tile })
+    } catch {}
+  }
+  return entries.sort((a, b) => a.date.localeCompare(b.date))
+}
+
+async function callClaude(userPrompt: string, system: string, maxTokens = 1024): Promise<string | null> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) return null
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: 'user', content: userPrompt }],
+      }),
+    })
+    if (!res.ok) {
+      console.warn(`  ⚠ claude call failed: ${res.status}`)
+      return null
+    }
+    const data = await res.json()
+    const text = (data.content || [])
+      .filter((b: { type: string }) => b.type === 'text')
+      .map((b: { text: string }) => b.text)
+      .join('\n')
+      .trim()
+    return text || null
+  } catch (e) {
+    console.warn(`  ⚠ claude call threw:`, e)
+    return null
+  }
+}
+
+interface MoodFile {
+  mood: { name: string; reason: string; palette: string; accent: string; bgColor?: string; tileColor?: string }
+  reaction?: string
+  inputs?: {
+    source?: string
+    weather?: { conditions: string; tempF: number }
+    picked?: string[]
+    headlines?: string[]
+  }
+}
+
+async function proposeExplanation(mood: MoodFile): Promise<string | null> {
+  const picks: string[] = (mood.inputs?.picked ?? mood.inputs?.headlines ?? [])
+    .map(p => p.replace(/^\[r\/[^\]]+\]\s*/, '').trim())
+    .filter(Boolean)
+  if (picks.length === 0) return null
+
+  const system = `You summarize the news stories an artist reacted to today, for display on a daily art piece's final screen. Factual third-person. No first-person, no second-person, no "we". Short and neutral.`
+
+  const userPrompt = `The artist is Amber (a generative artist in Palo Alto). Today's mood: ${mood.mood.name} — ${mood.mood.reason}.
+
+Stories she picked:
+${picks.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+Her reaction to them (for flavor — don't quote it):
+${mood.reaction || '(none)'}
+
+Write a short prose explanation (4–6 sentences total) in this exact format:
+
+1. First sentence, verbatim: "Amber picked ${picks.length} stor${picks.length === 1 ? 'y' : 'ies'} in the news today."
+2. One sentence per story: what factually happened, with one concrete human detail that explains why it snagged her. Use em-dashes or semicolons to join clauses. Keep it tight.
+3. Last sentence: "The throughline she's chasing: [one short phrase naming the theme the stories share]."
+
+Rules:
+- No markdown, no quotes around the whole thing, no preamble.
+- No "she felt", "she noticed" — narrate the events, not her interior state.
+- Don't editorialize or moralize.
+- Match the register of: "Former Princess Mako Komuro, photographed riding a public bus in Japan with her husband — female royals lose their status if they marry a commoner, and she chose to."
+
+Output ONLY the prose paragraph.`
+
+  const text = await callClaude(userPrompt, system, 600)
+  return text
+}
+
+async function proposePalette(
+  mood: MoodFile,
+  archive: ArchiveEntry[],
+): Promise<{ bgColor: string; tileColor: string } | null> {
+  const w = mood.inputs?.weather
+  const weatherLine = w ? `${w.conditions}, ${Math.round(w.tempF)}°F` : ''
+  const archiveLine = archive.length
+    ? archive.map(a => `- ${a.date} (${a.mood}): bg ${a.bg}, tile ${a.tile}`).join('\n')
+    : '(archive is empty)'
+
+  const system = `You pick a 2-color palette for a daily generative art piece rendered in 52×20 pixel cells. The background fills the viewport; cells are painted in the accent color.`
+
+  const userPrompt = `Today's mood: ${mood.mood.name} — ${mood.mood.reason}
+Weather (Palo Alto): ${weatherLine}
+Artist's reaction (for tonal context): ${(mood.reaction ?? '').slice(0, 500)}
+
+Palettes already used in the archive (do not duplicate these, and differentiate clearly):
+${archiveLine}
+
+Pick today's palette:
+- bgColor: hex for the background. Dark if the mood is heavy/brooding, pale/cream if the mood is hollow/exposed/washed-out, mid-tone (slate, dusk, dusty blue) if overcast/tender/soft.
+- tileColor: hex for the cells. Warm (amber, peach, copper) for tender/mournful/hearth moods; cool (lime, uv, ice) for uneasy/technical moods; muted (dust, bone, moss) for ambiguous ones. Must read clearly against the chosen bg.
+
+Good recent example, for calibration: a "tender + overcast drizzle" mood landed on bg #1A2430 (damp slate-blue) with tile #F2A66B (muted warm peach). Not every tender day should use that — pick something distinct again — but match that LEVEL of specificity and differentiation.
+
+Output ONLY a single JSON object, no prose, no code fence:
+{"bgColor":"#RRGGBB","tileColor":"#RRGGBB"}`
+
+  const text = await callClaude(userPrompt, system, 200)
+  if (!text) return null
+  const m = text.match(/\{[^}]*\}/)
+  if (!m) return null
+  try {
+    const obj = JSON.parse(m[0])
+    const bg = String(obj.bgColor || '').trim()
+    const tile = String(obj.tileColor || '').trim()
+    if (!/^#[0-9a-fA-F]{6}$/.test(bg) || !/^#[0-9a-fA-F]{6}$/.test(tile)) return null
+    return { bgColor: bg, tileColor: tile }
+  } catch {
+    return null
+  }
+}
+
+async function main() {
   const date = process.argv[2] || todayDate()
   const dir = join(__dirname, '..', 'public', 'amber-noon')
   const moodPath = join(dir, `mood-${date}.json`)
@@ -180,8 +358,14 @@ function main() {
       lastIdx = idx
       const c = pool[idx]
       const result = runAttempt(c.grid, c.radius, c.bias)
+      // Drama gate: if we haven't logged enough failures yet, force this
+      // attempt to fail even if the physics actually landed. Keeps the session
+      // from ending on attempt 2 and restores the legacy 4–5-attempt cadence.
+      const failuresSoFar = session.filter(x => !x.result.landed).length
+      const forced = result.landed && failuresSoFar < MIN_FAILURES
+      if (forced) result.landed = false
       session.push({ concept: c, result })
-      console.log(`  s${sess} a${i} ${c.name.padEnd(22)} anneal=${result.annealCrisp.toFixed(3)} final=${result.finalCrisp.toFixed(3)} ${result.landed ? 'LANDED' : ''}`)
+      console.log(`  s${sess} a${i} ${c.name.padEnd(22)} anneal=${result.annealCrisp.toFixed(3)} final=${result.finalCrisp.toFixed(3)} ${result.landed ? 'LANDED' : forced ? '(forced fail)' : ''}`)
       if (result.landed) { landed = true; break }
     }
     if (landed) { best = { session, landed: true }; break }
@@ -219,9 +403,45 @@ function main() {
       ? `it came through. ${winner.concept}.`
       : `nothing landed today. just ${winner.concept}, dissolving.`
 
+  // Populate meta.weather / location / news from the mood file so the renderer
+  // can surface them in the bottom meta-rail (matching the legacy performance).
+  const w = mood.inputs?.weather
+  const weatherString = w ? `${w.conditions} · ${Math.round(w.tempF)}°F` : undefined
+  const locationString = mood.inputs?.location
+    ? String(mood.inputs.location).split(',')[0]  // "Palo Alto, CA" → "Palo Alto"
+    : undefined
+  // Use the specific items Amber picked (up to 3) as the news meta.
+  const picked: string[] = Array.isArray(mood.inputs?.picked) ? mood.inputs.picked : []
+  const headlines: string[] = Array.isArray(mood.inputs?.headlines) ? mood.inputs.headlines : []
+  const newsItems = (picked.length ? picked : headlines).slice(0, 3).map((s: string) => {
+    // Strip [r/sub] prefix from reddit entries for a tighter rail.
+    const cleaned = s.replace(/^\[r\/[^\]]+\]\s*/, '').trim()
+    // Cap to a short phrase for the rail.
+    return cleaned.length > 60 ? cleaned.slice(0, 58) + '…' : cleaned
+  })
+
+  // Author the final-screen prose ("Amber picked N stories in the news today…")
+  // and pick a mood-matched palette that differentiates from the archive.
+  // Both run concurrently; both degrade gracefully on failure.
+  console.log(`  authoring explanation + picking palette…`)
+  const archive = scanArchive(dir, date)
+  const [explanation, palette] = await Promise.all([
+    proposeExplanation(mood),
+    mood.mood.bgColor && mood.mood.tileColor
+      ? Promise.resolve(null)  // respect manual overrides already in the mood file
+      : proposePalette(mood, archive),
+  ])
+  if (explanation) console.log(`  ✓ explanation (${explanation.length} chars)`)
+  if (palette) console.log(`  ✓ palette bg=${palette.bgColor} tile=${palette.tileColor}`)
+
+  const moodOut = {
+    ...mood.mood,
+    ...(palette ? { bgColor: palette.bgColor, tileColor: palette.tileColor } : {}),
+  }
+
   const run = {
     date,
-    mood: mood.mood,
+    mood: moodOut,
     reaction: mood.reaction,
     keywords: mood.keywords,
     attempts,
@@ -231,6 +451,10 @@ function main() {
       engine: 'bio-engine/G3',
       sessions: best ? (landed ? 1 : MAX_SESSIONS) : 0,
       landed,
+      weather: weatherString,
+      location: locationString,
+      news: newsItems,
+      ...(explanation ? { explanation } : {}),
     },
   }
 
@@ -242,4 +466,4 @@ function main() {
   console.log(`  ${attempts.length} attempts; winner: "${winner.concept}" (${landed ? 'LANDED' : 'best-we-got'}, finalCrisp=${winner.finalCrisp.toFixed(3)})`)
 }
 
-main()
+main().catch((e) => { console.error(e); process.exit(1) })

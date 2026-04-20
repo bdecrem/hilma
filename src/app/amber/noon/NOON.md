@@ -73,6 +73,28 @@ Run: `npx tsx scripts/bake-noon-bio.ts [YYYY-MM-DD]`.
 
 The old deterministic-attempts baker (no physics — predetermined success pattern, `planAttempts` from `generator.ts`). Still present for regenerating 26×10 archive pieces. New pieces should use `bake-noon-bio.ts`.
 
+## The curation pass — 2026-04-20 lesson
+
+`sketch-concepts.ts` produces legible icons but not *great* images. The bake pipeline runs fine on auto-sketches, but when we want the day's piece to actually land visually, insert a human-in-the-loop curation step between `sketch-concepts` and `bake-noon-bio`.
+
+**What failed (automated):** Even with tuned prompts (single object, canvas-filling, specific detail), Opus-generated sketches top out at "bathroom-sign icon." The medium is 1-bit pixel cells — the model can't do stroke weight, gradient, or line quality. It produces competent silhouettes, not composition.
+
+**What worked — the flow, in order:**
+1. **Run set-mood and sketch-concepts as normal** — even though the auto-sketches won't ship, the `mood.reaction` and `keywords` are how we understand what today is about. Read the reaction aloud. Read the 8 keywords. Notice the themes — the two or three stories Amber actually picked.
+2. **Summarize the stories.** Say back to the user what Amber is reacting to — the literal news/reddit items that snagged her. This is the "ideation" step and it's almost always strong.
+3. **Ask Claude for 5 simple, powerful visual ideas** tied to those themes. Each one must be something Claude can actually draft in a 52×20 grid. Single object or minimal composition. Wide cinematic aspect exploited. No "scene with a figure doing an action" — that's beyond pixel-art reach. Good examples from 2026-04-20: *crown on an empty bus seat*, *face split into filter-on/filter-crashed halves*, *row of crowned heads with one bare*, *cliff of descending bars*, *broken mirror with crown fragmenting inside*.
+4. **User picks the ideas to ship** (or asks for iteration). Pick 5.
+5. **Hand-draft them** — write a `scripts/draw-*.ts` helper (modeled on `scripts/draw-five.ts`) that builds each grid as an array of per-row column indices, maps to `number[][]`, and writes the 5 `{name, blurb, grid}` concepts into `concepts-YYYY-MM-DD.json`, REPLACING the auto-generated 8. Hand-drafting in code (per-row index lists) is faster and more reliable than trying to count 52-char ASCII strings by eye.
+6. **Preview at `/amber/noon/sketches`** — must render cleanly. Confirm each concept reads at a glance. The sketches page uses `CELL=12, GAP=3` — each cell is visibly distinct, so you can count 52 across and 20 down.
+7. **Run `bake-noon-bio.ts`** — the bio-engine bakes a session from the curated 5. Fewer concepts means a tighter session.
+
+**Heuristics for proposing the 5 ideas:**
+- *Single object beats scene.* A crown on a seat beats "Mako on a bus holding a pole beside her husband." The latter is a composition the model can't draw; the former is one shape with a clear silhouette that carries the whole story.
+- *Exploit the 2.6:1 aspect.* Wide things that want to be wide — a row of figures, a descending histogram, a long bench, a horizon. A square-ish subject feels small in the frame.
+- *Lean into the medium.* Pixel art is good at grids, dashes, broken outlines, scattered blocks, stepped diagonals. A "face pixelated on one side" is *more* legible in 1-bit cells than it would be in paint. A "cracked mirror" renders as radial lines — easy. Use what the medium does well.
+- *Asymmetry always.* One crown off-center; the bare head placed 3rd or 6th, never 4th; the cascade going left-to-right.
+- *Each idea should carry one of today's themes entirely*, not a fragment. If Amber has three stories, pick 2–3 for the ideas and stack multiple ideas on the strongest story.
+
 ## Data files (per-day)
 
 All under `public/amber-noon/`:
@@ -120,27 +142,26 @@ Per-concept tuning (`radius`, `bias`) balances landing rates so thin shapes land
 
 Typical use: a pale cream + graphite combo (`#E8DFD0` / `#6A6460`) for a hollowed-out mood — inverting the usual dark-on-dark default.
 
+## Auto-authored at bake time
+
+As of 2026-04-20, `bake-noon-bio.ts` generates two extra pieces of the artifact via Claude calls after the physics session completes:
+
+### 1. Prose explanation (`meta.explanation`)
+A neutral third-person summary of the stories Amber picked today, displayed on the final screen below the closing statement. Format is fixed:
+- First sentence: `"Amber picked N stor(y|ies) in the news today."`
+- One sentence per story: what factually happened + one concrete human detail.
+- Last sentence: `"The throughline she's chasing: [theme]."`
+
+The prompt calibrates on the voice of today's Mako/streamer/Onion paragraph — em-dash- and semicolon-joined clauses, no first-person, no "she felt"/"she noticed" narration. If the Claude call fails, the field is omitted and the renderer falls back to the legacy uppercase meta rail.
+
+### 2. Per-day palette (`mood.bgColor` / `mood.tileColor`)
+A 2-color hex pair picked to match the mood's emotional register and differentiate from the archive. The baker passes every prior day's resolved `{bg, tile}` pair to Claude so it can avoid repeats. Dark bg for heavy/brooding, pale/cream for hollow/exposed, mid-tone slate for overcast/tender; warm accent for tender/mournful, cool for uneasy/technical, muted for ambiguous.
+
+If `mood.bgColor` and `mood.tileColor` are already set in the mood file (hand-overridden), the baker respects them and skips the palette call.
+
 ## Manual steps still to automate
 
-Three things were done by hand for 2026-04-17. Next noon will produce a workable-but-flatter piece unless these are scripted:
-
-### 1. Custom per-day palette (`bgColor` / `tileColor`)
-`set-mood.ts` only returns the 6 palette tokens + 3 accent tokens. It does NOT ask Amber to propose hex overrides. Today's cream + graphite (`#E8DFD0` / `#6A6460`) was proposed in chat and written into `mood-2026-04-17.json` by hand.
-
-**To automate:** extend the `set-mood.ts` prompt to give Amber license to return optional `bgColor` / `tileColor` hexes when the mood calls for something outside the 6 dark presets (e.g. pale/overexposed for hollowed-out, bile green for queasy). Engine already honors the overrides — just need the prompt to produce them.
-
-### 2. Reconciling closing statement
-`bake-noon-bio.ts` writes a generic closing (`"it came through. {winner}."`). When the physics-picked winner doesn't match what Amber's reaction is actually about (e.g. reaction fixates on "child's desk" but Ising lands on "tanker at anchor"), the piece reads incoherent. Today's closing was hand-authored via a one-off Claude API call that gave Amber the reaction + winner and asked her to reconcile.
-
-**To automate:** at the end of `bake-noon-bio.ts` (after the winner is determined), call Claude once with:
-- the full reaction paragraph
-- the attempted concepts in order
-- the winner concept
-- Amber persona
-
-and ask for a 2–3 sentence closing in Amber's voice that honestly bridges what she was fixated on in the reaction to whatever shape actually landed. Write it into `closingStatement`.
-
-### 3. Homepage `creations.json` entry
+### 1. Homepage `creations.json` entry
 The amber homepage (`/amber`) reads `src/app/amber/creations.json` for its live-card grid. New pieces don't auto-surface — today's entry was added by hand:
 ```json
 { "name": "noon", "url": "/amber/noon/2026-04-17", "date": "04.17", "category": "noon", "description": "hollowed-out · tanker at anchor" }

@@ -48,7 +48,15 @@ interface SketchedConcept {
 
 function parseAsciiGrid(ascii: string): number[][] {
   const lines = ascii.replace(/\r/g, '').split('\n').map(l => l.trimEnd()).filter(l => l.length > 0)
-  const gridLines = lines.filter(l => l.length >= COLS * 0.7 && !/[a-zA-Z]{3,}/.test(l))
+  // Accept any line that's wide enough and not mostly alphabetic (which would be prose).
+  // Opus occasionally slips a label (e.g. "TRANSFER") into a sketch row; we let it
+  // through and let the char-by-char parser below map non-'#' to empty.
+  const isLikelyGridRow = (l: string) => {
+    if (l.length < COLS * 0.7) return false
+    const alpha = (l.match(/[a-zA-Z]/g) || []).length
+    return alpha / l.length < 0.3
+  }
+  const gridLines = lines.filter(isLikelyGridRow)
   if (gridLines.length < ROWS) {
     throw new Error(`not enough grid rows (${gridLines.length} < ${ROWS}) in:\n${ascii}`)
   }
@@ -74,11 +82,22 @@ You sketch in a strict 52 columns × 20 rows grid, using '#' for filled cells an
 Keywords:
 ${mood.keywords.map((k, i) => `${i + 1}. ${k}`).join('\n')}
 
-═══ TARGET REGISTER — what good looks like ═══
+═══ ONE OBJECT PER SKETCH. DRAW IT LARGE. ═══
 
-This is "frantic light" — the one you nailed last time. Study it:
+Each keyword names ONE physical object. Draw that object, and ONLY that object. No scenes. No figures interacting with it. No accompanying elements. Just the thing itself.
 
-....................................................
+The canvas is 52 columns × 20 rows. It is WIDE (2.6:1). You must FILL IT with the object. The most common failure is drawing the object as a small icon centered in empty space. Don't do that.
+
+How to fill the canvas with one object:
+- Pick the object's longest axis and orient it along the 52-col width. A key laid sideways. A bell hung by its rope so the rope spans top-to-bottom. A shoe in profile.
+- Make the object ~16–20 rows tall (use top and bottom of the canvas). NOT 8–10 rows floating in the middle.
+- Make the object's widest point ~30–48 cols wide. Not centered in cols 20–32.
+- Internal detail is welcome: a crack, a dent, a chip, a visible weave, a glint of light. But keep all details PART OF the same object. No separate elements beside it.
+
+═══ TARGET REGISTER ═══
+
+EXAMPLE — "frantic light" (abstract gesture, fills the canvas):
+
 ....................................................
 ..................##........##......................
 ..................##........##......................
@@ -98,18 +117,19 @@ This is "frantic light" — the one you nailed last time. Study it:
 ............##....##........##......................
 ....................................................
 ....................................................
+....................................................
 
-Why it works: asymmetric scatter, vertical lines with breaks, tons of negative space, no filled blob, no symmetry. You can READ it instantly but it also has a feeling. That's the bar.
+Why it works: the single subject (scattered rays) spans the full width (col 2 to col 42) and most of the height. Asymmetric. Readable instantly. Has a feeling.
 
 ═══ Rules ═══
 
 - Each sketch is EXACTLY 20 rows of EXACTLY 52 characters
 - Only '#' (filled) and '.' (empty) — nothing else
-- Iconic and immediately recognizable — think road sign, bathroom sign, weather icon
-- LEAVE NEGATIVE SPACE. At least half the cells should be '.'
-- NO centered filled ovals, NO undifferentiated blobs, NO "round shape in the middle"
-- Prefer lines, edges, scatter, gesture over filled areas
-- If you can't make an image legible, make it SPARE rather than DENSE — a few dots read better than a mushy cloud
+- ONE OBJECT per sketch. Nothing next to it, above it, or beside it. Just the thing.
+- USE THE CANVAS. Scale the object to fill 16–20 rows and 30–48 cols.
+- Keep negative space (~50%), but achieve it through the object's own shape (outline, gaps, internal voids) — not by drawing it small.
+- NO centered filled ovals, NO undifferentiated blobs, NO "round shape in the middle of empty space"
+- Prefer outlines, edges, asymmetric gesture, specific detail over uniform filled areas
 
 Output ONLY a JSON array (no prose, no code fence) with one object per keyword:
 [
