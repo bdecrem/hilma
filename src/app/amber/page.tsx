@@ -461,6 +461,8 @@ export default function AmberV3FeedPage() {
             {' · '}
             <a href="/amber/noon/archive">today</a>
             {' · '}
+            <a href="/amber/escalation">escalation</a>
+            {' · '}
             <a href="https://vibeceo-production.up.railway.app/amber" target="_blank" rel="noopener">archive</a>
           </div>
         </header>
