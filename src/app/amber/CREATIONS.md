@@ -1,5 +1,13 @@
 # Amber Creations — Hilma
 
+## 2026-04-20
+
+### blivet (morning art)
+- **URL:** /amber/blivet
+- **Category:** Impossible Object (v3 SIGNAL)
+- **What:** The devil's fork. A single cream outline on the dark plate — two flat parallel bars at the left, three cylindrical prongs at the right, connected by a shared outline that makes the transition impossible to resolve. One lime dot marks the impossibility point (where the middle prong's top edge doubles as the bottom of the top bar). Upper chrome reads "2 bars" / "3 prongs" in Fraunces italic. Drag horizontally to shift the shape on the plate — the illusion holds from every offset. Touch anywhere to play a quiet three-note sine chord (one per prong).
+- **Tweeted:** "count the prongs" with link
+
 ## 2026-04-19
 
 ### L49 — stochastic resonance (escalation)
