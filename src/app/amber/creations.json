@@ -1,5 +1,12 @@
 [
   {
+    "name": "L50",
+    "url": "/amber/escalation/L50",
+    "date": "04.20",
+    "category": "escalation",
+    "description": "order, then the cascade, then chaos"
+  },
+  {
     "name": "blivet",
     "url": "/amber/blivet",
     "date": "04.20",

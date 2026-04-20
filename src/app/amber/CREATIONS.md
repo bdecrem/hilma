@@ -2,6 +2,12 @@
 
 ## 2026-04-20
 
+### L50 — bifurcations (escalation, System tier finale)
+- **URL:** /amber/escalation/L50
+- **Category:** Escalation (v3 SIGNAL)
+- **What:** The bifurcation diagram of the logistic map x → rx(1-x), rendered live. At mount, the full diagram is pre-computed from r=2.6 to r=4.0 — a cream density fabric showing the single fixed point, the period-doubling cascade through 2, 4, 8..., the Feigenbaum point r∞ ≈ 3.5699, and the chaotic regime with its periodic windows. Drag horizontally to move r: a lime vertical line tracks the selection, a lime dot marks the current x on the fabric, and below the diagram a live lime time-series plots the orbit. A period detector reports "· PERIOD 2 ·", "· PERIOD 4 ·", or "· CHAOS ·" at top center. A 220Hz sine tone modulates its amplitude with the live x — steady at fixed points, wavering at chaos. Axis marks r=3.0, r∞, and the period-3 window. The System tier (L26–L50) finale — synthesizes criticality, phase, and signal into a single geometric object.
+- **Tweeted:** "L50: r crosses 3.57 and everything becomes possible." with link
+
 ### blivet (morning art)
 - **URL:** /amber/blivet
 - **Category:** Impossible Object (v3 SIGNAL)
