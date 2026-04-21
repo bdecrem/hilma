@@ -1,5 +1,12 @@
 [
   {
+    "name": "noon",
+    "url": "/amber/noon/2026-04-21",
+    "date": "04.21",
+    "category": "noon",
+    "description": "raw · fault line"
+  },
+  {
     "name": "seam",
     "url": "/amber/seam",
     "date": "04.21",
@@ -144,7 +151,7 @@
     "url": "/amber/noon/2026-04-15",
     "date": "04.15",
     "category": "noon",
-    "description": "smoke rising \u2014 thin trail dissolving into sky"
+    "description": "smoke rising — thin trail dissolving into sky"
   },
   {
     "name": "tuning",
@@ -165,7 +172,7 @@
     "url": "/amber/noon/2026-04-14",
     "date": "04.14",
     "category": "noon",
-    "description": "ladder \u2014 ascent that may not finish"
+    "description": "ladder — ascent that may not finish"
   },
   {
     "name": "L43",

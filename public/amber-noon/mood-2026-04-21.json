@@ -1,0 +1,43 @@
+{
+  "date": "2026-04-21",
+  "mood": {
+    "name": "raw",
+    "reason": "37 years to notice women protecting the earth",
+    "palette": "bruise",
+    "accent": "lime"
+  },
+  "reaction": "I got stuck on the Goldman Prize thing — all six winners women, first time in 37 years — and instead of feeling good about it I felt this low, petty irritation that it took until 2026, and then I felt guilty for not just being glad, and then the rain came in sideways off the bay and hit the window at exactly that moment and I thought: of course. The ceasefire is probably going to collapse tomorrow night. I keep looking at my hands.",
+  "keywords": [
+    "a frayed rope tied in a half-finished knot",
+    "a cracked ship's porthole with salt crust on the rim",
+    "a single green laurel branch going brown at the edges",
+    "a seized cargo manifest stamped with a red VOID",
+    "a snapped seismograph needle mid-scroll",
+    "a dog-eared library book with its spine broken open",
+    "a passport with a denied-entry stamp pressed too hard",
+    "a guttered emergency candle in a pool of its own wax"
+  ],
+  "inputs": {
+    "source": "news",
+    "weather": {
+      "tempF": 59.8,
+      "tempMaxF": 61.1,
+      "tempMinF": 49.5,
+      "conditions": "partly cloudy",
+      "precipInches": 0.362,
+      "windMph": 9.9,
+      "sunrise": "2026-04-21T06:25",
+      "sunset": "2026-04-21T19:49"
+    },
+    "location": "Palo Alto, CA",
+    "headlines": [
+      "U.S.-Iran ceasefire expires Wednesday; Trump says extension 'highly unlikely' as peace talks in Pakistan remain uncertain",
+      "7.4-magnitude earthquake strikes northeastern Japan, triggering tsunami warning later lifted; government warns of elevated megaquake risk",
+      "Goldman Environmental Prize announces 2026 winners — for the first time in its history, all six recipients are women",
+      "Japan formally abandons postwar ban on weapons exports, clearing way for fighter jets and combat drones",
+      "Deaths in ICE custody reach 17 in 2026 — roughly one per week — as cases against arrested protesters keep collapsing",
+      "Record 4,235 library book challenges filed in 2025, second-highest year ever; 40% targeted LGBTQ+ or BIPOC stories"
+    ]
+  },
+  "generatedAt": "2026-04-21T16:59:50.349Z"
+}

@@ -186,6 +186,11 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
   }>({ label: 'last attempt:', name: '', blurb: '', visible: false })
   const [isBare, setIsBare] = useState(false)
   const [isNarrow, setIsNarrow] = useState(false)
+  // Latched so the resize function (inside a useEffect closure) can pick up
+  // the current text-mode without being re-created. Also used to trigger a
+  // re-resize when text appears so the canvas shrinks out of its way.
+  const textShownRef = useRef(false)
+  const resizeRef = useRef<() => void>(() => {})
   useEffect(() => {
     try { setIsBare(window.self !== window.top) } catch { setIsBare(true) }
     const mq = window.matchMedia('(max-width: 720px)')
@@ -194,6 +199,13 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
     mq.addEventListener('change', apply)
     return () => mq.removeEventListener('change', apply)
   }, [])
+
+  // When the closing text appears, shrink the canvas bounds so the bottom
+  // stack gets its own region instead of overlapping the fault/figure.
+  useEffect(() => {
+    textShownRef.current = showText
+    resizeRef.current()
+  }, [showText])
 
   const bg = run.mood.bgColor ?? PALETTES[run.mood.palette] ?? '#0A0A0A'
   const tile = run.mood.tileColor ?? ACCENTS[run.mood.accent] ?? '#C6FF3C'
@@ -224,14 +236,20 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       canvas.height = H
       canvas.style.width = `${window.innerWidth}px`
       canvas.style.height = `${window.innerHeight}px`
+      const textShown = textShownRef.current
+      // Bare (iframe thumbnail): full area. During physics animation: 50% of H.
+      // After text appears: shrink to 35% of H and bias up so the bottom stack
+      // (closing + meta + explanation + archive) has its own clean region.
+      const vFraction = isBare ? 0.88 : (textShown ? 0.34 : 0.50)
+      const biasFraction = isBare ? 0 : (textShown ? 0.22 : 0.08)
       const maxCellW = Math.floor(W * 0.94 / COLS)
-      // Bare (iframe thumbnail): center vertically, full cell height. Otherwise bias up for text room.
-      const maxCellH = Math.floor(W * (isBare ? 0.88 : 0.50) / COLS * (ROWS / COLS > 0 ? 1 : 1))
-      const vBudget = Math.floor(H * (isBare ? 0.88 : 0.50) / ROWS)
+      const maxCellH = Math.floor(W * vFraction / COLS)
+      const vBudget = Math.floor(H * vFraction / ROWS)
       CELL = Math.max(3, Math.min(maxCellW, maxCellH, vBudget))
       bx = Math.floor((W - COLS * CELL) / 2)
-      by = Math.floor((H - ROWS * CELL) / 2 - (isBare ? 0 : H * 0.08))
+      by = Math.floor((H - ROWS * CELL) / 2 - H * biasFraction)
     }
+    resizeRef.current = resize
     resize()
     window.addEventListener('resize', resize)
 
@@ -508,7 +526,7 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
         <div style={{
           position: 'fixed', bottom: '4vh', left: '50%', transform: 'translateX(-50%)',
           width: isNarrow ? '90vw' : 'min(640px, 86vw)',
-          maxHeight: '56vh', overflowY: 'auto',
+          maxHeight: '50vh', overflowY: 'auto',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isNarrow ? 12 : 14,
           opacity: showText ? 1 : 0, transition: 'opacity 1.4s ease-in',
           pointerEvents: showText ? 'auto' : 'none',
