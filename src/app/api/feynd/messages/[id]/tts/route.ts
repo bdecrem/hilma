@@ -53,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     },
     body: JSON.stringify({
       model: 'gpt-4o-mini-tts',
-      voice: 'ballad',
+      voice: 'echo',
       input: text,
       response_format: 'mp3',
     }),
