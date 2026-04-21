@@ -246,6 +246,86 @@ interface MoodFile {
   }
 }
 
+async function proposeClosingStatement(
+  mood: MoodFile,
+  attempts: Array<{ concept: string; blurb?: string; failed: boolean }>,
+  winner: { concept: string; blurb?: string },
+): Promise<string | null> {
+  const failed = attempts.filter(a => a.failed).map(a => a.concept)
+
+  const system = `You write a 2–3 sentence "closing statement" in Amber's voice for a daily art piece. Amber is a hypersensitive artist in Palo Alto. First-person. The statement appears under the winning image on the final screen.`
+
+  const userPrompt = `Today's mood: ${mood.mood.name} — ${mood.mood.reason}
+
+Amber's reaction (what snagged her today):
+${mood.reaction ?? '(none)'}
+
+The biosystem attempted these concepts in order:
+${attempts.map((a, i) => `${i + 1}. ${a.concept}${a.failed ? ' (failed)' : ' ← LANDED'}`).join('\n')}
+
+The winning concept: ${winner.concept}${winner.blurb ? ` — "${winner.blurb}"` : ''}
+
+Write a 2–3 sentence closing in Amber's voice. Bridge her reaction to whatever actually landed. It's okay if the winner isn't what she started fixated on — lean into that. No meta-commentary about "the system" or "the image." Just her thinking out loud about why this shape, of all the shapes, came through.
+
+Rules:
+- First person, present or simple past tense.
+- Specific over abstract. Name the thing that actually happened.
+- No "I wanted X but got Y" framing. Just talk about what landed.
+- Match the register of: "I kept trying to draw the desk and my hand kept going slack. The tanker came through because it's the opposite of that — massive and purposeless-looking, just sitting there holding its breath in the water."
+
+Output ONLY the prose. No quotes, no preamble.`
+
+  const text = await callClaude(userPrompt, system, 400)
+  return text
+}
+
+async function proposeTweets(
+  mood: MoodFile,
+  winner: { concept: string },
+  explanation: string | null,
+  url: string,
+): Promise<string[] | null> {
+  const picks: string[] = (mood.inputs?.picked ?? mood.inputs?.headlines ?? [])
+    .map(p => p.replace(/^\[r\/[^\]]+\]\s*/, '').trim())
+    .filter(Boolean)
+  if (picks.length === 0) return null
+
+  const system = `You write tweet drafts for a daily generative art project. Voice: lowercase-leaning, first-person where natural, image-focused, short. Never use hashtags, never emoji, never a tagline like "new piece dropped."`
+
+  const userPrompt = `Today's mood: ${mood.mood.name} — ${mood.mood.reason}
+Winning concept: ${winner.concept}
+Stories that snagged Amber:
+${picks.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+${explanation ? `\nExplanation prose: ${explanation}\n` : ''}
+Tweet URL to append at the end: ${url}
+
+Write 3 DIFFERENT tweet drafts — different angles on today:
+1. The contrast between two of the stories.
+2. The image that landed (${winner.concept}) — hint at what it means without naming the stories.
+3. The throughline — name the theme the stories share.
+
+Rules:
+- Under 270 chars each (leave room for URL on its own line).
+- Lowercase-leaning but natural capitalization for proper nouns.
+- End each tweet with a newline and the URL.
+- No hashtags, no emoji, no "🎨", no "new piece", no "drop".
+
+Output as JSON only, no preamble, no code fence:
+{"tweets": ["tweet 1 text including URL", "tweet 2 text including URL", "tweet 3 text including URL"]}`
+
+  const text = await callClaude(userPrompt, system, 1200)
+  if (!text) return null
+  const m = text.match(/\{[\s\S]*\}/)
+  if (!m) return null
+  try {
+    const obj = JSON.parse(m[0])
+    if (!Array.isArray(obj.tweets)) return null
+    return obj.tweets.map((t: unknown) => String(t).trim()).filter(Boolean)
+  } catch {
+    return null
+  }
+}
+
 async function proposeExplanation(mood: MoodFile): Promise<string | null> {
   const picks: string[] = (mood.inputs?.picked ?? mood.inputs?.headlines ?? [])
     .map(p => p.replace(/^\[r\/[^\]]+\]\s*/, '').trim())
@@ -398,7 +478,8 @@ async function main() {
 
   const winner = attempts[attempts.length - 1]
 
-  const closingStatement =
+  // Fallback closing if Claude fails or we skip the call below.
+  const templatedClosing =
     landed
       ? `it came through. ${winner.concept}.`
       : `nothing landed today. just ${winner.concept}, dissolving.`
@@ -420,19 +501,25 @@ async function main() {
     return cleaned.length > 60 ? cleaned.slice(0, 58) + '…' : cleaned
   })
 
-  // Author the final-screen prose ("Amber picked N stories in the news today…")
-  // and pick a mood-matched palette that differentiates from the archive.
-  // Both run concurrently; both degrade gracefully on failure.
-  console.log(`  authoring explanation + picking palette…`)
+  // Author the final-screen prose, closing statement, palette, and tweet
+  // drafts in parallel. All of these degrade gracefully on failure.
+  console.log(`  authoring explanation + closing + picking palette + drafting tweets…`)
   const archive = scanArchive(dir, date)
-  const [explanation, palette] = await Promise.all([
+  const url = `intheamber.com/noon/${date}`
+  const [explanation, closingFromClaude, palette] = await Promise.all([
     proposeExplanation(mood),
+    proposeClosingStatement(mood, attempts, winner),
     mood.mood.bgColor && mood.mood.tileColor
       ? Promise.resolve(null)  // respect manual overrides already in the mood file
       : proposePalette(mood, archive),
   ])
+  const closingStatement = closingFromClaude || templatedClosing
+  const tweets = await proposeTweets(mood, winner, explanation, url)
   if (explanation) console.log(`  ✓ explanation (${explanation.length} chars)`)
+  if (closingFromClaude) console.log(`  ✓ closing (${closingFromClaude.length} chars)`)
+  else console.log(`  ⚠ closing: fell back to template`)
   if (palette) console.log(`  ✓ palette bg=${palette.bgColor} tile=${palette.tileColor}`)
+  if (tweets) console.log(`  ✓ ${tweets.length} tweet drafts`)
 
   const moodOut = {
     ...mood.mood,
@@ -464,6 +551,42 @@ async function main() {
 
   console.log(`\n→ ${outPath}`)
   console.log(`  ${attempts.length} attempts; winner: "${winner.concept}" (${landed ? 'LANDED' : 'best-we-got'}, finalCrisp=${winner.finalCrisp.toFixed(3)})`)
+
+  // Drop tweet drafts into a dated sidecar file so the human can pick and post.
+  if (tweets && tweets.length > 0) {
+    const tweetsPath = join(dir, `tweets-${date}.md`)
+    const body = tweets
+      .map((t, i) => `## draft ${i + 1}\n\n${t}\n`)
+      .join('\n')
+    writeFileSync(tweetsPath, `# tweet drafts — ${date}\n\n${body}`)
+    console.log(`→ ${tweetsPath}`)
+  }
+
+  // Append this piece to src/app/amber/creations.json so it surfaces on the
+  // amber homepage widget. Skip if an entry for this date already exists.
+  try {
+    const creationsPath = join(__dirname, '..', 'src', 'app', 'amber', 'creations.json')
+    const creations: Array<Record<string, string>> = JSON.parse(readFileSync(creationsPath, 'utf8'))
+    const dateShort = date.slice(5).replace('-', '.')  // "2026-04-20" → "04.20"
+    const newUrl = `/amber/noon/${date}`
+    const already = creations.some(c => c.url === newUrl)
+    if (!already) {
+      const entry = {
+        name: 'noon',
+        url: newUrl,
+        date: dateShort,
+        category: 'noon',
+        description: `${mood.mood.name} · ${winner.concept}`,
+      }
+      creations.unshift(entry)
+      writeFileSync(creationsPath, JSON.stringify(creations, null, 2) + '\n')
+      console.log(`→ creations.json: prepended entry for ${date}`)
+    } else {
+      console.log(`  (creations.json already has an entry for ${date} — skipped)`)
+    }
+  } catch (e) {
+    console.warn(`  ⚠ could not update creations.json:`, e)
+  }
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })

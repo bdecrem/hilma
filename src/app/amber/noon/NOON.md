@@ -159,25 +159,52 @@ A 2-color hex pair picked to match the mood's emotional register and differentia
 
 If `mood.bgColor` and `mood.tileColor` are already set in the mood file (hand-overridden), the baker respects them and skips the palette call.
 
-## Manual steps still to automate
+## Remaining manual steps
 
-### 1. Homepage `creations.json` entry
-The amber homepage (`/amber`) reads `src/app/amber/creations.json` for its live-card grid. New pieces don't auto-surface — today's entry was added by hand:
-```json
-{ "name": "noon", "url": "/amber/noon/2026-04-17", "date": "04.17", "category": "noon", "description": "hollowed-out · tanker at anchor" }
-```
+The only things a human still does:
 
-**To automate:** at the end of `bake-noon-bio.ts`, read `src/app/amber/creations.json`, prepend a new entry built from `mood.name + winner.concept`, write it back. Date format is `MM.DD` (2-digit, dot-separated). Skip if an entry for today already exists.
+1. **Commit + push.** Deliberate by design — pushing triggers a live Vercel deploy, which is a production action that should never happen without a go-ahead. Run `git add public/amber-noon/ src/app/amber/creations.json && git commit -m "Amber: Noon MM.DD — mood · winner" && git push`.
+2. **Pick + post a tweet.** The baker drafts three candidates in `public/amber-noon/tweets-YYYY-MM-DD.md`. Pick one, then post via `set -a && source .env.local && set +a && npx tsx scripts/tweet.ts "paste tweet here"` (the tweet command path matches what the amber escalation pipeline uses).
+3. **(Rare) Curation pass.** When auto-sketches aren't strong enough — see the fast-path section above.
 
-## Adding a day (quick reference)
+## Toward full automation
+
+When we want to cron this: wrap `scripts/noon.ts` with a `CronCreate` fire in the session, then add a post-bake step that auto-commits + pushes and auto-tweets from a draft-picker. The tweet-picker would need to either (a) always pick draft #1 or (b) call Claude again with a tie-breaking prompt. A human-in-the-loop day-zero acceptance test catches edge cases (illegible sketches, broken palette) before we relinquish the review step.
+
+## Adding a day — the fast path
+
+One command does everything:
 
 ```bash
-npx tsx scripts/set-mood.ts                     # weather + news/reddit → mood, reaction, keywords
-npx tsx scripts/sketch-concepts.ts              # Amber sketches 8 keywords at 52×20
-SKETCH_MODEL=claude-opus-4-7 npx tsx scripts/sketch-concepts.ts   # Opus for richer sketches
-npx tsx scripts/bake-noon-bio.ts                # bio-engine session → final run
-# then open: http://localhost:3000/amber/noon/YYYY-MM-DD
-# preview sketches:  http://localhost:3000/amber/noon/sketches
+npx tsx scripts/noon.ts                         # today (source auto-picked)
+npx tsx scripts/noon.ts 2026-04-20 reddit       # specific date, forced source
+SKETCH_MODEL=claude-opus-4-7 npx tsx scripts/noon.ts   # Opus for richer sketches
 ```
 
-Don't forget to add the day to `src/app/amber/creations.json` so it surfaces on the amber homepage.
+`scripts/noon.ts` runs `set-mood` → `sketch-concepts` → `bake-noon-bio` in sequence, skipping steps whose output file already exists. At the end:
+- The baked artifact is written to `public/amber-noon/YYYY-MM-DD.json`.
+- Tweet drafts are written to `public/amber-noon/tweets-YYYY-MM-DD.md` (3 candidates in different registers — pick one, post).
+- `src/app/amber/creations.json` has a new entry prepended so the piece surfaces on the amber homepage.
+- Preview locally at `http://localhost:3000/amber/noon/YYYY-MM-DD` or via sketches at `http://localhost:3000/amber/noon/sketches`.
+
+After previewing, commit + push (Vercel auto-deploys).
+
+### If the auto-sketches don't land
+
+The sketcher produces competent 1-bit icons but sometimes misses the mood. When that happens, use the **curation pass**: review Amber's `reaction` and `keywords`, propose 5 simple visual ideas native to 52×20 pixel art (stepped diagonals, radial cracks, silhouette rows, bar charts, broken outlines, scattered blocks), hand-draft them in a new `scripts/draw-*.ts` helper (template: `scripts/draw-five.ts` — build each grid as a per-row list of column indices), then re-run the bake alone:
+
+```bash
+npx tsx scripts/draw-five.ts                   # writes curated concepts, replaces auto-sketches
+SKIP_SKETCH=1 npx tsx scripts/noon.ts          # bake using the curated concepts
+```
+
+`SKIP_SKETCH=1` tells the runner not to regenerate the concepts file.
+
+## What the baker auto-authors
+
+At bake time, `bake-noon-bio.ts` makes four parallel Claude calls after the physics session completes. All degrade gracefully if the API is unreachable — the baker still writes a working (flatter) artifact.
+
+1. **`meta.explanation`** — neutral third-person prose summarizing the stories Amber picked, in the fixed format `"Amber picked N stories in the news today."` → one sentence per story → `"The throughline she's chasing: [theme]."` Displayed on the final screen and the archive card.
+2. **`closingStatement`** — 2–3 sentences in Amber's voice bridging her reaction to whatever actually landed. Replaces the old template `"it came through. X."`.
+3. **`mood.bgColor` / `mood.tileColor`** — a hex pair that matches the mood's register and differentiates from every prior archived palette. Skipped if already manually set in the mood file.
+4. **Tweet drafts** (`public/amber-noon/tweets-YYYY-MM-DD.md`) — 3 different angles on today: the contrast between two stories, the image that landed, and the throughline. Each ≤270 chars, lowercase-leaning, URL on its own line.
