@@ -15,6 +15,13 @@ interface Project {
 
 const projects: Project[] = [
   {
+    name: 'feynd',
+    url: 'https://github.com/bdecrem/hilma',
+    shortDesc: 'experimental learning app, named after feynman (the physicist who insisted you don\'t understand something until you can explain it simply). first module: "teach me about AI" — short videos paired with an interactive voice mode, so you can stop the lesson mid-sentence and argue with it.',
+    fullDesc: 'native ios. early days.',
+    status: 'respinning',
+  },
+  {
     name: 'jambot',
     url: 'https://github.com/bdecrem/jambot',
     shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style command line app with a deep custom toolset: a suite of instruments and effects plugins that you can also play <a href="https://kochi.to/jb01/ui/jb01/index.html" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">from the web</a>. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
