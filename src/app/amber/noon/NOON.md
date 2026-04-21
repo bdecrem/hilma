@@ -206,5 +206,15 @@ At bake time, `bake-noon-bio.ts` makes four parallel Claude calls after the phys
 
 1. **`meta.explanation`** — neutral third-person prose summarizing the stories Amber picked, in the fixed format `"Amber picked N stories in the news today."` → one sentence per story → `"The throughline she's chasing: [theme]."` Displayed on the final screen and the archive card.
 2. **`closingStatement`** — 2–3 sentences in Amber's voice bridging her reaction to whatever actually landed. Replaces the old template `"it came through. X."`.
-3. **`mood.bgColor` / `mood.tileColor`** — a hex pair that matches the mood's register and differentiates from every prior archived palette. Skipped if already manually set in the mood file.
+3. **`mood.bgColor` / `mood.tileColor`** — a hex pair that matches the mood's register and differentiates from every prior archived palette. The picker is calibrated against two reference points: tender+drizzle landed on damp slate (#1A2430) + muted peach (#F2A66B); raw+environmental+geological landed on dark earth (#1A1814) + dusty sage (#9CAC82). The prompt covers mood→register defaults (tender→warm-on-cool, raw→green/rust-on-earth, uneasy→cool-on-cool, euphoric→UV-on-bruise, angry→sodium-on-oxblood, hollowed-out→graphite-on-near-black). Field must always be dark + temperature-biased; tile must be muted/dusky, not UI-bright. The picker actively hunts unused color LANES — if every prior tile is warm, it reaches for a muted green or sage. Skipped if `mood.bgColor` is already set in the mood file.
 4. **Tweet drafts** (`public/amber-noon/tweets-YYYY-MM-DD.md`) — 3 different angles on today: the contrast between two stories, the image that landed, and the throughline. Each ≤270 chars, lowercase-leaning, URL on its own line.
+
+## Renderer layout contract
+
+`BioRenderer.tsx` runs in three layout modes — documenting here so they stay intact:
+
+1. **Bare (iframe thumbnail).** Canvas fills 88% of the viewport. No overlay text, no animation. Used by the amber homepage live-card grid.
+2. **Animation (physics running).** Canvas uses 50% of viewport height, biased 8% above center. Leaves a clean floor for the top-left "last attempt:" / "landed on:" ticker. Runs until the final attempt crystallizes.
+3. **Text shown (closing + meta + explanation + archive visible).** Canvas shrinks to **34% of viewport height**, biased **22% above center**. Bottom stack is capped at **50vh** with internal scroll. This prevents the fault line / winner image from overlapping the closing text on landscape or short viewports. Triggered via a `textShownRef` + `resizeRef` pair: the effect watching `showText` flips the ref and forces a resize.
+
+If future edits change the 50vh stack cap or the 34%/22% canvas fractions, test on a 1440×900 landscape viewport — that's where the original bug manifested.

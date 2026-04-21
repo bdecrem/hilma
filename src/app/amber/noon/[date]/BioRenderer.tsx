@@ -237,9 +237,16 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       canvas.style.width = `${window.innerWidth}px`
       canvas.style.height = `${window.innerHeight}px`
       const textShown = textShownRef.current
-      // Bare (iframe thumbnail): full area. During physics animation: 50% of H.
-      // After text appears: shrink to 35% of H and bias up so the bottom stack
-      // (closing + meta + explanation + archive) has its own clean region.
+      // Layout contract (three modes):
+      //   - BARE (iframe thumbnail): canvas fills 88% of viewport. No overlay text.
+      //   - ANIMATION (physics running, no closing text yet): canvas uses 50% of H,
+      //     biased 8% above center. Free floor below for the "last attempt:" ticker.
+      //   - TEXT SHOWN (closing + meta + explanation + archive visible): canvas
+      //     shrinks to 34% of H and biases 22% above center. This pins the grid
+      //     into the upper region so the bottom stack — capped at 50vh — never
+      //     overlaps it, even on landscape / short viewports. Triggered by the
+      //     showText-watching effect above, which flips textShownRef and calls
+      //     resizeRef.current().
       const vFraction = isBare ? 0.88 : (textShown ? 0.34 : 0.50)
       const biasFraction = isBare ? 0 : (textShown ? 0.22 : 0.08)
       const maxCellW = Math.floor(W * 0.94 / COLS)

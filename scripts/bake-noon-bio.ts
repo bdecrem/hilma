@@ -370,20 +370,43 @@ async function proposePalette(
     ? archive.map(a => `- ${a.date} (${a.mood}): bg ${a.bg}, tile ${a.tile}`).join('\n')
     : '(archive is empty)'
 
-  const system = `You pick a 2-color palette for a daily generative art piece rendered in 52×20 pixel cells. The background fills the viewport; cells are painted in the accent color.`
+  const system = `You pick a 2-color palette for a daily generative art piece rendered in 52×20 pixel cells. The field is the viewport background; the cells are painted in the tile color. The aesthetic is Amber v3 "SIGNAL": dark field + one accent, heavy negative space, specimen register.`
 
   const userPrompt = `Today's mood: ${mood.mood.name} — ${mood.mood.reason}
 Weather (Palo Alto): ${weatherLine}
 Artist's reaction (for tonal context): ${(mood.reaction ?? '').slice(0, 500)}
 
-Palettes already used in the archive (do not duplicate these, and differentiate clearly):
+Palettes already used in the archive (${archive.length} pieces — differentiate clearly from all of them):
 ${archiveLine}
 
-Pick today's palette:
-- bgColor: hex for the background. Dark if the mood is heavy/brooding, pale/cream if the mood is hollow/exposed/washed-out, mid-tone (slate, dusk, dusty blue) if overcast/tender/soft.
-- tileColor: hex for the cells. Warm (amber, peach, copper) for tender/mournful/hearth moods; cool (lime, uv, ice) for uneasy/technical moods; muted (dust, bone, moss) for ambiguous ones. Must read clearly against the chosen bg.
+═══ RULES ═══
 
-Good recent example, for calibration: a "tender + overcast drizzle" mood landed on bg #1A2430 (damp slate-blue) with tile #F2A66B (muted warm peach). Not every tender day should use that — pick something distinct again — but match that LEVEL of specificity and differentiation.
+1. Background: must be DARK (total luminance well under 0.35). Not pure black — always tinted by a temperature (earth, ink, olive, bruise, oxblood, charcoal, slate). Never cream, pastel, or neutral-gray. The piece has to read as a night plate.
+2. Tile: must read clearly against the field — distinct in both hue AND luminance. Muted over bright (dusky, dusted, desaturated) — a tile that's too saturated reads as a UI button, not a specimen.
+3. Pair: the bg + tile should feel like ONE system — either resonating (same temperature family) or deliberately clashing (cool bg + warm tile, or warm bg + cool tile). Pick one relationship and commit.
+
+═══ MOOD → COLOR REGISTER (defaults, not rules) ═══
+
+- tender / mournful / held → warm tile on cool dark (peach/amber/copper on slate/ink)
+- raw / stripped / exposed / environmental → muted green or rust tile on dark earth (sage/moss/clay on charcoal-brown/olive-black)
+- uneasy / watching / technical → cool tile on cool dark (lime/UV/ice on petrol/ink)
+- euphoric / 4am / alien → UV or high-chroma tile on bruise
+- angry / smoldering → sodium/ember on oxblood
+- hollowed-out / flattened → graphite/bone on near-black or (rarely) cream inversion
+- brooding / heavy → muted warm or muted cool on near-black
+
+These are starting points. The mood's REASON + reaction almost always points to a more specific register.
+
+═══ ARCHIVE AWARENESS ═══
+
+Before picking, identify which color lanes the archive already owns. If every prior tile is warm (amber, peach, copper, red-orange), a muted green or sage is a fresh lane. If prior bgs cluster in navy/slate, an earth-brown or oxblood is fresh. Actively hunt unused lanes.
+
+═══ CALIBRATION EXAMPLES ═══
+
+- "tender + overcast drizzle" (Mako on a wet bus) → bg #1A2430 (damp slate-blue), tile #F2A66B (muted warm peach). Cool bg + warm tile, muted both.
+- "raw + goldman prize 37 years + earthquake" (stripped, environmental, geological) → bg #1A1814 (dark earth-charcoal), tile #9CAC82 (dusty sage). Warm dark bg + cool muted tile — specifically green-on-earth for the environmental thread. A lane nothing else in the archive occupies.
+
+Match that level of specificity: the COMBINATION says something the mood-name alone doesn't.
 
 Output ONLY a single JSON object, no prose, no code fence:
 {"bgColor":"#RRGGBB","tileColor":"#RRGGBB"}`
