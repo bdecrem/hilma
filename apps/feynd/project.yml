@@ -1,4 +1,4 @@
-name: LearnAI
+name: Feynd
 options:
   bundleIdPrefix: com.bartdecrem
   deploymentTarget:
@@ -13,24 +13,19 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_STRICT_CONCURRENCY: minimal
 
-packages:
-  RealtimeAPI:
-    url: https://github.com/m1guelpf/swift-realtime-openai
-    branch: main
-
 targets:
-  LearnAI:
+  Feynd:
     type: application
     platform: iOS
     sources:
-      - path: LearnAI
+      - path: Feynd
         excludes:
           - "Secrets.swift.example"
     info:
-      path: LearnAI/Info.plist
+      path: Feynd/Info.plist
       properties:
-        CFBundleDisplayName: LearnAI
-        NSMicrophoneUsageDescription: "LearnAI uses the microphone to hold realtime voice conversations about AI."
+        CFBundleDisplayName: Feynd
+        NSMicrophoneUsageDescription: "Feynd uses the microphone so you can talk with the tutor out loud."
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
@@ -38,11 +33,8 @@ targets:
           UIApplicationSupportsMultipleScenes: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.LearnAI
+        PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.Feynd
         TARGETED_DEVICE_FAMILY: "1"
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_USER_SCRIPT_SANDBOXING: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-    dependencies:
-      - package: RealtimeAPI
-        product: RealtimeAPI

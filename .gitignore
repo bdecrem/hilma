@@ -38,3 +38,17 @@ next-env.d.ts
 # beats (generated audio)
 *.wav
 apps/*/node_modules/
+
+# iOS app secrets (per-app Secrets.swift is generated from Secrets.swift.example)
+apps/*/*/Secrets.swift
+
+# Python virtualenvs under scripts/
+scripts/*/.venv/
+scripts/*/__pycache__/
+
+# Xcode build artifacts
+apps/*/build/
+apps/*/DerivedData/
+apps/*/*/DerivedData/
+apps/*/*.xcodeproj/xcuserdata/
+apps/*/*.xcodeproj/project.xcworkspace/xcuserdata/
