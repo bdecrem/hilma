@@ -7,7 +7,7 @@
 - **Category:** Escalation (v3 SIGNAL) — first piece of the Environment tier (L51–75)
 - **What:** A 3D Lissajous torus knot. 600 points on the closed curve x=sin(3t), y=sin(4t+π/5), z=sin(5t+π/3) rotating around the vertical axis with a slight precession. Perspective projection with depth fog: near points bright and large, far points fade into the field. The static curve is illegible — only rotation reveals its 3D shape. Drag to push rotation (velocity picks up, then damps back to a steady cadence). Tap to ring the nearest point — a lime pulse travels outward along the curve in both directions, brightening neighbor points as it passes. 62 Hz sine drone, gain scales with angular velocity. A brief tick on tap. Chrome upper-right: ENVIRONMENT · L51. Museum label: *L51* / "a shape that only exists when it turns".
 - **Techniques:** canvas, 3d-projection, lissajous-knot, perspective, depth-fog, drag-momentum, tap-ring, web-audio, drone, v3-signal, environment-tier
-- **Tweeted:** pending
+- **Tweeted:** "L51: a shape that only exists when it turns." with link (ID 2046676209233547404)
 
 ### seam (morning art)
 - **URL:** /amber/seam
