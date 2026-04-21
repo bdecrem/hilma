@@ -38,9 +38,13 @@ export interface NoonRun {
   winner: Attempt
   closingStatement: string
   meta?: {
+    engine?: string
+    landed?: boolean
+    sessions?: number
     weather?: string
     location?: string
     news?: string[]
+    explanation?: string
   }
 }
 

@@ -47,18 +47,86 @@ export default function NoonArchive() {
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
-      <header style={{ marginBottom: 44 }}>
+      <header style={{ marginBottom: 36 }}>
         <div style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
           amber · noon · archive
         </div>
         <h1 style={{ marginTop: 10, fontSize: 28, fontWeight: 300, letterSpacing: '0.02em' }}>
           one piece a day at noon
         </h1>
-        <p style={{ marginTop: 10, fontSize: 14, color: 'rgba(255,255,255,0.55)', maxWidth: 560, lineHeight: 1.5 }}>
+        <p style={{ marginTop: 10, fontSize: 14, color: 'rgba(255,255,255,0.55)', maxWidth: 640, lineHeight: 1.5 }}>
           weather + the world, filtered through amber's mood. {runs.length}{' '}
           {runs.length === 1 ? 'piece' : 'pieces'} so far.
         </p>
       </header>
+
+      <section
+        style={{
+          marginBottom: 56,
+          maxWidth: 720,
+          fontSize: 13.5,
+          lineHeight: 1.65,
+          color: 'rgba(232,232,232,0.7)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 14,
+        }}
+      >
+        <h2 style={{
+          margin: 0,
+          fontSize: 12,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.45)',
+          fontWeight: 400,
+        }}>
+          how it works
+        </h2>
+        <p style={{ margin: 0 }}>
+          Every day at noon, Amber makes one artifact. The process runs in six steps.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p style={{ margin: 0 }}>
+            <strong style={{ color: 'rgba(232,232,232,0.92)' }}>1. Input.</strong>{' '}
+            She reads today's Palo Alto weather and scrolls the news or reddit's hot feed.
+            A few stories snag her.
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong style={{ color: 'rgba(232,232,232,0.92)' }}>2. Reaction.</strong>{' '}
+            She writes a short first-person paragraph about what hit her, names her mood in
+            one word, and lists 5–8 single objects that carry the feeling — a dented thermos,
+            a tote bag with a center crease, a broken ring light.
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong style={{ color: 'rgba(232,232,232,0.92)' }}>3. Sketch.</strong>{' '}
+            Each object gets drawn as a 52×20 pixel silhouette — bathroom-sign clarity.
+            The 5–8 sketches are the targets the biosystem will try to hit.
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong style={{ color: 'rgba(232,232,232,0.92)' }}>4. Biosystem.</strong>{' '}
+            A Langevin–Ising physics engine tries to render each sketch from random noise.
+            Every cell in the 52×20 grid carries a continuous spin between −1 and +1; the
+            spin updates based on its four neighbors plus a bias pulling toward the target
+            shape. The system starts hot (T=2.0) — the grid is noise — and cools down
+            (T=0.03) over twelve seconds. As it cools, patterns try to coalesce. Most
+            attempts don't land: the noise never organizes into the target and the grid
+            dissolves back to empty. When one does land (crispness ≥ 0.80), the system
+            crystallizes on the winning shape. A session typically takes 4–5 attempts.
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong style={{ color: 'rgba(232,232,232,0.92)' }}>5. Bake.</strong>{' '}
+            The session runs once. Its outcome — the failed attempts, the winning concept,
+            the final spin field — is recorded and frozen. That recording is the day's artifact.
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong style={{ color: 'rgba(232,232,232,0.92)' }}>6. Playback.</strong>{' '}
+            The page replays the recording. The physics animates live for texture, but at
+            the end of each attempt the state snaps to whatever the baker recorded — so the
+            artifact is the same every time you visit it. The mood, the stories that inspired
+            it, and the closing statement fade in after the winning shape crystallizes.
+          </p>
+        </div>
+      </section>
 
       <section
         style={{
@@ -109,7 +177,21 @@ export default function NoonArchive() {
                   <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 4, background: accent }} />
                   {run.mood.name}
                 </div>
-                {run.closingStatement && (
+                {run.meta?.explanation ? (
+                  <p
+                    style={{
+                      margin: 0,
+                      fontFamily: "'DM Sans', system-ui, sans-serif",
+                      fontWeight: 300,
+                      fontSize: 12.5,
+                      lineHeight: 1.55,
+                      color: txtMid,
+                      letterSpacing: '0.005em',
+                    }}
+                  >
+                    {run.meta.explanation}
+                  </p>
+                ) : run.closingStatement ? (
                   <p
                     style={{
                       margin: 0,
@@ -124,7 +206,7 @@ export default function NoonArchive() {
                   >
                     {run.closingStatement}
                   </p>
-                )}
+                ) : null}
               </article>
             </Link>
           )
