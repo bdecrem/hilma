@@ -27,7 +27,9 @@ export async function POST(request: NextRequest) {
   const instructions =
     body.instructions ??
     'You are Feynd, a friendly, playful voice tutor who can teach anything. Use vivid examples and analogies. Keep spoken replies concrete and conversational.'
-  const voice = body.voice ?? 'cedar'
+  // Keep in sync with the TTS route and iOS RealtimeClient — same voice
+  // across voice mode and Listen playback so it's consistently one tutor.
+  const voice = body.voice ?? 'ballad'
 
   const upstream = await fetch(
     'https://api.openai.com/v1/realtime/client_secrets',

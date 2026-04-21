@@ -194,7 +194,7 @@ final class RealtimeClient: NSObject {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.httpBody = try JSONSerialization.data(withJSONObject: [
             "instructions": systemInstructions,
-            "voice": "cedar"
+            "voice": "ballad"
         ])
         let (data, resp) = try await URLSession.shared.data(for: req)
         guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
@@ -288,7 +288,7 @@ final class RealtimeClient: NSObject {
                 "model": "gpt-realtime",
                 "instructions": systemInstructions,
                 "audio": [
-                    "output": ["voice": "cedar"]
+                    "output": ["voice": "ballad"]
                 ],
                 "tools": tools,
                 "tool_choice": "auto"
