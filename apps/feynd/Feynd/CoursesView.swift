@@ -112,7 +112,9 @@ private struct EmptyState: View {
 
 struct CourseDetailView: View {
     let course: Course
-    let onAskAbout: (CourseVideo) -> Void
+    let onAskAbout: (CourseVideo) -> Void        // voice (opens Chat tab w/ Realtime)
+    let onChatText: (CourseVideo) -> Void        // text chat thread
+    let onQuiz: (CourseVideo) -> Void            // open quiz
     let onClose: () -> Void
 
     @State private var progress: CourseProgress
@@ -120,9 +122,13 @@ struct CourseDetailView: View {
 
     init(course: Course,
          onAskAbout: @escaping (CourseVideo) -> Void,
+         onChatText: @escaping (CourseVideo) -> Void,
+         onQuiz: @escaping (CourseVideo) -> Void,
          onClose: @escaping () -> Void) {
         self.course = course
         self.onAskAbout = onAskAbout
+        self.onChatText = onChatText
+        self.onQuiz = onQuiz
         self.onClose = onClose
         self._progress = State(initialValue: CourseProgress(courseId: course.id))
     }
@@ -226,7 +232,9 @@ struct CourseDetailView: View {
                                 progress.markWatched(v.id)
                             }
                         },
-                        onAsk: { onAskAbout(v) }
+                        onAsk: { onAskAbout(v) },
+                        onChatText: { onChatText(v) },
+                        onQuiz: { onQuiz(v) }
                     )
                 }
             }
@@ -288,7 +296,9 @@ private struct VideoRow: View {
     let isWatched: Bool
     let onToggleWatched: () -> Void
     let onWatch: () -> Void
-    let onAsk: () -> Void
+    let onAsk: () -> Void          // voice (Realtime on Chat tab)
+    let onChatText: () -> Void     // text chat thread
+    let onQuiz: () -> Void         // quiz
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -335,11 +345,38 @@ private struct VideoRow: View {
             }
 
             HStack(spacing: 8) {
-                Spacer()
-                Button(action: onAsk) {
+                // Quiz — leftmost, muted until watched
+                Button(action: onQuiz) {
                     HStack(spacing: 6) {
-                        Image(systemName: "waveform")
-                        Text("Ask Feynd")
+                        Image(systemName: "checkmark.circle")
+                        Text("Quiz")
+                    }
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(isWatched ? 1 : 0.55))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(Capsule().fill(Color.white.opacity(isWatched ? 0.1 : 0.05)))
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                // Voice Ask (Realtime) — icon-only to save space
+                Button(action: onAsk) {
+                    Image(systemName: "waveform")
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(Color.white.opacity(0.1)))
+                }
+                .buttonStyle(.plain)
+
+                // Text chat — the primary way to ask about the video now
+                Button(action: onChatText) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "bubble.left.fill")
+                        Text("Chat")
                     }
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(.white)

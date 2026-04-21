@@ -19,6 +19,10 @@ struct ContentView: View {
     // Course navigation state (lives at root so tabs can cross-talk).
     @State private var openCourse: Course? = nil
     @State private var activeVideo: CourseVideo? = nil
+    // When set, a modal text-chat thread is open for this video.
+    @State private var textChatVideo: CourseVideo? = nil
+    // Quiz sheet state.
+    @State private var quizVideo: CourseVideo? = nil
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -69,6 +73,19 @@ struct ContentView: View {
                     startChatting(about: video)
                     openCourse = nil
                 },
+                onChatText: { video in
+                    openCourse = nil
+                    // small delay so the first sheet can dismiss before the next opens
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        textChatVideo = video
+                    }
+                },
+                onQuiz: { video in
+                    openCourse = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        quizVideo = video
+                    }
+                },
                 onClose: { openCourse = nil }
             )
             .background(
@@ -79,6 +96,20 @@ struct ContentView: View {
                 .ignoresSafeArea()
             )
             .preferredColorScheme(.dark)
+        }
+        .sheet(item: $textChatVideo) { v in
+            ChatThreadView(
+                courseId: "frontier-ai-2026",
+                video: v,
+                onClose: { textChatVideo = nil }
+            )
+        }
+        .sheet(item: $quizVideo) { v in
+            QuizView(
+                courseId: "frontier-ai-2026",
+                video: v,
+                onClose: { quizVideo = nil }
+            )
         }
     }
 

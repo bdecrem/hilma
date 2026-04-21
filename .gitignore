@@ -46,6 +46,11 @@ apps/*/*/Secrets.swift
 scripts/*/.venv/
 scripts/*/__pycache__/
 
+# Supabase CLI local state (migrations/ and config.toml are checked in; the
+# rest is ephemeral)
+supabase/.branches/
+supabase/.temp/
+
 # Xcode build artifacts
 apps/*/build/
 apps/*/DerivedData/

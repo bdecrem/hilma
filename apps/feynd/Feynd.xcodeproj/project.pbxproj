@@ -9,17 +9,23 @@
 /* Begin PBXBuildFile section */
 		084C865AC45978A8E4D9348F /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1D34499768352567AD63B4 /* Course.swift */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
+		44AC14A485CF4ECC93831C76 /* QuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4480ACBEA660131DB45C44A /* QuizView.swift */; };
 		4AB55572292540C6E6137C6F /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889CAE26161E8467A991FA33 /* AnthropicClient.swift */; };
 		65DD9C62C54D69BB9F351DDD /* CoursesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F75B0F782EC4E25CBCEB0D /* CoursesView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
 		C8FC0F6C2164FBED3AE5E6F4 /* frontier-ai-2026.json in Resources */ = {isa = PBXBuildFile; fileRef = FC10E86FAF86236D8E96033E /* frontier-ai-2026.json */; };
 		CB1A223A872830FD2A4A0271 /* RealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA7EAE45A7DF6F02587C07B /* RealtimeClient.swift */; };
+		CDC21450D44841E708AB84CD /* FeyndAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F8C8290B4781B349BF946E7 /* FeyndAPI.swift */; };
+		D04EC851EBFC88FE6DD09D05 /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B3E5F4E0D1819C84B8A75 /* DeviceIdentity.swift */; };
 		DA1D34D56E1402DA637AD353 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBA0A10DE726A2B91DEEC5C5 /* ContentView.swift */; };
+		F9005761BB4DC71C1A0F97D3 /* ChatThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4008EFAC4FA51DEBEA74D5A /* ChatThreadView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0A077252957BBEE41DCF582D /* FeyndApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndApp.swift; sourceTree = "<group>"; };
+		0F8C8290B4781B349BF946E7 /* FeyndAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndAPI.swift; sourceTree = "<group>"; };
+		579B3E5F4E0D1819C84B8A75 /* DeviceIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdentity.swift; sourceTree = "<group>"; };
 		62F75B0F782EC4E25CBCEB0D /* CoursesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoursesView.swift; sourceTree = "<group>"; };
 		889CAE26161E8467A991FA33 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
 		8B7488FF54E0D0D3D2342D62 /* Feynd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Feynd.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -27,7 +33,9 @@
 		8D1D34499768352567AD63B4 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
 		8D6854393131D5ADEB1B75CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B4008EFAC4FA51DEBEA74D5A /* ChatThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThreadView.swift; sourceTree = "<group>"; };
 		CBA0A10DE726A2B91DEEC5C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		D4480ACBEA660131DB45C44A /* QuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizView.swift; sourceTree = "<group>"; };
 		EDA7EAE45A7DF6F02587C07B /* RealtimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeClient.swift; sourceTree = "<group>"; };
 		FC10E86FAF86236D8E96033E /* frontier-ai-2026.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "frontier-ai-2026.json"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -38,11 +46,15 @@
 			children = (
 				889CAE26161E8467A991FA33 /* AnthropicClient.swift */,
 				8D6854393131D5ADEB1B75CE /* Assets.xcassets */,
+				B4008EFAC4FA51DEBEA74D5A /* ChatThreadView.swift */,
 				CBA0A10DE726A2B91DEEC5C5 /* ContentView.swift */,
 				8D1D34499768352567AD63B4 /* Course.swift */,
 				62F75B0F782EC4E25CBCEB0D /* CoursesView.swift */,
+				579B3E5F4E0D1819C84B8A75 /* DeviceIdentity.swift */,
+				0F8C8290B4781B349BF946E7 /* FeyndAPI.swift */,
 				0A077252957BBEE41DCF582D /* FeyndApp.swift */,
 				B119830CA567768C3502310E /* Info.plist */,
+				D4480ACBEA660131DB45C44A /* QuizView.swift */,
 				EDA7EAE45A7DF6F02587C07B /* RealtimeClient.swift */,
 				8BE40ACBCE23969C211C1B42 /* Secrets.swift */,
 				664C2EC3B1B97217567F37B3 /* CourseData */,
@@ -146,10 +158,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				4AB55572292540C6E6137C6F /* AnthropicClient.swift in Sources */,
+				F9005761BB4DC71C1A0F97D3 /* ChatThreadView.swift in Sources */,
 				DA1D34D56E1402DA637AD353 /* ContentView.swift in Sources */,
 				084C865AC45978A8E4D9348F /* Course.swift in Sources */,
 				65DD9C62C54D69BB9F351DDD /* CoursesView.swift in Sources */,
+				D04EC851EBFC88FE6DD09D05 /* DeviceIdentity.swift in Sources */,
+				CDC21450D44841E708AB84CD /* FeyndAPI.swift in Sources */,
 				218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */,
+				44AC14A485CF4ECC93831C76 /* QuizView.swift in Sources */,
 				CB1A223A872830FD2A4A0271 /* RealtimeClient.swift in Sources */,
 				6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */,
 			);

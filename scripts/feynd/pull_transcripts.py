@@ -25,7 +25,11 @@ from youtube_transcript_api._errors import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "apps/feynd/Feynd/Resources/courses/frontier-ai-2026.json"
+# Two copies on purpose: iOS reads from CourseData at runtime (bundled into
+# the .app); Next.js backend imports from src/data so Vercel traces it into
+# the serverless function bundle.
+OUT = ROOT / "apps/feynd/Feynd/CourseData/frontier-ai-2026.json"
+OUT_BACKEND = ROOT / "src/data/feynd/frontier-ai-2026.json"
 
 COURSE = {
     "id": "frontier-ai-2026",
@@ -290,7 +294,10 @@ def main() -> int:
         out_videos.append(vv)
 
     course_out = dict(COURSE, videos=out_videos)
-    OUT.write_text(json.dumps(course_out, ensure_ascii=False, indent=2))
+    payload = json.dumps(course_out, ensure_ascii=False, indent=2)
+    OUT.write_text(payload)
+    OUT_BACKEND.parent.mkdir(parents=True, exist_ok=True)
+    OUT_BACKEND.write_text(payload)
     total_chars = sum(len(v["transcript"]["text"]) for v in out_videos)
     print(
         f"\nwrote {OUT.relative_to(ROOT)}  videos={len(out_videos)} "
