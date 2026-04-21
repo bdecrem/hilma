@@ -258,7 +258,7 @@ struct ChatThreadView: View {
 
         fetchingTTSId = msg.id
         do {
-            let url = try await FeyndAPI.fetchTTS(messageId: msg.id)
+            let url = try await FeyndAPI.fetchTTS(messageId: msg.id, text: msg.text)
             fetchingTTSId = nil
 
             let p = AVPlayer(url: url)

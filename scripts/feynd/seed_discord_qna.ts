@@ -265,6 +265,31 @@ async function main() {
     console.log(`cleared ${ids.length} prior seed chat(s)`)
   }
 
+  // Build the messages jsonb array (messages live inline in feynd_chats now).
+  const now = new Date()
+  const messages: Array<Record<string, unknown>> = []
+  let t = now.getTime() - (PAIRS.length * 2 * 1000) // stagger timestamps backward
+  for (const p of PAIRS) {
+    messages.push({
+      id: crypto.randomUUID(),
+      role: 'user',
+      text: p.q,
+      source: 'discord',
+      audio_url: null,
+      created_at: new Date(t).toISOString(),
+    })
+    t += 500
+    messages.push({
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      text: p.a,
+      source: 'discord',
+      audio_url: null,
+      created_at: new Date(t).toISOString(),
+    })
+    t += 500
+  }
+
   const { data: chat, error: chatErr } = await sb
     .from('feynd_chats')
     .insert({
@@ -272,34 +297,15 @@ async function main() {
       course_id: COURSE_ID,
       video_id: VIDEO_ID,
       title: CHAT_TITLE,
+      messages,
     })
-    .select()
+    .select('id')
     .single()
   if (chatErr || !chat) {
     console.error('Chat insert failed:', chatErr)
     process.exit(1)
   }
-  console.log(`created chat ${chat.id} for device ${deviceId}`)
-
-  const rows: Array<{
-    chat_id: string
-    role: 'user' | 'assistant'
-    text: string
-    source: string
-  }> = []
-  for (const p of PAIRS) {
-    rows.push({ chat_id: chat.id, role: 'user', text: p.q, source: 'discord' })
-    rows.push({ chat_id: chat.id, role: 'assistant', text: p.a, source: 'discord' })
-  }
-  const { error: msgErr, count } = await sb
-    .from('feynd_messages')
-    .insert(rows, { count: 'exact' })
-  if (msgErr) {
-    console.error('Message insert failed:', msgErr)
-    process.exit(1)
-  }
-  console.log(`inserted ${count ?? rows.length} messages (${PAIRS.length} Q&A pairs)`)
-  console.log('done.')
+  console.log(`created chat ${chat.id} with ${messages.length} messages (${PAIRS.length} Q&A pairs) for device ${deviceId}`)
 }
 
 main().catch((e) => {

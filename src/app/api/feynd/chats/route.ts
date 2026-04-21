@@ -3,7 +3,9 @@ import { feyndAuth, feyndSupabase } from '@/lib/feynd/supabase'
 
 export const runtime = 'nodejs'
 
-// GET /api/feynd/chats?video_id=<optional> — list this device's chats
+// GET /api/feynd/chats?video_id=<optional>&course_id=<optional>
+// Lists this device's chats (without the messages array — call /chats/:id
+// for the full message thread).
 export async function GET(request: NextRequest) {
   const auth = feyndAuth(request)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -27,7 +29,8 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ chats: data })
 }
 
-// POST /api/feynd/chats — create a new chat
+// POST /api/feynd/chats
+// Body: { course_id, video_id?, title? }
 export async function POST(request: NextRequest) {
   const auth = feyndAuth(request)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -46,8 +49,9 @@ export async function POST(request: NextRequest) {
       course_id: courseId,
       video_id: body.video_id ?? null,
       title: (body.title ?? 'New chat').slice(0, 200),
+      messages: [],
     })
-    .select()
+    .select('id, device_id, course_id, video_id, title, created_at, updated_at')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ chat: data })

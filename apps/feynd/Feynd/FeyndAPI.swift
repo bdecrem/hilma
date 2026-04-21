@@ -153,8 +153,12 @@ enum FeyndAPI {
         return (out.user_message, out.assistant_message)
     }
 
-    static func fetchTTS(messageId: String) async throws -> URL {
-        let req = try makeRequest(path: "api/feynd/messages/\(messageId)/tts", method: "POST")
+    static func fetchTTS(messageId: String, text: String) async throws -> URL {
+        let req = try makeRequest(
+            path: "api/feynd/messages/\(messageId)/tts",
+            method: "POST",
+            body: ["text": text]
+        )
         let out = try await send(req, as: TTSResp.self)
         guard let url = URL(string: out.audio_url) else {
             throw FeyndAPIError.decodingFailed("Invalid audio URL")

@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import { feyndAuth, feyndSupabase } from '@/lib/feynd/supabase'
 import { opusAsk } from '@/lib/feynd/opus'
 import { getVideo } from '@/lib/feynd/course'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60 // Opus round-trip can take ~15-25s on long transcripts
+export const maxDuration = 60
+
+type Msg = {
+  id: string
+  role: 'user' | 'assistant'
+  text: string
+  source: 'text' | 'voice' | 'discord' | 'seed'
+  audio_url?: string | null
+  created_at: string
+}
 
 // POST /api/feynd/chats/:id/messages
-// Body: { text: string, source?: 'text'|'voice' }
-// Appends the user message, calls Opus with full chat history + video
-// transcript (if chat is video-scoped), appends the assistant reply, and
-// returns both messages. This is the text-chat workhorse.
+// Body: { text, source? }
+// Reads the chat row, appends the user message, calls Opus with full
+// history + video transcript (if video-scoped), appends the assistant
+// reply, writes the whole messages array back. No separate messages table.
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = feyndAuth(request)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -25,7 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const sb = feyndSupabase()
 
-  // Verify chat belongs to this device
+  // Load chat (verifies ownership + gets current messages).
   const { data: chat, error: chatErr } = await sb
     .from('feynd_chats')
     .select('*')
@@ -36,25 +46,28 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'Chat not found' }, { status: 404 })
   }
 
-  // Insert the user message first so it's persisted even if Opus fails.
-  const { data: userMsg, error: userErr } = await sb
-    .from('feynd_messages')
-    .insert({ chat_id: chatId, role: 'user', text: userText, source })
-    .select()
-    .single()
-  if (userErr) return NextResponse.json({ error: userErr.message }, { status: 500 })
+  const existing: Msg[] = Array.isArray(chat.messages) ? (chat.messages as Msg[]) : []
 
-  // Load full chat history (for Opus context) — include the just-inserted
-  // user message.
-  const { data: historyRows } = await sb
-    .from('feynd_messages')
-    .select('role, text')
-    .eq('chat_id', chatId)
-    .order('created_at', { ascending: true })
-  const allTurns = (historyRows ?? []) as { role: 'user' | 'assistant'; text: string }[]
-  const priorTurns = allTurns.slice(0, -1) // everything before the user msg
+  const userMsg: Msg = {
+    id: randomUUID(),
+    role: 'user',
+    text: userText,
+    source,
+    audio_url: null,
+    created_at: new Date().toISOString(),
+  }
 
-  // Build video context if the chat is scoped to a video.
+  // Persist the user message first so it's not lost if Opus fails.
+  {
+    const { error: e } = await sb
+      .from('feynd_chats')
+      .update({ messages: [...existing, userMsg], updated_at: new Date().toISOString() })
+      .eq('id', chatId)
+      .eq('device_id', auth.deviceId)
+    if (e) return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+
+  // Build Opus context.
   let videoContext: Parameters<typeof opusAsk>[0]['videoContext'] | undefined
   if (chat.video_id) {
     const v = getVideo(chat.course_id, chat.video_id)
@@ -69,9 +82,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
-  // For text chat, we want readable prose, not "spoken" — override the default
-  // system prompt. (When the iOS app renders a message for TTS it'll hit the
-  // dedicated /tts route with its own spoken-prose rewrite if needed.)
+  const history = existing.map((m) => ({ role: m.role, text: m.text }))
+
   const chatSystem = `You are Feynd, a curious and playful tutor who can teach anything. Reply in clean prose that reads well both on screen AND spoken aloud.
 
 Style rules:
@@ -84,22 +96,44 @@ Style rules:
   try {
     answer = await opusAsk({
       question: userText,
-      history: priorTurns,
+      history,
       videoContext,
       system: chatSystem,
       maxTokens: 1200,
     })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
-    return NextResponse.json({ error: `Opus failed: ${msg}`, user_message: userMsg }, { status: 502 })
+    return NextResponse.json(
+      { error: `Opus failed: ${msg}`, user_message: userMsg },
+      { status: 502 }
+    )
   }
 
-  const { data: assistantMsg, error: asstErr } = await sb
-    .from('feynd_messages')
-    .insert({ chat_id: chatId, role: 'assistant', text: answer, source: 'text' })
-    .select()
+  const assistantMsg: Msg = {
+    id: randomUUID(),
+    role: 'assistant',
+    text: answer,
+    source: 'text',
+    audio_url: null,
+    created_at: new Date().toISOString(),
+  }
+
+  // Re-read to avoid clobbering a concurrent update. For single-user
+  // scale this is overkill but harmless.
+  const { data: fresh } = await sb
+    .from('feynd_chats')
+    .select('messages')
+    .eq('id', chatId)
+    .eq('device_id', auth.deviceId)
     .single()
-  if (asstErr) return NextResponse.json({ error: asstErr.message }, { status: 500 })
+  const current: Msg[] = Array.isArray(fresh?.messages) ? (fresh!.messages as Msg[]) : [...existing, userMsg]
+
+  const { error: writeErr } = await sb
+    .from('feynd_chats')
+    .update({ messages: [...current, assistantMsg], updated_at: new Date().toISOString() })
+    .eq('id', chatId)
+    .eq('device_id', auth.deviceId)
+  if (writeErr) return NextResponse.json({ error: writeErr.message }, { status: 500 })
 
   return NextResponse.json({ user_message: userMsg, assistant_message: assistantMsg })
 }

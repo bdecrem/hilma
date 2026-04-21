@@ -16,9 +16,9 @@ type QuizQuestion = {
 }
 
 // GET /api/feynd/quizzes/:videoId?course_id=<id>
-// Lazily generates and caches a 6-question multiple-choice quiz for the
-// video. Also mixes in the user's past Q&A (chat messages) for this video
-// so quiz items can reflect what they actually asked about.
+// Returns (lazy-generates) a 6-question MCQ for the video. Questions are
+// shared across devices; only attempts are per-device (and they live in
+// the same feynd_quizzes row as a jsonb array).
 export async function GET(request: NextRequest, { params }: { params: Promise<{ videoId: string }> }) {
   const auth = feyndAuth(request)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
@@ -29,10 +29,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const sb = feyndSupabase()
 
-  // Return cached quiz if present.
+  // Cache hit — return questions (NOT attempts, which can be large).
   const { data: cached } = await sb
     .from('feynd_quizzes')
-    .select('*')
+    .select('id, course_id, video_id, questions, generated_at')
     .eq('course_id', courseId)
     .eq('video_id', videoId)
     .maybeSingle()
@@ -46,27 +46,24 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Course/video not found' }, { status: 404 })
   }
 
-  // Pull any Q&A the user has had about this video (across their chats) to
-  // inform question selection. This is scoped to the device so the quiz
-  // reflects what THEY asked about.
+  // Pull the learner's prior Q&A (from their own chats) about this video
+  // so the quiz reinforces what they asked about.
   const { data: chats } = await sb
     .from('feynd_chats')
-    .select('id')
+    .select('messages')
     .eq('device_id', auth.deviceId)
     .eq('course_id', courseId)
     .eq('video_id', videoId)
-  const chatIds = (chats ?? []).map((c) => c.id)
-  let priorQnA: { role: string; text: string }[] = []
-  if (chatIds.length > 0) {
-    const { data: msgs } = await sb
-      .from('feynd_messages')
-      .select('role, text')
-      .in('chat_id', chatIds)
-      .order('created_at', { ascending: true })
-    priorQnA = msgs ?? []
+  const priorQnA: Array<{ role: string; text: string }> = []
+  for (const c of chats ?? []) {
+    const msgs = Array.isArray(c.messages) ? c.messages : []
+    for (const m of msgs) {
+      if (m && typeof m.role === 'string' && typeof m.text === 'string') {
+        priorQnA.push({ role: m.role, text: m.text })
+      }
+    }
   }
 
-  // Collect the concepts this video covers (for tagging questions).
   const videoConcepts = video.concepts
     .map((cid) => course.concepts.find((c) => c.id === cid))
     .filter(Boolean)
@@ -128,12 +125,11 @@ Return STRICT JSON matching this schema, no prose, no markdown fences:
     return NextResponse.json({ error: `Opus failed: ${msg}` }, { status: 502 })
   }
 
-  // Opus sometimes wraps JSON in ```json ... ``` despite instructions.
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim()
   let parsed: { questions?: QuizQuestion[] }
   try {
     parsed = JSON.parse(cleaned)
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Opus returned non-JSON', raw: cleaned.slice(0, 400) }, { status: 502 })
   }
   const questions = Array.isArray(parsed.questions) ? parsed.questions : []
@@ -143,14 +139,14 @@ Return STRICT JSON matching this schema, no prose, no markdown fences:
 
   const { data: inserted, error: insErr } = await sb
     .from('feynd_quizzes')
-    .insert({ course_id: courseId, video_id: videoId, questions })
-    .select()
+    .insert({ course_id: courseId, video_id: videoId, questions, attempts: [] })
+    .select('id, course_id, video_id, questions, generated_at')
     .single()
   if (insErr) {
     // Race: someone else may have inserted between our read and write.
     const { data: fallback } = await sb
       .from('feynd_quizzes')
-      .select('*')
+      .select('id, course_id, video_id, questions, generated_at')
       .eq('course_id', courseId)
       .eq('video_id', videoId)
       .maybeSingle()
