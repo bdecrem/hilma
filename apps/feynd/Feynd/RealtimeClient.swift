@@ -88,8 +88,49 @@ final class RealtimeClient: NSObject {
     private var handledCallIds: Set<String> = []
 
     /// When set, every Opus tool call carries this video's transcript as
-    /// cached context. Cleared when user leaves the video.
-    var videoContext: AnthropicClient.VideoContext? = nil
+    /// cached context. Cleared when user leaves the video. Mutate only via
+    /// `setVideoContext(_:)` so Realtime is told about the change too.
+    private(set) var videoContext: AnthropicClient.VideoContext? = nil
+
+    /// Point the session at a specific video (or clear it). In addition to
+    /// wiring the transcript to the Opus tool, this pushes a session.update
+    /// to Realtime so the model can resolve pronouns ("it", "this video")
+    /// and knows it MUST delegate transcript-level questions to Opus.
+    func setVideoContext(_ ctx: AnthropicClient.VideoContext?) {
+        self.videoContext = ctx
+        let instr = ctx.map(videoScopedInstructions(for:)) ?? systemInstructions
+        // GA requires `session.type` on every session.update — even partial
+        // ones that only change a single field.
+        try? sendJSON([
+            "type": "session.update",
+            "session": [
+                "type": "realtime",
+                "instructions": instr
+            ]
+        ])
+    }
+
+    private func videoScopedInstructions(for ctx: AnthropicClient.VideoContext) -> String {
+        let hostBit = ctx.host.isEmpty ? "" : " (with \(ctx.host))"
+        return """
+        \(systemInstructions)
+
+        CURRENT STUDY VIDEO:
+          Title:     "\(ctx.title)"
+          Author:    \(ctx.author)\(hostBit)
+          Published: \(ctx.publishedOn)
+
+        The user tapped "Ask Feynd" on this video. When they say "it", \
+        "this", "the video", or ask you to "summarize", "recap", "explain", \
+        or "quote" anything, they mean THIS video. You do NOT have the \
+        transcript yourself — Opus does. For ANY question that needs the \
+        actual content of the video (summary, themes, specifics, what the \
+        speaker said or argued), you MUST call the `ask_opus` tool. Do not \
+        invent content from the video under any circumstances. If the user \
+        asks something that is obviously not about this video, answer it \
+        normally.
+        """
+    }
 
     override init() {
         super.init()

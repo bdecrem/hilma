@@ -90,7 +90,7 @@ struct ContentView: View {
             publishedOn: video.publishedOn,
             transcript: video.transcript.text
         )
-        client?.videoContext = ctx
+        client?.setVideoContext(ctx)
         activeVideo = video
         withAnimation(.spring(response: 0.4, dampingFraction: 0.82)) {
             tab = .chat
@@ -98,7 +98,7 @@ struct ContentView: View {
     }
 
     private func clearVideoContext() {
-        client?.videoContext = nil
+        client?.setVideoContext(nil)
         activeVideo = nil
     }
 
