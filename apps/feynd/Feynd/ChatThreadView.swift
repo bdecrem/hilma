@@ -20,10 +20,9 @@ struct ChatThreadView: View {
     @State private var sending = false
     @State private var errorText: String? = nil
 
-    // Playback
-    @State private var player: AVPlayer? = nil
-    @State private var nowPlayingId: String? = nil
-    @State private var fetchingTTSId: String? = nil
+    // Playback — TTS via a short-lived Realtime session so the voice is
+    // literally the same as voice-mode Realtime.
+    @State private var tts = TTSPlayer()
 
     @FocusState private var inputFocused: Bool
 
@@ -107,8 +106,8 @@ struct ChatThreadView: View {
                         MessageBubble(
                             message: dm,
                             accent: accent,
-                            isPlaying: dm.id == nowPlayingId,
-                            isFetchingAudio: dm.id == fetchingTTSId,
+                            isPlaying: dm.id == tts.currentMessageId && tts.state == .speaking,
+                            isFetchingAudio: dm.id == tts.currentMessageId && tts.state == .preparing,
                             onPlay: { Task { await playOrPause(dm) } }
                         )
                         .id(dm.id)
@@ -243,55 +242,17 @@ struct ChatThreadView: View {
     private func playOrPause(_ dm: DisplayMessage) async {
         guard case .server(let msg) = dm, msg.role == "assistant" else { return }
 
-        // If this message is playing, pause and reset.
-        if nowPlayingId == msg.id, let player {
-            player.pause()
-            self.player = nil
-            self.nowPlayingId = nil
+        // Toggle: if this message is currently speaking (or preparing), stop.
+        if tts.currentMessageId == msg.id, tts.state != .idle {
+            await tts.stop()
             return
         }
 
-        // Stop any other playback.
-        if let old = player { old.pause() }
-        player = nil
-        nowPlayingId = nil
+        await tts.speak(msg.text, messageId: msg.id)
 
-        // Make sure the audio session is in .playback before we play so the
-        // silent switch doesn't mute us and a prior .playAndRecord session
-        // (from Realtime voice mode) doesn't route audio to the earpiece.
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .spokenAudio, options: [])
-            try session.setActive(true, options: [.notifyOthersOnDeactivation])
-        } catch {
-            NSLog("FEYND_TTS_AUDIO_SESSION_ERR \(error)")
-        }
-
-        fetchingTTSId = msg.id
-        do {
-            let url = try await FeyndAPI.fetchTTS(messageId: msg.id, text: msg.text)
-            fetchingTTSId = nil
-
-            let p = AVPlayer(url: url)
-            self.player = p
-            self.nowPlayingId = msg.id
-            p.play()
-
-            NotificationCenter.default.addObserver(
-                forName: .AVPlayerItemDidPlayToEndTime,
-                object: p.currentItem,
-                queue: .main
-            ) { _ in
-                Task { @MainActor in
-                    if self.nowPlayingId == msg.id {
-                        self.nowPlayingId = nil
-                        self.player = nil
-                    }
-                }
-            }
-        } catch {
-            fetchingTTSId = nil
-            errorText = "Playback failed: \(error.localizedDescription)"
+        // Surface any error into the thread's error banner.
+        if case .failed(let m) = tts.state {
+            errorText = "Playback failed: \(m)"
         }
     }
 }
