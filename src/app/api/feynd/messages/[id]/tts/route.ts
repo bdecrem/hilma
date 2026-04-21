@@ -41,8 +41,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: 'OPENAI_API_KEY not set' }, { status: 500 })
   }
 
-  // OpenAI TTS — gpt-4o-mini-tts, 'sage' voice (warm storyteller, closest
-  // to the Realtime cedar vibe).
+  // OpenAI TTS — gpt-4o-mini-tts, 'ash' voice. Cedar (the Realtime voice
+  // used for voice chat) isn't available on the standard TTS endpoint; ash
+  // is the closest warm masculine match so the Listen button sounds like
+  // the same tutor as the voice mode.
   const ttsRes = await fetch('https://api.openai.com/v1/audio/speech', {
     method: 'POST',
     headers: {
@@ -51,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     },
     body: JSON.stringify({
       model: 'gpt-4o-mini-tts',
-      voice: 'sage',
+      voice: 'ash',
       input: text,
       response_format: 'mp3',
     }),

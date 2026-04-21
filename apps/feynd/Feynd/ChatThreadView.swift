@@ -256,6 +256,17 @@ struct ChatThreadView: View {
         player = nil
         nowPlayingId = nil
 
+        // Make sure the audio session is in .playback before we play so the
+        // silent switch doesn't mute us and a prior .playAndRecord session
+        // (from Realtime voice mode) doesn't route audio to the earpiece.
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .spokenAudio, options: [])
+            try session.setActive(true, options: [.notifyOthersOnDeactivation])
+        } catch {
+            NSLog("FEYND_TTS_AUDIO_SESSION_ERR \(error)")
+        }
+
         fetchingTTSId = msg.id
         do {
             let url = try await FeyndAPI.fetchTTS(messageId: msg.id, text: msg.text)

@@ -10,6 +10,12 @@ enum DeviceIdentity {
     private static let account = "device_id"
 
     static var deviceId: String {
+        // Allow Secrets.swift to pin a stable device ID (used for seeded
+        // content like the Discord Q&A import). Keychain-generated UUIDs
+        // are fine for fresh installs — but pinning makes rebuilds stable.
+        if !Secrets.deviceIdOverride.isEmpty {
+            return Secrets.deviceIdOverride
+        }
         if let existing = readKeychain() {
             return existing
         }
