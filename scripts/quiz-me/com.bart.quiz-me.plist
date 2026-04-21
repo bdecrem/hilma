@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.bart.quiz-me</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/bart/Documents/code/hilma/scripts/quiz-me/run-pipeline.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/bart/Documents/code/hilma</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/bart/Documents/code/hilma/scripts/quiz-me/data/launchd.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/bart/Documents/code/hilma/scripts/quiz-me/data/launchd.err.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Every Sunday at 06:00 local time. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>6</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+</dict>
+</plist>
