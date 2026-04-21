@@ -7,8 +7,7 @@
 - **Category:** ASCII/Unicode (v3 SIGNAL)
 - **What:** Two vertical columns of geometric unicode glyphs (◌ ○ ● ◆ ◇ ▲ ▽ ■) slowly scrolling on a NIGHT plate. Each column drifts at its own rate — a faint horizontal cream hairline marks the compare row. When the center-row glyph of both columns happens to match, a lime hairline briefly bridges the gap and a quiet 820 Hz sine tick plays. Tap to nudge the right column's scroll speed for 700ms — the one direct way to cause a meeting. Far rows fade toward the field; only the center row reads at full weight. Chrome upper-right: MEETINGS · 001 · SPEC · 012. Museum label: *seam* / "where they meet".
 - **Techniques:** canvas, scrolling-glyphs, unicode-geometric, center-compare, debounce, pointer-nudge, web-audio, v3-signal, dark-bg
-- **Tweet text:** "where they meet"
-- **Tweeted:** pending
+- **Tweeted:** "where they meet" with link (ID 2046615799302090987)
 
 ## 2026-04-20
 
