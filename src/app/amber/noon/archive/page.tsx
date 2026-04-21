@@ -49,7 +49,18 @@ export default function NoonArchive() {
     >
       <header style={{ marginBottom: 36 }}>
         <div style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
-          amber · noon · archive
+          <Link
+            href="/amber"
+            style={{
+              color: 'rgba(232,232,232,0.85)',
+              textDecoration: 'none',
+              borderBottom: '1px solid rgba(232,232,232,0.2)',
+              paddingBottom: 1,
+            }}
+          >
+            amber
+          </Link>
+          {' · noon · archive'}
         </div>
         <h1 style={{ marginTop: 10, fontSize: 28, fontWeight: 300, letterSpacing: '0.02em' }}>
           one piece a day at noon
