@@ -33,7 +33,9 @@ enum AnthropicClient {
         req.httpMethod = "POST"
         req.setValue(Secrets.backendSecret, forHTTPHeaderField: "x-feynd-secret")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.timeoutInterval = 30
+        // Give Opus enough room for a cold prompt-cache write over the full
+        // topic source pool (~17s) plus Vercel cold-start slack.
+        req.timeoutInterval = 60
 
         var payload: [String: Any] = [
             "question": question,
