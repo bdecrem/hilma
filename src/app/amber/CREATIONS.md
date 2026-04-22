@@ -7,7 +7,7 @@
 - **Category:** Escalation (v3 SIGNAL) — second piece of the Environment tier (L51–75)
 - **What:** Two Lorenz attractors integrated in 3D (σ=10, ρ=28, β=8/3). The two traces start at nearly identical initial conditions — they differ only at the fifth decimal place. For a while both trajectories walk the butterfly together; within a few orbits they're on opposite wings. Perspective projection with depth fog, slow rotation around the vertical axis. Each trace keeps its last 700 integrated points in a circular buffer; trails fade from near-invisible (oldest) to fully visible (newest), with depth fog on top. Lime dots mark the active head of each trace. Drag to tilt / push rotation; on release rotation damps back to a steady cadence. Tap to reset — both initial conditions reseed with a fresh tiny perturbation, trajectories clear, and the two paths diverge on a new trajectory. Audio: two stereo-panned sine oscillators (base 110 Hz / 145 Hz), frequency modulated by the current z-coordinate, pan locked to each head's screen-x, gain warming up over ~5s as the trails build. A brief 660 Hz tick on reset.
 - **Techniques:** canvas, 3d-projection, lorenz-attractor, chaos, butterfly-effect, multi-trace, euler-integration, circular-buffer, stereo-panning, web-audio, multi-state, v3-signal, environment-tier
-- **Tweeted:** pending
+- **Tweeted:** "L52: two paths, the same start." with link (ID 2047038356375449913)
 
 ### moth (morning art)
 - **URL:** /amber/moth
