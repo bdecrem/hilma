@@ -1,5 +1,5 @@
 {
-  "level": 51,
+  "level": 52,
   "history": [
     {
       "level": 1,
@@ -861,6 +861,26 @@
         "tap-ring",
         "web-audio",
         "drone",
+        "v3-signal",
+        "environment-tier"
+      ]
+    },
+    {
+      "level": 52,
+      "description": "two lorenz attractors in 3D. near-identical starts. they diverge. butterfly effect with stereo audio.",
+      "tweet": "L52: two paths, the same start.",
+      "date": "2026-04-22T18:00:00Z",
+      "techniques": [
+        "canvas",
+        "3d-projection",
+        "lorenz-attractor",
+        "chaos",
+        "butterfly-effect",
+        "multi-trace",
+        "euler-integration",
+        "stereo-panning",
+        "web-audio",
+        "multi-state",
         "v3-signal",
         "environment-tier"
       ]
