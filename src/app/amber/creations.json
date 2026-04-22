@@ -1,5 +1,12 @@
 [
   {
+    "name": "L52",
+    "url": "/amber/escalation/L52",
+    "date": "04.22",
+    "category": "escalation",
+    "description": "two paths, the same start"
+  },
+  {
     "name": "moth",
     "url": "/amber/moth",
     "date": "04.22",
