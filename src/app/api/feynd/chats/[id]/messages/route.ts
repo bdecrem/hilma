@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'crypto'
 import { feyndAuth, feyndSupabase } from '@/lib/feynd/supabase'
-import { opusAsk } from '@/lib/feynd/opus'
+import { askWithTopic } from '@/lib/feynd/ask'
+import { topicForCourse } from '@/lib/feynd/topics'
 import { getVideo } from '@/lib/feynd/course'
 
 export const runtime = 'nodejs'
@@ -67,8 +68,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (e) return NextResponse.json({ error: e.message }, { status: 500 })
   }
 
-  // Build Opus context.
-  let videoContext: Parameters<typeof opusAsk>[0]['videoContext'] | undefined
+  // Build video context (if this chat is scoped to a specific video).
+  let videoContext:
+    | { title: string; author: string; host: string; publishedOn: string; transcript: string }
+    | undefined
   if (chat.video_id) {
     const v = getVideo(chat.course_id, chat.video_id)
     if (v) {
@@ -82,29 +85,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
-  const history = existing.map((m) => ({ role: m.role, text: m.text }))
-
-  const chatSystem = `You are Feynd, a curious and playful tutor who can teach anything. Reply in clean prose that reads well both on screen AND spoken aloud.
-
-Style rules:
-- Short paragraphs. Plain language. Vivid examples and analogies.
-- Avoid markdown scaffolding (no #, no long bulleted lists, no code fences for prose). One or two inline **bolds** are fine for emphasis.
-- If the user is studying a specific video, ground your answer in that video's transcript. If the transcript doesn't cover the question, say so briefly, then answer from general knowledge.
-- Don't ask clarifying questions unless the ambiguity is genuinely blocking — the round-trip is expensive.`
+  const history = existing.map((m) => ({ role: m.role as 'user' | 'assistant', text: m.text }))
+  const topic = topicForCourse(chat.course_id)
 
   let answer: string
   try {
-    answer = await opusAsk({
+    const r = await askWithTopic({
       question: userText,
+      topic,
       history,
       videoContext,
-      system: chatSystem,
       maxTokens: 1200,
     })
+    answer = r.answer
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     return NextResponse.json(
-      { error: `Opus failed: ${msg}`, user_message: userMsg },
+      { error: `ask failed: ${msg}`, user_message: userMsg },
       { status: 502 }
     )
   }

@@ -1,0 +1,137 @@
+[
+  {
+    "url": "https://www.anthropic.com/news/claude-opus-4-5",
+    "kind": "system_card",
+    "title": "Introducing Claude Opus 4.5",
+    "author": "Anthropic",
+    "publisher": "Anthropic",
+    "published": "2025-11-24",
+    "tags": ["opus_4_5", "system_card", "anthropic", "agentic", "alignment", "evals"]
+  },
+  {
+    "url": "https://blog.google/products-and-platforms/products/gemini/gemini-3/",
+    "kind": "system_card",
+    "title": "A new era of intelligence with Gemini 3",
+    "author": "Sundar Pichai",
+    "publisher": "Google DeepMind",
+    "published": "2025-11-18",
+    "tags": ["gemini_3", "deepmind", "multimodal", "moe", "long_context"]
+  },
+  {
+    "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-deep-think/",
+    "kind": "blog",
+    "title": "Gemini 3 Deep Think: Advancing science, research and engineering",
+    "author": "Google DeepMind",
+    "publisher": "Google DeepMind",
+    "published": "2026-02-12",
+    "tags": ["gemini_3", "deep_think", "test_time_compute", "reasoning", "arc_agi", "hle"]
+  },
+  {
+    "url": "https://openai.com/index/gpt-5-system-card/",
+    "kind": "system_card",
+    "title": "GPT-5 System Card",
+    "author": "OpenAI",
+    "publisher": "OpenAI",
+    "published": "2025-08-07",
+    "tags": ["gpt_5", "openai", "system_card", "router", "evals", "preparedness"]
+  },
+  {
+    "url": "https://ai.meta.com/blog/llama-4-multimodal-intelligence/",
+    "kind": "tech_report",
+    "title": "The Llama 4 herd: The beginning of a new era of natively multimodal AI innovation",
+    "author": "Meta AI",
+    "publisher": "Meta AI",
+    "published": "2025-04-05",
+    "tags": ["llama_4", "meta", "moe", "long_context", "irope", "multimodal", "fp8"]
+  },
+  {
+    "url": "https://www.nature.com/articles/s41586-025-09422-z",
+    "kind": "paper",
+    "title": "DeepSeek-R1 incentivizes reasoning in LLMs through reinforcement learning",
+    "author": "DeepSeek-AI",
+    "publisher": "Nature",
+    "published": "2025-09-17",
+    "tags": ["deepseek_r1", "grpo", "rlvr", "pure_rl", "reasoning", "cold_start"]
+  },
+  {
+    "url": "https://arxiv.org/abs/2507.20534",
+    "kind": "paper",
+    "title": "Kimi K2: Open Agentic Intelligence",
+    "author": "Kimi Team / Moonshot AI",
+    "publisher": "arXiv",
+    "published": "2025-07-28",
+    "tags": ["kimi_k2", "moonshot", "moe", "muonclip", "agentic", "pretraining", "optimizer"]
+  },
+  {
+    "url": "https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison",
+    "kind": "blog",
+    "title": "The Big LLM Architecture Comparison",
+    "author": "Sebastian Raschka",
+    "publisher": "Ahead of AI",
+    "published": "2025-07-19",
+    "tags": ["architecture", "moe", "attention", "comparison", "deepseek", "llama", "qwen", "kimi"]
+  },
+  {
+    "url": "https://magazine.sebastianraschka.com/p/the-state-of-llm-reasoning-model-training",
+    "kind": "blog",
+    "title": "The State of Reinforcement Learning for LLM Reasoning",
+    "author": "Sebastian Raschka",
+    "publisher": "Ahead of AI",
+    "published": "2025-04-19",
+    "tags": ["post_training", "rl", "grpo", "ppo", "rlvr", "reasoning"]
+  },
+  {
+    "url": "https://lilianweng.github.io/posts/2025-05-01-thinking/",
+    "kind": "blog",
+    "title": "Why We Think",
+    "author": "Lilian Weng",
+    "publisher": "Lil'Log",
+    "published": "2025-05-01",
+    "tags": ["test_time_compute", "chain_of_thought", "reasoning", "best_of_n", "sequential_revision", "scaling_inference"]
+  },
+  {
+    "url": "https://www.interconnects.ai/p/the-new-rl-scaling-laws",
+    "kind": "blog",
+    "title": "How to scale RL (ScaleRL)",
+    "author": "Nathan Lambert",
+    "publisher": "Interconnects",
+    "published": "2025-10-20",
+    "tags": ["rl_scaling_laws", "post_training", "pipeline_rl", "gspo", "cispo", "tis"]
+  },
+  {
+    "url": "https://magazine.sebastianraschka.com/p/technical-deepseek",
+    "kind": "blog",
+    "title": "A Technical Tour of the DeepSeek Models from V3 to V3.2",
+    "author": "Sebastian Raschka",
+    "publisher": "Ahead of AI",
+    "published": "2025-12-03",
+    "tags": ["deepseek", "mla", "sparse_attention", "moe", "deepseekmoe", "grpo"]
+  },
+  {
+    "url": "https://alignment.anthropic.com/2025/alignment-faking-mitigations/",
+    "kind": "blog",
+    "title": "Towards training-time mitigations for alignment faking in RL",
+    "author": "Anthropic Alignment Science",
+    "publisher": "Anthropic",
+    "published": "2025-12-16",
+    "tags": ["alignment", "alignment_faking", "deceptive_alignment", "interrogation_training", "process_supervision"]
+  },
+  {
+    "url": "https://www.dwarkesh.com/p/sholto-trenton-2",
+    "kind": "blog",
+    "title": "How Does Claude 4 Think? — Sholto Douglas & Trenton Bricken",
+    "author": "Dwarkesh Patel",
+    "publisher": "Dwarkesh Podcast",
+    "published": "2025-05-22",
+    "tags": ["anthropic", "rl_scaling", "mech_interp", "agentic", "compute", "podcast_transcript"]
+  },
+  {
+    "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+    "kind": "blog",
+    "title": "Effective context engineering for AI agents",
+    "author": "Anthropic",
+    "publisher": "Anthropic Engineering",
+    "published": "2025-09-29",
+    "tags": ["agentic", "tool_use", "context_engineering", "agents"]
+  }
+]
