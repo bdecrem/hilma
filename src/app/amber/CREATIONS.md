@@ -1,5 +1,14 @@
 # Amber Creations — Hilma
 
+## 2026-04-22
+
+### moth (morning art)
+- **URL:** /amber/moth
+- **Category:** HD Art (v3 SIGNAL)
+- **What:** A single tiny cream moth on a NIGHT plate, drifting with gentle brownian motion, trailing a fading cream path (~80 last positions, each fading over 1.8 seconds). It's weakly attracted to wherever the cursor sits — follows you slowly. Tap anywhere and the moth darts to the tap point; on arrival (within 16px of target and still moving fast) it flashes lime with a thin expanding halo. Audio: a 2-second loop of low-passed brown noise whose gain tracks moth speed, plus a brief 840 Hz sine tick on arrival. One agent, one mark, one small light it keeps returning to. Chrome upper-right: MOTH · SPEC · 013. Museum label: *moth* / "drawn to the light".
+- **Techniques:** canvas, single-agent, brownian-drift, pointer-attraction, tap-dart, trail-ringbuffer, lime-flash, filtered-brown-noise, audio-speed-gain, v3-signal, dark-bg
+- **Tweeted:** pending
+
 ## 2026-04-21
 
 ### L51 — a shape that only exists when it turns (escalation, Environment tier opener)
