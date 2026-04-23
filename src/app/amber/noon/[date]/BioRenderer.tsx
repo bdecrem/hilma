@@ -249,10 +249,13 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       //     resizeRef.current().
       const vFraction = isBare ? 0.88 : (textShown ? 0.34 : 0.50)
       const biasFraction = isBare ? 0 : (textShown ? 0.22 : 0.08)
+      // Two honest bounds: fit the width (cols) and fit the vertical budget (rows).
+      // The earlier code also had a `maxCellH = W * vFraction / COLS` clamp, which
+      // used viewport WIDTH as a vertical bound — on portrait mobile that capped
+      // the cell at ~half its natural size. Dropped.
       const maxCellW = Math.floor(W * 0.94 / COLS)
-      const maxCellH = Math.floor(W * vFraction / COLS)
       const vBudget = Math.floor(H * vFraction / ROWS)
-      CELL = Math.max(3, Math.min(maxCellW, maxCellH, vBudget))
+      CELL = Math.max(3, Math.min(maxCellW, vBudget))
       bx = Math.floor((W - COLS * CELL) / 2)
       by = Math.floor((H - ROWS * CELL) / 2 - H * biasFraction)
     }

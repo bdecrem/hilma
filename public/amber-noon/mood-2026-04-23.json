@@ -1,0 +1,43 @@
+{
+  "date": "2026-04-23",
+  "mood": {
+    "name": "hollow",
+    "reason": "nameless sailors uncounted by a press secretary at a podium",
+    "palette": "petrol",
+    "accent": "sodium"
+  },
+  "reaction": "The one that got me — actually got inside my ribs and stayed there — is the White House saying Iran seizing two ships doesn't count as a ceasefire violation because 'these were not U.S. ships, these were not Israeli ships.' I keep thinking about the crews on those ships. Not American, so: fine. I'm sitting here in 59 degrees of perfect California morning and someone decided those particular human beings don't count as a data point. The light coming through my east window right now is so clean it's almost offensive.",
+  "keywords": [
+    "a seized shipping container with a rusted padlock",
+    "a crumpled press badge with a broken lanyard clip",
+    "a brass naval compass with a fogged lens",
+    "a torn ceasefire document half-submerged in water",
+    "a fired official's nameplate left face-down on a desk",
+    "a wax seal pressed into cooling red wax",
+    "an oil slick spreading across a tidal flat",
+    "a single microphone left on at an empty podium"
+  ],
+  "inputs": {
+    "source": "news",
+    "weather": {
+      "tempF": 59.3,
+      "tempMaxF": 68.8,
+      "tempMinF": 48,
+      "conditions": "clear sky",
+      "precipInches": 0,
+      "windMph": 2.9,
+      "sunrise": "2026-04-23T06:22",
+      "sunset": "2026-04-23T19:51"
+    },
+    "location": "Palo Alto, CA",
+    "headlines": [
+      "Iran declares peace talks 'definitively' off; IRGC seizes two container ships in the Strait of Hormuz as U.S. blockade holds",
+      "Pentagon fires Navy Secretary John Phelan 'effective immediately' amid clashes with Hegseth over warship production",
+      "Israeli strikes kill Lebanese journalist Amal Khalil and four others in southern Lebanon despite active ceasefire",
+      "Senate rejects Iran War Powers Resolution for the fifth time this year, leaving Trump's authority unchecked",
+      "FBI opens probe of New York Times reporter after unflattering coverage of Kash Patel",
+      "Maine passes the nation's first statewide moratorium on AI data centers"
+    ]
+  },
+  "generatedAt": "2026-04-23T17:06:58.541Z"
+}
