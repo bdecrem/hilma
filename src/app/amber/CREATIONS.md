@@ -2,6 +2,12 @@
 
 ## 2026-04-23
 
+### wiggle (commission)
+- **URL:** /amber/wiggle
+- **Category:** HD Art (v3 SIGNAL) — funky/playful commission from Bart
+- **What:** A long cream chain of 40 spring-coupled circles that follows the cursor with springy lag, on a BRUISE plate (#150826). Head segment is fat (~18px), tail tapers to a thin tip (~3px). Each segment springs toward the previous one with damping; per-segment soft distance constraint keeps the chain from collapsing or stretching too far. Lime signal dot sits in the center of the head — the one charged moment. On tap, a wave-front of lime rings travels from head to tail at 80 segments/sec ("whip"). When the cursor is idle for 1.5s+, the target slowly orbits the center on a 2:3 Lissajous and the chain spirals into a loose curl by itself — the piece is never fully still. Cream + one lime, no audio. Caption lower-left: *wiggle.* / "follow." Chrome upper-right: WIGGLE · SPEC · 014. Built in response to: "make a FUNKY, FUN, artistic creation that fits our new color style, but is more playful, less serious."
+- **Techniques:** canvas, spring-chain, distance-constraint, cursor-follow, idle-orbit, whip-wave, lime-flash, v3-signal, dark-bg, bruise-field
+
 ### ratchet (morning art)
 - **URL:** /amber/ratchet
 - **Category:** Tiny Machine (v3 SIGNAL)
