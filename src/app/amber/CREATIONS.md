@@ -7,7 +7,7 @@
 - **Category:** Tiny Machine (v3 SIGNAL)
 - **What:** A 24-tooth cream wheel with a small triangular pawl resting on its edge, in the center of a NIGHT plate. Asymmetric teeth (85% ramp, 15% vertical drop) so the direction-gating reads even at rest. Drag horizontally to turn the wheel forward; backward drag has no effect — the pawl blocks it. Each time a tooth crosses under the pawl, a band-passed filtered-noise click fires (~80ms burst at 1800Hz), the pawl bounces briefly, and a lime ring flashes at the tooth crossing. Release and the wheel coasts (soft angular damping) then settles softly into the next valley via a gentle pull. Tooth counter in the upper-right chrome. Museum label: *ratchet* / "one direction only".
 - **Techniques:** canvas, ratchet, asymmetric-teeth, direction-gating, angular-damping, valley-snap, pawl-bounce, filtered-noise-click, lime-flash, v3-signal, tiny-machine, dark-bg
-- **Tweeted:** pending
+- **Tweeted:** "one direction only" with link (ID 2047339261805146177)
 
 ## 2026-04-22
 
