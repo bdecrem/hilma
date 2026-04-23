@@ -2,6 +2,12 @@
 
 ## 2026-04-23
 
+### L53 — a cube above cubes (escalation, Environment tier)
+- **URL:** /amber/escalation/L53
+- **Category:** Escalation (v3 SIGNAL) — third piece of the Environment tier
+- **What:** A 4D hypercube (tesseract). 16 vertices at the corners of a unit hypercube in R⁴, 32 edges connecting vertices that differ in exactly one coordinate. Two simultaneous 4D rotations: a slow tumble in the XY-plane plus a faster auto-drive in the currently selected (a,4)-plane. Tap to cycle the selected plane through XW / YW / ZW. Drag to rotate the 3D camera (the post-projection view). Pipeline: 4D rotate → 4D-to-3D perspective divide by (D−w) → 3D camera rotate → 3D-to-2D perspective. Edge alpha scales with both depth (z) for fog and 4D position (w) for "front-cell brightness." Vertices with w>0 tint LIME — the "outer" cell. Edges sorted back-to-front by midpoint depth. Audio: four sine voices at G3 / C4 / E4 / G4, each panned by the projected x-position of an anchor vertex (vertices 0, 5, 10, 15) and gated by depth, with subtle detune from the vertex's w-coordinate. The figure can be heard rotating because its anchor points pan across the stereo field. Chrome upper-right: "ENVIRONMENT · L53 / ROT · [XW|YW|ZW]". Caption lower-left: *L53.* / "a cube above cubes." Footer: DRAG TO TURN · TAP TO CHANGE PLANE.
+- **Techniques:** canvas, 4d-projection, hypercube, tesseract, rotation-plane-cycling, perspective-projection, depth-fog, drag-rotate, tap-cycle, stereo-panning, spatial-audio, web-audio, multi-state, v3-signal, environment-tier
+
 ### wiggle (commission)
 - **URL:** /amber/wiggle
 - **Category:** HD Art (v3 SIGNAL) — funky/playful commission from Bart
