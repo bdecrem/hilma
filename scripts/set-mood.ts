@@ -307,15 +307,13 @@ async function synthesizeMood(date: string, weather: WeatherSnapshot, source: So
   }
 }
 
-// Stable coin flip from the date — same day always picks the same source,
-// but the distribution is ~50/50 across days so the pipeline alternates.
+// Source picker: odd day-of-month → news, even → reddit. Predictable and
+// strictly alternating — so two consecutive days never share a substrate
+// unless one is forced explicitly on the command line.
 function pickSourceForDate(date: string): Source {
-  let h = 2166136261 >>> 0
-  for (let i = 0; i < date.length; i++) {
-    h ^= date.charCodeAt(i)
-    h = Math.imul(h, 16777619) >>> 0
-  }
-  return (h % 2) === 0 ? 'news' : 'reddit'
+  const m = date.match(/^\d{4}-\d{2}-(\d{2})$/)
+  const day = m ? parseInt(m[1], 10) : 1
+  return day % 2 === 0 ? 'reddit' : 'news'
 }
 
 function parseArgs(argv: string[]): { date: string; source: Source; sourceExplicit: boolean } {

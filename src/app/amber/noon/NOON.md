@@ -21,7 +21,7 @@ scripts/bake-noon-bio.ts     →  YYYY-MM-DD.json   ← what the page loads
 Reads nothing, writes `public/amber-noon/mood-YYYY-MM-DD.json`.
 
 - Pulls **Palo Alto weather** from Open-Meteo (no key needed). Prefers the `current` weather code over the `daily` dominant code — a sunny afternoon reads as "clear sky" even if the day also had morning fog.
-- Two substrates, one picked by a date-seeded coin flip (so the pipeline alternates ~50/50 across days):
+- Two substrates, picked by day-of-month parity (odd → news, even → reddit — strictly alternating so consecutive days never share a substrate):
   - `news` → Claude Sonnet with `web_search` tool pulls 4–6 global headlines from the last 24h.
   - `reddit` → direct pull of 25 hot posts from r/all; Amber picks 1–3 that snag her.
 - One call to Claude with the Amber persona (hypersensitive, full emotional range, first-person, notices small things). Returns:
