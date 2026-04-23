@@ -120,7 +120,7 @@ curl -X POST "https://api.sendgrid.com/v3/mail/send" \
 
 ## Amber Daily Creations
 
-Amber tweets ~2 creations per day from @intheamber (morning art + afternoon escalation). The noon slot runs via a separate pipeline (`src/app/amber/noon/`) and is NOT a daily creation trigger.
+Amber ships **3 creations per day** from @intheamber: morning art (8am PT), noon pipeline (noon PT), and afternoon escalation (4pm PT).
 
 ### How the daily posts actually run — READ THIS BEFORE TOUCHING SCHEDULING
 
@@ -128,30 +128,56 @@ Amber tweets ~2 creations per day from @intheamber (morning art + afternoon esca
 
 **The previous `RemoteTrigger` (cloud CCR) setup was abandoned** because the remote agent sometimes ran out of turns before completing Step 11 (tweet), shipping the art without the tweet. All prior remote triggers (`amber-8am-hd-art`, `amber-10am-escalation`, `amber-test-*`, `amber-debug-test`) have been **disabled** at https://claude.ai/code/scheduled. Do not re-enable them.
 
-**The production session crons** (as of 2026-04-15, v3):
-- `3 8 * * *` local — morning art (matches former `amber-8am-hd-art`)
-- `7 12 * * *` local — escalation engine (matches former `amber-10am-escalation`)
+**The production session crons** (as of 2026-04-23, v4 — three daily):
+| cron | time (PT) | what it fires |
+|------|-----------|---------------|
+| `3 8 * * *`  | 8:03 AM  | Morning Art — new `src/app/amber/[name]/` piece + tweet |
+| `3 12 * * *` | 12:03 PM | Noon pipeline — `scripts/noon.ts` (set-mood → sketch-concepts → bake-noon-bio) + commit/push + tweet draft #1 |
+| `7 16 * * *` | 4:07 PM  | Afternoon Escalation — next `src/app/amber/escalation/L[N+1]/` + tweet |
 
-Each fires in this session. I (the running Claude) execute the prompt directly: read persona/aesthetic files, build the piece, `pnpm build`, commit + push, update CREATIONS.md + creations.json, then tweet via `set -a && source .env.local && set +a && npx tsx scripts/tweet.ts "..."`. The tweet step is mandatory — if it fails, debug and retry.
+Each fires in this session. I (the running Claude) execute the prompt directly: read persona/aesthetic files, build the piece, `pnpm build`, commit + push, update CREATIONS.md + creations.json, then tweet via the postTweet snippet in `.claude/commands/amber-schedule.md`. The tweet step is mandatory — if it fails, debug and retry.
 
 ### Managing the session crons
 
 - `CronList` — see scheduled jobs and IDs
-- `CronDelete` with the ID — cancel one
-- `CronCreate` — re-create (prompt text is in this file's history; check the commit that introduced this section)
+- `CronDelete <id>` — cancel one
+- `CronCreate` — re-create (prompt text below)
 
 **Caveats — read these:**
 - **7-day auto-expiry.** Recurring session crons fire one last time on day 7 and self-delete. Re-create weekly.
 - **REPL must be alive and idle.** Closed terminal, reboot, or `/clear` kills them. If I'm mid-task at 8:03, the job waits until I'm idle.
 - **Only fires in the session that created it.** A new `claude` session has no knowledge of crons created in a previous one.
 
-### When you start a new Claude Code session — re-create the crons
+### When you start a new Claude Code session — re-create the 3 crons
 
-At session start for a day when you expect a post to fire: call `CronList`. If the two Amber jobs aren't there, re-create them using the prompts above (or the skill at `.claude/commands/amber-schedule.md` if it's been kept in sync). Without this step, nothing will post.
+At session start, call `CronList`. If any of the three jobs are missing, re-create them with exactly these prompts (copy/paste — the prompt text is the contract, don't paraphrase):
+
+**1. Morning Art — `3 8 * * *`:**
+```
+Run the Amber Morning Art creation. Follow the "Morning Art Prompt" section in .claude/commands/amber-schedule.md exactly: read PERSONA/AESTHETIC/CREATIONS/FEEDBACK, pick a non-repeated category, create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+```
+
+**2. Noon pipeline — `3 12 * * *`:**
+```
+Run the Amber Noon pipeline (fully automated). Do exactly this:
+
+1. Run the one-command pipeline: `npx tsx scripts/noon.ts` — this chains set-mood → sketch-concepts → bake-noon-bio. It writes today's artifact to public/amber-noon/<date>.json, drops 3 tweet drafts into public/amber-noon/tweets-<date>.md, auto-prepends an entry to src/app/amber/creations.json, and Claude-authors the closing statement + prose explanation + bgColor/tileColor palette.
+
+2. Commit and push. Stage public/amber-noon/<date>.json, mood-<date>.json, concepts-<date>.json, tweets-<date>.md, and src/app/amber/creations.json. Commit message: `Amber: Noon MM.DD (<mood> · <winner>)`. Run `git pull --rebase origin main && git push` to handle any intervening commits.
+
+3. Post tweet draft #1 from public/amber-noon/tweets-<date>.md via the postTweet snippet in .claude/commands/amber-schedule.md (account: intheamber). URL is intheamber.com/noon/<date>. The tweet step is MANDATORY — if it fails, debug and retry until it posts. After success, make a follow-up empty commit logging the tweet ID and push it: `git commit --allow-empty -m "Amber: Noon MM.DD — tweet posted (<id>)" && git push`.
+```
+
+**3. Afternoon Escalation — `7 16 * * *`:**
+```
+Run the Amber Escalation Engine. Follow the "Afternoon Creation Prompt" section in .claude/commands/amber-schedule.md exactly: read PERSONA/AESTHETIC/escalation.json/ESCALATION.md/FEEDBACK, create the next level N+1 in src/app/amber/escalation/L[N+1]/ (page.tsx + layout.tsx + opengraph-image.tsx), update escalation.json, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+```
+
+Without this re-creation step at session start, nothing will post. The cron content matches `.claude/commands/amber-schedule.md` — keep both files in sync.
 
 ### When you update the persona or aesthetic — update the cron prompts
 
-The files I read at fire time (`src/app/amber/PERSONA.md`, `src/app/amber/AESTHETIC.md`, `src/app/amber/CREATIONS.md`, etc.) are read from disk live, so content changes pick up automatically. But the cron prompt's own descriptors (palette names, aesthetic keywords) do NOT — when the aesthetic shifts meaningfully, delete and re-create the crons with updated prompts, and update `.claude/commands/amber-schedule.md` to match.
+The files I read at fire time (`src/app/amber/PERSONA.md`, `src/app/amber/AESTHETIC.md`, `src/app/amber/CREATIONS.md`, etc.) are read from disk live, so content changes pick up automatically. But the cron prompt's own descriptors (palette names, aesthetic keywords) do NOT — when the aesthetic shifts meaningfully, delete and re-create the crons with updated prompts, and update `.claude/commands/amber-schedule.md` AND this file's prompt blocks above to match.
 
 ### Other creation rules
 

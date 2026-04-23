@@ -4,19 +4,21 @@ Set up Amber's daily creation crons. These run in-session — they fire as long 
 
 ## What to do
 
-Create 2 local cron jobs using CronCreate:
+Create 3 local cron jobs using CronCreate:
 
 ### Cron 1: Morning Art (8am PT)
-- **Schedule:** `57 7 * * *` (minute 57 to avoid top-of-hour API traffic)
+- **Schedule:** `3 8 * * *`
 - **Prompt:** See "Morning Art Prompt" below
 
-### Cron 2: Afternoon Escalation (4pm PT)
-- **Schedule:** `57 15 * * *`
+### Cron 2: Noon Pipeline (12pm PT)
+- **Schedule:** `3 12 * * *`
+- **Prompt:** See "Noon Pipeline Prompt" below
+
+### Cron 3: Afternoon Escalation (4pm PT)
+- **Schedule:** `7 16 * * *`
 - **Prompt:** See "Afternoon Creation Prompt" below
 
-(The old midday "surprise" cron is retired — the noon artifact at `intheamber.com/noon/[date]` replaces it via a separate pipeline.)
-
-After creating both, confirm with: "Amber schedule active. 2 crons running: 8am and 4pm PT. They'll fire as long as this session stays open."
+After creating all three, confirm with: "Amber schedule active. 3 crons running: 8am, 12pm, and 4pm PT. They'll fire as long as this session stays open."
 
 ---
 
@@ -88,6 +90,32 @@ cd /Users/bart/Documents/code/vibeceo/sms-bot && \
 (async () => {
   const { postTweet } = await import('./lib/twitter-client.js');
   await postTweet('[caption]\n\nintheamber.com/amber/[name]', { account: 'intheamber' });
+})();
+"
+```
+
+---
+
+## Noon Pipeline Prompt
+
+Run the Amber Noon pipeline (fully automated). Do exactly this:
+
+1. Run the one-command pipeline: `npx tsx scripts/noon.ts` — this chains set-mood → sketch-concepts → bake-noon-bio. It writes today's artifact to `public/amber-noon/<date>.json`, drops 3 tweet drafts into `public/amber-noon/tweets-<date>.md`, auto-prepends an entry to `src/app/amber/creations.json`, and Claude-authors the closing statement + prose explanation + `bgColor`/`tileColor` palette.
+
+2. Commit and push. Stage `public/amber-noon/<date>.json`, `mood-<date>.json`, `concepts-<date>.json`, `tweets-<date>.md`, and `src/app/amber/creations.json`. Commit message: `Amber: Noon MM.DD (<mood> · <winner>)`. Run `git pull --rebase origin main && git push` to handle any intervening commits.
+
+3. Post tweet draft #1 from `public/amber-noon/tweets-<date>.md` via the postTweet snippet below (account: `intheamber`). URL is `intheamber.com/noon/<date>`. The tweet step is MANDATORY — if it fails, debug and retry until it posts. After success, make a follow-up empty commit logging the tweet ID and push it: `git commit --allow-empty -m "Amber: Noon MM.DD — tweet posted (<id>)" && git push`.
+
+```bash
+cd /Users/bart/Documents/code/vibeceo/sms-bot && \
+  TWITTER_API_KEY=$(grep '^TWITTER_API_KEY=' /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_API_SECRET=$(grep '^TWITTER_API_SECRET=' /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_INTHEAMBER_ACCESS_TOKEN=$(grep TWITTER_INTHEAMBER_ACCESS_TOKEN /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  TWITTER_INTHEAMBER_ACCESS_SECRET=$(grep TWITTER_INTHEAMBER_ACCESS_SECRET /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
+  npx tsx -e "
+(async () => {
+  const { postTweet } = await import('./lib/twitter-client.js');
+  await postTweet('[tweet text from drafts file]\n\nintheamber.com/noon/[date]', { account: 'intheamber' });
 })();
 "
 ```
