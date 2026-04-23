@@ -17,7 +17,7 @@ const projects: Project[] = [
   {
     name: 'feynd',
     url: 'https://github.com/bdecrem/hilma',
-    shortDesc: 'experimental learning app, named after feynman (the physicist who insisted you don\'t understand something until you can explain it simply). first module: "teach me about AI" — short videos paired with an interactive voice mode, so you can stop the lesson mid-sentence and argue with it.',
+    shortDesc: 'experimental learning app, named after richard feynman. first module: "teach me about AI" — short videos paired with an interactive voice mode, so you can stop the lesson mid-sentence and argue with it.',
     fullDesc: 'native ios. early days.',
     status: 'respinning',
   },
@@ -43,6 +43,13 @@ const projects: Project[] = [
     status: 'active',
   },
   {
+    name: 'ctrl shift',
+    url: 'https://ctrlshift.so',
+    shortDesc: 'idea for a responsible ai incubator, with learnings from mozilla builders. prototype built at a funder\'s invitation. prospected a first cohort and built a full <a href="https://ctrlshift.so/cs" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">knowledge repo</a>.',
+    fullDesc: 'long horizon lab. backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics.',
+    status: 'neglected',
+  },
+  {
     name: 'claudio',
     url: 'https://claudio.la',
     shortDesc: 'i\'ve worked with teams on several social apps, most recently mammoth. wanted to see how far i could get vibe-coding one solo, backend and all. a: pretty far.',
@@ -55,13 +62,6 @@ const projects: Project[] = [
     shortDesc: 'openclaw experiments on weird hardware. marg lives on a pwnagotchi and talks to cameras. a pico, some e-ink, and whatever else is lying around.',
     fullDesc: 'agents. hardware. questionable wiring.',
     status: 'respinning',
-  },
-  {
-    name: 'ctrl shift',
-    url: 'https://ctrlshift.so',
-    shortDesc: 'idea for a responsible ai incubator, with learnings from mozilla builders. prototype built at a funder\'s invitation. prospected a first cohort and built a full <a href="https://ctrlshift.so/cs" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">knowledge repo</a>.',
-    fullDesc: 'long horizon lab. backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics.',
-    status: 'neglected',
   },
   {
     name: 'markd',
