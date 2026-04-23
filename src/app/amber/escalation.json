@@ -1,5 +1,5 @@
 {
-  "level": 52,
+  "level": 53,
   "history": [
     {
       "level": 1,
@@ -884,6 +884,29 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 53,
+      "description": "tesseract. 4D hypercube projected through 3D to 2D. 16 vertices, 32 edges. auto-rotates in a chosen 4D plane (XW/YW/ZW) plus a slow tumble in the XY plane. drag to rotate the 3D camera; tap to cycle 4D rotation plane. depth fog on edges; vertex brightness scales with w-coordinate (vertices with w>0 tint lime). 4 sine voices at G3-C4-E4-G4, panned by projected-x of four anchor vertices, gain by depth, detune drifts with w. you can hear the figure rotate.",
+      "tweet": "L53: a shape that needs more than three dimensions.",
+      "date": "2026-04-23T23:30:00Z",
+      "techniques": [
+        "canvas",
+        "4d-projection",
+        "hypercube",
+        "tesseract",
+        "rotation-plane-cycling",
+        "perspective-projection",
+        "depth-fog",
+        "drag-rotate",
+        "tap-cycle",
+        "stereo-panning",
+        "spatial-audio",
+        "web-audio",
+        "multi-state",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1091,7 +1114,13 @@
     "arnold-tongue",
     "continuous-frequency",
     "beat-frequency",
-    "critical-coupling"
+    "critical-coupling",
+    "4d-projection",
+    "hypercube",
+    "tesseract",
+    "rotation-plane-cycling",
+    "tap-cycle",
+    "spatial-audio"
   ],
   "killed": []
 }
