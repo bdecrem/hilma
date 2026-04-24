@@ -386,7 +386,10 @@ export default function EscalationArchive() {
           <section className="entries">
             {items.map((item) => {
               const tier = tierFor(item.level)
-              const explanation = EXPLANATIONS[item.level] ?? item.description
+              // Only render the paragraph when a curated EXPLANATIONS entry
+              // exists — falling back to item.description would duplicate the
+              // title, which is already item.description.
+              const explanation = EXPLANATIONS[item.level]
               const url = `/amber/escalation/L${item.level}`
               return (
                 <Link key={item.level} href={url} className="entry">
@@ -404,7 +407,7 @@ export default function EscalationArchive() {
                       <span className="entry-tier">{tier.name} · {formatDate(item.date)}</span>
                     </div>
                     <div className="entry-title">{item.description}</div>
-                    <p className="entry-desc">{explanation}</p>
+                    {explanation && <p className="entry-desc">{explanation}</p>}
                   </div>
                 </Link>
               )

@@ -203,6 +203,7 @@ Read escalation.json for current level N. Create level N+1.
 2. Create `src/app/amber/escalation/L[N+1]/layout.tsx` with dark `themeColor` matching the field
 3. Create `src/app/amber/escalation/L[N+1]/opengraph-image.tsx` (ImageResponse, 1200×630, v3 aesthetic)
 4. Update `src/app/amber/escalation.json` with new level entry
+5. **Add a curated explanation to `src/app/amber/escalation/explanations.ts`** — a 2-4 sentence Amber-voiced paragraph for key `[N+1]` in the `EXPLANATIONS` record. This is what appears as the paragraph below the title on the `/amber/escalation` archive page. It should NOT just repeat the short description — write something richer that names the technique, the feeling, or the moment of the piece. If you skip this, the archive entry renders with title + metadata only (no paragraph) — it looks fine, just less rich.
 
 ### Step 3: Build, bake OG image, verify
 ```bash
