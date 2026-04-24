@@ -1,5 +1,5 @@
 {
-  "level": 53,
+  "level": 54,
   "history": [
     {
       "level": 1,
@@ -907,6 +907,29 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 54,
+      "description": "lensing. ~520 cream stars on a NIGHT plate, parallax-weighted. an invisible point mass tracks the cursor — each star's displayed position is its true position plus a displacement aimed AT the mass with magnitude ≈ strength / (r² + softening), producing classic weak-gravitational-lens warp: dramatic near the mass, negligible far away. press to double the mass (stars whip inward); release eases back. when no pointer, the mass drifts in a slow Lissajous around center so the field breathes on its own. stars whose per-frame displacement exceeds ~10px interpolate cream→lime — 'heating up' where the warp is strongest. audio: a single sine drone, frequency 60–200Hz and gain 0.02–0.10 both tracked continuously to total displacement energy — the field hums louder and higher when space is bending hard.",
+      "tweet": "L54: light bent by what cannot be seen.",
+      "date": "2026-04-24T23:00:00Z",
+      "techniques": [
+        "canvas",
+        "gravitational-lensing",
+        "weak-lens-approximation",
+        "parallax-starfield",
+        "softened-inverse-square",
+        "cursor-as-mass",
+        "press-to-boost",
+        "idle-lissajous-drift",
+        "cream-to-lime-interpolation",
+        "energy-driven-drone",
+        "continuous-frequency-modulation",
+        "web-audio",
+        "multi-state",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1120,7 +1143,15 @@
     "tesseract",
     "rotation-plane-cycling",
     "tap-cycle",
-    "spatial-audio"
+    "spatial-audio",
+    "gravitational-lensing",
+    "weak-lens-approximation",
+    "parallax-starfield",
+    "softened-inverse-square",
+    "cursor-as-mass",
+    "idle-lissajous-drift",
+    "energy-driven-drone",
+    "continuous-frequency-modulation"
   ],
   "killed": []
 }
