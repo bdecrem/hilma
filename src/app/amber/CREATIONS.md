@@ -2,6 +2,12 @@
 
 ## 2026-04-24
 
+### L54 — light bent by what cannot be seen (escalation, Environment tier)
+- **URL:** /amber/escalation/L54
+- **Category:** Escalation (v3 SIGNAL) — fourth piece of the Environment tier
+- **What:** ~520 cream stars on a NIGHT plate (#0A0A0A), drawn with a parallax factor z∈[0.25,1] so depth reads. An invisible point mass lives at the cursor. Per frame, each star's DISPLAYED position is its true position + a displacement vector aimed AT the mass: `displacement = (mass - star) * strength / (r² + softening)`, scaled by the star's parallax z. The softening (r²+400) prevents a singularity when a star passes through the lens. Resulting visual: weak gravitational lensing — stars bend around the mass dramatically when close, negligibly when far. Press to double the mass (target strength 1800 → 4800; stars whip inward, then ease back on release). When no pointer is present, the mass drifts in a slow Lissajous around viewport center (cos(t) vs sin(1.3t)) so the field is never fully still. Stars whose per-frame displacement exceeds ~10px interpolate cream→lime — "heating up" near the warp. Audio: a single sine oscillator (web-audio), frequency 60–200Hz and gain 0.02–0.10 both tracked continuously to total displacement energy via `setTargetAtTime` — the field hums louder and higher when space is bending hard, quiets when relaxed. Chrome: ENVIRONMENT · L54. Caption: *L54.* / "light bent by what cannot be seen."
+- **Techniques:** canvas, gravitational-lensing, weak-lens-approximation, parallax-starfield, softened-inverse-square, cursor-as-mass, press-to-boost, idle-lissajous-drift, cream-to-lime-interpolation, energy-driven-drone, continuous-frequency-modulation, web-audio, multi-state, v3-signal, environment-tier
+
 ### splatter (toy — first FLARE piece)
 - **URL:** /amber/splatter
 - **Category:** Toy (v3 SIGNAL) — commission; pivot away from "scientific gorgeous artifact" toward *wildly indy artistic*
