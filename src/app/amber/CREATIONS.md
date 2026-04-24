@@ -2,6 +2,12 @@
 
 ## 2026-04-23
 
+### squish (toy)
+- **URL:** /amber/squish
+- **Category:** Toy (v3 SIGNAL) — the new 8am direction: a manipulable physics artifact with no goal, no score, no content reveal
+- **What:** A cream soft-body blob on a HEARTH (#1A110A) plate. 28-node verlet ring with perimeter springs (keep neighbor distance), radial springs (restore circular shape around the centroid), and constant outward pressure (keeps it "inflated"). Cursor interactions: hover near it and it recoils outward; press-and-drag grabs the nearest node and pulls it with soft lag on neighbors — the whole blob deforms after you. Rendered as a filled quadratic-bezier closed curve through the ring, with a radial gradient (#EFEAD8 → #B8B09E) giving it 3D sheen. Lime signal dot at the centroid tracks "where the middle is" as you deform it. Soft sine-boing audio (rate-limited 90ms) fires when deformation energy jumps. No end state, no reveal. Caption lower-left: *squish.* / "press it. press it again." Chrome upper-right: SQUISH · TOY · 002.
+- **Techniques:** canvas, verlet-soft-body, perimeter-springs, radial-springs, constant-pressure, cursor-grab, neighbor-propagation, bezier-blob-rendering, web-audio, boing-synth, v3-signal, hearth-field, toy
+
 ### L53 — a cube above cubes (escalation, Environment tier)
 - **URL:** /amber/escalation/L53
 - **Category:** Escalation (v3 SIGNAL) — third piece of the Environment tier
