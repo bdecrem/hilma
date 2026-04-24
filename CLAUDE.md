@@ -150,7 +150,9 @@ Each fires in this session. I (the running Claude) execute the prompt directly: 
 
 ### When you start a new Claude Code session — re-create the 3 crons
 
-At session start, call `CronList`. If any of the three jobs are missing, re-create them with exactly these prompts (copy/paste — the prompt text is the contract, don't paraphrase):
+**Easy path:** run the `/amber-schedule` skill. It creates all three crons with the exact prompt text embedded in `.claude/commands/amber-schedule.md`. Verify with `CronList` afterward — you should see three jobs at 8:03 AM / 12:03 PM / 4:07 PM.
+
+**Manual path (fallback):** at session start, call `CronList`. If any of the three jobs are missing, re-create them manually with exactly these prompts (copy/paste — the prompt text is the contract, don't paraphrase):
 
 **1. Morning Art — `3 8 * * *`:**
 ```
