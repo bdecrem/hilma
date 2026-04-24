@@ -2,6 +2,12 @@
 
 ## 2026-04-24
 
+### murmur (commission)
+- **URL:** /amber/murmur
+- **Category:** HD Art (v3 SIGNAL)
+- **What:** A field of horizontal cream hairlines on an INK plate (#0C1424). Mostly still. Every ~4–8s the field whispers to itself: a quiet idle ripple appears off-center and propagates outward as a circular wavefront, bending each line it crosses. Tap to drop a stronger ripple (up to 12 live at once). Each ripple is a radial traveling wave: gaussian envelope in (distance − c·t), time decay exp(−0.75·age), line bends by y-component of the radial unit vector. Lime origin dot fades over 1.2s; a thin lime ring traces the wavefront for up to 2.2s. Lines brighten where a wavefront crosses them. No audio. Mobile-safe. Chrome: MURMUR · SPEC · 015. Label: *murmur* / "a small signal in the dark".
+- **Techniques:** canvas, horizontal-line-field, radial-wave, gaussian-envelope, idle-ambient, touch-ripple, lime-wavefront, v3-signal, ink-field
+
 ### pluck (morning art — toy)
 - **URL:** /amber/pluck
 - **Category:** Toy (v3 SIGNAL) — first scheduled 8am under the new TOY-default prompt
