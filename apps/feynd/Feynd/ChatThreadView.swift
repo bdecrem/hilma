@@ -1,28 +1,33 @@
 import AVFoundation
 import SwiftUI
 
-// Text-chat thread. Opened from the course detail view when the user taps
-// "Ask Feynd" on a video. Auto-resumes the most recent chat for that video
-// (if any) or creates a new one. Typed questions → Opus → text reply; tap
-// the speaker on any assistant message to hear it (TTS streamed from the
-// backend, cached in Supabase Storage).
+// Text-chat thread. Used in two modes:
+//   · Modal-sheet mode: opened from a course video's Chat button; scoped
+//     to that video (`video` non-nil, `onClose` closes the sheet).
+//   · Root mode: lives directly in the Chat tab, no video context, no
+//     close button — it's the persistent "open" chat for the topic.
+// Both modes share the same composer (text + dictation mic + send) and
+// the same per-message Listen playback via TTSPlayer.
 
 struct ChatThreadView: View {
     let courseId: String
-    let video: CourseVideo
-    let onClose: () -> Void
+    let video: CourseVideo?                  // nil in root mode
+    let onClose: (() -> Void)?               // nil in root mode — no × button
 
     @State private var chat: FeyndChat? = nil
     @State private var messages: [FeyndMessage] = []
-    @State private var pendingMessages: [LocalMessage] = []   // optimistic user msgs
+    @State private var pendingMessages: [LocalMessage] = []
     @State private var input: String = ""
     @State private var loading = true
     @State private var sending = false
     @State private var errorText: String? = nil
 
-    // Playback — TTS via a short-lived Realtime session so the voice is
-    // literally the same as voice-mode Realtime.
+    // TTS (Listen button) — short-lived Realtime session for voice output.
     @State private var tts = TTSPlayer()
+
+    // Interactive voice mode (mic button) — opens a full-screen Realtime
+    // session sheet.
+    @State private var showingVoiceSheet = false
 
     @FocusState private var inputFocused: Bool
 
@@ -51,30 +56,56 @@ struct ChatThreadView: View {
         }
         .preferredColorScheme(.dark)
         .task { await bootstrap() }
+        .fullScreenCover(isPresented: $showingVoiceSheet) {
+            VoiceSessionView(
+                video: video,
+                chatId: chat?.id,
+                onClose: { showingVoiceSheet = false },
+                onMessagePersisted: { msg in
+                    // Voice turn landed server-side — append it to the local
+                    // thread so it's visible the moment the sheet closes.
+                    if !messages.contains(where: { $0.id == msg.id }) {
+                        messages.append(msg)
+                    }
+                }
+            )
+        }
     }
 
     // MARK: Header
 
     private var header: some View {
         HStack(spacing: 12) {
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.white.opacity(0.8))
-                    .frame(width: 34, height: 34)
-                    .background(Circle().fill(.ultraThinMaterial))
+            if let onClose {
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .frame(width: 34, height: 34)
+                        .background(Circle().fill(.ultraThinMaterial))
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Chatting about")
-                    .font(.system(size: 10, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.5))
-                    .tracking(0.6)
-                Text(video.title)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
+                if let video {
+                    Text("Chatting about")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .tracking(0.6)
+                    Text(video.title)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                } else {
+                    Text("FEYND")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .tracking(0.8)
+                    Text("AI Learning")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white)
+                }
             }
             Spacer()
         }
@@ -142,7 +173,7 @@ struct ChatThreadView: View {
         HStack(alignment: .bottom, spacing: 10) {
             ZStack(alignment: .topLeading) {
                 if input.isEmpty {
-                    Text("Ask about this video…")
+                    Text(video == nil ? "Ask anything about AI…" : "Ask about this video…")
                         .font(.system(size: 15, design: .rounded))
                         .foregroundStyle(.white.opacity(0.35))
                         .padding(.horizontal, 14)
@@ -166,6 +197,18 @@ struct ChatThreadView: View {
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .stroke(Color.white.opacity(0.08), lineWidth: 1)
             )
+
+            // Mic button — switches into interactive voice mode (Realtime
+            // session sheet). Text chat stays behind it; close the sheet
+            // to return.
+            Button(action: { showingVoiceSheet = true }) {
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Color.white.opacity(0.12)))
+            }
+            .buttonStyle(.plain)
 
             Button(action: { Task { await send() } }) {
                 Image(systemName: sending ? "ellipsis" : "arrow.up")
@@ -197,16 +240,28 @@ struct ChatThreadView: View {
 
     private func bootstrap() async {
         do {
-            let existing = try await FeyndAPI.listChats(courseId: courseId, videoId: video.id)
-            if let latest = existing.first {
+            let existing = try await FeyndAPI.listChats(courseId: courseId, videoId: video?.id)
+            // In root mode we want a single persistent chat — filter to ones
+            // that are explicitly open (video_id nil) so we don't grab a
+            // recent video-scoped chat.
+            let match = video == nil
+                ? existing.first(where: { $0.video_id == nil })
+                : existing.first
+            if let latest = match {
                 let (c, msgs) = try await FeyndAPI.getChat(latest.id)
                 self.chat = c
                 self.messages = msgs
             } else {
+                let title: String
+                if let video {
+                    title = "Chat about \(video.title.prefix(60))"
+                } else {
+                    title = "AI Learning"
+                }
                 let created = try await FeyndAPI.createChat(
                     courseId: courseId,
-                    videoId: video.id,
-                    title: "Chat about \(video.title.prefix(60))"
+                    videoId: video?.id,
+                    title: title
                 )
                 self.chat = created
                 self.messages = []

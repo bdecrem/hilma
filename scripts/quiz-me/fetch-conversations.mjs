@@ -124,14 +124,21 @@ for (const org of orgs) {
   const orgId = org.uuid;
   console.log(`\n→ fetching list for org "${org.name || orgId}"`);
 
-  const list = await page.evaluate(async (orgId) => {
-    const r = await fetch(`/api/organizations/${orgId}/chat_conversations`, {
-      credentials: 'include',
-      headers: { 'accept': 'application/json' },
-    });
-    if (!r.ok) throw new Error(`list failed: ${r.status}`);
-    return r.json();
-  }, orgId);
+  let list;
+  try {
+    list = await page.evaluate(async (orgId) => {
+      const r = await fetch(`/api/organizations/${orgId}/chat_conversations`, {
+        credentials: 'include',
+        headers: { 'accept': 'application/json' },
+      });
+      if (!r.ok) throw new Error(`list failed: ${r.status}`);
+      return r.json();
+    }, orgId);
+  } catch (e) {
+    // Don't crash the whole run on one inaccessible org — save what we have.
+    console.warn(`  ⚠ skipping "${org.name || orgId}": ${e.message}`);
+    continue;
+  }
 
   console.log(`  found ${list.length} conversations`);
 

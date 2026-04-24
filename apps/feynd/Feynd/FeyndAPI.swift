@@ -65,6 +65,35 @@ struct FeyndQuizAttempt: Codable, Identifiable, Hashable {
     let attempted_at: String
 }
 
+// Quiz derived from the user's own Claude conversation history, surfaced
+// by the /api/feynd/claude-quizzes/* routes. The iOS client currently
+// only renders MCQ questions, which is what the API returns.
+
+struct ClaudeQuizSummary: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let topic: String?
+    let source_created_at: String?
+    let summary: String
+    let question_count: Int
+}
+
+struct ClaudeQuizMCQ: Codable, Hashable {
+    let q: String
+    let options: [String]
+    let answer_index: Int
+    let explanation: String?
+}
+
+struct ClaudeQuiz: Codable, Identifiable, Hashable {
+    let id: String
+    let title: String
+    let topic: String?
+    let source_created_at: String?
+    let summary: String
+    let questions: [ClaudeQuizMCQ]
+}
+
 // MARK: - Client
 
 enum FeyndAPI {
@@ -153,6 +182,49 @@ enum FeyndAPI {
         return (out.user_message, out.assistant_message)
     }
 
+    private struct SingleMessageResp: Codable { let message: FeyndMessage }
+
+    // Append a pre-formed message without invoking Opus. Used by voice mode
+    // to persist Realtime-emitted transcripts back into the chat thread.
+    static func appendMessage(chatId: String, role: String, text: String, source: String = "voice") async throws -> FeyndMessage {
+        let req = try makeRequest(path: "api/feynd/chats/\(chatId)/append", method: "POST", body: [
+            "role": role, "text": text, "source": source
+        ])
+        return try await send(req, as: SingleMessageResp.self).message
+    }
+
+    // --- Dictation (Whisper STT) ---------------------------------------
+
+    private struct STTResp: Codable { let text: String }
+
+    static func transcribe(audioData: Data, filename: String = "audio.m4a", mimeType: String = "audio/mp4") async throws -> String {
+        let url = Secrets.backendBaseURL.appendingPathComponent("api/feynd/stt")
+        let boundary = "----feynd-boundary-\(UUID().uuidString)"
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue(Secrets.backendSecret, forHTTPHeaderField: "x-feynd-secret")
+        req.setValue(DeviceIdentity.deviceId, forHTTPHeaderField: "x-feynd-device")
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = 60
+
+        var body = Data()
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"audio\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(audioData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        req.httpBody = body
+
+        let (data, resp) = try await URLSession.shared.data(for: req)
+        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            let code = (resp as? HTTPURLResponse)?.statusCode ?? -1
+            let snippet = String(data: data, encoding: .utf8) ?? ""
+            throw FeyndAPIError.badResponse(code, snippet)
+        }
+        let out = try JSONDecoder().decode(STTResp.self, from: data)
+        return out.text
+    }
+
     static func fetchTTS(messageId: String, text: String) async throws -> URL {
         let req = try makeRequest(
             path: "api/feynd/messages/\(messageId)/tts",
@@ -194,5 +266,20 @@ enum FeyndAPI {
         if let videoId { q["video_id"] = videoId }
         let req = try makeRequest(path: "api/feynd/quiz-attempts", query: q)
         return try await send(req, as: AttemptsResp.self).attempts
+    }
+
+    // --- Claude-history quizzes ------------------------------------------
+
+    private struct ClaudeQuizzesResp: Codable { let quizzes: [ClaudeQuizSummary] }
+    private struct ClaudeQuizResp: Codable { let quiz: ClaudeQuiz }
+
+    static func listClaudeQuizzes() async throws -> [ClaudeQuizSummary] {
+        let req = try makeRequest(path: "api/feynd/claude-quizzes")
+        return try await send(req, as: ClaudeQuizzesResp.self).quizzes
+    }
+
+    static func fetchClaudeQuiz(_ id: String) async throws -> ClaudeQuiz {
+        let req = try makeRequest(path: "api/feynd/claude-quizzes/\(id)")
+        return try await send(req, as: ClaudeQuizResp.self).quiz
     }
 }

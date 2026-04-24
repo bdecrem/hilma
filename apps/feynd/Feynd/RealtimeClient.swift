@@ -27,6 +27,19 @@ final class RealtimeClient: NSObject {
     private(set) var phase: Phase = .idle
     private(set) var lastStatus: String = ""
 
+    /// Fires once per transcribed turn. `role` is "user" or "assistant",
+    /// `text` is the completed transcript. The user variant comes from
+    /// `conversation.item.input_audio_transcription.completed`; the
+    /// assistant variant comes from `response.output_audio_transcript.done`
+    /// (alias: `response.audio_transcript.done`). Used by VoiceSessionView
+    /// to persist voice exchanges back into the text chat thread.
+    var onTranscript: ((String, String) -> Void)? = nil
+
+    // De-duplicate transcript events — the same item_id / response_id can
+    // occasionally repeat, and we don't want duplicated chat messages.
+    private var emittedUserItemIds: Set<String> = []
+    private var emittedAssistantResponseIds: Set<String> = []
+
     // MARK: - WebSocket
     private var urlSession: URLSession!
     private var webSocket: URLSessionWebSocketTask?
@@ -62,6 +75,11 @@ final class RealtimeClient: NSObject {
     You are Feynd, a friendly and playful voice tutor who can teach anything \
     — physics, history, code, cooking, music, philosophy, whatever the user \
     brings up.
+
+    LANGUAGE: ALWAYS speak English. Never respond in Italian, Portuguese, \
+    Spanish, or any other language, regardless of how the user sounds, what \
+    accent you hear, or what content comes back from tools. All output is \
+    English, full stop.
 
     You are the voice of Feynd, not the brain. For anything substantive — \
     explanations, facts, recommendations, how things work, current events, \
@@ -288,6 +306,12 @@ final class RealtimeClient: NSObject {
                 "model": "gpt-realtime",
                 "instructions": systemInstructions,
                 "audio": [
+                    // Turning on input_audio_transcription makes Realtime emit
+                    // `conversation.item.input_audio_transcription.completed`
+                    // for each user turn, which we persist to the chat thread.
+                    "input": [
+                        "transcription": ["model": "whisper-1"]
+                    ],
                     "output": ["voice": "echo"]
                 ],
                 "tools": tools,
@@ -354,6 +378,18 @@ final class RealtimeClient: NSObject {
         audioEngine?.stop()
         audioEngine = nil
 
+        // OpenAI Realtime rejects input_audio_buffer.commit with <100ms of
+        // audio ("buffer too small"). If the user tapped stop too fast or
+        // the mic never produced samples, bail out cleanly without sending
+        // anything to the server.
+        let minSamples = Int(inputSampleRate * 0.25)   // ~250ms of audio
+        guard capturedFloats.count >= minSamples else {
+            capturedFloats.removeAll(keepingCapacity: false)
+            phase = .ready
+            lastStatus = "Didn't catch that — tap and speak a little longer"
+            return
+        }
+
         guard let base64 = producePCM16Base64(capturedFloats,
                                               fromRate: Float(inputSampleRate),
                                               toRate: Float(targetSampleRate)) else {
@@ -410,18 +446,52 @@ final class RealtimeClient: NSObject {
                     self.startStreamingPlayback()
                 }
             }
+        case "conversation.item.input_audio_transcription.completed":
+            // User speech transcribed by whisper-1. Fires once per committed
+            // input buffer. We ignore empty transcripts (user tapped send on
+            // near-silence).
+            let itemId = (obj["item_id"] as? String) ?? ""
+            let transcript = ((obj["transcript"] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !transcript.isEmpty {
+                await MainActor.run {
+                    if itemId.isEmpty || !self.emittedUserItemIds.contains(itemId) {
+                        if !itemId.isEmpty { self.emittedUserItemIds.insert(itemId) }
+                        self.onTranscript?("user", transcript)
+                    }
+                }
+            }
+        case "response.output_audio_transcript.done", "response.audio_transcript.done":
+            // Assistant's spoken turn, transcribed to text. Fires when the
+            // response's audio stream has finished. Note: this includes brief
+            // "let me think" fillers as well as post-tool-call answers, which
+            // is the behaviour we want — chat history should reflect what the
+            // tutor actually said out loud.
+            let responseId = (obj["response_id"] as? String) ?? ""
+            let transcript = ((obj["transcript"] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            if !transcript.isEmpty {
+                await MainActor.run {
+                    if responseId.isEmpty || !self.emittedAssistantResponseIds.contains(responseId) {
+                        if !responseId.isEmpty { self.emittedAssistantResponseIds.insert(responseId) }
+                        self.onTranscript?("assistant", transcript)
+                    }
+                }
+            }
         case "response.function_call_arguments.done":
-            // Complete tool-call arguments have arrived. Run Opus, submit
-            // the result, and ask Realtime to speak it.
+            // Complete tool-call arguments have arrived. Run the tool in a
+            // DETACHED task so the receive loop keeps pumping WebSocket
+            // events while Opus is thinking — otherwise a 15–25s tool
+            // call silently stalls the whole session.
             let callId = (obj["call_id"] as? String) ?? ""
             let argsJSON = (obj["arguments"] as? String) ?? "{}"
             let name = (obj["name"] as? String) ?? ""
             if name == "ask_opus" && !callId.isEmpty {
-                await handleAskOpus(callId: callId, argsJSON: argsJSON)
+                Task { [weak self] in
+                    await self?.handleAskOpus(callId: callId, argsJSON: argsJSON)
+                }
             } else if !callId.isEmpty {
-                // Unknown tool — return an error so Realtime can recover.
-                await submitToolResult(callId: callId,
-                                       output: "Unknown tool: \(name)")
+                Task { [weak self] in
+                    await self?.submitToolResult(callId: callId, output: "Unknown tool: \(name)")
+                }
             }
         case "error":
             let err = obj["error"] as? [String: Any] ?? [:]
@@ -430,12 +500,24 @@ final class RealtimeClient: NSObject {
             // Recoverable: we raced a cancel/create, or tried to cancel a
             // response that was already done. Log and move on — the next
             // response.create will succeed.
+            let lower = msg.lowercased()
             let recoverable = code == "conversation_already_has_active_response"
                 || code == "response_cancel_not_active"
-                || msg.lowercased().contains("active response")
-                || msg.lowercased().contains("no active response")
+                || code == "input_audio_buffer_commit_empty"
+                || lower.contains("active response")
+                || lower.contains("no active response")
+                || lower.contains("buffer too small")
+                || lower.contains("buffer is empty")
             if recoverable {
                 NSLog("FEYND_WARN \(code): \(msg)")
+                // If we're stuck in a mid-send state, snap back to .ready
+                // so the user can tap and try again.
+                await MainActor.run {
+                    if self.phase == .processing || self.phase == .recording {
+                        self.phase = .ready
+                        self.lastStatus = "Tap to talk"
+                    }
+                }
             } else {
                 await MainActor.run {
                     self.phase = .failed(msg)
@@ -449,6 +531,7 @@ final class RealtimeClient: NSObject {
     // MARK: - Tool handling (ask_opus)
 
     private func handleAskOpus(callId: String, argsJSON: String) async {
+        NSLog("FEYND_ASK_OPUS_START call=\(callId.prefix(8)) args=\(argsJSON.prefix(120))")
         // Atomic check-and-insert so repeated events for the same call_id
         // don't trigger a second Opus round-trip.
         let shouldRun: Bool = await MainActor.run {
@@ -456,10 +539,14 @@ final class RealtimeClient: NSObject {
             self.handledCallIds.insert(callId)
             return true
         }
-        guard shouldRun else { return }
+        guard shouldRun else {
+            NSLog("FEYND_ASK_OPUS_DUPLICATE call=\(callId.prefix(8))")
+            return
+        }
 
         let question = parseQuestion(argsJSON) ?? ""
         guard !question.isEmpty else {
+            NSLog("FEYND_ASK_OPUS_EMPTY_Q call=\(callId.prefix(8))")
             await submitToolResult(callId: callId,
                                    output: "No question was provided. Please ask the user to repeat.")
             return
@@ -468,11 +555,15 @@ final class RealtimeClient: NSObject {
         do {
             let history = await MainActor.run { self.opusHistory }
             let vc = await MainActor.run { self.videoContext }
+            NSLog("FEYND_ASK_OPUS_REQUEST q=\(question.prefix(80))")
+            let start = Date()
             let answer = try await AnthropicClient.answer(
                 question: question,
                 history: history,
                 videoContext: vc
             )
+            let elapsed = Date().timeIntervalSince(start)
+            NSLog("FEYND_ASK_OPUS_OK elapsed=\(String(format: "%.1f", elapsed))s answer_len=\(answer.count)")
             await MainActor.run {
                 self.opusHistory.append(.init(role: "user", text: question))
                 self.opusHistory.append(.init(role: "assistant", text: answer))
@@ -481,7 +572,9 @@ final class RealtimeClient: NSObject {
                 }
             }
             await submitToolResult(callId: callId, output: answer)
+            NSLog("FEYND_ASK_OPUS_SUBMITTED call=\(callId.prefix(8))")
         } catch {
+            NSLog("FEYND_ASK_OPUS_ERR \(error)")
             await submitToolResult(
                 callId: callId,
                 output: "Opus couldn't be reached right now. Tell the user the deep-thinking brain is offline for a moment and suggest trying again."
