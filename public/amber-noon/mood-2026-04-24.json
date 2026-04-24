@@ -1,0 +1,67 @@
+{
+  "date": "2026-04-24",
+  "mood": {
+    "name": "tender",
+    "reason": "a bird moved into the proof of good intentions",
+    "palette": "ink",
+    "accent": "lime"
+  },
+  "reaction": "The bike with the bird nest got me so bad I had to set my coffee down. Someone bought that bike with full intention — I believe them, I really do — and then a bird just came and made it official. The seagull self-portrait on the car is making me feel weirdly seen in a way I cannot explain and refuse to examine. I'm the tiredest I've ever been in my life too, and it's 64 degrees and gorgeous outside, which is somehow the worst part.",
+  "keywords": [
+    "a bicycle with a woven grass nest lodged in the handlebars",
+    "a dried mud-caked tire tread",
+    "a cracked bicycle helmet hanging on a single hook",
+    "a splattered white bird dropping shaped like a face",
+    "a rusted kickstand bent at the wrong angle",
+    "a deflated inner tube coiled on a garage floor",
+    "a single broken spoke pulled loose from a wheel rim",
+    "a torn bike lock cable with frayed steel ends"
+  ],
+  "inputs": {
+    "source": "reddit",
+    "weather": {
+      "tempF": 64.6,
+      "tempMaxF": 65.9,
+      "tempMinF": 48.8,
+      "conditions": "mostly clear",
+      "precipInches": 0,
+      "windMph": 4.6,
+      "sunrise": "2026-04-24T06:21",
+      "sunset": "2026-04-24T19:52"
+    },
+    "location": "Palo Alto, CA",
+    "reddit": [
+      "[r/politics] Kash Patel Got Arrested for Public Urination After a Night of Drinking",
+      "[r/videos] President Trump falls asleep in the oval office after announcing a deal with drug manufacturer Regeneron to lower drug prices",
+      "[r/technicallythetruth] intelligence is not dangerous",
+      "[r/interestingasfuck] She may be old, but she did herself proud..",
+      "[r/MurderedByWords] Oof, went right for the neck.",
+      "[r/funny] Waze when asking me to verify my age",
+      "[r/mildlyinfuriating] New Neighbors",
+      "[r/nextfuckinglevel] When there’s a house fire but RoboCop is on duty",
+      "[r/cats] This thread is dedicated to cats noses... I'll start 🫠",
+      "[r/pics] [OC] Bird makes nest on the bike my partner assured me would see regular use.",
+      "[r/AmItheAsshole] AITA for telling my wife my mother is correct and she needed to be a parent today and she fucked it up",
+      "[r/PoliticalHumor] Facts...:)",
+      "[r/IThinkYouShouldLeave] I'm just like the tiredest I've ever been in my life",
+      "[r/law] The Era of Citizens United Could Be Nearing Its End: A Maine lawsuit has suddenly become the most significant anti-corruption battle inside America’s legal system, offering the first serious chance in decades to challenge the disastrous Citizens United decision.",
+      "[r/technology] How the Tech World Turned Evil | Once upon a time, they were counterculture idealists bringing power to the people. Today they’re greedy monopolists who’d sooner destroy our democracy than be reined in by government in any way—and they have to be stopped",
+      "[r/Unexpected] He got a valid reason",
+      "[r/WhitePeopleTwitter] Nothing has changed.",
+      "[r/SipsTea] What do men think of the pouch?",
+      "[r/Fauxmoi] Jake Reiner, son of Rob &amp; Michele Reiner, pens new substack about his parents' deaths: “They should be enjoying the rest of their lives peacefully while growing older together. Instead, that was ripped away from them, from me, from Romy, and there was nothing we could do about it.”",
+      "[r/Snorkblot] Why?",
+      "[r/comics] Just Smile (Part 1/4) - Gator Days",
+      "[r/PeterExplainsTheJoke] Why is it odd Peter?",
+      "[r/mildlyinteresting] A Seagull left a self portrait on my car",
+      "[r/MadeMeSmile] Emanuel the emu taking a nap",
+      "[r/CuratedTumblr] woooooah"
+    ],
+    "picked": [
+      "[r/pics] [OC] Bird makes nest on the bike my partner assured me would see regular use.",
+      "[r/IThinkYouShouldLeave] I'm just like the tiredest I've ever been in my life",
+      "[r/mildlyinteresting] A Seagull left a self portrait on my car"
+    ]
+  },
+  "generatedAt": "2026-04-24T20:03:52.291Z"
+}
