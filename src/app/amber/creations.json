@@ -1,5 +1,12 @@
 [
   {
+    "name": "pluck",
+    "url": "/amber/pluck",
+    "date": "04.24",
+    "category": "signal",
+    "description": "drag across"
+  },
+  {
     "name": "squish",
     "url": "/amber/squish",
     "date": "04.23",

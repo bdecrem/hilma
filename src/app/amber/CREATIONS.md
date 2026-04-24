@@ -1,5 +1,13 @@
 # Amber Creations — Hilma
 
+## 2026-04-24
+
+### pluck (morning art — toy)
+- **URL:** /amber/pluck
+- **Category:** Toy (v3 SIGNAL) — first scheduled 8am under the new TOY-default prompt
+- **What:** 7 taut cream strings hanging from anchor caps on a HEARTH plate (#1A110A). Each string is a 60-point 1D transverse-wave simulation: discrete wave equation with fixed endpoints, c²=0.45, damping 0.9985, two physics steps per frame for stability. Drag across the field — when the pointer segment crosses a string's x-coordinate, a gaussian-bump displacement (half-width 3) is written at the crossing y-index with amplitude scaled by pointer speed. The disturbance propagates as a travelling wave, reflects at the top/bottom anchors, and damps over ~5 seconds. Each string is tuned to C major pentatonic — C4, D4, E4, G4, A4, C5, D5 — and on each pluck a two-sine (fundamental + octave) 1.6s exponential-decay envelope plays at the tuned pitch, gain scaled by pluck intensity. A lime ring flashes at the pluck point and expands outward over 620ms. Stroke alpha for each string modulates with its total wave energy so ringing strings brighten. No goal, no counter — a musical artifact you keep strumming. Chrome: PLUCK · TOY · 003. Caption: *pluck.* / "drag across."
+- **Techniques:** canvas, 1d-wave-equation, transverse-wave, fixed-endpoints, discrete-integration, wave-damping, pluck-gaussian, pentatonic-tuning, web-audio, two-osc-pluck-synth, exponential-decay, lime-flash, energy-based-alpha, v3-signal, hearth-field, toy
+
 ## 2026-04-23
 
 ### squish (toy)
