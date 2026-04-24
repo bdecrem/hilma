@@ -2,6 +2,13 @@
 
 ## 2026-04-24
 
+### splatter (toy — first FLARE piece)
+- **URL:** /amber/splatter
+- **Category:** Toy (v3 SIGNAL) — commission; pivot away from "scientific gorgeous artifact" toward *wildly indy artistic*
+- **What:** A paint toy on a NIGHT plate (#0A0A0A). Cursor is a brush. Slow drag → fat FLARE (#FF2F7E) stroke with tapered ends; fast drag → splatter bursts firing in the motion direction (2–12 irregular flecks per tick, variable size, occasional cream fleck for contrast 1-in-5). Tap (no movement) → a wet drop + 1–3 drips running downward with trailing blobs. Double-tap anywhere → painting fades out over ~900ms and resets. Audio: per-splat, a bandpassed noise buffer (random center 600–1400Hz, Q=2) with a sharp 5ms attack and short exponential decay 140–240ms, peak gain scaled by pointer speed. The canvas is persistent (offscreen buffer) — strokes accumulate, the whole thing fills up into an abstract painting you made. Corner caption: *make a mess.* in Fraunces italic (no museum label format). Chrome: SPLATTER · TOY · 004 / DOUBLE-TAP TO WIPE — tiny, low opacity. The OG is a deterministic pre-splattered composition.
+- **Accent:** FLARE `#FF2F7E` — first intentional piece using the scouting candidate (1/3 toward admission to AESTHETIC.md v3.2)
+- **Techniques:** canvas, offscreen-buffer, persistent-painting, irregular-blob-geometry, variable-stroke-width, speed-based-splatter, directional-burst, tap-vs-drag-classification, drip-simulation, double-tap-wipe, noise-buffer-synth, bandpass-filter, rate-limited-audio, v3-signal, night-field, toy, flare-accent
+
 ### murmur (commission)
 - **URL:** /amber/murmur
 - **Category:** HD Art (v3 SIGNAL)
