@@ -4,21 +4,41 @@ Set up Amber's daily creation crons. These run in-session — they fire as long 
 
 ## What to do
 
-Create 3 local cron jobs using CronCreate:
+Create 3 local cron jobs using CronCreate. Each cron's `prompt` field MUST be the exact text in the code block for that cron (pointer-style: the cron prompt tells the firing agent to read the full instructions from this file, rather than storing all of them in the cron itself).
 
 ### Cron 1: Morning Art (8am PT)
 - **Schedule:** `3 8 * * *`
-- **Prompt:** See "Morning Art Prompt" below
+- **Prompt (copy verbatim into CronCreate):**
+
+```
+Run the Amber Morning Art creation. Follow the "Morning Art Prompt" section in .claude/commands/amber-schedule.md exactly: read PERSONA/AESTHETIC/CREATIONS/FEEDBACK, default to a TOY (manipulable physics artifact — no goal, no score, no content reveal; wiggle and squish are the reference). Only deviate when the mood genuinely calls for tiny-machine / impossible-object / specimen. Do NOT make interactive cards (tap-reveal) — those are banned. Do NOT make games (score/lives/timer) — wrong slot. Create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+```
 
 ### Cron 2: Noon Pipeline (12pm PT)
 - **Schedule:** `3 12 * * *`
-- **Prompt:** See "Noon Pipeline Prompt" below
+- **Prompt (copy verbatim into CronCreate):**
+
+```
+Run the Amber Noon pipeline (fully automated). Do exactly this:
+
+1. Run the one-command pipeline: `npx tsx scripts/noon.ts` — this chains set-mood → sketch-concepts → bake-noon-bio. It writes today's artifact to public/amber-noon/<date>.json, drops 3 tweet drafts into public/amber-noon/tweets-<date>.md, auto-prepends an entry to src/app/amber/creations.json, and Claude-authors the closing statement + prose explanation + bgColor/tileColor palette.
+
+2. Commit and push. Stage public/amber-noon/<date>.json, mood-<date>.json, concepts-<date>.json, tweets-<date>.md, and src/app/amber/creations.json. Commit message: `Amber: Noon MM.DD (<mood> · <winner>)`. Run `git pull --rebase origin main && git push` to handle any intervening commits.
+
+3. Post tweet draft #1 from public/amber-noon/tweets-<date>.md via the postTweet snippet in .claude/commands/amber-schedule.md (account: intheamber). URL is intheamber.com/noon/<date>. The tweet step is MANDATORY — if it fails, debug and retry until it posts. After success, make a follow-up empty commit logging the tweet ID and push it: `git commit --allow-empty -m "Amber: Noon MM.DD — tweet posted (<id>)" && git push`.
+```
 
 ### Cron 3: Afternoon Escalation (4pm PT)
 - **Schedule:** `7 16 * * *`
-- **Prompt:** See "Afternoon Creation Prompt" below
+- **Prompt (copy verbatim into CronCreate):**
 
-After creating all three, confirm with: "Amber schedule active. 3 crons running: 8am, 12pm, and 4pm PT. They'll fire as long as this session stays open."
+```
+Run the Amber Escalation Engine. Follow the "Afternoon Creation Prompt" section in .claude/commands/amber-schedule.md exactly: read PERSONA/AESTHETIC/escalation.json/ESCALATION.md/FEEDBACK, create the next level N+1 in src/app/amber/escalation/L[N+1]/ (page.tsx + layout.tsx + opengraph-image.tsx), update escalation.json, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+```
+
+After creating all three, run `CronList` to verify, then confirm with: "Amber schedule active. 3 crons running: 8am, 12pm, and 4pm PT. They'll fire as long as this session stays open."
+
+The longer "Morning Art Prompt" / "Noon Pipeline Prompt" / "Afternoon Creation Prompt" sections below are the step-by-step instructions the firing agent reads at fire time — the cron only stores the terse pointer above.
 
 ---
 
