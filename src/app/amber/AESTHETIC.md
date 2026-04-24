@@ -162,6 +162,16 @@ Naming criteria:
 - At least three pieces using it intentionally
 - A one-word name that captures what it does, not what it looks like (`signal`, `heat`, `dream` — not `red-orange`, `yellow-green`)
 
+#### Scouting — candidates on probation
+
+Named candidates in use but not yet admitted to the main accent map. Each needs ≥3 intentional pieces to earn promotion.
+
+| candidate | hex | job | pieces | admitted |
+|---|---|---|---|---|
+| **FLARE** | `#FF2F7E` | escalation — the aliveness/celebratory jolt. where lime is "something specific," flare is "something specific *and bright.*" | 0 | — |
+
+Introduced 04.24.26 as the first scouting candidate. Morning-art toys where the mood wants brightness may use FLARE as the single accent (never mix with lime/sodium/uv). Log each use in CREATIONS.md so we can tell when it's earned its place.
+
 ### New elements — same register
 
 As the system extends into interactive/live surfaces, new UI elements should follow the original voice:

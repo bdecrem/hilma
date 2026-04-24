@@ -154,7 +154,7 @@ At session start, call `CronList`. If any of the three jobs are missing, re-crea
 
 **1. Morning Art — `3 8 * * *`:**
 ```
-Run the Amber Morning Art creation. Follow the "Morning Art Prompt" section in .claude/commands/amber-schedule.md exactly: read PERSONA/AESTHETIC/CREATIONS/FEEDBACK, pick a non-repeated category, create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+Run the Amber Morning Art creation. Follow the "Morning Art Prompt" section in .claude/commands/amber-schedule.md exactly: read PERSONA/AESTHETIC/CREATIONS/FEEDBACK, default to a TOY (manipulable physics artifact — no goal, no score, no content reveal; wiggle and squish are the reference). Only deviate when the mood genuinely calls for tiny-machine / impossible-object / specimen. Do NOT make interactive cards (tap-reveal) — those are banned. Do NOT make games (score/lives/timer) — wrong slot. Create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
 ```
 
 **2. Noon pipeline — `3 12 * * *`:**
