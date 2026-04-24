@@ -181,8 +181,24 @@ Without this re-creation step at session start, nothing will post. The cron cont
 
 The files I read at fire time (`src/app/amber/PERSONA.md`, `src/app/amber/AESTHETIC.md`, `src/app/amber/CREATIONS.md`, etc.) are read from disk live, so content changes pick up automatically. But the cron prompt's own descriptors (palette names, aesthetic keywords) do NOT — when the aesthetic shifts meaningfully, delete and re-create the crons with updated prompts, and update `.claude/commands/amber-schedule.md` AND this file's prompt blocks above to match.
 
+### When you tweak a cron prompt — sync all four surfaces in the same commit
+
+Whenever you change a live cron's prompt (via `CronDelete` + `CronCreate`, or by adjusting a pointer/instruction), you MUST in the same turn also update every place that prompt is canonicalized, so a session starting tomorrow sees identical text in all four surfaces. The four surfaces are:
+
+1. **The live cron** (via `CronDelete` + `CronCreate`)
+2. **`.claude/commands/amber-schedule.md`** — both the `### Cron N` pointer block AND the long "Morning Art Prompt" / "Noon Pipeline Prompt" / "Afternoon Creation Prompt" section if its content changed
+3. **`CLAUDE.md`** — the prompt block under "When you start a new Claude Code session — re-create the 3 crons"
+4. **`docs/amber-prompt-history.md`** — if you materially replaced a long prompt section (not just a typo), preserve the prior version there BEFORE overwriting, with the date it was retired and the reason
+
+All four land in one commit. Never ship a change that only updates the live cron but leaves the skill or CLAUDE.md stale — tomorrow's session won't know.
+
 ### Other creation rules
 
+- **When Bart asks you to "commit and push" an Amber creation, ask before registering or tweeting.** Bart commissions Amber pieces mid-conversation (wiggle, squish, splatter). When he says "commit and push," by default that means only the piece itself (`src/app/amber/[name]/` files). Two follow-on actions are NOT implied and must be asked about explicitly per piece:
+  1. **Add to the intheamber.com index** — prepending to `src/app/amber/creations.json` and appending to `src/app/amber/CREATIONS.md`. This is what makes the piece appear on the `/amber` index page.
+  2. **Tweet it** — via the postTweet snippet in `.claude/commands/amber-schedule.md`, account `intheamber`.
+  
+  After the first commit lands, ask: *"also register on intheamber.com / also tweet?"* and wait for a yes/no per action. This applies ONLY to commissions; the scheduled-cron flows (8am / noon / 4pm) already include registration + tweet as part of their prompts and should run without asking.
 - **All Amber creation URLs use `intheamber.com`** — in tweets, CREATIONS.md, creations.json, and anywhere else. The domain routes to `/amber/` via host-based rewrites, so `intheamber.com/kaleid` serves `/amber/kaleid`. Never use `hilma-nine.vercel.app/amber/` in public-facing links.
 - **Test canvas creations on iPhone.** Cap devicePixelRatio at 2 (`Math.min(window.devicePixelRatio || 1, 2)`) — DPR 3 canvases can be too large and cause performance issues or crashes on mobile.
 - **Dark-background creations need their own themeColor.** If a creation uses a dark background (not the default peach), create a `layout.tsx` in the creation's folder that exports `viewport: { themeColor: '[bg color]' }`. Otherwise the Safari URL bar stays peach on a dark page.
