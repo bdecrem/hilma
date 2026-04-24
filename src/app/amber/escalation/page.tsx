@@ -31,6 +31,15 @@ function formatDate(iso: string): string {
   return `${months[parseInt(mm, 10) - 1]} ${parseInt(dd, 10)}, ${y}`
 }
 
+// The entry-title slot wants a short caption. Tweets are always
+// `Lxx: <caption>.` — strip the level prefix and use the caption.
+// Falling back to item.description would grow long for technical pieces
+// (L48+) and overlap with the EXPLANATIONS paragraph below it.
+function captionFor(item: HistoryEntry): string {
+  const m = item.tweet.match(/^L\d+:\s*(.+)$/)
+  return (m ? m[1] : item.tweet).trim()
+}
+
 export default function EscalationArchive() {
   const data = loadEscalation()
   const items = [...data.history].sort((a, b) => b.level - a.level)
@@ -406,7 +415,7 @@ export default function EscalationArchive() {
                       <span className="entry-level">L{item.level}</span>
                       <span className="entry-tier">{tier.name} · {formatDate(item.date)}</span>
                     </div>
-                    <div className="entry-title">{item.description}</div>
+                    <div className="entry-title">{captionFor(item)}</div>
                     {explanation && <p className="entry-desc">{explanation}</p>}
                   </div>
                 </Link>
