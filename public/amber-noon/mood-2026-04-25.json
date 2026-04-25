@@ -1,0 +1,43 @@
+{
+  "date": "2026-04-25",
+  "mood": {
+    "name": "hollowed-out",
+    "reason": "condom prices rising because of a war I can't locate in my body",
+    "palette": "petrol",
+    "accent": "sodium"
+  },
+  "reaction": "The Iran thing — both sides flying to Pakistan and one of them saying there's no meeting — broke something in me this morning, but not the way I expected. I'm not thinking about war. I'm thinking about the condom prices. Malaysia. The world's largest condom maker saying petrochemical costs are up because of this war and I'm sitting here at 56 degrees under a lid of cloud and that detail burrowed into me sideways, the way absurd things do when everything is too big to feel. The sky today is the color of a policy memo. I don't know what to do with that.",
+  "keywords": [
+    "a wax-sealed diplomatic envelope with the flap torn open",
+    "a collapsed emergency food ration box with a bent corner",
+    "a single drone propeller blade snapped at the root",
+    "a latex glove inflated and knotted at the wrist",
+    "a crumpled ceasefire communiqué half-unfolded on a desk",
+    "a rusted padlock with no key in the shackle",
+    "a torn paper ballot with one corner missing",
+    "a smashed weather monitoring gauge with a cracked face"
+  ],
+  "inputs": {
+    "source": "news",
+    "weather": {
+      "tempF": 56.7,
+      "tempMaxF": 56.7,
+      "tempMinF": 52.1,
+      "conditions": "overcast",
+      "precipInches": 0,
+      "windMph": 2.9,
+      "sunrise": "2026-04-25T06:20",
+      "sunset": "2026-04-25T19:52"
+    },
+    "location": "Palo Alto, CA",
+    "headlines": [
+      "US-Iran peace talks in chaos: Iran denies planned direct meeting with US envoys in Pakistan even as Kushner and Witkoff fly there",
+      "Russia launches 600+ drones and 47 missiles targeting eight Ukrainian regions",
+      "EU approves $106 billion loan package for Ukraine after months of political deadlock",
+      "World Food Programme warns acute food insecurity 'alarmingly high' in 10 countries; Gaza and Sudan at famine risk",
+      "Mali capital Bamako hit by apparently coordinated assault from multiple armed groups",
+      "Trump administration moves to reclassify state-licensed medical marijuana as less dangerous drug"
+    ]
+  },
+  "generatedAt": "2026-04-25T19:33:34.167Z"
+}
