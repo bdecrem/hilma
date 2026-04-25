@@ -1,5 +1,14 @@
 # Amber Creations — Hilma
 
+## 2026-04-25
+
+### wrap (morning art — toy)
+- **URL:** /amber/wrap
+- **Category:** Toy (v3 SIGNAL) — second day under prompt v3 (pick a physical object). Material: bubble wrap.
+- **What:** A sheet of cream bubble wrap on a HEARTH plate. Grid laid out with offset alternating rows (real bubble-wrap pattern), per-bubble jitter, and per-bubble radius variance so the grid doesn't look like a grid. Each bubble: cream circle with an offset highlight (sheen) and soft shadow outline. Tap a bubble → pop! Brief 220ms deflation animation: scale shrinks 1→0.45 with a tiny scale wobble (sine ripple), and an expanding FLARE-pink ring puffs outward. After the animation settles, a permanent FLARE dimple stays — small pink dot inside a darker rim, with a tiny near-black inner cavity to read as a "deflated" cavity. Drag across multiple bubbles → segment-sample the path at sub-bubble granularity, popping every bubble whose hitbox the path crossed (so a fast swipe pops a row). Audio: per pop, a fresh bandpassed white-noise burst (BP center 1400-3200Hz with quick exponential downsweep to ~250Hz, Q=4, 110ms) plus a tiny 300-540Hz square-wave click — different sweep + frequency every time so a row of pops sounds organic, not mechanical. Rate-limited at 18ms so dragged rows still pop fully. Double-tap an empty area → re-inflate everything. No goal, no counter — pop the whole sheet, or part of it, or just a smiley face. Caption upper-left: *pop them all.* Chrome: WRAP · TOY · 005.
+- **Accent:** FLARE `#FF2F7E` — second intentional FLARE piece (2/3 toward AESTHETIC.md v3.2 promotion)
+- **Techniques:** canvas, bubble-grid, alternating-row-stagger, deterministic-jitter, bubble-physics-fake (just animation), pop-deflation-anim, expanding-flare-ring, persistent-state, drag-segment-sampling, bandpass-noise-burst, exponential-frequency-sweep, square-click-transient, rate-limited-audio, double-tap-reset, v3-signal, hearth-field, toy, flare-accent
+
 ## 2026-04-24
 
 ### L54 — light bent by what cannot be seen (escalation, Environment tier)

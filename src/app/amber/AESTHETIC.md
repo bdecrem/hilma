@@ -168,7 +168,7 @@ Named candidates in use but not yet admitted to the main accent map. Each needs 
 
 | candidate | hex | job | pieces | admitted |
 |---|---|---|---|---|
-| **FLARE** | `#FF2F7E` | escalation — the aliveness/celebratory jolt. where lime is "something specific," flare is "something specific *and bright.*" | 1 (splatter 04.24) | — |
+| **FLARE** | `#FF2F7E` | escalation — the aliveness/celebratory jolt. where lime is "something specific," flare is "something specific *and bright.*" | 2 (splatter 04.24, wrap 04.25) | — |
 
 Introduced 04.24.26 as the first scouting candidate. Morning-art toys where the mood wants brightness may use FLARE as the single accent (never mix with lime/sodium/uv). Log each use in CREATIONS.md so we can tell when it's earned its place.
 
