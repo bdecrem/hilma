@@ -1,5 +1,5 @@
 {
-  "level": 54,
+  "level": 55,
   "history": [
     {
       "level": 1,
@@ -930,6 +930,31 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 55,
+      "description": "vortex. ~640 cream points distributed in a vertical cylinder around the y-axis, each with (theta, r, h). angular velocity follows a Rankine vortex: solid-body rotation in the core (r ≤ 0.42) and 1/r in the outer flow (r > 0.42), so tangential velocity v=ω·r is constant past the core. differential rotation produces the signature vortex shear. a horizontal lime tracer line at h=0 starts as a clean radial spoke and winds itself into a tighter and tighter spiral over time — a visualization of Stokes' theorem in motion. drag X to orbit camera, drag Y to modulate K (vortex strength), tap to scatter (each point gets a brief outward vR that decays). audio: bandpassed noise (wind), center frequency 280–1480Hz and gain 0.025–0.095 both tracking K continuously — the wind speeds up when you crank the vortex.",
+      "tweet": "L55: the inside spins faster than the outside.",
+      "date": "2026-04-25T23:00:00Z",
+      "techniques": [
+        "canvas",
+        "rankine-vortex",
+        "differential-rotation",
+        "3d-cylindrical-points",
+        "perspective-projection",
+        "depth-fog",
+        "lime-tracer-spiral",
+        "drag-orbit",
+        "drag-modulate-strength",
+        "tap-to-scatter",
+        "radial-velocity-decay",
+        "bandpassed-wind-noise",
+        "filter-frequency-sweep",
+        "web-audio",
+        "multi-state",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1151,7 +1176,15 @@
     "cursor-as-mass",
     "idle-lissajous-drift",
     "energy-driven-drone",
-    "continuous-frequency-modulation"
+    "continuous-frequency-modulation",
+    "rankine-vortex",
+    "differential-rotation",
+    "3d-cylindrical-points",
+    "lime-tracer-spiral",
+    "drag-modulate-strength",
+    "tap-to-scatter",
+    "bandpassed-wind-noise",
+    "filter-frequency-sweep"
   ],
   "killed": []
 }
