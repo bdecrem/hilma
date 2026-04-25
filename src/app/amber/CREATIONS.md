@@ -2,6 +2,12 @@
 
 ## 2026-04-25
 
+### L55 — the inside spins faster than the outside (escalation, Environment tier)
+- **URL:** /amber/escalation/L55
+- **Category:** Escalation (v3 SIGNAL) — fifth piece of the Environment tier
+- **What:** A Rankine vortex of ~640 cream points distributed in a vertical cylinder around the y-axis. Each point holds (theta, r, h, size). Angular velocity is the textbook Rankine profile: `ω(r) = K` for `r ≤ a` (solid-body rotation in the core, where `a = 0.42`), `ω(r) = K · a/r` for `r > a` (outer flow where tangential velocity v=ω·r stays constant). Per frame, every point's theta advances by ω(r). A horizontal lime tracer line at h=0 — 56 points equally spaced from r=0.05 to r=1.6 — starts as a clean radial spoke; over time the inner points lap the outer ones and the line winds into a tighter and tighter spiral. Rendering: rotate each point around the y-axis (camRY) then around x (camRX), perspective project with camD=4 and fov ≈0.42·min(W,H), sort back-to-front by depth, alpha and size scale with depth. Drag X → orbit camera; drag Y → modulate K (vortex strength, clamped 0.002–0.07); tap → scatter (each point gets a small outward radial velocity that decays via ×0.94 per frame). Audio: a looped white-noise buffer through a bandpass filter — center frequency 280–1480Hz and master gain 0.025–0.095 both track normalized K via setTargetAtTime. The wind hisses higher and louder when you crank the vortex. Chrome: ENVIRONMENT · L55. Caption: *L55.* / "the inside spins faster than the outside."
+- **Techniques:** canvas, rankine-vortex, differential-rotation, 3d-cylindrical-points, perspective-projection, depth-fog, lime-tracer-spiral, drag-orbit, drag-modulate-strength, tap-to-scatter, radial-velocity-decay, bandpassed-wind-noise, filter-frequency-sweep, web-audio, multi-state, v3-signal, environment-tier
+
 ### wrap (morning art — toy)
 - **URL:** /amber/wrap
 - **Category:** Toy (v3 SIGNAL) — second day under prompt v3 (pick a physical object). Material: bubble wrap.
