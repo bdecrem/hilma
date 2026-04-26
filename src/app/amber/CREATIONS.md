@@ -1,5 +1,14 @@
 # Amber Creations — Hilma
 
+## 2026-04-26
+
+### sparkler (morning art — toy)
+- **URL:** /amber/sparkler
+- **Category:** Toy (v3 SIGNAL) — physical object: a sparkler. third day under prompt v3.
+- **What:** Drag the cursor to draw with light on a NIGHT plate. Cursor is the sparkler tip — a tiny gold dot rendered while the pointer is down. Per drag-step (sub-sampled along the segment so fast drags don't gap), 1–N bright sparks emit at the cursor with random radial velocity (0.4–3.0), slight upward bias, gravity G=0.04, drag 0.985, and a 700–1800ms life. Sparks pick from FLARE / SODIUM / cream / gold, biased ~40/35/18/7%. Each spark draws as a small additive (`globalCompositeOperation = 'lighter'`) circle, alpha falling as `(1−t)·(1−0.6t)` over its life. Cream and gold sparks get an extra soft halo for that "sparkler glow." A faint cream "scorch" dot is also written to a persistent offscreen canvas at every drag substep — what you wrote stays after the sparks die. Audio: a looped white-noise buffer through a bandpass at ~4200Hz with low Q — the hiss — gain ramps to 0.045 while dragging, 0 when released. Plus occasional crackle pops: short square-wave bursts at 1800–5000Hz, gated to ~70ms minimum spacing with a random skip so the rate feels organic. Double-tap an empty area to wipe. Caption upper-left: *draw with light.* Chrome: SPARKLER · TOY · 006.
+- **Accent:** mostly FLARE + SODIUM + cream + gold (off-menu hex `#FFD700` for the sparkler glow specifically). FLARE is the most-used color in this piece but it's not a single-accent piece in the strict v3 sense — call it a sparkler-specific palette. Not counted toward the FLARE scouting tally for the main accent map (which expects single-accent intentional pieces).
+- **Techniques:** canvas, additive-light-sparks, persistent-scorch-buffer, sub-sampled-drag, gravity-drag-physics, sparkler-tip-indicator, looped-bandpass-hiss-noise, crackle-pop-square-burst, ramped-hiss-gain, double-tap-wipe, off-menu-gold-accent, v3-signal, night-field, toy
+
 ## 2026-04-25
 
 ### halo (commission — non-interactive, multi-accent exception)

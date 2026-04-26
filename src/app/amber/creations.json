@@ -1,5 +1,12 @@
 [
   {
+    "name": "sparkler",
+    "url": "/amber/sparkler",
+    "date": "04.26",
+    "category": "signal",
+    "description": "draw with light"
+  },
+  {
     "name": "halo",
     "url": "/amber/halo",
     "date": "04.25",
