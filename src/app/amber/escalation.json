@@ -1,5 +1,5 @@
 {
-  "level": 55,
+  "level": 56,
   "history": [
     {
       "level": 1,
@@ -955,6 +955,32 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 56,
+      "description": "dipole. two point charges in 3D — lime + at top, cream − at bottom, separated along y. 540 cream particles flow along the local electric field. at each frame, the field at a particle's position is the sum over charges of `sign_i · (r − r_i) / |r − r_i|³` (with r²+0.04 softening to avoid singularities), which points away from + and toward −. each particle's velocity is the field direction normalized × constant SPEED, so flow is uniform — not blasted near charges. trails of last 7 positions render as fading cream segments. when a particle gets within 0.18 of the − charge, it teleports back to a small radial offset near the + charge so the flow stays dense. drag X orbits camera; drag Y separates / closes the poles (sep range 0.55–1.7); tap swaps polarity — the field reverses, particles drift the other way until they hit the new sink. audio: a single low sine drone, frequency 70–140Hz tracking pole separation (closer poles = higher freq).",
+      "tweet": "L56: the field between two points.",
+      "date": "2026-04-26T23:00:00Z",
+      "techniques": [
+        "canvas",
+        "electric-dipole",
+        "vector-field-integration",
+        "softened-inverse-square",
+        "particle-flow-along-field",
+        "uniform-speed-normalization",
+        "fading-trail-buffer",
+        "source-sink-respawn",
+        "drag-orbit",
+        "drag-modulate-separation",
+        "tap-polarity-swap",
+        "polarity-flip-animation",
+        "low-sine-drone",
+        "separation-tracked-frequency",
+        "web-audio",
+        "multi-state",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1184,7 +1210,15 @@
     "drag-modulate-strength",
     "tap-to-scatter",
     "bandpassed-wind-noise",
-    "filter-frequency-sweep"
+    "filter-frequency-sweep",
+    "electric-dipole",
+    "vector-field-integration",
+    "particle-flow-along-field",
+    "uniform-speed-normalization",
+    "source-sink-respawn",
+    "drag-modulate-separation",
+    "tap-polarity-swap",
+    "low-sine-drone"
   ],
   "killed": []
 }
