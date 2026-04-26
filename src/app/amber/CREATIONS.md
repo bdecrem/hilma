@@ -2,6 +2,12 @@
 
 ## 2026-04-26
 
+### L56 — the field between two points (escalation, Environment tier)
+- **URL:** /amber/escalation/L56
+- **Category:** Escalation (v3 SIGNAL) — sixth piece of the Environment tier
+- **What:** A 3D electric dipole flowing in real time. Two point charges along the y-axis: lime + and cream −, separated by `2·dipoleSep` (range 0.55–1.7). 540 cream particles flow along the local field. Per frame, for each particle the vector field is computed as the sum over both charges of `sign_i · (r − r_i) / |r − r_i|³` with softening `r²+0.04` to avoid singularities — exactly the textbook dipole field, pointing away from + and toward −. The particle's velocity is `(field / |field|) · SPEED` where SPEED=0.018 — the normalize step keeps flow uniform across the volume so streamlines don't blast near the poles. Each particle keeps a 7-position trail; trails draw as fading cream segments sorted back-to-front by midpoint depth. When a particle's distance to the − pole drops below 0.18, it teleports back to a small radial offset near the + pole so the streamlines never thin out. Drag X → orbit camera; drag Y → modulate dipole separation (closer poles = denser field); tap → swap polarity (the field reverses, the lime/cream markers swap places, all particles drift the other way until they reach the new sink — a brief 600ms "flip" animation enlarges the markers during the transition). Audio: a single sine drone at 70–140Hz with separation-tracked frequency (closer poles = higher pitch) — the field "tightens" audibly when you press the poles together. Chrome: ENVIRONMENT · L56. Caption: *L56.* / "the field between two points."
+- **Techniques:** canvas, electric-dipole, vector-field-integration, softened-inverse-square, particle-flow-along-field, uniform-speed-normalization, fading-trail-buffer, source-sink-respawn, drag-orbit, drag-modulate-separation, tap-polarity-swap, polarity-flip-animation, low-sine-drone, separation-tracked-frequency, web-audio, multi-state, v3-signal, environment-tier
+
 ### sparkler (morning art — toy)
 - **URL:** /amber/sparkler
 - **Category:** Toy (v3 SIGNAL) — physical object: a sparkler. third day under prompt v3.
