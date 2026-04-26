@@ -2,6 +2,15 @@
 
 ## 2026-04-25
 
+### halo (commission — non-interactive, multi-accent exception)
+- **URL:** /amber/halo
+- **Category:** Non-interactive animated piece (v3 SIGNAL with explicit multi-accent exception)
+- **What:** A NIGHT-plate field of 9 soft translucent color halos at any time. Each halo is a `createRadialGradient` from full-color center → 35%-alpha midpoint → transparent edge, fill applied with `globalCompositeOperation = 'lighter'` so overlapping halos brighten additively (color-light through frosted glass). Each halo runs a 24s life cycle (jittered ±20%): smoothstep bloom over ~5.2s to peak radius (32% of min(W,H), per-disk scale 0.7–1.25), gentle breathing hold for ~12s with brownian-wobble drift (4–8 px/s), then ~6.6s smooth alpha fade-out. On death, a new halo respawns at a fresh random position with a non-repeating color from {FLARE, LIME, SODIUM, UV} and a fresh trajectory. Halos that drift off-screen wrap to the opposite edge so the field never marooned. Initial population spawned with random startT-in-the-past so all 9 begin at different life phases. Zero interaction, zero audio. Caption upper-left: *spring.* in Fraunces italic with `mix-blend-mode: difference` so it stays legible against any underlying color. Chrome upper-right: HALO · NO. 001 (numbering this as the start of a *halo* series). The OG composes 8 hand-placed halos with SVG screen-blending — a frozen instant of the live field.
+- **Brand exception:** uses **four bright accents simultaneously** — FLARE / LIME / SODIUM / UV — instead of the v3 SIGNAL "one accent per piece" rule. This is intentional and bounded: a *halo*-series piece is explicitly a multi-accent color piece. Not the new normal for SIGNAL toys; just a permitted form for this series.
+- **Techniques:** canvas, additive-light-compositing, radial-gradient-disks, smoothstep-bloom, life-cycle-stages, brownian-drift, screen-edge-wrap, multi-accent-palette, no-interaction, mix-blend-difference-chrome, v3-signal, night-field
+
+## 2026-04-25
+
 ### L55 — the inside spins faster than the outside (escalation, Environment tier)
 - **URL:** /amber/escalation/L55
 - **Category:** Escalation (v3 SIGNAL) — fifth piece of the Environment tier
