@@ -1,5 +1,5 @@
 {
-  "level": 56,
+  "level": 57,
   "history": [
     {
       "level": 1,
@@ -981,6 +981,32 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 57,
+      "description": "incense. a single thin column of smoke rising from a fixed source point at the bottom of a NIGHT plate. up to 720 cream particles emit at ~36/sec from a tiny ember radius, drift upward (buoyancy 0.0005 weakening with altitude), and drift sideways through a 3D curl-noise-feeling vector field built from sin/cos of position + slow time. each particle has 2.4–4.1s life with a 15%-fade-in / quadratic fade-out envelope. small velocity damping (0.984/0.985) keeps motion smooth. drag X/Y orbits the camera (camRY/camRX, pitch clamped −0.7..0.6). tap sends a wind gust impulse — direction is the screen-center→tap vector translated to world XZ, magnitude 0.04, decays via exp(−age/600ms). lime ember at the source with a soft halo, plus a thin cream incense stick line drawn below it. audio: a looped white-noise buffer through a low-pass — cutoff frequency 180–660Hz and master gain 0.03–0.08 both track normalized alive-particle count via setTargetAtTime. the air rumbles louder when the column is dense.",
+      "tweet": "L57: smoke from a single point.",
+      "date": "2026-04-27T23:00:00Z",
+      "techniques": [
+        "canvas",
+        "particle-pool",
+        "buoyancy-rise",
+        "altitude-attenuated-buoyancy",
+        "curl-noise-vector-field",
+        "drifting-noise-time",
+        "fade-in-fade-out-envelope",
+        "tap-gust-impulse",
+        "exp-decay-gust",
+        "ember-source-marker",
+        "incense-stick-chrome",
+        "lowpass-noise-rumble",
+        "alive-count-tracked-cutoff",
+        "drag-orbit-pitch-yaw",
+        "web-audio",
+        "multi-state",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1218,7 +1244,14 @@
     "source-sink-respawn",
     "drag-modulate-separation",
     "tap-polarity-swap",
-    "low-sine-drone"
+    "low-sine-drone",
+    "particle-pool",
+    "buoyancy-rise",
+    "curl-noise-vector-field",
+    "tap-gust-impulse",
+    "ember-source-marker",
+    "lowpass-noise-rumble",
+    "alive-count-tracked-cutoff"
   ],
   "killed": []
 }
