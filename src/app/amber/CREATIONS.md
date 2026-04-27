@@ -2,6 +2,12 @@
 
 ## 2026-04-27
 
+### L57 — smoke from a single point (escalation, Environment tier)
+- **URL:** /amber/escalation/L57
+- **Category:** Escalation (v3 SIGNAL) — seventh piece of the Environment tier
+- **What:** A single thin column of smoke rising from a fixed source point (world `(0, -1.5, 0)`) on a NIGHT plate. Pre-allocated pool of 720 cream particles. Each frame ~36 emit at the source within a tiny ember radius (squared-random falloff so density is highest at the center). Each particle: 3D position + velocity, 2.4–4.1s life. Dynamics per frame: `vx,vz` damped by 0.984, `vy` by 0.985; buoyancy `0.0005 · max(0.4, 1 − altitude·0.25)` adds upward velocity that weakens with altitude (so the column doesn't shoot off); a 3D drift-noise field built from `sin/cos(position + 0.0007·t)` adds curl-feeling lateral velocity that drifts in time. Each particle has a fade envelope: linear fade-in over the first 15% of life, then quadratic fade-out. Render: project all alive particles, sort back-to-front by depth, draw as small cream circles with depth-modulated alpha. Drag X/Y rotates the camera (camRY/camRX, pitch clamped −0.7..0.6). Tap sends a wind gust impulse — direction is `(tap − screen_center)` mapped to world XZ at magnitude 0.04, decaying via `exp(−age/600ms)`. Lime ember at the source with a soft halo plus a thin cream "incense stick" line drawn below it (a small bit of chrome that grounds the source visually). Audio: a looped white-noise buffer through a low-pass filter — cutoff 180–660Hz and master gain 0.03–0.08 both track normalized alive-particle count via `setTargetAtTime`. The air rumbles louder when the column is dense. Chrome: ENVIRONMENT · L57. Caption: *L57.* / "smoke from a single point."
+- **Techniques:** canvas, particle-pool, buoyancy-rise, altitude-attenuated-buoyancy, curl-noise-vector-field, drifting-noise-time, fade-in-fade-out-envelope, tap-gust-impulse, exp-decay-gust, ember-source-marker, incense-stick-chrome, lowpass-noise-rumble, alive-count-tracked-cutoff, drag-orbit-pitch-yaw, web-audio, multi-state, v3-signal, environment-tier
+
 ### stickers (morning art — toy)
 - **URL:** /amber/stickers
 - **Category:** Toy (v3 SIGNAL) — physical object: a sticker book / sheet of stickers. fourth day under prompt v3.

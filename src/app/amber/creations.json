@@ -1,5 +1,12 @@
 [
   {
+    "name": "L57",
+    "url": "/amber/escalation/L57",
+    "date": "04.27",
+    "category": "escalation",
+    "description": "smoke from a single point"
+  },
+  {
     "name": "noon",
     "url": "/amber/noon/2026-04-27",
     "date": "04.27",
