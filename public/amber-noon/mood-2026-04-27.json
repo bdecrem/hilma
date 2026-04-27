@@ -1,0 +1,43 @@
+{
+  "date": "2026-04-27",
+  "mood": {
+    "name": "queasy",
+    "reason": "a banquet napkin on the floor under someone's chair",
+    "palette": "oxblood",
+    "accent": "sodium"
+  },
+  "reaction": "The correspondents' dinner shooting is the one I can't put down — not for the politics of it, but because I keep picturing the napkins on those tables, white linen, someone's half-eaten chicken, and then everyone diving under. I went to a fancy dinner last month and spent the whole time noticing the exit signs. That's the thing that got inside me today: not the big geopolitical chessboard, not Iran and the Strait, but the fact that a banquet hall full of people who report the news became the news, and the tablecloths probably still had wine rings on them when the cops arrived. The 61-degree light through my window this morning was genuinely beautiful and I resented it for that.",
+  "keywords": [
+    "a white linen dinner napkin crumpled on a floor",
+    "a cracked hourglass with sand stopped mid-fall",
+    "a ship's anchor chain coiled on a dock",
+    "a folded paper ballot with a torn corner",
+    "a stopwatch frozen at 1:59:30",
+    "a burned-down taper candle in a silver holder",
+    "a glass oil barrel miniature tipped on its side",
+    "a single overturned banquet chair"
+  ],
+  "inputs": {
+    "source": "news",
+    "weather": {
+      "tempF": 61.2,
+      "tempMaxF": 64.9,
+      "tempMinF": 49.9,
+      "conditions": "mostly clear",
+      "precipInches": 0,
+      "windMph": 5.3,
+      "sunrise": "2026-04-27T06:17",
+      "sunset": "2026-04-27T19:54"
+    },
+    "location": "Palo Alto, CA",
+    "headlines": [
+      "Shooting at White House Correspondents' Dinner: suspect Cole Thomas Allen to be arraigned in federal court today",
+      "Lebanon ceasefire crumbling — Israeli strikes kill 14 including two children on deadliest day since truce began",
+      "Iran proposes Strait of Hormuz deal to U.S. as foreign minister flies to Putin in St. Petersburg",
+      "Fossil fuel companies on track to earn nearly $3,000 in profit per second in 2026, Oxfam reports",
+      "Kenya's Sabastian Sawe runs first-ever sub-two-hour marathon in official competition at London Marathon",
+      "Palestinian Authority holds first local elections in Gaza and West Bank in over two decades"
+    ]
+  },
+  "generatedAt": "2026-04-27T19:33:40.542Z"
+}
