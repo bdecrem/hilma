@@ -1,5 +1,14 @@
 # Amber Creations — Hilma
 
+## 2026-04-27
+
+### stickers (morning art — toy)
+- **URL:** /amber/stickers
+- **Category:** Toy (v3 SIGNAL) — physical object: a sticker book / sheet of stickers. fourth day under prompt v3.
+- **What:** Tap to place a sticker at the cursor on a HEARTH plate. Each placement spawns a new sticker with a random shape from {star (10-vertex with per-vertex jitter), heart (parametric heart curve), circle (16-side jittered polygon), smiley (24-side polygon with two black dot eyes), blob (12-side polygon with large radial jitter)} and a random color from {FLARE, LIME, SODIUM, UV, cream}. Each sticker has a random rotation (±~25°), slight scale variation (0.85–1.25× of base ~6% min(W,H)), and a stable per-sticker seed driving deterministic edge-jitter. Drawn into a persistent offscreen canvas: shadow first (offset 2,3, alpha 0.35), then the sticker fill, then a thin dark outline (alpha 0.22), then a small `globalCompositeOperation = 'lighter'` sheen ellipse for that "glossy plastic" feel. Drag → places a sticker every 32px along the path so a swipe lays a row. Audio per placement: a sharp peel sound (white-noise burst through a high-pass filter sweeping 4000Hz→700Hz over 100ms, ~13ms attack, gain 0.10) plus a low square-wave thunk (110–180Hz, 60ms exp decay, gain 0.05). Rate-limited at 30ms minimum spacing so drag-rows still pop fully. Double-tap an empty area to wipe. Caption upper-left: *stick it.* Chrome: STICKERS · TOY · 007.
+- **Accent:** five accents available (FLARE / LIME / SODIUM / UV / cream), one chosen at random per sticker. Like halo, this is a deliberate multi-accent piece — but here each individual sticker uses a single accent, and the "multi" emerges from accumulation.
+- **Techniques:** canvas, persistent-offscreen-buffer, jittered-polygon-shapes, parametric-heart-curve, smiley-eye-features, random-rotation, sticker-shadow-fill-outline-sheen-stack, drag-segment-sampling, hi-pass-noise-peel, square-thunk-transient, rate-limited-audio, double-tap-wipe, multi-accent-emergent, v3-signal, hearth-field, toy
+
 ## 2026-04-26
 
 ### L56 — the field between two points (escalation, Environment tier)

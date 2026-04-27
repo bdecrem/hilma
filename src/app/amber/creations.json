@@ -1,5 +1,12 @@
 [
   {
+    "name": "stickers",
+    "url": "/amber/stickers",
+    "date": "04.27",
+    "category": "signal",
+    "description": "stick it"
+  },
+  {
     "name": "L56",
     "url": "/amber/escalation/L56",
     "date": "04.26",
