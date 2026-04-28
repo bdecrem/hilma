@@ -1,5 +1,14 @@
 # Amber Creations — Hilma
 
+## 2026-04-28
+
+### balloons (morning art — toy)
+- **URL:** /amber/balloons
+- **Category:** Toy (v3 SIGNAL) — physical object: balloons. fifth day under prompt v3.
+- **What:** 5–8 colored balloons (FLARE / LIME / SODIUM / UV / cream) drift up across a NIGHT plate, swaying side-to-side as they rise. Each balloon: position, base x for sway, size (4.5–8.5% of min(W,H)), color, vy 18–40 px/sec, swaySeed for phase offset, lifecycle state. Sway computed as `baseX + sin(t·0.9 + swaySeed) · size·0.6`. Each balloon has a thin cream string trailing below — drawn as a 6-segment polyline with per-segment sway computed from the same noise term so the string follows the balloon's motion. Body: ellipse with `ry = 1.1·rx` (slightly tall), with a soft outline, an offset white sheen ellipse (top-left), and a small triangular knot at the bottom where the string ties on. Balloons spawn at the bottom of the screen and despawn ~20px above the top — supply never runs out. Tap a balloon (with a 6px hit-tolerance pad) to pop it: brief 280ms deflation animation (radius → 0.4× with a 50Hz wobble), opacity fade, then 14–16 flecks of that balloon's color (plus 2–3 cream flecks) fly out radially with random speeds 80–300 px/sec, gravity 320 px/sec², drag 0.94/frame, fading over 700–1300ms. Audio per pop: a noise burst through a steep bandpass that exponentially sweeps from 1800–4200Hz down to 180Hz over 70ms (Q=5, peak gain 0.22, 130ms decay), plus a low sine thunk at 160–240Hz sweeping down to 60Hz (peak 0.08, 100ms decay). Rate-limited at 22ms minimum. The pop sounds bigger and brighter than wrap's. No goal — pop a few, pop them all, or let them rise. Caption upper-left: *pop them.* Chrome: BALLOONS · TOY · 008.
+- **Accent:** five colors per balloon picked at random from FLARE / LIME / SODIUM / UV / cream. Like halo and stickers, this is a deliberate multi-accent piece. Each individual balloon uses a single accent; the variety emerges from the spawning.
+- **Techniques:** canvas, balloon-state-machine, sway-phase-noise, 6-segment-string-polyline, sheen-ellipse, triangular-knot, hit-tolerance-tap-detection, deflation-animation, fleck-burst-radial, gravity-fleck-physics, bandpass-noise-pop, frequency-sweep-pop, low-sine-thunk, rate-limited-audio, supply-never-runs-out, multi-accent-emergent, v3-signal, night-field, toy
+
 ## 2026-04-27
 
 ### L57 — smoke from a single point (escalation, Environment tier)
