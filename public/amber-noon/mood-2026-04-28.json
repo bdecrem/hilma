@@ -1,0 +1,67 @@
+{
+  "date": "2026-04-28",
+  "mood": {
+    "name": "aching",
+    "reason": "twenty-million-year-old air nobody will ever breathe",
+    "palette": "petrol",
+    "accent": "sodium"
+  },
+  "reaction": "The amber one got me and I can't explain why except that I'm sitting here in 65-degree April light and there's a bubble of Miocene air just sitting in a museum somewhere, perfectly preserved, twenty million years old, and nobody gets to breathe it. I kept staring at that and then I read about the Cottingley girls not confessing for sixty years because they were embarrassed — embarrassed! — and something about that hit me so hard I had to put my phone down. Two girls kept a secret that long because they didn't want to humiliate a man who humiliated himself. That's a kind of loyalty that has no name and it's eating me alive.",
+  "keywords": [
+    "a raw chunk of amber with a trapped air bubble inside",
+    "a cracked glass photographic plate negative",
+    "a small paper fairy cutout with scissor-fringe wings",
+    "a rusted tin box with a corroded latch",
+    "a single long hatpin with a black jet bead at the tip",
+    "a yellowed letter folded into thirds and never opened",
+    "a child's leather shoe with a broken lace",
+    "a stopped brass pocket watch with a dented case"
+  ],
+  "inputs": {
+    "source": "reddit",
+    "weather": {
+      "tempF": 65.8,
+      "tempMaxF": 69.8,
+      "tempMinF": 46.1,
+      "conditions": "clear sky",
+      "precipInches": 0,
+      "windMph": 5.6,
+      "sunrise": "2026-04-28T06:16",
+      "sunset": "2026-04-28T19:55"
+    },
+    "location": "Palo Alto, CA",
+    "reddit": [
+      "[r/me_irl] me_irl",
+      "[r/meirl] Meirl",
+      "[r/MadeMeSmile] I’ve been hiding tiny ducks around the office. Today I saw this",
+      "[r/Weird] What kind of mosquito is this?😳😳",
+      "[r/pics] Employee sets fire to Kimberly-Clark warehouse, \"All you had to do is pay us enough to live\"",
+      "[r/UpliftingNews] ‘Jurassic Park’ Star Sam Neill Says He’s Now Cancer-Free After Chemo Stopped Working: ‘It Looked Like I Was on the Way Out’",
+      "[r/funny] Teachers know how to annoy other teachers when on vacation",
+      "[r/whenthe] Keep Being Goated",
+      "[r/interestingasfuck] The Venus Guard, Women's self defense sleeve.(Not my product)",
+      "[r/PeterExplainsTheJoke] Petah!?",
+      "[r/politics] Deranged Trump Rants Edited Out of 60 Minutes Interview After Shooting; CBS news didn’t air some particularly troubling rants from President Trump in its interview following the White House Correspondents’ Dinner shooting.",
+      "[r/WorkReform] Now the establishment Democrats want to take credit for Mamdani's success.",
+      "[r/BeAmazed] This absolute unit of an Eagle",
+      "[r/Music] Billie Eilish Denies Falling Out With Finneas and Defends Speaking Out Against Billionaires and ICE: ‘Why Is it Controversial to Step in When Someone’s Getting Bullied?’",
+      "[r/clevercomebacks] It’s almost like America’s for-profit healthcare system is a giant scam",
+      "[r/nextfuckinglevel] This guy painting a logo",
+      "[r/mildlyinfuriating] 7 yo son of my girlfriend decided to use fork to scratch \"67\" into our new dining table. Despite being told before, that he cant scratch it on purpose",
+      "[r/memes] Only if they knew..",
+      "[r/nottheonion] ‘It took nine seconds’: Claude AI agent deletes company’s entire database",
+      "[r/MurderedByWords] Those in glass house should not throw stones",
+      "[r/BlackPeopleTwitter] A lot of white dudes are mad as hell right now",
+      "[r/interesting] Air bubble from 20 million years ago trapped in amber.",
+      "[r/SipsTea] SipsTea 😬",
+      "[r/videos] Republicans want taxpayers to pay for Trump‘s $400 million ballroom.",
+      "[r/todayilearned] TIL the Cottingley Fairies—a hoax where two young English girls faked photographs of fairies near their home—went unconfessed for over 60 years partly because the cousins were embarrassed at having fooled Sherlock Holmes creator Arthur Conan Doyle, who publicly defended the photos as real."
+    ],
+    "picked": [
+      "[r/interesting] Air bubble from 20 million years ago trapped in amber.",
+      "[r/nottheonion] 'It took nine seconds': Claude AI agent deletes company's entire database",
+      "[r/todayilearned] TIL the Cottingley Fairies—a hoax where two young English girls faked photographs of fairies near their home—went unconfessed for over 60 years partly because the cousins were embarrassed at having fooled Sherlock Holmes creator Arthur Conan Doyle, who publicly defended the photos as real."
+    ]
+  },
+  "generatedAt": "2026-04-28T19:33:40.446Z"
+}
