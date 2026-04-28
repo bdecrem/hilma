@@ -2,6 +2,12 @@
 
 ## 2026-04-28
 
+### L58 — light through water, on the floor (escalation, Environment tier)
+- **URL:** /amber/escalation/L58
+- **Category:** Escalation (v3 SIGNAL) — eighth piece of the Environment tier
+- **What:** A simulated pool floor lit from above by refracted light. Above the floor, a virtual water surface is the sum of 5 base sine wave components (each with its own (kx, ky, ω, amplitude, phase)) plus active ripple disturbances. Per frame, 70×40 = 2800 light samples are cast straight down. At each sample, the surface gradient ∂h/∂x and ∂h/∂y is computed analytically (base waves contribute via the cosine of their phase, multiplied by amplitude and wavevector component) plus contributions from each active ripple (modeled as a circular gaussian wavefront at radius `c·age` with half-width 12px and `exp(−0.85·age)` amplitude decay; gradient via chain rule on the gaussian). Refraction lands the ray on the floor at `(sample_x − ∂h/∂x · D, sample_y − ∂h/∂y · D)` where D=200 (virtual depth). A 3×3 weighted splat brightens the cell at that landing position in a half-resolution ImageData buffer (W·0.5 × H·0.5 to keep splat budget tractable). Each frame the buffer fades by 24 of 255 per channel toward FIELD, so caustic streaks form where many rays converge and the pattern flows. Drag adds continuous ripples at the cursor (every 26px or 90ms whichever first, smaller amp 1.4, 1800ms life). Tap drops a stone (single larger ripple, amp 4.5, 3500ms life). Lime overlay rings at each ripple origin trace the wavefront and fade with the ripple. The half-res ImageData is blitted to a temp canvas and `drawImage`-scaled with smoothing for the final composite. Audio: a looped white-noise buffer through a bandpass at 180–380Hz, gain 0.03–0.07 — both center frequency and gain track ripple count via setTargetAtTime. The water rumble thickens when the surface is busy. Chrome: ENVIRONMENT · L58. Caption: *L58.* / "light through water, on the floor."
+- **Techniques:** canvas, imagedata-buffer, caustics, snell-refraction-approx, analytic-gradient, ripple-wave-packet, gaussian-wavefront-envelope, exponential-decay-ripple, additive-splat-with-fade, half-res-render, drag-continuous-ripple, tap-stone-drop, lime-wavefront-overlay, bandpass-water-rumble, ripple-count-tracked-gain, web-audio, multi-state, v3-signal, environment-tier
+
 ### balloons (morning art — toy)
 - **URL:** /amber/balloons
 - **Category:** Toy (v3 SIGNAL) — physical object: balloons. fifth day under prompt v3.
