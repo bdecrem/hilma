@@ -1,5 +1,5 @@
 {
-  "level": 57,
+  "level": 58,
   "history": [
     {
       "level": 1,
@@ -1007,6 +1007,33 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 58,
+      "description": "caustics. the floor of a virtual pool. a water surface 'above' is modeled as the sum of 5 base sine wave components plus any active ripple disturbances. for each of 70×40 light samples cast straight down, the surface gradient ∂h/∂x and ∂h/∂y at that sample's position is computed analytically (base waves) and via gaussian wavefront contributions (ripples), then the ray refracts so it lands on the floor at sample - (∂h/∂x · D, ∂h/∂y · D) where D=200. a 3×3 weighted splat brightens the cell at that landing position in a half-res ImageData buffer, with a per-frame fade pulling each pixel back toward FIELD by 24 of 255 — so caustic streaks form where many rays converge, and the pattern flows. drag adds a continuous ripple at the cursor (every 26px or 90ms, smaller amp 1.4, life 1800ms); tap drops a stone (single larger ripple, amp 4.5, life 3500ms). each ripple is a circular wave packet at radius c·age (c=240–320 px/sec) with a gaussian half-width 12px envelope and exp(−0.85·age) decay. lime overlay rings at each ripple origin trace the wavefront. audio: a looped noise buffer through a bandpass at 180–380Hz, gain 0.03–0.07 — the water rumble thickens with ripple count.",
+      "tweet": "L58: light through water, on the floor.",
+      "date": "2026-04-28T23:00:00Z",
+      "techniques": [
+        "canvas",
+        "imagedata-buffer",
+        "caustics",
+        "snell-refraction-approx",
+        "analytic-gradient",
+        "ripple-wave-packet",
+        "gaussian-wavefront-envelope",
+        "exponential-decay-ripple",
+        "additive-splat-with-fade",
+        "half-res-render",
+        "drag-continuous-ripple",
+        "tap-stone-drop",
+        "lime-wavefront-overlay",
+        "bandpass-water-rumble",
+        "ripple-count-tracked-gain",
+        "web-audio",
+        "multi-state",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1251,7 +1278,16 @@
     "tap-gust-impulse",
     "ember-source-marker",
     "lowpass-noise-rumble",
-    "alive-count-tracked-cutoff"
+    "alive-count-tracked-cutoff",
+    "imagedata-buffer",
+    "caustics",
+    "snell-refraction-approx",
+    "analytic-gradient",
+    "ripple-wave-packet",
+    "additive-splat-with-fade",
+    "half-res-render",
+    "lime-wavefront-overlay",
+    "bandpass-water-rumble"
   ],
   "killed": []
 }
