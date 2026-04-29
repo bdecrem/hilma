@@ -2,6 +2,15 @@
 
 ## 2026-04-29
 
+### loving-grace (commission — Brautigan visualization)
+- **URL:** /amber/loving-grace
+- **Category:** Commission (v3 SIGNAL) — typography piece visualizing Richard Brautigan's "All Watched Over By Machines Of Loving Grace" (1967)
+- **What:** The full poem rendered in Fraunces italic light on a HEARTH (#1A110A) field, three stanzas centered, fading in sequentially over 8s on load. A canvas layer behind the type renders ~9–18 small "cursor-blossoms" (4–5 petal rings around a center dot), each rotating at its own slow speed (0.06–0.24 rad/s). Most are cream at 0.55 alpha; ~1 in 5 is LIME at 0.85 alpha (the cybernetic signal). Canvas is `position: fixed` so the blossoms stay still as the poem scrolls past on mobile. Header chrome: `LOVING GRACE.` (with lime period) top-left, `BRAUTIGAN · 67` top-right, both Courier Prime Bold uppercase letterspaced. Bottom-left caption: *machines, watching.* in Fraunces italic. Bottom-right: tap-to-toggle ambient audio with hollow circle indicator (lime fill when on).
+- **Audio:** Eno-style "An Ending (Ascent)" pad — no melody. Two related chords (Amaj9 [A C# E G# B] and F#m11 [F# A C# E B]) crossfade every 26–34s by spawning independent voices: each voice picks a random pitch from the current chord, fades in over 7–14s, holds 5–12s, fades out over 12–21s. Mostly sines with ~25% triangles for sparkle, ±7 cent detuning per voice. New voice spawns every 1.4–3.8s. Master through a 2200Hz lowpass with a 0.04Hz cutoff LFO (24s period). When the chord switches, old voices keep their assigned pitches and fade out naturally — the harmony bleeds across rather than cutting. Master fades in over 6s on tap. Browser autoplay rules require a tap to start.
+- **Layout:** Mobile-safe with `100dvh` + safe-area-inset padding. `clamp(14px, 3.6vw, 17px)` for poem font scales across viewports. Canvas DPR capped at 2.
+- **Accent:** cream (typography) + LIME (~20% of blossoms, the spec mark period). One field, one accent — v3 SIGNAL canon.
+- **Techniques:** typography-as-piece, full-poem-on-screen, scroll-friendly-mobile, fixed-canvas-background, sequential-stanza-fade, slow-rotating-cursor-blossoms, eno-pad-no-melody, independent-fading-voices, two-chord-crossfade, web-audio-no-files, tap-to-start-audio, lowpass-cutoff-lfo, hearth-field, v3-signal, commission
+
 ### snowglobe (morning art — toy)
 - **URL:** /amber/snowglobe
 - **Category:** Toy (v3 SIGNAL) — physical object: a snowglobe. sixth day under prompt v3.
