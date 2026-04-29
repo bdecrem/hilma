@@ -1,5 +1,5 @@
 {
-  "level": 58,
+  "level": 59,
   "history": [
     {
       "level": 1,
@@ -1034,6 +1034,40 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 59,
+      "description": "aurora. a curtain of light hanging in a dark sky. 180 vertical ribbons placed along an arc in 3D, each rendered as a vertical line with a top-to-bottom gradient (transparent at top, brightest in upper third, fading to transparent at the bottom horizon). the arc has a gentle z-curl (sin(πu·1.2 + 0.04t)) so the curtain undulates slowly in depth. proper perspective projection: each ribbon's base and top are projected through camera at (0, 0.55, -3.6) with focal = 0.62·min(W,H), so far ribbons appear smaller and closer to a horizon line at H·0.66. brightness per ribbon = intensity · wave · breath, where wave = 0.6 + 0.4·(0.55·sin(πu·4 - 0.5t) + 0.45·sin(πu·9 + 0.85t)) — two traveling waves of different wavenumbers and speeds that drift across the arc index. breath = 0.75 + 0.25·sin(0.11t + 3.2u) — a slow per-ribbon shimmer. drag X orbits the camera (camYaw rotates around y-axis); drag Y modulates intensity (0.15..1.0). tap = substorm: a wave packet that propagates outward in BOTH directions from the tap origin at 0.16 u-units/sec with gaussian half-width 0.07, decaying linearly over 5.5s. substorm peak shifts ribbon color from cream toward lime and adds a wide gradient glow stroke around the bright zone. additive (lighter) compositing throughout so glow accumulates. audio: looped pink-noise through bandpass — center frequency 200–580Hz and gain 0.035–0.095 both track total ribbon brightness via setTargetAtTime.",
+      "tweet": "L59: a curtain in the sky.",
+      "date": "2026-04-29T23:00:00Z",
+      "techniques": [
+        "canvas",
+        "aurora-curtain",
+        "ribbon-array",
+        "3d-arc-with-z-curl",
+        "perspective-projection",
+        "horizon-line-projection",
+        "depth-fog",
+        "depth-sorted-render",
+        "linear-gradient-stroke",
+        "additive-compositing",
+        "two-traveling-waves",
+        "per-ribbon-breath-lfo",
+        "substorm-wave-packet",
+        "bidirectional-pulse-propagation",
+        "cream-to-lime-on-peak",
+        "gradient-glow-bloom",
+        "drag-x-orbit",
+        "drag-y-intensity",
+        "tap-substorm",
+        "tap-to-u-projection",
+        "pink-noise-bandpass",
+        "brightness-tracked-filter",
+        "web-audio",
+        "multi-state",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1287,7 +1321,26 @@
     "additive-splat-with-fade",
     "half-res-render",
     "lime-wavefront-overlay",
-    "bandpass-water-rumble"
+    "bandpass-water-rumble",
+    "aurora-curtain",
+    "ribbon-array",
+    "3d-arc-with-z-curl",
+    "horizon-line-projection",
+    "depth-sorted-render",
+    "linear-gradient-stroke",
+    "additive-compositing",
+    "two-traveling-waves",
+    "per-ribbon-breath-lfo",
+    "substorm-wave-packet",
+    "bidirectional-pulse-propagation",
+    "cream-to-lime-on-peak",
+    "gradient-glow-bloom",
+    "drag-x-orbit",
+    "drag-y-intensity",
+    "tap-substorm",
+    "tap-to-u-projection",
+    "pink-noise-bandpass",
+    "brightness-tracked-filter"
   ],
   "killed": []
 }
