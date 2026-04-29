@@ -1,5 +1,14 @@
 # Amber Creations — Hilma
 
+## 2026-04-29
+
+### snowglobe (morning art — toy)
+- **URL:** /amber/snowglobe
+- **Category:** Toy (v3 SIGNAL) — physical object: a snowglobe. sixth day under prompt v3.
+- **What:** A glass dome on a dark plate with ~140 glitter flecks (78% cream, 22% FLARE pink) suspended inside. Each fleck has position, velocity, size, color, rotation, spin. Per frame: gravity 0.045 px/frame² pulls down, viscous drag 0.965 keeps motion slow and dreamy (water-like, not air-like). Containment: if a fleck's distance from the dome center exceeds the radius, it gets projected back to the inner edge and its velocity reflects across the surface normal (dotted with normal, scaled by 0.4 — soft bounce). Drag anywhere on the canvas → "shake": every fleck inside gets a velocity kick matching the drag direction with ±35% random spread per fleck, plus a small spin perturbation. Each shake also fires a soft bandpass-filtered noise rattle (2200–4600Hz center, Q=1.6, 45ms exp decay, peak gain scaled by drag speed; rate-limited at 28ms minimum). Released → flecks settle slowly back to the dome floor under gravity, swirling as they fall. Idle: flecks pile naturally at the bottom inside curve. Render order: dark field → wooden base disc beneath the dome → flecks (rotated rectangles for "flake" look) → dome circle outline → faint upper-left highlight gradient suggesting glass curvature. Caption upper-left: *shake it.* Chrome: SNOWGLOBE · TOY · 010.
+- **Accent:** cream (primary glitter) + FLARE (~22% of flecks for sparkle). Like halo / stickers / balloons, this is a documented multi-accent piece — but flecks each carry a single color, the multi emerges from the mix.
+- **Techniques:** canvas, dome-circular-containment, surface-normal-reflection, viscous-gravity, per-fleck-rotation-and-spin, drag-kick-with-spread, base-disc-chrome, glass-highlight-gradient, bandpass-rattle-burst, rate-limited-audio, multi-accent-emergent, v3-signal, night-field, toy
+
 ## 2026-04-28
 
 ### floor (commission — techno + caustics)

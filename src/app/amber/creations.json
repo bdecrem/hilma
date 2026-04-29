@@ -1,5 +1,12 @@
 [
   {
+    "name": "snowglobe",
+    "url": "/amber/snowglobe",
+    "date": "04.29",
+    "category": "signal",
+    "description": "shake it"
+  },
+  {
     "name": "floor",
     "url": "/amber/floor",
     "date": "04.28",
