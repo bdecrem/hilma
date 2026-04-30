@@ -1,5 +1,12 @@
 [
   {
+    "name": "chamber",
+    "url": "/amber/chamber",
+    "date": "04.29",
+    "category": "signal",
+    "description": "dub for the curtain · 122 BPM"
+  },
+  {
     "name": "L59",
     "url": "/amber/escalation/L59",
     "date": "04.29",
