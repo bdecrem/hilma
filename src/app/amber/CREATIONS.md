@@ -1,5 +1,19 @@
 # Amber Creations — Hilma
 
+## 2026-04-30
+
+### crayon (morning art — toy)
+- **URL:** /amber/crayon
+- **Category:** Toy (v3 SIGNAL) — physical object: a crayon scribble pad. seventh day under prompt v3.
+- **What:** A NIGHT (#0A0A0A) field that accepts crayon scribbles. Drag to scribble — the pointer path is sampled at every 3px and at each sample point a CLUSTER of 3–13 small dots is drawn within a ~6px radius (radius is `Math.pow(random, 0.7) * 5.5` so dots bias toward the cluster center, leaving a textured halo). Each dot has random radius 0.55–1.95px and random alpha 0.13–0.58 — produces the broken-wax-on-paper crayon character with visible gaps and irregular density. Marks accumulate directly into the canvas (no per-frame clear) so the page builds up indefinitely until resize.
+- **Cluster density tracks stroke speed:** density = max(3, floor(13 - speed·0.04)). Slow deliberate strokes lay denser, darker clusters; fast strokes break apart into gappy streaks — same as a real crayon under varying pressure.
+- **FLARE accent (the spark):** flareMix = max(0, min(0.75, (speed - 90)·0.011)). Below ~90 px/100ms (any normal scribble) the strokes are pure cream. Past that threshold the cluster color blends toward FLARE #FF2F7E — fast strokes literally "spark" pink, then fade back to cream as you slow down. This is the FLARE scouting candidate's third intentional use (after splatter 04.24 and wrap 04.25). Promotion eligible: log alongside those.
+- **Tap (no drag, <350ms):** drops a denser stationary cluster (3 cluster overlays at the same point) plus a short HP-noise click — a "knock" of the crayon tip on paper.
+- **Audio:** continuous looped white-noise (1.5s buffer) → bandpass filter (Q=0.9, center 1700–4100Hz) → master gain (0–0.15). Both gain and center frequency track stroke speed via `setTargetAtTime` with 0.04s time constants — paper-scrape that gets brighter and louder when you drag fast. Released → fades to silence in ~60ms. Tap clicks: short HP-filtered noise burst (1.1kHz, 45ms exponential decay). No tuned tones, no pentatonic.
+- **Chrome:** tiny "CRAYON." mark top-left (Courier Prime Bold 10px letter-spaced, 0.5 opacity, FLARE period); casual one-line caption "scribble." bottom-left (Fraunces italic light 17px, 0.7 opacity, no `*name.*` title above it); "a.·" mark bottom-right with FLARE period. All chrome `mixBlendMode: difference` so it stays readable as the canvas fills.
+- **Accent:** cream + FLARE (the third candidate piece). One field, two states — slow strokes are the canon cream, fast strokes spark FLARE. The accent is *earned* by user energy, not painted on.
+- **Techniques:** canvas, persistent-marks-no-clear, jittered-dot-cluster, biased-radial-distribution, density-tracks-speed, flare-threshold-on-speed, scribble-pad, drag-mark-making, tap-cluster-and-click, bandpass-noise-scrape, speed-tracked-gain, speed-tracked-cutoff, hp-noise-click, mix-blend-difference-chrome, no-title-just-caption, no-spec-branding, v3-signal, night-field, toy
+
 ## 2026-04-29
 
 ### chamber (commission — dub techno + L59 aurora visualizer)
