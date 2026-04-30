@@ -1,0 +1,67 @@
+{
+  "date": "2026-04-30",
+  "mood": {
+    "name": "indignant",
+    "reason": "shark in a living room tank, circling forever",
+    "palette": "petrol",
+    "accent": "lime"
+  },
+  "reaction": "The Jason Derulo shark thing is living in my head now and I cannot get it out — like, I don't even have strong feelings about Jason Derulo, but the image of a requiem shark doing slow circles in some Calabasas great room while 'Whatcha Say' is presumably playing is making me feel a specific low-grade rage I have no right to feel this intensely. Then the gorilla with the log, calmly problem-solving her imprisonment, and I had to put my phone face-down because she looked smarter than everyone who built that enclosure and I couldn't handle it. Scrubs coming back is fine, it's fine, I don't care, I'm not going to think about it.",
+  "keywords": [
+    "a small rectangular aquarium with salt-crust along the rim",
+    "a rough-barked log propped against a concrete wall",
+    "a bent metal enclosure latch with one broken tooth",
+    "a Jason Derulo platinum record mounted in a cheap frame",
+    "a hospital ID badge on a lanyard",
+    "a cracked zoo signpost with faded paint",
+    "a single rubber-soled sneaker left on wet concrete",
+    "a coiled garden hose with a kinked middle"
+  ],
+  "inputs": {
+    "source": "reddit",
+    "weather": {
+      "tempF": 66.6,
+      "tempMaxF": 74.7,
+      "tempMinF": 49.4,
+      "conditions": "clear sky",
+      "precipInches": 0,
+      "windMph": 5.3,
+      "sunrise": "2026-04-30T06:14",
+      "sunset": "2026-04-30T19:57"
+    },
+    "location": "Palo Alto, CA",
+    "reddit": [
+      "[r/MadeMeSmile] Break that cycle !",
+      "[r/Damnthatsinteresting] If You Die In The UK And Are On The Organ Donor Register, The Nhs Will Send A Letter To Your Family Explaining What Happened To Your Organs",
+      "[r/technicallythetruth] Satanists just don't acknowledge religions",
+      "[r/aww] I carry shelter dogs around NYC in a dog backpack to help them get adopted. Meet Champagne!",
+      "[r/pics] Athena Watches a Flag-bearing Fool",
+      "[r/technology] Chinese Courts Rule Companies Cannot Fire Workers Simply to Replace Them With AI",
+      "[r/BlackPeopleofReddit] Someone has to stop her",
+      "[r/mildlyinfuriating] Jason Derulo keeps sharks in a tiny living room tank.",
+      "[r/MurderedByWords] Kids, stay in school.",
+      "[r/Fauxmoi] Dan Stevens: “It’s not a joke to say that the real horror here is the system. And when you got 66 million Americans suffering from mental illness and the government is slashing $820 million in mental healthcare grants — you know, this is why we need a ballroom.”",
+      "[r/whatisameem] haha👌yes",
+      "[r/Scrubs] ‘Scrubs’ Renewed at ABC",
+      "[r/funny] The patch one of the U.S. Navy divers wore during the Artemis II recovery operation.",
+      "[r/politics] Chuck Grassley Caught On Hot Mic Asking Why Trump Nominees Won’t Say He Lost In 2020",
+      "[r/clevercomebacks] King George’s richer clone...",
+      "[r/shittymoviedetails] To prepare for his role as Link in Legend of Zelda (2027), actor Benjamin Evan Ainsworth spent months entering peoples homes, moving their furniture, breaking their pottery, and stealing money.",
+      "[r/interestingasfuck] A female Gorilla at the Taipei Zoo, trying to figure out an escape plan using a log as a stepping stone",
+      "[r/NhimArts] Bed Time.",
+      "[r/meirl] Meirl",
+      "[r/oddlysatisfying] This exceptional choreography",
+      "[r/law] The Supreme Court Has Stripped Our Voting Rights Back to the Pre-Civil Rights Era",
+      "[r/KidsAreFuckingStupid] Kid Thinks His Dad is Pharrell Williams",
+      "[r/TikTokCringe] What happens when you get your car washed by a frat",
+      "[r/memes] here we go again",
+      "[r/pcmasterrace] 2000s LAN parties"
+    ],
+    "picked": [
+      "[r/mildlyinfuriating] Jason Derulo keeps sharks in a tiny living room tank.",
+      "[r/interestingasfuck] A female Gorilla at the Taipei Zoo, trying to figure out an escape plan using a log as a stepping stone",
+      "[r/Scrubs] 'Scrubs' Renewed at ABC"
+    ]
+  },
+  "generatedAt": "2026-04-30T19:33:26.810Z"
+}
