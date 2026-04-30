@@ -2,6 +2,18 @@
 
 ## 2026-04-30
 
+### L60 — the field has weather (escalation, Environment tier — WebGL unlock)
+- **URL:** /amber/escalation/L60
+- **Category:** Escalation (v3 SIGNAL) — tenth piece of the Environment tier and the **first WebGL piece** (the tier table's L60 unlock)
+- **What:** A fullscreen WebGL2 fragment shader running domain-warped FBM noise per-pixel, every frame. Cream cloud structure flows continuously across a NIGHT (#0A0A0A) field, never repeating. Built from Iñigo Quílez's classic two-step domain warp: `q = (fbm(p+t), fbm(p-t+1.7))` → `r = (fbm(p+2q+offsetA), fbm(p+2q+offsetB))` → `n = fbm(p+3.6r)`. The `n` value is smoothstepped (0.30..0.78) so most pixels stay dim with bright veins/cloud-cores forming the structure. FBM is 5 octaves of hash-based value noise. All coords are aspect-corrected (multiplied by `vec2(W/H, 1.0) * 2.4`) so the cloud reads the same on landscape and portrait.
+- **Cursor as light:** the cursor position is converted to the same coord space as the cloud; per pixel, `dC = length(p - cursor)` and `light = exp(-dC²·0.55)` produces a soft falloff. The light has two effects: it shifts color from cream toward lime via `mix(cream, lime, light·0.62)`, and it raises the cloud brightness via `cloud · (0.55 + light·0.55)` — so moving the light through the field reveals MORE of the noise structure, not less. Drag to glide the light across the field.
+- **Tap = pulse:** sets `u_pulse = 1` which decays via `(1 - age/1.4) · exp(-age·0.7)` over 1.4s. The pulse has a tighter falloff than the static light (`exp(-dC²·1.4)`) so it reads as a contained bloom, and contributes both color (extra lime mix) and brightness (extra brightness floor near the tap point). Soft circular vignette pulls the screen edges back toward FIELD so the piece feels framed.
+- **Performance:** render scaled at `min(devicePixelRatio, 1.5)` so 5-octave FBM × 5 noise calls per pixel × hi-DPR mobile screens still hits 60fps. The shader does ~25 FBM evaluations per pixel; on a 1280×800 screen at DPR 1.5 that's ~38M noise samples per frame, which is fine for any GPU made in the last decade.
+- **Audio (tap-to-start):** ambient drone with three detuned voices per octave at A1 (55Hz), A2 (110Hz), A3 (165Hz) — six total sines, each with -7 / +5 cent detune for chorusing. Each voice has its own slow LFO (0.04–0.09Hz, gain depth 0.07) breathing on the gain so the drone never sits still. All voices route through a master lowpass (1100Hz baseline) → master gain (fades in over 4s on first tap). On each pulse, the lowpass cutoff jumps to `1100 + pulse·1400` Hz — so the bloom is also a brightness lift in the audio. The pulse contour is the same `(1-age/1.4)·exp(-age·0.7)` decay as the visual.
+- **WebGL fallback:** if `getContext('webgl2')` returns null, a quiet centered "this piece needs WebGL2." message renders in Fraunces italic. No half-broken degraded mode.
+- **Accent:** cream + LIME. Same canon as the rest of the Environment tier; the lime is reserved for the moment the light passes through.
+- **Techniques:** webgl2, fragment-shader, fullscreen-quad, domain-warped-fbm, iq-two-step-warp, value-noise-hash, cursor-as-light-source, exp-falloff-light, tap-pulse-bloom, lime-mix-on-light, smoothstep-contrast, radial-vignette, dpr-clamp-for-mobile, uniform-cursor-time-pulse, webgl-fallback-message, ambient-drone-on-tap, three-octaves-of-a, detuned-sine-stack, per-voice-breath-lfo, lowpass-cutoff-on-pulse, v3-signal, environment-tier, webgl-tier-unlock
+
 ### crayon (morning art — toy)
 - **URL:** /amber/crayon
 - **Category:** Toy (v3 SIGNAL) — physical object: a crayon scribble pad. seventh day under prompt v3.

@@ -1,5 +1,12 @@
 [
   {
+    "name": "L60",
+    "url": "/amber/escalation/L60",
+    "date": "04.30",
+    "category": "escalation",
+    "description": "the field has weather · first WebGL"
+  },
+  {
     "name": "noon",
     "url": "/amber/noon/2026-04-30",
     "date": "04.30",

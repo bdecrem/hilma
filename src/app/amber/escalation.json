@@ -1,5 +1,5 @@
 {
-  "level": 59,
+  "level": 60,
   "history": [
     {
       "level": 1,
@@ -1036,6 +1036,37 @@
       ]
     },
     {
+      "level": 60,
+      "description": "weather. first WebGL piece (the tier-table unlock at L60). a fullscreen WebGL2 fragment shader runs domain-warped FBM noise across every pixel each frame. cream cloud structure flows continuously across a NIGHT field; the shape is built by Iñigo-Quílez-style two-step domain warp: q = (fbm(p+t), fbm(p-t+1.7)); r = (fbm(p+2q+offset), fbm(p+2q+offset')); n = fbm(p+3.6r). the noise is smoothstepped so most pixels are dim with bright veins/cloud-cores. the cursor is a soft point light: dC = distance from pixel to cursor in shared aspect-corrected coords; light = exp(-dC²·0.55); near-cursor pixels lift cream toward LIME by mix(cream, lime, light·0.62 + pulse·1.3). brightness = cloud · (0.55 + light·0.55) so the light reveals MORE of the cloud structure rather than just sitting on top. tap = pulse: u_pulse surges to 1, decays via (1-age/1.4)·exp(-age·0.7) over ~1.4s; the pulse falloff (exp(-dC²·1.4)) is tighter than the static light so it reads as a contained bloom. soft circular vignette pulls edges back toward FIELD. render scaled at min(devicePixelRatio, 1.5) so mobile stays smooth. ambient drone (3 octaves of A — 55, 110, 165Hz — each with two detuned voices, plus per-voice slow LFO on gain) starts on first tap; master goes through a lowpass whose cutoff jumps from 1100 to 2500Hz on each pulse, so you hear the bloom too. graceful WebGL2 fallback message if context creation fails.",
+      "tweet": "L60: the field has weather.",
+      "date": "2026-04-30T23:00:00Z",
+      "techniques": [
+        "webgl2",
+        "fragment-shader",
+        "fullscreen-quad",
+        "domain-warped-fbm",
+        "iq-two-step-warp",
+        "value-noise-hash",
+        "cursor-as-light-source",
+        "exp-falloff-light",
+        "tap-pulse-bloom",
+        "lime-mix-on-light",
+        "smoothstep-contrast",
+        "radial-vignette",
+        "dpr-clamp-for-mobile",
+        "uniform-cursor-time-pulse",
+        "webgl-fallback-message",
+        "ambient-drone-on-tap",
+        "three-octaves-of-a",
+        "detuned-sine-stack",
+        "per-voice-breath-lfo",
+        "lowpass-cutoff-on-pulse",
+        "v3-signal",
+        "environment-tier",
+        "webgl-tier-unlock"
+      ]
+    },
+    {
       "level": 59,
       "description": "aurora. a curtain of light hanging in a dark sky. 180 vertical ribbons placed along an arc in 3D, each rendered as a vertical line with a top-to-bottom gradient (transparent at top, brightest in upper third, fading to transparent at the bottom horizon). the arc has a gentle z-curl (sin(πu·1.2 + 0.04t)) so the curtain undulates slowly in depth. proper perspective projection: each ribbon's base and top are projected through camera at (0, 0.55, -3.6) with focal = 0.62·min(W,H), so far ribbons appear smaller and closer to a horizon line at H·0.66. brightness per ribbon = intensity · wave · breath, where wave = 0.6 + 0.4·(0.55·sin(πu·4 - 0.5t) + 0.45·sin(πu·9 + 0.85t)) — two traveling waves of different wavenumbers and speeds that drift across the arc index. breath = 0.75 + 0.25·sin(0.11t + 3.2u) — a slow per-ribbon shimmer. drag X orbits the camera (camYaw rotates around y-axis); drag Y modulates intensity (0.15..1.0). tap = substorm: a wave packet that propagates outward in BOTH directions from the tap origin at 0.16 u-units/sec with gaussian half-width 0.07, decaying linearly over 5.5s. substorm peak shifts ribbon color from cream toward lime and adds a wide gradient glow stroke around the bright zone. additive (lighter) compositing throughout so glow accumulates. audio: looped pink-noise through bandpass — center frequency 200–580Hz and gain 0.035–0.095 both track total ribbon brightness via setTargetAtTime.",
       "tweet": "L59: a curtain in the sky.",
@@ -1340,7 +1371,24 @@
     "tap-substorm",
     "tap-to-u-projection",
     "pink-noise-bandpass",
-    "brightness-tracked-filter"
+    "brightness-tracked-filter",
+    "webgl2",
+    "fragment-shader",
+    "fullscreen-quad",
+    "domain-warped-fbm",
+    "iq-two-step-warp",
+    "value-noise-hash",
+    "cursor-as-light-source",
+    "exp-falloff-light",
+    "tap-pulse-bloom",
+    "lime-mix-on-light",
+    "radial-vignette",
+    "dpr-clamp-for-mobile",
+    "webgl-fallback-message",
+    "three-octaves-of-a",
+    "detuned-sine-stack",
+    "lowpass-cutoff-on-pulse",
+    "webgl-tier-unlock"
   ],
   "killed": []
 }
