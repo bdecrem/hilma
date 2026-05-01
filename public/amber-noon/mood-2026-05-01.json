@@ -1,0 +1,43 @@
+{
+  "date": "2026-05-01",
+  "mood": {
+    "name": "gutted",
+    "reason": "dozens of space missions canceled with one budget line",
+    "palette": "ink",
+    "accent": "sodium"
+  },
+  "reaction": "The NASA cut is the one that got me — not the drones, not the kings, the quiet cancellation of dozens of missions, like someone going through a drawer and throwing out things they haven't used lately. I keep thinking about the specific people who spent years on those projects, and how a line item just erased the thing they were building toward. Also it's May Day and the sky over Palo Alto is the color of old dishwater and I can't tell if I'm sad or just annoyed that it isn't raining properly, just hovering, just threatening.",
+  "keywords": [
+    "a crumpled mission patch torn at one edge",
+    "a rusted padlock with no key",
+    "a folded paper crane with a broken wing",
+    "a single drone propeller blade on concrete",
+    "a wax crown melting at one corner",
+    "a tin can with the label half-peeled off",
+    "a cracked telescope eyepiece",
+    "a handwritten sign rolled up with a rubber band"
+  ],
+  "inputs": {
+    "source": "news",
+    "weather": {
+      "tempF": 64.6,
+      "tempMaxF": 73.7,
+      "tempMinF": 51.4,
+      "conditions": "overcast",
+      "precipInches": 0,
+      "windMph": 6.8,
+      "sunrise": "2026-05-01T06:12",
+      "sunset": "2026-05-01T19:58"
+    },
+    "location": "Palo Alto, CA",
+    "headlines": [
+      "Senate Republicans block Iran war powers resolution for sixth time as 60-day deadline passes",
+      "Russia attacks Ternopil with 50+ drones on May Day; Zelensky says Ukraine's strikes cost Russia $7B in oil losses this year",
+      "Aung San Suu Kyi transferred from prison to house arrest, five years after Myanmar military coup",
+      "White House proposes cutting NASA budget by 23%, canceling dozens of missions",
+      "May Day 'No Kings' protests sweep US as Trump-Charles 'two Kings' photo inflames demonstrators",
+      "Chinese court rules it unlawful to fire worker whose job was replaced by AI"
+    ]
+  },
+  "generatedAt": "2026-05-01T19:33:28.636Z"
+}
