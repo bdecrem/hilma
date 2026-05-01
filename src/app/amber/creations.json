@@ -1,5 +1,12 @@
 [
   {
+    "name": "spray",
+    "url": "/amber/spray",
+    "date": "05.01",
+    "category": "signal",
+    "description": "hold to paint · the can heats up pink"
+  },
+  {
     "name": "slice",
     "url": "/amber/slice",
     "date": "04.30",

@@ -1,5 +1,17 @@
 # Amber Creations — Hilma
 
+## 2026-05-01
+
+### spray (morning art — toy)
+- **URL:** /amber/spray
+- **Category:** Toy (v3 SIGNAL) — physical object: a spray can. eighth day under prompt v3.
+- **What:** A NIGHT (#0A0A0A) field that accepts spray-paint clouds. Hold the pointer to spray; while held, every animation frame drops 30 small soft particles in a gaussian-radial cloud around the cursor (Box-Muller transform for the radial distance, uniform angle, so the cloud is concentrated at center with a scattered fringe). Each particle: random radius 1.4–4.4px, random alpha 0.045–0.145. Drag while held to paint trails — the cloud follows the cursor at 60fps × 30 particles = 1800 particles/sec under continuous spray. Marks accumulate directly into the canvas (no per-frame clear) so coverage builds up; dense areas read as solid color, sparse fringes read as fog. Tap (no drag, <350ms) drops a quick burst of 12 particles plus a short HP-noise release click — the "puff" of releasing the nozzle.
+- **The can heats up:** color of the spray cloud is `mix(cream, FLARE, flareMix)` where `flareMix = max(0, min(0.78, (holdSeconds - 0.4) * 0.55))`. First ~0.4s of any held burst is pure cream. Past that the cloud color blends toward FLARE #FF2F7E — a continuous hold for ~1.7s reaches the cap. Exactly the inverse of crayon's speed-trigger: spray's flare is hold-trigger. Different mark-making energy: crayon sparks pink on FAST motion, spray sparks pink on PERSISTENT pressure.
+- **Audio:** continuous looped white-noise (1.5s buffer) → bandpass filter (Q=1.5, center 1800–3200Hz) → master gain (0–0.12). Both gain and center frequency rise with hold duration — the can hisses louder and brighter the longer you hold the nozzle. `setTargetAtTime` time constants are 0.05s on hold-down (smooth attack) and faster (0.05s) on release (smooth decay). Tap release click: short HP-noise burst (1.2kHz, 45ms exponential decay) — the "tssk" of letting go. No tuned tones.
+- **Chrome:** tiny "SPRAY." mark top-left (Courier Prime Bold 10px letter-spaced, 0.5 opacity, FLARE period); casual one-line caption "hold to paint." bottom-left (Fraunces italic light 17px, 0.7 opacity, no `*name.*` title above it); "a.·" mark bottom-right with FLARE period. All chrome `mixBlendMode: difference` so it stays readable as the canvas fills with paint.
+- **Accent:** cream + FLARE (the fourth intentional FLARE piece — splatter 04.24, wrap 04.25, crayon 04.30, spray 05.01). Now well past the 3-piece promotion threshold for the accent map. The mechanic is a sibling to crayon's speed-trigger but inverts the input: persistent pressure rather than fast motion. Both are user-energy-earned accents — the FLARE is paid for by the user, not painted on.
+- **Techniques:** canvas, persistent-marks-no-clear, gaussian-radial-distribution, box-muller-transform, soft-low-alpha-particles, density-accumulation, hold-to-spray, hold-duration-tracks-flare, flare-threshold-on-hold, raf-continuous-emission, tap-burst-and-click, looped-bandpass-noise-hiss, hold-tracked-gain, hold-tracked-cutoff, hp-noise-release-click, mix-blend-difference-chrome, no-title-just-caption, no-spec-branding, v3-signal, night-field, toy
+
 ## 2026-04-30
 
 ### slice (commission — octatrack-style glitch sampler over the L60 weather field)
