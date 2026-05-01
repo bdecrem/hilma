@@ -212,7 +212,7 @@ Hilma's big sibling. A monorepo that grew like a vine — 6+ months of experimen
 
 | Project | Path | What it is |
 |---------|------|------------|
-| **Jambot** | `jambot/` | AI music production engine — synths (JB01, JB202, JT90, JT30, JT10), drum machines, renders WAV. Used by `/hallman` skill. Has `library.json` with genre/artist knowledge. |
+| **Jambot** | `jambot/` | AI music production engine — synths (JB01, JB202, JT90, JT30, JT10), drum machines, renders WAV. Used by `/hallman` skill. Has `library.json` — the canonical music knowledge base for ALL music we produce (jambot or WebAudio); see "Music recipes" section below. |
 | **Web** | `web/` | Legacy Next.js app on Vercel (pixelpit.gg + 10 other domains). 84 routes, 30KB middleware. Reference only — new stuff goes in hilma. |
 | **SMS Bot (Kochi.to)** | `sms-bot/` | AI agent service over SMS. Keyword dispatch, orchestrated routing, conversation threads. |
 | **Amber** | `sms-bot/agents/amber-*/` | AI sidekick — posts to Twitter, reads email, trades stocks, has moods influenced by lunar cycles. |
@@ -233,6 +233,15 @@ Python agents (Claude Agent SDK) for autonomous research: arxiv papers, medical 
 - **Reference code**: Look at vibeceo8 patterns when building similar features in hilma, but rewrite clean
 - **Shared services**: Same Supabase/Redis instances can be used if needed (credentials in vibeceo8/.env)
 - **Don't modify vibeceo8 from hilma** — it has its own deploy pipeline
+
+### Music recipes — `../vibeceo/jambot/library.json`
+
+**`vibeceo/jambot/library.json` is the canonical music knowledge base for ALL music we produce — whether or not it's made with jambot.** Hilma's WebAudio music pieces (floor, chamber, slice — synthesized from scratch in the browser) are governed by the same recipe book as Jambot's drum-machine-based renders. When working on any music piece:
+
+- **Before building:** read the relevant genre entry in `library.json` for the production prose, references, and signature elements. The library has core/deep tier entries (with drum/bass params for jambot) and profile tier entries (prose-only, no params yet).
+- **After shipping a new musical approach:** add a `tier: "profile"` entry to `library.json` capturing the genre/aesthetic. Format matches existing profile entries: `name`, `bpm`, `keys`, `swing`, `description` (prose), `production` (prose with detailed techniques), `references` (real tracks with year/label notes), `lineage`, `currentScene`. **Don't add drum/bass params unless they're proven** — that triggers the "Jambot: ONLY proven patch values" rule. Profile-tier prose-only entries are always safe.
+- The library covers genres (classic_house, dub_techno, idm, etc.), production methods (octatrack_glitch, broken_euclidean), and artist-specific entries (jeff_mills, richie_hawtin, etc.). New entries go in the appropriate slot — a genre-spanning method like Octatrack-style glitch sampling lives among the profile-tier genres, not as a hilma-side markdown file.
+- **Do NOT create separate music-recipe markdown files in hilma** (e.g., `src/app/amber/MUSIC.md`). The library is the single source of truth across both repos.
 
 ## Sister repo: docsrepo (`../docsrepo/`)
 

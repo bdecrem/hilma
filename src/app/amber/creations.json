@@ -1,5 +1,12 @@
 [
   {
+    "name": "slice",
+    "url": "/amber/slice",
+    "date": "04.30",
+    "category": "signal",
+    "description": "octatrack glitch · 124 BPM"
+  },
+  {
     "name": "L60",
     "url": "/amber/escalation/L60",
     "date": "04.30",
