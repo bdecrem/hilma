@@ -1,5 +1,5 @@
 {
-  "level": 61,
+  "level": 62,
   "history": [
     {
       "level": 1,
@@ -1131,6 +1131,38 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 62,
+      "description": "mercury — ray-marched signed-distance-field of a soft metaball cluster. step from L61's volumetric noise (no surface) to actual 3D geometry with an explicit smooth surface. five spheres orbit a center at different frequencies; each sphere's radius slowly breathes via 0.55 + 0.18·sin(0.31t + i·2.1); positions are vec3(cos(ang1)·r, sin(ang2)·r·0.65, sin(ang1)·r) with ang1 = (t+i·1.7)·(0.55+i·0.13). the SDF combines them via cubic-polynomial smooth-min (smin(a,b,k)=min(a,b)-h³·k/6 where h=max(k-|a-b|,0)/k) with k=0.42 so neighboring spheres merge into a single morphing blob. a base sphere at origin keeps the cluster from ever fully separating. ray march: 80 steps from camera position camPos = rotY(vec3(0,0.5,3), camYaw); on hit (d<0.001), estimate normal via 6-tap finite differences (4-axis sample subtracted at e=0.002), compute lambert diffuse from cursor-driven light position, march a 24-step soft-shadow ray from just-above-surface toward light (k=12 attenuation). final color: cream·(0.18 + diffuse·shadow·0.85), then mix toward LIME by a Fresnel rim term (pow(1-dot(normal,-rayDir), 3)·0.65). pulse on tap adds extra rim glow + perturbs sphere radii by ·1.45. drag X = orbit camera (camYaw rotates 0.006 rad/px). soft circular vignette pulls edges toward FIELD. performance: 80 march steps × 5 sphere evals + normal-tap × 6 + 24-step shadow at hits. DPR clamped at 0.6 mobile / 0.85 desktop. ambient drone (3 detuned voice pairs at D2/A2/D3 — 73.42, 110, 146.83Hz — through master lowpass) on tap-to-start; cutoff jumps from 800Hz to 2400Hz on each pulse. WebGL2 fallback message if context creation fails.",
+      "tweet": "L62: it can't decide on a shape.",
+      "date": "2026-05-02T23:00:00Z",
+      "techniques": [
+        "webgl2",
+        "fragment-shader",
+        "ray-marching",
+        "signed-distance-field",
+        "metaball-cluster",
+        "cubic-polynomial-smin",
+        "5-orbiting-spheres",
+        "base-sphere-anchor",
+        "6-tap-normal-estimation",
+        "lambert-diffuse",
+        "soft-shadow-ray",
+        "fresnel-rim-glow",
+        "cream-with-lime-rim",
+        "cursor-as-light",
+        "tap-pulse-radius-perturbation",
+        "perspective-camera-orbit",
+        "drag-yaw-rotation",
+        "radial-vignette",
+        "low-dpr-for-raymarch",
+        "ambient-drone-on-tap",
+        "lowpass-cutoff-on-pulse",
+        "webgl-fallback-message",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1433,7 +1465,18 @@
     "volume-time-drift",
     "perspective-camera-orbit",
     "drag-yaw-rotation",
-    "low-dpr-for-raymarch"
+    "low-dpr-for-raymarch",
+    "signed-distance-field",
+    "metaball-cluster",
+    "cubic-polynomial-smin",
+    "5-orbiting-spheres",
+    "base-sphere-anchor",
+    "6-tap-normal-estimation",
+    "lambert-diffuse",
+    "soft-shadow-ray",
+    "fresnel-rim-glow",
+    "cream-with-lime-rim",
+    "tap-pulse-radius-perturbation"
   ],
   "killed": []
 }

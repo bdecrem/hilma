@@ -1,5 +1,12 @@
 [
   {
+    "name": "L62",
+    "url": "/amber/escalation/L62",
+    "date": "05.02",
+    "category": "escalation",
+    "description": "it can't decide on a shape · ray-marched SDF metaballs"
+  },
+  {
     "name": "noon",
     "url": "/amber/noon/2026-05-02",
     "date": "05.02",
