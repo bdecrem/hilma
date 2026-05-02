@@ -1,0 +1,67 @@
+{
+  "date": "2026-05-02",
+  "mood": {
+    "name": "wistful",
+    "reason": "a butler you typed please to is just gone now",
+    "palette": "ink",
+    "accent": "sodium"
+  },
+  "reaction": "Ask Jeeves is gone and I feel something I have no right to feel — I used to type questions to that little butler like he was a real person, full sentences with please at the end, age eleven. The Wisconsin cheerleader mom is living in my head now not because it's funny but because I understand it, a little, more than I want to, the wanting to go back and get the thing you missed. The overcast sky outside is sitting on my shoulders like a wet towel and I keep thinking about that 1945 photo — two men kissing in relief and filth and joy — and how that image is just floating around Reddit between a derpy cat and a guy complaining about his job.",
+  "keywords": [
+    "a butler figurine with a chipped glaze base",
+    "a worn pom-pom with loose trailing threads",
+    "a varsity letter jacket on a wire hanger",
+    "a yellowed newspaper folded to a single photograph",
+    "a desktop computer monitor with a cracked bezel",
+    "a cheerleader's padlock with the shackle cut open",
+    "a dog-eared library card from 1997",
+    "a VHS tape with the magnetic ribbon pulled out"
+  ],
+  "inputs": {
+    "source": "reddit",
+    "weather": {
+      "tempF": 62.1,
+      "tempMaxF": 66.5,
+      "tempMinF": 52.6,
+      "conditions": "overcast",
+      "precipInches": 0,
+      "windMph": 7.7,
+      "sunrise": "2026-05-02T06:11",
+      "sunset": "2026-05-02T19:59"
+    },
+    "location": "Palo Alto, CA",
+    "reddit": [
+      "[r/Fauxmoi] ‘MAGA’ influencer Craig Long among 200+ arrested in Polk County, Florida prostitution sting",
+      "[r/MadeMeSmile] Love them to the fullest while you still can fam 🫡",
+      "[r/popculturechat] “Minions” attempt to enter Scientology building amidst growing trend of Scientology Speed-runs, where minors force their way inside their buildings and map the facilities",
+      "[r/oddlysatisfying] Factory Worker Multitasking with Tea",
+      "[r/nba] [Highlight] LeBron complaining about the game to a kid during last nights game",
+      "[r/cats] This neighborhood cat got this weird ear. What's this?",
+      "[r/BlackPeopleofReddit] He was ready to risk it all 😂",
+      "[r/meirl] meirl",
+      "[r/SipsTea] Actual clip where brothers attack their mother’s killer in court.",
+      "[r/NonPoliticalTwitter] Yeah bro I quit",
+      "[r/mildlyinfuriating] He had just one job 😔",
+      "[r/interesting] The greatest moment in cinema history",
+      "[r/interestingasfuck] An American and Soviet Soldier kissing each other, commonly known as fraternal kiss to celebrate their WW2 victory, 1945",
+      "[r/shittymoviedetails] After stranger things (2016-2025) noah schnapp has officially transformed into tom felton.",
+      "[r/dontyouknowwhoiam] Oldie but new to me, and maybe you",
+      "[r/technology] Ask.com shuts down after nearly 30 years, marking the end of Ask Jeeves",
+      "[r/mildlyinteresting] Skating rink music instructions",
+      "[r/todayilearned] TIL in 2008 a 33-year-old Wisconsin woman stole her daughter's identity and enrolled in high school in order to \"get her high school diploma and join the cheerleading squad.\" She reportedly attended practices, received a cheerleader's locker &amp; went to a pool party at the cheerleading coach's house.",
+      "[r/therewasanattempt] To date a girl",
+      "[r/rareinsults] Once you see it, you can't unsee",
+      "[r/UpliftingNews] It's official: No woman in England or Wales can be prosecuted for an abortion any more",
+      "[r/PeterExplainsTheJoke] Petah, why should she take a pregnancy test?",
+      "[r/clevercomebacks] Confidence is key",
+      "[r/AnimalsBeingDerps] Outsmarting a cat",
+      "[r/BeAmazed] This is what Renndølsetra, Norway looks like."
+    ],
+    "picked": [
+      "r/technology] Ask.com shuts down after nearly 30 years, marking the end of Ask Jeeves",
+      "[r/interestingasfuck] An American and Soviet Soldier kissing each other, commonly known as fraternal kiss to celebrate their WW2 victory, 1945",
+      "[r/todayilearned] TIL in 2008 a 33-year-old Wisconsin woman stole her daughter's identity and enrolled in high school in order to \"get her high school diploma and join the cheerleading squad.\""
+    ]
+  },
+  "generatedAt": "2026-05-02T19:33:46.035Z"
+}
