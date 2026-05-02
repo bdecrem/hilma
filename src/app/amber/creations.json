@@ -1,5 +1,12 @@
 [
   {
+    "name": "cradle",
+    "url": "/amber/cradle",
+    "date": "05.01",
+    "category": "signal",
+    "description": "newton's cradle · knock the first one"
+  },
+  {
     "name": "L61",
     "url": "/amber/escalation/L61",
     "date": "05.01",
