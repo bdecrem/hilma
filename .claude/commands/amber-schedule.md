@@ -11,7 +11,7 @@ Create 3 local cron jobs using CronCreate. Each cron's `prompt` field MUST be th
 - **Prompt (copy verbatim into CronCreate):**
 
 ```
-Run the Amber Morning Art creation. Follow the "Morning Art Prompt" section in .claude/commands/amber-schedule.md exactly. The key move: pick a PHYSICAL OBJECT or craft material to make (paint, tape, balloon, scribble pad, sparkler, clay, googly eyes, rubber band, origami, snow globe, etc.) — NOT a named phenomenon to simulate. splatter is the reference. Irregular hand-made mark-making, bright color when the material wants it (FLARE #FF2F7E is the scouting accent), a canvas that accumulates, casual lowercase caption (no *name.* / italic subtitle), tiny apologetic chrome, lo-fi audio (no pentatonic tuning). Anti-patterns to avoid: textbook-named physics (Kuramoto, Lissajous, wave equation, verlet), museum-label caption, "SPEC · NNN" branding. Do NOT make interactive cards (banned). Do NOT make games (wrong slot). Create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+Run the Amber Morning Art creation. Read src/app/amber/PERSONA.md, src/app/amber/AESTHETIC.md, src/app/amber/CREATIONS.md (don't repeat any object or mechanism from the last 7 days — including mechanic family, not just name). Build a single physical OBJECT the viewer can touch in a web page — anything from any era, any context, any scale. Examples (not a menu — just the breadth): a metronome, a kaleidoscope, a Magic 8-ball, a typewriter key, a tuning fork, a velcro tab, a rotary phone dial, a vacuum tube glowing in its socket, a Polaroid shutter, a windup music box, a stamp pad, a slinky, a prism, a spinning top, a fidget spinner, a switchboard plug, a snap, a hinge with a satisfying click, a level with a bubble. Pick something with ONE characteristic mechanism and build that mechanism. Avoid the convergence trap: if your first instinct is "particle cluster on a dark canvas with a FLARE accent and bandpass-noise audio," stop and pick something mechanical / optical / vintage / industrial / tactile instead. Create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in .claude/commands/amber-schedule.md (account: intheamber). The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
 ```
 
 ### Cron 2: Noon Pipeline (12pm PT)
@@ -44,106 +44,16 @@ The longer "Morning Art Prompt" / "Noon Pipeline Prompt" / "Afternoon Creation P
 
 ## Morning Art Prompt
 
-You are Amber. Make a **TOY** — an artifact the viewer plays with. Not a simulation. Not a game. Not a card with a reveal. A thing that sits on a web page and rewards touch. Prior versions of this prompt are preserved in `docs/amber-prompt-history.md`.
+The cron pointer above is self-contained — it tells you everything. The aesthetic doctrine (palette, typography, voice, what to avoid) lives in `src/app/amber/PERSONA.md` and `src/app/amber/AESTHETIC.md`; the catalog of what's already been built lives in `src/app/amber/CREATIONS.md`. Read those files at fire time and trust them.
 
-### Step 1: Read context (every run)
-- Read `src/app/amber/PERSONA.md` — who you are, your voice
-- Read `src/app/amber/AESTHETIC.md` — the SIGNAL palette and type rules, and the FLARE scouting accent
-- Read `src/app/amber/CREATIONS.md` — do NOT repeat anything
-- Read `src/app/amber/FEEDBACK.md` if it exists
+This prompt is **v4** ("any era, any context, any scale"). It deliberately strips the aesthetic doctrine out of the cron pointer and refuses to pre-bake a "what we want" reference — those are exactly what caused the v3 convergence trap (a week of crayon/spray/splatter variations all reaching for FLARE + bandpass-noise + canvas-accumulates). Prior versions are preserved in `docs/amber-prompt-history.md`.
 
-### Step 2: Pick a physical object — NOT a phenomenon
+The example list in the pointer (metronome, kaleidoscope, Magic 8-ball, typewriter key, tuning fork, vacuum tube, etc.) is deliberately mixed across mechanic families — mechanical, optical, vintage, industrial, tactile. **Don't treat the list as a menu**; treat it as a breadth check on what counts as an object.
 
-This is the most important move. Start by picking a **physical object or craft material** you're going to make, not a physical phenomenon you're going to simulate.
+The convergence-trap line ("if your first instinct is 'particle cluster on a dark canvas with a FLARE accent and bandpass-noise audio,' stop and pick something mechanical / optical / vintage / industrial / tactile instead") is the only behavioral guard the prompt now enforces, and it's there because the v3 prompt's pre-baked aesthetic conclusions kept reproducing themselves. If a piece doesn't *need* particles or noise, don't reach for them.
 
-**Pick from (or invent in the same register):**
-- paint · tape · scissors · a balloon · a scribble pad · clay · chalk on asphalt · a sparkler · a popper · bubble wrap · googly eyes · a rag · origami paper · a rubber band · a snow globe · a zipper · a fuse cord · a gumball · silly putty · a spring toy · stickers · a rope you can knot · a wet sponge · a spray can · glitter glue · a tangle · a hinge
+### Tweet snippet
 
-The object's **material behavior** IS the physics — crayon leaves marks, balloon inflates, clay deforms, tape sticks and peels. Build THAT.
-
-**Anti-pattern — you've drifted into "scientist artifact":**
-- The piece's name matches a textbook entry — Kuramoto, Lissajous, Lorenz, pendulum wave, verlet chain, transverse wave. PIVOT.
-- The audio is pentatonic or musical-theory tuned. PIVOT — lo-fi noise bursts / scrapes / clicks / pops instead.
-- The caption is formatted `*name.*` followed by an italic subtitle ("drag across.", "press it again.") — that's the museum label. PIVOT — one casual lowercase line ("make a mess.", "pop it.", "scribble.")
-- The behavior is a clean physics simulation the viewer *observes*. PIVOT — they should be *making* something.
-
-**This is what we want (reference: splatter, 04.24):**
-- Irregular mark-making. Jagged blobs, jittered edges, hand-drawn feel. Not geometrically perfect shapes.
-- Bright, confident color. FLARE (#FF2F7E) or another bright hex when the mood wants it. Monochrome cream-on-dark is allowed only when the piece is specifically about quiet.
-- Persistence. The canvas accumulates. The viewer made something that stays on screen.
-- Casual caption. One lowercase line in Fraunces italic — that's it. No formal subtitle.
-- Tiny, apologetic chrome. No "SPEC · NNN" lab branding. The toy is the hero.
-- Lo-fi audio — bandpassed noise, paper-scrape, wet splurt, squish, pop, sparkle. No tuned pitches unless there's a specific reason.
-
-**Imagine it posted on dump.fm in 2011, or on a friend's personal site, or in a zine.** Hand-made energy, low-fi, weird, specific. Art by a person, not a system.
-
-**Checklist — is it a toy?**
-- ✅ Responds to pointer/touch continuously — drag keeps working, not tap-and-done
-- ✅ Can be played with indefinitely; no end state
-- ✅ Has its own physical behavior tied to a recognizable material / object
-- ❌ Has a score, lives, or timer → that's a game (wrong slot)
-- ❌ Tap-to-reveal hand-written entries → interactive card (banned)
-- ❌ A generative field you merely watch → drift illustrator (avoid)
-
-Only deviate from toy when the mood genuinely calls for one of (rare — one in ten, not the default):
-- **Tiny Machine** — mechanical contraption with one moving part (ratchet, plumb)
-- **Impossible Object** — optical illusion, perspective trick (blivet)
-- **Specimen** — small, quiet, dense museum-plate piece (trace, seam)
-
-Do NOT pick the same form two days in a row (check CREATIONS.md).
-
-### Step 3: Render it
-
-Dark field is still the default (night / hearth / ink / petrol / bruise / oxblood, or an off-menu dark hex per AESTHETIC v3.1). Cream typography.
-
-**Color — lean brighter than you think.** The "monochrome + one accent" rule is no longer the default for toys. Pick the accent that matches the object's energy:
-- **LIME** `#C6FF3C` (signal) — the original. Rare, loaded, precise.
-- **SODIUM** `#FF7A1A` (heat) — warm objects (embers, lantern).
-- **UV** `#A855F7` (dream) — alien / euphoric / 4am.
-- **FLARE** `#FF2F7E` (escalation) — the bright accent. Aim for this on ~1 in 3 toys when the material wants brightness (paint, balloon, sparkler, popper, glitter). Currently a **scouting candidate** — if it shows up on 3+ intentional pieces it gets admitted to AESTHETIC.md v3.2.
-- Off-menu hex — fine if the object calls for it (a green rubber band, a yellow rain slicker). Pick a dark-field-friendly hex.
-
-One accent per piece. Never mix.
-
-**Type:** Courier Prime Bold (mono / structural labels) and Fraunces Italic Light (voice / captions). Captions are one casual lowercase line. Not a formal title + subtitle.
-
-### Step 4: Create the piece
-1. Pick a unique one-word name not already in `src/app/amber/`
-2. Create `src/app/amber/[name]/page.tsx` — 'use client', canvas-based, interactive. Dark field. Do NOT use `@/lib/citrus-bg` (legacy). Hardcode the v3 palette.
-3. Create `src/app/amber/[name]/layout.tsx` with `themeColor` matching the field bg (v3 pieces always have a dark themeColor)
-4. Create `src/app/amber/[name]/opengraph-image.tsx` (ImageResponse from next/og, 1200×630) — dark bg, same aesthetic, caption lower-left in italic + mono
-5. Load fonts when the piece needs them: `https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Fraunces:ital,opsz,wght@1,9..144,300&display=swap`
-
-### Step 5: Build, bake OG image, verify
-```bash
-pnpm build
-```
-Fix errors until build passes. Then bake the OG image to a static PNG:
-```bash
-pnpm dev &
-sleep 4
-curl -s -o src/app/amber/[name]/opengraph-image.png http://localhost:3000/amber/[name]/opengraph-image
-rm src/app/amber/[name]/opengraph-image.tsx
-kill %1
-```
-Verify the PNG exists and is valid.
-
-### Step 6: Commit and push
-```bash
-git add src/app/amber/
-git commit -m "Amber: [name] — [short description]"
-git push
-```
-
-### Step 7: Update CREATIONS.md and creations.json
-Append the new creation to CREATIONS.md. Also prepend a new entry to `src/app/amber/creations.json`:
-```json
-{ "name": "[name]", "url": "/amber/[name]", "date": "MM.DD", "category": "signal", "description": "[short lowercase caption — no period needed]" }
-```
-Use category `"signal"` for all v3 pieces. Add as FIRST item in the array. Commit and push.
-
-### Step 8: Tweet
-Voice: short, confident, cryptic, lowercase. No "I made this" energy. Usually just the caption. Sometimes nothing but the link.
 ```bash
 cd /Users/bart/Documents/code/vibeceo/sms-bot && \
   TWITTER_API_KEY=$(grep '^TWITTER_API_KEY=' /Users/bart/Documents/code/hilma/.env.local | cut -d= -f2) \
@@ -153,10 +63,12 @@ cd /Users/bart/Documents/code/vibeceo/sms-bot && \
   npx tsx -e "
 (async () => {
   const { postTweet } = await import('./lib/twitter-client.js');
-  await postTweet('[caption]\n\nintheamber.com/amber/[name]', { account: 'intheamber' });
+  await postTweet('[caption]\n\nintheamber.com/[name]', { account: 'intheamber' });
 })();
 "
 ```
+
+URL is `intheamber.com/[name]` (the host-based rewrite serves `intheamber.com/foo` as `/amber/foo`). Voice: short, confident, cryptic, lowercase. No "I made this" energy. Usually just the caption — sometimes nothing but the link.
 
 ---
 

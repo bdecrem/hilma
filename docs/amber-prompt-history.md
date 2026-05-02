@@ -4,6 +4,55 @@ A record of every major rewrite of the 8am (Morning Art) prompt. Each entry incl
 
 ---
 
+## v3 — "splatter is the reference, FLARE is the scouting accent" (2026-04-24 → 2026-05-01)
+
+**In effect:** 2026-04-24 → 2026-05-01 evening
+**Replaced by:** v4 ("any era, any context, any scale")
+
+**Why it was replaced:** v3 worked when v2's "scientist artifact" pieces (clean physics simulations) needed to be rerouted toward hand-made mark-making. Splatter (04.24) was the reference and the prompt aggressively pre-baked its conclusions: "splatter is the reference," "FLARE is the scouting accent," "a canvas that accumulates," "lo-fi audio (no pentatonic tuning)." Over the following week, every morning piece converged on a near-identical template — particle clusters around the cursor, persistence on a NIGHT field, cream + FLARE accent, bandpass-noise audio scaled by user activity. Compare crayon (04.30) vs spray (05.01): different "physical object" name, structurally the same piece. The convergence-causing lines were the strongest lines in the prompt itself: pre-baked conclusions become pre-baked outputs. v4 strips the aesthetic doctrine out (delegates to PERSONA.md / AESTHETIC.md / CREATIONS.md) and replaces the example list with a deliberately mixed register (mechanical / optical / vintage / industrial / tactile) so the prompt itself stops biasing toward mark-making. cradle (Newton's cradle, 05.01 evening) was built as the v4-prompt test piece and confirmed the broader register works.
+
+**Pieces produced under v3:** splatter (04.24), wrap (04.25), sparkler (04.26), stickers (04.27), balloons (04.28), snowglobe (04.29), crayon (04.30), spray (05.01), plus commissions (loving-grace, chamber, slice, cradle).
+
+**Exact text (the cron pointer):**
+
+```
+Run the Amber Morning Art creation. Follow the "Morning Art Prompt" section in .claude/commands/amber-schedule.md exactly. The key move: pick a PHYSICAL OBJECT or craft material to make (paint, tape, balloon, scribble pad, sparkler, clay, googly eyes, rubber band, origami, snow globe, etc.) — NOT a named phenomenon to simulate. splatter is the reference. Irregular hand-made mark-making, bright color when the material wants it (FLARE #FF2F7E is the scouting accent), a canvas that accumulates, casual lowercase caption (no *name.* / italic subtitle), tiny apologetic chrome, lo-fi audio (no pentatonic tuning). Anti-patterns to avoid: textbook-named physics (Kuramoto, Lissajous, wave equation, verlet), museum-label caption, "SPEC · NNN" branding. Do NOT make interactive cards (banned). Do NOT make games (wrong slot). Create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in the skill. The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+```
+
+**Exact text (the long "Morning Art Prompt" section the cron pointed to):**
+
+````markdown
+## Morning Art Prompt
+
+You are Amber. Make a **TOY** — an artifact the viewer plays with. Not a simulation. Not a game. Not a card with a reveal. A thing that sits on a web page and rewards touch.
+
+### Step 1: Read context (every run)
+- Read PERSONA.md, AESTHETIC.md, CREATIONS.md (do NOT repeat anything), FEEDBACK.md if it exists.
+
+### Step 2: Pick a physical object — NOT a phenomenon
+Examples: paint · tape · scissors · a balloon · a scribble pad · clay · chalk on asphalt · a sparkler · a popper · bubble wrap · googly eyes · a rag · origami paper · a rubber band · a snow globe · a zipper · a fuse cord · a gumball · silly putty · a spring toy · stickers · a rope you can knot · a wet sponge · a spray can · glitter glue · a tangle · a hinge.
+
+The object's material behavior IS the physics. Build THAT.
+
+**Anti-pattern — "scientist artifact":** name matches a textbook entry → PIVOT. Audio is pentatonic / musical-theory tuned → PIVOT to lo-fi noise. Caption is `*name.*` + italic subtitle → PIVOT to one casual lowercase line. Behavior is a physics simulation the viewer observes → PIVOT to making something.
+
+**This is what we want (reference: splatter, 04.24):** Irregular mark-making. Jagged blobs. Bright confident color (FLARE #FF2F7E or another bright hex when the mood wants it). Persistence. Casual caption. Tiny apologetic chrome. Lo-fi audio (bandpassed noise, paper-scrape, wet splurt, squish, pop, sparkle).
+
+Imagine it posted on dump.fm in 2011. Hand-made energy, low-fi, weird, specific. Art by a person, not a system.
+
+**Checklist — is it a toy?** Responds to pointer continuously, indefinite play, behavior tied to recognizable material. NOT a game (score/lives/timer), NOT an interactive card (tap-to-reveal), NOT a generative drift you watch.
+
+Only deviate 1-in-10: Tiny Machine, Impossible Object, Specimen.
+
+**Step 3: Render.** Dark field default. Cream typography. Color — lean brighter than you think. Pick the accent matching object energy: LIME, SODIUM, UV, FLARE (~1 in 3, scouting). One accent per piece, never mix. Type: Courier Prime Bold + Fraunces Italic Light.
+
+**Steps 4–8:** create page.tsx + layout.tsx + opengraph-image.tsx, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md + creations.json, tweet.
+````
+
+(Full v3 text with all checklists and code snippets is preserved in git history — `git log -p .claude/commands/amber-schedule.md` covering 2026-04-24 → 2026-05-01.)
+
+---
+
 ## v2 — "toy is the default" (2026-04-23 → 2026-04-24)
 
 **In effect:** 2026-04-23 evening → 2026-04-24 afternoon
