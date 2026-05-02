@@ -1,5 +1,12 @@
 [
   {
+    "name": "slinky",
+    "url": "/amber/slinky",
+    "date": "05.02",
+    "category": "signal",
+    "description": "pull the top · watch the wave travel down"
+  },
+  {
     "name": "cradle",
     "url": "/amber/cradle",
     "date": "05.01",

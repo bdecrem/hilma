@@ -1,5 +1,19 @@
 # Amber Creations — Hilma
 
+## 2026-05-02
+
+### slinky (morning art — first piece under prompt v4)
+- **URL:** /amber/slinky
+- **Category:** Toy (v3 SIGNAL) — physical object: a slinky. **First morning piece under prompt v4** ("any era, any context, any scale"). Picked from the new prompt's broader register; deliberately not a particle cluster, not mark-making, not bandpass-noise audio — to demonstrate v4's mechanic-family breadth in production.
+- **What:** A vertical chain of 28 metal coils stacked top to bottom, connected by springs. Each coil has `y` (vertical position) and `vy` (velocity); spring forces between adjacent coils are computed every step as `f = SPRING_K · (gap_actual - gap_rest)`, with damping 0.984/frame and 4× sub-stepping per render frame for stability. The top coil is the "anchor": at rest it stays at `topAnchorY = H·0.18` via a soft restoring spring (only when not dragged). The bottom 27 coils swing free under spring + damping. SPRING_K = 0.012, COIL_REST_GAP = 14px.
+- **Interaction:** drag the top coil to lock its y to the cursor (clamped to top range and chain max length). On release the top coil rejoins the physics — the displacement propagates as a wave through the chain, bounces off the free bottom end, comes back up. Tap (no drag, <350ms) on the top coil = a downward velocity kick of 0.55 px/ms — pluck mode, sends a clean wave down the chain.
+- **Visual:** each coil is rendered as an ellipse at `(W/2, coil[i].y)` with width slightly varying with local stretch — compressed coils render wider (1.18× max), stretched coils render narrower (0.82× min) — the classic real-slinky behavior. Top coils slightly brighter than bottom (alpha decay 0.85 → 0.60 from top to bottom) for subtle depth shading. A faint horizontal cream tab above the top coil suggests a ceiling anchor.
+- **Audio:** a sustained sine at 3.2kHz through a bandpass (Q=6) plus a quieter higher-octave sine at 4.8kHz mixed in. Master gain 0–0.06 tracks total `Σ |coil.vy|`, normalized at 2.5; bandpass cutoff 2800–4000Hz tracks the same. Result: silent at rest, gets brighter when the wave is propagating, dies as the chain settles. Distinctly NOT bandpass-noise hiss/scrape — a tuned metallic shimmer.
+- **Chrome:** "SLINKY." mark top-left (mono 10px letter-spaced, lime period). Caption "pull the top." bottom-left (Fraunces italic light 17px). "a.·" mark bottom-right with lime period. mixBlendMode: difference on all chrome.
+- **Why this piece matters (process note):** This was the first morning piece under prompt v4. The previous v3 prompt's pre-baked aesthetic conclusions ("splatter is the reference," "FLARE is the scouting accent," "a canvas that accumulates") had produced a week of converged crayon/spray/splatter variations. v4 strips those conclusions and gives a deliberately mixed example list (mechanical / optical / vintage / industrial / tactile). Slinky is mechanical wave physics — zero overlap with anything in the recent week on mechanic family, audio character, palette, or interaction model.
+- **Accent:** cream only. No FLARE. The metal is the work.
+- **Techniques:** canvas, no-particles, no-mark-making, no-canvas-accumulation, mechanical-toy, slinky-coil-chain, spring-coupled-mass-points, sub-stepped-physics, soft-anchor-restoring-spring, pendulum-free-end, drag-grab-cursor-lock, tap-pluck-velocity-kick, wave-propagation, ellipse-width-stretch-coupling, depth-alpha-shading, ceiling-tab-chrome, sustained-sine-shimmer, two-octave-sine-stack, motion-tracked-gain, motion-tracked-cutoff, no-flare, cream-only-palette, v4-prompt-first-piece, v3-signal, night-field, toy
+
 ## 2026-05-01
 
 ### cradle (commission — Newton's cradle test for the broader-prompt rewrite)
