@@ -1,5 +1,5 @@
 {
-  "level": 62,
+  "level": 63,
   "history": [
     {
       "level": 1,
@@ -1163,6 +1163,33 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 63,
+      "description": "marble — ray-marched glass sphere refracting a domain-warped FBM cloud field behind it. step in the rendering arc: L60 = 2D shader (no surface), L61 = 3D volumetric (no surface), L62 = 3D opaque surface, L63 = 3D refractive surface (light bends through). per pixel: (1) sample the bg cloud field via 4-octave 2D fbm with IQ-style two-step domain warp; (2) ray-test against a sphere centered at the cursor (radius 0.7); (3) on hit, estimate normal, refract entry direction with refract(rd, n, 1/1.45) (air→glass IOR), compute exit point and exit normal, refract again with refract(refractedIn, exitN, 1.45) (glass→air); (4) sample the bg field at exitP.xy + refractedOut.xy·0.4 — this is the 'looking through glass' lens warp; (5) Fresnel mix between the refracted view and surrounding bg via pow(1-|dot(rd,n)|, 3); (6) inside swirl: sample 3D fbm at entryP·1.6 + (0,0,t·0.07), smoothstep(0.55, 0.75) for a faint cream ribbon; (7) lime rim edge glow at grazing angles via mix(col, lime, fresnel·0.55). drag = move the cursor (and the marble) across the field. tap = nudge: u_pulse surges to 1, decays via (1-age/1.2)·exp(-age·0.6) over 1.2s; pulse adds a slight radial breathing on the sphere radius (·1.07) and a brightness lift. soft circular vignette pulls edges back toward FIELD. audio: a single 880Hz sine through master gain (0.04 baseline) with a 0.18Hz tremolo LFO on its sub-gain (depth 0.35) — quiet glass ringing. plus a 1760Hz ping channel that surges on each pulse (gain → pulse·0.18). ambient + percussive. WebGL2 fallback message if context creation fails. DPR clamped at 0.85 mobile / 1.2 desktop (refraction shader is lighter than L62's full ray-march so DPR can be higher).",
+      "tweet": "L63: look through it.",
+      "date": "2026-05-03T23:00:00Z",
+      "techniques": [
+        "webgl2",
+        "fragment-shader",
+        "ray-sphere-intersection",
+        "refraction",
+        "snells-law-approximation",
+        "iq-two-step-warp-fbm",
+        "double-refract-entry-and-exit",
+        "fresnel-glass-edge",
+        "lime-rim-on-grazing",
+        "internal-3d-fbm-swirl",
+        "cursor-as-sphere-center",
+        "tap-pulse-radial-breathing",
+        "radial-vignette",
+        "single-sine-glass-tone",
+        "tremolo-lfo-amplitude",
+        "ping-channel-on-pulse",
+        "webgl-fallback-message",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1476,7 +1503,18 @@
     "soft-shadow-ray",
     "fresnel-rim-glow",
     "cream-with-lime-rim",
-    "tap-pulse-radius-perturbation"
+    "tap-pulse-radius-perturbation",
+    "ray-sphere-intersection",
+    "refraction",
+    "snells-law-approximation",
+    "double-refract-entry-and-exit",
+    "fresnel-glass-edge",
+    "lime-rim-on-grazing",
+    "internal-3d-fbm-swirl",
+    "tap-pulse-radial-breathing",
+    "single-sine-glass-tone",
+    "tremolo-lfo-amplitude",
+    "ping-channel-on-pulse"
   ],
   "killed": []
 }

@@ -2,6 +2,17 @@
 
 ## 2026-05-03
 
+### L63 — look through it (escalation, Environment tier — fourth WebGL piece, first refractive surface)
+- **URL:** /amber/escalation/L63
+- **Category:** Escalation (v3 SIGNAL) — thirteenth piece of the Environment tier; fourth WebGL piece; **first refractive surface.** The rendering arc: L60 = 2D shader (no surface), L61 = 3D volumetric (no surface), L62 = 3D opaque surface, L63 = 3D refractive surface (light bends through).
+- **What:** A WebGL2 fragment shader. Each pixel: (1) sample a domain-warped FBM cloud field — the same "weather" pattern from L60 — for the bg; (2) ray-test against a glass sphere centered at the cursor (radius 0.7); (3) on hit, refract the entry direction with `refract(rd, n, 1/1.45)` (air→glass IOR), compute exit point + exit normal, refract again with `refract(refractedIn, exitN, 1.45)` (glass→air); (4) sample the bg at `exitP.xy + refractedOut.xy·0.4` — the "looking through glass" lens warp; (5) Fresnel mix `pow(1-|dot(rd,n)|, 3)` blends the refracted view with the surrounding bg (more bg-mix at grazing); (6) inside swirl: sample 3D fbm at `entryP·1.6 + (0,0,t·0.07)`, smoothstep(0.55, 0.75) for a faint cream "ribbon" — the colored swirl a real marble has; (7) lime rim glow at grazing via `mix(col, lime, fresnel·0.55)`.
+- **Interaction:** drag = move the cursor (and the marble) across the field. Tap = nudge: `u_pulse` surges to 1, decays via `(1 - age/1.2)·exp(-age·0.6)` over 1.2s. Pulse adds a slight radial breathing on the sphere (`radius·1.07`) and a brightness lift, and triggers a 1760Hz audio ping.
+- **Audio:** continuous quiet glass tone — single 880Hz sine, master gain ramps to 0.04 over 4s on first tap. A 0.18Hz tremolo LFO (depth 0.35) on the sub-gain gives it a slow "ringing" character. Plus a separate 1760Hz ping channel that surges on each pulse (gain → `pulse·0.18`) — the soft "tink" when you nudge the marble.
+- **Vignette:** soft circular falloff (smoothstep 1.55 → 0.6) blends edges back toward FIELD.
+- **Performance:** refraction shader is lighter than L62's full ray-march (no normal estimation, no soft-shadow ray, no SDF iteration) — just one ray-sphere intersection + two refract() calls + a few fbm samples. DPR clamped at 0.85 mobile / 1.2 desktop (HIGHER than L62's 0.6/0.85 — taking advantage of the lighter shader).
+- **Accent:** cream + LIME. Same canon as L60–L62. Lime appears at the marble's rim via Fresnel.
+- **Techniques:** webgl2, fragment-shader, ray-sphere-intersection, refraction, snells-law-approximation, double-refract-entry-and-exit, iq-two-step-warp-fbm, fresnel-glass-edge, lime-rim-on-grazing, internal-3d-fbm-swirl, cursor-as-sphere-center, tap-pulse-radial-breathing, radial-vignette, single-sine-glass-tone, tremolo-lfo-amplitude, ping-channel-on-pulse, webgl-fallback-message, v3-signal, environment-tier
+
 ### tube (morning art — vintage industrial)
 - **URL:** /amber/tube
 - **Category:** Toy (v3 SIGNAL) — physical object: a vacuum tube. Second morning piece under prompt v4. Picked from v4's vintage/industrial register; deliberately NOT mark-making, NOT particle clusters, NOT bandpass-noise audio. SODIUM accent (warm orange #FF7A1A) — the heat color. Different from yesterday's slinky (mechanical wave) on every axis: no springs, no impact, no clicks — visual glow + tuned hum response to a single hold-to-power input.
