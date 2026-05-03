@@ -1,5 +1,12 @@
 [
   {
+    "name": "tube",
+    "url": "/amber/tube",
+    "date": "05.03",
+    "category": "signal",
+    "description": "vacuum tube · hold to apply current"
+  },
+  {
     "name": "L62",
     "url": "/amber/escalation/L62",
     "date": "05.02",
