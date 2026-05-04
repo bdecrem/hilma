@@ -1,5 +1,19 @@
 # Amber Creations — Hilma
 
+## 2026-05-04
+
+### dial (morning art — vintage mechanical)
+- **URL:** /amber/dial
+- **Category:** Toy (v3 SIGNAL) — physical object: a rotary phone dial. Third morning piece under prompt v4. Vintage mechanical with spring-return rotation + per-detent clicks.
+- **What:** A classic black bakelite dial face on a NIGHT field. 10 cream-rimmed finger holes around the perimeter (digits 1-2-3-…-9-0 going clockwise from upper-left). A finger stop on the lower-right (cream pin + arm) prevents over-rotation past digit 0. Drag any finger hole clockwise around the dial — only CW motion contributes; CCW drag is ignored, exactly as a real dial. Maximum rotation is `9.4 × HOLE_ANGULAR_SPAN` (one detent past digit 0). On release, the wheel spring-returns counter-clockwise via first-order spring physics: angular acceleration `= -SPRING_K · rotation` with `SPRING_K = 0.018 / ms²`, damping `0.985 / frame`. The dial settles back to rest position over ~1.5–2.5 seconds depending on how far it was wound.
+- **Detent clicks:** every animation frame, compare `floor(rotation / SPAN)` to the previous frame's value. When it changes (the wheel just crossed a detent boundary), trigger a click — but only if `|rotVel| > 0.0001` rad/ms (so we don't get micro-clicks at settle). Click intensity scales with `|rotVel|·80` capped at 1.0. The dragged hole shows brighter cream rim (alpha 0.85 vs 0.55) and thicker stroke (2px vs 1px) so you can see what you're holding.
+- **Audio:** mechanical detent click. Per click: a 25ms white-noise burst through HP@1500Hz + LP@5000Hz (plastic-y mid-band), envelope: instant attack to peak (0.18 + intensity·0.45), 25ms exponential decay. Plastic, not metallic — distinct from cradle's metal-on-metal ping (HP@1800 + 2.8kHz sine ping) and slinky's sustained shimmer (sine drone). The sound of a Western Electric 500 dial returning home.
+- **Visual:** dial face = #1a1a1a circle with cream outline (the bakelite). 10 finger holes punched as FIELD-colored circles with cream rims. Number labels (1-9, 0) printed at REST position around the outer ring (don't rotate with the wheel — labels stay put, holes spin). Inner cream-rimmed central plate (#262626). Finger stop: small cream pin at 30° below horizontal-right with a short arm to the dial perimeter.
+- **Chrome:** "DIAL." mark top-left (mono 10px letter-spaced, lime period). Caption "spin a number." bottom-left (Fraunces italic light 17px). "a.·" mark bottom-right with lime period. mixBlendMode: difference.
+- **Why this piece matters:** Third v4 morning. Yesterday tube (electrical glow + 80Hz hum, sodium); day before slinky (mechanical wave, cream); today dial (spring-return rotation + plastic clicks, cream + lime accent dots). Three consecutive mornings, three completely different mechanic families and audio characters. v4 working — no convergence on FLARE/particles/canvas-accumulates.
+- **Accent:** cream only (with the canonical lime period in chrome). The bakelite is the work.
+- **Techniques:** canvas, no-particles, no-mark-making, no-canvas-accumulation, vintage-mechanical-toy, rotary-phone-dial, spring-return-rotation, first-order-angular-spring, angular-velocity-damping, max-rotation-clamp, cw-only-drag, finger-hole-grab, cursor-angle-tracking, atan2-wraparound-handling, detent-tick-detection, intensity-from-velocity, plastic-detent-click-synth, hp-noise-bandpass, dragged-hole-highlight, fixed-labels-rotating-holes, finger-stop-render, no-flare, cream-only-palette, v4-prompt-third-piece, v3-signal, night-field, toy
+
 ## 2026-05-03
 
 ### L63 — look through it (escalation, Environment tier — fourth WebGL piece, first refractive surface)
