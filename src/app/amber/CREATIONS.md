@@ -2,6 +2,21 @@
 
 ## 2026-05-04
 
+### L64 — follow the current (escalation, Environment tier — fifth WebGL piece, first per-pixel flow visualization)
+- **URL:** /amber/escalation/L64
+- **Category:** Escalation (v3 SIGNAL) — fourteenth piece of the Environment tier; fifth WebGL piece. **First per-pixel flow visualization** — no surface, no volume, no geometry. The whole screen IS the visualization.
+- **Rendering arc:** L60 = 2D fragment shader (no surface), L61 = 3D volumetric (no surface), L62 = 3D opaque surface, L63 = 3D refractive surface, L64 = WHOLE-SCREEN flow viz (every pixel computes its own backward streamline through a vector field).
+- **What:** WebGL2 fragment shader. Per pixel: take the cursor's aspect-corrected position p, integrate BACKWARD through a 2D curl-noise field for 24 RK1 steps (h = 0.02). At each step accumulate brightness from a SECOND fbm sampled at trail·2.5 + offset, smoothstep(0.55, 0.85), weighted by (1 - i/24) so older positions contribute less. Final color = mix(FIELD, CREAM, brightness/weightSum). Result: flowing fabric-like cream patterns where bright streaks trace where the field has been carrying particles.
+- **The vector field:** curl of a 4-octave fbm scalar field. In 2D, curl(n) = (-∂n/∂y, ∂n/∂x) — gives a divergence-free (incompressible) field, which is why the result reads as flowing currents that swirl but never bunch up or vanish into sinks. Gradient computed via finite differences at h = 0.01. The field drifts in time at vec2(t·0.04, t·0.03).
+- **Cursor as vortex source:** at every integration step, add a perpendicular vortex centered at cursorP — `vortex = vec2(-d.y, d.x) · exp(-d²·2) · 0.6`. Drag introduces a swirl that warps the streamlines locally (the field bends around the cursor).
+- **Tap = pulse glow:** `u_pulse` decays via (1 - age/1.4)·exp(-age·0.7) over 1.4s. Adds a tight cream→lime glow at the cursor (`exp(-d²·4) · 0.7`).
+- **Audio:** 3 detuned voice pairs at C2/G2/C3 (65.41 / 98.0 / 130.81 Hz) — pitched LOWER than tube/L62 to feel like a deep current rather than a shimmer. Each voice = 2 oscillators, one at f, one at f·1.005 for slow beating. Through master lowpass that opens 900Hz → 2300Hz on each pulse (setTargetAtTime with 0.06s time constant), then closes back down (1.2s constant). On first tap the master gain ramps to 0.07 over 4s.
+- **Mobile:** DPR clamped at 0.7 (vs 1.0 desktop) — the per-pixel 24-step integration is expensive, lower DPR keeps it fluid. Native touch event handlers (touchstart/move/end with preventDefault) added in addition to pointer events as iOS Safari fallback (lessons from dial).
+- **Vignette:** soft radial falloff smoothstep(1.45 → 0.65).
+- **Chrome:** "ENVIRONMENT · L64 · STREAMLINES" top-right (mono 10px letter-spaced 4). "L64." top-left (mono Bold 14px). Caption "follow the current." bottom-left (Fraunces italic light 17px). "a.·" bottom-right with LIME period.
+- **Accent:** cream + LIME. Same canon as L60–L63. Lime appears in the cursor pulse glow.
+- **Techniques:** webgl2, fragment-shader, per-pixel-streamline-integration, rk1-backward-trace, 2d-curl-noise, divergence-free-flow, finite-difference-gradient, drifting-noise-time, cursor-vortex-source, perpendicular-vortex-falloff, weighted-trail-brightness-accumulation, second-fbm-for-brightness, smoothstep-contrast, tap-pulse-cream-to-lime, radial-vignette, low-dpr-for-flow, touch-event-fallback, ambient-drone-on-tap, lowpass-cutoff-on-pulse, v3-signal, environment-tier
+
 ### dial (UNSHIPPED — withdrawn)
 - **Status:** built 2026-05-04 as the v4 morning piece (rotary phone dial, vintage mechanical). The interaction never worked reliably on iOS Safari — multiple attempted fixes (bigger dial, forgiving drag region, slower spring, native touch event handlers in addition to pointer events) all failed to make the spin-and-spring-return mechanic feel right on a real iPhone. Withdrawn at Bart's request 2026-05-04 evening: page directory + creations.json entry deleted; the morning tweet went out before withdrawal so the link in that tweet now 404s. Lesson logged: spinning-rotation gestures on small touchscreens are harder than they look, especially when the gesture must arc CW around a center and the visual feedback depends on a fast spring; future picks should prefer simpler tap/drag mechanics for mobile-first pieces.
 

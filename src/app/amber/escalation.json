@@ -1,5 +1,5 @@
 {
-  "level": 63,
+  "level": 64,
   "history": [
     {
       "level": 1,
@@ -1190,6 +1190,35 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 64,
+      "description": "current — per-pixel streamline integration through a 2D curl-noise vector field. step in the rendering arc: L60 = 2D shader, L61 = 3D volumetric, L62 = 3D opaque surface, L63 = 3D refractive surface, L64 = WHOLE SCREEN as flow visualization (no surface, no volume — every pixel computes its own backward streamline). per pixel: take the cursor's aspect-corrected position, integrate BACKWARD through the field for 24 RK1 steps with step size 0.02. the field is curl noise: take the 2D gradient of a 4-octave fbm scalar field at p (sampled at h=0.01 finite differences) and rotate it 90° (curl in 2D = (-∂n/∂y, ∂n/∂x)) so the result is incompressible (divergence-free) — gives the characteristic swirling flow look. fbm sampling drifts with time at vec2(t·0.04, t·0.03). cursor influence: at every step, add a perpendicular vortex centered at cursorP with strength exp(-d²·2)·0.6 — drag introduces a swirl that warps the streamlines locally. brightness accumulation: at each step along the trail, sample a SECOND fbm at trail·2.5 + (7.7, 3.1), smoothstep(0.55, 0.85), weight by (1 - i/24) so older positions contribute less. final brightness = sum / weightSum. tap = pulse: u_pulse decays via (1-age/1.4)·exp(-age·0.7), produces a tight cream→lime glow at the cursor (exp(-d²·4)·0.7). ambient drone: 3 detuned voice pairs at C2/G2/C3 (65.41/98/130.81 Hz — pitched lower than tube/L62 to feel like deep current), through master lowpass that opens 900Hz→2300Hz on each pulse. soft circular vignette. DPR clamped at 0.7 mobile / 1.0 desktop. native touch event handlers as iOS Safari fallback.",
+      "tweet": "L64: follow the current.",
+      "date": "2026-05-04T23:00:00Z",
+      "techniques": [
+        "webgl2",
+        "fragment-shader",
+        "per-pixel-streamline-integration",
+        "rk1-backward-trace",
+        "2d-curl-noise",
+        "divergence-free-flow",
+        "finite-difference-gradient",
+        "drifting-noise-time",
+        "cursor-vortex-source",
+        "perpendicular-vortex-falloff",
+        "weighted-trail-brightness-accumulation",
+        "second-fbm-for-brightness",
+        "smoothstep-contrast",
+        "tap-pulse-cream-to-lime",
+        "radial-vignette",
+        "low-dpr-for-flow",
+        "touch-event-fallback",
+        "ambient-drone-on-tap",
+        "lowpass-cutoff-on-pulse",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1514,7 +1543,20 @@
     "tap-pulse-radial-breathing",
     "single-sine-glass-tone",
     "tremolo-lfo-amplitude",
-    "ping-channel-on-pulse"
+    "ping-channel-on-pulse",
+    "per-pixel-streamline-integration",
+    "rk1-backward-trace",
+    "2d-curl-noise",
+    "divergence-free-flow",
+    "finite-difference-gradient",
+    "drifting-noise-time",
+    "cursor-vortex-source",
+    "perpendicular-vortex-falloff",
+    "weighted-trail-brightness-accumulation",
+    "second-fbm-for-brightness",
+    "tap-pulse-cream-to-lime",
+    "low-dpr-for-flow",
+    "touch-event-fallback"
   ],
   "killed": []
 }
