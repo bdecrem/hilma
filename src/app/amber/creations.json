@@ -1,12 +1,5 @@
 [
   {
-    "name": "dial",
-    "url": "/amber/dial",
-    "date": "05.04",
-    "category": "signal",
-    "description": "rotary phone dial · spin a number"
-  },
-  {
     "name": "L63",
     "url": "/amber/escalation/L63",
     "date": "05.03",
