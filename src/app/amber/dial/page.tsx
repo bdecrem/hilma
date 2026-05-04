@@ -30,8 +30,11 @@ const FIRST_HOLE_ANGLE_REST = -Math.PI / 2 + HOLE_ANGULAR_SPAN * 0.5 // first ho
 // physics: rotation = how far CW the user has spun the dial from rest, in radians.
 // rotation 0 = rest (hole "1" at its rest position).
 // rotation > 0 = wound CW.
-const SPRING_K = 0.018 // angular spring constant (per ms²) — return-to-zero force per radian
-const DAMPING = 0.985 // velocity damping per frame
+// Slow spring + heavy damping — a real rotary dial takes ~1 second per digit
+// to return. T = 2π/√k; with k = 0.0001 / ms² that's a ~630ms natural period,
+// damping critically pulls it back to the click-by-click cadence we want.
+const SPRING_K = 0.0001
+const DAMPING = 0.997
 const MAX_ROTATION = HOLE_ANGULAR_SPAN * (N_HOLES - 1) + HOLE_ANGULAR_SPAN * 0.4 // can't spin past digit 0
 
 export default function DialPage() {
@@ -109,15 +112,20 @@ export default function DialPage() {
       noise.stop(now + 0.03)
     }
 
-    // dial geometry helpers
+    // dial geometry helpers — bigger on narrow viewports so finger drag is easy
     const dialCenter = () => ({
       x: W / 2,
       y: H * 0.5,
     })
-    const dialOuterR = () => Math.min(W, H) * 0.32
-    const dialInnerR = () => dialOuterR() * 0.55 // inner cream area where labels sit
+    const dialOuterR = () => {
+      const narrow = Math.min(W, H)
+      // on phones, cap at 0.42 of the narrow side; on desktop stay smaller for breathing room
+      const factor = W < 600 ? 0.42 : 0.32
+      return narrow * factor
+    }
+    const dialInnerR = () => dialOuterR() * 0.55
     const holeR = () => dialOuterR() * 0.10
-    const holeOrbitR = () => dialOuterR() * 0.78 // distance from center to hole center
+    const holeOrbitR = () => dialOuterR() * 0.78
 
     // hole position given dial rotation
     // hole angles increase CW from FIRST_HOLE_ANGLE_REST (which is in screen coords)
@@ -148,20 +156,26 @@ export default function DialPage() {
 
     const onDown = (e: PointerEvent) => {
       const p = pos(e)
-      // find which hole was grabbed (closest hole within hit radius)
+      const c = dialCenter()
+      const distFromCenter = Math.hypot(p.x - c.x, p.y - c.y)
+      // accept any touch on the dial — outer ring + a small grace zone
+      // (don't accept touches inside the central plate or far outside the dial)
+      const innerHit = dialInnerR() * 0.85 // give the central plate some hit room
+      const outerHit = dialOuterR() + 16
+      if (distFromCenter < innerHit || distFromCenter > outerHit) return
+      // find the closest hole for highlight purposes (visual only — drag works regardless)
       let bestIdx = -1
       let bestDist = Infinity
       for (let i = 0; i < N_HOLES; i++) {
         const hc = holeCenter(i)
         const d = Math.hypot(p.x - hc.x, p.y - hc.y)
-        if (d < holeR() + 12 && d < bestDist) {
+        if (d < bestDist) {
           bestDist = d
           bestIdx = i
         }
       }
-      if (bestIdx < 0) return
       dragging = true
-      dragHoleIdx = bestIdx
+      dragHoleIdx = bestDist < holeR() + 18 ? bestIdx : -1 // highlight only if near a hole
       moved = false
       downX = p.x
       downY = p.y
