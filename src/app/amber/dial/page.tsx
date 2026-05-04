@@ -144,26 +144,23 @@ export default function DialPage() {
       }
     }
 
-    // pointer helpers
-    const pos = (e: PointerEvent) => {
+    // pointer helpers — use raw clientX/Y so it works for both PointerEvent and Touch
+    const posFromXY = (clientX: number, clientY: number) => {
       const r = canvas.getBoundingClientRect()
-      return { x: e.clientX - r.left, y: e.clientY - r.top }
+      return { x: clientX - r.left, y: clientY - r.top }
     }
     const cursorAngleFromCenter = (x: number, y: number) => {
       const c = dialCenter()
       return Math.atan2(y - c.y, x - c.x)
     }
 
-    const onDown = (e: PointerEvent) => {
-      const p = pos(e)
+    const handleDown = (clientX: number, clientY: number) => {
+      const p = posFromXY(clientX, clientY)
       const c = dialCenter()
       const distFromCenter = Math.hypot(p.x - c.x, p.y - c.y)
-      // accept any touch on the dial — outer ring + a small grace zone
-      // (don't accept touches inside the central plate or far outside the dial)
-      const innerHit = dialInnerR() * 0.85 // give the central plate some hit room
-      const outerHit = dialOuterR() + 16
+      const innerHit = dialInnerR() * 0.85
+      const outerHit = dialOuterR() + 24
       if (distFromCenter < innerHit || distFromCenter > outerHit) return
-      // find the closest hole for highlight purposes (visual only — drag works regardless)
       let bestIdx = -1
       let bestDist = Infinity
       for (let i = 0; i < N_HOLES; i++) {
@@ -175,53 +172,79 @@ export default function DialPage() {
         }
       }
       dragging = true
-      dragHoleIdx = bestDist < holeR() + 18 ? bestIdx : -1 // highlight only if near a hole
+      dragHoleIdx = bestDist < holeR() + 18 ? bestIdx : -1
       moved = false
       downX = p.x
       downY = p.y
       downT = performance.now()
       lastDragAngle = cursorAngleFromCenter(p.x, p.y)
       rotVel = 0
-      try {
-        canvas.setPointerCapture(e.pointerId)
-      } catch {}
       ensureAudio()
     }
 
-    const onMove = (e: PointerEvent) => {
+    const handleMove = (clientX: number, clientY: number) => {
       if (!dragging) return
-      const p = pos(e)
+      const p = posFromXY(clientX, clientY)
       const angleNow = cursorAngleFromCenter(p.x, p.y)
       let delta = angleNow - lastDragAngle
-      // handle wraparound (atan2 jumps from π to -π or vice versa)
+      // handle atan2 wraparound between π and -π
       if (delta > Math.PI) delta -= Math.PI * 2
       if (delta < -Math.PI) delta += Math.PI * 2
-      // only allow CW spin (positive delta in screen coords); CCW drag does nothing
-      if (delta > 0) {
-        const newRot = Math.min(MAX_ROTATION, rotation + delta)
-        rotation = newRot
-      }
+      // accept BOTH directions but only CW (positive) increases rotation; CCW is allowed
+      // to relax (so accidental CCW jitter while making a roughly-CW gesture doesn't get stuck).
+      // BUT clamp at 0 so the dial can never wind backwards past rest.
+      const newRot = Math.max(0, Math.min(MAX_ROTATION, rotation + delta))
+      rotation = newRot
       lastDragAngle = angleNow
       if (Math.abs(p.x - downX) > 4 || Math.abs(p.y - downY) > 4) moved = true
     }
 
-    const onUp = (e: PointerEvent) => {
+    const handleUp = () => {
       if (dragging) {
-        try {
-          canvas.releasePointerCapture(e.pointerId)
-        } catch {}
         dragging = false
         dragHoleIdx = -1
-        // give a small CCW velocity to start the spring-return
-        // (the spring will do the rest, but a kick feels more mechanical)
-        rotVel = -0.0008 * Math.sqrt(rotation) // bigger initial velocity if dial was wound farther
+        rotVel = -0.0008 * Math.sqrt(rotation)
       }
     }
 
-    canvas.addEventListener('pointerdown', onDown)
-    canvas.addEventListener('pointermove', onMove)
-    canvas.addEventListener('pointerup', onUp)
-    canvas.addEventListener('pointercancel', onUp)
+    // POINTER events (desktop, modern mobile browsers)
+    const onPointerDown = (e: PointerEvent) => {
+      handleDown(e.clientX, e.clientY)
+      try {
+        canvas.setPointerCapture(e.pointerId)
+      } catch {}
+    }
+    const onPointerMove = (e: PointerEvent) => handleMove(e.clientX, e.clientY)
+    const onPointerUp = (e: PointerEvent) => {
+      try {
+        canvas.releasePointerCapture(e.pointerId)
+      } catch {}
+      handleUp()
+    }
+    canvas.addEventListener('pointerdown', onPointerDown)
+    canvas.addEventListener('pointermove', onPointerMove)
+    canvas.addEventListener('pointerup', onPointerUp)
+    canvas.addEventListener('pointercancel', onPointerUp)
+
+    // TOUCH events — fallback for iOS Safari quirks where pointer events sometimes
+    // don't deliver consistently inside a fixed-position canvas. preventDefault on
+    // touchmove blocks Safari's overscroll/pull-to-refresh from stealing the gesture.
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 0) return
+      const t = e.touches[0]
+      handleDown(t.clientX, t.clientY)
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return
+      e.preventDefault()
+      const t = e.touches[0]
+      handleMove(t.clientX, t.clientY)
+    }
+    const onTouchEnd = () => handleUp()
+    canvas.addEventListener('touchstart', onTouchStart, { passive: true })
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false })
+    canvas.addEventListener('touchend', onTouchEnd)
+    canvas.addEventListener('touchcancel', onTouchEnd)
 
     // physics + render loop
     let lastT = performance.now()
@@ -338,10 +361,14 @@ export default function DialPage() {
     return () => {
       cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
-      canvas.removeEventListener('pointerdown', onDown)
-      canvas.removeEventListener('pointermove', onMove)
-      canvas.removeEventListener('pointerup', onUp)
-      canvas.removeEventListener('pointercancel', onUp)
+      canvas.removeEventListener('pointerdown', onPointerDown)
+      canvas.removeEventListener('pointermove', onPointerMove)
+      canvas.removeEventListener('pointerup', onPointerUp)
+      canvas.removeEventListener('pointercancel', onPointerUp)
+      canvas.removeEventListener('touchstart', onTouchStart)
+      canvas.removeEventListener('touchmove', onTouchMove)
+      canvas.removeEventListener('touchend', onTouchEnd)
+      canvas.removeEventListener('touchcancel', onTouchEnd)
       if (audioCtx) {
         try {
           audioCtx.close()
@@ -364,9 +391,10 @@ export default function DialPage() {
           overflow: 'hidden',
           height: '100dvh',
           width: '100vw',
+          touchAction: 'none',
         }}
       >
-        <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: 'grab' }} />
+        <canvas ref={canvasRef} style={{ display: 'block', touchAction: 'none', cursor: 'grab', userSelect: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }} />
 
         <div
           style={{
