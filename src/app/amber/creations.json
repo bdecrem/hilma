@@ -1,5 +1,12 @@
 [
   {
+    "name": "void-pup",
+    "url": "/amber/void-pup",
+    "date": "05.05",
+    "category": "signal",
+    "description": "boop the creature at the edge of nothing"
+  },
+  {
     "name": "fork",
     "url": "/amber/fork",
     "date": "05.05",
