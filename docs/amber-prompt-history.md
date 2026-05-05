@@ -4,6 +4,38 @@ A record of every major rewrite of the 8am (Morning Art) prompt. Each entry incl
 
 ---
 
+## v4 morning + noon RETIRED (2026-05-05) — solo afternoon escalation
+
+**In effect:** 2026-05-01 → 2026-05-05 (morning v4); noon pipeline ran since launch
+**Replaced by:** nothing — Bart cut Amber's daily output from 3 pieces/day to 1 piece/day (afternoon escalation only).
+
+**Why it was retired:** Bart wanted to consolidate Amber's daily cadence. The morning art prompt (v4) was working — three pieces under it (slinky 05.02, tube 05.03, fork 05.05) each landed a different mechanic family with no convergence trap. The noon pipeline was also working (npx tsx scripts/noon.ts produces a daily mood-driven artifact). But three crons firing in the same REPL session became fragile — if Claude was mid-task at fire time, jobs queued and the day's output landed in clumps; the volume of commits + tweets per day was higher than Bart wanted; and the escalation engine (the long-running L1→L100 arc) is the highest-value of the three. Cutting morning + noon makes room for that to be the centerpiece. Both prompts are preserved here in case Bart wants to revive either.
+
+**Pieces produced under v4 morning:** cradle (05.01 commission, the v4-prompt test piece), slinky (05.02), tube (05.03), dial (05.04, withdrawn — mobile spinning failed), fork (05.05).
+**Noon pipeline output:** continues to live at `public/amber-noon/<date>.json` and `intheamber.com/noon/<date>` — the one-off noon files for past days are not removed.
+
+**Exact text — v4 morning cron pointer (the text that was in `4b4f30ed`):**
+
+```
+Run the Amber Morning Art creation. Read src/app/amber/PERSONA.md, src/app/amber/AESTHETIC.md, src/app/amber/CREATIONS.md (don't repeat any object or mechanism from the last 7 days — including mechanic family, not just name). Build a single physical OBJECT the viewer can touch in a web page — anything from any era, any context, any scale. Examples (not a menu — just the breadth): a metronome, a kaleidoscope, a Magic 8-ball, a typewriter key, a tuning fork, a velcro tab, a rotary phone dial, a vacuum tube glowing in its socket, a Polaroid shutter, a windup music box, a stamp pad, a slinky, a prism, a spinning top, a fidget spinner, a switchboard plug, a snap, a hinge with a satisfying click, a level with a bubble. Pick something with ONE characteristic mechanism and build that mechanism. Avoid the convergence trap: if your first instinct is "particle cluster on a dark canvas with a FLARE accent and bandpass-noise audio," stop and pick something mechanical / optical / vintage / industrial / tactile instead. Create page.tsx + layout.tsx + opengraph-image.tsx in src/app/amber/[name]/, pnpm build, bake OG to PNG, commit + push, update CREATIONS.md and prepend to creations.json, then tweet via the postTweet snippet in .claude/commands/amber-schedule.md (account: intheamber). The tweet step is mandatory — if it fails, debug and retry until the tweet posts.
+```
+
+**Exact text — noon pipeline cron pointer (the text that was in `3d15e34a`):**
+
+```
+Run the Amber Noon pipeline (fully automated). Do exactly this:
+
+1. Run the one-command pipeline: `npx tsx scripts/noon.ts` — this chains set-mood → sketch-concepts → bake-noon-bio. It writes today's artifact to public/amber-noon/<date>.json, drops 3 tweet drafts into public/amber-noon/tweets-<date>.md, auto-prepends an entry to src/app/amber/creations.json, and Claude-authors the closing statement + prose explanation + bgColor/tileColor palette.
+
+2. Commit and push. Stage public/amber-noon/<date>.json, mood-<date>.json, concepts-<date>.json, tweets-<date>.md, and src/app/amber/creations.json. Commit message: `Amber: Noon MM.DD (<mood> · <winner>)`. Run `git pull --rebase origin main && git push` to handle any intervening commits.
+
+3. Post tweet draft #1 from public/amber-noon/tweets-<date>.md via the postTweet snippet in .claude/commands/amber-schedule.md (account: intheamber). URL is intheamber.com/noon/<date>. The tweet step is MANDATORY — if it fails, debug and retry until it posts. After success, make a follow-up empty commit logging the tweet ID and push it: `git commit --allow-empty -m "Amber: Noon MM.DD — tweet posted (<id>)" && git push`.
+```
+
+**To revive either:** copy the pointer text above into a new `CronCreate` (schedule `3 8 * * *` for morning, `3 12 * * *` for noon), and add the corresponding section back into `.claude/commands/amber-schedule.md` (the long "Morning Art Prompt" / "Noon Pipeline Prompt" sections were also removed in this commit — find them in the git history if needed).
+
+---
+
 ## v3 — "splatter is the reference, FLARE is the scouting accent" (2026-04-24 → 2026-05-01)
 
 **In effect:** 2026-04-24 → 2026-05-01 evening
