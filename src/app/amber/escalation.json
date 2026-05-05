@@ -1,5 +1,5 @@
 {
-  "level": 64,
+  "level": 65,
   "history": [
     {
       "level": 1,
@@ -1219,6 +1219,42 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 65,
+      "description": "let it grow — Gray-Scott reaction-diffusion via FBO ping-pong. step in the rendering arc: L60-L64 were all per-pixel-per-frame fragment shaders (deterministic functions of x,y,t). L65 introduces actual STATE: each pixel's value depends on its previous value and its 8-neighbor average, updated by writing to one framebuffer while reading from another, then swapping (ping-pong). chemistry: two reagents U and V diffuse at different rates (dU=0.16, dV=0.08) and react via U + 2V → 3V. feed (f=0.0367) and kill (k=0.0649) coefficients chosen for 'mitosis' morphology — circular spots that form, grow, divide into two, drift apart, repeat. simulation runs at 220×N or 360×N (mobile/desktop) on RGBA16F textures via EXT_color_buffer_float; 6 update steps per display frame for stability. 9-point Laplacian stencil (4 cardinal neighbors at weight 0.2 + 4 diagonals at weight 0.05) for smoother diffusion. cursor injection: drag adds V (the activator) inside a 0.025-radius disc — drawing seeds new growth wherever the cursor goes. tap perturbs k by -0.0035 briefly (relaxes back via *0.95 each frame) — pattern morphology shifts (spots → maze-like → back). display shader samples V, smoothstep(0.10, 0.45) for contrast, mixes cream brightness + lime cursor pulse glow. ambient drone in A minor: 4 voices at A1/E2/A2/E3 (55/82.41/110/164.81 Hz), 2 detuned sines per voice (det ±9, ±7), warmer than L64's C-current. each voice has its own slow LFO (0.05-0.11 Hz) on amplitude. master lowpass 800Hz opens to 2300Hz on tap pulse via setTargetAtTime. DPR 1.0 mobile / 1.4 desktop.",
+      "tweet": "L65: let it grow.",
+      "date": "2026-05-05T23:00:00Z",
+      "techniques": [
+        "webgl2",
+        "fbo-ping-pong",
+        "stateful-simulation",
+        "gray-scott-reaction-diffusion",
+        "rgba16f-half-float-textures",
+        "ext-color-buffer-float",
+        "9-point-laplacian-stencil",
+        "two-reagent-chemistry",
+        "u-2v-to-3v-reaction",
+        "differential-diffusion-rates",
+        "feed-kill-coefficients",
+        "mitosis-morphology",
+        "f-0367-k-0649",
+        "multi-step-per-frame-stability",
+        "cursor-injects-activator-v",
+        "drag-to-seed-growth",
+        "tap-perturbs-kill-coefficient",
+        "smoothstep-contrast-display",
+        "low-sim-resolution-vs-display",
+        "warm-a-minor-ambient-drone",
+        "55-82-110-165-hz-voices",
+        "detuned-sine-pairs-per-voice",
+        "per-voice-slow-lfo-amplitude",
+        "master-lowpass-opens-on-pulse",
+        "rendering-arc-step",
+        "first-stateful-piece",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1556,7 +1592,25 @@
     "second-fbm-for-brightness",
     "tap-pulse-cream-to-lime",
     "low-dpr-for-flow",
-    "touch-event-fallback"
+    "touch-event-fallback",
+    "fbo-ping-pong",
+    "stateful-simulation",
+    "gray-scott-reaction-diffusion",
+    "rgba16f-half-float-textures",
+    "ext-color-buffer-float",
+    "9-point-laplacian-stencil",
+    "two-reagent-chemistry",
+    "u-2v-to-3v-reaction",
+    "differential-diffusion-rates",
+    "feed-kill-coefficients",
+    "mitosis-morphology",
+    "multi-step-per-frame-stability",
+    "cursor-injects-activator-v",
+    "drag-to-seed-growth",
+    "tap-perturbs-kill-coefficient",
+    "low-sim-resolution-vs-display",
+    "warm-a-minor-ambient-drone",
+    "first-stateful-piece"
   ],
   "killed": []
 }

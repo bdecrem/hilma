@@ -1,5 +1,12 @@
 [
   {
+    "name": "L65",
+    "url": "/amber/escalation/L65",
+    "date": "05.05",
+    "category": "escalation",
+    "description": "let it grow · Gray-Scott reaction-diffusion (FBO ping-pong)"
+  },
+  {
     "name": "sock-cat",
     "url": "/amber/sock-cat",
     "date": "05.05",
