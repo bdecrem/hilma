@@ -1,5 +1,12 @@
 [
   {
+    "name": "fork",
+    "url": "/amber/fork",
+    "date": "05.05",
+    "category": "signal",
+    "description": "a tuning fork · strike it, hear A=440Hz ring out and decay"
+  },
+  {
     "name": "current",
     "url": "/amber/current",
     "date": "05.04",
