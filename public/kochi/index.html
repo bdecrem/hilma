@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kochi — Concept viewer</title>
+<meta name="description" content="Four design directions for Kochi, a proactive agent for iPhone." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bone:      #EFE7D6;
+  --ink:       #1A1814;
+  --ink-soft:  #3A332A;
+  --mute:      #897F6E;
+  --rule:      #C7BCA1;
+  --persimmon: #C9421E;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: var(--bone);
+  color: var(--ink);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bar {
+  position: sticky;
+  top: 0;
+  background: var(--bone);
+  border-bottom: 1px solid var(--ink);
+  padding: 0.7rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+}
+
+.brand-mark {
+  width: 1.5rem; height: 1.5rem;
+  background-image: url('kochi.png');
+  background-size: 250% auto;
+  background-position: center 65%;
+  background-repeat: no-repeat;
+  mix-blend-mode: multiply;
+}
+
+.label {
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mute);
+  border-left: 1px solid var(--rule);
+  padding-left: 1rem;
+}
+
+.toggles {
+  display: flex;
+  gap: 0.4rem;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--rule);
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 180ms, color 180ms, background 180ms;
+}
+
+.toggle .num {
+  font-family: "Fraunces", serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--persimmon);
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1;
+}
+
+.toggle:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.toggle.active {
+  background: var(--ink);
+  color: var(--bone);
+  border-color: var(--ink);
+}
+
+.toggle.active .num {
+  color: var(--persimmon);
+}
+
+.frame-wrap {
+  height: calc(100vh - 3.5rem);
+  height: calc(100dvh - 3.5rem);
+}
+
+iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--bone);
+}
+
+@media (max-width: 700px) {
+  .label { display: none; }
+  .toggles { width: 100%; justify-content: flex-start; margin-left: 0; }
+  .toggle { padding: 0.35rem 0.6rem; font-size: 0.68rem; gap: 0.35rem; }
+  .toggle .num { font-size: 0.9rem; }
+  .frame-wrap { height: calc(100vh - 6.4rem); height: calc(100dvh - 6.4rem); }
+}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span>Kochi</span>
+  </div>
+  <span class="label">Concept viewer</span>
+  <nav class="toggles">
+    <a class="toggle" href="#dispatch" data-concept="dispatch"><span class="num">i.</span> Dispatch</a>
+    <a class="toggle" href="#readme"   data-concept="readme"><span class="num">ii.</span> README</a>
+    <a class="toggle" href="#field"    data-concept="field"><span class="num">iii.</span> Field&nbsp;note</a>
+    <a class="toggle" href="#acid"     data-concept="acid"><span class="num">iv.</span> Acid</a>
+  </nav>
+</header>
+
+<div class="frame-wrap">
+  <iframe id="frame" title="Kochi concept"></iframe>
+</div>
+
+<script>
+const map = {
+  dispatch: 'dispatch.html',
+  readme:   'readme.html',
+  field:    'field-note.html',
+  acid:     'acid.html',
+};
+
+const titles = {
+  dispatch: 'Dispatch',
+  readme:   'README',
+  field:    'Field note',
+  acid:     'Acid',
+};
+
+const frame = document.getElementById('frame');
+const toggles = document.querySelectorAll('.toggle');
+
+function go(name) {
+  if (!map[name]) name = 'dispatch';
+  frame.src = map[name];
+  toggles.forEach(t => t.classList.toggle('active', t.dataset.concept === name));
+  if (location.hash !== '#' + name) {
+    history.replaceState(null, '', '#' + name);
+  }
+  document.title = 'Kochi — ' + titles[name];
+}
+
+go((location.hash || '#dispatch').slice(1));
+
+window.addEventListener('hashchange', () => {
+  go((location.hash || '#dispatch').slice(1));
+});
+
+toggles.forEach(t => {
+  t.addEventListener('click', e => {
+    e.preventDefault();
+    go(t.dataset.concept);
+  });
+});
+</script>
+
+</body>
+</html>

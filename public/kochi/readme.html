@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>kochi // README</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #0F0A06;
+  --bg-soft:      #1A130C;
+  --amber:        #E5A845;
+  --amber-bright: #F5D78A;
+  --amber-dim:    #8C6730;
+  --red:          #E54A2B;
+  --green:        #82B85B;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--bg);
+  color: var(--amber);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 4rem 2rem;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* CRT scanlines, very subtle */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(0,0,0,0.18) 2px,
+    rgba(0,0,0,0.18) 3px
+  );
+  z-index: 100;
+  mix-blend-mode: multiply;
+}
+
+/* CRT vignette */
+body::after {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(15,10,6,0.55) 100%);
+  z-index: 101;
+}
+
+::selection { background: var(--amber-bright); color: var(--bg); }
+
+.terminal {
+  max-width: 76ch;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.prompt-line {
+  color: var(--amber-dim);
+  margin-bottom: 1.6rem;
+  font-size: 0.85rem;
+}
+.prompt-line .user  { color: var(--green); }
+.prompt-line .path  { color: var(--amber); }
+.prompt-line .cmd   { color: var(--amber-bright); }
+
+.ascii {
+  color: var(--amber-bright);
+  white-space: pre;
+  font-size: 0.85rem;
+  line-height: 1.05;
+  margin: 0.5rem 0 2rem;
+  text-shadow: 0 0 6px rgba(229, 168, 69, 0.18);
+}
+
+h1 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: var(--amber-bright);
+  text-shadow: 0 0 5px rgba(245, 215, 138, 0.15);
+}
+h1::before { content: "# "; color: var(--amber-dim); }
+
+.tagline {
+  color: var(--amber-dim);
+  margin-bottom: 2.2rem;
+  padding-left: 2rem;
+}
+
+h2 {
+  font-size: 0.98rem;
+  font-weight: 700;
+  margin: 2.5rem 0 0.6rem;
+  color: var(--amber-bright);
+  letter-spacing: 0.01em;
+}
+h2::before { content: "## "; color: var(--amber-dim); }
+
+p, ul, ol, .cmd-block, .quote, .callout {
+  padding-left: 2rem;
+  margin-bottom: 0.8rem;
+}
+
+ul { list-style: none; padding-left: 2rem; }
+li {
+  padding-left: 1.6rem;
+  position: relative;
+  margin-bottom: 0.5rem;
+  color: var(--amber);
+}
+li::before {
+  content: "─";
+  position: absolute;
+  left: 0;
+  color: var(--amber-dim);
+}
+li.hush { color: var(--amber-dim); font-style: italic; }
+li.hush::before { color: var(--red); content: "·"; }
+
+.quote {
+  border-left: 1px solid var(--amber-dim);
+  padding-left: 1rem;
+  margin-left: 2rem;
+  color: var(--amber-bright);
+  font-style: italic;
+}
+.quote em { color: var(--red); font-style: italic; }
+
+.cmd-block {
+  color: var(--amber-dim);
+}
+.cmd-block .cmd   { color: var(--amber-bright); }
+.cmd-block .arrow { color: var(--red); }
+.cmd-block .comment { color: var(--amber-dim); }
+
+.kbd {
+  display: inline-block;
+  padding: 0.05em 0.4em;
+  border: 1px solid var(--amber-dim);
+  border-radius: 2px;
+  font-size: 0.85em;
+  color: var(--amber);
+  background: rgba(229,168,69,0.05);
+}
+
+.code-inline {
+  color: var(--amber-bright);
+  background: rgba(229,168,69,0.06);
+  padding: 0 0.3em;
+  border: 1px solid rgba(229,168,69,0.18);
+}
+
+.footer-rule {
+  margin: 3rem 0 1.4rem;
+  color: var(--amber-dim);
+  white-space: pre;
+  font-size: 0.85rem;
+}
+
+.footer {
+  color: var(--amber-dim);
+  font-size: 0.82rem;
+  padding-left: 2rem;
+  line-height: 1.7;
+}
+.footer strong { color: var(--amber); font-weight: 500; }
+
+.cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  background: var(--amber-bright);
+  vertical-align: -0.1em;
+  margin-left: 0.2em;
+  animation: blink 1.05s steps(1) infinite;
+  box-shadow: 0 0 8px rgba(245, 215, 138, 0.4);
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+a {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+a:hover { color: var(--amber-bright); }
+
+@media (max-width: 580px) {
+  body { padding: 2rem 1rem; font-size: 14px; }
+  .ascii { font-size: 0.7rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="terminal">
+
+<div class="prompt-line">
+<span class="user">user@local</span>:<span class="path">~/kochi</span>$ <span class="cmd">cat README</span>
+</div>
+
+<pre class="ascii">       ◦       ◦
+       │       │
+       │       │
+   ┌───┴───────┴───┐
+   │               │
+   │   ●       ●   │
+   │               │
+   └─ ─ ─ ─ ─ ─ ─ ─</pre>
+
+<h1>kochi</h1>
+<p class="tagline">a proactive agent for iPhone.<br/>quiet most of the time.</p>
+
+<h2>about</h2>
+<div class="quote">
+this is not a productivity tool.<br/>
+you will not be able to ask it<br/>
+what's on your calendar.
+</div>
+
+<p>kochi runs on iOS 26+ and talks to an OpenClaw agent. you type, it answers, the screen is quiet.</p>
+
+<h2>the signal</h2>
+
+<p>once a day, between <span class="code-inline">09:00</span> and <span class="code-inline">21:00</span> local, a small file is fetched from <span class="code-inline">claudio.la/chaos.json</span>. the file is signed with our private Ed25519 key. your phone holds the public half, pinned at install.</p>
+
+<div class="cmd-block">
+<span class="comment">// we chose the key.</span><br/>
+<span class="comment">// we did not choose the hour.</span>
+</div>
+
+<h2>known anomalies</h2>
+<ul>
+<li>the file is not always fetched at the same hour each day.</li>
+<li>this is the feature.</li>
+<li class="hush">after 23:00, the agent is sometimes less professional. we are aware.</li>
+</ul>
+
+<h2>install</h2>
+<div class="cmd-block">
+$ <span class="cmd">open testflight</span><br/>
+<span class="arrow">→</span> <a href="mailto:hello@kochi.app?subject=kochi%20%E2%80%94%20a%20key%2C%20please">request a key</a>
+</div>
+
+<pre class="footer-rule">────────────────────────────────────────────────────────────</pre>
+
+<div class="footer">
+signed by <strong>9854…414905</strong><br/>
+<strong>com.bartdecrem.crash</strong> · iOS 26.0+<br/>
+MMXXVI<span class="cursor"></span>
+</div>
+
+</div>
+
+</body>
+</html>

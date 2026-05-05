@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KOCHI — Proactive Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --lime:      #D8EB42;
+  --lime-deep: #B4C634;
+  --ink:       #14110C;
+  --ink-soft:  #2F2A1F;
+  --red:       #E53E2A;
+  --paper:     #FAF7E8;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--lime);
+  color: var(--ink);
+  font-family: "Bricolage Grotesque", system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.4;
+  font-feature-settings: "kern", "ss02";
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* paper grain so the lime has texture */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.32;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 0.45 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+::selection { background: var(--ink); color: var(--lime); }
+
+/* MASTHEAD */
+.masthead {
+  border-bottom: 2px solid var(--ink);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.logo {
+  display: flex; align-items: center; gap: 0.7rem;
+  font-size: 1.05rem;
+  letter-spacing: 0;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-variation-settings: "opsz" 36, "wght" 800;
+}
+
+.logo-mark {
+  width: 1.7rem; height: 1.7rem;
+  background-image: url("kochi.png");
+  background-size: 250% auto;
+  background-position: center 65%;
+  background-repeat: no-repeat;
+  mix-blend-mode: multiply;
+}
+
+.masthead a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--ink);
+  padding-bottom: 1px;
+  transition: color 200ms, border-color 200ms;
+}
+.masthead a:hover { color: var(--red); border-color: var(--red); }
+
+/* HERO */
+.hero {
+  padding: 3rem 2rem 4.5rem;
+  border-bottom: 2px solid var(--ink);
+  position: relative;
+}
+
+.hero h1 {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 800;
+  font-size: clamp(4.2rem, 18vw, 16rem);
+  line-height: 0.84;
+  letter-spacing: -0.05em;
+  color: var(--ink);
+  font-variation-settings: "opsz" 96, "wght" 800;
+}
+
+.hero h1 .ag {
+  font-style: italic;
+  font-variation-settings: "opsz" 96, "wght" 700;
+}
+
+.hero h1 .stop { color: var(--red); }
+
+.hero-sub {
+  margin-top: 1.6rem;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* SECTIONS */
+.section {
+  padding: 3.2rem 2rem;
+  border-bottom: 2px solid var(--ink);
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+.section .num {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: clamp(3rem, 10vw, 9rem);
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+  font-variation-settings: "opsz" 96, "wght" 700;
+}
+
+.section .num .label {
+  display: block;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.92rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-top: 0.7rem;
+  font-variation-settings: normal;
+}
+
+.section .body {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 400;
+  font-size: clamp(1.2rem, 1.8vw, 1.7rem);
+  line-height: 1.32;
+  letter-spacing: -0.012em;
+  font-variation-settings: "opsz" 24, "wght" 400;
+  max-width: 36rem;
+}
+
+.section .body p + p,
+.section .body p + .hours,
+.section .body .hours + .hours-foot,
+.section .body p + .hours-foot {
+  margin-top: 1.2rem;
+}
+
+.section em {
+  font-style: italic;
+  color: var(--red);
+  font-variation-settings: "opsz" 24, "wght" 500;
+}
+
+/* HOURS bar — the joke */
+.hours {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  margin-top: 2.2rem !important;
+}
+
+.hours .bar {
+  flex: 1;
+  height: 2px;
+  background: var(--ink);
+  position: relative;
+}
+
+/* a small red tick a bit past 21:00, suggesting the hours aren't really fixed */
+.hours .bar::after {
+  content: "";
+  position: absolute;
+  right: -8px;
+  top: -3px; bottom: -3px;
+  width: 3px;
+  background: var(--red);
+}
+
+.hours .bar::before {
+  content: "";
+  position: absolute;
+  left: 0; top: -3px; bottom: -3px;
+  width: 3px;
+  background: var(--ink);
+}
+
+.hours-foot {
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+  font-variation-settings: "opsz" 18, "wght" 400;
+}
+
+/* CTA SECTION (inverted) */
+.cta-section {
+  background: var(--ink);
+  color: var(--lime);
+  padding: 4rem 2rem;
+  border-bottom: none;
+  display: grid;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+  gap: 3rem;
+  align-items: start;
+}
+
+.cta-section .num   { color: var(--lime); }
+.cta-section .body  { color: var(--lime); }
+.cta-section em     { color: var(--red); }
+
+.cta-link {
+  display: inline-flex; align-items: baseline; gap: 0.5rem;
+  margin-top: 1.6rem;
+  font-family: "Bricolage Grotesque", sans-serif;
+  font-weight: 700;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--lime);
+  text-decoration: none;
+  border-bottom: 3px solid var(--lime);
+  padding-bottom: 0.4rem;
+  font-variation-settings: "opsz" 96, "wght" 700;
+  transition: color 200ms, border-color 200ms, gap 220ms;
+}
+.cta-link:hover {
+  color: var(--red);
+  border-color: var(--red);
+  gap: 1.1rem;
+}
+
+.cta-link .arrow {
+  font-weight: 400;
+  font-style: normal;
+  transform: translateY(-0.05em);
+}
+
+/* FOOTER */
+.footer {
+  background: var(--ink);
+  color: rgba(216, 235, 66, 0.55);
+  padding: 1.4rem 2rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.9rem 2rem;
+  border-top: 2px solid var(--lime);
+}
+.footer strong { color: var(--lime); font-weight: 500; }
+
+@media (max-width: 760px) {
+  .section, .cta-section { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.4rem 1.2rem; }
+  .hero { padding: 2.4rem 1.2rem 3.2rem; }
+  .masthead { padding: 1rem 1.2rem; }
+  .footer { padding: 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="logo">
+    <span class="logo-mark"></span>
+    <span>KOCHI</span>
+  </div>
+  <a href="#cta">Apply ↗</a>
+</header>
+
+<section class="hero">
+  <h1>PROACTIVE<br/><span class="ag">AGENT</span><span class="stop">.</span></h1>
+  <p class="hero-sub">A chat application · iPhone · iOS 26+</p>
+</section>
+
+<section class="section">
+  <div class="num">01<span class="label">What it is</span></div>
+  <div class="body">
+    <p>You type. It answers. Most of the time the screen is quiet.</p>
+    <p>It does not read your calendar. It does not summarise your inbox. <em>It would not want to.</em></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="num">02<span class="label">The signal</span></div>
+  <div class="body">
+    <p>Once a day, at an hour we do not announce, your phone buzzes. The agent has said something. <em>You did not ask for it.</em></p>
+    <div class="hours">
+      <span>09:00</span><span class="bar"></span><span>21:00</span>
+    </div>
+    <p class="hours-foot">Hours nominal.</p>
+  </div>
+</section>
+
+<section class="cta-section" id="cta">
+  <div class="num">03<span class="label">A key</span></div>
+  <div class="body">
+    <p>Currently in TestFlight. Bring your own curiosity.</p>
+    <a class="cta-link" href="mailto:hello@kochi.app?subject=KOCHI%20%E2%80%94%20a%20key%2C%20please">
+      Request <span class="arrow">↗</span>
+    </a>
+  </div>
+</section>
+
+<footer class="footer">
+  <span>SIGNED <strong>9854…414905</strong></span>
+  <span><strong>com.bartdecrem.crash</strong></span>
+  <span>MMXXVI</span>
+</footer>
+
+</body>
+</html>

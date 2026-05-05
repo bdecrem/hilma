@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kochi — A Field Note</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Caveat:wght@400;700&family=Cardo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:       #EDE0C5;
+  --paper-deep:  #E1D2B3;
+  --paper-edge:  #D8C7A4;
+  --ink:         #2E2014;
+  --ink-soft:    #5A4530;
+  --pencil:      #8A7E66;
+  --red-faded:   #9C3326;
+  --rule:        #B7A685;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--paper-edge);
+  color: var(--ink);
+  font-family: "Cardo", "Iowan Old Style", Georgia, serif;
+  font-size: 16.5px;
+  line-height: 1.55;
+  min-height: 100vh;
+  padding: 4rem 1.5rem;
+  position: relative;
+}
+
+/* paper noise */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.18  0 0 0 0 0.13  0 0 0 0 0.08  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  opacity: 0.45;
+  mix-blend-mode: multiply;
+  z-index: 1;
+}
+
+::selection { background: var(--red-faded); color: var(--paper); }
+
+.plate {
+  max-width: 760px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 3.4rem 3.4rem 2.8rem;
+  box-shadow:
+    0 1px 0 rgba(0,0,0,0.05),
+    0 30px 60px -30px rgba(46, 32, 20, 0.25);
+}
+
+/* inner second border, like a museum mat */
+.plate::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid var(--rule);
+  pointer-events: none;
+}
+
+/* a faint corner mark on each corner */
+.plate::after {
+  content: "";
+  position: absolute;
+  top: 18px; left: 18px; right: 18px; bottom: 18px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, var(--pencil) 12px, transparent 12px) top left / 12px 1px no-repeat,
+    linear-gradient(to bottom, var(--pencil) 12px, transparent 12px) top left / 1px 12px no-repeat,
+    linear-gradient(to left, var(--pencil) 12px, transparent 12px) top right / 12px 1px no-repeat,
+    linear-gradient(to bottom, var(--pencil) 12px, transparent 12px) top right / 1px 12px no-repeat,
+    linear-gradient(to right, var(--pencil) 12px, transparent 12px) bottom left / 12px 1px no-repeat,
+    linear-gradient(to top, var(--pencil) 12px, transparent 12px) bottom left / 1px 12px no-repeat,
+    linear-gradient(to left, var(--pencil) 12px, transparent 12px) bottom right / 12px 1px no-repeat,
+    linear-gradient(to top, var(--pencil) 12px, transparent 12px) bottom right / 1px 12px no-repeat;
+}
+
+.plate-head {
+  text-align: center;
+  margin-bottom: 0.4rem;
+}
+
+.plate-number {
+  font-family: "Cardo", serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pencil);
+  margin-bottom: 1.2rem;
+}
+
+.title {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(3.4rem, 9vw, 5.4rem);
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 0.4rem;
+}
+
+.subtitle {
+  font-family: "Caveat", cursive;
+  font-size: 1.5rem;
+  color: var(--red-faded);
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+.specimen-area {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 1.5rem 0 2rem;
+  padding: 1rem 0;
+  min-height: 320px;
+}
+
+.specimen {
+  width: clamp(180px, 40vw, 280px);
+  position: relative;
+  z-index: 2;
+}
+
+.specimen img {
+  display: block;
+  width: 100%;
+  mix-blend-mode: multiply;
+  filter: sepia(0.7) saturate(0.9) brightness(0.55);
+}
+
+/* labels */
+.label {
+  position: absolute;
+  font-family: "Caveat", cursive;
+  font-size: 1.18rem;
+  color: var(--ink-soft);
+  line-height: 1.2;
+  z-index: 3;
+  letter-spacing: 0.01em;
+}
+.label .num {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 1.5rem;
+  color: var(--red-faded);
+  margin-right: 0.4rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.label-1 { top: 6%;  left: 4%;  max-width: 12ch; }
+.label-2 { top: 36%; right: 4%; max-width: 14ch; text-align: right; }
+.label-3 { bottom: 6%; left: 4%; max-width: 14ch; }
+
+/* dashed leader lines pointing toward the specimen */
+.label::after {
+  content: "";
+  position: absolute;
+  border-top: 1px dashed var(--pencil);
+  width: 60px;
+  top: 50%;
+}
+.label-1::after { left: 100%; transform: translateX(8px) rotate(8deg); }
+.label-2::after { right: 100%; transform: translateX(-8px) rotate(-8deg); }
+.label-3::after { left: 100%; transform: translateX(8px) rotate(-8deg); }
+
+/* CLASSIFICATION */
+.classification {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.8rem;
+  margin-top: 1.5rem;
+}
+
+.classification-head {
+  text-align: center;
+  font-family: "Cardo", serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--pencil);
+  margin-bottom: 1.4rem;
+  font-weight: 400;
+}
+
+.classification-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.55rem 2.4rem;
+  font-size: 1.05rem;
+  max-width: 30rem;
+  margin: 0 auto;
+}
+
+.classification-grid dt {
+  font-family: "Cardo", serif;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+.classification-grid dd {
+  font-family: "Cardo", serif;
+  color: var(--ink);
+}
+.classification-grid .asterisk {
+  color: var(--red-faded);
+  font-weight: 700;
+  margin-left: 0.15rem;
+}
+
+/* footnote — the joke */
+.footnote {
+  margin-top: 2.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-family: "Cardo", serif;
+  font-style: italic;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  max-width: 42rem;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+
+.footnote .star {
+  color: var(--red-faded);
+  font-style: normal;
+  font-weight: 700;
+  margin-right: 0.2rem;
+}
+
+/* CTA */
+.cta {
+  margin-top: 2.4rem;
+  text-align: center;
+  font-family: "Caveat", cursive;
+  font-size: 1.6rem;
+  color: var(--red-faded);
+}
+
+.cta a {
+  color: var(--red-faded);
+  text-decoration: none;
+  border-bottom: 1px solid var(--red-faded);
+  padding-bottom: 2px;
+  transition: color 200ms, border-color 200ms;
+}
+.cta a:hover { color: var(--ink); border-color: var(--ink); }
+
+.tag {
+  text-align: center;
+  margin-top: 2.2rem;
+  font-family: "Cardo", serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--pencil);
+}
+
+@media (max-width: 700px) {
+  .plate { padding: 2.2rem 1.2rem; }
+  .label-1, .label-3 { left: 0; max-width: 9ch; font-size: 1rem; }
+  .label-2 { right: 0; max-width: 9ch; font-size: 1rem; }
+  .label::after { display: none; }
+  .specimen { width: 60vw; }
+}
+</style>
+</head>
+<body>
+
+<article class="plate">
+  <header class="plate-head">
+    <p class="plate-number">Plate III · Field Note</p>
+    <h1 class="title">Kochi</h1>
+    <p class="subtitle">— bot, proactive</p>
+  </header>
+
+  <div class="specimen-area">
+    <div class="label label-1"><span class="num">i.</span>antennae<br/><em>(purpose unclear)</em></div>
+    <div class="label label-2"><span class="num">ii.</span>ocular sensors<br/><em>always open</em></div>
+    <div class="label label-3"><span class="num">iii.</span>vocal apparatus,<br/><em>concealed</em></div>
+
+    <figure class="specimen">
+      <img src="kochi.png" alt="Kochi specimen" />
+    </figure>
+  </div>
+
+  <section class="classification">
+    <h2 class="classification-head">Classification</h2>
+    <dl class="classification-grid">
+      <dt>Genus</dt>     <dd>Kochi</dd>
+      <dt>Species</dt>   <dd>Bot, proactive</dd>
+      <dt>Habitat</dt>   <dd>iPhone (iOS 26.0+)</dd>
+      <dt>Range</dt>     <dd>Global; cellular</dd>
+      <dt>Diet</dt>      <dd>Text</dd>
+      <dt>Activity</dt>  <dd>Diurnal<span class="asterisk">*</span></dd>
+      <dt>Call</dt>      <dd>One per day, at irregular hours</dd>
+    </dl>
+  </section>
+
+  <p class="footnote">
+    <span class="star">*</span>Specimens observed in the field after 23:00 local have demonstrated atypical conversational drift. The behaviour is intermittent and does not appear to be harmful. Researchers recommend leaving the device on the nightstand and reviewing transcripts in the morning.
+  </p>
+
+  <p class="cta">
+    Specimen available <a href="mailto:hello@kochi.app?subject=Kochi%20%E2%80%94%20a%20specimen%2C%20please">on request →</a>
+  </p>
+
+  <p class="tag">TestFlight · iOS 26 · MMXXVI</p>
+</article>
+
+</body>
+</html>
