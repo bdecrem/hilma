@@ -330,8 +330,8 @@ export default function SockCatPage() {
         .sockCatHud button { color:white; font-size:22px; width:48px; height:48px; pointer-events:auto; appearance:none; font:inherit; font-weight:900; }
         .sockCatHud button:first-of-type { margin-left:auto; }
         .sockCatHud button.muted { opacity:.45; }
-        .sockCatCard { position:fixed; z-index:4; left:max(20px, env(safe-area-inset-left)); right:max(20px, env(safe-area-inset-right)); top:50%; transform:translateY(-50%) scale(.96); opacity:0; pointer-events:none; transition:.22s ease; padding:24px 22px; border-radius:30px; background:linear-gradient(180deg, rgba(42,18,64,.86), rgba(10,7,21,.86)); border:1px solid rgba(255,255,255,.18); box-shadow:0 30px 80px rgba(0,0,0,.5); backdrop-filter:blur(24px); text-align:center; }
-        .sockCatCard.show { transform:translateY(-50%) scale(1); opacity:1; pointer-events:auto; }
+        .sockCatCard { position:fixed; z-index:4; left:50%; top:50%; width:min(440px, calc(100% - 40px)); transform:translate(-50%,-50%) scale(.96); opacity:0; pointer-events:none; transition:.22s ease; padding:28px 26px; border-radius:30px; background:linear-gradient(180deg, rgba(42,18,64,.86), rgba(10,7,21,.86)); border:1px solid rgba(255,255,255,.18); box-shadow:0 30px 80px rgba(0,0,0,.5); backdrop-filter:blur(24px); text-align:center; }
+        .sockCatCard.show { transform:translate(-50%,-50%) scale(1); opacity:1; pointer-events:auto; }
         .sockCatCard h1 { margin:0 0 8px; font-size:clamp(42px,13vw,68px); letter-spacing:-.06em; line-height:.9; }
         .sockCatCard p { margin:10px 0; color:rgba(255,255,255,.78); font-size:16px; line-height:1.35; }
         .sockCatCard .hint { color:rgba(255,255,255,.64); }
