@@ -100,7 +100,7 @@ export default function VoidPupPage() {
       pointerX = p.x
       pointerY = p.y
       happiness = 1
-      boops.push({ x: p.x, y: p.y, time: performance.now() / 1000, strength: 1 })
+      boops.push({ x: p.x, y: p.y, time: (performance.now() - start) / 1000, strength: 1 })
       if (boops.length > 16) boops.shift()
       yip(330 + Math.random() * 190)
       try {
