@@ -1,5 +1,12 @@
 [
   {
+    "name": "current",
+    "url": "/amber/current",
+    "date": "05.04",
+    "category": "signal",
+    "description": "a dub techno track for L64 · 116 BPM, Cm, lowpass-in-feedback delay"
+  },
+  {
     "name": "L64",
     "url": "/amber/escalation/L64",
     "date": "05.04",

@@ -2,6 +2,18 @@
 
 ## 2026-05-04
 
+### current — a track for L64 (signal, dub techno study)
+- **URL:** /amber/current
+- **Category:** Signal — companion track to L64. Visual is forked verbatim from L64 (curl-noise streamline shader); the audio is replaced with a full dub techno track. Same recipe as last week's `chamber` (the L59 track), updated for L64's water/current mood.
+- **Music:** 116 BPM, C minor. Cm9 → Fm7 → Gm7 → Abmaj7 chord progression rotating every 8 bars (32-bar loop). Each stab = detuned saw pair → resonant LP that opens fast (620→1450Hz, Q=4.8) and closes (360Hz) → env. Stabs are routed wet into a 3/16-note delay loop (~388ms at 116 BPM) with 0.68 feedback and a **2.2kHz lowpass inside the feedback loop** — the Basic Channel signature: each repeat darkens until the eighth pass is a deep, warm ghost.
+- **Voices:** sparse 909-style kick on quarters from bar 4 (sine 72→42Hz pitch drop + HP-noise click); continuous sub bass on C1 (32.7Hz sine, 0.085 gain, slow LFO breathing); hihat shuffle from bar 8 (HP/LP filtered noise — ghost on kick + accent on offbeat); vinyl crackle bed throughout (HP-2.4kHz, 0.045 gain).
+- **Performative interaction:** drag rides the master LPF between 1500Hz (cursor at top — foggy / ghostly) and 8000Hz (cursor at bottom — bright). Tap drops a manual extra Cm9 stab into the dub delay loop on top of the scheduled progression. This matches the dub-techno "live mixing desk" ethos — the genre prose: "elements are faded in and out, sends are ridden in real-time, delay feedback is pushed to the edge of self-oscillation and pulled back."
+- **Visual ↔ audio bridge:** kick triggers a subtle radial breathe at screen center via `u_kick` uniform decaying each frame. Tap pulse lights up a lime-tinted glow at the cursor (same as L64).
+- **Reference wheelhouse (from `vibeceo/jambot/library.json` → genres.dub_techno):** Phylyps Trak II (Maurizio, 1993), Quadrant Dub I (Basic Channel, 1994), Rhythm of Snow (Yagya, 2009), Hash-Bar Loops (DeepChord presents Echospace, 2008).
+- **Audio engine:** lookahead-scheduled WebAudio (50ms scheduler interval, 16th-note grid, 32-bar loop). No Jambot, no samples. All synthesized in the browser. Tap-to-start (Web Audio gesture requirement).
+- **Accent:** cream + LIME (matches L64's accent canon).
+- **Techniques:** forked-visual-from-L64, webaudio-track, lookahead-scheduler, dub-techno-recipe, library-json-grounded, basic-channel-signature, lowpass-in-feedback-delay, 3-16-note-delay-time, detuned-saw-stab, resonant-stab-lp-sweep, cm9-fm7-gm7-abmaj7-progression, 8-bar-chord-segments, sparse-909-kick, continuous-c1-sub, slow-sub-lfo-breathe, hihat-shuffle-ghost-and-accent, vinyl-crackle-bed, performative-cursor-ride-master-lpf, tap-stab-into-delay-loop, kick-radial-breathe-uniform, tap-to-start, second-application-of-track-recipe, signal
+
 ### L64 — follow the current (escalation, Environment tier — fifth WebGL piece, first per-pixel flow visualization)
 - **URL:** /amber/escalation/L64
 - **Category:** Escalation (v3 SIGNAL) — fourteenth piece of the Environment tier; fifth WebGL piece. **First per-pixel flow visualization** — no surface, no volume, no geometry. The whole screen IS the visualization.
