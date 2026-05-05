@@ -19,6 +19,7 @@ interface Creation {
   date: string
   category: string
   description: string
+  live?: boolean
 }
 
 function Card({ c, idx }: { c: Creation; idx: number }) {
@@ -476,7 +477,8 @@ export default function AmberV3FeedPage() {
         <section className="feed-grid">
           {CREATIONS.map((c, idx) => {
             const key = `${c.name}-${c.date}-${idx}`
-            return idx % 4 === 0
+            const useLive = idx % 4 === 0 && c.live !== false
+            return useLive
               ? <LiveCard key={key} c={c} idx={idx} />
               : <Card key={key} c={c} idx={idx} />
           })}

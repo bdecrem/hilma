@@ -4,7 +4,8 @@
     "url": "/amber/sock-cat",
     "date": "05.05",
     "category": "signal",
-    "description": "catch socks and treats · dodge the occasional bomb"
+    "description": "catch socks and treats · dodge the occasional bomb",
+    "live": false
   },
   {
     "name": "fork",
