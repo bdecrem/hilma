@@ -1,5 +1,12 @@
 [
   {
+    "name": "L66",
+    "url": "/amber/escalation/L66",
+    "date": "05.06",
+    "category": "escalation",
+    "description": "follow the scent · 16,384-agent Physarum slime-mold simulation"
+  },
+  {
     "name": "dish",
     "url": "/amber/dish",
     "date": "05.05",

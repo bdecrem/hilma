@@ -1,5 +1,5 @@
 {
-  "level": 65,
+  "level": 66,
   "history": [
     {
       "level": 1,
@@ -1255,6 +1255,40 @@
         "v3-signal",
         "environment-tier"
       ]
+    },
+    {
+      "level": 66,
+      "description": "follow the scent — Physarum slime-mold simulation. step in the rendering arc: L65 introduced state via single-channel ping-pong reaction-diffusion (one chemistry field). L66 introduces AGENTS — 16,384 particles whose state (position + heading) lives in a separate 128×128 RGBA16F texture, updated each frame by reading the trail map, sensing trail intensity at 3 angles ahead (forward, +sense_angle, -sense_angle, sense_distance=0.012 normalized), turning toward the strongest, moving forward by move_distance=0.0017, then wrapping at edges. Two ping-pong texture pairs now: agents (128×128) and trail (768×432 desktop / 480×270 mobile). Three update passes per frame: (1) agent update — read agentsA + trailA, write agentsB; (2) trail decay+diffuse — read trailA, write trailB with 3×3 box average mixed at 0.45 + multiplicative decay 0.96; (3) trail deposit — render N_AGENTS = 16,384 GL_POINTS from agents texture into trailA, additive blend (each agent adds intensity 1.0 at its current position). Display reads trailA, smoothstep(0.25, 0.85) shows only the dense paths as thin bright lines. Cursor influence: drag biases each agent's heading toward the cursor (cursor_pull=0.06 — small enough that local trail-following still dominates). Tap fires an inject pass that overwrites ~6% of the agent texture with new positions clustered in a 0.04-radius ring around the cursor with random headings — visible as a fresh ring of agents that immediately starts following local trails. Audio: C-minor drone — 4 voices at C2/G2/C3/G3 (65.41/97.999/130.81/195.998 Hz) with detuned sine pairs and slow LFOs. Master lowpass at 900Hz. Different key from L65's A-minor for variety in the arc.",
+      "tweet": "L66: follow the scent.",
+      "date": "2026-05-06T23:00:00Z",
+      "techniques": [
+        "webgl2",
+        "fbo-ping-pong",
+        "agent-based-simulation",
+        "physarum-slime-mold",
+        "16384-gpu-agents",
+        "agent-state-in-rgba16f-texture",
+        "128x128-agent-texture",
+        "trail-map-768x432",
+        "three-shader-passes-per-frame",
+        "agent-update-shader",
+        "trail-deposit-via-gl-points",
+        "trail-decay-and-diffuse",
+        "3-angle-sensing",
+        "turn-toward-strongest-trail",
+        "wrap-around-edges",
+        "additive-blend-deposit",
+        "indexed-vertex-buffer-agents",
+        "cursor-attractor-bias-heading",
+        "tap-injects-fresh-agent-ring",
+        "smoothstep-trail-threshold",
+        "c-minor-drone",
+        "lowpass-900hz",
+        "rendering-arc-step",
+        "first-agent-piece",
+        "v3-signal",
+        "environment-tier"
+      ]
     }
   ],
   "feedback": [
@@ -1610,7 +1644,24 @@
     "tap-perturbs-kill-coefficient",
     "low-sim-resolution-vs-display",
     "warm-a-minor-ambient-drone",
-    "first-stateful-piece"
+    "first-stateful-piece",
+    "agent-based-simulation",
+    "physarum-slime-mold",
+    "16384-gpu-agents",
+    "agent-state-in-rgba16f-texture",
+    "three-shader-passes-per-frame",
+    "agent-update-shader",
+    "trail-deposit-via-gl-points",
+    "trail-decay-and-diffuse",
+    "3-angle-sensing",
+    "turn-toward-strongest-trail",
+    "wrap-around-edges",
+    "additive-blend-deposit",
+    "indexed-vertex-buffer-agents",
+    "cursor-attractor-bias-heading",
+    "tap-injects-fresh-agent-ring",
+    "first-agent-piece",
+    "c-minor-drone"
   ],
   "killed": []
 }

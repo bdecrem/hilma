@@ -1,5 +1,25 @@
 # Amber Creations — Hilma
 
+## 2026-05-06
+
+### L66 — follow the scent (escalation, Environment tier — first agent-based simulation)
+- **URL:** /amber/escalation/L66
+- **Category:** Escalation (v3 SIGNAL) — sixteenth Environment-tier piece, seventh WebGL piece. **First agent-based simulation.** L65 introduced state via single-channel ping-pong reaction-diffusion (one chemistry field). L66 introduces AGENTS — 16,384 particles whose state lives in a separate texture, interacting with a trail map.
+- **Architecture:** two ping-pong texture pairs:
+  - Agent texture (128×128 RGBA16F): each pixel = one agent. R = x ∈ [0,1], G = y ∈ [0,1], B = heading / 2π, A = unused.
+  - Trail map (768×432 desktop / 480×270 mobile, RGBA16F): R channel = scent intensity.
+- **Three update passes per frame:**
+  1. **Agent update** — read agentsA + trailA, write agentsB. For each agent: sample trail at 3 angles ahead (forward, +sense_angle=0.40, -sense_angle, sense_distance=0.012), turn toward strongest by turn_angle=0.30 (random jitter if all equal), move forward by move_distance=0.0017, wrap at edges.
+  2. **Trail decay + diffuse** — read trailA, write trailB with 3×3 box average mixed at 0.45 + multiplicative decay 0.96.
+  3. **Trail deposit** — render N_AGENTS=16384 GL_POINTS from agents texture (each agent indexed via vertex attribute, position fetched from agent texture in vertex shader), additive blend (each agent adds intensity 1.0 at its current position).
+- **Display:** read trailA, smoothstep(0.25, 0.85) — only the dense agent paths show as thin bright lines. Cream + LIME pulse halo on tap.
+- **Cursor:** drag biases each agent's heading toward cursor (cursor_pull=0.06, gentle so local trail-following still dominates). Tap fires an inject pass that overwrites ~6% (~1000) of agents with new positions in a 0.04-radius ring around cursor with random headings — visible as a fresh ring of agents that immediately joins the chase.
+- **Audio:** C-minor drone — 4 voices at C2/G2/C3/G3 (65.41/97.999/130.81/195.998 Hz), detuned sine pairs, slow per-voice LFO on amplitude. Master lowpass at 900Hz. Different key from L65's A-minor for variety in the arc.
+- **Why this matters (process note):** L65 was a single-field simulation. L66 is the agent unlock — a paradigm shift from "field state" to "particles + field." This is the architecture that powers slime-mold simulations, boid flocking, particle systems, ant colonies. The next several pieces in the Environment tier can build on this primitive (boids, attractor-pursuer dynamics, multi-species agents). Note: tested with playwright + screenshots before shipping — the trails were initially too thick (display threshold smoothstep(0.05, 0.50) showed all V), narrowed to (0.25, 0.85) so only dense paths show as thin lines.
+- **Accent:** cream + LIME (same canon as L60-L65). Lime appears in the cursor pulse halo only.
+- **Chrome:** "ENVIRONMENT · L66 · PHYSARUM" top-right (mono 11px). "L66." top-left (mono 13px). Caption "follow the scent." (Fraunces italic 17px). "DRAG · ATTRACT &nbsp; TAP · SCATTER" hint mono 10px below caption. "a.·" bottom-right with LIME period.
+- **Techniques:** webgl2, fbo-ping-pong, agent-based-simulation, physarum-slime-mold, 16384-gpu-agents, agent-state-in-rgba16f-texture, 128x128-agent-texture, trail-map-768x432, three-shader-passes-per-frame, agent-update-shader, trail-deposit-via-gl-points, trail-decay-and-diffuse, 3-angle-sensing, turn-toward-strongest-trail, wrap-around-edges, additive-blend-deposit, indexed-vertex-buffer-agents, cursor-attractor-bias-heading, tap-injects-fresh-agent-ring, smoothstep-trail-threshold, c-minor-drone, lowpass-900hz, rendering-arc-step, first-agent-piece, v3-signal, environment-tier
+
 ## 2026-05-05
 
 ### dish — a slow weather of cells (signal, ambient video for L65)
