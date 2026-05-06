@@ -74,6 +74,14 @@ html, body {
   gap: 0.4rem;
   margin-left: auto;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.toggles-sep {
+  width: 1px;
+  height: 1.4rem;
+  background: var(--rule);
+  margin: 0 0.5rem;
 }
 
 .toggle {
@@ -149,6 +157,10 @@ iframe {
   </div>
   <span class="label">Concept viewer</span>
   <nav class="toggles">
+    <a class="toggle" href="#frame"    data-concept="frame"><span class="num">A.</span> Frame</a>
+    <a class="toggle" href="#peek"     data-concept="peek"><span class="num">B.</span> Peek</a>
+    <a class="toggle" href="#mark"     data-concept="mark"><span class="num">C.</span> Mark</a>
+    <span class="toggles-sep" aria-hidden="true"></span>
     <a class="toggle" href="#dispatch" data-concept="dispatch"><span class="num">i.</span> Dispatch</a>
     <a class="toggle" href="#readme"   data-concept="readme"><span class="num">ii.</span> README</a>
     <a class="toggle" href="#field"    data-concept="field"><span class="num">iii.</span> Field&nbsp;note</a>
@@ -162,6 +174,9 @@ iframe {
 
 <script>
 const map = {
+  frame:    '/kochi/frame.html',
+  peek:     '/kochi/peek.html',
+  mark:     '/kochi/mark.html',
   dispatch: '/kochi/dispatch.html',
   readme:   '/kochi/readme.html',
   field:    '/kochi/field-note.html',
@@ -169,6 +184,9 @@ const map = {
 };
 
 const titles = {
+  frame:    'A · Frame',
+  peek:     'B · Peek',
+  mark:     'C · Mark',
   dispatch: 'Dispatch',
   readme:   'README',
   field:    'Field note',
@@ -188,10 +206,10 @@ function go(name) {
   document.title = 'Kochi — ' + titles[name];
 }
 
-go((location.hash || '#dispatch').slice(1));
+go((location.hash || '#frame').slice(1));
 
 window.addEventListener('hashchange', () => {
-  go((location.hash || '#dispatch').slice(1));
+  go((location.hash || '#frame').slice(1));
 });
 
 toggles.forEach(t => {
