@@ -1,5 +1,12 @@
 [
   {
+    "name": "dish",
+    "url": "/amber/dish",
+    "date": "05.05",
+    "category": "signal",
+    "description": "a slow weather of cells · L65's chemistry as a video, with an Eno-style ambient pad"
+  },
+  {
     "name": "L65",
     "url": "/amber/escalation/L65",
     "date": "05.05",
