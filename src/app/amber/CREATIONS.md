@@ -2,6 +2,19 @@
 
 ## 2026-05-06
 
+### scent — a track for L66 (signal, techno + Physarum visualizer)
+- **URL:** /amber/scent
+- **Category:** Signal — companion track to L66. Visual is forked verbatim from L66 (16,384-agent Physarum slime-mold simulation, ping-pong trail map, sense → turn → move → deposit). Audio is a 125 BPM techno track in C minor.
+- **Music:** kick + sub bass = byte-for-byte copy of chamber/current proven values (continuous C1 sub-sine drone at 32.7Hz gain 0.085; 909-style kick 70→45Hz pitch envelope, 220ms decay, HP-noise click). Driving 4/4 kick on quarters from bar 2 (steadier than chamber/current, which start at bar 4). Cm9 chord stab on offbeats (steps 2 + 10) starting bar 8 — pre-rendered Cm9 saw chord buffer through resonant LP, played CLEAN at native rate (no parameter locks, no stutter, no reverse, no bitcrush). Sparse FM ping (660Hz carrier, 990Hz mod) every other bar from bar 12. Closed hat on every 16th from bar 6.
+- **What's NOT in this version (process notes):** earlier iterations had a 6-bit bitcrush waveshaper bus, parameter-locked playback rates (0.7-1.4× per stab), occasional reverse triggers, stutter retriggers (3-6 sub-divisions per step on stabs and hats), and a custom layered kick (sub-sine at 38Hz with 520ms decay). All of that produced a "weird" character Bart rejected — saved as `_backup/page.v1-glitch-drone-bass.tsx` if we ever want to revisit the Octatrack-glitch direction. Final shipped version is clean techno + clean stabs.
+- **Cursor mapping:** drag rides the master LPF (cursor-Y: top = foggy 1500Hz, bottom = bright 8000Hz) AND attracts agents in the simulation. Tap drops a manual chord stab AND scatters a fresh ring of ~1000 agents at the cursor.
+- **Visual ↔ audio bridge:** kick triggers a subtle radial breathe at screen center via `u_kick` uniform decaying each frame (0.86 per frame). Tap pulse halo same as L66.
+- **Wheelhouse:** chamber (DK014, L59) and current (DK016, L64). Same kick + bass + general scaffold. Variation lives in: tempo (125 vs 116-122), driving 4/4 from bar 2 (vs sparse), no dub-delay loop, FM ping voice as an extra melodic element.
+- **Music recipe:** copy-paste of chamber/current per `feedback_amber_proven_kick_bass.md` rule (do not synthesize custom kicks/bass voices).
+- **Accent:** cream + LIME (matches L66's accent canon).
+- **Chrome:** "TECHNO · CM · 125 BPM" top-right (mono 11px). "SCENT." top-left (mono 13px). Caption "a track for L66." (Fraunces italic 17px). "a.·" bottom-right with LIME period.
+- **Techniques:** forked-visual-from-L66, webaudio-track, lookahead-scheduler, copy-paste-chamber-kick, copy-paste-chamber-sub-drone, fast-4-4-kick-from-bar-2, cm9-clean-chord-stab-on-offbeats, prerendered-cm9-saw-chord-buffer, fm-ping-660hz-carrier-990hz-mod, sparse-melodic-ping-every-other-bar, plain-hihat-shuffle-no-stutter, no-bitcrush, no-parameter-locks, no-reverse-triggers, no-stutter-retriggers, no-dub-delay-loop, drag-rides-master-lpf, tap-drops-clean-stab-and-scatters-agents, kick-triggers-radial-breathe, fourth-application-of-track-recipe, signal
+
 ### L66 — follow the scent (escalation, Environment tier — first agent-based simulation)
 - **URL:** /amber/escalation/L66
 - **Category:** Escalation (v3 SIGNAL) — sixteenth Environment-tier piece, seventh WebGL piece. **First agent-based simulation.** L65 introduced state via single-channel ping-pong reaction-diffusion (one chemistry field). L66 introduces AGENTS — 16,384 particles whose state lives in a separate texture, interacting with a trail map.
