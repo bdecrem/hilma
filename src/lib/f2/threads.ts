@@ -11,22 +11,35 @@ export type F2Thread = {
   id: string
   handle: string
   client: F2Client
-  url: string
+  url: string | null
+  topic: string | null
   content: string | null
   messages: F2ThreadMessage[]
   created_at: string
   updated_at: string
 }
 
+export type CreateThreadInput = {
+  client: F2Client
+  handle: string
+  url?: string | null
+  topic?: string | null
+  content?: string | null
+}
+
 export async function createThread(
-  client: F2Client,
-  handle: string,
-  url: string,
-  content: string | null,
+  input: CreateThreadInput,
 ): Promise<F2Thread | null> {
   const { data, error } = await f2Supabase()
     .from('f2_threads')
-    .insert({ client, handle, url, content, messages: [] })
+    .insert({
+      client: input.client,
+      handle: input.handle,
+      url: input.url ?? null,
+      topic: input.topic ?? null,
+      content: input.content ?? null,
+      messages: [],
+    })
     .select('*')
     .single()
 

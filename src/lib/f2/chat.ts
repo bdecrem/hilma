@@ -13,53 +13,145 @@ function anthropic(): Anthropic {
   return _client
 }
 
-export async function chatWithThread(
-  thread: F2Thread,
-  userText: string,
-): Promise<string> {
-  const content = thread.content
-    ? thread.content.slice(0, MAX_CONTEXT_FOR_CHAT)
-    : null
+// Three actions Claude can pick on every inbound text:
+//  - continue: stay in the active learning thread; persist the exchange
+//  - new_topic: spin up a fresh thread on a new topic; persist as the new thread
+//  - chitchat: answer off-topic question without polluting any learning thread
+export type RouterAction =
+  | { kind: 'continue'; reply: string }
+  | { kind: 'new_topic'; topic: string; reply: string }
+  | { kind: 'chitchat'; reply: string }
 
-  const systemText = content
-    ? `You're helping the user learn about a specific source they shared. Answer their questions using the content below as the primary source. If the answer isn't in the content, say so plainly.
+const TOOLS: Anthropic.Tool[] = [
+  {
+    name: 'continue_chat',
+    description:
+      "Reply within the user's ACTIVE learning thread. Use when the user is asking a follow-up question, answering a quiz, requesting clarification, or otherwise advancing the current topic. The exchange will be appended to the thread's message history.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        reply: { type: 'string', description: 'Your response to the user.' },
+      },
+      required: ['reply'],
+    },
+  },
+  {
+    name: 'start_new_topic',
+    description:
+      "Start a fresh learning thread on a DIFFERENT topic. Use when the user explicitly asks to learn something new (\"explain X\", \"teach me about Y\", \"let's switch to Z\") or when their question is clearly about a domain unrelated to the active thread. The opening_reply must briefly acknowledge the switch (e.g. 'New topic: X.' or 'Switching to Y.') and then begin substantive teaching.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        topic: {
+          type: 'string',
+          description: 'Short noun phrase naming the new topic (2-5 words).',
+        },
+        opening_reply: {
+          type: 'string',
+          description:
+            'Full response to the user — should include both the topic-switch acknowledgement and substantive opening content.',
+        },
+      },
+      required: ['topic', 'opening_reply'],
+    },
+  },
+  {
+    name: 'chitchat',
+    description:
+      "Answer an off-topic or chatbot-style question that doesn't belong in a learning thread (weather, jokes, code help, trivia unrelated to the active topic, casual conversation). This reply will NOT be persisted anywhere.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        reply: { type: 'string', description: 'Your response to the user.' },
+      },
+      required: ['reply'],
+    },
+  },
+]
 
-URL: ${thread.url}
-
-Content:
-${content}
-
-Reply rules:
-- Be direct. No preambles like "Great question" or "Based on the article".
+function buildSystem(thread: F2Thread | null): string {
+  const baseRules = `Reply rules:
+- Be direct. No preambles ("Great question", "Based on the article").
 - Plain text, no markdown.
-- Keep replies tight — a few paragraphs max unless the user asks for more.`
-    : `You're helping the user learn about a source they shared, but the fetched content was empty or unavailable. Answer from your general knowledge about the URL and flag uncertainty.
+- Keep replies tight unless the user asks for more.`
 
-URL: ${thread.url}
+  if (!thread) {
+    return `You are F2 — a learning companion. The user has no active learning thread yet.
 
-Reply rules:
-- Be direct, plain text, no markdown.
-- Keep replies tight.`
+For every message, pick exactly one tool:
+- start_new_topic: if the user wants to learn something. Even simple framings like "explain photosynthesis" or "what is X" should start a topic — that's the whole point of F2.
+- chitchat: only for clearly off-topic banter (weather, jokes, casual hellos, AI-chatbot trivia unrelated to learning).
+- continue_chat: do NOT use — there is no active thread.
 
-  const history = thread.messages.map((m) => ({
+${baseRules}`
+  }
+
+  const subject = thread.topic
+    ? `topic "${thread.topic}"`
+    : thread.url
+      ? `URL ${thread.url}`
+      : '(no subject)'
+
+  const sourceBlock = thread.content
+    ? `\n\nSource content (primary reference — answer from this when relevant):\n${thread.content.slice(0, MAX_CONTEXT_FOR_CHAT)}`
+    : ''
+
+  return `You are F2 — a learning companion. The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
+
+For every message, pick exactly one tool:
+- continue_chat: the user is advancing the current topic — follow-up questions, quiz answers, "tell me more", clarifications.
+- start_new_topic: the user wants to learn about a different topic. Don't be too eager — only switch when the new topic is clearly unrelated.
+- chitchat: off-topic banter, jokes, weather, AI-chatbot trivia unrelated to the active topic. Won't be persisted.
+
+${baseRules}`
+}
+
+export async function routeAndReply(
+  thread: F2Thread | null,
+  userText: string,
+): Promise<RouterAction> {
+  const systemText = buildSystem(thread)
+
+  const history = (thread?.messages ?? []).map((m) => ({
     role: m.role,
     content: m.text,
   }))
 
   const response = await anthropic().messages.create({
     model: MODEL,
-    max_tokens: 800,
+    max_tokens: 1000,
     system: [
-      {
-        type: 'text',
-        text: systemText,
-        cache_control: { type: 'ephemeral' },
-      },
+      { type: 'text', text: systemText, cache_control: { type: 'ephemeral' } },
     ],
+    tools: TOOLS,
+    tool_choice: { type: 'any' },
     messages: [...history, { role: 'user', content: userText }],
   })
 
-  const block = response.content[0]
-  if (block?.type === 'text') return block.text.trim()
-  return '(no response)'
+  const toolUse = response.content.find((b) => b.type === 'tool_use')
+  if (!toolUse || toolUse.type !== 'tool_use') {
+    // Defensive: model returned plain text instead of a tool call.
+    const text = response.content.find((b) => b.type === 'text')
+    const reply = text?.type === 'text' ? text.text.trim() : '(no response)'
+    return { kind: 'chitchat', reply }
+  }
+
+  const input = toolUse.input as Record<string, unknown>
+  switch (toolUse.name) {
+    case 'continue_chat':
+      return { kind: 'continue', reply: String(input.reply ?? '').trim() }
+    case 'start_new_topic':
+      return {
+        kind: 'new_topic',
+        topic: String(input.topic ?? '').trim(),
+        reply: String(input.opening_reply ?? '').trim(),
+      }
+    case 'chitchat':
+      return { kind: 'chitchat', reply: String(input.reply ?? '').trim() }
+    default:
+      return {
+        kind: 'chitchat',
+        reply: `(unknown tool: ${toolUse.name})`,
+      }
+  }
 }

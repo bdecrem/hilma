@@ -1,14 +1,16 @@
 // Client-agnostic core entrypoint for F2.
 // Every client (iMessage, web, iOS) routes inbound messages through processMessage.
 //
-// Behavior (ported from vibeceo/sms-bot/commands/f2.ts):
-//   - URL → fetch + extract, create thread, confirm.
-//   - non-URL + latest thread exists → chat about it via Claude.
-//   - non-URL + no thread → friendly hint.
+// Behavior:
+//   - URL → fetch + extract → new URL-backed thread.
+//   - non-URL → tool-using LLM picks one of:
+//       continue_chat  → reply within active thread, persist exchange
+//       start_new_topic → spin up new topic thread, persist opening
+//       chitchat       → reply, persist nothing
 
 import { isUrl, stripSurroundingQuotes, fetchUrlContent } from './url'
 import { createThread, getLatestThread, appendMessages } from './threads'
-import { chatWithThread } from './chat'
+import { routeAndReply } from './chat'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -32,7 +34,7 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   if (isUrl(firstToken)) {
     return handleNewUrl(client, handle, firstToken)
   }
-  return handleChat(client, handle, text)
+  return handleNonUrl(client, handle, text)
 }
 
 async function handleNewUrl(
@@ -41,7 +43,7 @@ async function handleNewUrl(
   url: string,
 ): Promise<F2Reply> {
   const content = await fetchUrlContent(url)
-  const thread = await createThread(client, handle, url, content)
+  const thread = await createThread({ client, handle, url, content })
 
   if (!thread) {
     return { reply: "F2: couldn't save that URL. Try again in a sec." }
@@ -53,32 +55,46 @@ async function handleNewUrl(
   return { reply }
 }
 
-async function handleChat(
+async function handleNonUrl(
   client: F2Client,
   handle: string,
   userText: string,
 ): Promise<F2Reply> {
   const thread = await getLatestThread(client, handle)
-  if (!thread) {
-    return {
-      reply:
-        'F2: no thread yet. Send a URL first (https://...), then ask away.',
-    }
-  }
 
-  let reply: string
+  let action
   try {
-    reply = await chatWithThread(thread, userText)
+    action = await routeAndReply(thread, userText)
   } catch (err) {
-    console.error('[f2] chat failed:', err)
+    console.error('[f2] routeAndReply failed:', err)
     return { reply: 'F2: hit an error talking to Claude. Try again in a moment.' }
   }
 
   const now = new Date().toISOString()
-  await appendMessages(thread.id, thread.messages, [
-    { role: 'user', text: userText, created_at: now },
-    { role: 'assistant', text: reply, created_at: now },
-  ])
 
-  return { reply }
+  switch (action.kind) {
+    case 'continue': {
+      if (!thread) {
+        // Defensive: model picked continue but there's no thread. Treat as chitchat.
+        return { reply: action.reply }
+      }
+      await appendMessages(thread.id, thread.messages, [
+        { role: 'user', text: userText, created_at: now },
+        { role: 'assistant', text: action.reply, created_at: now },
+      ])
+      return { reply: action.reply }
+    }
+    case 'new_topic': {
+      const fresh = await createThread({ client, handle, topic: action.topic })
+      if (fresh) {
+        await appendMessages(fresh.id, [], [
+          { role: 'user', text: userText, created_at: now },
+          { role: 'assistant', text: action.reply, created_at: now },
+        ])
+      }
+      return { reply: action.reply }
+    }
+    case 'chitchat':
+      return { reply: action.reply }
+  }
 }
