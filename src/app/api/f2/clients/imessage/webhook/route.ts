@@ -1,13 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { authWebhook, sendIMessage } from '@/lib/f2/bluebubbles'
 import { processMessage } from '@/lib/f2/agent'
 
 export const runtime = 'nodejs'
+// BlueBubbles fire-and-forget: if we don't ack fast it drops the message
+// (no retries). We return 200 in ~50ms, then process via after().
+export const maxDuration = 60
 
-// BlueBubbles webhook receiver.
-// Configure in BlueBubbles UI → Settings → Webhooks:
-//   URL: https://hilma-nine.vercel.app/api/f2/clients/imessage/webhook?secret=<BLUEBUBBLES_WEBHOOK_SECRET>
-//   Events: new-message (others currently ignored)
 type BBWebhook = {
   type?: string
   data?: {
@@ -43,20 +42,25 @@ export async function POST(req: Request) {
   const text = (data.text ?? '').trim()
   const chatGuid = data.chats?.[0]?.guid
   const handle = data.handle?.address ?? ''
+  const guid = data.guid ?? '?'
   if (!text || !chatGuid || !handle) {
+    console.log(`[f2/imessage] skip ${guid}: missing fields (text=${!!text} chat=${!!chatGuid} handle=${!!handle})`)
     return NextResponse.json({ ok: true, skipped: 'missing-fields' })
   }
 
-  const result = await processMessage({ handle, text, client: 'imessage' })
+  console.log(`[f2/imessage] accepted ${guid} from ${handle}: ${text.slice(0, 80)}`)
 
-  if (result.reply) {
+  after(async () => {
     try {
-      await sendIMessage({ chatGuid, text: result.reply })
+      const result = await processMessage({ handle, text, client: 'imessage' })
+      if (result.reply) {
+        await sendIMessage({ chatGuid, text: result.reply })
+        console.log(`[f2/imessage] replied ${guid}`)
+      }
     } catch (e) {
-      console.error('[f2/imessage] send failed', e)
-      return NextResponse.json({ ok: false, error: 'send-failed' }, { status: 502 })
+      console.error(`[f2/imessage] processing failed for ${guid}`, e)
     }
-  }
+  })
 
   return NextResponse.json({ ok: true })
 }
