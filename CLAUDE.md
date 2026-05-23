@@ -67,14 +67,14 @@ Key files (`apps/feynd/Feynd/`):
 
 **Backend contract:** the iOS app hits the exact same `/api/f2/*` endpoints as the web (login/logout/me, messages, topics CRUD, ingest, latest, quiz). One backend, multiple fronts.
 
-### Feynd voice (Realtime) — READ THESE FIRST
+### Feynd voice (Realtime)
 
-Voice mode is wired through OpenAI Realtime. Before touching anything in `src/lib/f2/realtime.ts`, `src/app/api/f2/realtime/**`, `apps/feynd/Feynd/RealtimeVoiceClient.swift`, `apps/feynd/Feynd/VoiceSessionView.swift`, or `apps/f2/schema/007_f2_voice_sessions.sql`, read:
+Voice mode runs through OpenAI Realtime. Code lives in `src/lib/f2/realtime.ts`, `src/app/api/f2/realtime/**`, `apps/feynd/Feynd/RealtimeVoiceClient.swift`, `apps/feynd/Feynd/VoiceSessionView.swift`, and `apps/f2/schema/007_f2_voice_sessions.sql`. Two reference docs:
 
-- **[`docs/f2-realtime-api-reference.md`](docs/f2-realtime-api-reference.md)** — the actual API surface this repo uses (OpenAI endpoints + event names + F2 wrapper + iOS event flow). Source of truth for what to call and what to expect back. Includes a "recheck these official docs" list because the Realtime schema has shifted before. Start here.
-- **[`docs/f2-realtime-voice-proposal.md`](docs/f2-realtime-voice-proposal.md)** — original strategy doc. Architectural rationale (WebRTC vs WebSocket trade-offs, client-mediated vs sideband tools, retrieval-not-stuffing, phased plan). The current code is **Phase 1 with WebSocket** — the proposal's WebRTC recommendation is the next step, not what's shipped. Don't confuse intent vs. current state.
+- [`docs/f2-realtime-api-reference.md`](docs/f2-realtime-api-reference.md) — the API surface this repo uses (OpenAI endpoints, event names, F2 wrapper, iOS event flow), plus a list of official OpenAI docs to recheck since the Realtime schema has shifted.
+- [`docs/f2-realtime-voice-proposal.md`](docs/f2-realtime-voice-proposal.md) — strategy doc with architectural rationale (WebRTC vs WebSocket, client-mediated vs sideband tools, retrieval, phasing). Note: shipped code is Phase 1 with WebSocket; the WebRTC recommendation is a future step.
 
-Phase-1 voice is reachable from the Voice button in `TopicDetailView`. Backend mints an ephemeral OpenAI client secret per session and persists transcripts in `f2_voice_sessions`. All tool calls derive `user_id` from the session cookie, never from model args — preserve that invariant.
+Voice is reachable from the Voice button in `TopicDetailView`. The backend mints an ephemeral OpenAI client secret per session and stores transcripts in `f2_voice_sessions`. Tool calls derive `user_id` from the session cookie, never from model args.
 
 ### Feynd iOS — voice-tutor archive
 
