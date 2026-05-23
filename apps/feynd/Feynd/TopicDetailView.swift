@@ -22,7 +22,7 @@ struct TopicDetailView: View {
                 topicComposer
             }
         }
-        .background(Color(red: 0.97, green: 0.97, blue: 0.96))
+        .background(Color(.systemGroupedBackground))
         .navigationTitle(thread?.topic ?? "Topic")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -57,12 +57,12 @@ struct TopicDetailView: View {
                         .font(.subheadline)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
-                        .background(.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .clipShape(Capsule())
-                        .overlay(Capsule().stroke(Color(white: 0.8)))
+                        .overlay(Capsule().stroke(Color(.separator)))
                 }
                 .disabled(busy)
-                .foregroundStyle(.black)
+                .foregroundStyle(Color.primary)
 
                 Spacer()
             }

@@ -8,7 +8,7 @@ struct LoginView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.97, green: 0.97, blue: 0.96).ignoresSafeArea()
+            Color(.systemGroupedBackground).ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 24) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -27,17 +27,17 @@ struct LoginView: View {
                         .textContentType(.username)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
-                        .background(.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(white: 0.85)))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator)))
 
                     SecureField("password", text: $password)
                         .textContentType(.password)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
-                        .background(.white)
+                        .background(Color(.secondarySystemGroupedBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(white: 0.85)))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.separator)))
                 }
 
                 if let err = session.loginError {
@@ -53,10 +53,10 @@ struct LoginView: View {
                 } label: {
                     Text(busy ? "Signing in…" : "Sign in")
                         .font(.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color(.systemBackground))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(Color.black)
+                        .background(Color(.label))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 .disabled(busy || username.isEmpty || password.isEmpty)

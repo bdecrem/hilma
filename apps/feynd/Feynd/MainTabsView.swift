@@ -24,6 +24,6 @@ struct MainTabsView: View {
                 Label("Paste", systemImage: "doc.text")
             }
         }
-        .tint(.black)
+        .tint(Color.primary)
     }
 }

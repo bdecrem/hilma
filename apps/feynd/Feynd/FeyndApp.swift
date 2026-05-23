@@ -3,11 +3,15 @@ import SwiftUI
 @main
 struct FeyndApp: App {
     @State private var session = Session()
+    @AppStorage("colorSchemePreference") private var colorSchemeRaw = ColorSchemePreference.system.rawValue
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(session)
+                .preferredColorScheme(
+                    ColorSchemePreference(rawValue: colorSchemeRaw)?.resolved
+                )
                 .task {
                     await session.bootstrap()
                 }

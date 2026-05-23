@@ -6,25 +6,27 @@ struct ChatView: View {
     @State private var draft = ""
     @State private var busy = false
     @State private var loadError: String? = nil
+    @State private var showSettings = false
 
     var body: some View {
         VStack(spacing: 0) {
             MessageList(messages: messages, busy: busy)
             Composer(draft: $draft, busy: busy, onSend: send)
         }
-        .background(Color(red: 0.97, green: 0.97, blue: 0.96))
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Chat")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button("Sign out", role: .destructive) {
-                        Task { await session.logout() }
-                    }
+                Button {
+                    showSettings = true
                 } label: {
-                    Image(systemName: "person.crop.circle")
+                    Image(systemName: "gearshape")
                 }
             }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
         .task { await loadLatest() }
     }
@@ -112,12 +114,12 @@ struct MessageBubble: View {
                 .font(.system(size: 15))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .foregroundStyle(message.role == "user" ? .white : Color.primary)
-                .background(message.role == "user" ? Color.blue : Color.white)
+                .foregroundStyle(message.role == "user" ? Color.white : Color.primary)
+                .background(message.role == "user" ? Color.blue : Color(.secondarySystemGroupedBackground))
                 .clipShape(BubbleShape(isUser: message.role == "user"))
                 .overlay(
                     BubbleShape(isUser: message.role == "user")
-                        .stroke(message.role == "user" ? .clear : Color(white: 0.85), lineWidth: 1)
+                        .stroke(message.role == "user" ? .clear : Color(.separator), lineWidth: 1)
                 )
                 .textSelection(.enabled)
 
@@ -138,7 +140,6 @@ struct BubbleShape: Shape {
                 in: rect,
                 cornerSize: CGSize(width: radius, height: radius)
             )
-            // Slight asymmetric corner near the speaker
             if isUser {
                 let tailRect = CGRect(x: rect.maxX - radius, y: rect.maxY - radius, width: radius, height: radius)
                 p.addRect(tailRect)
@@ -167,9 +168,9 @@ struct TypingIndicator: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Color.white)
+        .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(white: 0.85)))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(.separator)))
         .onReceive(timer) { _ in phase = (phase + 1) % 3 }
     }
 }
@@ -185,15 +186,15 @@ struct Composer: View {
                 .lineLimit(1...5)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(.white)
+                .background(Color(.secondarySystemGroupedBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(white: 0.85)))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color(.separator)))
 
             Button(action: onSend) {
                 Image(systemName: "arrow.up.circle.fill")
                     .resizable()
                     .frame(width: 34, height: 34)
-                    .foregroundStyle(canSend ? .black : Color(white: 0.7))
+                    .foregroundStyle(canSend ? Color.primary : Color(.tertiaryLabel))
             }
             .disabled(!canSend)
         }
