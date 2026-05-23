@@ -138,14 +138,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat/:path+',
         },
-        // feynd.cc/anything → /f2/anything (exclude already-/f2 to avoid /f2/f2/…)
+        // feynd.cc/anything → /f2/anything
+        // Excludes /f2/* (avoid /f2/f2/…) AND /api/* and /_next/* — afterFiles
+        // rewrites run BEFORE dynamic routes, so without the api exclusion the
+        // catch-all swallows /api/f2/topics/[id] etc. before they can match.
         {
-          source: '/:path((?!f2(?:/|$)).*)',
+          source: '/:path((?!(?:f2|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'feynd.cc' }],
           destination: '/f2/:path',
         },
         {
-          source: '/:path((?!f2(?:/|$)).*)',
+          source: '/:path((?!(?:f2|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.feynd.cc' }],
           destination: '/f2/:path',
         },
