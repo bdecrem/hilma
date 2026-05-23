@@ -30,6 +30,9 @@ targets:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
+        NSMicrophoneUsageDescription: Feynd uses the microphone so you can talk with your learning assistant.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.Feynd
