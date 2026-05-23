@@ -7,17 +7,29 @@
 //       continue_chat  → reply within active thread, persist exchange
 //       start_new_topic → spin up new topic thread, persist opening
 //       chitchat       → reply, persist nothing
+//
+// If `threadId` is provided, that thread is targeted directly (used by web UI
+// when the user is chatting from a specific topic's page). Otherwise the
+// agent operates on the user's most recently updated thread.
 
 import { isUrl, stripSurroundingQuotes, fetchUrlContent } from './url'
-import { createThread, getLatestThread, appendMessages } from './threads'
+import {
+  createThread,
+  getLatestThread,
+  getThreadById,
+  appendMessages,
+  type F2Thread,
+} from './threads'
 import { routeAndReply } from './chat'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
 export type F2Message = {
+  userId: string
   handle: string
   text: string
   client: F2Client
+  threadId?: string
 }
 
 export type F2Reply = {
@@ -25,25 +37,26 @@ export type F2Reply = {
 }
 
 export async function processMessage(input: F2Message): Promise<F2Reply> {
-  const { client, handle } = input
+  const { userId, client, handle, threadId } = input
   const text = input.text.trim()
   if (!text) return { reply: '' }
 
   const firstToken = stripSurroundingQuotes(text.split(/\s+/)[0])
 
   if (isUrl(firstToken)) {
-    return handleNewUrl(client, handle, firstToken)
+    return handleNewUrl(userId, client, handle, firstToken)
   }
-  return handleNonUrl(client, handle, text)
+  return handleNonUrl(userId, client, handle, text, threadId)
 }
 
 async function handleNewUrl(
+  userId: string,
   client: F2Client,
   handle: string,
   url: string,
 ): Promise<F2Reply> {
   const content = await fetchUrlContent(url)
-  const thread = await createThread({ client, handle, url, content })
+  const thread = await createThread({ userId, client, handle, url, content })
 
   if (!thread) {
     return { reply: "F2: couldn't save that URL. Try again in a sec." }
@@ -56,11 +69,18 @@ async function handleNewUrl(
 }
 
 async function handleNonUrl(
+  userId: string,
   client: F2Client,
   handle: string,
   userText: string,
+  threadId: string | undefined,
 ): Promise<F2Reply> {
-  const thread = await getLatestThread(client, handle)
+  let thread: F2Thread | null = null
+  if (threadId) {
+    thread = await getThreadById(userId, threadId)
+  } else {
+    thread = await getLatestThread(userId)
+  }
 
   let action
   try {
@@ -85,7 +105,12 @@ async function handleNonUrl(
       return { reply: action.reply }
     }
     case 'new_topic': {
-      const fresh = await createThread({ client, handle, topic: action.topic })
+      const fresh = await createThread({
+        userId,
+        client,
+        handle,
+        topic: action.topic,
+      })
       if (fresh) {
         await appendMessages(fresh.id, [], [
           { role: 'user', text: userText, created_at: now },

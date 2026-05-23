@@ -1,32 +1,38 @@
 import { NextResponse } from 'next/server'
-import { processMessage, type F2Message, type F2Client } from '@/lib/f2/agent'
+import { processMessage } from '@/lib/f2/agent'
+import { getSessionUser } from '@/lib/f2/auth'
 
 export const runtime = 'nodejs'
 
 // POST /api/f2/messages
-// Body: { handle, text, client }
-// Returns: { reply }
-//
-// Client-agnostic core. Web/iOS/iMessage adapters all call this.
+// Web-app endpoint. Session-authenticated. Body: { text, thread_id? }.
+// iMessage (and any future server-side client) calls processMessage directly,
+// not this route — keeps the session contract clean.
 export async function POST(req: Request) {
-  let body: Partial<F2Message>
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
+
+  let body: { text?: string; thread_id?: string }
   try {
-    body = (await req.json()) as Partial<F2Message>
+    body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  const { handle, text, client } = body
-  if (!handle || !text || !client) {
-    return NextResponse.json(
-      { error: 'handle, text, client required' },
-      { status: 400 },
-    )
+
+  const text = body.text?.trim()
+  if (!text) {
+    return NextResponse.json({ error: 'text required' }, { status: 400 })
   }
-  const valid: F2Client[] = ['imessage', 'web', 'ios']
-  if (!valid.includes(client)) {
-    return NextResponse.json({ error: `invalid client: ${client}` }, { status: 400 })
-  }
-  const result = await processMessage({ handle, text, client })
+
+  const result = await processMessage({
+    userId: user.id,
+    client: 'web',
+    handle: user.username,
+    text,
+    threadId: body.thread_id,
+  })
   return NextResponse.json(result)
 }
 

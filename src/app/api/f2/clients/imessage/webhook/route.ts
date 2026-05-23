@@ -1,6 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { authWebhook, sendIMessage } from '@/lib/f2/bluebubbles'
 import { processMessage } from '@/lib/f2/agent'
+import { getImessageDefaultUserId } from '@/lib/f2/auth'
 import { f2Supabase } from '@/lib/f2/supabase'
 
 export const runtime = 'nodejs'
@@ -72,7 +73,8 @@ export async function POST(req: Request) {
 
   after(async () => {
     try {
-      const result = await processMessage({ handle, text, client: 'imessage' })
+      const userId = getImessageDefaultUserId()
+      const result = await processMessage({ userId, handle, text, client: 'imessage' })
       if (result.reply) {
         await sendIMessage({ chatGuid, text: result.reply })
         console.log(`[f2/imessage] replied ${guid}`)
