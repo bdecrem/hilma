@@ -69,6 +69,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat',
         },
+        // feynd.cc root → /f2 (the F2 web app)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'feynd.cc' }],
+          destination: '/f2',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.feynd.cc' }],
+          destination: '/f2',
+        },
       ],
       afterFiles: [
         // intheamber.com/anything → /amber/anything (only if no file matched above)
@@ -126,6 +137,17 @@ const nextConfig: NextConfig = {
           source: '/:path+',
           has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat/:path+',
+        },
+        // feynd.cc/anything → /f2/anything (exclude already-/f2 to avoid /f2/f2/…)
+        {
+          source: '/:path((?!f2(?:/|$)).*)',
+          has: [{ type: 'host', value: 'feynd.cc' }],
+          destination: '/f2/:path',
+        },
+        {
+          source: '/:path((?!f2(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.feynd.cc' }],
+          destination: '/f2/:path',
         },
       ],
       fallback: [],
