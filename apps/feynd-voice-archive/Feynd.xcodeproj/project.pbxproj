@@ -7,56 +7,79 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0387F0E72213C7AE7F16657D /* DictationRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89BA3836BD278E9B57A2E148 /* DictationRecorder.swift */; };
+		084C865AC45978A8E4D9348F /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1D34499768352567AD63B4 /* Course.swift */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
-		36BE08CA63307A15CECFDBEA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFCEF68207C8EC05D3B4760 /* Models.swift */; };
-		412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */; };
-		5B58C25CE4AFF970698227C4 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC33D7342C9F25E38F967F4 /* ChatView.swift */; };
+		44AC14A485CF4ECC93831C76 /* QuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4480ACBEA660131DB45C44A /* QuizView.swift */; };
+		4AB55572292540C6E6137C6F /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 889CAE26161E8467A991FA33 /* AnthropicClient.swift */; };
+		52CE0AE96985F8A6AAD0B4C8 /* TTSPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A269B5F6518DE402A0A9328 /* TTSPlayer.swift */; };
+		65DD9C62C54D69BB9F351DDD /* CoursesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62F75B0F782EC4E25CBCEB0D /* CoursesView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
-		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
-		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
-		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
-		C573E836F4F99984E9A8409E /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC5668529933DC6749CB3D06 /* Session.swift */; };
-		E837DB371B838AB27BC85493 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E1F1203E78919DA10B73C9 /* LoginView.swift */; };
-		FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */; };
+		C7475076D822DE3F91527773 /* ClaudeQuizView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 829CC399B78BF79AADBF25E2 /* ClaudeQuizView.swift */; };
+		C8FC0F6C2164FBED3AE5E6F4 /* frontier-ai-2026.json in Resources */ = {isa = PBXBuildFile; fileRef = FC10E86FAF86236D8E96033E /* frontier-ai-2026.json */; };
+		CB1A223A872830FD2A4A0271 /* RealtimeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA7EAE45A7DF6F02587C07B /* RealtimeClient.swift */; };
+		CDC21450D44841E708AB84CD /* FeyndAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F8C8290B4781B349BF946E7 /* FeyndAPI.swift */; };
+		D04EC851EBFC88FE6DD09D05 /* DeviceIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579B3E5F4E0D1819C84B8A75 /* DeviceIdentity.swift */; };
+		DA1D34D56E1402DA637AD353 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBA0A10DE726A2B91DEEC5C5 /* ContentView.swift */; };
+		F9005761BB4DC71C1A0F97D3 /* ChatThreadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4008EFAC4FA51DEBEA74D5A /* ChatThreadView.swift */; };
+		FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		0A077252957BBEE41DCF582D /* FeyndApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndApp.swift; sourceTree = "<group>"; };
-		0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
-		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
-		5DC33D7342C9F25E38F967F4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
-		78E1F1203E78919DA10B73C9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		0F8C8290B4781B349BF946E7 /* FeyndAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndAPI.swift; sourceTree = "<group>"; };
+		4A269B5F6518DE402A0A9328 /* TTSPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSPlayer.swift; sourceTree = "<group>"; };
+		579B3E5F4E0D1819C84B8A75 /* DeviceIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdentity.swift; sourceTree = "<group>"; };
+		62F75B0F782EC4E25CBCEB0D /* CoursesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoursesView.swift; sourceTree = "<group>"; };
+		829CC399B78BF79AADBF25E2 /* ClaudeQuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeQuizView.swift; sourceTree = "<group>"; };
+		889CAE26161E8467A991FA33 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
+		89BA3836BD278E9B57A2E148 /* DictationRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictationRecorder.swift; sourceTree = "<group>"; };
 		8B7488FF54E0D0D3D2342D62 /* Feynd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Feynd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8BE40ACBCE23969C211C1B42 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		8D1D34499768352567AD63B4 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
 		8D6854393131D5ADEB1B75CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A62FA8AD3B3E792810622A3A /* F2API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F2API.swift; sourceTree = "<group>"; };
+		A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSessionView.swift; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		C0564EA3B927E26544E7655B /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
-		CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabsView.swift; sourceTree = "<group>"; };
-		EC5668529933DC6749CB3D06 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
-		EFFCEF68207C8EC05D3B4760 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B4008EFAC4FA51DEBEA74D5A /* ChatThreadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThreadView.swift; sourceTree = "<group>"; };
+		CBA0A10DE726A2B91DEEC5C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		D4480ACBEA660131DB45C44A /* QuizView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizView.swift; sourceTree = "<group>"; };
+		EDA7EAE45A7DF6F02587C07B /* RealtimeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeClient.swift; sourceTree = "<group>"; };
+		FC10E86FAF86236D8E96033E /* frontier-ai-2026.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "frontier-ai-2026.json"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
 		4373D04F4E053F1CAF5AA605 /* Feynd */ = {
 			isa = PBXGroup;
 			children = (
+				889CAE26161E8467A991FA33 /* AnthropicClient.swift */,
 				8D6854393131D5ADEB1B75CE /* Assets.xcassets */,
-				5DC33D7342C9F25E38F967F4 /* ChatView.swift */,
-				A62FA8AD3B3E792810622A3A /* F2API.swift */,
+				B4008EFAC4FA51DEBEA74D5A /* ChatThreadView.swift */,
+				829CC399B78BF79AADBF25E2 /* ClaudeQuizView.swift */,
+				CBA0A10DE726A2B91DEEC5C5 /* ContentView.swift */,
+				8D1D34499768352567AD63B4 /* Course.swift */,
+				62F75B0F782EC4E25CBCEB0D /* CoursesView.swift */,
+				579B3E5F4E0D1819C84B8A75 /* DeviceIdentity.swift */,
+				89BA3836BD278E9B57A2E148 /* DictationRecorder.swift */,
+				0F8C8290B4781B349BF946E7 /* FeyndAPI.swift */,
 				0A077252957BBEE41DCF582D /* FeyndApp.swift */,
 				B119830CA567768C3502310E /* Info.plist */,
-				78E1F1203E78919DA10B73C9 /* LoginView.swift */,
-				CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */,
-				EFFCEF68207C8EC05D3B4760 /* Models.swift */,
-				C0564EA3B927E26544E7655B /* PasteView.swift */,
+				D4480ACBEA660131DB45C44A /* QuizView.swift */,
+				EDA7EAE45A7DF6F02587C07B /* RealtimeClient.swift */,
 				8BE40ACBCE23969C211C1B42 /* Secrets.swift */,
-				EC5668529933DC6749CB3D06 /* Session.swift */,
-				0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */,
-				0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */,
+				4A269B5F6518DE402A0A9328 /* TTSPlayer.swift */,
+				A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */,
+				664C2EC3B1B97217567F37B3 /* CourseData */,
 			);
 			path = Feynd;
+			sourceTree = "<group>";
+		};
+		664C2EC3B1B97217567F37B3 /* CourseData */ = {
+			isa = PBXGroup;
+			children = (
+				FC10E86FAF86236D8E96033E /* frontier-ai-2026.json */,
+			);
+			path = CourseData;
 			sourceTree = "<group>";
 		};
 		B7269715FA6EFD860E6E2ED1 /* Products */ = {
@@ -135,6 +158,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */,
+				C8FC0F6C2164FBED3AE5E6F4 /* frontier-ai-2026.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,17 +169,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5B58C25CE4AFF970698227C4 /* ChatView.swift in Sources */,
-				935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */,
+				4AB55572292540C6E6137C6F /* AnthropicClient.swift in Sources */,
+				F9005761BB4DC71C1A0F97D3 /* ChatThreadView.swift in Sources */,
+				C7475076D822DE3F91527773 /* ClaudeQuizView.swift in Sources */,
+				DA1D34D56E1402DA637AD353 /* ContentView.swift in Sources */,
+				084C865AC45978A8E4D9348F /* Course.swift in Sources */,
+				65DD9C62C54D69BB9F351DDD /* CoursesView.swift in Sources */,
+				D04EC851EBFC88FE6DD09D05 /* DeviceIdentity.swift in Sources */,
+				0387F0E72213C7AE7F16657D /* DictationRecorder.swift in Sources */,
+				CDC21450D44841E708AB84CD /* FeyndAPI.swift in Sources */,
 				218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */,
-				E837DB371B838AB27BC85493 /* LoginView.swift in Sources */,
-				412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */,
-				36BE08CA63307A15CECFDBEA /* Models.swift in Sources */,
-				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
+				44AC14A485CF4ECC93831C76 /* QuizView.swift in Sources */,
+				CB1A223A872830FD2A4A0271 /* RealtimeClient.swift in Sources */,
 				6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */,
-				C573E836F4F99984E9A8409E /* Session.swift in Sources */,
-				FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */,
-				965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */,
+				52CE0AE96985F8A6AAD0B4C8 /* TTSPlayer.swift in Sources */,
+				FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

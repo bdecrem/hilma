@@ -25,6 +25,7 @@ targets:
       path: Feynd/Info.plist
       properties:
         CFBundleDisplayName: Feynd
+        NSMicrophoneUsageDescription: "Feynd uses the microphone so you can talk with the tutor out loud."
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

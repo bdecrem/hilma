@@ -26,7 +26,7 @@ python3           # Use python3 (not python) for all Python scripts
 
 ## Apps
 
-Hilma hosts 6 apps. Two are standalone in `apps/`, three are Next.js routes on Vercel, and Tunn3l has its own repo.
+Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js routes on Vercel, and Tunn3l has its own repo.
 
 | App | Path | Deploy | What it is |
 |-----|------|--------|------------|
@@ -36,6 +36,16 @@ Hilma hosts 6 apps. Two are standalone in `apps/`, three are Next.js routes on V
 | **Decremental** | `src/app/projects/` | Vercel (decremental.com) | Projects page |
 | **Writer** | `src/app/writer/` | Vercel | Writing tool |
 | **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |
+| **F2 (web)** | `src/app/f2/` | Vercel (feynd.cc) | Learning app — chat + topics + paste, user-scoped |
+| **F2 (iOS)** | `apps/feynd/` | Xcode (manual TestFlight) | Native iPhone client for F2, talks to the same `/api/f2/*` backend |
+
+### Feynd iOS — what's here vs. archived
+
+`apps/feynd/` was originally a voice-tutor app (OpenAI Realtime + Opus, "Frontier AI 2026" course). On 2026-05-23 it was repurposed as the F2 iOS client. The original is preserved two ways:
+- Git tag `feynd-voice-archive-v1` (full pre-repurpose tree)
+- Folder `apps/feynd-voice-archive/` (verbatim snapshot; see its `ARCHIVE.md`)
+
+Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, deployment target iOS 17 — unchanged across the repurpose.
 
 ## Project structure — where things go
 
