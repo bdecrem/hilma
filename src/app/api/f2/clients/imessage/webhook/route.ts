@@ -1,6 +1,7 @@
 import { NextResponse, after } from 'next/server'
 import { authWebhook, sendIMessage } from '@/lib/f2/bluebubbles'
 import { processMessage } from '@/lib/f2/agent'
+import { f2Supabase } from '@/lib/f2/supabase'
 
 export const runtime = 'nodejs'
 // BlueBubbles fire-and-forget: if we don't ack fast it drops the message
@@ -16,6 +17,19 @@ type BBWebhook = {
     handle?: { address?: string; service?: string } | null
     chats?: Array<{ guid?: string }>
   }
+}
+
+// Insert the guid into the dedup table. Returns true if this is the
+// first time we've seen it, false if it's a duplicate.
+async function claimGuid(guid: string): Promise<boolean> {
+  const { error } = await f2Supabase()
+    .from('f2_processed_webhooks')
+    .insert({ guid, client: 'imessage' })
+  if (!error) return true
+  if (error.code === '23505') return false
+  console.error(`[f2/imessage] dedup insert errored for ${guid}:`, error)
+  // Fail open — better to risk a dup than to drop the message.
+  return true
 }
 
 export async function POST(req: Request) {
@@ -42,10 +56,16 @@ export async function POST(req: Request) {
   const text = (data.text ?? '').trim()
   const chatGuid = data.chats?.[0]?.guid
   const handle = data.handle?.address ?? ''
-  const guid = data.guid ?? '?'
-  if (!text || !chatGuid || !handle) {
-    console.log(`[f2/imessage] skip ${guid}: missing fields (text=${!!text} chat=${!!chatGuid} handle=${!!handle})`)
+  const guid = data.guid ?? ''
+  if (!text || !chatGuid || !handle || !guid) {
+    console.log(`[f2/imessage] skip ${guid || '?'}: missing fields (text=${!!text} chat=${!!chatGuid} handle=${!!handle} guid=${!!guid})`)
     return NextResponse.json({ ok: true, skipped: 'missing-fields' })
+  }
+
+  const fresh = await claimGuid(guid)
+  if (!fresh) {
+    console.log(`[f2/imessage] dup ${guid}: already processed`)
+    return NextResponse.json({ ok: true, skipped: 'duplicate' })
   }
 
   console.log(`[f2/imessage] accepted ${guid} from ${handle}: ${text.slice(0, 80)}`)
