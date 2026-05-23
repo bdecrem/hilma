@@ -39,13 +39,39 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **F2 (web)** | `src/app/f2/` | Vercel (feynd.cc) | Learning app — chat + topics + paste, user-scoped |
 | **F2 (iOS)** | `apps/feynd/` | Xcode (manual TestFlight) | Native iPhone client for F2, talks to the same `/api/f2/*` backend |
 
-### Feynd iOS — what's here vs. archived
+### Feynd iOS — where the code lives
+
+**Native iPhone client for F2 lives in `apps/feynd/`.** SwiftUI + XcodeGen (`project.yml` is the source of truth, `.xcodeproj` is generated). Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, deployment target iOS 17.
+
+Key files (`apps/feynd/Feynd/`):
+- `FeyndApp.swift` — `@main` entry. Owns the `Session` and routes to `LoginView` vs `MainTabsView`.
+- `MainTabsView.swift` — the three tabs: Chat / Topics / Paste.
+- `ChatView.swift`, `TopicsView.swift`, `TopicDetailView.swift`, `PasteView.swift`, `LoginView.swift` — one screen per file.
+- `F2API.swift` — HTTP client. Uses `URLSession` + `HTTPCookieStorage.shared` so the `f2_session` cookie persists across launches.
+- `Session.swift` — `@Observable` auth state (loading / signedOut / signedIn).
+- `Models.swift` — `F2User`, `F2Topic`, `F2Message`, `F2Thread`.
+- `Secrets.swift` (gitignored, see `Secrets.swift.example`) — backend URL (defaults to `https://feynd.cc`).
+- `Assets.xcassets/AppIcon.appiconset/` — app icon (same set since the original voice app).
+
+**Working on iOS — the workflow:**
+1. Edit Swift files in `apps/feynd/Feynd/`.
+2. After adding/removing files (or changing `project.yml`): `cd apps/feynd && xcodegen generate`.
+3. Verify compile: `xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd -destination 'generic/platform=iOS Simulator' build` (must say `** BUILD SUCCEEDED **` before declaring done — this is a standing rule).
+4. End-to-end CLI test (recommended when the change is more than a one-liner):
+   - `xcrun simctl boot "iPhone 16"` (skips if already booted)
+   - Rebuild with `-destination 'platform=iOS Simulator,name=iPhone 16'`
+   - `xcrun simctl install "iPhone 16" <DerivedData>/Build/Products/Debug-iphonesimulator/Feynd.app`
+   - `xcrun simctl launch "iPhone 16" com.bartdecrem.Feynd`
+   - `xcrun simctl io "iPhone 16" screenshot /tmp/feynd.png` to visually verify
+5. For signing/provisioning sanity (catches arm64-specific issues simulator builds miss): `xcodebuild ... -destination 'generic/platform=iOS' build`.
+
+**Backend contract:** the iOS app hits the exact same `/api/f2/*` endpoints as the web (login/logout/me, messages, topics CRUD, ingest, latest, quiz). One backend, multiple fronts.
+
+### Feynd iOS — voice-tutor archive
 
 `apps/feynd/` was originally a voice-tutor app (OpenAI Realtime + Opus, "Frontier AI 2026" course). On 2026-05-23 it was repurposed as the F2 iOS client. The original is preserved two ways:
 - Git tag `feynd-voice-archive-v1` (full pre-repurpose tree)
 - Folder `apps/feynd-voice-archive/` (verbatim snapshot; see its `ARCHIVE.md`)
-
-Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, deployment target iOS 17 — unchanged across the repurpose.
 
 ## Project structure — where things go
 
@@ -56,7 +82,7 @@ Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, deployment target iOS 17
 | `src/app/` | Next.js pages and routes (React, server-rendered) | `/amber/`, `/projects/`, `/writer/`, `/art-agent/` |
 | `src/components/` | Shared React components | UI primitives used across pages |
 | `src/lib/` | Shared utilities and helpers | `citrus-bg.ts` |
-| `apps/` | Standalone apps with their own runtime (not Next.js) | `tunnel/`, `collab/`, `design-agent/` |
+| `apps/` | Standalone apps with their own runtime (not Next.js) | `feynd/` (iOS Swift), `collab/`, `mcp-dashboard/` |
 | `public/` | Static files served as-is (HTML, images, fonts) | `art/spring-curves.html` |
 | `scripts/` | One-off scripts and build tools | `tweet.ts`, `adjectives.js` |
 | `docs/` | Documentation, plans, proposals | `amber-daily-schedule.md` |
