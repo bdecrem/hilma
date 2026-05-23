@@ -67,6 +67,15 @@ Key files (`apps/feynd/Feynd/`):
 
 **Backend contract:** the iOS app hits the exact same `/api/f2/*` endpoints as the web (login/logout/me, messages, topics CRUD, ingest, latest, quiz). One backend, multiple fronts.
 
+### Feynd voice (Realtime) — READ THESE FIRST
+
+Voice mode is wired through OpenAI Realtime. Before touching anything in `src/lib/f2/realtime.ts`, `src/app/api/f2/realtime/**`, `apps/feynd/Feynd/RealtimeVoiceClient.swift`, `apps/feynd/Feynd/VoiceSessionView.swift`, or `apps/f2/schema/007_f2_voice_sessions.sql`, read:
+
+- **[`docs/f2-realtime-api-reference.md`](docs/f2-realtime-api-reference.md)** — the actual API surface this repo uses (OpenAI endpoints + event names + F2 wrapper + iOS event flow). Source of truth for what to call and what to expect back. Includes a "recheck these official docs" list because the Realtime schema has shifted before. Start here.
+- **[`docs/f2-realtime-voice-proposal.md`](docs/f2-realtime-voice-proposal.md)** — original strategy doc. Architectural rationale (WebRTC vs WebSocket trade-offs, client-mediated vs sideband tools, retrieval-not-stuffing, phased plan). The current code is **Phase 1 with WebSocket** — the proposal's WebRTC recommendation is the next step, not what's shipped. Don't confuse intent vs. current state.
+
+Phase-1 voice is reachable from the Voice button in `TopicDetailView`. Backend mints an ephemeral OpenAI client secret per session and persists transcripts in `f2_voice_sessions`. All tool calls derive `user_id` from the session cookie, never from model args — preserve that invariant.
+
 ### Feynd iOS — voice-tutor archive
 
 `apps/feynd/` was originally a voice-tutor app (OpenAI Realtime + Opus, "Frontier AI 2026" course). On 2026-05-23 it was repurposed as the F2 iOS client. The original is preserved two ways:
