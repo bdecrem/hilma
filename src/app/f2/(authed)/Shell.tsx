@@ -14,6 +14,7 @@ export default function Shell({
   const router = useRouter()
   const isChat = pathname === '/f2'
   const isTopics = pathname.startsWith('/f2/topics')
+  const isPaste = pathname === '/f2/paste'
 
   async function logout() {
     await fetch('/api/f2/auth/logout', { method: 'POST' })
@@ -53,7 +54,17 @@ export default function Shell({
           </Link>
         </div>
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-neutral-500">{username}</span>
+          <Link
+            href="/f2/paste"
+            className={`px-3 py-1.5 rounded-full text-sm ${
+              isPaste
+                ? 'bg-neutral-900 text-white'
+                : 'border border-neutral-300 text-neutral-700 hover:bg-neutral-100'
+            }`}
+          >
+            + Paste
+          </Link>
+          <span className="hidden sm:inline text-neutral-500">{username}</span>
           <button
             onClick={logout}
             className="text-neutral-500 hover:text-neutral-900"
