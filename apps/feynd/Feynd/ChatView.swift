@@ -7,6 +7,7 @@ struct ChatView: View {
     @State private var busy = false
     @State private var loadError: String? = nil
     @State private var showSettings = false
+    @State private var voicePresented = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,6 +18,13 @@ struct ChatView: View {
         .navigationTitle("Chat")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    voicePresented = true
+                } label: {
+                    Image(systemName: "mic.circle.fill")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     showSettings = true
@@ -27,6 +35,9 @@ struct ChatView: View {
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
+        }
+        .sheet(isPresented: $voicePresented) {
+            VoiceSessionView(mode: "global")
         }
         .task { await loadLatest() }
     }

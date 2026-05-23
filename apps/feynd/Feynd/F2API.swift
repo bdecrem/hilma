@@ -137,6 +137,80 @@ final class F2API {
         return res.thread.id
     }
 
+    // MARK: Realtime voice
+
+    struct RealtimeSessionResponse: Codable {
+        let clientSecret: ClientSecret
+        let openaiSessionId: String?
+        let voiceSession: VoiceSession
+        let realtime: RealtimeConfig
+
+        struct ClientSecret: Codable {
+            let value: String
+            let expiresAt: Int
+
+            enum CodingKeys: String, CodingKey {
+                case value
+                case expiresAt = "expires_at"
+            }
+        }
+
+        struct VoiceSession: Codable {
+            let id: String
+            let mode: String
+            let threadId: String?
+
+            enum CodingKeys: String, CodingKey {
+                case id, mode
+                case threadId = "thread_id"
+            }
+        }
+
+        struct RealtimeConfig: Codable {
+            let model: String
+            let voice: String
+            let callsUrl: URL
+            let dataChannel: String
+
+            enum CodingKeys: String, CodingKey {
+                case model, voice
+                case callsUrl = "calls_url"
+                case dataChannel = "data_channel"
+            }
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case clientSecret = "client_secret"
+            case openaiSessionId = "openai_session_id"
+            case voiceSession = "voice_session"
+            case realtime
+        }
+    }
+
+    func startRealtimeSession(mode: String, threadId: String? = nil) async throws -> RealtimeSessionResponse {
+        struct Body: Encodable {
+            let mode: String
+            let thread_id: String?
+        }
+        return try await post("/api/f2/realtime/session", body: Body(mode: mode, thread_id: threadId))
+    }
+
+    func callRealtimeTool(name: String, arguments: [String: String]) async throws -> Data {
+        struct Body: Encodable {
+            let name: String
+            let arguments: [String: String]
+        }
+        return try await postRaw("/api/f2/realtime/tool", body: Body(name: name, arguments: arguments))
+    }
+
+    func finishRealtimeSession(id: String, transcript: [[String: String]], summary: String? = nil) async throws {
+        struct Body: Encodable {
+            let transcript: [[String: String]]
+            let summary: String?
+        }
+        let _: EmptyResponse = try await request("/api/f2/realtime/session/\(id)", method: "PATCH", body: Body(transcript: transcript, summary: summary))
+    }
+
     // MARK: HTTP plumbing
 
     private struct EmptyBody: Codable {}
@@ -148,6 +222,34 @@ final class F2API {
 
     private func post<B: Encodable, R: Decodable>(_ path: String, body: B) async throws -> R {
         try await request(path, method: "POST", body: body)
+    }
+
+    private func postRaw<B: Encodable>(_ path: String, body: B) async throws -> Data {
+        let url = Secrets.backendBaseURL.appendingPathComponent(path)
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        req.httpBody = try encoder.encode(body)
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: req)
+        } catch {
+            throw F2APIError.transport(error)
+        }
+
+        guard let http = response as? HTTPURLResponse else {
+            throw F2APIError.http(0, "non-HTTP response")
+        }
+        if http.statusCode == 401 {
+            throw F2APIError.unauthenticated
+        }
+        if http.statusCode >= 400 {
+            throw F2APIError.http(http.statusCode, errorMessage(from: data, response: http))
+        }
+        return data
     }
 
     private func request<B: Encodable, R: Decodable>(_ path: String, method: String, body: B?) async throws -> R {
@@ -176,8 +278,7 @@ final class F2API {
             throw F2APIError.unauthenticated
         }
         if http.statusCode >= 400 {
-            let msg = String(data: data, encoding: .utf8)
-            throw F2APIError.http(http.statusCode, msg)
+            throw F2APIError.http(http.statusCode, errorMessage(from: data, response: http))
         }
 
         if R.self == EmptyResponse.self {
@@ -197,5 +298,26 @@ final class F2API {
         for cookie in HTTPCookieStorage.shared.cookies ?? [] where cookie.domain.contains(host) || cookie.name == "f2_session" {
             HTTPCookieStorage.shared.deleteCookie(cookie)
         }
+    }
+
+    private func errorMessage(from data: Data, response: HTTPURLResponse) -> String {
+        let contentType = response.value(forHTTPHeaderField: "Content-Type") ?? ""
+        if contentType.contains("application/json"),
+           let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let err = obj["error"] as? String {
+            return err
+        }
+        if contentType.contains("text/html") {
+            if response.statusCode == 404 {
+                return "The F2 voice endpoint is not available on this server."
+            }
+            return "The server returned an HTML error page."
+        }
+        let text = String(data: data, encoding: .utf8)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        if let text, !text.isEmpty {
+            return String(text.prefix(240))
+        }
+        return HTTPURLResponse.localizedString(forStatusCode: response.statusCode)
     }
 }

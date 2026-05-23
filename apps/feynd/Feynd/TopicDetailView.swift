@@ -12,6 +12,7 @@ struct TopicDetailView: View {
     @State private var renamePresented = false
     @State private var renameDraft = ""
     @State private var deletePresented = false
+    @State private var voicePresented = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,6 +47,9 @@ struct TopicDetailView: View {
         } message: {
             Text("\"\(thread?.topic ?? "this topic")\" will be removed permanently.")
         }
+        .sheet(isPresented: $voicePresented) {
+            VoiceSessionView(mode: "topic", threadId: topicId)
+        }
         .task { await load() }
     }
 
@@ -54,6 +58,20 @@ struct TopicDetailView: View {
             HStack(spacing: 8) {
                 Button(action: quizMe) {
                     Label("Quiz me", systemImage: "questionmark.circle")
+                        .font(.subheadline)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color(.secondarySystemGroupedBackground))
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color(.separator)))
+                }
+                .disabled(busy)
+                .foregroundStyle(Color.primary)
+
+                Button {
+                    voicePresented = true
+                } label: {
+                    Label("Voice", systemImage: "mic.circle")
                         .font(.subheadline)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)

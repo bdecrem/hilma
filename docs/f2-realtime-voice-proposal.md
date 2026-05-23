@@ -6,25 +6,50 @@ Audience: Claude Code agent responsible for the overall F2/Feynd architecture.
 
 ## Summary
 
-Add a native voice conversation mode to the Feynd iPhone app using OpenAI `gpt-realtime-2` over WebRTC, while keeping all F2 data access, topic retrieval, tool execution, and persistence behind the existing F2 backend.
+Add a native voice conversation mode to the Feynd iPhone app using OpenAI Realtime over WebRTC, while keeping all F2 data access, topic retrieval, tool execution, and persistence behind the existing F2 backend.
 
-The user experience should feel like talking to F2 about anything Bart has saved: URLs, pasted text, topic chats, quiz history, and future F2 sources. The technical design should not dump the whole database into a Realtime session. Use retrieval and server-side tools so the model pulls only the topic context it needs.
+The user experience should feel like talking to F2 about anything Bart has saved: URLs, pasted text, topic chats, quiz history, and future F2 sources. The technical design **must not** dump the whole database into a Realtime session. Use retrieval and server-side tools so the model pulls only the topic context it needs.
+
+As of 2026-05-23, official OpenAI docs list `gpt-realtime-2` as the current reasoning model for realtime voice interactions. Do not hardcode that string in Swift. Keep the model and voice configurable from the backend environment.
+
+## Concrete First PR
+
+Build topic-scoped voice first. Do not start with global archive search.
+
+1. Add `POST /api/f2/realtime/session`.
+2. Backend authenticates the existing `f2_session` cookie.
+3. Backend mints a Realtime client secret or proxies the SDP offer using OpenAI's documented WebRTC flow.
+4. Add `VoiceSessionView.swift` and `RealtimeVoiceClient.swift` to `apps/feynd/Feynd/`.
+5. Add a microphone button to `TopicDetailView.swift`.
+6. Use `gpt-realtime-2` by backend config, not a Swift magic string.
+7. Use only one Phase 1 tool: `get_topic_context`.
+8. Persist one voice session transcript/summary in `f2_voice_sessions`.
+9. Add `NSMicrophoneUsageDescription`.
+10. Reuse the archived voice app's state machine and audio-session setup where possible.
+11. Document manual test steps and actual OpenAI usage/cost from at least one test session.
+
+Defer global voice, vector search, broad tool catalogs, and sideband control until topic voice works end to end.
 
 ## Current Codebase Context
 
 Relevant paths:
 
-- `apps/feynd/`: SwiftUI iPhone app.
-- `apps/feynd/Feynd/F2API.swift`: Existing authenticated HTTP client.
-- `apps/feynd/Feynd/ChatView.swift`: Global text chat UI.
-- `apps/feynd/Feynd/TopicDetailView.swift`: Per-topic text chat and quiz UI.
-- `apps/feynd/Feynd/TopicsView.swift`: Topic list.
-- `src/app/api/f2/*`: Existing Next.js API routes.
-- `src/lib/f2/agent.ts`: Shared F2 message entrypoint for web/iMessage/iOS/SMS.
-- `src/lib/f2/chat.ts`: Current Claude-based text routing.
+- `apps/feynd/`: current SwiftUI iPhone app.
+- `apps/feynd/Feynd/F2API.swift`: existing authenticated HTTP client.
+- `apps/feynd/Feynd/ChatView.swift`: global text chat UI.
+- `apps/feynd/Feynd/TopicDetailView.swift`: per-topic text chat and quiz UI.
+- `apps/feynd/Feynd/TopicsView.swift`: topic list.
+- `apps/feynd-voice-archive/`: archived voice-tutor app to mine for UI and audio plumbing.
+- `apps/feynd-voice-archive/Feynd/RealtimeClient.swift`: old WebSocket Realtime client with useful `AVAudioSession`, capture, playback, transcript, and state-machine code.
+- `apps/feynd-voice-archive/Feynd/VoiceSessionView.swift`: reusable voice-mode UI shell.
+- `apps/feynd-voice-archive/Feynd/TTSPlayer.swift`: audio playback patterns.
+- `apps/feynd-voice-archive/Feynd/Info.plist`: old `NSMicrophoneUsageDescription` string.
+- `src/app/api/f2/*`: existing Next.js API routes.
+- `src/lib/f2/agent.ts`: shared F2 message entrypoint for web/iMessage/iOS/SMS.
+- `src/lib/f2/chat.ts`: current Claude-based text routing.
 - `src/lib/f2/threads.ts`: Supabase access for `f2_threads`.
 - `apps/f2/schema/*.sql`: F2 Supabase migrations.
-- `apps/f2/CLAUDE.md`: Required project context and operating rules.
+- `apps/f2/CLAUDE.md`: required project context and operating rules.
 
 Current F2 shape:
 
@@ -34,36 +59,38 @@ Current F2 shape:
 - The iPhone app already uses cookie-backed auth via the existing `f2_session` cookie.
 - Text chat currently routes through `/api/f2/messages` and then `processMessage()`.
 
+## OpenAI Realtime Grounding
+
+This proposal is grounded in the official OpenAI docs as of 2026-05-23:
+
+- Model page: `gpt-realtime-2` is described as OpenAI's most capable realtime voice model, with text/audio/image input, text/audio output, function calling, configurable reasoning effort, 128K context, and audio token pricing.
+- WebRTC guide: OpenAI recommends WebRTC rather than WebSockets when connecting from a client such as a browser or mobile device.
+- WebRTC guide: two connection patterns are documented:
+  - Unified interface: backend sends SDP plus session config to `/v1/realtime/calls` using the standard API key and returns the SDP answer.
+  - Ephemeral token: backend calls `/v1/realtime/client_secrets`, returns `client_secret.value`, and the client uses that ephemeral key when posting its SDP offer to `/v1/realtime/calls`.
+- Client secrets API reference: Realtime client secrets are short-lived, are intended for client environments, and can carry a session configuration.
+- Server-side controls guide: sideband connections let the user client and application server connect to the same Realtime session; the server connection can monitor the session, update instructions, and respond to tool calls.
+- Realtime session schema: `tools`, `tool_choice`, and `reasoning` are part of the current session configuration. `reasoning` applies to reasoning-capable Realtime models such as `gpt-realtime-2`.
+
+Implementation-time rule:
+
+**Before coding against OpenAI, re-open the live OpenAI docs for Realtime WebRTC, client secrets, session config, model page, and server-side controls. Realtime schema has changed before; treat the docs as source of truth.**
+
 ## Product Goal
 
 Add voice mode in two places:
 
-1. Global voice chat: talk to F2 across the full learning archive.
-2. Topic voice chat: talk about one selected topic with that topic as the default context.
+1. Topic voice chat: talk about one selected topic with that topic as the default context.
+2. Global voice chat: talk to F2 across the full learning archive.
 
 The assistant should support:
 
 - Natural back-and-forth voice conversation.
-- Topic lookup across saved F2 content.
 - Deep discussion of URL/paste content already stored in Supabase.
+- Topic lookup across saved F2 content.
 - Switching topics by voice.
 - Quiz mode by voice.
 - Durable transcript and summary persistence back into F2.
-
-## OpenAI Realtime Guidance To Use
-
-Use OpenAI `gpt-realtime-2`, released in May 2026 for the Realtime API.
-
-Prefer WebRTC for the iPhone client. OpenAI's current Realtime docs recommend WebRTC for client/mobile-style interactions, with WebSockets more appropriate for server-side middle tiers.
-
-Keep private application logic on the server:
-
-- Do not put OpenAI standard API keys in the iPhone app.
-- Do not give the client direct Supabase service access.
-- Do not expose arbitrary database tools client-side.
-- Use authenticated backend endpoints to mint Realtime credentials or proxy SDP session creation.
-
-OpenAI supports server-side controls / sideband connections for Realtime sessions. That is the cleanest long-term design for private tools, but it may require a durable Node service because the current F2 backend appears to be a Next.js/Vercel-style app.
 
 ## Recommended Architecture
 
@@ -72,11 +99,11 @@ OpenAI supports server-side controls / sideband connections for Realtime session
 1. User taps Voice in the iPhone app.
 2. iPhone asks F2 backend to start a Realtime session.
 3. Backend authenticates the existing `f2_session` cookie.
-4. Backend creates a Realtime session for `gpt-realtime-2`.
-5. iPhone establishes a WebRTC audio connection to OpenAI.
+4. Backend creates or configures a Realtime session.
+5. iPhone establishes a WebRTC audio connection.
 6. Realtime model speaks directly with the user.
 7. Model requests F2 context through tools.
-8. Tool calls are fulfilled by the F2 backend, not by direct database access from the app.
+8. Tool calls are fulfilled by authenticated F2 API routes, not by direct database access from the app.
 9. At the end of the session, transcripts and a compact summary are saved back to F2.
 
 ### Backend Session Endpoint
@@ -96,55 +123,121 @@ Request shape:
 }
 ```
 
-Response shape depends on chosen connection method:
-
-- MVP: return an ephemeral OpenAI Realtime client secret and the initial session config.
-- Alternative: accept the client's SDP offer and return the OpenAI SDP answer through the unified `/v1/realtime/calls` flow.
-
 Use the existing session cookie auth from `src/lib/f2/auth.ts`.
 
-Recommended model config:
+Recommended config source:
+
+- `OPENAI_REALTIME_MODEL=gpt-realtime-2`
+- `OPENAI_REALTIME_VOICE=marin`
+- `OPENAI_REALTIME_REASONING_EFFORT=low`
+
+Do not put these in `Secrets.swift` unless the backend sends them as inert display/debug data. The backend owns the actual OpenAI session config.
+
+### Preferred Connection Flow For Phase 1
+
+Use the ephemeral token flow unless implementation testing shows the unified SDP proxy is easier on iOS:
+
+1. iOS calls `POST /api/f2/realtime/session`.
+2. Backend builds the full session config, including model, voice, instructions, tool declarations, and optional reasoning config.
+3. Backend calls `POST https://api.openai.com/v1/realtime/client_secrets` with the standard OpenAI API key.
+4. Backend returns `client_secret.value` plus any F2-specific session id to iOS.
+5. iOS creates a WebRTC offer.
+6. iOS posts the SDP offer to `https://api.openai.com/v1/realtime/calls` with `Authorization: Bearer <client_secret.value>` and `Content-Type: application/sdp`.
+7. iOS sets the returned SDP answer as the remote description.
+8. iOS opens the `oai-events` data channel for Realtime events and tool-call orchestration.
+
+Note: OpenAI's client secret default TTL is short; the API reference currently documents one minute for default client-secret expiration, with optional `expires_after` configuration. The iOS app should create the WebRTC session immediately after receiving the secret.
+
+Alternative:
+
+- Use the unified interface where iOS posts SDP to F2, and F2 posts multipart `sdp` + `session` to `/v1/realtime/calls` with the standard API key. This keeps OpenAI call initialization entirely backend-mediated but puts F2 in the critical path for session startup.
+
+### Session Config Sketch
+
+This is illustrative, not a copy-paste contract. Verify exact schema at implementation time.
 
 ```json
 {
-  "type": "realtime",
-  "model": "gpt-realtime-2",
-  "output_modalities": ["audio"],
-  "audio": {
-    "input": {
-      "turn_detection": {
-        "type": "semantic_vad"
+  "session": {
+    "type": "realtime",
+    "model": "gpt-realtime-2",
+    "instructions": "You are F2, Bart's learning companion...",
+    "output_modalities": ["audio"],
+    "audio": {
+      "input": {
+        "turn_detection": {
+          "type": "semantic_vad"
+        }
+      },
+      "output": {
+        "voice": "marin"
       }
     },
-    "output": {
-      "voice": "marin"
-    }
+    "reasoning": {
+      "effort": "low"
+    },
+    "tool_choice": "auto",
+    "tools": []
   }
 }
 ```
 
-Voice can be changed before first audio output. After the model emits audio, OpenAI sessions do not allow changing the voice for that session.
+Voice guidance:
 
-### iPhone App
+- OpenAI examples currently use `marin`, and release/docs mention new voices such as `marin` and `cedar`.
+- Keep voice in backend config.
+- If `marin` is unavailable in the target account/model, fall back to a documented available voice after checking live docs.
 
-Add files under `apps/feynd/Feynd/`:
+## iOS Implementation Details
 
-- `VoiceSessionView.swift`
-- `RealtimeVoiceClient.swift`
-- `VoiceSessionState.swift` if state gets non-trivial
+### WebRTC Dependency
+
+iOS does not provide a public native WebRTC framework for app use. WKWebView JavaScript WebRTC is the wrong tool for this feature.
+
+Use this decision order:
+
+1. Check whether OpenAI has shipped an official iOS Realtime SDK by implementation time. If it exists and supports `gpt-realtime-2`, WebRTC audio, data-channel events, and tool-call handling, prefer it.
+2. Otherwise use `stasel/WebRTC`, the maintained Swift Package wrapping Google's WebRTC. Expect a large binary dependency; this is acceptable for a real voice feature.
+
+Do not reuse the archived app's raw WebSocket transport. It is useful for audio plumbing and UX, but the new transport should be WebRTC.
+
+### Audio Plumbing
+
+Add `NSMicrophoneUsageDescription` back to `apps/feynd/Feynd/Info.plist`, for example:
+
+```xml
+<key>NSMicrophoneUsageDescription</key>
+<string>Feynd uses the microphone so you can talk with your learning assistant.</string>
+```
+
+Configure `AVAudioSession` before starting WebRTC capture:
+
+- category: `.playAndRecord`
+- mode: `.voiceChat`
+- options: `.defaultToSpeaker`, `.allowBluetoothHFP`, and any AirPlay/Bluetooth options supported by the chosen WebRTC stack and iOS target
+- activate with `.notifyOthersOnDeactivation`
+
+The archived `apps/feynd-voice-archive/Feynd/RealtimeClient.swift` already contains a working `AVAudioSession` setup, mic permission flow, capture state, playback state, and transcript callbacks. Reuse the concepts, but update the mode to `.voiceChat` and adapt transport to WebRTC.
+
+### Reuse From Archive
+
+Mine these files before writing new UI or audio code:
+
+- `apps/feynd-voice-archive/Feynd/VoiceSessionView.swift`: voice sheet structure, state-driven labels, orb interaction, permission handling.
+- `apps/feynd-voice-archive/Feynd/RealtimeClient.swift`: phase enum, audio session setup, transcript callback pattern, lifecycle cleanup.
+- `apps/feynd-voice-archive/Feynd/TTSPlayer.swift`: playback patterns if any local playback remains necessary.
+- `apps/feynd-voice-archive/Feynd/Info.plist`: microphone permission wording.
+
+Expected new files:
+
+- `apps/feynd/Feynd/VoiceSessionView.swift`
+- `apps/feynd/Feynd/RealtimeVoiceClient.swift`
+- `apps/feynd/Feynd/VoiceSessionState.swift` if state gets non-trivial
 
 Add UI entry points:
 
-- `ChatView.swift`: toolbar or composer-adjacent microphone button for global voice.
-- `TopicDetailView.swift`: microphone button near "Quiz me" for topic-scoped voice.
-
-Implementation notes:
-
-- Use native WebRTC if available in the project, or add the smallest viable dependency for iOS WebRTC.
-- Reuse `F2API.swift` auth/cookie behavior for the session bootstrap endpoint.
-- Show a simple state machine: connecting, listening, speaking, muted, reconnecting, ended.
-- Include explicit mute/end controls.
-- Capture server events over the WebRTC data channel for transcripts, tool status, and error reporting.
+- Phase 1: `TopicDetailView.swift`, microphone button near "Quiz me".
+- Phase 2: `ChatView.swift`, toolbar or composer-adjacent microphone button for global voice.
 
 ## Context Strategy
 
@@ -153,26 +246,34 @@ Do not load every F2 thread into the Realtime prompt.
 Use three layers:
 
 1. Session instructions: stable F2 behavior, voice style, and tool policy.
-2. Small initial context: current topic title, URL, quiz count, recent messages, and a compact archive summary.
+2. Small initial context: current topic title, URL, quiz count, recent messages, and a compact source summary.
 3. Retrieval tools: fetch relevant chunks as the conversation needs them.
 
-### Initial Prompt Shape
+Topic mode initial context:
 
-Global mode:
+- F2 identity.
+- Selected thread id, title/topic, URL, quiz count, last quizzed date.
+- Recent thread messages.
+- Small source summary or first bounded slice of source content for Phase 1 only.
+- Tool instruction: use `get_topic_context` for deeper source text.
 
-- "You are F2, Bart's learning companion."
-- "You can discuss any saved topic, but you must use tools to retrieve specific saved material."
-- Include a short list of recent topics: title, id, last updated, quiz count.
+Global mode initial context:
 
-Topic mode:
-
-- Same F2 identity.
-- Include selected thread id, title/topic, URL, quiz count, last quizzed date.
-- Include recent thread messages.
-- Include a small source summary if available.
-- Use tools for deeper source text instead of assuming full context.
+- F2 identity.
+- Short recent-topic list only: title, id, last updated, quiz count.
+- Tool instruction: search before making claims about saved material.
 
 ## Retrieval Layer
+
+Phase 1 can use bounded direct thread context and one topic-context tool. Phase 2 should add chunked retrieval.
+
+Add pgvector in a separate migration:
+
+```sql
+create extension if not exists vector;
+```
+
+Use `text-embedding-3-small` initially and store `vector(1536)`. It is cheaper and good enough for F2's first retrieval pass. If accuracy is poor, migrate to `text-embedding-3-large` with `vector(3072)`.
 
 Add a chunk/index table:
 
@@ -184,18 +285,19 @@ create table if not exists f2_topic_chunks (
   chunk_index integer not null,
   text text not null,
   metadata jsonb not null default '{}'::jsonb,
-  embedding vector,
+  embedding vector(1536),
   created_at timestamptz not null default now(),
   unique(thread_id, chunk_index)
 );
 ```
 
-If `pgvector` is not enabled in the Supabase project, add it as a migration before the table. Use the current preferred OpenAI embedding model at implementation time.
+Add a vector index after real data volume justifies it. For a tiny Bart-only corpus, correctness and simplicity matter more than index tuning.
 
 Chunk sources:
 
 - `f2_threads.content`
 - Longer `messages` histories when useful
+- Voice session summaries
 - Future uploaded files/transcripts if F2 adds them
 
 Add backend helpers:
@@ -205,65 +307,69 @@ Add backend helpers:
 
 Core functions:
 
-- `ensureThreadChunks(threadId)`
+- `ensureThreadChunks(userId, threadId)`
 - `searchUserTopics(userId, query, limit)`
 - `getThreadContext(userId, threadId, query?, limit?)`
-
-For MVP, retrieval can start with Postgres full-text search or simple text search. For the real version, use vector search.
 
 ## Tool Design
 
 Expose only narrow, user-scoped tools to the Realtime model.
 
-Recommended tools:
+**Critical security rule: every tool handler must derive `user_id` from the authenticated F2 session or server-side voice session, never from model arguments. Every database query must include `user_id`. Never trust `thread_id` alone.**
 
-```text
-list_topics(limit?: number)
-```
+### Phase 1 Tool
 
-Returns recent topic ids, titles, URLs, timestamps, quiz counts.
-
-```text
-search_topics(query: string, limit?: number)
-```
-
-Searches across the user's topic titles, source chunks, and maybe recent messages.
-
-```text
-get_topic(thread_id: string)
-```
-
-Returns title, URL, metadata, summary, and selected source chunks.
+Only expose:
 
 ```text
 get_topic_context(thread_id: string, query: string)
 ```
 
-Returns the best source chunks for a question about a specific topic.
+Behavior:
+
+- Verify `thread_id` belongs to authenticated `user_id`.
+- Return topic title, URL, quiz metadata, recent useful messages, and bounded source text/chunks relevant to `query`.
+- If retrieval is not built yet, return a bounded slice of `f2_threads.content` plus recent messages.
+
+### Phase 2 Tools
+
+Add only after Phase 1 works:
 
 ```text
-record_voice_turn(thread_id?: string, user_text: string, assistant_text: string)
+list_topics(limit?: number)
 ```
 
-Persists voice transcripts into the appropriate F2 thread.
+```text
+search_topics(query: string, limit?: number)
+```
+
+```text
+get_topic(thread_id: string)
+```
 
 ```text
 quiz_me(thread_id: string)
 ```
 
-Reuses or mirrors existing quiz behavior from `/api/f2/topics/[id]/quiz`.
-
 ```text
 create_topic_from_spoken_note(title: string, text: string)
 ```
 
-Optional later tool for "save this as a topic."
+Do not add `record_voice_turn` as a normal per-turn model tool. The canonical transcript belongs in `f2_voice_sessions.transcript`; save it from session events or app/backend lifecycle code. A later optional tool can be `mark_important_takeaway(...)` if the model needs to deliberately flag a learning insight during a session.
 
-Important: all tool handlers must derive `user_id` from the authenticated session, never from model arguments.
+## Vercel Decision Point
+
+F2 is a Next.js app deployed on Vercel.
+
+Vercel serverless functions are not the right place to hold persistent sideband WebSocket connections to OpenAI. Therefore:
+
+- Phase 1 should use client-mediated tool calls or the unified SDP proxy only for startup.
+- Do not plan server-side sideband on Vercel.
+- If production voice needs server-side sideband control, create a separate durable service such as `f2-voice-broker` on Fly.io, Render, a long-running Node host, or an appropriate Worker/runtime that supports the required WebSocket lifecycle.
+
+This is a decision, not just a risk. Sideband is architecturally cleaner but out of scope unless we add that durable service.
 
 ## Sideband vs Client-Mediated Tools
-
-There are two viable designs.
 
 ### MVP: Client-Mediated Tool Calls
 
@@ -271,7 +377,7 @@ The iPhone app receives Realtime tool-call events on the data channel, calls aut
 
 Pros:
 
-- Works with the existing Next.js backend.
+- Works with the existing Next.js/Vercel backend.
 - Faster to ship.
 - No durable WebSocket worker required.
 
@@ -285,23 +391,9 @@ This is acceptable for Bart-only/internal MVP because the backend still enforces
 
 ### Production: Server Sideband Controller
 
-The iPhone establishes WebRTC with OpenAI. The backend also connects to the same Realtime call over a sideband WebSocket using the call id. The backend observes tool calls, executes tools, updates instructions, and persists transcripts.
+The iPhone establishes WebRTC with OpenAI. A separate durable backend connects to the same Realtime call over a sideband WebSocket using the call id from the `/v1/realtime/calls` response. The backend observes tool calls, executes tools, updates instructions, and persists transcripts.
 
-Pros:
-
-- Best security boundary.
-- Keeps business logic client-agnostic.
-- Easier to share voice support across iOS, web, SIP, or future clients.
-
-Cons:
-
-- Needs a durable Node service or runtime that can hold WebSocket connections.
-- Vercel serverless may not be the right host for this piece.
-
-Recommendation:
-
-- Build MVP with client-mediated tools.
-- Plan a `f2-voice-broker` service if voice becomes central.
+Build this only if voice becomes core.
 
 ## Persistence
 
@@ -320,18 +412,20 @@ create table if not exists f2_voice_sessions (
   ended_at timestamptz,
   transcript jsonb not null default '[]'::jsonb,
   summary text,
+  usage jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
 );
 ```
 
 At session end:
 
-- Save transcript events.
+- Save transcript events into `f2_voice_sessions.transcript`.
+- Save usage/cost metadata when available.
 - Generate a compact summary.
-- If topic mode, append a voice-session summary to the thread's `messages`.
+- If topic mode, append one voice-session summary message to `f2_threads.messages`.
 - Update `updated_at` for touched thread.
 
-Avoid appending every raw partial transcript into `f2_threads.messages`; that array should stay useful for learning context, not become noisy audio telemetry.
+Avoid appending every raw transcript turn into `f2_threads.messages`; that array should stay useful for learning context, not become noisy audio telemetry.
 
 ## Prompting Guidance
 
@@ -356,6 +450,21 @@ Style:
 - Offer to go deeper.
 - Voice should feel like a patient learning partner, not a customer support bot.
 
+## Voice Quiz Flow
+
+Voice quiz mode should be explicit, not automatic on every voice session.
+
+Flow:
+
+1. User taps a future "Voice quiz" control or says "quiz me" during topic voice.
+2. F2 asks one question about the current topic and then waits.
+3. Bart answers by voice.
+4. F2 evaluates verbally, gives the correction or reinforcement, then asks whether to continue.
+5. Default quiz length is 3 questions; allow "keep going" or "stop quiz."
+6. At the end, save quiz count, last quizzed date, and a compact summary of strengths/gaps.
+
+Do not build this in Phase 1 unless topic voice is already stable.
+
 ## Phased Build Plan
 
 ### Phase 1: Topic Voice MVP
@@ -365,18 +474,20 @@ Scope:
 - Topic-scoped voice only from `TopicDetailView.swift`.
 - Realtime session endpoint.
 - WebRTC audio connection.
-- Initial prompt includes selected topic metadata and a bounded amount of content.
-- Persist final transcript summary to the thread.
-
-Do not build full archive search yet.
+- One tool: `get_topic_context`.
+- Initial prompt includes selected topic metadata and bounded context.
+- Persist final transcript and summary to `f2_voice_sessions`.
 
 Validation:
 
 - Start a session from one topic.
 - Ask questions about the topic.
 - Confirm the assistant answers using the topic context.
+- Confirm mic routing works through speaker and Bluetooth headset.
+- Interrupt the model and confirm conversation recovers.
 - End the session.
 - Confirm transcript/summary persisted in Supabase.
+- Record actual Realtime usage/cost from the session.
 
 ### Phase 2: Global Voice + Retrieval
 
@@ -384,7 +495,7 @@ Scope:
 
 - Add global voice from `ChatView.swift`.
 - Add chunking and retrieval.
-- Add `list_topics`, `search_topics`, and `get_topic_context` tools.
+- Add `list_topics`, `search_topics`, and `get_topic` tools.
 - Let the assistant switch between saved topics by voice.
 
 Validation:
@@ -403,6 +514,7 @@ Scope:
 - Spaced review prompts.
 - Session summaries with durable learning notes.
 - Optional web voice support reusing the same backend contract.
+- Optional `f2-voice-broker` if server-side sideband becomes necessary.
 
 Validation:
 
@@ -410,20 +522,31 @@ Validation:
 - Check cost and latency.
 - Check that saved summaries improve later conversations.
 
-## Risks And Decisions
+## Cost
 
-### Vercel / Serverless Runtime
+Official OpenAI pricing as of 2026-05-23 for `gpt-realtime-2`:
 
-If using server sideband controls, do not assume Vercel serverless can hold the needed WebSocket lifecycle. Verify runtime first. If it is unsuitable, use a separate small Node service.
+- Text input: $4.00 / 1M tokens.
+- Text output: $24.00 / 1M tokens.
+- Audio input: $32.00 / 1M audio tokens.
+- Audio output: $64.00 / 1M audio tokens.
+- Cached input is lower, but do not assume caching will materially reduce early MVP cost.
 
-### Cost
-
-Realtime audio can get expensive in long open sessions. Add:
+The official docs and release page price audio by tokens, not by a fixed dollars-per-minute value. Any per-minute estimate must be measured from real usage. For planning, add:
 
 - visible session timer
 - auto-end after inactivity
 - max session length
-- optional text transcript only after session end
+- usage capture in `f2_voice_sessions.usage`
+- a post-MVP report from 5-minute, 10-minute, and 30-minute test sessions
+
+Do not ship an always-open voice mode without cost guardrails.
+
+## Risks And Decisions
+
+### API Drift
+
+Realtime schema and endpoint examples have changed over time. Verify model name, voice names, `client_secrets` request shape, session config, event names, and tool-call event flow against live OpenAI docs immediately before implementation.
 
 ### Context Bloat
 
@@ -435,24 +558,13 @@ Text F2 currently uses Claude. Voice should use OpenAI Realtime because this is 
 
 ### Security
 
-All tool calls must be scoped by authenticated `user_id`. Never trust `thread_id` alone. Every query should include `user_id`.
-
-## Concrete First PR
-
-The first implementation PR should do only this:
-
-1. Add `POST /api/f2/realtime/session`.
-2. Add iOS `VoiceSessionView.swift` and `RealtimeVoiceClient.swift`.
-3. Add a microphone button to `TopicDetailView.swift`.
-4. Start `gpt-realtime-2` topic-scoped sessions.
-5. Persist a session summary or transcript stub.
-6. Document manual test steps.
-
-Defer global retrieval until topic voice works end to end.
+User scoping belongs on the backend. The model can request `thread_id`; the backend must prove ownership through authenticated `user_id`.
 
 ## References
 
-- OpenAI release: `gpt-realtime-2`, `gpt-realtime-translate`, and `gpt-realtime-whisper` announced May 7, 2026.
-- OpenAI Realtime WebRTC docs: client/mobile connections should use WebRTC.
-- OpenAI Realtime conversations docs: sessions are stateful, can use `gpt-realtime-2`, and support session updates, audio, image input, and tools.
-- OpenAI server-side controls docs: use sideband connections when private tool use and business logic should remain server-side.
+- OpenAI model docs: `https://developers.openai.com/api/docs/models/gpt-realtime-2`
+- OpenAI release: `https://openai.com/index/advancing-voice-intelligence-with-new-models-in-the-api/`
+- OpenAI Realtime WebRTC docs: `https://developers.openai.com/api/docs/guides/realtime-webrtc`
+- OpenAI Realtime conversations docs: `https://developers.openai.com/api/docs/guides/realtime-model-capabilities`
+- OpenAI Realtime client secrets API reference: `https://developers.openai.com/api/docs/api-reference/realtime-sessions`
+- OpenAI server-side controls docs: `https://developers.openai.com/api/docs/guides/realtime-server-controls`
