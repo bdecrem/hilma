@@ -18,26 +18,18 @@ struct TopicsView: View {
                     description: Text("Send F2 a URL or ask a question to get started.")
                 )
             } else {
-                List {
-                    ForEach(topics) { t in
-                        NavigationLink(value: t) {
-                            TopicRowView(topic: t)
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) { delete(t) } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                            Button { startRename(t) } label: {
-                                Label("Rename", systemImage: "pencil")
-                            }.tint(.blue)
-                        }
-                        .contextMenu {
-                            Button { startRename(t) } label: { Label("Rename", systemImage: "pencil") }
-                            Button(role: .destructive) { delete(t) } label: { Label("Delete", systemImage: "trash") }
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(topics) { t in
+                            TopicListRow(
+                                topic: t,
+                                onRename: { startRename(t) },
+                                onDelete: { delete(t) }
+                            )
+                            Divider().padding(.leading, 16)
                         }
                     }
                 }
-                .listStyle(.plain)
                 .refreshable { await load() }
             }
         }
@@ -99,6 +91,41 @@ struct TopicsView: View {
     }
 }
 
+struct TopicListRow: View {
+    let topic: F2Topic
+    let onRename: () -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            NavigationLink(value: topic) {
+                TopicRowView(topic: topic)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Menu {
+                Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
+                Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+        .contextMenu {
+            Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
+            Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
+        }
+    }
+}
+
 struct TopicRowView: View {
     let topic: F2Topic
 
@@ -123,7 +150,7 @@ struct TopicRowView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 10)
     }
 }
 

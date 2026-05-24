@@ -1,11 +1,13 @@
 import SwiftUI
 
 struct PasteView: View {
+    var onSaved: ((String) -> Void)? = nil
+
     @State private var title = ""
     @State private var text = ""
     @State private var busy = false
-    @State private var navigateToId: String? = nil
     @State private var errorMessage: String? = nil
+    @State private var savedTitle: String? = nil
 
     var body: some View {
         Form {
@@ -28,6 +30,10 @@ struct PasteView: View {
                 Section { Text(errorMessage).foregroundStyle(.red) }
             }
 
+            if let savedTitle {
+                Section { Text("Saved as “\(savedTitle)”.").foregroundStyle(.secondary) }
+            }
+
             Section {
                 Button {
                     save()
@@ -44,14 +50,6 @@ struct PasteView: View {
         }
         .navigationTitle("Paste text")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(isPresented: Binding(
-            get: { navigateToId != nil },
-            set: { if !$0 { navigateToId = nil } }
-        )) {
-            if let id = navigateToId {
-                TopicDetailView(topicId: id)
-            }
-        }
     }
 
     private func save() {
@@ -63,9 +61,11 @@ struct PasteView: View {
         Task {
             do {
                 let id = try await F2API.shared.ingestPaste(title: titleVal.isEmpty ? nil : titleVal, text: body)
+                let displayTitle = titleVal.isEmpty ? body.split(separator: "\n").first.map(String.init) ?? "Untitled" : titleVal
                 title = ""
                 text = ""
-                navigateToId = id
+                savedTitle = displayTitle
+                onSaved?(id)
             } catch {
                 errorMessage = error.localizedDescription
             }

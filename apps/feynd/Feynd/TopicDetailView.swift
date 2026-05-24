@@ -3,15 +3,11 @@ import SwiftUI
 struct TopicDetailView: View {
     let topicId: String
 
-    @Environment(\.dismiss) private var dismiss
     @State private var thread: F2Thread? = nil
     @State private var messages: [F2Message] = []
     @State private var draft = ""
     @State private var busy = false
     @State private var loading = true
-    @State private var renamePresented = false
-    @State private var renameDraft = ""
-    @State private var deletePresented = false
     @State private var voicePresented = false
 
     var body: some View {
@@ -26,27 +22,6 @@ struct TopicDetailView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle(thread?.topic ?? "Topic")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Button { startRename() } label: { Label("Rename", systemImage: "pencil") }
-                    Button(role: .destructive) { deletePresented = true } label: { Label("Delete", systemImage: "trash") }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
-            }
-        }
-        .alert("Rename topic", isPresented: $renamePresented) {
-            TextField("Title", text: $renameDraft)
-            Button("Cancel", role: .cancel) {}
-            Button("Save") { commitRename() }
-        }
-        .alert("Delete topic?", isPresented: $deletePresented) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) { commitDelete() }
-        } message: {
-            Text("\"\(thread?.topic ?? "this topic")\" will be removed permanently.")
-        }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
         }
@@ -141,35 +116,6 @@ struct TopicDetailView: View {
                 messages.append(F2Message(role: "assistant", text: "(error: \(error.localizedDescription))", createdAt: Date()))
             }
             busy = false
-        }
-    }
-
-    private func startRename() {
-        renameDraft = thread?.topic ?? ""
-        renamePresented = true
-    }
-
-    private func commitRename() {
-        let newName = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !newName.isEmpty else { return }
-        if var t = thread { t.topic = newName; thread = t }
-        Task {
-            do {
-                try await F2API.shared.renameTopic(id: topicId, to: newName)
-            } catch {
-                await load()
-            }
-        }
-    }
-
-    private func commitDelete() {
-        Task {
-            do {
-                try await F2API.shared.deleteTopic(id: topicId)
-                dismiss()
-            } catch {
-                // leave on screen; could surface a toast
-            }
         }
     }
 }

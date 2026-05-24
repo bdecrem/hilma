@@ -295,7 +295,7 @@ Each event contains a base64 audio delta:
 }
 ```
 
-The current client wraps each PCM delta in a small WAV container and queues it through `AVAudioPlayer`. This is a workable MVP but not ideal for production speech playback. A production upgrade should use a continuous audio queue/player to avoid gaps between chunks.
+The current client wraps each PCM delta in a small WAV container and queues it through `AVAudioPlayer`. Playback is protected by a small jitter buffer: it waits for 4 queued audio deltas or about 450ms before starting each assistant response. This helps absorb cellular jitter, but the WAV-per-delta path is still not ideal for production speech playback. A production upgrade should use a continuous audio queue/player to avoid gaps between chunks.
 
 When the model finishes a response, the client watches:
 
@@ -720,4 +720,3 @@ Tool calls loop or duplicate:
 Wrong user's data:
 
 - This is a security bug. Check every tool path derives `user_id` from `getSessionUser()` and passes it into every DB query.
-

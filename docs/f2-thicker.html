@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>F2 — Thicker lines</title>
+<style>
+  :root {
+    --ink: #0f1419;
+    --paper: #f7f5f1;
+    --muted: #6b6b6b;
+    --rule: #e4e1db;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 24px;
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .lede {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .tile { display: flex; flex-direction: column; gap: 10px; }
+  .icon-frame {
+    aspect-ratio: 1;
+    border-radius: 22.5%;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  }
+  .icon-frame svg { width: 100%; height: 100%; display: block; }
+  .label {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .label strong { color: var(--ink); font-weight: 500; }
+  .caption {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .specs {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">F2 — Thicker lines</p>
+  <h1>Three weights up.</h1>
+  <p class="lede">Same blush dots, thicker line strokes. Each step adds presence to the F as a letter while keeping the dots as pale punctuation. Node radius scales proportionally so the relationship stays consistent.</p>
+</header>
+
+<div class="grid">
+
+  <!-- 01: line 14, node r17 -->
+  <div class="tile">
+    <div class="icon-frame">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="120" y1="110" x2="280" y2="110" stroke="#ff7a3d" stroke-width="14" stroke-linecap="round"/>
+        <line x1="120" y1="110" x2="120" y2="310" stroke="#ff7a3d" stroke-width="14" stroke-linecap="round"/>
+        <line x1="120" y1="200" x2="240" y2="200" stroke="#ff7a3d" stroke-width="14" stroke-linecap="round"/>
+        <circle cx="120" cy="110" r="17" fill="#ffd2b8"/>
+        <circle cx="280" cy="110" r="17" fill="#ffd2b8"/>
+        <circle cx="120" cy="200" r="17" fill="#ffd2b8"/>
+        <circle cx="240" cy="200" r="17" fill="#ffd2b8"/>
+        <circle cx="120" cy="310" r="17" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="label"><strong>01</strong> &nbsp; +2</div>
+    <p class="caption specs">line 14 · node r17</p>
+    <p class="caption">A small step up. F has more body, but the proportions are still close to where we were.</p>
+  </div>
+
+  <!-- 02: line 16, node r19 -->
+  <div class="tile">
+    <div class="icon-frame">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="120" y1="110" x2="280" y2="110" stroke="#ff7a3d" stroke-width="16" stroke-linecap="round"/>
+        <line x1="120" y1="110" x2="120" y2="310" stroke="#ff7a3d" stroke-width="16" stroke-linecap="round"/>
+        <line x1="120" y1="200" x2="240" y2="200" stroke="#ff7a3d" stroke-width="16" stroke-linecap="round"/>
+        <circle cx="120" cy="110" r="19" fill="#ffd2b8"/>
+        <circle cx="280" cy="110" r="19" fill="#ffd2b8"/>
+        <circle cx="120" cy="200" r="19" fill="#ffd2b8"/>
+        <circle cx="240" cy="200" r="19" fill="#ffd2b8"/>
+        <circle cx="120" cy="310" r="19" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="label"><strong>02</strong> &nbsp; +4</div>
+    <p class="caption specs">line 16 · node r19</p>
+    <p class="caption">Substantial weight. F has real presence as a letterform; dots feel like jewel-pegs in a steady warm frame.</p>
+  </div>
+
+  <!-- 03: line 18, node r21 -->
+  <div class="tile">
+    <div class="icon-frame">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="120" y1="110" x2="280" y2="110" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <line x1="120" y1="110" x2="120" y2="310" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <line x1="120" y1="200" x2="240" y2="200" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <circle cx="120" cy="110" r="21" fill="#ffd2b8"/>
+        <circle cx="280" cy="110" r="21" fill="#ffd2b8"/>
+        <circle cx="120" cy="200" r="21" fill="#ffd2b8"/>
+        <circle cx="240" cy="200" r="21" fill="#ffd2b8"/>
+        <circle cx="120" cy="310" r="21" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="label"><strong>03</strong> &nbsp; +6</div>
+    <p class="caption specs">line 18 · node r21</p>
+    <p class="caption">Bold. The F now fills its space confidently; reads as a serious wordmark at any size. Dots remain proportionate.</p>
+  </div>
+
+</div>
+
+<footer>
+  My pick is <strong>02</strong> — substantial enough that the F feels intentional, not skinny, but still has enough breathing room around it. <strong>03</strong> starts to crowd the icon frame; might want to scale the whole composition down slightly if we go that bold. Want to push past 18?
+</footer>
+
+</div>
+</body>
+</html>

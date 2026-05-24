@@ -16,13 +16,6 @@ struct MainTabsView: View {
             .tabItem {
                 Label("Topics", systemImage: "list.bullet.rectangle")
             }
-
-            NavigationStack {
-                PasteView()
-            }
-            .tabItem {
-                Label("Paste", systemImage: "doc.text")
-            }
         }
         .tint(Color.primary)
     }

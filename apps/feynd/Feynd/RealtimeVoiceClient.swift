@@ -31,10 +31,15 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
     private var audioConverter: AVAudioConverter?
     private var audioPlayer: AVAudioPlayer?
     private var playbackQueue: [Data] = []
+    private var playbackPrimed = false
+    private var playbackResponseDone = false
+    private var playbackPrimeTask: Task<Void, Never>?
     private var transcript: [[String: String]] = []
     private var handledToolCallIds: Set<String> = []
 
     private let targetSampleRate: Double = 24_000
+    private let playbackPrimeChunkCount = 4
+    private let playbackPrimeDelayNanos: UInt64 = 450_000_000
 
     init(mode: String, threadId: String? = nil) {
         self.mode = mode
@@ -218,6 +223,8 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
                 enqueueAudio(data)
             }
         case "response.done":
+            playbackResponseDone = true
+            tryStartPlayback()
             if playbackQueue.isEmpty && audioPlayer == nil {
                 phase = .connected
                 status = "Connected"
@@ -244,14 +251,46 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
 
     private func enqueueAudio(_ pcm: Data) {
         playbackQueue.append(wavData(fromPCM16: pcm, sampleRate: Int(targetSampleRate), channels: 1))
-        if audioPlayer == nil {
-            playNextAudio()
+        schedulePlaybackPrimeFallback()
+        tryStartPlayback()
+    }
+
+    private func schedulePlaybackPrimeFallback() {
+        guard !playbackPrimed, audioPlayer == nil, playbackPrimeTask == nil else { return }
+        let delay = playbackPrimeDelayNanos
+        playbackPrimeTask = Task { [weak self] in
+            do {
+                try await Task.sleep(nanoseconds: delay)
+            } catch {
+                return
+            }
+            await MainActor.run {
+                guard let self else { return }
+                self.playbackPrimeTask = nil
+                self.tryStartPlayback(force: true)
+            }
         }
+    }
+
+    private func tryStartPlayback(force: Bool = false) {
+        guard audioPlayer == nil, !playbackQueue.isEmpty else { return }
+
+        if !playbackPrimed {
+            let hasEnoughBuffer = playbackQueue.count >= playbackPrimeChunkCount
+            guard force || playbackResponseDone || hasEnoughBuffer else { return }
+            playbackPrimed = true
+            playbackPrimeTask?.cancel()
+            playbackPrimeTask = nil
+        }
+
+        playNextAudio()
     }
 
     private func playNextAudio() {
         guard !playbackQueue.isEmpty else {
             audioPlayer = nil
+            playbackPrimed = false
+            playbackResponseDone = false
             phase = .connected
             status = "Connected"
             return
@@ -403,6 +442,10 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
         audioPlayer?.stop()
         audioPlayer = nil
         playbackQueue.removeAll()
+        playbackPrimed = false
+        playbackResponseDone = false
+        playbackPrimeTask?.cancel()
+        playbackPrimeTask = nil
         webSocket?.cancel(with: .goingAway, reason: nil)
         webSocket = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])

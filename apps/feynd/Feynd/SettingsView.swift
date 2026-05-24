@@ -24,6 +24,14 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
 
+                Section("Library") {
+                    NavigationLink {
+                        PasteView(onSaved: { _ in dismiss() })
+                    } label: {
+                        Label("Paste text as a topic", systemImage: "doc.text")
+                    }
+                }
+
                 if case let .signedIn(user) = session.state {
                     Section("Account") {
                         LabeledContent("Signed in as", value: user.username)
