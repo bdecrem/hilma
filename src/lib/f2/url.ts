@@ -54,15 +54,10 @@ export function extractYouTubeVideoId(url: string): string | null {
   return null
 }
 
-// Fetches the auto-generated or human-uploaded transcript for a YouTube video
-// via the `youtube-transcript` package (which scrapes the watch page + decodes
-// the timedtext stream). We hand-rolled this once and YouTube's player-response
-// auth changes broke it; the package keeps up so we don't have to.
-//
-// Returns null when no English caption track is available or anything in the
-// chain breaks — callers fall back to the regular HTML extraction so the user
-// still gets *something* stored for the URL.
-export async function fetchYouTubeTranscript(
+// Direct call into the youtube-transcript package. Works on residential IPs;
+// returns empty/null on datacenter IPs (Vercel, AWS, etc.) because YouTube
+// blocks them. Exported so the local proxy endpoint can call it directly.
+export async function fetchYouTubeTranscriptLocal(
   videoId: string,
 ): Promise<string | null> {
   try {
@@ -76,8 +71,48 @@ export async function fetchYouTubeTranscript(
       .trim()
     return text.length > 0 ? text : null
   } catch (err) {
-    // Fall through — caller will try the regular HTML fetch.
-    console.error(`[f2] YouTube transcript fetch failed for ${videoId}:`, err)
+    console.error(`[f2] YouTube transcript fetch (local) failed for ${videoId}:`, err)
+    return null
+  }
+}
+
+// Top-level entry point. If F2_YOUTUBE_FETCH_URL is set, proxy through that
+// base (typically Bart's iMac via bart-imac.tunn3l.sh) so the actual YouTube
+// call happens from a residential IP. Otherwise call directly — works for
+// local dev on the iMac itself.
+//
+// Returns null on any failure; callers fall back to the regular HTML
+// extraction so the user still gets *something* stored for the URL.
+export async function fetchYouTubeTranscript(
+  videoId: string,
+): Promise<string | null> {
+  const proxyBase = process.env.F2_YOUTUBE_FETCH_URL?.replace(/\/$/, '')
+  if (!proxyBase) {
+    return fetchYouTubeTranscriptLocal(videoId)
+  }
+
+  const secret = process.env.F2_YOUTUBE_FETCH_SECRET ?? ''
+  if (!secret) {
+    console.error('[f2] F2_YOUTUBE_FETCH_URL set but F2_YOUTUBE_FETCH_SECRET missing')
+    return null
+  }
+
+  try {
+    const res = await fetch(
+      `${proxyBase}/api/f2/youtube-transcript?v=${encodeURIComponent(videoId)}`,
+      {
+        headers: { 'x-f2-secret': secret },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      },
+    )
+    if (!res.ok) {
+      console.error(`[f2] YouTube proxy ${proxyBase} → ${res.status}`)
+      return null
+    }
+    const data = (await res.json()) as { text?: string; error?: string }
+    return data.text?.trim() || null
+  } catch (err) {
+    console.error(`[f2] YouTube proxy error:`, err)
     return null
   }
 }
