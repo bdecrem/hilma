@@ -1,7 +1,8 @@
 // URL detection + fetching + HTML→text extraction for F2.
 // Ported from vibeceo/sms-bot/commands/f2.ts.
 
-const MAX_STORED_CONTENT = 30000
+import { YoutubeTranscript } from 'youtube-transcript'
+
 const FETCH_TIMEOUT_MS = 15000
 const USER_AGENT =
   'Mozilla/5.0 (compatible; F2Bot/1.0; +https://hilma-nine.vercel.app)'
@@ -37,7 +38,63 @@ function stripHtml(html: string): string {
   return text.replace(/\s+/g, ' ').trim()
 }
 
+// YouTube URL → video id. Covers watch?v=, youtu.be/, shorts/, embed/, m.youtube.
+const YOUTUBE_PATTERNS = [
+  /youtu\.be\/([A-Za-z0-9_-]{6,})/i,
+  /youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/i,
+  /youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/i,
+  /(?:m\.|www\.)?youtube\.com\/watch\?(?:.*&)?v=([A-Za-z0-9_-]{6,})/i,
+]
+
+export function extractYouTubeVideoId(url: string): string | null {
+  for (const re of YOUTUBE_PATTERNS) {
+    const m = url.match(re)
+    if (m) return m[1]
+  }
+  return null
+}
+
+// Fetches the auto-generated or human-uploaded transcript for a YouTube video
+// via the `youtube-transcript` package (which scrapes the watch page + decodes
+// the timedtext stream). We hand-rolled this once and YouTube's player-response
+// auth changes broke it; the package keeps up so we don't have to.
+//
+// Returns null when no English caption track is available or anything in the
+// chain breaks — callers fall back to the regular HTML extraction so the user
+// still gets *something* stored for the URL.
+export async function fetchYouTubeTranscript(
+  videoId: string,
+): Promise<string | null> {
+  try {
+    const lines = await YoutubeTranscript.fetchTranscript(videoId, { lang: 'en' })
+    if (!Array.isArray(lines) || lines.length === 0) return null
+    const text = lines
+      .map((l) => l.text)
+      .filter(Boolean)
+      .join(' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+    return text.length > 0 ? text : null
+  } catch (err) {
+    // Fall through — caller will try the regular HTML fetch.
+    console.error(`[f2] YouTube transcript fetch failed for ${videoId}:`, err)
+    return null
+  }
+}
+
 export async function fetchUrlContent(url: string): Promise<string | null> {
+  // YouTube URLs: prefer the transcript over the watch-page HTML.
+  // (HTML on youtube.com strips down to chrome / "Sign in to like this video"
+  // boilerplate — useless for learning.) If no captions exist or anything in
+  // the transcript chain breaks, fall through to the regular HTML path so the
+  // user still gets *something* stored.
+  const ytId = extractYouTubeVideoId(url)
+  if (ytId) {
+    const transcript = await fetchYouTubeTranscript(ytId)
+    if (transcript && transcript.length >= 50) return transcript
+    console.log(`[f2] YouTube ${ytId}: no transcript, falling back to HTML`)
+  }
+
   try {
     const res = await fetch(url, {
       headers: {
@@ -63,7 +120,7 @@ export async function fetchUrlContent(url: string): Promise<string | null> {
     const text = ct.includes('text/html') ? stripHtml(body) : body.trim()
     if (text.length < 50) return null
 
-    return text.slice(0, MAX_STORED_CONTENT)
+    return text
   } catch (err) {
     console.error(`[f2] fetch error for ${url}:`, err)
     return null

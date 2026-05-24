@@ -29,6 +29,9 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.14)(react@19.2.4)
+      youtube-transcript:
+        specifier: ^1.3.1
+        version: 1.3.1
     devDependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.90.0
@@ -2359,6 +2362,10 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  youtube-transcript@1.3.1:
+    resolution: {integrity: sha512-NDCjwad113TGybbYF51y9Z4tcwzBHUZWQdF9veULNca18L+FdDbHHtTHIr69WVa3bB90l67S8kN0HtL2JO9fhg==}
+    engines: {node: '>=18.0.0'}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -4986,5 +4993,7 @@ snapshots:
   ws@8.20.0: {}
 
   yocto-queue@0.1.0: {}
+
+  youtube-transcript@1.3.1: {}
 
   zwitch@2.0.4: {}
