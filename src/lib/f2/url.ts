@@ -54,14 +54,11 @@ export function extractYouTubeVideoId(url: string): string | null {
   return null
 }
 
-// Fetches the YouTube transcript via the `youtube-transcript` package.
-//
-// Known issue: YouTube returns empty responses to datacenter IP ranges
-// (Vercel, AWS, etc.) so this works locally on a residential connection
-// but typically returns null in production. Callers fall back to the
-// regular HTML extraction when this returns null. A real production fix
-// requires a third-party transcript API service.
-export async function fetchYouTubeTranscript(
+// Direct YouTube transcript fetch via the `youtube-transcript` package.
+// Only works from a residential IP — YouTube returns empty responses to
+// datacenter ranges. Called by the /api/f2/youtube-transcript route which
+// runs on the Mac mini behind a tunn3l tunnel.
+export async function fetchYouTubeTranscriptLocal(
   videoId: string,
 ): Promise<string | null> {
   try {
@@ -75,7 +72,44 @@ export async function fetchYouTubeTranscript(
       .trim()
     return text.length > 0 ? text : null
   } catch (err) {
-    console.error(`[f2] YouTube transcript fetch failed for ${videoId}:`, err)
+    console.error(`[f2] YouTube transcript fetch (local) failed for ${videoId}:`, err)
+    return null
+  }
+}
+
+// Top-level dispatcher used by fetchUrlContent. If F2_YOUTUBE_FETCH_URL is
+// set (Vercel), call the mini's proxy to borrow its residential IP. Otherwise
+// fetch directly (works in local dev or anywhere with a residential IP).
+export async function fetchYouTubeTranscript(
+  videoId: string,
+): Promise<string | null> {
+  const proxyBase = process.env.F2_YOUTUBE_FETCH_URL?.replace(/\/$/, '')
+  if (!proxyBase) {
+    return fetchYouTubeTranscriptLocal(videoId)
+  }
+
+  const secret = process.env.F2_YOUTUBE_FETCH_SECRET ?? ''
+  if (!secret) {
+    console.error('[f2] F2_YOUTUBE_FETCH_URL set but F2_YOUTUBE_FETCH_SECRET missing')
+    return null
+  }
+
+  try {
+    const res = await fetch(
+      `${proxyBase}/api/f2/youtube-transcript?v=${encodeURIComponent(videoId)}`,
+      {
+        headers: { 'x-f2-secret': secret },
+        signal: AbortSignal.timeout(15000),
+      },
+    )
+    if (!res.ok) {
+      console.error(`[f2] YouTube proxy ${proxyBase} → ${res.status}`)
+      return null
+    }
+    const data = (await res.json()) as { text?: string; error?: string }
+    return data.text?.trim() || null
+  } catch (err) {
+    console.error(`[f2] YouTube proxy error:`, err)
     return null
   }
 }
