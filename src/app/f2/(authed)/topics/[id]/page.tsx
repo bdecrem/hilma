@@ -33,6 +33,7 @@ export default async function TopicDetailPage({
       initialMessages={thread.messages ?? []}
       topicTitle={topicLabel(thread)}
       stars={thread.stars ?? 0}
+      sourceUrl={thread.url ?? null}
     />
   )
 }

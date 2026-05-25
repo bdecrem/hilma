@@ -11,11 +11,13 @@ export default function TopicChat({
   initialMessages,
   topicTitle,
   stars,
+  sourceUrl,
 }: {
   threadId: string
   initialMessages: Msg[]
   topicTitle: string
   stars: number
+  sourceUrl: string | null
 }) {
   return (
     <ChatView
@@ -23,6 +25,7 @@ export default function TopicChat({
       initialMessages={initialMessages}
       topicTitle={topicTitle}
       stars={stars}
+      sourceUrl={sourceUrl}
       emptyHint="No messages yet on this topic. Send one, or hit Quiz me."
     />
   )

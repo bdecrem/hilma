@@ -11,6 +11,7 @@ export default function ChatView({
   emptyHint,
   topicTitle,
   stars,
+  sourceUrl,
 }: {
   initialMessages: Msg[]
   threadId?: string
@@ -19,6 +20,9 @@ export default function ChatView({
   topicTitle?: string
   /// Topic detail variant only — stars row beside the title.
   stars?: number
+  /// Topic detail variant only — when present, renders a small external-link
+  /// icon at the right end of the chip row.
+  sourceUrl?: string | null
 }) {
   const [messages, setMessages] = useState<Msg[]>(initialMessages)
   const [text, setText] = useState('')
@@ -135,7 +139,7 @@ export default function ChatView({
       >
         <div className="max-w-2xl mx-auto px-4 pt-3 pb-3">
           {threadId ? (
-            <div className="flex gap-2 mb-2 overflow-x-auto">
+            <div className="flex items-center gap-2 mb-2 overflow-x-auto">
               <ActionChip
                 label="Quiz me"
                 onClick={() => quizMe('standard')}
@@ -146,6 +150,37 @@ export default function ChatView({
                 onClick={() => alert('Voice mode is iPhone-only for now.')}
                 icon={<MicIcon />}
               />
+              <div className="flex-1" />
+              {sourceUrl ? (
+                <a
+                  href={sourceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Open source article"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    background: 'var(--feynd-surface)',
+                    border: '1px solid var(--feynd-border)',
+                    color: 'var(--feynd-text-2)',
+                    flexShrink: 0,
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M7 17L17 7M9 7h8v8"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </a>
+              ) : null}
             </div>
           ) : null}
           <div className="flex gap-2 items-end">

@@ -6,6 +6,7 @@ import SwiftUI
 struct TopicDetailView: View {
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     let topicId: String
 
     @State private var thread: F2Thread? = nil
@@ -117,6 +118,15 @@ struct TopicDetailView: View {
             .allowsHitTesting(!busy)
 
             Spacer()
+
+            // Source link — icon-only so it never crowds Quiz me / Talk to F2.
+            // Only renders when the topic has a URL behind it.
+            if let urlString = thread?.url, let url = URL(string: urlString) {
+                IconCircleButton(systemImage: "arrow.up.right", fg: FeyndTheme.text2) {
+                    openURL(url)
+                }
+                .accessibilityLabel("Open source article")
+            }
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)
