@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>F2 — 5% smaller</title>
+<style>
+  :root {
+    --ink: #0f1419;
+    --paper: #f7f5f1;
+    --muted: #6b6b6b;
+    --rule: #e4e1db;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: ui-serif, 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  header {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 24px;
+    margin-bottom: 48px;
+  }
+  .eyebrow {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 500;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .lede {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    margin-bottom: 40px;
+  }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+  .tile { display: flex; flex-direction: column; gap: 10px; }
+  .icon-frame {
+    aspect-ratio: 1;
+    border-radius: 22.5%;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  }
+  .icon-frame svg { width: 100%; height: 100%; display: block; }
+  .label {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+  }
+  .label strong { color: var(--ink); font-weight: 500; }
+  .caption {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .specs {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+  .device-row {
+    display: flex;
+    gap: 18px;
+    padding: 24px;
+    background: linear-gradient(160deg, #9ab4cf, #7b9bb8);
+    border-radius: 24px;
+    margin-top: 32px;
+    align-items: center;
+    justify-content: center;
+  }
+  .device-icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 22.5%;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .device-icon svg { width: 100%; height: 100%; display: block; }
+  .device-label {
+    font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 12px;
+  }
+  footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">F2 — 5% smaller</p>
+  <h1>Same three, less shrunk.</h1>
+  <p class="lede">5% smaller instead of 10–15%. Same three weight options. Same +12 right shift. The F sits with a touch more presence in the frame.</p>
+</header>
+
+<div class="grid">
+
+  <!-- Original F: x 120-280 (160w), y 110-310 (200h)
+       95%: 152w, 190h
+       Center the new bounds within the original, then shift +12 right -->
+
+  <!-- 01: line 18 -->
+  <div class="tile">
+    <div class="icon-frame">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="136" y1="125" x2="284" y2="125" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <line x1="136" y1="125" x2="136" y2="305" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <line x1="136" y1="210" x2="252" y2="210" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <circle cx="136" cy="125" r="20" fill="#ffd2b8"/>
+        <circle cx="284" cy="125" r="20" fill="#ffd2b8"/>
+        <circle cx="136" cy="210" r="20" fill="#ffd2b8"/>
+        <circle cx="252" cy="210" r="20" fill="#ffd2b8"/>
+        <circle cx="136" cy="305" r="20" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="label"><strong>01</strong> &nbsp; +18 stroke</div>
+    <p class="caption specs">line 18 · node r20 · shifted +12 right · 95% size</p>
+    <p class="caption">Light step up in weight, more presence in the frame than 10%-smaller version.</p>
+  </div>
+
+  <!-- 02: line 20 -->
+  <div class="tile">
+    <div class="icon-frame">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="136" y1="125" x2="284" y2="125" stroke="#ff7a3d" stroke-width="20" stroke-linecap="round"/>
+        <line x1="136" y1="125" x2="136" y2="305" stroke="#ff7a3d" stroke-width="20" stroke-linecap="round"/>
+        <line x1="136" y1="210" x2="252" y2="210" stroke="#ff7a3d" stroke-width="20" stroke-linecap="round"/>
+        <circle cx="136" cy="125" r="22" fill="#ffd2b8"/>
+        <circle cx="284" cy="125" r="22" fill="#ffd2b8"/>
+        <circle cx="136" cy="210" r="22" fill="#ffd2b8"/>
+        <circle cx="252" cy="210" r="22" fill="#ffd2b8"/>
+        <circle cx="136" cy="305" r="22" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="label"><strong>02</strong> &nbsp; +20 stroke</div>
+    <p class="caption specs">line 20 · node r22 · shifted +12 right · 95% size</p>
+    <p class="caption">The middle pick. Confident weight, still has breathing room. My favorite of the three.</p>
+  </div>
+
+  <!-- 03: line 22 -->
+  <div class="tile">
+    <div class="icon-frame">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="136" y1="125" x2="284" y2="125" stroke="#ff7a3d" stroke-width="22" stroke-linecap="round"/>
+        <line x1="136" y1="125" x2="136" y2="305" stroke="#ff7a3d" stroke-width="22" stroke-linecap="round"/>
+        <line x1="136" y1="210" x2="252" y2="210" stroke="#ff7a3d" stroke-width="22" stroke-linecap="round"/>
+        <circle cx="136" cy="125" r="24" fill="#ffd2b8"/>
+        <circle cx="284" cy="125" r="24" fill="#ffd2b8"/>
+        <circle cx="136" cy="210" r="24" fill="#ffd2b8"/>
+        <circle cx="252" cy="210" r="24" fill="#ffd2b8"/>
+        <circle cx="136" cy="305" r="24" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="label"><strong>03</strong> &nbsp; +22 stroke</div>
+    <p class="caption specs">line 22 · node r24 · shifted +12 right · 95% size</p>
+    <p class="caption">Boldest. Reads chunky and confident at any size.</p>
+  </div>
+
+</div>
+
+<p class="caption" style="margin-top: 36px;">At home-screen scale:</p>
+<div class="device-row">
+  <div>
+    <div class="device-icon">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="136" y1="125" x2="284" y2="125" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <line x1="136" y1="125" x2="136" y2="305" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <line x1="136" y1="210" x2="252" y2="210" stroke="#ff7a3d" stroke-width="18" stroke-linecap="round"/>
+        <circle cx="136" cy="125" r="20" fill="#ffd2b8"/>
+        <circle cx="284" cy="125" r="20" fill="#ffd2b8"/>
+        <circle cx="136" cy="210" r="20" fill="#ffd2b8"/>
+        <circle cx="252" cy="210" r="20" fill="#ffd2b8"/>
+        <circle cx="136" cy="305" r="20" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="device-label">01</div>
+  </div>
+  <div>
+    <div class="device-icon">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="136" y1="125" x2="284" y2="125" stroke="#ff7a3d" stroke-width="20" stroke-linecap="round"/>
+        <line x1="136" y1="125" x2="136" y2="305" stroke="#ff7a3d" stroke-width="20" stroke-linecap="round"/>
+        <line x1="136" y1="210" x2="252" y2="210" stroke="#ff7a3d" stroke-width="20" stroke-linecap="round"/>
+        <circle cx="136" cy="125" r="22" fill="#ffd2b8"/>
+        <circle cx="284" cy="125" r="22" fill="#ffd2b8"/>
+        <circle cx="136" cy="210" r="22" fill="#ffd2b8"/>
+        <circle cx="252" cy="210" r="22" fill="#ffd2b8"/>
+        <circle cx="136" cy="305" r="22" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="device-label">02</div>
+  </div>
+  <div>
+    <div class="device-icon">
+      <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#0f1419"/>
+        <line x1="136" y1="125" x2="284" y2="125" stroke="#ff7a3d" stroke-width="22" stroke-linecap="round"/>
+        <line x1="136" y1="125" x2="136" y2="305" stroke="#ff7a3d" stroke-width="22" stroke-linecap="round"/>
+        <line x1="136" y1="210" x2="252" y2="210" stroke="#ff7a3d" stroke-width="22" stroke-linecap="round"/>
+        <circle cx="136" cy="125" r="24" fill="#ffd2b8"/>
+        <circle cx="284" cy="125" r="24" fill="#ffd2b8"/>
+        <circle cx="136" cy="210" r="24" fill="#ffd2b8"/>
+        <circle cx="252" cy="210" r="24" fill="#ffd2b8"/>
+        <circle cx="136" cy="305" r="24" fill="#ffd2b8"/>
+      </svg>
+    </div>
+    <div class="device-label">03</div>
+  </div>
+</div>
+
+<footer>
+  Spec: F bounding box 136–284 horizontal, 125–305 vertical (148w × 180h) on a 400×400 canvas. Crossbar at y=210, ending at x=252. Stroke 20, node r22, color line #ff7a3d, color node #ffd2b8, background #0f1419.
+</footer>
+
+</div>
+</body>
+</html>

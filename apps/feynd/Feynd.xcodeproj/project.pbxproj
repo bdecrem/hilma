@@ -14,6 +14,7 @@
 		5B58C25CE4AFF970698227C4 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC33D7342C9F25E38F967F4 /* ChatView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
 		75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7811C80A73490F1D2B650D /* SettingsView.swift */; };
+		80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8E1D52867446105B46D06E /* FeyndChrome.swift */; };
 		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
 		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
@@ -21,6 +22,7 @@
 		B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */; };
 		C573E836F4F99984E9A8409E /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC5668529933DC6749CB3D06 /* Session.swift */; };
 		E837DB371B838AB27BC85493 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E1F1203E78919DA10B73C9 /* LoginView.swift */; };
+		ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */; };
 		FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */; };
 		FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */; };
 /* End PBXBuildFile section */
@@ -30,9 +32,11 @@
 		0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
 		3C7811C80A73490F1D2B650D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		4E8E1D52867446105B46D06E /* FeyndChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndChrome.swift; sourceTree = "<group>"; };
 		5DC33D7342C9F25E38F967F4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchemePreference.swift; sourceTree = "<group>"; };
 		78E1F1203E78919DA10B73C9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndTheme.swift; sourceTree = "<group>"; };
 		8B7488FF54E0D0D3D2342D62 /* Feynd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Feynd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8BE40ACBCE23969C211C1B42 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		8D6854393131D5ADEB1B75CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -55,6 +59,8 @@
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
 				A62FA8AD3B3E792810622A3A /* F2API.swift */,
 				0A077252957BBEE41DCF582D /* FeyndApp.swift */,
+				4E8E1D52867446105B46D06E /* FeyndChrome.swift */,
+				7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */,
 				B119830CA567768C3502310E /* Info.plist */,
 				78E1F1203E78919DA10B73C9 /* LoginView.swift */,
 				CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */,
@@ -161,6 +167,8 @@
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
 				935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */,
 				218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */,
+				80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */,
+				ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */,
 				E837DB371B838AB27BC85493 /* LoginView.swift in Sources */,
 				412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */,
 				36BE08CA63307A15CECFDBEA /* Models.swift in Sources */,

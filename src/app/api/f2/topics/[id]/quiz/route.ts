@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
-import { getThreadById, recordQuiz } from '@/lib/f2/threads'
+import { getThreadById, recordQuiz, type QuizKind } from '@/lib/f2/threads'
 import { processMessage } from '@/lib/f2/agent'
 
 export const runtime = 'nodejs'
 
 // POST /api/f2/topics/[id]/quiz
+// Body (optional): { kind: 'standard' | 'hard' }
 // Triggers a quiz on the given topic by sending a synthetic user message
-// through the existing agent loop. The LLM's continue_chat behavior already
-// knows how to quiz. Increments quiz_count on the thread.
+// through the existing agent loop. Awards stars on the thread:
+//   1st standard quiz → 1 star
+//   2nd standard quiz → 2 stars
+//   hard quiz         → 3 stars (regardless of order)
 export async function POST(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   const user = await getSessionUser()
@@ -24,15 +27,34 @@ export async function POST(
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
 
+  let kind: QuizKind = 'standard'
+  try {
+    const body = (await req.json().catch(() => null)) as { kind?: string } | null
+    if (body?.kind === 'hard') kind = 'hard'
+  } catch {
+    // empty/invalid body → default standard
+  }
+
+  const prompt =
+    kind === 'hard'
+      ? 'Give me the Hard Quiz on this topic — tougher questions, multi-step.'
+      : 'Quiz me on this topic.'
+
   const result = await processMessage({
     userId: user.id,
     client: 'web',
     handle: user.username,
-    text: 'Quiz me on this topic.',
+    text: prompt,
     threadId: id,
   })
 
-  await recordQuiz(thread.id, thread.quiz_count)
+  const recorded = await recordQuiz(thread, kind)
 
-  return NextResponse.json(result)
+  return NextResponse.json({
+    ...result,
+    kind,
+    stars: recorded.stars,
+    quiz_count: recorded.quiz_count,
+    hard_quiz_completed_at: recorded.hard_quiz_completed_at,
+  })
 }

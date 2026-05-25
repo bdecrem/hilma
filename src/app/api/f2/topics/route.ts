@@ -17,6 +17,8 @@ export async function GET() {
     url: t.url,
     last_quizzed_at: t.last_quizzed_at,
     quiz_count: t.quiz_count,
+    stars: t.stars,
+    hard_quiz_completed_at: t.hard_quiz_completed_at,
     created_at: t.created_at,
     updated_at: t.updated_at,
     client: t.client,

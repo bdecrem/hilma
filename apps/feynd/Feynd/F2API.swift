@@ -126,9 +126,31 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }
 
-    func quizMe(id: String) async throws -> String {
-        let res: MessageResponse = try await request("/api/f2/topics/\(id)/quiz", method: "POST", body: nil as EmptyBody?)
-        return res.reply
+    /// Response from `POST /api/f2/topics/[id]/quiz`. Stars + counts are
+    /// recomputed server-side; we just consume them.
+    struct QuizResponse: Codable {
+        let reply: String
+        let kind: String?
+        let stars: Int?
+        let quizCount: Int?
+        let hardQuizCompletedAt: Date?
+
+        enum CodingKeys: String, CodingKey {
+            case reply, kind, stars
+            case quizCount = "quiz_count"
+            case hardQuizCompletedAt = "hard_quiz_completed_at"
+        }
+    }
+
+    /// `kind`: "standard" earns up to 2 stars, "hard" earns the third star.
+    func quizMe(id: String, kind: String = "standard") async throws -> QuizResponse {
+        struct Body: Encodable { let kind: String }
+        let res: QuizResponse = try await post("/api/f2/topics/\(id)/quiz", body: Body(kind: kind))
+        return res
+    }
+
+    func fetchProgress() async throws -> F2Progress {
+        try await get("/api/f2/progress")
     }
 
     func ingestPaste(title: String?, text: String) async throws -> String {

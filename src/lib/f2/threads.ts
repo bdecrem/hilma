@@ -20,7 +20,11 @@ export type F2Thread = {
   updated_at: string
   last_quizzed_at: string | null
   quiz_count: number
+  stars: number
+  hard_quiz_completed_at: string | null
 }
+
+export type QuizKind = 'standard' | 'hard'
 
 export type CreateThreadInput = {
   userId: string
@@ -106,18 +110,46 @@ export async function listTopicsForUser(userId: string): Promise<F2Thread[]> {
   return (data as F2Thread[]) ?? []
 }
 
+// Compute the new star value after a quiz. Monotonic — never decreases.
+//   - 'hard' quiz → 3
+//   - 'standard' quiz → bumps 0→1, 1→2 (caps at 2; only a hard quiz reaches 3)
+export function nextStars(current: number, kind: QuizKind): number {
+  if (kind === 'hard') return Math.max(current, 3)
+  if (current >= 2) return current
+  return current + 1
+}
+
+export type RecordedQuiz = {
+  stars: number
+  quiz_count: number
+  hard_quiz_completed_at: string | null
+}
+
 export async function recordQuiz(
-  threadId: string,
-  currentCount: number,
-): Promise<void> {
+  thread: F2Thread,
+  kind: QuizKind = 'standard',
+): Promise<RecordedQuiz> {
+  const now = new Date().toISOString()
+  const newStars = nextStars(thread.stars, kind)
+  const newCount = kind === 'standard' ? thread.quiz_count + 1 : thread.quiz_count
+  const newHardAt = kind === 'hard' ? now : thread.hard_quiz_completed_at
+
   const { error } = await f2Supabase()
     .from('f2_threads')
     .update({
-      last_quizzed_at: new Date().toISOString(),
-      quiz_count: currentCount + 1,
+      last_quizzed_at: now,
+      quiz_count: newCount,
+      stars: newStars,
+      hard_quiz_completed_at: newHardAt,
     })
-    .eq('id', threadId)
+    .eq('id', thread.id)
   if (error) console.error('[f2] recordQuiz failed:', error)
+
+  return {
+    stars: newStars,
+    quiz_count: newCount,
+    hard_quiz_completed_at: newHardAt,
+  }
 }
 
 export async function appendMessages(
