@@ -3,6 +3,12 @@ import SwiftUI
 /// Topics screen — direct port of `TopicsScreen` from feynd-screens.jsx.
 /// Library eyebrow, 34pt title, Recent pill, meta strip, rows with mini glyph
 /// + 16.5pt title + star meta + kebab. Custom chrome end-to-end.
+enum TopicSort: String, CaseIterable, Identifiable {
+    case recent, alphabetical
+    var id: String { rawValue }
+    var label: String { self == .recent ? "Recent" : "A–Z" }
+}
+
 struct TopicsView: View {
     @Environment(Session.self) private var session
     @State private var topics: [F2Topic] = []
@@ -11,6 +17,22 @@ struct TopicsView: View {
     @State private var renameTarget: F2Topic? = nil
     @State private var renameDraft = ""
     @State private var showProfile = false
+    /// Persists across launches; defaults to recent.
+    @AppStorage("topicsSortMode") private var sortRaw = TopicSort.recent.rawValue
+
+    private var sort: TopicSort { TopicSort(rawValue: sortRaw) ?? .recent }
+
+    private var sortedTopics: [F2Topic] {
+        switch sort {
+        case .recent:
+            // Server already returns by updated_at desc; preserve order.
+            return topics
+        case .alphabetical:
+            return topics.sorted {
+                $0.displayLabel.localizedCaseInsensitiveCompare($1.displayLabel) == .orderedAscending
+            }
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -64,8 +86,31 @@ struct TopicsView: View {
                 .tracking(-0.8)
                 .foregroundStyle(FeyndTheme.text)
             Spacer()
+            sortMenu
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+        .padding(.bottom, 14)
+    }
+
+    /// Recent / A–Z toggle. Menu lets the user pick; current pick is shown
+    /// in the pill so the trailing chevron always has meaning.
+    private var sortMenu: some View {
+        Menu {
+            ForEach(TopicSort.allCases) { option in
+                Button {
+                    sortRaw = option.rawValue
+                } label: {
+                    if option == sort {
+                        Label(option.label, systemImage: "checkmark")
+                    } else {
+                        Text(option.label)
+                    }
+                }
+            }
+        } label: {
             HStack(spacing: 4) {
-                Text("Recent")
+                Text(sort.label)
                     .font(.system(size: 12.5, weight: .medium))
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .semibold))
@@ -77,9 +122,6 @@ struct TopicsView: View {
             .background(FeyndTheme.surface, in: Capsule())
             .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         }
-        .padding(.horizontal, 18)
-        .padding(.top, 8)
-        .padding(.bottom, 14)
     }
 
     private var metaStrip: some View {
@@ -89,15 +131,6 @@ struct TopicsView: View {
                 .tracking(0.2)
                 .foregroundStyle(FeyndTheme.text3)
             Spacer()
-            HStack(spacing: 5) {
-                Image(systemName: "star.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(FeyndTheme.gold)
-                Text("\(session.progress.totalStars) STARS EARNED")
-                    .font(.system(size: 12, weight: .semibold))
-                    .tracking(0.2)
-                    .foregroundStyle(FeyndTheme.text3)
-            }
         }
         .padding(.horizontal, 18)
         .padding(.bottom, 10)
@@ -121,14 +154,15 @@ struct TopicsView: View {
     }
 
     private var rows: some View {
-        ScrollView {
+        let display = sortedTopics
+        return ScrollView {
             // Bottom inset large enough to keep the floating TabPill from
             // covering the last row.
             LazyVStack(spacing: 0) {
-                ForEach(Array(topics.enumerated()), id: \.element.id) { idx, topic in
+                ForEach(Array(display.enumerated()), id: \.element.id) { idx, topic in
                     NavigationLink(value: topic) {
                         TopicListRow(topic: topic,
-                                     isLast: idx == topics.count - 1,
+                                     isLast: idx == display.count - 1,
                                      onRename: { startRename(topic) },
                                      onDelete: { delete(topic) })
                     }
@@ -243,9 +277,6 @@ struct TopicListRow: View {
         } else {
             HStack(spacing: 8) {
                 StarRow(value: topic.stars, max: 5, size: 11, gap: 2)
-                Text("·").foregroundStyle(FeyndTheme.text3)
-                Text("\(topic.quizCount) \(topic.quizCount == 1 ? "quiz" : "quizzes")")
-                    .foregroundStyle(FeyndTheme.text2)
                 Text("·").foregroundStyle(FeyndTheme.text3)
                 Text(relative(topic.createdAt))
                     .foregroundStyle(FeyndTheme.text3)

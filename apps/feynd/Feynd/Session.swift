@@ -16,6 +16,13 @@ final class Session {
     /// the top-left profile badge stays in sync across screens.
     var progress: F2Progress = .zero
 
+    /// Set to the new level when `refreshProgress()` observes a level
+    /// increase. UI watches this and presents the level-up celebration; clear
+    /// to nil to dismiss. First post-login refresh is intentionally silent
+    /// (no celebration for restoring known state).
+    var pendingLevelUp: Int? = nil
+    private var hasLoadedProgressOnce = false
+
     func bootstrap() async {
         // On launch, see if a persistent cookie is still good.
         do {
@@ -44,13 +51,26 @@ final class Session {
         try? await F2API.shared.logout()
         state = .signedOut
         progress = .zero
+        pendingLevelUp = nil
+        hasLoadedProgressOnce = false
     }
 
     func refreshProgress() async {
         do {
-            progress = try await F2API.shared.fetchProgress()
+            let next = try await F2API.shared.fetchProgress()
+            let previousLevel = progress.level
+            progress = next
+            if hasLoadedProgressOnce, next.level > previousLevel {
+                pendingLevelUp = next.level
+            }
+            hasLoadedProgressOnce = true
         } catch {
             // Non-fatal — the badge just keeps the last known value.
         }
+    }
+
+    /// Clear the pending celebration once the user has acknowledged it.
+    func clearPendingLevelUp() {
+        pendingLevelUp = nil
     }
 }

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { MiniTopicGlyph, StarRow } from '../feynd-chrome'
 
 export type TopicRowData = {
   id: string
@@ -10,6 +11,7 @@ export type TopicRowData = {
   quiz_count: number
   last_quizzed_at: string | null
   created_at: string
+  stars: number
 }
 
 function relative(iso: string | null): string {
@@ -40,7 +42,13 @@ function defaultLabel(t: TopicRowData): string {
   return '(untitled)'
 }
 
-export default function TopicRow({ topic: initial }: { topic: TopicRowData }) {
+export default function TopicRow({
+  topic: initial,
+  last,
+}: {
+  topic: TopicRowData
+  last: boolean
+}) {
   const [topic, setTopic] = useState(initial)
   const [menuOpen, setMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
@@ -81,7 +89,7 @@ export default function TopicRow({ topic: initial }: { topic: TopicRowData }) {
     }
     setBusy(true)
     const prev = topic
-    setTopic({ ...topic, topic: next }) // optimistic
+    setTopic({ ...topic, topic: next })
     const res = await fetch(`/api/f2/topics/${topic.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -97,10 +105,9 @@ export default function TopicRow({ topic: initial }: { topic: TopicRowData }) {
 
   async function handleDelete() {
     setMenuOpen(false)
-    if (!confirm(`Delete "${defaultLabel(topic)}"? This can't be undone.`))
-      return
+    if (!confirm(`Delete "${defaultLabel(topic)}"? This can't be undone.`)) return
     setBusy(true)
-    setDeleted(true) // optimistic
+    setDeleted(true)
     const res = await fetch(`/api/f2/topics/${topic.id}`, { method: 'DELETE' })
     setBusy(false)
     if (!res.ok) {
@@ -109,75 +116,149 @@ export default function TopicRow({ topic: initial }: { topic: TopicRowData }) {
     }
   }
 
-  return (
-    <li>
-      <div
-        className={`rounded-xl bg-white border border-neutral-200 px-4 py-3 transition-colors ${
-          busy ? 'opacity-60' : 'hover:border-neutral-400'
-        }`}
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            {renaming ? (
-              <input
-                ref={inputRef}
-                type="text"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') saveRename()
-                  if (e.key === 'Escape') setRenaming(false)
-                }}
-                onBlur={saveRename}
-                className="w-full rounded-md border border-neutral-300 px-2 py-1 text-[15px] outline-none focus:border-neutral-500"
-              />
-            ) : (
-              <Link
-                href={`/f2/topics/${topic.id}`}
-                className="block font-medium text-[15px] truncate hover:underline"
-              >
-                {defaultLabel(topic)}
-              </Link>
-            )}
-            <div className="text-xs text-neutral-500 mt-1">
-              <span className="text-neutral-400">
-                Added {relative(topic.created_at)}
-              </span>
-              <span className="mx-1.5 text-neutral-300">·</span>
-              {topic.quiz_count > 0
-                ? `Quizzed ${topic.quiz_count}× · last ${relative(topic.last_quizzed_at)}`
-                : 'No quizzes yet'}
-            </div>
-          </div>
+  const isNew = topic.stars === 0 && topic.quiz_count === 0
 
-          <div ref={menuRef} className="relative shrink-0">
-            <button
-              type="button"
-              aria-label="Topic options"
-              onClick={() => setMenuOpen((v) => !v)}
-              className="w-8 h-8 rounded-full hover:bg-neutral-100 flex items-center justify-center text-neutral-500"
+  return (
+    <li
+      style={{
+        borderBottom: last ? 'none' : '1px solid var(--feynd-border-soft)',
+        opacity: busy ? 0.6 : 1,
+        transition: 'opacity 120ms',
+      }}
+    >
+      <div className="flex items-center gap-3 py-3 px-1">
+        <MiniTopicGlyph />
+
+        <div className="min-w-0 flex-1">
+          {renaming ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') saveRename()
+                if (e.key === 'Escape') setRenaming(false)
+              }}
+              onBlur={saveRename}
+              style={{
+                width: '100%',
+                padding: '4px 8px',
+                fontSize: 16,
+                borderRadius: 6,
+                border: '1px solid var(--feynd-border)',
+                background: 'var(--feynd-bg-raised)',
+                color: 'var(--feynd-text)',
+                outline: 'none',
+              }}
+            />
+          ) : (
+            <Link
+              href={`/f2/topics/${topic.id}`}
+              style={{
+                display: 'block',
+                fontSize: 16.5,
+                fontWeight: 600,
+                letterSpacing: -0.3,
+                color: 'var(--feynd-text)',
+                textDecoration: 'none',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
             >
-              <span aria-hidden className="text-xl leading-none">⋯</span>
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 top-9 z-20 min-w-[140px] rounded-lg bg-white border border-neutral-200 shadow-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={openRename}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-neutral-100"
-                >
-                  Rename
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
-              </div>
+              {defaultLabel(topic)}
+            </Link>
+          )}
+          <div
+            className="mt-1 flex items-center gap-2 text-[12.5px]"
+            style={{ letterSpacing: -0.1 }}
+          >
+            {isNew ? (
+              <span style={{ color: 'var(--feynd-text-3)' }}>
+                {relative(topic.created_at)} · no quizzes yet
+              </span>
+            ) : (
+              <>
+                <StarRow value={topic.stars} />
+                <span style={{ color: 'var(--feynd-text-3)' }}>·</span>
+                <span style={{ color: 'var(--feynd-text-3)' }}>
+                  {relative(topic.created_at)}
+                </span>
+              </>
             )}
           </div>
+        </div>
+
+        <div ref={menuRef} className="relative shrink-0">
+          <button
+            type="button"
+            aria-label="Topic options"
+            onClick={() => setMenuOpen((v) => !v)}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--feynd-text-3)',
+              cursor: 'pointer',
+              fontSize: 20,
+              lineHeight: 1,
+            }}
+          >
+            ⋯
+          </button>
+          {menuOpen && (
+            <div
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: '100%',
+                marginTop: 6,
+                minWidth: 140,
+                background: 'var(--feynd-surface)',
+                border: '1px solid var(--feynd-border)',
+                borderRadius: 12,
+                boxShadow: 'var(--feynd-shadow-soft)',
+                overflow: 'hidden',
+                zIndex: 20,
+              }}
+            >
+              <button
+                type="button"
+                onClick={openRename}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 12px',
+                  fontSize: 14,
+                  color: 'var(--feynd-text)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Rename
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 12px',
+                  fontSize: 14,
+                  color: '#D43F2B',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </li>

@@ -17,16 +17,10 @@ struct ChatView: View {
 
             VStack(spacing: 0) {
                 FeyndTopBar {
-                    HStack(spacing: 8) {
-                        F2MiniMark(size: 22)
-                        Text("F2")
-                            .font(.system(size: 15.5, weight: .semibold))
-                            .foregroundStyle(FeyndTheme.text)
-                        Text("tutor")
-                            .font(.system(size: 14))
-                            .italic()
-                            .foregroundStyle(FeyndTheme.text3)
-                    }
+                    Text("Chat")
+                        .font(.system(size: 16, weight: .semibold))
+                        .tracking(-0.2)
+                        .foregroundStyle(FeyndTheme.text)
                 } trailing: {
                     IconCircleButton(systemImage: "plus") { /* future: new chat */ }
                 } onProfileTap: {
@@ -109,6 +103,12 @@ struct ChatView: View {
 
 /// The conversation scroll itself — auto-scrolls to bottom, shows typing dots
 /// while a reply is in flight.
+///
+/// Keyboard dismissal:
+///  - `.scrollDismissesKeyboard(.interactively)` peels the keyboard with the
+///    finger as the user drags down on the conversation (Messages/WhatsApp idiom).
+///  - The empty-area tap gesture is the fallback for short chats where there's
+///    nothing to scroll — taps on bubble area resign first responder.
 struct ChatScrollView: View {
     let messages: [F2Message]
     let busy: Bool
@@ -143,8 +143,13 @@ struct ChatScrollView: View {
                     }
                 }
                 .padding(.vertical, 8)
+                // contentShape extends the tap target to the empty area between
+                // bubbles, so a tap anywhere in the scroll content dismisses.
+                .contentShape(Rectangle())
+                .onTapGesture { dismissKeyboard() }
             }
             .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
             .onChange(of: messages.count) { _, _ in
                 if let last = messages.last {
                     withAnimation(.spring(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .bottom) }
@@ -155,6 +160,15 @@ struct ChatScrollView: View {
             }
         }
     }
+}
+
+/// Resign first responder on the active text field. Used by both the
+/// interactive-drag fallback and the tap-anywhere dismissal.
+func dismissKeyboard() {
+    UIApplication.shared.sendAction(
+        #selector(UIResponder.resignFirstResponder),
+        to: nil, from: nil, for: nil
+    )
 }
 
 struct TypingDots: View {

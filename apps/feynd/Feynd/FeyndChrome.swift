@@ -440,8 +440,8 @@ struct TabPill: View {
         }
         .padding(4)
         .background(
-            // The translucent pill from the design (rgba(20,17,15,0.78) + blur).
-            Capsule().fill(Color(hex: 0x14110F).opacity(0.78))
+            // Translucent backdrop — warm-dark in dark mode, warm-paper in light.
+            Capsule().fill(FeyndTheme.tabPillBg.opacity(0.78))
         )
         .background(
             Capsule().fill(.ultraThinMaterial)

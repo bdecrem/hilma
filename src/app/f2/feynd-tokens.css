@@ -1,0 +1,63 @@
+/* Feynd web design tokens — mirror of FeyndTheme.swift.
+ *
+ * Light is "warm-tinted paper"; dark is "warm-tinted ink". Same coral / gold
+ * brand accents in both. Switched at runtime via a [data-feynd-theme="..."]
+ * attribute on the <body> (set by the FeyndThemeProvider client component).
+ */
+
+[data-feynd-theme="light"] {
+  --feynd-bg:          #FAF6EE;
+  --feynd-bg-raised:   #F1ECDF;
+  --feynd-surface:     #FFFFFF;
+  --feynd-surface-2:   #ECE5D6;
+  --feynd-surface-3:   #DFD7C5;
+  --feynd-border:      #E0D9CB;
+  --feynd-border-soft: #EFE8DA;
+
+  --feynd-text:        #1A1612;
+  --feynd-text-2:      #6A6358;
+  --feynd-text-3:      #948C7E;
+  --feynd-text-4:      #C9C1B0;
+
+  --feynd-coral:       #E27250;
+  --feynd-coral-soft:  rgba(226, 114, 80, 0.16);
+  --feynd-blue:        #007AFF;
+  --feynd-gold:        #E89C2C;
+
+  --feynd-tabpill-bg:  rgba(246, 241, 227, 0.78);
+  --feynd-shadow-soft: 0 1px 2px rgba(60, 50, 30, 0.06), 0 6px 24px rgba(60, 50, 30, 0.08);
+}
+
+[data-feynd-theme="dark"] {
+  --feynd-bg:          #0E0C0B;
+  --feynd-bg-raised:   #161311;
+  --feynd-surface:     #1A1715;
+  --feynd-surface-2:   #26221F;
+  --feynd-surface-3:   #312C28;
+  --feynd-border:      #2C2825;
+  --feynd-border-soft: #221F1C;
+
+  --feynd-text:        #F4F0EB;
+  --feynd-text-2:      #9A948D;
+  --feynd-text-3:      #5C5853;
+  --feynd-text-4:      #3A3733;
+
+  --feynd-coral:       #ED8264;
+  --feynd-coral-soft:  rgba(237, 130, 100, 0.16);
+  --feynd-blue:        #0A84FF;
+  --feynd-gold:        #FFB44A;
+
+  --feynd-tabpill-bg:  rgba(20, 17, 15, 0.78);
+  --feynd-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.25), 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+/* The Feynd-themed root container. Owns the page bg + the default text color
+ * so every child inherits sensibly. Use this on the outermost wrapper inside
+ * the authed layout. */
+.feynd-root {
+  background: var(--feynd-bg);
+  color: var(--feynd-text);
+  min-height: 100dvh;
+  /* Avoid the Safari bounce flashing the system bg color. */
+  background-attachment: fixed;
+}
