@@ -44,7 +44,8 @@ struct TopicsView: View {
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(FeyndTheme.text2)
                 } trailing: {
-                    IconCircleButton(systemImage: "plus") { /* future: ingest */ }
+                    // Empty — new topics come from pasting a URL in Chat.
+                    EmptyView()
                 } onProfileTap: {
                     showProfile = true
                 }
@@ -63,7 +64,7 @@ struct TopicsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showProfile) { SettingsView() }
+        .sheet(isPresented: $showProfile) { ProfileSheet() }
         .alert("Rename topic",
                isPresented: Binding(get: { renameTarget != nil },
                                     set: { if !$0 { renameTarget = nil } })) {
@@ -71,9 +72,14 @@ struct TopicsView: View {
             Button("Cancel", role: .cancel) { renameTarget = nil }
             Button("Save") { commitRename() }
         }
+        // Reload on every appearance — keeps stars/level in sync with quizzes
+        // completed on the Topic detail screen (no stale data when returning).
         .task {
-            if topics.isEmpty { await load() }
+            await load()
             await session.refreshProgress()
+        }
+        .onChange(of: session.progress) { _, _ in
+            Task { await load() }
         }
     }
 
@@ -276,7 +282,7 @@ struct TopicListRow: View {
                 .tracking(-0.1)
         } else {
             HStack(spacing: 8) {
-                StarRow(value: topic.stars, max: 5, size: 11, gap: 2)
+                StarRow(value: topic.stars, size: 11, gap: 2)
                 Text("·").foregroundStyle(FeyndTheme.text3)
                 Text(relative(topic.createdAt))
                     .foregroundStyle(FeyndTheme.text3)

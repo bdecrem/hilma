@@ -3,6 +3,26 @@ import Foundation
 struct F2User: Codable, Equatable {
     let id: String
     let username: String
+    var avatarUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, username
+        case avatarUrl = "avatar_url"
+    }
+
+    // Tolerant decode — handles backends that don't yet return avatar_url.
+    init(id: String, username: String, avatarUrl: String? = nil) {
+        self.id = id
+        self.username = username
+        self.avatarUrl = avatarUrl
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        username = try c.decode(String.self, forKey: .username)
+        avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
+    }
 }
 
 struct F2Topic: Codable, Identifiable, Equatable, Hashable {
@@ -13,6 +33,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     var lastQuizzedAt: Date?
     var stars: Int
     var hardQuizCompletedAt: Date?
+    var pendingQuizKind: String?
     let createdAt: Date
     let updatedAt: Date
     let client: String?
@@ -36,13 +57,13 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case quizCount = "quiz_count"
         case lastQuizzedAt = "last_quizzed_at"
         case hardQuizCompletedAt = "hard_quiz_completed_at"
+        case pendingQuizKind = "pending_quiz_kind"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
 
     // Custom init so the iOS app keeps working against backends that don't
-    // yet return `stars` / `hard_quiz_completed_at` (those fields shipped in
-    // the same change as this client; older deployments won't have them).
+    // yet return `stars` / `hard_quiz_completed_at` / `pending_quiz_kind`.
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
@@ -53,6 +74,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         lastQuizzedAt = try c.decodeIfPresent(Date.self, forKey: .lastQuizzedAt)
         stars = try c.decodeIfPresent(Int.self, forKey: .stars) ?? 0
         hardQuizCompletedAt = try c.decodeIfPresent(Date.self, forKey: .hardQuizCompletedAt)
+        pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
     }
@@ -79,6 +101,7 @@ struct F2Thread: Codable {
     var lastQuizzedAt: Date?
     var stars: Int
     var hardQuizCompletedAt: Date?
+    var pendingQuizKind: String?
 
     var sourceHost: String? {
         guard let url, let host = URL(string: url)?.host else { return nil }
@@ -90,6 +113,7 @@ struct F2Thread: Codable {
         case quizCount = "quiz_count"
         case lastQuizzedAt = "last_quizzed_at"
         case hardQuizCompletedAt = "hard_quiz_completed_at"
+        case pendingQuizKind = "pending_quiz_kind"
     }
 
     init(from decoder: Decoder) throws {
@@ -102,6 +126,25 @@ struct F2Thread: Codable {
         lastQuizzedAt = try c.decodeIfPresent(Date.self, forKey: .lastQuizzedAt)
         stars = try c.decodeIfPresent(Int.self, forKey: .stars) ?? 0
         hardQuizCompletedAt = try c.decodeIfPresent(Date.self, forKey: .hardQuizCompletedAt)
+        pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
+    }
+}
+
+/// Italic flavor word that sits next to the level number ("Level 4 · Apprentice").
+/// Kept in lockstep with `levelTitle()` in `src/lib/f2/progress.ts`.
+func feyndLevelTitle(_ level: Int) -> String {
+    switch level {
+    case ..<1: return "Newcomer"
+    case 1: return "Beginner"
+    case 2: return "Curious"
+    case 3: return "Student"
+    case 4: return "Apprentice"
+    case 5: return "Scholar"
+    case 6: return "Adept"
+    case 7: return "Practitioner"
+    case 8: return "Expert"
+    case 9: return "Master"
+    default: return "Sage"
     }
 }
 

@@ -13,7 +13,7 @@ import { useEffect, useState } from 'react'
 
 export function StarRow({
   value,
-  max = 5,
+  max = 3,
   size = 11,
 }: {
   value: number
@@ -61,15 +61,17 @@ type Progress = {
   to_next_level: number
 }
 
-/// Avatar (warm coral gradient) + thin ring (background track + coral arc) +
-/// L chip docked below. The single-ring + arc combo is the iOS fix for the
-/// "two visible circles" bug.
+/// Avatar (uploaded photo or warm coral gradient) + thin ring (background
+/// track + coral arc) + L chip docked below. The single-ring + arc combo is
+/// the iOS fix for the "two visible circles" bug.
 export function ProfileBadge({
   username,
+  avatarUrl,
   progress,
   onClick,
 }: {
   username: string
+  avatarUrl?: string | null
   progress: Progress | null
   onClick?: () => void
 }) {
@@ -117,27 +119,47 @@ export function ProfileBadge({
           strokeDasharray={dash}
         />
       </svg>
-      <span
-        style={{
-          width: 38,
-          height: 38,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle at 30% 25%, #F5A08A 0%, #ED8264 55%, #B85A3F 100%)',
-          color: '#fff',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 16,
-          fontWeight: 600,
-          letterSpacing: -0.2,
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.3)',
-          position: 'absolute',
-          top: 2,
-          left: 2,
-        }}
-      >
-        {username[0]?.toUpperCase() ?? '?'}
-      </span>
+      {avatarUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={avatarUrl}
+          alt=""
+          width={38}
+          height={38}
+          style={{
+            position: 'absolute',
+            top: 2,
+            left: 2,
+            width: 38,
+            height: 38,
+            borderRadius: '50%',
+            objectFit: 'cover',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.3)',
+          }}
+        />
+      ) : (
+        <span
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle at 30% 25%, #F5A08A 0%, #ED8264 55%, #B85A3F 100%)',
+            color: '#fff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 16,
+            fontWeight: 600,
+            letterSpacing: -0.2,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 1px 2px rgba(0,0,0,0.3)',
+            position: 'absolute',
+            top: 2,
+            left: 2,
+          }}
+        >
+          {username[0]?.toUpperCase() ?? '?'}
+        </span>
+      )}
       <span
         className="text-[9.5px] font-bold tracking-[0.04em]"
         style={{
@@ -434,11 +456,16 @@ export function useLevelWatcher(): {
     const onVis = () => {
       if (document.visibilityState === 'visible') load()
     }
+    // Allow other components (e.g. ChatView after a quiz completes) to ask
+    // for an immediate refresh so the celebration fires without polling lag.
+    const onManual = () => load()
     document.addEventListener('visibilitychange', onVis)
+    window.addEventListener('feynd-progress-refresh', onManual)
     return () => {
       mounted = false
       clearInterval(t)
       document.removeEventListener('visibilitychange', onVis)
+      window.removeEventListener('feynd-progress-refresh', onManual)
     }
   }, [])
 
@@ -454,7 +481,6 @@ export function LevelUpOverlay({
 }) {
   return (
     <div
-      onClick={onDismiss}
       role="dialog"
       aria-modal="true"
       aria-label={`Level ${progress.level} unlocked`}
@@ -467,7 +493,6 @@ export function LevelUpOverlay({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        cursor: 'pointer',
         animation: 'feyndCelebrationIn 0.35s ease-out',
       }}
     >
@@ -506,21 +531,18 @@ export function LevelUpOverlay({
           Level {progress.level}
         </h2>
         <p style={{ marginTop: 8, color: 'var(--feynd-text-2)', fontSize: 16 }}>
-          {progress.starred_topic_count} starred{' '}
-          {progress.starred_topic_count === 1 ? 'topic' : 'topics'} in your library
+          {progress.total_stars} total{' '}
+          {progress.total_stars === 1 ? 'star' : 'stars'} earned
         </p>
         {progress.to_next_level > 0 && (
           <p style={{ marginTop: 8, color: 'var(--feynd-text-3)', fontSize: 13 }}>
             {progress.to_next_level} more{' '}
-            {progress.to_next_level === 1 ? 'topic' : 'topics'} to reach L{progress.level + 1}
+            {progress.to_next_level === 1 ? 'star' : 'stars'} to reach L{progress.level + 1}
           </p>
         )}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDismiss()
-          }}
+          onClick={onDismiss}
           style={{
             marginTop: 32,
             padding: '14px 28px',

@@ -7,6 +7,7 @@ import { f2Supabase } from './supabase'
 export type F2User = {
   id: string
   username: string
+  avatar_url: string | null
 }
 
 const COOKIE_NAME = 'f2_session'
@@ -60,7 +61,7 @@ export async function getSessionUser(): Promise<F2User | null> {
   if (!verified) return null
   const { data, error } = await f2Supabase()
     .from('f2_users')
-    .select('id, username')
+    .select('id, username, avatar_url')
     .eq('id', verified.userId)
     .maybeSingle()
   if (error || !data) return null

@@ -44,8 +44,8 @@ struct LevelUpView: View {
             .padding(.horizontal, 32)
             .padding(.bottom, 32)
             .opacity(contentOpacity)
-            .contentShape(Rectangle())
-            .onTapGesture { onDismiss() }
+            // Intentionally no tap-anywhere dismiss — the user has to tap the
+            // explicit button so they can dwell on the moment.
         }
         .onAppear {
             // Hero star pops in with a bounce.
@@ -145,12 +145,12 @@ struct LevelUpView: View {
     // MARK: - Copy
 
     private var headlineCopy: String {
-        let n = progress.starredTopicCount
-        return "\(n) starred \(n == 1 ? "topic" : "topics") in your library"
+        let n = progress.totalStars
+        return "\(n) total \(n == 1 ? "star" : "stars") earned"
     }
 
     private var nextGoalCopy: String {
         let n = progress.toNextLevel
-        return "\(n) more \(n == 1 ? "topic" : "topics") to reach L\(level + 1)"
+        return "\(n) more \(n == 1 ? "star" : "stars") to reach L\(level + 1)"
     }
 }

@@ -22,7 +22,9 @@ struct ChatView: View {
                         .tracking(-0.2)
                         .foregroundStyle(FeyndTheme.text)
                 } trailing: {
-                    IconCircleButton(systemImage: "plus") { /* future: new chat */ }
+                    // Empty by design — paste a URL in the composer to start a
+                    // new topic; no need for a dedicated button.
+                    EmptyView()
                 } onProfileTap: {
                     showSettings = true
                 }
@@ -50,7 +52,7 @@ struct ChatView: View {
                 Color.clear.frame(height: 86)
             }
         }
-        .sheet(isPresented: $showSettings) { SettingsView() }
+        .sheet(isPresented: $showSettings) { ProfileSheet() }
         .sheet(isPresented: $voicePresented) { VoiceSessionView(mode: "global") }
         .task { await loadLatest() }
     }

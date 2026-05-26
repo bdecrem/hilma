@@ -22,6 +22,7 @@ export type F2Thread = {
   quiz_count: number
   stars: number
   hard_quiz_completed_at: string | null
+  pending_quiz_kind: QuizKind | null
 }
 
 export type QuizKind = 'standard' | 'hard'
@@ -125,29 +126,57 @@ export type RecordedQuiz = {
   hard_quiz_completed_at: string | null
 }
 
-export async function recordQuiz(
+/// User just *started* a quiz. We track which kind is in flight so that when
+/// they hit Done we know which star bump to apply. No star is awarded yet.
+export async function recordQuizStarted(
   thread: F2Thread,
   kind: QuizKind = 'standard',
 ): Promise<RecordedQuiz> {
   const now = new Date().toISOString()
-  const newStars = nextStars(thread.stars, kind)
-  const newCount = kind === 'standard' ? thread.quiz_count + 1 : thread.quiz_count
-  const newHardAt = kind === 'hard' ? now : thread.hard_quiz_completed_at
-
+  const newCount = thread.quiz_count + 1
   const { error } = await f2Supabase()
     .from('f2_threads')
     .update({
       last_quizzed_at: now,
       quiz_count: newCount,
-      stars: newStars,
-      hard_quiz_completed_at: newHardAt,
+      pending_quiz_kind: kind,
     })
     .eq('id', thread.id)
-  if (error) console.error('[f2] recordQuiz failed:', error)
+  if (error) console.error('[f2] recordQuizStarted failed:', error)
+  return {
+    stars: thread.stars,
+    quiz_count: newCount,
+    hard_quiz_completed_at: thread.hard_quiz_completed_at,
+  }
+}
 
+/// User signaled "Done" on the quiz they had open. Award the star (if any) for
+/// whichever kind was pending, then clear the pending state. If nothing was
+/// pending this is a no-op so we don't grant stars from a stale Done button.
+export async function completeQuiz(thread: F2Thread): Promise<RecordedQuiz> {
+  const kind = thread.pending_quiz_kind
+  if (!kind) {
+    return {
+      stars: thread.stars,
+      quiz_count: thread.quiz_count,
+      hard_quiz_completed_at: thread.hard_quiz_completed_at,
+    }
+  }
+  const now = new Date().toISOString()
+  const newStars = nextStars(thread.stars, kind)
+  const newHardAt = kind === 'hard' ? now : thread.hard_quiz_completed_at
+  const { error } = await f2Supabase()
+    .from('f2_threads')
+    .update({
+      stars: newStars,
+      hard_quiz_completed_at: newHardAt,
+      pending_quiz_kind: null,
+    })
+    .eq('id', thread.id)
+  if (error) console.error('[f2] completeQuiz failed:', error)
   return {
     stars: newStars,
-    quiz_count: newCount,
+    quiz_count: thread.quiz_count,
     hard_quiz_completed_at: newHardAt,
   }
 }

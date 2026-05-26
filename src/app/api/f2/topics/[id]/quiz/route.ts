@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
-import { getThreadById, recordQuiz, type QuizKind } from '@/lib/f2/threads'
+import { getThreadById, recordQuizStarted, type QuizKind } from '@/lib/f2/threads'
 import { processMessage } from '@/lib/f2/agent'
 
 export const runtime = 'nodejs'
 
 // POST /api/f2/topics/[id]/quiz
 // Body (optional): { kind: 'standard' | 'hard' }
-// Triggers a quiz on the given topic by sending a synthetic user message
-// through the existing agent loop. Awards stars on the thread:
-//   1st standard quiz → 1 star
-//   2nd standard quiz → 2 stars
-//   hard quiz         → 3 stars (regardless of order)
+// Starts a quiz — sends the synthetic user nudge through the agent loop and
+// marks `pending_quiz_kind` on the thread. The star is *not* awarded here;
+// the user must POST /quiz/complete after they're done answering.
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -48,11 +46,12 @@ export async function POST(
     threadId: id,
   })
 
-  const recorded = await recordQuiz(thread, kind)
+  const recorded = await recordQuizStarted(thread, kind)
 
   return NextResponse.json({
     ...result,
     kind,
+    pending_quiz_kind: kind,
     stars: recorded.stars,
     quiz_count: recorded.quiz_count,
     hard_quiz_completed_at: recorded.hard_quiz_completed_at,

@@ -34,6 +34,7 @@ export default async function TopicDetailPage({
       topicTitle={topicLabel(thread)}
       stars={thread.stars ?? 0}
       sourceUrl={thread.url ?? null}
+      initialPendingQuizKind={thread.pending_quiz_kind ?? null}
     />
   )
 }

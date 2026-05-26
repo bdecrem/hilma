@@ -73,4 +73,14 @@ final class Session {
     func clearPendingLevelUp() {
         pendingLevelUp = nil
     }
+
+    /// Patch the avatar URL on the signed-in user so the ProfileBadge picks it
+    /// up immediately without a server round-trip.
+    func setAvatarUrl(_ url: String?) {
+        if case let .signedIn(user) = state {
+            var u = user
+            u.avatarUrl = url
+            state = .signedIn(u)
+        }
+    }
 }

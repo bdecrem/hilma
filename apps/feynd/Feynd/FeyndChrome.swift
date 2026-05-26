@@ -5,12 +5,12 @@ import SwiftUI
 
 // MARK: - Stars
 
-/// Five-cell row by default to match the design (extras stay outlined).
+/// Three-cell row to match the backend cap (1st quiz, 2nd quiz, hard quiz).
 /// Filled stars use coral-gold; empties use the faintest text token so they
 /// recede but stay visible against the warm-dark bg.
 struct StarRow: View {
     let value: Int
-    var max: Int = 5
+    var max: Int = 3
     var size: CGFloat = 11
     var gap: CGFloat = 2
 
@@ -43,6 +43,13 @@ struct ProfileBadge: View {
         return "?"
     }
 
+    private var avatarUrl: URL? {
+        if case let .signedIn(user) = session.state, let s = user.avatarUrl {
+            return URL(string: s)
+        }
+        return nil
+    }
+
     var body: some View {
         let p = session.progress
         let ring = size + 4
@@ -59,22 +66,8 @@ struct ProfileBadge: View {
                 .rotationEffect(.degrees(-90))
                 .frame(width: ring, height: ring)
 
-            // The warm-gradient avatar disc with the user's initial.
-            Circle()
-                .fill(FeyndTheme.avatarGradient)
-                .frame(width: size, height: size)
-                .overlay(
-                    // Soft inner highlight + bottom shadow matching JSX boxShadow.
-                    Circle()
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
-                        .blendMode(.plusLighter)
-                )
-                .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
-                .overlay(
-                    Text(initial)
-                        .font(.system(size: 16, weight: .semibold, design: .default))
-                        .foregroundStyle(.white)
-                )
+            // Avatar disc — uploaded photo if present, otherwise warm gradient + initial.
+            avatarDisc(size: size)
         }
         // L chip docks BELOW the badge, centered. The frame height includes
         // room for the overhang so nothing clips.
@@ -97,6 +90,45 @@ struct ProfileBadge: View {
         }
         .frame(width: ring, height: ring + 14)
         .accessibilityLabel("Level \(p.level), \(p.starredTopicCount) starred topics")
+    }
+
+    /// Round avatar — uploaded photo when one is set on the session user,
+    /// otherwise the warm coral gradient + initial.
+    @ViewBuilder
+    private func avatarDisc(size: CGFloat) -> some View {
+        if let url = avatarUrl {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                default:
+                    gradientFallback(size: size)
+                }
+            }
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1).blendMode(.plusLighter))
+            .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+        } else {
+            gradientFallback(size: size)
+        }
+    }
+
+    private func gradientFallback(size: CGFloat) -> some View {
+        Circle()
+            .fill(FeyndTheme.avatarGradient)
+            .frame(width: size, height: size)
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    .blendMode(.plusLighter)
+            )
+            .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+            .overlay(
+                Text(initial)
+                    .font(.system(size: size * 0.42, weight: .semibold))
+                    .foregroundStyle(.white)
+            )
     }
 }
 

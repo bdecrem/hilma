@@ -10,8 +10,9 @@ export default function ChatView({
   threadId,
   emptyHint,
   topicTitle,
-  stars,
+  stars: initialStars,
   sourceUrl,
+  initialPendingQuizKind,
 }: {
   initialMessages: Msg[]
   threadId?: string
@@ -23,10 +24,17 @@ export default function ChatView({
   /// Topic detail variant only — when present, renders a small external-link
   /// icon at the right end of the chip row.
   sourceUrl?: string | null
+  /// Topic detail variant only — server-recorded pending quiz, drives the
+  /// Done chip on initial render.
+  initialPendingQuizKind?: string | null
 }) {
   const [messages, setMessages] = useState<Msg[]>(initialMessages)
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
+  const [stars, setStars] = useState<number | undefined>(initialStars)
+  const [pendingQuizKind, setPendingQuizKind] = useState<string | null>(
+    initialPendingQuizKind ?? null,
+  )
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -86,13 +94,31 @@ export default function ChatView({
     })
     setBusy(false)
     if (!res.ok) return
-    const { reply } = (await res.json()) as { reply: string }
-    if (reply) {
+    const json = (await res.json()) as { reply: string; pending_quiz_kind?: string }
+    if (json.reply) {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', text: reply, created_at: new Date().toISOString() },
+        { role: 'assistant', text: json.reply, created_at: new Date().toISOString() },
       ])
     }
+    setPendingQuizKind(json.pending_quiz_kind ?? kind)
+  }
+
+  /// User signals the quiz is finished. Server awards the star.
+  async function completeQuiz() {
+    if (!threadId || busy) return
+    setBusy(true)
+    const res = await fetch(`/api/f2/topics/${threadId}/quiz/complete`, {
+      method: 'POST',
+    })
+    setBusy(false)
+    if (!res.ok) return
+    const json = (await res.json()) as { stars?: number; pending_quiz_kind: null }
+    if (typeof json.stars === 'number') setStars(json.stars)
+    setPendingQuizKind(null)
+    // Bump the level-watcher's polling — refresh now so the header chip
+    // and celebration fire immediately rather than waiting up to 20s.
+    window.dispatchEvent(new Event('feynd-progress-refresh'))
   }
 
   return (
@@ -108,6 +134,11 @@ export default function ChatView({
             {typeof stars === 'number' ? (
               <div className="mt-1.5 flex items-center gap-2 text-xs" style={{ color: 'var(--feynd-text-3)' }}>
                 <StarRow value={stars} size={11} />
+              </div>
+            ) : null}
+            {pendingQuizKind ? (
+              <div className="mt-1 text-[11px] italic" style={{ color: 'var(--feynd-coral)' }}>
+                Quiz in progress — hit Done quiz when you're finished.
               </div>
             ) : null}
           </div>
@@ -140,16 +171,26 @@ export default function ChatView({
         <div className="max-w-2xl mx-auto px-4 pt-3 pb-3">
           {threadId ? (
             <div className="flex items-center gap-2 mb-2 overflow-x-auto">
-              <ActionChip
-                label="Quiz me"
-                onClick={() => quizMe('standard')}
-                icon={<QuizIcon />}
-              />
-              <ActionChip
-                label="Talk to F2"
-                onClick={() => alert('Voice mode is iPhone-only for now.')}
-                icon={<MicIcon />}
-              />
+              {pendingQuizKind ? (
+                <ActionChip
+                  label="Done quiz"
+                  onClick={completeQuiz}
+                  icon={<CheckIcon />}
+                />
+              ) : (
+                <>
+                  <ActionChip
+                    label="Quiz me"
+                    onClick={() => quizMe('standard')}
+                    icon={<QuizIcon />}
+                  />
+                  <ActionChip
+                    label="Talk to F2"
+                    onClick={() => alert('Voice mode is iPhone-only for now.')}
+                    icon={<MicIcon />}
+                  />
+                </>
+              )}
               <div className="flex-1" />
               {sourceUrl ? (
                 <a
@@ -321,6 +362,14 @@ function QuizIcon() {
         strokeLinecap="round"
       />
       <circle cx="12" cy="17.4" r="1.05" fill="currentColor" />
+    </svg>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1 14.59l-4-4 1.41-1.41L11 13.76l5.59-5.59L18 9.59 11 16.59z" />
     </svg>
   )
 }

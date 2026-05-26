@@ -16,7 +16,12 @@ export default async function AuthedLayout({
 
   return (
     <FeyndThemeProvider>
-      <Shell username={user.username}>{children}</Shell>
+      <Shell
+        username={user.username}
+        initialAvatarUrl={user.avatar_url}
+      >
+        {children}
+      </Shell>
     </FeyndThemeProvider>
   )
 }

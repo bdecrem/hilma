@@ -126,31 +126,117 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }
 
-    /// Response from `POST /api/f2/topics/[id]/quiz`. Stars + counts are
-    /// recomputed server-side; we just consume them.
+    /// Response from `POST /api/f2/topics/[id]/quiz`. Stars are not yet
+    /// awarded — `pendingQuizKind` records which kind is in flight so the UI
+    /// can show a Done button.
     struct QuizResponse: Codable {
         let reply: String
         let kind: String?
+        let pendingQuizKind: String?
         let stars: Int?
         let quizCount: Int?
         let hardQuizCompletedAt: Date?
 
         enum CodingKeys: String, CodingKey {
             case reply, kind, stars
+            case pendingQuizKind = "pending_quiz_kind"
             case quizCount = "quiz_count"
             case hardQuizCompletedAt = "hard_quiz_completed_at"
         }
     }
 
     /// `kind`: "standard" earns up to 2 stars, "hard" earns the third star.
+    /// Just marks the quiz as in-flight — no star yet.
     func quizMe(id: String, kind: String = "standard") async throws -> QuizResponse {
         struct Body: Encodable { let kind: String }
         let res: QuizResponse = try await post("/api/f2/topics/\(id)/quiz", body: Body(kind: kind))
         return res
     }
 
+    /// Response from `POST /api/f2/topics/[id]/quiz/complete` — star is now
+    /// awarded based on whichever kind was pending.
+    struct QuizCompleteResponse: Codable {
+        let stars: Int?
+        let quizCount: Int?
+        let hardQuizCompletedAt: Date?
+        let completedKind: String?
+
+        enum CodingKeys: String, CodingKey {
+            case stars
+            case quizCount = "quiz_count"
+            case hardQuizCompletedAt = "hard_quiz_completed_at"
+            case completedKind = "completed_kind"
+        }
+    }
+
+    /// Tell the server the user has finished answering the in-flight quiz.
+    /// The server awards the star (or no-ops if nothing was pending).
+    func completeQuiz(id: String) async throws -> QuizCompleteResponse {
+        let res: QuizCompleteResponse = try await request(
+            "/api/f2/topics/\(id)/quiz/complete",
+            method: "POST",
+            body: nil as EmptyBody?
+        )
+        return res
+    }
+
     func fetchProgress() async throws -> F2Progress {
         try await get("/api/f2/progress")
+    }
+
+    // MARK: Avatar
+
+    struct AvatarResponse: Codable {
+        let avatarUrl: String?
+        enum CodingKeys: String, CodingKey { case avatarUrl = "avatar_url" }
+    }
+
+    /// Upload an image as the signed-in user's avatar. Image is encoded as JPEG
+    /// (or PNG when transparency matters; the design uses round masks so JPEG
+    /// is fine). Server enforces 1 MB and image/jpeg|png at the bucket level.
+    func uploadAvatar(imageData: Data, mime: String = "image/jpeg") async throws -> String {
+        let url = Secrets.backendBaseURL.appendingPathComponent("/api/f2/avatar")
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+
+        let boundary = "feynd-\(UUID().uuidString)"
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        let crlf = "\r\n"
+        func append(_ s: String) { body.append(s.data(using: .utf8)!) }
+        let filename = mime == "image/png" ? "avatar.png" : "avatar.jpg"
+        append("--\(boundary)\(crlf)")
+        append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\(crlf)")
+        append("Content-Type: \(mime)\(crlf)\(crlf)")
+        body.append(imageData)
+        append("\(crlf)--\(boundary)--\(crlf)")
+        req.httpBody = body
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: req)
+        } catch {
+            throw F2APIError.transport(error)
+        }
+        guard let http = response as? HTTPURLResponse else {
+            throw F2APIError.http(0, "non-HTTP response")
+        }
+        if http.statusCode == 401 { throw F2APIError.unauthenticated }
+        if http.statusCode >= 400 {
+            throw F2APIError.http(http.statusCode, errorMessage(from: data, response: http))
+        }
+        let decoded = try decoder.decode(AvatarResponse.self, from: data)
+        guard let urlStr = decoded.avatarUrl else {
+            throw F2APIError.http(500, "no avatar_url in response")
+        }
+        return urlStr
+    }
+
+    /// Remove the current user's avatar.
+    func deleteAvatar() async throws {
+        let _: EmptyResponse = try await request("/api/f2/avatar", method: "DELETE", body: nil as EmptyBody?)
     }
 
     func ingestPaste(title: String?, text: String) async throws -> String {

@@ -46,7 +46,7 @@ struct TopicDetailView: View {
                 Color.clear.frame(height: 86) // room for floating TabPill
             }
         }
-        .sheet(isPresented: $showProfile) { SettingsView() }
+        .sheet(isPresented: $showProfile) { ProfileSheet() }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
         }
@@ -67,7 +67,7 @@ struct TopicDetailView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
-                    StarRow(value: thread?.stars ?? 0, max: 5, size: 10, gap: 2)
+                    StarRow(value: thread?.stars ?? 0, size: 10, gap: 2)
                     if let host = thread?.sourceHost {
                         Text("·").foregroundStyle(FeyndTheme.text3)
                         Text(host)
@@ -95,32 +95,48 @@ struct TopicDetailView: View {
         (thread?.stars ?? 0) >= 2 && (thread?.hardQuizCompletedAt == nil)
     }
 
+    /// A quiz the user already started but hasn't completed. Drives whether
+    /// the chip row shows the start buttons or the Done button.
+    private var quizInProgress: Bool {
+        thread?.pendingQuizKind != nil
+    }
+
     private var chipRow: some View {
         HStack(spacing: 8) {
-            ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
-                quiz(kind: "standard")
-            }
-            .opacity(busy ? 0.5 : 1)
-            .allowsHitTesting(!busy)
+            if quizInProgress {
+                // Mid-quiz: only Done. Coral coral so it's the obvious primary action.
+                ActionChip(label: "Done quiz", systemImage: "checkmark.circle.fill") {
+                    completeQuiz()
+                }
+                .opacity(busy ? 0.5 : 1)
+                .allowsHitTesting(!busy)
+            } else {
+                ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
+                    quiz(kind: "standard")
+                }
+                .opacity(busy ? 0.5 : 1)
+                .allowsHitTesting(!busy)
 
-            if canTakeHardQuiz {
-                ActionChip(label: "Hard quiz", systemImage: "flame.fill", iconTint: FeyndTheme.gold) {
-                    quiz(kind: "hard")
+                if canTakeHardQuiz {
+                    // Single-word label so the chip never wraps to two lines
+                    // when the row gets crowded on narrower screens.
+                    ActionChip(label: "Hard", systemImage: "flame.fill", iconTint: FeyndTheme.gold) {
+                        quiz(kind: "hard")
+                    }
+                    .opacity(busy ? 0.5 : 1)
+                    .allowsHitTesting(!busy)
+                }
+
+                ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
+                    voicePresented = true
                 }
                 .opacity(busy ? 0.5 : 1)
                 .allowsHitTesting(!busy)
             }
 
-            ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
-                voicePresented = true
-            }
-            .opacity(busy ? 0.5 : 1)
-            .allowsHitTesting(!busy)
-
             Spacer()
 
-            // Source link — icon-only so it never crowds Quiz me / Talk to F2.
-            // Only renders when the topic has a URL behind it.
+            // Source link — icon-only so it never crowds the main chips.
             if let urlString = thread?.url, let url = URL(string: urlString) {
                 IconCircleButton(systemImage: "arrow.up.right", fg: FeyndTheme.text2) {
                     openURL(url)
@@ -182,9 +198,38 @@ struct TopicDetailView: View {
                     if let s = res.stars { t.stars = s }
                     if let c = res.quizCount { t.quizCount = c }
                     if let h = res.hardQuizCompletedAt { t.hardQuizCompletedAt = h }
+                    // Server set pending state; mirror it locally so the Done
+                    // chip renders without waiting for another fetch.
+                    t.pendingQuizKind = res.pendingQuizKind ?? kind
                     t.lastQuizzedAt = Date()
                     thread = t
                 }
+                // No level change yet — quiz hasn't been "completed".
+            } catch {
+                messages.append(F2Message(role: "assistant",
+                                          text: "(error: \(error.localizedDescription))",
+                                          createdAt: Date()))
+            }
+            busy = false
+        }
+    }
+
+    /// User hit "Done quiz". Award the star, clear the pending state, and
+    /// refresh user-wide progress (this is the moment the level can rise).
+    private func completeQuiz() {
+        guard !busy else { return }
+        busy = true
+        Task {
+            do {
+                let res = try await F2API.shared.completeQuiz(id: topicId)
+                if var t = thread {
+                    if let s = res.stars { t.stars = s }
+                    if let c = res.quizCount { t.quizCount = c }
+                    if let h = res.hardQuizCompletedAt { t.hardQuizCompletedAt = h }
+                    t.pendingQuizKind = nil
+                    thread = t
+                }
+                // Now is the right moment — star was just awarded.
                 await session.refreshProgress()
             } catch {
                 messages.append(F2Message(role: "assistant",
