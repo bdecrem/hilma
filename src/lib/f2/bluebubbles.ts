@@ -1,7 +1,10 @@
 // BlueBubbles adapter: outbound sender + inbound webhook auth.
 // BlueBubbles Server runs on Bart's Mac mini, reachable at https://bart-mini.tunn3l.sh.
 
-const BB_TIMEOUT_MS = 8000
+// Sending a fresh iMessage via AppleScript can take 10–15 seconds end-to-end
+// (Tunn3l hop + AppleScript boot + Messages.app delivery). 8s was too tight
+// and was reliably timing out even when delivery actually succeeded.
+const BB_TIMEOUT_MS = 25000
 
 function bbBase(): string {
   const u = process.env.BLUEBUBBLES_URL

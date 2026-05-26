@@ -167,7 +167,12 @@ struct IMessagePairingView: View {
             } catch F2APIError.http(400, let msg) {
                 error = msg ?? "Enter a phone number or iCloud email."
             } catch F2APIError.http(502, let msg) {
-                error = msg ?? "Couldn't send the message."
+                // BlueBubbles often delivers the iMessage even when our HTTP
+                // call to it times out. Move to the code-entry step so the
+                // user can use the code if it arrives; surface the warning
+                // there instead of blocking on this screen.
+                phase = .enterCode(handle: handle)
+                error = msg ?? "If you didn't get a code, go back and try again."
             } catch let err {
                 error = err.localizedDescription
             }

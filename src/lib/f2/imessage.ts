@@ -89,24 +89,23 @@ export async function startImessagePairing(
     return { ok: false, status: 500, error: 'Could not start pairing.' }
   }
 
-  // Send via BlueBubbles. Wrap in try/catch — a send failure shouldn't
-  // leave a pending row hanging; clean up so the user can retry.
+  // Send via BlueBubbles. If the request to BlueBubbles errors / times out,
+  // KEEP the pending row — AppleScript on the Mac mini frequently delivers
+  // the message even when our fetch times out. The 10-minute TTL handles
+  // cleanup for the case where delivery really did fail.
   try {
     await sendIMessage({
       addresses: [handle],
       text: `Your Feynd confirmation code is ${code}. Expires in ${CODE_TTL_MIN} minutes.`,
     })
   } catch (e) {
-    console.error('[f2/imessage] send failed:', e)
-    await sb
-      .from('f2_imessage_pending')
-      .delete()
-      .eq('user_id', userId)
-      .eq('handle', handle)
+    console.error('[f2/imessage] send returned error (message may still have been delivered):', e)
+    // Surface the failure to the client but leave the pending row so the
+    // user can still confirm if the message did arrive.
     return {
       ok: false,
       status: 502,
-      error: "Couldn't send the confirmation message. Double-check the handle.",
+      error: "BlueBubbles didn't acknowledge — if the code arrives anyway, go back and try entering it.",
     }
   }
 

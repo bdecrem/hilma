@@ -88,6 +88,11 @@ export default function WebProfileSheet({
     setImessageBusy(false)
     if (!res.ok) {
       const j = await res.json().catch(() => ({}))
+      if (res.status === 502) {
+        // BlueBubbles probably still delivered the iMessage — let the user
+        // try to enter the code on the next step instead of blocking here.
+        setImessageMode('enterCode')
+      }
       setImessageError(j.error ?? "Couldn't send the code.")
       return
     }
