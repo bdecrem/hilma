@@ -17,6 +17,7 @@ export default async function TopicsPage() {
     last_quizzed_at: t.last_quizzed_at,
     created_at: typeof t.created_at === 'string' ? t.created_at : String(t.created_at),
     stars: t.stars ?? 0,
+    kind: t.kind ?? null,
   }))
 
   return <TopicsClient topics={topics} />

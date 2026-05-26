@@ -164,9 +164,15 @@ struct F2MiniMark: View {
 
 // MARK: - Mini topic glyph (used on the left of every topic row)
 
-/// 36pt rounded-square with diagonal line + 2 dots — matches the JSX glyph
-/// (corner-to-corner stroke, end dots, coral on surface bg).
+/// 36pt rounded-square chip whose inner glyph reflects the topic's source
+/// kind: chat / web / audio / video / paste / fallback. Pass a `nil` kind
+/// for legacy threads — falls back to the line+nodes mark.
+///
+/// Native SwiftUI renderings of the six SVG glyphs spec'd in
+/// `src/app/f2/topic-icons-preview/page.tsx`. All use the coral token so
+/// they shift slightly between light + dark like the rest of the chrome.
 struct MiniTopicGlyph: View {
+    var kind: String? = nil
     var size: CGFloat = 36
 
     var body: some View {
@@ -178,19 +184,191 @@ struct MiniTopicGlyph: View {
             )
             .frame(width: size, height: size)
             .overlay(
-                Canvas { ctx, s in
-                    // SVG viewBox in the JSX is 20×20 with line (4,14)→(16,6) and r=2.2.
-                    let scale = s.width / 20.0
-                    let p1 = CGPoint(x: 4 * scale, y: 14 * scale)
-                    let p2 = CGPoint(x: 16 * scale, y: 6 * scale)
-                    var line = Path()
-                    line.move(to: p1); line.addLine(to: p2)
-                    ctx.stroke(line, with: .color(FeyndTheme.coral), lineWidth: 1.2 * scale)
-                    let r: CGFloat = 2.2 * scale
-                    ctx.fill(Path(ellipseIn: CGRect(x: p1.x - r, y: p1.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.coral))
-                    ctx.fill(Path(ellipseIn: CGRect(x: p2.x - r, y: p2.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.coral))
-                }
+                glyph
+                    .frame(width: size * 0.55, height: size * 0.55)
             )
+    }
+
+    @ViewBuilder
+    private var glyph: some View {
+        // viewBox is 20×20 in all source SVGs; each sub-glyph scales itself.
+        switch kind {
+        case "chat":  ChatGlyph()
+        case "web":   WebGlyph()
+        case "audio": AudioGlyph()
+        case "video": VideoGlyph()
+        case "paste": PasteGlyph()
+        default:      FallbackGlyph()
+        }
+    }
+}
+
+/// All sub-glyphs draw in their own coordinate space using GeometryReader
+/// so they scale cleanly to whatever frame MiniTopicGlyph hands them.
+
+/// `Canvas` lets us paint at the exact 20×20 viewBox coordinates the SVGs
+/// use, then scale to fit. Cheaper than building Path+Shape for every glyph
+/// and visually identical.
+
+private struct WebGlyph: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let stroke = 1.2 * s
+
+            // Outer circle.
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: 4 * s, y: 4 * s, width: 12 * s, height: 12 * s)),
+                with: coral, lineWidth: stroke
+            )
+            // Horizontal equator.
+            var equator = Path()
+            equator.move(to: CGPoint(x: 4 * s, y: 10 * s))
+            equator.addLine(to: CGPoint(x: 16 * s, y: 10 * s))
+            ctx.stroke(equator, with: coral, lineWidth: stroke)
+            // Inner ellipse (meridian).
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: 7 * s, y: 4 * s, width: 6 * s, height: 12 * s)),
+                with: coral, lineWidth: stroke
+            )
+            // Filled nodes at the equator ends.
+            let r = 2.2 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 4 * s - r, y: 10 * s - r, width: r*2, height: r*2)), with: coral)
+            ctx.fill(Path(ellipseIn: CGRect(x: 16 * s - r, y: 10 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct AudioGlyph: View {
+    // Music note — line stem + flag + filled circle notehead.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let stroke = 1.2 * s
+
+            var stem = Path()
+            stem.move(to: CGPoint(x: 13 * s, y: 4.5 * s))
+            stem.addLine(to: CGPoint(x: 13 * s, y: 13.5 * s))
+            ctx.stroke(stem, with: coral, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+
+            var flag = Path()
+            flag.move(to: CGPoint(x: 13 * s, y: 4.5 * s))
+            flag.addLine(to: CGPoint(x: 16.5 * s, y: 7 * s))
+            ctx.stroke(flag, with: coral, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+
+            let r = 2.8 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 10.6 * s - r, y: 13.5 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct VideoGlyph: View {
+    // Play triangle inside a screen frame.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let stroke = 1.2 * s
+
+            let frame = RoundedRectangle(cornerRadius: 2 * s).path(
+                in: CGRect(x: 3 * s, y: 5 * s, width: 14 * s, height: 10 * s)
+            )
+            ctx.stroke(frame, with: coral, lineWidth: stroke)
+
+            var play = Path()
+            play.move(to: CGPoint(x: 8.5 * s, y: 7.8 * s))
+            play.addLine(to: CGPoint(x: 8.5 * s, y: 12.2 * s))
+            play.addLine(to: CGPoint(x: 12.6 * s, y: 10 * s))
+            play.closeSubpath()
+            ctx.fill(play, with: coral)
+        }
+    }
+}
+
+private struct PasteGlyph: View {
+    // Three rows with leading dots — pasted text.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let stroke = 1.2 * s
+            let lines: [(CGFloat, CGFloat)] = [
+                (15, 6), (14, 10), (12, 14),
+            ]
+            for (xEnd, y) in lines {
+                var line = Path()
+                line.move(to: CGPoint(x: 7 * s, y: y * s))
+                line.addLine(to: CGPoint(x: xEnd * s, y: y * s))
+                ctx.stroke(line, with: coral, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+            }
+            let r = 2.2 * s
+            for y in [6.0, 10.0, 14.0] {
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: 4.5 * s - r, y: CGFloat(y) * s - r, width: r*2, height: r*2)),
+                    with: coral
+                )
+            }
+        }
+    }
+}
+
+private struct FallbackGlyph: View {
+    // Original line + 2 dots glyph, unchanged.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let stroke = 1.2 * s
+            var line = Path()
+            line.move(to: CGPoint(x: 4 * s, y: 14 * s))
+            line.addLine(to: CGPoint(x: 16 * s, y: 6 * s))
+            ctx.stroke(line, with: coral, lineWidth: stroke)
+            let r = 2.2 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 4 * s - r, y: 14 * s - r, width: r*2, height: r*2)), with: coral)
+            ctx.fill(Path(ellipseIn: CGRect(x: 16 * s - r, y: 6 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct ChatGlyph: View {
+    // Speech bubble outline with two dots inside — same path data as the
+    // SVG in src/app/f2/topic-icons-preview/page.tsx.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let stroke = 1.2 * s
+
+            // Rounded speech bubble. Use addRoundedRect for the body, then
+            // append the tail as a triangle joined to the bottom-left corner.
+            var bubble = Path()
+            bubble.addRoundedRect(
+                in: CGRect(x: 3 * s, y: 4 * s, width: 14 * s, height: 9 * s),
+                cornerSize: CGSize(width: 2 * s, height: 2 * s)
+            )
+            // Tail: small triangle pointing down-left from the bubble's bottom.
+            var tail = Path()
+            tail.move(to: CGPoint(x: 6 * s, y: 13 * s))
+            tail.addLine(to: CGPoint(x: 6 * s, y: 16 * s))
+            tail.addLine(to: CGPoint(x: 9 * s, y: 13 * s))
+            tail.closeSubpath()
+
+            ctx.stroke(bubble, with: coral,
+                       style: StrokeStyle(lineWidth: stroke, lineJoin: .round))
+            ctx.stroke(tail, with: coral,
+                       style: StrokeStyle(lineWidth: stroke, lineJoin: .round))
+
+            // Two filled dots inside the bubble.
+            let r = 1.6 * s
+            for x in [7.5, 12.5] {
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: CGFloat(x) * s - r, y: 8.6 * s - r, width: r*2, height: r*2)),
+                    with: coral
+                )
+            }
+        }
     }
 }
 

@@ -34,6 +34,9 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     var stars: Int
     var hardQuizCompletedAt: Date?
     var pendingQuizKind: String?
+    /// Source kind: chat | web | audio | video | paste | fallback. Drives the
+    /// glyph in the topic row. Set server-side at thread creation.
+    var kind: String?
     let createdAt: Date
     let updatedAt: Date
     let client: String?
@@ -53,7 +56,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, topic, url, client, stars
+        case id, topic, url, client, stars, kind
         case quizCount = "quiz_count"
         case lastQuizzedAt = "last_quizzed_at"
         case hardQuizCompletedAt = "hard_quiz_completed_at"
@@ -63,7 +66,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     }
 
     // Custom init so the iOS app keeps working against backends that don't
-    // yet return `stars` / `hard_quiz_completed_at` / `pending_quiz_kind`.
+    // yet return the newer optional fields (kind, pending_quiz_kind, etc.).
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
@@ -75,6 +78,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         stars = try c.decodeIfPresent(Int.self, forKey: .stars) ?? 0
         hardQuizCompletedAt = try c.decodeIfPresent(Date.self, forKey: .hardQuizCompletedAt)
         pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
+        kind = try c.decodeIfPresent(String.self, forKey: .kind)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
     }

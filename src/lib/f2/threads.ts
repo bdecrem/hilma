@@ -23,9 +23,45 @@ export type F2Thread = {
   stars: number
   hard_quiz_completed_at: string | null
   pending_quiz_kind: QuizKind | null
+  kind: TopicKind
 }
 
 export type QuizKind = 'standard' | 'hard'
+
+/// Topic source kind — drives which glyph the Topics list renders.
+/// Stored on the thread (computed at creation time, see classifyTopicKind).
+export type TopicKind = 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
+
+const VIDEO_HOSTS = /^(?:[\w-]+\.)*(?:youtube\.com|youtu\.be|vimeo\.com)$/i
+const AUDIO_HOSTS = /^(?:[\w-]+\.)*(?:open\.spotify\.com|anchor\.fm|podcasts\.apple\.com|overcast\.fm)$/i
+const AUDIO_EXT = /\.(mp3|m4a|wav|aac|ogg|flac)(?:\?|$)/i
+const VIDEO_EXT = /\.(mp4|mov|webm|mkv|avi)(?:\?|$)/i
+
+/// Pure classification — no LLM call. Order matters: file-extension match
+/// beats host match (someone could host audio on YouTube but the file
+/// extension is the more reliable signal).
+export function classifyTopicKind(input: {
+  url: string | null | undefined
+  content: string | null | undefined
+  topic: string | null | undefined
+}): TopicKind {
+  const url = input.url?.trim() ?? ''
+  if (url) {
+    if (AUDIO_EXT.test(url)) return 'audio'
+    if (VIDEO_EXT.test(url)) return 'video'
+    try {
+      const host = new URL(url).hostname.toLowerCase()
+      if (VIDEO_HOSTS.test(host)) return 'video'
+      if (AUDIO_HOSTS.test(host)) return 'audio'
+    } catch {
+      // Not a parseable URL — treat as generic web below.
+    }
+    return 'web'
+  }
+  if ((input.content ?? '').trim().length > 0) return 'paste'
+  if ((input.topic ?? '').trim().length > 0) return 'chat'
+  return 'fallback'
+}
 
 export type CreateThreadInput = {
   userId: string
@@ -39,6 +75,11 @@ export type CreateThreadInput = {
 export async function createThread(
   input: CreateThreadInput,
 ): Promise<F2Thread | null> {
+  const kind = classifyTopicKind({
+    url: input.url,
+    content: input.content,
+    topic: input.topic,
+  })
   const { data, error } = await f2Supabase()
     .from('f2_threads')
     .insert({
@@ -49,6 +90,7 @@ export async function createThread(
       topic: input.topic ?? null,
       content: input.content ?? null,
       messages: [],
+      kind,
     })
     .select('*')
     .single()

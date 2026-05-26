@@ -186,7 +186,19 @@ export function ProfileBadge({
 // Mini topic glyph (diagonal Feynman-style two-node mark on a tiny tile)
 // ---------------------------------------------------------------------------
 
-export function MiniTopicGlyph({ size = 36 }: { size?: number }) {
+export type TopicKind = 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
+
+/// 36pt rounded-square chip whose inner glyph reflects the topic's source
+/// kind. Source-of-truth SVG paths were prototyped in
+/// `src/app/f2/topic-icons-preview/` (now deleted) — coral strokes + coral
+/// filled nodes in the same node-and-edge vocabulary as the app icon.
+export function MiniTopicGlyph({
+  kind,
+  size = 36,
+}: {
+  kind?: TopicKind | null
+  size?: number
+}) {
   return (
     <div
       style={{
@@ -201,12 +213,95 @@ export function MiniTopicGlyph({ size = 36 }: { size?: number }) {
         flexShrink: 0,
       }}
     >
-      <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 20 20" aria-hidden>
-        <line x1="4" y1="14" x2="16" y2="6" stroke="var(--feynd-coral)" strokeWidth="1.2" />
-        <circle cx="4" cy="14" r="2.2" fill="var(--feynd-coral)" />
-        <circle cx="16" cy="6" r="2.2" fill="var(--feynd-coral)" />
-      </svg>
+      <div style={{ width: size * 0.55, height: size * 0.55 }}>
+        {renderGlyph(kind ?? 'fallback')}
+      </div>
     </div>
+  )
+}
+
+function renderGlyph(kind: TopicKind) {
+  switch (kind) {
+    case 'chat':  return <ChatGlyph />
+    case 'web':   return <WebGlyph />
+    case 'audio': return <AudioGlyph />
+    case 'video': return <VideoGlyph />
+    case 'paste': return <PasteGlyph />
+    default:      return <FallbackGlyph />
+  }
+}
+
+// All glyphs share the 20×20 viewBox the preview page used.
+const GLYPH_STROKE = 1.2
+const GLYPH_R = 2.2
+
+function ChatGlyph() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <path
+        d="M5 4 H15 A2 2 0 0 1 17 6 V11 A2 2 0 0 1 15 13 H9 L6 16 V13 H5 A2 2 0 0 1 3 11 V6 A2 2 0 0 1 5 4 Z"
+        fill="none"
+        stroke="var(--feynd-coral)"
+        strokeWidth={GLYPH_STROKE}
+        strokeLinejoin="round"
+      />
+      <circle cx="7.5" cy="8.6" r={GLYPH_R - 0.6} fill="var(--feynd-coral)" />
+      <circle cx="12.5" cy="8.6" r={GLYPH_R - 0.6} fill="var(--feynd-coral)" />
+    </svg>
+  )
+}
+
+function WebGlyph() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <circle cx="10" cy="10" r="6" fill="none" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} />
+      <line x1="4" y1="10" x2="16" y2="10" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} />
+      <ellipse cx="10" cy="10" rx="3" ry="6" fill="none" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} />
+      <circle cx="4" cy="10" r={GLYPH_R} fill="var(--feynd-coral)" />
+      <circle cx="16" cy="10" r={GLYPH_R} fill="var(--feynd-coral)" />
+    </svg>
+  )
+}
+
+function AudioGlyph() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <line x1="13" y1="4.5" x2="13" y2="13.5" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <line x1="13" y1="4.5" x2="16.5" y2="7" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <circle cx="10.6" cy="13.5" r="2.8" fill="var(--feynd-coral)" />
+    </svg>
+  )
+}
+
+function VideoGlyph() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <rect x="3" y="5" width="14" height="10" rx="2" fill="none" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} />
+      <path d="M 8.5 7.8 L 8.5 12.2 L 12.6 10 Z" fill="var(--feynd-coral)" />
+    </svg>
+  )
+}
+
+function PasteGlyph() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <line x1="7" y1="6" x2="15" y2="6" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <line x1="7" y1="10" x2="14" y2="10" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <line x1="7" y1="14" x2="12" y2="14" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <circle cx="4.5" cy="6" r={GLYPH_R} fill="var(--feynd-coral)" />
+      <circle cx="4.5" cy="10" r={GLYPH_R} fill="var(--feynd-coral)" />
+      <circle cx="4.5" cy="14" r={GLYPH_R} fill="var(--feynd-coral)" />
+    </svg>
+  )
+}
+
+function FallbackGlyph() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <line x1="4" y1="14" x2="16" y2="6" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} />
+      <circle cx="4" cy="14" r={GLYPH_R} fill="var(--feynd-coral)" />
+      <circle cx="16" cy="6" r={GLYPH_R} fill="var(--feynd-coral)" />
+    </svg>
   )
 }
 

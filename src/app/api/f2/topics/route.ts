@@ -20,6 +20,7 @@ export async function GET() {
     stars: t.stars,
     hard_quiz_completed_at: t.hard_quiz_completed_at,
     pending_quiz_kind: t.pending_quiz_kind,
+    kind: t.kind,
     created_at: t.created_at,
     updated_at: t.updated_at,
     client: t.client,

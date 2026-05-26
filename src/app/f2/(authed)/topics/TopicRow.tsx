@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
-import { MiniTopicGlyph, StarRow } from '../feynd-chrome'
+import { MiniTopicGlyph, StarRow, type TopicKind } from '../feynd-chrome'
 
 export type TopicRowData = {
   id: string
@@ -12,6 +12,7 @@ export type TopicRowData = {
   last_quizzed_at: string | null
   created_at: string
   stars: number
+  kind: TopicKind | null
 }
 
 function relative(iso: string | null): string {
@@ -127,7 +128,7 @@ export default function TopicRow({
       }}
     >
       <div className="flex items-center gap-3 py-3 px-1">
-        <MiniTopicGlyph />
+        <MiniTopicGlyph kind={topic.kind} />
 
         <div className="min-w-0 flex-1">
           {renaming ? (
