@@ -49,7 +49,9 @@ struct TopicDetailView: View {
                 .feyndContentColumn()
             }
         }
-        .sheet(isPresented: $showProfile) { ProfileSheet() }
+        // Catalyst sheets don't always inherit @Observable env values — pass
+        // `session` through explicitly. See ChatView.swift for context.
+        .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
         }

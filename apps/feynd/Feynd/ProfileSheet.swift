@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import UniformTypeIdentifiers
 
 /// Profile + settings sheet — port of `ProfileSheet` in feynd-screens.jsx.
 ///
@@ -18,6 +19,7 @@ struct ProfileSheet: View {
     @AppStorage("colorSchemePreference") private var colorSchemeRaw = ColorSchemePreference.system.rawValue
 
     @State private var pickerItem: PhotosPickerItem? = nil
+    @State private var showFileImporter = false  // Mac Catalyst fallback
     @State private var uploadingAvatar = false
     @State private var uploadError: String? = nil
 
@@ -111,10 +113,30 @@ struct ProfileSheet: View {
     private var hero: some View {
         VStack(spacing: 0) {
             HStack(spacing: 16) {
+                // Mac Catalyst doesn't surface a usable PhotosPicker the same
+                // way iOS does — tapping it crashes the app when the system
+                // tries to bring up the photo library. Use the SwiftUI native
+                // .fileImporter on Catalyst (works for jpg/png as required).
+                #if targetEnvironment(macCatalyst)
+                Button {
+                    showFileImporter = true
+                } label: {
+                    avatarWithCamera
+                }
+                .buttonStyle(.plain)
+                .fileImporter(
+                    isPresented: $showFileImporter,
+                    allowedContentTypes: [.jpeg, .png],
+                    allowsMultipleSelection: false
+                ) { result in
+                    handleImportedFile(result: result)
+                }
+                #else
                 PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
                     avatarWithCamera
                 }
                 .buttonStyle(.plain)
+                #endif
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(username)
@@ -378,6 +400,35 @@ struct ProfileSheet: View {
                 session.setAvatarUrl(url)
             } catch {
                 uploadError = error.localizedDescription
+            }
+        }
+    }
+
+    /// Mac Catalyst path — handles the result from `.fileImporter`.
+    /// Reads the chosen file off disk, detects MIME from extension, uploads.
+    private func handleImportedFile(result: Result<[URL], Error>) {
+        switch result {
+        case .failure(let err):
+            uploadError = err.localizedDescription
+        case .success(let urls):
+            guard let fileURL = urls.first else { return }
+            Task {
+                uploadingAvatar = true
+                defer { uploadingAvatar = false }
+                let needsAccess = fileURL.startAccessingSecurityScopedResource()
+                defer { if needsAccess { fileURL.stopAccessingSecurityScopedResource() } }
+                do {
+                    let data = try Data(contentsOf: fileURL)
+                    if data.count > 1024 * 1024 {
+                        uploadError = "Image is over 1 MB. Pick a smaller one."
+                        return
+                    }
+                    let mime = fileURL.pathExtension.lowercased() == "png" ? "image/png" : "image/jpeg"
+                    let url = try await F2API.shared.uploadAvatar(imageData: data, mime: mime)
+                    session.setAvatarUrl(url)
+                } catch {
+                    uploadError = error.localizedDescription
+                }
             }
         }
     }

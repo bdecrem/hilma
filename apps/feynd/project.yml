@@ -31,6 +31,9 @@ targets:
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         NSMicrophoneUsageDescription: Feynd uses the microphone so you can talk with your learning assistant.
+        # Required by PhotosPicker on Mac Catalyst — without it the app is
+        # terminated the moment the picker tries to access the photo library.
+        NSPhotoLibraryUsageDescription: Pick a profile photo from your library.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     settings:

@@ -69,7 +69,9 @@ struct TopicsView: View {
                 .feyndContentColumn()
             }
         }
-        .sheet(isPresented: $showProfile) { ProfileSheet() }
+        // Catalyst sheets don't always inherit @Observable env values — pass
+        // `session` through explicitly. See ChatView.swift for context.
+        .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
         .alert("Rename topic",
                isPresented: Binding(get: { renameTarget != nil },
                                     set: { if !$0 { renameTarget = nil } })) {

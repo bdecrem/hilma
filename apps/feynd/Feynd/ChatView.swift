@@ -53,7 +53,11 @@ struct ChatView: View {
                 Color.clear.frame(height: 86)
             }
         }
-        .sheet(isPresented: $showSettings) { ProfileSheet() }
+        // Mac Catalyst sheets present in a separate scene that doesn't always
+        // inherit @Observable environment values from the parent — explicitly
+        // forward `session` so ProfileSheet's @Environment(Session.self)
+        // lookup doesn't crash with "No Observable object of type Session".
+        .sheet(isPresented: $showSettings) { ProfileSheet().environment(session) }
         .sheet(isPresented: $voicePresented) { VoiceSessionView(mode: "global") }
         .task { await loadLatest() }
     }
