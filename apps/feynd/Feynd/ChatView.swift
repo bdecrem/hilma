@@ -118,8 +118,22 @@ struct ChatView: View {
 struct ChatScrollView: View {
     let messages: [F2Message]
     let busy: Bool
+    @State private var measuredWidth: CGFloat = 390
 
     var body: some View {
+        // Measure the conversation row width once (and on each resize), then
+        // hand it to bubbles via the chatRowWidth environment so they cap at
+        // 75% of whatever's available — responsive on Catalyst + iPad without
+        // needing a per-bubble GeometryReader.
+        GeometryReader { geo in
+            scroll
+                .environment(\.chatRowWidth, measuredWidth)
+                .onAppear { measuredWidth = geo.size.width }
+                .onChange(of: geo.size.width) { _, w in measuredWidth = w }
+        }
+    }
+
+    private var scroll: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {

@@ -471,6 +471,31 @@ struct DayDivider: View {
     }
 }
 
+// MARK: - Chat bubble width plumbing
+//
+// Bubbles cap their width at 75% of the conversation row's available width.
+// `ChatScrollView` measures itself once with a GeometryReader and publishes
+// the width via this environment value; every bubble reads it.
+
+private struct ChatRowWidthKey: EnvironmentKey {
+    /// Phone-sized default so previews + first-frame renders look right.
+    static let defaultValue: CGFloat = 390
+}
+
+extension EnvironmentValues {
+    var chatRowWidth: CGFloat {
+        get { self[ChatRowWidthKey.self] }
+        set { self[ChatRowWidthKey.self] = newValue }
+    }
+}
+
+/// Convenience used by AI + User bubbles.
+private func bubbleMaxWidth(for rowWidth: CGFloat) -> CGFloat {
+    // Floor: bubbles never get tinier than what fits on an iPhone.
+    // Ceiling: ~75% of the row keeps lines readable even on a 1600pt Catalyst window.
+    max(280, rowWidth * 0.75)
+}
+
 // MARK: - Chat bubbles (custom shape with one-corner-flat tail)
 
 /// 20pt rounded everywhere except one corner that's 4pt — the tail anchor.
@@ -499,6 +524,7 @@ struct BubbleShape: Shape {
 }
 
 struct AIBubble<Content: View>: View {
+    @Environment(\.chatRowWidth) private var rowWidth
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -512,7 +538,7 @@ struct AIBubble<Content: View>: View {
                 .padding(.vertical, 10)
                 .background(BubbleShape(isUser: false).fill(FeyndTheme.surface))
                 .overlay(BubbleShape(isUser: false).stroke(FeyndTheme.border, lineWidth: 1))
-                .frame(maxWidth: 600, alignment: .leading)
+                .frame(maxWidth: bubbleMaxWidth(for: rowWidth), alignment: .leading)
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)
@@ -521,6 +547,7 @@ struct AIBubble<Content: View>: View {
 }
 
 struct UserBubble: View {
+    @Environment(\.chatRowWidth) private var rowWidth
     let text: String
 
     var body: some View {
@@ -532,7 +559,7 @@ struct UserBubble: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
                 .background(BubbleShape(isUser: true).fill(FeyndTheme.blue))
-                .frame(maxWidth: 290, alignment: .trailing)
+                .frame(maxWidth: bubbleMaxWidth(for: rowWidth), alignment: .trailing)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 4)
