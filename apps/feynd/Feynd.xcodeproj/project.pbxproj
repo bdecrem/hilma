@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00FA62D14737E52644E26F61 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B09246FF15307342083E574 /* SignupView.swift */; };
 		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
+		19C524D5397F5550C8A33970 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = DAABD116A19EBEA378D604DA /* WebRTC */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
 		36BE08CA63307A15CECFDBEA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFCEF68207C8EC05D3B4760 /* Models.swift */; };
 		412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */; };
@@ -57,6 +58,17 @@
 		EC5668529933DC6749CB3D06 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		EFFCEF68207C8EC05D3B4760 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2EC007927EA8C22A9852105B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				19C524D5397F5550C8A33970 /* WebRTC in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		4373D04F4E053F1CAF5AA605 /* Feynd */ = {
@@ -114,6 +126,7 @@
 			buildPhases = (
 				C72B123456E6382386D117D6 /* Sources */,
 				A8C3559117BA6882EF1AA4BA /* Resources */,
+				2EC007927EA8C22A9852105B /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -121,6 +134,7 @@
 			);
 			name = Feynd;
 			packageProductDependencies = (
+				DAABD116A19EBEA378D604DA /* WebRTC */,
 			);
 			productName = Feynd;
 			productReference = 8B7488FF54E0D0D3D2342D62 /* Feynd.app */;
@@ -149,6 +163,9 @@
 			);
 			mainGroup = F87F9A36F88E2A22B1A387BD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A68BC3EB0D0AD299F5C1CA48 /* XCRemoteSwiftPackageReference "WebRTC" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B7269715FA6EFD860E6E2ED1 /* Products */;
 			projectDirPath = "";
@@ -395,6 +412,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A68BC3EB0D0AD299F5C1CA48 /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stasel/WebRTC.git";
+			requirement = {
+				kind = exactVersion;
+				version = 147.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DAABD116A19EBEA378D604DA /* WebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A68BC3EB0D0AD299F5C1CA48 /* XCRemoteSwiftPackageReference "WebRTC" */;
+			productName = WebRTC;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 335989D3BB49D8743AF521FE /* Project object */;
 }

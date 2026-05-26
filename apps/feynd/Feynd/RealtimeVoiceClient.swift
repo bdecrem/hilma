@@ -1,10 +1,11 @@
 @preconcurrency import AVFoundation
 import Foundation
 import Observation
+@preconcurrency import WebRTC
 
 @MainActor
 @Observable
-final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
+final class RealtimeVoiceClient: NSObject {
     enum Phase: Equatable {
         case idle
         case requestingPermission
@@ -25,27 +26,19 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
     let threadId: String?
 
     private var sessionResponse: F2API.RealtimeSessionResponse?
-    private var urlSession: URLSession!
-    private var webSocket: URLSessionWebSocketTask?
-    private var audioEngine: AVAudioEngine?
-    private var audioConverter: AVAudioConverter?
-    private var audioPlayer: AVAudioPlayer?
-    private var playbackQueue: [Data] = []
-    private var playbackPrimed = false
-    private var playbackResponseDone = false
-    private var playbackPrimeTask: Task<Void, Never>?
+    private var peerConnectionFactory: RTCPeerConnectionFactory?
+    private var peerConnection: RTCPeerConnection?
+    private var localAudioTrack: RTCAudioTrack?
+    private var dataChannel: RTCDataChannel?
+    private var audioRouteObserver: NSObjectProtocol?
+    private var statisticsTask: Task<Void, Never>?
     private var transcript: [[String: String]] = []
     private var handledToolCallIds: Set<String> = []
-
-    private let targetSampleRate: Double = 24_000
-    private let playbackPrimeChunkCount = 4
-    private let playbackPrimeDelayNanos: UInt64 = 450_000_000
 
     init(mode: String, threadId: String? = nil) {
         self.mode = mode
         self.threadId = threadId
         super.init()
-        self.urlSession = URLSession(configuration: .default)
     }
 
     func start() async {
@@ -61,22 +54,20 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
             }
 
             try configureAudioSession()
+            observeAudioRoute()
+            logAudioRoute(reason: "session configured")
 
             phase = .creatingSession
             status = "Creating Realtime session..."
             let session = try await F2API.shared.startRealtimeSession(mode: mode, threadId: threadId)
-            self.sessionResponse = session
-            self.model = session.realtime.model
-            self.voice = session.realtime.voice
+            sessionResponse = session
+            model = session.realtime.model
+            voice = session.realtime.voice
 
             phase = .connecting
             status = "Connecting audio..."
-            try connectWebSocket(session)
-            startReceiveLoop()
-            try startMicStreaming()
-
-            phase = .connected
-            status = "Connected"
+            try await connectWebRTC(session)
+            status = "Establishing media..."
         } catch {
             cleanup()
             phase = .failed(error.localizedDescription)
@@ -104,109 +95,126 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
         try session.setCategory(
             .playAndRecord,
             mode: .voiceChat,
-            options: [.defaultToSpeaker, .allowBluetoothHFP, .allowAirPlay]
+            options: [.defaultToSpeaker, .allowBluetoothHFP]
         )
         try session.setActive(true, options: [.notifyOthersOnDeactivation])
     }
 
-    private func connectWebSocket(_ session: F2API.RealtimeSessionResponse) throws {
-        var components = URLComponents(string: "wss://api.openai.com/v1/realtime")!
-        components.queryItems = [URLQueryItem(name: "model", value: session.realtime.model)]
-        guard let url = components.url else { throw VoiceError.invalidURL }
+    private func connectWebRTC(_ session: F2API.RealtimeSessionResponse) async throws {
+        let factory = RTCPeerConnectionFactory()
+        let configuration = RTCConfiguration()
+        configuration.sdpSemantics = .unifiedPlan
+        configuration.continualGatheringPolicy = .gatherContinually
+        let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
 
-        var req = URLRequest(url: url)
-        req.setValue("Bearer \(session.clientSecret.value)", forHTTPHeaderField: "Authorization")
-        let task = urlSession.webSocketTask(with: req)
-        webSocket = task
-        task.resume()
+        guard let connection = factory.peerConnection(
+            with: configuration,
+            constraints: constraints,
+            delegate: self
+        ) else {
+            throw VoiceError.peerConnection
+        }
+
+        let audioSource = factory.audioSource(with: nil)
+        let audioTrack = factory.audioTrack(with: audioSource, trackId: "f2-microphone")
+        audioTrack.isEnabled = true
+        guard connection.add(audioTrack, streamIds: ["f2-realtime"]) != nil else {
+            throw VoiceError.audioTrack
+        }
+
+        let channelConfiguration = RTCDataChannelConfiguration()
+        channelConfiguration.isOrdered = true
+        guard let channel = connection.dataChannel(
+            forLabel: session.realtime.dataChannel,
+            configuration: channelConfiguration
+        ) else {
+            throw VoiceError.dataChannel
+        }
+        channel.delegate = self
+
+        peerConnectionFactory = factory
+        peerConnection = connection
+        localAudioTrack = audioTrack
+        dataChannel = channel
+
+        let offer = try await offer(for: connection)
+        try await setLocalDescription(offer, on: connection)
+        let answer = try await exchangeSDP(
+            offer: offer.sdp,
+            callsURL: session.realtime.callsUrl,
+            clientSecret: session.clientSecret.value
+        )
+        try await setRemoteDescription(
+            RTCSessionDescription(type: .answer, sdp: answer),
+            on: connection
+        )
+        NSLog("F2_REALTIME_WEBRTC remote SDP accepted")
     }
 
-    private func startReceiveLoop() {
-        Task { [weak self] in
-            while let self, let ws = self.webSocket {
-                do {
-                    let message = try await ws.receive()
-                    switch message {
-                    case .string(let text):
-                        self.handleEvent(text)
-                    case .data(let data):
-                        if let text = String(data: data, encoding: .utf8) {
-                            self.handleEvent(text)
-                        }
-                    @unknown default:
-                        break
-                    }
-                } catch {
-                    await MainActor.run {
-                        if self.phase != .ended {
-                            self.phase = .failed(error.localizedDescription)
-                            self.status = "Realtime disconnected"
-                        }
-                    }
-                    break
+    private func offer(for connection: RTCPeerConnection) async throws -> RTCSessionDescription {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<RTCSessionDescription, Error>) in
+            let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
+            connection.offer(for: constraints) { offer, error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else if let offer {
+                    continuation.resume(returning: offer)
+                } else {
+                    continuation.resume(throwing: VoiceError.missingSDP)
                 }
             }
         }
     }
 
-    private func startMicStreaming() throws {
-        let engine = AVAudioEngine()
-        let input = engine.inputNode
-        let inputFormat = input.outputFormat(forBus: 0)
-        guard let outputFormat = AVAudioFormat(
-            commonFormat: .pcmFormatInt16,
-            sampleRate: targetSampleRate,
-            channels: 1,
-            interleaved: true
-        ) else {
-            throw VoiceError.audioFormat
-        }
-
-        let converter = AVAudioConverter(from: inputFormat, to: outputFormat)
-        self.audioEngine = engine
-        self.audioConverter = converter
-
-        input.installTap(onBus: 0, bufferSize: 2048, format: inputFormat) { [weak self] buffer, _ in
-            guard let self else { return }
-            Task { @MainActor in
-                self.sendAudioBuffer(buffer, inputFormat: inputFormat, outputFormat: outputFormat)
+    private func setLocalDescription(
+        _ description: RTCSessionDescription,
+        on connection: RTCPeerConnection
+    ) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            connection.setLocalDescription(description) { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
             }
         }
-
-        engine.prepare()
-        try engine.start()
     }
 
-    private func sendAudioBuffer(_ buffer: AVAudioPCMBuffer, inputFormat: AVAudioFormat, outputFormat: AVAudioFormat) {
-        guard let converter = audioConverter else { return }
-        let ratio = outputFormat.sampleRate / inputFormat.sampleRate
-        let frameCapacity = AVAudioFrameCount(Double(buffer.frameLength) * ratio) + 8
-        guard let converted = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: frameCapacity) else { return }
-
-        var error: NSError?
-        var consumed = false
-        converter.convert(to: converted, error: &error) { _, outStatus in
-            if consumed {
-                outStatus.pointee = .noDataNow
-                return nil
+    private func setRemoteDescription(
+        _ description: RTCSessionDescription,
+        on connection: RTCPeerConnection
+    ) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            connection.setRemoteDescription(description) { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: ())
+                }
             }
-            consumed = true
-            outStatus.pointee = .haveData
-            return buffer
         }
-        guard error == nil, converted.frameLength > 0 else { return }
-        guard let data = pcm16Data(from: converted) else { return }
-        let base64 = data.base64EncodedString()
-        sendEvent([
-            "type": "input_audio_buffer.append",
-            "audio": base64
-        ])
     }
 
-    private func pcm16Data(from buffer: AVAudioPCMBuffer) -> Data? {
-        let frames = Int(buffer.frameLength)
-        guard frames > 0, let channelData = buffer.int16ChannelData else { return nil }
-        return Data(bytes: channelData[0], count: frames * MemoryLayout<Int16>.size)
+    private func exchangeSDP(offer: String, callsURL: URL, clientSecret: String) async throws -> String {
+        var request = URLRequest(url: callsURL)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(clientSecret)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/sdp", forHTTPHeaderField: "Content-Type")
+        request.httpBody = Data(offer.utf8)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VoiceError.invalidSDPResponse
+        }
+        guard (200..<300).contains(httpResponse.statusCode) else {
+            let details = String(data: data, encoding: .utf8) ?? "No response body."
+            throw VoiceError.sdpExchange(httpResponse.statusCode, details)
+        }
+        guard let answer = String(data: data, encoding: .utf8), !answer.isEmpty else {
+            throw VoiceError.invalidSDPResponse
+        }
+        return answer
     }
 
     private func handleEvent(_ text: String) {
@@ -217,18 +225,12 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
         else { return }
 
         switch type {
-        case "response.audio.delta", "response.output_audio.delta":
-            if let audio = event["delta"] as? String,
-               let data = Data(base64Encoded: audio) {
-                enqueueAudio(data)
-            }
+        case "response.created":
+            phase = .speaking
+            status = "Speaking"
         case "response.done":
-            playbackResponseDone = true
-            tryStartPlayback()
-            if playbackQueue.isEmpty && audioPlayer == nil {
-                phase = .connected
-                status = "Connected"
-            }
+            phase = .connected
+            status = "Connected"
         case "conversation.item.input_audio_transcription.completed":
             if let transcriptText = event["transcript"] as? String {
                 appendTranscript(role: "user", text: transcriptText)
@@ -244,98 +246,10 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
         case "error":
             let message = ((event["error"] as? [String: Any])?["message"] as? String) ?? "Realtime error"
             status = message
+            NSLog("F2_REALTIME_EVENT_ERROR %@", message)
         default:
             break
         }
-    }
-
-    private func enqueueAudio(_ pcm: Data) {
-        playbackQueue.append(wavData(fromPCM16: pcm, sampleRate: Int(targetSampleRate), channels: 1))
-        schedulePlaybackPrimeFallback()
-        tryStartPlayback()
-    }
-
-    private func schedulePlaybackPrimeFallback() {
-        guard !playbackPrimed, audioPlayer == nil, playbackPrimeTask == nil else { return }
-        let delay = playbackPrimeDelayNanos
-        playbackPrimeTask = Task { [weak self] in
-            do {
-                try await Task.sleep(nanoseconds: delay)
-            } catch {
-                return
-            }
-            await MainActor.run {
-                guard let self else { return }
-                self.playbackPrimeTask = nil
-                self.tryStartPlayback(force: true)
-            }
-        }
-    }
-
-    private func tryStartPlayback(force: Bool = false) {
-        guard audioPlayer == nil, !playbackQueue.isEmpty else { return }
-
-        if !playbackPrimed {
-            let hasEnoughBuffer = playbackQueue.count >= playbackPrimeChunkCount
-            guard force || playbackResponseDone || hasEnoughBuffer else { return }
-            playbackPrimed = true
-            playbackPrimeTask?.cancel()
-            playbackPrimeTask = nil
-        }
-
-        playNextAudio()
-    }
-
-    private func playNextAudio() {
-        guard !playbackQueue.isEmpty else {
-            audioPlayer = nil
-            playbackPrimed = false
-            playbackResponseDone = false
-            phase = .connected
-            status = "Connected"
-            return
-        }
-        let data = playbackQueue.removeFirst()
-        do {
-            let player = try AVAudioPlayer(data: data)
-            player.delegate = self
-            audioPlayer = player
-            phase = .speaking
-            status = "Speaking"
-            player.prepareToPlay()
-            player.play()
-        } catch {
-            audioPlayer = nil
-            phase = .connected
-            status = "Connected"
-        }
-    }
-
-    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        Task { @MainActor in
-            self.audioPlayer = nil
-            self.playNextAudio()
-        }
-    }
-
-    private func wavData(fromPCM16 pcm: Data, sampleRate: Int, channels: Int) -> Data {
-        var data = Data()
-        let byteRate = sampleRate * channels * 2
-        let blockAlign = channels * 2
-        data.append("RIFF".data(using: .ascii)!)
-        data.append(UInt32(36 + pcm.count).littleEndianData)
-        data.append("WAVEfmt ".data(using: .ascii)!)
-        data.append(UInt32(16).littleEndianData)
-        data.append(UInt16(1).littleEndianData)
-        data.append(UInt16(channels).littleEndianData)
-        data.append(UInt32(sampleRate).littleEndianData)
-        data.append(UInt32(byteRate).littleEndianData)
-        data.append(UInt16(blockAlign).littleEndianData)
-        data.append(UInt16(16).littleEndianData)
-        data.append("data".data(using: .ascii)!)
-        data.append(UInt32(pcm.count).littleEndianData)
-        data.append(pcm)
-        return data
     }
 
     private func appendTranscript(role: String, text: String) {
@@ -389,10 +303,10 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
     private func parseStringArguments(_ json: String) -> [String: String] {
         guard
             let data = json.data(using: .utf8),
-            let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return [:] }
         var result: [String: String] = [:]
-        for (key, value) in obj {
+        for (key, value) in object {
             result[key] = String(describing: value)
         }
         return result
@@ -411,12 +325,13 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
     }
 
     private func sendEvent(_ object: [String: Any]) {
-        guard let data = try? JSONSerialization.data(withJSONObject: object),
-              let text = String(data: data, encoding: .utf8) else { return }
-        webSocket?.send(.string(text)) { error in
-            if let error {
-                NSLog("F2_REALTIME_SEND_ERROR \(error.localizedDescription)")
-            }
+        guard
+            let channel = dataChannel,
+            channel.readyState == .open,
+            let data = try? JSONSerialization.data(withJSONObject: object)
+        else { return }
+        if !channel.sendData(RTCDataBuffer(data: data, isBinary: false)) {
+            NSLog("F2_REALTIME_DATA_CHANNEL_SEND_ERROR")
         }
     }
 
@@ -434,39 +349,214 @@ final class RealtimeVoiceClient: NSObject, AVAudioPlayerDelegate {
         return "Voice session with \(transcript.count) transcribed turns."
     }
 
+    private func observeAudioRoute() {
+        audioRouteObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            let reasonValue = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
+            let reason = reasonValue.flatMap(AVAudioSession.RouteChangeReason.init(rawValue:))?.rawValue ?? 0
+            Task { @MainActor in
+                self?.logAudioRoute(reason: "route change \(reason)")
+            }
+        }
+    }
+
+    private func logAudioRoute(reason: String) {
+        let session = AVAudioSession.sharedInstance()
+        let outputs = session.currentRoute.outputs
+            .map { "\($0.portType.rawValue):\($0.portName)" }
+            .joined(separator: ",")
+        let inputs = session.currentRoute.inputs
+            .map { "\($0.portType.rawValue):\($0.portName)" }
+            .joined(separator: ",")
+        NSLog(
+            "F2_REALTIME_AUDIO_ROUTE %@ inputs=%@ outputs=%@ rate=%.0f buffer=%.4f latency=%.4f",
+            reason,
+            inputs,
+            outputs,
+            session.sampleRate,
+            session.ioBufferDuration,
+            session.outputLatency
+        )
+    }
+
+    private func startStatisticsLogging() {
+        guard statisticsTask == nil else { return }
+        statisticsTask = Task { [weak self] in
+            while !Task.isCancelled {
+                do {
+                    try await Task.sleep(nanoseconds: 10_000_000_000)
+                } catch {
+                    break
+                }
+                guard let self, let connection = self.peerConnection else { break }
+                let report = await connection.statistics()
+                for statistic in report.statistics.values {
+                    if statistic.type == "inbound-rtp",
+                       Self.statisticText("kind", from: statistic) == "audio" {
+                        NSLog(
+                            "F2_REALTIME_STATS inbound_audio packetsLost=%@ jitter=%@ concealedSamples=%@ jitterBufferDelay=%@ jitterBufferEmittedCount=%@",
+                            Self.statisticText("packetsLost", from: statistic),
+                            Self.statisticText("jitter", from: statistic),
+                            Self.statisticText("concealedSamples", from: statistic),
+                            Self.statisticText("jitterBufferDelay", from: statistic),
+                            Self.statisticText("jitterBufferEmittedCount", from: statistic)
+                        )
+                    } else if statistic.type == "candidate-pair",
+                              Self.statisticText("nominated", from: statistic) == "1" {
+                        NSLog(
+                            "F2_REALTIME_STATS candidate_pair state=%@ rtt=%@ availableIncomingBitrate=%@",
+                            Self.statisticText("state", from: statistic),
+                            Self.statisticText("currentRoundTripTime", from: statistic),
+                            Self.statisticText("availableIncomingBitrate", from: statistic)
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private nonisolated static func statisticText(_ key: String, from statistic: RTCStatistics) -> String {
+        statistic.values[key].map(String.init(describing:)) ?? "-"
+    }
+
     private func cleanup() {
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine?.stop()
-        audioEngine = nil
-        audioConverter = nil
-        audioPlayer?.stop()
-        audioPlayer = nil
-        playbackQueue.removeAll()
-        playbackPrimed = false
-        playbackResponseDone = false
-        playbackPrimeTask?.cancel()
-        playbackPrimeTask = nil
-        webSocket?.cancel(with: .goingAway, reason: nil)
-        webSocket = nil
+        if let observer = audioRouteObserver {
+            NotificationCenter.default.removeObserver(observer)
+            audioRouteObserver = nil
+        }
+        dataChannel?.delegate = nil
+        dataChannel?.close()
+        dataChannel = nil
+        statisticsTask?.cancel()
+        statisticsTask = nil
+        localAudioTrack?.isEnabled = false
+        localAudioTrack = nil
+        peerConnection?.close()
+        peerConnection = nil
+        peerConnectionFactory = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: [.notifyOthersOnDeactivation])
     }
 
     enum VoiceError: LocalizedError {
-        case invalidURL
-        case audioFormat
+        case peerConnection
+        case audioTrack
+        case dataChannel
+        case missingSDP
+        case invalidSDPResponse
+        case sdpExchange(Int, String)
 
         var errorDescription: String? {
             switch self {
-            case .invalidURL: return "Couldn't create the Realtime WebSocket URL."
-            case .audioFormat: return "Couldn't configure microphone audio."
+            case .peerConnection:
+                return "Couldn't create the Realtime media connection."
+            case .audioTrack:
+                return "Couldn't connect microphone audio."
+            case .dataChannel:
+                return "Couldn't create the Realtime event channel."
+            case .missingSDP:
+                return "Couldn't create a Realtime connection offer."
+            case .invalidSDPResponse:
+                return "OpenAI returned an invalid Realtime connection response."
+            case .sdpExchange(let status, let message):
+                return "OpenAI Realtime connection failed (\(status)): \(message)"
             }
         }
     }
 }
 
-private extension FixedWidthInteger {
-    var littleEndianData: Data {
-        var value = self.littleEndian
-        return Data(bytes: &value, count: MemoryLayout<Self>.size)
+extension RealtimeVoiceClient: RTCDataChannelDelegate {
+    nonisolated func dataChannelDidChangeState(_ dataChannel: RTCDataChannel) {
+        let state = dataChannel.readyState
+        Task { @MainActor in
+            NSLog("F2_REALTIME_DATA_CHANNEL state=%ld", state.rawValue)
+        }
+    }
+
+    nonisolated func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
+        guard let text = String(data: buffer.data, encoding: .utf8) else { return }
+        Task { @MainActor in
+            self.handleEvent(text)
+        }
+    }
+}
+
+extension RealtimeVoiceClient: RTCPeerConnectionDelegate {
+    nonisolated func peerConnection(
+        _ peerConnection: RTCPeerConnection,
+        didChange stateChanged: RTCSignalingState
+    ) {}
+
+    nonisolated func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
+        for audioTrack in stream.audioTracks {
+            audioTrack.isEnabled = true
+        }
+        Task { @MainActor in
+            NSLog("F2_REALTIME_WEBRTC remote audio stream added")
+        }
+    }
+
+    nonisolated func peerConnection(_ peerConnection: RTCPeerConnection, didRemove stream: RTCMediaStream) {}
+
+    nonisolated func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {}
+
+    nonisolated func peerConnection(
+        _ peerConnection: RTCPeerConnection,
+        didChange newState: RTCIceConnectionState
+    ) {
+        Task { @MainActor in
+            NSLog("F2_REALTIME_ICE state=%ld", newState.rawValue)
+        }
+    }
+
+    nonisolated func peerConnection(
+        _ peerConnection: RTCPeerConnection,
+        didChange newState: RTCIceGatheringState
+    ) {}
+
+    nonisolated func peerConnection(
+        _ peerConnection: RTCPeerConnection,
+        didGenerate candidate: RTCIceCandidate
+    ) {}
+
+    nonisolated func peerConnection(
+        _ peerConnection: RTCPeerConnection,
+        didRemove candidates: [RTCIceCandidate]
+    ) {}
+
+    nonisolated func peerConnection(
+        _ peerConnection: RTCPeerConnection,
+        didOpen dataChannel: RTCDataChannel
+    ) {
+        dataChannel.delegate = self
+    }
+
+    nonisolated func peerConnection(
+        _ peerConnection: RTCPeerConnection,
+        didChange newState: RTCPeerConnectionState
+    ) {
+        Task { @MainActor in
+            NSLog("F2_REALTIME_CONNECTION state=%ld", newState.rawValue)
+            switch newState {
+            case .connected:
+                self.phase = .connected
+                self.status = "Connected"
+                self.logAudioRoute(reason: "WebRTC connected")
+                self.startStatisticsLogging()
+            case .failed:
+                if self.phase != .ended {
+                    self.phase = .failed("Realtime media connection failed.")
+                    self.status = "Voice disconnected"
+                }
+            case .disconnected:
+                if self.phase != .ended {
+                    self.status = "Reconnecting audio..."
+                }
+            default:
+                break
+            }
+        }
     }
 }

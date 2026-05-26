@@ -1,6 +1,6 @@
 # F2 Realtime Voice API Reference
 
-Last updated: 2026-05-23
+Last updated: 2026-05-26
 
 This document is for code agents working on Feynd/F2 voice features. It describes the OpenAI Realtime API surface used by this repo, the F2 backend wrapper around it, and the iOS client event flow.
 
@@ -12,13 +12,14 @@ The current branch implements native iPhone voice mode with:
 - F2 backend tool endpoint: `POST /api/f2/realtime/tool`
 - F2 backend persistence endpoint: `PATCH /api/f2/realtime/session/:id`
 - OpenAI endpoint: `POST https://api.openai.com/v1/realtime/client_secrets`
-- OpenAI realtime transport: `wss://api.openai.com/v1/realtime?model=<model>`
+- OpenAI realtime transport: WebRTC through `POST https://api.openai.com/v1/realtime/calls`
+- iOS WebRTC package: `stasel/WebRTC` `147.0.0` (`WebRTC-M147.xcframework`)
 - Default model: `gpt-realtime-2`
 - Default voice: `marin`
 - Default input transcription model: `gpt-realtime-whisper`
 - Default reasoning effort: `low`
 
-Important: OpenAI recommends WebRTC for browser/mobile realtime clients because WebRTC handles media transport more robustly. This repo currently uses the documented WebSocket interface with an ephemeral client secret because the native iOS WebRTC dependency was not practical during this implementation pass. Do not confuse the current code with the earlier proposal's WebRTC-first target.
+Important: OpenAI recommends WebRTC for browser/mobile realtime clients. Feynd now follows that path: audio is carried as WebRTC media tracks and Realtime events/tools use the `oai-events` data channel. The prior WebSocket plus base64 PCM playback path has been removed from the iPhone client.
 
 ## Official OpenAI Docs To Recheck
 
@@ -36,8 +37,8 @@ Documentation facts this implementation depends on:
 
 - Client secrets are short-lived ephemeral keys intended for client environments, so iOS never receives the standard `OPENAI_API_KEY`.
 - `POST /v1/realtime/client_secrets` accepts a `session` object containing the Realtime session config.
-- WebSocket connections send and receive JSON events as text frames.
-- WebSocket audio input is sent as base64 PCM chunks through `input_audio_buffer.append`.
+- Mobile WebRTC clients send an SDP offer to `POST /v1/realtime/calls`, authenticated with the ephemeral client secret, then apply OpenAI's SDP answer.
+- Under WebRTC, microphone and assistant audio are media tracks; JSON Realtime events are sent and received over a data channel.
 - Realtime sessions can emit audio plus transcript when output modality is audio.
 - Realtime voices include `marin` and `cedar`; OpenAI currently recommends those for quality.
 - `voice` generally must be set before model audio output begins.
@@ -88,10 +89,11 @@ iOS:
 6. OpenAI returns an ephemeral `client_secret.value`, expiration, and session metadata.
 7. F2 creates a row in `f2_voice_sessions`.
 8. F2 returns the ephemeral secret and voice session id to iOS.
-9. iOS connects directly to OpenAI Realtime over WebSocket using the ephemeral secret.
-10. iOS streams microphone audio to OpenAI and plays audio deltas from OpenAI.
-11. If OpenAI requests a tool call, iOS calls the F2 tool endpoint with its authenticated cookie and sends the result back to OpenAI.
-12. On stop, iOS saves the transcript and summary through the F2 persistence endpoint.
+9. iOS creates a WebRTC peer connection, local microphone audio track, and `oai-events` data channel.
+10. iOS POSTs its SDP offer directly to OpenAI's `/v1/realtime/calls` endpoint using the ephemeral secret and installs the SDP answer.
+11. WebRTC transports microphone and assistant audio; the iOS app does not encode or play raw audio deltas.
+12. If OpenAI requests a tool call over `oai-events`, iOS calls the F2 tool endpoint with its authenticated cookie and sends the result back over the data channel.
+13. On stop, iOS saves the transcript and summary through the F2 persistence endpoint.
 
 ## F2 Session Endpoint
 
@@ -151,7 +153,7 @@ Response body:
 }
 ```
 
-Note: `calls_url` and `data_channel` are included so a future WebRTC client can use the same backend contract. The current iOS client uses the WebSocket URL instead.
+The current iOS client uses `calls_url` for its SDP exchange and `data_channel` for Realtime JSON events.
 
 ## OpenAI Client Secret Request
 
@@ -229,83 +231,58 @@ There are two modes:
 
 Hard constraint: do not dump all F2 data into the Realtime prompt. Use narrow retrieval/tool calls. Topic mode includes at most a bounded excerpt, and `get_topic_context` returns at most a bounded context window.
 
-## iOS WebSocket Connection
+## iOS WebRTC Connection
 
-Current iOS connection code is in `RealtimeVoiceClient.connectWebSocket`.
+Current connection code is in `RealtimeVoiceClient.connectWebRTC`. The native dependency is declared in `apps/feynd/project.yml` and resolved through Swift Package Manager.
 
-URL:
+The handshake follows OpenAI's documented WebRTC client flow:
 
-```text
-wss://api.openai.com/v1/realtime?model=<model>
-```
-
-Headers:
+1. Create an `RTCPeerConnection`.
+2. Add a local WebRTC audio track sourced from the device microphone.
+3. Create the ordered `oai-events` `RTCDataChannel`.
+4. Create and install the SDP offer locally.
+5. Send that SDP as `application/sdp` to the backend-returned `calls_url`:
 
 ```http
+POST https://api.openai.com/v1/realtime/calls
 Authorization: Bearer <client_secret.value>
+Content-Type: application/sdp
 ```
 
-The iOS app must use the ephemeral `client_secret.value`, never the standard OpenAI API key.
+6. Install OpenAI's SDP response as the remote description.
 
-The OpenAI WebSocket sends and receives JSON event objects serialized as strings. The client currently uses `URLSessionWebSocketTask`.
+The iOS app must use the ephemeral `client_secret.value`, never the standard OpenAI API key. The F2 backend is not in the media path.
 
-## Audio Input
+## Audio Routing And Media
 
-The current iOS audio path:
+Feynd configures `AVAudioSession` before creating the connection:
 
-1. Request microphone permission.
-2. Configure `AVAudioSession` with:
-   - category: `.playAndRecord`
-   - mode: `.voiceChat`
-   - options: `.defaultToSpeaker`, `.allowBluetoothHFP`, `.allowAirPlay`
-3. Start `AVAudioEngine`.
-4. Install a mic tap.
-5. Convert the device input format to:
-   - PCM signed 16-bit integer
-   - 24 kHz
-   - mono
-   - interleaved
-6. Base64-encode raw PCM bytes.
-7. Send `input_audio_buffer.append` events over the WebSocket.
+- category: `.playAndRecord`
+- mode: `.voiceChat`
+- options: `.defaultToSpeaker`, `.allowBluetoothHFP`
 
-Event:
+This keeps voice-processing behavior and Bluetooth headset input/output routing enabled. The client logs route changes, sample rate, I/O buffer duration, and output latency with the `F2_REALTIME_AUDIO_ROUTE` prefix for device debugging. Once connected, it also samples WebRTC inbound-audio and selected-candidate statistics every 10 seconds under `F2_REALTIME_STATS`, including packet loss, jitter, concealed samples, jitter-buffer counters, and round-trip time.
 
-```json
-{
-  "type": "input_audio_buffer.append",
-  "audio": "<base64 pcm16 24khz mono>"
-}
-```
+WebRTC owns audio capture, encoding, jitter handling, packet-loss recovery, and remote playback. The app no longer:
 
-Because the session uses `semantic_vad`, the client does not explicitly send `input_audio_buffer.commit` for every utterance. If this changes to manual push-to-talk or server VAD settings change, revisit whether the client must send `input_audio_buffer.commit` and `response.create`.
+- installs an `AVAudioEngine` microphone tap;
+- sends `input_audio_buffer.append` base64 PCM events;
+- receives or queues `response.audio.delta` audio payloads;
+- creates an `AVAudioPlayer` per delta.
 
-## Audio Output
+`semantic_vad` remains configured server-side, so turns and response generation do not require manual audio-buffer commits in the iOS client.
 
-The iOS client currently handles both event names:
+## Event Data Channel
 
-- `response.audio.delta`
-- `response.output_audio.delta`
+Non-media Realtime events flow through the `oai-events` data channel as UTF-8 JSON. `RealtimeVoiceClient` currently handles:
 
-Each event contains a base64 audio delta:
+- `response.created` and `response.done` for UI status;
+- `conversation.item.input_audio_transcription.completed`;
+- `response.audio_transcript.done` and `response.output_audio_transcript.done`;
+- `response.function_call_arguments.done` and function-call `response.output_item.done`;
+- `error`.
 
-```json
-{
-  "type": "response.audio.delta",
-  "delta": "<base64 pcm16 audio>"
-}
-```
-
-The current client wraps each PCM delta in a small WAV container and queues it through `AVAudioPlayer`. Playback is protected by a small jitter buffer: it waits for 4 queued audio deltas or about 450ms before starting each assistant response. This helps absorb cellular jitter, but the WAV-per-delta path is still not ideal for production speech playback. A production upgrade should use a continuous audio queue/player to avoid gaps between chunks.
-
-When the model finishes a response, the client watches:
-
-```json
-{
-  "type": "response.done"
-}
-```
-
-The current UI moves back to `connected` when queued playback is empty.
+Function output still uses `conversation.item.create` with `type: "function_call_output"` followed by `response.create`; only the transport changed from WebSocket frames to data-channel messages.
 
 ## Transcripts
 
@@ -606,19 +583,16 @@ OpenAI:
 - The standard API key stays server-side only.
 - iOS receives only ephemeral client secrets.
 
-## WebRTC Upgrade Path
+## Implemented WebRTC Boundary
 
-OpenAI recommends WebRTC for mobile/client voice. To upgrade from the current WebSocket MVP:
+OpenAI recommends WebRTC for mobile/client voice, and the iPhone app now uses it. The backend contract has not changed:
 
-1. Pick a native iOS WebRTC dependency or official OpenAI iOS Realtime SDK if available.
-2. Keep `POST /api/f2/realtime/session` as the backend contract.
-3. Use the returned `client_secret.value` to authenticate the WebRTC SDP offer to OpenAI.
-4. Open the `oai-events` data channel.
-5. Move JSON event handling from WebSocket receive/send to the data channel.
-6. Remove manual PCM append/playback when WebRTC remote/local audio tracks are working.
-7. Keep the F2 tool endpoint and transcript persistence semantics unchanged.
+1. `POST /api/f2/realtime/session` remains responsible for authentication, session configuration, persistence setup, and minting the ephemeral client secret.
+2. iOS performs the SDP exchange directly with OpenAI and carries audio only over the WebRTC media connection.
+3. The `oai-events` data channel carries the same JSON event and function-call messages used by the Realtime API.
+4. `POST /api/f2/realtime/tool` and transcript persistence remain authenticated F2 backend operations.
 
-The WebRTC version should use the same session config, tool schema, prompt construction, and security model as the WebSocket version.
+The old raw WebSocket/manual PCM player is not a supported iOS fallback. Reintroducing it would also reintroduce the playback discontinuities that motivated this transport change.
 
 ## Sideband Upgrade Path
 
@@ -680,7 +654,8 @@ Device test:
 - Confirm `NSMicrophoneUsageDescription` exists.
 - Confirm mic permission prompt appears.
 - Confirm voice session creates through the selected backend.
-- Confirm OpenAI WebSocket connects.
+- Confirm OpenAI WebRTC connection and `oai-events` data channel open.
+- With AirPods connected, confirm the `F2_REALTIME_AUDIO_ROUTE` log reports a Bluetooth headset route.
 - Confirm speaking generates transcript events.
 - Confirm `get_topic_context` works in topic mode.
 - Confirm stopping the session writes `f2_voice_sessions.ended_at` and `transcript`.
@@ -703,6 +678,12 @@ OpenAI 400 from `client_secrets`:
 - The request body shape is wrong.
 - Session config was sent at the top level instead of under `session`.
 - A model, voice, transcription model, or config field is not available for the account/API version.
+
+OpenAI SDP exchange failure:
+
+- The client secret expired before the app POSTed its SDP offer to `calls_url`.
+- The call endpoint or token contract changed; check the official WebRTC guide before altering the app protocol.
+- The native WebRTC offer did not advertise a compatible audio media track.
 
 No audio output:
 

@@ -13,6 +13,11 @@ settings:
     CURRENT_PROJECT_VERSION: "2"
     SWIFT_STRICT_CONCURRENCY: minimal
 
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    exactVersion: 147.0.0
+
 targets:
   Feynd:
     type: application
@@ -21,6 +26,8 @@ targets:
       - path: Feynd
         excludes:
           - "Secrets.swift.example"
+    dependencies:
+      - package: WebRTC
     info:
       path: Feynd/Info.plist
       properties:
