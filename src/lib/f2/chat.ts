@@ -2,7 +2,10 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { F2Thread } from './threads'
 
 const MODEL = 'claude-sonnet-4-6'
-const MAX_CONTEXT_FOR_CHAT = 24000
+// No content cap. Claude Sonnet 4.6 + the 1M-context beta lets us send the
+// entire source — full podcast transcripts, articles, books. Repeated
+// turns hit the prompt cache so cost stays sane.
+const CONTEXT_1M_BETA = 'context-1m-2025-08-07'
 
 let _client: Anthropic | null = null
 function anthropic(): Anthropic {
@@ -93,7 +96,7 @@ ${baseRules}`
       : '(no subject)'
 
   const sourceBlock = thread.content
-    ? `\n\nSource content (primary reference — answer from this when relevant):\n${thread.content.slice(0, MAX_CONTEXT_FOR_CHAT)}`
+    ? `\n\nSource content (primary reference — answer from this when relevant):\n${thread.content}`
     : ''
 
   return `You are F2 — a learning companion. The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
@@ -117,16 +120,20 @@ export async function routeAndReply(
     content: m.text,
   }))
 
-  const response = await anthropic().messages.create({
-    model: MODEL,
-    max_tokens: 1000,
-    system: [
-      { type: 'text', text: systemText, cache_control: { type: 'ephemeral' } },
-    ],
-    tools: TOOLS,
-    tool_choice: { type: 'any' },
-    messages: [...history, { role: 'user', content: userText }],
-  })
+  const response = await anthropic().messages.create(
+    {
+      model: MODEL,
+      max_tokens: 1000,
+      system: [
+        { type: 'text', text: systemText, cache_control: { type: 'ephemeral' } },
+      ],
+      tools: TOOLS,
+      tool_choice: { type: 'any' },
+      messages: [...history, { role: 'user', content: userText }],
+    },
+    // 1M-token context window so full transcripts / books fit.
+    { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
+  )
 
   const toolUse = response.content.find((b) => b.type === 'tool_use')
   if (!toolUse || toolUse.type !== 'tool_use') {

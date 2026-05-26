@@ -2,7 +2,9 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { F2Thread } from './threads'
 
 const MODEL = 'claude-haiku-4-5-20251001'
-const MAX_SOURCE_CHARS = 4000
+// No source cap — the grader gets the full transcript / book so it can
+// actually evaluate the user's answers against the real ground truth.
+const CONTEXT_1M_BETA = 'context-1m-2025-08-07'
 const MAX_TRANSCRIPT_MESSAGES = 24
 
 let _client: Anthropic | null = null
@@ -30,7 +32,7 @@ export type QuizTwoGrade = {
 /// better to err generously than to gate the user on a flaky LLM read.
 export async function gradeQuizTwo(thread: F2Thread): Promise<QuizTwoGrade> {
   const transcript = recentTranscript(thread)
-  const source = (thread.content ?? '').slice(0, MAX_SOURCE_CHARS)
+  const source = thread.content ?? ''
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
   const system = `You are grading a 5-question quiz a user just took on a topic.
@@ -57,12 +59,16 @@ ${transcript}
 Count how many of the 4 substantive answers (questions 2–5) were acceptable.`
 
   try {
-    const res = await anthropic().messages.create({
-      model: MODEL,
-      max_tokens: 200,
-      system,
-      messages: [{ role: 'user', content: user }],
-    })
+    const res = await anthropic().messages.create(
+      {
+        model: MODEL,
+        max_tokens: 200,
+        system,
+        messages: [{ role: 'user', content: user }],
+      },
+      // 1M-token context so the grader can see full transcripts / books.
+      { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
+    )
     const block = res.content.find(b => b.type === 'text')
     const raw = block?.type === 'text' ? block.text.trim() : ''
     const parsed = extractJson(raw)
