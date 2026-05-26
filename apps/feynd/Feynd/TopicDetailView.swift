@@ -24,29 +24,27 @@ struct TopicDetailView: View {
             VStack(spacing: 0) {
                 header
 
-                VStack(spacing: 0) {
-                    if let t = thread, t.url != nil, let host = t.sourceHost {
-                        SourceCard(
-                            title: t.topic ?? host,
-                            host: host,
-                            letter: String((t.topic ?? host).prefix(1)).uppercased()
-                        )
-                        .padding(.bottom, 4)
-                    }
-
-                    if loading && thread == nil {
-                        ProgressView().tint(FeyndTheme.text2)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        ChatScrollView(messages: messages, busy: busy)
-                    }
-
-                    chipRow
-                    FeyndComposer(draft: $draft, busy: busy, onSend: send)
-
-                    Color.clear.frame(height: 86) // room for floating TabPill
+                // No column clamp — bubbles + composer grow with the window.
+                if let t = thread, t.url != nil, let host = t.sourceHost {
+                    SourceCard(
+                        title: t.topic ?? host,
+                        host: host,
+                        letter: String((t.topic ?? host).prefix(1)).uppercased()
+                    )
+                    .padding(.bottom, 4)
                 }
-                .feyndContentColumn()
+
+                if loading && thread == nil {
+                    ProgressView().tint(FeyndTheme.text2)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ChatScrollView(messages: messages, busy: busy)
+                }
+
+                chipRow
+                FeyndComposer(draft: $draft, busy: busy, onSend: send)
+
+                Color.clear.frame(height: 86) // room for floating TabPill
             }
         }
         // Catalyst sheets don't always inherit @Observable env values — pass

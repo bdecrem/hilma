@@ -29,25 +29,24 @@ struct ChatView: View {
                     showSettings = true
                 }
 
-                VStack(spacing: 0) {
-                    ChatScrollView(messages: messages, busy: busy)
+                // No content column clamp here — chat reads better when bubbles
+                // can grow with the window on Catalyst. Bubble maxWidth handles
+                // line-length readability.
+                ChatScrollView(messages: messages, busy: busy)
 
-                    // Action chips row above the composer.
-                    HStack(spacing: 8) {
-                        ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
-                            sendNudge("Quiz me.")
-                        }
-                        ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
-                            voicePresented = true
-                        }
-                        Spacer()
+                HStack(spacing: 8) {
+                    ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
+                        sendNudge("Quiz me.")
                     }
-                    .padding(.horizontal, 14)
-                    .padding(.top, 8)
-
-                    FeyndComposer(draft: $draft, busy: busy, onSend: send)
+                    ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
+                        voicePresented = true
+                    }
+                    Spacer()
                 }
-                .feyndContentColumn()
+                .padding(.horizontal, 14)
+                .padding(.top, 8)
+
+                FeyndComposer(draft: $draft, busy: busy, onSend: send)
 
                 // Space for the floating TabPill.
                 Color.clear.frame(height: 86)

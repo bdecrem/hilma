@@ -512,7 +512,7 @@ struct AIBubble<Content: View>: View {
                 .padding(.vertical, 10)
                 .background(BubbleShape(isUser: false).fill(FeyndTheme.surface))
                 .overlay(BubbleShape(isUser: false).stroke(FeyndTheme.border, lineWidth: 1))
-                .frame(maxWidth: 290, alignment: .leading)
+                .frame(maxWidth: 600, alignment: .leading)
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)
