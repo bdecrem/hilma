@@ -13,7 +13,8 @@ mapped to a single F2 user (`bart`) via the `F2_DEFAULT_IMESSAGE_USER_ID`
 env var on Vercel. Going forward we associate iMessage handles with the
 user who proves ownership of the handle by typing a 6-digit confirmation
 code into the app. Each user can pair multiple handles (e.g. phone +
-iCloud email).
+iCloud email). **There is no fallback** — messages from unpaired handles
+are silently dropped.
 
 ## The pairing flow
 
@@ -75,11 +76,11 @@ iCloud email).
 - **Webhook lookup change** (`/api/f2/clients/imessage/webhook`):
   - Before: every inbound message was attributed to the
     `F2_DEFAULT_IMESSAGE_USER_ID` user.
-  - Now: look up the sender's handle in `f2_users.imessage_handles` first;
-    fall back to `F2_DEFAULT_IMESSAGE_USER_ID` only if no one's claimed it.
-  - Once your handle is paired and you confirm via the app, the env-var
-    fallback can be removed (and we can leave it unset to *deny* unknown
-    handles entirely).
+  - Now: look up the sender's handle in `f2_users.imessage_handles`. If
+    the handle is paired, the message routes to that user. **If not, the
+    message is dropped.** No env-var fallback.
+  - `F2_DEFAULT_IMESSAGE_USER_ID` is no longer read by the webhook and
+    can be removed from Vercel project env.
 
 ## Handle format
 
@@ -118,11 +119,8 @@ From any signed-in F2 account:
 - **One-handle-per-user**: `/imessage/start` rejects with 409 if another
   account already owns the handle. To re-bind, the previous owner must
   remove it first via `DELETE /api/f2/imessage/handles`.
-- **Removing the bart fallback**: once Bart's phone + iCloud handle are
-  both paired, unset `F2_DEFAULT_IMESSAGE_USER_ID` in Vercel project env.
-  After that, any unknown handle that messages the Mac mini will be logged
-  as `skipping — unpaired handle, no default user set` and silently dropped
-  (no reply).
+- **Unpaired handles are dropped silently** (no reply, logged as
+  `dropped — unpaired handle`). Pair your handle in the app first.
 
 ## Where the code lives
 

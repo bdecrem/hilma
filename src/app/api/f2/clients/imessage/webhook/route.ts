@@ -1,7 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { authWebhook, sendIMessage } from '@/lib/f2/bluebubbles'
 import { processMessage } from '@/lib/f2/agent'
-import { getImessageDefaultUserId } from '@/lib/f2/auth'
 import { findUserByImessageHandle } from '@/lib/f2/imessage'
 import { f2Supabase } from '@/lib/f2/supabase'
 
@@ -74,23 +73,19 @@ export async function POST(req: Request) {
 
   after(async () => {
     try {
-      // Look up the paired user first; fall back to the env default only
-      // if no one has claimed this handle yet. Once everyone has paired
-      // their own handle, F2_DEFAULT_IMESSAGE_USER_ID can be removed.
+      // Strict: the handle must be paired to a real F2 account. No
+      // env-var fallback — every account gets its own inbox.
       const paired = await findUserByImessageHandle(handle)
-      let userId: string
-      if (paired) {
-        userId = paired.id
-      } else {
-        try {
-          userId = getImessageDefaultUserId()
-          console.log(`[f2/imessage] ${guid} unpaired handle, using default user`)
-        } catch {
-          console.log(`[f2/imessage] ${guid} skipping — unpaired handle, no default user set`)
-          return
-        }
+      if (!paired) {
+        console.log(`[f2/imessage] ${guid} dropped — unpaired handle ${handle}`)
+        return
       }
-      const result = await processMessage({ userId, handle, text, client: 'imessage' })
+      const result = await processMessage({
+        userId: paired.id,
+        handle,
+        text,
+        client: 'imessage',
+      })
       if (result.reply) {
         await sendIMessage({ chatGuid, text: result.reply })
         console.log(`[f2/imessage] replied ${guid}`)

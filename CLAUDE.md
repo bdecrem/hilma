@@ -147,6 +147,7 @@ curl -X POST "https://api.sendgrid.com/v3/mail/send" \
 
 ## Conventions
 
+- **Don't add fallbacks unless they're genuinely required.** Default to failing loudly — drop the message, return an error, surface the missing config. Fallbacks usually paper over real bugs (e.g. routing every unpaired iMessage to bart hides the fact that nobody has paired their handle yet) and create weird side effects that take longer to debug later than the original issue would have. Required cases: graceful client decoding of optional fields, retry-after-transient-network-error. NOT required: silently substituting a default user, default env var, default response when something's missing — make the caller deal with it.
 - **Always test before declaring done.** When building scripts or features, run them (or at least a dry run) and verify the output before telling the user it's ready.
 - **Always run `gh` commands from the repo root**, never from `/tmp` or other non-git directories. `gh release` requires a git repo context. When chaining commands that start in `/tmp` (e.g., compressing binaries), `cd` back to the repo before running `gh`.
 - **Never initialize external clients at module top level in API routes.** Supabase, Redis, etc. must use a lazy getter (`let _client; function getClient() { if (!_client) _client = createClient(...); return _client; }`). Next.js imports modules during build when env vars aren't available — top-level init crashes the build.

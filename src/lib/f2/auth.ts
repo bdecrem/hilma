@@ -92,12 +92,6 @@ export function clearSessionCookie(res: NextResponse): void {
   })
 }
 
-export function getImessageDefaultUserId(): string {
-  const id = process.env.F2_DEFAULT_IMESSAGE_USER_ID
-  if (!id) throw new Error('F2_DEFAULT_IMESSAGE_USER_ID not set')
-  return id
-}
-
 /// Look up a user by either their username or their email (case-insensitive).
 /// New email signups have username = lowercased email, so the username query
 /// alone covers most cases — but we also fall back to email for safety.
