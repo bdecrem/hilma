@@ -637,6 +637,18 @@ struct FeyndComposer: View {
                     .tint(FeyndTheme.coral)
                     .lineLimit(1...5)
                     .padding(.horizontal, 16)
+                    // Mac Catalyst: Return submits, Shift+Return inserts a newline
+                    // (the standard chat-app behavior). On iPhone the soft-keyboard
+                    // return is left alone — it inserts newlines, send is the button.
+                    #if targetEnvironment(macCatalyst)
+                    .onKeyPress(keys: [.return], phases: .down) { press in
+                        if press.modifiers.contains(.shift) {
+                            return .ignored  // let the newline through
+                        }
+                        if canSend { onSend() }
+                        return .handled
+                    }
+                    #endif
             }
             .padding(.vertical, 11)
             .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 22))
