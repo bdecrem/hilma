@@ -163,15 +163,22 @@ final class F2API {
     }
 
     /// Response from `POST /api/f2/topics/[id]/quiz/complete` — star is now
-    /// awarded based on whichever kind was pending.
+    /// awarded based on whichever kind was pending. For Quiz 2 (going from
+    /// 1★ to 2★), `passed/accepted/total/notes` describe how the LLM grader
+    /// judged the user's answers. Other paths set `passed: true`,
+    /// `accepted: nil`, `total: nil`.
     struct QuizCompleteResponse: Codable {
         let stars: Int?
         let quizCount: Int?
         let hardQuizCompletedAt: Date?
         let completedKind: String?
+        let passed: Bool?
+        let accepted: Int?
+        let total: Int?
+        let notes: String?
 
         enum CodingKeys: String, CodingKey {
-            case stars
+            case stars, passed, accepted, total, notes
             case quizCount = "quiz_count"
             case hardQuizCompletedAt = "hard_quiz_completed_at"
             case completedKind = "completed_kind"

@@ -7,9 +7,15 @@ export const runtime = 'nodejs'
 
 // POST /api/f2/topics/[id]/quiz
 // Body (optional): { kind: 'standard' | 'hard' }
-// Starts a quiz — sends the synthetic user nudge through the agent loop and
-// marks `pending_quiz_kind` on the thread. The star is *not* awarded here;
-// the user must POST /quiz/complete after they're done answering.
+// Starts a quiz — sends a structured synthetic nudge through the agent loop
+// and marks `pending_quiz_kind` on the thread. The star is *not* awarded
+// here; the user must POST /quiz/complete when they finish.
+//
+// Quiz structure (driven by the user's current stars):
+//   - stars=0, kind=standard → Quiz 1: 4 questions (1 reflection + 3 facts)
+//   - stars=1, kind=standard → Quiz 2: 5 questions (1 reflection + 4 facts),
+//     graded; user needs 3/4 acceptable on the substantive ones
+//   - kind=hard            → Hard quiz: free-form, tougher, multi-step
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -33,10 +39,7 @@ export async function POST(
     // empty/invalid body → default standard
   }
 
-  const prompt =
-    kind === 'hard'
-      ? 'Give me the Hard Quiz on this topic — tougher questions, multi-step.'
-      : 'Quiz me on this topic.'
+  const prompt = buildQuizPrompt(kind, thread.stars)
 
   const result = await processMessage({
     userId: user.id,
@@ -56,4 +59,42 @@ export async function POST(
     quiz_count: recorded.quiz_count,
     hard_quiz_completed_at: recorded.hard_quiz_completed_at,
   })
+}
+
+function buildQuizPrompt(kind: QuizKind, currentStars: number): string {
+  if (kind === 'hard') {
+    return [
+      'Give me the Hard Quiz on this topic.',
+      'Ask tough, multi-step questions that go beyond surface recall —',
+      'synthesis, comparison, edge cases. Ask one at a time and wait for',
+      'my answer before moving on. No grading commentary mid-quiz.',
+    ].join(' ')
+  }
+
+  // Standard quiz. Structure depends on whether this is the user's first
+  // or second standard attempt (drives Quiz 1 vs Quiz 2).
+  if (currentStars <= 0) {
+    // Quiz 1 — 4 questions, no grading.
+    return [
+      'Quiz me on this topic — Quiz 1.',
+      'Ask exactly 4 questions, ONE AT A TIME, waiting for my answer between each.',
+      'Question 1 must be EXACTLY: "What is the main thing you learned from this?"',
+      'Questions 2–4 are substantive questions about the content (facts, concepts, key claims).',
+      'Do not number the questions out loud. Do not summarize or grade my answers between questions —',
+      'just react briefly ("Good." / "Hmm, not quite." style is fine, but no explanations) and move on.',
+      'After question 4 is answered, say something brief like "That\'s the quiz — tap Done quiz when you\'re ready."',
+    ].join(' ')
+  }
+
+  // Quiz 2 — 5 questions, will be graded server-side on completion.
+  return [
+    'Quiz me on this topic — Quiz 2, slightly more rigorous.',
+    'Ask exactly 5 questions, ONE AT A TIME, waiting for my answer between each.',
+    'Question 1 must be EXACTLY: "What is the main thing you learned from this?"',
+    'Questions 2–5 are substantive questions about the content — aim for a mix of factual recall,',
+    'understanding of key concepts, and one application/synthesis question.',
+    'Do not number the questions out loud. React briefly to each answer but do not explain or grade —',
+    'a separate grader will evaluate when I\'m done.',
+    'After question 5 is answered, say something brief like "That\'s the quiz — tap Done quiz when you\'re ready."',
+  ].join(' ')
 }

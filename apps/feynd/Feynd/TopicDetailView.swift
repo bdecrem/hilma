@@ -104,15 +104,22 @@ struct TopicDetailView: View {
         thread?.pendingQuizKind != nil
     }
 
+    /// Quiz 2 grading can take a couple of seconds; show that state on the
+    /// chip so the user doesn't think the button broke.
+    @State private var grading = false
+
     private var chipRow: some View {
         HStack(spacing: 8) {
             if quizInProgress {
                 // Mid-quiz: only Done. Coral coral so it's the obvious primary action.
-                ActionChip(label: "Done quiz", systemImage: "checkmark.circle.fill") {
+                ActionChip(
+                    label: grading ? "Grading…" : "Done quiz",
+                    systemImage: grading ? "hourglass" : "checkmark.circle.fill"
+                ) {
                     completeQuiz()
                 }
-                .opacity(busy ? 0.5 : 1)
-                .allowsHitTesting(!busy)
+                .opacity((busy || grading) ? 0.5 : 1)
+                .allowsHitTesting(!busy && !grading)
             } else {
                 ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
                     quiz(kind: "standard")
@@ -217,11 +224,13 @@ struct TopicDetailView: View {
         }
     }
 
-    /// User hit "Done quiz". Award the star, clear the pending state, and
-    /// refresh user-wide progress (this is the moment the level can rise).
+    /// User hit "Done quiz". For Quiz 1 / Hard the server just awards the
+    /// star. For Quiz 2 the server grades the conversation first; we surface
+    /// the result inline as an F2 message so the user knows why they did or
+    /// didn't earn the next star.
     private func completeQuiz() {
-        guard !busy else { return }
-        busy = true
+        guard !busy && !grading else { return }
+        grading = true
         Task {
             do {
                 let res = try await F2API.shared.completeQuiz(id: topicId)
@@ -232,14 +241,39 @@ struct TopicDetailView: View {
                     t.pendingQuizKind = nil
                     thread = t
                 }
-                // Now is the right moment — star was just awarded.
+                // Inline result message — gives the user a clear signal
+                // whether the Done tap earned a star or not.
+                let resultText = describeQuizResult(res)
+                if !resultText.isEmpty {
+                    messages.append(F2Message(role: "assistant", text: resultText, createdAt: Date()))
+                }
+                // Refresh user-wide progress (level may have ticked up).
                 await session.refreshProgress()
             } catch {
                 messages.append(F2Message(role: "assistant",
                                           text: "(error: \(error.localizedDescription))",
                                           createdAt: Date()))
             }
-            busy = false
+            grading = false
         }
+    }
+
+    /// Renders the result of a /quiz/complete call as a short F2 message.
+    /// Quiz 1 and Hard quizzes return passed:true with no accepted/total —
+    /// emit a quiet acknowledgement. Quiz 2 returns accepted/total — show
+    /// the score either way so the user knows what just happened.
+    private func describeQuizResult(_ res: F2API.QuizCompleteResponse) -> String {
+        let passed = res.passed ?? true
+        if let accepted = res.accepted, let total = res.total {
+            if passed {
+                return "Nice — you got \(accepted) of \(total) right. You earned a star."
+            } else {
+                return "You got \(accepted) of \(total) — need 3 to earn the star. Try again whenever you'd like."
+            }
+        }
+        if passed {
+            return "Star earned. Nice work."
+        }
+        return ""
     }
 }

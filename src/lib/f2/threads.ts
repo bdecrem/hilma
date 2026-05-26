@@ -192,6 +192,17 @@ export async function recordQuizStarted(
   }
 }
 
+/// Clears a pending quiz without awarding any star. Used when the grader
+/// decides the user didn't pass — they can retry without leaving a stale
+/// pending row lying around.
+export async function abandonPendingQuiz(threadId: string): Promise<void> {
+  const { error } = await f2Supabase()
+    .from('f2_threads')
+    .update({ pending_quiz_kind: null })
+    .eq('id', threadId)
+  if (error) console.error('[f2] abandonPendingQuiz failed:', error)
+}
+
 /// User signaled "Done" on the quiz they had open. Award the star (if any) for
 /// whichever kind was pending, then clear the pending state. If nothing was
 /// pending this is a no-op so we don't grant stars from a stale Done button.

@@ -104,7 +104,8 @@ export default function ChatView({
     setPendingQuizKind(json.pending_quiz_kind ?? kind)
   }
 
-  /// User signals the quiz is finished. Server awards the star.
+  /// User signals the quiz is finished. Server awards the star (Quiz 1,
+  /// Hard) or grades the conversation first and decides (Quiz 2).
   async function completeQuiz() {
     if (!threadId || busy) return
     setBusy(true)
@@ -113,9 +114,34 @@ export default function ChatView({
     })
     setBusy(false)
     if (!res.ok) return
-    const json = (await res.json()) as { stars?: number; pending_quiz_kind: null }
+    const json = (await res.json()) as {
+      stars?: number
+      pending_quiz_kind: null
+      passed?: boolean
+      accepted?: number | null
+      total?: number | null
+    }
     if (typeof json.stars === 'number') setStars(json.stars)
     setPendingQuizKind(null)
+
+    // Inline result message — same vocabulary the iOS app uses so the user
+    // gets a clear signal whether the tap earned a star.
+    const passed = json.passed ?? true
+    let resultText = ''
+    if (typeof json.accepted === 'number' && typeof json.total === 'number') {
+      resultText = passed
+        ? `Nice — you got ${json.accepted} of ${json.total} right. You earned a star.`
+        : `You got ${json.accepted} of ${json.total} — need 3 to earn the star. Try again whenever you'd like.`
+    } else if (passed) {
+      resultText = 'Star earned. Nice work.'
+    }
+    if (resultText) {
+      setMessages((prev) => [
+        ...prev,
+        { role: 'assistant', text: resultText, created_at: new Date().toISOString() },
+      ])
+    }
+
     // Bump the level-watcher's polling — refresh now so the header chip
     // and celebration fire immediately rather than waiting up to 20s.
     window.dispatchEvent(new Event('feynd-progress-refresh'))
