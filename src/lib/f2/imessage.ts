@@ -41,7 +41,7 @@ function generateCode(): string {
 }
 
 export type StartResult =
-  | { ok: true; handle: string; sentAt: string }
+  | { ok: true; handle: string; code: string }
   | { ok: false; status: number; error: string }
 
 /// Step 1 of pairing. Stores the pending code and sends it via iMessage.
@@ -89,27 +89,22 @@ export async function startImessagePairing(
     return { ok: false, status: 500, error: 'Could not start pairing.' }
   }
 
-  // Send via BlueBubbles. If the request to BlueBubbles errors / times out,
-  // KEEP the pending row — AppleScript on the Mac mini frequently delivers
-  // the message even when our fetch times out. The 10-minute TTL handles
-  // cleanup for the case where delivery really did fail.
+  return { ok: true, handle, code }
+}
+
+/// Fire-and-forget BlueBubbles send. The /imessage/start route stores the
+/// pending row + returns 200 immediately (so the client UI can advance),
+/// then schedules this via `after()` so AppleScript's 10–20s delivery
+/// chain doesn't blow the Vercel function timeout.
+export async function sendPairingMessage(handle: string, code: string): Promise<void> {
   try {
     await sendIMessage({
       addresses: [handle],
       text: `Your Feynd confirmation code is ${code}. Expires in ${CODE_TTL_MIN} minutes.`,
     })
   } catch (e) {
-    console.error('[f2/imessage] send returned error (message may still have been delivered):', e)
-    // Surface the failure to the client but leave the pending row so the
-    // user can still confirm if the message did arrive.
-    return {
-      ok: false,
-      status: 502,
-      error: "BlueBubbles didn't acknowledge — if the code arrives anyway, go back and try entering it.",
-    }
+    console.error('[f2/imessage] send failed (code already stored; user can retry):', e)
   }
-
-  return { ok: true, handle, sentAt: new Date().toISOString() }
 }
 
 export type ConfirmResult =
