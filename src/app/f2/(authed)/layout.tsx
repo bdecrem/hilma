@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getSessionUser } from '@/lib/f2/auth'
 import Shell from './Shell'
-import FeyndThemeProvider from './FeyndThemeProvider'
-import '../feynd-tokens.css'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,14 +12,14 @@ export default async function AuthedLayout({
   const user = await getSessionUser()
   if (!user) redirect('/f2/login')
 
+  // FeyndThemeProvider + tokens come from /f2/layout.tsx now so login,
+  // signup, and the authed shell all share the same light/dark vocabulary.
   return (
-    <FeyndThemeProvider>
-      <Shell
-        username={user.username}
-        initialAvatarUrl={user.avatar_url}
-      >
-        {children}
-      </Shell>
-    </FeyndThemeProvider>
+    <Shell
+      username={user.username}
+      initialAvatarUrl={user.avatar_url}
+    >
+      {children}
+    </Shell>
   )
 }

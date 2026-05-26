@@ -53,6 +53,82 @@ export default function WebProfileSheet({
   const [uploadError, setUploadError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // iMessage pairing state.
+  const [imessageHandles, setImessageHandles] = useState<string[]>([])
+  const [imessageMode, setImessageMode] = useState<'idle' | 'enterHandle' | 'enterCode'>('idle')
+  const [imessageHandle, setImessageHandle] = useState('')
+  const [imessageCode, setImessageCode] = useState('')
+  const [imessageBusy, setImessageBusy] = useState(false)
+  const [imessageError, setImessageError] = useState<string | null>(null)
+
+  // Load existing paired handles whenever the sheet opens.
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/f2/imessage/handles', { cache: 'no-store' })
+        if (!res.ok) return
+        const j = (await res.json()) as { handles: string[] }
+        if (!cancelled) setImessageHandles(j.handles ?? [])
+      } catch { /* leave empty */ }
+    })()
+    return () => { cancelled = true }
+  }, [open])
+
+  async function imessageStart() {
+    if (!imessageHandle.trim() || imessageBusy) return
+    setImessageBusy(true)
+    setImessageError(null)
+    const res = await fetch('/api/f2/imessage/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle: imessageHandle.trim() }),
+    })
+    setImessageBusy(false)
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      setImessageError(j.error ?? "Couldn't send the code.")
+      return
+    }
+    const j = (await res.json()) as { handle: string }
+    setImessageHandle(j.handle)
+    setImessageMode('enterCode')
+  }
+
+  async function imessageConfirm() {
+    if (imessageCode.length !== 6 || imessageBusy) return
+    setImessageBusy(true)
+    setImessageError(null)
+    const res = await fetch('/api/f2/imessage/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle: imessageHandle, code: imessageCode }),
+    })
+    setImessageBusy(false)
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      setImessageError(j.error ?? "Code didn't match.")
+      return
+    }
+    const j = (await res.json()) as { handle: string }
+    setImessageHandles(prev => prev.includes(j.handle) ? prev : [...prev, j.handle])
+    setImessageMode('idle')
+    setImessageHandle('')
+    setImessageCode('')
+  }
+
+  async function imessageRemove(handle: string) {
+    const prev = imessageHandles
+    setImessageHandles(prev.filter(h => h !== handle))
+    const res = await fetch('/api/f2/imessage/handles', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle }),
+    })
+    if (!res.ok) setImessageHandles(prev)
+  }
+
   // Close on Escape.
   useEffect(() => {
     if (!open) return
@@ -275,6 +351,68 @@ export default function WebProfileSheet({
           <div style={{ padding: '0 16px 44px' }}>
             <Section label="Appearance">
               <ThemeSegmented mode={mode} onChange={setMode} />
+            </Section>
+
+            <Section label="iMessage">
+              <Card>
+                {imessageHandles.length === 0 && imessageMode === 'idle' && (
+                  <Row
+                    label="Add iMessage"
+                    labelColor="var(--feynd-coral)"
+                    onClick={() => setImessageMode('enterHandle')}
+                  />
+                )}
+                {imessageHandles.map((h, i) => (
+                  <div key={h}>
+                    <Row label={h} onClick={() => imessageRemove(h)} />
+                    {(i < imessageHandles.length - 1 || imessageMode === 'idle') && <Divider />}
+                  </div>
+                ))}
+                {imessageHandles.length > 0 && imessageMode === 'idle' && (
+                  <Row
+                    label="Add another"
+                    labelColor="var(--feynd-coral)"
+                    onClick={() => setImessageMode('enterHandle')}
+                  />
+                )}
+                {imessageMode === 'enterHandle' && (
+                  <ImessagePairingInline
+                    title="Your iPhone number or iCloud email"
+                    hint="We'll send a 6-digit code via iMessage. Enter it on the next step."
+                    placeholder="+15551234567 or you@icloud.com"
+                    value={imessageHandle}
+                    onChange={setImessageHandle}
+                    primaryLabel={imessageBusy ? 'Sending…' : 'Send code'}
+                    primaryDisabled={imessageBusy || !imessageHandle.trim()}
+                    onPrimary={imessageStart}
+                    onCancel={() => {
+                      setImessageMode('idle')
+                      setImessageHandle('')
+                      setImessageError(null)
+                    }}
+                    error={imessageError}
+                  />
+                )}
+                {imessageMode === 'enterCode' && (
+                  <ImessagePairingInline
+                    title="Enter the 6-digit code"
+                    hint={`Sent to ${imessageHandle}. Code expires in 10 minutes.`}
+                    placeholder="123456"
+                    value={imessageCode}
+                    onChange={setImessageCode}
+                    primaryLabel={imessageBusy ? 'Verifying…' : 'Confirm'}
+                    primaryDisabled={imessageBusy || imessageCode.length !== 6}
+                    onPrimary={imessageConfirm}
+                    onCancel={() => {
+                      setImessageMode('idle')
+                      setImessageHandle('')
+                      setImessageCode('')
+                      setImessageError(null)
+                    }}
+                    error={imessageError}
+                  />
+                )}
+              </Card>
             </Section>
 
             <Section label="Account">
@@ -514,6 +652,73 @@ function Row({
         </svg>
       ) : null}
     </button>
+  )
+}
+
+function ImessagePairingInline({
+  title, hint, placeholder, value, onChange,
+  primaryLabel, primaryDisabled, onPrimary, onCancel, error,
+}: {
+  title: string
+  hint: string
+  placeholder: string
+  value: string
+  onChange: (v: string) => void
+  primaryLabel: string
+  primaryDisabled: boolean
+  onPrimary: () => void
+  onCancel: () => void
+  error: string | null
+}) {
+  return (
+    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--feynd-text)' }}>{title}</div>
+      <div style={{ fontSize: 13, color: 'var(--feynd-text-2)' }}>{hint}</div>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        style={{
+          padding: '12px 14px',
+          background: 'var(--feynd-bg-raised)',
+          border: '1px solid var(--feynd-border)',
+          borderRadius: 10,
+          color: 'var(--feynd-text)',
+          fontSize: 15,
+          outline: 'none',
+        }}
+      />
+      {error ? (
+        <div style={{ color: '#FF6B5B', fontSize: 13 }}>{error}</div>
+      ) : null}
+      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+        <button
+          type="button"
+          onClick={onCancel}
+          style={{
+            flex: 0, padding: '10px 14px',
+            background: 'transparent',
+            color: 'var(--feynd-text-2)',
+            border: '1px solid var(--feynd-border)',
+            borderRadius: 10, fontSize: 14, fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >Cancel</button>
+        <button
+          type="button"
+          onClick={onPrimary}
+          disabled={primaryDisabled}
+          style={{
+            flex: 1, padding: '10px 14px',
+            background: primaryDisabled ? 'var(--feynd-surface-2)' : 'var(--feynd-coral)',
+            color: primaryDisabled ? 'var(--feynd-text-3)' : '#1A0E08',
+            border: 'none', borderRadius: 10,
+            fontSize: 14, fontWeight: 600,
+            cursor: primaryDisabled ? 'default' : 'pointer',
+          }}
+        >{primaryLabel}</button>
+      </div>
+    </div>
   )
 }
 

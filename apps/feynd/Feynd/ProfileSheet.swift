@@ -21,6 +21,9 @@ struct ProfileSheet: View {
     @State private var uploadingAvatar = false
     @State private var uploadError: String? = nil
 
+    @State private var imessageHandles: [String] = []
+    @State private var showPairing = false
+
     var body: some View {
         VStack(spacing: 0) {
             handle
@@ -42,6 +45,31 @@ struct ProfileSheet: View {
                isPresented: Binding(get: { uploadError != nil }, set: { if !$0 { uploadError = nil } })) {
             Button("OK") { uploadError = nil }
         } message: { Text(uploadError ?? "") }
+        .sheet(isPresented: $showPairing) {
+            NavigationStack {
+                IMessagePairingView { newHandle in
+                    if !imessageHandles.contains(newHandle) {
+                        imessageHandles.append(newHandle)
+                    }
+                }
+            }
+        }
+        .task {
+            do { imessageHandles = try await F2API.shared.listImessageHandles() }
+            catch { /* keep empty */ }
+        }
+    }
+
+    private func removeImessage(handle: String) async {
+        // Optimistic: drop from local list, then call the server.
+        imessageHandles.removeAll { $0 == handle }
+        do { try await F2API.shared.removeImessageHandle(handle: handle) }
+        catch {
+            // Restore on failure so the UI reflects reality.
+            if !imessageHandles.contains(handle) {
+                imessageHandles.append(handle)
+            }
+        }
     }
 
     // MARK: - Pieces
@@ -263,6 +291,26 @@ struct ProfileSheet: View {
             SettingsSection(label: "Appearance") {
                 ThemeSegmented(value: colorSchemeRaw) { mode in
                     colorSchemeRaw = mode
+                }
+            }
+            SettingsSection(label: "iMessage") {
+                SettingsCard {
+                    if imessageHandles.isEmpty {
+                        SettingsRow(label: "Add iMessage", labelColor: FeyndTheme.coral) {
+                            showPairing = true
+                        }
+                    } else {
+                        ForEach(Array(imessageHandles.enumerated()), id: \.element) { idx, h in
+                            SettingsRow(label: h, detail: nil, labelColor: FeyndTheme.text) {
+                                Task { await removeImessage(handle: h) }
+                            }
+                            if idx < imessageHandles.count - 1 { SettingsDivider() }
+                        }
+                        SettingsDivider()
+                        SettingsRow(label: "Add another", labelColor: FeyndTheme.coral) {
+                            showPairing = true
+                        }
+                    }
                 }
             }
             SettingsSection(label: "Account") {

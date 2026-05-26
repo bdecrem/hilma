@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00FA62D14737E52644E26F61 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B09246FF15307342083E574 /* SignupView.swift */; };
+		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
 		36BE08CA63307A15CECFDBEA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFCEF68207C8EC05D3B4760 /* Models.swift */; };
 		412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */; };
@@ -33,9 +35,11 @@
 		0A077252957BBEE41DCF582D /* FeyndApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndApp.swift; sourceTree = "<group>"; };
 		0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
+		121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
 		3C7811C80A73490F1D2B650D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4E8E1D52867446105B46D06E /* FeyndChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndChrome.swift; sourceTree = "<group>"; };
 		5DC33D7342C9F25E38F967F4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		6B09246FF15307342083E574 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchemePreference.swift; sourceTree = "<group>"; };
 		78E1F1203E78919DA10B73C9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndTheme.swift; sourceTree = "<group>"; };
@@ -65,6 +69,7 @@
 				0A077252957BBEE41DCF582D /* FeyndApp.swift */,
 				4E8E1D52867446105B46D06E /* FeyndChrome.swift */,
 				7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */,
+				121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */,
 				B119830CA567768C3502310E /* Info.plist */,
 				CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */,
 				78E1F1203E78919DA10B73C9 /* LoginView.swift */,
@@ -76,6 +81,7 @@
 				8BE40ACBCE23969C211C1B42 /* Secrets.swift */,
 				EC5668529933DC6749CB3D06 /* Session.swift */,
 				3C7811C80A73490F1D2B650D /* SettingsView.swift */,
+				6B09246FF15307342083E574 /* SignupView.swift */,
 				0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */,
 				0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */,
 				A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */,
@@ -175,6 +181,7 @@
 				218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */,
 				80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */,
 				ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */,
+				0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */,
 				470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */,
 				E837DB371B838AB27BC85493 /* LoginView.swift in Sources */,
 				412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */,
@@ -185,6 +192,7 @@
 				6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */,
 				C573E836F4F99984E9A8409E /* Session.swift in Sources */,
 				75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */,
+				00FA62D14737E52644E26F61 /* SignupView.swift in Sources */,
 				FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */,
 				965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */,
 				FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */,

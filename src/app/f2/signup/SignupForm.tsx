@@ -5,64 +5,69 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { AuthField, AuthCTA, AuthError } from '../auth/AuthAtoms'
 
-export default function LoginForm() {
+export default function SignupForm() {
   const router = useRouter()
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  function looksLikeEmail(s: string): boolean {
+    const t = s.trim()
+    return t.includes('@') && t.includes('.') && t.length >= 5
+  }
+  const canSubmit = looksLikeEmail(email) && password.length >= 8
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!canSubmit) return
     setBusy(true)
     setErr(null)
-    const res = await fetch('/api/f2/auth/login', {
+    const res = await fetch('/api/f2/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     })
     setBusy(false)
     if (!res.ok) {
       const j = await res.json().catch(() => ({}))
-      setErr(j.error ?? 'Login failed')
+      setErr(j.error ?? 'Sign up failed.')
       return
     }
     router.push('/f2')
     router.refresh()
   }
 
-  const canSubmit = username.length > 0 && password.length > 0
-
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <AuthField
-        type="text"
-        autoComplete="username"
-        placeholder="email or username"
-        value={username}
-        onChange={setUsername}
+        type="email"
+        autoComplete="email"
+        placeholder="email"
+        value={email}
+        onChange={setEmail}
       />
       <AuthField
         type="password"
-        autoComplete="current-password"
-        placeholder="password"
+        autoComplete="new-password"
+        placeholder="password (8+ characters)"
         value={password}
         onChange={setPassword}
       />
       <AuthError text={err} />
-      <AuthCTA label="Sign in" disabled={!canSubmit} busy={busy} />
+      <AuthCTA label="Create account" disabled={!canSubmit} busy={busy} />
 
       <div className="text-center mt-6" style={{ fontSize: 14 }}>
-        <span style={{ color: 'var(--feynd-text-2)' }}>New here? </span>
+        <span style={{ color: 'var(--feynd-text-2)' }}>Already have one? </span>
         <Link
-          href="/f2/signup"
+          href="/f2/login"
           style={{
             color: 'var(--feynd-coral)',
             fontWeight: 600,
             textDecoration: 'none',
           }}
         >
-          Create an account
+          Sign in
         </Link>
       </div>
     </form>

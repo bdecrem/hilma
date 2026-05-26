@@ -98,14 +98,73 @@ export function getImessageDefaultUserId(): string {
   return id
 }
 
-export async function findUserByUsername(
-  username: string,
+/// Look up a user by either their username or their email (case-insensitive).
+/// New email signups have username = lowercased email, so the username query
+/// alone covers most cases — but we also fall back to email for safety.
+export async function findUserByIdentifier(
+  identifier: string,
 ): Promise<{ id: string; password_hash: string } | null> {
-  const { data, error } = await f2Supabase()
+  const lower = identifier.toLowerCase()
+  const sb = f2Supabase()
+  // Try username first (covers existing accounts + new email-as-username).
+  const { data: byUser } = await sb
     .from('f2_users')
     .select('id, password_hash')
-    .eq('username', username.toLowerCase())
+    .eq('username', lower)
     .maybeSingle()
-  if (error || !data) return null
-  return data as { id: string; password_hash: string }
+  if (byUser) return byUser as { id: string; password_hash: string }
+
+  // Fall back to email lookup for users who happened to register with a
+  // separate display username at some future point.
+  const { data: byEmail } = await sb
+    .from('f2_users')
+    .select('id, password_hash')
+    .ilike('email', lower)
+    .maybeSingle()
+  if (byEmail) return byEmail as { id: string; password_hash: string }
+
+  return null
+}
+
+/// Back-compat alias — earlier callers used this name.
+export const findUserByUsername = findUserByIdentifier
+
+export function isValidEmail(s: string): boolean {
+  // Pragmatic check, not RFC-5322 perfect. Good enough to reject typos.
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return re.test(s.trim())
+}
+
+export async function createUser(input: {
+  email: string
+  password: string
+}): Promise<{ id: string; username: string; email: string } | { error: string; status: number }> {
+  const email = input.email.trim().toLowerCase()
+  if (!isValidEmail(email)) return { error: 'Invalid email.', status: 400 }
+  if (input.password.length < 8) {
+    return { error: 'Password must be at least 8 characters.', status: 400 }
+  }
+
+  const sb = f2Supabase()
+  // Pre-check both columns to give a clean 409 instead of a Postgres error.
+  const { data: existing } = await sb
+    .from('f2_users')
+    .select('id')
+    .or(`username.eq.${email},email.ilike.${email}`)
+    .maybeSingle()
+  if (existing) {
+    return { error: 'An account with that email already exists.', status: 409 }
+  }
+
+  const password_hash = await hashPassword(input.password)
+  const { data, error } = await sb
+    .from('f2_users')
+    .insert({ username: email, email, password_hash })
+    .select('id, username, email')
+    .single()
+  if (error || !data) {
+    console.error('[f2] createUser failed:', error)
+    return { error: 'Could not create account.', status: 500 }
+  }
+  return data as { id: string; username: string; email: string }
 }

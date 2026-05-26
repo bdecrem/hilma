@@ -68,6 +68,15 @@ final class F2API {
         return res.user
     }
 
+    /// Create a fresh account with email + password. Server enforces 8+ char
+    /// password and email format, returns 409 if the email is already taken.
+    /// Auto-signs in (session cookie set on the response).
+    func signup(email: String, password: String) async throws -> F2User {
+        struct Body: Encodable { let email: String; let password: String }
+        let res: LoginResponse = try await post("/api/f2/auth/signup", body: Body(email: email, password: password))
+        return res.user
+    }
+
     func me() async throws -> F2User {
         let res: LoginResponse = try await get("/api/f2/auth/me")
         return res.user
@@ -237,6 +246,43 @@ final class F2API {
     /// Remove the current user's avatar.
     func deleteAvatar() async throws {
         let _: EmptyResponse = try await request("/api/f2/avatar", method: "DELETE", body: nil as EmptyBody?)
+    }
+
+    // MARK: iMessage pairing
+
+    struct IMessageHandlesResponse: Codable { let handles: [String] }
+    struct IMessageStartResponse: Codable {
+        let handle: String
+        let sentAt: String?
+        enum CodingKeys: String, CodingKey {
+            case handle
+            case sentAt = "sent_at"
+        }
+    }
+    struct IMessageConfirmResponse: Codable { let handle: String }
+
+    func listImessageHandles() async throws -> [String] {
+        let res: IMessageHandlesResponse = try await get("/api/f2/imessage/handles")
+        return res.handles
+    }
+
+    /// Step 1 — server sends a 6-digit code via iMessage to the handle.
+    func startImessagePairing(handle: String) async throws -> String {
+        struct Body: Encodable { let handle: String }
+        let res: IMessageStartResponse = try await post("/api/f2/imessage/start", body: Body(handle: handle))
+        return res.handle
+    }
+
+    /// Step 2 — verify the 6-digit code; on success the handle is bound.
+    func confirmImessagePairing(handle: String, code: String) async throws -> String {
+        struct Body: Encodable { let handle: String; let code: String }
+        let res: IMessageConfirmResponse = try await post("/api/f2/imessage/confirm", body: Body(handle: handle, code: code))
+        return res.handle
+    }
+
+    func removeImessageHandle(handle: String) async throws {
+        struct Body: Encodable { let handle: String }
+        let _: EmptyResponse = try await request("/api/f2/imessage/handles", method: "DELETE", body: Body(handle: handle))
     }
 
     func ingestPaste(title: String?, text: String) async throws -> String {
