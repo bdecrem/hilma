@@ -29,24 +29,25 @@ struct ChatView: View {
                     showSettings = true
                 }
 
-                ChatScrollView(messages: messages, busy: busy)
+                VStack(spacing: 0) {
+                    ChatScrollView(messages: messages, busy: busy)
 
-                // Action chips row above the composer.
-                HStack(spacing: 8) {
-                    ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
-                        // No active thread context in the root Chat tab — send a
-                        // quiz nudge through the agent loop.
-                        sendNudge("Quiz me.")
+                    // Action chips row above the composer.
+                    HStack(spacing: 8) {
+                        ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
+                            sendNudge("Quiz me.")
+                        }
+                        ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
+                            voicePresented = true
+                        }
+                        Spacer()
                     }
-                    ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
-                        voicePresented = true
-                    }
-                    Spacer()
+                    .padding(.horizontal, 14)
+                    .padding(.top, 8)
+
+                    FeyndComposer(draft: $draft, busy: busy, onSend: send)
                 }
-                .padding(.horizontal, 14)
-                .padding(.top, 8)
-
-                FeyndComposer(draft: $draft, busy: busy, onSend: send)
+                .feyndContentColumn()
 
                 // Space for the floating TabPill.
                 Color.clear.frame(height: 86)

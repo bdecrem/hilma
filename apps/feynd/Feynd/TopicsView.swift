@@ -50,18 +50,23 @@ struct TopicsView: View {
                     showProfile = true
                 }
 
-                titleRow
-                metaStrip
+                // Center + clamp the column so wide Mac windows don't stretch
+                // the row labels edge-to-edge. No-op on phone widths.
+                VStack(spacing: 0) {
+                    titleRow
+                    metaStrip
 
-                if topics.isEmpty && loading {
-                    ProgressView()
-                        .tint(FeyndTheme.text2)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if topics.isEmpty {
-                    emptyState
-                } else {
-                    rows
+                    if topics.isEmpty && loading {
+                        ProgressView()
+                            .tint(FeyndTheme.text2)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else if topics.isEmpty {
+                        emptyState
+                    } else {
+                        rows
+                    }
                 }
+                .feyndContentColumn()
             }
         }
         .sheet(isPresented: $showProfile) { ProfileSheet() }

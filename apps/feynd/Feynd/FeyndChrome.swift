@@ -454,6 +454,21 @@ struct FeyndComposer: View {
 
 // MARK: - Tab pill (floating Chat / Topics)
 
+/// Maximum width the main column ever uses. Keeps Catalyst windows from
+/// stretching topic rows / chat bubbles edge-to-edge on wide displays.
+/// iOS phones never get wider than this anyway, so it's a no-op there.
+let FEYND_CONTENT_MAX_WIDTH: CGFloat = 720
+
+/// Centers + clamps content to `FEYND_CONTENT_MAX_WIDTH`. Use on inner
+/// columns (Topics list, chat scroll, composer row) so wide Mac/iPad windows
+/// don't stretch row labels across half a meter of pixels.
+extension View {
+    func feyndContentColumn() -> some View {
+        self.frame(maxWidth: FEYND_CONTENT_MAX_WIDTH)
+            .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
 enum FeyndTab: String, CaseIterable {
     case chat, topics
     var label: String { self == .chat ? "Chat" : "Topics" }
