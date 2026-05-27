@@ -637,23 +637,17 @@ struct FeyndComposer: View {
                     .tint(FeyndTheme.coral)
                     .lineLimit(1...5)
                     .padding(.horizontal, 16)
-                    // Mac Catalyst: Return submits, Shift+Return inserts a newline
-                    // (the standard chat-app behavior). On iPhone the soft-keyboard
-                    // return is left alone — it inserts newlines, send is the button.
-                    #if targetEnvironment(macCatalyst)
-                    .onKeyPress(keys: [.return], phases: .down) { press in
-                        if press.modifiers.contains(.shift) {
-                            return .ignored  // let the newline through
-                        }
-                        if canSend { onSend() }
-                        return .handled
-                    }
-                    #endif
             }
             .padding(.vertical, 11)
             .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 22))
             .overlay(RoundedRectangle(cornerRadius: 22).stroke(FeyndTheme.border, lineWidth: 1))
 
+            // Mac Catalyst: plain Return = submit, Shift+Return = newline.
+            // Attaching .keyboardShortcut to the Send button itself registers
+            // Return at the responder-chain level, so it fires even while the
+            // TextField (axis: .vertical) has focus. Shift+Return falls through
+            // because the modifier doesn't match, and the field inserts a
+            // newline as usual. iOS leaves the soft-keyboard return alone.
             Button(action: { if canSend { onSend() } }) {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 15, weight: .heavy))
@@ -663,6 +657,9 @@ struct FeyndComposer: View {
             }
             .buttonStyle(.plain)
             .disabled(!canSend)
+            #if targetEnvironment(macCatalyst)
+            .keyboardShortcut(.return, modifiers: [])
+            #endif
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
