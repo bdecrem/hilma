@@ -630,6 +630,24 @@ struct FeyndComposer: View {
                         .foregroundStyle(FeyndTheme.text3)
                         .padding(.leading, 16)
                 }
+                // Catalyst: single-line + .onSubmit so the hardware Return
+                // submits. axis: .vertical would make the TextField claim
+                // Return as a newline and swallow .keyboardShortcut /
+                // .onKeyPress. The field still wraps visually for long
+                // pasted text — we just trade in-field newlines for send.
+                //
+                // iPhone/iPad: keep the multi-line composer; soft-keyboard
+                // Return inserts newlines, Send is the round button.
+                #if targetEnvironment(macCatalyst)
+                TextField("", text: $draft)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 16))
+                    .foregroundStyle(FeyndTheme.text)
+                    .tint(FeyndTheme.coral)
+                    .padding(.horizontal, 16)
+                    .submitLabel(.send)
+                    .onSubmit { if canSend { onSend() } }
+                #else
                 TextField("", text: $draft, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.system(size: 16))
@@ -637,17 +655,12 @@ struct FeyndComposer: View {
                     .tint(FeyndTheme.coral)
                     .lineLimit(1...5)
                     .padding(.horizontal, 16)
+                #endif
             }
             .padding(.vertical, 11)
             .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 22))
             .overlay(RoundedRectangle(cornerRadius: 22).stroke(FeyndTheme.border, lineWidth: 1))
 
-            // Mac Catalyst: plain Return = submit, Shift+Return = newline.
-            // Attaching .keyboardShortcut to the Send button itself registers
-            // Return at the responder-chain level, so it fires even while the
-            // TextField (axis: .vertical) has focus. Shift+Return falls through
-            // because the modifier doesn't match, and the field inserts a
-            // newline as usual. iOS leaves the soft-keyboard return alone.
             Button(action: { if canSend { onSend() } }) {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 15, weight: .heavy))
@@ -657,9 +670,6 @@ struct FeyndComposer: View {
             }
             .buttonStyle(.plain)
             .disabled(!canSend)
-            #if targetEnvironment(macCatalyst)
-            .keyboardShortcut(.return, modifiers: [])
-            #endif
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
