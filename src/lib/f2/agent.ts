@@ -21,6 +21,7 @@ import {
   type F2Thread,
 } from './threads'
 import { routeAndReply } from './chat'
+import { nameTopic } from './name-topic'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -55,8 +56,23 @@ async function handleNewUrl(
   handle: string,
   url: string,
 ): Promise<F2Reply> {
-  const content = await fetchUrlContent(url)
-  const thread = await createThread({ userId, client, handle, url, content })
+  const fetched = await fetchUrlContent(url)
+  const content = fetched.body
+  // Ask the AI to pick a chapter-style title, with the page's <title> as a
+  // hint. The LLM will rewrite hostnames / clickbait / fluff into a clean
+  // subject phrase. Falls through to null when we have nothing to send.
+  const topic = content || fetched.title
+    ? await nameTopic({ body: content ?? '', documentTitle: fetched.title })
+    : null
+
+  const thread = await createThread({
+    userId,
+    client,
+    handle,
+    url,
+    content,
+    topic,
+  })
 
   if (!thread) {
     return { reply: "F2: couldn't save that URL. Try again in a sec." }
@@ -105,11 +121,18 @@ async function handleNonUrl(
       return { reply: action.reply }
     }
     case 'new_topic': {
+      // Same naming pipeline as the URL/paste paths. The routing LLM's pick
+      // is fed in as a hint; Haiku rewrites it when it can do better given
+      // the user's question + opening reply.
+      const refined = await nameTopic({
+        body: `USER: ${userText}\n\nF2: ${action.reply}`,
+        documentTitle: action.topic,
+      })
       const fresh = await createThread({
         userId,
         client,
         handle,
-        topic: action.topic,
+        topic: refined || action.topic,
       })
       if (fresh) {
         await appendMessages(fresh.id, [], [

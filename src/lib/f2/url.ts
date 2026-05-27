@@ -15,6 +15,23 @@ export function stripSurroundingQuotes(s: string): string {
   return s.replace(/^["'‘’“‛”]+|["'‘’“‛”]+$/g, '')
 }
 
+// Pull <title>…</title> verbatim. Returns the trimmed inner text or null.
+// Used as a hint for the topic-naming step alongside the body text.
+export function extractHtmlTitle(html: string): string | null {
+  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)
+  if (!m) return null
+  const text = m[1]
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim()
+  return text.length > 0 ? text : null
+}
+
 function stripHtml(html: string): string {
   let text = html
     .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
@@ -114,13 +131,24 @@ export async function fetchYouTubeTranscript(
   }
 }
 
-export async function fetchUrlContent(url: string): Promise<string | null> {
-  // YouTube URLs: try the transcript first. May return null in production
-  // (YouTube blocks datacenter IPs); falls through to HTML if so.
+export type FetchedUrl = {
+  /** Extracted readable text (transcript / article body / plain text). */
+  body: string | null
+  /** HTML <title> if available — used as a naming hint, not authoritative. */
+  title: string | null
+}
+
+export async function fetchUrlContent(url: string): Promise<FetchedUrl> {
+  // YouTube URLs: try the transcript first. If we got one, optionally fetch
+  // the watch page's <title> as a separate, cheap GET so the topic-naming
+  // step has a real document title to work from (transcripts don't carry one).
   const ytId = extractYouTubeVideoId(url)
   if (ytId) {
     const transcript = await fetchYouTubeTranscript(ytId)
-    if (transcript && transcript.length >= 50) return transcript
+    if (transcript && transcript.length >= 50) {
+      const title = await fetchHtmlTitleOnly(url)
+      return { body: transcript, title }
+    }
     console.log(`[f2] YouTube ${ytId}: no transcript, falling back to HTML`)
   }
 
@@ -136,22 +164,40 @@ export async function fetchUrlContent(url: string): Promise<string | null> {
 
     if (!res.ok) {
       console.error(`[f2] fetch ${url} → ${res.status}`)
-      return null
+      return { body: null, title: null }
     }
 
     const ct = res.headers.get('content-type') || ''
     if (!ct.includes('text/html') && !ct.includes('text/plain')) {
       console.log(`[f2] skipping non-text content-type for ${url}: ${ct}`)
-      return null
+      return { body: null, title: null }
     }
 
-    const body = await res.text()
-    const text = ct.includes('text/html') ? stripHtml(body) : body.trim()
-    if (text.length < 50) return null
-
-    return text
+    const raw = await res.text()
+    const isHtml = ct.includes('text/html')
+    const body = isHtml ? stripHtml(raw) : raw.trim()
+    const title = isHtml ? extractHtmlTitle(raw) : null
+    return { body: body.length >= 50 ? body : null, title }
   } catch (err) {
     console.error(`[f2] fetch error for ${url}:`, err)
+    return { body: null, title: null }
+  }
+}
+
+// Lightweight title-only GET (used by the YouTube path to grab the video's
+// real page title for naming, after we already have the transcript).
+async function fetchHtmlTitleOnly(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'text/html' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    })
+    if (!res.ok) return null
+    const ct = res.headers.get('content-type') || ''
+    if (!ct.includes('text/html')) return null
+    const html = await res.text()
+    return extractHtmlTitle(html)
+  } catch {
     return null
   }
 }
