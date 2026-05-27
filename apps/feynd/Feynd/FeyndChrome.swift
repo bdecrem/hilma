@@ -13,17 +13,21 @@ struct StarRow: View {
     var max: Int = 3
     var size: CGFloat = 11
     var gap: CGFloat = 2
+    /// When true, the topic is closed for further quizzes — only render the
+    /// filled stars; no empty outlines suggest more is available.
+    var locked: Bool = false
 
     var body: some View {
+        let cells = locked ? value : max
         HStack(spacing: gap) {
-            ForEach(0..<max, id: \.self) { i in
+            ForEach(0..<cells, id: \.self) { i in
                 Image(systemName: i < value ? "star.fill" : "star")
                     .font(.system(size: size, weight: .semibold))
                     .foregroundStyle(i < value ? FeyndTheme.gold : FeyndTheme.text4)
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("\(value) of \(max) stars")
+        .accessibilityLabel(locked ? "\(value) stars, topic complete" : "\(value) of \(max) stars")
     }
 }
 

@@ -220,6 +220,45 @@ final class F2API {
         )
     }
 
+    struct TopicSource: Codable, Identifiable, Equatable {
+        let kind: String          // "primary" | "additional"
+        let index: Int
+        let url: String?
+        let title: String?
+        let contentLength: Int
+        let addedAt: String?
+
+        var id: String { "\(kind)-\(index)" }
+
+        enum CodingKeys: String, CodingKey {
+            case kind, index, url, title
+            case contentLength = "content_length"
+            case addedAt = "added_at"
+        }
+    }
+    struct ListSourcesResponse: Codable { let sources: [TopicSource] }
+
+    /// List every source attached to a topic — primary (the original URL +
+    /// content on the thread row, if any) plus every additional source the
+    /// user has appended. Used by the "View Topic Context" modal.
+    func listTopicSources(id: String) async throws -> [TopicSource] {
+        let res: ListSourcesResponse = try await get("/api/f2/topics/\(id)/sources")
+        return res.sources
+    }
+
+    struct DeleteSourceRequest: Codable { let kind: String; let index: Int? }
+
+    /// Remove a source from a topic. Pass kind="primary" to clear the thread's
+    /// original url/content, or kind="additional" with the index of the entry
+    /// to remove from the additional_sources array.
+    func deleteTopicSource(id: String, kind: String, index: Int?) async throws {
+        let _: EmptyResponse = try await request(
+            "/api/f2/topics/\(id)/sources",
+            method: "DELETE",
+            body: DeleteSourceRequest(kind: kind, index: index),
+        )
+    }
+
     // MARK: Avatar
 
     struct AvatarResponse: Codable {

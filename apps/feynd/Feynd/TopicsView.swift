@@ -4,9 +4,15 @@ import SwiftUI
 /// Library eyebrow, 34pt title, Recent pill, meta strip, rows with mini glyph
 /// + 16.5pt title + star meta + kebab. Custom chrome end-to-end.
 enum TopicSort: String, CaseIterable, Identifiable {
-    case recent, alphabetical
+    case recent, alphabetical, byStars
     var id: String { rawValue }
-    var label: String { self == .recent ? "Recent" : "A–Z" }
+    var label: String {
+        switch self {
+        case .recent: return "Recent"
+        case .alphabetical: return "A–Z"
+        case .byStars: return "By stars"
+        }
+    }
 }
 
 struct TopicsView: View {
@@ -21,6 +27,7 @@ struct TopicsView: View {
     @State private var addMaterialURL = ""
     @State private var addMaterialBusy = false
     @State private var addMaterialError: String? = nil
+    @State private var contextTarget: F2Topic? = nil
     /// Persists across launches; defaults to recent.
     @AppStorage("topicsSortMode") private var sortRaw = TopicSort.recent.rawValue
 
@@ -35,6 +42,10 @@ struct TopicsView: View {
             return topics.sorted {
                 $0.displayLabel.localizedCaseInsensitiveCompare($1.displayLabel) == .orderedAscending
             }
+        case .byStars:
+            // 0-star topics first (what needs work), then 1, 2, 3.
+            // Within a star bucket, preserve the server's recent-first order.
+            return topics.sorted { $0.stars < $1.stars }
         }
     }
 
@@ -76,6 +87,10 @@ struct TopicsView: View {
         // Catalyst sheets don't always inherit @Observable env values — pass
         // `session` through explicitly. See ChatView.swift for context.
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
+        .sheet(item: $contextTarget) { topic in
+            TopicContextSheet(topic: topic)
+                .environment(session)
+        }
         .alert("Rename topic",
                isPresented: Binding(get: { renameTarget != nil },
                                     set: { if !$0 { renameTarget = nil } })) {
@@ -195,7 +210,8 @@ struct TopicsView: View {
                                      isLast: idx == display.count - 1,
                                      onRename: { startRename(topic) },
                                      onDelete: { delete(topic) },
-                                     onAddMaterial: { startAddMaterial(topic) })
+                                     onAddMaterial: { startAddMaterial(topic) },
+                                     onViewContext: { contextTarget = topic })
                     }
                     .buttonStyle(.plain)
                 }
@@ -287,6 +303,7 @@ struct TopicListRow: View {
     let onRename: () -> Void
     let onDelete: () -> Void
     let onAddMaterial: () -> Void
+    let onViewContext: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -306,6 +323,7 @@ struct TopicListRow: View {
                 Menu {
                     Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
                     Button { onAddMaterial() } label: { Label("Add material", systemImage: "link.badge.plus") }
+                    Button { onViewContext() } label: { Label("View context", systemImage: "doc.text.magnifyingglass") }
                     Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -339,7 +357,7 @@ struct TopicListRow: View {
                 .tracking(-0.1)
         } else {
             HStack(spacing: 8) {
-                StarRow(value: topic.stars, size: 11, gap: 2)
+                StarRow(value: topic.stars, size: 11, gap: 2, locked: topic.hardQuizCompletedAt != nil)
                 Text("·").foregroundStyle(FeyndTheme.text3)
                 Text(relative(topic.createdAt))
                     .foregroundStyle(FeyndTheme.text3)

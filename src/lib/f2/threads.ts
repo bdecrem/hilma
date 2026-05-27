@@ -183,11 +183,12 @@ export async function listTopicsForUser(userId: string): Promise<F2Thread[]> {
 
 // Compute the new star value after a quiz. Monotonic — never decreases.
 //   - 'hard' quiz       → 3
-//   - 'reflection' quiz → 1 (locks the topic; see completeQuiz)
+//   - 'reflection' quiz → current + 1 (capped at 3; locks the topic, see completeQuiz).
+//     Available as the 1st, 2nd, or 3rd star; each invocation grants one more.
 //   - 'standard' quiz   → bumps 0→1, 1→2 (caps at 2; only a hard quiz reaches 3)
 export function nextStars(current: number, kind: QuizKind): number {
   if (kind === 'hard') return Math.max(current, 3)
-  if (kind === 'reflection') return Math.max(current, 1)
+  if (kind === 'reflection') return Math.min(3, current + 1)
   if (current >= 2) return current
   return current + 1
 }

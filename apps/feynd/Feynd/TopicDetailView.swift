@@ -66,7 +66,7 @@ struct TopicDetailView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
-                    StarRow(value: thread?.stars ?? 0, size: 10, gap: 2)
+                    StarRow(value: thread?.stars ?? 0, size: 10, gap: 2, locked: thread?.hardQuizCompletedAt != nil)
                     if let host = thread?.sourceHost {
                         Text("·").foregroundStyle(FeyndTheme.text3)
                         Text(host)
