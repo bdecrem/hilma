@@ -170,6 +170,11 @@ export type RecordedQuiz = {
 
 /// User just *started* a quiz. We track which kind is in flight so that when
 /// they hit Done we know which star bump to apply. No star is awarded yet.
+///
+/// All four helpers below add `.eq('user_id', …)` to their WHERE clause as
+/// defense-in-depth. Callers should still verify ownership upstream, but the
+/// extra filter means a stray call with someone else's thread id is a no-op
+/// instead of a cross-user write.
 export async function recordQuizStarted(
   thread: F2Thread,
   kind: QuizKind = 'standard',
@@ -184,6 +189,7 @@ export async function recordQuizStarted(
       pending_quiz_kind: kind,
     })
     .eq('id', thread.id)
+    .eq('user_id', thread.user_id)
   if (error) console.error('[f2] recordQuizStarted failed:', error)
   return {
     stars: thread.stars,
@@ -195,11 +201,15 @@ export async function recordQuizStarted(
 /// Clears a pending quiz without awarding any star. Used when the grader
 /// decides the user didn't pass — they can retry without leaving a stale
 /// pending row lying around.
-export async function abandonPendingQuiz(threadId: string): Promise<void> {
+export async function abandonPendingQuiz(
+  threadId: string,
+  userId: string,
+): Promise<void> {
   const { error } = await f2Supabase()
     .from('f2_threads')
     .update({ pending_quiz_kind: null })
     .eq('id', threadId)
+    .eq('user_id', userId)
   if (error) console.error('[f2] abandonPendingQuiz failed:', error)
 }
 
@@ -226,6 +236,7 @@ export async function completeQuiz(thread: F2Thread): Promise<RecordedQuiz> {
       pending_quiz_kind: null,
     })
     .eq('id', thread.id)
+    .eq('user_id', thread.user_id)
   if (error) console.error('[f2] completeQuiz failed:', error)
   return {
     stars: newStars,
@@ -236,6 +247,7 @@ export async function completeQuiz(thread: F2Thread): Promise<RecordedQuiz> {
 
 export async function appendMessages(
   threadId: string,
+  userId: string,
   existing: F2ThreadMessage[],
   toAdd: F2ThreadMessage[],
 ): Promise<void> {
@@ -244,6 +256,7 @@ export async function appendMessages(
     .from('f2_threads')
     .update({ messages, updated_at: new Date().toISOString() })
     .eq('id', threadId)
+    .eq('user_id', userId)
 
   if (error) console.error('[f2] appendMessages failed:', error)
 }

@@ -48,7 +48,7 @@ export async function POST(
   if (isQuizTwo) {
     const grade = await gradeQuizTwo(thread)
     if (!grade.passed) {
-      await abandonPendingQuiz(thread.id)
+      await abandonPendingQuiz(thread.id, user.id)
       return NextResponse.json({
         stars: thread.stars,
         quiz_count: thread.quiz_count,

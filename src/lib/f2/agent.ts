@@ -114,7 +114,7 @@ async function handleNonUrl(
         // Defensive: model picked continue but there's no thread. Treat as chitchat.
         return { reply: action.reply }
       }
-      await appendMessages(thread.id, thread.messages, [
+      await appendMessages(thread.id, thread.user_id, thread.messages, [
         { role: 'user', text: userText, created_at: now },
         { role: 'assistant', text: action.reply, created_at: now },
       ])
@@ -135,7 +135,7 @@ async function handleNonUrl(
         topic: refined || action.topic,
       })
       if (fresh) {
-        await appendMessages(fresh.id, [], [
+        await appendMessages(fresh.id, fresh.user_id, [], [
           { role: 'user', text: userText, created_at: now },
           { role: 'assistant', text: action.reply, created_at: now },
         ])
