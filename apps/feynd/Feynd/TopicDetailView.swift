@@ -15,7 +15,6 @@ struct TopicDetailView: View {
     @State private var busy = false
     @State private var loading = true
     @State private var voicePresented = false
-    @State private var showProfile = false
 
     var body: some View {
         ZStack {
@@ -47,16 +46,13 @@ struct TopicDetailView: View {
                 Color.clear.frame(height: 86) // room for floating TabPill
             }
         }
-        // Catalyst sheets don't always inherit @Observable env values — pass
-        // `session` through explicitly. See ChatView.swift for context.
-        .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
         }
         .task { await load() }
     }
 
-    // MARK: - Header (back / center / kebab)
+    // MARK: - Header (back / center title)
 
     private var header: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -87,7 +83,9 @@ struct TopicDetailView: View {
             }
             .frame(maxWidth: .infinity)
 
-            IconCircleButton(systemImage: "ellipsis", fg: FeyndTheme.text2) { showProfile = true }
+            // Invisible spacer to keep the title centered between the back
+            // button and the trailing edge (matches the old kebab's footprint).
+            Color.clear.frame(width: 36, height: 36)
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)

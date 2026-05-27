@@ -162,11 +162,13 @@ struct F2Progress: Codable, Equatable {
     var nextLevelAt: Int
     var toNextLevel: Int
 
-    /// 0..1 fill of the level-up ring. Handles the "already at next threshold"
-    /// edge — never returns NaN, never exceeds 1.
+    /// 0..1 fill of the level-up ring — mirrors the linear progress bar in
+    /// ProfileSheet exactly. Backend levels are based on TOTAL stars (not
+    /// starred-topic count), so the numerator must be totalStars too.
+    /// Handles the "already at next threshold" edge — never NaN, never > 1.
     var progressFraction: Double {
         let span = max(1, nextLevelAt - currentLevelAt)
-        let earned = max(0, starredTopicCount - currentLevelAt)
+        let earned = max(0, totalStars - currentLevelAt)
         return min(1.0, Double(earned) / Double(span))
     }
 

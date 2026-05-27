@@ -57,6 +57,9 @@ struct ProfileSheet: View {
             }
         }
         .task {
+            // Refresh user-wide progress so the ring + bar reflect any star
+            // earned right before this sheet was opened.
+            await session.refreshProgress()
             do { imessageHandles = try await F2API.shared.listImessageHandles() }
             catch { /* keep empty */ }
         }
@@ -199,7 +202,19 @@ struct ProfileSheet: View {
     @ViewBuilder
     private var avatarHero: some View {
         let s: CGFloat = 78
+        let ring = s + 8
+        let p = session.progress
         ZStack {
+            // Same progress fraction as the linear bar below — single source.
+            Circle()
+                .stroke(FeyndTheme.surface2, lineWidth: 2)
+                .frame(width: ring, height: ring)
+            Circle()
+                .trim(from: 0, to: p.progressFraction)
+                .stroke(FeyndTheme.coral, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .frame(width: ring, height: ring)
+
             if let urlStr = currentAvatarUrl, let url = URL(string: urlStr) {
                 AsyncImage(url: url) { phase in
                     switch phase {
@@ -212,10 +227,8 @@ struct ProfileSheet: View {
             } else {
                 heroGradient
             }
-            Circle()
-                .stroke(FeyndTheme.bgRaised, lineWidth: 2)
-                .frame(width: s, height: s)
         }
+        .frame(width: ring, height: ring)
         .shadow(color: .black.opacity(0.45), radius: 12, y: 4)
     }
 
