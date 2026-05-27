@@ -66,7 +66,7 @@ struct TopicDetailView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
-                    StarRow(value: thread?.stars ?? 0, size: 10, gap: 2, locked: thread?.hardQuizCompletedAt != nil)
+                    StarRow(value: thread?.stars ?? 0, size: 10, gap: 2, locked: thread?.hardQuizCompletedAt != nil || thread?.pendingQuizKind == "reflection")
                     if let host = thread?.sourceHost {
                         Text("·").foregroundStyle(FeyndTheme.text3)
                         Text(host)
@@ -178,9 +178,19 @@ struct TopicDetailView: View {
         messages.append(F2Message(role: "user", text: text, createdAt: Date()))
         Task {
             do {
-                let reply = try await F2API.shared.sendMessage(text: text, threadId: topicId)
-                if !reply.isEmpty {
-                    messages.append(F2Message(role: "assistant", text: reply, createdAt: Date()))
+                let res = try await F2API.shared.sendMessage(text: text, threadId: topicId)
+                if !res.reply.isEmpty {
+                    messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
+                }
+                // When a reflection quiz starts via chat, the server includes a
+                // thread_state snapshot. Mirror it locally so the Done button
+                // appears and stars/locked state stay in sync.
+                if let st = res.threadState, var t = thread {
+                    t.pendingQuizKind = st.pendingQuizKind
+                    t.stars = st.stars
+                    t.quizCount = st.quizCount
+                    t.hardQuizCompletedAt = st.hardQuizCompletedAt
+                    thread = t
                 }
             } catch {
                 messages.append(F2Message(role: "assistant",

@@ -89,15 +89,38 @@ final class F2API {
 
     // MARK: Messages
 
-    struct MessageResponse: Codable { let reply: String }
+    /// Optional thread-state snapshot returned when a chat turn changed the
+    /// thread's quiz/star state (e.g. a reflection quiz started).
+    struct MessageThreadState: Codable {
+        let pendingQuizKind: String?
+        let stars: Int
+        let quizCount: Int
+        let hardQuizCompletedAt: Date?
 
-    func sendMessage(text: String, threadId: String? = nil) async throws -> String {
+        enum CodingKeys: String, CodingKey {
+            case stars
+            case pendingQuizKind = "pending_quiz_kind"
+            case quizCount = "quiz_count"
+            case hardQuizCompletedAt = "hard_quiz_completed_at"
+        }
+    }
+
+    struct MessageResponse: Codable {
+        let reply: String
+        let threadState: MessageThreadState?
+
+        enum CodingKeys: String, CodingKey {
+            case reply
+            case threadState = "thread_state"
+        }
+    }
+
+    func sendMessage(text: String, threadId: String? = nil) async throws -> MessageResponse {
         struct Body: Encodable {
             let text: String
             let thread_id: String?
         }
-        let res: MessageResponse = try await post("/api/f2/messages", body: Body(text: text, thread_id: threadId))
-        return res.reply
+        return try await post("/api/f2/messages", body: Body(text: text, thread_id: threadId))
     }
 
     // MARK: Topics

@@ -78,9 +78,9 @@ struct ChatView: View {
         messages.append(F2Message(role: "user", text: text, createdAt: Date()))
         Task {
             do {
-                let reply = try await F2API.shared.sendMessage(text: text)
-                if !reply.isEmpty {
-                    messages.append(F2Message(role: "assistant", text: reply, createdAt: Date()))
+                let res = try await F2API.shared.sendMessage(text: text)
+                if !res.reply.isEmpty {
+                    messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }
             } catch {
                 messages.append(F2Message(role: "assistant",
@@ -97,9 +97,9 @@ struct ChatView: View {
         messages.append(F2Message(role: "user", text: text, createdAt: Date()))
         Task {
             do {
-                let reply = try await F2API.shared.sendMessage(text: text)
-                if !reply.isEmpty {
-                    messages.append(F2Message(role: "assistant", text: reply, createdAt: Date()))
+                let res = try await F2API.shared.sendMessage(text: text)
+                if !res.reply.isEmpty {
+                    messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }
             } catch { /* swallow */ }
             busy = false

@@ -357,7 +357,7 @@ struct TopicListRow: View {
                 .tracking(-0.1)
         } else {
             HStack(spacing: 8) {
-                StarRow(value: topic.stars, size: 11, gap: 2, locked: topic.hardQuizCompletedAt != nil)
+                StarRow(value: topic.stars, size: 11, gap: 2, locked: topic.hardQuizCompletedAt != nil || topic.pendingQuizKind == "reflection")
                 Text("·").foregroundStyle(FeyndTheme.text3)
                 Text(relative(topic.createdAt))
                     .foregroundStyle(FeyndTheme.text3)

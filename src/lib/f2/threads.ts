@@ -11,7 +11,10 @@ export type F2ThreadMessage = {
 /// a URL + the extracted body (when we could pull one). Stored on the thread
 /// row as a jsonb array; concatenated into the LLM context by buildFullContent.
 export type F2AdditionalSource = {
-  url: string
+  /** The URL the user added. May be cleared (null) via the View Context
+   *  modal while the transcript content is kept, e.g. when the user only
+   *  cares about the body text. */
+  url: string | null
   title: string | null
   content: string | null
   added_at: string
@@ -48,7 +51,9 @@ export function buildFullContent(thread: F2Thread): string {
   }
   for (const src of thread.additional_sources ?? []) {
     if (!src.content) continue
-    const label = src.title ? `${src.url} — ${src.title}` : src.url
+    const label = src.title
+      ? `${src.url ?? '(no URL)'} — ${src.title}`
+      : (src.url ?? 'pasted material')
     parts.push(`\n\n--- Additional source: ${label} ---\n\n${src.content}`)
   }
   return parts.join('')

@@ -36,6 +36,15 @@ export type F2Message = {
 
 export type F2Reply = {
   reply: string
+  /** Thread state snapshot — included when the message changed the thread's
+   *  quiz/star state (e.g. a chat-triggered reflection quiz started). Clients
+   *  apply these to their local thread so the UI updates without a refetch. */
+  thread_state?: {
+    pending_quiz_kind: 'standard' | 'hard' | 'reflection' | null
+    stars: number
+    quiz_count: number
+    hard_quiz_completed_at: string | null
+  }
 }
 
 export async function processMessage(input: F2Message): Promise<F2Reply> {
@@ -91,20 +100,21 @@ function isReflectionQuizRequest(text: string): boolean {
   return /\breflection[ -]?quiz\b/i.test(text)
 }
 
-async function startReflectionQuiz(
+async function reflectionQuizTurn(
   thread: F2Thread,
   userText: string,
+  isFirstTurn: boolean,
 ): Promise<F2Reply> {
   let reply: string
   try {
     reply = await replyAsReflectionQuiz(thread, userText)
   } catch (err) {
     console.error('[f2] reflection quiz failed:', err)
-    return { reply: 'F2: hit an error starting the reflection quiz. Try again in a moment.' }
+    return { reply: 'F2: hit an error continuing the reflection quiz. Try again in a moment.' }
   }
 
   if (!reply) {
-    return { reply: "F2: couldn't generate reflection questions just now. Try again in a moment." }
+    return { reply: "F2: couldn't continue the reflection quiz. Try again in a moment." }
   }
 
   const now = new Date().toISOString()
@@ -112,9 +122,26 @@ async function startReflectionQuiz(
     { role: 'user', text: userText, created_at: now },
     { role: 'assistant', text: reply, created_at: now },
   ])
-  await recordQuizStarted(thread, 'reflection')
 
-  return { reply }
+  // First turn marks the quiz as in flight; subsequent turns just reuse the
+  // already-recorded state so we don't bump quiz_count for every answer.
+  const state = isFirstTurn
+    ? await recordQuizStarted(thread, 'reflection')
+    : {
+        stars: thread.stars,
+        quiz_count: thread.quiz_count,
+        hard_quiz_completed_at: thread.hard_quiz_completed_at,
+      }
+
+  return {
+    reply,
+    thread_state: {
+      pending_quiz_kind: 'reflection',
+      stars: state.stars,
+      quiz_count: state.quiz_count,
+      hard_quiz_completed_at: state.hard_quiz_completed_at,
+    },
+  }
 }
 
 async function handleNonUrl(
@@ -131,16 +158,22 @@ async function handleNonUrl(
     thread = await getLatestThread(userId)
   }
 
-  // Reflection quiz: chat-triggered. Requires an active topic that isn't
-  // already locked or mid-quiz. Bypasses the routing LLM and goes straight
-  // to a dedicated reflection-quiz prompt.
+  // Reflection quiz — handled at the chat level so it survives across turns:
+  //   - If pending_quiz_kind is already 'reflection', stay in reflection mode
+  //     so the LLM keeps the 3-question protocol instead of being hijacked by
+  //     the standard router.
+  //   - Otherwise, if the user just asked for one (and we're not already in
+  //     a different quiz), start the reflection quiz fresh.
+  if (thread && thread.pending_quiz_kind === 'reflection') {
+    return reflectionQuizTurn(thread, userText, /* isFirstTurn */ false)
+  }
   if (
     thread &&
     isReflectionQuizRequest(userText) &&
     !thread.pending_quiz_kind &&
     !thread.hard_quiz_completed_at
   ) {
-    return startReflectionQuiz(thread, userText)
+    return reflectionQuizTurn(thread, userText, /* isFirstTurn */ true)
   }
 
   let action
