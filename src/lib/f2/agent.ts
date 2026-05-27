@@ -18,9 +18,10 @@ import {
   getLatestThread,
   getThreadById,
   appendMessages,
+  recordQuizStarted,
   type F2Thread,
 } from './threads'
-import { routeAndReply } from './chat'
+import { routeAndReply, replyAsReflectionQuiz } from './chat'
 import { nameTopic } from './name-topic'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
@@ -84,6 +85,38 @@ async function handleNewUrl(
   return { reply }
 }
 
+/// Matches "reflection quiz", "reflection-quiz", "give me a reflection quiz",
+/// etc. — anywhere in the message, case-insensitive, word-bounded.
+function isReflectionQuizRequest(text: string): boolean {
+  return /\breflection[ -]?quiz\b/i.test(text)
+}
+
+async function startReflectionQuiz(
+  thread: F2Thread,
+  userText: string,
+): Promise<F2Reply> {
+  let reply: string
+  try {
+    reply = await replyAsReflectionQuiz(thread, userText)
+  } catch (err) {
+    console.error('[f2] reflection quiz failed:', err)
+    return { reply: 'F2: hit an error starting the reflection quiz. Try again in a moment.' }
+  }
+
+  if (!reply) {
+    return { reply: "F2: couldn't generate reflection questions just now. Try again in a moment." }
+  }
+
+  const now = new Date().toISOString()
+  await appendMessages(thread.id, thread.user_id, thread.messages, [
+    { role: 'user', text: userText, created_at: now },
+    { role: 'assistant', text: reply, created_at: now },
+  ])
+  await recordQuizStarted(thread, 'reflection')
+
+  return { reply }
+}
+
 async function handleNonUrl(
   userId: string,
   client: F2Client,
@@ -96,6 +129,18 @@ async function handleNonUrl(
     thread = await getThreadById(userId, threadId)
   } else {
     thread = await getLatestThread(userId)
+  }
+
+  // Reflection quiz: chat-triggered. Requires an active topic that isn't
+  // already locked or mid-quiz. Bypasses the routing LLM and goes straight
+  // to a dedicated reflection-quiz prompt.
+  if (
+    thread &&
+    isReflectionQuizRequest(userText) &&
+    !thread.pending_quiz_kind &&
+    !thread.hard_quiz_completed_at
+  ) {
+    return startReflectionQuiz(thread, userText)
   }
 
   let action

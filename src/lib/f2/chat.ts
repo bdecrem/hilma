@@ -109,6 +109,58 @@ For every message, pick exactly one tool:
 ${baseRules}`
 }
 
+/// Reflection-quiz mode. Bypasses the routing LLM — we already know what
+/// we want: 3 thoughtful, open-ended questions, one at a time. Returns the
+/// assistant's opening reply (the first reflection question). The caller is
+/// responsible for persisting messages + marking pending_quiz_kind.
+export async function replyAsReflectionQuiz(
+  thread: F2Thread,
+  userText: string,
+): Promise<string> {
+  const subject = thread.topic ?? thread.url ?? '(this topic)'
+  const sourceBlock = thread.content
+    ? `\n\nSource content (the material the user is reflecting on):\n${thread.content}`
+    : ''
+
+  const system = `You are F2 — a learning companion. The user has just asked for a Reflection Quiz on: ${subject}.
+
+This is a REFLECTION quiz — for stories or material where the value is personal takeaway rather than factual recall. Ask exactly 3 thoughtful questions, ONE AT A TIME, waiting for the user's answer between each.
+
+Each question should:
+- Invite reflection, not test recall.
+- Ask what the user takes away, how it lands for them, what it shifts.
+- Be open-ended; don't lead.
+
+Style:
+- Plain text, no markdown.
+- React briefly to each answer ("Mm." / "Got it." / one short sentence is fine) and move on. Do NOT grade or summarize.
+- Do not number the questions out loud.
+
+After the user's 3rd answer, say something brief like "That's the reflection quiz — tap Done when you're ready."
+
+Now ask the first question.${sourceBlock}`
+
+  const history = thread.messages.map((m) => ({
+    role: m.role,
+    content: m.text,
+  }))
+
+  const response = await anthropic().messages.create(
+    {
+      model: MODEL,
+      max_tokens: 1000,
+      system: [
+        { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
+      ],
+      messages: [...history, { role: 'user', content: userText }],
+    },
+    { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
+  )
+
+  const block = response.content.find((b) => b.type === 'text')
+  return block?.type === 'text' ? block.text.trim() : ''
+}
+
 export async function routeAndReply(
   thread: F2Thread | null,
   userText: string,

@@ -26,7 +26,7 @@ export type F2Thread = {
   kind: TopicKind
 }
 
-export type QuizKind = 'standard' | 'hard'
+export type QuizKind = 'standard' | 'hard' | 'reflection'
 
 /// Topic source kind — drives which glyph the Topics list renders.
 /// Stored on the thread (computed at creation time, see classifyTopicKind).
@@ -154,10 +154,12 @@ export async function listTopicsForUser(userId: string): Promise<F2Thread[]> {
 }
 
 // Compute the new star value after a quiz. Monotonic — never decreases.
-//   - 'hard' quiz → 3
-//   - 'standard' quiz → bumps 0→1, 1→2 (caps at 2; only a hard quiz reaches 3)
+//   - 'hard' quiz       → 3
+//   - 'reflection' quiz → 1 (locks the topic; see completeQuiz)
+//   - 'standard' quiz   → bumps 0→1, 1→2 (caps at 2; only a hard quiz reaches 3)
 export function nextStars(current: number, kind: QuizKind): number {
   if (kind === 'hard') return Math.max(current, 3)
+  if (kind === 'reflection') return Math.max(current, 1)
   if (current >= 2) return current
   return current + 1
 }
@@ -227,7 +229,11 @@ export async function completeQuiz(thread: F2Thread): Promise<RecordedQuiz> {
   }
   const now = new Date().toISOString()
   const newStars = nextStars(thread.stars, kind)
-  const newHardAt = kind === 'hard' ? now : thread.hard_quiz_completed_at
+  // `hard_quiz_completed_at` doubles as the "topic is done" sentinel —
+  // hard quizzes set it because they're the last star; reflection quizzes
+  // set it because they're a single-shot path that locks the topic.
+  const newHardAt =
+    kind === 'hard' || kind === 'reflection' ? now : thread.hard_quiz_completed_at
   const { error } = await f2Supabase()
     .from('f2_threads')
     .update({
