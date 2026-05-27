@@ -7,6 +7,16 @@ export type F2ThreadMessage = {
   created_at: string
 }
 
+/// Extra materials the user has attached to a topic over time. Each entry is
+/// a URL + the extracted body (when we could pull one). Stored on the thread
+/// row as a jsonb array; concatenated into the LLM context by buildFullContent.
+export type F2AdditionalSource = {
+  url: string
+  title: string | null
+  content: string | null
+  added_at: string
+}
+
 export type F2Thread = {
   id: string
   user_id: string
@@ -15,6 +25,7 @@ export type F2Thread = {
   url: string | null
   topic: string | null
   content: string | null
+  additional_sources: F2AdditionalSource[]
   messages: F2ThreadMessage[]
   created_at: string
   updated_at: string
@@ -24,6 +35,23 @@ export type F2Thread = {
   hard_quiz_completed_at: string | null
   pending_quiz_kind: QuizKind | null
   kind: TopicKind
+}
+
+/// One source-of-truth concatenation of every body the user has attached to a
+/// topic — primary content first, then each additional source separated by a
+/// labeled header so the model knows where each excerpt comes from. Used by
+/// chat, quiz grading, voice, and the reflection quiz.
+export function buildFullContent(thread: F2Thread): string {
+  const parts: string[] = []
+  if (thread.content) {
+    parts.push(thread.content)
+  }
+  for (const src of thread.additional_sources ?? []) {
+    if (!src.content) continue
+    const label = src.title ? `${src.url} — ${src.title}` : src.url
+    parts.push(`\n\n--- Additional source: ${label} ---\n\n${src.content}`)
+  }
+  return parts.join('')
 }
 
 export type QuizKind = 'standard' | 'hard' | 'reflection'

@@ -200,6 +200,26 @@ final class F2API {
         try await get("/api/f2/progress")
     }
 
+    // MARK: Additional materials
+
+    struct AddSourceRequest: Codable { let url: String }
+    struct AddSourceResponse: Codable {
+        let total: Int
+        let fetched: Bool
+    }
+
+    /// Attach an additional URL to an existing topic. Server fetches the body
+    /// and appends a { url, title, content, added_at } entry to the thread's
+    /// additional_sources array. The combined corpus is what the chat / quiz /
+    /// voice prompts see going forward.
+    func addTopicSource(id: String, url: String) async throws -> AddSourceResponse {
+        try await request(
+            "/api/f2/topics/\(id)/sources",
+            method: "POST",
+            body: AddSourceRequest(url: url),
+        )
+    }
+
     // MARK: Avatar
 
     struct AvatarResponse: Codable {

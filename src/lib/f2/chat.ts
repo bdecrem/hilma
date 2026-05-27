@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { F2Thread } from './threads'
+import { buildFullContent, type F2Thread } from './threads'
 
 const MODEL = 'claude-sonnet-4-6'
 // No content cap. Claude Sonnet 4.6 + the 1M-context beta lets us send the
@@ -95,8 +95,9 @@ ${baseRules}`
       ? `URL ${thread.url}`
       : '(no subject)'
 
-  const sourceBlock = thread.content
-    ? `\n\nSource content (primary reference — answer from this when relevant):\n${thread.content}`
+  const fullContent = buildFullContent(thread)
+  const sourceBlock = fullContent
+    ? `\n\nSource content (primary reference — answer from this when relevant):\n${fullContent}`
     : ''
 
   return `You are F2 — a learning companion. The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
@@ -118,8 +119,9 @@ export async function replyAsReflectionQuiz(
   userText: string,
 ): Promise<string> {
   const subject = thread.topic ?? thread.url ?? '(this topic)'
-  const sourceBlock = thread.content
-    ? `\n\nSource content (the material the user is reflecting on):\n${thread.content}`
+  const fullContent = buildFullContent(thread)
+  const sourceBlock = fullContent
+    ? `\n\nSource content (the material the user is reflecting on):\n${fullContent}`
     : ''
 
   const system = `You are F2 — a learning companion. The user has just asked for a Reflection Quiz on: ${subject}.

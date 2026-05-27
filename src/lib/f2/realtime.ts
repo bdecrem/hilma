@@ -1,5 +1,10 @@
 import { f2Supabase } from './supabase'
-import { getThreadById, type F2Thread, type F2ThreadMessage } from './threads'
+import {
+  buildFullContent,
+  getThreadById,
+  type F2Thread,
+  type F2ThreadMessage,
+} from './threads'
 
 export type RealtimeMode = 'global' | 'topic'
 
@@ -40,8 +45,9 @@ function openaiApiKey(): string {
 
 function summarizeThreadForPrompt(thread: F2Thread): string {
   const subject = thread.topic || thread.url || 'Untitled topic'
-  const source = thread.content
-    ? `\n\nSource excerpt:\n${thread.content.slice(0, MAX_INITIAL_CONTENT_CHARS)}`
+  const fullContent = buildFullContent(thread)
+  const source = fullContent
+    ? `\n\nSource excerpt:\n${fullContent.slice(0, MAX_INITIAL_CONTENT_CHARS)}`
     : ''
   const recent = formatMessages(thread.messages.slice(-MAX_RECENT_MESSAGES))
   return `Current topic:
@@ -224,7 +230,7 @@ export async function getTopicContext(input: {
     throw new Error('Topic not found for this user.')
   }
 
-  const content = thread.content ?? ''
+  const content = buildFullContent(thread)
   const context = selectRelevantContent(content, input.query)
   return {
     thread_id: thread.id,

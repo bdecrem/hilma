@@ -17,6 +17,10 @@ struct TopicsView: View {
     @State private var renameTarget: F2Topic? = nil
     @State private var renameDraft = ""
     @State private var showProfile = false
+    @State private var addMaterialTarget: F2Topic? = nil
+    @State private var addMaterialURL = ""
+    @State private var addMaterialBusy = false
+    @State private var addMaterialError: String? = nil
     /// Persists across launches; defaults to recent.
     @AppStorage("topicsSortMode") private var sortRaw = TopicSort.recent.rawValue
 
@@ -78,6 +82,19 @@ struct TopicsView: View {
             TextField("Title", text: $renameDraft)
             Button("Cancel", role: .cancel) { renameTarget = nil }
             Button("Save") { commitRename() }
+        }
+        .alert("Add material",
+               isPresented: Binding(get: { addMaterialTarget != nil },
+                                    set: { if !$0 { dismissAddMaterial() } })) {
+            TextField("https://…", text: $addMaterialURL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+                .keyboardType(.URL)
+            Button("Cancel", role: .cancel) { dismissAddMaterial() }
+            Button("Add") { commitAddMaterial() }
+                .disabled(addMaterialBusy)
+        } message: {
+            Text(addMaterialError ?? "Paste a URL — F2 will pull it in and add it to this topic's context.")
         }
         // Reload on every appearance — keeps stars/level in sync with quizzes
         // completed on the Topic detail screen (no stale data when returning).
@@ -177,7 +194,8 @@ struct TopicsView: View {
                         TopicListRow(topic: topic,
                                      isLast: idx == display.count - 1,
                                      onRename: { startRename(topic) },
-                                     onDelete: { delete(topic) })
+                                     onDelete: { delete(topic) },
+                                     onAddMaterial: { startAddMaterial(topic) })
                     }
                     .buttonStyle(.plain)
                 }
@@ -209,6 +227,36 @@ struct TopicsView: View {
         renameTarget = topic
     }
 
+    private func startAddMaterial(_ topic: F2Topic) {
+        addMaterialURL = ""
+        addMaterialError = nil
+        addMaterialTarget = topic
+    }
+
+    private func dismissAddMaterial() {
+        addMaterialTarget = nil
+        addMaterialURL = ""
+        addMaterialError = nil
+        addMaterialBusy = false
+    }
+
+    private func commitAddMaterial() {
+        guard let target = addMaterialTarget else { return }
+        let url = addMaterialURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !url.isEmpty else { return }
+        addMaterialBusy = true
+        Task {
+            do {
+                _ = try await F2API.shared.addTopicSource(id: target.id, url: url)
+                await load()
+                dismissAddMaterial()
+            } catch {
+                addMaterialError = "Couldn't add: \(error.localizedDescription)"
+                addMaterialBusy = false
+            }
+        }
+    }
+
     private func commitRename() {
         guard let target = renameTarget else { return }
         let newName = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -238,6 +286,7 @@ struct TopicListRow: View {
     let isLast: Bool
     let onRename: () -> Void
     let onDelete: () -> Void
+    let onAddMaterial: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -256,6 +305,7 @@ struct TopicListRow: View {
 
                 Menu {
                     Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
+                    Button { onAddMaterial() } label: { Label("Add material", systemImage: "link.badge.plus") }
                     Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
                 } label: {
                     Image(systemName: "ellipsis")

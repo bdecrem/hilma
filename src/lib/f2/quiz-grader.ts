@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { F2Thread } from './threads'
+import { buildFullContent, type F2Thread } from './threads'
 
 const MODEL = 'claude-haiku-4-5-20251001'
 // No source cap — the grader gets the full transcript / book so it can
@@ -32,7 +32,7 @@ export type QuizTwoGrade = {
 /// better to err generously than to gate the user on a flaky LLM read.
 export async function gradeQuizTwo(thread: F2Thread): Promise<QuizTwoGrade> {
   const transcript = recentTranscript(thread)
-  const source = thread.content ?? ''
+  const source = buildFullContent(thread)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
   const system = `You are grading a 5-question quiz a user just took on a topic.
