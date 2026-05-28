@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f5b27a" />
+<title>Cozy Island</title>
+<meta property="og:title" content="Cozy Island" />
+<meta property="og:description" content="A little island at golden hour — gentle waves, swaying palms, a warm campfire, and fireflies." />
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a2238; }
+  #app { position: fixed; inset: 0; }
+  .label {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 18px);
+    transform: translateX(-50%);
+    font: 500 13px/1 ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(255,245,230,0.78); text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    pointer-events: none; user-select: none;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="label">cozy island · drag to look around</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const app = document.getElementById('app');
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+// ---- Renderer ----
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(DPR);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+app.appendChild(renderer.domElement);
+
+// ---- Scene ----
+const scene = new THREE.Scene();
+const HORIZON = new THREE.Color('#f7c08a');   // warm haze at the waterline
+scene.fog = new THREE.FogExp2(HORIZON, 0.018);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 400);
+camera.position.set(16, 9, 19);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.target.set(0, 2.2, 0);
+controls.minDistance = 9;
+controls.maxDistance = 42;
+controls.maxPolarAngle = Math.PI * 0.49;   // don't dip below the sea
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+
+// ---- Sky dome (sunset gradient) ----
+const skyGeo = new THREE.SphereGeometry(200, 32, 16);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms: {
+    top:    { value: new THREE.Color('#3a5a8c') },  // soft blue overhead
+    mid:    { value: new THREE.Color('#f3a368') },  // peach
+    bottom: { value: new THREE.Color('#fbd9a6') },  // pale gold at horizon
+  },
+  vertexShader: `
+    varying vec3 vPos;
+    void main(){ vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+  `,
+  fragmentShader: `
+    varying vec3 vPos;
+    uniform vec3 top; uniform vec3 mid; uniform vec3 bottom;
+    void main(){
+      float h = normalize(vPos).y;            // -1..1
+      vec3 c = mix(bottom, mid, smoothstep(-0.05, 0.28, h));
+      c = mix(c, top, smoothstep(0.22, 0.7, h));
+      gl_FragColor = vec4(c, 1.0);
+    }
+  `,
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+// soft glowing sun low on the horizon
+const sunGlow = new THREE.Mesh(
+  new THREE.SphereGeometry(7, 24, 24),
+  new THREE.MeshBasicMaterial({ color: '#fff2d0', fog: false, transparent: true, opacity: 0.95 })
+);
+sunGlow.position.set(-70, 12, -120);
+scene.add(sunGlow);
+
+// ---- Lights ----
+scene.add(new THREE.HemisphereLight('#ffe6c2', '#3b5a78', 0.65));
+
+const sun = new THREE.DirectionalLight('#ffd9a0', 1.5);
+sun.position.set(-30, 22, -28);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 120;
+sun.shadow.camera.left = -28; sun.shadow.camera.right = 28;
+sun.shadow.camera.top = 28;  sun.shadow.camera.bottom = -28;
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+
+const fill = new THREE.DirectionalLight('#a9c8ff', 0.25);
+fill.position.set(20, 10, 18);
+scene.add(fill);
+
+// ===================================================================
+//  WATER
+// ===================================================================
+const waterGeo = new THREE.PlaneGeometry(400, 400, 160, 160);
+waterGeo.rotateX(-Math.PI / 2);
+const waterBase = waterGeo.attributes.position.array.slice();
+const waterMat = new THREE.MeshStandardMaterial({
+  color: '#2f7e9e', roughness: 0.35, metalness: 0.15,
+  transparent: true, opacity: 0.93, flatShading: true,
+});
+const water = new THREE.Mesh(waterGeo, waterMat);
+water.position.y = -0.2;
+water.receiveShadow = true;
+scene.add(water);
+
+// ===================================================================
+//  ISLAND
+// ===================================================================
+const island = new THREE.Group();
+scene.add(island);
+
+// sand base — wide, short cone so the beach slopes into the sea
+const sand = new THREE.Mesh(
+  new THREE.CylinderGeometry(9.5, 13, 3, 48, 1),
+  new THREE.MeshStandardMaterial({ color: '#e8c98f', roughness: 1 })
+);
+sand.position.y = 0.3;
+sand.castShadow = true; sand.receiveShadow = true;
+island.add(sand);
+
+// grassy top, slightly domed and raised
+const grassGeo = new THREE.SphereGeometry(8.2, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.5);
+const gp = grassGeo.attributes.position;
+for (let i = 0; i < gp.count; i++) {            // squash the dome flatter + gentle lumps
+  const x = gp.getX(i), z = gp.getZ(i);
+  let y = gp.getY(i) * 0.34;
+  y += Math.sin(x * 0.7) * Math.cos(z * 0.7) * 0.25;
+  gp.setY(i, y);
+}
+grassGeo.computeVertexNormals();
+const grass = new THREE.Mesh(
+  grassGeo,
+  new THREE.MeshStandardMaterial({ color: '#6fae5a', roughness: 0.95, flatShading: true })
+);
+grass.position.y = 1.7;
+grass.castShadow = true; grass.receiveShadow = true;
+island.add(grass);
+
+// scattered rocks
+function rock(x, z, s) {
+  const r = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(s, 0),
+    new THREE.MeshStandardMaterial({ color: '#8a8378', roughness: 1, flatShading: true })
+  );
+  r.position.set(x, 1.9, z);
+  r.rotation.set(Math.random(), Math.random(), Math.random());
+  r.castShadow = true; r.receiveShadow = true;
+  island.add(r);
+}
+rock(5.5, -3.2, 0.7); rock(-6, 2.5, 0.55); rock(-4.5, -5, 0.45); rock(6.5, 4, 0.5);
+
+// ===================================================================
+//  PALM TREES (swaying)
+// ===================================================================
+const palms = [];
+function makePalm(x, z, lean, scale = 1) {
+  const g = new THREE.Group();
+  g.position.set(x, 2.0, z);
+  g.scale.setScalar(scale);
+
+  // curved trunk built from stacked, tilting segments
+  const trunkMat = new THREE.MeshStandardMaterial({ color: '#9a6b41', roughness: 1, flatShading: true });
+  const segs = 7;
+  const trunk = new THREE.Group();
+  let prevY = 0;
+  for (let i = 0; i < segs; i++) {
+    const t = i / segs;
+    const h = 1.05;
+    const r0 = 0.42 - t * 0.22, r1 = 0.42 - (t + 1 / segs) * 0.22;
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, h, 8), trunkMat);
+    const bend = lean * t * t;                 // lean increases toward the crown
+    seg.position.set(bend * 2.4, prevY + h / 2, 0);
+    seg.rotation.z = -lean * t * 1.1;
+    seg.castShadow = true;
+    trunk.add(seg);
+    prevY += h * 0.96;
+  }
+  g.add(trunk);
+
+  // crown of fronds
+  const crown = new THREE.Group();
+  crown.position.set(lean * 2.4, prevY, 0);
+  const frondMat = new THREE.MeshStandardMaterial({ color: '#3f9a4e', roughness: 0.85, side: THREE.DoubleSide, flatShading: true });
+  const frondGeo = new THREE.PlaneGeometry(3.4, 0.9, 4, 1);
+  const fp = frondGeo.attributes.position;     // taper the width to a point + curl the tip down
+  for (let i = 0; i < fp.count; i++) {
+    const px = fp.getX(i);
+    const tt = (px + 1.7) / 3.4;               // 0 at base, 1 at tip
+    fp.setY(i, fp.getY(i) * (1 - tt * 0.94));  // narrow toward the tip → leaf shape
+    fp.setZ(i, fp.getZ(i) - tt * tt * 1.15);   // droop/curl the frond downward
+  }
+  frondGeo.computeVertexNormals();
+  const FR = 9;
+  for (let i = 0; i < FR; i++) {
+    const f = new THREE.Mesh(frondGeo, frondMat);
+    f.position.set(1.55, 0, 0);
+    f.castShadow = true;
+    const pivot = new THREE.Group();
+    pivot.rotation.y = (i / FR) * Math.PI * 2;
+    pivot.rotation.z = 0.28 + Math.random() * 0.18;
+    pivot.add(f);
+    crown.add(pivot);
+  }
+  // a couple of coconuts
+  for (let i = 0; i < 3; i++) {
+    const c = new THREE.Mesh(
+      new THREE.SphereGeometry(0.26, 10, 10),
+      new THREE.MeshStandardMaterial({ color: '#5b3d24', roughness: 0.9 })
+    );
+    const a = (i / 3) * Math.PI * 2;
+    c.position.set(Math.cos(a) * 0.45, -0.25, Math.sin(a) * 0.45);
+    c.castShadow = true;
+    crown.add(c);
+  }
+  g.add(crown);
+
+  island.add(g);
+  palms.push({ group: g, crown, phase: Math.random() * Math.PI * 2, baseLean: lean });
+}
+makePalm(-2.5, 1.5, 0.16, 1.15);
+makePalm(3.2, -1.8, -0.13, 0.95);
+makePalm(0.5, -4.2, 0.1, 1.0);
+
+// ===================================================================
+//  CAMPFIRE (flickering light + animated flames)
+// ===================================================================
+const fire = new THREE.Group();
+// Seat the fire ON the grass dome, not inside it. Grass is a R=8.2 hemisphere
+// scaled to 0.34 height, sitting at y=1.7. Surface height at horizontal radius
+// rho is: sqrt(R^2 - rho^2)*0.34 + lump + 1.7. At (1.6,1.6) rho≈2.26 → ≈4.35.
+fire.position.set(1.6, 4.3, 1.6);
+island.add(fire);
+
+// ring of stones
+const stoneMat = new THREE.MeshStandardMaterial({ color: '#7d756a', roughness: 1, flatShading: true });
+for (let i = 0; i < 9; i++) {
+  const a = (i / 9) * Math.PI * 2;
+  const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.26, 0), stoneMat);
+  s.position.set(Math.cos(a) * 0.9, 0.12, Math.sin(a) * 0.9);
+  s.rotation.set(Math.random(), Math.random(), Math.random());
+  s.castShadow = true; s.receiveShadow = true;
+  fire.add(s);
+}
+// crossed logs
+const logMat = new THREE.MeshStandardMaterial({ color: '#6b4326', roughness: 1, flatShading: true });
+for (let i = 0; i < 4; i++) {
+  const log = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 1.5, 7), logMat);
+  log.rotation.z = Math.PI / 2;
+  log.rotation.y = (i / 4) * Math.PI;
+  log.position.y = 0.16 + (i % 2) * 0.1;
+  log.castShadow = true;
+  fire.add(log);
+}
+// flame cones (additive, animated)
+const flameMat = new THREE.MeshBasicMaterial({ color: '#ff8a2b', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+const flameCoreMat = new THREE.MeshBasicMaterial({ color: '#ffe07a', transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+const flames = [];
+for (let i = 0; i < 5; i++) {
+  const m = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.0, 8), i < 2 ? flameCoreMat : flameMat);
+  m.position.set((Math.random() - 0.5) * 0.4, 0.55 + Math.random() * 0.2, (Math.random() - 0.5) * 0.4);
+  m.scale.setScalar(0.6 + Math.random() * 0.6);
+  fire.add(m);
+  flames.push({ m, phase: Math.random() * Math.PI * 2, baseY: m.position.y });
+}
+// the warm light that makes it cozy
+const fireLight = new THREE.PointLight('#ff944d', 6, 22, 2);
+fireLight.position.set(0, 1.1, 0);
+fireLight.castShadow = true;
+fireLight.shadow.mapSize.set(1024, 1024);
+fire.add(fireLight);
+
+// ===================================================================
+//  FIREFLIES
+// ===================================================================
+function glowSprite() {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,247,200,1)');
+  g.addColorStop(0.3, 'rgba(255,224,130,0.8)');
+  g.addColorStop(1, 'rgba(255,224,130,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+}
+const FLY = 60;
+const flyGeo = new THREE.BufferGeometry();
+const flyPos = new Float32Array(FLY * 3);
+const flyData = [];
+for (let i = 0; i < FLY; i++) {
+  const r = 4 + Math.random() * 9, a = Math.random() * Math.PI * 2;
+  const x = Math.cos(a) * r, z = Math.sin(a) * r, y = 2.5 + Math.random() * 4;
+  flyPos[i * 3] = x; flyPos[i * 3 + 1] = y; flyPos[i * 3 + 2] = z;
+  flyData.push({ x, y, z, sp: 0.4 + Math.random() * 0.7, ph: Math.random() * Math.PI * 2 });
+}
+flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
+const flies = new THREE.Points(flyGeo, new THREE.PointsMaterial({
+  size: 0.55, map: glowSprite(), transparent: true, depthWrite: false,
+  blending: THREE.AdditiveBlending, fog: false,
+}));
+scene.add(flies);
+
+// ===================================================================
+//  ANIMATE
+// ===================================================================
+const clock = new THREE.Clock();
+function animate() {
+  const t = clock.getElapsedTime();
+
+  // water waves
+  const pos = waterGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = waterBase[i * 3], z = waterBase[i * 3 + 2];
+    const y = Math.sin(x * 0.18 + t * 0.9) * 0.32
+            + Math.cos(z * 0.22 + t * 0.7) * 0.28
+            + Math.sin((x + z) * 0.12 + t * 0.5) * 0.18;
+    pos.setY(i, y);
+  }
+  pos.needsUpdate = true;
+  waterGeo.computeVertexNormals();
+
+  // palms sway
+  for (const p of palms) {
+    const s = Math.sin(t * 0.8 + p.phase) * 0.05;
+    p.group.rotation.z = s;
+    p.crown.rotation.y = Math.sin(t * 0.4 + p.phase) * 0.06;
+  }
+
+  // flames flicker
+  for (const f of flames) {
+    const fl = 0.75 + Math.sin(t * 9 + f.phase) * 0.2 + Math.sin(t * 21 + f.phase) * 0.1;
+    f.m.scale.y = fl;
+    f.m.scale.x = f.m.scale.z = 0.55 + (fl - 0.75) * 0.5 + 0.4;
+    f.m.position.y = f.baseY + Math.sin(t * 7 + f.phase) * 0.05;
+  }
+  fireLight.intensity = 5.5 + Math.sin(t * 11) * 1.0 + Math.sin(t * 27) * 0.6;
+
+  // fireflies drift
+  const fp = flyGeo.attributes.position;
+  for (let i = 0; i < FLY; i++) {
+    const d = flyData[i];
+    fp.setX(i, d.x + Math.sin(t * d.sp + d.ph) * 0.8);
+    fp.setY(i, d.y + Math.sin(t * d.sp * 1.3 + d.ph) * 0.5);
+    fp.setZ(i, d.z + Math.cos(t * d.sp * 0.9 + d.ph) * 0.8);
+  }
+  fp.needsUpdate = true;
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ---- resize ----
+addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

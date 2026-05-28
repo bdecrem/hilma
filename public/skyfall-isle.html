@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3b06a" />
+<title>Skyfall Isle</title>
+<meta property="og:title" content="Skyfall Isle" />
+<meta property="og:description" content="A little island floating in golden sky — a waterfall spilling into the clouds, swaying palms, lanterns, and fireflies." />
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #1a2238; }
+  #app { position: fixed; inset: 0; }
+  .label {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 18px);
+    transform: translateX(-50%);
+    font: 500 13px/1 ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(255,245,230,0.78); text-shadow: 0 1px 6px rgba(0,0,0,0.4);
+    pointer-events: none; user-select: none;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="label">skyfall isle · drag to look around</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const app = document.getElementById('app');
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+// deterministic-ish PRNG so the layout is stable run-to-run (no Math.random at init)
+let _seed = 9173;
+function rnd() { _seed = (_seed * 1103515245 + 12345) & 0x7fffffff; return _seed / 0x7fffffff; }
+
+// ---- Renderer ----
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(DPR);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+app.appendChild(renderer.domElement);
+
+// ---- Scene ----
+const scene = new THREE.Scene();
+const HAZE = new THREE.Color('#f3c79a');       // warm haze the clouds fade into
+scene.fog = new THREE.FogExp2(HAZE, 0.011);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 600);
+camera.position.set(20, 8, 25);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.target.set(0, 2.4, 0);
+controls.minDistance = 10;
+controls.maxDistance = 70;
+controls.maxPolarAngle = Math.PI * 0.9;        // float in open sky — you can peek under the island
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.3;
+
+// ---- Sky dome (sunset gradient) ----
+const skyGeo = new THREE.SphereGeometry(300, 32, 16);
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide,
+  uniforms: {
+    top:    { value: new THREE.Color('#3a5a8c') },  // soft blue overhead
+    mid:    { value: new THREE.Color('#f3a368') },  // peach
+    bottom: { value: new THREE.Color('#fbd9a6') },  // pale gold at horizon
+  },
+  vertexShader: `
+    varying vec3 vPos;
+    void main(){ vPos = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }
+  `,
+  fragmentShader: `
+    varying vec3 vPos;
+    uniform vec3 top; uniform vec3 mid; uniform vec3 bottom;
+    void main(){
+      float h = normalize(vPos).y;            // -1..1
+      vec3 c = mix(bottom, mid, smoothstep(-0.25, 0.22, h));
+      c = mix(c, top, smoothstep(0.22, 0.7, h));
+      gl_FragColor = vec4(c, 1.0);
+    }
+  `,
+});
+scene.add(new THREE.Mesh(skyGeo, skyMat));
+
+// soft glowing sun low on the horizon
+const sunGlow = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 24, 24),
+  new THREE.MeshBasicMaterial({ color: '#fff2d0', fog: false, transparent: true, opacity: 0.95 })
+);
+sunGlow.position.set(-80, 18, -150);
+scene.add(sunGlow);
+
+// ---- Lights ----
+scene.add(new THREE.HemisphereLight('#ffe6c2', '#caa37a', 0.7));
+
+const sun = new THREE.DirectionalLight('#ffd9a0', 1.5);
+sun.position.set(-30, 26, -28);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 1;
+sun.shadow.camera.far = 120;
+sun.shadow.camera.left = -28; sun.shadow.camera.right = 28;
+sun.shadow.camera.top = 28;  sun.shadow.camera.bottom = -28;
+sun.shadow.bias = -0.0004;
+scene.add(sun);
+
+const fill = new THREE.DirectionalLight('#a9c8ff', 0.25);
+fill.position.set(20, 10, 18);
+scene.add(fill);
+
+// helper: soft round glow sprite (lanterns, fireflies, mist, waterfall)
+function glowSprite(inner, outer) {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, inner); g.addColorStop(0.35, outer); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(c); tex.needsUpdate = true; return tex;
+}
+
+// ===================================================================
+//  CLOUD SEA  (replaces the ocean — the island floats above it)
+// ===================================================================
+// faint cloud "floor" far below, dissolving into haze via fog
+const floorGeo = new THREE.PlaneGeometry(700, 700, 40, 40);
+floorGeo.rotateX(-Math.PI / 2);
+const fpos = floorGeo.attributes.position;
+for (let i = 0; i < fpos.count; i++) {
+  const x = fpos.getX(i), z = fpos.getZ(i);
+  fpos.setY(i, Math.sin(x * 0.03) * 2.2 + Math.cos(z * 0.035) * 2.0);   // gentle rolling
+}
+floorGeo.computeVertexNormals();
+const cloudFloor = new THREE.Mesh(
+  floorGeo,
+  new THREE.MeshStandardMaterial({ color: '#fdedd2', roughness: 1, flatShading: true, transparent: true, opacity: 0.85 })
+);
+cloudFloor.position.y = -38;
+scene.add(cloudFloor);
+
+// drifting low-poly cloud puffs at mid-depth for parallax
+const cloudMat = new THREE.MeshStandardMaterial({ color: '#fff6ea', roughness: 1, flatShading: true });
+const clouds = [];
+function makeCloud(x, y, z, s) {
+  const g = new THREE.Group();
+  const n = 3 + Math.floor(rnd() * 3);
+  for (let k = 0; k < n; k++) {
+    const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 0), cloudMat);
+    blob.position.set((rnd() - 0.5) * 2.8, (rnd() - 0.5) * 0.6, (rnd() - 0.5) * 2.2);
+    blob.scale.set(1 + rnd(), 0.65 + rnd() * 0.4, 1 + rnd());
+    g.add(blob);
+  }
+  g.position.set(x, y, z);
+  g.scale.setScalar(s);
+  scene.add(g);
+  clouds.push({ group: g, sp: 0.4 + rnd() * 0.8, wrap: 130 });
+}
+for (let c = 0; c < 26; c++) {
+  const a = rnd() * Math.PI * 2;
+  const r = 26 + rnd() * 70;
+  makeCloud(Math.cos(a) * r, -6 - rnd() * 22, Math.sin(a) * r, 2 + rnd() * 4);
+}
+
+// distant sky-islands on the horizon (scale + wonder)
+function makeSkyIsleSilhouette(x, y, z, s) {
+  const g = new THREE.Group();
+  const top = new THREE.Mesh(
+    new THREE.SphereGeometry(4, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.5),
+    new THREE.MeshStandardMaterial({ color: '#9bbf7a', roughness: 1, flatShading: true })
+  );
+  top.scale.y = 0.4;
+  g.add(top);
+  const sk = new THREE.Mesh(
+    new THREE.ConeGeometry(3.4, 9, 8),
+    new THREE.MeshStandardMaterial({ color: '#8a6b52', roughness: 1, flatShading: true })
+  );
+  sk.rotation.x = Math.PI;
+  sk.position.y = -4.6;
+  g.add(sk);
+  g.position.set(x, y, z);
+  g.scale.setScalar(s);
+  scene.add(g);
+}
+makeSkyIsleSilhouette(-95, 6, -120, 2.4);
+makeSkyIsleSilhouette(70, -4, -110, 1.7);
+
+// ===================================================================
+//  THE FLOATING ISLAND
+// ===================================================================
+const island = new THREE.Group();
+scene.add(island);
+
+// sandy rim — tapers INWARD going down (unlike the sea version)
+const sand = new THREE.Mesh(
+  new THREE.CylinderGeometry(9.5, 7.5, 2.6, 48, 1),
+  new THREE.MeshStandardMaterial({ color: '#e8c98f', roughness: 1 })
+);
+sand.position.y = 0.5;
+sand.castShadow = true; sand.receiveShadow = true;
+island.add(sand);
+
+// jagged rocky underside — a downward spike, the bottom of the floating island
+const spikeGeo = new THREE.ConeGeometry(7.6, 17, 14, 6, true);
+const sp = spikeGeo.attributes.position;
+for (let i = 0; i < sp.count; i++) {
+  const x = sp.getX(i), y = sp.getY(i), z = sp.getZ(i);
+  if (y < 8.0) {                                   // leave the very tip clean, jag the rest
+    const j = (rnd() - 0.5) * 1.6 * (1 - (y + 8.5) / 17);  // more jag toward the base ring
+    sp.setX(i, x + j);
+    sp.setZ(i, z + j * 0.8);
+  }
+}
+spikeGeo.computeVertexNormals();
+const spike = new THREE.Mesh(
+  spikeGeo,
+  new THREE.MeshStandardMaterial({ color: '#8a6b52', roughness: 1, flatShading: true })
+);
+spike.rotation.x = Math.PI;                        // point the tip down
+spike.position.y = -0.8 - 8.5;                     // base meets the sand bottom (~ -0.8)
+spike.castShadow = true; spike.receiveShadow = true;
+island.add(spike);
+
+// a couple of protruding rock chunks on the underside for silhouette
+for (let i = 0; i < 4; i++) {
+  const chunk = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(1.1 + rnd() * 0.9, 0),
+    new THREE.MeshStandardMaterial({ color: '#7d6048', roughness: 1, flatShading: true })
+  );
+  const a = rnd() * Math.PI * 2;
+  chunk.position.set(Math.cos(a) * (3 + rnd() * 3), -4 - rnd() * 7, Math.sin(a) * (3 + rnd() * 3));
+  chunk.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
+  chunk.castShadow = true;
+  island.add(chunk);
+}
+
+// grassy top, slightly domed and raised
+const grassGeo = new THREE.SphereGeometry(8.2, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.5);
+const gp = grassGeo.attributes.position;
+for (let i = 0; i < gp.count; i++) {
+  const x = gp.getX(i), z = gp.getZ(i);
+  let y = gp.getY(i) * 0.34;
+  y += Math.sin(x * 0.7) * Math.cos(z * 0.7) * 0.25;
+  gp.setY(i, y);
+}
+grassGeo.computeVertexNormals();
+const grass = new THREE.Mesh(
+  grassGeo,
+  new THREE.MeshStandardMaterial({ color: '#6fae5a', roughness: 0.95, flatShading: true })
+);
+grass.position.y = 1.7;
+grass.castShadow = true; grass.receiveShadow = true;
+island.add(grass);
+
+// scattered rocks on top
+function rock(x, z, s) {
+  const r = new THREE.Mesh(
+    new THREE.DodecahedronGeometry(s, 0),
+    new THREE.MeshStandardMaterial({ color: '#8a8378', roughness: 1, flatShading: true })
+  );
+  r.position.set(x, 1.9, z);
+  r.rotation.set(rnd(), rnd(), rnd());
+  r.castShadow = true; r.receiveShadow = true;
+  island.add(r);
+}
+rock(5.5, -3.2, 0.7); rock(-6, 2.5, 0.55); rock(-4.5, -5, 0.45); rock(6.5, 4, 0.5);
+
+// ===================================================================
+//  PALM TREES (swaying) — now strung with lanterns
+// ===================================================================
+const palms = [];
+const lanterns = [];
+const lanternTex = glowSprite('rgba(255,236,170,1)', 'rgba(255,170,80,0.85)');
+function makePalm(x, z, lean, scale = 1) {
+  const g = new THREE.Group();
+  g.position.set(x, 2.0, z);
+  g.scale.setScalar(scale);
+
+  const trunkMat = new THREE.MeshStandardMaterial({ color: '#9a6b41', roughness: 1, flatShading: true });
+  const segs = 7;
+  const trunk = new THREE.Group();
+  let prevY = 0;
+  for (let i = 0; i < segs; i++) {
+    const t = i / segs;
+    const h = 1.05;
+    const r0 = 0.42 - t * 0.22, r1 = 0.42 - (t + 1 / segs) * 0.22;
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, h, 8), trunkMat);
+    const bend = lean * t * t;
+    seg.position.set(bend * 2.4, prevY + h / 2, 0);
+    seg.rotation.z = -lean * t * 1.1;
+    seg.castShadow = true;
+    trunk.add(seg);
+    prevY += h * 0.96;
+  }
+  g.add(trunk);
+
+  const crown = new THREE.Group();
+  crown.position.set(lean * 2.4, prevY, 0);
+  const frondMat = new THREE.MeshStandardMaterial({ color: '#3f9a4e', roughness: 0.85, side: THREE.DoubleSide, flatShading: true });
+  const frondGeo = new THREE.PlaneGeometry(3.4, 0.9, 4, 1);
+  const fp = frondGeo.attributes.position;
+  for (let i = 0; i < fp.count; i++) {
+    const px = fp.getX(i);
+    const tt = (px + 1.7) / 3.4;
+    fp.setY(i, fp.getY(i) * (1 - tt * 0.94));
+    fp.setZ(i, fp.getZ(i) - tt * tt * 1.15);
+  }
+  frondGeo.computeVertexNormals();
+  const FR = 9;
+  for (let i = 0; i < FR; i++) {
+    const f = new THREE.Mesh(frondGeo, frondMat);
+    f.position.set(1.55, 0, 0);
+    f.castShadow = true;
+    const pivot = new THREE.Group();
+    pivot.rotation.y = (i / FR) * Math.PI * 2;
+    pivot.rotation.z = 0.28 + rnd() * 0.18;
+    pivot.add(f);
+    crown.add(pivot);
+  }
+  for (let i = 0; i < 3; i++) {
+    const c = new THREE.Mesh(
+      new THREE.SphereGeometry(0.26, 10, 10),
+      new THREE.MeshStandardMaterial({ color: '#5b3d24', roughness: 0.9 })
+    );
+    const a = (i / 3) * Math.PI * 2;
+    c.position.set(Math.cos(a) * 0.45, -0.25, Math.sin(a) * 0.45);
+    c.castShadow = true;
+    crown.add(c);
+  }
+  g.add(crown);
+
+  // hanging lantern just below the crown
+  const lantern = new THREE.Group();
+  lantern.position.copy(crown.position);
+  lantern.position.y -= 0.6 + rnd() * 0.4;
+  lantern.position.x += (rnd() - 0.5) * 0.6;
+  const orb = new THREE.Mesh(
+    new THREE.SphereGeometry(0.22, 12, 12),
+    new THREE.MeshBasicMaterial({ color: '#ffd98a', fog: false })
+  );
+  lantern.add(orb);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: lanternTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  halo.scale.setScalar(1.6);
+  lantern.add(halo);
+  const llight = new THREE.PointLight('#ffcaa0', 2.2, 9, 2);
+  lantern.add(llight);
+  g.add(lantern);
+  lanterns.push({ halo, llight, phase: rnd() * Math.PI * 2, baseHalo: 1.6 });
+
+  island.add(g);
+  palms.push({ group: g, crown, phase: rnd() * Math.PI * 2, baseLean: lean });
+}
+makePalm(-2.5, 1.5, 0.16, 1.15);
+makePalm(3.2, -1.8, -0.13, 0.95);
+makePalm(0.5, -4.2, 0.1, 1.0);
+
+// ===================================================================
+//  CAMPFIRE (flickering light + animated flames) — sits on the dome
+// ===================================================================
+const fire = new THREE.Group();
+fire.position.set(1.6, 4.3, 1.6);
+island.add(fire);
+
+const stoneMat = new THREE.MeshStandardMaterial({ color: '#7d756a', roughness: 1, flatShading: true });
+for (let i = 0; i < 9; i++) {
+  const a = (i / 9) * Math.PI * 2;
+  const s = new THREE.Mesh(new THREE.DodecahedronGeometry(0.26, 0), stoneMat);
+  s.position.set(Math.cos(a) * 0.9, 0.12, Math.sin(a) * 0.9);
+  s.rotation.set(rnd(), rnd(), rnd());
+  s.castShadow = true; s.receiveShadow = true;
+  fire.add(s);
+}
+const logMat = new THREE.MeshStandardMaterial({ color: '#6b4326', roughness: 1, flatShading: true });
+for (let i = 0; i < 4; i++) {
+  const log = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 1.5, 7), logMat);
+  log.rotation.z = Math.PI / 2;
+  log.rotation.y = (i / 4) * Math.PI;
+  log.position.y = 0.16 + (i % 2) * 0.1;
+  log.castShadow = true;
+  fire.add(log);
+}
+const flameMat = new THREE.MeshBasicMaterial({ color: '#ff8a2b', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+const flameCoreMat = new THREE.MeshBasicMaterial({ color: '#ffe07a', transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+const flames = [];
+for (let i = 0; i < 5; i++) {
+  const m = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.0, 8), i < 2 ? flameCoreMat : flameMat);
+  m.position.set((rnd() - 0.5) * 0.4, 0.55 + rnd() * 0.2, (rnd() - 0.5) * 0.4);
+  m.scale.setScalar(0.6 + rnd() * 0.6);
+  fire.add(m);
+  flames.push({ m, phase: rnd() * Math.PI * 2, baseY: m.position.y });
+}
+const fireLight = new THREE.PointLight('#ff944d', 6, 22, 2);
+fireLight.position.set(0, 1.1, 0);
+fireLight.castShadow = true;
+fireLight.shadow.mapSize.set(1024, 1024);
+fire.add(fireLight);
+
+// ===================================================================
+//  WATERFALL — spills off an edge and dissolves into mist
+// ===================================================================
+const FALL_ORIGIN = new THREE.Vector3(-5.5, 1.4, 6.2);   // a notch on the rim, at beach height
+const FALL_BOTTOM = -16;                                  // where droplets fade into the cloud sea
+
+// translucent sheet at the lip
+const sheet = new THREE.Mesh(
+  new THREE.PlaneGeometry(2.2, 9, 1, 1),
+  new THREE.MeshBasicMaterial({ color: '#d7f1ff', transparent: true, opacity: 0.28, side: THREE.DoubleSide, depthWrite: false })
+);
+sheet.position.set(FALL_ORIGIN.x, FALL_ORIGIN.y - 3.5, FALL_ORIGIN.z + 0.3);
+scene.add(sheet);
+
+// falling droplets
+const DROPS = 220;
+const dropGeo = new THREE.BufferGeometry();
+const dropPos = new Float32Array(DROPS * 3);
+const dropData = [];
+for (let i = 0; i < DROPS; i++) {
+  const y = FALL_ORIGIN.y - rnd() * (FALL_ORIGIN.y - FALL_BOTTOM);
+  const x = FALL_ORIGIN.x + (rnd() - 0.5) * 1.6;
+  const z = FALL_ORIGIN.z + (rnd() - 0.5) * 1.0;
+  dropPos[i * 3] = x; dropPos[i * 3 + 1] = y; dropPos[i * 3 + 2] = z;
+  dropData.push({ vy: 7 + rnd() * 5 });
+}
+dropGeo.setAttribute('position', new THREE.BufferAttribute(dropPos, 3));
+const drops = new THREE.Points(dropGeo, new THREE.PointsMaterial({
+  size: 0.45, map: glowSprite('rgba(231,247,255,1)', 'rgba(180,224,255,0.7)'),
+  transparent: true, depthWrite: false, opacity: 0.9,
+}));
+scene.add(drops);
+
+// mist puffs where the water dissolves
+const mistTex = glowSprite('rgba(255,255,255,0.9)', 'rgba(220,235,250,0.5)');
+const mists = [];
+for (let i = 0; i < 7; i++) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: mistTex, transparent: true, depthWrite: false, opacity: 0.5 }));
+  s.position.set(FALL_ORIGIN.x + (rnd() - 0.5) * 3, FALL_BOTTOM + 2 + rnd() * 2, FALL_ORIGIN.z + (rnd() - 0.5) * 2);
+  s.scale.setScalar(3 + rnd() * 3);
+  scene.add(s);
+  mists.push({ s, phase: rnd() * Math.PI * 2 });
+}
+
+// ===================================================================
+//  FIREFLIES
+// ===================================================================
+const FLY = 60;
+const flyGeo = new THREE.BufferGeometry();
+const flyPos = new Float32Array(FLY * 3);
+const flyData = [];
+for (let i = 0; i < FLY; i++) {
+  const r = 4 + rnd() * 9, a = rnd() * Math.PI * 2;
+  const x = Math.cos(a) * r, z = Math.sin(a) * r, y = 2.5 + rnd() * 4;
+  flyPos[i * 3] = x; flyPos[i * 3 + 1] = y; flyPos[i * 3 + 2] = z;
+  flyData.push({ x, y, z, sp: 0.4 + rnd() * 0.7, ph: rnd() * Math.PI * 2 });
+}
+flyGeo.setAttribute('position', new THREE.BufferAttribute(flyPos, 3));
+const flies = new THREE.Points(flyGeo, new THREE.PointsMaterial({
+  size: 0.55, map: glowSprite('rgba(255,247,200,1)', 'rgba(255,224,130,0.8)'),
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+}));
+scene.add(flies);
+
+// ===================================================================
+//  ANIMATE
+// ===================================================================
+const clock = new THREE.Clock();
+function animate() {
+  const t = clock.getElapsedTime();
+
+  // the whole island bobs ever so gently, as if held aloft
+  island.position.y = Math.sin(t * 0.5) * 0.18;
+  island.rotation.z = Math.sin(t * 0.33) * 0.006;
+
+  // clouds drift and wrap around
+  for (const c of clouds) {
+    let x = c.group.position.x + c.sp * 0.016;
+    if (x > c.wrap) x -= c.wrap * 2;
+    c.group.position.x = x;
+  }
+
+  // palms sway
+  for (const p of palms) {
+    p.group.rotation.z = Math.sin(t * 0.8 + p.phase) * 0.05;
+    p.crown.rotation.y = Math.sin(t * 0.4 + p.phase) * 0.06;
+  }
+
+  // lanterns glow softly
+  for (const l of lanterns) {
+    const g = 1 + Math.sin(t * 2.3 + l.phase) * 0.12;
+    l.halo.scale.setScalar(l.baseHalo * g);
+    l.llight.intensity = 2.0 + Math.sin(t * 2.3 + l.phase) * 0.5;
+  }
+
+  // flames flicker
+  for (const f of flames) {
+    const fl = 0.75 + Math.sin(t * 9 + f.phase) * 0.2 + Math.sin(t * 21 + f.phase) * 0.1;
+    f.m.scale.y = fl;
+    f.m.scale.x = f.m.scale.z = 0.55 + (fl - 0.75) * 0.5 + 0.4;
+    f.m.position.y = f.baseY + Math.sin(t * 7 + f.phase) * 0.05;
+  }
+  fireLight.intensity = 5.5 + Math.sin(t * 11) * 1.0 + Math.sin(t * 27) * 0.6;
+
+  // waterfall droplets fall, then respawn at the lip
+  const dp = dropGeo.attributes.position;
+  for (let i = 0; i < DROPS; i++) {
+    let y = dp.getY(i) - dropData[i].vy * 0.016;
+    let x = dp.getX(i) + Math.sin(t * 3 + i) * 0.004;          // slight shimmer
+    if (y < FALL_BOTTOM) {                                      // recycle to the top lip
+      y = FALL_ORIGIN.y - rnd() * 1.0;
+      x = FALL_ORIGIN.x + (rnd() - 0.5) * 1.6;
+      dp.setZ(i, FALL_ORIGIN.z + (rnd() - 0.5) * 1.0);
+    }
+    dp.setX(i, x); dp.setY(i, y);
+  }
+  dp.needsUpdate = true;
+
+  // mist breathes at the dissolve point
+  for (const m of mists) {
+    m.s.material.opacity = 0.45 + Math.sin(t * 1.4 + m.phase) * 0.18;
+    m.s.position.y = FALL_BOTTOM + 2.5 + Math.sin(t * 0.8 + m.phase) * 0.6;
+  }
+
+  // fireflies drift
+  const fp2 = flyGeo.attributes.position;
+  for (let i = 0; i < FLY; i++) {
+    const d = flyData[i];
+    fp2.setX(i, d.x + Math.sin(t * d.sp + d.ph) * 0.8);
+    fp2.setY(i, d.y + Math.sin(t * d.sp * 1.3 + d.ph) * 0.5);
+    fp2.setZ(i, d.z + Math.cos(t * d.sp * 0.9 + d.ph) * 0.8);
+  }
+  fp2.needsUpdate = true;
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ---- resize ----
+addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
