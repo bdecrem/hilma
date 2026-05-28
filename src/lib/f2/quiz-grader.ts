@@ -1,11 +1,33 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { buildFullContent, type F2Thread } from './threads'
 
-const MODEL = 'claude-haiku-4-5-20251001'
-// No source cap — the grader gets the full transcript / book so it can
-// actually evaluate the user's answers against the real ground truth.
-const CONTEXT_1M_BETA = 'context-1m-2025-08-07'
+const MODEL = 'claude-haiku-4-5'
+// Haiku 4.5 has a 200K-token context window — comfortably fits articles,
+// transcripts, and most books, so the grader can evaluate against the real
+// ground truth. (No 1M beta header: it's a no-op on a 200K model.) The rare
+// oversized source surfaces via the catch below, which credits the user.
 const MAX_TRANSCRIPT_MESSAGES = 24
+
+// Structured-output schema: the API constrains the response to valid JSON of
+// this exact shape, so no hand-rolled extraction is needed. `accepted` is an
+// enum (numeric constraints like minimum/maximum aren't supported by the
+// structured-output schema subset, so the 0–4 bound is expressed as an enum).
+const GRADE_SCHEMA = {
+  type: 'object',
+  properties: {
+    accepted: {
+      type: 'integer',
+      enum: [0, 1, 2, 3, 4],
+      description: 'How many of the 4 substantive answers (questions 2–5) were acceptable.',
+    },
+    notes: {
+      type: 'string',
+      description: "One short sentence on the user's overall performance.",
+    },
+  },
+  required: ['accepted', 'notes'],
+  additionalProperties: false,
+}
 
 let _client: Anthropic | null = null
 function anthropic(): Anthropic {
@@ -43,10 +65,7 @@ For each of the 4 substantive questions, decide if the user's answer is at least
 
 Pass threshold: at least 3 of 4 substantive answers acceptable.
 
-Reply with ONLY valid JSON in this shape:
-{"accepted": 0, "notes": "one short sentence on the user's overall performance"}
-
-No prose, no backticks, no preamble. Just the JSON.`
+Return how many of the 4 substantive answers were acceptable, plus one short sentence on the user's overall performance.`
 
   const user = `Topic: ${subject}
 
@@ -59,19 +78,18 @@ ${transcript}
 Count how many of the 4 substantive answers (questions 2–5) were acceptable.`
 
   try {
-    const res = await anthropic().messages.create(
-      {
-        model: MODEL,
-        max_tokens: 200,
-        system,
-        messages: [{ role: 'user', content: user }],
-      },
-      // 1M-token context so the grader can see full transcripts / books.
-      { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
-    )
+    const res = await anthropic().messages.create({
+      model: MODEL,
+      max_tokens: 200,
+      system,
+      output_config: { format: { type: 'json_schema', schema: GRADE_SCHEMA } },
+      messages: [{ role: 'user', content: user }],
+    })
     const block = res.content.find(b => b.type === 'text')
     const raw = block?.type === 'text' ? block.text.trim() : ''
-    const parsed = extractJson(raw)
+    // Output is schema-constrained, so a plain parse is safe; a refusal or
+    // truncation throws and is caught below (generous fallback).
+    const parsed = raw ? (JSON.parse(raw) as { accepted?: unknown; notes?: unknown }) : null
     const accepted = clampInt(parsed?.accepted, 0, 4)
     const notes = typeof parsed?.notes === 'string' ? parsed.notes.slice(0, 240) : undefined
     return {
@@ -91,21 +109,6 @@ function recentTranscript(thread: F2Thread): string {
   return msgs
     .map(m => `${m.role === 'user' ? 'USER' : 'F2'}: ${m.text.trim()}`)
     .join('\n\n')
-}
-
-function extractJson(raw: string): { accepted?: unknown; notes?: unknown } | null {
-  if (!raw) return null
-  // Trim accidental code fences.
-  const stripped = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim()
-  // Find the outermost JSON object — defensive against any preamble.
-  const start = stripped.indexOf('{')
-  const end = stripped.lastIndexOf('}')
-  if (start === -1 || end === -1 || end < start) return null
-  try {
-    return JSON.parse(stripped.slice(start, end + 1))
-  } catch {
-    return null
-  }
 }
 
 function clampInt(v: unknown, lo: number, hi: number): number {

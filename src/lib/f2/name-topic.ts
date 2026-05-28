@@ -8,7 +8,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 
-const MODEL = 'claude-haiku-4-5-20251001'
+const MODEL = 'claude-haiku-4-5'
 const SAMPLE_CHARS = 4000
 
 let _client: Anthropic | null = null
@@ -49,7 +49,8 @@ export async function nameTopic(input: NameTopicInput): Promise<string | null> {
     const res = await anthropic().messages.create({
       model: MODEL,
       max_tokens: 40,
-      messages: [{ role: 'user', content: `${INSTRUCTION}\n\n${prompt}` }],
+      system: INSTRUCTION,
+      messages: [{ role: 'user', content: prompt }],
     })
     const block = res.content[0]
     const raw = block?.type === 'text' ? block.text : ''
