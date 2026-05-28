@@ -155,7 +155,7 @@ func feyndLevelTitle(_ level: Int) -> String {
 /// User-wide learning progress. Mirror of `/api/f2/progress`.
 struct F2Progress: Codable, Equatable {
     var level: Int
-    var starredTopicCount: Int
+    var topicCount: Int
     var totalStars: Int
     var masteredTopicCount: Int
     var currentLevelAt: Int
@@ -174,7 +174,7 @@ struct F2Progress: Codable, Equatable {
 
     static let zero = F2Progress(
         level: 0,
-        starredTopicCount: 0,
+        topicCount: 0,
         totalStars: 0,
         masteredTopicCount: 0,
         currentLevelAt: 0,
@@ -184,7 +184,7 @@ struct F2Progress: Codable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case level
-        case starredTopicCount = "starred_topic_count"
+        case topicCount = "topic_count"
         case totalStars = "total_stars"
         case masteredTopicCount = "mastered_topic_count"
         case currentLevelAt = "current_level_at"

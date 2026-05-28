@@ -33,7 +33,7 @@ export function levelTitle(level: number): string {
 
 export type F2Progress = {
   level: number
-  starred_topic_count: number
+  topic_count: number // total topics for the user (matches the Topics list)
   total_stars: number
   mastered_topic_count: number // topics with 3 stars
   current_level_at: number // total stars needed for current level
@@ -42,17 +42,20 @@ export type F2Progress = {
 }
 
 export async function getUserProgress(userId: string): Promise<F2Progress> {
+  // Count every topic the user has — same predicate as listTopicsForUser so
+  // the Profile "topics" stat matches the Topics list exactly. Rows with 0
+  // stars contribute 0 to the star totals, so no separate query is needed.
   const { data, error } = await f2Supabase()
     .from('f2_threads')
     .select('stars')
     .eq('user_id', userId)
-    .gt('stars', 0)
+    .or('topic.not.is.null,url.not.is.null')
 
   if (error) {
     console.error('[f2] getUserProgress failed:', error)
     return {
       level: 0,
-      starred_topic_count: 0,
+      topic_count: 0,
       total_stars: 0,
       mastered_topic_count: 0,
       current_level_at: 0,
@@ -62,7 +65,7 @@ export async function getUserProgress(userId: string): Promise<F2Progress> {
   }
 
   const rows = (data ?? []) as { stars: number }[]
-  const starred_topic_count = rows.length
+  const topic_count = rows.length
   const total_stars = rows.reduce((sum, r) => sum + (r.stars ?? 0), 0)
   const mastered_topic_count = rows.filter((r) => r.stars >= 3).length
   const level = levelForStars(total_stars)
@@ -71,7 +74,7 @@ export async function getUserProgress(userId: string): Promise<F2Progress> {
 
   return {
     level,
-    starred_topic_count,
+    topic_count,
     total_stars,
     mastered_topic_count,
     current_level_at,

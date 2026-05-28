@@ -309,7 +309,7 @@ struct ProfileSheet: View {
                     Circle().fill(FeyndTheme.coral).frame(width: 5, height: 5)
                 }
             }
-            StatChip(value: "\(p.starredTopicCount)", label: "topics") {
+            StatChip(value: "\(p.topicCount)", label: "topics") {
                 VStack(spacing: 1.5) {
                     Rectangle().fill(FeyndTheme.text2).frame(width: 11, height: 1.6).cornerRadius(0.6)
                     Rectangle().fill(FeyndTheme.text2).frame(width: 11, height: 1.6).cornerRadius(0.6)

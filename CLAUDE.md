@@ -1,5 +1,16 @@
 # Hilma
 
+## Do the work yourself — no lazy shortcuts
+
+When a step is doable with the tools available, do it — don't punt it to Bart and don't offer to do it instead of just doing it.
+
+- **Verification is my job, not Bart's.** "Verify behavior" means I drive it. I have a browser (Playwright + Chrome MCP), a shell, DB access, and the iOS simulator. If checking the fix means loading a page, logging in, querying the database, or launching the app, I do that myself and report what I observed. Asking Bart to "load the page and tell me what you see" or "let me know if it works" is the lazy punt to avoid.
+- **Don't stop at "it compiles."** A passing `pnpm build` / `xcodebuild` is necessary, not sufficient. Exercise the actual feature before saying it's done (see the F2 "spec first, then verify behavior" gates below).
+- **Don't offer when you can act.** Replace "want me to verify?" / "you could check X" with the verified result. The only things worth asking before doing are genuinely gated actions (push to prod, destructive ops, sending messages, mutating Bart's real data) — those still need an explicit go-ahead.
+- **If a step is truly blocked, say so plainly** — name the blocker (no credentials, endpoint down, tool not connected) instead of quietly handing the work back.
+
+State all of this plainly; this is a standing expectation, not a one-off.
+
 ## What is this
 
 Hilma is a clean Next.js project — the new home for new things. Replaces the bloated vibeceo8/web codebase. Cherry-pick from vibeceo8 as needed, don't migrate.
@@ -38,6 +49,19 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |
 | **F2 (web)** | `src/app/f2/` | Vercel (feynd.cc) | Learning app — chat + topics + paste, user-scoped |
 | **F2 (iOS)** | `apps/feynd/` | Xcode (manual TestFlight) | Native iPhone client for F2, talks to the same `/api/f2/*` backend |
+
+### Building an F2 feature — spec first, then verify behavior
+
+F2 features have repeatedly shipped across a string of patch commits because the design was wrong from the start, or because "the build passed" was mistaken for "the feature works." `pnpm build` and `xcodebuild` only prove the code compiles — they say nothing about whether the feature behaves correctly. Two gates close that gap. Both apply to any change that touches a user-facing flow (chat routing, quizzes, stars, topics, auth, voice).
+
+**Gate 1 — spec the behavior before writing code.** Write a short bullet list (4-8 lines) describing exactly what the user will experience step by step, and confirm it with Bart before editing. This is cheap and catches the most expensive class of bug: building the wrong thing correctly. The reflection-quiz rebuild (one question, one reply, one star) only got un-stuck once the behavior was written down first.
+
+**Gate 2 — drive the real flow before declaring done.** Compilation is necessary, not sufficient. Exercise the actual feature end to end:
+- **Web:** run it through the browser against local or feynd.cc (Playwright MCP is fine) — log in, perform the flow, confirm the observable result and that nothing regressed.
+- **iOS:** the simulator launch + screenshot loop already documented below (boot, install, launch, `simctl io screenshot`), driving the actual screen the change affects.
+- **Backend state machines** (quiz/star transitions in `src/lib/f2/`) are largely pure code — the LLM only generates text, the state changes are deterministic. Prefer a focused test (mock Supabase + Anthropic) asserting the transitions over a manual click-through; it catches regressions every run.
+
+If you genuinely can't drive the flow (no test account, endpoint down), say so plainly rather than reporting success.
 
 ### Feynd iOS — where the code lives
 

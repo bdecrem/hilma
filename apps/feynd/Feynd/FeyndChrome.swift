@@ -93,7 +93,7 @@ struct ProfileBadge: View {
                 .offset(y: 7)
         }
         .frame(width: ring, height: ring + 14)
-        .accessibilityLabel("Level \(p.level), \(p.starredTopicCount) starred topics")
+        .accessibilityLabel("Level \(p.level), \(p.topicCount) topics")
     }
 
     /// Round avatar — uploaded photo when one is set on the session user,

@@ -5,7 +5,7 @@ import { useFeyndTheme, type FeyndThemeMode } from './FeyndThemeProvider'
 
 type Progress = {
   level: number
-  starred_topic_count: number
+  topic_count: number
   total_stars: number
   mastered_topic_count: number
   current_level_at: number
@@ -342,7 +342,7 @@ export default function WebProfileSheet({
                   <circle cx="6" cy="6" r="2" fill="var(--feynd-coral)" />
                 </svg>
               }/>
-              <StatChip value={`${p?.starred_topic_count ?? 0}`} label="topics" icon={
+              <StatChip value={`${p?.topic_count ?? 0}`} label="topics" icon={
                 <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden>
                   <rect x="1.5" y="2.5" width="9" height="1.6" rx="0.6" fill="var(--feynd-text-2)" />
                   <rect x="1.5" y="5.2" width="9" height="1.6" rx="0.6" fill="var(--feynd-text-2)" />

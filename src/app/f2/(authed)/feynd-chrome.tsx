@@ -53,7 +53,7 @@ export function StarRow({
 
 type Progress = {
   level: number
-  starred_topic_count: number
+  topic_count: number
   total_stars: number
   mastered_topic_count: number
   current_level_at: number
@@ -76,12 +76,14 @@ export function ProfileBadge({
   onClick?: () => void
 }) {
   const level = progress?.level ?? 0
+  // Level thresholds are in TOTAL stars, so the ring numerator must be
+  // total_stars — not topic count.
   const fraction = progress
     ? Math.max(
         0,
         Math.min(
           1,
-          (progress.starred_topic_count - progress.current_level_at) /
+          (progress.total_stars - progress.current_level_at) /
             Math.max(1, progress.next_level_at - progress.current_level_at),
         ),
       )
@@ -99,7 +101,7 @@ export function ProfileBadge({
       onClick={onClick}
       className="relative inline-flex items-center justify-center cursor-pointer"
       style={{ width: ring, height: ring + 14 }}
-      aria-label={`Level ${level}, ${progress?.starred_topic_count ?? 0} starred topics`}
+      aria-label={`Level ${level}, ${progress?.topic_count ?? 0} topics`}
     >
       <svg
         width={ring}
