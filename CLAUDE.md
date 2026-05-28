@@ -11,6 +11,12 @@ When a step is doable with the tools available, do it — don't punt it to Bart 
 
 State all of this plainly; this is a standing expectation, not a one-off.
 
+## Flag when Extra High effort may help
+
+At the start of a non-trivial feature or debugging request — and again after I've scoped it and read the relevant code — flag to Bart (one line, with the reason) when it may be worth switching the effort level to Extra High via `/effort`. I can't flip the switch myself; I only flag and Bart decides.
+
+Worth flagging: interacting state / ordering (state machines like the F2 quiz/star/topic flows), changes that span many files or web + iOS + backend at once, design decisions with real tradeoffs (schema/auth/routing shape), non-obvious debugging, and correctness-critical or algorithmic logic. Not worth it (High or lower is fine): mechanical edits, renames, dep bumps, following an established pattern, clear single-file changes, lookups. The post-scoping checkpoint matters most — difficulty often only surfaces once I've read the code.
+
 ## What is this
 
 Hilma is a clean Next.js project — the new home for new things. Replaces the bloated vibeceo8/web codebase. Cherry-pick from vibeceo8 as needed, don't migrate.
