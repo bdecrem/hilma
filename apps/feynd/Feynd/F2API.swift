@@ -243,42 +243,49 @@ final class F2API {
         )
     }
 
+    /// One display row in the View Context modal. Media URLs with a transcript
+    /// (YouTube + audio hosts) are split server-side into two items — one with
+    /// part="url", one with part="transcript" — sharing the same kind/index.
+    /// Everything else returns as a single part="source" item.
     struct TopicSource: Codable, Identifiable, Equatable {
+        let id: String
         let kind: String          // "primary" | "additional"
         let index: Int
+        let part: String          // "source" | "url" | "transcript"
+        let topicKind: String     // "web" | "video" | "audio" | "paste" | "fallback"
         let url: String?
         let title: String?
         let contentLength: Int
         let addedAt: String?
 
-        var id: String { "\(kind)-\(index)" }
-
         enum CodingKeys: String, CodingKey {
-            case kind, index, url, title
+            case id, kind, index, part, url, title
+            case topicKind = "topic_kind"
             case contentLength = "content_length"
             case addedAt = "added_at"
         }
     }
-    struct ListSourcesResponse: Codable { let sources: [TopicSource] }
+    struct ListSourcesResponse: Codable { let items: [TopicSource] }
 
     /// List every source attached to a topic — primary (the original URL +
     /// content on the thread row, if any) plus every additional source the
     /// user has appended. Used by the "View Topic Context" modal.
     func listTopicSources(id: String) async throws -> [TopicSource] {
         let res: ListSourcesResponse = try await get("/api/f2/topics/\(id)/sources")
-        return res.sources
+        return res.items
     }
 
-    struct DeleteSourceRequest: Codable { let kind: String; let index: Int? }
+    struct DeleteSourceRequest: Codable { let kind: String; let index: Int?; let part: String }
 
-    /// Remove a source from a topic. Pass kind="primary" to clear the thread's
-    /// original url/content, or kind="additional" with the index of the entry
-    /// to remove from the additional_sources array.
-    func deleteTopicSource(id: String, kind: String, index: Int?) async throws {
+    /// Remove a source (or one half of a split media source) from a topic.
+    /// kind: "primary" | "additional". index: required for additional.
+    /// part: "source" drops the whole entry; "url" clears just the URL;
+    /// "transcript" clears just the content body.
+    func deleteTopicSource(id: String, kind: String, index: Int?, part: String) async throws {
         let _: EmptyResponse = try await request(
             "/api/f2/topics/\(id)/sources",
             method: "DELETE",
-            body: DeleteSourceRequest(kind: kind, index: index),
+            body: DeleteSourceRequest(kind: kind, index: index, part: part),
         )
     }
 

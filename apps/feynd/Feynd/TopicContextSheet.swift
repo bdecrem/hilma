@@ -118,13 +118,15 @@ struct TopicContextSheet: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
-                    Text(src.kind == "primary" ? "PRIMARY" : "ADDITIONAL")
+                    Text(rowTag(src))
                         .font(.system(size: 10, weight: .bold))
                         .tracking(0.5)
                         .foregroundStyle(src.kind == "primary" ? FeyndTheme.coral : FeyndTheme.text3)
-                    Text(sizeLabel(src.contentLength))
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(FeyndTheme.text3)
+                    if src.part != "url" {
+                        Text(sizeLabel(src.contentLength))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(FeyndTheme.text3)
+                    }
                 }
                 if let title = src.title, !title.isEmpty, title != "- YouTube" {
                     Text(title)
@@ -132,7 +134,11 @@ struct TopicContextSheet: View {
                         .foregroundStyle(FeyndTheme.text)
                         .lineLimit(2)
                 }
-                if let url = src.url, !url.isEmpty {
+                if src.part == "transcript" {
+                    Text("Transcript of the linked \(src.topicKind == "audio" ? "audio" : "video")")
+                        .font(.system(size: 11))
+                        .foregroundStyle(FeyndTheme.text2)
+                } else if let url = src.url, !url.isEmpty {
                     Text(url)
                         .font(.system(size: 11))
                         .foregroundStyle(FeyndTheme.text2)
@@ -169,6 +175,18 @@ struct TopicContextSheet: View {
         .padding(.vertical, 14)
     }
 
+    /// The little uppercase tag on the left of each row.
+    ///   PRIMARY URL / PRIMARY TRANSCRIPT / PRIMARY
+    ///   ADDITIONAL URL / ADDITIONAL TRANSCRIPT / ADDITIONAL
+    private func rowTag(_ src: F2API.TopicSource) -> String {
+        let base = src.kind == "primary" ? "PRIMARY" : "ADDITIONAL"
+        switch src.part {
+        case "url": return "\(base) URL"
+        case "transcript": return "\(base) TRANSCRIPT"
+        default: return base
+        }
+    }
+
     // MARK: - Data
 
     private func load() async {
@@ -190,6 +208,7 @@ struct TopicContextSheet: View {
                 id: topic.id,
                 kind: src.kind,
                 index: src.kind == "additional" ? src.index : nil,
+                part: src.part,
             )
             // Optimistic local update so the row vanishes immediately.
             sources.removeAll { $0.id == src.id }
