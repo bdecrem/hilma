@@ -107,10 +107,12 @@ final class F2API {
 
     struct MessageResponse: Codable {
         let reply: String
+        let threadId: String?
         let threadState: MessageThreadState?
 
         enum CodingKeys: String, CodingKey {
             case reply
+            case threadId = "thread_id"
             case threadState = "thread_state"
         }
     }

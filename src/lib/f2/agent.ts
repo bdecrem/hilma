@@ -36,6 +36,11 @@ export type F2Message = {
 
 export type F2Reply = {
   reply: string
+  /** The thread this message landed on, when one exists. Populated for URL
+   *  ingestion, continue-on-existing-topic, new_topic, and reflection turns.
+   *  Lets clients like ChatView target follow-up calls (e.g. quiz/complete)
+   *  at the right thread without a separate /latest round-trip. */
+  thread_id?: string
   /** Thread state snapshot — included when the message changed the thread's
    *  quiz/star state (e.g. a chat-triggered reflection quiz started). Clients
    *  apply these to their local thread so the UI updates without a refetch. */
@@ -91,7 +96,7 @@ async function handleNewUrl(
   const reply = content
     ? `F2 got it. Stored ${url} (${content.length.toLocaleString()} chars). Ask me anything about it.`
     : `F2 stored ${url}, but couldn't pull readable text from it. You can still ask — I'll answer from general knowledge.`
-  return { reply }
+  return { reply, thread_id: thread.id }
 }
 
 /// Matches "reflection quiz", "reflection-quiz", "give me a reflection quiz",
@@ -135,6 +140,7 @@ async function reflectionQuizTurn(
 
   return {
     reply,
+    thread_id: thread.id,
     thread_state: {
       pending_quiz_kind: 'reflection',
       stars: state.stars,
@@ -196,7 +202,7 @@ async function handleNonUrl(
         { role: 'user', text: userText, created_at: now },
         { role: 'assistant', text: action.reply, created_at: now },
       ])
-      return { reply: action.reply }
+      return { reply: action.reply, thread_id: thread.id }
     }
     case 'new_topic': {
       // Same naming pipeline as the URL/paste paths. The routing LLM's pick
@@ -218,7 +224,7 @@ async function handleNonUrl(
           { role: 'assistant', text: action.reply, created_at: now },
         ])
       }
-      return { reply: action.reply }
+      return { reply: action.reply, thread_id: fresh?.id }
     }
     case 'chitchat':
       return { reply: action.reply }
