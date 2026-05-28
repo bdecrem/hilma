@@ -66,7 +66,7 @@ struct TopicDetailView: View {
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
-                    StarRow(value: thread?.stars ?? 0, size: 10, gap: 2, locked: thread?.hardQuizCompletedAt != nil || thread?.pendingQuizKind == "reflection")
+                    StarRow(value: thread?.stars ?? 0, size: 10, gap: 2, locked: thread?.hardQuizCompletedAt != nil)
                     if let host = thread?.sourceHost {
                         Text("·").foregroundStyle(FeyndTheme.text3)
                         Text(host)
@@ -96,10 +96,13 @@ struct TopicDetailView: View {
         (thread?.stars ?? 0) >= 2 && (thread?.hardQuizCompletedAt == nil)
     }
 
-    /// A quiz the user already started but hasn't completed. Drives whether
-    /// the chip row shows the start buttons or the Done button.
+    /// A standard or hard quiz the user already started but hasn't completed.
+    /// Drives whether the chip row shows the start buttons or the Done button.
+    /// Reflection quizzes deliberately don't trigger this — they complete on
+    /// the user's next chat reply, no Done button needed.
     private var quizInProgress: Bool {
-        thread?.pendingQuizKind != nil
+        let kind = thread?.pendingQuizKind
+        return kind == "standard" || kind == "hard"
     }
 
     /// Quiz 2 grading can take a couple of seconds; show that state on the
@@ -182,15 +185,21 @@ struct TopicDetailView: View {
                 if !res.reply.isEmpty {
                     messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }
-                // When a reflection quiz starts via chat, the server includes a
-                // thread_state snapshot. Mirror it locally so the Done button
-                // appears and stars/locked state stay in sync.
+                // Reflection-quiz turns return a thread_state snapshot — both
+                // when the quiz starts (pending_quiz_kind=reflection) and when
+                // it completes on the user's reply (pending cleared, stars+1,
+                // hard_quiz_completed_at set). Mirror it locally so the header
+                // stars + locked state update without a refetch.
                 if let st = res.threadState, var t = thread {
                     t.pendingQuizKind = st.pendingQuizKind
                     t.stars = st.stars
                     t.quizCount = st.quizCount
                     t.hardQuizCompletedAt = st.hardQuizCompletedAt
                     thread = t
+                    // On completion, the user's level may have ticked up.
+                    if st.pendingQuizKind == nil {
+                        await session.refreshProgress()
+                    }
                 }
             } catch {
                 messages.append(F2Message(role: "assistant",

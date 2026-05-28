@@ -11,13 +11,6 @@ struct ChatView: View {
     @State private var showSettings = false
     @State private var voicePresented = false
 
-    // Latest-thread state mirrored from the server's MessageResponse. Lets
-    // ChatView show a Done button (and complete the quiz) for chat-triggered
-    // reflection quizzes — same UX as TopicDetailView's chip row.
-    @State private var currentThreadId: String? = nil
-    @State private var pendingQuizKind: String? = nil
-    @State private var grading = false
-
     var body: some View {
         ZStack {
             FeyndTheme.bg.ignoresSafeArea()
@@ -42,24 +35,11 @@ struct ChatView: View {
                 ChatScrollView(messages: messages, busy: busy)
 
                 HStack(spacing: 8) {
-                    if pendingQuizKind != nil {
-                        // Mid-quiz: show Done quiz instead of the start chips.
-                        // Matches TopicDetailView's chip behavior.
-                        ActionChip(
-                            label: grading ? "Grading…" : "Done quiz",
-                            systemImage: grading ? "hourglass" : "checkmark.circle.fill"
-                        ) {
-                            completeQuiz()
-                        }
-                        .opacity((busy || grading) ? 0.5 : 1)
-                        .allowsHitTesting(!busy && !grading)
-                    } else {
-                        ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
-                            sendNudge("Quiz me.")
-                        }
-                        ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
-                            voicePresented = true
-                        }
+                    ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
+                        sendNudge("Quiz me.")
+                    }
+                    ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
+                        voicePresented = true
                     }
                     Spacer()
                 }
@@ -87,10 +67,6 @@ struct ChatView: View {
         do {
             let thread = try await F2API.shared.latestThread()
             messages = thread?.messages ?? []
-            // Seed quiz state from the latest thread so a refresh / app reopen
-            // picks up an in-flight reflection quiz too.
-            currentThreadId = thread?.id
-            pendingQuizKind = thread?.pendingQuizKind
         } catch { /* keep empty */ }
     }
 
@@ -106,7 +82,11 @@ struct ChatView: View {
                 if !res.reply.isEmpty {
                     messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }
-                applyResponseState(res)
+                // A reflection-quiz completion bumps the user's star count;
+                // refresh progress so the header L<n> badge stays in sync.
+                if let st = res.threadState, st.pendingQuizKind == nil {
+                    await session.refreshProgress()
+                }
             } catch {
                 messages.append(F2Message(role: "assistant",
                                           text: "(error: \(error.localizedDescription))",
@@ -126,61 +106,8 @@ struct ChatView: View {
                 if !res.reply.isEmpty {
                     messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }
-                applyResponseState(res)
             } catch { /* swallow */ }
             busy = false
-        }
-    }
-
-    /// Mirror server-returned thread id + quiz state into local @State so the
-    /// chip row + completeQuiz target the right thread.
-    private func applyResponseState(_ res: F2API.MessageResponse) {
-        if let id = res.threadId { currentThreadId = id }
-        if let st = res.threadState {
-            pendingQuizKind = st.pendingQuizKind
-        }
-    }
-
-    private func completeQuiz() {
-        guard let id = currentThreadId, !grading else { return }
-        grading = true
-        Task {
-            do {
-                let res = try await F2API.shared.completeQuiz(id: id)
-                pendingQuizKind = res.completedKind == nil ? pendingQuizKind : nil
-                let resultText = describeQuizResult(res)
-                if !resultText.isEmpty {
-                    messages.append(F2Message(role: "assistant", text: resultText, createdAt: Date()))
-                }
-                await session.refreshProgress()
-            } catch {
-                messages.append(F2Message(role: "assistant",
-                                          text: "(error: \(error.localizedDescription))",
-                                          createdAt: Date()))
-            }
-            grading = false
-        }
-    }
-
-    /// Inline confirmation line after Done so the user gets visible feedback
-    /// (star earned / quiz failed / etc.).
-    private func describeQuizResult(_ res: F2API.QuizCompleteResponse) -> String {
-        let stars = res.stars ?? 0
-        let starWord = stars == 1 ? "star" : "stars"
-        if res.passed == false {
-            let acc = res.accepted ?? 0
-            let total = res.total ?? 0
-            return "Quiz: \(acc)/\(total) acceptable. No star this time — give it another go when you're ready."
-        }
-        switch res.completedKind {
-        case "reflection":
-            return "Reflection complete. ⭐ Star earned — you now have \(stars) \(starWord) on this topic, and it's marked done."
-        case "hard":
-            return "Hard quiz complete. ⭐⭐⭐ Three stars earned."
-        case "standard":
-            return "Quiz complete. You now have \(stars) \(starWord) on this topic."
-        default:
-            return ""
         }
     }
 }

@@ -110,11 +110,12 @@ For every message, pick exactly one tool:
 ${baseRules}`
 }
 
-/// Reflection-quiz mode. Bypasses the routing LLM — we already know what
-/// we want: 3 thoughtful, open-ended questions, one at a time. Returns the
-/// assistant's opening reply (the first reflection question). The caller is
-/// responsible for persisting messages + marking pending_quiz_kind.
-export async function replyAsReflectionQuiz(
+/// Reflection quiz, step 1: ask a single thoughtful question.
+///
+/// One-shot by design. The reflection quiz is for one-off articles / stories
+/// where the goal is a moment of personal takeaway, not factual recall —
+/// one question is enough to "do the work."
+export async function askReflectionQuestion(
   thread: F2Thread,
   userText: string,
 ): Promise<string> {
@@ -124,23 +125,9 @@ export async function replyAsReflectionQuiz(
     ? `\n\nSource content (the material the user is reflecting on):\n${fullContent}`
     : ''
 
-  const system = `You are F2 — a learning companion. The user has just asked for a Reflection Quiz on: ${subject}.
+  const system = `You are F2 — a learning companion. The user just asked for a Reflection Quiz on: ${subject}.
 
-This is a REFLECTION quiz — for stories or material where the value is personal takeaway rather than factual recall. Ask exactly 3 thoughtful questions, ONE AT A TIME, waiting for the user's answer between each.
-
-Each question should:
-- Invite reflection, not test recall.
-- Ask what the user takes away, how it lands for them, what it shifts.
-- Be open-ended; don't lead.
-
-Style:
-- Plain text, no markdown.
-- React briefly to each answer ("Mm." / "Got it." / one short sentence is fine) and move on. Do NOT grade or summarize.
-- Do not number the questions out loud.
-
-After the user's 3rd answer, say something brief like "That's the reflection quiz — tap Done when you're ready."
-
-Now ask the first question.${sourceBlock}`
+Ask exactly ONE thoughtful, open-ended question inviting personal reflection on this material — what they take away, how it lands for them, what it shifts. Don't test recall. Don't lead. No preamble ("Great question", "Let's reflect"). No markdown. Plain text, one question, that's it.${sourceBlock}`
 
   const history = thread.messages.map((m) => ({
     role: m.role,
@@ -150,7 +137,42 @@ Now ask the first question.${sourceBlock}`
   const response = await anthropic().messages.create(
     {
       model: MODEL,
-      max_tokens: 1000,
+      max_tokens: 400,
+      system: [
+        { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
+      ],
+      messages: [...history, { role: 'user', content: userText }],
+    },
+    { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
+  )
+
+  const block = response.content.find((b) => b.type === 'text')
+  return block?.type === 'text' ? block.text.trim() : ''
+}
+
+/// Reflection quiz, step 2: brief acknowledgement of the user's answer.
+///
+/// One short sentence, no grading, no summary, no follow-up question. The
+/// agent layer appends the star-earned line and updates the thread state.
+export async function acknowledgeReflectionAnswer(
+  thread: F2Thread,
+  userText: string,
+): Promise<string> {
+  const subject = thread.topic ?? thread.url ?? '(this topic)'
+
+  const system = `You are F2 — a learning companion. The user just answered the single reflection question you asked them about: ${subject}.
+
+React in ONE short sentence — something warm and human ("Mm, that lands." / "Yeah, I get that." / a brief sincere reaction to what they said). Do NOT grade. Do NOT summarize. Do NOT ask another question. Plain text. One sentence.`
+
+  const history = thread.messages.map((m) => ({
+    role: m.role,
+    content: m.text,
+  }))
+
+  const response = await anthropic().messages.create(
+    {
+      model: MODEL,
+      max_tokens: 120,
       system: [
         { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
       ],

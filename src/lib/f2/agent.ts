@@ -19,9 +19,14 @@ import {
   getThreadById,
   appendMessages,
   recordQuizStarted,
+  completeQuiz,
   type F2Thread,
 } from './threads'
-import { routeAndReply, replyAsReflectionQuiz } from './chat'
+import {
+  routeAndReply,
+  askReflectionQuestion,
+  acknowledgeReflectionAnswer,
+} from './chat'
 import { nameTopic } from './name-topic'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
@@ -105,21 +110,22 @@ function isReflectionQuizRequest(text: string): boolean {
   return /\breflection[ -]?quiz\b/i.test(text)
 }
 
-async function reflectionQuizTurn(
+/// Step 1: user typed "reflection quiz". Ask one open-ended question, mark
+/// the thread as pending reflection. No star awarded yet.
+async function startReflectionTurn(
   thread: F2Thread,
   userText: string,
-  isFirstTurn: boolean,
 ): Promise<F2Reply> {
   let reply: string
   try {
-    reply = await replyAsReflectionQuiz(thread, userText)
+    reply = await askReflectionQuestion(thread, userText)
   } catch (err) {
-    console.error('[f2] reflection quiz failed:', err)
-    return { reply: 'F2: hit an error continuing the reflection quiz. Try again in a moment.' }
+    console.error('[f2] reflection quiz failed to start:', err)
+    return { reply: 'F2: hit an error starting the reflection quiz. Try again in a moment.' }
   }
 
   if (!reply) {
-    return { reply: "F2: couldn't continue the reflection quiz. Try again in a moment." }
+    return { reply: "F2: couldn't start the reflection quiz. Try again in a moment." }
   }
 
   const now = new Date().toISOString()
@@ -127,22 +133,52 @@ async function reflectionQuizTurn(
     { role: 'user', text: userText, created_at: now },
     { role: 'assistant', text: reply, created_at: now },
   ])
-
-  // First turn marks the quiz as in flight; subsequent turns just reuse the
-  // already-recorded state so we don't bump quiz_count for every answer.
-  const state = isFirstTurn
-    ? await recordQuizStarted(thread, 'reflection')
-    : {
-        stars: thread.stars,
-        quiz_count: thread.quiz_count,
-        hard_quiz_completed_at: thread.hard_quiz_completed_at,
-      }
+  const state = await recordQuizStarted(thread, 'reflection')
 
   return {
     reply,
     thread_id: thread.id,
     thread_state: {
       pending_quiz_kind: 'reflection',
+      stars: state.stars,
+      quiz_count: state.quiz_count,
+      hard_quiz_completed_at: state.hard_quiz_completed_at,
+    },
+  }
+}
+
+/// Step 2: user replied to the reflection question. Award the star, mark the
+/// topic done, clear pending — all in this single round-trip. F2's reply is
+/// a brief acknowledgement with a star-earned line appended.
+async function completeReflectionTurn(
+  thread: F2Thread,
+  userText: string,
+): Promise<F2Reply> {
+  let ack: string
+  try {
+    ack = await acknowledgeReflectionAnswer(thread, userText)
+  } catch (err) {
+    console.error('[f2] reflection acknowledgement failed:', err)
+    ack = 'Got it.'
+  }
+  if (!ack) ack = 'Got it.'
+
+  const now = new Date().toISOString()
+  // Save the user's answer (and our ack with the star line) BEFORE awarding so
+  // the thread state we read for completeQuiz still has pending_quiz_kind set.
+  const starLine = '⭐ Reflection star earned — this topic is marked done.'
+  const reply = `${ack}\n\n${starLine}`
+  await appendMessages(thread.id, thread.user_id, thread.messages, [
+    { role: 'user', text: userText, created_at: now },
+    { role: 'assistant', text: reply, created_at: now },
+  ])
+  const state = await completeQuiz(thread)
+
+  return {
+    reply,
+    thread_id: thread.id,
+    thread_state: {
+      pending_quiz_kind: null,
       stars: state.stars,
       quiz_count: state.quiz_count,
       hard_quiz_completed_at: state.hard_quiz_completed_at,
@@ -164,22 +200,16 @@ async function handleNonUrl(
     thread = await getLatestThread(userId)
   }
 
-  // Reflection quiz — handled at the chat level so it survives across turns:
-  //   - If pending_quiz_kind is already 'reflection', stay in reflection mode
-  //     so the LLM keeps the 3-question protocol instead of being hijacked by
-  //     the standard router.
-  //   - Otherwise, if the user just asked for one (and we're not already in
-  //     a different quiz), start the reflection quiz fresh.
-  if (thread && thread.pending_quiz_kind === 'reflection') {
-    return reflectionQuizTurn(thread, userText, /* isFirstTurn */ false)
+  // Reflection quiz — one question, one reply, one star, done.
+  //   - Typing "reflection quiz" ALWAYS wins, overriding any pending
+  //     standard/hard quiz. Works at 0/1/2/3 stars, locked or not.
+  //   - If reflection is already pending (we just asked the question), this
+  //     reply finishes the quiz: award the star, mark done, clear pending.
+  if (thread && isReflectionQuizRequest(userText)) {
+    return startReflectionTurn(thread, userText)
   }
-  if (
-    thread &&
-    isReflectionQuizRequest(userText) &&
-    !thread.pending_quiz_kind &&
-    !thread.hard_quiz_completed_at
-  ) {
-    return reflectionQuizTurn(thread, userText, /* isFirstTurn */ true)
+  if (thread && thread.pending_quiz_kind === 'reflection') {
+    return completeReflectionTurn(thread, userText)
   }
 
   let action

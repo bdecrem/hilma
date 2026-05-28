@@ -35,6 +35,10 @@ export default function ChatView({
   const [pendingQuizKind, setPendingQuizKind] = useState<string | null>(
     initialPendingQuizKind ?? null,
   )
+  // Done-button quizzes are standard/hard only. Reflection completes on the
+  // user's next chat reply (no button needed).
+  const buttonQuizInProgress =
+    pendingQuizKind === 'standard' || pendingQuizKind === 'hard'
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -67,12 +71,29 @@ export default function ChatView({
       ])
       return
     }
-    const { reply } = (await res.json()) as { reply: string }
-    if (reply) {
+    const json = (await res.json()) as {
+      reply: string
+      thread_state?: {
+        pending_quiz_kind: string | null
+        stars: number
+      }
+    }
+    if (json.reply) {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', text: reply, created_at: new Date().toISOString() },
+        { role: 'assistant', text: json.reply, created_at: new Date().toISOString() },
       ])
+    }
+    // Reflection-quiz turns echo thread_state. Mirror it so the header stars +
+    // pending hint stay in sync; refresh user-level progress on completion.
+    if (json.thread_state) {
+      setPendingQuizKind(json.thread_state.pending_quiz_kind)
+      if (typeof json.thread_state.stars === 'number') {
+        setStars(json.thread_state.stars)
+      }
+      if (json.thread_state.pending_quiz_kind === null) {
+        window.dispatchEvent(new Event('feynd-progress-refresh'))
+      }
     }
   }
 
@@ -162,7 +183,7 @@ export default function ChatView({
                 <StarRow value={stars} size={11} />
               </div>
             ) : null}
-            {pendingQuizKind ? (
+            {buttonQuizInProgress ? (
               <div className="mt-1 text-[11px] italic" style={{ color: 'var(--feynd-coral)' }}>
                 Quiz in progress — hit Done quiz when you're finished.
               </div>
@@ -197,7 +218,7 @@ export default function ChatView({
         <div className="max-w-2xl mx-auto px-4 pt-3 pb-3">
           {threadId ? (
             <div className="flex items-center gap-2 mb-2 overflow-x-auto">
-              {pendingQuizKind ? (
+              {buttonQuizInProgress ? (
                 <ActionChip
                   label="Done quiz"
                   onClick={completeQuiz}
