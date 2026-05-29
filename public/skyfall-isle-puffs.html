@@ -24,11 +24,35 @@
     color: rgba(255,245,230,0.72); text-shadow: 0 1px 6px rgba(0,0,0,0.4);
     pointer-events: none; user-select: none;
   }
+  .nav-btn {
+    position: fixed; top: 50%; transform: translateY(-50%); z-index: 5;
+    width: 58px; height: 58px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.14); color: #fff; font-size: 30px; line-height: 1;
+    -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .25s ease, background .2s ease, transform .15s ease;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.26); }
+  .nav-btn:active { transform: translateY(-50%) scale(0.92); }
+  #nav-left { left: max(14px, env(safe-area-inset-left)); }
+  #nav-right { right: max(14px, env(safe-area-inset-right)); }
+  .nav-btn[disabled] { opacity: 0; pointer-events: none; }
+  .isle-name {
+    position: fixed; top: calc(env(safe-area-inset-top) + 16px); left: 50%; transform: translateX(-50%);
+    z-index: 5; color: rgba(255,255,255,0.94);
+    font: 600 15px/1 ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+    letter-spacing: 0.2em; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+    pointer-events: none; user-select: none;
+  }
 </style>
 </head>
 <body>
 <div id="app"></div>
-<div class="label">dream cosmos · drag to orbit · grab a puff · tap grass to feed · tap the fire</div>
+<div id="isle-name" class="isle-name">Cloudhaven</div>
+<button id="nav-left" class="nav-btn" aria-label="Previous island">‹</button>
+<button id="nav-right" class="nav-btn" aria-label="Next island">›</button>
+<div class="label">‹ › or arrow keys to travel · drag to orbit · grab a puff · tap to feed</div>
 
 <script type="importmap">
 {
@@ -568,6 +592,179 @@ function launchMeteor(m) {
 }
 
 // ===================================================================
+//  ISLAND #2 — "Sugar Drift": a candy realm on its own cloud
+// ===================================================================
+const ISLE2_POS = new THREE.Vector3(96, 2, -16);
+const island2 = new THREE.Group();
+island2.position.copy(ISLE2_POS);
+scene.add(island2);
+const candy = { flames: [], spinners: [], balloons: [], gummies: [], fountainGeo: null, fountainV: [], sprinkleGeo: null, sprinkleData: [], light: null, bobPhase: 1.7 };
+
+function spiralTex(cA, cB) {
+  const s = 128, c = document.createElement('canvas'); c.width = c.height = s; const x = c.getContext('2d');
+  x.fillStyle = cA; x.fillRect(0, 0, s, s);
+  x.strokeStyle = cB; x.lineWidth = 9; x.lineCap = 'round'; x.beginPath();
+  for (let a = 0; a < Math.PI * 7; a += 0.08) { const r = a * 2.0, px = s / 2 + Math.cos(a) * r, py = s / 2 + Math.sin(a) * r; if (a === 0) x.moveTo(px, py); else x.lineTo(px, py); }
+  x.stroke(); const t = new THREE.CanvasTexture(c); t.needsUpdate = true; return t;
+}
+function stripeTex(cA, cB) {
+  const s = 64, c = document.createElement('canvas'); c.width = c.height = s; const x = c.getContext('2d');
+  for (let i = -s; i < s * 2; i += 16) { x.fillStyle = ((i / 16) & 1) ? cA : cB; x.save(); x.translate(i, 0); x.rotate(0.5); x.fillRect(0, -s, 16, s * 3); x.restore(); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.needsUpdate = true; return t;
+}
+
+// the cloud Sugar Drift rests on
+const cloud2 = makeFluffyCloud({ radius: 13, depth: 8, count: 130, topY: 1.6, sit: true, tint: '#fff0fa', shade: '#c79ec8', opacity: 0.97 });
+cloud2.position.y = -0.8; island2.add(cloud2);
+
+// biscuit beach rim + frosting dome (same dome shape as island #1)
+const biscuit = new THREE.Mesh(new THREE.CylinderGeometry(9.6, 8.8, 1.3, 48, 1), new THREE.MeshStandardMaterial({ color: '#e7b06a', roughness: 0.8 }));
+biscuit.position.y = 1.05; island2.add(biscuit);
+const frostGeo = new THREE.SphereGeometry(8.2, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.5);
+const fg2 = frostGeo.attributes.position;
+for (let i = 0; i < fg2.count; i++) { const x = fg2.getX(i), z = fg2.getZ(i); fg2.setY(i, fg2.getY(i) * 0.34 + Math.sin(x * 0.7) * Math.cos(z * 0.7) * 0.25); }
+frostGeo.computeVertexNormals();
+const frosting = new THREE.Mesh(frostGeo, new THREE.MeshStandardMaterial({ color: '#ff9ecb', roughness: 0.4, emissive: '#ff9ecb', emissiveIntensity: 0.08 }));
+frosting.position.y = 1.7; island2.add(frosting);
+
+// icing drips around the rim
+const icingMat = new THREE.MeshStandardMaterial({ color: '#fff3f8', roughness: 0.5 });
+for (let i = 0; i < 16; i++) {
+  const a = (i / 16) * Math.PI * 2, x = Math.cos(a) * 7.6, z = Math.sin(a) * 7.6;
+  const drip = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 0.5 + rnd() * 0.7, 4, 8), icingMat);
+  drip.position.set(x, domeHeight(x, z) - 0.55 - rnd() * 0.4, z); island2.add(drip);
+}
+
+// lollipop "trees" (spin)
+function makeLollipop(x, z, h, tilt, cols) {
+  const g = new THREE.Group(); g.position.set(x, domeHeight(x, z), z);
+  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, h, 8), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4 }));
+  stick.position.y = h / 2; g.add(stick);
+  const swirl = new THREE.Group(); swirl.position.y = h; swirl.rotation.x = Math.PI / 2; g.add(swirl);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.16, 28), new THREE.MeshStandardMaterial({ map: spiralTex(cols[0], cols[1]), roughness: 0.35 }));
+  swirl.add(disc);
+  g.rotation.z = tilt; island2.add(g); candy.spinners.push(disc);
+}
+makeLollipop(-2.6, 1.6, 4.4, 0.12, ['#ff5a7a', '#ffffff']);
+makeLollipop(3.0, -1.6, 3.6, -0.1, ['#7ad0ff', '#ffffff']);
+makeLollipop(0.6, -3.8, 4.0, 0.08, ['#ffd86b', '#ff7ac0']);
+
+// candy canes at the rim
+function makeCane(x, z, rot) {
+  const g = new THREE.Group(); g.position.set(x, domeHeight(x, z), z);
+  const mat = new THREE.MeshStandardMaterial({ map: stripeTex('#ff3b5c', '#ffffff'), roughness: 0.4 });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 2.6, 12), mat); shaft.position.y = 1.3; g.add(shaft);
+  const hook = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.18, 10, 16, Math.PI), mat); hook.position.set(0.5, 2.6, 0); g.add(hook);
+  g.rotation.y = rot; island2.add(g);
+}
+makeCane(6.2, 2.0, 0.4); makeCane(-5.4, -3.4, -0.8);
+
+// gumdrops scattered
+const gumColors = ['#ff7ab0', '#9ad0ff', '#b6f0a0', '#ffd86b', '#d8b4ff'];
+for (let i = 0; i < 10; i++) {
+  const a = rnd() * Math.PI * 2, rad = rr(2, 6), x = Math.cos(a) * rad, z = Math.sin(a) * rad, col = gumColors[Math.floor(rnd() * gumColors.length)];
+  const gd = new THREE.Mesh(new THREE.SphereGeometry(0.4 + rnd() * 0.25, 12, 10, 0, Math.PI * 2, 0, Math.PI * 0.62),
+    new THREE.MeshStandardMaterial({ color: col, roughness: 0.3, emissive: col, emissiveIntensity: 0.06 }));
+  gd.scale.y = 1.3; gd.position.set(x, domeHeight(x, z), z); island2.add(gd);
+}
+
+// gummy bears (bob)
+function makeGummy(x, z, col) {
+  const g = new THREE.Group(); g.position.set(x, domeHeight(x, z), z);
+  const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.25, transparent: true, opacity: 0.9, emissive: col, emissiveIntensity: 0.12 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.36, 14, 12), mat); body.scale.set(1, 1.15, 0.9); body.position.y = 0.5; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 12), mat); head.position.y = 1.05; g.add(head);
+  const earGeo = new THREE.SphereGeometry(0.1, 8, 8);
+  const eL = new THREE.Mesh(earGeo, mat), eR = new THREE.Mesh(earGeo, mat); eL.position.set(-0.16, 1.26, 0); eR.position.set(0.16, 1.26, 0); g.add(eL, eR);
+  const limbGeo = new THREE.SphereGeometry(0.12, 8, 8);
+  const aL = new THREE.Mesh(limbGeo, mat), aR = new THREE.Mesh(limbGeo, mat), lL = new THREE.Mesh(limbGeo, mat), lR = new THREE.Mesh(limbGeo, mat);
+  aL.position.set(-0.34, 0.55, 0.1); aR.position.set(0.34, 0.55, 0.1); lL.position.set(-0.18, 0.12, 0.1); lR.position.set(0.18, 0.12, 0.1); g.add(aL, aR, lL, lR);
+  const eyeMat = new THREE.MeshStandardMaterial({ color: '#3a2030' }), eg = new THREE.SphereGeometry(0.04, 8, 8);
+  const yL = new THREE.Mesh(eg, eyeMat), yR = new THREE.Mesh(eg, eyeMat); yL.position.set(-0.09, 1.08, 0.24); yR.position.set(0.09, 1.08, 0.24); g.add(yL, yR);
+  island2.add(g); candy.gummies.push({ g, phase: rnd() * Math.PI * 2, baseY: g.position.y });
+}
+makeGummy(-1.5, 3.2, '#ff5a8a'); makeGummy(2.4, 2.6, '#7ad0ff'); makeGummy(4.0, -3.2, '#b6f0a0');
+
+// centerpiece: a candle cake — the warm focal glow (Sugar Drift's "campfire")
+const cake = new THREE.Group(); cake.position.set(1.2, domeHeight(1.2, 0.4), 0.4); island2.add(cake);
+const t1 = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.9, 28), new THREE.MeshStandardMaterial({ color: '#fff0e6', roughness: 0.5 })); t1.position.y = 0.45; cake.add(t1);
+const t2 = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.1, 0.8, 28), new THREE.MeshStandardMaterial({ color: '#ffc2d8', roughness: 0.5 })); t2.position.y = 1.25; cake.add(t2);
+const cherry = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 12), new THREE.MeshStandardMaterial({ color: '#ff3b5c', roughness: 0.2 })); cherry.position.y = 1.75; cake.add(cherry);
+for (let i = 0; i < 6; i++) {
+  const a = (i / 6) * Math.PI * 2, cx = Math.cos(a) * 0.7, cz = Math.sin(a) * 0.7;
+  const candle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.5, 8), new THREE.MeshStandardMaterial({ map: stripeTex('#ff7ab0', '#ffffff'), roughness: 0.4 }));
+  candle.position.set(cx, 1.9, cz); cake.add(candle);
+  const fl = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.34, 8), i % 2 ? flameMat : flameCoreMat);
+  fl.position.set(cx, 2.25, cz); cake.add(fl); candy.flames.push({ m: fl, phase: rnd() * Math.PI * 2, baseY: 2.25 });
+}
+candy.light = new THREE.PointLight('#ffd0a0', 3.0, 14, 2); candy.light.position.set(0, 2.4, 0); cake.add(candy.light);
+
+// candy fountain spilling off the rim into the cloud
+const F2_ORIGIN = new THREE.Vector3(-5.5, 1.2, 5.8), F2_BOTTOM = -14;
+const c2sheet = new THREE.Mesh(new THREE.PlaneGeometry(2.0, 8, 1, 1), new THREE.MeshBasicMaterial({ color: '#ff9ecb', transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }));
+c2sheet.position.set(F2_ORIGIN.x, F2_ORIGIN.y - 3, F2_ORIGIN.z + 0.2); island2.add(c2sheet);
+const D2 = 160, c2geo = new THREE.BufferGeometry(), c2pos = new Float32Array(D2 * 3);
+for (let i = 0; i < D2; i++) { c2pos[i * 3] = F2_ORIGIN.x + (rnd() - 0.5) * 1.4; c2pos[i * 3 + 1] = F2_ORIGIN.y - rnd() * (F2_ORIGIN.y - F2_BOTTOM); c2pos[i * 3 + 2] = F2_ORIGIN.z + (rnd() - 0.5) * 0.9; candy.fountainV.push(6 + rnd() * 4); }
+c2geo.setAttribute('position', new THREE.BufferAttribute(c2pos, 3));
+island2.add(new THREE.Points(c2geo, new THREE.PointsMaterial({ size: 0.4, map: glowSprite('rgba(255,200,235,1)', 'rgba(255,150,205,0.6)'), transparent: true, depthWrite: false, opacity: 0.9 })));
+candy.fountainGeo = c2geo; candy.F2_ORIGIN = F2_ORIGIN; candy.F2_BOTTOM = F2_BOTTOM;
+
+// floating sprinkles (multicolor confetti)
+const SPK = 70, spkGeo = new THREE.BufferGeometry(), spkPos = new Float32Array(SPK * 3), spkCol = new Float32Array(SPK * 3);
+const spkHues = ['#ff5a8a', '#7ad0ff', '#b6f0a0', '#ffd86b', '#d8b4ff', '#ff9ecb'].map((h) => new THREE.Color(h));
+for (let i = 0; i < SPK; i++) {
+  const a = rnd() * Math.PI * 2, rad = rr(2, 8), x = Math.cos(a) * rad, z = Math.sin(a) * rad, y = 2.5 + rnd() * 4.5;
+  spkPos[i * 3] = x; spkPos[i * 3 + 1] = y; spkPos[i * 3 + 2] = z;
+  const col = spkHues[Math.floor(rnd() * spkHues.length)]; spkCol[i * 3] = col.r; spkCol[i * 3 + 1] = col.g; spkCol[i * 3 + 2] = col.b;
+  candy.sprinkleData.push({ x, y, z, sp: 0.4 + rnd() * 0.7, ph: rnd() * Math.PI * 2 });
+}
+spkGeo.setAttribute('position', new THREE.BufferAttribute(spkPos, 3)); spkGeo.setAttribute('color', new THREE.BufferAttribute(spkCol, 3));
+island2.add(new THREE.Points(spkGeo, new THREE.PointsMaterial({ size: 0.4, map: glowSprite('rgba(255,255,255,1)', 'rgba(255,255,255,0.2)'), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0.95 })));
+candy.sprinkleGeo = spkGeo;
+
+// drifting balloons (bob + sway)
+const balloonHues = ['#ff6f9c', '#7ad0ff', '#ffd86b', '#b6f0a0', '#d8b4ff'];
+for (let i = 0; i < 5; i++) {
+  const a = rnd() * Math.PI * 2, rad = rr(3, 8), x = Math.cos(a) * rad, z = Math.sin(a) * rad, col = balloonHues[i % balloonHues.length];
+  const g = new THREE.Group();
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(0.6, 16, 14), new THREE.MeshStandardMaterial({ color: col, roughness: 0.3, emissive: col, emissiveIntensity: 0.1 })); ball.scale.y = 1.2; g.add(ball);
+  const knot = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.18, 6), new THREE.MeshStandardMaterial({ color: col })); knot.position.y = -0.72; g.add(knot);
+  const str = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 2.4, 4), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.5 })); str.position.y = -1.9; g.add(str);
+  g.position.set(x, domeHeight(x, z) + 4 + rnd() * 1.5, z); island2.add(g);
+  candy.balloons.push({ g, baseX: x, baseZ: z, baseY: g.position.y, ph: rnd() * Math.PI * 2, sp: 0.3 + rnd() * 0.4 });
+}
+
+// ===================================================================
+//  ISLAND NAVIGATION — fly between islands (arrow keys + on-screen ‹ ›)
+// ===================================================================
+const ISLANDS = [
+  { name: 'Cloudhaven', center: new THREE.Vector3(0, 2.6, 0) },
+  { name: 'Sugar Drift', center: ISLE2_POS.clone().add(new THREE.Vector3(0, 2.6, 0)) },
+];
+let currentIsle = 0, traveling = false, travelT = 0;
+const TRAVEL_DUR = 2.0;
+const _fromT = new THREE.Vector3(), _toT = new THREE.Vector3(), _fromC = new THREE.Vector3(), _toC = new THREE.Vector3(), _off = new THREE.Vector3();
+const navLeft = document.getElementById('nav-left'), navRight = document.getElementById('nav-right'), isleName = document.getElementById('isle-name');
+function updateNavUI() { isleName.textContent = ISLANDS[currentIsle].name; navLeft.disabled = currentIsle === 0; navRight.disabled = currentIsle === ISLANDS.length - 1; }
+function travelTo(i) {
+  i = Math.max(0, Math.min(ISLANDS.length - 1, i));
+  if (traveling || i === currentIsle) return;
+  _fromT.copy(controls.target); _fromC.copy(camera.position); _off.copy(camera.position).sub(controls.target);
+  _toT.copy(ISLANDS[i].center); _toC.copy(ISLANDS[i].center).add(_off);
+  currentIsle = i; traveling = true; travelT = 0; controls.enabled = false; controls.autoRotate = false;
+  updateNavUI();
+}
+addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') { travelTo(currentIsle + 1); e.preventDefault(); }
+  else if (e.key === 'ArrowLeft') { travelTo(currentIsle - 1); e.preventDefault(); }
+});
+function navTap(e, dir) { e.preventDefault(); e.stopPropagation(); travelTo(currentIsle + dir); }
+navLeft.addEventListener('pointerup', (e) => navTap(e, -1));
+navRight.addEventListener('pointerup', (e) => navTap(e, 1));
+[navLeft, navRight].forEach((b) => b.addEventListener('pointerdown', (e) => e.stopPropagation()));
+updateNavUI();
+
+// ===================================================================
 //  PUFFS  — the critters
 // ===================================================================
 const PUFF_COLORS = ['#ff9aa2', '#a0e7a0', '#9ad0ff', '#ffe08a', '#d3b3ff', '#ffc4e1', '#9fe0d8', '#ffb38a'];
@@ -858,6 +1055,7 @@ function setRay(e) {
   raycaster.setFromCamera(ndc, camera);
 }
 function onDown(e) {
+  if (traveling || currentIsle !== 0) { downXY = null; return; }   // puff interaction only on Cloudhaven
   downXY = [e.clientX, e.clientY]; dragged = false;
   setRay(e);
   const hits = raycaster.intersectObjects(puffBodies, false);
@@ -888,7 +1086,7 @@ function onUp(e) {
     else { carried.state = 'drop'; carried.vy = 0; }                                  // toss down
     carried = null;
     controls.enabled = true;
-  } else if (!dragged) {
+  } else if (!dragged && downXY && currentIsle === 0) {
     // tap on empty space: hit the dome
     setRay(e);
     const hit = raycaster.intersectObject(grass, false)[0];
@@ -975,6 +1173,39 @@ function animate() {
   island.position.y = Math.sin(T * 0.5) * 0.18;
   island.rotation.z = Math.sin(T * 0.33) * 0.006;
 
+  // ---- Sugar Drift (island #2) life ----
+  island2.position.y = ISLE2_POS.y + Math.sin(T * 0.45 + candy.bobPhase) * 0.2;
+  island2.rotation.z = Math.sin(T * 0.3 + candy.bobPhase) * 0.006;
+  for (const d of candy.spinners) d.rotation.y += dt * 1.3;
+  for (const gm of candy.gummies) gm.g.position.y = gm.baseY + Math.abs(Math.sin(T * 2 + gm.phase)) * 0.16;
+  for (const f of candy.flames) {
+    const flick = 0.7 + Math.sin(T * 10 + f.phase) * 0.2 + Math.sin(T * 23 + f.phase) * 0.1;
+    f.m.scale.y = flick; f.m.scale.x = f.m.scale.z = 0.7 + (flick - 0.7) * 0.5;
+    f.m.position.y = f.baseY + Math.sin(T * 8 + f.phase) * 0.02;
+  }
+  if (candy.light) candy.light.intensity = 2.6 + Math.sin(T * 12) * 0.5;
+  for (const b of candy.balloons) {
+    b.g.position.x = b.baseX + Math.sin(T * b.sp + b.ph) * 0.5;
+    b.g.position.z = b.baseZ + Math.cos(T * b.sp * 0.8 + b.ph) * 0.5;
+    b.g.position.y = b.baseY + Math.sin(T * b.sp * 1.2 + b.ph) * 0.35;
+    b.g.rotation.z = Math.sin(T * b.sp + b.ph) * 0.08;
+  }
+  const c2p = candy.fountainGeo.attributes.position;
+  for (let i = 0; i < D2; i++) {
+    let y = c2p.getY(i) - candy.fountainV[i] * dt, x = c2p.getX(i) + Math.sin(T * 3 + i) * 0.004;
+    if (y < candy.F2_BOTTOM) { y = candy.F2_ORIGIN.y - rnd() * 0.8; x = candy.F2_ORIGIN.x + (rnd() - 0.5) * 1.4; c2p.setZ(i, candy.F2_ORIGIN.z + (rnd() - 0.5) * 0.9); }
+    c2p.setX(i, x); c2p.setY(i, y);
+  }
+  c2p.needsUpdate = true;
+  const spkP = candy.sprinkleGeo.attributes.position;
+  for (let i = 0; i < SPK; i++) {
+    const d = candy.sprinkleData[i];
+    spkP.setX(i, d.x + Math.sin(T * d.sp + d.ph) * 0.7);
+    spkP.setY(i, d.y + Math.sin(T * d.sp * 1.3 + d.ph) * 0.6);
+    spkP.setZ(i, d.z + Math.cos(T * d.sp * 0.9 + d.ph) * 0.7);
+  }
+  spkP.needsUpdate = true;
+
   // clouds drift
   for (const c of clouds) {
     let x = c.group.position.x + c.sp * dt; if (x > c.wrap) x -= c.wrap * 2; c.group.position.x = x;
@@ -1048,7 +1279,17 @@ function animate() {
     if (h.life <= 0) { scene.remove(h.s); hearts.splice(i, 1); }
   }
 
-  controls.update();
+  // camera travel between islands (smooth glide, keeping the viewing offset)
+  if (traveling) {
+    travelT = Math.min(1, travelT + dt / TRAVEL_DUR);
+    const e = travelT * travelT * (3 - 2 * travelT);
+    controls.target.lerpVectors(_fromT, _toT, e);
+    camera.position.lerpVectors(_fromC, _toC, e);
+    camera.lookAt(controls.target);
+    if (travelT >= 1) { traveling = false; controls.enabled = true; controls.autoRotate = true; }
+  } else {
+    controls.update();
+  }
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
