@@ -668,22 +668,7 @@ for (let i = 0; i < 10; i++) {
   gd.scale.y = 1.3; gd.position.set(x, domeHeight(x, z), z); island2.add(gd);
 }
 
-// gummy bears (bob)
-function makeGummy(x, z, col) {
-  const g = new THREE.Group(); g.position.set(x, domeHeight(x, z), z);
-  const mat = new THREE.MeshStandardMaterial({ color: col, roughness: 0.25, transparent: true, opacity: 0.9, emissive: col, emissiveIntensity: 0.12 });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.36, 14, 12), mat); body.scale.set(1, 1.15, 0.9); body.position.y = 0.5; g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 12), mat); head.position.y = 1.05; g.add(head);
-  const earGeo = new THREE.SphereGeometry(0.1, 8, 8);
-  const eL = new THREE.Mesh(earGeo, mat), eR = new THREE.Mesh(earGeo, mat); eL.position.set(-0.16, 1.26, 0); eR.position.set(0.16, 1.26, 0); g.add(eL, eR);
-  const limbGeo = new THREE.SphereGeometry(0.12, 8, 8);
-  const aL = new THREE.Mesh(limbGeo, mat), aR = new THREE.Mesh(limbGeo, mat), lL = new THREE.Mesh(limbGeo, mat), lR = new THREE.Mesh(limbGeo, mat);
-  aL.position.set(-0.34, 0.55, 0.1); aR.position.set(0.34, 0.55, 0.1); lL.position.set(-0.18, 0.12, 0.1); lR.position.set(0.18, 0.12, 0.1); g.add(aL, aR, lL, lR);
-  const eyeMat = new THREE.MeshStandardMaterial({ color: '#3a2030' }), eg = new THREE.SphereGeometry(0.04, 8, 8);
-  const yL = new THREE.Mesh(eg, eyeMat), yR = new THREE.Mesh(eg, eyeMat); yL.position.set(-0.09, 1.08, 0.24); yR.position.set(0.09, 1.08, 0.24); g.add(yL, yR);
-  island2.add(g); candy.gummies.push({ g, phase: rnd() * Math.PI * 2, baseY: g.position.y });
-}
-makeGummy(-1.5, 3.2, '#ff5a8a'); makeGummy(2.4, 2.6, '#7ad0ff'); makeGummy(4.0, -3.2, '#b6f0a0');
+// (living gummy critters are spawned by the shared critter engine below)
 
 // centerpiece: a candle cake — the warm focal glow (Sugar Drift's "campfire")
 const cake = new THREE.Group(); cake.position.set(1.2, domeHeight(1.2, 0.4), 0.4); island2.add(cake);
@@ -722,8 +707,9 @@ spkGeo.setAttribute('position', new THREE.BufferAttribute(spkPos, 3)); spkGeo.se
 island2.add(new THREE.Points(spkGeo, new THREE.PointsMaterial({ size: 0.4, map: glowSprite('rgba(255,255,255,1)', 'rgba(255,255,255,0.2)'), vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, opacity: 0.95 })));
 candy.sprinkleGeo = spkGeo;
 
-// drifting balloons (bob + sway)
+// drifting balloons (bob + sway) — poppable (see the critter engine below)
 const balloonHues = ['#ff6f9c', '#7ad0ff', '#ffd86b', '#b6f0a0', '#d8b4ff'];
+const candyBalloonBodies = [];   // hit-test meshes for popping
 for (let i = 0; i < 5; i++) {
   const a = rnd() * Math.PI * 2, rad = rr(3, 8), x = Math.cos(a) * rad, z = Math.sin(a) * rad, col = balloonHues[i % balloonHues.length];
   const g = new THREE.Group();
@@ -731,7 +717,10 @@ for (let i = 0; i < 5; i++) {
   const knot = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.18, 6), new THREE.MeshStandardMaterial({ color: col })); knot.position.y = -0.72; g.add(knot);
   const str = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 2.4, 4), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.5 })); str.position.y = -1.9; g.add(str);
   g.position.set(x, domeHeight(x, z) + 4 + rnd() * 1.5, z); island2.add(g);
-  candy.balloons.push({ g, baseX: x, baseZ: z, baseY: g.position.y, ph: rnd() * Math.PI * 2, sp: 0.3 + rnd() * 0.4 });
+  const entry = { g, ball, col, baseX: x, baseZ: z, baseY: g.position.y, ph: rnd() * Math.PI * 2, sp: 0.3 + rnd() * 0.4, popped: false, respawn: 0 };
+  ball.userData.balloon = entry;
+  candyBalloonBodies.push(ball);
+  candy.balloons.push(entry);
 }
 
 // ===================================================================
@@ -765,82 +754,81 @@ navRight.addEventListener('pointerup', (e) => navTap(e, 1));
 updateNavUI();
 
 // ===================================================================
-//  PUFFS  — the critters
+//  CRITTERS + MECHANICS — one shared engine, one config per island
 // ===================================================================
 const PUFF_COLORS = ['#ff9aa2', '#a0e7a0', '#9ad0ff', '#ffe08a', '#d3b3ff', '#ffc4e1', '#9fe0d8', '#ffb38a'];
-const critters = new THREE.Group(); scene.add(critters);
-const puffs = [];
-const puffBodies = [];   // for raycasting
-const MAX_PUFFS = 12;
-let colorIdx = 0;
 
-function makePuff(x, z, baby) {
-  const g = new THREE.Group();
-  const rig = new THREE.Group(); g.add(rig);   // rig is squashed/stretched
-  const color = PUFF_COLORS[colorIdx++ % PUFF_COLORS.length];
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14),
-    new THREE.MeshStandardMaterial({ color, roughness: 0.7, flatShading: false }));
+// --- critter "skins": same rig shape ({g, rig, body, eyeL, eyeR, tip}) ---
+function makePuffVisual(color) {
+  const g = new THREE.Group(); const rig = new THREE.Group(); g.add(rig);
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 14), new THREE.MeshStandardMaterial({ color, roughness: 0.7 }));
   body.scale.set(1, 0.82, 1); body.castShadow = true; rig.add(body);
-  body.userData.puff = null;   // set below
-  // eyes
-  const eyeMat = new THREE.MeshStandardMaterial({ color: '#2a2330', roughness: 0.4 });
-  const eyeGeo = new THREE.SphereGeometry(0.075, 10, 10);
+  const eyeMat = new THREE.MeshStandardMaterial({ color: '#2a2330', roughness: 0.4 }), eyeGeo = new THREE.SphereGeometry(0.075, 10, 10);
   const eyeL = new THREE.Mesh(eyeGeo, eyeMat), eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.15, 0.12, 0.34); eyeR.position.set(0.15, 0.12, 0.34);
-  rig.add(eyeL, eyeR);
-  // tiny shine
+  eyeL.position.set(-0.15, 0.12, 0.34); eyeR.position.set(0.15, 0.12, 0.34); rig.add(eyeL, eyeR);
   const shineGeo = new THREE.SphereGeometry(0.028, 8, 8), shineMat = new THREE.MeshBasicMaterial({ color: '#fff' });
   const sL = new THREE.Mesh(shineGeo, shineMat), sR = new THREE.Mesh(shineGeo, shineMat);
   sL.position.set(-0.13, 0.15, 0.40); sR.position.set(0.17, 0.15, 0.40); rig.add(sL, sR);
-  // feet
-  const footMat = new THREE.MeshStandardMaterial({ color: '#caa37a', roughness: 0.9 });
-  const footGeo = new THREE.SphereGeometry(0.1, 8, 8);
+  const footMat = new THREE.MeshStandardMaterial({ color: '#caa37a', roughness: 0.9 }), footGeo = new THREE.SphereGeometry(0.1, 8, 8);
   const fL = new THREE.Mesh(footGeo, footMat), fR = new THREE.Mesh(footGeo, footMat);
-  fL.scale.set(1, 0.6, 1.3); fR.scale.set(1, 0.6, 1.3);
-  fL.position.set(-0.16, -0.34, 0.16); fR.position.set(0.16, -0.34, 0.16); rig.add(fL, fR);
-  // antenna with glowing tip
+  fL.scale.set(1, 0.6, 1.3); fR.scale.set(1, 0.6, 1.3); fL.position.set(-0.16, -0.34, 0.16); fR.position.set(0.16, -0.34, 0.16); rig.add(fL, fR);
   const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 5), new THREE.MeshStandardMaterial({ color: '#7a5a3a' }));
   ant.position.set(0, 0.5, 0); rig.add(ant);
   const tip = new THREE.Mesh(new THREE.SphereGeometry(0.07, 10, 10), new THREE.MeshBasicMaterial({ color: '#fff0b0', fog: false }));
   tip.position.set(0, 0.66, 0); rig.add(tip);
-
-  critters.add(g);
-  const p = {
-    g, rig, body, eyeL, eyeR, tip,
-    pos: new THREE.Vector2(x, z),
-    heading: rnd() * Math.PI * 2,
-    state: 'wander', target: null, timer: 0.5 + rnd(),
-    hopPhase: rnd() * Math.PI * 2, moving: false,
-    blink: rr(2, 6), spin: 0, vy: 0,
-    fed: 0, size: baby ? 0.35 : 1, targetSize: 1,
-    chaseFly: (Math.floor(rnd() * FLY)),
-  };
-  body.userData.puff = p;
-  puffBodies.push(body);
-  puffs.push(p);
-  return p;
+  return { g, rig, body, eyeL, eyeR, tip };
 }
-for (let i = 0; i < 8; i++) {
-  const a = (i / 8) * Math.PI * 2, rad = rr(1.5, 4.5);
-  makePuff(Math.cos(a) * rad, Math.sin(a) * rad, false);
+function makeGummyVisual(color) {
+  const g = new THREE.Group(); const rig = new THREE.Group(); g.add(rig);
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.25, transparent: true, opacity: 0.92, emissive: color, emissiveIntensity: 0.12 });
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.44, 16, 14), mat); body.scale.set(1, 0.9, 1); body.castShadow = true; rig.add(body);
+  const top = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.34, 12), mat); top.position.y = 0.44; rig.add(top);   // gumdrop point
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', fog: false })); tip.position.set(0, 0.64, 0); rig.add(tip);
+  const eyeMat = new THREE.MeshStandardMaterial({ color: '#3a2030', roughness: 0.4 }), eyeGeo = new THREE.SphereGeometry(0.07, 10, 10);
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat), eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeL.position.set(-0.15, 0.08, 0.37); eyeR.position.set(0.15, 0.08, 0.37); rig.add(eyeL, eyeR);
+  const shineGeo = new THREE.SphereGeometry(0.025, 8, 8), shineMat = new THREE.MeshBasicMaterial({ color: '#fff' });
+  const sL = new THREE.Mesh(shineGeo, shineMat), sR = new THREE.Mesh(shineGeo, shineMat);
+  sL.position.set(-0.13, 0.11, 0.42); sR.position.set(0.17, 0.11, 0.42); rig.add(sL, sR);
+  return { g, rig, body, eyeL, eyeR, tip };
 }
 
-// ---- berries ----
-const berryMat = new THREE.MeshStandardMaterial({ color: '#ff5a4d', roughness: 0.5 });
-const leafMat = new THREE.MeshStandardMaterial({ color: '#3f9a4e', roughness: 0.8 });
-const berries = [];
-function dropBerry(x, z) {
-  const rho = Math.hypot(x, z);
-  if (rho > ROAM) { const k = ROAM / rho; x *= k; z *= k; }
+let _cid = 0;
+function spawnCritter(isle, x, z, baby) {
+  const color = isle.colors[_cid++ % isle.colors.length];
+  const v = isle.skin === 'gummy' ? makeGummyVisual(color) : makePuffVisual(color);
+  isle.crittersGroup.add(v.g);
+  const c = { g: v.g, rig: v.rig, body: v.body, eyeL: v.eyeL, eyeR: v.eyeR, tip: v.tip, isle,
+    pos: new THREE.Vector2(x, z), heading: rnd() * Math.PI * 2, state: 'wander', target: null,
+    timer: 0.5 + rnd(), hopPhase: rnd() * Math.PI * 2, moving: false, blink: rr(2, 6),
+    spin: 0, vy: 0, fed: 0, size: baby ? 0.35 : 1, targetSize: 1, chaseIdx: Math.floor(rnd() * isle.playN) };
+  v.body.userData.critter = c;
+  isle.bodies.push(v.body); isle.critters.push(c);
+  return c;
+}
+
+// --- food: berries (Cloudhaven) and bonbons (Sugar Drift) ---
+const BERRY_MAT = new THREE.MeshStandardMaterial({ color: '#ff5a4d', roughness: 0.5 });
+const LEAF_MAT = new THREE.MeshStandardMaterial({ color: '#3f9a4e', roughness: 0.8 });
+function makeBerry(isle, x, z) {
+  const rho = Math.hypot(x, z); if (rho > isle.roam) { const k = isle.roam / rho; x *= k; z *= k; }
   const g = new THREE.Group();
-  const b = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), berryMat); b.castShadow = true; g.add(b);
-  const lf = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.16, 5), leafMat); lf.position.y = 0.22; g.add(lf);
-  g.position.set(x, domeHeight(x, z) + 0.22, z); g.scale.setScalar(0.01);
-  island.add(g);
-  berries.push({ group: g, x, z, grow: 0, eaten: false });
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), BERRY_MAT); b.castShadow = true; g.add(b);
+  const lf = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.16, 5), LEAF_MAT); lf.position.y = 0.22; g.add(lf);
+  g.position.set(x, domeHeight(x, z) + 0.22, z); g.scale.setScalar(0.01); isle.group.add(g);
+  isle.food.push({ group: g, x, z, grow: 0, eaten: false });
+}
+function makeBonbon(isle, x, z) {
+  const rho = Math.hypot(x, z); if (rho > isle.roam) { const k = isle.roam / rho; x *= k; z *= k; }
+  const col = ['#ff5a8a', '#7ad0ff', '#ffd86b', '#b6f0a0'][Math.floor(rnd() * 4)];
+  const g = new THREE.Group();
+  const b = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), new THREE.MeshStandardMaterial({ color: col, roughness: 0.25, emissive: col, emissiveIntensity: 0.12 })); b.castShadow = true; g.add(b);
+  const wrap = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.2, 6), new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4 })); wrap.position.y = 0.22; g.add(wrap);
+  g.position.set(x, domeHeight(x, z) + 0.22, z); g.scale.setScalar(0.01); isle.group.add(g);
+  isle.food.push({ group: g, x, z, grow: 0, eaten: false });
 }
 
-// ---- hearts ----
+// --- hearts (poke/eat) ---
 const hearts = [];
 function popHeart(wx, wy, wz) {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: HEART_TEX, transparent: true, depthWrite: false, fog: false }));
@@ -848,25 +836,40 @@ function popHeart(wx, wy, wz) {
   hearts.push({ s, life: 1 });
 }
 
+// --- confetti bursts (balloon pops) ---
+const bursts = [];
+const CONFETTI_HUES = ['#ff5a8a', '#7ad0ff', '#b6f0a0', '#ffd86b', '#d8b4ff', '#ff9ecb'];
+const CONFETTI_TEX = glowSprite('rgba(255,255,255,1)', 'rgba(255,255,255,0.25)');
+function popConfetti(wx, wy, wz) {
+  for (let i = 0; i < 18; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: CONFETTI_TEX, color: CONFETTI_HUES[Math.floor(rnd() * CONFETTI_HUES.length)], transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }));
+    s.position.set(wx, wy, wz); s.scale.setScalar(0.28 + rnd() * 0.22); scene.add(s);
+    const a = rnd() * Math.PI * 2, sp = 2 + rnd() * 3.5;
+    bursts.push({ s, vx: Math.cos(a) * sp, vy: 2.5 + rnd() * 3, vz: Math.sin(a) * sp, life: 1 });
+  }
+}
+
 // ===================================================================
-//  PUFF BEHAVIOR
+//  CRITTER BEHAVIOR — operates on c.isle, so any island runs the same sim
 // ===================================================================
 let dayFactor = 1;   // 1 = bright day, 0 = dusk/night
+const _one = new THREE.Vector3(1, 1, 1);
+const _wp2 = new THREE.Vector3();
 
-function nearestTuft(p) {
+function nearestTuft(c) {
   let best = null, bd = 1e9;
-  for (const t of tufts) {
+  for (const t of c.isle.tufts) {
     if (t.level < 0.5) continue;
-    const d = (t.x - p.pos.x) ** 2 + (t.z - p.pos.y) ** 2;
+    const d = (t.x - c.pos.x) ** 2 + (t.z - c.pos.y) ** 2;
     if (d < bd) { bd = d; best = t; }
   }
   return best;
 }
-function nearestBerry(p) {
+function nearestFood(c) {
   let best = null, bd = 1e9;
-  for (const b of berries) {
+  for (const b of c.isle.food) {
     if (b.eaten) continue;
-    const d = (b.x - p.pos.x) ** 2 + (b.z - p.pos.y) ** 2;
+    const d = (b.x - c.pos.x) ** 2 + (b.z - c.pos.y) ** 2;
     if (d < bd) { bd = d; best = b; }
   }
   return best;
@@ -876,177 +879,168 @@ function randPointInDome(maxR) {
   return new THREE.Vector2(Math.cos(a) * r, Math.sin(a) * r);
 }
 
-function chooseBehavior(p) {
-  p.target = null; p.eatingBerry = null; p.grazeTuft = null;
-  const berry = nearestBerry(p);
+function chooseBehavior(c) {
+  c.target = null; c.eatingFood = null; c.grazeTuft = null;
+  const food = nearestFood(c);
   const r = rnd();
   if (dayFactor < 0.35) {
-    // dusk / night: gather and rest, occasional snack
-    if (berry && r < 0.2) return startEat(p, berry);
-    if (r < 0.78) return startGather(p);
-    return startRest(p, rr(2.5, 4.5));
+    if (food && r < 0.2) return startEat(c, food);
+    if (r < 0.78) return startGather(c);
+    return startRest(c, rr(2.5, 4.5));
   }
-  // daytime
-  if (berry && r < 0.32) return startEat(p, berry);
-  if (r < 0.36) return startGraze(p);
-  if (r < 0.66) return startPlay(p);
-  if (r < 0.82) return startWander(p);
-  if (r < 0.92) return startGawk(p);
-  return startRest(p, rr(2, 4));
+  if (food && r < 0.32) return startEat(c, food);
+  if (r < 0.36) return startGraze(c);
+  if (r < 0.66) return startPlay(c);
+  if (r < 0.82) return startWander(c);
+  if (r < 0.92) return startGawk(c);
+  return startRest(c, rr(2, 4));
 }
-function startWander(p) { p.state = 'wander'; p.target = randPointInDome(ROAM); p.timer = 4; }
-function startGraze(p) {
-  const t = nearestTuft(p);
-  if (!t) return startWander(p);
-  p.state = 'graze'; p.grazeTuft = t; p.target = new THREE.Vector2(t.x, t.z); p.timer = 5;
+function startWander(c) { c.state = 'wander'; c.target = randPointInDome(c.isle.roam); c.timer = 4; }
+function startGraze(c) {
+  const t = nearestTuft(c);
+  if (!t) return startWander(c);
+  c.state = 'graze'; c.grazeTuft = t; c.target = new THREE.Vector2(t.x, t.z); c.timer = 5;
 }
-function startPlay(p) {
-  p.state = 'play'; p.chaseFly = Math.floor(rnd() * FLY); p.timer = rr(3, 5); p.target = new THREE.Vector2(p.pos.x, p.pos.y);
+function startPlay(c) {
+  c.state = 'play'; c.chaseIdx = Math.floor(rnd() * c.isle.playN); c.timer = rr(3, 5); c.target = new THREE.Vector2(c.pos.x, c.pos.y);
 }
-function startGawk(p) {
-  // walk to the rim near the waterfall and watch
-  const a = Math.atan2(FALL_ORIGIN.z, FALL_ORIGIN.x) + (rnd() - 0.5) * 0.8;
-  p.state = 'gawk'; p.target = new THREE.Vector2(Math.cos(a) * (ROAM - 0.2), Math.sin(a) * (ROAM - 0.2)); p.timer = 6;
+function startGawk(c) {
+  const o = c.isle.gawkOrigin;
+  const a = Math.atan2(o.z, o.x) + (rnd() - 0.5) * 0.8;
+  c.state = 'gawk'; c.target = new THREE.Vector2(Math.cos(a) * (c.isle.roam - 0.2), Math.sin(a) * (c.isle.roam - 0.2)); c.timer = 6;
 }
-function startRest(p, dur) { p.state = 'rest'; p.target = null; p.timer = dur; }
-function startGather(p) {
-  const a = rnd() * Math.PI * 2, r = rr(1.3, 2.2);
-  p.state = 'gather'; p.target = new THREE.Vector2(FIRE_XZ.x + Math.cos(a) * r, FIRE_XZ.y + Math.sin(a) * r); p.timer = rr(5, 9);
+function startRest(c, dur) { c.state = 'rest'; c.target = null; c.timer = dur; }
+function startGather(c) {
+  const a = rnd() * Math.PI * 2, r = rr(1.3, 2.2), gx = c.isle.gatherXZ;
+  c.state = 'gather'; c.target = new THREE.Vector2(gx.x + Math.cos(a) * r, gx.y + Math.sin(a) * r); c.timer = rr(5, 9);
 }
-function startEat(p, berry) { p.state = 'eat'; p.eatingBerry = berry; p.target = new THREE.Vector2(berry.x, berry.z); p.timer = 6; }
+function startEat(c, food) { c.state = 'eat'; c.eatingFood = food; c.target = new THREE.Vector2(food.x, food.z); c.timer = 6; }
 
-function pokePuff(p) {
-  p.spin = 0.7;
-  const wy = p.g.position.y + 0.9;
-  popHeart(p.g.position.x, wy, p.g.position.z);
+function pokeCritter(c) {
+  c.spin = 0.7;
+  c.g.getWorldPosition(_wp2);
+  popHeart(_wp2.x, _wp2.y + 0.9, _wp2.z);
 }
 
-const _fv = new THREE.Vector3();
-function updatePuff(p, dt, T) {
-  // grow babies in
-  if (p.size < p.targetSize) p.size = Math.min(p.targetSize, p.size + dt * 0.13);
+function updateCritter(c, dt, T) {
+  if (c.size < c.targetSize) c.size = Math.min(c.targetSize, c.size + dt * 0.13);
 
-  if (p.state === 'held') {            // carried by the pointer — position set by handler
-    p.rig.scale.set(0.92, 1.12, 0.92); // stretched while dangling
-    blinkUpdate(p, dt);
+  if (c.state === 'held') {            // carried — position set by the pointer handler
+    c.rig.scale.set(0.92, 1.12, 0.92);
+    blinkUpdate(c, dt);
     return;
   }
-
-  if (p.state === 'drop') {            // tossed down, fall to the dome with a bounce
-    p.vy -= 18 * dt;
-    let y = p.g.position.y + p.vy * dt;
-    const surf = domeHeight(p.pos.x, p.pos.y) + island.position.y;
+  if (c.state === 'drop') {            // tossed down, falls to the dome with a bounce (local space)
+    c.vy -= 18 * dt;
+    let y = c.g.position.y + c.vy * dt;
+    const surf = domeHeight(c.pos.x, c.pos.y);
     if (y <= surf) {
       y = surf;
-      if (Math.abs(p.vy) > 2.2) { p.vy = -p.vy * 0.42; p.rig.scale.set(1.25, 0.7, 1.25); }
-      else { p.vy = 0; chooseBehavior(p); }
+      if (Math.abs(c.vy) > 2.2) { c.vy = -c.vy * 0.42; c.rig.scale.set(1.25, 0.7, 1.25); }
+      else { c.vy = 0; chooseBehavior(c); }
     }
-    p.g.position.y = y;
-    // ease squash back toward normal
-    p.rig.scale.lerp(_one, Math.min(1, dt * 8));
-    blinkUpdate(p, dt);
+    c.g.position.y = y;
+    c.rig.scale.lerp(_one, Math.min(1, dt * 8));
+    blinkUpdate(c, dt);
     return;
   }
 
-  p.timer -= dt;
+  c.timer -= dt;
 
-  // play: chase a (moving) firefly
-  if (p.state === 'play') {
-    flyWorld(p.chaseFly, _fv);
-    p.target.set(_fv.x, _fv.z);
+  // play: chase a moving sparkle (firefly / sprinkle), read in the isle's local frame
+  if (c.state === 'play') {
+    const gp = c.isle.playGeo.attributes.position;
+    c.target.set(gp.getX(c.chaseIdx), gp.getZ(c.chaseIdx));
   }
 
-  // movement toward target
-  p.moving = false;
-  if (p.target) {
-    const dx = p.target.x - p.pos.x, dz = p.target.y - p.pos.y;
-    const d = Math.hypot(dx, dz);
-    const arriveAt = p.state === 'play' ? 0.6 : 0.28;
+  c.moving = false;
+  if (c.target) {
+    const dx = c.target.x - c.pos.x, dz = c.target.y - c.pos.y, d = Math.hypot(dx, dz);
+    const arriveAt = c.state === 'play' ? 0.6 : 0.28;
     if (d > arriveAt) {
-      const speed = (p.state === 'play' ? 3.4 : 2.0) * (0.6 + 0.4 * p.size);
+      const speed = (c.state === 'play' ? 3.4 : 2.0) * (0.6 + 0.4 * c.size);
       const nx = dx / d, nz = dz / d;
-      p.pos.x += nx * speed * dt; p.pos.y += nz * speed * dt;
-      // clamp to dome
-      const rho = Math.hypot(p.pos.x, p.pos.y);
-      if (rho > ROAM) { const k = ROAM / rho; p.pos.x *= k; p.pos.y *= k; }
-      p.heading = Math.atan2(nx, nz);
-      p.moving = true;
-    } else if (p.state === 'eat' && p.eatingBerry && !p.eatingBerry.eaten) {
-      // reached berry → eat it
-      p.eatingBerry.eaten = true;
-      p.fed++;
-      popHeart(p.g.position.x, p.g.position.y + 0.7, p.g.position.z);
-      if (p.fed >= 2 && puffs.length < MAX_PUFFS && rnd() < 0.7) {
-        p.fed = 0;
-        const baby = makePuff(p.pos.x + 0.4, p.pos.y + 0.4, true);
-        startWander(baby);
+      c.pos.x += nx * speed * dt; c.pos.y += nz * speed * dt;
+      const rho = Math.hypot(c.pos.x, c.pos.y), R = c.isle.roam;
+      if (rho > R) { const k = R / rho; c.pos.x *= k; c.pos.y *= k; }
+      c.heading = Math.atan2(nx, nz);
+      c.moving = true;
+    } else if (c.state === 'eat' && c.eatingFood && !c.eatingFood.eaten) {
+      c.eatingFood.eaten = true; c.fed++;
+      c.g.getWorldPosition(_wp2); popHeart(_wp2.x, _wp2.y + 0.7, _wp2.z);
+      if (c.fed >= 2 && c.isle.critters.length < c.isle.max && rnd() < 0.7) {
+        c.fed = 0; startWander(spawnCritter(c.isle, c.pos.x + 0.4, c.pos.y + 0.4, true));
       }
     }
   }
 
-  // grazing nibbles its tuft down
-  if (p.state === 'graze' && p.grazeTuft && !p.moving) {
-    p.grazeTuft.level = Math.max(0, p.grazeTuft.level - dt * 0.5);
-  }
-
-  // choose next behavior when the timer runs out
-  if (p.timer <= 0) chooseBehavior(p);
+  if (c.state === 'graze' && c.grazeTuft && !c.moving) c.grazeTuft.level = Math.max(0, c.grazeTuft.level - dt * 0.5);
+  if (c.timer <= 0) chooseBehavior(c);
 
   // ---- visuals ----
-  // hop while moving (squash-stretch)
   let hopY = 0, stretch = 1;
-  if (p.moving) {
-    p.hopPhase += dt * (p.state === 'play' ? 13 : 9);
-    const s = Math.sin(p.hopPhase);
-    hopY = Math.abs(s) * (p.state === 'play' ? 0.32 : 0.22);
+  if (c.moving) {
+    c.hopPhase += dt * (c.state === 'play' ? 13 : 9);
+    const s = Math.sin(c.hopPhase);
+    hopY = Math.abs(s) * (c.state === 'play' ? 0.32 : 0.22);
     stretch = 1 + s * 0.14;
-  } else {
-    // idle breathing / behavior flourishes
-    if (p.state === 'graze') { stretch = 1 - Math.abs(Math.sin(T * 6 + p.hopPhase)) * 0.16; hopY = 0; }
-    else stretch = 1 + Math.sin(T * 2 + p.hopPhase) * 0.04;
-  }
-  // spin (poke reaction)
-  if (p.spin > 0) { p.spin -= dt; p.g.rotation.y += dt * 18; }
-  else {
-    // face heading (smoothed)
-    let dh = p.heading - p.g.rotation.y;
-    dh = Math.atan2(Math.sin(dh), Math.cos(dh));
-    p.g.rotation.y += dh * Math.min(1, dt * 10);
-  }
-  // gawk faces outward
-  if (p.state === 'gawk' && !p.moving) {
-    const out = Math.atan2(p.pos.x, p.pos.y);
-    let dh = out - p.g.rotation.y; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
-    p.g.rotation.y += dh * Math.min(1, dt * 6);
-  }
+  } else if (c.state === 'graze') { stretch = 1 - Math.abs(Math.sin(T * 6 + c.hopPhase)) * 0.16; }
+  else stretch = 1 + Math.sin(T * 2 + c.hopPhase) * 0.04;
 
-  const sz = p.size;
-  p.rig.scale.set(sz / Math.sqrt(stretch), sz * stretch, sz / Math.sqrt(stretch));
-  p.g.position.set(p.pos.x, domeHeight(p.pos.x, p.pos.y) + island.position.y + hopY, p.pos.y);
+  if (c.spin > 0) { c.spin -= dt; c.g.rotation.y += dt * 18; }
+  else { let dh = c.heading - c.g.rotation.y; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); c.g.rotation.y += dh * Math.min(1, dt * 10); }
+  if (c.state === 'gawk' && !c.moving) { const out = Math.atan2(c.pos.x, c.pos.y); let dh = out - c.g.rotation.y; dh = Math.atan2(Math.sin(dh), Math.cos(dh)); c.g.rotation.y += dh * Math.min(1, dt * 6); }
 
-  // antenna tip glows at night
-  p.tip.material.color.setRGB(1, 0.94 - 0.3 * (1 - dayFactor), 0.7 - 0.4 * (1 - dayFactor));
-
-  blinkUpdate(p, dt);
+  const sz = c.size;
+  c.rig.scale.set(sz / Math.sqrt(stretch), sz * stretch, sz / Math.sqrt(stretch));
+  c.g.position.set(c.pos.x, domeHeight(c.pos.x, c.pos.y) + hopY, c.pos.y);   // local; parent island handles bob/offset
+  c.tip.material.color.setRGB(1, 0.94 - 0.3 * (1 - dayFactor), 0.7 - 0.4 * (1 - dayFactor));
+  blinkUpdate(c, dt);
 }
-const _one = new THREE.Vector3(1, 1, 1);
-function blinkUpdate(p, dt) {
-  p.blink -= dt;
+function blinkUpdate(c, dt) {
+  c.blink -= dt;
   let ey = 1;
-  if (p.blink < 0.12) ey = 0.12;               // blink closed briefly
-  if (p.blink <= 0) p.blink = rr(2.5, 6.5);
-  p.eyeL.scale.y = ey; p.eyeR.scale.y = ey;
+  if (c.blink < 0.12) ey = 0.12;
+  if (c.blink <= 0) c.blink = rr(2.5, 6.5);
+  c.eyeL.scale.y = ey; c.eyeR.scale.y = ey;
 }
+
+// --- Sugar Drift graze bits (candy sprinkle piles the gummies nibble) ---
+const tufts2 = [];
+const candyBitMat = new THREE.MeshStandardMaterial({ color: '#ffd1e8', roughness: 0.4, emissive: '#ff9ecb', emissiveIntensity: 0.06 });
+for (let i = 0; i < 14; i++) {
+  const a = rnd() * Math.PI * 2, rad = rr(1.5, ROAM - 0.6), x = Math.cos(a) * rad, z = Math.sin(a) * rad;
+  const g = new THREE.Group();
+  for (let b = 0; b < 3; b++) { const bit = new THREE.Mesh(new THREE.SphereGeometry(0.09 + rnd() * 0.05, 8, 8), candyBitMat); bit.position.set((rnd() - 0.5) * 0.22, 0.1, (rnd() - 0.5) * 0.22); g.add(bit); }
+  g.position.set(x, domeHeight(x, z), z); island2.add(g);
+  tufts2.push({ group: g, x, z, level: 1 });
+}
+
+// --- island configs: same mechanics, themed assets ---
+const ISLES = [
+  { name: 'Cloudhaven', group: island, crittersGroup: new THREE.Group(), skin: 'puff',
+    colors: PUFF_COLORS, roam: ROAM, max: 12, gatherXZ: FIRE_XZ, gawkOrigin: FALL_ORIGIN,
+    domeMesh: grass, tufts, food: [], critters: [], bodies: [], balloonBodies: [],
+    playGeo: flyGeo, playN: FLY, stoke: 0, makeFood: makeBerry },
+  { name: 'Sugar Drift', group: island2, crittersGroup: new THREE.Group(), skin: 'gummy',
+    colors: ['#ff7ab0', '#9ad0ff', '#b6f0a0', '#ffd86b', '#d8b4ff', '#ff9ecb'], roam: ROAM, max: 12,
+    gatherXZ: new THREE.Vector2(1.2, 0.4), gawkOrigin: F2_ORIGIN, domeMesh: frosting,
+    tufts: tufts2, food: [], critters: [], bodies: [], balloonBodies: candyBalloonBodies,
+    playGeo: spkGeo, playN: SPK, stoke: 0, makeFood: makeBonbon },
+];
+ISLES.forEach((isle) => isle.group.add(isle.crittersGroup));
+for (const isle of ISLES) for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, rad = rr(1.5, 4.5); spawnCritter(isle, Math.cos(a) * rad, Math.sin(a) * rad, false); }
 
 // ===================================================================
-//  INTERACTION  (tap vs orbit, grab a puff, feed, stoke fire)
+//  INTERACTION  (tap vs orbit · grab/poke/toss · feed · gather · pop balloons)
+//  Acts on the focused island (ISLES[currentIsle]) so both work the same.
 // ===================================================================
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 const dom = renderer.domElement;
-const carryPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -5);   // y = 5
-const _pt = new THREE.Vector3();
-let carried = null, downXY = null, dragged = false;
+const carryPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -5.5);
+const _pt = new THREE.Vector3(), _wp = new THREE.Vector3();
+let carried = null, downXY = null, dragged = false, downBalloon = null;
 
 function setRay(e) {
   const r = dom.getBoundingClientRect();
@@ -1054,53 +1048,62 @@ function setRay(e) {
   ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
   raycaster.setFromCamera(ndc, camera);
 }
+function gatherCritters(isle) { isle.stoke = 1.2; for (const c of isle.critters) if (c.state !== 'held' && rnd() < 0.8) startGather(c); }
+function popBalloon(b) {
+  if (b.popped) return;
+  b.popped = true; b.g.visible = false; b.respawn = 4 + rnd() * 4;
+  b.g.getWorldPosition(_wp); popConfetti(_wp.x, _wp.y, _wp.z);
+  for (const c of ISLES[1].critters) c.spin = 0.7;   // the gummies cheer
+}
 function onDown(e) {
-  if (traveling || currentIsle !== 0) { downXY = null; return; }   // puff interaction only on Cloudhaven
-  downXY = [e.clientX, e.clientY]; dragged = false;
+  if (traveling) { downXY = null; return; }
+  const isle = ISLES[currentIsle];
+  downXY = [e.clientX, e.clientY]; dragged = false; downBalloon = null;
   setRay(e);
-  const hits = raycaster.intersectObjects(puffBodies, false);
+  const hits = raycaster.intersectObjects(isle.bodies, false);
   if (hits.length) {
-    carried = hits[0].object.userData.puff;
+    carried = hits[0].object.userData.critter;
     carried.state = 'held'; carried.vy = 0; carried.spin = 0;
-    controls.enabled = false;     // capture-phase: OrbitControls (target phase) will then bail
+    carryPlane.constant = -(carried.isle.group.position.y + 5.5);   // carry above this island's dome
+    controls.enabled = false;
+    return;
+  }
+  if (isle.balloonBodies.length) {
+    const bh = raycaster.intersectObjects(isle.balloonBodies, false);
+    if (bh.length) downBalloon = bh[0].object.userData.balloon;     // pop on tap (in onUp)
   }
 }
 function onMove(e) {
-  if (downXY) {
-    if (Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 6) dragged = true;
-  }
+  if (downXY && Math.hypot(e.clientX - downXY[0], e.clientY - downXY[1]) > 6) dragged = true;
   if (carried) {
     setRay(e);
     if (raycaster.ray.intersectPlane(carryPlane, _pt)) {
-      let x = _pt.x, z = _pt.z;
-      const rho = Math.hypot(x, z);
-      if (rho > ROAM + 1.5) { const k = (ROAM + 1.5) / rho; x *= k; z *= k; }
+      const lp = carried.isle.group.worldToLocal(_pt.clone());
+      let x = lp.x, z = lp.z; const rho = Math.hypot(x, z), R = carried.isle.roam + 1.5;
+      if (rho > R) { const k = R / rho; x *= k; z *= k; }
       carried.pos.set(x, z);
-      carried.g.position.set(x, 5 + Math.sin(performance.now() * 0.006) * 0.1, z);
+      carried.g.position.set(x, lp.y + Math.sin(performance.now() * 0.006) * 0.1, z);
     }
   }
 }
 function onUp(e) {
   if (carried) {
-    if (!dragged) { carried.state = 'drop'; carried.vy = 1.5; pokePuff(carried); }   // poke
-    else { carried.state = 'drop'; carried.vy = 0; }                                  // toss down
-    carried = null;
-    controls.enabled = true;
-  } else if (!dragged && downXY && currentIsle === 0) {
-    // tap on empty space: hit the dome
+    if (!dragged) { carried.state = 'drop'; carried.vy = 1.5; pokeCritter(carried); }   // poke
+    else { carried.state = 'drop'; carried.vy = 0; }                                     // toss down
+    carried = null; controls.enabled = true;
+  } else if (!dragged && downBalloon) {
+    popBalloon(downBalloon);                                                             // pop a balloon
+  } else if (!dragged && downXY) {
+    const isle = ISLES[currentIsle];
     setRay(e);
-    const hit = raycaster.intersectObject(grass, false)[0];
+    const hit = raycaster.intersectObject(isle.domeMesh, false)[0];
     if (hit) {
-      const x = hit.point.x, z = hit.point.z;
-      if (Math.hypot(x - FIRE_XZ.x, z - FIRE_XZ.y) < 1.6) {
-        stoke = 1.2;                              // stoke the fire
-        for (const p of puffs) if (p.state !== 'held' && rnd() < 0.8) startGather(p);
-      } else {
-        dropBerry(x, z);                          // feed
-      }
+      const lp = isle.group.worldToLocal(hit.point.clone());
+      if (Math.hypot(lp.x - isle.gatherXZ.x, lp.z - isle.gatherXZ.y) < 1.7) gatherCritters(isle);  // gather
+      else isle.makeFood(isle, lp.x, lp.z);                                                        // feed
     }
   }
-  downXY = null;
+  downXY = null; downBalloon = null;
 }
 dom.addEventListener('pointerdown', onDown, true);    // capture so we can pre-empt OrbitControls
 window.addEventListener('pointermove', onMove);
@@ -1108,12 +1111,13 @@ window.addEventListener('pointerup', onUp);
 
 // debug hooks (handy for testing / scripting the toy)
 window.__isle = {
-  poke: () => pokePuff(puffs[Math.floor(rnd() * puffs.length)]),
-  berry: (x = 0, z = 0) => dropBerry(x, z),
-  stoke: () => { stoke = 1.2; for (const p of puffs) if (rnd() < 0.8) startGather(p); },
+  poke: () => { const isle = ISLES[currentIsle]; if (isle.critters.length) pokeCritter(isle.critters[Math.floor(rnd() * isle.critters.length)]); },
+  feed: (x = 0, z = 0) => { const isle = ISLES[currentIsle]; isle.makeFood(isle, x, z); },
+  gather: () => gatherCritters(ISLES[currentIsle]),
+  pop: () => { const b = candy.balloons.find((x) => !x.popped); if (b) popBalloon(b); },
   setDay: (v) => { dayOverride = v; },
   clearDay: () => { dayOverride = null; },
-  count: () => puffs.length,
+  count: () => ISLES[currentIsle].critters.length,
 };
 let dayOverride = null;
 
@@ -1177,14 +1181,20 @@ function animate() {
   island2.position.y = ISLE2_POS.y + Math.sin(T * 0.45 + candy.bobPhase) * 0.2;
   island2.rotation.z = Math.sin(T * 0.3 + candy.bobPhase) * 0.006;
   for (const d of candy.spinners) d.rotation.y += dt * 1.3;
-  for (const gm of candy.gummies) gm.g.position.y = gm.baseY + Math.abs(Math.sin(T * 2 + gm.phase)) * 0.16;
+  ISLES[1].stoke = Math.max(0, ISLES[1].stoke - dt * 0.5);
+  const boost2 = 1 + ISLES[1].stoke * 1.6;
   for (const f of candy.flames) {
     const flick = 0.7 + Math.sin(T * 10 + f.phase) * 0.2 + Math.sin(T * 23 + f.phase) * 0.1;
-    f.m.scale.y = flick; f.m.scale.x = f.m.scale.z = 0.7 + (flick - 0.7) * 0.5;
+    f.m.scale.y = flick * boost2; f.m.scale.x = f.m.scale.z = (0.7 + (flick - 0.7) * 0.5) * (0.85 + 0.15 * boost2);
     f.m.position.y = f.baseY + Math.sin(T * 8 + f.phase) * 0.02;
   }
-  if (candy.light) candy.light.intensity = 2.6 + Math.sin(T * 12) * 0.5;
+  if (candy.light) candy.light.intensity = (2.6 + Math.sin(T * 12) * 0.5) * boost2;
   for (const b of candy.balloons) {
+    if (b.popped) {
+      b.respawn -= dt;
+      if (b.respawn <= 0) { const a = rnd() * Math.PI * 2, rad = rr(3, 8); b.baseX = Math.cos(a) * rad; b.baseZ = Math.sin(a) * rad; b.baseY = domeHeight(b.baseX, b.baseZ) + 4 + rnd() * 1.5; b.popped = false; b.g.visible = true; }
+      continue;
+    }
     b.g.position.x = b.baseX + Math.sin(T * b.sp + b.ph) * 0.5;
     b.g.position.z = b.baseZ + Math.cos(T * b.sp * 0.8 + b.ph) * 0.5;
     b.g.position.y = b.baseY + Math.sin(T * b.sp * 1.2 + b.ph) * 0.35;
@@ -1222,8 +1232,8 @@ function animate() {
   }
 
   // flames (+ stoke boost)
-  stoke = Math.max(0, stoke - dt * 0.5);
-  const boost = 1 + stoke * 1.8;
+  ISLES[0].stoke = Math.max(0, ISLES[0].stoke - dt * 0.5);
+  const boost = 1 + ISLES[0].stoke * 1.8;
   for (const f of flames) {
     const flick = 0.75 + Math.sin(T * 9 + f.phase) * 0.2 + Math.sin(T * 21 + f.phase) * 0.1;
     f.m.scale.y = flick * boost;
@@ -1253,30 +1263,30 @@ function animate() {
   }
   fp2.needsUpdate = true;
 
-  // tufts regrow + scale to level
-  for (const t of tufts) {
-    if (t.level < 1) t.level = Math.min(1, t.level + dt * 0.06);
-    const s = 0.3 + 0.7 * t.level;
-    t.group.scale.set(1, s, 1);
+  // critters, food, graze-tufts — per island (same engine on both)
+  for (const isle of ISLES) {
+    for (const t of isle.tufts) { if (t.level < 1) t.level = Math.min(1, t.level + dt * 0.06); const s = 0.3 + 0.7 * t.level; t.group.scale.set(1, s, 1); }
+    for (let i = isle.food.length - 1; i >= 0; i--) {
+      const b = isle.food[i];
+      if (b.eaten) { b.grow -= dt * 3; b.group.scale.setScalar(Math.max(0.001, b.grow)); if (b.grow <= 0) { isle.group.remove(b.group); isle.food.splice(i, 1); } }
+      else if (b.grow < 1) { b.grow = Math.min(1, b.grow + dt * 4); b.group.scale.setScalar(b.grow); }
+    }
+    for (const c of isle.critters) updateCritter(c, dt, T);
   }
-
-  // berries grow in
-  for (let i = berries.length - 1; i >= 0; i--) {
-    const b = berries[i];
-    if (b.eaten) {
-      b.grow -= dt * 3; b.group.scale.setScalar(Math.max(0.001, b.grow));
-      if (b.grow <= 0) { island.remove(b.group); berries.splice(i, 1); }
-    } else if (b.grow < 1) { b.grow = Math.min(1, b.grow + dt * 4); b.group.scale.setScalar(b.grow); }
-  }
-
-  // puffs
-  for (const p of puffs) updatePuff(p, dt, T);
 
   // hearts float up & fade
   for (let i = hearts.length - 1; i >= 0; i--) {
     const h = hearts[i]; h.life -= dt * 0.8; h.s.position.y += dt * 0.9;
     h.s.material.opacity = Math.max(0, h.life); h.s.scale.setScalar(0.5 + (1 - h.life) * 0.3);
     if (h.life <= 0) { scene.remove(h.s); hearts.splice(i, 1); }
+  }
+
+  // confetti bursts (balloon pops)
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const p = bursts[i]; p.life -= dt * 0.9; p.vy -= 9 * dt;
+    p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt;
+    p.s.material.opacity = Math.max(0, p.life);
+    if (p.life <= 0) { scene.remove(p.s); bursts.splice(i, 1); }
   }
 
   // camera travel between islands (smooth glide, keeping the viewing offset)
