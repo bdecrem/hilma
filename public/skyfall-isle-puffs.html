@@ -45,11 +45,23 @@
     letter-spacing: 0.2em; text-transform: uppercase; text-shadow: 0 1px 8px rgba(0,0,0,0.5);
     pointer-events: none; user-select: none;
   }
+  .snd-btn {
+    position: fixed; top: calc(env(safe-area-inset-top) + 12px); left: max(14px, env(safe-area-inset-left));
+    z-index: 6; width: 44px; height: 44px; border-radius: 50%; border: none;
+    background: rgba(255,255,255,0.14); color: #fff; font-size: 19px; line-height: 1;
+    -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+    cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s ease, transform .15s ease;
+  }
+  .snd-btn:hover { background: rgba(255,255,255,0.26); }
+  .snd-btn:active { transform: scale(0.92); }
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="isle-name" class="isle-name">Cloudhaven</div>
+<button id="sound-btn" class="snd-btn" aria-label="Toggle music">🔊</button>
 <button id="nav-left" class="nav-btn" aria-label="Previous island">‹</button>
 <button id="nav-right" class="nav-btn" aria-label="Next island">›</button>
 <div class="label">‹ › or arrow keys to travel · drag to orbit · grab a puff · tap to feed</div>
@@ -741,6 +753,7 @@ function travelTo(i) {
   _fromT.copy(controls.target); _fromC.copy(camera.position); _off.copy(camera.position).sub(controls.target);
   _toT.copy(ISLANDS[i].center); _toC.copy(ISLANDS[i].center).add(_off);
   currentIsle = i; traveling = true; travelT = 0; controls.enabled = false; controls.autoRotate = false;
+  MUSIC.setIsland(i);
   updateNavUI();
 }
 addEventListener('keydown', (e) => {
@@ -752,6 +765,124 @@ navLeft.addEventListener('pointerup', (e) => navTap(e, -1));
 navRight.addEventListener('pointerup', (e) => navTap(e, 1));
 [navLeft, navRight].forEach((b) => b.addEventListener('pointerdown', (e) => e.stopPropagation()));
 updateNavUI();
+
+// ===================================================================
+//  MUSIC — generative per-island themes (Web Audio), crossfade on travel.
+//  Mobile-safe: the AudioContext is created + resumed inside a user gesture.
+// ===================================================================
+const MUSIC = (() => {
+  const MASTER = 0.5, LOOKAHEAD = 0.1, TICK = 25;
+  const nf = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  let ctx = null, master = null, reverb = null, noiseBuf = null;
+  let dream = null, candy = null, songs = [], timer = null;
+  let started = false, muted = false, cur = 0;
+
+  function impulse(sec, decay) {
+    const len = (ctx.sampleRate * sec) | 0, buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay); }
+    return buf;
+  }
+  function voice(time, freq, opt) {
+    const type = opt.type || 'sine', atk = opt.atk ?? 0.01, rel = opt.rel ?? 0.4, peak = opt.peak ?? 0.1, song = opt.song;
+    const o = ctx.createOscillator(); o.type = type; o.frequency.value = freq;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, time);
+    g.gain.linearRampToValueAtTime(peak, time + atk);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + atk + rel);
+    let last = o;
+    if (opt.cutoff) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = opt.cutoff; o.connect(f); last = f; }
+    last.connect(g); g.connect(song.bus);
+    o.start(time); o.stop(time + atk + rel + 0.05);
+  }
+  function tick_noise(time, song, peak) {
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6500;
+    const g = ctx.createGain(); g.gain.setValueAtTime(peak, time); g.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
+    src.connect(hp); hp.connect(g); g.connect(song.bus); src.start(time); src.stop(time + 0.09);
+  }
+
+  // Cloudhaven — slow dreamy pads + sub drone + pentatonic bells
+  const CH = [{ root: 50, pad: [50, 54, 57] }, { root: 55, pad: [55, 59, 62] }, { root: 47, pad: [47, 50, 54] }, { root: 45, pad: [45, 49, 52] }];
+  const ARP = [62, 64, 66, 69, 71, 74];
+  function scheduleDream(time, step) {
+    const ci = Math.floor(step / 8) % CH.length;
+    if (step % 8 === 0) {
+      for (const m of CH[ci].pad) voice(time, nf(m), { type: 'sine', atk: 1.2, rel: 3.2, peak: 0.05, song: dream });
+      voice(time, nf(CH[ci].root - 12), { type: 'sine', atk: 1.0, rel: 3.6, peak: 0.06, song: dream });
+    }
+    if (step % 2 === 0) {
+      const m = ARP[(step / 2 + ci) % ARP.length] + (Math.random() < 0.3 ? 12 : 0);
+      voice(time, nf(m), { type: 'sine', atk: 0.005, rel: 1.6, peak: 0.07, song: dream });
+    }
+  }
+  // Sugar Drift — bouncy music-box melody + plucky bass + shaker
+  const BASS = [48, null, 55, null, 53, null, 55, null, 48, null, 55, null, 52, null, 55, null];
+  const MEL = [72, 76, 79, 76, 74, 77, 81, 77, 72, 79, 76, 72, 77, 76, 74, 72];
+  function scheduleCandy(time, step) {
+    const s = step % 16;
+    if (BASS[s] != null) voice(time, nf(BASS[s]), { type: 'triangle', atk: 0.005, rel: 0.22, peak: 0.12, cutoff: 900, song: candy });
+    if (MEL[s] != null) voice(time, nf(MEL[s]), { type: 'triangle', atk: 0.003, rel: 0.34, peak: 0.085, song: candy });
+    if (s % 4 === 0) voice(time, nf(36), { type: 'sine', atk: 0.002, rel: 0.18, peak: 0.10, song: candy });   // soft bounce
+    if (s % 2 === 1) tick_noise(time, candy, 0.03);                                                            // shaker
+  }
+  function mkSong(beat, wetAmt, schedule) {
+    const bus = ctx.createGain(); bus.gain.value = 0; bus.connect(master);
+    const send = ctx.createGain(); send.gain.value = wetAmt; bus.connect(send); send.connect(reverb);
+    return { bus, beat, step: 0, nextTime: 0, schedule };
+  }
+  function loop() {
+    if (!ctx) return; const now = ctx.currentTime;
+    for (const s of songs) while (s.nextTime < now + LOOKAHEAD) { s.schedule(s.nextTime, s.step); s.step++; s.nextTime += s.beat; }
+  }
+  function setIsland(i, instant) {
+    cur = i;
+    if (!started) return;
+    const t = ctx.currentTime, T = instant ? 0.01 : 1.4;
+    songs.forEach((s, j) => { s.bus.gain.cancelScheduledValues(t); s.bus.gain.setValueAtTime(s.bus.gain.value, t); s.bus.gain.linearRampToValueAtTime(j === i ? 1 : 0, t + T); });
+  }
+  function unlock() {
+    if (started) { ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = 0;
+    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+    reverb = ctx.createConvolver(); reverb.buffer = impulse(2.8, 2.6); reverb.connect(master);
+    const nlen = (ctx.sampleRate * 0.1) | 0; noiseBuf = ctx.createBuffer(1, nlen, ctx.sampleRate);
+    const nd = noiseBuf.getChannelData(0); for (let i = 0; i < nlen; i++) nd[i] = Math.random() * 2 - 1;
+    dream = mkSong(0.5, 0.55, scheduleDream);
+    candy = mkSong(0.25, 0.18, scheduleCandy);
+    songs = [dream, candy];
+    const t0 = ctx.currentTime + 0.12; songs.forEach((s) => { s.nextTime = t0; s.step = 0; });
+    timer = setInterval(loop, TICK);
+    started = true;
+    setIsland(cur, true);
+    if (!muted) master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + 1.5);
+    ctx.resume();
+  }
+  function toggleMute() {
+    muted = !muted;
+    if (!started) return;
+    const t = ctx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t);
+    master.gain.linearRampToValueAtTime(muted ? 0 : MASTER, t + 0.4);
+    if (!muted) ctx.resume();
+  }
+  function setSuspended(h) { if (!ctx) return; if (h) ctx.suspend(); else if (started && !muted) ctx.resume(); }
+  return {
+    unlock, setIsland, toggleMute, isMuted: () => muted, isStarted: () => started, setSuspended,
+    state: () => (ctx ? ctx.state : 'none'),
+    buses: () => songs.map((s) => +s.bus.gain.value.toFixed(2)),
+  };
+})();
+window.__music = MUSIC;
+
+// sound toggle + gesture unlock (mobile requires audio to start from a tap)
+const sndBtn = document.getElementById('sound-btn');
+function refreshSnd() { sndBtn.textContent = (MUSIC.isStarted() && MUSIC.isMuted()) ? '🔇' : '🔊'; }
+sndBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+sndBtn.addEventListener('pointerup', (e) => { e.preventDefault(); e.stopPropagation(); if (!MUSIC.isStarted()) MUSIC.unlock(); else MUSIC.toggleMute(); refreshSnd(); });
+function firstGesture() { MUSIC.unlock(); refreshSnd(); window.removeEventListener('pointerdown', firstGesture, true); window.removeEventListener('keydown', firstGesture, true); }
+window.addEventListener('pointerdown', firstGesture, true);
+window.addEventListener('keydown', firstGesture, true);
+document.addEventListener('visibilitychange', () => MUSIC.setSuspended(document.hidden));
 
 // ===================================================================
 //  CRITTERS + MECHANICS — one shared engine, one config per island
