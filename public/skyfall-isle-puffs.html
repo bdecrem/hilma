@@ -209,44 +209,84 @@ function heartTex() {
 const HEART_TEX = heartTex();
 
 // ===================================================================
-//  CLOUD SEA
+//  FLUFFY CLOUDS — billboarded soft-sprite volumes (reusable per island)
 // ===================================================================
-const floorGeo = new THREE.PlaneGeometry(700, 700, 40, 40);
-floorGeo.rotateX(-Math.PI / 2);
-const fpos = floorGeo.attributes.position;
-for (let i = 0; i < fpos.count; i++) {
-  fpos.setY(i, Math.sin(fpos.getX(i) * 0.03) * 2.2 + Math.cos(fpos.getZ(i) * 0.035) * 2.0);
-}
-floorGeo.computeVertexNormals();
-const cloudFloor = new THREE.Mesh(
-  floorGeo,
-  new THREE.MeshStandardMaterial({ color: '#1c1147', emissive: '#2a1860', emissiveIntensity: 0.5, roughness: 1, flatShading: true, transparent: true, opacity: 0.45 })
-);
-cloudFloor.position.y = -40;
-scene.add(cloudFloor);
-
-// pastel stardust clouds — each cloud picks a glowing pastel tint
-const CLOUD_TINTS = ['#ffd6f2', '#cdb8ff', '#bfe9ff', '#d8fff0', '#ffe6c7', '#ffc4e6'];
-const cloudMats = CLOUD_TINTS.map((hex) => new THREE.MeshStandardMaterial({
-  color: hex, emissive: hex, emissiveIntensity: 0.7, roughness: 1, flatShading: true, transparent: true, opacity: 0.95 }));
-const clouds = [];
-function makeCloud(x, y, z, s) {
-  const g = new THREE.Group();
-  const cloudMat = cloudMats[Math.floor(rnd() * cloudMats.length)];
-  const n = 3 + Math.floor(rnd() * 3);
-  for (let k = 0; k < n; k++) {
-    const blob = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 0), cloudMat);
-    blob.position.set((rnd() - 0.5) * 2.8, (rnd() - 0.5) * 0.6, (rnd() - 0.5) * 2.2);
-    blob.scale.set(1 + rnd(), 0.65 + rnd() * 0.4, 1 + rnd());
-    g.add(blob);
+// Why sprites, not meshes: stacks of soft cloud-puff billboards read as
+// genuinely fluffy/voluminous, cost ~1 quad each (cheap enough for several
+// islands + ambient drift), and the builder is reusable — every island gets
+// its own cloud and we can scatter the same puffs through the void. This is
+// the shared cloud tech for the whole dream cosmos (islands + travel later).
+function cloudPuffTexture() {
+  const s = 256, c = document.createElement('canvas'); c.width = c.height = s;
+  const x = c.getContext('2d'); x.clearRect(0, 0, s, s);
+  for (let i = 0; i < 18; i++) {                       // overlapping soft lobes → irregular fluff
+    const ang = rnd() * Math.PI * 2, dist = rnd() * s * 0.24;
+    const px = s / 2 + Math.cos(ang) * dist;
+    const py = s / 2 + Math.sin(ang) * dist * 0.7;     // flatter vertically
+    const rad = (0.14 + rnd() * 0.28) * s * 0.5;
+    const g = x.createRadialGradient(px, py, 0, px, py, rad);
+    g.addColorStop(0, 'rgba(255,255,255,0.95)');
+    g.addColorStop(0.55, 'rgba(255,255,255,0.45)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, s, s);
   }
-  g.position.set(x, y, z); g.scale.setScalar(s);
+  const t = new THREE.CanvasTexture(c); t.needsUpdate = true; return t;
+}
+const CLOUD_TEXES = [cloudPuffTexture(), cloudPuffTexture(), cloudPuffTexture()];
+
+// Build one fluffy cloud as a Group of soft billboards (caller adds it to the
+// scene or to an island). sit:true → a broad cushion that billows downward for
+// an island to rest on; otherwise a rounder free-floating puff. Bottoms are
+// shaded cooler/darker than tops to give the cloud volume.
+function makeFluffyCloud(opts = {}) {
+  const { radius = 6, depth = 4, count = 24, scale = 1, topY = 0.6,
+          tint = '#ffffff', shade = '#a294cc', sit = false, opacity = 0.92 } = opts;
+  const g = new THREE.Group();
+  const top = new THREE.Color(tint), bot = new THREE.Color(shade);
+  let ti = 0;
+  for (let i = 0; i < count; i++) {
+    let v, levelR, py, shadeF;
+    if (sit) {
+      v = Math.pow(rnd(), 1.8);                         // bias toward 0 → dense broad top, wispy base
+      levelR = radius * (1 - 0.5 * v);
+      py = topY - v * depth + (rnd() - 0.5) * 0.6;
+      shadeF = 1 - 0.85 * v;                            // tops bright, base shaded
+    } else {
+      v = rnd() * 2 - 1;                                // ellipsoid around center
+      levelR = radius * Math.sqrt(Math.max(0.02, 1 - v * v * 0.7));
+      py = v * depth * 0.5;
+      shadeF = py / (depth * 0.5) * 0.5 + 0.5;
+    }
+    const a = rnd() * Math.PI * 2;
+    const rr_ = Math.pow(rnd(), 0.5) * levelR;
+    const edge = rr_ / (radius + 1e-3);
+    const sprScale = radius * (0.42 + 0.5 * (1 - edge)) * (0.85 + rnd() * 0.45);
+    const col = bot.clone().lerp(top, 0.3 + 0.7 * Math.max(0, Math.min(1, shadeF)));
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: CLOUD_TEXES[ti++ % 3], color: col, transparent: true, depthWrite: false, opacity }));
+    spr.position.set(Math.cos(a) * rr_, py, Math.sin(a) * rr_);
+    spr.scale.set(sprScale * 1.25, sprScale, 1);
+    g.add(spr);
+  }
+  g.scale.setScalar(scale);
+  return g;
+}
+
+// ===================================================================
+//  AMBIENT CLOUDS — fluffy puffs drifting through the dream void
+// ===================================================================
+const CLOUD_TINTS = ['#ffffff', '#fbe9ff', '#e7edff', '#eafff6', '#fff2e0'];
+const clouds = [];
+for (let c = 0; c < 18; c++) {
+  const a = rnd() * Math.PI * 2, r = 26 + rnd() * 70;
+  const g = makeFluffyCloud({
+    radius: 4 + rnd() * 4, depth: 2.5 + rnd() * 2, count: 16 + Math.floor(rnd() * 8),
+    tint: CLOUD_TINTS[Math.floor(rnd() * CLOUD_TINTS.length)], shade: '#6f5f9e', opacity: 0.85,
+  });
+  g.position.set(Math.cos(a) * r, -8 - rnd() * 20, Math.sin(a) * r);
+  g.scale.setScalar(1 + rnd() * 1.4);
   scene.add(g);
   clouds.push({ group: g, sp: 0.4 + rnd() * 0.8, wrap: 130 });
-}
-for (let c = 0; c < 26; c++) {
-  const a = rnd() * Math.PI * 2, r = 26 + rnd() * 70;
-  makeCloud(Math.cos(a) * r, -6 - rnd() * 22, Math.sin(a) * r, 2 + rnd() * 4);
 }
 
 const ISLE_TOPS = ['#b6f0a0', '#ffb3e6', '#bfe0ff', '#e6c0ff'];
@@ -255,9 +295,9 @@ function makeSkyIsle(x, y, z, s, hue) {
   const top = new THREE.Mesh(new THREE.SphereGeometry(4, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.5),
     new THREE.MeshStandardMaterial({ color: hue, emissive: hue, emissiveIntensity: 0.15, roughness: 1, flatShading: true }));
   top.scale.y = 0.4; g.add(top);
-  const sk = new THREE.Mesh(new THREE.ConeGeometry(3.4, 11, 7),   // crystal shard root
-    new THREE.MeshStandardMaterial({ color: '#9d7be0', emissive: '#5a32a0', emissiveIntensity: 0.5, roughness: 0.6, flatShading: true }));
-  sk.rotation.x = Math.PI; sk.position.y = -5.6; g.add(sk);
+  const cloud = makeFluffyCloud({ radius: 5, depth: 4, count: 26, topY: -0.8, sit: true,
+    tint: '#ffffff', shade: '#7a68aa', opacity: 0.9 });
+  g.add(cloud);   // each distant island rests on its own little cloud too
   g.position.set(x, y, z); g.scale.setScalar(s); scene.add(g);
 }
 makeSkyIsle(-95, 10, -120, 2.4, ISLE_TOPS[0]);
@@ -272,37 +312,22 @@ makeSkyIsle(30, 34, -160, 0.9, ISLE_TOPS[1]);
 const island = new THREE.Group();
 scene.add(island);
 
+// a thin sandy beach rim (not a deep bowl) — the cloud is the island's underside
 const sand = new THREE.Mesh(
-  new THREE.CylinderGeometry(9.5, 7.5, 2.6, 48, 1),
+  new THREE.CylinderGeometry(9.6, 8.8, 1.3, 48, 1),
   new THREE.MeshStandardMaterial({ color: '#e8c98f', roughness: 1 })
 );
-sand.position.y = 0.5; sand.castShadow = true; sand.receiveShadow = true;
+sand.position.y = 1.05; sand.castShadow = true; sand.receiveShadow = true;
 island.add(sand);
 
-const spikeGeo = new THREE.ConeGeometry(7.6, 17, 14, 6, true);
-const sp = spikeGeo.attributes.position;
-for (let i = 0; i < sp.count; i++) {
-  const y = sp.getY(i);
-  if (y < 8.0) {
-    const j = (rnd() - 0.5) * 1.6 * (1 - (y + 8.5) / 17);
-    sp.setX(i, sp.getX(i) + j); sp.setZ(i, sp.getZ(i) + j * 0.8);
-  }
-}
-spikeGeo.computeVertexNormals();
-const spike = new THREE.Mesh(spikeGeo, new THREE.MeshStandardMaterial({ color: '#8a5cd0', emissive: '#4a228a', emissiveIntensity: 0.45, roughness: 0.5, flatShading: true }));
-spike.rotation.x = Math.PI; spike.position.y = -0.8 - 8.5;
-spike.castShadow = true; spike.receiveShadow = true;
-island.add(spike);
-
-for (let i = 0; i < 4; i++) {
-  const chunkHue = ['#b06ee6', '#7d5cd6', '#d98fe0', '#9d7be0'][i % 4];
-  const chunk = new THREE.Mesh(new THREE.DodecahedronGeometry(1.1 + rnd() * 0.9, 0),
-    new THREE.MeshStandardMaterial({ color: chunkHue, emissive: chunkHue, emissiveIntensity: 0.35, roughness: 0.5, flatShading: true }));
-  const a = rnd() * Math.PI * 2;
-  chunk.position.set(Math.cos(a) * (3 + rnd() * 3), -4 - rnd() * 7, Math.sin(a) * (3 + rnd() * 3));
-  chunk.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3); chunk.castShadow = true;
-  island.add(chunk);
-}
+// the cloud our island rests on — a broad fluffy cushion billowing downward,
+// wider than the beach so the island looks nestled on top of it
+const islandCloud = makeFluffyCloud({
+  radius: 13, depth: 8, count: 130, topY: 1.6, sit: true,
+  tint: '#f7f1ff', shade: '#8a79bc', opacity: 0.97,
+});
+islandCloud.position.y = -0.8;   // dense top at ~y0.8 cradles the beach (bottom ~0.4), wisping down
+island.add(islandCloud);         // child of island so it bobs along with it
 
 // grassy top
 const grassGeo = new THREE.SphereGeometry(8.2, 40, 24, 0, Math.PI * 2, 0, Math.PI * 0.5);
