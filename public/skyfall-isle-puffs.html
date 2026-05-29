@@ -843,6 +843,8 @@ const MUSIC = (() => {
     if (started) { ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     ctx = new AC();
+    // iOS: route to the playback session so audio ignores the ring/silent switch (16.4+)
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
     master = ctx.createGain(); master.gain.value = 0;
     const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
     reverb = ctx.createConvolver(); reverb.buffer = impulse(2.8, 2.6); reverb.connect(master);
@@ -856,6 +858,8 @@ const MUSIC = (() => {
     started = true;
     setIsland(cur, true);
     if (!muted) master.gain.linearRampToValueAtTime(MASTER, ctx.currentTime + 1.5);
+    // iOS: kick a 1-sample buffer inside the gesture to fully unlock output
+    try { const b = ctx.createBuffer(1, 1, 22050); const s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch (e) {}
     ctx.resume();
   }
   function toggleMute() {
@@ -866,8 +870,9 @@ const MUSIC = (() => {
     if (!muted) ctx.resume();
   }
   function setSuspended(h) { if (!ctx) return; if (h) ctx.suspend(); else if (started && !muted) ctx.resume(); }
+  function resume() { if (ctx) ctx.resume(); }
   return {
-    unlock, setIsland, toggleMute, isMuted: () => muted, isStarted: () => started, setSuspended,
+    unlock, setIsland, toggleMute, isMuted: () => muted, isStarted: () => started, setSuspended, resume,
     state: () => (ctx ? ctx.state : 'none'),
     buses: () => songs.map((s) => +s.bus.gain.value.toFixed(2)),
   };
@@ -879,9 +884,11 @@ const sndBtn = document.getElementById('sound-btn');
 function refreshSnd() { sndBtn.textContent = (MUSIC.isStarted() && MUSIC.isMuted()) ? '🔇' : '🔊'; }
 sndBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
 sndBtn.addEventListener('pointerup', (e) => { e.preventDefault(); e.stopPropagation(); if (!MUSIC.isStarted()) MUSIC.unlock(); else MUSIC.toggleMute(); refreshSnd(); });
-function firstGesture() { MUSIC.unlock(); refreshSnd(); window.removeEventListener('pointerdown', firstGesture, true); window.removeEventListener('keydown', firstGesture, true); }
-window.addEventListener('pointerdown', firstGesture, true);
-window.addEventListener('keydown', firstGesture, true);
+const GESTURES = ['pointerdown', 'touchend', 'click', 'keydown'];
+function firstGesture() { MUSIC.unlock(); refreshSnd(); for (const ev of GESTURES) window.removeEventListener(ev, firstGesture, true); }
+for (const ev of GESTURES) window.addEventListener(ev, firstGesture, true);
+// iOS can suspend audio after an interruption — nudge it back on later taps
+window.addEventListener('pointerdown', () => { if (MUSIC.isStarted() && !MUSIC.isMuted() && MUSIC.state() !== 'running') MUSIC.resume(); });
 document.addEventListener('visibilitychange', () => MUSIC.setSuspended(document.hidden));
 
 // ===================================================================
