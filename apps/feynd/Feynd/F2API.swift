@@ -35,6 +35,11 @@ final class F2API {
         config.httpShouldSetCookies = true
         config.httpCookieAcceptPolicy = .always
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        // F2 data is per-user and live. Drop the cache entirely so a list/topic
+        // fetch can never be served stale from URLCache (the session config's
+        // requestCachePolicy alone isn't enough — per-request .useProtocolCachePolicy
+        // overrides it, so a cacheable response header would still be replayed).
+        config.urlCache = nil
         self.session = URLSession(configuration: config)
 
         self.encoder = JSONEncoder()
@@ -508,6 +513,7 @@ final class F2API {
         let url = Secrets.backendBaseURL.appendingPathComponent(path)
         var req = URLRequest(url: url)
         req.httpMethod = method
+        req.cachePolicy = .reloadIgnoringLocalCacheData   // never read a cached response
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("application/json", forHTTPHeaderField: "Accept")
         if let body {

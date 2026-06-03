@@ -4,10 +4,15 @@ import { listTopicsForUser } from '@/lib/f2/threads'
 
 export const runtime = 'nodejs'
 
+// Per-user, session-authed, live data — must never be cached by URLCache, a
+// CDN, or any proxy. (Next's default `public, max-age=0, must-revalidate` is
+// both wrong here and was being replayed stale by the iOS URLSession cache.)
+const NO_STORE = { 'Cache-Control': 'no-store' }
+
 export async function GET() {
   const user = await getSessionUser()
   if (!user) {
-    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: NO_STORE })
   }
 
   const threads = await listTopicsForUser(user.id)
@@ -25,5 +30,5 @@ export async function GET() {
     updated_at: t.updated_at,
     client: t.client,
   }))
-  return NextResponse.json({ topics })
+  return NextResponse.json({ topics }, { headers: NO_STORE })
 }
