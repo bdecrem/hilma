@@ -13,26 +13,31 @@ struct MainTabsView: View {
         ZStack(alignment: .bottom) {
             FeyndTheme.bg.ignoresSafeArea()
 
-            // Switch screens with opacity rather than swapping the view tree —
-            // keeps each tab's NavigationStack state alive.
-            ZStack {
-                NavigationStack(path: $chatPath) {
-                    ChatView()
-                        .toolbar(.hidden, for: .navigationBar)
+            // Render only the active tab. The old approach kept BOTH
+            // NavigationStacks mounted and toggled opacity — on Catalyst that
+            // wedged SwiftUI's update tracking, so the Topics list stopped
+            // re-rendering on state changes (pull-to-refresh, re-sort) until an
+            // app relaunch. Mounting just the active tab keeps it updating.
+            // The path bindings live here in @State, so navigation survives tab
+            // switches, and entering Topics re-runs its .task → a fresh load,
+            // which means topics added in Chat show up the moment you switch over.
+            Group {
+                switch active {
+                case .chat:
+                    NavigationStack(path: $chatPath) {
+                        ChatView()
+                            .toolbar(.hidden, for: .navigationBar)
+                    }
+                case .topics:
+                    NavigationStack(path: $topicsPath) {
+                        TopicsView()
+                            .toolbar(.hidden, for: .navigationBar)
+                            .navigationDestination(for: F2Topic.self) { topic in
+                                TopicDetailView(topicId: topic.id)
+                                    .toolbar(.hidden, for: .navigationBar)
+                            }
+                    }
                 }
-                .opacity(active == .chat ? 1 : 0)
-                .allowsHitTesting(active == .chat)
-
-                NavigationStack(path: $topicsPath) {
-                    TopicsView()
-                        .toolbar(.hidden, for: .navigationBar)
-                        .navigationDestination(for: F2Topic.self) { topic in
-                            TopicDetailView(topicId: topic.id)
-                                .toolbar(.hidden, for: .navigationBar)
-                        }
-                }
-                .opacity(active == .topics ? 1 : 0)
-                .allowsHitTesting(active == .topics)
             }
 
             // Floating pill — sits above the home indicator.
