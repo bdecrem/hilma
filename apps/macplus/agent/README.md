@@ -20,6 +20,15 @@ ANTHROPIC_API_KEY=sk-... ./node_modules/.bin/tsx src/main.ts --cwd /path/to/docs
 Flags: `--cwd <dir>` (working directory / corpus), `--model <id>` (default `claude-sonnet-4-6`),
 `--cols <n>` (wrap width, default 80). In-session: `/help /quit /clear /cols N /cwd /model`.
 
+## Deployed location (as of 2026-06-03)
+Source of truth lives here in the repo (`apps/macplus/agent/`). The running copy is on the **Mac mini**
+at `~/claude-plus/` (`admin@192.168.7.50`), put there by rsync + `npm install`. To re-deploy after editing:
+```bash
+rsync -az --exclude node_modules ~/Documents/coding2025/hilma/apps/macplus/agent/ admin@192.168.7.50:claude-plus/
+ssh admin@192.168.7.50 'cd claude-plus && /opt/homebrew/bin/npm install'
+```
+Currently it runs on a temporary listener on **port 2324** (the prod login shell stays on 2323).
+
 ## Run it on the mini (what the Plus dials into)
 Replace the plain-shell listener with the agent. **Important:** run `tsx` directly (NOT `npx`, which
 prints a spinner that corrupts the VT100), and do NOT route child stderr to the socket (keep SDK/Node

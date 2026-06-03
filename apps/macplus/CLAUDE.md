@@ -14,6 +14,46 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 
 ---
 
+## WHERE WE LEFT OFF (2026-06-03) — read this first when resuming
+
+The agent ("**Macinclaude Plus**" — the name Bart picked) is **built and working**; the only blocker is
+the **Plus↔modem serial cable**.
+
+- **Code locations:** repo **source of truth** = `apps/macplus/agent/` (this repo: `src/main.ts`,
+  `src/teletype.ts`, `README.md`). **Deployed copy on the mini** = `~/claude-plus/` on
+  `admin@192.168.7.50`, put there by rsync from the repo, then `npm install` on the mini. Re-deploy with:
+  `rsync -az --exclude node_modules ~/Documents/coding2025/hilma/apps/macplus/agent/ admin@192.168.7.50:claude-plus/`
+  then `ssh admin@192.168.7.50 'cd claude-plus && /opt/homebrew/bin/npm install'`.
+- **Agent status:** running on the mini's `~/claude-plus/` copy via a **temporary listener on port
+  2324** (NOT the production 2323 login shell). Verified end-to-end from the iMac with
+  `nc 192.168.7.50 2324` — held a conversation, it created a file with the `[y/N/a]` gate. Caveats:
+  the `ANTHROPIC_API_KEY` was set only in that listener's environment (not persistent — if the mini
+  rebooted, re-launch per `agent/README.md`). The banner on the mini says "Macinclaude Plus" but the
+  **repo source/docs still say the old name** — renaming to "Macinclaude Plus" is a pending TODO.
+- **The blocker — the cable:** Bart's original DIN-8→DB-9 cable is **dead** — physically missing DB-9
+  **pins 2 & 3 (RXD/TXD)**, so it has no data path (confirmed why nothing ever reached the modem).
+- **Confirmed facts:** the WiFi modem is a **Simulant RetroWiFi SI**, **DB-9 female**, a Hayes modem
+  (**DCE**) → it needs a **STRAIGHT-THROUGH** cable, NOT null-modem. (Confirmed via Simulant/community.)
+- **On order (arrives ~6/4; Bart resumes next week):**
+  1. **C2G 25041 / 70810** cable — mini-DIN-8 **male** → DB-9 **female**, ~4 ft.
+  2. **Warmstor** DB-9 male-to-male **straight gender changer** (6-pack).
+  3. **LNHCAW** DB-9 male-to-male **null-modem adapter**.
+  Both adapters are male-male (they bridge the cable's female DB-9 to the SI's female). We bought both
+  because the C2G 25041's internal wiring (straight vs null-modem) is undocumented and field reports conflict.
+
+- **NEXT STEPS when the parts arrive:**
+  1. Assemble: Plus **modem port** → C2G cable → **straight gender changer** → SI. ZTerm: Modem Port,
+     **9600**, 8-N-1, flow control **off**, **Local Echo ON** (for the AT test only).
+  2. Type `AT` → expect `OK`. **If silent, swap the straight coupler for the null-modem adapter** in the
+     same spot and retry. One of the two is the correct wiring.
+  3. Once `OK`: set ZTerm **Local Echo OFF**, join WiFi `ATW"SSID,PASSWORD"`, save `AT&W`.
+  4. **Dial the agent:** `ATDT"192.168.7.50:2324"` → lands in Macinclaude Plus. (If 2324 is dead, re-launch
+     the listener — `agent/README.md`.)
+
+(Full WiFi/connection detail and the bring-up table are in the "Connecting the Plus to WiFi" section below.)
+
+---
+
 ## The hardware/storage setup
 
 - **Machine:** Macintosh Plus (Motorola 68000, 1–4 MB RAM, 512×342 1-bit B&W screen, no Control key, no fan).
@@ -23,6 +63,22 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
   **`Apps`** folder. This is where built apps land.
 - **Rule:** never reformat or alter the card's FAT32 or its other files (`bluescsi.ini`, `HD30_512 MacPack.hda`).
   We only overwrite the one `.hda` file.
+
+---
+
+## Current state of the Macintosh Plus
+
+- **Boots fine** off the BlueSCSI card into System 6.0.8 (volume "BlueSCSI Mac Plus"); a System 7.0.1
+  folder is also present, plus Apple HD SC Setup, Silver Lining, System Picker.
+- **`Apps/` folder on the card holds four working apps**, all with resource forks verified intact:
+  **MacPaint 2.0** (`APPL/MPNT`), **MacWrite 4.5** (`APPL/MACA`), **ZTerm 1.0.1** (`APPL/zTRM`), and
+  **Sudoku** (`APPL/????`, built here). MacPaint/MacWrite/ZTerm were sourced from Macintosh Garden;
+  Sudoku was built from scratch (see the worked example below).
+- **Simulator we use: Mini vMac** (the Mac Plus emulator) on the iMac — boots a *pre-made* System 6.0.5
+  floppy image (`Disk605.dsk`) with the real Plus ROM (`boot0.rom`/`vMac.ROM`). We do **not** compile an
+  OS. Mini vMac boots **raw HFS** images only, not the APM `.hda`/`.vhd` SCSI images (those work on the
+  real Plus). It's the only emulator in the loop; everything visual is verified there before the card.
+- **Networking / WiFi: not yet working** — blocked on the serial cable. See "WHERE WE LEFT OFF" at the top.
 
 ---
 
@@ -193,6 +249,30 @@ sync && diskutil eject /dev/diskN
 - For a bare app already in MacBinary (e.g. Retro68's `Name.bin`), `hcopy -m` is enough. For native
   macOS files carrying a resource fork in an xattr (e.g. unpacked `.sit`/`.hqx` downloads), encode to
   MacBinary first with `tools/macbin.py`.
+
+---
+
+## Worked example — how Sudoku was built (the full pipeline)
+
+End to end, in the order it happened (`sudoku/`):
+1. **Puzzles, generated + verified in Python** — `sudoku/generate_puzzles.py` builds puzzles, digs holes
+   while a solver checks **uniqueness**, grades difficulty, and emits `sudoku/puzzles.h` (36 puzzles:
+   8 easy / 14 medium / 14 hard, every one verified to have exactly one solution).
+2. **The app, in C against the Mac Toolbox** — `sudoku/sudoku.c`: a `WaitNextEvent` loop, a QuickDraw
+   9×9 grid with hit-testing, code-built menus (`MenuSelect`/`MenuKey`), selection highlight, and B&W
+   styling that distinguishes givens / user entries / conflicts. Compiled for 68000 with **Retro68**
+   (`sudoku/CMakeLists.txt` → `add_application`; `sudoku/build.sh` is one-command).
+3. **Logic verified on the host** — `sudoku/logic_test.c` ports the exact conflict/win algorithms and
+   asserts them against all 36 puzzles with the system clang (fast, catches regressions without the Mac).
+4. **Injected onto the Plus** — the Retro68 `Sudoku.bin` (MacBinary) `hcopy -m`'d into the `Apps` folder
+   of a local copy of the BlueSCSI image, resource fork confirmed byte-identical, then the `.hda` copied
+   back to the SD card. (`tools/lsrsrc.py` confirms `CODE`/`SIZE` resources; `tools/macbin.py` is the
+   MacBinary encoder for non-Retro68 apps.)
+5. **Run for real in Mini vMac** — booted System 6 with the actual Plus ROM, launched Sudoku, drove it
+   (clicks + keys), confirmed rendering, input, conflict-marking, and the menus before trusting the card.
+
+This is the template for any new 68k app here: generate/verify data → Toolbox C via Retro68 → host-test
+the pure logic → inject with resource fork intact → drive it in Mini vMac.
 
 ---
 
