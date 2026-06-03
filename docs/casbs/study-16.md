@@ -73,3 +73,19 @@ Diaconis ('99), Jack Katz ('00), Judith Walkowitz ('01), Beth Simmons ('02), Kaa
 Graham Gottlieb, Hana Sevcikova ('17), Cécile Roudeau, Daniela Niesta Kayser, John Markoff,
 Roberta Katz ('18), Giulia Baroni ('19), Roby Harrington ('20), Aisha Beliso-De Jesús ('21),
 J. Nathan Matias ('22), Michelle Miao ('23), Tsui-Sung Wu ('24).
+
+## Hall of Shame (the fun version, for the daughter)
+Punchy/unbalanced on purpose — Bart is not the first "loser" in #16:
+
+1. **Paul Romer** — Won the Nobel, then got run out of the World Bank in 15 months for trashing its stats and trying to ban the word "and."
+2. **John Markoff** — NYT reporter who turned a hacker he never interviewed into a supervillain, then sold the movie rights. Got his own "Free Kevin" hate campaign.
+3. **John McCarthy** — Coined "Artificial Intelligence," promised thinking machines in a generation, delivered 30 years of disappointment.
+4. **Amos Tversky** — His research won the Nobel. He'd died, so his buddy kept the medal.
+5. **Seymour Martin Lipset** — Bet his whole career on "rich countries turn democratic." Then met China.
+6. **George E. P. Box** — The world's most-quoted statistician — for the line "all models are wrong."
+7. **Nell Irvin Painter** — Star historian who went to art school at 64 to be the worst kid in the room.
+8. **John W. Rowe** — Invented "Successful Aging": a science for blaming old people for getting sick.
+9. **K. Alison Clarke-Stewart** — Spent 30 years studying whether daycare ruins your kids. No survivors.
+10. **Persi Diaconis** — Dropped out at 14 to run off as a circus magician. (Annoyingly, became a Stanford professor.)
+
+Kicker: **Simine Vazire** sat here too — the scientist whose entire job is catching everyone else faking their results. So the room's housed both the frauds and the cop.
