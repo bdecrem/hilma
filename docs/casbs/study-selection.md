@@ -5,7 +5,11 @@ themed around "ghost in the machine" backstories (mind / AI / cybernetics /
 cognition / consciousness) — which dovetails with the Now What project (cognition
 after AGI). Self-contained so the conversation can continue from any machine.
 
-Last updated: 2026-06-02.
+Last updated: 2026-06-03.
+
+> **Outcome: Bart got Study 16.** The grab is settled — the strategy and cheat
+> sheet below are kept for the record. The full back story of the room lives in
+> `study-16.md`; the standout living ghost (John Markoff) is in `john-markoff.md`.
 
 ---
 
