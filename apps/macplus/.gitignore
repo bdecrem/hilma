@@ -1,0 +1,13 @@
+# Build artifacts and disk images live under ~/mac-plus-apps/, never in the repo.
+build/
+*.bin
+*.APPL
+*.dsk
+*.hda
+*.rom
+*.ROM
+*.img
+*.vhd
+# stray macOS resource-fork sidecars
+._*
+.DS_Store

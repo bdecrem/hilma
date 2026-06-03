@@ -1,0 +1,22 @@
+{
+  "name": "claude-plus",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Claude Code for the Macintosh Plus — a coding agent rendered for a VT100 over a slow serial link.",
+  "bin": {
+    "claude-plus": "src/main.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "dev": "tsx src/main.ts --cols 80"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}
