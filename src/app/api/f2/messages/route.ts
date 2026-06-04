@@ -3,6 +3,9 @@ import { processMessage } from '@/lib/f2/agent'
 import { getSessionUser } from '@/lib/f2/auth'
 
 export const runtime = 'nodejs'
+// "setup:" runs a synchronous search + rank + transcript-fetch loop that can
+// take ~30-45s; give it room (the iMessage webhook already allows 60).
+export const maxDuration = 60
 
 // POST /api/f2/messages
 // Web-app endpoint. Session-authenticated. Body: { text, thread_id? }.

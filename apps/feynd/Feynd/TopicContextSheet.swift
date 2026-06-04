@@ -194,6 +194,11 @@ struct TopicContextSheet: View {
                 .foregroundStyle(FeyndTheme.text)
                 .lineLimit(8)
                 .fixedSize(horizontal: false, vertical: true)
+            if let author = src.author, !author.isEmpty {
+                Text("— \(author)")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(FeyndTheme.text3)
+            }
         }
     }
 

@@ -25,6 +25,8 @@ export type F2AdditionalSource = {
 /// folded into the LLM context by buildFullContent.
 export type F2Quote = {
   text: string
+  /** Optional attribution, e.g. "Amos Tversky". Null when not supplied. */
+  author?: string | null
   created_at: string
 }
 
@@ -69,7 +71,9 @@ export function buildFullContent(thread: F2Thread): string {
   // them as the user's own emphasis on top of the source material.
   const quotes = (thread.quotes ?? []).filter((q) => q.text?.trim())
   if (quotes.length > 0) {
-    const body = quotes.map((q) => `"${q.text}"`).join('\n\n')
+    const body = quotes
+      .map((q) => (q.author ? `"${q.text}" — ${q.author}` : `"${q.text}"`))
+      .join('\n\n')
     parts.push(`\n\n--- Quotes the user saved ---\n\n${body}`)
   }
   return parts.join('')
@@ -317,13 +321,29 @@ export async function appendMessages(
   if (error) console.error('[f2] appendMessages failed:', error)
 }
 
+/// Overwrite a thread's additional_sources array. Used by the "setup:" video
+/// flow to attach the 2nd/3rd video sources after the thread is created.
+export async function setAdditionalSources(
+  threadId: string,
+  userId: string,
+  sources: F2AdditionalSource[],
+): Promise<void> {
+  const { error } = await f2Supabase()
+    .from('f2_threads')
+    .update({ additional_sources: sources, updated_at: new Date().toISOString() })
+    .eq('id', threadId)
+    .eq('user_id', userId)
+  if (error) console.error('[f2] setAdditionalSources failed:', error)
+}
+
 /// Append a captured quote to a topic. Returns the new total, or null on error.
 /// Like the quiz helpers, scoped by user_id as defense-in-depth.
 export async function appendQuote(
   thread: F2Thread,
   text: string,
+  author: string | null = null,
 ): Promise<number | null> {
-  const entry: F2Quote = { text, created_at: new Date().toISOString() }
+  const entry: F2Quote = { text, author: author ?? null, created_at: new Date().toISOString() }
   const next = [...(thread.quotes ?? []), entry]
   const { error } = await f2Supabase()
     .from('f2_threads')

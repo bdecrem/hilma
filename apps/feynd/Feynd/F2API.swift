@@ -262,11 +262,12 @@ final class F2API {
         let topicKind: String     // "web" | "video" | "audio" | "paste" | "fallback"
         let url: String?
         let title: String?
+        let author: String?
         let contentLength: Int
         let addedAt: String?
 
         enum CodingKeys: String, CodingKey {
-            case id, kind, index, part, url, title
+            case id, kind, index, part, url, title, author
             case topicKind = "topic_kind"
             case contentLength = "content_length"
             case addedAt = "added_at"

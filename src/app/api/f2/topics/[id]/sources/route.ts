@@ -33,6 +33,8 @@ type SourceItem = {
   url: string | null
   /** For quotes, this carries the quote text itself. */
   title: string | null
+  /** Attribution for a quote row, when supplied. Null/absent otherwise. */
+  author?: string | null
   content_length: number
   added_at: string | null
 }
@@ -156,6 +158,7 @@ export async function GET(
       topic_kind: 'fallback',
       url: null,
       title: q.text,
+      author: q.author ?? null,
       content_length: q.text?.length ?? 0,
       added_at: q.created_at,
     })

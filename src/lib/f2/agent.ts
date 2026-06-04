@@ -25,8 +25,11 @@ import {
   setPendingQuote,
   matchTopicByName,
   listTopicsForUser,
+  setAdditionalSources,
   type F2Thread,
+  type F2AdditionalSource,
 } from './threads'
+import { findExplainerVideos } from './videos'
 import {
   routeAndReply,
   askReflectionQuestion,
@@ -71,7 +74,15 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   // target topic. Resolving it takes priority over all other routing.
   const pending = await getPendingQuote(userId)
   if (pending) {
-    return resolvePendingQuote(userId, client, handle, pending, text)
+    const { text: pText, author: pAuthor } = decodePending(pending)
+    return resolvePendingQuote(userId, client, handle, pText, pAuthor, text)
+  }
+
+  // "setup: <freeform>" → find 3 explainer videos and spin up a new topic
+  // from them. Always creates a fresh topic, regardless of the active one.
+  const setupMatch = text.match(/^set[\s-]?up\b[\s:,.\-—]*/i)
+  if (setupMatch) {
+    return handleSetup(userId, client, handle, text, text.slice(setupMatch[0].length).trim())
   }
 
   // "quote <text>" → capture a quote for the active topic (or ask which one).
@@ -80,8 +91,8 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   // which we strip so they don't double up against the quotes the UI adds.
   const quoteMatch = text.match(/^quote\b[\s:,;.\-—]*/i)
   if (quoteMatch) {
-    const quoteText = stripQuoteMarks(text.slice(quoteMatch[0].length).trim())
-    return handleQuote(userId, client, handle, text, quoteText, threadId)
+    const { text: quoteText, author } = parseQuote(text.slice(quoteMatch[0].length).trim())
+    return handleQuote(userId, client, handle, text, quoteText, author, threadId)
   }
 
   const firstToken = stripSurroundingQuotes(text.split(/\s+/)[0])
@@ -92,21 +103,66 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   return handleNonUrl(userId, client, handle, text, threadId)
 }
 
-/// Strip one matched pair of surrounding quotation marks — straight ("…", '…')
-/// or curly ("…", '…') — from a captured quote. Leaves inner quotes and
-/// unbalanced marks untouched.
-function stripQuoteMarks(s: string): string {
-  const t = s.trim()
-  if (t.length < 2) return t
-  const pairs: Record<string, string> = {
-    '"': '"',
-    "'": "'",
-    '“': '”', // " "
-    '‘': '’', // ' '
+const QUOTE_PAIRS: Record<string, string> = {
+  '"': '"',
+  "'": "'",
+  '“': '”', // " "
+  '‘': '’', // ' '
+}
+
+/// Parse a captured quote into text + optional author.
+///   "<quote>" (author)     → author in parens
+///   "<quote>" - author      → author after a dash (-, –, —) or colon
+///   "<quote>" author        → bare trailing attribution
+///   <quote>                 → no quotation marks: whole thing is the text,
+///                             no author (no reliable boundary)
+/// A single layer of surrounding quotes is stripped from the text either way.
+function parseQuote(raw: string): { text: string; author: string | null } {
+  const s = raw.trim()
+  if (s.length < 2) return { text: s, author: null }
+
+  const close = QUOTE_PAIRS[s[0]]
+  if (close) {
+    const end = s.indexOf(close, 1)
+    if (end > 0) {
+      const text = s.slice(1, end).trim()
+      const author = parseAuthor(s.slice(end + 1).trim())
+      return { text, author }
+    }
   }
-  const close = pairs[t[0]]
-  if (close && t.endsWith(close)) return t.slice(1, -1).trim()
-  return t
+  // No usable quote span — strip a matched pair if present, no author.
+  const c = QUOTE_PAIRS[s[0]]
+  if (c && s.endsWith(c)) return { text: s.slice(1, -1).trim(), author: null }
+  return { text: s, author: null }
+}
+
+/// Pull an author out of the text trailing a closing quote: "(name)",
+/// "- name" / "— name" / ": name", or a bare "name". Empty → null.
+function parseAuthor(rest: string): string | null {
+  if (!rest) return null
+  const paren = rest.match(/^\((.+)\)$/)
+  if (paren) return paren[1].trim() || null
+  const dashed = rest.match(/^[-–—:]\s*(.+)$/)
+  if (dashed) return dashed[1].trim() || null
+  return rest || null
+}
+
+/// The pending-quote slot is a single text column; encode text+author as JSON
+/// so an unfiled author survives the "which topic?" round-trip. Legacy plain
+/// strings decode as text with no author.
+function encodePending(text: string, author: string | null): string {
+  return JSON.stringify({ t: text, a: author ?? null })
+}
+function decodePending(s: string): { text: string; author: string | null } {
+  try {
+    const o = JSON.parse(s)
+    if (o && typeof o.t === 'string') {
+      return { text: o.t, author: typeof o.a === 'string' ? o.a : null }
+    }
+  } catch {
+    // legacy plain-text pending value
+  }
+  return { text: s, author: null }
 }
 
 /// Save `quoteText` onto a topic and persist the exchange to its chat log so it
@@ -114,14 +170,16 @@ function stripQuoteMarks(s: string): string {
 async function fileQuote(
   thread: F2Thread,
   quoteText: string,
+  author: string | null,
   userMessage: string,
 ): Promise<F2Reply> {
-  const total = await appendQuote(thread, quoteText)
+  const total = await appendQuote(thread, quoteText, author)
   if (total === null) {
     return { reply: "F2: couldn't save that quote. Try again in a sec." }
   }
   const label = thread.topic ?? thread.url ?? 'this topic'
-  const reply = `F2 saved that quote to "${label}". ${total} quote${total === 1 ? '' : 's'} on this topic now.`
+  const by = author ? ` (${author})` : ''
+  const reply = `F2 saved that quote${by} to "${label}". ${total} quote${total === 1 ? '' : 's'} on this topic now.`
   const now = new Date().toISOString()
   await appendMessages(thread.id, thread.user_id, thread.messages, [
     { role: 'user', text: userMessage, created_at: now },
@@ -139,19 +197,20 @@ async function handleQuote(
   handle: string,
   userMessage: string,
   quoteText: string,
+  author: string | null,
   threadId: string | undefined,
 ): Promise<F2Reply> {
   if (!quoteText) {
-    return { reply: 'F2: add the quote text after "quote" — e.g. quote "Whereof one cannot speak…".' }
+    return { reply: 'F2: add the quote text after "quote" — e.g. quote "Whereof one cannot speak…" (Wittgenstein).' }
   }
 
   if (threadId) {
     const thread = await getThreadById(userId, threadId)
     if (!thread) return { reply: "F2: couldn't find that topic to attach the quote to." }
-    return fileQuote(thread, quoteText, userMessage)
+    return fileQuote(thread, quoteText, author, userMessage)
   }
 
-  await setPendingQuote(userId, quoteText)
+  await setPendingQuote(userId, encodePending(quoteText, author))
   const topics = await listTopicsForUser(userId)
   const recent = topics
     .slice(0, 5)
@@ -173,6 +232,7 @@ async function resolvePendingQuote(
   client: F2Client,
   handle: string,
   quoteText: string,
+  author: string | null,
   answer: string,
 ): Promise<F2Reply> {
   if (/^cancel\b/i.test(answer)) {
@@ -191,7 +251,7 @@ async function resolvePendingQuote(
       return { reply: "F2: couldn't create that topic. Try again in a sec." }
     }
     await setPendingQuote(userId, null)
-    return fileQuote(thread, quoteText, `quote ${quoteText}`)
+    return fileQuote(thread, quoteText, author, `quote ${quoteText}`)
   }
 
   const match = await matchTopicByName(userId, answer)
@@ -201,7 +261,79 @@ async function resolvePendingQuote(
     }
   }
   await setPendingQuote(userId, null)
-  return fileQuote(match, quoteText, `quote ${quoteText}`)
+  return fileQuote(match, quoteText, author, `quote ${quoteText}`)
+}
+
+/// "setup: <freeform>" — find a few reputable 30-60 min explainer videos for
+/// the request, create a topic from them, and ingest their transcripts as the
+/// topic's sources. Fully synchronous (search + rank + transcript fetches),
+/// so callers must allow a long maxDuration.
+async function handleSetup(
+  userId: string,
+  client: F2Client,
+  handle: string,
+  userMessage: string,
+  request: string,
+): Promise<F2Reply> {
+  if (!request) {
+    return { reply: 'F2: tell me what to set up — e.g. setup: a good overview of the history of Israel that won\'t bore me.' }
+  }
+
+  const result = await findExplainerVideos(request)
+  if (!result || result.picks.length === 0) {
+    return {
+      reply: "F2: couldn't find solid 30-60 minute videos for that. Try rephrasing or narrowing the topic.",
+    }
+  }
+
+  const picks = result.picks
+  // Pull transcripts in parallel — the slow part. A miss just means that
+  // video keeps its link but contributes no transcript (per spec).
+  const transcripts = await Promise.all(
+    picks.map((p) =>
+      fetchUrlContent(p.url)
+        .then((r) => r.body)
+        .catch(() => null),
+    ),
+  )
+
+  // First video is the primary source; the rest become additional sources.
+  const thread = await createThread({
+    userId,
+    client,
+    handle,
+    url: picks[0].url,
+    content: transcripts[0],
+    topic: result.topicTitle,
+  })
+  if (!thread) {
+    return { reply: 'F2: found the videos but couldn\'t create the topic. Try again in a sec.' }
+  }
+
+  const now = new Date().toISOString()
+  const extra: F2AdditionalSource[] = picks.slice(1).map((p, i) => ({
+    url: p.url,
+    title: p.title,
+    content: transcripts[i + 1] ?? null,
+    added_at: now,
+  }))
+  if (extra.length > 0) {
+    await setAdditionalSources(thread.id, thread.user_id, extra)
+  }
+
+  const lines = picks
+    .map((p, i) => `${i + 1}. ${p.title} — ${p.channel} (${Math.round(p.durationSec / 60)} min)\n${p.url}`)
+    .join('\n')
+  const withTranscripts = transcripts.filter(Boolean).length
+  const reply =
+    `F2 set up "${result.topicTitle}" with ${picks.length} video${picks.length === 1 ? '' : 's'}:\n\n${lines}\n\n` +
+    `Transcripts added for ${withTranscripts} of ${picks.length}. Ask me anything about this topic, or open it to dig in.`
+
+  await appendMessages(thread.id, thread.user_id, [], [
+    { role: 'user', text: userMessage, created_at: now },
+    { role: 'assistant', text: reply, created_at: now },
+  ])
+  return { reply, thread_id: thread.id }
 }
 
 async function handleNewUrl(
