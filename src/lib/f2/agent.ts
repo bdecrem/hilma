@@ -20,6 +20,11 @@ import {
   appendMessages,
   recordQuizStarted,
   completeQuiz,
+  appendQuote,
+  getPendingQuote,
+  setPendingQuote,
+  matchTopicByName,
+  listTopicsForUser,
   type F2Thread,
 } from './threads'
 import {
@@ -62,12 +67,141 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   const text = input.text.trim()
   if (!text) return { reply: '' }
 
+  // A quote was typed outside any topic last turn; this message names the
+  // target topic. Resolving it takes priority over all other routing.
+  const pending = await getPendingQuote(userId)
+  if (pending) {
+    return resolvePendingQuote(userId, client, handle, pending, text)
+  }
+
+  // "quote <text>" → capture a quote for the active topic (or ask which one).
+  // Tolerant of the separator after the keyword ("quote", "Quote:", "QUOTE -")
+  // and of the user wrapping the text in quotation marks (straight or curly),
+  // which we strip so they don't double up against the quotes the UI adds.
+  const quoteMatch = text.match(/^quote\b[\s:,;.\-—]*/i)
+  if (quoteMatch) {
+    const quoteText = stripQuoteMarks(text.slice(quoteMatch[0].length).trim())
+    return handleQuote(userId, client, handle, text, quoteText, threadId)
+  }
+
   const firstToken = stripSurroundingQuotes(text.split(/\s+/)[0])
 
   if (isUrl(firstToken)) {
     return handleNewUrl(userId, client, handle, firstToken)
   }
   return handleNonUrl(userId, client, handle, text, threadId)
+}
+
+/// Strip one matched pair of surrounding quotation marks — straight ("…", '…')
+/// or curly ("…", '…') — from a captured quote. Leaves inner quotes and
+/// unbalanced marks untouched.
+function stripQuoteMarks(s: string): string {
+  const t = s.trim()
+  if (t.length < 2) return t
+  const pairs: Record<string, string> = {
+    '"': '"',
+    "'": "'",
+    '“': '”', // " "
+    '‘': '’', // ' '
+  }
+  const close = pairs[t[0]]
+  if (close && t.endsWith(close)) return t.slice(1, -1).trim()
+  return t
+}
+
+/// Save `quoteText` onto a topic and persist the exchange to its chat log so it
+/// shows up on reload. `userMessage` is the user's original typed text.
+async function fileQuote(
+  thread: F2Thread,
+  quoteText: string,
+  userMessage: string,
+): Promise<F2Reply> {
+  const total = await appendQuote(thread, quoteText)
+  if (total === null) {
+    return { reply: "F2: couldn't save that quote. Try again in a sec." }
+  }
+  const label = thread.topic ?? thread.url ?? 'this topic'
+  const reply = `F2 saved that quote to "${label}". ${total} quote${total === 1 ? '' : 's'} on this topic now.`
+  const now = new Date().toISOString()
+  await appendMessages(thread.id, thread.user_id, thread.messages, [
+    { role: 'user', text: userMessage, created_at: now },
+    { role: 'assistant', text: reply, created_at: now },
+  ])
+  return { reply, thread_id: thread.id }
+}
+
+/// "quote <text>". With a threadId we're inside a topic — attach directly.
+/// Without one (general Chat tab / iMessage) we park the text and ask which
+/// topic it belongs to; the next message resolves it (resolvePendingQuote).
+async function handleQuote(
+  userId: string,
+  client: F2Client,
+  handle: string,
+  userMessage: string,
+  quoteText: string,
+  threadId: string | undefined,
+): Promise<F2Reply> {
+  if (!quoteText) {
+    return { reply: 'F2: add the quote text after "quote" — e.g. quote "Whereof one cannot speak…".' }
+  }
+
+  if (threadId) {
+    const thread = await getThreadById(userId, threadId)
+    if (!thread) return { reply: "F2: couldn't find that topic to attach the quote to." }
+    return fileQuote(thread, quoteText, userMessage)
+  }
+
+  await setPendingQuote(userId, quoteText)
+  const topics = await listTopicsForUser(userId)
+  const recent = topics
+    .slice(0, 5)
+    .map((t) => `• ${t.topic ?? t.url}`)
+    .join('\n')
+  const list = recent ? `\n\nRecent topics:\n${recent}` : ''
+  return {
+    reply: `F2: which topic should I save this quote to? Reply with a topic name, or "new <name>" to create one.${list}`,
+  }
+}
+
+/// The user has a parked quote and just named a topic for it. Handles:
+///   "cancel"      → drop the quote
+///   "new <name>"  → create the topic, file the quote
+///   <topic name>  → match an existing topic, file the quote
+/// On no match we keep the quote parked and re-prompt.
+async function resolvePendingQuote(
+  userId: string,
+  client: F2Client,
+  handle: string,
+  quoteText: string,
+  answer: string,
+): Promise<F2Reply> {
+  if (/^cancel\b/i.test(answer)) {
+    await setPendingQuote(userId, null)
+    return { reply: 'F2: okay, dropped that quote.' }
+  }
+
+  const newMatch = answer.match(/^new\b[\s:,\-—]*(.*)$/i)
+  if (newMatch) {
+    const name = newMatch[1].trim()
+    if (!name) {
+      return { reply: 'F2: give the new topic a name — e.g. new The Iliad.' }
+    }
+    const thread = await createThread({ userId, client, handle, topic: name })
+    if (!thread) {
+      return { reply: "F2: couldn't create that topic. Try again in a sec." }
+    }
+    await setPendingQuote(userId, null)
+    return fileQuote(thread, quoteText, `quote ${quoteText}`)
+  }
+
+  const match = await matchTopicByName(userId, answer)
+  if (!match) {
+    return {
+      reply: `F2: couldn't find a topic called "${answer}". Reply with an exact topic name, "new <name>" to create one, or "cancel" to drop it.`,
+    }
+  }
+  await setPendingQuote(userId, null)
+  return fileQuote(match, quoteText, `quote ${quoteText}`)
 }
 
 async function handleNewUrl(

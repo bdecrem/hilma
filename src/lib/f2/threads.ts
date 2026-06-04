@@ -20,6 +20,14 @@ export type F2AdditionalSource = {
   added_at: string
 }
 
+/// A quote the user captured for a topic by typing "quote <text>" in chat.
+/// Stored on the thread row as a jsonb array; surfaced in "View context" and
+/// folded into the LLM context by buildFullContent.
+export type F2Quote = {
+  text: string
+  created_at: string
+}
+
 export type F2Thread = {
   id: string
   user_id: string
@@ -29,6 +37,7 @@ export type F2Thread = {
   topic: string | null
   content: string | null
   additional_sources: F2AdditionalSource[]
+  quotes: F2Quote[]
   messages: F2ThreadMessage[]
   created_at: string
   updated_at: string
@@ -55,6 +64,13 @@ export function buildFullContent(thread: F2Thread): string {
       ? `${src.url ?? '(no URL)'} — ${src.title}`
       : (src.url ?? 'pasted material')
     parts.push(`\n\n--- Additional source: ${label} ---\n\n${src.content}`)
+  }
+  // Quotes the user captured for this topic. Listed last so the model treats
+  // them as the user's own emphasis on top of the source material.
+  const quotes = (thread.quotes ?? []).filter((q) => q.text?.trim())
+  if (quotes.length > 0) {
+    const body = quotes.map((q) => `"${q.text}"`).join('\n\n')
+    parts.push(`\n\n--- Quotes the user saved ---\n\n${body}`)
   }
   return parts.join('')
 }
@@ -299,4 +315,92 @@ export async function appendMessages(
     .eq('user_id', userId)
 
   if (error) console.error('[f2] appendMessages failed:', error)
+}
+
+/// Append a captured quote to a topic. Returns the new total, or null on error.
+/// Like the quiz helpers, scoped by user_id as defense-in-depth.
+export async function appendQuote(
+  thread: F2Thread,
+  text: string,
+): Promise<number | null> {
+  const entry: F2Quote = { text, created_at: new Date().toISOString() }
+  const next = [...(thread.quotes ?? []), entry]
+  const { error } = await f2Supabase()
+    .from('f2_threads')
+    .update({ quotes: next, updated_at: new Date().toISOString() })
+    .eq('id', thread.id)
+    .eq('user_id', thread.user_id)
+  if (error) {
+    console.error('[f2] appendQuote failed:', error)
+    return null
+  }
+  return next.length
+}
+
+/// Remove the quote at `index` from a topic. No-op if the index is out of range.
+export async function deleteQuoteAt(
+  userId: string,
+  thread: F2Thread,
+  index: number,
+): Promise<boolean> {
+  const arr = thread.quotes ?? []
+  if (index < 0 || index >= arr.length) return false
+  const next = arr.filter((_, i) => i !== index)
+  const { error } = await f2Supabase()
+    .from('f2_threads')
+    .update({ quotes: next, updated_at: new Date().toISOString() })
+    .eq('id', thread.id)
+    .eq('user_id', userId)
+  if (error) {
+    console.error('[f2] deleteQuoteAt failed:', error)
+    return false
+  }
+  return true
+}
+
+/// Per-user scratch slot for a quote typed outside any topic. The user's next
+/// message names the target topic; we read this, file the quote, then clear it.
+export async function getPendingQuote(userId: string): Promise<string | null> {
+  const { data, error } = await f2Supabase()
+    .from('f2_users')
+    .select('pending_quote')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error) {
+    console.error('[f2] getPendingQuote failed:', error)
+    return null
+  }
+  return (data?.pending_quote as string | null) ?? null
+}
+
+export async function setPendingQuote(
+  userId: string,
+  text: string | null,
+): Promise<void> {
+  const { error } = await f2Supabase()
+    .from('f2_users')
+    .update({ pending_quote: text })
+    .eq('id', userId)
+  if (error) console.error('[f2] setPendingQuote failed:', error)
+}
+
+/// Resolve a free-text topic name to one of the user's threads. Tries an exact
+/// (case-insensitive, trimmed) match on the topic label first, then a unique
+/// substring match. Returns null when nothing matches or the substring is
+/// ambiguous (more than one hit) — the caller re-prompts in that case.
+export async function matchTopicByName(
+  userId: string,
+  name: string,
+): Promise<F2Thread | null> {
+  const needle = name.trim().toLowerCase()
+  if (!needle) return null
+  const topics = await listTopicsForUser(userId)
+  const labelOf = (t: F2Thread) => (t.topic ?? t.url ?? '').trim().toLowerCase()
+
+  const exact = topics.filter((t) => labelOf(t) === needle)
+  if (exact.length === 1) return exact[0]
+  if (exact.length > 1) return exact[0] // identical labels — pick most-recent (list is desc)
+
+  const partial = topics.filter((t) => labelOf(t).includes(needle))
+  return partial.length === 1 ? partial[0] : null
 }

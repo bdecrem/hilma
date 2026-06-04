@@ -116,6 +116,10 @@ struct TopicContextSheet: View {
     private func row(_ src: F2API.TopicSource) -> some View {
         let isDeleting = deleting.contains(src.id)
         HStack(alignment: .top, spacing: 12) {
+            if src.kind == "quote" {
+                quoteContent(src)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Text(rowTag(src))
@@ -151,6 +155,7 @@ struct TopicContextSheet: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            }
 
             Button {
                 confirmDelete = src
@@ -175,10 +180,29 @@ struct TopicContextSheet: View {
         .padding(.vertical, 14)
     }
 
+    /// A captured quote — the quote text itself shown in quotes, italic.
+    @ViewBuilder
+    private func quoteContent(_ src: F2API.TopicSource) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("QUOTE")
+                .font(.system(size: 10, weight: .bold))
+                .tracking(0.5)
+                .foregroundStyle(FeyndTheme.coral)
+            Text("“\(src.title ?? "")”")
+                .font(.system(size: 14))
+                .italic()
+                .foregroundStyle(FeyndTheme.text)
+                .lineLimit(8)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     /// The little uppercase tag on the left of each row.
     ///   PRIMARY URL / PRIMARY TRANSCRIPT / PRIMARY
     ///   ADDITIONAL URL / ADDITIONAL TRANSCRIPT / ADDITIONAL
+    ///   QUOTE
     private func rowTag(_ src: F2API.TopicSource) -> String {
+        if src.kind == "quote" { return "QUOTE" }
         let base = src.kind == "primary" ? "PRIMARY" : "ADDITIONAL"
         switch src.part {
         case "url": return "\(base) URL"
@@ -207,7 +231,7 @@ struct TopicContextSheet: View {
             try await F2API.shared.deleteTopicSource(
                 id: topic.id,
                 kind: src.kind,
-                index: src.kind == "additional" ? src.index : nil,
+                index: (src.kind == "additional" || src.kind == "quote") ? src.index : nil,
                 part: src.part,
             )
             // Optimistic local update so the row vanishes immediately.

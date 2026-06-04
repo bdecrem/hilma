@@ -16,21 +16,22 @@ export const maxDuration = 60
 // two display items. For video/audio URLs that have an extracted transcript,
 // we split the URL itself from the transcript so the user can delete just
 // one without losing the other. Plain articles + pastes stay bundled.
-type SourcePart = 'source' | 'url' | 'transcript'
-type SourceKind = 'primary' | 'additional'
+type SourcePart = 'source' | 'url' | 'transcript' | 'quote'
+type SourceKind = 'primary' | 'additional' | 'quote'
 
 type SourceItem = {
   /** Stable id for the UI row. */
   id: string
   /** Which storage slot this comes from. */
   kind: SourceKind
-  /** Index into additional_sources for kind='additional', else 0. */
+  /** Index into additional_sources (or quotes for kind='quote'), else 0. */
   index: number
   /** Whether this row represents the whole bundled source, or just one half. */
   part: SourcePart
   /** Classified shape ('video' | 'audio' | 'web' | 'paste' | 'fallback'). */
   topic_kind: ReturnType<typeof classifyTopicKind>
   url: string | null
+  /** For quotes, this carries the quote text itself. */
   title: string | null
   content_length: number
   added_at: string | null
@@ -143,6 +144,23 @@ export async function GET(
     )
   }
 
+  // Quotes the user captured for this topic — one row each, carrying the quote
+  // text in `title`. Listed after the sources.
+  for (let i = 0; i < (thread.quotes?.length ?? 0); i++) {
+    const q = thread.quotes[i]
+    items.push({
+      id: `quote-${i}`,
+      kind: 'quote',
+      index: i,
+      part: 'quote',
+      topic_kind: 'fallback',
+      url: null,
+      title: q.text,
+      content_length: q.text?.length ?? 0,
+      added_at: q.created_at,
+    })
+  }
+
   return NextResponse.json({ items })
 }
 
@@ -238,11 +256,30 @@ export async function DELETE(
   }
 
   const part = (body.part ?? 'source') as SourcePart
-  if (part !== 'source' && part !== 'url' && part !== 'transcript') {
-    return NextResponse.json({ error: "part must be 'source', 'url', or 'transcript'" }, { status: 400 })
+  if (part !== 'source' && part !== 'url' && part !== 'transcript' && part !== 'quote') {
+    return NextResponse.json({ error: "part must be 'source', 'url', 'transcript', or 'quote'" }, { status: 400 })
   }
 
   const sb = f2Supabase()
+
+  if (body.kind === 'quote') {
+    const idx = body.index
+    const arr = thread.quotes ?? []
+    if (typeof idx !== 'number' || idx < 0 || idx >= arr.length) {
+      return NextResponse.json({ error: 'invalid index' }, { status: 400 })
+    }
+    const next = arr.filter((_, i) => i !== idx)
+    const { error } = await sb
+      .from('f2_threads')
+      .update({ quotes: next, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id)
+    if (error) {
+      console.error('[f2] delete quote failed:', error)
+      return NextResponse.json({ error: 'delete failed' }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true, total: next.length })
+  }
 
   if (body.kind === 'primary') {
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
