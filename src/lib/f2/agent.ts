@@ -279,61 +279,69 @@ async function handleSetup(
     return { reply: 'F2: tell me what to set up — e.g. setup: a good overview of the history of Israel that won\'t bore me.' }
   }
 
-  const result = await findExplainerVideos(request)
-  if (!result || result.picks.length === 0) {
-    return {
-      reply: "F2: couldn't find solid 30-60 minute videos for that. Try rephrasing or narrowing the topic.",
+  // The whole loop reaches out to the YouTube API, Claude, and the transcript
+  // proxy — any of which can fail. Never let that surface as a 500; return a
+  // readable message and log the real cause.
+  try {
+    const result = await findExplainerVideos(request)
+    if (!result || result.picks.length === 0) {
+      return {
+        reply: "F2: couldn't find solid 30-60 minute videos for that. Try rephrasing or narrowing the topic.",
+      }
     }
+
+    const picks = result.picks
+    // Pull transcripts in parallel — the slow part. A miss just means that
+    // video keeps its link but contributes no transcript (per spec).
+    const transcripts = await Promise.all(
+      picks.map((p) =>
+        fetchUrlContent(p.url)
+          .then((r) => r.body)
+          .catch(() => null),
+      ),
+    )
+
+    // First video is the primary source; the rest become additional sources.
+    const thread = await createThread({
+      userId,
+      client,
+      handle,
+      url: picks[0].url,
+      content: transcripts[0],
+      topic: result.topicTitle,
+    })
+    if (!thread) {
+      return { reply: 'F2: found the videos but couldn\'t create the topic. Try again in a sec.' }
+    }
+
+    const now = new Date().toISOString()
+    const extra: F2AdditionalSource[] = picks.slice(1).map((p, i) => ({
+      url: p.url,
+      title: p.title,
+      content: transcripts[i + 1] ?? null,
+      added_at: now,
+    }))
+    if (extra.length > 0) {
+      await setAdditionalSources(thread.id, thread.user_id, extra)
+    }
+
+    const lines = picks
+      .map((p, i) => `${i + 1}. ${p.title} — ${p.channel} (${Math.round(p.durationSec / 60)} min)\n${p.url}`)
+      .join('\n')
+    const withTranscripts = transcripts.filter(Boolean).length
+    const reply =
+      `F2 set up "${result.topicTitle}" with ${picks.length} video${picks.length === 1 ? '' : 's'}:\n\n${lines}\n\n` +
+      `Transcripts added for ${withTranscripts} of ${picks.length}. Ask me anything about this topic, or open it to dig in.`
+
+    await appendMessages(thread.id, thread.user_id, [], [
+      { role: 'user', text: userMessage, created_at: now },
+      { role: 'assistant', text: reply, created_at: now },
+    ])
+    return { reply, thread_id: thread.id }
+  } catch (err) {
+    console.error('[f2] handleSetup failed:', err)
+    return { reply: 'F2: hit a snag setting that up (the video search or transcripts failed). Try again in a moment.' }
   }
-
-  const picks = result.picks
-  // Pull transcripts in parallel — the slow part. A miss just means that
-  // video keeps its link but contributes no transcript (per spec).
-  const transcripts = await Promise.all(
-    picks.map((p) =>
-      fetchUrlContent(p.url)
-        .then((r) => r.body)
-        .catch(() => null),
-    ),
-  )
-
-  // First video is the primary source; the rest become additional sources.
-  const thread = await createThread({
-    userId,
-    client,
-    handle,
-    url: picks[0].url,
-    content: transcripts[0],
-    topic: result.topicTitle,
-  })
-  if (!thread) {
-    return { reply: 'F2: found the videos but couldn\'t create the topic. Try again in a sec.' }
-  }
-
-  const now = new Date().toISOString()
-  const extra: F2AdditionalSource[] = picks.slice(1).map((p, i) => ({
-    url: p.url,
-    title: p.title,
-    content: transcripts[i + 1] ?? null,
-    added_at: now,
-  }))
-  if (extra.length > 0) {
-    await setAdditionalSources(thread.id, thread.user_id, extra)
-  }
-
-  const lines = picks
-    .map((p, i) => `${i + 1}. ${p.title} — ${p.channel} (${Math.round(p.durationSec / 60)} min)\n${p.url}`)
-    .join('\n')
-  const withTranscripts = transcripts.filter(Boolean).length
-  const reply =
-    `F2 set up "${result.topicTitle}" with ${picks.length} video${picks.length === 1 ? '' : 's'}:\n\n${lines}\n\n` +
-    `Transcripts added for ${withTranscripts} of ${picks.length}. Ask me anything about this topic, or open it to dig in.`
-
-  await appendMessages(thread.id, thread.user_id, [], [
-    { role: 'user', text: userMessage, created_at: now },
-    { role: 'assistant', text: reply, created_at: now },
-  ])
-  return { reply, thread_id: thread.id }
 }
 
 async function handleNewUrl(
