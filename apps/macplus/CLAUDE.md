@@ -19,6 +19,14 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 The agent ("**Macinclaude Plus**" — the name Bart picked) is **built and working**; the only blocker is
 the **Plus↔modem serial cable**.
 
+> **Update 2026-06-06:** the cable currently in hand is a **PLC programming cable** (DB9-F → mini-DIN-8-M),
+> **not** a Mac serial cable — its DIN-8 pinout is for industrial PLCs, so it never connects GND/data on the
+> Plus's pins. SerialDoc's Baud Sweep reads **0 bytes at every rate** with it, and the SI's orange LED won't
+> light through it (the old broken cable does light it — it's correctly Mac-wired except for the snapped data
+> pins). Full analysis + the next steps are in the **"RetroWiFi SI — documentation & specs"** block under
+> *Hardware inventory* below. Bottom line: **buy a real mini-DIN-8 → DB-9 Macintosh modem cable.** Also a new
+> tool landed: **SerialDoc** (`serialdoc/`) — the serial diagnostic, now on the BlueSCSI card.
+
 - **Code locations:** repo **source of truth** = `apps/macplus/agent/` (this repo: `src/main.ts`,
   `src/teletype.ts`, `README.md`). **Deployed copy on the mini** = `~/claude-plus/` on
   `admin@192.168.7.50`, put there by rsync from the repo, then `npm install` on the mini. Re-deploy with:
@@ -70,10 +78,11 @@ the **Plus↔modem serial cable**.
 
 - **Boots fine** off the BlueSCSI card into System 6.0.8 (volume "BlueSCSI Mac Plus"); a System 7.0.1
   folder is also present, plus Apple HD SC Setup, Silver Lining, System Picker.
-- **`Apps/` folder on the card holds four working apps**, all with resource forks verified intact:
-  **MacPaint 2.0** (`APPL/MPNT`), **MacWrite 4.5** (`APPL/MACA`), **ZTerm 1.0.1** (`APPL/zTRM`), and
-  **Sudoku** (`APPL/????`, built here). MacPaint/MacWrite/ZTerm were sourced from Macintosh Garden;
-  Sudoku was built from scratch (see the worked example below).
+- **`Apps/` folder on the card holds five working apps**, all with resource forks verified intact:
+  **MacPaint 2.0** (`APPL/MPNT`), **MacWrite 4.5** (`APPL/MACA`), **ZTerm 1.0.1** (`APPL/zTRM`),
+  **Sudoku** (`APPL/????`, built here), and **SerialDoc** (`APPL/????`, built here — the serial-cable
+  diagnostic, see `serialdoc/`). MacPaint/MacWrite/ZTerm were sourced from Macintosh Garden;
+  Sudoku and SerialDoc were built from scratch (see the worked example below).
 - **Simulator we use: Mini vMac** (the Mac Plus emulator) on the iMac — boots a *pre-made* System 6.0.5
   floppy image (`Disk605.dsk`) with the real Plus ROM (`boot0.rom`/`vMac.ROM`). We do **not** compile an
   OS. Mini vMac boots **raw HFS** images only, not the APM `.hda`/`.vhd` SCSI images (those work on the
@@ -86,13 +95,57 @@ the **Plus↔modem serial cable**.
 
 | Item | What it is | Interface | Use |
 |------|-----------|-----------|-----|
-| **Simulant RetroWiFi SI** | WiFi-to-serial modem (Hayes/Zimodem-compatible) — bridges a serial port to modern WiFi | **DE-9 (DB-9) male RS-232**; **5V micro-USB** power; 300–115200 baud; AT command set; RTS/CTS + XON/XOFF | **This is how the Plus gets online over WiFi.** Simulant also sells a DB-9→DB-25 adapter. |
+| **Simulant RetroWiFi SI** | WiFi-to-serial modem (Hayes/Zimodem-compatible) — bridges a serial port to modern WiFi | **DE-9 (DB-9) female RS-232** (Hayes modem = DCE); **5V micro-USB** power (USB-only — the serial port can't run it); 300–115200 baud; AT command set; RTS/CTS + XON/XOFF | **This is how the Plus gets online over WiFi.** Simulant also sells a DB-9→DB-25 adapter. See the docs block below. |
 | **Practical Peripherals PM2400SA** | 2400-baud external dial-up modem | **DB-25 RS-232**; analog phone line (RJ-11) | Legacy *real* dial-up only — **not used for WiFi**. |
 | Cable: **Apple Mac modem cable** | Mac serial → external RS-232 modem | mini-DIN-8 ↔ **DB-25** | Connects the Plus serial port to a DB-25 modem (e.g. the PM2400SA). Modem end = DB-25. |
 | Cable: **Mac serial cable** | Mac-to-Mac / printer / LocalTalk-style | mini-DIN-8 ↔ **mini-DIN-8** (both ends round) | Not directly usable with the DB-9 RetroWiFi SI. |
 | Coiled cords | Mac Plus **keyboard** coiled cable and/or an **RJ-11** phone cord | RJ-style 4P4C / RJ-11 | Keyboard; phone cord is for the PM2400SA, not WiFi. |
 
 Plus the BlueSCSI + SD card and the Macintosh Plus itself (see top).
+
+### RetroWiFi SI — documentation & specs (reference)
+
+**Official docs** (both thin on pinout/LED detail — the User Instructions PDF on the shop page and the
+Amstrad BBS at `amstrad.simulant.uk` are the deeper sources):
+- Shop / spec page: https://www.simulant.uk/shop/retro-vintage-computer-wifi-modem-rs232-serial-hayes-compatible
+- Simulant wiki: https://wiki.simulant.uk/index.php?title=Retro_Wifi_SI_(rs232_serial_port_Hayes_compatible_modem)
+- Tindie listing: https://www.tindie.com/products/simulant/retro-wifi-si-rs232-serial-port-internet-modem/
+- Related/sibling firmware with documented LED scheme (ESP8266 RS-232 modem): https://github.com/mecparts/RetroWiFiModem
+
+**Confirmed specs:** ESP8266 + MAX3232; **5V micro-USB power only** (no USB cable included; the RS-232
+port does NOT power it); standard **DE-9 RS-232**, female, wired as a **DCE/Hayes modem** (so the Plus is
+the DTE → wants a **straight-through** data path, 2→2 / 3→3); supports 300–115200 baud; Hayes AT command
+set; HW (RTS/CTS) + SW (XON/XOFF) flow control; DCD + RI supported. Firmware is Zimodem (auto-bauds on `AT`).
+
+**Cable bring-up findings (2026-06-06) — ROOT CAUSE: wrong cable type.** The cable being tried is a
+generic **PLC programming cable** — "DB9 RS232 to Mini 8-Pin Round Head, DB9 9-pin **female** → mini-DIN-8
+**male**, PLC programming adapter" (marketed for touchscreens / PLCs / industrial controllers). **That is
+not a Macintosh serial cable.** PLC programming cables wire TxD/RxD/GND onto whatever DIN-8 pins that
+particular PLC family uses — which do **not** match the Mac Plus modem-port pinout (TxD− pin 3, GND pin 4,
+RxD− pin 5). So the data/ground never land where the Plus drives/expects them.
+
+This is confirmed by the **orange-light tell**: with the **old** DIN-8→DB-9 cable (the dead one, DB-9 pins
+2 & 3 physically snapped off) an **orange LED inside the SI lights up** when connected to the Plus; with the
+**PLC cable** it does **not** light, on **either** gender-changer (straight or null-modem). The old cable
+still wires **GND + all the control lines** (DTR/RTS/DSR/CTS/DCD) on the correct Mac pins — only the data
+pins are gone — enough to satisfy the SI's line-sense and light the LED. The PLC cable failing to light it
+means GND/control aren't reaching the SI, and **no ground ⇒ no RS-232 ⇒ the zero-bytes-at-every-baud**
+result SerialDoc's Baud Sweep reports. The adapters can't fix it (straight/null only swaps pins 2 & 3, never
+addresses a wrong-pinout ground).
+
+**The fix is a correct cable, not more adapter-swapping.** Use the **C2G 25041 / 70810** — a genuine
+"DB9-Female → 8-Pin Mini-DIN-Male **Apple Mac** adapter cable" (DIN-8 wired to Apple's pinout: TxD− 3,
+RxD− 5, GND 4, HSKo 1, HSKi 2). Confirmed to be the right *type* (the on-order cable from the resume note);
+its internal straight-vs-crossed DB-9 wiring is undocumented, but the two gender changers cover both cases.
+Hook-up: mini-DIN-8 → Plus modem port; DB-9-female end → male-male gender changer → SI. **First checkpoint
+is the orange LED** — it should light once this cable seats (GND/control finally on the right pins), before
+any data works; then it's just the straight↔null sweep. (Avoid PLC programming cables and any non-Apple
+DIN-8 cable — wrong pinout, as proven above.) Also worth doing when
+resuming: (1) confirm the SI has real **USB power** (if it only ever lit via the old cable, that was
+parasitic leakage off the RS-232 lines, not real power — plug in 5V micro-USB and confirm it lights on its
+own); (2) optionally **meter the PLC cable** DIN-8↔DB-9 to see its actual map (expect GND NOT on DIN-8 pin 4
+↔ DB-9 pin 5) — but don't sink time into salvaging a PLC cable; replace it. **Diagnose with SerialDoc**
+(`serialdoc/`), not ZTerm — see the bring-up note below.
 
 ## Connecting the Plus to WiFi
 
@@ -118,6 +171,13 @@ TxD− → modem RxD, RxD− → modem TxD, GND↔GND, tie TxD+/RxD+ to GND, wir
 
 **The RetroWiFi SI firmware is Zimodem** (Allen Huffman's fork of Bo Zimmerman's Zimodem; ESP8266 +
 MAX3232). It **auto-detects baud** the moment you type `AT`, so the exact ZTerm rate isn't critical.
+
+**Use SerialDoc for the AT test, not (just) ZTerm.** `serialdoc/` is a purpose-built diagnostic that
+shows what ZTerm hides: it reports exact byte counts ("sent 3, received 0"), a **Hex View** that turns
+"garbage" into reportable byte values (e.g. `4F 4B 0D | OK.`), and a **Baud Sweep** that fires `AT` at
+300→19200 in one run so you find cable-good + correct-baud at once. It opens the port with hardware flow
+control **forced off**, so a cable missing the CTS line can't silently hang transmit. Flow: Port ▸ Open
+Port → Tests ▸ Baud Sweep → Tests ▸ AT Probe (expect PASS/OK). Zero bytes at every rate ⇒ swap the adapter.
 
 **Bring-up procedure (go/no-go before trusting anything):**
 1. Power the WiFi SI over USB (LED on). Plug it into the Plus **modem port** (phone icon, *not* the printer port).
@@ -314,6 +374,10 @@ apps/macplus/
     CMakeLists.txt          ← add_application(Sudoku sudoku.c)
     generate_puzzles.py     ← regenerates puzzles.h with verified unique-solution puzzles
     logic_test.c            ← host-clang test of conflict/win logic vs every puzzle
+  serialdoc/
+    serialdoc.c             ← serial-port diagnostic (Serial Manager + TextEdit console, ~500 lines C)
+    CMakeLists.txt          ← add_application(SerialDoc serialdoc.c)
+    build.sh                ← one-command Retro68 build
   tools/
     macbin.py               ← MacBinary II encoder (native macOS file w/ rsrc fork → .bin for hcopy -m)
     lsrsrc.py               ← list resource-fork types (sanity-check a built app)
