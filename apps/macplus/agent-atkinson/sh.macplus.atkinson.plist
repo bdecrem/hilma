@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchDaemon for the Atkinson image agent (port 2325 — the Plus's image client
+  dials this; 2323 = login shell, 2324 = Macinclaude text agent). Modeled on
+  sh.macplus.terminal.plist (the 2323 listener).
+
+  Install (the OPENAI_API_KEY is injected from hilma/.env.local at install time —
+  __OPENAI_API_KEY__ is a placeholder; never commit the real key):
+    KEY=$(grep -E '^OPENAI_API_KEY=' ~/Documents/code/hilma/.env.local | head -1 | cut -d= -f2- | sed 's/^"//;s/"$//')
+    pkill -f 'socat.*2325'
+    sudo bash -c "sed 's|__OPENAI_API_KEY__|$KEY|' \
+      ~/Documents/code/hilma/apps/macplus/agent-atkinson/sh.macplus.atkinson.plist \
+      > /Library/LaunchDaemons/sh.macplus.atkinson.plist"
+    sudo chown root:wheel /Library/LaunchDaemons/sh.macplus.atkinson.plist
+    sudo chmod 644       /Library/LaunchDaemons/sh.macplus.atkinson.plist
+    sudo launchctl bootstrap system /Library/LaunchDaemons/sh.macplus.atkinson.plist
+
+  Restart after a code change: sudo launchctl kickstart -k system/sh.macplus.atkinson
+  Notes: runs as admin (Pillow lives in admin's Python; root can't import PIL).
+  ATK_PYTHON=/usr/bin/python3 — only that python has Pillow (Homebrew's doesn't).
+  PATH includes /opt/homebrew/bin so tsx's `#!/usr/bin/env node` finds node.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>sh.macplus.atkinson</string>
+  <key>UserName</key>
+  <string>admin</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/socat</string>
+    <string>TCP-LISTEN:2325,reuseaddr,fork</string>
+    <string>EXEC:/Users/admin/Documents/code/hilma/apps/macplus/agent-atkinson/node_modules/.bin/tsx /Users/admin/Documents/code/hilma/apps/macplus/agent-atkinson/src/main.ts,pty,setsid,ctty</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>OPENAI_API_KEY</key>
+    <string>__OPENAI_API_KEY__</string>
+    <key>ATK_PYTHON</key>
+    <string>/usr/bin/python3</string>
+  </dict>
+  <key>KeepAlive</key>
+  <true/>
+  <key>RunAtLoad</key>
+  <true/>
+  <!-- Daemon runs as `admin`, which cannot write /var/log (root-only). Log to
+       admin's own home, mirroring sh.claude-plus.terminal. Wrong paths here make
+       launchd fail to spawn (job shows "active" but no process / port). -->
+  <key>StandardOutPath</key>
+  <string>/Users/admin/Library/Logs/macplus-atkinson.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/admin/Library/Logs/macplus-atkinson.err.log</string>
+</dict>
+</plist>

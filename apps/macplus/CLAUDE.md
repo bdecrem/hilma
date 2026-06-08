@@ -211,8 +211,8 @@ The bring-up steps above (open port, `AT`, `ATDT`-dial) are the manual ZTerm rit
 - **Status (2026-06-07):** built & compiles clean with Retro68 (`CODE×9, DLOG, DITL, SIZE`); `.dsk`
   staged in `~/mac-plus-apps/vmac/`. **Not yet driven in Mini vMac** (the emulator's screen didn't render
   into the screenshot tool that session) and the live connect needs the real Plus (no serial in the
-  emulator). The mini agent on 2324 is still a **hand-started process, not a LaunchDaemon** — make it
-  persistent (mirror `sh.macplus.terminal.plist`, bake in `ANTHROPIC_API_KEY`) before trusting boot=connected.
+  emulator). The mini agent on 2324 is now a **LaunchDaemon** (`/Library/LaunchDaemons/sh.claude-plus.terminal.plist`,
+  label `sh.claude-plus.terminal`, runs `/usr/local/bin/claude-plus-listener.sh`) — auto-starts on boot.
 
 ### Atkinson (the Plus draws, in 1-bit) — `atkinson/` + `agent-atkinson/`
 
@@ -247,8 +247,11 @@ bitmap row-by-row so it "develops" like a Polaroid over the slow link.
   `cd atkinson && ./build.sh`.
 - **Status (2026-06-08):** built, compiles clean (`CODE×9, DLOG×2, DITL×2, SIZE`), UI verified in Mini
   vMac, full data path verified except the physical serial wire (still blocked on the Plus↔modem cable).
-  The mini listener on 2325 is a **hand-started process, not a LaunchDaemon** — make it persistent before
-  trusting boot=ready.
+  The mini listener on 2325 is now a **LaunchDaemon** (`/Library/LaunchDaemons/sh.macplus.atkinson.plist`,
+  label `sh.macplus.atkinson`, runs as `admin` with `OPENAI_API_KEY` + `ATK_PYTHON=/usr/bin/python3`) —
+  auto-starts on boot, RunAtLoad + KeepAlive. Install/refresh: `sudo bash agent-atkinson/install-daemon.sh`
+  (reads the key from `.env.local`); restart after a code change: `sudo launchctl kickstart -k system/sh.macplus.atkinson`.
+  Logs: `~/Library/Logs/macplus-atkinson.{out,err}.log`. Verified end-to-end over the socket (banner + /quit).
 
 ### The endgame: a Unix shell on the Plus, via the Mac mini (RECEIVING END ALREADY CONFIGURED)
 

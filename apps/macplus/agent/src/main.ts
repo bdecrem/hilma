@@ -191,7 +191,7 @@ function handleSlash(line: string): boolean {  // returns false => quit
     case 'help':
       tt.line('Commands: /help  /quit  /clear  /cols N  /cwd  /model');
       tt.line('Type plain text to talk to Claude. Reads/searches auto-run; edits & bash ask [y/N/a].');
-      tt.line('Knowledge: ask "what did i save about X" - searches your F2 notes + docsrepo.');
+      tt.line('Knowledge: ask "what did i say about X" - searches your F2 notes + docsrepo.');
       return true;
     case 'quit': case 'exit': tt.line('Goodbye.'); return false;
     case 'clear': tt.clear(); return true;
@@ -242,7 +242,7 @@ async function main() {
   tt.line(`  model:  ${cfg.model} @ ${cfg.cols} cols`);
   tt.line('');
   tt.line('  type a task.  /help for commands.  /quit to disconnect.');
-  tt.line('  ask "what did i save about X" to search your notes.');
+  tt.line('  ask "what did i say about X" to search your notes.');
   tt.line('');
 
   await promptUser();   // first turn (or /quit before we start)
