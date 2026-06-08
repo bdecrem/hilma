@@ -1,0 +1,805 @@
+/*
+ * Macinclaude - a one-app "Claude Code on the Macintosh Plus" launcher.
+ * (System 6.0.8, 68000.) Built with Retro68. Black & white, low memory.
+ *
+ * What it is: the Plus-side client for the Macinclaude agent running on the
+ * Mac mini. SerialDoc proved the cable and the AT/baud handshake; this app
+ * bakes the whole ritual in. Configure once (WiFi + mini host:port + baud);
+ * after that, launching the app = you're talking to Claude on your Mac Plus.
+ *
+ * Boot behavior:
+ *   - First launch (no prefs): Settings dialog. Saving joins WiFi, writes the
+ *     creds INTO the modem (AT&W, so the RetroWiFi remembers its own network),
+ *     and stores host/port/baud in a prefs file in the System Folder.
+ *   - Every launch after: auto-connect. Open the modem port, confirm the modem
+ *     answers (AT/OK), dial the mini (ATDT"host:port"), watch for CONNECT, then
+ *     drop straight into a live terminal session with the agent.
+ *   - Connection menu: Connect/Reconnect, Disconnect, Settings...
+ *   - Any step fails => a plain status line naming what broke + Settings/retry.
+ *     No silent fallback.
+ *
+ * Serial I/O mirrors SerialDoc: built-in drivers (.AOut/.AIn modem,
+ * .BOut/.BIn printer), hardware flow control FORCED OFF (a cable missing CTS
+ * can't silently hang transmit), non-blocking reads via SerGetBuf + FSRead.
+ *
+ * Naming: this Plus app and the mini agent are both "Macinclaude" - two halves
+ * of one product. They never share a namespace (different machine, language,
+ * folder); the only shared token is the name on the screen.
+ */
+
+#include <Quickdraw.h>
+#include <Windows.h>
+#include <Menus.h>
+#include <Fonts.h>
+#include <Events.h>
+#include <TextEdit.h>
+#include <Dialogs.h>
+#include <ToolUtils.h>
+#include <Sound.h>
+#include <Memory.h>
+#include <OSUtils.h>
+#include <Devices.h>
+#include <Files.h>
+#include <Serial.h>
+#include <SegLoad.h>
+
+/* Font IDs (classic constants not always provided by the interfaces). */
+#ifndef monaco
+#define monaco 4
+#endif
+#ifndef systemFont
+#define systemFont 0
+#endif
+
+/* ---- window geometry (512x342 screen, 20px menu bar) ---- */
+#define WIN_W   480
+#define WIN_H   292
+#define TE_PAD  4
+
+/* ---- menus ---- */
+#define kAppleMenu  128
+#define kFileMenu   129
+#define kConnMenu   130
+
+/* File menu items */
+#define kFileQuit    1
+
+/* Connection menu items */
+#define kConnConnect    1
+#define kConnDisconnect 2
+/* 3 = separator */
+#define kConnSettings   4
+
+/* ---- Settings dialog (see macinclaude.r) ---- */
+#define kDlgSettings 128
+#define kSave    1
+#define kCancel  2
+#define kSSID    4
+#define kPass    6
+#define kHost    8
+#define kPortF   10
+#define kRB1200  12
+#define kRB2400  13
+#define kRB9600  14
+#define kRB19200 15
+#define kFrame   17
+
+/* ---- config / prefs ---- */
+#define kPrefMagic   0x4D43      /* 'MC' */
+#define kPrefVersion 1
+#define kPrefName    "\pMacinclaude Prefs"
+#define kPrefCreator 'MCLD'
+#define kPrefType    'pref'
+
+typedef struct {
+    short          magic;
+    short          version;
+    short          baudIdx;      /* index into kBaudTab (0..3) */
+    unsigned short tcpPort;       /* e.g. 2324 */
+    Str255         host;          /* e.g. "192.168.7.50" */
+    Str255         ssid;
+    Str255         pass;
+    Boolean        wifiSaved;     /* creds already written to the modem */
+    Boolean        pad;
+} Config;
+
+static Config gCfg;
+static Boolean gHaveCfg = false;
+static short   gPrefVRef = 0;
+
+/* ---- globals ---- */
+static WindowPtr  gWin;
+static TEHandle   gTE;
+static MenuHandle gAppleM, gFileM, gConnM;
+static Boolean    gDone = false;
+
+static short      gInRef, gOutRef;          /* serial driver refnums */
+static Boolean    gPortOpen = false;
+static Boolean    gConnected = false;       /* in a live terminal session */
+
+static char       gSerBuf[2048];            /* roomy input buffer */
+static unsigned char gCap[1024];            /* capture scratch for handshakes */
+
+/* ---- baud table (matches SerialDoc) ---- */
+typedef struct { const char *name; short config; } BaudEntry;
+static const BaudEntry kBaudTab[] = {
+    { "1200",  baud1200  + data8 + noParity + stop10 },
+    { "2400",  baud2400  + data8 + noParity + stop10 },
+    { "9600",  baud9600  + data8 + noParity + stop10 },
+    { "19200", baud19200 + data8 + noParity + stop10 },
+};
+#define NBAUD 4
+
+/* ================= console (TextEdit) ================= */
+
+static void StrLen(const char *s, long *n) { long i = 0; while (s[i]) i++; *n = i; }
+
+static void ScrollToBottom(void)
+{
+    short totalH, viewH, desiredTop, delta;
+    totalH = (*gTE)->nLines * (*gTE)->lineHeight;
+    viewH  = (*gTE)->viewRect.bottom - (*gTE)->viewRect.top;
+    desiredTop = (*gTE)->viewRect.top - ((totalH > viewH) ? (totalH - viewH) : 0);
+    delta = desiredTop - (*gTE)->destRect.top;
+    if (delta != 0) TEScroll(0, delta, gTE);
+}
+
+static void Emit(const char *s)
+{
+    long n; StrLen(s, &n);
+    if (n <= 0) return;
+    if ((*gTE)->teLength + n > 28000) {
+        TESetSelect(0, 12000, gTE);
+        TEDelete(gTE);
+    }
+    TESetSelect(32767, 32767, gTE);
+    TEInsert((Ptr)s, n, gTE);
+    ScrollToBottom();
+}
+
+static void EmitLine(const char *s) { Emit(s); Emit("\r"); }
+
+static void CatLong(char *buf, short *len, long v)
+{
+    char tmp[12]; short n = 0;
+    if (v < 0) { buf[(*len)++] = '-'; v = -v; }
+    if (v == 0) tmp[n++] = '0';
+    while (v > 0) { tmp[n++] = (char)('0' + (v % 10)); v /= 10; }
+    while (n > 0) buf[(*len)++] = tmp[--n];
+}
+static void CatStr(char *buf, short *len, const char *s)
+{
+    short i; for (i = 0; s[i]; i++) buf[(*len)++] = s[i];
+}
+
+/* Render incoming bytes to the console, filtering ANSI/control noise.
+ * The agent sends clean ASCII + CRLF; the only escapes it emits are CSI
+ * sequences (clear-screen on /clear). We honor ESC[2J as a console clear and
+ * drop the rest, so nothing shows up as garbage dots. */
+static Boolean gInEsc = false;       /* mid CSI escape sequence */
+static char    gEscBuf[16];
+static short   gEscLen = 0;
+
+static void ClearConsole(void)
+{
+    TESetSelect(0, (*gTE)->teLength, gTE);
+    TEDelete(gTE);
+    ScrollToBottom();
+}
+
+static void DumpTerm(const unsigned char *buf, short len)
+{
+    char line[200]; short k = 0; short i;
+    for (i = 0; i < len; i++) {
+        unsigned char c = buf[i];
+        if (gInEsc) {
+            if (gEscLen < (short)sizeof(gEscBuf)) gEscBuf[gEscLen++] = (char)c;
+            /* CSI ends on a final byte 0x40..0x7E */
+            if (c >= 0x40 && c <= 0x7E) {
+                if (c == 'J') { if (k > 0) { line[k] = 0; Emit(line); k = 0; } ClearConsole(); }
+                gInEsc = false; gEscLen = 0;
+            }
+            continue;
+        }
+        if (c == 27) { gInEsc = true; gEscLen = 0; continue; }
+        if (c == 0) continue;                 /* drop NULs */
+        if (c == 13) line[k++] = '\r';
+        else if (c == 10) { if (i == 0 || buf[i - 1] != 13) line[k++] = '\r'; }
+        else if (c >= 32 && c < 127) line[k++] = (char)c;
+        else line[k++] = '.';
+        if (k > 180) { line[k] = 0; Emit(line); k = 0; }
+    }
+    if (k > 0) { line[k] = 0; Emit(line); }
+}
+
+/* ================= serial plumbing ================= */
+
+static void ConfigPort(short config)
+{
+    SerShk shk;
+    SerReset(gOutRef, config);
+    SerReset(gInRef,  config);
+    shk.fXOn = 0; shk.fCTS = 0; shk.xOn = 0; shk.xOff = 0;
+    shk.errs = 0; shk.evts = 0; shk.fInX = 0; shk.null = 0;
+    SerHShake(gOutRef, &shk);
+}
+
+static Boolean OpenSerPort(void)
+{
+    OSErr err;
+    if (gPortOpen) return true;
+    err = OpenDriver("\p.AOut", &gOutRef);            /* modem port */
+    if (err == noErr) err = OpenDriver("\p.AIn", &gInRef);
+    if (err != noErr) {
+        char b[64]; short n = 0;
+        CatStr(b, &n, "*** could not open modem port, err "); CatLong(b, &n, err);
+        b[n] = 0; EmitLine(b);
+        return false;
+    }
+    SerSetBuf(gInRef, (Ptr)gSerBuf, (short)sizeof(gSerBuf));
+    ConfigPort(kBaudTab[gCfg.baudIdx].config);
+    gPortOpen = true;
+    return true;
+}
+
+static void CloseSerPort(void)
+{
+    if (!gPortOpen) return;
+    SerSetBuf(gInRef, (Ptr)gSerBuf, 0);
+    CloseDriver(gInRef);
+    CloseDriver(gOutRef);
+    gPortOpen = false;
+}
+
+static void DrainInput(void)
+{
+    long avail, cnt;
+    if (!gPortOpen) return;
+    while (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
+        cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
+        FSRead(gInRef, &cnt, gSerBuf);
+    }
+}
+
+static void SendBytes(const char *s, long n)
+{
+    long cnt = n;
+    if (!gPortOpen) return;
+    FSWrite(gOutRef, &cnt, (Ptr)s);
+}
+static void SendStr(const char *s) { long n; StrLen(s, &n); SendBytes(s, n); }
+
+/* Poll the port for `ticks`, copying bytes into out[] (capped at cap). */
+static short CaptureFor(short ticks, unsigned char *out, short cap)
+{
+    unsigned long deadline = TickCount() + (unsigned long)ticks;
+    short total = 0; long avail, cnt;
+    while ((long)(TickCount() - deadline) < 0) {
+        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
+            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
+            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
+                short i;
+                for (i = 0; i < (short)cnt; i++)
+                    if (total < cap) out[total++] = (unsigned char)gSerBuf[i];
+            }
+        }
+    }
+    return total;
+}
+
+/* true if needle (C string) appears anywhere in buf */
+static Boolean Contains(const unsigned char *buf, short len, const char *needle)
+{
+    short i; long nl; StrLen(needle, &nl);
+    if (nl == 0 || len < (short)nl) return false;
+    for (i = 0; i + (short)nl <= len; i++) {
+        short j; Boolean hit = true;
+        for (j = 0; j < (short)nl; j++)
+            if (buf[i + j] != (unsigned char)needle[j]) { hit = false; break; }
+        if (hit) return true;
+    }
+    return false;
+}
+
+/* ================= pascal/C string helpers ================= */
+
+static void P2C(ConstStr255Param p, char *c)
+{
+    short i, n = p[0];
+    for (i = 0; i < n; i++) c[i] = (char)p[i + 1];
+    c[n] = 0;
+}
+
+/* ================= prefs persistence ================= */
+
+static void PrefsLocate(void)
+{
+    SysEnvRec env;
+    if (SysEnvirons(curSysEnvVers, &env) == noErr) gPrefVRef = env.sysVRefNum;
+    else gPrefVRef = 0;
+}
+
+static void SetDefaults(void)
+{
+    short i;
+    gCfg.magic = kPrefMagic;
+    gCfg.version = kPrefVersion;
+    gCfg.baudIdx = 2;               /* 9600 */
+    gCfg.tcpPort = 2324;            /* the Macinclaude agent on the mini */
+    /* host = "192.168.7.50" */
+    { const char *h = "192.168.7.50"; gCfg.host[0] = 12;
+      for (i = 0; i < 12; i++) gCfg.host[i + 1] = (unsigned char)h[i]; }
+    gCfg.ssid[0] = 0;
+    gCfg.pass[0] = 0;
+    gCfg.wifiSaved = false;
+}
+
+static Boolean LoadPrefs(void)
+{
+    short refNum; long count;
+    if (FSOpen(kPrefName, gPrefVRef, &refNum) != noErr) return false;
+    count = sizeof(Config);
+    SetFPos(refNum, fsFromStart, 0);
+    if (FSRead(refNum, &count, (Ptr)&gCfg) != noErr || count != (long)sizeof(Config)) {
+        FSClose(refNum); return false;
+    }
+    FSClose(refNum);
+    if (gCfg.magic != kPrefMagic || gCfg.version != kPrefVersion) return false;
+    if (gCfg.baudIdx < 0 || gCfg.baudIdx >= NBAUD) gCfg.baudIdx = 2;
+    return true;
+}
+
+static void SavePrefs(void)
+{
+    short refNum; long count;
+    Create(kPrefName, gPrefVRef, kPrefCreator, kPrefType);   /* ok if it exists */
+    if (FSOpen(kPrefName, gPrefVRef, &refNum) != noErr) {
+        EmitLine("*** could not save prefs."); return;
+    }
+    count = sizeof(Config);
+    SetFPos(refNum, fsFromStart, 0);
+    FSWrite(refNum, &count, (Ptr)&gCfg);
+    SetEOF(refNum, (long)sizeof(Config));
+    FSClose(refNum);
+    FlushVol(NULL, gPrefVRef);
+}
+
+/* ================= modem operations ================= */
+
+/* send AT, look for OK; a couple tries so Zimodem can auto-baud */
+static Boolean ModemAlive(void)
+{
+    short tries, got;
+    for (tries = 0; tries < 3; tries++) {
+        DrainInput();
+        SendStr("AT\r");
+        got = CaptureFor(90, gCap, sizeof(gCap));    /* ~1.5s */
+        if (Contains(gCap, got, "OK")) return true;
+    }
+    return false;
+}
+
+/* Join WiFi and persist it in the modem (Settings -> Save). */
+static Boolean JoinWiFi(void)
+{
+    char cmd[600]; short n; short got;
+    char ssidC[256], passC[256];
+
+    if (gCfg.ssid[0] == 0) { EmitLine("  (no SSID set - skipping WiFi join)"); return false; }
+    if (!OpenSerPort()) return false;
+
+    EmitLine("Joining WiFi...");
+    if (!ModemAlive()) {
+        EmitLine("  modem did not answer AT. Check cable/power, then retry.");
+        return false;
+    }
+
+    P2C(gCfg.ssid, ssidC);
+    P2C(gCfg.pass, passC);
+
+    /* ATW"SSID,PASSWORD" - Zimodem join */
+    n = 0; CatStr(cmd, &n, "ATW\"");
+    CatStr(cmd, &n, ssidC); CatStr(cmd, &n, ",");
+    CatStr(cmd, &n, passC); CatStr(cmd, &n, "\"\r");
+    cmd[n] = 0;
+    DrainInput();
+    SendStr(cmd);
+    got = CaptureFor(900, gCap, sizeof(gCap));        /* up to ~15s to associate */
+    DumpTerm(gCap, got);
+
+    if (Contains(gCap, got, "ERROR") || got == 0) {
+        EmitLine("  WiFi join failed. Check SSID/password.");
+        return false;
+    }
+    /* Save into the modem so it reconnects on its own next power-up. */
+    DrainInput();
+    SendStr("AT&W\r");
+    CaptureFor(90, gCap, sizeof(gCap));
+    gCfg.wifiSaved = true;
+    EmitLine("  WiFi joined and saved to the modem.");
+    return true;
+}
+
+/* Dial the agent and, on CONNECT, hand off to the terminal loop. */
+static Boolean DialAgent(void)
+{
+    char cmd[320]; short n; short got;
+    char hostC[256]; char b[120];
+
+    if (!OpenSerPort()) return false;
+
+    EmitLine("");
+    EmitLine("Connecting to Macinclaude...");
+    if (!ModemAlive()) {
+        EmitLine("  modem did not answer AT @ this baud.");
+        EmitLine("  Try Connection > Settings to set the baud, or check the cable.");
+        return false;
+    }
+
+    P2C(gCfg.host, hostC);
+    n = 0; CatStr(b, &n, "  dialing "); CatStr(b, &n, hostC);
+    CatStr(b, &n, ":"); CatLong(b, &n, (long)gCfg.tcpPort); CatStr(b, &n, " ...");
+    b[n] = 0; EmitLine(b);
+
+    /* ATDT"host:port" - the RetroWiFi SI speaks telnet itself */
+    n = 0; CatStr(cmd, &n, "ATDT\"");
+    CatStr(cmd, &n, hostC); CatStr(cmd, &n, ":");
+    CatLong(cmd, &n, (long)gCfg.tcpPort);
+    CatStr(cmd, &n, "\"\r");
+    cmd[n] = 0;
+    DrainInput();
+    SendStr(cmd);
+    got = CaptureFor(600, gCap, sizeof(gCap));        /* up to ~10s for CONNECT */
+
+    if (Contains(gCap, got, "CONNECT")) {
+        gConnected = true;
+        gInEsc = false; gEscLen = 0;
+        EmitLine("--- connected. you're talking to Claude. ---");
+        EmitLine("");
+        /* anything that arrived alongside CONNECT (e.g. the banner) */
+        DumpTerm(gCap, got);
+        return true;
+    }
+    if (Contains(gCap, got, "BUSY"))      EmitLine("  BUSY - the agent listener may be down on the mini.");
+    else if (Contains(gCap, got, "NO CARRIER") || Contains(gCap, got, "NO ANSWER"))
+                                          EmitLine("  no answer - is the mini agent (port) up?");
+    else if (got == 0)                    EmitLine("  silence - WiFi not joined? Try Settings.");
+    else { EmitLine("  unexpected reply:"); DumpTerm(gCap, got); }
+    return false;
+}
+
+static void Disconnect(void)
+{
+    if (!gPortOpen) { gConnected = false; return; }
+    if (gConnected) {
+        /* +++ escape to command mode, then hang up */
+        SendStr("+++");
+        CaptureFor(90, gCap, sizeof(gCap));
+        SendStr("ATH\r");
+        CaptureFor(60, gCap, sizeof(gCap));
+    }
+    gConnected = false;
+    EmitLine("");
+    EmitLine("--- disconnected ---");
+}
+
+/* ================= terminal pump (live session) ================= */
+
+static void PumpTerminal(void)
+{
+    long avail, cnt;
+    if (!gPortOpen || !gConnected) return;
+    if (SerGetBuf(gInRef, &avail) != noErr || avail <= 0) return;
+    cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
+    if (FSRead(gInRef, &cnt, gSerBuf) != noErr) return;
+    DumpTerm((unsigned char *)gSerBuf, (short)cnt);
+}
+
+static void TerminalKey(char ch)
+{
+    char out[2];
+    if (!gConnected) { SysBeep(1); return; }
+    out[0] = ch;
+    SendBytes(out, 1);             /* remote echoes; no local echo */
+}
+
+/* ================= Settings dialog ================= */
+
+static void SetDlgText(DialogPtr d, short item, ConstStr255Param s)
+{
+    short t; Handle h; Rect b;
+    GetDialogItem(d, item, &t, &h, &b);
+    SetDialogItemText(h, s);
+}
+static void GetDlgText(DialogPtr d, short item, Str255 s)
+{
+    short t; Handle h; Rect b;
+    GetDialogItem(d, item, &t, &h, &b);
+    GetDialogItemText(h, s);
+}
+static ControlHandle DlgCtl(DialogPtr d, short item)
+{
+    short t; Handle h; Rect b;
+    GetDialogItem(d, item, &t, &h, &b);
+    return (ControlHandle)h;
+}
+
+static void SyncBaudRadios(DialogPtr d, short sel)
+{
+    SetControlValue(DlgCtl(d, kRB1200),  sel == 0);
+    SetControlValue(DlgCtl(d, kRB2400),  sel == 1);
+    SetControlValue(DlgCtl(d, kRB9600),  sel == 2);
+    SetControlValue(DlgCtl(d, kRB19200), sel == 3);
+}
+
+/* default-button frame drawn around the Save button */
+static pascal void FrameDefault(DialogPtr dlg, short itemNo)
+{
+    short t; Handle h; Rect box;
+    (void)itemNo;
+    GetDialogItem(dlg, kSave, &t, &h, &box);
+    InsetRect(&box, -4, -4);
+    PenSize(3, 3);
+    FrameRoundRect(&box, 16, 16);
+    PenSize(1, 1);
+}
+
+/* returns true if the user saved */
+static Boolean DoSettingsDialog(void)
+{
+    DialogPtr dlg;
+    short item, baudSel;
+    Str255 num;
+    short t; Handle h; Rect box;
+    Boolean saved = false;
+
+    dlg = GetNewDialog(kDlgSettings, 0L, (WindowPtr)-1L);
+    if (!dlg) { EmitLine("*** could not open Settings dialog."); return false; }
+
+    /* install the default-button frame user item */
+    GetDialogItem(dlg, kFrame, &t, &h, &box);
+    SetDialogItem(dlg, kFrame, t, (Handle)NewUserItemUPP(&FrameDefault), &box);
+
+    SetDlgText(dlg, kSSID, gCfg.ssid);
+    SetDlgText(dlg, kPass, gCfg.pass);
+    SetDlgText(dlg, kHost, gCfg.host);
+    NumToString((long)gCfg.tcpPort, num);
+    SetDlgText(dlg, kPortF, num);
+    baudSel = gCfg.baudIdx;
+    SyncBaudRadios(dlg, baudSel);
+    SelectDialogItemText(dlg, kSSID, 0, 32767);
+
+    for (;;) {
+        ModalDialog(0L, &item);
+        if (item == kSave) {
+            long pv;
+            GetDlgText(dlg, kSSID, gCfg.ssid);
+            GetDlgText(dlg, kPass, gCfg.pass);
+            GetDlgText(dlg, kHost, gCfg.host);
+            GetDlgText(dlg, kPortF, num);
+            StringToNum(num, &pv);
+            if (pv < 1) pv = 2324;
+            gCfg.tcpPort = (unsigned short)pv;
+            gCfg.baudIdx = baudSel;
+            gCfg.magic = kPrefMagic;
+            gCfg.version = kPrefVersion;
+            saved = true;
+            break;
+        } else if (item == kCancel) {
+            break;
+        } else if (item >= kRB1200 && item <= kRB19200) {
+            baudSel = item - kRB1200;
+            SyncBaudRadios(dlg, baudSel);
+        }
+    }
+    DisposeDialog(dlg);
+    return saved;
+}
+
+/* Open Settings, then (if saved) persist + re-join WiFi + reconfigure port. */
+static void DoSettings(void)
+{
+    if (gConnected) Disconnect();
+    if (DoSettingsDialog()) {
+        SavePrefs();
+        gHaveCfg = true;
+        EmitLine("");
+        EmitLine("Settings saved.");
+        if (gPortOpen) ConfigPort(kBaudTab[gCfg.baudIdx].config);
+        if (gCfg.ssid[0] != 0) {
+            if (JoinWiFi()) SavePrefs();   /* persist wifiSaved=true */
+        }
+    }
+}
+
+/* ================= menus ================= */
+
+static void SyncMenus(void)
+{
+    if (gConnected) {
+        DisableItem(gConnM, kConnConnect);
+        EnableItem(gConnM, kConnDisconnect);
+    } else {
+        EnableItem(gConnM, kConnConnect);
+        DisableItem(gConnM, kConnDisconnect);
+    }
+}
+
+static void DoAbout(void)
+{
+    EmitLine("");
+    EmitLine("=============== Macinclaude ===============");
+    EmitLine(" Claude Code, on your Macintosh Plus.");
+    EmitLine(" Talks over the RetroWiFi modem to the");
+    EmitLine(" Macinclaude agent on the Mac mini.");
+    EmitLine(" code by Claude Code, for Bart Decrem");
+    EmitLine("===========================================");
+}
+
+static void DoMenu(long sel)
+{
+    short menu = HiWord(sel);
+    short item = LoWord(sel);
+    Str255 name;
+    switch (menu) {
+        case kAppleMenu:
+            if (item == 1) DoAbout();
+            else { GetMenuItemText(gAppleM, item, name); OpenDeskAcc(name); }
+            break;
+        case kFileMenu:
+            if (item == kFileQuit) gDone = true;
+            break;
+        case kConnMenu:
+            switch (item) {
+                case kConnConnect:    if (!gConnected) DialAgent();  break;
+                case kConnDisconnect: Disconnect();                  break;
+                case kConnSettings:   DoSettings();                  break;
+            }
+            break;
+    }
+    SyncMenus();
+    HiliteMenu(0);
+}
+
+/* ================= events ================= */
+
+static void HandleMouseDown(EventRecord *ev)
+{
+    WindowPtr win;
+    short part = FindWindow(ev->where, &win);
+    switch (part) {
+        case inMenuBar:   DoMenu(MenuSelect(ev->where)); break;
+        case inSysWindow: SystemClick(ev, win); break;
+        case inDrag:      DragWindow(win, ev->where, &qd.screenBits.bounds); break;
+        case inContent:   if (win != FrontWindow()) SelectWindow(win); break;
+    }
+}
+
+static void HandleEvent(EventRecord *ev)
+{
+    char ch;
+    switch (ev->what) {
+        case mouseDown: HandleMouseDown(ev); break;
+        case keyDown:
+        case autoKey:
+            ch = ev->message & charCodeMask;
+            if (ev->modifiers & cmdKey) {
+                if (ev->what == keyDown) {
+                    long sel = MenuKey(ch);
+                    if (HiWord(sel)) DoMenu(sel);
+                }
+            } else if (gConnected) {
+                TerminalKey(ch);
+            }
+            break;
+        case updateEvt: {
+            WindowPtr w = (WindowPtr)ev->message;
+            BeginUpdate(w);
+            SetPort(w);
+            { Rect r = (*gTE)->viewRect; EraseRect(&r); TEUpdate(&r, gTE); }
+            EndUpdate(w);
+            break;
+        }
+        case activateEvt: break;
+    }
+}
+
+/* ================= setup ================= */
+
+static void SetUpMenus(void)
+{
+    Str255 appleTitle;
+    appleTitle[0] = 1; appleTitle[1] = 0x14;     /* apple symbol */
+
+    gAppleM = NewMenu(kAppleMenu, appleTitle);
+    AppendMenu(gAppleM, "\pAbout Macinclaude");
+    AppendMenu(gAppleM, "\p(-");
+    AppendResMenu(gAppleM, 'DRVR');
+    InsertMenu(gAppleM, 0);
+
+    gFileM = NewMenu(kFileMenu, "\pFile");
+    AppendMenu(gFileM, "\pQuit/Q");
+    InsertMenu(gFileM, 0);
+
+    gConnM = NewMenu(kConnMenu, "\pConnection");
+    AppendMenu(gConnM, "\pConnect/K;Disconnect;(-;Settings...");
+    InsertMenu(gConnM, 0);
+
+    DrawMenuBar();
+}
+
+static void SetUpWindow(void)
+{
+    Rect r, view;
+    short left = (qd.screenBits.bounds.right - WIN_W) / 2;
+    short top  = qd.screenBits.bounds.top + 24;
+    SetRect(&r, left, top, left + WIN_W, top + WIN_H);
+    gWin = NewWindow(0L, &r, "\pMacinclaude", true, documentProc,
+                     (WindowPtr)-1L, false, 0);
+    SetPort(gWin);
+    TextFont(monaco); TextSize(9);
+
+    SetRect(&view, TE_PAD, TE_PAD, WIN_W - TE_PAD, WIN_H - TE_PAD);
+    gTE = TENew(&view, &view);
+    TEAutoView(true, gTE);
+}
+
+static void InitToolbox(void)
+{
+    InitGraf(&qd.thePort);
+    InitFonts();
+    InitWindows();
+    InitMenus();
+    TEInit();
+    InitDialogs(0L);
+    InitCursor();
+    FlushEvents(everyEvent, 0);
+}
+
+static void Banner(void)
+{
+    EmitLine("    M A C I N C L A U D E");
+    EmitLine("    ~~~~~~~~~~~~~~~~~~~~~");
+    EmitLine("    Claude Code for the 1986 Mac.");
+    EmitLine("");
+}
+
+int main(void)
+{
+    EventRecord ev;
+
+    InitToolbox();
+    SetUpMenus();
+    SetUpWindow();
+
+    PrefsLocate();
+    Banner();
+
+    gHaveCfg = LoadPrefs();
+    if (!gHaveCfg) {
+        SetDefaults();
+        EmitLine("First run - let's set things up.");
+        EmitLine("");
+        if (DoSettingsDialog()) {
+            SavePrefs();
+            gHaveCfg = true;
+            if (gCfg.ssid[0] != 0 && JoinWiFi()) SavePrefs();
+        } else {
+            EmitLine("Setup cancelled. Use Connection > Settings when ready.");
+        }
+    }
+
+    SyncMenus();
+
+    if (gHaveCfg) DialAgent();      /* the magic: launch = connected */
+
+    while (!gDone) {
+        long sleep = gConnected ? 2L : 15L;
+        if (WaitNextEvent(everyEvent, &ev, sleep, 0L))
+            HandleEvent(&ev);
+        if (gConnected) { PumpTerminal(); TEIdle(gTE); }
+    }
+    if (gConnected) Disconnect();
+    if (gPortOpen) CloseSerPort();
+    return 0;
+}

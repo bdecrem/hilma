@@ -192,6 +192,28 @@ Port → Tests ▸ Baud Sweep → Tests ▸ AT Probe (expect PASS/OK). Zero byte
    - Friendlier alternative: **`AT+CONFIG`** ⏎ → interactive menu (pick network, set baud/flow control).
 5. "Dial" the target by telnet — the WiFi SI speaks telnet itself: **`ATDT"<host>:<port>"`**.
 
+### Macinclaude (the Plus-side client) — `macinclaude/`
+
+The bring-up steps above (open port, `AT`, `ATDT`-dial) are the manual ZTerm ritual. **Macinclaude**
+(`macinclaude/`) is a purpose-built Plus app that bakes the whole ritual in, so launching it ≈ typing
+`claude` on the Plus. It is the client half of the same-named product whose server half is the agent in
+`agent/` (no namespace clash — different machine/language/folder; the only shared token is the name).
+
+- **First launch (no prefs):** a Settings dialog (DLOG/DITL in `macinclaude.r`) — WiFi SSID + password,
+  Mac mini host + TCP port, baud. Saving joins WiFi and persists it **in the modem** (`ATW"ssid,pass"`
+  then `AT&W`), and writes host/port/baud to a `Macinclaude Prefs` data file in the **System Folder**
+  (located via `SysEnvirons().sysVRefNum`).
+- **Every launch after:** auto-connect — open the modem port (flow control forced off, à la SerialDoc),
+  `AT`/`OK` to confirm the modem, `ATDT"host:port"`, watch for `CONNECT`, then drop into a live terminal
+  talking to the agent. Defaults: host `192.168.7.50`, **port 2324** (the agent), baud 9600.
+- **Connection menu:** Connect/Reconnect, Disconnect (`+++`/`ATH`), Settings… Any failed step prints a
+  plain status line naming what broke (no `OK`, no `CONNECT`) — no silent fallback.
+- **Status (2026-06-07):** built & compiles clean with Retro68 (`CODE×9, DLOG, DITL, SIZE`); `.dsk`
+  staged in `~/mac-plus-apps/vmac/`. **Not yet driven in Mini vMac** (the emulator's screen didn't render
+  into the screenshot tool that session) and the live connect needs the real Plus (no serial in the
+  emulator). The mini agent on 2324 is still a **hand-started process, not a LaunchDaemon** — make it
+  persistent (mirror `sh.macplus.terminal.plist`, bake in `ANTHROPIC_API_KEY`) before trusting boot=connected.
+
 ### The endgame: a Unix shell on the Plus, via the Mac mini (RECEIVING END ALREADY CONFIGURED)
 
 The Plus has no TCP/IP — the RetroWiFi SI does the networking and opens a raw TCP socket to the mini,
@@ -377,6 +399,12 @@ apps/macplus/
   serialdoc/
     serialdoc.c             ← serial-port diagnostic (Serial Manager + TextEdit console, ~500 lines C)
     CMakeLists.txt          ← add_application(SerialDoc serialdoc.c)
+    build.sh                ← one-command Retro68 build
+  macinclaude/
+    macinclaude.c           ← the Plus-side "Claude Code launcher": Settings dialog + prefs
+                              persistence + auto-connect state machine + live terminal (~700 lines C)
+    macinclaude.r           ← Settings dialog (DLOG/DITL 128) + SIZE resource (Rez)
+    CMakeLists.txt          ← add_application(Macinclaude macinclaude.c macinclaude.r)
     build.sh                ← one-command Retro68 build
   tools/
     macbin.py               ← MacBinary II encoder (native macOS file w/ rsrc fork → .bin for hcopy -m)
