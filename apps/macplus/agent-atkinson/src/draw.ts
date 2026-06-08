@@ -23,6 +23,12 @@ const HERE = fileURLToPath(new URL('.', import.meta.url));
 // agent-atkinson/src -> ../../atkinson/dither.py
 const DITHER_PY = resolve(HERE, '..', '..', 'atkinson', 'dither.py');
 
+// Which python runs dither.py. Must be a python3 with Pillow. Explicit (not a
+// bare "python3" PATH lookup) because the box can have several python3s and
+// only one has Pillow - e.g. on the mini /usr/bin/python3 has it but the
+// Homebrew python3 that wins on PATH (needed for node) does not.
+const PYTHON = process.env.ATK_PYTHON || 'python3';
+
 // Provider: 'openai' (gpt-image-1) or 'together' (FLUX). Default openai.
 const PROVIDER = (process.env.ATK_IMAGE_PROVIDER || 'openai').toLowerCase();
 
@@ -120,7 +126,7 @@ export async function ditherToFrame(imageBytes: Buffer): Promise<Buffer> {
   const previewPng = join(dir, 'preview.png');
   try {
     await writeFile(inPng, imageBytes);
-    await run('python3', [
+    await run(PYTHON, [
       DITHER_PY, inPng, previewPng,
       '--size', `${IMG_W}x${IMG_H}`,
       '--fit', 'cover',
