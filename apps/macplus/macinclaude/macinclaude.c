@@ -203,6 +203,17 @@ static void DumpTerm(const unsigned char *buf, short len)
         }
         if (c == 27) { gInEsc = true; gEscLen = 0; continue; }
         if (c == 0) continue;                 /* drop NULs */
+        if (c == 8 || c == 127) {             /* destructive backspace echo: the
+                                               * PTY erases with BS/space/BS, so
+                                               * delete the last console char */
+            if (k > 0) { line[k] = 0; Emit(line); k = 0; }
+            if ((*gTE)->teLength > 0) {
+                TESetSelect((*gTE)->teLength - 1, (*gTE)->teLength, gTE);
+                TEDelete(gTE);
+                ScrollToBottom();
+            }
+            continue;
+        }
         if (c == 13) line[k++] = '\r';
         else if (c == 10) { if (i == 0 || buf[i - 1] != 13) line[k++] = '\r'; }
         else if (c >= 32 && c < 127) line[k++] = (char)c;
@@ -499,6 +510,10 @@ static void TerminalKey(char ch)
 {
     char out[2];
     if (!gConnected) { SysBeep(1); return; }
+    /* The Plus Delete key sends 0x08 (BS), but the mini's PTY erase char is
+     * 0x7F (DEL) - so send DEL, otherwise the host echoes a literal ^H instead
+     * of erasing. (This is the bug ZTerm couldn't fix without a setting.) */
+    if (ch == 8) ch = 0x7f;
     out[0] = ch;
     SendBytes(out, 1);             /* remote echoes; no local echo */
 }

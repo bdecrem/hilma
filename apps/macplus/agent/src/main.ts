@@ -167,12 +167,25 @@ async function promptUser(): Promise<void> {
 
 /* ---------- main ---------- */
 async function main() {
-  tt.line();
-  tt.line('=== CLAUDE CODE for the Macintosh Plus ===');
-  tt.line(`cwd: ${cfg.cwd}`);
-  tt.line(`model: ${cfg.model}   width: ${cfg.cols}`);
-  tt.line('Ask a question or give a task. /help for commands.');
-  tt.line();
+  const banner = [
+    '',
+    '     .---------.',
+    '    |  _______  |',
+    '    |  | o o |  |          M A C I N C L A U D E',
+    '    |  |  -  |  |          ~~~~~~~~~~~~~~~~~~~~~',
+    '    |  | \\_/ |  |                p l u s',
+    '    |  |_____|  |',
+    '    | o  [===]  |          a coding companion',
+    '    |___________|          for the 1986 mac,',
+    '     \\_________/           over 9600 baud.',
+    '',
+  ];
+  for (const ln of banner) tt.line(ln);
+  tt.line(`  cwd:    ${cfg.cwd}`);
+  tt.line(`  model:  ${cfg.model} @ ${cfg.cols} cols`);
+  tt.line('');
+  tt.line('  type a task.  /help for commands.  /quit to disconnect.');
+  tt.line('');
 
   await promptUser();   // first turn (or /quit before we start)
 

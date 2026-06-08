@@ -23,9 +23,25 @@ const UNICODE_MAP: [RegExp, string][] = [
   [/[   ]/g, ' '],           // non-breaking spaces
 ];
 
+/* Apply backspace (0x08) and DEL (0x7F) destructively: the model sometimes
+ * emits them to self-correct, but a dumb VT100/ZTerm prints them as literal
+ * ^H instead of erasing. Resolve them here so the line goes out already
+ * corrected. (Within a chunk; cross-chunk corrections are rare and harmless.) */
+function applyBackspaces(s: string): string {
+  if (s.indexOf('\x08') < 0 && s.indexOf('\x7f') < 0) return s;
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === '\x08' || c === '\x7f') out = out.slice(0, -1);
+    else out += c;
+  }
+  return out;
+}
+
 export function toAscii(s: string): string {
   let r = s;
   for (const [re, rep] of UNICODE_MAP) r = r.replace(re, rep);
+  r = applyBackspaces(r);                               // erase, don't print ^H
   r = r.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '');        // strip ANSI escapes
   r = r.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, '?');     // anything left non-ASCII -> '?'
   return r;
