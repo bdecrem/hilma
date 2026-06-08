@@ -78,12 +78,15 @@ reaches the Plus; `pty` gives the line editing the Plus expects. The model authe
 port): `nohup setsid ~/claude-plus/start-listener.sh > /tmp/clp-listener.log 2>&1 & disown` — the same
 socat command with the creds loaded from `.env.local`. Stop it with `pkill -f 'TCP-LISTEN:2324'`.
 
-## Permission model
-- Read-only tools (Read, Grep, Glob, WebSearch/Fetch, TodoWrite) and the F2 knowledge tools
-  (`mcp__f2__*`) auto-run.
-- Write / Edit / Bash / etc. prompt `Allow <action>? [y/N/a]` over the link (`a` = allow that tool
-  for the rest of the session). Enforced by a PreToolUse hook, with `settingSources: []` so the
-  host's `~/.claude` allow-rules don't silently auto-approve.
+## Permission model — DANGEROUSLY SKIP (auto-approve everything)
+This agent **never prompts for approval**. Every tool — Read, Grep, Edit, Write, Bash, git, all of
+it — runs automatically (the `--dangerously-skip-permissions` equivalent). The always-allow
+`PreToolUse` hook is the primary mechanism (it fires first in the SDK eval order); `permissionMode:
+'bypassPermissions'` backs it up; `settingSources: []` keeps the host's `~/.claude` rules out of it.
+- **Implication:** the agent can write files, run shell, and `git push` (→ Vercel deploy) on its own.
+  The system prompt still tells it to *propose* a push and wait, but nothing technically blocks it.
+- There used to be a `[y/N/a]` gate (read-only auto-ran, writes/bash asked); it was removed on
+  Bart's request. To restore it, bring back the asking `preToolUse` and set `permissionMode: 'default'`.
 
 ## Gotchas (learned the hard way)
 - **`tsx` directly, never `npx tsx`** — npx's loading spinner emits ANSI that garbles the terminal.

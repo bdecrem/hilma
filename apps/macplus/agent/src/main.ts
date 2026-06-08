@@ -127,10 +127,8 @@ async function* prompts() {
   }
 }
 
-/* ---------- permission gate (read-only auto-runs; writes/bash ask) ---------- */
-const READONLY = new Set(['Read', 'Grep', 'Glob', 'WebSearch', 'WebFetch', 'TodoWrite', 'BashOutput', 'NotebookRead']);
-const sessionAllow = new Set<string>();
-
+/* ---------- permission gate: DANGEROUSLY SKIP — auto-approve EVERYTHING ---------- */
+// Used to render tool calls on the Plus (see handleMsg); no longer used for gating.
 function toolTitle(name: string, input: any): string {
   if (name === 'Bash') return `Bash: ${String(input?.command ?? '').slice(0, 60)}`;
   if (name === 'Read' || name === 'Edit' || name === 'Write' || name === 'NotebookEdit')
@@ -140,23 +138,20 @@ function toolTitle(name: string, input: any): string {
   return name;
 }
 
-// Permission gate via a PreToolUse hook (fires FIRST in the SDK's eval order, and
-// reliably — unlike canUseTool, which is only a last-resort fallback). Read-only
-// tools auto-allow; writes/bash/etc. ask the user [y/N/a] over the link.
+// Bart asked for the --dangerously-skip-permissions equivalent: this agent
+// auto-approves EVERY tool with no [y/N/a] prompt — reads, edits, Write, Bash,
+// git, all of it. The PreToolUse hook fires first in the SDK's eval order and
+// unconditionally allows; permissionMode is also 'bypassPermissions' (below) as
+// belt-and-suspenders. The Plus user sees actions happen, never an approval.
+// NOTE: the agent can now write files, run shell commands, and `git push`
+// (the Vercel deploy path) entirely on its own. The system prompt still tells it
+// to PROPOSE a push and wait — but nothing technically stops it anymore.
 const allowOut = () => ({ hookSpecificOutput: { hookEventName: 'PreToolUse' as const, permissionDecision: 'allow' as const } });
-const denyOut = (reason: string) => ({ hookSpecificOutput: { hookEventName: 'PreToolUse' as const, permissionDecision: 'deny' as const, permissionDecisionReason: reason } });
 
 const preToolUse = async (input: any) => {
   if (input?.hook_event_name !== 'PreToolUse') return {};
-  const name: string = input.tool_name;
-  const ti = input.tool_input ?? {};
-  if (process.env.CLP_DEBUG) process.stderr.write(`[preToolUse] ${name}\n`);
-  // F2 knowledge tools are read-only DB queries — auto-run like Read/Grep.
-  if (name.startsWith('mcp__f2__') || READONLY.has(name) || sessionAllow.has(name)) return allowOut();
-  const ans = (await tt.ask(`  Allow ${toolTitle(name, ti)}? [y/N/a] `)).trim().toLowerCase();
-  if (ans === 'a' || ans === 'always') { sessionAllow.add(name); return allowOut(); }
-  if (ans === 'y' || ans === 'yes') return allowOut();
-  return denyOut('User declined this action.');
+  if (process.env.CLP_DEBUG) process.stderr.write(`[preToolUse] ${input.tool_name} (auto-allow)\n`);
+  return allowOut();
 };
 
 /* ---------- render the SDK message stream ---------- */
@@ -190,7 +185,7 @@ function handleSlash(line: string): boolean {  // returns false => quit
   switch (cmd) {
     case 'help':
       tt.line('Commands: /help  /quit  /clear  /cols N  /cwd  /model');
-      tt.line('Type plain text to talk to Claude. Reads/searches auto-run; edits & bash ask [y/N/a].');
+      tt.line('Type plain text to talk to Claude. All tools run automatically (no approvals).');
       tt.line('Knowledge: ask "what did i say about X" - searches your F2 notes + docsrepo.');
       return true;
     case 'quit': case 'exit': tt.line('Goodbye.'); return false;
@@ -258,10 +253,12 @@ async function main() {
         additionalDirectories: [cfg.docs],
         // F2 datastore: in-process, read-only knowledge tools (mcp__f2__*).
         mcpServers: { f2: createF2Server() },
-        // Isolation mode: ignore the host's ~/.claude allow-rules so OUR hook
-        // is the sole permission authority (otherwise the user's settings auto-approve).
+        // Don't load the host's ~/.claude settings (kept for isolation).
         settingSources: [],
-        permissionMode: 'default',
+        // Dangerously skip permissions: never prompt for anything. The always-allow
+        // PreToolUse hook is the primary mechanism (fires first); bypassPermissions
+        // is the matching mode. See the gate comment above.
+        permissionMode: 'bypassPermissions',
         hooks: { PreToolUse: [{ hooks: [preToolUse] }] },
       } as any,
     })) {
