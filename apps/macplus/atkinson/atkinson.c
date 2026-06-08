@@ -58,9 +58,18 @@
 #define kFileMenu  129
 #define kConnMenu  130
 #define kImageMenu 131
+#define kEditMenu  132
 
 /* File menu items */
 #define kFileQuit    1
+
+/* Edit menu items (standard layout so desk accessories + dialog editing work) */
+#define kEditUndo    1
+/* 2 = separator */
+#define kEditCut     3
+#define kEditCopy    4
+#define kEditPaste   5
+#define kEditClear   6
 
 /* Connection menu items */
 #define kConnConnect    1
@@ -126,7 +135,7 @@ static short   gPrefVRef = 0;
 
 /* ---- globals ---- */
 static WindowPtr  gWin;
-static MenuHandle gAppleM, gFileM, gConnM, gImageM;
+static MenuHandle gAppleM, gFileM, gEditM, gConnM, gImageM;
 static Boolean    gDone = false;
 
 static short      gInRef, gOutRef;          /* serial driver refnums */
@@ -544,6 +553,40 @@ static ControlHandle DlgCtl(DialogPtr d, short item)
     return (ControlHandle)h;
 }
 
+/* Copy a TE's current selection to the desk scrap. We write the substring with
+ * PutScrap directly rather than TECopy+TEToScrap, because TEToScrap is a glue
+ * routine Retro68 doesn't link by default (PutScrap/GetScrap are real traps). */
+static void ScrapFromTE(TEHandle te)
+{
+    short s = (*te)->selStart, e = (*te)->selEnd;
+    if (e > s) {
+        Handle ht = (*te)->hText;
+        HLock(ht);
+        ZeroScrap();
+        PutScrap((long)(e - s), 'TEXT', (Ptr)(*ht + s));
+        HUnlock(ht);
+    }
+}
+
+/* Insert the desk-scrap text into a TE at the current selection (replacing it).
+ * Same reason as above: avoids the TEFromScrap glue. */
+static void ScrapIntoTE(TEHandle te)
+{
+    Handle h; long n, off = 0;
+    h = NewHandle(0);
+    if (!h) return;
+    n = GetScrap(h, 'TEXT', &off);
+    if (n > 0) {
+        if ((*te)->selEnd > (*te)->selStart) TEDelete(te);
+        HLock(h);
+        TEInsert((Ptr)*h, n, te);
+        HUnlock(h);
+    } else {
+        SysBeep(1);                /* nothing on the clipboard */
+    }
+    DisposeHandle(h);
+}
+
 /* default-button frame drawn around a button's box (UserItem proc) */
 static short gFrameItem = kSave;
 static pascal void FrameDefault(DialogPtr dlg, short itemNo)
@@ -557,15 +600,32 @@ static pascal void FrameDefault(DialogPtr dlg, short itemNo)
     PenSize(1, 1);
 }
 
-/* Map Return->default button, Esc->cancel. (Clipboard editing left to the
- * Settings dialog where the dead-key escape hatch matters most.) */
+/* Modal filter shared by both dialogs: map Return->default, Esc->cancel, and
+ * wire Cmd-X/C/V into the active edit field (SSID/password/host, or the New
+ * Image prompt). Without Cmd-V a long prompt has to be typed by hand on the
+ * Plus keyboard, and a dead key (e.g. a stuck 'L') can't be worked around. */
 static short gDefItem = kSave, gCanItem = kCancel;
 static pascal Boolean KeyFilter(DialogPtr dlg, EventRecord *ev, short *itemHit)
 {
-    char ch;
-    (void)dlg;
+    char ch, lc;
+    DialogPeek dp = (DialogPeek)dlg;
+    TEHandle te = dp->textH;
     if (ev->what != keyDown && ev->what != autoKey) return false;
     ch = ev->message & charCodeMask;
+    if (ev->modifiers & cmdKey) {
+        lc = ch;
+        if (lc >= 'A' && lc <= 'Z') lc += 32;
+        if (te && dp->editField >= 0) {
+            if (lc == 'v') { ScrapIntoTE(te); ev->what = nullEvent; return false; }
+            if (lc == 'c') { ScrapFromTE(te); ev->what = nullEvent; return false; }
+            if (lc == 'x') {
+                ScrapFromTE(te);
+                if ((*te)->selEnd > (*te)->selStart) TEDelete(te);
+                ev->what = nullEvent; return false;
+            }
+        }
+        return false;
+    }
     if (ch == 13 || ch == 3)  { *itemHit = gDefItem; return true; }   /* Return/Enter */
     if (ch == 27)             { *itemHit = gCanItem; return true; }   /* Esc */
     return false;
@@ -735,6 +795,13 @@ static void DoMenu(long sel)
         case kFileMenu:
             if (item == kFileQuit) gDone = true;
             break;
+        case kEditMenu:
+            /* Standard edit menu: let a desk accessory handle Cut/Copy/Paste.
+             * The image window itself has no editable text; dialog-field editing
+             * is handled in KeyFilter (Cmd-X/C/V), since the menu bar is disabled
+             * while a modal dialog is up. */
+            SystemEdit(item - 1);
+            break;
         case kConnMenu:
             switch (item) {
                 case kConnConnect:    if (!gConnected) DialAgent(); break;
@@ -813,6 +880,10 @@ static void SetUpMenus(void)
     gFileM = NewMenu(kFileMenu, "\pFile");
     AppendMenu(gFileM, "\pQuit/Q");
     InsertMenu(gFileM, 0);
+
+    gEditM = NewMenu(kEditMenu, "\pEdit");
+    AppendMenu(gEditM, "\pUndo/Z;(-;Cut/X;Copy/C;Paste/V;Clear");
+    InsertMenu(gEditM, 0);
 
     gConnM = NewMenu(kConnMenu, "\pConnection");
     AppendMenu(gConnM, "\pConnect/K;Disconnect;(-;Settings...");

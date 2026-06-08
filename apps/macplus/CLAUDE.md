@@ -226,7 +226,10 @@ bitmap row-by-row so it "develops" like a Polaroid over the slow link.
   prompt dialog → sends the text → parses the streamed frame and blits each scanline as it arrives. The
   canvas is the whole window; transient status (`connecting…`, `receiving 42%`, `done`) lives in the title
   bar. New Image is disabled until connected. **Image ▸ Draw Test Image** reveals the embedded
-  `test_image.h` offline (no link needed) — handy for verifying the renderer in Mini vMac.
+  `test_image.h` offline (no link needed) — handy for verifying the renderer in Mini vMac. A standard
+  **Edit** menu + a shared modal-dialog filter give Cmd-X/C/V in the Settings and New Image fields (so a
+  long prompt can be pasted instead of typed on the Plus keyboard) plus desk-accessory support, ported
+  from Macinclaude.
 - **Mini side (`agent-atkinson/`):** reads a prompt line → generates an image (OpenAI `gpt-image-1`, or
   Together FLUX via `ATK_IMAGE_PROVIDER`) → Atkinson-dithers + packs to 1bpp by shelling out to the proven
   `atkinson/dither.py` (the single source of truth for the packed-byte layout) → streams the frame. Runs
