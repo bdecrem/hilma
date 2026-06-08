@@ -12,7 +12,9 @@
     "dev": "tsx src/main.ts --cols 80"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "latest"
+    "@anthropic-ai/claude-agent-sdk": "latest",
+    "@supabase/supabase-js": "^2.45.0",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "latest",
