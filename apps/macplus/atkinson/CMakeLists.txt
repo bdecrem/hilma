@@ -4,6 +4,7 @@ project(Atkinson C)
 # Retro68 provides add_application() via its toolchain file.
 add_application(Atkinson
     atkinson.c
+    atkinson.r
 )
 
 set_target_properties(Atkinson PROPERTIES COMPILE_OPTIONS -ffunction-sections)

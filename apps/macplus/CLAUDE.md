@@ -214,6 +214,39 @@ The bring-up steps above (open port, `AT`, `ATDT`-dial) are the manual ZTerm rit
   emulator). The mini agent on 2324 is still a **hand-started process, not a LaunchDaemon** — make it
   persistent (mirror `sh.macplus.terminal.plist`, bake in `ANTHROPIC_API_KEY`) before trusting boot=connected.
 
+### Atkinson (the Plus draws, in 1-bit) — `atkinson/` + `agent-atkinson/`
+
+Same two-halves shape as Macinclaude, but instead of a terminal it produces pictures: you type an image
+idea on the Plus, the mini generates the image and Atkinson-dithers it to 1-bit, and the Plus paints the
+bitmap row-by-row so it "develops" like a Polaroid over the slow link.
+
+- **Plus side (`atkinson/atkinson.c` + `atkinson.r`):** reuses Macinclaude's Settings dialog + prefs +
+  serial transport + modem connect (defaults: host `192.168.7.50`, **port 2325**, baud 9600 — 2323 is the
+  login shell, 2324 the Macinclaude text agent, 2325 this image agent). Adds **Image ▸ New Image…** → a
+  prompt dialog → sends the text → parses the streamed frame and blits each scanline as it arrives. The
+  canvas is the whole window; transient status (`connecting…`, `receiving 42%`, `done`) lives in the title
+  bar. New Image is disabled until connected. **Image ▸ Draw Test Image** reveals the embedded
+  `test_image.h` offline (no link needed) — handy for verifying the renderer in Mini vMac.
+- **Mini side (`agent-atkinson/`):** reads a prompt line → generates an image (OpenAI `gpt-image-1`, or
+  Together FLUX via `ATK_IMAGE_PROVIDER`) → Atkinson-dithers + packs to 1bpp by shelling out to the proven
+  `atkinson/dither.py` (the single source of truth for the packed-byte layout) → streams the frame. Runs
+  under socat like the text agent. See `agent-atkinson/README.md`.
+- **Wire format** (must match both halves): `ATKIMG <w> <h> <rb>\r\n`, then `h` lines of `rb*2` hex chars
+  (one image row each), then `ATKEND\r\n` (or `ATKERR <msg>\r\n`). Hex, not raw binary, so the bytes
+  survive the modem's telnet layer (a raw `0xFF` reads as a telnet IAC) and the 68000 parser stays trivial.
+  480×300 → 60 bytes/row → 18000 bytes → 36000 hex chars ≈ 37 s to develop at 9600 baud.
+- **Tested without the wire:** the receive parser lives in `atkinson/atkinson_rx.inc` (shared verbatim
+  between the app and `atkinson/rxtest.c`); `rxtest.c` feeds it a *real* agent frame and asserts it
+  reconstructs the exact 18000 bytes, in order. The agent half is covered by `agent-atkinson` `npm run
+  selftest` (prompt → frame → validate → preview PNG). All four UI surfaces (Settings dialog, canvas +
+  test-image render, menu enable/disable, New Image dialog) were driven in Mini vMac — the New Image dialog
+  via a `#ifdef ATK_TEST_UI` build that forces the connected state (shipping build is clean). Build:
+  `cd atkinson && ./build.sh`.
+- **Status (2026-06-08):** built, compiles clean (`CODE×9, DLOG×2, DITL×2, SIZE`), UI verified in Mini
+  vMac, full data path verified except the physical serial wire (still blocked on the Plus↔modem cable).
+  The mini listener on 2325 is a **hand-started process, not a LaunchDaemon** — make it persistent before
+  trusting boot=ready.
+
 ### The endgame: a Unix shell on the Plus, via the Mac mini (RECEIVING END ALREADY CONFIGURED)
 
 The Plus has no TCP/IP — the RetroWiFi SI does the networking and opens a raw TCP socket to the mini,
@@ -406,6 +439,19 @@ apps/macplus/
     macinclaude.r           ← Settings dialog (DLOG/DITL 128) + SIZE resource (Rez)
     CMakeLists.txt          ← add_application(Macinclaude macinclaude.c macinclaude.r)
     build.sh                ← one-command Retro68 build
+  atkinson/
+    atkinson.c              ← the Plus-side image client: Settings + serial (from Macinclaude) +
+                              New Image prompt dialog + frame receive/progressive blit (~700 lines C)
+    atkinson_rx.inc         ← the frame parser, shared verbatim with rxtest.c
+    atkinson.r              ← Settings (DLOG/DITL 128) + New Image (DLOG/DITL 129) + SIZE (Rez)
+    rxtest.c                ← host-clang test: decode a real agent frame, assert exact bytes
+    dither.py               ← Atkinson dither + 1bpp pack (defines the wire byte layout)
+    test_image.h            ← embedded 480x300 1bpp image (offline renderer self-test)
+    CMakeLists.txt          ← add_application(Atkinson atkinson.c atkinson.r)
+    build.sh                ← one-command Retro68 build
+  agent-atkinson/           ← mini side: prompt → image gen → dither → stream frame (Node/TS)
+    src/{main,draw,frame,selftest}.ts
+    README.md               ← protocol + how to run (socat on :2325)
   tools/
     macbin.py               ← MacBinary II encoder (native macOS file w/ rsrc fork → .bin for hcopy -m)
     lsrsrc.py               ← list resource-fork types (sanity-check a built app)

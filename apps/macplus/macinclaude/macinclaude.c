@@ -59,10 +59,19 @@
 /* ---- menus ---- */
 #define kAppleMenu  128
 #define kFileMenu   129
+#define kEditMenu   131
 #define kConnMenu   130
 
 /* File menu items */
 #define kFileQuit    1
+
+/* Edit menu items (standard layout so desk accessories + dialog editing work) */
+#define kEditUndo    1
+/* 2 = separator */
+#define kEditCut     3
+#define kEditCopy    4
+#define kEditPaste   5
+#define kEditClear   6
 
 /* Connection menu items */
 #define kConnConnect    1
@@ -110,7 +119,7 @@ static short   gPrefVRef = 0;
 /* ---- globals ---- */
 static WindowPtr  gWin;
 static TEHandle   gTE;
-static MenuHandle gAppleM, gFileM, gConnM;
+static MenuHandle gAppleM, gFileM, gEditM, gConnM;
 static Boolean    gDone = false;
 
 static short      gInRef, gOutRef;          /* serial driver refnums */
@@ -179,6 +188,10 @@ static void CatStr(char *buf, short *len, const char *s)
 static Boolean gInEsc = false;       /* mid CSI escape sequence */
 static char    gEscBuf[16];
 static short   gEscLen = 0;
+static unsigned char gPrevByte = 0;  /* last raw byte of the previous DumpTerm
+                                      * chunk - so a CRLF split across two serial
+                                      * reads still collapses to one line (the
+                                      * blank-line bug vs ZTerm) */
 
 static void ClearConsole(void)
 {
@@ -215,12 +228,19 @@ static void DumpTerm(const unsigned char *buf, short len)
             continue;
         }
         if (c == 13) line[k++] = '\r';
-        else if (c == 10) { if (i == 0 || buf[i - 1] != 13) line[k++] = '\r'; }
+        else if (c == 10) {
+            /* lone LF -> newline; but a LF right after a CR (the second half of
+             * a \r\n, even one split across reads) was already turned into the
+             * line break by that CR, so skip it. */
+            unsigned char prev = (i == 0) ? gPrevByte : buf[i - 1];
+            if (prev != 13) line[k++] = '\r';
+        }
         else if (c >= 32 && c < 127) line[k++] = (char)c;
         else line[k++] = '.';
         if (k > 180) { line[k] = 0; Emit(line); k = 0; }
     }
     if (k > 0) { line[k] = 0; Emit(line); }
+    if (len > 0) gPrevByte = buf[len - 1];
 }
 
 /* ================= serial plumbing ================= */
@@ -464,7 +484,7 @@ static Boolean DialAgent(void)
 
     if (Contains(gCap, got, "CONNECT")) {
         gConnected = true;
-        gInEsc = false; gEscLen = 0;
+        gInEsc = false; gEscLen = 0; gPrevByte = 0;
         EmitLine("--- connected. you're talking to Claude. ---");
         EmitLine("");
         /* anything that arrived alongside CONNECT (e.g. the banner) */
@@ -518,6 +538,66 @@ static void TerminalKey(char ch)
     SendBytes(out, 1);             /* remote echoes; no local echo */
 }
 
+/* Copy a TE's current selection to the desk scrap. We write the substring with
+ * PutScrap directly rather than TECopy+TEToScrap, because TEToScrap is a glue
+ * routine Retro68 doesn't link by default (PutScrap/GetScrap are real traps). */
+static void ScrapFromTE(TEHandle te)
+{
+    short s = (*te)->selStart, e = (*te)->selEnd;
+    if (e > s) {
+        Handle ht = (*te)->hText;
+        HLock(ht);
+        ZeroScrap();
+        PutScrap((long)(e - s), 'TEXT', (Ptr)(*ht + s));
+        HUnlock(ht);
+    }
+}
+
+/* Insert the desk-scrap text into a TE at the current selection (replacing it).
+ * Same reason as above: avoids the TEFromScrap glue. */
+static void ScrapIntoTE(TEHandle te)
+{
+    Handle h; long n, off = 0;
+    h = NewHandle(0);
+    if (!h) return;
+    n = GetScrap(h, 'TEXT', &off);
+    if (n > 0) {
+        if ((*te)->selEnd > (*te)->selStart) TEDelete(te);
+        HLock(h);
+        TEInsert((Ptr)*h, n, te);
+        HUnlock(h);
+    } else {
+        SysBeep(1);                /* nothing on the clipboard */
+    }
+    DisposeHandle(h);
+}
+
+/* Copy the console selection (if any) to the desk scrap. */
+static void TerminalCopy(void)
+{
+    ScrapFromTE(gTE);
+}
+
+/* Paste: send the clipboard text out the serial line as if typed. The remote
+ * echoes it back, so it appears on screen. This is the escape hatch for a dead
+ * key (e.g. a stuck 'L'): type the text anywhere with Key Caps, copy, paste here. */
+static void TerminalPaste(void)
+{
+    Handle h; long n, off = 0;
+    if (!gConnected) { SysBeep(1); return; }
+    h = NewHandle(0);
+    if (!h) return;
+    n = GetScrap(h, 'TEXT', &off);
+    if (n > 0) {
+        HLock(h);
+        SendBytes(*h, n);          /* raw bytes; remote echoes them back */
+        HUnlock(h);
+    } else {
+        SysBeep(1);                /* nothing on the clipboard */
+    }
+    DisposeHandle(h);
+}
+
 /* ================= Settings dialog ================= */
 
 static void SetDlgText(DialogPtr d, short item, ConstStr255Param s)
@@ -560,6 +640,36 @@ static pascal void FrameDefault(DialogPtr dlg, short itemNo)
 }
 
 /* returns true if the user saved */
+/* Modal filter for the Settings dialog: wire up clipboard editing in the
+ * SSID/password/host fields (Cmd-X/C/V), and map Return->Save, Esc->Cancel.
+ * Without this, Cmd-V does nothing and a dead key (stuck 'L') can't be worked
+ * around by pasting. */
+static pascal Boolean SettingsFilter(DialogPtr dlg, EventRecord *ev, short *itemHit)
+{
+    char ch, lc;
+    DialogPeek dp = (DialogPeek)dlg;
+    TEHandle te = dp->textH;
+    if (ev->what != keyDown && ev->what != autoKey) return false;
+    ch = ev->message & charCodeMask;
+    if (ev->modifiers & cmdKey) {
+        lc = ch;
+        if (lc >= 'A' && lc <= 'Z') lc += 32;
+        if (te && dp->editField >= 0) {
+            if (lc == 'v') { ScrapIntoTE(te); ev->what = nullEvent; return false; }
+            if (lc == 'c') { ScrapFromTE(te); ev->what = nullEvent; return false; }
+            if (lc == 'x') {
+                ScrapFromTE(te);
+                if ((*te)->selEnd > (*te)->selStart) TEDelete(te);
+                ev->what = nullEvent; return false;
+            }
+        }
+        return false;
+    }
+    if (ch == 13 || ch == 3)  { *itemHit = kSave;   return true; }   /* Return/Enter */
+    if (ch == 27)             { *itemHit = kCancel; return true; }   /* Esc */
+    return false;
+}
+
 static Boolean DoSettingsDialog(void)
 {
     DialogPtr dlg;
@@ -567,9 +677,11 @@ static Boolean DoSettingsDialog(void)
     Str255 num;
     short t; Handle h; Rect box;
     Boolean saved = false;
+    ModalFilterUPP filt;
 
     dlg = GetNewDialog(kDlgSettings, 0L, (WindowPtr)-1L);
     if (!dlg) { EmitLine("*** could not open Settings dialog."); return false; }
+    filt = NewModalFilterUPP(SettingsFilter);
 
     /* install the default-button frame user item */
     GetDialogItem(dlg, kFrame, &t, &h, &box);
@@ -585,7 +697,7 @@ static Boolean DoSettingsDialog(void)
     SelectDialogItemText(dlg, kSSID, 0, 32767);
 
     for (;;) {
-        ModalDialog(0L, &item);
+        ModalDialog(filt, &item);
         if (item == kSave) {
             long pv;
             GetDlgText(dlg, kSSID, gCfg.ssid);
@@ -607,6 +719,7 @@ static Boolean DoSettingsDialog(void)
             SyncBaudRadios(dlg, baudSel);
         }
     }
+    DisposeModalFilterUPP(filt);
     DisposeDialog(dlg);
     return saved;
 }
@@ -663,6 +776,11 @@ static void DoMenu(long sel)
             break;
         case kFileMenu:
             if (item == kFileQuit) gDone = true;
+            break;
+        case kEditMenu:
+            if (SystemEdit(item - 1)) break;   /* a desk accessory took it */
+            if (item == kEditCopy)  TerminalCopy();
+            if (item == kEditPaste) TerminalPaste();
             break;
         case kConnMenu:
             switch (item) {
@@ -735,6 +853,10 @@ static void SetUpMenus(void)
     gFileM = NewMenu(kFileMenu, "\pFile");
     AppendMenu(gFileM, "\pQuit/Q");
     InsertMenu(gFileM, 0);
+
+    gEditM = NewMenu(kEditMenu, "\pEdit");
+    AppendMenu(gEditM, "\pUndo/Z;(-;Cut/X;Copy/C;Paste/V;Clear");
+    InsertMenu(gEditM, 0);
 
     gConnM = NewMenu(kConnMenu, "\pConnection");
     AppendMenu(gConnM, "\pConnect/K;Disconnect;(-;Settings...");

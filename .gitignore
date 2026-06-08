@@ -37,7 +37,7 @@ next-env.d.ts
 
 # beats (generated audio)
 *.wav
-apps/*/node_modules/
+apps/**/node_modules/
 
 # iOS app secrets (per-app Secrets.swift is generated from Secrets.swift.example)
 apps/*/*/Secrets.swift

@@ -1,0 +1,19 @@
+{
+  "name": "atkinson-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mini-side image agent for the Plus 'Atkinson' app: prompt -> generated image -> Atkinson dither -> 1bpp frame streamed over the serial/TCP link.",
+  "bin": {
+    "atkinson-agent": "src/main.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

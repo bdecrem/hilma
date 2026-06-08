@@ -5,11 +5,22 @@
  * packed bitmap; the Plus just paints the bytes - band by band, top to bottom,
  * so the picture develops like a Polaroid over the slow serial link.
  *
- * This file is the Plus-side RENDERER. The data path it draws from is pluggable:
- *   - embedded test image (test_image.h) - so the progressive blit can be
- *     verified in Mini vMac with no serial link (this milestone), and
- *   - (next) a framed 1bpp stream over the modem port, reusing Macinclaude's
- *     serial transport. Both end in the same SetImage()+DrawImageProgressive().
+ * Two halves of one product:
+ *   - Plus side (this file): connects to the agent (settings + serial transport
+ *     borrowed from Macinclaude), prompts the user for an image idea, sends it,
+ *     and renders the 1bpp frame the agent streams back.
+ *   - Mini side (agent-atkinson/): takes the prompt, generates an image,
+ *     Atkinson-dithers it, and streams the frame.
+ *
+ * Wire protocol (Plus <-> agent, over the raw TCP/serial link):
+ *   Plus -> agent:  "<prompt text>\r"
+ *   agent -> Plus:  optional status lines, then a frame:
+ *       "ATKIMG <w> <h> <rowbytes>\r\n"
+ *       <h lines, each rowbytes*2 hex chars + \r\n>   (one image row per line)
+ *       "ATKEND\r\n"
+ *     or on failure  "ATKERR <message>\r\n"
+ *   Hex (not raw binary) so the bytes survive the modem's telnet layer (a raw
+ *   0xFF would be read as a telnet IAC) and so the 68000 parser stays trivial.
  *
  * Bitmap format (matches dither.py): 1bpp, MSB-first, a SET bit = black
  * (QuickDraw's convention), each row padded to a whole, EVEN byte count
@@ -21,53 +32,197 @@
 #include <Menus.h>
 #include <Fonts.h>
 #include <Events.h>
+#include <TextEdit.h>
 #include <Dialogs.h>
 #include <ToolUtils.h>
 #include <Sound.h>
 #include <Memory.h>
 #include <OSUtils.h>
+#include <Devices.h>
+#include <Files.h>
+#include <Serial.h>
 #include <SegLoad.h>
 
 #include "test_image.h"   /* gTestImg[], gTestImg_W/_H/_ROWBYTES */
 
-/* Font IDs */
+/* Font IDs (classic constants not always provided by the interfaces). */
 #ifndef monaco
 #define monaco 4
+#endif
+#ifndef systemFont
+#define systemFont 0
 #endif
 
 /* ---- menus ---- */
 #define kAppleMenu 128
 #define kFileMenu  129
-#define kImageMenu 130
+#define kConnMenu  130
+#define kImageMenu 131
 
-#define kFileQuit   1
+/* File menu items */
+#define kFileQuit    1
 
-#define kImgDrawTest 1   /* progressive reveal of the embedded test image */
-#define kImgRedraw   2
-#define kImgClear    3
+/* Connection menu items */
+#define kConnConnect    1
+#define kConnDisconnect 2
+/* 3 = separator */
+#define kConnSettings   4
+
+/* Image menu items */
+#define kImgNew      1
+/* 2 = separator */
+#define kImgTest     3
+#define kImgRedraw   4
+#define kImgClear    5
+
+/* ---- Settings dialog (see atkinson.r) ---- */
+#define kDlgSettings 128
+#define kSave    1
+#define kCancel  2
+#define kSSID    4
+#define kPass    6
+#define kHost    8
+#define kPortF   10
+#define kRB1200  12
+#define kRB2400  13
+#define kRB9600  14
+#define kRB19200 15
+#define kFrame   17
+
+/* ---- New Image dialog (see atkinson.r) ---- */
+#define kDlgNewImage 129
+#define kNewCreate  1
+#define kNewCancel  2
+#define kNewPrompt  4
+#define kNewFrame   6
+
+/* ---- config / prefs ---- */
+#define kPrefMagic   0x414B      /* 'AK' */
+#define kPrefVersion 1
+#define kPrefName    "\pAtkinson Prefs"
+#define kPrefCreator 'ATKN'
+#define kPrefType    'pref'
+
+typedef struct {
+    short          magic;
+    short          version;
+    short          baudIdx;      /* index into kBaudTab (0..3) */
+    unsigned short tcpPort;       /* e.g. 2325 */
+    Str255         host;          /* e.g. "192.168.7.50" */
+    Str255         ssid;
+    Str255         pass;
+    Boolean        wifiSaved;     /* creds already written to the modem */
+    Boolean        pad;
+} Config;
+
+static Config gCfg;
+static Boolean gHaveCfg = false;
+static short   gPrefVRef = 0;
 
 /* ---- window geometry: content 480x300, centered, below menu+title bars ---- */
 #define IMG_W 480
 #define IMG_H 300
-#define WIN_TOP   40
-#define WIN_LEFT  16
+#define WIN_LEFT 16
 
 /* ---- globals ---- */
 static WindowPtr  gWin;
-static MenuHandle gAppleM, gFileM, gImageM;
+static MenuHandle gAppleM, gFileM, gConnM, gImageM;
 static Boolean    gDone = false;
 
-/* current image descriptor (embedded now; a received buffer later) */
-static const unsigned char *gImgBits = 0L;
+static short      gInRef, gOutRef;          /* serial driver refnums */
+static Boolean    gPortOpen = false;
+static Boolean    gConnected = false;       /* in a live session with the agent */
+
+static char       gSerBuf[2048];            /* roomy input buffer */
+static unsigned char gCap[1024];            /* capture scratch for handshakes */
+
+/* the current image: 480x300 1bpp packed bytes (set bit = black) */
+static unsigned char gImgBuf[IMG_W / 8 * IMG_H];   /* 18000 bytes */
 static short gImgRB = 0, gImgW = 0, gImgH = 0;
 static Boolean gImgValid = false;
 
+/* ---- baud table (matches SerialDoc/Macinclaude) ---- */
+typedef struct { const char *name; short config; } BaudEntry;
+static const BaudEntry kBaudTab[] = {
+    { "1200",  baud1200  + data8 + noParity + stop10 },
+    { "2400",  baud2400  + data8 + noParity + stop10 },
+    { "9600",  baud9600  + data8 + noParity + stop10 },
+    { "19200", baud19200 + data8 + noParity + stop10 },
+};
+#define NBAUD 4
+
+/* ================= small string helpers ================= */
+
+static void StrLen(const char *s, long *n) { long i = 0; while (s[i]) i++; *n = i; }
+
+static void CatLong(char *buf, short *len, long v)
+{
+    char tmp[12]; short n = 0;
+    if (v < 0) { buf[(*len)++] = '-'; v = -v; }
+    if (v == 0) tmp[n++] = '0';
+    while (v > 0) { tmp[n++] = (char)('0' + (v % 10)); v /= 10; }
+    while (n > 0) buf[(*len)++] = tmp[--n];
+}
+static void CatStr(char *buf, short *len, const char *s)
+{
+    short i; for (i = 0; s[i]; i++) buf[(*len)++] = s[i];
+}
+
+static void P2C(ConstStr255Param p, char *c)
+{
+    short i, n = p[0];
+    for (i = 0; i < n; i++) c[i] = (char)p[i + 1];
+    c[n] = 0;
+}
+
+/* C string -> Pascal Str255 (truncates at 255) */
+static void C2P(const char *c, Str255 p)
+{
+    short n = 0;
+    while (c[n] && n < 255) { p[n + 1] = (unsigned char)c[n]; n++; }
+    p[0] = (unsigned char)n;
+}
+
+/* true if needle (C string) appears anywhere in buf */
+static Boolean Contains(const unsigned char *buf, short len, const char *needle)
+{
+    short i; long nl; StrLen(needle, &nl);
+    if (nl == 0 || len < (short)nl) return false;
+    for (i = 0; i + (short)nl <= len; i++) {
+        short j; Boolean hit = true;
+        for (j = 0; j < (short)nl; j++)
+            if (buf[i + j] != (unsigned char)needle[j]) { hit = false; break; }
+        if (hit) return true;
+    }
+    return false;
+}
+
+/* ================= status line (window title) ================= */
+
+/* The image is the whole canvas, so transient status lives in the title bar:
+ * "Atkinson - connecting...", "Atkinson - generating", "Atkinson - 42%", etc. */
+static void SetStatus(const char *msg)
+{
+    Str255 t; short n = 0; char b[80];
+    CatStr(b, &n, "Atkinson");
+    if (msg && msg[0]) { CatStr(b, &n, " - "); CatStr(b, &n, msg); }
+    b[n] = 0;
+    C2P(b, t);
+    if (gWin) SetWTitle(gWin, t);
+}
+
+static void SetStatusPct(const char *msg, short pct)
+{
+    char b[80]; short n = 0;
+    CatStr(b, &n, msg); CatStr(b, &n, " "); CatLong(b, &n, (long)pct); CatStr(b, &n, "%");
+    b[n] = 0; SetStatus(b);
+}
+
 /* ================= bitmap drawing ================= */
 
-/* Build a QuickDraw BitMap over the current image's packed bytes. */
 static void MakeBitMap(BitMap *bm)
 {
-    bm->baseAddr = (Ptr)gImgBits;
+    bm->baseAddr = (Ptr)gImgBuf;
     bm->rowBytes = gImgRB;                 /* must be even; dither.py guarantees it */
     SetRect(&bm->bounds, 0, 0, gImgW, gImgH);
 }
@@ -85,16 +240,19 @@ static void DrawBand(short top, short bottom)
 
 static void DrawFull(void) { if (gImgValid) DrawBand(0, gImgH); }
 
-/* Paint the image top-to-bottom in bands, with a small pause between each, so
- * it "develops". With a live serial feed the pacing comes from byte arrival;
- * here the Delay() stands in for that, to prove the progressive blit. */
+static void ClearCanvas(void)
+{
+    Rect c; SetPort(gWin); SetRect(&c, 0, 0, IMG_W, IMG_H); EraseRect(&c);
+}
+
+/* Paint the current image top-to-bottom in bands with a small pause, so it
+ * "develops". Used for the embedded test image (offline). The live path renders
+ * each band as its row arrives, so it doesn't need this Delay-based pacing. */
 static void DrawImageProgressive(void)
 {
     short band = 20, y; long t;
     if (!gImgValid) return;
-    /* clear the canvas first */
-    SetPort(gWin);
-    { Rect c; SetRect(&c, 0, 0, gImgW, gImgH); EraseRect(&c); }
+    ClearCanvas();
     for (y = 0; y < gImgH; y += band) {
         short bottom = y + band; if (bottom > gImgH) bottom = gImgH;
         DrawBand(y, bottom);
@@ -102,28 +260,467 @@ static void DrawImageProgressive(void)
     }
 }
 
-static void SetImage(const unsigned char *bits, short rowBytes, short w, short h)
+/* Copy embedded bytes into our buffer and reveal them (offline demo/self-test). */
+static void DrawTestImage(void)
 {
-    gImgBits = bits; gImgRB = rowBytes; gImgW = w; gImgH = h; gImgValid = true;
+    short i;
+    for (i = 0; i < (short)sizeof(gImgBuf) && i < (short)sizeof(gTestImg); i++)
+        gImgBuf[i] = gTestImg[i];
+    gImgRB = gTestImg_ROWBYTES; gImgW = gTestImg_W; gImgH = gTestImg_H;
+    gImgValid = true;
+    SetStatus("test image");
+    DrawImageProgressive();
 }
 
 static void ClearImage(void)
 {
-    Rect c;
     gImgValid = false;
-    SetPort(gWin);
-    SetRect(&c, 0, 0, IMG_W, IMG_H);
-    EraseRect(&c);
+    ClearCanvas();
+    SetStatus("");
+}
+
+/* ================= serial plumbing (mirrors Macinclaude/SerialDoc) ================= */
+
+static void ConfigPort(short config)
+{
+    SerShk shk;
+    SerReset(gOutRef, config);
+    SerReset(gInRef,  config);
+    shk.fXOn = 0; shk.fCTS = 0; shk.xOn = 0; shk.xOff = 0;
+    shk.errs = 0; shk.evts = 0; shk.fInX = 0; shk.null = 0;
+    SerHShake(gOutRef, &shk);
+}
+
+static Boolean OpenSerPort(void)
+{
+    OSErr err;
+    if (gPortOpen) return true;
+    err = OpenDriver("\p.AOut", &gOutRef);            /* modem port */
+    if (err == noErr) err = OpenDriver("\p.AIn", &gInRef);
+    if (err != noErr) { SetStatus("could not open modem port"); return false; }
+    SerSetBuf(gInRef, (Ptr)gSerBuf, (short)sizeof(gSerBuf));
+    ConfigPort(kBaudTab[gCfg.baudIdx].config);
+    gPortOpen = true;
+    return true;
+}
+
+static void CloseSerPort(void)
+{
+    if (!gPortOpen) return;
+    SerSetBuf(gInRef, (Ptr)gSerBuf, 0);
+    CloseDriver(gInRef);
+    CloseDriver(gOutRef);
+    gPortOpen = false;
+}
+
+static void DrainInput(void)
+{
+    long avail, cnt;
+    if (!gPortOpen) return;
+    while (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
+        cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
+        FSRead(gInRef, &cnt, gSerBuf);
+    }
+}
+
+static void SendBytes(const char *s, long n)
+{
+    long cnt = n;
+    if (!gPortOpen) return;
+    FSWrite(gOutRef, &cnt, (Ptr)s);
+}
+static void SendStr(const char *s) { long n; StrLen(s, &n); SendBytes(s, n); }
+
+/* Poll the port for `ticks`, copying bytes into out[] (capped at cap). */
+static short CaptureFor(short ticks, unsigned char *out, short cap)
+{
+    unsigned long deadline = TickCount() + (unsigned long)ticks;
+    short total = 0; long avail, cnt;
+    while ((long)(TickCount() - deadline) < 0) {
+        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
+            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
+            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
+                short i;
+                for (i = 0; i < (short)cnt; i++)
+                    if (total < cap) out[total++] = (unsigned char)gSerBuf[i];
+            }
+        }
+    }
+    return total;
+}
+
+/* ================= prefs persistence ================= */
+
+static void PrefsLocate(void)
+{
+    SysEnvRec env;
+    if (SysEnvirons(curSysEnvVers, &env) == noErr) gPrefVRef = env.sysVRefNum;
+    else gPrefVRef = 0;
+}
+
+static void SetDefaults(void)
+{
+    short i;
+    gCfg.magic = kPrefMagic;
+    gCfg.version = kPrefVersion;
+    gCfg.baudIdx = 2;               /* 9600 */
+    gCfg.tcpPort = 2325;            /* the Atkinson agent on the mini */
+    { const char *h = "192.168.7.50"; gCfg.host[0] = 12;
+      for (i = 0; i < 12; i++) gCfg.host[i + 1] = (unsigned char)h[i]; }
+    gCfg.ssid[0] = 0;
+    gCfg.pass[0] = 0;
+    gCfg.wifiSaved = false;
+}
+
+static Boolean LoadPrefs(void)
+{
+    short refNum; long count;
+    if (FSOpen(kPrefName, gPrefVRef, &refNum) != noErr) return false;
+    count = sizeof(Config);
+    SetFPos(refNum, fsFromStart, 0);
+    if (FSRead(refNum, &count, (Ptr)&gCfg) != noErr || count != (long)sizeof(Config)) {
+        FSClose(refNum); return false;
+    }
+    FSClose(refNum);
+    if (gCfg.magic != kPrefMagic || gCfg.version != kPrefVersion) return false;
+    if (gCfg.baudIdx < 0 || gCfg.baudIdx >= NBAUD) gCfg.baudIdx = 2;
+    return true;
+}
+
+static void SavePrefs(void)
+{
+    short refNum; long count;
+    Create(kPrefName, gPrefVRef, kPrefCreator, kPrefType);   /* ok if it exists */
+    if (FSOpen(kPrefName, gPrefVRef, &refNum) != noErr) { SetStatus("could not save prefs"); return; }
+    count = sizeof(Config);
+    SetFPos(refNum, fsFromStart, 0);
+    FSWrite(refNum, &count, (Ptr)&gCfg);
+    SetEOF(refNum, (long)sizeof(Config));
+    FSClose(refNum);
+    FlushVol(NULL, gPrefVRef);
+}
+
+/* ================= modem operations ================= */
+
+/* send AT, look for OK; a couple tries so Zimodem can auto-baud */
+static Boolean ModemAlive(void)
+{
+    short tries, got;
+    for (tries = 0; tries < 3; tries++) {
+        DrainInput();
+        SendStr("AT\r");
+        got = CaptureFor(90, gCap, sizeof(gCap));    /* ~1.5s */
+        if (Contains(gCap, got, "OK")) return true;
+    }
+    return false;
+}
+
+/* Join WiFi and persist it in the modem (Settings -> Save). */
+static Boolean JoinWiFi(void)
+{
+    char cmd[600]; short n; short got;
+    char ssidC[256], passC[256];
+
+    if (gCfg.ssid[0] == 0) { SetStatus("no SSID set"); return false; }
+    if (!OpenSerPort()) return false;
+
+    SetStatus("joining WiFi...");
+    if (!ModemAlive()) { SetStatus("modem did not answer AT - check cable/power"); return false; }
+
+    P2C(gCfg.ssid, ssidC);
+    P2C(gCfg.pass, passC);
+
+    /* ATW"SSID,PASSWORD" - Zimodem join */
+    n = 0; CatStr(cmd, &n, "ATW\"");
+    CatStr(cmd, &n, ssidC); CatStr(cmd, &n, ",");
+    CatStr(cmd, &n, passC); CatStr(cmd, &n, "\"\r");
+    cmd[n] = 0;
+    DrainInput();
+    SendStr(cmd);
+    got = CaptureFor(900, gCap, sizeof(gCap));        /* up to ~15s to associate */
+
+    if (Contains(gCap, got, "ERROR") || got == 0) { SetStatus("WiFi join failed - check SSID/password"); return false; }
+    /* Save into the modem so it reconnects on its own next power-up. */
+    DrainInput();
+    SendStr("AT&W\r");
+    CaptureFor(90, gCap, sizeof(gCap));
+    gCfg.wifiSaved = true;
+    SetStatus("WiFi joined and saved");
+    return true;
+}
+
+/* Dial the agent; on CONNECT mark the session live. */
+static Boolean DialAgent(void)
+{
+    char cmd[320]; short n; short got;
+    char hostC[256];
+
+    if (!OpenSerPort()) return false;
+
+    SetStatus("connecting...");
+    if (!ModemAlive()) { SetStatus("modem did not answer AT @ this baud"); return false; }
+
+    P2C(gCfg.host, hostC);
+    SetStatus("dialing...");
+
+    /* ATDT"host:port" - the RetroWiFi SI speaks telnet itself */
+    n = 0; CatStr(cmd, &n, "ATDT\"");
+    CatStr(cmd, &n, hostC); CatStr(cmd, &n, ":");
+    CatLong(cmd, &n, (long)gCfg.tcpPort);
+    CatStr(cmd, &n, "\"\r");
+    cmd[n] = 0;
+    DrainInput();
+    SendStr(cmd);
+    got = CaptureFor(600, gCap, sizeof(gCap));        /* up to ~10s for CONNECT */
+
+    if (Contains(gCap, got, "CONNECT")) {
+        gConnected = true;
+        SetStatus("connected - Image > New Image to draw");
+        return true;
+    }
+    if (Contains(gCap, got, "BUSY"))      SetStatus("BUSY - agent listener may be down");
+    else if (Contains(gCap, got, "NO CARRIER") || Contains(gCap, got, "NO ANSWER"))
+                                          SetStatus("no answer - is the mini agent up?");
+    else if (got == 0)                    SetStatus("silence - WiFi not joined? try Settings");
+    else                                  SetStatus("unexpected reply from modem");
+    return false;
+}
+
+static void Disconnect(void)
+{
+    if (!gPortOpen) { gConnected = false; return; }
+    if (gConnected) {
+        SendStr("+++");
+        CaptureFor(90, gCap, sizeof(gCap));
+        SendStr("ATH\r");
+        CaptureFor(60, gCap, sizeof(gCap));
+    }
+    gConnected = false;
+    SetStatus("disconnected");
+}
+
+/* ================= frame receive state machine ================= */
+
+/* The parser lives in atkinson_rx.inc so the host test (rxtest.c) exercises the
+ * exact same code against a real agent frame. It needs the image globals (above)
+ * and these four callbacks (DrawBand/ClearCanvas/SetStatus/SetStatusPct, also
+ * above). PumpReceive (below) is the Mac-serial feeder and stays here. */
+#include "atkinson_rx.inc"
+
+/* Non-blocking: drain whatever serial bytes are waiting into the parser. */
+static void PumpReceive(void)
+{
+    long avail, cnt; short i;
+    if (!gPortOpen) return;
+    if (SerGetBuf(gInRef, &avail) != noErr || avail <= 0) {
+        if (gRxState != RX_IDLE && (long)(TickCount() - gRxDeadline) > 0)
+            RxAbort("timed out waiting for the agent");
+        return;
+    }
+    cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
+    if (FSRead(gInRef, &cnt, gSerBuf) != noErr) return;
+    for (i = 0; i < (short)cnt; i++) FeedRxByte((unsigned char)gSerBuf[i]);
+    gRxDeadline = TickCount() + 60 * 60;     /* 60s of silence = give up */
+}
+
+/* ================= dialogs ================= */
+
+static void SetDlgText(DialogPtr d, short item, ConstStr255Param s)
+{
+    short t; Handle h; Rect b;
+    GetDialogItem(d, item, &t, &h, &b);
+    SetDialogItemText(h, s);
+}
+static void GetDlgText(DialogPtr d, short item, Str255 s)
+{
+    short t; Handle h; Rect b;
+    GetDialogItem(d, item, &t, &h, &b);
+    GetDialogItemText(h, s);
+}
+static ControlHandle DlgCtl(DialogPtr d, short item)
+{
+    short t; Handle h; Rect b;
+    GetDialogItem(d, item, &t, &h, &b);
+    return (ControlHandle)h;
+}
+
+/* default-button frame drawn around a button's box (UserItem proc) */
+static short gFrameItem = kSave;
+static pascal void FrameDefault(DialogPtr dlg, short itemNo)
+{
+    short t; Handle h; Rect box;
+    (void)itemNo;
+    GetDialogItem(dlg, gFrameItem, &t, &h, &box);
+    InsetRect(&box, -4, -4);
+    PenSize(3, 3);
+    FrameRoundRect(&box, 16, 16);
+    PenSize(1, 1);
+}
+
+/* Map Return->default button, Esc->cancel. (Clipboard editing left to the
+ * Settings dialog where the dead-key escape hatch matters most.) */
+static short gDefItem = kSave, gCanItem = kCancel;
+static pascal Boolean KeyFilter(DialogPtr dlg, EventRecord *ev, short *itemHit)
+{
+    char ch;
+    (void)dlg;
+    if (ev->what != keyDown && ev->what != autoKey) return false;
+    ch = ev->message & charCodeMask;
+    if (ch == 13 || ch == 3)  { *itemHit = gDefItem; return true; }   /* Return/Enter */
+    if (ch == 27)             { *itemHit = gCanItem; return true; }   /* Esc */
+    return false;
+}
+
+static void SyncBaudRadios(DialogPtr d, short sel)
+{
+    SetControlValue(DlgCtl(d, kRB1200),  sel == 0);
+    SetControlValue(DlgCtl(d, kRB2400),  sel == 1);
+    SetControlValue(DlgCtl(d, kRB9600),  sel == 2);
+    SetControlValue(DlgCtl(d, kRB19200), sel == 3);
+}
+
+/* returns true if the user saved */
+static Boolean DoSettingsDialog(void)
+{
+    DialogPtr dlg;
+    short item, baudSel;
+    Str255 num;
+    short t; Handle h; Rect box;
+    Boolean saved = false;
+    ModalFilterUPP filt;
+
+    dlg = GetNewDialog(kDlgSettings, 0L, (WindowPtr)-1L);
+    if (!dlg) { SetStatus("could not open Settings dialog"); return false; }
+    gDefItem = kSave; gCanItem = kCancel; gFrameItem = kSave;
+    filt = NewModalFilterUPP(KeyFilter);
+
+    GetDialogItem(dlg, kFrame, &t, &h, &box);
+    SetDialogItem(dlg, kFrame, t, (Handle)NewUserItemUPP(&FrameDefault), &box);
+
+    SetDlgText(dlg, kSSID, gCfg.ssid);
+    SetDlgText(dlg, kPass, gCfg.pass);
+    SetDlgText(dlg, kHost, gCfg.host);
+    NumToString((long)gCfg.tcpPort, num);
+    SetDlgText(dlg, kPortF, num);
+    baudSel = gCfg.baudIdx;
+    SyncBaudRadios(dlg, baudSel);
+    SelectDialogItemText(dlg, kSSID, 0, 32767);
+
+    for (;;) {
+        ModalDialog(filt, &item);
+        if (item == kSave) {
+            long pv;
+            GetDlgText(dlg, kSSID, gCfg.ssid);
+            GetDlgText(dlg, kPass, gCfg.pass);
+            GetDlgText(dlg, kHost, gCfg.host);
+            GetDlgText(dlg, kPortF, num);
+            StringToNum(num, &pv);
+            if (pv < 1) pv = 2325;
+            gCfg.tcpPort = (unsigned short)pv;
+            gCfg.baudIdx = baudSel;
+            gCfg.magic = kPrefMagic;
+            gCfg.version = kPrefVersion;
+            saved = true;
+            break;
+        } else if (item == kCancel) {
+            break;
+        } else if (item >= kRB1200 && item <= kRB19200) {
+            baudSel = item - kRB1200;
+            SyncBaudRadios(dlg, baudSel);
+        }
+    }
+    DisposeModalFilterUPP(filt);
+    DisposeDialog(dlg);
+    return saved;
+}
+
+/* Open Settings, then (if saved) persist + re-join WiFi + reconfigure port. */
+static void DoSettings(void)
+{
+    if (gConnected) Disconnect();
+    if (DoSettingsDialog()) {
+        SavePrefs();
+        gHaveCfg = true;
+        SetStatus("settings saved");
+        if (gPortOpen) ConfigPort(kBaudTab[gCfg.baudIdx].config);
+        if (gCfg.ssid[0] != 0) { if (JoinWiFi()) SavePrefs(); }
+    }
+}
+
+/* Prompt for an image idea; returns true + fills prompt[] (C string) if Create. */
+static Boolean DoNewImageDialog(char *prompt, short cap)
+{
+    DialogPtr dlg;
+    short item;
+    short t; Handle h; Rect box;
+    Boolean go = false;
+    Str255 p;
+    ModalFilterUPP filt;
+
+    dlg = GetNewDialog(kDlgNewImage, 0L, (WindowPtr)-1L);
+    if (!dlg) { SetStatus("could not open New Image dialog"); return false; }
+    gDefItem = kNewCreate; gCanItem = kNewCancel; gFrameItem = kNewCreate;
+    filt = NewModalFilterUPP(KeyFilter);
+
+    GetDialogItem(dlg, kNewFrame, &t, &h, &box);
+    SetDialogItem(dlg, kNewFrame, t, (Handle)NewUserItemUPP(&FrameDefault), &box);
+
+    SetDlgText(dlg, kNewPrompt, "\p");
+    SelectDialogItemText(dlg, kNewPrompt, 0, 32767);
+
+    for (;;) {
+        ModalDialog(filt, &item);
+        if (item == kNewCreate) {
+            GetDlgText(dlg, kNewPrompt, p);
+            if (p[0] == 0) { SysBeep(1); continue; }   /* empty -> stay open */
+            P2C(p, prompt);
+            if ((short)p[0] >= cap) prompt[cap - 1] = 0;
+            go = true; break;
+        } else if (item == kNewCancel) {
+            break;
+        }
+    }
+    DisposeModalFilterUPP(filt);
+    DisposeDialog(dlg);
+    return go;
+}
+
+/* The whole point: ask for an idea, send it, let the frame stream in. */
+static void DoNewImage(void)
+{
+    char prompt[256];
+    if (!gConnected) { SetStatus("not connected - use Connection > Connect"); SysBeep(1); return; }
+    if (gRxState != RX_IDLE) { SetStatus("still receiving - wait"); SysBeep(1); return; }
+    if (!DoNewImageDialog(prompt, sizeof(prompt))) return;
+
+    /* send the prompt as one line */
+    DrainInput();
+    gRxLineLen = 0;
+    SendStr(prompt);
+    SendStr("\r");
+
+    gRxState = RX_WAIT_HEADER;
+    gRxRow = 0;
+    gRxDeadline = TickCount() + 60 * 60;     /* generation can take a while */
+    SetStatus("generating...");
 }
 
 /* ================= menus ================= */
 
-static void DoAbout(void)
+static void SyncMenus(void)
 {
-    /* A tiny modal-less note in an alert-style box would need a DLOG; keep it
-     * light: just (re)draw the test image, which is the whole point. */
-    SysBeep(1);
+    if (gConnected) {
+        DisableItem(gConnM, kConnConnect);
+        EnableItem(gConnM, kConnDisconnect);
+        EnableItem(gImageM, kImgNew);
+    } else {
+        EnableItem(gConnM, kConnConnect);
+        DisableItem(gConnM, kConnDisconnect);
+        DisableItem(gImageM, kImgNew);
+    }
 }
+
+static void DoAbout(void) { SetStatus("Claude draws, in 1-bit"); SysBeep(1); }
 
 static void DoMenu(long sel)
 {
@@ -138,17 +735,23 @@ static void DoMenu(long sel)
         case kFileMenu:
             if (item == kFileQuit) gDone = true;
             break;
+        case kConnMenu:
+            switch (item) {
+                case kConnConnect:    if (!gConnected) DialAgent(); break;
+                case kConnDisconnect: Disconnect();                 break;
+                case kConnSettings:   DoSettings();                 break;
+            }
+            break;
         case kImageMenu:
             switch (item) {
-                case kImgDrawTest:
-                    SetImage(gTestImg, gTestImg_ROWBYTES, gTestImg_W, gTestImg_H);
-                    DrawImageProgressive();
-                    break;
-                case kImgRedraw: DrawFull(); break;
-                case kImgClear:  ClearImage(); break;
+                case kImgNew:    DoNewImage();           break;
+                case kImgTest:   DrawTestImage();        break;
+                case kImgRedraw: DrawFull();             break;
+                case kImgClear:  ClearImage();           break;
             }
             break;
     }
+    SyncMenus();
     HiliteMenu(0);
 }
 
@@ -172,10 +775,13 @@ static void HandleEvent(EventRecord *ev)
     switch (ev->what) {
         case mouseDown: HandleMouseDown(ev); break;
         case keyDown:
+        case autoKey:
             ch = ev->message & charCodeMask;
             if (ev->modifiers & cmdKey) {
-                long sel = MenuKey(ch);
-                if (HiWord(sel)) DoMenu(sel);
+                if (ev->what == keyDown) {
+                    long sel = MenuKey(ch);
+                    if (HiWord(sel)) DoMenu(sel);
+                }
             }
             break;
         case updateEvt: {
@@ -187,6 +793,7 @@ static void HandleEvent(EventRecord *ev)
             EndUpdate(w);
             break;
         }
+        case activateEvt: break;
     }
 }
 
@@ -195,7 +802,7 @@ static void HandleEvent(EventRecord *ev)
 static void SetUpMenus(void)
 {
     Str255 appleTitle;
-    appleTitle[0] = 1; appleTitle[1] = 0x14;
+    appleTitle[0] = 1; appleTitle[1] = 0x14;     /* apple symbol */
 
     gAppleM = NewMenu(kAppleMenu, appleTitle);
     AppendMenu(gAppleM, "\pAbout Atkinson");
@@ -207,8 +814,12 @@ static void SetUpMenus(void)
     AppendMenu(gFileM, "\pQuit/Q");
     InsertMenu(gFileM, 0);
 
+    gConnM = NewMenu(kConnMenu, "\pConnection");
+    AppendMenu(gConnM, "\pConnect/K;Disconnect;(-;Settings...");
+    InsertMenu(gConnM, 0);
+
     gImageM = NewMenu(kImageMenu, "\pImage");
-    AppendMenu(gImageM, "\pDraw Test Image/D;Redraw/R;Clear/K");
+    AppendMenu(gImageM, "\pNew Image.../N;(-;Draw Test Image/D;Redraw/R;Clear");
     InsertMenu(gImageM, 0);
 
     DrawMenuBar();
@@ -217,9 +828,11 @@ static void SetUpMenus(void)
 static void SetUpWindow(void)
 {
     Rect r;
-    SetRect(&r, WIN_LEFT, WIN_TOP, WIN_LEFT + IMG_W, WIN_TOP + IMG_H);
-    gWin = NewWindow(0L, &r, "\puntitled", true, documentProc,
-                     (WindowPtr)-1L, true, 0);
+    short left = (qd.screenBits.bounds.right - IMG_W) / 2;
+    short top  = qd.screenBits.bounds.top + 40;
+    SetRect(&r, left, top, left + IMG_W, top + IMG_H);
+    gWin = NewWindow(0L, &r, "\pAtkinson", true, documentProc,
+                     (WindowPtr)-1L, false, 0);
     SetPort(gWin);
 }
 
@@ -243,14 +856,40 @@ int main(void)
     SetUpMenus();
     SetUpWindow();
 
-    /* Auto-reveal the embedded test image on launch, so the progressive blit
-     * is the first thing you see (the demo). Image menu re-runs it. */
-    SetImage(gTestImg, gTestImg_ROWBYTES, gTestImg_W, gTestImg_H);
-    DrawImageProgressive();
+    PrefsLocate();
+
+    gHaveCfg = LoadPrefs();
+    if (!gHaveCfg) {
+        SetDefaults();
+        SetStatus("first run - set things up");
+        if (DoSettingsDialog()) {
+            SavePrefs();
+            gHaveCfg = true;
+            if (gCfg.ssid[0] != 0 && JoinWiFi()) SavePrefs();
+        } else {
+            SetStatus("setup cancelled - use Connection > Settings");
+        }
+    }
+
+    SyncMenus();
+
+    if (gHaveCfg) DialAgent();      /* launch = connected, ready to draw */
+#ifdef ATK_TEST_UI
+    /* emulator-only: there's no serial in Mini vMac, so force the connected
+     * state to drive the New Image dialog through its real menu path. Never
+     * defined in the shipping build. */
+    gConnected = true;
+    SetStatus("UI TEST - New Image enabled");
+#endif
+    SyncMenus();
 
     while (!gDone) {
-        if (WaitNextEvent(everyEvent, &ev, 15L, 0L))
+        long sleep = (gConnected && gRxState != RX_IDLE) ? 1L : 15L;
+        if (WaitNextEvent(everyEvent, &ev, sleep, 0L))
             HandleEvent(&ev);
+        if (gConnected) PumpReceive();
     }
+    if (gConnected) Disconnect();
+    if (gPortOpen) CloseSerPort();
     return 0;
 }
