@@ -188,10 +188,6 @@ static void CatStr(char *buf, short *len, const char *s)
 static Boolean gInEsc = false;       /* mid CSI escape sequence */
 static char    gEscBuf[16];
 static short   gEscLen = 0;
-static unsigned char gPrevByte = 0;  /* last raw byte of the previous DumpTerm
-                                      * chunk - so a CRLF split across two serial
-                                      * reads still collapses to one line (the
-                                      * blank-line bug vs ZTerm) */
 
 static void ClearConsole(void)
 {
@@ -227,20 +223,19 @@ static void DumpTerm(const unsigned char *buf, short len)
             }
             continue;
         }
-        if (c == 13) line[k++] = '\r';
-        else if (c == 10) {
-            /* lone LF -> newline; but a LF right after a CR (the second half of
-             * a \r\n, even one split across reads) was already turned into the
-             * line break by that CR, so skip it. */
-            unsigned char prev = (i == 0) ? gPrevByte : buf[i - 1];
-            if (prev != 13) line[k++] = '\r';
-        }
+        /* Line breaks: the LF is the break, CR is dropped. The agent ends every
+         * line with exactly one LF, so this yields one break per line. CRs are
+         * just decoration the telnet/Zimodem layer may add or duplicate
+         * (\r\n, \r\r\n, \r\0\n) - emitting a break per CR is what double-spaced
+         * everything vs ZTerm, which is likewise LF-driven. TextEdit's own line
+         * terminator is CR, so an LF maps to a single '\r'. */
+        if (c == 10) line[k++] = '\r';
+        else if (c == 13) { /* drop - the LF makes the break */ }
         else if (c >= 32 && c < 127) line[k++] = (char)c;
         else line[k++] = '.';
         if (k > 180) { line[k] = 0; Emit(line); k = 0; }
     }
     if (k > 0) { line[k] = 0; Emit(line); }
-    if (len > 0) gPrevByte = buf[len - 1];
 }
 
 /* ================= serial plumbing ================= */
@@ -484,7 +479,7 @@ static Boolean DialAgent(void)
 
     if (Contains(gCap, got, "CONNECT")) {
         gConnected = true;
-        gInEsc = false; gEscLen = 0; gPrevByte = 0;
+        gInEsc = false; gEscLen = 0;
         EmitLine("--- connected. you're talking to Claude. ---");
         EmitLine("");
         /* anything that arrived alongside CONNECT (e.g. the banner) */
