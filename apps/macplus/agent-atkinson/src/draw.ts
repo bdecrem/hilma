@@ -71,6 +71,12 @@ async function pickImage(json: any): Promise<Buffer> {
   throw new Error('image API returned no image');
 }
 
+// Hard cap on the image-gen call so a slow/hung provider fails loudly (-> ATKERR
+// on the Plus) instead of hanging the connection. gpt-image-1 'medium' is ~20s;
+// 'high' ~50s. 90s leaves headroom while still timing out well before the user
+// (or the Plus's own serial read) gives up. Override with ATK_GEN_TIMEOUT_MS.
+const GEN_TIMEOUT_MS = Number(process.env.ATK_GEN_TIMEOUT_MS) || 90_000;
+
 async function genTogether(prompt: string): Promise<Buffer> {
   const key = process.env.TOGETHER_API_KEY;
   if (!key) throw new Error('TOGETHER_API_KEY not set');
@@ -81,6 +87,7 @@ async function genTogether(prompt: string): Promise<Buffer> {
       model: process.env.ATK_IMAGE_MODEL || 'black-forest-labs/FLUX.1-schnell-Free',
       prompt, width: 1024, height: 768, n: 1, steps: 4, response_format: 'b64_json',
     }),
+    signal: AbortSignal.timeout(GEN_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`Together ${res.status}: ${(await res.text().catch(() => '')).slice(0, 160)}`);
   return pickImage(await res.json());
@@ -95,8 +102,12 @@ async function genOpenAI(prompt: string): Promise<Buffer> {
     body: JSON.stringify({
       model: process.env.ATK_IMAGE_MODEL || 'gpt-image-1',
       prompt, size: '1536x1024', n: 1,   // landscape; dither.py cover-fits to 480x300
-      quality: process.env.ATK_IMAGE_QUALITY || 'high',   // best tonal detail for the dither
+      // 'medium' (~20s) not 'high' (~50s): after the 1-bit 480x300 Atkinson
+      // dither the extra tonal detail is mostly thrown away, and 'high' was
+      // overrunning the client's ~1-min timeout. Override with ATK_IMAGE_QUALITY.
+      quality: process.env.ATK_IMAGE_QUALITY || 'medium',
     }),
+    signal: AbortSignal.timeout(GEN_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text().catch(() => '')).slice(0, 160)}`);
   return pickImage(await res.json());
