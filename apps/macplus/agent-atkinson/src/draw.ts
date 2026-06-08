@@ -26,6 +26,34 @@ const DITHER_PY = resolve(HERE, '..', '..', 'atkinson', 'dither.py');
 // Provider: 'openai' (gpt-image-1) or 'together' (FLUX). Default openai.
 const PROVIDER = (process.env.ATK_IMAGE_PROVIDER || 'openai').toLowerCase();
 
+/*
+ * The taste layer. The Plus shows a 480x300 *1-bit* Atkinson-dithered bitmap,
+ * so the generated source image has to be built for that: high-contrast
+ * monochrome with a strong value structure and bold composition. We wrap every
+ * user idea in this art direction so the result reads as gorgeous old-school
+ * Mac art (MacPaint / 1980s b&w Mac game art) once dithered, instead of a muddy
+ * downsample of a color photo. Override the whole thing with ATK_STYLE.
+ *
+ * Deliberately does NOT ask for "pixel art" or "dithering" - dither.py owns the
+ * 1-bit conversion; asking the model to also dither just double-dithers to mush.
+ */
+const STYLE = process.env.ATK_STYLE || [
+  'Black-and-white illustration in the style of vintage 1-bit Macintosh art —',
+  'classic MacPaint and 1980s black-and-white Mac adventure games',
+  '(Dark Castle, Shadowgate, The Manhole, Uninvited).',
+  'Pure monochrome, absolutely no color.',
+  'High contrast with deep blacks, bright whites, and a full range of grays.',
+  'Dramatic chiaroscuro lighting, bold confident silhouette, one clear subject,',
+  'clean composition with generous negative space so it reads at small size.',
+  'Shading rendered as fine crosshatching, stippling, and engraved hatch lines.',
+  'No text, no lettering, no captions, no border or frame.',
+].join(' ');
+
+/** Wrap a user's image idea in the house art direction. */
+export function buildPrompt(userIdea: string): string {
+  return `${STYLE}\n\nSubject: ${userIdea.trim()}`;
+}
+
 async function pickImage(json: any): Promise<Buffer> {
   const d = json?.data?.[0];
   if (d?.b64_json) return Buffer.from(d.b64_json, 'base64');
@@ -61,6 +89,7 @@ async function genOpenAI(prompt: string): Promise<Buffer> {
     body: JSON.stringify({
       model: process.env.ATK_IMAGE_MODEL || 'gpt-image-1',
       prompt, size: '1536x1024', n: 1,   // landscape; dither.py cover-fits to 480x300
+      quality: process.env.ATK_IMAGE_QUALITY || 'high',   // best tonal detail for the dither
     }),
   });
   if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text().catch(() => '')).slice(0, 160)}`);
@@ -108,8 +137,9 @@ export async function ditherToFrame(imageBytes: Buffer): Promise<Buffer> {
   }
 }
 
-/** prompt -> packed 1bpp frame (generate + dither). */
+/** prompt -> packed 1bpp frame (generate + dither). The user's idea is wrapped
+ *  in the house art direction (buildPrompt) before it hits the model. */
 export async function promptToFrame(prompt: string): Promise<Buffer> {
-  const img = await generateImage(prompt);
+  const img = await generateImage(buildPrompt(prompt));
   return ditherToFrame(img);
 }
