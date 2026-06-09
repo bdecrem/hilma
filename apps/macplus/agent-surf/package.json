@@ -1,0 +1,22 @@
+{
+  "name": "surf-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mini-side reader-mode browser agent for the Plus 'Macinclaude Surf' app: command -> fetch -> Claude reader-mode -> SRF frame over the serial/TCP link.",
+  "bin": {
+    "surf-agent": "src/main.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

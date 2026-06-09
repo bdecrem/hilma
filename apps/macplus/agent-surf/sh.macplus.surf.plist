@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  LaunchDaemon for the Surf browser agent (port 2326 — the Plus's Macinclaude
+  Surf app dials this; 2323 = login shell, 2324 = Code, 2325 = Paint).
+  Modeled on sh.macplus.atkinson.plist.
+
+  Install: sudo bash apps/macplus/agent-surf/install-daemon.sh
+  Restart after a code change: sudo launchctl kickstart -k system/sh.macplus.surf
+
+  pty options matter: raw,echo=0. A cooked pty echoes the Plus's commands back
+  into the stream and re-runs them, and ONLCR mangles the line endings — both
+  observed breaking the Mini vMac end-to-end test before these flags were added.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>sh.macplus.surf</string>
+  <key>UserName</key>
+  <string>admin</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/opt/homebrew/bin/socat</string>
+    <string>TCP-LISTEN:2326,reuseaddr,fork</string>
+    <string>EXEC:/Users/admin/Documents/code/hilma/apps/macplus/agent-surf/node_modules/.bin/tsx /Users/admin/Documents/code/hilma/apps/macplus/agent-surf/src/main.ts,pty,raw,echo=0,setsid,ctty</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>ANTHROPIC_API_KEY</key>
+    <string>__ANTHROPIC_API_KEY__</string>
+  </dict>
+  <key>KeepAlive</key>
+  <true/>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/admin/Library/Logs/macplus-surf.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/admin/Library/Logs/macplus-surf.err.log</string>
+</dict>
+</plist>

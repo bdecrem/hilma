@@ -27,6 +27,9 @@ the **Plus↔modem serial cable**.
 > *Hardware inventory* below. Bottom line: **buy a real mini-DIN-8 → DB-9 Macintosh modem cable.** Also a new
 > tool landed: **SerialDoc** (`serialdoc/`) — the serial diagnostic, now on the BlueSCSI card.
 
+> **Update 2026-06-09:** the proper Mac serial cable **arrived** — the cable blocker is cleared. And the
+> **Macinclaude Paint and Macinclaude Code apps both work** and are fully testable in Mini vMac.
+
 - **Code locations:** repo **source of truth** = `apps/macplus/agent/` (this repo: `src/main.ts`,
   `src/teletype.ts`, `README.md`). **Deployed copy on the mini** = `~/claude-plus/` on
   `admin@192.168.7.50`, put there by rsync from the repo, then `npm install` on the mini. Re-deploy with:
@@ -252,6 +255,53 @@ bitmap row-by-row so it "develops" like a Polaroid over the slow link.
   auto-starts on boot, RunAtLoad + KeepAlive. Install/refresh: `sudo bash agent-atkinson/install-daemon.sh`
   (reads the key from `.env.local`); restart after a code change: `sudo launchctl kickstart -k system/sh.macplus.atkinson`.
   Logs: `~/Library/Logs/macplus-atkinson.{out,err}.log`. Verified end-to-end over the socket (banner + /quit).
+
+### Macinclaude Surf (a web browser for the Plus) — `surf/` + `agent-surf/`
+
+Same two-halves shape as Macinclaude/Atkinson: a **reader-mode web browser**. The Plus sends one
+command line (`GO <url-or-search-words>` / `LINK <n>` / `BACK` / `SUM` / `ASK <q>`); the mini fetches
+the page, strips it locally, and Claude (`claude-opus-4-8`, override `SURF_MODEL`) re-emits it as a
+compact line-tagged markup ("SRF": `T/H/P/Q/-/L/B` blocks + `+` continuations, ≤220 chars/line,
+ASCII only). The Plus renders it progressively — word-wrapped styled Geneva text, clickable
+underlined links, a real Control-Manager scrollbar. A cleaned article is 5–8 KB → loads in 6–8 s at
+9600 baud. Plain words in the Open Location dialog become a Claude `web_search`; `SUM`/`ASK` answer
+from the already-fetched page text without a re-fetch. `BACK` replays from the agent's frame cache.
+
+- **Plus side (`surf/surf.c` + `surf.r`):** settings/prefs/serial/dial ported from Atkinson
+  (defaults host `192.168.7.50`, **port 2326**, 9600). Layout engine: blocks → word-wrap via
+  TextWidth binary search → line records → scrolling document. Frame parser in `surf_rx.inc`,
+  shared verbatim with the host test `rxtest.c` (21 asserts: continuation joining, link numbers,
+  error/abort recovery, noise rejection, overflow caps). Build `surf/build.sh` (normal) or
+  `build.sh test` (SURF_TEST: offline Mini vMac build, commands load the embedded `test_page.h`).
+- **Mini side (`agent-surf/`):** `extract.ts` (fetch + HTML strip + absolute link list, no parser
+  dep) → `claude.ts` (readerify / web_search / summarize-ask) → `page.ts` (sanitize to a legal
+  frame: ASCII fold, line splitting, link numbering, caps) → `session.ts` (history + frame cache)
+  → `main.ts` (stdin loop + **paced output**, see below). `npm run selftest` validates offline
+  (extract/frame rules) and live (real URL + search) without the Plus.
+- **Deploy:** `sudo bash agent-surf/install-daemon.sh` on the mini (LaunchDaemon
+  `sh.macplus.surf`, port 2326, key injected from `.env.local`). Until that's installed there's a
+  hand-started socat on 2326 (started 2026-06-09; dies if the mini reboots).
+- **Status (2026-06-09): fully verified end-to-end in Mini vMac over the serial bridge** — dialed
+  through vmodem to the live mini agent; loaded the welcome page, live Hacker News, the Anthropic
+  Fable 5 announcement (published that day), and the Wikipedia Mac Plus article; exercised links,
+  scrollbar/keys, Summarize, Back, and word-search via Open Location. Not yet run on the real Plus.
+
+**Hard-won serial lessons (apply to ALL Plus apps):**
+1. **Never pass the same buffer to `SerSetBuf` and `FSRead`.** The driver owns the SerSetBuf ring;
+   reading into it corrupts the stream (glued/repeated text mid-page). Use two buffers
+   (`gSerRing` for the driver, a separate scratch for FSRead). **Atkinson/Macinclaude/SerialDoc
+   still have this latent bug** — they share one `gSerBuf`. It only bites under sustained receive,
+   which Atkinson's serial path hasn't exercised yet. Fix when next touched.
+2. **socat pty must be `raw,echo=0`** for line-protocol agents. A cooked pty echoes the Plus's
+   commands back and the echo re-triggered commands (duplicated frames), and ONLCR turns `\r\n`
+   into `\r\r\n`. (The 2324/2325 daemons run cooked + `stderr`; they're interactive/tolerant, but
+   don't copy that pattern for new protocol agents.)
+3. **Pace agent output to wire speed** (surf paces to `SURF_BAUD`/10 bytes/s, default 960). A full
+   TCP burst overruns the small buffers downstream (the emulator's SCC bridge, and plausibly the
+   RetroWiFi SI's ESP8266) and drops bytes mid-frame. The wire is the bottleneck anyway.
+4. **Don't blind-capture after `ATDT`.** If the agent pushes data on connect, a fixed
+   `CaptureFor(600)` swallows it. Scan for `CONNECT` incrementally and hand the tail of the
+   capture to the protocol parser (see `DialAgent` in surf.c).
 
 ### The endgame: a Unix shell on the Plus, via the Mac mini (RECEIVING END ALREADY CONFIGURED)
 
