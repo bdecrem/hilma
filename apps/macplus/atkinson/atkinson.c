@@ -749,6 +749,16 @@ static Boolean DoNewImageDialog(char *prompt, short cap)
 static void DoNewImage(void)
 {
     char prompt[256];
+#ifdef ATK_TEST
+    /* Offline test build (Mini vMac, no serial): the dialog + prompt entry are
+     * real, but instead of round-tripping to the agent we just develop the
+     * embedded test image, so the whole New Image -> develop path is exercisable
+     * in the emulator. */
+    if (!DoNewImageDialog(prompt, sizeof(prompt))) return;
+    SetStatus("test draw");
+    DrawTestImage();
+    return;
+#endif
     if (!gConnected) { SetStatus("not connected - use Connection > Connect"); SysBeep(1); return; }
     if (gRxState != RX_IDLE) { SetStatus("still receiving - wait"); SysBeep(1); return; }
     if (!DoNewImageDialog(prompt, sizeof(prompt))) return;
@@ -930,6 +940,16 @@ int main(void)
     PrefsLocate();
 
     gHaveCfg = LoadPrefs();
+#ifdef ATK_TEST
+    /* Offline test build for Mini vMac (build.sh test / -DATK_TEST). There is no
+     * serial in the emulator, so skip first-run setup and the modem dial, force
+     * the connected state (which enables New Image), and let New Image develop
+     * the embedded test image instead of talking to the agent (see DoNewImage).
+     * Never define this for the real Plus. */
+    (void)gHaveCfg;
+    gConnected = true;
+    SetStatus("TEST BUILD - New Image draws the embedded image");
+#else
     if (!gHaveCfg) {
         SetDefaults();
         SetStatus("first run - set things up");
@@ -941,16 +961,7 @@ int main(void)
             SetStatus("setup cancelled - use Connection > Settings");
         }
     }
-
-    SyncMenus();
-
     if (gHaveCfg) DialAgent();      /* launch = connected, ready to draw */
-#ifdef ATK_TEST_UI
-    /* emulator-only: there's no serial in Mini vMac, so force the connected
-     * state to drive the New Image dialog through its real menu path. Never
-     * defined in the shipping build. */
-    gConnected = true;
-    SetStatus("UI TEST - New Image enabled");
 #endif
     SyncMenus();
 
