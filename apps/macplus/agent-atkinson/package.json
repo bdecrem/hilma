@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "tsx src/main.ts",
-    "selftest": "tsx src/selftest.ts"
+    "selftest": "tsx src/selftest.ts",
+    "draw": "tsx src/cli.ts"
   },
   "devDependencies": {
     "@types/node": "latest",
