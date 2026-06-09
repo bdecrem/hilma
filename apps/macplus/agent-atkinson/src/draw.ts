@@ -33,17 +33,33 @@ const PYTHON = process.env.ATK_PYTHON || 'python3';
 const PROVIDER = (process.env.ATK_IMAGE_PROVIDER || 'openai').toLowerCase();
 
 /*
- * The taste layer. The Plus shows a 480x300 *1-bit* Atkinson-dithered bitmap,
- * so the generated source image has to be built for that: high-contrast
- * monochrome with a strong value structure and bold composition. We wrap every
- * user idea in this art direction so the result reads as gorgeous old-school
- * Mac art (MacPaint / 1980s b&w Mac game art) once dithered, instead of a muddy
- * downsample of a color photo. Override the whole thing with ATK_STYLE.
+ * The taste layer. Two looks, picked by ATK_MODE (the Plus shows a 480x300
+ * 1-bit bitmap either way):
+ *   icon  (default) - flat, bold, chunky early-Macintosh icon / MacPaint clip
+ *                     art (Susan Kare). One simple subject, solid black on
+ *                     white, no shading. Rendered through the pixelate path
+ *                     (hard threshold + blocky upscale) for the big-pixel look.
+ *   scene           - detailed 1-bit engraving (Dark Castle / Shadowgate),
+ *                     full grayscale, rendered with Atkinson dither. Best for
+ *                     rich scenes/landscapes.
+ * Override the whole prompt with ATK_STYLE.
  *
- * Deliberately does NOT ask for "pixel art" or "dithering" - dither.py owns the
- * 1-bit conversion; asking the model to also dither just double-dithers to mush.
+ * Neither asks the model to "dither/pixelate" - dither.py owns the 1-bit step;
+ * asking the model to also do it just doubles up into mush.
  */
-const STYLE = process.env.ATK_STYLE || [
+export const MODE = (process.env.ATK_MODE || 'icon').toLowerCase();
+
+const ICON_STYLE = [
+  'A single iconic black-and-white image in the style of an original 1984',
+  'Apple Macintosh system icon and MacPaint clip art by Susan Kare.',
+  'One simple subject, centered, in a clean side-profile silhouette facing left.',
+  'Bold solid-black shapes and thick black outlines on a pure white background.',
+  'Absolutely flat: no shading, no gradients, no gray, no crosshatching, no',
+  'texture, no color, no 3D. Minimal detail, friendly, instantly readable,',
+  'with generous white space around the subject.',
+].join(' ');
+
+const SCENE_STYLE = [
   'Black-and-white illustration in the style of vintage 1-bit Macintosh art —',
   'classic MacPaint and 1980s black-and-white Mac adventure games',
   '(Dark Castle, Shadowgate, The Manhole, Uninvited).',
@@ -54,6 +70,8 @@ const STYLE = process.env.ATK_STYLE || [
   'Shading rendered as fine crosshatching, stippling, and engraved hatch lines.',
   'No text, no lettering, no captions, no border or frame.',
 ].join(' ');
+
+const STYLE = process.env.ATK_STYLE || (MODE === 'scene' ? SCENE_STYLE : ICON_STYLE);
 
 /** Wrap a user's image idea in the house art direction. */
 export function buildPrompt(userIdea: string): string {
@@ -101,7 +119,9 @@ async function genOpenAI(prompt: string): Promise<Buffer> {
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model: process.env.ATK_IMAGE_MODEL || 'gpt-image-1',
-      prompt, size: '1536x1024', n: 1,   // landscape; dither.py cover-fits to 480x300
+      prompt, n: 1,
+      // icon art is square (centered subject); scenes are landscape.
+      size: MODE === 'scene' ? '1536x1024' : '1024x1024',
       // 'medium' (~20s) not 'high' (~50s): after the 1-bit 480x300 Atkinson
       // dither the extra tonal detail is mostly thrown away, and 'high' was
       // overrunning the client's ~1-min timeout. Override with ATK_IMAGE_QUALITY.
@@ -137,13 +157,15 @@ export async function ditherToFrame(imageBytes: Buffer): Promise<Buffer> {
   const previewPng = join(dir, 'preview.png');
   try {
     await writeFile(inPng, imageBytes);
-    await run(PYTHON, [
-      DITHER_PY, inPng, previewPng,
-      '--size', `${IMG_W}x${IMG_H}`,
-      '--fit', 'cover',
-      '--contrast', '1.15',
-      '--bin', outBin,
-    ]);
+    const args = [DITHER_PY, inPng, previewPng, '--size', `${IMG_W}x${IMG_H}`, '--bin', outBin];
+    if (MODE === 'scene') {
+      args.push('--fit', 'cover', '--contrast', '1.15');
+    } else {
+      // icon: keep white margins (contain) and render chunky blocky pixels.
+      args.push('--fit', 'contain', '--contrast', '1.2',
+                '--mode', 'pixel', '--cells', process.env.ATK_CELLS || '80x50');
+    }
+    await run(PYTHON, args);
     const packed = await readFile(outBin);
     if (packed.length !== FRAME_BYTES) {
       throw new Error(`dither produced ${packed.length} bytes, expected ${FRAME_BYTES}`);

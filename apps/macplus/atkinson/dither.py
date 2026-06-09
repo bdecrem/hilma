@@ -57,6 +57,17 @@ def atkinson(im):
                     buf[at(nx, ny)] += err
     return out  # 1 = white pixel, 0 = black pixel
 
+def pixelate(im, cells_w, cells_h):
+    """Chunky early-Mac-icon look (Susan Kare): average the (already grayscale +
+    fit) image down to a small cells_w x cells_h grid, HARD-threshold to pure
+    black/white (no dither), then blow it back up to WxH with nearest-neighbor so
+    the pixels are big and blocky. Returns the same 1=white/0=black layout as
+    atkinson()."""
+    small = im.resize((cells_w, cells_h), Image.LANCZOS)   # area-average down
+    small = small.point(lambda v: 255 if v >= 128 else 0)  # 1-bit, no dither
+    big = small.resize((W, H), Image.NEAREST)              # blocky upscale
+    return bytearray(1 if v >= 128 else 0 for v in big.getdata())
+
 def to_preview(bits, w, h):
     im = Image.new("1", (w, h))
     im.putdata([1 if b else 0 for b in bits])
@@ -99,11 +110,14 @@ def main():
     inp = sys.argv[1]
     out_png = None
     fit, contrast, out_bin, out_hdr, hdr_name = "contain", 1.0, None, None, "gTestImg"
+    mode, cells = "dither", (96, 60)
     rest = sys.argv[2:]
     i = 0
     while i < len(rest):
         a = rest[i]
         if a == "--fit": fit = rest[i+1]; i += 2
+        elif a == "--mode": mode = rest[i+1]; i += 2
+        elif a == "--cells": cells = tuple(int(v) for v in rest[i+1].lower().split("x")); i += 2
         elif a == "--contrast": contrast = float(rest[i+1]); i += 2
         elif a == "--bin": out_bin = rest[i+1]; i += 2
         elif a == "--header": out_hdr = rest[i+1]; i += 2
@@ -116,10 +130,11 @@ def main():
         out_png = inp.rsplit(".", 1)[0] + "_1bit.png"
 
     im = load_gray_fit(inp, fit, contrast)
-    bits = atkinson(im)
+    bits = pixelate(im, cells[0], cells[1]) if mode == "pixel" else atkinson(im)
     preview = to_preview(bits, W, H)
     preview.save(out_png)
-    print(f"preview: {out_png}  ({W}x{H} 1-bit, fit={fit}, contrast={contrast})")
+    print(f"preview: {out_png}  ({W}x{H} 1-bit, mode={mode}, fit={fit}, contrast={contrast}"
+          + (f", cells={cells[0]}x{cells[1]}" if mode == "pixel" else "") + ")")
     packed, rb = pack_1bpp(bits, W, H)
     if out_bin:
         with open(out_bin, "wb") as f:
