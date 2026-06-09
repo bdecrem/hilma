@@ -60,14 +60,17 @@ const ICON_STYLE = [
 ].join(' ');
 
 const SCENE_STYLE = [
-  'Black-and-white illustration in the style of vintage 1-bit Macintosh art —',
-  'classic MacPaint and 1980s black-and-white Mac adventure games',
-  '(Dark Castle, Shadowgate, The Manhole, Uninvited).',
+  'Black ink line illustration in the style of vintage 1-bit Macintosh art —',
+  'classic MacPaint and 1980s black-and-white Mac software',
+  '(MacPaint, HyperCard stacks, The Manhole, Susan Kare artwork).',
   'Pure monochrome, absolutely no color.',
-  'High contrast with deep blacks, bright whites, and a full range of grays.',
-  'Dramatic chiaroscuro lighting, bold confident silhouette, one clear subject,',
-  'clean composition with generous negative space so it reads at small size.',
-  'Shading rendered as fine crosshatching, stippling, and engraved hatch lines.',
+  'Bright and HIGH-KEY: a clean WHITE background dominates and the whole image reads LIGHT and airy,',
+  'like black ink drawn on white paper — the white of the page is the main value.',
+  'Give the subject rich, detailed black linework with fine crosshatching, stippling and engraved hatch',
+  'lines for shading so it has real presence and depth — but avoid large solid-black fills and dark backgrounds.',
+  'Soft, even, high-key lighting — no heavy shadows, no dark chiaroscuro, no black or dark backgrounds.',
+  'Strong line contrast so it survives 1-bit dithering.',
+  'One clear subject, bold confident outline, generous white negative space so it reads at small size.',
   'No text, no lettering, no captions, no border or frame.',
 ].join(' ');
 
