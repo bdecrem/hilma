@@ -121,8 +121,7 @@ class AsyncQueue<T> {
     };
   }
 }
-const inputQ = new AsyncQueue<string>();
-async function* prompts() {
+async function* prompts(inputQ: AsyncQueue<string>) {
   for await (const line of inputQ) {
     yield { type: 'user', message: { role: 'user', content: line }, parent_tool_use_id: null, session_id: '' } as any;
   }
@@ -180,40 +179,76 @@ function handleMsg(msg: any): void {
   // result / system / progress events: nothing to show on the Plus
 }
 
+/* ---------- model + effort choices (offered under /model) ---------- */
+// The SDK only lets you change `model` on a live session (Query.setModel); there
+// is no runtime setter for effort. So a switch tears the session down and rebuilds
+// it under the new model/effort, resuming the prior session_id to keep context.
+// Sonnet is one entry (default effort); Opus 4.8 and Fable 5 each get the two
+// effort levels Bart asked for, listed as separate picks.
+type ModelChoice = { label: string; model: string; effort?: 'medium' | 'high' };
+const MODELS: ModelChoice[] = [
+  { label: 'Sonnet 4.6', model: 'claude-sonnet-4-6' },
+  { label: 'Opus 4.8',   model: 'claude-opus-4-8', effort: 'medium' },
+  { label: 'Opus 4.8',   model: 'claude-opus-4-8', effort: 'high' },
+  { label: 'Fable 5',    model: 'claude-fable-5',  effort: 'medium' },
+  { label: 'Fable 5',    model: 'claude-fable-5',  effort: 'high' },
+];
+const choiceLabel = (m: ModelChoice) => (m.effort ? `${m.label} (${m.effort})` : m.label);
+// Currently selected pick (index into MODELS); seeded from --model.
+let current = Math.max(0, MODELS.findIndex((m) => m.model === cfg.model));
+
 /* ---------- slash commands (handled locally, never sent to the model) ---------- */
-function handleSlash(line: string): boolean {  // returns false => quit
+type SlashResult = 'continue' | 'quit' | 'switch';  // switch => rebuild query with new model/effort
+function handleSlash(line: string): SlashResult {
   const [cmd, ...rest] = line.slice(1).split(/\s+/);
   switch (cmd) {
     case 'help':
-      tt.line('Commands: /help  /quit  /clear  /cols N  /cwd  /model');
+      tt.line(`Commands: /help  /quit  /clear  /cols N  /cwd  /model [1..${MODELS.length}]`);
       tt.line('Type plain text to talk to Claude. All tools run automatically (no approvals).');
       tt.line('Knowledge: ask "what did i say about X" - searches your F2 notes + docsrepo.');
-      return true;
-    case 'quit': case 'exit': tt.line('Goodbye.'); return false;
-    case 'clear': tt.clear(); return true;
+      return 'continue';
+    case 'quit': case 'exit': tt.line('Goodbye.'); return 'quit';
+    case 'clear': tt.clear(); return 'continue';
     case 'cols': {
       const n = parseInt(rest[0] ?? '', 10);
       if (n >= 20 && n <= 200) { tt.cols = n; tt.line(`cols = ${n}`); }
       else tt.line('usage: /cols 20..200');
-      return true;
+      return 'continue';
     }
-    case 'cwd': tt.line(`cwd: ${cfg.cwd}`); return true;
-    case 'model': tt.line(`model: ${cfg.model}`); return true;
-    default: tt.line(`unknown command: /${cmd}  (try /help)`); return true;
+    case 'cwd': tt.line(`cwd: ${cfg.cwd}`); return 'continue';
+    case 'model': {
+      if (!rest[0]) {                                   // list the picks
+        tt.line('models:');
+        MODELS.forEach((m, i) =>
+          tt.line(`  ${i + 1}) ${choiceLabel(m)}${i === current ? '   [current]' : ''}`));
+        tt.line(`  switch with /model 1..${MODELS.length} (keeps the conversation)`);
+        return 'continue';
+      }
+      const n = parseInt(rest[0], 10);
+      if (!(n >= 1 && n <= MODELS.length)) { tt.line(`usage: /model 1..${MODELS.length}`); return 'continue'; }
+      if (n - 1 === current) { tt.line(`already on ${choiceLabel(MODELS[current])}`); return 'continue'; }
+      current = n - 1;
+      tt.line(`model -> ${choiceLabel(MODELS[current])}`);
+      return 'switch';
+    }
+    default: tt.line(`unknown command: /${cmd}  (try /help)`); return 'continue';
   }
 }
 
-/* ---------- prompt the user, handling slash commands; closes queue on /quit ---------- */
-async function promptUser(): Promise<void> {
+/* ---------- prompt the user, handling slash commands locally ----------
+ * Returns 'go' once a real (non-slash) line has been queued, 'quit' on /quit,
+ * or 'switch' when the user picked a different model (caller rebuilds query). */
+async function promptUser(inputQ: AsyncQueue<string>): Promise<'go' | 'quit' | 'switch'> {
   while (true) {
     const line = (await tt.ask('> ')).trim();
     if (line === '') continue;
     if (line.startsWith('/')) {
-      if (!handleSlash(line)) { inputQ.close(); return; }
+      const r = handleSlash(line);
+      if (r !== 'continue') return r;   // 'quit' | 'switch'
       continue;
     }
     inputQ.push(line);
-    return;
+    return 'go';
   }
 }
 
@@ -235,45 +270,68 @@ async function main() {
   for (const ln of banner) tt.line(ln);
   tt.line(`  cwd:    ${cfg.cwd}`);
   tt.line(`  docs:   ${cfg.docs} + F2 store`);
-  tt.line(`  model:  ${cfg.model} @ ${cfg.cols} cols`);
+  tt.line(`  model:  ${choiceLabel(MODELS[current])} @ ${cfg.cols} cols`);
   tt.line('');
-  tt.line('  type a task.  /help for commands.  /quit to disconnect.');
+  tt.line('  type a task.  /help for commands.  /model to switch models.');
   tt.line('  ask "what did i say about X" to search your notes.');
   tt.line('');
 
-  await promptUser();   // first turn (or /quit before we start)
+  // A /model switch can't change effort on a live SDK session, so we tear the
+  // query down and rebuild it under the new model/effort, passing `resume` so
+  // the conversation carries over. `sessionId` tracks the live session; `resume`
+  // is what we hand the next query() to continue from.
+  let sessionId: string | undefined;
+  let resume: string | undefined;
+  let quit = false;
 
-  try {
-    for await (const msg of query({
-      prompt: prompts(),
-      options: {
-        cwd: cfg.cwd,
-        model: cfg.model,
-        systemPrompt: { type: 'preset', preset: 'claude_code', append: PLUS_APPEND },
-        // docsrepo: a second searchable root for the knowledge-librarian role.
-        additionalDirectories: [cfg.docs],
-        // F2 datastore: in-process, read-only knowledge tools (mcp__f2__*).
-        mcpServers: { f2: createF2Server() },
-        // Don't load the host's ~/.claude settings (kept for isolation).
-        settingSources: [],
-        // Dangerously skip permissions: never prompt for anything. The always-allow
-        // PreToolUse hook is the primary mechanism (fires first); bypassPermissions
-        // is the matching mode. See the gate comment above.
-        permissionMode: 'bypassPermissions',
-        hooks: { PreToolUse: [{ hooks: [preToolUse] }] },
-      } as any,
-    })) {
-      handleMsg(msg);
-      if (msg.type === 'result') {
-        tt.line();
-        await promptUser();   // next turn (or close the queue -> ends the stream)
+  while (!quit) {
+    const inputQ = new AsyncQueue<string>();
+    const first = await promptUser(inputQ);          // first turn of this session
+    if (first === 'quit') break;
+    if (first === 'switch') { resume = sessionId; continue; }   // switched before sending: rebuild
+
+    const choice = MODELS[current];
+    try {
+      for await (const msg of query({
+        prompt: prompts(inputQ),
+        options: {
+          cwd: cfg.cwd,
+          model: choice.model,
+          // effort is a query()-creation option (no live setter); omit for the
+          // single-level Sonnet pick to keep its SDK default.
+          ...(choice.effort ? { effort: choice.effort } : {}),
+          // resume the prior session so a model switch keeps the conversation.
+          ...(resume ? { resume } : {}),
+          systemPrompt: { type: 'preset', preset: 'claude_code', append: PLUS_APPEND },
+          // docsrepo: a second searchable root for the knowledge-librarian role.
+          additionalDirectories: [cfg.docs],
+          // F2 datastore: in-process, read-only knowledge tools (mcp__f2__*).
+          mcpServers: { f2: createF2Server() },
+          // Don't load the host's ~/.claude settings (kept for isolation).
+          settingSources: [],
+          // Dangerously skip permissions: never prompt for anything. The always-allow
+          // PreToolUse hook is the primary mechanism (fires first); bypassPermissions
+          // is the matching mode. See the gate comment above.
+          permissionMode: 'bypassPermissions',
+          hooks: { PreToolUse: [{ hooks: [preToolUse] }] },
+        } as any,
+      })) {
+        if (msg.session_id) sessionId = msg.session_id;   // remember for resume
+        handleMsg(msg);
+        if (msg.type === 'result') {
+          tt.line();
+          const a = await promptUser(inputQ);             // next turn
+          if (a === 'quit') { quit = true; inputQ.close(); break; }
+          if (a === 'switch') { resume = sessionId; inputQ.close(); break; }  // rebuild under new model
+          // 'go': the next line is queued; keep streaming this session
+        }
       }
+    } catch (err: any) {
+      tt.line(`! agent error: ${err?.message ?? String(err)}`);
+      break;
     }
-  } catch (err: any) {
-    tt.line(`! agent error: ${err?.message ?? String(err)}`);
-  } finally {
-    tt.close();
   }
+  tt.close();
 }
 
 main();
