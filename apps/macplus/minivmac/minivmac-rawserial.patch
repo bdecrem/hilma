@@ -1,0 +1,319 @@
+diff --git a/src/PROGMAIN.c b/src/PROGMAIN.c
+index 15b5cfc..4cd6360 100644
+--- a/src/PROGMAIN.c
++++ b/src/PROGMAIN.c
+@@ -173,6 +173,9 @@ LOCALPROC SixtiethSecondNotify(void)
+ #if EmLocalTalk
+ 	LocalTalkTick();
+ #endif
++#if EmRawSerial
++	RawSerialTick();
++#endif
+ #if EmRTC
+ 	RTC_Interrupt();
+ #endif
+diff --git a/src/SCCEMDEV.c b/src/SCCEMDEV.c
+index 89fde1f..accd833 100644
+--- a/src/SCCEMDEV.c
++++ b/src/SCCEMDEV.c
+@@ -49,6 +49,116 @@
+ #define SCC_dolog (dbglog_HAVE && 0)
+ #define SCC_TrackMore 0
+ 
++#if EmRawSerial
++/*
++	Raw async serial transport for channel 0 (the modem port), bridged to a
++	host TCP socket. A companion "virtual modem" listens at the host endpoint
++	(env MNVM_SERIAL, default 127.0.0.1:5454), speaks Hayes AT, and bridges to
++	the Mac mini's listener - so the real Macinclaude apps run their full modem
++	handshake (AT/OK, ATDT, CONNECT) unmodified, inside the emulator.
++*/
++#include <sys/types.h>
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <netinet/tcp.h>
++#include <arpa/inet.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <errno.h>
++#include <string.h>
++#include <stdlib.h>
++
++#define RawSer_RxBufSz 8192
++static int RawSer_fd = -1;
++static unsigned char RawSer_RxBuf[RawSer_RxBufSz];
++static int RawSer_RxHead = 0;
++static int RawSer_RxTail = 0;
++static blnr gRawSerARxInt = falseblnr;   /* channel-0 Rx interrupt pending */
++
++static void RawSer_Connect(void)
++{
++	const char *spec; char host[128]; int port; const char *colon;
++	struct sockaddr_in sa; int fd; int fl; int one = 1; size_t n;
++	if (RawSer_fd >= 0) {
++		return;
++	}
++	spec = getenv("MNVM_SERIAL");
++	if ((nullpr == spec) || (0 == *spec)) {
++		spec = "127.0.0.1:5454";
++	}
++	colon = strrchr(spec, ':');
++	if (nullpr == colon) {
++		return;
++	}
++	n = (size_t)(colon - spec);
++	if (n >= sizeof(host)) { n = sizeof(host) - 1; }
++	memcpy(host, spec, n); host[n] = 0;
++	port = atoi(colon + 1);
++	fd = socket(AF_INET, SOCK_STREAM, 0);
++	if (fd < 0) { return; }
++	memset(&sa, 0, sizeof(sa));
++	sa.sin_family = AF_INET;
++	sa.sin_port = htons((unsigned short)port);
++	if (inet_pton(AF_INET, host, &sa.sin_addr) != 1) { close(fd); return; }
++	if (connect(fd, (struct sockaddr *)&sa, sizeof(sa)) != 0) { close(fd); return; }
++	fl = fcntl(fd, F_GETFL, 0);
++	(void)fcntl(fd, F_SETFL, fl | O_NONBLOCK);
++	(void)setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
++	RawSer_fd = fd;
++}
++
++static void RawSer_Reset(void)
++{
++	/* UART reset only: flush the Rx ring and pending interrupt. Deliberately
++	 * keep the socket open - the emulator<->virtual-modem link is the "serial
++	 * cable" and persists for the whole run (the modem session, AT/ATDT/ATH,
++	 * lives on top of it), so a soft SCC reset mustn't hang up the cable. */
++	RawSer_RxHead = 0;
++	RawSer_RxTail = 0;
++	gRawSerARxInt = falseblnr;
++}
++
++static void RawSer_TxByte(ui3b b)
++{
++	unsigned char c = b;
++	ssize_t r;
++	RawSer_Connect();
++	if (RawSer_fd < 0) { return; }
++	r = send(RawSer_fd, &c, 1, 0);
++	if ((r < 0) && (errno != EAGAIN) && (errno != EWOULDBLOCK)) {
++		close(RawSer_fd); RawSer_fd = -1;
++	}
++}
++
++static void RawSer_Poll(void)
++{
++	unsigned char tmp[2048];
++	ssize_t r; ssize_t i;
++	RawSer_Connect();
++	if (RawSer_fd < 0) { return; }
++	r = recv(RawSer_fd, tmp, sizeof(tmp), 0);
++	if (r > 0) {
++		for (i = 0; i < r; i++) {
++			int nxt = (RawSer_RxTail + 1) % RawSer_RxBufSz;
++			if (nxt == RawSer_RxHead) { break; } /* full: drop rest */
++			RawSer_RxBuf[RawSer_RxTail] = tmp[i];
++			RawSer_RxTail = nxt;
++		}
++	} else if (r == 0) {
++		close(RawSer_fd); RawSer_fd = -1;
++	}
++}
++
++static int RawSer_RxPop(void) /* next byte 0..255, or -1 if none */
++{
++	int c;
++	if (RawSer_RxHead == RawSer_RxTail) { return -1; }
++	c = RawSer_RxBuf[RawSer_RxHead];
++	RawSer_RxHead = (RawSer_RxHead + 1) % RawSer_RxBufSz;
++	return c;
++}
++#endif /* EmRawSerial */
++
+ #if EmLocalTalk
+ 
+ LOCALVAR blnr CTSpacketPending = falseblnr;
+@@ -349,7 +459,7 @@ typedef struct {
+ 	blnr TxUnderrun;
+ 	blnr SyncHunt;
+ 	blnr TxIP; /* Transmit Interrupt Pending */
+-#if EmLocalTalk
++#if EmLocalTalk || EmRawSerial
+ 	ui3r RxBuff;
+ #endif
+ #if EmLocalTalk
+@@ -423,10 +533,10 @@ typedef struct {
+ #if SCC_TrackMore
+ 	ui3r TBitsPerChar;
+ #endif
+-#if EmLocalTalk || SCC_TrackMore
++#if EmLocalTalk || SCC_TrackMore || EmRawSerial
+ 	ui3r RxIntMode;
+ #endif
+-#if EmLocalTalk || SCC_TrackMore
++#if EmLocalTalk || SCC_TrackMore || EmRawSerial
+ 	blnr FirstChar;
+ #endif
+ #if EmLocalTalk || SCC_TrackMore
+@@ -448,7 +558,7 @@ typedef struct {
+ 			not emulating mouse this way, leave false.
+ 		*/
+ #endif
+-#if EmLocalTalk
++#if EmLocalTalk || EmRawSerial
+ 	/* otherwise RxChrAvail always false */
+ 	blnr RxChrAvail;
+ #endif
+@@ -616,10 +726,36 @@ LOCALPROC CheckSCCInterruptFlag(void)
+ 	}
+ #endif
+ 
++#if EmRawSerial
++	{
++		blnr ReceiveAInterrupt = falseblnr;
++		switch (SCC.a[0].RxIntMode) {
++			case 1:
++				if (SCC.a[0].RxChrAvail && SCC.a[0].FirstChar) {
++					ReceiveAInterrupt = trueblnr;
++				}
++				break;
++			case 2:
++				if (SCC.a[0].RxChrAvail) {
++					ReceiveAInterrupt = trueblnr;
++				}
++				break;
++			default:
++				break;
++		}
++		gRawSerARxInt = ReceiveAInterrupt;
++	}
++#endif
++
+ 	/* Master Interrupt Enable */
+ 	if (! SCC.MIE) {
+ 		SCC.SCC_Interrupt_Type = 0;
+ 	} else
++#if EmRawSerial
++	if (gRawSerARxInt) {
++		SCC.SCC_Interrupt_Type = SCC_A_Rx;
++	} else
++#endif
+ #if 0
+ 	/* External Interrupt Enable */
+ 	if (SCC.a[1].ExtIE) {
+@@ -838,6 +974,28 @@ LOCALPROC SCC_ResetChannel(int chan)
+ #endif
+ }
+ 
++#if EmRawSerial
++/*
++	Called periodically from the main loop. Pull socket bytes into the Rx ring,
++	and if the SCC is ready for a char (Rx enabled, none pending), hand one to
++	channel 0 and raise the receive interrupt - mirroring how LocalTalkTick
++	feeds channel 1.
++*/
++GLOBALPROC RawSerialTick(void)
++{
++	RawSer_Poll();
++	if (SCC.a[0].RxEnable && (! SCC.a[0].RxChrAvail)) {
++		int c = RawSer_RxPop();
++		if (c >= 0) {
++			SCC.a[0].RxBuff = (ui3r)c;
++			SCC.a[0].RxChrAvail = trueblnr;
++			SCC.a[0].FirstChar = trueblnr;
++			CheckSCCInterruptFlag();
++		}
++	}
++}
++#endif
++
+ GLOBALPROC SCC_Reset(void)
+ {
+ 	SCCwaitrq = 1;
+@@ -857,6 +1015,10 @@ GLOBALPROC SCC_Reset(void)
+ 
+ 	SCC_ResetChannel(1);
+ 	SCC_ResetChannel(0);
++
++#if EmRawSerial
++	RawSer_Reset();
++#endif
+ }
+ 
+ 
+@@ -1124,7 +1286,7 @@ LOCALFUNC ui3r SCC_GetRR0(int chan)
+ #if 0 /* ZeroCount always false */
+ 		| (SCC.a[chan].ZeroCount ? (1 << 1) : 0)
+ #endif
+-#if EmLocalTalk
++#if EmLocalTalk || EmRawSerial
+ 		/* otherwise RxChrAvail always false */
+ 		| (SCC.a[chan].RxChrAvail ? (1 << 0) : 0)
+ #endif
+@@ -1296,6 +1458,20 @@ LOCALFUNC ui3r SCC_GetRR8(int chan)
+ 	/* Receive Buffer */
+ 	/* happens on boot with appletalk on */
+ 	if (SCC.a[chan].RxEnable) {
++#if EmRawSerial
++		if (0 == chan) {
++			int nxt;
++			value = SCC.a[0].RxBuff;
++			SCC.a[0].RxChrAvail = falseblnr;
++			nxt = RawSer_RxPop();
++			if (nxt >= 0) {
++				SCC.a[0].RxBuff = (ui3r)nxt;
++				SCC.a[0].RxChrAvail = trueblnr;
++				SCC.a[0].FirstChar = falseblnr;
++			}
++			CheckSCCInterruptFlag();
++		} else
++#endif
+ #if EmLocalTalk
+ 		if (0 != chan) {
+ 			/*
+@@ -1616,7 +1792,7 @@ LOCALPROC SCC_PutWR1(ui3r Data, int chan)
+ 	}
+ #endif
+ 
+-#if EmLocalTalk || SCC_TrackMore
++#if EmLocalTalk || SCC_TrackMore || EmRawSerial
+ 	{
+ 		ui3r NewRxIntMode = (Data >> 3) & 3;
+ 		if (SCC.a[chan].RxIntMode != NewRxIntMode) {
+@@ -2233,6 +2409,11 @@ LOCALPROC SCC_PutWR8(ui3r Data, int chan)
+ 		/* Output (Data) to Modem(B) or Printer(A) Port */
+ 
+ 		/* happens on boot with appletalk on */
++#if EmRawSerial
++		if (0 == chan) {
++			RawSer_TxByte(Data);
++		}
++#endif
+ #if EmLocalTalk
+ 		if (0 != chan) {
+ 			SCC_TxBuffPut(Data);
+diff --git a/src/SCCEMDEV.h b/src/SCCEMDEV.h
+index 23be3e8..562f77f 100644
+--- a/src/SCCEMDEV.h
++++ b/src/SCCEMDEV.h
+@@ -20,6 +20,12 @@
+ #define SCCEMDEV_H
+ #endif
+ 
++/* Raw async serial on the modem port (channel 0), bridged to a host TCP
++ * socket. Added for Macinclaude end-to-end testing in Mini vMac. */
++#ifndef EmRawSerial
++#define EmRawSerial 1
++#endif
++
+ EXPORTPROC SCC_Reset(void);
+ 
+ EXPORTFUNC ui5b SCC_Access(ui5b Data, blnr WriteMem, CPTR addr);
+@@ -29,3 +35,7 @@ EXPORTFUNC blnr SCC_InterruptsEnabled(void);
+ #if EmLocalTalk
+ EXPORTPROC LocalTalkTick(void);
+ #endif
++
++#if EmRawSerial
++EXPORTPROC RawSerialTick(void);
++#endif
