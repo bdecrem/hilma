@@ -213,7 +213,7 @@ static Boolean Contains(const unsigned char *buf, short len, const char *needle)
 static void SetStatus(const char *msg)
 {
     Str255 t; short n = 0; char b[80];
-    CatStr(b, &n, "Atkinson");
+    CatStr(b, &n, "Macinclaude Paint");
     if (msg && msg[0]) { CatStr(b, &n, " - "); CatStr(b, &n, msg); }
     b[n] = 0;
     C2P(b, t);
@@ -912,7 +912,7 @@ static void SetUpWindow(void)
     short left = (qd.screenBits.bounds.right - IMG_W) / 2;
     short top  = qd.screenBits.bounds.top + 40;
     SetRect(&r, left, top, left + IMG_W, top + IMG_H);
-    gWin = NewWindow(0L, &r, "\pAtkinson", true, documentProc,
+    gWin = NewWindow(0L, &r, "\pMacinclaude Paint", true, documentProc,
                      (WindowPtr)-1L, false, 0);
     SetPort(gWin);
 }
@@ -929,6 +929,69 @@ static void InitToolbox(void)
     FlushEvents(everyEvent, 0);
 }
 
+/* ================= splash ================= */
+
+/* The Claude spark: 12 rays around (cx,cy), alternating long/short. */
+static void DrawSpark(short cx, short cy, short rad)
+{
+    static const short ux[12] = {100,87,50,0,-50,-87,-100,-87,-50,0,50,87};
+    static const short uy[12] = {0,50,87,100,87,50,0,-50,-87,-100,-87,-50};
+    short i, len; Rect d;
+    PenSize(2, 2);
+    for (i = 0; i < 12; i++) {
+        len = (i & 1) ? (short)(rad * 6 / 10) : rad;
+        MoveTo(cx, cy);
+        Line(ux[i] * len / 100, uy[i] * len / 100);
+    }
+    PenSize(1, 1);
+    SetRect(&d, cx - 2, cy - 2, cx + 3, cy + 3); PaintOval(&d);
+}
+
+/* an artist's easel holding a canvas with a Claude spark painted on it. */
+static void DrawEasel(short cx, short topY)
+{
+    Rect canvas;
+    short spread = 44, legH = 104, apexX = cx, apexY = topY;
+    PenSize(2, 2);
+    MoveTo(apexX, apexY); LineTo(apexX - spread, apexY + legH);            /* left leg */
+    MoveTo(apexX, apexY); LineTo(apexX + spread, apexY + legH);            /* right leg */
+    MoveTo(apexX + 5, apexY + 6); LineTo(apexX + spread - 10, apexY + legH); /* back leg */
+    MoveTo(apexX - spread + 8, apexY + legH - 16);
+    LineTo(apexX + spread - 8, apexY + legH - 16);                         /* tray bar */
+    SetRect(&canvas, cx - 30, apexY + 16, cx + 30, apexY + 66);
+    EraseRect(&canvas); FrameRect(&canvas);                               /* canvas over legs */
+    PenSize(1, 1);
+    DrawSpark((canvas.left + canvas.right) / 2, (canvas.top + canvas.bottom) / 2, 14);
+}
+
+static void CenterText(short winW, short y, ConstStr255Param s)
+{
+    MoveTo((winW - StringWidth(s)) / 2, y); DrawString(s);
+}
+
+/* Startup splash: easel hero + Chicago title + loading line + bar. Held briefly,
+ * then cleared so the canvas takes over. */
+static void ShowSplash(void)
+{
+    Rect rp, bar, fill; short bx; long t;
+    SetPort(gWin);
+    SetRect(&rp, 0, 0, IMG_W, IMG_H); EraseRect(&rp);
+    DrawEasel(IMG_W / 2, 20);
+    TextFont(systemFont); TextFace(bold); TextSize(20);
+    CenterText(IMG_W, 168, "\pMACINCLAUDE");
+    CenterText(IMG_W, 190, "\pPAINT");
+    TextFace(0); TextSize(12);
+    CenterText(IMG_W, 222, "\pmixing the 1-bit paint");
+    bx = (IMG_W - 240) / 2;
+    SetRect(&bar, bx, 234, bx + 240, 252);
+    PenSize(2, 2); FrameRoundRect(&bar, 12, 12); PenSize(1, 1);
+    SetRect(&fill, bx + 4, 238, bx + 4 + 232 * 38 / 100, 248); PaintRoundRect(&fill, 8, 8);
+    TextSize(9);
+    CenterText(IMG_W, 274, "\pclaude draws, you watch it develop");
+    Delay(120, &t);
+    EraseRect(&rp);
+}
+
 int main(void)
 {
     EventRecord ev;
@@ -937,6 +1000,7 @@ int main(void)
     SetUpMenus();
     SetUpWindow();
 
+    ShowSplash();
     PrefsLocate();
 
     gHaveCfg = LoadPrefs();

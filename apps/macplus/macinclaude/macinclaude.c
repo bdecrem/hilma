@@ -866,7 +866,7 @@ static void SetUpWindow(void)
     short left = (qd.screenBits.bounds.right - WIN_W) / 2;
     short top  = qd.screenBits.bounds.top + 24;
     SetRect(&r, left, top, left + WIN_W, top + WIN_H);
-    gWin = NewWindow(0L, &r, "\pMacinclaude", true, documentProc,
+    gWin = NewWindow(0L, &r, "\pMacinclaude Code", true, documentProc,
                      (WindowPtr)-1L, false, 0);
     SetPort(gWin);
     TextFont(monaco); TextSize(9);
@@ -896,6 +896,68 @@ static void Banner(void)
     EmitLine("");
 }
 
+/* ================= splash ================= */
+
+/* The Claude spark: 12 rays around (cx,cy), alternating long/short. */
+static void DrawSpark(short cx, short cy, short rad)
+{
+    static const short ux[12] = {100,87,50,0,-50,-87,-100,-87,-50,0,50,87};
+    static const short uy[12] = {0,50,87,100,87,50,0,-50,-87,-100,-87,-50};
+    short i, len; Rect d;
+    PenSize(2, 2);
+    for (i = 0; i < 12; i++) {
+        len = (i & 1) ? (short)(rad * 6 / 10) : rad;
+        MoveTo(cx, cy);
+        Line(ux[i] * len / 100, uy[i] * len / 100);
+    }
+    PenSize(1, 1);
+    SetRect(&d, cx - 2, cy - 2, cx + 3, cy + 3); PaintOval(&d);
+}
+
+/* compact Macintosh silhouette, a Claude spark glowing on its screen. */
+static void DrawCompactMac(short cx, short topY)
+{
+    Rect body, scr, slot, dot;
+    short w = 70, h = 86, L = cx - w / 2, T = topY;
+    PenSize(2, 2);
+    SetRect(&body, L, T, L + w, T + h);        FrameRoundRect(&body, 16, 16);
+    SetRect(&scr, L + 9, T + 9, L + w - 9, T + 47); FrameRoundRect(&scr, 8, 8);
+    MoveTo(L + 9, T + 55); LineTo(L + w - 9, T + 55);   /* chin separator */
+    PenSize(1, 1);
+    DrawSpark((scr.left + scr.right) / 2, (scr.top + scr.bottom) / 2, 13);
+    SetRect(&slot, L + w - 30, T + h - 17, L + w - 10, T + h - 12); PaintRect(&slot);
+    SetRect(&dot, L + 11, T + h - 20, L + 19, T + h - 12); PaintOval(&dot);
+}
+
+static void CenterText(short winW, short y, ConstStr255Param s)
+{
+    MoveTo((winW - StringWidth(s)) / 2, y); DrawString(s);
+}
+
+/* Startup splash: compact-Mac hero + Chicago title + loading line + bar. Held
+ * briefly, then cleared so the terminal takes over. */
+static void ShowSplash(void)
+{
+    Rect rp, bar, fill; short bx; long t;
+    SetPort(gWin);
+    rp = gWin->portRect; EraseRect(&rp);
+    DrawCompactMac(WIN_W / 2, 14);
+    TextFont(systemFont); TextFace(bold); TextSize(20);
+    CenterText(WIN_W, 130, "\pMACINCLAUDE");
+    CenterText(WIN_W, 152, "\pCODE");
+    TextFace(0); TextSize(12);
+    CenterText(WIN_W, 184, "\pconnecting to claude . 9600 baud");
+    bx = (WIN_W - 240) / 2;
+    SetRect(&bar, bx, 198, bx + 240, 216);
+    PenSize(2, 2); FrameRoundRect(&bar, 12, 12); PenSize(1, 1);
+    SetRect(&fill, bx + 4, 202, bx + 4 + 232 * 6 / 10, 212); PaintRoundRect(&fill, 8, 8);
+    TextSize(9);
+    CenterText(WIN_W, 238, "\pa coding companion for the 1986 mac");
+    Delay(120, &t);
+    EraseRect(&rp);
+    TextFont(monaco); TextSize(9); TextFace(0);     /* restore for the console */
+}
+
 int main(void)
 {
     EventRecord ev;
@@ -904,6 +966,7 @@ int main(void)
     SetUpMenus();
     SetUpWindow();
 
+    ShowSplash();
     PrefsLocate();
     Banner();
 
