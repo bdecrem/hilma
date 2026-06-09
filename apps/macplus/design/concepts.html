@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#2a2a2a; }
+  .stack { display:flex; flex-direction:column; align-items:center; gap:40px; padding:40px; }
+  .label { color:#bbb; font-family:'Silkscreen'; font-size:13px; letter-spacing:1px; margin-bottom:-26px; align-self:flex-start; padding-left:4px;}
+  .screen {
+    width:1024px; height:684px; background:#fff; color:#000;
+    position:relative; overflow:hidden; image-rendering:pixelated;
+    font-family:'Silkscreen';
+  }
+  /* thin rounded inner frame, very classic-Mac */
+  .frame { position:absolute; inset:18px; border:3px solid #000; border-radius:16px; }
+  .col { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .title { font-family:'Press Start 2P'; line-height:1.2; text-align:center; }
+  .sub { font-family:'Silkscreen'; }
+
+  /* classic determinate progress bar */
+  .bar { width:420px; height:22px; border:3px solid #000; border-radius:12px; padding:3px; }
+  .bar > i { display:block; height:100%; width:64%; border-radius:7px;
+    background:repeating-linear-gradient(135deg,#000 0 3px,#fff 3px 6px); }
+
+  /* dither helpers */
+  .checker { background:repeating-conic-gradient(#000 0 90deg,#fff 0 180deg) 0 0/6px 6px; }
+
+  /* icon board */
+  .desk { position:absolute; inset:0; }
+  .win { position:absolute; background:#fff; border:3px solid #000; border-radius:12px; box-shadow:6px 6px 0 #000;}
+  .tbar { height:34px; border-bottom:3px solid #000; position:relative;
+    background:repeating-linear-gradient(#000 0 2px,#fff 2px 6px); display:flex; align-items:center; justify-content:center; }
+  .tbar .t { background:#fff; padding:0 14px; font-family:'Press Start 2P'; font-size:12px; }
+  .tbar .x { position:absolute; left:10px; top:50%; transform:translateY(-50%); width:16px; height:16px; border:3px solid #000; background:#fff; }
+  .icons { display:flex; gap:0; }
+  .ic { width:180px; display:flex; flex-direction:column; align-items:center; gap:12px; padding:22px 0; }
+  .ic .nm { font-family:'Press Start 2P'; font-size:13px; }
+  .ic .sz { font-family:'Silkscreen'; font-size:11px; color:#000; }
+  svg { display:block; image-rendering:pixelated; shape-rendering:crispEdges; }
+</style>
+</head>
+<body>
+<div class="stack">
+
+  <!-- ===================== SPLASH: MACINCLAUDE CODE ===================== -->
+  <div>
+    <div class="label">SPLASH — Macinclaude Code</div>
+    <div class="screen" id="s-code">
+      <div class="frame"></div>
+      <div class="col">
+        <div id="hero-code" style="margin-bottom:26px"></div>
+        <div class="title" style="font-size:30px">MACINCLAUDE<br><span style="font-size:30px">CODE</span></div>
+        <div class="sub" style="font-size:17px; margin-top:26px; letter-spacing:1px">&#10038; connecting to claude &#183; 9600 baud &#10038;</div>
+        <div class="bar" style="margin-top:18px"><i></i></div>
+        <div class="sub" style="font-size:12px; margin-top:14px; color:#000">a coding companion for the 1986 mac</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== SPLASH: MACINCLAUDE PAINT ===================== -->
+  <div>
+    <div class="label">SPLASH — Macinclaude Paint</div>
+    <div class="screen" id="s-paint">
+      <div class="frame"></div>
+      <div class="col">
+        <div id="hero-paint" style="margin-bottom:26px"></div>
+        <div class="title" style="font-size:30px">MACINCLAUDE<br>PAINT</div>
+        <div class="sub" style="font-size:17px; margin-top:26px; letter-spacing:1px">&#10038; mixing the 1-bit paint &#10038;</div>
+        <div class="bar" style="margin-top:18px"><i style="width:38%"></i></div>
+        <div class="sub" style="font-size:12px; margin-top:14px">claude draws, you watch it develop</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== APP ICONS ===================== -->
+  <div>
+    <div class="label">APP ICONS — concepts (shown large + at 32px)</div>
+    <div class="screen checker" id="s-icons">
+      <div class="win" style="left:90px; top:120px; width:380px;">
+        <div class="tbar"><span class="x"></span><span class="t">MC Code</span></div>
+        <div class="icons">
+          <div class="ic"><div id="ic-code-a"></div><div class="nm">MC Code</div><div class="sz">compact mac + spark</div></div>
+          <div class="ic"><div id="ic-code-b"></div><div class="nm">MC Code</div><div class="sz">terminal + spark</div></div>
+        </div>
+      </div>
+      <div class="win" style="left:556px; top:120px; width:380px;">
+        <div class="tbar"><span class="x"></span><span class="t">MC Paint</span></div>
+        <div class="icons">
+          <div class="ic"><div id="ic-paint-a"></div><div class="nm">MC Paint</div><div class="sz">brush + spark</div></div>
+          <div class="ic"><div id="ic-paint-b"></div><div class="nm">MC Paint</div><div class="sz">easel</div></div>
+        </div>
+      </div>
+      <!-- tiny 32px row to prove it reads small -->
+      <div class="win" style="left:90px; top:470px; width:846px; ">
+        <div class="tbar"><span class="x"></span><span class="t">at real size &#183; 32 x 32</span></div>
+        <div style="display:flex; align-items:center; gap:34px; padding:22px 30px; font-family:'Silkscreen'; font-size:14px;">
+          <span id="sm-code-a"></span><span>MC Code</span>
+          <span id="sm-code-b"></span><span>MC Code</span>
+          <span style="width:30px"></span>
+          <span id="sm-paint-a"></span><span>MC Paint</span>
+          <span id="sm-paint-b"></span><span>MC Paint</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ---- Claude spark: irregular radiating burst, reads as the Claude mark in 1-bit ----
+function spark(size, n=14, w=0.085) {
+  const c = 100, parts = [];
+  const lens = [];
+  for (let i=0;i<n;i++) lens.push(i%2 ? 0.92 : 0.6);   // alternate long/short
+  const ww = 200*w;
+  for (let i=0;i<n;i++){
+    const ang = i*(360/n);
+    const len = 86*lens[i];
+    parts.push(`<rect x="${c-ww/2}" y="${c-len}" width="${ww}" height="${len}" rx="${ww/2}" transform="rotate(${ang} ${c} ${c})"/>`);
+  }
+  // little center void + dot
+  return `<svg width="${size}" height="${size}" viewBox="0 0 200 200"><g fill="#000">${parts.join('')}</g></svg>`;
+}
+function twinkle(size){ // small 4-point sparkle
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><path fill="#000" d="M50 4 L58 42 L96 50 L58 58 L50 96 L42 58 L4 50 L42 42 Z"/></svg>`;
+}
+
+// ---- compact Macintosh silhouette with a spark on screen ----
+function compactMac(size, withSpark=true){
+  const inner = withSpark ? spark(120,14).replace('width="120" height="120"','width="120" height="120" x="100" y="74"') : '';
+  return `<svg width="${size}" height="${size*1.18}" viewBox="0 0 320 380">
+    <g fill="none" stroke="#000" stroke-width="9">
+      <rect x="26" y="14" width="268" height="352" rx="34"/>
+      <rect x="60" y="54" width="200" height="170" rx="14"/>
+    </g>
+    <g transform="translate(98,86) scale(0.52)">${withSpark?spark(220,14):''}</g>
+    <g fill="#000">
+      <rect x="60" y="250" width="200" height="12" rx="6"/>
+      <rect x="196" y="290" width="78" height="14" rx="7"/>            <!-- floppy slot -->
+      <circle cx="84" cy="300" r="11"/>                                <!-- apple-ish dot -->
+    </g>
+  </svg>`;
+}
+
+// ---- paintbrush, diagonal, with a spark of "paint" at the tip ----
+function brush(size){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 320 320">
+    <g stroke="#000" stroke-width="9" fill="#fff" stroke-linejoin="round">
+      <rect x="150" y="22" width="40" height="150" rx="18" transform="rotate(32 170 90)"/>  <!-- handle -->
+    </g>
+    <g fill="#000">
+      <g transform="rotate(32 170 90)">
+        <rect x="146" y="150" width="48" height="26"/>                  <!-- ferrule -->
+        <path d="M150 176 Q170 250 170 250 Q170 250 190 176 Z"/>        <!-- bristles -->
+      </g>
+    </g>
+    <g transform="translate(150,210)">${spark(150,12)}</g>             <!-- paint = spark -->
+  </svg>`;
+}
+
+// ---- easel ----
+function easel(size){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 320 320">
+    <g stroke="#000" stroke-width="9" fill="none" stroke-linecap="round">
+      <path d="M160 40 L70 290 M160 40 L250 290 M96 210 L224 210 M160 250 L160 300"/>
+    </g>
+    <g stroke="#000" stroke-width="8" fill="#fff"><rect x="96" y="70" width="128" height="120" rx="6"/></g>
+    <g transform="translate(118,84)">${spark(92,12)}</g>
+  </svg>`;
+}
+
+// ---- terminal window icon ----
+function terminal(size){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 320 320">
+    <g stroke="#000" stroke-width="9" fill="#fff"><rect x="34" y="46" width="252" height="228" rx="18"/></g>
+    <rect x="34" y="46" width="252" height="38" fill="#000"/>
+    <g fill="#000" font-family="monospace">
+      <rect x="64" y="120" width="70" height="14"/>                      <!-- > -->
+      <rect x="64" y="120" width="14" height="60"/>
+      <rect x="150" y="150" width="80" height="16"/>                     <!-- cursor line -->
+      <rect x="244" y="146" width="22" height="24"/>                     <!-- block cursor -->
+    </g>
+    <g transform="translate(176,92)">${spark(70,12)}</g>
+  </svg>`;
+}
+
+const big = 230, ico = 118, sm = 34;
+document.getElementById('hero-code').innerHTML  = compactMac(300);
+document.getElementById('hero-paint').innerHTML = brush(300);
+
+document.getElementById('ic-code-a').innerHTML  = compactMac(ico);
+document.getElementById('ic-code-b').innerHTML  = terminal(ico);
+document.getElementById('ic-paint-a').innerHTML = brush(ico);
+document.getElementById('ic-paint-b').innerHTML = easel(ico);
+
+document.getElementById('sm-code-a').innerHTML  = compactMac(sm);
+document.getElementById('sm-code-b').innerHTML  = terminal(sm);
+document.getElementById('sm-paint-a').innerHTML = brush(sm);
+document.getElementById('sm-paint-b').innerHTML = easel(sm);
+</script>
+</body>
+</html>
