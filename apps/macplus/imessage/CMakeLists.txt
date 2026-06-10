@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 3.5)
 project(MacinclaudeIMessage C)
 
 # Retro68 provides add_application() via its toolchain file.
+# Transport is the WiFi system service (../wifi/wifi.c) — same as Quote/Bridge.
 add_application(IMessage
     imessage.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../wifi/wifi.c
     imessage.r
 )
 
-# The MUX transport (.WIFI seam) is shared verbatim from ../wifi:
-#   mux_rx.inc (parser) + muxclient.inc (sender). im_rx.inc is local.
+# wifi.h + the WiFi service's MUX includes live in ../wifi; im_rx.inc is local.
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../wifi)
 
 # Offline test build for Mini vMac (no serial): enable with -DIM_TEST=ON or

@@ -14,6 +14,30 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 
 ---
 
+## What we've built — app & service catalog
+
+**Apps**
+- **Sudoku** (`sudoku/`) — 36-puzzle game, unique-solution verified
+- **Macinclaude Code** (`macinclaude/`) — Claude Code agent in a VT100 terminal
+- **Macinclaude Paint** (`atkinson/`) — prompt → image → 1-bit Atkinson dither → progressive blit
+- **Macinclaude Surf** (`surf/`) — reader-mode web browser
+- **Macinclaude Foundry** (`foundry/`) — describe an app → Claude writes + Retro68 compiles → lands on disk
+- **Quote of the Day** (`quote/`) — daily quote, served over the WiFi service
+- **The Bridge** (`bridge/`) — over-the-air app delivery (drop a `.bin` in the mini outbox → installs on the Plus)
+
+**Services / infrastructure**
+- **WiFi system service** (`wifi/wifi.c` + `wifi.h`) + **boot INIT** (`wifi/wifiinit.c`) — one shared resident link to the mux; dial once, every app just attaches (no AT/ATDT in apps)
+- **Multiplexer** (`agent-mux/`) — one serial connection, channel fan-out to backend services
+- **Diagnostic stack** (`diag/diag.inc` + `agent-diag/`) — 3-sink logger (screen ring / wire / SD file) + mini sink, so hardware debugging needs no SD round-trip
+- **Mini agents** (the brains) — `agent-foundry/`, `agent-surf/`, `agent-atkinson/`, `agent-quote/`, `agent-bridge/`
+- **Mini vMac serial bridge** (`minivmac/vmodem.py` + `minivmac/e2e.sh`) — drive any app against its live agent in the emulator, no SD shuttling
+- **SerialDoc** (`serialdoc/`) — serial-cable diagnostic (byte counts, hex view, baud sweep)
+- **HelloWiFi** (`wifi/`) — WiFi bring-up + link test; smiley/sad verdict
+- **MuxDemo** (`wifi/`) — 2-channel multiplexer demo
+- **WiFiTest** (`wifi/`) — WiFi-service echo round-trip test
+
+---
+
 ## WHERE WE LEFT OFF (2026-06-03) — read this first when resuming
 
 The agent ("**Macinclaude Plus**" — the name Bart picked) is **built and working**; the only blocker is

@@ -39,6 +39,7 @@
 #include <Files.h>
 #include <Serial.h>
 #include <SegLoad.h>
+#include "wifi.h"                /* the WiFi system service — wifi.c owns serial + MUX */
 
 #ifndef geneva
 #define geneva 3
@@ -158,13 +159,7 @@ static ControlHandle gScroll;
 static MenuHandle    gAppleM, gFileM, gEditM, gConnM, gMsgM;
 static Boolean       gDone = false;
 
-static short   gInRef, gOutRef;
-static Boolean gPortOpen = false;
-static Boolean gConnected = false;
-
-static char gSerRing[4096];     /* serial driver input ring (SerSetBuf) */
-static char gSerBuf[2048];      /* FSRead scratch — MUST be separate from the ring */
-static unsigned char gCap[1024];
+static Boolean gConnected = false;   /* our "imessage" channel is open */
 
 /* ---- receive assembly state ---- */
 #define RX_NONE 0
@@ -371,7 +366,7 @@ static void ImConvStart(short idx, const char *name)
 {
     short i;
     gRxMode = RX_CONV;
-    gSel = idx;
+    gSel = (idx >= 0 && idx < MAX_CONV) ? idx : -1;   /* never index out of range */
     for (i = 0; name[i] && i < CONV_NAMEW - 1; i++) gThreadName[i] = name[i];
     gThreadName[i] = 0;
     ThreadClear();
@@ -413,96 +408,27 @@ static void ImStatus(const char *msg) { SetStatus(msg); }
 static void ImError(const char *msg) { SetStatus(msg); SysBeep(1); }
 static void ImSent(short idx) { (void)idx; SetStatus("sent"); }
 
-/* ================= serial + MUX transport ================= */
-/* muxclient.inc needs MuxSendRaw(); mux_rx.inc needs MuxData/MuxClosed/MuxErr/MuxPing */
-
-static void SendBytes(const char *s, long n) { long c = n; if (gPortOpen) FSWrite(gOutRef, &c, (Ptr)s); }
-static void SendStr(const char *s) { long n; StrLen(s, &n); SendBytes(s, n); }
-static void MuxSendRaw(const char *bytes, long n) { SendBytes(bytes, n); }   /* muxclient.inc hook */
+/* ================= transport: the WiFi system service ================= */
+/* wifi.c owns the serial port and the MUX framing. Here we just open one
+ * logical channel ("imessage") on the shared link and feed whatever arrives
+ * into the IM payload parser. No AT/ATDT, no serial buffers — the service has
+ * them. (This replaces the old OpenSerPort/DialMux/MUX layer wholesale.) */
 
 /* the IM payload parser (its Im* callbacks are defined above); this also
  * defines the ImRx type, so gIm follows the include */
 #include "im_rx.inc"
-static ImRx gIm;
+static ImRx  gIm;
+static short gChan = -1;            /* our channel on the shared link, -1 = none */
 
-static void MuxData(short chan, const unsigned char *bytes, short n)
-{
-    if (chan == CH_IM) ImRxFeed(&gIm, bytes, n);
-}
-static void MuxClosed(short chan) { if (chan == CH_IM) SetStatus("channel closed by mini"); }
-static void MuxErr(short chan, const char *msg) { (void)chan; SetStatus(msg); SysBeep(1); }
-static void MuxPing(void);   /* fwd */
-
-/* the MUX framing (parser + sender); these define the MuxRx type */
-#include "mux_rx.inc"
-#include "muxclient.inc"
-static MuxRx gMux;
-
-static void MuxPing(void) { MuxPong(); }   /* answer keepalive */
-
-/* ================= serial plumbing ================= */
-
-static void ConfigPort(short config)
-{
-    SerShk shk;
-    SerReset(gOutRef, config);
-    SerReset(gInRef,  config);
-    shk.fXOn = 0; shk.fCTS = 0; shk.xOn = 0; shk.xOff = 0;
-    shk.errs = 0; shk.evts = 0; shk.fInX = 0; shk.null = 0;
-    SerHShake(gOutRef, &shk);
-}
-static Boolean OpenSerPort(void)
-{
-    OSErr err;
-    if (gPortOpen) return true;
-    err = OpenDriver("\p.AOut", &gOutRef);
-    if (err == noErr) err = OpenDriver("\p.AIn", &gInRef);
-    if (err != noErr) { SetStatus("could not open modem port"); return false; }
-    SerSetBuf(gInRef, (Ptr)gSerRing, (short)sizeof(gSerRing));
-    ConfigPort(kBaudTab[gCfg.baudIdx].config);
-    gPortOpen = true;
-    return true;
-}
-static void CloseSerPort(void)
-{
-    if (!gPortOpen) return;
-    SerSetBuf(gInRef, (Ptr)gSerRing, 0);
-    CloseDriver(gInRef); CloseDriver(gOutRef);
-    gPortOpen = false;
-}
-static void DrainInput(void)
-{
-    long avail, cnt;
-    if (!gPortOpen) return;
-    while (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-        cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-        FSRead(gInRef, &cnt, gSerBuf);
-    }
-}
-static short CaptureFor(short ticks, unsigned char *out, short cap)
-{
-    unsigned long deadline = TickCount() + (unsigned long)ticks;
-    short total = 0; long avail, cnt;
-    while ((long)(TickCount() - deadline) < 0) {
-        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
-                short i; for (i = 0; i < (short)cnt; i++) if (total < cap) out[total++] = (unsigned char)gSerBuf[i];
-            }
-        }
-    }
-    return total;
-}
-
-/* Non-blocking pump: feed waiting bytes through the MUX parser. */
+/* Non-blocking pump: drain the shared link and feed our channel's bytes to the
+ * IM parser. Call every event-loop pass. */
 static void PumpReceive(void)
 {
-    long avail, cnt; short i;
-    if (!gPortOpen) return;
-    if (SerGetBuf(gInRef, &avail) != noErr || avail <= 0) return;
-    cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-    if (FSRead(gInRef, &cnt, gSerBuf) != noErr) return;
-    MuxRxFeed(&gMux, (const unsigned char *)gSerBuf, (short)cnt);
+    unsigned char buf[256]; short n;
+    if (gChan < 0) return;
+    WIFIIdle();
+    n = WIFIRead(gChan, buf, sizeof(buf));
+    if (n > 0) ImRxFeed(&gIm, buf, n);
 }
 
 /* ================= prefs ================= */
@@ -543,91 +469,28 @@ static void SavePrefs(void)
     FSClose(refNum); FlushVol(NULL, gPrefVRef);
 }
 
-/* ================= modem operations ================= */
+/* ================= connect / disconnect (the WiFi service) ================= */
 
-static Boolean ModemAlive(void)
-{
-    short tries, got;
-    for (tries = 0; tries < 3; tries++) {
-        DrainInput(); SendStr("AT\r");
-        got = CaptureFor(90, gCap, sizeof(gCap));
-        if (Contains(gCap, got, "OK")) return true;
-    }
-    return false;
-}
-static Boolean JoinWiFi(void)
-{
-    char cmd[600]; short n; short got; char ssidC[256], passC[256];
-    if (gCfg.ssid[0] == 0) { SetStatus("no SSID set"); return false; }
-    if (!OpenSerPort()) return false;
-    SetStatus("joining WiFi...");
-    if (!ModemAlive()) { SetStatus("modem did not answer AT - check cable/power"); return false; }
-    P2C(gCfg.ssid, ssidC); P2C(gCfg.pass, passC);
-    n = 0; CatStr(cmd, &n, "ATW\""); CatStr(cmd, &n, ssidC); CatStr(cmd, &n, ","); CatStr(cmd, &n, passC); CatStr(cmd, &n, "\"\r"); cmd[n] = 0;
-    DrainInput(); SendStr(cmd);
-    got = CaptureFor(900, gCap, sizeof(gCap));
-    if (Contains(gCap, got, "ERROR") || got == 0) { SetStatus("WiFi join failed - check SSID/password"); return false; }
-    DrainInput(); SendStr("AT&W\r"); CaptureFor(90, gCap, sizeof(gCap));
-    gCfg.wifiSaved = true; SetStatus("WiFi joined and saved");
-    return true;
-}
-
-/* ---- THE .WIFI SEAM ----------------------------------------------------
- * DialMux() opens the serial port, talks to the modem, dials the mux, and
- * scans for CONNECT. When the resident .WIFI driver exists, THIS function is
- * what gets replaced: the driver already holds a persistent connection, so the
- * app just asks it for a channel. Everything below the channel calls
- * (MuxOpen/MuxSendLine/MuxData) stays exactly as-is. */
+/* Bring the shared WiFi link up (or reuse a live one) and open our "imessage"
+ * channel, then ask for the conversation list. The WiFi service owns the modem
+ * and the MUX, so there's no AT/ATDT here — we just ask for a channel.
+ * (Kept the name DialMux so the menu/launch call sites are unchanged.) */
 static Boolean DialMux(void)
 {
-    char cmd[320]; short n; short got = 0; char hostC[256]; unsigned long deadline;
-    if (!OpenSerPort()) return false;
-    SetStatus("connecting...");
-    if (!ModemAlive()) { SetStatus("modem did not answer AT @ this baud"); return false; }
-    P2C(gCfg.host, hostC);
-    SetStatus("dialing...");
-    n = 0; CatStr(cmd, &n, "ATDT\""); CatStr(cmd, &n, hostC); CatStr(cmd, &n, ":"); CatLong(cmd, &n, (long)gCfg.tcpPort); CatStr(cmd, &n, "\"\r"); cmd[n] = 0;
-    DrainInput(); SendStr(cmd);
-    deadline = TickCount() + 600;          /* up to ~10s */
-    while ((long)(TickCount() - deadline) < 0) {
-        long avail, cnt;
-        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
-                short i; for (i = 0; i < (short)cnt; i++) if (got < (short)sizeof(gCap)) gCap[got++] = (unsigned char)gSerBuf[i];
-            }
-        }
-        {
-            short past = FindEnd(gCap, got, "CONNECT");
-            if (past >= 0) {
-                short i;
-                gConnected = true;
-                MuxRxInit(&gMux);
-                ImRxInit(&gIm);
-                /* feed any post-CONNECT bytes (the "9600" tail is ignored as noise) */
-                for (i = past; i < got; i++) { unsigned char b = gCap[i]; MuxRxFeed(&gMux, &b, 1); }
-                SetStatus("connected");
-                MuxOpen(CH_IM, "imessage");      /* open our logical channel */
-                MuxSendLine(CH_IM, "LIST");       /* ask for the conversation list */
-                return true;
-            }
-        }
-        if (Contains(gCap, got, "BUSY")) { SetStatus("BUSY - mux listener may be down"); return false; }
-        if (Contains(gCap, got, "NO CARRIER") || Contains(gCap, got, "NO ANSWER")) { SetStatus("no answer - is the mini mux up?"); return false; }
-    }
-    if (got == 0) SetStatus("silence - WiFi not joined? try Settings");
-    else          SetStatus("unexpected reply from modem");
-    return false;
+    SetStatus("connecting to the WiFi service...");
+    if (!WIFIConnect()) { SetStatus("no WiFi link - is the service/INIT up?"); return false; }
+    gChan = WIFIOpen("imessage");
+    if (gChan < 0) { SetStatus("could not open the imessage channel"); return false; }
+    ImRxInit(&gIm);
+    gConnected = true;
+    SetStatus("connected");
+    WIFISendLine(gChan, "LIST");        /* ask for the conversation list */
+    return true;
 }
 
 static void Disconnect(void)
 {
-    if (!gPortOpen) { gConnected = false; return; }
-    if (gConnected) {
-        MuxClose(CH_IM);
-        SendStr("+++"); CaptureFor(90, gCap, sizeof(gCap));
-        SendStr("ATH\r"); CaptureFor(60, gCap, sizeof(gCap));
-    }
+    if (gChan >= 0) { WIFIClose(gChan); gChan = -1; }
     gConnected = false;
     SetStatus("disconnected");
 }
@@ -639,7 +502,7 @@ static void Disconnect(void)
 static void LoadTestThread(void)
 {
     long i, n; StrLen(gTestThread, &n);
-    MuxRxInit(&gMux); ImRxInit(&gIm);
+    ImRxInit(&gIm);
     for (i = 0; i < n; i++) ImRxFeed(&gIm, (const unsigned char *)gTestThread + i, 1);
 }
 #endif
@@ -650,7 +513,7 @@ static void SendChanLine(const char *line)
     (void)line; return;
 #else
     if (!gConnected) { SetStatus("not connected - use Connection > Connect"); SysBeep(1); return; }
-    MuxSendLine(CH_IM, line);
+    WIFISendLine(gChan, line);
 #endif
 }
 
@@ -758,8 +621,7 @@ static void DoSettings(void)
     if (gConnected) Disconnect();
     if (DoSettingsDialog()) {
         SavePrefs(); gHaveCfg = true; SetStatus("settings saved");
-        if (gPortOpen) ConfigPort(kBaudTab[gCfg.baudIdx].config);
-        if (gCfg.ssid[0] != 0) { if (JoinWiFi()) SavePrefs(); }
+        /* WiFi join + baud are the service's job now — nothing to do here */
     }
 }
 
@@ -978,7 +840,7 @@ static void SetUpMenus(void)
     AppendMenu(gAppleM, "\pAbout Macinclaude iMessage"); AppendMenu(gAppleM, "\p(-"); AppendResMenu(gAppleM, 'DRVR'); InsertMenu(gAppleM, 0);
     gFileM = NewMenu(kFileMenu, "\pFile"); AppendMenu(gFileM, "\pQuit/Q"); InsertMenu(gFileM, 0);
     gEditM = NewMenu(kEditMenu, "\pEdit"); AppendMenu(gEditM, "\pUndo/Z;(-;Cut/X;Copy/C;Paste/V;Clear"); InsertMenu(gEditM, 0);
-    gConnM = NewMenu(kConnMenu, "\pConnection"); AppendMenu(gConnM, "\pConnect/K;Disconnect;(-;Settings..."); InsertMenu(gConnM, 0);
+    gConnM = NewMenu(kConnMenu, "\pConnection"); AppendMenu(gConnM, "\pConnect/K;Disconnect"); InsertMenu(gConnM, 0);
     gMsgM = NewMenu(kMsgMenu, "\pMessages"); AppendMenu(gMsgM, "\pRefresh List/L;Reply.../R;(-;Check for New/Y"); InsertMenu(gMsgM, 0);
     DrawMenuBar();
 }
@@ -1046,16 +908,9 @@ int main(void)
     LoadTestThread();
     DrawAll();
 #else
-    if (!gHaveCfg) {
-        SetDefaults();
-        SetStatus("first run - set things up");
-        if (DoSettingsDialog()) {
-            SavePrefs(); gHaveCfg = true;
-            if (gCfg.ssid[0] != 0 && JoinWiFi()) SavePrefs();
-        } else SetStatus("setup cancelled - use Connection > Settings");
-    }
+    if (!gHaveCfg) { SetDefaults(); gHaveCfg = true; }   /* nothing to ask — the WiFi service owns the link */
     DrawAll();
-    if (gHaveCfg) DialMux();      /* launch = connect; list streams in */
+    DialMux();                    /* launch = connect via the service; list streams in */
 #endif
     SyncMenus();
 
@@ -1067,6 +922,6 @@ int main(void)
 #endif
     }
     if (gConnected) Disconnect();
-    if (gPortOpen) CloseSerPort();
+    WIFIPark();                     /* leave the shared link up for the next app */
     return 0;
 }

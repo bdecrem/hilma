@@ -27,10 +27,13 @@ static char  lastStatus[128];
 static short lastSent = -1;
 
 static int curMsg = -1;   /* index of the message currently being assembled */
+static int gMaxLine = 0;  /* longest string any callback ever received */
+static void track(const char *s) { int L = (int)strlen(s); if (L > gMaxLine) gMaxLine = L; }
 
 static void ImListStart(void) { listStarts++; nRows = 0; }
 static void ImListRow(short idx, short unread, const char *name)
 {
+    track(name);
     if (nRows < 16) { rowIdx[nRows] = idx; rowUnread[nRows] = unread; strncpy(rowName[nRows], name, 63); nRows++; }
 }
 static void ImConvStart(short idx, const char *name)
@@ -39,6 +42,7 @@ static void ImConvStart(short idx, const char *name)
 }
 static void ImMsg(char dir, const char *text)
 {
+    track(text);
     if (nMsgs < 32) { msgDir[nMsgs] = dir; strncpy(msgText[nMsgs], text, 255); curMsg = nMsgs; nMsgs++; }
 }
 static void ImCont(const char *text)
@@ -86,6 +90,31 @@ int main(void)
     statuses = 0; listStarts = 0; convStarts = 0; ends = 0; nRows = 0; nMsgs = 0;
     ImRxFeed(&rx, (const unsigned char *)gTestThread, (short)n);
     CHECK(nRows == 4 && nMsgs == 4 && ends == 2, "bulk feed decodes identically");
+
+    /* ---- overflow stress: a backend with FAR more rows/messages and a much
+     *      longer line than any client array. The app drops past its caps
+     *      (MAX_CONV / MAX_PLINES / gMsgBuf) — here we prove the parser itself
+     *      never crashes and never hands a callback a line > IMRX_LINEMAX
+     *      (over-long lines are truncated, not overflowed). ---- */
+    {
+        static char big[60000]; int bn = 0, k, j;
+        ImRxInit(&rx);
+        statuses = listStarts = convStarts = ends = nRows = nMsgs = errors = 0;
+        gMaxLine = 0;
+        bn += sprintf(big + bn, "IMLIST\r\n");
+        for (k = 0; k < 500; k++) bn += sprintf(big + bn, "C %d 0 Conversation number %d\r\n", k, k);
+        bn += sprintf(big + bn, "C 500 0 ");              /* one 2000-char row name */
+        for (j = 0; j < 2000; j++) big[bn++] = 'X';
+        big[bn++] = '\r'; big[bn++] = '\n';
+        bn += sprintf(big + bn, "IMEND\r\n");
+        bn += sprintf(big + bn, "IMCONV 9999 BigThread\r\n");   /* out-of-range idx */
+        for (k = 0; k < 800; k++) bn += sprintf(big + bn, "M %c message %d with some words\r\n", (k & 1) ? '>' : '<', k);
+        bn += sprintf(big + bn, "IMEND\r\n");
+        for (k = 0; k < bn; k++) { unsigned char b = (unsigned char)big[k]; ImRxFeed(&rx, &b, 1); }  /* byte-by-byte */
+        CHECK(listStarts == 1 && convStarts == 1 && ends == 2, "overflow: structure still parses");
+        CHECK(gMaxLine <= IMRX_LINEMAX, "overflow: parser never exceeds IMRX_LINEMAX (long lines truncated)");
+        CHECK(errors == 0, "overflow: no spurious errors");
+    }
 
     printf(g_fail ? "\n%d FAILURE(S)\n" : "\nall good\n", g_fail);
     return g_fail ? 1 : 0;
