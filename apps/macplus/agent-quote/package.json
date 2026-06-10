@@ -1,0 +1,10 @@
+{
+  "name": "macinclaude-quote",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Quote of the Day service: a tiny TCP server the Plus reaches through the WiFi system service (mux channel 'quote'). Serves today's quote (or a random one) from quotes.json.",
+  "bin": { "macinclaude-quote": "src/main.ts" },
+  "scripts": { "start": "tsx src/main.ts --listen 2332" },
+  "devDependencies": { "@types/node": "latest", "tsx": "latest", "typescript": "latest" }
+}
