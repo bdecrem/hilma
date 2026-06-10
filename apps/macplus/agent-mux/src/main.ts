@@ -24,7 +24,9 @@ const SERVICES: Record<string, { host: string; port: number }> = {
   surf:    { host: '127.0.0.1', port: 2326 },
   foundry: { host: '127.0.0.1', port: 2327 },
   talk:    { host: '127.0.0.1', port: 2329 },
+  diag:    { host: '127.0.0.1', port: 2331 },  // diagnostic sink — Plus streams logs here
 };
+// "echo" is handled internally (no backend) — a round-trip test for bring-up.
 
 function log(m: string): void { console.error(`[mux ${new Date().toISOString()}] ${m}`); }
 
@@ -46,6 +48,7 @@ class Downlink {
   private timer: ReturnType<typeof setInterval> | null = null;
   private dec: MuxDecoder;
   private uplinks = new Map<number, net.Socket>();
+  private echoChans = new Set<number>();
 
   constructor(private sock: net.Socket) {
     this.dec = new MuxDecoder({
@@ -78,6 +81,11 @@ class Downlink {
   private openChannel(chan: number, service: string): void {
     if (chan < 0 || chan > MAX_CHAN) return;
     this.closeChannel(chan);
+    if (service === 'echo') {                 // internal round-trip test, no backend
+      this.echoChans.add(chan);
+      log(`channel ${chan} -> echo (internal)`);
+      return;
+    }
     const target = resolve(service);
     if (!target) { this.send(frameErr(chan, `unknown service "${service}"`)); return; }
     log(`channel ${chan} -> ${service} (${target.host}:${target.port})`);
@@ -98,11 +106,13 @@ class Downlink {
   }
 
   private toUplink(chan: number, bytes: Buffer): void {
+    if (this.echoChans.has(chan)) { this.send(frameData(chan, bytes)); return; }
     const up = this.uplinks.get(chan);
     if (up) up.write(bytes);
   }
 
   private closeChannel(chan: number): void {
+    this.echoChans.delete(chan);
     const up = this.uplinks.get(chan);
     if (up) { this.uplinks.delete(chan); up.destroy(); }
   }
