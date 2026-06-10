@@ -1,0 +1,23 @@
+{
+  "name": "foundry-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Macinclaude Foundry: the Plus asks for an app in plain words; Claude writes the Toolbox C, Retro68 cross-compiles it, and the binary is streamed back over the serial link and saved as a double-clickable app.",
+  "bin": {
+    "foundry-agent": "src/main.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts --listen 2327",
+    "stdin": "tsx src/main.ts",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

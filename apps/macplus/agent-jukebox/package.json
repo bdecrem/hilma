@@ -1,0 +1,23 @@
+{
+  "name": "jukebox-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Macinclaude Jukebox: the Plus asks for a song in plain words; Claude composes melody + lyrics, and the Plus sings it through its 1986 speaker with karaoke lyrics.",
+  "bin": {
+    "jukebox-agent": "src/main.ts"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts --listen 2328",
+    "stdin": "tsx src/main.ts",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}

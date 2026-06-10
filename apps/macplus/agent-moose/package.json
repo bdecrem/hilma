@@ -1,0 +1,15 @@
+{
+  "name": "moose-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Talking Plus: a sardonic 1-bit character on the Macintosh Plus who speaks via MacinTalk. Claude writes his lines (with attitude) from real data - Hacker News, and an optional calendar/inbox briefing - and converts them to MacinTalk phonemes the Plus speaks aloud.",
+  "bin": { "moose-agent": "src/main.ts" },
+  "scripts": {
+    "start": "tsx src/main.ts --listen 2329",
+    "stdin": "tsx src/main.ts",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "dependencies": { "@anthropic-ai/sdk": "latest" },
+  "devDependencies": { "@types/node": "latest", "tsx": "latest", "typescript": "latest" }
+}

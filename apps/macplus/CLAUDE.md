@@ -256,6 +256,85 @@ bitmap row-by-row so it "develops" like a Polaroid over the slow link.
   (reads the key from `.env.local`); restart after a code change: `sudo launchctl kickstart -k system/sh.macplus.atkinson`.
   Logs: `~/Library/Logs/macplus-atkinson.{out,err}.log`. Verified end-to-end over the socket (banner + /quit).
 
+### The Macinclaude app family — port map
+
+All four "Plus front-end + mini brain" apps share the same transport (settings/prefs/serial/dial,
+ported app to app) and the same two-halves shape. Each dials its own TCP port so they can run side
+by side:
+
+| port | app | what it does |
+|------|-----|--------------|
+| 2323 | login shell | raw zsh on the mini (socat → `login -f admin`) |
+| 2324 | Macinclaude Code | Claude Code agent, VT100 terminal |
+| 2325 | Macinclaude Paint (`atkinson/`) | prompt → image → 1-bit dither → progressive blit |
+| 2326 | Macinclaude Surf (`surf/`) | reader-mode web browser |
+| 2327 | Macinclaude Foundry (`foundry/`) | describe an app → Claude writes + Retro68 compiles it → delivered as a real APPL onto the disk |
+| 2328 | Macinclaude Jukebox (`jukebox/`) | describe a song → Claude composes → the Plus sings it (square-wave synth) with karaoke + bouncing ball |
+| 2329 | The Talking Plus (`talkingplus/`) | a sardonic 1-bit character who speaks aloud via MacinTalk; Claude writes his lines from real data |
+
+The mini-side agents are `agent-foundry/`, `agent-jukebox/`, `agent-moose/` (each a standalone
+`node:net` TCP server — **no socat/pty**, which sidesteps the echo/ONLCR traps the Surf agent hit).
+All four serial lessons from Surf (separate SerSetBuf ring vs FSRead scratch; paced output to wire
+speed; CONNECT-tail handoff into the parser; raw transport) are baked into every new app.
+
+**Status (2026-06-09):** Foundry, Jukebox, and Talking Plus are **built, compile clean (both normal
+and `*_TEST` Mini vMac builds), and fully host-tested** (each has a shared `*_rx.inc` parser driven
+by an `rxtest.c`, and each agent has a passing `npm run selftest` incl. a live Claude round-trip).
+The Mini vMac *visual/audio* drive-through for these three is the one remaining step (the iMac
+screen locked mid-session); test disks are staged in `~/mac-plus-apps/mctest/`. None deployed to the
+real Plus yet, and the agents aren't yet LaunchDaemons (Surf's `install-daemon.sh` is the template).
+
+#### Macinclaude Foundry (`foundry/` + `agent-foundry/`) — the self-extending Plus
+
+Type a wish ("a stopwatch with lap times") → the agent has Claude write a complete Toolbox C app
+(system prompt carries the house skeleton `agent-foundry/testapp/hello.c` + every Retro68/System-6
+constraint), cross-compiles it with Retro68 **with up to 4 fix-it retries** (compiler errors fed
+back to Claude), and streams the resulting MacBinary back as a hex `FNDBIN` frame. The Plus decodes
+it on the fly and writes **both forks to the boot disk**, so a new double-clickable APPL appears in
+the Finder ~2–4 min after the sentence, no SD-card shuttle. `foundry.c` is a build-log console +
+streaming MacBinary→disk writer (`MBConsume` routes header → data fork → padding → rsrc fork; 16-bit
+additive checksum verified before keeping the file). **Runs on the machine with the Retro68
+toolchain** (the iMac today, `192.168.7.189:2327`; moves to the mini once the toolchain lands there).
+Verified: agent selftest compiled a real "DiceRoller" (Claude, clean on attempt 2); `rxtest` 13/13
+against that real .bin.
+
+#### Macinclaude Jukebox (`jukebox/` + `agent-jukebox/`) — the Plus sings
+
+Type a vibe → Claude composes an original monophonic melody + timed lyrics (`agent-jukebox/score.ts`
+parses note-names+beats → MIDI + Mac ticks), streamed as a compact `JBXSON` score frame. `jukebox.c`
+performs it: the Sound Manager **square-wave synth** (`SndNewChannel(noteSynth)` + `freqCmd`/
+`quietCmd`, event-loop-clocked off `TickCount` so audio and screen can't drift) plays the melody
+while lyrics display karaoke-style with a per-beat **bouncing ball**. Mono, 1 voice today; the
+wavetable synth (up to 4 voices / different timbres) is the obvious upgrade, and the **printer port
+is free for serial-MIDI out** to sequence real gear (Bart's a producer — that's the future wow).
+Embedded test song = Daisy Bell. Verified: live compose ("The Little Mac That Learned to Sing", 149
+notes); `rxtest` 15/15. **PARKED** mid-build at Bart's pivot to Talking Plus — see the task list; the
+only remaining work is the emulator visual/audio drive-through + commit.
+
+#### The Talking Plus (`talkingplus/` + `agent-moose/`) — MacinTalk homage to the Talking Moose
+
+A wry 1-bit character who **speaks aloud through the Plus's own speaker** using the 1986 **MacinTalk**
+TTS driver, with Claude writing his lines (deadpan, "awake since 1986") from real data. Three
+commands: **Wake** (greeting, uses an optional `~/.talking-plus/briefing.json` calendar/inbox feed),
+**News** (live Hacker News gossip — public, no creds, the guaranteed demo), **Tell Him Something**
+(`SAY <topic>`). Claude writes the line AND transcribes it to MacinTalk phonemes word-by-word
+(`agent-moose/persona.ts` carries the phoneme alphabet); the app speaks each word and flaps the
+mouth + highlights the word in a speech bubble in time. Moods drive the face (eyebrows/eyes/mouth).
+
+**MacinTalk mechanism (reverse-engineered from the 1.31 driver's glue):** speak = build an `IOParam`
+with the phoneme C-string as `ioBuffer`/`ioReqCount` and the `.SPEECH` driver refNum, then
+**`PBWriteSync`** (synchronous — blocks while the word plays, which is exactly why per-word chunking
+gives free mouth-flap + karaoke timing). Rate/pitch would be `_Control` calls. The driver is a
+`DRVR` resource named `.SPEECH` inside Apple's **MacinTalk file** — **not redistributed** (copyright,
+same rule as the ROM); the app `OpenResFile("MacinTalk")` + `OpenDriver(".SPEECH")` off the boot
+disk, so Bart drops the freely-available MacinTalk file on the BlueSCSI card next to the app. If the
+file's absent (e.g. the emulator), he **mimes** — silent mouth-flap + word highlight, so the visual
+still demos. Claude does English→phonemes (better than the 1985 Reader rules and needs no extra
+driver resources). Verified: agent selftest, live — e.g. *"Oh good, Bart, you are vertical again. I
+have been awake since 1986, but sure, take your time."* + valid phonemes; `rxtest` 15/15.
+MacinTalk research + the driver-glue disassembly notes: the driver was pulled to `/tmp` for analysis
+only, not committed.
+
 ### Macinclaude Surf (a web browser for the Plus) — `surf/` + `agent-surf/`
 
 Same two-halves shape as Macinclaude/Atkinson: a **reader-mode web browser**. The Plus sends one
