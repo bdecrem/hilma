@@ -1,0 +1,13 @@
+{
+  "name": "macinclaude-mux",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Macinclaude multiplexer: the single endpoint the always-on .WIFI driver on the Plus connects to. Frames are tagged by channel; the mux fans each channel out to the right backend agent (Code/Surf/Foundry/Talking) and relays bidirectionally, so the Plus dials once and every app shares the link.",
+  "bin": { "macinclaude-mux": "src/main.ts" },
+  "scripts": {
+    "start": "tsx src/main.ts --listen 2330",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "devDependencies": { "@types/node": "latest", "tsx": "latest", "typescript": "latest" }
+}
