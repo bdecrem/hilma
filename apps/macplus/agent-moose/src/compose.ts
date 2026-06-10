@@ -31,23 +31,45 @@ function fold(s: string): string {
   return out.replace(/\s+/g, ' ').trim();
 }
 
-/** Pair spoken words with phoneme-words; tolerate small count mismatches. */
+/*
+ * Pair spoken words with phoneme groups, keeping the DISPLAY words intact and
+ * the mapping aligned even when Claude emits a different number of phoneme
+ * groups (it tends to split numbers/compounds, e.g. "1986" -> 3 groups). We
+ * normalize to one (display, phonemes) entry per spoken word by merging the
+ * surplus side, so the bubble highlight always tracks the right word.
+ */
 function pairWords(say: string, ph: string): { display: string; phonemes: string }[] {
   const spoken = fold(say).split(' ').filter(Boolean);
-  const phon = ph.split('/').map((p) => p.trim()).filter(Boolean);
-  const out: { display: string; phonemes: string }[] = [];
+  const rawPhon = ph.split('/').map((p) => p.trim()).filter(Boolean);
+  // Fold standalone punctuation groups (".", ",", "!") into the previous group:
+  // MacinTalk still speaks the pause, but it shouldn't consume a word slot.
+  const phon: string[] = [];
+  for (const g of rawPhon) {
+    if (/^[.,!?]+$/.test(g) && phon.length > 0) phon[phon.length - 1] += ' ' + g;
+    else phon.push(g);
+  }
+  if (spoken.length === 0) return [];
+  if (phon.length === 0) return spoken.map((w) => ({ display: w, phonemes: '' }));
+
   if (phon.length === spoken.length) {
-    for (let i = 0; i < spoken.length; i++) out.push({ display: spoken[i], phonemes: phon[i] });
-    return out;
+    return spoken.map((w, i) => ({ display: w, phonemes: phon[i] }));
   }
-  // mismatch: distribute spoken words across available phoneme chunks evenly
-  const n = Math.max(1, phon.length);
-  for (let i = 0; i < n; i++) {
-    const a = Math.floor((i * spoken.length) / n);
-    const b = Math.floor(((i + 1) * spoken.length) / n);
-    out.push({ display: spoken.slice(a, b).join(' ') || spoken[a] || '', phonemes: phon[i] });
+  if (phon.length > spoken.length) {
+    // more phoneme groups than words: merge phonemes down to one group per word
+    const n = spoken.length;
+    return spoken.map((w, i) => {
+      const a = Math.floor((i * phon.length) / n);
+      const b = Math.max(a + 1, Math.floor(((i + 1) * phon.length) / n));
+      return { display: w, phonemes: phon.slice(a, b).join(' ') };
+    });
   }
-  return out.filter((w) => w.display);
+  // fewer phoneme groups than words: merge display words down to one per group
+  const m = phon.length;
+  return phon.map((p, i) => {
+    const a = Math.floor((i * spoken.length) / m);
+    const b = Math.max(a + 1, Math.floor(((i + 1) * spoken.length) / m));
+    return { display: spoken.slice(a, b).join(' '), phonemes: p };
+  });
 }
 
 function parse(text: string): Utterance {

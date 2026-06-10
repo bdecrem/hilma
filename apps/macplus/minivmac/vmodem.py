@@ -22,6 +22,7 @@ and reach the Mac mini's agent listeners (Code :2324, Paint :2325).
 Usage:
   python3 vmodem.py [listen_port]      # default 5454; point MNVM_SERIAL at it
 """
+import os
 import re
 import select
 import socket
@@ -53,6 +54,14 @@ def dial(conn, target):
         reply(conn, "NO CARRIER")
         return
     host, port = m.group(1), int(m.group(2))
+    # Test convenience: MNVM_REDIRECT=host:port reroutes every dial there, so an
+    # unchanged Plus app (whose saved prefs point at the mini) can reach an agent
+    # running elsewhere (e.g. Foundry on the iMac) without editing the dialog.
+    redir = os.environ.get("MNVM_REDIRECT")
+    if redir:
+        rh, _, rp = redir.partition(":")
+        host, port = rh, int(rp or port)
+        log(f"redirecting dial -> {host}:{port}")
     log(f"dialing {host}:{port} ...")
     try:
         mini = socket.create_connection((host, port), timeout=8)
