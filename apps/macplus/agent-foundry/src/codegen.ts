@@ -34,8 +34,13 @@ HARD CONSTRAINTS:
 - 1-bit graphics only: black/white, PaintRect/FrameRect/InvertRect/FrameOval/Line/MoveTo. PAT patterns via qd.gray etc. No Color QuickDraw calls.
 - Screen is 512x342 with a 20px menu bar; keep windows inside. Fonts: Chicago=systemFont(0) 12, Geneva=3 (9/12), Monaco=4 (9).
 - 68000 + 1MB: static/global buffers, no recursion bombs, ints are 16-bit shorts in the Toolbox — use long where you need 32 bits. Avoid floating point if integers can do the job (no FPU; SANE is slow).
-- Randomness: short r = Random(); (QuickDraw, returns -32767..32767; seed with qd.randSeed = TickCount();). Time: TickCount() (60ths), GetDateTime(&secs) + Secs2Date for clock/date. Delay(ticks,&l) blocks — prefer counting TickCount in the event loop for animation.
-- Animation: do it from the event loop on null events (WaitNextEvent returns false), gated by TickCount, drawing directly to the window. Keep redraw cheap.
+- Randomness: short r = Random(); (QuickDraw, returns -32767..32767; seed with qd.randSeed = TickCount();). Time: TickCount() (60ths). For wall-clock date/time use: unsigned long secs; DateTimeRec dt; GetDateTime(&secs); SecondsToDate(secs, &dt); — then read dt.hour/dt.minute/dt.second/dt.day/dt.month/dt.year. (Both GetDateTime and SecondsToDate are inline traps that always link. Do NOT use GetTime() — it is declared but not inline, so it fails at link time with "undefined reference to GETTIME". Do NOT use Secs2Date — wrong name.) Delay(ticks,&l) blocks — prefer counting TickCount in the event loop for animation.
+- Animation / NO FLICKER (critical — apps that blink are unusable): NEVER erase the whole window (or EraseRect the whole content) and redraw it every loop pass. That full erase-then-redraw is exactly what makes a clock blink. Instead:
+  1. Redraw ONLY when the displayed value actually changed. Keep the last drawn state in a variable (e.g. short gLastSec; for a clock, only redraw when GetDateTime's second differs from gLastSec). On an unchanged null event, draw nothing.
+  2. Erase ONLY the region that changes, never the whole window. For a clock, draw the static face/ticks ONCE (and on updateEvt), and each second erase just the hands area (or redraw the old hands in white) then draw the new hands — leave the face untouched.
+  3. For genuinely continuous motion (a bouncing ball, a sweep), use an OFFSCREEN BitMap: build a BitMap + its own bits (NewPtr(rowBytes*height)), SetPort to a GrafPort pointed at it, draw the frame there, then CopyBits(&off.portBits, &win->portBits, &r, &r, srcCopy, 0L) to blit it in one pass — no flicker. Erase only within the offscreen.
+  4. updateEvt must redraw from model state (BeginUpdate; draw everything; EndUpdate) — that's the ONLY place a full repaint belongs.
+  Gate all animation on TickCount in the event loop (null events), and give WaitNextEvent a sleep of ~5-15 ticks so you're not spinning.
 - For sound: SysBeep(1) is always safe. (Avoid the Sound Manager unless asked; on the Plus only simple square-wave via SysBeep is reliable from Retro68.)
 - NO networking, NO files unless asked (if asked: classic File Manager - Create/FSOpen/FSWrite/FSClose on the default volume).
 - Mouse: GetMouse(&pt) (local coords), Button(), StillDown(), WaitMouseUp() for drag interactions.
@@ -46,6 +51,7 @@ HARD CONSTRAINTS:
   NumToString(longVal, str255); StringToNum(str255, &longVal); MoveTo(h, v); LineTo(h, v); Line(dh, dv);
   InvertRect/EraseRect/PaintRect/FrameRect take (const Rect *). FillRect(&r, &qd.gray).
   GlobalToLocal(&pt) before content hit-testing of ev->where.
+- Retro68's multiversal headers use the NEWER Universal-Interfaces names, NOT the old Inside Macintosh ones. If you reference a function the headers don't declare you get "implicit declaration" and the build FAILS. Known renames you must respect: date/time is SecondsToDate / DateToSeconds (NOT Secs2Date / Date2Secs); read the clock with GetDateTime(&secs) then SecondsToDate(secs,&dt) — never GetTime() (declared but not inline → link error). When unsure, prefer the calls shown in the skeleton and this prompt over half-remembered classic names.
 
 QUALITY BAR: the app should feel like real 1986 shareware — a proper window title, sensible layout, instructions visible in the window or About, satisfying interaction. Scope it so the whole thing fits in 200-700 lines. If the wish is ambiguous, make the obvious fun choice; never ask questions.
 

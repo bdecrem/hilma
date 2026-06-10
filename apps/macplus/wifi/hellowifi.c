@@ -89,7 +89,7 @@ static short FindAfter(const unsigned char *b, short len, const char *nd){ short
 static void SendBytes(const char *s, long n){ long c=n; if(gPortOpen)FSWrite(gOutRef,&c,(Ptr)s); }
 static void MuxSendRaw(const char *bytes, long n){ SendBytes(bytes,n); }    /* muxclient.inc hook */
 static void Drain(void){ long a,c; if(!gPortOpen)return; while(SerGetBuf(gInRef,&a)==noErr&&a>0){c=a;if(c>(long)sizeof(gSerBuf))c=sizeof(gSerBuf);FSRead(gInRef,&c,gSerBuf);} }
-static short CaptureFor(short ticks, unsigned char *out, short cap){ unsigned long dl=TickCount()+(unsigned long)ticks; short tot=0; long a,c; while((long)(TickCount()-dl)<0){ if(SerGetBuf(gInRef,&a)==noErr&&a>0){c=a;if(c>(long)sizeof(gSerBuf))c=sizeof(gSerBuf);if(FSRead(gInRef,&c,gSerBuf)==noErr){short i;for(i=0;i<(short)c;i++)if(tot<cap)out[tot++]=(unsigned char)gSerBuf[i];}}} return tot; }
+static short CaptureFor(short ticks, unsigned char *out, short cap){ unsigned long dl=TickCount()+(unsigned long)ticks; short tot=0; long a,c; while((long)(TickCount()-dl)<0){ SystemTask(); if(SerGetBuf(gInRef,&a)==noErr&&a>0){c=a;if(c>(long)sizeof(gSerBuf))c=sizeof(gSerBuf);if(FSRead(gInRef,&c,gSerBuf)==noErr){short i;for(i=0;i<(short)c;i++)if(tot<cap)out[tot++]=(unsigned char)gSerBuf[i];}}} return tot; }
 static Boolean OpenSerial(void){ SerShk shk; if(gPortOpen)return true; if(OpenDriver("\p.AOut",&gOutRef)!=noErr)return false; if(OpenDriver("\p.AIn",&gInRef)!=noErr)return false; SerSetBuf(gInRef,(Ptr)gSerRing,(short)sizeof(gSerRing)); SerReset(gOutRef,kBaud);SerReset(gInRef,kBaud); shk.fXOn=0;shk.fCTS=0;shk.xOn=0;shk.xOff=0;shk.errs=0;shk.evts=0;shk.fInX=0;shk.null=0; SerHShake(gOutRef,&shk); gPortOpen=true; return true; }
 
 /* ---- mux_rx callbacks ---- */
@@ -167,6 +167,23 @@ static void DrawScreen(void)
 /* feed leftover post-CONNECT bytes */
 static void FeedByteToRx(unsigned char b){ MuxRxFeed(&gRx,&b,1); }
 
+/* Return the modem to COMMAND mode so a fresh AT probe works. After a prior
+ * run the modem is online (connected to the mux), so "AT" would just travel to
+ * the mux as data and never get an "OK" — that's the "no OK to AT" on re-run.
+ * Hayes escape needs ~1s of guard silence before and after "+++". */
+static void HangUp(void)
+{
+    long t;
+    if(!gPortOpen) return;
+    if(gConnected){ MuxClose(CH_ECHO); MuxClose(CH_TALK); MuxClose(CH_DIAG); }
+    Delay(70,&t);                       /* >1s guard before escape */
+    SendBytes("+++",3);                 /* escape to command mode (no CR) */
+    Delay(70,&t);                       /* >1s guard after escape */
+    Drain(); SendBytes("ATH\r",4);      /* hang up the connection */
+    CaptureFor(90,gCap,sizeof(gCap));
+    gConnected=false;
+}
+
 static Boolean DialMux(void)
 {
     char cmd[64]; short n=0, got, tries;
@@ -195,6 +212,10 @@ static void RunTest(void)
     DiagInit();
     DiagSetFile(gBootVRef);                 /* SD fallback */
     DiagLog("BOOT","HelloWiFi bring-up starting");
+
+    /* if a prior run left us online, drop back to command mode first so the
+     * AT probe below actually reaches the modem (fixes "no OK to AT" on re-run) */
+    if (gConnected || gPortOpen) { DiagLog("RESET","hanging up prior session"); HangUp(); }
 
     if (!DialMux()) { gVerdict = -1; DiagLog("RESULT","FAILED before mux - sad face"); DiagFlush(); DrawScreen(); return; }
 

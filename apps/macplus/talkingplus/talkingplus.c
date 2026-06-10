@@ -59,6 +59,10 @@
 #define kTalkSay  3
 /* 4 sep */
 #define kTalkTest 5
+/* 6 sep */
+#define kTalkVoice 7   /* opt-in: open the MacinTalk driver (off by default — it
+                          bangs the sound hardware directly and freezes the mouse
+                          on a real Plus until reboot; see OpenSpeech). */
 
 /* ---- Settings dialog (talkingplus.r DLOG/DITL 128) ---- */
 #define kDlgSettings 128
@@ -139,6 +143,7 @@ static unsigned long gNextBlink = 0;
 static short   gSpeechRef = 0;          /* .SPEECH driver refNum, 0 = none */
 static short   gMacinTalkResFile = -1;
 static Boolean gCanSpeak = false;
+static Boolean gVoiceOn  = false;       /* user opted into MacinTalk this session */
 
 /* parser owns these (talk_rx.inc, included after callbacks) */
 static short gRxState;
@@ -459,6 +464,29 @@ static void CloseSpeech(void)
     gCanSpeak = false;
 }
 
+/* User opt-in for the real MacinTalk voice. Off by default because MacinTalk
+ * directly bangs the sound hardware and freezes the mouse on a real Plus until
+ * reboot. With it off the character mimes (bubble + mouth-flap), which is
+ * mouse-safe. The menu item is check-marked while on. */
+static void ToggleVoice(void)
+{
+    if (gVoiceOn) {
+        CloseSpeech();
+        gVoiceOn = false;
+        CheckItem(gTalkM, kTalkVoice, false);
+        SetStatus("voice off - he mimes (mouse-safe)");
+    } else {
+        OpenSpeech();                      /* opens MacinTalk + the .SPEECH driver */
+        if (gCanSpeak) {
+            gVoiceOn = true;
+            CheckItem(gTalkM, kTalkVoice, true);
+            SetStatus("MacinTalk ON - heads up: speaking may freeze the mouse til reboot");
+        } else {
+            SetStatus("no MacinTalk file found - still miming");
+        }
+    }
+}
+
 /* Speak one phoneme C-string synchronously (PBWrite to .SPEECH). Blocks until
  * the word finishes - the documented MacinTalk calling convention. */
 static void SpeakPhonemes(const char *ph)
@@ -630,6 +658,7 @@ static short CaptureFor(short ticks, unsigned char *out, short cap)
     unsigned long deadline = TickCount() + (unsigned long)ticks;
     short total = 0; long avail, cnt;
     while ((long)(TickCount() - deadline) < 0) {
+        SystemTask();   /* keep cursor/DAs alive during the blocking wait */
         if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
             cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
             if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
@@ -706,7 +735,7 @@ static Boolean ModemAlive(void)
 }
 static Boolean JoinWiFi(void)
 {
-    char cmd[600]; short n, got; char ssidC[256], passC[256];
+    static char cmd[600]; static char ssidC[256], passC[256]; short n, got;
     if (gCfg.ssid[0] == 0) { SetStatus("no SSID set"); return false; }
     if (!OpenSerPort()) return false;
     SetStatus("joining WiFi...");
@@ -721,7 +750,7 @@ static Boolean JoinWiFi(void)
 }
 static Boolean DialAgent(void)
 {
-    char cmd[320]; short n, got = 0; char hostC[256]; unsigned long deadline;
+    static char cmd[320]; static char hostC[256]; short n, got = 0; unsigned long deadline;
     if (!OpenSerPort()) return false;
     SetStatus("connecting...");
     if (!ModemAlive()) { SetStatus("modem did not answer AT @ this baud"); return false; }
@@ -732,6 +761,7 @@ static Boolean DialAgent(void)
     deadline = TickCount() + 600;
     while ((long)(TickCount() - deadline) < 0) {
         long avail, cnt;
+        SystemTask();   /* keep cursor/DAs alive while waiting for CONNECT */
         if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
             cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
             if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
@@ -886,7 +916,7 @@ static Boolean DoPromptDialog(char *out, short cap)
 }
 static void DoTellHim(void)
 {
-    char topic[200]; char cmd[210]; short n = 0;
+    static char topic[200]; static char cmd[210]; short n = 0;
     if (!DoPromptDialog(topic, sizeof(topic))) return;
     CatStr(cmd, &n, "SAY "); CatStr(cmd, &n, topic); cmd[n] = 0;
     SendCmd(cmd);
@@ -930,6 +960,7 @@ static void DoMenu(long sel)
 #else
                 case kTalkTest: SetStatus("(test line is a Mini vMac build thing)"); break;
 #endif
+                case kTalkVoice: ToggleVoice(); break;
             }
             break;
     }
@@ -975,7 +1006,7 @@ static void SetUpMenus(void)
     gFileM = NewMenu(kFileMenu, "\pFile"); AppendMenu(gFileM, "\pQuit/Q"); InsertMenu(gFileM, 0);
     gEditM = NewMenu(kEditMenu, "\pEdit"); AppendMenu(gEditM, "\pUndo/Z;(-;Cut/X;Copy/C;Paste/V;Clear"); InsertMenu(gEditM, 0);
     gConnM = NewMenu(kConnMenu, "\pConnection"); AppendMenu(gConnM, "\pConnect/K;Disconnect;(-;Settings..."); InsertMenu(gConnM, 0);
-    gTalkM = NewMenu(kTalkMenu, "\pTalk"); AppendMenu(gTalkM, "\pWake Him Up/W;Read the News/J;Tell Him Something.../T;(-;Say Test Line"); InsertMenu(gTalkM, 0);
+    gTalkM = NewMenu(kTalkMenu, "\pTalk"); AppendMenu(gTalkM, "\pWake Him Up/W;Read the News/J;Tell Him Something.../T;(-;Say Test Line;(-;Use MacinTalk Voice"); InsertMenu(gTalkM, 0);
     DrawMenuBar();
 }
 static void SetUpWindow(void)
@@ -1021,7 +1052,10 @@ int main(void)
     EventRecord ev;
     InitToolbox(); SetUpMenus(); SetUpWindow();
     ShowSplash(); PrefsLocate();
-    OpenSpeech();
+    /* NOTE: do NOT open MacinTalk at launch. Its driver bangs the sound hardware
+       directly and leaves the Plus's VIA in a state that freezes a mouse axis
+       until reboot (Apple PT-22: "no solutions to this incompatibility"). Start
+       miming; the user opts into the voice via Talk > Use MacinTalk Voice. */
     gNextBlink = TickCount() + 120;
 
     gHaveCfg = LoadPrefs();

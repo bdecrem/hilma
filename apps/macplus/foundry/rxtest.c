@@ -136,6 +136,51 @@ int main(int argc, char **argv)
     feed("FNDBIN 256 0\r\nZZZZ\r\n");
     check("bad hex detected", gLastErr[0] != 0 && gRxState == FRX_IDLE);
 
+    /* ---- 6. adversarial fuzz: every malformed frame must abort-or-stay-idle,
+     *        never run away or leave the parser stuck mid-delivery. These are
+     *        the inputs a flaky 9600-baud modem link can actually produce. ---- */
+    gLastErr[0] = 0; gDone = 0;
+    feed("FNDBIN 99999999 0\r\n");                 /* total way over the 900000 cap */
+    check("oversized header rejected", strstr(gLastErr, "bad delivery header") != NULL && gRxState == FRX_IDLE);
+
+    gLastErr[0] = 0;
+    feed("FNDBIN 256 0\r\n");                       /* valid header... */
+    {
+        int i; for (i = 0; i < 400; i++) FeedRxByte('A');  /* ...then a hex line longer than FRX_LINEMAX */
+        FeedRxByte('\r'); FeedRxByte('\n');
+    }
+    check("overlong hex line rejected", strstr(gLastErr, "too long") != NULL && gRxState == FRX_IDLE);
+
+    gLastErr[0] = 0;
+    feed("FNDBIN 256 0\r\nABC\r\n");                /* odd-length hex line */
+    check("odd hex line rejected", strstr(gLastErr, "odd hex") != NULL && gRxState == FRX_IDLE);
+
+    gLastErr[0] = 0; gDone = 0;
+    feed("FNDBIN 4 0\r\n");                          /* promise 4, send 256 -> overrun */
+    { int i; for (i = 0; i < 128; i++) FeedRxByte('4'), FeedRxByte('1'); FeedRxByte('\r'); FeedRxByte('\n'); }
+    check("overrun rejected", strstr(gLastErr, "longer than promised") != NULL && gRxState == FRX_IDLE);
+
+    /* random byte storm: deterministic LCG, no \r\n discipline. Must not crash,
+     * must not get stuck in FRX_BIN forever. */
+    {
+        unsigned long seed = 0x1234567u;
+        long i; int everStuck = 0;
+        for (i = 0; i < 200000; i++) {
+            seed = seed * 1103515245u + 12345u;
+            FeedRxByte((unsigned char)(seed >> 16));
+        }
+        FeedRxByte('\n');                            /* flush any partial line */
+        /* parser is either idle or mid-line, never wedged with a live delivery
+         * that can't be ended — assert it isn't sitting in FRX_BIN with a count */
+        if (gRxState == FRX_BIN && gBinCount > 0 && gBinCount < gBinTotal) everStuck = 1;
+        check("random storm survived (no crash)", 1);
+        check("random storm left no wedged delivery", !everStuck);
+    }
+    /* a clean delivery still works after all that abuse */
+    gDone = 0;
+    { char *f = makeFrame(bin, binLen, 0, 0); feed(f); free(f); }
+    check("clean delivery after fuzz", gDone == 1 && gOutLen == binLen);
+
     printf(gFail ? "\n%d FAILURE(S)\n" : "\nALL RX TESTS PASSED\n", gFail);
     return gFail ? 1 : 0;
 }

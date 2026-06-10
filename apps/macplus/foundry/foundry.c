@@ -281,12 +281,22 @@ static void MBAbortFile(void)
     if (gMBOpen) { FSDelete(gMBName, 0); gMBOpen = false; }
 }
 
+/* Read a 4-byte OSType out of the MacBinary header WITHOUT a misaligned long
+ * read: gMBHead[65]/[69] land on odd addresses, and *(OSType*)oddAddr is an
+ * address error (instant bomb) on the 68000. Assemble it big-endian by byte. */
+static OSType MBHeadType(short off)
+{
+    return ((OSType)gMBHead[off] << 24) | ((OSType)gMBHead[off + 1] << 16) |
+           ((OSType)gMBHead[off + 2] << 8) | (OSType)gMBHead[off + 3];
+}
+
 static OSErr MBCreateUnique(void)
 {
     OSErr err;
     short tryN;
     Str255 base;
     short i;
+    OSType creator = MBHeadType(69), ftype = MBHeadType(65);
     for (i = 0; i <= gMBName[0]; i++) base[i] = gMBName[i];
     for (tryN = 0; tryN <= 8; tryN++) {
         if (tryN > 0) {
@@ -298,7 +308,7 @@ static OSErr MBCreateUnique(void)
                 gMBName[gMBName[0]] = (unsigned char)('1' + tryN);
             }
         }
-        err = Create(gMBName, 0, *(OSType *)&gMBHead[69], *(OSType *)&gMBHead[65]);
+        err = Create(gMBName, 0, creator, ftype);
         if (err == noErr) return noErr;
         if (err != dupFNErr) return err;
     }
@@ -521,6 +531,7 @@ static short CaptureFor(short ticks, unsigned char *out, short cap)
     unsigned long deadline = TickCount() + (unsigned long)ticks;
     short total = 0; long avail, cnt;
     while ((long)(TickCount() - deadline) < 0) {
+        SystemTask();   /* keep cursor/DAs alive during the blocking wait */
         if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
             cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
             if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
@@ -617,8 +628,7 @@ static Boolean ModemAlive(void)
 
 static Boolean JoinWiFi(void)
 {
-    char cmd[600]; short n; short got;
-    char ssidC[256], passC[256];
+    static char cmd[600]; static char ssidC[256], passC[256]; short n; short got;
 
     if (gCfg.ssid[0] == 0) { SetStatus("no SSID set"); return false; }
     if (!OpenSerPort()) return false;
@@ -648,8 +658,7 @@ static Boolean JoinWiFi(void)
 
 static Boolean DialAgent(void)
 {
-    char cmd[320]; short n; short got = 0;
-    char hostC[256];
+    static char cmd[320]; static char hostC[256]; short n; short got = 0;
     unsigned long deadline;
 
     if (!OpenSerPort()) return false;
@@ -673,6 +682,7 @@ static Boolean DialAgent(void)
     deadline = TickCount() + 600;
     while ((long)(TickCount() - deadline) < 0) {
         long avail, cnt;
+        SystemTask();   /* keep cursor/DAs alive while waiting for CONNECT */
         if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
             cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
             if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
@@ -738,7 +748,7 @@ static void SendMake(const char *wish)
     LoadTestFrame();
     return;
 #else
-    char cmd[280]; short n = 0;
+    static char cmd[280]; short n = 0;
     if (!gConnected) { SetStatus("not connected - use Connection > Connect"); SysBeep(1); return; }
     if (gRxState == FRX_BIN) { SetStatus("still receiving - wait"); SysBeep(1); return; }
     CatStr(cmd, &n, "MAKE ");
@@ -746,7 +756,7 @@ static void SendMake(const char *wish)
     cmd[n] = 0;
     AddLog("");
     {
-        char b[280]; short n2 = 0;
+        static char b[280]; short n2 = 0;
         CatStr(b, &n2, "> ");
         CatStr(b, &n2, wish);
         b[n2] = 0;
@@ -961,7 +971,7 @@ static Boolean DoPromptDialog(char *out, short cap)
 
 static void DoNewApp(void)
 {
-    char wish[240];
+    static char wish[240];
     if (!DoPromptDialog(wish, sizeof(wish))) return;
     SendMake(wish);
 }
