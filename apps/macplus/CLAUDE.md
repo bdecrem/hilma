@@ -269,15 +269,14 @@ by side:
 | 2325 | Macinclaude Paint (`atkinson/`) | prompt → image → 1-bit dither → progressive blit |
 | 2326 | Macinclaude Surf (`surf/`) | reader-mode web browser |
 | 2327 | Macinclaude Foundry (`foundry/`) | describe an app → Claude writes + Retro68 compiles it → delivered as a real APPL onto the disk |
-| 2328 | Macinclaude Jukebox (`jukebox/`) | describe a song → Claude composes → the Plus sings it (square-wave synth) with karaoke + bouncing ball |
 | 2329 | The Talking Plus (`talkingplus/`) | a sardonic 1-bit character who speaks aloud via MacinTalk; Claude writes his lines from real data |
 
-The mini-side agents are `agent-foundry/`, `agent-jukebox/`, `agent-moose/` (each a standalone
+The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone
 `node:net` TCP server — **no socat/pty**, which sidesteps the echo/ONLCR traps the Surf agent hit).
 All four serial lessons from Surf (separate SerSetBuf ring vs FSRead scratch; paced output to wire
 speed; CONNECT-tail handoff into the parser; raw transport) are baked into every new app.
 
-**Status (2026-06-09):** Foundry, Jukebox, and Talking Plus are **built, compile clean (both normal
+**Status (2026-06-09):** Foundry and Talking Plus are **built, compile clean (both normal
 and `*_TEST` Mini vMac builds), and fully host-tested** (each has a shared `*_rx.inc` parser driven
 by an `rxtest.c`, and each agent has a passing `npm run selftest` incl. a live Claude round-trip).
 The Mini vMac *visual/audio* drive-through for these three is the one remaining step (the iMac
@@ -297,19 +296,6 @@ additive checksum verified before keeping the file). **Runs on the machine with 
 toolchain** (the iMac today, `192.168.7.189:2327`; moves to the mini once the toolchain lands there).
 Verified: agent selftest compiled a real "DiceRoller" (Claude, clean on attempt 2); `rxtest` 13/13
 against that real .bin.
-
-#### Macinclaude Jukebox (`jukebox/` + `agent-jukebox/`) — the Plus sings
-
-Type a vibe → Claude composes an original monophonic melody + timed lyrics (`agent-jukebox/score.ts`
-parses note-names+beats → MIDI + Mac ticks), streamed as a compact `JBXSON` score frame. `jukebox.c`
-performs it: the Sound Manager **square-wave synth** (`SndNewChannel(noteSynth)` + `freqCmd`/
-`quietCmd`, event-loop-clocked off `TickCount` so audio and screen can't drift) plays the melody
-while lyrics display karaoke-style with a per-beat **bouncing ball**. Mono, 1 voice today; the
-wavetable synth (up to 4 voices / different timbres) is the obvious upgrade, and the **printer port
-is free for serial-MIDI out** to sequence real gear (Bart's a producer — that's the future wow).
-Embedded test song = Daisy Bell. Verified: live compose ("The Little Mac That Learned to Sing", 149
-notes); `rxtest` 15/15. **PARKED** mid-build at Bart's pivot to Talking Plus — see the task list; the
-only remaining work is the emulator visual/audio drive-through + commit.
 
 #### The Talking Plus (`talkingplus/` + `agent-moose/`) — MacinTalk homage to the Talking Moose
 
