@@ -1,0 +1,14 @@
+{
+  "name": "imessage-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "iMessage client for the Macintosh Plus. The mini reads ~/Library/Messages/chat.db and sends via AppleScript (Messages.app); the Plus shows a conversation list + thread and composes replies over the persistent-WiFi MUX link.",
+  "bin": { "imessage-agent": "src/main.ts" },
+  "scripts": {
+    "start": "tsx src/main.ts --listen 2328",
+    "stdin": "tsx src/main.ts",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "devDependencies": { "@types/node": "latest", "tsx": "latest", "typescript": "latest" }
+}

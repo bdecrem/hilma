@@ -269,6 +269,7 @@ by side:
 | 2325 | Macinclaude Paint (`atkinson/`) | prompt → image → 1-bit dither → progressive blit |
 | 2326 | Macinclaude Surf (`surf/`) | reader-mode web browser |
 | 2327 | Macinclaude Foundry (`foundry/`) | describe an app → Claude writes + Retro68 compiles it → delivered as a real APPL onto the disk |
+| 2328 | Macinclaude iMessage (`imessage/`) | read + reply to iMessages from the Plus; mini reads chat.db and sends via AppleScript |
 | 2329 | The Talking Plus (`talkingplus/`) | a sardonic 1-bit character who speaks aloud via MacinTalk; Claude writes his lines from real data |
 
 The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone
@@ -320,6 +321,45 @@ driver resources). Verified: agent selftest, live — e.g. *"Oh good, Bart, you 
 have been awake since 1986, but sure, take your time."* + valid phonemes; `rxtest` 15/15.
 MacinTalk research + the driver-glue disassembly notes: the driver was pulled to `/tmp` for analysis
 only, not committed.
+
+#### Macinclaude iMessage (`imessage/` + `agent-imessage/`) — texting from a 1986 Mac
+
+Read and reply to iMessages on the Plus. **This is the first app built on the
+persistent-WiFi MUX seam** (the quote-of-the-day app on the iMac is the other
+early adopter): instead of dialing a private agent port like Surf/Atkinson, it
+dials the **multiplexer once** (`192.168.7.50:2330`) and opens a logical channel
+to service `imessage` (`wifi/muxclient.inc` + `wifi/mux_rx.inc`, shared verbatim
+with MuxDemo). When the resident `.WIFI` driver lands, only `DialMux()` gets
+replaced by a driver "give me a channel" call — the channel API
+(`MuxOpen`/`MuxSend`/`MuxData`) is unchanged. The seam is marked `THE .WIFI SEAM`
+in `imessage.c`.
+
+- **Plus side (`imessage.c` + `imessage.r`):** a two-pane UI — conversation list
+  on the left (click to select), the selected thread on the right (word-wrapped,
+  outgoing right-aligned / incoming left, scrollbar), and a modal **Reply…**
+  (Cmd-R) compose box (inline compose field is a future step). Settings/prefs
+  ported from Surf (default mux port **2330**, host `192.168.7.50`, 9600). The
+  payload parser is `im_rx.inc`, shared verbatim with `rxtest.c`.
+- **Mini side (`agent-imessage/`, port 2328):** a `node:net` server (no socat).
+  Reads `~/Library/Messages/chat.db` via `sqlite3 -readonly` (with a typedstream
+  decoder for the ~40% of rows whose `text` is NULL and body lives in
+  `attributedBody`), and **sends via AppleScript** (`osascript` → Messages.app,
+  addressing the existing chat by its GUID). Polls chat.db every 3s and re-pushes
+  the open thread on new mail. Needs **Full Disk Access**; `IMSG_DRY_RUN=1`
+  logs sends instead of texting. See `agent-imessage/README.md`.
+- **Protocol:** `LIST` / `OPEN <idx>` / `SEND <idx> <text>` up; `IMLIST`/`C`,
+  `IMCONV`/`M`/`+`, `IMSTS`/`IMERR`/`IMSENT` down (ASCII, line-capped, paced).
+  `agent-mux` SERVICES maps `imessage -> 127.0.0.1:2328`.
+- **Status (2026-06-10):** built, both builds compile clean (`CODE×9, DLOG×2,
+  DITL×2, SIZE`), agent `selftest` green against real chat.db. **Verified
+  end-to-end through the multiplexer host-side:** LIST returned a real
+  conversation list, OPEN a real thread (attributedBody decoded), and SEND
+  (dry-run) returned `IMSENT` + a refreshed thread. The IM_TEST disk is staged
+  at `~/mac-plus-apps/mctest/IMessageTest.dsk`. **Not yet driven in Mini vMac**
+  (the GUI session was screen-locked — the blocker `wifi/RESUME-ALWAYSON.md`
+  flags). Agent runs hand-started (no LaunchDaemon yet; `agent-surf`'s installer
+  is the template). Sending a real text to a contact is intentionally left for
+  Bart to trigger — the path is verified only in dry-run.
 
 ### Macinclaude Surf (a web browser for the Plus) — `surf/` + `agent-surf/`
 

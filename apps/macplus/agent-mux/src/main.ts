@@ -19,11 +19,12 @@ import {
 } from './protocol.ts';
 
 const SERVICES: Record<string, { host: string; port: number }> = {
-  code:    { host: '127.0.0.1', port: 2324 },
-  paint:   { host: '127.0.0.1', port: 2325 },
-  surf:    { host: '127.0.0.1', port: 2326 },
-  foundry: { host: '127.0.0.1', port: 2327 },
-  talk:    { host: '127.0.0.1', port: 2329 },
+  code:     { host: '127.0.0.1', port: 2324 },
+  paint:    { host: '127.0.0.1', port: 2325 },
+  surf:     { host: '127.0.0.1', port: 2326 },
+  foundry:  { host: '127.0.0.1', port: 2327 },
+  imessage: { host: '127.0.0.1', port: 2328 },
+  talk:     { host: '127.0.0.1', port: 2329 },
   diag:    { host: '127.0.0.1', port: 2331 },  // diagnostic sink — Plus streams logs here
   quote:   { host: '127.0.0.1', port: 2332 },  // quote of the day
   bridge:  { host: '127.0.0.1', port: 2333 },  // OTA app delivery to the Plus
