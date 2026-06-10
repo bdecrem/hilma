@@ -26,7 +26,8 @@ unverifiable-in-emulator part is the resident driver's residency + timing.
 | piece | state |
 |---|---|
 | `agent-mux/` mini multiplexer | **DONE, committed.** selftest 9/9 (framing + live 2-channel relay). `npm start` → :2330 |
-| `wifi/mux_rx.inc` | **DONE** — 68k MUX parser, shared with driver + host test (host test not yet written) |
+| `wifi/mux_rx.inc` | **DONE** — 68k MUX parser, shared with driver + demo |
+| `wifi/muxclient.inc` + `wifi/muxdemo.c` | **DONE + verified (2026-06-10).** Multiplexer proven end-to-end host-side: 2 channels (talk + diag) over one mux connection, real Claude reply on the talk channel. MuxDemo 68k app compiles + staged (`mctest/MuxDemo.dsk`); emulator drive-through pending a screen unlock. This is the data-path the resident driver will make persistent. |
 | diagnostic stack (`diag/`, `agent-diag/`) | **DONE + verified (2026-06-10).** SCREEN + WIRE sinks confirmed end-to-end in Mini vMac (lines streamed Plus→mini live, no SD round-trip). SD sink unconfirmed in emulator only because the 800K boot floppy is full (3KB free → Create fails); works on the real Plus's 1GB disk. |
 | `.WIFI` driver (`wifi/wifidrvr.c`) | **NOT STARTED.** Build via Retro68 `--mac-flat` code-resource + Rez (templates: `~/mac-plus-apps/Retro68/Samples/SystemExtension` = INIT, `Samples/WDEF` = code resource w/ custom entry point) |
 | INIT, DA, client lib, app conversion | **NOT STARTED** (task #14) |
