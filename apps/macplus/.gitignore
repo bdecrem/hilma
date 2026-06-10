@@ -11,3 +11,10 @@ build/
 # stray macOS resource-fork sidecars
 ._*
 .DS_Store
+
+# Contacts DB is PII — never commit it, wherever it lands
+*.abcddb
+*.abcddb-wal
+*.abcddb-shm
+*.abbu
+*.abbu.zip
