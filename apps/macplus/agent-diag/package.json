@@ -1,0 +1,10 @@
+{
+  "name": "macinclaude-diag-sink",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Macinclaude diagnostic sink: a tiny TCP server the Plus streams its logs to over the serial link, so hardware debugging never needs an SD-card round-trip. Timestamps every line and appends to a dated file + stdout.",
+  "bin": { "macinclaude-diag-sink": "src/main.ts" },
+  "scripts": { "start": "tsx src/main.ts --listen 2331" },
+  "devDependencies": { "@types/node": "latest", "tsx": "latest", "typescript": "latest" }
+}
