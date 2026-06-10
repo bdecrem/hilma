@@ -294,7 +294,6 @@ by side:
 | 2326 | Macinclaude Surf (`surf/`) | reader-mode web browser |
 | 2327 | Macinclaude Foundry (`foundry/`) | describe an app → Claude writes + Retro68 compiles it → delivered as a real APPL onto the disk |
 | 2328 | Macinclaude iMessage (`imessage/`) | read + reply to iMessages from the Plus; mini reads chat.db and sends via AppleScript |
-| 2329 | The Talking Plus (`talkingplus/`) | a sardonic 1-bit character who speaks aloud via MacinTalk; Claude writes his lines from real data |
 
 The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone
 `node:net` TCP server — **no socat/pty**, which sidesteps the echo/ONLCR traps the Surf agent hit).

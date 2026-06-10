@@ -113,8 +113,11 @@ static Boolean gHaveCfg = false;
 static short   gPrefVRef = 0;
 
 /* ---- window geometry ---- */
-#define WIN_W 496
-#define WIN_H 320
+/* The Plus screen is 512x342 with a 20px menu bar. The window opens at top=40
+ * (title bar fills 20-40), so the content must be <= 342-40 = 302 tall to keep
+ * the bottom (and the scrollbar's down-arrow) on screen. */
+#define WIN_W 504
+#define WIN_H 300
 #define LIST_W 150                      /* conversation list pane width */
 #define SBAR_W 16                       /* thread scrollbar */
 #define DIV_X  LIST_W                    /* divider between panes */
