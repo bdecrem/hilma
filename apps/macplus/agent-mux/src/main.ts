@@ -26,6 +26,7 @@ const SERVICES: Record<string, { host: string; port: number }> = {
   talk:    { host: '127.0.0.1', port: 2329 },
   diag:    { host: '127.0.0.1', port: 2331 },  // diagnostic sink — Plus streams logs here
   quote:   { host: '127.0.0.1', port: 2332 },  // quote of the day
+  bridge:  { host: '127.0.0.1', port: 2333 },  // OTA app delivery to the Plus
 };
 // "echo" is handled internally (no backend) — a round-trip test for bring-up.
 

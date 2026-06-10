@@ -1,0 +1,10 @@
+{
+  "name": "macinclaude-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Bridge agent: watches an outbox and pushes MacBinary app binaries to the Plus over WiFi (mux channel 'bridge') as FND frames, for over-the-air app delivery with no SD-card shuttling.",
+  "bin": { "macinclaude-bridge": "src/main.ts" },
+  "scripts": { "start": "tsx src/main.ts --listen 2333" },
+  "devDependencies": { "@types/node": "latest", "tsx": "latest", "typescript": "latest" }
+}
