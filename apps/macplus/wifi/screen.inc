@@ -5,17 +5,20 @@
  * Whatever app is frontmost, when a "GRAB" line arrives on the reserved screen
  * channel we snapshot the 512x342 1-bit screen (qd.screenBits), PackBits-compress
  * it (Apple TN1023 — the same scheme MacPaint/PICT use), and stream it back as
- * BINARY on the screen channel:
- *   SCRB <w> <h> <rowBytes> <packedLen>\r   header line
- *   then the packed bytes in <=CHUNK pieces, STOP-AND-WAIT: after each piece we
- *   block for a "K\r" ack from the agent before sending the next.
- * The mini's agent-screen un-PackBits it, inverts (Mac 1=black vs PNG 0=black),
- * and writes a 1-bit PNG.
+ * HEX on the screen channel:
+ *   SCRB <w> <h> <rowBytes> <packedLen>\r   header line (packedLen = RAW bytes)
+ *   then packedLen*2 uppercase hex chars in <=CHUNK*2 pieces, STOP-AND-WAIT:
+ *   after each piece we block for a "K\r" ack from the agent before the next.
+ * The mini's agent-screen hex-decodes, un-PackBits, inverts (Mac 1=black vs PNG
+ * 0=black), and writes a 1-bit PNG.
  *
- * Why binary PackBits, not hex+RLE: the raw frame is only 21,888 bytes; hex
- * doubles it and naive run-length *expands* on the dithered gray desktop. PackBits
- * sends a blank screen in ~342 bytes, the gray desktop in ~684, never expanding
- * past ~1/128 over raw.
+ * Why hex, not raw binary: the RetroWiFi SI dials in telnet mode, and its telnet
+ * layer mangles raw binary on the uplink (0xFF = IAC, CR gets NVT-translated) —
+ * which desyncs the MUX byte-count framing and the frame never arrives. Same
+ * reason Atkinson's image frames are hex. Proven on the real Plus 2026-06-11:
+ * the ASCII header landed, 0 of 6142 binary payload bytes ever did. PackBits
+ * first keeps it small anyway: gray desktop ~684 packed bytes -> ~1.4KB hex,
+ * worst case ~22KB packed -> ~44KB hex (~46s at 9600 baud — fine for a grab).
  *
  * Why stop-and-wait acks: the Plus->modem uplink has NO hardware flow control and
  * the modem's WiFi uplink is slow, so blasting a multi-KB frame overruns the
@@ -27,11 +30,12 @@
  * on-demand "show me the screen" — it's a screenshot, not VNC.
  */
 
-#define SCR_CHUNK   512             /* bytes per stop-and-wait window */
+#define SCR_CHUNK   512             /* RAW bytes per stop-and-wait window (2x on the wire as hex) */
 #define SCR_ACKWAIT 1200            /* ticks (~20s) to wait for a chunk ack */
 
 #define SCR_FBMAX  21888L              /* 64 * 342 — the Plus screen, in bytes */
 static unsigned char gScrPacked[SCR_FBMAX + SCR_FBMAX/128 + 64];   /* PackBits worst case */
+static char gScrHexBuf[SCR_CHUNK * 2];                             /* one chunk, hex-encoded */
 
 /* PackBits-encode src[0..n) into out; returns the packed length. Mirrors the
  * agent's unpackBits exactly: literal packet hdr 0..127 = (len-1); run packet
@@ -103,11 +107,20 @@ static void WIFIScreenGrab(void)
     MuxNumStr(hdr, &hn, packed); hdr[hn] = 0;
     MuxSendLine(WIFI_SCREEN_CHAN, hdr);
 
-    /* stop-and-wait: one chunk, then block for the agent's ack before the next.
-     * If an ack never comes (agent gone / link wedged) we bail so the app frees. */
+    /* stop-and-wait: one hex-encoded chunk, then block for the agent's ack
+     * before the next. If an ack never comes (agent gone / link wedged) we bail
+     * so the app frees. Hex (not raw binary) so the modem's telnet layer can't
+     * eat payload bytes — see the header comment. */
     for (off = 0; off < packed; off += SCR_CHUNK) {
-        long c = packed - off; if (c > SCR_CHUNK) c = SCR_CHUNK;
-        MuxSend(WIFI_SCREEN_CHAN, (const char *)(gScrPacked + off), c);
+        static const char hexd[] = "0123456789ABCDEF";
+        long c = packed - off; long k;
+        if (c > SCR_CHUNK) c = SCR_CHUNK;
+        for (k = 0; k < c; k++) {
+            unsigned char v = gScrPacked[off + k];
+            gScrHexBuf[k * 2]     = hexd[(v >> 4) & 0xF];
+            gScrHexBuf[k * 2 + 1] = hexd[v & 0xF];
+        }
+        MuxSend(WIFI_SCREEN_CHAN, gScrHexBuf, c * 2);
         if (!scrWaitAck(SCR_ACKWAIT)) break;
         SystemTask();
     }

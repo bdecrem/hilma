@@ -135,7 +135,7 @@ If a service is down, check its err log, then `launchctl kickstart -k gui/501/sh
   service so it captures whatever app is frontmost (not live VNC — too slow at
   9600 baud). The service reserves the top mux channel and opens it to `screen`
   on every `WIFIConnect`; `touch ~/.screen-grab` on the mini makes the agent send
-  `GRAB`, the Plus RLE+hex-streams `qd.screenBits` back, and the agent writes a
+  `GRAB`, the Plus PackBits+hex-streams `qd.screenBits` back, and the agent writes a
   1-bit PNG to `~/screen-latest.png`. Needs an app built with the current `wifi.c`
   running on the Plus (older apps don't open the channel).
 

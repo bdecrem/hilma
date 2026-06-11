@@ -9,12 +9,16 @@
  * send "GRAB\r" down that channel; the Plus snapshots qd.screenBits (the whole
  * 512x342 1-bit screen, whatever app is frontmost), PackBits-compresses it, and
  * streams it back as:
- *   SCRB <w> <h> <rowBytes> <packedLen>\r   header line
- *   <packedLen raw PackBits bytes>          count-delimited binary payload
- * We un-PackBits that, invert (Mac 1=black vs PNG 0=black), and write a 1-bit PNG.
+ *   SCRB <w> <h> <rowBytes> <packedLen>\r   header line (packedLen = RAW bytes)
+ *   <packedLen*2 uppercase hex chars>       count-delimited hex payload
+ * We hex-decode, un-PackBits, invert (Mac 1=black vs PNG 0=black), and write a
+ * 1-bit PNG.
  *
- * PackBits (Apple TN1023) keeps a grab tiny: a blank screen is ~342 bytes, the
- * gray desktop ~684, worst-case noise bounded at ~raw size (21,888). No hex.
+ * The payload is hex, not raw binary, because the RetroWiFi SI dials in telnet
+ * mode and its telnet layer mangles binary on the uplink (0xFF = IAC, CR gets
+ * NVT-translated), desyncing the MUX framing — observed on the real Plus
+ * 2026-06-11 (header arrived, 0 payload bytes ever did). PackBits keeps the
+ * grab small anyway: gray desktop ~684 packed bytes -> ~1.4KB hex on the wire.
  *
  * Trigger: touch the trigger file (default ~/.screen-grab). We poll its mtime
  * every second; on change, if the Plus is connected, we fire a GRAB. The PNG
@@ -109,12 +113,13 @@ function buildPng(w: number, h: number, rb: number, frame: Buffer): Buffer {
 /* ---- the Plus connection (one at a time; newest wins) ---- */
 class Plus {
   private buf = Buffer.alloc(0);
-  // null = waiting for a SCRB header line; else collecting `need` packed bytes
-  private hdr: { w: number; h: number; rb: number; need: number } | null = null;
-  private acked = 0;            // payload bytes we've ack'd (stop-and-wait, CHUNK=512)
+  // null = waiting for a SCRB header line; else collecting `hexNeed` hex chars
+  // (need = raw packed bytes from the header; the wire carries need*2 hex chars)
+  private hdr: { w: number; h: number; rb: number; need: number; hexNeed: number } | null = null;
+  private acked = 0;            // hex chars we've ack'd (stop-and-wait, CHUNK raw = CHUNK*2 hex)
   private rxTotal = 0;          // bytes seen since GRAB (diagnostic)
   private lastLog = 0;
-  static readonly CHUNK = 512;
+  static readonly CHUNK = 512;  // RAW bytes per Plus-side chunk (1024 hex chars on the wire)
   private stallTimer: ReturnType<typeof setInterval> | null = null;
   constructor(public sock: net.Socket) {
     sock.setNoDelay(true);
@@ -131,19 +136,19 @@ class Plus {
     let last = -1;
     this.stallTimer = setInterval(() => {
       if (this.hdr && this.buf.length === last) {
-        log(`...stalled: have ${this.buf.length}/${this.hdr.need} payload bytes (rx ${this.rxTotal} total)`);
+        log(`...stalled: have ${this.buf.length}/${this.hdr.hexNeed} hex chars (rx ${this.rxTotal} total)`);
       }
       last = this.hdr ? this.buf.length : -1;
     }, 3000);
     this.sock.write('GRAB\r');
   }
-  /** Stop-and-wait: send one "K\r" for each fully-received 512B chunk (and the
-   *  final partial), so the Plus only sends the next chunk once the modem has
-   *  actually drained this one. */
+  /** Stop-and-wait: send one "K\r" for each fully-received chunk (CHUNK raw
+   *  bytes = CHUNK*2 hex chars; the final chunk may be partial), so the Plus
+   *  only sends the next chunk once the modem has actually drained this one. */
   private ackChunks(): void {
     if (!this.hdr) return;
-    while (this.acked < this.hdr.need) {
-      const next = Math.min(this.acked + Plus.CHUNK, this.hdr.need);
+    while (this.acked < this.hdr.hexNeed) {
+      const next = Math.min(this.acked + Plus.CHUNK * 2, this.hdr.hexNeed);
       if (this.buf.length >= next) { this.sock.write('K\r'); this.acked = next; }
       else break;
     }
@@ -157,7 +162,7 @@ class Plus {
     this.buf = this.buf.length ? Buffer.concat([this.buf, d]) : d;
     if (this.hdr && this.buf.length - this.lastLog >= 1024) {
       this.lastLog = this.buf.length;
-      log(`  payload ${this.buf.length}/${this.hdr.need}B`);
+      log(`  payload ${this.buf.length}/${this.hdr.hexNeed} hex chars`);
     }
     for (;;) {
       if (!this.hdr) {
@@ -168,26 +173,31 @@ class Plus {
         this.buf = this.buf.subarray(cut + 1);
         const m = line.match(/^SCRB\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)$/);
         if (m) {
-          this.hdr = { w: +m[1], h: +m[2], rb: +m[3], need: +m[4] };
-          log(`receiving ${this.hdr.w}x${this.hdr.h} rb=${this.hdr.rb} packed=${this.hdr.need}B`);
+          this.hdr = { w: +m[1], h: +m[2], rb: +m[3], need: +m[4], hexNeed: +m[4] * 2 };
+          log(`receiving ${this.hdr.w}x${this.hdr.h} rb=${this.hdr.rb} packed=${this.hdr.need}B (${this.hdr.hexNeed} hex chars)`);
         }
         // non-header lines (stray status) are ignored
         if (this.buf.length === 0) return;
         continue;
       }
-      // collecting binary payload — ack each completed 512B chunk (stop-and-wait)
+      // collecting hex payload — ack each completed chunk (stop-and-wait)
       this.ackChunks();
-      if (this.buf.length < this.hdr.need) return;
-      const packed = this.buf.subarray(0, this.hdr.need);
-      this.buf = this.buf.subarray(this.hdr.need);
-      const { w, h, rb } = this.hdr;
+      if (this.buf.length < this.hdr.hexNeed) return;
+      const hex = this.buf.subarray(0, this.hdr.hexNeed).toString('latin1');
+      this.buf = this.buf.subarray(this.hdr.hexNeed);
+      const { w, h, rb, need } = this.hdr;
       this.hdr = null;
       if (this.stallTimer) { clearInterval(this.stallTimer); this.stallTimer = null; }
       try {
-        const frame = unpackBits(packed, rb * h);
-        const png = buildPng(w, h, rb, frame);
-        writeFileSync(OUT, png);
-        log(`wrote ${OUT} (${png.length} bytes from ${packed.length}B packed)`);
+        const packed = Buffer.from(hex, 'hex');   // stops at the first non-hex char
+        if (packed.length !== need) {
+          log(`!! hex decode came up short: ${packed.length}/${need} bytes — first 64 chars: ${JSON.stringify(hex.slice(0, 64))}`);
+        } else {
+          const frame = unpackBits(packed, rb * h);
+          const png = buildPng(w, h, rb, frame);
+          writeFileSync(OUT, png);
+          log(`wrote ${OUT} (${png.length} bytes from ${need}B packed / ${hex.length} hex)`);
+        }
       } catch (e) {
         log(`decode/encode failed: ${(e as Error).message}`);
       }

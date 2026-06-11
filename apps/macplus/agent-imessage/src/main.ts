@@ -80,7 +80,7 @@ class Conn {
     if (this.busy) return;
     this.busy = true;
     while (this.queue.length) {
-      try { this.handle(this.queue.shift()!); }
+      try { await this.handle(this.queue.shift()!); }
       catch (e) { this.send(encodeError(e instanceof Error ? e.message : String(e))); }
     }
     this.busy = false;
@@ -105,12 +105,12 @@ class Conn {
     log(`OPEN ${idx} (${c.name}) -> ${msgs.length} messages`);
   }
 
-  private doSend(idx: number, text: string): void {
+  private async doSend(idx: number, text: string): Promise<void> {
     const c = this.convs[idx];
     if (!c) { this.send(encodeError(`no conversation ${idx} - refresh the list`)); return; }
     if (!text) { this.send(encodeError('nothing to send')); return; }
     try {
-      sendIMessage(c.guid, text);
+      await sendIMessage(c.guid, text);
       this.send(encodeSent(idx));
       log(`SEND ${idx} (${c.name}): ${JSON.stringify(text)}`);
       // reflect the just-sent message back by re-pushing the thread
@@ -124,11 +124,11 @@ class Conn {
 
   /* "New" flow: text a recipient with no existing thread, then refresh the list
    * so the freshly-created conversation appears. */
-  private doSendTo(handle: string, text: string): void {
+  private async doSendTo(handle: string, text: string): Promise<void> {
     if (!handle) { this.send(encodeError('no recipient')); return; }
     if (!text) { this.send(encodeError('nothing to send')); return; }
     try {
-      sendIMessageToHandle(handle, text);
+      await sendIMessageToHandle(handle, text);
       log(`SENDTO ${handle}: ${JSON.stringify(text)}`);
       this.send(encodeStatus(`sent to ${handle}`));
       this.seenRowid = maxMessageRowid();
@@ -138,7 +138,7 @@ class Conn {
     }
   }
 
-  private handle(line: string): void {
+  private async handle(line: string): Promise<void> {
     const m = line.match(/^(\S+)\s*(.*)$/s);
     if (!m) return;
     const verb = m[1].toUpperCase();
@@ -149,14 +149,14 @@ class Conn {
       const sp = rest.indexOf(' ');
       const idx = parseInt(sp < 0 ? rest : rest.slice(0, sp), 10);
       const text = sp < 0 ? '' : rest.slice(sp + 1);
-      this.doSend(idx, text);
+      await this.doSend(idx, text);
       return;
     }
     if (verb === 'SENDTO') {
       const sp = rest.indexOf(' ');
       const handle = sp < 0 ? rest : rest.slice(0, sp);
       const text = sp < 0 ? '' : rest.slice(sp + 1);
-      this.doSendTo(handle, text);
+      await this.doSendTo(handle, text);
       return;
     }
     this.send(encodeError(`unknown command ${verb} - try LIST / OPEN <n> / SEND <n> <text> / SENDTO <handle> <text>`));

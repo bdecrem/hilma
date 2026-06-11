@@ -7,13 +7,29 @@
  * IMSG_DRY_RUN=1 short-circuits it (build/verify without texting anyone).
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const execFileP = promisify(execFile);
+
+/* Run osascript ASYNCHRONOUSLY. Synchronous execFileSync was a foot-gun here:
+ * the FIRST send under the launchd agent triggers a macOS Automation consent
+ * prompt on the mini's screen, and until someone clicks it osascript blocks —
+ * a synchronous call froze the agent's ENTIRE single-threaded event loop for the
+ * full timeout, so every Plus client saw a dead "Sending…". Async keeps the loop
+ * live (other reads/clients keep working) and the timeout returns a clean IMERR.
+ * 15s is plenty for a real send; a blocked-on-permission call fails fast enough
+ * that the Plus isn't left hanging. If you get ETIMEDOUT / "not authorized",
+ * grant Automation control of Messages to the agent's node binary on the mini. */
+async function runOsascript(script: string): Promise<void> {
+  await execFileP('/usr/bin/osascript', ['-e', script], { timeout: 15000, killSignal: 'SIGKILL' });
+}
 
 function asAppleStr(s: string): string {
   return '"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
 }
 
-export function sendIMessage(chatGuid: string, text: string): void {
+export async function sendIMessage(chatGuid: string, text: string): Promise<void> {
   if (process.env.IMSG_DRY_RUN) {
     console.error(`[imessage DRY_RUN] would send to ${chatGuid}: ${JSON.stringify(text)}`);
     return;
@@ -22,7 +38,7 @@ export function sendIMessage(chatGuid: string, text: string): void {
     `tell application "Messages"\n` +
     `  send ${asAppleStr(text)} to chat id ${asAppleStr(chatGuid)}\n` +
     `end tell`;
-  execFileSync('/usr/bin/osascript', ['-e', script], { timeout: 30000 });
+  await runOsascript(script);
 }
 
 /* Start a NEW conversation with a handle that has no existing chat (the "New"
@@ -30,7 +46,7 @@ export function sendIMessage(chatGuid: string, text: string): void {
  * participant directly: try iMessage (blue) first, fall back to SMS (green) for
  * numbers not on iMessage. SMS routing requires Text Message Forwarding on for
  * this Mac. */
-export function sendIMessageToHandle(handle: string, text: string): void {
+export async function sendIMessageToHandle(handle: string, text: string): Promise<void> {
   if (process.env.IMSG_DRY_RUN) {
     console.error(`[imessage DRY_RUN] would start a NEW chat to ${handle}: ${JSON.stringify(text)}`);
     return;
@@ -46,5 +62,5 @@ export function sendIMessageToHandle(handle: string, text: string): void {
     `    send ${t} to participant ${h} of svc\n` +
     `  end try\n` +
     `end tell`;
-  execFileSync('/usr/bin/osascript', ['-e', script], { timeout: 30000 });
+  await runOsascript(script);
 }
