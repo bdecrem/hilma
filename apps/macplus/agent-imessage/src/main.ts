@@ -41,6 +41,7 @@ class Conn {
   private queue: string[] = [];
   private convs: Conversation[] = [];
   private openRowid: number | null = null;
+  private openConv: Conversation | null = null;
   private seenRowid = 0;
 
   constructor(private write: (b: Buffer) => void) {
@@ -100,15 +101,25 @@ class Conn {
     const c = this.convs[idx];
     if (!c) { this.send(encodeError(`no conversation ${idx} - refresh the list`)); return; }
     this.openRowid = c.rowid;
+    this.openConv = c;
     const msgs = getMessages(c.rowid, THREAD_LIMIT);
     this.send(encodeConversation(idx, c.name, msgs));
     log(`OPEN ${idx} (${c.name}) -> ${msgs.length} messages`);
   }
 
   private async doSend(idx: number, text: string): Promise<void> {
-    const c = this.convs[idx];
-    if (!c) { this.send(encodeError(`no conversation ${idx} - refresh the list`)); return; }
+    // Address the OPENed conversation, never convs[idx]: incoming mail reorders
+    // the list (tick() refreshes), so between the client's OPEN and its SEND the
+    // same row index can silently rebind to a different chat — observed live: a
+    // reply typed into the open "Bart Decrem" thread delivered to the group chat
+    // that had moved into row 0. The reply bar on the Plus always replies to the
+    // open thread, so the open conversation is the only correct target.
+    const c = this.openConv;
+    if (!c) { this.send(encodeError('no open conversation - open a thread first')); return; }
     if (!text) { this.send(encodeError('nothing to send')); return; }
+    if (this.convs[idx]?.rowid !== c.rowid) {
+      log(`SEND idx ${idx} drifted (list reordered) — sending to open thread "${c.name}"`);
+    }
     try {
       await sendIMessage(c.guid, text);
       this.send(encodeSent(idx));

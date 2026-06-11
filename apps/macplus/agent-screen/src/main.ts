@@ -125,6 +125,8 @@ class Plus {
     sock.setNoDelay(true);
     sock.on('data', (d) => this.feed(d));
     sock.on('error', () => {});
+    // a dead session must not keep its stall timer ticking (ghost log spam)
+    sock.on('close', () => { if (this.stallTimer) { clearInterval(this.stallTimer); this.stallTimer = null; } });
   }
   grab(): void {
     log('GRAB -> Plus');
