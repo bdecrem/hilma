@@ -7,12 +7,14 @@
  * The WiFi system service on the Plus opens a channel named "screen" at connect
  * time (see wifi/screen.inc) and keeps it idle. When we want to see the Plus we
  * send "GRAB\r" down that channel; the Plus snapshots qd.screenBits (the whole
- * 512x342 1-bit screen, whatever app is frontmost), RLE+hex encodes it, and
+ * 512x342 1-bit screen, whatever app is frontmost), PackBits-compresses it, and
  * streams it back as:
- *   SCR <w> <h> <rowBytes>\r
- *   <hex run pairs>\r   (CCBB CCBB ... = count, raw byte)
- *   SCREND\r
- * We un-RLE that, invert (Mac 1=black vs PNG 0=black), and write a 1-bit PNG.
+ *   SCRB <w> <h> <rowBytes> <packedLen>\r   header line
+ *   <packedLen raw PackBits bytes>          count-delimited binary payload
+ * We un-PackBits that, invert (Mac 1=black vs PNG 0=black), and write a 1-bit PNG.
+ *
+ * PackBits (Apple TN1023) keeps a grab tiny: a blank screen is ~342 bytes, the
+ * gray desktop ~684, worst-case noise bounded at ~raw size (21,888). No hex.
  *
  * Trigger: touch the trigger file (default ~/.screen-grab). We poll its mtime
  * every second; on change, if the Plus is connected, we fire a GRAB. The PNG
@@ -51,14 +53,13 @@ function chunk(type: string, data: Buffer): Buffer {
   return Buffer.concat([len, td, crc]);
 }
 /** raw = h scanlines, each (1 + bytesPerRow) bytes: filter byte 0 then pixels. */
-function encodePng(w: number, h: number, bytesPerRow: number, raw: Buffer): Buffer {
+function encodePng(w: number, h: number, raw: Buffer): Buffer {
   const sig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   const ihdr = Buffer.alloc(13);
   ihdr.writeUInt32BE(w, 0); ihdr.writeUInt32BE(h, 4);
   ihdr[8] = 1;   // bit depth
   ihdr[9] = 0;   // color type 0 = grayscale
   ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;  // deflate / adaptive filter / no interlace
-  void bytesPerRow;
   return Buffer.concat([
     sig,
     chunk('IHDR', ihdr),
@@ -67,87 +68,88 @@ function encodePng(w: number, h: number, bytesPerRow: number, raw: Buffer): Buff
   ]);
 }
 
-/* ---- a capture in progress ---- */
-class Capture {
-  w = 0; h = 0; rb = 0;
-  private bytes: number[] = [];
-  header(line: string): boolean {
-    const m = line.match(/^SCR\s+(\d+)\s+(\d+)\s+(\d+)$/);
-    if (!m) return false;
-    this.w = +m[1]; this.h = +m[2]; this.rb = +m[3];
-    this.bytes = [];
-    return true;
-  }
-  /** decode a hex line of (count, byte) run pairs into the raw bitmap. */
-  runs(line: string): void {
-    const s = line.replace(/[^0-9A-Fa-f]/g, '');
-    for (let i = 0; i + 4 <= s.length; i += 4) {
-      const count = parseInt(s.slice(i, i + 2), 16);
-      const byte = parseInt(s.slice(i + 2, i + 4), 16);
-      for (let k = 0; k < count; k++) this.bytes.push(byte);
+/** PackBits decode (Apple TN1023): hdr 0..127 = copy hdr+1 literal bytes;
+ *  hdr 129..255 = repeat next byte 257-hdr times; 128 = no-op. */
+function unpackBits(src: Buffer, expected: number): Buffer {
+  const out = Buffer.alloc(expected);
+  let o = 0, i = 0;
+  while (i < src.length && o < expected) {
+    const h = src[i++];
+    if (h < 128) {
+      const c = h + 1;
+      for (let k = 0; k < c && o < expected && i < src.length; k++) out[o++] = src[i++];
+    } else if (h > 128) {
+      const c = 257 - h;
+      const v = src[i++];
+      for (let k = 0; k < c && o < expected; k++) out[o++] = v;
     }
   }
-  /** assemble the PNG; returns null if the byte count is wrong. */
-  finish(): Buffer | null {
-    const expect = this.rb * this.h;
-    if (!this.w || !this.h || !this.rb) return null;
-    if (this.bytes.length !== expect) {
-      log(`size mismatch: got ${this.bytes.length}, expected ${expect} (${this.rb}x${this.h})`);
-      // pad/truncate so a partial frame still renders something
-      while (this.bytes.length < expect) this.bytes.push(0);
-      this.bytes.length = expect;
+  return out;
+}
+
+function buildPng(w: number, h: number, rb: number, frame: Buffer): Buffer {
+  const bytesPerRow = Math.ceil(w / 8);
+  const raw = Buffer.alloc((1 + bytesPerRow) * h);
+  let o = 0;
+  for (let y = 0; y < h; y++) {
+    raw[o++] = 0;  // filter: none
+    for (let x = 0; x < bytesPerRow; x++) {
+      // Mac: 1 = black. PNG grayscale: 0 = black. Invert.
+      raw[o++] = (~frame[y * rb + x]) & 0xff;
     }
-    const bytesPerRow = Math.ceil(this.w / 8);
-    const raw = Buffer.alloc((1 + bytesPerRow) * this.h);
-    let o = 0;
-    for (let y = 0; y < this.h; y++) {
-      raw[o++] = 0;  // filter: none
-      for (let x = 0; x < bytesPerRow; x++) {
-        // Mac: 1 = black. PNG grayscale: 0 = black. Invert.
-        raw[o++] = (~this.bytes[y * this.rb + x]) & 0xff;
-      }
-    }
-    return encodePng(this.w, this.h, bytesPerRow, raw);
   }
+  return encodePng(w, h, raw);
 }
 
 /* ---- the Plus connection (one at a time; newest wins) ---- */
 class Plus {
-  private buf = '';
-  private cap: Capture | null = null;
-  constructor(private sock: net.Socket) {
+  private buf = Buffer.alloc(0);
+  // null = waiting for a SCRB header line; else collecting `need` packed bytes
+  private hdr: { w: number; h: number; rb: number; need: number } | null = null;
+  constructor(public sock: net.Socket) {
     sock.setNoDelay(true);
-    sock.on('data', (d) => this.feed(d.toString('latin1')));
+    sock.on('data', (d) => this.feed(d));
     sock.on('error', () => {});
   }
   grab(): void {
     log('GRAB -> Plus');
-    this.cap = new Capture();
+    this.hdr = null;
+    this.buf = Buffer.alloc(0);
     this.sock.write('GRAB\r');
   }
-  private feed(data: string): void {
-    this.buf += data;
-    let nl: number;
-    while ((nl = this.buf.search(/[\r\n]/)) >= 0) {
-      const line = this.buf.slice(0, nl).trim();
-      this.buf = this.buf.slice(nl + 1);
-      if (line) this.line(line);
+  private feed(d: Buffer): void {
+    this.buf = this.buf.length ? Buffer.concat([this.buf, d]) : d;
+    for (;;) {
+      if (!this.hdr) {
+        let cut = this.buf.indexOf(0x0d);             // header line ends at \r
+        if (cut < 0) cut = this.buf.indexOf(0x0a);
+        if (cut < 0) return;                          // header line not complete yet
+        const line = this.buf.subarray(0, cut).toString('latin1').trim();
+        this.buf = this.buf.subarray(cut + 1);
+        const m = line.match(/^SCRB\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)$/);
+        if (m) {
+          this.hdr = { w: +m[1], h: +m[2], rb: +m[3], need: +m[4] };
+          log(`receiving ${this.hdr.w}x${this.hdr.h} rb=${this.hdr.rb} packed=${this.hdr.need}B`);
+        }
+        // non-header lines (stray status) are ignored
+        if (this.buf.length === 0) return;
+        continue;
+      }
+      // collecting binary payload
+      if (this.buf.length < this.hdr.need) return;
+      const packed = this.buf.subarray(0, this.hdr.need);
+      this.buf = this.buf.subarray(this.hdr.need);
+      const { w, h, rb } = this.hdr;
+      this.hdr = null;
+      try {
+        const frame = unpackBits(packed, rb * h);
+        const png = buildPng(w, h, rb, frame);
+        writeFileSync(OUT, png);
+        log(`wrote ${OUT} (${png.length} bytes from ${packed.length}B packed)`);
+      } catch (e) {
+        log(`decode/encode failed: ${(e as Error).message}`);
+      }
     }
-  }
-  private line(line: string): void {
-    if (line.startsWith('SCR ')) {
-      const c = new Capture();
-      if (c.header(line)) { this.cap = c; log(`receiving ${c.w}x${c.h} rb=${c.rb}`); }
-      return;
-    }
-    if (line === 'SCREND') {
-      if (!this.cap) return;
-      const png = this.cap.finish();
-      this.cap = null;
-      if (png) { writeFileSync(OUT, png); log(`wrote ${OUT} (${png.length} bytes)`); }
-      return;
-    }
-    if (this.cap) this.cap.runs(line);
   }
 }
 
@@ -158,7 +160,7 @@ const port = idx >= 0 ? parseInt(process.argv[idx + 1] ?? '2334', 10) || 2334 : 
 const server = net.createServer((sock) => {
   log(`Plus connected from ${sock.remoteAddress}`);
   active = new Plus(sock);
-  sock.on('close', () => { if (active && (active as any).sock === sock) active = null; });
+  sock.on('close', () => { if (active && active.sock === sock) active = null; });
 });
 server.listen(port, () => log(`screen agent listening on :${port} (trigger ${TRIGGER})`));
 
