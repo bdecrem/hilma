@@ -50,6 +50,7 @@ they still start at boot. Each plist is a thin shim that runs
 | 2331 | `sh.macplus.diag`    | diagnostic log sink                        | node:net, long-running |
 | 2332 | `sh.macplus.quote`   | quote of the day                           | node:net, long-running |
 | 2333 | `sh.macplus.bridge`  | OTA app delivery (watches `~/bridge-outbox`) | node:net, long-running |
+| 2334 | `sh.macplus.screen`  | on-demand screenshot of the Plus (touch `~/.screen-grab` → writes `~/screen-latest.png`) | node:net, long-running |
 
 Logs: `~/Library/Logs/macplus-<name>.{out,err}.log` on the mini.
 
@@ -127,6 +128,13 @@ If a service is down, check its err log, then `launchctl kickstart -k gui/501/sh
 - **bridge (2333):** drop a built `.bin` into `~/bridge-outbox/` on the mini and
   the Plus (running The Bridge) installs it — this is how new Plus apps ship
   without SD-card shuttling.
+- **screen (2334):** on-demand screenshot of the real Plus, baked into the WiFi
+  service so it captures whatever app is frontmost (not live VNC — too slow at
+  9600 baud). The service reserves the top mux channel and opens it to `screen`
+  on every `WIFIConnect`; `touch ~/.screen-grab` on the mini makes the agent send
+  `GRAB`, the Plus RLE+hex-streams `qd.screenBits` back, and the agent writes a
+  1-bit PNG to `~/screen-latest.png`. Needs an app built with the current `wifi.c`
+  running on the Plus (older apps don't open the channel).
 
 ## Verifying from any LAN machine
 

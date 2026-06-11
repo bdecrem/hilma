@@ -21,12 +21,17 @@
 #include <OSUtils.h>
 #include <Memory.h>
 #include <Files.h>
+#include <Quickdraw.h>
 #include "wifi.h"
 
 #define MUX_HOST "192.168.7.50"
 #define MUX_PORT 2330
 #define kBaud   (baud9600 + data8 + noParity + stop10)
 #define RING    1024            /* per-channel receive ring buffer */
+
+/* The top channel is reserved by the service itself for on-demand screen grabs
+ * (see screen.inc). Apps never get it — WIFIConnect opens it, WIFIOpen skips it. */
+#define WIFI_SCREEN_CHAN (WIFI_MAXCHAN - 1)
 
 /* host hooks the MUX includes call — forward-declared so the parser/sender can
  * be pulled in before WIFIState (which needs the MuxRx type from mux_rx.inc) */
@@ -49,10 +54,15 @@ typedef struct WIFIState {
     short         head[WIFI_MAXCHAN], tail[WIFI_MAXCHAN];
     char          serRing[4096];    /* the serial driver's SerSetBuf ring */
     char          serScratch[2048]; /* FSRead scratch — separate from the ring */
+    Boolean       scrReq;           /* a GRAB arrived on the screen channel */
+    char          scrCmd[16];       /* line accumulator for the screen channel */
+    short         scrCmdLen;
 } WIFIState;
 
 static WIFIState  gInstance;     /* app-local state; the LINK persists in hardware */
 static WIFIState *gW = 0;        /* -> gInstance once initialised */
+
+#include "screen.inc"            /* WIFIScreenGrab() — uses qd + MuxSendLine */
 
 /* write raw bytes to the serial link */
 static void MuxSendRaw(const char *bytes, long n)
@@ -66,6 +76,21 @@ static void MuxData(short chan, const unsigned char *b, short n)
 {
     short i;
     if (!gW || chan < 0 || chan >= WIFI_MAXCHAN) return;
+    if (chan == WIFI_SCREEN_CHAN) {              /* commands for the grabber, not app data */
+        for (i = 0; i < n; i++) {
+            unsigned char c = b[i];
+            if (c == '\r' || c == '\n') {
+                gW->scrCmd[gW->scrCmdLen] = 0;
+                if (gW->scrCmdLen >= 4 && gW->scrCmd[0] == 'G' && gW->scrCmd[1] == 'R'
+                    && gW->scrCmd[2] == 'A' && gW->scrCmd[3] == 'B')
+                    gW->scrReq = true;
+                gW->scrCmdLen = 0;
+            } else if (gW->scrCmdLen < (short)sizeof(gW->scrCmd) - 1) {
+                gW->scrCmd[gW->scrCmdLen++] = (char)c;
+            }
+        }
+        return;
+    }
     for (i = 0; i < n; i++) {
         short nt = (short)((gW->tail[chan] + 1) % RING);
         if (nt == gW->head[chan]) break;          /* ring full: drop the rest */
@@ -117,6 +142,17 @@ static Boolean waitFor(const char *needle, short ticks)
     return false;
 }
 
+/* Reserve + open the screen channel so the grabber is always available, and so
+ * WIFIOpen (which picks the first free channel) never hands it to an app. */
+static void openScreenChan(void)
+{
+    gW->used[WIFI_SCREEN_CHAN] = true;
+    gW->head[WIFI_SCREEN_CHAN] = gW->tail[WIFI_SCREEN_CHAN] = 0;
+    gW->scrCmdLen = 0;
+    gW->scrReq = false;
+    MuxOpen(WIFI_SCREEN_CHAN, "screen");
+}
+
 /* ---- public API ---- */
 Boolean WIFIConnect(void)
 {
@@ -136,7 +172,7 @@ Boolean WIFIConnect(void)
      * makes "dial once, every app after just attaches" work. */
     drainSerial();
     putStr("MUXPING\r\n");
-    if (waitFor("MUXPONG", 90)) { gW->connected = true; return true; }
+    if (waitFor("MUXPONG", 90)) { gW->connected = true; openScreenChan(); return true; }
 
     /* Link not up — do the full modem dial. */
     for (tries = 0; tries < 3; tries++) { drainSerial(); putStr("AT\r"); if (waitFor("OK", 90)) break; }
@@ -150,6 +186,7 @@ Boolean WIFIConnect(void)
     drainSerial(); putStr(cmd);
     if (!waitFor("CONNECT", 600)) return false;
     gW->connected = true;
+    openScreenChan();
     return true;
 }
 
@@ -192,6 +229,7 @@ short WIFIIdle(void)
     c = a; if (c > (long)sizeof(gW->serScratch)) c = sizeof(gW->serScratch);
     if (FSRead(gW->inRef, &c, gW->serScratch) != noErr) return 0;
     MuxRxFeed(&gW->rx, (const unsigned char *)gW->serScratch, (short)c);
+    if (gW->scrReq) { gW->scrReq = false; WIFIScreenGrab(); }
     return (short)c;
 }
 

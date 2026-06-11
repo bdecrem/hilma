@@ -17,8 +17,8 @@ DEPLOY="${MACPLUS_DEPLOY:-/Users/admin/hilma-deploy}"
 DEVTREE="${MACPLUS_DEVTREE:-/Users/admin/Documents/code/hilma}"
 ENVFILE="$HOME/.macplus-backend.env"
 UID_N="$(id -u)"
-AGENT_DIRS="agent agent-atkinson agent-surf agent-mux agent-imessage agent-diag agent-quote agent-bridge"
-LONG_RUNNERS="mux imessage diag quote bridge"
+AGENT_DIRS="agent agent-atkinson agent-surf agent-mux agent-imessage agent-diag agent-quote agent-bridge agent-screen"
+LONG_RUNNERS="mux imessage diag quote bridge screen"
 
 echo "== pull =="
 BEFORE="$(git -C "$DEPLOY" rev-parse --short HEAD)"
@@ -57,7 +57,7 @@ done
 
 sleep 2
 echo "== fleet status =="
-for spec in code:2324 paint:2325 surf:2326 imessage:2328 mux:2330 diag:2331 quote:2332 bridge:2333; do
+for spec in code:2324 paint:2325 surf:2326 imessage:2328 mux:2330 diag:2331 quote:2332 bridge:2333 screen:2334; do
   n="${spec%%:*}"; p="${spec##*:}"
   if /usr/sbin/netstat -an -p tcp | grep -q "\.$p .*LISTEN"; then
     echo "   $n :$p LISTEN"

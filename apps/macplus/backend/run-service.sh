@@ -15,13 +15,14 @@
 #   diag     :2331  node:net diagnostic log sink
 #   quote    :2332  node:net quote of the day
 #   bridge   :2333  node:net OTA app delivery (watches ~/bridge-outbox)
+#   screen   :2334  node:net on-demand screenshot of the Plus (watches ~/.screen-grab)
 #
 # Secrets come from ~/.macplus-backend.env (chmod 600, NOT in git, NOT in the
 # plists). backend/update.sh re-syncs it from the dev tree's .env.local when
 # that file is readable.
 set -u
 
-NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge>}"
+NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen>}"
 DEPLOY="${MACPLUS_DEPLOY:-/Users/admin/hilma-deploy}"
 BASE="$DEPLOY/apps/macplus"
 SOCAT=/opt/homebrew/bin/socat
@@ -64,6 +65,7 @@ case "$NAME" in
   bridge)
     mkdir -p "${BRIDGE_OUTBOX:-$HOME/bridge-outbox}"
     cd "$BASE/agent-bridge"; exec ./node_modules/.bin/tsx src/main.ts --listen 2333 ;;
+  screen)   cd "$BASE/agent-screen";   exec ./node_modules/.bin/tsx src/main.ts --listen 2334 ;;
   *)
     echo "run-service: unknown service '$NAME'" >&2; exit 64 ;;
 esac
