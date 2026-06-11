@@ -38,54 +38,48 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 
 ---
 
-## WHERE WE LEFT OFF (2026-06-03) — read this first when resuming
+## WHERE WE LEFT OFF (2026-06-11) — read this first when resuming
 
-The agent ("**Macinclaude Plus**" — the name Bart picked) is **built and working**; the only blocker is
-the **Plus↔modem serial cable**.
+**The Plus is online and the whole app suite ships over WiFi.** The serial-cable
+blocker is long resolved (the proper mini-DIN-8 → DB-9 Mac modem cable arrived);
+the Plus talks to the mini over the RetroWiFi SI modem. Earlier cable/diagnostic
+history is preserved further down ("Connecting the Plus to WiFi", "RetroWiFi SI").
 
-> **Update 2026-06-06:** the cable currently in hand is a **PLC programming cable** (DB9-F → mini-DIN-8-M),
-> **not** a Mac serial cable — its DIN-8 pinout is for industrial PLCs, so it never connects GND/data on the
-> Plus's pins. SerialDoc's Baud Sweep reads **0 bytes at every rate** with it, and the SI's orange LED won't
-> light through it (the old broken cable does light it — it's correctly Mac-wired except for the snapped data
-> pins). Full analysis + the next steps are in the **"RetroWiFi SI — documentation & specs"** block under
-> *Hardware inventory* below. Bottom line: **buy a real mini-DIN-8 → DB-9 Macintosh modem cable.** Also a new
-> tool landed: **SerialDoc** (`serialdoc/`) — the serial diagnostic, now on the BlueSCSI card.
+- **WiFi system service — built + working.** Apps no longer dial the modem. A
+  boot INIT (`wifi/wifiinit.c`) brings up ONE shared link to the mini multiplexer
+  at startup; every app calls `WIFIConnect()` / `WIFIOpen("<service>")` (client
+  lib = `wifi/wifi.c` + `wifi.h`) and just attaches — dial once, every app after
+  reuses it. This replaced the planned resident `.WIFI` DRVR (which fought
+  Retro68's flat-code format); the **system-heap manager + INIT** is the shipped
+  design. The link persists across app-quit because the serial driver stays open
+  and the modem stays online; `WIFIConnect` pings the mux and reuses a live link.
+- **The Bridge = over-the-air delivery (how new builds reach the Plus now).**
+  Keep `bridge/` running on the Plus, drop a built `.bin` into the mini's
+  `~/bridge-outbox/`, and it streams over WiFi and writes itself to the boot disk
+  as a versioned icon (e.g. `IMessage3`) — no SD-card shuttling. Reuses Foundry's
+  MacBinary-to-disk writer (incl. the odd-address bomb fix).
+- **iMessage is live.** Reads the mini's `chat.db` (contact names resolved via
+  `agent-imessage/contacts.ts`), conversation list + thread both scroll, threads
+  are chronological (newest at bottom), and **Reply actually sends — to both
+  iMessage (blue) AND SMS (green)** via `osascript` → Messages.app on the mini.
+  Caveat: it reads the *mini's* iMessage account, which can differ from your iMac.
+- **Verified apps:** Foundry, Surf, Quote of the Day, The Bridge, iMessage —
+  driven in Mini vMac against the live mini backend and/or on the real Plus. See
+  the app catalog at the top.
+- **Talking Plus: retired.** MacinTalk bangs the sound hardware directly and
+  freezes the Plus mouse until reboot (Apple PT-22, no fix). Source stays as
+  history; it's off the app lists and the SD card.
 
-> **Update 2026-06-09:** the proper Mac serial cable **arrived** — the cable blocker is cleared. And the
-> **Macinclaude Paint and Macinclaude Code apps both work** and are fully testable in Mini vMac.
-
-- **Code locations:** repo **source of truth** = `apps/macplus/agent/` (this repo: `src/main.ts`,
-  `src/teletype.ts`, `README.md`). **Deployed copy on the mini** = `~/claude-plus/` on
-  `admin@192.168.7.50`, put there by rsync from the repo, then `npm install` on the mini. Re-deploy with:
-  `rsync -az --exclude node_modules ~/Documents/coding2025/hilma/apps/macplus/agent/ admin@192.168.7.50:claude-plus/`
-  then `ssh admin@192.168.7.50 'cd claude-plus && /opt/homebrew/bin/npm install'`.
-- **Agent status:** running on the mini's `~/claude-plus/` copy via a **temporary listener on port
-  2324** (NOT the production 2323 login shell). Verified end-to-end from the iMac with
-  `nc 192.168.7.50 2324` — held a conversation, it created a file with the `[y/N/a]` gate. Caveats:
-  the `ANTHROPIC_API_KEY` was set only in that listener's environment (not persistent — if the mini
-  rebooted, re-launch per `agent/README.md`). The banner on the mini says "Macinclaude Plus" but the
-  **repo source/docs still say the old name** — renaming to "Macinclaude Plus" is a pending TODO.
-- **The blocker — the cable:** Bart's original DIN-8→DB-9 cable is **dead** — physically missing DB-9
-  **pins 2 & 3 (RXD/TXD)**, so it has no data path (confirmed why nothing ever reached the modem).
-- **Confirmed facts:** the WiFi modem is a **Simulant RetroWiFi SI**, **DB-9 female**, a Hayes modem
-  (**DCE**) → it needs a **STRAIGHT-THROUGH** cable, NOT null-modem. (Confirmed via Simulant/community.)
-- **On order (arrives ~6/4; Bart resumes next week):**
-  1. **C2G 25041 / 70810** cable — mini-DIN-8 **male** → DB-9 **female**, ~4 ft.
-  2. **Warmstor** DB-9 male-to-male **straight gender changer** (6-pack).
-  3. **LNHCAW** DB-9 male-to-male **null-modem adapter**.
-  Both adapters are male-male (they bridge the cable's female DB-9 to the SI's female). We bought both
-  because the C2G 25041's internal wiring (straight vs null-modem) is undocumented and field reports conflict.
-
-- **NEXT STEPS when the parts arrive:**
-  1. Assemble: Plus **modem port** → C2G cable → **straight gender changer** → SI. ZTerm: Modem Port,
-     **9600**, 8-N-1, flow control **off**, **Local Echo ON** (for the AT test only).
-  2. Type `AT` → expect `OK`. **If silent, swap the straight coupler for the null-modem adapter** in the
-     same spot and retry. One of the two is the correct wiring.
-  3. Once `OK`: set ZTerm **Local Echo OFF**, join WiFi `ATW"SSID,PASSWORD"`, save `AT&W`.
-  4. **Dial the agent:** `ATDT"192.168.7.50:2324"` → lands in Macinclaude Plus. (If 2324 is dead, re-launch
-     the listener — `agent/README.md`.)
-
-(Full WiFi/connection detail and the bring-up table are in the "Connecting the Plus to WiFi" section below.)
+**Mini backend (hand-started — the one open ops item).** Agents on
+`admin@192.168.7.50`, started by hand, so a mini reboot drops them:
+mux `:2330`, iMessage `:2328`, bridge `:2333`, quote `:2332`, diag `:2331`
+(Foundry's agent runs on the *iMac* `:2327`). **TODO: make them LaunchAgents**
+(NOT root LaunchDaemons) — iMessage needs admin's GUI session for `osascript`
+Automation + Full Disk Access, which a root daemon can't get. Auto-login (admin)
+is on, so LaunchAgents start at boot. Run iMessage WITHOUT `IMSG_DRY_RUN` for
+live sends. Heads-up: the deployed `~/agent-mux` had a STALE route map (missing
+the `imessage` route) — use the clone's
+`~/Documents/code/hilma/apps/macplus/agent-mux` or sync it.
 
 ---
 
@@ -114,7 +108,9 @@ the **Plus↔modem serial cable**.
   floppy image (`Disk605.dsk`) with the real Plus ROM (`boot0.rom`/`vMac.ROM`). We do **not** compile an
   OS. Mini vMac boots **raw HFS** images only, not the APM `.hda`/`.vhd` SCSI images (those work on the
   real Plus). It's the only emulator in the loop; everything visual is verified there before the card.
-- **Networking / WiFi: not yet working** — blocked on the serial cable. See "WHERE WE LEFT OFF" at the top.
+- **Networking / WiFi: working.** The Plus reaches the mini over the RetroWiFi SI modem; apps use the
+  WiFi system service (`wifi/`) — boot INIT brings the link up, apps attach via `WIFIConnect`. The whole
+  app suite (Foundry/Surf/Quote/Bridge/iMessage) runs over it. See "WHERE WE LEFT OFF" at the top.
 
 ---
 
@@ -300,12 +296,12 @@ The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone
 All four serial lessons from Surf (separate SerSetBuf ring vs FSRead scratch; paced output to wire
 speed; CONNECT-tail handoff into the parser; raw transport) are baked into every new app.
 
-**Status (2026-06-09):** Foundry and Talking Plus are **built, compile clean (both normal
-and `*_TEST` Mini vMac builds), and fully host-tested** (each has a shared `*_rx.inc` parser driven
-by an `rxtest.c`, and each agent has a passing `npm run selftest` incl. a live Claude round-trip).
-The Mini vMac *visual/audio* drive-through for these three is the one remaining step (the iMac
-screen locked mid-session); test disks are staged in `~/mac-plus-apps/mctest/`. None deployed to the
-real Plus yet, and the agents aren't yet LaunchDaemons (Surf's `install-daemon.sh` is the template).
+**Status (2026-06-11):** Foundry is **built, verified in Mini vMac, and shipped to the real Plus** —
+it compiled and delivered a working analog clock end to end (and the on-the-fly MacBinary writer's
+odd-address bomb is fixed). Quote of the Day, The Bridge, and iMessage joined the family on the WiFi
+service; all run over the shared link. **The Talking Plus is retired** (MacinTalk freezes the Plus
+mouse — see its section below). Mini agents are still hand-started (LaunchAgent-ization is the open
+ops TODO; see "WHERE WE LEFT OFF").
 
 #### Macinclaude Foundry (`foundry/` + `agent-foundry/`) — the self-extending Plus
 
@@ -321,7 +317,13 @@ toolchain** (the iMac today, `192.168.7.189:2327`; moves to the mini once the to
 Verified: agent selftest compiled a real "DiceRoller" (Claude, clean on attempt 2); `rxtest` 13/13
 against that real .bin.
 
-#### The Talking Plus (`talkingplus/` + `agent-moose/`) — MacinTalk homage to the Talking Moose
+#### The Talking Plus (`talkingplus/` + `agent-moose/`) — RETIRED (MacinTalk homage to the Talking Moose)
+
+> **RETIRED (2026-06-11).** MacinTalk bangs the Plus's sound hardware directly and leaves the VIA in a
+> state that freezes a mouse axis until reboot — Apple's own PT-22 technote says there's no fix. So a
+> speaking Plus and a usable mouse can't coexist on this hardware. Removed from the app lists and the SD
+> card; the source stays as history (and for the hard-won MacinTalk/SCC notes below). Voice was made
+> opt-in (Talk ▸ Use MacinTalk Voice) before retiring; default was mime, which is mouse-safe.
 
 A wry 1-bit character who **speaks aloud through the Plus's own speaker** using the 1986 **MacinTalk**
 TTS driver, with Claude writing his lines (deadpan, "awake since 1986") from real data. Three
@@ -347,42 +349,41 @@ only, not committed.
 
 #### Macinclaude iMessage (`imessage/` + `agent-imessage/`) — texting from a 1986 Mac
 
-Read and reply to iMessages on the Plus. **This is the first app built on the
-persistent-WiFi MUX seam** (the quote-of-the-day app on the iMac is the other
-early adopter): instead of dialing a private agent port like Surf/Atkinson, it
-dials the **multiplexer once** (`192.168.7.50:2330`) and opens a logical channel
-to service `imessage` (`wifi/muxclient.inc` + `wifi/mux_rx.inc`, shared verbatim
-with MuxDemo). When the resident `.WIFI` driver lands, only `DialMux()` gets
-replaced by a driver "give me a channel" call — the channel API
-(`MuxOpen`/`MuxSend`/`MuxData`) is unchanged. The seam is marked `THE .WIFI SEAM`
-in `imessage.c`.
+Read and reply to iMessages on the Plus — **live, sending real texts to both
+iMessage (blue) and SMS (green)**. It runs on the WiFi system service like
+Quote/Bridge: `WIFIConnect()` then `WIFIOpen("imessage")`, no dialing in the app
+(`wifi.c` owns the serial + MUX). There is no Settings dialog — the service +
+INIT own the link.
 
 - **Plus side (`imessage.c` + `imessage.r`):** a two-pane UI — conversation list
-  on the left (click to select), the selected thread on the right (word-wrapped,
-  outgoing right-aligned / incoming left, scrollbar), and a modal **Reply…**
-  (Cmd-R) compose box (inline compose field is a future step). Settings/prefs
-  ported from Surf (default mux port **2330**, host `192.168.7.50`, 9600). The
-  payload parser is `im_rx.inc`, shared verbatim with `rxtest.c`.
+  on the left with **its own scrollbar** (`gListScroll`/`gListTop`), the selected
+  thread on the right (word-wrapped, outgoing right-aligned / incoming left, its
+  own scrollbar), and a modal **Reply…** (Cmd-R) compose box. Window is **500×290
+  at top=40** so it fits the real Plus screen (CRT overscan). The payload parser
+  is `im_rx.inc`, shared verbatim with `rxtest.c` (which includes an overflow
+  fuzz pass — more rows/messages/longer lines than the client allots are dropped
+  gracefully, never overflow).
 - **Mini side (`agent-imessage/`, port 2328):** a `node:net` server (no socat).
-  Reads `~/Library/Messages/chat.db` via `sqlite3 -readonly` (with a typedstream
-  decoder for the ~40% of rows whose `text` is NULL and body lives in
-  `attributedBody`), and **sends via AppleScript** (`osascript` → Messages.app,
-  addressing the existing chat by its GUID). Polls chat.db every 3s and re-pushes
-  the open thread on new mail. Needs **Full Disk Access**; `IMSG_DRY_RUN=1`
-  logs sends instead of texting. See `agent-imessage/README.md`.
+  Reads `~/Library/Messages/chat.db` via `sqlite3 -readonly` (typedstream decoder
+  for the rows whose `text` is NULL and body lives in `attributedBody`); resolves
+  handles → contact names via `contacts.ts` (a `~/.imessage-contacts` DB,
+  `IMSG_CONTACTS_DB` to override). Conversations are `ORDER BY last_date DESC`
+  (most-recent first); a thread is fetched newest-`limit` then **reversed to
+  chronological** so the Plus renders newest at the bottom. **Sends via
+  AppleScript** (`osascript` → Messages.app, `send … to chat id <guid>`) — routes
+  by the chat's own service, so blue chats send iMessage and green chats send SMS
+  (needs Text Message Forwarding on the mini, which is set up). Needs **Full Disk
+  Access** + **Automation** permission (admin's GUI session). `IMSG_DRY_RUN=1`
+  logs sends instead of texting — **must be OFF for live use**.
 - **Protocol:** `LIST` / `OPEN <idx>` / `SEND <idx> <text>` up; `IMLIST`/`C`,
   `IMCONV`/`M`/`+`, `IMSTS`/`IMERR`/`IMSENT` down (ASCII, line-capped, paced).
   `agent-mux` SERVICES maps `imessage -> 127.0.0.1:2328`.
-- **Status (2026-06-10):** built, both builds compile clean (`CODE×9, DLOG×2,
-  DITL×2, SIZE`), agent `selftest` green against real chat.db. **Verified
-  end-to-end through the multiplexer host-side:** LIST returned a real
-  conversation list, OPEN a real thread (attributedBody decoded), and SEND
-  (dry-run) returned `IMSENT` + a refreshed thread. The IM_TEST disk is staged
-  at `~/mac-plus-apps/mctest/IMessageTest.dsk`. **Not yet driven in Mini vMac**
-  (the GUI session was screen-locked — the blocker `wifi/RESUME-ALWAYSON.md`
-  flags). Agent runs hand-started (no LaunchDaemon yet; `agent-surf`'s installer
-  is the template). Sending a real text to a contact is intentionally left for
-  Bart to trigger — the path is verified only in dry-run.
+- **Status (2026-06-11): live + verified.** Drives in Mini vMac against the live
+  mini backend — lists real conversations, opens real threads (chronological),
+  both panes scroll, and **Reply delivers to blue and green** (confirmed an SMS
+  send recorded `is_from_me=1, is_sent=1, service=SMS` in chat.db). Shipped to the
+  real Plus via the Bridge. Caveat: reads the *mini's* iMessage account, which can
+  differ from the iMac's Messages.
 
 ### Macinclaude Surf (a web browser for the Plus) — `surf/` + `agent-surf/`
 
