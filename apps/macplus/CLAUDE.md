@@ -70,16 +70,15 @@ history is preserved further down ("Connecting the Plus to WiFi", "RetroWiFi SI"
   freezes the Plus mouse until reboot (Apple PT-22, no fix). Source stays as
   history; it's off the app lists and the SD card.
 
-**Mini backend (hand-started — the one open ops item).** Agents on
-`admin@192.168.7.50`, started by hand, so a mini reboot drops them:
-mux `:2330`, iMessage `:2328`, bridge `:2333`, quote `:2332`, diag `:2331`
-(Foundry's agent runs on the *iMac* `:2327`). **TODO: make them LaunchAgents**
-(NOT root LaunchDaemons) — iMessage needs admin's GUI session for `osascript`
-Automation + Full Disk Access, which a root daemon can't get. Auto-login (admin)
-is on, so LaunchAgents start at boot. Run iMessage WITHOUT `IMSG_DRY_RUN` for
-live sends. Heads-up: the deployed `~/agent-mux` had a STALE route map (missing
-the `imessage` route) — use the clone's
-`~/Documents/code/hilma/apps/macplus/agent-mux` or sync it.
+**Mini backend — SOLVED (2026-06-11): see [`BACKEND.md`](BACKEND.md), the canonical ops doc.**
+All mini-side agents now run as **LaunchAgents** (`sh.macplus.*`, gui/501 — NOT root
+daemons, because iMessage needs admin's GUI session for Automation + Full Disk Access;
+auto-login is on so they start at boot) out of a dedicated **deploy clone**
+`~/hilma-deploy` that only ever `git pull`s. GitHub is the only sync path — the old
+rsync/hand-started copies (`~/claude-plus`, `~/surf-agent`, `~/agent-*`) are retired,
+which also kills the stale-route-map class of bug. **Update verb (no sudo):**
+`bash ~/hilma-deploy/apps/macplus/backend/update.sh`. Run iMessage WITHOUT
+`IMSG_DRY_RUN` for live sends.
 
 ---
 
@@ -234,8 +233,9 @@ The bring-up steps above (open port, `AT`, `ATDT`-dial) are the manual ZTerm rit
 - **Status (2026-06-07):** built & compiles clean with Retro68 (`CODE×9, DLOG, DITL, SIZE`); `.dsk`
   staged in `~/mac-plus-apps/vmac/`. **Not yet driven in Mini vMac** (the emulator's screen didn't render
   into the screenshot tool that session) and the live connect needs the real Plus (no serial in the
-  emulator). The mini agent on 2324 is now a **LaunchDaemon** (`/Library/LaunchDaemons/sh.claude-plus.terminal.plist`,
-  label `sh.claude-plus.terminal`, runs `/usr/local/bin/claude-plus-listener.sh`) — auto-starts on boot.
+  emulator). The mini agent on 2324 runs as LaunchAgent **`sh.macplus.code`** from the deploy
+  clone — see [`BACKEND.md`](BACKEND.md). (The old `sh.claude-plus.terminal` root daemon +
+  `~/claude-plus` rsync copy were retired 2026-06-11.)
 
 ### Atkinson (the Plus draws, in 1-bit) — `atkinson/` + `agent-atkinson/`
 
@@ -270,11 +270,10 @@ bitmap row-by-row so it "develops" like a Polaroid over the slow link.
   `cd atkinson && ./build.sh`.
 - **Status (2026-06-08):** built, compiles clean (`CODE×9, DLOG×2, DITL×2, SIZE`), UI verified in Mini
   vMac, full data path verified except the physical serial wire (still blocked on the Plus↔modem cable).
-  The mini listener on 2325 is now a **LaunchDaemon** (`/Library/LaunchDaemons/sh.macplus.atkinson.plist`,
-  label `sh.macplus.atkinson`, runs as `admin` with `OPENAI_API_KEY` + `ATK_PYTHON=/usr/bin/python3`) —
-  auto-starts on boot, RunAtLoad + KeepAlive. Install/refresh: `sudo bash agent-atkinson/install-daemon.sh`
-  (reads the key from `.env.local`); restart after a code change: `sudo launchctl kickstart -k system/sh.macplus.atkinson`.
-  Logs: `~/Library/Logs/macplus-atkinson.{out,err}.log`. Verified end-to-end over the socket (banner + /quit).
+  The mini listener on 2325 runs as LaunchAgent **`sh.macplus.paint`** from the deploy clone
+  (`ATK_PYTHON=/usr/bin/python3` set by the runner; `OPENAI_API_KEY` from `~/.macplus-backend.env`) —
+  see [`BACKEND.md`](BACKEND.md). (The old `sh.macplus.atkinson` root daemon was retired 2026-06-11.)
+  Logs: `~/Library/Logs/macplus-paint.{out,err}.log`. Verified end-to-end over the socket (banner + /quit).
 
 ### The Macinclaude app family — port map
 
@@ -290,6 +289,9 @@ by side:
 | 2326 | Macinclaude Surf (`surf/`) | reader-mode web browser |
 | 2327 | Macinclaude Foundry (`foundry/`) | describe an app → Claude writes + Retro68 compiles it → delivered as a real APPL onto the disk |
 | 2328 | Macinclaude iMessage (`imessage/`) | read + reply to iMessages from the Plus; mini reads chat.db and sends via AppleScript |
+
+(Infrastructure ports, not user apps: mux `:2330`, diag `:2331`, quote `:2332`, bridge `:2333`.
+**How all mini-side services are deployed, updated, and restarted: [`BACKEND.md`](BACKEND.md).**)
 
 The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone
 `node:net` TCP server — **no socat/pty**, which sidesteps the echo/ONLCR traps the Surf agent hit).
@@ -407,9 +409,8 @@ from the already-fetched page text without a re-fetch. `BACK` replays from the a
   frame: ASCII fold, line splitting, link numbering, caps) → `session.ts` (history + frame cache)
   → `main.ts` (stdin loop + **paced output**, see below). `npm run selftest` validates offline
   (extract/frame rules) and live (real URL + search) without the Plus.
-- **Deploy:** `sudo bash agent-surf/install-daemon.sh` on the mini (LaunchDaemon
-  `sh.macplus.surf`, port 2326, key injected from `.env.local`). Until that's installed there's a
-  hand-started socat on 2326 (started 2026-06-09; dies if the mini reboots).
+- **Deploy:** runs as LaunchAgent `sh.macplus.surf` (port 2326, `raw,echo=0`) from the deploy
+  clone — see [`BACKEND.md`](BACKEND.md). (The hand-started socat from 2026-06-09 is retired.)
 - **Status (2026-06-09): fully verified end-to-end in Mini vMac over the serial bridge** — dialed
   through vmodem to the live mini agent; loaded the welcome page, live Hacker News, the Anthropic
   Fable 5 announcement (published that day), and the Wikipedia Mac Plus article; exercised links,

@@ -46,44 +46,17 @@ under the new model/effort and `resume`s the prior `session_id`, keeping the
 conversation. Opus 4.8 and Fable 5 each expose medium + high as separate picks
 (sidestepping a dedicated effort UI); Sonnet is a single entry at the SDK default.
 
-## Deployed location (as of 2026-06-03)
-Source of truth lives here in the repo (`apps/macplus/agent/`). The running copy is on the **Mac mini**
-at `~/claude-plus/` (`admin@192.168.7.50`), put there by rsync + `npm install`. To re-deploy after editing:
-```bash
-rsync -az --exclude node_modules ~/Documents/coding2025/hilma/apps/macplus/agent/ admin@192.168.7.50:claude-plus/
-ssh admin@192.168.7.50 'cd claude-plus && /opt/homebrew/bin/npm install'
-```
-It runs on **port 2324**, started automatically by a launchd daemon (see "Run it on the mini" below);
-the prod login shell stays on 2323.
-
-## Run it on the mini (what the Plus dials into)
-**A launchd daemon already owns port 2324 and starts the agent automatically** — `RunAtLoad` +
-`KeepAlive`, so it comes up on boot and respawns if it dies (2323 stays the plain login shell). You
-normally start nothing by hand: deploy new code (above) and the next connection picks it up, since
-socat forks a fresh `tsx` per connection. The pieces:
-- `/Library/LaunchDaemons/sh.claude-plus.terminal.plist` — the daemon (label `sh.claude-plus.terminal`,
-  user `admin`). Logs: `~/Library/Logs/claude-plus.{out,err}.log`.
-- `/usr/local/bin/claude-plus-listener.sh` — what it execs: sources `/etc/claude-plus.env`
-  (`ANTHROPIC_API_KEY`), then `socat TCP-LISTEN:2324,reuseaddr,fork EXEC:'tsx … --cwd <hilma>'`.
-- The F2 Supabase keys are NOT in `/etc/claude-plus.env`; `main.ts` loads them from `--cwd`'s
-  `.env.local` at startup, so the daemon serves the knowledge tools with no extra config.
-
-Manage it (needs sudo):
-```bash
-sudo launchctl print     system/sh.claude-plus.terminal                                # status / pid / last exit
-sudo launchctl kickstart -k system/sh.claude-plus.terminal                             # restart now (e.g. after a deploy)
-sudo launchctl bootout   system/sh.claude-plus.terminal                                # stop + unload
-sudo launchctl bootstrap system /Library/LaunchDaemons/sh.claude-plus.terminal.plist   # load it
-```
-A code-only deploy (new `src/*.ts`) needs no restart — the next connection runs it. Only changes to
-`claude-plus-listener.sh` or `/etc/claude-plus.env` need a `kickstart`. socat runs `tsx` directly (NOT
-`npx`, whose spinner garbles the VT100) and keeps child stderr server-side so SDK/Node noise never
-reaches the Plus; `pty` gives the line editing the Plus expects. The model authenticates via the
-`claude` CLI's OAuth login, so `ANTHROPIC_API_KEY` is effectively optional.
-
-**Manual fallback** (debug only — first `sudo launchctl bootout` the daemon so it doesn't fight for the
-port): `nohup setsid ~/claude-plus/start-listener.sh > /tmp/clp-listener.log 2>&1 & disown` — the same
-socat command with the creds loaded from `.env.local`. Stop it with `pkill -f 'TCP-LISTEN:2324'`.
+## Deployed location / run it on the mini (as of 2026-06-11)
+Source of truth lives here in the repo (`apps/macplus/agent/`). On the **Mac mini** it runs from the
+**deploy clone** `~/hilma-deploy` as LaunchAgent **`sh.macplus.code`** on port 2324 (2323 stays the
+plain login shell). **There is no rsync and no `~/claude-plus` copy anymore.** To deploy: push to
+`main`, then run `bash ~/hilma-deploy/apps/macplus/backend/update.sh` on the mini — code-only changes
+need no restart (socat forks a fresh `tsx` per connection; the next dial-in runs the new code).
+Logs: `~/Library/Logs/macplus-code.{out,err}.log`. Model auth is the `claude` CLI's OAuth login (or
+`ANTHROPIC_API_KEY`); the F2 Supabase keys come from `~/.macplus-backend.env`, sourced by the runner.
+**Canonical ops doc — fleet table, secrets, TCC grants, recovery: [`../BACKEND.md`](../BACKEND.md).**
+(Old gotchas that still apply: run `tsx` directly, never `npx` — its spinner garbles the VT100; keep
+child stderr server-side; cooked `pty` is deliberate for this interactive agent.)
 
 ## Permission model — DANGEROUSLY SKIP (auto-approve everything)
 This agent **never prompts for approval**. Every tool — Read, Grep, Edit, Write, Bash, git, all of

@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# DEPRECATED (2026-06-11): superseded by the deploy-clone + LaunchAgent model.
+# Use backend/install-agents.sh + backend/update.sh instead. See apps/macplus/BACKEND.md.
+echo "DEPRECATED: see apps/macplus/BACKEND.md (backend/install-agents.sh replaces this)" >&2
+exit 1
 #
 # Install/refresh the Atkinson image-agent LaunchDaemon (port 2325).
 # RUN AS ROOT:  sudo bash apps/macplus/agent-atkinson/install-daemon.sh

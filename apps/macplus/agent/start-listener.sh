@@ -1,4 +1,9 @@
 #!/bin/zsh
+
+# DEPRECATED (2026-06-11): superseded by the deploy-clone + LaunchAgent model.
+# Use backend/install-agents.sh + backend/update.sh instead. See apps/macplus/BACKEND.md.
+echo "DEPRECATED: see apps/macplus/BACKEND.md (backend/install-agents.sh replaces this)" >&2
+exit 1
 #
 # Start the Macinclaude agent listener on the Mac mini (port 2324 — the agent;
 # 2323 stays the plain login shell). The Plus dials this over the RetroWiFi-SI.
