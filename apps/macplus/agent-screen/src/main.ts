@@ -106,6 +106,9 @@ class Plus {
   private buf = Buffer.alloc(0);
   // null = waiting for a SCRB header line; else collecting `need` packed bytes
   private hdr: { w: number; h: number; rb: number; need: number } | null = null;
+  private rxTotal = 0;          // bytes seen since GRAB (diagnostic)
+  private lastLog = 0;
+  private stallTimer: ReturnType<typeof setInterval> | null = null;
   constructor(public sock: net.Socket) {
     sock.setNoDelay(true);
     sock.on('data', (d) => this.feed(d));
@@ -115,10 +118,24 @@ class Plus {
     log('GRAB -> Plus');
     this.hdr = null;
     this.buf = Buffer.alloc(0);
+    this.rxTotal = 0; this.lastLog = 0;
+    if (this.stallTimer) clearInterval(this.stallTimer);
+    let last = -1;
+    this.stallTimer = setInterval(() => {
+      if (this.hdr && this.buf.length === last) {
+        log(`...stalled: have ${this.buf.length}/${this.hdr.need} payload bytes (rx ${this.rxTotal} total)`);
+      }
+      last = this.hdr ? this.buf.length : -1;
+    }, 3000);
     this.sock.write('GRAB\r');
   }
   private feed(d: Buffer): void {
+    this.rxTotal += d.length;
     this.buf = this.buf.length ? Buffer.concat([this.buf, d]) : d;
+    if (this.hdr && this.buf.length - this.lastLog >= 1024) {
+      this.lastLog = this.buf.length;
+      log(`  payload ${this.buf.length}/${this.hdr.need}B`);
+    }
     for (;;) {
       if (!this.hdr) {
         let cut = this.buf.indexOf(0x0d);             // header line ends at \r
@@ -141,6 +158,7 @@ class Plus {
       this.buf = this.buf.subarray(this.hdr.need);
       const { w, h, rb } = this.hdr;
       this.hdr = null;
+      if (this.stallTimer) { clearInterval(this.stallTimer); this.stallTimer = null; }
       try {
         const frame = unpackBits(packed, rb * h);
         const png = buildPng(w, h, rb, frame);
