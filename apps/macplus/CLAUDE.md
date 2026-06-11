@@ -91,6 +91,14 @@ mini** — it pulls, npm-installs, re-syncs secrets, and kickstarts the long-run
 socat agents pick up new code on the next dial-in). Run iMessage WITHOUT `IMSG_DRY_RUN`
 for live sends.
 
+**Deploying from a remote machine (after your commit + push), one line:**
+```bash
+ssh admin@192.168.7.50 'bash ~/hilma-deploy/apps/macplus/backend/update.sh'
+```
+That single script does the pull, deps, secret sync, and daemon restarts, then prints a
+fleet status table. No ssh handy? `nc 192.168.7.50 2323` drops you in a shell on the mini —
+run the same command — or just ask the Claude Code session running on the mini.
+
 ---
 
 ## The hardware/storage setup
