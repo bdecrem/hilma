@@ -106,8 +106,10 @@ class Plus {
   private buf = Buffer.alloc(0);
   // null = waiting for a SCRB header line; else collecting `need` packed bytes
   private hdr: { w: number; h: number; rb: number; need: number } | null = null;
+  private acked = 0;            // payload bytes we've ack'd (stop-and-wait, CHUNK=512)
   private rxTotal = 0;          // bytes seen since GRAB (diagnostic)
   private lastLog = 0;
+  static readonly CHUNK = 512;
   private stallTimer: ReturnType<typeof setInterval> | null = null;
   constructor(public sock: net.Socket) {
     sock.setNoDelay(true);
@@ -118,6 +120,7 @@ class Plus {
     log('GRAB -> Plus');
     this.hdr = null;
     this.buf = Buffer.alloc(0);
+    this.acked = 0;
     this.rxTotal = 0; this.lastLog = 0;
     if (this.stallTimer) clearInterval(this.stallTimer);
     let last = -1;
@@ -128,6 +131,17 @@ class Plus {
       last = this.hdr ? this.buf.length : -1;
     }, 3000);
     this.sock.write('GRAB\r');
+  }
+  /** Stop-and-wait: send one "K\r" for each fully-received 512B chunk (and the
+   *  final partial), so the Plus only sends the next chunk once the modem has
+   *  actually drained this one. */
+  private ackChunks(): void {
+    if (!this.hdr) return;
+    while (this.acked < this.hdr.need) {
+      const next = Math.min(this.acked + Plus.CHUNK, this.hdr.need);
+      if (this.buf.length >= next) { this.sock.write('K\r'); this.acked = next; }
+      else break;
+    }
   }
   private feed(d: Buffer): void {
     this.rxTotal += d.length;
@@ -152,7 +166,8 @@ class Plus {
         if (this.buf.length === 0) return;
         continue;
       }
-      // collecting binary payload
+      // collecting binary payload — ack each completed 512B chunk (stop-and-wait)
+      this.ackChunks();
       if (this.buf.length < this.hdr.need) return;
       const packed = this.buf.subarray(0, this.hdr.need);
       this.buf = this.buf.subarray(this.hdr.need);

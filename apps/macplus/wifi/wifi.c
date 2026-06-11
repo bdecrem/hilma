@@ -55,6 +55,7 @@ typedef struct WIFIState {
     char          serRing[4096];    /* the serial driver's SerSetBuf ring */
     char          serScratch[2048]; /* FSRead scratch — separate from the ring */
     Boolean       scrReq;           /* a GRAB arrived on the screen channel */
+    Boolean       scrAck;           /* a K (chunk ack) arrived on the screen channel */
     char          scrCmd[16];       /* line accumulator for the screen channel */
     short         scrCmdLen;
 } WIFIState;
@@ -84,6 +85,8 @@ static void MuxData(short chan, const unsigned char *b, short n)
                 if (gW->scrCmdLen >= 4 && gW->scrCmd[0] == 'G' && gW->scrCmd[1] == 'R'
                     && gW->scrCmd[2] == 'A' && gW->scrCmd[3] == 'B')
                     gW->scrReq = true;
+                else if (gW->scrCmdLen == 1 && gW->scrCmd[0] == 'K')   /* chunk ack */
+                    gW->scrAck = true;
                 gW->scrCmdLen = 0;
             } else if (gW->scrCmdLen < (short)sizeof(gW->scrCmd) - 1) {
                 gW->scrCmd[gW->scrCmdLen++] = (char)c;
