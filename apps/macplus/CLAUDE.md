@@ -71,14 +71,25 @@ history is preserved further down ("Connecting the Plus to WiFi", "RetroWiFi SI"
   history; it's off the app lists and the SD card.
 
 **Mini backend — SOLVED (2026-06-11): see [`BACKEND.md`](BACKEND.md), the canonical ops doc.**
-All mini-side agents now run as **LaunchAgents** (`sh.macplus.*`, gui/501 — NOT root
-daemons, because iMessage needs admin's GUI session for Automation + Full Disk Access;
-auto-login is on so they start at boot) out of a dedicated **deploy clone**
-`~/hilma-deploy` that only ever `git pull`s. GitHub is the only sync path — the old
-rsync/hand-started copies (`~/claude-plus`, `~/surf-agent`, `~/agent-*`) are retired,
-which also kills the stale-route-map class of bug. **Update verb (no sudo):**
-`bash ~/hilma-deploy/apps/macplus/backend/update.sh`. Run iMessage WITHOUT
-`IMSG_DRY_RUN` for live sends.
+The model in brief — every mini-side agent (`agent-*` in this folder) runs on the mini as:
+
+```
+launchd (~/Library/LaunchAgents/sh.macplus.<name>.plist — starts at boot, restarts on crash)
+  └─> backend/run-service.sh <name>     (the one runner, in git; loads ~/.macplus-backend.env)
+        └─> the agent from the deploy clone ~/hilma-deploy/apps/macplus/agent-<name>/
+            (socat wrapper for the dial-in agents code/paint/surf; plain `tsx … --listen <port>`
+             for the TCP servers mux/imessage/diag/quote/bridge/screen)
+```
+
+Nothing is started by hand — launchd is both launcher and keeper-alive (they're user
+LaunchAgents, gui/501, NOT root daemons, because iMessage needs admin's GUI session for
+Automation + FDA; auto-login is on so they still start at boot). The deploy clone only
+ever `git pull`s; GitHub is the only sync path (the old rsync/hand-started copies
+`~/claude-plus`, `~/surf-agent`, `~/agent-*` are retired). **To ship a backend change:
+push to `main`, then run `bash ~/hilma-deploy/apps/macplus/backend/update.sh` on the
+mini** — it pulls, npm-installs, re-syncs secrets, and kickstarts the long-runners (the
+socat agents pick up new code on the next dial-in). Run iMessage WITHOUT `IMSG_DRY_RUN`
+for live sends.
 
 ---
 
@@ -302,8 +313,8 @@ speed; CONNECT-tail handoff into the parser; raw transport) are baked into every
 it compiled and delivered a working analog clock end to end (and the on-the-fly MacBinary writer's
 odd-address bomb is fixed). Quote of the Day, The Bridge, and iMessage joined the family on the WiFi
 service; all run over the shared link. **The Talking Plus is retired** (MacinTalk freezes the Plus
-mouse — see its section below). Mini agents are still hand-started (LaunchAgent-ization is the open
-ops TODO; see "WHERE WE LEFT OFF").
+mouse — see its section below). Mini agents run as launchd-managed LaunchAgents from the deploy
+clone — see [`BACKEND.md`](BACKEND.md) (the hand-started era ended 2026-06-11).
 
 #### Macinclaude Foundry (`foundry/` + `agent-foundry/`) — the self-extending Plus
 
