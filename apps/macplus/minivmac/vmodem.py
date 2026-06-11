@@ -80,6 +80,12 @@ def dial(conn, target):
     log("call ended")
 
 
+# Optional: throttle the Mac->mini (uplink) direction to mimic the real RetroWiFi
+# modem, whose WiFi uplink is far slower than the localhost relay. Set
+# MNVM_UPLINK_BPS=160 (say) to reproduce the slow-link screen-grab path.
+UPLINK_BPS = int(os.environ.get("MNVM_UPLINK_BPS", "0"))  # 0 = unlimited
+
+
 def data_mode(conn, mini):
     """Relay raw bytes both ways until either side hangs up. '+++' from the
     Mac side returns to command mode (mirrors the apps' Disconnect)."""
@@ -112,6 +118,8 @@ def data_mode(conn, mini):
                     return
                 try:
                     mini.sendall(d)
+                    if UPLINK_BPS > 0:
+                        time.sleep(len(d) / UPLINK_BPS)   # pace the uplink like the real modem
                 except OSError:
                     return
         if mini in r:

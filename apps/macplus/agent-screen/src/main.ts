@@ -31,6 +31,11 @@ const OUT = process.env.SCREEN_OUT || path.join(os.homedir(), 'screen-latest.png
 
 function log(m: string): void { console.error(`[screen ${new Date().toISOString()}] ${m}`); }
 
+/* nothing should fail silently: surface signals and uncaught errors */
+process.on('SIGTERM', () => { log('!! received SIGTERM — exiting'); process.exit(143); });
+process.on('uncaughtException', (e) => { log(`!! uncaughtException: ${e && e.stack ? e.stack : e}`); });
+process.on('unhandledRejection', (e) => { log(`!! unhandledRejection: ${e}`); });
+
 /* ---- minimal 1-bit grayscale PNG encoder ---- */
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
@@ -144,6 +149,10 @@ class Plus {
     }
   }
   private feed(d: Buffer): void {
+    if (this.rxTotal === 0) {
+      const head = d.subarray(0, 48);
+      log(`first bytes (${d.length}): hex=${head.toString('hex')} ascii=${JSON.stringify(head.toString('latin1'))}`);
+    }
     this.rxTotal += d.length;
     this.buf = this.buf.length ? Buffer.concat([this.buf, d]) : d;
     if (this.hdr && this.buf.length - this.lastLog >= 1024) {
