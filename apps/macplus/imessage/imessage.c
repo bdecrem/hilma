@@ -114,10 +114,10 @@ static short   gPrefVRef = 0;
 
 /* ---- window geometry ---- */
 /* The Plus screen is 512x342 with a 20px menu bar. The window opens at top=40
- * (title bar fills 20-40), so the content must be <= 342-40 = 302 tall to keep
- * the bottom (and the scrollbar's down-arrow) on screen. */
-#define WIN_W 504
-#define WIN_H 300
+ * (title bar fills 20-40). Keep clear margin so it fits real hardware (slight
+ * CRT overscan), not just the pixel-exact emulator: content 6..506 x 40..330. */
+#define WIN_W 500
+#define WIN_H 290
 #define LIST_W 150                      /* conversation list pane width */
 #define SBAR_W 16                       /* thread scrollbar */
 #define DIV_X  LIST_W                    /* divider between panes */

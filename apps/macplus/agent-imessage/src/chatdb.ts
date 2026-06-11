@@ -17,6 +17,7 @@
 import { execFileSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
+import { resolveHandle } from './contacts.ts';
 
 const DB = process.env.IMSG_CHATDB || path.join(os.homedir(), 'Library/Messages/chat.db');
 
@@ -87,10 +88,48 @@ export function getConversations(limit = 20): Conversation[] {
   return rows.map((r) => ({
     rowid: r.rowid,
     guid: r.guid,
-    name: (r.dname && String(r.dname).trim()) || String(r.cid || 'unknown'),
+    name: resolveConvName(r),
     unread: r.unread || 0,
     lastDate: r.last_date || 0,
   }));
+}
+
+/** The handles participating in a chat (for naming unnamed group chats). */
+function getParticipants(chatRowid: number): string[] {
+  const rows = query(`
+    SELECT h.id AS id
+    FROM chat_handle_join chj
+    JOIN handle h ON h.ROWID = chj.handle_id
+    WHERE chj.chat_id = ${chatRowid | 0};
+  `);
+  return rows.map((r) => String(r.id)).filter(Boolean);
+}
+
+/** A short label for an unresolved handle (drop the country code noise). */
+function shortHandle(h: string): string {
+  if (h.includes('@')) return h;
+  const d = h.replace(/\D/g, '');
+  return d.length > 10 ? `+${d}` : h;
+}
+
+/* Pick the best display name for a conversation:
+ *   1. an explicit group display_name
+ *   2. one participant  -> that handle's contact name (or the raw handle)
+ *   3. many participants -> their names, comma-joined (+N for the rest)
+ * Driving off the participant list (not chat_identifier) means group chats with
+ * an opaque hex GUID still resolve to people, not the GUID. */
+function resolveConvName(r: { rowid: number; cid: string; dname: string | null }): string {
+  const dname = (r.dname && String(r.dname).trim()) || '';
+  if (dname) return dname;
+  const handles = getParticipants(r.rowid);
+  if (handles.length === 1) return resolveHandle(handles[0]) || shortHandle(handles[0]);
+  if (handles.length > 1) {
+    const names = handles.map((h) => resolveHandle(h) || shortHandle(h));
+    const shown = names.slice(0, 3).join(', ');
+    return names.length > 3 ? `${shown} +${names.length - 3}` : shown;
+  }
+  const cid = String(r.cid || '');
+  return resolveHandle(cid) || cid || 'unknown';
 }
 
 /** Messages in a chat, oldest -> newest, last `limit`. */
@@ -103,7 +142,11 @@ export function getMessages(chatRowid: number, limit = 40): Message[] {
     ORDER BY m.date DESC
     LIMIT ${limit | 0};
   `);
-  rows.reverse(); // sqlite gave newest-first; we want oldest-first for display
+  // The query grabs the most-recent `limit` (date DESC); reverse to chronological
+  // (oldest -> newest) so the Plus renders the newest at the bottom, where it
+  // auto-scrolls — matching iMessage. (Serving newest-first put the newest at the
+  // top and scrolled to the oldest.)
+  rows.reverse();
   const out: Message[] = [];
   for (const r of rows) {
     let body = bodyOf(r);
