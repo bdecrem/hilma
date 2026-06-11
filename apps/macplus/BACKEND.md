@@ -90,9 +90,8 @@ If a service is down, check its err log, then `launchctl kickstart -k gui/501/sh
 
 - **code (2324):** the agent *program* runs from the deploy clone; its *workspace*
   (`--cwd`) is the dev tree `~/Documents/code/hilma` — that's the repo the Plus
-  user edits. `~/Documents` is TCC-protected: for the agent to read/edit the dev
-  tree, the mini needs a one-time **Full Disk Access** grant for the responsible
-  binary (System Settings → Privacy & Security → Full Disk Access). Model auth
+  user edits. `~/Documents` is TCC-protected; see "TCC grants — confirmed
+  empirically" below for the one-time grant that makes this work. Model auth
   is the `claude` CLI's OAuth login or `ANTHROPIC_API_KEY`; F2 knowledge tools
   use the SUPABASE keys from the central env file.
 - **paint (2325):** `ATK_PYTHON=/usr/bin/python3` is set by `run-service.sh`
@@ -100,10 +99,28 @@ If a service is down, check its err log, then `launchctl kickstart -k gui/501/sh
 - **surf (2326):** plain Anthropic SDK — **requires** `ANTHROPIC_API_KEY` (no
   OAuth fallback). socat opts must stay `raw,echo=0` (cooked pty echoes commands
   back and duplicates frames).
-- **imessage (2328):** reads `~/Library/Messages/chat.db` (needs **Full Disk
-  Access** for the launchd context) and sends via `osascript` → Messages.app
-  (first send triggers an **Automation** consent prompt on the mini's screen —
-  click Allow once). `IMSG_DRY_RUN` must be **unset** for live sends.
+- **imessage (2328):** reads `~/Library/Messages/chat.db` (needs the **node FDA
+  grant** below) and sends via `osascript` → Messages.app (first send triggers
+  an **Automation** consent prompt on the mini's screen — click Allow once).
+  `IMSG_DRY_RUN` must be **unset** for live sends.
+
+### TCC grants — confirmed empirically (2026-06-11)
+
+- **Grant Full Disk Access to `node`** (`/opt/homebrew/bin/node` — resolves to
+  the Cellar binary). Because every LaunchAgent here execs through tsx into
+  node, the job's responsible binary is node, and **the grant covers the job's
+  children too** (the iMessage agent's `sqlite3` reads chat.db; the Code
+  agent's Bash tool reads/edits the Documents dev tree — both verified live).
+  Heads-up: a Homebrew node upgrade changes the Cellar path → re-grant.
+- **FDA vs Files & Folders:** a stored *deny* in Files & Folders → "Documents
+  Folder" (from once clicking "Don't Allow") blocks Documents reads **even when
+  the app has Full Disk Access**. If a terminal app can read chat.db but not
+  `~/Documents`, that's the fix: System Settings → Privacy & Security →
+  Files & Folders → the app → toggle Documents Folder on.
+- **Escape hatch:** if your interactive context is TCC-blocked but node isn't,
+  a one-shot LaunchAgent whose `ProgramArguments[0]` is node can do the
+  blocked file work (this is how the dev tree was pulled and secrets synced
+  during the migration).
 - **mux (2330):** the route map (`SERVICES` in `agent-mux/src/main.ts`) is part
   of the code — adding a service = edit, push, update, kickstart (update.sh does
   the kickstart). It has a built-in `echo` service for bring-up tests.
