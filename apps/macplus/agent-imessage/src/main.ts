@@ -20,7 +20,7 @@
 
 import net from 'node:net';
 import { getConversations, getMessages, maxMessageRowid, incomingSince, type Conversation } from './chatdb.ts';
-import { sendIMessage } from './applescript.ts';
+import { sendIMessage, sendIMessageToHandle } from './applescript.ts';
 import { encodeList, encodeConversation, encodeStatus, encodeError, encodeSent } from './protocol.ts';
 
 const BAUD = Math.max(300, parseInt(process.env.SURF_BAUD || '9600', 10) || 9600);
@@ -122,6 +122,22 @@ class Conn {
     }
   }
 
+  /* "New" flow: text a recipient with no existing thread, then refresh the list
+   * so the freshly-created conversation appears. */
+  private doSendTo(handle: string, text: string): void {
+    if (!handle) { this.send(encodeError('no recipient')); return; }
+    if (!text) { this.send(encodeError('nothing to send')); return; }
+    try {
+      sendIMessageToHandle(handle, text);
+      log(`SENDTO ${handle}: ${JSON.stringify(text)}`);
+      this.send(encodeStatus(`sent to ${handle}`));
+      this.seenRowid = maxMessageRowid();
+      this.doList();
+    } catch (e) {
+      this.send(encodeError(`send failed: ${e instanceof Error ? e.message : String(e)}`));
+    }
+  }
+
   private handle(line: string): void {
     const m = line.match(/^(\S+)\s*(.*)$/s);
     if (!m) return;
@@ -136,7 +152,14 @@ class Conn {
       this.doSend(idx, text);
       return;
     }
-    this.send(encodeError(`unknown command ${verb} - try LIST / OPEN <n> / SEND <n> <text>`));
+    if (verb === 'SENDTO') {
+      const sp = rest.indexOf(' ');
+      const handle = sp < 0 ? rest : rest.slice(0, sp);
+      const text = sp < 0 ? '' : rest.slice(sp + 1);
+      this.doSendTo(handle, text);
+      return;
+    }
+    this.send(encodeError(`unknown command ${verb} - try LIST / OPEN <n> / SEND <n> <text> / SENDTO <handle> <text>`));
   }
 
   /* poll chat.db for newly-arrived incoming mail */

@@ -24,3 +24,27 @@ export function sendIMessage(chatGuid: string, text: string): void {
     `end tell`;
   execFileSync('/usr/bin/osascript', ['-e', script], { timeout: 30000 });
 }
+
+/* Start a NEW conversation with a handle that has no existing chat (the "New"
+ * button flow). Unlike sendIMessage, there's no chat GUID yet, so we address the
+ * participant directly: try iMessage (blue) first, fall back to SMS (green) for
+ * numbers not on iMessage. SMS routing requires Text Message Forwarding on for
+ * this Mac. */
+export function sendIMessageToHandle(handle: string, text: string): void {
+  if (process.env.IMSG_DRY_RUN) {
+    console.error(`[imessage DRY_RUN] would start a NEW chat to ${handle}: ${JSON.stringify(text)}`);
+    return;
+  }
+  const h = asAppleStr(handle), t = asAppleStr(text);
+  const script =
+    `tell application "Messages"\n` +
+    `  try\n` +
+    `    set svc to 1st service whose service type = iMessage\n` +
+    `    send ${t} to participant ${h} of svc\n` +
+    `  on error\n` +
+    `    set svc to 1st service whose service type = SMS\n` +
+    `    send ${t} to participant ${h} of svc\n` +
+    `  end try\n` +
+    `end tell`;
+  execFileSync('/usr/bin/osascript', ['-e', script], { timeout: 30000 });
+}

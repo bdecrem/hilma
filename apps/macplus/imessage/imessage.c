@@ -88,6 +88,16 @@
 #define kPromptEdit   4
 #define kPromptFrame  5
 
+/* ---- New Message dialog (imessage.r DLOG/DITL 130): To + Message ---- */
+#define kDlgNew     130
+#define kNewSend      1
+#define kNewCancel    2
+#define kNewToLabel   3
+#define kNewTo        4
+#define kNewMsgLabel  5
+#define kNewMsg       6
+#define kNewFrame     7
+
 /* ---- prefs ---- */
 #define kPrefMagic   0x494D      /* 'IM' */
 #define kPrefVersion 1
@@ -131,6 +141,7 @@ static short   gPrefVRef = 0;
 #define COMPOSE_H 24                      /* inline reply bar at the thread pane bottom */
 #define THREAD_H (WIN_H - COMPOSE_H)      /* thread text + scrollbar height (above the bar) */
 #define SENDBTN_W 46                      /* the Send button */
+#define NEWBTN_W  40                      /* the "New" (compose to a new recipient) button */
 
 /* ---- conversation list ---- */
 #define MAX_CONV 24
@@ -167,9 +178,11 @@ static ControlHandle gListScroll;   /* conversation list (left pane) scrollbar *
 static short gListTop = 0;           /* index of the first visible conversation */
 static TEHandle      gCompose;       /* inline reply field, bottom of the thread pane */
 static ControlHandle gSendBtn;       /* the Send button */
+static ControlHandle gNewBtn;        /* the "New" button (compose to a new recipient) */
 static void DrawCompose(void);
 static void SetComposeEnabled(Boolean on);
 static void DoSend(void);
+static void DoNewMessage(void);
 static MenuHandle    gAppleM, gFileM, gEditM, gConnM, gMsgM;
 static Boolean       gDone = false;
 
@@ -679,7 +692,8 @@ static void DrawCompose(void)
     Rect box;
     SetPort(gWin);
     MoveTo(DIV_X + 1, THREAD_H); LineTo(WIN_W, THREAD_H);            /* separator above the bar */
-    SetRect(&box, DIV_X + 3, THREAD_H + 2, WIN_W - SENDBTN_W - 4, WIN_H - 3);
+    if (gNewBtn) Draw1Control(gNewBtn);
+    SetRect(&box, DIV_X + NEWBTN_W + 6, THREAD_H + 2, WIN_W - SENDBTN_W - 4, WIN_H - 3);
     EraseRect(&box);
     FrameRect(&box);
     if (gCompose) TEUpdate(&(**gCompose).viewRect, gCompose);
@@ -700,6 +714,48 @@ static void DoSend(void)
     SendChanLine(cmd);
     TESetText("", 0L, gCompose);
     DrawCompose();
+    SetStatus("sending...");
+}
+
+/* ---- "New" — compose a message to a recipient with no existing thread ----
+ * Opens a two-field modal (To + Message); on Send, fires SENDTO <handle> <text>
+ * up the channel. The agent sends it via Messages.app, which routes blue/green
+ * automatically. Replying to an existing thread still uses the inline bar above. */
+static Boolean DoNewMessageDialog(char *toOut, short toCap, char *msgOut, short msgCap)
+{
+    DialogPtr dlg; short item; short t; Handle h; Rect box; Boolean go = false;
+    Str255 pto, pmsg; ModalFilterUPP filt;
+    dlg = GetNewDialog(kDlgNew, 0L, (WindowPtr)-1L);
+    if (!dlg) { SetStatus("could not open New Message dialog"); return false; }
+    gDefItem = kNewSend; gCanItem = kNewCancel; gFrameItem = kNewSend;
+    filt = NewModalFilterUPP(KeyFilter);
+    GetDialogItem(dlg, kNewFrame, &t, &h, &box);
+    SetDialogItem(dlg, kNewFrame, t, (Handle)NewUserItemUPP(&FrameDefault), &box);
+    SetDlgText(dlg, kNewTo, "\p");
+    SetDlgText(dlg, kNewMsg, "\p");
+    SelectDialogItemText(dlg, kNewTo, 0, 32767);
+    for (;;) {
+        ModalDialog(filt, &item);
+        if (item == kNewSend) {
+            GetDlgText(dlg, kNewTo, pto);
+            GetDlgText(dlg, kNewMsg, pmsg);
+            if (pto[0] == 0 || pmsg[0] == 0) { SysBeep(1); continue; }   /* both required */
+            P2C(pto, toOut);   if ((short)pto[0]  >= toCap)  toOut[toCap - 1]   = 0;
+            P2C(pmsg, msgOut); if ((short)pmsg[0] >= msgCap) msgOut[msgCap - 1] = 0;
+            go = true; break;
+        } else if (item == kNewCancel) break;
+    }
+    DisposeModalFilterUPP(filt); DisposeDialog(dlg);
+    return go;
+}
+
+static void DoNewMessage(void)
+{
+    char to[128], msg[300], cmd[460]; short n = 0;
+    if (!gConnected) { SetStatus("connect first (Connection > Connect)"); SysBeep(1); return; }
+    if (!DoNewMessageDialog(to, sizeof(to), msg, sizeof(msg))) return;
+    CatStr(cmd, &n, "SENDTO "); CatStr(cmd, &n, to); CatStr(cmd, &n, " "); CatStr(cmd, &n, msg); cmd[n] = 0;
+    SendChanLine(cmd);
     SetStatus("sending...");
 }
 
@@ -821,6 +877,8 @@ static void ContentClick(EventRecord *ev)
             else TrackControl(c, pt, (ControlActionUPP)ListScrollAction);
         } else if (c == gSendBtn) {
             if (TrackControl(c, pt, 0L)) DoSend();
+        } else if (c == gNewBtn) {
+            if (TrackControl(c, pt, 0L)) DoNewMessage();
         }
         return;
     }
@@ -862,6 +920,7 @@ static void SyncMenus(void)
         EnableItem(gConnM, kConnConnect); DisableItem(gConnM, kConnDisconnect);
         DisableItem(gMsgM, kMsgRefresh); DisableItem(gMsgM, kMsgCheck);
     }
+    if (gNewBtn) HiliteControl(gNewBtn, (unsigned char)(up ? 0 : 255));   /* New needs only a live link */
 }
 
 static void DoAbout(void) { SetStatus("your texts, on a 1986 Macintosh"); SysBeep(1); }
@@ -932,6 +991,7 @@ static void HandleEvent(EventRecord *ev)
                 if (gScroll) HiliteControl(gScroll, h);
                 if (gListScroll) HiliteControl(gListScroll, h);
                 if (gSendBtn) HiliteControl(gSendBtn, gSel >= 0 ? h : 255);
+                if (gNewBtn) HiliteControl(gNewBtn, gConnected ? h : 255);
                 if (gCompose) { if ((ev->modifiers & activeFlag) && gSel >= 0) TEActivate(gCompose); else TEDeactivate(gCompose); }
             } break;
     }
@@ -962,8 +1022,10 @@ static void SetUpWindow(void)
     SetRect(&r, LBAR_X, -1, DIV_X + 1, WIN_H + 1);
     gListScroll = NewControl(gWin, &r, "\p", true, 0, 0, 0, scrollBarProc, 0);
     { FontInfo fi; TextFont(geneva); TextSize(9); TextFace(0); GetFontInfo(&fi); gAsc9 = fi.ascent; gLh9 = fi.ascent + fi.descent + fi.leading; }
-    /* inline reply field + Send button, pinned to the bottom of the thread pane */
-    { Rect tr; SetRect(&tr, DIV_X + 6, THREAD_H + 4, WIN_W - SENDBTN_W - 7, WIN_H - 4);
+    /* "New" button at the left of the bar, then the inline reply field, then Send */
+    SetRect(&r, DIV_X + 3, THREAD_H + 2, DIV_X + 3 + NEWBTN_W, WIN_H - 2);
+    gNewBtn = NewControl(gWin, &r, "\pNew", true, 0, 0, 0, pushButProc, 0);
+    { Rect tr; SetRect(&tr, DIV_X + NEWBTN_W + 9, THREAD_H + 4, WIN_W - SENDBTN_W - 7, WIN_H - 4);
       TextFont(geneva); TextSize(9); TextFace(0);
       gCompose = TENew(&tr, &tr); }
     SetRect(&r, WIN_W - SENDBTN_W - 3, THREAD_H + 2, WIN_W - 3, WIN_H - 2);

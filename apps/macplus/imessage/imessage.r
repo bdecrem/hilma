@@ -75,6 +75,34 @@ resource 'DITL' (129) {
     }
 };
 
+/* ---- New Message (two fields: To + Message) ----
+ * dialog 380 wide x 158 tall. left = (512-380)/2 = 66 ; top = 110. */
+resource 'DLOG' (130) {
+    { 110, 66, 268, 446 },
+    dBoxProc,
+    visible,
+    noGoAway,
+    0,
+    130,
+    "",
+    noAutoCenter
+};
+
+resource 'DITL' (130) {
+    {
+        /* 1 Send   */ { 128, 290, 148, 364 }, Button    { enabled, "Send" };
+        /* 2 Cancel */ { 128, 200, 148, 274 }, Button    { enabled, "Cancel" };
+
+        /* 3 to label */ { 12, 16, 28, 364 }, StaticText  { enabled, "Send to (phone number or email):" };
+        /* 4 to edit  */ { 30, 16, 48, 364 }, EditText    { enabled, "" };
+
+        /* 5 msg label */ { 56, 16, 72, 364 }, StaticText { enabled, "Message:" };
+        /* 6 msg edit  */ { 74, 16, 120, 364 }, EditText   { enabled, "" };
+
+        /* 7 default-button frame (UserItem) */ { 124, 286, 152, 368 }, UserItem { enabled };
+    }
+};
+
 #include "Processes.r"
 
 resource 'SIZE' (-1) {
