@@ -63,9 +63,8 @@
 #define kConnSettings   4
 
 #define kMsgRefresh 1
-#define kMsgReply   2
-/* 3 separator */
-#define kMsgCheck   4
+#define kMsgCheck   2
+/* Reply removed — replies are the inline compose bar now */
 
 /* ---- Settings dialog (imessage.r DLOG/DITL 128) ---- */
 #define kDlgSettings 128
@@ -129,6 +128,9 @@ static short   gPrefVRef = 0;
 #define ROW_H 16                         /* a conversation-list row */
 #define LBAR_X (DIV_X - SBAR_W)           /* left edge of the list scrollbar */
 #define LIST_ROWS (WIN_H / ROW_H)         /* conversation rows that fit at once */
+#define COMPOSE_H 24                      /* inline reply bar at the thread pane bottom */
+#define THREAD_H (WIN_H - COMPOSE_H)      /* thread text + scrollbar height (above the bar) */
+#define SENDBTN_W 46                      /* the Send button */
 
 /* ---- conversation list ---- */
 #define MAX_CONV 24
@@ -163,6 +165,11 @@ static WindowPtr     gWin;
 static ControlHandle gScroll;       /* thread (right pane) scrollbar */
 static ControlHandle gListScroll;   /* conversation list (left pane) scrollbar */
 static short gListTop = 0;           /* index of the first visible conversation */
+static TEHandle      gCompose;       /* inline reply field, bottom of the thread pane */
+static ControlHandle gSendBtn;       /* the Send button */
+static void DrawCompose(void);
+static void SetComposeEnabled(Boolean on);
+static void DoSend(void);
 static MenuHandle    gAppleM, gFileM, gEditM, gConnM, gMsgM;
 static Boolean       gDone = false;
 
@@ -243,7 +250,7 @@ static short DocHeight(void) { return gDocY + 12; }
 
 static void SyncScrollbar(void)
 {
-    short max = DocHeight() - WIN_H;
+    short max = DocHeight() - THREAD_H;
     if (max < 0) max = 0;
     if (gScroll) {
         SetControlMaximum(gScroll, max);
@@ -263,12 +270,12 @@ static void DrawThread(void)
 {
     Rect view; short i;
     SetPort(gWin);
-    SetRect(&view, DIV_X + 1, 0, VIEW_R, WIN_H);
+    SetRect(&view, DIV_X + 1, 0, VIEW_R, THREAD_H);
     EraseRect(&view);
     for (i = 0; i < gNPL; i++) {
         short top = gPL[i].y - gScrollY;
         short w;
-        if (top > WIN_H) break;
+        if (top > THREAD_H) break;
         if (top + gLh9 < 0) continue;
         StyleFont(gPL[i].style);
         if (StyleRight(gPL[i].style)) {
@@ -377,6 +384,7 @@ static void ImConvStart(short idx, const char *name)
     for (i = 0; name[i] && i < CONV_NAMEW - 1; i++) gThreadName[i] = name[i];
     gThreadName[i] = 0;
     ThreadClear();
+    if (gSel >= 0) SetComposeEnabled(true);   /* a thread is open — you can reply */
 }
 static void ImMsg(char dir, const char *text)
 {
@@ -403,7 +411,7 @@ static void ImEnd(void)
         FlushMsg();
         SyncScrollbar();
         /* jump to newest on a fresh thread load */
-        gScrollY = DocHeight() - WIN_H; if (gScrollY < 0) gScrollY = 0;
+        gScrollY = DocHeight() - THREAD_H; if (gScrollY < 0) gScrollY = 0;
         if (gScroll) SetControlValue(gScroll, gScrollY);
         SetStatus(gThreadName);
     }
@@ -658,14 +666,40 @@ static Boolean DoPromptDialog(const char *label, const char *button, char *out, 
     return go;
 }
 
-static void DoReply(void)
+/* ---- inline reply bar (bottom of the thread pane) ---- */
+
+static void SetComposeEnabled(Boolean on)
 {
-    char text[240]; char cmd[300]; short n; char label[80]; short li = 0;
+    if (gCompose) { if (on) TEActivate(gCompose); else TEDeactivate(gCompose); }
+    if (gSendBtn) HiliteControl(gSendBtn, (unsigned char)(on ? 0 : 255));
+}
+
+static void DrawCompose(void)
+{
+    Rect box;
+    SetPort(gWin);
+    MoveTo(DIV_X + 1, THREAD_H); LineTo(WIN_W, THREAD_H);            /* separator above the bar */
+    SetRect(&box, DIV_X + 3, THREAD_H + 2, WIN_W - SENDBTN_W - 4, WIN_H - 3);
+    EraseRect(&box);
+    FrameRect(&box);
+    if (gCompose) TEUpdate(&(**gCompose).viewRect, gCompose);
+    if (gSendBtn) Draw1Control(gSendBtn);
+}
+
+static void DoSend(void)
+{
+    char text[300]; char cmd[340]; short n, len; Handle h;
+    if (!gCompose) return;
     if (gSel < 0 || gSel >= gConvN) { SetStatus("select a conversation first"); SysBeep(1); return; }
-    CatStr(label, &li, "Reply to "); CatStr(label, &li, gConvName[gSel]); CatStr(label, &li, ":"); label[li] = 0;
-    if (!DoPromptDialog(label, "Send", text, sizeof(text))) return;
+    len = (**gCompose).teLength;
+    if (len <= 0) { SysBeep(1); return; }
+    if (len > (short)sizeof(text) - 1) len = sizeof(text) - 1;
+    h = (Handle)(**gCompose).hText;
+    HLock(h); BlockMoveData(*h, text, len); HUnlock(h); text[len] = 0;
     n = 0; CatStr(cmd, &n, "SEND "); CatLong(cmd, &n, (long)gSel); CatStr(cmd, &n, " "); CatStr(cmd, &n, text); cmd[n] = 0;
     SendChanLine(cmd);
+    TESetText("", 0L, gCompose);
+    DrawCompose();
     SetStatus("sending...");
 }
 
@@ -717,6 +751,7 @@ static void DrawAll(void)
     DrawList();
     DrawThread();
     DrawDivider();
+    DrawCompose();
     if (gScroll) { SetPort(gWin); Draw1Control(gScroll); }
 }
 
@@ -724,7 +759,7 @@ static void DrawAll(void)
 
 static void ScrollTo(short v)
 {
-    short max = DocHeight() - WIN_H;
+    short max = DocHeight() - THREAD_H;
     if (max < 0) max = 0;
     if (v < 0) v = 0;
     if (v > max) v = max;
@@ -739,8 +774,8 @@ static pascal void ScrollAction(ControlHandle c, short part)
     switch (part) {
         case inUpButton:   d = -gLh9; break;
         case inDownButton: d = gLh9;  break;
-        case inPageUp:     d = -(WIN_H - gLh9 * 2); break;
-        case inPageDown:   d = WIN_H - gLh9 * 2;    break;
+        case inPageUp:     d = -(THREAD_H - gLh9 * 2); break;
+        case inPageDown:   d = THREAD_H - gLh9 * 2;    break;
         default: return;
     }
     ScrollTo(GetControlValue(c) + d);
@@ -776,7 +811,7 @@ static void ContentClick(EventRecord *ev)
     Point pt = ev->where; ControlHandle c; short part;
     SetPort(gWin); GlobalToLocal(&pt);
 
-    part = FindControl(pt, gWin, &c);          /* a scrollbar? (thread or list) */
+    part = FindControl(pt, gWin, &c);          /* a scrollbar or the Send button? */
     if (part != 0 && c != 0) {
         if (c == gScroll) {
             if (part == inThumb) { TrackControl(c, pt, 0L); ScrollTo(GetControlValue(c)); }
@@ -784,7 +819,13 @@ static void ContentClick(EventRecord *ev)
         } else if (c == gListScroll) {
             if (part == inThumb) { TrackControl(c, pt, 0L); ListScrollTo(GetControlValue(c)); }
             else TrackControl(c, pt, (ControlActionUPP)ListScrollAction);
+        } else if (c == gSendBtn) {
+            if (TrackControl(c, pt, 0L)) DoSend();
         }
+        return;
+    }
+    if (gCompose && PtInRect(pt, &(**gCompose).viewRect)) {   /* click into the reply field */
+        TEClick(pt, (Boolean)((ev->modifiers & shiftKey) != 0), gCompose);
         return;
     }
     if (pt.h < LBAR_X) {                        /* conversation list (text area) */
@@ -801,8 +842,8 @@ static void DoKey(char ch)
     switch (ch) {
         case 0x1E: ScrollTo(gScrollY - gLh9); break;
         case 0x1F: ScrollTo(gScrollY + gLh9); break;
-        case 0x0B: ScrollTo(gScrollY - (WIN_H - gLh9 * 2)); break;
-        case 0x0C: case ' ': ScrollTo(gScrollY + (WIN_H - gLh9 * 2)); break;
+        case 0x0B: ScrollTo(gScrollY - (THREAD_H - gLh9 * 2)); break;
+        case 0x0C: case ' ': ScrollTo(gScrollY + (THREAD_H - gLh9 * 2)); break;
         case 0x01: ScrollTo(0); break;
         case 0x04: ScrollTo(32000); break;
     }
@@ -816,10 +857,10 @@ static void SyncMenus(void)
 #endif
     if (up) {
         DisableItem(gConnM, kConnConnect); EnableItem(gConnM, kConnDisconnect);
-        EnableItem(gMsgM, kMsgRefresh); EnableItem(gMsgM, kMsgReply); EnableItem(gMsgM, kMsgCheck);
+        EnableItem(gMsgM, kMsgRefresh); EnableItem(gMsgM, kMsgCheck);
     } else {
         EnableItem(gConnM, kConnConnect); DisableItem(gConnM, kConnDisconnect);
-        DisableItem(gMsgM, kMsgRefresh); DisableItem(gMsgM, kMsgReply); DisableItem(gMsgM, kMsgCheck);
+        DisableItem(gMsgM, kMsgRefresh); DisableItem(gMsgM, kMsgCheck);
     }
 }
 
@@ -831,7 +872,18 @@ static void DoMenu(long sel)
     switch (menu) {
         case kAppleMenu: if (item == 1) DoAbout(); else { GetMenuItemText(gAppleM, item, name); OpenDeskAcc(name); } break;
         case kFileMenu:  if (item == kFileQuit) gDone = true; break;
-        case kEditMenu:  SystemEdit(item - 1); break;
+        case kEditMenu:
+            if (gCompose && gSel >= 0) {
+                switch (item) {            /* Undo 1, sep 2, Cut 3, Copy 4, Paste 5, Clear 6 */
+                    case 3: TECut(gCompose);  break;
+                    case 4: TECopy(gCompose); break;
+                    case 5: TEPaste(gCompose); break;
+                    case 6: TEDelete(gCompose); break;
+                    default: break;
+                }
+                DrawCompose();
+            } else SystemEdit(item - 1);
+            break;
         case kConnMenu:
             switch (item) {
                 case kConnConnect:    if (!gConnected) DialMux(); break;
@@ -842,7 +894,6 @@ static void DoMenu(long sel)
         case kMsgMenu:
             switch (item) {
                 case kMsgRefresh: RequestList(); break;
-                case kMsgReply:   DoReply(); break;
                 case kMsgCheck:   RequestList(); break;
             }
             break;
@@ -869,10 +920,20 @@ static void HandleEvent(EventRecord *ev)
         case keyDown: case autoKey:
             ch = ev->message & charCodeMask;
             if (ev->modifiers & cmdKey) { if (ev->what == keyDown) { long s = MenuKey(ch); if (HiWord(s)) DoMenu(s); } }
+            else if (gCompose && gSel >= 0 && gConnected) {   /* type into the reply field */
+                if (ch == 0x0D || ch == 0x03) DoSend();        /* Return / Enter = send */
+                else TEKey(ch, gCompose);
+            }
             else DoKey(ch);
             break;
         case updateEvt: { WindowPtr w = (WindowPtr)ev->message; BeginUpdate(w); if (w == gWin) DrawAll(); EndUpdate(w); break; }
-        case activateEvt: if ((WindowPtr)ev->message == gWin) { short h = (ev->modifiers & activeFlag) ? 0 : 255; if (gScroll) HiliteControl(gScroll, h); if (gListScroll) HiliteControl(gListScroll, h); } break;
+        case activateEvt: if ((WindowPtr)ev->message == gWin) {
+                short h = (ev->modifiers & activeFlag) ? 0 : 255;
+                if (gScroll) HiliteControl(gScroll, h);
+                if (gListScroll) HiliteControl(gListScroll, h);
+                if (gSendBtn) HiliteControl(gSendBtn, gSel >= 0 ? h : 255);
+                if (gCompose) { if ((ev->modifiers & activeFlag) && gSel >= 0) TEActivate(gCompose); else TEDeactivate(gCompose); }
+            } break;
     }
 }
 
@@ -886,7 +947,7 @@ static void SetUpMenus(void)
     gFileM = NewMenu(kFileMenu, "\pFile"); AppendMenu(gFileM, "\pQuit/Q"); InsertMenu(gFileM, 0);
     gEditM = NewMenu(kEditMenu, "\pEdit"); AppendMenu(gEditM, "\pUndo/Z;(-;Cut/X;Copy/C;Paste/V;Clear"); InsertMenu(gEditM, 0);
     gConnM = NewMenu(kConnMenu, "\pConnection"); AppendMenu(gConnM, "\pConnect/K;Disconnect"); InsertMenu(gConnM, 0);
-    gMsgM = NewMenu(kMsgMenu, "\pMessages"); AppendMenu(gMsgM, "\pRefresh List/L;Reply.../R;(-;Check for New/Y"); InsertMenu(gMsgM, 0);
+    gMsgM = NewMenu(kMsgMenu, "\pMessages"); AppendMenu(gMsgM, "\pRefresh List/L;Check for New/Y"); InsertMenu(gMsgM, 0);
     DrawMenuBar();
 }
 
@@ -896,11 +957,17 @@ static void SetUpWindow(void)
     SetRect(&r, left, top, left + WIN_W, top + WIN_H);
     gWin = NewWindow(0L, &r, "\pMacinclaude iMessage", true, documentProc, (WindowPtr)-1L, false, 0);
     SetPort(gWin);
-    SetRect(&r, WIN_W - SBAR_W, -1, WIN_W + 1, WIN_H + 1);
+    SetRect(&r, WIN_W - SBAR_W, -1, WIN_W + 1, THREAD_H + 1);   /* thread scrollbar stops above the compose bar */
     gScroll = NewControl(gWin, &r, "\p", true, 0, 0, 0, scrollBarProc, 0);
     SetRect(&r, LBAR_X, -1, DIV_X + 1, WIN_H + 1);
     gListScroll = NewControl(gWin, &r, "\p", true, 0, 0, 0, scrollBarProc, 0);
     { FontInfo fi; TextFont(geneva); TextSize(9); TextFace(0); GetFontInfo(&fi); gAsc9 = fi.ascent; gLh9 = fi.ascent + fi.descent + fi.leading; }
+    /* inline reply field + Send button, pinned to the bottom of the thread pane */
+    { Rect tr; SetRect(&tr, DIV_X + 6, THREAD_H + 4, WIN_W - SENDBTN_W - 7, WIN_H - 4);
+      TextFont(geneva); TextSize(9); TextFace(0);
+      gCompose = TENew(&tr, &tr); }
+    SetRect(&r, WIN_W - SENDBTN_W - 3, THREAD_H + 2, WIN_W - 3, WIN_H - 2);
+    gSendBtn = NewControl(gWin, &r, "\pSend", true, 0, 0, 0, pushButProc, 0);
 }
 
 static void InitToolbox(void)
@@ -964,6 +1031,7 @@ int main(void)
     while (!gDone) {
         long sleep = gConnected ? 2L : 15L;
         if (WaitNextEvent(everyEvent, &ev, sleep, 0L)) HandleEvent(&ev);
+        if (gCompose) TEIdle(gCompose);     /* blink the reply caret */
 #ifndef IM_TEST
         if (gConnected) PumpReceive();
 #endif
