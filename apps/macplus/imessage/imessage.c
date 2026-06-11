@@ -127,6 +127,8 @@ static short   gPrefVRef = 0;
 #define TXW    (TXR - TX0)               /* thread wrap width (px) */
 #define MARG_TOP 6
 #define ROW_H 16                         /* a conversation-list row */
+#define LBAR_X (DIV_X - SBAR_W)           /* left edge of the list scrollbar */
+#define LIST_ROWS (WIN_H / ROW_H)         /* conversation rows that fit at once */
 
 /* ---- conversation list ---- */
 #define MAX_CONV 24
@@ -158,7 +160,9 @@ static short gAsc9, gLh9;
 
 /* ---- globals ---- */
 static WindowPtr     gWin;
-static ControlHandle gScroll;
+static ControlHandle gScroll;       /* thread (right pane) scrollbar */
+static ControlHandle gListScroll;   /* conversation list (left pane) scrollbar */
+static short gListTop = 0;           /* index of the first visible conversation */
 static MenuHandle    gAppleM, gFileM, gEditM, gConnM, gMsgM;
 static Boolean       gDone = false;
 
@@ -354,7 +358,7 @@ static void FlushMsg(void)
 
 /* ================= im_rx.inc callbacks ================= */
 
-static void ImListStart(void) { gRxMode = RX_LIST; gConvN = 0; }
+static void ImListStart(void) { gRxMode = RX_LIST; gConvN = 0; gListTop = 0; }
 static void ImListRow(short idx, short unread, const char *name)
 {
     short i;
@@ -678,20 +682,28 @@ static void DrawConvName(short x, short y, const char *name, short maxw)
 
 static void DrawList(void)
 {
-    Rect pane; short i;
+    Rect pane; short i, lmax;
     SetPort(gWin);
-    SetRect(&pane, 0, 0, DIV_X, WIN_H);
+    lmax = gConvN - LIST_ROWS; if (lmax < 0) lmax = 0;      /* clamp scroll range */
+    if (gListTop > lmax) gListTop = lmax;
+    if (gListTop < 0) gListTop = 0;
+    SetRect(&pane, 0, 0, LBAR_X, WIN_H);                    /* text area only, not the bar */
     EraseRect(&pane);
     TextFont(geneva); TextSize(9);
-    for (i = 0; i < gConvN; i++) {
-        short y = i * ROW_H;
+    for (i = gListTop; i < gConvN; i++) {
+        short y = (i - gListTop) * ROW_H;
         if (y >= WIN_H) break;
         TextFace(gConvUnread[i] > 0 ? bold : 0);
         if (gConvUnread[i] > 0) { MoveTo(4, y + 12); DrawString("\p>"); }
-        DrawConvName(12, y + 12, gConvName[i], DIV_X - 16);
-        if (i == gSel) { Rect rr; SetRect(&rr, 0, y, DIV_X, y + ROW_H); InvertRect(&rr); }
+        DrawConvName(12, y + 12, gConvName[i], LBAR_X - 16);
+        if (i == gSel) { Rect rr; SetRect(&rr, 0, y, LBAR_X, y + ROW_H); InvertRect(&rr); }
     }
     TextFace(0);
+    if (gListScroll) {
+        SetControlMaximum(gListScroll, lmax);
+        SetControlValue(gListScroll, gListTop);
+        Draw1Control(gListScroll);
+    }
 }
 
 static void DrawDivider(void)
@@ -734,6 +746,29 @@ static pascal void ScrollAction(ControlHandle c, short part)
     ScrollTo(GetControlValue(c) + d);
 }
 
+/* ================= scrolling (conversation list) ================= */
+
+static void ListScrollTo(short v)
+{
+    short lmax = gConvN - LIST_ROWS; if (lmax < 0) lmax = 0;
+    if (v < 0) v = 0; if (v > lmax) v = lmax;
+    if (v == gListTop) return;
+    gListTop = v;
+    DrawList();
+}
+static pascal void ListScrollAction(ControlHandle c, short part)
+{
+    short d = 0;
+    switch (part) {
+        case inUpButton:   d = -1; break;
+        case inDownButton: d = 1;  break;
+        case inPageUp:     d = -(LIST_ROWS - 1); break;
+        case inPageDown:   d = LIST_ROWS - 1;    break;
+        default: return;
+    }
+    ListScrollTo(GetControlValue(c) + d);
+}
+
 /* ================= events ================= */
 
 static void ContentClick(EventRecord *ev)
@@ -741,16 +776,23 @@ static void ContentClick(EventRecord *ev)
     Point pt = ev->where; ControlHandle c; short part;
     SetPort(gWin); GlobalToLocal(&pt);
 
-    if (pt.h < DIV_X) {                       /* conversation list */
-        short row = pt.v / ROW_H;
-        if (row >= 0 && row < gConvN && row != gSel) { gSel = row; DrawList(); OpenConv(row); }
-        else if (row >= 0 && row < gConvN) { OpenConv(row); }
+    part = FindControl(pt, gWin, &c);          /* a scrollbar? (thread or list) */
+    if (part != 0 && c != 0) {
+        if (c == gScroll) {
+            if (part == inThumb) { TrackControl(c, pt, 0L); ScrollTo(GetControlValue(c)); }
+            else TrackControl(c, pt, (ControlActionUPP)ScrollAction);
+        } else if (c == gListScroll) {
+            if (part == inThumb) { TrackControl(c, pt, 0L); ListScrollTo(GetControlValue(c)); }
+            else TrackControl(c, pt, (ControlActionUPP)ListScrollAction);
+        }
         return;
     }
-    part = FindControl(pt, gWin, &c);          /* thread scrollbar */
-    if (c == gScroll && part != 0) {
-        if (part == inThumb) { TrackControl(c, pt, 0L); ScrollTo(GetControlValue(c)); }
-        else TrackControl(c, pt, (ControlActionUPP)ScrollAction);
+    if (pt.h < LBAR_X) {                        /* conversation list (text area) */
+        short row = gListTop + pt.v / ROW_H;
+        if (row >= 0 && row < gConvN) {
+            if (row != gSel) { gSel = row; DrawList(); }
+            OpenConv(row);
+        }
     }
 }
 
@@ -830,7 +872,7 @@ static void HandleEvent(EventRecord *ev)
             else DoKey(ch);
             break;
         case updateEvt: { WindowPtr w = (WindowPtr)ev->message; BeginUpdate(w); if (w == gWin) DrawAll(); EndUpdate(w); break; }
-        case activateEvt: if ((WindowPtr)ev->message == gWin && gScroll) HiliteControl(gScroll, (ev->modifiers & activeFlag) ? 0 : 255); break;
+        case activateEvt: if ((WindowPtr)ev->message == gWin) { short h = (ev->modifiers & activeFlag) ? 0 : 255; if (gScroll) HiliteControl(gScroll, h); if (gListScroll) HiliteControl(gListScroll, h); } break;
     }
 }
 
@@ -856,6 +898,8 @@ static void SetUpWindow(void)
     SetPort(gWin);
     SetRect(&r, WIN_W - SBAR_W, -1, WIN_W + 1, WIN_H + 1);
     gScroll = NewControl(gWin, &r, "\p", true, 0, 0, 0, scrollBarProc, 0);
+    SetRect(&r, LBAR_X, -1, DIV_X + 1, WIN_H + 1);
+    gListScroll = NewControl(gWin, &r, "\p", true, 0, 0, 0, scrollBarProc, 0);
     { FontInfo fi; TextFont(geneva); TextSize(9); TextFace(0); GetFontInfo(&fi); gAsc9 = fi.ascent; gLh9 = fi.ascent + fi.descent + fi.leading; }
 }
 
