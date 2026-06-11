@@ -113,11 +113,14 @@ If a service is down, check its err log, then `launchctl kickstart -k gui/501/sh
   children too** (the iMessage agent's `sqlite3` reads chat.db; the Code
   agent's Bash tool reads/edits the Documents dev tree — both verified live).
   Heads-up: a Homebrew node upgrade changes the Cellar path → re-grant.
-- **FDA vs Files & Folders:** a stored *deny* in Files & Folders → "Documents
-  Folder" (from once clicking "Don't Allow") blocks Documents reads **even when
-  the app has Full Disk Access**. If a terminal app can read chat.db but not
-  `~/Documents`, that's the fix: System Settings → Privacy & Security →
-  Files & Folders → the app → toggle Documents Folder on.
+- **FDA vs a stored Documents deny:** a stored *deny* for the Documents folder
+  (from once clicking "Don't Allow") blocks Documents reads **even when the app
+  has Full Disk Access** — and on current macOS the Files & Folders pane does
+  NOT show a per-folder row you could toggle. The fix (confirmed 2026-06-11) is
+  to clear the stored decision:
+  `tccutil reset SystemPolicyDocumentsFolder com.apple.Terminal`
+  (no sudo; substitute the app's bundle id). With FDA present, access resumes
+  immediately, no new prompt.
 - **Escape hatch:** if your interactive context is TCC-blocked but node isn't,
   a one-shot LaunchAgent whose `ProgramArguments[0]` is node can do the
   blocked file work (this is how the dev tree was pulled and secrets synced
