@@ -1,0 +1,53 @@
+name: Peri
+options:
+  bundleIdPrefix: com.bartdecrem
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: 274T5WCVD2
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    exactVersion: 147.0.0
+
+targets:
+  Peri:
+    type: application
+    platform: iOS
+    sources:
+      - path: Peri
+        excludes:
+          - "Secrets.swift.example"
+    dependencies:
+      - package: WebRTC
+    info:
+      path: Peri/Info.plist
+      properties:
+        CFBundleDisplayName: Peri
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSMicrophoneUsageDescription: Peri listens so you can review and learn by voice while you walk.
+        # The whole point is pocket use — keep the voice session alive with
+        # the screen locked.
+        UIBackgroundModes:
+          - audio
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.Peri
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

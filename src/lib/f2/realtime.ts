@@ -6,7 +6,8 @@ import {
   type F2ThreadMessage,
 } from './threads'
 
-export type RealtimeMode = 'global' | 'topic'
+// 'walk' belongs to Peri (src/lib/f4) but shares this table + session helpers.
+export type RealtimeMode = 'global' | 'topic' | 'walk'
 
 export type VoiceSession = {
   id: string
@@ -268,9 +269,13 @@ function selectRelevantContent(content: string, query: string): string {
 
 export async function createOpenAIRealtimeClientSecret(input: {
   instructions: string
+  /** Override the tool catalog (defaults to F2's get_topic_context). */
+  tools?: unknown[]
+  /** Override the output voice (defaults to env / marin). */
+  voice?: string
 }) {
   const model = realtimeModel()
-  const voice = realtimeVoice()
+  const voice = input.voice ?? realtimeVoice()
   const body = {
     session: {
       type: 'realtime',
@@ -295,7 +300,7 @@ export async function createOpenAIRealtimeClientSecret(input: {
         effort: realtimeReasoningEffort(),
       },
       tool_choice: 'auto',
-      tools: [getTopicContextTool()],
+      tools: input.tools ?? [getTopicContextTool()],
     },
   }
 
