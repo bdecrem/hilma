@@ -16,6 +16,7 @@ struct TopicView: View {
     @State private var loading = true
     @State private var distilling = false
     @State private var distillNote: String? = nil
+    @State private var voicePresented = false
 
     var body: some View {
         ScrollView {
@@ -37,6 +38,14 @@ struct TopicView: View {
         .scrollIndicators(.hidden)
         .background(Theme.bg)
         .task { await load() }
+        .fullScreenCover(isPresented: $voicePresented, onDismiss: {
+            Task {
+                await load()
+                await session.refreshHome()
+            }
+        }) {
+            VoiceView(topicId: topicId, topicTitle: topicTitle).environment(session)
+        }
     }
 
     // MARK: Header
@@ -86,22 +95,40 @@ struct TopicView: View {
             }
             .padding(.top, 6)
 
-            NavigationLink {
-                ChatView(topicId: topicId, topicTitle: topicTitle)
-                    .toolbar(.hidden, for: .navigationBar)
-            } label: {
-                HStack(spacing: 7) {
-                    Image(systemName: "bubble.left.and.bubble.right")
-                        .font(.system(size: 13, weight: .medium))
-                    Text("Discuss — ask anything about this")
-                        .font(.system(size: 14, weight: .medium))
+            HStack(spacing: 8) {
+                NavigationLink {
+                    ChatView(topicId: topicId, topicTitle: topicTitle)
+                        .toolbar(.hidden, for: .navigationBar)
+                } label: {
+                    HStack(spacing: 7) {
+                        Image(systemName: "bubble.left.and.bubble.right")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("Discuss")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(Theme.moss)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Theme.mossSoft, in: Capsule())
                 }
-                .foregroundStyle(Theme.moss)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(Theme.mossSoft, in: Capsule())
+                .buttonStyle(.plain)
+
+                Button {
+                    voicePresented = true
+                } label: {
+                    HStack(spacing: 7) {
+                        Image(systemName: "waveform")
+                            .font(.system(size: 13, weight: .medium))
+                        Text("Talk it through")
+                            .font(.system(size: 14, weight: .medium))
+                    }
+                    .foregroundStyle(Theme.moss)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Theme.mossSoft, in: Capsule())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .padding(.top, 14)
         }
     }

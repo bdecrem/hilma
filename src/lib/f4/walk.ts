@@ -1,5 +1,5 @@
 import { f2Supabase } from '@/lib/f2/supabase'
-import { buildFullContent, getThreadById } from '@/lib/f2/threads'
+import { buildFullContent, getThreadById, type F2Thread } from '@/lib/f2/threads'
 import { applyReview, dueCards, getCardById, homeData } from '@/lib/f3/cards'
 
 // Peri — the walking voice tutor. A walk session is one Realtime conversation
@@ -88,6 +88,38 @@ VOICE RULES — these matter more than anything:
 - Audio only: no markdown, no spelled-out URLs, no formatting.`
 }
 
+// Topic-scoped voice: the user hopped into voice from one topic in Loci.
+// Same Peri persona and tools, but the conversation orbits this topic —
+// discuss it, go deeper, and quiz its due ideas when the user is game.
+export function buildTopicVoiceInstructions(input: {
+  userName: string
+  thread: F2Thread
+  dueCount: number
+}): string {
+  const name = friendlyName(input.userName)
+  const subject = input.thread.topic ?? input.thread.url ?? 'this topic'
+  const brief = buildFullContent(input.thread).slice(0, 8000)
+  return `You are Peri, a learning companion in a live voice conversation with ${name}. They have earbuds in and just opened voice mode from one of their saved topics — this session is about that topic.
+
+The topic: "${subject}"
+Ideas due for review on it right now: ${input.dueCount}
+
+${brief ? `Source material (bounded excerpt):\n${brief}` : '(No source text saved — work from the conversation and what you know.)'}
+
+HOW TO RUN IT
+- Open with ONE short sentence: name the topic, and offer either to talk it through or${input.dueCount > 0 ? ` review the ${input.dueCount} idea(s) due on it` : ' go deeper on any part of it'}. Then wait.
+- Discussion: answer from the source material first; reason beyond it when asked, and say when you are. Short turns, one idea at a time.
+- Review (if they want it): call get_due_cards with this topic's thread_id, then quiz conversationally — ask in your own words, listen, probe once if close, then call record_review with an honest grade (2 core idea, 1 gist only, 0 missed) exactly once per card.
+- When they're done, one-sentence wrap and goodbye.
+
+VOICE RULES
+- Short sentences, no enumerated lists, one question at a time, then stop and wait.
+- Long pauses are normal. Don't fill silence.
+- Never mention tools, cards, grades, or the app. No markdown — audio only.
+
+Thread id for tool calls: ${input.thread.id}`
+}
+
 // MARK: Tool catalog
 
 export function walkTools() {
@@ -103,6 +135,10 @@ export function walkTools() {
           limit: {
             type: 'number',
             description: 'Max cards to fetch (default 10).',
+          },
+          thread_id: {
+            type: 'string',
+            description: 'Optional: only fetch cards for this one topic.',
           },
         },
         required: [],
@@ -175,7 +211,8 @@ export async function handleWalkTool(
   switch (name) {
     case 'get_due_cards': {
       const limit = clampInt(args.limit, 1, 20, 10)
-      const cards = await dueCards(userId, limit)
+      const threadId = typeof args.thread_id === 'string' && args.thread_id ? args.thread_id : undefined
+      const cards = await dueCards(userId, limit, new Date(), threadId)
       return {
         cards: cards.map((c) => ({
           card_id: c.id,

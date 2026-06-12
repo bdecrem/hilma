@@ -106,13 +106,16 @@ export async function dueCards(
   userId: string,
   limit = 12,
   now: Date = new Date(),
+  threadId?: string,
 ): Promise<F3QueueCard[]> {
-  const { data, error } = await f2Supabase()
+  let query = f2Supabase()
     .from('f3_cards')
     .select('*, f2_threads(topic, kind)')
     .eq('user_id', userId)
     .eq('suspended', false)
     .lte('due_at', now.toISOString())
+  if (threadId) query = query.eq('thread_id', threadId)
+  const { data, error } = await query
     .order('due_at', { ascending: true })
     .limit(limit)
   if (error) {

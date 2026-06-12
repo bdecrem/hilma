@@ -10,10 +10,13 @@
 // response.create, get_due_cards → record_review tool round-trips work
 // against the authed backend, audio bytes actually stream, transcripts land.
 //
-// Usage: node scripts/test-walk-realtime.mjs [backendBase]
+// Usage: node scripts/test-walk-realtime.mjs [backendBase] [threadId]
 //        (default http://localhost:3000; needs the dev server running)
+//        threadId switches to a TOPIC-scoped voice session and, on finish,
+//        PATCHes the transcript so the merge-into-chat bridge runs too.
 
 const BASE = process.argv[2] || 'http://localhost:3000'
+const THREAD_ID = process.argv[3] || null
 const USER = { username: 'f3-test@example.com', password: 'f3-test-pass-1' }
 
 // Scripted user turns: each fires after the assistant finishes a response.
@@ -49,8 +52,8 @@ async function backend(path, body) {
 const login = await backend('/api/f2/auth/login', USER)
 log('logged in as', login.user.username)
 
-const session = await backend('/api/f4/walk/session')
-log('walk session minted:', session.voice_session.id, '| agenda:', JSON.stringify(session.agenda))
+const session = await backend('/api/f4/walk/session', THREAD_ID ? { thread_id: THREAD_ID } : {})
+log('session minted:', session.voice_session.id, '| mode:', session.voice_session.mode, '| agenda:', JSON.stringify(session.agenda))
 
 const url = `wss://api.openai.com/v1/realtime?model=${encodeURIComponent(session.realtime.model)}`
 const ws = new WebSocket(url, {
@@ -135,8 +138,24 @@ ws.addEventListener('message', async (ev) => {
   }
 })
 
-function finish() {
+async function finish() {
   ws.close()
+  // Exercise the finish endpoint + merge-into-chat bridge like the app does.
+  try {
+    const turns = transcripts.map((t) => ({
+      role: t.role,
+      text: t.text,
+      created_at: new Date().toISOString(),
+    }))
+    const res = await fetch(`${BASE}/api/f4/walk/session/${session.voice_session.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify({ transcript: turns, summary: 'Harness run.' }),
+    })
+    console.log('finish PATCH:', res.status, await res.text())
+  } catch (e) {
+    console.error('finish PATCH failed:', e)
+  }
   console.log('\n===== RESULTS =====')
   console.log('assistant turns:', transcripts.length)
   console.log('audio bytes (base64) streamed:', audioBytes)

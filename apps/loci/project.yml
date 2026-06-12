@@ -13,6 +13,11 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_STRICT_CONCURRENCY: minimal
 
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    exactVersion: 147.0.0
+
 targets:
   Loci:
     type: application
@@ -21,6 +26,8 @@ targets:
       - path: Loci
         excludes:
           - "Secrets.swift.example"
+    dependencies:
+      - package: WebRTC
     info:
       path: Loci/Info.plist
       properties:
@@ -30,6 +37,10 @@ targets:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
+        NSMicrophoneUsageDescription: Loci listens in voice mode so you can review and discuss topics hands-free.
+        # Voice sessions keep running with the screen locked / phone pocketed.
+        UIBackgroundModes:
+          - audio
         # Simulator/dev builds talk to the Next.js dev server over plain http.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true

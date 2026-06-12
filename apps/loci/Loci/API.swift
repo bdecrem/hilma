@@ -195,6 +195,85 @@ final class API {
         return res.thread.id
     }
 
+    // MARK: Voice (f4 walk backend — global walk or topic-scoped)
+
+    struct VoiceSessionResponse: Codable {
+        let clientSecret: ClientSecret
+        let voiceSession: VoiceSession
+        let realtime: Realtime
+        let agenda: Agenda
+
+        struct ClientSecret: Codable {
+            let value: String
+            enum CodingKeys: String, CodingKey { case value }
+        }
+        struct VoiceSession: Codable {
+            let id: String
+            let mode: String
+        }
+        struct Realtime: Codable {
+            let model: String
+            let voice: String
+            let callsUrl: URL
+            let dataChannel: String
+            enum CodingKeys: String, CodingKey {
+                case model, voice
+                case callsUrl = "calls_url"
+                case dataChannel = "data_channel"
+            }
+        }
+        struct Agenda: Codable {
+            let dueCount: Int
+            enum CodingKeys: String, CodingKey {
+                case dueCount = "due_count"
+            }
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case realtime, agenda
+            case clientSecret = "client_secret"
+            case voiceSession = "voice_session"
+        }
+    }
+
+    /// threadId nil = global walk; non-nil = voice session scoped to a topic.
+    func startVoiceSession(threadId: String?) async throws -> VoiceSessionResponse {
+        struct Body: Encodable { let thread_id: String? }
+        return try await post("/api/f4/walk/session", Body(thread_id: threadId))
+    }
+
+    func callVoiceTool(name: String, argumentsJSON: String) async throws -> Data {
+        let argsObject = (try? JSONSerialization.jsonObject(with: Data(argumentsJSON.utf8))) ?? [:]
+        let payload: [String: Any] = ["name": name, "arguments": argsObject]
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        guard let url = URL(string: "/api/f4/walk/tool", relativeTo: Secrets.backendBaseURL) else {
+            throw APIError.http(0, "bad tool path")
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.httpBody = body
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let (data, response) = try await session.data(for: req)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            throw APIError.http(status, String(data: data, encoding: .utf8))
+        }
+        return data
+    }
+
+    func finishVoiceSession(id: String, transcript: [[String: String]], summary: String?) async throws {
+        struct Body: Encodable {
+            let transcript: [[String: String]]
+            let summary: String?
+        }
+        struct OK: Codable { let ok: Bool }
+        let _: OK = try await request(
+            "/api/f4/walk/session/\(id)",
+            method: "PATCH",
+            body: Body(transcript: transcript, summary: summary)
+        )
+    }
+
     // MARK: Plumbing
 
     private func get<R: Decodable>(_ path: String) async throws -> R {

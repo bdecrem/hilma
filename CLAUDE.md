@@ -55,7 +55,7 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |
 | **F2 (web)** | `src/app/f2/` | Vercel (feynd.cc) | Learning app — chat + topics + paste, user-scoped |
 | **F2 (iOS)** | `apps/feynd/` | Xcode (manual TestFlight) | Native iPhone client for F2, talks to the same `/api/f2/*` backend |
-| **Loci (iOS)** | `apps/loci/` | Xcode (XcodeGen, same workflow as Feynd) | v3 learning app — spaced-repetition memory layer (`/api/f3/*`, `src/lib/f3/`) on F2 accounts/topics: idea cards, conversational recall grading, primer questions |
+| **Loci (iOS)** | `apps/loci/` | Xcode (XcodeGen, same workflow as Feynd) | v3 learning app — spaced-repetition memory layer (`/api/f3/*`, `src/lib/f3/`) on F2 accounts/topics: idea cards, conversational recall grading, primer questions. Includes voice mode (Peri engine via `/api/f4/walk`): global voice walk from Today, per-topic voice from any row, transcripts merge back into topic chat |
 | **Peri (iOS)** | `apps/peri/` | Xcode (XcodeGen, same workflow as Feynd) | Voice-only walking tutor — OpenAI Realtime over WebRTC (`/api/f4/walk/*`, `src/lib/f4/`). Peri speaks first, quizzes the Loci card deck conversationally, records reviews via server-authed tools. Harness: `scripts/test-walk-realtime.mjs` |
 | **MacPlus** | `apps/macplus/` | Retro68 → BlueSCSI SD card (manual) | Native classic-Mac (System 6, 68000) apps for Bart's real Macintosh Plus. See `apps/macplus/CLAUDE.md` |
 

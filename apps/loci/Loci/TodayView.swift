@@ -7,6 +7,8 @@ struct TodayView: View {
     var onSeeAll: () -> Void
 
     @State private var reviewPresented = false
+    @State private var voicePresented = false
+    @State private var voiceTopic: TopicSummary? = nil
 
     var body: some View {
         ScrollView {
@@ -32,7 +34,7 @@ struct TodayView: View {
                     VStack(spacing: 10) {
                         ForEach(Array(session.home.topics.prefix(5))) { t in
                             NavigationLink(value: t) {
-                                TopicRow(topic: t)
+                                TopicRow(topic: t, onVoice: { voiceTopic = t })
                             }
                             .buttonStyle(.plain)
                         }
@@ -51,6 +53,16 @@ struct TodayView: View {
             Task { await session.refreshHome() }
         }) {
             ReviewView().environment(session)
+        }
+        .fullScreenCover(isPresented: $voicePresented, onDismiss: {
+            Task { await session.refreshHome() }
+        }) {
+            VoiceView().environment(session)
+        }
+        .fullScreenCover(item: $voiceTopic, onDismiss: {
+            Task { await session.refreshHome() }
+        }) { t in
+            VoiceView(topicId: t.id, topicTitle: t.displayLabel).environment(session)
         }
     }
 
@@ -114,6 +126,8 @@ struct TodayView: View {
                     .padding(.top, 4)
                 PrimaryButton(label: "Start review") { reviewPresented = true }
                     .padding(.top, 16)
+                voiceButton(label: "Or review by voice — walk and talk")
+                    .padding(.top, 8)
             } else if session.home.cardCount == 0 {
                 Text("Nothing here yet")
                     .font(.system(size: 22, weight: .semibold, design: .serif))
@@ -135,12 +149,33 @@ struct TodayView: View {
                     .font(.system(size: 13.5))
                     .foregroundStyle(Theme.ink2)
                     .padding(.top, 6)
+                voiceButton(label: "Take a voice walk — Peri can teach")
+                    .padding(.top, 14)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.border, lineWidth: 1))
+    }
+
+    /// The voice-mode bridge: a full-width secondary button in the hero card.
+    private func voiceButton(label: String) -> some View {
+        Button {
+            voicePresented = true
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "waveform")
+                    .font(.system(size: 14, weight: .semibold))
+                Text(label)
+                    .font(.system(size: 14.5, weight: .semibold))
+            }
+            .foregroundStyle(Theme.moss)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Theme.mossSoft, in: RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: Stats
@@ -177,9 +212,11 @@ struct TodayView: View {
     }
 }
 
-/// Shared topic row: title, meta line, strength bar.
+/// Shared topic row: title, meta line, strength bar. `onVoice` (when set)
+/// shows a mic button — the hop from any topic straight into voice mode.
 struct TopicRow: View {
     let topic: TopicSummary
+    var onVoice: (() -> Void)? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -198,6 +235,16 @@ struct TopicRow: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(Theme.mossSoft, in: Capsule())
+                }
+                if let onVoice {
+                    Button(action: onVoice) {
+                        Image(systemName: "waveform")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Theme.moss)
+                            .frame(width: 30, height: 30)
+                            .background(Theme.mossSoft, in: Circle())
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             HStack(spacing: 8) {

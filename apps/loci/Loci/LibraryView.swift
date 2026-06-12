@@ -3,6 +3,7 @@ import SwiftUI
 /// All topics, strongest signal first: what's fading and what's due.
 struct LibraryView: View {
     @Environment(AppSession.self) private var session
+    @State private var voiceTopic: TopicSummary? = nil
 
     var body: some View {
         ScrollView {
@@ -36,7 +37,7 @@ struct LibraryView: View {
                     VStack(spacing: 10) {
                         ForEach(session.home.topics) { t in
                             NavigationLink(value: t) {
-                                TopicRow(topic: t)
+                                TopicRow(topic: t, onVoice: { voiceTopic = t })
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
@@ -58,6 +59,11 @@ struct LibraryView: View {
         .background(Theme.bg)
         .refreshable { await session.refreshHome() }
         .task { await session.refreshHome() }
+        .fullScreenCover(item: $voiceTopic, onDismiss: {
+            Task { await session.refreshHome() }
+        }) { t in
+            VoiceView(topicId: t.id, topicTitle: t.displayLabel).environment(session)
+        }
     }
 
     private func delete(_ topic: TopicSummary) {

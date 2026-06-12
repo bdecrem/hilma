@@ -6,24 +6,63 @@ import {
   realtimeModel,
   updateVoiceSessionRealtimeId,
 } from '@/lib/f2/realtime'
-import { buildWalkInstructions, walkAgenda, walkTools, walkVoice } from '@/lib/f4/walk'
+import { getThreadById } from '@/lib/f2/threads'
+import { dueCards } from '@/lib/f3/cards'
+import {
+  buildTopicVoiceInstructions,
+  buildWalkInstructions,
+  walkAgenda,
+  walkTools,
+  walkVoice,
+} from '@/lib/f4/walk'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
 // POST /api/f4/walk/session
-// Mint a Realtime session for a walk: compute the agenda, build Peri's
-// instructions + tool catalog, get an ephemeral client secret from OpenAI,
-// and open an f2_voice_sessions row (mode 'walk'). Response shape mirrors
-// /api/f2/realtime/session so the WebRTC client code is interchangeable.
-export async function POST() {
+// Body (optional): { thread_id } — when present, mint a TOPIC-scoped voice
+// session (the user hopped into voice from one topic in Loci); otherwise a
+// global walk. Both use the Peri persona and the same tool catalog; response
+// shape mirrors /api/f2/realtime/session so the WebRTC client code is shared.
+export async function POST(req: Request) {
   const user = await getSessionUser()
   if (!user) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
 
-  const agenda = await walkAgenda(user.id)
-  const instructions = buildWalkInstructions({ userName: user.username, agenda })
+  let threadId: string | null = null
+  try {
+    const body = await req.json()
+    if (body && typeof body.thread_id === 'string' && body.thread_id) {
+      threadId = body.thread_id
+    }
+  } catch {
+    // Empty body = global walk.
+  }
+
+  let instructions: string
+  let agenda = { due_count: 0, card_count: 0, streak_days: 0 }
+  if (threadId) {
+    const thread = await getThreadById(user.id, threadId)
+    if (!thread) {
+      return NextResponse.json({ error: 'topic not found' }, { status: 404 })
+    }
+    const due = await dueCards(user.id, 20, new Date(), threadId)
+    instructions = buildTopicVoiceInstructions({
+      userName: user.username,
+      thread,
+      dueCount: due.length,
+    })
+    agenda.due_count = due.length
+  } else {
+    const walk = await walkAgenda(user.id)
+    instructions = buildWalkInstructions({ userName: user.username, agenda: walk })
+    agenda = {
+      due_count: walk.due_count,
+      card_count: walk.card_count,
+      streak_days: walk.streak_days,
+    }
+  }
 
   let openaiSecret
   try {
@@ -37,9 +76,11 @@ export async function POST() {
     return NextResponse.json({ error: 'voice session unavailable' }, { status: 502 })
   }
 
+  const mode = threadId ? 'topic' : 'walk'
   const voiceSession = await createVoiceSession({
     userId: user.id,
-    mode: 'walk',
+    mode,
+    threadId: threadId ?? undefined,
     realtimeSessionId: openaiSecret.session?.id,
     model: realtimeModel(),
     voice: walkVoice(),
@@ -63,8 +104,8 @@ export async function POST() {
     openai_session_id: openaiSecret.session?.id ?? null,
     voice_session: {
       id: voiceSession.id,
-      mode: 'walk',
-      thread_id: null,
+      mode,
+      thread_id: threadId,
     },
     realtime: {
       model: realtimeModel(),
@@ -72,10 +113,6 @@ export async function POST() {
       calls_url: 'https://api.openai.com/v1/realtime/calls',
       data_channel: 'oai-events',
     },
-    agenda: {
-      due_count: agenda.due_count,
-      card_count: agenda.card_count,
-      streak_days: agenda.streak_days,
-    },
+    agenda,
   })
 }
