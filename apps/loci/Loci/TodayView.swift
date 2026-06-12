@@ -136,6 +136,8 @@ struct TodayView: View {
                     .font(.system(size: 13.5))
                     .foregroundStyle(Theme.ink2)
                     .padding(.top, 6)
+                voiceButton(label: "Take a voice walk — Peri can teach")
+                    .padding(.top, 14)
             } else {
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.seal.fill")
