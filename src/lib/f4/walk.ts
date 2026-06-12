@@ -12,6 +12,22 @@ const WALK_VOICE = 'cedar'
 const MAX_BRIEF_CHARS = 12_000
 const MAX_TOPICS_LISTED = 20
 
+// Chat-only topics (no URL ingested, nothing pasted) have no saved source
+// text — but their chat history IS the material the user learned from.
+// Tail-biased so the most recent exchanges survive the cut.
+function voiceSourceMaterial(thread: F2Thread, maxChars: number): {
+  text: string
+  fromChat: boolean
+} {
+  const saved = buildFullContent(thread)
+  if (saved) return { text: saved.slice(0, maxChars), fromChat: false }
+  const lines = (thread.messages ?? [])
+    .filter((m) => m.text?.trim())
+    .map((m) => `${m.role === 'user' ? 'Learner' : 'Tutor'}: ${m.text.trim()}`)
+  if (lines.length === 0) return { text: '', fromChat: false }
+  return { text: lines.join('\n\n').slice(-maxChars), fromChat: true }
+}
+
 // MARK: Agenda
 
 export type WalkAgenda = {
@@ -98,13 +114,19 @@ export function buildTopicVoiceInstructions(input: {
 }): string {
   const name = friendlyName(input.userName)
   const subject = input.thread.topic ?? input.thread.url ?? 'this topic'
-  const brief = buildFullContent(input.thread).slice(0, 8000)
+  const source = voiceSourceMaterial(input.thread, 8000)
   return `You are Peri, a learning companion in a live voice conversation with ${name}. They have earbuds in and just opened voice mode from one of their saved topics — this session is about that topic.
 
 The topic: "${subject}"
 Ideas due for review on it right now: ${input.dueCount}
 
-${brief ? `Source material (bounded excerpt):\n${brief}` : '(No source text saved — work from the conversation and what you know.)'}
+${
+  source.text
+    ? source.fromChat
+      ? `No source document is saved for this topic, but here is the chat conversation the learner has had about it — treat it as the source material:\n${source.text}`
+      : `Source material (bounded excerpt):\n${source.text}`
+    : '(No source text saved — work from the conversation and what you know.)'
+}
 
 HOW TO RUN IT
 - Open with ONE short sentence: name the topic, and offer either to talk it through or${input.dueCount > 0 ? ` review the ${input.dueCount} idea(s) due on it` : ' go deeper on any part of it'}. Then wait.
@@ -264,11 +286,13 @@ export async function handleWalkTool(
         .eq('user_id', userId)
         .eq('thread_id', threadId)
         .eq('suspended', false)
+      const source = voiceSourceMaterial(thread, MAX_BRIEF_CHARS)
       return {
         thread_id: thread.id,
         topic: thread.topic,
         url: thread.url,
-        content: buildFullContent(thread).slice(0, MAX_BRIEF_CHARS),
+        content: source.text,
+        content_is_chat_history: source.fromChat,
         existing_idea_prompts: ((data as { prompt: string }[]) ?? []).map((c) => c.prompt),
       }
     }

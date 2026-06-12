@@ -79,6 +79,60 @@ final class API {
         }
     }
 
+    // MARK: Progress + avatar (f2 endpoints — same star/level system as Feynd)
+
+    func fetchProgress() async throws -> UserProgress {
+        try await get("/api/f2/progress")
+    }
+
+    private struct AvatarResponse: Codable {
+        let avatarUrl: String?
+        enum CodingKeys: String, CodingKey { case avatarUrl = "avatar_url" }
+    }
+
+    /// Upload an image as the signed-in user's avatar. Server enforces 1 MB
+    /// and image/jpeg|png at the bucket level.
+    func uploadAvatar(imageData: Data, mime: String = "image/jpeg") async throws -> String {
+        guard let url = URL(string: "/api/f2/avatar", relativeTo: Secrets.backendBaseURL) else {
+            throw APIError.http(0, "bad avatar path")
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        let boundary = "loci-\(UUID().uuidString)"
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        let crlf = "\r\n"
+        func append(_ s: String) { body.append(s.data(using: .utf8)!) }
+        let filename = mime == "image/png" ? "avatar.png" : "avatar.jpg"
+        append("--\(boundary)\(crlf)")
+        append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\(crlf)")
+        append("Content-Type: \(mime)\(crlf)\(crlf)")
+        body.append(imageData)
+        append("\(crlf)--\(boundary)--\(crlf)")
+        req.httpBody = body
+
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: req)
+        } catch {
+            throw APIError.transport(error)
+        }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            throw APIError.http(status, String(data: data, encoding: .utf8))
+        }
+        let decoded = try decoder.decode(AvatarResponse.self, from: data)
+        guard let urlStr = decoded.avatarUrl else {
+            throw APIError.http(500, "no avatar_url in response")
+        }
+        return urlStr
+    }
+
+    func deleteAvatar() async throws {
+        let _: AvatarResponse = try await request("/api/f2/avatar", method: "DELETE")
+    }
+
     // MARK: Home / topics
 
     func home() async throws -> Home {

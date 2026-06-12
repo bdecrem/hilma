@@ -9,6 +9,7 @@ struct TodayView: View {
     @State private var reviewPresented = false
     @State private var voicePresented = false
     @State private var voiceTopic: TopicSummary? = nil
+    @State private var profilePresented = false
 
     var body: some View {
         ScrollView {
@@ -64,6 +65,38 @@ struct TodayView: View {
         }) { t in
             VoiceView(topicId: t.id, topicTitle: t.displayLabel).environment(session)
         }
+        .sheet(isPresented: $profilePresented) {
+            ProfileView().environment(session)
+        }
+    }
+
+    /// The header avatar: uploaded photo when one exists, otherwise the
+    /// moss initial circle. Tapping opens the profile sheet.
+    @ViewBuilder
+    private var avatarCircle: some View {
+        if let urlStr = session.user?.avatarUrl, let url = URL(string: urlStr) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img): img.resizable().scaledToFill()
+                default: initialCircle
+                }
+            }
+            .frame(width: 38, height: 38)
+            .clipShape(Circle())
+        } else {
+            initialCircle
+        }
+    }
+
+    private var initialCircle: some View {
+        Circle()
+            .fill(Theme.mossSoft)
+            .frame(width: 38, height: 38)
+            .overlay(
+                Text(String(session.user?.username.prefix(1) ?? "?").uppercased())
+                    .font(.system(size: 16, weight: .semibold, design: .serif))
+                    .foregroundStyle(Theme.moss)
+            )
     }
 
     // MARK: Header
@@ -80,24 +113,10 @@ struct TodayView: View {
                     .foregroundStyle(Theme.ink)
             }
             Spacer()
-            Menu {
-                if let user = session.user {
-                    Text(user.username)
-                }
-                Button(role: .destructive) {
-                    Task { await session.signOut() }
-                } label: {
-                    Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right")
-                }
+            Button {
+                profilePresented = true
             } label: {
-                Circle()
-                    .fill(Theme.mossSoft)
-                    .frame(width: 38, height: 38)
-                    .overlay(
-                        Text(String(session.user?.username.prefix(1) ?? "?").uppercased())
-                            .font(.system(size: 16, weight: .semibold, design: .serif))
-                            .foregroundStyle(Theme.moss)
-                    )
+                avatarCircle
             }
             .buttonStyle(.plain)
         }

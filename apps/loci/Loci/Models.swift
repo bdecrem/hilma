@@ -3,6 +3,67 @@ import Foundation
 struct User: Codable, Equatable {
     let id: String
     let username: String
+    var avatarUrl: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, username
+        case avatarUrl = "avatar_url"
+    }
+}
+
+/// User-wide learning progress — mirror of /api/f2/progress, the same star
+/// and level system Feynd uses (one backend, shared accounts). In Loci stars
+/// come from reviewing: a topic earns 1★ once every idea has been reviewed,
+/// 2★ when all hold a 7-day interval, 3★ at 21 days.
+struct UserProgress: Codable, Equatable {
+    var level: Int
+    var topicCount: Int
+    var totalStars: Int
+    var masteredTopicCount: Int
+    var currentLevelAt: Int
+    var nextLevelAt: Int
+    var toNextLevel: Int
+
+    /// 0..1 fill for the ring/bar — numerator is total stars because backend
+    /// levels are based on total stars. Never NaN, never > 1.
+    var progressFraction: Double {
+        let span = max(1, nextLevelAt - currentLevelAt)
+        let earned = max(0, totalStars - currentLevelAt)
+        return min(1.0, Double(earned) / Double(span))
+    }
+
+    static let zero = UserProgress(
+        level: 0, topicCount: 0, totalStars: 0, masteredTopicCount: 0,
+        currentLevelAt: 0, nextLevelAt: 1, toNextLevel: 1
+    )
+
+    enum CodingKeys: String, CodingKey {
+        case level
+        case topicCount = "topic_count"
+        case totalStars = "total_stars"
+        case masteredTopicCount = "mastered_topic_count"
+        case currentLevelAt = "current_level_at"
+        case nextLevelAt = "next_level_at"
+        case toNextLevel = "to_next_level"
+    }
+}
+
+/// Italic flavor word next to the level number ("Level 4 · Apprentice").
+/// Kept in lockstep with `levelTitle()` in `src/lib/f2/progress.ts`.
+func lociLevelTitle(_ level: Int) -> String {
+    switch level {
+    case ..<1: return "Newcomer"
+    case 1: return "Beginner"
+    case 2: return "Curious"
+    case 3: return "Student"
+    case 4: return "Apprentice"
+    case 5: return "Scholar"
+    case 6: return "Adept"
+    case 7: return "Practitioner"
+    case 8: return "Expert"
+    case 9: return "Master"
+    default: return "Sage"
+    }
 }
 
 /// One topic as the home/library screens need it — mirrors F3TopicSummary.

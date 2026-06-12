@@ -80,7 +80,17 @@ struct MainView: View {
             if atRoot {
                 bottomBar
             }
+
+            // Level-up celebration — owns the whole frame until dismissed.
+            if let newLevel = session.pendingLevelUp {
+                LevelUpView(level: newLevel, progress: session.progress) {
+                    session.pendingLevelUp = nil
+                }
+                .transition(.opacity)
+                .zIndex(10)
+            }
         }
+        .animation(.easeOut(duration: 0.25), value: session.pendingLevelUp)
         .sheet(isPresented: $addPresented) {
             AddView().environment(session)
         }

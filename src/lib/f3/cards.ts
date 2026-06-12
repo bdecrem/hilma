@@ -174,11 +174,62 @@ export async function applyReview(input: {
   })
   if (logError) console.error('[f3] applyReview log insert failed:', logError)
 
+  await syncTopicStars(input.userId, input.card.thread_id)
+
   return {
     card: data as F3Card,
     next_due_at: next.due_at,
     interval_days: next.interval_days,
   }
+}
+
+// MARK: Stars — reviewing in Loci feeds the same star/level system F2's
+// quizzes feed. A topic's stars derive from the spaced-repetition state of
+// its cards: 1★ once every idea has been reviewed, 2★ when all hold a 7-day
+// interval, 3★ at 21 days (mastered). Stars only ever go UP — a lapsed card
+// can pause progress but never takes back a star, and F2 quiz stars are
+// preserved (we write max of current and derived).
+export async function syncTopicStars(
+  userId: string,
+  threadId: string,
+): Promise<void> {
+  const sb = f2Supabase()
+  const { data, error } = await sb
+    .from('f3_cards')
+    .select('last_reviewed_at, interval_days')
+    .eq('user_id', userId)
+    .eq('thread_id', threadId)
+    .eq('suspended', false)
+  if (error) {
+    console.error('[f3] syncTopicStars cards fetch failed:', error)
+    return
+  }
+  const cards = (data as Pick<F3Card, 'last_reviewed_at' | 'interval_days'>[]) ?? []
+  if (cards.length === 0) return
+
+  let derived = 0
+  if (cards.every((c) => c.last_reviewed_at !== null)) {
+    derived = 1
+    if (cards.every((c) => c.interval_days >= 7)) derived = 2
+    if (derived === 2 && cards.every((c) => c.interval_days >= 21)) derived = 3
+  }
+  if (derived === 0) return
+
+  const { data: thread, error: threadError } = await sb
+    .from('f2_threads')
+    .select('stars')
+    .eq('id', threadId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (threadError || !thread) return
+  if ((thread.stars ?? 0) >= derived) return
+
+  const { error: updateError } = await sb
+    .from('f2_threads')
+    .update({ stars: derived })
+    .eq('id', threadId)
+    .eq('user_id', userId)
+  if (updateError) console.error('[f3] syncTopicStars update failed:', updateError)
 }
 
 export type F3TopicSummary = {
