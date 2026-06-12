@@ -70,8 +70,42 @@ struct TodayView: View {
         }
     }
 
-    /// The header avatar: uploaded photo when one exists, otherwise the
-    /// moss initial circle. Tapping opens the profile sheet.
+    /// The header profile badge, F2-style: avatar disc with a thin progress
+    /// ring (fill = progress toward the next level, same fraction as the
+    /// profile sheet's bar) and an "L<n>" chip docked below. Tap → profile.
+    private var avatarBadge: some View {
+        let p = session.progress
+        let ring: CGFloat = 42 // avatar 38 + 4
+        return ZStack {
+            // Track and arc live on the SAME ring — one circle, not two.
+            Circle()
+                .stroke(Theme.raised, lineWidth: 1.5)
+                .frame(width: ring, height: ring)
+            Circle()
+                .trim(from: 0, to: p.progressFraction)
+                .stroke(Theme.moss, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .frame(width: ring, height: ring)
+            avatarCircle
+        }
+        // Level chip overhangs below the ring; frame leaves room so no clip.
+        .overlay(alignment: .bottom) {
+            Text("L\(p.level)")
+                .font(.system(size: 9.5, weight: .bold))
+                .tracking(0.4)
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1.5)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Theme.raised))
+                .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.border, lineWidth: 1))
+                .offset(y: 7)
+        }
+        .frame(width: ring, height: ring + 14)
+        .accessibilityLabel("Level \(p.level), \(p.toNextLevel) stars to next level")
+    }
+
+    /// The avatar disc: uploaded photo when one exists, otherwise the
+    /// moss initial circle.
     @ViewBuilder
     private var avatarCircle: some View {
         if let urlStr = session.user?.avatarUrl, let url = URL(string: urlStr) {
@@ -116,7 +150,7 @@ struct TodayView: View {
             Button {
                 profilePresented = true
             } label: {
-                avatarCircle
+                avatarBadge
             }
             .buttonStyle(.plain)
         }

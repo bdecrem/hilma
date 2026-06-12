@@ -54,3 +54,15 @@ targets:
         # (black screen at launch until reboot). Single-binary debug builds.
         ENABLE_DEBUG_DYLIB: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+
+# Xcode 26's debugger can't attach on the iOS 27 beta — the app aborts at
+# launch (__abort_with_payload) whenever lldb attaches. Run without the
+# debugger so plain Cmd+R works on Bart's phone; launches fine undebugged.
+schemes:
+  Loci:
+    build:
+      targets:
+        Loci: all
+    run:
+      config: Debug
+      debugEnabled: false
