@@ -16,6 +16,20 @@ travels across machines.
 
 ---
 
+## Scope — "Reality 3" (Mollie Kinder)
+The crisp framing for what this project explores:
+
+> "Reality 3 is the post-AGI world where AI and robotics can do essentially
+> everything humans do, the economy is producing enormous surplus, and the main
+> questions are about how to redistribute it, how to make sure democracy
+> survives, and what people should do with their time."
+> — Mollie Kinder
+
+The three things we're exploring:
+1. **Redistribution** — how to share the enormous surplus.
+2. **Democracy** — how to make sure it survives.
+3. **Time / meaning** — what people should do with their time.
+
 ## Open questions / themes to chase
 - _(add)_
 
