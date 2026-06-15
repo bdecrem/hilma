@@ -8,6 +8,9 @@ across machines.
 hilltop and the densest "mind-and-machine" ghost list at CASBS).
 
 ## Contents
+- **SCRATCHPAD.md** — living idea log for the "Now What?" project itself:
+  open questions, the ten-conversations/ten-artifacts log, artifact sketches,
+  raw-idea inbox, and references. Dump ideas here as they come.
 - **study-selection.md** — how the grab works, map/view orientation, the public
   fellow→study data file, and the original ranked grab-day cheat sheet (now
   historical, since #16 is settled).
