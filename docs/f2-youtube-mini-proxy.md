@@ -1,5 +1,19 @@
 # F2 YouTube transcript proxy on the Mac mini
 
+> **2026-06-25 update — now a standalone script, not the Next.js app.**
+> The proxy used to run the whole hilma Next.js app on the mini (`pnpm start`),
+> which needs a `.next` build. That build went missing once and the service
+> silently crash-looped, taking YouTube transcripts down. It's been replaced by
+> `scripts/f2-youtube-proxy.mjs` — a ~120-line plain Node HTTP server that does
+> only the transcript fetch (no build, nothing to go missing). It listens on
+> `:3000` (same port, so the `f2-mini.tunn3l.sh` tunnel is unchanged), reads the
+> secret from the repo `.env.local`, and uses the already-installed
+> `youtube-transcript` package. Managed by launchd
+> `~/Library/LaunchAgents/sh.f2.youtube-proxy.plist` (RunAtLoad + KeepAlive).
+> The old `sh.f2.nextserver.plist` is archived in `~/Library/LaunchAgents/disabled/`.
+> Logs: `~/Library/Logs/f2-youtube-proxy/`. The Vercel-side setup (env vars,
+> dispatch in `src/lib/f2/url.ts`) is unchanged — sections below still apply.
+
 Goal: let F2 in production (Vercel at feynd.cc) fetch YouTube transcripts.
 
 The problem: YouTube returns empty responses to datacenter IP ranges (Vercel, AWS, GCP). The `youtube-transcript` npm package works fine — but only when the caller's source IP is residential. On Vercel it silently returns nothing and our ingest falls back to scraping the watch page, which is just chrome ("About Press Copyright Contact us …"), useless for learning.
