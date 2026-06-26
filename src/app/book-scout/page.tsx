@@ -5,7 +5,8 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 type Source = { id: string; name: string; url: string; type: string; notes: string; genre: string; active: boolean }
 type BookSrc = { name: string; said: string }
 type Book = { title: string; author: string; pub_date: string; one_line: string; sources: BookSrc[] }
-type Digest = { id: string; month_label: string; genre: string; books: Book[]; created_at: string }
+type ClaudePick = { title: string; author: string; pub_date: string; one_line: string; why: string }
+type Digest = { id: string; month_label: string; genre: string; books: Book[]; claude_picks: ClaudePick[]; created_at: string }
 type Config = { genre: string; reference_books: string; deliver_to: string; notes: string }
 type Genre = { slug: string; label: string; sort: number }
 type Data = { config: Config; sources: Source[]; digests: Digest[]; genres: Genre[] }
@@ -15,8 +16,12 @@ const C = {
   accent: '#c2683a', line: '#ece4d3', quoteBar: '#d9c7a3',
 }
 
-const kindle = (b: Book) =>
+const kindle = (b: { title: string; author: string }) =>
   `https://www.amazon.com/s?k=${encodeURIComponent(b.title + ' ' + b.author)}&i=digital-text`
+
+const kBtn = (b: { title: string; author: string }) => (
+  <a href={kindle(b)} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: 12, fontSize: 14, fontWeight: 600, color: '#fff', background: C.accent, textDecoration: 'none', padding: '8px 14px', borderRadius: 6 }}>Find on Kindle →</a>
+)
 
 const sourceMatches = (sourceGenre: string, genre: string) => {
   const tags = sourceGenre.split(',').map((t) => t.trim().toLowerCase())
@@ -33,6 +38,7 @@ export default function BookScoutPage() {
   const [newSrc, setNewSrc] = useState({ name: '', url: '', type: 'editorial', genre: 'thrillers' })
   const [dirty, setDirty] = useState(false)
   const [run, setRun] = useState<{ id: string; status: string; message: string } | null>(null)
+  const [emailMsg, setEmailMsg] = useState('')
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const load = useCallback(async () => {
@@ -95,6 +101,19 @@ export default function BookScoutPage() {
     }, 5000)
   }
 
+  const emailDigest = async (digestId: string) => {
+    setEmailMsg('Sending…')
+    const r = await fetch('/api/book-scout/email-digest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-book-scout-key': key },
+      body: JSON.stringify({ digest_id: digestId }),
+    })
+    if (r.status === 401) { setEmailMsg(''); setErr('Wrong key — unlock first.'); return }
+    if (!r.ok) { const j = await r.json().catch(() => ({})); setEmailMsg(`Failed: ${j.error || 'error'}`); return }
+    const j = await r.json()
+    setEmailMsg(`Emailed to ${j.to} ✓`)
+  }
+
   if (!data) {
     return <main style={{ background: C.bg, minHeight: '100dvh', color: C.faint, fontFamily: 'system-ui', padding: 40 }}>{err || 'Loading…'}</main>
   }
@@ -131,17 +150,23 @@ export default function BookScoutPage() {
         {unlocked && (dirty || run) && (
           <div style={{ marginTop: 16, padding: 14, background: '#fff4e9', borderRadius: 10, border: `1px solid ${C.quoteBar}` }}>
             {run ? (
-              <div style={{ fontSize: 14, color: C.ink }}>
-                {run.status === 'running' && <>⏳ {run.message}</>}
-                {run.status === 'done' && <>✅ Done — {run.message}. Results below are updated.</>}
-                {run.status === 'error' && <>⚠️ Run failed: {run.message} <button onClick={rerun} style={{ ...btnGhost, marginLeft: 8 }}>retry</button></>}
+              <div style={{ fontSize: 14, color: C.ink, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                {run.status === 'running' && <span>⏳ {run.message}</span>}
+                {run.status === 'done' && (
+                  <>
+                    <span>✅ Done — {run.message}. Results below are updated.</span>
+                    <button onClick={() => digest && emailDigest(digest.id)} disabled={!digest} style={btnSolid}>✉ Email these results</button>
+                  </>
+                )}
+                {run.status === 'error' && <><span>⚠️ Run failed: {run.message}</span> <button onClick={rerun} style={btnGhost}>retry</button></>}
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 14, color: C.ink }}>You changed the genre or sources. Re-run the agent to refresh the results and email a new digest?</span>
+                <span style={{ fontSize: 14, color: C.ink }}>You changed the genre or sources. Re-run the agent to refresh the results?</span>
                 <button onClick={rerun} disabled={busy} style={btnSolid}>Re-run now</button>
               </div>
             )}
+            {emailMsg && <div style={{ marginTop: 8, fontSize: 13, color: C.sub }}>{emailMsg}</div>}
           </div>
         )}
 
@@ -183,9 +208,35 @@ export default function BookScoutPage() {
                       <div style={{ fontSize: 14, color: '#3a352c', marginTop: 2 }}>{s.said}</div>
                     </div>
                   ))}
-                  <a href={kindle(b)} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: 12, fontSize: 14, fontWeight: 600, color: '#fff', background: C.accent, textDecoration: 'none', padding: '8px 14px', borderRadius: 6 }}>Find on Kindle →</a>
+                  {kBtn(b)}
                 </div>
               ))}
+
+              {digest.claude_picks && digest.claude_picks.length > 0 && (
+                <div style={{ marginTop: 30 }}>
+                  <div style={{ fontSize: 13, letterSpacing: '.08em', textTransform: 'uppercase', color: '#5c6b4e', fontWeight: 700 }}>Claude Code Picks</div>
+                  <p style={{ fontSize: 13, color: C.faint, margin: '4px 0 0' }}>AI picks based on your own fiction shelf — recent, available now, and not already owned.</p>
+                  {digest.claude_picks.map((p, i) => (
+                    <div key={i} style={{ padding: '18px 0', borderTop: `1px solid ${C.line}` }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: C.ink, lineHeight: 1.3 }}>{p.title}</div>
+                      <div style={{ fontSize: 14, color: C.faint, marginTop: 2 }}>{p.author} · {p.pub_date}</div>
+                      <div style={{ fontSize: 15, color: '#4a4438', marginTop: 8, lineHeight: 1.5 }}>{p.one_line}</div>
+                      <div style={{ marginTop: 8, paddingLeft: 12, borderLeft: '3px solid #b9c4a0' }}>
+                        <div style={{ fontSize: 13, color: '#5c6b4e', fontWeight: 600 }}>Why it fits your shelf</div>
+                        <div style={{ fontSize: 14, color: '#3a352c', marginTop: 2 }}>{p.why}</div>
+                      </div>
+                      {kBtn(p)}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {unlocked && (
+                <div style={{ marginTop: 18 }}>
+                  <button onClick={() => emailDigest(digest.id)} style={btnGhost}>✉ Email these results</button>
+                  {emailMsg && <span style={{ marginLeft: 10, fontSize: 13, color: C.sub }}>{emailMsg}</span>}
+                </div>
+              )}
             </>
           ) : <div style={{ color: C.faint }}>No digests yet.</div>}
         </Section>

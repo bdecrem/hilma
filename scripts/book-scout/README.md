@@ -12,9 +12,31 @@ attribution.
   results. Unlock with the edit key to change the genre, mute/delete sources, or
   add new ones.
 - **Data:** Supabase (`sms-bot` project) — `book_scout_config` (one row: genre,
-  reference books, deliver-to, notes), `book_scout_sources` (the human
-  curators), `book_scout_digests` (each month's results). This is the single
-  source of truth; the page and the monthly agent both read/write it.
+  reference books, deliver-to, notes), `book_scout_genres` (dropdown options),
+  `book_scout_sources` (human curators; `genre` is a comma-separated list or
+  "general"), `book_scout_digests` (each month's results — `books` + `claude_picks`),
+  `book_scout_runs` (on-demand rerun status), and `book_scout_library` (the
+  reader's Kindle library with an `is_fiction` flag, loaded from a local CSV via
+  `load-library.py`). This is the single source of truth.
+
+- **Two lists per digest:**
+  1. the human-curated genre list (`books`), and
+  2. **Claude Code Picks** (`claude_picks`) — up to 5 AI picks based on the
+     reader's own *fiction* library: recent, available now, not already owned,
+     openly labelled as AI picks.
+
+- **Library de-dupe:** every recommended title is normalized (`normalize.ts` +
+  `load-library.py` must stay in lockstep) and dropped if it's already in
+  `book_scout_library`. Applied in both `/api/book-scout/digest` and `/run`.
+
+- **Rerun is decoupled from email:** `/run` researches + saves but does NOT
+  email; `/api/book-scout/email-digest` sends a saved digest on demand (the
+  page's "Email these results" button). The monthly `/digest` path still
+  auto-emails.
+
+- **Personal data is git-ignored:** `misc/Kindle_Books_Recent_200.csv` and
+  `misc/kindle-library.md` are NOT committed (public repo); the data lives in
+  Supabase and the library endpoint is key-gated.
 - **API:** `src/app/api/book-scout/` — `data` (open read), `config` + `sources`
   (authed writes), `digest` (authed; the monthly agent posts results here, which
   saves to the archive AND emails via SendGrid).

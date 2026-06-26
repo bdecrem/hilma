@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { Book } from './email'
+import type { Book, ClaudePick } from './email'
+import type { LibraryBook } from './library'
 
 // Lazy client — never init at module top level.
 let _client: Anthropic | null = null
@@ -88,15 +89,83 @@ When done, output ONLY a JSON array (no prose before or after), each item exactl
   return { books, sourceNames }
 }
 
-// Pull the JSON array out of the model's final text, tolerating stray prose,
+// Claude Code Picks — AI curation grounded in the reader's own fiction library.
+// Up to 5 recent, available-now books in the reader's vein that they don't own.
+export async function researchClaudePicks(input: {
+  library: LibraryBook[]
+  today: string
+}): Promise<ClaudePick[]> {
+  const { library, today } = input
+  // Purchases are a stronger signal than samples — list them first and labelled.
+  const shelf = library
+    .map((b) => `${b.type === 'Purchase' ? 'P' : 's'} · ${b.title} — ${b.author}`)
+    .join('\n')
+
+  const prompt = `You are "Claude Code Picks" — a personal book scout. Below is a reader's FICTION library (P = purchased, a strong signal; s = sampled, a weaker signal). Study their taste, then recommend up to 5 books they would likely love.
+
+Today is ${today}.
+
+THE READER'S FICTION SHELF:
+${shelf}
+
+REQUIREMENTS for every pick:
+1. NOT already on their shelf above (no repeats, no other books by a series they already own unless it's a genuinely new entry).
+2. RECENT: published within roughly the last 12 months (on or before ${today}).
+3. AVAILABLE NOW on Kindle (already published, buyable — not forthcoming/pre-order).
+4. A genuine taste match — use web_search to find recent releases, "if you liked X" readalikes, and new books by authors adjacent to their shelf.
+
+Be specific and grounded: the reader clearly leans toward [infer their lanes from the shelf — e.g. espionage/spy fiction, Reacher-style action, legal thrillers, Nordic/translated crime, literary & domestic suspense, smart speculative fiction]. Pick across their lanes, not five of the same thing.
+
+These are openly AI picks — use judgment, but every "why" must point to specific books/authors on their shelf.
+
+When done, output ONLY a JSON array (no prose, no fences), up to 5 items:
+{"title":"...","author":"...","pub_date":"e.g. 'Mar 2026' — within ~12 months, on/before ${today}","one_line":"one neutral sentence on what the book is","why":"one sentence on why it fits THIS reader, naming a book or author from their shelf"}`
+
+  const messages: Anthropic.MessageParam[] = [{ role: 'user', content: prompt }]
+  let final: Anthropic.Message | null = null
+  for (let i = 0; i < 8; i++) {
+    const res = await anthropic().messages.create({
+      model: 'claude-opus-4-8',
+      max_tokens: 12000,
+      messages,
+      tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 12 }],
+    })
+    if (res.stop_reason === 'pause_turn') {
+      messages.push({ role: 'assistant', content: res.content })
+      continue
+    }
+    final = res
+    break
+  }
+  if (!final) throw new Error('claude picks did not complete')
+
+  const text = final.content
+    .filter((b): b is Anthropic.TextBlock => b.type === 'text')
+    .map((b) => b.text)
+    .join('\n')
+
+  const arr = extractArray(text)
+  return arr
+    .filter((o): o is ClaudePick => {
+      const x = o as Record<string, unknown>
+      return x && typeof x.title === 'string' && typeof x.author === 'string' && typeof x.why === 'string'
+    })
+    .map((p) => ({
+      title: p.title,
+      author: p.author,
+      pub_date: p.pub_date || '',
+      one_line: p.one_line || '',
+      why: p.why,
+    }))
+    .slice(0, 5)
+}
+
+// Pull a JSON array out of the model's final text, tolerating stray prose,
 // markdown fences, and bracket characters inside the surrounding prose.
-function parseBooks(text: string): Book[] {
+function extractArray(text: string): unknown[] {
   const candidates: string[] = []
-  // 1. A fenced ```json block, if present.
   const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
   if (fence) candidates.push(fence[1])
-  // 2. The array-of-objects span — anchor on `[{`/`}]` so a stray `[word]` in
-  //    prose doesn't derail extraction.
   const a = text.indexOf('[{')
   const aSpaced = a === -1 ? text.search(/\[\s*\{/) : a
   const b = text.lastIndexOf('}]')
@@ -104,19 +173,20 @@ function parseBooks(text: string): Book[] {
     const end = text.indexOf(']', b)
     candidates.push(text.slice(aSpaced, end === -1 ? b + 2 : end + 1))
   }
-  // 3. Whole text as a last resort.
   candidates.push(text.trim())
-
-  let arr: unknown = null
   for (const c of candidates) {
     try {
       const v = JSON.parse(c)
-      if (Array.isArray(v) && v.length) { arr = v; break }
+      if (Array.isArray(v) && v.length) return v
     } catch {
       // try next candidate
     }
   }
-  if (!Array.isArray(arr)) return []
+  return []
+}
+
+function parseBooks(text: string): Book[] {
+  const arr = extractArray(text)
   return arr
     .filter((b): b is Book => {
       const o = b as Record<string, unknown>

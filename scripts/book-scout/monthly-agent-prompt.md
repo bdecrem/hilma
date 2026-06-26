@@ -52,6 +52,18 @@ older list of available books over a fresh list of unreleased ones.
 Aim for 8–12 books. Correct attribution and genuine availability over quantity.
 Never invent quotes — quote/paraphrase what you actually fetched.
 
+## Step 3.5 — Claude Code Picks (a second, personal list)
+
+GET https://feynd.cc/api/book-scout/library with header `x-book-scout-key: <BOOK_SCOUT_PASSWORD>`. This returns the reader's FICTION shelf (`type` is "Purchase" — a strong signal — or "Sample" — weaker).
+
+Study their taste and pick UP TO 5 books they'd love, as "Claude Code Picks":
+- NOT already on their shelf.
+- RECENT: published within roughly the last 12 months (on/before today).
+- AVAILABLE NOW on Kindle (not forthcoming).
+- A genuine taste match — use WebSearch for recent releases, "if you liked X" readalikes, and new books by authors adjacent to their shelf. Spread across their lanes (e.g. espionage, Reacher-style action, legal thrillers, Nordic/translated crime, literary & domestic suspense, smart speculative fiction) — don't pick five of the same thing.
+
+These are openly AI picks. Each must include a one-sentence `why` that names a specific book or author from their shelf.
+
 ## Step 4 — post the results
 
 Compute `month_label` as the current month and year (e.g. "July 2026").
@@ -73,11 +85,21 @@ Body:
       "one_line": "one neutral sentence on what the book is — NOT your opinion",
       "sources": [ { "name": "human source", "said": "short quote/paraphrase" } ]
     }
+  ],
+  "claude_picks": [
+    {
+      "title": "...",
+      "author": "...",
+      "pub_date": "within ~12 months, on/before today",
+      "one_line": "one neutral sentence on what the book is",
+      "why": "one sentence on why it fits this reader, naming a book/author from their shelf"
+    }
   ]
 }
 
-The endpoint saves the digest to the archive (visible at feynd.cc/book-scout) and
-emails it to the configured address. Confirm the response shows `saved: true` and
-`emailed: true`. If `emailed` is false, report the `email_error`.
+The endpoint saves the digest to the archive (visible at feynd.cc/book-scout),
+automatically drops any book the reader already owns, and emails it to the
+configured address. Confirm the response shows `saved: true` and `emailed: true`.
+If `emailed` is false, report the `email_error`.
 
 Do not send the email yourself — the endpoint does it. Your job ends at the POST.
