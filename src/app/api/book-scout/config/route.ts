@@ -14,6 +14,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
 
+  const db = bookScoutDb()
   const update: Record<string, string> = { updated_at: new Date().toISOString() }
   if (typeof body.genre === 'string') update.genre = body.genre.trim().toLowerCase()
   if (typeof body.reference_books === 'string') update.reference_books = body.reference_books
@@ -22,7 +23,13 @@ export async function PUT(req: Request) {
 
   if (update.genre === '') return NextResponse.json({ error: 'genre cannot be empty' }, { status: 400 })
 
-  const { error } = await bookScoutDb().from('book_scout_config').update(update).eq('id', 1)
+  // Genre must be one of the known genres (the page only offers these).
+  if (update.genre !== undefined) {
+    const { data: g } = await db.from('book_scout_genres').select('slug').eq('slug', update.genre).maybeSingle()
+    if (!g) return NextResponse.json({ error: `unknown genre "${update.genre}"` }, { status: 400 })
+  }
+
+  const { error } = await db.from('book_scout_config').update(update).eq('id', 1)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

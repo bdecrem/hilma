@@ -1,21 +1,26 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 type Source = { id: string; name: string; url: string; type: string; notes: string; genre: string; active: boolean }
 type BookSrc = { name: string; said: string }
 type Book = { title: string; author: string; pub_date: string; one_line: string; sources: BookSrc[] }
 type Digest = { id: string; month_label: string; genre: string; books: Book[]; created_at: string }
 type Config = { genre: string; reference_books: string; deliver_to: string; notes: string }
-type Data = { config: Config; sources: Source[]; digests: Digest[] }
+type Genre = { slug: string; label: string; sort: number }
+type Data = { config: Config; sources: Source[]; digests: Digest[]; genres: Genre[] }
 
 const C = {
   bg: '#faf6ec', card: '#fffdf7', ink: '#241f17', sub: '#6b6256', faint: '#8a7f6d',
   accent: '#c2683a', line: '#ece4d3', quoteBar: '#d9c7a3',
 }
 
-function kindle(b: Book) {
-  return `https://www.amazon.com/s?k=${encodeURIComponent(b.title + ' ' + b.author)}&i=digital-text`
+const kindle = (b: Book) =>
+  `https://www.amazon.com/s?k=${encodeURIComponent(b.title + ' ' + b.author)}&i=digital-text`
+
+const sourceMatches = (sourceGenre: string, genre: string) => {
+  const tags = sourceGenre.split(',').map((t) => t.trim().toLowerCase())
+  return tags.includes('general') || tags.includes(genre.toLowerCase())
 }
 
 export default function BookScoutPage() {
@@ -23,24 +28,27 @@ export default function BookScoutPage() {
   const [err, setErr] = useState('')
   const [key, setKey] = useState('')
   const [unlocked, setUnlocked] = useState(false)
-  const [selDigest, setSelDigest] = useState<string>('')
-  const [genreDraft, setGenreDraft] = useState('')
+  const [selDigest, setSelDigest] = useState('')
   const [busy, setBusy] = useState(false)
   const [newSrc, setNewSrc] = useState({ name: '', url: '', type: 'editorial', genre: 'thrillers' })
+  const [dirty, setDirty] = useState(false)
+  const [run, setRun] = useState<{ id: string; status: string; message: string } | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const load = useCallback(async () => {
     const r = await fetch('/api/book-scout/data', { cache: 'no-store' })
     if (!r.ok) { setErr('Could not load data'); return }
     const d: Data = await r.json()
     setData(d)
-    setGenreDraft(d.config.genre)
-    if (d.digests.length && !selDigest) setSelDigest(d.digests[0].id)
-  }, [selDigest])
+    setSelDigest((prev) => prev || d.digests[0]?.id || '')
+    setNewSrc((s) => ({ ...s, genre: s.genre || d.config.genre }))
+  }, [])
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem('bookScoutKey') : ''
     if (saved) { setKey(saved); setUnlocked(true) }
     load()
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [load])
 
   const write = async (path: string, method: string, body?: unknown) => {
@@ -53,7 +61,7 @@ export default function BookScoutPage() {
       })
       if (r.status === 401) { setErr('Wrong key — edits rejected.'); setUnlocked(false); localStorage.removeItem('bookScoutKey'); return false }
       if (!r.ok) { const j = await r.json().catch(() => ({})); setErr(j.error || 'Save failed'); return false }
-      setErr('')
+      setErr(''); setDirty(true)
       await load()
       return true
     } finally { setBusy(false) }
@@ -61,8 +69,30 @@ export default function BookScoutPage() {
 
   const unlock = () => {
     if (!key.trim()) return
-    localStorage.setItem('bookScoutKey', key.trim())
-    setUnlocked(true); setErr('')
+    localStorage.setItem('bookScoutKey', key.trim()); setUnlocked(true); setErr('')
+  }
+
+  const rerun = async () => {
+    setErr('')
+    const r = await fetch('/api/book-scout/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-book-scout-key': key },
+    })
+    if (!r.ok) { const j = await r.json().catch(() => ({})); setErr(j.error || 'Could not start run'); return }
+    const { run_id } = await r.json()
+    setDirty(false)
+    setRun({ id: run_id, status: 'running', message: 'Researching human sources… (this takes a few minutes)' })
+    if (pollRef.current) clearInterval(pollRef.current)
+    pollRef.current = setInterval(async () => {
+      const s = await fetch(`/api/book-scout/run/${run_id}`, { cache: 'no-store' })
+      if (!s.ok) return
+      const st = await s.json()
+      setRun({ id: run_id, status: st.status, message: st.message })
+      if (st.status === 'done' || st.status === 'error') {
+        if (pollRef.current) clearInterval(pollRef.current)
+        if (st.status === 'done') { await load(); if (st.digest_id) setSelDigest(st.digest_id) }
+      }
+    }, 5000)
   }
 
   if (!data) {
@@ -70,27 +100,7 @@ export default function BookScoutPage() {
   }
 
   const digest = data.digests.find((d) => d.id === selDigest) || data.digests[0]
-  const thrillerSrc = data.sources.filter((s) => s.genre === 'thrillers')
-  const generalSrc = data.sources.filter((s) => s.genre === 'general')
-  const otherSrc = data.sources.filter((s) => s.genre !== 'thrillers' && s.genre !== 'general')
-
-  const SourceRow = (s: Source) => (
-    <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderTop: `1px solid ${C.line}`, opacity: s.active ? 1 : 0.45 }}>
-      <div style={{ flex: 1 }}>
-        <a href={s.url} target="_blank" rel="noreferrer" style={{ color: C.ink, fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>{s.name}</a>
-        <span style={{ marginLeft: 8, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em', color: C.accent, fontWeight: 700 }}>{s.type}</span>
-        {s.notes && <div style={{ fontSize: 13, color: C.faint, marginTop: 2 }}>{s.notes}</div>}
-      </div>
-      {unlocked && (
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button onClick={() => write(`/api/book-scout/sources/${s.id}`, 'PATCH', { active: !s.active })} disabled={busy}
-            style={btnGhost}>{s.active ? 'mute' : 'unmute'}</button>
-          <button onClick={() => { if (confirm(`Remove "${s.name}"?`)) write(`/api/book-scout/sources/${s.id}`, 'DELETE') }} disabled={busy}
-            style={{ ...btnGhost, color: '#a3402a' }}>delete</button>
-        </div>
-      )}
-    </div>
-  )
+  const genreLabel = data.genres.find((g) => g.slug === data.config.genre)?.label || data.config.genre
 
   return (
     <main style={{ background: C.bg, minHeight: '100dvh', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif', padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)' }}>
@@ -99,18 +109,17 @@ export default function BookScoutPage() {
         <div style={{ fontSize: 13, letterSpacing: '.08em', textTransform: 'uppercase', color: C.accent, fontWeight: 700 }}>Book Scout</div>
         <h1 style={{ fontSize: 30, fontWeight: 800, color: C.ink, margin: '4px 0 8px' }}>Control panel</h1>
         <p style={{ fontSize: 15, color: C.sub, lineHeight: 1.5, margin: 0 }}>
-          Books picked by human critics, booksellers and librarians — never by AI. The monthly digest pulls from the sources below and only surfaces titles available on Kindle now.
+          Books picked by human critics, booksellers and librarians — never by AI. The digest pulls from the sources below and only surfaces titles available on Kindle now.
         </p>
 
         {/* Unlock */}
         <div style={{ marginTop: 20, padding: 14, background: C.card, borderRadius: 10, border: `1px solid ${C.line}` }}>
           {unlocked ? (
-            <div style={{ fontSize: 13, color: C.sub }}>🔓 Editing unlocked. <button onClick={() => { setUnlocked(false); localStorage.removeItem('bookScoutKey') }} style={{ ...btnGhost, marginLeft: 6 }}>lock</button></div>
+            <div style={{ fontSize: 13, color: C.sub }}>🔓 Editing unlocked. <button onClick={() => { setUnlocked(false); localStorage.removeItem('bookScoutKey') }} style={btnGhost}>lock</button></div>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <span style={{ fontSize: 13, color: C.sub }}>🔒 Enter key to edit:</span>
-              <input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="key"
-                style={inputStyle} onKeyDown={(e) => e.key === 'Enter' && unlock()} />
+              <input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="key" style={inputStyle} onKeyDown={(e) => e.key === 'Enter' && unlock()} />
               <button onClick={unlock} style={btnSolid}>Unlock</button>
             </div>
           )}
@@ -118,15 +127,37 @@ export default function BookScoutPage() {
 
         {err && <div style={{ marginTop: 14, color: '#a3402a', fontSize: 14 }}>{err}</div>}
 
+        {/* Rerun banner */}
+        {unlocked && (dirty || run) && (
+          <div style={{ marginTop: 16, padding: 14, background: '#fff4e9', borderRadius: 10, border: `1px solid ${C.quoteBar}` }}>
+            {run ? (
+              <div style={{ fontSize: 14, color: C.ink }}>
+                {run.status === 'running' && <>⏳ {run.message}</>}
+                {run.status === 'done' && <>✅ Done — {run.message}. Results below are updated.</>}
+                {run.status === 'error' && <>⚠️ Run failed: {run.message} <button onClick={rerun} style={{ ...btnGhost, marginLeft: 8 }}>retry</button></>}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 14, color: C.ink }}>You changed the genre or sources. Re-run the agent to refresh the results and email a new digest?</span>
+                <button onClick={rerun} disabled={busy} style={btnSolid}>Re-run now</button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Genre */}
         <Section title="Genre">
           {unlocked ? (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input value={genreDraft} onChange={(e) => setGenreDraft(e.target.value)} style={{ ...inputStyle, width: 200 }} />
-              <button onClick={() => write('/api/book-scout/config', 'PUT', { genre: genreDraft })} disabled={busy || genreDraft === data.config.genre} style={btnSolid}>Save</button>
-            </div>
+            <select
+              value={data.config.genre}
+              disabled={busy}
+              onChange={(e) => write('/api/book-scout/config', 'PUT', { genre: e.target.value })}
+              style={{ ...inputStyle, fontSize: 16, padding: '10px 12px' }}
+            >
+              {data.genres.map((g) => <option key={g.slug} value={g.slug}>{g.label}</option>)}
+            </select>
           ) : (
-            <div style={{ fontSize: 22, fontWeight: 700, color: C.ink, textTransform: 'capitalize' }}>{data.config.genre}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: C.ink }}>{genreLabel}</div>
           )}
           {data.config.reference_books && <div style={{ marginTop: 8, fontSize: 14, color: C.sub }}>Reference books: {data.config.reference_books}</div>}
         </Section>
@@ -161,13 +192,29 @@ export default function BookScoutPage() {
 
         {/* Sources */}
         <Section title="Sources">
-          <p style={{ fontSize: 13, color: C.faint, margin: '0 0 8px' }}>The humans the agent listens to. Muted sources are skipped.</p>
-          {thrillerSrc.length > 0 && <SubHead>Thrillers</SubHead>}
-          {thrillerSrc.map(SourceRow)}
-          {generalSrc.length > 0 && <SubHead>General</SubHead>}
-          {generalSrc.map(SourceRow)}
-          {otherSrc.length > 0 && <SubHead>Other</SubHead>}
-          {otherSrc.map(SourceRow)}
+          <p style={{ fontSize: 13, color: C.faint, margin: '0 0 10px' }}>
+            The humans the agent listens to. A green dot marks sources used for the current genre ({genreLabel}). Muted sources are skipped.
+          </p>
+          {data.sources.map((s) => {
+            const used = s.active && sourceMatches(s.genre, data.config.genre)
+            return (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0', borderTop: `1px solid ${C.line}`, opacity: s.active ? 1 : 0.45 }}>
+                <span title={used ? `used for ${genreLabel}` : 'not used for this genre'} style={{ marginTop: 6, flexShrink: 0, width: 8, height: 8, borderRadius: 4, background: used ? '#3f9d52' : '#d8cfbb' }} />
+                <div style={{ flex: 1 }}>
+                  <a href={s.url} target="_blank" rel="noreferrer" style={{ color: C.ink, fontWeight: 600, fontSize: 15, textDecoration: 'none' }}>{s.name}</a>
+                  <span style={{ marginLeft: 8, fontSize: 11, textTransform: 'uppercase', letterSpacing: '.05em', color: C.accent, fontWeight: 700 }}>{s.type}</span>
+                  <div style={{ fontSize: 12, color: C.faint, marginTop: 2 }}>{s.genre.split(',').map((t) => t.trim()).join(' · ')}</div>
+                  {s.notes && <div style={{ fontSize: 13, color: C.faint, marginTop: 2 }}>{s.notes}</div>}
+                </div>
+                {unlocked && (
+                  <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                    <button onClick={() => write(`/api/book-scout/sources/${s.id}`, 'PATCH', { active: !s.active })} disabled={busy} style={btnGhost}>{s.active ? 'mute' : 'unmute'}</button>
+                    <button onClick={() => { if (confirm(`Remove "${s.name}"?`)) write(`/api/book-scout/sources/${s.id}`, 'DELETE') }} disabled={busy} style={{ ...btnGhost, color: '#a3402a' }}>delete</button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
 
           {unlocked && (
             <div style={{ marginTop: 18, padding: 14, background: C.card, borderRadius: 10, border: `1px solid ${C.line}` }}>
@@ -179,7 +226,7 @@ export default function BookScoutPage() {
                   <select value={newSrc.type} onChange={(e) => setNewSrc({ ...newSrc, type: e.target.value })} style={inputStyle}>
                     {['critic', 'editorial', 'bookseller', 'librarian', 'aggregator'].map((t) => <option key={t}>{t}</option>)}
                   </select>
-                  <input placeholder="genre" value={newSrc.genre} onChange={(e) => setNewSrc({ ...newSrc, genre: e.target.value })} style={inputStyle} />
+                  <input placeholder="genres (comma-separated, or 'general')" value={newSrc.genre} onChange={(e) => setNewSrc({ ...newSrc, genre: e.target.value })} style={{ ...inputStyle, flex: 1 }} />
                 </div>
                 <button disabled={busy || !newSrc.name || !newSrc.url} style={btnSolid}
                   onClick={async () => { if (await write('/api/book-scout/sources', 'POST', newSrc)) setNewSrc({ name: '', url: '', type: 'editorial', genre: data.config.genre }) }}>Add source</button>
@@ -201,9 +248,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       {children}
     </section>
   )
-}
-function SubHead({ children }: { children: React.ReactNode }) {
-  return <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.05em', color: C.faint, fontWeight: 700, marginTop: 16 }}>{children}</div>
 }
 
 const inputStyle: React.CSSProperties = { fontSize: 14, padding: '8px 10px', borderRadius: 6, border: `1px solid ${C.quoteBar}`, background: '#fff', color: C.ink, fontFamily: 'inherit' }

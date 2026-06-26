@@ -21,8 +21,9 @@ From the response use:
 - `config.genre` — the genre to scout this month (e.g. "thrillers").
 - `config.reference_books` — optional; if present, lean toward books in a
   similar vein, but never at the expense of the human-attribution rule.
-- `sources` — the human curators. Use ONLY sources where `active` is true and
-  whose `genre` matches `config.genre` OR equals "general". Each has a `url`.
+- `sources` — the human curators. Each source's `genre` is a comma-separated
+  list of genres (or "general"). Use ONLY sources where `active` is true AND
+  whose `genre` list contains `config.genre` OR contains "general". Each has a `url`.
 
 ## Step 2 — mine the active human sources
 
@@ -40,6 +41,13 @@ that show up across more than one human source.
    with a short quote or close paraphrase of what they said. Name the source.
 3. RECENT: the human picked/reviewed it in roughly the last 1–3 months, or it's
    a current staff pick.
+
+DATE-WINDOW SELF-CORRECTION (important): For each source, check the availability
+of what it is currently featuring. If MORE THAN ~30% of a source's current picks
+are not yet available (still forthcoming), that source's current page is too
+forward-looking — go back to that source's EARLIER lists (previous month or two)
+and pull already-released titles from there instead. Always prefer a slightly
+older list of available books over a fresh list of unreleased ones.
 
 Aim for 8–12 books. Correct attribution and genuine availability over quantity.
 Never invent quotes — quote/paraphrase what you actually fetched.
