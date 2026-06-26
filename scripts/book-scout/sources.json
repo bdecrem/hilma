@@ -1,0 +1,23 @@
+{
+  "_comment": "Human book-curation sources for Book Scout. The agent pulls recent picks from these and attributes every recommendation to its human source. The AI NEVER recommends on its own taste — it only aggregates and filters these humans' picks. Add/prune sources over time; keep only sources where real people curate (editors, critics, booksellers, librarians), not algorithmic/crowd lists.",
+  "genres": {
+    "thrillers": [
+      { "name": "The New York Times — Crime column", "url": "https://www.nytimes.com/column/crime", "type": "critic", "notes": "Long-running crime/thriller roundup by a named NYT critic. Gold standard." },
+      { "name": "The Guardian — best recent crime and thrillers", "url": "https://www.theguardian.com/books/series/crime-fiction-roundup", "type": "critic", "notes": "Monthly roundup by The Guardian's crime critic." },
+      { "name": "CrimeReads", "url": "https://crimereads.com/category/book-lists/", "type": "editorial", "notes": "LitHub's crime vertical. Monthly 'best new thrillers' / 'crime books of the month' lists by editors." },
+      { "name": "Murder by the Book (Houston)", "url": "https://www.murderbooks.com/", "type": "bookseller", "notes": "Specialist crime/mystery indie bookstore. Bookseller staff picks." },
+      { "name": "The Poisoned Pen (Scottsdale)", "url": "https://www.poisonedpen.com/", "type": "bookseller", "notes": "Specialist mystery/thriller indie. Strong staff recommendations + signed first editions." },
+      { "name": "The Mysterious Bookshop (NYC)", "url": "https://www.mysteriousbookshop.com/", "type": "bookseller", "notes": "Oldest mystery specialist bookstore in the US. Bookseller picks." },
+      { "name": "Kirkus Reviews — mystery/thriller", "url": "https://www.kirkusreviews.com/book-reviews/fiction/mystery/", "type": "critic", "notes": "Professional reviews; starred reviews signal critic enthusiasm." },
+      { "name": "BookMarks (Literary Hub)", "url": "https://bookmarks.reviews/", "type": "aggregator", "notes": "Aggregates pro critic reviews into a rating. Use to confirm a thriller is broadly well-reviewed by humans." }
+    ],
+    "_general": [
+      { "name": "The New York Times — New & Noteworthy / Editors' Choice", "url": "https://www.nytimes.com/section/books/review", "type": "editorial", "notes": "NYT Book Review editors' weekly picks." },
+      { "name": "NPR Books", "url": "https://www.npr.org/sections/books/", "type": "editorial", "notes": "NPR critics + 'Books We Love'." },
+      { "name": "LitHub — most anticipated / monthly previews", "url": "https://lithub.com/", "type": "editorial", "notes": "Editorial previews and critic picks." },
+      { "name": "Powell's Books staff picks", "url": "https://www.powells.com/staff-picks", "type": "bookseller", "notes": "Large indie; well-known bookseller staff picks." },
+      { "name": "The Strand (NYC) staff picks", "url": "https://www.strandbooks.com/", "type": "bookseller", "notes": "Famous NYC indie bookseller picks." },
+      { "name": "Seattle Public Library — Peak Picks / staff", "url": "https://www.spl.org/", "type": "librarian", "notes": "Librarian staff picks." }
+    ]
+  }
+}
