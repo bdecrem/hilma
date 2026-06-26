@@ -1,10 +1,10 @@
 import { NextResponse, after } from 'next/server'
 import { bookScoutDb, authed } from '@/lib/book-scout/db'
-import { researchBooks, researchClaudePicks } from '@/lib/book-scout/research'
-import { getOwnedTitles, getFictionLibrary, filterOwned } from '@/lib/book-scout/library'
+import { researchBooks } from '@/lib/book-scout/research'
+import { getOwnedTitles, filterOwned } from '@/lib/book-scout/library'
 
 export const runtime = 'nodejs'
-export const maxDuration = 300
+export const maxDuration = 600
 
 // A source's comma-separated genre list applies to genre G if it lists G or 'general'.
 function sourceMatches(sourceGenre: string, genre: string): boolean {
@@ -52,19 +52,21 @@ export async function POST(req: Request) {
   after(async () => {
     try {
       const owned = await getOwnedTitles()
-      const fiction = await getFictionLibrary()
 
-      // Human-curated genre digest, minus anything already on the shelf.
+      // Re-run only refreshes the fast human-curated genre list (so it stays
+      // well under the function timeout). Claude Code Picks depend on the
+      // reader's library, not the genre, so they're regenerated monthly — here
+      // we carry the most recent ones forward so the section stays populated.
       const research = await researchBooks({ genre, referenceBooks, sources, today })
       const books = filterOwned(research.books, owned)
 
-      // Claude Code Picks from the reader's own fiction taste, also deduped.
-      let claudePicks: Awaited<ReturnType<typeof researchClaudePicks>> = []
-      try {
-        claudePicks = filterOwned(await researchClaudePicks({ library: fiction, today }), owned)
-      } catch {
-        // Claude Code Picks are a bonus — never fail the whole run over them.
-      }
+      const { data: prev } = await db
+        .from('book_scout_digests')
+        .select('claude_picks')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      const claudePicks = prev?.claude_picks ?? []
 
       const { data: digest, error: digErr } = await db
         .from('book_scout_digests')
@@ -79,7 +81,7 @@ export async function POST(req: Request) {
           status: 'done',
           digest_id: digest.id,
           finished_at: new Date().toISOString(),
-          message: `${books.length} curated + ${claudePicks.length} Claude picks (not emailed yet)`,
+          message: `${books.length} books (not emailed yet)`,
         })
         .eq('id', run.id)
     } catch (e) {

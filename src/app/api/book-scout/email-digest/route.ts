@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const capGenre = digest.genre.charAt(0).toUpperCase() + digest.genre.slice(1)
   const email = await sendDigestEmail(
     deliverTo,
-    `Book Scout — ${capGenre}, ${digest.month_label} (${books.length} on Kindle now)`,
+    `Dog-Ear — ${capGenre}, ${digest.month_label} (${books.length} on Kindle now)`,
     html,
   )
   if (!email.ok) return NextResponse.json({ error: email.error || 'email failed' }, { status: 500 })

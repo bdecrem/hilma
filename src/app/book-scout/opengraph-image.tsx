@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 
-export const alt = 'Book Scout — book recommendations picked by humans, not AI'
+export const alt = 'Dog-Ear — new books worth folding down a corner for'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -13,25 +13,23 @@ export default function OG() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: '#faf6ec',
-          padding: '72px',
-          fontFamily: 'sans-serif',
+          justifyContent: 'center',
+          position: 'relative',
+          background: '#f3ead7',
+          padding: '78px',
+          fontFamily: 'Georgia, serif',
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 30, letterSpacing: 6, textTransform: 'uppercase', color: '#c2683a', fontWeight: 700 }}>
-            Book Scout
-          </div>
-          <div style={{ display: 'flex', fontSize: 90, fontWeight: 800, color: '#241f17', marginTop: 18, lineHeight: 1.02 }}>
-            Picked by humans,
-          </div>
-          <div style={{ display: 'flex', fontSize: 90, fontWeight: 800, color: '#c2683a', lineHeight: 1.02 }}>
-            not by AI.
-          </div>
+        {/* dog-ear fold, top-right */}
+        <div style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderLeft: '120px solid transparent', borderTop: '120px solid #b03a26' }} />
+        <div style={{ display: 'flex', fontSize: 26, letterSpacing: 8, textTransform: 'uppercase', color: '#b03a26', fontFamily: 'monospace' }}>
+          A reading list
         </div>
-        <div style={{ display: 'flex', fontSize: 34, color: '#6b6256', lineHeight: 1.3, maxWidth: 1000 }}>
-          Monthly recommendations from critics, booksellers and librarians — available on Kindle now.
+        <div style={{ display: 'flex', fontSize: 132, fontWeight: 700, color: '#231d15', marginTop: 8, lineHeight: 1 }}>
+          Dog-Ear
+        </div>
+        <div style={{ display: 'flex', fontSize: 32, fontStyle: 'italic', color: '#6f6552', marginTop: 26, maxWidth: 940, lineHeight: 1.35 }}>
+          New books worth folding down a corner for — picked by real booksellers, with a few from Claude.
         </div>
       </div>
     ),
