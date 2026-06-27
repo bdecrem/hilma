@@ -71,6 +71,7 @@ static const int g_dext[30] = {
 #define ST_DYNAMIC    5   /* dynamic block: read HLIT/HDIST/HCLEN            */
 #define ST_DYN_CL     6   /* dynamic block: read code-length code lengths    */
 #define ST_DYN_LENS   7   /* dynamic block: read lit/dist code lengths       */
+#define ST_DONE       8   /* final block (BFINAL=1) decoded: stop            */
 
 struct ins {
     const uint8_t *in;
@@ -248,6 +249,9 @@ static int inf_step(struct ins *s) {
     zss_inflate *z = s->z;
     switch (z->mode) {
 
+    case ST_DONE:                         /* final block decoded: nothing more */
+        return 1;
+
     case ST_INIT: {                       /* 2-byte zlib header */
         int used = 0;
         uint32_t cmf, flg;
@@ -267,7 +271,7 @@ static int inf_step(struct ins *s) {
         if (!inf_peekbits(s, 1, &used, &bfinal)) return 1;
         if (!inf_peekbits(s, 2, &used, &btype)) return 1;
         inf_drop(s, used);
-        (void)bfinal;                     /* SSH never sets BFINAL */
+        z->bfinal = (int)bfinal;          /* remember: stop after this block if set */
         if (btype == 0) {
             /* skip to byte boundary: drop the low (bitcnt & 7) bits */
             inf_drop(s, z->bitcnt & 7);
@@ -303,7 +307,7 @@ static int inf_step(struct ins *s) {
             if (inf_emit(s, (int)b)) return ZE_OVERFLOW;
             z->stored_rem--;
         }
-        z->mode = ST_HEADER;
+        z->mode = z->bfinal ? ST_DONE : ST_HEADER;
         return 0;
     }
 
@@ -315,7 +319,7 @@ static int inf_step(struct ins *s) {
             r = inf_codes(s, z->flcnt, z->flsym, z->fdcnt, z->fdsym);
         if (r == 1) return 1;             /* suspended mid-block */
         if (r < 0) return r;
-        z->mode = ST_HEADER;              /* end of block */
+        z->mode = z->bfinal ? ST_DONE : ST_HEADER;   /* end of block */
         return 0;
     }
 

@@ -85,6 +85,7 @@ typedef struct {
     int      mode;               /* resumable state-machine position         */
     int      fixed_built;        /* fixed Huffman tables constructed yet?    */
     int      cur_dynamic;        /* ST_CODES: dynamic(1) vs fixed(0) tables  */
+    int      bfinal;             /* current block's BFINAL bit (1 = last)    */
 
     uint64_t bitbuf;             /* bit accumulator (LSB-first), persists     */
     int      bitcnt;             /* number of valid bits in bitbuf            */
