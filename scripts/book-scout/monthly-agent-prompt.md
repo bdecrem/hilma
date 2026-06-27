@@ -1,105 +1,41 @@
-# Book Scout — monthly agent prompt
+# Dog-Ear — the monthly run
 
-This is the exact instruction run by the monthly cloud routine (via `/schedule`).
-Keep this file in sync with the live routine. The routine needs web access
-(WebSearch + WebFetch) and Bash (curl).
+There is **one** monthly run. It builds the shared Staff Picks once, generates
+each signed-up user's personal Claude Code Picks from their stored taste
+profile, and emails every user their issue (staff picks + their picks).
 
----
+All of that logic lives server-side in **`POST /api/book-scout/monthly`**
+(`src/app/api/book-scout/monthly/route.ts`), key-gated with `x-book-scout-key`.
+The work runs in `after()` on the server, so the caller just fires it and
+returns.
 
-You are Book Scout's monthly research engine. Your job is NOT to recommend books
-from your own taste — that is explicitly forbidden and defeats the entire point.
-Your ONLY job is to find books that real, named human curators (critics,
-booksellers, librarians) have recently recommended, and report them with
-attribution. If you cannot attribute a book to a specific human source with
-something they actually said, DO NOT include it.
+## The cron
 
-## Step 1 — read the current config
+A monthly cloud routine (`/schedule`, trigger `book-scout-monthly`, `0 15 1 * *`)
+does nothing but call the endpoint:
 
-GET https://feynd.cc/api/book-scout/data
+```
+curl -sS -X POST https://feynd.cc/api/book-scout/monthly -H 'x-book-scout-key: <BOOK_SCOUT_PASSWORD>'
+```
 
-From the response use:
-- `config.genre` — the genre to scout this month (e.g. "thrillers").
-- `config.reference_books` — optional; if present, lean toward books in a
-  similar vein, but never at the expense of the human-attribution rule.
-- `sources` — the human curators. Each source's `genre` is a comma-separated
-  list of genres (or "general"). Use ONLY sources where `active` is true AND
-  whose `genre` list contains `config.genre` OR contains "general". Each has a `url`.
+Expect `{"started": true, "month": "..."}`. The research + emails finish in the
+background.
 
-## Step 2 — mine the active human sources
+## What the endpoint does
 
-Use WebSearch + WebFetch to pull each active source's most recent picks for the
-genre. Run several searches (vary by source and current month/year) and fetch
-the promising pages to extract real titles + what the curator said. Prefer books
-that show up across more than one human source.
+1. **Staff Picks** — `researchBooks(config.genre, active sources)` once → saved
+   as a shared `book_scout_digests` row (books only). Falls back to the most
+   recent issue if the research call fails, so the run still goes out.
+2. **Per-user Claude Code Picks** — for each `book_scout_users` row with a
+   library: build the taste profile if missing, then `researchClaudePicks` from
+   the profile, dedup against what they own, save to `book_scout_user_picks`.
+3. **Email** — each user gets `buildDigestHtml(staffBooks, …, theirPicks)` at
+   their account email.
 
-## Step 3 — hard filters (every book must pass all three)
+## Scaling note
 
-1. AVAILABLE NOW: already published (pub date on or before today) and buyable as
-   a Kindle ebook. EXCLUDE anything "coming soon," "most anticipated," pre-order,
-   or forthcoming. This is the single most important filter.
-2. ATTRIBUTED: tied to at least one named human source from the active list,
-   with a short quote or close paraphrase of what they said. Name the source.
-3. RECENT: the human picked/reviewed it in roughly the last 1–3 months, or it's
-   a current staff pick.
-
-DATE-WINDOW SELF-CORRECTION (important): For each source, check the availability
-of what it is currently featuring. If MORE THAN ~30% of a source's current picks
-are not yet available (still forthcoming), that source's current page is too
-forward-looking — go back to that source's EARLIER lists (previous month or two)
-and pull already-released titles from there instead. Always prefer a slightly
-older list of available books over a fresh list of unreleased ones.
-
-Aim for 8–12 books. Correct attribution and genuine availability over quantity.
-Never invent quotes — quote/paraphrase what you actually fetched.
-
-## Step 3.5 — Claude Code Picks (a second, personal list)
-
-GET https://feynd.cc/api/book-scout/library with header `x-book-scout-key: <BOOK_SCOUT_PASSWORD>`. This returns the reader's FICTION shelf (`type` is "Purchase" — a strong signal — or "Sample" — weaker).
-
-Study their taste and pick UP TO 5 books they'd love, as "Claude Code Picks":
-- NOT already on their shelf.
-- RECENT: published within roughly the last 12 months (on/before today).
-- AVAILABLE NOW on Kindle (not forthcoming).
-- A genuine taste match — use WebSearch for recent releases, "if you liked X" readalikes, and new books by authors adjacent to their shelf. Spread across their lanes (e.g. espionage, Reacher-style action, legal thrillers, Nordic/translated crime, literary & domestic suspense, smart speculative fiction) — don't pick five of the same thing.
-
-These are openly AI picks. Each must include a one-sentence `why` that names a specific book or author from their shelf.
-
-## Step 4 — post the results
-
-Compute `month_label` as the current month and year (e.g. "July 2026").
-
-POST https://feynd.cc/api/book-scout/digest
-Headers:
-  Content-Type: application/json
-  x-book-scout-key: <BOOK_SCOUT_PASSWORD>
-Body:
-{
-  "month_label": "<current month year>",
-  "genre": "<config.genre>",
-  "source_names": ["<distinct human sources you used>"],
-  "books": [
-    {
-      "title": "...",
-      "author": "...",
-      "pub_date": "e.g. 'Jul 2026' — must be on/before today",
-      "one_line": "one neutral sentence on what the book is — NOT your opinion",
-      "sources": [ { "name": "human source", "said": "short quote/paraphrase" } ]
-    }
-  ],
-  "claude_picks": [
-    {
-      "title": "...",
-      "author": "...",
-      "pub_date": "within ~12 months, on/before today",
-      "one_line": "one neutral sentence on what the book is",
-      "why": "one sentence on why it fits this reader, naming a book/author from their shelf"
-    }
-  ]
-}
-
-The endpoint saves the digest to the archive (visible at feynd.cc/book-scout),
-automatically drops any book the reader already owns, and emails it to the
-configured address. Confirm the response shows `saved: true` and `emailed: true`.
-If `emailed` is false, report the `email_error`.
-
-Do not send the email yourself — the endpoint does it. Your job ends at the POST.
+Users are processed sequentially inside one function invocation (each ~½–1 min
+for the picks research). That's fine for a handful of users. If the user count
+grows past what fits in the function's `maxDuration`, move the per-user loop to
+a queue / batched invocations (e.g. process N users per call, or fan out to the
+Mac mini) — the per-user step is already self-contained.
