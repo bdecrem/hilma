@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 
-export const alt = 'Dog-Ear — new books worth folding down a corner for'
+export const alt = 'dog ear — a little library on the internet'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -13,23 +13,35 @@ export default function OG() {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          background: '#f3ead7',
-          padding: '78px',
-          fontFamily: 'Georgia, serif',
+          background: '#f3ece0',
+          fontFamily: 'sans-serif',
         }}
       >
-        {/* dog-ear fold, top-right */}
-        <div style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderLeft: '120px solid transparent', borderTop: '120px solid #b03a26' }} />
-        <div style={{ display: 'flex', fontSize: 26, letterSpacing: 8, textTransform: 'uppercase', color: '#b03a26', fontFamily: 'monospace' }}>
-          A reading list
-        </div>
-        <div style={{ display: 'flex', fontSize: 132, fontWeight: 700, color: '#231d15', marginTop: 8, lineHeight: 1 }}>
-          Dog-Ear
-        </div>
-        <div style={{ display: 'flex', fontSize: 32, fontStyle: 'italic', color: '#6f6552', marginTop: 26, maxWidth: 940, lineHeight: 1.35 }}>
-          New books worth folding down a corner for — picked by real booksellers, with a few from Claude.
+        {/* amber dog-eared page fold, top-right */}
+        <div style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderLeft: '150px solid transparent', borderTop: '150px solid #e8a13c' }} />
+
+        {/* flat dog-over-a-book mark */}
+        <svg width="340" height="240" viewBox="28 70 144 100" fill="none">
+          <g stroke="#3b372f" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <path d="M72 78 C52 82 48 116 58 132 C70 122 76 102 78 86 C78 80 76 78 72 78 Z" fill="#e8a13c" strokeWidth="4" />
+            <path d="M128 78 C148 82 152 116 142 132 C130 122 124 102 122 86 C122 80 124 78 128 78 Z" fill="#e8a13c" strokeWidth="4" />
+            <path d="M68 130 C62 100 82 84 100 84 C118 84 138 100 132 130" />
+            <circle cx="86" cy="112" r="3.6" fill="#3b372f" stroke="none" />
+            <circle cx="114" cy="112" r="3.6" fill="#3b372f" stroke="none" />
+            <path d="M34 128 L166 128 L166 162 L34 162 Z" />
+            <path d="M100 128 L100 162" strokeWidth="2.6" />
+            <path d="M74 128 C74 121 88 121 88 128" strokeWidth="3.2" />
+            <path d="M112 128 C112 121 126 121 126 128" strokeWidth="3.2" />
+            <path d="M96 126 L104 126 L100 131 Z" fill="#3b372f" strokeWidth="1.6" />
+          </g>
+        </svg>
+
+        <div style={{ display: 'flex', fontSize: 96, fontWeight: 800, color: '#3b372f', marginTop: 8 }}>dog ear</div>
+        <div style={{ display: 'flex', fontSize: 34, color: '#8a8475', marginTop: 14, maxWidth: 820, textAlign: 'center' }}>
+          a little library on the internet — picked by real booksellers, with a few from Claude.
         </div>
       </div>
     ),

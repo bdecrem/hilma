@@ -72,7 +72,7 @@ export async function POST(req: Request) {
           await db.from('book_scout_user_picks').insert({ user_id: u.id, month_label: label, picks })
         }
         const html = buildDigestHtml(staffBooks, label, genre, sourceNames, picks)
-        await sendDigestEmail(u.email, `Dog-Ear — ${capGenre}, ${label} (${staffBooks.length} on Kindle now)`, html)
+        await sendDigestEmail(u.email, `dog ear · ${capGenre}, ${label} (${staffBooks.length} on Kindle now)`, html)
       } catch {
         // one user's failure shouldn't stop the rest
       }

@@ -62,7 +62,7 @@ export async function POST(req: Request) {
   const capGenre = genre.charAt(0).toUpperCase() + genre.slice(1)
   const email = await sendDigestEmail(
     deliverTo,
-    `Dog-Ear — ${capGenre}, ${monthLabel} (${books.length} on Kindle now)`,
+    `dog ear · ${capGenre}, ${monthLabel} (${books.length} on Kindle now)`,
     html,
   )
 
