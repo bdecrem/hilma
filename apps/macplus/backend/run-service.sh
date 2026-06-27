@@ -71,7 +71,9 @@ case "$NAME" in
     cd "$BASE/agent-bridge"; exec ./node_modules/.bin/tsx src/main.ts --listen 2333 ;;
   screen)   cd "$BASE/agent-screen";   exec ./node_modules/.bin/tsx src/main.ts --listen 2334 ;;
   netspeed) cd "$BASE/agent-netspeed"; exec /usr/bin/env node server.js ;;
-  porthole) cd "$BASE/agent-porthole"; exec ./node_modules/.bin/tsx src/main.ts --listen 2336 ;;
+  porthole)
+    export PORT_PYTHON="${PORT_PYTHON:-/usr/bin/python3}"   # the python with Pillow (dither.py)
+    cd "$BASE/agent-porthole"; exec ./node_modules/.bin/tsx src/main.ts --listen 2336 ;;
   *)
     echo "run-service: unknown service '$NAME'" >&2; exit 64 ;;
 esac
