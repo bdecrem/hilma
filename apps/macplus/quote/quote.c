@@ -1,12 +1,14 @@
 /*
- * Quote of the Day — a Macinclaude app that gets online through the WiFi
- * SYSTEM SERVICE (wifi.h), not by dialing the modem itself. It opens a "quote"
- * channel to the mini, asks for today's quote, and shows it word-wrapped with
- * the author beneath. Quote menu: Today's Quote / Surprise Me.
+ * Quote of the Day — a Macinclaude app that gets online through the shared
+ * MacTCP library (nettcp.h), not the old WiFi system service and not by dialing
+ * the modem itself. It opens a direct TCP socket to the mini's quote agent,
+ * asks for today's quote, and shows it word-wrapped with the author beneath.
+ * Quote menu: Today's Quote / Surprise Me.
  *
- * This is the first "real" app on the WiFi service: all it does is
- *   WIFIConnect(); ch = WIFIOpen("quote"); WIFISendLine(ch, "TODAY");
- * and read the reply. No AT commands anywhere.
+ * Transport: NetConnect(&gConn, NetParseIP("192.168.7.50"), 2332); then send
+ * "TODAY\r" / "RANDOM\r" with NetSend and read the "QUOTE ..." / "BY ..." reply
+ * with NetAvailable + NetRecv. The request/response protocol is unchanged from
+ * the WiFi-service version — only the wire underneath it changed.
  */
 #include <Quickdraw.h>
 #include <Windows.h>
@@ -16,7 +18,10 @@
 #include <TextEdit.h>
 #include <Dialogs.h>
 #include <OSUtils.h>
-#include "wifi.h"
+#include "nettcp.h"        /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
+
+#define QUOTE_IP   "192.168.7.50"
+#define QUOTE_PORT 2332
 
 #ifndef geneva
 #define geneva 3
@@ -37,10 +42,11 @@ static MenuHandle gAppleM, gFileM, gQuoteM;
 static char  gQuote[256];
 static char  gAuthor[80];
 static char  gStatus[80];
-static short gChan = -1;
+static NetConn gConn;
+static Boolean gConnected = false;
 static Boolean gHaveQuote = false;
 
-/* incoming line accumulator for the channel */
+/* incoming line accumulator for the connection */
 static char  gLine[300];
 static short gLineLen = 0;
 
@@ -102,7 +108,7 @@ static void DrawScreen(void)
     }
 }
 
-/* a completed channel line (QUOTE ... / BY ...) */
+/* a completed line (QUOTE ... / BY ...) */
 static void HandleLine(void)
 {
     gLine[gLineLen] = 0;
@@ -117,11 +123,17 @@ static void HandleLine(void)
 
 static void PumpQuote(void)
 {
-    unsigned char buf[128]; short n, i;
-    if (gChan < 0) return;
-    WIFIIdle();
-    n = WIFIRead(gChan, buf, sizeof(buf));
-    for (i = 0; i < n; i++) {
+    unsigned char buf[128]; long avail, got; short i;
+    if (!gConnected) return;
+    avail = NetAvailable(&gConn);
+    if (avail <= 0) {
+        if (avail < 0) { gConnected = false; }   /* connection gone */
+        return;
+    }
+    if (avail > (long)sizeof(buf)) avail = sizeof(buf);
+    got = NetRecv(&gConn, buf, (unsigned short)avail, 1);
+    if (got <= 0) return;
+    for (i = 0; i < (short)got; i++) {
         unsigned char c = buf[i];
         if (c == '\r') continue;
         if (c == '\n') { HandleLine(); gLineLen = 0; continue; }
@@ -131,12 +143,17 @@ static void PumpQuote(void)
 
 static void Ask(const char *what)
 {
+    char cmd[16]; short n = 0;
     gHaveQuote = false; gLineLen = 0;
     scopy(gStatus, "fetching a quote...", sizeof(gStatus));
     DrawScreen();
-    if (gChan < 0) gChan = WIFIOpen("quote");
-    if (gChan < 0) { scopy(gStatus, "could not open the quote channel", sizeof(gStatus)); DrawScreen(); return; }
-    WIFISendLine(gChan, what);
+    if (!gConnected) { scopy(gStatus, "not connected to the quote service", sizeof(gStatus)); DrawScreen(); return; }
+    /* send "<what>\r" — same line the WiFi service used to put on the channel */
+    while (what[n] && n < 14) { cmd[n] = what[n]; n++; }
+    cmd[n++] = '\r';
+    if (NetSend(&gConn, cmd, (unsigned short)n) != noErr) {
+        scopy(gStatus, "could not send the request", sizeof(gStatus)); DrawScreen();
+    }
 }
 
 static void SetUpMenus(void)
@@ -154,7 +171,7 @@ static void DoMenu(long sel)
 {
     short menu = HiWord(sel), item = LoWord(sel); Str255 nm;
     if (menu == kAppleMenu) {
-        if (item == 1) { ParamText("\pQuote of the Day — over WiFi, through the system service.", "\p", "\p", "\p"); NoteAlert(128, 0L); }
+        if (item == 1) { ParamText("\pQuote of the Day — over TCP, through MacTCP.", "\p", "\p", "\p"); NoteAlert(128, 0L); }
         else { GetMenuItemText(gAppleM, item, nm); OpenDeskAcc(nm); }
     } else if (menu == kFileMenu) { /* quit handled by caller via flag */
     } else if (menu == kQuoteMenu) {
@@ -174,10 +191,15 @@ int main(void)
     gWin = NewWindow(0L, &bounds, "\pQuote of the Day", true, noGrowDocProc, (WindowPtr)-1L, true, 0);
     SetPort(gWin);
 
-    scopy(gStatus, "connecting to WiFi...", sizeof(gStatus));
+    scopy(gStatus, "connecting to the quote service...", sizeof(gStatus));
     DrawScreen();
-    if (WIFIConnect()) Ask("TODAY");
-    else { scopy(gStatus, "no WiFi service (is the link up?)", sizeof(gStatus)); DrawScreen(); }
+    if (NetConnect(&gConn, NetParseIP(QUOTE_IP), QUOTE_PORT) == noErr) {
+        gConnected = true;
+        Ask("TODAY");
+    } else {
+        scopy(gStatus, "could not connect (is MacTCP up?)", sizeof(gStatus));
+        DrawScreen();
+    }
 
     while (!done) {
         if (WaitNextEvent(everyEvent, &ev, 6L, 0L)) {
@@ -204,7 +226,6 @@ int main(void)
         }
         PumpQuote();
     }
-    if (gChan >= 0) WIFIClose(gChan);
-    WIFIPark();
+    if (gConnected) NetClose(&gConn);
     return 0;
 }

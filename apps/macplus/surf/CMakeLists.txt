@@ -2,10 +2,14 @@ cmake_minimum_required(VERSION 3.5)
 project(Surf C)
 
 # Retro68 provides add_application() via its toolchain file.
+# nettcp (../net) is the shared WiFi/TCP transport, replacing the serial modem.
 add_application(Surf
     surf.c
     surf.r
+    ${CMAKE_CURRENT_SOURCE_DIR}/../net/nettcp.c
 )
+
+target_include_directories(Surf PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../net)
 
 # Offline test build for Mini vMac (no serial): enable with -DSURF_TEST=ON or
 # `./build.sh test`. Commands load the embedded test page; do NOT ship.

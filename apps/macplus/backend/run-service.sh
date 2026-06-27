@@ -8,7 +8,7 @@
 #
 # Services (see ../BACKEND.md for the full map):
 #   code     :2324  socat -> Macinclaude Code agent (interactive VT100; cooked pty)
-#   paint    :2325  socat -> Atkinson image agent   (cooked pty, tolerant)
+#   paint    :2325  socat -> Atkinson image agent   (raw,echo=0 — direct TCP now)
 #   surf     :2326  socat -> Surf reader-mode agent (raw,echo=0 — protocol agent!)
 #   mux      :2330  node:net multiplexer (the WiFi service front door)
 #   imessage :2328  node:net iMessage bridge (chat.db read + AppleScript send)
@@ -16,6 +16,7 @@
 #   quote    :2332  node:net quote of the day
 #   bridge   :2333  node:net OTA app delivery (watches ~/bridge-outbox)
 #   screen   :2334  node:net on-demand screenshot of the Plus (watches ~/.screen-grab)
+#   netspeed :2335  node:net bulk server for the Plus NetSpeed speed test
 #
 # Secrets come from ~/.macplus-backend.env (chmod 600, NOT in git, NOT in the
 # plists). backend/update.sh re-syncs it from the dev tree's .env.local when
@@ -49,8 +50,11 @@ case "$NAME" in
     ;;
   paint)
     export ATK_PYTHON="${ATK_PYTHON:-/usr/bin/python3}"   # only this python has Pillow
+    # raw,echo=0: the Plus now connects by direct TCP (MacTCP/DaynaPORT), not
+    # through the modem+telnet. A cooked pty would echo the prompt back and
+    # ONLCR-mangle the hex frame (serial lesson #2). Match surf's raw mode.
     exec "$SOCAT" TCP-LISTEN:2325,reuseaddr,fork \
-      EXEC:"$(tsx_for agent-atkinson) $BASE/agent-atkinson/src/main.ts",pty,setsid,ctty
+      EXEC:"$(tsx_for agent-atkinson) $BASE/agent-atkinson/src/main.ts",pty,raw,echo=0,setsid,ctty
     ;;
   surf)
     # raw,echo=0: line-protocol agent — a cooked pty echoes commands back and
@@ -66,6 +70,7 @@ case "$NAME" in
     mkdir -p "${BRIDGE_OUTBOX:-$HOME/bridge-outbox}"
     cd "$BASE/agent-bridge"; exec ./node_modules/.bin/tsx src/main.ts --listen 2333 ;;
   screen)   cd "$BASE/agent-screen";   exec ./node_modules/.bin/tsx src/main.ts --listen 2334 ;;
+  netspeed) cd "$BASE/agent-netspeed"; exec /usr/bin/env node server.js ;;
   *)
     echo "run-service: unknown service '$NAME'" >&2; exit 64 ;;
 esac

@@ -43,6 +43,7 @@
 #include <Serial.h>
 #include <SegLoad.h>
 
+#include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
 #include "test_image.h"   /* gTestImg[], gTestImg_W/_H/_ROWBYTES */
 
 /* Font IDs (classic constants not always provided by the interfaces). */
@@ -138,12 +139,10 @@ static WindowPtr  gWin;
 static MenuHandle gAppleM, gFileM, gEditM, gConnM, gImageM;
 static Boolean    gDone = false;
 
-static short      gInRef, gOutRef;          /* serial driver refnums */
-static Boolean    gPortOpen = false;
+static NetConn    gConn;                    /* the TCP connection to the agent */
 static Boolean    gConnected = false;       /* in a live session with the agent */
 
-static char       gSerBuf[2048];            /* roomy input buffer */
-static unsigned char gCap[1024];            /* capture scratch for handshakes */
+static char       gSerBuf[2048];            /* receive scratch (TCP -> parser)   */
 
 /* the current image: 480x300 1bpp packed bytes (set bit = black) */
 static unsigned char gImgBuf[IMG_W / 8 * IMG_H];   /* 18000 bytes */
@@ -290,72 +289,31 @@ static void ClearImage(void)
 
 /* ================= serial plumbing (mirrors Macinclaude/SerialDoc) ================= */
 
-static void ConfigPort(short config)
+/* ================= TCP transport primitives =================
+ * These replace the RetroWiFi serial-modem path. The Plus now opens a real TCP
+ * socket to the agent through the BlueSCSI DaynaPORT + MacTCP (see net/nettcp).
+ * The wire protocol above is unchanged - only the pipe under it is different. */
+
+/* Send a C string over the connection (used for the one prompt line). */
+static void SendStr(const char *s)
 {
-    SerShk shk;
-    SerReset(gOutRef, config);
-    SerReset(gInRef,  config);
-    shk.fXOn = 0; shk.fCTS = 0; shk.xOn = 0; shk.xOff = 0;
-    shk.errs = 0; shk.evts = 0; shk.fInX = 0; shk.null = 0;
-    SerHShake(gOutRef, &shk);
+    long n;
+    if (!gConnected) return;
+    StrLen(s, &n);
+    if (n > 0) NetSend(&gConn, s, (unsigned short)n);
 }
 
-static Boolean OpenSerPort(void)
-{
-    OSErr err;
-    if (gPortOpen) return true;
-    err = OpenDriver("\p.AOut", &gOutRef);            /* modem port */
-    if (err == noErr) err = OpenDriver("\p.AIn", &gInRef);
-    if (err != noErr) { SetStatus("could not open modem port"); return false; }
-    SerSetBuf(gInRef, (Ptr)gSerBuf, (short)sizeof(gSerBuf));
-    ConfigPort(kBaudTab[gCfg.baudIdx].config);
-    gPortOpen = true;
-    return true;
-}
-
-static void CloseSerPort(void)
-{
-    if (!gPortOpen) return;
-    SerSetBuf(gInRef, (Ptr)gSerBuf, 0);
-    CloseDriver(gInRef);
-    CloseDriver(gOutRef);
-    gPortOpen = false;
-}
-
+/* Discard any bytes already waiting on the socket (stale tail from a prior
+   image), so a new prompt starts the parser on a clean stream. */
 static void DrainInput(void)
 {
-    long avail, cnt;
-    if (!gPortOpen) return;
-    while (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-        cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-        FSRead(gInRef, &cnt, gSerBuf);
+    long avail;
+    if (!gConnected) return;
+    while ((avail = NetAvailable(&gConn)) > 0) {
+        unsigned short cnt = (avail > (long)sizeof(gSerBuf))
+                             ? (unsigned short)sizeof(gSerBuf) : (unsigned short)avail;
+        if (NetRecv(&gConn, gSerBuf, cnt, 2) <= 0) break;
     }
-}
-
-static void SendBytes(const char *s, long n)
-{
-    long cnt = n;
-    if (!gPortOpen) return;
-    FSWrite(gOutRef, &cnt, (Ptr)s);
-}
-static void SendStr(const char *s) { long n; StrLen(s, &n); SendBytes(s, n); }
-
-/* Poll the port for `ticks`, copying bytes into out[] (capped at cap). */
-static short CaptureFor(short ticks, unsigned char *out, short cap)
-{
-    unsigned long deadline = TickCount() + (unsigned long)ticks;
-    short total = 0; long avail, cnt;
-    while ((long)(TickCount() - deadline) < 0) {
-        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
-                short i;
-                for (i = 0; i < (short)cnt; i++)
-                    if (total < cap) out[total++] = (unsigned char)gSerBuf[i];
-            }
-        }
-    }
-    return total;
 }
 
 /* ================= prefs persistence ================= */
@@ -409,101 +367,42 @@ static void SavePrefs(void)
     FlushVol(NULL, gPrefVRef);
 }
 
-/* ================= modem operations ================= */
+/* ================= connection ================= */
 
-/* send AT, look for OK; a couple tries so Zimodem can auto-baud */
-static Boolean ModemAlive(void)
-{
-    short tries, got;
-    for (tries = 0; tries < 3; tries++) {
-        DrainInput();
-        SendStr("AT\r");
-        got = CaptureFor(90, gCap, sizeof(gCap));    /* ~1.5s */
-        if (Contains(gCap, got, "OK")) return true;
-    }
-    return false;
-}
-
-/* Join WiFi and persist it in the modem (Settings -> Save). */
-static Boolean JoinWiFi(void)
-{
-    char cmd[600]; short n; short got;
-    char ssidC[256], passC[256];
-
-    if (gCfg.ssid[0] == 0) { SetStatus("no SSID set"); return false; }
-    if (!OpenSerPort()) return false;
-
-    SetStatus("joining WiFi...");
-    if (!ModemAlive()) { SetStatus("modem did not answer AT - check cable/power"); return false; }
-
-    P2C(gCfg.ssid, ssidC);
-    P2C(gCfg.pass, passC);
-
-    /* ATW"SSID,PASSWORD" - Zimodem join */
-    n = 0; CatStr(cmd, &n, "ATW\"");
-    CatStr(cmd, &n, ssidC); CatStr(cmd, &n, ",");
-    CatStr(cmd, &n, passC); CatStr(cmd, &n, "\"\r");
-    cmd[n] = 0;
-    DrainInput();
-    SendStr(cmd);
-    got = CaptureFor(900, gCap, sizeof(gCap));        /* up to ~15s to associate */
-
-    if (Contains(gCap, got, "ERROR") || got == 0) { SetStatus("WiFi join failed - check SSID/password"); return false; }
-    /* Save into the modem so it reconnects on its own next power-up. */
-    DrainInput();
-    SendStr("AT&W\r");
-    CaptureFor(90, gCap, sizeof(gCap));
-    gCfg.wifiSaved = true;
-    SetStatus("WiFi joined and saved");
-    return true;
-}
-
-/* Dial the agent; on CONNECT mark the session live. */
+/* Open a TCP connection to the agent (host:port from prefs). WiFi itself is
+   now brought up by the BlueSCSI (DaynaPORT), not by this app - so there is no
+   AT/ATDT/AT&W handshake anymore, just a socket. */
 static Boolean DialAgent(void)
 {
-    char cmd[320]; short n; short got;
     char hostC[256];
+    unsigned long ip;
+    OSErr err;
 
-    if (!OpenSerPort()) return false;
+    if (gConnected) return true;
 
     SetStatus("connecting...");
-    if (!ModemAlive()) { SetStatus("modem did not answer AT @ this baud"); return false; }
-
     P2C(gCfg.host, hostC);
-    SetStatus("dialing...");
+    ip = NetParseIP(hostC);
+    if (ip == 0) { SetStatus("bad server IP - check Settings"); return false; }
 
-    /* ATDT"host:port" - the RetroWiFi SI speaks telnet itself */
-    n = 0; CatStr(cmd, &n, "ATDT\"");
-    CatStr(cmd, &n, hostC); CatStr(cmd, &n, ":");
-    CatLong(cmd, &n, (long)gCfg.tcpPort);
-    CatStr(cmd, &n, "\"\r");
-    cmd[n] = 0;
-    DrainInput();
-    SendStr(cmd);
-    got = CaptureFor(600, gCap, sizeof(gCap));        /* up to ~10s for CONNECT */
-
-    if (Contains(gCap, got, "CONNECT")) {
-        gConnected = true;
-        SetStatus("connected - Image > New Image to draw");
-        return true;
+    err = NetConnect(&gConn, ip, gCfg.tcpPort);
+    if (err != noErr) {
+        char msg[80]; short n = 0;
+        CatStr(msg, &n, "connect failed: ");
+        CatStr(msg, &n, (char *)NetErrStr(err));
+        msg[n] = 0;
+        SetStatus(msg);
+        return false;
     }
-    if (Contains(gCap, got, "BUSY"))      SetStatus("BUSY - agent listener may be down");
-    else if (Contains(gCap, got, "NO CARRIER") || Contains(gCap, got, "NO ANSWER"))
-                                          SetStatus("no answer - is the mini agent up?");
-    else if (got == 0)                    SetStatus("silence - WiFi not joined? try Settings");
-    else                                  SetStatus("unexpected reply from modem");
-    return false;
+
+    gConnected = true;
+    SetStatus("connected - Image > New Image to draw");
+    return true;
 }
 
 static void Disconnect(void)
 {
-    if (!gPortOpen) { gConnected = false; return; }
-    if (gConnected) {
-        SendStr("+++");
-        CaptureFor(90, gCap, sizeof(gCap));
-        SendStr("ATH\r");
-        CaptureFor(60, gCap, sizeof(gCap));
-    }
+    if (gConnected) NetClose(&gConn);
     gConnected = false;
     SetStatus("disconnected");
 }
@@ -516,19 +415,24 @@ static void Disconnect(void)
  * above). PumpReceive (below) is the Mac-serial feeder and stays here. */
 #include "atkinson_rx.inc"
 
-/* Non-blocking: drain whatever serial bytes are waiting into the parser. */
+/* Non-blocking: drain whatever TCP bytes have arrived into the parser. Called
+   every event-loop pass, so the image still develops band-by-band as data
+   streams in - now near-instantly over TCP instead of crawling at 9600 baud. */
 static void PumpReceive(void)
 {
-    long avail, cnt; short i;
-    if (!gPortOpen) return;
-    if (SerGetBuf(gInRef, &avail) != noErr || avail <= 0) {
+    long avail, got; short i;
+    if (!gConnected) return;
+    avail = NetAvailable(&gConn);
+    if (avail <= 0) {
+        if (avail < 0) { RxAbort("connection dropped"); gConnected = false; return; }
         if (gRxState != RX_IDLE && (long)(TickCount() - gRxDeadline) > 0)
             RxAbort("timed out waiting for the agent");
         return;
     }
-    cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-    if (FSRead(gInRef, &cnt, gSerBuf) != noErr) return;
-    for (i = 0; i < (short)cnt; i++) FeedRxByte((unsigned char)gSerBuf[i]);
+    if (avail > (long)sizeof(gSerBuf)) avail = sizeof(gSerBuf);
+    got = NetRecv(&gConn, gSerBuf, (unsigned short)avail, 5);
+    if (got <= 0) return;
+    for (i = 0; i < (short)got; i++) FeedRxByte((unsigned char)gSerBuf[i]);
     gRxDeadline = TickCount() + 60 * 60;     /* 60s of silence = give up */
 }
 
@@ -701,9 +605,7 @@ static void DoSettings(void)
     if (DoSettingsDialog()) {
         SavePrefs();
         gHaveCfg = true;
-        SetStatus("settings saved");
-        if (gPortOpen) ConfigPort(kBaudTab[gCfg.baudIdx].config);
-        if (gCfg.ssid[0] != 0) { if (JoinWiFi()) SavePrefs(); }
+        SetStatus("settings saved - Connection > Connect");
     }
 }
 
@@ -1020,7 +922,6 @@ int main(void)
         if (DoSettingsDialog()) {
             SavePrefs();
             gHaveCfg = true;
-            if (gCfg.ssid[0] != 0 && JoinWiFi()) SavePrefs();
         } else {
             SetStatus("setup cancelled - use Connection > Settings");
         }
@@ -1036,6 +937,5 @@ int main(void)
         if (gConnected) PumpReceive();
     }
     if (gConnected) Disconnect();
-    if (gPortOpen) CloseSerPort();
     return 0;
 }

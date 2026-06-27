@@ -69,6 +69,9 @@ resource 'SIZE' (-1) {
     reserved,
     reserved,
     reserved,
-    120 * 1024,
-    120 * 1024
+    /* MacTCP needs room: ~16K receive buffer + code + TextEdit console + QuickDraw
+       scratch. 120K was fine for the serial path; give the TCP path 1MB (the Plus
+       has 4MB), mirroring Atkinson. */
+    1024 * 1024,
+    1024 * 1024
 };

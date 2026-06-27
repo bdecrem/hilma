@@ -4,14 +4,16 @@
  *
  * The Plus sends one line ("MAKE <wish>"); on the modern side Claude writes
  * the Toolbox C, Retro68 cross-compiles it, and the resulting MacBinary is
- * streamed back over the serial link (FND frames, see foundry_rx.inc). This
+ * streamed back over a TCP socket (FND frames, see foundry_rx.inc). This
  * app shows the build log as it happens, then decodes the MacBinary ON THE
  * FLY - writing the data and resource forks straight to the boot disk - so
  * when the transfer ends there is a real, double-clickable application
  * sitting in the Finder that did not exist three minutes earlier.
  *
  * UI: a build-log console window + one dialog ("What should the app do?").
- * Settings/serial/dial are the proven Macinclaude/Atkinson/Surf transport.
+ * The transport is the shared MacTCP client (net/nettcp): the Plus opens a
+ * real TCP socket to the agent through the BlueSCSI DaynaPORT + MacTCP - no
+ * RetroWiFi AT/ATDT modem dialing anymore (mirrors atkinson.c).
  */
 
 #include <Quickdraw.h>
@@ -29,6 +31,8 @@
 #include <Files.h>
 #include <Serial.h>
 #include <SegLoad.h>
+
+#include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
 
 #ifndef monaco
 #define monaco 4
@@ -125,13 +129,12 @@ static WindowPtr  gWin;
 static MenuHandle gAppleM, gFileM, gEditM, gConnM, gFndM;
 static Boolean    gDone = false;
 
-static short   gInRef, gOutRef;
-static Boolean gPortOpen = false;
-static Boolean gConnected = false;
+static NetConn gConn;                  /* the TCP connection to the agent */
+static Boolean gConnected = false;     /* in a live session with the agent */
 
-static char gSerRing[4096];     /* serial driver's ring buffer (SerSetBuf) */
-static char gSerBuf[2048];      /* FSRead scratch - separate from the ring */
-static unsigned char gCap[1024];
+/* Receive scratch: apps stream large, so drain a big chunk per pump pass over
+ * fast TCP (mirrors bridge.c's PumpBridge). */
+static unsigned char gNetBuf[4096];
 
 /* ---- baud table ---- */
 typedef struct { const char *name; short config; } BaudEntry;
@@ -171,32 +174,6 @@ static void C2P(const char *c, Str255 p)
     short n = 0;
     while (c[n] && n < 255) { p[n + 1] = (unsigned char)c[n]; n++; }
     p[0] = (unsigned char)n;
-}
-
-static Boolean Contains(const unsigned char *buf, short len, const char *needle)
-{
-    short i; long nl; StrLen(needle, &nl);
-    if (nl == 0 || len < (short)nl) return false;
-    for (i = 0; i + (short)nl <= len; i++) {
-        short j; Boolean hit = true;
-        for (j = 0; j < (short)nl; j++)
-            if (buf[i + j] != (unsigned char)needle[j]) { hit = false; break; }
-        if (hit) return true;
-    }
-    return false;
-}
-
-static short FindEnd(const unsigned char *buf, short len, const char *needle)
-{
-    short i; long nl; StrLen(needle, &nl);
-    if (nl == 0 || len < (short)nl) return -1;
-    for (i = 0; i + (short)nl <= len; i++) {
-        short j; Boolean hit = true;
-        for (j = 0; j < (short)nl; j++)
-            if (buf[i + j] != (unsigned char)needle[j]) { hit = false; break; }
-        if (hit) return (short)(i + (short)nl);
-    }
-    return -1;
 }
 
 /* ================= status line (window title) ================= */
@@ -474,88 +451,52 @@ static void BinDone(void)
 
 #include "foundry_rx.inc"
 
-/* ================= serial plumbing ================= */
+/* ================= TCP transport primitives =================
+ * These replace the RetroWiFi serial-modem path. The Plus now opens a real TCP
+ * socket to the agent through the BlueSCSI DaynaPORT + MacTCP (see net/nettcp).
+ * The FND wire protocol on top of it is unchanged - only the pipe is. */
 
-static void ConfigPort(short config)
+/* Send a C string over the connection (the one "MAKE <wish>" line + its \r). */
+static void SendStr(const char *s)
 {
-    SerShk shk;
-    SerReset(gOutRef, config);
-    SerReset(gInRef,  config);
-    shk.fXOn = 0; shk.fCTS = 0; shk.xOn = 0; shk.xOff = 0;
-    shk.errs = 0; shk.evts = 0; shk.fInX = 0; shk.null = 0;
-    SerHShake(gOutRef, &shk);
+    long n;
+    if (!gConnected) return;
+    StrLen(s, &n);
+    if (n > 0) NetSend(&gConn, s, (unsigned short)n);
 }
 
-static Boolean OpenSerPort(void)
-{
-    OSErr err;
-    if (gPortOpen) return true;
-    err = OpenDriver("\p.AOut", &gOutRef);
-    if (err == noErr) err = OpenDriver("\p.AIn", &gInRef);
-    if (err != noErr) { SetStatus("could not open modem port"); return false; }
-    SerSetBuf(gInRef, (Ptr)gSerRing, (short)sizeof(gSerRing));
-    ConfigPort(kBaudTab[gCfg.baudIdx].config);
-    gPortOpen = true;
-    return true;
-}
-
-static void CloseSerPort(void)
-{
-    if (!gPortOpen) return;
-    SerSetBuf(gInRef, (Ptr)gSerRing, 0);
-    CloseDriver(gInRef);
-    CloseDriver(gOutRef);
-    gPortOpen = false;
-}
-
+/* Discard any bytes already waiting on the socket (stale tail from a prior
+   delivery), so a new MAKE starts the parser on a clean stream. */
 static void DrainInput(void)
 {
-    long avail, cnt;
-    if (!gPortOpen) return;
-    while (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-        cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-        FSRead(gInRef, &cnt, gSerBuf);
+    long avail;
+    if (!gConnected) return;
+    while ((avail = NetAvailable(&gConn)) > 0) {
+        unsigned short cnt = (avail > (long)sizeof(gNetBuf))
+                             ? (unsigned short)sizeof(gNetBuf) : (unsigned short)avail;
+        if (NetRecv(&gConn, gNetBuf, cnt, 2) <= 0) break;
     }
 }
 
-static void SendBytes(const char *s, long n)
-{
-    long cnt = n;
-    if (!gPortOpen) return;
-    FSWrite(gOutRef, &cnt, (Ptr)s);
-}
-static void SendStr(const char *s) { long n; StrLen(s, &n); SendBytes(s, n); }
-
-static short CaptureFor(short ticks, unsigned char *out, short cap)
-{
-    unsigned long deadline = TickCount() + (unsigned long)ticks;
-    short total = 0; long avail, cnt;
-    while ((long)(TickCount() - deadline) < 0) {
-        SystemTask();   /* keep cursor/DAs alive during the blocking wait */
-        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
-                short i;
-                for (i = 0; i < (short)cnt; i++)
-                    if (total < cap) out[total++] = (unsigned char)gSerBuf[i];
-            }
-        }
-    }
-    return total;
-}
-
+/* Non-blocking: drain whatever TCP bytes have arrived into the FND parser.
+   Called every event-loop pass, so the build log + MacBinary delivery develop
+   as data streams in - now near-instantly over TCP. Apps stream large, so we
+   pull up to a 4096-byte chunk per pass (mirrors bridge.c's PumpBridge). */
 static void PumpReceive(void)
 {
-    long avail, cnt; short i;
-    if (!gPortOpen) return;
-    if (SerGetBuf(gInRef, &avail) != noErr || avail <= 0) {
+    long avail, got; short i;
+    if (!gConnected) return;
+    avail = NetAvailable(&gConn);
+    if (avail <= 0) {
+        if (avail < 0) { FrxAbort("connection dropped"); gConnected = false; return; }
         if (gRxState != FRX_IDLE && (long)(TickCount() - gRxDeadline) > 0)
             FrxAbort("timed out waiting for the agent");
         return;
     }
-    cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-    if (FSRead(gInRef, &cnt, gSerBuf) != noErr) return;
-    for (i = 0; i < (short)cnt; i++) FeedRxByte((unsigned char)gSerBuf[i]);
+    if (avail > (long)sizeof(gNetBuf)) avail = sizeof(gNetBuf);
+    got = NetRecv(&gConn, gNetBuf, (unsigned short)avail, 5);
+    if (got <= 0) return;
+    for (i = 0; i < (short)got; i++) FeedRxByte(gNetBuf[i]);
     gRxDeadline = TickCount() + 180L * 60L;   /* codegen can be slow; 3 min of silence */
 }
 
@@ -612,117 +553,46 @@ static void SavePrefs(void)
     FlushVol(NULL, gPrefVRef);
 }
 
-/* ================= modem operations ================= */
+/* ================= connection ================= */
 
-static Boolean ModemAlive(void)
-{
-    short tries, got;
-    for (tries = 0; tries < 3; tries++) {
-        DrainInput();
-        SendStr("AT\r");
-        got = CaptureFor(90, gCap, sizeof(gCap));
-        if (Contains(gCap, got, "OK")) return true;
-    }
-    return false;
-}
-
-static Boolean JoinWiFi(void)
-{
-    static char cmd[600]; static char ssidC[256], passC[256]; short n; short got;
-
-    if (gCfg.ssid[0] == 0) { SetStatus("no SSID set"); return false; }
-    if (!OpenSerPort()) return false;
-
-    SetStatus("joining WiFi...");
-    if (!ModemAlive()) { SetStatus("modem did not answer AT - check cable/power"); return false; }
-
-    P2C(gCfg.ssid, ssidC);
-    P2C(gCfg.pass, passC);
-
-    n = 0; CatStr(cmd, &n, "ATW\"");
-    CatStr(cmd, &n, ssidC); CatStr(cmd, &n, ",");
-    CatStr(cmd, &n, passC); CatStr(cmd, &n, "\"\r");
-    cmd[n] = 0;
-    DrainInput();
-    SendStr(cmd);
-    got = CaptureFor(900, gCap, sizeof(gCap));
-
-    if (Contains(gCap, got, "ERROR") || got == 0) { SetStatus("WiFi join failed - check SSID/password"); return false; }
-    DrainInput();
-    SendStr("AT&W\r");
-    CaptureFor(90, gCap, sizeof(gCap));
-    gCfg.wifiSaved = true;
-    SetStatus("WiFi joined and saved");
-    return true;
-}
-
+/* Open a TCP connection to the agent (host:port from prefs). WiFi itself is
+   now brought up by the BlueSCSI (DaynaPORT), not by this app - so there is no
+   AT/ATDT/AT&W handshake anymore, just a socket. */
 static Boolean DialAgent(void)
 {
-    static char cmd[320]; static char hostC[256]; short n; short got = 0;
-    unsigned long deadline;
+    char hostC[256];
+    unsigned long ip;
+    OSErr err;
 
-    if (!OpenSerPort()) return false;
+    if (gConnected) return true;
 
     SetStatus("connecting...");
-    if (!ModemAlive()) { SetStatus("modem did not answer AT @ this baud"); return false; }
-
     P2C(gCfg.host, hostC);
-    SetStatus("dialing...");
+    ip = NetParseIP(hostC);
+    if (ip == 0) { SetStatus("bad server IP - check Settings"); return false; }
 
-    n = 0; CatStr(cmd, &n, "ATDT\"");
-    CatStr(cmd, &n, hostC); CatStr(cmd, &n, ":");
-    CatLong(cmd, &n, (long)gCfg.tcpPort);
-    CatStr(cmd, &n, "\"\r");
-    cmd[n] = 0;
-    DrainInput();
-    SendStr(cmd);
-
-    /* stop the capture the instant CONNECT lands; the agent pushes its
-     * welcome lines right behind it and those belong to the FND parser */
-    deadline = TickCount() + 600;
-    while ((long)(TickCount() - deadline) < 0) {
-        long avail, cnt;
-        SystemTask();   /* keep cursor/DAs alive while waiting for CONNECT */
-        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
-                short i;
-                for (i = 0; i < (short)cnt; i++)
-                    if (got < (short)sizeof(gCap)) gCap[got++] = (unsigned char)gSerBuf[i];
-            }
-        }
-        {
-            short past = FindEnd(gCap, got, "CONNECT");
-            if (past >= 0) {
-                short i;
-                gConnected = true;
-                gRxState = FRX_IDLE;
-                gRxDeadline = TickCount() + 60L * 60L;
-                SetStatus("connected");
-                gRxLineLen = 0;
-                for (i = past; i < got; i++) FeedRxByte(gCap[i]);
-                return true;
-            }
-        }
-        if (Contains(gCap, got, "BUSY")) { SetStatus("BUSY - agent listener may be down"); return false; }
-        if (Contains(gCap, got, "NO CARRIER") || Contains(gCap, got, "NO ANSWER")) {
-            SetStatus("no answer - is the foundry agent up?"); return false;
-        }
+    err = NetConnect(&gConn, ip, gCfg.tcpPort);
+    if (err != noErr) {
+        char msg[80]; short n = 0;
+        CatStr(msg, &n, "connect failed: ");
+        CatStr(msg, &n, (char *)NetErrStr(err));
+        msg[n] = 0;
+        SetStatus(msg);
+        return false;
     }
-    if (got == 0) SetStatus("silence - WiFi not joined? try Settings");
-    else          SetStatus("unexpected reply from modem");
-    return false;
+
+    gConnected = true;
+    gRxState = FRX_IDLE;
+    gRxLineLen = 0;
+    gRxDeadline = TickCount() + 60L * 60L;
+    SetStatus("connected - Foundry > New App to build");
+    AddLog("connected to the foundry agent.");
+    return true;
 }
 
 static void Disconnect(void)
 {
-    if (!gPortOpen) { gConnected = false; return; }
-    if (gConnected) {
-        SendStr("+++");
-        CaptureFor(90, gCap, sizeof(gCap));
-        SendStr("ATH\r");
-        CaptureFor(60, gCap, sizeof(gCap));
-    }
+    if (gConnected) NetClose(&gConn);
     gConnected = false;
     gRxState = FRX_IDLE;
     SetStatus("disconnected");
@@ -762,6 +632,8 @@ static void SendMake(const char *wish)
         b[n2] = 0;
         AddLog(b);
     }
+    DrainInput();
+    gRxLineLen = 0;
     SendStr(cmd);
     SendStr("\r");
     gRxDeadline = TickCount() + 180L * 60L;
@@ -926,9 +798,7 @@ static void DoSettings(void)
     if (DoSettingsDialog()) {
         SavePrefs();
         gHaveCfg = true;
-        SetStatus("settings saved");
-        if (gPortOpen) ConfigPort(kBaudTab[gCfg.baudIdx].config);
-        if (gCfg.ssid[0] != 0) { if (JoinWiFi()) SavePrefs(); }
+        SetStatus("settings saved - Connection > Connect");
     }
 }
 
@@ -1212,7 +1082,6 @@ int main(void)
         if (DoSettingsDialog()) {
             SavePrefs();
             gHaveCfg = true;
-            if (gCfg.ssid[0] != 0 && JoinWiFi()) SavePrefs();
         } else {
             SetStatus("setup cancelled - use Connection > Settings");
         }
@@ -1230,6 +1099,5 @@ int main(void)
 #endif
     }
     if (gConnected) Disconnect();
-    if (gPortOpen) CloseSerPort();
     return 0;
 }

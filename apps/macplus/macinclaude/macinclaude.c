@@ -8,19 +8,18 @@
  * after that, launching the app = you're talking to Claude on your Mac Plus.
  *
  * Boot behavior:
- *   - First launch (no prefs): Settings dialog. Saving joins WiFi, writes the
- *     creds INTO the modem (AT&W, so the RetroWiFi remembers its own network),
- *     and stores host/port/baud in a prefs file in the System Folder.
- *   - Every launch after: auto-connect. Open the modem port, confirm the modem
- *     answers (AT/OK), dial the mini (ATDT"host:port"), watch for CONNECT, then
- *     drop straight into a live terminal session with the agent.
+ *   - First launch (no prefs): Settings dialog. Saving stores host/port/baud in
+ *     a prefs file in the System Folder.
+ *   - Every launch after: auto-connect. Open a TCP socket to the mini (host:port
+ *     from prefs), then drop straight into a live terminal session with the agent.
  *   - Connection menu: Connect/Reconnect, Disconnect, Settings...
  *   - Any step fails => a plain status line naming what broke + Settings/retry.
  *     No silent fallback.
  *
- * Serial I/O mirrors SerialDoc: built-in drivers (.AOut/.AIn modem,
- * .BOut/.BIn printer), hardware flow control FORCED OFF (a cable missing CTS
- * can't silently hang transmit), non-blocking reads via SerGetBuf + FSRead.
+ * Transport: the Plus now opens a real TCP socket to the agent through the
+ * BlueSCSI DaynaPORT + MacTCP (see net/nettcp). WiFi itself is brought up by the
+ * BlueSCSI, not by this app - so there is no AT/ATDT/AT&W modem handshake
+ * anymore, just a socket. The terminal emulation above the pipe is unchanged.
  *
  * Naming: this Plus app and the mini agent are both "Macinclaude" - two halves
  * of one product. They never share a namespace (different machine, language,
@@ -42,6 +41,8 @@
 #include <Files.h>
 #include <Serial.h>
 #include <SegLoad.h>
+
+#include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
 
 /* Font IDs (classic constants not always provided by the interfaces). */
 #ifndef monaco
@@ -122,12 +123,10 @@ static TEHandle   gTE;
 static MenuHandle gAppleM, gFileM, gEditM, gConnM;
 static Boolean    gDone = false;
 
-static short      gInRef, gOutRef;          /* serial driver refnums */
-static Boolean    gPortOpen = false;
+static NetConn    gConn;                    /* the TCP connection to the agent */
 static Boolean    gConnected = false;       /* in a live terminal session */
 
-static char       gSerBuf[2048];            /* roomy input buffer */
-static unsigned char gCap[1024];            /* capture scratch for handshakes */
+static char       gSerBuf[2048];            /* receive scratch (TCP -> parser) */
 
 /* ---- baud table (matches SerialDoc) ---- */
 typedef struct { const char *name; short config; } BaudEntry;
@@ -238,93 +237,29 @@ static void DumpTerm(const unsigned char *buf, short len)
     if (k > 0) { line[k] = 0; Emit(line); }
 }
 
-/* ================= serial plumbing ================= */
+/* ================= TCP transport primitives =================
+ * These replace the RetroWiFi serial-modem path. The Plus now opens a real TCP
+ * socket to the agent through the BlueSCSI DaynaPORT + MacTCP (see net/nettcp).
+ * The terminal protocol above is unchanged - only the pipe under it is. */
 
-static void ConfigPort(short config)
-{
-    SerShk shk;
-    SerReset(gOutRef, config);
-    SerReset(gInRef,  config);
-    shk.fXOn = 0; shk.fCTS = 0; shk.xOn = 0; shk.xOff = 0;
-    shk.errs = 0; shk.evts = 0; shk.fInX = 0; shk.null = 0;
-    SerHShake(gOutRef, &shk);
-}
-
-static Boolean OpenSerPort(void)
-{
-    OSErr err;
-    if (gPortOpen) return true;
-    err = OpenDriver("\p.AOut", &gOutRef);            /* modem port */
-    if (err == noErr) err = OpenDriver("\p.AIn", &gInRef);
-    if (err != noErr) {
-        char b[64]; short n = 0;
-        CatStr(b, &n, "*** could not open modem port, err "); CatLong(b, &n, err);
-        b[n] = 0; EmitLine(b);
-        return false;
-    }
-    SerSetBuf(gInRef, (Ptr)gSerBuf, (short)sizeof(gSerBuf));
-    ConfigPort(kBaudTab[gCfg.baudIdx].config);
-    gPortOpen = true;
-    return true;
-}
-
-static void CloseSerPort(void)
-{
-    if (!gPortOpen) return;
-    SerSetBuf(gInRef, (Ptr)gSerBuf, 0);
-    CloseDriver(gInRef);
-    CloseDriver(gOutRef);
-    gPortOpen = false;
-}
-
-static void DrainInput(void)
-{
-    long avail, cnt;
-    if (!gPortOpen) return;
-    while (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-        cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-        FSRead(gInRef, &cnt, gSerBuf);
-    }
-}
-
+/* Send n bytes over the connection (no local echo; the remote echoes). */
 static void SendBytes(const char *s, long n)
 {
-    long cnt = n;
-    if (!gPortOpen) return;
-    FSWrite(gOutRef, &cnt, (Ptr)s);
+    if (!gConnected || n <= 0) return;
+    NetSend(&gConn, s, (unsigned short)n);
 }
 static void SendStr(const char *s) { long n; StrLen(s, &n); SendBytes(s, n); }
 
-/* Poll the port for `ticks`, copying bytes into out[] (capped at cap). */
-static short CaptureFor(short ticks, unsigned char *out, short cap)
+/* Discard any bytes already waiting on the socket. */
+static void DrainInput(void)
 {
-    unsigned long deadline = TickCount() + (unsigned long)ticks;
-    short total = 0; long avail, cnt;
-    while ((long)(TickCount() - deadline) < 0) {
-        if (SerGetBuf(gInRef, &avail) == noErr && avail > 0) {
-            cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-            if (FSRead(gInRef, &cnt, gSerBuf) == noErr) {
-                short i;
-                for (i = 0; i < (short)cnt; i++)
-                    if (total < cap) out[total++] = (unsigned char)gSerBuf[i];
-            }
-        }
+    long avail;
+    if (!gConnected) return;
+    while ((avail = NetAvailable(&gConn)) > 0) {
+        unsigned short cnt = (avail > (long)sizeof(gSerBuf))
+                             ? (unsigned short)sizeof(gSerBuf) : (unsigned short)avail;
+        if (NetRecv(&gConn, gSerBuf, cnt, 2) <= 0) break;
     }
-    return total;
-}
-
-/* true if needle (C string) appears anywhere in buf */
-static Boolean Contains(const unsigned char *buf, short len, const char *needle)
-{
-    short i; long nl; StrLen(needle, &nl);
-    if (nl == 0 || len < (short)nl) return false;
-    for (i = 0; i + (short)nl <= len; i++) {
-        short j; Boolean hit = true;
-        for (j = 0; j < (short)nl; j++)
-            if (buf[i + j] != (unsigned char)needle[j]) { hit = false; break; }
-        if (hit) return true;
-    }
-    return false;
 }
 
 /* ================= pascal/C string helpers ================= */
@@ -390,120 +325,45 @@ static void SavePrefs(void)
     FlushVol(NULL, gPrefVRef);
 }
 
-/* ================= modem operations ================= */
+/* ================= connection ================= */
 
-/* send AT, look for OK; a couple tries so Zimodem can auto-baud */
-static Boolean ModemAlive(void)
-{
-    short tries, got;
-    for (tries = 0; tries < 3; tries++) {
-        DrainInput();
-        SendStr("AT\r");
-        got = CaptureFor(90, gCap, sizeof(gCap));    /* ~1.5s */
-        if (Contains(gCap, got, "OK")) return true;
-    }
-    return false;
-}
-
-/* Join WiFi and persist it in the modem (Settings -> Save). */
-static Boolean JoinWiFi(void)
-{
-    char cmd[600]; short n; short got;
-    char ssidC[256], passC[256];
-
-    if (gCfg.ssid[0] == 0) { EmitLine("  (no SSID set - skipping WiFi join)"); return false; }
-    if (!OpenSerPort()) return false;
-
-    EmitLine("Joining WiFi...");
-    if (!ModemAlive()) {
-        EmitLine("  modem did not answer AT. Check cable/power, then retry.");
-        return false;
-    }
-
-    P2C(gCfg.ssid, ssidC);
-    P2C(gCfg.pass, passC);
-
-    /* ATW"SSID,PASSWORD" - Zimodem join */
-    n = 0; CatStr(cmd, &n, "ATW\"");
-    CatStr(cmd, &n, ssidC); CatStr(cmd, &n, ",");
-    CatStr(cmd, &n, passC); CatStr(cmd, &n, "\"\r");
-    cmd[n] = 0;
-    DrainInput();
-    SendStr(cmd);
-    got = CaptureFor(900, gCap, sizeof(gCap));        /* up to ~15s to associate */
-    DumpTerm(gCap, got);
-
-    if (Contains(gCap, got, "ERROR") || got == 0) {
-        EmitLine("  WiFi join failed. Check SSID/password.");
-        return false;
-    }
-    /* Save into the modem so it reconnects on its own next power-up. */
-    DrainInput();
-    SendStr("AT&W\r");
-    CaptureFor(90, gCap, sizeof(gCap));
-    gCfg.wifiSaved = true;
-    EmitLine("  WiFi joined and saved to the modem.");
-    return true;
-}
-
-/* Dial the agent and, on CONNECT, hand off to the terminal loop. */
+/* Open a TCP connection to the agent (host:port from prefs) and, on success,
+   drop into the terminal loop. WiFi itself is brought up by the BlueSCSI
+   (DaynaPORT), not by this app - so there is no AT/ATDT/AT&W handshake anymore,
+   just a socket. */
 static Boolean DialAgent(void)
 {
-    char cmd[320]; short n; short got;
-    char hostC[256]; char b[120];
+    char hostC[256];
+    unsigned long ip;
+    OSErr err;
 
-    if (!OpenSerPort()) return false;
+    if (gConnected) return true;
 
     EmitLine("");
     EmitLine("Connecting to Macinclaude...");
-    if (!ModemAlive()) {
-        EmitLine("  modem did not answer AT @ this baud.");
-        EmitLine("  Try Connection > Settings to set the baud, or check the cable.");
+    P2C(gCfg.host, hostC);
+    ip = NetParseIP(hostC);
+    if (ip == 0) { EmitLine("  bad server IP - check Connection > Settings."); return false; }
+
+    err = NetConnect(&gConn, ip, gCfg.tcpPort);
+    if (err != noErr) {
+        char b[80]; short n = 0;
+        CatStr(b, &n, "  connect failed: ");
+        CatStr(b, &n, (char *)NetErrStr(err));
+        b[n] = 0; EmitLine(b);
         return false;
     }
 
-    P2C(gCfg.host, hostC);
-    n = 0; CatStr(b, &n, "  dialing "); CatStr(b, &n, hostC);
-    CatStr(b, &n, ":"); CatLong(b, &n, (long)gCfg.tcpPort); CatStr(b, &n, " ...");
-    b[n] = 0; EmitLine(b);
-
-    /* ATDT"host:port" - the RetroWiFi SI speaks telnet itself */
-    n = 0; CatStr(cmd, &n, "ATDT\"");
-    CatStr(cmd, &n, hostC); CatStr(cmd, &n, ":");
-    CatLong(cmd, &n, (long)gCfg.tcpPort);
-    CatStr(cmd, &n, "\"\r");
-    cmd[n] = 0;
-    DrainInput();
-    SendStr(cmd);
-    got = CaptureFor(600, gCap, sizeof(gCap));        /* up to ~10s for CONNECT */
-
-    if (Contains(gCap, got, "CONNECT")) {
-        gConnected = true;
-        gInEsc = false; gEscLen = 0;
-        EmitLine("--- connected. you're talking to Claude. ---");
-        EmitLine("");
-        /* anything that arrived alongside CONNECT (e.g. the banner) */
-        DumpTerm(gCap, got);
-        return true;
-    }
-    if (Contains(gCap, got, "BUSY"))      EmitLine("  BUSY - the agent listener may be down on the mini.");
-    else if (Contains(gCap, got, "NO CARRIER") || Contains(gCap, got, "NO ANSWER"))
-                                          EmitLine("  no answer - is the mini agent (port) up?");
-    else if (got == 0)                    EmitLine("  silence - WiFi not joined? Try Settings.");
-    else { EmitLine("  unexpected reply:"); DumpTerm(gCap, got); }
-    return false;
+    gConnected = true;
+    gInEsc = false; gEscLen = 0;
+    EmitLine("--- connected. you're talking to Claude. ---");
+    EmitLine("");
+    return true;
 }
 
 static void Disconnect(void)
 {
-    if (!gPortOpen) { gConnected = false; return; }
-    if (gConnected) {
-        /* +++ escape to command mode, then hang up */
-        SendStr("+++");
-        CaptureFor(90, gCap, sizeof(gCap));
-        SendStr("ATH\r");
-        CaptureFor(60, gCap, sizeof(gCap));
-    }
+    if (gConnected) NetClose(&gConn);
     gConnected = false;
     EmitLine("");
     EmitLine("--- disconnected ---");
@@ -513,12 +373,21 @@ static void Disconnect(void)
 
 static void PumpTerminal(void)
 {
-    long avail, cnt;
-    if (!gPortOpen || !gConnected) return;
-    if (SerGetBuf(gInRef, &avail) != noErr || avail <= 0) return;
-    cnt = avail; if (cnt > (long)sizeof(gSerBuf)) cnt = sizeof(gSerBuf);
-    if (FSRead(gInRef, &cnt, gSerBuf) != noErr) return;
-    DumpTerm((unsigned char *)gSerBuf, (short)cnt);
+    long avail, got;
+    if (!gConnected) return;
+    avail = NetAvailable(&gConn);
+    if (avail <= 0) {
+        if (avail < 0) {       /* connection gone */
+            gConnected = false;
+            EmitLine("");
+            EmitLine("--- connection dropped ---");
+        }
+        return;
+    }
+    if (avail > (long)sizeof(gSerBuf)) avail = sizeof(gSerBuf);
+    got = NetRecv(&gConn, gSerBuf, (unsigned short)avail, 5);
+    if (got <= 0) return;
+    DumpTerm((unsigned char *)gSerBuf, (short)got);
 }
 
 static void TerminalKey(char ch)
@@ -719,7 +588,7 @@ static Boolean DoSettingsDialog(void)
     return saved;
 }
 
-/* Open Settings, then (if saved) persist + re-join WiFi + reconfigure port. */
+/* Open Settings, then (if saved) persist. Reconnect via Connection > Connect. */
 static void DoSettings(void)
 {
     if (gConnected) Disconnect();
@@ -727,11 +596,7 @@ static void DoSettings(void)
         SavePrefs();
         gHaveCfg = true;
         EmitLine("");
-        EmitLine("Settings saved.");
-        if (gPortOpen) ConfigPort(kBaudTab[gCfg.baudIdx].config);
-        if (gCfg.ssid[0] != 0) {
-            if (JoinWiFi()) SavePrefs();   /* persist wifiSaved=true */
-        }
+        EmitLine("Settings saved. Use Connection > Connect.");
     }
 }
 
@@ -753,7 +618,7 @@ static void DoAbout(void)
     EmitLine("");
     EmitLine("=============== Macinclaude ===============");
     EmitLine(" Claude Code, on your Macintosh Plus.");
-    EmitLine(" Talks over the RetroWiFi modem to the");
+    EmitLine(" Talks over WiFi (MacTCP) to the");
     EmitLine(" Macinclaude agent on the Mac mini.");
     EmitLine(" code by Claude Code, for Bart Decrem");
     EmitLine("===========================================");
@@ -978,7 +843,6 @@ int main(void)
         if (DoSettingsDialog()) {
             SavePrefs();
             gHaveCfg = true;
-            if (gCfg.ssid[0] != 0 && JoinWiFi()) SavePrefs();
         } else {
             EmitLine("Setup cancelled. Use Connection > Settings when ready.");
         }
@@ -995,6 +859,5 @@ int main(void)
         if (gConnected) { PumpTerminal(); TEIdle(gTE); }
     }
     if (gConnected) Disconnect();
-    if (gPortOpen) CloseSerPort();
     return 0;
 }

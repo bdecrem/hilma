@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 project(Bridge C)
 
-# The Bridge — links the WiFi system service (../wifi/wifi.c) and includes the
+# The Bridge — direct TCP via the shared nettcp library (../net); includes the
 # shared frame parser from ../foundry.
-add_application(Bridge bridge.c ${CMAKE_CURRENT_SOURCE_DIR}/../wifi/wifi.c)
+add_application(Bridge bridge.c bridge.r ${CMAKE_CURRENT_SOURCE_DIR}/../net/nettcp.c)
 target_include_directories(Bridge PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../wifi
+    ${CMAKE_CURRENT_SOURCE_DIR}/../net
     ${CMAKE_CURRENT_SOURCE_DIR}/../foundry)
 set_target_properties(Bridge PROPERTIES COMPILE_OPTIONS -ffunction-sections)
 

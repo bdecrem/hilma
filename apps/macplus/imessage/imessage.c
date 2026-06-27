@@ -7,20 +7,17 @@
  * on the left, the selected thread on the right, and composes replies with a
  * modal "Reply..." box.
  *
- * Persistent-WiFi transport: instead of dialing a private agent port, this app
- * dials the MUX multiplexer once and opens a logical channel to the "imessage"
- * service (wifi/muxclient.inc + wifi/mux_rx.inc, shared with MuxDemo). That is
- * the same data path the resident .WIFI driver will later make persistent - so
- * when the driver lands, only OpenSerPort()+DialMux() get replaced by a driver
- * "give me a channel" call; the channel API (MuxOpen/MuxSend/MuxData) is
- * unchanged. See THE .WIFI SEAM marker below.
+ * Transport: a direct TCP socket via the shared MacTCP library (net/nettcp.c,
+ * over the BlueSCSI DaynaPORT Ethernet emulation). The app opens one connection
+ * straight to the mini's iMessage agent at 192.168.7.50:2328 — no modem, no MUX
+ * channel. (This replaced the old RetroWiFi-SI serial / WiFi-system-service path.)
  *
  * Two halves of one product:
- *   - Plus side (this file): settings + serial + MUX transport, the IM payload
- *     receiver (im_rx.inc, shared with rxtest.c), a two-pane browse/compose UI.
+ *   - Plus side (this file): TCP transport (nettcp), the IM payload receiver
+ *     (im_rx.inc, shared with rxtest.c), a two-pane browse/compose UI.
  *   - Mini side (agent-imessage/): chat.db read + AppleScript send.
  *
- * Commands the Plus sends on the channel (one line + \r):
+ * Commands the Plus sends on the socket (one line + \r):
  *   LIST / OPEN <idx> / SEND <idx> <text>
  */
 
@@ -39,7 +36,10 @@
 #include <Files.h>
 #include <Serial.h>
 #include <SegLoad.h>
-#include "wifi.h"                /* the WiFi system service — wifi.c owns serial + MUX */
+#include "nettcp.h"              /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
+
+#define IMESSAGE_IP   "192.168.7.50"
+#define IMESSAGE_PORT 2328
 
 #ifndef geneva
 #define geneva 3
@@ -186,7 +186,8 @@ static void DoNewMessage(void);
 static MenuHandle    gAppleM, gFileM, gEditM, gConnM, gMsgM;
 static Boolean       gDone = false;
 
-static Boolean gConnected = false;   /* our "imessage" channel is open */
+static Boolean gConnected = false;   /* the TCP connection to the mini is open */
+static NetConn gConn;                /* the one MacTCP stream (zero-init) */
 
 /* ---- receive assembly state ---- */
 #define RX_NONE 0
@@ -436,27 +437,32 @@ static void ImStatus(const char *msg) { SetStatus(msg); }
 static void ImError(const char *msg) { SetStatus(msg); SysBeep(1); }
 static void ImSent(short idx) { (void)idx; SetStatus("sent"); }
 
-/* ================= transport: the WiFi system service ================= */
-/* wifi.c owns the serial port and the MUX framing. Here we just open one
- * logical channel ("imessage") on the shared link and feed whatever arrives
- * into the IM payload parser. No AT/ATDT, no serial buffers — the service has
- * them. (This replaces the old OpenSerPort/DialMux/MUX layer wholesale.) */
+/* ================= transport: direct TCP via MacTCP ================= */
+/* nettcp.c owns the MacTCP stream to the mini (BlueSCSI DaynaPORT). We open one
+ * socket to 192.168.7.50:2328, send the line commands (LIST/OPEN/SEND), and feed
+ * whatever arrives into the IM payload parser. (This replaces the WiFi system
+ * service / MUX channel wholesale.) */
 
 /* the IM payload parser (its Im* callbacks are defined above); this also
  * defines the ImRx type, so gIm follows the include */
 #include "im_rx.inc"
 static ImRx  gIm;
-static short gChan = -1;            /* our channel on the shared link, -1 = none */
 
-/* Non-blocking pump: drain the shared link and feed our channel's bytes to the
+/* Non-blocking pump: drain whatever has arrived on the socket and feed it to the
  * IM parser. Call every event-loop pass. */
 static void PumpReceive(void)
 {
-    unsigned char buf[256]; short n;
-    if (gChan < 0) return;
-    WIFIIdle();
-    n = WIFIRead(gChan, buf, sizeof(buf));
-    if (n > 0) ImRxFeed(&gIm, buf, n);
+    unsigned char buf[1024]; long avail, got;
+    if (!gConnected) return;
+    avail = NetAvailable(&gConn);
+    if (avail <= 0) {
+        if (avail < 0) { gConnected = false; SetStatus("connection dropped"); }
+        return;
+    }
+    if (avail > (long)sizeof(buf)) avail = sizeof(buf);
+    got = NetRecv(&gConn, buf, (unsigned short)avail, 1);
+    if (got > 0) ImRxFeed(&gIm, buf, (short)got);
+    else if (got == 0) { gConnected = false; SetStatus("connection closed"); }
 }
 
 /* ================= prefs ================= */
@@ -497,29 +503,30 @@ static void SavePrefs(void)
     FSClose(refNum); FlushVol(NULL, gPrefVRef);
 }
 
-/* ================= connect / disconnect (the WiFi service) ================= */
+/* ================= connect / disconnect (direct TCP) ================= */
 
-/* Bring the shared WiFi link up (or reuse a live one) and open our "imessage"
- * channel, then ask for the conversation list. The WiFi service owns the modem
- * and the MUX, so there's no AT/ATDT here — we just ask for a channel.
- * (Kept the name DialMux so the menu/launch call sites are unchanged.) */
+/* Open a TCP socket to the mini's iMessage agent (192.168.7.50:2328) and ask for
+ * the conversation list. nettcp.c owns the MacTCP stream — NetConnect blocks
+ * until connected or it times out. (Kept the name DialMux so the menu/launch
+ * call sites are unchanged.) */
+static void SendChanLine(const char *line);
 static Boolean DialMux(void)
 {
-    SetStatus("connecting to the WiFi service...");
-    if (!WIFIConnect()) { SetStatus("no WiFi link - is the service/INIT up?"); return false; }
-    gChan = WIFIOpen("imessage");
-    if (gChan < 0) { SetStatus("could not open the imessage channel"); return false; }
+    SetStatus("connecting to the mini...");
+    if (NetConnect(&gConn, NetParseIP(IMESSAGE_IP), IMESSAGE_PORT) != noErr) {
+        SetStatus("could not connect - is MacTCP up and the agent running?");
+        return false;
+    }
     ImRxInit(&gIm);
     gConnected = true;
     SetStatus("connected");
-    WIFISendLine(gChan, "LIST");        /* ask for the conversation list */
+    SendChanLine("LIST");               /* ask for the conversation list */
     return true;
 }
 
 static void Disconnect(void)
 {
-    if (gChan >= 0) { WIFIClose(gChan); gChan = -1; }
-    gConnected = false;
+    if (gConnected) { NetClose(&gConn); gConnected = false; }
     SetStatus("disconnected");
 }
 
@@ -540,8 +547,11 @@ static void SendChanLine(const char *line)
 #ifdef IM_TEST
     (void)line; return;
 #else
+    char buf[512]; short n = 0;
     if (!gConnected) { SetStatus("not connected - use Connection > Connect"); SysBeep(1); return; }
-    WIFISendLine(gChan, line);
+    while (line[n] && n < (short)sizeof(buf) - 1) { buf[n] = line[n]; n++; }
+    buf[n++] = '\r';                    /* the agent is line-based (CR-terminated) */
+    NetSend(&gConn, buf, (unsigned short)n);
 #endif
 }
 
@@ -1098,7 +1108,6 @@ int main(void)
         if (gConnected) PumpReceive();
 #endif
     }
-    if (gConnected) Disconnect();
-    WIFIPark();                     /* leave the shared link up for the next app */
+    if (gConnected) Disconnect();   /* close the TCP stream on quit */
     return 0;
 }

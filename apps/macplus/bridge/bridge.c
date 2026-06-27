@@ -24,7 +24,10 @@
 #include <Memory.h>
 #include <OSUtils.h>
 #include <Files.h>
-#include "wifi.h"
+#include "nettcp.h"        /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
+
+#define BRIDGE_IP   "192.168.7.50"
+#define BRIDGE_PORT 2333
 
 #ifndef monaco
 #define monaco 4
@@ -43,7 +46,8 @@
 
 static WindowPtr  gWin;
 static MenuHandle gAppleM, gFileM;
-static short gChan = -1;
+static NetConn    gConn;
+static Boolean    gConnected = false;
 static long  gInstalled = 0;       /* count of apps received this session */
 
 /* ---- small helpers (same as Foundry) ---- */
@@ -235,13 +239,20 @@ static void BinDone(void)
 #include "../foundry/foundry_rx.inc"
 
 /* ================= app ================= */
+static unsigned char gNetBuf[4096];   /* drain a big chunk per pass over fast TCP */
 static void PumpBridge(void)
 {
-    unsigned char buf[256]; short n, i;
-    if (gChan < 0) return;
-    WIFIIdle();
-    n = WIFIRead(gChan, buf, sizeof(buf));
-    for (i = 0; i < n; i++) FeedRxByte(buf[i]);
+    long avail, got; short i;
+    if (!gConnected) return;
+    avail = NetAvailable(&gConn);
+    if (avail <= 0) {
+        if (avail < 0) { AddLog("connection dropped - relaunch to reconnect"); gConnected = false; }
+        return;
+    }
+    if (avail > (long)sizeof(gNetBuf)) avail = sizeof(gNetBuf);
+    got = NetRecv(&gConn, gNetBuf, (unsigned short)avail, 1);
+    if (got <= 0) return;
+    for (i = 0; i < (short)got; i++) FeedRxByte(gNetBuf[i]);
 }
 
 static void SetUpMenus(void)
@@ -263,12 +274,13 @@ int main(void)
 
     AddLog("The Bridge - over-the-air app delivery.");
     AddLog("");
-    if (WIFIConnect()) {
-        gChan = WIFIOpen("bridge");
-        if (gChan >= 0) { AddLog("connected. waiting for the mini to push apps..."); SetTitle("The Bridge - ready"); }
-        else AddLog("could not open the bridge channel.");
+    if (NetConnect(&gConn, NetParseIP(BRIDGE_IP), BRIDGE_PORT) == noErr) {
+        gConnected = true;
+        AddLog("connected. waiting for the mini to push apps...");
+        SetTitle("The Bridge - ready");
     } else {
-        AddLog("no WiFi service - is the link up?");
+        AddLog("could not connect to the bridge (192.168.7.50:2333).");
+        AddLog("is MacTCP up and the mini bridge agent running?");
     }
 
     while (!done) {
@@ -295,7 +307,6 @@ int main(void)
         }
         PumpBridge();
     }
-    if (gChan >= 0) WIFIClose(gChan);
-    WIFIPark();
+    if (gConnected) NetClose(&gConn);
     return 0;
 }
