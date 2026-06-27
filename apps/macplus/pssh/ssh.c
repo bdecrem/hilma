@@ -212,12 +212,11 @@ static int negotiate(ssh_client*c){
     v=pick_alg(list,macs); if(v<0) return -1; c->mac512_c2s = (v==1); c->mac_len_c2s = v==1?64:32;
     if(!kexinit_list(c->is,c->isn,5,list,sizeof(list))) return -1;   /* mac s2c */
     v=pick_alg(list,macs); if(v<0) return -1; c->mac512_s2c = (v==1); c->mac_len_s2c = v==1?64:32;
-    {   /* MUST match the offer order in build_kexinit (client preference wins).
-           none-preferred until the inflate Z_PARTIAL_FLUSH fix is verified. */
-        static const char*const comps[] = {"none","zlib@openssh.com","zlib",0};
+    {   /* MUST match the offer order in build_kexinit (client preference wins). */
+        static const char*const comps[] = {"zlib@openssh.com","zlib","none",0};
         c->comp_c2s = c->comp_s2c = 0;   /* 0 none, 1 immediate-zlib, 2 delayed-zlib@openssh */
-        if(kexinit_list(c->is,c->isn,6,list,sizeof(list))){ v=pick_alg(list,comps); if(v>=0) c->comp_c2s = (v==1)?2:(v==2)?1:0; }
-        if(kexinit_list(c->is,c->isn,7,list,sizeof(list))){ v=pick_alg(list,comps); if(v>=0) c->comp_s2c = (v==1)?2:(v==2)?1:0; }
+        if(kexinit_list(c->is,c->isn,6,list,sizeof(list))){ v=pick_alg(list,comps); if(v>=0) c->comp_c2s = (v==0)?2:(v==1)?1:0; }
+        if(kexinit_list(c->is,c->isn,7,list,sizeof(list))){ v=pick_alg(list,comps); if(v>=0) c->comp_s2c = (v==0)?2:(v==1)?1:0; }
     }
     return 0;
 }
@@ -235,8 +234,8 @@ static void build_kexinit(ssh_client*c){
     w_cstr(&w, "aes256-ctr,aes128-ctr");        /* enc s2c */
     w_cstr(&w, "hmac-sha2-256,hmac-sha2-512");  /* mac c2s */
     w_cstr(&w, "hmac-sha2-256,hmac-sha2-512");  /* mac s2c */
-    w_cstr(&w, "none,zlib@openssh.com,zlib");    /* comp c2s (none preferred until inflate fix verified) */
-    w_cstr(&w, "none,zlib@openssh.com,zlib");    /* comp s2c */
+    w_cstr(&w, "zlib@openssh.com,zlib,none");    /* comp c2s (compression preferred) */
+    w_cstr(&w, "zlib@openssh.com,zlib,none");    /* comp s2c */
     w_cstr(&w, "");                              /* lang c2s */
     w_cstr(&w, "");                              /* lang s2c */
     w_byte(&w, 0);                               /* first_kex_packet_follows */

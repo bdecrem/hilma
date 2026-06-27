@@ -70,10 +70,24 @@ typedef struct {
     int16_t  head[ZSS_HSIZE];    /* hash -> last frame position (-1 = none)  */
 } zss_deflate;
 
-/* Decompressor context. No heap. ~34 KB. */
+/* Decompressor context. No heap. ~35 KB.
+ *
+ * Fully resumable streaming decoder.  It treats the input as ONE continuous
+ * deflate bit stream handed over in arbitrary byte-aligned chunks (one per
+ * SSH packet).  It does NOT rely on the Z_SYNC_FLUSH 00 00 FF FF marker to
+ * delimit chunks -- the caller's packet framing gives the boundary.  Every
+ * call consumes exactly its inlen bytes and emits whatever output those bits
+ * produce, preserving the bit buffer (including partial bits carried across a
+ * chunk boundary), the in-flight block/decode state, and the 32 KB window
+ * across calls.  Works for any flush the peer used (Z_NO_FLUSH /
+ * Z_PARTIAL_FLUSH / Z_SYNC_FLUSH / Z_FULL_FLUSH). */
 typedef struct {
-    int      header_done;        /* zlib 2-byte header consumed yet?         */
+    int      mode;               /* resumable state-machine position         */
     int      fixed_built;        /* fixed Huffman tables constructed yet?    */
+    int      cur_dynamic;        /* ST_CODES: dynamic(1) vs fixed(0) tables  */
+
+    uint64_t bitbuf;             /* bit accumulator (LSB-first), persists     */
+    int      bitcnt;             /* number of valid bits in bitbuf            */
 
     uint8_t  win[ZSS_WIN];       /* 32 KB circular history window            */
     uint32_t wpos;               /* next write index (0..32767)              */
@@ -85,11 +99,21 @@ typedef struct {
     int16_t  fdcnt[16];
     int16_t  fdsym[30];
 
-    /* dynamic Huffman tables (rebuilt per dynamic block) */
+    /* dynamic Huffman tables (final; used by ST_CODES) */
     int16_t  dlcnt[16];
     int16_t  dlsym[288];
     int16_t  ddcnt[16];
     int16_t  ddsym[32];
+
+    /* stored-block remaining byte count (resumable mid-copy) */
+    uint32_t stored_rem;
+
+    /* dynamic-header build sub-state (resumable mid-parse) */
+    int      dyn_nlen, dyn_ndist, dyn_ncode, dyn_idx, dyn_prev;
+    int16_t  cl_lengths[19];
+    int16_t  clcnt[16];
+    int16_t  clsym[19];
+    int16_t  dyn_lengths[288 + 32];
 } zss_inflate;
 
 /* Returns 0 on success, <0 on error. */

@@ -44,33 +44,79 @@ static const int g_dext[30] = {
     0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13 };
 
 /* ===================================================================== */
-/* INFLATE                                                               */
+/* INFLATE  (fully resumable streaming state machine)                    */
 /* ===================================================================== */
+/*
+ * This decoder treats all calls as one continuous deflate bit stream and may
+ * SUSPEND at any bit position when the current chunk's input runs out, then
+ * RESUME on the next call with no loss of state.  The persistent state lives
+ * in the context (zss_inflate): bit buffer + count, the state-machine `mode`,
+ * the 32 KB window, any in-flight stored/dynamic sub-state, and the tables.
+ *
+ * The key trick that makes mid-symbol suspension clean: bit consumption is
+ * COMMITTED only when an operation fully completes.  Reads use a local `used`
+ * offset that peeks bits at (bitbuf >> used) WITHOUT removing them; on success
+ * we remove `used` bits in one shot; on suspend we simply return without
+ * removing anything, so re-running the operation next call re-reads the same
+ * bits (now joined by freshly arrived ones).  Input bytes pulled into bitbuf
+ * persist there across calls, so nothing is ever re-fetched from old `in`.
+ */
+
+/* state-machine modes */
+#define ST_INIT       0   /* need the 2-byte zlib header (must be 0: memset) */
+#define ST_HEADER     1   /* between blocks: read block header               */
+#define ST_STORED_LEN 2   /* stored block: read LEN/NLEN                      */
+#define ST_STORED     3   /* stored block: copying LEN bytes                 */
+#define ST_CODES      4   /* compressed block: decoding lit/len/dist         */
+#define ST_DYNAMIC    5   /* dynamic block: read HLIT/HDIST/HCLEN            */
+#define ST_DYN_CL     6   /* dynamic block: read code-length code lengths    */
+#define ST_DYN_LENS   7   /* dynamic block: read lit/dist code lengths       */
 
 struct ins {
     const uint8_t *in;
     uint32_t inlen, incnt;
-    uint32_t bitbuf;
-    int      bitcnt;
     uint8_t *out;
     uint32_t outcap, outcnt;
     int      overflow;
-    int      err;        /* set when input runs short mid-symbol */
+    int      suspend;        /* set when input ran out -- stop, resume later  */
     zss_inflate *z;
 };
 
-/* read `need` bits, LSB-first */
-static int inf_bits(struct ins *s, int need) {
-    uint32_t val = s->bitbuf;
-    while (s->bitcnt < need) {
-        if (s->incnt >= s->inlen) { s->err = 1; return 0; }
-        val |= (uint32_t)s->in[s->incnt++] << s->bitcnt;
-        s->bitcnt += 8;
+/* Make at least `need` bits available in bitbuf without removing any.
+   Returns 1 if available; on input exhaustion sets suspend and returns 0.
+   bitbuf is 64-bit; the largest atomic peek window is a match unit
+   (15 + 5 + 15 + 13 = 48 bits), well within range. */
+static int inf_ensure(struct ins *s, int need) {
+    while (s->z->bitcnt < need) {
+        if (s->incnt >= s->inlen) { s->suspend = 1; return 0; }
+        s->z->bitbuf |= (uint64_t)s->in[s->incnt++] << s->z->bitcnt;
+        s->z->bitcnt += 8;
     }
-    s->bitbuf = val >> need;
-    s->bitcnt -= need;
-    if (need == 0) return 0;
-    return (int)(val & (((uint32_t)1 << need) - 1));
+    return 1;
+}
+
+/* remove `n` bits from the front of bitbuf (commit) */
+static void inf_drop(struct ins *s, int n) {
+    s->z->bitbuf >>= n;
+    s->z->bitcnt -= n;
+}
+
+/* read+commit n bits (n<=32); returns 0 (suspend) without consuming if short */
+static int inf_getbits(struct ins *s, int n, uint32_t *val) {
+    if (n == 0) { *val = 0; return 1; }
+    if (!inf_ensure(s, n)) return 0;
+    *val = (uint32_t)(s->z->bitbuf & (((uint64_t)1 << n) - 1));
+    inf_drop(s, n);
+    return 1;
+}
+
+/* peek n bits at offset *used (no commit); advances *used on success */
+static int inf_peekbits(struct ins *s, int n, int *used, uint32_t *val) {
+    if (n == 0) { *val = 0; return 1; }
+    if (!inf_ensure(s, *used + n)) return 0;
+    *val = (uint32_t)((s->z->bitbuf >> *used) & (((uint64_t)1 << n) - 1));
+    *used += n;
+    return 1;
 }
 
 /* emit one byte to output + window */
@@ -83,15 +129,19 @@ static int inf_emit(struct ins *s, int b) {
     return 0;
 }
 
-/* canonical Huffman: decode one symbol from table (count[], symbol[]) */
-static int inf_decode(struct ins *s, const int16_t *count, const int16_t *symbol) {
-    int len, code = 0, first = 0, index = 0, cnt, bit;
+/* Decode one canonical-Huffman symbol by PEEKING at offset *used.
+   On success advances *used past the code (caller commits later).
+   On input exhaustion sets suspend and returns ZE_BADINPUT (caller checks
+   s->suspend first).  Bits are read MSB-first within the code, matching
+   DEFLATE: the bit at stream offset (*used+len-1) is appended low. */
+static int inf_decode(struct ins *s, const int16_t *count, const int16_t *symbol,
+                      int *used) {
+    int len, code = 0, first = 0, index = 0, cnt;
     for (len = 1; len <= MAXBITS; len++) {
-        bit = inf_bits(s, 1);
-        if (s->err) return ZE_BADINPUT;
-        code |= bit;
+        if (!inf_ensure(s, *used + len)) return ZE_BADINPUT;  /* suspend */
+        code |= (int)((s->z->bitbuf >> (*used + len - 1)) & 1);
         cnt = count[len];
-        if (code - cnt < first) return symbol[index + (code - first)];
+        if (code - cnt < first) { *used += len; return symbol[index + (code - first)]; }
         index += cnt;
         first += cnt;
         first <<= 1;
@@ -122,55 +172,6 @@ static int inf_construct(int16_t *count, int16_t *symbol,
     return left;                          /* >0 means incomplete (ok for dist) */
 }
 
-/* decode a stored (uncompressed) block; aligns to byte boundary first */
-static int inf_stored(struct ins *s) {
-    uint32_t len, nlen;
-    /* discard buffered bits back to a byte boundary */
-    while (s->bitcnt >= 8) { s->incnt--; s->bitcnt -= 8; }
-    s->bitbuf = 0; s->bitcnt = 0;
-    if (s->incnt + 4 > s->inlen) return ZE_SHORT;
-    len  = s->in[s->incnt++];
-    len |= (uint32_t)s->in[s->incnt++] << 8;
-    nlen  = s->in[s->incnt++];
-    nlen |= (uint32_t)s->in[s->incnt++] << 8;
-    if ((len ^ 0xFFFF) != nlen) return ZE_NLEN;
-    while (len--) {
-        if (s->incnt >= s->inlen) return ZE_SHORT;
-        if (inf_emit(s, s->in[s->incnt++])) return ZE_OVERFLOW;
-    }
-    return 0;
-}
-
-/* decode literal/length + distance symbols until end-of-block (256) */
-static int inf_codes(struct ins *s, const int16_t *lcnt, const int16_t *lsym,
-                     const int16_t *dcnt, const int16_t *dsym) {
-    int sym, len;
-    uint32_t dist;
-    for (;;) {
-        sym = inf_decode(s, lcnt, lsym);
-        if (sym < 0) return sym;
-        if (sym < 256) {
-            if (inf_emit(s, sym)) return ZE_OVERFLOW;
-        } else if (sym == 256) {
-            return 0;                     /* end of block */
-        } else {
-            sym -= 257;
-            if (sym >= 29) return ZE_BADSYM;
-            len = g_lbase[sym] + inf_bits(s, g_lext[sym]);
-            sym = inf_decode(s, dcnt, dsym);
-            if (sym < 0) return sym;
-            if (sym >= 30) return ZE_BADSYM;
-            dist = (uint32_t)g_dbase[sym] + (uint32_t)inf_bits(s, g_dext[sym]);
-            if (s->err) return ZE_BADINPUT;
-            if (dist > s->z->wfilled) return ZE_DISTFAR;
-            while (len--) {
-                int b = s->z->win[(s->z->wpos - dist) & ZSS_WMASK];
-                if (inf_emit(s, b)) return ZE_OVERFLOW;
-            }
-        }
-    }
-}
-
 static void inf_build_fixed(zss_inflate *z) {
     int16_t lengths[288];
     int i;
@@ -189,56 +190,222 @@ static void inf_build_fixed(zss_inflate *z) {
 static const int g_clorder[19] = {
     16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
 
-static int inf_dynamic(struct ins *s) {
-    int nlen, ndist, ncode, index, sym, len, err;
-    int16_t lengths[288 + 32];
-    int16_t clcnt[16], clsym[19];
+/* Decode lit/len/dist codes until end-of-block.
+   Returns 0 = EOB reached, 1 = suspended (resume in ST_CODES),
+   <0 = error/overflow.  Each symbol/match unit is atomic: bits are peeked via
+   `used` and only dropped once the whole unit decodes, so a mid-unit suspend
+   leaves the bit buffer untouched and the unit is re-decoded next call. */
+static int inf_codes(struct ins *s,
+                     const int16_t *lc, const int16_t *ls,
+                     const int16_t *dc, const int16_t *ds) {
+    zss_inflate *z = s->z;
+    for (;;) {
+        int used = 0, sym, dsym, len;
+        uint32_t e, dist;
 
-    nlen  = inf_bits(s, 5) + 257;
-    ndist = inf_bits(s, 5) + 1;
-    ncode = inf_bits(s, 4) + 4;
-    if (s->err) return ZE_BADINPUT;
-    if (nlen > 286 || ndist > 30) return ZE_BADTABLE;
-
-    for (index = 0; index < ncode; index++)
-        lengths[g_clorder[index]] = (int16_t)inf_bits(s, 3);
-    for (; index < 19; index++) lengths[g_clorder[index]] = 0;
-    if (s->err) return ZE_BADINPUT;
-    err = inf_construct(clcnt, clsym, lengths, 19);
-    if (err != 0) return ZE_BADTABLE;     /* code-length code must be complete */
-
-    index = 0;
-    while (index < nlen + ndist) {
-        sym = inf_decode(s, clcnt, clsym);
+        sym = inf_decode(s, lc, ls, &used);
+        if (s->suspend) return 1;
         if (sym < 0) return sym;
-        if (sym < 16) {
-            lengths[index++] = (int16_t)sym;
-        } else if (sym == 16) {
-            if (index == 0) return ZE_BADTABLE;
-            len = lengths[index - 1];
-            sym = 3 + inf_bits(s, 2);
-            while (sym-- && index < nlen + ndist) lengths[index++] = (int16_t)len;
-        } else if (sym == 17) {
-            sym = 3 + inf_bits(s, 3);
-            while (sym-- && index < nlen + ndist) lengths[index++] = 0;
-        } else {
-            sym = 11 + inf_bits(s, 7);
-            while (sym-- && index < nlen + ndist) lengths[index++] = 0;
+
+        if (sym < 256) {
+            inf_drop(s, used);
+            if (inf_emit(s, sym)) return ZE_OVERFLOW;
+            continue;
         }
-        if (s->err) return ZE_BADINPUT;
+        if (sym == 256) {                 /* end of block */
+            inf_drop(s, used);
+            return 0;
+        }
+        sym -= 257;
+        if (sym >= 29) return ZE_BADSYM;
+        len = g_lbase[sym];
+        if (g_lext[sym]) {
+            if (!inf_peekbits(s, g_lext[sym], &used, &e)) return 1;
+            len += (int)e;
+        }
+        dsym = inf_decode(s, dc, ds, &used);
+        if (s->suspend) return 1;
+        if (dsym < 0) return dsym;
+        if (dsym >= 30) return ZE_BADSYM;
+        dist = (uint32_t)g_dbase[dsym];
+        if (g_dext[dsym]) {
+            if (!inf_peekbits(s, g_dext[dsym], &used, &e)) return 1;
+            dist += e;
+        }
+        inf_drop(s, used);                /* whole match unit decoded -- commit */
+        if (dist > z->wfilled) return ZE_DISTFAR;
+        while (len--) {
+            int b = z->win[(z->wpos - dist) & ZSS_WMASK];
+            if (inf_emit(s, b)) return ZE_OVERFLOW;
+        }
     }
-    if (lengths[256] == 0) return ZE_BADTABLE;  /* missing end-of-block code */
+}
 
-    err = inf_construct(s->z->dlcnt, s->z->dlsym, lengths, nlen);
-    if (err < 0) return ZE_BADTABLE;      /* lit/len code over-subscribed */
-    err = inf_construct(s->z->ddcnt, s->z->ddsym, lengths + nlen, ndist);
-    if (err < 0) return ZE_BADTABLE;      /* a single incomplete dist code is ok */
+/* Perform one state-machine step.
+   Returns 0 = progress (call again), 1 = suspended (out of input, return ok),
+   <0 = error. */
+static int inf_step(struct ins *s) {
+    zss_inflate *z = s->z;
+    switch (z->mode) {
 
-    return inf_codes(s, s->z->dlcnt, s->z->dlsym, s->z->ddcnt, s->z->ddsym);
+    case ST_INIT: {                       /* 2-byte zlib header */
+        int used = 0;
+        uint32_t cmf, flg;
+        if (!inf_peekbits(s, 8, &used, &cmf)) return 1;
+        if (!inf_peekbits(s, 8, &used, &flg)) return 1;
+        if ((cmf & 0x0F) != 8) return ZE_NOTDEFLATE;          /* CM must be 8 */
+        if (((cmf << 8) | flg) % 31 != 0) return ZE_BADCHECK;
+        if (flg & 0x20) return ZE_FDICT;                      /* preset dict */
+        inf_drop(s, used);
+        z->mode = ST_HEADER;
+        return 0;
+    }
+
+    case ST_HEADER: {                     /* block header: BFINAL + BTYPE */
+        int used = 0;
+        uint32_t bfinal, btype;
+        if (!inf_peekbits(s, 1, &used, &bfinal)) return 1;
+        if (!inf_peekbits(s, 2, &used, &btype)) return 1;
+        inf_drop(s, used);
+        (void)bfinal;                     /* SSH never sets BFINAL */
+        if (btype == 0) {
+            /* skip to byte boundary: drop the low (bitcnt & 7) bits */
+            inf_drop(s, z->bitcnt & 7);
+            z->mode = ST_STORED_LEN;
+        } else if (btype == 1) {
+            inf_build_fixed(z);
+            z->cur_dynamic = 0;
+            z->mode = ST_CODES;
+        } else if (btype == 2) {
+            z->mode = ST_DYNAMIC;
+        } else {
+            return ZE_BADTYPE;
+        }
+        return 0;
+    }
+
+    case ST_STORED_LEN: {
+        int used = 0;
+        uint32_t len, nlen;
+        if (!inf_peekbits(s, 16, &used, &len))  return 1;
+        if (!inf_peekbits(s, 16, &used, &nlen)) return 1;
+        inf_drop(s, used);
+        if ((len ^ 0xFFFF) != nlen) return ZE_NLEN;
+        z->stored_rem = len;
+        z->mode = ST_STORED;
+        return 0;
+    }
+
+    case ST_STORED: {
+        while (z->stored_rem) {
+            uint32_t b;
+            if (!inf_getbits(s, 8, &b)) return 1;   /* per-byte atomic */
+            if (inf_emit(s, (int)b)) return ZE_OVERFLOW;
+            z->stored_rem--;
+        }
+        z->mode = ST_HEADER;
+        return 0;
+    }
+
+    case ST_CODES: {
+        int r;
+        if (z->cur_dynamic)
+            r = inf_codes(s, z->dlcnt, z->dlsym, z->ddcnt, z->ddsym);
+        else
+            r = inf_codes(s, z->flcnt, z->flsym, z->fdcnt, z->fdsym);
+        if (r == 1) return 1;             /* suspended mid-block */
+        if (r < 0) return r;
+        z->mode = ST_HEADER;              /* end of block */
+        return 0;
+    }
+
+    case ST_DYNAMIC: {                    /* HLIT(5) HDIST(5) HCLEN(4) */
+        int used = 0, i;
+        uint32_t a, b, c;
+        if (!inf_peekbits(s, 5, &used, &a)) return 1;
+        if (!inf_peekbits(s, 5, &used, &b)) return 1;
+        if (!inf_peekbits(s, 4, &used, &c)) return 1;
+        inf_drop(s, used);
+        z->dyn_nlen  = (int)a + 257;
+        z->dyn_ndist = (int)b + 1;
+        z->dyn_ncode = (int)c + 4;
+        if (z->dyn_nlen > 286 || z->dyn_ndist > 30) return ZE_BADTABLE;
+        for (i = 0; i < 19; i++) z->cl_lengths[i] = 0;
+        z->dyn_idx = 0;
+        z->mode = ST_DYN_CL;
+        return 0;
+    }
+
+    case ST_DYN_CL: {                     /* ncode 3-bit code-length lengths */
+        while (z->dyn_idx < z->dyn_ncode) {
+            uint32_t v;
+            if (!inf_getbits(s, 3, &v)) return 1;
+            z->cl_lengths[g_clorder[z->dyn_idx]] = (int16_t)v;
+            z->dyn_idx++;
+        }
+        if (inf_construct(z->clcnt, z->clsym, z->cl_lengths, 19) != 0)
+            return ZE_BADTABLE;           /* code-length code must be complete */
+        z->dyn_idx = 0;
+        z->dyn_prev = 0;
+        z->mode = ST_DYN_LENS;
+        return 0;
+    }
+
+    case ST_DYN_LENS: {                   /* lit/dist code lengths via cl code */
+        int total = z->dyn_nlen + z->dyn_ndist;
+        while (z->dyn_idx < total) {
+            int used = 0, sym;
+            uint32_t rep;
+            sym = inf_decode(s, z->clcnt, z->clsym, &used);
+            if (s->suspend) return 1;
+            if (sym < 0) return sym;
+            if (sym < 16) {
+                inf_drop(s, used);
+                z->dyn_lengths[z->dyn_idx++] = (int16_t)sym;
+                z->dyn_prev = sym;
+            } else if (sym == 16) {
+                int k;
+                if (z->dyn_idx == 0) return ZE_BADTABLE;
+                if (!inf_peekbits(s, 2, &used, &rep)) return 1;
+                inf_drop(s, used);
+                k = 3 + (int)rep;
+                while (k-- && z->dyn_idx < total)
+                    z->dyn_lengths[z->dyn_idx++] = (int16_t)z->dyn_prev;
+            } else if (sym == 17) {
+                int k;
+                if (!inf_peekbits(s, 3, &used, &rep)) return 1;
+                inf_drop(s, used);
+                k = 3 + (int)rep;
+                while (k-- && z->dyn_idx < total) z->dyn_lengths[z->dyn_idx++] = 0;
+                z->dyn_prev = 0;
+            } else {                       /* sym == 18 */
+                int k;
+                if (!inf_peekbits(s, 7, &used, &rep)) return 1;
+                inf_drop(s, used);
+                k = 11 + (int)rep;
+                while (k-- && z->dyn_idx < total) z->dyn_lengths[z->dyn_idx++] = 0;
+                z->dyn_prev = 0;
+            }
+        }
+        if (z->dyn_lengths[256] == 0) return ZE_BADTABLE;  /* need EOB code */
+        if (inf_construct(z->dlcnt, z->dlsym, z->dyn_lengths, z->dyn_nlen) < 0)
+            return ZE_BADTABLE;
+        if (inf_construct(z->ddcnt, z->ddsym,
+                          z->dyn_lengths + z->dyn_nlen, z->dyn_ndist) < 0)
+            return ZE_BADTABLE;
+        z->cur_dynamic = 1;
+        z->mode = ST_CODES;
+        return 0;
+    }
+
+    default:
+        return ZE_BADINPUT;
+    }
 }
 
 int zss_inflate_init(zss_inflate *z) {
     memset(z, 0, sizeof(*z));
+    z->mode = ST_INIT;
     return 0;
 }
 
@@ -247,44 +414,18 @@ void zss_inflate_free(zss_inflate *z) { (void)z; }
 int zss_inflate_run(zss_inflate *z, const uint8_t *in, uint32_t inlen,
                     uint8_t *out, uint32_t outcap, uint32_t *outlen) {
     struct ins s;
-    int last, type, e;
+    int rc;
 
     s.in = in; s.inlen = inlen; s.incnt = 0;
-    s.bitbuf = 0; s.bitcnt = 0;
     s.out = out; s.outcap = outcap; s.outcnt = 0;
-    s.overflow = 0; s.err = 0; s.z = z;
+    s.overflow = 0; s.suspend = 0; s.z = z;
+    /* bitbuf/bitcnt are NOT reset -- they carry partial bits across calls. */
 
-    if (!z->header_done) {
-        uint8_t cmf, flg;
-        if (inlen < 2) return ZE_SHORT;
-        cmf = in[0]; flg = in[1];
-        if ((cmf & 0x0F) != 8) return ZE_NOTDEFLATE;     /* CM must be 8 */
-        if ((((uint32_t)cmf << 8) | flg) % 31 != 0) return ZE_BADCHECK;
-        if (flg & 0x20) return ZE_FDICT;                 /* preset dict: no */
-        s.incnt = 2;
-        z->header_done = 1;
-    }
-
-    /* Process whole deflate blocks until the input bytes are consumed.
-       Each *_run() input is one sync-flushed packet: zero or more data
-       blocks followed by the empty stored block (00 00 FF FF). */
-    while (s.incnt < s.inlen) {
-        last = inf_bits(&s, 1);            /* BFINAL -- ignored (SSH never sets) */
-        type = inf_bits(&s, 2);
-        (void)last;
-        if (s.err) return ZE_BADINPUT;
-        if (type == 0) {
-            e = inf_stored(&s);
-        } else if (type == 1) {
-            inf_build_fixed(z);
-            e = inf_codes(&s, z->flcnt, z->flsym, z->fdcnt, z->fdsym);
-        } else if (type == 2) {
-            e = inf_dynamic(&s);
-        } else {
-            return ZE_BADTYPE;
-        }
-        if (e < 0) return e;
-        if (s.overflow) return ZE_OVERFLOW;
+    for (;;) {
+        rc = inf_step(&s);
+        if (rc == 1) break;     /* suspended: out of input for this chunk, ok */
+        if (rc < 0) return rc;  /* hard error */
+        /* rc == 0: progress, keep stepping */
     }
 
     *outlen = s.outcnt;

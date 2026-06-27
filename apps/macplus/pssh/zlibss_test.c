@@ -146,22 +146,21 @@ static void reverse_interop(const char *name, const uint8_t **bufs,
     ok(r == 1, name);
 }
 
-/* Test 2: feed Python-compressed vectors to one inflate context. */
-static void forward_interop(const char *name,
-                            const uint8_t *zc1, uint32_t zl1, const uint8_t *d1, uint32_t dl1,
-                            const uint8_t *zc2, uint32_t zl2, const uint8_t *d2, uint32_t dl2) {
+/* Test 2: feed N Python-compressed chunks (one shared stream) to ONE inflate
+   context, byte-exact per chunk. Works for any flush mode the producer used. */
+static void forward_stream(const char *name, int n,
+                           const uint8_t **zc, const uint32_t *zl,
+                           const uint8_t **d,  const uint32_t *dl) {
     uint32_t got;
-    int rc, allok = 1;
+    int i, allok = 1;
     zss_inflate_init(&INF);
-
-    rc = zss_inflate_run(&INF, zc1, zl1, PLAIN, (uint32_t)sizeof(PLAIN), &got);
-    if (rc != 0 || got != dl1 || (got && memcmp(PLAIN, d1, got) != 0)) {
-        allok = 0; printf("    (chunk1 rc=%d got=%u want=%u)\n", rc, got, dl1);
-    }
-    if (allok) {
-        rc = zss_inflate_run(&INF, zc2, zl2, PLAIN, (uint32_t)sizeof(PLAIN), &got);
-        if (rc != 0 || got != dl2 || (got && memcmp(PLAIN, d2, got) != 0)) {
-            allok = 0; printf("    (chunk2 rc=%d got=%u want=%u)\n", rc, got, dl2);
+    for (i = 0; i < n; i++) {
+        int rc = zss_inflate_run(&INF, zc[i], zl[i], PLAIN,
+                                 (uint32_t)sizeof(PLAIN), &got);
+        if (rc != 0 || got != dl[i] || (got && memcmp(PLAIN, d[i], got) != 0)) {
+            allok = 0;
+            printf("    (chunk %d rc=%d got=%u want=%u)\n", i, rc, got, dl[i]);
+            break;
         }
     }
     ok(allok, name);
@@ -231,13 +230,66 @@ int main(void) {
         roundtrip("rt: stream with empty middle chunk", b, l, 3);
     }
 
-    /* ===== Test 2: Python-compressed -> our inflate (streaming) ===== */
-    forward_interop("interop py->us: text stream",
-        A(vA_zc1), A(vA_d1), A(vA_zc2), A(vA_d2));
-    forward_interop("interop py->us: repetitive+english stream",
-        A(vB_zc1), A(vB_d1), A(vB_zc2), A(vB_d2));
-    forward_interop("interop py->us: empty-first-chunk stream",
-        A(vC_zc1), A(vC_d1), A(vC_zc2), A(vC_d2));
+    /* ===== Test 2: Python-compressed -> our inflate (streaming) =====
+       One shared inflate context per stream, fed chunk by chunk. Covers
+       SYNC / PARTIAL / FULL / NO flush, so the decoder cannot depend on the
+       sync-flush 00 00 FF FF marker or on chunk boundaries being byte-aligned
+       in the bit stream. */
+    {
+        const uint8_t *zc[8], *d[8];
+        uint32_t zl[8], dl[8];
+#define SET(i, P, N) do { zc[i]=P##_zc##N; zl[i]=P##_zl##N; \
+                          d[i]=P##_d##N;  dl[i]=P##_dl##N; } while (0)
+
+        SET(0,vA,1); SET(1,vA,2);
+        forward_stream("interop py->us SYNC: text stream", 2, zc, zl, d, dl);
+
+        SET(0,vB,1); SET(1,vB,2);
+        forward_stream("interop py->us SYNC: repetitive+english", 2, zc, zl, d, dl);
+
+        SET(0,vC,1); SET(1,vC,2);
+        forward_stream("interop py->us SYNC: empty-first-chunk", 2, zc, zl, d, dl);
+
+        /* The coordinator's exact bug: Z_PARTIAL_FLUSH, 2nd chunk continues the
+           bit stream mid-byte (no 00 00 FF FF marker). Extended to 3 chunks. */
+        SET(0,vP,1); SET(1,vP,2); SET(2,vP,3);
+        forward_stream("interop py->us PARTIAL: hello/world/3rd", 3, zc, zl, d, dl);
+
+        /* Many small partial-flush chunks: lots of mid-bit-buffer boundaries
+           plus cross-chunk back-references. */
+        SET(0,vQ,1); SET(1,vQ,2); SET(2,vQ,3);
+        SET(3,vQ,4); SET(4,vQ,5); SET(5,vQ,6);
+        forward_stream("interop py->us PARTIAL: 6 small chunks", 6, zc, zl, d, dl);
+
+        SET(0,vF,1); SET(1,vF,2);
+        forward_stream("interop py->us FULL: english", 2, zc, zl, d, dl);
+
+#undef SET
+    }
+
+    /* NO_FLUSH: with no flush the output does NOT align to input chunk
+       boundaries -- chunk1 emits ~0 bytes (data buffered), chunk2 emits it
+       all. So assert the TOTAL recovered stream equals the concatenation. */
+    {
+        uint32_t got, total = 0;
+        int rc, allok = 1;
+        static uint8_t WANT[2048], GOTBUF[2048];
+        uint32_t wlen = 0;
+        memcpy(WANT + wlen, vN_d1, vN_dl1); wlen += vN_dl1;
+        memcpy(WANT + wlen, vN_d2, vN_dl2); wlen += vN_dl2;
+
+        zss_inflate_init(&INF);
+        rc = zss_inflate_run(&INF, vN_zc1, vN_zl1, GOTBUF + total,
+                             (uint32_t)sizeof(GOTBUF) - total, &got);
+        if (rc != 0) allok = 0; else total += got;
+        rc = zss_inflate_run(&INF, vN_zc2, vN_zl2, GOTBUF + total,
+                             (uint32_t)sizeof(GOTBUF) - total, &got);
+        if (rc != 0) allok = 0; else total += got;
+        if (allok && (total != wlen || memcmp(GOTBUF, WANT, wlen) != 0)) {
+            allok = 0; printf("    (NO_FLUSH total got=%u want=%u)\n", total, wlen);
+        }
+        ok(allok, "interop py->us NO_FLUSH: split mid-block (total)");
+    }
 
     /* ===== Test 3: our deflate -> Python inflate (streaming) ===== */
     {
@@ -262,6 +314,42 @@ int main(void) {
         b[1] = (const uint8_t *)"chunk-B reuses chunk-A "; l[1] = 23;
         b[2] = english; l[2] = englen;
         reverse_interop("interop us->py: 3-chunk stream", b, l, 3);
+
+        /* many tiny sync-flushed chunks on one stream -> Python decodes all */
+        b[0] = (const uint8_t *)"aa "; l[0] = 3;
+        b[1] = (const uint8_t *)"bb "; l[1] = 3;
+        b[2] = (const uint8_t *)"aa bb "; l[2] = 6;
+        b[3] = (const uint8_t *)"cc aa "; l[3] = 6;
+        reverse_interop("interop us->py: 4 tiny chunks", b, l, 4);
+    }
+
+    /* ===== Test 4: arbitrary byte-aligned re-chunking =====
+       Feed ONE continuous mixed-flush compressed blob to one inflate context
+       in tiny fixed-size slices that fall at arbitrary bit positions (NOT at
+       flush boundaries). The decoder must suspend/resume across every slice
+       and still recover the exact stream. Run for several slice sizes. */
+    {
+        static const uint32_t sizes[5] = {1, 2, 3, 5, 7};
+        static uint8_t OUT[2048];
+        int si;
+        for (si = 0; si < 5; si++) {
+            uint32_t step = sizes[si], off = 0, total = 0, got;
+            int allok = 1, rc;
+            char nm[64];
+            zss_inflate_init(&INF);
+            while (off < vR_zl) {
+                uint32_t n = vR_zl - off; if (n > step) n = step;
+                rc = zss_inflate_run(&INF, vR_zc + off, n, OUT + total,
+                                     (uint32_t)sizeof(OUT) - total, &got);
+                if (rc != 0) { allok = 0; printf("    (slice rc=%d off=%u)\n", rc, off); break; }
+                total += got; off += n;
+            }
+            if (allok && (total != vR_dl || memcmp(OUT, vR_d, vR_dl) != 0)) {
+                allok = 0; printf("    (got=%u want=%u)\n", total, (uint32_t)vR_dl);
+            }
+            snprintf(nm, sizeof(nm), "resume: %u-byte slices across mixed flushes", step);
+            ok(allok, nm);
+        }
     }
 
     printf("zlibss: %d passed, %d failed\n", g_pass, g_fail);
