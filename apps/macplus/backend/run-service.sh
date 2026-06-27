@@ -23,7 +23,7 @@
 # that file is readable.
 set -u
 
-NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen>}"
+NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen|netspeed|porthole>}"
 DEPLOY="${MACPLUS_DEPLOY:-/Users/admin/hilma-deploy}"
 BASE="$DEPLOY/apps/macplus"
 SOCAT=/opt/homebrew/bin/socat
@@ -71,6 +71,7 @@ case "$NAME" in
     cd "$BASE/agent-bridge"; exec ./node_modules/.bin/tsx src/main.ts --listen 2333 ;;
   screen)   cd "$BASE/agent-screen";   exec ./node_modules/.bin/tsx src/main.ts --listen 2334 ;;
   netspeed) cd "$BASE/agent-netspeed"; exec /usr/bin/env node server.js ;;
+  porthole) cd "$BASE/agent-porthole"; exec ./node_modules/.bin/tsx src/main.ts --listen 2336 ;;
   *)
     echo "run-service: unknown service '$NAME'" >&2; exit 64 ;;
 esac

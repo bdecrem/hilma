@@ -51,6 +51,7 @@ they still start at boot. Each plist is a thin shim that runs
 | 2332 | `sh.macplus.quote`   | quote of the day                           | node:net, long-running |
 | 2333 | `sh.macplus.bridge`  | OTA app delivery (watches `~/bridge-outbox`) | node:net, long-running |
 | 2334 | `sh.macplus.screen`  | on-demand screenshot of the Plus (touch `~/.screen-grab` → writes `~/screen-latest.png`) | node:net, long-running |
+| 2336 | `sh.macplus.porthole`| remote-framebuffer web browser: headless Chromium renders, dithered to 1-bit, streamed to the Plus (`porthole/`). One-time setup on the mini: `cd ~/hilma-deploy/apps/macplus/agent-porthole && npx playwright install chromium` | node:net, long-running |
 
 Logs: `~/Library/Logs/macplus-<name>.{out,err}.log` on the mini.
 
