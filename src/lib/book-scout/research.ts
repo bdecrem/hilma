@@ -133,17 +133,18 @@ export async function researchClaudePicks(input: {
 
 ${tasteProfile}
 
-Recommend up to 5 books this reader would love.
+Recommend 8 books this reader would love (the caller trims to the best 5 after
+removing any they already own).
 
 REQUIREMENTS for every pick:
 1. RECENT: published within roughly the last 12 months (on or before ${today}).
 2. AVAILABLE NOW on Kindle (already published, buyable — not forthcoming/pre-order).
-3. A genuine taste match across their lanes — not five of the same thing.
-4. Prefer fresher / less-obvious picks over the most-everywhere bestseller.
+3. A genuine taste match across their lanes — not eight of the same thing.
+4. Prefer fresher / less-obvious recent releases over the most-everywhere bestseller.
 
 Use web_search to find recent releases, "if you liked X" readalikes, and new books by authors adjacent to their taste. Every "why" must tie the pick to a specific element of their taste profile (a lane or an author).
 
-When done, output ONLY a JSON array (no prose, no fences), up to 5 items:
+When done, output ONLY a JSON array (no prose, no fences), 8 items:
 {"title":"...","author":"...","pub_date":"e.g. 'Mar 2026' — within ~12 months, on/before ${today}","one_line":"one neutral sentence on what the book is","why":"one sentence on why it fits THIS reader's taste"}`
 
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: prompt }]
@@ -182,7 +183,7 @@ When done, output ONLY a JSON array (no prose, no fences), up to 5 items:
       one_line: p.one_line || '',
       why: p.why,
     }))
-    .slice(0, 5)
+    .slice(0, 8)
 }
 
 // Pull a JSON array out of the model's final text, tolerating stray prose,

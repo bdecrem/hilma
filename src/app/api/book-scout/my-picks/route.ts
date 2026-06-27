@@ -36,7 +36,7 @@ export async function POST() {
         await db.from('book_scout_users').update({ taste_profile: profile, profile_updated_at: new Date().toISOString() }).eq('id', user.id)
       }
       const owned = await getUserOwnedTitles(user.id)
-      const picks = filterOwned(await researchClaudePicks({ tasteProfile: profile, today }), owned)
+      const picks = filterOwned(await researchClaudePicks({ tasteProfile: profile, today }), owned).slice(0, 5)
       await db.from('book_scout_user_picks').insert({ user_id: user.id, month_label: label, picks })
     } catch {
       await db.from('book_scout_user_picks').insert({ user_id: user.id, month_label: label, picks: [] })
