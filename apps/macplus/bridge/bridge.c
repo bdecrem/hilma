@@ -273,14 +273,24 @@ int main(void)
     SetPort(gWin);
 
     AddLog("The Bridge - over-the-air app delivery.");
-    AddLog("");
-    if (NetConnect(&gConn, NetParseIP(BRIDGE_IP), BRIDGE_PORT) == noErr) {
-        gConnected = true;
-        AddLog("connected. waiting for the mini to push apps...");
-        SetTitle("The Bridge - ready");
+    AddLog("step 1: window up");
+    DrawConsole();                       /* paint before any network, so a hang/crash is visible */
+    { EventRecord e0; WaitNextEvent(everyEvent, &e0, 1L, 0L); }   /* let the window draw */
+    AddLog("step 2: opening MacTCP...");
+    DrawConsole();
+    if (NetInit() != noErr) {            /* explicit, so a driver problem is logged not a bomb */
+        AddLog("MacTCP (.IPP) not available - is the DaynaPORT/WiFi up?");
     } else {
-        AddLog("could not connect to the bridge (192.168.7.50:2333).");
-        AddLog("is MacTCP up and the mini bridge agent running?");
+        AddLog("step 3: connecting to 192.168.7.50:2333...");
+        DrawConsole();
+        if (NetConnect(&gConn, NetParseIP(BRIDGE_IP), BRIDGE_PORT) == noErr) {
+            gConnected = true;
+            AddLog("connected. waiting for the mini to push apps...");
+            SetTitle("The Bridge - ready");
+        } else {
+            AddLog("could not connect to the bridge (192.168.7.50:2333).");
+            AddLog("is the mini bridge agent running?");
+        }
     }
 
     while (!done) {

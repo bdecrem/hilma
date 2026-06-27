@@ -8,9 +8,9 @@
  *     treat the Mac's HFS as a Unix tree ("/" = the boot volume, ":" -> "/")
  *   - `ssh` / `mini`: opens a REAL bash on the Mac mini over our TCP stack
  *     (net/nettcp -> MacTCP -> BlueSCSI DaynaPORT), so you can run apps / real
- *     ssh from a machine that actually has them. The Plus<->mini hop is
- *     plaintext LAN TCP (real crypto is too slow for a 7.8MHz 68000); the mini
- *     does the real ssh onward.
+ *     ssh from a machine that actually has them. Real SSH-2 (curve25519 +
+ *     aes256) to agent-pssh on the mini (:2222), which has no login-grace
+ *     limit so the slow 68000 handshake completes.
  *
  * The shell core (tokenizer + dispatch + builtins) lives in shell.inc and is
  * host-tested by shtest.c. This file supplies the Mac console, the HFS-backed
