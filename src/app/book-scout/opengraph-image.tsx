@@ -4,7 +4,20 @@ export const alt = 'dog ear — a little library on the internet'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-export default function OG() {
+// Fetch a Shantell Sans weight from Google Fonts as a usable font file for Satori.
+async function loadFont(weight: number): Promise<ArrayBuffer> {
+  const css = await (
+    await fetch(`https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@${weight}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' },
+    })
+  ).text()
+  const url = css.match(/src:\s*url\((https:[^)]+)\)/)?.[1]
+  if (!url) throw new Error('font url not found')
+  return (await fetch(url)).arrayBuffer()
+}
+
+export default async function OG() {
+  const [bold, regular] = await Promise.all([loadFont(700), loadFont(400)])
   return new ImageResponse(
     (
       <div
@@ -17,13 +30,11 @@ export default function OG() {
           justifyContent: 'center',
           position: 'relative',
           background: '#f3ece0',
-          fontFamily: 'sans-serif',
+          fontFamily: 'Shantell Sans',
         }}
       >
-        {/* amber dog-eared page fold, top-right */}
         <div style={{ position: 'absolute', top: 0, right: 0, width: 0, height: 0, borderLeft: '150px solid transparent', borderTop: '150px solid #e8a13c' }} />
 
-        {/* flat dog-over-a-book mark */}
         <svg width="340" height="240" viewBox="28 70 144 100" fill="none">
           <g stroke="#3b372f" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round" fill="none">
             <path d="M72 78 C52 82 48 116 58 132 C70 122 76 102 78 86 C78 80 76 78 72 78 Z" fill="#e8a13c" strokeWidth="4" />
@@ -39,12 +50,18 @@ export default function OG() {
           </g>
         </svg>
 
-        <div style={{ display: 'flex', fontSize: 96, fontWeight: 800, color: '#3b372f', marginTop: 8 }}>dog ear</div>
-        <div style={{ display: 'flex', fontSize: 34, color: '#8a8475', marginTop: 14, maxWidth: 820, textAlign: 'center' }}>
+        <div style={{ display: 'flex', fontSize: 104, fontWeight: 700, color: '#3b372f', marginTop: 6 }}>dog ear</div>
+        <div style={{ display: 'flex', fontSize: 33, fontWeight: 400, color: '#8a8475', marginTop: 16, maxWidth: 820, textAlign: 'center' }}>
           a little library on the internet — picked by real booksellers, with a few from Claude.
         </div>
       </div>
     ),
-    { ...size },
+    {
+      ...size,
+      fonts: [
+        { name: 'Shantell Sans', data: bold, weight: 700, style: 'normal' },
+        { name: 'Shantell Sans', data: regular, weight: 400, style: 'normal' },
+      ],
+    },
   )
 }
