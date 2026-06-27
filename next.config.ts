@@ -80,6 +80,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.feynd.cc' }],
           destination: '/f2',
         },
+        // dogear.bar root → /book-scout (the Dog-Ear app)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'dogear.bar' }],
+          destination: '/book-scout',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.dogear.bar' }],
+          destination: '/book-scout',
+        },
       ],
       afterFiles: [
         // intheamber.com/anything → /amber/anything (only if no file matched above)
