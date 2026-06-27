@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
-import { bookScoutDb, authed } from '@/lib/book-scout/db'
+import { bookScoutDb } from '@/lib/book-scout/db'
+import { isAdmin } from '@/lib/book-scout/auth'
 
 export const runtime = 'nodejs'
 
 // PUT /api/book-scout/config — update genre / reference books / deliver-to / notes.
 export async function PUT(req: Request) {
-  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'admin only' }, { status: 401 })
 
   let body: { genre?: string; reference_books?: string; deliver_to?: string; notes?: string }
   try {

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
-import { bookScoutDb, authed } from '@/lib/book-scout/db'
+import { bookScoutDb } from '@/lib/book-scout/db'
+import { isAdmin } from '@/lib/book-scout/auth'
 
 export const runtime = 'nodejs'
 
 // PATCH /api/book-scout/sources/[id] — toggle active or edit fields.
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'admin only' }, { status: 401 })
   const { id } = await params
 
   let body: { active?: boolean; name?: string; url?: string; type?: string; notes?: string; genre?: string }
@@ -31,7 +32,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 // DELETE /api/book-scout/sources/[id]
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'admin only' }, { status: 401 })
   const { id } = await params
   const { error } = await bookScoutDb().from('book_scout_sources').delete().eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

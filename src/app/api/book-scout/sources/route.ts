@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
-import { bookScoutDb, authed } from '@/lib/book-scout/db'
+import { bookScoutDb } from '@/lib/book-scout/db'
+import { isAdmin } from '@/lib/book-scout/auth'
 
 export const runtime = 'nodejs'
 
 // POST /api/book-scout/sources — add a human-curator source.
 export async function POST(req: Request) {
-  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'admin only' }, { status: 401 })
 
   let body: { name?: string; url?: string; type?: string; notes?: string; genre?: string }
   try {

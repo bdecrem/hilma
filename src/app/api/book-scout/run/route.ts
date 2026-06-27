@@ -1,5 +1,6 @@
 import { NextResponse, after } from 'next/server'
-import { bookScoutDb, authed } from '@/lib/book-scout/db'
+import { bookScoutDb } from '@/lib/book-scout/db'
+import { isAdmin } from '@/lib/book-scout/auth'
 import { researchBooks } from '@/lib/book-scout/research'
 import { getOwnedTitles, filterOwned } from '@/lib/book-scout/library'
 
@@ -18,8 +19,8 @@ function monthLabel(d: Date): string {
 
 // POST /api/book-scout/run — research the current genre now, then save + email.
 // Returns immediately with a run id; the work continues via after().
-export async function POST(req: Request) {
-  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+export async function POST() {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'admin only' }, { status: 401 })
 
   const db = bookScoutDb()
   const [{ data: config }, { data: allSources }] = await Promise.all([

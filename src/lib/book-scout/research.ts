@@ -55,13 +55,16 @@ When done, output ONLY a JSON array (no prose before or after), each item exactl
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: prompt }]
   let final: Anthropic.Message | null = null
 
-  // Agentic web-search loop — re-send on pause_turn until the model finishes.
+  // Sonnet + the basic web_search tool: the _20260209 variant runs code-exec
+  // dynamic filtering on every search (~10s each), which makes a multi-search
+  // run blow past function timeouts. Basic search + Sonnet completes in a
+  // couple of minutes.
   for (let i = 0; i < 8; i++) {
     const res = await anthropic().messages.create({
-      model: 'claude-opus-4-8',
-      max_tokens: 16000,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 12000,
       messages,
-      tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 16 }],
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
     })
     if (res.stop_reason === 'pause_turn') {
       messages.push({ role: 'assistant', content: res.content })
@@ -89,46 +92,68 @@ When done, output ONLY a JSON array (no prose before or after), each item exactl
   return { books, sourceNames }
 }
 
-// Claude Code Picks — AI curation grounded in the reader's own fiction library.
-// Up to 5 recent, available-now books in the reader's vein that they don't own.
+// ONE-TIME taste profile from a reader's library. Cheap (no web search), run
+// once on upload and reused for every pick run — so we never re-read hundreds
+// of books per request. Returns a compact prose profile.
+export async function generateTasteProfile(library: LibraryBook[]): Promise<string> {
+  // Purchases are the strong signal; include them all, then top up with samples.
+  const purchases = library.filter((b) => b.type === 'Purchase')
+  const samples = library.filter((b) => b.type !== 'Purchase')
+  const lines = [...purchases, ...samples].slice(0, 320).map((b) => `${b.title} — ${b.author}`)
+
+  const prompt = `Here is a reader's book library (${library.length} books; the purchased ones are the strongest signal, listed first).
+
+${lines.join('\n')}
+
+Write a concise TASTE PROFILE for this reader that a book scout can reuse to recommend new books — without seeing the full library again. 150–220 words, plain prose. Cover:
+- Their main lanes / sub-genres (be specific, e.g. "espionage in the le Carré/McCloskey mold", "Reacher-style action", "Nordic & translated crime", "literary domestic suspense", "smart speculative fiction").
+- Authors they clearly follow (name the recurring ones).
+- The texture they like (pace, tone, settings, translated vs. domestic, standalone vs. series).
+- A one-line steer on what to recommend and what to avoid.
+Output ONLY the profile prose — no preamble, no headings.`
+
+  const res = await anthropic().messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 700,
+    messages: [{ role: 'user', content: prompt }],
+  })
+  return res.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join(' ').trim()
+}
+
+// Claude Code Picks — driven by the stored taste profile (not the full library),
+// so a 600-book shelf costs the same as a 50-book one. Dedup against owned
+// titles happens in the caller, in code (not in the prompt).
 export async function researchClaudePicks(input: {
-  library: LibraryBook[]
+  tasteProfile: string
   today: string
 }): Promise<ClaudePick[]> {
-  const { library, today } = input
-  // Purchases are a stronger signal than samples — list them first and labelled.
-  const shelf = library
-    .map((b) => `${b.type === 'Purchase' ? 'P' : 's'} · ${b.title} — ${b.author}`)
-    .join('\n')
+  const { tasteProfile, today } = input
 
-  const prompt = `You are "Claude Code Picks" — a personal book scout. Below is a reader's FICTION library (P = purchased, a strong signal; s = sampled, a weaker signal). Study their taste, then recommend up to 5 books they would likely love.
+  const prompt = `You are "Claude Code Picks" — a personal book scout. Here is the reader's taste profile:
 
-Today is ${today}.
+${tasteProfile}
 
-THE READER'S FICTION SHELF:
-${shelf}
+Recommend up to 5 books this reader would love.
 
 REQUIREMENTS for every pick:
-1. NOT already on their shelf above (no repeats, no other books by a series they already own unless it's a genuinely new entry).
-2. RECENT: published within roughly the last 12 months (on or before ${today}).
-3. AVAILABLE NOW on Kindle (already published, buyable — not forthcoming/pre-order).
-4. A genuine taste match — use web_search to find recent releases, "if you liked X" readalikes, and new books by authors adjacent to their shelf.
+1. RECENT: published within roughly the last 12 months (on or before ${today}).
+2. AVAILABLE NOW on Kindle (already published, buyable — not forthcoming/pre-order).
+3. A genuine taste match across their lanes — not five of the same thing.
+4. Prefer fresher / less-obvious picks over the most-everywhere bestseller.
 
-Be specific and grounded: the reader clearly leans toward [infer their lanes from the shelf — e.g. espionage/spy fiction, Reacher-style action, legal thrillers, Nordic/translated crime, literary & domestic suspense, smart speculative fiction]. Pick across their lanes, not five of the same thing.
-
-These are openly AI picks — use judgment, but every "why" must point to specific books/authors on their shelf.
+Use web_search to find recent releases, "if you liked X" readalikes, and new books by authors adjacent to their taste. Every "why" must tie the pick to a specific element of their taste profile (a lane or an author).
 
 When done, output ONLY a JSON array (no prose, no fences), up to 5 items:
-{"title":"...","author":"...","pub_date":"e.g. 'Mar 2026' — within ~12 months, on/before ${today}","one_line":"one neutral sentence on what the book is","why":"one sentence on why it fits THIS reader, naming a book or author from their shelf"}`
+{"title":"...","author":"...","pub_date":"e.g. 'Mar 2026' — within ~12 months, on/before ${today}","one_line":"one neutral sentence on what the book is","why":"one sentence on why it fits THIS reader's taste"}`
 
   const messages: Anthropic.MessageParam[] = [{ role: 'user', content: prompt }]
   let final: Anthropic.Message | null = null
   for (let i = 0; i < 8; i++) {
     const res = await anthropic().messages.create({
-      model: 'claude-opus-4-8',
-      max_tokens: 12000,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 6000,
       messages,
-      tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: 12 }],
+      tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }],
     })
     if (res.stop_reason === 'pause_turn') {
       messages.push({ role: 'assistant', content: res.content })

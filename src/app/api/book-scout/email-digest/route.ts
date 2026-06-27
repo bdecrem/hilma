@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { bookScoutDb, authed } from '@/lib/book-scout/db'
+import { bookScoutDb } from '@/lib/book-scout/db'
+import { isAdmin } from '@/lib/book-scout/auth'
 import { buildDigestHtml, sendDigestEmail, type Book, type ClaudePick } from '@/lib/book-scout/email'
 
 export const runtime = 'nodejs'
@@ -8,7 +9,7 @@ export const maxDuration = 30
 // POST /api/book-scout/email-digest — email a saved digest on demand.
 // Body: { digest_id?: string }  (defaults to the most recent digest)
 export async function POST(req: Request) {
-  if (!authed(req)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  if (!(await isAdmin())) return NextResponse.json({ error: 'admin only' }, { status: 401 })
 
   let body: { digest_id?: string } = {}
   try {
