@@ -36,7 +36,7 @@
 #include "scp.inc"               /* SCP file-transfer protocol */
 
 #define MINI_IP   "192.168.7.50"
-#define MINI_PORT 22              /* real SSH */
+#define MINI_PORT 2222              /* real SSH */
 
 #ifndef monaco
 #define monaco 4

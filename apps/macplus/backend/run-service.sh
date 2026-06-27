@@ -74,6 +74,11 @@ case "$NAME" in
   porthole)
     export PORT_PYTHON="${PORT_PYTHON:-/usr/bin/python3}"   # the python with Pillow (dither.py)
     cd "$BASE/agent-porthole"; exec ./node_modules/.bin/tsx src/main.ts --listen 2336 ;;
+  pssh)
+    # SSH server with NO login-grace limit, so the Plus's multi-minute handshake
+    # completes (the system sshd on :22 kills it). login -f admin shell.
+    export PSSH_LOGIN_USER="${PSSH_LOGIN_USER:-admin}"
+    cd "$BASE/agent-pssh"; exec /usr/bin/env node src/server.js --listen 2222 ;;
   *)
     echo "run-service: unknown service '$NAME'" >&2; exit 64 ;;
 esac

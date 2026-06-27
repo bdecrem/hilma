@@ -197,10 +197,10 @@ static short ShControl(short argc, char **argv)
     if (SEq(c,"clear")||SEq(c,"cls")) return 2;
     if (SEq(c,"mkdir")) { if(argc<2)PxOutLn("usage: mkdir <name>"); else if(FsMkdir(argv[1])!=0)PxOutLn("mkdir: failed"); return 0; }
     if (SEq(c,"rm")||SEq(c,"del")) { if(argc<2)PxOutLn("usage: rm <file>"); else if(FsRemove(argv[1])!=0)PxOutLn("rm: failed"); return 0; }
-    if (SEq(c,"mini")) { PxSetRemote("admin@192.168.7.50", 22); return 1; }
+    if (SEq(c,"mini")) { PxSetRemote("admin@192.168.7.50", 2222); return 1; }
     if (SEq(c,"ssh")) {
         char host[64]; unsigned short port = 22; short i = 0;
-        if (argc < 2) { PxSetRemote("admin@192.168.7.50", 22); return 1; }   /* bare ssh = the mini */
+        if (argc < 2) { PxSetRemote("admin@192.168.7.50", 2222); return 1; }   /* bare ssh = the mini */
         { const char *a = argv[1];
           while (a[i] && a[i] != ':' && i < 63) { host[i] = a[i]; i++; } host[i] = 0;
           if (a[i] == ':') port = (unsigned short)Atoi(a + i + 1);

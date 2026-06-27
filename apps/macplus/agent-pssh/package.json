@@ -1,0 +1,13 @@
+{
+  "name": "pssh-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Mini-side SSH server for the Plus 'Plutonix' client. A real SSH-2 server (ssh2) with NO login-grace timeout, so the 68000's multi-minute handshake can complete (the system sshd on :22 kills it on LoginGraceTime). Encrypted shell to admin over the trusted LAN.",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "ssh2": "^1.15.0"
+  }
+}
