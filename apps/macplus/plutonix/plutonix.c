@@ -32,6 +32,7 @@
 #include <TextUtils.h>
 #include <string.h>
 #include "nettcp.h"
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 #include "ssh.h"                  /* real SSH-2 client (pssh) */
 #include "scp.inc"               /* SCP file-transfer protocol */
 
@@ -594,7 +595,7 @@ static void SshPump(void)
     r = ssh_pump(gSsh, 8);                 /* 8 ladder bits per pass -> smooth UI */
     if (gSshConnecting) {
         gKexPct = (short)((long)ssh_kex_progress(gSsh) * 100 / 255);
-        if (r == 1) { gSshConnecting = false; if (!gScpMode) gRemote = true; }
+        if (r == 1) { gSshConnecting = false; if (!gScpMode) gRemote = true; AppLog("mini connected"); }
     }
     if (gScpMode) {
         if (!gScpStarted && !gSshConnecting) { gScpStarted = true; scp_start(&gScp); }
@@ -612,6 +613,7 @@ static void SshPump(void)
     }
     if (r < 0) {
         if (gScpMode) { FSClose(gScpRef); gScpMode = false; }
+        AppLog("mini ssh error");
         PxOut("ssh: "); PxOutLn(ssh_error(gSsh)); SshClose(0);
     }
 }
@@ -687,6 +689,7 @@ int main(void)
 
     gLineLen[0] = 0; gLines[0][0] = 0;
     FsChdir("/");
+    AppLogOpen("Plutonix"); AppLog("launched");   /* key events -> mini shared log */
     PxOutLn(PX_VERSION " - type 'help', or 'ssh' for a shell on the mini.");
     PxOutLn("");
 

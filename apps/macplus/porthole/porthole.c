@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "nettcp.h"
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 
 #define CANVAS_W   512
 #define CANVAS_H   300
@@ -119,8 +120,8 @@ static Boolean Connect(void)
     ip = NetParseIP(MINI_IP);
     if (ip == 0) { PortStatus("bad mini IP"); return false; }
     err = NetConnect(&gConn, ip, MINI_PORT);
-    if (err != noErr) { PortStatus("connect failed - is the agent up?"); return false; }
-    gConnected = true; RxReset();
+    if (err != noErr) { PortStatus("connect failed - is the agent up?"); AppLog("agent connect failed"); return false; }
+    gConnected = true; RxReset(); AppLog("agent connected");
     PortStatus("Porthole - connected. Go > Open Location");
     return true;
 }
@@ -276,6 +277,7 @@ int main(void)
     PortStatus("Porthole TEST BUILD (embedded frame)");
     PortBlit(0, 0, CANVAS_W, CANVAS_H);
 #else
+    AppLogOpen("Porthole"); AppLog("launched");   /* key events -> mini shared log */
     Connect();
 #endif
 

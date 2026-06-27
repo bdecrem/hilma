@@ -16,6 +16,7 @@
 import net from 'node:net';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { homedir } from 'node:os';
 
 function arg(flag: string, def: string): string {
   const i = process.argv.indexOf(flag);
@@ -23,8 +24,10 @@ function arg(flag: string, def: string): string {
 }
 
 const port = parseInt(arg('--listen', '2331'), 10) || 2331;
-const logdir = arg('--logdir', '/tmp/macplus-diag');
+// persistent shared logs folder (survives reboot); every Plus app appends here.
+const logdir = arg('--logdir', join(homedir(), 'macplus-logs'));
 mkdirSync(logdir, { recursive: true });
+const allLog = join(logdir, 'all.log');     // combined, timestamped, one line per event
 
 function stamp(): string {
   // ISO without the timezone Z, millisecond precision
@@ -52,6 +55,7 @@ const server = net.createServer((sock) => {
       const line = `${stamp()}  ${raw}`;
       process.stderr.write(line + '\n');
       appendFileSync(file, line + '\n');
+      appendFileSync(allLog, line + '\n');   // the joint feed I pull from
     }
   });
   sock.on('close', () => {
