@@ -43,6 +43,7 @@ extern void  PxOutLn(const char *s);
 extern void  PxDate(char *out, short cap);
 extern long  PxFreeMem(void);
 extern void  PxSetRemote(const char *host, unsigned short port);  /* ssh target */
+extern void  PxSetScp(int isGet, const char *local, const char *remote);  /* scp target */
 
 /* ---- tiny freestanding helpers ---- */
 static short SLen(const char *s) { short n=0; while(s[n])n++; return n; }
@@ -147,6 +148,7 @@ static short CmdHelp(short argc, char **argv, const char *in, long inLen, PxBuf 
   BufPutS(out,"remote:    ssh [user@]host[:port]  - REAL encrypted SSH-2 (curve25519,\n");
   BufPutS(out,"           aes128-ctr). The key exchange takes ~a minute on a 68000 but\n");
   BufPutS(out,"           the UI stays live (progress bar). 'mini' = ssh admin@the-mini.\n");
+  BufPutS(out,"           put <local> host:<path> / get host:<path> <local>  - scp file copy\n");
   return 0; }
 
 static const struct { const char *name; CmdFn fn; } gCmds[] = {
@@ -205,6 +207,21 @@ static short ShControl(short argc, char **argv)
           else if (argc >= 3) port = (unsigned short)Atoi(argv[2]); }
         PxSetRemote(host, port);
         return 1;
+    }
+    if (SEq(c,"put") || SEq(c,"get")) {
+        /* put <local> [user@]host:<path>   |   get [user@]host:<path> <local> */
+        int isGet = SEq(c,"get"); const char *hostarg, *localarg, *colon;
+        char host[96], rpath[128]; short i, hn;
+        if (argc < 3) { PxOutLn("usage: put <local> host:<path>  |  get host:<path> <local>"); return 0; }
+        hostarg = isGet ? argv[1] : argv[2];
+        localarg = isGet ? argv[2] : argv[1];
+        colon = hostarg; while (*colon && *colon != ':') colon++;
+        if (*colon != ':') { PxOutLn("scp: remote must be host:path"); return 0; }
+        hn = (short)(colon - hostarg); for (i=0;i<hn&&i<95;i++) host[i]=hostarg[i]; host[i]=0;
+        { const char *r = colon+1; for (i=0;r[i]&&i<127;i++) rpath[i]=r[i]; rpath[i]=0; }
+        PxSetRemote(host, 22);
+        PxSetScp(isGet, localarg, rpath);
+        return 3;
     }
     if (SEq(c,"exit")||SEq(c,"logout")) { PxOutLn("(already in the local shell; 'exit' leaves a remote session)"); return 0; }
     return -1;

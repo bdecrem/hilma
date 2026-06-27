@@ -14,6 +14,7 @@ add_application(Plutonix
     ${CMAKE_CURRENT_SOURCE_DIR}/../pssh/x25519.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../pssh/sha512.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../pssh/ed25519.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../pssh/zlibss.c
 )
 
 target_include_directories(Plutonix PRIVATE

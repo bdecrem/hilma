@@ -504,6 +504,79 @@ static void sc_reduce64(uint8_t out[32], const uint8_t hash[64])
     }
 }
 
+/* out = (x*y + z) mod L, all three inputs 32-byte LE scalars (for signing's
+ * S = (r + k*a) mod L).  x,y < L < 2^252, so x*y < 2^504 fits in 63 bytes and
+ * x*y + z (z < L) is < 2^505 — comfortably inside a 64-byte (512-bit) buffer,
+ * which sc_reduce64 then folds mod L.  Partial products are uint32*uint32 only. */
+static void sc_muladd(uint8_t out[32], const uint8_t x[32],
+                      const uint8_t y[32], const uint8_t z[32])
+{
+    uint32_t X[8], Y[8], Z[8], prod[16];
+    uint8_t  wide[64];
+    uint64_t carry;
+    int i, j;
+
+    for (i = 0; i < 8; i++) {
+        X[i] = (uint32_t)x[4*i] | ((uint32_t)x[4*i+1] << 8)
+             | ((uint32_t)x[4*i+2] << 16) | ((uint32_t)x[4*i+3] << 24);
+        Y[i] = (uint32_t)y[4*i] | ((uint32_t)y[4*i+1] << 8)
+             | ((uint32_t)y[4*i+2] << 16) | ((uint32_t)y[4*i+3] << 24);
+        Z[i] = (uint32_t)z[4*i] | ((uint32_t)z[4*i+1] << 8)
+             | ((uint32_t)z[4*i+2] << 16) | ((uint32_t)z[4*i+3] << 24);
+    }
+
+    for (i = 0; i < 16; i++) prod[i] = 0;
+    for (i = 0; i < 8; i++) {                 /* schoolbook X*Y -> 16 limbs */
+        carry = 0;
+        for (j = 0; j < 8; j++) {
+            uint64_t v = (uint64_t)prod[i+j] + (uint64_t)X[i] * (uint64_t)Y[j] + carry;
+            prod[i+j] = (uint32_t)v;
+            carry = v >> 32;
+        }
+        prod[i+8] = (uint32_t)carry;
+    }
+
+    carry = 0;                                /* + Z into the low 8 limbs */
+    for (i = 0; i < 8; i++) {
+        uint64_t v = (uint64_t)prod[i] + (uint64_t)Z[i] + carry;
+        prod[i] = (uint32_t)v;
+        carry = v >> 32;
+    }
+    for (i = 8; i < 16 && carry; i++) {       /* propagate the add carry up */
+        uint64_t v = (uint64_t)prod[i] + carry;
+        prod[i] = (uint32_t)v;
+        carry = v >> 32;
+    }
+
+    for (i = 0; i < 16; i++) {                /* serialize to 64 LE bytes */
+        wide[4*i]     = (uint8_t)(prod[i]);
+        wide[4*i + 1] = (uint8_t)(prod[i] >> 8);
+        wide[4*i + 2] = (uint8_t)(prod[i] >> 16);
+        wide[4*i + 3] = (uint8_t)(prod[i] >> 24);
+    }
+    sc_reduce64(out, wide);
+}
+
+/* R = [scalar]B for the base point B (fixed-base double-and-add, MSB first).
+ * Used by ed25519_pubkey_from_seed; signing slices the same loop in sign_step. */
+static void ge_scalarmult_base(uint32_t R[4][8], const uint8_t scalar[32])
+{
+    uint32_t B[4][8];
+    int i;
+
+    fe_copy(B[GE_X], FE_BX);
+    fe_copy(B[GE_Y], FE_BY);
+    fe_1(B[GE_Z]);
+    fe_copy(B[GE_T], FE_BT);
+
+    ge_identity(R);
+    for (i = 255; i >= 0; i--) {
+        ge_add(R, R, R);                                   /* double */
+        if ((scalar[i >> 3] >> (i & 7)) & 1u)
+            ge_add(R, R, B);                               /* + B bit */
+    }
+}
+
 /* ----------------------------------------------------------- public verify */
 
 int ed25519_verify_start(ed25519_vrfy_state *st, const uint8_t pub[32],
@@ -598,4 +671,120 @@ int ed25519_verify(const uint8_t pub[32], const uint8_t *msg, size_t msglen,
     while (!ed25519_verify_step(&st, 256))
         ;
     return ed25519_verify_finish(&st);
+}
+
+/* ----------------------------------------------------------- public signing */
+
+/* Clamp the low 32 bytes of SHA512(seed) into the secret scalar a (RFC 8032). */
+static void ed_clamp(uint8_t a[32])
+{
+    a[0]  &= 248;
+    a[31] &= 127;
+    a[31] |= 64;
+}
+
+void ed25519_pubkey_from_seed(uint8_t pub[32], const uint8_t seed[32])
+{
+    uint8_t  h[64], a[32];
+    uint32_t A[4][8];
+    int i;
+
+    sha512(seed, 32, h);
+    for (i = 0; i < 32; i++) a[i] = h[i];
+    ed_clamp(a);
+    ge_scalarmult_base(A, a);      /* A = [a]B */
+    ge_tobytes(pub, A);
+}
+
+int ed25519_sign_start(ed25519_sign_state *st, const uint8_t *msg, size_t msglen,
+                       const uint8_t pub[32], const uint8_t seed[32])
+{
+    uint8_t    h[64], rbuf[64];
+    sha512_ctx sc;
+    int i;
+
+    memset(st, 0, sizeof(*st));
+
+    /* h = SHA512(seed); a = clamp(h[0..31]); prefix = h[32..63]. */
+    sha512(seed, 32, h);
+    for (i = 0; i < 32; i++) st->a[i]      = h[i];
+    for (i = 0; i < 32; i++) st->prefix[i] = h[32 + i];
+    ed_clamp(st->a);
+
+    for (i = 0; i < 32; i++) st->pub[i] = pub[i];
+    st->msg    = msg;
+    st->msglen = msglen;
+
+    /* r = SHA512(prefix || M) mod L. */
+    sha512_init(&sc);
+    sha512_update(&sc, st->prefix, 32);
+    sha512_update(&sc, msg, msglen);
+    sha512_final(&sc, rbuf);
+    sc_reduce64(st->r, rbuf);
+
+    /* Prime R = [r]B: accumulator at identity, base point ready, bits 255..0. */
+    fe_copy(st->B[GE_X], FE_BX);
+    fe_copy(st->B[GE_Y], FE_BY);
+    fe_1(st->B[GE_Z]);
+    fe_copy(st->B[GE_T], FE_BT);
+    ge_identity(st->acc);
+    st->bit  = 255;
+    st->done = 0;
+    return 0;
+}
+
+int ed25519_sign_step(ed25519_sign_state *st, int max_steps)
+{
+    int n = 0;
+    if (st->done)
+        return 1;
+
+    while (st->bit >= 0 && n < max_steps) {
+        int t = st->bit;
+        ge_add(st->acc, st->acc, st->acc);                 /* double */
+        if ((st->r[t >> 3] >> (t & 7)) & 1u)
+            ge_add(st->acc, st->acc, st->B);               /* + [r]B bit */
+        st->bit--;
+        n++;
+    }
+    if (st->bit < 0) {
+        st->done = 1;
+        return 1;
+    }
+    return 0;
+}
+
+void ed25519_sign_finish(ed25519_sign_state *st, uint8_t sig[64])
+{
+    uint8_t    Renc[32], k[32], kbuf[64];
+    sha512_ctx sc;
+    int i;
+
+    /* Make sure the scalar multiply finished (cheap if already done). */
+    while (!ed25519_sign_step(st, 256))
+        ;
+
+    ge_tobytes(Renc, st->acc);          /* R = [r]B, encoded */
+
+    /* k = SHA512(R || A || M) mod L. */
+    sha512_init(&sc);
+    sha512_update(&sc, Renc, 32);
+    sha512_update(&sc, st->pub, 32);
+    sha512_update(&sc, st->msg, st->msglen);
+    sha512_final(&sc, kbuf);
+    sc_reduce64(k, kbuf);
+
+    /* S = (r + k*a) mod L. */
+    for (i = 0; i < 32; i++) sig[i] = Renc[i];
+    sc_muladd(sig + 32, k, st->a, st->r);
+}
+
+void ed25519_sign(uint8_t sig[64], const uint8_t *msg, size_t msglen,
+                  const uint8_t pub[32], const uint8_t seed[32])
+{
+    ed25519_sign_state st;
+    ed25519_sign_start(&st, msg, msglen, pub, seed);
+    while (!ed25519_sign_step(&st, 256))
+        ;
+    ed25519_sign_finish(&st, sig);
 }

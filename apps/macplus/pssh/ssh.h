@@ -42,6 +42,14 @@ typedef struct {
 ssh_client *ssh_new(const ssh_io *io, const char *user, const char *password);
 void        ssh_free(ssh_client *c);
 
+/* Optional: provide an Ed25519 private key (32-byte seed) for public-key auth.
+   If set, the client tries the key first and falls back to the password. */
+void        ssh_set_identity(ssh_client *c, const uint8_t seed[32]);
+
+/* Optional: run a single command instead of an interactive shell (used for scp).
+   Must be called before the channel opens (i.e. right after ssh_new). */
+void        ssh_set_exec(ssh_client *c, const char *cmd);
+
 /* feed bytes that arrived from the socket */
 void ssh_feed(ssh_client *c, const uint8_t *data, size_t len);
 

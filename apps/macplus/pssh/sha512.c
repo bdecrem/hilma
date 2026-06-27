@@ -213,3 +213,37 @@ void sha512(const void *data, size_t len, uint8_t out[64])
     sha512_update(&c, data, len);
     sha512_final(&c, out);
 }
+
+/* HMAC-SHA-512 (RFC 2104). Block size 128, digest 64. */
+void hmac_sha512(const uint8_t *key, size_t keylen,
+                 const uint8_t *msg, size_t msglen, uint8_t out[64])
+{
+    uint8_t k[128];
+    uint8_t ipad[128];
+    uint8_t opad[128];
+    uint8_t inner[64];
+    sha512_ctx c;
+    int i;
+
+    memset(k, 0, sizeof(k));
+    if (keylen > 128) {
+        sha512(key, keylen, k);          /* first 64 bytes; rest stays zero */
+    } else {
+        memcpy(k, key, keylen);
+    }
+
+    for (i = 0; i < 128; i++) {
+        ipad[i] = (uint8_t)(k[i] ^ 0x36);
+        opad[i] = (uint8_t)(k[i] ^ 0x5c);
+    }
+
+    sha512_init(&c);
+    sha512_update(&c, ipad, 128);
+    sha512_update(&c, msg, msglen);
+    sha512_final(&c, inner);
+
+    sha512_init(&c);
+    sha512_update(&c, opad, 128);
+    sha512_update(&c, inner, 64);
+    sha512_final(&c, out);
+}

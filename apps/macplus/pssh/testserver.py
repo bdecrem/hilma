@@ -3,16 +3,24 @@
 Accepts user 'mac' / password 'plutonix', offers an ed25519 host key, and gives
 an echoing shell that answers 'whoami' -> 'mac'. Run: python3 testserver.py [port]
 """
-import socket, threading, sys, paramiko
+import socket, threading, sys, os, binascii, paramiko
 
 HOST_KEY = paramiko.Ed25519Key.from_private_key_file("/tmp/pssh_test_hostkey")
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 2222
+# optional: a raw 32-byte ed25519 public key (hex) that publickey auth accepts
+ALLOWED_PUB = os.environ.get("PSSH_ALLOWED_PUB")
+ALLOWED_PUB = binascii.unhexlify(ALLOWED_PUB) if ALLOWED_PUB else None
 
 class Server(paramiko.ServerInterface):
     def __init__(self): self.done = threading.Event()
     def check_auth_password(self, u, p):
         return paramiko.AUTH_SUCCESSFUL if (u == "mac" and p == "plutonix") else paramiko.AUTH_FAILED
-    def get_allowed_auths(self, u): return "password"
+    def check_auth_publickey(self, u, key):
+        # key.asbytes() = string("ssh-ed25519")+string(pub); compare the raw 32-byte pub
+        ok = (ALLOWED_PUB is not None and u == "mac"
+              and isinstance(key, paramiko.Ed25519Key) and key.asbytes()[-32:] == ALLOWED_PUB)
+        return paramiko.AUTH_SUCCESSFUL if ok else paramiko.AUTH_FAILED
+    def get_allowed_auths(self, u): return "publickey,password"
     def check_channel_request(self, kind, cid):
         return paramiko.OPEN_SUCCEEDED if kind == "session" else paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
     def check_channel_pty_request(self, *a): return True

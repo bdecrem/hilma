@@ -33,6 +33,10 @@ void sha512_final(sha512_ctx *c, uint8_t out[64]);
 /* One-shot convenience wrapper. */
 void sha512(const void *data, size_t len, uint8_t out[64]);
 
+/* HMAC-SHA-512 (RFC 2104). out is 64 bytes. For SSH hmac-sha2-512. */
+void hmac_sha512(const uint8_t *key, size_t keylen,
+                 const uint8_t *msg, size_t msglen, uint8_t out[64]);
+
 #ifdef __cplusplus
 }
 #endif

@@ -33,6 +33,7 @@
 #include <string.h>
 #include "nettcp.h"
 #include "ssh.h"                  /* real SSH-2 client (pssh) */
+#include "scp.inc"               /* SCP file-transfer protocol */
 
 #define MINI_IP   "192.168.7.50"
 #define MINI_PORT 22              /* real SSH */
@@ -85,6 +86,15 @@ static Boolean  gPwPrompt = false;        /* collecting the password */
 static short    gKexPct = 0;              /* 0..100 kex progress */
 static char     gSshPass[80];
 static short    gSshPassLen = 0;
+/* scp transfer state */
+static Boolean  gScpMode = false;         /* this connection is an scp transfer */
+static Boolean  gScpStarted = false;
+static Boolean  gScpPending = false;      /* queued behind the password prompt */
+static int      gScpIsGet = 0;
+static char     gScpLocal[128], gScpRemote[128];
+static ScpCtx   gScp;
+static short    gScpRef;                   /* open local HFS file */
+static char     gScpExec[300];
 
 /* ---- forward decls for the shell core ---- */
 void PxOut(const char *s);
@@ -339,6 +349,15 @@ void PxSetRemote(const char *host, unsigned short port)
     gRemHost[i] = 0; gRemPort = port;
 }
 
+/* the shell calls this for `put`/`get` (with PxSetRemote for host), then returns 3. */
+void PxSetScp(int isGet, const char *local, const char *remote)
+{
+    short i;
+    gScpIsGet = isGet;
+    for (i = 0; local[i]  && i < 127; i++) gScpLocal[i]  = local[i];  gScpLocal[i]  = 0;
+    for (i = 0; remote[i] && i < 127; i++) gScpRemote[i] = remote[i]; gScpRemote[i] = 0;
+}
+
 #include "shell.inc"
 
 /* ================= HFS filesystem ops that emit into a PxBuf ================= */
@@ -439,7 +458,12 @@ static void FeedRemote(const unsigned char *b, short n)  /* ANSI-strip + console
 
 /* ssh io callbacks */
 static int  sshSend(void *u, const uint8_t *d, size_t n) { (void)u; return (NetSend(&gConn, d, (unsigned short)n) == noErr) ? (int)n : -1; }
-static void sshOnData(void *u, const uint8_t *d, size_t n) { (void)u; FeedRemote(d, (short)n); }
+static void sshOnData(void *u, const uint8_t *d, size_t n) { (void)u;
+    if (gScpMode) scp_feed(&gScp, d, (uint32_t)n); else FeedRemote(d, (short)n); }
+/* scp protocol callbacks */
+static int  scpEmit(void *u, const uint8_t *d, uint32_t n) { (void)u; return ssh_send_data(gSsh, d, n) >= 0 ? 0 : -1; }
+static long scpFread(void *u, uint8_t *buf, long max) { long c = max; (void)u; if (FSRead(gScpRef, &c, buf) != noErr && c == 0) return 0; return c; }
+static int  scpFwrite(void *u, const uint8_t *d, long n) { long c = n; (void)u; return (FSWrite(gScpRef, &c, (Ptr)d) == noErr) ? 0 : -1; }
 static void sshStatus(void *u, const char *m) { (void)u; PxOutLn(m); }
 static void sshRand(void *u, uint8_t *o, size_t n) { (void)u; PxRandom(o, n); }
 
@@ -476,6 +500,20 @@ static int sshCheckHost(void *u, const uint8_t key[32])
     return 0;
 }
 
+/* load an optional Ed25519 identity (32-byte seed) from "Plutonix Identity" in
+   the System Folder; enables public-key auth (tried before the password). */
+static void LoadIdentity(ssh_client *c)
+{
+    SysEnvRec se; short vref, ref; uint8_t seed[32]; long cnt = 32;
+    SysEnvirons(1, &se); vref = se.sysVRefNum;
+    if (FSOpen("\pPlutonix Identity", vref, &ref) == noErr) {
+        if (FSRead(ref, &cnt, seed) == noErr && cnt == 32) {
+            ssh_set_identity(c, seed); PxOutLn("(using key identity)");
+        }
+        FSClose(ref);
+    }
+}
+
 static void SshClose(const char *why)
 {
     if (gSsh) { ssh_free(gSsh); gSsh = 0; }
@@ -498,7 +536,48 @@ static void StartSSH(void)
     gSshIo.get_random = sshRand; gSshIo.check_host = sshCheckHost; gSshIo.user = 0;
     gSsh = ssh_new(&gSshIo, gSshUser, gSshPass);
     if (!gSsh) { PxOutLn("ssh: out of memory"); NetClose(&gConn); return; }
+    LoadIdentity(gSsh);
     gSshConnecting = true; gEsc = 0; gKexPct = 0;
+}
+
+/* open the local HFS file (in the cwd) for an scp transfer, connect, and arm the
+   scp protocol. The transfer runs in the event loop (SshPump). */
+static void StartSCP(void)
+{
+    OSErr err; unsigned long ip; short vRef; long dir; char leaf[64]; Str255 pn; HParamBlockRec hp;
+    short k; const char *s;
+    gPwPrompt = false; gScpPending = false; gSshPass[gSshPassLen] = 0;
+    ip = NetParseIP(gRemHost);
+    if (ip == 0) { PxOut("scp: bad host: "); PxOutLn(gRemHost); return; }
+    if (!FsResolve(gScpLocal, false, &vRef, &dir, leaf) || leaf[0] == 0) { PxOutLn("scp: bad local path"); return; }
+    c2p(leaf, pn);
+    if (gScpIsGet) {                                  /* create local file for writing */
+        hp.ioParam.ioNamePtr = pn; hp.ioParam.ioVRefNum = vRef; hp.fileParam.ioDirID = dir; hp.ioParam.ioMisc = 0;
+        (void)PBHCreateSync(&hp);
+        hp.ioParam.ioNamePtr = pn; hp.ioParam.ioVRefNum = vRef; hp.fileParam.ioDirID = dir; hp.ioParam.ioPermssn = fsWrPerm; hp.ioParam.ioMisc = 0;
+        if (PBHOpenSync(&hp) != noErr) { PxOutLn("scp: cannot create local file"); return; }
+        gScpRef = hp.ioParam.ioRefNum; SetEOF(gScpRef, 0);
+    } else {                                          /* open local file for reading */
+        hp.ioParam.ioNamePtr = pn; hp.ioParam.ioVRefNum = vRef; hp.fileParam.ioDirID = dir; hp.ioParam.ioPermssn = fsRdPerm; hp.ioParam.ioMisc = 0;
+        if (PBHOpenSync(&hp) != noErr) { PxOutLn("scp: cannot open local file"); return; }
+        gScpRef = hp.ioParam.ioRefNum;
+    }
+    k = 0; s = gScpIsGet ? "scp -f " : "scp -t "; while (*s) gScpExec[k++] = *s++;
+    s = gScpRemote; while (*s && k < 298) gScpExec[k++] = *s++; gScpExec[k] = 0;
+    PxOut("scp "); PxOut(gScpIsGet ? "<- " : "-> "); PxOut(gSshUser); PxOut("@"); PxOut(gRemHost);
+    PxOut(":"); PxOutLn(gScpRemote); DrawConsole();
+    err = NetConnect(&gConn, ip, gRemPort);
+    if (err != noErr) { PxOut("scp: "); PxOutLn((char *)NetErrStr(err)); FSClose(gScpRef); return; }
+    gSshIo.send = sshSend; gSshIo.on_data = sshOnData; gSshIo.on_status = sshStatus;
+    gSshIo.get_random = sshRand; gSshIo.check_host = sshCheckHost; gSshIo.user = 0;
+    gSsh = ssh_new(&gSshIo, gSshUser, gSshPass);
+    if (!gSsh) { PxOutLn("scp: out of memory"); NetClose(&gConn); FSClose(gScpRef); return; }
+    LoadIdentity(gSsh);
+    ssh_set_exec(gSsh, gScpExec);
+    if (gScpIsGet) scp_get_init(&gScp, scpEmit, scpFwrite, 0);
+    else { long sz = 0; GetEOF(gScpRef, &sz); SetFPos(gScpRef, fsFromStart, 0);
+           scp_put_init(&gScp, scpEmit, scpFread, 0, gScpLocal, sz); }
+    gScpMode = true; gScpStarted = false; gSshConnecting = true; gEsc = 0; gKexPct = 0;
 }
 
 static void SshPump(void)
@@ -513,8 +592,28 @@ static void SshPump(void)
         if (got > 0) ssh_feed(gSsh, buf, (size_t)got);
     }
     r = ssh_pump(gSsh, 8);                 /* 8 ladder bits per pass -> smooth UI */
-    if (gSshConnecting) { gKexPct = (short)((long)ssh_kex_progress(gSsh) * 100 / 255); if (r == 1) { gSshConnecting = false; gRemote = true; } }
-    if (r < 0) { PxOut("ssh: "); PxOutLn(ssh_error(gSsh)); SshClose(0); }
+    if (gSshConnecting) {
+        gKexPct = (short)((long)ssh_kex_progress(gSsh) * 100 / 255);
+        if (r == 1) { gSshConnecting = false; if (!gScpMode) gRemote = true; }
+    }
+    if (gScpMode) {
+        if (!gScpStarted && !gSshConnecting) { gScpStarted = true; scp_start(&gScp); }
+        if (gScp.finished) {
+            char b[24]; short k = 0; long v = gScp.moved;
+            FSClose(gScpRef);
+            if (gScp.error) PxOutLn("scp: transfer FAILED");
+            else { char t[20]; short tn = 0; if (v == 0) t[tn++] = '0';
+                   while (v) { t[tn++] = (char)('0' + v % 10); v /= 10; }
+                   { const char *p = "scp: done ("; while (*p) b[k++] = *p++; }
+                   while (tn) b[k++] = t[--tn]; b[k] = 0; PxOut(b); PxOutLn(" bytes)"); }
+            gScpMode = false; SshClose(0);
+            return;
+        }
+    }
+    if (r < 0) {
+        if (gScpMode) { FSClose(gScpRef); gScpMode = false; }
+        PxOut("ssh: "); PxOutLn(ssh_error(gSsh)); SshClose(0);
+    }
 }
 
 /* ================= input ================= */
@@ -527,8 +626,9 @@ static void RunLine(void)
     { char pr[300]; Prompt(pr, sizeof(pr)); PxOut(pr); PxOut(line); PutCh('\n'); }
     gInputLen = 0; gInput[0] = 0;
     rc = ShRun(line);
-    if (rc == 1) { gPwPrompt = true; gSshPassLen = 0; gSshPass[0] = 0; PxOut("password: "); }
+    if (rc == 1) { gScpPending = false; gPwPrompt = true; gSshPassLen = 0; gSshPass[0] = 0; PxOut("password: "); }
     else if (rc == 2) { gHead = 0; gCount = 1; gLineLen[0] = 0; gLines[0][0] = 0; }
+    else if (rc == 3) { gScpPending = true; gPwPrompt = true; gSshPassLen = 0; gSshPass[0] = 0; PxOut("password: "); }
 }
 
 static void KeyLocal(char c)
@@ -541,8 +641,8 @@ static void KeyLocal(char c)
 
 static void KeyPassword(char c)
 {
-    if (c == 13 || c == 3) { PutCh('\n'); StartSSH(); return; }       /* enter -> connect */
-    if (c == 27) { gPwPrompt = false; PxOutLn("(cancelled)"); return; }
+    if (c == 13 || c == 3) { PutCh('\n'); if (gScpPending) StartSCP(); else StartSSH(); return; }
+    if (c == 27) { gPwPrompt = false; gScpPending = false; PxOutLn("(cancelled)"); return; }
     if (c == 8) { if (gSshPassLen > 0) gSshPassLen--; gSshPass[gSshPassLen] = 0; return; }
     if (c < 32) return;
     if (gSshPassLen < (short)sizeof(gSshPass) - 1) { gSshPass[gSshPassLen++] = c; gSshPass[gSshPassLen] = 0; }
@@ -591,15 +691,16 @@ int main(void)
     PxOutLn("");
 
     while (!gDone) {
-        Boolean busy = gRemote || gSshConnecting;
+        Boolean busy = gRemote || gSshConnecting || gScpMode;
         if (WaitNextEvent(everyEvent, &ev, busy ? 1L : 8L, 0L)) {
             switch (ev.what) {
                 case updateEvt: BeginUpdate(gWin); DrawConsole(); EndUpdate(gWin); break;
                 case keyDown:
                 case autoKey: {
                     char c = ev.message & charCodeMask;
-                    if ((ev.modifiers & cmdKey) && !gRemote && !gPwPrompt) { DoMenu(MenuKey(c)); break; }
+                    if ((ev.modifiers & cmdKey) && !gRemote && !gPwPrompt && !gScpMode) { DoMenu(MenuKey(c)); break; }
                     if (gPwPrompt) KeyPassword(c);
+                    else if (gScpMode) { if (c == 27) { FSClose(gScpRef); gScpMode = false; SshClose("[scp cancelled]"); } }
                     else if (gRemote) KeyRemote(c);
                     else if (gSshConnecting) { if (c == 27) SshClose("[cancelled]"); }
                     else KeyLocal(c);
@@ -614,9 +715,9 @@ int main(void)
                 }
             }
         }
-        if (gRemote || gSshConnecting) { SshPump(); DrawConsole(); }
+        if (gRemote || gSshConnecting || gScpMode) { SshPump(); DrawConsole(); }
     }
     if (gSsh) ssh_free(gSsh);
-    if (gRemote || gSshConnecting) NetClose(&gConn);
+    if (gRemote || gSshConnecting || gScpMode) NetClose(&gConn);
     return 0;
 }

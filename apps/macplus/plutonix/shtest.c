@@ -16,6 +16,7 @@ void PxDate(char *out, short cap) { strncpy(out,"Sat Jun 27 09:00 2026",cap); ou
 long PxFreeMem(void) { return 3000000L; }
 
 void PxSetRemote(const char*h, unsigned short p){(void)h;(void)p;}
+void PxSetScp(int g, const char*l, const char*r){(void)g;(void)l;(void)r;}
 #include "shell.inc"
 
 /* ---- fake filesystem (uses PxBuf, so it lives after the include) ---- */

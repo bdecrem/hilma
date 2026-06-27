@@ -47,6 +47,16 @@ int main(int argc, char **argv) {
     io.send = io_send; io.on_data = io_data; io.on_status = io_status; io.get_random = io_rand;
     io.check_host = io_check_host; io.user = 0;
     c = ssh_new(&io, user, pass);
+    {   const char *idhex = getenv("PSSH_IDENTITY");   /* 64 hex chars = 32-byte ed25519 seed */
+        if (idhex && strlen(idhex) >= 64) {
+            uint8_t seed[32]; int k;
+            for (k = 0; k < 32; k++) { int hi=idhex[k*2],lo=idhex[k*2+1];
+                hi=(hi<='9')?hi-'0':(hi|0x20)-'a'+10; lo=(lo<='9')?lo-'0':(lo|0x20)-'a'+10;
+                seed[k]=(uint8_t)((hi<<4)|lo); }
+            ssh_set_identity(c, seed);
+            fprintf(stderr, "[ssh] using public-key identity\n");
+        }
+    }
     t0 = time(0);
 
     for (;;) {

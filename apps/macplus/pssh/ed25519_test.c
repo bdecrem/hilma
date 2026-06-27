@@ -16,6 +16,7 @@
 #include <string.h>
 #include "ed25519.h"
 #include "ed25519_vectors.h"
+#include "ed25519_sign_vectors.h"
 
 static int passed = 0, failed = 0;
 
@@ -89,6 +90,53 @@ int main(void)
             check(oneshot == 0, name);
             sprintf(name, "vec %d sliced==oneshot (bad msg)", i);
             check(sliced == oneshot, name);
+        }
+    }
+
+    /* ---------------------------------------------------------- SIGNING ---- */
+    for (i = 0; i < ED_NSIGN_VECS; i++) {
+        const ed_sign_vec *v = &ED_SIGN_VECS[i];
+        uint8_t pub[32], sig[64], sig2[64];
+        ed25519_sign_state st;
+        int j, steps;
+
+        /* (req 2b) public key derived from the seed matches PyNaCl's. */
+        ed25519_pubkey_from_seed(pub, v->seed);
+        sprintf(name, "sign vec %d (%s) pubkey_from_seed matches", i, v->name);
+        check(memcmp(pub, v->pub, 32) == 0, name);
+
+        /* (req 1+2) one-shot signature is byte-identical to the published /
+           PyNaCl signature (RFC 8032 vectors for i<3, PyNaCl random after). */
+        ed25519_sign(sig, v->msg, v->msglen, v->pub, v->seed);
+        sprintf(name, "sign vec %d signature == reference bytes", i);
+        check(memcmp(sig, v->sig, 64) == 0, name);
+
+        /* (req 3) round-trip: our own verify accepts our own signature. */
+        sprintf(name, "sign vec %d verify(sign())==1", i);
+        check(ed25519_verify(v->pub, v->msg, v->msglen, sig) == 1, name);
+
+        /* (req 4) resumable, stepped ONE bit at a time, yields identical bytes. */
+        check(ed25519_sign_start(&st, v->msg, v->msglen, v->pub, v->seed) == 0,
+              "sign_start returns 0");
+        steps = 0;
+        do { steps++; } while (!ed25519_sign_step(&st, 1) && steps < 100000);
+        ed25519_sign_finish(&st, sig2);
+        sprintf(name, "sign vec %d sliced(1)==oneshot", i);
+        check(memcmp(sig, sig2, 64) == 0, name);
+
+        /* sliced must have taken exactly 256 single-bit steps to finish. */
+        sprintf(name, "sign vec %d sliced used 256 steps", i);
+        check(steps == 256, name);
+
+        /* tamper: flip a message bit -> signature differs (sanity, non-empty). */
+        if (v->msglen > 0) {
+            uint8_t m2[256], sig3[64];
+            memcpy(m2, v->msg, v->msglen);
+            m2[0] ^= 0x01;
+            ed25519_sign(sig3, m2, v->msglen, v->pub, v->seed);
+            sprintf(name, "sign vec %d flipped-msg changes sig", i);
+            check(memcmp(sig3, sig, 64) != 0, name);
+            (void)j;
         }
     }
 

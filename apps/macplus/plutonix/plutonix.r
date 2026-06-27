@@ -1,6 +1,7 @@
 /*
- * Plutonix resources — just a SIZE partition. The console ring (~17K) + the
- * nettcp 16K receive buffer + code want real room; the Plus has 4MB, give it 1MB.
+ * Plutonix resources — just a SIZE partition. Console ring (~17K) + nettcp 16K
+ * recv buffer + the SSH/zlib working set (zlib streams ~54K BSS, crypto buffers)
+ * + code want real room; the Plus has 4MB, give it 2MB.
  */
 #include "Processes.r"
 
@@ -21,6 +22,6 @@ resource 'SIZE' (-1) {
     reserved,
     reserved,
     reserved,
-    1024 * 1024,
-    1024 * 1024
+    2048 * 1024,
+    2048 * 1024
 };

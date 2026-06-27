@@ -88,6 +88,34 @@ int main(void)
     if (ok) g_pass++; else { g_fail++; printf("  FAIL CTR round-trip 37B\n"); }
   }
 
-  printf("aes128: %d passed, %d failed\n", g_pass, g_fail);
+  /* ---- AES-256 (FIPS-197 C.3 ECB + SP800-38A F.5.5 CTR) ---- */
+  {
+    aes_ctx c2;
+    uint8_t key32[32], in2[64], out2[64], ctr2[16];
+
+    hex2bin("000102030405060708090a0b0c0d0e0f"
+            "101112131415161718191a1b1c1d1e1f", key32, 32);
+    hex2bin("00112233445566778899aabbccddeeff", in2, 16);
+    aes_init(&c2, key32, 32);
+    aes_encrypt(&c2, in2, out2);
+    check("FIPS-197 C.3 AES-256 ECB", out2, "8ea2b7ca516745bfeafc49904b496089", 16);
+
+    hex2bin("603deb1015ca71be2b73aef0857d7781"
+            "1f352c073b6108d72d9810a30914dff4", key32, 32);
+    hex2bin("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff", ctr2, 16);
+    hex2bin("6bc1bee22e409f96e93d7e117393172a"
+            "ae2d8a571e03ac9c9eb76fac45af8e51"
+            "30c81c46a35ce411e5fbc1191a0a52ef"
+            "f69f2445df4f9b17ad2b417be66c3710", in2, 64);
+    aes_init(&c2, key32, 32);
+    aes_ctr_xor(&c2, ctr2, in2, out2, 64);
+    check("SP800-38A F.5.5 AES-256 CTR x4", out2,
+          "601ec313775789a5b7a7f504bbf3d228"
+          "f443e3ca4d62b59aca84e990cacaf5c5"
+          "2b0930daa23de94ce87017ba2d84988d"
+          "dfc9c58db67aada613c2dd08457941a6", 64);
+  }
+
+  printf("aes: %d passed, %d failed\n", g_pass, g_fail);
   return g_fail == 0 ? 0 : 1;
 }

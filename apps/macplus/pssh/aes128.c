@@ -32,27 +32,35 @@ static const uint8_t rcon[10] = {
   0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1b,0x36
 };
 
-void aes128_init(aes128_ctx *c, const uint8_t key[16])
+/* General Rijndael key expansion for Nk = 4 (AES-128) or 8 (AES-256). */
+void aes_init(aes_ctx *c, const uint8_t *key, int keybytes)
 {
   uint8_t *rk = c->rk;
+  int nk = keybytes / 4;          /* 4 or 8 */
+  int nr = nk + 6;                /* 10 or 14 */
+  int total = 4 * (nr + 1);       /* total 32-bit words in the schedule */
   int i;
   uint8_t t[4];
 
-  memcpy(rk, key, 16);
+  c->nr = nr;
+  memcpy(rk, key, (size_t)keybytes);
 
-  for (i = 4; i < 44; i++) {
+  for (i = nk; i < total; i++) {
     uint8_t *prev = rk + (i - 1) * 4;
     t[0] = prev[0]; t[1] = prev[1]; t[2] = prev[2]; t[3] = prev[3];
-    if ((i & 3) == 0) {
+    if (i % nk == 0) {
       /* RotWord + SubWord + Rcon */
       uint8_t tmp = t[0];
-      t[0] = (uint8_t)(sbox[t[1]] ^ rcon[(i / 4) - 1]);
+      t[0] = (uint8_t)(sbox[t[1]] ^ rcon[(i / nk) - 1]);
       t[1] = sbox[t[2]];
       t[2] = sbox[t[3]];
       t[3] = sbox[tmp];
+    } else if (nk > 6 && i % nk == 4) {
+      /* AES-256 only: an extra SubWord every 8 words */
+      t[0] = sbox[t[0]]; t[1] = sbox[t[1]]; t[2] = sbox[t[2]]; t[3] = sbox[t[3]];
     }
     {
-      uint8_t *w0 = rk + (i - 4) * 4;
+      uint8_t *w0 = rk + (i - nk) * 4;
       uint8_t *w  = rk + i * 4;
       w[0] = (uint8_t)(w0[0] ^ t[0]);
       w[1] = (uint8_t)(w0[1] ^ t[1]);
@@ -108,7 +116,7 @@ static void mix_columns(uint8_t s[16])
   }
 }
 
-void aes128_encrypt(const aes128_ctx *c, const uint8_t in[16], uint8_t out[16])
+void aes_encrypt(const aes_ctx *c, const uint8_t in[16], uint8_t out[16])
 {
   uint8_t s[16];
   int round;
@@ -116,7 +124,7 @@ void aes128_encrypt(const aes128_ctx *c, const uint8_t in[16], uint8_t out[16])
   memcpy(s, in, 16);
   add_round_key(s, c->rk);
 
-  for (round = 1; round < 10; round++) {
+  for (round = 1; round < c->nr; round++) {
     sub_bytes(s);
     shift_rows(s);
     mix_columns(s);
@@ -126,13 +134,13 @@ void aes128_encrypt(const aes128_ctx *c, const uint8_t in[16], uint8_t out[16])
   /* Final round: no MixColumns. */
   sub_bytes(s);
   shift_rows(s);
-  add_round_key(s, c->rk + 160);
+  add_round_key(s, c->rk + c->nr * 16);
 
   memcpy(out, s, 16);
 }
 
-void aes128_ctr_xor(const aes128_ctx *c, uint8_t counter[16],
-                    const uint8_t *in, uint8_t *out, size_t len)
+void aes_ctr_xor(const aes_ctx *c, uint8_t counter[16],
+                 const uint8_t *in, uint8_t *out, size_t len)
 {
   uint8_t ks[16];
   size_t i;
@@ -140,7 +148,7 @@ void aes128_ctr_xor(const aes128_ctx *c, uint8_t counter[16],
 
   while (len > 0) {
     size_t n = len < 16 ? len : 16;
-    aes128_encrypt(c, counter, ks);
+    aes_encrypt(c, counter, ks);
     for (i = 0; i < n; i++) out[i] = (uint8_t)(in[i] ^ ks[i]);
     in += n;
     out += n;
