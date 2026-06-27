@@ -6,7 +6,9 @@
   "description": "Mini-side half of the Plus 'Porthole' browser: a real headless Chromium whose rendered screen is dithered to 1-bit and streamed to the Plus, which sends back clicks/scrolls/keys.",
   "scripts": {
     "start": "tsx src/main.ts",
-    "selftest": "tsx src/selftest.ts"
+    "selftest": "tsx src/selftest.ts",
+    "difftest": "tsx src/difftest.ts",
+    "gentest": "tsx src/gentestframe.ts"
   },
   "dependencies": {
     "playwright": "^1.59.1"
