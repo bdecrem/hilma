@@ -90,6 +90,27 @@ static void SendCmd(const char *cmd)
     NetSend(&gConn, "\r", 1);
 }
 
+static void CatNum(char *b, short *n, long v)
+{
+    char t[12]; short ti = 0;
+    if (v < 0) { b[(*n)++] = '-'; v = -v; }
+    if (v == 0) t[ti++] = '0'; while (v) { t[ti++] = (char)('0' + v % 10); v /= 10; }
+    while (ti) b[(*n)++] = t[--ti];
+}
+static void SendClick(short x, short y)
+{
+    char c[40]; short n = 0; const char *p = "CLICK ";
+    while (*p) c[n++] = *p++; CatNum(c, &n, x); c[n++] = ' '; CatNum(c, &n, y); c[n] = 0;
+    SendCmd(c);
+}
+static void SendScroll(short dy)
+{
+    char c[24]; short n = 0; const char *p = "SCROLL ";
+    while (*p) c[n++] = *p++; CatNum(c, &n, dy); c[n] = 0; SendCmd(c);
+}
+static void SendType(char ch) { char c[8]; c[0]='T';c[1]='Y';c[2]='P';c[3]='E';c[4]=' ';c[5]=ch;c[6]=0; SendCmd(c); }
+static void SendKey(const char *name) { char c[24]; short n=0; const char *p="KEY "; while(*p)c[n++]=*p++; while(*name)c[n++]=*name++; c[n]=0; SendCmd(c); }
+
 static Boolean Connect(void)
 {
     unsigned long ip; OSErr err;
@@ -196,12 +217,28 @@ static void HandleEvent(EventRecord *ev)
         part = FindWindow(ev->where, &w);
         if (part == inMenuBar) DoMenu(MenuSelect(ev->where));
         else if (part == inDrag) DragWindow(w, ev->where, &qd.screenBits.bounds);
-        else if (part == inContent && w == gWin) { if (w != FrontWindow()) SelectWindow(w); }
+        else if (part == inContent && w == gWin) {
+            if (w != FrontWindow()) SelectWindow(w);
+            else { Point pt = ev->where; SetPort(gWin); GlobalToLocal(&pt);
+                   if (pt.h >= 0 && pt.h < CANVAS_W && pt.v >= 0 && pt.v < CANVAS_H) SendClick(pt.h, pt.v); }
+        }
         break;
     case keyDown:
     case autoKey:
         c = ev->message & charCodeMask;
-        if (ev->modifiers & cmdKey) { if (ev->what == keyDown) DoMenu(MenuKey(c)); }
+        if (ev->modifiers & cmdKey) { if (ev->what == keyDown) DoMenu(MenuKey(c)); break; }
+        switch (c) {                              /* drive the remote browser */
+        case 0x1E: SendScroll(-60);  break;       /* up arrow   */
+        case 0x1F: SendScroll(60);   break;       /* down arrow */
+        case 0x0B: SendScroll(-260); break;       /* page up    */
+        case 0x0C: SendScroll(260);  break;       /* page down  */
+        case ' ':  SendKey("Space"); break;       /* space (avoid TYPE trim) */
+        case 13:   SendKey("Enter"); break;
+        case 8:    SendKey("Backspace"); break;
+        case 9:    SendKey("Tab"); break;
+        case 27:   break;                         /* esc: ignore */
+        default:   if (c >= 32 && c < 127) SendType(c); break;   /* type into focused field */
+        }
         break;
     case updateEvt:
         w = (WindowPtr)ev->message;

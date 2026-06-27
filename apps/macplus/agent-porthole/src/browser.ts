@@ -73,6 +73,7 @@ export async function go(url: string): Promise<string> {
   return (await p.title().catch(() => '')) || u;
 }
 
+export async function title(): Promise<string> { const p = await ensurePage(); return (await p.title().catch(() => '')) || ''; }
 export async function back(): Promise<void> { const p = await ensurePage(); await p.goBack({ timeout: 15000 }).catch(() => {}); await settle(p); }
 export async function click(x: number, y: number): Promise<void> { const p = await ensurePage(); await p.mouse.click(x, y).catch(() => {}); await settle(p); }
 export async function scroll(dy: number): Promise<void> { const p = await ensurePage(); await p.mouse.wheel(0, dy).catch(() => {}); await settle(p); }

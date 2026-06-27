@@ -13,7 +13,7 @@
  * Run standalone:  npx tsx src/main.ts --listen 2336
  */
 import net from 'node:net';
-import { go, back, click, scroll, typeText, key, shot, CW, CH, CRB } from './browser.ts';
+import { go, back, click, scroll, typeText, key, shot, title, CW, CH, CRB } from './browser.ts';
 import { frameFull, msgStatus, msgTitle } from './frame.ts';
 
 function portFromArgs(): number {
@@ -34,7 +34,7 @@ async function handle(lineRaw: string, send: (b: Buffer) => void): Promise<void>
   const arg = sp < 0 ? '' : line.slice(sp + 1).trim();
   try {
     switch (cmd) {
-      case 'GO':     { send(msgStatus('loading ' + arg.slice(0, 60))); const title = await go(arg); send(msgTitle(title)); break; }
+      case 'GO':     { send(msgStatus('loading ' + arg.slice(0, 60))); await go(arg); break; }
       case 'BACK':   { send(msgStatus('back')); await back(); break; }
       case 'CLICK':  { const [x, y] = arg.split(/\s+/).map(Number); await click(x | 0, y | 0); break; }
       case 'SCROLL': { await scroll(parseInt(arg, 10) || 0); break; }
@@ -42,6 +42,7 @@ async function handle(lineRaw: string, send: (b: Buffer) => void): Promise<void>
       case 'KEY':    { await key(arg || 'Enter'); break; }
       default:       { send(msgStatus('unknown: ' + cmd)); return; }
     }
+    send(msgTitle(await title()));        /* page title can change via JS after any action */
     const packed = await shot();
     send(frameFull(packed, CW, CH, CRB));
     send(msgStatus('ready'));
