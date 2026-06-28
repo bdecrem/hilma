@@ -101,6 +101,6 @@ resource 'SIZE' (-1) {
     /* MacTCP needs room: 16K receive buffer + 18K image + code + QuickDraw
        scratch. 160K was fine for the serial path but the TCP path overruns it
        mid-develop and crashes. The Plus has 4MB; give it 1MB. */
-    1024 * 1024,
-    1024 * 1024
+    2048 * 1024,
+    2048 * 1024
 };

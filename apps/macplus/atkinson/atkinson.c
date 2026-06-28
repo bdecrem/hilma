@@ -44,6 +44,7 @@
 #include <SegLoad.h>
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 #include "test_image.h"   /* gTestImg[], gTestImg_W/_H/_ROWBYTES */
 
 /* Font IDs (classic constants not always provided by the interfaces). */
@@ -392,10 +393,12 @@ static Boolean DialAgent(void)
         CatStr(msg, &n, (char *)NetErrStr(err));
         msg[n] = 0;
         SetStatus(msg);
+        AppLog("connect failed");
         return false;
     }
 
     gConnected = true;
+    AppLog("connected");
     SetStatus("connected - Image > New Image to draw");
     return true;
 }
@@ -901,6 +904,8 @@ int main(void)
     InitToolbox();
     SetUpMenus();
     SetUpWindow();
+
+    AppLogOpen("Atkinson"); AppLog("launched");   /* key events -> mini shared log */
 
     ShowSplash();
     PrefsLocate();

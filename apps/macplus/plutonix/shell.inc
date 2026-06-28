@@ -205,6 +205,8 @@ static short ShControl(short argc, char **argv)
           while (a[i] && a[i] != ':' && i < 63) { host[i] = a[i]; i++; } host[i] = 0;
           if (a[i] == ':') port = (unsigned short)Atoi(a + i + 1);
           else if (argc >= 3) port = (unsigned short)Atoi(argv[2]); }
+        /* the mini's no-grace SSH server is on 2222, not the system sshd on 22 */
+        if (port == 22) { short k; for (k = 0; host[k]; k++) { short j = 0; const char *m = "192.168.7.50"; while (m[j] && host[k+j] == m[j]) j++; if (m[j] == 0) { port = 2222; break; } } }
         PxSetRemote(host, port);
         return 1;
     }

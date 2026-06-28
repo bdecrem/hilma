@@ -43,6 +43,7 @@
 #include <SegLoad.h>
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 
 /* Font IDs (classic constants not always provided by the interfaces). */
 #ifndef monaco
@@ -351,10 +352,12 @@ static Boolean DialAgent(void)
         CatStr(b, &n, "  connect failed: ");
         CatStr(b, &n, (char *)NetErrStr(err));
         b[n] = 0; EmitLine(b);
+        AppLog("connect failed");
         return false;
     }
 
     gConnected = true;
+    AppLog("connected");
     gInEsc = false; gEscLen = 0;
     EmitLine("--- connected. you're talking to Claude. ---");
     EmitLine("");
@@ -830,6 +833,8 @@ int main(void)
     InitToolbox();
     SetUpMenus();
     SetUpWindow();
+
+    AppLogOpen("Macinclaude"); AppLog("launched");   /* key events -> mini shared log */
 
     ShowSplash();
     PrefsLocate();

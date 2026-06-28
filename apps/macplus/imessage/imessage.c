@@ -37,6 +37,7 @@
 #include <Serial.h>
 #include <SegLoad.h>
 #include "nettcp.h"              /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 
 #define IMESSAGE_IP   "192.168.7.50"
 #define IMESSAGE_PORT 2328
@@ -515,10 +516,12 @@ static Boolean DialMux(void)
     SetStatus("connecting to the mini...");
     if (NetConnect(&gConn, NetParseIP(IMESSAGE_IP), IMESSAGE_PORT) != noErr) {
         SetStatus("could not connect - is MacTCP up and the agent running?");
+        AppLog("connect failed");
         return false;
     }
     ImRxInit(&gIm);
     gConnected = true;
+    AppLog("connected");
     SetStatus("connected");
     SendChanLine("LIST");               /* ask for the conversation list */
     return true;
@@ -1083,6 +1086,7 @@ int main(void)
     InitToolbox();
     SetUpMenus();
     SetUpWindow();
+    AppLogOpen("IMessage"); AppLog("launched");   /* key events -> mini shared log */
     ShowSplash();
     PrefsLocate();
     gHaveCfg = LoadPrefs();

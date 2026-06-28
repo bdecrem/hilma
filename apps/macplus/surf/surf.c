@@ -35,6 +35,7 @@
 #include <SegLoad.h>
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 
 #ifndef geneva
 #define geneva 3
@@ -527,10 +528,12 @@ static Boolean DialAgent(void)
         CatStr(msg, &n, (char *)NetErrStr(err));
         msg[n] = 0;
         SetStatus(msg);
+        AppLog("connect failed");
         return false;
     }
 
     gConnected = true;
+    AppLog("connected");
     gRxState = SRX_WAIT;
     gRxDeadline = TickCount() + 60L * 60L;
     gRxLineLen = 0;
@@ -1132,6 +1135,8 @@ int main(void)
     InitToolbox();
     SetUpMenus();
     SetUpWindow();
+
+    AppLogOpen("Surf"); AppLog("launched");   /* key events -> mini shared log */
 
     ShowSplash();
     PrefsLocate();

@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include "nettcp.h"
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 
 #define SERVER_IP	"192.168.7.50"
 #define SERVER_PORT	2335		/* 2334 is the screen agent; 2335 is free */
@@ -216,10 +217,12 @@ static void RunSpeedTest(void)
 		sprintf(b, "Connect failed: %s (%d)", NetErrStr(err), err);
 		s[0] = (unsigned char)strlen(b); BlockMoveData(b, &s[1], s[0]);
 		DrawStatus(s);
+		AppLog("connect failed");
 		InitCursor();
 		return;
 	}
 
+	AppLog("connected");
 	DrawStatus("\pDownloading\311");
 
 	if (ReadHeader(&conn, &payload, spill, &spillLen) != 0 || payload == 0) {
@@ -304,6 +307,8 @@ int main(void)
 					 (WindowPtr)-1L, true, 0);
 	SetPort(gWin);
 	DrawFrame();
+
+	AppLogOpen("NetSpeed"); AppLog("launched");   /* key events -> mini shared log */
 
 	while (!gDone) {
 		if (WaitNextEvent(everyEvent, &ev, 30L, nil)) {

@@ -33,6 +33,7 @@
 #include <SegLoad.h>
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 
 #ifndef monaco
 #define monaco 4
@@ -578,10 +579,12 @@ static Boolean DialAgent(void)
         CatStr(msg, &n, (char *)NetErrStr(err));
         msg[n] = 0;
         SetStatus(msg);
+        AppLog("connect failed");
         return false;
     }
 
     gConnected = true;
+    AppLog("connected");
     gRxState = FRX_IDLE;
     gRxLineLen = 0;
     gRxDeadline = TickCount() + 60L * 60L;
@@ -1064,6 +1067,8 @@ int main(void)
     InitToolbox();
     SetUpMenus();
     SetUpWindow();
+
+    AppLogOpen("Foundry"); AppLog("launched");   /* key events -> mini shared log */
 
     ShowSplash();
     PrefsLocate();

@@ -19,6 +19,7 @@
 #include <Dialogs.h>
 #include <OSUtils.h>
 #include "nettcp.h"        /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
+#include "applog.inc"            /* key-event logging to the mini's shared logs */
 
 #define QUOTE_IP   "192.168.7.50"
 #define QUOTE_PORT 2332
@@ -191,12 +192,16 @@ int main(void)
     gWin = NewWindow(0L, &bounds, "\pQuote of the Day", true, noGrowDocProc, (WindowPtr)-1L, true, 0);
     SetPort(gWin);
 
+    AppLogOpen("Quote"); AppLog("launched");   /* key events -> mini shared log */
+
     scopy(gStatus, "connecting to the quote service...", sizeof(gStatus));
     DrawScreen();
     if (NetConnect(&gConn, NetParseIP(QUOTE_IP), QUOTE_PORT) == noErr) {
         gConnected = true;
+        AppLog("connected");
         Ask("TODAY");
     } else {
+        AppLog("connect failed");
         scopy(gStatus, "could not connect (is MacTCP up?)", sizeof(gStatus));
         DrawScreen();
     }
