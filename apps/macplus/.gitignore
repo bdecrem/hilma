@@ -18,3 +18,4 @@ build/
 *.abcddb-shm
 *.abbu
 *.abbu.zip
+porthole/build-test/

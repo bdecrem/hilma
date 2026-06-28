@@ -38,7 +38,68 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 
 ---
 
-## WHERE WE LEFT OFF (2026-06-11) — read this first when resuming
+## WHERE WE LEFT OFF (2026-06-27) — read this FIRST when resuming
+
+This is the current state. The 2026-06-11 section below is older history.
+
+### What's new since 2026-06-11
+
+- **The apps moved off the serial WiFi service to direct TCP (`net/nettcp.c` →
+  MacTCP → BlueSCSI DaynaPORT).** Every app now `NetConnect`s to the mini by IP
+  (`192.168.7.50`). MacTCP + the DaynaPORT driver are installed in the Plus
+  System Folder. The old `wifi.c`/`wifi.h` system-service path is legacy.
+- **Plutonix (`plutonix/`) — a small Unix subsystem that runs ON the Plus.** A
+  real shell + pipeline engine (`a | b | c`, `< > >>`), ~18 stream tools
+  (echo/cat/ls/grep/wc/head/tail/sort/uniq/rev/nl/tr/date/mem/uname…), the HFS
+  disk presented as the Unix tree (`/` = boot volume; **`rm`/`cat` hit real
+  files**), plus a **from-scratch SSH-2 client (`pssh/`)** + scp. Shell core is
+  in `shell.inc` (host-tested by `shtest.c`, 32/32). `mini` / `ssh` open a shell
+  on the mini.
+- **SSH timeout — FIXED via `agent-pssh` (mini, :2222).** The 68000 takes SEVERAL
+  MINUTES to grind the curve25519 handshake; the mini's **system sshd (:22) kills
+  it on LoginGraceTime (~2 min)** and we can't change that (no sudo). `agent-pssh`
+  is a user-space `ssh2` SSH server with **no grace limit** + **TCP keepalive**,
+  shell to admin. Algorithms match pssh (curve25519, aes256/128-ctr,
+  hmac-sha2-256/512, ssh-ed25519). Plutonix `mini` and `ssh admin@192.168.7.50`
+  both route to **:2222** (not :22). Deployed; verified my client connects + gets
+  a shell. Recent UX fixes: console **blink** (now repaints only on new output via
+  `gDirty`), idle **disconnect** (TCP keepalive on pssh AND the bridge agent).
+- **SIZE bumped 1MB → 2MB** on all the nettcp apps. Atkinson and the Bridge
+  crashed at 1MB (the 68000 nettcp working set was too tight); 2MB fixed it.
+- **Shared app-event logging (`net/applog.inc`) — the remote-troubleshooting loop.**
+  Any app calls `AppLogOpen("Name")` then `AppLog("event")`; lines stream to the
+  diag sink (:2331) → **`~/macplus-logs/all.log` on the mini**. Pull it with one
+  ssh: `ssh admin@192.168.7.50 'tail ~/macplus-logs/all.log'`. Wired into every
+  app (launched / connected / connect-failed). Best-effort + safe (off if the
+  sink is down; never blocks/crashes the app). Companion tools: `agent-screen`
+  (:2334, screenshot the Plus) + `agent-diag` (:2331, the sink).
+
+### ⚠️ The Bridge + Foundry are DISABLED — disk-writer corrupts the boot volume
+
+On 2026-06-27 **The Bridge corrupted the Plus boot disk** → freeze → black screen
+on next boot (the disk was unbootable with BlueSCSI attached). The corruption
+starts at **byte ~50 KB of the volume** — in the HFS boot/catalog structures, i.e.
+the **MacBinary-to-disk writer** (`bridge/bridge.c` `MBConsume` + the shared
+`foundry/foundry_rx.inc`) scribbling outside the file it's writing. Same writer
+Foundry uses. Recovery: restored the card from a clean pre-corruption snapshot
+(`~/mac-plus-apps/work/card_work.hda`), updated Plutonix, **removed The Bridge from
+the card**. The corrupted image is saved at `~/mac-plus-apps/work/corrupted-backup.hda`
+for forensics (diff vs `card_work.hda` to find what the writer clobbered).
+
+- **DO NOT re-enable OTA delivery (the Bridge) or run Foundry** until the disk
+  writer is audited and proven safe. Ship app updates **via the SD card** for now.
+- `agent-pssh` keepalive + `agent-bridge` keepalive are deployed; the mini
+  agents (BACKEND.md) all run. Only the **Plus-side Bridge app** is the hazard.
+
+### How to ship an app update right now (Bridge is off)
+Build the app, then inject onto the inserted card with hfsutils (see "Injecting
+onto the Plus" below): `cp` card→work copy, `hmount`, `hcopy -m <App>.bin
+":<Name>"`, `humount`, `cp` back, `sync`, `diskutil eject`. The card volume is
+**"BlueSCSI Mac Plus"**, apps live in the **`Apps`** folder.
+
+---
+
+## WHERE WE LEFT OFF (2026-06-11) — older history
 
 **The Plus is online and the whole app suite ships over WiFi.** The serial-cable
 blocker is long resolved (the proper mini-DIN-8 → DB-9 Mac modem cable arrived);
