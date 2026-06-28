@@ -48,6 +48,7 @@ class Conn {
   private busy = false;
   constructor(private sock: net.Socket) {
     sock.setNoDelay(true);
+    sock.setKeepAlive(true, 10000);   // the Bridge sits idle waiting for apps; keep the link alive
     sock.on('close', () => this.shutdown());
     sock.on('error', () => this.shutdown());
     this.send(statusLine('bridge online - drop a .bin in the outbox'));
