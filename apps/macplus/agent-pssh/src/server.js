@@ -48,6 +48,9 @@ new Server({
   },
 }, (client) => {
   log('client connected');
+  // keep the idle connection alive — without this the NAT/DaynaPORT drops it
+  // after a minute or two and the Plus gets ECONNRESET mid-session.
+  try { if (client._sock) client._sock.setKeepAlive(true, 10000); } catch {}
   client.on('authentication', (ctx) => {
     if (ctx.method === 'password' || ctx.method === 'none' || ctx.method === 'keyboard-interactive') return ctx.accept();
     return ctx.reject(['password', 'none']);

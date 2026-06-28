@@ -442,9 +442,12 @@ static void PxRandom(uint8_t *o, size_t n)
     for (i = 0; i < n; i++) { st = st * 1103515245UL + 12345UL + (unsigned long)TickCount(); o[i] = (uint8_t)(st >> 17); }
 }
 
+static Boolean gDirty = true;   /* console needs a redraw (set on new remote output) */
+
 static void FeedRemote(const unsigned char *b, short n)  /* ANSI-strip + console */
 {
     short i;
+    if (n > 0) gDirty = true;
     for (i = 0; i < n; i++) {
         unsigned char c = b[i];
         if (gEsc == 1) { gEsc = (c == '[') ? 2 : 0; continue; }
@@ -718,7 +721,12 @@ int main(void)
                 }
             }
         }
-        if (gRemote || gSshConnecting || gScpMode) { SshPump(); DrawConsole(); }
+        if (gRemote || gSshConnecting || gScpMode) {
+            SshPump();
+            /* only repaint when there's new output (or the kex bar is moving) -
+               redrawing every pass erased+redrew the whole window => constant blink */
+            if (gSshConnecting || gScpMode || gDirty) { DrawConsole(); gDirty = false; }
+        }
     }
     if (gSsh) ssh_free(gSsh);
     if (gRemote || gSshConnecting || gScpMode) NetClose(&gConn);
