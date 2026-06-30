@@ -1,5 +1,7 @@
 # Hilma
 
+> **Personal side note (not project-related):** Rivian R2 lease analysis in progress — see [misc/rivian-r2-lease-analysis.md](misc/rivian-r2-lease-analysis.md). Pick the conversation back up from there.
+
 ## Do the work yourself — no lazy shortcuts
 
 When a step is doable with the tools available, do it — don't punt it to Bart and don't offer to do it instead of just doing it.
