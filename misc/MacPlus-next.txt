@@ -1,0 +1,13 @@
+Now I want you to clone "most" of our ssh app and give me a new command/app name for that, and that version is FAST so it (1) only works on the local network or in a trusted environment and (2) it does not need to do the handshake/generate a key thing that takes so long, but (3) I can do all of the same things - effectively I'm remotely logged onto to my Mac mini just as I am when I ssh in. I don't know if this is a dumb terminal or whatever technically I am asking for.  Test and commit your work, if possible push it over our Bridge app, which should now work.
+
+
+ssh admin@192.168.7.50
+
+  From your iMac that logs in with your key (no password). ssh 
+  admin@admins-Mac-mini.local works too.
+
+
+Plutonix isn't working quite right yet:
+1- the screen was constantly blink-refreshing
+2- and entering commands on the remote machine was VERY SLOW, almost impossible to see what I was typing
+3- and when I stepped away for a minute or two, the connection had been kicked out - I was back on my local machine
