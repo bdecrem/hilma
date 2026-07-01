@@ -38,9 +38,18 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 
 ---
 
-## WHERE WE LEFT OFF (2026-06-27) — read this FIRST when resuming
+## WHERE WE LEFT OFF (2026-07-01) — read this FIRST when resuming
 
 This is the current state. The 2026-06-11 section below is older history.
+
+### SD card archive — restore a working card in minutes
+
+`~/mac-plus-apps/sdcard-archive/` holds a complete, verified copy of the SD
+card (boot image + bluescsi.ini + NE4.hda + firmware) with a step-by-step
+restore guide at `~/mac-plus-apps/sdcard-archive/RESTORE.md`. If the card ever dies again:
+format any microSD, copy three files on, done. The archive image is gated by
+`tools/hfscheck.py` (full HFS integrity check) and was boot-tested in Mini vMac.
+Refresh the archive after meaningful card changes (procedure in RESTORE.md).
 
 ### What's new since 2026-06-11
 
@@ -74,28 +83,42 @@ This is the current state. The 2026-06-11 section below is older history.
   sink is down; never blocks/crashes the app). Companion tools: `agent-screen`
   (:2334, screenshot the Plus) + `agent-diag` (:2331, the sink).
 
-### ⚠️ The Bridge + Foundry are DISABLED — disk-writer corrupts the boot volume
+### The 2026-06-27 "disk corruption" was a misdiagnosis — resolved 2026-07-01
 
-On 2026-06-27 **The Bridge corrupted the Plus boot disk** → freeze → black screen
-on next boot (the disk was unbootable with BlueSCSI attached). The corruption
-starts at **byte ~50 KB of the volume** — in the HFS boot/catalog structures, i.e.
-the **MacBinary-to-disk writer** (`bridge/bridge.c` `MBConsume` + the shared
-`foundry/foundry_rx.inc`) scribbling outside the file it's writing. Same writer
-Foundry uses. Recovery: restored the card from a clean pre-corruption snapshot
-(`~/mac-plus-apps/work/card_work.hda`), updated Plutonix, **removed The Bridge from
-the card**. The corrupted image is saved at `~/mac-plus-apps/work/corrupted-backup.hda`
-for forensics (diff vs `card_work.hda` to find what the writer clobbered).
+What actually happened, established by full forensics (HFS integrity checker +
+resource-fork validation + Mini vMac boot tests on every snapshot):
 
-- **DO NOT re-enable OTA delivery (the Bridge) or run Foundry** until the disk
-  writer is audited and proven safe. Ship app updates **via the SD card** for now.
-- `agent-pssh` keepalive + `agent-bridge` keepalive are deployed; the mini
-  agents (BACKEND.md) all run. Only the **Plus-side Bridge app** is the hazard.
+- **The HFS volume was never corrupted.** The "corrupted" image
+  (`~/mac-plus-apps/work/corrupted-backup.hda`) passes every structural check
+  and boots in Mini vMac with all 17 apps. The "corruption at ~50 KB" was the
+  MDB (volume header at partition offset 48 K), which legitimately differs
+  between any two mounts.
+- **The disk writer is innocent.** Audit of `bridge/bridge.c` `MBConsume` +
+  `foundry/foundry_rx.inc`: File-Manager-only writes (FSWrite to its own file
+  refnums), bounds-checked, cannot reach HFS structures. The 17:23 freeze
+  during the Plutonix delivery was most likely the Bridge's known 1 MB-SIZE
+  crash — the card was running the 14:47 1 MB build; the 2 MB fix landed 17:06.
+- **The no-boot was the BlueSCSI itself:** firmware 2026.02.08 on the Pico 2 W
+  died during WiFi init (card's log.txt ended at "Connecting to Wi-Fi SSID",
+  never reaching "Initialization complete!" — SCSI bus dead, so the Plus
+  couldn't see the disk). Fixed by updating to **v2026.04.27** ("Fixed on
+  Pico 1W / Pico 2W with WPA2 networks") via the SD self-flash path. Booted
+  and WiFi confirmed working 2026-07-01.
+- This SD card has a history of SDIO timeout errors (old log in the card's
+  .Trashes). If flakiness recurs, swap in a fresh card — full restore takes
+  minutes from `~/mac-plus-apps/sdcard-archive/` (see RESTORE.md there).
 
-### How to ship an app update right now (Bridge is off)
+**The Bridge is still off the card** — not because the writer is unsafe, but
+because it hasn't been rebuilt/re-verified since the crash. To re-enable OTA:
+rebuild `bridge/` from current source (SIZE is now 2 MB, commit 2979578),
+inject onto the card, and test a delivery. Foundry same story.
+
+### How to ship an app update right now (until the Bridge is back)
 Build the app, then inject onto the inserted card with hfsutils (see "Injecting
 onto the Plus" below): `cp` card→work copy, `hmount`, `hcopy -m <App>.bin
 ":<Name>"`, `humount`, `cp` back, `sync`, `diskutil eject`. The card volume is
-**"BlueSCSI Mac Plus"**, apps live in the **`Apps`** folder.
+**"BlueSCSI Mac Plus"**, apps live in the **`Apps`** folder. Then refresh the
+archive copy (RESTORE.md "Keeping the archive current").
 
 ---
 
@@ -169,8 +192,9 @@ run the same command — or just ask the Claude Code session running on the mini
 - **Boot image on the card:** `HD20_512-1GB-MacPlus-6+7.hda` — a 1 GB image with an **Apple Partition Map**,
   one HFS volume named **"BlueSCSI Mac Plus"**, holding System 6.0.8 + System 7.0.1 boot folders and an
   **`Apps`** folder. This is where built apps land.
-- **Rule:** never reformat or alter the card's FAT32 or its other files (`bluescsi.ini`, `HD30_512 MacPack.hda`).
-  We only overwrite the one `.hda` file.
+- **Rule:** never reformat the card or alter its other files (`bluescsi.ini`, `NE4.hda`,
+  `HD30_512 DaynaInstall.hda`). We only overwrite the one boot `.hda` file. (The card is
+  exFAT; a full archive + restore guide lives at `~/mac-plus-apps/sdcard-archive/RESTORE.md`.)
 
 ---
 
