@@ -69,10 +69,18 @@ Refresh the archive after meaningful card changes (procedure in RESTORE.md).
   it on LoginGraceTime (~2 min)** and we can't change that (no sudo). `agent-pssh`
   is a user-space `ssh2` SSH server with **no grace limit** + **TCP keepalive**,
   shell to admin. Algorithms match pssh (curve25519, aes256/128-ctr,
-  hmac-sha2-256/512, ssh-ed25519). Plutonix `mini` and `ssh admin@192.168.7.50`
-  both route to **:2222** (not :22). Deployed; verified my client connects + gets
-  a shell. Recent UX fixes: console **blink** (now repaints only on new output via
+  hmac-sha2-256/512, ssh-ed25519). Plutonix `ssh admin@192.168.7.50` routes to
+  **:2222** (not :22). Deployed; verified my client connects + gets a shell.
+  Recent UX fixes: console **blink** (now repaints only on new output via
   `gDirty`), idle **disconnect** (TCP keepalive on pssh AND the bridge agent).
+- **The INSTANT shell (2026-07-01): Plutonix `mini` / `rsh` → `agent-rsh` (:2329).**
+  The fast sibling of pssh for the trusted LAN: raw TCP → pty → admin login
+  shell. No key exchange (was minutes), no per-keystroke encrypt/decrypt (was
+  why typing crawled). `mini` now takes ~a second to a live zsh; `ssh` remains
+  the real-crypto path. `rsh host[:port]` reaches any host. ESC returns to
+  Plutonix. Server: `agent-rsh/server.mjs` (dependency-free node + socat pty,
+  TCP keepalive so idle sessions survive). Plutonix's ANSI stripper also now
+  swallows OSC/charset escapes, not just CSI (zsh emits OSC on some setups).
 - **SIZE bumped 1MB → 2MB** on all the nettcp apps. Atkinson and the Bridge
   crashed at 1MB (the 68000 nettcp working set was too tight); 2MB fixed it.
 - **Shared app-event logging (`net/applog.inc`) — the remote-troubleshooting loop.**
@@ -394,7 +402,9 @@ by side:
 | 2327 | Macinclaude Foundry (`foundry/`) | describe an app → Claude writes + Retro68 compiles it → delivered as a real APPL onto the disk |
 | 2328 | Macinclaude iMessage (`imessage/`) | read + reply to iMessages from the Plus; mini reads chat.db and sends via AppleScript |
 
-(Infrastructure ports, not user apps: mux `:2330`, diag `:2331`, quote `:2332`, bridge `:2333`.
+(Infrastructure ports, not user apps: rsh `:2329` (Plutonix instant shell), mux `:2330`,
+diag `:2331`, quote `:2332`, bridge `:2333`, screen `:2334`, netspeed `:2335`,
+porthole `:2336`, pssh `:2222`.
 **How all mini-side services are deployed, updated, and restarted: [`BACKEND.md`](BACKEND.md).**)
 
 The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone

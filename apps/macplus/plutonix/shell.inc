@@ -9,8 +9,8 @@
  *     final stage to the console (or a file).
  *   - programs: echo cat ls pwd grep wc head tail sort uniq rev nl tr date mem
  *               uname help   (all pipeable: `uname | tr a-z A-Z`)
- *   - control (side-effecting): cd mkdir rm clear  and ssh/mini (the ONE command
- *     that reaches the mini — a bonus, not the substance)
+ *   - control (side-effecting): cd mkdir rm clear  and the remote commands:
+ *     mini/rsh (instant raw shell on the mini) and ssh (real SSH-2)
  *
  * Shared verbatim with the host test (shtest.c): pipes, redirection, and every
  * program are tested with the system clang, no emulator, no network.
@@ -145,9 +145,10 @@ static short CmdHelp(short argc, char **argv, const char *in, long inLen, PxBuf 
   BufPutS(out,"pipes:     ls / | grep Apps | wc -l\n");
   BufPutS(out,"redirect:  sort < in > out ;  echo hi >> log\n");
   BufPutS(out,"files:     cd <dir>  mkdir <d>  rm <f>  clear\n");
-  BufPutS(out,"remote:    ssh [user@]host[:port]  - REAL encrypted SSH-2 (curve25519,\n");
-  BufPutS(out,"           aes128-ctr). The key exchange takes ~a minute on a 68000 but\n");
-  BufPutS(out,"           the UI stays live (progress bar). 'mini' = ssh admin@the-mini.\n");
+  BufPutS(out,"remote:    mini / rsh [host[:port]]  - INSTANT shell on the mini (raw TCP,\n");
+  BufPutS(out,"           trusted LAN, no wait). ESC returns to Plutonix.\n");
+  BufPutS(out,"           ssh [user@]host[:port]  - REAL encrypted SSH-2 (curve25519,\n");
+  BufPutS(out,"           aes128-ctr; the key exchange takes ~a minute on a 68000).\n");
   BufPutS(out,"           put <local> host:<path> / get host:<path> <local>  - scp file copy\n");
   return 0; }
 
@@ -189,7 +190,8 @@ static void RunPipeline(char *(*stages)[PX_MAXARGS], short *argcs, short ns,
     }
 }
 
-/* control commands. Return: 0 handled-normal, 1 ssh, 2 clear, -1 not control */
+/* control commands. Return: 0 handled-normal, 1 ssh, 2 clear, 3 scp,
+   4 rsh (instant raw shell), -1 not control */
 static short ShControl(short argc, char **argv)
 {
     const char *c = argv[0];
@@ -197,7 +199,19 @@ static short ShControl(short argc, char **argv)
     if (SEq(c,"clear")||SEq(c,"cls")) return 2;
     if (SEq(c,"mkdir")) { if(argc<2)PxOutLn("usage: mkdir <name>"); else if(FsMkdir(argv[1])!=0)PxOutLn("mkdir: failed"); return 0; }
     if (SEq(c,"rm")||SEq(c,"del")) { if(argc<2)PxOutLn("usage: rm <file>"); else if(FsRemove(argv[1])!=0)PxOutLn("rm: failed"); return 0; }
-    if (SEq(c,"mini")) { PxSetRemote("admin@192.168.7.50", 2222); return 1; }
+    if (SEq(c,"mini")) { PxSetRemote("admin@192.168.7.50", 2329); return 4; }   /* instant */
+    if (SEq(c,"rsh")) {
+        /* rsh [host[:port]] — INSTANT trusted-LAN shell (agent-rsh), no crypto,
+           no handshake. Bare rsh = the mini. */
+        char host[64]; unsigned short port = 2329; short i = 0;
+        if (argc < 2) { PxSetRemote("admin@192.168.7.50", 2329); return 4; }
+        { const char *a = argv[1];
+          while (a[i] && a[i] != ':' && i < 63) { host[i] = a[i]; i++; } host[i] = 0;
+          if (a[i] == ':') port = (unsigned short)Atoi(a + i + 1);
+          else if (argc >= 3) port = (unsigned short)Atoi(argv[2]); }
+        PxSetRemote(host, port);
+        return 4;
+    }
     if (SEq(c,"ssh")) {
         char host[64]; unsigned short port = 22; short i = 0;
         if (argc < 2) { PxSetRemote("admin@192.168.7.50", 2222); return 1; }   /* bare ssh = the mini */
@@ -229,7 +243,7 @@ static short ShControl(short argc, char **argv)
     return -1;
 }
 
-/* Parse + run a full command line. Returns 0 normal, 1 ssh, 2 clear. */
+/* Parse + run a full command line. Returns 0 normal, 1 ssh, 2 clear, 3 scp, 4 rsh. */
 static short ShRun(char *line)
 {
     char *stagev[PX_MAXSTAGES][PX_MAXARGS]; short stagec[PX_MAXSTAGES]; short ns = 0;

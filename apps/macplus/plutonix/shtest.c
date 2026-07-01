@@ -15,7 +15,8 @@ void PxOutLn(const char *s) { PxOut(s); PxOut("\n"); }
 void PxDate(char *out, short cap) { strncpy(out,"Sat Jun 27 09:00 2026",cap); out[cap-1]=0; }
 long PxFreeMem(void) { return 3000000L; }
 
-void PxSetRemote(const char*h, unsigned short p){(void)h;(void)p;}
+static char gRemHostT[64]; static unsigned short gRemPortT;
+void PxSetRemote(const char*h, unsigned short p){strncpy(gRemHostT,h,63);gRemHostT[63]=0;gRemPortT=p;}
 void PxSetScp(int g, const char*l, const char*r){(void)g;(void)l;(void)r;}
 #include "shell.inc"
 
@@ -59,7 +60,14 @@ int main(void) {
 
     rc=run("clear"); ok("clear -> rc 2", rc==2);
     rc=run("ssh");   ok("ssh -> rc 1", rc==1);
-    rc=run("mini");  ok("mini -> rc 1", rc==1);
+    ok("ssh targets pssh :2222", gRemPortT==2222);
+    rc=run("mini");  ok("mini -> rc 4 (instant rsh)", rc==4);
+    ok("mini targets rsh :2329", gRemPortT==2329 && strstr(gRemHostT,"192.168.7.50")!=0);
+    rc=run("rsh");   ok("rsh -> rc 4", rc==4);
+    ok("bare rsh targets the mini :2329", gRemPortT==2329 && strstr(gRemHostT,"192.168.7.50")!=0);
+    rc=run("rsh 192.168.7.99:2000"); ok("rsh host:port -> rc 4", rc==4);
+    ok("rsh host:port parsed", gRemPortT==2000 && !strcmp(gRemHostT,"192.168.7.99"));
+    rc=run("rsh 192.168.7.99"); ok("rsh host default port", rc==4 && gRemPortT==2329 && !strcmp(gRemHostT,"192.168.7.99"));
 
     ok("bogus -> not found", (run("zzz x"),strstr(gCap,"command not found")!=0));
 

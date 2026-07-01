@@ -6,11 +6,12 @@
  *   - a scrolling console with an input line and a Unix-y prompt
  *   - builtins (ls/cd/pwd/cat/mkdir/rm/echo/clear/date/mem/uname/help) that
  *     treat the Mac's HFS as a Unix tree ("/" = the boot volume, ":" -> "/")
- *   - `ssh` / `mini`: opens a REAL bash on the Mac mini over our TCP stack
- *     (net/nettcp -> MacTCP -> BlueSCSI DaynaPORT), so you can run apps / real
- *     ssh from a machine that actually has them. Real SSH-2 (curve25519 +
- *     aes256) to agent-pssh on the mini (:2222), which has no login-grace
- *     limit so the slow 68000 handshake completes.
+ *   - `mini` / `rsh`: an INSTANT login shell on the Mac mini over our TCP
+ *     stack (net/nettcp -> MacTCP -> BlueSCSI DaynaPORT) to agent-rsh (:2329).
+ *     Raw TCP, trusted-LAN: no key exchange (minutes on a 68000), no
+ *     per-keystroke crypto (what made typing crawl).
+ *   - `ssh`: the same shell, REAL SSH-2 (curve25519 + aes256) to agent-pssh
+ *     (:2222), which has no login-grace limit so the slow handshake completes.
  *
  * The shell core (tokenizer + dispatch + builtins) lives in shell.inc and is
  * host-tested by shtest.c. This file supplies the Mac console, the HFS-backed
@@ -77,6 +78,7 @@ static Boolean    gDone = false;
 
 /* mode: local shell vs. connected to a remote host */
 static Boolean  gRemote = false;
+static Boolean  gRawMode = false;    /* rsh: raw TCP shell (no SSH layer) */
 static NetConn  gConn;
 static short    gEsc = 0;            /* ANSI state: 0 normal, 1 ESC, 2 in CSI */
 static char     gRemHost[64] = MINI_IP;
@@ -444,14 +446,25 @@ static void PxRandom(uint8_t *o, size_t n)
 
 static Boolean gDirty = true;   /* console needs a redraw (set on new remote output) */
 
-static void FeedRemote(const unsigned char *b, short n)  /* ANSI-strip + console */
+/* ANSI-strip + console. gEsc: 0 normal, 1 after ESC, 2 in CSI (ESC[..final),
+   3 in OSC (ESC]..BEL or ESC\), 4 OSC saw ESC (ST pending), 5 charset (one char). */
+static void FeedRemote(const unsigned char *b, short n)
 {
     short i;
     if (n > 0) gDirty = true;
     for (i = 0; i < n; i++) {
         unsigned char c = b[i];
-        if (gEsc == 1) { gEsc = (c == '[') ? 2 : 0; continue; }
+        if (gEsc == 1) {
+            if (c == '[') gEsc = 2;
+            else if (c == ']') gEsc = 3;
+            else if (c == '(' || c == ')' || c == '#') gEsc = 5;
+            else gEsc = 0;
+            continue;
+        }
         if (gEsc == 2) { if (c >= '@' && c <= '~') gEsc = 0; continue; }
+        if (gEsc == 3) { if (c == 7) gEsc = 0; else if (c == 27) gEsc = 4; continue; }
+        if (gEsc == 4) { if (c == '\\') gEsc = 0; else if (c != 27) gEsc = 3; continue; }
+        if (gEsc == 5) { gEsc = 0; continue; }
         if (c == 27) { gEsc = 1; continue; }
         if (c == '\r') continue;
         if (c == 7) continue;
@@ -522,8 +535,38 @@ static void SshClose(const char *why)
 {
     if (gSsh) { ssh_free(gSsh); gSsh = 0; }
     NetClose(&gConn);
-    gRemote = false; gSshConnecting = false;
+    gRemote = false; gSshConnecting = false; gRawMode = false;
     if (why) { PxOutLn(""); PxOutLn(why); }
+}
+
+/* ================= remote (rsh) mode — instant raw shell ================= */
+/* No SSH: connect, then pipe bytes both ways. agent-rsh (:2329) gives us a
+   pty login shell on the other end. Trusted-LAN only — that's the point:
+   no multi-minute key exchange, no per-keystroke crypto on a 68000. */
+static void StartRaw(void)
+{
+    OSErr err; unsigned long ip;
+    ip = NetParseIP(gRemHost);
+    if (ip == 0) { PxOut("rsh: bad host: "); PxOutLn(gRemHost); return; }
+    if (NetInit() != noErr) { PxOutLn("rsh: MacTCP (.IPP) not available - is the DaynaPORT up?"); return; }
+    PxOut("rsh "); PxOut(gRemHost); PxOutLn(" - connecting...");
+    DrawConsole();
+    err = NetConnect(&gConn, ip, gRemPort);
+    if (err != noErr) { PxOut("rsh: "); PxOutLn((char *)NetErrStr(err)); return; }
+    gRawMode = true; gRemote = true; gEsc = 0; gDirty = true;
+    AppLog("rsh connected");
+    PxOutLn("[connected - ESC returns to Plutonix]");
+}
+
+static void RawPump(void)
+{
+    unsigned char buf[2048]; long avail, got;
+    avail = NetAvailable(&gConn);
+    if (avail < 0) { SshClose("[connection closed - back in Plutonix]"); return; }
+    if (avail == 0) return;
+    if (avail > (long)sizeof(buf)) avail = sizeof(buf);
+    got = NetRecv(&gConn, buf, (unsigned short)avail, 1);
+    if (got > 0) FeedRemote(buf, (short)got);
 }
 
 static void StartSSH(void)
@@ -634,6 +677,7 @@ static void RunLine(void)
     if (rc == 1) { gScpPending = false; gPwPrompt = true; gSshPassLen = 0; gSshPass[0] = 0; PxOut("password: "); }
     else if (rc == 2) { gHead = 0; gCount = 1; gLineLen[0] = 0; gLines[0][0] = 0; }
     else if (rc == 3) { gScpPending = true; gPwPrompt = true; gSshPassLen = 0; gSshPass[0] = 0; PxOut("password: "); }
+    else if (rc == 4) StartRaw();                       /* rsh/mini: instant, no password */
 }
 
 static void KeyLocal(char c)
@@ -658,6 +702,7 @@ static void KeyRemote(char c)
     char ch = c;
     if (c == 27) { SshClose("[disconnected - back in Plutonix]"); return; }   /* ESC = bail */
     if (c == 13 || c == 3) ch = '\r';
+    if (gRawMode) { NetSend(&gConn, &ch, 1); return; }
     if (gSsh) ssh_send_data(gSsh, (const uint8_t *)&ch, 1);
 }
 
@@ -693,7 +738,7 @@ int main(void)
     gLineLen[0] = 0; gLines[0][0] = 0;
     FsChdir("/");
     AppLogOpen("Plutonix"); AppLog("launched");   /* key events -> mini shared log */
-    PxOutLn(PX_VERSION " - type 'help', or 'ssh' for a shell on the mini.");
+    PxOutLn(PX_VERSION " - 'help' | 'mini' = instant shell on the mini | 'ssh' = encrypted.");
     PxOutLn("");
 
     while (!gDone) {
@@ -722,7 +767,7 @@ int main(void)
             }
         }
         if (gRemote || gSshConnecting || gScpMode) {
-            SshPump();
+            if (gRawMode) RawPump(); else SshPump();
             /* only repaint when there's new output (or the kex bar is moving) -
                redrawing every pass erased+redrew the whole window => constant blink */
             if (gSshConnecting || gScpMode || gDirty) { DrawConsole(); gDirty = false; }

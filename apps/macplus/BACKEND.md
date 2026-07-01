@@ -46,13 +46,14 @@ they still start at boot. Each plist is a thin shim that runs
 | 2326 | `sh.macplus.surf`    | Macinclaude Surf (reader-mode browser)     | socat, per-connection (`raw,echo=0`) |
 | 2327 | —                    | Macinclaude Foundry agent — **runs on the iMac** (`192.168.7.189:2327`); the mini now has the Retro68 toolchain, so moving it here is possible but not done | — |
 | 2328 | `sh.macplus.imessage`| iMessage bridge (chat.db read, AppleScript send) | node:net, long-running |
+| 2329 | `sh.macplus.rsh`     | INSTANT shell for Plutonix `mini`/`rsh` — raw TCP → pty → admin login shell. No SSH: no handshake (minutes on a 68000), no per-key crypto. Trusted-LAN only. | node:net, long-running |
 | 2330 | `sh.macplus.mux`     | multiplexer — the WiFi service front door; routes named channels to the services above | node:net, long-running |
 | 2331 | `sh.macplus.diag`    | diagnostic log sink                        | node:net, long-running |
 | 2332 | `sh.macplus.quote`   | quote of the day                           | node:net, long-running |
 | 2333 | `sh.macplus.bridge`  | OTA app delivery (watches `~/bridge-outbox`) | node:net, long-running |
 | 2334 | `sh.macplus.screen`  | on-demand screenshot of the Plus (touch `~/.screen-grab` → writes `~/screen-latest.png`) | node:net, long-running |
 | 2336 | `sh.macplus.porthole`| remote-framebuffer web browser: headless Chromium renders, dithered to 1-bit, streamed to the Plus (`porthole/`). One-time setup on the mini: `cd ~/hilma-deploy/apps/macplus/agent-porthole && npx playwright install chromium` | node:net, long-running |
-| 2222 | `sh.macplus.pssh`    | SSH server with NO login-grace limit so the Plus 68000 handshake completes (system sshd on :22 kills it); shell to admin. Used by Plutonix `mini`/`ssh`. | node:net (ssh2), long-running |
+| 2222 | `sh.macplus.pssh`    | SSH server with NO login-grace limit so the Plus 68000 handshake completes (system sshd on :22 kills it); shell to admin. Used by Plutonix `ssh` (the encrypted path; `mini` is now the instant :2329 path). | node:net (ssh2), long-running |
 
 Logs: `~/Library/Logs/macplus-<name>.{out,err}.log` on the mini.
 
