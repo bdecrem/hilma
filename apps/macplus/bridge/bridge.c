@@ -25,6 +25,7 @@
 #include <OSUtils.h>
 #include <Files.h>
 #include "nettcp.h"        /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
+#include "applog.inc"      /* key-event logging to the mini's shared logs */
 
 #define BRIDGE_IP   "192.168.7.50"
 #define BRIDGE_PORT 2333
@@ -197,6 +198,7 @@ static void RxFail(const char *msg)
 {
     char b[220]; short n = 0;
     MBAbortFile(); gMBPos = 0;
+    AppLog("delivery failed");
     CatStr(b,&n,"FAILED: "); CatStr(b,&n,msg); b[n]=0;
     AddLog(b); SetTitle("The Bridge - error"); SysBeep(1);
 }
@@ -205,6 +207,7 @@ static void BinBegin(long total)
 {
     gMBPos = 0; gMBTotal = total; gLastPct = -1;
     gMBDataLen = gMBRsrcLen = gMBDataPadded = 0; gMBOpen = false;
+    AppLog("receiving app");
     AddLog("push starting...");
     SetTitle("The Bridge - receiving");
 }
@@ -229,6 +232,7 @@ static void BinDone(void)
     char cname[64];
     MBCloseFiles(); gMBOpen = false; gMBPos = 0;
     FlushVol(NULL, 0);
+    AppLog("app installed");
     P2C(gMBName, cname);
     { char b[140]; short n = 0; CatStr(b,&n,"INSTALLED: '"); CatStr(b,&n,cname); CatStr(b,&n,"' is on your disk"); b[n]=0; AddLog(b); }
     AddLog("(find it in the Finder; relaunch to run it)");
@@ -281,19 +285,23 @@ int main(void)
     if (NetInit() != noErr) {            /* explicit, so a driver problem is logged not a bomb */
         AddLog("MacTCP (.IPP) not available - is the DaynaPORT/WiFi up?");
     } else {
+        AppLogOpen("Bridge"); AppLog("launched");   /* key events -> mini shared log */
         AddLog("step 3: connecting to 192.168.7.50:2333...");
         DrawConsole();
         if (NetConnect(&gConn, NetParseIP(BRIDGE_IP), BRIDGE_PORT) == noErr) {
             gConnected = true;
+            AppLog("connected");
             AddLog("connected. waiting for the mini to push apps...");
             SetTitle("The Bridge - ready");
         } else {
+            AppLog("connect failed");
             AddLog("could not connect to the bridge (192.168.7.50:2333).");
             AddLog("is the mini bridge agent running?");
         }
     }
 
     while (!done) {
+        AppLogTick();
         if (WaitNextEvent(everyEvent, &ev, 4L, 0L)) {
             switch (ev.what) {
                 case updateEvt: BeginUpdate(gWin); DrawConsole(); EndUpdate(gWin); break;
@@ -318,5 +326,6 @@ int main(void)
         PumpBridge();
     }
     if (gConnected) NetClose(&gConn);
+    AppLogClose();
     return 0;
 }

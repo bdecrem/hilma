@@ -1165,6 +1165,7 @@ int main(void)
     SyncMenus();
 
     while (!gDone) {
+        AppLogTick();
         long sleep = (gConnected && gRxState != SRX_IDLE) ? 1L : 15L;
         if (WaitNextEvent(everyEvent, &ev, sleep, 0L))
             HandleEvent(&ev);
@@ -1173,5 +1174,6 @@ int main(void)
 #endif
     }
     if (gConnected) Disconnect();
+    AppLogClose();
     return 0;
 }

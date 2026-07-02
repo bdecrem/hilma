@@ -311,6 +311,7 @@ int main(void)
 	AppLogOpen("NetSpeed"); AppLog("launched");   /* key events -> mini shared log */
 
 	while (!gDone) {
+		AppLogTick();
 		if (WaitNextEvent(everyEvent, &ev, 30L, nil)) {
 			switch (ev.what) {
 				case mouseDown:
@@ -336,5 +337,6 @@ int main(void)
 			}
 		}
 	}
+	AppLogClose();
 	return 0;
 }

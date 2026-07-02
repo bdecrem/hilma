@@ -207,6 +207,7 @@ int main(void)
     }
 
     while (!done) {
+        AppLogTick();
         if (WaitNextEvent(everyEvent, &ev, 6L, 0L)) {
             switch (ev.what) {
                 case updateEvt: BeginUpdate(gWin); DrawScreen(); EndUpdate(gWin); break;
@@ -232,5 +233,6 @@ int main(void)
         PumpQuote();
     }
     if (gConnected) NetClose(&gConn);
+    AppLogClose();
     return 0;
 }

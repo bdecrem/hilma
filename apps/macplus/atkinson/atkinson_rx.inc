@@ -65,6 +65,7 @@ static void TakeRow(const char *line, short len, short row)
 static void RxAbort(const char *why)
 {
     gRxState = RX_IDLE;
+    RxNote(why);                /* breadcrumb to the shared log (app) / stub (test) */
     SetStatus(why);
 }
 
@@ -74,6 +75,7 @@ static void RxLine(char *line, short len)
     if (gRxState == RX_WAIT_HEADER) {
         if (len >= 6 && line[0]=='A'&&line[1]=='T'&&line[2]=='K'&&line[3]=='I'&&line[4]=='M'&&line[5]=='G') {
             if (!ParseHeader(line)) { RxAbort("bad image header"); return; }
+            RxNote("receiving image");
             ClearCanvas();
             gImgValid = false;          /* nothing drawn yet */
             gRxRow = 0;
@@ -88,6 +90,7 @@ static void RxLine(char *line, short len)
     if (gRxState == RX_READ_ROWS) {
         if (len >= 6 && line[0]=='A'&&line[1]=='T'&&line[2]=='K'&&line[3]=='E'&&line[4]=='N'&&line[5]=='D') {
             gRxState = RX_IDLE;
+            RxNote(gRxRow >= gImgH ? "image done" : "image done (partial)");
             SetStatus(gRxRow >= gImgH ? "done" : "done (partial)");
             return;
         }

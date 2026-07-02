@@ -416,6 +416,7 @@ static void Disconnect(void)
  * exact same code against a real agent frame. It needs the image globals (above)
  * and these four callbacks (DrawBand/ClearCanvas/SetStatus/SetStatusPct, also
  * above). PumpReceive (below) is the Mac-serial feeder and stays here. */
+static void RxNote(const char *m) { AppLog(m); }   /* parser breadcrumbs -> shared log */
 #include "atkinson_rx.inc"
 
 /* Non-blocking: drain whatever TCP bytes have arrived into the parser. Called
@@ -669,6 +670,7 @@ static void DoNewImage(void)
     if (!DoNewImageDialog(prompt, sizeof(prompt))) return;
 
     /* send the prompt as one line */
+    AppLog("new image requested");
     DrainInput();
     gRxLineLen = 0;
     SendStr(prompt);
@@ -936,11 +938,13 @@ int main(void)
     SyncMenus();
 
     while (!gDone) {
+        AppLogTick();
         long sleep = (gConnected && gRxState != RX_IDLE) ? 1L : 15L;
         if (WaitNextEvent(everyEvent, &ev, sleep, 0L))
             HandleEvent(&ev);
         if (gConnected) PumpReceive();
     }
     if (gConnected) Disconnect();
+    AppLogClose();
     return 0;
 }

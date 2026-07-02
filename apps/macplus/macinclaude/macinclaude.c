@@ -858,11 +858,13 @@ int main(void)
     if (gHaveCfg) DialAgent();      /* the magic: launch = connected */
 
     while (!gDone) {
+        AppLogTick();
         long sleep = gConnected ? 2L : 15L;
         if (WaitNextEvent(everyEvent, &ev, sleep, 0L))
             HandleEvent(&ev);
         if (gConnected) { PumpTerminal(); TEIdle(gTE); }
     }
     if (gConnected) Disconnect();
+    AppLogClose();
     return 0;
 }

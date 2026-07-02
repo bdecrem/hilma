@@ -282,10 +282,12 @@ int main(void)
 #endif
 
     while (!gDone) {
+        AppLogTick();
         long sleep = (gConnected && RxBusy()) ? 1L : 10L;
         if (WaitNextEvent(everyEvent, &ev, sleep, 0L)) HandleEvent(&ev);
         if (gConnected) PumpReceive();
     }
     if (gConnected) NetClose(&gConn);
+    AppLogClose();
     return 0;
 }

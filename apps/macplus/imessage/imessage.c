@@ -1086,7 +1086,23 @@ int main(void)
     InitToolbox();
     SetUpMenus();
     SetUpWindow();
-    AppLogOpen("IMessage"); AppLog("launched");   /* key events -> mini shared log */
+    /* paint + breadcrumb BEFORE any network (same pattern as the Bridge), so a
+     * MacTCP/driver hang shows exactly where it stopped instead of a freeze on
+     * a blank window. The 2026-07-02 startup freeze had no log line at all —
+     * these on-screen steps work even when the network never comes up. */
+    DrawAll();
+    SetStatus("starting up...");
+    { EventRecord e0; WaitNextEvent(everyEvent, &e0, 1L, 0L); }   /* let it draw */
+#ifndef IM_TEST
+    SetStatus("step 1: opening MacTCP...");
+    if (NetInit() != noErr) {
+        SetStatus("MacTCP (.IPP) not available - is the DaynaPORT/WiFi up?");
+    } else {
+        SetStatus("step 2: opening the log link...");
+        AppLogOpen("IMessage"); AppLog("launched");   /* key events -> mini shared log */
+        SetStatus("step 2: log link done");
+    }
+#endif
     ShowSplash();
     PrefsLocate();
     gHaveCfg = LoadPrefs();
@@ -1100,11 +1116,13 @@ int main(void)
 #else
     if (!gHaveCfg) { SetDefaults(); gHaveCfg = true; }   /* nothing to ask — the WiFi service owns the link */
     DrawAll();
-    DialMux();                    /* launch = connect via the service; list streams in */
+    SetStatus("step 3: connecting to the agent...");
+    DialMux();                    /* launch = connect; list streams in */
 #endif
     SyncMenus();
 
     while (!gDone) {
+        AppLogTick();
         long sleep = gConnected ? 2L : 15L;
         if (WaitNextEvent(everyEvent, &ev, sleep, 0L)) HandleEvent(&ev);
         if (gCompose) TEIdle(gCompose);     /* blink the reply caret */
@@ -1113,5 +1131,6 @@ int main(void)
 #endif
     }
     if (gConnected) Disconnect();   /* close the TCP stream on quit */
+    AppLogClose();
     return 0;
 }

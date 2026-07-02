@@ -87,9 +87,21 @@ Refresh the archive after meaningful card changes (procedure in RESTORE.md).
   Any app calls `AppLogOpen("Name")` then `AppLog("event")`; lines stream to the
   diag sink (:2331) → **`~/macplus-logs/all.log` on the mini**. Pull it with one
   ssh: `ssh admin@192.168.7.50 'tail ~/macplus-logs/all.log'`. Wired into every
-  app (launched / connected / connect-failed). Best-effort + safe (off if the
-  sink is down; never blocks/crashes the app). Companion tools: `agent-screen`
-  (:2334, screenshot the Plus) + `agent-diag` (:2331, the sink).
+  app including The Bridge (launched / connected / connect-failed; the Bridge
+  also logs receiving app / app installed / delivery failed). Best-effort +
+  safe (off if the sink is down; never blocks/crashes the app). Companion
+  tools: `agent-screen` (:2334, screenshot the Plus) + `agent-diag` (:2331).
+- **applog v2 (2026-07-02): heartbeats + reconnect — silence is now a signal.**
+  Apps call `AppLogTick()` once per event-loop pass (and `AppLogClose()` on
+  quit — also fixes a MacTCP stream leak). Idle apps send `~hb` every 60 s;
+  the sink swallows heartbeats (session files only, never all.log) and derives
+  liveness: ~3 min without one → `(went silent …)` in all.log, then
+  `(heartbeat resumed)` / `(link closed)`. So a FROZEN Plus now shows up in
+  the log within ~3 min instead of just going quiet. A failed/dropped log
+  link reconnects with backoff (15 s doubling to 10 min cap). Sink sets TCP
+  keepalive so dead links reap instead of wedging. State machine host-tested:
+  `net/applog_test.c` (19 asserts). Apps only pick this up when rebuilt —
+  pre-v2 builds still log, they just never heartbeat.
 
 ### The 2026-06-27 "disk corruption" was a misdiagnosis — resolved 2026-07-01
 

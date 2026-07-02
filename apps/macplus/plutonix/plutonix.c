@@ -742,6 +742,7 @@ int main(void)
     PxOutLn("");
 
     while (!gDone) {
+        AppLogTick();
         Boolean busy = gRemote || gSshConnecting || gScpMode;
         if (WaitNextEvent(everyEvent, &ev, busy ? 1L : 8L, 0L)) {
             switch (ev.what) {
@@ -775,5 +776,6 @@ int main(void)
     }
     if (gSsh) ssh_free(gSsh);
     if (gRemote || gSshConnecting || gScpMode) NetClose(&gConn);
+    AppLogClose();
     return 0;
 }
