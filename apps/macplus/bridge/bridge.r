@@ -1,7 +1,8 @@
 /*
  * The Bridge — resources. Just a SIZE partition. The Bridge had no SIZE
- * resource before (it got MultiFinder's tiny default); with the nettcp 16K
- * receive buffer it needs real room. The Plus has 4MB; give it 1MB.
+ * resource before (it got MultiFinder's tiny default), then crashed at 1MB
+ * mid-delivery (the 68000 nettcp working set was too tight). The Plus has
+ * 4MB; give it 2MB like the other nettcp apps.
  */
 #include "Processes.r"
 

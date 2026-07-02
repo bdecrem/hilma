@@ -106,22 +106,26 @@ resource-fork validation + Mini vMac boot tests on every snapshot):
   refnums), bounds-checked, cannot reach HFS structures. The 17:23 freeze
   during the Plutonix delivery was most likely the Bridge's known 1 MB-SIZE
   crash — the card was running the 14:47 1 MB build; the 2 MB fix landed 17:06.
-- **The no-boot was the BlueSCSI itself:** firmware 2026.02.08 on the Pico 2 W
-  died during WiFi init (card's log.txt ended at "Connecting to Wi-Fi SSID",
-  never reaching "Initialization complete!" — SCSI bus dead, so the Plus
-  couldn't see the disk). Fixed by updating to **v2026.04.27** ("Fixed on
-  Pico 1W / Pico 2W with WPA2 networks") via the SD self-flash path. Booted
-  and WiFi confirmed working 2026-07-01.
-- This SD card has a history of SDIO timeout errors (old log in the card's
-  .Trashes). If flakiness recurs, swap in a fresh card — full restore takes
-  minutes from `~/mac-plus-apps/sdcard-archive/` (see RESTORE.md there).
+- **The no-boot was the SD CARD failing in the BlueSCSI's SDIO interface.**
+  The full 2026-07-01 boot log shows ~700 consecutive `SD Error Code: 0x02`
+  lines during init — when the storm doesn't clear, the SCSI bus stays dead
+  and the Plus can't boot ("black screen with BlueSCSI attached"); when it
+  clears, everything works. The card reads perfectly in a Mac reader — it
+  fails only at the BlueSCSI's 26 MHz SDIO. Reseating/power-cycling revived
+  it on 2026-07-01. (The staged firmware self-flash never triggered — fw is
+  still 2026.02.08; if updating, use USB/BOOTSEL with the .uf2 from the
+  archive.) **Replace the card with a fresh name-brand microSD** — restore
+  takes minutes from `~/mac-plus-apps/sdcard-archive/` (see RESTORE.md there).
 
-**The Bridge is still off the card** — not because the writer is unsafe, but
-because it hasn't been rebuilt/re-verified since the crash. To re-enable OTA:
-rebuild `bridge/` from current source (SIZE is now 2 MB, commit 2979578),
-inject onto the card, and test a delivery. Foundry same story.
+**The Bridge is BACK on the card (2026-07-01 evening).** New build from current
+source: 2 MB SIZE verified in the injected resource, frame parser 20/20 host
+tests (incl. fuzz), delivery pipeline E2E-verified byte-exact from agent-bridge
+over the wire. Remaining gate: one real delivery on hardware — drop a `.bin`
+in the mini's `~/bridge-outbox/` while The Bridge is open on the Plus, watch
+`~/macplus-logs/all.log`. Until that passes, also keep shipping via SD.
+Foundry uses the same delivery path and inherits this verification.
 
-### How to ship an app update right now (until the Bridge is back)
+### How to ship an app update via the SD card
 Build the app, then inject onto the inserted card with hfsutils (see "Injecting
 onto the Plus" below): `cp` card→work copy, `hmount`, `hcopy -m <App>.bin
 ":<Name>"`, `humount`, `cp` back, `sync`, `diskutil eject`. The card volume is
