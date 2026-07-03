@@ -1,0 +1,22 @@
+name: FableMeter
+options:
+  bundleIdPrefix: com.bartdecrem
+  deploymentTarget:
+    macOS: "14.0"
+targets:
+  FableMeter:
+    type: application
+    platform: macOS
+    sources:
+      - FableMeter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.FableMeter
+        DEVELOPMENT_TEAM: 274T5WCVD2
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_LSUIElement: YES        # menu bar only — no Dock icon
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        SWIFT_VERSION: "5.9"
+        ENABLE_HARDENED_RUNTIME: NO
