@@ -248,6 +248,10 @@ async function promptUser(inputQ: AsyncQueue<string>): Promise<'go' | 'quit' | '
       continue;
     }
     inputQ.push(line);
+    // "alive" heartbeat: on a slow link with a big model, the gap between Return
+    // and the first token feels dead. Show that Claude picked it up. Tool-use and
+    // text lines stream in right after and take over from here.
+    tt.line('...thinking');
     return 'go';
   }
 }

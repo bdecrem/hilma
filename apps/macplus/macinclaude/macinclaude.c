@@ -57,15 +57,29 @@
 #define WIN_W   480
 #define WIN_H   292
 #define TE_PAD  4
+/* The bottom strip is a NATIVE local input line: you compose your message here
+ * with instant, full Mac editing (mouse, Cut/Copy/Paste) and only the finished
+ * line goes over the slow link on Return. The transcript scrolls above it. */
+#define INPUT_H   32          /* height of the input strip (separator + ~2 lines) */
+#define PROMPT_W  16          /* room for the "> " prompt left of the field */
 
 /* ---- menus ---- */
 #define kAppleMenu  128
 #define kFileMenu   129
 #define kEditMenu   131
 #define kConnMenu   130
+#define kClaudeMenu 132
 
 /* File menu items */
 #define kFileQuit    1
+
+/* Claude menu items — the superpowers, surfaced natively.
+ * 1..5 = model picks (send "/model N"); then Clear + Search Notes. */
+#define kClModelBase 1        /* items 1..5 are the five model picks */
+#define kClModelN    5
+/* 6 = separator */
+#define kClSearch    7        /* "Search My Notes..." */
+#define kClClear     8        /* "Clear Screen" */
 
 /* Edit menu items (standard layout so desk accessories + dialog editing work) */
 #define kEditUndo    1
@@ -120,12 +134,20 @@ static short   gPrefVRef = 0;
 
 /* ---- globals ---- */
 static WindowPtr  gWin;
-static TEHandle   gTE;
-static MenuHandle gAppleM, gFileM, gEditM, gConnM;
+static TEHandle   gTE;                      /* transcript (read-only, scrolls) */
+static TEHandle   gInputTE;                 /* the native local input line */
+static MenuHandle gAppleM, gFileM, gEditM, gConnM, gClaudeM;
 static Boolean    gDone = false;
 
 static NetConn    gConn;                    /* the TCP connection to the agent */
 static Boolean    gConnected = false;       /* in a live terminal session */
+static Boolean    gWorking = false;         /* sent a line, awaiting Claude's reply */
+
+/* input-line helpers (defined with the window setup, used earlier in menus/events) */
+static void SendLine(void);
+static void PrefillInput(const char *s);
+static void InvalInput(void);
+static void DrawInputChrome(void);
 
 static char       gSerBuf[2048];            /* receive scratch (TCP -> parser) */
 
@@ -642,14 +664,43 @@ static void DoMenu(long sel)
             break;
         case kEditMenu:
             if (SystemEdit(item - 1)) break;   /* a desk accessory took it */
-            if (item == kEditCopy)  TerminalCopy();
-            if (item == kEditPaste) TerminalPaste();
+            switch (item) {
+                case kEditCut:
+                    ScrapFromTE(gInputTE);
+                    if ((*gInputTE)->selEnd > (*gInputTE)->selStart) { TEDelete(gInputTE); InvalInput(); }
+                    break;
+                case kEditCopy: {                 /* copy from the field with a selection */
+                    TEHandle t = ((*gInputTE)->selEnd > (*gInputTE)->selStart) ? gInputTE : gTE;
+                    ScrapFromTE(t);
+                    break;
+                }
+                case kEditPaste:                  /* into the input line, to edit + send */
+                    ScrapIntoTE(gInputTE); InvalInput();
+                    break;
+                case kEditClear:
+                    if ((*gInputTE)->selEnd > (*gInputTE)->selStart) { TEDelete(gInputTE); InvalInput(); }
+                    break;
+            }
             break;
         case kConnMenu:
             switch (item) {
                 case kConnConnect:    if (!gConnected) DialAgent();  break;
                 case kConnDisconnect: Disconnect();                  break;
                 case kConnSettings:   DoSettings();                  break;
+            }
+            break;
+        case kClaudeMenu:
+            if (item >= kClModelBase && item <= kClModelN) {   /* switch model */
+                if (gConnected) {
+                    char cmd[16]; short n = 0;
+                    CatStr(cmd, &n, "/model "); CatLong(cmd, &n, (long)item); cmd[n] = 0;
+                    SendStr(cmd); SendStr("\r");
+                } else SysBeep(1);
+            } else if (item == kClSearch) {        /* one pick from the killer search */
+                PrefillInput("what did I save about ");
+            } else if (item == kClClear) {
+                if (gConnected) SendStr("/clear\r");
+                ClearConsole();
             }
             break;
     }
@@ -667,7 +718,15 @@ static void HandleMouseDown(EventRecord *ev)
         case inMenuBar:   DoMenu(MenuSelect(ev->where)); break;
         case inSysWindow: SystemClick(ev, win); break;
         case inDrag:      DragWindow(win, ev->where, &qd.screenBits.bounds); break;
-        case inContent:   if (win != FrontWindow()) SelectWindow(win); break;
+        case inContent:
+            if (win != FrontWindow()) { SelectWindow(win); break; }
+            {   Point pt = ev->where; Boolean shift;
+                SetPort(win); GlobalToLocal(&pt);
+                shift = (ev->modifiers & shiftKey) != 0;
+                if (PtInRect(pt, &(*gInputTE)->viewRect))     TEClick(pt, shift, gInputTE);
+                else if (PtInRect(pt, &(*gTE)->viewRect))     TEClick(pt, shift, gTE);
+            }
+            break;
     }
 }
 
@@ -684,8 +743,11 @@ static void HandleEvent(EventRecord *ev)
                     long sel = MenuKey(ch);
                     if (HiWord(sel)) DoMenu(sel);
                 }
-            } else if (gConnected) {
-                TerminalKey(ch);
+            } else if (ch == 13 || ch == 3) {     /* Return/Enter -> send the line */
+                SendLine();
+            } else {
+                SetPort(gWin);
+                TEKey(ch, gInputTE);              /* instant local editing (incl. backspace) */
             }
             break;
         case updateEvt: {
@@ -693,6 +755,8 @@ static void HandleEvent(EventRecord *ev)
             BeginUpdate(w);
             SetPort(w);
             { Rect r = (*gTE)->viewRect; EraseRect(&r); TEUpdate(&r, gTE); }
+            DrawInputChrome();
+            { Rect r = (*gInputTE)->viewRect; EraseRect(&r); TEUpdate(&r, gInputTE); }
             EndUpdate(w);
             break;
         }
@@ -725,6 +789,13 @@ static void SetUpMenus(void)
     AppendMenu(gConnM, "\pConnect/K;Disconnect;(-;Settings...");
     InsertMenu(gConnM, 0);
 
+    /* Claude menu — the superpowers, native and discoverable: switch model,
+     * search your saved notes, clear the screen. (Dashes, not parens, in the
+     * item text: AppendMenu treats "(" as a disable marker.) */
+    gClaudeM = NewMenu(kClaudeMenu, "\pClaude");
+    AppendMenu(gClaudeM, "\pSonnet 4.6;Opus 4.8 - medium;Opus 4.8 - high;Fable 5 - medium;Fable 5 - high;(-;Search My Notes.../F;Clear Screen");
+    InsertMenu(gClaudeM, 0);
+
     DrawMenuBar();
 }
 
@@ -733,15 +804,76 @@ static void SetUpWindow(void)
     Rect r, view;
     short left = (qd.screenBits.bounds.right - WIN_W) / 2;
     short top  = qd.screenBits.bounds.top + 24;
+    short sepY = WIN_H - INPUT_H;         /* separator between transcript and input */
     SetRect(&r, left, top, left + WIN_W, top + WIN_H);
     gWin = NewWindow(0L, &r, "\pMacinclaude Code", true, documentProc,
                      (WindowPtr)-1L, false, 0);
     SetPort(gWin);
     TextFont(monaco); TextSize(9);
 
-    SetRect(&view, TE_PAD, TE_PAD, WIN_W - TE_PAD, WIN_H - TE_PAD);
+    /* transcript: the scrolling record above the input strip */
+    SetRect(&view, TE_PAD, TE_PAD, WIN_W - TE_PAD, sepY - 2);
     gTE = TENew(&view, &view);
     TEAutoView(true, gTE);
+
+    /* native local input line: compose here with instant editing, right of "> " */
+    SetRect(&view, TE_PAD + PROMPT_W, sepY + 4, WIN_W - TE_PAD, WIN_H - 3);
+    gInputTE = TENew(&view, &view);
+    TEAutoView(true, gInputTE);
+    TEActivate(gInputTE);                /* the input line owns the blinking caret */
+}
+
+/* separator line + "> " prompt for the input strip */
+static void DrawInputChrome(void)
+{
+    short sepY = WIN_H - INPUT_H;
+    SetPort(gWin);
+    MoveTo(TE_PAD, sepY);       LineTo(WIN_W - TE_PAD, sepY);
+    TextFont(monaco); TextSize(9);
+    MoveTo(TE_PAD, sepY + 16);  DrawString("\p>");
+}
+
+/* redraw just the input field (after edits/sends) */
+static void InvalInput(void)
+{
+    Rect ir; SetPort(gWin);
+    ir = (*gInputTE)->viewRect;
+    EraseRect(&ir);
+    TEUpdate(&ir, gInputTE);
+}
+
+/* Put text into the input line and focus it — used by "Search My Notes" so the
+ * killer knowledge search is one menu pick away (just type the topic). */
+static void PrefillInput(const char *s)
+{
+    long n; StrLen(s, &n);
+    TESetSelect(0, 32767, gInputTE);
+    TEDelete(gInputTE);
+    if (n > 0) TEInsert((Ptr)s, n, gInputTE);
+    TESetSelect(32767, 32767, gInputTE);
+    InvalInput();
+}
+
+/* Send the composed input line to the agent, then clear it. Local editing is
+ * instant; only the finished line crosses the slow link, on Return. The cooked
+ * PTY echoes it back so it lands in the transcript as your turn. */
+static void SendLine(void)
+{
+    CharsHandle h; long n;
+    if (!gConnected) {
+        EmitLine(""); EmitLine("(not connected - use Connection > Connect)");
+        SysBeep(1); return;
+    }
+    n = (*gInputTE)->teLength;
+    if (n <= 0) { SysBeep(1); return; }
+    h = TEGetText(gInputTE);
+    HLock((Handle)h);
+    SendBytes(*h, n);
+    HUnlock((Handle)h);
+    SendStr("\r");                        /* submit (cooked PTY maps CR->NL) */
+    TESetSelect(0, 32767, gInputTE);
+    TEDelete(gInputTE);
+    InvalInput();
 }
 
 static void InitToolbox(void)
@@ -857,12 +989,16 @@ int main(void)
 
     if (gHaveCfg) DialAgent();      /* the magic: launch = connected */
 
+    DrawInputChrome();              /* draw the input strip once at startup */
+    InvalInput();
+
     while (!gDone) {
         AppLogTick();
         long sleep = gConnected ? 2L : 15L;
         if (WaitNextEvent(everyEvent, &ev, sleep, 0L))
             HandleEvent(&ev);
-        if (gConnected) { PumpTerminal(); TEIdle(gTE); }
+        if (gConnected) PumpTerminal();
+        TEIdle(gInputTE);                   /* blink the input caret, connected or not */
     }
     if (gConnected) Disconnect();
     AppLogClose();
