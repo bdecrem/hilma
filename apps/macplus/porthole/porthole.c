@@ -31,6 +31,7 @@
 
 #include "nettcp.h"
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 
 #define CANVAS_W   512
 #define CANVAS_H   300
@@ -218,6 +219,12 @@ static void HandleEvent(EventRecord *ev)
         part = FindWindow(ev->where, &w);
         if (part == inMenuBar) DoMenu(MenuSelect(ev->where));
         else if (part == inDrag) DragWindow(w, ev->where, &qd.screenBits.bounds);
+        else if (part == inGoAway) { if (TrackGoAway(w, ev->where)) gDone = true; }
+        else if (part == inZoomIn || part == inZoomOut) {
+            if (WFZoom(w, part, ev->where)) { SetPort(gWin);
+                if (gImgValid) PortBlit(0, 0, CANVAS_W, CANVAS_H);
+                else { Rect pr = gWin->portRect; EraseRect(&pr); } }
+        }
         else if (part == inContent && w == gWin) {
             if (w != FrontWindow()) SelectWindow(w);
             else { Point pt = ev->where; SetPort(gWin); GlobalToLocal(&pt);
@@ -252,11 +259,7 @@ static void HandleEvent(EventRecord *ev)
 
 static void SetUpWindow(void)
 {
-    Rect r;
-    short left = (qd.screenBits.bounds.right - CANVAS_W) / 2;
-    short top  = qd.screenBits.bounds.top + 40;
-    SetRect(&r, left, top, left + CANVAS_W, top + CANVAS_H);
-    gWin = NewWindow(0L, &r, "\pPorthole", true, documentProc, (WindowPtr)-1L, false, 0);
+    gWin = WFNew("\pPorthole");            /* fills the screen; close + zoom boxes */
     SetPort(gWin);
 }
 

@@ -34,6 +34,7 @@
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 
 #ifndef monaco
 #define monaco 4
@@ -109,8 +110,7 @@ static Boolean gHaveCfg = false;
 static short   gPrefVRef = 0;
 
 /* ---- window / console ---- */
-#define WIN_W 496
-#define WIN_H 300
+static short WIN_W = 496, WIN_H = 300;   /* set from the full-screen window at open */
 #define LOG_LINES 100
 #define LOG_COLS  82
 
@@ -921,6 +921,12 @@ static void HandleMouseDown(EventRecord *ev)
         case inMenuBar:   DoMenu(MenuSelect(ev->where)); break;
         case inSysWindow: SystemClick(ev, win); break;
         case inDrag:      DragWindow(win, ev->where, &qd.screenBits.bounds); break;
+        case inGoAway:    if (TrackGoAway(win, ev->where)) gDone = true; break;
+        case inZoomIn:
+        case inZoomOut:   if (WFZoom(win, part, ev->where)) {
+                              WIN_W = win->portRect.right  - win->portRect.left;
+                              WIN_H = win->portRect.bottom - win->portRect.top;
+                              DrawConsole(); } break;
         case inContent:   if (win != FrontWindow()) SelectWindow(win); break;
     }
 }
@@ -985,13 +991,10 @@ static void SetUpMenus(void)
 
 static void SetUpWindow(void)
 {
-    Rect r;
-    short left = (qd.screenBits.bounds.right - WIN_W) / 2;
-    short top  = qd.screenBits.bounds.top + 40;
-    SetRect(&r, left, top, left + WIN_W, top + WIN_H);
-    gWin = NewWindow(0L, &r, "\pMacinclaude Foundry", true, documentProc,
-                     (WindowPtr)-1L, false, 0);
+    gWin = WFNew("\pMacinclaude Foundry");  /* fills the screen; close + zoom boxes */
     SetPort(gWin);
+    WIN_W = gWin->portRect.right  - gWin->portRect.left;
+    WIN_H = gWin->portRect.bottom - gWin->portRect.top;
 }
 
 static void InitToolbox(void)

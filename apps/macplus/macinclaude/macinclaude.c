@@ -44,6 +44,7 @@
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 
 /* Font IDs (classic constants not always provided by the interfaces). */
 #ifndef monaco
@@ -53,9 +54,10 @@
 #define systemFont 0
 #endif
 
-/* ---- window geometry (512x342 screen, 20px menu bar) ---- */
-#define WIN_W   480
-#define WIN_H   292
+/* ---- window geometry ---- */
+/* WIN_W/WIN_H are set at window-open time from the actual (full-screen) window
+ * and refreshed on zoom, so the layout follows the current window size. */
+static short WIN_W = 480, WIN_H = 292;
 #define TE_PAD  4
 /* The bottom strip is a NATIVE local input line: you compose your message here
  * with instant, full Mac editing (mouse, Cut/Copy/Paste) and only the finished
@@ -148,6 +150,8 @@ static void SendLine(void);
 static void PrefillInput(const char *s);
 static void InvalInput(void);
 static void DrawInputChrome(void);
+static void LayoutTE(void);       /* (re)position the TE views from WIN_W/WIN_H */
+static void Relayout(void);       /* after a zoom: refresh dims, re-lay-out, redraw */
 
 static char       gSerBuf[2048];            /* receive scratch (TCP -> parser) */
 
@@ -718,6 +722,9 @@ static void HandleMouseDown(EventRecord *ev)
         case inMenuBar:   DoMenu(MenuSelect(ev->where)); break;
         case inSysWindow: SystemClick(ev, win); break;
         case inDrag:      DragWindow(win, ev->where, &qd.screenBits.bounds); break;
+        case inGoAway:    if (TrackGoAway(win, ev->where)) gDone = true; break;
+        case inZoomIn:
+        case inZoomOut:   if (WFZoom(win, part, ev->where)) Relayout(); break;
         case inContent:
             if (win != FrontWindow()) { SelectWindow(win); break; }
             {   Point pt = ev->where; Boolean shift;
@@ -793,22 +800,36 @@ static void SetUpMenus(void)
      * search your saved notes, clear the screen. (Dashes, not parens, in the
      * item text: AppendMenu treats "(" as a disable marker.) */
     gClaudeM = NewMenu(kClaudeMenu, "\pClaude");
-    AppendMenu(gClaudeM, "\pSonnet 4.6;Opus 4.8 - medium;Opus 4.8 - high;Fable 5 - medium;Fable 5 - high;(-;Search My Notes.../F;Clear Screen");
+    AppendMenu(gClaudeM, "\pSonnet 5;Opus 4.8 - medium;Opus 4.8 - high;Fable 5 - medium;Fable 5 - high;(-;Search My Notes.../F;Clear Screen");
     InsertMenu(gClaudeM, 0);
 
     DrawMenuBar();
 }
 
+/* (re)position the two TE views from the current window size — called at setup
+ * and after a zoom, so the transcript + input line follow the window. */
+static void LayoutTE(void)
+{
+    short sepY = WIN_H - INPUT_H;
+    Rect v;
+    SetRect(&v, TE_PAD, TE_PAD, WIN_W - TE_PAD, sepY - 2);
+    (*gTE)->viewRect = v;
+    (*gTE)->destRect.left = v.left; (*gTE)->destRect.right = v.right;
+    TECalText(gTE);
+    SetRect(&v, TE_PAD + PROMPT_W, sepY + 4, WIN_W - TE_PAD, WIN_H - 3);
+    (*gInputTE)->viewRect = v;
+    (*gInputTE)->destRect.left = v.left; (*gInputTE)->destRect.right = v.right;
+    TECalText(gInputTE);
+}
+
 static void SetUpWindow(void)
 {
-    Rect r, view;
-    short left = (qd.screenBits.bounds.right - WIN_W) / 2;
-    short top  = qd.screenBits.bounds.top + 24;
-    short sepY = WIN_H - INPUT_H;         /* separator between transcript and input */
-    SetRect(&r, left, top, left + WIN_W, top + WIN_H);
-    gWin = NewWindow(0L, &r, "\pMacinclaude Code", true, documentProc,
-                     (WindowPtr)-1L, false, 0);
+    Rect view; short sepY;
+    gWin = WFNew("\pMacinclaude Code");   /* fills the screen; close + zoom boxes */
     SetPort(gWin);
+    WIN_W = gWin->portRect.right  - gWin->portRect.left;
+    WIN_H = gWin->portRect.bottom - gWin->portRect.top;
+    sepY  = WIN_H - INPUT_H;
     TextFont(monaco); TextSize(9);
 
     /* transcript: the scrolling record above the input strip */
@@ -831,6 +852,20 @@ static void DrawInputChrome(void)
     MoveTo(TE_PAD, sepY);       LineTo(WIN_W - TE_PAD, sepY);
     TextFont(monaco); TextSize(9);
     MoveTo(TE_PAD, sepY + 16);  DrawString("\p>");
+}
+
+/* after a zoom: pull the new window dims, re-lay-out the TE views, redraw all. */
+static void Relayout(void)
+{
+    Rect rp;
+    SetPort(gWin);
+    WIN_W = gWin->portRect.right  - gWin->portRect.left;
+    WIN_H = gWin->portRect.bottom - gWin->portRect.top;
+    LayoutTE();
+    rp = gWin->portRect; EraseRect(&rp);
+    { Rect r = (*gTE)->viewRect; TEUpdate(&r, gTE); }
+    DrawInputChrome();
+    { Rect r = (*gInputTE)->viewRect; TEUpdate(&r, gInputTE); }
 }
 
 /* redraw just the input field (after edits/sends) */
@@ -946,7 +981,7 @@ static void ShowSplash(void)
     CenterText(WIN_W, 130, "\pMACINCLAUDE");
     CenterText(WIN_W, 152, "\pCODE");
     TextFace(0); TextSize(12);
-    CenterText(WIN_W, 184, "\pconnecting to claude . 9600 baud");
+    CenterText(WIN_W, 184, "\pwaking up claude ...");
     bx = (WIN_W - 240) / 2;
     SetRect(&bar, bx, 198, bx + 240, 216);
     PenSize(2, 2); FrameRoundRect(&bar, 12, 12); PenSize(1, 1);

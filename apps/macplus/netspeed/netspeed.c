@@ -27,6 +27,7 @@
 
 #include "nettcp.h"
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 
 #define SERVER_IP	"192.168.7.50"
 #define SERVER_PORT	2335		/* 2334 is the screen agent; 2335 is free */
@@ -43,9 +44,8 @@
 static WindowPtr	gWin;
 static Boolean		gDone = false;
 
-/* layout (window content is 360 x 220) */
-#define WIN_W	360
-#define WIN_H	220
+/* layout — WIN_W/WIN_H are set from the full-screen window at open. */
+static short WIN_W = 360, WIN_H = 220;
 #define BAR_L	24
 #define BAR_R	(WIN_W - 24)
 #define BAR_T	120
@@ -301,11 +301,11 @@ int main(void)
 	InitToolbox();
 	SetUpMenus();
 
-	SetRect(&r, 0, 0, WIN_W, WIN_H);
-	OffsetRect(&r, (qd.screenBits.bounds.right - WIN_W) / 2, 60);
-	gWin = NewWindow(nil, &r, "\pNetSpeed", true, noGrowDocProc,
-					 (WindowPtr)-1L, true, 0);
+	(void)r;
+	gWin = WFNew("\pNetSpeed");            /* fills the screen; close + zoom boxes */
 	SetPort(gWin);
+	WIN_W = gWin->portRect.right  - gWin->portRect.left;
+	WIN_H = gWin->portRect.bottom - gWin->portRect.top;
 	DrawFrame();
 
 	AppLogOpen("NetSpeed"); AppLog("launched");   /* key events -> mini shared log */
@@ -322,6 +322,13 @@ int main(void)
 						DragWindow(win, ev.where, &qd.screenBits.bounds);
 					else if (part == inGoAway && TrackGoAway(win, ev.where))
 						gDone = true;
+					else if (part == inZoomIn || part == inZoomOut) {
+						if (WFZoom(win, part, ev.where)) {
+							WIN_W = gWin->portRect.right  - gWin->portRect.left;
+							WIN_H = gWin->portRect.bottom - gWin->portRect.top;
+							ClearContent(); DrawFrame();
+						}
+					}
 					else if (part == inContent && win != FrontWindow())
 						SelectWindow(win);
 					break;

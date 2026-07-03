@@ -20,6 +20,7 @@
 #include <OSUtils.h>
 #include "nettcp.h"        /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 
 #define QUOTE_IP   "192.168.7.50"
 #define QUOTE_PORT 2332
@@ -188,8 +189,8 @@ int main(void)
     InitGraf(&qd.thePort); InitFonts(); InitWindows(); InitMenus();
     TEInit(); InitDialogs(0L); InitCursor();
     SetUpMenus();
-    SetRect(&bounds, 30, 60, 482, 300);
-    gWin = NewWindow(0L, &bounds, "\pQuote of the Day", true, noGrowDocProc, (WindowPtr)-1L, true, 0);
+    (void)bounds;
+    gWin = WFNew("\pQuote of the Day");   /* fills the screen; close + zoom boxes */
     SetPort(gWin);
 
     AppLogOpen("Quote"); AppLog("launched");   /* key events -> mini shared log */
@@ -219,6 +220,7 @@ int main(void)
                         else DoMenu(s);
                     } else if (part == inDrag) DragWindow(w, ev.where, &qd.screenBits.bounds);
                     else if (part == inGoAway) { if (TrackGoAway(w, ev.where)) done = true; }
+                    else if (part == inZoomIn || part == inZoomOut) { if (WFZoom(w, part, ev.where)) DrawScreen(); }
                     break;
                 }
                 case keyDown:

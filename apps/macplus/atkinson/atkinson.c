@@ -45,6 +45,7 @@
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 #include "test_image.h"   /* gTestImg[], gTestImg_W/_H/_ROWBYTES */
 
 /* Font IDs (classic constants not always provided by the interfaces). */
@@ -776,6 +777,9 @@ static void HandleMouseDown(EventRecord *ev)
         case inMenuBar:   DoMenu(MenuSelect(ev->where)); break;
         case inSysWindow: SystemClick(ev, win); break;
         case inDrag:      DragWindow(win, ev->where, &qd.screenBits.bounds); break;
+        case inGoAway:    if (TrackGoAway(win, ev->where)) gDone = true; break;
+        case inZoomIn:
+        case inZoomOut:   if (WFZoom(win, part, ev->where)) DrawFull(); break;
         case inContent:   if (win != FrontWindow()) SelectWindow(win); break;
     }
 }
@@ -842,13 +846,16 @@ static void SetUpMenus(void)
 
 static void SetUpWindow(void)
 {
-    Rect r;
-    short left = (qd.screenBits.bounds.right - IMG_W) / 2;
-    short top  = qd.screenBits.bounds.top + 40;
-    SetRect(&r, left, top, left + IMG_W, top + IMG_H);
-    gWin = NewWindow(0L, &r, "\pMacinclaude Paint", true, documentProc,
-                     (WindowPtr)-1L, false, 0);
+    gWin = WFNew("\pMacinclaude Paint");   /* fills the screen; close + zoom boxes */
     SetPort(gWin);
+    /* The image is blitted straight to screen memory, so the window must stay
+     * byte-aligned at the left and wide enough for the 480px picture. Make the
+     * compact (zoom-down) state exactly the image size, anchored at the left. */
+    {
+        WFStateHandle h = (WFStateHandle)((WindowPeek)gWin)->dataHandle;
+        short l = qd.screenBits.bounds.left, t = qd.screenBits.bounds.top + 40;
+        if (h) SetRect(&(**h).userState, l, t, l + IMG_W, t + IMG_H);
+    }
 }
 
 static void InitToolbox(void)

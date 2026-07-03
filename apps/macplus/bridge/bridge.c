@@ -26,6 +26,7 @@
 #include <Files.h>
 #include "nettcp.h"        /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
 #include "applog.inc"      /* key-event logging to the mini's shared logs */
+#include "winfull.inc"     /* full-screen window + close/zoom (maximize) box */
 
 #define BRIDGE_IP   "192.168.7.50"
 #define BRIDGE_PORT 2333
@@ -272,8 +273,8 @@ int main(void)
     InitGraf(&qd.thePort); InitFonts(); InitWindows(); InitMenus();
     TEInit(); InitDialogs(0L); InitCursor();
     SetUpMenus();
-    SetRect(&bounds, 20, 50, 492, 50 + WIN_H);
-    gWin = NewWindow(0L, &bounds, "\pThe Bridge", true, noGrowDocProc, (WindowPtr)-1L, false, 0);
+    (void)bounds;
+    gWin = WFNew("\pThe Bridge");         /* fills the screen; close + zoom boxes */
     SetPort(gWin);
 
     AddLog("The Bridge - over-the-air app delivery.");
@@ -316,6 +317,8 @@ int main(void)
                         }
                         HiliteMenu(0);
                     } else if (part == inDrag) DragWindow(w, ev.where, &qd.screenBits.bounds);
+                    else if (part == inGoAway) { if (TrackGoAway(w, ev.where)) done = true; }
+                    else if (part == inZoomIn || part == inZoomOut) { if (WFZoom(w, part, ev.where)) DrawConsole(); }
                     break;
                 }
                 case keyDown:

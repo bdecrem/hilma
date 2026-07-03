@@ -38,6 +38,7 @@
 #include <SegLoad.h>
 #include "nettcp.h"              /* direct TCP via MacTCP (BlueSCSI DaynaPORT) */
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 
 #define IMESSAGE_IP   "192.168.7.50"
 #define IMESSAGE_PORT 2328
@@ -126,8 +127,7 @@ static short   gPrefVRef = 0;
 /* The Plus screen is 512x342 with a 20px menu bar. The window opens at top=40
  * (title bar fills 20-40). Keep clear margin so it fits real hardware (slight
  * CRT overscan), not just the pixel-exact emulator: content 6..506 x 40..330. */
-#define WIN_W 500
-#define WIN_H 290
+static short WIN_W = 500, WIN_H = 290;  /* set from the full-screen window at open */
 #define LIST_W 150                      /* conversation list pane width */
 #define SBAR_W 16                       /* thread scrollbar */
 #define DIV_X  LIST_W                    /* divider between panes */
@@ -420,6 +420,7 @@ static void ImCont(const char *text)
     gMsgBuf[gMsgLen] = 0;
 }
 static void DrawAll(void);
+static void LayoutControls(void);
 static void ImEnd(void)
 {
     if (gRxMode == RX_CONV) {
@@ -980,6 +981,13 @@ static void HandleMouseDown(EventRecord *ev)
         case inMenuBar:   DoMenu(MenuSelect(ev->where)); break;
         case inSysWindow: SystemClick(ev, win); break;
         case inDrag:      DragWindow(win, ev->where, &qd.screenBits.bounds); break;
+        case inGoAway:    if (TrackGoAway(win, ev->where)) gDone = true; break;
+        case inZoomIn:
+        case inZoomOut:   if (WFZoom(win, part, ev->where)) {
+                              WIN_W = win->portRect.right  - win->portRect.left;
+                              WIN_H = win->portRect.bottom - win->portRect.top;
+                              LayoutControls(); InvalRect(&win->portRect);
+                          } break;
         case inContent:   if (win != FrontWindow()) SelectWindow(win); else if (win == gWin) ContentClick(ev); break;
     }
 }
@@ -1026,10 +1034,11 @@ static void SetUpMenus(void)
 
 static void SetUpWindow(void)
 {
-    Rect r; short left = (qd.screenBits.bounds.right - WIN_W) / 2; short top = qd.screenBits.bounds.top + 40;
-    SetRect(&r, left, top, left + WIN_W, top + WIN_H);
-    gWin = NewWindow(0L, &r, "\pMacinclaude iMessage", true, documentProc, (WindowPtr)-1L, false, 0);
+    Rect r;
+    gWin = WFNew("\pMacinclaude iMessage");   /* fills the screen; close + zoom boxes */
     SetPort(gWin);
+    WIN_W = gWin->portRect.right  - gWin->portRect.left;
+    WIN_H = gWin->portRect.bottom - gWin->portRect.top;
     SetRect(&r, WIN_W - SBAR_W, -1, WIN_W + 1, THREAD_H + 1);   /* thread scrollbar stops above the compose bar */
     gScroll = NewControl(gWin, &r, "\p", true, 0, 0, 0, scrollBarProc, 0);
     SetRect(&r, LBAR_X, -1, DIV_X + 1, WIN_H + 1);
@@ -1043,6 +1052,21 @@ static void SetUpWindow(void)
       gCompose = TENew(&tr, &tr); }
     SetRect(&r, WIN_W - SENDBTN_W - 3, THREAD_H + 2, WIN_W - 3, WIN_H - 2);
     gSendBtn = NewControl(gWin, &r, "\pSend", true, 0, 0, 0, pushButProc, 0);
+}
+
+/* reposition the panes' controls after a zoom: thread scrollbar to the new right
+ * edge, the compose bar (New / field / Send) across the bottom of the thread pane. */
+static void LayoutControls(void)
+{
+    Rect tr;
+    MoveControl(gScroll,     WIN_W - SBAR_W, -1);                   SizeControl(gScroll,     SBAR_W + 1, THREAD_H + 2);
+    MoveControl(gListScroll, LBAR_X, -1);                          SizeControl(gListScroll, SBAR_W + 1, WIN_H + 2);
+    MoveControl(gNewBtn,     DIV_X + 3, THREAD_H + 2);             SizeControl(gNewBtn,     NEWBTN_W,  COMPOSE_H - 4);
+    MoveControl(gSendBtn,    WIN_W - SENDBTN_W - 3, THREAD_H + 2);  SizeControl(gSendBtn,    SENDBTN_W, COMPOSE_H - 4);
+    SetRect(&tr, DIV_X + NEWBTN_W + 9, THREAD_H + 4, WIN_W - SENDBTN_W - 7, WIN_H - 4);
+    (*gCompose)->viewRect = tr;
+    (*gCompose)->destRect.left = tr.left; (*gCompose)->destRect.right = tr.right;
+    TECalText(gCompose);
 }
 
 static void InitToolbox(void)

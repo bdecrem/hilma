@@ -28,7 +28,7 @@ function parseArgs() {
   };
   return {
     cols: Math.max(20, Math.min(200, parseInt(get('--cols', '80'), 10) || 80)),
-    model: get('--model', 'claude-sonnet-4-6'),
+    model: get('--model', 'claude-sonnet-5'),
     cwd: get('--cwd', process.cwd()),
     // Knowledge repo of markdown docs (the docsrepo sibling). Searchable in
     // addition to --cwd; override with --docs <dir>.
@@ -183,11 +183,11 @@ function handleMsg(msg: any): void {
 // The SDK only lets you change `model` on a live session (Query.setModel); there
 // is no runtime setter for effort. So a switch tears the session down and rebuilds
 // it under the new model/effort, resuming the prior session_id to keep context.
-// Sonnet is one entry (default effort); Opus 4.8 and Fable 5 each get the two
-// effort levels Bart asked for, listed as separate picks.
+// Sonnet 5 is the default (one entry, default effort); Opus 4.8 and Fable 5 each
+// get the two effort levels, listed as separate picks.
 type ModelChoice = { label: string; model: string; effort?: 'medium' | 'high' };
 const MODELS: ModelChoice[] = [
-  { label: 'Sonnet 4.6', model: 'claude-sonnet-4-6' },
+  { label: 'Sonnet 5',   model: 'claude-sonnet-5' },
   { label: 'Opus 4.8',   model: 'claude-opus-4-8', effort: 'medium' },
   { label: 'Opus 4.8',   model: 'claude-opus-4-8', effort: 'high' },
   { label: 'Fable 5',    model: 'claude-fable-5',  effort: 'medium' },
@@ -267,8 +267,8 @@ async function main() {
     '    |  | \\_/ |  |                p l u s',
     '    |  |_____|  |',
     '    | o  [===]  |          a coding companion',
-    '    |___________|          for the 1986 mac,',
-    '     \\_________/           over 9600 baud.',
+    '    |___________|          for the 1986 mac —',
+    '     \\_________/           no modem required.',
     '',
   ];
   for (const ln of banner) tt.line(ln);

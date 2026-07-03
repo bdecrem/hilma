@@ -34,6 +34,7 @@
 #include <string.h>
 #include "nettcp.h"
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
+#include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 #include "ssh.h"                  /* real SSH-2 client (pssh) */
 #include "scp.inc"               /* SCP file-transfer protocol */
 
@@ -755,8 +756,8 @@ int main(void)
     InitGraf(&qd.thePort); InitFonts(); InitWindows(); InitMenus();
     TEInit(); InitDialogs(0L); InitCursor();
     SetUpMenus();
-    SetRect(&b, 6, 42, 506, 336);
-    gWin = NewWindow(0L, &b, "\pPlutonix", true, noGrowDocProc, (WindowPtr)-1L, false, 0);
+    (void)b;
+    gWin = WFNew("\pPlutonix");           /* fills the screen; close + zoom boxes */
     SetPort(gWin);
 
     gLineLen[0] = 0; gLines[0][0] = 0;
@@ -787,6 +788,8 @@ int main(void)
                     WindowPtr w; short part = FindWindow(ev.where, &w);
                     if (part == inMenuBar) DoMenu(MenuSelect(ev.where));
                     else if (part == inDrag) DragWindow(w, ev.where, &qd.screenBits.bounds);
+                    else if (part == inGoAway) { if (TrackGoAway(w, ev.where)) gDone = true; }
+                    else if (part == inZoomIn || part == inZoomOut) { if (WFZoom(w, part, ev.where)) { Rect pr = gWin->portRect; EraseRect(&pr); DrawConsole(); } }
                     break;
                 }
             }
