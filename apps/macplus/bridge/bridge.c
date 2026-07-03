@@ -116,7 +116,8 @@ static short gRxState;
 static unsigned char gMBHead[128];
 static long   gMBPos = 0;
 static long   gMBDataLen = 0, gMBRsrcLen = 0, gMBDataPadded = 0;
-static Str255 gMBName;
+static Str255 gMBName;    /* the temp file the incoming app is written to */
+static Str255 gMBFinal;   /* its real name; we atomically swap to this on success */
 static short  gDataRef = 0, gRsrcRef = 0;
 static Boolean gMBOpen = false;
 static long   gMBTotal = 0;
@@ -129,39 +130,36 @@ static void MBAbortFile(void) { MBCloseFiles(); if (gMBOpen) { FSDelete(gMBName,
  * is a 68000 bus error). Assemble big-endian by byte. */
 static OSType MBHeadType(short off) { return ((OSType)gMBHead[off]<<24)|((OSType)gMBHead[off+1]<<16)|((OSType)gMBHead[off+2]<<8)|(OSType)gMBHead[off+3]; }
 
-static OSErr MBCreateUnique(void)
+/* The fixed temp file every incoming app is written to. Once its checksum
+ * verifies (BinDone), we delete the existing app and rename this into its
+ * place — an atomic replace, so a dropped transfer never clobbers the app
+ * that's already installed and there are no versioned duplicates. */
+static void MBSetTempName(void)
 {
-    OSErr err; short tryN; Str255 base; short i;
-    OSType creator = MBHeadType(69), ftype = MBHeadType(65);
-    for (i = 0; i <= gMBName[0]; i++) base[i] = gMBName[i];
-    for (tryN = 0; tryN <= 8; tryN++) {
-        if (tryN > 0) {
-            for (i = 0; i <= base[0]; i++) gMBName[i] = base[i];
-            if (gMBName[0] < 31) { gMBName[0]++; gMBName[gMBName[0]] = (unsigned char)('1' + tryN); }
-            else { gMBName[gMBName[0]] = (unsigned char)('1' + tryN); }
-        }
-        err = Create(gMBName, 0, creator, ftype);
-        if (err == noErr) return noErr;
-        if (err != dupFNErr) return err;
-    }
-    return dupFNErr;
+    static const char t[] = "Bridge Incoming";
+    short k = 0; while (t[k]) { gMBName[k + 1] = (unsigned char)t[k]; k++; }
+    gMBName[0] = (unsigned char)k;
 }
 
 static Boolean MBParseHeader(void)
 {
     long dlen, rlen; short nameLen = gMBHead[1]; char cname[64]; short i;
     if (gMBHead[0] != 0 || nameLen < 1 || nameLen > 31) return false;
-    gMBName[0] = (unsigned char)nameLen;
-    for (i = 0; i < nameLen; i++) gMBName[i + 1] = gMBHead[2 + i];
+    gMBFinal[0] = (unsigned char)nameLen;
+    for (i = 0; i < nameLen; i++) gMBFinal[i + 1] = gMBHead[2 + i];
     dlen = ((long)gMBHead[83]<<24)|((long)gMBHead[84]<<16)|((long)gMBHead[85]<<8)|(long)gMBHead[86];
     rlen = ((long)gMBHead[87]<<24)|((long)gMBHead[88]<<16)|((long)gMBHead[89]<<8)|(long)gMBHead[90];
     if (dlen < 0 || rlen < 0 || dlen + rlen > 850000L) return false;
     gMBDataLen = dlen; gMBRsrcLen = rlen; gMBDataPadded = ((dlen + 127L) / 128L) * 128L;
-    if (MBCreateUnique() != noErr) return false;
+    /* write to the temp file; BinDone renames it into gMBFinal once verified. */
+    MBSetTempName();
+    (void)FSDelete(gMBName, 0);          /* clear any leftover temp from a prior abort */
+    { OSType creator = MBHeadType(69), ftype = MBHeadType(65);
+      if (Create(gMBName, 0, creator, ftype) != noErr) return false; }
     gMBOpen = true;
     if (FSOpen(gMBName, 0, &gDataRef) != noErr) { MBAbortFile(); return false; }
     if (OpenRF(gMBName, 0, &gRsrcRef) != noErr) { MBAbortFile(); return false; }
-    P2C(gMBName, cname);
+    P2C(gMBFinal, cname);
     { char b[120]; short n = 0; CatStr(b,&n,"incoming app: "); CatStr(b,&n,cname); CatStr(b,&n," ("); CatLong(b,&n,gMBDataLen+gMBRsrcLen); CatStr(b,&n," bytes)"); b[n]=0; AddLog(b); }
     return true;
 }
@@ -230,13 +228,32 @@ static void BinBytes(const unsigned char *b, short n)
 
 static void BinDone(void)
 {
-    char cname[64];
+    char cname[64]; OSErr derr;
     MBCloseFiles(); gMBOpen = false; gMBPos = 0;
+    P2C(gMBFinal, cname);
+    /* Atomic replace: remove the existing app, then rename the verified temp into
+     * its place. If the app can't be removed - it's the currently running app,
+     * e.g. delivering the Bridge to itself - keep the temp and report; the
+     * installed copy is never left half-written. */
+    derr = FSDelete(gMBFinal, 0);
+    if (derr != noErr && derr != fnfErr) {
+        char b[160]; short n = 0;
+        AppLog("replace failed (app in use)");
+        CatStr(b,&n,"could not replace '"); CatStr(b,&n,cname);
+        CatStr(b,&n,"' - is it running? kept as 'Bridge Incoming'"); b[n]=0;
+        AddLog(b); SetTitle("The Bridge - in use"); SysBeep(1); return;
+    }
+    if (Rename(gMBName, 0, gMBFinal) != noErr) {
+        char b[160]; short n = 0;
+        AppLog("rename failed");
+        CatStr(b,&n,"delivered but could not name it '"); CatStr(b,&n,cname);
+        CatStr(b,&n,"' (kept as 'Bridge Incoming')"); b[n]=0;
+        AddLog(b); SetTitle("The Bridge - error"); SysBeep(1); return;
+    }
     FlushVol(NULL, 0);
     AppLog("app installed");
-    P2C(gMBName, cname);
-    { char b[140]; short n = 0; CatStr(b,&n,"INSTALLED: '"); CatStr(b,&n,cname); CatStr(b,&n,"' is on your disk"); b[n]=0; AddLog(b); }
-    AddLog("(find it in the Finder; relaunch to run it)");
+    { char b[140]; short n = 0; CatStr(b,&n,"INSTALLED: '"); CatStr(b,&n,cname); CatStr(b,&n,"' updated in place"); b[n]=0; AddLog(b); }
+    AddLog("(relaunch it to run the new version)");
     gInstalled++;
     SetTitle("The Bridge - ready"); SysBeep(1);
 }

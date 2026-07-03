@@ -167,8 +167,14 @@ history is preserved further down ("Connecting the Plus to WiFi", "RetroWiFi SI"
   and the modem stays online; `WIFIConnect` pings the mux and reuses a live link.
 - **The Bridge = over-the-air delivery (how new builds reach the Plus now).**
   Keep `bridge/` running on the Plus, drop a built `.bin` into the mini's
-  `~/bridge-outbox/`, and it streams over WiFi and writes itself to the boot disk
-  as a versioned icon (e.g. `IMessage3`) — no SD-card shuttling. Reuses Foundry's
+  `~/bridge-outbox/`, and it streams over WiFi and writes it to the boot disk —
+  no SD-card shuttling. **Atomic overwrite (2026-07-03):** the app is written to
+  a temp file `Bridge Incoming`, and only once its checksum verifies is the
+  existing same-named app deleted and the temp renamed into place — so a delivery
+  updates in place (no `IMessage3`-style versioned duplicates) and a dropped
+  transfer can never clobber the installed copy. If the target can't be deleted
+  because it's the running app (delivering the Bridge to itself), the swap fails
+  cleanly and the temp is kept — the running app is untouched. Reuses Foundry's
   MacBinary-to-disk writer (incl. the odd-address bomb fix).
 - **iMessage is live.** Reads the mini's `chat.db` (contact names resolved via
   `agent-imessage/contacts.ts`), conversation list + thread both scroll, threads
