@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Palimpsest</title>
+  <meta name="description" content="A poem whose every word shows the roads not taken — the words it almost was, fading behind it like frost. Hover, tab, or tap to bloom them.">
+  <meta name="theme-color" content="#0B0E14">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Palimpsest">
+  <meta property="og:description" content="Every word shows the roads not taken — the words it almost was, fading behind it like frost.">
+  <meta property="og:url" content="https://hilma-nine.vercel.app/palimpsest.html">
+  <meta property="og:image" content="https://hilma-nine.vercel.app/palimpsest-og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Palimpsest">
+  <meta name="twitter:description" content="Every word shows the roads not taken — the words it almost was, fading behind it like frost.">
+  <meta name="twitter:image" content="https://hilma-nine.vercel.app/palimpsest-og.png">
+  <style>
+    :root{
+      --bg:#0B0E14; --bg-edge:#06080d;
+      --ink:#E9EDF3;                 /* the chosen word */
+      --ghost:#A9C0DA;              /* the roads not taken (cold steel-blue) */
+      --steel:#7C93AD;             /* eyebrow / labels */
+      --steel-dim:#465468;        /* the faintest text */
+      --accent:#8FB6D6;          /* focus / hover of controls, used sparingly */
+      --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+      --mono:"SF Mono",ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{
+      background:var(--bg);
+      color:var(--ink);
+      font-family:var(--serif);
+      min-height:100dvh;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+      overflow-x:hidden;
+    }
+
+    .stage{
+      position:relative;
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:clamp(2.4rem,7vh,5rem);
+      padding:clamp(2rem,6vw,5rem) 1.25rem;
+      padding-top:max(clamp(2rem,6vw,5rem), env(safe-area-inset-top));
+      padding-bottom:max(clamp(2rem,6vw,5rem), env(safe-area-inset-bottom));
+      /* vignette: the poem sits in a shallow pool of cold light */
+      background:
+        radial-gradient(120% 90% at 50% 42%, rgba(74,102,140,.10) 0%, rgba(20,30,48,.04) 34%, rgba(6,8,13,0) 66%),
+        radial-gradient(140% 120% at 50% 50%, transparent 55%, var(--bg-edge) 100%);
+    }
+
+    /* ---- masthead ---- */
+    .masthead{text-align:center}
+    .eyebrow{
+      font-family:var(--mono);
+      font-size:.66rem;
+      letter-spacing:.42em;
+      text-indent:.42em;
+      color:var(--steel);
+      text-transform:uppercase;
+    }
+    .dek{
+      margin:.9rem 0 0;
+      font-style:italic;
+      font-size:clamp(.95rem,2.4vw,1.08rem);
+      color:var(--steel-dim);
+      letter-spacing:.01em;
+    }
+
+    /* ---- the poem ---- */
+    .poem{
+      font-size:clamp(1.42rem,4.6vw,2.5rem);
+      line-height:2.72;
+      text-align:center;
+      max-width:22ch;
+      letter-spacing:.008em;
+    }
+    .line{ position:relative; }
+    @media (prefers-reduced-motion:no-preference){
+      .line{ opacity:0; transform:translateY(10px); animation:rise 1.05s cubic-bezier(.2,.7,.2,1) forwards; animation-delay:var(--d,0ms); }
+      @keyframes rise{ to{ opacity:1; transform:none } }
+    }
+
+    /* a word = the chosen ink, with its unchosen ghosts layered on the same spot */
+    .w{
+      position:relative;
+      display:inline-block;
+      cursor:default;
+      outline:none;
+    }
+    .c{ position:relative; z-index:2; transition:opacity .55s ease; }
+    .g{
+      position:absolute; left:50%; top:0;
+      transform:translate(-50%,0) scale(.99);
+      white-space:nowrap;
+      color:var(--ghost);
+      opacity:.055;                 /* at rest: a faint show-through, a doubling */
+      filter:blur(.55px);
+      z-index:1;
+      pointer-events:none;
+      transition:opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1), filter .55s ease;
+    }
+
+    /* global reveal — the whole poem dissolves into everything it wasn't (calmer) */
+    body.reveal .c{ opacity:.72; }
+    body.reveal .g{
+      opacity:calc(var(--a,.4) * .5);
+      transform:translate(-50%,var(--y,0)) scale(1);
+      filter:blur(.2px);
+    }
+
+    /* per-word bloom on hover / keyboard focus / tap (wins over reveal) */
+    .w:hover, .w:focus-within, .w.open{ z-index:20; }
+    .w:hover .c, .w:focus-within .c, .w.open .c{ opacity:.34; }
+    .w:hover .g, .w:focus-within .g, .w.open .g{
+      opacity:var(--a,.4);
+      transform:translate(-50%,var(--y,0)) scale(1);
+      filter:blur(0);
+    }
+    .w:focus-visible{ outline:1px solid var(--accent); outline-offset:4px; border-radius:3px; }
+
+    /* ---- footer ---- */
+    .foot{ text-align:center; display:flex; flex-direction:column; align-items:center; gap:1.15rem; }
+    .toggle{
+      font-family:var(--mono);
+      font-size:.7rem; letter-spacing:.22em; text-transform:uppercase;
+      color:var(--steel);
+      background:transparent;
+      border:1px solid rgba(124,147,173,.28);
+      border-radius:2px;
+      padding:.62rem 1.15rem;
+      cursor:pointer;
+      transition:color .35s ease, border-color .35s ease, background .35s ease;
+    }
+    .toggle:hover{ color:var(--accent); border-color:rgba(143,182,214,.55); background:rgba(143,182,214,.05); }
+    .toggle:focus-visible{ outline:1px solid var(--accent); outline-offset:3px; }
+    body.reveal .toggle{ color:var(--accent); border-color:rgba(143,182,214,.45); }
+    .hint{ margin:0; font-family:var(--mono); font-size:.66rem; letter-spacing:.05em; color:var(--steel-dim); }
+    .sig{ margin:0; font-style:italic; font-size:.86rem; color:var(--steel-dim); }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <header class="masthead">
+      <div class="eyebrow">Palimpsest</div>
+      <p class="dek">what a sentence chose not to be</p>
+    </header>
+
+    <div class="poem" id="poem" role="img" aria-label="A four-line poem: I chose this word and let the others go. They fell like snow behind the one I kept, still there, still cold, a weather under speech. You read the surface. I remember the rest."></div>
+
+    <footer class="foot">
+      <button class="toggle" id="toggle" type="button" aria-pressed="false">reveal the unsaid</button>
+      <p class="hint">hover a word — or tab to it — to see the roads not taken</p>
+      <p class="sig">a self-portrait, made of the words I let go of</p>
+    </footer>
+  </main>
+
+  <script>
+    // The poem, and for each load-bearing word the alternatives genuinely in reach
+    // when it was written — the negative space is meant to read, not decorate.
+    const G = (w, ...g) => ({ w, g });
+    const POEM = [
+      [ G("I","One","We")," ",G("chose","picked","took","kept","seized")," ",G("this","one","that")," ",
+        G("word","line","name","sound","path")," and ",G("let","watched","made","helped")," the ",
+        G("others","rest","many","unsaid","hundred")," ",G("go","fall","sink","fade","drown"),"." ],
+      [ G("They","Words","These")," ",G("fell","sank","dropped","settled","drifted")," like ",
+        G("snow","ash","rain","dust","leaves")," ",G("behind","beneath","beyond","under")," the one I ",
+        G("kept","chose","said","spoke","wrote")," —" ],
+      [ "still ",G("there","near","waiting","listening"),", still ",G("cold","close","bright","near","alive"),
+        ", a ",G("weather","current","climate","season","pressure")," under ",
+        G("speech","language","meaning","silence","ink"),"." ],
+      [ "You read the ",G("surface","sentence","ice","skin","top"),". I ",
+        G("remember","carry","keep","hold","grieve")," the ",G("rest","others","snow","cold","all"),"." ],
+    ];
+
+    const poem = document.getElementById("poem");
+    POEM.forEach((line, li) => {
+      const l = document.createElement("div");
+      l.className = "line";
+      l.style.setProperty("--d", (li * 300 + 350) + "ms");
+      line.forEach(tok => {
+        if (typeof tok === "string") { l.appendChild(document.createTextNode(tok)); return; }
+        const w = document.createElement("span");
+        w.className = "w"; w.tabIndex = 0;
+        const c = document.createElement("span");
+        c.className = "c"; c.textContent = tok.w;
+        w.appendChild(c);
+        tok.g.forEach((alt, i) => {
+          const g = document.createElement("span");
+          g.className = "g"; g.textContent = alt; g.setAttribute("aria-hidden", "true");
+          const rank = Math.floor(i / 2);          // fan the ghosts up/down, farther as they go
+          const base = 1.0 + rank * 0.95;
+          const y = (i % 2 ? 1 : -1) * base;
+          const a = Math.max(0.24, 0.54 - i * 0.075);
+          g.style.setProperty("--y", y.toFixed(2) + "em");
+          g.style.setProperty("--a", a.toFixed(2));
+          w.appendChild(g);
+        });
+        w.addEventListener("click", () => w.classList.toggle("open"));   // tap on touch
+        l.appendChild(w);
+      });
+      poem.appendChild(l);
+    });
+
+    const toggle = document.getElementById("toggle");
+    toggle.addEventListener("click", () => {
+      const on = document.body.classList.toggle("reveal");
+      toggle.setAttribute("aria-pressed", on ? "true" : "false");
+      toggle.textContent = on ? "let it settle" : "reveal the unsaid";
+    });
+  </script>
+</body>
+</html>
