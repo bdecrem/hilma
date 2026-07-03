@@ -59,7 +59,13 @@ static void TakeRow(const char *line, short len, short row)
         dst[i] = (unsigned char)((hi << 4) | lo);
     }
     gImgValid = true;
+    /* crash-bracketing breadcrumbs (every 25 rows): the last "decoded" or
+       "blitted" line that reaches the mini's log before the app dies tells us
+       the exact row AND whether it fell in TakeRow's decode or in DrawBand's
+       CopyBits. See RxMark in the includer (no-op in the host test). */
+    if ((row % 25) == 0) RxMark(row, 0);     /* survived decode of this row */
     DrawBand(row, row + 1);
+    if ((row % 25) == 0) RxMark(row, 1);     /* survived CopyBits of this row */
 }
 
 static void RxAbort(const char *why)

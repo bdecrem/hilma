@@ -417,6 +417,14 @@ static void Disconnect(void)
  * and these four callbacks (DrawBand/ClearCanvas/SetStatus/SetStatusPct, also
  * above). PumpReceive (below) is the Mac-serial feeder and stays here. */
 static void RxNote(const char *m) { AppLog(m); }   /* parser breadcrumbs -> shared log */
+/* per-band crash breadcrumb: "rx row 225 decoded" / "rx row 225 blitted" */
+static void RxMark(short row, short stage)
+{
+    char b[40]; short n = 0;
+    CatStr(b, &n, "rx row "); CatLong(b, &n, (long)row);
+    CatStr(b, &n, stage ? " blitted" : " decoded"); b[n] = 0;
+    AppLog(b);
+}
 #include "atkinson_rx.inc"
 
 /* Non-blocking: drain whatever TCP bytes have arrived into the parser. Called

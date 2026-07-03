@@ -49,6 +49,7 @@ static void ClearCanvas(void) { }
 static void SetStatus(const char *m) { strncpy(gStatus, m, sizeof(gStatus) - 1); gStatus[sizeof(gStatus)-1]=0; }
 static void SetStatusPct(const char *m, short p) { (void)m; (void)p; }
 static void RxNote(const char *m) { (void)m; }
+static void RxMark(short row, short stage) { (void)row; (void)stage; }
 
 #include "atkinson_rx.inc"
 

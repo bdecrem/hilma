@@ -139,17 +139,33 @@ static void Prompt(char *out, short cap)
     out[n] = 0;
 }
 
+/* Erase from the current pen position to the right edge across one text row.
+   Clears leftover characters from a previously longer line without blanking the
+   whole window — the piece that made the remote terminal flash. */
+static void ClearToEol(const Rect *r, short base, const FontInfo *fi)
+{
+    Point pen; Rect t;
+    GetPen(&pen);
+    SetRect(&t, pen.h, base - fi->ascent, r->right, base + fi->descent + fi->leading);
+    if (t.left < t.right) EraseRect(&t);
+}
+
 static void DrawConsole(void)
 {
-    Rect r; short rows, y, i, idx, first;
+    Rect r, below; short rows, y, i, idx, first, lineH;
     FontInfo fi;
     SetPort(gWin);
     r = gWin->portRect;
-    EraseRect(&r);
     TextFont(monaco); TextSize(9);
     GetFontInfo(&fi);
-    rows = (r.bottom - r.top) / (fi.ascent + fi.descent + fi.leading) - 1;
+    lineH = fi.ascent + fi.descent + fi.leading;
+    rows = (r.bottom - r.top) / lineH - 1;
     if (rows < 1) rows = 1;
+    /* srcCopy makes each glyph overwrite its own cell (background included), so we
+       don't blank the whole window first. That full EraseRect-then-redraw was the
+       flash: on a slow link the console went briefly empty on every output chunk.
+       genuine exposures still get a clean full repaint via the updateEvt handler. */
+    TextMode(srcCopy);
 
     /* the input line (prompt + typed text) is the last visible row in local mode */
     first = gCount - rows + 1 - gTopVisible;     /* +1 leaves room for input line */
@@ -159,7 +175,8 @@ static void DrawConsole(void)
         idx = (gHead - (gCount - 1) + (first + i) + NLINES * 4) % NLINES;
         MoveTo(r.left + 4, y);
         DrawText(gLines[idx], 0, gLineLen[idx]);
-        y += fi.ascent + fi.descent + fi.leading;
+        ClearToEol(&r, y, &fi);
+        y += lineH;
     }
     if (gSshConnecting) {                       /* resumable kex: live progress, UI alive */
         char b[48]; short k; short bars = (short)(gKexPct * 20 / 100);
@@ -169,12 +186,14 @@ static void DrawConsole(void)
         DrawText("] ", 0, 2);
         b[0] = (char)('0' + (gKexPct/100)%10); b[1] = (char)('0' + (gKexPct/10)%10); b[2] = (char)('0' + gKexPct%10); b[3] = '%'; b[4] = 0;
         DrawText(b, (gKexPct>=100)?0:1, (gKexPct>=100)?4:3);
+        ClearToEol(&r, y, &fi); y += lineH;
     } else if (gPwPrompt) {
         short k;
         MoveTo(r.left + 4, y);
         DrawText("password: ", 0, 10);
         for (k = 0; k < gSshPassLen && k < 40; k++) DrawChar('*');
         DrawChar('_');
+        ClearToEol(&r, y, &fi); y += lineH;
     } else if (!gRemote) {
         char pr[300];
         Prompt(pr, sizeof(pr));
@@ -182,7 +201,12 @@ static void DrawConsole(void)
         DrawText(pr, 0, (short)strlen(pr));
         DrawText(gInput, 0, gInputLen);
         DrawChar('_');                         /* cheap cursor */
+        ClearToEol(&r, y, &fi); y += lineH;
     }
+    /* clear any rows below the last one drawn (leftover from a taller frame) */
+    SetRect(&below, r.left, y - fi.ascent, r.right, r.bottom);
+    if (below.top < below.bottom) EraseRect(&below);
+    TextMode(srcOr);
 }
 
 /* ================= HFS filesystem (the shell's Fs* ops) ================= */
@@ -746,7 +770,7 @@ int main(void)
         Boolean busy = gRemote || gSshConnecting || gScpMode;
         if (WaitNextEvent(everyEvent, &ev, busy ? 1L : 8L, 0L)) {
             switch (ev.what) {
-                case updateEvt: BeginUpdate(gWin); DrawConsole(); EndUpdate(gWin); break;
+                case updateEvt: BeginUpdate(gWin); { Rect pr = gWin->portRect; EraseRect(&pr); } DrawConsole(); EndUpdate(gWin); break;
                 case keyDown:
                 case autoKey: {
                     char c = ev.message & charCodeMask;
