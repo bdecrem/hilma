@@ -664,6 +664,13 @@ Run all that apply before declaring done (mirrors the repo-wide "spec first, the
      `Disk605.dsk` (boots System 6) then `Name.dsk`.
    - Drive via the computer-use MCP: double-click the disk → double-click the app → exercise it.
      Confirm rendering + input + menus on the actual emulated 512×342 Plus screen.
+   - **This step is for a session running on the iMac** (which has the computer-use MCP). **The
+     Macinclaude Code agent on the mini CANNOT do it** — it has no computer-use MCP (only a Playwright
+     browser MCP), and the mini is headless, so `screencapture` fails with "could not create image from
+     display." So the agent must NOT try to open Mini vMac or a computer-use/Playwright MCP for a Plus
+     app. Instead it verifies with steps 1 (build) + 2 (host-logic test), and for anything VISUAL it
+     builds the app and delivers it to the REAL Plus over the Bridge (drop the `.bin` in
+     `~/bridge-outbox/`, tell Bart to open The Bridge to receive) so Bart can look at real hardware.
 
 ---
 
