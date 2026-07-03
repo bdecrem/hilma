@@ -65,9 +65,20 @@ if [ -n "$LEAKS" ]; then
 fi
 echo "clean — no private markers in the published tree."
 
-# --- 5. summary ----------------------------------------------------------------
+# --- 5. commit + push the public repo (github.com/bdecrem/Macinclaude) ----------
+cd "$DEST"
+if [ ! -d .git ]; then
+  git init -q
+  git remote add origin https://github.com/bdecrem/Macinclaude.git
+  git branch -M main
+fi
 echo "== published =="
-echo "apps:   $(find "$DEST" -maxdepth 1 -type d -not -name '.*' | wc -l | tr -d ' ') top-level dirs"
-echo "C src:  $(find "$DEST" -name '*.c' | wc -l | tr -d ' ') files"
-echo "docs:   $(find "$DEST" -name '*.md' | wc -l | tr -d ' ') files"
-echo "Done. Review $DEST, then git init / commit / push there to publish."
+echo "apps: $(find "$DEST" -maxdepth 1 -type d -not -name '.*' | wc -l | tr -d ' ') dirs  C: $(find "$DEST" -name '*.c' | wc -l | tr -d ' ')  docs: $(find "$DEST" -name '*.md' | wc -l | tr -d ' ')"
+if [ -n "$(git status --porcelain)" ]; then
+  git add -A
+  git -c user.name="Bart Decrem" -c user.email="bdecrem@gmail.com" \
+      commit -q -m "Re-publish from hilma ($(date +%Y-%m-%d))"
+  git push -q -u origin main && echo "pushed -> https://github.com/bdecrem/Macinclaude"
+else
+  echo "no changes since last publish."
+fi

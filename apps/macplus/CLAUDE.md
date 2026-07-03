@@ -12,6 +12,35 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 > live outside the repo under `~/mac-plus-apps/` and are referenced below. Don't commit ROMs
 > (copyright) or build artifacts.
 
+## Public open-source mirror — how this repo relates to `../macinclaude`
+
+This folder (`hilma/apps/macplus`) is the **private working clone**: real IPs
+(`192.168.7.x`), the ops runbook, session notes — machine-specific to Bart's rig.
+The **public open-source repo** is a sibling at `../macinclaude`, published to
+**https://github.com/bdecrem/Macinclaude** (MIT). It's for the community: download
++ install apps, build your own, and "bring your Mac back to life."
+
+**We work HERE. `../macinclaude` is GENERATED — never edit it by hand.**
+
+- **To (re)publish** (do this after meaningful macplus changes, or when asked):
+  `bash apps/macplus/publish/publish.sh`. It clears + regenerates the public tree,
+  sanitizes machine-specifics (`192.168.7.x` → `192.168.1.50`, deploy path/host/MAC
+  → generic), **leak-checks (aborts if any private marker survives)**, drops in the
+  community docs, then **commits and pushes to GitHub automatically**. Push is the
+  default now — so a re-publish IS a push.
+- **What's excluded** (denylist in `publish.sh`): the private docs (this `CLAUDE.md`,
+  `BACKEND.md`, `SHUTTLE-TEST.md`, `AGENT-PLAN.md`, `wifi/RESUME-ALWAYSON.md`),
+  retired/orphaned apps (`talkingplus`, `agent-moose`, `agent-jukebox`), `drunk85`
+  (bundles third-party `llama2.c` — needs its own license first), `design/`, and all
+  build artifacts / `node_modules`.
+- **A NEW app is auto-included** on the next publish — nothing to do, unless it should
+  stay private (then add it to the denylist in `publish.sh`) or it bundles third-party
+  code (handle licensing first).
+- **Community-facing docs** (README, LICENSE, the guides, `config.example`) live in
+  `apps/macplus/publish/repo-files/` — edit them THERE, not in `../macinclaude`.
+- **iMessage** (reads Bart's `chat.db`) and the F2/docsrepo notes-librarian ship as
+  "personal example, adapt for yourself," not as turnkey features.
+
 ---
 
 ## What we've built — app & service catalog
