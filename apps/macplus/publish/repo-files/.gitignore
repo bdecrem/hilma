@@ -1,0 +1,19 @@
+# Build artifacts (Retro68 / CMake)
+build/
+*.bin
+*.APPL
+*.dsk
+*.rsrc
+*.o
+*.obj
+
+# Node
+node_modules/
+package-lock.json
+
+# Your local network config (copy config.example and edit)
+config.local
+*.local
+
+# macOS
+.DS_Store

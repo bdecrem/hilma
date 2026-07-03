@@ -1,0 +1,29 @@
+# ---------------------------------------------------------------------------
+# Macinclaude network configuration (example)
+#
+# The apps ship pointing at a placeholder LAN address. Change it to the Mac on
+# your network that runs the agents (the "brains"). There are two ways:
+#
+#   1. At runtime — the networked apps (Macinclaude Code, Surf, Paint, ...) have
+#      a Settings dialog on the Plus. Enter your Mac's host + port there; it's
+#      saved in a prefs file on the Plus, so you set it once.
+#
+#   2. At build time — each app has its server address as a #define near the top
+#      of its .c file. Change it before building. The names vary by app, e.g.:
+#         bridge/bridge.c      BRIDGE_IP
+#         quote/quote.c        QUOTE_IP
+#         plutonix/plutonix.c  MINI_IP
+#         net/applog.inc       APPLOG_IP
+#         wifi/wifi.c          MUX_HOST
+#
+# The agents (agent-*/) listen on fixed TCP ports on the Mac that runs them;
+# they don't need your IP. See docs/RUNNING-THE-BACKEND.md for the port map.
+# ---------------------------------------------------------------------------
+
+# LAN IP of the Mac running the agents (the "brains").
+MACINCLAUDE_HOST=192.168.1.50
+
+# The agent ports (must match what each app dials). Defaults:
+#   macinclaude 2324   paint 2325   surf 2326   foundry 2327   imessage 2328
+#   rsh 2329   mux 2330   diag 2331   quote 2332   bridge 2333   screen 2334
+#   netspeed 2335   porthole 2336   ssh 2222
