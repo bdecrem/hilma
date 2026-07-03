@@ -16,9 +16,11 @@ FILES="$SRC/publish/repo-files"                  # community docs to drop in
 echo "SRC:  $SRC"
 echo "DEST: $DEST"
 
-# --- 1. fresh copy of the reusable tree (exclude private + artifacts) -----------
-rm -rf "$DEST"
+# --- 1. sync the reusable tree (exclude private + artifacts) --------------------
+# Clear the previous content but KEEP the repo's own .git (history/remote), so
+# re-publishes are clean and stale / now-excluded files never linger.
 mkdir -p "$DEST"
+find "$DEST" -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
 rsync -a \
   --exclude='.git' --exclude='.DS_Store' \
   --exclude='node_modules/' --exclude='build/' \
@@ -31,6 +33,8 @@ rsync -a \
   --exclude='design/' \
   `# retired / orphaned apps (MacinTalk freezes the Plus; jukebox has no Plus app):` \
   --exclude='talkingplus/' --exclude='agent-moose/' --exclude='agent-jukebox/' \
+  `# experimental + bundles third-party code (llama2.c) — hold from the public release:` \
+  --exclude='drunk85/' \
   "$SRC/" "$DEST/"
 
 # --- 2. sanitize machine-specific values ---------------------------------------
