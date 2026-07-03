@@ -236,15 +236,34 @@ static void MakeBitMap(BitMap *bm)
     SetRect(&bm->bounds, 0, 0, gImgW, gImgH);
 }
 
-/* Copy rows [top, bottom) of the current image into the window (1:1, no scale). */
+/* Blit rows [top, bottom) of the image straight into screen memory with
+   BlockMove, bypassing CopyBits. CopyBits crashed the real Plus with an address
+   error on the first blit during a live receive — it renders fine in Mini vMac,
+   which can't run MacTCP alongside it, so the fault only shows on hardware
+   (likely CopyBits' word-based blitter choking on the 60-vs-64 rowBytes
+   mismatch or the heap state with MacTCP active). A direct byte copy is
+   alignment-safe and touches no Memory Manager. The image is 480px (60 bytes)
+   wide; the window sits at global left 16 (screen byte 2), so each row lands at
+   screen bytes 2..61 of the 64-byte screen row. Off-screen / overrunning rows
+   are skipped so a bad offset can never scribble outside the screen. */
 static void DrawBand(short top, short bottom)
 {
-    BitMap bm; Rect r; GrafPtr gp = (GrafPtr)gWin;
+    Ptr   screenBase; short screenRB, screenH; short r; Point pt;
     if (!gImgValid) return;
-    MakeBitMap(&bm);
-    SetRect(&r, 0, top, gImgW, bottom);    /* same rect in src and dst (local) */
     SetPort(gWin);
-    CopyBits(&bm, &gp->portBits, &r, &r, srcCopy, 0L);
+    screenBase = qd.screenBits.baseAddr;
+    screenRB   = qd.screenBits.rowBytes;
+    screenH    = qd.screenBits.bounds.bottom - qd.screenBits.bounds.top;
+    for (r = top; r < bottom; r++) {
+        short col; long dstOff;
+        pt.h = 0; pt.v = r;
+        LocalToGlobal(&pt);                          /* image row r -> global screen coords */
+        if (pt.v < 0 || pt.v >= screenH) continue;   /* off-screen row: skip */
+        col = pt.h >> 3;                             /* byte column (window left is byte-aligned) */
+        if (col < 0 || col + gImgRB > screenRB) continue;   /* would run off the row: skip */
+        dstOff = (long)pt.v * screenRB + col;
+        BlockMove((Ptr)(gImgBuf + (long)r * gImgRB), (Ptr)(screenBase + dstOff), gImgRB);
+    }
 }
 
 static void DrawFull(void) { if (gImgValid) DrawBand(0, gImgH); }

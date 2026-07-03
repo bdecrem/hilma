@@ -60,7 +60,17 @@ OSErr NetConnect(NetConn *c, unsigned long host, unsigned short port)
 	if (err != noErr)
 		return err;
 
-	c->rcvBuff = NewPtr(IPP_RCVBUF_LEN);
+	/* Allocate the MacTCP receive buffer in the SYSTEM heap, not the app heap.
+	 * MacTCP holds this pointer for the stream's whole life. If the app quits
+	 * cleanly, NetClose releases the stream and frees this. But if the app
+	 * CRASHES (address-error bomb), NetClose never runs — MacTCP keeps a leaked
+	 * stream still pointing here. An app-heap buffer gets reclaimed and reused
+	 * when the dead app's heap is torn down, so MacTCP then scribbles arriving
+	 * packets into reused memory and corrupts whatever app runs next → every
+	 * later network app fails until reboot ("first app works, next doesn't").
+	 * A system-heap buffer survives the crash: MacTCP writes to still-valid
+	 * (leaked) memory, no corruption, and the next app connects fine. */
+	c->rcvBuff = NewPtrSys(IPP_RCVBUF_LEN);
 	if (c->rcvBuff == nil)
 		return MemError();
 	c->rcvBuffLen = IPP_RCVBUF_LEN;

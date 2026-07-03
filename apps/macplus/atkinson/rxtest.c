@@ -35,14 +35,17 @@ static Boolean gImgValid = false;
 
 /* ---- callbacks the parser calls; here they just record what happened ---- */
 static int   gBandCalls = 0;
-static int   gLastBandTop = -1;
-static int   gBandInOrder = 1;
+static int   gRowsCovered = 0;       /* sum of band heights — must total IMG_H */
+static int   gNextExpectedTop = 0;   /* bands must be contiguous top->bottom */
+static int   gBandsContiguous = 1;
+static int   gBandMaxHeight = 0;
 static char  gStatus[128];
 
 static void DrawBand(short top, short bottom) {
-    (void)bottom;
-    if (top != gLastBandTop + 1) gBandInOrder = 0;   /* must blit row N then N+1 */
-    gLastBandTop = top;
+    if (top != gNextExpectedTop) gBandsContiguous = 0;   /* no gaps/overlaps */
+    gNextExpectedTop = bottom;
+    if (bottom - top > gBandMaxHeight) gBandMaxHeight = bottom - top;
+    gRowsCovered += bottom - top;
     gBandCalls++;
 }
 static void ClearCanvas(void) { }
@@ -79,12 +82,14 @@ int main(void) {
     CHECK(gImgW == IMG_W && gImgH == IMG_H && gImgRB == IMG_RB, "header dims wrong");
     CHECK(gRxState == RX_IDLE, "parser did not return to IDLE on ATKEND");
     CHECK(gRxRow == IMG_H, "did not decode all 300 rows");
-    CHECK(gBandCalls == IMG_H, "DrawBand not called once per row");
-    CHECK(gBandInOrder, "rows not blitted top-to-bottom in order");
+    CHECK(gRowsCovered == IMG_H, "bands did not cover all 300 rows");
+    CHECK(gBandsContiguous, "bands not contiguous top-to-bottom");
+    CHECK(gBandMaxHeight > 1, "blitting one scanline at a time (the crash) — bands must be multi-row");
+    CHECK(gBandCalls < IMG_H, "not banding — one DrawBand per row");
     CHECK(strcmp(gStatus, "done") == 0, "final status not 'done'");
     CHECK(memcmp(gImgBuf, want, FRAME_BYTES) == 0, "decoded image != agent's packed bytes");
 
     if (fails) { fprintf(stderr, "rxtest: %d FAILED\n", fails); return 1; }
-    printf("rxtest PASS: 300 rows decoded in order, image bytes match agent frame exactly\n");
+    printf("rxtest PASS: 300 rows decoded, %d bands (max %d rows), image bytes exact\n", gBandCalls, gBandMaxHeight);
     return 0;
 }

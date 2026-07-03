@@ -17,6 +17,8 @@ static short gRxState = RX_IDLE;
 static char  gRxLine[300];      /* one wire line; rb*2 hex = up to 256 */
 static short gRxLineLen = 0;
 static short gRxRow = 0;        /* next image row to fill */
+static short gDrawnRow = 0;     /* rows [0,gDrawnRow) already blitted (band boundary) */
+#define RX_BAND 30              /* blit in 30-row bands, never a single scanline */
 static unsigned long gRxDeadline = 0;   /* abort if the agent goes silent */
 
 static short HexNib(char c)
@@ -47,7 +49,12 @@ static Boolean ParseHeader(const char *line)
     return true;
 }
 
-/* Decode one hex row line into gImgBuf at row `row`; blit just that scanline. */
+/* Decode one hex row line into gImgBuf at row `row`. Blitting is done in
+   multi-row BANDS by the caller (RxLine), NOT here: a 1-pixel-tall CopyBits
+   (DrawBand(row, row+1)) crashed the real Plus's QuickDraw with an address
+   error on the very first blit — the breadcrumb log ended at "rx row 0 decoded"
+   with no "blitted". The tested test-image render always blits multi-row bands,
+   which are safe; so we accumulate rows here and band-blit them. */
 static void TakeRow(const char *line, short len, short row)
 {
     short need = gImgRB * 2, i;
@@ -59,13 +66,6 @@ static void TakeRow(const char *line, short len, short row)
         dst[i] = (unsigned char)((hi << 4) | lo);
     }
     gImgValid = true;
-    /* crash-bracketing breadcrumbs (every 25 rows): the last "decoded" or
-       "blitted" line that reaches the mini's log before the app dies tells us
-       the exact row AND whether it fell in TakeRow's decode or in DrawBand's
-       CopyBits. See RxMark in the includer (no-op in the host test). */
-    if ((row % 25) == 0) RxMark(row, 0);     /* survived decode of this row */
-    DrawBand(row, row + 1);
-    if ((row % 25) == 0) RxMark(row, 1);     /* survived CopyBits of this row */
 }
 
 static void RxAbort(const char *why)
@@ -85,6 +85,7 @@ static void RxLine(char *line, short len)
             ClearCanvas();
             gImgValid = false;          /* nothing drawn yet */
             gRxRow = 0;
+            gDrawnRow = 0;
             gRxState = RX_READ_ROWS;
             SetStatus("receiving 0%");
         } else if (len >= 6 && line[0]=='A'&&line[1]=='T'&&line[2]=='K'&&line[3]=='E'&&line[4]=='R'&&line[5]=='R') {
@@ -95,6 +96,7 @@ static void RxLine(char *line, short len)
     }
     if (gRxState == RX_READ_ROWS) {
         if (len >= 6 && line[0]=='A'&&line[1]=='T'&&line[2]=='K'&&line[3]=='E'&&line[4]=='N'&&line[5]=='D') {
+            if (gRxRow > gDrawnRow) { DrawBand(gDrawnRow, gRxRow); gDrawnRow = gRxRow; }  /* final band */
             gRxState = RX_IDLE;
             RxNote(gRxRow >= gImgH ? "image done" : "image done (partial)");
             SetStatus(gRxRow >= gImgH ? "done" : "done (partial)");
@@ -107,8 +109,12 @@ static void RxLine(char *line, short len)
         if (gRxRow < gImgH) {
             TakeRow(line, len, gRxRow);
             gRxRow++;
-            if ((gRxRow % 30) == 0 || gRxRow == gImgH)
+            if (gRxRow - gDrawnRow >= RX_BAND || gRxRow == gImgH) {
+                DrawBand(gDrawnRow, gRxRow);          /* blit the new band (>=1px, ~30 in practice) */
+                RxMark(gRxRow, 1);                    /* breadcrumb: band blitted up to row N */
+                gDrawnRow = gRxRow;
                 SetStatusPct("receiving", (short)((long)gRxRow * 100 / gImgH));
+            }
         }
     }
 }

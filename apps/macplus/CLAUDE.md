@@ -129,13 +129,17 @@ resource-fork validation + Mini vMac boot tests on every snapshot):
   archive.) **Replace the card with a fresh name-brand microSD** — restore
   takes minutes from `~/mac-plus-apps/sdcard-archive/` (see RESTORE.md there).
 
-**The Bridge is BACK on the card (2026-07-01 evening).** New build from current
-source: 2 MB SIZE verified in the injected resource, frame parser 20/20 host
-tests (incl. fuzz), delivery pipeline E2E-verified byte-exact from agent-bridge
-over the wire. Remaining gate: one real delivery on hardware — drop a `.bin`
-in the mini's `~/bridge-outbox/` while The Bridge is open on the Plus, watch
-`~/macplus-logs/all.log`. Until that passes, also keep shipping via SD.
+**The Bridge is on the card (2 MB build).** Frame parser 20/20 host tests
+(incl. fuzz), delivery pipeline E2E-verified byte-exact from agent-bridge over
+the wire, and a real hardware delivery confirmed (BridgeTest, 2026-07-02).
 Foundry uses the same delivery path and inherits this verification.
+
+**RULE: never update The Bridge over itself (OTA). Bridge updates go via SD
+card only.** A running Bridge delivering a newer copy of itself over the slow
+link crashed the Plus (2026-07-02). OTA (drop a `.bin` in the mini's
+`~/bridge-outbox/` while The Bridge is open, watch `~/macplus-logs/all.log`) is
+fine for every OTHER app; for the Bridge itself, rebuild and ship on the SD
+card. (Chose not to build a self-update guard — the operational rule is enough.)
 
 ### How to ship an app update via the SD card
 Build the app, then inject onto the inserted card with hfsutils (see "Injecting
