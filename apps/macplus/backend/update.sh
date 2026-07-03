@@ -18,7 +18,7 @@ DEVTREE="${MACPLUS_DEVTREE:-/Users/admin/Documents/code/hilma}"
 ENVFILE="$HOME/.macplus-backend.env"
 UID_N="$(id -u)"
 AGENT_DIRS="agent agent-atkinson agent-surf agent-mux agent-imessage agent-diag agent-quote agent-bridge agent-screen agent-porthole agent-pssh"
-LONG_RUNNERS="mux imessage diag quote bridge screen porthole pssh rsh"
+LONG_RUNNERS="mux imessage diag quote bridge screen porthole pssh rsh pixel"
 
 echo "== pull =="
 BEFORE="$(git -C "$DEPLOY" rev-parse --short HEAD)"

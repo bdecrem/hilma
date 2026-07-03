@@ -24,6 +24,7 @@ MacPaint 2.0, MacWrite 4.5, ZTerm 1.0.1 — were also sourced and injected onto 
 - **Macinclaude Foundry** (`foundry/`) — describe an app → Claude writes + Retro68 compiles → lands on disk
 - **Quote of the Day** (`quote/`) — daily quote, served over the WiFi service
 - **The Bridge** (`bridge/`) — over-the-air app delivery (drop a `.bin` in the mini outbox → installs on the Plus)
+- **Daily Pixel** (`pixel/` + `agent-pixel/`, :2337) — persistent collaborative 64x64 1-bit canvas; you draw with the mouse, Claude adds a few strokes daily (or on invite, Canvas ▸ Invite Claude), updates appear live while watching
 
 **Services / infrastructure**
 - **WiFi system service** (`wifi/wifi.c` + `wifi.h`) + **boot INIT** (`wifi/wifiinit.c`) — one shared resident link to the mux; dial once, every app just attaches (no AT/ATDT in apps)
@@ -430,7 +431,7 @@ by side:
 
 (Infrastructure ports, not user apps: rsh `:2329` (Plutonix instant shell), mux `:2330`,
 diag `:2331`, quote `:2332`, bridge `:2333`, screen `:2334`, netspeed `:2335`,
-porthole `:2336`, pssh `:2222`.
+porthole `:2336`, pixel `:2337` (Daily Pixel canvas), pssh `:2222`.
 **How all mini-side services are deployed, updated, and restarted: [`BACKEND.md`](BACKEND.md).**)
 
 The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone

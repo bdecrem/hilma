@@ -18,13 +18,14 @@
 #   screen   :2334  node:net on-demand screenshot of the Plus (watches ~/.screen-grab)
 #   netspeed :2335  node:net bulk server for the Plus NetSpeed speed test
 #   rsh      :2329  node:net INSTANT shell for Plutonix (raw TCP -> pty, no SSH)
+#   pixel    :2337  node:net Daily Pixel collaborative canvas (+ daily Claude strokes)
 #
 # Secrets come from ~/.macplus-backend.env (chmod 600, NOT in git, NOT in the
 # plists). backend/update.sh re-syncs it from the dev tree's .env.local when
 # that file is readable.
 set -u
 
-NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen|netspeed|porthole|pssh|rsh>}"
+NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen|netspeed|porthole|pssh|rsh|pixel>}"
 DEPLOY="${MACPLUS_DEPLOY:-/Users/admin/hilma-deploy}"
 BASE="$DEPLOY/apps/macplus"
 SOCAT=/opt/homebrew/bin/socat
@@ -80,6 +81,10 @@ case "$NAME" in
     # completes (the system sshd on :22 kills it). login -f admin shell.
     export PSSH_LOGIN_USER="${PSSH_LOGIN_USER:-admin}"
     cd "$BASE/agent-pssh"; exec /usr/bin/env node src/server.js --listen 2222 ;;
+  pixel)
+    # Daily Pixel canvas — dependency-free node (needs ANTHROPIC_API_KEY for
+    # the daily Claude strokes; runs fine without, just never draws).
+    cd "$BASE/agent-pixel"; exec /usr/bin/env node server.mjs --listen 2337 ;;
   rsh)
     # INSTANT shell for Plutonix — raw TCP -> pty -> login shell. No SSH, no
     # handshake, no per-key crypto; trusted-LAN only (same model as :2323).
