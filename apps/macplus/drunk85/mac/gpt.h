@@ -70,6 +70,7 @@ extern void (*gGptProgress)(int step);
 /* ---- runtime experiment toggles (Lab menu) + per-reply phase timing ---- */
 extern int gUseLUT;   /* 1: int8 multiply table (default), 0: 68000 MULS.W */
 extern int gFixExp;   /* 1: table exp, 0: libm expf (default, byte-exact)  */
+extern int gFixAttn;  /* 1: int8 attention scores, 0: float (default)      */
 
 /* App sets this to TickCount so the engine can time phases. */
 extern unsigned long (*gGptClock)(void);

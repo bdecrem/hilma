@@ -65,7 +65,7 @@
 
 /* Bump this every build so Bart can confirm which one is running (shown on the
  * load line and sent to the mini log). */
-#define ORACLE_VER "v7"
+#define ORACLE_VER "v8"
 
 /* Font IDs (classic constants not always exposed by the interfaces). */
 #ifndef systemFont
@@ -87,8 +87,8 @@ static short WIN_W = 502, WIN_H = 300;   /* set for real in CreateTE/Relayout */
 
 /* reply shape: stop at a sentence end once past kMinReply, hard cap kMaxReply.
  * At ~2.7 chars/token that is a 50..150 char reply — a real post, not a saga. */
-#define kMinReply 20
-#define kMaxReply 56
+#define kMinReply 12
+#define kMaxReply 30
 
 /* ---- menus ---- */
 #define kAppleMenu 128
@@ -104,8 +104,9 @@ static short WIN_W = 502, WIN_H = 300;   /* set for real in CreateTE/Relayout */
 /* Lab menu items: experiment toggles + analytics */
 #define kLabLUT    1     /* multiply table on/off */
 #define kLabExp    2     /* table exp on/off      */
-/* item 3 = separator */
-#define kLabStats  4     /* send stats to the mini now */
+#define kLabAttn   3     /* int8 attention on/off */
+/* item 4 = separator */
+#define kLabStats  5     /* send stats to the mini now */
 
 /* ---- globals ---- */
 static WindowPtr  gWin;
@@ -177,8 +178,8 @@ static void SendRunStats(short ptoks, short gtoks)
     unsigned long at = GptTicksAttn(), si = GptTicksSilu();
     unsigned long other = tot;
     if (other > mm + rms + qz + at + si) other -= (mm + rms + qz + at + si); else other = 0;
-    sprintf(b, ORACLE_VER " run lut=%d exp=%d toks=%d/%d total=%lu mm=%lu attn=%lu rms=%lu quant=%lu silu=%lu other=%lu",
-            gUseLUT, gFixExp, (int)ptoks, (int)gtoks, tot, mm, at, rms, qz, si, other);
+    sprintf(b, ORACLE_VER " run lut=%d exp=%d a8=%d toks=%d/%d total=%lu mm=%lu attn=%lu rms=%lu quant=%lu silu=%lu other=%lu",
+            gUseLUT, gFixExp, gFixAttn, (int)ptoks, (int)gtoks, tot, mm, at, rms, qz, si, other);
     AppLog(b);
 }
 
@@ -557,6 +558,10 @@ static void DoMenu(long sel)
                 gFixExp = !gFixExp;
                 CheckItem(gLabM, kLabExp, gFixExp != 0);
                 AppLog(gFixExp ? "toggle: table exp ON" : "toggle: table exp OFF");
+            } else if (item == kLabAttn) {
+                gFixAttn = !gFixAttn;
+                CheckItem(gLabM, kLabAttn, gFixAttn != 0);
+                AppLog(gFixAttn ? "toggle: int8 attention ON" : "toggle: int8 attention OFF");
             } else if (item == kLabStats) {
                 SendRunStats(gPromptToks, gGenCount);   /* last reply's numbers */
             }
@@ -585,9 +590,10 @@ static void SetUpMenus(void)
     InsertMenu(gOracleM, 0);
 
     gLabM = NewMenu(kLabMenu, "\pLab");
-    AppendMenu(gLabM, "\pMultiply Table;Table Exp;(-;Send Stats Now");
-    CheckItem(gLabM, kLabLUT, gUseLUT != 0);   /* reflect current toggle state */
-    CheckItem(gLabM, kLabExp, gFixExp != 0);
+    AppendMenu(gLabM, "\pMultiply Table;Table Exp;Int8 Attention;(-;Send Stats Now");
+    CheckItem(gLabM, kLabLUT,  gUseLUT != 0);   /* reflect current toggle state */
+    CheckItem(gLabM, kLabExp,  gFixExp != 0);
+    CheckItem(gLabM, kLabAttn, gFixAttn != 0);
     InsertMenu(gLabM, 0);
 
     DrawMenuBar();

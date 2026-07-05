@@ -113,6 +113,20 @@ int gWantLogits = 1;              /* 0 during prompt prefill: skip classifier */
 /* ---- runtime experiment toggles (flipped from the Plus "Lab" menu) ---- */
 int gUseLUT = 1;                  /* 1: int8 multiply table, 0: 68000 MULS.W  */
 int gFixExp = 0;                  /* 1: table exp, 0: libm expf               */
+int gFixAttn = 0;                 /* 1: int8 attention scores (dot products)  */
+
+/* int8 key cache for fixed-point attention scores: k vectors quantized on
+ * write, so the per-token O(pos) score dot-products become integer MACs
+ * instead of float. Not byte-exact (quantized q,k). */
+static signed char *gKcache8 = 0L;
+static float       *gKscale  = 0L;    /* one scale per (layer,pos) k vector   */
+static int build_attn_cache(Config *p) {
+    int kv_dim = (p->dim * p->n_kv_heads) / p->n_heads;
+    long n = (long)p->n_layers * p->seq_len * kv_dim;
+    gKcache8 = (signed char *)malloc(n);
+    gKscale  = (float *)malloc((long)p->n_layers * p->seq_len * sizeof(float));
+    return (gKcache8 && gKscale) ? 0 : -1;
+}
 
 /* ---- per-phase timing (streamed to the mini after each reply) ---- */
 unsigned long (*gGptClock)(void) = 0;   /* app sets this to TickCount         */
@@ -471,6 +485,62 @@ core = core.replace(
     "            s->hb[i] = val;\n        }\n\n        // final matmul to get the output of the ffn",
     "            s->hb[i] = val;\n        }\n        gTicksSilu += clk() - _ts;\n\n        // final matmul to get the output of the ffn")
 
+# --- fixed-point attention (gFixAttn): quantize each k on write, then do the
+#     per-token score dot-products in int8 instead of float. Not byte-exact. ---
+_kw_old = "        memcpy(key_cache_row, s->k, kv_dim * sizeof(*key_cache_row));"
+_kw_new = ("        memcpy(key_cache_row, s->k, kv_dim * sizeof(*key_cache_row));\n"
+           "        if (gFixAttn) {   /* store this k quantized to int8 for fast scores */\n"
+           "            signed char *_kq = gKcache8 + loff + pos * kv_dim;\n"
+           "            float _wm = 0.0f, _sc, _iv; int _i;\n"
+           "            for (_i = 0; _i < kv_dim; _i++) { float _a = s->k[_i]; if (_a < 0) _a = -_a; if (_a > _wm) _wm = _a; }\n"
+           "            _sc = _wm / 127.0f; gKscale[l * p->seq_len + pos] = _sc;\n"
+           "            _iv = (_sc != 0.0f) ? 1.0f / _sc : 0.0f;\n"
+           "            for (_i = 0; _i < kv_dim; _i++) _kq[_i] = (signed char)(s->k[_i]*_iv + (s->k[_i] >= 0 ? 0.5f : -0.5f));\n"
+           "        }")
+assert _kw_old in core, "k-write not found -- runq.c changed"
+core = core.replace(_kw_old, _kw_new)
+
+_sc_old = ("""            for (int t = 0; t <= pos; t++) {
+                // get the key vector for this head and at this timestep
+                float* k = s->key_cache + loff + t * kv_dim + (h / kv_mul) * head_size;
+                // calculate the attention score as the dot product of q and k
+                float score = 0.0f;
+                for (int i = 0; i < head_size; i++) {
+                    score += q[i] * k[i];
+                }
+                score /= gAttnScale;      /* == sqrtf(head_size), hoisted */
+                // save the score to the attention buffer
+                att[t] = score;
+            }""")
+_sc_new = ("""            if (gFixAttn) {
+                /* quantize q for this head once, then integer dot-products */
+                signed char _q8[128]; int _i, kb = (h / kv_mul) * head_size;
+                float _qm = 0.0f, _qs, _qi;
+                for (_i = 0; _i < head_size; _i++) { float _a = q[_i]; if (_a < 0) _a = -_a; if (_a > _qm) _qm = _a; }
+                _qs = _qm / 127.0f; _qi = (_qs != 0.0f) ? 1.0f / _qs : 0.0f;
+                for (_i = 0; _i < head_size; _i++) _q8[_i] = (signed char)(q[_i]*_qi + (q[_i] >= 0 ? 0.5f : -0.5f));
+                for (int t = 0; t <= pos; t++) {
+                    signed char *k8 = gKcache8 + loff + t * kv_dim + kb;
+                    long iv = 0;
+                    for (_i = 0; _i < head_size; _i++) iv += (long)_q8[_i] * (long)k8[_i];
+                    att[t] = ((float)iv * _qs * gKscale[l * p->seq_len + t]) / gAttnScale;
+                }
+            } else
+            for (int t = 0; t <= pos; t++) {
+                // get the key vector for this head and at this timestep
+                float* k = s->key_cache + loff + t * kv_dim + (h / kv_mul) * head_size;
+                // calculate the attention score as the dot product of q and k
+                float score = 0.0f;
+                for (int i = 0; i < head_size; i++) {
+                    score += q[i] * k[i];
+                }
+                score /= gAttnScale;      /* == sqrtf(head_size), hoisted */
+                // save the score to the attention buffer
+                att[t] = score;
+            }""")
+assert _sc_old in core, "scores loop not found -- runq.c changed"
+core = core.replace(_sc_old, _sc_new)
+
 # tokenizer structs + compare_tokens (verbatim).
 tok_structs = slc(486, 502)
 # free_tokenizer + decode + safe_printf + str_lookup + encode (verbatim), except
@@ -600,6 +670,7 @@ int GptInitMem(const void *modelData, long modelLen,
     PROG(1);
     if (load_model_mem(&gT, modelData, modelLen) != 0) return -1;
     if (build_mul_lut() != 0) return -1;      /* int8xint8 product table */
+    if (build_attn_cache(&gT.config) != 0) return -1;   /* int8 key cache */
     build_exp_table();
     PROG(2);
     if (build_rope(&gT.config) != 0) return -1;
@@ -701,6 +772,8 @@ void GptShutdown(void) {
     if (gRopeCos) { free(gRopeCos); gRopeCos = 0L; }
     if (gRopeSin) { free(gRopeSin); gRopeSin = 0L; }
     if (gMulLUT)  { free(gMulLUT);  gMulLUT  = 0L; }
+    if (gKcache8) { free(gKcache8); gKcache8 = 0L; }
+    if (gKscale)  { free(gKscale);  gKscale  = 0L; }
     gWantLogits = 1;
     gReady = 0;
 }
