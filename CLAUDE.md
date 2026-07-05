@@ -141,7 +141,9 @@ Voice is reachable from the Voice button in `TopicDetailView`. The backend mints
 
 ## Deploying
 
-**NEVER push without Bart explicitly asking.** Pushing triggers a live Vercel deploy — that's a production action, not a routine one. Commit when asked to commit; push ONLY when asked to push. "Commit and push" is two actions; "commit" is one. If Bart says "commit," commit and stop. If Bart says "push," then push. Treat every push as needing its own explicit go-ahead, even if you just finished committing on his request.
+**Commit regularly — don't wait to be asked.** Commit at logical checkpoints as work lands: a feature finished, a fix verified, a refactor done, a risky change about to start (so there's a clean state to fall back to). Frequent small commits with clear messages beat one big commit at the end — they make the work easy to follow and easy to revert. This is a standing habit, not something to ask permission for each time.
+
+**Pushing is separate — push only when Bart explicitly asks.** Pushing triggers a live Vercel deploy, a production action. "Commit and push" is two actions; "commit" is one. If Bart says "commit," commit and stop. Treat every push as needing its own go-ahead, even right after committing on his request.
 
 **ALWAYS run `pnpm build` locally before pushing.** If the build fails locally, it will fail on Vercel too — and ALL pages (not just the broken one) will stop deploying until the build is fixed. A broken build blocks the entire site.
 
