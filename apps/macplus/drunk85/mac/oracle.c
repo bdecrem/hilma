@@ -50,11 +50,11 @@
 
 #include "winfull.inc"     /* full-screen window + close/zoom box */
 #include "gpt.h"           /* the local inference engine (ported llama2.c)   */
-/* Oracle is a FULLY OFFLINE app: no MacTCP, no networking. An earlier build
- * added applog (MacTCP) for remote timing, but that pulled in the whole TCP
- * stack, and on real hardware (where MacTCP is installed, unlike the emulator)
- * it broke the model load at startup. Removed. Timing is on-screen only, via
- * the Oracle > Benchmark menu. */
+#include "nettcp.h"        /* MacTCP to the mini -- for analytics only        */
+#include "applog.inc"      /* per-reply stats -> mini ~/macplus-logs/all.log  */
+/* Networking is for ANALYTICS ONLY and is brought up LAZILY (first idle,
+ * AFTER the model loads) so it can never block or crash the load again -- the
+ * earlier crash was MacTCP being touched during the ~18s load. */
 
 /* The int8 model + tokenizer are embedded in the app as resources (see
  * oracle.r), so THE ORACLE is a single self-contained file -- no data files to
@@ -90,16 +90,23 @@ static short WIN_W = 502, WIN_H = 300;   /* set for real in CreateTE/Relayout */
 #define kAppleMenu 128
 #define kFileMenu  129
 #define kOracleMenu 130
+#define kLabMenu   131
 /* Oracle menu items */
 #define kAskAgain   1
 /* item 2 = separator */
 #define kClearItem  3
 /* item 4 = separator */
 #define kBenchItem  5
+/* Lab menu items: experiment toggles + analytics */
+#define kLabLUT    1     /* multiply table on/off */
+#define kLabExp    2     /* table exp on/off      */
+/* item 3 = separator */
+#define kLabStats  4     /* send stats to the mini now */
 
 /* ---- globals ---- */
 static WindowPtr  gWin;
-static MenuHandle gAppleM, gFileM, gOracleM;
+static MenuHandle gAppleM, gFileM, gOracleM, gLabM;
+static Boolean    gLogOpened = false;   /* lazy analytics link, opened post-load */
 static TEHandle   gTE;          /* transcript (read-only, scrolls)  */
 static TEHandle   gInputTE;     /* the native local input line      */
 static Boolean    gDone   = false;
@@ -141,6 +148,34 @@ static void MakePStr(Str255 s, const char *c)
     s[0] = (unsigned char)i;
 }
 static void StrLen(const char *s, long *n) { long i = 0; while (s[i]) i++; *n = i; }
+
+/* clock hook for the engine's phase timers */
+static unsigned long OracleClock(void) { return (unsigned long)TickCount(); }
+
+/* Open the analytics link once, lazily, at the first idle after the model is
+ * loaded -- never during the load (that is what crashed before). Best-effort. */
+static void LazyLogOpen(void)
+{
+    if (gLogOpened) return;
+    gLogOpened = true;              /* try once; applog is best-effort/safe */
+    AppLogOpen("Oracle");
+    AppLog(gModelLoaded ? "ready (analytics on)" : "ready (model FAILED)");
+}
+
+/* After a reply, stream the config + phase timing to the mini's all.log:
+ *   Oracle: run lut=1 exp=0 ptoks=8 gtoks=20 total=1234t mm=1010t (per-tok ...)
+ * ticks are 1/60 s. This is how experiments are read without the emulator. */
+static void SendRunStats(short ptoks, short gtoks)
+{
+    char b[160];
+    unsigned long tot = GptTicksTotal(), mm = GptTicksMatmul();
+    short toks = (short)(ptoks + gtoks);
+    long perTok10 = toks ? (long)(tot * 10 / toks) : 0;   /* ticks*10 per token */
+    sprintf(b, "run lut=%d exp=%d ptoks=%d gtoks=%d total=%lut mm=%lut rest=%lut per-tok=%ld.%ldt",
+            gUseLUT, gFixExp, (int)ptoks, (int)gtoks, tot, mm,
+            (tot > mm ? tot - mm : 0), perTok10 / 10, perTok10 % 10);
+    AppLog(b);
+}
 
 /* ================= transcript (TextEdit) ================= */
 
@@ -337,6 +372,7 @@ static void Respond(const char *prompt, short len)
             Emit(bb);
         }
         gBenchReport = false;
+        SendRunStats(gPromptToks, gGenCount);   /* stream this run to the mini */
     } else {
         /* demo voice when the model resources are missing */
         short which;
@@ -504,6 +540,20 @@ static void DoMenu(long sel)
                 } else SysBeep(1);
             }
             break;
+        case kLabMenu:
+            if (gBusy) { SysBeep(1); break; }
+            if (item == kLabLUT) {
+                gUseLUT = !gUseLUT;
+                CheckItem(gLabM, kLabLUT, gUseLUT != 0);
+                AppLog(gUseLUT ? "toggle: multiply table ON" : "toggle: multiply table OFF");
+            } else if (item == kLabExp) {
+                gFixExp = !gFixExp;
+                CheckItem(gLabM, kLabExp, gFixExp != 0);
+                AppLog(gFixExp ? "toggle: table exp ON" : "toggle: table exp OFF");
+            } else if (item == kLabStats) {
+                SendRunStats(gPromptToks, gGenCount);   /* last reply's numbers */
+            }
+            break;
     }
     HiliteMenu(0);
 }
@@ -526,6 +576,12 @@ static void SetUpMenus(void)
     gOracleM = NewMenu(kOracleMenu, "\pOracle");
     AppendMenu(gOracleM, "\pAsk Again/R;(-;Clear/K;(-;Benchmark/B");
     InsertMenu(gOracleM, 0);
+
+    gLabM = NewMenu(kLabMenu, "\pLab");
+    AppendMenu(gLabM, "\pMultiply Table;Table Exp;(-;Send Stats Now");
+    CheckItem(gLabM, kLabLUT, gUseLUT != 0);   /* reflect current toggle state */
+    CheckItem(gLabM, kLabExp, gFixExp != 0);
+    InsertMenu(gLabM, 0);
 
     DrawMenuBar();
 }
@@ -633,6 +689,7 @@ int main(void)
     unsigned long tLoad0, tLoad1;
 
     InitToolbox();
+    gGptClock = OracleClock;   /* engine phase timers use TickCount */
 
     SetUpMenus();
     SetUpWindow();
@@ -677,7 +734,13 @@ int main(void)
      * directly avoids Gestalt, which is an unimplemented trap on the Plus ROM. */
     while (!gDone) {
         if (WaitNextEvent(everyEvent, &ev, 15L, 0L)) HandleEvent(&ev);
-        if (!gBusy) TEIdle(gInputTE);     /* blink the input caret */
+        if (!gBusy) {
+            TEIdle(gInputTE);             /* blink the input caret */
+            LazyLogOpen();                /* bring up analytics AFTER the load */
+            AppLogTick();
+        }
     }
+    AppLog("quit");
+    AppLogClose();
     return 0;
 }

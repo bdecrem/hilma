@@ -50,24 +50,11 @@ header = '''/*
 #include <stdint.h>
 #include "gpt.h"
 
-/* Fixed-point experiment knobs (default OFF -> byte-exact float build). Set at
- * compile time to measure the speed/quality tradeoff:
- *   -DGPT_FIXED_SCALE=1 -DSCALE_Q=N   integer matmul scaling, N frac bits
- *   -DGPT_FIXED_EXP=1                 table exp in softmax/silu/sampler        */
-#ifndef GPT_FIXED_SCALE
-#define GPT_FIXED_SCALE 0
-#endif
-#ifndef SCALE_Q
-#define SCALE_Q 30
-#endif
-#ifndef GPT_FIXED_EXP
-#define GPT_FIXED_EXP 0
-#endif
-#if GPT_FIXED_EXP
-#define EXPF(x) fast_expf(x)
-#else
-#define EXPF(x) expf(x)
-#endif
+/* exp is chosen at RUNTIME (gFixExp) so the Plus "Lab" menu can toggle it
+ * live; default 0 = libm expf (byte-exact). */
+extern int gFixExp;
+extern float fast_expf(float);
+#define EXPF(x) (gFixExp ? fast_expf(x) : expf(x))
 '''
 
 # GS global + structs + malloc/free run state (verbatim; ssize_t -> long).
@@ -110,6 +97,19 @@ void (*gGptProgress)(int step) = 0;
 
 /* generation-time knobs & tables (v2 engine) */
 int gWantLogits = 1;              /* 0 during prompt prefill: skip classifier */
+
+/* ---- runtime experiment toggles (flipped from the Plus "Lab" menu) ---- */
+int gUseLUT = 1;                  /* 1: int8 multiply table, 0: 68000 MULS.W  */
+int gFixExp = 0;                  /* 1: table exp, 0: libm expf               */
+
+/* ---- per-phase timing (streamed to the mini after each reply) ---- */
+unsigned long (*gGptClock)(void) = 0;   /* app sets this to TickCount         */
+unsigned long gTicksMatmul = 0;         /* time inside matmul                 */
+unsigned long gTicksTotal  = 0;         /* time inside forward()              */
+static unsigned long clk(void) { return gGptClock ? gGptClock() : 0UL; }
+void GptStatsReset(void) { gTicksMatmul = 0; gTicksTotal = 0; }
+unsigned long GptTicksMatmul(void) { return gTicksMatmul; }
+unsigned long GptTicksTotal(void)  { return gTicksTotal; }
 static float gAttnScale = 1.0f;   /* sqrtf(head_size), hoisted out of attention */
 static float *gRopeCos = 0L, *gRopeSin = 0L;   /* [seq_len][head_size/2] */
 
@@ -134,7 +134,7 @@ static float g2powf[4097];
 static void build_exp_table(void) {
     int k; for (k = 0; k <= 4096; k++) g2powf[k] = (float)pow(2.0, (double)k / 4096.0);
 }
-static float fast_expf(float x) {
+float fast_expf(float x) {
     float t, f, a, lo, hi; int i, idx;
     union { float fl; int32_t in; } u;
     if (x <= -87.3f) return 0.0f;
@@ -350,49 +350,50 @@ new_matmul = '''void matmul(float* xout, QuantizedTensor *x, QuantizedTensor *w,
      * (GS % 8 == 0, checked at load). No divide in the loop (both scale arrays
      * walked with pointers). Same per-group float summation order. */
     int i, j, k;
+    unsigned long _t0 = clk();
     static unsigned short x8buf[512];   /* ((uint8)x[k]) << 8, reused per row */
     const int8_t *wp  = w->q;
     const float  *wsp = w->s;
-    for (k = 0; k < n; k++)
-        x8buf[k] = (unsigned short)(((unsigned)(unsigned char)x->q[k]) << 8);
+    if (gUseLUT)
+        for (k = 0; k < n; k++)
+            x8buf[k] = (unsigned short)(((unsigned)(unsigned char)x->q[k]) << 8);
     for (i = 0; i < d; i++) {
-#if GPT_FIXED_SCALE
-        long long val_acc = 0;            /* fixed-point accumulator (Q = SCALE_Q) */
-#else
         float val = 0.0f;
-#endif
         const float          *xsp = x->s;
         const unsigned short *x8  = x8buf;
+        const int8_t         *xp  = x->q;
         for (j = 0; j <= n - GS; j += GS) {
             int32_t ival = 0;
-            for (k = 0; k < GS; k += 8) {
-                ival += gMulLUT[x8[0] | (unsigned char)wp[0]];
-                ival += gMulLUT[x8[1] | (unsigned char)wp[1]];
-                ival += gMulLUT[x8[2] | (unsigned char)wp[2]];
-                ival += gMulLUT[x8[3] | (unsigned char)wp[3]];
-                ival += gMulLUT[x8[4] | (unsigned char)wp[4]];
-                ival += gMulLUT[x8[5] | (unsigned char)wp[5]];
-                ival += gMulLUT[x8[6] | (unsigned char)wp[6]];
-                ival += gMulLUT[x8[7] | (unsigned char)wp[7]];
-                x8 += 8; wp += 8;
+            if (gUseLUT) {                       /* multiply table */
+                for (k = 0; k < GS; k += 8) {
+                    ival += gMulLUT[x8[0] | (unsigned char)wp[0]];
+                    ival += gMulLUT[x8[1] | (unsigned char)wp[1]];
+                    ival += gMulLUT[x8[2] | (unsigned char)wp[2]];
+                    ival += gMulLUT[x8[3] | (unsigned char)wp[3]];
+                    ival += gMulLUT[x8[4] | (unsigned char)wp[4]];
+                    ival += gMulLUT[x8[5] | (unsigned char)wp[5]];
+                    ival += gMulLUT[x8[6] | (unsigned char)wp[6]];
+                    ival += gMulLUT[x8[7] | (unsigned char)wp[7]];
+                    x8 += 8; wp += 8;
+                }
+            } else {                             /* native 68000 MULS.W */
+                for (k = 0; k < GS; k += 8) {
+                    ival += (int32_t)((int16_t)xp[0] * (int16_t)wp[0]);
+                    ival += (int32_t)((int16_t)xp[1] * (int16_t)wp[1]);
+                    ival += (int32_t)((int16_t)xp[2] * (int16_t)wp[2]);
+                    ival += (int32_t)((int16_t)xp[3] * (int16_t)wp[3]);
+                    ival += (int32_t)((int16_t)xp[4] * (int16_t)wp[4]);
+                    ival += (int32_t)((int16_t)xp[5] * (int16_t)wp[5]);
+                    ival += (int32_t)((int16_t)xp[6] * (int16_t)wp[6]);
+                    ival += (int32_t)((int16_t)xp[7] * (int16_t)wp[7]);
+                    xp += 8; wp += 8;
+                }
             }
-#if GPT_FIXED_SCALE
-            /* combined scale ws*xs rounded to SCALE_Q fractional bits, then
-             * integer accumulate -- no float mul/add per group. SCALE_Q trades
-             * precision (quality) for the bit-width of the fixed-point mul. */
-            { double cs = (double)(*wsp++) * (double)(*xsp++);
-              long long csfx = (long long)(cs * (double)(1LL << SCALE_Q) + (cs >= 0 ? 0.5 : -0.5));
-              val_acc += (long long)ival * csfx; }
-#else
             val += ((float) ival) * (*wsp++) * (*xsp++);
-#endif
         }
-#if GPT_FIXED_SCALE
-        xout[i] = (float)((double)val_acc / (double)(1LL << SCALE_Q));
-#else
         xout[i] = val;
-#endif
     }
+    gTicksMatmul += clk() - _t0;
 }'''
 assert old_matmul in core, "matmul function not found verbatim -- runq.c changed"
 core = core.replace(old_matmul, new_matmul)
@@ -694,12 +695,16 @@ void GptGenerate(const char *prompt, int maxNewTokens,
     generated = 0;
     total = promptLen + maxNewTokens;
     if (total > seqcap) total = seqcap;
+    GptStatsReset();
 
     while (pos < total) {
         int prefill = (pos < promptLen - 1);
         float *logits;
+        unsigned long _f;
         gWantLogits = !prefill;
+        _f = clk();
         logits = forward(&gT, token, pos);
+        gTicksTotal += clk() - _f;
         if (prefill) next = ptoks[pos + 1];
         else         next = sample(&gSmp, logits);
         pos++;

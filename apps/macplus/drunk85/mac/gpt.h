@@ -67,4 +67,14 @@ double        GptEvalText(const char *text);
  * Used for remote diagnosis on hardware where a crash can't be caught in C. */
 extern void (*gGptProgress)(int step);
 
+/* ---- runtime experiment toggles (Lab menu) + per-reply phase timing ---- */
+extern int gUseLUT;   /* 1: int8 multiply table (default), 0: 68000 MULS.W */
+extern int gFixExp;   /* 1: table exp, 0: libm expf (default, byte-exact)  */
+
+/* App sets this to TickCount so the engine can time phases. */
+extern unsigned long (*gGptClock)(void);
+void          GptStatsReset(void);      /* also reset at each GptGenerate     */
+unsigned long GptTicksMatmul(void);     /* ticks in matmul during last reply  */
+unsigned long GptTicksTotal(void);      /* ticks in forward() during last reply*/
+
 #endif /* GPT_H */
