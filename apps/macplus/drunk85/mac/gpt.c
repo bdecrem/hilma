@@ -14,6 +14,25 @@
 #include <stdint.h>
 #include "gpt.h"
 
+/* Fixed-point experiment knobs (default OFF -> byte-exact float build). Set at
+ * compile time to measure the speed/quality tradeoff:
+ *   -DGPT_FIXED_SCALE=1 -DSCALE_Q=N   integer matmul scaling, N frac bits
+ *   -DGPT_FIXED_EXP=1                 table exp in softmax/silu/sampler        */
+#ifndef GPT_FIXED_SCALE
+#define GPT_FIXED_SCALE 0
+#endif
+#ifndef SCALE_Q
+#define SCALE_Q 30
+#endif
+#ifndef GPT_FIXED_EXP
+#define GPT_FIXED_EXP 0
+#endif
+#if GPT_FIXED_EXP
+#define EXPF(x) fast_expf(x)
+#else
+#define EXPF(x) expf(x)
+#endif
+
 int GS = 0; // group size global for quantization of the weights
 
 // ----------------------------------------------------------------------------
@@ -206,6 +225,27 @@ static int build_mul_lut(void) {
     return 0;
 }
 
+/* table-assisted expf (used only when GPT_FIXED_EXP): e^x = 2^i * 2^f, 2^f from
+ * a 4096-entry interpolated table, 2^i into the float exponent bits. */
+static float g2powf[4097];
+static void build_exp_table(void) {
+    int k; for (k = 0; k <= 4096; k++) g2powf[k] = (float)pow(2.0, (double)k / 4096.0);
+}
+static float fast_expf(float x) {
+    float t, f, a, lo, hi; int i, idx;
+    union { float fl; int32_t in; } u;
+    if (x <= -87.3f) return 0.0f;
+    if (x >=  88.0f) return 3.0e38f;
+    t = x * 1.442695041f;
+    i = (int)t; if (t < 0.0f && (float)i != t) i--;
+    f = t - (float)i;
+    idx = (int)(f * 4096.0f);
+    a = f * 4096.0f - (float)idx;
+    lo = g2powf[idx]; hi = g2powf[idx + 1];
+    u.in = (i + 127) << 23;
+    return (lo + (hi - lo) * a) * u.fl;
+}
+
 static int big_endian(void) { unsigned short x = 1; return *((unsigned char *)&x) == 0; }
 static uint32_t rd32(const unsigned char *p) {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8)
@@ -343,7 +383,7 @@ void softmax(float* x, int size) {
     // exp and sum
     float sum = 0.0f;
     for (int i = 0; i < size; i++) {
-        x[i] = expf(x[i] - max_val);
+        x[i] = EXPF(x[i] - max_val);
         sum += x[i];
     }
     // normalize
@@ -368,7 +408,11 @@ void matmul(float* xout, QuantizedTensor *x, QuantizedTensor *w, int n, int d) {
     for (k = 0; k < n; k++)
         x8buf[k] = (unsigned short)(((unsigned)(unsigned char)x->q[k]) << 8);
     for (i = 0; i < d; i++) {
+#if GPT_FIXED_SCALE
+        long long val_acc = 0;            /* fixed-point accumulator (Q = SCALE_Q) */
+#else
         float val = 0.0f;
+#endif
         const float          *xsp = x->s;
         const unsigned short *x8  = x8buf;
         for (j = 0; j <= n - GS; j += GS) {
@@ -384,9 +428,22 @@ void matmul(float* xout, QuantizedTensor *x, QuantizedTensor *w, int n, int d) {
                 ival += gMulLUT[x8[7] | (unsigned char)wp[7]];
                 x8 += 8; wp += 8;
             }
+#if GPT_FIXED_SCALE
+            /* combined scale ws*xs rounded to SCALE_Q fractional bits, then
+             * integer accumulate -- no float mul/add per group. SCALE_Q trades
+             * precision (quality) for the bit-width of the fixed-point mul. */
+            { double cs = (double)(*wsp++) * (double)(*xsp++);
+              long long csfx = (long long)(cs * (double)(1LL << SCALE_Q) + (cs >= 0 ? 0.5 : -0.5));
+              val_acc += (long long)ival * csfx; }
+#else
             val += ((float) ival) * (*wsp++) * (*xsp++);
+#endif
         }
+#if GPT_FIXED_SCALE
+        xout[i] = (float)((double)val_acc / (double)(1LL << SCALE_Q));
+#else
         xout[i] = val;
+#endif
     }
 }
 
@@ -503,7 +560,7 @@ float* forward(Transformer* transformer, int token, int pos) {
         for (int i = 0; i < hidden_dim; i++) {
             float val = s->hb[i];
             // silu(x)=x*σ(x), where σ(x) is the logistic sigmoid
-            val *= (1.0f / (1.0f + expf(-val)));
+            val *= (1.0f / (1.0f + EXPF(-val)));
             // elementwise multiply with w3(x)
             val *= s->hb2[i];
             s->hb[i] = val;
@@ -903,7 +960,7 @@ static int sample_topk(Sampler *sampler, float *logits) {
     for (i = 1; i < cnt; i++) if (pi[i].prob > maxv) maxv = pi[i].prob;
     sum = 0.0f;
     for (i = 0; i < cnt; i++) {
-        pi[i].prob = expf((pi[i].prob - maxv) / sampler->temperature);
+        pi[i].prob = EXPF((pi[i].prob - maxv) / sampler->temperature);
         sum += pi[i].prob;
     }
     coin = random_f32(&sampler->rng_state);
@@ -939,6 +996,7 @@ int GptInitMem(const void *modelData, long modelLen,
     PROG(1);
     if (load_model_mem(&gT, modelData, modelLen) != 0) return -1;
     if (build_mul_lut() != 0) return -1;      /* int8xint8 product table */
+    build_exp_table();
     PROG(2);
     if (build_rope(&gT.config) != 0) return -1;
     gAttnScale = sqrtf(gT.config.dim / gT.config.n_heads);
@@ -996,6 +1054,33 @@ void GptDbgProbe(const char *prompt, int *pLen, int *pT0, int *pT1, int *pFirst)
         else *pFirst = sample_argmax(logits, gT.config.vocab_size);
     }
     gWantLogits = 1;
+}
+
+/* Average cross-entropy (nats/token) of `text` under the model -- the real
+ * quality measure. Teacher-forced; uses double exp/log for an honest loss
+ * regardless of the model's own sampler. Lower = better prediction. Compare
+ * float vs fixed-point builds on the same text: equal loss = equal quality. */
+double GptEvalText(const char *text) {
+    int *toks; int n = 0, pos, cap; double loss = 0.0; int cnt = 0;
+    if (!gReady) return -1.0;
+    cap = 0; { const char *p = text; while (*p++) cap++; }
+    toks = (int *)malloc((size_t)(cap + 3) * sizeof(int));
+    if (!toks) return -1.0;
+    encode(&gTok, (char *)text, 1, 0, toks, &n);
+    if (n < 2) { free(toks); return -1.0; }
+    gWantLogits = 1;
+    for (pos = 0; pos < n - 1; pos++) {
+        float *logits = forward(&gT, toks[pos], pos);
+        int V = gT.config.vocab_size, next = toks[pos + 1], q;
+        float maxl = logits[0];
+        double sum = 0.0, logp;
+        for (q = 1; q < V; q++) if (logits[q] > maxl) maxl = logits[q];
+        for (q = 0; q < V; q++) sum += exp((double)(logits[q] - maxl));
+        logp = (double)(logits[next] - maxl) - log(sum);
+        loss += -logp; cnt++;
+    }
+    free(toks);
+    return cnt ? loss / (double)cnt : -1.0;
 }
 
 void GptShutdown(void) {

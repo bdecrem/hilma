@@ -57,6 +57,10 @@ unsigned long GptDbgBits(int i);
 int           GptDbgFirstTok(void);
 void          GptDbgProbe(const char *prompt, int *pLen, int *pT0, int *pT1, int *pFirst);
 
+/* Average cross-entropy (nats/token) of `text` under the model. Quality metric
+ * for comparing float vs fixed-point builds. Lower = better. */
+double        GptEvalText(const char *text);
+
 /* Optional progress hook, called with a step number as GptInit proceeds
  * (1=enter, 2=model file open, 3=weights buffer alloc, 4=weights read,
  *  5=run-state alloc, 6=tokenizer, 7=sampler/ready). Default NULL (no-op).
