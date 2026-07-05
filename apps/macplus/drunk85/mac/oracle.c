@@ -63,6 +63,10 @@
 #define kTokType   'TOKN'
 #define kResID     128
 
+/* Bump this every build so Bart can confirm which one is running (shown on the
+ * load line and sent to the mini log). */
+#define ORACLE_VER "v7"
+
 /* Font IDs (classic constants not always exposed by the interfaces). */
 #ifndef systemFont
 #define systemFont 0       /* Chicago */
@@ -159,7 +163,7 @@ static void LazyLogOpen(void)
     if (gLogOpened) return;
     gLogOpened = true;              /* try once; applog is best-effort/safe */
     AppLogOpen("Oracle");
-    AppLog(gModelLoaded ? "ready (analytics on)" : "ready (model FAILED)");
+    AppLog(gModelLoaded ? ORACLE_VER " ready (analytics on)" : ORACLE_VER " ready (model FAILED)");
 }
 
 /* After a reply, stream the config + phase timing to the mini's all.log:
@@ -167,13 +171,14 @@ static void LazyLogOpen(void)
  * ticks are 1/60 s. This is how experiments are read without the emulator. */
 static void SendRunStats(short ptoks, short gtoks)
 {
-    char b[160];
+    char b[200];
     unsigned long tot = GptTicksTotal(), mm = GptTicksMatmul();
-    short toks = (short)(ptoks + gtoks);
-    long perTok10 = toks ? (long)(tot * 10 / toks) : 0;   /* ticks*10 per token */
-    sprintf(b, "run lut=%d exp=%d ptoks=%d gtoks=%d total=%lut mm=%lut rest=%lut per-tok=%ld.%ldt",
-            gUseLUT, gFixExp, (int)ptoks, (int)gtoks, tot, mm,
-            (tot > mm ? tot - mm : 0), perTok10 / 10, perTok10 % 10);
+    unsigned long rms = GptTicksRms(), qz = GptTicksQuant();
+    unsigned long at = GptTicksAttn(), si = GptTicksSilu();
+    unsigned long other = tot;
+    if (other > mm + rms + qz + at + si) other -= (mm + rms + qz + at + si); else other = 0;
+    sprintf(b, ORACLE_VER " run lut=%d exp=%d toks=%d/%d total=%lu mm=%lu attn=%lu rms=%lu quant=%lu silu=%lu other=%lu",
+            gUseLUT, gFixExp, (int)ptoks, (int)gtoks, tot, mm, at, rms, qz, si, other);
     AppLog(b);
 }
 
@@ -333,6 +338,8 @@ static int OracleTick(int phase, int done, int total, void *ctx)
         if (gSawEnd  && done >= kMinReply) return 0;
     }
     PumpEvents();
+    AppLogTick();                /* heartbeat during the long reply, so the mini
+                                 * does not flag a working app as "went silent" */
     if (gAbort) return 0;
     SetCursor(*GetCursor(watchCursor));
     return 1;
@@ -700,7 +707,7 @@ int main(void)
      * slow wake-up doesn't read as a hang (the first hardware run was
      * interrupted mid-load because it looked stuck). */
     SetCursor(*GetCursor(watchCursor));
-    EmitLine("waking the mind of 1985 -- give me a minute.");
+    EmitLine("THE ORACLE " ORACLE_VER " -- waking the mind of 1985, give me a minute.");
     Emit("loading ");
     gGptProgress = LoadProg;
     tLoad0 = TickCount();

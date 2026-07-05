@@ -55,6 +55,11 @@ header = '''/*
 extern int gFixExp;
 extern float fast_expf(float);
 #define EXPF(x) (gFixExp ? fast_expf(x) : expf(x))
+
+/* phase timers -- forward declared (definitions in the loader section) so the
+ * earlier-emitted quantize() can reference them. */
+static unsigned long clk(void);
+extern unsigned long gTicksMatmul, gTicksTotal, gTicksRms, gTicksQuant, gTicksAttn, gTicksSilu;
 '''
 
 # GS global + structs + malloc/free run state (verbatim; ssize_t -> long).
@@ -82,6 +87,13 @@ _q_new = '''        // calculate and write the quantized values (reciprocal-mult
         }'''
 assert _q_old in part_quant, "quantize body not found verbatim -- runq.c changed"
 part_quant = part_quant.replace(_q_old, _q_new)
+# time quantize()
+part_quant = part_quant.replace(
+    "void quantize(QuantizedTensor *qx, float* x, int n) {\n    int num_groups = n / GS;",
+    "void quantize(QuantizedTensor *qx, float* x, int n) {\n    unsigned long _tq = clk();\n    int num_groups = n / GS;")
+part_quant = part_quant.replace(
+    "            qx->q[group * GS + i] = quantized;\n        }\n    }\n}",
+    "            qx->q[group * GS + i] = quantized;\n        }\n    }\n    gTicksQuant += clk() - _tq;\n}")
 
 # our weight mapper + memory loader (replaces runq's mmap read_checkpoint).
 # NOTE endianness: llama2.c checkpoints are LITTLE-endian; the 68000 Mac is
@@ -106,10 +118,17 @@ int gFixExp = 0;                  /* 1: table exp, 0: libm expf               */
 unsigned long (*gGptClock)(void) = 0;   /* app sets this to TickCount         */
 unsigned long gTicksMatmul = 0;         /* time inside matmul                 */
 unsigned long gTicksTotal  = 0;         /* time inside forward()              */
+unsigned long gTicksRms = 0, gTicksQuant = 0, gTicksAttn = 0, gTicksSilu = 0;
 static unsigned long clk(void) { return gGptClock ? gGptClock() : 0UL; }
-void GptStatsReset(void) { gTicksMatmul = 0; gTicksTotal = 0; }
+void GptStatsReset(void) {
+    gTicksMatmul = gTicksTotal = gTicksRms = gTicksQuant = gTicksAttn = gTicksSilu = 0;
+}
 unsigned long GptTicksMatmul(void) { return gTicksMatmul; }
 unsigned long GptTicksTotal(void)  { return gTicksTotal; }
+unsigned long GptTicksRms(void)    { return gTicksRms; }
+unsigned long GptTicksQuant(void)  { return gTicksQuant; }
+unsigned long GptTicksAttn(void)   { return gTicksAttn; }
+unsigned long GptTicksSilu(void)   { return gTicksSilu; }
 static float gAttnScale = 1.0f;   /* sqrtf(head_size), hoisted out of attention */
 static float *gRopeCos = 0L, *gRopeSin = 0L;   /* [seq_len][head_size/2] */
 
@@ -431,6 +450,26 @@ assert old_final in core, "final rmsnorm block not found -- runq.c changed"
 core = core.replace(old_final, new_final)
 assert "expf(" in core
 core = core.replace("expf(", "EXPF(")
+
+# --- finer phase timers: rmsnorm, attention block, silu block ---
+core = core.replace(
+    "void rmsnorm(float* o, float* x, float* weight, int size) {\n    // calculate sum of squares\n    float ss = 0.0f;",
+    "void rmsnorm(float* o, float* x, float* weight, int size) {\n    unsigned long _tr = clk();\n    // calculate sum of squares\n    float ss = 0.0f;")
+core = core.replace(
+    "    // normalize and scale\n    for (int j = 0; j < size; j++) {\n        o[j] = weight[j] * (ss * x[j]);\n    }\n}",
+    "    // normalize and scale\n    for (int j = 0; j < size; j++) {\n        o[j] = weight[j] * (ss * x[j]);\n    }\n    gTicksRms += clk() - _tr;\n}")
+core = core.replace(
+    "        // multihead attention. iterate over all heads\n        int h;",
+    "        // multihead attention. iterate over all heads\n        unsigned long _ta = clk();\n        int h;")
+core = core.replace(
+    "        }\n\n        // final matmul to get the output of the attention",
+    "        }\n        gTicksAttn += clk() - _ta;\n\n        // final matmul to get the output of the attention")
+core = core.replace(
+    "        // SwiGLU non-linearity\n        for (int i = 0; i < hidden_dim; i++) {",
+    "        unsigned long _ts = clk();\n        // SwiGLU non-linearity\n        for (int i = 0; i < hidden_dim; i++) {")
+core = core.replace(
+    "            s->hb[i] = val;\n        }\n\n        // final matmul to get the output of the ffn",
+    "            s->hb[i] = val;\n        }\n        gTicksSilu += clk() - _ts;\n\n        // final matmul to get the output of the ffn")
 
 # tokenizer structs + compare_tokens (verbatim).
 tok_structs = slc(486, 502)

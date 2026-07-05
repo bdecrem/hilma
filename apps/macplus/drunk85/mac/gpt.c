@@ -20,6 +20,11 @@ extern int gFixExp;
 extern float fast_expf(float);
 #define EXPF(x) (gFixExp ? fast_expf(x) : expf(x))
 
+/* phase timers -- forward declared (definitions in the loader section) so the
+ * earlier-emitted quantize() can reference them. */
+static unsigned long clk(void);
+extern unsigned long gTicksMatmul, gTicksTotal, gTicksRms, gTicksQuant, gTicksAttn, gTicksSilu;
+
 int GS = 0; // group size global for quantization of the weights
 
 // ----------------------------------------------------------------------------
@@ -143,6 +148,7 @@ void dequantize(QuantizedTensor *qx, float* x, int n) {
 }
 
 void quantize(QuantizedTensor *qx, float* x, int n) {
+    unsigned long _tq = clk();
     int num_groups = n / GS;
     float Q_MAX = 127.0f;
 
@@ -170,6 +176,7 @@ void quantize(QuantizedTensor *qx, float* x, int n) {
             qx->q[group * GS + i] = quantized;
         }
     }
+    gTicksQuant += clk() - _tq;
 }
 
 /* initialize `n` x quantized tensor (with `size_each` elements), starting from memory pointed at *ptr */
@@ -203,10 +210,17 @@ int gFixExp = 0;                  /* 1: table exp, 0: libm expf               */
 unsigned long (*gGptClock)(void) = 0;   /* app sets this to TickCount         */
 unsigned long gTicksMatmul = 0;         /* time inside matmul                 */
 unsigned long gTicksTotal  = 0;         /* time inside forward()              */
+unsigned long gTicksRms = 0, gTicksQuant = 0, gTicksAttn = 0, gTicksSilu = 0;
 static unsigned long clk(void) { return gGptClock ? gGptClock() : 0UL; }
-void GptStatsReset(void) { gTicksMatmul = 0; gTicksTotal = 0; }
+void GptStatsReset(void) {
+    gTicksMatmul = gTicksTotal = gTicksRms = gTicksQuant = gTicksAttn = gTicksSilu = 0;
+}
 unsigned long GptTicksMatmul(void) { return gTicksMatmul; }
 unsigned long GptTicksTotal(void)  { return gTicksTotal; }
+unsigned long GptTicksRms(void)    { return gTicksRms; }
+unsigned long GptTicksQuant(void)  { return gTicksQuant; }
+unsigned long GptTicksAttn(void)   { return gTicksAttn; }
+unsigned long GptTicksSilu(void)   { return gTicksSilu; }
 static float gAttnScale = 1.0f;   /* sqrtf(head_size), hoisted out of attention */
 static float *gRopeCos = 0L, *gRopeSin = 0L;   /* [seq_len][head_size/2] */
 
@@ -358,6 +372,7 @@ static int load_model_mem(Transformer *t, const void *data, long len) {
 }
 
 void rmsnorm(float* o, float* x, float* weight, int size) {
+    unsigned long _tr = clk();
     // calculate sum of squares
     float ss = 0.0f;
     for (int j = 0; j < size; j++) {
@@ -370,6 +385,7 @@ void rmsnorm(float* o, float* x, float* weight, int size) {
     for (int j = 0; j < size; j++) {
         o[j] = weight[j] * (ss * x[j]);
     }
+    gTicksRms += clk() - _tr;
 }
 
 void softmax(float* x, int size) {
@@ -501,6 +517,7 @@ float* forward(Transformer* transformer, int token, int pos) {
         memcpy(value_cache_row, s->v, kv_dim * sizeof(*value_cache_row));
 
         // multihead attention. iterate over all heads
+        unsigned long _ta = clk();
         int h;
         for (h = 0; h < p->n_heads; h++) {
             // get the query vector for this head
@@ -538,6 +555,7 @@ float* forward(Transformer* transformer, int token, int pos) {
                 }
             }
         }
+        gTicksAttn += clk() - _ta;
 
         // final matmul to get the output of the attention
         quantize(&s->xq, s->xb, dim);
@@ -557,6 +575,7 @@ float* forward(Transformer* transformer, int token, int pos) {
         matmul(s->hb, &s->xq, w->w1 + l, dim, hidden_dim);
         matmul(s->hb2, &s->xq, w->w3 + l, dim, hidden_dim);
 
+        unsigned long _ts = clk();
         // SwiGLU non-linearity
         for (int i = 0; i < hidden_dim; i++) {
             float val = s->hb[i];
@@ -566,6 +585,7 @@ float* forward(Transformer* transformer, int token, int pos) {
             val *= s->hb2[i];
             s->hb[i] = val;
         }
+        gTicksSilu += clk() - _ts;
 
         // final matmul to get the output of the ffn
         quantize(&s->hq, s->hb, hidden_dim);

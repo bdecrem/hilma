@@ -76,5 +76,9 @@ extern unsigned long (*gGptClock)(void);
 void          GptStatsReset(void);      /* also reset at each GptGenerate     */
 unsigned long GptTicksMatmul(void);     /* ticks in matmul during last reply  */
 unsigned long GptTicksTotal(void);      /* ticks in forward() during last reply*/
+unsigned long GptTicksRms(void);        /* rmsnorm */
+unsigned long GptTicksQuant(void);      /* quantize */
+unsigned long GptTicksAttn(void);       /* attention (dot+softmax+weighted) */
+unsigned long GptTicksSilu(void);       /* swiglu/silu */
 
 #endif /* GPT_H */
