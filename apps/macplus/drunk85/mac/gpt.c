@@ -155,10 +155,12 @@ void quantize(QuantizedTensor *qx, float* x, int n) {
         float scale = wmax / Q_MAX;
         qx->s[group] = scale;
 
-        // calculate and write the quantized values
+        // calculate and write the quantized values (reciprocal-multiply +
+        // inline round instead of per-element divide + round() library call)
+        float inv = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
         for (int i = 0; i < GS; i++) {
-            float quant_value = x[group * GS + i] / scale; // scale
-            int8_t quantized = (int8_t) round(quant_value); // round and clamp
+            float quant_value = x[group * GS + i] * inv;
+            int8_t quantized = (int8_t)(quant_value + (quant_value >= 0.0f ? 0.5f : -0.5f));
             qx->q[group * GS + i] = quantized;
         }
     }

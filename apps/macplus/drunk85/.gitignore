@@ -12,3 +12,4 @@ mac/dist/
 # needed to build + to revert). Override the apps/macplus/.gitignore "*.bin".
 !mac/model_q.bin
 !mac/tok2048.bin
+mac/gpttest_ref

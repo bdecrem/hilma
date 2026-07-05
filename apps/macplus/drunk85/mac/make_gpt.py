@@ -54,8 +54,28 @@ header = '''/*
 # GS global + structs + malloc/free run state (verbatim; ssize_t -> long).
 part_structs = slc(19, 134).replace("ssize_t", "long")
 
-# dequantize + quantize + init_quantized_tensors (verbatim).
+# dequantize + quantize + init_quantized_tensors (verbatim), then a speed patch:
+# quantize runs GS float divides + a round() library call per group, ~17 times a
+# token. Replace the per-element divide with a reciprocal-multiply (1 divide per
+# group, then fmul) and round() with inline add-half+truncate. Both avoid slow
+# library calls; the gate confirms the quantized bytes are unchanged.
 part_quant = slc(139, 187)
+_q_old = '''        // calculate and write the quantized values
+        for (int i = 0; i < GS; i++) {
+            float quant_value = x[group * GS + i] / scale; // scale
+            int8_t quantized = (int8_t) round(quant_value); // round and clamp
+            qx->q[group * GS + i] = quantized;
+        }'''
+_q_new = '''        // calculate and write the quantized values (reciprocal-multiply +
+        // inline round instead of per-element divide + round() library call)
+        float inv = (scale != 0.0f) ? (1.0f / scale) : 0.0f;
+        for (int i = 0; i < GS; i++) {
+            float quant_value = x[group * GS + i] * inv;
+            int8_t quantized = (int8_t)(quant_value + (quant_value >= 0.0f ? 0.5f : -0.5f));
+            qx->q[group * GS + i] = quantized;
+        }'''
+assert _q_old in part_quant, "quantize body not found verbatim -- runq.c changed"
+part_quant = part_quant.replace(_q_old, _q_new)
 
 # our weight mapper + memory loader (replaces runq's mmap read_checkpoint).
 # NOTE endianness: llama2.c checkpoints are LITTLE-endian; the 68000 Mac is
