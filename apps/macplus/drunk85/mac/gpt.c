@@ -189,6 +189,21 @@ int gWantLogits = 1;              /* 0 during prompt prefill: skip classifier */
 static float gAttnScale = 1.0f;   /* sqrtf(head_size), hoisted out of attention */
 static float *gRopeCos = 0L, *gRopeSin = 0L;   /* [seq_len][head_size/2] */
 
+/* int8 x int8 product table (v3 speed): the 68000's MULS.W is ~50 cycles; a
+ * table read is ~2x faster and BYTE-IDENTICAL (same products), so the model
+ * output is unchanged. 65536 entries x int16 = 128KB, built once at init.
+ * Index = ((uint8)a << 8) | (uint8)b, value = (int8)a * (int8)b. */
+static int16_t *gMulLUT = 0L;
+static int build_mul_lut(void) {
+    int a, b;
+    gMulLUT = (int16_t *)malloc(65536L * sizeof(int16_t));
+    if (!gMulLUT) return -1;
+    for (a = -128; a < 128; a++)
+        for (b = -128; b < 128; b++)
+            gMulLUT[(((long)(a & 0xFF)) << 8) | (b & 0xFF)] = (int16_t)(a * b);
+    return 0;
+}
+
 static int big_endian(void) { unsigned short x = 1; return *((unsigned char *)&x) == 0; }
 static uint32_t rd32(const unsigned char *p) {
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8)
@@ -337,31 +352,35 @@ void softmax(float* x, int size) {
 
 void matmul(float* xout, QuantizedTensor *x, QuantizedTensor *w, int n, int d) {
     /* W (d,n) @ x (n,) -> xout (d,) -- THE hot loop (~90% of a token).
-     * int8 x int8 products via the 68000's native 16x16 muls.w (the int16
-     * casts are gcc's mulhisi3 idiom; -O0/__mulsi3 was ~4x slower), unrolled
-     * 8x (GS % 8 == 0, checked at load). The weight bytes and both scale
-     * arrays are walked with pointers, so there is no divide (no __divsi3)
-     * anywhere in the loop. Bit-identical to the reference: same integer
-     * products, same per-group float summation order. */
+     * int8 x int8 products come from gMulLUT (a 128KB table) instead of the
+     * 68000's slow MULS.W. The products are IDENTICAL, so the output is
+     * byte-for-byte the same as the reference -- this is a pure speedup, not
+     * an approximation. x[k] is pre-shifted into the high index byte once per
+     * matmul (x8buf) so the inner MAC is just: table[x8 | w]. Unrolled 8x
+     * (GS % 8 == 0, checked at load). No divide in the loop (both scale arrays
+     * walked with pointers). Same per-group float summation order. */
     int i, j, k;
-    const int8_t *wp  = w->q;   /* walks the whole tensor, row-major */
-    const float  *wsp = w->s;   /* one scale per GS group, same order */
+    static unsigned short x8buf[512];   /* ((uint8)x[k]) << 8, reused per row */
+    const int8_t *wp  = w->q;
+    const float  *wsp = w->s;
+    for (k = 0; k < n; k++)
+        x8buf[k] = (unsigned short)(((unsigned)(unsigned char)x->q[k]) << 8);
     for (i = 0; i < d; i++) {
         float val = 0.0f;
-        const int8_t *xp  = x->q;
-        const float  *xsp = x->s;
+        const float          *xsp = x->s;
+        const unsigned short *x8  = x8buf;
         for (j = 0; j <= n - GS; j += GS) {
             int32_t ival = 0;
             for (k = 0; k < GS; k += 8) {
-                ival += (int32_t)((int16_t)xp[0] * (int16_t)wp[0]);
-                ival += (int32_t)((int16_t)xp[1] * (int16_t)wp[1]);
-                ival += (int32_t)((int16_t)xp[2] * (int16_t)wp[2]);
-                ival += (int32_t)((int16_t)xp[3] * (int16_t)wp[3]);
-                ival += (int32_t)((int16_t)xp[4] * (int16_t)wp[4]);
-                ival += (int32_t)((int16_t)xp[5] * (int16_t)wp[5]);
-                ival += (int32_t)((int16_t)xp[6] * (int16_t)wp[6]);
-                ival += (int32_t)((int16_t)xp[7] * (int16_t)wp[7]);
-                xp += 8; wp += 8;
+                ival += gMulLUT[x8[0] | (unsigned char)wp[0]];
+                ival += gMulLUT[x8[1] | (unsigned char)wp[1]];
+                ival += gMulLUT[x8[2] | (unsigned char)wp[2]];
+                ival += gMulLUT[x8[3] | (unsigned char)wp[3]];
+                ival += gMulLUT[x8[4] | (unsigned char)wp[4]];
+                ival += gMulLUT[x8[5] | (unsigned char)wp[5]];
+                ival += gMulLUT[x8[6] | (unsigned char)wp[6]];
+                ival += gMulLUT[x8[7] | (unsigned char)wp[7]];
+                x8 += 8; wp += 8;
             }
             val += ((float) ival) * (*wsp++) * (*xsp++);
         }
@@ -917,6 +936,7 @@ int GptInitMem(const void *modelData, long modelLen,
     if (gReady) GptShutdown();
     PROG(1);
     if (load_model_mem(&gT, modelData, modelLen) != 0) return -1;
+    if (build_mul_lut() != 0) return -1;      /* int8xint8 product table */
     PROG(2);
     if (build_rope(&gT.config) != 0) return -1;
     gAttnScale = sqrtf(gT.config.dim / gT.config.n_heads);
@@ -989,6 +1009,7 @@ void GptShutdown(void) {
     free_run_state(&gT.state);
     if (gRopeCos) { free(gRopeCos); gRopeCos = 0L; }
     if (gRopeSin) { free(gRopeSin); gRopeSin = 0L; }
+    if (gMulLUT)  { free(gMulLUT);  gMulLUT  = 0L; }
     gWantLogits = 1;
     gReady = 0;
 }
