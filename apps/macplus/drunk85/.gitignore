@@ -1,0 +1,14 @@
+.venv/
+llama2.c/
+data/
+out/
+__pycache__/
+
+# host-compiled test binary + stale fp32 two-file dist (the abandoned approach)
+mac/gpttest
+mac/dist/
+
+# The embedded int8 model + tokenizer ARE tracked (they are the deployed model,
+# needed to build + to revert). Override the apps/macplus/.gitignore "*.bin".
+!mac/model_q.bin
+!mac/tok2048.bin
