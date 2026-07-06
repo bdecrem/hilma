@@ -65,7 +65,7 @@
 
 /* Bump this every build so Bart can confirm which one is running (shown on the
  * load line and sent to the mini log). */
-#define ORACLE_VER "v9"
+#define ORACLE_VER "v10"
 
 /* Font IDs (classic constants not always exposed by the interfaces). */
 #ifndef systemFont
@@ -633,7 +633,7 @@ static void SetUpMenus(void)
     InsertMenu(gOracleM, 0);
 
     gLabM = NewMenu(kLabMenu, "\pLab");
-    AppendMenu(gLabM, "\pMultiply Table;Table Exp;Int8 Attention;Remote (mini);(-;Send Stats Now");
+    AppendMenu(gLabM, "\pMultiply Table;Table Exp;Int8 Attention;Use Mini Model;(-;Send Stats Now");
     CheckItem(gLabM, kLabLUT,    gUseLUT != 0);   /* reflect current toggle state */
     CheckItem(gLabM, kLabExp,    gFixExp != 0);
     CheckItem(gLabM, kLabAttn,   gFixAttn != 0);
