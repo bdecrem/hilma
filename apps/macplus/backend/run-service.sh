@@ -95,7 +95,7 @@ case "$NAME" in
     # the Plus runs, plus chat memory / top-p / repetition penalty / postproc.
     # Lazily builds a venv with numpy + sentencepiece on first launch.
     D="$BASE/agent-oracle"; PY="$D/.venv/bin/python"
-    if [ ! -x "$PY" ]; then
+    if ! "$PY" -c "import numpy, sentencepiece" 2>/dev/null; then
       /usr/bin/python3 -m venv "$D/.venv"
       "$D/.venv/bin/pip" install -q --disable-pip-version-check numpy sentencepiece
     fi
