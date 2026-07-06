@@ -66,7 +66,7 @@
 
 /* Bump this every build so Bart can confirm which one is running (shown on the
  * load line and sent to the mini log). */
-#define ORACLE_VER "v11"
+#define ORACLE_VER "v12"
 
 /* Font IDs (classic constants not always exposed by the interfaces). */
 #ifndef systemFont
