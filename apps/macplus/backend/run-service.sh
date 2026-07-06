@@ -90,6 +90,16 @@ case "$NAME" in
     # handshake, no per-key crypto; trusted-LAN only (same model as :2323).
     export RSH_LOGIN_USER="${RSH_LOGIN_USER:-admin}"
     cd "$BASE/agent-rsh"; exec /usr/bin/env node server.mjs --listen 2329 ;;
+  oracle)
+    # THE ORACLE hosted on the mini: numpy fp32 inference of the same 1985 model
+    # the Plus runs, plus chat memory / top-p / repetition penalty / postproc.
+    # Lazily builds a venv with numpy + sentencepiece on first launch.
+    D="$BASE/agent-oracle"; PY="$D/.venv/bin/python"
+    if [ ! -x "$PY" ]; then
+      /usr/bin/python3 -m venv "$D/.venv"
+      "$D/.venv/bin/pip" install -q --disable-pip-version-check numpy sentencepiece
+    fi
+    cd "$D"; exec "$PY" oracle_server.py --listen 2338 ;;
   *)
     echo "run-service: unknown service '$NAME'" >&2; exit 64 ;;
 esac

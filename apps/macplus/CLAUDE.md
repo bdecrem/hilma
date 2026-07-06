@@ -460,7 +460,8 @@ by side:
 
 (Infrastructure ports, not user apps: rsh `:2329` (Plutonix instant shell), mux `:2330`,
 diag `:2331`, quote `:2332`, bridge `:2333`, screen `:2334`, netspeed `:2335`,
-porthole `:2336`, pixel `:2337` (Daily Pixel canvas), pssh `:2222`.
+porthole `:2336`, pixel `:2337` (Daily Pixel canvas), oracle `:2338`
+(hosted Oracle model, `agent-oracle/`), pssh `:2222`.
 **How all mini-side services are deployed, updated, and restarted: [`BACKEND.md`](BACKEND.md).**)
 
 The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone

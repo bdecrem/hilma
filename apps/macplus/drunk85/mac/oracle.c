@@ -65,7 +65,7 @@
 
 /* Bump this every build so Bart can confirm which one is running (shown on the
  * load line and sent to the mini log). */
-#define ORACLE_VER "v8"
+#define ORACLE_VER "v9"
 
 /* Font IDs (classic constants not always exposed by the interfaces). */
 #ifndef systemFont
@@ -101,17 +101,21 @@ static short WIN_W = 502, WIN_H = 300;   /* set for real in CreateTE/Relayout */
 #define kClearItem  3
 /* item 4 = separator */
 #define kBenchItem  5
-/* Lab menu items: experiment toggles + analytics */
+/* Lab menu items: experiment toggles + analytics + remote model */
 #define kLabLUT    1     /* multiply table on/off */
 #define kLabExp    2     /* table exp on/off      */
 #define kLabAttn   3     /* int8 attention on/off */
-/* item 4 = separator */
-#define kLabStats  5     /* send stats to the mini now */
+#define kLabRemote 4     /* use the mini's smarter model */
+/* item 5 = separator */
+#define kLabStats  6     /* send stats to the mini now */
 
 /* ---- globals ---- */
 static WindowPtr  gWin;
 static MenuHandle gAppleM, gFileM, gOracleM, gLabM;
 static Boolean    gLogOpened = false;   /* lazy analytics link, opened post-load */
+static Boolean    gRemote    = false;   /* route replies to the mini's agent-oracle */
+#define kRemoteIP   "192.168.7.50"
+#define kRemotePort 2338
 static TEHandle   gTE;          /* transcript (read-only, scrolls)  */
 static TEHandle   gInputTE;     /* the native local input line      */
 static Boolean    gDone   = false;
@@ -346,10 +350,45 @@ static int OracleTick(int phase, int done, int total, void *ctx)
     return 1;
 }
 
+/* Route the prompt to the mini's agent-oracle (2338) and stream its reply into
+ * the transcript. The mini runs the smarter/chat model; the Plus is a terminal.
+ * Protocol: send "<prompt>\n", read reply text until EOT (0x04). */
+static void RemoteRespond(const char *prompt, short len)
+{
+    NetConn c; char buf[260], rb[128]; short i, n, j; long got; Boolean done = false;
+    BusyOn();
+    Emit("ORACLE: ");
+    if (NetConnect(&c, NetParseIP(kRemoteIP), kRemotePort) != noErr) {
+        Emit("(can't reach the mini -- is agent-oracle running?)");
+        EmitLine(""); EmitLine(""); BusyOff(); return;
+    }
+    n = 0; for (i = 0; i < len && n < 255; i++) buf[n++] = prompt[i]; buf[n++] = '\n';
+    if (NetSend(&c, buf, (unsigned short)n) != noErr) { NetClose(&c); Emit("(send failed)");
+        EmitLine(""); EmitLine(""); BusyOff(); return; }
+    while (!done) {
+        got = NetRecv(&c, rb, (unsigned short)(sizeof(rb) - 1), 40);
+        if (got <= 0) break;                 /* closed or timeout */
+        { char out[130]; short o = 0;
+          for (j = 0; j < got; j++) {
+              char ch = rb[j];
+              if (ch == 4) { done = true; break; }      /* EOT: reply complete */
+              out[o++] = (ch == '\n') ? '\r' : ch;
+          }
+          out[o] = 0; if (o) Emit(out);
+        }
+        SetCursor(*GetCursor(watchCursor));
+        PumpEvents(); if (gAbort) break;
+    }
+    NetClose(&c);
+    if (gAbort && !gDone) Emit(" [stopped]");
+    EmitLine(""); EmitLine(""); BusyOff();
+}
+
 static void Respond(const char *prompt, short len)
 {
     char pbuf[280]; short i, n;
     unsigned long t1;
+    if (gRemote) { RemoteRespond(prompt, len); return; }
     BusyOn();
     gAbort = false; gSawEnd = false; gStopPara = false;
     gDotsCleared = false; gDotCount = 0; gGenCount = 0; gPromptToks = 0;
@@ -562,6 +601,10 @@ static void DoMenu(long sel)
                 gFixAttn = !gFixAttn;
                 CheckItem(gLabM, kLabAttn, gFixAttn != 0);
                 AppLog(gFixAttn ? "toggle: int8 attention ON" : "toggle: int8 attention OFF");
+            } else if (item == kLabRemote) {
+                gRemote = !gRemote;
+                CheckItem(gLabM, kLabRemote, gRemote != 0);
+                AppLog(gRemote ? "toggle: REMOTE model ON" : "toggle: REMOTE model OFF");
             } else if (item == kLabStats) {
                 SendRunStats(gPromptToks, gGenCount);   /* last reply's numbers */
             }
@@ -590,10 +633,11 @@ static void SetUpMenus(void)
     InsertMenu(gOracleM, 0);
 
     gLabM = NewMenu(kLabMenu, "\pLab");
-    AppendMenu(gLabM, "\pMultiply Table;Table Exp;Int8 Attention;(-;Send Stats Now");
-    CheckItem(gLabM, kLabLUT,  gUseLUT != 0);   /* reflect current toggle state */
-    CheckItem(gLabM, kLabExp,  gFixExp != 0);
-    CheckItem(gLabM, kLabAttn, gFixAttn != 0);
+    AppendMenu(gLabM, "\pMultiply Table;Table Exp;Int8 Attention;Remote (mini);(-;Send Stats Now");
+    CheckItem(gLabM, kLabLUT,    gUseLUT != 0);   /* reflect current toggle state */
+    CheckItem(gLabM, kLabExp,    gFixExp != 0);
+    CheckItem(gLabM, kLabAttn,   gFixAttn != 0);
+    CheckItem(gLabM, kLabRemote, gRemote != 0);
     InsertMenu(gLabM, 0);
 
     DrawMenuBar();
