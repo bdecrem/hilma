@@ -20,6 +20,11 @@ extern int gFixExp;
 extern float fast_expf(float);
 #define EXPF(x) (gFixExp ? fast_expf(x) : expf(x))
 
+/* Max context on the Plus: caps the KV cache so a bigger model fits 2MB. */
+#ifndef GPT_SEQ_CAP
+#define GPT_SEQ_CAP 96
+#endif
+
 /* phase timers -- forward declared (definitions in the loader section) so the
  * earlier-emitted quantize() can reference them. */
 static unsigned long clk(void);
@@ -1052,6 +1057,11 @@ int GptInitMem(const void *modelData, long modelLen,
     if (gReady) GptShutdown();
     PROG(1);
     if (load_model_mem(&gT, modelData, modelLen) != 0) return -1;
+    /* Cap the context so the KV cache + bigger model fit the 2MB partition on
+     * the 4MB Plus. The model trained at seq 256, but runs fine at a shorter
+     * context, and local replies are short (cap ~30 tokens). Cuts the fp32 KV
+     * cache roughly in half. */
+    if (gT.config.seq_len > GPT_SEQ_CAP) gT.config.seq_len = GPT_SEQ_CAP;
     if (build_mul_lut() != 0) return -1;      /* int8xint8 product table */
     if (build_attn_cache(&gT.config) != 0) return -1;   /* int8 key cache */
     build_exp_table();

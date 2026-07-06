@@ -45,6 +45,7 @@
 #include <OSUtils.h>
 #include <Devices.h>
 #include <Resources.h>
+#include <Files.h>         /* prefs file: remember local/remote across quits */
 
 #include <stdio.h>         /* sprintf for the timing lines */
 
@@ -65,7 +66,7 @@
 
 /* Bump this every build so Bart can confirm which one is running (shown on the
  * load line and sent to the mini log). */
-#define ORACLE_VER "v10"
+#define ORACLE_VER "v11"
 
 /* Font IDs (classic constants not always exposed by the interfaces). */
 #ifndef systemFont
@@ -147,6 +148,8 @@ static void DrawWindow(void);
 static void SendLine(void);
 static void Respond(const char *prompt, short len);
 static void HandleEvent(EventRecord *ev);
+static void SavePrefs(void);
+static void LoadModelIfNeeded(void);
 
 /* ================= small helpers ================= */
 
@@ -604,7 +607,9 @@ static void DoMenu(long sel)
             } else if (item == kLabRemote) {
                 gRemote = !gRemote;
                 CheckItem(gLabM, kLabRemote, gRemote != 0);
+                SavePrefs();                 /* remembered across quits */
                 AppLog(gRemote ? "toggle: REMOTE model ON" : "toggle: REMOTE model OFF");
+                if (!gRemote) LoadModelIfNeeded();   /* switching to local: load now */
             } else if (item == kLabStats) {
                 SendRunStats(gPromptToks, gGenCount);   /* last reply's numbers */
             }
@@ -729,21 +734,84 @@ static void LoadProg(int step)
     Emit(".");
 }
 
+/* ================= prefs (remember local/remote across quits) =================
+ * A 2-byte "Oracle Prefs" file in the System Folder: ['O'][gRemote]. Remembering
+ * remote mode lets launch SKIP the ~minute model load entirely. */
+static short PrefsVol(void)
+{
+    SysEnvRec env;
+    if (SysEnvirons(1, &env) == noErr) return env.sysVRefNum;
+    return 0;
+}
+static void SavePrefs(void)
+{
+    Str255 nm; short ref; long cnt; char b[2];
+    MakePStr(nm, "Oracle Prefs");
+    Create(nm, PrefsVol(), 'ORCL', 'pref');      /* ok if it already exists */
+    if (FSOpen(nm, PrefsVol(), &ref) == noErr) {
+        b[0] = 'O'; b[1] = gRemote ? 1 : 0; cnt = 2;
+        FSWrite(ref, &cnt, b); FSClose(ref);
+    }
+}
+static void LoadPrefs(void)
+{
+    Str255 nm; short ref; long cnt; char b[2];
+    MakePStr(nm, "Oracle Prefs");
+    if (FSOpen(nm, PrefsVol(), &ref) == noErr) {
+        cnt = 2;
+        if (FSRead(ref, &cnt, b) == noErr && cnt >= 2 && b[0] == 'O')
+            gRemote = (b[1] != 0);
+        FSClose(ref);
+    }
+}
+
+/* Load the embedded model on demand (skipped entirely in remote mode, which is
+ * why remote launch is instant). Safe to call more than once. */
+static void LoadModelIfNeeded(void)
+{
+    unsigned long t0, t1;
+    if (gModelLoaded) return;
+    SetCursor(*GetCursor(watchCursor));
+    EmitLine("waking the mind of 1985 -- give me a minute.");
+    Emit("loading ");
+    gGptProgress = LoadProg;
+    t0 = TickCount();
+    {
+        Handle modelH = GetResource(kModelType, kResID);
+        Handle tokH   = GetResource(kTokType,   kResID);
+        if (modelH && tokH) {
+            HLock(modelH); HLock(tokH);
+            gModelLoaded = (GptInitMem(*modelH, GetHandleSize(modelH),
+                                       *tokH,   GetHandleSize(tokH),
+                                       0.8f, 0.9f, (unsigned long)TickCount()) == 0);
+        }
+    }
+    t1 = TickCount();
+    gGptProgress = 0L;
+    { char lb[64]; long lt = (long)(t1 - t0);
+      sprintf(lb, " %s (%ld.%lds)", gModelLoaded ? "awake." : "LOAD FAILED (try Use Mini Model).",
+              lt / 60, (lt % 60) / 6);
+      EmitLine(lb); }
+    EmitLine("");
+    InitCursor();
+}
+
 static void Greeting(void)
 {
     EmitLine("ORACLE: ask, and i will answer.");
     EmitLine("        i remember only 1986.");
-    if (gModelLoaded)
+    if (gRemote)
+        EmitLine("        (using the mini's smarter model. Lab menu to switch.)");
+    else if (gModelLoaded)
         EmitLine("        (i think slowly. each word costs seconds. Cmd-. shuts me up.)");
     else
-        EmitLine("        (demo voice - model not in this build.)");
+        EmitLine("        (demo voice - model not loaded.)");
     EmitLine("");
 }
 
 int main(void)
 {
     EventRecord ev;
-    unsigned long tLoad0, tLoad1;
 
     InitToolbox();
     gGptClock = OracleClock;   /* engine phase timers use TickCount */
@@ -752,38 +820,17 @@ int main(void)
     SetUpWindow();
     DrawWindow();
 
-    /* Load the embedded int8 model + tokenizer from the app's own resources.
-     * This takes a little while on the real Plus -- set the expectation so a
-     * slow wake-up doesn't read as a hang (the first hardware run was
-     * interrupted mid-load because it looked stuck). */
-    SetCursor(*GetCursor(watchCursor));
-    EmitLine("THE ORACLE " ORACLE_VER " -- waking the mind of 1985, give me a minute.");
-    Emit("loading ");
-    gGptProgress = LoadProg;
-    tLoad0 = TickCount();
-    {
-        Handle modelH = GetResource(kModelType, kResID);
-        Handle tokH   = GetResource(kTokType,   kResID);
-        if (modelH && tokH) {
-            HLock(modelH);          /* weights are read in place: keep locked */
-            HLock(tokH);
-            gModelLoaded = (GptInitMem(*modelH, GetHandleSize(modelH),
-                                       *tokH,   GetHandleSize(tokH),
-                                       0.8f, 0.9f,
-                                       (unsigned long)TickCount()) == 0);
-        }
+    LoadPrefs();                       /* remembers local vs Use Mini Model */
+    CheckItem(gLabM, kLabRemote, gRemote != 0);
+    EmitLine("THE ORACLE " ORACLE_VER);
+    if (gRemote) {
+        /* remote mode: the mini does the thinking, so DON'T load the local
+         * model -- that is what makes this launch instant. */
+        EmitLine("remote mode (mini). ready instantly.");
+        EmitLine("");
+    } else {
+        LoadModelIfNeeded();
     }
-    tLoad1 = TickCount();
-    gGptProgress = 0L;
-    {
-        char lb[64];
-        long lt = (long)(tLoad1 - tLoad0);
-        sprintf(lb, " %s (%ld.%lds)", gModelLoaded ? "awake." : "LOAD FAILED.",
-                lt / 60, (lt % 60) / 6);
-        EmitLine(lb);          /* show the real load time on screen */
-    }
-    EmitLine("");
-    InitCursor();
 
     Greeting();
 
