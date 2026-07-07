@@ -20,6 +20,7 @@ const projects: Project[] = [
     shortDesc: 'breathing new life into my 1986 macintosh plus. first we let it onto our wifi through a 9600 baud modem. one thing led to another, and now it runs a full unix subsystem (including ssh, with handshake keys generated on-device), a claude code agent, and a 250k-parameter llm trained on 1986 usenet posts.',
     fullDesc: 'also: a web browser, an image generator, sudoku. plus a half dozen utilities — remote audit logs, over-the-air app updates, that sort of thing.',
     status: 'respinning',
+    artifacts: [{ label: 'the tweet', url: 'https://x.com/bartdecrem/status/2073153628836339823' }],
   },
   {
     name: 'feynd',
