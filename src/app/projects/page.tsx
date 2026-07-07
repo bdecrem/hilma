@@ -15,6 +15,13 @@ interface Project {
 
 const projects: Project[] = [
   {
+    name: 'macinclaude',
+    url: 'https://github.com/bdecrem/Macinclaude',
+    shortDesc: 'breathing new life into my 1986 macintosh plus. first we let it onto our wifi through a 9600 baud modem. one thing led to another, and now it runs a full unix subsystem (including ssh, with handshake keys generated on-device), a claude code agent, and a 250k-parameter llm trained on 1986 usenet posts.',
+    fullDesc: 'also: a web browser, an image generator, sudoku. plus a half dozen utilities — remote audit logs, over-the-air app updates, that sort of thing.',
+    status: 'respinning',
+  },
+  {
     name: 'feynd',
     url: 'https://github.com/bdecrem/hilma',
     shortDesc: 'experimental learning app, named after richard feynman. first module: "teach me about AI" — short videos paired with an interactive voice mode, so you can stop the lesson mid-sentence and argue with it.',
@@ -26,21 +33,21 @@ const projects: Project[] = [
     url: 'https://github.com/bdecrem/jambot',
     shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style command line app with a deep custom toolset: a suite of instruments and effects plugins that you can also play <a href="https://kochi.to/jb01/ui/jb01/index.html" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">from the web</a>. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
     fullDesc: 'think ableton live, rebuilt for the command line. 7 synthesizers, 5 effects processors. outputs midi, wav, stems.',
-    status: 'wip',
+    status: 'neglected',
   },
   {
     name: 'amber',
     url: 'https://intheamber.com',
     shortDesc: 'built myself an ai sidekick before openclaw was a thing. amber responds to email, builds apps, and trades stocks. mood shifts with the moon. these days mostly focused on posting <a href="https://intheamber.com/amber/escalation/L41" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">toys and art</a> on twitter.',
     fullDesc: 'ai sidekick, no guardrails.',
-    status: 'active',
+    status: 'neglected',
   },
   {
     name: 'tunn3l.sh',
     url: 'https://tunn3l.sh',
     shortDesc: 'exploring the idea of an agent-first devtool.',
     fullDesc: 'tunnel relay service: expose localhost to the internet. http and ssh tunnels. one-line cli install; public url or ssh port, instantly. no config.',
-    status: 'active',
+    status: 'neglected',
   },
   {
     name: 'ctrl shift',
@@ -61,28 +68,28 @@ const projects: Project[] = [
     url: 'https://daskollektiv.rip',
     shortDesc: 'openclaw experiments on weird hardware. marg lives on a pwnagotchi and talks to cameras. a pico, some e-ink, and whatever else is lying around.',
     fullDesc: 'agents. hardware. questionable wiring.',
-    status: 'respinning',
+    status: 'neglected',
   },
   {
     name: 'markd',
     url: 'https://github.com/bdecrem/markd',
     shortDesc: 'a friendly markdown editor for mac and ios, built for my own use. currently in private testflight beta.',
     fullDesc: 'markdown editor for mac and iphone. clean, fast, no nonsense.',
-    status: 'respinning',
+    status: 'neglected',
   },
   {
     name: 'mutabl',
     url: 'https://mutabl.co',
     shortDesc: 'the idea: software that evolves as you use it. ask, and it grows new features.',
     fullDesc: 'apps that evolve. ask your todo list for a new feature, it builds it. source is yours.',
-    status: 'respinning',
+    status: 'neglected',
   },
   {
     name: 'kochi.to',
     url: 'https://kochi.to',
     shortDesc: 'the idea: a personal ai agent over sms, built around daily text and <a href="https://apps.apple.com/us/app/kochi-podcast-player/id6752669410" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">podcast</a> briefs on ai, science, and tech. for the ai research brief: a graph database with 200k+ papers and agentic search on top.',
     fullDesc: 'ai over sms. daily reports, research papers, chat companion. also an iphone podcast app. (most agents decommissioned.)',
-    status: ['neglected', 'retired'],
+    status: 'neglected',
     artifacts: [{ label: 'iphone app', url: 'https://apps.apple.com/us/app/kochi-podcast-player/id6752669410' }],
   },
   {
@@ -118,21 +125,21 @@ const projects: Project[] = [
     url: 'https://kochi.to/token-tank',
     shortDesc: 'gave 5 ai agents $500 to build businesses. one registered a domain. they held a meeting. <em>summer-fall 2025.</em>',
     fullDesc: 'ai incubator for ais.',
-    status: 'retired',
+    status: 'neglected',
   },
   {
     name: 'webtoys',
     url: 'https://webtoys.ai',
     shortDesc: 'what if lovable, but over sms? text a prompt, get a deployed web page. might still work. <em>summer-fall 2025.</em>',
     fullDesc: 'vibecoding over sms.',
-    status: 'retired',
+    status: 'neglected',
   },
   {
     name: 'advisorsfoundry',
     url: 'https://advisorsfoundry.ai',
     shortDesc: 'chatbot that grew into something. discord bots, easter eggs, sms. held together by inertia. <em>summer-fall 2025.</em>',
     fullDesc: 'the first experiment.',
-    status: 'retired',
+    status: 'neglected',
   },
 ]
 
@@ -505,13 +512,53 @@ export default function Projects() {
           <div className={`mt-1 text-xs italic tracking-wide transition-colors duration-700 ${theme.subtitle}`}>
             bart decrem
           </div>
-          <p className={`mt-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
-            a year building agentic ai systems, mostly proof of concepts (some just quick sketches). a conversational research agent running on a knowledge graph of 200,000+ ai research papers and 845,000 authorships. an experimental, fully automated game studio where 6 ai agents built 65+ arcade games, shipped to production, then tweeted about them. a digital audio workstation with a command line interface (think: claude code), 7 custom synthesizers and 5 effects processors. a creative sidekick that posts multiple times a day and has made 500+ generative artworks (when they&apos;re not trading stocks or responding to email). plus, a prototype for a responsible ai incubator.
-            {' '}previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
-            <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.{' '}
-            <a href="https://theforkiverse.com/@bart" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">forkiverse</a>.{' '}
-            <a href="https://twitter.com/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">twitter</a>.
-          </p>
+          <div className={`mt-3 space-y-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
+            <p>
+              currently: <a href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">setting up my mac plus</a> just so, in preparation for a year at stanford.
+            </p>
+            <p>
+              may 2025&ndash;2026: a year building agentic ai systems, mostly proofs of concept. a research agent on a knowledge graph of 200,000+ ai papers. a game studio where 6 agents built 65+ arcade games. a command-line daw with 7 custom synthesizers. a creative sidekick that has made 500+ generative artworks. plus, a prototype for a responsible ai incubator.
+            </p>
+            <p>
+              previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
+              <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.
+            </p>
+          </div>
+          <div className="mt-5 flex items-center gap-4">
+            <a
+              href="https://x.com/bartdecrem"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="x"
+              className={`transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644z" />
+              </svg>
+            </a>
+            <a
+              href="https://decremental.substack.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="substack"
+              className={`transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24L12 18.11 22.539 24V10.812H1.46zM22.539 0H1.46v2.836h21.08V0z" />
+              </svg>
+            </a>
+            <a
+              href="https://linkedin.com/in/bartdecrem"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="linkedin"
+              className={`transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.119 20.452H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z" />
+              </svg>
+            </a>
+          </div>
         </div>
 
         {/* Projects */}
@@ -609,3 +656,4 @@ export default function Projects() {
     </div>
   )
 }
+
