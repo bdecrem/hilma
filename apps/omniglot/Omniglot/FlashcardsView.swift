@@ -52,6 +52,7 @@ struct FlashcardsView: View {
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(Theme.inkSecondary)
                 }
+                .accessibilityLabel("Close review")
                 ProgressView(value: progress)
                     .tint(Theme.accent)
                     .background(Theme.accentTint)

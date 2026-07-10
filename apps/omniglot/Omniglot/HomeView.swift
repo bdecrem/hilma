@@ -60,15 +60,15 @@ struct HomeView: View {
     }
 
     private var talkHero: some View {
-        VStack(spacing: 16) {
-            Button {
-                UIImpactFeedbackGenerator(style: .soft).impactOccurred()
-                if let chapter = currentChapter {
-                    talkTopic = chapter
-                } else {
-                    talkFreeform = true
-                }
-            } label: {
+        Button {
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+            if let chapter = currentChapter {
+                talkTopic = chapter
+            } else {
+                talkFreeform = true
+            }
+        } label: {
+            VStack(spacing: 16) {
                 ZStack {
                     Circle()
                         .fill(Theme.accent)
@@ -78,27 +78,28 @@ struct HomeView: View {
                         .foregroundStyle(.white)
                 }
                 .scaleEffect(breathing ? 1.02 : 1.0)
-            }
-            .buttonStyle(.plain)
-            .onAppear {
-                guard !UIAccessibility.isReduceMotionEnabled else { return }
-                withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                    breathing = true
-                }
-            }
 
-            VStack(spacing: 4) {
-                Text("Start conversation")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.ink)
-                if let chapter = currentChapter {
-                    Text("Chapter \(chapter.sortOrder + 1) · \(chapter.titleTarget ?? chapter.title)")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.inkTertiary)
+                VStack(spacing: 4) {
+                    Text("Start conversation")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                    if let chapter = currentChapter {
+                        Text("Chapter \(chapter.sortOrder + 1) · \(chapter.titleTarget ?? chapter.title)")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.inkTertiary)
+                    }
                 }
+            }
+            .padding(.vertical, 16)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("startConversation")
+        .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else { return }
+            withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
+                breathing = true
             }
         }
-        .padding(.vertical, 16)
     }
 
     private func chapterCard(_ chapter: TopicSummary) -> some View {

@@ -161,7 +161,9 @@ async function runChapterTool(
     model: GENERATION_MODEL,
     system: chapterSystem(lang, level),
     messages: [{ role: 'user', content: userPrompt }],
-    maxTokens: 8000,
+    // CJK chapters (hanzi + pinyin + translations for every string) can
+    // overflow smaller budgets and truncate the tool call mid-JSON.
+    maxTokens: 16000,
     tools: [chapterTool(lang)],
     forceTool: true,
   })

@@ -19,6 +19,18 @@ packages:
     exactVersion: 147.0.0
 
 targets:
+  OmniglotUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [OmniglotUITests]
+    dependencies:
+      - target: Omniglot
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.OmniglotUITests
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: YES
+
   Omniglot:
     type: application
     platform: iOS
@@ -61,3 +73,7 @@ schemes:
       # Xcode 26 debugger can't attach on iOS 27 beta (app aborts at launch
       # under lldb) — run undebugged so plain Cmd+R works on device.
       debugEnabled: false
+    test:
+      config: Debug
+      targets:
+        - OmniglotUITests
