@@ -19,6 +19,15 @@ enum F2ChatModel: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Single-letter badge for the compact icon picker.
+    var letter: String {
+        switch self {
+        case .opus: return "O"
+        case .fable: return "F"
+        case .glm: return "G"
+        }
+    }
+
     static let storageKey = "f2ChatModel"
     static let defaultModel: F2ChatModel = .opus
 
@@ -74,12 +83,24 @@ struct ModelPickerMenu: View {
                 .background(FeyndTheme.surface, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
             case .icon:
-                Image(systemName: "sparkles")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(FeyndTheme.text2)
-                    .frame(width: 36, height: 36)
-                    .background(FeyndTheme.surface, in: Circle())
-                    .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
+                // Model letter + a pinch of pixie dust so the badge reads
+                // "magic" and tells you which model at a glance.
+                ZStack {
+                    Text(selected.letter)
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(FeyndTheme.text2)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(FeyndTheme.gold)
+                        .offset(x: 9, y: -9)
+                    Image(systemName: "sparkle")
+                        .font(.system(size: 5, weight: .bold))
+                        .foregroundStyle(FeyndTheme.gold.opacity(0.7))
+                        .offset(x: -10, y: 8)
+                }
+                .frame(width: 36, height: 36)
+                .background(FeyndTheme.surface, in: Circle())
+                .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
             }
         }
         .buttonStyle(.plain)
