@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00FA62D14737E52644E26F61 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B09246FF15307342083E574 /* SignupView.swift */; };
+		0E7694CF618B45FF234EB3CB /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */; };
 		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
 		19C524D5397F5550C8A33970 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = DAABD116A19EBEA378D604DA /* WebRTC */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
@@ -54,6 +55,7 @@
 		A62FA8AD3B3E792810622A3A /* F2API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F2API.swift; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C0564EA3B927E26544E7655B /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
+		C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
 		CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabsView.swift; sourceTree = "<group>"; };
 		CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
 		E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeVoiceClient.swift; sourceTree = "<group>"; };
@@ -88,6 +90,7 @@
 				CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */,
 				78E1F1203E78919DA10B73C9 /* LoginView.swift */,
 				CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */,
+				C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */,
 				EFFCEF68207C8EC05D3B4760 /* Models.swift */,
 				C0564EA3B927E26544E7655B /* PasteView.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
@@ -205,6 +208,7 @@
 				470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */,
 				E837DB371B838AB27BC85493 /* LoginView.swift in Sources */,
 				412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */,
+				0E7694CF618B45FF234EB3CB /* ModelPicker.swift in Sources */,
 				36BE08CA63307A15CECFDBEA /* Models.swift in Sources */,
 				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,

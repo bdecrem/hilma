@@ -122,12 +122,13 @@ final class F2API {
         }
     }
 
-    func sendMessage(text: String, threadId: String? = nil) async throws -> MessageResponse {
+    func sendMessage(text: String, threadId: String? = nil, model: String? = nil) async throws -> MessageResponse {
         struct Body: Encodable {
             let text: String
             let thread_id: String?
+            let model: String?
         }
-        return try await post("/api/f2/messages", body: Body(text: text, thread_id: threadId))
+        return try await post("/api/f2/messages", body: Body(text: text, thread_id: threadId, model: model))
     }
 
     // MARK: Topics

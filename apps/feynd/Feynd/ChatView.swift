@@ -22,9 +22,7 @@ struct ChatView: View {
                         .tracking(-0.2)
                         .foregroundStyle(FeyndTheme.text)
                 } trailing: {
-                    // Empty by design — paste a URL in the composer to start a
-                    // new topic; no need for a dedicated button.
-                    EmptyView()
+                    ModelPickerMenu(style: .pill)
                 } onProfileTap: {
                     showSettings = true
                 }
@@ -78,7 +76,7 @@ struct ChatView: View {
         messages.append(F2Message(role: "user", text: text, createdAt: Date()))
         Task {
             do {
-                let res = try await F2API.shared.sendMessage(text: text)
+                let res = try await F2API.shared.sendMessage(text: text, model: F2ChatModel.current.rawValue)
                 if !res.reply.isEmpty {
                     messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }
@@ -102,7 +100,7 @@ struct ChatView: View {
         messages.append(F2Message(role: "user", text: text, createdAt: Date()))
         Task {
             do {
-                let res = try await F2API.shared.sendMessage(text: text)
+                let res = try await F2API.shared.sendMessage(text: text, model: F2ChatModel.current.rawValue)
                 if !res.reply.isEmpty {
                     messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }

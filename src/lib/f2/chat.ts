@@ -1,20 +1,9 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { buildFullContent, type F2Thread } from './threads'
+import { llmComplete, type LlmTool } from './llm'
 
-const MODEL = 'claude-sonnet-4-6'
-// No content cap. Claude Sonnet 4.6 + the 1M-context beta lets us send the
-// entire source — full podcast transcripts, articles, books. Repeated
-// turns hit the prompt cache so cost stays sane.
-const CONTEXT_1M_BETA = 'context-1m-2025-08-07'
-
-let _client: Anthropic | null = null
-function anthropic(): Anthropic {
-  if (_client) return _client
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set')
-  _client = new Anthropic({ apiKey })
-  return _client
-}
+// All chat replies go through the model registry in llm.ts. `model` params
+// below are registry keys sent by the client (iOS/macOS picker); undefined
+// keeps the legacy default so the web app is unchanged.
 
 // Three actions Claude can pick on every inbound text:
 //  - continue: stay in the active learning thread; persist the exchange
@@ -25,7 +14,7 @@ export type RouterAction =
   | { kind: 'new_topic'; topic: string; reply: string }
   | { kind: 'chitchat'; reply: string }
 
-const TOOLS: Anthropic.Tool[] = [
+const TOOLS: LlmTool[] = [
   {
     name: 'continue_chat',
     description:
@@ -110,6 +99,10 @@ For every message, pick exactly one tool:
 ${baseRules}`
 }
 
+function historyOf(thread: F2Thread): { role: 'user' | 'assistant'; content: string }[] {
+  return thread.messages.map((m) => ({ role: m.role, content: m.text }))
+}
+
 /// Reflection quiz, step 1: ask a single thoughtful question.
 ///
 /// One-shot by design. The reflection quiz is for one-off articles / stories
@@ -118,6 +111,7 @@ ${baseRules}`
 export async function askReflectionQuestion(
   thread: F2Thread,
   userText: string,
+  model?: string | null,
 ): Promise<string> {
   const subject = thread.topic ?? thread.url ?? '(this topic)'
   const fullContent = buildFullContent(thread)
@@ -129,25 +123,13 @@ export async function askReflectionQuestion(
 
 Ask exactly ONE thoughtful, open-ended question inviting personal reflection on this material — what they take away, how it lands for them, what it shifts. Don't test recall. Don't lead. No preamble ("Great question", "Let's reflect"). No markdown. Plain text, one question, that's it.${sourceBlock}`
 
-  const history = thread.messages.map((m) => ({
-    role: m.role,
-    content: m.text,
-  }))
-
-  const response = await anthropic().messages.create(
-    {
-      model: MODEL,
-      max_tokens: 400,
-      system: [
-        { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
-      ],
-      messages: [...history, { role: 'user', content: userText }],
-    },
-    { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
-  )
-
-  const block = response.content.find((b) => b.type === 'text')
-  return block?.type === 'text' ? block.text.trim() : ''
+  const result = await llmComplete({
+    model,
+    system,
+    messages: [...historyOf(thread), { role: 'user', content: userText }],
+    maxTokens: 400,
+  })
+  return result.type === 'text' ? result.text : ''
 }
 
 /// Reflection quiz, step 2: brief acknowledgement of the user's answer.
@@ -157,6 +139,7 @@ Ask exactly ONE thoughtful, open-ended question inviting personal reflection on 
 export async function acknowledgeReflectionAnswer(
   thread: F2Thread,
   userText: string,
+  model?: string | null,
 ): Promise<string> {
   const subject = thread.topic ?? thread.url ?? '(this topic)'
 
@@ -164,63 +147,39 @@ export async function acknowledgeReflectionAnswer(
 
 React in ONE short sentence — something warm and human ("Mm, that lands." / "Yeah, I get that." / a brief sincere reaction to what they said). Do NOT grade. Do NOT summarize. Do NOT ask another question. Plain text. One sentence.`
 
-  const history = thread.messages.map((m) => ({
-    role: m.role,
-    content: m.text,
-  }))
-
-  const response = await anthropic().messages.create(
-    {
-      model: MODEL,
-      max_tokens: 120,
-      system: [
-        { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
-      ],
-      messages: [...history, { role: 'user', content: userText }],
-    },
-    { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
-  )
-
-  const block = response.content.find((b) => b.type === 'text')
-  return block?.type === 'text' ? block.text.trim() : ''
+  const result = await llmComplete({
+    model,
+    system,
+    messages: [...historyOf(thread), { role: 'user', content: userText }],
+    maxTokens: 120,
+  })
+  return result.type === 'text' ? result.text : ''
 }
 
 export async function routeAndReply(
   thread: F2Thread | null,
   userText: string,
+  model?: string | null,
 ): Promise<RouterAction> {
-  const systemText = buildSystem(thread)
+  const result = await llmComplete({
+    model,
+    system: buildSystem(thread),
+    messages: [
+      ...(thread ? historyOf(thread) : []),
+      { role: 'user', content: userText },
+    ],
+    maxTokens: 1000,
+    tools: TOOLS,
+    forceTool: true,
+  })
 
-  const history = (thread?.messages ?? []).map((m) => ({
-    role: m.role,
-    content: m.text,
-  }))
-
-  const response = await anthropic().messages.create(
-    {
-      model: MODEL,
-      max_tokens: 1000,
-      system: [
-        { type: 'text', text: systemText, cache_control: { type: 'ephemeral' } },
-      ],
-      tools: TOOLS,
-      tool_choice: { type: 'any' },
-      messages: [...history, { role: 'user', content: userText }],
-    },
-    // 1M-token context window so full transcripts / books fit.
-    { headers: { 'anthropic-beta': CONTEXT_1M_BETA } },
-  )
-
-  const toolUse = response.content.find((b) => b.type === 'tool_use')
-  if (!toolUse || toolUse.type !== 'tool_use') {
+  if (result.type === 'text') {
     // Defensive: model returned plain text instead of a tool call.
-    const text = response.content.find((b) => b.type === 'text')
-    const reply = text?.type === 'text' ? text.text.trim() : '(no response)'
-    return { kind: 'chitchat', reply }
+    return { kind: 'chitchat', reply: result.text || '(no response)' }
   }
 
-  const input = toolUse.input as Record<string, unknown>
-  switch (toolUse.name) {
+  const input = result.input
+  switch (result.name) {
     case 'continue_chat':
       return { kind: 'continue', reply: String(input.reply ?? '').trim() }
     case 'start_new_topic':
@@ -234,7 +193,7 @@ export async function routeAndReply(
     default:
       return {
         kind: 'chitchat',
-        reply: `(unknown tool: ${toolUse.name})`,
+        reply: `(unknown tool: ${result.name})`,
       }
   }
 }

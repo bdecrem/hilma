@@ -45,6 +45,10 @@ export type F2Message = {
   text: string
   client: F2Client
   threadId?: string
+  /** Chat-model registry key (see lib/f2/llm.ts). Sent by the iOS/macOS
+   *  picker; absent for web/iMessage, which keep the default model. Governs
+   *  chat replies only — topic naming and quiz grading stay on Haiku. */
+  model?: string
 }
 
 export type F2Reply = {
@@ -66,7 +70,7 @@ export type F2Reply = {
 }
 
 export async function processMessage(input: F2Message): Promise<F2Reply> {
-  const { userId, client, handle, threadId } = input
+  const { userId, client, handle, threadId, model } = input
   const text = input.text.trim()
   if (!text) return { reply: '' }
 
@@ -100,7 +104,7 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   if (isUrl(firstToken)) {
     return handleNewUrl(userId, client, handle, firstToken)
   }
-  return handleNonUrl(userId, client, handle, text, threadId)
+  return handleNonUrl(userId, client, handle, text, threadId, model)
 }
 
 const QUOTE_PAIRS: Record<string, string> = {
@@ -389,10 +393,11 @@ function isReflectionQuizRequest(text: string): boolean {
 async function startReflectionTurn(
   thread: F2Thread,
   userText: string,
+  model?: string,
 ): Promise<F2Reply> {
   let reply: string
   try {
-    reply = await askReflectionQuestion(thread, userText)
+    reply = await askReflectionQuestion(thread, userText, model)
   } catch (err) {
     console.error('[f2] reflection quiz failed to start:', err)
     return { reply: 'F2: hit an error starting the reflection quiz. Try again in a moment.' }
@@ -427,10 +432,11 @@ async function startReflectionTurn(
 async function completeReflectionTurn(
   thread: F2Thread,
   userText: string,
+  model?: string,
 ): Promise<F2Reply> {
   let ack: string
   try {
-    ack = await acknowledgeReflectionAnswer(thread, userText)
+    ack = await acknowledgeReflectionAnswer(thread, userText, model)
   } catch (err) {
     console.error('[f2] reflection acknowledgement failed:', err)
     ack = 'Got it.'
@@ -466,6 +472,7 @@ async function handleNonUrl(
   handle: string,
   userText: string,
   threadId: string | undefined,
+  model: string | undefined,
 ): Promise<F2Reply> {
   let thread: F2Thread | null = null
   if (threadId) {
@@ -480,15 +487,15 @@ async function handleNonUrl(
   //   - If reflection is already pending (we just asked the question), this
   //     reply finishes the quiz: award the star, mark done, clear pending.
   if (thread && isReflectionQuizRequest(userText)) {
-    return startReflectionTurn(thread, userText)
+    return startReflectionTurn(thread, userText, model)
   }
   if (thread && thread.pending_quiz_kind === 'reflection') {
-    return completeReflectionTurn(thread, userText)
+    return completeReflectionTurn(thread, userText, model)
   }
 
   let action
   try {
-    action = await routeAndReply(thread, userText)
+    action = await routeAndReply(thread, userText, model)
   } catch (err) {
     console.error('[f2] routeAndReply failed:', err)
     return { reply: 'F2: hit an error talking to Claude. Try again in a moment.' }

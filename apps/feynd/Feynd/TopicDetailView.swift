@@ -83,9 +83,9 @@ struct TopicDetailView: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Invisible spacer to keep the title centered between the back
-            // button and the trailing edge (matches the old kebab's footprint).
-            Color.clear.frame(width: 36, height: 36)
+            // Same 36pt footprint the old kebab had, so the title stays
+            // centered — now the chat-model picker.
+            ModelPickerMenu(style: .icon)
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)
@@ -181,7 +181,7 @@ struct TopicDetailView: View {
         messages.append(F2Message(role: "user", text: text, createdAt: Date()))
         Task {
             do {
-                let res = try await F2API.shared.sendMessage(text: text, threadId: topicId)
+                let res = try await F2API.shared.sendMessage(text: text, threadId: topicId, model: F2ChatModel.current.rawValue)
                 if !res.reply.isEmpty {
                     messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }
