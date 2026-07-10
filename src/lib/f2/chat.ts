@@ -1,5 +1,5 @@
 import { buildFullContent, type F2Thread } from './threads'
-import { llmComplete, type LlmTool } from './llm'
+import { llmComplete, contextCharBudget, type LlmTool } from './llm'
 
 // All chat replies go through the model registry in llm.ts. `model` params
 // below are registry keys sent by the client (iOS/macOS picker); undefined
@@ -61,7 +61,19 @@ const TOOLS: LlmTool[] = [
   },
 ]
 
-function buildSystem(thread: F2Thread | null): string {
+/// Fit source material to the model's context budget. Books overflow the
+/// smaller-context models (GLM: 262K tokens vs Claude's 1M); rather than
+/// hard-failing the API call, keep the head of the source and say so.
+function fitToBudget(content: string, model: string | null | undefined): string {
+  const budget = contextCharBudget(model)
+  if (content.length <= budget) return content
+  return (
+    content.slice(0, budget) +
+    '\n\n[Source truncated here — it exceeds this model\'s context window. Answer from the portion above and general knowledge; mention the cutoff if the user asks about late-in-source material.]'
+  )
+}
+
+function buildSystem(thread: F2Thread | null, model?: string | null): string {
   const baseRules = `Reply rules:
 - Be direct. No preambles ("Great question", "Based on the article").
 - Plain text, no markdown.
@@ -86,7 +98,7 @@ ${baseRules}`
 
   const fullContent = buildFullContent(thread)
   const sourceBlock = fullContent
-    ? `\n\nSource content (primary reference — answer from this when relevant):\n${fullContent}`
+    ? `\n\nSource content (primary reference — answer from this when relevant):\n${fitToBudget(fullContent, model)}`
     : ''
 
   return `You are F2 — a learning companion. The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
@@ -116,7 +128,7 @@ export async function askReflectionQuestion(
   const subject = thread.topic ?? thread.url ?? '(this topic)'
   const fullContent = buildFullContent(thread)
   const sourceBlock = fullContent
-    ? `\n\nSource content (the material the user is reflecting on):\n${fullContent}`
+    ? `\n\nSource content (the material the user is reflecting on):\n${fitToBudget(fullContent, model)}`
     : ''
 
   const system = `You are F2 — a learning companion. The user just asked for a Reflection Quiz on: ${subject}.
@@ -163,7 +175,7 @@ export async function routeAndReply(
 ): Promise<RouterAction> {
   const result = await llmComplete({
     model,
-    system: buildSystem(thread),
+    system: buildSystem(thread, model),
     messages: [
       ...(thread ? historyOf(thread) : []),
       { role: 'user', content: userText },

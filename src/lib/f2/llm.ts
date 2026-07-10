@@ -32,6 +32,11 @@ type ModelSpec = {
   /** Thinking tokens count against max_tokens; models that think need
    *  headroom beyond the small caps the chat layer asks for. */
   maxTokensFloor?: number
+  /** How many chars of source material the chat layer may inline into the
+   *  system prompt for this model. Roughly 3.5 chars/token; set well under
+   *  the model's context window to leave room for history, tool schemas,
+   *  thinking, and output. Book-sized topics get truncated to this. */
+  contextCharBudget: number
   /** On stop_reason "refusal" (Fable 5 safety classifiers), retry the same
    *  request once on this model key. */
   refusalFallback?: LlmModelKey
@@ -47,6 +52,7 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     label: 'Sonnet 4.6',
     // 1M-token context window so full transcripts / books fit.
     betaHeaders: ['context-1m-2025-08-07'],
+    contextCharBudget: 3_000_000,
   },
   'opus-4-8': {
     provider: 'anthropic',
@@ -56,6 +62,7 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     // recommended default. 1M context is standard, no beta needed.
     thinking: { type: 'adaptive' },
     maxTokensFloor: 8192,
+    contextCharBudget: 3_000_000,
   },
   'fable-5': {
     provider: 'anthropic',
@@ -65,6 +72,7 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     effort: 'medium',
     maxTokensFloor: 8192,
     refusalFallback: 'opus-4-8',
+    contextCharBudget: 3_000_000,
   },
   'glm-5.2': {
     provider: 'together',
@@ -72,6 +80,9 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     label: 'GLM-5.2',
     // GLM-5.2 thinks by default; reasoning tokens draw from max_tokens.
     maxTokensFloor: 8192,
+    // 262K-token window — far smaller than the Claude models' 1M. ~600K
+    // chars ≈ 170K tokens of source leaves room for history + output.
+    contextCharBudget: 600_000,
   },
 }
 
@@ -119,6 +130,14 @@ export function resolveModel(key: string | null | undefined): LlmModelKey {
   if (!key) return DEFAULT_MODEL
   if (!isModelKey(key)) throw new Error(`Unknown model key: ${key}`)
   return key
+}
+
+/** Char budget for inlined source material on this model. The chat layer
+ *  truncates topic sources to this before building the system prompt, so a
+ *  book-sized topic degrades to a truncated source instead of a hard API
+ *  error on smaller-context models. */
+export function contextCharBudget(key: string | null | undefined): number {
+  return MODELS[resolveModel(key)].contextCharBudget
 }
 
 // ---------------------------------------------------------------------------
