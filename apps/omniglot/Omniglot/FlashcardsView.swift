@@ -16,6 +16,9 @@ struct FlashcardsView: View {
     @State private var xpResult: XpResult?
     @State private var submitting = false
     @State private var submitError: String?
+    // Guards the 180ms card-exit window: a double-tap on the last card
+    // would otherwise removeFirst() on an empty queue and crash.
+    @State private var isGrading = false
 
     private var total: Int { cards.count }
     private var remainingUnique: Int { Set(queue.map(\.id)).count }
@@ -96,11 +99,11 @@ struct FlashcardsView: View {
     private var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                guard flipped else { return }
+                guard flipped, !isGrading else { return }
                 drag = value.translation
             }
             .onEnded { value in
-                guard flipped else {
+                guard flipped, !isGrading else {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { drag = .zero }
                     return
                 }
@@ -214,13 +217,14 @@ struct FlashcardsView: View {
             .background(tint)
             .clipShape(Capsule())
         }
-        .disabled(!flipped)
+        .disabled(!flipped || isGrading)
     }
 
     // MARK: Grading + submit
 
     private func grade(known: Bool) {
-        guard let card = queue.first else { return }
+        guard !isGrading, let card = queue.first else { return }
+        isGrading = true
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
 
         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
@@ -228,7 +232,7 @@ struct FlashcardsView: View {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
-            queue.removeFirst()
+            if !queue.isEmpty { queue.removeFirst() }
             if known {
                 // Card leaves the session; "known" is settled at submit time.
             } else {
@@ -238,6 +242,7 @@ struct FlashcardsView: View {
             }
             drag = .zero
             flipped = false
+            isGrading = false
             if queue.isEmpty { submit() }
         }
     }

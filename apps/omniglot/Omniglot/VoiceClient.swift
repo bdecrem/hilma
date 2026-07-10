@@ -38,6 +38,7 @@ final class VoiceClient: NSObject {
     private var dataChannel: RTCDataChannel?
     private(set) var transcript: [[String: String]] = []
     private var openedConversation = false
+    private var connectTimeoutTask: Task<Void, Never>?
 
     var userTurns: Int {
         transcript.filter { $0["role"] == "user" }.count
@@ -68,6 +69,16 @@ final class VoiceClient: NSObject {
             phase = .connecting
             status = "Connecting…"
             try await connectWebRTC(session)
+
+            // ICE can stall without ever reaching .failed — don't leave the
+            // booth stuck on "Connecting…" forever.
+            connectTimeoutTask = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 20_000_000_000)
+                guard let self, self.phase == .connecting else { return }
+                self.cleanup()
+                self.phase = .failed("Couldn't reach the voice service. Try again.")
+                self.status = "Connection timed out"
+            }
         } catch {
             cleanup()
             phase = .failed(error.localizedDescription)
@@ -257,6 +268,8 @@ final class VoiceClient: NSObject {
     }
 
     private func cleanup() {
+        connectTimeoutTask?.cancel()
+        connectTimeoutTask = nil
         dataChannel?.delegate = nil
         dataChannel?.close()
         dataChannel = nil

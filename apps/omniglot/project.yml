@@ -44,6 +44,8 @@ targets:
       path: Omniglot/Info.plist
       properties:
         CFBundleDisplayName: Omniglot
+        # Light-only app (the Talk booth opts into dark itself via SwiftUI).
+        UIUserInterfaceStyle: Light
         NSMicrophoneUsageDescription: "Omniglot listens during conversation practice so you can speak with your tutor."
         UIBackgroundModes: [audio]
         NSAppTransportSecurity:

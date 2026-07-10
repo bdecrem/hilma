@@ -16,6 +16,9 @@ export type OmniConversation = {
   language: string
   level: number
   realtime_session_id: string | null
+  ended_at: string | null
+  summary: string | null
+  corrections: unknown
 }
 
 const DEFAULT_MODEL = 'gpt-realtime-2'
@@ -219,7 +222,7 @@ export async function createConversation(input: {
       realtime_model: input.model,
       realtime_voice: input.voice,
     })
-    .select('id, user_id, topic_id, mode, language, level, realtime_session_id')
+    .select('id, user_id, topic_id, mode, language, level, realtime_session_id, ended_at, summary, corrections')
     .single()
   if (error) {
     console.error('[omni/talk] createConversation failed:', error)
@@ -250,7 +253,7 @@ export async function getConversation(
 ): Promise<OmniConversation | null> {
   const { data } = await omniSupabase()
     .from('omni_conversations')
-    .select('id, user_id, topic_id, mode, language, level, realtime_session_id')
+    .select('id, user_id, topic_id, mode, language, level, realtime_session_id, ended_at, summary, corrections')
     .eq('id', conversationId)
     .eq('user_id', userId)
     .maybeSingle()

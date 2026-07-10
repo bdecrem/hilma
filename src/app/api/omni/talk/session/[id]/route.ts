@@ -35,15 +35,28 @@ export async function PATCH(
     return NextResponse.json({ error: 'Session not found.' }, { status: 404 })
   }
 
+  // Idempotency: a client retry (or double-fire) must not re-run the
+  // debrief, re-award XP, or mint a duplicate freeform chapter.
+  if (conversation.ended_at) {
+    const xp = await awardXp(user.id, conversation.language, 0)
+    return NextResponse.json({
+      summary: conversation.summary ?? null,
+      corrections: conversation.corrections ?? [],
+      xp,
+      new_topic: null,
+    })
+  }
+
   let body: { transcript?: TranscriptTurn[] }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 })
   }
-  const transcript = (body.transcript ?? []).filter(
-    (t) => typeof t?.role === 'string' && typeof t?.text === 'string',
-  )
+  const transcript = (body.transcript ?? [])
+    .filter((t) => typeof t?.role === 'string' && typeof t?.text === 'string')
+    .slice(0, 600)
+    .map((t) => ({ role: t.role, text: t.text.slice(0, 4000) }))
   const userTurns = transcript.filter(
     (t) => t.role === 'user' && t.text.trim(),
   ).length

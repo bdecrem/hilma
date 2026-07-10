@@ -11,13 +11,19 @@ final class AppSession {
 
     var auth: AuthState = .loading
     var progress: Progress = .zero
-    /// Set when an XP award crosses a level boundary; a view shows it once.
-    var pendingLevelUp: Int?
     /// The chapter catalog for the current language, shared by Home + Library.
     var topics: TopicsResponse?
+    /// True when the catalog failed to load and there's nothing cached —
+    /// Home/Library show a retry row instead of a silently empty course.
+    var topicsLoadFailed = false
 
     func refreshTopics() async {
-        topics = try? await API.shared.topics()
+        do {
+            topics = try await API.shared.topics()
+            topicsLoadFailed = false
+        } catch {
+            topicsLoadFailed = topics == nil
+        }
     }
 
     var user: OmniUser? {
@@ -38,10 +44,12 @@ final class AppSession {
     }
 
     func signIn(email: String, password: String) async throws {
+        topics = nil
         apply(try await API.shared.login(email: email, password: password))
     }
 
     func signUp(email: String, password: String, language: String, level: Int) async throws {
+        topics = nil
         apply(try await API.shared.signup(email: email, password: password, language: language, level: level))
     }
 
@@ -53,13 +61,16 @@ final class AppSession {
 
     func signOut() async {
         try? await API.shared.logout()
+        // Even if the logout POST failed (offline), the local session must
+        // die — otherwise the next launch quietly signs the user back in.
+        API.shared.clearSessionCookie()
         auth = .signedOut
         progress = .zero
+        topics = nil
     }
 
     /// Fold an XP award into the visible progress.
     func take(_ xp: XpResult) {
-        if xp.leveledUp { pendingLevelUp = xp.level }
         progress = xp.progress
     }
 

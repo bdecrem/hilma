@@ -65,8 +65,7 @@ struct LoginView: View {
             PrimaryButton(title: busy ? "One moment…" : (creating ? "Continue" : "Sign in"),
                           disabled: busy || email.isEmpty || password.isEmpty) {
                 if creating {
-                    error = nil
-                    step = .language
+                    validateAndAdvance()
                 } else {
                     signIn()
                 }
@@ -92,11 +91,46 @@ struct LoginView: View {
     private func field<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         content()
             .font(.system(size: 17))
+            .foregroundStyle(Theme.ink)
+            .tint(Theme.accent)
             .padding(.horizontal, 16)
             .frame(height: 52)
             .background(Theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.hairline, lineWidth: 1))
+    }
+
+    /// Everything that can be wrong with the credentials gets caught HERE,
+    /// on step 1 — never three steps later.
+    private func validateAndAdvance() {
+        let trimmed = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.contains("@"), trimmed.contains(".") else {
+            error = "That doesn't look like an email address."
+            return
+        }
+        guard password.count >= 8 else {
+            error = "Password needs at least 8 characters."
+            return
+        }
+        busy = true
+        error = nil
+        Task {
+            do {
+                let check = try await API.shared.checkEmail(trimmed)
+                if !check.valid {
+                    error = "That doesn't look like an email address."
+                } else if !check.available {
+                    error = "An account with that email already exists — sign in instead."
+                } else {
+                    step = .language
+                }
+            } catch {
+                // Server unreachable for the pre-flight — let them continue;
+                // the final signup will report anything real.
+                step = .language
+            }
+            busy = false
+        }
     }
 
     // MARK: Step 2 — language grid (typographic tiles, no flags)
@@ -246,7 +280,10 @@ struct LoginView: View {
             do {
                 try await session.signUp(email: email, password: password, language: lang.code, level: level)
             } catch {
+                // Land the user back where the problem is fixable, with the
+                // error visible — not stranded on the last step.
                 self.error = error.localizedDescription
+                step = .credentials
             }
             busy = false
         }

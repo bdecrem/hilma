@@ -15,16 +15,24 @@ final class OmniglotUITests: XCTestCase {
         Thread.sleep(forTimeInterval: seconds)
     }
 
+    /// Launch with the -omni-uitest flag: the app starts signed out (cookie
+    /// cleared) and skips infinite animations that break synthesized taps.
+    private func makeApp() -> XCUIApplication {
+        let app = XCUIApplication()
+        app.launchArguments += ["-omni-uitest"]
+        app.launch()
+        return app
+    }
+
     private func signInIfNeeded(_ app: XCUIApplication) {
         let email = app.textFields["Email"]
-        if email.waitForExistence(timeout: 5) {
-            email.tap()
-            email.typeText("omni-test@example.com")
-            let password = app.secureTextFields["Password"]
-            password.tap()
-            password.typeText("omni-test-pass1")
-            app.buttons["Sign in"].tap()
-        }
+        XCTAssertTrue(email.waitForExistence(timeout: 10), "login screen")
+        email.tap()
+        email.typeText("omni-test@example.com")
+        let password = app.secureTextFields["Password"]
+        password.tap()
+        password.typeText("omni-test-pass1\n")
+        _ = tapAnything(app, label: "Sign in")
         XCTAssertTrue(
             app.staticTexts["Start conversation"].waitForExistence(timeout: 15),
             "Home should appear after sign-in"
@@ -42,42 +50,86 @@ final class OmniglotUITests: XCTestCase {
             app.cells.matching(predicate).firstMatch,
             app.otherElements.matching(predicate).firstMatch,
         ]
+        let names = ["buttons", "staticTexts", "cells", "otherElements"]
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            for element in queries where element.exists && element.isHittable {
+            for (i, element) in queries.enumerated() where element.exists && element.isHittable {
+                print("OMNI_TAP '\(label)' via \(names[i]) frame=\(element.frame)")
                 element.tap()
                 return true
             }
             Thread.sleep(forTimeInterval: 0.5)
         }
+        // iOS 26's floating tab bar (and other decorated containers) can
+        // report hittable=false for perfectly tappable elements — fall back
+        // to a raw coordinate tap on anything that at least exists.
+        for (i, element) in queries.enumerated() where element.exists {
+            print("OMNI_TAP '\(label)' FALLBACK via \(names[i]) frame=\(element.frame)")
+            element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            return true
+        }
         print("OMNI_TREE (no hittable '\(label)')\n\(app.debugDescription)")
         return false
     }
 
+    /// Bisect probe: identical to testZ plus a 3s wait before the tap —
+    /// isolates whether time-on-Home is what breaks the tab bar.
+    func testY_tabSwitchAfterWait() throws {
+        let app = makeApp()
+        signInIfNeeded(app)
+        hold(3)
+        XCTAssertTrue(tapAnything(app, label: "Library"), "Library tab")
+        if !app.navigationBars["Library"].waitForExistence(timeout: 10) {
+            print("OMNI_TREE_TABSWITCH_WAIT\n\(app.debugDescription)")
+            XCTFail("Library screen after wait")
+        }
+    }
+
+    /// Minimal bisect probe: sign in, switch to Library. Nothing else.
+    func testZ_tabSwitch() throws {
+        let app = makeApp()
+        signInIfNeeded(app)
+        XCTAssertTrue(tapAnything(app, label: "Library"), "Library tab")
+        if !app.navigationBars["Library"].waitForExistence(timeout: 10) {
+            print("OMNI_TREE_TABSWITCH\n\(app.debugDescription)")
+            XCTFail("Library screen")
+        }
+    }
+
     func testA_tourCoreScreens() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = makeApp()
 
         // 1 — Home
         signInIfNeeded(app)
         hold()
 
-        // 2 — Library
+        // 2 — Library. Assert on the nav title — Home also contains chapter
+        // text, so a missed tab tap must not pass silently.
         XCTAssertTrue(tapAnything(app, label: "Library"), "Library tab")
+        if !app.navigationBars["Library"].waitForExistence(timeout: 10) {
+            print("OMNI_KEYBOARDS \(app.keyboards.count) windows-tree:\n\(app.debugDescription)")
+            XCTFail("Library screen")
+        }
         hold(2)
 
-        // 3 — Chapter detail
+        // 3 — Chapter detail. Case-sensitive: the detail eyebrow is
+        // "DIALOGUE"; Home's thread caption is "Dialogue".
         XCTAssertTrue(tapAnything(app, label: "Mucho gusto"), "first chapter row")
-        // Section eyebrows render uppercased ("DIALOGUE").
         let dialogueHeader = app.staticTexts
-            .matching(NSPredicate(format: "label ==[c] 'Dialogue'")).firstMatch
+            .matching(NSPredicate(format: "label == 'DIALOGUE'")).firstMatch
         XCTAssertTrue(dialogueHeader.waitForExistence(timeout: 10), "chapter detail")
         hold()
         app.swipeUp()
         hold(2)
 
-        // 4 — Flash cards: flip one, grade two, close
-        if !app.buttons["Review cards"].isHittable { app.swipeUp() }
+        // 4 — Flash cards: flip one, grade two, close. The dialogue section
+        // is long — keep scrolling until the review button is on screen.
+        var scrolls = 0
+        while !app.buttons["Review cards"].exists && scrolls < 6 {
+            app.swipeUp()
+            scrolls += 1
+            hold(1)
+        }
         XCTAssertTrue(tapAnything(app, label: "Review cards"), "review button")
         XCTAssertTrue(app.staticTexts["Tap to flip"].waitForExistence(timeout: 5))
         hold(2)
@@ -93,9 +145,72 @@ final class OmniglotUITests: XCTestCase {
         hold(2)
     }
 
+    /// The signup path end to end: bad password caught on step 1, then a
+    /// real account through language + level, landing on Home. Also visits
+    /// Profile (and signs out first, since state persists across tests).
+    func testC_signupFlow() throws {
+        let app = makeApp()
+
+        XCTAssertTrue(app.textFields["Email"].waitForExistence(timeout: 10))
+        hold(2)
+        XCTAssertTrue(tapAnything(app, label: "Create an account"), "create account link")
+
+        // Step 1 with a too-short password must fail HERE, not at step 3.
+        let email = app.textFields["Email"]
+        email.tap()
+        email.typeText("ui-\(UUID().uuidString.prefix(8).lowercased())@example.com")
+        let password = app.secureTextFields["Password"]
+        password.tap()
+        password.typeText("short\n") // return dismisses the keyboard
+        XCTAssertTrue(tapAnything(app, label: "Continue"), "continue #1")
+        let lengthError = app.staticTexts
+            .matching(NSPredicate(format: "label CONTAINS 'at least 8'")).firstMatch
+        XCTAssertTrue(lengthError.waitForExistence(timeout: 5), "password length caught on step 1")
+        hold(2)
+
+        // Fix the password and proceed.
+        password.tap()
+        password.typeText("-now-long-enough\n")
+        XCTAssertTrue(tapAnything(app, label: "Continue"), "continue #2")
+        let languageStep = app.staticTexts["Which language?"]
+        if !languageStep.waitForExistence(timeout: 10) {
+            print("OMNI_TREE_SIGNUP\n\(app.debugDescription)")
+            XCTFail("language step")
+        }
+        hold(2)
+        XCTAssertTrue(tapAnything(app, label: "Français"), "language tile")
+        app.buttons["Continue"].tap()
+        XCTAssertTrue(app.staticTexts
+            .matching(NSPredicate(format: "label CONTAINS 'studied'")).firstMatch
+            .waitForExistence(timeout: 5), "level step")
+        hold(2)
+        XCTAssertTrue(tapAnything(app, label: "Some basics"), "level choice")
+        XCTAssertTrue(
+            app.staticTexts["Start conversation"].waitForExistence(timeout: 15),
+            "Home after signup"
+        )
+        hold(2)
+
+        // Library: the New topic sheet (bottom of the list — scroll to it).
+        XCTAssertTrue(tapAnything(app, label: "Library"), "library tab")
+        hold(2)
+        app.swipeUp()
+        app.swipeUp()
+        hold(1)
+        XCTAssertTrue(tapAnything(app, label: "New topic"), "new topic row")
+        XCTAssertTrue(app.staticTexts
+            .matching(NSPredicate(format: "label CONTAINS[c] 'new topic'")).firstMatch
+            .waitForExistence(timeout: 5))
+        hold(2)
+        app.buttons["Cancel"].tap()
+
+        // Profile.
+        XCTAssertTrue(tapAnything(app, label: "Profile"), "profile tab")
+        hold(3)
+    }
+
     func testB_talkBooth() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = makeApp()
         signInIfNeeded(app)
 
         // Mic permission alert may appear on first talk.
@@ -107,14 +222,18 @@ final class OmniglotUITests: XCTestCase {
             return false
         }
 
-        let hero = app.descendants(matching: .any)
-            .matching(identifier: "startConversation").firstMatch
+        // Button type specifically — the .any query can resolve to a wrapper
+        // element with a larger frame, and its center-tap lands on the
+        // chapter card below the hero.
+        let hero = app.buttons.matching(identifier: "startConversation").firstMatch
         XCTAssertTrue(hero.waitForExistence(timeout: 5), "hero button")
         hero.tap()
 
         let end = app.buttons["End"]
         if !end.waitForExistence(timeout: 8) {
-            app.tap() // nudge the interruption monitor
+            // If a permission alert is blocking, tapping the app's TOP edge
+            // nudges the interruption monitor without hitting Home content.
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.08)).tap()
         }
         if !end.waitForExistence(timeout: 15) {
             print("OMNI_TREE_BOOTH\n\(app.debugDescription)")

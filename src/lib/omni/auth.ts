@@ -97,10 +97,12 @@ export function clearSessionCookie(res: NextResponse): void {
 export async function findUserByEmail(
   email: string,
 ): Promise<{ id: string; password_hash: string } | null> {
+  // Exact match, not ilike — emails are stored lowercased, and ilike treats
+  // "_" and "%" as wildcards, which breaks logins for underscore emails.
   const { data } = await omniSupabase()
     .from('omni_users')
     .select('id, password_hash')
-    .ilike('email', email.trim().toLowerCase())
+    .eq('email', email.trim().toLowerCase())
     .maybeSingle()
   return (data as { id: string; password_hash: string } | null) ?? null
 }
@@ -128,7 +130,7 @@ export async function createUser(input: {
   const { data: existing } = await sb
     .from('omni_users')
     .select('id')
-    .ilike('email', email)
+    .eq('email', email)
     .maybeSingle()
   if (existing) {
     return { error: 'An account with that email already exists.', status: 409 }
@@ -141,6 +143,11 @@ export async function createUser(input: {
     .select('id, email, display_name, language')
     .single()
   if (error || !data) {
+    // The pre-check races with concurrent signups; the unique index is the
+    // real guard — report it as the duplicate it is, not a 500.
+    if (error?.code === '23505') {
+      return { error: 'An account with that email already exists.', status: 409 }
+    }
     console.error('[omni] createUser failed:', error)
     return { error: 'Could not create account.', status: 500 }
   }

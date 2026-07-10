@@ -8,8 +8,19 @@ struct OmniglotApp: App {
         WindowGroup {
             RootView()
                 .environment(session)
+            // Light-only is declared via UIUserInterfaceStyle in Info.plist
+            // (a SwiftUI-level .preferredColorScheme(.light) override made
+            // XCUITest's synthesized taps unreliable on dark-mode devices).
+            // The Talk booth opts into dark itself.
         }
     }
+}
+
+/// UI tests launch with this flag: skips infinite animations (XCUITest's
+/// synthesized taps are unreliable against a perpetually-animating tree)
+/// and starts signed out for deterministic runs.
+var isUITest: Bool {
+    ProcessInfo.processInfo.arguments.contains("-omni-uitest")
 }
 
 struct RootView: View {
@@ -28,7 +39,10 @@ struct RootView: View {
                 MainView()
             }
         }
-        .task { await session.bootstrap() }
+        .task {
+            if isUITest { API.shared.clearSessionCookie() }
+            await session.bootstrap()
+        }
     }
 }
 

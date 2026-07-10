@@ -21,9 +21,19 @@ struct TopicDetailView: View {
                         grammarSection(grammar)
                     }
                 } else if let loadError {
-                    Text(loadError)
-                        .font(.system(size: 15))
-                        .foregroundStyle(Theme.correction)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(loadError)
+                            .font(.system(size: 15))
+                            .foregroundStyle(Theme.correction)
+                        Button {
+                            self.loadError = nil
+                            Task { await load() }
+                        } label: {
+                            Text("Try again")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(Theme.accent)
+                        }
+                    }
                 } else {
                     ProgressView()
                         .frame(maxWidth: .infinity)

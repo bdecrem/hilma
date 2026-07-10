@@ -57,6 +57,14 @@ final class API {
         return try await post("/api/omni/auth/login", Body(email: email, password: password))
     }
 
+    /// Signup pre-flight: is the email well-formed and not yet registered?
+    func checkEmail(_ email: String) async throws -> (valid: Bool, available: Bool) {
+        struct Body: Encodable { let email: String }
+        struct Res: Codable { let valid: Bool; let available: Bool }
+        let res: Res = try await post("/api/omni/auth/check", Body(email: email))
+        return (res.valid, res.available)
+    }
+
     func me() async throws -> AuthResponse {
         try await get("/api/omni/auth/me")
     }
@@ -64,6 +72,10 @@ final class API {
     func logout() async throws {
         struct Empty: Codable {}
         let _: Empty = try await post("/api/omni/auth/logout", Empty())
+        clearSessionCookie()
+    }
+
+    func clearSessionCookie() {
         if let cookies = HTTPCookieStorage.shared.cookies {
             for cookie in cookies where cookie.name == "omni_session" {
                 HTTPCookieStorage.shared.deleteCookie(cookie)

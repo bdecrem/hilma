@@ -17,8 +17,14 @@ struct TalkView: View {
         case live
         case wrappingUp
         case notes(EndSessionResponse)
+        case saveFailed(String)
     }
     @State private var stage: Stage = .live
+    // Held across retries: the client is torn down at End, so this is the
+    // only copy of the conversation until the server accepts it.
+    @State private var pendingTranscript: [[String: String]] = []
+    @State private var pendingConversationId: String?
+    @State private var pendingHadConversation = false
 
     var body: some View {
         ZStack {
@@ -30,6 +36,8 @@ struct TalkView: View {
                 wrappingUpView
             case .notes(let response):
                 notesView(response)
+            case .saveFailed(let message):
+                saveFailedView(message)
             }
         }
         .preferredColorScheme(.dark)
@@ -115,12 +123,13 @@ struct TalkView: View {
             Button {
                 client.setMuted(!client.muted)
             } label: {
-                Image(systemName: client.muted ? "mic.slash.fill" : "mic.slash")
+                Image(systemName: client.muted ? "mic.slash.fill" : "mic")
                     .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(client.muted ? Theme.boothOchre : Theme.boothSecondary)
                     .frame(width: 44, height: 44)
                     .background(Circle().stroke(Theme.boothControl, lineWidth: 1.5))
             }
+            .accessibilityLabel(client.muted ? "Unmute" : "Mute")
 
             Button {
                 endSession()
@@ -155,32 +164,81 @@ struct TalkView: View {
     }
 
     private func endSession() {
-        let hadConversation = client.userTurns > 0
-        let transcript = client.transcript
-        let conversationId = client.conversationId
+        pendingHadConversation = client.userTurns > 0
+        pendingTranscript = client.transcript
+        pendingConversationId = client.conversationId
         client.stop()
 
-        guard let conversationId else {
+        guard pendingConversationId != nil else {
+            dismiss()
+            return
+        }
+        saveSession()
+    }
+
+    /// Deliver the transcript to the server. This is the ONLY copy of the
+    /// conversation, so a failure offers retry — never a silent discard.
+    private func saveSession() {
+        guard let conversationId = pendingConversationId else {
             dismiss()
             return
         }
         stage = .wrappingUp
         Task {
             do {
-                let response = try await API.shared.endTalkSession(id: conversationId, transcript: transcript)
+                let response = try await API.shared.endTalkSession(id: conversationId, transcript: pendingTranscript)
                 session.take(response.xp)
                 if response.newTopic != nil { await session.refreshTopics() }
-                if hadConversation {
+                if pendingHadConversation {
                     stage = .notes(response)
                 } else {
                     dismiss()
                 }
             } catch {
-                // The transcript is safe server-side either way; don't trap
-                // the user in the booth over a failed debrief.
-                dismiss()
+                if pendingHadConversation {
+                    stage = .saveFailed(error.localizedDescription)
+                } else {
+                    // Nothing was said — nothing worth trapping them over.
+                    dismiss()
+                }
             }
         }
+    }
+
+    private func saveFailedView(_ message: String) -> some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Eyebrow(text: "Couldn't save", color: Theme.boothSecondary)
+            Text("Your conversation is still here — it just didn't reach the server.")
+                .font(.system(size: 17))
+                .foregroundStyle(Theme.boothInk)
+                .multilineTextAlignment(.center)
+            Text(message)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.boothSecondary)
+                .multilineTextAlignment(.center)
+            Spacer()
+            Button {
+                saveSession()
+            } label: {
+                Text("Try again")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.boothBg)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Theme.boothInk)
+                    .clipShape(Capsule())
+            }
+            Button {
+                dismiss()
+            } label: {
+                Text("Discard session")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Theme.boothSecondary)
+            }
+            .padding(.bottom, 24)
+        }
+        .padding(.horizontal, 24)
     }
 
     // MARK: Session notes
@@ -344,7 +402,7 @@ struct TalkLamp: View {
         .opacity(baseOpacity)
         .animation(.easeInOut(duration: 0.6), value: phase)
         .onAppear {
-            guard !UIAccessibility.isReduceMotionEnabled else { return }
+            guard !UIAccessibility.isReduceMotionEnabled, !isUITest else { return }
             withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
                 breathing = true
             }

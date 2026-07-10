@@ -32,7 +32,29 @@ export async function POST(req: Request) {
   }
 
   const sb = omniSupabase()
-  const cardIds = results.map((r) => r.card_id)
+
+  // Dedupe (last result wins — the same card can't appear twice in one
+  // upsert) and verify every card is real and visible to this user.
+  const latest = new Map<string, boolean>()
+  for (const r of results) latest.set(r.card_id, r.known)
+  const cardIds = [...latest.keys()]
+  const { data: validCards } = await sb
+    .from('omni_cards')
+    .select('id, omni_topics!inner(user_id)')
+    .in('id', cardIds)
+  const accessible = new Set(
+    (validCards ?? [])
+      .filter((c) => {
+        const t = c.omni_topics as { user_id: string | null } | { user_id: string | null }[]
+        const ownerId = Array.isArray(t) ? t[0]?.user_id : t?.user_id
+        return ownerId === null || ownerId === user.id
+      })
+      .map((c) => c.id as string),
+  )
+  if (accessible.size !== cardIds.length) {
+    return NextResponse.json({ error: 'Unknown cards in submission.' }, { status: 400 })
+  }
+
   const { data: existing } = await sb
     .from('omni_reviews')
     .select('card_id, strength, review_count')
@@ -41,7 +63,8 @@ export async function POST(req: Request) {
   const byCard = new Map((existing ?? []).map((r) => [r.card_id as string, r]))
 
   const now = new Date().toISOString()
-  const rows = results.map((r) => {
+  const deduped = [...latest.entries()].map(([card_id, known]) => ({ card_id, known }))
+  const rows = deduped.map((r) => {
     const prev = byCard.get(r.card_id)
     const strength = prev ? (prev.strength as number) : 0
     return {
@@ -61,7 +84,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Could not save reviews.' }, { status: 500 })
   }
 
-  const known = results.filter((r) => r.known).length
-  const xp = await awardXp(user.id, user.language, reviewXp(results.length, known))
+  const known = deduped.filter((r) => r.known).length
+  const xp = await awardXp(user.id, user.language, reviewXp(deduped.length, known))
   return NextResponse.json({ xp })
 }

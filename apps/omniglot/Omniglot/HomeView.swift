@@ -24,6 +24,8 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity)
                     if let chapter = currentChapter {
                         chapterCard(chapter)
+                    } else if session.topicsLoadFailed {
+                        retryRow
                     }
                     freeformRow
                 }
@@ -91,11 +93,14 @@ struct HomeView: View {
                 }
             }
             .padding(.vertical, 16)
+            // No background on this button, so without an explicit content
+            // shape the gap between the circle and the label is dead to taps.
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("startConversation")
         .onAppear {
-            guard !UIAccessibility.isReduceMotionEnabled else { return }
+            guard !UIAccessibility.isReduceMotionEnabled, !isUITest else { return }
             withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
                 breathing = true
             }
@@ -119,6 +124,27 @@ struct HomeView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
+            .background(Theme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var retryRow: some View {
+        Button {
+            Task { await session.refreshTopics() }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(Theme.accent)
+                Text("Couldn't load your course — tap to retry.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Theme.inkSecondary)
+                Spacer()
+            }
+            .padding(16)
             .background(Theme.surface)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.hairline, lineWidth: 1))

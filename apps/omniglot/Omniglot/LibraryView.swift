@@ -4,6 +4,8 @@ struct LibraryView: View {
     @Environment(AppSession.self) private var session
 
     @State private var newTopicPresented = false
+    @State private var deleteError: String?
+    @State private var deleteErrorPresented = false
 
     private var prebakedByLevel: [(level: Int, topics: [TopicSummary])] {
         guard let all = session.topics?.prebaked else { return [] }
@@ -62,6 +64,11 @@ struct LibraryView: View {
             }
             .sheet(isPresented: $newTopicPresented) {
                 NewTopicSheet()
+            }
+            .alert("Couldn't delete that topic", isPresented: $deleteErrorPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(deleteError ?? "")
             }
         }
         .task {
@@ -140,7 +147,12 @@ struct LibraryView: View {
         let doomed = indexSet.map { mine[$0] }
         Task {
             for topic in doomed {
-                try? await API.shared.deleteTopic(id: topic.id)
+                do {
+                    try await API.shared.deleteTopic(id: topic.id)
+                } catch {
+                    deleteError = error.localizedDescription
+                    deleteErrorPresented = true
+                }
             }
             await session.refreshTopics()
         }
