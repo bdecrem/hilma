@@ -1,5 +1,6 @@
 import { f2Supabase } from './supabase'
 import type { F2Client } from './agent'
+import type { VideoBand } from './videos'
 
 export type F2ThreadMessage = {
   role: 'user' | 'assistant'
@@ -49,6 +50,10 @@ export type F2Thread = {
   hard_quiz_completed_at: string | null
   pending_quiz_kind: QuizKind | null
   kind: TopicKind
+  /** Length band the topic's videos were found in ("new short|medium|long").
+   *  Null for non-video topics and legacy "setup:" topics (treated as
+   *  'long' when fetching more videos). */
+  video_band: VideoBand | null
 }
 
 /// One source-of-truth concatenation of every body the user has attached to a
@@ -123,6 +128,7 @@ export type CreateThreadInput = {
   url?: string | null
   topic?: string | null
   content?: string | null
+  videoBand?: VideoBand | null
 }
 
 export async function createThread(
@@ -144,6 +150,7 @@ export async function createThread(
       content: input.content ?? null,
       messages: [],
       kind,
+      video_band: input.videoBand ?? null,
     })
     .select('*')
     .single()

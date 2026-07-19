@@ -29,13 +29,19 @@ import {
   type F2Thread,
   type F2AdditionalSource,
 } from './threads'
-import { findExplainerVideos } from './videos'
+import {
+  findExplainerVideos,
+  youtubeVideoId,
+  bandLabel,
+  type VideoBand,
+} from './videos'
 import {
   routeAndReply,
   askReflectionQuestion,
   acknowledgeReflectionAnswer,
 } from './chat'
 import { nameTopic } from './name-topic'
+import { llmComplete } from './llm'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -47,7 +53,8 @@ export type F2Message = {
   threadId?: string
   /** Chat-model registry key (see lib/f2/llm.ts). Sent by the iOS/macOS
    *  picker; absent for web/iMessage, which keep the default model. Governs
-   *  chat replies only — topic naming and quiz grading stay on Haiku. */
+   *  chat replies and quiz-question generation — topic naming, quiz grading,
+   *  and video search/ranking stay on their fixed internal models. */
   model?: string
 }
 
@@ -86,7 +93,23 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   // from them. Always creates a fresh topic, regardless of the active one.
   const setupMatch = text.match(/^set[\s-]?up\b[\s:,.\-—]*/i)
   if (setupMatch) {
-    return handleSetup(userId, client, handle, text, text.slice(setupMatch[0].length).trim())
+    return handleVideoSetup(
+      userId, client, handle, text, text.slice(setupMatch[0].length).trim(), 'long',
+    )
+  }
+
+  // "new short|medium|long <topic>" → new topic seeded with 3 videos of that
+  // length. "new none <topic>" → new topic with no videos, just chat. Always
+  // creates a fresh topic. (A bare "new <name>" without one of these keywords
+  // falls through to the LLM router, unchanged.)
+  const newMatch = text.match(/^new\s+(short|medium|long|none)\b[\s:,.\-—]*/i)
+  if (newMatch) {
+    const kind = newMatch[1].toLowerCase() as VideoBand | 'none'
+    const request = text.slice(newMatch[0].length).trim()
+    if (kind === 'none') {
+      return handleNewNone(userId, client, handle, text, request, model)
+    }
+    return handleVideoSetup(userId, client, handle, text, request, kind)
   }
 
   // "quote <text>" → capture a quote for the active topic (or ask which one).
@@ -268,29 +291,31 @@ async function resolvePendingQuote(
   return fileQuote(match, quoteText, author, `quote ${quoteText}`)
 }
 
-/// "setup: <freeform>" — find a few reputable 30-60 min explainer videos for
-/// the request, create a topic from them, and ingest their transcripts as the
-/// topic's sources. Fully synchronous (search + rank + transcript fetches),
-/// so callers must allow a long maxDuration.
-async function handleSetup(
+/// "new short|medium|long <topic>" (and legacy "setup:", which maps to
+/// 'long') — find 3 recent, reputable explainer videos in the band, create a
+/// topic from them, and ingest their transcripts as the topic's sources.
+/// Fully synchronous (search + rank + transcript fetches), so callers must
+/// allow a long maxDuration.
+async function handleVideoSetup(
   userId: string,
   client: F2Client,
   handle: string,
   userMessage: string,
   request: string,
+  band: VideoBand,
 ): Promise<F2Reply> {
   if (!request) {
-    return { reply: 'F2: tell me what to set up — e.g. setup: a good overview of the history of Israel that won\'t bore me.' }
+    return { reply: `F2: name the topic — e.g. new ${band} quantum physics.` }
   }
 
   // The whole loop reaches out to the YouTube API, Claude, and the transcript
   // proxy — any of which can fail. Never let that surface as a 500; return a
   // readable message and log the real cause.
   try {
-    const result = await findExplainerVideos(request)
+    const result = await findExplainerVideos(request, { band })
     if (!result || result.picks.length === 0) {
       return {
-        reply: "F2: couldn't find solid 30-60 minute videos for that. Try rephrasing or narrowing the topic.",
+        reply: `F2: couldn't find solid ${bandLabel(band)} videos for that. Try rephrasing or narrowing the topic.`,
       }
     }
 
@@ -313,6 +338,7 @@ async function handleSetup(
       url: picks[0].url,
       content: transcripts[0],
       topic: result.topicTitle,
+      videoBand: band,
     })
     if (!thread) {
       return { reply: 'F2: found the videos but couldn\'t create the topic. Try again in a sec.' }
@@ -335,7 +361,7 @@ async function handleSetup(
     const withTranscripts = transcripts.filter(Boolean).length
     const reply =
       `F2 set up "${result.topicTitle}" with ${picks.length} video${picks.length === 1 ? '' : 's'}:\n\n${lines}\n\n` +
-      `Transcripts added for ${withTranscripts} of ${picks.length}. Ask me anything about this topic, or open it to dig in.`
+      `Transcripts added for ${withTranscripts} of ${picks.length}. Ask me anything about this topic, or say "give me 3 other ones" for a fresh set.`
 
     await appendMessages(thread.id, thread.user_id, [], [
       { role: 'user', text: userMessage, created_at: now },
@@ -343,8 +369,124 @@ async function handleSetup(
     ])
     return { reply, thread_id: thread.id }
   } catch (err) {
-    console.error('[f2] handleSetup failed:', err)
+    console.error('[f2] handleVideoSetup failed:', err)
     return { reply: 'F2: hit a snag setting that up (the video search or transcripts failed). Try again in a moment.' }
+  }
+}
+
+/// "new none <topic>" — create a fresh chat-only topic (no videos, no
+/// sources) and open it with a short model-generated framing. Uses the
+/// client's selected model so the opening matches the rest of the chat.
+async function handleNewNone(
+  userId: string,
+  client: F2Client,
+  handle: string,
+  userMessage: string,
+  topicPhrase: string,
+  model?: string,
+): Promise<F2Reply> {
+  if (!topicPhrase) {
+    return { reply: 'F2: name the topic — e.g. new none quantum physics.' }
+  }
+
+  const title =
+    (await nameTopic({ body: topicPhrase, documentTitle: topicPhrase })) || topicPhrase
+
+  let opening = ''
+  try {
+    const result = await llmComplete({
+      model,
+      system:
+        `You are F2 — a learning companion. The user just started a fresh learning topic: "${title}". ` +
+        'Open it: 2-4 sentences framing what the subject covers and asking where they want to start. ' +
+        'Be direct, no preambles, plain text, no markdown.',
+      messages: [{ role: 'user', content: userMessage }],
+      maxTokens: 600,
+    })
+    opening = result.type === 'text' ? result.text : ''
+  } catch (err) {
+    console.error('[f2] new-none opening failed:', err)
+  }
+
+  const thread = await createThread({ userId, client, handle, topic: title })
+  if (!thread) {
+    return { reply: "F2: couldn't create that topic. Try again in a sec." }
+  }
+
+  const reply = opening || `New topic: ${title}. What do you want to dig into first?`
+  const now = new Date().toISOString()
+  await appendMessages(thread.id, thread.user_id, [], [
+    { role: 'user', text: userMessage, created_at: now },
+    { role: 'assistant', text: reply, created_at: now },
+  ])
+  return { reply, thread_id: thread.id }
+}
+
+/// The router picked more_videos: find 3 videos the topic doesn't already
+/// have, in the topic's original length band, and attach them as additional
+/// sources. Legacy "setup:" topics have no stored band and default to long.
+async function handleMoreVideos(
+  thread: F2Thread,
+  userText: string,
+  refinement: string | null,
+): Promise<F2Reply> {
+  const band: VideoBand = thread.video_band ?? 'long'
+  const subject = thread.topic ?? thread.url ?? ''
+  const request = refinement ? `${subject} — ${refinement}` : subject
+
+  const excludeIds = [thread.url, ...(thread.additional_sources ?? []).map((s) => s.url)]
+    .map(youtubeVideoId)
+    .filter((id): id is string => id !== null)
+
+  try {
+    const result = await findExplainerVideos(request, { band, excludeIds })
+    if (!result || result.picks.length === 0) {
+      return {
+        reply: `F2: couldn't find more solid ${bandLabel(band)} videos on this beyond what you have. Try narrowing the angle — e.g. "3 more on <subtopic>".`,
+        thread_id: thread.id,
+      }
+    }
+
+    const picks = result.picks
+    const transcripts = await Promise.all(
+      picks.map((p) =>
+        fetchUrlContent(p.url)
+          .then((r) => r.body)
+          .catch(() => null),
+      ),
+    )
+
+    const now = new Date().toISOString()
+    const extra: F2AdditionalSource[] = picks.map((p, i) => ({
+      url: p.url,
+      title: p.title,
+      content: transcripts[i] ?? null,
+      added_at: now,
+    }))
+    await setAdditionalSources(thread.id, thread.user_id, [
+      ...(thread.additional_sources ?? []),
+      ...extra,
+    ])
+
+    const lines = picks
+      .map((p, i) => `${i + 1}. ${p.title} — ${p.channel} (${Math.round(p.durationSec / 60)} min)\n${p.url}`)
+      .join('\n')
+    const withTranscripts = transcripts.filter(Boolean).length
+    const reply =
+      `F2 found ${picks.length} more:\n\n${lines}\n\n` +
+      `Transcripts added for ${withTranscripts} of ${picks.length} — they're part of this topic now.`
+
+    await appendMessages(thread.id, thread.user_id, thread.messages, [
+      { role: 'user', text: userText, created_at: now },
+      { role: 'assistant', text: reply, created_at: now },
+    ])
+    return { reply, thread_id: thread.id }
+  } catch (err) {
+    console.error('[f2] handleMoreVideos failed:', err)
+    return {
+      reply: 'F2: hit a snag finding more videos (the search or transcripts failed). Try again in a moment.',
+      thread_id: thread.id,
+    }
   }
 }
 
@@ -539,5 +681,12 @@ async function handleNonUrl(
     }
     case 'chitchat':
       return { reply: action.reply }
+    case 'more_videos': {
+      if (!thread) {
+        // Defensive: the tool is only offered when a video thread is active.
+        return { reply: 'F2: open a video topic first, then ask for more videos.' }
+      }
+      return handleMoreVideos(thread, userText, action.refinement)
+    }
   }
 }

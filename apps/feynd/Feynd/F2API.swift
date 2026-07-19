@@ -186,10 +186,14 @@ final class F2API {
     }
 
     /// `kind`: "standard" earns up to 2 stars, "hard" earns the third star.
-    /// Just marks the quiz as in-flight — no star yet.
-    func quizMe(id: String, kind: String = "standard") async throws -> QuizResponse {
-        struct Body: Encodable { let kind: String }
-        let res: QuizResponse = try await post("/api/f2/topics/\(id)/quiz", body: Body(kind: kind))
+    /// Just marks the quiz as in-flight — no star yet. `model` is the picker's
+    /// registry key so quiz questions come from the same model as chat.
+    func quizMe(id: String, kind: String = "standard", model: String? = nil) async throws -> QuizResponse {
+        struct Body: Encodable {
+            let kind: String
+            let model: String?
+        }
+        let res: QuizResponse = try await post("/api/f2/topics/\(id)/quiz", body: Body(kind: kind, model: model))
         return res
     }
 

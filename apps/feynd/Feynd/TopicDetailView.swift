@@ -217,7 +217,7 @@ struct TopicDetailView: View {
         messages.append(F2Message(role: "user", text: prompt, createdAt: Date()))
         Task {
             do {
-                let res = try await F2API.shared.quizMe(id: topicId, kind: kind)
+                let res = try await F2API.shared.quizMe(id: topicId, kind: kind, model: F2ChatModel.current.rawValue)
                 if !res.reply.isEmpty {
                     messages.append(F2Message(role: "assistant", text: res.reply, createdAt: Date()))
                 }

@@ -4,8 +4,9 @@ import { getSessionUser } from '@/lib/f2/auth'
 import { isModelKey } from '@/lib/f2/llm'
 
 export const runtime = 'nodejs'
-// "setup:" runs a synchronous search + rank + transcript-fetch loop that can
-// take ~30-45s; give it room (the iMessage webhook already allows 60).
+// "setup:" / "new short|medium|long" / more_videos run a synchronous search +
+// rank + transcript-fetch loop that can take ~30-45s; give it room (the
+// iMessage webhook already allows 60).
 export const maxDuration = 60
 
 // POST /api/f2/messages

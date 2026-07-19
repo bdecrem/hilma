@@ -1,27 +1,60 @@
-// F2 "setup:" — agentic explainer-video finder.
+// F2 "new short|medium|long" (and legacy "setup:") — agentic explainer-video
+// finder.
 //
 // Given a freeform request ("find me videos giving a good overview of the
-// history of Israel that won't bore me"), this:
+// history of Israel that won't bore me") and a length band, this:
 //   1. plans 2-3 YouTube search queries + quality criteria (Haiku),
-//   2. searches the YouTube Data API (long videos only) and pulls real
-//      durations / channels / view counts,
-//   3. filters to the 30-60 min band, then
-//   4. ranks the candidates and picks the 3 best reputable, on-topic videos
-//      (Sonnet).
+//   2. searches the YouTube Data API (duration-filtered per band) and pulls
+//      real durations / channels / view counts,
+//   3. filters to the band's duration window, then
+//   4. ranks the candidates and picks the 3 best recent, reputable,
+//      on-topic videos (Sonnet).
 //
-// The caller (agent.ts handleSetup) creates a topic from the result and
-// ingests the transcripts. Discovery uses the YouTube Data API rather than
-// letting the model free-associate URLs, so durations and links are real.
+// The caller (agent.ts) creates a topic from the result and ingests the
+// transcripts. Discovery uses the YouTube Data API rather than letting the
+// model free-associate URLs, so durations and links are real. `excludeIds`
+// supports "give me 3 other ones" — already-shown videos never resurface.
 
 import Anthropic from '@anthropic-ai/sdk'
 
 const PLAN_MODEL = 'claude-haiku-4-5'
 const RANK_MODEL = 'claude-sonnet-4-6'
 
-// Duration band. Bart's spec is 30-60 min; we collect a slightly wider net so
-// the ranker has room to choose, and tell it to prefer the 30-60 core.
-const MIN_SEC = 25 * 60
-const MAX_SEC = 70 * 60
+// Length bands ("new short / medium / long"). Each band collects a slightly
+// wider net than its target so the ranker has room to choose, and the rank
+// prompt tells it to prefer the target core. `searchDurations` maps to the
+// YouTube API's coarse videoDuration filter (short <4 min, medium 4-20 min,
+// long >20 min) — bands that straddle a boundary search both buckets.
+export type VideoBand = 'short' | 'medium' | 'long'
+
+type BandSpec = {
+  /** Human phrasing for the prompts, e.g. "2-5 minute". */
+  targetText: string
+  minSec: number
+  maxSec: number
+  searchDurations: ('short' | 'medium' | 'long')[]
+}
+
+const BANDS: Record<VideoBand, BandSpec> = {
+  short: {
+    targetText: '2-5 minute',
+    minSec: 90,
+    maxSec: 7 * 60,
+    searchDurations: ['short', 'medium'],
+  },
+  medium: {
+    targetText: '15-20 minute',
+    minSec: 10 * 60,
+    maxSec: 25 * 60,
+    searchDurations: ['medium', 'long'],
+  },
+  long: {
+    targetText: '40-60 minute',
+    minSec: 30 * 60,
+    maxSec: 70 * 60,
+    searchDurations: ['long'],
+  },
+}
 
 const SEARCH_API = 'https://www.googleapis.com/youtube/v3/search'
 const VIDEOS_API = 'https://www.googleapis.com/youtube/v3/videos'
@@ -59,6 +92,12 @@ export type FindResult = {
   candidatesConsidered: number
 }
 
+/** Human phrasing for a band's target length, for user-facing replies —
+ *  e.g. "15-20 minute". */
+export function bandLabel(band: VideoBand): string {
+  return BANDS[band].targetText
+}
+
 // --- Step 1: turn the freeform ask into search queries + criteria ----------
 
 type SearchPlan = {
@@ -68,21 +107,28 @@ type SearchPlan = {
   recencyYears: number | null
 }
 
-const PLAN_SYSTEM =
-  'You plan a YouTube search to find long-form explainer videos for a learner. ' +
-  'Given their freeform request, return ONLY a JSON object (no prose, no code fence) with keys: ' +
-  '"topicTitle" (a clean 3-7 word chapter-style title for the subject, Title Case, no quotes), ' +
-  '"queries" (2-3 distinct YouTube search query strings likely to surface reputable 30-60 minute explainers, lectures, or documentaries — vary the angle), ' +
-  '"criteria" (one sentence describing what makes a strong pick for THIS request — honor any taste cues like "won\'t bore me" or "overview"), ' +
-  'and "recencyYears" (an integer when the user asks for recent/last-N-years material, else null). ' +
-  'Do not invent video titles or URLs — only produce search queries.'
+function planSystem(band: BandSpec): string {
+  return (
+    'You plan a YouTube search to find explainer videos for a learner. ' +
+    'Given their freeform request, return ONLY a JSON object (no prose, no code fence) with keys: ' +
+    '"topicTitle" (a clean 3-7 word chapter-style title for the subject, Title Case, no quotes), ' +
+    `"queries" (2-3 distinct YouTube search query strings likely to surface reputable ${band.targetText} explainers, lectures, or documentaries — vary the angle), ` +
+    '"criteria" (one sentence describing what makes a strong pick for THIS request — honor any taste cues like "won\'t bore me" or "overview"), ' +
+    'and "recencyYears" (an integer when the user asks for recent/last-N-years material, else null). ' +
+    'Do not invent video titles or URLs — only produce search queries.'
+  )
+}
 
-async function planSearch(request: string, today: string): Promise<SearchPlan | null> {
+async function planSearch(
+  request: string,
+  today: string,
+  band: BandSpec,
+): Promise<SearchPlan | null> {
   try {
     const res = await anthropic().messages.create({
       model: PLAN_MODEL,
       max_tokens: 400,
-      system: PLAN_SYSTEM,
+      system: planSystem(band),
       messages: [{ role: 'user', content: `Today is ${today}.\n\nRequest: ${request}` }],
     })
     const block = res.content[0]
@@ -106,19 +152,21 @@ async function planSearch(request: string, today: string): Promise<SearchPlan | 
 
 // --- Step 2: YouTube Data API search + details -----------------------------
 
-/// search.list for one query → up to `max` video ids. videoDuration=long
-/// restricts to >20 min so we don't waste the details quota on shorts.
+/// search.list for one query → up to `max` video ids. videoDuration
+/// pre-filters by the API's coarse buckets so we don't waste the details
+/// quota on videos far outside the band.
 async function searchVideoIds(
   query: string,
   publishedAfter: string | null,
-  max = 12,
+  videoDuration: 'short' | 'medium' | 'long',
+  max = 10,
 ): Promise<string[]> {
   const params = new URLSearchParams({
     key: youtubeKey(),
     q: query,
     part: 'snippet',
     type: 'video',
-    videoDuration: 'long',
+    videoDuration,
     order: 'relevance',
     relevanceLanguage: 'en',
     maxResults: String(max),
@@ -181,17 +229,22 @@ async function fetchVideoDetails(ids: string[]): Promise<VideoCandidate[]> {
 
 // --- Step 3: rank + pick 3 -------------------------------------------------
 
-const RANK_SYSTEM =
-  'You are curating a short learning playlist. From a numbered list of real YouTube videos, pick the 3 BEST for the learner\'s request. ' +
-  'Favor reputable, knowledgeable sources (established educators, universities, broadcasters, recognized authors/journalists, well-regarded documentary channels) and substantive explainers over thin or sensational content. ' +
-  'Prefer videos in the 30-60 minute range. Aim for 3 that together give a strong, non-boring overview — varied angles are good, near-duplicates are not. ' +
-  'On contested topics, prefer balanced, credible sources. ' +
-  'Return ONLY a JSON array of exactly 3 objects (no prose, no code fence): [{"n": <the number from the list>, "why": "<≤12 word reason>"}]. Use distinct n values.'
+function rankSystem(band: BandSpec): string {
+  return (
+    'You are curating a short learning playlist. From a numbered list of real YouTube videos, pick the 3 BEST for the learner\'s request. ' +
+    'Favor reputable, knowledgeable sources (established educators, universities, broadcasters, recognized authors/journalists, well-regarded documentary channels) and substantive explainers over thin or sensational content. ' +
+    'Recency matters: each video lists its publish year — all else near-equal, prefer recent uploads over dated ones, and treat fast-moving subjects (tech, science, current affairs) as needing recent material. ' +
+    `Prefer videos in the ${band.targetText} range. Aim for 3 that together give a strong, non-boring overview — varied angles are good, near-duplicates are not. ` +
+    'On contested topics, prefer balanced, credible sources. ' +
+    'Return ONLY a JSON array of exactly 3 objects (no prose, no code fence): [{"n": <the number from the list>, "why": "<≤12 word reason>"}]. Use distinct n values.'
+  )
+}
 
 async function rankPicks(
   request: string,
   criteria: string,
   candidates: VideoCandidate[],
+  band: BandSpec,
 ): Promise<{ n: number; why: string }[] | null> {
   const list = candidates
     .map((c, i) => {
@@ -205,7 +258,7 @@ async function rankPicks(
     const res = await anthropic().messages.create({
       model: RANK_MODEL,
       max_tokens: 500,
-      system: RANK_SYSTEM,
+      system: rankSystem(band),
       messages: [
         {
           role: 'user',
@@ -228,28 +281,45 @@ async function rankPicks(
 
 // --- Orchestrator ----------------------------------------------------------
 
-export async function findExplainerVideos(request: string): Promise<FindResult | null> {
+export type FindVideoOptions = {
+  /** Length band; defaults to 'long' (the legacy "setup:" behavior). */
+  band?: VideoBand
+  /** Video ids to never return — "give me 3 other ones" passes the ids
+   *  already attached to the topic. */
+  excludeIds?: string[]
+}
+
+export async function findExplainerVideos(
+  request: string,
+  options: FindVideoOptions = {},
+): Promise<FindResult | null> {
   const trimmed = request.trim()
   if (!trimmed) return null
 
+  const band = BANDS[options.band ?? 'long']
+  const exclude = new Set(options.excludeIds ?? [])
+
   const now = new Date()
-  const plan = await planSearch(trimmed, now.toISOString().slice(0, 10))
+  const plan = await planSearch(trimmed, now.toISOString().slice(0, 10), band)
   if (!plan) return null
 
   const publishedAfter = plan.recencyYears
     ? new Date(now.getTime() - plan.recencyYears * 365 * 24 * 3600 * 1000).toISOString()
     : null
 
-  // Run the queries, dedupe ids, pull details.
+  // Run each query against each of the band's YouTube duration buckets,
+  // dedupe ids, drop excluded ones, pull details.
   const idLists = await Promise.all(
-    plan.queries.map((q) => searchVideoIds(q, publishedAfter)),
+    plan.queries.flatMap((q) =>
+      band.searchDurations.map((d) => searchVideoIds(q, publishedAfter, d)),
+    ),
   )
-  const ids = Array.from(new Set(idLists.flat()))
+  const ids = Array.from(new Set(idLists.flat())).filter((id) => !exclude.has(id))
   if (ids.length === 0) return { topicTitle: plan.topicTitle, picks: [], candidatesConsidered: 0 }
 
   const details = await fetchVideoDetails(ids)
   const inBand = details
-    .filter((c) => c.durationSec >= MIN_SEC && c.durationSec <= MAX_SEC)
+    .filter((c) => c.durationSec >= band.minSec && c.durationSec <= band.maxSec)
     .sort((a, b) => b.viewCount - a.viewCount)
     .slice(0, 25)
 
@@ -262,7 +332,7 @@ export async function findExplainerVideos(request: string): Promise<FindResult |
   if (inBand.length <= 3) {
     picks = inBand.map((c) => ({ ...c, why: '' }))
   } else {
-    const ranked = await rankPicks(trimmed, plan.criteria, inBand)
+    const ranked = await rankPicks(trimmed, plan.criteria, inBand, band)
     if (ranked && ranked.length > 0) {
       const seen = new Set<number>()
       picks = []
@@ -288,6 +358,16 @@ export async function findExplainerVideos(request: string): Promise<FindResult |
 }
 
 // --- helpers ---------------------------------------------------------------
+
+/// Extract the video id from a YouTube watch/share URL, else null. Used to
+/// build the exclude list from a topic's existing video sources.
+export function youtubeVideoId(url: string | null | undefined): string | null {
+  if (!url) return null
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/i,
+  )
+  return m ? m[1] : null
+}
 
 /// Parse ISO 8601 duration (PT#H#M#S) → seconds.
 function parseISODuration(iso: string): number {

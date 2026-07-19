@@ -5,14 +5,17 @@ import { llmComplete, contextCharBudget, type LlmTool } from './llm'
 // below are registry keys sent by the client (iOS/macOS picker); undefined
 // keeps the legacy default so the web app is unchanged.
 
-// Three actions Claude can pick on every inbound text:
+// Actions Claude can pick on every inbound text:
 //  - continue: stay in the active learning thread; persist the exchange
 //  - new_topic: spin up a fresh thread on a new topic; persist as the new thread
 //  - chitchat: answer off-topic question without polluting any learning thread
+//  - more_videos: (video topics only) find 3 more videos for this topic —
+//    the agent layer runs the YouTube search, not the router
 export type RouterAction =
   | { kind: 'continue'; reply: string }
   | { kind: 'new_topic'; topic: string; reply: string }
   | { kind: 'chitchat'; reply: string }
+  | { kind: 'more_videos'; refinement: string | null }
 
 const TOOLS: LlmTool[] = [
   {
@@ -61,6 +64,32 @@ const TOOLS: LlmTool[] = [
   },
 ]
 
+/// Offered only when the active thread was seeded with videos. The router
+/// just signals intent — the agent layer runs the actual YouTube search.
+const MORE_VIDEOS_TOOL: LlmTool = {
+  name: 'more_videos',
+  description:
+    'The user wants MORE videos for the active topic — "give me 3 other ones", "find me different videos", "more videos please", "got anything newer?". Do not use for questions about the existing videos\' content.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      refinement: {
+        type: 'string',
+        description:
+          'Only when the user narrows the ask (e.g. "more, but about the experiments"): a short phrase capturing the narrowing. Omit otherwise.',
+      },
+    },
+  },
+}
+
+/// A thread qualifies for more_videos when it carries video sources — either
+/// it was created by the "new/setup" video flow (video_band set) or its
+/// primary source is a video URL.
+export function threadHasVideos(thread: F2Thread | null): boolean {
+  if (!thread) return false
+  return thread.video_band != null || thread.kind === 'video'
+}
+
 /// Fit source material to the model's context budget. Books overflow the
 /// smaller-context models (GLM: 262K tokens vs Claude's 1M); rather than
 /// hard-failing the API call, keep the head of the source and say so.
@@ -101,12 +130,16 @@ ${baseRules}`
     ? `\n\nSource content (primary reference — answer from this when relevant):\n${fitToBudget(fullContent, model)}`
     : ''
 
+  const moreVideosLine = threadHasVideos(thread)
+    ? '\n- more_videos: the user asks for more/other/different videos on this topic. The system runs the search — do not invent video titles or links yourself.'
+    : ''
+
   return `You are F2 — a learning companion. The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
 
 For every message, pick exactly one tool:
 - continue_chat: the user is advancing the current topic — follow-up questions, quiz answers, "tell me more", clarifications.
 - start_new_topic: the user wants to learn about a different topic. Don't be too eager — only switch when the new topic is clearly unrelated.
-- chitchat: off-topic banter, jokes, weather, AI-chatbot trivia unrelated to the active topic. Won't be persisted.
+- chitchat: off-topic banter, jokes, weather, AI-chatbot trivia unrelated to the active topic. Won't be persisted.${moreVideosLine}
 
 ${baseRules}`
 }
@@ -173,6 +206,7 @@ export async function routeAndReply(
   userText: string,
   model?: string | null,
 ): Promise<RouterAction> {
+  const tools = threadHasVideos(thread) ? [...TOOLS, MORE_VIDEOS_TOOL] : TOOLS
   const result = await llmComplete({
     model,
     system: buildSystem(thread, model),
@@ -181,7 +215,7 @@ export async function routeAndReply(
       { role: 'user', content: userText },
     ],
     maxTokens: 1000,
-    tools: TOOLS,
+    tools,
     forceTool: true,
   })
 
@@ -202,6 +236,10 @@ export async function routeAndReply(
       }
     case 'chitchat':
       return { kind: 'chitchat', reply: String(input.reply ?? '').trim() }
+    case 'more_videos': {
+      const refinement = String(input.refinement ?? '').trim()
+      return { kind: 'more_videos', refinement: refinement || null }
+    }
     default:
       return {
         kind: 'chitchat',
