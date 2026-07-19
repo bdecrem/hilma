@@ -152,7 +152,7 @@ struct ChatScrollView: View {
                         if msg.role == "user" {
                             UserBubble(text: msg.text).id(msg.id)
                         } else {
-                            AIBubble { Text(msg.text) }.id(msg.id)
+                            AIBubble { Text(linkified(msg.text)) }.id(msg.id)
                         }
                     }
                     if busy {

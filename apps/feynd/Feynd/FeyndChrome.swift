@@ -527,6 +527,25 @@ struct BubbleShape: Shape {
     }
 }
 
+/// Detect bare URLs in reply text and mark them as tappable links —
+/// F2 replies are plain text (video lists include raw youtube.com URLs), so
+/// without this SwiftUI renders them as inert text.
+func linkified(_ text: String) -> AttributedString {
+    var attributed = AttributedString(text)
+    guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+        return attributed
+    }
+    let ns = text as NSString
+    for match in detector.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+        guard let url = match.url,
+              let range = Range(match.range, in: attributed) else { continue }
+        attributed[range].link = url
+        attributed[range].foregroundColor = FeyndTheme.blue
+        attributed[range].underlineStyle = .single
+    }
+    return attributed
+}
+
 struct AIBubble<Content: View>: View {
     @Environment(\.chatRowWidth) private var rowWidth
     @ViewBuilder var content: () -> Content
