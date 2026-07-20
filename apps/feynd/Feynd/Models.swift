@@ -25,6 +25,24 @@ struct F2User: Codable, Equatable {
     }
 }
 
+/// Narrated-recap state for a topic — mirror of the server's `audio_summary`
+/// jsonb (the script text never reaches list payloads). status:
+/// "generating" | "ready" | "error".
+struct F2AudioSummary: Codable, Equatable, Hashable {
+    let status: String
+    let url: String?
+    let scale: String?        // "book" | "short"
+    let durationSecs: Int?
+    let error: String?
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case status, url, scale, error
+        case durationSecs = "duration_secs"
+        case updatedAt = "updated_at"
+    }
+}
+
 struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     let id: String
     var topic: String?
@@ -37,6 +55,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     /// Source kind: chat | web | audio | video | paste | fallback. Drives the
     /// glyph in the topic row. Set server-side at thread creation.
     var kind: String?
+    var audioSummary: F2AudioSummary?
     let createdAt: Date
     let updatedAt: Date
     let client: String?
@@ -61,6 +80,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case lastQuizzedAt = "last_quizzed_at"
         case hardQuizCompletedAt = "hard_quiz_completed_at"
         case pendingQuizKind = "pending_quiz_kind"
+        case audioSummary = "audio_summary"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
@@ -79,6 +99,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         hardQuizCompletedAt = try c.decodeIfPresent(Date.self, forKey: .hardQuizCompletedAt)
         pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
         kind = try c.decodeIfPresent(String.self, forKey: .kind)
+        audioSummary = try c.decodeIfPresent(F2AudioSummary.self, forKey: .audioSummary)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
     }
@@ -106,6 +127,7 @@ struct F2Thread: Codable {
     var stars: Int
     var hardQuizCompletedAt: Date?
     var pendingQuizKind: String?
+    var audioSummary: F2AudioSummary?
 
     var sourceHost: String? {
         guard let url, let host = URL(string: url)?.host else { return nil }
@@ -118,6 +140,7 @@ struct F2Thread: Codable {
         case lastQuizzedAt = "last_quizzed_at"
         case hardQuizCompletedAt = "hard_quiz_completed_at"
         case pendingQuizKind = "pending_quiz_kind"
+        case audioSummary = "audio_summary"
     }
 
     init(from decoder: Decoder) throws {
@@ -131,6 +154,7 @@ struct F2Thread: Codable {
         stars = try c.decodeIfPresent(Int.self, forKey: .stars) ?? 0
         hardQuizCompletedAt = try c.decodeIfPresent(Date.self, forKey: .hardQuizCompletedAt)
         pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
+        audioSummary = try c.decodeIfPresent(F2AudioSummary.self, forKey: .audioSummary)
     }
 }
 

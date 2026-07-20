@@ -28,6 +28,9 @@ struct TopicsView: View {
     @State private var addMaterialBusy = false
     @State private var addMaterialError: String? = nil
     @State private var contextTarget: F2Topic? = nil
+    @State private var audioError: String? = nil
+    /// True while a background task is polling for in-flight audio summaries.
+    @State private var pollingAudio = false
     /// Persists across launches; defaults to recent.
     @AppStorage("topicsSortMode") private var sortRaw = TopicSort.recent.rawValue
 
@@ -110,6 +113,13 @@ struct TopicsView: View {
                 .disabled(addMaterialBusy)
         } message: {
             Text(addMaterialError ?? "Paste a URL — F2 will pull it in and add it to this topic's context.")
+        }
+        .alert("Audio summary",
+               isPresented: Binding(get: { audioError != nil },
+                                    set: { if !$0 { audioError = nil } })) {
+            Button("OK") { audioError = nil }
+        } message: {
+            Text(audioError ?? "")
         }
         // Reload on every appearance — keeps stars/level in sync with quizzes
         // completed on the Topic detail screen (no stale data when returning).
@@ -211,7 +221,8 @@ struct TopicsView: View {
                                      onRename: { startRename(topic) },
                                      onDelete: { delete(topic) },
                                      onAddMaterial: { startAddMaterial(topic) },
-                                     onViewContext: { contextTarget = topic })
+                                     onViewContext: { contextTarget = topic },
+                                     onGenerateAudio: { generateAudio(topic) })
                     }
                     .buttonStyle(.plain)
                 }
@@ -235,6 +246,42 @@ struct TopicsView: View {
             topics = try await F2API.shared.listTopics()
         } catch {
             loadError = error.localizedDescription
+        }
+        startAudioPollingIfNeeded()
+    }
+
+    /// Fire off summary generation, mirror the pending state locally, and
+    /// start polling so the row flips to Play when the server finishes.
+    private func generateAudio(_ topic: F2Topic) {
+        Task {
+            do {
+                let pending = try await F2API.shared.generateAudioSummary(
+                    id: topic.id, model: F2ChatModel.current.rawValue)
+                if let idx = topics.firstIndex(where: { $0.id == topic.id }) {
+                    topics[idx].audioSummary = pending ?? F2AudioSummary(
+                        status: "generating", url: nil, scale: nil,
+                        durationSecs: nil, error: nil, updatedAt: nil)
+                }
+                startAudioPollingIfNeeded()
+            } catch {
+                audioError = error.localizedDescription
+            }
+        }
+    }
+
+    /// One poller at a time; re-fetches the list every few seconds while any
+    /// topic is still generating. Book-scale summaries take a few minutes.
+    private func startAudioPollingIfNeeded() {
+        guard !pollingAudio,
+              topics.contains(where: { $0.audioSummary?.status == "generating" })
+        else { return }
+        pollingAudio = true
+        Task {
+            defer { pollingAudio = false }
+            while topics.contains(where: { $0.audioSummary?.status == "generating" }) {
+                try? await Task.sleep(for: .seconds(6))
+                do { topics = try await F2API.shared.listTopics() } catch { break }
+            }
         }
     }
 
@@ -304,6 +351,7 @@ struct TopicListRow: View {
     let onDelete: () -> Void
     let onAddMaterial: () -> Void
     let onViewContext: () -> Void
+    let onGenerateAudio: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -324,6 +372,7 @@ struct TopicListRow: View {
                     Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
                     Button { onAddMaterial() } label: { Label("Add material", systemImage: "link.badge.plus") }
                     Button { onViewContext() } label: { Label("View context", systemImage: "doc.text.magnifyingglass") }
+                    audioMenuItem
                     Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -348,10 +397,42 @@ struct TopicListRow: View {
 
     private var isNew: Bool { topic.stars == 0 && topic.quizCount == 0 }
 
+    /// One state-aware entry in the kebab menu. While a summary is cooking
+    /// the item is disabled so a double-tap can't double-spend.
+    @ViewBuilder
+    private var audioMenuItem: some View {
+        switch topic.audioSummary?.status {
+        case "generating":
+            Button {} label: { Label("Generating audio…", systemImage: "hourglass") }
+                .disabled(true)
+        case "ready":
+            Button { onGenerateAudio() } label: {
+                Label("Regenerate Audio Summary", systemImage: "waveform")
+            }
+        case "error":
+            Button { onGenerateAudio() } label: {
+                Label("Retry Audio Summary", systemImage: "waveform.badge.exclamationmark")
+            }
+        default:
+            Button { onGenerateAudio() } label: {
+                Label("Generate Audio Summary", systemImage: "waveform")
+            }
+        }
+    }
+
+    /// Trailing note on the meta line while audio is generating or failed.
+    private var audioNote: String? {
+        switch topic.audioSummary?.status {
+        case "generating": return "making audio…"
+        case "error": return "audio failed"
+        default: return nil
+        }
+    }
+
     @ViewBuilder
     private var metaLine: some View {
         if isNew {
-            Text("\(relative(topic.createdAt)) · no quizzes yet")
+            Text("\(relative(topic.createdAt)) · no quizzes yet\(audioNote.map { " · \($0)" } ?? "")")
                 .font(.system(size: 12.5))
                 .foregroundStyle(FeyndTheme.text3)
                 .tracking(-0.1)
@@ -359,7 +440,7 @@ struct TopicListRow: View {
             HStack(spacing: 8) {
                 StarRow(value: topic.stars, size: 11, gap: 2, locked: topic.hardQuizCompletedAt != nil)
                 Text("·").foregroundStyle(FeyndTheme.text3)
-                Text(relative(topic.createdAt))
+                Text(relative(topic.createdAt) + (audioNote.map { " · \($0)" } ?? ""))
                     .foregroundStyle(FeyndTheme.text3)
             }
             .font(.system(size: 12.5))

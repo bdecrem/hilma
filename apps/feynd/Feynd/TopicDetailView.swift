@@ -15,6 +15,7 @@ struct TopicDetailView: View {
     @State private var busy = false
     @State private var loading = true
     @State private var voicePresented = false
+    @State private var playerPresented = false
 
     var body: some View {
         ZStack {
@@ -48,6 +49,11 @@ struct TopicDetailView: View {
         }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
+        }
+        .sheet(isPresented: $playerPresented) {
+            if let url = audioSummaryURL {
+                AudioSummaryPlayerView(title: thread?.topic ?? "Topic", url: url)
+            }
         }
         .task { await load() }
     }
@@ -94,6 +100,13 @@ struct TopicDetailView: View {
 
     private var canTakeHardQuiz: Bool {
         (thread?.stars ?? 0) >= 2 && (thread?.hardQuizCompletedAt == nil)
+    }
+
+    /// Non-nil once this topic has a ready Audio Summary — drives the Play chip.
+    private var audioSummaryURL: URL? {
+        guard let a = thread?.audioSummary, a.status == "ready",
+              let urlString = a.url else { return nil }
+        return URL(string: urlString)
     }
 
     /// A standard or hard quiz the user already started but hasn't completed.
@@ -143,6 +156,14 @@ struct TopicDetailView: View {
                 }
                 .opacity(busy ? 0.5 : 1)
                 .allowsHitTesting(!busy)
+
+                if audioSummaryURL != nil {
+                    ActionChip(label: "Play", systemImage: "play.fill") {
+                        playerPresented = true
+                    }
+                    .opacity(busy ? 0.5 : 1)
+                    .allowsHitTesting(!busy)
+                }
             }
 
             Spacer()

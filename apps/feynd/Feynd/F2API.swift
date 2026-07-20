@@ -235,6 +235,23 @@ final class F2API {
         try await get("/api/f2/progress")
     }
 
+    // MARK: Audio summary
+
+    struct AudioSummaryStartResponse: Codable {
+        let audioSummary: F2AudioSummary?
+        enum CodingKeys: String, CodingKey { case audioSummary = "audio_summary" }
+    }
+
+    /// Kick off narrated-summary generation for a topic. Returns immediately
+    /// with the pending state (status "generating"); poll listTopics() until
+    /// the status flips to ready/error. Server answers 409 if a generation is
+    /// already in flight for this topic.
+    func generateAudioSummary(id: String, model: String? = nil) async throws -> F2AudioSummary? {
+        struct Body: Encodable { let model: String? }
+        let res: AudioSummaryStartResponse = try await post("/api/f2/topics/\(id)/audio-summary", body: Body(model: model))
+        return res.audioSummary
+    }
+
     // MARK: Additional materials
 
     struct AddSourceRequest: Codable { let url: String }

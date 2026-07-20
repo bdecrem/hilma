@@ -1,6 +1,7 @@
 import { f2Supabase } from './supabase'
 import type { F2Client } from './agent'
 import type { VideoBand } from './videos'
+import type { AudioSummary } from './audio-summary'
 
 export type F2ThreadMessage = {
   role: 'user' | 'assistant'
@@ -54,6 +55,9 @@ export type F2Thread = {
    *  Null for non-video topics and legacy "setup:" topics (treated as
    *  'long' when fetching more videos). */
   video_band: VideoBand | null
+  /** Narrated recap state (see lib/f2/audio-summary.ts). Null when the user
+   *  has never generated one for this topic. */
+  audio_summary: AudioSummary | null
 }
 
 /// One source-of-truth concatenation of every body the user has attached to a

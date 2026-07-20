@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { listTopicsForUser } from '@/lib/f2/threads'
+import { audioSummaryForClient } from '@/lib/f2/audio-summary'
 
 export const runtime = 'nodejs'
 
@@ -29,6 +30,8 @@ export async function GET() {
     created_at: t.created_at,
     updated_at: t.updated_at,
     client: t.client,
+    // Script text stays out of list payloads — clients only need state + URL.
+    audio_summary: audioSummaryForClient(t.audio_summary),
   }))
   return NextResponse.json({ topics }, { headers: NO_STORE })
 }

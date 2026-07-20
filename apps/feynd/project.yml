@@ -43,6 +43,9 @@ targets:
         NSPhotoLibraryUsageDescription: Pick a profile photo from your library.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        # Keep Audio Summary playback alive with the screen locked.
+        UIBackgroundModes:
+          - audio
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.Feynd
