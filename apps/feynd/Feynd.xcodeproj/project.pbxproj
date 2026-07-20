@@ -14,6 +14,7 @@
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
 		36BE08CA63307A15CECFDBEA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFCEF68207C8EC05D3B4760 /* Models.swift */; };
 		412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */; };
+		445C46DD3C8AB7B90A505AEC /* AudioSummaryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */; };
 		470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */; };
 		4860FA3E933A27649FF2F725 /* TopicContextSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057BE0BC148176D8DF6A2A52 /* TopicContextSheet.swift */; };
 		48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */; };
@@ -40,6 +41,7 @@
 		0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
 		121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
+		2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayerView.swift; sourceTree = "<group>"; };
 		3C7811C80A73490F1D2B650D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4E8E1D52867446105B46D06E /* FeyndChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndChrome.swift; sourceTree = "<group>"; };
 		5DC33D7342C9F25E38F967F4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
@@ -79,6 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				8D6854393131D5ADEB1B75CE /* Assets.xcassets */,
+				2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */,
 				5DC33D7342C9F25E38F967F4 /* ChatView.swift */,
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
 				A62FA8AD3B3E792810622A3A /* F2API.swift */,
@@ -198,6 +201,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				445C46DD3C8AB7B90A505AEC /* AudioSummaryPlayerView.swift in Sources */,
 				5B58C25CE4AFF970698227C4 /* ChatView.swift in Sources */,
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
 				935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */,
