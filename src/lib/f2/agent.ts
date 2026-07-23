@@ -42,6 +42,7 @@ import {
 } from './chat'
 import { nameTopic } from './name-topic'
 import { llmComplete } from './llm'
+import { setAudioSummary } from './audio-summary'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -73,6 +74,15 @@ export type F2Reply = {
     stars: number
     quiz_count: number
     hard_quiz_completed_at: string | null
+  }
+  /** Set by the `summary <instructions>` command: the thread's audio_summary
+   *  has been marked `generating` and the caller (the /api/f2/messages route)
+   *  should run generateAudioSummary in the background via after(). Absent for
+   *  every other message. */
+  regenerate_summary?: {
+    thread_id: string
+    instructions: string | null
+    model?: string
   }
 }
 
@@ -110,6 +120,16 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
       return handleNewNone(userId, client, handle, text, request, model)
     }
     return handleVideoSetup(userId, client, handle, text, request, kind)
+  }
+
+  // "summary <instructions>" → regenerate this topic's audio summary +
+  // transcript, steered by the instructions (e.g. "make it longer", "add more
+  // dates"). "summary" alone regenerates with no extra guidance. The heavy
+  // generation runs in the background (see the /api/f2/messages route).
+  const summaryMatch = text.match(/^summary\b[\s:,.\-—]*/i)
+  if (summaryMatch) {
+    const instructions = text.slice(summaryMatch[0].length).trim()
+    return handleSummaryCommand(userId, threadId, instructions, model)
   }
 
   // "quote <text>" → capture a quote for the active topic (or ask which one).
@@ -371,6 +391,52 @@ async function handleVideoSetup(
   } catch (err) {
     console.error('[f2] handleVideoSetup failed:', err)
     return { reply: 'F2: hit a snag setting that up (the video search or transcripts failed). Try again in a moment.' }
+  }
+}
+
+/// "summary <instructions>" — regenerate the active topic's audio summary +
+/// transcript, steered by the user's instructions. Marks audio_summary as
+/// `generating` (preserving prior versions) and returns a `regenerate_summary`
+/// directive; the /api/f2/messages route runs the actual generation in the
+/// background via after(). Needs an active topic to act on.
+async function handleSummaryCommand(
+  userId: string,
+  threadId: string | undefined,
+  instructions: string,
+  model?: string,
+): Promise<F2Reply> {
+  const thread = threadId
+    ? await getThreadById(userId, threadId)
+    : await getLatestThread(userId)
+  if (!thread) {
+    return { reply: 'F2: open a topic first, then type "summary" (optionally with how to change it, e.g. "summary make it longer").' }
+  }
+
+  // Mark generating, preserving any prior transcript/version history so a
+  // failure or the in-flight window never drops the base + augmented set.
+  const now = new Date().toISOString()
+  await setAudioSummary(thread.id, thread.user_id, {
+    ...(thread.audio_summary ?? {}),
+    status: 'generating',
+    updated_at: now,
+  })
+
+  const label = thread.topic ?? thread.url ?? 'this topic'
+  const how = instructions ? ` (${instructions})` : ''
+  const reply =
+    `F2 is regenerating the summary for "${label}"${how}. ` +
+    'It\'ll show up in Topic Context, and the Play chip will use the new audio, in a minute or two.'
+
+  // Log the exchange so the command + reply appear in the topic's chat.
+  await appendMessages(thread.id, thread.user_id, thread.messages, [
+    { role: 'user', text: instructions ? `summary ${instructions}` : 'summary', created_at: now },
+    { role: 'assistant', text: reply, created_at: now },
+  ])
+
+  return {
+    reply,
+    thread_id: thread.id,
+    regenerate_summary: { thread_id: thread.id, instructions: instructions || null, model },
   }
 }
 

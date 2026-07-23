@@ -12,6 +12,9 @@ struct TopicContextSheet: View {
     let topic: F2Topic
 
     @State private var sources: [F2API.TopicSource] = []
+    @State private var summaries: [F2API.SummaryVersion] = []
+    @State private var currentSummaryId: String? = nil
+    @State private var readerTarget: F2API.SummaryVersion? = nil
     @State private var loading = true
     @State private var loadError: String? = nil
     @State private var deleting: Set<String> = []
@@ -33,7 +36,7 @@ struct TopicContextSheet: View {
                             .font(.system(size: 13))
                             .foregroundStyle(FeyndTheme.text3)
                             .padding(24)
-                    } else if sources.isEmpty {
+                    } else if sources.isEmpty && summaries.isEmpty {
                         Text("No source material attached to this topic.")
                             .font(.system(size: 13))
                             .foregroundStyle(FeyndTheme.text3)
@@ -41,13 +44,19 @@ struct TopicContextSheet: View {
                             .padding(.horizontal, 32)
                             .padding(.vertical, 40)
                     } else {
-                        ForEach(sources) { src in
-                            row(src)
-                            if src.id != sources.last?.id {
-                                Rectangle()
-                                    .fill(FeyndTheme.borderSoft)
-                                    .frame(height: 1)
-                                    .padding(.horizontal, 14)
+                        if !summaries.isEmpty {
+                            summariesSection
+                        }
+                        if !sources.isEmpty {
+                            if !summaries.isEmpty { sectionEyebrow("Source material") }
+                            ForEach(sources) { src in
+                                row(src)
+                                if src.id != sources.last?.id {
+                                    Rectangle()
+                                        .fill(FeyndTheme.borderSoft)
+                                        .frame(height: 1)
+                                        .padding(.horizontal, 14)
+                                }
                             }
                         }
                     }
@@ -71,6 +80,102 @@ struct TopicContextSheet: View {
         } message: {
             Text("The AI will no longer use this material when answering questions about \"\(topic.displayLabel)\".")
         }
+        .sheet(item: $readerTarget) { version in
+            TranscriptReaderView(
+                topicLabel: topic.displayLabel,
+                version: version,
+                isCurrent: version.id == currentSummaryId,
+            )
+        }
+    }
+
+    // MARK: - Summaries
+
+    /// The audio-summary transcripts (base + augmented), newest last. Tapping a
+    /// row opens the full transcript in a reader.
+    @ViewBuilder
+    private var summariesSection: some View {
+        sectionEyebrow("Summaries")
+        VStack(spacing: 0) {
+            ForEach(summaries) { v in
+                Button { readerTarget = v } label: { summaryRow(v) }
+                    .buttonStyle(.plain)
+                if v.id != summaries.last?.id {
+                    Rectangle()
+                        .fill(FeyndTheme.borderSoft)
+                        .frame(height: 1)
+                        .padding(.horizontal, 14)
+                }
+            }
+        }
+    }
+
+    private func summaryRow(_ v: F2API.SummaryVersion) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(v.instructions == nil ? "BASE SUMMARY" : "REVISED")
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(0.5)
+                        .foregroundStyle(v.instructions == nil ? FeyndTheme.text3 : FeyndTheme.coral)
+                    if v.id == currentSummaryId {
+                        Text("CURRENT · HAS AUDIO")
+                            .font(.system(size: 10, weight: .bold))
+                            .tracking(0.5)
+                            .foregroundStyle(FeyndTheme.gold)
+                    }
+                }
+                if let instr = v.instructions, !instr.isEmpty {
+                    Text("“\(instr)”")
+                        .font(.system(size: 14))
+                        .italic()
+                        .foregroundStyle(FeyndTheme.text)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(summaryMeta(v))
+                    .font(.system(size: 11))
+                    .foregroundStyle(FeyndTheme.text2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 4) {
+                Text("Read")
+                    .font(.system(size: 12, weight: .semibold))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+            .foregroundStyle(FeyndTheme.text3)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
+        .contentShape(Rectangle())
+    }
+
+    /// "SHORT · ~4 min · 612 words" — whatever pieces are known.
+    private func summaryMeta(_ v: F2API.SummaryVersion) -> String {
+        var bits: [String] = []
+        if let scale = v.scale { bits.append(scale == "book" ? "Book length" : "Short") }
+        if let secs = v.durationSecs, secs > 0 {
+            let mins = max(1, Int((Double(secs) / 60).rounded()))
+            bits.append("~\(mins) min")
+        }
+        let words = v.script.split(whereSeparator: { $0 == " " || $0 == "\n" }).count
+        if words > 0 { bits.append("\(words) words") }
+        return bits.joined(separator: " · ")
+    }
+
+    private func sectionEyebrow(_ text: String) -> some View {
+        HStack {
+            Text(text.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .tracking(0.6)
+                .foregroundStyle(FeyndTheme.text3)
+            Spacer()
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 16)
+        .padding(.bottom, 6)
     }
 
     // MARK: - Pieces
@@ -222,7 +327,15 @@ struct TopicContextSheet: View {
         loading = true
         loadError = nil
         do {
-            sources = try await F2API.shared.listTopicSources(id: topic.id)
+            // Sources are the primary content; summaries are best-effort (a
+            // topic may have none). Don't let a summaries hiccup blank the sheet.
+            async let sourcesTask = F2API.shared.listTopicSources(id: topic.id)
+            async let summariesTask = try? F2API.shared.listSummaries(id: topic.id)
+            sources = try await sourcesTask
+            if let s = await summariesTask {
+                summaries = s.summaries
+                currentSummaryId = s.currentId
+            }
         } catch {
             loadError = error.localizedDescription
         }

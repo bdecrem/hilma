@@ -63,7 +63,10 @@ export async function POST(
     }
   }
 
+  // Preserve any prior transcript/version history while regenerating, so a
+  // failure (or the in-flight window) never drops the base + augmented set.
   const pending: AudioSummary = {
+    ...(existing ?? {}),
     status: 'generating',
     updated_at: new Date().toISOString(),
   }
@@ -76,6 +79,7 @@ export async function POST(
       const message = err instanceof Error ? err.message : String(err)
       console.error('[f2] audio summary generation failed:', message)
       await setAudioSummary(thread.id, user.id, {
+        ...(existing ?? {}),
         status: 'error',
         error: message.slice(0, 500),
         updated_at: new Date().toISOString(),

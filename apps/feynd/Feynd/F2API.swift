@@ -162,6 +162,11 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(topic: newTopic))
     }
 
+    func setPinned(id: String, pinned: Bool) async throws {
+        struct Body: Encodable { let pinned: Bool }
+        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(pinned: pinned))
+    }
+
     func deleteTopic(id: String) async throws {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }
@@ -303,6 +308,40 @@ final class F2API {
     func listTopicSources(id: String) async throws -> [TopicSource] {
         let res: ListSourcesResponse = try await get("/api/f2/topics/\(id)/sources")
         return res.items
+    }
+
+    /// One audio-summary transcript version. Base version has instructions=nil;
+    /// each `summary <…>` command adds an augmented one. Only the current
+    /// version (id == current_id) has playable audio.
+    struct SummaryVersion: Codable, Identifiable, Equatable {
+        let id: String
+        let script: String
+        let scale: String?          // "book" | "short"
+        let durationSecs: Int?
+        let instructions: String?   // nil = base version
+        let createdAt: String?
+
+        enum CodingKeys: String, CodingKey {
+            case id, script, scale, instructions
+            case durationSecs = "duration_secs"
+            case createdAt = "created_at"
+        }
+    }
+    struct SummariesResponse: Codable {
+        let summaries: [SummaryVersion]
+        let currentId: String?
+        let audioUrl: String?
+        enum CodingKeys: String, CodingKey {
+            case summaries
+            case currentId = "current_id"
+            case audioUrl = "audio_url"
+        }
+    }
+
+    /// Full audio-summary transcripts for a topic, base first. Backs the
+    /// Summaries section + reader in the Topic Context sheet.
+    func listSummaries(id: String) async throws -> SummariesResponse {
+        try await get("/api/f2/topics/\(id)/summaries")
     }
 
     struct DeleteSourceRequest: Codable { let kind: String; let index: Int?; let part: String }

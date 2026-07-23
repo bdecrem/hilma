@@ -30,6 +30,7 @@ export async function GET() {
     created_at: t.created_at,
     updated_at: t.updated_at,
     client: t.client,
+    pinned_at: t.pinned_at,
     // Script text stays out of list payloads — clients only need state + URL.
     audio_summary: audioSummaryForClient(t.audio_summary),
   }))

@@ -1,7 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { processMessage } from '@/lib/f2/agent'
 import { getSessionUser } from '@/lib/f2/auth'
 import { isModelKey } from '@/lib/f2/llm'
+import { getThreadById } from '@/lib/f2/threads'
+import { generateAudioSummary, setAudioSummary } from '@/lib/f2/audio-summary'
 
 export const runtime = 'nodejs'
 // "setup:" / "new short|medium|long" / more_videos run a synchronous search +
@@ -48,6 +50,34 @@ export async function POST(req: Request) {
     threadId: body.thread_id,
     model: body.model,
   })
+
+  // The `summary <instructions>` command already marked the thread's
+  // audio_summary as `generating`; run the heavy regeneration in the
+  // background (script + TTS + upload can take minutes — well past this
+  // route's maxDuration). The client polls /api/f2/topics for the flip to
+  // ready, exactly like the Generate-Audio menu action.
+  if (result.regenerate_summary) {
+    const { thread_id, instructions, model } = result.regenerate_summary
+    const userId = user.id
+    after(async () => {
+      try {
+        const thread = await getThreadById(userId, thread_id)
+        if (!thread) return
+        await generateAudioSummary(thread, model, instructions)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.error('[f2] summary-command regeneration failed:', message)
+        const thread = await getThreadById(userId, thread_id)
+        await setAudioSummary(thread_id, userId, {
+          ...(thread?.audio_summary ?? {}),
+          status: 'error',
+          error: message.slice(0, 500),
+          updated_at: new Date().toISOString(),
+        })
+      }
+    })
+  }
+
   return NextResponse.json(result)
 }
 

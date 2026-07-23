@@ -32,27 +32,39 @@ export async function PATCH(
   }
   const { id } = await ctx.params
 
-  let body: { topic?: string }
+  let body: { topic?: string; pinned?: boolean }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  const topic = body.topic?.trim()
-  if (!topic) {
-    return NextResponse.json({ error: 'topic required' }, { status: 400 })
+
+  // Pin/unpin — orthogonal to rename. A PATCH sets whichever field it carries.
+  const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (typeof body.pinned === 'boolean') {
+    update.pinned_at = body.pinned ? new Date().toISOString() : null
+  }
+  if (body.topic !== undefined) {
+    const topic = body.topic.trim()
+    if (!topic) {
+      return NextResponse.json({ error: 'topic required' }, { status: 400 })
+    }
+    update.topic = topic
+  }
+  if (update.topic === undefined && update.pinned_at === undefined) {
+    return NextResponse.json({ error: 'nothing to update' }, { status: 400 })
   }
 
   const { data, error } = await f2Supabase()
     .from('f2_threads')
-    .update({ topic, updated_at: new Date().toISOString() })
+    .update(update)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, topic')
+    .select('id, topic, pinned_at')
     .maybeSingle()
 
   if (error) {
-    console.error('[f2] rename topic failed:', error)
+    console.error('[f2] update topic failed:', error)
     return NextResponse.json({ error: 'update failed' }, { status: 500 })
   }
   if (!data) {

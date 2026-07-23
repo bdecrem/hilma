@@ -9,6 +9,24 @@ import { llmComplete, contextCharBudget } from './llm'
 
 export type AudioSummaryScale = 'book' | 'short'
 
+/// One generated transcript. The base version has instructions=null; each
+/// `summary <instructions>` command appends an augmented version. Only the
+/// latest version has playable audio (its MP3 is the thread's current one);
+/// older versions keep their transcript only. Shown in Topic Context.
+export type AudioSummaryVersion = {
+  id: string
+  script: string
+  scale: AudioSummaryScale
+  duration_secs: number
+  /** User's redo instructions for this version; null for the base version. */
+  instructions: string | null
+  created_at: string
+}
+
+/// Same as AudioSummaryVersion but with the heavy `script` dropped — what the
+/// topics-list payload carries so it stays small.
+export type AudioSummaryVersionMeta = Omit<AudioSummaryVersion, 'script'>
+
 export type AudioSummary = {
   status: 'generating' | 'ready' | 'error'
   url?: string
@@ -16,8 +34,16 @@ export type AudioSummary = {
   scale?: AudioSummaryScale
   duration_secs?: number
   voice?: string
+  /** Redo instructions behind the current transcript; null for base. */
+  instructions?: string | null
   error?: string
   updated_at: string
+  /** Every transcript generated for this topic: the base (id 'base') plus each
+   *  augmented version. Mirrored top-level fields describe the current one. */
+  versions?: AudioSummaryVersion[]
+  /** Which version the top-level fields + the current MP3 correspond to. Only
+   *  this version has playable audio. */
+  current_id?: string
 }
 
 const TTS_MODEL = 'gpt-4o-mini-tts'
@@ -50,20 +76,49 @@ export async function setAudioSummary(
   if (error) console.error('[f2] setAudioSummary failed:', error)
 }
 
-/// Everything the client needs to render list rows / the Play chip — the
-/// script stays server-side-only in list payloads to keep them small.
+/// Everything the client needs to render list rows / the Play chip — every
+/// transcript body (top-level + per-version) is stripped so list payloads stay
+/// small. Full transcripts come from GET /api/f2/topics/[id]/summaries.
 export function audioSummaryForClient(
   a: AudioSummary | null | undefined,
-): Omit<AudioSummary, 'script'> | null {
+): (Omit<AudioSummary, 'script' | 'versions'> & { versions?: AudioSummaryVersionMeta[] }) | null {
   if (!a) return null
-  const { script: _script, ...rest } = a
-  return rest
+  const { script: _script, versions, ...rest } = a
+  return {
+    ...rest,
+    versions: versions?.map(({ script: _s, ...meta }) => meta),
+  }
+}
+
+/// The list of full transcripts for a topic, base first. Handles legacy
+/// summaries that predate versioning by synthesizing a single base entry from
+/// the top-level fields.
+export function audioSummaryVersions(a: AudioSummary | null | undefined): AudioSummaryVersion[] {
+  if (!a) return []
+  if (a.versions && a.versions.length > 0) return a.versions
+  // Legacy summary with no version array yet — synthesize a base entry from
+  // the top-level transcript so it still shows in Topic Context.
+  if (a.script) {
+    return [{
+      id: 'base',
+      script: a.script,
+      scale: a.scale ?? inferScale(a.script),
+      duration_secs: a.duration_secs ?? estimateDurationSecs(a.script),
+      instructions: a.instructions ?? null,
+      created_at: a.updated_at,
+    }]
+  }
+  return []
 }
 
 // ---------------------------------------------------------------------------
 // Script generation
 
-function buildScriptSystem(thread: F2Thread, model: string | null | undefined): string {
+function buildScriptSystem(
+  thread: F2Thread,
+  model: string | null | undefined,
+  instructions?: string | null,
+): string {
   const subject = thread.topic ?? thread.url ?? '(untitled topic)'
 
   const fullContent = buildFullContent(thread)
@@ -93,7 +148,11 @@ How to write it:
 - The user's chat on this topic is included below — let it shape emphasis: return to the questions they asked and the themes they cared about.
 - Spoken prose only: no markdown, no headings, no bullet points, no stage directions. Short paragraphs, natural transitions, contractions welcome.
 - Open by naming the topic in a natural sentence (no "welcome to"). End with one closing thought — no "thanks for listening."
-
+${instructions?.trim() ? `
+The user has asked you to adjust THIS version of the summary as follows:
+"${instructions.trim()}"
+Follow these instructions. Where they conflict with the default length or scale guidance above (e.g. "make it longer", "go deeper on X", "more dates"), the user's instructions win — override the word-count band as needed.
+` : ''}
 Output ONLY the script text.
 
 ${source ? `Source material:\n${source}\n\n` : ''}${history ? `Chat history on this topic:\n${history}` : '(No chat history yet.)'}`
@@ -101,6 +160,10 @@ ${source ? `Source material:\n${source}\n\n` : ''}${history ? `Chat history on t
 
 function inferScale(script: string): AudioSummaryScale {
   return script.split(/\s+/).length > 1200 ? 'book' : 'short'
+}
+
+function estimateDurationSecs(script: string): number {
+  return Math.round((script.split(/\s+/).length / WORDS_PER_MINUTE) * 60)
 }
 
 // ---------------------------------------------------------------------------
@@ -165,11 +228,13 @@ async function ttsChunk(text: string, voice: string): Promise<Buffer> {
 export async function generateAudioSummary(
   thread: F2Thread,
   model: string | null | undefined,
+  instructions?: string | null,
 ): Promise<AudioSummary> {
-  // 1. Script from the user's active chat model.
+  // 1. Script from the user's active chat model. `instructions` (from the
+  //    `summary <…>` chat command) steer this version's length/emphasis.
   const result = await llmComplete({
     model,
-    system: buildScriptSystem(thread, model),
+    system: buildScriptSystem(thread, model, instructions),
     messages: [{ role: 'user', content: 'Write the audio summary script now.' }],
     maxTokens: 16000,
   })
@@ -178,8 +243,7 @@ export async function generateAudioSummary(
   }
   const script = result.text.trim()
   const scale = inferScale(script)
-  const words = script.split(/\s+/).length
-  const durationSecs = Math.round((words / WORDS_PER_MINUTE) * 60)
+  const durationSecs = estimateDurationSecs(script)
 
   // 2. TTS, chunked at sentence boundaries; MP3 frames concatenate cleanly.
   const voice = ttsVoice()
@@ -203,6 +267,47 @@ export async function generateAudioSummary(
 
   const { data: pub } = sb.storage.from('f2-audio').getPublicUrl(path)
 
+  const now = new Date().toISOString()
+
+  // Seed the existing version history. If a legacy (pre-versioning) summary is
+  // present — even one already flipped to `generating` by the summary command —
+  // recover its transcript as the base so it's never lost.
+  const prior = thread.audio_summary
+  let versions: AudioSummaryVersion[] = prior?.versions?.length
+    ? [...prior.versions]
+    : (prior?.script
+        ? [{
+            id: 'base',
+            script: prior.script,
+            scale: prior.scale ?? inferScale(prior.script),
+            duration_secs: prior.duration_secs ?? estimateDurationSecs(prior.script),
+            instructions: prior.instructions ?? null,
+            created_at: prior.updated_at,
+          }]
+        : [])
+
+  const trimmed = instructions?.trim() || null
+  const isBase = trimmed === null
+  const version: AudioSummaryVersion = {
+    id: isBase ? 'base' : `v${Date.now()}`,
+    script,
+    scale,
+    duration_secs: durationSecs,
+    instructions: trimmed,
+    created_at: now,
+  }
+
+  // A base regeneration (menu "Regenerate", or `summary` with no text) replaces
+  // the base entry in place; an augmented `summary <…>` appends a new version.
+  if (isBase) {
+    const idx = versions.findIndex((v) => v.id === 'base')
+    versions = idx >= 0
+      ? versions.map((v, i) => (i === idx ? version : v))
+      : [version, ...versions]
+  } else {
+    versions = [...versions, version]
+  }
+
   const summary: AudioSummary = {
     status: 'ready',
     url: pub.publicUrl,
@@ -210,7 +315,10 @@ export async function generateAudioSummary(
     scale,
     duration_secs: durationSecs,
     voice,
-    updated_at: new Date().toISOString(),
+    instructions: trimmed,
+    updated_at: now,
+    versions,
+    current_id: version.id,
   }
   await setAudioSummary(thread.id, thread.user_id, summary)
   return summary

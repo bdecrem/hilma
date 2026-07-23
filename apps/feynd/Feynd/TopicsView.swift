@@ -36,20 +36,34 @@ struct TopicsView: View {
 
     private var sort: TopicSort { TopicSort(rawValue: sortRaw) ?? .recent }
 
-    private var sortedTopics: [F2Topic] {
+    /// Apply the active sort to an arbitrary slice of topics.
+    private func applySort(_ list: [F2Topic]) -> [F2Topic] {
         switch sort {
         case .recent:
             // Server already returns by updated_at desc; preserve order.
-            return topics
+            return list
         case .alphabetical:
-            return topics.sorted {
+            return list.sorted {
                 $0.displayLabel.localizedCaseInsensitiveCompare($1.displayLabel) == .orderedAscending
             }
         case .byStars:
             // 0-star topics first (what needs work), then 1, 2, 3.
             // Within a star bucket, preserve the server's recent-first order.
-            return topics.sorted { $0.stars < $1.stars }
+            return list.sorted { $0.stars < $1.stars }
         }
+    }
+
+    /// Pinned topics float above everything, newest-pinned first, regardless
+    /// of the active sort.
+    private var pinnedTopics: [F2Topic] {
+        topics.filter(\.isPinned).sorted {
+            ($0.pinnedAt ?? .distantPast) > ($1.pinnedAt ?? .distantPast)
+        }
+    }
+
+    /// Everything not pinned, in the active sort order.
+    private var unpinnedTopics: [F2Topic] {
+        applySort(topics.filter { !$0.isPinned })
     }
 
     var body: some View {
@@ -209,23 +223,21 @@ struct TopicsView: View {
     }
 
     private var rows: some View {
-        let display = sortedTopics
+        let pinned = pinnedTopics
+        let unpinned = unpinnedTopics
+        let hasPinned = !pinned.isEmpty
         return ScrollView {
             // Bottom inset large enough to keep the floating TabPill from
             // covering the last row.
             LazyVStack(spacing: 0) {
-                ForEach(Array(display.enumerated()), id: \.element.id) { idx, topic in
-                    NavigationLink(value: topic) {
-                        TopicListRow(topic: topic,
-                                     isLast: idx == display.count - 1,
-                                     onRename: { startRename(topic) },
-                                     onDelete: { delete(topic) },
-                                     onAddMaterial: { startAddMaterial(topic) },
-                                     onViewContext: { contextTarget = topic },
-                                     onGenerateAudio: { generateAudio(topic) })
-                    }
-                    .buttonStyle(.plain)
+                if hasPinned {
+                    sectionHeader("Pinned")
+                    topicList(pinned)
+                    // Only label the second group when there's a pinned group
+                    // above it to distinguish; otherwise it's just "the list".
+                    sectionHeader("All topics")
                 }
+                topicList(unpinned)
                 Color.clear.frame(height: 96)
             }
             .padding(.horizontal, 14)
@@ -235,6 +247,36 @@ struct TopicsView: View {
             await load()
             await session.refreshProgress()
         }
+    }
+
+    @ViewBuilder
+    private func topicList(_ display: [F2Topic]) -> some View {
+        ForEach(Array(display.enumerated()), id: \.element.id) { idx, topic in
+            NavigationLink(value: topic) {
+                TopicListRow(topic: topic,
+                             isLast: idx == display.count - 1,
+                             onRename: { startRename(topic) },
+                             onDelete: { delete(topic) },
+                             onAddMaterial: { startAddMaterial(topic) },
+                             onViewContext: { contextTarget = topic },
+                             onGenerateAudio: { generateAudio(topic) },
+                             onTogglePin: { togglePin(topic) })
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func sectionHeader(_ text: String) -> some View {
+        HStack {
+            Text(text.uppercased())
+                .font(.system(size: 11, weight: .semibold))
+                .tracking(0.6)
+                .foregroundStyle(FeyndTheme.text3)
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, 18)
+        .padding(.bottom, 6)
     }
 
     // MARK: - Data
@@ -342,6 +384,19 @@ struct TopicsView: View {
             catch { topics = prev }
         }
     }
+
+    private func togglePin(_ topic: F2Topic) {
+        let willPin = !topic.isPinned
+        let prev = topics
+        // Optimistic: flip pinnedAt locally so the row jumps sections at once.
+        if let i = topics.firstIndex(where: { $0.id == topic.id }) {
+            topics[i].pinnedAt = willPin ? Date() : nil
+        }
+        Task {
+            do { try await F2API.shared.setPinned(id: topic.id, pinned: willPin) }
+            catch { topics = prev }
+        }
+    }
 }
 
 struct TopicListRow: View {
@@ -352,6 +407,7 @@ struct TopicListRow: View {
     let onAddMaterial: () -> Void
     let onViewContext: () -> Void
     let onGenerateAudio: () -> Void
+    let onTogglePin: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -359,16 +415,28 @@ struct TopicListRow: View {
                 MiniTopicGlyph(kind: topic.kind, size: 36)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(topic.displayLabel)
-                        .font(.system(size: 16.5, weight: .semibold))
-                        .tracking(-0.3)
-                        .foregroundStyle(FeyndTheme.text)
-                        .lineLimit(1)
+                    HStack(spacing: 5) {
+                        if topic.isPinned {
+                            Image(systemName: "pin.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(FeyndTheme.coral)
+                                .rotationEffect(.degrees(45))
+                        }
+                        Text(topic.displayLabel)
+                            .font(.system(size: 16.5, weight: .semibold))
+                            .tracking(-0.3)
+                            .foregroundStyle(FeyndTheme.text)
+                            .lineLimit(1)
+                    }
                     metaLine
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 Menu {
+                    Button { onTogglePin() } label: {
+                        Label(topic.isPinned ? "Unpin" : "Pin",
+                              systemImage: topic.isPinned ? "pin.slash" : "pin")
+                    }
                     Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
                     Button { onAddMaterial() } label: { Label("Add material", systemImage: "link.badge.plus") }
                     Button { onViewContext() } label: { Label("View context", systemImage: "doc.text.magnifyingglass") }

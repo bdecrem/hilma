@@ -58,6 +58,9 @@ export type F2Thread = {
   /** Narrated recap state (see lib/f2/audio-summary.ts). Null when the user
    *  has never generated one for this topic. */
   audio_summary: AudioSummary | null
+  /** When the user pinned this topic. Non-null = pinned; the timestamp also
+   *  orders pinned topics (most-recently-pinned first). Null = not pinned. */
+  pinned_at: string | null
 }
 
 /// One source-of-truth concatenation of every body the user has attached to a

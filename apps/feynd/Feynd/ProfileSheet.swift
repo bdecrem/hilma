@@ -25,6 +25,7 @@ struct ProfileSheet: View {
 
     @State private var imessageHandles: [String] = []
     @State private var showPairing = false
+    @State private var showHelp = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -47,6 +48,9 @@ struct ProfileSheet: View {
                isPresented: Binding(get: { uploadError != nil }, set: { if !$0 { uploadError = nil } })) {
             Button("OK") { uploadError = nil }
         } message: { Text(uploadError ?? "") }
+        .sheet(isPresented: $showHelp) {
+            HelpSheet()
+        }
         .sheet(isPresented: $showPairing) {
             NavigationStack {
                 IMessagePairingView { newHandle in
@@ -363,6 +367,13 @@ struct ProfileSheet: View {
                         SettingsRow(label: "Remove profile photo", labelColor: FeyndTheme.text2) {
                             Task { await removeAvatar() }
                         }
+                    }
+                }
+            }
+            SettingsSection(label: "Help") {
+                SettingsCard {
+                    SettingsRow(label: "Chat commands") {
+                        showHelp = true
                     }
                 }
             }

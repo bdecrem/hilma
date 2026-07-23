@@ -59,6 +59,11 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     let createdAt: Date
     let updatedAt: Date
     let client: String?
+    /// When the user pinned this topic; nil = not pinned. Also orders pinned
+    /// topics (most-recently-pinned first).
+    var pinnedAt: Date?
+
+    var isPinned: Bool { pinnedAt != nil }
 
     var displayLabel: String {
         if let topic, !topic.isEmpty { return topic }
@@ -83,6 +88,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case audioSummary = "audio_summary"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case pinnedAt = "pinned_at"
     }
 
     // Custom init so the iOS app keeps working against backends that don't
@@ -102,6 +108,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         audioSummary = try c.decodeIfPresent(F2AudioSummary.self, forKey: .audioSummary)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
+        pinnedAt = try c.decodeIfPresent(Date.self, forKey: .pinnedAt)
     }
 }
 
