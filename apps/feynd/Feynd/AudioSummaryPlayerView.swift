@@ -18,6 +18,11 @@ struct AudioSummaryPlayerView: View {
     @State private var timeObserver: Any? = nil
     @State private var endObserver: NSObjectProtocol? = nil
 
+    /// Playback speed, remembered across summaries. Pitch is preserved via the
+    /// item's timeDomain algorithm, so faster speech stays natural.
+    @AppStorage("audioSummarySpeed") private var speed: Double = 1.0
+    private let speeds: [Double] = [1.0, 1.25, 1.5]
+
     var body: some View {
         ZStack {
             FeyndTheme.bg.ignoresSafeArea()
@@ -56,7 +61,10 @@ struct AudioSummaryPlayerView: View {
                     .padding(.bottom, 26)
 
                 transport
-                    .padding(.bottom, 44)
+
+                speedControl
+                    .padding(.top, 26)
+                    .padding(.bottom, 40)
             }
         }
         .presentationDetents([.medium, .large])
@@ -121,6 +129,42 @@ struct AudioSummaryPlayerView: View {
         }
     }
 
+    /// Compact speed pill — tap to cycle 1× → 1.25× → 1.5×. Sits on its own
+    /// centered line below the transport so the play/skip row is untouched.
+    private var speedControl: some View {
+        Button { cycleSpeed() } label: {
+            Text(speedLabel)
+                .font(.system(size: 13.5, weight: .semibold).monospacedDigit())
+                .foregroundStyle(speed == 1.0 ? FeyndTheme.text3 : FeyndTheme.coral)
+                .frame(minWidth: 40)
+                .padding(.vertical, 7)
+                .padding(.horizontal, 14)
+                .background(FeyndTheme.surface, in: Capsule())
+                .overlay(Capsule().stroke(speed == 1.0 ? FeyndTheme.border : FeyndTheme.coral.opacity(0.5), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Playback speed \(speedLabel)")
+    }
+
+    private var speedLabel: String {
+        // 1 → "1×", 1.25 → "1.25×", 1.5 → "1.5×"
+        let s = String(format: "%g", speed)
+        return "\(s)×"
+    }
+
+    private func cycleSpeed() {
+        let i = speeds.firstIndex(of: speed) ?? 0
+        speed = speeds[(i + 1) % speeds.count]
+        applyRate()
+    }
+
+    /// Push the current speed to the player. AVPlayer.rate doubles as the
+    /// play/pause switch, so only drive it while playing.
+    private func applyRate() {
+        guard let p = player, playing else { return }
+        p.rate = Float(speed)
+    }
+
     // MARK: - Playback
 
     private func setup() {
@@ -128,6 +172,9 @@ struct AudioSummaryPlayerView: View {
         try? AVAudioSession.sharedInstance().setActive(true)
 
         let item = AVPlayerItem(url: url)
+        // Preserve pitch when the rate changes — timeDomain is tuned for speech,
+        // so 1.25×/1.5× stays natural rather than chipmunked.
+        item.audioTimePitchAlgorithm = .timeDomain
         let p = AVPlayer(playerItem: item)
         player = p
 
@@ -154,7 +201,8 @@ struct AudioSummaryPlayerView: View {
             }
         }
 
-        p.play()
+        // Start at the remembered speed (rate != 0 begins playback).
+        p.rate = Float(speed)
         playing = true
     }
 
@@ -170,15 +218,23 @@ struct AudioSummaryPlayerView: View {
 
     private func togglePlay() {
         guard let p = player else { return }
-        if playing { p.pause() } else { p.play() }
-        playing.toggle()
+        if playing {
+            p.pause()
+            playing = false
+        } else {
+            playing = true
+            p.rate = Float(speed)   // resume at the chosen speed, not 1×
+        }
     }
 
     private func skip(_ seconds: Double) {
         guard let p = player else { return }
         let target = max(0, min(duration > 0 ? duration : .greatestFiniteMagnitude, current + seconds))
         current = target
-        p.seek(to: CMTime(seconds: target, preferredTimescale: 600))
+        p.seek(to: CMTime(seconds: target, preferredTimescale: 600)) { _ in
+            // seek can reset rate to 0 mid-playback; restore it.
+            if playing { p.rate = Float(speed) }
+        }
     }
 
     private func timeString(_ secs: Double) -> String {
