@@ -117,7 +117,7 @@ struct AudioSummaryPlayerView: View {
         }
     }
 
-    /// Compact speed pill — tap to cycle 1× → 1.25× → 1.5×. Sits on its own
+    /// Compact speed pill — tap to cycle 1× → 1.1× → 1.25× → 1.5×. Sits on its own
     /// centered line below the transport so the play/skip row is untouched.
     private var speedControl: some View {
         Button { ctl.cycleSpeed() } label: {

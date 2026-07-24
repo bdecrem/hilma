@@ -23,7 +23,7 @@ final class AudioSummaryPlayer {
     /// Playback speed, remembered across summaries (same defaults key the
     /// sheet has always used). Pitch is preserved via timeDomain.
     private(set) var speed: Double = UserDefaults.standard.object(forKey: "audioSummarySpeed") as? Double ?? 1.0
-    let speeds: [Double] = [1.0, 1.25, 1.5]
+    let speeds: [Double] = [1.0, 1.1, 1.25, 1.5]
 
     private var player: AVPlayer? = nil
     private var timeObserver: Any? = nil
