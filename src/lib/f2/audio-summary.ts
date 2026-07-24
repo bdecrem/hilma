@@ -1,6 +1,6 @@
 import { f2Supabase } from './supabase'
 import { buildFullContent, type F2Thread } from './threads'
-import { llmComplete, contextCharBudget } from './llm'
+import { llmComplete } from './llm'
 
 // Audio Summary — a one-shot narrated recap of a topic, stored as MP3 in the
 // public f2-audio bucket and tracked in the f2_threads.audio_summary jsonb
@@ -113,53 +113,273 @@ export function audioSummaryVersions(a: AudioSummary | null | undefined): AudioS
 
 // ---------------------------------------------------------------------------
 // Script generation
+//
+// Small sources (articles, videos, short pastes) generate in one pass. Book-
+// length sources are read in full via map-reduce: each ~35K-char section is
+// digested by a fast model — so every word gets read and no single call has to
+// attend to hundreds of thousands of tokens at once — then the user's model
+// writes the script from the ordered digests. The user's own notes are pulled
+// into a checklist the script must account for, and a coverage pass patches in
+// anything missed.
 
-function buildScriptSystem(
-  thread: F2Thread,
-  model: string | null | undefined,
-  instructions?: string | null,
-): string {
-  const subject = thread.topic ?? thread.url ?? '(untitled topic)'
+const MAP_REDUCE_CHAR_THRESHOLD = 150_000
+const SECTION_CHARS = 35_000
+const MAP_CONCURRENCY = 6
+// An additional source this small counts as the user's own notes/annotations
+// (guaranteed point-by-point coverage) rather than bulk source material.
+const NOTES_SOURCE_MAX_CHARS = 30_000
+const BOOK_WORD_THRESHOLD = 15_000
+// Fast, cheap, 3M-context model for the map digests + coverage checks. The
+// final writing (the reduce) stays on the user's chosen model.
+const MAP_MODEL = 'sonnet-4-6'
 
-  const fullContent = buildFullContent(thread)
-  // Reserve room for history + instructions inside the model's context budget.
-  const sourceBudget = Math.max(10000, contextCharBudget(model) - MAX_HISTORY_CHARS - 8000)
-  const source = fullContent.length > sourceBudget
-    ? fullContent.slice(0, sourceBudget) + '\n\n[source truncated]'
-    : fullContent
-  const sourceWords = Math.round(fullContent.split(/\s+/).length / 1000)
-
-  const history = thread.messages
-    .map((m) => `${m.role}: ${m.text}`)
-    .join('\n')
-    .slice(-MAX_HISTORY_CHARS)
-
-  return `You're writing a script about ${subject} for someone to listen to. Picture a smart friend who actually knows this material telling you about it on a walk — not a lecture, not a podcast intro, not a book report. Someone talking. A text-to-speech voice reads it aloud, so write plain spoken words: no markdown, no headings, no bullets, no stage directions, no "[pause]".
-
-Length — pick one silently based on the source:
-- If the source is a book or book-length work: 2,300–2,800 words (about 15–18 minutes).
-- Otherwise (an article, a video, a chat-only topic): 450–650 words (about 3–4 minutes).
-(The source below is roughly ${sourceWords} thousand words.)
-
-The voice is the whole point. Read this twice:
-- Start in the middle of a real idea — say something specific and true about the subject right away. NEVER open by announcing it. Banned first moves: "Let's talk about…", "Today we're looking at…", "Welcome to…", "In this summary…", "Imagine…", "Picture this…", "${subject} is a book/story/idea that…", and any "genuinely fascinating / a fascinating look at / one of the most important" framing. If your first sentence could be the back cover of a book, delete it and start with an actual fact.
+/// The anti-slop spoken voice, shared by the single-pass and map-reduce paths
+/// so every summary sounds the same (see feedback: no AI-slop / TED-talk voice).
+const VOICE_RULES = `The voice is the whole point. Read this twice:
+- Start in the middle of a real idea — say something specific and true about the subject right away. NEVER open by announcing it. Banned first moves: "Let's talk about…", "Today we're looking at…", "Welcome to…", "In this summary…", "Imagine…", "Picture this…", "[Subject] is a book/story/idea that…", and any "genuinely fascinating / a fascinating look at / one of the most important" framing. If your first sentence could be the back cover of a book, delete it and start with an actual fact.
 - Sound like a person, not an AI, not a TED talk, not a corporate blog. Say things straight. Trust the listener.
 - Never use these words: delve, tapestry, pivotal, seamless, leverage, harness, unlock, unleash, realm, journey, landscape (figurative), testament, dive/deep dive, crucial, vital, foster, underscore, illuminate, resonate, weave, intricate, nuanced, robust, transformative, groundbreaking, ultimately, moreover, furthermore, notably, essentially, indeed, "it's worth noting", "at its core", "when it comes to", "in today's world".
-- No "not just X, but Y" and no "it isn't X, it's Y". No rhetorical questions to open a section ("What makes this so…? Why does…?"). No one-word sentences for drama. No rule-of-three lists where two would do.
+- No "not just X, but Y" and no "it isn't X, it's Y". No rhetorical questions to open a section. No one-word sentences for drama. No rule-of-three lists where two would do.
 - Vary the rhythm. Mix short blunt sentences with longer ones. Contractions throughout. Don't editorialize about how important or amazing the subject is — show it by the specifics you pick.
 - End on a real thought that lands. Don't recap what you just said and don't say "thanks for listening."
+- Spoken words only: no markdown, no headings, no bullets, no stage directions, no "[pause]".`
 
-What to cover:
-- The big ideas and how they connect — enough that the listener actually understands the subject, not just its vibe.
-- Anchor with real dates, names, and terms, at the level of "the Odyssey is set around 1200 BC but was written down centuries later." Rough eras and round numbers are right. Don't pile up statistics or trivia — nobody's cramming for a quiz.
-- The user's own chat and saved notes on this topic are below. Let them steer what you dwell on — the questions they asked, the parts they cared about.
-${instructions?.trim() ? `
+function lengthTarget(isBook: boolean): string {
+  return isBook
+    ? 'Aim for 2,400–2,900 words (about 15–18 minutes spoken) — enough to walk through the whole thing properly, not a teaser.'
+    : 'Aim for 450–650 words (about 3–4 minutes spoken).'
+}
+
+function instructionsBlock(instructions?: string | null): string {
+  if (!instructions?.trim()) return ''
+  return `
 The user asked you to adjust THIS version specifically: "${instructions.trim()}"
-Do what they asked. If it conflicts with the length or scale above (e.g. "make it longer", "go deeper on X", "more dates"), their instruction wins.
-` : ''}
+Do what they asked. If it conflicts with the length target above (e.g. "make it longer", "go deeper on X", "more dates"), their instruction wins.
+`
+}
+
+/// The user's own notes/emphasis, which the script must cover point by point.
+function notesCoverageBlock(notesChecklist: string[]): string {
+  if (notesChecklist.length === 0) return ''
+  const list = notesChecklist.map((n, i) => `${i + 1}. ${n}`).join('\n')
+  return `
+The user took these notes while reading — their own emphasis, questions, and reactions. Your script MUST account for every one: work each into the narration where it naturally fits. Answer their questions. If a note gets a fact wrong, give the correct version plainly (don't repeat the mistake). Skip a note ONLY if it is genuinely unintelligible or clearly off-topic — cover all the rest.
+The user's notes:
+${list}
+`
+}
+
+function contentGuidance(whole: boolean): string {
+  return `What to cover:
+- ${whole ? 'The whole arc, beginning to end, using every section digest below in order — weight it naturally, don\'t front-load and rush the ending.' : 'The big ideas and how they connect — enough that the listener actually understands the subject, not just its vibe.'}
+- Anchor with real dates, names, and terms, at the level of "the Odyssey is set around 1200 BC but was written down centuries later." Rough eras and round numbers are right. Don't pile up statistics or trivia — nobody's cramming for a quiz.`
+}
+
+function buildSinglePassSystem(
+  subject: string,
+  source: string,
+  history: string,
+  isBook: boolean,
+  instructions: string | null | undefined,
+  notesChecklist: string[],
+): string {
+  return `You're writing a script about ${subject} for someone to listen to. Picture a smart friend who actually knows this material telling you about it on a walk — not a lecture, not a podcast intro, not a book report. Someone talking. A text-to-speech voice reads it aloud.
+
+${lengthTarget(isBook)}
+
+${VOICE_RULES}
+
+${contentGuidance(false)}
+- The user's own chat on this topic is below. Let it steer what you dwell on — the questions they asked, the parts they cared about.
+${notesCoverageBlock(notesChecklist)}${instructionsBlock(instructions)}
 Output ONLY the spoken words — nothing else.
 
 ${source ? `Source material:\n${source}\n\n` : ''}${history ? `Chat history on this topic:\n${history}` : '(No chat history yet.)'}`
+}
+
+function buildReduceSystem(
+  subject: string,
+  digests: string[],
+  isBook: boolean,
+  instructions: string | null | undefined,
+  notesChecklist: string[],
+): string {
+  const digestBlock = digests
+    .map((d, i) => `--- Section ${i + 1} of ${digests.length} ---\n${d}`)
+    .join('\n\n')
+  return `You're writing a script about ${subject} for someone to listen to — a smart friend who knows this material telling you about it on a walk. A text-to-speech voice reads it aloud.
+
+Below are section-by-section digests of the ENTIRE source, read start to finish and given to you in order. Write one flowing script that covers its whole arc from these digests. Don't skip or skim the later sections.
+
+${lengthTarget(isBook)}
+
+${VOICE_RULES}
+
+${contentGuidance(true)}
+${notesCoverageBlock(notesChecklist)}${instructionsBlock(instructions)}
+Output ONLY the spoken words — nothing else.
+
+Section digests (the full source, in order):
+${digestBlock}`
+}
+
+// ---------------------------------------------------------------------------
+// Map-reduce helpers
+
+/// Split source text into sections of at most `maxChars`, on paragraph
+/// boundaries; a single oversized paragraph is hard-split.
+function splitIntoSections(text: string, maxChars = SECTION_CHARS): string[] {
+  const sections: string[] = []
+  let cur = ''
+  for (const para of text.split(/\n\n+/)) {
+    if (para.length > maxChars) {
+      if (cur) { sections.push(cur); cur = '' }
+      for (let i = 0; i < para.length; i += maxChars) sections.push(para.slice(i, i + maxChars))
+      continue
+    }
+    if (cur && cur.length + para.length + 2 > maxChars) { sections.push(cur); cur = para }
+    else cur = cur ? `${cur}\n\n${para}` : para
+  }
+  if (cur) sections.push(cur)
+  return sections
+}
+
+/// Run `fn` over `items` with bounded concurrency, preserving order.
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+  async function worker() {
+    while (next < items.length) {
+      const i = next++
+      results[i] = await fn(items[i], i)
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker))
+  return results
+}
+
+/// Extract a dense, faithful digest of one section (fast model).
+async function mapDigest(section: string, subject: string, i: number, total: number): Promise<string> {
+  const r = await llmComplete({
+    model: MAP_MODEL,
+    system: `You are digesting one section of a longer work about ${subject}, for a writer who will later narrate a spoken summary of the whole thing. This is section ${i + 1} of ${total}. Capture, in order, every important point in THIS section: the ideas and how they develop, and the concrete facts that matter (dates, names, places, terms, key numbers). Be compact but complete — don't invent anything, don't skip anything important. No preamble, no "this section covers". Just the substance, about 400–600 words.`,
+    messages: [{ role: 'user', content: section }],
+    maxTokens: 2000,
+  })
+  return r.type === 'text' ? r.text : ''
+}
+
+/// Turn the user's raw notes into a clean numbered list of distinct points.
+async function extractNotesChecklist(notesText: string, subject: string): Promise<string[]> {
+  if (!notesText.trim()) return []
+  const r = await llmComplete({
+    model: MAP_MODEL,
+    system: `The user jotted these raw reading notes about ${subject} — scribbles, shorthand, typos, half-thoughts. Break them into a clean numbered list of every DISTINCT point, claim, question, or thing they cared about. One point per line, rewritten just enough to be intelligible while keeping their meaning and emphasis. Include everything you can make sense of. Drop ONLY fragments that are genuinely unintelligible or clearly unrelated to ${subject}. Output ONLY the numbered list, nothing else.`,
+    messages: [{ role: 'user', content: notesText }],
+    maxTokens: 3000,
+  })
+  if (r.type !== 'text') return []
+  return r.text
+    .split('\n')
+    .map((l) => l.replace(/^\s*\d+[.)]\s*/, '').trim())
+    .filter(Boolean)
+}
+
+/// Which checklist points (by index) the script fails to reflect.
+async function verifyMissingNotes(script: string, notesChecklist: string[]): Promise<number[]> {
+  if (notesChecklist.length === 0) return []
+  const list = notesChecklist.map((n, i) => `${i + 1}. ${n}`).join('\n')
+  const r = await llmComplete({
+    model: MAP_MODEL,
+    system: `Below is a spoken-summary script, then a numbered list of points the user wanted covered. A point counts as covered if its substance appears in the script, even in different words. Return ONLY the numbers of the points NOT meaningfully covered, comma-separated. If every point is covered, return exactly "NONE".`,
+    messages: [{ role: 'user', content: `SCRIPT:\n${script}\n\nPOINTS:\n${list}` }],
+    maxTokens: 500,
+  })
+  if (r.type !== 'text' || /^\s*none/i.test(r.text)) return []
+  return [...r.text.matchAll(/\d+/g)]
+    .map((m) => parseInt(m[0], 10) - 1)
+    .filter((i) => i >= 0 && i < notesChecklist.length)
+}
+
+/// The user's own annotations — quotes plus short additional sources — which
+/// get guaranteed point-by-point coverage. Bulk material (long transcripts) is
+/// read via the map-reduce corpus instead, not here.
+function gatherNotesText(thread: F2Thread): string {
+  const parts: string[] = []
+  for (const q of thread.quotes ?? []) {
+    if (q.text?.trim()) parts.push(q.author ? `"${q.text}" — ${q.author}` : `"${q.text}"`)
+  }
+  for (const s of thread.additional_sources ?? []) {
+    if (s.content && s.content.trim() && s.content.length <= NOTES_SOURCE_MAX_CHARS) {
+      parts.push(s.title ? `${s.title}:\n${s.content}` : s.content)
+    }
+  }
+  return parts.join('\n\n')
+}
+
+/// Produce the spoken script: single pass for small sources, map-reduce for
+/// book-length ones, then a coverage pass that patches in any missed notes.
+async function generateScript(
+  thread: F2Thread,
+  model: string | null | undefined,
+  instructions: string | null | undefined,
+): Promise<string> {
+  const subject = thread.topic ?? thread.url ?? '(untitled topic)'
+  const corpus = buildFullContent(thread)
+  const isBook = corpus.split(/\s+/).length > BOOK_WORD_THRESHOLD
+  const history = thread.messages.map((m) => `${m.role}: ${m.text}`).join('\n').slice(-MAX_HISTORY_CHARS)
+
+  const notesChecklist = await extractNotesChecklist(gatherNotesText(thread), subject)
+
+  let script: string
+  if (corpus.length <= MAP_REDUCE_CHAR_THRESHOLD) {
+    const r = await llmComplete({
+      model,
+      system: buildSinglePassSystem(subject, corpus, history, isBook, instructions, notesChecklist),
+      messages: [{ role: 'user', content: 'Write the audio summary script now.' }],
+      maxTokens: 16000,
+    })
+    script = r.type === 'text' ? r.text.trim() : ''
+  } else {
+    const sections = splitIntoSections(corpus)
+    const digests = (await mapWithConcurrency(sections, MAP_CONCURRENCY, (s, i) =>
+      mapDigest(s, subject, i, sections.length),
+    )).filter(Boolean)
+    if (digests.length === 0) throw new Error('map phase produced no digests')
+    const r = await llmComplete({
+      model,
+      system: buildReduceSystem(subject, digests, isBook, instructions, notesChecklist),
+      messages: [{ role: 'user', content: 'Write the audio summary script now, covering the whole work start to finish.' }],
+      maxTokens: 16000,
+    })
+    script = r.type === 'text' ? r.text.trim() : ''
+  }
+
+  if (!script) throw new Error('script generation returned no text')
+
+  // Coverage pass — patch in any notes the script missed (one attempt).
+  if (notesChecklist.length > 0) {
+    const missing = await verifyMissingNotes(script, notesChecklist)
+    if (missing.length > 0) {
+      const missingList = missing.map((i, n) => `${n + 1}. ${notesChecklist[i]}`).join('\n')
+      const r = await llmComplete({
+        model,
+        system: `Revise this spoken-summary script so it also covers the points below, which it currently misses. Weave them in naturally where they belong — don't tack them onto the end, don't announce them, keep the exact same voice and the same rules (no "let's talk about", no jargon, plain spoken prose, no markdown). Keep everything that's already there. Output ONLY the full revised script.
+
+Points to add:
+${missingList}`,
+        messages: [{ role: 'user', content: script }],
+        maxTokens: 16000,
+      })
+      if (r.type === 'text' && r.text.trim()) script = r.text.trim()
+    }
+  }
+
+  return script
 }
 
 function inferScale(script: string): AudioSummaryScale {
@@ -234,18 +454,10 @@ export async function generateAudioSummary(
   model: string | null | undefined,
   instructions?: string | null,
 ): Promise<AudioSummary> {
-  // 1. Script from the user's active chat model. `instructions` (from the
-  //    `summary <…>` chat command) steer this version's length/emphasis.
-  const result = await llmComplete({
-    model,
-    system: buildScriptSystem(thread, model, instructions),
-    messages: [{ role: 'user', content: 'Write the audio summary script now.' }],
-    maxTokens: 16000,
-  })
-  if (result.type !== 'text' || !result.text.trim()) {
-    throw new Error('script generation returned no text')
-  }
-  const script = result.text.trim()
+  // 1. Script from the user's active model. Small sources generate in one pass;
+  //    book-length sources are read in full via map-reduce. `instructions`
+  //    (from the `summary <…>` command) steer this version's length/emphasis.
+  const script = await generateScript(thread, model, instructions)
   const scale = inferScale(script)
   const durationSecs = estimateDurationSecs(script)
 

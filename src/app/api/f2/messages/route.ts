@@ -7,9 +7,10 @@ import { generateAudioSummary, setAudioSummary } from '@/lib/f2/audio-summary'
 
 export const runtime = 'nodejs'
 // "setup:" / "new short|medium|long" / more_videos run a synchronous search +
-// rank + transcript-fetch loop that can take ~30-45s; give it room (the
-// iMessage webhook already allows 60).
-export const maxDuration = 60
+// rank + transcript-fetch loop (~30-45s). The `summary` command additionally
+// kicks off a book-scale map-reduce regeneration in after() (script + TTS +
+// upload), which needs the same headroom as the audio-summary route.
+export const maxDuration = 300
 
 // POST /api/f2/messages
 // Web-app + iOS endpoint. Session-authenticated. Body: { text, thread_id?,
