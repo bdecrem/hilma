@@ -1,27 +1,16 @@
 import SwiftUI
 import AVFoundation
 
-/// Player sheet for a topic's narrated Audio Summary — streams the MP3 from
-/// Supabase storage. Just a recording: play/pause, ±15s skip, scrubber.
-/// Sets the audio session to .playback so it keeps playing in silent mode
-/// and (with the `audio` background mode) with the screen locked.
+/// Player sheet for a topic's narrated Audio Summary — a UI over the shared
+/// AudioSummaryPlayer, which owns the actual playback. Closing this sheet
+/// leaves the audio running (background mode + lock-screen controls live in
+/// the controller); reopening it re-attaches to the running playback.
 struct AudioSummaryPlayerView: View {
     let title: String
     let url: URL
 
     @Environment(\.dismiss) private var dismiss
-    @State private var player: AVPlayer? = nil
-    @State private var playing = false
-    @State private var duration: Double = 0
-    @State private var current: Double = 0
-    @State private var scrubbing = false
-    @State private var timeObserver: Any? = nil
-    @State private var endObserver: NSObjectProtocol? = nil
-
-    /// Playback speed, remembered across summaries. Pitch is preserved via the
-    /// item's timeDomain algorithm, so faster speech stays natural.
-    @AppStorage("audioSummarySpeed") private var speed: Double = 1.0
-    private let speeds: [Double] = [1.0, 1.25, 1.5]
+    private var ctl: AudioSummaryPlayer { AudioSummaryPlayer.shared }
 
     var body: some View {
         ZStack {
@@ -69,27 +58,26 @@ struct AudioSummaryPlayerView: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.hidden)
-        .onAppear(perform: setup)
-        .onDisappear(perform: teardown)
+        .onAppear { ctl.load(title: title, url: url) }
     }
 
     private var scrubber: some View {
         VStack(spacing: 6) {
             Slider(
-                value: Binding(get: { current }, set: { current = $0 }),
-                in: 0...max(duration, 1)
+                value: Binding(get: { ctl.current }, set: { ctl.current = $0 }),
+                in: 0...max(ctl.duration, 1)
             ) { editing in
-                scrubbing = editing
+                ctl.scrubbing = editing
                 if !editing {
-                    player?.seek(to: CMTime(seconds: current, preferredTimescale: 600))
+                    ctl.seek(to: ctl.current)
                 }
             }
             .tint(FeyndTheme.coral)
 
             HStack {
-                Text(timeString(current))
+                Text(timeString(ctl.current))
                 Spacer()
-                Text("-" + timeString(max(0, duration - current)))
+                Text("-" + timeString(max(0, ctl.duration - ctl.current)))
             }
             .font(.system(size: 12, weight: .medium).monospacedDigit())
             .foregroundStyle(FeyndTheme.text3)
@@ -98,29 +86,29 @@ struct AudioSummaryPlayerView: View {
 
     private var transport: some View {
         HStack(spacing: 44) {
-            Button { skip(-15) } label: {
+            Button { ctl.skip(-15) } label: {
                 Image(systemName: "gobackward.15")
                     .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(FeyndTheme.text2)
             }
             .buttonStyle(.plain)
 
-            Button(action: togglePlay) {
+            Button { ctl.togglePlay() } label: {
                 ZStack {
                     Circle()
                         .fill(FeyndTheme.coral)
                         .frame(width: 68, height: 68)
-                    Image(systemName: playing ? "pause.fill" : "play.fill")
+                    Image(systemName: ctl.playing ? "pause.fill" : "play.fill")
                         .font(.system(size: 26, weight: .semibold))
                         .foregroundStyle(.white)
                         // Optical centering — the play triangle reads
                         // left-heavy in a circle; pause needs no shift.
-                        .offset(x: playing ? 0 : 2)
+                        .offset(x: ctl.playing ? 0 : 2)
                 }
             }
             .buttonStyle(.plain)
 
-            Button { skip(15) } label: {
+            Button { ctl.skip(15) } label: {
                 Image(systemName: "goforward.15")
                     .font(.system(size: 24, weight: .medium))
                     .foregroundStyle(FeyndTheme.text2)
@@ -132,15 +120,15 @@ struct AudioSummaryPlayerView: View {
     /// Compact speed pill — tap to cycle 1× → 1.25× → 1.5×. Sits on its own
     /// centered line below the transport so the play/skip row is untouched.
     private var speedControl: some View {
-        Button { cycleSpeed() } label: {
+        Button { ctl.cycleSpeed() } label: {
             Text(speedLabel)
                 .font(.system(size: 13.5, weight: .semibold).monospacedDigit())
-                .foregroundStyle(speed == 1.0 ? FeyndTheme.text3 : FeyndTheme.coral)
+                .foregroundStyle(ctl.speed == 1.0 ? FeyndTheme.text3 : FeyndTheme.coral)
                 .frame(minWidth: 40)
                 .padding(.vertical, 7)
                 .padding(.horizontal, 14)
                 .background(FeyndTheme.surface, in: Capsule())
-                .overlay(Capsule().stroke(speed == 1.0 ? FeyndTheme.border : FeyndTheme.coral.opacity(0.5), lineWidth: 1))
+                .overlay(Capsule().stroke(ctl.speed == 1.0 ? FeyndTheme.border : FeyndTheme.coral.opacity(0.5), lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Playback speed \(speedLabel)")
@@ -148,93 +136,8 @@ struct AudioSummaryPlayerView: View {
 
     private var speedLabel: String {
         // 1 → "1×", 1.25 → "1.25×", 1.5 → "1.5×"
-        let s = String(format: "%g", speed)
+        let s = String(format: "%g", ctl.speed)
         return "\(s)×"
-    }
-
-    private func cycleSpeed() {
-        let i = speeds.firstIndex(of: speed) ?? 0
-        speed = speeds[(i + 1) % speeds.count]
-        applyRate()
-    }
-
-    /// Push the current speed to the player. AVPlayer.rate doubles as the
-    /// play/pause switch, so only drive it while playing.
-    private func applyRate() {
-        guard let p = player, playing else { return }
-        p.rate = Float(speed)
-    }
-
-    // MARK: - Playback
-
-    private func setup() {
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
-        try? AVAudioSession.sharedInstance().setActive(true)
-
-        let item = AVPlayerItem(url: url)
-        // Preserve pitch when the rate changes — timeDomain is tuned for speech,
-        // so 1.25×/1.5× stays natural rather than chipmunked.
-        item.audioTimePitchAlgorithm = .timeDomain
-        let p = AVPlayer(playerItem: item)
-        player = p
-
-        timeObserver = p.addPeriodicTimeObserver(
-            forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
-            queue: .main
-        ) { time in
-            if !scrubbing { current = time.seconds }
-        }
-
-        endObserver = NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: item,
-            queue: .main
-        ) { _ in
-            playing = false
-            current = 0
-            p.seek(to: .zero)
-        }
-
-        Task {
-            if let d = try? await item.asset.load(.duration), d.isNumeric {
-                duration = d.seconds
-            }
-        }
-
-        // Start at the remembered speed (rate != 0 begins playback).
-        p.rate = Float(speed)
-        playing = true
-    }
-
-    private func teardown() {
-        player?.pause()
-        if let obs = timeObserver { player?.removeTimeObserver(obs) }
-        if let obs = endObserver { NotificationCenter.default.removeObserver(obs) }
-        timeObserver = nil
-        endObserver = nil
-        player = nil
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-    }
-
-    private func togglePlay() {
-        guard let p = player else { return }
-        if playing {
-            p.pause()
-            playing = false
-        } else {
-            playing = true
-            p.rate = Float(speed)   // resume at the chosen speed, not 1×
-        }
-    }
-
-    private func skip(_ seconds: Double) {
-        guard let p = player else { return }
-        let target = max(0, min(duration > 0 ? duration : .greatestFiniteMagnitude, current + seconds))
-        current = target
-        p.seek(to: CMTime(seconds: target, preferredTimescale: 600)) { _ in
-            // seek can reset rate to 0 mid-playback; restore it.
-            if playing { p.rate = Float(speed) }
-        }
     }
 
     private func timeString(_ secs: Double) -> String {
