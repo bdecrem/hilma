@@ -16,7 +16,7 @@ import Anthropic from '@anthropic-ai/sdk'
 // ---------------------------------------------------------------------------
 // Registry
 
-export type LlmModelKey = 'sonnet-4-6' | 'opus-4-8' | 'fable-5' | 'glm-5.2'
+export type LlmModelKey = 'sonnet-4-6' | 'opus-4-8' | 'opus-5' | 'fable-5' | 'glm-5.2'
 
 type ModelSpec = {
   provider: 'anthropic' | 'together'
@@ -64,6 +64,16 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     maxTokensFloor: 8192,
     contextCharBudget: 3_000_000,
   },
+  'opus-5': {
+    provider: 'anthropic',
+    apiModel: 'claude-opus-5',
+    label: 'Opus 5',
+    // Same request shape as Opus 4.8 per the Models API: adaptive thinking
+    // (budget_tokens unsupported), 1M context standard, full effort range.
+    thinking: { type: 'adaptive' },
+    maxTokensFloor: 8192,
+    contextCharBudget: 3_000_000,
+  },
   'fable-5': {
     provider: 'anthropic',
     apiModel: 'claude-fable-5',
@@ -86,8 +96,9 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
   },
 }
 
-/** Keys the clients may select. The legacy default stays internal. */
-export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-4-8', 'fable-5', 'glm-5.2']
+/** Keys the clients may select. The legacy default stays internal; 'opus-4-8'
+ *  stays in the registry for old clients but the picker now offers Opus 5. */
+export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-5', 'fable-5', 'glm-5.2']
 
 export const DEFAULT_MODEL: LlmModelKey = 'sonnet-4-6'
 

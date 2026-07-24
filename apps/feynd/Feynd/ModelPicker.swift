@@ -5,7 +5,9 @@ import SwiftUI
 /// backend registry (src/lib/f2/llm.ts) maps keys to providers. Keys must
 /// match that registry exactly.
 enum F2ChatModel: String, CaseIterable, Identifiable {
-    case opus = "opus-4-8"
+    // A stored legacy "opus-4-8" selection fails rawValue init and falls back
+    // to defaultModel, so old installs migrate to Opus 5 automatically.
+    case opus = "opus-5"
     case fable = "fable-5"
     case glm = "glm-5.2"
 
@@ -13,7 +15,7 @@ enum F2ChatModel: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .opus: return "Opus 4.8"
+        case .opus: return "Opus 5"
         case .fable: return "Fable 5"
         case .glm: return "GLM-5.2"
         }
