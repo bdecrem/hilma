@@ -344,6 +344,31 @@ final class F2API {
         try await get("/api/f2/topics/\(id)/summaries")
     }
 
+    struct SourceText: Codable { let content: String; let title: String?; let url: String? }
+
+    /// Fetch the full text of one source row on demand (bodies are kept out of
+    /// the list payload). `part` is unused server-side — kind+index identify
+    /// the storage slot — but taken for symmetry with the row.
+    func readSourceText(id: String, kind: String, index: Int) async throws -> SourceText {
+        var comps = URLComponents(
+            url: Secrets.backendBaseURL.appendingPathComponent("/api/f2/topics/\(id)/sources"),
+            resolvingAgainstBaseURL: false,
+        )!
+        comps.queryItems = [
+            URLQueryItem(name: "read", value: "1"),
+            URLQueryItem(name: "kind", value: kind),
+            URLQueryItem(name: "index", value: String(index)),
+        ]
+        var req = URLRequest(url: comps.url!)
+        req.httpMethod = "GET"
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        let (data, response) = try await session.data(for: req)
+        guard let http = response as? HTTPURLResponse else { throw F2APIError.http(0, "non-HTTP response") }
+        if http.statusCode == 401 { throw F2APIError.unauthenticated }
+        if http.statusCode >= 400 { throw F2APIError.http(http.statusCode, errorMessage(from: data, response: http)) }
+        return try decoder.decode(SourceText.self, from: data)
+    }
+
     struct DeleteSourceRequest: Codable { let kind: String; let index: Int?; let part: String }
 
     /// Remove a source (or one half of a split media source) from a topic.

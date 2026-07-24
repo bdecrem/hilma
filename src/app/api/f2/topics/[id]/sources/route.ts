@@ -107,8 +107,12 @@ function expandSource(input: {
 // Returns every displayable source row for the View Context modal — primary
 // first, then each additional source. Media URLs with transcripts are split
 // into two rows; everything else is a single bundled row.
+//
+// With `?read=1&kind=&index=&part=` it instead returns the full text of a
+// single row ({ content, title, url }), so the client can open a source to
+// read it on demand rather than shipping every body in the list payload.
 export async function GET(
-  _req: Request,
+  req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
   const user = await getSessionUser()
@@ -119,6 +123,29 @@ export async function GET(
   const thread = await getThreadById(user.id, id)
   if (!thread) {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
+  }
+
+  const sp = new URL(req.url).searchParams
+  if (sp.get('read') === '1') {
+    const kind = sp.get('kind')
+    const index = Number(sp.get('index') ?? '0')
+    let content: string | null = null
+    let title: string | null = null
+    let url: string | null = null
+    if (kind === 'primary') {
+      content = thread.content
+      url = thread.url
+    } else if (kind === 'additional') {
+      const s = thread.additional_sources?.[index]
+      content = s?.content ?? null
+      title = s?.title ?? null
+      url = s?.url ?? null
+    } else if (kind === 'quote') {
+      content = thread.quotes?.[index]?.text ?? null
+    } else {
+      return NextResponse.json({ error: 'invalid kind' }, { status: 400 })
+    }
+    return NextResponse.json({ content: content ?? '', title, url })
   }
 
   const items: SourceItem[] = []

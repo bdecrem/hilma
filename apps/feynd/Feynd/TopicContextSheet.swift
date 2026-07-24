@@ -15,10 +15,17 @@ struct TopicContextSheet: View {
     @State private var summaries: [F2API.SummaryVersion] = []
     @State private var currentSummaryId: String? = nil
     @State private var readerTarget: F2API.SummaryVersion? = nil
+    @State private var sourceReaderTarget: F2API.TopicSource? = nil
     @State private var loading = true
     @State private var loadError: String? = nil
     @State private var deleting: Set<String> = []
     @State private var confirmDelete: F2API.TopicSource? = nil
+    // Add-context (a URL the AI pulls in) — mirrors the topics-list flow, but
+    // available right here on the context sheet.
+    @State private var showAddContext = false
+    @State private var addURL = ""
+    @State private var addBusy = false
+    @State private var addError: String? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -26,6 +33,7 @@ struct TopicContextSheet: View {
             header
             ScrollView {
                 VStack(spacing: 0) {
+                    addContextButton
                     if loading {
                         ProgressView()
                             .tint(FeyndTheme.text2)
@@ -67,6 +75,18 @@ struct TopicContextSheet: View {
         }
         .background(FeyndTheme.bgRaised.ignoresSafeArea())
         .task { await load() }
+        .alert("Add context",
+               isPresented: $showAddContext) {
+            TextField("https://…", text: $addURL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled(true)
+                .keyboardType(.URL)
+            Button("Cancel", role: .cancel) { addURL = ""; addError = nil }
+            Button("Add") { Task { await commitAdd() } }
+                .disabled(addBusy)
+        } message: {
+            Text(addError ?? "Paste a URL (article, YouTube, etc.) — F2 pulls it in and adds it to this topic's context.")
+        }
         .alert("Remove this source?",
                isPresented: Binding(get: { confirmDelete != nil },
                                     set: { if !$0 { confirmDelete = nil } })) {
@@ -87,6 +107,66 @@ struct TopicContextSheet: View {
                 isCurrent: version.id == currentSummaryId,
             )
         }
+        .sheet(item: $sourceReaderTarget) { src in
+            SourceReaderView(topicId: topic.id, source: src, heading: readerHeading(src))
+        }
+    }
+
+    // MARK: - Add context
+
+    private var addContextButton: some View {
+        Button { addURL = ""; addError = nil; showAddContext = true } label: {
+            HStack(spacing: 8) {
+                if addBusy {
+                    ProgressView().controlSize(.mini).tint(FeyndTheme.text2)
+                } else {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                Text(addBusy ? "Adding…" : "Add context")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundStyle(FeyndTheme.coral)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(addBusy)
+        .padding(.horizontal, 18)
+        .padding(.top, 12)
+        .padding(.bottom, 4)
+    }
+
+    private func commitAdd() async {
+        let url = addURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !url.isEmpty else { return }
+        addBusy = true
+        addError = nil
+        defer { addBusy = false }
+        do {
+            _ = try await F2API.shared.addTopicSource(id: topic.id, url: url)
+            addURL = ""
+            await load()
+        } catch {
+            addError = "Couldn't add: \(error.localizedDescription)"
+            showAddContext = true
+        }
+    }
+
+    /// Heading for the source reader — the source's own title, else a label.
+    private func readerHeading(_ src: F2API.TopicSource) -> String {
+        if let t = src.title, !t.isEmpty, t != "- YouTube" { return t }
+        if src.part == "transcript" { return "Transcript" }
+        if src.kind == "primary" { return "Primary source" }
+        return "Source"
+    }
+
+    /// A row carries readable body text (as opposed to a bare URL or a quote,
+    /// which is already shown inline).
+    private func isReadable(_ src: F2API.TopicSource) -> Bool {
+        src.kind != "quote" && src.part != "url"
     }
 
     // MARK: - Summaries
@@ -243,20 +323,37 @@ struct TopicContextSheet: View {
                         .foregroundStyle(FeyndTheme.text)
                         .lineLimit(2)
                 }
+                // Body line. A URL renders as a tappable link that opens in the
+                // browser; a transcript/pasted body gets a one-line descriptor.
                 if src.part == "transcript" {
                     Text("Transcript of the linked \(src.topicKind == "audio" ? "audio" : "video")")
                         .font(.system(size: 11))
                         .foregroundStyle(FeyndTheme.text2)
-                } else if let url = src.url, !url.isEmpty {
-                    Text(url)
-                        .font(.system(size: 11))
-                        .foregroundStyle(FeyndTheme.text2)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                } else if let url = src.url, !url.isEmpty, let dest = URL(string: url) {
+                    Link(destination: dest) {
+                        Text(url)
+                            .font(.system(size: 11))
+                            .foregroundStyle(FeyndTheme.coral)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
                 } else if src.kind == "primary" {
                     Text("Pasted text")
                         .font(.system(size: 11))
                         .foregroundStyle(FeyndTheme.text2)
+                }
+                if isReadable(src) {
+                    Button { sourceReaderTarget = src } label: {
+                        HStack(spacing: 4) {
+                            Text("Read")
+                                .font(.system(size: 12, weight: .semibold))
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                        .foregroundStyle(FeyndTheme.text3)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 2)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
