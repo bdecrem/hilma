@@ -58,6 +58,11 @@ const TTS_CHUNK_CHARS = 3000
 const WORDS_PER_MINUTE = 160
 // How much recent chat history informs the script's emphasis.
 const MAX_HISTORY_CHARS = 12000
+// A 'generating' summary older than this has almost certainly hard-timed-out
+// (serverless functions are killed without running their catch). Past it, the
+// client is shown the preserved previous recording instead of a vanished Play
+// button. Longer than any legitimate generation.
+const STALE_GENERATING_MS = 8 * 60 * 1000
 
 export function ttsVoice(): string {
   return process.env.OPENAI_TTS_VOICE || DEFAULT_TTS_VOICE
@@ -84,10 +89,19 @@ export function audioSummaryForClient(
 ): (Omit<AudioSummary, 'script' | 'versions'> & { versions?: AudioSummaryVersionMeta[] }) | null {
   if (!a) return null
   const { script: _script, versions, ...rest } = a
-  return {
+  const out = {
     ...rest,
     versions: versions?.map(({ script: _s, ...meta }) => meta),
   }
+  // Self-heal a hard-timed-out regeneration: if it's been "generating" past the
+  // stale window but a previous recording URL is preserved, present it as ready
+  // so the Play button reappears (playing the last good audio) instead of
+  // vanishing forever. A genuinely in-flight generation (recent) is left alone.
+  if (out.status === 'generating' && out.url) {
+    const age = Date.now() - Date.parse(out.updated_at ?? '')
+    if (!(age >= 0) || age > STALE_GENERATING_MS) out.status = 'ready'
+  }
+  return out
 }
 
 /// The list of full transcripts for a topic, base first. Handles legacy

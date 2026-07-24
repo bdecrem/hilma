@@ -49,10 +49,16 @@ async function main() {
     console.log('notes already attached')
   }
 
-  // 2. Regenerate the base summary through the pipeline (opus for quality).
-  //    No instructions → replaces the base version in place.
-  console.log('generating with updated anti-slop prompt (opus)…')
-  const summary = await generateAudioSummary(thread, 'opus-4-8', null)
+  // 2. Regenerate through the pipeline (opus for quality) at a long, in-depth
+  //    target. Runs offline so it can't hit the serverless time limit.
+  const instructions =
+    'Make this a long, in-depth summary meant to run 45–55 minutes when read aloud — ' +
+    'roughly 8,000 to 9,500 words. Walk through the ENTIRE book in real depth: all four ' +
+    'parts and every one of the eight thresholds, in order, start to finish, with the ' +
+    'dates, names, and mechanisms. This is not a highlight reel — give each part real room. ' +
+    'Cover every one of my notes. Do not stop early or wrap up before the whole book is covered.'
+  console.log('generating 45–55 min in-depth summary (opus, map-reduce)…')
+  const summary = await generateAudioSummary(thread, 'opus-4-8', instructions)
 
   const opener = (summary.script ?? '').slice(0, 400)
   console.log('\n--- opening ---\n' + opener + '\n---------------')
