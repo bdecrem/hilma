@@ -34,7 +34,7 @@ struct HelpSheet: View {
         ),
         Command(
             usage: "summary <instructions>",
-            detail: "Rebuild this topic's audio summary + transcript your way — e.g. \"summary make it longer\" or \"summary add more dates\". Plain \"summary\" regenerates it. Read the versions in Topic Context."
+            detail: "Rebuild this topic's audio summary + transcript your way — e.g. \"summary make it longer\", \"summary add more dates\", or \"summary 40 minutes\" for a long-form walkthrough. Plain \"summary\" regenerates it. Read the versions in Topic Context."
         ),
         Command(
             usage: "more videos",

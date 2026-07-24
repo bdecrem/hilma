@@ -139,6 +139,17 @@ export function audioSummaryVersions(a: AudioSummary | null | undefined): AudioS
 const MAP_REDUCE_CHAR_THRESHOLD = 150_000
 const SECTION_CHARS = 35_000
 const MAP_CONCURRENCY = 6
+// `summary 40 minutes` and up runs the part-wise long-form path: a single
+// generation can't produce 6,000+ words (models compress long targets), so the
+// script is written in parallel parts of ~PART_TARGET_WORDS each, one per
+// equal stretch of the raw source. Below this threshold the normal single-pass
+// or map-reduce path handles the request.
+const LONG_FORM_MIN_MINUTES = 20
+const PART_TARGET_WORDS = 2000
+const MAX_PARTS = 8
+// All parts run in one parallel round so the whole write fits well inside the
+// route's maxDuration.
+const PART_CONCURRENCY = MAX_PARTS
 // An additional source this small counts as the user's own notes/annotations
 // (guaranteed point-by-point coverage) rather than bulk source material.
 const NOTES_SOURCE_MAX_CHARS = 30_000
@@ -235,6 +246,98 @@ Output ONLY the spoken words — nothing else.
 
 Section digests (the full source, in order):
 ${digestBlock}`
+}
+
+// ---------------------------------------------------------------------------
+// Long-form (part-wise) helpers
+
+/// Requested spoken duration in minutes, parsed from the user's `summary <…>`
+/// instructions ("40 minutes", "a 45-min version", "an hour", "1.5 hours").
+/// Returns null when no duration is asked for.
+export function parseRequestedMinutes(instructions: string | null | undefined): number | null {
+  const s = instructions?.toLowerCase()
+  if (!s) return null
+  const hours = s.match(/(\d+(?:\.\d+)?)\s*-?\s*h(?:ou)?rs?\b/)
+  if (hours) return Math.round(parseFloat(hours[1]) * 60)
+  if (/\b(?:an?|one)\s+hour\b/.test(s)) return 60
+  if (/\bhalf\s+(?:an\s+)?hour\b/.test(s)) return 30
+  const mins = s.match(/(\d+)\s*-?\s*min(?:ute)?s?\b/)
+  if (mins) return parseInt(mins[1], 10)
+  return null
+}
+
+/// Split text into `n` roughly equal spans on paragraph boundaries.
+function splitEqualSpans(text: string, n: number): string[] {
+  const paras = text.split(/\n\n+/)
+  const target = Math.ceil(text.length / n)
+  const spans: string[] = []
+  let cur = ''
+  for (const p of paras) {
+    cur = cur ? `${cur}\n\n${p}` : p
+    if (cur.length >= target && spans.length < n - 1) { spans.push(cur); cur = '' }
+  }
+  if (cur) spans.push(cur)
+  return spans
+}
+
+/// Write one long script as parallel parts, each covering its own stretch of
+/// the raw source in order. Ported from scripts/f2-origin-long.ts — that
+/// offline generator is the proven shape for 40–60 min summaries.
+async function generateLongScript(
+  subject: string,
+  corpus: string,
+  model: string | null | undefined,
+  minutes: number,
+  instructions: string | null | undefined,
+  notesChecklist: string[],
+): Promise<string> {
+  const targetWords = minutes * WORDS_PER_MINUTE
+  const partCount = Math.min(MAX_PARTS, Math.max(2, Math.ceil(targetWords / PART_TARGET_WORDS)))
+  const partWords = Math.round(targetWords / partCount)
+  const spans = splitEqualSpans(corpus, partCount)
+
+  const notesBlock = notesChecklist.length
+    ? `
+The user took these notes while reading — their own emphasis, questions, and reactions. Wherever a note belongs to THIS stretch of the source, cover it: answer their questions; if a note gets a fact wrong, give the correct version plainly. Notes for other stretches are handled by the other parts.
+The user's notes:
+${notesChecklist.map((n, i) => `${i + 1}. ${n}`).join('\n')}
+`
+    : ''
+  const extraBlock = instructions?.trim()
+    ? `
+The user also asked: "${instructions.trim()}". Apply it to how you write this part — but the overall length is already handled by the part structure, so keep this part's word target.
+`
+    : ''
+
+  const parts = await mapWithConcurrency(spans, PART_CONCURRENCY, async (span, i) => {
+    const posRule = i === 0
+      ? 'This is the very start of the whole summary. Open in the middle of a real, specific idea — do NOT announce the subject, no "let\'s talk about", no back-cover framing. Just start with an actual fact.'
+      : `Parts 1–${i} already covered the earlier stretch. Continue straight on. Do NOT reintroduce the subject, do NOT recap earlier parts, do NOT say "in this part" or "picking up where we left off". Just keep going from here.`
+    const endRule = i === spans.length - 1
+      ? 'This is the final part. End on one real closing thought about the whole thing.'
+      : 'Do not conclude or wrap up — more parts follow after this one.'
+    const r = await llmComplete({
+      model,
+      system: `You're writing part ${i + 1} of ${spans.length} of one long, in-depth spoken summary of ${subject} — a smart friend walking you through the whole thing. A text-to-speech voice reads it aloud.
+
+${posRule}
+Cover the stretch of the source below, in real depth and in order — the ideas, how they develop, and the concrete dates, names, and mechanisms. Aim for about ${partWords - 100}–${partWords + 100} words for this part. ${endRule}
+
+${VOICE_RULES}
+${notesBlock}${extraBlock}
+Output ONLY the spoken words for this part.
+
+Source (this part's stretch, in order):
+${span}`,
+      messages: [{ role: 'user', content: `Write part ${i + 1} now.` }],
+      maxTokens: 8000,
+    })
+    return r.type === 'text' ? r.text.trim() : ''
+  })
+
+  const script = parts.filter(Boolean).join('\n\n')
+  if (!script) throw new Error('long-form generation produced no parts')
+  return script
 }
 
 // ---------------------------------------------------------------------------
@@ -348,6 +451,15 @@ async function generateScript(
   const history = thread.messages.map((m) => `${m.role}: ${m.text}`).join('\n').slice(-MAX_HISTORY_CHARS)
 
   const notesChecklist = await extractNotesChecklist(gatherNotesText(thread), subject)
+
+  // A requested duration of LONG_FORM_MIN_MINUTES+ takes the part-wise path —
+  // no single generation reliably produces that many words. Notes coverage is
+  // built into each part, so the trailing coverage pass is skipped (a one-call
+  // revision of a 6,000-word script would compress it right back down).
+  const requestedMinutes = parseRequestedMinutes(instructions)
+  if (requestedMinutes !== null && requestedMinutes >= LONG_FORM_MIN_MINUTES) {
+    return generateLongScript(subject, corpus, model, requestedMinutes, instructions, notesChecklist)
+  }
 
   let script: string
   if (corpus.length <= MAP_REDUCE_CHAR_THRESHOLD) {

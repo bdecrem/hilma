@@ -409,7 +409,7 @@ async function handleSummaryCommand(
     ? await getThreadById(userId, threadId)
     : await getLatestThread(userId)
   if (!thread) {
-    return { reply: 'F2: open a topic first, then type "summary" (optionally with how to change it, e.g. "summary make it longer").' }
+    return { reply: 'F2: open a topic first, then type "summary" (optionally with how to change it, e.g. "summary make it longer" or "summary 40 minutes").' }
   }
 
   // Mark generating, preserving any prior transcript/version history so a
