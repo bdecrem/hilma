@@ -11,6 +11,15 @@ When a step is doable with the tools available, do it — don't punt it to Bart 
 - **Don't offer when you can act.** Replace "want me to verify?" / "you could check X" with the verified result. The only things worth asking before doing are genuinely gated actions (push to prod, destructive ops, sending messages, mutating Bart's real data) — those still need an explicit go-ahead.
 - **If a step is truly blocked, say so plainly** — name the blocker (no credentials, endpoint down, tool not connected) instead of quietly handing the work back.
 
+### Finish the work — always. There is no "paused" or "want me to continue?"
+
+Bart has gotten angry about this, hard. When a task is started, **finish it in the same turn** — all of it, end to end. The answer to "would we ever not want the work finished?" is **no**. Do not leave a task "paused," "partially done," or "in the working tree for later." Do not stop at a blocker you can route around, and do not end a turn with "say the word and I'll pick it back up" — just pick it back up and finish.
+
+- **Never ask permission to finish.** "Want me to resume X?" / "should I keep going?" / "let me know and I'll…" are all banned. If X is part of what was asked and is doable, do it now. The only pause is for a genuinely gated action (push to prod, destructive op, spending money, mutating real data in a risky way) or a hard external blocker only Bart can clear (unlock the phone, provide a credential) — and even then, finish everything else around it first.
+- **A blocker on one sub-part doesn't stop the rest.** Route around it: if a Vercel path can't do something, do it locally; if an API can't raise a limit, re-encode to fit; if the phone is locked, finish all the code + commits + verification and only the physical install waits. Deliver everything that isn't literally blocked.
+- **"Finish" includes verify + commit + (when this session has been deploying) push + deploy.** Don't hand back compiled-but-unverified, or verified-but-uncommitted. Carry it all the way to the working, shipped state that was asked for.
+- Leaving half-finished work and reporting it as a status update is the single fastest way to make Bart furious. Finishing without being re-prodded is the expectation, every time.
+
 State all of this plainly; this is a standing expectation, not a one-off.
 
 ## Flag when Extra High effort may help

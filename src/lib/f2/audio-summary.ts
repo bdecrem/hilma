@@ -141,15 +141,20 @@ const SECTION_CHARS = 35_000
 const MAP_CONCURRENCY = 6
 // `summary 40 minutes` and up runs the part-wise long-form path: a single
 // generation can't produce 6,000+ words (models compress long targets), so the
-// script is written in parallel parts of ~PART_TARGET_WORDS each, one per
-// equal stretch of the raw source. Below this threshold the normal single-pass
-// or map-reduce path handles the request.
+// script is written in parallel parts, one per equal stretch of the raw
+// source. Below this threshold the normal single-pass or map-reduce path
+// handles the request.
 const LONG_FORM_MIN_MINUTES = 20
 const PART_TARGET_WORDS = 2000
-const MAX_PARTS = 8
-// All parts run in one parallel round so the whole write fits well inside the
-// route's maxDuration.
-const PART_CONCURRENCY = MAX_PARTS
+// The source is sliced into one section per narration part (see
+// generateLongScript): each section is digested and gets its own part, so no
+// major topic can be buried by a neighbor. MAX_PARTS caps how finely a very
+// long book is sliced; the section size is derived from it and the target
+// length.
+const MAX_PARTS = 16
+// Concurrency cap on the parallel part-writes; extra parts queue. Keeps the
+// whole write inside the route's maxDuration even at MAX_PARTS.
+const PART_CONCURRENCY = 8
 // An additional source this small counts as the user's own notes/annotations
 // (guaranteed point-by-point coverage) rather than bulk source material.
 const NOTES_SOURCE_MAX_CHARS = 30_000
@@ -280,9 +285,14 @@ function splitEqualSpans(text: string, n: number): string[] {
   return spans
 }
 
-/// Write one long script as parallel parts, each covering its own stretch of
-/// the raw source in order. Ported from scripts/f2-origin-long.ts — that
-/// offline generator is the proven shape for 40–60 min summaries.
+/// Write one long script as parallel parts. Earlier versions handed each part a
+/// raw stretch of the source; that reliably dropped whole passages buried
+/// mid-stretch (e.g. the run of Homo species and the control of fire vanishing
+/// between australopithecines and human dispersal). Instead we first digest
+/// EVERY section of the source (the same map step the regular book path uses,
+/// so nothing goes unread), then hand each part a contiguous bucket of those
+/// digests to narrate. A digest has already surfaced its section's milestones,
+/// so the writer can't skip past a passage it never saw.
 async function generateLongScript(
   subject: string,
   corpus: string,
@@ -292,9 +302,33 @@ async function generateLongScript(
   notesChecklist: string[],
 ): Promise<string> {
   const targetWords = minutes * WORDS_PER_MINUTE
-  const partCount = Math.min(MAX_PARTS, Math.max(2, Math.ceil(targetWords / PART_TARGET_WORDS)))
+
+  // Slice the source so there's ONE section per narration part — that 1:1
+  // mapping is what guarantees coverage. Bucketing several digests into one
+  // part let the writer dwell on one and skip another (whole runs of hominin
+  // species vanished that way). With one digest per part, every section gets
+  // its own dedicated airtime and nothing competes.
+  //
+  // Section size is chosen so the part count lands in a sane band: enough
+  // parts to actually fill the requested length (a part can't realistically
+  // narrate more than PART_TARGET_WORDS), but never more than MAX_PARTS.
+  const byLength = Math.max(2, Math.ceil(targetWords / PART_TARGET_WORDS))
+  let sectionChars = Math.min(SECTION_CHARS, Math.ceil(corpus.length / byLength))
+  sectionChars = Math.max(sectionChars, Math.ceil(corpus.length / MAX_PARTS), 4_000)
+  const sections = splitIntoSections(corpus, sectionChars)
+
+  // Read the whole source: one dense digest per section (nothing goes unread).
+  const digests = (await mapWithConcurrency(sections, MAP_CONCURRENCY, (s, i) =>
+    mapDigest(s, subject, i, sections.length),
+  )).filter(Boolean)
+  if (digests.length === 0) throw new Error('long-form map phase produced no digests')
+
+  // One part per digest. partWords is intentionally un-floored: a short part
+  // that faithfully covers one section beats a long part that skips half of
+  // two. Total ≈ target duration; some overshoot stays inside the 40–60 band.
+  const partCount = digests.length
   const partWords = Math.round(targetWords / partCount)
-  const spans = splitEqualSpans(corpus, partCount)
+  const digestBuckets = digests.map((d) => [d])
 
   const notesBlock = notesChecklist.length
     ? `
@@ -309,26 +343,29 @@ The user also asked: "${instructions.trim()}". Apply it to how you write this pa
 `
     : ''
 
-  const parts = await mapWithConcurrency(spans, PART_CONCURRENCY, async (span, i) => {
+  const parts = await mapWithConcurrency(digestBuckets, PART_CONCURRENCY, async (bucket, i) => {
     const posRule = i === 0
       ? 'This is the very start of the whole summary. Open in the middle of a real, specific idea — do NOT announce the subject, no "let\'s talk about", no back-cover framing. Just start with an actual fact.'
       : `Parts 1–${i} already covered the earlier stretch. Continue straight on. Do NOT reintroduce the subject, do NOT recap earlier parts, do NOT say "in this part" or "picking up where we left off". Just keep going from here.`
-    const endRule = i === spans.length - 1
+    const endRule = i === digestBuckets.length - 1
       ? 'This is the final part. End on one real closing thought about the whole thing.'
       : 'Do not conclude or wrap up — more parts follow after this one.'
+    const digestText = bucket
+      .map((d, k) => `--- Section ${i + 1}.${k + 1} ---\n${d}`)
+      .join('\n\n')
     const r = await llmComplete({
       model,
-      system: `You're writing part ${i + 1} of ${spans.length} of one long, in-depth spoken summary of ${subject} — a smart friend walking you through the whole thing. A text-to-speech voice reads it aloud.
+      system: `You're writing part ${i + 1} of ${digestBuckets.length} of one long, in-depth spoken summary of ${subject} — a smart friend walking you through the whole thing. A text-to-speech voice reads it aloud.
 
 ${posRule}
-Cover the stretch of the source below, in real depth and in order — the ideas, how they develop, and the concrete dates, names, and mechanisms. Aim for about ${partWords - 100}–${partWords + 100} words for this part. ${endRule}
+Below are section-by-section digests of THIS part's stretch of the source, in order. Narrate the whole stretch from them: the ideas, how they develop, and the concrete dates, names, and mechanisms. Move through it evenly, start to finish — do NOT dwell on the opening and rush or skip the end. Every distinct development the digests mention — each stage, era, species, invention, or mechanism — has to get real airtime; never collapse a run of them into one line or jump from an early one straight to a much later one. Aim for about ${partWords - 100}–${partWords + 100} words for this part. ${endRule}
 
 ${VOICE_RULES}
 ${notesBlock}${extraBlock}
 Output ONLY the spoken words for this part.
 
-Source (this part's stretch, in order):
-${span}`,
+Section digests (this part's stretch, in order):
+${digestText}`,
       messages: [{ role: 'user', content: `Write part ${i + 1} now.` }],
       maxTokens: 8000,
     })
@@ -440,7 +477,7 @@ function gatherNotesText(thread: F2Thread): string {
 
 /// Produce the spoken script: single pass for small sources, map-reduce for
 /// book-length ones, then a coverage pass that patches in any missed notes.
-async function generateScript(
+export async function generateScript(
   thread: F2Thread,
   model: string | null | undefined,
   instructions: string | null | undefined,
@@ -571,6 +608,52 @@ async function ttsChunk(text: string, voice: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer())
 }
 
+// OpenAI's mp3 comes back at ~128 kbps stereo — ~46 MB for 45 minutes, which
+// bumps the storage upload ceiling for hour-long summaries. Spoken narration
+// needs nowhere near that, so re-encode to 48 kbps mono: same voice, a third
+// the size (a 60-min summary lands well under 20 MB). Falls back to the
+// original bytes if ffmpeg isn't available or the transcode fails, so this can
+// only shrink the file, never break the upload that worked before.
+const TARGET_BITRATE = '48k'
+
+async function transcodeToSmallMp3(input: Buffer): Promise<Buffer> {
+  let ffmpegPath: string | null = null
+  try {
+    // ffmpeg-static default-exports the bundled binary path (null if missing).
+    ffmpegPath = (await import('ffmpeg-static')).default as unknown as string | null
+  } catch {
+    ffmpegPath = null
+  }
+  if (!ffmpegPath) return input
+
+  const { spawn } = await import('node:child_process')
+  return await new Promise<Buffer>((resolve) => {
+    try {
+      const proc = spawn(ffmpegPath as string, [
+        '-hide_banner', '-loglevel', 'error',
+        '-i', 'pipe:0',
+        '-ac', '1', '-b:a', TARGET_BITRATE, '-f', 'mp3',
+        'pipe:1',
+      ])
+      const out: Buffer[] = []
+      let failed = false
+      proc.stdout.on('data', (d: Buffer) => out.push(d))
+      proc.on('error', () => { failed = true; resolve(input) })
+      proc.on('close', (code) => {
+        if (failed) return
+        const result = Buffer.concat(out)
+        // Only accept a plausible, smaller result; otherwise keep the original.
+        resolve(code === 0 && result.length > 1024 && result.length < input.length ? result : input)
+      })
+      proc.stdin.on('error', () => {})
+      proc.stdin.write(input)
+      proc.stdin.end()
+    } catch {
+      resolve(input)
+    }
+  })
+}
+
 // ---------------------------------------------------------------------------
 // The full pipeline. Caller is responsible for having set status=generating
 // first (the route does it before returning 202) and for catching errors.
@@ -588,9 +671,11 @@ export async function generateAudioSummary(
   const durationSecs = estimateDurationSecs(script)
 
   // 2. TTS, chunked at sentence boundaries; MP3 frames concatenate cleanly.
+  //    Then re-encode to a low bitrate so long summaries stay small enough to
+  //    upload (a 50+ min recording otherwise exceeds the storage limit).
   const voice = ttsVoice()
   const buffers = await Promise.all(chunkScript(script).map((c) => ttsChunk(c, voice)))
-  const mp3 = Buffer.concat(buffers)
+  const mp3 = await transcodeToSmallMp3(Buffer.concat(buffers))
 
   // 3. Upload with a cache-busting name (public bucket + CDN), then drop any
   //    prior recordings for this thread so the bucket doesn't grow.
