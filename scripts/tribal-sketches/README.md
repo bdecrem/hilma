@@ -10,6 +10,8 @@ Three sketches in one genre — underground hypnotic/tribal techno (Mills lineag
 
 All 112 bars (~3.5 min), rendered through the jambot headless API (`../vibeceo/jambot/headless.js`).
 
+Note: these tracks sound as intended only with the JT30 shrillness fix in vibeceo (commit `7718dddd8`, 2026-07-26) — before that, the 303's envelope slammed the filter to 18kHz on every note and the renders screeched at 8-16kHz.
+
 ## Re-render
 
 ```bash
