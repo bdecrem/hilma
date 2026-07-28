@@ -9,6 +9,7 @@ Round one's three tracks were really three subgenres. Round two locks to Mills-s
 | `congregation` | 138 | melodic-anthem pole | The Bells (two-movement form, A-minor bell riff) |
 | `red-clay` | 134 | pure-ritual pole, no melody | Casa, Kat Race (clave lattice, drum choir in fourths) |
 | `interceptor` | 145 | aggression ceiling | Utopia, The Extremist, Cyclone (siren stab, kick-rumble-as-bass) |
+| `procession` | 131 | Afro-acid antiphony (round 3, post-repair) | In The Bush, The Bells' "switch" — tuned-tom question, real-slide 303 answer |
 
 Sophistication upgrades this round: velocity grids via per-step `jt90.<voice>.level` automation in dB (10-14 dB accent/ghost spreads), hat-decay riding, tom melodies via cents tuning, mixer-mute choreography arrangement (no programmed fills — whole-voice mutes and dropouts only), 8-bar phrase grammar, spectral placement so the three tracks EQ-stack like a Mills 3-deck set.
 
