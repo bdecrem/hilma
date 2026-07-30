@@ -1,0 +1,436 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		24FC92A1924F74A846654B36 /* SyncCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FFBDC8F371803B2610D8B3 /* SyncCoreTests.swift */; };
+		266E215FAA064003B08F57F2 /* SyncCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE5ECB4C005B5DDF0AA9AA56 /* SyncCore.swift */; };
+		D14C1C9C924D9FE55CF06FBB /* PlaudWalkNotesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F120422A258066F55E2D212 /* PlaudWalkNotesApp.swift */; };
+		E1E486F2D019347E46EBD3C8 /* PLAUDWalkNotes.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5D1953BB8D51F2BA58EC92C2 /* PLAUDWalkNotes.icns */; };
+		EE3006FEBAD5D64C020FAA33 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7BFB5D7B98EAC1F3D3E3135E /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		03CE3050C24DDCA2DB060893 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D07D2F39AC911A2B9CBD5250 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43D9F10B3C4322C5060E6964;
+			remoteInfo = PlaudWalkNotes;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		3F120422A258066F55E2D212 /* PlaudWalkNotesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaudWalkNotesApp.swift; sourceTree = "<group>"; };
+		53CD1169318F25BD585A539D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5D1953BB8D51F2BA58EC92C2 /* PLAUDWalkNotes.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = PLAUDWalkNotes.icns; sourceTree = "<group>"; };
+		7BFB5D7B98EAC1F3D3E3135E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		93AF0B98D8B4E2092378B373 /* PlaudWalkNotes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PlaudWalkNotes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A82B2BA19CE9C6ADAF2A13BF /* PlaudWalkNotesTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PlaudWalkNotesTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2FFBDC8F371803B2610D8B3 /* SyncCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCoreTests.swift; sourceTree = "<group>"; };
+		EE5ECB4C005B5DDF0AA9AA56 /* SyncCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCore.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		01AB72E8DF6A97DF9AABC219 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				5D1953BB8D51F2BA58EC92C2 /* PLAUDWalkNotes.icns */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		33295F65975D99E501CB4E63 /* PlaudWalkNotesTests */ = {
+			isa = PBXGroup;
+			children = (
+				D2FFBDC8F371803B2610D8B3 /* SyncCoreTests.swift */,
+			);
+			path = PlaudWalkNotesTests;
+			sourceTree = "<group>";
+		};
+		4080E57C2293D6859AF4665E = {
+			isa = PBXGroup;
+			children = (
+				8A68BF4F16C7A8EB86FB0960 /* PlaudWalkNotes */,
+				33295F65975D99E501CB4E63 /* PlaudWalkNotesTests */,
+				6D580FD7880AF25815F1506E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6D580FD7880AF25815F1506E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				93AF0B98D8B4E2092378B373 /* PlaudWalkNotes.app */,
+				A82B2BA19CE9C6ADAF2A13BF /* PlaudWalkNotesTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8A68BF4F16C7A8EB86FB0960 /* PlaudWalkNotes */ = {
+			isa = PBXGroup;
+			children = (
+				7BFB5D7B98EAC1F3D3E3135E /* Assets.xcassets */,
+				53CD1169318F25BD585A539D /* Info.plist */,
+				3F120422A258066F55E2D212 /* PlaudWalkNotesApp.swift */,
+				EE5ECB4C005B5DDF0AA9AA56 /* SyncCore.swift */,
+				01AB72E8DF6A97DF9AABC219 /* Resources */,
+			);
+			path = PlaudWalkNotes;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		2FF73E250082DE52722220EC /* PlaudWalkNotesTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7DDDA7192D7DDCAFB1DAD569 /* Build configuration list for PBXNativeTarget "PlaudWalkNotesTests" */;
+			buildPhases = (
+				944D1DE349A446A2A27B2892 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				03458B7ACE32C5A8C15A375E /* PBXTargetDependency */,
+			);
+			name = PlaudWalkNotesTests;
+			packageProductDependencies = (
+			);
+			productName = PlaudWalkNotesTests;
+			productReference = A82B2BA19CE9C6ADAF2A13BF /* PlaudWalkNotesTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		43D9F10B3C4322C5060E6964 /* PlaudWalkNotes */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5EBDE965E1DB7729A53A127 /* Build configuration list for PBXNativeTarget "PlaudWalkNotes" */;
+			buildPhases = (
+				1D6B628B1CF407FA0631F1D7 /* Sources */,
+				82CBEC9C08C8730A0BCCB68C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PlaudWalkNotes;
+			packageProductDependencies = (
+			);
+			productName = PlaudWalkNotes;
+			productReference = 93AF0B98D8B4E2092378B373 /* PlaudWalkNotes.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D07D2F39AC911A2B9CBD5250 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					43D9F10B3C4322C5060E6964 = {
+						DevelopmentTeam = 274T5WCVD2;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 7B915DAC762F4DAC7CF4FE24 /* Build configuration list for PBXProject "PlaudWalkNotes" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 4080E57C2293D6859AF4665E;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6D580FD7880AF25815F1506E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				43D9F10B3C4322C5060E6964 /* PlaudWalkNotes */,
+				2FF73E250082DE52722220EC /* PlaudWalkNotesTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		82CBEC9C08C8730A0BCCB68C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE3006FEBAD5D64C020FAA33 /* Assets.xcassets in Resources */,
+				E1E486F2D019347E46EBD3C8 /* PLAUDWalkNotes.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1D6B628B1CF407FA0631F1D7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D14C1C9C924D9FE55CF06FBB /* PlaudWalkNotesApp.swift in Sources */,
+				266E215FAA064003B08F57F2 /* SyncCore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		944D1DE349A446A2A27B2892 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				24FC92A1924F74A846654B36 /* SyncCoreTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		03458B7ACE32C5A8C15A375E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43D9F10B3C4322C5060E6964 /* PlaudWalkNotes */;
+			targetProxy = 03CE3050C24DDCA2DB060893 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		2AFFA234B10F1C3F78DE8F98 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.PlaudWalkNotesTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PlaudWalkNotes.app/Contents/MacOS/PlaudWalkNotes";
+			};
+			name = Debug;
+		};
+		47DDD999D3262CF1E9876968 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		5BD652596E83DBC5121A17B7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PlaudWalkNotes/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.PlaudWalkNotes;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		8AD21E642F41E027D111EE02 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		90DB825B7BF0F8566B79F52D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PlaudWalkNotes/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.PlaudWalkNotes;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		AEC24FBCBBA67824ABF554CA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.PlaudWalkNotesTests;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PlaudWalkNotes.app/Contents/MacOS/PlaudWalkNotes";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7B915DAC762F4DAC7CF4FE24 /* Build configuration list for PBXProject "PlaudWalkNotes" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				47DDD999D3262CF1E9876968 /* Debug */,
+				8AD21E642F41E027D111EE02 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7DDDA7192D7DDCAFB1DAD569 /* Build configuration list for PBXNativeTarget "PlaudWalkNotesTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2AFFA234B10F1C3F78DE8F98 /* Debug */,
+				AEC24FBCBBA67824ABF554CA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E5EBDE965E1DB7729A53A127 /* Build configuration list for PBXNativeTarget "PlaudWalkNotes" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90DB825B7BF0F8566B79F52D /* Debug */,
+				5BD652596E83DBC5121A17B7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D07D2F39AC911A2B9CBD5250 /* Project object */;
+}
