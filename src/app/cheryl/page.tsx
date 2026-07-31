@@ -1,3 +1,5 @@
+import Game from './Game';
+
 export default function CherylPage() {
   return (
     <main
@@ -35,6 +37,7 @@ export default function CherylPage() {
       >
         I&apos;m here with Bart and we&apos;re just passing time.
       </p>
+      <Game />
     </main>
   );
 }
