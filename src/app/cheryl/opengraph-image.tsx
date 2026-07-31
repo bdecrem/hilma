@@ -16,12 +16,12 @@ export default function OgImage() {
           alignItems: 'center',
           justifyContent: 'center',
           gap: 24,
-          background: 'linear-gradient(160deg, #1a1440 0%, #3b1d6e 45%, #7a2c8f 100%)',
+          background: 'linear-gradient(160deg, #023436 0%, #036666 45%, #14919b 100%)',
         }}
       >
         <div style={{ fontSize: 96 }}>👋</div>
-        <div style={{ color: '#ffe9a8', fontSize: 110, fontWeight: 800 }}>Hi Cheryl</div>
-        <div style={{ color: '#e8dcff', fontSize: 40 }}>
+        <div style={{ color: '#ffd166', fontSize: 110, fontWeight: 800 }}>Hi Cheryl</div>
+        <div style={{ color: '#d8f3f0', fontSize: 40 }}>
           I&apos;m here with Bart and we&apos;re just passing time.
         </div>
       </div>

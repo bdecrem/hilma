@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#1a1440',
+  themeColor: '#023436',
 };
 
 export default function CherylLayout({ children }: { children: React.ReactNode }) {

@@ -71,7 +71,7 @@ export default function Game() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.9rem' }}>
-      <div style={{ color: '#e8dcff', fontSize: '1rem', display: 'flex', gap: '1.5rem' }}>
+      <div style={{ color: '#d8f3f0', fontSize: '1rem', display: 'flex', gap: '1.5rem' }}>
         <span>⏱ {timeLeft}s</span>
         <span>⭐ {score}</span>
         {best > 0 && <span>🏆 {best}</span>}
@@ -110,8 +110,8 @@ export default function Game() {
           style={{
             fontSize: '1.15rem',
             fontWeight: 700,
-            color: '#1a1440',
-            background: '#ffe9a8',
+            color: '#023436',
+            background: '#ffd166',
             border: 'none',
             borderRadius: '999px',
             padding: '0.7rem 1.8rem',
