@@ -19,7 +19,7 @@ export type VoiceSession = {
   realtime_voice: string | null
 }
 
-const DEFAULT_MODEL = 'gpt-realtime-2'
+const DEFAULT_MODEL = 'gpt-realtime-2.1'
 const DEFAULT_VOICE = 'marin'
 const DEFAULT_REASONING_EFFORT = 'low'
 const MAX_INITIAL_CONTENT_CHARS = 8000
