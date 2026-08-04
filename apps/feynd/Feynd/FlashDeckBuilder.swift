@@ -45,7 +45,7 @@ final class FlashDeckBuilder {
         toast = t
         FlashSFX.shared.play(.ding)
         toastDismissTask = Task {
-            try? await Task.sleep(for: .seconds(4.5))
+            try? await Task.sleep(for: .seconds(6))
             if !Task.isCancelled {
                 toast = nil
             }
