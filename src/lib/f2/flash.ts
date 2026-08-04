@@ -52,7 +52,7 @@ export const STAR2_SCORE = 9 // 9/10 on two consecutive full sets → star 2
 // Card generation
 
 const GENERATE_MIN = 4
-const GENERATE_MAX = 40
+const GENERATE_MAX = 75
 
 /// Generate `count` flash cards from a topic's source material + chat history
 /// and insert them. Returns the new cards. Uses the same model registry as

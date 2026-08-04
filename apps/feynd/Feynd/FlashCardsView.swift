@@ -144,15 +144,15 @@ struct FlashCardsView: View {
     }
 
     private var countPicker: some View {
-        HStack(spacing: 8) {
-            ForEach([10, 15, 20, 25], id: \.self) { n in
+        HStack(spacing: 6) {
+            ForEach([10, 15, 20, 25, 40, 50, 75], id: \.self) { n in
                 Button {
                     generateCount = n
                 } label: {
                     Text("\(n)")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(generateCount == n ? Color(hex: 0x1A0E08) : FeyndTheme.text2)
-                        .frame(width: 52, height: 40)
+                        .frame(width: 44, height: 40)
                         .background(
                             generateCount == n ? FeyndTheme.coral : FeyndTheme.surface,
                             in: RoundedRectangle(cornerRadius: 12)
