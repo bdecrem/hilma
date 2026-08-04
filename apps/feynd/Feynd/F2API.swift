@@ -616,6 +616,22 @@ final class F2API {
         try await get("/api/f2/flash/jumbo")
     }
 
+    /// User drafts a question; the server polishes it, answers it from the
+    /// topic material, and writes the wrong choices.
+    func authorFlashCard(topicId: String, question: String, model: String? = nil) async throws -> FlashCard {
+        struct Body: Encodable { let question: String; let model: String? }
+        let res: UpdateCardResponse = try await post("/api/f2/topics/\(topicId)/flash/card", body: Body(question: question, model: model))
+        return res.card
+    }
+
+    /// Rebuild the whole deck to the user's instructions, replacing all
+    /// existing cards. Slow — run through FlashDeckBuilder.
+    func redoFlashDeck(topicId: String, instructions: String, model: String? = nil) async throws -> [FlashCard] {
+        struct Body: Encodable { let instructions: String; let model: String? }
+        let res: GenerateCardsResponse = try await post("/api/f2/topics/\(topicId)/flash/redo", body: Body(instructions: instructions, model: model))
+        return res.cards
+    }
+
     /// Grade a finished Final Review voice session. A → star 3.
     func submitFinalReview(topicId: String, voiceSessionId: String) async throws -> FinalReviewResult {
         struct Body: Encodable { let voice_session_id: String }

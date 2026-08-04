@@ -61,6 +61,8 @@ export async function generateFlashCards(
   thread: F2Thread,
   count: number,
   model?: string | null,
+  /** Optional user guidance about the style/mix of cards (the "redo" flow). */
+  styleInstructions?: string,
 ): Promise<FlashCard[]> {
   const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, Math.round(count)))
   const subject = thread.topic ?? thread.url ?? 'this topic'
@@ -79,7 +81,12 @@ Rules:
 - Each card needs exactly 3 plausible-but-wrong distractors of the same shape
   and length as the answer, so multiple-choice mode isn't guessable by format.
 - Cover the topic broadly; no two cards should test the same fact.
-- No trick questions, no "all of the above".`
+- No trick questions, no "all of the above".${styleInstructions ? `
+
+The learner asked for the deck to be built THEIR way — follow this guidance
+about the style and mix of cards (it wins over the defaults above where they
+conflict, except the format rules about answers and distractors):
+${styleInstructions}` : ''}`
 
   const user = `Topic: ${subject}
 
@@ -156,6 +163,117 @@ Create exactly ${n} flash cards.`
     throw new Error('Could not save generated cards')
   }
   return data as FlashCard[]
+}
+
+/// Turn a user-drafted question into a full card: clean up typos/wording
+/// (keeping the intent), answer it from the topic's material, and write the
+/// multiple-choice distractors.
+export async function authorFlashCard(
+  thread: F2Thread,
+  draftQuestion: string,
+  model?: string | null,
+): Promise<FlashCard> {
+  const subject = thread.topic ?? thread.url ?? 'this topic'
+  const source = buildFullContent(thread).slice(0, 120_000)
+
+  const system = `You finish a flash card that a learner drafted for their own deck. They wrote the question; you polish it and supply the rest.
+
+Rules:
+- Keep the question's intent exactly — fix typos, grammar, and clarity only.
+- Write the canonical answer from the source material (short: a few words to one sentence). If the source doesn't cover it, answer from general knowledge of the topic.
+- Add exactly 3 plausible-but-wrong distractors matching the answer's shape and length.`
+
+  const user = `Topic: ${subject}
+
+Source material:
+${source || '(no source — answer from general knowledge of the topic)'}
+
+The learner's draft question:
+${draftQuestion}
+
+Produce the finished card.`
+
+  const result = await llmComplete({
+    model,
+    system,
+    messages: [{ role: 'user', content: user }],
+    maxTokens: 2000,
+    forceTool: true,
+    tools: [
+      {
+        name: 'create_flash_cards',
+        description: 'Record the finished flash card.',
+        input_schema: {
+          type: 'object',
+          properties: {
+            cards: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  question: { type: 'string' },
+                  answer: { type: 'string' },
+                  distractors: { type: 'array', items: { type: 'string' } },
+                },
+                required: ['question', 'answer', 'distractors'],
+              },
+            },
+          },
+          required: ['cards'],
+        },
+      },
+    ],
+  })
+  if (result.type !== 'tool_call') throw new Error('Card authoring returned nothing')
+  const c = ((result.input.cards ?? []) as {
+    question?: string
+    answer?: string
+    distractors?: string[]
+  }[])[0]
+  if (!c?.question?.trim() || !c.answer?.trim()) {
+    throw new Error('Card authoring produced no usable card')
+  }
+  const { data, error } = await f2Supabase()
+    .from('f2_flash_cards')
+    .insert({
+      user_id: thread.user_id,
+      thread_id: thread.id,
+      question: c.question.trim(),
+      answer: c.answer.trim(),
+      distractors: (c.distractors ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3),
+    })
+    .select('*')
+    .single()
+  if (error || !data) {
+    console.error('[f2/flash] authorFlashCard insert failed:', error)
+    throw new Error('Could not save the card')
+  }
+  return data as FlashCard
+}
+
+/// Regenerate the whole deck to match the user's instructions, replacing the
+/// existing cards. New cards are inserted BEFORE the old ones are deleted so
+/// a generation failure never loses the deck.
+export async function redoFlashCards(
+  thread: F2Thread,
+  instructions: string,
+  model?: string | null,
+): Promise<FlashCard[]> {
+  const old = await listFlashCards(thread.user_id, thread.id)
+  const count = Math.max(SET_SIZE, Math.min(GENERATE_MAX, old.length || 15))
+
+  const newCards = await generateFlashCards(thread, count, model, instructions)
+
+  if (old.length > 0) {
+    const { error } = await f2Supabase()
+      .from('f2_flash_cards')
+      .delete()
+      .eq('user_id', thread.user_id)
+      .eq('thread_id', thread.id)
+      .in('id', old.map((c) => c.id))
+    if (error) console.error('[f2/flash] redo delete-old failed:', error)
+  }
+  return newCards
 }
 
 // ---------------------------------------------------------------------------

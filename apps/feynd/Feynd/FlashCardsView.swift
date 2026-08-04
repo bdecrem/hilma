@@ -21,6 +21,9 @@ struct FlashCardsView: View {
     @State private var startingMode: String? = nil
     @State private var editTarget: FlashCard? = nil
     @State private var showCards = false
+    @State private var newQuestion = ""
+    @State private var addingCard = false
+    @State private var remakeInstructions = ""
 
     var body: some View {
         ZStack {
@@ -380,8 +383,101 @@ struct FlashCardsView: View {
                     }
                     .buttonStyle(.plain)
                 }
+
+                addQuestionRow
+                remakeBox
             }
         }
+    }
+
+    /// Write-your-own card: the user types a question (typos welcome), F2
+    /// polishes it and fills in the answer + wrong choices.
+    private var addQuestionRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("ADD YOUR OWN")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.0)
+                .foregroundStyle(FeyndTheme.text3)
+                .padding(.top, 8)
+            HStack(spacing: 8) {
+                TextField("Write a question — F2 fills in the answer…", text: $newQuestion, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 14))
+                    .foregroundStyle(FeyndTheme.text)
+                    .tint(FeyndTheme.coral)
+                    .lineLimit(1...3)
+                    .padding(.horizontal, 13)
+                    .padding(.vertical, 11)
+                    .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
+
+                Button {
+                    addCard()
+                } label: {
+                    Group {
+                        if addingCard {
+                            ProgressView().tint(Color(hex: 0x1A0E08)).scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "plus")
+                                .font(.system(size: 14, weight: .heavy))
+                                .foregroundStyle(Color(hex: 0x1A0E08))
+                        }
+                    }
+                    .frame(width: 38, height: 38)
+                    .background(FeyndTheme.coral, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .disabled(addingCard || newQuestion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(newQuestion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+            }
+        }
+    }
+
+    /// Remake-the-deck box: free-form instructions, whole deck regenerated
+    /// in the background (replaces every card).
+    private var remakeBox: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("REMAKE THIS DECK")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.0)
+                .foregroundStyle(FeyndTheme.text3)
+                .padding(.top, 8)
+            TextField("e.g. more anecdotal, with a few big-picture questions…", text: $remakeInstructions, axis: .vertical)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14))
+                .foregroundStyle(FeyndTheme.text)
+                .tint(FeyndTheme.coral)
+                .lineLimit(2...5)
+                .padding(.horizontal, 13)
+                .padding(.vertical, 11)
+                .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
+            HStack {
+                Text("Replaces all \(cards.count) cards.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(FeyndTheme.text3)
+                Spacer()
+                Button {
+                    remakeDeck()
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "wand.and.stars")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Remake deck")
+                            .font(.system(size: 13.5, weight: .bold))
+                    }
+                    .foregroundStyle(Color(hex: 0x1A0E08))
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 9)
+                    .background(FeyndTheme.gold, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(remakeInstructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                          || FlashDeckBuilder.shared.isBuilding(topicId))
+                .opacity(remakeInstructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+            }
+        }
+        .padding(.bottom, 10)
     }
 
     // MARK: - Data
@@ -407,6 +503,39 @@ struct FlashCardsView: View {
             topicId: topicId,
             topicLabel: topicLabel,
             count: generateCount,
+            model: F2ChatModel.current.rawValue
+        )
+        dismiss()
+    }
+
+    /// Inline await — a single card takes a few seconds, worth watching.
+    private func addCard() {
+        let question = newQuestion.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !question.isEmpty, !addingCard else { return }
+        addingCard = true
+        Task {
+            do {
+                let card = try await F2API.shared.authorFlashCard(
+                    topicId: topicId, question: question, model: F2ChatModel.current.rawValue)
+                cards.append(card)
+                newQuestion = ""
+                FlashSFX.shared.play(.correct)
+            } catch {
+                errorMessage = "Couldn't add the card: \(error.localizedDescription)"
+            }
+            addingCard = false
+        }
+    }
+
+    /// Whole-deck remake runs in the background (it's a full regeneration) —
+    /// close the sheet, toast on completion, same as building a new deck.
+    private func remakeDeck() {
+        let instructions = remakeInstructions.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !instructions.isEmpty else { return }
+        FlashDeckBuilder.shared.redo(
+            topicId: topicId,
+            topicLabel: topicLabel,
+            instructions: instructions,
             model: F2ChatModel.current.rawValue
         )
         dismiss()

@@ -40,6 +40,24 @@ final class FlashDeckBuilder {
         }
     }
 
+    /// Fire-and-forget deck REMAKE — regenerates the whole deck to the
+    /// user's instructions, replacing existing cards. Same background + toast
+    /// contract as generate().
+    func redo(topicId: String, topicLabel: String, instructions: String, model: String?) {
+        guard !buildingTopicIds.contains(topicId) else { return }
+        buildingTopicIds.insert(topicId)
+        Task {
+            do {
+                let cards = try await F2API.shared.redoFlashDeck(
+                    topicId: topicId, instructions: instructions, model: model)
+                show(Toast(message: "Deck remade — \(cards.count) new cards · \(topicLabel)", isError: false))
+            } catch {
+                show(Toast(message: "Deck remake failed for \(topicLabel) — try again.", isError: true))
+            }
+            buildingTopicIds.remove(topicId)
+        }
+    }
+
     private func show(_ t: Toast) {
         toastDismissTask?.cancel()
         toast = t
