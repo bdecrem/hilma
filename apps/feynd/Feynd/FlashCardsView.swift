@@ -1,0 +1,538 @@
+import SwiftUI
+
+/// Per-topic flash hub, presented as a sheet from the Topics … menu or the
+/// topic's Flash chip. Generate the deck, pick a mode, review history,
+/// manage cards.
+struct FlashCardsView: View {
+    let topicId: String
+    let topicLabel: String
+
+    @Environment(Session.self) private var session
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var cards: [FlashCard] = []
+    @State private var sets: [FlashSetRecord] = []
+    @State private var stars = 0
+    @State private var loading = true
+    @State private var generating = false
+    @State private var generateCount = 15
+    @State private var errorMessage: String? = nil
+    @State private var activeSet: FlashStart? = nil
+    @State private var voiceSet: FlashStart? = nil
+    @State private var startingMode: String? = nil
+    @State private var editTarget: FlashCard? = nil
+    @State private var showCards = false
+
+    var body: some View {
+        ZStack {
+            FeyndTheme.bg.ignoresSafeArea()
+            VStack(spacing: 0) {
+                header
+                if loading {
+                    ProgressView().tint(FeyndTheme.text2)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if cards.isEmpty {
+                    generateHero
+                } else {
+                    content
+                }
+            }
+        }
+        .task { await load() }
+        .fullScreenCover(item: $activeSet) { start in
+            FlashSetView(start: start, topicLabel: topicLabel) { _ in
+                Task { await load() }
+            }
+            .environment(session)
+        }
+        .fullScreenCover(item: $voiceSet) { start in
+            FlashVoiceView(start: start, topicLabel: topicLabel) { _ in
+                Task { await load() }
+            }
+            .environment(session)
+        }
+        .sheet(item: $editTarget) { card in
+            FlashCardEditSheet(card: card) { edited in
+                if let i = cards.firstIndex(where: { $0.id == edited.id }) { cards[i] = edited }
+            } onDelete: {
+                cards.removeAll { $0.id == card.id }
+            }
+        }
+        .alert("Flash cards", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK") { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(alignment: .center) {
+            IconCircleButton(systemImage: "chevron.down", fg: FeyndTheme.text) { dismiss() }
+            VStack(spacing: 3) {
+                Text("FLASH CARDS")
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(1.2)
+                    .foregroundStyle(FeyndTheme.coral)
+                Text(topicLabel)
+                    .font(.system(size: 16, weight: .semibold))
+                    .tracking(-0.3)
+                    .foregroundStyle(FeyndTheme.text)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            Color.clear.frame(width: 36, height: 36)
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
+    }
+
+    // MARK: - Empty deck → generate
+
+    private var generateHero: some View {
+        VStack(spacing: 18) {
+            Spacer()
+            Image(systemName: "bolt.circle.fill")
+                .font(.system(size: 54))
+                .foregroundStyle(FeyndTheme.coral)
+            Text("Build this topic's deck")
+                .font(.system(size: 22, weight: .bold))
+                .tracking(-0.4)
+                .foregroundStyle(FeyndTheme.text)
+            Text("F2 reads everything you've saved here and writes flash cards that test the ideas that matter.")
+                .font(.system(size: 14))
+                .lineSpacing(3)
+                .foregroundStyle(FeyndTheme.text2)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+
+            countPicker
+            generateButton
+            Spacer()
+            Spacer()
+        }
+    }
+
+    private var countPicker: some View {
+        HStack(spacing: 8) {
+            ForEach([10, 15, 20, 25], id: \.self) { n in
+                Button {
+                    generateCount = n
+                } label: {
+                    Text("\(n)")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(generateCount == n ? Color(hex: 0x1A0E08) : FeyndTheme.text2)
+                        .frame(width: 52, height: 40)
+                        .background(
+                            generateCount == n ? FeyndTheme.coral : FeyndTheme.surface,
+                            in: RoundedRectangle(cornerRadius: 12)
+                        )
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: generateCount == n ? 0 : 1))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 6)
+    }
+
+    private var generateButton: some View {
+        Button {
+            generate()
+        } label: {
+            HStack(spacing: 8) {
+                if generating {
+                    ProgressView().tint(Color(hex: 0x1A0E08)).scaleEffect(0.85)
+                }
+                Text(generating ? "Writing cards…" : "Generate \(generateCount) cards")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(Color(hex: 0x1A0E08))
+            }
+            .padding(.horizontal, 26)
+            .padding(.vertical, 14)
+            .background(FeyndTheme.coral, in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(generating)
+        .opacity(generating ? 0.7 : 1)
+    }
+
+    // MARK: - Deck exists → modes + history + manage
+
+    private var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                deckStrip
+                modeButtons
+                starLadderHint
+                if !sets.isEmpty { historySection }
+                manageSection
+                Color.clear.frame(height: 30)
+            }
+            .padding(.horizontal, 18)
+            .padding(.top, 8)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private var deckStrip: some View {
+        HStack(spacing: 8) {
+            Text("\(cards.count) CARDS IN DECK")
+                .font(.system(size: 12, weight: .semibold))
+                .tracking(0.3)
+                .foregroundStyle(FeyndTheme.text3)
+            Text("·").foregroundStyle(FeyndTheme.text3)
+            StarRow(value: stars, size: 11, gap: 2)
+            Spacer()
+            Button {
+                generate()
+            } label: {
+                HStack(spacing: 4) {
+                    if generating {
+                        ProgressView().tint(FeyndTheme.text2).scaleEffect(0.7)
+                    } else {
+                        Image(systemName: "plus")
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    Text(generating ? "Writing…" : "More cards")
+                        .font(.system(size: 12.5, weight: .semibold))
+                }
+                .foregroundStyle(FeyndTheme.text2)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 6)
+                .background(FeyndTheme.surface, in: Capsule())
+                .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .disabled(generating)
+        }
+    }
+
+    private var modeButtons: some View {
+        VStack(spacing: 10) {
+            modeButton("choice", icon: "square.grid.2x2", title: "Multiple choice",
+                       sub: "Tap the right answer — instant feedback")
+            modeButton("text", icon: "keyboard", title: "Type answers",
+                       sub: "Write it in your own words, F2 grades")
+            modeButton("voice", icon: "mic.fill", title: "Voice round",
+                       sub: "F2 quizzes you out loud, game-show style")
+        }
+    }
+
+    private func modeButton(_ mode: String, icon: String, title: String, sub: String) -> some View {
+        Button {
+            startSet(mode: mode)
+        } label: {
+            HStack(spacing: 13) {
+                Image(systemName: icon)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.coral)
+                    .frame(width: 40, height: 40)
+                    .background(FeyndTheme.coralSoft, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text)
+                    Text(sub)
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+                Spacer()
+                if startingMode == mode {
+                    ProgressView().tint(FeyndTheme.text2)
+                } else {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+            }
+            .padding(13)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(startingMode != nil)
+    }
+
+    /// Where this topic stands on the star-2 grind, so the bar is visible.
+    @ViewBuilder
+    private var starLadderHint: some View {
+        if stars < 2 {
+            let streak = currentHighStreak
+            HStack(spacing: 8) {
+                Image(systemName: "star")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.gold)
+                Text(streak == 1
+                     ? "9+ round banked — one more in a row earns the second star."
+                     : "Score 9/10 or better twice in a row to earn the second star.")
+                    .font(.system(size: 12.5))
+                    .foregroundStyle(FeyndTheme.text2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var currentHighStreak: Int {
+        guard let last = sets.first else { return 0 }
+        return (last.total >= 10 && last.score >= 9) ? 1 : 0
+    }
+
+    private var historySection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("PAST ROUNDS")
+                .font(.system(size: 11, weight: .bold))
+                .tracking(1.0)
+                .foregroundStyle(FeyndTheme.text3)
+            ForEach(sets) { s in
+                HStack(spacing: 10) {
+                    Image(systemName: iconForMode(s.mode))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.coral)
+                        .frame(width: 26)
+                    Text("\(s.score)/\(s.total)")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(s.score >= 9 ? FeyndTheme.gold : FeyndTheme.text)
+                        .frame(width: 46, alignment: .leading)
+                    Text("+\(s.xp) XP")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text3)
+                    Spacer()
+                    Text(relative(s.createdAt))
+                        .font(.system(size: 12))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+                .padding(.vertical, 9)
+                .padding(.horizontal, 12)
+                .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
+            }
+        }
+    }
+
+    private func iconForMode(_ mode: String) -> String {
+        switch mode {
+        case "text": return "keyboard"
+        case "voice": return "mic.fill"
+        default: return "square.grid.2x2"
+        }
+    }
+
+    private var manageSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) { showCards.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Text("ALL CARDS")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(1.0)
+                    Image(systemName: showCards ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 9, weight: .bold))
+                }
+                .foregroundStyle(FeyndTheme.text3)
+            }
+            .buttonStyle(.plain)
+
+            if showCards {
+                ForEach(cards) { card in
+                    Button {
+                        editTarget = card
+                    } label: {
+                        HStack(alignment: .top, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(card.question)
+                                    .font(.system(size: 13.5, weight: .medium))
+                                    .foregroundStyle(FeyndTheme.text)
+                                    .multilineTextAlignment(.leading)
+                                Text(card.answer)
+                                    .font(.system(size: 12.5))
+                                    .foregroundStyle(FeyndTheme.coral)
+                            }
+                            Spacer(minLength: 8)
+                            Image(systemName: "pencil")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                        .padding(11)
+                        .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    // MARK: - Data
+
+    private func load() async {
+        loading = cards.isEmpty && sets.isEmpty
+        defer { loading = false }
+        do {
+            let flash = try await F2API.shared.getTopicFlash(id: topicId)
+            cards = flash.cards
+            sets = flash.sets
+            stars = flash.stars
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func generate() {
+        guard !generating else { return }
+        generating = true
+        Task {
+            do {
+                let new = try await F2API.shared.generateFlashCards(
+                    topicId: topicId, count: generateCount, model: F2ChatModel.current.rawValue)
+                cards.append(contentsOf: new)
+            } catch {
+                errorMessage = "Couldn't generate cards: \(error.localizedDescription)"
+            }
+            generating = false
+        }
+    }
+
+    private func startSet(mode: String) {
+        guard startingMode == nil else { return }
+        startingMode = mode
+        Task {
+            do {
+                let start = try await F2API.shared.startFlashSet(threadId: topicId, mode: mode)
+                if mode == "voice" {
+                    voiceSet = start
+                } else {
+                    activeSet = start
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            startingMode = nil
+        }
+    }
+}
+
+// FlashStart needs Identifiable for fullScreenCover(item:).
+extension FlashStart: Identifiable {
+    var id: String { questions.map(\.cardId).joined(separator: "-") }
+}
+
+// MARK: - Card edit sheet
+
+/// Edit a card's question / answer / wrong choices, or delete it. Reachable
+/// from the deck list AND inline from the multiple-choice set UI.
+struct FlashCardEditSheet: View {
+    let card: FlashCard
+    var onSaved: (FlashCard) -> Void
+    var onDelete: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var question: String
+    @State private var answer: String
+    @State private var d1: String
+    @State private var d2: String
+    @State private var d3: String
+    @State private var busy = false
+    @State private var errorMessage: String? = nil
+
+    init(card: FlashCard, onSaved: @escaping (FlashCard) -> Void, onDelete: @escaping () -> Void) {
+        self.card = card
+        self.onSaved = onSaved
+        self.onDelete = onDelete
+        _question = State(initialValue: card.question)
+        _answer = State(initialValue: card.answer)
+        let d = card.distractors + ["", "", ""]
+        _d1 = State(initialValue: d[0])
+        _d2 = State(initialValue: d[1])
+        _d3 = State(initialValue: d[2])
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Question") {
+                    TextField("Question", text: $question, axis: .vertical)
+                        .lineLimit(1...4)
+                }
+                Section("Answer") {
+                    TextField("Correct answer", text: $answer, axis: .vertical)
+                        .lineLimit(1...3)
+                }
+                Section("Wrong choices (multiple choice)") {
+                    TextField("Wrong choice 1", text: $d1)
+                    TextField("Wrong choice 2", text: $d2)
+                    TextField("Wrong choice 3", text: $d3)
+                }
+                if let errorMessage {
+                    Section { Text(errorMessage).foregroundStyle(.red) }
+                }
+                Section {
+                    Button(role: .destructive) {
+                        delete()
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text(busy ? "Working…" : "Delete this card")
+                            Spacer()
+                        }
+                    }
+                    .disabled(busy)
+                }
+            }
+            .navigationTitle("Edit card")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(busy ? "Saving…" : "Save") { save() }
+                        .disabled(busy
+                                  || question.trimmingCharacters(in: .whitespaces).isEmpty
+                                  || answer.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+    }
+
+    private func save() {
+        busy = true
+        Task {
+            do {
+                let distractors = [d1, d2, d3]
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                let updated = try await F2API.shared.updateFlashCard(
+                    cardId: card.id,
+                    question: question.trimmingCharacters(in: .whitespacesAndNewlines),
+                    answer: answer.trimmingCharacters(in: .whitespacesAndNewlines),
+                    distractors: distractors
+                )
+                onSaved(updated)
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            busy = false
+        }
+    }
+
+    private func delete() {
+        busy = true
+        Task {
+            do {
+                try await F2API.shared.deleteFlashCard(cardId: card.id)
+                onDelete()
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            busy = false
+        }
+    }
+}

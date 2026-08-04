@@ -28,6 +28,7 @@ struct TopicsView: View {
     @State private var addMaterialBusy = false
     @State private var addMaterialError: String? = nil
     @State private var contextTarget: F2Topic? = nil
+    @State private var flashTarget: F2Topic? = nil
     @State private var audioError: String? = nil
     /// True while a background task is polling for in-flight audio summaries.
     @State private var pollingAudio = false
@@ -106,6 +107,10 @@ struct TopicsView: View {
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
         .sheet(item: $contextTarget) { topic in
             TopicContextSheet(topic: topic)
+                .environment(session)
+        }
+        .sheet(item: $flashTarget) { topic in
+            FlashCardsView(topicId: topic.id, topicLabel: topic.displayLabel)
                 .environment(session)
         }
         .alert("Rename topic",
@@ -260,7 +265,8 @@ struct TopicsView: View {
                              onAddMaterial: { startAddMaterial(topic) },
                              onViewContext: { contextTarget = topic },
                              onGenerateAudio: { generateAudio(topic) },
-                             onTogglePin: { togglePin(topic) })
+                             onTogglePin: { togglePin(topic) },
+                             onFlashCards: { flashTarget = topic })
             }
             .buttonStyle(.plain)
         }
@@ -408,6 +414,7 @@ struct TopicListRow: View {
     let onViewContext: () -> Void
     let onGenerateAudio: () -> Void
     let onTogglePin: () -> Void
+    let onFlashCards: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -437,6 +444,7 @@ struct TopicListRow: View {
                         Label(topic.isPinned ? "Unpin" : "Pin",
                               systemImage: topic.isPinned ? "pin.slash" : "pin")
                     }
+                    Button { onFlashCards() } label: { Label("Flash cards", systemImage: "bolt.fill") }
                     Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
                     Button { onAddMaterial() } label: { Label("Add material", systemImage: "link.badge.plus") }
                     Button { onViewContext() } label: { Label("View context", systemImage: "doc.text.magnifyingglass") }

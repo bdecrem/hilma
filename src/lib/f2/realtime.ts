@@ -7,7 +7,8 @@ import {
 } from './threads'
 
 // 'walk' belongs to Peri (src/lib/f4) but shares this table + session helpers.
-export type RealtimeMode = 'global' | 'topic' | 'walk'
+// 'flash' = a spoken 10-card flash set; 'final_review' = the star-3 oral exam.
+export type RealtimeMode = 'global' | 'topic' | 'walk' | 'flash' | 'final_review'
 
 export type VoiceSession = {
   id: string
@@ -115,6 +116,57 @@ ${summarizeThreadForPrompt(input.thread)}`
   return `${base}
 
 You are currently in global voice mode. The user may ask about any saved F2 topic. Search/list-topic tools may be added later; for now, ask the user to open a topic for source-grounded discussion if you do not have enough context.`
+}
+
+/// Quizmaster script for a spoken flash set. The card list is embedded in
+/// the instructions; grading happens after the session from the transcript
+/// (judgeVoiceSet in flash.ts), so no tools are needed here.
+export function buildFlashVoiceInstructions(input: {
+  userName: string
+  topicLabel: string | null
+  cards: { question: string; answer: string }[]
+}): string {
+  const name = friendlyName(input.userName)
+  const deck = input.cards
+    .map((c, i) => `${i + 1}. Q: ${c.question}\n   A: ${c.answer}`)
+    .join('\n')
+  const scope = input.topicLabel
+    ? `on the topic "${input.topicLabel}"`
+    : 'mixing questions from across everything they are learning'
+
+  return `You are F2, running a spoken flash-card round with ${name} ${scope}. You speak first.
+
+The deck (${input.cards.length} questions, in order):
+${deck}
+
+How to run the round:
+- Open with one short, energetic line welcoming ${name} to the round, then ask question 1 immediately.
+- Ask EXACTLY the questions in the deck, in order, one at a time. Read the question naturally; do not read the answer.
+- After the user answers: say "Correct!" or "Not quite" in a word or two, give the canonical answer in one short sentence if they missed it, then move straight to the next question. No lectures.
+- If the user is silent or says they don't know, give the answer briefly and move on.
+- Never skip a question and never invent extra ones.
+- After the last question, tell them the round is over and roughly how they did, thank them, and say goodbye. Keep the whole wrap-up under 15 seconds.
+- Keep everything brisk and fun — this is a game show, not a seminar.`
+}
+
+/// Oral-exam script for the Final Review (star 3). Comprehensive but humane;
+/// the transcript is graded A–F afterwards (judgeFinalReview in flash.ts).
+export function buildFinalReviewInstructions(input: {
+  userName: string
+  thread: F2Thread
+}): string {
+  const name = friendlyName(input.userName)
+  return `You are F2, conducting ${name}'s FINAL REVIEW — a spoken oral exam on a topic they have been studying. Passing at the highest level earns their mastery star, so be thorough and fair. You speak first.
+
+${summarizeThreadForPrompt(input.thread)}
+
+How to conduct the review:
+- Open by telling ${name} this is their Final Review: about five questions, explain things in your own words, and there's a star on the line. Then ask the first question.
+- Ask 5-6 substantive questions that together cover the topic's main ideas AND some supporting detail. Prefer "explain", "why", and "how" questions over trivia.
+- One question at a time. Let them finish. A brief follow-up probe ("and why does that matter?") is good when an answer is thin.
+- Do NOT teach, correct at length, or reveal answers mid-exam — a short neutral acknowledgment ("okay", "got it") and the next question. Save observations for the end.
+- Use get_topic_context if you need source detail to form a good question.
+- After the last question, thank them, tell them the review is complete and that their grade is being tallied, and say goodbye. Do not announce a grade yourself.`
 }
 
 export function getTopicContextTool() {

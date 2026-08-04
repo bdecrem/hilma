@@ -24,8 +24,15 @@ final class RealtimeVoiceClient: NSObject {
 
     let mode: String
     let threadId: String?
+    /// Flash mode: the deck (card ids in question order) the server embeds
+    /// in the session instructions.
+    let cardIds: [String]?
 
     private var sessionResponse: F2API.RealtimeSessionResponse?
+
+    /// The backend voice-session row id — needed by flash / final-review
+    /// flows to grade the transcript after the call ends.
+    var voiceSessionId: String? { sessionResponse?.voiceSession.id }
     private var peerConnectionFactory: RTCPeerConnectionFactory?
     private var peerConnection: RTCPeerConnection?
     private var localAudioTrack: RTCAudioTrack?
@@ -35,9 +42,10 @@ final class RealtimeVoiceClient: NSObject {
     private var transcript: [[String: String]] = []
     private var handledToolCallIds: Set<String> = []
 
-    init(mode: String, threadId: String? = nil) {
+    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil) {
         self.mode = mode
         self.threadId = threadId
+        self.cardIds = cardIds
         super.init()
     }
 
@@ -59,7 +67,7 @@ final class RealtimeVoiceClient: NSObject {
 
             phase = .creatingSession
             status = "Creating Realtime session..."
-            let session = try await F2API.shared.startRealtimeSession(mode: mode, threadId: threadId)
+            let session = try await F2API.shared.startRealtimeSession(mode: mode, threadId: threadId, cardIds: cardIds)
             sessionResponse = session
             model = session.realtime.model
             voice = session.realtime.voice
@@ -80,6 +88,17 @@ final class RealtimeVoiceClient: NSObject {
         cleanup()
         phase = .ended
         status = "Ended"
+    }
+
+    /// Like stop(), but AWAITS the transcript upload before returning, so a
+    /// caller can immediately submit the session for grading. Returns the
+    /// backend voice-session id (nil if the session never got created).
+    func end() async -> String? {
+        cleanup()
+        phase = .ended
+        status = "Ended"
+        await finishSession()
+        return voiceSessionId
     }
 
     private func requestMicrophonePermission() async -> Bool {

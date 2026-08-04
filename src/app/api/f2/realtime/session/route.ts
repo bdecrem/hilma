@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
+import { getFlashCardsByIds } from '@/lib/f2/flash'
 import {
+  buildFinalReviewInstructions,
+  buildFlashVoiceInstructions,
   buildRealtimeInstructions,
   createOpenAIRealtimeClientSecret,
   createVoiceSession,
@@ -17,6 +20,8 @@ export const maxDuration = 30
 type SessionBody = {
   mode?: RealtimeMode
   thread_id?: string
+  // 'flash' mode: the selected deck (from /api/f2/flash/start), in order.
+  card_ids?: string[]
 }
 
 export async function POST(req: Request) {
@@ -33,12 +38,12 @@ export async function POST(req: Request) {
   }
 
   const mode = body.mode ?? 'global'
-  if (mode !== 'global' && mode !== 'topic') {
+  if (!['global', 'topic', 'flash', 'final_review'].includes(mode)) {
     return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
   }
 
   let thread = null
-  if (mode === 'topic') {
+  if (mode === 'topic' || mode === 'final_review' || (mode === 'flash' && body.thread_id)) {
     if (!body.thread_id) {
       return NextResponse.json({ error: 'thread_id required' }, { status: 400 })
     }
@@ -48,13 +53,46 @@ export async function POST(req: Request) {
     }
   }
 
-  const instructions = buildRealtimeInstructions({
-    mode,
-    userName: user.username,
-    thread,
-  })
+  let instructions: string
+  if (mode === 'flash') {
+    const ids = body.card_ids ?? []
+    if (ids.length === 0) {
+      return NextResponse.json({ error: 'card_ids required' }, { status: 400 })
+    }
+    const cards = await getFlashCardsByIds(user.id, ids)
+    const byId = new Map(cards.map((c) => [c.id, c]))
+    const ordered = ids.map((id) => byId.get(id)).filter((c) => c != null)
+    if (ordered.length !== ids.length) {
+      return NextResponse.json({ error: 'unknown card in set' }, { status: 400 })
+    }
+    instructions = buildFlashVoiceInstructions({
+      userName: user.username,
+      topicLabel: thread ? (thread.topic ?? thread.url) : null,
+      cards: ordered.map((c) => ({ question: c.question, answer: c.answer })),
+    })
+  } else if (mode === 'final_review') {
+    // The client gates this behind stars 1+2; enforce server-side too.
+    if ((thread?.stars ?? 0) < 2) {
+      return NextResponse.json(
+        { error: 'Final Review unlocks at 2 stars.' },
+        { status: 403 },
+      )
+    }
+    instructions = buildFinalReviewInstructions({ userName: user.username, thread: thread! })
+  } else {
+    instructions = buildRealtimeInstructions({
+      mode,
+      userName: user.username,
+      thread,
+    })
+  }
 
-  const openaiSecret = await createOpenAIRealtimeClientSecret({ instructions })
+  // Flash rounds are fully scripted — no tools. Everything else keeps the
+  // topic-context tool.
+  const openaiSecret = await createOpenAIRealtimeClientSecret({
+    instructions,
+    ...(mode === 'flash' ? { tools: [] } : {}),
+  })
 
   const voiceSession = await createVoiceSession({
     userId: user.id,

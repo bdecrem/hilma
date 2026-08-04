@@ -221,15 +221,13 @@ export async function listTopicsForUser(userId: string): Promise<F2Thread[]> {
 }
 
 // Compute the new star value after a quiz. Monotonic — never decreases.
-//   - 'hard' quiz       → 3
-//   - 'reflection' quiz → current + 1 (capped at 3; locks the topic, see completeQuiz).
-//     Available as the 1st, 2nd, or 3rd star; each invocation grants one more.
-//   - 'standard' quiz   → bumps 0→1, 1→2 (caps at 2; only a hard quiz reaches 3)
-export function nextStars(current: number, kind: QuizKind): number {
-  if (kind === 'hard') return Math.max(current, 3)
-  if (kind === 'reflection') return Math.min(3, current + 1)
-  if (current >= 2) return current
-  return current + 1
+//
+// New ladder (2026-08): chat quizzes of ANY kind award only the FIRST star.
+//   ★2 comes from flash sets (>=9/10 twice in a row — src/lib/f2/flash.ts)
+//   ★3 comes from an A-grade Final Review voice session.
+// 'hard' stays accepted for old clients but no longer reaches 3.
+export function nextStars(current: number, _kind: QuizKind): number {
+  return Math.max(current, 1)
 }
 
 export type RecordedQuiz = {
@@ -295,13 +293,11 @@ export async function completeQuiz(thread: F2Thread): Promise<RecordedQuiz> {
       hard_quiz_completed_at: thread.hard_quiz_completed_at,
     }
   }
-  const now = new Date().toISOString()
   const newStars = nextStars(thread.stars, kind)
-  // `hard_quiz_completed_at` doubles as the "topic is done" sentinel —
-  // hard quizzes set it because they're the last star; reflection quizzes
-  // set it because they're a single-shot path that locks the topic.
-  const newHardAt =
-    kind === 'hard' || kind === 'reflection' ? now : thread.hard_quiz_completed_at
+  // `hard_quiz_completed_at` is now the "topic mastered" sentinel and is set
+  // ONLY by a passed Final Review (awardFinalReviewStar in flash.ts). Chat
+  // quizzes never lock a topic anymore — the ladder continues via flash sets.
+  const newHardAt = thread.hard_quiz_completed_at
   const { error } = await f2Supabase()
     .from('f2_threads')
     .update({

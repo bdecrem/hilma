@@ -531,12 +531,95 @@ final class F2API {
         }
     }
 
-    func startRealtimeSession(mode: String, threadId: String? = nil) async throws -> RealtimeSessionResponse {
+    /// `cardIds` is required for mode "flash" — the deck the quizmaster reads
+    /// from, in question order.
+    func startRealtimeSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil) async throws -> RealtimeSessionResponse {
         struct Body: Encodable {
             let mode: String
             let thread_id: String?
+            let card_ids: [String]?
         }
-        return try await post("/api/f2/realtime/session", body: Body(mode: mode, thread_id: threadId))
+        return try await post("/api/f2/realtime/session", body: Body(mode: mode, thread_id: threadId, card_ids: cardIds))
+    }
+
+    // MARK: Flash cards
+
+    /// Deck + set history for one topic.
+    func getTopicFlash(id: String) async throws -> TopicFlash {
+        try await get("/api/f2/topics/\(id)/flash")
+    }
+
+    struct GenerateCardsResponse: Codable { let cards: [FlashCard] }
+
+    /// Generate `count` new cards from the topic's material. Slow (one big
+    /// LLM read of the source) — callers should show progress.
+    func generateFlashCards(topicId: String, count: Int, model: String? = nil) async throws -> [FlashCard] {
+        struct Body: Encodable { let count: Int; let model: String? }
+        let res: GenerateCardsResponse = try await post("/api/f2/topics/\(topicId)/flash", body: Body(count: count, model: model))
+        return res.cards
+    }
+
+    struct UpdateCardResponse: Codable { let card: FlashCard }
+
+    func updateFlashCard(cardId: String, question: String, answer: String, distractors: [String]) async throws -> FlashCard {
+        struct Body: Encodable { let question: String; let answer: String; let distractors: [String] }
+        let res: UpdateCardResponse = try await request("/api/f2/flash/cards/\(cardId)", method: "PATCH", body: Body(question: question, answer: answer, distractors: distractors))
+        return res.card
+    }
+
+    func deleteFlashCard(cardId: String) async throws {
+        let _: EmptyResponse = try await request("/api/f2/flash/cards/\(cardId)", method: "DELETE", body: nil as EmptyBody?)
+    }
+
+    /// Start a topic set (mode chosen by the user).
+    func startFlashSet(threadId: String, mode: String) async throws -> FlashStart {
+        struct Body: Encodable { let mode: String; let thread_id: String }
+        return try await post("/api/f2/flash/start", body: Body(mode: mode, thread_id: threadId))
+    }
+
+    /// Start a Jumbo level (mode fixed by the level).
+    func startJumboSet(level: Int) async throws -> FlashStart {
+        struct Body: Encodable { let jumbo_level: Int }
+        return try await post("/api/f2/flash/start", body: Body(jumbo_level: level))
+    }
+
+    struct FlashAnswer: Encodable {
+        let card_id: String
+        let answer: String?
+    }
+
+    /// Submit a finished choice/text set for grading + recording.
+    func submitFlashSet(mode: String, threadId: String?, jumboLevel: Int?, answers: [FlashAnswer]) async throws -> FlashSubmitResult {
+        struct Body: Encodable {
+            let mode: String
+            let thread_id: String?
+            let jumbo_level: Int?
+            let answers: [FlashAnswer]
+        }
+        return try await post("/api/f2/flash/submit", body: Body(mode: mode, thread_id: threadId, jumbo_level: jumboLevel, answers: answers))
+    }
+
+    /// Submit a finished VOICE set — graded server-side from the session
+    /// transcript, so this must run after finishRealtimeSession.
+    func submitVoiceFlashSet(threadId: String?, jumboLevel: Int?, cardIds: [String], voiceSessionId: String) async throws -> FlashSubmitResult {
+        struct Body: Encodable {
+            let mode: String
+            let thread_id: String?
+            let jumbo_level: Int?
+            let card_ids: [String]
+            let voice_session_id: String
+        }
+        return try await post("/api/f2/flash/submit", body: Body(mode: "voice", thread_id: threadId, jumbo_level: jumboLevel, card_ids: cardIds, voice_session_id: voiceSessionId))
+    }
+
+    func jumboState() async throws -> JumboState {
+        try await get("/api/f2/flash/jumbo")
+    }
+
+    /// Grade a finished Final Review voice session. A → star 3.
+    func submitFinalReview(topicId: String, voiceSessionId: String) async throws -> FinalReviewResult {
+        struct Body: Encodable { let voice_session_id: String }
+        return try await post("/api/f2/topics/\(topicId)/final-review", body: Body(voice_session_id: voiceSessionId))
     }
 
     func callRealtimeTool(name: String, arguments: [String: String]) async throws -> Data {

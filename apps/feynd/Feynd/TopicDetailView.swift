@@ -16,6 +16,8 @@ struct TopicDetailView: View {
     @State private var loading = true
     @State private var voicePresented = false
     @State private var playerPresented = false
+    @State private var flashPresented = false
+    @State private var finalReviewPresented = false
 
     var body: some View {
         ZStack {
@@ -49,6 +51,20 @@ struct TopicDetailView: View {
         }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
+        }
+        .sheet(isPresented: $flashPresented) {
+            FlashCardsView(topicId: topicId, topicLabel: thread?.topic ?? "Topic")
+                .environment(session)
+        }
+        .fullScreenCover(isPresented: $finalReviewPresented) {
+            FinalReviewView(topicId: topicId, topicLabel: thread?.topic ?? "Topic") { result in
+                if var t = thread {
+                    t.stars = result.stars
+                    if result.mastered { t.hardQuizCompletedAt = Date() }
+                    thread = t
+                }
+            }
+            .environment(session)
         }
         .sheet(isPresented: $playerPresented) {
             if let url = audioSummaryURL {
@@ -98,7 +114,8 @@ struct TopicDetailView: View {
         .padding(.bottom, 14)
     }
 
-    private var canTakeHardQuiz: Bool {
+    /// Star 3's gate: stars 1+2 earned, not yet mastered.
+    private var canTakeFinalReview: Bool {
         (thread?.stars ?? 0) >= 2 && (thread?.hardQuizCompletedAt == nil)
     }
 
@@ -122,61 +139,72 @@ struct TopicDetailView: View {
     /// chip so the user doesn't think the button broke.
     @State private var grading = false
 
+    /// The chip row scrolls horizontally — the ladder can put four chips
+    /// here (Flash, Final Review, Talk, Play) and none may wrap or shrink.
     private var chipRow: some View {
-        HStack(spacing: 8) {
-            if quizInProgress {
-                // Mid-quiz: only Done. Coral coral so it's the obvious primary action.
-                ActionChip(
-                    label: grading ? "Grading…" : "Done quiz",
-                    systemImage: grading ? "hourglass" : "checkmark.circle.fill"
-                ) {
-                    completeQuiz()
-                }
-                .opacity((busy || grading) ? 0.5 : 1)
-                .allowsHitTesting(!busy && !grading)
-            } else {
-                ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
-                    quiz(kind: "standard")
-                }
-                .opacity(busy ? 0.5 : 1)
-                .allowsHitTesting(!busy)
+        ScrollView(.horizontal) {
+            HStack(spacing: 8) {
+                if quizInProgress {
+                    // Mid-quiz: only Done — the obvious primary action.
+                    ActionChip(
+                        label: grading ? "Grading…" : "Done quiz",
+                        systemImage: grading ? "hourglass" : "checkmark.circle.fill"
+                    ) {
+                        completeQuiz()
+                    }
+                    .opacity((busy || grading) ? 0.5 : 1)
+                    .allowsHitTesting(!busy && !grading)
+                } else {
+                    // Star 1 comes from the quiz; once it's earned the chip
+                    // retires and the flash ladder takes over.
+                    if (thread?.stars ?? 0) < 1 {
+                        ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
+                            quiz(kind: "standard")
+                        }
+                        .opacity(busy ? 0.5 : 1)
+                        .allowsHitTesting(!busy)
+                    }
 
-                if canTakeHardQuiz {
-                    // Single-word label so the chip never wraps to two lines
-                    // when the row gets crowded on narrower screens.
-                    ActionChip(label: "Hard", systemImage: "flame.fill", iconTint: FeyndTheme.gold) {
-                        quiz(kind: "hard")
+                    ActionChip(label: "Flash", systemImage: "bolt.fill") {
+                        flashPresented = true
                     }
                     .opacity(busy ? 0.5 : 1)
                     .allowsHitTesting(!busy)
-                }
 
-                ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
-                    voicePresented = true
-                }
-                .opacity(busy ? 0.5 : 1)
-                .allowsHitTesting(!busy)
+                    if canTakeFinalReview {
+                        ActionChip(label: "Final Review", systemImage: "checkmark.seal.fill", iconTint: FeyndTheme.gold) {
+                            finalReviewPresented = true
+                        }
+                        .opacity(busy ? 0.5 : 1)
+                        .allowsHitTesting(!busy)
+                    }
 
-                if audioSummaryURL != nil {
-                    ActionChip(label: "Play", systemImage: "play.fill") {
-                        playerPresented = true
+                    ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
+                        voicePresented = true
                     }
                     .opacity(busy ? 0.5 : 1)
                     .allowsHitTesting(!busy)
+
+                    if audioSummaryURL != nil {
+                        ActionChip(label: "Play", systemImage: "play.fill") {
+                            playerPresented = true
+                        }
+                        .opacity(busy ? 0.5 : 1)
+                        .allowsHitTesting(!busy)
+                    }
+                }
+
+                // Source link — icon-only so it never crowds the main chips.
+                if let urlString = thread?.url, let url = URL(string: urlString) {
+                    IconCircleButton(systemImage: "arrow.up.right", fg: FeyndTheme.text2) {
+                        openURL(url)
+                    }
+                    .accessibilityLabel("Open source article")
                 }
             }
-
-            Spacer()
-
-            // Source link — icon-only so it never crowds the main chips.
-            if let urlString = thread?.url, let url = URL(string: urlString) {
-                IconCircleButton(systemImage: "arrow.up.right", fg: FeyndTheme.text2) {
-                    openURL(url)
-                }
-                .accessibilityLabel("Open source article")
-            }
+            .padding(.horizontal, 14)
         }
-        .padding(.horizontal, 14)
+        .scrollIndicators(.hidden)
         .padding(.top, 8)
     }
 

@@ -8,6 +8,7 @@ struct MainTabsView: View {
     @State private var active: FeyndTab = .topics
     @State private var topicsPath = NavigationPath()
     @State private var chatPath = NavigationPath()
+    @State private var flashPath = NavigationPath()
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -36,6 +37,11 @@ struct MainTabsView: View {
                                 TopicDetailView(topicId: topic.id)
                                     .toolbar(.hidden, for: .navigationBar)
                             }
+                    }
+                case .flash:
+                    NavigationStack(path: $flashPath) {
+                        FlashTabView()
+                            .toolbar(.hidden, for: .navigationBar)
                     }
                 }
             }

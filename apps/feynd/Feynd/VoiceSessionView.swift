@@ -6,16 +6,27 @@ import SwiftUI
 struct VoiceSessionView: View {
     let mode: String
     let threadId: String?
+    /// Optional header override ("Flash round · Big History").
+    let title: String?
+    /// When set, End hands the finished session off instead of dismissing:
+    /// the transcript upload is AWAITED, then this runs with the voice
+    /// session id (nil = abandoned via X / never connected). The host owns
+    /// dismissal + whatever grading happens next.
+    let onFinished: ((String?) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var client: RealtimeVoiceClient
     @State private var muted = false
     @State private var orbRotation: Double = 0
+    @State private var ending = false
 
-    init(mode: String, threadId: String? = nil) {
+    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
+         title: String? = nil, onFinished: ((String?) -> Void)? = nil) {
         self.mode = mode
         self.threadId = threadId
-        _client = State(initialValue: RealtimeVoiceClient(mode: mode, threadId: threadId))
+        self.title = title
+        self.onFinished = onFinished
+        _client = State(initialValue: RealtimeVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds))
     }
 
     var body: some View {
@@ -80,7 +91,10 @@ struct VoiceSessionView: View {
 
             Spacer()
 
-            Button { client.stop(); dismiss() } label: {
+            Button {
+                client.stop()
+                if let onFinished { onFinished(nil) } else { dismiss() }
+            } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(FeyndTheme.text2)
@@ -101,7 +115,7 @@ struct VoiceSessionView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .tracking(0.5)
                 .foregroundStyle(FeyndTheme.text3)
-            Text(client.model.isEmpty ? "F2 voice session" : "F2 · \(client.voice)")
+            Text(title ?? (client.model.isEmpty ? "F2 voice session" : "F2 · \(client.voice)"))
                 .font(.system(size: 22, weight: .semibold))
                 .tracking(-0.5)
                 .foregroundStyle(FeyndTheme.text)
@@ -169,8 +183,20 @@ struct VoiceSessionView: View {
                 danger: false
             ) { muted.toggle() }
             CircleControlButton(label: "Keyboard", systemImage: "keyboard", danger: false) { }
-            CircleControlButton(label: "End", systemImage: "phone.down.fill", danger: true) {
-                client.stop(); dismiss()
+            CircleControlButton(label: ending ? "…" : "End", systemImage: "phone.down.fill", danger: true) {
+                guard !ending else { return }
+                if let onFinished {
+                    // Flash / Final Review: wait for the transcript to land,
+                    // then hand off for grading — the host dismisses.
+                    ending = true
+                    Task {
+                        let id = await client.end()
+                        onFinished(id)
+                    }
+                } else {
+                    client.stop()
+                    dismiss()
+                }
             }
         }
     }

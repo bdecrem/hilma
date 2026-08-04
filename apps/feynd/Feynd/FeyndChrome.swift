@@ -717,9 +717,21 @@ extension View {
 }
 
 enum FeyndTab: String, CaseIterable {
-    case chat, topics
-    var label: String { self == .chat ? "Chat" : "Topics" }
-    var iconSystem: String { self == .chat ? "bubble.left.and.bubble.right.fill" : "list.bullet" }
+    case chat, topics, flash
+    var label: String {
+        switch self {
+        case .chat: return "Chat"
+        case .topics: return "Topics"
+        case .flash: return "Flash"
+        }
+    }
+    var iconSystem: String {
+        switch self {
+        case .chat: return "bubble.left.and.bubble.right.fill"
+        case .topics: return "list.bullet"
+        case .flash: return "bolt.fill"
+        }
+    }
 }
 
 struct TabPill: View {
@@ -741,7 +753,7 @@ struct TabPill: View {
             Capsule().fill(.ultraThinMaterial)
         )
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
-        .frame(width: 240)
+        .frame(width: 320)
         .shadow(color: .black.opacity(0.45), radius: 30, y: 8)
     }
 
