@@ -239,6 +239,7 @@ struct FlashSetView: View {
         guard picked == nil else { return }
         picked = choice
         answers[index] = choice
+        FlashSFX.shared.play(choice == q.answer ? .correct : .wrong)
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(choice == q.answer ? .success : .error)
         // Right answers move fast; misses linger so the correction registers.
@@ -471,6 +472,7 @@ struct FlashResultsView: View {
             }
         }
         .task {
+            FlashSFX.shared.play(isPerfect ? .fanfare : .done)
             withAnimation(.spring(response: 0.9, dampingFraction: 0.8).delay(0.15)) {
                 ringProgress = fraction
             }

@@ -14,7 +14,6 @@ struct FlashCardsView: View {
     @State private var sets: [FlashSetRecord] = []
     @State private var stars = 0
     @State private var loading = true
-    @State private var generating = false
     @State private var generateCount = 15
     @State private var errorMessage: String? = nil
     @State private var activeSet: FlashStart? = nil
@@ -39,6 +38,13 @@ struct FlashCardsView: View {
             }
         }
         .task { await load() }
+        // If a background build for THIS topic finishes while the sheet is
+        // open, pull in the fresh deck.
+        .onChange(of: FlashDeckBuilder.shared.buildingTopicIds) { old, new in
+            if old.contains(topicId) && !new.contains(topicId) {
+                Task { await load() }
+            }
+        }
         .fullScreenCover(item: $activeSet) { start in
             FlashSetView(start: start, topicLabel: topicLabel) { _ in
                 Task { await load() }
@@ -97,22 +103,38 @@ struct FlashCardsView: View {
     private var generateHero: some View {
         VStack(spacing: 18) {
             Spacer()
-            Image(systemName: "bolt.circle.fill")
-                .font(.system(size: 54))
-                .foregroundStyle(FeyndTheme.coral)
-            Text("Build this topic's deck")
-                .font(.system(size: 22, weight: .bold))
-                .tracking(-0.4)
-                .foregroundStyle(FeyndTheme.text)
-            Text("F2 reads everything you've saved here and writes flash cards that test the ideas that matter.")
-                .font(.system(size: 14))
-                .lineSpacing(3)
-                .foregroundStyle(FeyndTheme.text2)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+            if FlashDeckBuilder.shared.isBuilding(topicId) {
+                // A build kicked off earlier is still running — the sheet was
+                // dismissed then, but the user peeked back in.
+                ProgressView().tint(FeyndTheme.coral).scaleEffect(1.3)
+                Text("F2 is writing your cards…")
+                    .font(.system(size: 22, weight: .bold))
+                    .tracking(-0.4)
+                    .foregroundStyle(FeyndTheme.text)
+                Text("You can close this — a notification will pop up when the deck is ready.")
+                    .font(.system(size: 14))
+                    .lineSpacing(3)
+                    .foregroundStyle(FeyndTheme.text2)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            } else {
+                Image(systemName: "bolt.circle.fill")
+                    .font(.system(size: 54))
+                    .foregroundStyle(FeyndTheme.coral)
+                Text("Build this topic's deck")
+                    .font(.system(size: 22, weight: .bold))
+                    .tracking(-0.4)
+                    .foregroundStyle(FeyndTheme.text)
+                Text("F2 reads everything you've saved here and writes flash cards that test the ideas that matter.")
+                    .font(.system(size: 14))
+                    .lineSpacing(3)
+                    .foregroundStyle(FeyndTheme.text2)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
 
-            countPicker
-            generateButton
+                countPicker
+                generateButton
+            }
             Spacer()
             Spacer()
         }
@@ -144,21 +166,14 @@ struct FlashCardsView: View {
         Button {
             generate()
         } label: {
-            HStack(spacing: 8) {
-                if generating {
-                    ProgressView().tint(Color(hex: 0x1A0E08)).scaleEffect(0.85)
-                }
-                Text(generating ? "Writing cards…" : "Generate \(generateCount) cards")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(Color(hex: 0x1A0E08))
-            }
-            .padding(.horizontal, 26)
-            .padding(.vertical, 14)
-            .background(FeyndTheme.coral, in: Capsule())
+            Text("Generate \(generateCount) cards")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundStyle(Color(hex: 0x1A0E08))
+                .padding(.horizontal, 26)
+                .padding(.vertical, 14)
+                .background(FeyndTheme.coral, in: Capsule())
         }
         .buttonStyle(.plain)
-        .disabled(generating)
-        .opacity(generating ? 0.7 : 1)
     }
 
     // MARK: - Deck exists → modes + history + manage
@@ -191,14 +206,15 @@ struct FlashCardsView: View {
             Button {
                 generate()
             } label: {
+                let building = FlashDeckBuilder.shared.isBuilding(topicId)
                 HStack(spacing: 4) {
-                    if generating {
+                    if building {
                         ProgressView().tint(FeyndTheme.text2).scaleEffect(0.7)
                     } else {
                         Image(systemName: "plus")
                             .font(.system(size: 11, weight: .bold))
                     }
-                    Text(generating ? "Writing…" : "More cards")
+                    Text(building ? "Writing…" : "More cards")
                         .font(.system(size: 12.5, weight: .semibold))
                 }
                 .foregroundStyle(FeyndTheme.text2)
@@ -208,7 +224,7 @@ struct FlashCardsView: View {
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
-            .disabled(generating)
+            .disabled(FlashDeckBuilder.shared.isBuilding(topicId))
         }
     }
 
@@ -383,19 +399,17 @@ struct FlashCardsView: View {
         }
     }
 
+    /// Hand the build to FlashDeckBuilder and close this sheet immediately —
+    /// generation takes up to a minute and shouldn't hold the UI hostage.
+    /// A toast announces the finished deck wherever the user is by then.
     private func generate() {
-        guard !generating else { return }
-        generating = true
-        Task {
-            do {
-                let new = try await F2API.shared.generateFlashCards(
-                    topicId: topicId, count: generateCount, model: F2ChatModel.current.rawValue)
-                cards.append(contentsOf: new)
-            } catch {
-                errorMessage = "Couldn't generate cards: \(error.localizedDescription)"
-            }
-            generating = false
-        }
+        FlashDeckBuilder.shared.generate(
+            topicId: topicId,
+            topicLabel: topicLabel,
+            count: generateCount,
+            model: F2ChatModel.current.rawValue
+        )
+        dismiss()
     }
 
     private func startSet(mode: String) {

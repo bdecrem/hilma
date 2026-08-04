@@ -157,6 +157,7 @@ struct FinalReviewView: View {
     }
 
     private func gradeReveal(_ r: FinalReviewResult) -> some View {
+        // (SFX for the reveal fires in onAppear below, with the animation.)
         ZStack {
             ScrollView {
                 VStack(spacing: 18) {
@@ -242,6 +243,7 @@ struct FinalReviewView: View {
             }
         }
         .onAppear {
+            FlashSFX.shared.play(r.passed ? .fanfare : .done)
             withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.2)) {
                 revealed = true
             }

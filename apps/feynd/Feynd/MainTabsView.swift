@@ -50,6 +50,18 @@ struct MainTabsView: View {
             TabPill(active: $active)
                 .padding(.bottom, 12)
 
+            // Deck-ready toast — drops in from the top over any tab, so card
+            // generation can run in the background without holding a sheet open.
+            if let toast = FlashDeckBuilder.shared.toast {
+                VStack {
+                    FlashToastBanner(toast: toast)
+                        .onTapGesture { FlashDeckBuilder.shared.toast = nil }
+                    Spacer()
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .zIndex(90)
+            }
+
             // Level-up celebration sits on top of everything else when armed.
             // Uses a separate ZStack pass with high zIndex so it survives any
             // current sheets / nav pushes on either tab.
@@ -65,6 +77,8 @@ struct MainTabsView: View {
         }
         .animation(.spring(response: 0.45, dampingFraction: 0.8),
                    value: session.pendingLevelUp)
+        .animation(.spring(response: 0.4, dampingFraction: 0.85),
+                   value: FlashDeckBuilder.shared.toast)
         // No forced color scheme — defer to FeyndApp's @AppStorage preference
         // so the Settings light/dark/system toggle actually drives the UI.
     }
