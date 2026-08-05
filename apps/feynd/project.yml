@@ -53,6 +53,9 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_USER_SCRIPT_SANDBOXING: NO
+        # The Xcode debug-dylib stub launch path aborts at startup on the
+        # iOS 27 beta — black screen. Ship a single binary instead.
+        ENABLE_DEBUG_DYLIB: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # Mac Catalyst — same bundle ID, Mac runs the iPad layout with native
         # window chrome (resizable). Minimum macOS pegged at Sonoma so the
