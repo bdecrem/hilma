@@ -587,6 +587,33 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/flash/cards/\(cardId)", method: "DELETE", body: nil as EmptyBody?)
     }
 
+    /// Rate a card: "down" buries it, "priority" pushes it up the rotation,
+    /// nil clears the rating. Returns the updated card.
+    @discardableResult
+    func rateFlashCard(cardId: String, rating: String?) async throws -> FlashCard {
+        // Explicit encode: the synthesized one omits nil, but the server
+        // needs to SEE null to clear a rating (absent = leave unchanged).
+        struct Body: Encodable {
+            let rating: String?
+            enum CodingKeys: String, CodingKey { case rating }
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(rating, forKey: .rating)
+            }
+        }
+        let res: UpdateCardResponse = try await request(
+            "/api/f2/flash/cards/\(cardId)", method: "PATCH", body: Body(rating: rating))
+        return res.card
+    }
+
+    struct DecksResponse: Codable { let decks: [FlashDeck] }
+
+    /// Every topic that has flash cards — the Flash tab's deck manager.
+    func listFlashDecks() async throws -> [FlashDeck] {
+        let res: DecksResponse = try await get("/api/f2/flash/decks")
+        return res.decks
+    }
+
     /// Start a topic set (mode chosen by the user).
     func startFlashSet(threadId: String, mode: String) async throws -> FlashStart {
         struct Body: Encodable { let mode: String; let thread_id: String }

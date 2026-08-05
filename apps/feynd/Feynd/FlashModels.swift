@@ -7,8 +7,72 @@ struct FlashCard: Codable, Identifiable, Equatable, Hashable {
     var question: String
     var answer: String
     var distractors: [String]
+    /// "down" = buried (never served again), "priority" = resurfaced hard
+    /// until mastered, nil = a normal card. Absent on older backends.
+    var rating: String?
+    /// How many times this card has been served in a set.
+    var timesShown: Int?
+    /// Consecutive correct answers — the mastery counter.
+    var streak: Int?
 
-    enum CodingKeys: String, CodingKey { case id, question, answer, distractors }
+    var isBuried: Bool { rating == "down" }
+    var isPriority: Bool { rating == "priority" }
+
+    enum CodingKeys: String, CodingKey {
+        case id, question, answer, distractors, rating, streak
+        case timesShown = "times_shown"
+    }
+
+    init(id: String, question: String, answer: String, distractors: [String],
+         rating: String? = nil, timesShown: Int? = nil, streak: Int? = nil) {
+        self.id = id
+        self.question = question
+        self.answer = answer
+        self.distractors = distractors
+        self.rating = rating
+        self.timesShown = timesShown
+        self.streak = streak
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        question = try c.decode(String.self, forKey: .question)
+        answer = try c.decode(String.self, forKey: .answer)
+        distractors = try c.decodeIfPresent([String].self, forKey: .distractors) ?? []
+        rating = try c.decodeIfPresent(String.self, forKey: .rating)
+        timesShown = try c.decodeIfPresent(Int.self, forKey: .timesShown)
+        streak = try c.decodeIfPresent(Int.self, forKey: .streak)
+    }
+}
+
+/// One topic's deck as listed in the Flash tab's deck manager.
+struct FlashDeck: Codable, Identifiable, Equatable {
+    var id: String { threadId }
+    let threadId: String
+    let topic: String?
+    let url: String?
+    let kind: String?
+    let stars: Int
+    let cardCount: Int
+    let priorityCount: Int
+    let buriedCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case topic, url, kind, stars
+        case threadId = "thread_id"
+        case cardCount = "card_count"
+        case priorityCount = "priority_count"
+        case buriedCount = "buried_count"
+    }
+
+    var displayLabel: String {
+        if let topic, !topic.isEmpty { return topic }
+        if let url, let host = URL(string: url)?.host {
+            return host.replacingOccurrences(of: "www.", with: "")
+        }
+        return "(untitled)"
+    }
 }
 
 /// One question inside a running set. `choices` + `answer` only arrive in
@@ -19,9 +83,12 @@ struct FlashQuestion: Codable, Identifiable, Equatable {
     let question: String
     let choices: [String]?
     let answer: String?
+    /// Existing rating on this card ("priority"; buried cards are never
+    /// served), so the thumbs render in the right state on arrival.
+    let rating: String?
 
     enum CodingKeys: String, CodingKey {
-        case question, choices, answer
+        case question, choices, answer, rating
         case cardId = "card_id"
     }
 }

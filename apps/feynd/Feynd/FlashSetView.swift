@@ -30,6 +30,10 @@ struct FlashSetView: View {
     /// right/wrong flash is showing. Nil = not yet answered.
     @State private var picked: String? = nil
     @State private var editTarget: FlashCard? = nil
+    /// Optimistic per-card rating state, keyed by card id. Seeded from the
+    /// questions the server sent so a card rated in an earlier round shows
+    /// its state immediately.
+    @State private var ratings: [String: String] = [:]
     @State private var draft = ""
     @FocusState private var draftFocused: Bool
 
@@ -39,6 +43,11 @@ struct FlashSetView: View {
         self.onRecorded = onRecorded
         _questions = State(initialValue: start.questions)
         _answers = State(initialValue: Array(repeating: nil, count: start.questions.count))
+        var seeded: [String: String] = [:]
+        for q in start.questions where q.rating != nil {
+            seeded[q.cardId] = q.rating
+        }
+        _ratings = State(initialValue: seeded)
     }
 
     private var isChoice: Bool { start.mode == "choice" }
@@ -143,6 +152,7 @@ struct FlashSetView: View {
                     .tracking(0.4)
                     .foregroundStyle(FeyndTheme.text3)
                 Spacer()
+                thumbsRow(q)
                 // Inline deck editing lives right here in the set UI.
                 Button {
                     editTarget = FlashCard(
@@ -176,6 +186,47 @@ struct FlashSetView: View {
         .id(q.cardId) // fresh transition per card
         .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
                                 removal: .move(edge: .leading).combined(with: .opacity)))
+    }
+
+    // MARK: Rating the card
+
+    /// Two verdicts only, by design: one thumb DOWN buries the card for good,
+    /// and a DOUBLE thumbs up makes it a priority card. There is no single
+    /// thumbs up — "fine, I guess" isn't a signal worth scheduling on.
+    /// Tapping the state you're already in clears it, so neither is a trap.
+    private func thumbsRow(_ q: FlashQuestion) -> some View {
+        let rating = ratings[q.cardId]
+        return HStack(spacing: 2) {
+            Button { rate(q.cardId, rating == "down" ? nil : "down") } label: {
+                Image(systemName: rating == "down" ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(rating == "down" ? Color(hex: 0xE0635A) : FeyndTheme.text3)
+                    .frame(width: 30, height: 30)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(rating == "down" ? "Un-bury this card" : "Bury this card")
+
+            Button { rate(q.cardId, rating == "priority" ? nil : "priority") } label: {
+                DoubleThumbsUp(active: rating == "priority", size: 13)
+                    .frame(minWidth: 36, minHeight: 30)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(rating == "priority" ? "Remove priority" : "Mark as priority")
+        }
+        .animation(.easeOut(duration: 0.15), value: rating)
+    }
+
+    private func rate(_ cardId: String, _ rating: String?) {
+        if let rating { ratings[cardId] = rating } else { ratings.removeValue(forKey: cardId) }
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+        Task {
+            // Fire-and-forget: a failed rating shouldn't interrupt the round.
+            // The optimistic state stands; the next set reloads server truth.
+            try? await F2API.shared.rateFlashCard(cardId: cardId, rating: rating)
+        }
     }
 
     // MARK: Choice mode
@@ -349,7 +400,8 @@ struct FlashSetView: View {
             cardId: card.id,
             question: card.question,
             choices: isChoice ? choices : nil,
-            answer: isChoice ? card.answer : nil
+            answer: isChoice ? card.answer : nil,
+            rating: ratings[card.id]
         )
     }
 

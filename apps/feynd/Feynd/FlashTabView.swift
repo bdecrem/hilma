@@ -14,6 +14,7 @@ struct FlashTabView: View {
     @State private var activeSet: FlashStart? = nil
     @State private var voiceSet: FlashStart? = nil
     @State private var showProfile = false
+    @State private var showDecks = false
     @State private var pulse = false
 
     // Path geometry — one shared set of numbers for nodes AND connectors.
@@ -44,7 +45,10 @@ struct FlashTabView: View {
                         .font(.system(size: 16, weight: .medium))
                         .foregroundStyle(FeyndTheme.text2)
                 } trailing: {
-                    xpPill
+                    HStack(spacing: 8) {
+                        deckStackButton
+                        xpPill
+                    }
                 } onProfileTap: {
                     showProfile = true
                 }
@@ -66,6 +70,13 @@ struct FlashTabView: View {
             }
         }
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
+        .sheet(isPresented: $showDecks) {
+            FlashDecksSheet()
+                .environment(session)
+                // Cards may have been added or buried — the map's card count
+                // and the locked/unlocked state both depend on it.
+                .onDisappear { Task { await load() } }
+        }
         .sheet(item: $sheetLevel) { level in
             LevelStartSheet(
                 level: level,
@@ -106,16 +117,51 @@ struct FlashTabView: View {
             Image(systemName: "bolt.fill")
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(FeyndTheme.gold)
-            Text("\(state?.xp ?? 0)")
+            // Never wrap: the pill shares a tight top bar with the deck
+            // button, and a two-line XP count looks broken.
+            Text(compactXP(state?.xp ?? 0))
                 .font(.system(size: 13.5, weight: .bold))
                 .foregroundStyle(FeyndTheme.text)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .contentTransition(.numericText())
         }
         .padding(.horizontal, 11)
         .padding(.vertical, 7)
         .background(FeyndTheme.surface, in: Capsule())
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+        .fixedSize(horizontal: true, vertical: false)
         .accessibilityLabel("\(state?.xp ?? 0) experience points")
+    }
+
+    /// XP grows without bound, the top bar doesn't. Four digits and up get
+    /// abbreviated so the pill stays one short line forever.
+    private func compactXP(_ xp: Int) -> String {
+        if xp < 1000 { return "\(xp)" }
+        if xp < 100_000 {
+            let k = Double(xp) / 1000
+            // 1.2k up to 99.9k, dropping the decimal once it's not useful.
+            return k < 10
+                ? String(format: "%.1fk", k)
+                : String(format: "%.0fk", k)
+        }
+        return String(format: "%.1fM", Double(xp) / 1_000_000)
+    }
+
+    /// The deck manager button — a stack of cards, which is literally what
+    /// it opens. Badged when any deck holds priority cards.
+    private var deckStackButton: some View {
+        Button { showDecks = true } label: {
+            Image(systemName: "rectangle.stack.fill")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(FeyndTheme.text)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 7)
+                .background(FeyndTheme.surface, in: Capsule())
+                .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Manage your decks")
     }
 
     private var titleRow: some View {

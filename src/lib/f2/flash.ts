@@ -11,6 +11,11 @@ import { f2Supabase } from './supabase'
 import { llmComplete } from './llm'
 import { buildFullContent, type F2Thread } from './threads'
 
+/// The user's verdict on a card itself (not on their answer).
+///   'down'     — bury it; never serve it in a set again
+///   'priority' — resurface hard until mastered, then keep it in rotation
+export type CardRating = 'down' | 'priority'
+
 export type FlashCard = {
   id: string
   user_id: string
@@ -19,6 +24,19 @@ export type FlashCard = {
   answer: string
   distractors: string[]
   created_at: string
+  rating: CardRating | null
+  rated_at: string | null
+  // Exposure history.
+  times_shown: number
+  last_shown_at: string | null
+  // SM-2 scheduling state (see reviewCard below).
+  reps: number
+  lapses: number
+  ease: number
+  interval_days: number
+  scheduled_days: number
+  due_at: string | null
+  streak: number
 }
 
 export type FlashSetMode = 'choice' | 'text' | 'voice'
@@ -314,6 +332,73 @@ export async function countFlashCards(userId: string): Promise<number> {
   return count ?? 0
 }
 
+export type FlashDeck = {
+  thread_id: string
+  topic: string | null
+  url: string | null
+  kind: string | null
+  stars: number
+  card_count: number
+  priority_count: number
+  buried_count: number
+}
+
+/// Every topic the user has cards for, newest-touched first — the Flash
+/// tab's deck manager. One query per table rather than a join so it uses
+/// the same client shape as the rest of this module.
+export async function listDecks(userId: string): Promise<FlashDeck[]> {
+  const sb = f2Supabase()
+  const [{ data: cardRows, error: cardErr }, { data: threadRows }] = await Promise.all([
+    sb.from('f2_flash_cards').select('thread_id, rating').eq('user_id', userId),
+    sb
+      .from('f2_threads')
+      .select('id, topic, url, kind, stars, updated_at')
+      .eq('user_id', userId),
+  ])
+  if (cardErr) {
+    console.error('[f2/flash] listDecks failed:', cardErr)
+    return []
+  }
+
+  const counts = new Map<string, { total: number; priority: number; buried: number }>()
+  for (const row of (cardRows ?? []) as { thread_id: string; rating: string | null }[]) {
+    const c = counts.get(row.thread_id) ?? { total: 0, priority: 0, buried: 0 }
+    // Buried cards are excluded from the playable total — the deck manager
+    // shows them separately so a bury is visible and reversible.
+    if (row.rating === 'down') c.buried++
+    else {
+      c.total++
+      if (row.rating === 'priority') c.priority++
+    }
+    counts.set(row.thread_id, c)
+  }
+
+  const threads = (threadRows ?? []) as {
+    id: string
+    topic: string | null
+    url: string | null
+    kind: string | null
+    stars: number | null
+    updated_at: string
+  }[]
+  return threads
+    .filter((t) => counts.has(t.id))
+    .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))
+    .map((t) => {
+      const c = counts.get(t.id)!
+      return {
+        thread_id: t.id,
+        topic: t.topic,
+        url: t.url,
+        kind: t.kind,
+        stars: t.stars ?? 0,
+        card_count: c.total,
+        priority_count: c.priority,
+        buried_count: c.buried,
+      }
+    })
+}
+
 export async function getFlashCardsByIds(
   userId: string,
   ids: string[],
@@ -334,13 +419,26 @@ export async function getFlashCardsByIds(
 export async function updateFlashCard(
   userId: string,
   cardId: string,
-  patch: { question?: string; answer?: string; distractors?: string[] },
+  patch: {
+    question?: string
+    answer?: string
+    distractors?: string[]
+    /** undefined = leave alone; null = clear; 'down' | 'priority' = set. */
+    rating?: CardRating | null
+  },
 ): Promise<FlashCard | null> {
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (patch.question?.trim()) update.question = patch.question.trim()
   if (patch.answer?.trim()) update.answer = patch.answer.trim()
   if (patch.distractors) {
     update.distractors = patch.distractors.map((d) => d.trim()).filter(Boolean).slice(0, 3)
+  }
+  if (patch.rating !== undefined) {
+    update.rating = patch.rating
+    update.rated_at = patch.rating ? new Date().toISOString() : null
+    // Promoting a card to priority makes it due immediately — the whole
+    // point of the double thumbs up is "show me this one, soon".
+    if (patch.rating === 'priority') update.due_at = new Date().toISOString()
   }
   const { data, error } = await f2Supabase()
     .from('f2_flash_cards')
@@ -373,15 +471,253 @@ export async function deleteFlashCard(
 }
 
 // ---------------------------------------------------------------------------
+// Scheduling — Anki-flavored SM-2 (SuperMemo 2), the scheduler Anki ships by
+// default. Chosen over FSRS because FSRS without its training optimizer runs
+// on population-default parameters, which forfeits most of its edge for 21
+// parameters' worth of complexity; and over plain Leitner because Leitner has
+// no per-card ease, so a card that's hard *for this user* is scheduled
+// exactly like an easy one.
+//
+// A flash set only knows right or wrong, so answers map onto Anki's buttons
+// as correct → Good, wrong → Again.
+const EASE_START = 2.5
+const EASE_MIN = 1.3
+/// SM-2 has no upper bound on ease; we add one so a card the user always gets
+/// right can't launch itself years into the future.
+const EASE_MAX = 3.0
+const EASE_DELTA_AGAIN = -0.2
+const EASE_DELTA_GOOD = 0
+
+const FIRST_INTERVAL = 1 // days, on graduating
+const SECOND_INTERVAL = 6 // days, SM-2's I(2)
+const MIN_LAPSE_INTERVAL = 1
+const MAX_INTERVAL = 365
+/// ±5% jitter on intervals of 3+ days so cards learned together don't come
+/// back forever as a clump.
+const FUZZ_PCT = 0.05
+
+/// Anki calls a card "mature" at a 21-day interval; that's our mastery line,
+/// plus a floor of consecutive correct answers so one lucky guess can't do it.
+export const MASTERY_INTERVAL_DAYS = 21
+export const MASTERY_STREAK = 3
+
+/// Priority cards (double thumbs up) come back twice as often as the model
+/// says, hard-capped at 3 days until they're genuinely mastered — then they
+/// settle onto a monthly maintenance loop rather than disappearing. That
+/// last cap is the "still resurface them from time to time" half.
+const PRIORITY_FACTOR = 0.5
+const PRIORITY_MAX_UNMASTERED = 3
+const PRIORITY_MAX_MASTERED = 30
+/// Mastered normal cards top out at ~6 months — a small deck should keep
+/// everything in circulation.
+const NORMAL_MAX_MASTERED = 180
+
+export type CardReview = {
+  reps: number
+  lapses: number
+  ease: number
+  interval_days: number
+  scheduled_days: number
+  due_at: string
+  streak: number
+}
+
+/// Mastery is judged on the UNCLAMPED model interval. Reading the clamped
+/// one would trap priority cards: pinned to 3 days, they could never reach
+/// the 21-day bar, so they'd drill aggressively forever.
+export function isMastered(card: { interval_days: number; streak: number }): boolean {
+  return Number(card.interval_days) >= MASTERY_INTERVAL_DAYS && card.streak >= MASTERY_STREAK
+}
+
+/// One SM-2 step. Pure — current state plus right/wrong in, next state out.
+/// `now` and `jitter` are injected so the whole thing is testable.
+export function reviewCard(
+  card: Pick<FlashCard, 'reps' | 'lapses' | 'ease' | 'interval_days' | 'streak' | 'rating'>,
+  correct: boolean,
+  now: Date = new Date(),
+  jitter: number = Math.random(),
+): CardReview {
+  const ease = clamp(
+    Number(card.ease || EASE_START) + (correct ? EASE_DELTA_GOOD : EASE_DELTA_AGAIN),
+    EASE_MIN,
+    EASE_MAX,
+  )
+
+  let reps: number
+  let lapses = card.lapses
+  let streak: number
+  let interval: number
+
+  if (!correct) {
+    // A lapse drops the card to the bottom of the ladder — back tomorrow.
+    reps = 0
+    lapses += 1
+    streak = 0
+    interval = MIN_LAPSE_INTERVAL
+  } else {
+    reps = card.reps + 1
+    streak = card.streak + 1
+    if (reps === 1) interval = FIRST_INTERVAL
+    else if (reps === 2) interval = SECOND_INTERVAL
+    else interval = Number(card.interval_days) * ease
+  }
+  interval = Math.min(MAX_INTERVAL, round2(interval))
+
+  // Policy clamps — these shape WHEN the card returns without touching the
+  // model interval above, so mastery progress keeps accruing underneath.
+  const mastered = isMastered({ interval_days: interval, streak })
+  let scheduled = interval
+  if (card.rating === 'priority') {
+    scheduled = Math.min(
+      scheduled * PRIORITY_FACTOR,
+      mastered ? PRIORITY_MAX_MASTERED : PRIORITY_MAX_UNMASTERED,
+    )
+  } else if (mastered) {
+    scheduled = Math.min(scheduled, NORMAL_MAX_MASTERED)
+  }
+  // Fuzz first, then clamp — the other order lets the jitter push a card
+  // past the very cap that's meant to keep it in rotation.
+  if (scheduled >= 3) {
+    scheduled = scheduled * (1 - FUZZ_PCT + jitter * FUZZ_PCT * 2)
+  }
+  const ceiling =
+    card.rating === 'priority'
+      ? mastered
+        ? PRIORITY_MAX_MASTERED
+        : PRIORITY_MAX_UNMASTERED
+      : mastered
+        ? NORMAL_MAX_MASTERED
+        : MAX_INTERVAL
+  scheduled = round2(clamp(scheduled, 1, Math.min(ceiling, MAX_INTERVAL)))
+
+  return {
+    reps,
+    lapses,
+    ease: round2(ease),
+    interval_days: interval,
+    scheduled_days: scheduled,
+    due_at: new Date(now.getTime() + scheduled * 86_400_000).toISOString(),
+    streak,
+  }
+}
+
+function clamp(n: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, n))
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100
+}
+
+/// Apply one review per answered card. Called from recordFlashSet.
+async function applyReviews(
+  userId: string,
+  cards: FlashCard[],
+  correctById: Map<string, boolean>,
+  now: Date = new Date(),
+): Promise<void> {
+  await Promise.all(
+    cards.map((card) => {
+      const correct = correctById.get(card.id)
+      if (correct === undefined) return Promise.resolve()
+      const next = reviewCard(card, correct, now)
+      return f2Supabase()
+        .from('f2_flash_cards')
+        .update({ ...next, updated_at: now.toISOString() })
+        .eq('id', card.id)
+        .eq('user_id', userId)
+        .then(({ error }) => {
+          if (error) console.error('[f2/flash] applyReviews failed:', error)
+        })
+    }),
+  )
+}
+
+/// Record that these cards were served. Separate from the review step —
+/// a card can be shown and abandoned, and that still counts as exposure.
+export async function markCardsShown(userId: string, cardIds: string[]): Promise<void> {
+  if (cardIds.length === 0) return
+  const now = new Date().toISOString()
+  const { error } = await f2Supabase().rpc('f2_mark_cards_shown', {
+    p_user_id: userId,
+    p_card_ids: cardIds,
+    p_now: now,
+  })
+  if (error) console.error('[f2/flash] markCardsShown failed:', error)
+}
+
+// ---------------------------------------------------------------------------
 // Set selection
 
-/// Pick up to SET_SIZE random cards for a set. Topic sets draw from one
-/// thread; Jumbo sets draw across every topic the user has cards for.
+/// How overdue a card is, in days. Never-reviewed cards sort as brand new
+/// (0) so they mix in rather than dominating.
+function overdueDays(card: FlashCard, now: number): number {
+  if (!card.due_at) return 0
+  return (now - new Date(card.due_at).getTime()) / 86_400_000
+}
+
+/// Selection weight. Higher = likelier to be picked. Priority cards get a
+/// standing multiplier; due cards climb the more overdue they are; mastered
+/// cards fall back to an occasional appearance instead of vanishing.
+export function cardWeight(card: FlashCard, now: number = Date.now()): number {
+  let w = 1
+  const overdue = overdueDays(card, now)
+  if (card.due_at) {
+    // Due today ≈ 3x a not-yet-due card, and it keeps climbing with age.
+    w = overdue >= 0 ? 3 + Math.min(12, overdue) : 0.6
+  } else {
+    // Never reviewed — worth seeing soon, but not ahead of a real backlog.
+    w = 2.5
+  }
+  if (card.rating === 'priority') {
+    w *= isMastered(card) ? 2 : 5
+  } else if (isMastered(card)) {
+    // Learned and not flagged: keep it in the mix, quietly.
+    w *= 0.35
+  }
+  // Cards the user keeps missing deserve another look.
+  if (card.lapses > 0) w *= 1 + Math.min(1, card.lapses * 0.15)
+  return w
+}
+
+/// Weighted sample without replacement — each draw picks proportionally to
+/// weight, so scheduling shapes the odds without making sets deterministic.
+function weightedSample(cards: FlashCard[], n: number, now: number): FlashCard[] {
+  const pool = cards.map((card) => ({ card, weight: cardWeight(card, now) }))
+  const out: FlashCard[] = []
+  while (out.length < n && pool.length > 0) {
+    const total = pool.reduce((sum, p) => sum + p.weight, 0)
+    if (total <= 0) {
+      out.push(...shuffle(pool.map((p) => p.card)).slice(0, n - out.length))
+      break
+    }
+    let r = Math.random() * total
+    let idx = pool.length - 1
+    for (let i = 0; i < pool.length; i++) {
+      r -= pool[i].weight
+      if (r <= 0) {
+        idx = i
+        break
+      }
+    }
+    out.push(pool[idx].card)
+    pool.splice(idx, 1)
+  }
+  return out
+}
+
+/// Pick up to SET_SIZE cards for a set. Topic sets draw from one thread;
+/// Jumbo sets draw across every topic the user has cards for. Buried cards
+/// (thumbs down) are never served; the rest are sampled by schedule weight.
 export async function pickSetCards(
   userId: string,
   threadId: string | null,
 ): Promise<FlashCard[]> {
-  let query = f2Supabase().from('f2_flash_cards').select('*').eq('user_id', userId)
+  let query = f2Supabase()
+    .from('f2_flash_cards')
+    .select('*')
+    .eq('user_id', userId)
+    .or('rating.is.null,rating.eq.priority')
   if (threadId) query = query.eq('thread_id', threadId)
   const { data, error } = await query
   if (error) {
@@ -389,7 +725,9 @@ export async function pickSetCards(
     return []
   }
   const all = (data as FlashCard[]) ?? []
-  return shuffle(all).slice(0, SET_SIZE)
+  // Shuffle first so the presentation order isn't weight order — the user
+  // shouldn't be able to read the scheduler off the sequence.
+  return shuffle(weightedSample(all, SET_SIZE, Date.now()))
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -637,6 +975,23 @@ export async function recordFlashSet(input: {
   if (setErr || !setRow) {
     console.error('[f2/flash] recordFlashSet insert failed:', setErr)
     throw new Error('Could not save the set')
+  }
+
+  // Advance each answered card's schedule (SM-2). Best-effort: a scheduling
+  // hiccup must not cost the user the set they just played.
+  try {
+    const answered = input.results.filter((r) => r.card_id)
+    const cards = await getFlashCardsByIds(
+      input.userId,
+      answered.map((r) => r.card_id),
+    )
+    await applyReviews(
+      input.userId,
+      cards,
+      new Map(answered.map((r) => [r.card_id, r.correct])),
+    )
+  } catch (e) {
+    console.error('[f2/flash] review scheduling failed:', e)
   }
 
   // XP — read-modify-write is fine for a single-user account.

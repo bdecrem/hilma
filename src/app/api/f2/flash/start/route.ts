@@ -5,6 +5,7 @@ import {
   choicesForCard,
   getJumboState,
   jumboLevelMode,
+  markCardsShown,
   pickSetCards,
   type FlashSetMode,
 } from '@/lib/f2/flash'
@@ -75,9 +76,14 @@ export async function POST(req: Request) {
     )
   }
 
+  // Serving the cards counts as an exposure — this is what makes the
+  // scheduler's "when did I last see this" real.
+  await markCardsShown(user.id, cards.map((c) => c.id))
+
   const questions = cards.map((c) => ({
     card_id: c.id,
     question: c.question,
+    rating: c.rating,
     ...(mode === 'choice'
       ? { choices: choicesForCard(c), answer: c.answer }
       : {}),

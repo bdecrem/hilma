@@ -359,33 +359,86 @@ struct FlashCardsView: View {
 
             if showCards {
                 ForEach(cards) { card in
-                    Button {
-                        editTarget = card
-                    } label: {
-                        HStack(alignment: .top, spacing: 8) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(card.question)
-                                    .font(.system(size: 13.5, weight: .medium))
-                                    .foregroundStyle(FeyndTheme.text)
-                                    .multilineTextAlignment(.leading)
-                                Text(card.answer)
-                                    .font(.system(size: 12.5))
-                                    .foregroundStyle(FeyndTheme.coral)
-                            }
-                            Spacer(minLength: 8)
-                            Image(systemName: "pencil")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(FeyndTheme.text3)
-                        }
-                        .padding(11)
-                        .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
+                    cardRow(card)
                 }
 
                 addQuestionRow
                 remakeBox
+            }
+        }
+    }
+
+    /// One card in the manage list. Buried cards stay visible here (dimmed)
+    /// so a thumbs-down is never a one-way door — tapping the thumb again
+    /// puts the card straight back into rotation.
+    private func cardRow(_ card: FlashCard) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Button { editTarget = card } label: {
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 6) {
+                        if card.isPriority {
+                            Text("PRIORITY")
+                                .font(.system(size: 9, weight: .bold))
+                                .tracking(0.5)
+                                .foregroundStyle(FeyndTheme.gold)
+                        }
+                        if card.isBuried {
+                            Text("BURIED")
+                                .font(.system(size: 9, weight: .bold))
+                                .tracking(0.5)
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                    }
+                    Text(card.question)
+                        .font(.system(size: 13.5, weight: .medium))
+                        .foregroundStyle(FeyndTheme.text)
+                        .multilineTextAlignment(.leading)
+                    Text(card.answer)
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(FeyndTheme.coral)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            VStack(spacing: 4) {
+                Button { setRating(card, card.isBuried ? nil : "down") } label: {
+                    Image(systemName: card.isBuried ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(card.isBuried ? Color(hex: 0xE0635A) : FeyndTheme.text3)
+                        .frame(width: 34, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                Button { setRating(card, card.isPriority ? nil : "priority") } label: {
+                    DoubleThumbsUp(active: card.isPriority, size: 12)
+                        .frame(width: 34, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(11)
+        .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
+        .opacity(card.isBuried ? 0.55 : 1)
+    }
+
+
+    private func setRating(_ card: FlashCard, _ rating: String?) {
+        guard let i = cards.firstIndex(where: { $0.id == card.id }) else { return }
+        let previous = cards[i].rating
+        cards[i].rating = rating
+        Task {
+            do {
+                _ = try await F2API.shared.rateFlashCard(cardId: card.id, rating: rating)
+            } catch {
+                // Put the old state back so the UI never lies about the deck.
+                if let j = cards.firstIndex(where: { $0.id == card.id }) {
+                    cards[j].rating = previous
+                }
+                errorMessage = "Couldn't update that card: \(error.localizedDescription)"
             }
         }
     }
