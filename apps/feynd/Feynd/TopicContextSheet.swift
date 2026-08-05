@@ -26,6 +26,11 @@ struct TopicContextSheet: View {
     @State private var addURL = ""
     @State private var addBusy = false
     @State private var addError: String? = nil
+    // Upload Notes — a .txt file that becomes the user's own notes on this
+    // topic. Notes are covered point by point in audio summaries.
+    @State private var showNotesImporter = false
+    @State private var notesBusy = false
+    @State private var notesError: String? = nil
     // Study focus — scopes flash cards, quizzes, and the Final Review to the
     // part of the material the user actually studied. Seeded from the server
     // in load() (the list's F2Topic can be stale after an earlier edit).
@@ -43,7 +48,13 @@ struct TopicContextSheet: View {
             header
             ScrollView {
                 VStack(spacing: 0) {
-                    addContextButton
+                    HStack(spacing: 8) {
+                        addContextButton
+                        uploadNotesButton
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
+                    .padding(.bottom, 4)
                     studyFocusSection
                     if loading {
                         ProgressView()
@@ -98,6 +109,20 @@ struct TopicContextSheet: View {
         } message: {
             Text(addError ?? "Paste a URL (article, YouTube, etc.) — F2 pulls it in and adds it to this topic's context.")
         }
+        .fileImporter(
+            isPresented: $showNotesImporter,
+            allowedContentTypes: [.plainText, .text],
+            allowsMultipleSelection: false,
+        ) { result in
+            importNotes(result)
+        }
+        .alert("Upload notes",
+               isPresented: Binding(get: { notesError != nil },
+                                    set: { if !$0 { notesError = nil } })) {
+            Button("OK") { notesError = nil }
+        } message: {
+            Text(notesError ?? "")
+        }
         .alert("Study focus",
                isPresented: $showFocusEditor) {
             TextField("Only the first half…", text: $focusDraft)
@@ -136,7 +161,7 @@ struct TopicContextSheet: View {
 
     private var addContextButton: some View {
         Button { addURL = ""; addError = nil; showAddContext = true } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: 7) {
                 if addBusy {
                     ProgressView().controlSize(.mini).tint(FeyndTheme.text2)
                 } else {
@@ -145,6 +170,7 @@ struct TopicContextSheet: View {
                 }
                 Text(addBusy ? "Adding…" : "Add context")
                     .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(1)
             }
             .foregroundStyle(FeyndTheme.coral)
             .frame(maxWidth: .infinity)
@@ -154,9 +180,59 @@ struct TopicContextSheet: View {
         }
         .buttonStyle(.plain)
         .disabled(addBusy)
-        .padding(.horizontal, 18)
-        .padding(.top, 12)
-        .padding(.bottom, 4)
+    }
+
+    /// Upload Notes — pick a .txt file; its contents become the user's own
+    /// notes on this topic, covered point by point in audio summaries.
+    private var uploadNotesButton: some View {
+        Button { notesError = nil; showNotesImporter = true } label: {
+            HStack(spacing: 7) {
+                if notesBusy {
+                    ProgressView().controlSize(.mini).tint(FeyndTheme.text2)
+                } else {
+                    Image(systemName: "note.text.badge.plus")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                Text(notesBusy ? "Uploading…" : "Upload notes")
+                    .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(FeyndTheme.coral)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(notesBusy)
+    }
+
+    private func importNotes(_ result: Result<[URL], Error>) {
+        guard case .success(let urls) = result, let fileURL = urls.first else { return }
+        notesBusy = true
+        Task {
+            defer { notesBusy = false }
+            do {
+                // Files-app picks come security-scoped; without the access
+                // call the read throws a permission error.
+                let scoped = fileURL.startAccessingSecurityScopedResource()
+                defer { if scoped { fileURL.stopAccessingSecurityScopedResource() } }
+                let text = try String(contentsOf: fileURL, encoding: .utf8)
+                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    notesError = "That file is empty."
+                    return
+                }
+                let title = fileURL.deletingPathExtension().lastPathComponent
+                _ = try await F2API.shared.uploadTopicNotes(
+                    id: topic.id,
+                    text: text,
+                    title: title.isEmpty ? nil : title,
+                )
+                await load()
+            } catch {
+                notesError = "Couldn't upload: \(error.localizedDescription)"
+            }
+        }
     }
 
     // MARK: - Study focus
@@ -432,7 +508,9 @@ struct TopicContextSheet: View {
                     Text(rowTag(src))
                         .font(.system(size: 10, weight: .bold))
                         .tracking(0.5)
-                        .foregroundStyle(src.kind == "primary" ? FeyndTheme.coral : FeyndTheme.text3)
+                        .foregroundStyle(
+                            src.note == true ? FeyndTheme.gold
+                            : src.kind == "primary" ? FeyndTheme.coral : FeyndTheme.text3)
                     if src.part != "url" {
                         Text(sizeLabel(src.contentLength))
                             .font(.system(size: 11, weight: .medium))
@@ -459,6 +537,10 @@ struct TopicContextSheet: View {
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
+                } else if src.note == true {
+                    Text("Your notes — audio summaries cover these point by point")
+                        .font(.system(size: 11))
+                        .foregroundStyle(FeyndTheme.text2)
                 } else if src.kind == "primary" {
                     Text("Pasted text")
                         .font(.system(size: 11))
@@ -532,6 +614,7 @@ struct TopicContextSheet: View {
     ///   QUOTE
     private func rowTag(_ src: F2API.TopicSource) -> String {
         if src.kind == "quote" { return "QUOTE" }
+        if src.note == true { return "NOTES" }
         let base = src.kind == "primary" ? "PRIMARY" : "ADDITIONAL"
         switch src.part {
         case "url": return "\(base) URL"

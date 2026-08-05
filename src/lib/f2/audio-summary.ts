@@ -462,13 +462,22 @@ async function verifyMissingNotes(script: string, notesChecklist: string[]): Pro
 /// The user's own annotations — quotes plus short additional sources — which
 /// get guaranteed point-by-point coverage. Bulk material (long transcripts) is
 /// read via the map-reduce corpus instead, not here.
+///
+/// Sources flagged note:true (Upload Notes) are ALWAYS notes — the user said
+/// so explicitly — with only a hard slice to keep the checklist extractor
+/// sane. The size heuristic applies just to unflagged sources, where short
+/// usually means annotation and long means bulk material.
 function gatherNotesText(thread: F2Thread): string {
   const parts: string[] = []
   for (const q of thread.quotes ?? []) {
     if (q.text?.trim()) parts.push(q.author ? `"${q.text}" — ${q.author}` : `"${q.text}"`)
   }
   for (const s of thread.additional_sources ?? []) {
-    if (s.content && s.content.trim() && s.content.length <= NOTES_SOURCE_MAX_CHARS) {
+    if (!s.content?.trim()) continue
+    if (s.note) {
+      const body = s.content.slice(0, NOTES_SOURCE_MAX_CHARS * 2)
+      parts.push(s.title ? `${s.title}:\n${body}` : body)
+    } else if (s.content.length <= NOTES_SOURCE_MAX_CHARS) {
       parts.push(s.title ? `${s.title}:\n${s.content}` : s.content)
     }
   }

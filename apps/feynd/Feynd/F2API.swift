@@ -293,6 +293,17 @@ final class F2API {
         )
     }
 
+    /// Upload the user's own notes (a .txt file's contents) to a topic.
+    /// Stored flagged as notes, so audio summaries cover them point by point.
+    func uploadTopicNotes(id: String, text: String, title: String?) async throws -> AddSourceResponse {
+        struct Body: Encodable { let text: String; let title: String? }
+        return try await request(
+            "/api/f2/topics/\(id)/sources",
+            method: "POST",
+            body: Body(text: text, title: title),
+        )
+    }
+
     /// One display row in the View Context modal. Media URLs with a transcript
     /// (YouTube + audio hosts) are split server-side into two items — one with
     /// part="url", one with part="transcript" — sharing the same kind/index.
@@ -306,11 +317,13 @@ final class F2API {
         let url: String?
         let title: String?
         let author: String?
+        /// True for user-uploaded notes (Upload Notes).
+        let note: Bool?
         let contentLength: Int
         let addedAt: String?
 
         enum CodingKeys: String, CodingKey {
-            case id, kind, index, part, url, title, author
+            case id, kind, index, part, url, title, author, note
             case topicKind = "topic_kind"
             case contentLength = "content_length"
             case addedAt = "added_at"

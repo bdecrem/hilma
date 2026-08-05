@@ -35,6 +35,8 @@ type SourceItem = {
   title: string | null
   /** Attribution for a quote row, when supplied. Null/absent otherwise. */
   author?: string | null
+  /** True for user-uploaded notes (Upload Notes). */
+  note?: boolean
   content_length: number
   added_at: string | null
 }
@@ -46,6 +48,7 @@ function expandSource(input: {
   title: string | null
   content: string | null
   added_at: string | null
+  note?: boolean
 }): SourceItem[] {
   const topicKind = classifyTopicKind({
     url: input.url,
@@ -97,6 +100,7 @@ function expandSource(input: {
       topic_kind: topicKind,
       url: input.url,
       title: input.title,
+      note: input.note,
       content_length: input.content?.length ?? 0,
       added_at: input.added_at,
     },
@@ -169,6 +173,7 @@ export async function GET(
         title: s.title,
         content: s.content,
         added_at: s.added_at,
+        note: s.note,
       }),
     )
   }
@@ -195,10 +200,14 @@ export async function GET(
 }
 
 // POST /api/f2/topics/[id]/sources
-// Body: { url: string }
+// Body: { url: string }            → fetch the URL and attach its content
+//   or: { text: string, title? }   → attach the text as the user's own NOTES
 //
-// Fetches the URL's content (HTML/text or YouTube transcript) and appends
-// { url, title, content, added_at } to the thread's additional_sources jsonb.
+// The notes path (Upload Notes in the app) stores the raw text with
+// note:true, which guarantees point-by-point coverage in audio summaries no
+// matter how long the notes are.
+const NOTES_UPLOAD_MAX_CHARS = 200_000
+
 export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
@@ -214,23 +223,41 @@ export async function POST(
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
 
-  let body: { url?: string }
+  let body: { url?: string; text?: string; title?: string }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  const url = body.url?.trim()
-  if (!url || !isUrl(url)) {
-    return NextResponse.json({ error: 'valid URL required' }, { status: 400 })
-  }
 
-  const fetched = await fetchUrlContent(url)
-  const entry: F2AdditionalSource = {
-    url,
-    title: fetched.title,
-    content: fetched.body,
-    added_at: new Date().toISOString(),
+  let entry: F2AdditionalSource
+  const text = body.text?.trim()
+  if (text) {
+    if (text.length > NOTES_UPLOAD_MAX_CHARS) {
+      return NextResponse.json(
+        { error: `notes too large (max ${NOTES_UPLOAD_MAX_CHARS.toLocaleString()} characters)` },
+        { status: 413 },
+      )
+    }
+    entry = {
+      url: null,
+      title: body.title?.trim() || 'My notes',
+      content: text,
+      added_at: new Date().toISOString(),
+      note: true,
+    }
+  } else {
+    const url = body.url?.trim()
+    if (!url || !isUrl(url)) {
+      return NextResponse.json({ error: 'url or text required' }, { status: 400 })
+    }
+    const fetched = await fetchUrlContent(url)
+    entry = {
+      url,
+      title: fetched.title,
+      content: fetched.body,
+      added_at: new Date().toISOString(),
+    }
   }
   const next = [...(thread.additional_sources ?? []), entry]
 
@@ -251,7 +278,7 @@ export async function POST(
   return NextResponse.json({
     source: entry,
     total: next.length,
-    fetched: fetched.body !== null,
+    fetched: entry.content !== null,
   })
 }
 

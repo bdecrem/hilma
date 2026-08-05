@@ -20,6 +20,10 @@ export type F2AdditionalSource = {
   title: string | null
   content: string | null
   added_at: string
+  /** True when the user uploaded this as their own notes (Upload Notes).
+   *  Notes always get the point-by-point coverage treatment in audio
+   *  summaries, regardless of length. */
+  note?: boolean
 }
 
 /// A quote the user captured for a topic by typing "quote <text>" in chat.
