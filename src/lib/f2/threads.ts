@@ -99,6 +99,29 @@ export function buildFullContent(thread: F2Thread): string {
   return parts.join('')
 }
 
+/// An additional source at or below this size counts as the user's own
+/// annotations rather than bulk material, even without the note flag.
+export const NOTES_SOURCE_MAX_CHARS = 30_000
+
+/// The user's own notes on a topic: uploaded notes files (note:true, always
+/// notes whatever their length) plus captured quotes and short pastes. Shared
+/// by audio-summary coverage and flash card generation so both weigh the same
+/// material as "what this person personally cared about".
+export function gatherUserNotes(thread: F2Thread): string {
+  const parts: string[] = []
+  for (const q of thread.quotes ?? []) {
+    if (q.text?.trim()) parts.push(q.author ? `"${q.text}" — ${q.author}` : `"${q.text}"`)
+  }
+  for (const s of thread.additional_sources ?? []) {
+    if (!s.content?.trim()) continue
+    const isNotes = s.note === true || s.content.length <= NOTES_SOURCE_MAX_CHARS
+    if (!isNotes) continue
+    const body = s.note ? s.content.slice(0, NOTES_SOURCE_MAX_CHARS * 2) : s.content
+    parts.push(s.title ? `${s.title}:\n${body}` : body)
+  }
+  return parts.join('\n\n')
+}
+
 export type QuizKind = 'standard' | 'hard' | 'reflection'
 
 /// Topic source kind — drives which glyph the Topics list renders.

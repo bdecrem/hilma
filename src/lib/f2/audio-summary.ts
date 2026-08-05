@@ -1,5 +1,5 @@
 import { f2Supabase } from './supabase'
-import { buildFullContent, type F2Thread } from './threads'
+import { buildFullContent, gatherUserNotes, type F2Thread } from './threads'
 import { llmComplete } from './llm'
 
 // Audio Summary — a one-shot narrated recap of a topic, stored as MP3 in the
@@ -155,9 +155,6 @@ const MAX_PARTS = 16
 // Concurrency cap on the parallel part-writes; extra parts queue. Keeps the
 // whole write inside the route's maxDuration even at MAX_PARTS.
 const PART_CONCURRENCY = 8
-// An additional source this small counts as the user's own notes/annotations
-// (guaranteed point-by-point coverage) rather than bulk source material.
-const NOTES_SOURCE_MAX_CHARS = 30_000
 const BOOK_WORD_THRESHOLD = 15_000
 // Fast, cheap, 3M-context model for the map digests + coverage checks. The
 // final writing (the reduce) stays on the user's chosen model.
@@ -459,30 +456,12 @@ async function verifyMissingNotes(script: string, notesChecklist: string[]): Pro
     .filter((i) => i >= 0 && i < notesChecklist.length)
 }
 
-/// The user's own annotations — quotes plus short additional sources — which
-/// get guaranteed point-by-point coverage. Bulk material (long transcripts) is
-/// read via the map-reduce corpus instead, not here.
-///
-/// Sources flagged note:true (Upload Notes) are ALWAYS notes — the user said
-/// so explicitly — with only a hard slice to keep the checklist extractor
-/// sane. The size heuristic applies just to unflagged sources, where short
-/// usually means annotation and long means bulk material.
-function gatherNotesText(thread: F2Thread): string {
-  const parts: string[] = []
-  for (const q of thread.quotes ?? []) {
-    if (q.text?.trim()) parts.push(q.author ? `"${q.text}" — ${q.author}` : `"${q.text}"`)
-  }
-  for (const s of thread.additional_sources ?? []) {
-    if (!s.content?.trim()) continue
-    if (s.note) {
-      const body = s.content.slice(0, NOTES_SOURCE_MAX_CHARS * 2)
-      parts.push(s.title ? `${s.title}:\n${body}` : body)
-    } else if (s.content.length <= NOTES_SOURCE_MAX_CHARS) {
-      parts.push(s.title ? `${s.title}:\n${s.content}` : s.content)
-    }
-  }
-  return parts.join('\n\n')
-}
+/// The user's own annotations — quotes, uploaded notes, and short additional
+/// sources — which get guaranteed point-by-point coverage. Bulk material
+/// (long transcripts) is read via the map-reduce corpus instead, not here.
+/// Shared with flash card generation, so both surfaces treat the same
+/// material as the user's own emphasis (see gatherUserNotes in threads.ts).
+const gatherNotesText = gatherUserNotes
 
 /// Produce the spoken script: single pass for small sources, map-reduce for
 /// book-length ones, then a coverage pass that patches in any missed notes.

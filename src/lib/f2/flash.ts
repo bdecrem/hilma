@@ -9,7 +9,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
 import { llmComplete } from './llm'
-import { buildFullContent, type F2Thread } from './threads'
+import { buildFullContent, gatherUserNotes, type F2Thread } from './threads'
 
 /// The user's verdict on a card itself (not on their answer).
 ///   'down'     — bury it; never serve it in a set again
@@ -90,6 +90,13 @@ export async function generateFlashCards(
     .map((m) => `${m.role}: ${m.text}`)
     .join('\n')
     .slice(0, 12_000)
+  // The audio summary is what the learner actually listened to, and it was
+  // itself written to cover their notes point by point — so when one exists
+  // it outranks the raw source for deciding WHAT to test.
+  const script = (thread.audio_summary?.script ?? '').slice(0, 60_000)
+  // Their own notes, straight from the uploads — the strongest signal about
+  // what they personally care about.
+  const notes = gatherUserNotes(thread).slice(0, 30_000)
 
   const system = `You write flash cards for a learning app. Given source material and a chat transcript about a topic, produce exactly ${n} flash cards that test real understanding of the most important ideas.
 
@@ -99,7 +106,22 @@ Rules:
 - Each card needs exactly 3 plausible-but-wrong distractors of the same shape
   and length as the answer, so multiple-choice mode isn't guessable by format.
 - Cover the topic broadly; no two cards should test the same fact.
-- No trick questions, no "all of the above".${thread.study_focus ? `
+- No trick questions, no "all of the above".${script ? `
+
+WHAT TO TEST — the learner has an audio summary of this topic, and it is what
+they actually listened to. Treat it as the authority on what matters: the deck
+should track the summary's coverage and emphasis, and every major idea in it
+should be testable from this deck. Use the full source material below to get
+facts exactly right and to write good distractors, but do NOT pull in
+material the summary passes over.` : ''}${notes ? `
+
+THE LEARNER'S OWN NOTES — what they flagged while reading. These are the
+strongest signal about what they care about. Make sure the deck covers the
+substance of these points; weight them above equally-important material they
+never mentioned. Where a note gets a fact wrong, test the CORRECT fact (and
+consider using their mistaken version as a distractor). Where a note asks a
+question, the answer is worth a card.
+${notes}` : ''}${thread.study_focus ? `
 
 STUDY FOCUS — the learner has only studied part of this material and wants to
 be tested ONLY within it. Their instruction:
@@ -113,8 +135,11 @@ conflict, except the format rules about answers and distractors):
 ${styleInstructions}` : ''}`
 
   const user = `Topic: ${subject}
-
-Source material:
+${script ? `
+Audio summary the learner listened to (the authority on what to test):
+${script}
+` : ''}
+Source material (ground truth for facts and distractors):
 ${source || '(no source — use the chat transcript as ground truth)'}
 
 Chat transcript:
