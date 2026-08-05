@@ -97,6 +97,8 @@ Key files (`apps/feynd/Feynd/`):
 - `Secrets.swift` (gitignored, see `Secrets.swift.example`) — backend URL (defaults to `https://feynd.cc`).
 - `Assets.xcassets/AppIcon.appiconset/` — app icon (same set since the original voice app).
 
+**See [`apps/feynd/CLAUDE.md`](apps/feynd/CLAUDE.md) for the full build/install playbook** — including the standing rule to run `./apps/feynd/bump-build.sh` before every build that lands on a device, so Settings → About reports a version Bart can actually trust.
+
 **Working on iOS — the workflow:**
 1. Edit Swift files in `apps/feynd/Feynd/`.
 2. After adding/removing files (or changing `project.yml`): `cd apps/feynd && xcodegen generate`.

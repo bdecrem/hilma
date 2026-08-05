@@ -382,6 +382,8 @@ struct ProfileSheet: View {
                     SettingsRow(label: "App", detail: "Feynd")
                     SettingsDivider()
                     SettingsRow(label: "Version", detail: appVersion)
+                    SettingsDivider()
+                    SettingsRow(label: "Built", detail: buildDate)
                 }
             }
         }
@@ -403,6 +405,19 @@ struct ProfileSheet: View {
         let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
         let b = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
         return "\(v) (\(b))"
+    }
+
+    /// When this binary was compiled, read off the executable itself — so it's
+    /// right even if someone forgets to bump the build number. Together with
+    /// the version it answers "is the build I just installed actually running?"
+    private var buildDate: String {
+        guard let url = Bundle.main.executableURL,
+              let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let date = attrs[.modificationDate] as? Date
+        else { return "unknown" }
+        let f = DateFormatter()
+        f.dateFormat = "MMM d, h:mm a"
+        return f.string(from: date)
     }
 
     // MARK: - Uploads
