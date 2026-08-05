@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
+import { listFlashCards } from '@/lib/f2/flash'
 import { f2Supabase } from '@/lib/f2/supabase'
 
 export const runtime = 'nodejs'
@@ -32,7 +33,7 @@ export async function PATCH(
   }
   const { id } = await ctx.params
 
-  let body: { topic?: string; pinned?: boolean }
+  let body: { topic?: string; pinned?: boolean; study_focus?: string | null }
   try {
     body = await req.json()
   } catch {
@@ -51,7 +52,17 @@ export async function PATCH(
     }
     update.topic = topic
   }
-  if (update.topic === undefined && update.pinned_at === undefined) {
+  // Study focus — empty string clears it. Capped so a pasted essay can't
+  // become the focus; this is a one-line instruction, not more material.
+  if (body.study_focus !== undefined) {
+    const focus = (body.study_focus ?? '').trim().slice(0, 500)
+    update.study_focus = focus || null
+  }
+  if (
+    update.topic === undefined &&
+    update.pinned_at === undefined &&
+    update.study_focus === undefined
+  ) {
     return NextResponse.json({ error: 'nothing to update' }, { status: 400 })
   }
 
@@ -60,7 +71,7 @@ export async function PATCH(
     .update(update)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, topic, pinned_at')
+    .select('id, topic, pinned_at, study_focus')
     .maybeSingle()
 
   if (error) {
@@ -70,7 +81,14 @@ export async function PATCH(
   if (!data) {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
-  return NextResponse.json({ thread: data })
+
+  // When the focus changed, tell the client how big the existing deck is so
+  // it can kick off a rebuild (the deck was generated under the old focus).
+  let flash_card_count: number | undefined
+  if (update.study_focus !== undefined) {
+    flash_card_count = (await listFlashCards(user.id, id)).length
+  }
+  return NextResponse.json({ thread: data, flash_card_count })
 }
 
 export async function DELETE(

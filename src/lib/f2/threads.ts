@@ -61,6 +61,10 @@ export type F2Thread = {
   /** When the user pinned this topic. Non-null = pinned; the timestamp also
    *  orders pinned topics (most-recently-pinned first). Null = not pinned. */
   pinned_at: string | null
+  /** User instruction scoping what they want to be tested on ("only the
+   *  first half — I haven't finished the book"). Honored by flash card
+   *  generation, chat quizzes, and the Final Review. Null = no focus. */
+  study_focus: string | null
 }
 
 /// One source-of-truth concatenation of every body the user has attached to a

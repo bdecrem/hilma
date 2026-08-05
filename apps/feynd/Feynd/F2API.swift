@@ -167,6 +167,22 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(pinned: pinned))
     }
 
+    /// Save (or clear, with "") the topic's study focus. Returns how many
+    /// flash cards the topic currently has so the caller can rebuild a deck
+    /// that was generated under the old focus.
+    func setStudyFocus(id: String, focus: String) async throws -> Int {
+        struct Body: Encodable {
+            let studyFocus: String
+            enum CodingKeys: String, CodingKey { case studyFocus = "study_focus" }
+        }
+        struct Response: Decodable {
+            let flashCardCount: Int?
+            enum CodingKeys: String, CodingKey { case flashCardCount = "flash_card_count" }
+        }
+        let res: Response = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(studyFocus: focus))
+        return res.flashCardCount ?? 0
+    }
+
     func deleteTopic(id: String) async throws {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }

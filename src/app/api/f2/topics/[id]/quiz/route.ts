@@ -54,7 +54,7 @@ export async function POST(
     // empty/invalid body → default standard
   }
 
-  const prompt = buildQuizPrompt(kind, thread.stars)
+  const prompt = buildQuizPrompt(kind, thread.stars, thread.study_focus)
 
   const result = await processMessage({
     userId: user.id,
@@ -77,14 +77,23 @@ export async function POST(
   })
 }
 
-function buildQuizPrompt(kind: QuizKind, currentStars: number): string {
+function buildQuizPrompt(
+  kind: QuizKind,
+  currentStars: number,
+  studyFocus: string | null,
+): string {
+  // The quiz request is a synthetic USER message, so the focus reads as the
+  // user restating their own constraint — the strongest place to put it.
+  const focus = studyFocus
+    ? ` Important: I have only studied part of this material — restrict every question to this focus and ask nothing outside it: "${studyFocus}".`
+    : ''
   if (kind === 'hard') {
     return [
       'Give me the Hard Quiz on this topic.',
       'Ask tough, multi-step questions that go beyond surface recall —',
       'synthesis, comparison, edge cases. Ask one at a time and wait for',
       'my answer before moving on. No grading commentary mid-quiz.',
-    ].join(' ')
+    ].join(' ') + focus
   }
 
   // Standard quiz. Structure depends on whether this is the user's first
@@ -99,7 +108,7 @@ function buildQuizPrompt(kind: QuizKind, currentStars: number): string {
       'Do not number the questions out loud. Do not summarize or grade my answers between questions —',
       'just react briefly ("Good." / "Hmm, not quite." style is fine, but no explanations) and move on.',
       'After question 4 is answered, say something brief like "That\'s the quiz — tap Done quiz when you\'re ready."',
-    ].join(' ')
+    ].join(' ') + focus
   }
 
   // Quiz 2 — 5 questions, will be graded server-side on completion.
@@ -112,5 +121,5 @@ function buildQuizPrompt(kind: QuizKind, currentStars: number): string {
     'Do not number the questions out loud. React briefly to each answer but do not explain or grade —',
     'a separate grader will evaluate when I\'m done.',
     'After question 5 is answered, say something brief like "That\'s the quiz — tap Done quiz when you\'re ready."',
-  ].join(' ')
+  ].join(' ') + focus
 }

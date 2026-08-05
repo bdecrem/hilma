@@ -81,7 +81,13 @@ Rules:
 - Each card needs exactly 3 plausible-but-wrong distractors of the same shape
   and length as the answer, so multiple-choice mode isn't guessable by format.
 - Cover the topic broadly; no two cards should test the same fact.
-- No trick questions, no "all of the above".${styleInstructions ? `
+- No trick questions, no "all of the above".${thread.study_focus ? `
+
+STUDY FOCUS — the learner has only studied part of this material and wants to
+be tested ONLY within it. Their instruction:
+"${thread.study_focus}"
+Every card must come from inside this focus. Skip material outside it, even
+if it seems important.` : ''}${styleInstructions ? `
 
 The learner asked for the deck to be built THEIR way — follow this guidance
 about the style and mix of cards (it wins over the defaults above where they
@@ -540,7 +546,9 @@ export async function judgeFinalReview(
   const source = buildFullContent(thread).slice(0, 100_000)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
-  const system = `You grade a spoken Final Review session for a learning app. The assistant conducted a comprehensive oral review of a topic; the user is trying to demonstrate mastery.
+  const system = `You grade a spoken Final Review session for a learning app. The assistant conducted a comprehensive oral review of a topic; the user is trying to demonstrate mastery.${thread.study_focus ? `
+
+The user set a STUDY FOCUS — they only studied part of the material and the exam was scoped to it: "${thread.study_focus}". Grade ONLY command of the material inside that focus. Never penalize gaps in material outside it.` : ''}
 
 Grade the USER's performance A–F:
 - A: commanded the main ideas AND meaningful supporting detail, explained in their own words, few or no real errors. This is a high bar — reserve A for genuinely strong performances.

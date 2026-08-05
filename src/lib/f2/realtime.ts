@@ -158,7 +158,9 @@ export function buildFinalReviewInstructions(input: {
   const name = friendlyName(input.userName)
   return `You are F2, conducting ${name}'s FINAL REVIEW — a spoken oral exam on a topic they have been studying. Passing at the highest level earns their mastery star, so be thorough and fair. You speak first.
 
-${summarizeThreadForPrompt(input.thread)}
+${summarizeThreadForPrompt(input.thread)}${input.thread.study_focus ? `
+
+STUDY FOCUS: ${name} has only studied part of this material and asked to be examined ONLY on it: "${input.thread.study_focus}". Every question must stay inside that focus — never ask about material outside it.` : ''}
 
 How to conduct the review:
 - Open by telling ${name} this is their Final Review: about five questions, explain things in your own words, and there's a star on the line. Then ask the first question.

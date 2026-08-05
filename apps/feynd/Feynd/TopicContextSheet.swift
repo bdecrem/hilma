@@ -26,6 +26,16 @@ struct TopicContextSheet: View {
     @State private var addURL = ""
     @State private var addBusy = false
     @State private var addError: String? = nil
+    // Study focus — scopes flash cards, quizzes, and the Final Review to the
+    // part of the material the user actually studied. Seeded from the server
+    // in load() (the list's F2Topic can be stale after an earlier edit).
+    @State private var studyFocus: String? = nil
+    @State private var focusSeeded = false
+    @State private var showFocusEditor = false
+    @State private var focusDraft = ""
+    @State private var focusBusy = false
+    @State private var focusError: String? = nil
+    @State private var deckRebuilding = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -34,6 +44,7 @@ struct TopicContextSheet: View {
             ScrollView {
                 VStack(spacing: 0) {
                     addContextButton
+                    studyFocusSection
                     if loading {
                         ProgressView()
                             .tint(FeyndTheme.text2)
@@ -87,6 +98,15 @@ struct TopicContextSheet: View {
         } message: {
             Text(addError ?? "Paste a URL (article, YouTube, etc.) — F2 pulls it in and adds it to this topic's context.")
         }
+        .alert("Study focus",
+               isPresented: $showFocusEditor) {
+            TextField("Only the first half…", text: $focusDraft)
+            Button("Cancel", role: .cancel) { focusDraft = ""; focusError = nil }
+            Button("Save") { Task { await commitFocus(focusDraft) } }
+                .disabled(focusBusy)
+        } message: {
+            Text(focusError ?? "What should F2 test you on? Flash cards, quizzes, and the Final Review will stick to it — e.g. “Only the first half — I haven’t finished the book.”")
+        }
         .alert("Remove this source?",
                isPresented: Binding(get: { confirmDelete != nil },
                                     set: { if !$0 { confirmDelete = nil } })) {
@@ -137,6 +157,108 @@ struct TopicContextSheet: View {
         .padding(.horizontal, 18)
         .padding(.top, 12)
         .padding(.bottom, 4)
+    }
+
+    // MARK: - Study focus
+
+    @ViewBuilder
+    private var studyFocusSection: some View {
+        Group {
+            if let focus = studyFocus {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("STUDY FOCUS")
+                        .font(.system(size: 10, weight: .bold))
+                        .tracking(0.5)
+                        .foregroundStyle(FeyndTheme.gold)
+                    Text("“\(focus)”")
+                        .font(.system(size: 14))
+                        .italic()
+                        .foregroundStyle(FeyndTheme.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 5) {
+                        if deckRebuilding {
+                            ProgressView().controlSize(.mini).tint(FeyndTheme.text2)
+                        }
+                        Text(deckRebuilding
+                             ? "Rebuilding the flash deck to match…"
+                             : "Flash cards, quizzes, and the Final Review stay inside this.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(FeyndTheme.text2)
+                    }
+                    HStack(spacing: 16) {
+                        Button("Edit") {
+                            focusDraft = focus
+                            focusError = nil
+                            showFocusEditor = true
+                        }
+                        Button("Clear") { Task { await commitFocus("") } }
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.coral)
+                    .buttonStyle(.plain)
+                    .disabled(focusBusy)
+                    .padding(.top, 2)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+            } else {
+                Button {
+                    focusDraft = ""
+                    focusError = nil
+                    showFocusEditor = true
+                } label: {
+                    HStack(spacing: 8) {
+                        if focusBusy {
+                            ProgressView().controlSize(.mini).tint(FeyndTheme.text2)
+                        } else {
+                            Image(systemName: "scope")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        Text("Set a study focus")
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                    .foregroundStyle(FeyndTheme.text2)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(focusBusy)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+    }
+
+    /// Save ("" clears) the focus, then rebuild an existing deck to match —
+    /// its cards were generated under the old focus. The rebuild Task is
+    /// unstructured on purpose: it keeps running if the sheet is dismissed.
+    private func commitFocus(_ newValue: String) async {
+        focusBusy = true
+        defer { focusBusy = false }
+        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        do {
+            let cardCount = try await F2API.shared.setStudyFocus(id: topic.id, focus: trimmed)
+            studyFocus = trimmed.isEmpty ? nil : trimmed
+            focusDraft = ""
+            if cardCount > 0 {
+                deckRebuilding = true
+                let topicId = topic.id
+                let instructions = trimmed.isEmpty
+                    ? "My study focus was removed — rebuild the deck to cover the full source material evenly."
+                    : "Rebuild the deck to match my study focus."
+                Task {
+                    _ = try? await F2API.shared.redoFlashDeck(topicId: topicId, instructions: instructions)
+                    deckRebuilding = false
+                }
+            }
+        } catch {
+            focusError = "Couldn't save: \(error.localizedDescription)"
+            showFocusEditor = true
+        }
     }
 
     private func commitAdd() async {
@@ -424,14 +546,24 @@ struct TopicContextSheet: View {
         loading = true
         loadError = nil
         do {
-            // Sources are the primary content; summaries are best-effort (a
-            // topic may have none). Don't let a summaries hiccup blank the sheet.
+            // Sources are the primary content; summaries + thread (for the
+            // study focus) are best-effort — a hiccup shouldn't blank the sheet.
             async let sourcesTask = F2API.shared.listTopicSources(id: topic.id)
             async let summariesTask = try? F2API.shared.listSummaries(id: topic.id)
+            async let threadTask = try? F2API.shared.getThread(id: topic.id)
             sources = try await sourcesTask
             if let s = await summariesTask {
                 summaries = s.summaries
                 currentSummaryId = s.currentId
+            }
+            // Only seed once — a reload after the user saved a focus in this
+            // sheet must not clobber their fresh edit with the fetched value.
+            if !focusSeeded {
+                focusSeeded = true
+                let fetchedThread = await threadTask
+                let fetched = fetchedThread?.studyFocus ?? topic.studyFocus
+                let trimmed = (fetched ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                studyFocus = trimmed.isEmpty ? nil : trimmed
             }
         } catch {
             loadError = error.localizedDescription

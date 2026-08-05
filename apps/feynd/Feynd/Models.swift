@@ -62,6 +62,9 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     /// When the user pinned this topic; nil = not pinned. Also orders pinned
     /// topics (most-recently-pinned first).
     var pinnedAt: Date?
+    /// User instruction scoping what they want to be tested on ("only the
+    /// first half"). Flash cards, quizzes, and the Final Review honor it.
+    var studyFocus: String?
 
     var isPinned: Bool { pinnedAt != nil }
 
@@ -89,6 +92,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case pinnedAt = "pinned_at"
+        case studyFocus = "study_focus"
     }
 
     // Custom init so the iOS app keeps working against backends that don't
@@ -109,6 +113,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
         pinnedAt = try c.decodeIfPresent(Date.self, forKey: .pinnedAt)
+        studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
     }
 }
 
@@ -135,6 +140,8 @@ struct F2Thread: Codable {
     var hardQuizCompletedAt: Date?
     var pendingQuizKind: String?
     var audioSummary: F2AudioSummary?
+    /// See F2Topic.studyFocus.
+    var studyFocus: String?
 
     var sourceHost: String? {
         guard let url, let host = URL(string: url)?.host else { return nil }
@@ -148,6 +155,7 @@ struct F2Thread: Codable {
         case hardQuizCompletedAt = "hard_quiz_completed_at"
         case pendingQuizKind = "pending_quiz_kind"
         case audioSummary = "audio_summary"
+        case studyFocus = "study_focus"
     }
 
     init(from decoder: Decoder) throws {
@@ -162,6 +170,7 @@ struct F2Thread: Codable {
         hardQuizCompletedAt = try c.decodeIfPresent(Date.self, forKey: .hardQuizCompletedAt)
         pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
         audioSummary = try c.decodeIfPresent(F2AudioSummary.self, forKey: .audioSummary)
+        studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
     }
 }
 
