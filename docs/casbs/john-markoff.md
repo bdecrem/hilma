@@ -50,7 +50,7 @@ https://johnmarkoff.net/
 **Subject:** I inherited your old CASBS study (#16)
 
 Hi John — I'm a new CASBS fellow, and I just landed Study 16, which I then discovered was
-*your* office in 2018–19 (its ghost list runs Quine → McCarthy → Tversky → you, which is a
+*your* office in 2018–19 (its ghost list runs Quine → Tversky → McCarthy → you, which is a
 lot to live up to).
 
 Quick intro: I'm a longtime Valley founder — Tapulous (Tap Tap Revenge, → Disney) and,
