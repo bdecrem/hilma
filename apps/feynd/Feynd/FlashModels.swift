@@ -46,6 +46,18 @@ struct FlashCard: Codable, Identifiable, Equatable, Hashable {
     }
 }
 
+/// Score that clears a Jumbo level for a set played in `mode` — mirrors
+/// jumboPassScore in src/lib/f2/flash.ts. Spoken recall is the hardest
+/// performance so audio rounds pass at 7; choice has the answers on screen
+/// so it demands 9; typed sits between.
+func jumboPassScore(mode: String) -> Int {
+    switch mode {
+    case "voice": return 7
+    case "text": return 8
+    default: return 9
+    }
+}
+
 /// One topic's deck as listed in the Flash tab's deck manager.
 struct FlashDeck: Codable, Identifiable, Equatable {
     var id: String { threadId }
@@ -177,10 +189,20 @@ struct JumboLevelInfo: Codable, Identifiable, Equatable {
     let status: String          // locked | unlocked | passed
     let bestScore: Int?
     let stars: Int              // 0..3 node stars
+    /// Score that clears the level in its default mode (voice 7, text 8,
+    /// choice 9). Absent on older backends — requiredScore falls back to
+    /// the same mapping client-side.
+    let passScore: Int?
 
     enum CodingKeys: String, CodingKey {
         case level, mode, status, stars
         case bestScore = "best_score"
+        case passScore = "pass_score"
+    }
+
+    /// Threshold to clear this level when played in its default mode.
+    var requiredScore: Int {
+        passScore ?? jumboPassScore(mode: mode)
     }
 
     var modeIcon: String {

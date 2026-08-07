@@ -1,8 +1,10 @@
 import SwiftUI
 
 /// The Flash tab — Jumbo Flash Game. A vertical level path (think Duolingo)
-/// over every flash card the user owns, across all topics. Pass a level
-/// (7/10) to unlock the next; 9/10 = 2 node stars, perfect = 3.
+/// over every flash card the user owns, across all topics. Clearing a level
+/// depends on how you play it: audio rounds (the mic button plays any level
+/// as one) pass at 7/10, typed at 8/10, multiple choice at 9/10. 9/10 = 2
+/// node stars, perfect = 3.
 struct FlashTabView: View {
     @Environment(Session.self) private var session
 
@@ -64,6 +66,19 @@ struct FlashTabView: View {
                         levelMap(state)
                     } else {
                         errorHero
+                    }
+                }
+                .feyndContentColumn()
+            }
+
+            // Audio-round button — floats over the map, plays the current
+            // level as a voice set (passes at 7, vs 9 for multiple choice).
+            if let state, state.cardCount >= 10 {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        audioRoundButton
                     }
                 }
                 .feyndContentColumn()
@@ -146,6 +161,34 @@ struct FlashTabView: View {
                 : String(format: "%.0fk", k)
         }
         return String(format: "%.1fM", Double(xp) / 1_000_000)
+    }
+
+    /// Floating mic button — starts the current level as an audio round.
+    /// Same cards, spoken back and forth; the easier 7/10 bar applies.
+    private var audioRoundButton: some View {
+        Button { startAudioRound() } label: {
+            HStack(spacing: 7) {
+                if startingLevel != nil {
+                    ProgressView().tint(Color(hex: 0x1A0E08)).scaleEffect(0.8)
+                } else {
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 15, weight: .bold))
+                }
+                Text("Audio round")
+                    .font(.system(size: 14, weight: .bold))
+            }
+            .foregroundStyle(Color(hex: 0x1A0E08))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(FeyndTheme.coral, in: Capsule())
+            .overlay(Capsule().stroke(Color(hex: 0xF5A08A), lineWidth: 1))
+            .shadow(color: .black.opacity(0.45), radius: 10, y: 4)
+        }
+        .buttonStyle(.plain)
+        .disabled(startingLevel != nil)
+        .padding(.trailing, 24)
+        .padding(.bottom, 104) // clear the floating tab pill
+        .accessibilityLabel("Play the current level as an audio round")
     }
 
     /// The deck manager button — a stack of cards, which is literally what
@@ -421,6 +464,23 @@ struct FlashTabView: View {
             startingLevel = nil
         }
     }
+
+    /// Mic button: play the current (frontier) level as an audio round.
+    private func startAudioRound() {
+        guard startingLevel == nil, let state else { return }
+        let level = state.levels.first(where: { $0.status == "unlocked" })?.level
+            ?? state.highestPassed + 1
+        FlashSFX.shared.play(.start)
+        startingLevel = level
+        Task {
+            do {
+                voiceSet = try await F2API.shared.startJumboSet(level: level, voice: true)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            startingLevel = nil
+        }
+    }
 }
 
 // MARK: - World scenery
@@ -680,6 +740,16 @@ private struct LevelStartSheet: View {
     let starting: Bool
     let onPlay: () -> Void
 
+    /// Threshold copy for an uncleared level, by its default mode. Choice
+    /// passes at 9, which is already two stars — say so instead of listing
+    /// the same number twice.
+    private var unpassedCopy: String {
+        let need = level.requiredScore
+        return need >= 9
+            ? "10 questions mixed from all your topics. Score 9 to clear it (that's two stars), perfect for three."
+            : "10 questions mixed from all your topics. Score \(need) to clear it, 9 for two stars, perfect for three."
+    }
+
     var body: some View {
         ZStack {
             FeyndTheme.bg.ignoresSafeArea()
@@ -707,12 +777,18 @@ private struct LevelStartSheet: View {
 
                 Text(level.status == "passed"
                      ? "Cleared with \(level.bestScore ?? 0)/10. Replay for a better score — 10/10 earns all three stars."
-                     : "10 questions mixed from all your topics. Score 7 to clear it, 9 for two stars, perfect for three.")
+                     : unpassedCopy)
                     .font(.system(size: 13.5))
                     .lineSpacing(3)
                     .foregroundStyle(FeyndTheme.text2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 34)
+
+                if level.status != "passed" && level.mode != "voice" {
+                    Text("Or use the mic button — audio rounds clear at 7.")
+                        .font(.system(size: 12))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
 
                 if level.status == "passed" {
                     HStack(spacing: 3) {

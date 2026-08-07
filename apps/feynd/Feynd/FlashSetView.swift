@@ -61,6 +61,7 @@ struct FlashSetView: View {
             case .results(let r): FlashResultsView(
                 result: r,
                 jumboLevel: start.jumboLevel,
+                mode: start.mode,
                 onDone: { dismiss() }
             )
             case .error(let msg): errorView(msg)
@@ -470,6 +471,9 @@ struct FlashSetView: View {
 struct FlashResultsView: View {
     let result: FlashSubmitResult
     let jumboLevel: Int?
+    /// Mode the set was played in — the Jumbo pass bar depends on it
+    /// (voice 7, text 8, choice 9).
+    var mode: String = "choice"
     let onDone: () -> Void
 
     @State private var ringProgress: CGFloat = 0
@@ -477,7 +481,9 @@ struct FlashResultsView: View {
 
     private var isPerfect: Bool { result.total > 0 && result.score == result.total }
     private var fraction: CGFloat { result.total > 0 ? CGFloat(result.score) / CGFloat(result.total) : 0 }
-    private var passedJumbo: Bool { jumboLevel != nil && result.score >= 7 && result.total >= 10 }
+    private var passedJumbo: Bool {
+        jumboLevel != nil && result.total >= 10 && result.score >= jumboPassScore(mode: mode)
+    }
 
     var body: some View {
         ZStack {

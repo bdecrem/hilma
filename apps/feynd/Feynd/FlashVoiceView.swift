@@ -48,7 +48,7 @@ struct FlashVoiceView: View {
                         .foregroundStyle(FeyndTheme.text2)
                 }
             case .results(let r):
-                FlashResultsView(result: r, jumboLevel: start.jumboLevel) {
+                FlashResultsView(result: r, jumboLevel: start.jumboLevel, mode: "voice") {
                     dismiss()
                 }
             case .error(let msg):

@@ -639,9 +639,14 @@ final class F2API {
     }
 
     /// Start a Jumbo level (mode fixed by the level).
-    func startJumboSet(level: Int) async throws -> FlashStart {
-        struct Body: Encodable { let jumbo_level: Int }
-        return try await post("/api/f2/flash/start", body: Body(jumbo_level: level))
+    /// Start a Jumbo set. `voice: true` plays the level as an audio round
+    /// (the Flash tab's mic button) instead of the level's default mode.
+    func startJumboSet(level: Int, voice: Bool = false) async throws -> FlashStart {
+        struct Body: Encodable {
+            let jumbo_level: Int
+            let mode: String?
+        }
+        return try await post("/api/f2/flash/start", body: Body(jumbo_level: level, mode: voice ? "voice" : nil))
     }
 
     struct FlashAnswer: Encodable {

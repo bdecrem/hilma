@@ -63,8 +63,20 @@ export type FlashSet = {
 }
 
 export const SET_SIZE = 10
-export const JUMBO_PASS_SCORE = 7
 export const STAR2_SCORE = 9 // 9/10 on two consecutive full sets → star 2
+
+/// Score needed to clear a Jumbo level, by the mode the set was played in.
+/// Voice is the hardest to perform (spoken recall, judged) so it passes at
+/// 7; multiple choice has the answers on screen so it demands 9; typed sits
+/// between. Any level can be played as an audio round via the Flash tab's
+/// mic button, so the threshold follows the SET's mode, not the level's.
+export function jumboPassScore(mode: FlashSetMode): number {
+  switch (mode) {
+    case 'voice': return 7
+    case 'text': return 8
+    case 'choice': return 9
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Card generation
@@ -1117,6 +1129,9 @@ export type JumboLevel = {
   status: 'locked' | 'unlocked' | 'passed'
   best_score: number | null
   stars: number // 0..3 node stars (7-8 → 1, 9 → 2, 10 → 3)
+  /** Score that clears this level in its default mode (jumboPassScore).
+   *  A voice round of the same level passes at jumboPassScore('voice'). */
+  pass_score: number
 }
 
 export type JumboState = {
@@ -1141,7 +1156,7 @@ function nodeStars(score: number, total: number): number {
   if (total < SET_SIZE) return 0
   if (score >= total) return 3
   if (score >= STAR2_SCORE) return 2
-  if (score >= JUMBO_PASS_SCORE) return 1
+  if (score >= jumboPassScore('voice')) return 1
   return 0
 }
 
@@ -1154,25 +1169,31 @@ export async function getJumboState(userId: string): Promise<JumboState> {
     countFlashCards(userId),
     sb
       .from('f2_flash_sets')
-      .select('jumbo_level, score, total')
+      .select('jumbo_level, score, total, mode')
       .eq('user_id', userId)
       .not('jumbo_level', 'is', null),
   ])
   if (error) console.error('[f2/flash] getJumboState failed:', error)
 
   const best = new Map<number, { score: number; total: number }>()
-  for (const s of (sets ?? []) as { jumbo_level: number; score: number; total: number }[]) {
+  // A level is cleared when ANY full set met the threshold for the mode it
+  // was played in — a 7 in a voice round clears what a choice round needs a
+  // 9 for.
+  const cleared = new Set<number>()
+  for (const s of (sets ?? []) as {
+    jumbo_level: number
+    score: number
+    total: number
+    mode: FlashSetMode
+  }[]) {
     const b = best.get(s.jumbo_level)
     if (!b || s.score > b.score) best.set(s.jumbo_level, { score: s.score, total: s.total })
+    if (s.total >= SET_SIZE && s.score >= jumboPassScore(s.mode)) cleared.add(s.jumbo_level)
   }
 
   // Levels pass in order; the map unlocks strictly one past the highest pass.
   let highestPassed = 0
-  while (true) {
-    const b = best.get(highestPassed + 1)
-    if (b && b.total >= SET_SIZE && b.score >= JUMBO_PASS_SCORE) highestPassed++
-    else break
-  }
+  while (cleared.has(highestPassed + 1)) highestPassed++
 
   const LOOKAHEAD = 4
   const MIN_MAP = 10
@@ -1181,12 +1202,14 @@ export async function getJumboState(userId: string): Promise<JumboState> {
   for (let l = 1; l <= top; l++) {
     const b = best.get(l)
     const passed = l <= highestPassed
+    const mode = jumboLevelMode(l)
     levels.push({
       level: l,
-      mode: jumboLevelMode(l),
+      mode,
       status: passed ? 'passed' : l === highestPassed + 1 ? 'unlocked' : 'locked',
       best_score: b?.score ?? null,
       stars: b ? nodeStars(b.score, b.total) : 0,
+      pass_score: jumboPassScore(mode),
     })
   }
 
