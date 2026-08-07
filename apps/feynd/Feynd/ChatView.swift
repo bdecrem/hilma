@@ -66,6 +66,11 @@ struct ChatView: View {
         // lookup doesn't crash with "No Observable object of type Session".
         .sheet(isPresented: $showSettings) { ProfileSheet().environment(session) }
         .sheet(isPresented: $voicePresented) { VoiceSessionView(mode: "global") }
+        // Dev/testing hook: `simctl launch … -ShowVoice 1` opens the voice
+        // sheet straight away for headless screenshot verification.
+        .onAppear {
+            if UserDefaults.standard.bool(forKey: "ShowVoice") { voicePresented = true }
+        }
         .task { await loadLatest() }
     }
 
