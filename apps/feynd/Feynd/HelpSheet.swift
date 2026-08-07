@@ -26,7 +26,7 @@ struct HelpSheet: View {
         ),
         Command(
             usage: "quote \"<text>\" (author)",
-            detail: "Save a quote to the current topic. Outside a topic, F2 asks which topic to file it under."
+            detail: "Save a quote to the current topic. Outside a topic, Dodo asks which topic to file it under."
         ),
         Command(
             usage: "reflection quiz",

@@ -179,7 +179,7 @@ struct TopicDetailView: View {
                         .allowsHitTesting(!busy)
                     }
 
-                    ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
+                    ActionChip(label: "Talk to Dodo", systemImage: "mic.fill") {
                         voicePresented = true
                     }
                     .opacity(busy ? 0.5 : 1)

@@ -711,7 +711,7 @@ private struct LevelStartSheet: View {
                     modeButton("text", icon: "keyboard", title: "Type answers",
                                sub: "Write it in your own words — clears at \(jumboPassScore(mode: "text"))/10")
                     modeButton("voice", icon: "mic.fill", title: "Voice round",
-                               sub: "F2 quizzes you out loud — clears at \(jumboPassScore(mode: "voice"))/10")
+                               sub: "Dodo quizzes you out loud — clears at \(jumboPassScore(mode: "voice"))/10")
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 2)

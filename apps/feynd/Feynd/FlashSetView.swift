@@ -433,7 +433,7 @@ struct FlashSetView: View {
     private var gradingView: some View {
         VStack(spacing: 16) {
             ProgressView().tint(FeyndTheme.accent).scaleEffect(1.4)
-            Text(start.mode == "text" ? "F2 is grading your answers…" : "Tallying your round…")
+            Text(start.mode == "text" ? "Dodo is grading your answers…" : "Tallying your round…")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(FeyndTheme.text2)
         }

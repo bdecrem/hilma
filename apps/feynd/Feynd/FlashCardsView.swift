@@ -110,7 +110,7 @@ struct FlashCardsView: View {
                 // A build kicked off earlier is still running — the sheet was
                 // dismissed then, but the user peeked back in.
                 ProgressView().tint(FeyndTheme.accent).scaleEffect(1.3)
-                Text("F2 is writing your cards…")
+                Text("Dodo is writing your cards…")
                     .font(.system(size: 22, weight: .bold))
                     .tracking(-0.4)
                     .foregroundStyle(FeyndTheme.text)
@@ -128,7 +128,7 @@ struct FlashCardsView: View {
                     .font(.system(size: 22, weight: .bold))
                     .tracking(-0.4)
                     .foregroundStyle(FeyndTheme.text)
-                Text("F2 reads everything you've saved here and writes flash cards that test the ideas that matter.")
+                Text("Dodo reads everything you've saved here and writes flash cards that test the ideas that matter.")
                     .font(.system(size: 14))
                     .lineSpacing(3)
                     .foregroundStyle(FeyndTheme.text2)
@@ -236,9 +236,9 @@ struct FlashCardsView: View {
             modeButton("choice", icon: "square.grid.2x2", title: "Multiple choice",
                        sub: "Tap the right answer — instant feedback")
             modeButton("text", icon: "keyboard", title: "Type answers",
-                       sub: "Write it in your own words, F2 grades")
+                       sub: "Write it in your own words, Dodo grades")
             modeButton("voice", icon: "mic.fill", title: "Voice round",
-                       sub: "F2 quizzes you out loud, game-show style")
+                       sub: "Dodo quizzes you out loud, game-show style")
         }
     }
 
@@ -453,7 +453,7 @@ struct FlashCardsView: View {
                 .foregroundStyle(FeyndTheme.text3)
                 .padding(.top, 8)
             HStack(spacing: 8) {
-                TextField("Write a question — F2 fills in the answer…", text: $newQuestion, axis: .vertical)
+                TextField("Write a question — Dodo fills in the answer…", text: $newQuestion, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
                     .foregroundStyle(FeyndTheme.text)

@@ -43,7 +43,7 @@ struct FlashVoiceView: View {
             case .grading:
                 VStack(spacing: 16) {
                     ProgressView().tint(FeyndTheme.accent).scaleEffect(1.4)
-                    Text("F2 is scoring your round…")
+                    Text("Dodo is scoring your round…")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(FeyndTheme.text2)
                 }

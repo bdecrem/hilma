@@ -107,7 +107,7 @@ struct TopicContextSheet: View {
             Button("Add") { Task { await commitAdd() } }
                 .disabled(addBusy)
         } message: {
-            Text(addError ?? "Paste a URL (article, YouTube, etc.) — F2 pulls it in and adds it to this topic's context.")
+            Text(addError ?? "Paste a URL (article, YouTube, etc.) — Dodo pulls it in and adds it to this topic's context.")
         }
         .fileImporter(
             isPresented: $showNotesImporter,
