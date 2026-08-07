@@ -188,7 +188,9 @@ export function ProfileBadge({
 // Mini topic glyph (diagonal Feynman-style two-node mark on a tiny tile)
 // ---------------------------------------------------------------------------
 
-export type TopicKind = 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
+export type TopicKind =
+  | 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
+  | 'book' | 'mini' | 'general'
 
 /// 36pt rounded-square chip whose inner glyph reflects the topic's source
 /// kind. Source-of-truth SVG paths were prototyped in
@@ -229,6 +231,9 @@ function renderGlyph(kind: TopicKind) {
     case 'audio': return <AudioGlyph />
     case 'video': return <VideoGlyph />
     case 'paste': return <PasteGlyph />
+    case 'book':  return <BookGlyph />
+    case 'mini':  return <MiniKindGlyph />
+    case 'general': return <GeneralGlyph />
     default:      return <FallbackGlyph />
   }
 }
@@ -293,6 +298,47 @@ function PasteGlyph() {
       <circle cx="4.5" cy="6" r={GLYPH_R} fill="var(--feynd-coral)" />
       <circle cx="4.5" cy="10" r={GLYPH_R} fill="var(--feynd-coral)" />
       <circle cx="4.5" cy="14" r={GLYPH_R} fill="var(--feynd-coral)" />
+    </svg>
+  )
+}
+
+function BookGlyph() {
+  // Open book: two page curves meeting at a center spine.
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <path
+        d="M 10 6 C 8.5 4.8, 6 4.8, 4.5 5.6 V 14 C 6 13.2, 8.5 13.2, 10 14.4"
+        fill="none" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round"
+      />
+      <path
+        d="M 10 6 C 11.5 4.8, 14 4.8, 15.5 5.6 V 14 C 14 13.2, 11.5 13.2, 10 14.4"
+        fill="none" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round"
+      />
+      <line x1="10" y1="6" x2="10" y2="14.4" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} />
+    </svg>
+  )
+}
+
+function MiniKindGlyph() {
+  // Little spark: three short rays through a filled center node.
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <line x1="10" y1="5.5" x2="10" y2="14.5" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <line x1="6.1" y1="7.75" x2="13.9" y2="12.25" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <line x1="6.1" y1="12.25" x2="13.9" y2="7.75" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <circle cx="10" cy="10" r={GLYPH_R} fill="var(--feynd-coral)" />
+    </svg>
+  )
+}
+
+function GeneralGlyph() {
+  // Lightbulb: bulb circle + filament node + two base lines.
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <circle cx="10" cy="8.2" r="4.2" fill="none" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} />
+      <circle cx="10" cy="8.2" r="1.6" fill="var(--feynd-coral)" />
+      <line x1="8.3" y1="13.6" x2="11.7" y2="13.6" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
+      <line x1="8.8" y1="15.6" x2="11.2" y2="15.6" stroke="var(--feynd-coral)" strokeWidth={GLYPH_STROKE} strokeLinecap="round" />
     </svg>
   )
 }

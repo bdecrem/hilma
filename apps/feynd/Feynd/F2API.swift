@@ -157,9 +157,14 @@ final class F2API {
         return res.thread
     }
 
-    func renameTopic(id: String, to newTopic: String) async throws {
-        struct Body: Encodable { let topic: String }
-        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(topic: newTopic))
+    /// Rename a topic and/or set its user-chosen type (kind). Pass nil to
+    /// leave either field unchanged.
+    func renameTopic(id: String, to newTopic: String, kind: String? = nil) async throws {
+        struct Body: Encodable {
+            let topic: String
+            let kind: String?
+        }
+        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(topic: newTopic, kind: kind))
     }
 
     func setPinned(id: String, pinned: Bool) async throws {

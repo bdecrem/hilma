@@ -16,13 +16,10 @@
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
-	<!-- Both come from project.yml (MARKETING_VERSION / CURRENT_PROJECT_VERSION)
-	     via apps/feynd/bump-build.sh. Never hardcode them here — that's how
-	     Settings > About ended up frozen at "1.0 (1)" for every build. -->
 	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
+	<string>1.0</string>
 	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<string>1</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

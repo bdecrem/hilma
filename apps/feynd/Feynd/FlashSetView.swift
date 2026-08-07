@@ -171,6 +171,16 @@ struct FlashSetView: View {
                 .buttonStyle(.plain)
                 .opacity(isChoice ? 1 : 0)   // text mode has no answer to edit safely
             }
+            // Which topic this card belongs to — essential in Jumbo sets,
+            // where "according to the book…" could mean any of the decks.
+            if let cardTopic = q.topic ?? topicLabel {
+                Text(cardTopic.uppercased())
+                    .font(.system(size: 11, weight: .semibold))
+                    .tracking(0.8)
+                    .foregroundStyle(FeyndTheme.text3)
+                    .lineLimit(1)
+                    .padding(.top, 8)
+            }
             Text(q.question)
                 .font(.system(size: 22, weight: .semibold))
                 .tracking(-0.4)
@@ -401,7 +411,8 @@ struct FlashSetView: View {
             question: card.question,
             choices: isChoice ? choices : nil,
             answer: isChoice ? card.answer : nil,
-            rating: ratings[card.id]
+            rating: ratings[card.id],
+            topic: questions[i].topic
         )
     }
 

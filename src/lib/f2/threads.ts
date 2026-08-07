@@ -126,7 +126,16 @@ export type QuizKind = 'standard' | 'hard' | 'reflection'
 
 /// Topic source kind — drives which glyph the Topics list renders.
 /// Stored on the thread (computed at creation time, see classifyTopicKind).
-export type TopicKind = 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
+/// 'book' | 'mini' | 'general' are user-set types (Rename Topic sheet) that
+/// classification never produces — the user picks them to say what a topic
+/// IS rather than where it came from.
+export type TopicKind =
+  | 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
+  | 'book' | 'mini' | 'general'
+
+export const ALL_TOPIC_KINDS: TopicKind[] = [
+  'chat', 'web', 'audio', 'video', 'paste', 'fallback', 'book', 'mini', 'general',
+]
 
 const VIDEO_HOSTS = /^(?:[\w-]+\.)*(?:youtube\.com|youtu\.be|vimeo\.com)$/i
 const AUDIO_HOSTS = /^(?:[\w-]+\.)*(?:open\.spotify\.com|anchor\.fm|podcasts\.apple\.com|overcast\.fm)$/i

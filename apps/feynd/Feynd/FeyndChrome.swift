@@ -202,6 +202,9 @@ struct MiniTopicGlyph: View {
         case "audio": AudioGlyph()
         case "video": VideoGlyph()
         case "paste": PasteGlyph()
+        case "book":  BookGlyph()
+        case "mini":  MiniKindGlyph()
+        case "general": GeneralGlyph()
         default:      FallbackGlyph()
         }
     }
@@ -313,6 +316,92 @@ private struct PasteGlyph: View {
                     Path(ellipseIn: CGRect(x: 4.5 * s - r, y: CGFloat(y) * s - r, width: r*2, height: r*2)),
                     with: coral
                 )
+            }
+        }
+    }
+}
+
+private struct BookGlyph: View {
+    // Open book: two page curves meeting at a center spine.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
+
+            var left = Path()
+            left.move(to: CGPoint(x: 10 * s, y: 6 * s))
+            left.addCurve(to: CGPoint(x: 4.5 * s, y: 5.6 * s),
+                          control1: CGPoint(x: 8.5 * s, y: 4.8 * s),
+                          control2: CGPoint(x: 6 * s, y: 4.8 * s))
+            left.addLine(to: CGPoint(x: 4.5 * s, y: 14 * s))
+            left.addCurve(to: CGPoint(x: 10 * s, y: 14.4 * s),
+                          control1: CGPoint(x: 6 * s, y: 13.2 * s),
+                          control2: CGPoint(x: 8.5 * s, y: 13.2 * s))
+            ctx.stroke(left, with: coral, style: style)
+
+            var right = Path()
+            right.move(to: CGPoint(x: 10 * s, y: 6 * s))
+            right.addCurve(to: CGPoint(x: 15.5 * s, y: 5.6 * s),
+                           control1: CGPoint(x: 11.5 * s, y: 4.8 * s),
+                           control2: CGPoint(x: 14 * s, y: 4.8 * s))
+            right.addLine(to: CGPoint(x: 15.5 * s, y: 14 * s))
+            right.addCurve(to: CGPoint(x: 10 * s, y: 14.4 * s),
+                           control1: CGPoint(x: 14 * s, y: 13.2 * s),
+                           control2: CGPoint(x: 11.5 * s, y: 13.2 * s))
+            ctx.stroke(right, with: coral, style: style)
+
+            var spine = Path()
+            spine.move(to: CGPoint(x: 10 * s, y: 6 * s))
+            spine.addLine(to: CGPoint(x: 10 * s, y: 14.4 * s))
+            ctx.stroke(spine, with: coral, lineWidth: 1.2 * s)
+        }
+    }
+}
+
+private struct MiniKindGlyph: View {
+    // Little spark: three short rays through a filled center node.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
+            let rays: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
+                (10, 5.5, 10, 14.5),
+                (6.1, 7.75, 13.9, 12.25),
+                (6.1, 12.25, 13.9, 7.75),
+            ]
+            for (x1, y1, x2, y2) in rays {
+                var ray = Path()
+                ray.move(to: CGPoint(x: x1 * s, y: y1 * s))
+                ray.addLine(to: CGPoint(x: x2 * s, y: y2 * s))
+                ctx.stroke(ray, with: coral, style: style)
+            }
+            let r = 2.2 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 10 * s - r, y: 10 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct GeneralGlyph: View {
+    // Lightbulb: bulb circle + filament node + two base lines.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
+
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: 5.8 * s, y: 4 * s, width: 8.4 * s, height: 8.4 * s)),
+                with: coral, lineWidth: 1.2 * s
+            )
+            let r = 1.6 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 10 * s - r, y: 8.2 * s - r, width: r*2, height: r*2)), with: coral)
+            for (x1, x2, y) in [(8.3, 11.7, 13.6), (8.8, 11.2, 15.6)] as [(CGFloat, CGFloat, CGFloat)] {
+                var line = Path()
+                line.move(to: CGPoint(x: x1 * s, y: y * s))
+                line.addLine(to: CGPoint(x: x2 * s, y: y * s))
+                ctx.stroke(line, with: coral, style: style)
             }
         }
     }

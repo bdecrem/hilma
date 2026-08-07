@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
-import { getThreadById } from '@/lib/f2/threads'
+import { ALL_TOPIC_KINDS, getThreadById, type TopicKind } from '@/lib/f2/threads'
 import { listFlashCards } from '@/lib/f2/flash'
 import { f2Supabase } from '@/lib/f2/supabase'
 
@@ -33,7 +33,7 @@ export async function PATCH(
   }
   const { id } = await ctx.params
 
-  let body: { topic?: string; pinned?: boolean; study_focus?: string | null }
+  let body: { topic?: string; pinned?: boolean; study_focus?: string | null; kind?: string }
   try {
     body = await req.json()
   } catch {
@@ -58,10 +58,18 @@ export async function PATCH(
     const focus = (body.study_focus ?? '').trim().slice(0, 500)
     update.study_focus = focus || null
   }
+  // Topic type — user override of the auto-classified kind (drives the icon).
+  if (body.kind !== undefined) {
+    if (!ALL_TOPIC_KINDS.includes(body.kind as TopicKind)) {
+      return NextResponse.json({ error: 'invalid kind' }, { status: 400 })
+    }
+    update.kind = body.kind
+  }
   if (
     update.topic === undefined &&
     update.pinned_at === undefined &&
-    update.study_focus === undefined
+    update.study_focus === undefined &&
+    update.kind === undefined
   ) {
     return NextResponse.json({ error: 'nothing to update' }, { status: 400 })
   }
@@ -71,7 +79,7 @@ export async function PATCH(
     .update(update)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, topic, pinned_at, study_focus')
+    .select('id, topic, pinned_at, study_focus, kind')
     .maybeSingle()
 
   if (error) {

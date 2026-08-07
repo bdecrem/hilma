@@ -21,7 +21,6 @@ struct TopicsView: View {
     @State private var loading = false
     @State private var loadError: String? = nil
     @State private var renameTarget: F2Topic? = nil
-    @State private var renameDraft = ""
     @State private var showProfile = false
     @State private var addMaterialTarget: F2Topic? = nil
     @State private var addMaterialURL = ""
@@ -113,12 +112,10 @@ struct TopicsView: View {
             FlashCardsView(topicId: topic.id, topicLabel: topic.displayLabel)
                 .environment(session)
         }
-        .alert("Rename topic",
-               isPresented: Binding(get: { renameTarget != nil },
-                                    set: { if !$0 { renameTarget = nil } })) {
-            TextField("Title", text: $renameDraft)
-            Button("Cancel", role: .cancel) { renameTarget = nil }
-            Button("Save") { commitRename() }
+        .sheet(item: $renameTarget) { topic in
+            RenameTopicSheet(topic: topic) { newName, newKind in
+                commitRename(topic, newName: newName, newKind: newKind)
+            }
         }
         .alert("Add material",
                isPresented: Binding(get: { addMaterialTarget != nil },
@@ -334,7 +331,6 @@ struct TopicsView: View {
     }
 
     private func startRename(_ topic: F2Topic) {
-        renameDraft = topic.topic ?? topic.displayLabel
         renameTarget = topic
     }
 
@@ -368,17 +364,21 @@ struct TopicsView: View {
         }
     }
 
-    private func commitRename() {
-        guard let target = renameTarget else { return }
-        let newName = renameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func commitRename(_ target: F2Topic, newName: String, newKind: String?) {
         renameTarget = nil
-        guard !newName.isEmpty, newName != target.topic else { return }
+        let name = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        let kindChanged = newKind != nil && newKind != (target.kind ?? "fallback")
+        guard name != target.topic || kindChanged else { return }
         if let idx = topics.firstIndex(where: { $0.id == target.id }) {
-            topics[idx].topic = newName
+            topics[idx].topic = name
+            if kindChanged, let newKind { topics[idx].kind = newKind }
         }
         Task {
-            do { try await F2API.shared.renameTopic(id: target.id, to: newName) }
-            catch { await load() }
+            do {
+                try await F2API.shared.renameTopic(
+                    id: target.id, to: name, kind: kindChanged ? newKind : nil)
+            } catch { await load() }
         }
     }
 
@@ -530,4 +530,77 @@ func relative(_ date: Date) -> String {
     let f = RelativeDateTimeFormatter()
     f.unitsStyle = .short
     return f.localizedString(for: date, relativeTo: Date())
+}
+
+/// Rename + type editor. The type is the small glyph on the topic row —
+/// auto-classified at creation, user-overridable here. Book and Mini Topic
+/// are the two main types; General Topic covers non-book subjects.
+struct RenameTopicSheet: View {
+    let topic: F2Topic
+    /// (newName, newKind) — kind is the raw value the picker landed on.
+    let onSave: (String, String?) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: String
+    @State private var kind: String
+
+    /// Dropdown order: the main user types first, the auto source kinds
+    /// after, the unclassified default last.
+    static let kindOptions: [(value: String, label: String)] = [
+        ("book", "Book"),
+        ("mini", "Mini Topic"),
+        ("general", "General Topic"),
+        ("web", "Web page"),
+        ("video", "Video"),
+        ("audio", "Audio"),
+        ("paste", "Pasted text"),
+        ("chat", "Chat"),
+        ("fallback", "Default"),
+    ]
+
+    init(topic: F2Topic, onSave: @escaping (String, String?) -> Void) {
+        self.topic = topic
+        self.onSave = onSave
+        _draft = State(initialValue: topic.topic ?? topic.displayLabel)
+        _kind = State(initialValue: topic.kind ?? "fallback")
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Title") {
+                    TextField("Title", text: $draft, axis: .vertical)
+                        .lineLimit(1...3)
+                }
+                Section("Type") {
+                    HStack(spacing: 12) {
+                        MiniTopicGlyph(kind: kind, size: 30)
+                        Picker("Type", selection: $kind) {
+                            ForEach(Self.kindOptions, id: \.value) { option in
+                                Text(option.label).tag(option.value)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        Spacer()
+                    }
+                }
+            }
+            .navigationTitle("Rename topic")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(draft, kind)
+                        dismiss()
+                    }
+                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
 }

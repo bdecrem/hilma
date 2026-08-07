@@ -52,8 +52,10 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     var stars: Int
     var hardQuizCompletedAt: Date?
     var pendingQuizKind: String?
-    /// Source kind: chat | web | audio | video | paste | fallback. Drives the
-    /// glyph in the topic row. Set server-side at thread creation.
+    /// Topic kind: chat | web | audio | video | paste | fallback, plus the
+    /// user-set types book | mini | general. Drives the glyph in the topic
+    /// row. Auto-classified at thread creation; overridable from the Rename
+    /// Topic sheet.
     var kind: String?
     var audioSummary: F2AudioSummary?
     let createdAt: Date

@@ -86,9 +86,14 @@ struct FlashQuestion: Codable, Identifiable, Equatable {
     /// Existing rating on this card ("priority"; buried cards are never
     /// served), so the thumbs render in the right state on arrival.
     let rating: String?
+    /// The card's topic name, shown in small print at the top of the card —
+    /// matters in Jumbo sets where every card can come from a different
+    /// topic ("according to the book…" needs to say which book). Absent on
+    /// older backends.
+    let topic: String?
 
     enum CodingKeys: String, CodingKey {
-        case question, choices, answer, rating
+        case question, choices, answer, rating, topic
         case cardId = "card_id"
     }
 }

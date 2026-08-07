@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
+import { f2Supabase } from '@/lib/f2/supabase'
 import {
   SET_SIZE,
   choicesForCard,
@@ -16,6 +17,20 @@ type StartBody = {
   mode?: FlashSetMode
   thread_id?: string
   jumbo_level?: number
+}
+
+/// Same display rule the clients use for deck rows: topic name, else the
+/// URL's host, else a placeholder.
+function topicLabel(t: { topic: string | null; url: string | null }): string {
+  if (t.topic?.trim()) return t.topic
+  if (t.url) {
+    try {
+      return new URL(t.url).hostname.replace(/^www\./, '')
+    } catch {
+      // fall through
+    }
+  }
+  return '(untitled)'
 }
 
 // POST /api/f2/flash/start — pick the questions for a set.
@@ -80,10 +95,23 @@ export async function POST(req: Request) {
   // scheduler's "when did I last see this" real.
   await markCardsShown(user.id, cards.map((c) => c.id))
 
+  // Topic label per card, so questions like "according to the book…" say
+  // WHICH book. One lookup covers both set types (Jumbo mixes topics).
+  const threadIds = [...new Set(cards.map((c) => c.thread_id))]
+  const { data: threadRows } = await f2Supabase()
+    .from('f2_threads')
+    .select('id, topic, url')
+    .eq('user_id', user.id)
+    .in('id', threadIds)
+  const topicLabels = new Map(
+    (threadRows ?? []).map((t) => [t.id as string, topicLabel(t)]),
+  )
+
   const questions = cards.map((c) => ({
     card_id: c.id,
     question: c.question,
     rating: c.rating,
+    topic: topicLabels.get(c.thread_id) ?? null,
     ...(mode === 'choice'
       ? { choices: choicesForCard(c), answer: c.answer }
       : {}),
