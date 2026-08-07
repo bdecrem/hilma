@@ -18,6 +18,8 @@ struct FlashTabView: View {
     @State private var showProfile = false
     @State private var showDecks = false
     @State private var pulse = false
+    /// Whether the big in-scroll title is on screen (bar echoes it when not).
+    @State private var bigTitleVisible = false
 
     // Path geometry — one shared set of numbers for nodes AND connectors.
     // Node centers: y = topPad + i * pitch, x = centerX + amp * zigzag(i).
@@ -43,7 +45,7 @@ struct FlashTabView: View {
             FeyndTheme.bg.ignoresSafeArea()
             VStack(spacing: 0) {
                 FeyndTopBar {
-                    EmptyView()
+                    BarTitle(text: "Peck", bigTitleVisible: bigTitleVisible)
                 } trailing: {
                     HStack(spacing: 8) {
                         deckStackButton
@@ -54,15 +56,17 @@ struct FlashTabView: View {
                 }
 
                 VStack(spacing: 0) {
-                    titleRow
                     if loading && state == nil {
+                        titleRow
                         ProgressView().tint(FeyndTheme.text2)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else if let state, state.cardCount < 10 {
+                        titleRow
                         lockedHero(state)
                     } else if let state {
                         levelMap(state)
                     } else {
+                        titleRow
                         errorHero
                     }
                 }
@@ -98,7 +102,11 @@ struct FlashTabView: View {
             }
             .environment(session)
         }
+        .onTitleVisibility { bigTitleVisible = $0 }
         .task {
+            if state == nil, let cached: JumboState = ScreenCache.load(key: ScreenCache.jumbo) {
+                state = cached
+            }
             await load()
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
                 pulse = true
@@ -166,24 +174,11 @@ struct FlashTabView: View {
     }
 
     private var titleRow: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .bottom) {
-                Text("Peck")
-                    .font(.custom("Fredoka", size: 38).weight(.semibold))
-                    .tracking(-0.4)
-                    .foregroundStyle(FeyndTheme.text)
-                Spacer()
-            }
-            if let state {
-                Text("\(state.cardCount) CARDS · \(state.highestPassed) LEVEL\(state.highestPassed == 1 ? "" : "S") CLEARED")
-                    .font(.system(size: 12, weight: .semibold))
-                    .tracking(0.2)
-                    .foregroundStyle(FeyndTheme.text3)
-            }
-        }
-        .padding(.horizontal, 18)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
+        ScreenTitle(
+            text: "Peck",
+            subtitle: state.map { "\($0.cardCount) CARDS · \($0.highestPassed) LEVEL\($0.highestPassed == 1 ? "" : "S") CLEARED" }
+        )
+        .titleVisibilityMarker()
     }
 
     // MARK: - Not enough cards yet
@@ -258,6 +253,7 @@ struct FlashTabView: View {
 
             ScrollViewReader { proxy in
                 ScrollView {
+                    titleRow
                     ZStack(alignment: .topLeading) {
                         PeckIslandScenery(height: height)
 
@@ -405,8 +401,11 @@ struct FlashTabView: View {
         defer { loading = false }
         do {
             state = try await F2API.shared.jumboState()
+            if let state { ScreenCache.save(state, key: ScreenCache.jumbo) }
         } catch {
-            errorMessage = error.localizedDescription
+            // With a cached map on screen, a failed refresh stays quiet —
+            // stale beats an alert. Only a truly empty screen reports.
+            if state == nil { errorMessage = error.localizedDescription }
         }
     }
 

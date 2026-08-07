@@ -10,6 +10,8 @@ struct ChatView: View {
     @State private var busy = false
     @State private var showSettings = false
     @State private var voicePresented = false
+    /// Whether the big in-scroll title is on screen (bar echoes it when not).
+    @State private var bigTitleVisible = false
 
     var body: some View {
         ZStack {
@@ -17,30 +19,22 @@ struct ChatView: View {
 
             VStack(spacing: 0) {
                 FeyndTopBar {
-                    EmptyView()
+                    BarTitle(text: "Chat", bigTitleVisible: bigTitleVisible)
                 } trailing: {
                     ModelPickerMenu(style: .pill)
                 } onProfileTap: {
                     showSettings = true
                 }
 
-                // Single stylized header — same Fredoka title treatment as
-                // Topics and Peck.
-                HStack {
-                    Text("Chat")
-                        .font(.custom("Fredoka", size: 38).weight(.semibold))
-                        .tracking(-0.4)
-                        .foregroundStyle(FeyndTheme.text)
-                    Spacer()
-                }
-                .padding(.horizontal, 18)
-                .padding(.top, 8)
-                .padding(.bottom, 6)
-
                 // No content column clamp here — chat reads better when bubbles
                 // can grow with the window on Catalyst. Bubble maxWidth handles
-                // line-length readability.
-                ChatScrollView(messages: messages, busy: busy)
+                // line-length readability. The big title scrolls with the
+                // transcript (it sits above the oldest message); the bar
+                // echoes "Chat" whenever it's off screen.
+                ChatScrollView(messages: messages, busy: busy) {
+                    ScreenTitle(text: "Chat")
+                        .titleVisibilityMarker()
+                }
 
                 HStack(spacing: 8) {
                     ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
@@ -72,15 +66,20 @@ struct ChatView: View {
             if UserDefaults.standard.bool(forKey: "ShowVoice") { voicePresented = true }
         }
         .task { await loadLatest() }
+        .onTitleVisibility { bigTitleVisible = $0 }
     }
 
     // MARK: - Actions
 
     private func loadLatest() async {
+        if messages.isEmpty, let cached: [F2Message] = ScreenCache.load(key: ScreenCache.chatLatest) {
+            messages = cached
+        }
         do {
             let thread = try await F2API.shared.latestThread()
             messages = thread?.messages ?? []
-        } catch { /* keep empty */ }
+            ScreenCache.save(messages, key: ScreenCache.chatLatest)
+        } catch { /* keep whatever we have */ }
     }
 
     private func send() {
@@ -133,9 +132,12 @@ struct ChatView: View {
 ///    finger as the user drags down on the conversation (Messages/WhatsApp idiom).
 ///  - The empty-area tap gesture is the fallback for short chats where there's
 ///    nothing to scroll — taps on bubble area resign first responder.
-struct ChatScrollView: View {
+struct ChatScrollView<Header: View>: View {
     let messages: [F2Message]
     let busy: Bool
+    /// Optional content rendered above the oldest message — the Chat tab
+    /// puts its big scrolling screen title here.
+    @ViewBuilder var header: () -> Header
     @State private var measuredWidth: CGFloat = 390
 
     var body: some View {
@@ -155,6 +157,7 @@ struct ChatScrollView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
+                    header()
                     if messages.isEmpty && !busy {
                         Text("Paste a URL to learn from, or ask me anything to begin.")
                             .font(.system(size: 14))
@@ -230,5 +233,12 @@ struct TypingDots: View {
             .overlay(BubbleShape(isUser: false).stroke(FeyndTheme.border, lineWidth: 1))
         }
         .onReceive(timer) { _ in phase = (phase + 1) % 3 }
+    }
+}
+
+extension ChatScrollView where Header == EmptyView {
+    /// Headerless variant — Topic detail uses the plain transcript.
+    init(messages: [F2Message], busy: Bool) {
+        self.init(messages: messages, busy: busy) { EmptyView() }
     }
 }

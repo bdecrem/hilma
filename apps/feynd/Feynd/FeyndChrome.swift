@@ -775,6 +775,77 @@ extension View {
     }
 }
 
+// MARK: - Semi-sticky screen titles
+
+/// Whether the big in-scroll Fredoka title is currently on screen. When a
+/// lazy container culls the title (or it scrolls under the pinned bar), the
+/// preference falls back to false and the bar echoes the screen name.
+private struct TitleVisibleKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
+    }
+}
+
+extension View {
+    /// Attach to the big title row inside a scroll view — reports whether
+    /// its bottom edge is still below the pinned top bar.
+    func titleVisibilityMarker() -> some View {
+        background(GeometryReader { g in
+            Color.clear.preference(key: TitleVisibleKey.self,
+                                   value: g.frame(in: .global).maxY > 118)
+        })
+    }
+
+    func onTitleVisibility(_ update: @escaping (Bool) -> Void) -> some View {
+        onPreferenceChange(TitleVisibleKey.self, perform: update)
+    }
+}
+
+/// Compact screen name for the pinned top bar — appears only once the big
+/// in-scroll title has floated out of view.
+struct BarTitle: View {
+    let text: String
+    let bigTitleVisible: Bool
+
+    var body: some View {
+        Text(text)
+            .font(.custom("Fredoka", size: 18).weight(.semibold))
+            .tracking(-0.2)
+            .foregroundStyle(FeyndTheme.text)
+            .opacity(bigTitleVisible ? 0 : 1)
+            .animation(.easeInOut(duration: 0.16), value: bigTitleVisible)
+            .accessibilityHidden(bigTitleVisible)
+    }
+}
+
+/// The big in-scroll Fredoka screen title, shared by Chat / Topics / Peck.
+struct ScreenTitle: View {
+    let text: String
+    var subtitle: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .bottom) {
+                Text(text)
+                    .font(.custom("Fredoka", size: 38).weight(.semibold))
+                    .tracking(-0.4)
+                    .foregroundStyle(FeyndTheme.text)
+                Spacer()
+            }
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: 12, weight: .semibold))
+                    .tracking(0.2)
+                    .foregroundStyle(FeyndTheme.text3)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
+    }
+}
+
 enum FeyndTab: String, CaseIterable {
     case chat, topics, flash
     var label: String {

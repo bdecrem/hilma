@@ -42,6 +42,7 @@
 		C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */; };
 		C573E836F4F99984E9A8409E /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC5668529933DC6749CB3D06 /* Session.swift */; };
 		CA6A43AB698791A05B576ED4 /* TranscriptReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */; };
+		D577BB198B5846938AF1ECEB /* ScreenCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D359E2025298CA4A57C307D /* ScreenCache.swift */; };
 		E6EBD84BFA074BDBE3DF859D /* FlashCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A838C8293EE5A7B38D62679D /* FlashCardsView.swift */; };
 		E837DB371B838AB27BC85493 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E1F1203E78919DA10B73C9 /* LoginView.swift */; };
 		ED0532A13EF17F943FC56DE3 /* FlashSetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC72F31FAF938D3D638D39F /* FlashSetView.swift */; };
@@ -58,6 +59,7 @@
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
 		121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
 		21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptReaderView.swift; sourceTree = "<group>"; };
+		2D359E2025298CA4A57C307D /* ScreenCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCache.swift; sourceTree = "<group>"; };
 		2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Fredoka-OFL.txt"; sourceTree = "<group>"; };
 		2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayerView.swift; sourceTree = "<group>"; };
 		3C7811C80A73490F1D2B650D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 				C0564EA3B927E26544E7655B /* PasteView.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
 				E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */,
+				2D359E2025298CA4A57C307D /* ScreenCache.swift */,
 				8BE40ACBCE23969C211C1B42 /* Secrets.swift */,
 				EC5668529933DC6749CB3D06 /* Session.swift */,
 				3C7811C80A73490F1D2B650D /* SettingsView.swift */,
@@ -287,6 +290,7 @@
 				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
 				B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */,
+				D577BB198B5846938AF1ECEB /* ScreenCache.swift in Sources */,
 				6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */,
 				C573E836F4F99984E9A8409E /* Session.swift in Sources */,
 				75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */,
@@ -337,7 +341,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -420,7 +424,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

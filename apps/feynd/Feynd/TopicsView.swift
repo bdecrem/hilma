@@ -32,6 +32,8 @@ struct TopicsView: View {
     @State private var audioError: String? = nil
     /// True while a background task is polling for in-flight audio summaries.
     @State private var pollingAudio = false
+    /// Whether the big in-scroll title is on screen (bar echoes it when not).
+    @State private var bigTitleVisible = true
     /// Persists across launches; defaults to recent.
     @AppStorage("topicsSortMode") private var sortRaw = TopicSort.recent.rawValue
 
@@ -73,10 +75,11 @@ struct TopicsView: View {
 
             VStack(spacing: 0) {
                 FeyndTopBar {
-                    EmptyView()
+                    BarTitle(text: "Topics", bigTitleVisible: bigTitleVisible)
                 } trailing: {
-                    // Empty — new topics come from pasting a URL in Chat.
-                    EmptyView()
+                    // The sort pill lives in the pinned bar so it stays
+                    // reachable however far the list is scrolled.
+                    sortMenu
                 } onProfileTap: {
                     showProfile = true
                 }
@@ -84,14 +87,13 @@ struct TopicsView: View {
                 // Center + clamp the column so wide Mac windows don't stretch
                 // the row labels edge-to-edge. No-op on phone widths.
                 VStack(spacing: 0) {
-                    titleRow
-                    metaStrip
-
                     if topics.isEmpty && loading {
+                        titleRow
                         ProgressView()
                             .tint(FeyndTheme.text2)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else if topics.isEmpty {
+                        titleRow
                         emptyState
                     } else {
                         rows
@@ -154,9 +156,14 @@ struct TopicsView: View {
         } message: {
             Text(audioError ?? "")
         }
-        // Reload on every appearance — keeps stars/level in sync with quizzes
-        // completed on the Topic detail screen (no stale data when returning).
+        .onTitleVisibility { bigTitleVisible = $0 }
+        // Cached list first (instant paint), then reload on every appearance —
+        // keeps stars/level in sync with quizzes completed on the Topic
+        // detail screen (no stale data when returning).
         .task {
+            if topics.isEmpty, let cached: [F2Topic] = ScreenCache.load(key: ScreenCache.topics) {
+                topics = cached
+            }
             await load()
             await session.refreshProgress()
         }
@@ -168,17 +175,8 @@ struct TopicsView: View {
     // MARK: - Sections
 
     private var titleRow: some View {
-        HStack(alignment: .bottom) {
-            Text("Topics")
-                .font(.custom("Fredoka", size: 38).weight(.semibold))
-                .tracking(-0.4)
-                .foregroundStyle(FeyndTheme.text)
-            Spacer()
-            sortMenu
-        }
-        .padding(.horizontal, 18)
-        .padding(.top, 8)
-        .padding(.bottom, 14)
+        ScreenTitle(text: "Topics")
+            .titleVisibilityMarker()
     }
 
     /// Floating + — small and tucked into the bottom-right corner, out of
@@ -238,8 +236,8 @@ struct TopicsView: View {
                 .foregroundStyle(FeyndTheme.text3)
             Spacer()
         }
-        .padding(.horizontal, 18)
-        .padding(.bottom, 10)
+        .padding(.horizontal, 4)
+        .padding(.bottom, 4)
     }
 
     private var emptyState: some View {
@@ -267,6 +265,8 @@ struct TopicsView: View {
             // Bottom inset large enough to keep the floating TabPill from
             // covering the last row.
             LazyVStack(spacing: 0) {
+                titleRow.padding(.horizontal, -14)
+                metaStrip
                 if hasPinned {
                     sectionHeader("Pinned")
                     topicList(pinned)
@@ -324,6 +324,7 @@ struct TopicsView: View {
         defer { loading = false }
         do {
             topics = try await F2API.shared.listTopics()
+            ScreenCache.save(topics, key: ScreenCache.topics)
         } catch {
             loadError = error.localizedDescription
         }

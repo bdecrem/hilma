@@ -24,13 +24,24 @@ final class Session {
     private var hasLoadedProgressOnce = false
 
     func bootstrap() async {
-        // On launch, see if a persistent cookie is still good.
+        // Instant start: restore the last signed-in user from disk so the
+        // tabs (and their cached screens) render immediately, then validate
+        // the cookie in the background. Only a confirmed 401 signs out —
+        // a network hiccup keeps the cached session alive.
+        let cached: F2User? = ScreenCache.load(key: ScreenCache.sessionUser)
+        if let cached {
+            state = .signedIn(cached)
+        }
         do {
             let user = try await F2API.shared.me()
             state = .signedIn(user)
+            ScreenCache.save(user, key: ScreenCache.sessionUser)
             await refreshProgress()
-        } catch {
+        } catch F2APIError.unauthenticated, F2APIError.http(401, _) {
             state = .signedOut
+            ScreenCache.clear()
+        } catch {
+            if cached == nil { state = .signedOut }
         }
     }
 
@@ -39,6 +50,7 @@ final class Session {
         do {
             let user = try await F2API.shared.login(username: username, password: password)
             state = .signedIn(user)
+            ScreenCache.save(user, key: ScreenCache.sessionUser)
             await refreshProgress()
         } catch F2APIError.unauthenticated, F2APIError.http(401, _) {
             loginError = "Invalid username or password."
@@ -53,6 +65,7 @@ final class Session {
         progress = .zero
         pendingLevelUp = nil
         hasLoadedProgressOnce = false
+        ScreenCache.clear()
     }
 
     func refreshProgress() async {
