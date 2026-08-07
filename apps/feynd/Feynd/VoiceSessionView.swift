@@ -1,8 +1,11 @@
 import SwiftUI
 
-/// Voice mode — the dodo takes the call. Warm marigold glow, the dodo
-/// character front and center (bobbing while it listens, breathing ring
-/// while it speaks), live caption, three big circle controls.
+/// Voice mode — the Dodo Radio. Talking to Dodo is a charming little
+/// tabletop machine that IS the dodo: sprout antenna, blinking eyes, beak
+/// dial, and a belly grille whose equalizer bars move with the session
+/// (big bounce while Dodo speaks, a calm idle while it listens). The sky
+/// behind it matches the app's modes: sunny morning in light, starry dusk
+/// in dark. Palette comes straight from BRANDING.md / the Peck map.
 struct VoiceSessionView: View {
     let mode: String
     let threadId: String?
@@ -30,30 +33,32 @@ struct VoiceSessionView: View {
 
     var body: some View {
         ZStack {
-            // Layered radial glow + warm-dark base.
             FeyndTheme.bg.ignoresSafeArea()
-            RadialGradient(
-                colors: [FeyndTheme.accent.opacity(0.25), FeyndTheme.accent.opacity(0)],
-                center: UnitPoint(x: 0.5, y: 0.38),
-                startRadius: 1, endRadius: 320
-            )
-            .ignoresSafeArea()
-            RadialGradient(
-                colors: [FeyndTheme.accent.opacity(0.10), FeyndTheme.accent.opacity(0)],
-                center: UnitPoint(x: 0.5, y: 1.0),
-                startRadius: 1, endRadius: 360
-            )
-            .ignoresSafeArea()
+            VoiceSkyBackdrop().ignoresSafeArea()
 
             VStack(spacing: 0) {
                 headerRow
-                topicLabel
+
+                Text("TALKING ABOUT")
+                    .font(.system(size: 11, weight: .bold))
+                    .tracking(2.2)
+                    .foregroundStyle(FeyndTheme.text3)
+                    .padding(.top, 14)
+
                 Spacer(minLength: 0)
-                DodoVoiceOrb(speaking: client.phase == .speaking)
+
+                DodoRadio(tape: tapeText, activity: activity)
+
                 Spacer(minLength: 0)
-                transcript
-                statusRow
+
+                Text(transcriptText)
+                    .font(.custom("Fredoka", size: 21).weight(.medium))
+                    .foregroundStyle(FeyndTheme.text)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 36)
+
                 controls
+                    .padding(.top, 26)
                     .padding(.bottom, 50)
             }
         }
@@ -61,6 +66,21 @@ struct VoiceSessionView: View {
             await client.start()
         }
         .onDisappear { client.stop() }
+    }
+
+    /// What the radio's label tape reads — the session's subject.
+    private var tapeText: String {
+        (title ?? "Dodo voice session").uppercased()
+    }
+
+    /// How lively the grille is: full bounce while speaking, gentle sway
+    /// while listening, near-still before the session is up.
+    private var activity: Double {
+        switch client.phase {
+        case .speaking: return 1.0
+        case .connected: return 0.35
+        default: return 0.12
+        }
     }
 
     // MARK: - Sections
@@ -80,7 +100,7 @@ struct VoiceSessionView: View {
             .padding(.leading, 8)
             .padding(.trailing, 10)
             .padding(.vertical, 6)
-            .background(Color.white.opacity(0.05), in: Capsule())
+            .background(FeyndTheme.surface.opacity(0.7), in: Capsule())
             .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
 
             Spacer()
@@ -103,70 +123,16 @@ struct VoiceSessionView: View {
         .padding(.bottom, 4)
     }
 
-    private var topicLabel: some View {
-        VStack(spacing: 4) {
-            Text("TALKING ABOUT")
-                .font(.system(size: 12, weight: .semibold))
-                .tracking(0.5)
-                .foregroundStyle(FeyndTheme.text3)
-            Text(title ?? (client.model.isEmpty ? "Dodo voice session" : "Dodo · \(client.voice)"))
-                .font(.custom("Fredoka", size: 23).weight(.semibold))
-                .tracking(-0.3)
-                .foregroundStyle(FeyndTheme.text)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 10)
-    }
-
-    private var transcript: some View {
-        // Phase-driven live caption — in the design this is the keyword-highlighted
-        // sentence F2 is speaking. We don't yet stream transcripts, so show a
-        // phase-appropriate cue with the same typography.
-        Text(transcriptText)
-            .font(.system(size: 19, weight: .regular))
-            .tracking(-0.3)
-            .lineSpacing(7)
-            .foregroundStyle(FeyndTheme.text)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 28)
-            .padding(.bottom, 18)
-            .frame(maxWidth: 360)
-    }
-
     private var transcriptText: String {
         switch client.phase {
         case .idle, .requestingPermission, .creatingSession, .connecting:
-            return "Connecting…"
+            return "Tuning in…"
         case .connected:
-            return "Start speaking. Dodo will answer when you pause."
+            return "Dodo is listening — just talk."
         case .speaking:
-            return "Dodo is speaking."
+            return "Dodo is speaking…"
         case .failed(let m): return m
         case .ended: return "Session ended."
-        }
-    }
-
-    private var statusRow: some View {
-        HStack(spacing: 10) {
-            ListenWave(active: client.phase == .connected || client.phase == .speaking)
-            Text(statusItalic)
-                .italic()
-                .font(.system(size: 13))
-                .tracking(-0.1)
-                .foregroundStyle(FeyndTheme.text2)
-        }
-        .padding(.bottom, 20)
-        .padding(.top, 8)
-    }
-
-    private var statusItalic: String {
-        switch client.phase {
-        case .speaking: return "Dodo is speaking…"
-        case .connected: return "Dodo is listening…"
-        case .failed: return "Couldn't connect"
-        case .ended: return "Ended"
-        default: return "Connecting…"
         }
     }
 
@@ -196,31 +162,208 @@ struct VoiceSessionView: View {
     }
 }
 
-// MARK: - Listen wave (7 thin coral bars, bouncing)
+// MARK: - The Dodo Radio
 
-struct ListenWave: View {
-    let active: Bool
-    @State private var phase = 0
-    private let timer = Timer.publish(every: 0.18, on: .main, in: .common).autoconnect()
+/// The radio that is the dodo: sprout antenna, blinking eyes, blush, beak
+/// dial, equalizer grille, marigold feet, and a label tape naming the topic.
+struct DodoRadio: View {
+    let tape: String
+    /// 0…1 — how much the equalizer moves.
+    let activity: Double
+
+    private let barSpeeds: [Double] = [5.2, 6.4, 4.5, 6.9, 5.7, 4.9, 6.1]
+    private let barPhases: [Double] = [0.0, 1.3, 2.4, 3.1, 4.3, 5.2, 0.7]
 
     var body: some View {
-        HStack(spacing: 2) {
-            ForEach(0..<7, id: \.self) { i in
-                Capsule()
-                    .fill(FeyndTheme.accent)
-                    .frame(width: 3, height: barHeight(i))
-                    .animation(.easeInOut(duration: 0.25), value: phase)
+        VStack(spacing: 0) {
+            // Sprout antenna.
+            ZStack {
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(Color(hex: 0x6FAE5C))
+                    .frame(width: 6, height: 36)
+                Ellipse()
+                    .fill(Color(hex: 0x7BB662))
+                    .frame(width: 34, height: 18)
+                    .rotationEffect(.degrees(-24))
+                    .offset(x: -18, y: -14)
+                Ellipse()
+                    .fill(Color(hex: 0x5F9E4C))
+                    .frame(width: 34, height: 18)
+                    .rotationEffect(.degrees(22))
+                    .offset(x: 18, y: -16)
             }
+            .frame(height: 40)
+            .zIndex(1)
+
+            // Body.
+            VStack(spacing: 0) {
+                TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+                    let t = timeline.date.timeIntervalSinceReferenceDate
+                    VStack(spacing: 0) {
+                        // Face: blush · eye · eye · blush.
+                        HStack(spacing: 26) {
+                            cheek
+                            eye(t: t)
+                            eye(t: t)
+                            cheek
+                        }
+                        .padding(.top, 2)
+
+                        // Beak dial.
+                        ZStack {
+                            Ellipse()
+                                .fill(Color(hex: 0xC9821F))
+                                .frame(width: 52, height: 40)
+                                .offset(y: 2.5)
+                            Ellipse()
+                                .fill(Color(hex: 0xF0A830))
+                                .frame(width: 52, height: 40)
+                        }
+                        .padding(.top, 4)
+                        .padding(.bottom, 16)
+
+                        // Grille + equalizer.
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color(hex: 0x33383E))
+                            .frame(height: 106)
+                            .overlay(
+                                HStack(spacing: 7) {
+                                    ForEach(0..<7, id: \.self) { i in
+                                        Capsule()
+                                            .fill(Color(hex: 0xF6B04E))
+                                            .frame(width: 9, height: barHeight(i, t: t))
+                                    }
+                                }
+                            )
+                    }
+                }
+
+                // Label tape — the topic.
+                Text(tape)
+                    .font(.system(size: 11.5, weight: .heavy))
+                    .tracking(1.6)
+                    .lineLimit(1)
+                    .foregroundStyle(Color(hex: 0x3E3324))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 5)
+                    .background(Color(hex: 0xF6B04E), in: RoundedRectangle(cornerRadius: 7))
+                    .frame(maxWidth: 216)
+                    .padding(.top, 15)
+            }
+            .padding(EdgeInsets(top: 24, leading: 24, bottom: 21, trailing: 24))
+            .frame(width: 272)
+            .background(Color(hex: 0xF9EFDA), in: RoundedRectangle(cornerRadius: 34))
+            .overlay(
+                RoundedRectangle(cornerRadius: 34)
+                    .stroke(FeyndTheme.border.opacity(0.6), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.28), radius: 20, y: 10)
+
+            // Feet.
+            HStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(hex: 0xF0A830))
+                    .frame(width: 34, height: 12)
+                Spacer()
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(hex: 0xF0A830))
+                    .frame(width: 34, height: 12)
+            }
+            .padding(.horizontal, 54)
+            .frame(width: 272)
+            .offset(y: -3)
         }
-        .frame(height: 14)
-        .onReceive(timer) { _ in if active { phase = (phase + 1) % 4 } }
+        .accessibilityElement()
+        .accessibilityLabel(activity >= 1 ? "Dodo is speaking" : "Dodo is listening")
     }
 
-    private func barHeight(_ i: Int) -> CGFloat {
-        // Base pattern (matches the JSX example) shifted by `phase` for bounce.
-        let base: [CGFloat] = [3, 6, 11, 6, 4, 9, 3]
-        let offset = (i + phase) % base.count
-        return active ? base[offset] : 4
+    private var cheek: some View {
+        Ellipse()
+            .fill(Color(hex: 0xF2A19A))
+            .frame(width: 22, height: 13)
+            .opacity(0.65)
+            .offset(y: 8)
+    }
+
+    /// Blinking eye — closes for a beat every ~4.6s.
+    private func eye(t: Double) -> some View {
+        let phase = t.truncatingRemainder(dividingBy: 4.6)
+        let closed = phase > 4.38 && phase < 4.52
+        return ZStack {
+            Circle()
+                .fill(Color(hex: 0x33383E))
+                .frame(width: 30, height: 30)
+            Circle()
+                .fill(.white)
+                .frame(width: 10, height: 10)
+                .offset(x: -5, y: -5)
+        }
+        .scaleEffect(y: closed ? 0.12 : 1, anchor: .center)
+    }
+
+    /// Deterministic per-bar wave — amplitude scales with session activity.
+    private func barHeight(_ i: Int, t: Double) -> CGFloat {
+        let wave = 0.5 + 0.5 * sin(t * barSpeeds[i] + barPhases[i])
+        let base = 14.0
+        let amp = 8.0 + 52.0 * activity
+        return CGFloat(base + amp * wave)
+    }
+}
+
+// MARK: - Sky backdrop (starry dusk / sunny morning, like the Peck map)
+
+private struct VoiceSkyBackdrop: View {
+    @Environment(\.colorScheme) private var scheme
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            if scheme == .dark {
+                // Dusk glow + crescent moon + a few calm stars.
+                RadialGradient(
+                    colors: [Color(hex: 0x4A3D63).opacity(0.55), Color(hex: 0x4A3D63).opacity(0)],
+                    center: UnitPoint(x: 0.5, y: 0.30),
+                    startRadius: 10, endRadius: w * 0.85
+                )
+                ZStack {
+                    Circle().fill(Color(hex: 0xF3E3B2))
+                        .frame(width: 44, height: 44)
+                    Circle().fill(Color(hex: 0x1E2440).opacity(0.92))
+                        .frame(width: 44, height: 44)
+                        .offset(x: 13, y: -4)
+                }
+                .position(x: 62, y: 118)
+                ForEach(0..<8, id: \.self) { i in
+                    let fi = Double(i)
+                    Circle()
+                        .fill(Color(hex: 0xF3E9C8).opacity(0.30 + 0.35 * ((fi * 0.618).truncatingRemainder(dividingBy: 1))))
+                        .frame(width: 3, height: 3)
+                        .position(
+                            x: w * (0.10 + 0.82 * ((fi * 0.618 + 0.21).truncatingRemainder(dividingBy: 1))),
+                            y: 70 + 620 * ((fi * 0.755).truncatingRemainder(dividingBy: 1))
+                        )
+                }
+            } else {
+                // Morning: soft sun + two cloud puffs.
+                Circle()
+                    .fill(Color(hex: 0xFFD469))
+                    .frame(width: 56, height: 56)
+                    .background(
+                        Circle().fill(Color(hex: 0xFFD469).opacity(0.28))
+                            .frame(width: 92, height: 92)
+                    )
+                    .position(x: 66, y: 122)
+                cloud(width: 74).position(x: w - 82, y: 168)
+                cloud(width: 54).position(x: w - 120, y: 148)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    private func cloud(width: CGFloat) -> some View {
+        Capsule()
+            .fill(Color.white.opacity(0.85))
+            .frame(width: width, height: 15)
     }
 }
 
