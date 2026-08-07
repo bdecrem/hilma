@@ -17,15 +17,25 @@ struct ChatView: View {
 
             VStack(spacing: 0) {
                 FeyndTopBar {
-                    Text("Chat")
-                        .font(.system(size: 16, weight: .semibold))
-                        .tracking(-0.2)
-                        .foregroundStyle(FeyndTheme.text)
+                    EmptyView()
                 } trailing: {
                     ModelPickerMenu(style: .pill)
                 } onProfileTap: {
                     showSettings = true
                 }
+
+                // Single stylized header — same Fredoka title treatment as
+                // Topics and Peck.
+                HStack {
+                    Text("Chat")
+                        .font(.custom("Fredoka", size: 38).weight(.semibold))
+                        .tracking(-0.4)
+                        .foregroundStyle(FeyndTheme.text)
+                    Spacer()
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 8)
+                .padding(.bottom, 6)
 
                 // No content column clamp here — chat reads better when bubbles
                 // can grow with the window on Catalyst. Bubble maxWidth handles
@@ -36,7 +46,7 @@ struct ChatView: View {
                     ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
                         sendNudge("Quiz me.")
                     }
-                    ActionChip(label: "Talk to F2", systemImage: "mic.fill") {
+                    ActionChip(label: "Talk to Dodo", systemImage: "mic.fill") {
                         voicePresented = true
                     }
                     Spacer()
@@ -200,7 +210,7 @@ struct TypingDots: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            F2MiniMark(size: 26)
+            DodoMiniMark(size: 26)
             HStack(spacing: 5) {
                 ForEach(0..<3) { i in
                     Circle()

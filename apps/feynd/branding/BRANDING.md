@@ -77,3 +77,14 @@ buttons.
 | ink-on-accent | `#261C06` | `#261C06` |
 
 Avatar gradient: marigold radial `#F6C46A → #F0A830 → #B97A14`.
+
+## Peck — the game map (design turn 5)
+
+Setting: the dodo's island (Mauritius) — lagoon, offshore islet, palms,
+rolling meadows. The traveler dodo from the logo walks the trail beside the
+current level. Same scene both modes: sunny morning in light, starry dusk in
+dark. Implemented natively in `FlashTabView.swift` (`PeckIslandScenery` +
+`PeckPalette`, colors straight from the design's two CSS var sets) and
+`DodoArt.swift` (`DodoTraveler`). Node numerals, START, and all screen
+headers (Chat / Topics / Peck) are Fredoka SemiBold. The game and tab are
+named **Peck**.

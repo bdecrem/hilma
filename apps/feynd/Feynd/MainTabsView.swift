@@ -5,7 +5,15 @@ import SwiftUI
 /// so Topic detail still pushes naturally; nav bars are hidden everywhere.
 struct MainTabsView: View {
     @Environment(Session.self) private var session
-    @State private var active: FeyndTab = .topics
+    // Dev/testing hook: `simctl launch … -StartTab peck|chat|topics` opens
+    // on that tab, so headless screenshot verification can reach every tab.
+    @State private var active: FeyndTab = {
+        switch UserDefaults.standard.string(forKey: "StartTab") {
+        case "peck", "flash": return .flash
+        case "chat": return .chat
+        default: return .topics
+        }
+    }()
     @State private var topicsPath = NavigationPath()
     @State private var chatPath = NavigationPath()
     @State private var flashPath = NavigationPath()

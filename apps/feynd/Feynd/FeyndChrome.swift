@@ -136,36 +136,6 @@ struct ProfileBadge: View {
     }
 }
 
-// MARK: - F2 mini mark (two-node Feynman diagram, app-icon echo)
-
-struct F2MiniMark: View {
-    var size: CGFloat = 26
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: 8)
-            .fill(FeyndTheme.bg)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(FeyndTheme.border, lineWidth: 1)
-            )
-            .frame(width: size, height: size)
-            .overlay(
-                Canvas { ctx, s in
-                    let inset: CGFloat = s.width * 0.2
-                    let y = s.height / 2
-                    let p1 = CGPoint(x: inset, y: y)
-                    let p2 = CGPoint(x: s.width - inset, y: y)
-                    var line = Path()
-                    line.move(to: p1); line.addLine(to: p2)
-                    ctx.stroke(line, with: .color(FeyndTheme.accent), lineWidth: 1.2)
-                    let r: CGFloat = 2.2 * (size / 20)
-                    ctx.fill(Path(ellipseIn: CGRect(x: p1.x - r, y: p1.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.accent))
-                    ctx.fill(Path(ellipseIn: CGRect(x: p2.x - r, y: p2.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.accent))
-                }
-            )
-    }
-}
-
 // MARK: - Mini topic glyph (used on the left of every topic row)
 
 /// 36pt rounded-square chip whose inner glyph reflects the topic's source
@@ -641,7 +611,7 @@ struct AIBubble<Content: View>: View {
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            F2MiniMark(size: 26)
+            DodoMiniMark(size: 26)
             content()
                 .font(.system(size: 16))
                 .foregroundStyle(FeyndTheme.text)
@@ -811,7 +781,7 @@ enum FeyndTab: String, CaseIterable {
         switch self {
         case .chat: return "Chat"
         case .topics: return "Topics"
-        case .flash: return "Flash"
+        case .flash: return "Peck"
         }
     }
     var iconSystem: String {

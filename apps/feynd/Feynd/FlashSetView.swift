@@ -113,7 +113,7 @@ struct FlashSetView: View {
             .buttonStyle(.plain)
             Spacer()
             VStack(spacing: 2) {
-                Text(start.jumboLevel != nil ? "JUMBO · LEVEL \(start.jumboLevel!)" : "FLASH ROUND")
+                Text(start.jumboLevel != nil ? "PECK · LEVEL \(start.jumboLevel!)" : "FLASH ROUND")
                     .font(.system(size: 11, weight: .bold))
                     .tracking(1.2)
                     .foregroundStyle(FeyndTheme.accent)

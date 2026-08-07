@@ -73,9 +73,7 @@ struct TopicsView: View {
 
             VStack(spacing: 0) {
                 FeyndTopBar {
-                    Text("Library")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(FeyndTheme.text2)
+                    EmptyView()
                 } trailing: {
                     // Empty — new topics come from pasting a URL in Chat.
                     EmptyView()
@@ -172,8 +170,8 @@ struct TopicsView: View {
     private var titleRow: some View {
         HStack(alignment: .bottom) {
             Text("Topics")
-                .font(.system(size: 34, weight: .bold))
-                .tracking(-0.8)
+                .font(.custom("Fredoka", size: 38).weight(.semibold))
+                .tracking(-0.4)
                 .foregroundStyle(FeyndTheme.text)
             Spacer()
             sortMenu

@@ -46,6 +46,7 @@
 		E837DB371B838AB27BC85493 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E1F1203E78919DA10B73C9 /* LoginView.swift */; };
 		ED0532A13EF17F943FC56DE3 /* FlashSetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC72F31FAF938D3D638D39F /* FlashSetView.swift */; };
 		ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */; };
+		F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */; };
 		FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */; };
 		FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */; };
 /* End PBXBuildFile section */
@@ -90,6 +91,7 @@
 		CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
 		E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeVoiceClient.swift; sourceTree = "<group>"; };
 		EC5668529933DC6749CB3D06 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoArt.swift; sourceTree = "<group>"; };
 		EE7DB0ED0D66A78BC46C7BEB /* FlashModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashModels.swift; sourceTree = "<group>"; };
 		EFFCEF68207C8EC05D3B4760 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDeckBuilder.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */,
 				5DC33D7342C9F25E38F967F4 /* ChatView.swift */,
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
+				EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */,
 				9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */,
 				A62FA8AD3B3E792810622A3A /* F2API.swift */,
 				0A077252957BBEE41DCF582D /* FeyndApp.swift */,
@@ -260,6 +263,7 @@
 				445C46DD3C8AB7B90A505AEC /* AudioSummaryPlayerView.swift in Sources */,
 				5B58C25CE4AFF970698227C4 /* ChatView.swift in Sources */,
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
+				F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */,
 				2653F9928D7A0873DFC35016 /* DoubleThumbsUp.swift in Sources */,
 				935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */,
 				218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */,
@@ -333,7 +337,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -416,7 +420,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

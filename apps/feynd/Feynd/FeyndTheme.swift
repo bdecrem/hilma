@@ -89,6 +89,12 @@ enum FeyndTheme {
 
     // MARK: Helpers
 
+    /// Public builder for one-off adaptive colors (e.g. the Peck map's
+    /// scenery palette) so views don't reimplement the trait dance.
+    static func adaptiveColor(dark: UInt32, light: UInt32) -> Color {
+        adaptive(dark: dark, light: light)
+    }
+
     /// Build an adaptive Color that resolves to a different hex per trait.
     private static func adaptive(dark: UInt32, light: UInt32) -> Color {
         Color(UIColor { trait in

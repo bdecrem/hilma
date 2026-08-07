@@ -43,9 +43,7 @@ struct FlashTabView: View {
             FeyndTheme.bg.ignoresSafeArea()
             VStack(spacing: 0) {
                 FeyndTopBar {
-                    Text("Arcade")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(FeyndTheme.text2)
+                    EmptyView()
                 } trailing: {
                     HStack(spacing: 8) {
                         deckStackButton
@@ -106,7 +104,7 @@ struct FlashTabView: View {
                 pulse = true
             }
         }
-        .alert("Flash", isPresented: Binding(
+        .alert("Peck", isPresented: Binding(
             get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } }
         )) {
             Button("OK") { errorMessage = nil }
@@ -170,9 +168,9 @@ struct FlashTabView: View {
     private var titleRow: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .bottom) {
-                Text("Flash")
-                    .font(.system(size: 34, weight: .bold))
-                    .tracking(-0.8)
+                Text("Peck")
+                    .font(.custom("Fredoka", size: 38).weight(.semibold))
+                    .tracking(-0.4)
                     .foregroundStyle(FeyndTheme.text)
                 Spacer()
             }
@@ -205,7 +203,7 @@ struct FlashTabView: View {
                 .font(.system(size: 21, weight: .bold))
                 .tracking(-0.4)
                 .foregroundStyle(FeyndTheme.text)
-            Text("Jumbo mixes flash cards from every topic you're learning into one climb. You have \(state.cardCount) of 10 — open a topic's ⋯ menu and tap Flash cards to build a deck.")
+            Text("Peck mixes flash cards from every topic you're learning into one island trail. You have \(state.cardCount) of 10 — open a topic's ⋯ menu and tap Flash cards to build a deck.")
                 .font(.system(size: 14))
                 .lineSpacing(3)
                 .foregroundStyle(FeyndTheme.text2)
@@ -232,7 +230,7 @@ struct FlashTabView: View {
             Image(systemName: "bolt.slash")
                 .font(.system(size: 30))
                 .foregroundStyle(FeyndTheme.text3)
-            Text("Couldn't load the Flash arcade.")
+            Text("Couldn't load Peck.")
                 .font(.system(size: 14))
                 .foregroundStyle(FeyndTheme.text2)
             Button("Retry") { Task { await load() } }
@@ -242,11 +240,12 @@ struct FlashTabView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // MARK: - The map (the "night climb" world)
+    // MARK: - The map (the dodo's island)
 
-    /// Level 1 sits at the BOTTOM in a dark meadow; the path climbs through
-    /// twilight and clouds into a starry sky. One shared bit of math places
-    /// nodes, trail, and scenery: y(i) = H - bottomPad - i * pitch.
+    /// Level 1 sits at the BOTTOM in a sunny meadow; the trail wanders up
+    /// through hills to the shore, and the last stretch fades out over the
+    /// sea toward the sun/moon. One shared bit of math places nodes, trail,
+    /// and scenery: y(i) = H - bottomPad - i * pitch.
     private func levelMap(_ state: JumboState) -> some View {
         GeometryReader { geo in
             let w = min(geo.size.width, 430)
@@ -255,14 +254,15 @@ struct FlashTabView: View {
             let height = topPad + CGFloat(max(0, count - 1)) * pitch + bottomPad
             let yFor: (Int) -> CGFloat = { i in height - bottomPad - CGFloat(i) * pitch }
             let xFor: (Int) -> CGFloat = { i in centerX + zig(i) * (amp * w / 430) }
+            let currentIdx = state.levels.firstIndex(where: { $0.status == "unlocked" })
 
             ScrollViewReader { proxy in
                 ScrollView {
                     ZStack(alignment: .topLeading) {
-                        FlashWorldScenery(height: height)
+                        PeckIslandScenery(height: height)
 
                         // Stepping-stone trail between consecutive nodes —
-                        // warm sand dots, like a path through the world.
+                        // round pebble dots, like the design's dotted path.
                         Canvas { ctx, _ in
                             var path = Path()
                             for i in 0..<count {
@@ -277,8 +277,8 @@ struct FlashTabView: View {
                             }
                             ctx.stroke(
                                 path,
-                                with: .color(Color(hex: 0xF3DFAE).opacity(0.5)),
-                                style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [0.5, 12])
+                                with: .color(PeckPalette.pathDotColor.opacity(0.9)),
+                                style: StrokeStyle(lineWidth: 7, lineCap: .round, dash: [0.1, 17])
                             )
                         }
                         .frame(height: height)
@@ -287,6 +287,14 @@ struct FlashTabView: View {
                             levelNode(level)
                                 .position(x: xFor(i), y: yFor(i))
                                 .id(level.level)
+                        }
+
+                        // The traveler walks the trail beside the current
+                        // level, backpack on, sprout up.
+                        if let i = currentIdx {
+                            DodoTraveler(size: 82)
+                                .position(x: max(34, xFor(i) - 72), y: yFor(i) + 44)
+                                .allowsHitTesting(false)
                         }
                     }
                     .frame(height: height)
@@ -319,75 +327,75 @@ struct FlashTabView: View {
             VStack(spacing: 5) {
                 ZStack {
                     if isCurrent {
-                        // Pulsing gold halo says "you are here".
+                        // Pulsing marigold halo says "you are here".
                         Circle()
-                            .stroke(FeyndTheme.gold.opacity(pulse ? 0.2 : 0.6), lineWidth: 3)
-                            .frame(width: nodeSize + (pulse ? 24 : 10), height: nodeSize + (pulse ? 24 : 10))
+                            .stroke(PeckPalette.marigold.opacity(pulse ? 0.25 : 0.7), lineWidth: 3)
+                            .frame(width: nodeSize + (pulse ? 26 : 12), height: nodeSize + (pulse ? 26 : 12))
                     }
 
-                    // Chunky game-button base: a darker "depth" disc peeking
-                    // out below the face makes the node read as pressable.
-                    Circle()
-                        .fill(isPassed ? Color(hex: 0xB97A14) : Color(hex: 0x180F28))
-                        .frame(width: nodeSize, height: nodeSize)
-                        .offset(y: 4)
-                    Circle()
-                        .fill(isPassed ? FeyndTheme.accent : (isCurrent ? Color(hex: 0x3A2B57) : Color(hex: 0x2A2140)))
-                        .frame(width: nodeSize, height: nodeSize)
-                        .overlay(
-                            Circle().stroke(
-                                isPassed ? Color(hex: 0xF6C46A) : (isCurrent ? FeyndTheme.gold : Color(hex: 0x453563)),
-                                lineWidth: isCurrent ? 2 : 1.5
-                            )
-                        )
-                        .shadow(color: isPassed ? FeyndTheme.accent.opacity(0.4) : .black.opacity(0.35),
-                                radius: isPassed ? 14 : 8, y: 4)
-
-                    if level.status == "locked" {
-                        Image(systemName: "lock.fill")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(Color(hex: 0x6B5C94))
+                    if isPassed {
+                        // Cleared: sunny marigold stone with a soft halo.
+                        Circle()
+                            .fill(PeckPalette.marigold.opacity(0.25))
+                            .frame(width: nodeSize + 18, height: nodeSize + 18)
+                        Circle()
+                            .fill(PeckPalette.marigold)
+                            .frame(width: nodeSize, height: nodeSize)
+                            .shadow(color: PeckPalette.marigold.opacity(0.4), radius: 12, y: 3)
+                        Text("\(level.level)")
+                            .font(.custom("Fredoka", size: 26).weight(.semibold))
+                            .foregroundStyle(Color(hex: 0x3E3324))
+                    } else if isCurrent {
+                        // Current: marigold ring around a bright face.
+                        Circle()
+                            .fill(PeckPalette.marigold)
+                            .frame(width: nodeSize + 13, height: nodeSize + 13)
+                        Circle()
+                            .fill(PeckPalette.nodeCurFace)
+                            .frame(width: nodeSize, height: nodeSize)
+                        Text("\(level.level)")
+                            .font(.custom("Fredoka", size: 29).weight(.semibold))
+                            .foregroundStyle(PeckPalette.nodeCurNum)
                     } else {
-                        VStack(spacing: 1) {
-                            Text("\(level.level)")
-                                .font(.system(size: 22, weight: .bold))
-                                .foregroundStyle(.white)
-                            Image(systemName: level.modeIcon)
-                                .font(.system(size: 9, weight: .semibold))
-                                .foregroundStyle(isPassed ? .white.opacity(0.85) : FeyndTheme.gold)
-                        }
+                        // Locked: quiet foggy stone.
+                        Circle()
+                            .fill(PeckPalette.nodeLock)
+                            .frame(width: nodeSize - 8, height: nodeSize - 8)
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(PeckPalette.nodeLockIcon)
                     }
 
                     // Cleared levels plant a little victory flag.
                     if isPassed {
                         FlagMarker()
-                            .offset(x: nodeSize * 0.42, y: -nodeSize * 0.52)
+                            .offset(x: nodeSize * 0.44, y: -nodeSize * 0.54)
                     }
                 }
                 .frame(height: nodeSize + 26) // room for halo + flag, keeps rows even
 
                 if isPassed {
-                    HStack(spacing: 1.5) {
+                    HStack(spacing: 2) {
                         ForEach(0..<3, id: \.self) { s in
                             Image(systemName: "star.fill")
-                                .font(.system(size: 8.5, weight: .bold))
-                                .foregroundStyle(s < level.stars ? FeyndTheme.gold : Color(hex: 0x4A3A66))
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(s < level.stars ? PeckPalette.starGold : PeckPalette.starDim)
                         }
                     }
                 } else if isCurrent {
                     Text("START")
-                        .font(.system(size: 10, weight: .heavy))
-                        .tracking(1.2)
-                        .foregroundStyle(FeyndTheme.gold)
-                        .shadow(color: .black.opacity(0.6), radius: 3)
+                        .font(.custom("Fredoka", size: 13).weight(.semibold))
+                        .tracking(3)
+                        .foregroundStyle(PeckPalette.startText)
+                        .shadow(color: .black.opacity(0.25), radius: 2)
                 } else {
                     Color.clear.frame(height: 10)
                 }
             }
         }
         .buttonStyle(.plain)
-        .opacity(level.status == "locked" ? 0.8 : 1)
-        .accessibilityLabel("Level \(level.level), \(level.modeLabel), \(level.status)")
+        .opacity(level.status == "locked" ? 0.9 : 1)
+        .accessibilityLabel("Level \(level.level), \(level.status)")
     }
 
     // MARK: - Data / actions
@@ -426,230 +434,204 @@ struct FlashTabView: View {
     }
 }
 
-// MARK: - World scenery
+// MARK: - The island world
 
-/// The fixed dusk-to-space backdrop behind the level path: meadow and pines
-/// at the bottom, mountain silhouettes, drifting clouds mid-climb, then a
-/// starfield and crescent moon at the top. All Canvas-drawn — no assets.
-/// Deterministic pseudo-random placement (golden-ratio hashing) so the world
-/// looks the same every visit; only clouds drift and stars twinkle.
-private struct FlashWorldScenery: View {
+/// Adaptive colors for the Peck map, straight from the design's two CSS var
+/// sets (turn 5 of dodo-logo.dc.html): sunny morning in light mode, starry
+/// dusk in dark.
+enum PeckPalette {
+    static let skyA      = FeyndTheme.adaptiveColor(dark: 0x1E2440, light: 0xAEE0EE)
+    static let skyB      = FeyndTheme.adaptiveColor(dark: 0x4A3D63, light: 0xEAF7EF)
+    static let sunMoon   = FeyndTheme.adaptiveColor(dark: 0xF3E3B2, light: 0xFFD469)
+    static let cloud     = FeyndTheme.adaptiveColor(dark: 0x4A4468, light: 0xFFFFFF)
+    static let sea       = FeyndTheme.adaptiveColor(dark: 0x2C5B66, light: 0x79C6C4)
+    static let island    = FeyndTheme.adaptiveColor(dark: 0x22453A, light: 0x4E8F6E)
+    static let palm      = FeyndTheme.adaptiveColor(dark: 0x2E5B3F, light: 0x4E8F6E)
+    static let trunk     = FeyndTheme.adaptiveColor(dark: 0x4A3A2C, light: 0x8A6A4C)
+    static let hillFar   = FeyndTheme.adaptiveColor(dark: 0x3A5A4A, light: 0xBFDCA4)
+    static let hillMid   = FeyndTheme.adaptiveColor(dark: 0x2E4A3A, light: 0x96C77E)
+    static let hillNear  = FeyndTheme.adaptiveColor(dark: 0x254032, light: 0x7BB662)
+    static let grass     = FeyndTheme.adaptiveColor(dark: 0x1D3528, light: 0x5FA24C)
+    static let tuft      = FeyndTheme.adaptiveColor(dark: 0x2E4A38, light: 0x4C8C3D)
+    static let tree1     = FeyndTheme.adaptiveColor(dark: 0x2E5B3F, light: 0x5F9E4C)
+    static let tree2     = FeyndTheme.adaptiveColor(dark: 0x3A6B4A, light: 0x7BB662)
+    static let pathDotColor = FeyndTheme.adaptiveColor(dark: 0xD9C89A, light: 0xFFFDF4)
+    static let starColor = Color(hex: 0xF3E9C8)   // dark-mode only, drawn conditionally
+    static let marigold  = Color(hex: 0xF6B04E)
+    static let nodeCurFace = FeyndTheme.adaptiveColor(dark: 0x3B3560, light: 0xFFFDF4)
+    static let nodeCurNum  = FeyndTheme.adaptiveColor(dark: 0xFFF6E0, light: 0x3E4A52)
+    static let startText   = FeyndTheme.adaptiveColor(dark: 0xF6B04E, light: 0x8A5B14)
+    static let nodeLock    = FeyndTheme.adaptiveColor(dark: 0x332F4E, light: 0xC4D6C8)
+    static let nodeLockIcon = FeyndTheme.adaptiveColor(dark: 0x5C567E, light: 0x8FA695)
+    static let starGold    = FeyndTheme.adaptiveColor(dark: 0xF6B04E, light: 0xF0A830)
+    static let starDim     = FeyndTheme.adaptiveColor(dark: 0x4A4468, light: 0xC9D6CB)
+}
+
+/// The dodo's island, drawn tall: sun/moon and sky at the top, the sea with
+/// a little offshore islet, then rolling hills descending to the sunny
+/// meadow at the bottom where the trail begins. Same scene both modes —
+/// sunny morning in light, starry dusk in dark. All Canvas, no assets.
+private struct PeckIslandScenery: View {
     let height: CGFloat
+    @Environment(\.colorScheme) private var scheme
 
     private func frac(_ v: Double) -> Double { v - v.rounded(.down) }
 
     var body: some View {
-        ZStack {
-            // "Funky dusk": plum night at the top melting through violet and
-            // a burnt-coral horizon haze into a deep teal meadow.
-            LinearGradient(
-                stops: [
-                    .init(color: Color(hex: 0x160E24), location: 0.00),
-                    .init(color: Color(hex: 0x271A44), location: 0.30),
-                    .init(color: Color(hex: 0x3D2453), location: 0.58),
-                    .init(color: Color(hex: 0x5C3247), location: 0.76),
-                    .init(color: Color(hex: 0x6E4140), location: 0.84),
-                    .init(color: Color(hex: 0x24443A), location: 0.94),
-                    .init(color: Color(hex: 0x152E27), location: 1.00),
-                ],
-                startPoint: .top, endPoint: .bottom
-            )
+        Canvas { ctx, size in
+            let w = size.width
+            let h = size.height
+            let dark = scheme == .dark
+            func fill(_ p: Path, _ c: Color, _ o: Double = 1) {
+                ctx.fill(p, with: .color(c.opacity(o)))
+            }
 
-            TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
-                let t = timeline.date.timeIntervalSinceReferenceDate
-                Canvas { ctx, size in
-                    let w = size.width
-                    let h = size.height
+            // Sky base + soft horizon glow.
+            fill(Path(CGRect(x: 0, y: 0, width: w, height: h)), PeckPalette.skyA)
+            fill(Path(ellipseIn: CGRect(x: -w * 0.35, y: 150, width: w * 1.7, height: 220)),
+                 PeckPalette.skyB, 0.8)
 
-                    // Stars — dots plus little 4-point sparkles, twinkling.
-                    for i in 0..<34 {
-                        let fi = Double(i)
-                        let x = w * frac(fi * 0.6180339887 + 0.13)
-                        let y = h * 0.58 * frac(fi * 0.7548776662)
-                        let tw = 0.3 + 0.5 * (0.5 + 0.5 * sin(t * (0.7 + frac(fi * 0.53)) + fi))
-                        if i % 5 == 0 {
-                            // Sparkle cross: two thin diamonds.
-                            let s = 3.0 + 3.0 * frac(fi * 0.31)
-                            var cross = Path()
-                            cross.move(to: CGPoint(x: x, y: y - s))
-                            cross.addQuadCurve(to: CGPoint(x: x + s, y: y), control: CGPoint(x: x + s * 0.18, y: y - s * 0.18))
-                            cross.addQuadCurve(to: CGPoint(x: x, y: y + s), control: CGPoint(x: x + s * 0.18, y: y + s * 0.18))
-                            cross.addQuadCurve(to: CGPoint(x: x - s, y: y), control: CGPoint(x: x - s * 0.18, y: y + s * 0.18))
-                            cross.addQuadCurve(to: CGPoint(x: x, y: y - s), control: CGPoint(x: x - s * 0.18, y: y - s * 0.18))
-                            ctx.fill(cross, with: .color(Color(hex: 0xF3DFAE).opacity(tw)))
-                        } else {
-                            let r = 0.8 + 1.2 * frac(fi * 0.3247179572)
-                            ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
-                                     with: .color(.white.opacity(tw * 0.9)))
-                        }
-                    }
-
-                    // Shooting star — a brief streak every ~9 seconds.
-                    let cycle = frac(t / 9.0)
-                    if cycle < 0.11 {
-                        let p = cycle / 0.11
-                        let sx = w * (0.15 + 0.5 * p)
-                        let sy = h * 0.10 + h * 0.10 * p
-                        var streak = Path()
-                        streak.move(to: CGPoint(x: sx, y: sy))
-                        streak.addLine(to: CGPoint(x: sx - 34, y: sy - 12))
-                        let fade = sin(p * .pi)
-                        ctx.stroke(streak, with: .color(.white.opacity(0.7 * fade)),
-                                   style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
-                    }
-
-                    // The big moon — oversized, cratered, glowing. The hero.
-                    let moonC = CGPoint(x: w * 0.24, y: 120)
-                    for (gr, ga) in [(96.0, 0.05), (76.0, 0.08)] {
-                        ctx.fill(Path(ellipseIn: CGRect(x: moonC.x - gr, y: moonC.y - gr, width: gr * 2, height: gr * 2)),
-                                 with: .color(Color(hex: 0xF3DFAE).opacity(ga)))
-                    }
-                    ctx.fill(Path(ellipseIn: CGRect(x: moonC.x - 54, y: moonC.y - 54, width: 108, height: 108)),
-                             with: .color(Color(hex: 0xF3DFAE)))
-                    let craters: [(Double, Double, Double)] = [
-                        (-0.35, -0.25, 13), (0.22, 0.05, 17), (-0.1, 0.42, 9), (0.38, -0.38, 8),
-                    ]
-                    for (cx, cy, cr) in craters {
-                        ctx.fill(Path(ellipseIn: CGRect(x: moonC.x + cx * 54 - cr, y: moonC.y + cy * 54 - cr,
-                                                        width: cr * 2, height: cr * 2)),
-                                 with: .color(Color(hex: 0xDCC38A).opacity(0.8)))
-                    }
-
-                    // A funky little ringed planet, upper right.
-                    let planetC = CGPoint(x: w * 0.83, y: h * 0.20)
-                    ctx.fill(Path(ellipseIn: CGRect(x: planetC.x - 11, y: planetC.y - 11, width: 22, height: 22)),
-                             with: .color(FeyndTheme.accent.opacity(0.9)))
-                    var ring = ctx
-                    ring.translateBy(x: planetC.x, y: planetC.y)
-                    ring.rotate(by: .degrees(-18))
-                    ring.stroke(Path(ellipseIn: CGRect(x: -20, y: -6, width: 40, height: 12)),
-                                with: .color(Color(hex: 0xF3DFAE).opacity(0.75)), lineWidth: 1.6)
-
-                    // Cloud streaks — long thin lavender wisps, drifting.
-                    for i in 0..<6 {
-                        let fi = Double(i)
-                        let y = h * (0.34 + 0.34 * frac(fi * 0.7548776662))
-                        let drift = sin(t * 0.08 + fi * 2.1) * 22
-                        let baseX = w * frac(fi * 0.6180339887 + 0.37) + drift
-                        let len = 60.0 + 70.0 * frac(fi * 0.29)
-                        let wisp = Color(hex: 0x9C86C4).opacity(0.22)
-                        ctx.fill(Path(roundedRect: CGRect(x: baseX - len / 2, y: y, width: len, height: 7), cornerRadius: 3.5), with: .color(wisp))
-                        ctx.fill(Path(roundedRect: CGRect(x: baseX - len * 0.32, y: y - 6, width: len * 0.55, height: 6), cornerRadius: 3), with: .color(wisp))
-                    }
-
-                    // Layered ridge lines with sunset rim light — further is
-                    // hazier, each crest catches a sliver of coral.
-                    let ridges: [(base: Double, amp: Double, fill: UInt32, alpha: Double, phase: Double)] = [
-                        (h - 210, 55, 0x6B4160, 0.55, 0.0),
-                        (h - 165, 48, 0x4A2C55, 0.75, 1.7),
-                        (h - 125, 42, 0x33204A, 0.95, 3.9),
-                    ]
-                    for r in ridges {
-                        var ridge = Path()
-                        ridge.move(to: CGPoint(x: 0, y: h))
-                        ridge.addLine(to: CGPoint(x: 0, y: r.base))
-                        let steps = 5
-                        for s in 1...steps {
-                            let px = w * Double(s) / Double(steps)
-                            let py = r.base - r.amp * (0.5 + 0.5 * sin(Double(s) * 2.1 + r.phase))
-                            let cx = w * (Double(s) - 0.5) / Double(steps)
-                            let cy = r.base - r.amp * (0.5 + 0.5 * sin((Double(s) - 0.5) * 2.1 + r.phase + 1.2))
-                            ridge.addQuadCurve(to: CGPoint(x: px, y: py), control: CGPoint(x: cx, y: cy))
-                        }
-                        ridge.addLine(to: CGPoint(x: w, y: h))
-                        ridge.closeSubpath()
-                        ctx.fill(ridge, with: .color(Color(hex: r.fill).opacity(r.alpha)))
-                        // Rim light along the crest.
-                        var crest = Path()
-                        crest.move(to: CGPoint(x: 0, y: r.base))
-                        for s in 1...steps {
-                            let px = w * Double(s) / Double(steps)
-                            let py = r.base - r.amp * (0.5 + 0.5 * sin(Double(s) * 2.1 + r.phase))
-                            let cx = w * (Double(s) - 0.5) / Double(steps)
-                            let cy = r.base - r.amp * (0.5 + 0.5 * sin((Double(s) - 0.5) * 2.1 + r.phase + 1.2))
-                            crest.addQuadCurve(to: CGPoint(x: px, y: py), control: CGPoint(x: cx, y: cy))
-                        }
-                        ctx.stroke(crest, with: .color(Color(hex: 0xE08A5C).opacity(0.35)), lineWidth: 1.4)
-                    }
-
-                    // Meadow hummocks — deep teal with a minty rim.
-                    var backHill = Path()
-                    backHill.move(to: CGPoint(x: 0, y: h))
-                    backHill.addLine(to: CGPoint(x: 0, y: h - 96))
-                    backHill.addQuadCurve(to: CGPoint(x: w * 0.52, y: h - 64),
-                                          control: CGPoint(x: w * 0.2, y: h - 124))
-                    backHill.addQuadCurve(to: CGPoint(x: w, y: h - 92),
-                                          control: CGPoint(x: w * 0.8, y: h - 28))
-                    backHill.addLine(to: CGPoint(x: w, y: h))
-                    backHill.closeSubpath()
-                    ctx.fill(backHill, with: .color(Color(hex: 0x25493B)))
-                    var backRim = Path()
-                    backRim.move(to: CGPoint(x: 0, y: h - 96))
-                    backRim.addQuadCurve(to: CGPoint(x: w * 0.52, y: h - 64),
-                                         control: CGPoint(x: w * 0.2, y: h - 124))
-                    backRim.addQuadCurve(to: CGPoint(x: w, y: h - 92),
-                                         control: CGPoint(x: w * 0.8, y: h - 28))
-                    ctx.stroke(backRim, with: .color(Color(hex: 0x74BA95).opacity(0.4)), lineWidth: 1.6)
-
-                    // Wonky blob trees on the back hummock — round canopies
-                    // squashed at random, thin trunks, no two alike.
-                    for i in 0..<5 {
-                        let fi = Double(i)
-                        let x = w * (0.08 + 0.86 * frac(fi * 0.6180339887 + 0.57))
-                        let baseY = h - 72 - 24 * frac(fi * 0.43)
-                        let ch = 20.0 + 14.0 * frac(fi * 0.77)
-                        let squash = 0.85 + 0.4 * frac(fi * 0.61)
-                        var trunk = Path()
-                        trunk.move(to: CGPoint(x: x, y: baseY))
-                        trunk.addLine(to: CGPoint(x: x + (frac(fi * 0.9) - 0.5) * 5, y: baseY - ch * 0.6))
-                        ctx.stroke(trunk, with: .color(Color(hex: 0x1A2E24)), lineWidth: 2.4)
-                        ctx.fill(Path(ellipseIn: CGRect(x: x - ch * squash / 2, y: baseY - ch * 1.35,
-                                                        width: ch * squash, height: ch)),
-                                 with: .color(Color(hex: 0x2F6247)))
-                        ctx.fill(Path(ellipseIn: CGRect(x: x - ch * squash * 0.32, y: baseY - ch * 1.28,
-                                                        width: ch * squash * 0.45, height: ch * 0.4)),
-                                 with: .color(Color(hex: 0x4C8A64).opacity(0.65)))
-                    }
-
-                    var frontHill = Path()
-                    frontHill.move(to: CGPoint(x: 0, y: h))
-                    frontHill.addLine(to: CGPoint(x: 0, y: h - 42))
-                    frontHill.addQuadCurve(to: CGPoint(x: w * 0.62, y: h - 26),
-                                           control: CGPoint(x: w * 0.3, y: h - 66))
-                    frontHill.addQuadCurve(to: CGPoint(x: w, y: h - 50),
-                                           control: CGPoint(x: w * 0.86, y: h - 4))
-                    frontHill.addLine(to: CGPoint(x: w, y: h))
-                    frontHill.closeSubpath()
-                    ctx.fill(frontHill, with: .color(Color(hex: 0x142A20)))
-
-                    // Grass tufts — little 3-blade fans along the front hill.
-                    for i in 0..<9 {
-                        let fi = Double(i)
-                        let x = w * (0.04 + 0.92 * frac(fi * 0.6180339887 + 0.23))
-                        let y = h - 30 - 16 * frac(fi * 0.47)
-                        for b in -1...1 {
-                            var blade = Path()
-                            blade.move(to: CGPoint(x: x, y: y))
-                            blade.addQuadCurve(to: CGPoint(x: x + Double(b) * 5, y: y - 9 - 3 * frac(fi * 0.8)),
-                                               control: CGPoint(x: x + Double(b) * 1.5, y: y - 6))
-                            ctx.stroke(blade, with: .color(Color(hex: 0x3E7A55).opacity(0.8)), lineWidth: 1.3)
-                        }
-                    }
-
-                    // Fireflies — slow-orbiting warm sparks over the meadow.
-                    for i in 0..<7 {
-                        let fi = Double(i)
-                        let cx = w * frac(fi * 0.6180339887 + 0.49)
-                        let cy = h - 60 - 90 * frac(fi * 0.71)
-                        let x = cx + sin(t * (0.3 + 0.2 * frac(fi * 0.9)) + fi * 2.4) * 16
-                        let y = cy + sin(t * (0.4 + 0.15 * frac(fi * 0.5)) + fi * 1.3) * 10
-                        let glow = 0.25 + 0.55 * (0.5 + 0.5 * sin(t * 1.6 + fi * 2.9))
-                        ctx.fill(Path(ellipseIn: CGRect(x: x - 4, y: y - 4, width: 8, height: 8)),
-                                 with: .color(FeyndTheme.gold.opacity(glow * 0.25)))
-                        ctx.fill(Path(ellipseIn: CGRect(x: x - 1.6, y: y - 1.6, width: 3.2, height: 3.2)),
-                                 with: .color(FeyndTheme.gold.opacity(glow)))
-                    }
+            // Stars — dusk only.
+            if dark {
+                for i in 0..<12 {
+                    let fi = Double(i)
+                    let x = w * frac(fi * 0.6180339887 + 0.21)
+                    let y = 16 + 180 * frac(fi * 0.7548776662)
+                    let r = 1.4 + 1.0 * frac(fi * 0.37)
+                    fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
+                         PeckPalette.starColor, 0.9)
                 }
+            }
+
+            // Sun (light) / moon (dark) with halo, upper right.
+            let sunC = CGPoint(x: w * 0.82, y: 84)
+            fill(Path(ellipseIn: CGRect(x: sunC.x - 38, y: sunC.y - 38, width: 76, height: 76)),
+                 PeckPalette.sunMoon, 0.3)
+            fill(Path(ellipseIn: CGRect(x: sunC.x - 26, y: sunC.y - 26, width: 52, height: 52)),
+                 PeckPalette.sunMoon)
+
+            // Two puffs of cloud.
+            for (cx, cy) in [(w * 0.20, 96.0), (w * 0.62, 158.0)] {
+                fill(Path(roundedRect: CGRect(x: cx - 38, y: cy, width: 76, height: 15), cornerRadius: 7.5), PeckPalette.cloud)
+                fill(Path(roundedRect: CGRect(x: cx - 20, y: cy - 10, width: 46, height: 13), cornerRadius: 6.5), PeckPalette.cloud)
+            }
+
+            // The sea, with a tiny offshore islet + palm.
+            let seaTop: CGFloat = 235
+            let seaBottom: CGFloat = 350
+            fill(Path(CGRect(x: 0, y: seaTop, width: w, height: seaBottom - seaTop)), PeckPalette.sea)
+            let isl = CGPoint(x: w * 0.24, y: seaBottom - 8)
+            fill(Path(ellipseIn: CGRect(x: isl.x - 40, y: isl.y - 10, width: 80, height: 20)), PeckPalette.island)
+            var mount = Path()
+            mount.move(to: CGPoint(x: isl.x - 5, y: isl.y))
+            mount.addCurve(to: CGPoint(x: isl.x + 2, y: isl.y - 28),
+                           control1: CGPoint(x: isl.x - 7, y: isl.y - 13),
+                           control2: CGPoint(x: isl.x - 5, y: isl.y - 21))
+            mount.addCurve(to: CGPoint(x: isl.x + 1, y: isl.y),
+                           control1: CGPoint(x: isl.x + 4, y: isl.y - 21),
+                           control2: CGPoint(x: isl.x + 2, y: isl.y - 10))
+            mount.closeSubpath()
+            fill(mount, PeckPalette.island)
+            for dir in [-1.0, 1.0] {
+                var frond = Path()
+                frond.move(to: CGPoint(x: isl.x + 2, y: isl.y - 26))
+                frond.addQuadCurve(to: CGPoint(x: isl.x + 2 + dir * 20, y: isl.y - 30),
+                                   control: CGPoint(x: isl.x + 2 + dir * 10, y: isl.y - 36))
+                frond.addQuadCurve(to: CGPoint(x: isl.x + 2, y: isl.y - 26),
+                                   control: CGPoint(x: isl.x + 2 + dir * 9, y: isl.y - 27))
+                frond.closeSubpath()
+                fill(frond, PeckPalette.palm)
+            }
+
+            // Rolling hills — far, mid, near — then the meadow floor. Crest
+            // lines are gentle sine waves; each layer fills to the bottom.
+            let landTop = seaBottom
+            let landSpan = max(1, h - landTop - 150)
+            let layers: [(frac: Double, color: Color, amp: Double, phase: Double)] = [
+                (0.00, PeckPalette.hillFar, 26, 0.4),
+                (0.30, PeckPalette.hillMid, 34, 2.2),
+                (0.62, PeckPalette.hillNear, 30, 4.1),
+            ]
+            for layer in layers {
+                let crest = landTop + landSpan * layer.frac
+                var hill = Path()
+                hill.move(to: CGPoint(x: 0, y: h))
+                hill.addLine(to: CGPoint(x: 0, y: crest + 20))
+                let steps = 5
+                for s in 1...steps {
+                    let px = w * Double(s) / Double(steps)
+                    let py = crest + 20 - layer.amp * (0.5 + 0.5 * sin(Double(s) * 1.9 + layer.phase))
+                    let cx = w * (Double(s) - 0.5) / Double(steps)
+                    let cy = crest + 20 - layer.amp * (0.5 + 0.5 * sin((Double(s) - 0.5) * 1.9 + layer.phase + 1.1))
+                    hill.addQuadCurve(to: CGPoint(x: px, y: py), control: CGPoint(x: cx, y: cy))
+                }
+                hill.addLine(to: CGPoint(x: w, y: h))
+                hill.closeSubpath()
+                fill(hill, layer.color)
+            }
+
+            // Meadow floor.
+            var meadow = Path()
+            let meadowTop = h - 140
+            meadow.move(to: CGPoint(x: 0, y: h))
+            meadow.addLine(to: CGPoint(x: 0, y: meadowTop + 14))
+            meadow.addQuadCurve(to: CGPoint(x: w * 0.55, y: meadowTop),
+                                control: CGPoint(x: w * 0.25, y: meadowTop - 16))
+            meadow.addQuadCurve(to: CGPoint(x: w, y: meadowTop + 10),
+                                control: CGPoint(x: w * 0.82, y: meadowTop + 18))
+            meadow.addLine(to: CGPoint(x: w, y: h))
+            meadow.closeSubpath()
+            fill(meadow, PeckPalette.grass)
+
+            // Round trees scattered down the hills. Canopy color by band:
+            // the lighter tree2 green only on the far/mid hills — on the
+            // near hill it matches the ground exactly and disappears.
+            for i in 0..<7 {
+                let fi = Double(i)
+                let x = w * (0.06 + 0.88 * frac(fi * 0.6180339887 + 0.43))
+                let y = landTop + 60 + (landSpan * 0.82) * frac(fi * 0.7548776662)
+                let r = 13.0 + 8.0 * frac(fi * 0.53)
+                let upperHalf = y < landTop + landSpan * 0.55
+                fill(Path(roundedRect: CGRect(x: x - 3, y: y - 4, width: 6, height: r + 8), cornerRadius: 3), PeckPalette.trunk)
+                fill(Path(ellipseIn: CGRect(x: x - r, y: y - r * 1.6, width: r * 2, height: r * 2)),
+                     upperHalf && i % 2 == 0 ? PeckPalette.tree2 : PeckPalette.tree1)
+            }
+
+            // A tall palm near the shore.
+            let palmX = w * 0.10
+            let palmBase = landTop + 46
+            var ptrunk = Path()
+            ptrunk.move(to: CGPoint(x: palmX, y: palmBase))
+            ptrunk.addQuadCurve(to: CGPoint(x: palmX + 8, y: palmBase - 44),
+                                control: CGPoint(x: palmX - 2, y: palmBase - 24))
+            ptrunk.addQuadCurve(to: CGPoint(x: palmX + 12, y: palmBase - 43),
+                                control: CGPoint(x: palmX + 11, y: palmBase - 44))
+            ptrunk.addQuadCurve(to: CGPoint(x: palmX + 4, y: palmBase),
+                                control: CGPoint(x: palmX + 2, y: palmBase - 24))
+            ptrunk.closeSubpath()
+            fill(ptrunk, PeckPalette.trunk)
+            for (dx, dy) in [(-22.0, -6.0), (20.0, -8.0), (-2.0, -22.0)] {
+                var frond = Path()
+                let tip = CGPoint(x: palmX + 9 + dx, y: palmBase - 44 + dy)
+                frond.move(to: CGPoint(x: palmX + 9, y: palmBase - 44))
+                frond.addQuadCurve(to: tip, control: CGPoint(x: palmX + 9 + dx * 0.5, y: palmBase - 52 + dy * 0.4))
+                frond.addQuadCurve(to: CGPoint(x: palmX + 9, y: palmBase - 44),
+                                   control: CGPoint(x: palmX + 9 + dx * 0.5, y: palmBase - 42 + dy * 0.6))
+                frond.closeSubpath()
+                fill(frond, PeckPalette.palm)
+            }
+
+            // Grass tufts on the meadow.
+            for i in 0..<8 {
+                let fi = Double(i)
+                let x = w * (0.05 + 0.9 * frac(fi * 0.6180339887 + 0.29))
+                let y = h - 24 - 80 * frac(fi * 0.47)
+                var tuft = Path()
+                tuft.move(to: CGPoint(x: x - 4, y: y))
+                tuft.addLine(to: CGPoint(x: x, y: y - 12))
+                tuft.addLine(to: CGPoint(x: x + 3, y: y))
+                tuft.closeSubpath()
+                fill(tuft, PeckPalette.tuft)
             }
         }
         .frame(height: height)
@@ -663,16 +645,16 @@ private struct FlagMarker: View {
             var pole = Path()
             pole.move(to: CGPoint(x: 3, y: 2))
             pole.addLine(to: CGPoint(x: 3, y: size.height - 2))
-            ctx.stroke(pole, with: .color(Color(hex: 0xF3E3B8)), lineWidth: 2)
+            ctx.stroke(pole, with: .color(Color(hex: 0xFFF6E0)), lineWidth: 2)
             var flag = Path()
             flag.move(to: CGPoint(x: 4.5, y: 2))
             flag.addLine(to: CGPoint(x: size.width - 2, y: 6.5))
             flag.addLine(to: CGPoint(x: 4.5, y: 11))
             flag.closeSubpath()
-            ctx.fill(flag, with: .color(FeyndTheme.gold))
+            ctx.fill(flag, with: .color(Color(hex: 0xF6B04E)))
         }
         .frame(width: 20, height: 24)
-        .shadow(color: .black.opacity(0.5), radius: 2, y: 1)
+        .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
     }
 }
 

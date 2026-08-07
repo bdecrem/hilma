@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// Voice mode — matches `VoiceScreen` in feynd-screens.jsx.
-/// Coral-glow background, conic-gradient orb with Feynman center mark,
-/// live transcript, listen wave, three big circle controls (Mute / Keyboard / End).
+/// Voice mode — the dodo takes the call. Warm marigold glow, the dodo
+/// character front and center (bobbing while it listens, breathing ring
+/// while it speaks), live caption, three big circle controls.
 struct VoiceSessionView: View {
     let mode: String
     let threadId: String?
@@ -17,7 +17,6 @@ struct VoiceSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var client: RealtimeVoiceClient
     @State private var muted = false
-    @State private var orbRotation: Double = 0
     @State private var ending = false
 
     init(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
@@ -50,7 +49,7 @@ struct VoiceSessionView: View {
                 headerRow
                 topicLabel
                 Spacer(minLength: 0)
-                VoiceOrb(rotation: orbRotation)
+                DodoVoiceOrb(speaking: client.phase == .speaking)
                 Spacer(minLength: 0)
                 transcript
                 statusRow
@@ -59,11 +58,6 @@ struct VoiceSessionView: View {
             }
         }
         .task {
-            // Slow continuous rotation of the conic ring — animation drives
-            // a state value rather than mutating the view to keep it smooth.
-            withAnimation(.linear(duration: 16).repeatForever(autoreverses: false)) {
-                orbRotation = 360
-            }
             await client.start()
         }
         .onDisappear { client.stop() }
@@ -115,9 +109,9 @@ struct VoiceSessionView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .tracking(0.5)
                 .foregroundStyle(FeyndTheme.text3)
-            Text(title ?? (client.model.isEmpty ? "F2 voice session" : "F2 · \(client.voice)"))
-                .font(.system(size: 22, weight: .semibold))
-                .tracking(-0.5)
+            Text(title ?? (client.model.isEmpty ? "Dodo voice session" : "Dodo · \(client.voice)"))
+                .font(.custom("Fredoka", size: 23).weight(.semibold))
+                .tracking(-0.3)
                 .foregroundStyle(FeyndTheme.text)
                 .multilineTextAlignment(.center)
         }
@@ -145,9 +139,9 @@ struct VoiceSessionView: View {
         case .idle, .requestingPermission, .creatingSession, .connecting:
             return "Connecting…"
         case .connected:
-            return "Start speaking. F2 will respond when you pause."
+            return "Start speaking. Dodo will answer when you pause."
         case .speaking:
-            return "F2 is speaking."
+            return "Dodo is speaking."
         case .failed(let m): return m
         case .ended: return "Session ended."
         }
@@ -168,8 +162,8 @@ struct VoiceSessionView: View {
 
     private var statusItalic: String {
         switch client.phase {
-        case .speaking: return "F2 is speaking…"
-        case .connected: return "F2 is listening…"
+        case .speaking: return "Dodo is speaking…"
+        case .connected: return "Dodo is listening…"
         case .failed: return "Couldn't connect"
         case .ended: return "Ended"
         default: return "Connecting…"
@@ -199,84 +193,6 @@ struct VoiceSessionView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - Voice orb
-
-struct VoiceOrb: View {
-    let rotation: Double
-
-    var body: some View {
-        ZStack {
-            // Outer halo — soft coral bloom.
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [FeyndTheme.accent.opacity(0.35), FeyndTheme.accent.opacity(0)],
-                        center: .center, startRadius: 30, endRadius: 165
-                    )
-                )
-                .frame(width: 320, height: 320)
-                .blur(radius: 8)
-
-            // Mid conic ring — coral cycle around the orb. Slow rotation.
-            Circle()
-                .fill(
-                    AngularGradient(
-                        colors: [
-                            FeyndTheme.accent,
-                            Color(hex: 0xFFB89A),
-                            FeyndTheme.accent,
-                            Color(hex: 0xB97A14),
-                            FeyndTheme.accent
-                        ],
-                        center: .center
-                    )
-                )
-                .frame(width: 200, height: 200)
-                .blur(radius: 2)
-                .opacity(0.85)
-                .rotationEffect(.degrees(rotation))
-
-            // Inner glass — radial light highlight, dark falloff, faint rim.
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Color.white.opacity(0.18), Color.white.opacity(0)],
-                        center: UnitPoint(x: 0.35, y: 0.30),
-                        startRadius: 1, endRadius: 60
-                    )
-                )
-                .background(
-                    Circle().fill(
-                        RadialGradient(
-                            colors: [Color.black.opacity(0.45), Color.black.opacity(0)],
-                            center: UnitPoint(x: 0.6, y: 0.7),
-                            startRadius: 1, endRadius: 70
-                        )
-                    )
-                )
-                .frame(width: 168, height: 168)
-                .overlay(Circle().stroke(Color.white.opacity(0.08), lineWidth: 1))
-                .shadow(color: .black.opacity(0.6), radius: 8)
-
-            // Center two-node Feynman mark, white.
-            Canvas { ctx, size in
-                let y = size.height / 2
-                let inset: CGFloat = 16
-                let p1 = CGPoint(x: inset, y: y)
-                let p2 = CGPoint(x: size.width - inset, y: y)
-                var line = Path()
-                line.move(to: p1); line.addLine(to: p2)
-                ctx.stroke(line, with: .color(.white.opacity(0.85)), lineWidth: 2)
-                let r: CGFloat = 6
-                ctx.fill(Path(ellipseIn: CGRect(x: p1.x - r, y: p1.y - r, width: r*2, height: r*2)), with: .color(.white))
-                ctx.fill(Path(ellipseIn: CGRect(x: p2.x - r, y: p2.y - r, width: r*2, height: r*2)), with: .color(.white))
-            }
-            .frame(width: 70, height: 70)
-        }
-        .frame(width: 240, height: 240)
     }
 }
 
