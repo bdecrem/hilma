@@ -72,10 +72,12 @@ export async function POST(req: Request) {
         { status: 409 },
       )
     }
-    // The Flash tab's mic button plays any level as an audio round; other
-    // modes stay fixed by the level. The pass threshold follows the mode
-    // the set is actually played in (see jumboPassScore).
-    mode = body.mode === 'voice' ? 'voice' : jumboLevelMode(jumboLevel)
+    // The level sheet lets the user play any level in any mode; the pass
+    // threshold follows the mode actually played (see jumboPassScore).
+    // Absent/invalid mode falls back to the level's default flavor.
+    mode = body.mode === 'voice' || body.mode === 'text' || body.mode === 'choice'
+      ? body.mode
+      : jumboLevelMode(jumboLevel)
   } else {
     if (!body.thread_id) {
       return NextResponse.json({ error: 'thread_id or jumbo_level required' }, { status: 400 })

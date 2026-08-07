@@ -1,10 +1,10 @@
 import SwiftUI
 
 /// The Flash tab — Jumbo Flash Game. A vertical level path (think Duolingo)
-/// over every flash card the user owns, across all topics. Clearing a level
-/// depends on how you play it: audio rounds (the mic button plays any level
-/// as one) pass at 7/10, typed at 8/10, multiple choice at 9/10. 9/10 = 2
-/// node stars, perfect = 3.
+/// over every flash card the user owns, across all topics. The level sheet
+/// offers all three modes; clearing depends on the one you pick: voice
+/// passes at 7/10, typed at 8/10, multiple choice at 9/10. 9/10 = 2 node
+/// stars, perfect = 3.
 struct FlashTabView: View {
     @Environment(Session.self) private var session
 
@@ -71,18 +71,6 @@ struct FlashTabView: View {
                 .feyndContentColumn()
             }
 
-            // Audio-round button — floats over the map, plays the current
-            // level as a voice set (passes at 7, vs 9 for multiple choice).
-            if let state, state.cardCount >= 10 {
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        audioRoundButton
-                    }
-                }
-                .feyndContentColumn()
-            }
         }
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
         .sheet(isPresented: $showDecks) {
@@ -96,9 +84,9 @@ struct FlashTabView: View {
             LevelStartSheet(
                 level: level,
                 starting: startingLevel == level.level,
-                onPlay: { play(level) }
+                onPlay: { mode in play(level, mode: mode) }
             )
-            .presentationDetents([.height(320)])
+            .presentationDetents([.height(430)])
         }
         .fullScreenCover(item: $activeSet) { start in
             FlashSetView(start: start, topicLabel: nil) { _ in
@@ -161,34 +149,6 @@ struct FlashTabView: View {
                 : String(format: "%.0fk", k)
         }
         return String(format: "%.1fM", Double(xp) / 1_000_000)
-    }
-
-    /// Floating mic button — starts the current level as an audio round.
-    /// Same cards, spoken back and forth; the easier 7/10 bar applies.
-    private var audioRoundButton: some View {
-        Button { startAudioRound() } label: {
-            HStack(spacing: 7) {
-                if startingLevel != nil {
-                    ProgressView().tint(FeyndTheme.inkOnAccent).scaleEffect(0.8)
-                } else {
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 15, weight: .bold))
-                }
-                Text("Audio round")
-                    .font(.system(size: 14, weight: .bold))
-            }
-            .foregroundStyle(FeyndTheme.inkOnAccent)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(FeyndTheme.accent, in: Capsule())
-            .overlay(Capsule().stroke(Color(hex: 0xF6C46A), lineWidth: 1))
-            .shadow(color: .black.opacity(0.45), radius: 10, y: 4)
-        }
-        .buttonStyle(.plain)
-        .disabled(startingLevel != nil)
-        .padding(.trailing, 24)
-        .padding(.bottom, 104) // clear the floating tab pill
-        .accessibilityLabel("Play the current level as an audio round")
     }
 
     /// The deck manager button — a stack of cards, which is literally what
@@ -442,13 +402,13 @@ struct FlashTabView: View {
         }
     }
 
-    private func play(_ level: JumboLevelInfo) {
+    private func play(_ level: JumboLevelInfo, mode: String) {
         guard startingLevel == nil else { return }
         FlashSFX.shared.play(.start)
         startingLevel = level.level
         Task {
             do {
-                let start = try await F2API.shared.startJumboSet(level: level.level)
+                let start = try await F2API.shared.startJumboSet(level: level.level, mode: mode)
                 sheetLevel = nil
                 // Give the sheet a beat to dismiss before the cover slides up.
                 try? await Task.sleep(for: .milliseconds(350))
@@ -460,23 +420,6 @@ struct FlashTabView: View {
             } catch {
                 errorMessage = error.localizedDescription
                 sheetLevel = nil
-            }
-            startingLevel = nil
-        }
-    }
-
-    /// Mic button: play the current (frontier) level as an audio round.
-    private func startAudioRound() {
-        guard startingLevel == nil, let state else { return }
-        let level = state.levels.first(where: { $0.status == "unlocked" })?.level
-            ?? state.highestPassed + 1
-        FlashSFX.shared.play(.start)
-        startingLevel = level
-        Task {
-            do {
-                voiceSet = try await F2API.shared.startJumboSet(level: level, voice: true)
-            } catch {
-                errorMessage = error.localizedDescription
             }
             startingLevel = nil
         }
@@ -738,17 +681,11 @@ private struct FlagMarker: View {
 private struct LevelStartSheet: View {
     let level: JumboLevelInfo
     let starting: Bool
-    let onPlay: () -> Void
+    /// Called with the chosen mode: "choice" | "text" | "voice".
+    let onPlay: (String) -> Void
 
-    /// Threshold copy for an uncleared level, by its default mode. Choice
-    /// passes at 9, which is already two stars — say so instead of listing
-    /// the same number twice.
-    private var unpassedCopy: String {
-        let need = level.requiredScore
-        return need >= 9
-            ? "10 questions mixed from all your topics. Score 9 to clear it (that's two stars), perfect for three."
-            : "10 questions mixed from all your topics. Score \(need) to clear it, 9 for two stars, perfect for three."
-    }
+    /// Which mode button was tapped — keeps the spinner on that row.
+    @State private var pickedMode: String? = nil
 
     var body: some View {
         ZStack {
@@ -765,30 +702,14 @@ private struct LevelStartSheet: View {
                     .foregroundStyle(FeyndTheme.accent)
                     .padding(.top, 8)
 
-                HStack(spacing: 8) {
-                    Image(systemName: level.modeIcon)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(FeyndTheme.accent)
-                    Text(level.modeLabel)
-                        .font(.system(size: 20, weight: .bold))
-                        .tracking(-0.3)
-                        .foregroundStyle(FeyndTheme.text)
-                }
-
                 Text(level.status == "passed"
                      ? "Cleared with \(level.bestScore ?? 0)/10. Replay for a better score — 10/10 earns all three stars."
-                     : unpassedCopy)
+                     : "10 questions mixed from all your topics. 9/10 is two stars, a perfect round is three.")
                     .font(.system(size: 13.5))
                     .lineSpacing(3)
                     .foregroundStyle(FeyndTheme.text2)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 34)
-
-                if level.status != "passed" && level.mode != "voice" {
-                    Text("Or use the mic button — audio rounds clear at 7.")
-                        .font(.system(size: 12))
-                        .foregroundStyle(FeyndTheme.text3)
-                }
 
                 if level.status == "passed" {
                     HStack(spacing: 3) {
@@ -800,29 +721,60 @@ private struct LevelStartSheet: View {
                     }
                 }
 
-                Button(action: onPlay) {
-                    HStack(spacing: 8) {
-                        if starting {
-                            ProgressView().tint(FeyndTheme.inkOnAccent).scaleEffect(0.85)
-                        } else {
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 14, weight: .bold))
-                        }
-                        Text(level.status == "passed" ? "Play again" : "Let's go")
-                            .font(.system(size: 16, weight: .bold))
-                    }
-                    .foregroundStyle(FeyndTheme.inkOnAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(FeyndTheme.accent, in: Capsule())
+                // Same wording and layout as the topic deck's mode list;
+                // each sub states the clear bar for that mode.
+                VStack(spacing: 10) {
+                    modeButton("choice", icon: "square.grid.2x2", title: "Multiple choice",
+                               sub: "Tap the right answer — clears at \(jumboPassScore(mode: "choice"))/10")
+                    modeButton("text", icon: "keyboard", title: "Type answers",
+                               sub: "Write it in your own words — clears at \(jumboPassScore(mode: "text"))/10")
+                    modeButton("voice", icon: "mic.fill", title: "Voice round",
+                               sub: "F2 quizzes you out loud — clears at \(jumboPassScore(mode: "voice"))/10")
                 }
-                .buttonStyle(.plain)
-                .disabled(starting)
                 .padding(.horizontal, 24)
-                .padding(.top, 4)
+                .padding(.top, 2)
 
                 Spacer()
             }
         }
+        .onChange(of: starting) { _, nowStarting in
+            if !nowStarting { pickedMode = nil }
+        }
+    }
+
+    private func modeButton(_ mode: String, icon: String, title: String, sub: String) -> some View {
+        Button {
+            pickedMode = mode
+            onPlay(mode)
+        } label: {
+            HStack(spacing: 13) {
+                Image(systemName: icon)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.accent)
+                    .frame(width: 40, height: 40)
+                    .background(FeyndTheme.accentSoft, in: RoundedRectangle(cornerRadius: 12))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text)
+                    Text(sub)
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+                Spacer()
+                if starting && pickedMode == mode {
+                    ProgressView().tint(FeyndTheme.text2)
+                } else {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+            }
+            .padding(13)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(starting)
     }
 }
