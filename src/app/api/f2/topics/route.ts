@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
-import { listTopicsForUser } from '@/lib/f2/threads'
+import {
+  ALL_TOPIC_KINDS,
+  createThread,
+  listTopicsForUser,
+  type TopicKind,
+} from '@/lib/f2/threads'
 import { audioSummaryForClient } from '@/lib/f2/audio-summary'
 
 export const runtime = 'nodejs'
@@ -36,4 +41,47 @@ export async function GET() {
     audio_summary: audioSummaryForClient(t.audio_summary),
   }))
   return NextResponse.json({ topics }, { headers: NO_STORE })
+}
+
+// POST — create a bare topic from a typed title (the Topics screen's +
+// button). No source material yet; chat and Add Material fill it in later.
+export async function POST(req: Request) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
+
+  let body: { topic?: string; kind?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const topic = body.topic?.trim().slice(0, 200)
+  if (!topic) {
+    return NextResponse.json({ error: 'topic required' }, { status: 400 })
+  }
+  let kind: TopicKind | null = null
+  if (body.kind !== undefined) {
+    if (!ALL_TOPIC_KINDS.includes(body.kind as TopicKind)) {
+      return NextResponse.json({ error: 'invalid kind' }, { status: 400 })
+    }
+    kind = body.kind as TopicKind
+  }
+
+  const thread = await createThread({
+    userId: user.id,
+    client: 'web',
+    handle: user.username,
+    topic,
+    kind,
+  })
+  if (!thread) {
+    return NextResponse.json({ error: 'create failed' }, { status: 500 })
+  }
+  return NextResponse.json(
+    { thread: { id: thread.id, topic: thread.topic, kind: thread.kind } },
+    { headers: NO_STORE },
+  )
 }

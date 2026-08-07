@@ -21,6 +21,7 @@ struct TopicsView: View {
     @State private var loading = false
     @State private var loadError: String? = nil
     @State private var renameTarget: F2Topic? = nil
+    @State private var showNewTopic = false
     @State private var showProfile = false
     @State private var addMaterialTarget: F2Topic? = nil
     @State private var addMaterialURL = ""
@@ -100,6 +101,19 @@ struct TopicsView: View {
                 }
                 .feyndContentColumn()
             }
+
+            // Floating new-topic button, tucked in the bottom-right corner
+            // beside the tab pill.
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    newTopicButton
+                }
+            }
+            .feyndContentColumn()
+            .padding(.trailing, 8)
+            .padding(.bottom, 66)
         }
         // Catalyst sheets don't always inherit @Observable env values — pass
         // `session` through explicitly. See ChatView.swift for context.
@@ -115,6 +129,11 @@ struct TopicsView: View {
         .sheet(item: $renameTarget) { topic in
             RenameTopicSheet(topic: topic) { newName, newKind in
                 commitRename(topic, newName: newName, newKind: newKind)
+            }
+        }
+        .sheet(isPresented: $showNewTopic) {
+            NewTopicSheet {
+                Task { await load() }
             }
         }
         .alert("Add material",
@@ -162,6 +181,24 @@ struct TopicsView: View {
         .padding(.horizontal, 18)
         .padding(.top, 8)
         .padding(.bottom, 14)
+    }
+
+    /// Floating + — small and tucked into the bottom-right corner, out of
+    /// the way of the list and the tab pill. The header stays title + sort.
+    private var newTopicButton: some View {
+        Button { showNewTopic = true } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(Color(hex: 0x1A0E08))
+                .frame(width: 28, height: 28)
+                .background(FeyndTheme.coral, in: Circle())
+                .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
+                // Keep a finger-sized hit area around the small visual.
+                .padding(8)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("New topic")
     }
 
     /// Recent / A–Z toggle. Menu lets the user pick; current pick is shown
@@ -530,6 +567,80 @@ func relative(_ date: Date) -> String {
     let f = RelativeDateTimeFormatter()
     f.unitsStyle = .short
     return f.localizedString(for: date, relativeTo: Date())
+}
+
+/// The + button's sheet: type a title, pick a type, done. The topic starts
+/// bare — chat and Add Material give it substance later.
+struct NewTopicSheet: View {
+    /// Called after the topic was created server-side.
+    let onCreated: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+    @State private var kind = "general"
+    @State private var busy = false
+    @State private var errorMessage: String? = nil
+    @FocusState private var titleFocused: Bool
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Title") {
+                    TextField("What are you learning?", text: $title, axis: .vertical)
+                        .lineLimit(1...3)
+                        .focused($titleFocused)
+                }
+                Section("Type") {
+                    HStack(spacing: 12) {
+                        MiniTopicGlyph(kind: kind, size: 30)
+                        // Only the three human types here — the source kinds
+                        // (web/video/…) describe material, and a typed-in
+                        // topic has none yet.
+                        Picker("Type", selection: $kind) {
+                            Text("Book").tag("book")
+                            Text("Mini Topic").tag("mini")
+                            Text("General Topic").tag("general")
+                        }
+                        .pickerStyle(.menu)
+                        .labelsHidden()
+                        Spacer()
+                    }
+                }
+                if let errorMessage {
+                    Section { Text(errorMessage).foregroundStyle(.red) }
+                }
+            }
+            .navigationTitle("New topic")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(busy ? "Creating…" : "Create") { create() }
+                        .disabled(busy || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .onAppear { titleFocused = true }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func create() {
+        let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        busy = true
+        Task {
+            do {
+                try await F2API.shared.createTopic(title: name, kind: kind)
+                onCreated()
+                dismiss()
+            } catch {
+                errorMessage = "Couldn't create: \(error.localizedDescription)"
+                busy = false
+            }
+        }
+    }
 }
 
 /// Rename + type editor. The type is the small glyph on the topic row —

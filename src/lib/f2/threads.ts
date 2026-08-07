@@ -176,12 +176,15 @@ export type CreateThreadInput = {
   topic?: string | null
   content?: string | null
   videoBand?: VideoBand | null
+  /** Explicit topic type — skips classifyTopicKind. Used by the Topics
+   *  screen's "+ new topic" flow, where the user picks Book/Mini/General. */
+  kind?: TopicKind | null
 }
 
 export async function createThread(
   input: CreateThreadInput,
 ): Promise<F2Thread | null> {
-  const kind = classifyTopicKind({
+  const kind = input.kind ?? classifyTopicKind({
     url: input.url,
     content: input.content,
     topic: input.topic,
