@@ -58,16 +58,10 @@ struct ProfileBadge: View {
         let p = session.progress
         let ring = size + 4
         ZStack {
-            // Single background ring track. The arc lives on the SAME ring, not
-            // a second concentric circle — fixes the "two circles" bug.
+            // Solid slate ring — the mascot's body color framing its marigold
+            // disc. No progress semantics; the L chip below carries level.
             Circle()
-                .stroke(FeyndTheme.surface2, lineWidth: 1.5)
-                .frame(width: ring, height: ring)
-
-            Circle()
-                .trim(from: 0, to: p.progressFraction)
-                .stroke(FeyndTheme.accent, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-                .rotationEffect(.degrees(-90))
+                .stroke(FeyndTheme.slate, lineWidth: 2.5)
                 .frame(width: ring, height: ring)
 
             // Avatar disc — uploaded photo if present, otherwise warm gradient + initial.
