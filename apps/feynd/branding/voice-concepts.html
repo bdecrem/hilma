@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dodo — voice screen concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --butter:#FBF5E6; --peach:#FCE5D0; --cream:#F9EFDA; --paper:#FFFDF4;
+    --ink:#33383E; --ink2:#3E4A52; --marigold:#F0A830; --marigold2:#F6B04E;
+    --slate:#7C9EB2; --sprout:#7BB662; --blush:#F2A19A; --endred:#E0635A;
+    --dusk:#1E2440; --duskglow:#4A3D63;
+  }
+  *{margin:0;box-sizing:border-box}
+  body{background:#EFECE4;font-family:Nunito,system-ui,sans-serif;color:var(--ink);padding:36px 28px 60px}
+  h1{font-family:Fredoka,sans-serif;font-weight:600;font-size:28px;letter-spacing:-.3px;margin-bottom:6px}
+  .sub{font-size:14px;color:#6d675c;max-width:640px;margin-bottom:34px}
+  .row{display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap}
+  .concept{width:375px}
+  .clabel{font-family:Fredoka,sans-serif;font-weight:600;font-size:17px;margin-bottom:2px}
+  .cwhy{font-size:12.5px;line-height:1.45;color:#6d675c;margin-bottom:12px;min-height:54px}
+  .phone{position:relative;width:375px;height:812px;border-radius:48px;border:9px solid #23211E;
+         overflow:hidden;background:#000;box-shadow:0 18px 40px rgba(0,0,0,.18)}
+  .status{position:absolute;top:0;left:0;right:0;height:44px;display:flex;justify-content:space-between;
+          align-items:center;padding:14px 30px 0;font-weight:800;font-size:14px;z-index:9}
+  .batt{width:22px;height:11px;border:1.5px solid currentColor;border-radius:3.5px;padding:1.5px;opacity:.8}
+  .batt i{display:block;width:70%;height:100%;background:var(--sprout);border-radius:1.5px}
+  .xbtn{position:absolute;top:58px;right:20px;width:34px;height:34px;border-radius:50%;display:flex;
+        align-items:center;justify-content:center;font-size:13px;font-weight:800;z-index:9}
+  /* shared control row */
+  .controls{position:absolute;bottom:44px;left:0;right:0;display:flex;justify-content:center;gap:20px;z-index:9}
+  .ctl{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.2px}
+  .ctl .b{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .ctl svg{width:22px;height:22px}
+  .end .b{background:var(--endred);box-shadow:0 6px 18px rgba(224,99,90,.45)}
+  .end svg{stroke:#fff}
+  /* ---------- concept 1: island call ---------- */
+  .c1{background:linear-gradient(#AEE0EE 0%,#D6EFEA 40%,#EAF7EF 54%)}
+  .c1 .status,.c1 .xbtn{color:var(--ink2)}
+  .c1 .xbtn{background:rgba(255,253,244,.85);border:1px solid rgba(62,74,82,.12)}
+  .c1 .sun{position:absolute;top:78px;right:44px;width:64px;height:64px;border-radius:50%;background:#FFD469;
+           box-shadow:0 0 0 16px rgba(255,212,105,.28)}
+  .c1 .cloud{position:absolute;background:#fff;border-radius:99px}
+  .c1 .pill{position:absolute;top:60px;left:20px;display:flex;align-items:center;gap:6px;background:rgba(255,253,244,.85);
+            border:1px solid rgba(62,74,82,.12);border-radius:99px;padding:7px 13px 7px 9px;font-size:12px;font-weight:800;color:var(--ink2)}
+  .c1 .dot{width:7px;height:7px;border-radius:50%;background:#46D18A}
+  .c1 .sign{position:absolute;top:118px;left:50%;transform:translateX(-50%);text-align:center;background:var(--paper);
+            border-radius:18px;padding:12px 24px 14px;box-shadow:0 3px 12px rgba(62,74,82,.12)}
+  .c1 .sign .eyebrow{font-size:10.5px;font-weight:800;letter-spacing:1.6px;color:rgba(62,74,82,.5)}
+  .c1 .sign .topic{font-family:Fredoka,sans-serif;font-weight:600;font-size:22px;color:var(--ink2)}
+  .c1 .hillfar{position:absolute;left:-20px;right:-20px;top:430px;height:420px;background:#96C77E;border-radius:50%/70px}
+  .c1 .hillnear{position:absolute;left:-40px;right:-40px;top:520px;height:400px;background:#7BB662;border-radius:50%/80px}
+  .c1 .grass{position:absolute;left:-20px;right:-20px;top:648px;height:220px;background:#5FA24C;border-radius:50%/60px}
+  .c1 .tuft{position:absolute;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;
+            border-bottom:13px solid #4C8C3D}
+  .c1 .dodo{position:absolute;left:62px;top:430px;animation:bob 2.8s ease-in-out infinite}
+  .c1 .bubble{position:absolute;left:208px;top:436px;background:var(--paper);border-radius:22px;padding:16px 20px;
+              box-shadow:0 3px 12px rgba(62,74,82,.14);animation:bob 2.8s ease-in-out infinite reverse}
+  .c1 .bubble:after{content:"";position:absolute;left:-10px;bottom:16px;border:10px solid transparent;
+                    border-right-color:var(--paper);border-left:0}
+  .c1 .dots{display:flex;gap:6px}
+  .c1 .dots i{width:9px;height:9px;border-radius:50%;background:var(--marigold);animation:bounce 1.2s ease-in-out infinite}
+  .c1 .dots i:nth-child(2){animation-delay:.15s}.c1 .dots i:nth-child(3){animation-delay:.3s}
+  .c1 .hint{position:absolute;left:44px;right:44px;top:636px;text-align:center;font-size:14px;font-weight:700;color:rgba(255,253,244,.95)}
+  .c1 .ctl .b{background:var(--paper);border:1px solid rgba(62,74,82,.14);box-shadow:0 4px 10px rgba(62,74,82,.14)}
+  .c1 .ctl svg{stroke:var(--ink2)}
+  .c1 .ctl{color:rgba(62,74,82,.75)}
+  /* ---------- concept 2: big face ---------- */
+  .c2{background:var(--butter)}
+  .c2 .status,.c2 .xbtn{color:var(--ink2)}
+  .c2 .xbtn{background:rgba(62,74,82,.07)}
+  .c2 .eyebrow{position:absolute;top:66px;left:0;right:0;text-align:center;font-size:11px;font-weight:800;
+               letter-spacing:2.2px;color:rgba(62,74,82,.45)}
+  .c2 .topic{position:absolute;top:84px;left:0;right:0;text-align:center;font-family:Fredoka,sans-serif;
+             font-weight:600;font-size:27px;color:var(--ink2)}
+  .c2 .head{position:absolute;left:50%;top:168px;transform:translateX(-50%);animation:bob 3.2s ease-in-out infinite}
+  .c2 .arc{position:absolute;top:352px;width:46px;height:92px;border:4px solid var(--marigold);border-radius:50%;
+           border-top-color:transparent;border-bottom-color:transparent;opacity:.55;animation:pulse 1.6s ease-in-out infinite}
+  .c2 .arc.l{left:26px;border-right-color:transparent;transform:rotate(8deg)}
+  .c2 .arc.r{right:26px;border-left-color:transparent;transform:rotate(-8deg);animation-delay:.3s}
+  .c2 .arc.l2{left:6px;transform:scale(1.25) rotate(8deg);animation-delay:.45s}
+  .c2 .arc.r2{right:6px;transform:scale(1.25) rotate(-8deg);animation-delay:.75s}
+  .c2 .say{position:absolute;top:588px;left:0;right:0;text-align:center;font-family:Fredoka,sans-serif;
+           font-weight:500;font-size:30px;color:var(--ink2)}
+  .c2 .say .d{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--marigold);
+              margin-left:5px;animation:bounce 1.2s ease-in-out infinite}
+  .c2 .say .d:nth-child(2){animation-delay:.15s}.c2 .say .d:nth-child(3){animation-delay:.3s}
+  .c2 .dock{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
+            background:var(--paper);border:1px solid rgba(62,74,82,.1);border-radius:99px;padding:8px;
+            box-shadow:0 10px 26px rgba(62,74,82,.16)}
+  .c2 .dock .db{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .c2 .dock .db svg{width:21px;height:21px;stroke:var(--ink2)}
+  .c2 .dock .db.plain{background:rgba(62,74,82,.06)}
+  .c2 .dock .db.red{background:var(--endred);width:74px;border-radius:99px}
+  .c2 .dock .db.red svg{stroke:#fff}
+  /* ---------- concept 3: dodo radio ---------- */
+  .c3{background:radial-gradient(ellipse 420px 300px at 50% 24%,var(--duskglow),var(--dusk) 70%)}
+  .c3 .status,.c3 .xbtn{color:#F2EEE3}
+  .c3 .xbtn{background:rgba(242,238,227,.1)}
+  .c3 .star{position:absolute;width:3px;height:3px;border-radius:50%;background:#F3E9C8;animation:twinkle 3s ease-in-out infinite}
+  .c3 .moon{position:absolute;top:84px;left:40px;width:44px;height:44px;border-radius:50%;background:#F3E3B2;
+            box-shadow:0 0 0 12px rgba(243,227,178,.12)}
+  .c3 .moon:after{content:"";position:absolute;top:-4px;left:12px;width:44px;height:44px;border-radius:50%;background:var(--dusk)}
+  .c3 .eyebrow{position:absolute;top:66px;left:0;right:0;text-align:center;font-size:11px;font-weight:800;
+               letter-spacing:2.2px;color:rgba(242,238,227,.4)}
+  .c3 .radio{position:absolute;left:50%;top:196px;transform:translateX(-50%);width:272px}
+  .c3 .antenna{width:6px;height:34px;background:#6FAE5C;border-radius:3px;margin:0 auto;position:relative}
+  .c3 .leafL,.c3 .leafR{position:absolute;width:34px;height:18px;border-radius:50%;top:-10px}
+  .c3 .leafL{left:-30px;background:#7BB662;transform:rotate(-24deg)}
+  .c3 .leafR{left:2px;background:#5F9E4C;transform:rotate(22deg)}
+  .c3 .box{background:var(--cream);border-radius:34px;padding:26px 24px 22px;box-shadow:0 14px 34px rgba(0,0,0,.4)}
+  .c3 .face{display:flex;justify-content:center;align-items:center;gap:26px;margin-bottom:6px}
+  .c3 .eye{width:30px;height:30px;border-radius:50%;background:var(--ink);position:relative;animation:blink 5s infinite}
+  .c3 .eye:after{content:"";position:absolute;top:5px;left:5px;width:10px;height:10px;border-radius:50%;background:#fff}
+  .c3 .cheek{width:22px;height:13px;border-radius:50%;background:var(--blush);opacity:.65;margin-top:14px}
+  .c3 .beakknob{width:52px;height:40px;border-radius:50%;background:var(--marigold);margin:2px auto 16px;
+                border-bottom:4px solid #C9821F}
+  .c3 .grille{background:var(--ink);border-radius:20px;height:110px;display:flex;align-items:center;
+              justify-content:center;gap:7px;padding:0 18px}
+  .c3 .bar{width:9px;border-radius:5px;background:var(--marigold2);animation:eq 1.1s ease-in-out infinite}
+  .c3 .tape{margin:16px auto 0;width:max-content;background:var(--marigold2);color:#3E3324;border-radius:7px;
+            padding:4px 12px;font-size:11.5px;font-weight:800;letter-spacing:1.6px}
+  .c3 .feet{display:flex;justify-content:space-between;padding:0 54px;margin-top:-2px}
+  .c3 .foot{width:34px;height:12px;border-radius:8px;background:var(--marigold)}
+  .c3 .say{position:absolute;top:634px;left:0;right:0;text-align:center;font-family:Fredoka,sans-serif;
+           font-weight:500;font-size:21px;color:#F2EEE3}
+  .c3 .ctl .b{background:#2B3352;border:1px solid #3D4670}
+  .c3 .ctl svg{stroke:#F2EEE3}
+  .c3 .ctl{color:rgba(242,238,227,.65)}
+  /* animations */
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .c2 .head{animation-name:bob2}
+  @keyframes bob2{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
+  @keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+  @keyframes pulse{0%,100%{opacity:.15}50%{opacity:.65}}
+  @keyframes twinkle{0%,100%{opacity:.25}50%{opacity:.9}}
+  @keyframes blink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}97%{transform:scaleY(1)}}
+  @keyframes eq{0%,100%{height:22px}50%{height:var(--h,60px)}}
+  .blinkg{animation:blink 5s infinite;transform-origin:center 46%;transform-box:fill-box}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<h1>Dodo — voice screen, three directions</h1>
+<p class="sub">Same brand, three different bets: put the call <b>in the dodo's world</b>, make it <b>a face-to-face with the mascot</b>, or make talking feel like <b>a charming little machine</b>. All three keep the same three controls and the same states (connecting / listening / speaking).</p>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<g id="trav"><rect x="-9" y="44" width="6" height="12" rx="3" fill="#F0A830"/><rect x="3" y="44" width="6" height="12" rx="3" fill="#F0A830"/><rect x="-13" y="53" width="12" height="5" rx="2.5" fill="#F0A830"/><rect x="1" y="53" width="12" height="5" rx="2.5" fill="#F0A830"/><ellipse cx="0" cy="32" rx="20" ry="16" fill="#7C9EB2"/><ellipse cx="0" cy="35" rx="12" ry="10" fill="#F9EFDA"/><rect x="-30" y="24" width="14" height="11" rx="5.5" fill="#6A8FA3" transform="rotate(-20 -23 29)"/><rect x="16" y="24" width="14" height="11" rx="5.5" fill="#6A8FA3" transform="rotate(20 23 29)"/><path d="M-0.9 -26 C-1.1 -28.6 -0.4 -30.3 2.2 -32 C2.8 -30.7 2.2 -28.6 1.3 -26 Z" fill="#6FAE5C"/><path d="M0.9 -30.9 C-3.9 -36.5 -11.3 -37.4 -16.1 -34.4 C-13.9 -28.7 -5.7 -27.4 0.9 -30.9 Z" fill="#7BB662"/><path d="M1.7 -32.2 C3.9 -37.8 10.9 -39.6 16.1 -37.8 C15.2 -32.2 8.3 -29.2 1.7 -32.2 Z" fill="#5F9E4C"/><circle cx="0" cy="0" r="26" fill="#7C9EB2"/><path d="M-20 4 C-20 -7 -15 -13 -6.5 -12 Q0 -7.5 6.5 -12 C15 -13 20 -7 20 4 C20 16 11 24 0 24 C-11 24 -20 16 -20 4 Z" fill="#F9EFDA"/><circle cx="-9.4" cy="-2" r="5.5" fill="#33383E"/><circle cx="-11.2" cy="-4" r="2.1" fill="#FFFFFF"/><circle cx="9.4" cy="-2" r="5.5" fill="#33383E"/><circle cx="7.6" cy="-4" r="2.1" fill="#FFFFFF"/><ellipse cx="0" cy="6.3" rx="6.8" ry="5" fill="#F0A830"/><circle cx="-2.6" cy="5" r="0.95" fill="#C9821F"/><circle cx="2.6" cy="5" r="0.95" fill="#C9821F"/><ellipse cx="-15.6" cy="8.4" rx="4.2" ry="2.6" fill="#F2A19A" opacity="0.6"/><ellipse cx="15.6" cy="8.4" rx="4.2" ry="2.6" fill="#F2A19A" opacity="0.6"/></g>
+</defs></svg>
+
+<div class="row">
+
+  <!-- ================= CONCEPT 1 ================= -->
+  <div class="concept">
+    <div class="clabel">1 · Island Call</div>
+    <div class="cwhy">The call happens <b>in the Peck world</b> — you visit the dodo on its meadow. Its speech bubble IS the status. Morning here, dusk in dark mode, exactly like the map.</div>
+    <div class="phone c1">
+      <div class="status"><span>9:41</span><span class="batt"><i></i></span></div>
+      <div class="sun"></div>
+      <div class="cloud" style="top:212px;left:30px;width:74px;height:15px"></div>
+      <div class="cloud" style="top:202px;left:46px;width:44px;height:13px"></div>
+      <div class="cloud" style="top:240px;right:30px;width:66px;height:14px"></div>
+      <div class="pill"><span class="dot"></span>Voice session</div>
+      <div class="xbtn">✕</div>
+      <div class="sign">
+        <div class="eyebrow">TALKING ABOUT</div>
+        <div class="topic">Big History</div>
+      </div>
+      <div class="hillfar"></div>
+      <div class="hillnear"></div>
+      <div class="grass"></div>
+      <div class="tuft" style="top:700px;left:56px"></div>
+      <div class="tuft" style="top:730px;left:300px"></div>
+      <div class="tuft" style="top:764px;left:140px"></div>
+      <div class="bubble"><div class="dots"><i></i><i></i><i></i></div></div>
+      <div class="dodo">
+        <svg viewBox="-46 -46 92 110" width="150" height="180"><use href="#trav"/></svg>
+      </div>
+      <div class="hint">Start talking — Dodo answers when you pause.</div>
+      <div class="controls">
+        <div class="ctl"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>Mute</div>
+        <div class="ctl"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 11h.01M11 11h.01M15 11h.01M8 14.5h8"/></svg></div>Keyboard</div>
+        <div class="ctl end"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 14c5-4.5 11-4.5 16 0l-2.5 3c-1-.6-2-1.4-3.5-1.8l-.5-2.7c-2-.6-4-.6-6 0l-.5 2.7c-1.5.4-2.5 1.2-3.5 1.8z"/></svg></div>End</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONCEPT 2 ================= -->
+  <div class="concept">
+    <div class="clabel">2 · Face to Face</div>
+    <div class="cwhy">FaceTime with the mascot: a huge, breathing dodo face on butter, nothing else. Marigold sound-arcs ripple from the beak while it speaks; eyes blink while it listens.</div>
+    <div class="phone c2">
+      <div class="status"><span>9:41</span><span class="batt"><i></i></span></div>
+      <div class="xbtn">✕</div>
+      <div class="eyebrow">TALKING ABOUT</div>
+      <div class="topic">Big History</div>
+      <div class="arc l"></div><div class="arc r"></div>
+      <div class="arc l l2"></div><div class="arc r r2"></div>
+      <div class="head">
+        <svg viewBox="-42 -44 84 74" width="320" height="282">
+          <path d="M-0.9 -26 C-1.1 -28.6 -0.4 -30.3 2.2 -32 C2.8 -30.7 2.2 -28.6 1.3 -26 Z" fill="#6FAE5C"/>
+          <path d="M0.9 -30.9 C-3.9 -36.5 -11.3 -37.4 -16.1 -34.4 C-13.9 -28.7 -5.7 -27.4 0.9 -30.9 Z" fill="#7BB662"/>
+          <path d="M1.7 -32.2 C3.9 -37.8 10.9 -39.6 16.1 -37.8 C15.2 -32.2 8.3 -29.2 1.7 -32.2 Z" fill="#5F9E4C"/>
+          <circle cx="0" cy="0" r="26" fill="#7C9EB2"/>
+          <path d="M-20 4 C-20 -7 -15 -13 -6.5 -12 Q0 -7.5 6.5 -12 C15 -13 20 -7 20 4 C20 16 11 24 0 24 C-11 24 -20 16 -20 4 Z" fill="#F9EFDA"/>
+          <g class="blinkg"><circle cx="-9.4" cy="-2" r="5.5" fill="#33383E"/><circle cx="-11.2" cy="-4" r="2.1" fill="#FFFFFF"/></g>
+          <g class="blinkg"><circle cx="9.4" cy="-2" r="5.5" fill="#33383E"/><circle cx="7.6" cy="-4" r="2.1" fill="#FFFFFF"/></g>
+          <ellipse cx="0" cy="6.3" rx="6.8" ry="5" fill="#F0A830"/>
+          <circle cx="-2.6" cy="5" r="0.95" fill="#C9821F"/><circle cx="2.6" cy="5" r="0.95" fill="#C9821F"/>
+          <ellipse cx="-15.6" cy="8.4" rx="4.2" ry="2.6" fill="#F2A19A" opacity="0.6"/>
+          <ellipse cx="15.6" cy="8.4" rx="4.2" ry="2.6" fill="#F2A19A" opacity="0.6"/>
+        </svg>
+      </div>
+      <div class="say">Listening<span class="d"></span><span class="d"></span><span class="d"></span></div>
+      <div class="dock">
+        <div class="db plain"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>
+        <div class="db plain"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 11h.01M11 11h.01M15 11h.01M8 14.5h8"/></svg></div>
+        <div class="db red"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 14c5-4.5 11-4.5 16 0l-2.5 3c-1-.6-2-1.4-3.5-1.8l-.5-2.7c-2-.6-4-.6-6 0l-.5 2.7c-1.5.4-2.5 1.2-3.5 1.8z"/></svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= CONCEPT 3 ================= -->
+  <div class="concept">
+    <div class="clabel">3 · The Dodo Radio</div>
+    <div class="cwhy">Talking becomes a charming little machine: a tabletop radio that <b>is</b> the dodo — sprout antenna, beak dial, belly grille as a live equalizer. Toy-like, collectible, very "record me".</div>
+    <div class="phone c3">
+      <div class="status"><span>9:41</span><span class="batt"><i></i></span></div>
+      <div class="xbtn">✕</div>
+      <div class="moon"></div>
+      <div class="star" style="top:120px;left:120px"></div>
+      <div class="star" style="top:90px;right:80px;animation-delay:.8s"></div>
+      <div class="star" style="top:170px;right:140px;animation-delay:1.4s"></div>
+      <div class="star" style="top:200px;left:60px;animation-delay:2s"></div>
+      <div class="star" style="top:640px;left:40px;animation-delay:1s"></div>
+      <div class="star" style="top:700px;right:52px;animation-delay:.4s"></div>
+      <div class="eyebrow">TALKING ABOUT</div>
+      <div class="radio">
+        <div class="antenna"><div class="leafL"></div><div class="leafR"></div></div>
+        <div class="box">
+          <div class="face">
+            <div class="cheek"></div>
+            <div class="eye"></div><div class="eye"></div>
+            <div class="cheek"></div>
+          </div>
+          <div class="beakknob"></div>
+          <div class="grille">
+            <div class="bar" style="--h:44px"></div>
+            <div class="bar" style="--h:74px;animation-delay:.12s"></div>
+            <div class="bar" style="--h:36px;animation-delay:.24s"></div>
+            <div class="bar" style="--h:82px;animation-delay:.36s"></div>
+            <div class="bar" style="--h:52px;animation-delay:.48s"></div>
+            <div class="bar" style="--h:70px;animation-delay:.6s"></div>
+            <div class="bar" style="--h:40px;animation-delay:.72s"></div>
+          </div>
+          <div class="tape">BIG HISTORY</div>
+        </div>
+        <div class="feet"><div class="foot"></div><div class="foot"></div></div>
+      </div>
+      <div class="say">Dodo is listening…</div>
+      <div class="controls">
+        <div class="ctl"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></div>Mute</div>
+        <div class="ctl"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="3" y="7" width="18" height="11" rx="2"/><path d="M7 11h.01M11 11h.01M15 11h.01M8 14.5h8"/></svg></div>Keyboard</div>
+        <div class="ctl end"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M4 14c5-4.5 11-4.5 16 0l-2.5 3c-1-.6-2-1.4-3.5-1.8l-.5-2.7c-2-.6-4-.6-6 0l-.5 2.7c-1.5.4-2.5 1.2-3.5 1.8z"/></svg></div>End</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
