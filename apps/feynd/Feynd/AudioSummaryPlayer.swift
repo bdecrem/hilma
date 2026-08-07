@@ -214,7 +214,7 @@ final class AudioSummaryPlayer {
         guard url != nil else { return }
         var info: [String: Any] = [
             MPMediaItemPropertyTitle: title,
-            MPMediaItemPropertyArtist: "Feynd — Audio Summary",
+            MPMediaItemPropertyArtist: "Dodo — Audio Summary",
             MPNowPlayingInfoPropertyElapsedPlaybackTime: current,
             MPNowPlayingInfoPropertyPlaybackRate: playing ? speed : 0,
         ]

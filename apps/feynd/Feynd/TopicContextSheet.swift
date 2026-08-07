@@ -172,7 +172,7 @@ struct TopicContextSheet: View {
                     .font(.system(size: 14, weight: .semibold))
                     .lineLimit(1)
             }
-            .foregroundStyle(FeyndTheme.coral)
+            .foregroundStyle(FeyndTheme.accent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
@@ -197,7 +197,7 @@ struct TopicContextSheet: View {
                     .font(.system(size: 14, weight: .semibold))
                     .lineLimit(1)
             }
-            .foregroundStyle(FeyndTheme.coral)
+            .foregroundStyle(FeyndTheme.accent)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
@@ -270,7 +270,7 @@ struct TopicContextSheet: View {
                         Button("Clear") { Task { await commitFocus("") } }
                     }
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
                     .buttonStyle(.plain)
                     .disabled(focusBusy)
                     .padding(.top, 2)
@@ -395,7 +395,7 @@ struct TopicContextSheet: View {
                     Text(v.instructions == nil ? "BASE SUMMARY" : "REVISED")
                         .font(.system(size: 10, weight: .bold))
                         .tracking(0.5)
-                        .foregroundStyle(v.instructions == nil ? FeyndTheme.text3 : FeyndTheme.coral)
+                        .foregroundStyle(v.instructions == nil ? FeyndTheme.text3 : FeyndTheme.accent)
                     if v.id == currentSummaryId {
                         Text("CURRENT · HAS AUDIO")
                             .font(.system(size: 10, weight: .bold))
@@ -510,7 +510,7 @@ struct TopicContextSheet: View {
                         .tracking(0.5)
                         .foregroundStyle(
                             src.note == true ? FeyndTheme.gold
-                            : src.kind == "primary" ? FeyndTheme.coral : FeyndTheme.text3)
+                            : src.kind == "primary" ? FeyndTheme.accent : FeyndTheme.text3)
                     if src.part != "url" {
                         Text(sizeLabel(src.contentLength))
                             .font(.system(size: 11, weight: .medium))
@@ -533,7 +533,7 @@ struct TopicContextSheet: View {
                     Link(destination: dest) {
                         Text(url)
                             .font(.system(size: 11))
-                            .foregroundStyle(FeyndTheme.coral)
+                            .foregroundStyle(FeyndTheme.accent)
                             .lineLimit(1)
                             .truncationMode(.middle)
                     }
@@ -593,7 +593,7 @@ struct TopicContextSheet: View {
             Text("QUOTE")
                 .font(.system(size: 10, weight: .bold))
                 .tracking(0.5)
-                .foregroundStyle(FeyndTheme.coral)
+                .foregroundStyle(FeyndTheme.accent)
             Text("“\(src.title ?? "")”")
                 .font(.system(size: 14))
                 .italic()

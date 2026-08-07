@@ -1,6 +1,8 @@
-# Feynd (iOS + Mac Catalyst)
+# Dodo (iOS + Mac Catalyst)
 
-Native client for F2. SwiftUI + XcodeGen — `project.yml` is the source of truth, `Feynd.xcodeproj` is generated. Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, iOS 17+. Talks to the same `/api/f2/*` backend as the web app.
+Native client for F2. **The app's product name is Dodo** — that's the springboard name (`CFBundleDisplayName`), the in-app name, and the brand. The folder, scheme, bundle ID, and type names remain `Feynd` (renaming them would churn provisioning and every build command for zero user-visible gain). SwiftUI + XcodeGen — `project.yml` is the source of truth, `Feynd.xcodeproj` is generated. Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, iOS 17+. Talks to the same `/api/f2/*` backend as the web app.
+
+**Branding lives in [`branding/`](branding/BRANDING.md)** — the bookworm-dodo mark, app icon SVG source, Fredoka text mark spec, and the official color palette (dark "slate ink" / light "butter paper", marigold accent). The app icon PNGs are rendered from `branding/dodo-icon.svg` via `rsvg-convert`; regenerate all sizes from there, never hand-edit the PNGs.
 
 ## Bump the build number on every build
 

@@ -29,7 +29,7 @@ struct LevelUpView: View {
 
             // Coral halo — same vocabulary as Voice mode's orb.
             RadialGradient(
-                colors: [FeyndTheme.coral.opacity(0.35), FeyndTheme.coral.opacity(0)],
+                colors: [FeyndTheme.accent.opacity(0.35), FeyndTheme.accent.opacity(0)],
                 center: .center, startRadius: 1, endRadius: 320
             )
             .ignoresSafeArea()
@@ -95,8 +95,8 @@ struct LevelUpView: View {
             // Hero star — coral, soft pulse.
             Image(systemName: "star.fill")
                 .font(.system(size: 96, weight: .black))
-                .foregroundStyle(FeyndTheme.coral)
-                .shadow(color: FeyndTheme.coral.opacity(0.7), radius: 24)
+                .foregroundStyle(FeyndTheme.accent)
+                .shadow(color: FeyndTheme.accent.opacity(0.7), radius: 24)
                 .scaleEffect(heroScale * (heroPulse ? 1.04 : 1.0))
         }
         .frame(height: 240)
@@ -107,7 +107,7 @@ struct LevelUpView: View {
             Text("LEVEL UP")
                 .font(.system(size: 13, weight: .bold))
                 .tracking(2.4)
-                .foregroundStyle(FeyndTheme.coral)
+                .foregroundStyle(FeyndTheme.accent)
 
             Text("Level \(level)")
                 .font(.system(size: 52, weight: .bold))

@@ -116,7 +116,7 @@ struct FlashSetView: View {
                 Text(start.jumboLevel != nil ? "JUMBO · LEVEL \(start.jumboLevel!)" : "FLASH ROUND")
                     .font(.system(size: 11, weight: .bold))
                     .tracking(1.2)
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
                 if let topicLabel {
                     Text(topicLabel)
                         .font(.system(size: 13, weight: .medium))
@@ -137,7 +137,7 @@ struct FlashSetView: View {
         HStack(spacing: 4) {
             ForEach(0..<questions.count, id: \.self) { i in
                 Capsule()
-                    .fill(i < index ? FeyndTheme.coral : (i == index ? FeyndTheme.coralDim : FeyndTheme.surface2))
+                    .fill(i < index ? FeyndTheme.accent : (i == index ? FeyndTheme.accentDim : FeyndTheme.surface2))
                     .frame(height: 5)
             }
         }
@@ -319,7 +319,7 @@ struct FlashSetView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 16))
                 .foregroundStyle(FeyndTheme.text)
-                .tint(FeyndTheme.coral)
+                .tint(FeyndTheme.accent)
                 .lineLimit(1...4)
                 .focused($draftFocused)
                 .padding(.horizontal, 16)
@@ -350,10 +350,10 @@ struct FlashSetView: View {
                 } label: {
                     Text(index == questions.count - 1 ? "Finish" : "Next")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Color(hex: 0x1A0E08))
+                        .foregroundStyle(FeyndTheme.inkOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(FeyndTheme.coral, in: Capsule())
+                        .background(FeyndTheme.accent, in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -432,7 +432,7 @@ struct FlashSetView: View {
 
     private var gradingView: some View {
         VStack(spacing: 16) {
-            ProgressView().tint(FeyndTheme.coral).scaleEffect(1.4)
+            ProgressView().tint(FeyndTheme.accent).scaleEffect(1.4)
             Text(start.mode == "text" ? "F2 is grading your answers…" : "Tallying your round…")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(FeyndTheme.text2)
@@ -443,7 +443,7 @@ struct FlashSetView: View {
         VStack(spacing: 14) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 28))
-                .foregroundStyle(FeyndTheme.coral)
+                .foregroundStyle(FeyndTheme.accent)
             Text(msg)
                 .font(.system(size: 14))
                 .foregroundStyle(FeyndTheme.text2)
@@ -454,10 +454,10 @@ struct FlashSetView: View {
             } label: {
                 Text("Try again")
                     .font(.system(size: 15, weight: .bold))
-                    .foregroundStyle(Color(hex: 0x1A0E08))
+                    .foregroundStyle(FeyndTheme.inkOnAccent)
                     .padding(.horizontal, 28)
                     .padding(.vertical, 12)
-                    .background(FeyndTheme.coral, in: Capsule())
+                    .background(FeyndTheme.accent, in: Capsule())
             }
             .buttonStyle(.plain)
         }
@@ -521,10 +521,10 @@ struct FlashResultsView: View {
                     Button(action: onDone) {
                         Text("Done")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Color(hex: 0x1A0E08))
+                            .foregroundStyle(FeyndTheme.inkOnAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(FeyndTheme.coral, in: Capsule())
+                            .background(FeyndTheme.accent, in: Capsule())
                     }
                     .buttonStyle(.plain)
                     .padding(.top, 6)
@@ -571,7 +571,7 @@ struct FlashResultsView: View {
             Circle()
                 .trim(from: 0, to: ringProgress)
                 .stroke(
-                    isPerfect ? FeyndTheme.gold : FeyndTheme.coral,
+                    isPerfect ? FeyndTheme.gold : FeyndTheme.accent,
                     style: StrokeStyle(lineWidth: 12, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
@@ -594,7 +594,7 @@ struct FlashResultsView: View {
             bannerRow(icon: "star.fill", tint: FeyndTheme.gold,
                       text: "Second star earned — two 9+ rounds in a row!")
         } else if result.consecutiveHighSets == 1 && (result.stars ?? 2) < 2 && jumboLevel == nil {
-            bannerRow(icon: "flame.fill", tint: FeyndTheme.coral,
+            bannerRow(icon: "flame.fill", tint: FeyndTheme.accent,
                       text: "9+ round! One more in a row for the second star.")
         }
         if passedJumbo {
@@ -633,7 +633,7 @@ struct FlashResultsView: View {
                         .foregroundStyle(FeyndTheme.text)
                     Text(m.answer)
                         .font(.system(size: 13.5))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                     if let given = m.given, !given.isEmpty {
                         Text("You said: \(given)")
                             .font(.system(size: 12.5))
@@ -656,8 +656,8 @@ struct FlashResultsView: View {
 /// driven by TimelineView. No physics engine, no external deps.
 struct ConfettiView: View {
     private let colors: [Color] = [
-        FeyndTheme.coral, FeyndTheme.gold, Color(hex: 0x46D18A),
-        Color(hex: 0x6FB3FF), Color(hex: 0xF5A08A),
+        FeyndTheme.accent, FeyndTheme.gold, Color(hex: 0x46D18A),
+        Color(hex: 0x6FB3FF), Color(hex: 0xF6C46A),
     ]
 
     var body: some View {

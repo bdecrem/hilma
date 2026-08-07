@@ -169,7 +169,7 @@ struct FlashTabView: View {
         Button { startAudioRound() } label: {
             HStack(spacing: 7) {
                 if startingLevel != nil {
-                    ProgressView().tint(Color(hex: 0x1A0E08)).scaleEffect(0.8)
+                    ProgressView().tint(FeyndTheme.inkOnAccent).scaleEffect(0.8)
                 } else {
                     Image(systemName: "mic.fill")
                         .font(.system(size: 15, weight: .bold))
@@ -177,11 +177,11 @@ struct FlashTabView: View {
                 Text("Audio round")
                     .font(.system(size: 14, weight: .bold))
             }
-            .foregroundStyle(Color(hex: 0x1A0E08))
+            .foregroundStyle(FeyndTheme.inkOnAccent)
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(FeyndTheme.coral, in: Capsule())
-            .overlay(Capsule().stroke(Color(hex: 0xF5A08A), lineWidth: 1))
+            .background(FeyndTheme.accent, in: Capsule())
+            .overlay(Capsule().stroke(Color(hex: 0xF6C46A), lineWidth: 1))
             .shadow(color: .black.opacity(0.45), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
@@ -235,11 +235,11 @@ struct FlashTabView: View {
             Spacer()
             ZStack {
                 Circle()
-                    .fill(FeyndTheme.coralSoft)
+                    .fill(FeyndTheme.accentSoft)
                     .frame(width: 110, height: 110)
                 Image(systemName: "bolt.fill")
                     .font(.system(size: 44))
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
             }
             Text("The path opens at 10 cards")
                 .font(.system(size: 21, weight: .bold))
@@ -256,7 +256,7 @@ struct FlashTabView: View {
             HStack(spacing: 4) {
                 ForEach(0..<10, id: \.self) { i in
                     Capsule()
-                        .fill(i < state.cardCount ? FeyndTheme.coral : FeyndTheme.surface2)
+                        .fill(i < state.cardCount ? FeyndTheme.accent : FeyndTheme.surface2)
                         .frame(width: 16, height: 6)
                 }
             }
@@ -277,7 +277,7 @@ struct FlashTabView: View {
                 .foregroundStyle(FeyndTheme.text2)
             Button("Retry") { Task { await load() } }
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(FeyndTheme.coral)
+                .foregroundStyle(FeyndTheme.accent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -368,19 +368,19 @@ struct FlashTabView: View {
                     // Chunky game-button base: a darker "depth" disc peeking
                     // out below the face makes the node read as pressable.
                     Circle()
-                        .fill(isPassed ? Color(hex: 0xB85A3F) : Color(hex: 0x180F28))
+                        .fill(isPassed ? Color(hex: 0xB97A14) : Color(hex: 0x180F28))
                         .frame(width: nodeSize, height: nodeSize)
                         .offset(y: 4)
                     Circle()
-                        .fill(isPassed ? FeyndTheme.coral : (isCurrent ? Color(hex: 0x3A2B57) : Color(hex: 0x2A2140)))
+                        .fill(isPassed ? FeyndTheme.accent : (isCurrent ? Color(hex: 0x3A2B57) : Color(hex: 0x2A2140)))
                         .frame(width: nodeSize, height: nodeSize)
                         .overlay(
                             Circle().stroke(
-                                isPassed ? Color(hex: 0xF5A08A) : (isCurrent ? FeyndTheme.gold : Color(hex: 0x453563)),
+                                isPassed ? Color(hex: 0xF6C46A) : (isCurrent ? FeyndTheme.gold : Color(hex: 0x453563)),
                                 lineWidth: isCurrent ? 2 : 1.5
                             )
                         )
-                        .shadow(color: isPassed ? FeyndTheme.coral.opacity(0.4) : .black.opacity(0.35),
+                        .shadow(color: isPassed ? FeyndTheme.accent.opacity(0.4) : .black.opacity(0.35),
                                 radius: isPassed ? 14 : 8, y: 4)
 
                     if level.status == "locked" {
@@ -575,7 +575,7 @@ private struct FlashWorldScenery: View {
                     // A funky little ringed planet, upper right.
                     let planetC = CGPoint(x: w * 0.83, y: h * 0.20)
                     ctx.fill(Path(ellipseIn: CGRect(x: planetC.x - 11, y: planetC.y - 11, width: 22, height: 22)),
-                             with: .color(FeyndTheme.coral.opacity(0.9)))
+                             with: .color(FeyndTheme.accent.opacity(0.9)))
                     var ring = ctx
                     ring.translateBy(x: planetC.x, y: planetC.y)
                     ring.rotate(by: .degrees(-18))
@@ -762,13 +762,13 @@ private struct LevelStartSheet: View {
                 Text("LEVEL \(level.level)")
                     .font(.system(size: 12, weight: .heavy))
                     .tracking(1.6)
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
                     .padding(.top, 8)
 
                 HStack(spacing: 8) {
                     Image(systemName: level.modeIcon)
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                     Text(level.modeLabel)
                         .font(.system(size: 20, weight: .bold))
                         .tracking(-0.3)
@@ -803,7 +803,7 @@ private struct LevelStartSheet: View {
                 Button(action: onPlay) {
                     HStack(spacing: 8) {
                         if starting {
-                            ProgressView().tint(Color(hex: 0x1A0E08)).scaleEffect(0.85)
+                            ProgressView().tint(FeyndTheme.inkOnAccent).scaleEffect(0.85)
                         } else {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 14, weight: .bold))
@@ -811,10 +811,10 @@ private struct LevelStartSheet: View {
                         Text(level.status == "passed" ? "Play again" : "Let's go")
                             .font(.system(size: 16, weight: .bold))
                     }
-                    .foregroundStyle(Color(hex: 0x1A0E08))
+                    .foregroundStyle(FeyndTheme.inkOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(FeyndTheme.coral, in: Capsule())
+                    .background(FeyndTheme.accent, in: Capsule())
                 }
                 .buttonStyle(.plain)
                 .disabled(starting)

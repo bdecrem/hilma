@@ -215,7 +215,7 @@ struct ProfileSheet: View {
                 .frame(width: ring, height: ring)
             Circle()
                 .trim(from: 0, to: p.progressFraction)
-                .stroke(FeyndTheme.coral, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                .stroke(FeyndTheme.accent, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .frame(width: ring, height: ring)
 
@@ -266,7 +266,7 @@ struct ProfileSheet: View {
                 if p.toNextLevel > 0 {
                     HStack(spacing: 4) {
                         Text("\(p.toNextLevel) more")
-                            .foregroundStyle(FeyndTheme.coral)
+                            .foregroundStyle(FeyndTheme.accent)
                             .fontWeight(.semibold)
                         Text("to Level \(p.level + 1)")
                             .foregroundStyle(FeyndTheme.text3)
@@ -285,12 +285,12 @@ struct ProfileSheet: View {
                     Capsule()
                         .fill(
                             LinearGradient(
-                                colors: [FeyndTheme.coral, Color(hex: 0xF0A78C)],
+                                colors: [FeyndTheme.accent, Color(hex: 0xF0A78C)],
                                 startPoint: .leading, endPoint: .trailing
                             )
                         )
                         .frame(width: geo.size.width * fill)
-                        .shadow(color: FeyndTheme.coral.opacity(0.5), radius: 6)
+                        .shadow(color: FeyndTheme.accent.opacity(0.5), radius: 6)
                 }
             }
             .frame(height: 8)
@@ -308,9 +308,9 @@ struct ProfileSheet: View {
             StatChip(value: "\(p.masteredTopicCount)", label: "mastered") {
                 ZStack {
                     Circle()
-                        .stroke(FeyndTheme.coral, lineWidth: 1.4)
+                        .stroke(FeyndTheme.accent, lineWidth: 1.4)
                         .frame(width: 11, height: 11)
-                    Circle().fill(FeyndTheme.coral).frame(width: 5, height: 5)
+                    Circle().fill(FeyndTheme.accent).frame(width: 5, height: 5)
                 }
             }
             StatChip(value: "\(p.topicCount)", label: "topics") {
@@ -335,7 +335,7 @@ struct ProfileSheet: View {
             SettingsSection(label: "iMessage") {
                 SettingsCard {
                     if imessageHandles.isEmpty {
-                        SettingsRow(label: "Add iMessage", labelColor: FeyndTheme.coral) {
+                        SettingsRow(label: "Add iMessage", labelColor: FeyndTheme.accent) {
                             showPairing = true
                         }
                     } else {
@@ -346,7 +346,7 @@ struct ProfileSheet: View {
                             if idx < imessageHandles.count - 1 { SettingsDivider() }
                         }
                         SettingsDivider()
-                        SettingsRow(label: "Add another", labelColor: FeyndTheme.coral) {
+                        SettingsRow(label: "Add another", labelColor: FeyndTheme.accent) {
                             showPairing = true
                         }
                     }
@@ -379,7 +379,7 @@ struct ProfileSheet: View {
             }
             SettingsSection(label: "About") {
                 SettingsCard {
-                    SettingsRow(label: "App", detail: "Feynd")
+                    SettingsRow(label: "App", detail: "Dodo")
                     SettingsDivider()
                     SettingsRow(label: "Version", detail: appVersion)
                     SettingsDivider()

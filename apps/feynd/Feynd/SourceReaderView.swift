@@ -29,7 +29,7 @@ struct SourceReaderView: View {
                                     .lineLimit(1)
                                     .truncationMode(.middle)
                             }
-                            .foregroundStyle(FeyndTheme.coral)
+                            .foregroundStyle(FeyndTheme.accent)
                         }
                     }
 

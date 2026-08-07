@@ -130,7 +130,7 @@ struct FlashDecksSheet: View {
                     .frame(width: 38, height: 38)
                 Image(systemName: glyph(deck.kind))
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(deck.displayLabel)

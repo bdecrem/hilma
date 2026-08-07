@@ -189,9 +189,9 @@ struct TopicsView: View {
         Button { showNewTopic = true } label: {
             Image(systemName: "plus")
                 .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color(hex: 0x1A0E08))
+                .foregroundStyle(FeyndTheme.inkOnAccent)
                 .frame(width: 28, height: 28)
-                .background(FeyndTheme.coral, in: Circle())
+                .background(FeyndTheme.accent, in: Circle())
                 .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
                 // Keep a finger-sized hit area around the small visual.
                 .padding(8)
@@ -463,7 +463,7 @@ struct TopicListRow: View {
                         if topic.isPinned {
                             Image(systemName: "pin.fill")
                                 .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(FeyndTheme.coral)
+                                .foregroundStyle(FeyndTheme.accent)
                                 .rotationEffect(.degrees(45))
                         }
                         Text(topic.displayLabel)

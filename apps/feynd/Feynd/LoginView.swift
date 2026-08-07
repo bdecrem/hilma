@@ -12,7 +12,7 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             FeyndAuthShell(
-                title: "Feynd",
+                title: "dodo",
                 tagline: "Learn anything.",
                 primaryLabel: busy ? "Signing in…" : "Sign in",
                 primaryDisabled: busy || username.isEmpty || password.isEmpty,
@@ -25,7 +25,7 @@ struct LoginView: View {
                             Text("New here?")
                                 .foregroundStyle(FeyndTheme.text2)
                             Text("Create an account")
-                                .foregroundStyle(FeyndTheme.coral)
+                                .foregroundStyle(FeyndTheme.accent)
                                 .fontWeight(.semibold)
                         }
                         .font(.system(size: 14))
@@ -84,8 +84,10 @@ struct FeyndAuthShell<Body: View, Footer: View>: View {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title)
-                        .font(.system(size: 44, weight: .bold))
-                        .tracking(-1.0)
+                        // Brand type: Fredoka SemiBold, the Dodo text mark
+                        // (−0.4px tracking at 27px, scaled to this size).
+                        .font(.custom("Fredoka", size: 44).weight(.semibold))
+                        .tracking(-0.65)
                         .foregroundStyle(FeyndTheme.text)
                     Text(tagline)
                         .font(.system(size: 16))
@@ -100,11 +102,11 @@ struct FeyndAuthShell<Body: View, Footer: View>: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(primaryDisabled
                                          ? FeyndTheme.text3
-                                         : Color(hex: 0x1A0E08))
+                                         : FeyndTheme.inkOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(
-                            (primaryDisabled ? FeyndTheme.surface2 : FeyndTheme.coral),
+                            (primaryDisabled ? FeyndTheme.surface2 : FeyndTheme.accent),
                             in: RoundedRectangle(cornerRadius: 12)
                         )
                 }
@@ -148,7 +150,7 @@ struct FeyndAuthField: View {
         }
         .font(.system(size: 16))
         .foregroundStyle(FeyndTheme.text)
-        .tint(FeyndTheme.coral)
+        .tint(FeyndTheme.accent)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 12))

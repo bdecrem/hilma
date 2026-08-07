@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Dodo bookworm mark — official (design turn 4, "Book from 3a, dodo sized like 3b").
+       Source of truth: dodo-logo.dc.html group #bw3. Transparent background;
+       the app icon places this over #FCE5D0. -->
+  <g>
+    <path d="M98 46 C97.5 40 99 36 105 32 C106.5 35 105 40 103 46 Z" fill="#6FAE5C"/>
+    <path d="M102 35 C91 22 74 20 63 27 C68 40 87 43 102 35 Z" fill="#7BB662"/>
+    <path d="M104 32 C109 19 125 15 137 19 C135 32 119 39 104 32 Z" fill="#5F9E4C"/>
+    <circle cx="100" cy="104" r="60" fill="#7C9EB2"/>
+    <path d="M54.4 113.6 C54.4 87.2 66.4 72.8 85.6 75.2 Q100 87.2 114.4 75.2 C133.6 72.8 145.6 87.2 145.6 113.6 C145.6 142.4 126 159.2 100 159.2 C73.6 159.2 54.4 142.4 54.4 113.6 Z" fill="#F9EFDA"/>
+    <circle cx="78.4" cy="99.2" r="12.6" fill="#33383E"/>
+    <circle cx="74.2" cy="94.4" r="4.8" fill="#FFFFFF"/>
+    <circle cx="82" cy="104" r="1.9" fill="#FFFFFF" opacity="0.8"/>
+    <circle cx="121.6" cy="99.2" r="12.6" fill="#33383E"/>
+    <circle cx="117.4" cy="94.4" r="4.8" fill="#FFFFFF"/>
+    <circle cx="125.2" cy="104" r="1.9" fill="#FFFFFF" opacity="0.8"/>
+    <ellipse cx="100" cy="118.4" rx="15.6" ry="11.4" fill="#F0A830"/>
+    <circle cx="94" cy="115.4" r="2.16" fill="#C9821F"/>
+    <circle cx="106" cy="115.4" r="2.16" fill="#C9821F"/>
+    <ellipse cx="64" cy="123.2" rx="9.6" ry="6" fill="#F2A19A" opacity="0.6"/>
+    <ellipse cx="136" cy="123.2" rx="9.6" ry="6" fill="#F2A19A" opacity="0.6"/>
+    <rect x="97" y="158" width="6" height="36" rx="3" fill="#E6D9B8"/>
+    <path d="M30 194 L30 166 C52 154 76 152 98 160 L98 194 Z" fill="#FFFBF0"/>
+    <path d="M30 166 C52 154 76 152 98 160 L98 166 C76 158 52 160 30 172 Z" fill="#F0E6CC"/>
+    <path d="M170 194 L170 166 C148 154 124 152 102 160 L102 194 Z" fill="#FFF7E6"/>
+    <path d="M170 166 C148 154 124 152 102 160 L102 166 C124 158 148 160 170 172 Z" fill="#EBDFC0"/>
+    <rect x="42" y="173" width="40" height="3.5" rx="1.75" fill="#E5D8B6" transform="rotate(-7 62 175)"/>
+    <rect x="44" y="181" width="34" height="3.5" rx="1.75" fill="#E5D8B6" transform="rotate(-7 61 183)"/>
+    <rect x="118" y="173" width="40" height="3.5" rx="1.75" fill="#E0D2AE" transform="rotate(7 138 175)"/>
+    <rect x="122" y="181" width="34" height="3.5" rx="1.75" fill="#E0D2AE" transform="rotate(7 139 183)"/>
+    <rect x="32" y="142" width="27" height="21" rx="10.5" fill="#6A8FA3" transform="rotate(-18 45 152)"/>
+    <rect x="141" y="142" width="27" height="21" rx="10.5" fill="#6A8FA3" transform="rotate(18 154 152)"/>
+  </g>
+</svg>

@@ -26,7 +26,7 @@ struct AudioSummaryPlayerView: View {
 
                 Image(systemName: "waveform")
                     .font(.system(size: 44, weight: .medium))
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
                     .padding(.bottom, 22)
 
                 Text("AUDIO SUMMARY")
@@ -72,7 +72,7 @@ struct AudioSummaryPlayerView: View {
                     ctl.seek(to: ctl.current)
                 }
             }
-            .tint(FeyndTheme.coral)
+            .tint(FeyndTheme.accent)
 
             HStack {
                 Text(timeString(ctl.current))
@@ -96,7 +96,7 @@ struct AudioSummaryPlayerView: View {
             Button { ctl.togglePlay() } label: {
                 ZStack {
                     Circle()
-                        .fill(FeyndTheme.coral)
+                        .fill(FeyndTheme.accent)
                         .frame(width: 68, height: 68)
                     Image(systemName: ctl.playing ? "pause.fill" : "play.fill")
                         .font(.system(size: 26, weight: .semibold))
@@ -123,12 +123,12 @@ struct AudioSummaryPlayerView: View {
         Button { ctl.cycleSpeed() } label: {
             Text(speedLabel)
                 .font(.system(size: 13.5, weight: .semibold).monospacedDigit())
-                .foregroundStyle(ctl.speed == 1.0 ? FeyndTheme.text3 : FeyndTheme.coral)
+                .foregroundStyle(ctl.speed == 1.0 ? FeyndTheme.text3 : FeyndTheme.accent)
                 .frame(minWidth: 40)
                 .padding(.vertical, 7)
                 .padding(.horizontal, 14)
                 .background(FeyndTheme.surface, in: Capsule())
-                .overlay(Capsule().stroke(ctl.speed == 1.0 ? FeyndTheme.border : FeyndTheme.coral.opacity(0.5), lineWidth: 1))
+                .overlay(Capsule().stroke(ctl.speed == 1.0 ? FeyndTheme.border : FeyndTheme.accent.opacity(0.5), lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Playback speed \(speedLabel)")

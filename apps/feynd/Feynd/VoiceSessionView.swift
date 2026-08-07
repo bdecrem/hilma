@@ -34,13 +34,13 @@ struct VoiceSessionView: View {
             // Layered radial glow + warm-dark base.
             FeyndTheme.bg.ignoresSafeArea()
             RadialGradient(
-                colors: [FeyndTheme.coral.opacity(0.25), FeyndTheme.coral.opacity(0)],
+                colors: [FeyndTheme.accent.opacity(0.25), FeyndTheme.accent.opacity(0)],
                 center: UnitPoint(x: 0.5, y: 0.38),
                 startRadius: 1, endRadius: 320
             )
             .ignoresSafeArea()
             RadialGradient(
-                colors: [FeyndTheme.coral.opacity(0.10), FeyndTheme.coral.opacity(0)],
+                colors: [FeyndTheme.accent.opacity(0.10), FeyndTheme.accent.opacity(0)],
                 center: UnitPoint(x: 0.5, y: 1.0),
                 startRadius: 1, endRadius: 360
             )
@@ -213,7 +213,7 @@ struct VoiceOrb: View {
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [FeyndTheme.coral.opacity(0.35), FeyndTheme.coral.opacity(0)],
+                        colors: [FeyndTheme.accent.opacity(0.35), FeyndTheme.accent.opacity(0)],
                         center: .center, startRadius: 30, endRadius: 165
                     )
                 )
@@ -225,11 +225,11 @@ struct VoiceOrb: View {
                 .fill(
                     AngularGradient(
                         colors: [
-                            FeyndTheme.coral,
+                            FeyndTheme.accent,
                             Color(hex: 0xFFB89A),
-                            FeyndTheme.coral,
-                            Color(hex: 0xB85A3F),
-                            FeyndTheme.coral
+                            FeyndTheme.accent,
+                            Color(hex: 0xB97A14),
+                            FeyndTheme.accent
                         ],
                         center: .center
                     )
@@ -291,7 +291,7 @@ struct ListenWave: View {
         HStack(spacing: 2) {
             ForEach(0..<7, id: \.self) { i in
                 Capsule()
-                    .fill(FeyndTheme.coral)
+                    .fill(FeyndTheme.accent)
                     .frame(width: 3, height: barHeight(i))
                     .animation(.easeInOut(duration: 0.25), value: phase)
             }

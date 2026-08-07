@@ -77,7 +77,7 @@ struct HelpSheet: View {
         VStack(alignment: .leading, spacing: 5) {
             Text(cmd.usage)
                 .font(.system(size: 14, weight: .semibold, design: .monospaced))
-                .foregroundStyle(FeyndTheme.coral)
+                .foregroundStyle(FeyndTheme.accent)
             Text(cmd.detail)
                 .font(.system(size: 14))
                 .tracking(-0.2)

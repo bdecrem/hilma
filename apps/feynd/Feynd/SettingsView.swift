@@ -47,7 +47,7 @@ struct SettingsView: View {
                 }
 
                 Section("About") {
-                    LabeledContent("App", value: "Feynd")
+                    LabeledContent("App", value: "Dodo")
                     LabeledContent("Version", value: appVersion)
                 }
             }

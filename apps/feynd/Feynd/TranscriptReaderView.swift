@@ -20,7 +20,7 @@ struct TranscriptReaderView: View {
                             Text("REVISION REQUEST")
                                 .font(.system(size: 10, weight: .bold))
                                 .tracking(0.5)
-                                .foregroundStyle(FeyndTheme.coral)
+                                .foregroundStyle(FeyndTheme.accent)
                             Text("“\(instr)”")
                                 .font(.system(size: 14))
                                 .italic()

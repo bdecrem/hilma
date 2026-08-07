@@ -65,7 +65,7 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Writer** | `src/app/writer/` | Vercel | Writing tool |
 | **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |
 | **F2 (web)** | `src/app/f2/` | Vercel (feynd.cc) | Learning app — chat + topics + paste, user-scoped |
-| **F2 (iOS)** | `apps/feynd/` | Xcode (manual TestFlight) | Native iPhone client for F2, talks to the same `/api/f2/*` backend |
+| **Dodo (iOS)** | `apps/feynd/` | Xcode (manual TestFlight) | Native iPhone client for F2 (app name **Dodo**; folder/bundle keep the old Feynd identifiers), talks to the same `/api/f2/*` backend |
 | **Loci (iOS)** | `apps/loci/` | Xcode (XcodeGen, same workflow as Feynd) | v3 learning app — spaced-repetition memory layer (`/api/f3/*`, `src/lib/f3/`) on F2 accounts/topics: idea cards, conversational recall grading, primer questions. Includes voice mode (Peri engine via `/api/f4/walk`): global voice walk from Today, per-topic voice from any row, transcripts merge back into topic chat |
 | **Peri (iOS)** | `apps/peri/` | Xcode (XcodeGen, same workflow as Feynd) | Voice-only walking tutor — OpenAI Realtime over WebRTC (`/api/f4/walk/*`, `src/lib/f4/`). Peri speaks first, quizzes the Loci card deck conversationally, records reviews via server-authed tools. Harness: `scripts/test-walk-realtime.mjs` |
 | **MacPlus** | `apps/macplus/` | Retro68 → BlueSCSI SD card (manual) | Native classic-Mac (System 6, 68000) apps for Bart's real Macintosh Plus. See `apps/macplus/CLAUDE.md` |
@@ -83,9 +83,9 @@ F2 features have repeatedly shipped across a string of patch commits because the
 
 If you genuinely can't drive the flow (no test account, endpoint down), say so plainly rather than reporting success.
 
-### Feynd iOS — where the code lives
+### Dodo iOS (the app formerly named Feynd) — where the code lives
 
-**Native iPhone client for F2 lives in `apps/feynd/`.** SwiftUI + XcodeGen (`project.yml` is the source of truth, `.xcodeproj` is generated). Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, deployment target iOS 17.
+**Native iPhone client for F2 lives in `apps/feynd/`. The app is named Dodo** — springboard name, in-app strings, and branding (see `apps/feynd/branding/BRANDING.md`); the folder, scheme, and bundle ID keep the legacy Feynd identifiers. SwiftUI + XcodeGen (`project.yml` is the source of truth, `.xcodeproj` is generated). Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, deployment target iOS 17.
 
 Key files (`apps/feynd/Feynd/`):
 - `FeyndApp.swift` — `@main` entry. Owns the `Session` and routes to `LoginView` vs `MainTabsView`.
@@ -113,7 +113,7 @@ Key files (`apps/feynd/Feynd/`):
 
 **Backend contract:** the iOS app hits the exact same `/api/f2/*` endpoints as the web (login/logout/me, messages, topics CRUD, ingest, latest, quiz). One backend, multiple fronts.
 
-### Feynd voice (Realtime)
+### Dodo voice (Realtime)
 
 Voice mode runs through OpenAI Realtime. Code lives in `src/lib/f2/realtime.ts`, `src/app/api/f2/realtime/**`, `apps/feynd/Feynd/RealtimeVoiceClient.swift`, `apps/feynd/Feynd/VoiceSessionView.swift`, and `apps/f2/schema/007_f2_voice_sessions.sql`. Two reference docs:
 

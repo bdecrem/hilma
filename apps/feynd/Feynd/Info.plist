@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Feynd</string>
+	<string>Dodo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,9 +26,13 @@
 		<true/>
 	</dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Feynd uses the microphone so you can talk with your learning assistant.</string>
+	<string>Dodo uses the microphone so you can talk with your learning assistant.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Pick a profile photo from your library.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fredoka.ttf</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

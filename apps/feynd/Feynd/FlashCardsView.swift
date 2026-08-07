@@ -86,7 +86,7 @@ struct FlashCardsView: View {
                 Text("FLASH CARDS")
                     .font(.system(size: 11, weight: .bold))
                     .tracking(1.2)
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
                 Text(topicLabel)
                     .font(.system(size: 16, weight: .semibold))
                     .tracking(-0.3)
@@ -109,7 +109,7 @@ struct FlashCardsView: View {
             if FlashDeckBuilder.shared.isBuilding(topicId) {
                 // A build kicked off earlier is still running — the sheet was
                 // dismissed then, but the user peeked back in.
-                ProgressView().tint(FeyndTheme.coral).scaleEffect(1.3)
+                ProgressView().tint(FeyndTheme.accent).scaleEffect(1.3)
                 Text("F2 is writing your cards…")
                     .font(.system(size: 22, weight: .bold))
                     .tracking(-0.4)
@@ -123,7 +123,7 @@ struct FlashCardsView: View {
             } else {
                 Image(systemName: "bolt.circle.fill")
                     .font(.system(size: 54))
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
                 Text("Build this topic's deck")
                     .font(.system(size: 22, weight: .bold))
                     .tracking(-0.4)
@@ -151,10 +151,10 @@ struct FlashCardsView: View {
                 } label: {
                     Text("\(n)")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(generateCount == n ? Color(hex: 0x1A0E08) : FeyndTheme.text2)
+                        .foregroundStyle(generateCount == n ? FeyndTheme.inkOnAccent : FeyndTheme.text2)
                         .frame(width: 44, height: 40)
                         .background(
-                            generateCount == n ? FeyndTheme.coral : FeyndTheme.surface,
+                            generateCount == n ? FeyndTheme.accent : FeyndTheme.surface,
                             in: RoundedRectangle(cornerRadius: 12)
                         )
                         .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: generateCount == n ? 0 : 1))
@@ -171,10 +171,10 @@ struct FlashCardsView: View {
         } label: {
             Text("Generate \(generateCount) cards")
                 .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(Color(hex: 0x1A0E08))
+                .foregroundStyle(FeyndTheme.inkOnAccent)
                 .padding(.horizontal, 26)
                 .padding(.vertical, 14)
-                .background(FeyndTheme.coral, in: Capsule())
+                .background(FeyndTheme.accent, in: Capsule())
         }
         .buttonStyle(.plain)
     }
@@ -249,9 +249,9 @@ struct FlashCardsView: View {
             HStack(spacing: 13) {
                 Image(systemName: icon)
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(FeyndTheme.coral)
+                    .foregroundStyle(FeyndTheme.accent)
                     .frame(width: 40, height: 40)
-                    .background(FeyndTheme.coralSoft, in: RoundedRectangle(cornerRadius: 12))
+                    .background(FeyndTheme.accentSoft, in: RoundedRectangle(cornerRadius: 12))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.system(size: 16, weight: .semibold))
@@ -311,7 +311,7 @@ struct FlashCardsView: View {
                 HStack(spacing: 10) {
                     Image(systemName: iconForMode(s.mode))
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                         .frame(width: 26)
                     Text("\(s.score)/\(s.total)")
                         .font(.system(size: 15, weight: .bold))
@@ -395,7 +395,7 @@ struct FlashCardsView: View {
                         .multilineTextAlignment(.leading)
                     Text(card.answer)
                         .font(.system(size: 12.5))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -457,7 +457,7 @@ struct FlashCardsView: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
                     .foregroundStyle(FeyndTheme.text)
-                    .tint(FeyndTheme.coral)
+                    .tint(FeyndTheme.accent)
                     .lineLimit(1...3)
                     .padding(.horizontal, 13)
                     .padding(.vertical, 11)
@@ -469,15 +469,15 @@ struct FlashCardsView: View {
                 } label: {
                     Group {
                         if addingCard {
-                            ProgressView().tint(Color(hex: 0x1A0E08)).scaleEffect(0.8)
+                            ProgressView().tint(FeyndTheme.inkOnAccent).scaleEffect(0.8)
                         } else {
                             Image(systemName: "plus")
                                 .font(.system(size: 14, weight: .heavy))
-                                .foregroundStyle(Color(hex: 0x1A0E08))
+                                .foregroundStyle(FeyndTheme.inkOnAccent)
                         }
                     }
                     .frame(width: 38, height: 38)
-                    .background(FeyndTheme.coral, in: Circle())
+                    .background(FeyndTheme.accent, in: Circle())
                 }
                 .buttonStyle(.plain)
                 .disabled(addingCard || newQuestion.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -499,7 +499,7 @@ struct FlashCardsView: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
                 .foregroundStyle(FeyndTheme.text)
-                .tint(FeyndTheme.coral)
+                .tint(FeyndTheme.accent)
                 .lineLimit(2...5)
                 .padding(.horizontal, 13)
                 .padding(.vertical, 11)
@@ -519,7 +519,7 @@ struct FlashCardsView: View {
                         Text("Remake deck")
                             .font(.system(size: 13.5, weight: .bold))
                     }
-                    .foregroundStyle(Color(hex: 0x1A0E08))
+                    .foregroundStyle(FeyndTheme.inkOnAccent)
                     .padding(.horizontal, 15)
                     .padding(.vertical, 9)
                     .background(FeyndTheme.gold, in: Capsule())

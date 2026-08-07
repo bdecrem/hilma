@@ -444,7 +444,7 @@ export default function WebProfileSheet({
 
             <Section label="About">
               <Card>
-                <Row label="App" detail="Feynd" />
+                <Row label="App" detail="Dodo" />
                 <Divider />
                 <Row label="Version" detail="1.0 (web)" />
               </Card>

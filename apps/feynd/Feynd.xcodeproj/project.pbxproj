@@ -13,6 +13,7 @@
 		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
 		13E521D2E87C8EC6DF8BFE61 /* AudioSummaryPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */; };
 		19C524D5397F5550C8A33970 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = DAABD116A19EBEA378D604DA /* WebRTC */; };
+		1EDEEC852280CDCA8031E3CC /* Fredoka.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
 		2653F9928D7A0873DFC35016 /* DoubleThumbsUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */; };
 		36BE08CA63307A15CECFDBEA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFCEF68207C8EC05D3B4760 /* Models.swift */; };
@@ -35,6 +36,7 @@
 		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
 		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
+		A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */; };
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
 		B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */; };
 		C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */; };
@@ -55,6 +57,7 @@
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
 		121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
 		21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptReaderView.swift; sourceTree = "<group>"; };
+		2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Fredoka-OFL.txt"; sourceTree = "<group>"; };
 		2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayerView.swift; sourceTree = "<group>"; };
 		3C7811C80A73490F1D2B650D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		4BB209A33541127135A75E53 /* SourceReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReaderView.swift; sourceTree = "<group>"; };
@@ -76,6 +79,7 @@
 		A806446C086649CAB62568A4 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
 		A838C8293EE5A7B38D62679D /* FlashCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardsView.swift; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fredoka.ttf; sourceTree = "<group>"; };
 		BB38EBAB179201757DE149C1 /* FlashSFX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSFX.swift; sourceTree = "<group>"; };
 		BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashTabView.swift; sourceTree = "<group>"; };
 		BEC72F31FAF938D3D638D39F /* FlashSetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSetView.swift; sourceTree = "<group>"; };
@@ -145,8 +149,18 @@
 				0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */,
 				21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */,
 				A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */,
+				68FEE442C5A8149F8F4D7A36 /* Fonts */,
 			);
 			path = Feynd;
+			sourceTree = "<group>";
+		};
+		68FEE442C5A8149F8F4D7A36 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */,
+				B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */,
+			);
+			path = Fonts;
 			sourceTree = "<group>";
 		};
 		B7269715FA6EFD860E6E2ED1 /* Products */ = {
@@ -230,6 +244,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */,
+				A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */,
+				1EDEEC852280CDCA8031E3CC /* Fredoka.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,7 +333,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -400,7 +416,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

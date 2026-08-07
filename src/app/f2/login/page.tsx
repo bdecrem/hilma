@@ -10,7 +10,7 @@ export default async function LoginPage() {
   if (user) redirect('/f2')
 
   return (
-    <AuthShell title="Feynd" tagline="Learn anything.">
+    <AuthShell title="dodo" tagline="Learn anything.">
       <LoginForm />
     </AuthShell>
   )

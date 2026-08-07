@@ -66,7 +66,7 @@ struct ProfileBadge: View {
 
             Circle()
                 .trim(from: 0, to: p.progressFraction)
-                .stroke(FeyndTheme.coral, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                .stroke(FeyndTheme.accent, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .frame(width: ring, height: ring)
 
@@ -157,10 +157,10 @@ struct F2MiniMark: View {
                     let p2 = CGPoint(x: s.width - inset, y: y)
                     var line = Path()
                     line.move(to: p1); line.addLine(to: p2)
-                    ctx.stroke(line, with: .color(FeyndTheme.coral), lineWidth: 1.2)
+                    ctx.stroke(line, with: .color(FeyndTheme.accent), lineWidth: 1.2)
                     let r: CGFloat = 2.2 * (size / 20)
-                    ctx.fill(Path(ellipseIn: CGRect(x: p1.x - r, y: p1.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.coral))
-                    ctx.fill(Path(ellipseIn: CGRect(x: p2.x - r, y: p2.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.coral))
+                    ctx.fill(Path(ellipseIn: CGRect(x: p1.x - r, y: p1.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.accent))
+                    ctx.fill(Path(ellipseIn: CGRect(x: p2.x - r, y: p2.y - r, width: r*2, height: r*2)), with: .color(FeyndTheme.accent))
                 }
             )
     }
@@ -221,7 +221,7 @@ private struct WebGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let stroke = 1.2 * s
 
             // Outer circle.
@@ -252,7 +252,7 @@ private struct AudioGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let stroke = 1.2 * s
 
             var stem = Path()
@@ -276,7 +276,7 @@ private struct VideoGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let stroke = 1.2 * s
 
             let frame = RoundedRectangle(cornerRadius: 2 * s).path(
@@ -299,7 +299,7 @@ private struct PasteGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let stroke = 1.2 * s
             let lines: [(CGFloat, CGFloat)] = [
                 (15, 6), (14, 10), (12, 14),
@@ -326,7 +326,7 @@ private struct BookGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
 
             var left = Path()
@@ -364,7 +364,7 @@ private struct MiniKindGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
             let rays: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
                 (10, 5.5, 10, 14.5),
@@ -388,7 +388,7 @@ private struct GeneralGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
 
             ctx.stroke(
@@ -412,7 +412,7 @@ private struct FallbackGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let stroke = 1.2 * s
             var line = Path()
             line.move(to: CGPoint(x: 4 * s, y: 14 * s))
@@ -431,7 +431,7 @@ private struct ChatGlyph: View {
     var body: some View {
         Canvas { ctx, size in
             let s = size.width / 20.0
-            let coral = GraphicsContext.Shading.color(FeyndTheme.coral)
+            let coral = GraphicsContext.Shading.color(FeyndTheme.accent)
             let stroke = 1.2 * s
 
             // Rounded speech bubble. Use addRoundedRect for the body, then
@@ -525,7 +525,7 @@ struct IconCircleButton: View {
 struct ActionChip: View {
     let label: String
     let systemImage: String
-    var iconTint: Color = FeyndTheme.coral
+    var iconTint: Color = FeyndTheme.accent
     var action: () -> Void
 
     var body: some View {
@@ -696,7 +696,7 @@ struct SourceCard: View {
                 .overlay(
                     Text(letter)
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                 )
 
             VStack(alignment: .leading, spacing: 1) {
@@ -755,7 +755,7 @@ struct FeyndComposer: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 16))
                     .foregroundStyle(FeyndTheme.text)
-                    .tint(FeyndTheme.coral)
+                    .tint(FeyndTheme.accent)
                     .padding(.horizontal, 16)
                     .submitLabel(.send)
                     .onSubmit { if canSend { onSend() } }
@@ -764,7 +764,7 @@ struct FeyndComposer: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 16))
                     .foregroundStyle(FeyndTheme.text)
-                    .tint(FeyndTheme.coral)
+                    .tint(FeyndTheme.accent)
                     .lineLimit(1...5)
                     .padding(.horizontal, 16)
                 #endif
@@ -776,9 +776,9 @@ struct FeyndComposer: View {
             Button(action: { if canSend { onSend() } }) {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 15, weight: .heavy))
-                    .foregroundStyle(canSend ? Color(hex: 0x1A0E08) : Color(hex: 0x6A4A3D))
+                    .foregroundStyle(canSend ? FeyndTheme.inkOnAccent : Color(hex: 0x6A4A3D))
                     .frame(width: 36, height: 36)
-                    .background(canSend ? FeyndTheme.coral : FeyndTheme.surface2, in: Circle())
+                    .background(canSend ? FeyndTheme.accent : FeyndTheme.surface2, in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(!canSend)
@@ -856,7 +856,7 @@ struct TabPill: View {
             HStack(spacing: 7) {
                 Image(systemName: tab.iconSystem)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(isActive ? FeyndTheme.coral : FeyndTheme.text3)
+                    .foregroundStyle(isActive ? FeyndTheme.accent : FeyndTheme.text3)
                 Text(tab.label)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(isActive ? FeyndTheme.text : FeyndTheme.text2)

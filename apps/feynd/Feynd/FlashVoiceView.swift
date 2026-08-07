@@ -42,7 +42,7 @@ struct FlashVoiceView: View {
                 }
             case .grading:
                 VStack(spacing: 16) {
-                    ProgressView().tint(FeyndTheme.coral).scaleEffect(1.4)
+                    ProgressView().tint(FeyndTheme.accent).scaleEffect(1.4)
                     Text("F2 is scoring your round…")
                         .font(.system(size: 15, weight: .medium))
                         .foregroundStyle(FeyndTheme.text2)
@@ -55,7 +55,7 @@ struct FlashVoiceView: View {
                 VStack(spacing: 14) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.system(size: 28))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                     Text(msg)
                         .font(.system(size: 14))
                         .foregroundStyle(FeyndTheme.text2)
@@ -63,7 +63,7 @@ struct FlashVoiceView: View {
                         .padding(.horizontal, 30)
                     Button("Close") { dismiss() }
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                 }
             }
         }
@@ -141,7 +141,7 @@ struct FinalReviewView: View {
                 VStack(spacing: 14) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.system(size: 28))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                     Text(msg)
                         .font(.system(size: 14))
                         .foregroundStyle(FeyndTheme.text2)
@@ -149,7 +149,7 @@ struct FinalReviewView: View {
                         .padding(.horizontal, 30)
                     Button("Close") { dismiss() }
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(FeyndTheme.coral)
+                        .foregroundStyle(FeyndTheme.accent)
                 }
             }
         }
@@ -223,10 +223,10 @@ struct FinalReviewView: View {
                     } label: {
                         Text("Done")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Color(hex: 0x1A0E08))
+                            .foregroundStyle(FeyndTheme.inkOnAccent)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(FeyndTheme.coral, in: Capsule())
+                            .background(FeyndTheme.accent, in: Capsule())
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 22)

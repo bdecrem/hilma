@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "6"
+    CURRENT_PROJECT_VERSION: "7"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -31,13 +31,15 @@ targets:
     info:
       path: Feynd/Info.plist
       properties:
-        CFBundleDisplayName: Feynd
+        CFBundleDisplayName: Dodo
         UILaunchScreen: {}
+        UIAppFonts:
+          - Fredoka.ttf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
-        NSMicrophoneUsageDescription: Feynd uses the microphone so you can talk with your learning assistant.
+        NSMicrophoneUsageDescription: Dodo uses the microphone so you can talk with your learning assistant.
         # Required by PhotosPicker on Mac Catalyst — without it the app is
         # terminated the moment the picker tries to access the photo library.
         NSPhotoLibraryUsageDescription: Pick a profile photo from your library.

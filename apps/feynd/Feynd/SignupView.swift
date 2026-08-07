@@ -24,7 +24,7 @@ struct SignupView: View {
                         Text("Already have one?")
                             .foregroundStyle(FeyndTheme.text2)
                         Text("Sign in")
-                            .foregroundStyle(FeyndTheme.coral)
+                            .foregroundStyle(FeyndTheme.accent)
                             .fontWeight(.semibold)
                     }
                     .font(.system(size: 14))

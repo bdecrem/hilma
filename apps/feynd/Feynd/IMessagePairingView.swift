@@ -91,10 +91,10 @@ struct IMessagePairingView: View {
             Button(action: sendCode) {
                 Text(busy ? "Sending…" : "Send code")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(busy || handle.isEmpty ? FeyndTheme.text3 : Color(hex: 0x1A0E08))
+                    .foregroundStyle(busy || handle.isEmpty ? FeyndTheme.text3 : FeyndTheme.inkOnAccent)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
-                    .background(busy || handle.isEmpty ? FeyndTheme.surface2 : FeyndTheme.coral,
+                    .background(busy || handle.isEmpty ? FeyndTheme.surface2 : FeyndTheme.accent,
                                 in: RoundedRectangle(cornerRadius: 12))
             }
             .buttonStyle(.plain)
@@ -140,10 +140,10 @@ struct IMessagePairingView: View {
                 Button(action: { confirm(handle: pendingHandle) }) {
                     Text(busy ? "Verifying…" : "Confirm")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(busy || code.count != 6 ? FeyndTheme.text3 : Color(hex: 0x1A0E08))
+                        .foregroundStyle(busy || code.count != 6 ? FeyndTheme.text3 : FeyndTheme.inkOnAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
-                        .background(busy || code.count != 6 ? FeyndTheme.surface2 : FeyndTheme.coral,
+                        .background(busy || code.count != 6 ? FeyndTheme.surface2 : FeyndTheme.accent,
                                     in: RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
