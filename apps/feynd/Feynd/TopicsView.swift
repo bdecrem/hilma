@@ -34,6 +34,8 @@ struct TopicsView: View {
     @State private var pollingAudio = false
     /// Whether the big in-scroll title is on screen (bar echoes it when not).
     @State private var bigTitleVisible = true
+    /// Bumped by double-tapping the bar — the list scrolls back to the top.
+    @State private var scrollTopSignal = 0
     /// Persists across launches; defaults to recent.
     @AppStorage("topicsSortMode") private var sortRaw = TopicSort.recent.rawValue
 
@@ -82,6 +84,8 @@ struct TopicsView: View {
                     sortMenu
                 } onProfileTap: {
                     showProfile = true
+                } onDoubleTap: {
+                    scrollTopSignal += 1
                 }
 
                 // Center + clamp the column so wide Mac windows don't stretch
@@ -261,11 +265,13 @@ struct TopicsView: View {
         let pinned = pinnedTopics
         let unpinned = unpinnedTopics
         let hasPinned = !pinned.isEmpty
-        return ScrollView {
+        return ScrollViewReader { proxy in
+            ScrollView {
             // Bottom inset large enough to keep the floating TabPill from
             // covering the last row.
             LazyVStack(spacing: 0) {
                 titleRow.padding(.horizontal, -14)
+                    .id("topics-top")
                 metaStrip
                 if hasPinned {
                     sectionHeader("Pinned")
@@ -278,11 +284,17 @@ struct TopicsView: View {
                 Color.clear.frame(height: 96)
             }
             .padding(.horizontal, 14)
-        }
-        .scrollIndicators(.hidden)
-        .refreshable {
-            await load()
-            await session.refreshProgress()
+            }
+            .scrollIndicators(.hidden)
+            .refreshable {
+                await load()
+                await session.refreshProgress()
+            }
+            .onChange(of: scrollTopSignal) { _, _ in
+                withAnimation(.easeOut(duration: 0.3)) {
+                    proxy.scrollTo("topics-top", anchor: .top)
+                }
+            }
         }
     }
 

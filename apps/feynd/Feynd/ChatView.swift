@@ -12,6 +12,8 @@ struct ChatView: View {
     @State private var voicePresented = false
     /// Whether the big in-scroll title is on screen (bar echoes it when not).
     @State private var bigTitleVisible = false
+    /// Bumped by double-tapping the bar — the transcript jumps to the top.
+    @State private var scrollTopSignal = 0
 
     var body: some View {
         ZStack {
@@ -24,6 +26,8 @@ struct ChatView: View {
                     ModelPickerMenu(style: .pill)
                 } onProfileTap: {
                     showSettings = true
+                } onDoubleTap: {
+                    scrollTopSignal += 1
                 }
 
                 // No content column clamp here — chat reads better when bubbles
@@ -31,7 +35,7 @@ struct ChatView: View {
                 // line-length readability. The big title scrolls with the
                 // transcript (it sits above the oldest message); the bar
                 // echoes "Chat" whenever it's off screen.
-                ChatScrollView(messages: messages, busy: busy) {
+                ChatScrollView(messages: messages, busy: busy, scrollToTop: scrollTopSignal) {
                     ScreenTitle(text: "Chat")
                         .titleVisibilityMarker()
                 }
@@ -135,6 +139,8 @@ struct ChatView: View {
 struct ChatScrollView<Header: View>: View {
     let messages: [F2Message]
     let busy: Bool
+    /// Bump to jump the transcript back to its top (oldest message).
+    var scrollToTop: Int = 0
     /// Optional content rendered above the oldest message — the Chat tab
     /// puts its big scrolling screen title here.
     @ViewBuilder var header: () -> Header
@@ -158,6 +164,7 @@ struct ChatScrollView<Header: View>: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     header()
+                        .id("chat-top")
                     if messages.isEmpty && !busy {
                         Text("Paste a URL to learn from, or ask me anything to begin.")
                             .font(.system(size: 14))
@@ -191,6 +198,11 @@ struct ChatScrollView<Header: View>: View {
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
+            .onChange(of: scrollToTop) { _, _ in
+                withAnimation(.easeOut(duration: 0.3)) {
+                    proxy.scrollTo("chat-top", anchor: .top)
+                }
+            }
             .onChange(of: messages.count) { _, _ in
                 if let last = messages.last {
                     withAnimation(.spring(duration: 0.25)) { proxy.scrollTo(last.id, anchor: .bottom) }

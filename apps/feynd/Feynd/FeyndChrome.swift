@@ -443,6 +443,9 @@ struct FeyndTopBar<Center: View, Trailing: View>: View {
     @ViewBuilder var center: () -> Center
     @ViewBuilder var trailing: () -> Trailing
     var onProfileTap: () -> Void = {}
+    /// Double-tapping the bar's center region jumps the screen back to the
+    /// top (the avatar and trailing controls keep their own single taps).
+    var onDoubleTap: () -> Void = {}
 
     var body: some View {
         HStack(spacing: 0) {
@@ -456,6 +459,8 @@ struct FeyndTopBar<Center: View, Trailing: View>: View {
 
             center()
                 .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { onDoubleTap() }
 
             HStack {
                 Spacer(minLength: 0)

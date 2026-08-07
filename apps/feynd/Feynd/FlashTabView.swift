@@ -20,6 +20,8 @@ struct FlashTabView: View {
     @State private var pulse = false
     /// Whether the big in-scroll title is on screen (bar echoes it when not).
     @State private var bigTitleVisible = false
+    /// Bumped by double-tapping the bar — the map jumps to the very top.
+    @State private var scrollTopSignal = 0
 
     // Path geometry — one shared set of numbers for nodes AND connectors.
     // Node centers: y = topPad + i * pitch, x = centerX + amp * zigzag(i).
@@ -53,6 +55,8 @@ struct FlashTabView: View {
                     }
                 } onProfileTap: {
                     showProfile = true
+                } onDoubleTap: {
+                    scrollTopSignal += 1
                 }
 
                 VStack(spacing: 0) {
@@ -254,6 +258,7 @@ struct FlashTabView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     titleRow
+                        .id("peck-top")
                     ZStack(alignment: .topLeading) {
                         PeckIslandScenery(height: height)
 
@@ -306,6 +311,11 @@ struct FlashTabView: View {
                 // no programmatic scrolling here.)
                 .defaultScrollAnchor(.bottom)
                 .refreshable { await load() }
+                .onChange(of: scrollTopSignal) { _, _ in
+                    withAnimation(.easeOut(duration: 0.35)) {
+                        proxy.scrollTo("peck-top", anchor: .top)
+                    }
+                }
             }
         }
     }
