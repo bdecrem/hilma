@@ -39,10 +39,14 @@ struct SetSelectScreen: View {
                 .padding(.horizontal, 12)
                 .padding(.top, 8)
 
+                let storeIds = storeCardIds()
                 TabView(selection: $app.selectedSetIndex) {
                     DailyCard().tag(0)
                     ForEach(Array(TrackDef.all.enumerated()), id: \.element.id) { index, track in
                         SetCard(track: track).tag(index + 1)
+                    }
+                    ForEach(Array(storeIds.enumerated()), id: \.element) { index, id in
+                        OnlineCard(trackId: id).tag(TrackDef.all.count + 1 + index)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .always))
@@ -50,6 +54,115 @@ struct SetSelectScreen: View {
             }
         }
         .sheet(isPresented: $showSettings) { SettingsScreen() }
+        .task { await app.library.fetchOnline() }
+    }
+
+    /// Store pages: every downloaded pack plus every online track that isn't
+    /// downloaded yet, downloads first so they keep their spot offline.
+    private func storeCardIds() -> [String] {
+        var ids = app.library.downloaded.map { $0.id }
+        for row in app.library.storeTracks where !ids.contains(row.id) {
+            ids.append(row.id)
+        }
+        return ids
+    }
+}
+
+/// A store track: playable exactly like a SetCard once downloaded, a
+/// download card before that. Skinned via its skinRef.
+private struct OnlineCard: View {
+    let trackId: String
+    @EnvironmentObject private var app: AppState
+    @State private var failed = false
+
+    var body: some View {
+        if let track = app.library.byId(trackId) {
+            SetCard(track: track)
+        } else if let row = app.library.online.first(where: { $0.id == trackId }) {
+            downloadCard(row)
+        }
+    }
+
+    private func downloadCard(_ row: TrackLibrary.OnlineTrack) -> some View {
+        let skin = Skin.forTrack(row.skinRef ?? "ttd01")
+        let busy = app.library.downloading.contains(row.id)
+
+        return VStack(spacing: 12) {
+            Spacer()
+
+            Text(skin.styled("ONLINE SET"))
+                .font(.custom(Fonts.mono, size: 12))
+                .tracking(4)
+                .foregroundStyle(skin.laneColors[0].ui)
+
+            Text(skin.styled(row.name))
+                .font(.custom(skin.displayFont, size: 40))
+                .foregroundStyle(skin.foreground.ui)
+
+            Text(skin.styled(row.genreLine))
+                .font(.custom(Fonts.mono, size: 12))
+                .foregroundStyle(skin.dim.ui)
+                .multilineTextAlignment(.center)
+
+            HStack(spacing: 22) {
+                VStack(spacing: 4) {
+                    Text(String(Int(row.bpm)))
+                        .font(.custom(skin.displayFont, size: 18))
+                        .foregroundStyle(skin.foreground.ui)
+                    Text("bpm")
+                        .font(.custom(Fonts.mono, size: 9))
+                        .tracking(3)
+                        .foregroundStyle(skin.dim.ui)
+                }
+                VStack(spacing: 4) {
+                    Text(String(row.bars))
+                        .font(.custom(skin.displayFont, size: 18))
+                        .foregroundStyle(skin.foreground.ui)
+                    Text("bars")
+                        .font(.custom(Fonts.mono, size: 9))
+                        .tracking(3)
+                        .foregroundStyle(skin.dim.ui)
+                }
+            }
+            .padding(.top, 8)
+
+            Button {
+                failed = false
+                Task {
+                    do { try await app.library.download(row.id) } catch { failed = true }
+                }
+            } label: {
+                Text(skin.styled(busy ? "DOWNLOADING…" : "DOWNLOAD"))
+                    .font(.custom(skin.displayFont, size: 14))
+                    .tracking(skin.lowercase ? 4 : 1)
+                    .foregroundStyle(skin.background.ui)
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 36)
+                    .background(
+                        AnyShapeStyle(skin.foreground.ui),
+                        in: skin.lowercase ? AnyShape(Rectangle()) : AnyShape(Capsule())
+                    )
+            }
+            .disabled(busy)
+            .padding(.top, 14)
+
+            if failed {
+                Text(skin.styled("download failed — try again"))
+                    .font(.custom(Fonts.mono, size: 11))
+                    .foregroundStyle(skin.dim.ui)
+            }
+
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 22)
+                .fill(LinearGradient(colors: [skin.backgroundAlt.ui, skin.background.ui],
+                                     startPoint: .top, endPoint: .bottom))
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(skin.dim.ui.opacity(0.35), lineWidth: 1))
+        )
+        .padding(.horizontal, 22)
+        .padding(.vertical, 26)
     }
 }
 
@@ -58,7 +171,7 @@ private struct SetCard: View {
     @EnvironmentObject private var app: AppState
 
     var body: some View {
-        let skin = Skin.forTrack(track.id)
+        let skin = Skin.forTrack(track.skinRef)
         let locked = track.id == TrackDef.gabber.id && !app.gabberUnlocked
         let best = app.store.bests[track.id]
 

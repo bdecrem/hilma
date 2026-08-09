@@ -10,6 +10,7 @@ enum Route: Equatable {
 
 /// Nav, settings, unlocks. Settings persist through UserDefaults; scores
 /// through ScoreStore.
+@MainActor
 final class AppState: ObservableObject {
     @Published var route: Route = .title
     @Published var selectedSetIndex = 0
@@ -17,6 +18,7 @@ final class AppState: ObservableObject {
 
     let store = ScoreStore()
     let haptics = Haptics()
+    let library = TrackLibrary()
 
     // MARK: Settings
 
@@ -33,12 +35,20 @@ final class AppState: ObservableObject {
         didSet { UserDefaults.standard.set(kickHapticsOn, forKey: "ttd.kickHaptics") }
     }
 
+    private var cancellables: Set<AnyCancellable> = []
+
     init() {
         let d = UserDefaults.standard
         calibration = d.object(forKey: "ttd.calibration") as? Double ?? 0
         noteSpeed = d.object(forKey: "ttd.noteSpeed") as? Double ?? 1.0
         hapticsOn = d.object(forKey: "ttd.haptics") as? Bool ?? true
         kickHapticsOn = d.object(forKey: "ttd.kickHaptics") as? Bool ?? true
+
+        // Views observe AppState; surface the nested library's changes so
+        // store cards flip from "download" to playable the moment a pack lands.
+        library.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     var runSettings: RunSettings {
@@ -51,7 +61,7 @@ final class AppState: ObservableObject {
     // MARK: Flow
 
     func startRun(trackId: String, seed: UInt64? = nil, isDaily: Bool = false) {
-        guard TrackDef.byId(trackId) != nil else { return }
+        guard library.byId(trackId) != nil else { return }
         let config = RunConfig(trackId: trackId,
                                seed: seed ?? UInt64.random(in: 1..<UInt64.max),
                                isDaily: isDaily)
@@ -75,12 +85,22 @@ final class AppState: ObservableObject {
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               (url.host == "play" || components.path.contains("play")) else { return }
         let items = components.queryItems ?? []
-        guard let trackId = items.first(where: { $0.name == "track" })?.value,
-              TrackDef.byId(trackId) != nil else { return }
+        guard let trackId = items.first(where: { $0.name == "track" })?.value else { return }
         let seedString = items.first(where: { $0.name == "seed" })?.value ?? ""
         let seed = UInt64(seedString) ?? UInt64(seedString, radix: 16)
         // A gabber link doesn't bypass the unlock.
         if trackId == TrackDef.gabber.id && !gabberUnlocked { return }
-        startRun(trackId: trackId, seed: seed)
+        if library.byId(trackId) != nil {
+            startRun(trackId: trackId, seed: seed)
+            return
+        }
+        // Not local: if the store has it, download first, then play. This is
+        // both the deep-link UX and the headless test path for online packs.
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            if await self.library.ensurePlayable(trackId) {
+                self.startRun(trackId: trackId, seed: seed)
+            }
+        }
     }
 }

@@ -21,11 +21,11 @@ struct BackingPlan {
 enum BackingComposer {
 
     static func plan(for track: TrackDef) -> BackingPlan {
-        switch track.id {
-        case "ttd01": return origin(track)
-        case "ttd02": return minimal(track)
-        case "ttd03": return detroit(track)
-        case "ttd05": return afters(track)
+        switch track.backingStyle {
+        case "origin": return origin(track)
+        case "minimal": return minimal(track)
+        case "detroit": return detroit(track)
+        case "afters": return afters(track)
         default: return gabber(track)
         }
     }
@@ -73,12 +73,17 @@ enum BackingComposer {
         return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track))
     }
 
-    // ttd·02 — kick 4/4 (out during breakdown bars 16–20), offbeat hats from
-    // bar 4, claps on 2 & 4 from bar 12, 16-beat drone cycles throughout.
+    // ttd·02 — kick 4/4 (out during the breakdown), offbeat hats from the
+    // groove, claps on 2 & 4 from the build, 16-beat drone cycles throughout.
+    // All boundaries derive from track.sections so downloaded skeletons work.
     private static func minimal(_ track: TrackDef) -> BackingPlan {
         let spb = track.secondsPerBeat
         var events: [BackingEvent] = []
         var kicks: [Double] = []
+
+        let breakdownRange = track.sectionRange(.breakdown)
+        let hatsFrom = track.sectionRange(.groove).lowerBound          // ttd02: 4
+        let clapsFrom = track.sectionRange(.groove).upperBound         // build start; ttd02: 12
 
         for half in 0..<(track.bars * 8) {
             let halfBeat = Double(half) * 0.5
@@ -86,18 +91,18 @@ enum BackingComposer {
             let bar = half / 8
             let inBar = halfBeat - Double(bar * 4)
             let isWhole = inBar.truncatingRemainder(dividingBy: 1) == 0
-            let breakdown = bar >= 16 && bar < 20
+            let breakdown = breakdownRange.contains(bar)
 
             if isWhole && !breakdown {
                 let accent = inBar == 0
                 events.append(BackingEvent(time: t) { KickVoice.minimal(at: t, accent: accent, seed: UInt64(half) &+ 3) })
                 kicks.append(t)
             }
-            if !isWhole && bar >= 4 && !breakdown {
-                let open = inBar == 3.5 && bar >= 12
+            if !isWhole && bar >= hatsFrom && !breakdown {
+                let open = inBar == 3.5 && bar >= clapsFrom
                 events.append(BackingEvent(time: t) { HatVoice.minimal(at: t, open: open, seed: UInt64(half) &+ 5) })
             }
-            if isWhole && (inBar == 1 || inBar == 3) && bar >= 12 && !breakdown {
+            if isWhole && (inBar == 1 || inBar == 3) && bar >= clapsFrom && !breakdown {
                 events.append(BackingEvent(time: t) { ClapVoice(at: t, seed: UInt64(half) &+ 9) })
             }
             if inBar == 0 && isWhole && bar % 4 == 0 {
@@ -118,12 +123,20 @@ enum BackingComposer {
         let stab: [Double] = [Tone.C4, Tone.E4, Tone.G4, Tone.B4]
         let roots = [Tone.A2, Tone.A2, Tone.F2, Tone.G2]
 
+        let intro = track.sectionRange(.intro)
+        let groove = track.sectionRange(.groove)
+        let breakdownRange = track.sectionRange(.breakdown)
+        let hatsFrom = intro.lowerBound + intro.count / 2              // ttd03: 2
+        let clapsFrom = groove.lowerBound + groove.count / 2           // groove midpoint; ttd03: 8
+        let stringsFrom = groove.lowerBound                            // ttd03: 4
+        let stabsFrom = groove.upperBound                              // build start; ttd03: 12
+
         for half in 0..<(track.bars * 8) {
             let halfBeat = Double(half) * 0.5
             let bar = half / 8
             let inBar = halfBeat - Double(bar * 4)
             let isWhole = inBar.truncatingRemainder(dividingBy: 1) == 0
-            let breakdown = bar >= 16 && bar < 20
+            let breakdown = breakdownRange.contains(bar)
             let t = halfBeat * spb + (isWhole ? 0 : swingDelay)
 
             if isWhole && !breakdown {
@@ -133,20 +146,20 @@ enum BackingComposer {
                     events.append(BackingEvent(time: t) { BassVoice(at: t, freq: roots[bar % 4], spb: spb) })
                 }
             }
-            if !isWhole && bar >= 2 && !breakdown {
+            if !isWhole && bar >= hatsFrom && !breakdown {
                 let open = inBar == 3.5 && bar % 4 == 3
                 events.append(BackingEvent(time: t) { HatVoice.origin(at: t, open: open, seed: UInt64(half) &+ 21) })
             }
-            if isWhole && (inBar == 1 || inBar == 3) && bar >= 8 && !breakdown {
+            if isWhole && (inBar == 1 || inBar == 3) && bar >= clapsFrom && !breakdown {
                 events.append(BackingEvent(time: t) { ClapVoice(at: t, gain: 0.11, seed: UInt64(half) &+ 23) })
             }
-            if inBar == 0 && isWhole && bar % 2 == 0 && bar >= 4 {
+            if inBar == 0 && isWhole && bar % 2 == 0 && bar >= stringsFrom {
                 // Strings swell right through the breakdown — that's the point.
                 events.append(BackingEvent(time: t) {
                     StringsVoice(at: t, freqs: am9, dur: spb * 8, gain: breakdown ? 0.06 : 0.045, seed: UInt64(bar) &+ 31)
                 })
             }
-            if inBar == 3.5 && !isWhole && bar >= 12 && bar % 2 == 1 && !breakdown {
+            if inBar == 3.5 && !isWhole && bar >= stabsFrom && bar % 2 == 1 && !breakdown {
                 events.append(BackingEvent(time: t) { ChordStabVoice(at: t, freqs: stab) })
             }
         }
@@ -164,24 +177,61 @@ enum BackingComposer {
         var events: [BackingEvent] = []
         var kicks: [Double] = []
 
-        let ghostBars: Set<Int> = [13, 27]
-        func isBreakdown(_ bar: Int) -> Bool { bar >= 16 && bar < 20 }
+        // Section-derived skeleton (ttd05 values in comments).
+        let intro = track.sectionRange(.intro)                     // 0..<4
+        let groove = track.sectionRange(.groove)                   // 4..<12
+        let build = track.sectionRange(.build)                     // 12..<16
+        let breakdownRange = track.sectionRange(.breakdown)        // 16..<20
+        let peak = track.sectionRange(.peak)                       // 20..<28
+        let outro = track.sectionRange(.outro)                     // 28..<32
+        let totalBeats = Double(track.bars * 4)                    // 128
+
+        // Ghost bars (kick out for one bar — the Hawtin trick): second bar of
+        // the build and last bar of the peak. ttd05: 13 and 27.
+        let ghostBars: Set<Int> = [build.lowerBound + 1, peak.upperBound - 1]
+        func isBreakdown(_ bar: Int) -> Bool { breakdownRange.contains(bar) }
         func hasKick(_ bar: Int) -> Bool { !isBreakdown(bar) && !ghostBars.contains(bar) }
 
-        // Sidechain pump runs wherever the kick runs.
-        let pump = Pump(ranges: [
-            (at(0), at(52)), (at(56), at(64)), (at(80), at(108)), (at(112), at(128)),
-        ], spb: spb)
+        let hatsFrom = intro.lowerBound + intro.count / 2          // 2
+        let openHatsFrom = groove.lowerBound + 2                   // 6
+        let ghostTicksFrom = intro.lowerBound + 1                  // 1
+        let rimsFrom = groove.lowerBound                           // 4
+        let clapsFrom = groove.lowerBound + groove.count / 2       // groove midpoint; 8
+        let clapsTo = outro.lowerBound                             // 28
+        let subFrom = groove.lowerBound + 2                        // 6
+        let subTo = outro.lowerBound + 2                           // 30
+
+        // Sidechain pump runs wherever the kick runs: one range per
+        // contiguous run of kick bars. ttd05: 0–52, 56–64, 80–108, 112–128.
+        var pumpRanges: [(Double, Double)] = []
+        var runStart: Int? = nil
+        for bar in 0...track.bars {
+            if bar < track.bars, hasKick(bar) {
+                if runStart == nil { runStart = bar }
+            } else if let s = runStart {
+                pumpRanges.append((at(Double(s * 4)), at(Double(bar * 4))))
+                runStart = nil
+            }
+        }
+        let pump = Pump(ranges: pumpRanges, spb: spb)
 
         // The drone spans the whole track; its filter arc is the narrative:
         // slow rises, a swell through the breakdown, a hard snap at the drop.
+        // Anchors are section boundaries (in beats). ttd05: 0/32/48/63.9/64/
+        // 79.9/80/104/112/126.
+        let grooveMidBeat = Double((groove.lowerBound + groove.count / 2) * 4)
+        let buildBeat = Double(build.lowerBound * 4)
+        let breakdownBeat = Double(breakdownRange.lowerBound * 4)
+        let dropBeat = Double(peak.lowerBound * 4)
+        let peakLateBeat = Double((peak.upperBound - 2) * 4)
+        let outroBeat = Double(outro.lowerBound * 4)
         let arc: [(Double, Double)] = [
-            (at(0), 95), (at(32), 115), (at(48), 175), (at(63.9), 250),
-            (at(64), 330), (at(79.9), 430),
-            (at(80), 165), (at(104), 200), (at(112), 150), (at(126), 95),
+            (at(0), 95), (at(grooveMidBeat), 115), (at(buildBeat), 175), (at(breakdownBeat - 0.1), 250),
+            (at(breakdownBeat), 330), (at(dropBeat - 0.1), 430),
+            (at(dropBeat), 165), (at(peakLateBeat), 200), (at(outroBeat), 150), (at(totalBeats - 2), 95),
         ]
         events.append(BackingEvent(time: 0) {
-            AftersDroneVoice(at: 0, dur: at(128), arc: arc, pump: pump)
+            AftersDroneVoice(at: 0, dur: at(totalBeats), arc: arc, pump: pump)
         })
 
         for bar in 0..<track.bars {
@@ -206,15 +256,15 @@ enum BackingComposer {
                 }
             }
 
-            // offbeat hats: enter quiet at bar 2, creep up; micro-late swing;
+            // offbeat hats: enter quiet mid-intro, creep up; micro-late swing;
             // velocity pattern rotates every 8 bars (the 1% rule)
-            if bar >= 2 && !isBreakdown(bar) {
-                let ramp = min(1.0, 0.4 + 0.15 * Double(max(0, (bar - 2) / 2)))
+            if bar >= hatsFrom && !isBreakdown(bar) {
+                let ramp = min(1.0, 0.4 + 0.15 * Double(max(0, (bar - hatsFrom) / 2)))
                 let basePattern = [1.0, 0.72, 0.88, 0.72]
                 let rotation = (bar / 8) % 4
                 for k in 0..<4 {
                     let vel = basePattern[(k + rotation) % 4] * ramp
-                    let open = bar >= 6 && bar % 2 == 0 && k == 3
+                    let open = bar >= openHatsFrom && bar % 2 == 0 && k == 3
                     let jitter = (Double.random(in: -1...1, using: &micro)) * 0.003
                     let t = at(barStart + Double(k) + 0.5) + 0.012 + jitter
                     events.append(BackingEvent(time: t) {
@@ -224,7 +274,7 @@ enum BackingComposer {
             }
 
             // ghost 16ths on the "e"s — two per bar, positions drift by bar
-            if bar >= 1 && !isBreakdown(bar) {
+            if bar >= ghostTicksFrom && !isBreakdown(bar) {
                 let positions = [0.25, 1.25, 2.25, 3.25]
                 let first = Int.random(in: 0..<4, using: &micro)
                 let second = (first + 1 + Int.random(in: 0..<2, using: &micro)) % 4
@@ -232,7 +282,7 @@ enum BackingComposer {
                     let t = at(barStart + positions[p])
                     events.append(BackingEvent(time: t) { GhostTickVoice(at: t, seed: UInt64(bar * 16 + p) &+ 41) })
                 }
-                if bar >= 12 && bar < 16 {
+                if build.contains(bar) {
                     let t = at(barStart + 3.75)
                     events.append(BackingEvent(time: t) { GhostTickVoice(at: t, gain: 0.05, seed: UInt64(bar) &+ 43) })
                 }
@@ -240,17 +290,18 @@ enum BackingComposer {
 
             // rimshot on the and-of-4 (odd bars — even bars give it to the
             // open hat), plus the and-of-2 during the build
-            if bar >= 4 && !isBreakdown(bar) && bar % 2 == 1 && bar % 4 != 3 {
+            if bar >= rimsFrom && !isBreakdown(bar) && bar % 2 == 1 && bar % 4 != 3 {
                 let t = at(barStart + 3.5) + 0.012
                 events.append(BackingEvent(time: t) { RimVoice(at: t) })
             }
-            if bar >= 12 && bar < 16 && !ghostBars.contains(bar) {
+            if build.contains(bar) && !ghostBars.contains(bar) {
                 let t = at(barStart + 1.5) + 0.012
                 events.append(BackingEvent(time: t) { RimVoice(at: t, gain: 0.26) })
             }
 
-            // claps on 2 & 4 from bar 8, resting through breakdown and outro
-            if bar >= 8 && bar < 28 && !isBreakdown(bar) {
+            // claps on 2 & 4 from the groove midpoint, resting through
+            // breakdown and outro
+            if bar >= clapsFrom && bar < clapsTo && !isBreakdown(bar) {
                 for k in [1, 3] {
                     let t = at(barStart + Double(k))
                     events.append(BackingEvent(time: t) { ClapPlusVoice(at: t, seed: UInt64(bar * 4 + k) &+ 57) })
@@ -262,7 +313,7 @@ enum BackingComposer {
             }
 
             // offbeat sub bounce — carries the pulse, including the breakdown
-            if bar >= 6 && bar < 30 {
+            if bar >= subFrom && bar < subTo {
                 for k in 0..<4 {
                     let t = at(barStart + Double(k) + 0.5)
                     let gain = isBreakdown(bar) ? 0.17 : 0.21
@@ -270,14 +321,19 @@ enum BackingComposer {
                 }
             }
 
-            // dub chords on the and-of-1
+            // dub chords on the and-of-1. Standard hits: last intro bar, every
+            // 4th groove bar (offset 3), every other build bar, odd peak bars
+            // minus the ghost bar. Louder through the breakdown; one dark echo
+            // in the second outro bar. Reproduces ttd05's 3/7/11/12/14/21/23/
+            // 25 + 16–19 + 29 exactly.
             let chordSpec: (gain: Double, echoes: Int)? = {
-                switch bar {
-                case 3, 7, 11, 12, 14, 21, 23, 25: return (0.15, 5)
-                case 16, 17, 18, 19: return (0.19, 7)
-                case 29: return (0.13, 7)
-                default: return nil
-                }
+                if isBreakdown(bar) { return (0.19, 7) }
+                if bar == outro.lowerBound + 1 { return (0.13, 7) }
+                if bar == intro.upperBound - 1 { return (0.15, 5) }
+                if groove.contains(bar), (bar - groove.lowerBound) % 4 == 3 { return (0.15, 5) }
+                if build.contains(bar), (bar - build.lowerBound) % 2 == 0 { return (0.15, 5) }
+                if peak.contains(bar), (bar - peak.lowerBound) % 2 == 1, !ghostBars.contains(bar) { return (0.15, 5) }
+                return nil
             }()
             if let chordSpec {
                 let t = at(barStart + 0.5)
@@ -287,7 +343,7 @@ enum BackingComposer {
             }
 
             // shaker 16ths through the peak (minus the ghost bar)
-            if bar >= 20 && bar < 27 {
+            if peak.contains(bar) && !ghostBars.contains(bar) {
                 let wave = [0.3, 0.5, 1.0, 0.5]
                 for s in 0..<16 {
                     let t = at(barStart + Double(s) * 0.25)
@@ -296,28 +352,27 @@ enum BackingComposer {
                 }
             }
 
-            // the signature zap — once every 8 bars, answered in the ghost bar
-            switch bar {
-            case 7, 15, 23:
-                let t = at(barStart + 3.5)
-                events.append(BackingEvent(time: t) { ZapVoice(at: t, gain: 0.14, echoes: 2, spb: spb) })
-            case 27:
+            // the signature zap — every 8th bar at beat 3.5, answered in the
+            // peak's ghost bar, one long tail in the final bar
+            if bar == peak.upperBound - 1 {
                 let t = at(barStart + 1.5)
                 events.append(BackingEvent(time: t) { ZapVoice(at: t, gain: 0.16, echoes: 3, spb: spb) })
-            case 31:
+            } else if bar == track.bars - 1 {
                 let t = at(barStart + 2)
                 events.append(BackingEvent(time: t) { ZapVoice(at: t, gain: 0.15, echoes: 4, spb: spb) })
-            default: break
+            } else if bar % 8 == 7 {
+                let t = at(barStart + 3.5)
+                events.append(BackingEvent(time: t) { ZapVoice(at: t, gain: 0.14, echoes: 2, spb: spb) })
             }
 
-            // riser out of the breakdown, landing exactly on the drop
-            if bar == 19 {
+            // riser out of the last breakdown bar, landing exactly on the drop
+            if bar == breakdownRange.upperBound - 1 {
                 let t = at(barStart + 0.5)
                 events.append(BackingEvent(time: t) { RiserVoice(at: t, dur: at(3.5)) })
             }
         }
 
-        return BackingPlan(events: events, kickTimes: kicks, dropTime: at(80))
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: at(dropBeat))
     }
 
     // ttd·04 — distorted kick every beat, offbeat hats, claps at the peak.
@@ -326,21 +381,26 @@ enum BackingComposer {
         var events: [BackingEvent] = []
         var kicks: [Double] = []
 
+        let intro = track.sectionRange(.intro)
+        let breakdownRange = track.sectionRange(.breakdown)        // ttd04: 16..<18
+        let peakRange = track.sectionRange(.peak)                  // ttd04: 18..<28
+        let hatsFrom = intro.lowerBound + intro.count / 2          // 2
+
         for half in 0..<(track.bars * 8) {
             let halfBeat = Double(half) * 0.5
             let t = halfBeat * spb
             let bar = half / 8
             let inBar = halfBeat - Double(bar * 4)
             let isWhole = inBar.truncatingRemainder(dividingBy: 1) == 0
-            let breakdown = bar >= 16 && bar < 18
-            let peak = bar >= 18 && bar < 28
+            let breakdown = breakdownRange.contains(bar)
+            let peak = peakRange.contains(bar)
 
             if isWhole && !breakdown {
                 let accent = inBar == 0
                 events.append(BackingEvent(time: t) { KickVoice.gabber(at: t, accent: accent) })
                 kicks.append(t)
             }
-            if !isWhole && bar >= 2 {
+            if !isWhole && bar >= hatsFrom {
                 events.append(BackingEvent(time: t) { HatVoice.minimal(at: t, open: false, seed: UInt64(half) &+ 41) })
             }
             if isWhole && (inBar == 1 || inBar == 3) && peak {

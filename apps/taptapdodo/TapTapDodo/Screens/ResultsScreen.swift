@@ -9,7 +9,7 @@ struct ResultsScreen: View {
     @State private var copied = false
 
     var body: some View {
-        let skin = Skin.forTrack(config.trackId)
+        let skin = Skin.forTrack(app.library.byId(config.trackId)?.skinRef ?? config.trackId)
         let result = app.lastResult
 
         ZStack {

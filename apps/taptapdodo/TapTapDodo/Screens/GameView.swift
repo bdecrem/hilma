@@ -15,7 +15,8 @@ struct GameView: View {
                            preferredFramesPerSecond: UIScreen.main.maximumFramesPerSecond)
                     .ignoresSafeArea()
             } else {
-                Skin.forTrack(config.trackId).background.ui.ignoresSafeArea()
+                Skin.forTrack(app.library.byId(config.trackId)?.skinRef ?? config.trackId)
+                    .background.ui.ignoresSafeArea()
             }
         }
         .onAppear { buildSceneIfNeeded() }
@@ -26,16 +27,18 @@ struct GameView: View {
     }
 
     private func buildSceneIfNeeded() {
-        guard scene == nil, let track = TrackDef.byId(config.trackId) else { return }
+        guard scene == nil, let track = app.library.byId(config.trackId) else { return }
         let chart = ChartGenerator.generate(track: track, seed: config.seed)
         let finish = app.finishRun
+        let exit: () -> Void = { [weak app] in app?.route = .setSelect }
         scene = GameScene(size: UIScreen.main.bounds.size,
                           track: track,
                           chart: chart,
-                          skin: Skin.forTrack(track.id),
+                          skin: Skin.forTrack(track.skinRef),
                           config: config,
                           settings: app.runSettings,
                           haptics: app.haptics,
-                          onFinish: { result in finish(result) })
+                          onFinish: { result in finish(result) },
+                          onExit: exit)
     }
 }

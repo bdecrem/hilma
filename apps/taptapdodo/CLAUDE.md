@@ -70,6 +70,57 @@ scoring) and the audio DSP compile standalone on macOS — no simulator needed:
   each set to a float buffer and check per-second peak/RMS — silence, NaN, or
   clipping means a regression.
 
+## In-game pause button
+
+During a run a small "‖" glyph (two `SKShapeNode` bars) sits top-center on the
+HUD line, between the score and combo, respecting the safe-area inset. Tapping
+inside its ~44pt hit rect (`pauseButtonRect`, checked in `touchesBegan` BEFORE
+lane judgment so it never eats a lane tap) calls `pauseGame()`. The paused
+overlay is now two explicit skinned buttons — **resume** (`resumeGame()`) and
+**exit** (`exitRun()` → `onExit` closure → `app.route = .setSelect`), hit-tested
+by node `name` via `nodes(at:)`. Tap-anywhere-to-resume is gone. Backgrounding
+and audio interruptions still auto-pause. `abort()` is idempotent (scheduler
+stop / voice flush / conductor pause run exactly once) since exit, finish and
+the view's `onDisappear` can race.
+
+## Online track store
+
+Tracks can live server-side and be downloaded into the app like a built-in set.
+
+- **Track pack format v1** (`Charts/TrackPack.swift`): a JSON pack reuses a
+  built-in synthesis family (`backingStyle` ∈ origin/minimal/detroit/afters/
+  gabber) and a built-in skin (`skinRef`, a ttd id) but carries its own
+  skeleton — bpm, bars, travel, swing, `sections` (kind + start/end bars) and
+  `patternBank` (kind → `[[[offsetEighth, lane], ...], ...]`). `toTrackDef()`
+  validates and converts; it fails loudly on bad fields.
+- **`TrackDef`** gained `backingStyle` (defaults to an id-based mapping for the
+  five built-ins) and `skinRef` (defaults to own id). `BackingComposer.plan`,
+  `Skin.forTrack`, and the GameScene tap/ghost/masterGain switches all dispatch
+  on `backingStyle`/`skinRef`, not raw id, so packs Just Work.
+- **Composers follow `track.sections`.** Every entrance/breakdown/ghost-bar
+  boundary is derived from `track.sectionRange(_:)` (not hardcoded bars), so a
+  pack with a different length/layout sounds right. Built-in output is
+  bit-identical to the pre-refactor code (verified by diffing event streams).
+- **`Services/TrackLibrary.swift`** (`@MainActor ObservableObject`): built-ins +
+  packs decoded from `Application Support/taptapdodo/tracks/*.json`. `allPlayable`,
+  `byId` (used everywhere `TrackDef.byId` was), `fetchOnline()`, `download(id)`,
+  `ensurePlayable(id)`. The set-select pager appends one card per online/
+  downloaded track after the built-ins; fetch failure is silent (never blocks
+  on network). The `TTD_AUTORUN` / deep-link path downloads an online-only
+  track before starting the run.
+
+### Backend (Next.js, this repo)
+
+- Table `ttd_tracks (id text pk, name text, payload jsonb, created_at)` —
+  `apps/taptapdodo/schema/001_ttd_tracks.sql`. Reuses the F2 Supabase env
+  (`SUPABASE_URL` / `SUPABASE_SERVICE_KEY`) via the lazy getter in
+  `src/lib/ttd/supabase.ts`.
+- Routes: `GET /api/ttd/tracks` (list: id/name/genreLine/bpm/bars from payload),
+  `GET /api/ttd/tracks/[id]` (full payload). Base URL hardcoded in
+  `TrackLibrary` as `https://hilma-nine.vercel.app`.
+- Seed: `node scripts/ttd-seed-track.mjs` upserts the ttd06 "warehouse" test
+  track (afters family, ttd02 skin, 127 bpm, 36 bars).
+
 ## Architecture notes
 
 - `Game/Conductor.swift` owns musical time (mach host time → song seconds).

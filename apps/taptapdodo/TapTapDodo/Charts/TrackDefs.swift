@@ -16,6 +16,42 @@ struct TrackDef {
     let patternBank: [SectionKind: [Pattern]]
     /// Scale tones for melodic sets (Hz), indexed by ChartNote.pitchIndex.
     let scaleTones: [Double]
+    /// Which BackingComposer arrangement + tap/ghost voices + masterGain
+    /// family this track uses ("origin"/"minimal"/"detroit"/"afters"/"gabber").
+    /// Downloaded packs reuse a built-in family with their own skeleton.
+    let backingStyle: String
+    /// Which of the built-in Skins to render with (a ttd id, e.g. "ttd02").
+    let skinRef: String
+
+    init(id: String, index: Int, name: String, genreLine: String, bpm: Double,
+         bars: Int, travel: Double, swing: Double, melodic: Bool,
+         sections: [Section], patternBank: [SectionKind: [Pattern]],
+         scaleTones: [Double], backingStyle: String? = nil, skinRef: String? = nil) {
+        self.id = id
+        self.index = index
+        self.name = name
+        self.genreLine = genreLine
+        self.bpm = bpm
+        self.bars = bars
+        self.travel = travel
+        self.swing = swing
+        self.melodic = melodic
+        self.sections = sections
+        self.patternBank = patternBank
+        self.scaleTones = scaleTones
+        self.backingStyle = backingStyle ?? TrackDef.defaultStyle(forId: id)
+        self.skinRef = skinRef ?? id
+    }
+
+    private static func defaultStyle(forId id: String) -> String {
+        switch id {
+        case "ttd01": return "origin"
+        case "ttd02": return "minimal"
+        case "ttd03": return "detroit"
+        case "ttd05": return "afters"
+        default: return "gabber"
+        }
+    }
 
     var secondsPerBeat: Double { 60.0 / bpm }
     var totalBeats: Double { Double(bars * 4) }
@@ -24,6 +60,12 @@ struct TrackDef {
 
     func section(atBar bar: Int) -> Section {
         sections.first { $0.bars.contains(bar) } ?? sections[sections.count - 1]
+    }
+
+    /// Bar range of the first section of the given kind, or an empty range.
+    /// Composers derive every entrance/breakdown boundary from these.
+    func sectionRange(_ kind: SectionKind) -> Range<Int> {
+        sections.first { $0.kind == kind }?.bars ?? 0..<0
     }
 
     static func byId(_ id: String) -> TrackDef? { all.first { $0.id == id } }
