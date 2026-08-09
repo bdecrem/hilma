@@ -1,7 +1,10 @@
 import SpriteKit
 
-/// The mascot. Sits centered below the hit line in every set; every behavior
-/// is clock-driven from song time (never SKActions — pause/resume stays free).
+/// The mascot — the actual Dodo brand character, ported from the Feynd app's
+/// vector art (apps/feynd/Feynd/DodoArt.swift): slate head, cream hooded
+/// face, sprout, marigold beak and feet. Same art in every set; the per-set
+/// styles only change how it moves. Every behavior is clock-driven from song
+/// time (never SKActions — pause/resume stays free).
 final class DodoNode: SKNode {
     private let style: DodoStyle
     private let size: CGFloat
@@ -11,13 +14,27 @@ final class DodoNode: SKNode {
     var lastPeck: Double = -10
     var lastSad: Double = -10
     var combo: Int = 0
-    private var flourishStart: Double = -10
 
-    private let bodyGroup = SKNode()
+    private let figure = SKNode()
     private let headGroup = SKNode()
-    private var eyeDot: SKShapeNode?
-    private var eyeLine: SKShapeNode?
-    private var glasses: SKNode?
+    private var sprout = SKNode()
+    private var eyeGroups: [SKNode] = []
+    private var k: CGFloat { size / 75 }   // art units → points
+
+    // Brand colors (BRANDING.md — the character never re-tints per skin)
+    private enum Ink {
+        static let slate = SKColor(hex: 0x7C9EB2)
+        static let wing = SKColor(hex: 0x6A8FA3)
+        static let cream = SKColor(hex: 0xF9EFDA)
+        static let eye = SKColor(hex: 0x33383E)
+        static let beak = SKColor(hex: 0xF0A830)
+        static let nostril = SKColor(hex: 0xC9821F)
+        static let blush = SKColor(hex: 0xF2A19A)
+        static let feet = SKColor(hex: 0xF0A830)
+        static let sproutStem = SKColor(hex: 0x6FAE5C)
+        static let sproutLeft = SKColor(hex: 0x7BB662)
+        static let sproutRight = SKColor(hex: 0x5F9E4C)
+    }
 
     init(style: DodoStyle, size: CGFloat, spb: Double) {
         self.style = style
@@ -29,135 +46,113 @@ final class DodoNode: SKNode {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    // MARK: - Construction
+    // MARK: - Construction (art space: head center (0,0), y-up, ×k)
 
-    private struct Palette {
-        let body: SKColor
-        let shade: SKColor
-        let accent: SKColor   // beak + legs
-        let eye: SKColor
-        let line: SKColor
-        let lineWidth: CGFloat
-        let filled: Bool
-    }
-
-    private var palette: Palette {
-        switch style {
-        case .originFilled:
-            return Palette(body: SKColor(hex: 0xCFC8BC), shade: SKColor(hex: 0xB8B0A2),
-                           accent: SKColor(hex: 0xFFB454), eye: SKColor(hex: 0x12101C),
-                           line: .clear, lineWidth: 0, filled: true)
-        case .minimalLine:
-            return Palette(body: .clear, shade: .clear,
-                           accent: SKColor(hex: 0xF2F2F0), eye: SKColor(hex: 0xF2F2F0),
-                           line: SKColor(hex: 0xF2F2F0), lineWidth: 1.5, filled: false)
-        case .detroitLine:
-            return Palette(body: .clear, shade: .clear,
-                           accent: SKColor(hex: 0xDDE2EC), eye: SKColor(hex: 0xDDE2EC),
-                           line: SKColor(hex: 0xC9C2E8), lineWidth: 1.5, filled: false)
-        case .gabberLine:
-            return Palette(body: .clear, shade: .clear,
-                           accent: SKColor(hex: 0xFF2B2B), eye: SKColor(hex: 0xFF2B2B),
-                           line: SKColor(hex: 0xFF2B2B), lineWidth: 2, filled: false)
-        }
-    }
-
-    private func shape(_ path: CGPath, fill: SKColor?, stroke: SKColor?, width: CGFloat) -> SKShapeNode {
+    private func fillNode(_ path: CGPath, _ color: SKColor, alpha: CGFloat = 1) -> SKShapeNode {
         let node = SKShapeNode(path: path)
-        node.fillColor = fill ?? .clear
-        node.strokeColor = stroke ?? .clear
-        node.lineWidth = width
-        node.lineCap = .round
+        node.fillColor = color.withAlphaComponent(alpha)
+        node.strokeColor = .clear
         node.isAntialiased = true
         return node
     }
 
+    private func ellipse(cx: CGFloat, cy: CGFloat, rx: CGFloat, ry: CGFloat) -> CGPath {
+        CGPath(ellipseIn: CGRect(x: (cx - rx) * k, y: (cy - ry) * k,
+                                 width: rx * 2 * k, height: ry * 2 * k), transform: nil)
+    }
+
+    private func rounded(cx: CGFloat, cy: CGFloat, w: CGFloat, h: CGFloat, r: CGFloat) -> CGPath {
+        CGPath(roundedRect: CGRect(x: (cx - w / 2) * k, y: (cy - h / 2) * k,
+                                   width: w * k, height: h * k),
+               cornerWidth: r * k, cornerHeight: r * k, transform: nil)
+    }
+
     private func build() {
-        let s = size
-        let p = palette
-        let stroke: SKColor? = p.filled ? nil : p.line
-        let fillBody: SKColor? = p.filled ? p.body : nil
-        let fillShade: SKColor? = p.filled ? p.shade : nil
+        addChild(figure)
+        figure.position = CGPoint(x: 0, y: 26 * k)   // center the mass on the node
 
-        addChild(bodyGroup)
+        // legs + feet (art y 44…58 below head → negative here)
+        figure.addChild(fillNode(rounded(cx: -6, cy: -50, w: 6, h: 12, r: 3), Ink.feet))
+        figure.addChild(fillNode(rounded(cx: 6, cy: -50, w: 6, h: 12, r: 3), Ink.feet))
+        figure.addChild(fillNode(rounded(cx: -7, cy: -55.5, w: 12, h: 5, r: 2.5), Ink.feet))
+        figure.addChild(fillNode(rounded(cx: 7, cy: -55.5, w: 12, h: 5, r: 2.5), Ink.feet))
 
-        // body
-        let body = CGPath(ellipseIn: CGRect(x: -0.52 * s, y: -0.44 * s, width: 1.04 * s, height: 0.88 * s), transform: nil)
-        bodyGroup.addChild(shape(body, fill: fillBody, stroke: stroke, width: p.lineWidth))
+        // body + belly
+        figure.addChild(fillNode(ellipse(cx: 0, cy: -32, rx: 20, ry: 16), Ink.slate))
+        figure.addChild(fillNode(ellipse(cx: 0, cy: -35, rx: 12, ry: 10), Ink.cream))
 
-        // wing
-        var wingTransform = CGAffineTransform(translationX: -0.1 * s, y: -0.05 * s).rotated(by: 0.3)
-        let wingRect = CGRect(x: -0.26 * s, y: -0.18 * s, width: 0.52 * s, height: 0.36 * s)
-        let wing = CGPath(ellipseIn: wingRect, transform: &wingTransform)
-        bodyGroup.addChild(shape(wing, fill: fillShade, stroke: stroke, width: p.lineWidth))
-
-        // tail
-        if p.filled {
-            for i in 0..<3 {
-                let fi = CGFloat(i)
-                var tf = CGAffineTransform(translationX: -0.5 * s, y: (0.05 + fi * 0.07) * s).rotated(by: 0.6 + fi * 0.3)
-                let tail = CGPath(ellipseIn: CGRect(x: -0.12 * s, y: -0.06 * s, width: 0.24 * s, height: 0.12 * s), transform: &tf)
-                bodyGroup.addChild(shape(tail, fill: fillShade, stroke: nil, width: 0))
-            }
-        } else {
-            for i in 0..<3 {
-                let fi = CGFloat(i)
-                let path = CGMutablePath()
-                path.move(to: CGPoint(x: -0.42 * s, y: (0.02 + fi * 0.06) * s))
-                path.addLine(to: CGPoint(x: -0.62 * s, y: (0.12 + fi * 0.09) * s))
-                bodyGroup.addChild(shape(path, fill: nil, stroke: stroke, width: p.lineWidth))
-            }
+        // wings — rounded rects rotated at their pivots
+        for (px, rot) in [(-23.0, 0.35), (23.0, -0.35)] {
+            let wing = fillNode(rounded(cx: 0, cy: 0, w: 14, h: 11, r: 5.5), Ink.wing)
+            wing.position = CGPoint(x: px * k, y: -29.5 * k)
+            wing.zRotation = rot
+            figure.addChild(wing)
         }
 
-        // legs
-        let legs = CGMutablePath()
-        legs.move(to: CGPoint(x: -0.1 * s, y: -0.4 * s))
-        legs.addLine(to: CGPoint(x: -0.12 * s, y: -0.62 * s))
-        legs.move(to: CGPoint(x: 0.12 * s, y: -0.4 * s))
-        legs.addLine(to: CGPoint(x: 0.14 * s, y: -0.62 * s))
-        bodyGroup.addChild(shape(legs, fill: nil, stroke: p.filled ? p.accent : p.line,
-                                 width: p.filled ? 0.05 * s : p.lineWidth))
+        figure.addChild(headGroup)
+        buildHead()
+    }
 
-        // head group (head + beak + face), positioned at the neck
-        headGroup.position = CGPoint(x: 0.38 * s, y: 0.42 * s)
-        bodyGroup.addChild(headGroup)
+    private func buildHead() {
+        // sprout (art y −26…−39 above head → positive here)
+        let stem = CGMutablePath()
+        stem.move(to: p(-0.9, -26))
+        stem.addCurve(to: p(2.2, -32), control1: p(-1.1, -28.6), control2: p(-0.4, -30.3))
+        stem.addCurve(to: p(1.3, -26), control1: p(2.8, -30.7), control2: p(2.2, -28.6))
+        stem.closeSubpath()
 
-        let head = CGPath(ellipseIn: CGRect(x: -0.26 * s, y: -0.26 * s, width: 0.52 * s, height: 0.52 * s), transform: nil)
-        headGroup.addChild(shape(head, fill: fillBody, stroke: stroke, width: p.lineWidth))
+        let leafL = CGMutablePath()
+        leafL.move(to: p(0.9, -30.9))
+        leafL.addCurve(to: p(-16.1, -34.4), control1: p(-3.9, -36.5), control2: p(-11.3, -37.4))
+        leafL.addCurve(to: p(0.9, -30.9), control1: p(-13.9, -28.7), control2: p(-5.7, -27.4))
+        leafL.closeSubpath()
 
-        // beak — the big hooked dodo beak
-        let beak = CGMutablePath()
-        beak.move(to: CGPoint(x: 0.16 * s, y: 0.1 * s))
-        beak.addQuadCurve(to: CGPoint(x: 0.55 * s, y: -0.12 * s), control: CGPoint(x: 0.62 * s, y: 0.12 * s))
-        beak.addQuadCurve(to: CGPoint(x: 0.14 * s, y: -0.1 * s), control: CGPoint(x: 0.35 * s, y: -0.22 * s))
-        beak.closeSubpath()
-        headGroup.addChild(shape(beak, fill: p.filled ? p.accent : nil, stroke: stroke, width: p.lineWidth))
+        let leafR = CGMutablePath()
+        leafR.move(to: p(1.7, -32.2))
+        leafR.addCurve(to: p(16.1, -37.8), control1: p(3.9, -37.8), control2: p(10.9, -39.6))
+        leafR.addCurve(to: p(1.7, -32.2), control1: p(15.2, -32.2), control2: p(8.3, -29.2))
+        leafR.closeSubpath()
 
-        switch style {
-        case .originFilled:
-            // round eye + blink line, swapped by the clock
-            let eye = shape(CGPath(ellipseIn: CGRect(x: -0.01 * s, y: 0.0 * s, width: 0.1 * s, height: 0.1 * s), transform: nil),
-                            fill: p.eye, stroke: nil, width: 0)
+        sprout = SKNode()
+        sprout.addChild(fillNode(stem, Ink.sproutStem))
+        sprout.addChild(fillNode(leafL, Ink.sproutLeft))
+        sprout.addChild(fillNode(leafR, Ink.sproutRight))
+        headGroup.addChild(sprout)
+
+        // head + hooded cream face
+        headGroup.addChild(fillNode(ellipse(cx: 0, cy: 0, rx: 26, ry: 26), Ink.slate))
+
+        let face = CGMutablePath()
+        face.move(to: p(-20, 4))
+        face.addCurve(to: p(-6.5, -12), control1: p(-20, -7), control2: p(-15, -13))
+        face.addQuadCurve(to: p(6.5, -12), control: p(0, -7.5))
+        face.addCurve(to: p(20, 4), control1: p(15, -13), control2: p(20, -7))
+        face.addCurve(to: p(0, 24), control1: p(20, 16), control2: p(11, 24))
+        face.addCurve(to: p(-20, 4), control1: p(-11, 24), control2: p(-20, 16))
+        face.closeSubpath()
+        headGroup.addChild(fillNode(face, Ink.cream))
+
+        // eyes with highlights, grouped so the blink can squash them
+        eyeGroups = []
+        for sx in [-1.0, 1.0] {
+            let eye = SKNode()
+            eye.position = CGPoint(x: sx * 9.4 * k, y: -2 * k)
+            eye.addChild(fillNode(ellipse(cx: 0, cy: 0, rx: 5.5, ry: 5.5), Ink.eye))
+            eye.addChild(fillNode(ellipse(cx: -sx * 1.8, cy: 2, rx: 2.1, ry: 2.1), .white))
             headGroup.addChild(eye)
-            eyeDot = eye
-            let line = shape(CGPath(rect: CGRect(x: -0.02 * s, y: 0.02 * s, width: 0.12 * s, height: 0.03 * s), transform: nil),
-                             fill: p.eye, stroke: nil, width: 0)
-            line.isHidden = true
-            headGroup.addChild(line)
-            eyeLine = line
-        case .minimalLine, .detroitLine, .gabberLine:
-            // sunglasses: the one solid shape on the bird
-            let g = SKNode()
-            let lens = shape(CGPath(rect: CGRect(x: -0.12 * s, y: 0.01 * s, width: 0.28 * s, height: 0.11 * s), transform: nil),
-                             fill: p.accent, stroke: nil, width: 0)
-            g.addChild(lens)
-            let arm = CGMutablePath()
-            arm.move(to: CGPoint(x: -0.12 * s, y: 0.08 * s))
-            arm.addLine(to: CGPoint(x: -0.26 * s, y: 0.12 * s))
-            g.addChild(shape(arm, fill: nil, stroke: p.line, width: p.lineWidth))
-            headGroup.addChild(g)
-            glasses = g
+            eyeGroups.append(eye)
         }
+
+        // beak + nostrils + blush
+        headGroup.addChild(fillNode(ellipse(cx: 0, cy: -6.3, rx: 6.8, ry: 5), Ink.beak))
+        headGroup.addChild(fillNode(ellipse(cx: -2.6, cy: -5, rx: 0.95, ry: 0.95), Ink.nostril))
+        headGroup.addChild(fillNode(ellipse(cx: 2.6, cy: -5, rx: 0.95, ry: 0.95), Ink.nostril))
+        headGroup.addChild(fillNode(ellipse(cx: -15.6, cy: -8.4, rx: 4.2, ry: 2.6), Ink.blush, alpha: 0.6))
+        headGroup.addChild(fillNode(ellipse(cx: 15.6, cy: -8.4, rx: 4.2, ry: 2.6), Ink.blush, alpha: 0.6))
+    }
+
+    private func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+        CGPoint(x: x * k, y: -y * k)   // art is y-down; SpriteKit is y-up
     }
 
     // MARK: - Clock-driven behavior
@@ -186,42 +181,40 @@ final class DodoNode: SKNode {
 
         // combo flourishes
         if combo >= 30 {
-            if flourishStart < 0 { flourishStart = now }
             switch style {
             case .originFilled:
                 // little hop on each beat
                 dy += CGFloat(max(0, 1 - beatPhase * 3)) * s * 0.1
             case .minimalLine:
-                // lowers the sunglasses briefly, then back up
-                let age = now - flourishStart
-                if age < 1.2, let glasses {
-                    let k = CGFloat(sin(min(1, age / 1.2) * .pi))
-                    glasses.position = CGPoint(x: 0, y: -0.06 * s * k)
-                }
+                // the sprout dances
+                sprout.zRotation = CGFloat(sin(now * .pi * 2 / spb)) * 0.35
             case .detroitLine:
                 rotation = CGFloat(sin(now * .pi / spb / 2)) * 0.07
             case .gabberLine:
                 headGroup.zRotation = -CGFloat(max(0, 1 - beatPhase * 3)) * 0.45
             }
         } else {
-            flourishStart = -10
-            glasses?.position = .zero
+            sprout.zRotation = 0
             if style == .gabberLine { headGroup.zRotation = 0 }
         }
 
-        bodyGroup.position = CGPoint(x: 0, y: dy)
-        bodyGroup.zRotation = rotation
+        figure.position = CGPoint(x: 0, y: 26 * k + dy)
+        figure.zRotation = rotation
 
-        // head dips into the peck
-        let headDip: CGFloat = pecking ? -0.09 * s : 0
-        headGroup.position = CGPoint(x: 0.38 * s, y: 0.42 * s + headDip)
+        // head dips (and tips forward) into the peck
+        if pecking {
+            headGroup.position = CGPoint(x: 0, y: -0.09 * s)
+            if style != .gabberLine || combo < 30 { headGroup.zRotation = -0.15 }
+        } else {
+            headGroup.position = .zero
+            if style != .gabberLine || combo < 30 { headGroup.zRotation = 0 }
+        }
 
-        // origin face: blink + 0.5s sad eyes. minimal: no reaction, too cool.
-        if style == .originFilled {
-            let sad = sadAge >= 0 && sadAge < 0.5
-            let blink = sin(now * 0.7) > 0.995 || sad
-            eyeDot?.isHidden = blink
-            eyeLine?.isHidden = !blink
+        // blink (everyone) + 0.5s sad squint (origin keeps its feelings)
+        let sad = style == .originFilled && sadAge >= 0 && sadAge < 0.5
+        let blink = sin(now * 0.7) > 0.995 || sad
+        for group in eyeGroups {
+            group.yScale = blink ? 0.15 : 1
         }
     }
 }
