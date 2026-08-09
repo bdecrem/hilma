@@ -23,10 +23,22 @@ xcodebuild -project TapTapDodo.xcodeproj -scheme TapTapDodo \
   -destination 'generic/platform=iOS Simulator' build       # must say BUILD SUCCEEDED
 ```
 
-Device signing: this bundle ID has no provisioning profile yet. First device
-build must go through the Xcode GUI (signed-in account mints the profile);
-after that, CLI `-destination 'generic/platform=iOS'` works. Until then use
-`CODE_SIGNING_ALLOWED=NO` to verify the arm64 compile.
+Device signing: no Apple ID is signed into Xcode on this machine, so
+`-allowProvisioningUpdates` fails ("No Accounts"). Profiles are minted via
+the App Store Connect API instead — key `~/.appstoreconnect/private_keys/
+AuthKey_5A5HNSWA33.p8`, issuer ID in the taptapdodo memory file. The dev
+profile "taptapdodo dev" (expires 2027-08) is installed in
+`~/Library/Developer/Xcode/UserData/Provisioning Profiles/`. Signed build +
+install:
+
+```bash
+xcodebuild -project TapTapDodo.xcodeproj -scheme TapTapDodo \
+  -destination 'generic/platform=iOS' -derivedDataPath build-device \
+  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=taptapdodo dev" \
+  "CODE_SIGN_IDENTITY=Apple Development" build
+xcrun devicectl device install app --device <device-uuid> \
+  build-device/Build/Products/Debug-iphoneos/TapTapDodo.app
+```
 
 ## Verify behavior (not just compile)
 
