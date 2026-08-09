@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>TAP TAP DODO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #12101C;
+    --ink2: #1B1830;
+    --cream: #F5EFE6;
+    --pink: #FF4D8F;
+    --amber: #FFB454;
+    --teal: #3EE6C1;
+    --dim: #6B6580;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Space Grotesk', -apple-system, sans-serif;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  #stage { position: fixed; inset: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px; padding: 32px 24px;
+    background: radial-gradient(120% 90% at 50% 0%, var(--ink2) 0%, var(--ink) 70%);
+    z-index: 10; text-align: center;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .hidden { display: none !important; }
+
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--dim); font-weight: 500;
+  }
+  h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 900;
+    font-size: clamp(38px, 11vw, 64px);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+  }
+  h1 .tap1 { color: var(--pink); }
+  h1 .tap2 { color: var(--amber); }
+  h1 .dodo { color: var(--cream); display: block; }
+  .sub { color: var(--dim); font-size: 14px; max-width: 280px; line-height: 1.5; }
+
+  .bigbtn {
+    margin-top: 18px;
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 700; font-size: 16px;
+    letter-spacing: 0.06em;
+    color: var(--ink);
+    background: var(--cream);
+    border: none; border-radius: 999px;
+    padding: 18px 44px;
+    box-shadow: 0 0 0 0 rgba(255,77,143,0.5);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255,77,143,0.45); }
+    70% { box-shadow: 0 0 0 18px rgba(255,77,143,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,77,143,0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bigbtn { animation: none; }
+  }
+
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 14px 18px;
+    padding-top: calc(env(safe-area-inset-top) + 10px);
+    z-index: 5; pointer-events: none;
+  }
+  #score { font-family: 'Unbounded', sans-serif; font-weight: 700; font-size: 22px; }
+  #combo {
+    font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 15px;
+    color: var(--amber); text-align: right; min-height: 20px;
+  }
+  #judge {
+    position: absolute; left: 0; right: 0; top: 34%;
+    text-align: center; z-index: 5; pointer-events: none;
+    font-family: 'Unbounded', sans-serif; font-weight: 900;
+    font-size: 26px; letter-spacing: 0.05em;
+    opacity: 0; transform: scale(0.8);
+    transition: opacity 0.1s, transform 0.1s;
+  }
+  #judge.show { opacity: 1; transform: scale(1); }
+
+  .grade {
+    font-family: 'Unbounded', sans-serif; font-weight: 900;
+    font-size: 96px; line-height: 1; color: var(--teal);
+  }
+  .stats { display: flex; gap: 26px; margin-top: 6px; }
+  .stat { display: flex; flex-direction: column; gap: 4px; }
+  .stat b { font-family: 'Unbounded', sans-serif; font-size: 20px; }
+  .stat span { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--dim); }
+  .flavor { color: var(--dim); font-size: 14px; max-width: 300px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="score">0</div>
+    <div id="combo"></div>
+  </div>
+  <div id="judge"></div>
+
+  <div id="startScreen" class="screen">
+    <div class="eyebrow">est. extinct · back for one more set</div>
+    <h1><span class="tap1">TAP</span> <span class="tap2">TAP</span><span class="dodo">DODO</span></h1>
+    <p class="sub">Three lanes. One synth track. Tap when the notes hit the line. The dodo pecks the rest.</p>
+    <button class="bigbtn" id="startBtn">PLAY</button>
+    <p class="sub" style="font-size:12px">Sound on. Headphones better.</p>
+  </div>
+
+  <div id="endScreen" class="screen hidden">
+    <div class="eyebrow">set complete</div>
+    <div class="grade" id="gradeEl">A</div>
+    <div class="stats">
+      <div class="stat"><b id="finalScore">0</b><span>score</span></div>
+      <div class="stat"><b id="maxCombo">0</b><span>max combo</span></div>
+      <div class="stat"><b id="accEl">0%</b><span>accuracy</span></div>
+    </div>
+    <p class="flavor" id="flavorEl"></p>
+    <button class="bigbtn" id="againBtn">AGAIN</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = 1;
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---------- layout ----------
+  const LANES = 3;
+  const laneColors = ['#FF4D8F', '#FFB454', '#3EE6C1'];
+  function laneX(i) {
+    const pad = W * 0.08;
+    const w = (W - pad*2) / LANES;
+    return pad + w * i + w/2;
+  }
+  function laneW() { return (W * 0.84) / LANES; }
+  function hitY() { return H * 0.78; }
+
+  // ---------- audio ----------
+  const AC = window.AudioContext || window.webkitAudioContext;
+  let ac = null, master = null;
+  const BPM = 126;
+  const SPB = 60 / BPM; // seconds per beat
+
+  function initAudio() {
+    ac = new AC();
+    master = ac.createGain();
+    master.gain.value = 0.8;
+    const comp = ac.createDynamicsCompressor();
+    master.connect(comp); comp.connect(ac.destination);
+  }
+
+  function kick(t) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.setValueAtTime(150, t);
+    o.frequency.exponentialRampToValueAtTime(45, t + 0.11);
+    g.gain.setValueAtTime(0.9, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.25);
+  }
+  function hat(t, open) {
+    const len = open ? 0.18 : 0.05;
+    const buf = ac.createBuffer(1, ac.sampleRate * len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 2);
+    const s = ac.createBufferSource(); s.buffer = buf;
+    const f = ac.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
+    const g = ac.createGain(); g.gain.value = open ? 0.22 : 0.16;
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t);
+  }
+  function bass(t, freq) {
+    const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.value = freq;
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(900, t);
+    f.frequency.exponentialRampToValueAtTime(200, t + SPB * 0.9);
+    g.gain.setValueAtTime(0.28, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + SPB * 0.95);
+    o.connect(f); f.connect(g); g.connect(master);
+    o.start(t); o.stop(t + SPB);
+  }
+  function pluck(t, freq) {
+    const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'square'; o.frequency.value = freq;
+    f.type = 'lowpass'; f.frequency.value = 2600;
+    g.gain.setValueAtTime(0.16, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    o.connect(f); f.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.32);
+    // little octave shimmer
+    const o2 = ac.createOscillator(), g2 = ac.createGain();
+    o2.type = 'triangle'; o2.frequency.value = freq * 2;
+    g2.gain.setValueAtTime(0.07, t);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    o2.connect(g2); g2.connect(master);
+    o2.start(t); o2.stop(t + 0.24);
+  }
+  function pad(t, freqs, dur) {
+    freqs.forEach(fr => {
+      const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.value = fr; o.detune.value = (Math.random()*10-5);
+      f.type = 'lowpass'; f.frequency.value = 1100;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.05, t + dur*0.3);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      o.connect(f); f.connect(g); g.connect(master);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+
+  // ---------- song / chart ----------
+  // A minor. Bass roots per bar; lead notes are the playable chart.
+  const A2=110, C3=130.81, D3=146.83, E3=164.81, G2=98, F2=87.31;
+  const A3=220, B3=246.94, C4=261.63, D4=293.66, E4=329.63, G4=392, A4=440, C5=523.25, E5=659.25;
+
+  const BARS = 28; // ~53 seconds
+  const bassLine = [];
+  const chordSeq = [[A2,C3,E3],[F2,A2,C3],[C3,E3,G2*2],[G2,B3/2? B3/2:123.47,D3]];
+  const roots = [A2, F2, C3, G2];
+  for (let b = 0; b < BARS; b++) bassLine.push(roots[b % 4]);
+
+  // chart: {beat, lane, freq}
+  const chart = [];
+  const scaleTones = [A3, C4, D4, E4, G4, A4, C5, E5];
+  function toneForLane(lane, bar) {
+    const base = [0, 2, 4][lane] + (bar % 4);
+    return scaleTones[base % scaleTones.length];
+  }
+  // patterns per 4-bar phrase, in eighth-note offsets (0..7 per bar)
+  const phrases = [
+    // intro: sparse quarters
+    [[0,0],[2,1],[4,2],[6,1]],
+    // verse: syncopation
+    [[0,0],[3,1],[4,2],[6,0],[7,1]],
+    // build: denser
+    [[0,0],[2,2],[3,1],[4,0],[5,2],[6,1],[7,2]],
+    // drop: eighths with lane runs
+    [[0,0],[1,1],[2,2],[3,1],[4,0],[5,1],[6,2],[7,1]]
+  ];
+  for (let bar = 0; bar < BARS; bar++) {
+    let ph;
+    if (bar < 4) ph = phrases[0];
+    else if (bar < 12) ph = phrases[1];
+    else if (bar < 16) ph = phrases[2];
+    else if (bar < 24) ph = phrases[3];
+    else ph = phrases[1]; // outro
+    ph.forEach(([e, lane]) => {
+      const beat = bar * 4 + e * 0.5;
+      chart.push({ beat, lane, freq: toneForLane(lane, bar), hit: false, judged: false });
+    });
+  }
+  chart.sort((a,b) => a.beat - b.beat);
+
+  const TRAVEL = 1.75; // seconds a note is visible falling
+  const LEAD_IN = 3.2; // countdown before beat 0
+
+  // ---------- game state ----------
+  let running = false;
+  let songStart = 0;      // ac.currentTime at beat 0
+  let schedBeat = 0;      // next beat index to schedule audio for
+  let score = 0, combo = 0, maxCombo = 0;
+  let perfects = 0, goods = 0, misses = 0;
+  let flashes = [];       // {lane, t, quality}
+  let dodoState = { peck: 0, sad: 0, blink: 0 };
+  let raf = null;
+
+  const hud = document.getElementById('hud');
+  const scoreEl = document.getElementById('score');
+  const comboEl = document.getElementById('combo');
+  const judgeEl = document.getElementById('judge');
+
+  function songTime() { return ac.currentTime - songStart; }
+  function beatToTime(beat) { return beat * SPB; }
+  const totalBeats = BARS * 4;
+  const songLen = beatToTime(totalBeats) + 1.5;
+
+  // audio scheduler: schedule backing + chart plucks slightly ahead
+  function scheduleAudio() {
+    if (!running) return;
+    const ahead = songTime() + 0.25;
+    while (beatToTime(schedBeat * 0.5) < ahead && schedBeat < totalBeats * 2) {
+      const halfBeat = schedBeat * 0.5;
+      const t = songStart + beatToTime(halfBeat);
+      const bar = Math.floor(halfBeat / 4);
+      const inBar = halfBeat % 4;
+      const isWhole = inBar % 1 === 0;
+      if (t > ac.currentTime - 0.05) {
+        if (isWhole) {
+          kick(t);
+          if (inBar === 0) {
+            bass(t, bassLine[bar]);
+            if (bar % 2 === 0) pad(t, [A3/2 * (bar%4===0?1:0.89), A3, C4], SPB*4);
+          }
+          if (inBar === 2) bass(t, bassLine[bar] * 1.5);
+        }
+        hat(t + SPB*0.5*0, inBar === 3 && !isWhole);
+      }
+      schedBeat++;
+    }
+  }
+
+  // chart plucks are played on hit (reward) — and softly auto-played on miss window end
+  // so the melody survives even a bad run.
+
+  // ---------- input ----------
+  function laneFromX(x) {
+    const pad = W * 0.08;
+    if (x < pad) return 0;
+    if (x > W - pad) return LANES - 1;
+    return Math.min(LANES-1, Math.floor((x - pad) / ((W - pad*2)/LANES)));
+  }
+
+  function judge(lane) {
+    const now = songTime();
+    let best = null, bestDt = 1e9;
+    for (const n of chart) {
+      if (n.judged || n.lane !== lane) continue;
+      const dt = now - beatToTime(n.beat);
+      if (dt > 0.18) continue;
+      if (dt < -0.2) break;
+      if (Math.abs(dt) < Math.abs(bestDt)) { best = n; bestDt = dt; }
+    }
+    if (!best) return;
+    best.judged = true; best.hit = true;
+    const adt = Math.abs(bestDt);
+    let q, pts;
+    if (adt <= 0.065) { q = 'PERFECT'; pts = 100; perfects++; }
+    else if (adt <= 0.14) { q = 'GOOD'; pts = 50; goods++; }
+    else { q = 'GOOD'; pts = 25; goods++; }
+    combo++; maxCombo = Math.max(maxCombo, combo);
+    score += pts + Math.min(combo, 50) * 2;
+    pluck(ac.currentTime, best.freq);
+    flashes.push({ lane, t: now, q });
+    dodoState.peck = now;
+    showJudge(q, laneColors[lane]);
+    updateHud();
+  }
+
+  function miss(n) {
+    n.judged = true;
+    combo = 0; misses++;
+    // ghost note so the melody stays intact, quieter
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = n.freq;
+    g.gain.setValueAtTime(0.04, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
+    o.connect(g); g.connect(master);
+    o.start(); o.stop(ac.currentTime + 0.16);
+    dodoState.sad = songTime();
+    showJudge('MISS', '#6B6580');
+    updateHud();
+  }
+
+  let judgeTimer = null;
+  function showJudge(text, color) {
+    judgeEl.textContent = text;
+    judgeEl.style.color = color;
+    judgeEl.classList.add('show');
+    clearTimeout(judgeTimer);
+    judgeTimer = setTimeout(() => judgeEl.classList.remove('show'), 260);
+  }
+
+  function updateHud() {
+    scoreEl.textContent = score;
+    comboEl.textContent = combo >= 3 ? combo + '×' : '';
+  }
+
+  document.getElementById('stage').addEventListener('touchstart', (e) => {
+    if (!running) return;
+    e.preventDefault();
+    for (const t of e.changedTouches) judge(laneFromX(t.clientX));
+  }, { passive: false });
+  document.getElementById('stage').addEventListener('mousedown', (e) => {
+    if (!running) return;
+    judge(laneFromX(e.clientX));
+  });
+
+  // ---------- dodo ----------
+  function drawDodo(x, y, s, now) {
+    const peckAge = now - dodoState.peck;
+    const sadAge = now - dodoState.sad;
+    const pecking = peckAge >= 0 && peckAge < 0.16;
+    const sad = sadAge >= 0 && sadAge < 0.5;
+    const bob = Math.sin(now * Math.PI * 2 / SPB / 2) * s * 0.03;
+    const dip = pecking ? s * 0.12 : 0;
+
+    ctx.save();
+    ctx.translate(x, y + bob + dip);
+
+    // body
+    ctx.fillStyle = '#CFC8BC';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s*0.52, s*0.44, 0, 0, Math.PI*2);
+    ctx.fill();
+    // wing
+    ctx.fillStyle = '#B8B0A2';
+    ctx.beginPath();
+    ctx.ellipse(-s*0.1, s*0.05, s*0.26, s*0.18, -0.3, 0, Math.PI*2);
+    ctx.fill();
+    // tail poof
+    ctx.fillStyle = '#B8B0A2';
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.ellipse(-s*0.5, -s*0.05 - i*s*0.07, s*0.12, s*0.06, -0.6 - i*0.3, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // head
+    const hx = s*0.38, hy = -s*0.42 + (pecking ? s*0.1 : 0);
+    ctx.fillStyle = '#CFC8BC';
+    ctx.beginPath();
+    ctx.arc(hx, hy, s*0.26, 0, Math.PI*2);
+    ctx.fill();
+    // beak — big hooked dodo beak
+    ctx.fillStyle = '#FFB454';
+    ctx.beginPath();
+    ctx.moveTo(hx + s*0.16, hy - s*0.1);
+    ctx.quadraticCurveTo(hx + s*0.62, hy - s*0.12, hx + s*0.55, hy + s*0.12);
+    ctx.quadraticCurveTo(hx + s*0.35, hy + s*0.22, hx + s*0.14, hy + s*0.1);
+    ctx.closePath();
+    ctx.fill();
+    // eye
+    const blink = Math.sin(now * 0.7) > 0.995 || sad;
+    ctx.fillStyle = '#12101C';
+    if (blink) {
+      ctx.fillRect(hx - s*0.02, hy - s*0.05, s*0.12, s*0.03);
+    } else {
+      ctx.beginPath();
+      ctx.arc(hx + s*0.04, hy - s*0.05, s*0.05, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // legs
+    ctx.strokeStyle = '#FFB454'; ctx.lineWidth = s*0.05; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-s*0.1, s*0.4); ctx.lineTo(-s*0.12, s*0.62);
+    ctx.moveTo(s*0.12, s*0.4); ctx.lineTo(s*0.14, s*0.62);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- render ----------
+  function render() {
+    if (!running) return;
+    const now = songTime();
+    scheduleAudio();
+
+    // auto-miss passed notes
+    for (const n of chart) {
+      if (!n.judged && now - beatToTime(n.beat) > 0.18) miss(n);
+    }
+
+    ctx.clearRect(0, 0, W, H);
+
+    // background glow synced to beat
+    const beatPhase = (now / SPB) % 1;
+    const glow = Math.max(0, 1 - beatPhase * 3) * 0.06;
+    const grad = ctx.createRadialGradient(W/2, H*0.85, 0, W/2, H*0.85, H*0.9);
+    grad.addColorStop(0, `rgba(255,77,143,${0.05 + glow})`);
+    grad.addColorStop(1, 'rgba(18,16,28,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    const hy = hitY();
+    const lw = laneW();
+
+    // lanes
+    for (let i = 0; i < LANES; i++) {
+      const x = laneX(i);
+      ctx.strokeStyle = 'rgba(245,239,230,0.07)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x - lw/2 + 6, 0); ctx.lineTo(x - lw/2 + 6, hy);
+      ctx.moveTo(x + lw/2 - 6, 0); ctx.lineTo(x + lw/2 - 6, hy);
+      ctx.stroke();
+    }
+
+    // hit line
+    ctx.strokeStyle = 'rgba(245,239,230,0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(W*0.06, hy); ctx.lineTo(W*0.94, hy);
+    ctx.stroke();
+    // lane hit pads
+    for (let i = 0; i < LANES; i++) {
+      const x = laneX(i);
+      ctx.strokeStyle = laneColors[i] + '55';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, hy, lw*0.28, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
+    // hit flashes
+    flashes = flashes.filter(f => now - f.t < 0.3);
+    for (const f of flashes) {
+      const age = (now - f.t) / 0.3;
+      const x = laneX(f.lane);
+      ctx.strokeStyle = laneColors[f.lane];
+      ctx.globalAlpha = 1 - age;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(x, hy, lw*0.28 + age * lw*0.35, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // notes
+    for (const n of chart) {
+      const tHit = beatToTime(n.beat);
+      const dt = tHit - now;
+      if (dt > TRAVEL || (n.judged && n.hit)) continue;
+      if (dt < -0.25) continue;
+      const y = hy - (dt / TRAVEL) * (hy + 40);
+      const x = laneX(n.lane);
+      const r = lw * 0.2;
+      ctx.fillStyle = laneColors[n.lane];
+      if (n.judged && !n.hit) ctx.fillStyle = 'rgba(107,101,128,0.4)';
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fill();
+      // inner dot
+      ctx.fillStyle = 'rgba(18,16,28,0.55)';
+      ctx.beginPath();
+      ctx.arc(x, y, r*0.4, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // countdown
+    if (now < 0) {
+      const n = Math.ceil(-now / SPB / 2);
+      ctx.fillStyle = 'rgba(245,239,230,0.9)';
+      ctx.font = `900 64px Unbounded, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(now > -0.6 ? 'GO' : String(Math.min(3, n)), W/2, H*0.4);
+    }
+
+    // dodo
+    drawDodo(W/2, hy + Math.min(70, H*0.09), Math.min(64, W*0.16), now);
+
+    if (now > songLen) { endGame(); return; }
+    raf = requestAnimationFrame(render);
+  }
+
+  // ---------- flow ----------
+  function startGame() {
+    if (!ac) initAudio();
+    ac.resume().then(() => {
+      // reset
+      score = 0; combo = 0; maxCombo = 0;
+      perfects = 0; goods = 0; misses = 0;
+      schedBeat = 0; flashes = [];
+      chart.forEach(n => { n.hit = false; n.judged = false; });
+      updateHud();
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('endScreen').classList.add('hidden');
+      hud.classList.remove('hidden');
+      songStart = ac.currentTime + LEAD_IN;
+      running = true;
+      render();
+    });
+  }
+
+  function endGame() {
+    running = false;
+    cancelAnimationFrame(raf);
+    hud.classList.add('hidden');
+    const total = perfects + goods + misses;
+    const acc = total ? Math.round(100 * (perfects + goods * 0.5) / total) : 0;
+    let grade, flavor;
+    if (acc >= 95) { grade = 'S'; flavor = 'Flawless. Sixteen years since Tap Tap Revenge and the thumbs still work.'; }
+    else if (acc >= 85) { grade = 'A'; flavor = 'The dodo is fed. The species recovers. Science baffled.'; }
+    else if (acc >= 70) { grade = 'B'; flavor = 'Solid set. The dodo nods approvingly, as much as a dodo can.'; }
+    else if (acc >= 50) { grade = 'C'; flavor = 'The dodo survived worse. Barely. Run it back.'; }
+    else { grade = 'D'; flavor = 'This is how extinction happens. One more try.'; }
+    document.getElementById('gradeEl').textContent = grade;
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('maxCombo').textContent = maxCombo + '×';
+    document.getElementById('accEl').textContent = acc + '%';
+    document.getElementById('flavorEl').textContent = flavor;
+    document.getElementById('endScreen').classList.remove('hidden');
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('againBtn').addEventListener('click', startGame);
+})();
+</script>
+</body>
+</html>

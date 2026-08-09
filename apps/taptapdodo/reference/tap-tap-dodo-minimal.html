@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>tap tap dodo — minimal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blk: #050505;
+    --wht: #F2F2F0;
+    --gry: #5A5A58;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--blk);
+    color: var(--wht);
+    font-family: 'Space Mono', monospace;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: none;
+  }
+  #stage { position: fixed; inset: 0; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .screen {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 16px; padding: 32px 24px;
+    background: var(--blk);
+    z-index: 10; text-align: center;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .hidden { display: none !important; }
+
+  .cat {
+    font-size: 10px; letter-spacing: 0.4em; text-transform: lowercase;
+    color: var(--gry);
+  }
+  h1 {
+    font-weight: 700;
+    font-size: clamp(22px, 6.4vw, 34px);
+    letter-spacing: 0.14em;
+    text-transform: lowercase;
+    line-height: 1.5;
+  }
+  h1 small { display:block; font-size: 11px; letter-spacing: 0.4em; color: var(--gry); font-weight: 400; margin-top: 6px; }
+  .rule { width: 42px; height: 1px; background: var(--gry); }
+  .sub { color: var(--gry); font-size: 12px; max-width: 280px; line-height: 1.8; letter-spacing: 0.06em; }
+
+  .bigbtn {
+    margin-top: 20px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700; font-size: 13px;
+    letter-spacing: 0.4em; text-transform: lowercase;
+    color: var(--blk);
+    background: var(--wht);
+    border: 1px solid var(--wht);
+    padding: 16px 40px 16px 46px;
+  }
+  .bigbtn:active { background: var(--blk); color: var(--wht); }
+
+  #hud {
+    position: absolute; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 16px 20px;
+    padding-top: calc(env(safe-area-inset-top) + 12px);
+    z-index: 5; pointer-events: none;
+    font-size: 13px; letter-spacing: 0.2em;
+  }
+  #combo { color: var(--gry); text-align: right; min-height: 18px; }
+  #judge {
+    position: absolute; left: 0; right: 0; top: 33%;
+    text-align: center; z-index: 5; pointer-events: none;
+    font-weight: 700; font-size: 13px; letter-spacing: 0.5em; text-transform: lowercase;
+    opacity: 0;
+    transition: opacity 0.08s;
+  }
+  #judge.show { opacity: 1; }
+
+  .grade {
+    font-weight: 700; font-size: 84px; line-height: 1;
+    letter-spacing: 0.05em;
+  }
+  .stats { display: flex; gap: 30px; margin-top: 4px; }
+  .stat { display: flex; flex-direction: column; gap: 6px; }
+  .stat b { font-size: 17px; font-weight: 700; letter-spacing: 0.1em; }
+  .stat span { font-size: 9px; letter-spacing: 0.3em; text-transform: lowercase; color: var(--gry); }
+  .flavor { color: var(--gry); font-size: 12px; max-width: 300px; line-height: 1.8; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="score">0</div>
+    <div id="combo"></div>
+  </div>
+  <div id="judge"></div>
+
+  <div id="startScreen" class="screen">
+    <div class="cat">ttd·02</div>
+    <h1>tap tap dodo<small>minimal</small></h1>
+    <div class="rule"></div>
+    <p class="sub">same bird. no melody. 130 bpm, one kick, three lanes: circle, square, triangle. hold the groove.</p>
+    <button class="bigbtn" id="startBtn">play</button>
+    <p class="sub" style="font-size:10px">sound on. subwoofer ideal. this is a basement now.</p>
+  </div>
+
+  <div id="endScreen" class="screen hidden">
+    <div class="cat">set complete</div>
+    <div class="grade" id="gradeEl">a</div>
+    <div class="stats">
+      <div class="stat"><b id="finalScore">0</b><span>score</span></div>
+      <div class="stat"><b id="maxCombo">0</b><span>max combo</span></div>
+      <div class="stat"><b id="accEl">0%</b><span>accuracy</span></div>
+    </div>
+    <p class="flavor" id="flavorEl"></p>
+    <button class="bigbtn" id="againBtn">again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = 1;
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const LANES = 3;
+  const WHT = '#F2F2F0', GRY = '#5A5A58', BLK = '#050505';
+  function laneX(i) {
+    const pad = W * 0.08;
+    const w = (W - pad*2) / LANES;
+    return pad + w * i + w/2;
+  }
+  function laneW() { return (W * 0.84) / LANES; }
+  function hitY() { return H * 0.78; }
+
+  // ---------- audio ----------
+  const AC = window.AudioContext || window.webkitAudioContext;
+  let ac = null, master = null;
+  const BPM = 130;
+  const SPB = 60 / BPM;
+
+  function initAudio() {
+    ac = new AC();
+    master = ac.createGain();
+    master.gain.value = 0.85;
+    const comp = ac.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.ratio.value = 6;
+    master.connect(comp); comp.connect(ac.destination);
+  }
+
+  function kick(t, accent) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.frequency.setValueAtTime(135, t);
+    o.frequency.exponentialRampToValueAtTime(38, t + 0.14);
+    g.gain.setValueAtTime(accent ? 1.0 : 0.9, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.32);
+    // sub rumble tail
+    const buf = ac.createBuffer(1, ac.sampleRate * 0.35, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 3);
+    const s = ac.createBufferSource(); s.buffer = buf;
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 110;
+    const rg = ac.createGain(); rg.gain.value = 0.5;
+    s.connect(f); f.connect(rg); rg.connect(master);
+    s.start(t + 0.02);
+  }
+  function hat(t, open) {
+    const len = open ? 0.14 : 0.035;
+    const buf = ac.createBuffer(1, ac.sampleRate * len, ac.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 2);
+    const s = ac.createBufferSource(); s.buffer = buf;
+    const f = ac.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 8500;
+    const g = ac.createGain(); g.gain.value = open ? 0.16 : 0.12;
+    s.connect(f); f.connect(g); g.connect(master);
+    s.start(t);
+  }
+  function clap(t) {
+    for (let j = 0; j < 3; j++) {
+      const buf = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/d.length, 1.6);
+      const s = ac.createBufferSource(); s.buffer = buf;
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1300; f.Q.value = 1.4;
+      const g = ac.createGain(); g.gain.value = 0.14;
+      s.connect(f); f.connect(g); g.connect(master);
+      s.start(t + j * 0.011);
+    }
+  }
+  function drone(t, dur) {
+    const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.value = 55; // A1
+    f.type = 'lowpass'; f.frequency.setValueAtTime(90, t);
+    f.frequency.linearRampToValueAtTime(160, t + dur/2);
+    f.frequency.linearRampToValueAtTime(90, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.11, t + 0.5);
+    g.gain.linearRampToValueAtTime(0.0001, t + dur);
+    o.connect(f); f.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.1);
+  }
+
+  // lane voices — percussion, not melody
+  function stab0(t, vol) { // circle: sub blip
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(220, t);
+    o.frequency.exponentialRampToValueAtTime(110, t + 0.07);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.14);
+  }
+  function stab1(t, vol) { // square: dry click / rimshot
+    const o = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'square'; o.frequency.value = 880;
+    f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 6;
+    g.gain.setValueAtTime(vol * 0.9, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    o.connect(f); f.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.06);
+  }
+  function stab2(t, vol) { // triangle: metallic tick
+    const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), f = ac.createBiquadFilter();
+    o.type = 'square'; o.frequency.value = 2093;
+    o2.type = 'square'; o2.frequency.value = 2960;
+    f.type = 'highpass'; f.frequency.value = 2500;
+    g.gain.setValueAtTime(vol * 0.5, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    o.connect(f); o2.connect(f); f.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.09);
+    o2.start(t); o2.stop(t + 0.09);
+  }
+  const stabs = [stab0, stab1, stab2];
+
+  // ---------- chart ----------
+  const BARS = 32; // ~59s at 130
+  const chart = [];
+  // eighth-note patterns [offset, lane] — hypnotic, repetitive, evolving
+  const phrases = [
+    [[1,1],[3,1],[5,1],[7,1]],                          // intro: offbeat clicks only
+    [[0,0],[3,1],[4,0],[7,1]],                          // groove: sub on 1&3, clicks answer
+    [[0,0],[2,2],[3,1],[4,0],[6,2],[7,1]],              // layered: ticks enter
+    [[0,0],[1,2],[3,1],[4,0],[5,2],[6,1],[7,2]],        // peak: full pattern
+    [[0,0],[4,0]],                                       // breakdown: sub only
+  ];
+  for (let bar = 0; bar < BARS; bar++) {
+    let ph;
+    if (bar < 4) ph = phrases[0];
+    else if (bar < 12) ph = phrases[1];
+    else if (bar < 16) ph = phrases[2];
+    else if (bar < 20) ph = phrases[4];       // breakdown
+    else if (bar < 28) ph = phrases[3];       // peak
+    else ph = phrases[1];                      // outro
+    ph.forEach(([e, lane]) => {
+      chart.push({ beat: bar * 4 + e * 0.5, lane, hit: false, judged: false });
+    });
+  }
+  chart.sort((a,b) => a.beat - b.beat);
+
+  const TRAVEL = 1.7;
+  const LEAD_IN = 3.2;
+
+  // ---------- game state ----------
+  let running = false;
+  let songStart = 0, schedBeat = 0;
+  let score = 0, combo = 0, maxCombo = 0;
+  let perfects = 0, goods = 0, misses = 0;
+  let flashes = [];
+  let strobe = 0; // last kick time for background flash
+  let dodoState = { peck: 0, sad: 0 };
+  let raf = null;
+
+  const hud = document.getElementById('hud');
+  const scoreEl = document.getElementById('score');
+  const comboEl = document.getElementById('combo');
+  const judgeEl = document.getElementById('judge');
+
+  function songTime() { return ac.currentTime - songStart; }
+  function beatToTime(beat) { return beat * SPB; }
+  const totalBeats = BARS * 4;
+  const songLen = beatToTime(totalBeats) + 1.5;
+
+  function scheduleAudio() {
+    if (!running) return;
+    const ahead = songTime() + 0.25;
+    while (beatToTime(schedBeat * 0.5) < ahead && schedBeat < totalBeats * 2) {
+      const halfBeat = schedBeat * 0.5;
+      const t = songStart + beatToTime(halfBeat);
+      const bar = Math.floor(halfBeat / 4);
+      const inBar = halfBeat % 4;
+      const isWhole = inBar % 1 === 0;
+      const breakdown = bar >= 16 && bar < 20;
+      if (t > ac.currentTime - 0.05) {
+        if (isWhole && !breakdown) {
+          kick(t, inBar === 0);
+          if (inBar === 0) strobeQueue.push(t);
+        }
+        if (!isWhole && bar >= 4 && !breakdown) hat(t, inBar === 3.5 && bar >= 12);
+        if (isWhole && (inBar === 1 || inBar === 3) && bar >= 12 && !breakdown) clap(t);
+        if (inBar === 0 && isWhole && (bar % 4 === 0)) drone(t, SPB * 16);
+      }
+      schedBeat++;
+    }
+  }
+  let strobeQueue = [];
+
+  function laneFromX(x) {
+    const pad = W * 0.08;
+    if (x < pad) return 0;
+    if (x > W - pad) return LANES - 1;
+    return Math.min(LANES-1, Math.floor((x - pad) / ((W - pad*2)/LANES)));
+  }
+
+  function judge(lane) {
+    const now = songTime();
+    let best = null, bestDt = 1e9;
+    for (const n of chart) {
+      if (n.judged || n.lane !== lane) continue;
+      const dt = now - beatToTime(n.beat);
+      if (dt > 0.18) continue;
+      if (dt < -0.2) break;
+      if (Math.abs(dt) < Math.abs(bestDt)) { best = n; bestDt = dt; }
+    }
+    if (!best) return;
+    best.judged = true; best.hit = true;
+    const adt = Math.abs(bestDt);
+    let q, pts;
+    if (adt <= 0.065) { q = 'locked'; pts = 100; perfects++; }
+    else { q = 'ok'; pts = 50; goods++; }
+    combo++; maxCombo = Math.max(maxCombo, combo);
+    score += pts + Math.min(combo, 50) * 2;
+    stabs[lane](ac.currentTime, 0.3);
+    flashes.push({ lane, t: now });
+    dodoState.peck = now;
+    showJudge(q);
+    updateHud();
+  }
+
+  function miss(n) {
+    n.judged = true;
+    combo = 0; misses++;
+    stabs[n.lane](ac.currentTime, 0.06); // ghost, quiet
+    dodoState.sad = songTime();
+    showJudge('drift');
+    updateHud();
+  }
+
+  let judgeTimer = null;
+  function showJudge(text) {
+    judgeEl.textContent = text;
+    judgeEl.style.color = text === 'drift' ? GRY : WHT;
+    judgeEl.classList.add('show');
+    clearTimeout(judgeTimer);
+    judgeTimer = setTimeout(() => judgeEl.classList.remove('show'), 220);
+  }
+
+  function updateHud() {
+    scoreEl.textContent = score;
+    comboEl.textContent = combo >= 4 ? combo + '×' : '';
+  }
+
+  document.getElementById('stage').addEventListener('touchstart', (e) => {
+    if (!running) return;
+    e.preventDefault();
+    for (const t of e.changedTouches) judge(laneFromX(t.clientX));
+  }, { passive: false });
+  document.getElementById('stage').addEventListener('mousedown', (e) => {
+    if (!running) return;
+    judge(laneFromX(e.clientX));
+  });
+
+  // ---------- dodo: line art, sunglasses ----------
+  function drawDodo(x, y, s, now) {
+    const peckAge = now - dodoState.peck;
+    const pecking = peckAge >= 0 && peckAge < 0.14;
+    // head-nod locked to the kick, not a bounce
+    const beatPhase = ((now / SPB) % 1 + 1) % 1;
+    const nod = Math.max(0, 1 - beatPhase * 4) * s * 0.06;
+    const dip = pecking ? s * 0.1 : 0;
+
+    ctx.save();
+    ctx.translate(x, y + nod + dip);
+    ctx.strokeStyle = WHT;
+    ctx.lineWidth = 1.5;
+    ctx.lineCap = 'round';
+
+    // body outline
+    ctx.beginPath();
+    ctx.ellipse(0, 0, s*0.52, s*0.44, 0, 0, Math.PI*2);
+    ctx.stroke();
+    // wing line
+    ctx.beginPath();
+    ctx.ellipse(-s*0.1, s*0.05, s*0.26, s*0.18, -0.3, 0, Math.PI*2);
+    ctx.stroke();
+    // tail lines
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(-s*0.42, -s*0.02 - i*s*0.06);
+      ctx.lineTo(-s*0.62, -s*0.12 - i*s*0.09);
+      ctx.stroke();
+    }
+    // head outline
+    const hx = s*0.38, hy = -s*0.42 + (pecking ? s*0.09 : 0);
+    ctx.beginPath();
+    ctx.arc(hx, hy, s*0.26, 0, Math.PI*2);
+    ctx.stroke();
+    // beak outline
+    ctx.beginPath();
+    ctx.moveTo(hx + s*0.16, hy - s*0.1);
+    ctx.quadraticCurveTo(hx + s*0.62, hy - s*0.12, hx + s*0.55, hy + s*0.12);
+    ctx.quadraticCurveTo(hx + s*0.35, hy + s*0.22, hx + s*0.14, hy + s*0.1);
+    ctx.closePath();
+    ctx.stroke();
+    // sunglasses: filled — the one solid shape on the bird
+    ctx.fillStyle = WHT;
+    ctx.fillRect(hx - s*0.12, hy - s*0.12, s*0.28, s*0.11);
+    ctx.beginPath();
+    ctx.moveTo(hx - s*0.12, hy - s*0.08); ctx.lineTo(hx - s*0.26, hy - s*0.12);
+    ctx.stroke();
+    // legs
+    ctx.beginPath();
+    ctx.moveTo(-s*0.1, s*0.4); ctx.lineTo(-s*0.12, s*0.62);
+    ctx.moveTo(s*0.12, s*0.4); ctx.lineTo(s*0.14, s*0.62);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // lane glyphs
+  function drawGlyph(lane, x, y, r, style, alpha) {
+    ctx.globalAlpha = alpha;
+    if (style === 'fill') { ctx.fillStyle = WHT; } else { ctx.strokeStyle = style === 'dim' ? GRY : WHT; ctx.lineWidth = 1.5; }
+    ctx.beginPath();
+    if (lane === 0) {
+      ctx.arc(x, y, r, 0, Math.PI*2);
+    } else if (lane === 1) {
+      ctx.rect(x - r*0.88, y - r*0.88, r*1.76, r*1.76);
+    } else {
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x + r*0.95, y + r*0.75);
+      ctx.lineTo(x - r*0.95, y + r*0.75);
+      ctx.closePath();
+    }
+    if (style === 'fill') ctx.fill(); else ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  // ---------- render ----------
+  function render() {
+    if (!running) return;
+    const now = songTime();
+    scheduleAudio();
+
+    for (const n of chart) {
+      if (!n.judged && now - beatToTime(n.beat) > 0.18) miss(n);
+    }
+
+    // strobe: background flicks up on the downbeat kick
+    strobeQueue = strobeQueue.filter(t => t > ac.currentTime - 0.2);
+    let flash = 0;
+    for (const t of strobeQueue) {
+      const age = ac.currentTime - t;
+      if (age >= 0) flash = Math.max(flash, (1 - age / 0.09) * 0.05);
+    }
+    ctx.fillStyle = BLK;
+    ctx.fillRect(0, 0, W, H);
+    if (flash > 0) {
+      ctx.fillStyle = `rgba(242,242,240,${flash})`;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    const hy = hitY();
+    const lw = laneW();
+
+    // lane rails
+    for (let i = 0; i < LANES; i++) {
+      const x = laneX(i);
+      ctx.strokeStyle = 'rgba(242,242,240,0.08)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, 0); ctx.lineTo(x, hy - lw*0.3);
+      ctx.stroke();
+    }
+
+    // hit line
+    ctx.strokeStyle = 'rgba(242,242,240,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(W*0.06, hy); ctx.lineTo(W*0.94, hy);
+    ctx.stroke();
+    // lane targets: outlined glyphs
+    for (let i = 0; i < LANES; i++) drawGlyph(i, laneX(i), hy, lw*0.2, 'dim', 1);
+
+    // hit flashes: glyph inverts and expands
+    flashes = flashes.filter(f => now - f.t < 0.25);
+    for (const f of flashes) {
+      const age = (now - f.t) / 0.25;
+      drawGlyph(f.lane, laneX(f.lane), hy, lw*0.2 + age * lw*0.3, 'stroke', 1 - age);
+    }
+
+    // notes: filled glyphs falling
+    for (const n of chart) {
+      const tHit = beatToTime(n.beat);
+      const dt = tHit - now;
+      if (dt > TRAVEL || (n.judged && n.hit)) continue;
+      if (dt < -0.25) continue;
+      const y = hy - (dt / TRAVEL) * (hy + 40);
+      const alpha = n.judged && !n.hit ? 0.2 : 1;
+      drawGlyph(n.lane, laneX(n.lane), y, lw*0.16, n.judged && !n.hit ? 'dim' : 'fill', alpha);
+    }
+
+    // countdown
+    if (now < 0) {
+      const n = Math.ceil(-now / SPB / 2);
+      ctx.fillStyle = WHT;
+      ctx.font = `700 15px 'Space Mono', monospace`;
+      ctx.textAlign = 'center';
+      const label = now > -0.6 ? '· go ·' : '· ' + Math.min(3, n) + ' ·';
+      ctx.fillText(label, W/2, H*0.4);
+    }
+
+    drawDodo(W/2, hy + Math.min(70, H*0.09), Math.min(64, W*0.16), now);
+
+    if (now > songLen) { endGame(); return; }
+    raf = requestAnimationFrame(render);
+  }
+
+  // ---------- flow ----------
+  function startGame() {
+    if (!ac) initAudio();
+    ac.resume().then(() => {
+      score = 0; combo = 0; maxCombo = 0;
+      perfects = 0; goods = 0; misses = 0;
+      schedBeat = 0; flashes = []; strobeQueue = [];
+      chart.forEach(n => { n.hit = false; n.judged = false; });
+      updateHud();
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('endScreen').classList.add('hidden');
+      hud.classList.remove('hidden');
+      songStart = ac.currentTime + LEAD_IN;
+      running = true;
+      render();
+    });
+  }
+
+  function endGame() {
+    running = false;
+    cancelAnimationFrame(raf);
+    hud.classList.add('hidden');
+    const total = perfects + goods + misses;
+    const acc = total ? Math.round(100 * (perfects + goods * 0.5) / total) : 0;
+    let grade, flavor;
+    if (acc >= 95) { grade = 's'; flavor = 'metronomic. the booth nods once. highest possible honor.'; }
+    else if (acc >= 85) { grade = 'a'; flavor = 'locked in. the dodo kept its sunglasses on the whole time.'; }
+    else if (acc >= 70) { grade = 'b'; flavor = 'solid groove, some drift. the floor forgives.'; }
+    else if (acc >= 50) { grade = 'c'; flavor = 'the kick was right there. it never moved. run it back.'; }
+    else { grade = 'd'; flavor = 'this is why the species went out. again.'; }
+    document.getElementById('gradeEl').textContent = grade;
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('maxCombo').textContent = maxCombo + '×';
+    document.getElementById('accEl').textContent = acc + '%';
+    document.getElementById('flavorEl').textContent = flavor;
+    document.getElementById('endScreen').classList.remove('hidden');
+  }
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('againBtn').addEventListener('click', startGame);
+})();
+</script>
+</body>
+</html>

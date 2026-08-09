@@ -1,0 +1,518 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00CD52195471C39AE0C9ED99 /* Chart.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1B80814594B24802896B15 /* Chart.swift */; };
+		19AA4AAA918D2104C9209D4D /* ScoreStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5DBD08F3532B3370765408 /* ScoreStore.swift */; };
+		3528C734DE7765FDF2A3B449 /* TrackDefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610B5A6A8687736CE2A15DD8 /* TrackDefs.swift */; };
+		37AA6FD10CB39AA6AFE8BF03 /* TitleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C60ABD8FCBF60A4A22E5327 /* TitleScreen.swift */; };
+		394B3A2B938E489195BCDD8D /* StabVoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08612C6C22247F4BEE732981 /* StabVoices.swift */; };
+		3C8287EE9ED903CDAF3AEA63 /* SetSelectScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2D7BD6F84308FA5BEBF93E8 /* SetSelectScreen.swift */; };
+		40DAAF754E3591C3FA56A7DC /* Skin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCE05B5E66A54A918D82FE37 /* Skin.swift */; };
+		45EAA45C0CFDFCE37676AE23 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C126313F2635252522D9101E /* SettingsScreen.swift */; };
+		4ABD647D15ED24D6D0B7A4AA /* OriginSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5355B6041DF2D2BC8DCE06AC /* OriginSkin.swift */; };
+		4D44C746817B742A4D6E7CEC /* BassVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = E11F59102EF31B6FB72C0761 /* BassVoice.swift */; };
+		535F200C5AC49A6938704135 /* SynthEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7616224F557C50AB5FD9BAF1 /* SynthEngine.swift */; };
+		57F2D61DE047B3C78311356F /* ResultsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A65109DD8F593519C5F2737 /* ResultsScreen.swift */; };
+		5B3D391CB496CE6F9B1C3406 /* Conductor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44AAAF84FFE9464B17361250 /* Conductor.swift */; };
+		5C4281BAF2EED4674509F3F4 /* SpaceMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3CAA61C5B946CC660E86C30F /* SpaceMono-Bold.ttf */; };
+		605311051DD814CCE4A5750D /* Unbounded-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1BD42A5AB19C47DDF4A21358 /* Unbounded-Black.ttf */; };
+		666F261676CAD3A07981F0E0 /* TapTapDodoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF4461615DD09DF8CD92999 /* TapTapDodoApp.swift */; };
+		6953B90C88BED6C76BDF5ED2 /* MinimalSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B0DC61A173072E71267503 /* MinimalSkin.swift */; };
+		8877CF76CAC2F6D6F8A3B782 /* KickVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111C1A53EB2C99CF8D0D3803 /* KickVoice.swift */; };
+		8D83F46744D4B6B089490ED9 /* PadVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDA53EB2E6A61318D30138D /* PadVoice.swift */; };
+		9053DE1CFBD7D6B7734CCF73 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C2469FFF5B8D04E0FEF3DE /* GameScene.swift */; };
+		93E253172904E8A4026A88A5 /* HatVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5BF509E695CF1F94B06F6A /* HatVoice.swift */; };
+		95EF6B5D95CB2EA7DAC2988C /* BackingComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2E03B4F8A531DA560E66A3 /* BackingComposer.swift */; };
+		9D85DBE87345C94C2F50E3F6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9F0B955D82921BA04EDCC660 /* Assets.xcassets */; };
+		A1CB3B2E212C0B278D222AFC /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B03B08339E0CC135FAEA22 /* AppState.swift */; };
+		A2E97C7F3B12A263CEF0E83C /* SpaceMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1EB89BF73147BEE6E9535162 /* SpaceMono-Regular.ttf */; };
+		A3A1F5E1C8CECAD42EA76599 /* DodoNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AAF975D230E7AA49DAF13B /* DodoNode.swift */; };
+		AD5E7B2CB63DEFDCEF7E94C4 /* JudgmentEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B580114D85B158C005D4E5C4 /* JudgmentEngine.swift */; };
+		C3818A64728F2D66B02D2C9E /* GabberSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */; };
+		C6DAF4BAE0106B06863CBF05 /* DetroitSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41E24A6E7AF4C5CBD56CCEF /* DetroitSkin.swift */; };
+		D7E82B059E8140CFB6FCDEED /* PluckVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B63A840719A95E70E37542 /* PluckVoice.swift */; };
+		DA504BD4C575CF3615AC23B0 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FF5B90538D5CB46BAC91643 /* GameView.swift */; };
+		E431B6DDFC87151930294D91 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D61C713C6D052FBBC5A79FA3 /* Haptics.swift */; };
+		E4F6DC395FFAF4EBA2C14121 /* ChartGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AA78B5F717C3233F8C32EB /* ChartGenerator.swift */; };
+		F060E6B2CD5C93424C3577F5 /* ClapVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 244701DEF2DB7ADF2204BFEE /* ClapVoice.swift */; };
+		F0D2A2D388EEB97988736C25 /* SynthSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BC7FF2D2D49869CAC00FC22 /* SynthSupport.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08612C6C22247F4BEE732981 /* StabVoices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StabVoices.swift; sourceTree = "<group>"; };
+		0C60ABD8FCBF60A4A22E5327 /* TitleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleScreen.swift; sourceTree = "<group>"; };
+		111C1A53EB2C99CF8D0D3803 /* KickVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KickVoice.swift; sourceTree = "<group>"; };
+		1BD42A5AB19C47DDF4A21358 /* Unbounded-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Unbounded-Black.ttf"; sourceTree = "<group>"; };
+		1EB89BF73147BEE6E9535162 /* SpaceMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Regular.ttf"; sourceTree = "<group>"; };
+		244701DEF2DB7ADF2204BFEE /* ClapVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClapVoice.swift; sourceTree = "<group>"; };
+		2A65109DD8F593519C5F2737 /* ResultsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultsScreen.swift; sourceTree = "<group>"; };
+		2C5DBD08F3532B3370765408 /* ScoreStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreStore.swift; sourceTree = "<group>"; };
+		2DE642C8038B856216822E83 /* TapTapDodo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TapTapDodo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2FF5B90538D5CB46BAC91643 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		3884C8FA7341CB69C7446B85 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3CAA61C5B946CC660E86C30F /* SpaceMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Bold.ttf"; sourceTree = "<group>"; };
+		44AAAF84FFE9464B17361250 /* Conductor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conductor.swift; sourceTree = "<group>"; };
+		5355B6041DF2D2BC8DCE06AC /* OriginSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginSkin.swift; sourceTree = "<group>"; };
+		60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GabberSkin.swift; sourceTree = "<group>"; };
+		610B5A6A8687736CE2A15DD8 /* TrackDefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackDefs.swift; sourceTree = "<group>"; };
+		6F2E03B4F8A531DA560E66A3 /* BackingComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackingComposer.swift; sourceTree = "<group>"; };
+		7616224F557C50AB5FD9BAF1 /* SynthEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynthEngine.swift; sourceTree = "<group>"; };
+		8BC7FF2D2D49869CAC00FC22 /* SynthSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynthSupport.swift; sourceTree = "<group>"; };
+		97B0DC61A173072E71267503 /* MinimalSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalSkin.swift; sourceTree = "<group>"; };
+		9F0B955D82921BA04EDCC660 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B580114D85B158C005D4E5C4 /* JudgmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JudgmentEngine.swift; sourceTree = "<group>"; };
+		BF1B80814594B24802896B15 /* Chart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chart.swift; sourceTree = "<group>"; };
+		C126313F2635252522D9101E /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		C1B03B08339E0CC135FAEA22 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		C41E24A6E7AF4C5CBD56CCEF /* DetroitSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetroitSkin.swift; sourceTree = "<group>"; };
+		C9B63A840719A95E70E37542 /* PluckVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluckVoice.swift; sourceTree = "<group>"; };
+		CAF4461615DD09DF8CD92999 /* TapTapDodoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTapDodoApp.swift; sourceTree = "<group>"; };
+		CBDA53EB2E6A61318D30138D /* PadVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadVoice.swift; sourceTree = "<group>"; };
+		D2D7BD6F84308FA5BEBF93E8 /* SetSelectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetSelectScreen.swift; sourceTree = "<group>"; };
+		D5C2469FFF5B8D04E0FEF3DE /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
+		D61C713C6D052FBBC5A79FA3 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		D7AAF975D230E7AA49DAF13B /* DodoNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoNode.swift; sourceTree = "<group>"; };
+		DC5BF509E695CF1F94B06F6A /* HatVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatVoice.swift; sourceTree = "<group>"; };
+		E11F59102EF31B6FB72C0761 /* BassVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BassVoice.swift; sourceTree = "<group>"; };
+		F0AA78B5F717C3233F8C32EB /* ChartGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartGenerator.swift; sourceTree = "<group>"; };
+		FCE05B5E66A54A918D82FE37 /* Skin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skin.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		063D12C35C7811AD12421639 /* Charts */ = {
+			isa = PBXGroup;
+			children = (
+				BF1B80814594B24802896B15 /* Chart.swift */,
+				F0AA78B5F717C3233F8C32EB /* ChartGenerator.swift */,
+				610B5A6A8687736CE2A15DD8 /* TrackDefs.swift */,
+			);
+			path = Charts;
+			sourceTree = "<group>";
+		};
+		32933B4F00C02F6E3C41C965 = {
+			isa = PBXGroup;
+			children = (
+				81C544417301EC4B71CACAD6 /* TapTapDodo */,
+				3E506BF3555F498477734C0F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3E506BF3555F498477734C0F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2DE642C8038B856216822E83 /* TapTapDodo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		70DF801ADF3D9FFB11B0B887 /* Skins */ = {
+			isa = PBXGroup;
+			children = (
+				C41E24A6E7AF4C5CBD56CCEF /* DetroitSkin.swift */,
+				60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */,
+				97B0DC61A173072E71267503 /* MinimalSkin.swift */,
+				5355B6041DF2D2BC8DCE06AC /* OriginSkin.swift */,
+				FCE05B5E66A54A918D82FE37 /* Skin.swift */,
+			);
+			path = Skins;
+			sourceTree = "<group>";
+		};
+		8093FC7FA5501E6E48206722 /* Voices */ = {
+			isa = PBXGroup;
+			children = (
+				E11F59102EF31B6FB72C0761 /* BassVoice.swift */,
+				244701DEF2DB7ADF2204BFEE /* ClapVoice.swift */,
+				DC5BF509E695CF1F94B06F6A /* HatVoice.swift */,
+				111C1A53EB2C99CF8D0D3803 /* KickVoice.swift */,
+				CBDA53EB2E6A61318D30138D /* PadVoice.swift */,
+				C9B63A840719A95E70E37542 /* PluckVoice.swift */,
+				08612C6C22247F4BEE732981 /* StabVoices.swift */,
+			);
+			path = Voices;
+			sourceTree = "<group>";
+		};
+		81C544417301EC4B71CACAD6 /* TapTapDodo */ = {
+			isa = PBXGroup;
+			children = (
+				9F0B955D82921BA04EDCC660 /* Assets.xcassets */,
+				3884C8FA7341CB69C7446B85 /* Info.plist */,
+				C35DB8F9593994E4504654F5 /* App */,
+				8AB94E0BFB84FE10019A7BB4 /* Audio */,
+				063D12C35C7811AD12421639 /* Charts */,
+				AEFBB9876BC478A106FB14BA /* Fonts */,
+				FB8D4A312F42AA7D9530CD51 /* Game */,
+				9824CFEB2E697F52F32ADC39 /* Screens */,
+				DBB1FC71542F75B382A4E9A5 /* Services */,
+				70DF801ADF3D9FFB11B0B887 /* Skins */,
+			);
+			path = TapTapDodo;
+			sourceTree = "<group>";
+		};
+		8AB94E0BFB84FE10019A7BB4 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				6F2E03B4F8A531DA560E66A3 /* BackingComposer.swift */,
+				7616224F557C50AB5FD9BAF1 /* SynthEngine.swift */,
+				8BC7FF2D2D49869CAC00FC22 /* SynthSupport.swift */,
+				8093FC7FA5501E6E48206722 /* Voices */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		9824CFEB2E697F52F32ADC39 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				2FF5B90538D5CB46BAC91643 /* GameView.swift */,
+				2A65109DD8F593519C5F2737 /* ResultsScreen.swift */,
+				D2D7BD6F84308FA5BEBF93E8 /* SetSelectScreen.swift */,
+				C126313F2635252522D9101E /* SettingsScreen.swift */,
+				0C60ABD8FCBF60A4A22E5327 /* TitleScreen.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		AEFBB9876BC478A106FB14BA /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				3CAA61C5B946CC660E86C30F /* SpaceMono-Bold.ttf */,
+				1EB89BF73147BEE6E9535162 /* SpaceMono-Regular.ttf */,
+				1BD42A5AB19C47DDF4A21358 /* Unbounded-Black.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		C35DB8F9593994E4504654F5 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				C1B03B08339E0CC135FAEA22 /* AppState.swift */,
+				CAF4461615DD09DF8CD92999 /* TapTapDodoApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		DBB1FC71542F75B382A4E9A5 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				D61C713C6D052FBBC5A79FA3 /* Haptics.swift */,
+				2C5DBD08F3532B3370765408 /* ScoreStore.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		FB8D4A312F42AA7D9530CD51 /* Game */ = {
+			isa = PBXGroup;
+			children = (
+				44AAAF84FFE9464B17361250 /* Conductor.swift */,
+				D7AAF975D230E7AA49DAF13B /* DodoNode.swift */,
+				D5C2469FFF5B8D04E0FEF3DE /* GameScene.swift */,
+				B580114D85B158C005D4E5C4 /* JudgmentEngine.swift */,
+			);
+			path = Game;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A985B8A258CC53A9D45DEE5E /* TapTapDodo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 179BA516FC02A8A0ED248E19 /* Build configuration list for PBXNativeTarget "TapTapDodo" */;
+			buildPhases = (
+				29743ACFAC847F7CE3DAC485 /* Sources */,
+				471CF8A5A1E3D5126591D829 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TapTapDodo;
+			packageProductDependencies = (
+			);
+			productName = TapTapDodo;
+			productReference = 2DE642C8038B856216822E83 /* TapTapDodo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C7B98FAE13E1852B2D189DAF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					A985B8A258CC53A9D45DEE5E = {
+						DevelopmentTeam = 274T5WCVD2;
+					};
+				};
+			};
+			buildConfigurationList = 6B9A4F18E55640731F22E1A8 /* Build configuration list for PBXProject "TapTapDodo" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 32933B4F00C02F6E3C41C965;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3E506BF3555F498477734C0F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A985B8A258CC53A9D45DEE5E /* TapTapDodo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		471CF8A5A1E3D5126591D829 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9D85DBE87345C94C2F50E3F6 /* Assets.xcassets in Resources */,
+				5C4281BAF2EED4674509F3F4 /* SpaceMono-Bold.ttf in Resources */,
+				A2E97C7F3B12A263CEF0E83C /* SpaceMono-Regular.ttf in Resources */,
+				605311051DD814CCE4A5750D /* Unbounded-Black.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		29743ACFAC847F7CE3DAC485 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1CB3B2E212C0B278D222AFC /* AppState.swift in Sources */,
+				95EF6B5D95CB2EA7DAC2988C /* BackingComposer.swift in Sources */,
+				4D44C746817B742A4D6E7CEC /* BassVoice.swift in Sources */,
+				00CD52195471C39AE0C9ED99 /* Chart.swift in Sources */,
+				E4F6DC395FFAF4EBA2C14121 /* ChartGenerator.swift in Sources */,
+				F060E6B2CD5C93424C3577F5 /* ClapVoice.swift in Sources */,
+				5B3D391CB496CE6F9B1C3406 /* Conductor.swift in Sources */,
+				C6DAF4BAE0106B06863CBF05 /* DetroitSkin.swift in Sources */,
+				A3A1F5E1C8CECAD42EA76599 /* DodoNode.swift in Sources */,
+				C3818A64728F2D66B02D2C9E /* GabberSkin.swift in Sources */,
+				9053DE1CFBD7D6B7734CCF73 /* GameScene.swift in Sources */,
+				DA504BD4C575CF3615AC23B0 /* GameView.swift in Sources */,
+				E431B6DDFC87151930294D91 /* Haptics.swift in Sources */,
+				93E253172904E8A4026A88A5 /* HatVoice.swift in Sources */,
+				AD5E7B2CB63DEFDCEF7E94C4 /* JudgmentEngine.swift in Sources */,
+				8877CF76CAC2F6D6F8A3B782 /* KickVoice.swift in Sources */,
+				6953B90C88BED6C76BDF5ED2 /* MinimalSkin.swift in Sources */,
+				4ABD647D15ED24D6D0B7A4AA /* OriginSkin.swift in Sources */,
+				8D83F46744D4B6B089490ED9 /* PadVoice.swift in Sources */,
+				D7E82B059E8140CFB6FCDEED /* PluckVoice.swift in Sources */,
+				57F2D61DE047B3C78311356F /* ResultsScreen.swift in Sources */,
+				19AA4AAA918D2104C9209D4D /* ScoreStore.swift in Sources */,
+				3C8287EE9ED903CDAF3AEA63 /* SetSelectScreen.swift in Sources */,
+				45EAA45C0CFDFCE37676AE23 /* SettingsScreen.swift in Sources */,
+				40DAAF754E3591C3FA56A7DC /* Skin.swift in Sources */,
+				394B3A2B938E489195BCDD8D /* StabVoices.swift in Sources */,
+				535F200C5AC49A6938704135 /* SynthEngine.swift in Sources */,
+				F0D2A2D388EEB97988736C25 /* SynthSupport.swift in Sources */,
+				666F261676CAD3A07981F0E0 /* TapTapDodoApp.swift in Sources */,
+				37AA6FD10CB39AA6AFE8BF03 /* TitleScreen.swift in Sources */,
+				3528C734DE7765FDF2A3B449 /* TrackDefs.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5405E67C15D13E8125DB142B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		ABCB5B550CC39F55C3012BB2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		DB397372577FC680558D4791 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TapTapDodo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.taptapdodo;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		E499D42B5BDDC7AD0F7753DE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = TapTapDodo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.taptapdodo;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		179BA516FC02A8A0ED248E19 /* Build configuration list for PBXNativeTarget "TapTapDodo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E499D42B5BDDC7AD0F7753DE /* Debug */,
+				DB397372577FC680558D4791 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6B9A4F18E55640731F22E1A8 /* Build configuration list for PBXProject "TapTapDodo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ABCB5B550CC39F55C3012BB2 /* Debug */,
+				5405E67C15D13E8125DB142B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C7B98FAE13E1852B2D189DAF /* Project object */;
+}
