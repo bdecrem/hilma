@@ -1,16 +1,17 @@
 #!/usr/bin/env node
-// scripts/ttd-seed-track.mjs — upsert the Tap Tap Dodo test track (ttd06
-// "warehouse") into the ttd_tracks table. Reads SUPABASE_URL and
-// SUPABASE_SERVICE_KEY from hilma/.env.local. Idempotent (upsert on id).
+// scripts/ttd-seed-track.mjs — publish Tap Tap Dodo track packs to the
+// ttd_tracks table. Reads SUPABASE_URL and SUPABASE_SERVICE_KEY from
+// hilma/.env.local. Idempotent (upsert on id).
 //
-//   node scripts/ttd-seed-track.mjs
+//   node scripts/ttd-seed-track.mjs                       # publish every pack in scripts/ttd-tracks/
+//   node scripts/ttd-seed-track.mjs scripts/ttd-tracks/ttd07.json   # publish one
 //
-// The payload is track-pack format v1 (see apps/taptapdodo TrackPack.swift):
-// an afters-family (minimal-flavoured) track, ttd02 skin, 127 bpm, 36 bars.
-// Pattern density mirrors ttd02: intro 4 (offbeats), groove 4, build 6,
-// breakdown 2, peak 7, outro 4 notes/bar.
+// Packs are track-pack format v1 (see apps/taptapdodo TrackPack.swift):
+// a JSON musical skeleton (bpm/bars/sections/patternBank) referencing a
+// built-in synthesis family (backingStyle) and skin (skinRef). No audio —
+// the app synthesizes everything on-device.
 
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
@@ -29,51 +30,14 @@ function loadEnv() {
   return env
 }
 
-const payload = {
-  id: 'ttd06',
-  name: 'warehouse',
-  genreLine: 'minimal techno · concrete floor · 127',
-  bpm: 127,
-  bars: 36,
-  travel: 1.7,
-  swing: 0.5,
-  melodic: false,
-  scaleTones: [],
-  backingStyle: 'afters',
-  skinRef: 'ttd02',
-  sections: [
-    { kind: 'intro', start: 0, end: 4 },
-    { kind: 'groove', start: 4, end: 14 },
-    { kind: 'build', start: 14, end: 18 },
-    { kind: 'breakdown', start: 18, end: 22 },
-    { kind: 'peak', start: 22, end: 32 },
-    { kind: 'outro', start: 32, end: 36 },
-  ],
-  // pattern = array of [offsetEighth (0..7), lane (0..2)] pairs.
-  patternBank: {
-    // intro: 4 offbeat ticks, single lane — like ttd02's intro.
-    intro: [[[1, 1], [3, 1], [5, 1], [7, 1]]],
-    // groove: 4 notes/bar, anchor on beat 1 lane 0.
-    groove: [
-      [[0, 0], [3, 1], [4, 0], [7, 2]],
-      [[0, 0], [2, 1], [4, 0], [6, 2]],
-      [[0, 0], [3, 2], [4, 0], [7, 1]],
-    ],
-    // build: 6 notes/bar, tightening.
-    build: [
-      [[0, 0], [2, 2], [3, 1], [4, 0], [6, 2], [7, 1]],
-      [[0, 0], [1, 2], [3, 1], [4, 0], [5, 2], [7, 1]],
-    ],
-    // breakdown: 2 sparse anchors.
-    breakdown: [[[0, 0], [4, 0]], [[0, 0], [6, 0]]],
-    // peak: 7 notes/bar, the busiest.
-    peak: [
-      [[0, 0], [1, 2], [3, 1], [4, 0], [5, 2], [6, 1], [7, 2]],
-      [[0, 0], [2, 2], [3, 1], [4, 0], [5, 1], [6, 2], [7, 1]],
-    ],
-    // outro: back to 4, resolving.
-    outro: [[[0, 0], [3, 1], [4, 0], [7, 1]]],
-  },
+function payloadPaths() {
+  const args = process.argv.slice(2)
+  if (args.length > 0) return args
+  const dir = join(__dirname, 'ttd-tracks')
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .sort()
+    .map((f) => join(dir, f))
 }
 
 async function main() {
@@ -86,22 +50,24 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  const { error } = await supabase
-    .from('ttd_tracks')
-    .upsert({ id: payload.id, name: payload.name, payload }, { onConflict: 'id' })
+  for (const path of payloadPaths()) {
+    const payload = JSON.parse(readFileSync(path, 'utf8'))
+    for (const field of ['id', 'name', 'bpm', 'bars', 'sections', 'patternBank', 'backingStyle', 'skinRef']) {
+      if (payload[field] === undefined) throw new Error(`${path}: missing ${field}`)
+    }
+    const { error } = await supabase
+      .from('ttd_tracks')
+      .upsert({ id: payload.id, name: payload.name, payload }, { onConflict: 'id' })
+    if (error) throw new Error(`${payload.id} upsert failed: ${error.message}`)
 
-  if (error) {
-    console.error('upsert failed:', error.message)
-    process.exit(1)
+    const { data, error: readErr } = await supabase
+      .from('ttd_tracks')
+      .select('id, name, created_at')
+      .eq('id', payload.id)
+      .single()
+    if (readErr) throw readErr
+    console.log('seeded:', JSON.stringify(data))
   }
-
-  const { data, error: readErr } = await supabase
-    .from('ttd_tracks')
-    .select('id, name, created_at')
-    .eq('id', payload.id)
-    .single()
-  if (readErr) throw readErr
-  console.log('seeded:', JSON.stringify(data))
 }
 
 main().catch((e) => {
