@@ -28,7 +28,8 @@ struct TrackDef {
 
     static func byId(_ id: String) -> TrackDef? { all.first { $0.id == id } }
 
-    static let all: [TrackDef] = [origin, minimal, detroit, gabber]
+    // Pager order — the locked set stays last.
+    static let all: [TrackDef] = [origin, minimal, detroit, afters, gabber]
 }
 
 // Note frequencies (Hz)
@@ -141,6 +142,43 @@ extension TrackDef {
             .outro: [Pattern([(0, 0), (3, 1), (4, 2), (7, 1)])],
         ],
         scaleTones: [Tone.A3, Tone.B3, Tone.C4, Tone.E4, Tone.G4, Tone.A4, Tone.B4, Tone.C5]
+    )
+
+    // ttd·05 — the second minimal set: same basement, five more years in the
+    // booth. Rumble under the kick, dub chords in the smoke, ghost 16ths,
+    // one resonant filter arc for the whole track. Chart difficulty matches
+    // ttd·02 — the new musical layers stay in the backing.
+    static let afters = TrackDef(
+        id: "ttd05", index: 5, name: "afters",
+        genreLine: "minimal techno · 4am cut · rumble + dub",
+        bpm: 129, bars: 32, travel: 1.7, swing: 0.53, melodic: false,
+        sections: [
+            Section(kind: .intro, bars: 0..<4),
+            Section(kind: .groove, bars: 4..<12),
+            Section(kind: .build, bars: 12..<16),
+            Section(kind: .breakdown, bars: 16..<20),
+            Section(kind: .peak, bars: 20..<28),
+            Section(kind: .outro, bars: 28..<32),
+        ],
+        patternBank: [
+            .intro: [Pattern([(1, 1), (3, 1), (5, 1), (7, 1)])],
+            .groove: [
+                Pattern([(0, 0), (3, 1), (4, 0), (7, 1)]),
+                Pattern([(0, 0), (2, 1), (4, 0), (6, 2)]),
+                Pattern([(0, 0), (3, 1), (4, 0), (7, 2)]),
+            ],
+            .build: [
+                Pattern([(0, 0), (2, 2), (3, 1), (4, 0), (6, 2), (7, 1)]),
+                Pattern([(0, 0), (1, 2), (3, 1), (4, 0), (5, 2), (7, 1)]),
+            ],
+            .breakdown: [Pattern([(0, 0), (4, 0)]), Pattern([(0, 0), (6, 0)])],
+            .peak: [
+                Pattern([(0, 0), (1, 2), (3, 1), (4, 0), (5, 2), (6, 1), (7, 2)]),
+                Pattern([(0, 0), (2, 2), (3, 1), (4, 0), (5, 1), (6, 2), (7, 1)]),
+            ],
+            .outro: [Pattern([(0, 0), (3, 1), (4, 0), (7, 1)])],
+        ],
+        scaleTones: []
     )
 
     // ttd·04 — 180 BPM distorted kick chaos. Unlocked by S-ranking any other set.

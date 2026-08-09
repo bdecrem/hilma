@@ -56,6 +56,7 @@ struct Skin {
         case "ttd01": return .origin
         case "ttd02": return .minimal
         case "ttd03": return .detroit
+        case "ttd05": return .afters
         default: return .gabber
         }
     }

@@ -96,7 +96,7 @@ final class ScoreStore: ObservableObject {
 
     /// The daily rotates through the non-gabber sets.
     static func dailyTrackId(date: Date = Date()) -> String {
-        let ids = [TrackDef.origin.id, TrackDef.minimal.id, TrackDef.detroit.id]
-        return ids[Int(dailySeed(date: date) % 3)]
+        let ids = TrackDef.all.filter { $0.id != TrackDef.gabber.id }.map { $0.id }
+        return ids[Int(dailySeed(date: date) % UInt64(ids.count))]
     }
 }

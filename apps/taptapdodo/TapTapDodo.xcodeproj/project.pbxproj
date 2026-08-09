@@ -24,6 +24,7 @@
 		605311051DD814CCE4A5750D /* Unbounded-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1BD42A5AB19C47DDF4A21358 /* Unbounded-Black.ttf */; };
 		666F261676CAD3A07981F0E0 /* TapTapDodoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF4461615DD09DF8CD92999 /* TapTapDodoApp.swift */; };
 		6953B90C88BED6C76BDF5ED2 /* MinimalSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B0DC61A173072E71267503 /* MinimalSkin.swift */; };
+		8776C11DFC5D5106D7060BC5 /* AftersSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A928411028D1C4ABB599B21C /* AftersSkin.swift */; };
 		8877CF76CAC2F6D6F8A3B782 /* KickVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111C1A53EB2C99CF8D0D3803 /* KickVoice.swift */; };
 		8D83F46744D4B6B089490ED9 /* PadVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDA53EB2E6A61318D30138D /* PadVoice.swift */; };
 		9053DE1CFBD7D6B7734CCF73 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C2469FFF5B8D04E0FEF3DE /* GameScene.swift */; };
@@ -34,6 +35,7 @@
 		A2E97C7F3B12A263CEF0E83C /* SpaceMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1EB89BF73147BEE6E9535162 /* SpaceMono-Regular.ttf */; };
 		A3A1F5E1C8CECAD42EA76599 /* DodoNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AAF975D230E7AA49DAF13B /* DodoNode.swift */; };
 		AD5E7B2CB63DEFDCEF7E94C4 /* JudgmentEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B580114D85B158C005D4E5C4 /* JudgmentEngine.swift */; };
+		C31E69791CAB6760ED84D6C6 /* AftersVoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5B43C8C0339CA7908B26A66 /* AftersVoices.swift */; };
 		C3818A64728F2D66B02D2C9E /* GabberSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */; };
 		C6DAF4BAE0106B06863CBF05 /* DetroitSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41E24A6E7AF4C5CBD56CCEF /* DetroitSkin.swift */; };
 		D7E82B059E8140CFB6FCDEED /* PluckVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B63A840719A95E70E37542 /* PluckVoice.swift */; };
@@ -66,6 +68,7 @@
 		8BC7FF2D2D49869CAC00FC22 /* SynthSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynthSupport.swift; sourceTree = "<group>"; };
 		97B0DC61A173072E71267503 /* MinimalSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalSkin.swift; sourceTree = "<group>"; };
 		9F0B955D82921BA04EDCC660 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A928411028D1C4ABB599B21C /* AftersSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AftersSkin.swift; sourceTree = "<group>"; };
 		B580114D85B158C005D4E5C4 /* JudgmentEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JudgmentEngine.swift; sourceTree = "<group>"; };
 		BF1B80814594B24802896B15 /* Chart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chart.swift; sourceTree = "<group>"; };
 		C126313F2635252522D9101E /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
@@ -80,6 +83,7 @@
 		D7AAF975D230E7AA49DAF13B /* DodoNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoNode.swift; sourceTree = "<group>"; };
 		DC5BF509E695CF1F94B06F6A /* HatVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HatVoice.swift; sourceTree = "<group>"; };
 		E11F59102EF31B6FB72C0761 /* BassVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BassVoice.swift; sourceTree = "<group>"; };
+		E5B43C8C0339CA7908B26A66 /* AftersVoices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AftersVoices.swift; sourceTree = "<group>"; };
 		F0AA78B5F717C3233F8C32EB /* ChartGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartGenerator.swift; sourceTree = "<group>"; };
 		FCE05B5E66A54A918D82FE37 /* Skin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skin.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -114,6 +118,7 @@
 		70DF801ADF3D9FFB11B0B887 /* Skins */ = {
 			isa = PBXGroup;
 			children = (
+				A928411028D1C4ABB599B21C /* AftersSkin.swift */,
 				C41E24A6E7AF4C5CBD56CCEF /* DetroitSkin.swift */,
 				60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */,
 				97B0DC61A173072E71267503 /* MinimalSkin.swift */,
@@ -126,6 +131,7 @@
 		8093FC7FA5501E6E48206722 /* Voices */ = {
 			isa = PBXGroup;
 			children = (
+				E5B43C8C0339CA7908B26A66 /* AftersVoices.swift */,
 				E11F59102EF31B6FB72C0761 /* BassVoice.swift */,
 				244701DEF2DB7ADF2204BFEE /* ClapVoice.swift */,
 				DC5BF509E695CF1F94B06F6A /* HatVoice.swift */,
@@ -289,6 +295,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8776C11DFC5D5106D7060BC5 /* AftersSkin.swift in Sources */,
+				C31E69791CAB6760ED84D6C6 /* AftersVoices.swift in Sources */,
 				A1CB3B2E212C0B278D222AFC /* AppState.swift in Sources */,
 				95EF6B5D95CB2EA7DAC2988C /* BackingComposer.swift in Sources */,
 				4D44C746817B742A4D6E7CEC /* BassVoice.swift in Sources */,
@@ -360,7 +368,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -420,7 +428,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

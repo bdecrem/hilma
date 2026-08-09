@@ -6,10 +6,14 @@ files); every chart is generated from a seed, so a run is fully determined by
 `(trackId, seed)`. Full design spec in [SPEC.md](SPEC.md); the two HTML
 prototypes it ports live in `reference/`.
 
-Four sets: `ttd01 origin` (126, melodic A-minor plucks — the player plays the
+Five sets: `ttd01 origin` (126, melodic A-minor plucks — the player plays the
 lead line), `ttd02 minimal` (130, percussive lanes, strobe), `ttd03 detroit`
-(122, strings + swung hats), `ttd04 gabber` (180, distorted kicks — unlocked
-by S-ranking any other set). Daily set = shared seed from yyyymmdd.
+(122, strings + swung hats), `ttd05 afters` (129, the second minimal set —
+layered kick + rumble bed, sidechain pump, ghost 16ths, dub-chord echo
+chains, ghost bars, one resonant filter arc; see TRACK_RECIPE.md for the
+method), `ttd04 gabber` (180, distorted kicks — unlocked by S-ranking any
+other set). Daily set = shared seed from yyyymmdd, rotating over the
+non-gabber sets.
 
 ## Build
 

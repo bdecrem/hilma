@@ -27,6 +27,11 @@ struct HatVoice: Voice {
         HatVoice(at: t, open: open, cutoff: 8500, closedLen: 0.035, openLen: 0.14,
                  closedGain: 0.12, openGain: 0.16, seed: seed)
     }
+    /// afters: same 8.5k character as minimal, velocity-shaped per hit.
+    static func afters(at t: Double, open: Bool, velocity: Double, seed: UInt64) -> HatVoice {
+        HatVoice(at: t, open: open, cutoff: 8500, closedLen: 0.032, openLen: 0.12,
+                 closedGain: 0.12 * velocity, openGain: 0.16 * velocity, seed: seed)
+    }
 
     mutating func render(into out: UnsafeMutablePointer<Float>, frames: Int, bufferStart: Double, sr: Double) -> Bool {
         let dt = 1.0 / sr

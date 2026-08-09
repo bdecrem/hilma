@@ -61,3 +61,5 @@ apps/*/*.xcodeproj/project.xcworkspace/xcuserdata/
 # Book Scout: personal reading data (also lives in Supabase)
 misc/Kindle_Books_Recent_200.csv
 misc/kindle-library.md
+rivian-contracts-finance/
+apps/*/build-device/

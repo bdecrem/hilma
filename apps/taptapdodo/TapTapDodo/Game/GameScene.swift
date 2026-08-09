@@ -111,7 +111,7 @@ final class GameScene: SKScene {
         // Warm the audio graph, then start the clock.
         synth.stopAllVoices()
         synth.conductor = conductor
-        synth.masterGain = track.id == "ttd02" ? 0.85 : 0.8
+        synth.masterGain = ["ttd02", "ttd05"].contains(track.id) ? 0.85 : 0.8
         synth.start()
 
         let sched = BackingScheduler(plan: plan, conductor: conductor, synth: synth)
@@ -383,6 +383,8 @@ final class GameScene: SKScene {
         case "ttd03":
             let freq = track.scaleTones[note.pitchIndex ?? 0]
             synth.schedule(PluckVoice.detroit(at: audioAt, freq: freq))
+        case "ttd05":
+            synth.schedule(AftersTapVoice(at: audioAt, lane: lane, vol: 0.32))
         default:
             synth.schedule(GabberStabVoice(at: audioAt, lane: lane, vol: 0.35))
         }
@@ -427,6 +429,8 @@ final class GameScene: SKScene {
             synth.schedule(StabVoice(at: audioAt, lane: note.lane, vol: 0.06))
         case "ttd03":
             synth.schedule(GhostVoice(at: audioAt, freq: track.scaleTones[note.pitchIndex ?? 0]))
+        case "ttd05":
+            synth.schedule(AftersTapVoice(at: audioAt, lane: note.lane, vol: 0.06))
         default:
             synth.schedule(GabberStabVoice(at: audioAt, lane: note.lane, vol: 0.05))
         }

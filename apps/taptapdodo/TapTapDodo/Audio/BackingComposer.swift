@@ -25,6 +25,7 @@ enum BackingComposer {
         case "ttd01": return origin(track)
         case "ttd02": return minimal(track)
         case "ttd03": return detroit(track)
+        case "ttd05": return afters(track)
         default: return gabber(track)
         }
     }
@@ -150,6 +151,173 @@ enum BackingComposer {
             }
         }
         return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track))
+    }
+
+    // ttd·05 — the 4am minimal cut. Layered kick + breathing rumble bed,
+    // ghost 16ths, velocity-shaped swung hats, offbeat sub bounce, dub chords
+    // with darkening echoes, one resonant filter arc, sidechain pump, ghost
+    // bars at 13 and 27 (kick out for one bar — the Hawtin trick), and a
+    // rumble-only heartbeat through the breakdown.
+    private static func afters(_ track: TrackDef) -> BackingPlan {
+        let spb = track.secondsPerBeat
+        func at(_ beat: Double) -> Double { beat * spb }
+        var events: [BackingEvent] = []
+        var kicks: [Double] = []
+
+        let ghostBars: Set<Int> = [13, 27]
+        func isBreakdown(_ bar: Int) -> Bool { bar >= 16 && bar < 20 }
+        func hasKick(_ bar: Int) -> Bool { !isBreakdown(bar) && !ghostBars.contains(bar) }
+
+        // Sidechain pump runs wherever the kick runs.
+        let pump = Pump(ranges: [
+            (at(0), at(52)), (at(56), at(64)), (at(80), at(108)), (at(112), at(128)),
+        ], spb: spb)
+
+        // The drone spans the whole track; its filter arc is the narrative:
+        // slow rises, a swell through the breakdown, a hard snap at the drop.
+        let arc: [(Double, Double)] = [
+            (at(0), 95), (at(32), 115), (at(48), 175), (at(63.9), 250),
+            (at(64), 330), (at(79.9), 430),
+            (at(80), 165), (at(104), 200), (at(112), 150), (at(126), 95),
+        ]
+        events.append(BackingEvent(time: 0) {
+            AftersDroneVoice(at: 0, dur: at(128), arc: arc, pump: pump)
+        })
+
+        for bar in 0..<track.bars {
+            let barStart = Double(bar * 4)
+            var micro = SplitMix64(seed: UInt64(bar) &* 0x9E37 &+ 5)
+
+            // kick + rumble bed
+            if hasKick(bar) {
+                for k in 0..<4 {
+                    let t = at(barStart + Double(k))
+                    let accent = k == 0
+                    events.append(BackingEvent(time: t) { TightKickVoice(at: t, accent: accent, seed: UInt64(bar * 4 + k) &+ 3) })
+                    kicks.append(t)
+                    let rt = t + 0.018
+                    events.append(BackingEvent(time: rt) { RumbleVoice(at: rt, beatLength: spb, gain: 0.3, seed: UInt64(bar * 4 + k) &+ 91) })
+                }
+            } else if isBreakdown(bar) {
+                // the ghost of the kick: rumble alone, half gain, beats 1 & 3
+                for k in [0, 2] {
+                    let rt = at(barStart + Double(k)) + 0.018
+                    events.append(BackingEvent(time: rt) { RumbleVoice(at: rt, beatLength: spb * 2, gain: 0.15, seed: UInt64(bar * 4 + k) &+ 91) })
+                }
+            }
+
+            // offbeat hats: enter quiet at bar 2, creep up; micro-late swing;
+            // velocity pattern rotates every 8 bars (the 1% rule)
+            if bar >= 2 && !isBreakdown(bar) {
+                let ramp = min(1.0, 0.4 + 0.15 * Double(max(0, (bar - 2) / 2)))
+                let basePattern = [1.0, 0.72, 0.88, 0.72]
+                let rotation = (bar / 8) % 4
+                for k in 0..<4 {
+                    let vel = basePattern[(k + rotation) % 4] * ramp
+                    let open = bar >= 6 && bar % 2 == 0 && k == 3
+                    let jitter = (Double.random(in: -1...1, using: &micro)) * 0.003
+                    let t = at(barStart + Double(k) + 0.5) + 0.012 + jitter
+                    events.append(BackingEvent(time: t) {
+                        HatVoice.afters(at: t, open: open, velocity: open ? 0.85 : vel, seed: UInt64(bar * 8 + k) &+ 17)
+                    })
+                }
+            }
+
+            // ghost 16ths on the "e"s — two per bar, positions drift by bar
+            if bar >= 1 && !isBreakdown(bar) {
+                let positions = [0.25, 1.25, 2.25, 3.25]
+                let first = Int.random(in: 0..<4, using: &micro)
+                let second = (first + 1 + Int.random(in: 0..<2, using: &micro)) % 4
+                for p in Set([first, second]) {
+                    let t = at(barStart + positions[p])
+                    events.append(BackingEvent(time: t) { GhostTickVoice(at: t, seed: UInt64(bar * 16 + p) &+ 41) })
+                }
+                if bar >= 12 && bar < 16 {
+                    let t = at(barStart + 3.75)
+                    events.append(BackingEvent(time: t) { GhostTickVoice(at: t, gain: 0.05, seed: UInt64(bar) &+ 43) })
+                }
+            }
+
+            // rimshot on the and-of-4 (odd bars — even bars give it to the
+            // open hat), plus the and-of-2 during the build
+            if bar >= 4 && !isBreakdown(bar) && bar % 2 == 1 && bar % 4 != 3 {
+                let t = at(barStart + 3.5) + 0.012
+                events.append(BackingEvent(time: t) { RimVoice(at: t) })
+            }
+            if bar >= 12 && bar < 16 && !ghostBars.contains(bar) {
+                let t = at(barStart + 1.5) + 0.012
+                events.append(BackingEvent(time: t) { RimVoice(at: t, gain: 0.26) })
+            }
+
+            // claps on 2 & 4 from bar 8, resting through breakdown and outro
+            if bar >= 8 && bar < 28 && !isBreakdown(bar) {
+                for k in [1, 3] {
+                    let t = at(barStart + Double(k))
+                    events.append(BackingEvent(time: t) { ClapPlusVoice(at: t, seed: UInt64(bar * 4 + k) &+ 57) })
+                }
+                if bar % 4 == 2 {
+                    let t = at(barStart + 3.25)
+                    events.append(BackingEvent(time: t) { ClapPlusVoice(at: t, gain: 0.05, seed: UInt64(bar) &+ 59) })
+                }
+            }
+
+            // offbeat sub bounce — carries the pulse, including the breakdown
+            if bar >= 6 && bar < 30 {
+                for k in 0..<4 {
+                    let t = at(barStart + Double(k) + 0.5)
+                    let gain = isBreakdown(bar) ? 0.17 : 0.21
+                    events.append(BackingEvent(time: t) { SubPulseVoice(at: t, gain: gain, pump: pump) })
+                }
+            }
+
+            // dub chords on the and-of-1
+            let chordSpec: (gain: Double, echoes: Int)? = {
+                switch bar {
+                case 3, 7, 11, 12, 14, 21, 23, 25: return (0.15, 5)
+                case 16, 17, 18, 19: return (0.19, 7)
+                case 29: return (0.13, 7)
+                default: return nil
+                }
+            }()
+            if let chordSpec {
+                let t = at(barStart + 0.5)
+                events.append(BackingEvent(time: t) {
+                    DubChordVoice(at: t, spb: spb, gain: chordSpec.gain, echoes: chordSpec.echoes, pump: pump)
+                })
+            }
+
+            // shaker 16ths through the peak (minus the ghost bar)
+            if bar >= 20 && bar < 27 {
+                let wave = [0.3, 0.5, 1.0, 0.5]
+                for s in 0..<16 {
+                    let t = at(barStart + Double(s) * 0.25)
+                    let gain = 0.05 * wave[s % 4]
+                    events.append(BackingEvent(time: t) { ShakerVoice(at: t, gain: gain, seed: UInt64(bar * 16 + s) &+ 71) })
+                }
+            }
+
+            // the signature zap — once every 8 bars, answered in the ghost bar
+            switch bar {
+            case 7, 15, 23:
+                let t = at(barStart + 3.5)
+                events.append(BackingEvent(time: t) { ZapVoice(at: t, gain: 0.14, echoes: 2, spb: spb) })
+            case 27:
+                let t = at(barStart + 1.5)
+                events.append(BackingEvent(time: t) { ZapVoice(at: t, gain: 0.16, echoes: 3, spb: spb) })
+            case 31:
+                let t = at(barStart + 2)
+                events.append(BackingEvent(time: t) { ZapVoice(at: t, gain: 0.15, echoes: 4, spb: spb) })
+            default: break
+            }
+
+            // riser out of the breakdown, landing exactly on the drop
+            if bar == 19 {
+                let t = at(barStart + 0.5)
+                events.append(BackingEvent(time: t) { RiserVoice(at: t, dur: at(3.5)) })
+            }
+        }
+
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: at(80))
     }
 
     // ttd·04 — distorted kick every beat, offbeat hats, claps at the peak.
