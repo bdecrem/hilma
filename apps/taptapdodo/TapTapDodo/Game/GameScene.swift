@@ -114,10 +114,11 @@ final class GameScene: SKScene {
         buildHUD()
         observeInterruptions()
 
-        // Warm the audio graph, then start the clock.
+        // Warm the audio graph, then start the clock. The plan carries the
+        // set's whole routing: master gain, compressor, delay and duck buses.
         synth.stopAllVoices()
         synth.conductor = conductor
-        synth.masterGain = ["minimal", "afters"].contains(track.backingStyle) ? 0.85 : 0.8
+        synth.apply(plan.config)
         synth.start()
 
         let sched = BackingScheduler(plan: plan, conductor: conductor, synth: synth)
@@ -223,8 +224,11 @@ final class GameScene: SKScene {
             target.fillColor = .clear
             target.position = CGPoint(x: laneX(i), y: hitLineY)
             world.addChild(target)
+            targetNodes.append(target)
         }
     }
+
+    private var targetNodes: [SKShapeNode] = []
 
     /// circle / square / triangle, matching the minimal prototype's drawGlyph.
     private static func glyphNode(lane: Int, radius r: CGFloat) -> SKShapeNode {
@@ -502,6 +506,8 @@ final class GameScene: SKScene {
             synth.schedule(PluckVoice.detroit(at: audioAt, freq: freq))
         case "afters":
             synth.schedule(AftersTapVoice(at: audioAt, lane: lane, vol: 0.32))
+        case "minimal2":
+            synth.schedule(MinimalIITapVoice(at: audioAt, lane: lane, vol: 0.3 * note.vel + 0.06))
         default:
             synth.schedule(GabberStabVoice(at: audioAt, lane: lane, vol: 0.35))
         }
@@ -556,6 +562,8 @@ final class GameScene: SKScene {
             synth.schedule(GhostVoice(at: audioAt, freq: track.scaleTones[note.pitchIndex ?? 0]))
         case "afters":
             synth.schedule(AftersTapVoice(at: audioAt, lane: note.lane, vol: 0.06))
+        case "minimal2":
+            synth.schedule(MinimalIITapVoice(at: audioAt, lane: note.lane, vol: 0.05))
         default:
             synth.schedule(GabberStabVoice(at: audioAt, lane: note.lane, vol: 0.05))
         }
@@ -580,12 +588,16 @@ final class GameScene: SKScene {
 
     // MARK: - Note rendering
 
+    /// Velocity → size, only on authored charts: accents 1.15×, ghosts 0.92×.
+    private lazy var chartUsesVelocity: Bool = chart.contains { $0.vel != 1 }
+
     private func makeNoteNode(index: Int) -> SKShapeNode {
         let note = chart[index]
+        let velScale: CGFloat = chartUsesVelocity ? (note.vel >= 1 ? 1.15 : 0.92) : 1
         let node: SKShapeNode
         switch skin.laneStyle {
         case .colors:
-            let r = laneWidth * 0.2
+            let r = laneWidth * 0.2 * velScale
             node = SKShapeNode(circleOfRadius: r)
             node.fillColor = skin.laneColors[note.lane]
             node.strokeColor = .clear
@@ -594,7 +606,7 @@ final class GameScene: SKScene {
             inner.strokeColor = .clear
             node.addChild(inner)
         case .glyphs:
-            node = Self.glyphNode(lane: note.lane, radius: laneWidth * 0.16)
+            node = Self.glyphNode(lane: note.lane, radius: laneWidth * 0.16 * velScale)
             node.fillColor = skin.foreground
             node.strokeColor = .clear
         }
@@ -649,6 +661,17 @@ final class GameScene: SKScene {
 
         dodo?.combo = judge.combo
         dodo?.update(songTime: now)
+
+        // minimal ii: lane 2's target breathes on the 3-cycle through peak A
+        if track.backingStyle == "minimal2", targetNodes.count == 3 {
+            let bar = Int(now / track.secondsPerBeat / 4)
+            if bar >= 20, bar < 28 {
+                let phase = ((now / track.secondsPerBeat).truncatingRemainder(dividingBy: 1.5)) / 1.5
+                targetNodes[2].alpha = 0.7 + 0.3 * CGFloat(max(0, 1 - phase * 3))
+            } else {
+                targetNodes[2].alpha = 1
+            }
+        }
 
         if now > track.songLength { finish() }
     }

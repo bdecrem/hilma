@@ -56,9 +56,10 @@ struct PluckVoice: Voice {
             guard t >= 0, t < duration else { continue }
             var sample = 0.0
             if t < mainDecay {
-                phase += freq * dt
-                let square: Double = (phase - floor(phase)) < 0.5 ? 1 : -1
-                sample += lp.process(square) * env
+                let dp = freq * dt
+                phase += dp
+                if phase >= 1 { phase -= 1 }
+                sample += lp.process(blSquare(phase, dp)) * env
                 env *= envFactor
             }
             if t < shimmerDecay {

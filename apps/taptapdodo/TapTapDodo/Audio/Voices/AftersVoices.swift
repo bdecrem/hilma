@@ -96,7 +96,7 @@ struct RumbleVoice: Voice {
         var t = bufferStart - startSongTime
         if t + Double(frames) * dt < 0 { return true }
         if !started {
-            lp = .lowpass(sr: sr, freq: 100, q: 1.3)
+            lp = .lowpass(sr: sr, freq: 100, q: 2.28)
             started = true
         }
         for i in 0..<frames {
@@ -158,7 +158,7 @@ struct DubChordVoice: Voice {
                 currentEcho = echoIndex
                 // the lowpass in the feedback loop: darker every pass
                 let cutoff = 1600.0 * pow(0.72, Double(echoIndex))
-                lp = .lowpass(sr: sr, freq: cutoff, q: 0.9)
+                lp = .lowpass(sr: sr, freq: cutoff, q: -0.92)
             }
             let echoGain = gain * pow(0.62, Double(echoIndex))
             // fast-attack, short-decay stab envelope
@@ -167,8 +167,10 @@ struct DubChordVoice: Voice {
             else { env = exp(-(local - 0.004) / 0.03) }
             var mix = 0.0
             for v in 0..<freqs.count {
-                phases[v] += freqs[v] * dt
-                mix += 2.0 * (phases[v] - floor(phases[v])) - 1.0
+                let dp = freqs[v] * dt
+                phases[v] += dp
+                if phases[v] >= 1 { phases[v] -= 1 }
+                mix += blSaw(phases[v], dp)
             }
             var sample = lp.process(mix / 4) * env * echoGain
             if let pump { sample *= pump.gain(at: bufferStart + Double(i) * dt) }
@@ -276,8 +278,10 @@ struct RimVoice: Voice {
         for i in 0..<frames {
             defer { t += dt }
             guard t >= 0, t < duration else { continue }
-            phase += 810 * dt
-            let square: Double = (phase - floor(phase)) < 0.5 ? 1 : -1
+            let dp = 810 * dt
+            phase += dp
+            if phase >= 1 { phase -= 1 }
+            let square = blSquare(phase, dp)
             let env = exp(-t / 0.014)
             out[i] += Float((bp1.process(square) * 0.7 + bp2.process(square) * 0.3) * env * gain)
         }
@@ -437,7 +441,7 @@ struct RiserVoice: Voice {
         var t = bufferStart - startSongTime
         if t + Double(frames) * dt < 0 { return true }
         if !started {
-            hp = .highpass(sr: sr, freq: 250, q: 0.9)
+            hp = .highpass(sr: sr, freq: 250, q: -0.92)
             started = true
         }
         for i in 0..<frames {
@@ -447,7 +451,7 @@ struct RiserVoice: Voice {
             if sinceRetune >= 64 {
                 sinceRetune = 0
                 let f = expSweep(f0: 250, f1: 6500, t: t, sweep: dur)
-                hp.retune(.highpass(sr: sr, freq: f, q: 0.9))
+                hp.retune(.highpass(sr: sr, freq: f, q: -0.92))
             }
             let env = pow(t / dur, 1.6) * 0.11
             out[i] += Float(hp.process(noise.next()) * env)
@@ -500,7 +504,7 @@ struct AftersDroneVoice: Voice {
         var t = bufferStart - startSongTime
         if t + Double(frames) * dt < 0 { return true }
         if !started {
-            lp = .lowpass(sr: sr, freq: cutoff(at: bufferStart), q: 2.2)
+            lp = .lowpass(sr: sr, freq: cutoff(at: bufferStart), q: 6.85)
             started = true
         }
         let fA = 55.0
@@ -511,15 +515,18 @@ struct AftersDroneVoice: Voice {
             sinceRetune += 1
             if sinceRetune >= 48 {
                 sinceRetune = 0
-                lp.retune(.lowpass(sr: sr, freq: cutoff(at: startSongTime + t), q: 2.2))
+                lp.retune(.lowpass(sr: sr, freq: cutoff(at: startSongTime + t), q: 6.85))
             }
             let env: Double
             if t < 2 { env = 0.1 * (t / 2) }
             else if t > dur - 2 { env = 0.1 * ((dur - t) / 2) }
             else { env = 0.1 }
-            phaseA += fA * dt
-            phaseB += fB * dt
-            let saws = (2.0 * (phaseA - floor(phaseA)) - 1.0) + (2.0 * (phaseB - floor(phaseB)) - 1.0)
+            let dpA = fA * dt, dpB = fB * dt
+            phaseA += dpA
+            if phaseA >= 1 { phaseA -= 1 }
+            phaseB += dpB
+            if phaseB >= 1 { phaseB -= 1 }
+            let saws = blSaw(phaseA, dpA) + blSaw(phaseB, dpB)
             var sample = lp.process(saws * 0.5) * env
             if let pump { sample *= pump.gain(at: startSongTime + t) }
             out[i] += Float(sample)
@@ -574,8 +581,10 @@ struct AftersTapVoice: Voice {
                 let env: Double = t < 0.004 ? t / 0.004 : exp(-(t - 0.004) / 0.06)
                 sample = sin(phase * 2 * .pi) * env * vol
             case 1:
-                phase += 810 * dt
-                let square: Double = (phase - floor(phase)) < 0.5 ? 1 : -1
+                let dp = 810 * dt
+                phase += dp
+                if phase >= 1 { phase -= 1 }
+                let square = blSquare(phase, dp)
                 let env = exp(-t / 0.014)
                 sample = (bp1.process(square) * 0.7 + bp2.process(square) * 0.3) * env * vol
             default:

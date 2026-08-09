@@ -38,8 +38,10 @@ struct PadVoice: Voice {
             var mix = 0.0
             for v in 0..<freqs.count {
                 let f = freqs[v] * pow(2, detunes[v] / 1200)
-                phases[v] += f * dt
-                mix += 2.0 * (phases[v] - floor(phases[v])) - 1.0
+                let dp = f * dt
+                phases[v] += dp
+                if phases[v] >= 1 { phases[v] -= 1 }
+                mix += blSaw(phases[v], dp)
             }
             out[i] += Float(lp.process(mix) * env)
         }
@@ -86,9 +88,10 @@ struct DroneVoice: Voice {
             if t < 0.5 { env = 0.11 * (t / 0.5) }
             else if t > dur - 0.5 { env = 0.11 * ((dur - t) / 0.5) }
             else { env = 0.11 }
-            phase += 55.0 * dt
-            let saw = 2.0 * (phase - floor(phase)) - 1.0
-            out[i] += Float(lp.process(saw) * env)
+            let dp = 55.0 * dt
+            phase += dp
+            if phase >= 1 { phase -= 1 }
+            out[i] += Float(lp.process(blSaw(phase, dp)) * env)
         }
         return t < dur
     }
@@ -144,8 +147,10 @@ struct StringsVoice: Voice {
             var mix = 0.0
             for v in 0..<phases.count {
                 let f = freqs[v / 3] * pow(2, detunes[v] / 1200)
-                phases[v] += f * dt
-                mix += 2.0 * (phases[v] - floor(phases[v])) - 1.0
+                let dp = f * dt
+                phases[v] += dp
+                if phases[v] >= 1 { phases[v] -= 1 }
+                mix += blSaw(phases[v], dp)
             }
             out[i] += Float(lp.process(mix / 3) * env)
         }

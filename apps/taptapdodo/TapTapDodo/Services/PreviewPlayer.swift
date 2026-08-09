@@ -34,7 +34,9 @@ final class PreviewPlayer {
 
         synth.stopAllVoices()
         synth.conductor = cond
-        synth.masterGain = 0.5
+        var config = plan.config
+        config.masterGain *= 0.6   // previews stay polite
+        synth.apply(config)
         synth.start()
 
         let sched = BackingScheduler(plan: plan, conductor: cond, synth: synth)

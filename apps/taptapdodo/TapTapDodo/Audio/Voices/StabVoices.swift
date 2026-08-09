@@ -51,15 +51,17 @@ struct StabVoice: Voice {
                 phase += f * dt
                 sample = sin(phase * 2 * .pi) * env
             case .rim:
-                phase += 880 * dt
-                let square: Double = (phase - floor(phase)) < 0.5 ? 1 : -1
-                sample = filter.process(square) * env
+                let dp = 880 * dt
+                phase += dp
+                if phase >= 1 { phase -= 1 }
+                sample = filter.process(blSquare(phase, dp)) * env
             case .tick:
-                phase += 2093 * dt
-                phase2 += 2960 * dt
-                let s1: Double = (phase - floor(phase)) < 0.5 ? 1 : -1
-                let s2: Double = (phase2 - floor(phase2)) < 0.5 ? 1 : -1
-                sample = filter.process(s1 + s2) * env
+                let dp1 = 2093 * dt, dp2 = 2960 * dt
+                phase += dp1
+                if phase >= 1 { phase -= 1 }
+                phase2 += dp2
+                if phase2 >= 1 { phase2 -= 1 }
+                sample = filter.process(blSquare(phase, dp1) + blSquare(phase2, dp2)) * env
             }
             env *= envFactor
             out[i] += Float(sample)
@@ -103,8 +105,10 @@ struct ChordStabVoice: Voice {
             guard t >= 0, t < decay + 0.02 else { continue }
             var mix = 0.0
             for v in 0..<freqs.count {
-                phases[v] += freqs[v] * dt
-                mix += 2.0 * (phases[v] - floor(phases[v])) - 1.0
+                let dp = freqs[v] * dt
+                phases[v] += dp
+                if phases[v] >= 1 { phases[v] -= 1 }
+                mix += blSaw(phases[v], dp)
             }
             out[i] += Float(lp.process(mix / Double(freqs.count)) * env)
             env *= envFactor
@@ -146,9 +150,10 @@ struct GabberStabVoice: Voice {
         for i in 0..<frames {
             defer { t += dt }
             guard t >= 0, t < decay + 0.02 else { continue }
-            phase += freq * dt
-            let square: Double = (phase - floor(phase)) < 0.5 ? 1 : -1
-            out[i] += Float(hp.process(tanh(square * 4)) * env)
+            let dp = freq * dt
+            phase += dp
+            if phase >= 1 { phase -= 1 }
+            out[i] += Float(hp.process(tanh(blSquare(phase, dp) * 4)) * env)
             env *= envFactor
         }
         return t < decay + 0.02

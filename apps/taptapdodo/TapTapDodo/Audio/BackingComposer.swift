@@ -14,6 +14,9 @@ struct BackingPlan {
     let kickTimes: [Double]
     /// Song time the peak section lands (the drop, for the haptic thump window).
     let dropTime: Double
+    /// Engine routing for this set: master gain + compressor per family,
+    /// plus delay/duck buses where the set uses them.
+    var config = EngineConfig()
 }
 
 /// Translates each TrackDef into its arrangement. The origin and minimal plans
@@ -26,8 +29,108 @@ enum BackingComposer {
         case "minimal": return minimal(track)
         case "detroit": return detroit(track)
         case "afters": return afters(track)
+        case "minimal2": return minimalII(track)
         default: return gabber(track)
         }
+    }
+
+    // ttd·08 — exact port of minimal-ii's scheduleAudio() + automation:
+    // swung 128, F minor, duck bus on every kick, dub delay on dotted eighths
+    // whose feedback blooms through breakdown 1, drone with an 8-bar breath.
+    private static func minimalII(_ track: TrackDef) -> BackingPlan {
+        let spb = track.secondsPerBeat
+        let fm9: [Double] = [174.61, 207.65, 261.63, 392.0]     // F Ab C G
+        let abM9: [Double] = [207.65, 261.63, 311.13, 466.16]   // Ab C Eb Bb
+        func at(_ beat: Double) -> Double { MinimalII.swung(beat) * spb }
+        func barT(_ bar: Double) -> Double { bar * 4 * spb }
+
+        var events: [BackingEvent] = []
+        var kicks: [Double] = []
+
+        for step in 0..<(track.bars * 8) {
+            let halfBeat = Double(step) * 0.5
+            let bar = step / 8
+            let inBar = halfBeat - Double(bar * 4)
+            let isOn = inBar.truncatingRemainder(dividingBy: 1) == 0
+            let s = MinimalII.sec(bar)
+            let t = at(halfBeat)
+            let peak = s == "peakA" || s == "peakB"
+
+            // kick everywhere except breakdown 1
+            if isOn && s != "break1" {
+                let accent = inBar == 0
+                events.append(BackingEvent(time: t) { KickIIVoice(at: t, accent: accent, seed: UInt64(step) &+ 3) })
+                kicks.append(t)
+            }
+            // hats: swung offbeats; ghosted onbeats + open accents in peaks
+            if s != "intro" && s != "break1" && s != "break2" && s != "strip" && s != "outro" {
+                if !isOn {
+                    let open = peak && inBar == 3.5 && bar % 2 == 1
+                    events.append(BackingEvent(time: t) {
+                        HatIIVoice(at: t, vol: 0.14, open: open, seed: UInt64(step) &+ 17)
+                    })
+                } else if peak && inBar != 0 {
+                    events.append(BackingEvent(time: t) {
+                        HatIIVoice(at: t, vol: 0.045, open: false, seed: UInt64(step) &+ 19)
+                    })
+                }
+            }
+            // soft clap on 2 & 4, from bar 12, not in breaks
+            if isOn && (inBar == 1 || inBar == 3) && bar >= 12 && s != "break1" && s != "break2" {
+                events.append(BackingEvent(time: t) { ClapSoftVoice(at: t, seed: UInt64(step) &+ 29) })
+            }
+            // polymeter rim: every 3 eighths from bar 8, absent only in outro
+            if bar >= 8 && s != "outro" {
+                let e = step
+                if e % 3 == 0 {
+                    let vol = e % 6 == 0 ? 0.085 : 0.05
+                    events.append(BackingEvent(time: t) { RimIIVoice(at: t, vol: vol) })
+                }
+            }
+            // dub chords
+            var chord: (freqs: [Double], vel: Double)? = nil
+            if s == "layered", bar % 2 == 0, inBar == 0.5 { chord = (fm9, 1) }
+            if s == "roll", bar % 2 == 0, inBar == 0.5 { chord = (fm9, 1) }
+            if s == "break1", inBar == 0 { chord = (fm9, bar == 19 ? 1.2 : 0.9) }
+            if s == "peakA", bar % 2 == 1, inBar == 1.5 { chord = (fm9, 0.9) }
+            if s == "peakB", inBar == 0.5, bar % 2 == 0 { chord = (bar % 4 < 2 ? fm9 : abM9, 1) }
+            if bar == 46, inBar == 0 { chord = (fm9, 1.3) }   // final ring-out
+            if let chord {
+                events.append(BackingEvent(time: t) {
+                    ChordIIVoice(at: t, freqs: chord.freqs, vel: chord.vel, seed: UInt64(step) &+ 41)
+                })
+            }
+        }
+
+        // drone: level follows the arrangement, filter breathes per 8 bars
+        let gainArc: [(Double, Double)] = [
+            (barT(0), 0), (barT(1), 0.12), (barT(27.5), 0.12), (barT(28), 0),
+            (barT(31.5), 0), (barT(32), 0.12), (barT(46), 0.12), (barT(48), 0),
+        ]
+        var filterArc: [(Double, Double)] = []
+        var b = 0.0
+        while b < Double(track.bars) {
+            filterArc.append((barT(b), 90))
+            filterArc.append((barT(b + 4), 170))
+            b += 8
+        }
+        filterArc.append((barT(Double(track.bars)), 90))
+        let droneDur = Double(track.bars) * 4 * spb
+        events.append(BackingEvent(time: 0) {
+            DroneIIVoice(dur: droneDur, gainArc: gainArc, filterArc: filterArc)
+        })
+
+        // engine config: compressor -16/5, dotted-eighth delay whose feedback
+        // blooms 0.42→0.62 through breakdown 1, duck on every kick
+        let feedback: [(Double, Double)] = [
+            (barT(0), 0.42), (barT(16), 0.42), (barT(19), 0.62), (barT(20.5), 0.42),
+        ]
+        let config = EngineConfig(
+            masterGain: 0.85, compThreshold: -16, compRatio: 5,
+            delay: (time: spb * 0.75, wet: 0.3, feedback: feedback),
+            duck: (times: kicks, floor: 0.32, recover: spb * 0.44))
+
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: barT(20), config: config)
     }
 
     private static func dropStart(_ track: TrackDef) -> Double {
@@ -70,7 +173,8 @@ enum BackingComposer {
             // Closed hats on every eighth, exactly like the prototype.
             events.append(BackingEvent(time: t) { HatVoice.origin(at: t, open: false, seed: UInt64(half) &+ 1) })
         }
-        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track))
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track),
+                           config: EngineConfig(masterGain: 0.8, compThreshold: -24, compRatio: 12))
     }
 
     // ttd·02 — kick 4/4 (out during the breakdown), offbeat hats from the
@@ -109,7 +213,8 @@ enum BackingComposer {
                 events.append(BackingEvent(time: t) { DroneVoice(at: t, dur: spb * 16) })
             }
         }
-        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track))
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track),
+                           config: EngineConfig(masterGain: 0.85, compThreshold: -18, compRatio: 6))
     }
 
     // ttd·03 — kick 4/4 (out in breakdown), swung offbeat hats, claps from
@@ -163,7 +268,8 @@ enum BackingComposer {
                 events.append(BackingEvent(time: t) { ChordStabVoice(at: t, freqs: stab) })
             }
         }
-        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track))
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track),
+                           config: EngineConfig(masterGain: 0.8, compThreshold: -24, compRatio: 12))
     }
 
     // ttd·05 — the 4am minimal cut. Layered kick + breathing rumble bed,
@@ -372,7 +478,8 @@ enum BackingComposer {
             }
         }
 
-        return BackingPlan(events: events, kickTimes: kicks, dropTime: at(dropBeat))
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: at(dropBeat),
+                           config: EngineConfig(masterGain: 0.85, compThreshold: -18, compRatio: 6))
     }
 
     // ttd·04 — distorted kick every beat, offbeat hats, claps at the peak.
@@ -410,7 +517,8 @@ enum BackingComposer {
                 events.append(BackingEvent(time: t) { StabVoice(at: t, lane: 0, vol: 0.3) })
             }
         }
-        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track))
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: dropStart(track),
+                           config: EngineConfig(masterGain: 0.8, compThreshold: -18, compRatio: 6))
     }
 }
 

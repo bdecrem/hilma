@@ -6,6 +6,8 @@ import Foundation
 enum ChartGenerator {
 
     static func generate(track: TrackDef, seed: UInt64) -> [ChartNote] {
+        // minimal ii ships an authored chart — fixed, swung, velocity-accented.
+        if track.backingStyle == "minimal2" { return MinimalII.chart() }
         var rng = SplitMix64(seed: seed)
         var bars: [[(offset: Int, lane: Int)]] = []
 

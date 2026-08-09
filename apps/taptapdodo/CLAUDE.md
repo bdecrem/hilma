@@ -11,9 +11,31 @@ lead line), `ttd02 minimal` (130, percussive lanes, strobe), `ttd03 detroit`
 (122, strings + swung hats), `ttd05 afters` (129, the second minimal set —
 layered kick + rumble bed, sidechain pump, ghost 16ths, dub-chord echo
 chains, ghost bars, one resonant filter arc; see TRACK_RECIPE.md for the
-method), `ttd04 gabber` (180, distorted kicks — unlocked by S-ranking any
-other set). Daily set = shared seed from yyyymmdd, rotating over the
-non-gabber sets.
+method), `ttd08 minimal ii` (128, F minor — the authored set: swing, sidechain duck
+bus, dub-delay bus the player's tick taps feed, 3-against-4 polymeter chart
+with velocities; exact port of reference/tap-tap-dodo-minimal-ii.html),
+`ttd04 gabber` (180, distorted kicks — unlocked by S-ranking any other
+set). Daily set = shared seed from yyyymmdd, rotating over the non-gabber
+sets.
+
+## The engine matches WebAudio — keep it that way
+
+The synth was A/B'd against Chromium's WebAudio until solo voices sit within
+~1.5 dB and the full minimal-ii mix within ±0.6 dB RMS per second. What that
+took (all in `Audio/`): polyBLEP band-limited oscillators (naive squares
+alias); Blink's exact lowpass/highpass design (WebAudio Q for those types is
+resonance in dB — the RBJ version was measurably wrong); WebAudio's
+mono→stereo unity upmix (equal-power panning centered voices is −3 dB);
+independent noise streams per clap burst (a summed envelope on one stream is
++4.5 dB coherent); WebAudio oscillator start phases (saw begins at value 0);
+and a compressor modeled on MEASURED DynamicsCompressor behavior — static
+curves per config, τ≈50 ms release from a −5 dB idle, fast attack, 6 ms
+lookahead (`Compressor` in SynthSupport.swift, tables inside). MixCore.swift
+is the whole mix path (buses/delay/duck/pan/compressor) and compiles on
+macOS, so offline A/B harnesses exercise exactly what ships. Ground truth
+comes from OfflineAudioContext renders driven through Playwright — the
+method lives in the 2026-08-09 session's scratchpad harnesses; rebuild from
+this description if needed.
 
 ## Build
 

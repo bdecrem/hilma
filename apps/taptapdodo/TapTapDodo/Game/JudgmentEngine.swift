@@ -64,7 +64,8 @@ final class JudgmentEngine {
 
         combo += 1
         maxCombo = max(maxCombo, combo)
-        let points = base + min(combo, 50) * 2
+        // accents are worth more — velocity scales the whole award
+        let points = Int((Double(base + min(combo, 50) * 2) * notes[index].vel).rounded())
         score += points
         return TapResult(noteIndex: index, judgment: judgment, points: points,
                          deltaMs: Int((bestDt * 1000).rounded()))

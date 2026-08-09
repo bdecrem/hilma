@@ -44,6 +44,9 @@ struct ChartNote {
     let lane: Int
     /// Index into the set's scale tones. nil for percussive (non-melodic) sets.
     let pitchIndex: Int?
+    /// Velocity 0–1: scales score, tap volume and note size. Generated charts
+    /// use 1; authored charts (minimal ii) carry accents.
+    var vel: Double = 1
 }
 
 // MARK: - Run config & results

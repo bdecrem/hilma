@@ -162,6 +162,7 @@ private struct CalibrationSection: View {
         let synth = SynthEngine.shared
         synth.stopAllVoices()
         synth.conductor = cond
+        synth.apply(EngineConfig())   // plain routing for the metronome
         synth.start()
         let sched = BackingScheduler(plan: plan, conductor: cond, synth: synth)
         conductor = cond

@@ -39,9 +39,10 @@ struct BassVoice: Voice {
                 let cutoff = expSweep(f0: 900, f1: 200, t: t, sweep: spb * 0.9)
                 lp.retune(.lowpass(sr: sr, freq: cutoff))
             }
-            phase += freq * dt
-            let saw = 2.0 * (phase - floor(phase)) - 1.0
-            out[i] += Float(lp.process(saw) * env)
+            let dp = freq * dt
+            phase += dp
+            if phase >= 1 { phase -= 1 }
+            out[i] += Float(lp.process(blSaw(phase, dp)) * env)
             env *= envFactor
         }
         return t < duration

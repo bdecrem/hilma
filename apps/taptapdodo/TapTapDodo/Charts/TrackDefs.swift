@@ -22,11 +22,15 @@ struct TrackDef {
     let backingStyle: String
     /// Which of the built-in Skins to render with (a ttd id, e.g. "ttd02").
     let skinRef: String
+    /// Seconds of ring-out after the last beat (minimal ii lets the dub
+    /// delay tail breathe).
+    let tail: Double
 
     init(id: String, index: Int, name: String, genreLine: String, bpm: Double,
          bars: Int, travel: Double, swing: Double, melodic: Bool,
          sections: [Section], patternBank: [SectionKind: [Pattern]],
-         scaleTones: [Double], backingStyle: String? = nil, skinRef: String? = nil) {
+         scaleTones: [Double], backingStyle: String? = nil, skinRef: String? = nil,
+         tail: Double = 1.5) {
         self.id = id
         self.index = index
         self.name = name
@@ -41,6 +45,7 @@ struct TrackDef {
         self.scaleTones = scaleTones
         self.backingStyle = backingStyle ?? TrackDef.defaultStyle(forId: id)
         self.skinRef = skinRef ?? id
+        self.tail = tail
     }
 
     private static func defaultStyle(forId id: String) -> String {
@@ -55,7 +60,7 @@ struct TrackDef {
 
     var secondsPerBeat: Double { 60.0 / bpm }
     var totalBeats: Double { Double(bars * 4) }
-    var songLength: Double { totalBeats * secondsPerBeat + 1.5 }
+    var songLength: Double { totalBeats * secondsPerBeat + tail }
     var label: String { String(format: "ttd·%02d", index) }
 
     func section(atBar bar: Int) -> Section {
@@ -71,7 +76,7 @@ struct TrackDef {
     static func byId(_ id: String) -> TrackDef? { all.first { $0.id == id } }
 
     // Pager order — the locked set stays last.
-    static let all: [TrackDef] = [origin, minimal, detroit, afters, gabber]
+    static let all: [TrackDef] = [origin, minimal, detroit, afters, minimalII, gabber]
 }
 
 // Note frequencies (Hz)
@@ -221,6 +226,32 @@ extension TrackDef {
             .outro: [Pattern([(0, 0), (3, 1), (4, 0), (7, 1)])],
         ],
         scaleTones: []
+    )
+
+    // ttd·08 — "minimal ii", the authored F-minor set ported exactly from
+    // reference/tap-tap-dodo-minimal-ii.html. Swing, sidechain, dub delay,
+    // 3-against-4 polymeter. Chart is authored (MinimalII.chart), not seeded.
+    static let minimalII = TrackDef(
+        id: "ttd08", index: 8, name: "minimal ii",
+        genreLine: "minimal ii · f minor · 128 · swing + dub",
+        bpm: 128, bars: 48, travel: 1.7, swing: 0.5, melodic: false,
+        sections: [
+            Section(kind: .intro, bars: 0..<4),
+            Section(kind: .groove, bars: 4..<16),
+            Section(kind: .breakdown, bars: 16..<20),
+            Section(kind: .peak, bars: 20..<40),
+            Section(kind: .outro, bars: 40..<48),
+        ],
+        patternBank: [
+            .intro: [Pattern([(1, 1), (5, 1)])],
+            .groove: [Pattern([(0, 0), (3, 1), (4, 0), (7, 1)])],
+            .breakdown: [Pattern([(2, 2), (6, 2)])],
+            .peak: [Pattern([(0, 0), (3, 1), (4, 0), (7, 1)])],
+            .outro: [Pattern([(0, 0)])],
+        ],
+        scaleTones: [],
+        backingStyle: "minimal2",
+        tail: 0.75 * (60.0 / 128.0) * 4 + 1.0
     )
 
     // ttd·04 — 180 BPM distorted kick chaos. Unlocked by S-ranking any other set.

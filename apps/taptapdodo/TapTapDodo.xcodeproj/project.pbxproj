@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00CD52195471C39AE0C9ED99 /* Chart.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1B80814594B24802896B15 /* Chart.swift */; };
+		028D85D5CE36C4781074260A /* MixCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34F5396AA25971CCD44E266F /* MixCore.swift */; };
 		0294579809BF677C10570CD6 /* PreviewPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08767D69E34D267B896C223 /* PreviewPlayer.swift */; };
 		19AA4AAA918D2104C9209D4D /* ScoreStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5DBD08F3532B3370765408 /* ScoreStore.swift */; };
 		3528C734DE7765FDF2A3B449 /* TrackDefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610B5A6A8687736CE2A15DD8 /* TrackDefs.swift */; };
@@ -25,12 +26,14 @@
 		5C4281BAF2EED4674509F3F4 /* SpaceMono-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3CAA61C5B946CC660E86C30F /* SpaceMono-Bold.ttf */; };
 		605311051DD814CCE4A5750D /* Unbounded-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 1BD42A5AB19C47DDF4A21358 /* Unbounded-Black.ttf */; };
 		666F261676CAD3A07981F0E0 /* TapTapDodoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAF4461615DD09DF8CD92999 /* TapTapDodoApp.swift */; };
+		675D5EBDF0F8D9B39B1E7989 /* MinimalII.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3298606D2083A9C54CBC911D /* MinimalII.swift */; };
 		6953B90C88BED6C76BDF5ED2 /* MinimalSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97B0DC61A173072E71267503 /* MinimalSkin.swift */; };
 		6C12C015F5C9269A4D82D3DC /* TrackLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E258704B4F9206C9C50F2976 /* TrackLibrary.swift */; };
 		8776C11DFC5D5106D7060BC5 /* AftersSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A928411028D1C4ABB599B21C /* AftersSkin.swift */; };
 		8877CF76CAC2F6D6F8A3B782 /* KickVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111C1A53EB2C99CF8D0D3803 /* KickVoice.swift */; };
 		8D83F46744D4B6B089490ED9 /* PadVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDA53EB2E6A61318D30138D /* PadVoice.swift */; };
 		9053DE1CFBD7D6B7734CCF73 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C2469FFF5B8D04E0FEF3DE /* GameScene.swift */; };
+		924ED022B6BBA95E5FEE7BCC /* MinimalIISkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11671C99BB32C3BF4EBBE504 /* MinimalIISkin.swift */; };
 		93E253172904E8A4026A88A5 /* HatVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC5BF509E695CF1F94B06F6A /* HatVoice.swift */; };
 		95EF6B5D95CB2EA7DAC2988C /* BackingComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F2E03B4F8A531DA560E66A3 /* BackingComposer.swift */; };
 		9D85DBE87345C94C2F50E3F6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9F0B955D82921BA04EDCC660 /* Assets.xcassets */; };
@@ -41,6 +44,7 @@
 		C31E69791CAB6760ED84D6C6 /* AftersVoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5B43C8C0339CA7908B26A66 /* AftersVoices.swift */; };
 		C3818A64728F2D66B02D2C9E /* GabberSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */; };
 		C6DAF4BAE0106B06863CBF05 /* DetroitSkin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41E24A6E7AF4C5CBD56CCEF /* DetroitSkin.swift */; };
+		D5FB6E14E09EAB7B6E95DE07 /* MinimalIIVoices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B9B1361966BEBD15B6B37CB /* MinimalIIVoices.swift */; };
 		D7E82B059E8140CFB6FCDEED /* PluckVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9B63A840719A95E70E37542 /* PluckVoice.swift */; };
 		DA504BD4C575CF3615AC23B0 /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FF5B90538D5CB46BAC91643 /* GameView.swift */; };
 		E431B6DDFC87151930294D91 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D61C713C6D052FBBC5A79FA3 /* Haptics.swift */; };
@@ -53,6 +57,7 @@
 		08612C6C22247F4BEE732981 /* StabVoices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StabVoices.swift; sourceTree = "<group>"; };
 		0C60ABD8FCBF60A4A22E5327 /* TitleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleScreen.swift; sourceTree = "<group>"; };
 		111C1A53EB2C99CF8D0D3803 /* KickVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KickVoice.swift; sourceTree = "<group>"; };
+		11671C99BB32C3BF4EBBE504 /* MinimalIISkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalIISkin.swift; sourceTree = "<group>"; };
 		1BD42A5AB19C47DDF4A21358 /* Unbounded-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Unbounded-Black.ttf"; sourceTree = "<group>"; };
 		1EB89BF73147BEE6E9535162 /* SpaceMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Regular.ttf"; sourceTree = "<group>"; };
 		244701DEF2DB7ADF2204BFEE /* ClapVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClapVoice.swift; sourceTree = "<group>"; };
@@ -60,11 +65,14 @@
 		2C5DBD08F3532B3370765408 /* ScoreStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreStore.swift; sourceTree = "<group>"; };
 		2DE642C8038B856216822E83 /* TapTapDodo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TapTapDodo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2FF5B90538D5CB46BAC91643 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
+		3298606D2083A9C54CBC911D /* MinimalII.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalII.swift; sourceTree = "<group>"; };
+		34F5396AA25971CCD44E266F /* MixCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MixCore.swift; sourceTree = "<group>"; };
 		3884C8FA7341CB69C7446B85 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3CAA61C5B946CC660E86C30F /* SpaceMono-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "SpaceMono-Bold.ttf"; sourceTree = "<group>"; };
 		3CD8E40547B9933F89A37A51 /* TrackPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackPack.swift; sourceTree = "<group>"; };
 		44AAAF84FFE9464B17361250 /* Conductor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conductor.swift; sourceTree = "<group>"; };
 		5355B6041DF2D2BC8DCE06AC /* OriginSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginSkin.swift; sourceTree = "<group>"; };
+		5B9B1361966BEBD15B6B37CB /* MinimalIIVoices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalIIVoices.swift; sourceTree = "<group>"; };
 		60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GabberSkin.swift; sourceTree = "<group>"; };
 		610B5A6A8687736CE2A15DD8 /* TrackDefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackDefs.swift; sourceTree = "<group>"; };
 		6F2E03B4F8A531DA560E66A3 /* BackingComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackingComposer.swift; sourceTree = "<group>"; };
@@ -100,6 +108,7 @@
 			children = (
 				BF1B80814594B24802896B15 /* Chart.swift */,
 				F0AA78B5F717C3233F8C32EB /* ChartGenerator.swift */,
+				3298606D2083A9C54CBC911D /* MinimalII.swift */,
 				610B5A6A8687736CE2A15DD8 /* TrackDefs.swift */,
 				3CD8E40547B9933F89A37A51 /* TrackPack.swift */,
 			);
@@ -128,6 +137,7 @@
 				A928411028D1C4ABB599B21C /* AftersSkin.swift */,
 				C41E24A6E7AF4C5CBD56CCEF /* DetroitSkin.swift */,
 				60EDC0B77AE20A4E35AA57DA /* GabberSkin.swift */,
+				11671C99BB32C3BF4EBBE504 /* MinimalIISkin.swift */,
 				97B0DC61A173072E71267503 /* MinimalSkin.swift */,
 				5355B6041DF2D2BC8DCE06AC /* OriginSkin.swift */,
 				FCE05B5E66A54A918D82FE37 /* Skin.swift */,
@@ -143,6 +153,7 @@
 				244701DEF2DB7ADF2204BFEE /* ClapVoice.swift */,
 				DC5BF509E695CF1F94B06F6A /* HatVoice.swift */,
 				111C1A53EB2C99CF8D0D3803 /* KickVoice.swift */,
+				5B9B1361966BEBD15B6B37CB /* MinimalIIVoices.swift */,
 				CBDA53EB2E6A61318D30138D /* PadVoice.swift */,
 				C9B63A840719A95E70E37542 /* PluckVoice.swift */,
 				08612C6C22247F4BEE732981 /* StabVoices.swift */,
@@ -171,6 +182,7 @@
 			isa = PBXGroup;
 			children = (
 				6F2E03B4F8A531DA560E66A3 /* BackingComposer.swift */,
+				34F5396AA25971CCD44E266F /* MixCore.swift */,
 				7616224F557C50AB5FD9BAF1 /* SynthEngine.swift */,
 				8BC7FF2D2D49869CAC00FC22 /* SynthSupport.swift */,
 				8093FC7FA5501E6E48206722 /* Voices */,
@@ -322,7 +334,11 @@
 				93E253172904E8A4026A88A5 /* HatVoice.swift in Sources */,
 				AD5E7B2CB63DEFDCEF7E94C4 /* JudgmentEngine.swift in Sources */,
 				8877CF76CAC2F6D6F8A3B782 /* KickVoice.swift in Sources */,
+				675D5EBDF0F8D9B39B1E7989 /* MinimalII.swift in Sources */,
+				924ED022B6BBA95E5FEE7BCC /* MinimalIISkin.swift in Sources */,
+				D5FB6E14E09EAB7B6E95DE07 /* MinimalIIVoices.swift in Sources */,
 				6953B90C88BED6C76BDF5ED2 /* MinimalSkin.swift in Sources */,
+				028D85D5CE36C4781074260A /* MixCore.swift in Sources */,
 				4ABD647D15ED24D6D0B7A4AA /* OriginSkin.swift in Sources */,
 				8D83F46744D4B6B089490ED9 /* PadVoice.swift in Sources */,
 				D7E82B059E8140CFB6FCDEED /* PluckVoice.swift in Sources */,
@@ -380,7 +396,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -440,7 +456,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
