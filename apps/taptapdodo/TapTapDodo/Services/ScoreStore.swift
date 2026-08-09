@@ -79,7 +79,7 @@ final class ScoreStore: ObservableObject {
     }
 
     var hasSRank: Bool {
-        bests.contains { $0.key != TrackDef.gabber.id && $0.value.grade == "S" }
+        bests.contains { $0.key != TrackDef.gabber.id && $0.key != TrackDef.syncTest.id && $0.value.grade == "S" }
     }
 
     func todaysDaily() -> DailyEntry? { dailies[Self.todayKey()] }
@@ -96,7 +96,7 @@ final class ScoreStore: ObservableObject {
 
     /// The daily rotates through the non-gabber sets.
     static func dailyTrackId(date: Date = Date()) -> String {
-        let ids = TrackDef.all.filter { $0.id != TrackDef.gabber.id }.map { $0.id }
+        let ids = TrackDef.all.filter { $0.id != TrackDef.gabber.id && $0.backingStyle != "test" }.map { $0.id }
         return ids[Int(dailySeed(date: date) % UInt64(ids.count))]
     }
 }

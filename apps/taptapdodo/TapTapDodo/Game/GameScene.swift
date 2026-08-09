@@ -508,6 +508,8 @@ final class GameScene: SKScene {
             synth.schedule(AftersTapVoice(at: audioAt, lane: lane, vol: 0.32))
         case "minimal2":
             synth.schedule(MinimalIITapVoice(at: audioAt, lane: lane, vol: 0.3 * note.vel + 0.06))
+        case "test":
+            synth.schedule(StabVoice(at: audioAt, lane: lane, vol: 0.3))
         default:
             synth.schedule(GabberStabVoice(at: audioAt, lane: lane, vol: 0.35))
         }
@@ -532,6 +534,10 @@ final class GameScene: SKScene {
         case .miss:
             label = skin.judgeLabels.miss
             color = skin.dim
+        }
+        // the sync tester shows the signed error on EVERY hit
+        if track.backingStyle == "test", result.judgment != .miss {
+            micro = String(format: "%+d ms", result.deltaMs)
         }
         showJudge(label, color: color, micro: micro)
 
@@ -564,6 +570,8 @@ final class GameScene: SKScene {
             synth.schedule(AftersTapVoice(at: audioAt, lane: note.lane, vol: 0.06))
         case "minimal2":
             synth.schedule(MinimalIITapVoice(at: audioAt, lane: note.lane, vol: 0.05))
+        case "test":
+            synth.schedule(StabVoice(at: audioAt, lane: note.lane, vol: 0.06))
         default:
             synth.schedule(GabberStabVoice(at: audioAt, lane: note.lane, vol: 0.05))
         }

@@ -21,6 +21,11 @@ final class SynthEngine {
     /// The clock. Swapped per run (and for the calibration metronome).
     var conductor: Conductor?
 
+    /// Audio is rendered this much EARLY so it reaches the ear at its nominal
+    /// song time: hardware output latency (AirPods: 150ms+!) plus the
+    /// compressor's 6ms lookahead. Refreshed on start and route changes.
+    private var latencyComp: Double = 0.006
+
     private init() {
         let session = AVAudioSession.sharedInstance()
         try? session.setCategory(.playback, mode: .default)
@@ -46,12 +51,25 @@ final class SynthEngine {
 
         engine.attach(srcNode)
         engine.connect(srcNode, to: engine.mainMixerNode, format: format)
+
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in self?.refreshLatency() }
+        refreshLatency()
+    }
+
+    private func refreshLatency() {
+        let latency = AVAudioSession.sharedInstance().outputLatency
+        os_unfair_lock_lock(&lock)
+        latencyComp = latency + 0.006
+        os_unfair_lock_unlock(&lock)
     }
 
     func start() {
         guard !engine.isRunning else { return }
         try? AVAudioSession.sharedInstance().setActive(true)
         try? engine.start()
+        refreshLatency()
     }
 
     func pause() {
@@ -97,12 +115,13 @@ final class SynthEngine {
         guard let conductor, hasClock else { return }
 
         let ts = timestamp.pointee
-        let bufferStart: Double
+        var bufferStart: Double
         if ts.mFlags.contains(.hostTimeValid) {
             bufferStart = conductor.songTime(atHostTime: ts.mHostTime)
         } else {
             bufferStart = conductor.songTime
         }
+        bufferStart += latencyComp   // render early → lands on time at the ear
 
         core.render(voices: &active, outL: outL, outR: outR, frames: frames, bufferStart: bufferStart)
     }

@@ -75,8 +75,8 @@ struct TrackDef {
 
     static func byId(_ id: String) -> TrackDef? { all.first { $0.id == id } }
 
-    // Pager order — the locked set stays last.
-    static let all: [TrackDef] = [origin, minimal, detroit, afters, minimalII, gabber]
+    // Pager order — the locked set stays last, the sync tester after it.
+    static let all: [TrackDef] = [origin, minimal, detroit, afters, minimalII, gabber, syncTest]
 }
 
 // Note frequencies (Hz)
@@ -88,6 +88,23 @@ enum Tone {
 }
 
 extension TrackDef {
+
+    // ttd·00 — the sync tester: bare kick + hats, a note on every eighth in
+    // the middle lane, and a live ±ms readout on every hit. For diagnosing
+    // latency/calibration, not for glory.
+    static let syncTest = TrackDef(
+        id: "ttd00", index: 0, name: "sync test",
+        genreLine: "calibration · tap every eighth · 120",
+        bpm: 120, bars: 24, travel: 1.7, swing: 0.5, melodic: false,
+        sections: [Section(kind: .groove, bars: 0..<24)],
+        patternBank: [
+            .groove: [Pattern([(0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)])],
+        ],
+        scaleTones: [],
+        backingStyle: "test",
+        skinRef: "ttd02"
+    )
+
 
     // ttd·01 — the melodic set from reference/tap-tap-dodo.html.
     // The lane plucks ARE the lead line; the player plays it.

@@ -30,6 +30,7 @@ enum BackingComposer {
         case "detroit": return detroit(track)
         case "afters": return afters(track)
         case "minimal2": return minimalII(track)
+        case "test": return syncTest(track)
         default: return gabber(track)
         }
     }
@@ -131,6 +132,23 @@ enum BackingComposer {
             duck: (times: kicks, floor: 0.32, recover: spb * 0.44))
 
         return BackingPlan(events: events, kickTimes: kicks, dropTime: barT(20), config: config)
+    }
+
+    // ttd·00 — kick on every beat, closed hat on every eighth, nothing else.
+    private static func syncTest(_ track: TrackDef) -> BackingPlan {
+        let spb = track.secondsPerBeat
+        var events: [BackingEvent] = []
+        var kicks: [Double] = []
+        for half in 0..<(track.bars * 8) {
+            let t = Double(half) * 0.5 * spb
+            if half % 2 == 0 {
+                events.append(BackingEvent(time: t) { KickVoice.origin(at: t) })
+                kicks.append(t)
+            }
+            events.append(BackingEvent(time: t) { HatVoice.origin(at: t, open: false, seed: UInt64(half) &+ 1) })
+        }
+        return BackingPlan(events: events, kickTimes: kicks, dropTime: .infinity,
+                           config: EngineConfig(masterGain: 0.8, compThreshold: -24, compRatio: 12))
     }
 
     private static func dropStart(_ track: TrackDef) -> Double {

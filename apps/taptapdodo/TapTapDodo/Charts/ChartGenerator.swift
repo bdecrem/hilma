@@ -8,6 +8,12 @@ enum ChartGenerator {
     static func generate(track: TrackDef, seed: UInt64) -> [ChartNote] {
         // minimal ii ships an authored chart — fixed, swung, velocity-accented.
         if track.backingStyle == "minimal2" { return MinimalII.chart() }
+        // the sync tester: one note on every eighth, middle lane, no variation
+        if track.backingStyle == "test" {
+            return (0..<(track.bars * 8)).map {
+                ChartNote(beat: Double($0) * 0.5, lane: 1, pitchIndex: nil)
+            }
+        }
         var rng = SplitMix64(seed: seed)
         var bars: [[(offset: Int, lane: Int)]] = []
 
