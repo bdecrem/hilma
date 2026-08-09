@@ -55,6 +55,24 @@ struct SetSelectScreen: View {
         }
         .sheet(isPresented: $showSettings) { SettingsScreen() }
         .task { await app.library.fetchOnline() }
+        // Land on a card, hear two bars of its peak groove.
+        .onAppear { PreviewPlayer.shared.preview(track(atPage: app.selectedSetIndex)) }
+        .onChange(of: app.selectedSetIndex) { _, page in
+            PreviewPlayer.shared.preview(track(atPage: page))
+        }
+        .onDisappear { PreviewPlayer.shared.stop() }
+    }
+
+    /// The track behind a pager index: daily, built-ins, then store cards
+    /// (only previewable once downloaded).
+    private func track(atPage index: Int) -> TrackDef? {
+        if index == 0 { return app.library.byId(ScoreStore.dailyTrackId()) }
+        let builtIns = TrackDef.all
+        if index <= builtIns.count { return builtIns[index - 1] }
+        let storeIndex = index - builtIns.count - 1
+        let ids = storeCardIds()
+        guard storeIndex >= 0, storeIndex < ids.count else { return nil }
+        return app.library.byId(ids[storeIndex])
     }
 
     /// Store pages: every downloaded pack plus every online track that isn't
@@ -127,6 +145,7 @@ private struct OnlineCard: View {
             .padding(.top, 8)
 
             Button {
+                app.uiTap()
                 failed = false
                 Task {
                     do { try await app.library.download(row.id) } catch { failed = true }
@@ -210,6 +229,7 @@ private struct SetCard: View {
                     .padding(.top, 14)
             } else {
                 Button {
+                    app.uiTap()
                     app.startRun(trackId: track.id)
                 } label: {
                     Text(skin.styled("PLAY THIS SET"))
@@ -303,6 +323,7 @@ private struct DailyCard: View {
             }
 
             Button {
+                app.uiTap()
                 app.startDaily()
             } label: {
                 Text(skin.styled(played == nil ? "PLAY TODAY'S SET" : "PRACTICE"))

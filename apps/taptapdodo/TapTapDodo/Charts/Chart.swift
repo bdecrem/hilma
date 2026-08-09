@@ -69,6 +69,8 @@ struct RunResult {
     let goods: Int
     let misses: Int
     var isNewBest: Bool = false
+    /// Set when THIS run's grade tipped the gabber unlock.
+    var unlockedGabber: Bool = false
 
     var totalNotes: Int { perfects + goods + misses }
     var accuracy: Int {

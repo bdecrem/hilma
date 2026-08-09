@@ -9,6 +9,7 @@ final class Haptics {
     private var perfectPlayer: CHHapticPatternPlayer?
     private var goodPlayer: CHHapticPatternPlayer?
     private var kickPlayer: CHHapticPatternPlayer?
+    private var uiPlayer: CHHapticPatternPlayer?
     private let supported = CHHapticEngine.capabilitiesForHardware().supportsHaptics
 
     init() {
@@ -27,6 +28,7 @@ final class Haptics {
         perfectPlayer = transientPlayer(intensity: 0.8, sharpness: 0.9)
         goodPlayer = transientPlayer(intensity: 0.5, sharpness: 0.6)
         kickPlayer = transientPlayer(intensity: 0.3, sharpness: 0.25)
+        uiPlayer = transientPlayer(intensity: 0.35, sharpness: 0.5)
     }
 
     private func transientPlayer(intensity: Float, sharpness: Float) -> CHHapticPatternPlayer? {
@@ -42,4 +44,5 @@ final class Haptics {
     func perfect() { try? perfectPlayer?.start(atTime: CHHapticTimeImmediate) }
     func good() { try? goodPlayer?.start(atTime: CHHapticTimeImmediate) }
     func kick() { try? kickPlayer?.start(atTime: CHHapticTimeImmediate) }
+    func ui() { try? uiPlayer?.start(atTime: CHHapticTimeImmediate) }
 }

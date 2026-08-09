@@ -55,6 +55,15 @@ final class Conductor {
         running = true
     }
 
+    /// Start with the clock already at `t` — used by the set-select previews
+    /// to drop straight into a section without playing everything before it.
+    func start(atSongTime t: Double) {
+        let elapsedTicks = UInt64(max(0, t + leadIn) / Self.ticksToSeconds)
+        songStartHostTime = mach_absolute_time() &- elapsedTicks
+        pausedAt = t
+        running = true
+    }
+
     /// Interruption-safe pause: freeze song time.
     func pause() {
         guard running else { return }

@@ -121,6 +121,16 @@ Tracks can live server-side and be downloaded into the app like a built-in set.
 - Seed: `node scripts/ttd-seed-track.mjs` upserts the ttd06 "warehouse" test
   track (afters family, ttd02 skin, 127 bpm, 36 bars).
 
+## Feel layer (polish pass, build 4)
+
+Title dodo idles in a transparent SpriteKit scene; set-select cards preview
+two bars of their peak section (`Services/PreviewPlayer.swift` — conductor
+started mid-song via `start(atSongTime:)`, scheduler skips the past);
+count-in plays four quiet ticks; non-perfect judgments show early/late;
+menu buttons haptic-tick via `Haptics.ui()`; headphones-out auto-pauses.
+`taptapdodo://sets?page=N` deep links to a specific pager card — that plus
+`TTD_AUTORUN` is how every screen gets screenshot-verified headlessly.
+
 ## Architecture notes
 
 - `Game/Conductor.swift` owns musical time (mach host time → song seconds).

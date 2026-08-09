@@ -60,8 +60,14 @@ final class AppState: ObservableObject {
 
     // MARK: Flow
 
+    /// Light tick for menu buttons, honoring the haptics setting.
+    func uiTap() {
+        if hapticsOn { haptics.ui() }
+    }
+
     func startRun(trackId: String, seed: UInt64? = nil, isDaily: Bool = false) {
         guard library.byId(trackId) != nil else { return }
+        PreviewPlayer.shared.stop()
         let config = RunConfig(trackId: trackId,
                                seed: seed ?? UInt64.random(in: 1..<UInt64.max),
                                isDaily: isDaily)
@@ -74,16 +80,26 @@ final class AppState: ObservableObject {
 
     func finishRun(_ result: RunResult) {
         var final = result
+        let hadSRank = store.hasSRank
         final.isNewBest = store.record(result)
+        final.unlockedGabber = !hadSRank && store.hasSRank
         lastResult = final
         route = .results(result.config)
     }
 
     func handleDeepLink(_ url: URL) {
-        // taptapdodo://play?track=ttd02&seed=12345
+        // taptapdodo://play?track=ttd02&seed=12345 · taptapdodo://sets?page=N
         guard url.scheme == "taptapdodo",
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              (url.host == "play" || components.path.contains("play")) else { return }
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return }
+        if url.host == "sets" {
+            if let pageString = components.queryItems?.first(where: { $0.name == "page" })?.value,
+               let page = Int(pageString) {
+                selectedSetIndex = max(0, page)
+            }
+            route = .setSelect
+            return
+        }
+        guard url.host == "play" || components.path.contains("play") else { return }
         let items = components.queryItems ?? []
         guard let trackId = items.first(where: { $0.name == "track" })?.value else { return }
         let seedString = items.first(where: { $0.name == "seed" })?.value ?? ""

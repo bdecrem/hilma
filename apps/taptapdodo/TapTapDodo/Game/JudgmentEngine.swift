@@ -7,6 +7,8 @@ final class JudgmentEngine {
         let noteIndex: Int
         let judgment: Judgment
         let points: Int
+        /// Signed timing error in ms — negative early, positive late.
+        let deltaMs: Int
     }
 
     // Windows (seconds). Perfect ±65ms, Good ±140ms; a late tap out to +180ms
@@ -64,7 +66,8 @@ final class JudgmentEngine {
         maxCombo = max(maxCombo, combo)
         let points = base + min(combo, 50) * 2
         score += points
-        return TapResult(noteIndex: index, judgment: judgment, points: points)
+        return TapResult(noteIndex: index, judgment: judgment, points: points,
+                         deltaMs: Int((bestDt * 1000).rounded()))
     }
 
     /// Sweep for notes that slid past the late window. Returns newly missed indices.

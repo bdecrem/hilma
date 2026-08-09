@@ -48,6 +48,7 @@ final class GameScene: SKScene {
     private var scoreLabel: SKLabelNode!
     private var comboLabel: SKLabelNode!
     private var judgeLabel: SKLabelNode!
+    private var microJudgeLabel: SKLabelNode!
     private var countdownLabel: SKLabelNode!
     private var pausedOverlay: SKNode?
     private var pauseButtonRect: CGRect = .null
@@ -56,6 +57,7 @@ final class GameScene: SKScene {
     private struct Flash { let lane: Int; let start: Double; let node: SKShapeNode }
     private var flashes: [Flash] = []
     private var judgeShownAt = -10.0
+    private var comboPopAt = -10.0
     private var paused_ = false
     private var finished = false
     private var started = false
@@ -124,6 +126,15 @@ final class GameScene: SKScene {
 
         conductor.start()
         sched.start()
+
+        // Audible count-in: four quiet ticks on the beats leading into beat 0,
+        // so the tempo is in the player's ear before the first note arrives.
+        let spb = track.secondsPerBeat
+        for i in 1...4 {
+            let t = -Double(i) * spb
+            synth.schedule(HatVoice.afters(at: t, open: false, velocity: 0.55, seed: UInt64(900 + i)))
+        }
+
         started = true
     }
 
@@ -271,6 +282,12 @@ final class GameScene: SKScene {
         judgeLabel.alpha = 0
         addChild(judgeLabel)
 
+        microJudgeLabel = SKLabelNode()
+        microJudgeLabel.horizontalAlignmentMode = .center
+        microJudgeLabel.position = CGPoint(x: W / 2, y: H * 0.66 - 22)
+        microJudgeLabel.alpha = 0
+        addChild(microJudgeLabel)
+
         countdownLabel = SKLabelNode()
         countdownLabel.horizontalAlignmentMode = .center
         countdownLabel.position = CGPoint(x: W / 2, y: H * 0.6)
@@ -319,13 +336,19 @@ final class GameScene: SKScene {
                                            kern: isGlyphs ? 2 : 0)
     }
 
-    private func showJudge(_ text: String, color: SKColor) {
+    private func showJudge(_ text: String, color: SKColor, micro: String? = nil) {
         let isGlyphs = skin.laneStyle == .glyphs
         judgeLabel.attributedText = kerned(skin.styled(text),
                                            font: isGlyphs ? Fonts.monoBold : Fonts.unbounded,
                                            size: isGlyphs ? 13 : 24,
                                            color: color,
                                            kern: isGlyphs ? 6 : 1)
+        if let micro {
+            microJudgeLabel.attributedText = kerned(skin.styled(micro),
+                                                    font: Fonts.mono, size: 10,
+                                                    color: skin.dim, kern: 3)
+        }
+        microJudgeLabel.alpha = micro == nil ? 0 : 1
         judgeShownAt = conductor.songTime
         judgeLabel.alpha = 1
     }
@@ -342,6 +365,14 @@ final class GameScene: SKScene {
             // Pause on .began; stay paused after .ended — the player resumes
             // with a tap once they're ready, and the clock realigns exactly.
             if type == .began { self.pauseGame() }
+        }
+        // Headphones yanked mid-run: pause rather than blasting the speaker.
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
+        ) { [weak self] note in
+            guard let raw = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                  let reason = AVAudioSession.RouteChangeReason(rawValue: raw) else { return }
+            if reason == .oldDeviceUnavailable { self?.pauseGame() }
         }
     }
 
@@ -426,8 +457,14 @@ final class GameScene: SKScene {
             // Explicit buttons only — no more tap-anywhere-to-resume.
             for touch in touches {
                 let hit = nodes(at: touch.location(in: self))
-                if hit.contains(where: { $0.name == "ttd.resume" }) { resumeGame(); return }
-                if hit.contains(where: { $0.name == "ttd.exit" }) { exitRun(); return }
+                if hit.contains(where: { $0.name == "ttd.resume" }) {
+                    if settings.hapticsOn { haptics.ui() }
+                    resumeGame(); return
+                }
+                if hit.contains(where: { $0.name == "ttd.exit" }) {
+                    if settings.hapticsOn { haptics.ui() }
+                    exitRun(); return
+                }
             }
             return
         }
@@ -474,6 +511,7 @@ final class GameScene: SKScene {
 
         let label: String
         let color: SKColor
+        var micro: String? = nil
         switch result.judgment {
         case .perfect:
             label = skin.judgeLabels.perfect
@@ -482,12 +520,19 @@ final class GameScene: SKScene {
         case .good, .weak:
             label = skin.judgeLabels.good
             color = skin.judgeColoredByLane ? skin.laneColors[lane] : skin.foreground
+            // The skill loop: non-perfect hits say which side they landed on.
+            micro = result.deltaMs < 0 ? "early" : "late"
             if settings.hapticsOn { haptics.good() }
         case .miss:
             label = skin.judgeLabels.miss
             color = skin.dim
         }
-        showJudge(label, color: color)
+        showJudge(label, color: color, micro: micro)
+
+        if judge.combo > 0, judge.combo % 25 == 0 {
+            comboPopAt = now
+            if settings.hapticsOn { haptics.good() }
+        }
 
         if let node = noteNodes.removeValue(forKey: result.noteIndex) {
             node.removeFromParent()
@@ -590,10 +635,17 @@ final class GameScene: SKScene {
         updateBeatFX(now: now)
         updateCountdown(now: now)
 
-        // judgment label fade, clock-driven like everything else
+        // judgment label fade + entry pop, clock-driven like everything else
         let judgeAge = now - judgeShownAt
         let judgeHold = skin.laneStyle == .glyphs ? 0.22 : 0.26
-        judgeLabel.alpha = judgeAge < judgeHold ? 1 : max(0, 1 - (judgeAge - judgeHold) / 0.08)
+        let judgeAlpha = judgeAge < judgeHold ? 1 : max(0, 1 - (judgeAge - judgeHold) / 0.08)
+        judgeLabel.alpha = judgeAlpha
+        judgeLabel.setScale(judgeAge < 0.08 ? 0.85 + 0.15 * judgeAge / 0.08 : 1)
+        if microJudgeLabel.alpha > 0 { microJudgeLabel.alpha = judgeAlpha }
+
+        // combo milestone pop (every 25)
+        let comboAge = now - comboPopAt
+        comboLabel.setScale(comboAge < 0.25 ? 1 + 0.3 * (1 - comboAge / 0.25) : 1)
 
         dodo?.combo = judge.combo
         dodo?.update(songTime: now)

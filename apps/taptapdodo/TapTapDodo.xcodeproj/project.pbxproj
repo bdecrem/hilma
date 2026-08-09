@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00CD52195471C39AE0C9ED99 /* Chart.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF1B80814594B24802896B15 /* Chart.swift */; };
+		0294579809BF677C10570CD6 /* PreviewPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08767D69E34D267B896C223 /* PreviewPlayer.swift */; };
 		19AA4AAA918D2104C9209D4D /* ScoreStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5DBD08F3532B3370765408 /* ScoreStore.swift */; };
 		3528C734DE7765FDF2A3B449 /* TrackDefs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610B5A6A8687736CE2A15DD8 /* TrackDefs.swift */; };
 		37AA6FD10CB39AA6AFE8BF03 /* TitleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C60ABD8FCBF60A4A22E5327 /* TitleScreen.swift */; };
@@ -80,6 +81,7 @@
 		C9B63A840719A95E70E37542 /* PluckVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluckVoice.swift; sourceTree = "<group>"; };
 		CAF4461615DD09DF8CD92999 /* TapTapDodoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TapTapDodoApp.swift; sourceTree = "<group>"; };
 		CBDA53EB2E6A61318D30138D /* PadVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadVoice.swift; sourceTree = "<group>"; };
+		D08767D69E34D267B896C223 /* PreviewPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewPlayer.swift; sourceTree = "<group>"; };
 		D2D7BD6F84308FA5BEBF93E8 /* SetSelectScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetSelectScreen.swift; sourceTree = "<group>"; };
 		D5C2469FFF5B8D04E0FEF3DE /* GameScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		D61C713C6D052FBBC5A79FA3 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 			isa = PBXGroup;
 			children = (
 				D61C713C6D052FBBC5A79FA3 /* Haptics.swift */,
+				D08767D69E34D267B896C223 /* PreviewPlayer.swift */,
 				2C5DBD08F3532B3370765408 /* ScoreStore.swift */,
 				E258704B4F9206C9C50F2976 /* TrackLibrary.swift */,
 			);
@@ -323,6 +326,7 @@
 				4ABD647D15ED24D6D0B7A4AA /* OriginSkin.swift in Sources */,
 				8D83F46744D4B6B089490ED9 /* PadVoice.swift in Sources */,
 				D7E82B059E8140CFB6FCDEED /* PluckVoice.swift in Sources */,
+				0294579809BF677C10570CD6 /* PreviewPlayer.swift in Sources */,
 				57F2D61DE047B3C78311356F /* ResultsScreen.swift in Sources */,
 				19AA4AAA918D2104C9209D4D /* ScoreStore.swift in Sources */,
 				3C8287EE9ED903CDAF3AEA63 /* SetSelectScreen.swift in Sources */,
@@ -376,7 +380,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -436,7 +440,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

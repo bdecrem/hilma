@@ -18,7 +18,7 @@ struct ResultsScreen: View {
             VStack(spacing: 16) {
                 Spacer()
 
-                Text(skin.styled("SET COMPLETE"))
+                Text(skin.styled(config.isDaily ? "DAILY SET COMPLETE" : "SET COMPLETE"))
                     .font(.custom(Fonts.mono, size: 11))
                     .tracking(4)
                     .foregroundStyle(skin.dim.ui)
@@ -42,6 +42,20 @@ struct ResultsScreen: View {
                     }
                     .padding(.top, 6)
 
+                    // the split, in each set's own judgment vocabulary
+                    Text(skin.styled("\(skin.judgeLabels.perfect) \(result.perfects) · \(skin.judgeLabels.good) \(result.goods) · \(skin.judgeLabels.miss) \(result.misses)"))
+                        .font(.custom(Fonts.mono, size: 11))
+                        .tracking(1)
+                        .foregroundStyle(skin.dim.ui)
+
+                    if result.unlockedGabber {
+                        Text(Skin.gabber.styled("ttd·04 unlocked — the wall of kick awaits"))
+                            .font(.custom(Fonts.mono, size: 12))
+                            .tracking(2)
+                            .foregroundStyle(Skin.gabber.laneColors[0].ui)
+                            .padding(.top, 6)
+                    }
+
                     Text(skin.flavorLine(for: result.grade))
                         .font(.custom(Fonts.mono, size: 13))
                         .foregroundStyle(skin.dim.ui)
@@ -63,6 +77,7 @@ struct ResultsScreen: View {
                 }
 
                 Button {
+                    app.uiTap()
                     app.startRun(trackId: config.trackId)
                 } label: {
                     Text(skin.styled("AGAIN"))
@@ -75,14 +90,27 @@ struct ResultsScreen: View {
                 }
                 .padding(.top, 12)
 
-                Button {
-                    app.route = .setSelect
-                } label: {
-                    Text(skin.styled("sets"))
-                        .font(.custom(Fonts.mono, size: 13))
-                        .tracking(3)
-                        .foregroundStyle(skin.dim.ui)
-                        .padding(10)
+                HStack(spacing: 26) {
+                    Button {
+                        app.uiTap()
+                        app.startRun(trackId: config.trackId, seed: config.seed)
+                    } label: {
+                        Text(skin.styled("replay seed"))
+                            .font(.custom(Fonts.mono, size: 13))
+                            .tracking(3)
+                            .foregroundStyle(skin.dim.ui)
+                            .padding(10)
+                    }
+                    Button {
+                        app.uiTap()
+                        app.route = .setSelect
+                    } label: {
+                        Text(skin.styled("sets"))
+                            .font(.custom(Fonts.mono, size: 13))
+                            .tracking(3)
+                            .foregroundStyle(skin.dim.ui)
+                            .padding(10)
+                    }
                 }
 
                 Spacer()
