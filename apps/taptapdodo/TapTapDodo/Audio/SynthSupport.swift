@@ -26,7 +26,9 @@ struct Biquad {
 
     static func lowpass(sr: Double, freq: Double, q resonanceDb: Double = 1) -> Biquad {
         let cutoff = min(max(freq / (sr / 2), 0.0001), 0.9999)
-        let g = pow(10.0, 0.05 * resonanceDb)
+        // Chromium clamps resonance to >= 0 dB; below that the design's
+        // sqrt goes negative and the filter emits NaN.
+        let g = pow(10.0, 0.05 * max(0, resonanceDb))
         let d = sqrt((4 - sqrt(16 - 16 / (g * g))) / 2)
         let theta = Double.pi * cutoff
         let sn = 0.5 * d * sin(theta)
@@ -39,7 +41,7 @@ struct Biquad {
 
     static func highpass(sr: Double, freq: Double, q resonanceDb: Double = 1) -> Biquad {
         let cutoff = min(max(freq / (sr / 2), 0.0001), 0.9999)
-        let g = pow(10.0, 0.05 * resonanceDb)
+        let g = pow(10.0, 0.05 * max(0, resonanceDb))
         let d = sqrt((4 - sqrt(16 - 16 / (g * g))) / 2)
         let theta = Double.pi * cutoff
         let sn = 0.5 * d * sin(theta)

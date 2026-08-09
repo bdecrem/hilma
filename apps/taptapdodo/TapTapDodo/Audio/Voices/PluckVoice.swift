@@ -11,7 +11,7 @@ struct PluckVoice: Voice {
     let shimmerGain, shimmerDecay: Double
 
     private var phase = 0.0
-    private var phase2 = 0.0
+    private var phase2 = 0.25   // WebAudio triangle start (value 0, rising)
     private var env: Double
     private var env2: Double
     private var envFactor = 0.0

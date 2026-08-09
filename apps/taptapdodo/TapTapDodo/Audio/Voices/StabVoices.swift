@@ -88,7 +88,7 @@ struct ChordStabVoice: Voice {
         self.freqs = freqs
         self.vol = vol
         env = vol
-        phases = Array(repeating: 0, count: freqs.count)
+        phases = Array(repeating: 0.5, count: freqs.count)   // WebAudio saw start
     }
 
     mutating func render(into out: UnsafeMutablePointer<Float>, frames: Int, bufferStart: Double, sr: Double) -> Bool {

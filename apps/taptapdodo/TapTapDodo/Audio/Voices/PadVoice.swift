@@ -17,7 +17,7 @@ struct PadVoice: Voice {
         self.dur = dur
         var rng = SplitMix64(seed: seed)
         detunes = freqs.map { _ in Double.random(in: -5...5, using: &rng) }
-        phases = Array(repeating: 0, count: freqs.count)
+        phases = Array(repeating: 0.5, count: freqs.count)   // WebAudio saw start
     }
 
     mutating func render(into out: UnsafeMutablePointer<Float>, frames: Int, bufferStart: Double, sr: Double) -> Bool {
@@ -54,7 +54,7 @@ struct DroneVoice: Voice {
     let startSongTime: Double
     let dur: Double
 
-    private var phase = 0.0
+    private var phase = 0.5   // WebAudio saw start (value 0)
     private var lp = Biquad()
     private var started = false
     private var sinceRetune = 0
@@ -84,10 +84,11 @@ struct DroneVoice: Voice {
                     : 160 - (160 - 90) * ((t - half) / half)
                 lp.retune(.lowpass(sr: sr, freq: cutoff))
             }
+            // web: linearRamp 0→0.11 over 0.5s, then linearRamp down to 0
+            // across the rest of the cycle — the drone breathes, per cycle
             let env: Double
             if t < 0.5 { env = 0.11 * (t / 0.5) }
-            else if t > dur - 0.5 { env = 0.11 * ((dur - t) / 0.5) }
-            else { env = 0.11 }
+            else { env = 0.11 * max(0, (dur - t) / (dur - 0.5)) }
             let dp = 55.0 * dt
             phase += dp
             if phase >= 1 { phase -= 1 }

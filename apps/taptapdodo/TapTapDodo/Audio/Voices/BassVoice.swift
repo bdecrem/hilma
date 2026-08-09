@@ -6,7 +6,7 @@ struct BassVoice: Voice {
     let freq: Double
     let spb: Double
 
-    private var phase = 0.0
+    private var phase = 0.5   // WebAudio saw start (value 0)
     private var env = 0.28
     private var envFactor = 0.0
     private var lp = Biquad()
