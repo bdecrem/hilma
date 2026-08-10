@@ -904,6 +904,8 @@ export type FinalReviewGrade = {
   grade: 'A' | 'B' | 'C' | 'D' | 'F'
   passed: boolean // grade === 'A'
   notes: string
+  strengths: string[]
+  weaknesses: string[]
 }
 
 /// Grade a Final Review voice session transcript against the topic's source
@@ -921,19 +923,28 @@ export async function judgeFinalReview(
   const source = buildFullContent(thread).slice(0, 100_000)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
-  const system = `You grade a spoken Final Review session for a learning app. The assistant conducted a comprehensive oral review of a topic; the user is trying to demonstrate mastery.${thread.study_focus ? `
+  const system = `You grade a spoken Final Review session for a learning app. The assistant conducted an oral exam on a topic; the user is trying to demonstrate mastery. The exam is conversational: the user may have chosen the format themselves (for example summarizing the material in parts and discussing each), and the assistant may have offered brief corrections along the way.${thread.study_focus ? `
 
 The user set a STUDY FOCUS — they only studied part of the material and the exam was scoped to it: "${thread.study_focus}". Grade ONLY command of the material inside that focus. Never penalize gaps in material outside it.` : ''}
 
-Grade the USER's performance A–F:
+Grade the USER's performance A–F on what THEY demonstrated:
 - A: commanded the main ideas AND meaningful supporting detail, explained in their own words, few or no real errors. This is a high bar — reserve A for genuinely strong performances.
 - B: solid on main ideas, thin or shaky on detail.
 - C: got roughly half of it, real gaps or errors.
 - D/F: mostly unable to explain the material.
+Where the assistant corrected the user or supplied something they missed, treat that piece as not demonstrated by the user.
 
-Also write one or two sentences of feedback addressed to the user ("You ...") — what was strong, what to review.`
+Also produce:
+- notes: one or two sentences of feedback addressed to the user ("You ...") — the headline of how it went.
+- strengths: up to 5 short phrases naming specific ideas or areas the user clearly commanded. Empty only if nothing stood out.
+- weaknesses: up to 5 short phrases naming specific areas to review — gaps, errors, points the assistant had to correct. Be concrete ("the role of X in Y", not "some details").`
 
-  const parsed = await judgeJson<{ grade?: string; notes?: string }>(
+  const parsed = await judgeJson<{
+    grade?: string
+    notes?: string
+    strengths?: string[]
+    weaknesses?: string[]
+  }>(
     system,
     `Topic: ${subject}
 
@@ -949,18 +960,24 @@ Grade the user's performance.`,
       properties: {
         grade: { type: 'string', enum: ['A', 'B', 'C', 'D', 'F'] },
         notes: { type: 'string' },
+        strengths: { type: 'array', items: { type: 'string' } },
+        weaknesses: { type: 'array', items: { type: 'string' } },
       },
-      required: ['grade', 'notes'],
+      required: ['grade', 'notes', 'strengths', 'weaknesses'],
       additionalProperties: false,
     },
   )
   const grade = (['A', 'B', 'C', 'D', 'F'].includes(parsed.grade ?? '')
     ? parsed.grade
     : 'F') as FinalReviewGrade['grade']
+  const clip = (items: string[] | undefined) =>
+    (items ?? []).filter((s) => s.trim()).slice(0, 5).map((s) => s.trim().slice(0, 200))
   return {
     grade,
     passed: grade === 'A',
     notes: (parsed.notes ?? '').slice(0, 400),
+    strengths: clip(parsed.strengths),
+    weaknesses: clip(parsed.weaknesses),
   }
 }
 

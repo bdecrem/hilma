@@ -35,6 +35,69 @@ export function realtimeVoice(): string {
   return process.env.OPENAI_REALTIME_VOICE || DEFAULT_VOICE
 }
 
+/// The Realtime voices users can pick from, probed against the live API
+/// (fable/onyx/nova are TTS-only and rejected; alloy/verse accepted but
+/// left out to keep the list at 8). Preview clips for these ship in the
+/// Dodo app bundle — regenerate with scripts/generate-voice-previews.mjs
+/// if this list changes.
+export const REALTIME_VOICES = [
+  { id: 'marin', label: 'Marin', blurb: 'Bright and natural — the default.' },
+  { id: 'cedar', label: 'Cedar', blurb: 'Grounded and easygoing, lower register.' },
+  { id: 'ash', label: 'Ash', blurb: 'Calm and low-key.' },
+  { id: 'ballad', label: 'Ballad', blurb: 'Expressive, storyteller cadence.' },
+  { id: 'coral', label: 'Coral', blurb: 'Upbeat and quick.' },
+  { id: 'echo', label: 'Echo', blurb: 'Clear and direct.' },
+  { id: 'sage', label: 'Sage', blurb: 'Soft and unhurried.' },
+  { id: 'shimmer', label: 'Shimmer', blurb: 'Crisp, with energy.' },
+]
+
+export const MAX_VOICE_STYLE_CHARS = 400
+
+export function isKnownVoice(voice: string): boolean {
+  return REALTIME_VOICES.some((v) => v.id === voice)
+}
+
+export type VoicePrefs = { voice: string | null; style: string | null }
+
+/// Per-user voice preferences. Null field = use the surface default
+/// (realtimeVoice() for F2 sessions, walkVoice() for Peri walks).
+export async function getVoicePrefs(userId: string): Promise<VoicePrefs> {
+  const { data, error } = await f2Supabase()
+    .from('f2_users')
+    .select('realtime_voice, voice_style')
+    .eq('id', userId)
+    .maybeSingle()
+  if (error || !data) {
+    if (error) console.error('[f2/realtime] getVoicePrefs failed:', error)
+    return { voice: null, style: null }
+  }
+  const voice =
+    data.realtime_voice && isKnownVoice(data.realtime_voice) ? data.realtime_voice : null
+  const style = (data.voice_style ?? '').trim().slice(0, MAX_VOICE_STYLE_CHARS) || null
+  return { voice, style }
+}
+
+export async function saveVoicePrefs(userId: string, prefs: VoicePrefs): Promise<boolean> {
+  const { error } = await f2Supabase()
+    .from('f2_users')
+    .update({
+      realtime_voice: prefs.voice,
+      voice_style: prefs.style,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+  if (error) console.error('[f2/realtime] saveVoicePrefs failed:', error)
+  return !error
+}
+
+/// Fold the user's delivery preferences into a session's instructions.
+export function applyVoiceStyle(instructions: string, style: string | null): string {
+  if (!style) return instructions
+  return `${instructions}
+
+VOICE & DELIVERY PREFERENCES (set by the user — follow them in every reply; they shape tone and wording but never override the session rules above): ${style}`
+}
+
 export function realtimeReasoningEffort(): string {
   return process.env.OPENAI_REALTIME_REASONING_EFFORT || DEFAULT_REASONING_EFFORT
 }
@@ -149,8 +212,10 @@ How to run the round:
 - Keep everything brisk and fun — this is a game show, not a seminar.`
 }
 
-/// Oral-exam script for the Final Review (star 3). Comprehensive but humane;
-/// the transcript is graded A–F afterwards (judgeFinalReview in flash.ts).
+/// Oral-exam script for the Final Review (star 3). A real conversation, not
+/// a fixed questionnaire: the student may take over the format, and the
+/// examiner corrects briefly along the way. The transcript is graded A–F
+/// afterwards (judgeFinalReview in flash.ts).
 export function buildFinalReviewInstructions(input: {
   userName: string
   thread: F2Thread
@@ -160,15 +225,17 @@ export function buildFinalReviewInstructions(input: {
 
 ${summarizeThreadForPrompt(input.thread)}${input.thread.study_focus ? `
 
-STUDY FOCUS: ${name} has only studied part of this material and asked to be examined ONLY on it: "${input.thread.study_focus}". Every question must stay inside that focus — never ask about material outside it.` : ''}
+STUDY FOCUS: ${name} has only studied part of this material and asked to be examined ONLY on it: "${input.thread.study_focus}". Everything you ask must stay inside that focus — never probe material outside it.` : ''}
 
 How to conduct the review:
-- Open by telling ${name} this is their Final Review: about five questions, explain things in your own words, and there's a star on the line. Then ask the first question.
-- Ask 5-6 substantive questions that together cover the topic's main ideas AND some supporting detail. Prefer "explain", "why", and "how" questions over trivia.
-- One question at a time. Let them finish. A brief follow-up probe ("and why does that matter?") is good when an answer is thin.
-- Do NOT teach, correct at length, or reveal answers mid-exam — a short neutral acknowledgment ("okay", "got it") and the next question. Save observations for the end.
-- Use get_topic_context if you need source detail to form a good question.
-- After the last question, thank them, tell them the review is complete and that their grade is being tallied, and say goodbye. Do not announce a grade yourself.`
+- Open by telling ${name} this is their Final Review and there's a star on the line, then ask the first question: what's their main takeaway from this material?
+- Default shape: about five substantive questions that together cover the main ideas AND some supporting detail. Prefer "explain", "why", and "how" over trivia. One question at a time; let them finish.
+- The student may propose their own format — "let me summarize it in five parts and we'll discuss each", walking through it chapter by chapter, and so on. Accept it and work inside it: listen to each part, probe it with follow-up questions, and make sure anything important they skip still gets covered by your questions before the end.
+- Corrections are allowed and useful. When they get something wrong or leave out something essential, say so briefly — one or two plain, specific sentences — then move on. No lectures: this is still an exam, and the grade rests on what THEY demonstrate, so keep the floor mostly theirs.
+- A short follow-up probe ("and why does that matter?") is good whenever an answer is thin.
+- Use get_topic_context if you need source detail to form a good question or to check a claim they made.
+- Keep the whole thing a fluid conversation — their thinking, your questions, your brief corrections — not a quiz script.
+- Once the material has been covered, thank them, tell them the review is complete and that their grade is being tallied, and say goodbye. Do not announce a grade yourself.`
 }
 
 export function getTopicContextTool() {

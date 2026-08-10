@@ -11,12 +11,15 @@
 		08003C48F17C70F2C60C142B /* HelpSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C034E8A6E1CC456DE623630F /* HelpSheet.swift */; };
 		0E7694CF618B45FF234EB3CB /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */; };
 		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
+		10B1D2F87038A86CCA5D73B6 /* voice-marin.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 895F213807633430DF5ABD89 /* voice-marin.m4a */; };
 		13E521D2E87C8EC6DF8BFE61 /* AudioSummaryPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */; };
+		1654FB2047C765ABA53E6523 /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */; };
 		19C524D5397F5550C8A33970 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = DAABD116A19EBEA378D604DA /* WebRTC */; };
 		1EDEEC852280CDCA8031E3CC /* Fredoka.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
 		2653F9928D7A0873DFC35016 /* DoubleThumbsUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */; };
 		36BE08CA63307A15CECFDBEA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFCEF68207C8EC05D3B4760 /* Models.swift */; };
+		3C49C0024049020E4395B2D0 /* voice-ballad.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 072B2FB661710AC500114B62 /* voice-ballad.m4a */; };
 		3EB1222C6738105EC8558353 /* FlashTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */; };
 		412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */; };
 		42577E114FC7ADF0BE7A3051 /* FlashModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7DB0ED0D66A78BC46C7BEB /* FlashModels.swift */; };
@@ -27,10 +30,12 @@
 		5B58C25CE4AFF970698227C4 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DC33D7342C9F25E38F967F4 /* ChatView.swift */; };
 		5DE663128BAC796DF32F68D2 /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB38EBAB179201757DE149C1 /* FlashSFX.swift */; };
 		6156096DDC14A9F27155EB67 /* SourceReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB209A33541127135A75E53 /* SourceReaderView.swift */; };
+		681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */; };
 		69465CB76129F3A8475D3837 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A806446C086649CAB62568A4 /* FlashVoiceView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
 		75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7811C80A73490F1D2B650D /* SettingsView.swift */; };
 		80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8E1D52867446105B46D06E /* FeyndChrome.swift */; };
+		880554CC1BB76AA2496A93E8 /* voice-sage.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8B64197A30336810679C8C35 /* voice-sage.m4a */; };
 		8C6244F78751CFD513251E76 /* FlashDeckBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */; };
 		92AB59F1F628D34B68CB6AD4 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */; };
 		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
@@ -39,9 +44,12 @@
 		A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */; };
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
 		B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */; };
+		BCA3E817690080EE71E51E2C /* voice-coral.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */; };
 		C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */; };
+		C1147912E81813D4CCADA12B /* voice-shimmer.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */; };
 		C573E836F4F99984E9A8409E /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC5668529933DC6749CB3D06 /* Session.swift */; };
 		CA6A43AB698791A05B576ED4 /* TranscriptReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */; };
+		CBE848453268644DD73D7289 /* voice-cedar.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 21950791B59DF2C423867D07 /* voice-cedar.m4a */; };
 		D577BB198B5846938AF1ECEB /* ScreenCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D359E2025298CA4A57C307D /* ScreenCache.swift */; };
 		E6EBD84BFA074BDBE3DF859D /* FlashCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A838C8293EE5A7B38D62679D /* FlashCardsView.swift */; };
 		E837DB371B838AB27BC85493 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E1F1203E78919DA10B73C9 /* LoginView.swift */; };
@@ -49,15 +57,19 @@
 		ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */; };
 		F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */; };
 		FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */; };
+		FEA31118A9D37348F2BE1AA5 /* voice-echo.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C0FB2FF36963A5F7793FAF80 /* voice-echo.m4a */; };
 		FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		057BE0BC148176D8DF6A2A52 /* TopicContextSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicContextSheet.swift; sourceTree = "<group>"; };
+		072B2FB661710AC500114B62 /* voice-ballad.m4a */ = {isa = PBXFileReference; path = "voice-ballad.m4a"; sourceTree = "<group>"; };
 		0A077252957BBEE41DCF582D /* FeyndApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndApp.swift; sourceTree = "<group>"; };
 		0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
+		0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */ = {isa = PBXFileReference; path = "voice-coral.m4a"; sourceTree = "<group>"; };
 		121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
+		21950791B59DF2C423867D07 /* voice-cedar.m4a */ = {isa = PBXFileReference; path = "voice-cedar.m4a"; sourceTree = "<group>"; };
 		21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptReaderView.swift; sourceTree = "<group>"; };
 		2D359E2025298CA4A57C307D /* ScreenCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCache.swift; sourceTree = "<group>"; };
 		2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Fredoka-OFL.txt"; sourceTree = "<group>"; };
@@ -71,10 +83,14 @@
 		6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchemePreference.swift; sourceTree = "<group>"; };
 		78E1F1203E78919DA10B73C9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndTheme.swift; sourceTree = "<group>"; };
+		82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */ = {isa = PBXFileReference; path = "voice-shimmer.m4a"; sourceTree = "<group>"; };
+		895F213807633430DF5ABD89 /* voice-marin.m4a */ = {isa = PBXFileReference; path = "voice-marin.m4a"; sourceTree = "<group>"; };
 		8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayer.swift; sourceTree = "<group>"; };
+		8B64197A30336810679C8C35 /* voice-sage.m4a */ = {isa = PBXFileReference; path = "voice-sage.m4a"; sourceTree = "<group>"; };
 		8B7488FF54E0D0D3D2342D62 /* Feynd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Feynd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8BE40ACBCE23969C211C1B42 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		8D6854393131D5ADEB1B75CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */ = {isa = PBXFileReference; path = "voice-ash.m4a"; sourceTree = "<group>"; };
 		9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleThumbsUp.swift; sourceTree = "<group>"; };
 		9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
 		A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSessionView.swift; sourceTree = "<group>"; };
@@ -82,12 +98,14 @@
 		A806446C086649CAB62568A4 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
 		A838C8293EE5A7B38D62679D /* FlashCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardsView.swift; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSettingsView.swift; sourceTree = "<group>"; };
 		B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fredoka.ttf; sourceTree = "<group>"; };
 		BB38EBAB179201757DE149C1 /* FlashSFX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSFX.swift; sourceTree = "<group>"; };
 		BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashTabView.swift; sourceTree = "<group>"; };
 		BEC72F31FAF938D3D638D39F /* FlashSetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSetView.swift; sourceTree = "<group>"; };
 		C034E8A6E1CC456DE623630F /* HelpSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSheet.swift; sourceTree = "<group>"; };
 		C0564EA3B927E26544E7655B /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
+		C0FB2FF36963A5F7793FAF80 /* voice-echo.m4a */ = {isa = PBXFileReference; path = "voice-echo.m4a"; sourceTree = "<group>"; };
 		C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
 		CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabsView.swift; sourceTree = "<group>"; };
 		CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
@@ -155,7 +173,9 @@
 				0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */,
 				21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */,
 				A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */,
+				B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */,
 				68FEE442C5A8149F8F4D7A36 /* Fonts */,
+				E90BB6D8A48A8C1F0DFA068C /* VoicePreviews */,
 			);
 			path = Feynd;
 			sourceTree = "<group>";
@@ -175,6 +195,21 @@
 				8B7488FF54E0D0D3D2342D62 /* Feynd.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E90BB6D8A48A8C1F0DFA068C /* VoicePreviews */ = {
+			isa = PBXGroup;
+			children = (
+				8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */,
+				072B2FB661710AC500114B62 /* voice-ballad.m4a */,
+				21950791B59DF2C423867D07 /* voice-cedar.m4a */,
+				0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */,
+				C0FB2FF36963A5F7793FAF80 /* voice-echo.m4a */,
+				895F213807633430DF5ABD89 /* voice-marin.m4a */,
+				8B64197A30336810679C8C35 /* voice-sage.m4a */,
+				82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */,
+			);
+			path = VoicePreviews;
 			sourceTree = "<group>";
 		};
 		F87F9A36F88E2A22B1A387BD = {
@@ -252,6 +287,14 @@
 				9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */,
 				A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */,
 				1EDEEC852280CDCA8031E3CC /* Fredoka.ttf in Resources */,
+				681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */,
+				3C49C0024049020E4395B2D0 /* voice-ballad.m4a in Resources */,
+				CBE848453268644DD73D7289 /* voice-cedar.m4a in Resources */,
+				BCA3E817690080EE71E51E2C /* voice-coral.m4a in Resources */,
+				FEA31118A9D37348F2BE1AA5 /* voice-echo.m4a in Resources */,
+				10B1D2F87038A86CCA5D73B6 /* voice-marin.m4a in Resources */,
+				880554CC1BB76AA2496A93E8 /* voice-sage.m4a in Resources */,
+				C1147912E81813D4CCADA12B /* voice-shimmer.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -301,6 +344,7 @@
 				965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */,
 				CA6A43AB698791A05B576ED4 /* TranscriptReaderView.swift in Sources */,
 				FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */,
+				1654FB2047C765ABA53E6523 /* VoiceSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

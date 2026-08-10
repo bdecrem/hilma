@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import {
+  applyVoiceStyle,
   createOpenAIRealtimeClientSecret,
   createVoiceSession,
+  getVoicePrefs,
   realtimeModel,
   updateVoiceSessionRealtimeId,
 } from '@/lib/f2/realtime'
@@ -64,12 +66,17 @@ export async function POST(req: Request) {
     }
   }
 
+  // Per-user voice + delivery style, shared with the F2 voice surfaces.
+  const prefs = await getVoicePrefs(user.id)
+  const voice = prefs.voice ?? walkVoice()
+  instructions = applyVoiceStyle(instructions, prefs.style)
+
   let openaiSecret
   try {
     openaiSecret = await createOpenAIRealtimeClientSecret({
       instructions,
       tools: walkTools(),
-      voice: walkVoice(),
+      voice,
     })
   } catch (e) {
     console.error('[f4/walk] client secret failed:', e)
@@ -83,7 +90,7 @@ export async function POST(req: Request) {
     threadId: threadId ?? undefined,
     realtimeSessionId: openaiSecret.session?.id,
     model: realtimeModel(),
-    voice: walkVoice(),
+    voice,
   })
   if (!voiceSession) {
     return NextResponse.json({ error: 'could not create session record' }, { status: 500 })
@@ -109,7 +116,7 @@ export async function POST(req: Request) {
     },
     realtime: {
       model: realtimeModel(),
-      voice: walkVoice(),
+      voice,
       calls_url: 'https://api.openai.com/v1/realtime/calls',
       data_channel: 'oai-events',
     },

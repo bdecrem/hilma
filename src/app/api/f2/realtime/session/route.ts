@@ -3,11 +3,13 @@ import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
 import { getFlashCardsByIds } from '@/lib/f2/flash'
 import {
+  applyVoiceStyle,
   buildFinalReviewInstructions,
   buildFlashVoiceInstructions,
   buildRealtimeInstructions,
   createOpenAIRealtimeClientSecret,
   createVoiceSession,
+  getVoicePrefs,
   realtimeModel,
   realtimeVoice,
   updateVoiceSessionRealtimeId,
@@ -87,10 +89,16 @@ export async function POST(req: Request) {
     })
   }
 
+  // Per-user voice + delivery style, account-wide across all voice surfaces.
+  const prefs = await getVoicePrefs(user.id)
+  const voice = prefs.voice ?? realtimeVoice()
+  instructions = applyVoiceStyle(instructions, prefs.style)
+
   // Flash rounds are fully scripted — no tools. Everything else keeps the
   // topic-context tool.
   const openaiSecret = await createOpenAIRealtimeClientSecret({
     instructions,
+    voice,
     ...(mode === 'flash' ? { tools: [] } : {}),
   })
 
@@ -100,7 +108,7 @@ export async function POST(req: Request) {
     threadId: body.thread_id,
     realtimeSessionId: openaiSecret.session?.id,
     model: realtimeModel(),
-    voice: realtimeVoice(),
+    voice,
   })
 
   if (!voiceSession) {
@@ -128,7 +136,7 @@ export async function POST(req: Request) {
     },
     realtime: {
       model: realtimeModel(),
-      voice: realtimeVoice(),
+      voice,
       calls_url: 'https://api.openai.com/v1/realtime/calls',
       data_channel: 'oai-events',
     },

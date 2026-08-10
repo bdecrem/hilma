@@ -26,6 +26,7 @@ struct ProfileSheet: View {
     @State private var imessageHandles: [String] = []
     @State private var showPairing = false
     @State private var showHelp = false
+    @State private var showVoice = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -50,6 +51,9 @@ struct ProfileSheet: View {
         } message: { Text(uploadError ?? "") }
         .sheet(isPresented: $showHelp) {
             HelpSheet()
+        }
+        .sheet(isPresented: $showVoice) {
+            VoiceSettingsView()
         }
         .sheet(isPresented: $showPairing) {
             NavigationStack {
@@ -330,6 +334,13 @@ struct ProfileSheet: View {
             SettingsSection(label: "Appearance") {
                 ThemeSegmented(value: colorSchemeRaw) { mode in
                     colorSchemeRaw = mode
+                }
+            }
+            SettingsSection(label: "Voice") {
+                SettingsCard {
+                    SettingsRow(label: "Voice & style") {
+                        showVoice = true
+                    }
                 }
             }
             SettingsSection(label: "iMessage") {

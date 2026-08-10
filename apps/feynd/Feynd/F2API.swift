@@ -715,6 +715,18 @@ final class F2API {
         return try await post("/api/f2/topics/\(topicId)/final-review", body: Body(voice_session_id: voiceSessionId))
     }
 
+    // MARK: - Voice preferences
+
+    func voicePrefs() async throws -> VoicePrefs {
+        try await get("/api/f2/voice-prefs")
+    }
+
+    /// Empty string resets a field to the server default.
+    func saveVoicePrefs(voice: String, style: String) async throws -> VoicePrefs {
+        struct Body: Encodable { let voice: String; let voice_style: String }
+        return try await put("/api/f2/voice-prefs", body: Body(voice: voice, voice_style: style))
+    }
+
     func callRealtimeTool(name: String, arguments: [String: String]) async throws -> Data {
         struct Body: Encodable {
             let name: String
@@ -742,6 +754,10 @@ final class F2API {
 
     private func post<B: Encodable, R: Decodable>(_ path: String, body: B) async throws -> R {
         try await request(path, method: "POST", body: body)
+    }
+
+    private func put<B: Encodable, R: Decodable>(_ path: String, body: B) async throws -> R {
+        try await request(path, method: "PUT", body: body)
     }
 
     private func postRaw<B: Encodable>(_ path: String, body: B) async throws -> Data {

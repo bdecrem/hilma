@@ -57,6 +57,8 @@ export async function POST(
       grade: grade.grade,
       passed: grade.passed,
       notes: grade.notes,
+      strengths: grade.strengths,
+      weaknesses: grade.weaknesses,
       stars,
       mastered: grade.passed,
     })

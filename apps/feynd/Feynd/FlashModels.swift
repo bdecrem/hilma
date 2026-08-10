@@ -241,6 +241,10 @@ struct FinalReviewResult: Codable, Equatable {
     let grade: String
     let passed: Bool
     let notes: String
+    /// Areas the grader flagged as commanded / needing review. Optional so
+    /// results from older servers still decode.
+    let strengths: [String]?
+    let weaknesses: [String]?
     let stars: Int
     let mastered: Bool
 }

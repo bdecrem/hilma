@@ -111,6 +111,7 @@ struct FinalReviewView: View {
 
     @State private var phase: Phase = .talking
     @State private var revealed = false
+    @State private var showBreakdown = false
 
     var body: some View {
         ZStack {
@@ -218,6 +219,32 @@ struct FinalReviewView: View {
                             .padding(.horizontal, 22)
                     }
 
+                    if !(r.strengths ?? []).isEmpty || !(r.weaknesses ?? []).isEmpty {
+                        Button {
+                            showBreakdown = true
+                        } label: {
+                            HStack(spacing: 7) {
+                                Image(systemName: "chart.bar.doc.horizontal")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text("Strengths & weaknesses")
+                                    .font(.system(size: 14, weight: .semibold))
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            .foregroundStyle(FeyndTheme.accent)
+                            .padding(.vertical, 6)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .sheet(isPresented: $showBreakdown) {
+                            FinalReviewBreakdownSheet(
+                                topicLabel: topicLabel,
+                                strengths: r.strengths ?? [],
+                                weaknesses: r.weaknesses ?? []
+                            )
+                        }
+                    }
+
                     Button {
                         dismiss()
                     } label: {
@@ -264,6 +291,100 @@ struct FinalReviewView: View {
             } catch {
                 phase = .error(error.localizedDescription)
             }
+        }
+    }
+}
+
+/// What the grader flagged as commanded vs needing review — reached from the
+/// "Strengths & weaknesses" link on the grade card.
+struct FinalReviewBreakdownSheet: View {
+    let topicLabel: String
+    let strengths: [String]
+    let weaknesses: [String]
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(FeyndTheme.surface3)
+                .frame(width: 38, height: 4)
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
+
+            Text("Strengths & weaknesses")
+                .font(.system(size: 16, weight: .semibold))
+                .tracking(-0.2)
+                .foregroundStyle(FeyndTheme.text)
+                .padding(.top, 14)
+            Text(topicLabel)
+                .font(.system(size: 13))
+                .foregroundStyle(FeyndTheme.text3)
+                .lineLimit(1)
+                .padding(.top, 2)
+                .padding(.horizontal, 30)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    if !strengths.isEmpty {
+                        breakdownCard(
+                            title: "You had this",
+                            items: strengths,
+                            icon: "checkmark.circle.fill",
+                            tint: FeyndTheme.sprout
+                        )
+                    }
+                    if !weaknesses.isEmpty {
+                        breakdownCard(
+                            title: "Review these",
+                            items: weaknesses,
+                            icon: "arrow.uturn.backward.circle.fill",
+                            tint: FeyndTheme.accent
+                        )
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 18)
+                .padding(.bottom, 40)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .background(FeyndTheme.bgRaised.ignoresSafeArea())
+        .presentationDetents([.medium, .large])
+    }
+
+    private func breakdownCard(title: String, items: [String], icon: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased())
+                .font(.system(size: 11.5, weight: .bold))
+                .tracking(1.1)
+                .foregroundStyle(FeyndTheme.text3)
+                .padding(.leading, 6)
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.offset) { idx, item in
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Image(systemName: icon)
+                            .font(.system(size: 14))
+                            .foregroundStyle(tint)
+                        Text(item)
+                            .font(.system(size: 14.5))
+                            .lineSpacing(2)
+                            .foregroundStyle(FeyndTheme.text)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    if idx < items.count - 1 {
+                        Rectangle()
+                            .fill(FeyndTheme.borderSoft)
+                            .frame(height: 1)
+                            .padding(.leading, 38)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.borderSoft, lineWidth: 1))
         }
     }
 }
