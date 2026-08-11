@@ -81,7 +81,7 @@ struct FlashCardsView: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            IconCircleButton(systemImage: "chevron.down", fg: FeyndTheme.text) { dismiss() }
+            IconCircleButton(systemImage: "chevron.down", fg: FeyndTheme.text, cancelShortcut: true) { closeModal(dismiss) }
             VStack(spacing: 3) {
                 Text("FLASH CARDS")
                     .font(.system(size: 11, weight: .bold))
@@ -558,7 +558,7 @@ struct FlashCardsView: View {
             count: generateCount,
             model: F2ChatModel.current.rawValue
         )
-        dismiss()
+        closeModal(dismiss)
     }
 
     /// Inline await — a single card takes a few seconds, worth watching.
@@ -591,7 +591,7 @@ struct FlashCardsView: View {
             instructions: instructions,
             model: F2ChatModel.current.rawValue
         )
-        dismiss()
+        closeModal(dismiss)
     }
 
     private func startSet(mode: String) {
@@ -684,7 +684,7 @@ struct FlashCardEditSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { closeModal(dismiss) }.keyboardShortcut(.cancelAction)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(busy ? "Saving…" : "Save") { save() }
@@ -710,7 +710,7 @@ struct FlashCardEditSheet: View {
                     distractors: distractors
                 )
                 onSaved(updated)
-                dismiss()
+                closeModal(dismiss)
             } catch {
                 errorMessage = error.localizedDescription
             }
@@ -724,7 +724,7 @@ struct FlashCardEditSheet: View {
             do {
                 try await F2API.shared.deleteFlashCard(cardId: card.id)
                 onDelete()
-                dismiss()
+                closeModal(dismiss)
             } catch {
                 errorMessage = error.localizedDescription
             }

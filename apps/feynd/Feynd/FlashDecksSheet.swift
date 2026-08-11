@@ -79,7 +79,7 @@ struct FlashDecksSheet: View {
             }
             HStack {
                 Spacer()
-                Button { dismiss() } label: {
+                Button { closeModal(dismiss) } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(FeyndTheme.text2)
@@ -87,6 +87,7 @@ struct FlashDecksSheet: View {
                         .background(FeyndTheme.surface2, in: Circle())
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
             }
             .padding(.trailing, 14)
         }

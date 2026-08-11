@@ -107,7 +107,7 @@ struct VoiceSessionView: View {
 
             Button {
                 client.stop()
-                if let onFinished { onFinished(nil) } else { dismiss() }
+                if let onFinished { onFinished(nil) } else { closeModal(dismiss) }
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .semibold))
@@ -117,6 +117,7 @@ struct VoiceSessionView: View {
                     .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
         }
         .padding(.horizontal, 18)
         .padding(.top, 12)
@@ -155,7 +156,7 @@ struct VoiceSessionView: View {
                     }
                 } else {
                     client.stop()
-                    dismiss()
+                    closeModal(dismiss)
                 }
             }
         }

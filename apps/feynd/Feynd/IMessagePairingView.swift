@@ -37,7 +37,7 @@ struct IMessagePairingView: View {
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(FeyndTheme.text)
             HStack {
-                Button { dismiss() } label: {
+                Button { closeModal(dismiss) } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(FeyndTheme.text)
@@ -46,6 +46,7 @@ struct IMessagePairingView: View {
                         .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
                 Spacer()
             }
         }
@@ -188,7 +189,7 @@ struct IMessagePairingView: View {
             do {
                 let h = try await F2API.shared.confirmImessagePairing(handle: pendingHandle, code: code)
                 onPaired(h)
-                dismiss()
+                closeModal(dismiss)
             } catch F2APIError.http(401, _) {
                 error = "Code didn't match. Check the message and try again."
             } catch F2APIError.http(410, _) {

@@ -62,7 +62,7 @@ struct FlashSetView: View {
                 result: r,
                 jumboLevel: start.jumboLevel,
                 mode: start.mode,
-                onDone: { dismiss() }
+                onDone: { closeModal(dismiss) }
             )
             case .error(let msg): errorView(msg)
             }
@@ -101,7 +101,7 @@ struct FlashSetView: View {
     private var header: some View {
         HStack {
             Button {
-                dismiss()
+                closeModal(dismiss)
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .semibold))
@@ -111,6 +111,7 @@ struct FlashSetView: View {
                     .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
             }
             .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
             Spacer()
             VStack(spacing: 2) {
                 Text(start.jumboLevel != nil ? "PECK · LEVEL \(start.jumboLevel!)" : "FLASH ROUND")
@@ -422,7 +423,7 @@ struct FlashSetView: View {
         questions.remove(at: i)
         answers.remove(at: i)
         if questions.isEmpty {
-            dismiss()
+            closeModal(dismiss)
         } else if index >= questions.count {
             submit()
         }
@@ -527,6 +528,7 @@ struct FlashResultsView: View {
                             .background(FeyndTheme.accent, in: Capsule())
                     }
                     .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
                     .padding(.top, 6)
                     .padding(.bottom, 40)
                 }

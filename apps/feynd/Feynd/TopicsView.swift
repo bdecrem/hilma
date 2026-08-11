@@ -625,7 +625,7 @@ struct NewTopicSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { closeModal(dismiss) }.keyboardShortcut(.cancelAction)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(busy ? "Creating…" : "Create") { create() }
@@ -645,7 +645,7 @@ struct NewTopicSheet: View {
             do {
                 try await F2API.shared.createTopic(title: name, kind: kind)
                 onCreated()
-                dismiss()
+                closeModal(dismiss)
             } catch {
                 errorMessage = "Couldn't create: \(error.localizedDescription)"
                 busy = false
@@ -712,12 +712,12 @@ struct RenameTopicSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") { closeModal(dismiss) }.keyboardShortcut(.cancelAction)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         onSave(draft, kind)
-                        dismiss()
+                        closeModal(dismiss)
                     }
                     .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }

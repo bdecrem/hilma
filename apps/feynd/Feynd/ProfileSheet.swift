@@ -103,7 +103,7 @@ struct ProfileSheet: View {
                 .foregroundStyle(FeyndTheme.text)
             HStack {
                 Spacer()
-                Button { dismiss() } label: {
+                Button { closeModal(dismiss) } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(FeyndTheme.text2)
@@ -112,6 +112,7 @@ struct ProfileSheet: View {
                         .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
             }
         }
         .padding(.horizontal, 18)
@@ -370,7 +371,7 @@ struct ProfileSheet: View {
                     SettingsRow(label: "Sign out", labelColor: Color(hex: 0xFF6B5B)) {
                         Task {
                             await session.logout()
-                            dismiss()
+                            closeModal(dismiss)
                         }
                     }
                     if currentAvatarUrl != nil {

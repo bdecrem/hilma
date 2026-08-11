@@ -474,10 +474,12 @@ struct IconCircleButton: View {
     let systemImage: String
     var size: CGFloat = 36
     var fg: Color = FeyndTheme.text
+    /// Wire this button to the Escape key (for modal close affordances).
+    var cancelShortcut = false
     var action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        let button = Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(fg)
@@ -486,7 +488,51 @@ struct IconCircleButton: View {
                 .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
         }
         .buttonStyle(.plain)
+        if cancelShortcut {
+            button.keyboardShortcut(.cancelAction)
+        } else {
+            button
+        }
     }
+}
+
+// MARK: - Catalyst-proof modal dismissal
+
+/// Close the current modal without relying on the SwiftUI environment.
+///
+/// On Mac Catalyst, sheet/cover content can receive a detached environment —
+/// the same Catalyst bug that keeps @Observable values from flowing into
+/// sheets (see ChatView) — which leaves `\.dismiss` silently inert and close
+/// buttons dead. UIKit's presentation stack is always authoritative, so on
+/// Catalyst this walks to the topmost presented controller and dismisses it
+/// directly. iOS keeps the environment path untouched.
+@MainActor
+func closeModal(_ dismiss: DismissAction) {
+    #if targetEnvironment(macCatalyst)
+    if !dismissTopmostPresentedModal() { dismiss() }
+    #else
+    dismiss()
+    #endif
+}
+
+/// Walk UIKit's presentation stack and dismiss the topmost presented
+/// controller. Returns false when nothing is presented. Respects
+/// `interactiveDismissDisabled` (`isModalInPresentation`) so protected
+/// states (mid-grading, etc.) stay up. Backs both `closeModal` and the
+/// Escape menu command in FeyndApp.
+@MainActor
+@discardableResult
+func dismissTopmostPresentedModal(respectingModalLock: Bool = false) -> Bool {
+    let windows = UIApplication.shared.connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .flatMap(\.windows)
+    guard var top = (windows.first(where: \.isKeyWindow) ?? windows.first)?.rootViewController,
+          top.presentedViewController != nil
+    else { return false }
+    while let presented = top.presentedViewController { top = presented }
+    if respectingModalLock && top.isModalInPresentation { return false }
+    top.dismiss(animated: true)
+    return true
 }
 
 // MARK: - Action chip (Quiz me / Talk to F2 / Key points)

@@ -29,6 +29,8 @@
 	<string>Dodo uses the microphone so you can talk with your learning assistant.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Pick a profile photo from your library.</string>
+	<key>NSPrincipalClass</key>
+	<string>Feynd.FeyndApplication</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Fredoka.ttf</string>

@@ -43,6 +43,7 @@
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
 		A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */; };
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
+		A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */; };
 		B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */; };
 		BCA3E817690080EE71E51E2C /* voice-coral.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */; };
 		C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */; };
@@ -80,6 +81,7 @@
 		5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
 		5DC33D7342C9F25E38F967F4 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		6B09246FF15307342083E574 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
+		6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndApplication.swift; sourceTree = "<group>"; };
 		6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchemePreference.swift; sourceTree = "<group>"; };
 		78E1F1203E78919DA10B73C9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndTheme.swift; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 				9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */,
 				A62FA8AD3B3E792810622A3A /* F2API.swift */,
 				0A077252957BBEE41DCF582D /* FeyndApp.swift */,
+				6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */,
 				4E8E1D52867446105B46D06E /* FeyndChrome.swift */,
 				7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */,
 				A838C8293EE5A7B38D62679D /* FlashCardsView.swift */,
@@ -313,6 +316,7 @@
 				2653F9928D7A0873DFC35016 /* DoubleThumbsUp.swift in Sources */,
 				935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */,
 				218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */,
+				A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */,
 				80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */,
 				ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */,
 				E6EBD84BFA074BDBE3DF859D /* FlashCardsView.swift in Sources */,
@@ -385,7 +389,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 18;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -468,7 +472,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 18;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

@@ -16,6 +16,19 @@ struct FeyndApp: App {
                     await session.bootstrap()
                 }
         }
+        .commands {
+            // Escape closes the frontmost sheet/cover. Registered as a menu
+            // key equivalent because that's the one key path AppKit reliably
+            // delivers on Catalyst — SwiftUI .keyboardShortcut inside sheets
+            // and UIKeyCommand on the responder chain both get swallowed
+            // before they fire (see FeyndApplication.swift).
+            CommandGroup(after: .saveItem) {
+                Button("Dismiss Sheet") {
+                    dismissTopmostPresentedModal(respectingModalLock: true)
+                }
+                .keyboardShortcut(.escape, modifiers: [])
+            }
+        }
     }
 }
 

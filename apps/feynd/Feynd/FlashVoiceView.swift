@@ -35,7 +35,7 @@ struct FlashVoiceView: View {
                         : "Flash round" + (topicLabel.map { " · \($0)" } ?? "")
                 ) { voiceSessionId in
                     guard let voiceSessionId else {
-                        dismiss()   // abandoned via X
+                        closeModal(dismiss)   // abandoned via X
                         return
                     }
                     grade(voiceSessionId)
@@ -49,7 +49,7 @@ struct FlashVoiceView: View {
                 }
             case .results(let r):
                 FlashResultsView(result: r, jumboLevel: start.jumboLevel, mode: "voice") {
-                    dismiss()
+                    closeModal(dismiss)
                 }
             case .error(let msg):
                 VStack(spacing: 14) {
@@ -61,7 +61,7 @@ struct FlashVoiceView: View {
                         .foregroundStyle(FeyndTheme.text2)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
-                    Button("Close") { dismiss() }
+                    Button("Close") { closeModal(dismiss) }.keyboardShortcut(.cancelAction)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(FeyndTheme.accent)
                 }
@@ -124,7 +124,7 @@ struct FinalReviewView: View {
                     title: "Final Review · \(topicLabel)"
                 ) { voiceSessionId in
                     guard let voiceSessionId else {
-                        dismiss()
+                        closeModal(dismiss)
                         return
                     }
                     grade(voiceSessionId)
@@ -148,7 +148,7 @@ struct FinalReviewView: View {
                         .foregroundStyle(FeyndTheme.text2)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
-                    Button("Close") { dismiss() }
+                    Button("Close") { closeModal(dismiss) }.keyboardShortcut(.cancelAction)
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(FeyndTheme.accent)
                 }
@@ -246,7 +246,7 @@ struct FinalReviewView: View {
                     }
 
                     Button {
-                        dismiss()
+                        closeModal(dismiss)
                     } label: {
                         Text("Done")
                             .font(.system(size: 16, weight: .bold))
@@ -256,6 +256,7 @@ struct FinalReviewView: View {
                             .background(FeyndTheme.accent, in: Capsule())
                     }
                     .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
                     .padding(.horizontal, 22)
                     .padding(.top, 8)
                     .padding(.bottom, 40)
@@ -350,6 +351,20 @@ struct FinalReviewBreakdownSheet: View {
             .scrollIndicators(.hidden)
         }
         .background(FeyndTheme.bgRaised.ignoresSafeArea())
+        .overlay(alignment: .topTrailing) {
+            Button { closeModal(dismiss) } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.text2)
+                    .frame(width: 32, height: 32)
+                    .background(FeyndTheme.surface2, in: Circle())
+                    .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            .padding(.top, 12)
+            .padding(.trailing, 14)
+        }
         .presentationDetents([.medium, .large])
     }
 

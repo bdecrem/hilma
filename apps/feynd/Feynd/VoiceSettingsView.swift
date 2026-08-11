@@ -93,7 +93,7 @@ struct VoiceSettingsView: View {
                 .foregroundStyle(FeyndTheme.text)
             HStack {
                 Spacer()
-                Button { dismiss() } label: {
+                Button { closeModal(dismiss) } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(FeyndTheme.text2)
@@ -102,6 +102,7 @@ struct VoiceSettingsView: View {
                         .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
             }
         }
         .padding(.horizontal, 18)
