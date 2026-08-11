@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
-import { getFlashCardsByIds } from '@/lib/f2/flash'
+import { getFlashCardsByIds, openFormQuestion } from '@/lib/f2/flash'
 import {
   applyVoiceStyle,
   buildFinalReviewInstructions,
@@ -70,7 +70,8 @@ export async function POST(req: Request) {
     instructions = buildFlashVoiceInstructions({
       userName: user.username,
       topicLabel: thread ? (thread.topic ?? thread.url) : null,
-      cards: ordered.map((c) => ({ question: c.question, answer: c.answer })),
+      // Spoken rounds have no choices on screen — ask the standalone form.
+      cards: ordered.map((c) => ({ question: openFormQuestion(c), answer: c.answer })),
     })
   } else if (mode === 'final_review') {
     // The client gates this behind stars 1+2; enforce server-side too.

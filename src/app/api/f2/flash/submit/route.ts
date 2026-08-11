@@ -5,6 +5,7 @@ import {
   getFlashCardsByIds,
   judgeTextAnswers,
   judgeVoiceSet,
+  openFormQuestion,
   recordFlashSet,
   type FlashResult,
   type FlashSetMode,
@@ -106,7 +107,8 @@ export async function POST(req: Request) {
 
   const results: FlashResult[] = ordered.map((c, i) => ({
     card_id: c.id,
-    question: c.question,
+    // Echo the question as it was actually asked in this mode.
+    question: mode === 'choice' ? c.question : openFormQuestion(c),
     answer: c.answer,
     given: given[i],
     correct: correct[i],

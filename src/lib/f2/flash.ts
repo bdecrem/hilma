@@ -22,6 +22,9 @@ export type FlashCard = {
   thread_id: string
   question: string
   answer: string
+  /// Standalone rewording for text/voice modes; null when `question` already
+  /// works without the choices visible (the common case).
+  open_question: string | null
   distractors: string[]
   created_at: string
   rating: CardRating | null
@@ -117,6 +120,12 @@ Rules:
 - The canonical answer must be short (a few words to one sentence).
 - Each card needs exactly 3 plausible-but-wrong distractors of the same shape
   and length as the answer, so multiple-choice mode isn't guessable by format.
+- The deck is also played in typed and voice modes where ONLY the question is
+  shown, so questions must stand alone without the choices ("Which of these…"
+  fails there). If a card genuinely reads better with choice-dependent
+  phrasing in multiple-choice mode, keep it AND supply open_question — an
+  equivalent standalone rewording with the exact same canonical answer. Omit
+  open_question for every card whose question already stands alone.
 - Cover the topic broadly; no two cards should test the same fact.
 - No trick questions, no "all of the above".${script ? `
 
@@ -179,6 +188,11 @@ Create exactly ${n} flash cards.`
                 properties: {
                   question: { type: 'string' },
                   answer: { type: 'string' },
+                  open_question: {
+                    type: 'string',
+                    description:
+                      'ONLY when the question depends on seeing the choices: an equivalent standalone rewording with the same canonical answer.',
+                  },
                   distractors: {
                     type: 'array',
                     items: { type: 'string' },
@@ -201,6 +215,7 @@ Create exactly ${n} flash cards.`
   const raw = (result.input.cards ?? []) as {
     question?: string
     answer?: string
+    open_question?: string
     distractors?: string[]
   }[]
   const rows = raw
@@ -211,6 +226,7 @@ Create exactly ${n} flash cards.`
       thread_id: thread.id,
       question: c.question!.trim(),
       answer: c.answer!.trim(),
+      open_question: c.open_question?.trim() || null,
       distractors: (c.distractors ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3),
     }))
   if (rows.length === 0) throw new Error('Card generation produced no usable cards')
@@ -783,6 +799,13 @@ export function choicesForCard(card: FlashCard): string[] {
   return shuffle([card.answer, ...card.distractors])
 }
 
+/// The question to ask when no choices are on screen (text + voice modes).
+/// Most cards read fine as written; open_question exists only for cards
+/// whose base question leans on the visible choices ("Which of these…").
+export function openFormQuestion(card: FlashCard): string {
+  return card.open_question?.trim() || card.question
+}
+
 // ---------------------------------------------------------------------------
 // Judges (Haiku, schema-constrained — same pattern as quiz-grader.ts)
 
@@ -850,7 +873,7 @@ export async function judgeTextAnswers(
   const listing = toJudge
     .map(
       (e) =>
-        `${e.index}. Question: ${e.card.question}\n   Canonical answer: ${e.card.answer}\n   User's answer: ${e.givenText}`,
+        `${e.index}. Question: ${openFormQuestion(e.card)}\n   Canonical answer: ${e.card.answer}\n   User's answer: ${e.givenText}`,
     )
     .join('\n\n')
 
@@ -884,7 +907,7 @@ export async function judgeVoiceSet(
   if (!convo) return out
 
   const listing = cards
-    .map((c, i) => `${i}. Question: ${c.question}\n   Canonical answer: ${c.answer}`)
+    .map((c, i) => `${i}. Question: ${openFormQuestion(c)}\n   Canonical answer: ${c.answer}`)
     .join('\n\n')
 
   const system = `You grade a spoken flash-card quiz from its transcript. The assistant (F2) asked the listed questions; the user answered aloud. For each question, decide whether the user's spoken answer expressed the same idea as the canonical answer BEFORE the assistant revealed or corrected it. Accept casual spoken phrasing. If a question was never asked or the user never gave an answer of their own, mark it incorrect.`

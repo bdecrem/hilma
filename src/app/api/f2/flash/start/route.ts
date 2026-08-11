@@ -7,6 +7,7 @@ import {
   getJumboState,
   jumboLevelMode,
   markCardsShown,
+  openFormQuestion,
   pickSetCards,
   type FlashSetMode,
 } from '@/lib/f2/flash'
@@ -112,9 +113,11 @@ export async function POST(req: Request) {
     (threadRows ?? []).map((t) => [t.id as string, topicLabel(t)]),
   )
 
+  // Text/voice show the question with no choices, so choice-dependent cards
+  // serve their standalone rewording there.
   const questions = cards.map((c) => ({
     card_id: c.id,
-    question: c.question,
+    question: mode === 'choice' ? c.question : openFormQuestion(c),
     rating: c.rating,
     topic: topicLabels.get(c.thread_id) ?? null,
     ...(mode === 'choice'
