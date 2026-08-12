@@ -931,6 +931,53 @@ export type FinalReviewGrade = {
   weaknesses: string[]
 }
 
+/// Fact-check the claims and examples the user brought in from OUTSIDE the
+/// source material, so the grader can credit (or debit) them accurately.
+/// Uses web search when the claim's validity actually needs checking; returns
+/// plain-text verification notes, or null when there was nothing to check.
+/// Best-effort: any failure returns null and grading proceeds without notes.
+async function verifyOutsideClaims(
+  subject: string,
+  source: string,
+  convo: string,
+): Promise<string | null> {
+  const res = await anthropic().messages.create({
+    model: JUDGE_MODEL,
+    max_tokens: 2000,
+    system: `You verify claims for an oral-exam grader. Given the exam transcript and the topic's source material, find claims or examples the USER introduced that are NOT covered by the source material and whose accuracy matters for grading. For the most important ones (at most a few), check accuracy — use web search only when you are not confident from your own knowledge. If everything the user said is covered by the source or you can judge it without searching, do not search.
+
+Output short verification notes, one per claim: the claim, a verdict (valid / invalid / unverifiable), and one line of evidence. If there is nothing outside the source worth checking, output exactly: NONE`,
+    tools: [
+      {
+        type: 'web_search_20250305',
+        name: 'web_search',
+        max_uses: 4,
+      },
+    ],
+    messages: [
+      {
+        role: 'user',
+        content: `Topic: ${subject}
+
+Source material:
+${source.slice(0, 60_000) || '(no source)'}
+
+Exam transcript:
+${convo}
+
+Produce the verification notes.`,
+      },
+    ],
+  })
+  const text = res.content
+    .filter((b) => b.type === 'text')
+    .map((b) => (b as { text: string }).text)
+    .join('\n')
+    .trim()
+  if (!text || text.toUpperCase().startsWith('NONE')) return null
+  return text.slice(0, 4000)
+}
+
 /// Grade a Final Review voice session transcript against the topic's source
 /// material. Star 3 requires an A: the user demonstrated command of the
 /// topic's main ideas AND supporting detail, in their own words.
@@ -946,7 +993,18 @@ export async function judgeFinalReview(
   const source = buildFullContent(thread).slice(0, 100_000)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
-  const system = `You grade a spoken Final Review session for a learning app. The assistant conducted an oral exam on a topic; the user is trying to demonstrate mastery. The exam is conversational: the user may have chosen the format themselves (for example summarizing the material in parts and discussing each), and the assistant may have offered brief corrections along the way.${thread.study_focus ? `
+  // Fact-check user-supplied outside examples (web search) before grading.
+  // A failure here must never block the grade itself.
+  let verificationNotes: string | null = null
+  try {
+    verificationNotes = await verifyOutsideClaims(subject, source, convo)
+  } catch (e) {
+    console.error('[f2/flash] verifyOutsideClaims failed:', e)
+  }
+
+  const system = `You grade a spoken Final Review session for a learning app. The assistant conducted an oral exam on a topic; the user is trying to demonstrate mastery. The exam is conversational: the user may have chosen the format themselves (for example summarizing the material in parts and discussing each), and the assistant may have offered brief corrections along the way.
+
+The user may bring in examples, analogies, or facts from OUTSIDE the source material. That strengthens a performance when the material is valid: judge it on its merits using your own knowledge and the verification notes (when present) — being outside the source is never itself an error. Invalid or wrong outside material counts against the user, like any other error.${thread.study_focus ? `
 
 The user set a STUDY FOCUS — they only studied part of the material and the exam was scoped to it: "${thread.study_focus}". Grade ONLY command of the material inside that focus. Never penalize gaps in material outside it.` : ''}
 
@@ -973,7 +1031,10 @@ Also produce:
 
 Source material (ground truth):
 ${source || '(no source content — judge against the transcript itself)'}
-
+${verificationNotes ? `
+Verification notes on material the user brought in from outside the source (web-checked):
+${verificationNotes}
+` : ''}
 Session transcript:
 ${convo || '(empty transcript)'}
 
