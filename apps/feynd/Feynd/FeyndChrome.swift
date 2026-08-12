@@ -159,6 +159,28 @@ struct MiniTopicGlyph: View {
                 tintedGlyph
                     .frame(width: size * 0.55, height: size * 0.55)
             )
+            .overlay(alignment: .bottomTrailing) {
+                if verified {
+                    engravedCheck
+                        .padding(size * 0.12)
+                }
+            }
+    }
+
+    /// Tiny debossed checkmark in the tile's corner — a watermark stamped
+    /// into the gold, not a badge. Two layers fake the engraving: a hairline
+    /// white catch-light just below the stroke, then low-opacity ink on top.
+    private var engravedCheck: some View {
+        let s = size * 0.24
+        return ZStack {
+            Image(systemName: "checkmark")
+                .font(.system(size: s, weight: .bold))
+                .foregroundStyle(.white.opacity(0.35))
+                .offset(y: s * 0.09)
+            Image(systemName: "checkmark")
+                .font(.system(size: s, weight: .bold))
+                .foregroundStyle(FeyndTheme.inkOnAccent.opacity(0.30))
+        }
     }
 
     /// The glyphs paint themselves in the accent color; on an accent tile
