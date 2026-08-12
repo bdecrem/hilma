@@ -94,7 +94,14 @@ struct FlashVoiceView: View {
 
 /// The star-3 oral exam: a Final Review voice session followed by an A–F
 /// grade reveal. An A awards the third star and marks the topic mastered.
+/// The `.secondChance` variant runs the 3-question retake instead; passing
+/// it awards the star exactly like a full pass.
 struct FinalReviewView: View {
+    enum Variant: Equatable {
+        case full
+        case secondChance
+    }
+
     let topicId: String
     let topicLabel: String
     var onGraded: (FinalReviewResult) -> Void = { _ in }
@@ -112,6 +119,20 @@ struct FinalReviewView: View {
     @State private var phase: Phase = .talking
     @State private var revealed = false
     @State private var showBreakdown = false
+    @State private var variant: Variant
+    @State private var offerPresented = false
+
+    init(
+        topicId: String,
+        topicLabel: String,
+        variant: Variant = .full,
+        onGraded: @escaping (FinalReviewResult) -> Void = { _ in }
+    ) {
+        self.topicId = topicId
+        self.topicLabel = topicLabel
+        self.onGraded = onGraded
+        _variant = State(initialValue: variant)
+    }
 
     var body: some View {
         ZStack {
@@ -119,9 +140,9 @@ struct FinalReviewView: View {
             switch phase {
             case .talking:
                 VoiceSessionView(
-                    mode: "final_review",
+                    mode: variant == .secondChance ? "second_chance" : "final_review",
                     threadId: topicId,
-                    title: "Final Review · \(topicLabel)"
+                    title: (variant == .secondChance ? "Second Chance · " : "Final Review · ") + topicLabel
                 ) { voiceSessionId in
                     guard let voiceSessionId else {
                         closeModal(dismiss)
@@ -162,7 +183,7 @@ struct FinalReviewView: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    Text("FINAL REVIEW")
+                    Text(variant == .secondChance ? "SECOND CHANCE" : "FINAL REVIEW")
                         .font(.system(size: 12, weight: .heavy))
                         .tracking(1.6)
                         .foregroundStyle(FeyndTheme.text3)
@@ -200,7 +221,9 @@ struct FinalReviewView: View {
                         .background(FeyndTheme.surface, in: Capsule())
                         .overlay(Capsule().stroke(FeyndTheme.gold.opacity(0.4), lineWidth: 1))
                     } else {
-                        Text("An A earns the star. Review and come back — the material isn't going anywhere.")
+                        Text(variant == .secondChance
+                            ? "Not this time — study the weak spots and take the Final Review again."
+                            : "An A earns the star. Review and come back — the material isn't going anywhere.")
                             .font(.system(size: 13.5))
                             .foregroundStyle(FeyndTheme.text2)
                             .multilineTextAlignment(.center)
@@ -246,7 +269,13 @@ struct FinalReviewView: View {
                     }
 
                     Button {
-                        closeModal(dismiss)
+                        // A failed full attempt with a Second Chance on offer:
+                        // dismissing the grade pops the offer instead of closing.
+                        if !r.passed, variant == .full, r.secondChance?.eligible == true {
+                            offerPresented = true
+                        } else {
+                            closeModal(dismiss)
+                        }
                     } label: {
                         Text("Done")
                             .font(.system(size: 16, weight: .bold))
@@ -275,6 +304,22 @@ struct FinalReviewView: View {
             withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.2)) {
                 revealed = true
             }
+        }
+        .alert("Second Chance?", isPresented: $offerPresented) {
+            Button("Take it now") { startSecondChance() }
+            Button("Not now", role: .cancel) { closeModal(dismiss) }
+        } message: {
+            Text("Three questions on what you missed. Answer all three at A level and the star is yours. The offer stands for 24 hours.")
+        }
+    }
+
+    /// Roll straight from the failed grade into the 3-question retake.
+    private func startSecondChance() {
+        variant = .secondChance
+        revealed = false
+        showBreakdown = false
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            phase = .talking
         }
     }
 

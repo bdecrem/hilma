@@ -247,4 +247,18 @@ struct FinalReviewResult: Codable, Equatable {
     let weaknesses: [String]?
     let stars: Int
     let mastered: Bool
+    /// Whether a Second Chance (3-question retake) is on offer after this
+    /// failed full attempt. Optional so older servers still decode.
+    let secondChance: SecondChanceOffer?
+
+    enum CodingKeys: String, CodingKey {
+        case grade, passed, notes, strengths, weaknesses, stars, mastered
+        case secondChance = "second_chance"
+    }
+}
+
+struct SecondChanceOffer: Codable, Equatable {
+    let eligible: Bool
+    /// ISO timestamp the offer expires.
+    let until: String?
 }

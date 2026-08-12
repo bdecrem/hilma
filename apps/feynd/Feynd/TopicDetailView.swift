@@ -18,6 +18,8 @@ struct TopicDetailView: View {
     @State private var playerPresented = false
     @State private var flashPresented = false
     @State private var finalReviewPresented = false
+    @State private var finalReviewVariant: FinalReviewView.Variant = .full
+    @State private var secondChanceDialogPresented = false
 
     var body: some View {
         ZStack {
@@ -57,14 +59,37 @@ struct TopicDetailView: View {
                 .environment(session)
         }
         .fullScreenCover(isPresented: $finalReviewPresented) {
-            FinalReviewView(topicId: topicId, topicLabel: thread?.topic ?? "Topic") { result in
+            FinalReviewView(
+                topicId: topicId,
+                topicLabel: thread?.topic ?? "Topic",
+                variant: finalReviewVariant
+            ) { result in
                 if var t = thread {
                     t.stars = result.stars
                     if result.mastered { t.hardQuizCompletedAt = Date() }
                     thread = t
                 }
+                // Refetch so second_chance_until reflects this attempt.
+                Task { await load() }
             }
             .environment(session)
+        }
+        .confirmationDialog(
+            "You've earned a Second Chance",
+            isPresented: $secondChanceDialogPresented,
+            titleVisibility: .visible
+        ) {
+            Button("Second Chance — 3 questions") {
+                finalReviewVariant = .secondChance
+                finalReviewPresented = true
+            }
+            Button("Full Final Review") {
+                finalReviewVariant = .full
+                finalReviewPresented = true
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Answer 3 questions at A level to earn the star, or retake the full review.")
         }
         .sheet(isPresented: $playerPresented) {
             if let url = audioSummaryURL {
@@ -173,7 +198,14 @@ struct TopicDetailView: View {
 
                     if canTakeFinalReview {
                         ActionChip(label: "Final Review", systemImage: "checkmark.seal.fill", iconTint: FeyndTheme.gold) {
-                            finalReviewPresented = true
+                            // Within 24h of a failed 2nd+ attempt, offer the
+                            // 3-question Second Chance alongside the full exam.
+                            if thread?.secondChanceAvailable == true {
+                                secondChanceDialogPresented = true
+                            } else {
+                                finalReviewVariant = .full
+                                finalReviewPresented = true
+                            }
                         }
                         .opacity(busy ? 0.5 : 1)
                         .allowsHitTesting(!busy)

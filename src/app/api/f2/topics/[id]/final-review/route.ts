@@ -2,7 +2,12 @@ import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
 import { f2Supabase } from '@/lib/f2/supabase'
-import { awardFinalReviewStar, judgeFinalReview } from '@/lib/f2/flash'
+import {
+  awardFinalReviewStar,
+  getSecondChanceState,
+  judgeFinalReview,
+  recordVoiceSessionGrade,
+} from '@/lib/f2/flash'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -44,15 +49,33 @@ export async function POST(
   }
 
   try {
+    const isSecondChance = session.mode === 'second_chance'
     const grade = await judgeFinalReview(
       thread,
       (session.transcript ?? []) as { role?: string; text?: string }[],
+      isSecondChance ? 'second_chance' : 'full',
     )
+    // Record the grade on the session row — full attempts become countable
+    // history for Second Chance eligibility.
+    await recordVoiceSessionGrade(user.id, body.voice_session_id, grade)
+
     let stars = thread.stars
     if (grade.passed && thread.stars < 3) {
       await awardFinalReviewStar(user.id, thread.id)
       stars = 3
     }
+
+    // After a failed FULL attempt, tell the client whether the Second
+    // Chance offer applies (2+ attempts, latest below A, 24h window).
+    let second_chance: { eligible: boolean; until: string | null } = {
+      eligible: false,
+      until: null,
+    }
+    if (!grade.passed && !isSecondChance) {
+      const sc = await getSecondChanceState(user.id, thread.id)
+      second_chance = { eligible: sc.eligible, until: sc.until }
+    }
+
     return NextResponse.json({
       grade: grade.grade,
       passed: grade.passed,
@@ -61,6 +84,7 @@ export async function POST(
       weaknesses: grade.weaknesses,
       stars,
       mastered: grade.passed,
+      second_chance,
     })
   } catch (e) {
     console.error('[f2/final-review] grading failed:', e)

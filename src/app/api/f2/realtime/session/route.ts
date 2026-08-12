@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
-import { getFlashCardsByIds, openFormQuestion } from '@/lib/f2/flash'
+import { getFlashCardsByIds, getSecondChanceState, openFormQuestion } from '@/lib/f2/flash'
 import {
   applyVoiceStyle,
   buildFinalReviewInstructions,
+  buildSecondChanceInstructions,
   buildFlashVoiceInstructions,
   buildRealtimeInstructions,
   createOpenAIRealtimeClientSecret,
@@ -40,12 +41,15 @@ export async function POST(req: Request) {
   }
 
   const mode = body.mode ?? 'global'
-  if (!['global', 'topic', 'flash', 'final_review'].includes(mode)) {
+  if (!['global', 'topic', 'flash', 'final_review', 'second_chance'].includes(mode)) {
     return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
   }
 
   let thread = null
-  if (mode === 'topic' || mode === 'final_review' || (mode === 'flash' && body.thread_id)) {
+  if (
+    mode === 'topic' || mode === 'final_review' || mode === 'second_chance' ||
+    (mode === 'flash' && body.thread_id)
+  ) {
     if (!body.thread_id) {
       return NextResponse.json({ error: 'thread_id required' }, { status: 400 })
     }
@@ -82,6 +86,24 @@ export async function POST(req: Request) {
       )
     }
     instructions = buildFinalReviewInstructions({ userName: user.username, thread: thread! })
+  } else if (mode === 'second_chance') {
+    // Only within the 24h window after a failed 2nd+ Final Review attempt,
+    // and never once the topic is mastered.
+    if (thread!.hard_quiz_completed_at || thread!.stars >= 3) {
+      return NextResponse.json({ error: 'Topic already mastered.' }, { status: 403 })
+    }
+    const sc = await getSecondChanceState(user.id, thread!.id)
+    if (!sc.eligible) {
+      return NextResponse.json(
+        { error: 'No Second Chance available — take a Final Review first.' },
+        { status: 403 },
+      )
+    }
+    instructions = buildSecondChanceInstructions({
+      userName: user.username,
+      thread: thread!,
+      weaknesses: sc.last_weaknesses,
+    })
   } else {
     instructions = buildRealtimeInstructions({
       mode,

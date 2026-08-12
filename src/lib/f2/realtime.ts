@@ -7,8 +7,10 @@ import {
 } from './threads'
 
 // 'walk' belongs to Peri (src/lib/f4) but shares this table + session helpers.
-// 'flash' = a spoken 10-card flash set; 'final_review' = the star-3 oral exam.
-export type RealtimeMode = 'global' | 'topic' | 'walk' | 'flash' | 'final_review'
+// 'flash' = a spoken 10-card flash set; 'final_review' = the star-3 oral exam;
+// 'second_chance' = the 3-question retake offered after a failed Final Review.
+export type RealtimeMode =
+  | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance'
 
 export type VoiceSession = {
   id: string
@@ -236,6 +238,36 @@ How to conduct the review:
 - Use get_topic_context if you need source detail to form a good question or to check a claim they made.
 - Keep the whole thing a fluid conversation — their thinking, your questions, your brief corrections — not a quiz script.
 - Once the material has been covered, thank them, tell them the review is complete and that their grade is being tallied, and say goodbye. Do not announce a grade yourself.`
+}
+
+/// The Second Chance: exactly three questions, offered after a failed Final
+/// Review. Targets the weaknesses from the failed attempt when we have them.
+/// Passing bar (applied by the grader afterwards): A-level command across
+/// the three answers combined.
+export function buildSecondChanceInstructions(input: {
+  userName: string
+  thread: F2Thread
+  /** Weaknesses the grader flagged on the failed Final Review, if any. */
+  weaknesses?: string[]
+}): string {
+  const name = friendlyName(input.userName)
+  const weak = (input.weaknesses ?? []).filter((w) => w.trim())
+  return `You are F2, giving ${name} their SECOND CHANCE — a short spoken retake after a Final Review that fell just short. Exactly THREE questions. Their mastery star is on the line: to pass, their three answers together must be A-level. You speak first.
+
+${summarizeThreadForPrompt(input.thread)}${input.thread.study_focus ? `
+
+STUDY FOCUS: ${name} has only studied part of this material and asked to be examined ONLY on it: "${input.thread.study_focus}". Everything you ask must stay inside that focus.` : ''}${weak.length > 0 ? `
+
+WHERE THEY FELL SHORT LAST TIME — build your three questions primarily from these areas, so they can prove they've closed the gaps:
+${weak.map((w) => `- ${w}`).join('\n')}` : ''}
+
+How to run it:
+- Open by telling ${name} this is their Second Chance: three questions, and strong answers on all three earn the star. Then ask question 1.
+- Ask EXACTLY three substantive questions — "explain", "why", "how" — one at a time. No more, no fewer.
+- One short follow-up probe per question is allowed when an answer is thin, but it belongs to the same question.
+- Brief corrections are fine, but the grade rests on what THEY demonstrate — keep the floor theirs.
+- Use get_topic_context if you need source detail to form a sharp question.
+- After the third answer, thank them, say their grade is being tallied, and say goodbye. Do not announce a result yourself.`
 }
 
 export function getTopicContextTool() {

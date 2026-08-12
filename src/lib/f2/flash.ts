@@ -981,9 +981,12 @@ Produce the verification notes.`,
 /// Grade a Final Review voice session transcript against the topic's source
 /// material. Star 3 requires an A: the user demonstrated command of the
 /// topic's main ideas AND supporting detail, in their own words.
+/// The 'second_chance' variant grades the 3-question retake: an A means the
+/// three answers together showed A-level command of what was asked.
 export async function judgeFinalReview(
   thread: F2Thread,
   transcript: TranscriptTurn[],
+  variant: 'full' | 'second_chance' = 'full',
 ): Promise<FinalReviewGrade> {
   const convo = (transcript ?? [])
     .map((t) => `${t.role === 'user' ? 'USER' : 'F2'}: ${(t.text ?? '').trim()}`)
@@ -1002,7 +1005,12 @@ export async function judgeFinalReview(
     console.error('[f2/flash] verifyOutsideClaims failed:', e)
   }
 
-  const system = `You grade a spoken Final Review session for a learning app. The assistant conducted an oral exam on a topic; the user is trying to demonstrate mastery. The exam is conversational: the user may have chosen the format themselves (for example summarizing the material in parts and discussing each), and the assistant may have offered brief corrections along the way.
+  const examShape =
+    variant === 'second_chance'
+      ? `This was a SECOND CHANCE retake: the assistant asked exactly three substantive questions (after an earlier Final Review fell short). Grade ONLY the user's command of what those three questions covered — the retake is deliberately narrow, so never penalize material the questions didn't touch. An A means all three answers together showed genuine command: main ideas and supporting detail, in their own words.`
+      : `The exam is conversational: the user may have chosen the format themselves (for example summarizing the material in parts and discussing each), and the assistant may have offered brief corrections along the way.`
+
+  const system = `You grade a spoken ${variant === 'second_chance' ? 'Second Chance retake' : 'Final Review session'} for a learning app. The assistant conducted an oral exam on a topic; the user is trying to demonstrate mastery. ${examShape}
 
 The user may bring in examples, analogies, or facts from OUTSIDE the source material. That strengthens a performance when the material is valid: judge it on its merits using your own knowledge and the verification notes (when present) — being outside the source is never itself an error. Invalid or wrong outside material counts against the user, like any other error.${thread.study_focus ? `
 
@@ -1185,6 +1193,72 @@ export async function recordFlashSet(input: {
     star2_awarded: star2,
     stars,
     consecutive_high_sets: consecutive,
+  }
+}
+
+/// Persist a grade onto its voice session row. This is what makes Final
+/// Review attempts countable for Second Chance eligibility.
+export async function recordVoiceSessionGrade(
+  userId: string,
+  voiceSessionId: string,
+  g: FinalReviewGrade,
+): Promise<void> {
+  const { error } = await f2Supabase()
+    .from('f2_voice_sessions')
+    .update({
+      grade: g.grade,
+      graded_at: new Date().toISOString(),
+      grade_detail: { notes: g.notes, strengths: g.strengths, weaknesses: g.weaknesses },
+    })
+    .eq('id', voiceSessionId)
+    .eq('user_id', userId)
+  if (error) console.error('[f2/flash] recordVoiceSessionGrade failed:', error)
+}
+
+export type SecondChanceState = {
+  eligible: boolean
+  /** ISO timestamp the offer expires (24h after the failed attempt). */
+  until: string | null
+  /** Weaknesses from the failed attempt — feeds the retake's questions. */
+  last_weaknesses: string[]
+}
+
+export const SECOND_CHANCE_WINDOW_MS = 24 * 60 * 60 * 1000
+
+/// Second Chance eligibility from graded FULL Final Review history: 2+
+/// graded attempts, the latest below A and within the last 24 hours.
+/// Second Chance sessions (mode='second_chance') never count as attempts.
+/// Callers gate separately on the topic not being mastered yet.
+export async function getSecondChanceState(
+  userId: string,
+  threadId: string,
+): Promise<SecondChanceState> {
+  const none: SecondChanceState = { eligible: false, until: null, last_weaknesses: [] }
+  const { data, error } = await f2Supabase()
+    .from('f2_voice_sessions')
+    .select('grade, graded_at, grade_detail')
+    .eq('user_id', userId)
+    .eq('thread_id', threadId)
+    .eq('mode', 'final_review')
+    .not('grade', 'is', null)
+    .order('graded_at', { ascending: false })
+  if (error) {
+    console.error('[f2/flash] getSecondChanceState failed:', error)
+    return none
+  }
+  const attempts = (data ?? []) as {
+    grade: string
+    graded_at: string
+    grade_detail: { weaknesses?: string[] } | null
+  }[]
+  const last = attempts[0]
+  if (attempts.length < 2 || !last?.graded_at || last.grade === 'A') return none
+  const until = new Date(last.graded_at).getTime() + SECOND_CHANCE_WINDOW_MS
+  if (Date.now() > until) return none
+  return {
+    eligible: true,
+    until: new Date(until).toISOString(),
+    last_weaknesses: (last.grade_detail?.weaknesses ?? []).filter((w) => w?.trim()),
   }
 }
 

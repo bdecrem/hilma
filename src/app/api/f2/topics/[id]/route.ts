@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { ALL_TOPIC_KINDS, getThreadById, type TopicKind } from '@/lib/f2/threads'
-import { listFlashCards } from '@/lib/f2/flash'
+import { getSecondChanceState, listFlashCards } from '@/lib/f2/flash'
 import { f2Supabase } from '@/lib/f2/supabase'
 
 export const runtime = 'nodejs'
@@ -20,7 +20,17 @@ export async function GET(
   if (!thread) {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
-  return NextResponse.json({ thread })
+
+  // Second Chance window (24h after a failed 2nd+ Final Review) — drives
+  // the Final Review chip's retake offer. Only worth computing while the
+  // topic is still at the Final Review stage.
+  let second_chance_until: string | null = null
+  if (thread.stars >= 2 && thread.stars < 3 && !thread.hard_quiz_completed_at) {
+    const sc = await getSecondChanceState(user.id, thread.id)
+    second_chance_until = sc.eligible ? sc.until : null
+  }
+
+  return NextResponse.json({ thread: { ...thread, second_chance_until } })
 }
 
 export async function PATCH(

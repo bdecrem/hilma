@@ -82,8 +82,17 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     /// User instruction scoping what they want to be tested on ("only the
     /// first half"). Flash cards, quizzes, and the Final Review honor it.
     var studyFocus: String?
+    /// Non-nil while a Second Chance retake is on offer (24h after a failed
+    /// 2nd+ Final Review attempt). Topic-detail payload only.
+    var secondChanceUntil: Date?
 
     var isPinned: Bool { pinnedAt != nil }
+
+    /// The Second Chance offer is live right now.
+    var secondChanceAvailable: Bool {
+        guard let until = secondChanceUntil else { return false }
+        return until > Date()
+    }
 
     var displayLabel: String {
         if let topic, !topic.isEmpty { return topic }
@@ -111,6 +120,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case updatedAt = "updated_at"
         case pinnedAt = "pinned_at"
         case studyFocus = "study_focus"
+        case secondChanceUntil = "second_chance_until"
     }
 
     // Custom init so the iOS app keeps working against backends that don't
@@ -133,6 +143,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
         pinnedAt = try c.decodeIfPresent(Date.self, forKey: .pinnedAt)
         studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
+        secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
     }
 }
 
@@ -161,10 +172,18 @@ struct F2Thread: Codable {
     var audioSummary: F2AudioSummary?
     /// See F2Topic.studyFocus.
     var studyFocus: String?
+    /// See F2Topic.secondChanceUntil — topic-detail payload only.
+    var secondChanceUntil: Date?
 
     var sourceHost: String? {
         guard let url, let host = URL(string: url)?.host else { return nil }
         return host.replacingOccurrences(of: "www.", with: "")
+    }
+
+    /// The Second Chance offer is live right now.
+    var secondChanceAvailable: Bool {
+        guard let until = secondChanceUntil else { return false }
+        return until > Date()
     }
 
     enum CodingKeys: String, CodingKey {
@@ -175,6 +194,7 @@ struct F2Thread: Codable {
         case pendingQuizKind = "pending_quiz_kind"
         case audioSummary = "audio_summary"
         case studyFocus = "study_focus"
+        case secondChanceUntil = "second_chance_until"
     }
 
     init(from decoder: Decoder) throws {
@@ -190,6 +210,7 @@ struct F2Thread: Codable {
         pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
         audioSummary = try c.decodeIfPresent(F2AudioSummary.self, forKey: .audioSummary)
         studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
+        secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
     }
 }
 
