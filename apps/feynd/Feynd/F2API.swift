@@ -289,6 +289,35 @@ final class F2API {
         return res.audioSummary
     }
 
+    // MARK: Book summary
+
+    struct BookSummaryFull: Codable {
+        let status: String
+        let markdown: String?
+        let error: String?
+    }
+
+    private struct BookSummaryResponse: Codable {
+        let bookSummary: F2BookSummary?
+        enum CodingKeys: String, CodingKey { case bookSummary = "book_summary" }
+    }
+
+    private struct BookSummaryFullResponse: Codable {
+        let bookSummary: BookSummaryFull?
+        enum CodingKeys: String, CodingKey { case bookSummary = "book_summary" }
+    }
+
+    func generateBookSummary(id: String) async throws -> F2BookSummary? {
+        struct Body: Encodable {}
+        let res: BookSummaryResponse = try await post("/api/f2/topics/\(id)/book-summary", body: Body())
+        return res.bookSummary
+    }
+
+    func fetchBookSummary(id: String) async throws -> BookSummaryFull? {
+        let res: BookSummaryFullResponse = try await get("/api/f2/topics/\(id)/book-summary")
+        return res.bookSummary
+    }
+
     // MARK: Additional materials
 
     struct AddSourceRequest: Codable { let url: String }

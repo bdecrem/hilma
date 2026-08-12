@@ -7,6 +7,7 @@ import {
   type TopicKind,
 } from '@/lib/f2/threads'
 import { audioSummaryForClient } from '@/lib/f2/audio-summary'
+import { bookSummaryForClient } from '@/lib/f2/book-summary'
 
 export const runtime = 'nodejs'
 
@@ -39,6 +40,8 @@ export async function GET() {
     study_focus: t.study_focus,
     // Script text stays out of list payloads — clients only need state + URL.
     audio_summary: audioSummaryForClient(t.audio_summary),
+    // Same for the book summary's markdown — status only.
+    book_summary: bookSummaryForClient(t.book_summary),
   }))
   return NextResponse.json({ topics }, { headers: NO_STORE })
 }

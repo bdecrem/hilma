@@ -30,8 +30,11 @@ struct TopicsView: View {
     @State private var contextTarget: F2Topic? = nil
     @State private var flashTarget: F2Topic? = nil
     @State private var audioError: String? = nil
-    /// True while a background task is polling for in-flight audio summaries.
+    /// True while a background task is polling for in-flight audio or book
+    /// summaries.
     @State private var pollingAudio = false
+    @State private var bookReaderTarget: F2Topic? = nil
+    @State private var bookError: String? = nil
     /// Whether the big in-scroll title is on screen (bar echoes it when not).
     @State private var bigTitleVisible = true
     /// Bumped by double-tapping the bar — the list scrolls back to the top.
@@ -130,6 +133,9 @@ struct TopicsView: View {
             FlashCardsView(topicId: topic.id, topicLabel: topic.displayLabel)
                 .environment(session)
         }
+        .sheet(item: $bookReaderTarget) { topic in
+            BookSummaryReaderView(topicId: topic.id, topicLabel: topic.displayLabel)
+        }
         .sheet(item: $renameTarget) { topic in
             RenameTopicSheet(topic: topic) { newName, newKind in
                 commitRename(topic, newName: newName, newKind: newKind)
@@ -159,6 +165,13 @@ struct TopicsView: View {
             Button("OK") { audioError = nil }
         } message: {
             Text(audioError ?? "")
+        }
+        .alert("Book summary",
+               isPresented: Binding(get: { bookError != nil },
+                                    set: { if !$0 { bookError = nil } })) {
+            Button("OK") { bookError = nil }
+        } message: {
+            Text(bookError ?? "")
         }
         .onTitleVisibility { bigTitleVisible = $0 }
         // Cached list first (instant paint), then reload on every appearance —
@@ -309,6 +322,8 @@ struct TopicsView: View {
                              onAddMaterial: { startAddMaterial(topic) },
                              onViewContext: { contextTarget = topic },
                              onGenerateAudio: { generateAudio(topic) },
+                             onGenerateBook: { generateBook(topic) },
+                             onViewBookSummary: { bookReaderTarget = topic },
                              onTogglePin: { togglePin(topic) },
                              onFlashCards: { flashTarget = topic })
             }
@@ -362,16 +377,42 @@ struct TopicsView: View {
         }
     }
 
+    /// Kick off the study summary for a book topic and open the reader — it
+    /// shows progress while the server searches and writes, then the text.
+    private func generateBook(_ topic: F2Topic) {
+        Task {
+            do {
+                let pending = try await F2API.shared.generateBookSummary(id: topic.id)
+                if let idx = topics.firstIndex(where: { $0.id == topic.id }) {
+                    topics[idx].bookSummary = pending
+                        ?? F2BookSummary(status: "generating", error: nil, updatedAt: nil)
+                }
+            } catch let F2APIError.http(409, _) {
+                // Already generating — fall through to the reader to watch it.
+            } catch {
+                bookError = error.localizedDescription
+                return
+            }
+            bookReaderTarget = topic
+            startAudioPollingIfNeeded()
+        }
+    }
+
+    private var anySummaryGenerating: Bool {
+        topics.contains {
+            $0.audioSummary?.status == "generating" || $0.bookSummary?.status == "generating"
+        }
+    }
+
     /// One poller at a time; re-fetches the list every few seconds while any
-    /// topic is still generating. Book-scale summaries take a few minutes.
+    /// audio or book summary is still generating. Book-scale audio takes a
+    /// few minutes; book summaries a minute or two.
     private func startAudioPollingIfNeeded() {
-        guard !pollingAudio,
-              topics.contains(where: { $0.audioSummary?.status == "generating" })
-        else { return }
+        guard !pollingAudio, anySummaryGenerating else { return }
         pollingAudio = true
         Task {
             defer { pollingAudio = false }
-            while topics.contains(where: { $0.audioSummary?.status == "generating" }) {
+            while anySummaryGenerating {
                 try? await Task.sleep(for: .seconds(6))
                 do { topics = try await F2API.shared.listTopics() } catch { break }
             }
@@ -461,6 +502,8 @@ struct TopicListRow: View {
     let onAddMaterial: () -> Void
     let onViewContext: () -> Void
     let onGenerateAudio: () -> Void
+    let onGenerateBook: () -> Void
+    let onViewBookSummary: () -> Void
     let onTogglePin: () -> Void
     let onFlashCards: () -> Void
 
@@ -497,6 +540,7 @@ struct TopicListRow: View {
                     Button { onAddMaterial() } label: { Label("Add material", systemImage: "link.badge.plus") }
                     Button { onViewContext() } label: { Label("View context", systemImage: "doc.text.magnifyingglass") }
                     audioMenuItem
+                    if topic.kind == "book" { bookMenuItems }
                     Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -540,6 +584,34 @@ struct TopicListRow: View {
         default:
             Button { onGenerateAudio() } label: {
                 Label("Generate Audio Summary", systemImage: "waveform")
+            }
+        }
+    }
+
+    /// Book topics only: generate / watch / read the web-researched study
+    /// summary. Same state dance as the audio entry; the reader sheet shows
+    /// progress while a generation is in flight.
+    @ViewBuilder
+    private var bookMenuItems: some View {
+        switch topic.bookSummary?.status {
+        case "generating":
+            Button { onViewBookSummary() } label: {
+                Label("Book summary (writing…)", systemImage: "hourglass")
+            }
+        case "ready":
+            Button { onViewBookSummary() } label: {
+                Label("View Book Summary", systemImage: "text.book.closed")
+            }
+            Button { onGenerateBook() } label: {
+                Label("Regenerate Book Summary", systemImage: "arrow.clockwise")
+            }
+        case "error":
+            Button { onGenerateBook() } label: {
+                Label("Retry Book Summary", systemImage: "exclamationmark.triangle")
+            }
+        default:
+            Button { onGenerateBook() } label: {
+                Label("Generate Book Summary", systemImage: "text.book.closed")
             }
         }
     }

@@ -43,6 +43,20 @@ struct F2AudioSummary: Codable, Equatable, Hashable {
     }
 }
 
+/// Status of the web-researched study-context summary for book topics.
+/// The topics list carries status only; the markdown itself comes from
+/// GET /api/f2/topics/[id]/book-summary (see BookSummaryReaderView).
+struct F2BookSummary: Codable, Equatable, Hashable {
+    let status: String        // "generating" | "ready" | "error"
+    let error: String?
+    let updatedAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case status, error
+        case updatedAt = "updated_at"
+    }
+}
+
 struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     let id: String
     var topic: String?
@@ -58,6 +72,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     /// Topic sheet.
     var kind: String?
     var audioSummary: F2AudioSummary?
+    var bookSummary: F2BookSummary?
     let createdAt: Date
     let updatedAt: Date
     let client: String?
@@ -91,6 +106,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case hardQuizCompletedAt = "hard_quiz_completed_at"
         case pendingQuizKind = "pending_quiz_kind"
         case audioSummary = "audio_summary"
+        case bookSummary = "book_summary"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case pinnedAt = "pinned_at"
@@ -112,6 +128,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         pendingQuizKind = try c.decodeIfPresent(String.self, forKey: .pendingQuizKind)
         kind = try c.decodeIfPresent(String.self, forKey: .kind)
         audioSummary = try c.decodeIfPresent(F2AudioSummary.self, forKey: .audioSummary)
+        bookSummary = try c.decodeIfPresent(F2BookSummary.self, forKey: .bookSummary)
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         updatedAt = try c.decode(Date.self, forKey: .updatedAt)
         pinnedAt = try c.decodeIfPresent(Date.self, forKey: .pinnedAt)

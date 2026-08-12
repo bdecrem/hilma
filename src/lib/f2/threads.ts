@@ -2,6 +2,7 @@ import { f2Supabase } from './supabase'
 import type { F2Client } from './agent'
 import type { VideoBand } from './videos'
 import type { AudioSummary } from './audio-summary'
+import type { BookSummary } from './book-summary'
 
 export type F2ThreadMessage = {
   role: 'user' | 'assistant'
@@ -62,6 +63,9 @@ export type F2Thread = {
   /** Narrated recap state (see lib/f2/audio-summary.ts). Null when the user
    *  has never generated one for this topic. */
   audio_summary: AudioSummary | null
+  /** Web-researched study-context summary for book topics (see
+   *  lib/f2/book-summary.ts). Null when never generated. */
+  book_summary: BookSummary | null
   /** When the user pinned this topic. Non-null = pinned; the timestamp also
    *  orders pinned topics (most-recently-pinned first). Null = not pinned. */
   pinned_at: string | null
@@ -86,6 +90,12 @@ export function buildFullContent(thread: F2Thread): string {
       ? `${src.url ?? '(no URL)'} — ${src.title}`
       : (src.url ?? 'pasted material')
     parts.push(`\n\n--- Additional source: ${label} ---\n\n${src.content}`)
+  }
+  // The generated book summary is study context like any other source.
+  if (thread.book_summary?.status === 'ready' && thread.book_summary.markdown) {
+    parts.push(
+      `\n\n--- Book summary (web-researched study context) ---\n\n${thread.book_summary.markdown}`,
+    )
   }
   // Quotes the user captured for this topic. Listed last so the model treats
   // them as the user's own emphasis on top of the source material.

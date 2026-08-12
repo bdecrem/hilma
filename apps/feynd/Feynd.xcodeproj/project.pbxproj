@@ -11,6 +11,7 @@
 		08003C48F17C70F2C60C142B /* HelpSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C034E8A6E1CC456DE623630F /* HelpSheet.swift */; };
 		0E7694CF618B45FF234EB3CB /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */; };
 		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
+		0FA243A66767AA35B699BE73 /* BookSummaryReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */; };
 		10B1D2F87038A86CCA5D73B6 /* voice-marin.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 895F213807633430DF5ABD89 /* voice-marin.m4a */; };
 		13E521D2E87C8EC6DF8BFE61 /* AudioSummaryPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */; };
 		1654FB2047C765ABA53E6523 /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */; };
@@ -95,6 +96,7 @@
 		8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */ = {isa = PBXFileReference; path = "voice-ash.m4a"; sourceTree = "<group>"; };
 		9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleThumbsUp.swift; sourceTree = "<group>"; };
 		9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
+		A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookSummaryReaderView.swift; sourceTree = "<group>"; };
 		A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSessionView.swift; sourceTree = "<group>"; };
 		A62FA8AD3B3E792810622A3A /* F2API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F2API.swift; sourceTree = "<group>"; };
 		A806446C086649CAB62568A4 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 				8D6854393131D5ADEB1B75CE /* Assets.xcassets */,
 				8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */,
 				2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */,
+				A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */,
 				5DC33D7342C9F25E38F967F4 /* ChatView.swift */,
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
 				EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */,
@@ -310,6 +313,7 @@
 			files = (
 				13E521D2E87C8EC6DF8BFE61 /* AudioSummaryPlayer.swift in Sources */,
 				445C46DD3C8AB7B90A505AEC /* AudioSummaryPlayerView.swift in Sources */,
+				0FA243A66767AA35B699BE73 /* BookSummaryReaderView.swift in Sources */,
 				5B58C25CE4AFF970698227C4 /* ChatView.swift in Sources */,
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
 				F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */,
@@ -389,7 +393,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -472,7 +476,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 19;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
