@@ -142,19 +142,35 @@ struct ProfileBadge: View {
 struct MiniTopicGlyph: View {
     var kind: String? = nil
     var size: CGFloat = 36
+    /// Final Review passed (3 stars) — renders the inverted tile: accent
+    /// fill with the glyph knocked out in ink. Both colors come from the
+    /// theme, so light and dark modes each get their own accent/ink pair.
+    var verified: Bool = false
 
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
-            .fill(FeyndTheme.surface)
+            .fill(verified ? FeyndTheme.accent : FeyndTheme.surface)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(FeyndTheme.border, lineWidth: 1)
+                    .stroke(verified ? Color.clear : FeyndTheme.border, lineWidth: 1)
             )
             .frame(width: size, height: size)
             .overlay(
-                glyph
+                tintedGlyph
                     .frame(width: size * 0.55, height: size * 0.55)
             )
+    }
+
+    /// The glyphs paint themselves in the accent color; on an accent tile
+    /// that would vanish, so recolor by masking ink through the glyph's
+    /// alpha. inkOnAccent is the theme's designated on-accent ink.
+    @ViewBuilder
+    private var tintedGlyph: some View {
+        if verified {
+            FeyndTheme.inkOnAccent.mask(glyph)
+        } else {
+            glyph
+        }
     }
 
     @ViewBuilder

@@ -510,7 +510,7 @@ struct TopicListRow: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                MiniTopicGlyph(kind: topic.kind, size: 36)
+                MiniTopicGlyph(kind: topic.kind, size: 36, verified: topic.stars >= 3)
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 5) {
