@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "24"
+    CURRENT_PROJECT_VERSION: "25"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -32,6 +32,8 @@ targets:
       path: Feynd/Info.plist
       properties:
         CFBundleDisplayName: Dodo
+        # Short name — the macOS Dock hover label and app menu use this.
+        CFBundleName: Dodo
         # Escape-closes-modals responder — see FeyndApplication.swift.
         NSPrincipalClass: Feynd.FeyndApplication
         UILaunchScreen: {}
