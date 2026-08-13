@@ -25,7 +25,7 @@
 # that file is readable.
 set -u
 
-NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen|netspeed|porthole|pssh|rsh|pixel>}"
+NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen|netspeed|porthole|pssh|rsh|pixel|imsghttp>}"
 DEPLOY="${MACPLUS_DEPLOY:-/Users/admin/hilma-deploy}"
 BASE="$DEPLOY/apps/macplus"
 SOCAT=/opt/homebrew/bin/socat
@@ -81,6 +81,10 @@ case "$NAME" in
     # completes (the system sshd on :22 kills it). login -f admin shell.
     export PSSH_LOGIN_USER="${PSSH_LOGIN_USER:-admin}"
     cd "$BASE/agent-pssh"; exec /usr/bin/env node src/server.js --listen 2222 ;;
+  imsghttp)
+    # Outbound iMessage over HTTP for F2 (daily cards, chat replies) — see
+    # agent-imsghttp/server.mjs. Auth via IMSG_HTTP_SECRET from the env file.
+    cd "$BASE/agent-imsghttp"; exec /usr/bin/env node server.mjs --listen 2340 ;;
   pixel)
     # Daily Pixel canvas — dependency-free node (needs ANTHROPIC_API_KEY for
     # the daily Claude strokes; runs fine without, just never draws).

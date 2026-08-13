@@ -18,7 +18,7 @@ DEVTREE="${MACPLUS_DEVTREE:-/Users/admin/Documents/code/hilma}"
 ENVFILE="$HOME/.macplus-backend.env"
 UID_N="$(id -u)"
 AGENT_DIRS="agent agent-atkinson agent-surf agent-mux agent-imessage agent-diag agent-quote agent-bridge agent-screen agent-porthole agent-pssh"
-LONG_RUNNERS="mux imessage diag quote bridge screen porthole pssh rsh pixel oracle"
+LONG_RUNNERS="mux imessage diag quote bridge screen porthole pssh rsh pixel oracle imsghttp"
 
 echo "== pull =="
 BEFORE="$(git -C "$DEPLOY" rev-parse --short HEAD)"
@@ -39,7 +39,7 @@ if [ -r "$DEVTREE/.env.local" ]; then
   umask 077
   {
     echo "# MacPlus backend secrets — synced from $DEVTREE/.env.local by backend/update.sh ($(date +%F))."
-    grep -E '^(ANTHROPIC_API_KEY|OPENAI_API_KEY|TOGETHER_API_KEY|SUPABASE_URL|SUPABASE_SERVICE_KEY)=' "$DEVTREE/.env.local"
+    grep -E '^(ANTHROPIC_API_KEY|OPENAI_API_KEY|TOGETHER_API_KEY|SUPABASE_URL|SUPABASE_SERVICE_KEY|IMSG_HTTP_SECRET)=' "$DEVTREE/.env.local"
   } > "$ENVFILE.tmp" && mv "$ENVFILE.tmp" "$ENVFILE"
   echo "   re-synced $(grep -c '=' "$ENVFILE") keys -> $ENVFILE"
 else

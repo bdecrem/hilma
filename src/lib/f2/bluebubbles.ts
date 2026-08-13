@@ -22,7 +22,37 @@ export type SendArgs =
   | { chatGuid: string; text: string }
   | { addresses: string[]; text: string }
 
+/// Outbound sends go through the imsghttp agent on the Mac mini when it's
+/// configured — BlueBubbles' apple-script send path broke on macOS 26+ (its
+/// legacy "buddy" syntax), while the agent uses the modern syntax that
+/// works. BlueBubbles stays as the fallback and still handles all inbound.
+async function sendViaAgent(args: SendArgs): Promise<boolean> {
+  const url = process.env.F2_IMESSAGE_SEND_URL
+  const secret = process.env.F2_IMESSAGE_SEND_SECRET
+  if (!url || !secret) return false
+  const body =
+    'chatGuid' in args
+      ? { chat_guid: args.chatGuid, text: args.text }
+      : { handle: args.addresses[0], text: args.text }
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-imsg-secret': secret },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(BB_TIMEOUT_MS),
+  })
+  if (!res.ok) {
+    throw new Error(`imsghttp send failed (${res.status}): ${await res.text()}`)
+  }
+  return true
+}
+
 export async function sendIMessage(args: SendArgs): Promise<void> {
+  try {
+    if (await sendViaAgent(args)) return
+  } catch (e) {
+    console.error('[f2/imessage] agent send failed, falling back to BlueBubbles:', e)
+  }
+
   const base = bbBase()
   const password = bbPassword()
   const tempGuid = crypto.randomUUID()
