@@ -25,6 +25,10 @@ struct ProfileSheet: View {
 
     @State private var imessageHandles: [String] = []
     @State private var showPairing = false
+    @State private var phone: String? = nil
+    @State private var showPhoneEditor = false
+    @State private var phoneDraft = ""
+    @State private var phoneError: String? = nil
     @State private var showHelp = false
     @State private var showVoice = false
 
@@ -64,12 +68,33 @@ struct ProfileSheet: View {
                 }
             }
         }
+        .alert("Daily card number", isPresented: $showPhoneEditor) {
+            TextField("+1 650 555 0100", text: $phoneDraft)
+                .textContentType(.telephoneNumber)
+            Button("Save") {
+                Task { await savePhone() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text(phoneError ?? "Dodo texts one flash card a day to this number over iMessage. Reply in your own words to earn XP. Leave empty to turn it off.")
+        }
         .task {
             // Refresh user-wide progress so the ring + bar reflect any star
             // earned right before this sheet was opened.
             await session.refreshProgress()
             do { imessageHandles = try await F2API.shared.listImessageHandles() }
+            catch {}
+            do { phone = try await F2API.shared.profilePhone() }
             catch { /* keep empty */ }
+        }
+    }
+
+    private func savePhone() async {
+        do {
+            phone = try await F2API.shared.saveProfilePhone(phoneDraft)
+        } catch {
+            phoneError = error.localizedDescription
+            showPhoneEditor = true
         }
     }
 
@@ -361,6 +386,19 @@ struct ProfileSheet: View {
                         SettingsRow(label: "Add another", labelColor: FeyndTheme.accent) {
                             showPairing = true
                         }
+                    }
+                }
+            }
+            SettingsSection(label: "Daily card") {
+                SettingsCard {
+                    SettingsRow(
+                        label: phone ?? "Add phone number",
+                        detail: phone != nil ? "Dodo texts one flash card a day" : nil,
+                        labelColor: phone != nil ? FeyndTheme.text : FeyndTheme.accent
+                    ) {
+                        phoneDraft = phone ?? ""
+                        phoneError = nil
+                        showPhoneEditor = true
                     }
                 }
             }

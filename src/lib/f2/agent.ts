@@ -50,6 +50,7 @@ import {
 import { nameTopic } from './name-topic'
 import { llmComplete } from './llm'
 import { setAudioSummary } from './audio-summary'
+import { maybeHandleDailyAnswer } from './daily-card'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -173,6 +174,15 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   if (isUrl(firstToken)) {
     return handleNewUrl(userId, client, handle, firstToken)
   }
+
+  // Daily flash card: over iMessage, a plain text while a daily card is
+  // pending is its answer — graded with a correction and a little XP.
+  // Commands and URLs above still work mid-pending.
+  if (client === 'imessage' || client === 'sms') {
+    const dailyReply = await maybeHandleDailyAnswer(userId, text)
+    if (dailyReply) return { reply: dailyReply }
+  }
+
   return handleNonUrl(userId, client, handle, text, threadId, model)
 }
 

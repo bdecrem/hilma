@@ -749,6 +749,24 @@ final class F2API {
         return try await post("/api/f2/topics/\(topicId)/final-review", body: Body(voice_session_id: voiceSessionId))
     }
 
+    // MARK: - Profile extras
+
+    struct PhoneResponse: Codable { let phone: String? }
+
+    /// The phone number the daily flash card texts (nil = feature off).
+    func profilePhone() async throws -> String? {
+        let res: PhoneResponse = try await get("/api/f2/profile")
+        return res.phone
+    }
+
+    /// Save (or clear, with "") the daily-card phone number. Returns the
+    /// normalized number the server stored.
+    func saveProfilePhone(_ phone: String) async throws -> String? {
+        struct Body: Encodable { let phone: String }
+        let res: PhoneResponse = try await put("/api/f2/profile", body: Body(phone: phone))
+        return res.phone
+    }
+
     // MARK: - Voice preferences
 
     func voicePrefs() async throws -> VoicePrefs {

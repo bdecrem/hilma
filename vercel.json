@@ -3,6 +3,10 @@
     {
       "path": "/api/warm-og",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/f2/daily-card",
+      "schedule": "0 16 * * *"
     }
   ]
 }

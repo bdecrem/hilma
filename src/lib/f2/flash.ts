@@ -896,6 +896,53 @@ export async function judgeTextAnswers(
   return out
 }
 
+/// Grade one daily-card freeform answer: right/wrong plus one short
+/// coaching sentence (the correction when wrong, a sharpening detail when
+/// right). Used by the daily iMessage card.
+export async function judgeDailyCard(
+  card: FlashCard,
+  answer: string,
+): Promise<{ correct: boolean; feedback: string }> {
+  const system = `You grade a single flash-card answer sent by text message. Decide whether the user's answer expresses the same idea as the canonical answer — accept different wording and partial detail when the core idea is right. Then write ONE short sentence of feedback: when wrong, the correction (lead with the right answer); when right, one detail that sharpens or extends their answer. Plain text, no markdown, conversational.`
+  const parsed = await judgeJson<{ correct?: boolean; feedback?: string }>(
+    system,
+    `Question: ${openFormQuestion(card)}
+Canonical answer: ${card.answer}
+The user's answer: ${answer}
+
+Grade it.`,
+    {
+      type: 'object',
+      properties: {
+        correct: { type: 'boolean' },
+        feedback: { type: 'string' },
+      },
+      required: ['correct', 'feedback'],
+      additionalProperties: false,
+    },
+  )
+  return {
+    correct: Boolean(parsed.correct),
+    feedback: (parsed.feedback ?? '').slice(0, 400),
+  }
+}
+
+/// One card's SM-2 step, persisted — the daily card's single-card version
+/// of applyReviews.
+export async function reviewSingleCard(
+  userId: string,
+  card: FlashCard,
+  correct: boolean,
+): Promise<void> {
+  const next = reviewCard(card, correct)
+  const { error } = await f2Supabase()
+    .from('f2_flash_cards')
+    .update({ ...next, updated_at: new Date().toISOString() })
+    .eq('id', card.id)
+    .eq('user_id', userId)
+  if (error) console.error('[f2/flash] reviewSingleCard failed:', error)
+}
+
 type TranscriptTurn = { role?: string; text?: string }
 
 /// Judge a voice flash session: given the card list and the session
