@@ -399,6 +399,25 @@ export async function setAdditionalSources(
   if (error) console.error('[f2] setAdditionalSources failed:', error)
 }
 
+/// Set (or clear, with null) a topic's study focus. Same write the topics
+/// PATCH route does; shared here so the chat agent can do it too.
+export async function setStudyFocus(
+  threadId: string,
+  userId: string,
+  focus: string | null,
+): Promise<boolean> {
+  const { error } = await f2Supabase()
+    .from('f2_threads')
+    .update({ study_focus: focus, updated_at: new Date().toISOString() })
+    .eq('id', threadId)
+    .eq('user_id', userId)
+  if (error) {
+    console.error('[f2] setStudyFocus failed:', error)
+    return false
+  }
+  return true
+}
+
 /// Append a captured quote to a topic. Returns the new total, or null on error.
 /// Like the quiz helpers, scoped by user_id as defense-in-depth.
 export async function appendQuote(

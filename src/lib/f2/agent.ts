@@ -26,9 +26,16 @@ import {
   matchTopicByName,
   listTopicsForUser,
   setAdditionalSources,
+  setStudyFocus,
+  buildFullContent,
   type F2Thread,
   type F2AdditionalSource,
 } from './threads'
+import {
+  authorFlashCard,
+  generateFlashCards,
+  redoFlashCards,
+} from './flash'
 import {
   findExplainerVideos,
   youtubeVideoId,
@@ -41,7 +48,7 @@ import {
   acknowledgeReflectionAnswer,
 } from './chat'
 import { nameTopic } from './name-topic'
-import { llmComplete } from './llm'
+import { llmComplete, type LlmTool } from './llm'
 import { setAudioSummary } from './audio-summary'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
@@ -130,6 +137,16 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   if (summaryMatch) {
     const instructions = text.slice(summaryMatch[0].length).trim()
     return handleSummaryCommand(userId, threadId, instructions, model)
+  }
+
+  // "dodo <instruction>" → the content agent: act on the active topic's
+  // study materials (make/redo flash cards, add context notes, write and
+  // file documents, set the study focus). Conversational messages that just
+  // address the dodo fall through to a normal chat answer.
+  const dodoMatch = text.match(/^dodo\b[\s:,;.\-—!]*/i)
+  if (dodoMatch) {
+    const instruction = text.slice(dodoMatch[0].length).trim()
+    return handleDodoCommand(userId, threadId, text, instruction, model)
   }
 
   // "quote <text>" → capture a quote for the active topic (or ask which one).
@@ -392,6 +409,304 @@ async function handleVideoSetup(
     console.error('[f2] handleVideoSetup failed:', err)
     return { reply: 'F2: hit a snag setting that up (the video search or transcripts failed). Try again in a moment.' }
   }
+}
+
+// ---------------------------------------------------------------------------
+// "dodo <instruction>" — the content agent.
+
+const DODO_TOOLS: LlmTool[] = [
+  {
+    name: 'make_flash_card',
+    description:
+      'Create ONE specific flash card the user dictated. Use when they describe a single card — a question, optionally with the answer they want.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string', description: "The card's question, as the user intends it." },
+        answer: {
+          type: 'string',
+          description: 'ONLY when the user dictated the answer too. Omit to answer from the source material.',
+        },
+      },
+      required: ['question'],
+    },
+  },
+  {
+    name: 'add_flash_cards',
+    description:
+      'Generate additional cards into the existing deck (keeps current cards). Use for "make more cards", "add 5 cards about X".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        count: { type: 'integer', description: 'How many to add. Default 10 when the user did not say.' },
+        focus: { type: 'string', description: 'What the new cards should focus on, when the user said so.' },
+      },
+      required: ['count'],
+    },
+  },
+  {
+    name: 'redo_flash_cards',
+    description:
+      'Rebuild the WHOLE deck to the user\'s spec — replaces every existing card. Use for "redo the flash cards ...", "rebuild the deck focusing on ...".',
+    input_schema: {
+      type: 'object',
+      properties: {
+        instructions: {
+          type: 'string',
+          description: "The user's guidance for the new deck (focus, mix, style).",
+        },
+      },
+      required: ['instructions'],
+    },
+  },
+  {
+    name: 'add_context_note',
+    description:
+      "Add a note to the topic's context materials. When the user dictated content, keep their substance; when they asked you to write or research it, write it from the source material.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Short title for the note (a few words).' },
+        content: { type: 'string', description: 'The note body. Plain prose.' },
+      },
+      required: ['title', 'content'],
+    },
+  },
+  {
+    name: 'write_document',
+    description:
+      "Write a full document (study guide, outline, timeline, glossary, comparison...) from the topic's source material and file it in the context materials. Use when the user asks for a document, guide, or write-up to be created and added.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Document title.' },
+        brief: {
+          type: 'string',
+          description:
+            "What to write and how — the user's ask, plus anything from the conversation needed to write it well.",
+        },
+      },
+      required: ['title', 'brief'],
+    },
+  },
+  {
+    name: 'set_study_focus',
+    description:
+      'Scope what the user is tested on ("only test me on the first half"). Applies to flash cards, quizzes, and the Final Review. Empty string clears the focus.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        focus: { type: 'string', description: 'The focus instruction, or "" to clear it.' },
+      },
+      required: ['focus'],
+    },
+  },
+  {
+    name: 'answer_directly',
+    description:
+      "The message is NOT a content instruction — it's chat addressed to the dodo, or a question about the material. Answer it in plain text.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        reply: { type: 'string', description: 'Your answer. Plain text, no markdown, direct.' },
+      },
+      required: ['reply'],
+    },
+  },
+]
+
+/// "dodo <instruction>" — one agent turn over the active topic's materials.
+/// Picks exactly one content action (or answers directly), executes it
+/// server-side, and logs the exchange to the topic's chat.
+async function handleDodoCommand(
+  userId: string,
+  threadId: string | undefined,
+  originalText: string,
+  instruction: string,
+  model?: string,
+): Promise<F2Reply> {
+  const thread = threadId
+    ? await getThreadById(userId, threadId)
+    : await getLatestThread(userId)
+  if (!thread) {
+    return {
+      reply:
+        'F2: open a topic first — the dodo works on the active topic\'s materials (cards, notes, documents, study focus).',
+    }
+  }
+  const label = thread.topic ?? thread.url ?? 'this topic'
+  if (!instruction) {
+    return {
+      reply:
+        `F2: tell the dodo what to do with "${label}" — e.g. "dodo make a flash card asking …", "dodo redo the flash cards focusing on …", "dodo add a note: …", "dodo write a study guide and add it to context", "dodo only test me on the first half".`,
+      thread_id: thread.id,
+    }
+  }
+
+  const source = buildFullContent(thread).slice(0, 30_000)
+  const recentChat = thread.messages
+    .slice(-12)
+    .map((m) => `${m.role}: ${m.text}`)
+    .join('\n')
+    .slice(0, 6_000)
+
+  const system = `You are the content agent for the learning topic "${label}". The user prefixed their message with "dodo", which routes it to you. Pick exactly ONE tool:
+- make_flash_card / add_flash_cards / redo_flash_cards — card work. "Redo" replaces the deck; "add"/"make" keep it.
+- add_context_note — file a note in the topic's context materials.
+- write_document — create a document from the source material and file it in the context materials.
+- set_study_focus — scope what they get tested on; "" clears it.
+- answer_directly — the message isn't a content instruction (greeting, question about the material): just answer it, plain text, no markdown.
+
+When writing content yourself (notes, documents), ground it in the source material. Plain, direct prose — never filler.`
+
+  const user = `Source material (excerpt):
+${source || '(no source yet — the chat below is the material)'}
+
+Recent chat:
+${recentChat || '(none)'}
+
+The user's message:
+${instruction}`
+
+  let action: { name: string; input: Record<string, unknown> }
+  try {
+    const result = await llmComplete({
+      model,
+      system,
+      messages: [{ role: 'user', content: user }],
+      maxTokens: 4000,
+      tools: DODO_TOOLS,
+      forceTool: true,
+    })
+    if (result.type !== 'tool_call') {
+      action = { name: 'answer_directly', input: { reply: result.text } }
+    } else {
+      action = { name: result.name, input: result.input }
+    }
+  } catch (e) {
+    console.error('[f2/agent] dodo routing failed:', e)
+    return { reply: 'F2: the dodo tripped — try that again.', thread_id: thread.id }
+  }
+
+  let reply: string
+  try {
+    reply = await runDodoAction(thread, action, model)
+  } catch (e) {
+    console.error(`[f2/agent] dodo action ${action.name} failed:`, e)
+    reply = `F2: that didn't work (${e instanceof Error ? e.message : 'unknown error'}) — try again.`
+  }
+
+  const now = new Date().toISOString()
+  await appendMessages(thread.id, thread.user_id, thread.messages, [
+    { role: 'user', text: originalText, created_at: now },
+    { role: 'assistant', text: reply, created_at: now },
+  ])
+  return { reply, thread_id: thread.id }
+}
+
+async function runDodoAction(
+  thread: F2Thread,
+  action: { name: string; input: Record<string, unknown> },
+  model?: string,
+): Promise<string> {
+  const input = action.input
+  switch (action.name) {
+    case 'make_flash_card': {
+      const question = String(input.question ?? '').trim()
+      if (!question) return 'F2: the dodo needs the question for that card.'
+      const answer = String(input.answer ?? '').trim() || undefined
+      const card = await authorFlashCard(thread, question, model, answer)
+      return `F2: card added — "${card.question}" → "${card.answer}".`
+    }
+    case 'add_flash_cards': {
+      const count = Math.max(1, Math.min(30, Math.round(Number(input.count)) || 10))
+      const focus = String(input.focus ?? '').trim()
+      const cards = await generateFlashCards(thread, count, model, focus || undefined)
+      return `F2: added ${cards.length} card${cards.length === 1 ? '' : 's'} to the deck${focus ? ` — ${focus}` : ''}.`
+    }
+    case 'redo_flash_cards': {
+      const instructions = String(input.instructions ?? '').trim()
+      if (!instructions) return 'F2: tell the dodo how the new deck should differ.'
+      const cards = await redoFlashCards(thread, instructions, model)
+      return `F2: rebuilt the deck — ${cards.length} new cards (${instructions}).`
+    }
+    case 'add_context_note': {
+      const title = String(input.title ?? '').trim() || 'Note'
+      const content = String(input.content ?? '').trim()
+      if (!content) return 'F2: the note came out empty — say what it should cover.'
+      await appendGeneratedSource(thread, title, content, true)
+      return `F2: note "${title}" added to the topic's context.`
+    }
+    case 'write_document': {
+      const title = String(input.title ?? '').trim() || 'Document'
+      const brief = String(input.brief ?? '').trim()
+      if (!brief) return 'F2: say what the document should cover.'
+      const doc = await writeTopicDocument(thread, title, brief, model)
+      if (!doc) return 'F2: the document came out empty — try rephrasing the ask.'
+      const words = doc.split(/\s+/).length
+      await appendGeneratedSource(thread, title, doc, false)
+      return `F2: wrote "${title}" (~${words} words) and added it to the topic's context.`
+    }
+    case 'set_study_focus': {
+      const focus = String(input.focus ?? '').trim()
+      const ok = await setStudyFocus(thread.id, thread.user_id, focus || null)
+      if (!ok) return 'F2: could not save the study focus — try again.'
+      return focus
+        ? `F2: study focus set — "${focus}". Cards, quizzes, and the Final Review will stay inside it.`
+        : 'F2: study focus cleared — everything is testable again.'
+    }
+    case 'answer_directly':
+      return String(input.reply ?? '').trim() || 'F2: (no answer)'
+    default:
+      return `F2: the dodo doesn't know how to "${action.name}" yet.`
+  }
+}
+
+/// File a generated note/document into the topic's context materials.
+async function appendGeneratedSource(
+  thread: F2Thread,
+  title: string,
+  content: string,
+  note: boolean,
+): Promise<void> {
+  const next: F2AdditionalSource[] = [
+    ...(thread.additional_sources ?? []),
+    { url: null, title, content, added_at: new Date().toISOString(), note },
+  ]
+  await setAdditionalSources(thread.id, thread.user_id, next)
+}
+
+/// Write a study document from the topic's source material.
+async function writeTopicDocument(
+  thread: F2Thread,
+  title: string,
+  brief: string,
+  model?: string,
+): Promise<string> {
+  const subject = thread.topic ?? thread.url ?? 'this topic'
+  const source = buildFullContent(thread).slice(0, 100_000)
+  const result = await llmComplete({
+    model,
+    system: `You write a study document for a learner's personal library. Ground every claim in the source material; where you add general knowledge, make it accurate. Write in plain, direct prose — no filler, no hype, none of the tics of AI writing. Markdown structure (headings, lists, tables) only where it genuinely helps the format the user asked for.`,
+    messages: [
+      {
+        role: 'user',
+        content: `Topic: ${subject}
+
+Source material:
+${source || '(no source — write from general knowledge of the topic)'}
+
+Document title: ${title}
+
+What to write:
+${brief}
+
+Write the document. Output the document body only.`,
+      },
+    ],
+    maxTokens: 8000,
+  })
+  return result.type === 'text' ? result.text.trim() : ''
 }
 
 /// "summary <instructions>" — regenerate the active topic's audio summary +

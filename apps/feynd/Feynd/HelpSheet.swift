@@ -33,6 +33,10 @@ struct HelpSheet: View {
             detail: "One open question, one reply, one star — marks the topic done. Works even when quizzes are locked."
         ),
         Command(
+            usage: "dodo <instruction>",
+            detail: "Put the dodo to work on this topic's materials: \"dodo make a flash card asking …\", \"dodo add 5 cards about …\", \"dodo redo the flash cards focusing on dates\", \"dodo add a note: …\", \"dodo write a study guide and add it to context\", \"dodo only test me on the first half\"."
+        ),
+        Command(
             usage: "summary <instructions>",
             detail: "Rebuild this topic's audio summary + transcript your way — e.g. \"summary make it longer\", \"summary add more dates\", or \"summary 40 minutes\" for a long-form walkthrough. Plain \"summary\" regenerates it. Read the versions in Topic Context."
         ),

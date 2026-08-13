@@ -244,11 +244,14 @@ Create exactly ${n} flash cards.`
 
 /// Turn a user-drafted question into a full card: clean up typos/wording
 /// (keeping the intent), answer it from the topic's material, and write the
-/// multiple-choice distractors.
+/// multiple-choice distractors. When the learner dictated the answer too
+/// (the chat agent's "make a card asking X, answer Y"), it is kept as the
+/// canonical answer, cleaned up only.
 export async function authorFlashCard(
   thread: F2Thread,
   draftQuestion: string,
   model?: string | null,
+  providedAnswer?: string,
 ): Promise<FlashCard> {
   const subject = thread.topic ?? thread.url ?? 'this topic'
   const source = buildFullContent(thread).slice(0, 120_000)
@@ -257,7 +260,7 @@ export async function authorFlashCard(
 
 Rules:
 - Keep the question's intent exactly — fix typos, grammar, and clarity only.
-- Write the canonical answer from the source material (short: a few words to one sentence). If the source doesn't cover it, answer from general knowledge of the topic.
+- ${providedAnswer ? 'The learner specified the answer themselves — keep its substance exactly, cleaning up wording only.' : "Write the canonical answer from the source material (short: a few words to one sentence). If the source doesn't cover it, answer from general knowledge of the topic."}
 - Add exactly 3 plausible-but-wrong distractors matching the answer's shape and length.`
 
   const user = `Topic: ${subject}
@@ -266,7 +269,10 @@ Source material:
 ${source || '(no source — answer from general knowledge of the topic)'}
 
 The learner's draft question:
-${draftQuestion}
+${draftQuestion}${providedAnswer ? `
+
+The learner's own answer (keep its substance as the canonical answer):
+${providedAnswer}` : ''}
 
 Produce the finished card.`
 
