@@ -68,7 +68,7 @@ echo "--- port status ---"
 for n in $BOOT; do
   case "$n" in
     code) p=2324;; paint) p=2325;; surf) p=2326;; imessage) p=2328;; rsh) p=2329;;
-    mux) p=2330;; diag) p=2331;; quote) p=2332;; bridge) p=2333;; screen) p=2334;; netspeed) p=2335;; pixel) p=2337;; oracle) p=2338;;
+    mux) p=2330;; diag) p=2331;; quote) p=2332;; bridge) p=2333;; screen) p=2334;; netspeed) p=2335;; porthole) p=2336;; pixel) p=2337;; oracle) p=2338;; imsghttp) p=2340;; pssh) p=2222;; *) p=0;;
   esac
   if /usr/sbin/netstat -an -p tcp | grep -q "\.$p .*LISTEN"; then
     echo "  $n :$p LISTEN"
