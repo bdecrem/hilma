@@ -87,7 +87,16 @@ export async function fetchYouTubeTranscriptLocal(
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim()
-    return text.length > 0 ? text : null
+    // Reject marker-only tracks: YouTube sometimes serves a caption track
+    // that is nothing but bracketed cues ("[음악]", "[Music]", "[Applause]").
+    // Saving that as a topic's transcript poisons the context — better to
+    // report no transcript at all.
+    const speech = text.replace(/\[[^\]]{1,40}\]/g, '').replace(/\s+/g, ' ').trim()
+    if (speech.length < 200) {
+      console.error(`[f2] YouTube transcript for ${videoId} is markers-only (${text.length} chars) — treating as none`)
+      return null
+    }
+    return text
   } catch (err) {
     console.error(`[f2] YouTube transcript fetch (local) failed for ${videoId}:`, err)
     return null
