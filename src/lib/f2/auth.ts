@@ -157,6 +157,11 @@ export async function createUser(input: {
     .select('id, username, email')
     .single()
   if (error || !data) {
+    // Unique-constraint race: two signups for the same email at once. The
+    // pre-check above missed it, but the DB constraint holds the line.
+    if (error?.code === '23505') {
+      return { error: 'An account with that email already exists.', status: 409 }
+    }
     console.error('[f2] createUser failed:', error)
     return { error: 'Could not create account.', status: 500 }
   }

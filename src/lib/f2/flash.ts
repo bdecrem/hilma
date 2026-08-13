@@ -1140,14 +1140,24 @@ export async function recordFlashSet(input: {
     console.error('[f2/flash] review scheduling failed:', e)
   }
 
-  // XP — read-modify-write is fine for a single-user account.
-  const { data: userRow } = await sb
-    .from('f2_users')
-    .select('xp')
-    .eq('id', input.userId)
-    .maybeSingle()
-  const totalXp = ((userRow?.xp as number) ?? 0) + xp
-  await sb.from('f2_users').update({ xp: totalXp }).eq('id', input.userId)
+  // XP — atomic increment (f2_add_xp) so concurrent sets from the same
+  // account (phone + Mac) can't lose an update. Returns the new total.
+  let totalXp = xp
+  const { data: xpTotal, error: xpErr } = await sb.rpc('f2_add_xp', {
+    p_user_id: input.userId,
+    p_amount: xp,
+  })
+  if (xpErr || typeof xpTotal !== 'number') {
+    console.error('[f2/flash] f2_add_xp failed:', xpErr)
+    const { data: userRow } = await sb
+      .from('f2_users')
+      .select('xp')
+      .eq('id', input.userId)
+      .maybeSingle()
+    totalXp = ((userRow?.xp as number) ?? 0)
+  } else {
+    totalXp = xpTotal
+  }
 
   // Star 2 for topic sets: this set and the previous one both >= 9/10.
   let star2 = false
