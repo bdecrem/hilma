@@ -66,7 +66,7 @@ export async function sendDailyCards(): Promise<
 > {
   const { data: users, error } = await f2Supabase()
     .from('f2_users')
-    .select('id, username, phone')
+    .select('id, username, phone, daily_chat_guid')
     .not('phone', 'is', null)
   if (error) {
     console.error('[f2/daily-card] user query failed:', error)
@@ -74,7 +74,12 @@ export async function sendDailyCards(): Promise<
   }
 
   const out: { user: string; status: 'sent' | 'no-cards' | 'error'; detail?: string }[] = []
-  for (const u of (users ?? []) as { id: string; username: string; phone: string }[]) {
+  for (const u of (users ?? []) as {
+    id: string
+    username: string
+    phone: string
+    daily_chat_guid: string | null
+  }[]) {
     try {
       const card = await pickDailyCard(u.id)
       if (!card) {
@@ -96,7 +101,14 @@ export async function sendDailyCards(): Promise<
 ${openFormQuestion(card)}
 
 Reply with your answer (your own words are fine).`
-      await sendIMessage({ addresses: [u.phone], text })
+      // daily_chat_guid overrides handle addressing — required when the
+      // recipient's handle is an alias of the mini's own Apple ID (a
+      // phone-addressed send would make an ungradeable self-chat).
+      if (u.daily_chat_guid) {
+        await sendIMessage({ chatGuid: u.daily_chat_guid, text })
+      } else {
+        await sendIMessage({ addresses: [u.phone], text })
+      }
       await markCardsShown(u.id, [card.id])
       out.push({ user: u.username, status: 'sent' })
     } catch (e) {
