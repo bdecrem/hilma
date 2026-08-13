@@ -23,7 +23,10 @@ struct ChatView: View {
                 FeyndTopBar {
                     BarTitle(text: "Chat", bigTitleVisible: bigTitleVisible)
                 } trailing: {
-                    ModelPickerMenu(style: .pill)
+                    HStack(spacing: 8) {
+                        CopyChatButton(messages: messages)
+                        ModelPickerMenu(style: .pill)
+                    }
                 } onProfileTap: {
                     showSettings = true
                 } onDoubleTap: {

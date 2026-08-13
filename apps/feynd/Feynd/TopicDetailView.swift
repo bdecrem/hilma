@@ -130,9 +130,11 @@ struct TopicDetailView: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Same 36pt footprint the old kebab had, so the title stays
-            // centered — now the chat-model picker.
-            ModelPickerMenu(style: .icon)
+            // Trailing controls: copy-the-chat + the chat-model picker.
+            HStack(spacing: 8) {
+                CopyChatButton(messages: messages)
+                ModelPickerMenu(style: .icon)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)
