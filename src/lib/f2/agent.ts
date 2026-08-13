@@ -91,6 +91,15 @@ export type F2Reply = {
     instructions: string | null
     model?: string
   }
+  /** Set by the dodo agent's write_document action: the document is being
+   *  written in the background (web search + long generation can outrun the
+   *  request). The /api/f2/messages route runs the job via after(). */
+  write_document?: {
+    thread_id: string
+    title: string
+    brief: string
+    model?: string
+  }
 }
 
 export async function processMessage(input: F2Message): Promise<F2Reply> {
@@ -588,6 +597,27 @@ ${instruction}`
     return { reply: 'F2: the dodo tripped — try that again.', thread_id: thread.id }
   }
 
+  // Document writing runs in the background — web search plus a long
+  // generation can outrun both the request and the client's patience.
+  if (action.name === 'write_document') {
+    const title = String(action.input.title ?? '').trim() || 'Document'
+    const brief = String(action.input.brief ?? '').trim()
+    if (!brief) {
+      return { reply: 'F2: say what the document should cover.', thread_id: thread.id }
+    }
+    const now = new Date().toISOString()
+    const reply = `F2: writing "${title}" — it'll land in Topic Context in a minute or two.`
+    await appendMessages(thread.id, thread.user_id, thread.messages, [
+      { role: 'user', text: originalText, created_at: now },
+      { role: 'assistant', text: reply, created_at: now },
+    ])
+    return {
+      reply,
+      thread_id: thread.id,
+      write_document: { thread_id: thread.id, title, brief, model },
+    }
+  }
+
   let reply: string
   try {
     reply = await runDodoAction(thread, action, model)
@@ -637,16 +667,6 @@ async function runDodoAction(
       await appendGeneratedSource(thread, title, content, true)
       return `F2: note "${title}" added to the topic's context.`
     }
-    case 'write_document': {
-      const title = String(input.title ?? '').trim() || 'Document'
-      const brief = String(input.brief ?? '').trim()
-      if (!brief) return 'F2: say what the document should cover.'
-      const doc = await writeTopicDocument(thread, title, brief, model)
-      if (!doc) return 'F2: the document came out empty — try rephrasing the ask.'
-      const words = doc.split(/\s+/).length
-      await appendGeneratedSource(thread, title, doc, false)
-      return `F2: wrote "${title}" (~${words} words) and added it to the topic's context.`
-    }
     case 'set_study_focus': {
       const focus = String(input.focus ?? '').trim()
       const ok = await setStudyFocus(thread.id, thread.user_id, focus || null)
@@ -676,18 +696,25 @@ async function appendGeneratedSource(
   await setAdditionalSources(thread.id, thread.user_id, next)
 }
 
-/// Write a study document from the topic's source material.
+/// Write a study document from the topic's source material, with web search
+/// available when the brief calls for outside or current information. Goes
+/// straight to the Anthropic API (like book summaries) because the web_search
+/// server tool isn't part of the model registry.
 async function writeTopicDocument(
   thread: F2Thread,
   title: string,
   brief: string,
-  model?: string,
 ): Promise<string> {
   const subject = thread.topic ?? thread.url ?? 'this topic'
   const source = buildFullContent(thread).slice(0, 100_000)
-  const result = await llmComplete({
-    model,
-    system: `You write a study document for a learner's personal library. Ground every claim in the source material; where you add general knowledge, make it accurate. Write in plain, direct prose — no filler, no hype, none of the tics of AI writing. Markdown structure (headings, lists, tables) only where it genuinely helps the format the user asked for.`,
+  const { default: Anthropic } = await import('@anthropic-ai/sdk')
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const res = await anthropic.messages.create({
+    model: 'claude-opus-5',
+    max_tokens: 8192,
+    system: `You write a study document for a learner's personal library. Ground every claim in the source material; use web search when the brief calls for outside, related, or current information — otherwise skip it. Where you add general knowledge, make it accurate. Write in plain, direct prose — no filler, no hype, none of the tics of AI writing. Markdown structure (headings, lists, tables) only where it genuinely helps the format the user asked for.
+
+After any searching, reply with ONLY the document body — no preamble, no notes about your process.`,
     messages: [
       {
         role: 'user',
@@ -701,12 +728,58 @@ Document title: ${title}
 What to write:
 ${brief}
 
-Write the document. Output the document body only.`,
+Write the document.`,
       },
     ],
-    maxTokens: 8000,
+    tools: [
+      { type: 'web_search_20250305', name: 'web_search', max_uses: 6 } as never,
+    ],
   })
-  return result.type === 'text' ? result.text.trim() : ''
+  // The document is the text after the last search block — earlier text
+  // blocks are between-search narration (same extraction as book-summary).
+  let lastNonText = -1
+  res.content.forEach((block, i) => {
+    if (block.type !== 'text') lastNonText = i
+  })
+  return res.content
+    .slice(lastNonText + 1)
+    .map((block) => (block.type === 'text' ? block.text : ''))
+    .join('')
+    .trim()
+}
+
+/// The background half of the dodo agent's write_document action. Runs in
+/// the messages route's after(); reports completion (or failure) by
+/// appending to the topic's chat, which the client sees on next refresh.
+export async function runWriteDocumentJob(
+  userId: string,
+  threadId: string,
+  title: string,
+  brief: string,
+): Promise<void> {
+  const done = async (text: string) => {
+    const fresh = await getThreadById(userId, threadId)
+    if (!fresh) return
+    await appendMessages(fresh.id, fresh.user_id, fresh.messages, [
+      { role: 'assistant', text, created_at: new Date().toISOString() },
+    ])
+  }
+  try {
+    const thread = await getThreadById(userId, threadId)
+    if (!thread) return
+    const doc = await writeTopicDocument(thread, title, brief)
+    if (!doc) {
+      await done(`F2: "${title}" came out empty — try rephrasing the ask.`)
+      return
+    }
+    const words = doc.split(/\s+/).length
+    await appendGeneratedSource(thread, title, doc, false)
+    await done(`F2: "${title}" is ready — ~${words} words, filed in Topic Context.`)
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e)
+    console.error('[f2/agent] write_document job failed:', message)
+    await done(`F2: writing "${title}" failed (${message.slice(0, 200)}) — try again.`)
+  }
 }
 
 /// "summary <instructions>" — regenerate the active topic's audio summary +

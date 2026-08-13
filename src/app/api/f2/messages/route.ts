@@ -1,5 +1,5 @@
 import { NextResponse, after } from 'next/server'
-import { processMessage } from '@/lib/f2/agent'
+import { processMessage, runWriteDocumentJob } from '@/lib/f2/agent'
 import { getSessionUser } from '@/lib/f2/auth'
 import { isModelKey } from '@/lib/f2/llm'
 import { getThreadById } from '@/lib/f2/threads'
@@ -76,6 +76,16 @@ export async function POST(req: Request) {
           updated_at: new Date().toISOString(),
         })
       }
+    })
+  }
+
+  // The dodo agent's write_document action: web search + long generation
+  // run in the background; completion lands in the topic's chat.
+  if (result.write_document) {
+    const { thread_id, title, brief } = result.write_document
+    const userId = user.id
+    after(async () => {
+      await runWriteDocumentJob(userId, thread_id, title, brief)
     })
   }
 

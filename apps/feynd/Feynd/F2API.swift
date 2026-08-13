@@ -40,6 +40,11 @@ final class F2API {
         // requestCachePolicy alone isn't enough — per-request .useProtocolCachePolicy
         // overrides it, so a cacheable response header would still be replayed).
         config.urlCache = nil
+        // Chat commands can run long server-side (deck redo generates a whole
+        // deck synchronously). The system default of 60s was timing out on
+        // work that finishes fine — give requests the same headroom the
+        // server has (maxDuration 300 on the messages route).
+        config.timeoutIntervalForRequest = 300
         self.session = URLSession(configuration: config)
 
         self.encoder = JSONEncoder()
