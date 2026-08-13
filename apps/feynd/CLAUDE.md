@@ -44,11 +44,15 @@ This Mac (Catalyst):
 xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd \
   -destination 'platform=macOS,variant=Mac Catalyst' \
   -derivedDataPath <dd> -allowProvisioningUpdates build
-pkill -f "Feynd.app/Contents/MacOS/Feynd"   # REQUIRED — see below
-rm -rf /Applications/Feynd.app
-cp -R <dd>/Build/Products/Debug-maccatalyst/Feynd.app /Applications/
-open -a /Applications/Feynd.app
+pkill -f "/Contents/MacOS/Feynd"            # REQUIRED — see below
+rm -rf /Applications/Dodo.app
+cp -R <dd>/Build/Products/Debug-maccatalyst/Feynd.app /Applications/Dodo.app
+open -a /Applications/Dodo.app
 ```
+
+The bundle is installed AS `Dodo.app` (built as Feynd.app, renamed in the
+copy) — the Dock label follows the on-disk name, and CFBundleDisplayName
+alone wasn't enough to shake "Feynd" out of it.
 
 **Always `pkill` the running Mac app before copying.** A live process survives `rm -rf` of its bundle and `open -a` just reactivates it, so the new binary sits on disk unused and the app keeps showing the old UI. Confirm the relaunch by checking Settings → About shows the build you just made.
 
