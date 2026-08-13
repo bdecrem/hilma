@@ -34,7 +34,7 @@ struct HelpSheet: View {
         ),
         Command(
             usage: "dodo <instruction>",
-            detail: "Put the dodo to work on this topic's materials: \"dodo make a flash card asking …\", \"dodo add 5 cards about …\", \"dodo redo the flash cards focusing on dates\", \"dodo add a note: …\", \"dodo write a study guide and add it to context\", \"dodo only test me on the first half\"."
+            detail: "Put the dodo to work on this topic's materials — it reads before editing, searches the web to verify, and reports back: \"dodo clean up the briefing memo and verify the open items\", \"dodo make a flash card asking …\", \"dodo redo the flash cards focusing on dates\", \"dodo write a study guide and add it to context\", \"dodo only test me on the first half\". Keep talking to it with more \"dodo\" messages."
         ),
         Command(
             usage: "summary <instructions>",

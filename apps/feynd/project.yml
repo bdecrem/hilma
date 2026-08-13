@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "25"
+    CURRENT_PROJECT_VERSION: "26"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -32,6 +32,10 @@ targets:
       path: Feynd/Info.plist
       properties:
         CFBundleDisplayName: Dodo
+        # Wire the yml's version settings into the bundle — without these the
+        # generated plist hardcodes 1.0 (1) and About lies about the build.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # Short name — the macOS Dock hover label and app menu use this.
         CFBundleName: Dodo
         # Escape-closes-modals responder — see FeyndApplication.swift.
