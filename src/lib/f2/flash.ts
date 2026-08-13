@@ -99,7 +99,7 @@ export async function generateFlashCards(
 ): Promise<FlashCard[]> {
   const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, Math.round(count)))
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildFullContent(thread).slice(0, 120_000)
+  const source = buildFullContent(thread).slice(0, 400_000)
   const chat = thread.messages
     .slice(-30)
     .map((m) => `${m.role}: ${m.text}`)
@@ -254,7 +254,7 @@ export async function authorFlashCard(
   providedAnswer?: string,
 ): Promise<FlashCard> {
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildFullContent(thread).slice(0, 120_000)
+  const source = buildFullContent(thread).slice(0, 400_000)
 
   const system = `You finish a flash card that a learner drafted for their own deck. They wrote the question; you polish it and supply the rest.
 
@@ -1013,7 +1013,7 @@ Output short verification notes, one per claim: the claim, a verdict (valid / in
         content: `Topic: ${subject}
 
 Source material:
-${source.slice(0, 60_000) || '(no source)'}
+${source.slice(0, 300_000) || '(no source)'}
 
 Exam transcript:
 ${convo}
@@ -1046,7 +1046,7 @@ export async function judgeFinalReview(
     .filter((l) => l.length > 6)
     .join('\n')
     .slice(0, 40_000)
-  const source = buildFullContent(thread).slice(0, 100_000)
+  const source = buildFullContent(thread).slice(0, 400_000)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
   // Fact-check user-supplied outside examples (web search) before grading.

@@ -606,12 +606,14 @@ async function handleDodoCommand(
     }
   }
 
-  const primary = (thread.content ?? '').slice(0, 15_000)
+  // Max context: Opus runs this loop with a 1M-token window — hand it
+  // the full material (soft ceiling only for pathological inputs).
+  const primary = buildFullContent(thread).slice(0, 400_000)
   const recentChat = thread.messages
-    .slice(-14)
+    .slice(-40)
     .map((m) => `${m.role}: ${m.text}`)
     .join('\n')
-    .slice(0, 8_000)
+    .slice(0, 60_000)
 
   const system = `You are the dodo — the content agent for the learning topic "${label}". The user routes messages to you by starting them with "dodo". You manage this topic's study materials, and you work like a careful assistant: read before you edit, verify what you're unsure of, apply the user's decisions, then report back.
 
@@ -728,8 +730,15 @@ async function executeDodoTool(
       const sources = thread.additional_sources ?? []
       const match = matchContextSource(sources, String(input.title ?? ''))
       if ('error' in match) return { result: match.error }
-      const body = (match.source.content ?? '').slice(0, 30_000)
-      return { result: `Title: ${match.source.title}\n\n${body || '(empty)'}` }
+      const full = match.source.content ?? ''
+      const body = full.slice(0, 60_000)
+      // Say so when clipped — otherwise the agent mistakes the read cap
+      // for a truncated file and reports phantom missing content.
+      const clipped =
+        full.length > body.length
+          ? `\n\n[READ WINDOW LIMIT: showing the first ${body.length} of ${full.length} characters. The stored source itself is complete — do not report it as cut.]`
+          : ''
+      return { result: `Title: ${match.source.title}\n\n${body || '(empty)'}${clipped}` }
     }
     case 'update_context_source': {
       const sources = thread.additional_sources ?? []
@@ -822,7 +831,7 @@ async function writeTopicDocument(
   brief: string,
 ): Promise<string> {
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildFullContent(thread).slice(0, 100_000)
+  const source = buildFullContent(thread).slice(0, 400_000)
   const { default: Anthropic } = await import('@anthropic-ai/sdk')
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const res = await anthropic.messages.create({
