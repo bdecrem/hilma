@@ -207,3 +207,18 @@ export async function findUserByImessageHandle(
     .maybeSingle()
   return (data as { id: string } | null) ?? null
 }
+
+/// The user whose daily-card channel is this chat. Same-Apple-ID setups
+/// (the mini sending as the user's own account) make the user's replies
+/// register as from-me — this lookup is what lets the webhook accept them
+/// anyway, for exactly one chat per user.
+export async function findUserByDailyChatGuid(
+  chatGuid: string,
+): Promise<{ id: string } | null> {
+  const { data } = await f2Supabase()
+    .from('f2_users')
+    .select('id')
+    .eq('daily_chat_guid', chatGuid)
+    .maybeSingle()
+  return (data as { id: string } | null) ?? null
+}

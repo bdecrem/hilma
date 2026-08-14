@@ -46,7 +46,48 @@ async function sendViaAgent(args: SendArgs): Promise<boolean> {
   return true
 }
 
+/// Record what we're about to send, so the webhook can recognize the
+/// from-me echo of our own message. Best-effort — a failed insert must
+/// never block the send (worst case: one echo gets graded as an answer,
+/// same exposure we had before the ledger existed).
+async function recordOutbound(args: SendArgs): Promise<void> {
+  try {
+    const { f2Supabase } = await import('./supabase')
+    await f2Supabase()
+      .from('f2_imessage_outbound')
+      .insert({
+        chat_guid: 'chatGuid' in args ? args.chatGuid : args.addresses.join(','),
+        text: args.text,
+      })
+  } catch (e) {
+    console.error('[f2/imessage] outbound record failed:', e)
+  }
+}
+
+/// Was this exact text sent by US recently? Distinguishes our own from-me
+/// echoes from messages the user actually typed in the self-chat.
+export async function isRecentOutbound(text: string): Promise<boolean> {
+  const { f2Supabase } = await import('./supabase')
+  const since = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+  const { data, error } = await f2Supabase()
+    .from('f2_imessage_outbound')
+    .select('id')
+    .eq('text', text)
+    .gte('sent_at', since)
+    .limit(1)
+  if (error) {
+    console.error('[f2/imessage] outbound lookup failed:', error)
+    // Fail closed for echo safety: if we can't check, treat it as an echo
+    // rather than risk a grade-our-own-message loop.
+    return true
+  }
+  return (data ?? []).length > 0
+}
+
 export async function sendIMessage(args: SendArgs): Promise<void> {
+  // Ledger first: the webhook echo can arrive within a second of delivery,
+  // and the insert must already be visible by then.
+  await recordOutbound(args)
   try {
     if (await sendViaAgent(args)) return
   } catch (e) {
