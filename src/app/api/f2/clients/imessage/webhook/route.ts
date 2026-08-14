@@ -100,9 +100,14 @@ export async function POST(req: Request) {
   after(async () => {
     try {
       // Strict: the handle must be paired to a real F2 account (or the
-      // chat resolved above via daily_chat_guid). No env-var fallback —
+      // chat resolved via daily_chat_guid — in the self-chat channel the
+      // user's replies can arrive from an account alias, e.g. the me.com
+      // address, that was never explicitly paired). No env-var fallback —
       // every account gets its own inbox.
-      const paired = userId ? { id: userId } : await findUserByImessageHandle(handle)
+      const paired =
+        (userId ? { id: userId } : null) ??
+        (await findUserByImessageHandle(handle)) ??
+        (await findUserByDailyChatGuid(chatGuid))
       if (!paired) {
         console.log(`[f2/imessage] ${guid} dropped — unpaired handle ${handle}`)
         return
