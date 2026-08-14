@@ -7,6 +7,9 @@ import type { Metadata, Viewport } from 'next'
 // web app via meta refresh — a server redirect would have no <head> for
 // crawlers to read.
 export const metadata: Metadata = {
+  // The site-wide metadataBase belongs to another domain; without this the
+  // og:image URL is emitted under it.
+  metadataBase: new URL('https://feynd.cc'),
   title: 'Dodo — Peck',
   description: 'Keep your streak going — your daily answers already count on the map.',
   robots: { index: false },
