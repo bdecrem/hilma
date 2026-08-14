@@ -1,11 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { buildFullContent, type F2Thread } from './threads'
+import { buildBudgetedContent, type F2Thread } from './threads'
 
-const MODEL = 'claude-haiku-4-5'
-// Haiku 4.5 has a 200K-token context window — comfortably fits articles,
-// transcripts, and most books, so the grader can evaluate against the real
-// ground truth. (No 1M beta header: it's a no-op on a 200K model.) The rare
-// oversized source surfaces via the catch below, which credits the user.
+// Opus 5: quiz verdicts gate stars, and its 1M-token window means the FULL
+// book (plus summary/sources/quotes) is always in front of the grader.
+// Haiku's 200K window overflowed on book-sized topics and the failure path
+// silently credited the answer.
+const MODEL = 'claude-opus-5'
 const MAX_TRANSCRIPT_MESSAGES = 24
 
 // Structured-output schema: the API constrains the response to valid JSON of
@@ -54,7 +54,7 @@ export type QuizTwoGrade = {
 /// better to err generously than to gate the user on a flaky LLM read.
 export async function gradeQuizTwo(thread: F2Thread): Promise<QuizTwoGrade> {
   const transcript = recentTranscript(thread)
-  const source = buildFullContent(thread)
+  const source = buildBudgetedContent(thread, 3_000_000)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
   const system = `You are grading a 5-question quiz a user just took on a topic.

@@ -8,7 +8,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
-import { llmComplete } from './llm'
+import { contextCharBudget, llmComplete } from './llm'
 import { buildBudgetedContent, gatherUserNotes, type F2Thread } from './threads'
 
 /// The user's verdict on a card itself (not on their answer).
@@ -99,19 +99,21 @@ export async function generateFlashCards(
 ): Promise<FlashCard[]> {
   const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, Math.round(count)))
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildBudgetedContent(thread, 400_000)
+  // Full material, sized to the generating model's real window (3M chars on
+  // the 1M-token Anthropic models) — never a reflexive cap.
+  const source = buildBudgetedContent(thread, contextCharBudget(model))
   const chat = thread.messages
     .slice(-30)
     .map((m) => `${m.role}: ${m.text}`)
     .join('\n')
-    .slice(0, 12_000)
+    .slice(0, 60_000)
   // The audio summary is what the learner actually listened to, and it was
   // itself written to cover their notes point by point — so when one exists
   // it outranks the raw source for deciding WHAT to test.
-  const script = (thread.audio_summary?.script ?? '').slice(0, 60_000)
+  const script = (thread.audio_summary?.script ?? '').slice(0, 200_000)
   // Their own notes, straight from the uploads — the strongest signal about
   // what they personally care about.
-  const notes = gatherUserNotes(thread).slice(0, 30_000)
+  const notes = gatherUserNotes(thread).slice(0, 100_000)
 
   const system = `You write flash cards for a learning app. Given source material and a chat transcript about a topic, produce exactly ${n} flash cards that test real understanding of the most important ideas.
 
@@ -254,7 +256,7 @@ export async function authorFlashCard(
   providedAnswer?: string,
 ): Promise<FlashCard> {
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildBudgetedContent(thread, 400_000)
+  const source = buildBudgetedContent(thread, contextCharBudget(model))
 
   const system = `You finish a flash card that a learner drafted for their own deck. They wrote the question; you polish it and supply the rest.
 
@@ -1005,7 +1007,7 @@ export async function judgeVoiceSet(
     .map((t) => `${t.role === 'user' ? 'USER' : 'F2'}: ${(t.text ?? '').trim()}`)
     .filter((l) => l.length > 6)
     .join('\n')
-    .slice(0, 30_000)
+    .slice(0, 400_000)
   if (!convo) return out
 
   const listing = cards
@@ -1062,7 +1064,7 @@ Output short verification notes, one per claim: the claim, a verdict (valid / in
         content: `Topic: ${subject}
 
 Source material:
-${source.slice(0, 300_000) || '(no source)'}
+${source.slice(0, 3_000_000) || '(no source)'}
 
 Exam transcript:
 ${convo}
@@ -1094,8 +1096,10 @@ export async function judgeFinalReview(
     .map((t) => `${t.role === 'user' ? 'USER' : 'F2'}: ${(t.text ?? '').trim()}`)
     .filter((l) => l.length > 6)
     .join('\n')
-    .slice(0, 40_000)
-  const source = buildBudgetedContent(thread, 400_000)
+    .slice(0, 200_000)
+  // Opus 5 grades with a 1M-token window — the whole book plus every
+  // appendix fits; never grade against a fraction of the source again.
+  const source = buildBudgetedContent(thread, 3_000_000)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
   // Fact-check user-supplied outside examples (web search) before grading.

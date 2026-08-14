@@ -27,6 +27,7 @@ import {
   listTopicsForUser,
   setAdditionalSources,
   setStudyFocus,
+  buildBudgetedContent,
   buildFullContent,
   type F2Thread,
   type F2AdditionalSource,
@@ -608,7 +609,7 @@ async function handleDodoCommand(
 
   // Max context: Opus runs this loop with a 1M-token window — hand it
   // the full material (soft ceiling only for pathological inputs).
-  const primary = buildFullContent(thread).slice(0, 400_000)
+  const primary = buildBudgetedContent(thread, 3_000_000)
   const recentChat = thread.messages
     .slice(-40)
     .map((m) => `${m.role}: ${m.text}`)
@@ -731,7 +732,7 @@ async function executeDodoTool(
       const match = matchContextSource(sources, String(input.title ?? ''))
       if ('error' in match) return { result: match.error }
       const full = match.source.content ?? ''
-      const body = full.slice(0, 60_000)
+      const body = full.slice(0, 200_000)
       // Say so when clipped — otherwise the agent mistakes the read cap
       // for a truncated file and reports phantom missing content.
       const clipped =
@@ -831,7 +832,7 @@ async function writeTopicDocument(
   brief: string,
 ): Promise<string> {
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildFullContent(thread).slice(0, 400_000)
+  const source = buildBudgetedContent(thread, 3_000_000)
   const { default: Anthropic } = await import('@anthropic-ai/sdk')
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const res = await anthropic.messages.create({

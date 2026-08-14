@@ -25,8 +25,11 @@ export type VoiceSession = {
 const DEFAULT_MODEL = 'gpt-realtime-2.1'
 const DEFAULT_VOICE = 'marin'
 const DEFAULT_REASONING_EFFORT = 'low'
-const MAX_INITIAL_CONTENT_CHARS = 8000
-const MAX_TOOL_CONTENT_CHARS = 16000
+// gpt-realtime holds ~32K tokens total; the excerpt + tool pulls must
+// leave room for the conversation. These are the realtime ceiling, not a
+// reflexive cap — full material is reachable via get_topic_context paging.
+const MAX_INITIAL_CONTENT_CHARS = 24_000
+const MAX_TOOL_CONTENT_CHARS = 40_000
 const MAX_RECENT_MESSAGES = 10
 
 export function realtimeModel(): string {

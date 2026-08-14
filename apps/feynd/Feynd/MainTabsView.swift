@@ -89,16 +89,33 @@ struct MainTabsView: View {
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL { route(url) }
         }
+        #if targetEnvironment(simulator)
+        // `simctl launch … -OpenURL dodo://peck` — drives route() without
+        // SpringBoard's untappable "Open in Dodo?" dialog, so screenshot
+        // loops can verify deep-link behavior end to end.
+        .task {
+            if let raw = UserDefaults.standard.string(forKey: "OpenURL"),
+               let url = URL(string: raw) {
+                UserDefaults.standard.removeObject(forKey: "OpenURL")
+                route(url)
+            }
+        }
+        #endif
         // No forced color scheme — defer to FeyndApp's @AppStorage preference
         // so the Settings light/dark/system toggle actually drives the UI.
     }
 
     /// dodo://peck has "peck" as the host; https://feynd.cc/peck has it as
     /// the path. Check both so either form of the link switches tabs.
+    /// The peck link means "continue playing": besides switching tabs it
+    /// asks the Flash tab to open the current level's set immediately —
+    /// after the daily iMessage card, that set arrives with the day's
+    /// answers already counted, so the user lands on the next question.
     private func route(_ url: URL) {
         let target = (url.host ?? "") + url.path
         if target.lowercased().contains("peck") {
             active = .flash
+            DeepLinkRouter.shared.requestPeckPlay()
         }
     }
 }

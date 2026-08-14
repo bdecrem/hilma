@@ -127,8 +127,20 @@ struct FlashTabView: View {
                 showProfile = true
             }
             #endif
+            // Peck deep link while this tab wasn't mounted (cold start or
+            // arriving from another tab): the pending flag survives until
+            // the map is loaded, then the set opens directly.
+            if DeepLinkRouter.shared.consumePeckPlay() {
+                autoPlayCurrentLevel()
+            }
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
                 pulse = true
+            }
+        }
+        // Peck deep link while this tab is already on screen.
+        .onChange(of: DeepLinkRouter.shared.peckPlaySignal) {
+            if DeepLinkRouter.shared.consumePeckPlay() {
+                autoPlayCurrentLevel()
             }
         }
         .alert("Peck", isPresented: Binding(
@@ -417,6 +429,18 @@ struct FlashTabView: View {
             // With a cached map on screen, a failed refresh stays quiet —
             // stale beats an alert. Only a truly empty screen reports.
             if state == nil { errorMessage = error.localizedDescription }
+        }
+    }
+
+    /// Deep-link continuation: open the current unlocked level's set with no
+    /// taps. Non-voice so today's banked daily/bonus answers prefill it —
+    /// the whole point of the link is landing on the NEXT question.
+    private func autoPlayCurrentLevel() {
+        guard startingLevel == nil, activeSet == nil, voiceSet == nil else { return }
+        Task {
+            if state == nil { await load() }
+            guard let level = state?.levels.first(where: { $0.status == "unlocked" }) else { return }
+            play(level, mode: level.mode == "voice" ? "text" : level.mode)
         }
     }
 

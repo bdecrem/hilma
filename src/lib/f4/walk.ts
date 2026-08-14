@@ -9,7 +9,7 @@ import { applyReview, dueCards, getCardById, homeData } from '@/lib/f3/cards'
 // flow through tools so the prompt stays bounded and the data stays fresh.
 
 const WALK_VOICE = 'cedar'
-const MAX_BRIEF_CHARS = 12_000
+const MAX_BRIEF_CHARS = 24_000
 const MAX_TOPICS_LISTED = 20
 
 // Chat-only topics (no URL ingested, nothing pasted) have no saved source

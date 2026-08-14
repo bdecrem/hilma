@@ -50,7 +50,7 @@ export function bookSummaryForClient(
 /// and the "stories I already know" list filled from the topic.
 function buildBookSummaryPrompt(thread: F2Thread): string {
   const label = thread.topic ?? thread.url ?? 'this book'
-  const notes = gatherUserNotes(thread).slice(0, 8000)
+  const notes = gatherUserNotes(thread).slice(0, 100_000)
   return `Search the web and write a ~2-page (1,100–1,300 word) study-context summary
 of the book "${label}", as a markdown document. I'll give it to my study agent as
 context before discussing the book.
