@@ -121,6 +121,11 @@ struct FlashTabView: View {
                 UserDefaults.standard.removeObject(forKey: "AutoPlayLevel")
                 play(level, mode: "text")
             }
+            // `-OpenProfile 1` — straight to the settings sheet.
+            if UserDefaults.standard.bool(forKey: "OpenProfile") {
+                UserDefaults.standard.removeObject(forKey: "OpenProfile")
+                showProfile = true
+            }
             #endif
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
                 pulse = true

@@ -754,20 +754,29 @@ final class F2API {
 
     // MARK: - Profile extras
 
-    struct PhoneResponse: Codable { let phone: String? }
+    struct DailyCardStatus: Codable {
+        let dailyCardEnabled: Bool
+        /// Whether any iMessage handle (or chat-guid override) is paired —
+        /// the toggle needs one to switch on.
+        let imessagePaired: Bool
 
-    /// The phone number the daily flash card texts (nil = feature off).
-    func profilePhone() async throws -> String? {
-        let res: PhoneResponse = try await get("/api/f2/profile")
-        return res.phone
+        enum CodingKeys: String, CodingKey {
+            case dailyCardEnabled = "daily_card_enabled"
+            case imessagePaired = "imessage_paired"
+        }
     }
 
-    /// Save (or clear, with "") the daily-card phone number. Returns the
-    /// normalized number the server stored.
-    func saveProfilePhone(_ phone: String) async throws -> String? {
-        struct Body: Encodable { let phone: String }
-        let res: PhoneResponse = try await put("/api/f2/profile", body: Body(phone: phone))
-        return res.phone
+    /// Daily flash card over iMessage: enabled + whether a handle is paired.
+    func dailyCardStatus() async throws -> DailyCardStatus {
+        try await get("/api/f2/profile")
+    }
+
+    /// Flip the daily card. Server rejects enabling with no paired handle.
+    func setDailyCardEnabled(_ enabled: Bool) async throws -> Bool {
+        struct Body: Encodable { let daily_card_enabled: Bool }
+        struct Res: Codable { let daily_card_enabled: Bool }
+        let res: Res = try await put("/api/f2/profile", body: Body(daily_card_enabled: enabled))
+        return res.daily_card_enabled
     }
 
     // MARK: - Voice preferences

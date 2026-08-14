@@ -96,28 +96,41 @@ async function topicLabelFor(card: FlashCard): Promise<string | null> {
   return (data?.topic as string) ?? (data?.url as string) ?? null
 }
 
-/// Send the daily card to every user with a phone on file. Returns a
-/// per-user summary for the cron log.
+/// The iMessage address the daily card goes to: the user's paired handle,
+/// preferring a phone-shaped one when several are paired.
+function dailyHandle(handles: string[] | null): string | null {
+  if (!handles || handles.length === 0) return null
+  return handles.find((h) => h.startsWith('+')) ?? handles[0]
+}
+
+/// Send the daily card to every user who switched it on (delivery goes to
+/// their paired iMessage handle). Returns a per-user summary for the cron
+/// log.
 export async function sendDailyCards(): Promise<
-  { user: string; status: 'sent' | 'no-cards' | 'error'; detail?: string }[]
+  { user: string; status: 'sent' | 'no-cards' | 'no-handle' | 'error'; detail?: string }[]
 > {
   const { data: users, error } = await f2Supabase()
     .from('f2_users')
-    .select('id, username, phone, daily_chat_guid')
-    .not('phone', 'is', null)
+    .select('id, username, imessage_handles, daily_chat_guid')
+    .eq('daily_card_enabled', true)
   if (error) {
     console.error('[f2/daily-card] user query failed:', error)
     return []
   }
 
-  const out: { user: string; status: 'sent' | 'no-cards' | 'error'; detail?: string }[] = []
+  const out: { user: string; status: 'sent' | 'no-cards' | 'no-handle' | 'error'; detail?: string }[] = []
   for (const u of (users ?? []) as {
     id: string
     username: string
-    phone: string
+    imessage_handles: string[] | null
     daily_chat_guid: string | null
   }[]) {
     try {
+      const handle = dailyHandle(u.imessage_handles)
+      if (!u.daily_chat_guid && !handle) {
+        out.push({ user: u.username, status: 'no-handle' })
+        continue
+      }
       const card = await pickDailyCard(u.id)
       if (!card) {
         out.push({ user: u.username, status: 'no-cards' })
@@ -144,7 +157,7 @@ Reply with your answer (your own words are fine).`
       if (u.daily_chat_guid) {
         await sendIMessage({ chatGuid: u.daily_chat_guid, text })
       } else {
-        await sendIMessage({ addresses: [u.phone], text })
+        await sendIMessage({ addresses: [handle!], text })
       }
       await markCardsShown(u.id, [card.id])
       out.push({ user: u.username, status: 'sent' })

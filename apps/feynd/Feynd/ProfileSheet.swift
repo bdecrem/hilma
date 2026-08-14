@@ -25,10 +25,9 @@ struct ProfileSheet: View {
 
     @State private var imessageHandles: [String] = []
     @State private var showPairing = false
-    @State private var phone: String? = nil
-    @State private var showPhoneEditor = false
-    @State private var phoneDraft = ""
-    @State private var phoneError: String? = nil
+    @State private var dailyCardEnabled = false
+    @State private var dailyCardPaired = false
+    @State private var dailyCardError: String? = nil
     @State private var showHelp = false
     @State private var showVoice = false
 
@@ -68,15 +67,12 @@ struct ProfileSheet: View {
                 }
             }
         }
-        .alert("Daily card number", isPresented: $showPhoneEditor) {
-            TextField("+1 650 555 0100", text: $phoneDraft)
-                .textContentType(.telephoneNumber)
-            Button("Save") {
-                Task { await savePhone() }
-            }
-            Button("Cancel", role: .cancel) {}
+        .alert("Daily card", isPresented: Binding(
+            get: { dailyCardError != nil }, set: { if !$0 { dailyCardError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
         } message: {
-            Text(phoneError ?? "Dodo texts one flash card a day to this number over iMessage. Reply in your own words to earn XP. Leave empty to turn it off.")
+            Text(dailyCardError ?? "")
         }
         .task {
             // Refresh user-wide progress so the ring + bar reflect any star
@@ -84,17 +80,20 @@ struct ProfileSheet: View {
             await session.refreshProgress()
             do { imessageHandles = try await F2API.shared.listImessageHandles() }
             catch {}
-            do { phone = try await F2API.shared.profilePhone() }
-            catch { /* keep empty */ }
+            do {
+                let status = try await F2API.shared.dailyCardStatus()
+                dailyCardEnabled = status.dailyCardEnabled
+                dailyCardPaired = status.imessagePaired
+            } catch { /* keep defaults */ }
         }
     }
 
-    private func savePhone() async {
+    private func setDailyCard(_ enabled: Bool) async {
         do {
-            phone = try await F2API.shared.saveProfilePhone(phoneDraft)
+            dailyCardEnabled = try await F2API.shared.setDailyCardEnabled(enabled)
         } catch {
-            phoneError = error.localizedDescription
-            showPhoneEditor = true
+            dailyCardEnabled = !enabled // revert the optimistic flip
+            dailyCardError = error.localizedDescription
         }
     }
 
@@ -391,15 +390,34 @@ struct ProfileSheet: View {
             }
             SettingsSection(label: "Daily card") {
                 SettingsCard {
-                    SettingsRow(
-                        label: phone ?? "Add phone number",
-                        detail: phone != nil ? "Dodo texts one flash card a day" : nil,
-                        labelColor: phone != nil ? FeyndTheme.text : FeyndTheme.accent
-                    ) {
-                        phoneDraft = phone ?? ""
-                        phoneError = nil
-                        showPhoneEditor = true
+                    // Delivery rides the paired iMessage handle above — the
+                    // toggle is the whole setting.
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("One card a day over iMessage")
+                                .font(.system(size: 15))
+                                .tracking(-0.2)
+                                .foregroundStyle(FeyndTheme.text)
+                            if !dailyCardPaired && imessageHandles.isEmpty {
+                                Text("Pair iMessage above to turn this on")
+                                    .font(.system(size: 12.5))
+                                    .foregroundStyle(FeyndTheme.text3)
+                            }
+                        }
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { dailyCardEnabled },
+                            set: { on in
+                                dailyCardEnabled = on
+                                Task { await setDailyCard(on) }
+                            }
+                        ))
+                        .labelsHidden()
+                        .tint(FeyndTheme.accent)
+                        .disabled(!dailyCardPaired && imessageHandles.isEmpty && !dailyCardEnabled)
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
                 }
             }
             SettingsSection(label: "Account") {
