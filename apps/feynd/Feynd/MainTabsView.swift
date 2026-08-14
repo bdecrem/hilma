@@ -87,7 +87,23 @@ struct MainTabsView: View {
                    value: session.pendingLevelUp)
         .animation(.spring(response: 0.4, dampingFraction: 0.85),
                    value: FlashDeckBuilder.shared.toast)
+        // Deep links land on the Peck tab: dodo://peck (custom scheme) and
+        // https://feynd.cc/peck (universal link — the daily iMessage flow
+        // texts this one).
+        .onOpenURL { route($0) }
+        .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+            if let url = activity.webpageURL { route(url) }
+        }
         // No forced color scheme — defer to FeyndApp's @AppStorage preference
         // so the Settings light/dark/system toggle actually drives the UI.
+    }
+
+    /// dodo://peck has "peck" as the host; https://feynd.cc/peck has it as
+    /// the path. Check both so either form of the link switches tabs.
+    private func route(_ url: URL) {
+        let target = (url.host ?? "") + url.path
+        if target.lowercased().contains("peck") {
+            active = .flash
+        }
     }
 }

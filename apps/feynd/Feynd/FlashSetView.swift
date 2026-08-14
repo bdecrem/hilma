@@ -42,12 +42,20 @@ struct FlashSetView: View {
         self.topicLabel = topicLabel
         self.onRecorded = onRecorded
         _questions = State(initialValue: start.questions)
-        _answers = State(initialValue: Array(repeating: nil, count: start.questions.count))
+        // Peck credits arrive first and already answered — seed their given
+        // text (the server holds the verdicts) and open play just past them.
+        _answers = State(initialValue: start.questions.map { $0.prefilled?.given })
+        let leadingPrefilled = start.questions.prefix(while: { $0.prefilled != nil }).count
+        _index = State(initialValue: min(leadingPrefilled, max(0, start.questions.count - 1)))
         var seeded: [String: String] = [:]
         for q in start.questions where q.rating != nil {
             seeded[q.cardId] = q.rating
         }
         _ratings = State(initialValue: seeded)
+    }
+
+    private var prefilledCount: Int {
+        questions.filter { $0.prefilled != nil }.count
     }
 
     private var isChoice: Bool { start.mode == "choice" }
@@ -83,6 +91,23 @@ struct FlashSetView: View {
         VStack(spacing: 0) {
             header
             progressRow
+            if prefilledCount > 0 {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(FeyndTheme.gold)
+                    Text(prefilledCount == 1
+                         ? "1 answer counted from today's daily card"
+                         : "\(prefilledCount) answers counted from today's daily card")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text2)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(FeyndTheme.surface, in: Capsule())
+                .overlay(Capsule().stroke(FeyndTheme.borderSoft, lineWidth: 1))
+                .padding(.top, 10)
+            }
             Spacer(minLength: 8)
             if index < questions.count {
                 questionCard(questions[index])

@@ -771,6 +771,7 @@ function weightedSample(cards: FlashCard[], n: number, now: number): FlashCard[]
 export async function pickSetCards(
   userId: string,
   threadId: string | null,
+  opts?: { excludeIds?: string[]; n?: number },
 ): Promise<FlashCard[]> {
   let query = f2Supabase()
     .from('f2_flash_cards')
@@ -783,10 +784,11 @@ export async function pickSetCards(
     console.error('[f2/flash] pickSetCards failed:', error)
     return []
   }
-  const all = (data as FlashCard[]) ?? []
+  const exclude = new Set(opts?.excludeIds ?? [])
+  const all = ((data as FlashCard[]) ?? []).filter((c) => !exclude.has(c.id))
   // Shuffle first so the presentation order isn't weight order — the user
   // shouldn't be able to read the scheduler off the sequence.
-  return shuffle(weightedSample(all, SET_SIZE, Date.now()))
+  return shuffle(weightedSample(all, opts?.n ?? SET_SIZE, Date.now()))
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -925,6 +927,46 @@ Grade it.`,
     correct: Boolean(parsed.correct),
     feedback: (parsed.feedback ?? '').slice(0, 400),
   }
+}
+
+// ---------------------------------------------------------------------------
+// Peck credits — daily iMessage answers pre-fill the next Peck set
+
+/// One answered question banked from the daily iMessage flow. Consumed by
+/// the next Jumbo (Peck) set the user starts in a non-voice mode: it takes
+/// a slot in the set with its verdict already recorded, so the daily play
+/// literally is a step on the map. Replaced wholesale each new daily answer.
+export type PeckCredit = {
+  card_id: string
+  /// The question as it was asked over iMessage.
+  question: string
+  given: string | null
+  correct: boolean
+  mode: 'text' | 'choice'
+  source: 'daily' | 'bonus'
+  date: string
+}
+
+export async function getPeckCredits(userId: string): Promise<PeckCredit[]> {
+  const { data } = await f2Supabase()
+    .from('f2_users')
+    .select('peck_credit')
+    .eq('id', userId)
+    .maybeSingle()
+  const raw = data?.peck_credit
+  if (!Array.isArray(raw)) return []
+  return (raw as PeckCredit[]).filter((c) => c && c.card_id)
+}
+
+export async function setPeckCredits(
+  userId: string,
+  credits: PeckCredit[] | null,
+): Promise<void> {
+  const { error } = await f2Supabase()
+    .from('f2_users')
+    .update({ peck_credit: credits })
+    .eq('id', userId)
+  if (error) console.error('[f2/flash] setPeckCredits failed:', error)
 }
 
 /// One card's SM-2 step, persisted — the daily card's single-card version
@@ -1151,6 +1193,10 @@ export async function recordFlashSet(input: {
   jumboLevel: number | null
   mode: FlashSetMode
   results: FlashResult[]
+  /// Cards whose SM-2 step already happened elsewhere (Peck credits were
+  /// reviewed the day they were answered over iMessage) — scored in the set
+  /// but skipped by the scheduler here.
+  noReviewIds?: string[]
 }): Promise<RecordedSet> {
   const sb = f2Supabase()
   const score = input.results.filter((r) => r.correct).length
@@ -1179,7 +1225,8 @@ export async function recordFlashSet(input: {
   // Advance each answered card's schedule (SM-2). Best-effort: a scheduling
   // hiccup must not cost the user the set they just played.
   try {
-    const answered = input.results.filter((r) => r.card_id)
+    const skip = new Set(input.noReviewIds ?? [])
+    const answered = input.results.filter((r) => r.card_id && !skip.has(r.card_id))
     const cards = await getFlashCardsByIds(
       input.userId,
       answered.map((r) => r.card_id),

@@ -69,6 +69,18 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat',
         },
+        // feynd.cc universal-link manifest — Apple fetches this exact path
+        // to let https://feynd.cc/peck open the Dodo app.
+        {
+          source: '/.well-known/apple-app-site-association',
+          has: [{ type: 'host', value: 'feynd.cc' }],
+          destination: '/api/f2/aasa',
+        },
+        {
+          source: '/.well-known/apple-app-site-association',
+          has: [{ type: 'host', value: 'www.feynd.cc' }],
+          destination: '/api/f2/aasa',
+        },
         // feynd.cc root → /f2 (the F2 web app)
         {
           source: '/',

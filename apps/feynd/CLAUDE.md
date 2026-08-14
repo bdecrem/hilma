@@ -29,15 +29,25 @@ xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
-Bart's iPhone (device id `9FBCF85E-F1E3-5646-93DC-F51E897B1C27`):
+Bart's iPhone (device id `9FBCF85E-F1E3-5646-93DC-F51E897B1C27`) — **manual signing required** since the Associated Domains entitlement landed (2026-08-13): no Xcode account is signed in on this iMac, so `-allowProvisioningUpdates` fails ("No Accounts") and the old auto team profile lacks the capability anyway. Use the ASC-minted profile "feynd dev domains" (expires 2027-08, includes `applinks:feynd.cc`; the minting flow is documented in `apps/taptapdodo/CLAUDE.md` — same key, Feynd bundle-ID resource `L74V9QD69L`):
 ```bash
 xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd \
-  -destination 'platform=iOS,id=9FBCF85E-F1E3-5646-93DC-F51E897B1C27' \
-  -derivedDataPath <dd> -allowProvisioningUpdates build
+  -destination 'generic/platform=iOS' -derivedDataPath <dd> \
+  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=feynd dev domains" \
+  "CODE_SIGN_IDENTITY=Apple Development" build
 xcrun devicectl device install app --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27 <dd>/Build/Products/Debug-iphoneos/Feynd.app
 xcrun devicectl device process launch --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27 com.bartdecrem.Feynd
 ```
+The entitlement applies to device builds only (`CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]` in project.yml) — simulator and Catalyst builds sign exactly as before.
 Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is locked — the install still succeeded; say so rather than treating it as a failure.
+
+## Headless verification hooks (simulator only, compiled out of device builds)
+
+`simctl launch` arguments for screenshot-driven verification without taps:
+- `-TestLoginUser <u> -TestLoginPass <p>` — signs in during bootstrap (use the newx-test account, never Bart's). Point `Secrets.swift` at `.dev` first when the feature under test needs unpushed server code — and restore `.production` after.
+- `-StartTab peck|chat|topics` — opens on that tab.
+- `-AutoPlayLevel <n>` — opens Peck level *n*'s set in text mode with zero taps (shows prefilled Peck credits when the account has them).
+- `dodo://peck` via `simctl openurl` exercises deep-link routing, but SpringBoard shows an "Open in Dodo?" dialog that can't be tapped headlessly and persists over the app until the sim reboots (`simctl shutdown` + `boot` clears it). Production uses the universal link `https://feynd.cc/peck` (AASA served by `/api/f2/aasa` via a next.config rewrite).
 
 This Mac (Catalyst):
 ```bash

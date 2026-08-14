@@ -1,8 +1,16 @@
 import { f2Supabase } from './supabase'
 
-// Levels are tied to the user's TOTAL stars (sum across all topics).
-// Same triangular thresholds as before — level N needs N*(N+1)/2 stars.
+// Levels are tied to the user's TOTAL stars: topic stars (sum across all
+// topics) plus one star per 100 XP. Same triangular thresholds as before —
+// level N needs N*(N+1)/2 stars.
 // L1 = 1, L2 = 3, L3 = 6, L4 = 10, L5 = 15, ...
+
+/// 100 XP = 1 star for leveling purposes.
+export const XP_PER_STAR = 100
+
+export function starsFromXp(xp: number): number {
+  return Math.floor(Math.max(0, xp) / XP_PER_STAR)
+}
 export function levelForStars(totalStars: number): number {
   if (totalStars < 1) return 0
   // Largest N where N*(N+1)/2 <= totalStars.
@@ -45,11 +53,14 @@ export async function getUserProgress(userId: string): Promise<F2Progress> {
   // Count every topic the user has — same predicate as listTopicsForUser so
   // the Profile "topics" stat matches the Topics list exactly. Rows with 0
   // stars contribute 0 to the star totals, so no separate query is needed.
-  const { data, error } = await f2Supabase()
-    .from('f2_threads')
-    .select('stars')
-    .eq('user_id', userId)
-    .or('topic.not.is.null,url.not.is.null')
+  const [{ data, error }, { data: userRow }] = await Promise.all([
+    f2Supabase()
+      .from('f2_threads')
+      .select('stars')
+      .eq('user_id', userId)
+      .or('topic.not.is.null,url.not.is.null'),
+    f2Supabase().from('f2_users').select('xp').eq('id', userId).maybeSingle(),
+  ])
 
   if (error) {
     console.error('[f2] getUserProgress failed:', error)
@@ -66,7 +77,9 @@ export async function getUserProgress(userId: string): Promise<F2Progress> {
 
   const rows = (data ?? []) as { stars: number }[]
   const topic_count = rows.length
-  const total_stars = rows.reduce((sum, r) => sum + (r.stars ?? 0), 0)
+  const total_stars =
+    rows.reduce((sum, r) => sum + (r.stars ?? 0), 0) +
+    starsFromXp((userRow?.xp as number) ?? 0)
   const mastered_topic_count = rows.filter((r) => r.stars >= 3).length
   const level = levelForStars(total_stars)
   const current_level_at = starsForLevel(level)

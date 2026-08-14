@@ -3,12 +3,15 @@ import { getSessionUser } from '@/lib/f2/auth'
 import { f2Supabase } from '@/lib/f2/supabase'
 import {
   getFlashCardsByIds,
+  getPeckCredits,
   judgeTextAnswers,
   judgeVoiceSet,
   openFormQuestion,
   recordFlashSet,
+  setPeckCredits,
   type FlashResult,
   type FlashSetMode,
+  type PeckCredit,
 } from '@/lib/f2/flash'
 
 export const runtime = 'nodejs'
@@ -68,6 +71,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'unknown card in set' }, { status: 400 })
   }
 
+  // Peck credits present in this set keep their iMessage verdicts — the
+  // answer was graded (and SM-2 reviewed) the day it was texted.
+  let creditById = new Map<string, PeckCredit>()
+  if (jumboLevel != null && mode !== 'voice') {
+    const credits = await getPeckCredits(user.id)
+    creditById = new Map(
+      credits.filter((c) => byId.has(c.card_id)).map((c) => [c.card_id, c]),
+    )
+  }
+
   let given: (string | null)[]
   let correct: boolean[]
   try {
@@ -94,7 +107,18 @@ export async function POST(req: Request) {
       if (mode === 'choice') {
         correct = ordered.map((c, i) => (given[i] ?? '').trim() === c.answer)
       } else {
-        correct = await judgeTextAnswers(ordered, given)
+        // Don't spend the judge on credited cards — their verdict is fixed.
+        correct = await judgeTextAnswers(
+          ordered,
+          given.map((g, i) => (creditById.has(ordered[i].id) ? null : g)),
+        )
+      }
+      for (let i = 0; i < ordered.length; i++) {
+        const credit = creditById.get(ordered[i].id)
+        if (credit) {
+          given[i] = credit.given
+          correct[i] = credit.correct
+        }
       }
     }
   } catch (e) {
@@ -107,8 +131,11 @@ export async function POST(req: Request) {
 
   const results: FlashResult[] = ordered.map((c, i) => ({
     card_id: c.id,
-    // Echo the question as it was actually asked in this mode.
-    question: mode === 'choice' ? c.question : openFormQuestion(c),
+    // Echo the question as it was actually asked in this mode (credited
+    // cards: as it was asked over iMessage).
+    question:
+      creditById.get(c.id)?.question ??
+      (mode === 'choice' ? c.question : openFormQuestion(c)),
     answer: c.answer,
     given: given[i],
     correct: correct[i],
@@ -121,7 +148,16 @@ export async function POST(req: Request) {
       jumboLevel,
       mode,
       results,
+      noReviewIds: [...creditById.keys()],
     })
+    // Credits that just played are spent; any others (e.g. banked while
+    // this set was in flight) keep.
+    if (creditById.size > 0) {
+      const remaining = (await getPeckCredits(user.id)).filter(
+        (c) => !creditById.has(c.card_id),
+      )
+      await setPeckCredits(user.id, remaining.length > 0 ? remaining : null)
+    }
     return NextResponse.json({
       score: recorded.set.score,
       total: recorded.set.total,

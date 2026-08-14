@@ -24,6 +24,17 @@ final class Session {
     private var hasLoadedProgressOnce = false
 
     func bootstrap() async {
+        #if targetEnvironment(simulator)
+        // Headless-verification hook, simulator only: `simctl launch …
+        // -TestLoginUser <u> -TestLoginPass <p>` signs in before the UI
+        // settles, so screenshot loops can reach the signed-in tabs.
+        let defaults = UserDefaults.standard
+        if let u = defaults.string(forKey: "TestLoginUser"),
+           let p = defaults.string(forKey: "TestLoginPass") {
+            await login(username: u, password: p)
+            if case .signedIn = state { return }
+        }
+        #endif
         // Instant start: restore the last signed-in user from disk so the
         // tabs (and their cached screens) render immediately, then validate
         // the cookie in the background. Only a confirmed 401 signs out —

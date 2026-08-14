@@ -690,8 +690,11 @@ final class F2API {
         struct Body: Encodable {
             let jumbo_level: Int
             let mode: String?
+            /// This client understands pre-answered questions, so banked
+            /// Peck credits (daily iMessage answers) may open the set.
+            let accept_prefill: Bool
         }
-        return try await post("/api/f2/flash/start", body: Body(jumbo_level: level, mode: mode))
+        return try await post("/api/f2/flash/start", body: Body(jumbo_level: level, mode: mode, accept_prefill: true))
     }
 
     struct FlashAnswer: Encodable {

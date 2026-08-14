@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "27"
+    CURRENT_PROJECT_VERSION: "28"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -47,6 +47,12 @@ targets:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
+        # dodo://peck — direct scheme for testing deep-link routing in the
+        # simulator (universal links need the AASA live on feynd.cc).
+        CFBundleURLTypes:
+          - CFBundleURLName: com.bartdecrem.Feynd
+            CFBundleURLSchemes:
+              - dodo
         NSMicrophoneUsageDescription: Dodo uses the microphone so you can talk with your learning assistant.
         # Required by PhotosPicker on Mac Catalyst — without it the app is
         # terminated the moment the picker tries to access the photo library.
@@ -59,6 +65,13 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.Feynd
+        # Universal links (applinks:feynd.cc — see Feynd/Feynd.entitlements)
+        # apply to DEVICE iOS builds only. Catalyst would need its own Mac
+        # provisioning profile for the capability, and the daily-card link
+        # this exists for is always tapped on the phone. The sim doesn't
+        # need it either (dodo:// covers deep-link testing there).
+        CODE_SIGN_ENTITLEMENTS: ""
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": Feynd/Feynd.entitlements
         # 1 = iPhone, 2 = iPad. Catalyst piggybacks on the iPad device family.
         TARGETED_DEVICE_FAMILY: "1,2"
         GENERATE_INFOPLIST_FILE: NO

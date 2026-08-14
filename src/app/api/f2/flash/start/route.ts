@@ -5,11 +5,13 @@ import {
   SET_SIZE,
   choicesForCard,
   getJumboState,
+  getPeckCredits,
   jumboLevelMode,
   markCardsShown,
   openFormQuestion,
   pickSetCards,
   type FlashSetMode,
+  type PeckCredit,
 } from '@/lib/f2/flash'
 
 export const runtime = 'nodejs'
@@ -18,6 +20,10 @@ type StartBody = {
   mode?: FlashSetMode
   thread_id?: string
   jumbo_level?: number
+  /// Clients that understand pre-answered questions set this; Jumbo sets
+  /// then open with any banked Peck credits (daily iMessage answers)
+  /// already scored. Older clients get plain sets and credits keep.
+  accept_prefill?: boolean
 }
 
 /// Same display rule the clients use for deck rows: topic name, else the
@@ -89,8 +95,20 @@ export async function POST(req: Request) {
     threadId = body.thread_id
   }
 
-  const cards = await pickSetCards(user.id, threadId)
-  if (cards.length === 0) {
+  // Peck credits: the daily iMessage answers ride into the next Jumbo set
+  // as its opening questions, verdicts already recorded. Voice rounds skip
+  // them (a spoken session can't contain a typed answer) — credits keep
+  // until a non-voice round consumes them.
+  let credits: PeckCredit[] = []
+  if (jumboLevel != null && mode !== 'voice' && body.accept_prefill) {
+    credits = (await getPeckCredits(user.id)).slice(0, SET_SIZE - 1)
+  }
+
+  const cards = await pickSetCards(user.id, threadId, {
+    excludeIds: credits.map((c) => c.card_id),
+    n: SET_SIZE - credits.length,
+  })
+  if (cards.length === 0 && credits.length === 0) {
     return NextResponse.json(
       { error: 'No flash cards yet — generate some first.' },
       { status: 409 },
@@ -115,7 +133,7 @@ export async function POST(req: Request) {
 
   // Text/voice show the question with no choices, so choice-dependent cards
   // serve their standalone rewording there.
-  const questions = cards.map((c) => ({
+  const fresh = cards.map((c) => ({
     card_id: c.id,
     question: mode === 'choice' ? c.question : openFormQuestion(c),
     rating: c.rating,
@@ -124,6 +142,17 @@ export async function POST(req: Request) {
       ? { choices: choicesForCard(c), answer: c.answer }
       : {}),
   }))
+
+  // Credited questions lead the set, already answered — the client starts
+  // play right after them.
+  const prefilled = credits.map((c) => ({
+    card_id: c.card_id,
+    question: c.question,
+    rating: null,
+    topic: null,
+    prefilled: { given: c.given, correct: c.correct, source: c.source },
+  }))
+  const questions = [...prefilled, ...fresh]
 
   return NextResponse.json({
     mode,

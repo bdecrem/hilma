@@ -107,6 +107,7 @@
 		BB38EBAB179201757DE149C1 /* FlashSFX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSFX.swift; sourceTree = "<group>"; };
 		BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashTabView.swift; sourceTree = "<group>"; };
 		BEC72F31FAF938D3D638D39F /* FlashSetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSetView.swift; sourceTree = "<group>"; };
+		BFEDFCF9BE3FE6A5CFA1E1D9 /* Feynd.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Feynd.entitlements; sourceTree = "<group>"; };
 		C034E8A6E1CC456DE623630F /* HelpSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSheet.swift; sourceTree = "<group>"; };
 		C0564EA3B927E26544E7655B /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
 		C0FB2FF36963A5F7793FAF80 /* voice-echo.m4a */ = {isa = PBXFileReference; path = "voice-echo.m4a"; sourceTree = "<group>"; };
@@ -145,6 +146,7 @@
 				EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */,
 				9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */,
 				A62FA8AD3B3E792810622A3A /* F2API.swift */,
+				BFEDFCF9BE3FE6A5CFA1E1D9 /* Feynd.entitlements */,
 				0A077252957BBEE41DCF582D /* FeyndApp.swift */,
 				6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */,
 				4E8E1D52867446105B46D06E /* FeyndChrome.swift */,
@@ -393,7 +395,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -423,6 +425,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Feynd/Feynd.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				ENABLE_DEBUG_DYLIB = NO;
@@ -476,7 +480,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -513,6 +517,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Feynd/Feynd.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				ENABLE_DEBUG_DYLIB = NO;

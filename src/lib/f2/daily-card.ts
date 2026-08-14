@@ -7,37 +7,74 @@ import { f2Supabase } from './supabase'
 import { sendIMessage } from './bluebubbles'
 import {
   cardWeight,
+  choicesForCard,
   getFlashCardsByIds,
+  getPeckCredits,
   judgeDailyCard,
   markCardsShown,
   openFormQuestion,
   reviewSingleCard,
+  setPeckCredits,
   type FlashCard,
+  type PeckCredit,
 } from './flash'
 
-/// XP for the daily card: showing up pays, being right pays more.
+/// XP for the daily card: showing up pays, being right pays more. The
+/// bonus multiple-choice question pays the same way.
 export const DAILY_XP_CORRECT = 15
 export const DAILY_XP_ATTEMPT = 5
 
+/// Where the post-bonus reply sends the user to keep playing. Universal
+/// link — opens the Peck tab in Dodo, falls back to the web app.
+const PECK_URL = 'https://feynd.cc/peck'
+
 /// A pending daily card goes stale after this long — answers after that
-/// fall through to normal chat routing.
+/// fall through to normal chat routing. The bonus offer and bonus question
+/// expire on the same clock.
 const PENDING_MAX_AGE_MS = 36 * 60 * 60 * 1000
 
+/// daily_card is a tiny state machine, one state resident at a time:
+///   { card_id, sent_at }                       — daily question out, awaiting the freeform answer
+///   { stage: 'bonus_offer', offered_at }       — daily graded, "press 1" open
+///   { stage: 'bonus_question', card_id, sent_at, choices } — MC question out
 export type PendingDailyCard = {
   card_id: string
   sent_at: string
 }
 
+type BonusOffer = {
+  stage: 'bonus_offer'
+  offered_at: string
+}
+
+type BonusQuestion = {
+  stage: 'bonus_question'
+  card_id: string
+  sent_at: string
+  /// The shuffled choices exactly as texted, so the reply letter maps back
+  /// deterministically.
+  choices: string[]
+}
+
+type DailyState = PendingDailyCard | BonusOffer | BonusQuestion
+
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
+
 /// Weighted pick of ONE card across every deck the user owns — same
 /// weights the set scheduler uses, so due and priority cards surface first.
-async function pickDailyCard(userId: string): Promise<FlashCard | null> {
+async function pickDailyCard(
+  userId: string,
+  excludeIds: string[] = [],
+): Promise<FlashCard | null> {
   const { data, error } = await f2Supabase()
     .from('f2_flash_cards')
     .select('*')
     .eq('user_id', userId)
     .or('rating.is.null,rating.eq.priority')
-  if (error || !data || data.length === 0) return null
-  const cards = data as FlashCard[]
+  if (error || !data) return null
+  const exclude = new Set(excludeIds)
+  const cards = (data as FlashCard[]).filter((c) => !exclude.has(c.id))
+  if (cards.length === 0) return null
   const now = Date.now()
   const weights = cards.map((c) => cardWeight(c, now))
   const total = weights.reduce((s, w) => s + w, 0)
@@ -120,45 +157,174 @@ Reply with your answer (your own words are fine).`
   return out
 }
 
-/// If this user has a live pending daily card, grade `text` as its answer:
-/// SM-2 review + XP + a correction reply. Returns the reply, or null when
-/// there's no pending card (caller falls through to normal routing).
+function stale(iso: string): boolean {
+  return Date.now() - new Date(iso).getTime() > PENDING_MAX_AGE_MS
+}
+
+async function setDailyState(userId: string, state: DailyState | null): Promise<void> {
+  await f2Supabase().from('f2_users').update({ daily_card: state }).eq('id', userId)
+}
+
+/// Atomic XP bump; returns the new total when the RPC cooperates.
+async function addXp(userId: string, amount: number): Promise<number | null> {
+  const { data, error } = await f2Supabase().rpc('f2_add_xp', {
+    p_user_id: userId,
+    p_amount: amount,
+  })
+  return !error && typeof data === 'number' ? data : null
+}
+
+function xpTail(xp: number, total: number | null): string {
+  return `+${xp} XP${total != null ? ` (${total} total)` : ''}.`
+}
+
+/// If this user is mid daily-card flow, consume `text` as its next move:
+/// grade the freeform answer (SM-2 review + XP + correction + bonus offer),
+/// accept "1" as taking the bonus, or grade the bonus letter. Returns the
+/// reply, or null when nothing is pending (caller falls through to normal
+/// routing).
 export async function maybeHandleDailyAnswer(
   userId: string,
   text: string,
 ): Promise<string | null> {
-  const sb = f2Supabase()
-  const { data: userRow } = await sb
+  const { data: userRow } = await f2Supabase()
     .from('f2_users')
     .select('daily_card')
     .eq('id', userId)
     .maybeSingle()
-  const pending = userRow?.daily_card as PendingDailyCard | null
-  if (!pending?.card_id || !pending.sent_at) return null
-  if (Date.now() - new Date(pending.sent_at).getTime() > PENDING_MAX_AGE_MS) {
-    await sb.from('f2_users').update({ daily_card: null }).eq('id', userId)
+  const state = userRow?.daily_card as DailyState | null
+  if (!state) return null
+
+  if ('stage' in state && state.stage === 'bonus_offer') {
+    if (stale(state.offered_at)) {
+      await setDailyState(userId, null)
+      return null
+    }
+    // Only a bare "1" (allowing "1." / "1!") takes the offer — anything
+    // else is normal chat and leaves the offer standing.
+    if (text.replace(/[^0-9a-z]/gi, '') !== '1') return null
+    return sendBonusQuestion(userId)
+  }
+
+  if ('stage' in state && state.stage === 'bonus_question') {
+    if (!state.card_id || stale(state.sent_at)) {
+      await setDailyState(userId, null)
+      return null
+    }
+    return gradeBonusAnswer(userId, state, text)
+  }
+
+  // Daily question awaiting its freeform answer.
+  const pending = state as PendingDailyCard
+  if (!pending.card_id || !pending.sent_at) return null
+  if (stale(pending.sent_at)) {
+    await setDailyState(userId, null)
     return null
   }
 
   const [card] = await getFlashCardsByIds(userId, [pending.card_id])
   if (!card) {
-    await sb.from('f2_users').update({ daily_card: null }).eq('id', userId)
+    await setDailyState(userId, null)
     return null
   }
 
   const { correct, feedback } = await judgeDailyCard(card, text)
   await reviewSingleCard(userId, card, correct)
-  await sb.from('f2_users').update({ daily_card: null }).eq('id', userId)
+  await setDailyState(userId, {
+    stage: 'bonus_offer',
+    offered_at: new Date().toISOString(),
+  })
+
+  // Bank the answer as a Peck step — replaces yesterday's unconsumed
+  // credits, so at most one daily (+ one bonus) rides into the next set.
+  const credit: PeckCredit = {
+    card_id: card.id,
+    question: openFormQuestion(card),
+    given: text.trim() || null,
+    correct,
+    mode: 'text',
+    source: 'daily',
+    date: new Date().toISOString(),
+  }
+  await setPeckCredits(userId, [credit])
 
   const xp = correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT
-  let total: number | null = null
-  const { data: xpTotal, error: xpErr } = await sb.rpc('f2_add_xp', {
-    p_user_id: userId,
-    p_amount: xp,
-  })
-  if (!xpErr && typeof xpTotal === 'number') total = xpTotal
+  const total = await addXp(userId, xp)
 
   const head = correct ? '✅ Right.' : `❌ Not quite — the answer: ${card.answer}.`
-  const tail = `+${xp} XP${total != null ? ` (${total} total)` : ''}. See you tomorrow!`
+  const tail = `${xpTail(xp, total)} Press 1 for today's bonus question.`
   return `${head} ${feedback} ${tail}`.replace(/\s+/g, ' ').trim()
+}
+
+/// "1" received while the bonus offer stands: pick a second card and text
+/// it as a lettered multiple-choice question.
+async function sendBonusQuestion(userId: string): Promise<string | null> {
+  const credits = await getPeckCredits(userId)
+  const card = await pickDailyCard(userId, credits.map((c) => c.card_id))
+  if (!card) {
+    await setDailyState(userId, null)
+    return `No more cards to quiz today — keep playing in Dodo: ${PECK_URL}`
+  }
+  const choices = choicesForCard(card).slice(0, LETTERS.length)
+  await setDailyState(userId, {
+    stage: 'bonus_question',
+    card_id: card.id,
+    sent_at: new Date().toISOString(),
+    choices,
+  })
+  await markCardsShown(userId, [card.id])
+  const listing = choices.map((c, i) => `${LETTERS[i]}. ${c}`).join('\n')
+  return `🎁 Bonus question:\n\n${card.question}\n\n${listing}\n\nReply with a letter.`
+}
+
+/// Grade the bonus reply: a letter, or the full text of a choice. Anything
+/// unrecognizable counts as an attempt (wrong) — the correction still
+/// teaches, and the flow always ends here.
+async function gradeBonusAnswer(
+  userId: string,
+  state: BonusQuestion,
+  text: string,
+): Promise<string | null> {
+  const [card] = await getFlashCardsByIds(userId, [state.card_id])
+  if (!card) {
+    await setDailyState(userId, null)
+    return null
+  }
+
+  const cleaned = text.trim()
+  const letterIdx = LETTERS.indexOf(cleaned.replace(/[^a-z]/gi, '').toUpperCase())
+  let chosen: string | null = null
+  if (letterIdx >= 0 && letterIdx < state.choices.length) {
+    chosen = state.choices[letterIdx]
+  } else {
+    chosen =
+      state.choices.find((c) => c.trim().toLowerCase() === cleaned.toLowerCase()) ?? null
+  }
+
+  const correct = chosen != null && chosen === card.answer
+  await reviewSingleCard(userId, card, correct)
+  await setDailyState(userId, null)
+
+  // Second Peck step of the day — the one multiple-choice entry in an
+  // otherwise text-entry set.
+  const credits = (await getPeckCredits(userId)).filter(
+    (c) => c.card_id !== card.id && c.source !== 'bonus',
+  )
+  credits.push({
+    card_id: card.id,
+    question: card.question,
+    given: chosen ?? (cleaned || null),
+    correct,
+    mode: 'choice',
+    source: 'bonus',
+    date: new Date().toISOString(),
+  })
+  await setPeckCredits(userId, credits)
+
+  const xp = correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT
+  const total = await addXp(userId, xp)
+
+  const head = correct ? '✅ Right.' : `❌ Not quite — the answer: ${card.answer}.`
+  const tail = `${xpTail(xp, total)} Both answers count on your Peck map — keep going in Dodo: ${PECK_URL}`
+  return `${head} ${tail}`.replace(/\s+/g, ' ').trim()
 }

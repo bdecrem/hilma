@@ -103,11 +103,34 @@ struct FlashQuestion: Codable, Identifiable, Equatable {
     /// topic ("according to the book…" needs to say which book). Absent on
     /// older backends.
     let topic: String?
+    /// Set when this question arrived already answered — a Peck credit from
+    /// the daily iMessage card. The set opens past these; their verdicts
+    /// count in the final score.
+    let prefilled: PrefilledAnswer?
 
     enum CodingKeys: String, CodingKey {
-        case question, choices, answer, rating, topic
+        case question, choices, answer, rating, topic, prefilled
         case cardId = "card_id"
     }
+
+    init(cardId: String, question: String, choices: [String]?, answer: String?,
+         rating: String?, topic: String?, prefilled: PrefilledAnswer? = nil) {
+        self.cardId = cardId
+        self.question = question
+        self.choices = choices
+        self.answer = answer
+        self.rating = rating
+        self.topic = topic
+        self.prefilled = prefilled
+    }
+}
+
+/// A verdict carried in from the daily iMessage flow ("daily" freeform
+/// answer or the "bonus" multiple-choice question).
+struct PrefilledAnswer: Codable, Equatable {
+    let given: String?
+    let correct: Bool
+    let source: String?
 }
 
 struct FlashStart: Codable {

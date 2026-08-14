@@ -112,6 +112,16 @@ struct FlashTabView: View {
                 state = cached
             }
             await load()
+            #if targetEnvironment(simulator)
+            // Headless-verification hook: `simctl launch … -AutoPlayLevel 3`
+            // opens that level's set in text mode without any taps, so
+            // screenshot loops can see the in-set UI (e.g. Peck credits).
+            let auto = UserDefaults.standard.integer(forKey: "AutoPlayLevel")
+            if auto > 0, let level = state?.levels.first(where: { $0.level == auto }) {
+                UserDefaults.standard.removeObject(forKey: "AutoPlayLevel")
+                play(level, mode: "text")
+            }
+            #endif
             withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) {
                 pulse = true
             }
@@ -132,7 +142,7 @@ struct FlashTabView: View {
                 .foregroundStyle(FeyndTheme.gold)
             // Never wrap: the pill shares a tight top bar with the deck
             // button, and a two-line XP count looks broken.
-            Text(compactXP(state?.xp ?? 0))
+            Text("\(state?.xp ?? 0)")
                 .font(.system(size: 13.5, weight: .bold))
                 .foregroundStyle(FeyndTheme.text)
                 .lineLimit(1)
@@ -145,20 +155,6 @@ struct FlashTabView: View {
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         .fixedSize(horizontal: true, vertical: false)
         .accessibilityLabel("\(state?.xp ?? 0) experience points")
-    }
-
-    /// XP grows without bound, the top bar doesn't. Four digits and up get
-    /// abbreviated so the pill stays one short line forever.
-    private func compactXP(_ xp: Int) -> String {
-        if xp < 1000 { return "\(xp)" }
-        if xp < 100_000 {
-            let k = Double(xp) / 1000
-            // 1.2k up to 99.9k, dropping the decimal once it's not useful.
-            return k < 10
-                ? String(format: "%.1fk", k)
-                : String(format: "%.0fk", k)
-        }
-        return String(format: "%.1fM", Double(xp) / 1_000_000)
     }
 
     /// The deck manager button — a stack of cards, which is literally what
