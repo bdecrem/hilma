@@ -10,7 +10,9 @@ import {
 } from '@/lib/f2/flash'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60
+// Opus 5 grades against the FULL source (a whole book can be ~250K tokens)
+// plus a web-search verify pass — 60s was not enough once context got real.
+export const maxDuration = 300
 
 // POST /api/f2/topics/[id]/final-review — grade a finished Final Review
 // voice session. An A grade awards star 3 + marks the topic mastered.

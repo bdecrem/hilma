@@ -73,3 +73,12 @@ Bart's phone runs the iOS 27 beta, where Xcode's debug-dylib stub launch path ab
 ## Secrets.swift
 
 Gitignored (`Secrets.swift.example` is the template). `.production` → `https://feynd.cc`; `.dev` → the tunnel URL, or `http://localhost:3100` when driving the simulator against a local dev server. **Always restore it to `.production` before building for a real device.**
+
+## Never install to the phone in the background
+
+A device install replaces the bundle and KILLS the running app — a delayed
+or retrying background install can land while Bart is mid-exam or
+mid-session and destroy client-side state (a Final Review transcript died
+this way on 2026-08-14). Install only synchronously, at the moment the
+install was asked for. If the phone is locked, report that the install is
+pending and stop — never leave a retry loop running.
