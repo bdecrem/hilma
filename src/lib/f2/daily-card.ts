@@ -305,6 +305,14 @@ async function gradeBonusAnswer(
   }
 
   const cleaned = text.trim()
+
+  // A repeat "1" is impatience (the offer said "press 1"), not an answer —
+  // re-send the question instead of burning it as a wrong guess.
+  if (cleaned.replace(/[^0-9a-z]/gi, '') === '1') {
+    const listing = state.choices.map((c, i) => `${LETTERS[i]}. ${c}`).join('\n')
+    return `🎁 Bonus question:\n\n${card.question}\n\n${listing}\n\nReply with a letter.`
+  }
+
   const letterIdx = LETTERS.indexOf(cleaned.replace(/[^a-z]/gi, '').toUpperCase())
   let chosen: string | null = null
   if (letterIdx >= 0 && letterIdx < state.choices.length) {
