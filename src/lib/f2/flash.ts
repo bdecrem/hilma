@@ -819,6 +819,12 @@ export function openFormQuestion(card: FlashCard): string {
 
 const JUDGE_MODEL = 'claude-haiku-4-5'
 
+/// The Final Review (and its web-search verify pass) grades once per exam
+/// on a huge context, and the verdict gates a mastery star — that's a
+/// strategic-reading job, not a per-card check, so it gets the big model.
+/// High-volume per-card judges stay on Haiku.
+const GRADER_MODEL = 'claude-opus-5'
+
 let _anthropic: Anthropic | null = null
 function anthropic(): Anthropic {
   if (_anthropic) return _anthropic
@@ -832,9 +838,10 @@ async function judgeJson<T>(
   system: string,
   user: string,
   schema: Record<string, unknown>,
+  model: string = JUDGE_MODEL,
 ): Promise<T> {
   const res = await anthropic().messages.create({
-    model: JUDGE_MODEL,
+    model,
     max_tokens: 1500,
     system,
     output_config: { format: { type: 'json_schema', schema } },
@@ -1037,7 +1044,7 @@ async function verifyOutsideClaims(
   convo: string,
 ): Promise<string | null> {
   const res = await anthropic().messages.create({
-    model: JUDGE_MODEL,
+    model: GRADER_MODEL,
     max_tokens: 2000,
     system: `You verify claims for an oral-exam grader. Given the exam transcript and the topic's source material, find claims or examples the USER introduced that are NOT covered by the source material and whose accuracy matters for grading. For the most important ones (at most a few), check accuracy — use web search only when you are not confident from your own knowledge. If everything the user said is covered by the source or you can judge it without searching, do not search.
 
@@ -1153,6 +1160,7 @@ Grade the user's performance.`,
       required: ['grade', 'notes', 'strengths', 'weaknesses'],
       additionalProperties: false,
     },
+    GRADER_MODEL,
   )
   const grade = (['A', 'B', 'C', 'D', 'F'].includes(parsed.grade ?? '')
     ? parsed.grade
