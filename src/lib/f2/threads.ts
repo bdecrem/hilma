@@ -109,6 +109,27 @@ export function buildFullContent(thread: F2Thread): string {
   return parts.join('')
 }
 
+/// buildFullContent for callers that must TRUNCATE: the user-curated
+/// appendices (book summary, additional sources, quotes) come FIRST, and
+/// the primary content fills whatever budget remains. A plain
+/// buildFullContent().slice() drops the tail — which is exactly the
+/// summary/sources/quotes, the material a study focus most often points
+/// at. (A Final Review was graded against a source whose study-focus
+/// summary had been sliced off; this exists so that can't recur.)
+export function buildBudgetedContent(thread: F2Thread, maxChars: number): string {
+  const appendix = buildFullContent({ ...thread, content: null } as F2Thread)
+  const primary = thread.content ?? ''
+  const room = Math.max(0, maxChars - appendix.length)
+  const parts: string[] = []
+  if (primary) {
+    parts.push(
+      primary.length > room ? `${primary.slice(0, room)}\n\n[primary content truncated]` : primary,
+    )
+  }
+  if (appendix) parts.push(appendix)
+  return parts.join('').slice(0, maxChars)
+}
+
 /// An additional source at or below this size counts as the user's own
 /// annotations rather than bulk material, even without the note flag.
 export const NOTES_SOURCE_MAX_CHARS = 30_000

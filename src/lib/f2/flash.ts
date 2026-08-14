@@ -9,7 +9,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
 import { llmComplete } from './llm'
-import { buildFullContent, gatherUserNotes, type F2Thread } from './threads'
+import { buildBudgetedContent, gatherUserNotes, type F2Thread } from './threads'
 
 /// The user's verdict on a card itself (not on their answer).
 ///   'down'     — bury it; never serve it in a set again
@@ -99,7 +99,7 @@ export async function generateFlashCards(
 ): Promise<FlashCard[]> {
   const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, Math.round(count)))
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildFullContent(thread).slice(0, 400_000)
+  const source = buildBudgetedContent(thread, 400_000)
   const chat = thread.messages
     .slice(-30)
     .map((m) => `${m.role}: ${m.text}`)
@@ -254,7 +254,7 @@ export async function authorFlashCard(
   providedAnswer?: string,
 ): Promise<FlashCard> {
   const subject = thread.topic ?? thread.url ?? 'this topic'
-  const source = buildFullContent(thread).slice(0, 400_000)
+  const source = buildBudgetedContent(thread, 400_000)
 
   const system = `You finish a flash card that a learner drafted for their own deck. They wrote the question; you polish it and supply the rest.
 
@@ -1088,7 +1088,7 @@ export async function judgeFinalReview(
     .filter((l) => l.length > 6)
     .join('\n')
     .slice(0, 40_000)
-  const source = buildFullContent(thread).slice(0, 400_000)
+  const source = buildBudgetedContent(thread, 400_000)
   const subject = thread.topic ?? thread.url ?? '(no subject)'
 
   // Fact-check user-supplied outside examples (web search) before grading.
