@@ -35,6 +35,9 @@ import {
 import {
   authorFlashCard,
   generateFlashCards,
+  isMastered,
+  listFlashCards,
+  listFlashSets,
   redoFlashCards,
 } from './flash'
 import {
@@ -49,6 +52,7 @@ import {
   acknowledgeReflectionAnswer,
 } from './chat'
 import { nameTopic } from './name-topic'
+import { f2Supabase } from './supabase'
 import { llmComplete } from './llm'
 import { setAudioSummary } from './audio-summary'
 import { maybeHandleDailyAnswer } from './daily-card'
@@ -539,6 +543,27 @@ const DODO_AGENT_TOOLS = [
     },
   },
   {
+    name: 'list_flash_cards',
+    description:
+      "Read the topic's current deck with per-card learning state (priority/buried, times seen, streak, lapses, mastered, due date). ALWAYS call this before answering any question about the deck — what's in it, which cards are weak or unmastered, which are marked important, how many there are.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        include_buried: {
+          type: 'boolean',
+          description: 'Include cards the user buried (thumbs-down). Default false.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'get_progress',
+    description:
+      "The user's progress on THIS topic: stars, study focus, deck size, recent flash-set scores, and every graded review (Final Review / Second Chance) with its grade, feedback, strengths, and weaknesses. ALWAYS call this before answering questions like \"what was my grade\", \"how am I doing\", or \"what should I review\".",
+    input_schema: { type: 'object' as const, properties: {}, required: [] },
+  },
+  {
     name: 'set_study_focus',
     description:
       'Scope what the user is tested on ("only test me on the first half"). Applies to flash cards, quizzes, and the Final Review. Empty string clears the focus.',
@@ -623,6 +648,8 @@ How to work:
 - "Clean up / fold in / fix the memo" means EDIT THE EXISTING SOURCE: read_context_source first, apply their decisions, use web_search for the points they want validated (or that you can't confirm), then update_context_source with the complete revised content.
 - End with a report that carries the substance: what you changed, what you confirmed and the answer you found, and a short numbered list of anything that still needs their input. Never reply with just "done".
 - Card work: "redo" replaces the deck; "make"/"add" keep it. write_document runs in the background — say it's on the way.
+- Deck and progress questions are answered from REAL DATA, never from memory or guesswork: "which cards am I weak on / haven't memorized", "what's in my deck" → list_flash_cards first; "what was my grade", "how am I doing", "what should I review" → get_progress first. You have full access to the deck, its learning stats, quiz scores, and review grades — never claim you can't see them.
+- "How I want to be tested" instructions ("only test me on X", "focus quizzes on Y") → set_study_focus. It scopes flash cards, quizzes, and the Final Review.
 - If the message is just chat addressed to the dodo, answer it directly without tools.
 - Plain text replies, no markdown.`
 
@@ -652,7 +679,15 @@ ${instruction}`
     // `current` tracks the thread as tools mutate it (sources, cards).
     let current = thread
     const messages: { role: 'user' | 'assistant'; content: unknown }[] = [
-      { role: 'user', content: firstUser },
+      {
+        role: 'user',
+        // The full source rides in this first message (often hundreds of
+        // thousands of tokens) — cache it so turns 2+ of the loop read the
+        // prefix at 0.1x instead of re-processing the whole book each turn.
+        content: [
+          { type: 'text', text: firstUser, cache_control: { type: 'ephemeral' } },
+        ],
+      },
     ]
     for (let turn = 0; turn < 10; turn++) {
       const res = await anthropic.messages.create({
@@ -792,6 +827,77 @@ async function executeDodoTool(
       return {
         result: `Started writing "${title}" in the background — it will file itself into Topic Context in a minute or two. Tell the user it's on the way.`,
         writeDoc: { thread_id: thread.id, title, brief, model },
+      }
+    }
+    case 'list_flash_cards': {
+      const all = await listFlashCards(thread.user_id, thread.id)
+      const includeBuried = Boolean(input.include_buried)
+      const cards = includeBuried ? all : all.filter((c) => c.rating !== 'down')
+      if (cards.length === 0) {
+        return { result: 'The deck is empty — no flash cards on this topic yet.' }
+      }
+      const buriedCount = all.filter((c) => c.rating === 'down').length
+      const lines = cards.map((c, i) => {
+        const flags = [
+          c.rating === 'priority' ? 'PRIORITY' : null,
+          c.rating === 'down' ? 'BURIED' : null,
+          isMastered(c) ? 'mastered' : null,
+        ]
+          .filter(Boolean)
+          .join(', ')
+        const due = c.due_at ? c.due_at.slice(0, 10) : 'unscheduled'
+        return `${i + 1}. Q: ${c.question} → A: ${c.answer}\n   [${flags || 'learning'}] seen ${c.times_shown}x, streak ${c.streak}, lapses ${c.lapses}, due ${due}`
+      })
+      const header = `${cards.length} cards listed (${all.length} total, ${buriedCount} buried${includeBuried ? ', included' : ', hidden'}). "mastered" = the schedule considers it learned; a card seen several times with a low streak or lapses is one the user keeps missing; PRIORITY = the user flagged it important.`
+      return { result: `${header}\n\n${lines.join('\n')}` }
+    }
+    case 'get_progress': {
+      const [sets, cards] = await Promise.all([
+        listFlashSets(thread.user_id, thread.id),
+        listFlashCards(thread.user_id, thread.id),
+      ])
+      const { data: reviews } = await f2Supabase()
+        .from('f2_voice_sessions')
+        .select('mode, grade, graded_at, grade_detail, created_at')
+        .eq('user_id', thread.user_id)
+        .eq('thread_id', thread.id)
+        .in('mode', ['final_review', 'second_chance'])
+        .order('created_at', { ascending: false })
+        .limit(5)
+      const reviewLines = (reviews ?? []).map((r) => {
+        const d = (r.grade_detail ?? {}) as {
+          notes?: string
+          strengths?: string[]
+          weaknesses?: string[]
+        }
+        const label = r.mode === 'second_chance' ? 'Second Chance' : 'Final Review'
+        if (!r.grade) return `- ${label} on ${String(r.created_at).slice(0, 10)}: not graded (session ended without a grade)`
+        return [
+          `- ${label} on ${String(r.graded_at ?? r.created_at).slice(0, 10)}: grade ${r.grade}${r.grade === 'A' ? ' (passed — mastery star)' : ''}`,
+          d.notes ? `  Feedback: ${d.notes}` : null,
+          d.strengths?.length ? `  Strengths: ${d.strengths.join('; ')}` : null,
+          d.weaknesses?.length ? `  To review: ${d.weaknesses.join('; ')}` : null,
+        ]
+          .filter(Boolean)
+          .join('\n')
+      })
+      const setLines = sets
+        .slice(0, 5)
+        .map(
+          (s) =>
+            `- ${String(s.created_at).slice(0, 10)}: ${s.score}/${s.total} (${s.mode}${s.jumbo_level != null ? `, Peck level ${s.jumbo_level}` : ''})`,
+        )
+      const mastered = cards.filter((c) => isMastered(c)).length
+      return {
+        result: `Stars: ${thread.stars}/3${thread.hard_quiz_completed_at ? ' (Final Review passed)' : ''}
+Study focus: ${thread.study_focus ?? '(none set)'}
+Deck: ${cards.length} cards, ${mastered} mastered, ${cards.filter((c) => c.rating === 'priority').length} priority, ${cards.filter((c) => c.rating === 'down').length} buried
+
+Graded reviews:
+${reviewLines.length ? reviewLines.join('\n') : '(no Final Review attempts yet)'}
+
+Recent flash sets:
+${setLines.length ? setLines.join('\n') : '(none played yet)'}`,
       }
     }
     case 'set_study_focus': {

@@ -84,7 +84,9 @@ export function jumboPassScore(mode: FlashSetMode): number {
 // ---------------------------------------------------------------------------
 // Card generation
 
-const GENERATE_MIN = 4
+// No lower floor: "add 2 cards about X" must add exactly 2 — a silent
+// bump to 4 reads as the agent ignoring the user.
+const GENERATE_MIN = 1
 const GENERATE_MAX = 75
 
 /// Generate `count` flash cards from a topic's source material + chat history
