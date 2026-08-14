@@ -1,21 +1,21 @@
 import SwiftUI
 
-/// Custom shell — no iOS TabView, no native nav bars. Hosts Chat and Topics
+/// Custom shell — no iOS TabView, no native nav bars. Hosts Topics and Peck
 /// with a floating TabPill at the bottom. Each tab has its own NavigationStack
 /// so Topic detail still pushes naturally; nav bars are hidden everywhere.
+/// (The old Chat tab was removed 2026-08-13 — new topics start from the +
+/// button in Topics, and every conversation lives in its topic.)
 struct MainTabsView: View {
     @Environment(Session.self) private var session
-    // Dev/testing hook: `simctl launch … -StartTab peck|chat|topics` opens
+    // Dev/testing hook: `simctl launch … -StartTab peck|topics` opens
     // on that tab, so headless screenshot verification can reach every tab.
     @State private var active: FeyndTab = {
         switch UserDefaults.standard.string(forKey: "StartTab") {
         case "peck", "flash": return .flash
-        case "chat": return .chat
         default: return .topics
         }
     }()
     @State private var topicsPath = NavigationPath()
-    @State private var chatPath = NavigationPath()
     @State private var flashPath = NavigationPath()
 
     var body: some View {
@@ -32,11 +32,6 @@ struct MainTabsView: View {
             // which means topics added in Chat show up the moment you switch over.
             Group {
                 switch active {
-                case .chat:
-                    NavigationStack(path: $chatPath) {
-                        ChatView()
-                            .toolbar(.hidden, for: .navigationBar)
-                    }
                 case .topics:
                     NavigationStack(path: $topicsPath) {
                         TopicsView()

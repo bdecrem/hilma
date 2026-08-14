@@ -123,7 +123,8 @@ struct TopicsView: View {
             .padding(.bottom, 66)
         }
         // Catalyst sheets don't always inherit @Observable env values — pass
-        // `session` through explicitly. See ChatView.swift for context.
+        // `session` through explicitly (see dismissTopmostPresentedModal in
+        // FeyndChrome.swift for the underlying Catalyst bug).
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
         .sheet(item: $contextTarget) { topic in
             TopicContextSheet(topic: topic)
@@ -196,18 +197,17 @@ struct TopicsView: View {
             .titleVisibilityMarker()
     }
 
-    /// Floating + — small and tucked into the bottom-right corner, out of
-    /// the way of the list and the tab pill. The header stays title + sort.
+    /// Floating + in the bottom-right corner. With the Chat tab gone this
+    /// is THE way to start anything new, so it's a full-size FAB.
     private var newTopicButton: some View {
         Button { showNewTopic = true } label: {
             Image(systemName: "plus")
-                .font(.system(size: 13, weight: .bold))
+                .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(FeyndTheme.inkOnAccent)
-                .frame(width: 28, height: 28)
+                .frame(width: 54, height: 54)
                 .background(FeyndTheme.accent, in: Circle())
-                .shadow(color: .black.opacity(0.4), radius: 6, y: 2)
-                // Keep a finger-sized hit area around the small visual.
-                .padding(8)
+                .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
+                .padding(6)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)

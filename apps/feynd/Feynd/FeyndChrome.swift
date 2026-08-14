@@ -564,7 +564,7 @@ struct IconCircleButton: View {
 ///
 /// On Mac Catalyst, sheet/cover content can receive a detached environment —
 /// the same Catalyst bug that keeps @Observable values from flowing into
-/// sheets (see ChatView) — which leaves `\.dismiss` silently inert and close
+/// sheets — which leaves `\.dismiss` silently inert and close
 /// buttons dead. UIKit's presentation stack is always authoritative, so on
 /// Catalyst this walks to the topmost presented controller and dismisses it
 /// directly. iOS keeps the environment path untouched.
@@ -954,17 +954,15 @@ struct ScreenTitle: View {
 }
 
 enum FeyndTab: String, CaseIterable {
-    case chat, topics, flash
+    case topics, flash
     var label: String {
         switch self {
-        case .chat: return "Chat"
         case .topics: return "Topics"
         case .flash: return "Peck"
         }
     }
     var iconSystem: String {
         switch self {
-        case .chat: return "bubble.left.and.bubble.right.fill"
         case .topics: return "list.bullet"
         case .flash: return "bolt.fill"
         }
@@ -990,7 +988,9 @@ struct TabPill: View {
             Capsule().fill(.ultraThinMaterial)
         )
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
-        .frame(width: 320)
+        // Two tabs at the same per-button width the three-tab pill had:
+        // 4 pad + 104 + 4 gap + 104 + 4 pad = 220.
+        .frame(width: 220)
         .shadow(color: .black.opacity(0.45), radius: 30, y: 8)
     }
 
