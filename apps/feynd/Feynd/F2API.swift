@@ -700,6 +700,8 @@ final class F2API {
     struct FlashAnswer: Encodable {
         let card_id: String
         let answer: String?
+        /// Mixed sets: "choice" | "text" — which way this question played.
+        var format: String? = nil
     }
 
     /// Submit a finished choice/text set for grading + recording.

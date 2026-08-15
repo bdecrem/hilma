@@ -54,6 +54,7 @@ func jumboPassScore(mode: String) -> Int {
     switch mode {
     case "voice": return 7
     case "text": return 8
+    case "mixed": return 8
     default: return 9
     }
 }
@@ -107,14 +108,17 @@ struct FlashQuestion: Codable, Identifiable, Equatable {
     /// the daily iMessage card. The set opens past these; their verdicts
     /// count in the final score.
     let prefilled: PrefilledAnswer?
+    /// Mixed sets only: "choice" or "text" — how THIS question plays.
+    let format: String?
 
     enum CodingKeys: String, CodingKey {
-        case question, choices, answer, rating, topic, prefilled
+        case question, choices, answer, rating, topic, prefilled, format
         case cardId = "card_id"
     }
 
     init(cardId: String, question: String, choices: [String]?, answer: String?,
-         rating: String?, topic: String?, prefilled: PrefilledAnswer? = nil) {
+         rating: String?, topic: String?, prefilled: PrefilledAnswer? = nil,
+         format: String? = nil) {
         self.cardId = cardId
         self.question = question
         self.choices = choices
@@ -122,6 +126,7 @@ struct FlashQuestion: Codable, Identifiable, Equatable {
         self.rating = rating
         self.topic = topic
         self.prefilled = prefilled
+        self.format = format
     }
 }
 
@@ -232,6 +237,7 @@ struct JumboLevelInfo: Codable, Identifiable, Equatable {
         switch mode {
         case "text": return "keyboard"
         case "voice": return "mic.fill"
+        case "mixed": return "square.split.2x1"
         default: return "square.grid.2x2"
         }
     }
@@ -240,6 +246,7 @@ struct JumboLevelInfo: Codable, Identifiable, Equatable {
         switch mode {
         case "text": return "Type answers"
         case "voice": return "Voice round"
+        case "mixed": return "Mixed round"
         default: return "Multiple choice"
         }
     }

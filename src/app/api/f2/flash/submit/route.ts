@@ -22,8 +22,9 @@ type SubmitBody = {
   mode?: FlashSetMode
   thread_id?: string
   jumbo_level?: number
-  // choice/text: the user's answers, in question order.
-  answers?: { card_id?: string; answer?: string | null }[]
+  // choice/text/mixed: the user's answers, in question order. `format`
+  // rides on mixed-set answers so grading knows which were choice picks.
+  answers?: { card_id?: string; answer?: string | null; format?: string }[]
   // voice: card ids in question order + the finished voice session to grade.
   card_ids?: string[]
   voice_session_id?: string
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   const mode = body.mode
-  if (mode !== 'choice' && mode !== 'text' && mode !== 'voice') {
+  if (mode !== 'choice' && mode !== 'text' && mode !== 'voice' && mode !== 'mixed') {
     return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
   }
   const threadId = body.thread_id ?? null
@@ -106,6 +107,19 @@ export async function POST(req: Request) {
       given = (body.answers ?? []).map((a) => a.answer ?? null)
       if (mode === 'choice') {
         correct = ordered.map((c, i) => (given[i] ?? '').trim() === c.answer)
+      } else if (mode === 'mixed') {
+        // Choice-format answers grade by exact match; typed ones go to the
+        // judge (credited cards keep their fixed verdicts either way).
+        const formats = (body.answers ?? []).map((a) => a.format ?? 'text')
+        const judged = await judgeTextAnswers(
+          ordered,
+          given.map((g, i) =>
+            creditById.has(ordered[i].id) || formats[i] === 'choice' ? null : g,
+          ),
+        )
+        correct = ordered.map((c, i) =>
+          formats[i] === 'choice' ? (given[i] ?? '').trim() === c.answer : judged[i],
+        )
       } else {
         // Don't spend the judge on credited cards — their verdict is fixed.
         correct = await judgeTextAnswers(
@@ -135,7 +149,9 @@ export async function POST(req: Request) {
     // cards: as it was asked over iMessage).
     question:
       creditById.get(c.id)?.question ??
-      (mode === 'choice' ? c.question : openFormQuestion(c)),
+      (mode === 'choice' || (mode === 'mixed' && (body.answers?.[i]?.format === 'choice'))
+        ? c.question
+        : openFormQuestion(c)),
     answer: c.answer,
     given: given[i],
     correct: correct[i],

@@ -60,6 +60,15 @@ struct FlashSetView: View {
 
     private var isChoice: Bool { start.mode == "choice" }
 
+    /// Mixed sets carry a per-question format; pure sets inherit the set
+    /// mode. Drives which answer UI the CURRENT question shows.
+    private func questionFormat(_ q: FlashQuestion) -> String {
+        q.format ?? start.mode
+    }
+    private var currentIsChoice: Bool {
+        index < questions.count && questionFormat(questions[index]) == "choice"
+    }
+
     var body: some View {
         ZStack {
             FeyndTheme.bg.ignoresSafeArea()
@@ -112,7 +121,7 @@ struct FlashSetView: View {
             if index < questions.count {
                 questionCard(questions[index])
                 Spacer(minLength: 8)
-                if isChoice {
+                if currentIsChoice {
                     choiceButtons(questions[index])
                 } else {
                     textAnswerRow
@@ -196,7 +205,7 @@ struct FlashSetView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .opacity(isChoice ? 1 : 0)   // text mode has no answer to edit safely
+                .opacity(questionFormat(q) == "choice" ? 1 : 0)   // text questions have no answer to edit safely
             }
             // Which topic this card belongs to — essential in Jumbo sets,
             // where "according to the book…" could mean any of the decks.
@@ -397,7 +406,7 @@ struct FlashSetView: View {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                 index += 1
             }
-            if !isChoice { draftFocused = true }
+            if questionFormat(questions[index]) == "text" { draftFocused = true }
         } else {
             submit()
         }
@@ -408,7 +417,7 @@ struct FlashSetView: View {
         Task {
             do {
                 let payload = zip(questions, answers).map {
-                    F2API.FlashAnswer(card_id: $0.cardId, answer: $1)
+                    F2API.FlashAnswer(card_id: $0.cardId, answer: $1, format: $0.format)
                 }
                 let result = try await F2API.shared.submitFlashSet(
                     mode: start.mode,
@@ -433,13 +442,15 @@ struct FlashSetView: View {
         guard let i = questions.firstIndex(where: { $0.cardId == card.id }) else { return }
         var choices = card.distractors + [card.answer]
         choices.shuffle()
+        let fmt = questionFormat(questions[i])
         questions[i] = FlashQuestion(
             cardId: card.id,
             question: card.question,
-            choices: isChoice ? choices : nil,
-            answer: isChoice ? card.answer : nil,
+            choices: fmt == "choice" ? choices : nil,
+            answer: fmt == "choice" ? card.answer : nil,
             rating: ratings[card.id],
-            topic: questions[i].topic
+            topic: questions[i].topic,
+            format: questions[i].format
         )
     }
 
@@ -459,7 +470,7 @@ struct FlashSetView: View {
     private var gradingView: some View {
         VStack(spacing: 16) {
             ProgressView().tint(FeyndTheme.accent).scaleEffect(1.4)
-            Text(start.mode == "text" ? "Dodo is grading your answers…" : "Tallying your round…")
+            Text(start.mode == "text" || start.mode == "mixed" ? "Dodo is grading your answers…" : "Tallying your round…")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(FeyndTheme.text2)
         }

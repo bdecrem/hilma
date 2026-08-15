@@ -42,7 +42,7 @@ export type FlashCard = {
   streak: number
 }
 
-export type FlashSetMode = 'choice' | 'text' | 'voice'
+export type FlashSetMode = 'choice' | 'text' | 'voice' | 'mixed'
 
 export type FlashResult = {
   card_id: string
@@ -70,13 +70,14 @@ export const STAR2_SCORE = 9 // 9/10 on two consecutive full sets → star 2
 
 /// Score needed to clear a Jumbo level, by the mode the set was played in.
 /// Voice is the hardest to perform (spoken recall, judged) so it passes at
-/// 7; multiple choice has the answers on screen so it demands 9; typed sits
-/// between. Any level can be played as an audio round via the Flash tab's
-/// mic button, so the threshold follows the SET's mode, not the level's.
+/// 7; multiple choice has the answers on screen so it demands 9; typed and
+/// mixed (half choice, half typed — the default) sit between at 8. The
+/// threshold follows the SET's mode, not the level's.
 export function jumboPassScore(mode: FlashSetMode): number {
   switch (mode) {
     case 'voice': return 7
     case 'text': return 8
+    case 'mixed': return 8
     case 'choice': return 9
   }
 }
@@ -1491,15 +1492,11 @@ export type JumboState = {
   levels: JumboLevel[]
 }
 
-/// Deterministic mode per Jumbo level. Early levels are approachable
-/// multiple choice; typing joins at 5; voice rounds appear from 10 up.
+/// Deterministic mode per Jumbo level. Mixed (half choice, half typed) is
+/// the default everywhere; voice rounds keep their cadence from 10 up.
 export function jumboLevelMode(level: number): FlashSetMode {
-  if (level <= 4) return 'choice'
-  if (level <= 9) return level % 2 === 0 ? 'text' : 'choice'
-  const cycle = level % 3
-  if (cycle === 1) return 'choice'
-  if (cycle === 2) return 'text'
-  return 'voice'
+  if (level >= 10 && level % 3 === 0) return 'voice'
+  return 'mixed'
 }
 
 function nodeStars(score: number, total: number): number {

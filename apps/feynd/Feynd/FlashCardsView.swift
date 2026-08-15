@@ -233,6 +233,8 @@ struct FlashCardsView: View {
 
     private var modeButtons: some View {
         VStack(spacing: 10) {
+            modeButton("mixed", icon: "square.split.2x1", title: "Mixed round",
+                       sub: "Half choices, half typing — the all-rounder")
             modeButton("choice", icon: "square.grid.2x2", title: "Multiple choice",
                        sub: "Tap the right answer — instant feedback")
             modeButton("text", icon: "keyboard", title: "Type answers",

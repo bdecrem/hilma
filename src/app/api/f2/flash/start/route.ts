@@ -82,14 +82,14 @@ export async function POST(req: Request) {
     // The level sheet lets the user play any level in any mode; the pass
     // threshold follows the mode actually played (see jumboPassScore).
     // Absent/invalid mode falls back to the level's default flavor.
-    mode = body.mode === 'voice' || body.mode === 'text' || body.mode === 'choice'
+    mode = body.mode === 'voice' || body.mode === 'text' || body.mode === 'choice' || body.mode === 'mixed'
       ? body.mode
       : jumboLevelMode(jumboLevel)
   } else {
     if (!body.thread_id) {
       return NextResponse.json({ error: 'thread_id or jumbo_level required' }, { status: 400 })
     }
-    if (mode !== 'choice' && mode !== 'text' && mode !== 'voice') {
+    if (mode !== 'choice' && mode !== 'text' && mode !== 'voice' && mode !== 'mixed') {
       return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
     }
     threadId = body.thread_id
@@ -132,16 +132,24 @@ export async function POST(req: Request) {
   )
 
   // Text/voice show the question with no choices, so choice-dependent cards
-  // serve their standalone rewording there.
-  const fresh = cards.map((c) => ({
-    card_id: c.id,
-    question: mode === 'choice' ? c.question : openFormQuestion(c),
-    rating: c.rating,
-    topic: topicLabels.get(c.thread_id) ?? null,
-    ...(mode === 'choice'
-      ? { choices: choicesForCard(c), answer: c.answer }
-      : {}),
-  }))
+  // serve their standalone rewording there. Mixed sets split half/half:
+  // the first half of the fresh cards play as multiple choice, the rest as
+  // typed answers — each question carries its `format`.
+  const choiceCount = mode === 'mixed' ? Math.ceil(cards.length / 2) : 0
+  const fresh = cards.map((c, i) => {
+    const format: FlashSetMode =
+      mode === 'mixed' ? (i < choiceCount ? 'choice' : 'text') : mode
+    return {
+      card_id: c.id,
+      question: format === 'choice' ? c.question : openFormQuestion(c),
+      rating: c.rating,
+      topic: topicLabels.get(c.thread_id) ?? null,
+      ...(mode === 'mixed' ? { format } : {}),
+      ...(format === 'choice'
+        ? { choices: choicesForCard(c), answer: c.answer }
+        : {}),
+    }
+  })
 
   // Credited questions lead the set, already answered — the client starts
   // play right after them.

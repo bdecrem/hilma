@@ -440,7 +440,8 @@ struct FlashTabView: View {
         Task {
             if state == nil { await load() }
             guard let level = state?.levels.first(where: { $0.status == "unlocked" }) else { return }
-            play(level, mode: level.mode == "voice" ? "text" : level.mode)
+            // The daily-card deep link lands in Mixed — the default round.
+            play(level, mode: "mixed")
         }
     }
 
@@ -740,6 +741,8 @@ private struct LevelStartSheet: View {
                 // Same wording and layout as the topic deck's mode list;
                 // each sub states the clear bar for that mode.
                 VStack(spacing: 10) {
+                    modeButton("mixed", icon: "square.split.2x1", title: "Mixed round",
+                               sub: "Half choices, half typing — clears at \(jumboPassScore(mode: "mixed"))/10")
                     modeButton("choice", icon: "square.grid.2x2", title: "Multiple choice",
                                sub: "Tap the right answer — clears at \(jumboPassScore(mode: "choice"))/10")
                     modeButton("text", icon: "keyboard", title: "Type answers",
