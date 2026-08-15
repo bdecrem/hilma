@@ -132,13 +132,12 @@ export async function POST(req: Request) {
   )
 
   // Text/voice show the question with no choices, so choice-dependent cards
-  // serve their standalone rewording there. Mixed sets split half/half:
-  // the first half of the fresh cards play as multiple choice, the rest as
-  // typed answers — each question carries its `format`.
-  const choiceCount = mode === 'mixed' ? Math.ceil(cards.length / 2) : 0
+  // serve their standalone rewording there. Mixed sets alternate every
+  // other question — choice, text, choice, text — each carrying its
+  // `format` (still a half/half split overall).
   const fresh = cards.map((c, i) => {
     const format: FlashSetMode =
-      mode === 'mixed' ? (i < choiceCount ? 'choice' : 'text') : mode
+      mode === 'mixed' ? (i % 2 === 0 ? 'choice' : 'text') : mode
     return {
       card_id: c.id,
       question: format === 'choice' ? c.question : openFormQuestion(c),
