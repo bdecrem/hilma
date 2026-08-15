@@ -273,10 +273,15 @@ struct FinalReviewResult: Codable, Equatable {
     /// Whether a Second Chance (3-question retake) is on offer after this
     /// failed full attempt. Optional so older servers still decode.
     let secondChance: SecondChanceOffer?
+    /// Recert gradings only: whether the badge was renewed, and the next
+    /// due date when it was.
+    let renewed: Bool?
+    let recertDueAt: Date?
 
     enum CodingKeys: String, CodingKey {
-        case grade, passed, notes, strengths, weaknesses, stars, mastered
+        case grade, passed, notes, strengths, weaknesses, stars, mastered, renewed
         case secondChance = "second_chance"
+        case recertDueAt = "recert_due_at"
     }
 }
 

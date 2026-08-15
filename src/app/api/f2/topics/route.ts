@@ -31,6 +31,8 @@ export async function GET() {
     quiz_count: t.quiz_count,
     stars: t.stars,
     hard_quiz_completed_at: t.hard_quiz_completed_at,
+    recert_stage: t.recert_stage,
+    recert_due_at: t.recert_due_at,
     pending_quiz_kind: t.pending_quiz_kind,
     kind: t.kind,
     created_at: t.created_at,

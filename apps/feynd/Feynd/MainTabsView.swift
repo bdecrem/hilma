@@ -99,6 +99,14 @@ struct MainTabsView: View {
                 UserDefaults.standard.removeObject(forKey: "OpenURL")
                 route(url)
             }
+            // `-OpenTopic <id>` — push straight into a topic's detail screen.
+            if let id = UserDefaults.standard.string(forKey: "OpenTopic") {
+                UserDefaults.standard.removeObject(forKey: "OpenTopic")
+                if let t = try? await F2API.shared.listTopics().first(where: { $0.id == id }) {
+                    try? await Task.sleep(for: .seconds(1))
+                    topicsPath.append(t)
+                }
+            }
         }
         #endif
         // No forced color scheme — defer to FeyndApp's @AppStorage preference

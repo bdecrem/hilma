@@ -47,6 +47,7 @@
 		A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */; };
 		B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */; };
 		BCA3E817690080EE71E51E2C /* voice-coral.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */; };
+		C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F75E071CC1F646CA33327FAB /* RecertNotifications.swift */; };
 		C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */; };
 		C1147912E81813D4CCADA12B /* voice-shimmer.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */; };
 		C573E836F4F99984E9A8409E /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC5668529933DC6749CB3D06 /* Session.swift */; };
@@ -122,6 +123,7 @@
 		EE7DB0ED0D66A78BC46C7BEB /* FlashModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashModels.swift; sourceTree = "<group>"; };
 		EFFCEF68207C8EC05D3B4760 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDeckBuilder.swift; sourceTree = "<group>"; };
+		F75E071CC1F646CA33327FAB /* RecertNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecertNotifications.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +175,7 @@
 				C0564EA3B927E26544E7655B /* PasteView.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
 				E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */,
+				F75E071CC1F646CA33327FAB /* RecertNotifications.swift */,
 				2D359E2025298CA4A57C307D /* ScreenCache.swift */,
 				8BE40ACBCE23969C211C1B42 /* Secrets.swift */,
 				EC5668529933DC6749CB3D06 /* Session.swift */,
@@ -347,6 +350,7 @@
 				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
 				B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */,
+				C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */,
 				D577BB198B5846938AF1ECEB /* ScreenCache.swift in Sources */,
 				6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */,
 				C573E836F4F99984E9A8409E /* Session.swift in Sources */,
@@ -399,7 +403,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -484,7 +488,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 32;
+				CURRENT_PROJECT_VERSION = 33;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

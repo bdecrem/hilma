@@ -8,9 +8,10 @@ import {
 
 // 'walk' belongs to Peri (src/lib/f4) but shares this table + session helpers.
 // 'flash' = a spoken 10-card flash set; 'final_review' = the star-3 oral exam;
-// 'second_chance' = the 3-question retake offered after a failed Final Review.
+// 'second_chance' = the 3-question retake offered after a failed Final Review;
+// 'recert' = the 3-question refresher that keeps a certified badge gold.
 export type RealtimeMode =
-  | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance'
+  | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance' | 'recert'
 
 export type VoiceSession = {
   id: string
@@ -272,6 +273,35 @@ How to run it:
 - Brief corrections are fine, but the grade rests on what THEY demonstrate — keep the floor theirs.
 - Use get_topic_context if you need source detail to form a sharp question.
 - After the third answer, thank them, say their grade is being tallied, and say goodbye. Do not announce a result yourself.`
+}
+
+/// The recertification refresher: 3 questions that keep a certified badge
+/// gold. Retention bar (B renews), not the initial mastery bar — the point
+/// is proving the material stuck, quickly and pleasantly.
+export function buildRecertInstructions(input: {
+  userName: string
+  thread: F2Thread
+  /** Weaknesses flagged on the most recent graded exam, if any. */
+  weaknesses?: string[]
+}): string {
+  const name = friendlyName(input.userName)
+  const weak = (input.weaknesses ?? []).filter((w) => w.trim())
+  return `You are F2, giving ${name} a quick REFRESHER on a topic they mastered a while ago — the check that keeps their gold badge shining. Exactly THREE questions, about five minutes. This is a retention check, not the original exam: warm, brisk, and confidence-building. You speak first.
+
+${summarizeThreadForPrompt(input.thread)}${input.thread.study_focus ? `
+
+STUDY FOCUS: ${name} scoped this topic — examine ONLY within it: "${input.thread.study_focus}".` : ''}${weak.length > 0 ? `
+
+FLAGGED LAST TIME — make one of your three questions revisit these, so the refresher closes old gaps:
+${weak.map((w) => `- ${w}`).join('\n')}` : ''}
+
+How to run it:
+- Open by telling ${name} this is a quick refresher to keep their badge gold — three questions, a few minutes. Then ask question 1.
+- Shape: question 1 on the topic's central idea; question 2 on the flagged areas above (or a second core idea when there are none); question 3 on a supporting detail worth retaining.
+- Ask EXACTLY three questions, one at a time. One short follow-up probe per question when an answer is thin.
+- Brief corrections are fine — this is also a chance to re-learn — but the grade rests on what THEY recall unaided.
+- Use get_topic_context if you need source detail to form a sharp question.
+- After the third answer, thank them, say the badge check is being tallied, and say goodbye. Do not announce a result yourself.`
 }
 
 export function getTopicContextTool() {

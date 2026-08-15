@@ -352,6 +352,9 @@ struct TopicsView: View {
         do {
             topics = try await F2API.shared.listTopics()
             ScreenCache.save(topics, key: ScreenCache.topics)
+            // Keep the on-device badge-refresher reminders in step with the
+            // freshest recert due dates.
+            RecertNotifications.sync(topics: topics)
         } catch {
             loadError = error.localizedDescription
         }
@@ -510,7 +513,7 @@ struct TopicListRow: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                MiniTopicGlyph(kind: topic.kind, size: 36, verified: topic.stars >= 3)
+                MiniTopicGlyph(kind: topic.kind, size: 36, verified: topic.stars >= 3, dimmed: topic.recertLapsed)
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 5) {

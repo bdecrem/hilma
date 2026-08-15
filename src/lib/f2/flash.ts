@@ -1092,7 +1092,7 @@ Produce the verification notes.`,
 export async function judgeFinalReview(
   thread: F2Thread,
   transcript: TranscriptTurn[],
-  variant: 'full' | 'second_chance' = 'full',
+  variant: 'full' | 'second_chance' | 'recert' = 'full',
 ): Promise<FinalReviewGrade> {
   const convo = (transcript ?? [])
     .map((t) => `${t.role === 'user' ? 'USER' : 'F2'}: ${(t.text ?? '').trim()}`)
@@ -1116,9 +1116,11 @@ export async function judgeFinalReview(
   const examShape =
     variant === 'second_chance'
       ? `This was a SECOND CHANCE retake: the assistant asked exactly three substantive questions (after an earlier Final Review fell short). Grade ONLY the user's command of what those three questions covered — the retake is deliberately narrow, so never penalize material the questions didn't touch. An A means all three answers together showed genuine command: main ideas and supporting detail, in their own words.`
-      : `The exam is conversational: the user may have chosen the format themselves (for example summarizing the material in parts and discussing each), and the assistant may have offered brief corrections along the way.`
+      : variant === 'recert'
+        ? `This was a RECERTIFICATION REFRESHER: three quick questions checking whether material the user mastered a while ago has STUCK. Grade ONLY what the three questions covered — never penalize untouched material. The bar is retention, not the original mastery exam: an A means the material is still fully commanded; a B means the core is clearly retained with only minor rust. Reserve C and below for real forgetting of main ideas.`
+        : `The exam is conversational: the user may have chosen the format themselves (for example summarizing the material in parts and discussing each), and the assistant may have offered brief corrections along the way.`
 
-  const system = `You grade a spoken ${variant === 'second_chance' ? 'Second Chance retake' : 'Final Review session'} for a learning app. The assistant conducted an oral exam on a topic; the user is trying to demonstrate mastery. ${examShape}
+  const system = `You grade a spoken ${variant === 'second_chance' ? 'Second Chance retake' : variant === 'recert' ? 'recertification refresher' : 'Final Review session'} for a learning app. The assistant conducted an oral exam on a topic; the user is trying to demonstrate mastery. ${examShape}
 
 The user may bring in examples, analogies, or facts from OUTSIDE the source material. That strengthens a performance when the material is valid: judge it on its merits using your own knowledge and the verification notes (when present) — being outside the source is never itself an error. Invalid or wrong outside material counts against the user, like any other error.${thread.study_focus ? `
 
@@ -1393,10 +1395,59 @@ export async function awardFinalReviewStar(
 ): Promise<void> {
   const { error } = await f2Supabase()
     .from('f2_threads')
-    .update({ stars: 3, hard_quiz_completed_at: new Date().toISOString() })
+    .update({
+      stars: 3,
+      hard_quiz_completed_at: new Date().toISOString(),
+      // Certification starts the recert clock: first refresher in 30 days.
+      recert_stage: 0,
+      recert_due_at: new Date(Date.now() + RECERT_INTERVAL_DAYS[0] * 86_400_000).toISOString(),
+    })
     .eq('id', threadId)
     .eq('user_id', userId)
   if (error) console.error('[f2/flash] awardFinalReviewStar failed:', error)
+}
+
+// ---------------------------------------------------------------------------
+// Recertification — the gold badge is renewable
+
+/// Expanding renewal ladder: 30 days after certification, 60 after the
+/// first refresher, then every 90. Index by recert_stage, clamped.
+export const RECERT_INTERVAL_DAYS = [30, 60, 90]
+
+export function recertIntervalDays(stage: number): number {
+  return RECERT_INTERVAL_DAYS[Math.min(Math.max(stage, 0), RECERT_INTERVAL_DAYS.length - 1)]
+}
+
+/// A or B renews — the refresher checks retention, not first-pass mastery.
+export function recertRenews(grade: FinalReviewGrade['grade']): boolean {
+  return grade === 'A' || grade === 'B'
+}
+
+export const RECERT_XP = 50
+
+/// Apply a passed refresher: bump the stage, restart the clock, pay XP.
+/// Returns the new due date.
+export async function applyRecertRenewal(
+  userId: string,
+  threadId: string,
+  currentStage: number,
+): Promise<string> {
+  const nextStage = currentStage + 1
+  const dueAt = new Date(
+    Date.now() + recertIntervalDays(nextStage) * 86_400_000,
+  ).toISOString()
+  const { error } = await f2Supabase()
+    .from('f2_threads')
+    .update({ recert_stage: nextStage, recert_due_at: dueAt })
+    .eq('id', threadId)
+    .eq('user_id', userId)
+  if (error) console.error('[f2/flash] applyRecertRenewal failed:', error)
+  const { error: xpErr } = await f2Supabase().rpc('f2_add_xp', {
+    p_user_id: userId,
+    p_amount: RECERT_XP,
+  })
+  if (xpErr) console.error('[f2/flash] recert XP failed:', xpErr)
+  return dueAt
 }
 
 // ---------------------------------------------------------------------------

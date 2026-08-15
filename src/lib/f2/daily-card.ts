@@ -103,6 +103,32 @@ function dailyHandle(handles: string[] | null): string | null {
   return handles.find((h) => h.startsWith('+')) ?? handles[0]
 }
 
+/// Badge-watch P.S. for the daily card: certified topics whose gold dims
+/// within 3 days (or already dimmed). Empty string when nothing is due.
+export async function recertPostscript(userId: string): Promise<string> {
+  const soon = new Date(Date.now() + 3 * 86_400_000).toISOString()
+  const { data: due } = await f2Supabase()
+    .from('f2_threads')
+    .select('topic, url, recert_due_at')
+    .eq('user_id', userId)
+    .gte('stars', 3)
+    .not('recert_due_at', 'is', null)
+    .lte('recert_due_at', soon)
+    .order('recert_due_at')
+    .limit(2)
+  if (!due || due.length === 0) return ''
+  const lines = due.map((t) => {
+    const name = t.topic ?? t.url ?? 'a topic'
+    const days = Math.ceil(
+      (new Date(t.recert_due_at as string).getTime() - Date.now()) / 86_400_000,
+    )
+    return days <= 0
+      ? `your "${name}" badge has dimmed`
+      : `your "${name}" badge dims in ${days} day${days === 1 ? '' : 's'}`
+  })
+  return `\n\nP.S. ${lines.join(', and ')} — a 5-minute refresher in Dodo keeps it gold.`
+}
+
 /// Send the daily card to every user who switched it on (delivery goes to
 /// their paired iMessage handle). Returns a per-user summary for the cron
 /// log.
@@ -146,11 +172,13 @@ export async function sendDailyCards(): Promise<
         .update({ daily_card: pending })
         .eq('id', u.id)
 
+      const recertPs = await recertPostscript(u.id)
+
       const text = `🃏 Dodo daily card${label ? ` — ${label}` : ''}:
 
 ${openFormQuestion(card)}
 
-Reply with your answer (your own words are fine).`
+Reply with your answer (your own words are fine).${recertPs}`
       // daily_chat_guid overrides handle addressing — required when the
       // recipient's handle is an alias of the mini's own Apple ID (a
       // phone-addressed send would make an ungradeable self-chat).

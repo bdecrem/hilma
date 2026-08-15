@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
+import { f2Supabase } from '@/lib/f2/supabase'
 import { getFlashCardsByIds, getSecondChanceState, openFormQuestion } from '@/lib/f2/flash'
 import {
   applyVoiceStyle,
   buildFinalReviewInstructions,
+  buildRecertInstructions,
   buildSecondChanceInstructions,
   buildFlashVoiceInstructions,
   buildRealtimeInstructions,
@@ -41,13 +43,14 @@ export async function POST(req: Request) {
   }
 
   const mode = body.mode ?? 'global'
-  if (!['global', 'topic', 'flash', 'final_review', 'second_chance'].includes(mode)) {
+  if (!['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert'].includes(mode)) {
     return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
   }
 
   let thread = null
   if (
     mode === 'topic' || mode === 'final_review' || mode === 'second_chance' ||
+    mode === 'recert' ||
     (mode === 'flash' && body.thread_id)
   ) {
     if (!body.thread_id) {
@@ -103,6 +106,32 @@ export async function POST(req: Request) {
       userName: user.username,
       thread: thread!,
       weaknesses: sc.last_weaknesses,
+    })
+  } else if (mode === 'recert') {
+    // Refreshers exist only for certified topics. Taking one early (before
+    // the due date) is allowed — it just renews from today.
+    if ((thread?.stars ?? 0) < 3) {
+      return NextResponse.json(
+        { error: 'Refreshers are for mastered topics.' },
+        { status: 403 },
+      )
+    }
+    // Seed with the most recent graded exam's flagged weaknesses.
+    const { data: lastGraded } = await f2Supabase()
+      .from('f2_voice_sessions')
+      .select('grade_detail')
+      .eq('user_id', user.id)
+      .eq('thread_id', thread!.id)
+      .not('grade', 'is', null)
+      .order('graded_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const weaknesses =
+      ((lastGraded?.grade_detail as { weaknesses?: string[] } | null)?.weaknesses ?? [])
+    instructions = buildRecertInstructions({
+      userName: user.username,
+      thread: thread!,
+      weaknesses,
     })
   } else {
     instructions = buildRealtimeInstructions({

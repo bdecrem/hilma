@@ -85,8 +85,24 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     /// Non-nil while a Second Chance retake is on offer (24h after a failed
     /// 2nd+ Final Review attempt). Topic-detail payload only.
     var secondChanceUntil: Date?
+    /// When the gold badge needs its next refresher. Set on certification
+    /// and on every renewal (30/60/90-day ladder). Nil until certified.
+    var recertDueAt: Date?
 
     var isPinned: Bool { pinnedAt != nil }
+
+    /// Gold badge earned (Final Review passed).
+    var isCertified: Bool { stars >= 3 }
+    /// Past the refresher due date — the badge renders dimmed.
+    var recertLapsed: Bool {
+        guard isCertified, let due = recertDueAt else { return false }
+        return due < Date()
+    }
+    /// Inside the final 7 days before the badge dims.
+    var recertDueSoon: Bool {
+        guard isCertified, !recertLapsed, let due = recertDueAt else { return false }
+        return due.timeIntervalSinceNow < 7 * 86_400
+    }
 
     /// The Second Chance offer is live right now.
     var secondChanceAvailable: Bool {
@@ -121,6 +137,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case pinnedAt = "pinned_at"
         case studyFocus = "study_focus"
         case secondChanceUntil = "second_chance_until"
+        case recertDueAt = "recert_due_at"
     }
 
     // Custom init so the iOS app keeps working against backends that don't
@@ -144,6 +161,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         pinnedAt = try c.decodeIfPresent(Date.self, forKey: .pinnedAt)
         studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
         secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
+        recertDueAt = try c.decodeIfPresent(Date.self, forKey: .recertDueAt)
     }
 }
 
@@ -174,6 +192,17 @@ struct F2Thread: Codable {
     var studyFocus: String?
     /// See F2Topic.secondChanceUntil — topic-detail payload only.
     var secondChanceUntil: Date?
+    var recertDueAt: Date?
+
+    var isCertified: Bool { stars >= 3 }
+    var recertLapsed: Bool {
+        guard isCertified, let due = recertDueAt else { return false }
+        return due < Date()
+    }
+    var recertDueSoon: Bool {
+        guard isCertified, !recertLapsed, let due = recertDueAt else { return false }
+        return due.timeIntervalSinceNow < 7 * 86_400
+    }
 
     var sourceHost: String? {
         guard let url, let host = URL(string: url)?.host else { return nil }
@@ -195,6 +224,7 @@ struct F2Thread: Codable {
         case audioSummary = "audio_summary"
         case studyFocus = "study_focus"
         case secondChanceUntil = "second_chance_until"
+        case recertDueAt = "recert_due_at"
     }
 
     init(from decoder: Decoder) throws {
@@ -211,6 +241,7 @@ struct F2Thread: Codable {
         audioSummary = try c.decodeIfPresent(F2AudioSummary.self, forKey: .audioSummary)
         studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
         secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
+        recertDueAt = try c.decodeIfPresent(Date.self, forKey: .recertDueAt)
     }
 }
 

@@ -100,6 +100,8 @@ struct FinalReviewView: View {
     enum Variant: Equatable {
         case full
         case secondChance
+        /// The recertification refresher — 3 questions, B renews the badge.
+        case recert
     }
 
     let topicId: String
@@ -140,9 +142,11 @@ struct FinalReviewView: View {
             switch phase {
             case .talking:
                 VoiceSessionView(
-                    mode: variant == .secondChance ? "second_chance" : "final_review",
+                    mode: variant == .secondChance ? "second_chance"
+                        : variant == .recert ? "recert" : "final_review",
                     threadId: topicId,
-                    title: (variant == .secondChance ? "Second Chance · " : "Final Review · ") + topicLabel
+                    title: (variant == .secondChance ? "Second Chance · "
+                        : variant == .recert ? "Refresher · " : "Final Review · ") + topicLabel
                 ) { voiceSessionId in
                     guard let voiceSessionId else {
                         closeModal(dismiss)
@@ -178,12 +182,20 @@ struct FinalReviewView: View {
         .interactiveDismissDisabled(phase == .grading)
     }
 
+    private func renewalDateSuffix(_ r: FinalReviewResult) -> String {
+        guard let due = r.recertDueAt else { return "" }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "MMM d"
+        return " until \(fmt.string(from: due))"
+    }
+
     private func gradeReveal(_ r: FinalReviewResult) -> some View {
         // (SFX for the reveal fires in onAppear below, with the animation.)
         ZStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    Text(variant == .secondChance ? "SECOND CHANCE" : "FINAL REVIEW")
+                    Text(variant == .secondChance ? "SECOND CHANCE"
+                        : variant == .recert ? "REFRESHER" : "FINAL REVIEW")
                         .font(.system(size: 12, weight: .heavy))
                         .tracking(1.6)
                         .foregroundStyle(FeyndTheme.text3)
@@ -210,9 +222,11 @@ struct FinalReviewView: View {
 
                     if r.passed {
                         HStack(spacing: 8) {
-                            Image(systemName: "star.fill")
+                            Image(systemName: variant == .recert ? "seal.fill" : "star.fill")
                                 .foregroundStyle(FeyndTheme.gold)
-                            Text("Third star earned — topic mastered!")
+                            Text(variant == .recert
+                                ? "Badge renewed — gold\(renewalDateSuffix(r))!"
+                                : "Third star earned — topic mastered!")
                                 .font(.system(size: 15, weight: .bold))
                                 .foregroundStyle(FeyndTheme.text)
                         }
@@ -221,7 +235,9 @@ struct FinalReviewView: View {
                         .background(FeyndTheme.surface, in: Capsule())
                         .overlay(Capsule().stroke(FeyndTheme.gold.opacity(0.4), lineWidth: 1))
                     } else {
-                        Text(variant == .secondChance
+                        Text(variant == .recert
+                            ? "Not this time — the badge stays dim. Retake whenever you're ready; a B renews it."
+                            : variant == .secondChance
                             ? "Not this time — study the weak spots and take the Final Review again."
                             : "An A earns the star. Review and come back — the material isn't going anywhere.")
                             .font(.system(size: 13.5))

@@ -38,6 +38,8 @@ struct TopicDetailView: View {
                     .padding(.bottom, 4)
                 }
 
+                recertBanner
+
                 if loading && thread == nil {
                     ProgressView().tint(FeyndTheme.text2)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -124,6 +126,12 @@ struct TopicDetailView: View {
                         Text("\(count) \(count == 1 ? "quiz" : "quizzes")")
                             .foregroundStyle(FeyndTheme.text2)
                     }
+                    if let t = thread, t.isCertified, !t.recertLapsed, !t.recertDueSoon,
+                       let due = t.recertDueAt {
+                        Text("·").foregroundStyle(FeyndTheme.text3)
+                        Text("renews \(due.formatted(.dateTime.month(.abbreviated).day()))")
+                            .foregroundStyle(FeyndTheme.text3)
+                    }
                 }
                 .font(.system(size: 12))
                 .tracking(-0.1)
@@ -142,6 +150,80 @@ struct TopicDetailView: View {
     }
 
     /// Star 3's gate: stars 1+2 earned, not yet mastered.
+    /// The recert nudge above the conversation: an alert card once the badge
+    /// has dimmed, a soft one-liner in the final week. Both start the
+    /// 3-question refresher directly.
+    @ViewBuilder
+    private var recertBanner: some View {
+        if let t = thread, t.recertLapsed {
+            Button {
+                finalReviewVariant = .recert
+                finalReviewPresented = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "seal")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.gold.opacity(0.55))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Your mastery badge dimmed")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(FeyndTheme.text)
+                        Text("A 5-minute refresher — 3 questions — brings back the gold.")
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(FeyndTheme.text2)
+                    }
+                    Spacer()
+                    Text("Refresh")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(FeyndTheme.inkOnAccent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(FeyndTheme.accent, in: Capsule())
+                }
+                .padding(12)
+                .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.gold.opacity(0.4), lineWidth: 1))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 6)
+        } else if let t = thread, t.recertDueSoon, let due = t.recertDueAt {
+            Button {
+                finalReviewVariant = .recert
+                finalReviewPresented = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(FeyndTheme.gold)
+                    Text("Refresher due \(dueInWords(due)) — 3 questions keeps the badge gold.")
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(FeyndTheme.text2)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.bottom, 6)
+        }
+    }
+
+    private func dueInWords(_ due: Date) -> String {
+        let days = Int(ceil(due.timeIntervalSinceNow / 86_400))
+        if days <= 0 { return "today" }
+        if days == 1 { return "tomorrow" }
+        return "in \(days) days"
+    }
+
     private var canTakeFinalReview: Bool {
         (thread?.stars ?? 0) >= 2 && (thread?.hardQuizCompletedAt == nil)
     }
@@ -208,6 +290,16 @@ struct TopicDetailView: View {
                                 finalReviewVariant = .full
                                 finalReviewPresented = true
                             }
+                        }
+                        .opacity(busy ? 0.5 : 1)
+                        .allowsHitTesting(!busy)
+                    }
+
+                    if thread?.isCertified == true {
+                        ActionChip(label: "Refresher", systemImage: "arrow.clockwise",
+                                   iconTint: (thread?.recertLapsed == true || thread?.recertDueSoon == true) ? FeyndTheme.gold : FeyndTheme.accent) {
+                            finalReviewVariant = .recert
+                            finalReviewPresented = true
                         }
                         .opacity(busy ? 0.5 : 1)
                         .allowsHitTesting(!busy)

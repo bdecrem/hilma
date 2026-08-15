@@ -3,9 +3,11 @@ import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
 import { f2Supabase } from '@/lib/f2/supabase'
 import {
+  applyRecertRenewal,
   awardFinalReviewStar,
   getSecondChanceState,
   judgeFinalReview,
+  recertRenews,
   recordVoiceSessionGrade,
 } from '@/lib/f2/flash'
 
@@ -52,6 +54,38 @@ export async function POST(
 
   try {
     const isSecondChance = session.mode === 'second_chance'
+    const isRecert = session.mode === 'recert'
+
+    // Recert grades on the retention bar and renews the badge clock —
+    // stars are already 3 and never change here.
+    if (isRecert) {
+      const grade = await judgeFinalReview(
+        thread,
+        (session.transcript ?? []) as { role?: string; text?: string }[],
+        'recert',
+      )
+      await recordVoiceSessionGrade(user.id, body.voice_session_id, grade)
+      const renewed = recertRenews(grade.grade)
+      let recert_due_at = thread.recert_due_at ?? null
+      if (renewed) {
+        recert_due_at = await applyRecertRenewal(user.id, thread.id, thread.recert_stage ?? 0)
+      }
+      return NextResponse.json({
+        grade: grade.grade,
+        notes: grade.notes,
+        strengths: grade.strengths,
+        weaknesses: grade.weaknesses,
+        renewed,
+        recert_due_at,
+        stars: thread.stars,
+        mastered: true,
+        // Recert has no second-chance mechanic; the shape stays compatible
+        // with FinalReviewResult decoding on the client.
+        passed: renewed,
+        second_chance: { eligible: false, until: null },
+      })
+    }
+
     const grade = await judgeFinalReview(
       thread,
       (session.transcript ?? []) as { role?: string; text?: string }[],

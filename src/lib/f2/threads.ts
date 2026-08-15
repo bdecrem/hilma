@@ -54,6 +54,12 @@ export type F2Thread = {
   quiz_count: number
   stars: number
   hard_quiz_completed_at: string | null
+  /** Recertification ladder position: 0 after initial cert, +1 per renewal.
+   *  Maps to the 30/60/90-day interval (recertIntervalDays). */
+  recert_stage: number
+  /** When the gold badge needs its next refresher. Null until certified.
+   *  "Lapsed" is derived: now > recert_due_at. */
+  recert_due_at: string | null
   pending_quiz_kind: QuizKind | null
   kind: TopicKind
   /** Length band the topic's videos were found in ("new short|medium|long").

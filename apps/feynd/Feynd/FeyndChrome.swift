@@ -146,13 +146,17 @@ struct MiniTopicGlyph: View {
     /// fill with the glyph knocked out in ink. Both colors come from the
     /// theme, so light and dark modes each get their own accent/ink pair.
     var verified: Bool = false
+    /// Certified but past the refresher due date — the gold goes matte and
+    /// the corner mark becomes a refresh arrow. Stars are untouched; the
+    /// badge is stale, not lost.
+    var dimmed: Bool = false
 
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
-            .fill(verified ? FeyndTheme.accent : FeyndTheme.surface)
+            .fill(verified ? FeyndTheme.accent.opacity(dimmed ? 0.38 : 1) : FeyndTheme.surface)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(verified ? Color.clear : FeyndTheme.border, lineWidth: 1)
+                    .stroke(verified ? (dimmed ? FeyndTheme.border : Color.clear) : FeyndTheme.border, lineWidth: 1)
             )
             .frame(width: size, height: size)
             .overlay(
@@ -161,7 +165,7 @@ struct MiniTopicGlyph: View {
             )
             .overlay(alignment: .bottomTrailing) {
                 if verified {
-                    engravedCheck
+                    engravedMark
                         .padding(size * 0.12)
                 }
             }
@@ -170,16 +174,17 @@ struct MiniTopicGlyph: View {
     /// Tiny debossed checkmark in the tile's corner — a watermark stamped
     /// into the gold, not a badge. Two layers fake the engraving: a hairline
     /// white catch-light just below the stroke, then low-opacity ink on top.
-    private var engravedCheck: some View {
+    private var engravedMark: some View {
         let s = size * 0.24
+        let symbol = dimmed ? "arrow.clockwise" : "checkmark"
         return ZStack {
-            Image(systemName: "checkmark")
+            Image(systemName: symbol)
                 .font(.system(size: s, weight: .bold))
                 .foregroundStyle(.white.opacity(0.35))
                 .offset(y: s * 0.09)
-            Image(systemName: "checkmark")
+            Image(systemName: symbol)
                 .font(.system(size: s, weight: .bold))
-                .foregroundStyle(FeyndTheme.inkOnAccent.opacity(0.30))
+                .foregroundStyle(FeyndTheme.inkOnAccent.opacity(dimmed ? 0.55 : 0.30))
         }
     }
 
