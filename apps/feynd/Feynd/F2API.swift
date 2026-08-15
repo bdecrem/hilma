@@ -659,6 +659,23 @@ final class F2API {
     /// Rate a card: "down" buries it, "priority" pushes it up the rotation,
     /// nil clears the rating. Returns the updated card.
     @discardableResult
+    /// Author ONE card from a dictated question — Dodo writes the answer
+    /// and distractors from the topic's source material.
+    func authorFlashCard(threadId: String, question: String) async throws -> FlashCard {
+        struct Body: Encodable { let thread_id: String; let question: String }
+        let res: UpdateCardResponse = try await post("/api/f2/flash/cards", body: Body(thread_id: threadId, question: question))
+        return res.card
+    }
+
+    /// Set (or clear with "") the learner's standing note to the grader.
+    func setGradingNote(cardId: String, note: String) async throws {
+        struct Body: Encodable { let grading_note: String? }
+        let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        let _: UpdateCardResponse = try await request(
+            "/api/f2/flash/cards/\(cardId)", method: "PATCH",
+            body: Body(grading_note: trimmed.isEmpty ? nil : trimmed))
+    }
+
     func rateFlashCard(cardId: String, rating: String?) async throws -> FlashCard {
         // Explicit encode: the synthesized one omits nil, but the server
         // needs to SEE null to clear a rating (absent = leave unchanged).

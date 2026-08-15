@@ -98,7 +98,14 @@ struct TopicDetailView: View {
                 AudioSummaryPlayerView(title: thread?.topic ?? "Topic", url: url)
             }
         }
-        .task { await load() }
+        .task {
+            await load()
+            // Arriving via the card clinic's "Discuss with Dodo": the
+            // composer opens prefilled; the user edits and sends.
+            if let text = DeepLinkRouter.shared.consumeChatDraft(threadId: topicId) {
+                draft = text
+            }
+        }
     }
 
     // MARK: - Header (back / center title)

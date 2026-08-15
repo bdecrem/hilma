@@ -29,6 +29,9 @@ export type FlashCard = {
   created_at: string
   rating: CardRating | null
   rated_at: string | null
+  /// The learner's standing instruction to the grading agent for THIS card
+  /// ("don't be too literal", "accept the French spelling"). Null = none.
+  grading_note: string | null
   // Exposure history.
   times_shown: number
   last_shown_at: string | null
@@ -50,6 +53,11 @@ export type FlashResult = {
   answer: string
   given: string | null
   correct: boolean
+  /// Enrichment for the post-quiz card clinic (absent on old stored sets).
+  thread_id?: string
+  rating?: CardRating | null
+  grading_note?: string | null
+  distractors?: string[]
 }
 
 export type FlashSet = {
@@ -519,9 +527,14 @@ export async function updateFlashCard(
     distractors?: string[]
     /** undefined = leave alone; null = clear; 'down' | 'priority' = set. */
     rating?: CardRating | null
+    /** undefined = leave alone; null/'' = clear; string = set. */
+    grading_note?: string | null
   },
 ): Promise<FlashCard | null> {
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (patch.grading_note !== undefined) {
+    update.grading_note = patch.grading_note?.trim().slice(0, 500) || null
+  }
   if (patch.question?.trim()) update.question = patch.question.trim()
   if (patch.answer?.trim()) update.answer = patch.answer.trim()
   if (patch.distractors) {
@@ -927,11 +940,11 @@ export async function judgeTextAnswers(
   const listing = toJudge
     .map(
       (e) =>
-        `${e.index}. Question: ${openFormQuestion(e.card)}\n   Canonical answer: ${e.card.answer}\n   User's answer: ${e.givenText}`,
+        `${e.index}. Question: ${openFormQuestion(e.card)}\n   Canonical answer: ${e.card.answer}\n   User's answer: ${e.givenText}${e.card.grading_note ? `\n   The learner's standing grading instruction for this card (follow it): ${e.card.grading_note}` : ''}`,
     )
     .join('\n\n')
 
-  const system = `You grade flash-card answers. For each item, decide whether the user's answer expresses the same idea as the canonical answer. Accept different wording, minor imprecision, and partial detail as long as the core idea is right. Reject answers that are wrong, empty of content, or describe a different concept.`
+  const system = `You grade flash-card answers. For each item, decide whether the user's answer expresses the same idea as the canonical answer. Accept different wording, minor imprecision, and partial detail as long as the core idea is right. Reject answers that are wrong, empty of content, or describe a different concept. When an item carries a grading instruction from the learner, apply it — it adjusts the bar for that card.`
 
   const parsed = await judgeJson<{ verdicts: { index: number; correct: boolean }[] }>(
     system,
@@ -955,7 +968,8 @@ export async function judgeDailyCard(
   const parsed = await judgeJson<{ correct?: boolean; feedback?: string }>(
     system,
     `Question: ${openFormQuestion(card)}
-Canonical answer: ${card.answer}
+Canonical answer: ${card.answer}${card.grading_note ? `
+The learner's standing grading instruction for this card (follow it): ${card.grading_note}` : ''}
 The user's answer: ${answer}
 
 Grade it.`,
@@ -1048,7 +1062,7 @@ export async function judgeVoiceSet(
   if (!convo) return out
 
   const listing = cards
-    .map((c, i) => `${i}. Question: ${openFormQuestion(c)}\n   Canonical answer: ${c.answer}`)
+    .map((c, i) => `${i}. Question: ${openFormQuestion(c)}\n   Canonical answer: ${c.answer}${c.grading_note ? `\n   The learner's standing grading instruction for this card (follow it): ${c.grading_note}` : ''}`)
     .join('\n\n')
 
   const system = `You grade a spoken flash-card quiz from its transcript. The assistant (F2) asked the listed questions; the user answered aloud. For each question, decide whether the user's spoken answer expressed the same idea as the canonical answer BEFORE the assistant revealed or corrected it. Accept casual spoken phrasing. If a question was never asked or the user never gave an answer of their own, mark it incorrect.`

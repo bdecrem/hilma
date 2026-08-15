@@ -27,4 +27,31 @@ final class DeepLinkRouter {
         pendingPeckPlay = false
         return true
     }
+
+    // MARK: Discuss-a-card handoff
+
+    /// "Discuss with Dodo" from the card clinic: land in the card's topic
+    /// chat with a prefilled draft. Navigation (tab switch + push) consumes
+    /// the thread id; the destination TopicDetailView consumes the draft.
+    var topicChatSignal = 0
+    var pendingChatThreadId: String?
+    var pendingChatDraft: (threadId: String, text: String)?
+
+    func requestTopicChat(threadId: String, draft: String) {
+        pendingChatThreadId = threadId
+        pendingChatDraft = (threadId, draft)
+        topicChatSignal += 1
+    }
+
+    func consumeChatNavigation() -> String? {
+        defer { pendingChatThreadId = nil }
+        return pendingChatThreadId
+    }
+
+    /// The draft for THIS topic, at most once.
+    func consumeChatDraft(threadId: String) -> String? {
+        guard let d = pendingChatDraft, d.threadId == threadId else { return nil }
+        pendingChatDraft = nil
+        return d.text
+    }
 }

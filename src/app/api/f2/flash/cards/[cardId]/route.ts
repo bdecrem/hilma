@@ -18,6 +18,7 @@ export async function PATCH(
     answer?: string
     distractors?: string[]
     rating?: string | null
+    grading_note?: string | null
   }
   try {
     body = await req.json()
@@ -34,7 +35,13 @@ export async function PATCH(
     }
   }
   const { cardId } = await ctx.params
-  const card = await updateFlashCard(user.id, cardId, { ...body, rating })
+  const card = await updateFlashCard(user.id, cardId, {
+    question: body.question,
+    answer: body.answer,
+    distractors: body.distractors,
+    rating,
+    ...('grading_note' in body ? { grading_note: body.grading_note } : {}),
+  })
   if (!card) {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }

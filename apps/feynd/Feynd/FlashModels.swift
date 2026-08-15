@@ -163,10 +163,17 @@ struct FlashResultRow: Codable, Identifiable, Equatable {
     let answer: String
     let given: String?
     let correct: Bool
+    /// Card-clinic context (absent on older servers/stored sets).
+    var threadId: String?
+    var rating: String?
+    var gradingNote: String?
+    var distractors: [String]?
 
     enum CodingKeys: String, CodingKey {
-        case question, answer, given, correct
+        case question, answer, given, correct, rating, distractors
         case cardId = "card_id"
+        case threadId = "thread_id"
+        case gradingNote = "grading_note"
     }
 }
 

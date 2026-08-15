@@ -92,6 +92,17 @@ struct FlashSetView: View {
             }
         }
         .interactiveDismissDisabled(phase == .grading)
+        #if targetEnvironment(simulator)
+        .onAppear {
+            // `-AutoFinishSet 1` — junk-answer every question and submit, so
+            // screenshot loops can reach the results screen without taps.
+            if UserDefaults.standard.bool(forKey: "AutoFinishSet"), phase == .playing {
+                UserDefaults.standard.removeObject(forKey: "AutoFinishSet")
+                for i in answers.indices where answers[i] == nil { answers[i] = "zz" }
+                submit()
+            }
+        }
+        #endif
     }
 
     // MARK: - Play
@@ -515,6 +526,8 @@ struct FlashResultsView: View {
 
     @State private var ringProgress: CGFloat = 0
     @State private var shownXp = 0
+    /// The missed card whose clinic is open.
+    @State private var clinicTarget: FlashResultRow? = nil
 
     private var isPerfect: Bool { result.total > 0 && result.score == result.total }
     private var fraction: CGFloat { result.total > 0 ? CGFloat(result.score) / CGFloat(result.total) : 0 }
@@ -665,26 +678,389 @@ struct FlashResultsView: View {
                 .tracking(1.0)
                 .foregroundStyle(FeyndTheme.text3)
             ForEach(misses) { m in
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(m.question)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(FeyndTheme.text)
-                    Text(m.answer)
-                        .font(.system(size: 13.5))
-                        .foregroundStyle(FeyndTheme.accent)
-                    if let given = m.given, !given.isEmpty {
-                        Text("You said: \(given)")
-                            .font(.system(size: 12.5))
+                // Tap a miss to open its clinic: rate, edit, brief the
+                // grader, or take it to the topic chat.
+                Button { clinicTarget = m } label: {
+                    HStack(alignment: .center, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(m.question)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(FeyndTheme.text)
+                                .multilineTextAlignment(.leading)
+                            Text(m.answer)
+                                .font(.system(size: 13.5))
+                                .foregroundStyle(FeyndTheme.accent)
+                                .multilineTextAlignment(.leading)
+                            if let given = m.given, !given.isEmpty {
+                                Text("You said: \(given)")
+                                    .font(.system(size: 12.5))
+                                    .foregroundStyle(FeyndTheme.text3)
+                                    .multilineTextAlignment(.leading)
+                            }
+                        }
+                        Spacer(minLength: 6)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(FeyndTheme.text3)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(13)
+                    .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
+                    .contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(13)
-                .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
+                .buttonStyle(.plain)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .sheet(item: $clinicTarget) { row in
+            MissClinicSheet(row: row) {
+                // Discuss handoff: close the clinic, then the whole results
+                // surface — MainTabsView takes it from here.
+                clinicTarget = nil
+                onDone()
+            }
+        }
+        #if targetEnvironment(simulator)
+        .onAppear {
+            // `-OpenMissClinic 1` — open the first miss's clinic headlessly.
+            if UserDefaults.standard.bool(forKey: "OpenMissClinic"), let first = misses.first {
+                UserDefaults.standard.removeObject(forKey: "OpenMissClinic")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { clinicTarget = first }
+            }
+        }
+        #endif
+    }
+}
+
+// MARK: - The card clinic
+
+/// One missed card, opened from the results list. Everything you'd want to
+/// do about a miss lives here, quietly: flag the card (bury / priority),
+/// fix its wording, brief the grader, or take it into the topic chat.
+struct MissClinicSheet: View {
+    let row: FlashResultRow
+    /// Called when the user chooses "Talk it through" — the host closes
+    /// the results surface; navigation is already in flight.
+    var onDiscuss: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var rating: String?
+    @State private var note: String
+    @State private var savedNote: String
+    @State private var noteSaved = false
+    @State private var editing = false
+    @State private var question: String
+    @State private var answer: String
+    @State private var newCardOpen = false
+    @State private var newCardQuestion = ""
+    @State private var newCardState: NewCardState = .idle
+    @State private var confirmDelete = false
+    @State private var deleted = false
+
+    private enum NewCardState: Equatable { case idle, writing, added, failed }
+
+    init(row: FlashResultRow, onDiscuss: @escaping () -> Void) {
+        self.row = row
+        self.onDiscuss = onDiscuss
+        _rating = State(initialValue: row.rating)
+        _note = State(initialValue: row.gradingNote ?? "")
+        _savedNote = State(initialValue: row.gradingNote ?? "")
+        _question = State(initialValue: row.question)
+        _answer = State(initialValue: row.answer)
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                // The card itself, roomier than the row.
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(question)
+                        .font(.system(size: 18, weight: .semibold))
+                        .tracking(-0.3)
+                        .foregroundStyle(FeyndTheme.text)
+                    Text(answer)
+                        .font(.system(size: 15))
+                        .foregroundStyle(FeyndTheme.accent)
+                    if let given = row.given, !given.isEmpty {
+                        Text("You said: \(given)")
+                            .font(.system(size: 13.5))
+                            .foregroundStyle(FeyndTheme.text3)
+                    }
+                }
+                .padding(.top, 26)
+
+                // Rate — same two verdicts as everywhere else.
+                HStack(spacing: 10) {
+                    clinicChip(
+                        active: rating == "down",
+                        activeTint: Color(hex: 0xE0635A),
+                        label: rating == "down" ? "Buried" : "Bury it"
+                    ) {
+                        Image(systemName: rating == "down" ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                    } action: {
+                        setRating(rating == "down" ? nil : "down")
+                    }
+                    clinicChip(
+                        active: rating == "priority",
+                        activeTint: FeyndTheme.gold,
+                        label: rating == "priority" ? "Priority" : "Make priority"
+                    ) {
+                        DoubleThumbsUp(active: rating == "priority", size: 12)
+                    } action: {
+                        setRating(rating == "priority" ? nil : "priority")
+                    }
+                    Spacer()
+                }
+
+                // Brief the grader.
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("NOTE FOR THE GRADER")
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(1.0)
+                        .foregroundStyle(FeyndTheme.text3)
+                    TextField("e.g. \u{201C}don't be too literal\u{201D}", text: $note, axis: .vertical)
+                        .font(.system(size: 14.5))
+                        .foregroundStyle(FeyndTheme.text)
+                        .tint(FeyndTheme.accent)
+                        .lineLimit(1...3)
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 11)
+                        .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 12))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+                        .onChange(of: note) { noteSaved = false }
+                    if note.trimmingCharacters(in: .whitespaces) != savedNote {
+                        Button { saveNote() } label: {
+                            Text("Save note")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(FeyndTheme.inkOnAccent)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(FeyndTheme.accent, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    } else if noteSaved {
+                        Label("The grader will honor this", systemImage: "checkmark")
+                            .font(.system(size: 12.5, weight: .medium))
+                            .foregroundStyle(FeyndTheme.text2)
+                    }
+                }
+
+                Rectangle().fill(FeyndTheme.borderSoft).frame(height: 1)
+
+                // Deeper moves, as quiet rows.
+                clinicRow(icon: "pencil", title: "Edit this card",
+                          sub: "Fix the question, answer, or choices") {
+                    editing = true
+                }
+
+                // New card from a dictated question — Dodo writes the answer.
+                clinicRow(icon: "plus.circle", title: "Add a new card",
+                          sub: "Type the question; Dodo writes the answer") {
+                    withAnimation(.easeOut(duration: 0.18)) { newCardOpen.toggle() }
+                }
+                if newCardOpen {
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("The question for the new card…", text: $newCardQuestion, axis: .vertical)
+                            .font(.system(size: 14.5))
+                            .foregroundStyle(FeyndTheme.text)
+                            .tint(FeyndTheme.accent)
+                            .lineLimit(1...3)
+                            .padding(.horizontal, 13)
+                            .padding(.vertical, 11)
+                            .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+                        switch newCardState {
+                        case .writing:
+                            Label("Dodo is writing the card…", systemImage: "hourglass")
+                                .font(.system(size: 12.5, weight: .medium))
+                                .foregroundStyle(FeyndTheme.text2)
+                        case .added:
+                            Label("Added to the deck", systemImage: "checkmark")
+                                .font(.system(size: 12.5, weight: .medium))
+                                .foregroundStyle(FeyndTheme.text2)
+                        case .failed:
+                            Label("Couldn't write it — try again", systemImage: "exclamationmark.triangle")
+                                .font(.system(size: 12.5, weight: .medium))
+                                .foregroundStyle(Color(hex: 0xE0635A))
+                        case .idle:
+                            if !newCardQuestion.trimmingCharacters(in: .whitespaces).isEmpty {
+                                Button { addNewCard() } label: {
+                                    Text("Add card")
+                                        .font(.system(size: 13, weight: .bold))
+                                        .foregroundStyle(FeyndTheme.inkOnAccent)
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 8)
+                                        .background(FeyndTheme.accent, in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
+
+                clinicRow(icon: "bubble.left.and.bubble.right", title: "Talk it through with Dodo",
+                          sub: "Opens this topic's chat about the card") {
+                    discuss()
+                }
+
+                Rectangle().fill(FeyndTheme.borderSoft).frame(height: 1)
+
+                // Destructive, last, confirmed.
+                Button { confirmDelete = true } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xE0635A))
+                            .frame(width: 26)
+                        Text(deleted ? "Deleted" : "Delete this card")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(Color(hex: 0xE0635A))
+                        Spacer()
+                    }
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(deleted)
+                .opacity(deleted ? 0.5 : 1)
+                .confirmationDialog("Delete this card?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                    Button("Delete", role: .destructive) { deleteCard() }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("It leaves the deck for good — bury it instead if you might want it back.")
+                }
+
+                Spacer(minLength: 20)
+            }
+            .padding(.horizontal, 22)
+        }
+        .scrollIndicators(.hidden)
+        .background(FeyndTheme.bgRaised.ignoresSafeArea())
+        .presentationDetents([.medium, .large])
+        .presentationDragIndicator(.visible)
+        .sheet(isPresented: $editing) {
+            FlashCardEditSheet(
+                card: FlashCard(
+                    id: row.cardId,
+                    question: question,
+                    answer: answer,
+                    distractors: row.distractors ?? []
+                )
+            ) { edited in
+                question = edited.question
+                answer = edited.answer
+            } onDelete: {
+                dismiss()
+            }
+        }
+        #if targetEnvironment(simulator)
+        .onAppear {
+            // `-AutoDiscuss 1` — drive the chat handoff headlessly.
+            if UserDefaults.standard.bool(forKey: "AutoDiscuss") {
+                UserDefaults.standard.removeObject(forKey: "AutoDiscuss")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { discuss() }
+            }
+        }
+        #endif
+    }
+
+    private func addNewCard() {
+        guard let threadId = row.threadId else { return }
+        let q = newCardQuestion.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return }
+        newCardState = .writing
+        Task {
+            do {
+                _ = try await F2API.shared.authorFlashCard(threadId: threadId, question: q)
+                newCardQuestion = ""
+                newCardState = .added
+            } catch {
+                newCardState = .failed
+            }
+        }
+    }
+
+    private func deleteCard() {
+        deleted = true
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Task {
+            try? await F2API.shared.deleteFlashCard(cardId: row.cardId)
+            try? await Task.sleep(for: .milliseconds(500))
+            dismiss()
+        }
+    }
+
+    private func setRating(_ newValue: String?) {
+        rating = newValue
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Task { try? await F2API.shared.rateFlashCard(cardId: row.cardId, rating: newValue) }
+    }
+
+    private func saveNote() {
+        let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        savedNote = trimmed
+        noteSaved = true
+        Task { try? await F2API.shared.setGradingNote(cardId: row.cardId, note: trimmed) }
+    }
+
+    private func discuss() {
+        guard let threadId = row.threadId else { return }
+        var text = "About this flash card: \u{201C}\(question)\u{201D} — the expected answer is \u{201C}\(answer)\u{201D}."
+        if let given = row.given, !given.isEmpty {
+            text += " I answered \u{201C}\(given)\u{201D} and it was marked wrong."
+        }
+        text += " Help me understand this."
+        DeepLinkRouter.shared.requestTopicChat(threadId: threadId, draft: text)
+        dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { onDiscuss() }
+    }
+
+    @ViewBuilder
+    private func clinicChip<Icon: View>(
+        active: Bool, activeTint: Color, label: String,
+        @ViewBuilder icon: () -> Icon, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                icon()
+                    .font(.system(size: 13, weight: .semibold))
+                Text(label)
+                    .font(.system(size: 13.5, weight: .semibold))
+            }
+            .foregroundStyle(active ? activeTint : FeyndTheme.text2)
+            .padding(.horizontal, 13)
+            .padding(.vertical, 9)
+            .background(FeyndTheme.surface, in: Capsule())
+            .overlay(Capsule().stroke(active ? activeTint.opacity(0.5) : FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func clinicRow(icon: String, title: String, sub: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.accent)
+                    .frame(width: 26)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text)
+                    Text(sub)
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.text3)
+            }
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -155,6 +155,12 @@ export async function POST(req: Request) {
     answer: c.answer,
     given: given[i],
     correct: correct[i],
+    // Card clinic context: lets the results screen rate/edit/note/discuss
+    // a missed card without extra fetches.
+    thread_id: c.thread_id,
+    rating: c.rating,
+    grading_note: c.grading_note,
+    distractors: c.distractors,
   }))
 
   try {

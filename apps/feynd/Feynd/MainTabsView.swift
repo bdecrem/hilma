@@ -86,6 +86,19 @@ struct MainTabsView: View {
         // https://feynd.cc/peck (universal link — the daily iMessage flow
         // texts this one).
         .onOpenURL { route($0) }
+        // Card clinic "Discuss with Dodo": switch to Topics and push the
+        // card's topic. The destination view picks up the prefilled draft.
+        .onChange(of: DeepLinkRouter.shared.topicChatSignal) {
+            guard let id = DeepLinkRouter.shared.consumeChatNavigation() else { return }
+            active = .topics
+            Task {
+                if let t = try? await F2API.shared.listTopics().first(where: { $0.id == id }) {
+                    // A beat for cover dismissals to settle before the push.
+                    try? await Task.sleep(for: .milliseconds(450))
+                    topicsPath.append(t)
+                }
+            }
+        }
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL { route(url) }
         }
