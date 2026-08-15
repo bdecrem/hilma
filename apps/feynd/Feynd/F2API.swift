@@ -188,6 +188,12 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(pinned: pinned))
     }
 
+    /// Include or exclude a topic's deck from Peck (jumbo) sets.
+    func setPeckExcluded(id: String, excluded: Bool) async throws {
+        struct Body: Encodable { let peck_excluded: Bool }
+        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(peck_excluded: excluded))
+    }
+
     /// Save (or clear, with "") the topic's study focus. Returns how many
     /// flash cards the topic currently has so the caller can rebuild a deck
     /// that was generated under the old focus.

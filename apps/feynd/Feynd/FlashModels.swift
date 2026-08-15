@@ -70,6 +70,9 @@ struct FlashDeck: Codable, Identifiable, Equatable {
     let cardCount: Int
     let priorityCount: Int
     let buriedCount: Int
+    /// True when this deck sits out of Peck (jumbo) sets. Absent on older
+    /// servers — treated as included.
+    var peckExcluded: Bool?
 
     enum CodingKeys: String, CodingKey {
         case topic, url, kind, stars
@@ -77,6 +80,7 @@ struct FlashDeck: Codable, Identifiable, Equatable {
         case cardCount = "card_count"
         case priorityCount = "priority_count"
         case buriedCount = "buried_count"
+        case peckExcluded = "peck_excluded"
     }
 
     var displayLabel: String {

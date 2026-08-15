@@ -126,6 +126,11 @@ struct FlashTabView: View {
                 UserDefaults.standard.removeObject(forKey: "OpenProfile")
                 showProfile = true
             }
+            // `-OpenDecks 1` — straight to the deck manager.
+            if UserDefaults.standard.bool(forKey: "OpenDecks") {
+                UserDefaults.standard.removeObject(forKey: "OpenDecks")
+                showDecks = true
+            }
             #endif
             // Peck deep link while this tab wasn't mounted (cold start or
             // arriving from another tab): the pending flag survives until

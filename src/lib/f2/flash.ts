@@ -384,6 +384,32 @@ export async function listFlashCards(
   return (data as FlashCard[]) ?? []
 }
 
+/// Threads the user opted out of Peck. Cheap set for jumbo filtering.
+export async function peckExcludedThreadIds(userId: string): Promise<Set<string>> {
+  const { data } = await f2Supabase()
+    .from('f2_threads')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('peck_excluded', true)
+  return new Set(((data ?? []) as { id: string }[]).map((t) => t.id))
+}
+
+/// Playable Peck pool: non-buried cards on decks not opted out of Peck.
+export async function countPeckCards(userId: string): Promise<number> {
+  const excluded = await peckExcludedThreadIds(userId)
+  const { data, error } = await f2Supabase()
+    .from('f2_flash_cards')
+    .select('thread_id, rating')
+    .eq('user_id', userId)
+  if (error) {
+    console.error('[f2/flash] countPeckCards failed:', error)
+    return 0
+  }
+  return ((data ?? []) as { thread_id: string; rating: string | null }[]).filter(
+    (c) => c.rating !== 'down' && !excluded.has(c.thread_id),
+  ).length
+}
+
 export async function countFlashCards(userId: string): Promise<number> {
   const { count, error } = await f2Supabase()
     .from('f2_flash_cards')
@@ -398,6 +424,8 @@ export async function countFlashCards(userId: string): Promise<number> {
 
 export type FlashDeck = {
   thread_id: string
+  /// True when the user opted this deck out of Peck (jumbo) sets.
+  peck_excluded: boolean
   topic: string | null
   url: string | null
   kind: string | null
@@ -416,7 +444,7 @@ export async function listDecks(userId: string): Promise<FlashDeck[]> {
     sb.from('f2_flash_cards').select('thread_id, rating').eq('user_id', userId),
     sb
       .from('f2_threads')
-      .select('id, topic, url, kind, stars, updated_at')
+      .select('id, topic, url, kind, stars, updated_at, peck_excluded')
       .eq('user_id', userId),
   ])
   if (cardErr) {
@@ -444,6 +472,7 @@ export async function listDecks(userId: string): Promise<FlashDeck[]> {
     kind: string | null
     stars: number | null
     updated_at: string
+    peck_excluded: boolean | null
   }[]
   return threads
     .filter((t) => counts.has(t.id))
@@ -452,6 +481,7 @@ export async function listDecks(userId: string): Promise<FlashDeck[]> {
       const c = counts.get(t.id)!
       return {
         thread_id: t.id,
+        peck_excluded: t.peck_excluded === true,
         topic: t.topic,
         url: t.url,
         kind: t.kind,
@@ -790,7 +820,11 @@ export async function pickSetCards(
     return []
   }
   const exclude = new Set(opts?.excludeIds ?? [])
-  const all = ((data as FlashCard[]) ?? []).filter((c) => !exclude.has(c.id))
+  // Jumbo draws respect the per-topic Peck opt-out; topic sets ignore it.
+  const excludedThreads = threadId ? new Set<string>() : await peckExcludedThreadIds(userId)
+  const all = ((data as FlashCard[]) ?? []).filter(
+    (c) => !exclude.has(c.id) && !excludedThreads.has(c.thread_id),
+  )
   // Shuffle first so the presentation order isn't weight order — the user
   // shouldn't be able to read the scheduler off the sequence.
   return shuffle(weightedSample(all, opts?.n ?? SET_SIZE, Date.now()))
@@ -1513,7 +1547,7 @@ export async function getJumboState(userId: string): Promise<JumboState> {
   const sb = f2Supabase()
   const [{ data: userRow }, cardCount, { data: sets, error }] = await Promise.all([
     sb.from('f2_users').select('xp').eq('id', userId).maybeSingle(),
-    countFlashCards(userId),
+    countPeckCards(userId),
     sb
       .from('f2_flash_sets')
       .select('jumbo_level, score, total, mode')

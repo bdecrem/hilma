@@ -43,7 +43,7 @@ export async function PATCH(
   }
   const { id } = await ctx.params
 
-  let body: { topic?: string; pinned?: boolean; study_focus?: string | null; kind?: string }
+  let body: { topic?: string; pinned?: boolean; study_focus?: string | null; kind?: string; peck_excluded?: boolean }
   try {
     body = await req.json()
   } catch {
@@ -54,6 +54,9 @@ export async function PATCH(
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (typeof body.pinned === 'boolean') {
     update.pinned_at = body.pinned ? new Date().toISOString() : null
+  }
+  if (typeof body.peck_excluded === 'boolean') {
+    update.peck_excluded = body.peck_excluded
   }
   if (body.topic !== undefined) {
     const topic = body.topic.trim()
@@ -79,7 +82,8 @@ export async function PATCH(
     update.topic === undefined &&
     update.pinned_at === undefined &&
     update.study_focus === undefined &&
-    update.kind === undefined
+    update.kind === undefined &&
+    update.peck_excluded === undefined
   ) {
     return NextResponse.json({ error: 'nothing to update' }, { status: 400 })
   }

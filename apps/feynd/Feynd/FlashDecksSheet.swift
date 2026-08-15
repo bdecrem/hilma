@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// "The stack" — every topic that has flash cards, in one place. Reached
 /// from the card-stack button in the Flash tab. Tapping a deck opens the
@@ -162,6 +163,21 @@ struct FlashDecksSheet: View {
                         .foregroundStyle(i < deck.stars ? FeyndTheme.gold : FeyndTheme.text3.opacity(0.5))
                 }
             }
+            // In/out of Peck: one bolt, tappable. Gold = this deck's cards
+            // ride in Peck sets; slashed gray = sitting out. The row itself
+            // fades when out, so the state reads at a glance with no switch
+            // chrome.
+            Button {
+                togglePeck(deck)
+            } label: {
+                Image(systemName: (deck.peckExcluded ?? false) ? "bolt.slash" : "bolt.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle((deck.peckExcluded ?? false) ? FeyndTheme.text3 : FeyndTheme.gold)
+                    .frame(width: 30, height: 30)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel((deck.peckExcluded ?? false) ? "Include in Peck" : "Exclude from Peck")
             Image(systemName: "chevron.right")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(FeyndTheme.text3)
@@ -169,6 +185,18 @@ struct FlashDecksSheet: View {
         .padding(.horizontal, 18)
         .padding(.vertical, 13)
         .contentShape(Rectangle())
+        .opacity((deck.peckExcluded ?? false) ? 0.55 : 1)
+    }
+
+    /// Optimistic flip; the server is the tie-breaker on next load.
+    private func togglePeck(_ deck: FlashDeck) {
+        guard let i = decks.firstIndex(where: { $0.id == deck.id }) else { return }
+        let newValue = !(deck.peckExcluded ?? false)
+        decks[i].peckExcluded = newValue
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Task {
+            try? await F2API.shared.setPeckExcluded(id: deck.threadId, excluded: newValue)
+        }
     }
 
     private func glyph(_ kind: String?) -> String {
