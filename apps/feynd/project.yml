@@ -9,8 +9,13 @@ settings:
   base:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
+    # iPhone-only on device/simulator — App Store validation otherwise
+    # demands iPad multitasking orientations + iPad icons. Catalyst keeps
+    # its own family, so the Mac build is unaffected.
+    "TARGETED_DEVICE_FAMILY[sdk=iphoneos*]": "1"
+    "TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]": "1"
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "39"
+    CURRENT_PROJECT_VERSION: "40"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -40,6 +45,8 @@ targets:
         CFBundleName: Dodo
         # Escape-closes-modals responder — see FeyndApplication.swift.
         NSPrincipalClass: Feynd.FeyndApplication
+        # HTTPS only — skips TestFlight's export-compliance question.
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UIAppFonts:
           - Fredoka.ttf
