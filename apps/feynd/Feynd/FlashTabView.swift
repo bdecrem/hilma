@@ -50,7 +50,9 @@ struct FlashTabView: View {
                 FeyndTopBar {
                     BarTitle(text: "Peck", bigTitleVisible: bigTitleVisible)
                 } trailing: {
-                    HStack(spacing: 8) {
+                    // Three pills share the bar with the echoed title — keep
+                    // them tight so "Peck" never truncates against them.
+                    HStack(spacing: 6) {
                         pebblesButton
                         deckStackButton
                         xpPill
@@ -179,7 +181,7 @@ struct FlashTabView: View {
                 .fixedSize(horizontal: true, vertical: false)
                 .contentTransition(.numericText())
         }
-        .padding(.horizontal, 11)
+        .padding(.horizontal, 9)
         .padding(.vertical, 7)
         .background(FeyndTheme.surface, in: Capsule())
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
@@ -190,9 +192,11 @@ struct FlashTabView: View {
     /// The Pebbles button — the keepsake shelf of saved quotes.
     private var pebblesButton: some View {
         Button { showPebbles = true } label: {
-            PebbleGlyph(size: 15)
-                .padding(.horizontal, 11)
-                .padding(.vertical, 9)
+            Image(systemName: "quote.opening")
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(FeyndTheme.text)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 7)
                 .background(FeyndTheme.surface, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         }
@@ -207,7 +211,7 @@ struct FlashTabView: View {
             Image(systemName: "rectangle.stack.fill")
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(FeyndTheme.text)
-                .padding(.horizontal, 11)
+                .padding(.horizontal, 9)
                 .padding(.vertical, 7)
                 .background(FeyndTheme.surface, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
