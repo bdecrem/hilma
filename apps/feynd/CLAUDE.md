@@ -52,6 +52,27 @@ Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is lock
 - `-SkipNotifPrompt 1` — suppress the recert notification-permission request so the system alert never covers screenshots. If the alert is already pending from a run without the flag, uninstall the app AND reboot the sim to clear it — it survives app relaunches.
 - `dodo://peck` via `simctl openurl` exercises deep-link routing, but SpringBoard shows an "Open in Dodo?" dialog that can't be tapped headlessly and persists over the app until the sim reboots (`simctl shutdown` + `boot` clears it). Production uses the universal link `https://feynd.cc/peck` (AASA served by `/api/f2/aasa` via a next.config rewrite).
 
+## TestFlight upload (worked end to end 2026-08-16, build 0.2 (41))
+
+App Store Connect app record is **"Feynd"** (id 6773165027) — same bundle ID; Dodo is only the display name. Never create a new app record. The "internal" beta group has `hasAccessToAllBuilds`, so every processed build reaches internal testers automatically — do NOT try to add builds to it via the API (422).
+
+```bash
+./apps/feynd/bump-build.sh                      # unique CFBundleVersion per upload
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer   # RELEASE Xcode — ASC rejects beta-SDK uploads, and the beta is the selected default on this iMac
+xcodebuild archive -project Feynd.xcodeproj -scheme Feynd \
+  -destination 'generic/platform=iOS' -archivePath <path>/Feynd.xcarchive -configuration Release \
+  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=feynd appstore" \
+  "CODE_SIGN_IDENTITY=Apple Distribution"
+xcodebuild -exportArchive -archivePath <path>/Feynd.xcarchive \
+  -exportOptionsPlist export.plist -exportPath <out> \
+  -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8 \
+  -authenticationKeyID 5A5HNSWA33 -authenticationKeyIssuerID 69a6de80-eb13-47e3-e053-5b8c7c11a4d1
+```
+
+export.plist: method `app-store-connect`, destination `upload`, signingStyle manual, cert `Apple Distribution`, profile `feynd appstore`, teamID 274T5WCVD2.
+
+Standing facts: profile "feynd appstore" (uuid 66b0aaaa…, IOS_APP_STORE, expires 2027-08) is installed in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`, minted via the ASC API against distribution cert 4YB38SZ2F2 (in this Mac's keychain). Device/sim builds are iPhone-only (`TARGETED_DEVICE_FAMILY[sdk=iphoneos*]` at TARGET level — project-level conditionals lose to the target's plain "1,2"). `ITSAppUsesNonExemptEncryption` and `NSCameraUsageDescription` (WebRTC links camera APIs) live in project.yml — removing either breaks processing. Poll `/v1/builds?filter[version]=N` until VALID; a processing rejection (e.g. 90683) only surfaces there, not at upload.
+
 This Mac (Catalyst):
 ```bash
 xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd \
