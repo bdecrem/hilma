@@ -10,6 +10,11 @@ enum RecertNotifications {
     private static let prefix = "recert-"
 
     static func sync(topics: [F2Topic]) {
+        #if targetEnvironment(simulator)
+        // `-SkipNotifPrompt 1` — keep the permission alert out of headless
+        // screenshot runs; local reminders are meaningless in the sim anyway.
+        if UserDefaults.standard.bool(forKey: "SkipNotifPrompt") { return }
+        #endif
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             guard granted else { return }

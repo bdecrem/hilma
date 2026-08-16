@@ -105,6 +105,15 @@ struct TopicDetailView: View {
             if let text = DeepLinkRouter.shared.consumeChatDraft(threadId: topicId) {
                 draft = text
             }
+            #if targetEnvironment(simulator)
+            // `-OpenFlashCards 1` (with `-OpenTopic <id>`) — straight to this
+            // topic's flash hub for screenshot loops.
+            if UserDefaults.standard.bool(forKey: "OpenFlashCards") {
+                UserDefaults.standard.removeObject(forKey: "OpenFlashCards")
+                try? await Task.sleep(for: .milliseconds(600))
+                flashPresented = true
+            }
+            #endif
         }
     }
 

@@ -40,7 +40,22 @@ struct FlashCardsView: View {
                 }
             }
         }
-        .task { await load() }
+        .task {
+            await load()
+            #if targetEnvironment(simulator)
+            // `-EditFirstCard 1` — open the edit sheet on the deck's first
+            // card, and `-ShowCardList 1` — expand the card list.
+            if UserDefaults.standard.bool(forKey: "ShowCardList") {
+                UserDefaults.standard.removeObject(forKey: "ShowCardList")
+                showCards = true
+            }
+            if UserDefaults.standard.bool(forKey: "EditFirstCard"), let first = cards.first {
+                UserDefaults.standard.removeObject(forKey: "EditFirstCard")
+                try? await Task.sleep(for: .milliseconds(600))
+                editTarget = first
+            }
+            #endif
+        }
         // If a background build for THIS topic finishes while the sheet is
         // open, pull in the fresh deck.
         .onChange(of: FlashDeckBuilder.shared.buildingTopicIds) { old, new in
