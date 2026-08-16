@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "40"
+    CURRENT_PROJECT_VERSION: "41"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -56,6 +56,10 @@ targets:
             CFBundleURLSchemes:
               - dodo
         NSMicrophoneUsageDescription: Dodo uses the microphone so you can talk with your learning assistant.
+        # Dodo never takes photos or video — the WebRTC voice framework
+        # references camera APIs, and App Store processing (error 90683)
+        # demands the string whenever the API is merely linked.
+        NSCameraUsageDescription: Dodo does not take photos or video; this permission is only required by the voice-call framework.
         # Required by PhotosPicker on Mac Catalyst — without it the app is
         # terminated the moment the picker tries to access the photo library.
         NSPhotoLibraryUsageDescription: Pick a profile photo from your library.
