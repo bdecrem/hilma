@@ -17,6 +17,7 @@ struct FlashTabView: View {
     @State private var voiceSet: FlashStart? = nil
     @State private var showProfile = false
     @State private var showDecks = false
+    @State private var showPebbles = false
     @State private var pulse = false
     /// Whether the big in-scroll title is on screen (bar echoes it when not).
     @State private var bigTitleVisible = false
@@ -50,6 +51,7 @@ struct FlashTabView: View {
                     BarTitle(text: "Peck", bigTitleVisible: bigTitleVisible)
                 } trailing: {
                     HStack(spacing: 8) {
+                        pebblesButton
                         deckStackButton
                         xpPill
                     }
@@ -79,6 +81,7 @@ struct FlashTabView: View {
 
         }
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
+        .sheet(isPresented: $showPebbles) { PebblesView() }
         .sheet(isPresented: $showDecks) {
             FlashDecksSheet()
                 .environment(session)
@@ -131,6 +134,11 @@ struct FlashTabView: View {
                 UserDefaults.standard.removeObject(forKey: "OpenDecks")
                 showDecks = true
             }
+            // `-OpenPebbles 1` — straight to the quote carousel.
+            if UserDefaults.standard.bool(forKey: "OpenPebbles") {
+                UserDefaults.standard.removeObject(forKey: "OpenPebbles")
+                showPebbles = true
+            }
             #endif
             // Peck deep link while this tab wasn't mounted (cold start or
             // arriving from another tab): the pending flag survives until
@@ -177,6 +185,19 @@ struct FlashTabView: View {
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         .fixedSize(horizontal: true, vertical: false)
         .accessibilityLabel("\(state?.xp ?? 0) experience points")
+    }
+
+    /// The Pebbles button — the keepsake shelf of saved quotes.
+    private var pebblesButton: some View {
+        Button { showPebbles = true } label: {
+            PebbleGlyph(size: 15)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 9)
+                .background(FeyndTheme.surface, in: Capsule())
+                .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Pebbles — your saved quotes")
     }
 
     /// The deck manager button — a stack of cards, which is literally what

@@ -303,3 +303,20 @@ struct F2Progress: Codable, Equatable {
         case toNextLevel = "to_next_level"
     }
 }
+
+/// A keepsake the learner saved — quotes, for now. Browsed in the Pebbles
+/// carousel; one shows at random while a flash set is being graded.
+struct F2Artifact: Codable, Identifiable, Equatable {
+    let id: String
+    let threadId: String?
+    let kind: String
+    let body: String
+    let source: String?
+    /// Topic name of the linked thread, for the chip. Nil when unlinked.
+    let topic: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, kind, body, source, topic
+        case threadId = "thread_id"
+    }
+}

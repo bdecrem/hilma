@@ -36,6 +36,10 @@ struct FlashSetView: View {
     @State private var ratings: [String: String] = [:]
     @State private var draft = ""
     @FocusState private var draftFocused: Bool
+    /// The user's saved quotes, fetched quietly at set start; one shows at
+    /// random on the grading screen. Empty list = plain spinner, as before.
+    @State private var pebbles: [F2Artifact] = []
+    @State private var gradingPebble: F2Artifact? = nil
 
     init(start: FlashStart, topicLabel: String?, onRecorded: @escaping (FlashSubmitResult) -> Void = { _ in }) {
         self.start = start
@@ -92,6 +96,16 @@ struct FlashSetView: View {
             }
         }
         .interactiveDismissDisabled(phase == .grading)
+        .task {
+            pebbles = (try? await F2API.shared.listArtifacts()) ?? []
+            // Grading already started before the fetch landed (instant
+            // submits, slow networks): deal the pebble late.
+            if phase == .grading, gradingPebble == nil {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    gradingPebble = pebbles.randomElement()
+                }
+            }
+        }
         #if targetEnvironment(simulator)
         .onAppear {
             // `-AutoFinishSet 1` — junk-answer every question and submit, so
@@ -424,6 +438,7 @@ struct FlashSetView: View {
     }
 
     private func submit() {
+        gradingPebble = pebbles.randomElement()
         phase = .grading
         Task {
             do {
@@ -478,12 +493,23 @@ struct FlashSetView: View {
 
     // MARK: Grading / error
 
+    /// The waiting screen. With pebbles saved, the wait becomes a freebie:
+    /// one quote at random, nicely typeset, while the score is tallied.
     private var gradingView: some View {
         VStack(spacing: 16) {
+            Spacer()
             ProgressView().tint(FeyndTheme.accent).scaleEffect(1.4)
             Text(start.mode == "text" || start.mode == "mixed" ? "Dodo is grading your answers…" : "Tallying your round…")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(FeyndTheme.text2)
+            if let pebble = gradingPebble {
+                PebbleQuoteCard(artifact: pebble)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 18)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+            Spacer()
+            Spacer()
         }
     }
 

@@ -777,6 +777,28 @@ final class F2API {
         return try await post("/api/f2/topics/\(topicId)/final-review", body: Body(voice_session_id: voiceSessionId))
     }
 
+    // MARK: - Artifacts (Pebbles)
+
+    struct ArtifactsResponse: Codable { let artifacts: [F2Artifact] }
+    struct ArtifactResponse: Codable { let artifact: F2Artifact }
+
+    /// Every artifact the user has saved, newest first.
+    func listArtifacts() async throws -> [F2Artifact] {
+        let res: ArtifactsResponse = try await get("/api/f2/artifacts")
+        return res.artifacts
+    }
+
+    /// Save a quote. `threadId` links it to a topic for the chip; optional.
+    func createArtifact(body: String, source: String?, threadId: String?) async throws -> F2Artifact {
+        struct Body: Encodable { let body: String; let source: String?; let thread_id: String? }
+        let res: ArtifactResponse = try await post("/api/f2/artifacts", body: Body(body: body, source: source, thread_id: threadId))
+        return res.artifact
+    }
+
+    func deleteArtifact(id: String) async throws {
+        let _: EmptyResponse = try await request("/api/f2/artifacts/\(id)", method: "DELETE", body: nil as EmptyBody?)
+    }
+
     // MARK: - Profile extras
 
     struct DailyCardStatus: Codable {

@@ -47,6 +47,7 @@ Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is lock
 - `-TestLoginUser <u> -TestLoginPass <p>` — signs in during bootstrap (use the newx-test account, never Bart's). Point `Secrets.swift` at `.dev` first when the feature under test needs unpushed server code — and restore `.production` after.
 - `-StartTab peck|chat|topics` — opens on that tab.
 - `-AutoPlayLevel <n>` — opens Peck level *n*'s set in text mode with zero taps (shows prefilled Peck credits when the account has them).
+- `-OpenPebbles 1` — straight to the Pebbles quote carousel; add `-OpenPebbleAdd 1` to land on the save-a-quote form. Pair with `-AutoPlayLevel <n> -AutoFinishSet 1` instead to catch the grading screen's random quote.
 - `dodo://peck` via `simctl openurl` exercises deep-link routing, but SpringBoard shows an "Open in Dodo?" dialog that can't be tapped headlessly and persists over the app until the sim reboots (`simctl shutdown` + `boot` clears it). Production uses the universal link `https://feynd.cc/peck` (AASA served by `/api/f2/aasa` via a next.config rewrite).
 
 This Mac (Catalyst):
