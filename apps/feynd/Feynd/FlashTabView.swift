@@ -182,7 +182,10 @@ struct FlashTabView: View {
                 .contentTransition(.numericText())
         }
         .padding(.horizontal, 9)
-        .padding(.vertical, 7)
+        // All three trailing pills share one fixed height — icon glyphs and
+        // the XP text have different intrinsic heights and would otherwise
+        // render three subtly different capsules.
+        .frame(height: 31)
         .background(FeyndTheme.surface, in: Capsule())
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         .fixedSize(horizontal: true, vertical: false)
@@ -196,7 +199,7 @@ struct FlashTabView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(FeyndTheme.text)
                 .padding(.horizontal, 9)
-                .padding(.vertical, 7)
+                .frame(height: 31)   // matches xpPill — see the comment there
                 .background(FeyndTheme.surface, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         }
@@ -212,7 +215,7 @@ struct FlashTabView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(FeyndTheme.text)
                 .padding(.horizontal, 9)
-                .padding(.vertical, 7)
+                .frame(height: 31)   // matches xpPill — see the comment there
                 .background(FeyndTheme.surface, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         }
