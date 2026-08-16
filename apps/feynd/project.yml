@@ -9,11 +9,6 @@ settings:
   base:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
-    # iPhone-only on device/simulator — App Store validation otherwise
-    # demands iPad multitasking orientations + iPad icons. Catalyst keeps
-    # its own family, so the Mac build is unaffected.
-    "TARGETED_DEVICE_FAMILY[sdk=iphoneos*]": "1"
-    "TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]": "1"
     MARKETING_VERSION: "0.2"
     CURRENT_PROJECT_VERSION: "40"
     SWIFT_STRICT_CONCURRENCY: minimal
@@ -79,8 +74,12 @@ targets:
         # need it either (dodo:// covers deep-link testing there).
         CODE_SIGN_ENTITLEMENTS: ""
         "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": Feynd/Feynd.entitlements
-        # 1 = iPhone, 2 = iPad. Catalyst piggybacks on the iPad device family.
+        # 1 = iPhone, 2 = iPad. Catalyst piggybacks on the iPad device family,
+        # but device/simulator builds are iPhone-only — App Store validation
+        # otherwise demands iPad multitasking orientations + iPad icons.
         TARGETED_DEVICE_FAMILY: "1,2"
+        "TARGETED_DEVICE_FAMILY[sdk=iphoneos*]": "1"
+        "TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]": "1"
         GENERATE_INFOPLIST_FILE: NO
         ENABLE_USER_SCRIPT_SANDBOXING: NO
         # The Xcode debug-dylib stub launch path aborts at startup on the

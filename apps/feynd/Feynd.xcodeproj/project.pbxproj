@@ -430,8 +430,6 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.9;
-				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
-				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
 			};
 			name = Release;
 		};
@@ -457,6 +455,8 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
 			};
 			name = Release;
 		};
@@ -524,8 +524,6 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_STRICT_CONCURRENCY = minimal;
 				SWIFT_VERSION = 5.9;
-				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
-				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
 			};
 			name = Debug;
 		};
@@ -551,6 +549,8 @@
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
 			};
 			name = Debug;
 		};
