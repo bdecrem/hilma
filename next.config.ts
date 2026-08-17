@@ -92,6 +92,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.feynd.cc' }],
           destination: '/f2',
         },
+        // dodogo.cc root → /dodo (the Dodo project site)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'dodogo.cc' }],
+          destination: '/dodo',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.dodogo.cc' }],
+          destination: '/dodo',
+        },
         // dogear.bar root → /book-scout (the Dog-Ear app)
         {
           source: '/',
@@ -160,6 +171,17 @@ const nextConfig: NextConfig = {
           source: '/:path+',
           has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat/:path+',
+        },
+        // dodogo.cc/anything → /dodo/anything (og image, icon)
+        {
+          source: '/:path((?!(?:dodo|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'dodogo.cc' }],
+          destination: '/dodo/:path',
+        },
+        {
+          source: '/:path((?!(?:dodo|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.dodogo.cc' }],
+          destination: '/dodo/:path',
         },
         // feynd.cc/anything → /f2/anything
         // Excludes /f2/* (avoid /f2/f2/…) AND /api/* and /_next/* — afterFiles
