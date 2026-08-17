@@ -31,11 +31,15 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Dodo does not take photos or video; this permission is only required by the voice-call framework.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Dodo uses the microphone so you can talk with your learning assistant.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
