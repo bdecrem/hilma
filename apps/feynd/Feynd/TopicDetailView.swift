@@ -17,6 +17,7 @@ struct TopicDetailView: View {
     @State private var voicePresented = false
     @State private var playerPresented = false
     @State private var flashPresented = false
+    @State private var quotesPresented = false
     @State private var finalReviewPresented = false
     @State private var finalReviewVariant: FinalReviewView.Variant = .full
     @State private var secondChanceDialogPresented = false
@@ -59,6 +60,9 @@ struct TopicDetailView: View {
         .sheet(isPresented: $flashPresented) {
             FlashCardsView(topicId: topicId, topicLabel: thread?.topic ?? "Topic")
                 .environment(session)
+        }
+        .sheet(isPresented: $quotesPresented) {
+            PebblesView(threadId: topicId, topicLabel: thread?.topic)
         }
         .fullScreenCover(isPresented: $finalReviewPresented) {
             FinalReviewView(
@@ -112,6 +116,12 @@ struct TopicDetailView: View {
                 UserDefaults.standard.removeObject(forKey: "OpenFlashCards")
                 try? await Task.sleep(for: .milliseconds(600))
                 flashPresented = true
+            }
+            // `-OpenTopicQuotes 1` — this topic's Quotes shelf.
+            if UserDefaults.standard.bool(forKey: "OpenTopicQuotes") {
+                UserDefaults.standard.removeObject(forKey: "OpenTopicQuotes")
+                try? await Task.sleep(for: .milliseconds(600))
+                quotesPresented = true
             }
             #endif
         }
@@ -292,6 +302,14 @@ struct TopicDetailView: View {
 
                     ActionChip(label: "Flash", systemImage: "bolt.fill") {
                         flashPresented = true
+                    }
+                    .opacity(busy ? 0.5 : 1)
+                    .allowsHitTesting(!busy)
+
+                    // This topic's shelf of saved quotes (same data as the
+                    // Pebbles carousel in Peck, filtered to one topic).
+                    ActionChip(label: "Quotes", systemImage: "quote.opening") {
+                        quotesPresented = true
                     }
                     .opacity(busy ? 0.5 : 1)
                     .allowsHitTesting(!busy)

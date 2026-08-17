@@ -7,6 +7,11 @@ import UIKit
 /// from the pebble button in the Flash tab. The same card shows one quote
 /// at random on the flash grading screen.
 struct PebblesView: View {
+    /// Non-nil = show only this topic's quotes (the Quotes chip in a topic).
+    /// The + form pre-picks the topic, and cards drop the redundant chip.
+    var threadId: String? = nil
+    var topicLabel: String? = nil
+
     @Environment(\.dismiss) private var dismiss
 
     @State private var artifacts: [F2Artifact] = []
@@ -46,7 +51,7 @@ struct PebblesView: View {
             await load()
         }
         .sheet(isPresented: $adding) {
-            PebbleAddSheet { await load() }
+            PebbleAddSheet(presetTopicId: threadId) { await load() }
         }
         .confirmationDialog(
             "Drop this pebble?",
@@ -102,7 +107,7 @@ struct PebblesView: View {
     private var carousel: some View {
         TabView(selection: $page) {
             ForEach(Array(artifacts.enumerated()), id: \.element.id) { i, artifact in
-                PebbleQuoteCard(artifact: artifact)
+                PebbleQuoteCard(artifact: artifact, showTopic: threadId == nil)
                     .padding(.horizontal, 24)
                     .contextMenu {
                         Button(role: .destructive) {
@@ -136,7 +141,7 @@ struct PebblesView: View {
         VStack(spacing: 14) {
             Spacer()
             PebbleGlyph(size: 44)
-            Text("No pebbles yet")
+            Text(threadId == nil ? "No pebbles yet" : "No pebbles from this topic yet")
                 .font(.system(size: 20, weight: .bold))
                 .tracking(-0.3)
                 .foregroundStyle(FeyndTheme.text)
@@ -176,7 +181,8 @@ struct PebblesView: View {
         loading = artifacts.isEmpty
         loadError = nil
         do {
-            artifacts = try await F2API.shared.listArtifacts()
+            let all = try await F2API.shared.listArtifacts()
+            artifacts = threadId == nil ? all : all.filter { $0.threadId == threadId }
             page = min(page, max(0, artifacts.count - 1))
         } catch {
             loadError = "Couldn't load your pebbles: \(error.localizedDescription)"
@@ -199,6 +205,8 @@ struct PebblesView: View {
 /// grading screen.
 struct PebbleQuoteCard: View {
     let artifact: F2Artifact
+    /// Off inside a single topic's shelf, where the chip is redundant.
+    var showTopic: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -218,7 +226,7 @@ struct PebbleQuoteCard: View {
             .frame(maxHeight: 380)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, 8)
-            if artifact.source != nil || artifact.topic != nil {
+            if artifact.source != nil || (showTopic && artifact.topic != nil) {
                 Rectangle()
                     .fill(FeyndTheme.borderSoft)
                     .frame(height: 1)
@@ -232,7 +240,7 @@ struct PebbleQuoteCard: View {
                             .lineLimit(1)
                     }
                     Spacer(minLength: 0)
-                    if let topic = artifact.topic {
+                    if showTopic, let topic = artifact.topic {
                         Text(topic)
                             .font(.system(size: 11.5, weight: .bold))
                             .foregroundStyle(FeyndTheme.accent)
@@ -274,6 +282,8 @@ struct PebbleGlyph: View {
 /// Save a quote: the text, where it's from, and (optionally) which topic it
 /// belongs with.
 struct PebbleAddSheet: View {
+    /// Pre-picks this topic in the picker (the per-topic Quotes shelf).
+    var presetTopicId: String? = nil
     /// Called after a successful save so the carousel refreshes.
     var onSaved: () async -> Void
 
@@ -399,6 +409,9 @@ struct PebbleAddSheet: View {
         .onAppear { quoteFocused = true }
         .task {
             topics = (try? await F2API.shared.listTopics()) ?? []
+            if pickedTopic == nil, let presetTopicId {
+                pickedTopic = topics.first { $0.id == presetTopicId }
+            }
         }
     }
 

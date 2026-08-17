@@ -48,7 +48,7 @@ Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is lock
 - `-StartTab peck|chat|topics` — opens on that tab.
 - `-AutoPlayLevel <n>` — opens Peck level *n*'s set in text mode with zero taps (shows prefilled Peck credits when the account has them).
 - `-OpenPebbles 1` — straight to the Pebbles quote carousel; add `-OpenPebbleAdd 1` to land on the save-a-quote form. Pair with `-AutoPlayLevel <n> -AutoFinishSet 1` instead to catch the grading screen's random quote.
-- `-OpenTopic <threadId>` — push into that topic's detail; add `-OpenFlashCards 1` for its flash hub, and `-EditFirstCard 1` (+ `-ShowCardList 1`) for the card-edit sheet.
+- `-OpenTopic <threadId>` — push into that topic's detail; add `-OpenFlashCards 1` for its flash hub, `-EditFirstCard 1` (+ `-ShowCardList 1`) for the card-edit sheet, or `-OpenTopicQuotes 1` for the per-topic Quotes shelf.
 - `-SkipNotifPrompt 1` — suppress the recert notification-permission request so the system alert never covers screenshots. If the alert is already pending from a run without the flag, uninstall the app AND reboot the sim to clear it — it survives app relaunches.
 - `dodo://peck` via `simctl openurl` exercises deep-link routing, but SpringBoard shows an "Open in Dodo?" dialog that can't be tapped headlessly and persists over the app until the sim reboots (`simctl shutdown` + `boot` clears it). Production uses the universal link `https://feynd.cc/peck` (AASA served by `/api/f2/aasa` via a next.config rewrite).
 
