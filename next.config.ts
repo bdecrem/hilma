@@ -166,12 +166,12 @@ const nextConfig: NextConfig = {
         // rewrites run BEFORE dynamic routes, so without the api exclusion the
         // catch-all swallows /api/f2/topics/[id] etc. before they can match.
         {
-          source: '/:path((?!(?:f2|api|_next)(?:/|$)).*)',
+          source: '/:path((?!(?:f2|api|_next|dodo)(?:/|$)).*)',
           has: [{ type: 'host', value: 'feynd.cc' }],
           destination: '/f2/:path',
         },
         {
-          source: '/:path((?!(?:f2|api|_next)(?:/|$)).*)',
+          source: '/:path((?!(?:f2|api|_next|dodo)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.feynd.cc' }],
           destination: '/f2/:path',
         },
