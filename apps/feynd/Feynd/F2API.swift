@@ -87,6 +87,21 @@ final class F2API {
         return res.user
     }
 
+    /// Try-before-signup: server creates a claimable guest account seeded
+    /// with the intro topic and signs it in via the session cookie.
+    func guestLogin() async throws -> F2User {
+        let res: LoginResponse = try await post("/api/f2/auth/guest", body: EmptyBody())
+        return res.user
+    }
+
+    /// Upgrade the signed-in guest to a real account in place — same user
+    /// id, so topics, cards, pebbles, and XP all survive.
+    func claimAccount(email: String, password: String) async throws -> F2User {
+        struct Body: Encodable { let email: String; let password: String }
+        let res: LoginResponse = try await post("/api/f2/auth/claim", body: Body(email: email, password: password))
+        return res.user
+    }
+
     func me() async throws -> F2User {
         let res: LoginResponse = try await get("/api/f2/auth/me")
         return res.user
@@ -806,16 +821,38 @@ final class F2API {
         /// Whether any iMessage handle (or chat-guid override) is paired —
         /// the toggle needs one to switch on.
         let imessagePaired: Bool
+        /// The Refresher toggle; false = mastery is forever.
+        var recertEnabled: Bool = true
+        var isGuest: Bool = false
 
         enum CodingKeys: String, CodingKey {
             case dailyCardEnabled = "daily_card_enabled"
             case imessagePaired = "imessage_paired"
+            case recertEnabled = "recert_enabled"
+            case isGuest = "is_guest"
+        }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            dailyCardEnabled = try c.decodeIfPresent(Bool.self, forKey: .dailyCardEnabled) ?? false
+            imessagePaired = try c.decodeIfPresent(Bool.self, forKey: .imessagePaired) ?? false
+            recertEnabled = try c.decodeIfPresent(Bool.self, forKey: .recertEnabled) ?? true
+            isGuest = try c.decodeIfPresent(Bool.self, forKey: .isGuest) ?? false
         }
     }
 
     /// Daily flash card over iMessage: enabled + whether a handle is paired.
     func dailyCardStatus() async throws -> DailyCardStatus {
         try await get("/api/f2/profile")
+    }
+
+    /// Flip the Refresher toggle. Off = mastery is forever: the server stops
+    /// returning recert due dates and drops every refresher nudge.
+    func setRecertEnabled(_ enabled: Bool) async throws -> Bool {
+        struct Body: Encodable { let recert_enabled: Bool }
+        struct Res: Codable { let recert_enabled: Bool }
+        let res: Res = try await put("/api/f2/profile", body: Body(recert_enabled: enabled))
+        return res.recert_enabled
     }
 
     /// Flip the daily card. Server rejects enabling with no paired handle.

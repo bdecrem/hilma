@@ -30,6 +30,10 @@ struct ProfileSheet: View {
     @State private var dailyCardError: String? = nil
     @State private var showHelp = false
     @State private var showVoice = false
+    @State private var recertEnabled = true
+    @State private var isGuest = false
+    @State private var showClaim = false
+    @State private var showIntro = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -58,6 +62,17 @@ struct ProfileSheet: View {
         .sheet(isPresented: $showVoice) {
             VoiceSettingsView()
         }
+        .sheet(isPresented: $showIntro) {
+            OnboardingView(mode: .replay)
+                .environment(session)
+        }
+        .sheet(isPresented: $showClaim) {
+            ClaimAccountSheet { user in
+                session.applyClaimedUser(user)
+                isGuest = false
+            }
+            .environment(session)
+        }
         .sheet(isPresented: $showPairing) {
             NavigationStack {
                 IMessagePairingView { newHandle in
@@ -80,11 +95,28 @@ struct ProfileSheet: View {
             await session.refreshProgress()
             do { imessageHandles = try await F2API.shared.listImessageHandles() }
             catch {}
+            if case let .signedIn(user) = session.state { isGuest = user.isGuest }
             do {
                 let status = try await F2API.shared.dailyCardStatus()
                 dailyCardEnabled = status.dailyCardEnabled
                 dailyCardPaired = status.imessagePaired
+                recertEnabled = status.recertEnabled
+                isGuest = status.isGuest
+                // Mirror for views that render before this sheet ever loads
+                // (the topic screen's Refresher chip, notification sync).
+                UserDefaults.standard.set(status.recertEnabled, forKey: "recertEnabled")
             } catch { /* keep defaults */ }
+        }
+    }
+
+    private func setRecert(_ enabled: Bool) async {
+        do {
+            recertEnabled = try await F2API.shared.setRecertEnabled(enabled)
+            UserDefaults.standard.set(recertEnabled, forKey: "recertEnabled")
+            if !recertEnabled { RecertNotifications.clearAll() }
+        } catch {
+            recertEnabled = !enabled
+            dailyCardError = error.localizedDescription
         }
     }
 
@@ -356,6 +388,31 @@ struct ProfileSheet: View {
 
     private var sections: some View {
         VStack(spacing: 18) {
+            if isGuest {
+                SettingsCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("You're trying Dodo as a guest")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(FeyndTheme.text)
+                        Text("Everything you do is saved to this phone's session. Create an account and it all comes along — topics, cards, XP.")
+                            .font(.system(size: 13))
+                            .lineSpacing(2)
+                            .foregroundStyle(FeyndTheme.text2)
+                        Button { showClaim = true } label: {
+                            Text("Create account")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(FeyndTheme.inkOnAccent)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 9)
+                                .background(FeyndTheme.accent, in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                }
+            }
             SettingsSection(label: "Appearance") {
                 ThemeSegmented(value: colorSchemeRaw) { mode in
                     colorSchemeRaw = mode
@@ -418,6 +475,39 @@ struct ProfileSheet: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
+                }
+            }
+            SettingsSection(label: "Learning") {
+                SettingsCard {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Refreshers")
+                                .font(.system(size: 15))
+                                .tracking(-0.2)
+                                .foregroundStyle(FeyndTheme.text)
+                            Text(recertEnabled
+                                 ? "Gold badges dim over time; short refreshers keep them"
+                                 : "Off — mastery is forever, no refresher quizzes")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { recertEnabled },
+                            set: { on in
+                                recertEnabled = on
+                                Task { await setRecert(on) }
+                            }
+                        ))
+                        .labelsHidden()
+                        .tint(FeyndTheme.accent)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    SettingsDivider()
+                    SettingsRow(label: "See the intro again") {
+                        showIntro = true
+                    }
                 }
             }
             SettingsSection(label: "Account") {
@@ -672,5 +762,108 @@ struct ThemeSegmented: View {
         .padding(4)
         .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+    }
+}
+
+// MARK: - Claim (guest → real account)
+
+/// Email + password on the SAME account — the guest's topics, cards, and XP
+/// all survive the upgrade.
+struct ClaimAccountSheet: View {
+    var onClaimed: (F2User) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var email = ""
+    @State private var password = ""
+    @State private var error: String? = nil
+    @State private var busy = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(FeyndTheme.surface3)
+                .frame(width: 38, height: 4)
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
+            Text("Create your account")
+                .font(.system(size: 16, weight: .semibold))
+                .tracking(-0.2)
+                .foregroundStyle(FeyndTheme.text)
+                .padding(.top, 14)
+            Text("Same progress, real login — usable on any device.")
+                .font(.system(size: 13))
+                .foregroundStyle(FeyndTheme.text3)
+                .padding(.top, 2)
+
+            VStack(spacing: 12) {
+                TextField("email", text: $email)
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
+                SecureField("password (8+ characters)", text: $password)
+                    .textContentType(.newPassword)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
+                if let error {
+                    Text(error)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color(hex: 0xE0635A))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                Button { submit() } label: {
+                    HStack(spacing: 8) {
+                        if busy { ProgressView().tint(FeyndTheme.inkOnAccent) }
+                        Text(busy ? "Creating…" : "Create account")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(FeyndTheme.inkOnAccent)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 13)
+                    .background(FeyndTheme.accent, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .disabled(busy || !canSubmit)
+                .opacity(canSubmit ? 1 : 0.5)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            Spacer()
+        }
+        .background(FeyndTheme.bgRaised.ignoresSafeArea())
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.hidden)
+    }
+
+    private var canSubmit: Bool {
+        email.contains("@") && email.contains(".") && password.count >= 8
+    }
+
+    private func submit() {
+        busy = true
+        error = nil
+        Task {
+            do {
+                let user = try await F2API.shared.claimAccount(
+                    email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+                    password: password
+                )
+                onClaimed(user)
+                dismiss()
+            } catch F2APIError.http(409, _) {
+                error = "An account with that email already exists."
+            } catch F2APIError.http(400, let msg) {
+                error = msg ?? "Check your email and password."
+            } catch let err {
+                error = err.localizedDescription
+            }
+            busy = false
+        }
     }
 }

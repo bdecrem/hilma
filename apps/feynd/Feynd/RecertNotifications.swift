@@ -9,12 +9,27 @@ import UserNotifications
 enum RecertNotifications {
     private static let prefix = "recert-"
 
+    /// Drop every scheduled refresher reminder (the Settings toggle went off).
+    static func clearAll() {
+        let center = UNUserNotificationCenter.current()
+        center.getPendingNotificationRequests { pending in
+            let ours = pending.map(\.identifier).filter { $0.hasPrefix(prefix) }
+            center.removePendingNotificationRequests(withIdentifiers: ours)
+        }
+    }
+
     static func sync(topics: [F2Topic]) {
         #if targetEnvironment(simulator)
         // `-SkipNotifPrompt 1` — keep the permission alert out of headless
         // screenshot runs; local reminders are meaningless in the sim anyway.
         if UserDefaults.standard.bool(forKey: "SkipNotifPrompt") { return }
         #endif
+        // Refresher toggle off = mastery is forever — clear ours, schedule
+        // nothing. (The server also strips due dates; this is the belt.)
+        if UserDefaults.standard.object(forKey: "recertEnabled") as? Bool == false {
+            clearAll()
+            return
+        }
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
             guard granted else { return }

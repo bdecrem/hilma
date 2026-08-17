@@ -18,6 +18,8 @@ struct TopicDetailView: View {
     @State private var playerPresented = false
     @State private var flashPresented = false
     @State private var quotesPresented = false
+    /// Mirror of the server-side Refresher toggle (Profile keeps it fresh).
+    @AppStorage("recertEnabled") private var recertEnabledPref = true
     @State private var finalReviewPresented = false
     @State private var finalReviewVariant: FinalReviewView.Variant = .full
     @State private var secondChanceDialogPresented = false
@@ -338,7 +340,7 @@ struct TopicDetailView: View {
                         .allowsHitTesting(!busy)
                     }
 
-                    if thread?.isCertified == true {
+                    if thread?.isCertified == true && recertEnabledPref {
                         ActionChip(label: "Refresher", systemImage: "arrow.clockwise",
                                    iconTint: (thread?.recertLapsed == true || thread?.recertDueSoon == true) ? FeyndTheme.gold : FeyndTheme.accent) {
                             finalReviewVariant = .recert

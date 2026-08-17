@@ -70,6 +70,26 @@ final class Session {
         }
     }
 
+    /// Try-before-signup: create + sign into a seeded guest account.
+    func startGuest() async {
+        loginError = nil
+        do {
+            let user = try await F2API.shared.guestLogin()
+            state = .signedIn(user)
+            ScreenCache.save(user, key: ScreenCache.sessionUser)
+            await refreshProgress()
+        } catch {
+            loginError = error.localizedDescription
+        }
+    }
+
+    /// A guest just claimed the account (email + password set on the same
+    /// row) — swap in the upgraded user.
+    func applyClaimedUser(_ user: F2User) {
+        state = .signedIn(user)
+        ScreenCache.save(user, key: ScreenCache.sessionUser)
+    }
+
     func logout() async {
         try? await F2API.shared.logout()
         state = .signedOut

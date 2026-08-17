@@ -4,17 +4,21 @@ struct F2User: Codable, Equatable {
     let id: String
     let username: String
     var avatarUrl: String?
+    /// Try-before-signup account; claiming keeps the id and all progress.
+    var isGuest: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case id, username
         case avatarUrl = "avatar_url"
+        case isGuest = "is_guest"
     }
 
     // Tolerant decode — handles backends that don't yet return avatar_url.
-    init(id: String, username: String, avatarUrl: String? = nil) {
+    init(id: String, username: String, avatarUrl: String? = nil, isGuest: Bool = false) {
         self.id = id
         self.username = username
         self.avatarUrl = avatarUrl
+        self.isGuest = isGuest
     }
 
     init(from decoder: Decoder) throws {
@@ -22,6 +26,7 @@ struct F2User: Codable, Equatable {
         id = try c.decode(String.self, forKey: .id)
         username = try c.decode(String.self, forKey: .username)
         avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
+        isGuest = try c.decodeIfPresent(Bool.self, forKey: .isGuest) ?? false
     }
 }
 

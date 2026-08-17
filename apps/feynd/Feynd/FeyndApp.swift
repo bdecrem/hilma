@@ -34,6 +34,7 @@ struct FeyndApp: App {
 
 struct RootView: View {
     @Environment(Session.self) private var session
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     var body: some View {
         switch session.state {
@@ -43,9 +44,19 @@ struct RootView: View {
                 ProgressView()
             }
         case .signedOut:
-            LoginView()
+            // First run gets the intro; "sign in" from its gate page (or a
+            // finished replay) lands on the normal login screen.
+            if hasSeenOnboarding {
+                LoginView()
+            } else {
+                OnboardingView(mode: .firstRun) {
+                    hasSeenOnboarding = true
+                }
+                .onDisappear { hasSeenOnboarding = true }
+            }
         case .signedIn:
             MainTabsView()
+                .onAppear { hasSeenOnboarding = true }
         }
     }
 }
