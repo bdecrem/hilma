@@ -40,7 +40,25 @@ function osascript(script) {
 }
 
 /// Existing conversation by chat guid — works for 1:1 and groups.
+/// Service-agnostic 1:1 guids ("any;-;<handle>") trip Messages up: `chat id`
+/// resolves them to the SMS variant of the conversation (green bubbles,
+/// riding Text Message Forwarding). Route those through the iMessage
+/// service's participant instead — same conversation, blue path — and fall
+/// back to the raw chat id if that errors. Groups (";+;") keep chat id.
 function sendToChat(chatGuid, text) {
+  const oneToOne = chatGuid.match(/^any;-;(.+)$/)
+  if (oneToOne) {
+    return osascript(
+      `tell application "Messages"\n` +
+      `  try\n` +
+      `    set svc to 1st service whose service type = iMessage\n` +
+      `    send ${appleStr(text)} to participant ${appleStr(oneToOne[1])} of svc\n` +
+      `  on error\n` +
+      `    send ${appleStr(text)} to chat id ${appleStr(chatGuid)}\n` +
+      `  end try\n` +
+      `end tell`,
+    )
+  }
   return osascript(
     `tell application "Messages"\n` +
     `  send ${appleStr(text)} to chat id ${appleStr(chatGuid)}\n` +
