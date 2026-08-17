@@ -32,7 +32,9 @@ export async function GET() {
     stars: t.stars,
     hard_quiz_completed_at: t.hard_quiz_completed_at,
     recert_stage: t.recert_stage,
-    recert_due_at: t.recert_due_at,
+    // Refresher toggle off = mastery is forever: the client never sees a
+    // due date, so banners, chips, and local reminders all stay dark.
+    recert_due_at: user.recert_enabled === false ? null : t.recert_due_at,
     pending_quiz_kind: t.pending_quiz_kind,
     kind: t.kind,
     created_at: t.created_at,

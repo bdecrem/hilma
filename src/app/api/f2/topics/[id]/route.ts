@@ -30,7 +30,14 @@ export async function GET(
     second_chance_until = sc.eligible ? sc.until : null
   }
 
-  return NextResponse.json({ thread: { ...thread, second_chance_until } })
+  return NextResponse.json({
+    thread: {
+      ...thread,
+      second_chance_until,
+      // Refresher toggle off = no due date reaches the client.
+      recert_due_at: user.recert_enabled === false ? null : thread.recert_due_at,
+    },
+  })
 }
 
 export async function PATCH(

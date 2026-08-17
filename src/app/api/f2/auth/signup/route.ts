@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createUser, setSessionCookie } from '@/lib/f2/auth'
+import { seedIntroTopic } from '@/lib/f2/intro'
 
 export const runtime = 'nodejs'
 
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
   if ('error' in result) {
     return NextResponse.json({ error: result.error }, { status: result.status })
   }
+  // Every fresh account starts with the intro topic (best-effort).
+  await seedIntroTopic(result.id)
 
   const res = NextResponse.json({
     user: {

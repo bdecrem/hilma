@@ -14,13 +14,15 @@ export async function GET() {
   }
   const { data } = await f2Supabase()
     .from('f2_users')
-    .select('daily_card_enabled, imessage_handles, daily_chat_guid')
+    .select('daily_card_enabled, imessage_handles, daily_chat_guid, recert_enabled, is_guest')
     .eq('id', user.id)
     .maybeSingle()
   const handles = (data?.imessage_handles as string[] | null) ?? []
   return NextResponse.json({
     daily_card_enabled: Boolean(data?.daily_card_enabled),
     imessage_paired: handles.length > 0 || data?.daily_chat_guid != null,
+    recert_enabled: data?.recert_enabled !== false,
+    is_guest: Boolean(data?.is_guest),
   })
 }
 
@@ -31,12 +33,28 @@ export async function PUT(req: Request) {
   if (!user) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
-  let body: { daily_card_enabled?: boolean }
+  let body: { daily_card_enabled?: boolean; recert_enabled?: boolean }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
+
+  // The Refresher toggle — independent of the daily card.
+  if (typeof body.recert_enabled === 'boolean') {
+    const { error } = await f2Supabase()
+      .from('f2_users')
+      .update({ recert_enabled: body.recert_enabled })
+      .eq('id', user.id)
+    if (error) {
+      console.error('[f2/profile] recert_enabled update failed:', error)
+      return NextResponse.json({ error: 'Could not save.' }, { status: 500 })
+    }
+    if (typeof body.daily_card_enabled !== 'boolean') {
+      return NextResponse.json({ recert_enabled: body.recert_enabled })
+    }
+  }
+
   if (typeof body.daily_card_enabled !== 'boolean') {
     return NextResponse.json({ error: 'daily_card_enabled required' }, { status: 400 })
   }

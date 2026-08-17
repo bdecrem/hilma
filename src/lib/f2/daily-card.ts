@@ -111,6 +111,13 @@ function dailyHandle(handles: string[] | null): string | null {
 /// Badge-watch P.S. for the daily card: certified topics whose gold dims
 /// within 3 days (or already dimmed). Empty string when nothing is due.
 export async function recertPostscript(userId: string): Promise<string> {
+  // Refresher toggle off = no badge-watch nudges anywhere, this included.
+  const { data: prefs } = await f2Supabase()
+    .from('f2_users')
+    .select('recert_enabled')
+    .eq('id', userId)
+    .maybeSingle()
+  if (prefs?.recert_enabled === false) return ''
   const soon = new Date(Date.now() + 3 * 86_400_000).toISOString()
   const { data: due } = await f2Supabase()
     .from('f2_threads')
