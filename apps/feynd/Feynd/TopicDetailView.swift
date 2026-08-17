@@ -308,9 +308,18 @@ struct TopicDetailView: View {
 
                     // This topic's shelf of saved quotes (same data as the
                     // Pebbles carousel in Peck, filtered to one topic).
-                    ActionChip(label: "Quotes", systemImage: "quote.opening") {
-                        quotesPresented = true
+                    // Icon-only: the ❝ reads on its own, and the row is tight.
+                    Button { quotesPresented = true } label: {
+                        Image(systemName: "quote.opening")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(FeyndTheme.accent)
+                            .padding(.horizontal, 13)
+                            .frame(height: 34)   // same height as ActionChip
+                            .background(FeyndTheme.surface, in: Capsule())
+                            .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
                     }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("This topic's saved quotes")
                     .opacity(busy ? 0.5 : 1)
                     .allowsHitTesting(!busy)
 
