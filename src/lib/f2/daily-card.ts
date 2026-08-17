@@ -8,6 +8,7 @@ import { sendIMessage } from './bluebubbles'
 import {
   cardWeight,
   choicesForCard,
+  peckExcludedThreadIds,
   getFlashCardsByIds,
   getPeckCredits,
   judgeDailyCard,
@@ -60,8 +61,9 @@ type DailyState = PendingDailyCard | BonusOffer | BonusQuestion
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F']
 
-/// Weighted pick of ONE card across every deck the user owns — same
-/// weights the set scheduler uses, so due and priority cards surface first.
+/// Weighted pick of ONE card across the decks the user has active in Peck —
+/// same pool and weights as the set scheduler, so opted-out decks stay
+/// quiet and due/priority cards surface first.
 async function pickDailyCard(
   userId: string,
   excludeIds: string[] = [],
@@ -73,7 +75,10 @@ async function pickDailyCard(
     .or('rating.is.null,rating.eq.priority')
   if (error || !data) return null
   const exclude = new Set(excludeIds)
-  const cards = (data as FlashCard[]).filter((c) => !exclude.has(c.id))
+  const excludedThreads = await peckExcludedThreadIds(userId)
+  const cards = (data as FlashCard[]).filter(
+    (c) => !exclude.has(c.id) && !excludedThreads.has(c.thread_id),
+  )
   if (cards.length === 0) return null
   const now = Date.now()
   const weights = cards.map((c) => cardWeight(c, now))
