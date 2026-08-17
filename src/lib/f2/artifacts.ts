@@ -83,6 +83,34 @@ export async function createArtifact(
   }
 }
 
+export async function updateArtifact(
+  userId: string,
+  id: string,
+  patch: { body?: string; source?: string | null; thread_id?: string | null },
+): Promise<boolean> {
+  const update: Record<string, unknown> = {}
+  if (patch.body !== undefined) {
+    const body = patch.body.trim().slice(0, MAX_BODY_CHARS)
+    if (!body) return false
+    update.body = body
+  }
+  if (patch.source !== undefined) {
+    update.source = patch.source?.trim().slice(0, MAX_SOURCE_CHARS) || null
+  }
+  if (patch.thread_id !== undefined) update.thread_id = patch.thread_id
+  if (Object.keys(update).length === 0) return true
+  const { error } = await f2Supabase()
+    .from('f2_artifacts')
+    .update(update)
+    .eq('user_id', userId)
+    .eq('id', id)
+  if (error) {
+    console.error('[f2/artifacts] update failed:', error)
+    return false
+  }
+  return true
+}
+
 export async function deleteArtifact(
   userId: string,
   id: string,

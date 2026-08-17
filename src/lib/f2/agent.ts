@@ -14,6 +14,13 @@
 
 import { isUrl, stripSurroundingQuotes, fetchUrlContent } from './url'
 import {
+  createArtifact,
+  deleteArtifact,
+  listArtifacts,
+  updateArtifact,
+  type F2Artifact,
+} from './artifacts'
+import {
   createThread,
   getLatestThread,
   getThreadById,
@@ -543,6 +550,64 @@ const DODO_AGENT_TOOLS = [
     },
   },
   {
+    name: 'list_quotes',
+    description:
+      "Read the user's saved quote cards (\"pebbles\") — id, text, source, and which topic each is filed under. Defaults to this topic's; all_topics for the whole shelf. ALWAYS list before updating or deleting one.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        all_topics: {
+          type: 'boolean',
+          description: "true to see every topic's quotes, not just this one's.",
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'save_quote',
+    description:
+      'Save a quote card ("pebble") — a passage worth keeping. It shows in the Quotes shelf and resurfaces while flash rounds are graded. Files under THIS topic unless topic_title names another of the user\'s topics. To put one quote on two topics, save it twice.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        body: { type: 'string', description: 'The quote text, verbatim as the user wants it kept.' },
+        source: { type: 'string', description: 'Where it\'s from ("Sapiens, ch. 5"). Omit if unknown.' },
+        topic_title: {
+          type: 'string',
+          description: 'Full or partial title of ANOTHER topic to file it under. Omit for this topic.',
+        },
+      },
+      required: ['body'],
+    },
+  },
+  {
+    name: 'update_quote',
+    description:
+      'Edit an existing quote card. Match by id (prefix is fine) or a distinctive text snippet — list_quotes first. Only the fields you pass change.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        match: { type: 'string', description: 'Quote id (or prefix), or a snippet of its text.' },
+        new_body: { type: 'string', description: 'Replacement text. Omit to keep.' },
+        new_source: { type: 'string', description: 'Replacement source line; "" clears it. Omit to keep.' },
+      },
+      required: ['match'],
+    },
+  },
+  {
+    name: 'delete_quote',
+    description:
+      'Delete a quote card for good. Match by id (prefix is fine) or a distinctive text snippet — list_quotes first, and only delete what the user clearly pointed at.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        match: { type: 'string', description: 'Quote id (or prefix), or a snippet of its text.' },
+      },
+      required: ['match'],
+    },
+  },
+  {
     name: 'list_flash_cards',
     description:
       "Read the topic's current deck with per-card learning state (priority/buried, times seen, streak, lapses, mastered, due date). ALWAYS call this before answering any question about the deck — what's in it, which cards are weak or unmastered, which are marked important, how many there are.",
@@ -576,6 +641,35 @@ const DODO_AGENT_TOOLS = [
     },
   },
 ]
+
+/// Match one saved quote by id (prefix) or text/source snippet. Exactly one
+/// hit or an error the agent can act on.
+function matchQuote(
+  quotes: F2Artifact[],
+  raw: string,
+): { quote: F2Artifact } | { error: string } {
+  const needle = raw.trim().toLowerCase()
+  if (!needle) return { error: 'Error: match is empty — pass an id or a text snippet.' }
+  const hits = quotes.filter(
+    (q) =>
+      q.id.toLowerCase().startsWith(needle) ||
+      q.body.toLowerCase().includes(needle) ||
+      (q.source ?? '').toLowerCase().includes(needle),
+  )
+  if (hits.length === 1) return { quote: hits[0] }
+  const listing = quotesListingText(quotes)
+  if (hits.length === 0) return { error: `No quote matches "${raw}". ${listing}` }
+  return { error: `"${raw}" matches ${hits.length} quotes — be more specific. ${listing}` }
+}
+
+function quotesListingText(quotes: F2Artifact[]): string {
+  if (quotes.length === 0) return 'No quotes saved.'
+  const lines = quotes.map(
+    (q) =>
+      `- ${q.id.slice(0, 8)} · ${q.topic ?? '(no topic)'}${q.source ? ` · ${q.source}` : ''} · "${q.body.slice(0, 120)}${q.body.length > 120 ? '…' : ''}"`,
+  )
+  return `Quotes:\n${lines.join('\n')}`
+}
 
 /// Case-insensitive title match over the topic's context sources.
 function matchContextSource(
@@ -650,6 +744,7 @@ How to work:
 - Card work: "redo" replaces the deck; "make"/"add" keep it. write_document runs in the background — say it's on the way.
 - Deck and progress questions are answered from REAL DATA, never from memory or guesswork: "which cards am I weak on / haven't memorized", "what's in my deck" → list_flash_cards first; "what was my grade", "how am I doing", "what should I review" → get_progress first. You have full access to the deck, its learning stats, quiz scores, and review grades — never claim you can't see them.
 - "How I want to be tested" instructions ("only test me on X", "focus quizzes on Y") → set_study_focus. It scopes flash cards, quizzes, and the Final Review.
+- Quote cards ("pebbles" — the Quotes shelf): save_quote / update_quote / delete_quote, with list_quotes first for edits and deletes. "Save this quote", "add a pebble", "delete the Sapiens quote" all land here. You CAN add, edit, and delete them — never claim otherwise.
 - If the message is just chat addressed to the dodo, answer it directly without tools.
 - Plain text replies, no markdown.`
 
@@ -827,6 +922,56 @@ async function executeDodoTool(
       return {
         result: `Started writing "${title}" in the background — it will file itself into Topic Context in a minute or two. Tell the user it's on the way.`,
         writeDoc: { thread_id: thread.id, title, brief, model },
+      }
+    }
+    case 'list_quotes': {
+      const all = await listArtifacts(thread.user_id)
+      const quotes = input.all_topics === true ? all : all.filter((q) => q.thread_id === thread.id)
+      const scope = input.all_topics === true ? 'all topics' : 'this topic'
+      return { result: `${quotes.length} quote(s) on ${scope}.\n${quotesListingText(quotes)}` }
+    }
+    case 'save_quote': {
+      const body = String(input.body ?? '').trim()
+      if (!body) return { result: 'Error: body required.' }
+      const source = String(input.source ?? '').trim() || null
+      let targetThreadId = thread.id
+      let targetLabel = thread.topic ?? 'this topic'
+      const topicTitle = String(input.topic_title ?? '').trim()
+      if (topicTitle) {
+        const target = await matchTopicByName(thread.user_id, topicTitle)
+        if (!target) return { result: `Error: no topic matches "${topicTitle}".` }
+        targetThreadId = target.id
+        targetLabel = target.topic ?? target.url ?? 'that topic'
+      }
+      const artifact = await createArtifact(thread.user_id, {
+        body,
+        source,
+        thread_id: targetThreadId,
+      })
+      if (!artifact) return { result: 'Error: save failed.' }
+      return { result: `Quote saved under "${targetLabel}" (id ${artifact.id.slice(0, 8)}).` }
+    }
+    case 'update_quote': {
+      const quotes = await listArtifacts(thread.user_id)
+      const match = matchQuote(quotes, String(input.match ?? ''))
+      if ('error' in match) return { result: match.error }
+      const patch: { body?: string; source?: string | null } = {}
+      if (typeof input.new_body === 'string' && input.new_body.trim()) patch.body = input.new_body
+      if (typeof input.new_source === 'string') patch.source = input.new_source.trim() || null
+      if (Object.keys(patch).length === 0)
+        return { result: 'Error: nothing to change — pass new_body and/or new_source.' }
+      const ok = await updateArtifact(thread.user_id, match.quote.id, patch)
+      return { result: ok ? `Quote ${match.quote.id.slice(0, 8)} updated.` : 'Error: update failed.' }
+    }
+    case 'delete_quote': {
+      const quotes = await listArtifacts(thread.user_id)
+      const match = matchQuote(quotes, String(input.match ?? ''))
+      if ('error' in match) return { result: match.error }
+      const ok = await deleteArtifact(thread.user_id, match.quote.id)
+      return {
+        result: ok
+          ? `Deleted the quote "${match.quote.body.slice(0, 60)}…" (${match.quote.id.slice(0, 8)}).`
+          : 'Error: delete failed.',
       }
     }
     case 'list_flash_cards': {
