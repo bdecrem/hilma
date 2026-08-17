@@ -164,9 +164,9 @@ struct TopicDetailView: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Trailing controls: copy-the-chat + the chat-model picker.
+            // Trailing control: the chat-model picker. (Copy is per-message
+            // now — long-press any bubble; select normally on the Mac.)
             HStack(spacing: 8) {
-                CopyChatButton(messages: messages)
                 ModelPickerMenu(style: .icon)
             }
         }

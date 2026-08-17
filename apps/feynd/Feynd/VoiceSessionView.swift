@@ -55,6 +55,7 @@ struct VoiceSessionView: View {
                     .font(.custom("Fredoka", size: 21).weight(.medium))
                     .foregroundStyle(FeyndTheme.text)
                     .multilineTextAlignment(.center)
+                    .textSelection(.enabled)
                     .padding(.horizontal, 36)
 
                 controls

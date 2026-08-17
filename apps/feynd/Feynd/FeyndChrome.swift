@@ -513,30 +513,6 @@ struct FeyndTopBar<Center: View, Trailing: View>: View {
 
 // MARK: - Circular icon button (Plus, Back, Kebab, Close)
 
-/// Copies the whole visible chat to the clipboard as "You:/Dodo:" lines.
-/// Flashes a green check for a beat so the tap visibly landed.
-struct CopyChatButton: View {
-    let messages: [F2Message]
-    @State private var copied = false
-
-    var body: some View {
-        IconCircleButton(
-            systemImage: copied ? "checkmark" : "doc.on.doc",
-            fg: copied ? FeyndTheme.sprout : FeyndTheme.text2
-        ) {
-            UIPasteboard.general.string = messages
-                .map { "\($0.role == "user" ? "You" : "Dodo"): \($0.text)" }
-                .joined(separator: "\n\n")
-            withAnimation(.easeOut(duration: 0.15)) { copied = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.4) {
-                withAnimation { copied = false }
-            }
-        }
-        .disabled(messages.isEmpty)
-        .opacity(messages.isEmpty ? 0.4 : 1)
-    }
-}
-
 struct IconCircleButton: View {
     let systemImage: String
     var size: CGFloat = 36
@@ -728,6 +704,9 @@ struct AIBubble<Content: View>: View {
                 .font(.system(size: 16))
                 .foregroundStyle(FeyndTheme.text)
                 .lineSpacing(2)
+                // Normal copy: long-press → Copy on iOS, cursor selection
+                // on the Mac. Replaces the old copy-whole-chat button.
+                .textSelection(.enabled)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background(BubbleShape(isUser: false).fill(FeyndTheme.surface))
@@ -750,6 +729,7 @@ struct UserBubble: View {
             Text(text)
                 .font(.system(size: 16))
                 .foregroundStyle(.white)
+                .textSelection(.enabled)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
                 .background(BubbleShape(isUser: true).fill(FeyndTheme.blue))
