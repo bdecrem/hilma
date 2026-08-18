@@ -1,59 +1,75 @@
 import Image from 'next/image'
 import DodoTour from './DodoTour'
 
+// The dodogo.cc homepage — an essay-style introduction to Dodo, hybrid of
+// the blog post (the idea) and the repo README (the features). The older
+// product-style page lives at /dodo/alt.
+
 const GITHUB_URL = 'https://github.com/bdecrem/dodo'
 const SUBSTACK_URL = 'https://substack.com/inbox/post/211742287'
 const TESTFLIGHT_MAILTO =
   'mailto:bdecrem@gmail.com?subject=Dodo%20TestFlight%20access'
 
-export default function DodoPage() {
+export default function DodoAltPage() {
   return (
-    <main className="dd">
+    <main className="da">
       <style>{css}</style>
 
-      <header className="dd-top">
-        <div className="dd-mark">
-          <Image src="/dodo/appicon.png" alt="" width={34} height={34} className="dd-appicon" />
-          <span className="dd-word">dodo</span>
+      <header className="da-top">
+        <div className="da-mark">
+          <Image src="/dodo/appicon.png" alt="" width={30} height={30} className="da-appicon" />
+          <span className="da-word">dodo</span>
         </div>
-        <nav className="dd-nav">
+        <nav className="da-nav">
           <a href={GITHUB_URL}>GitHub</a>
           <a href={SUBSTACK_URL}>About</a>
         </nav>
       </header>
 
-      <section className="dd-hero">
-        <div className="dd-hero-copy">
-          <h1>
-            Learn it.
-            <br />
-            <em>Keep it.</em>
-          </h1>
-          <p className="dd-sub">
-            Feed Dodo a book, an article, a YouTube video, or your own notes.
-            It becomes a topic you can chat with, get quizzed on, and keep
-            remembering, through spaced-repetition flash cards, voice quizzes,
-            a daily card over iMessage, and mastery badges that dim unless you
-            refresh them.
+      <article className="da-body">
+        <h1>
+          Dodo is an AI learning companion: an open-source app to help you
+          understand, explain back, and remember any book or topic.{' '}
+          <em>It&rsquo;s not finished.</em>
+        </h1>
+
+        <section>
+          <div className="da-label">The idea</div>
+          <p>
+            I&rsquo;ve always been a self-improver: languages (Spanish: easy;
+            Chinese: not so much), music (guitar: my mother still believes;
+            synths &amp; Ableton: 🤷), sports (no, but I get yelled at less
+            after 10 years of surfing). I&rsquo;ve been through dozens of
+            tutors and learning systems.
           </p>
-          <p className="dd-sub">
-            Dodo is a native iPhone/MacOS app. It&rsquo;s open source (have
-            your agent spin up your own backend if you&rsquo;d like).
-            It&rsquo;s just a v.0.2 and we&rsquo;d love your feedback &amp;
-            patches.
+          <p>
+            Over the next few years, people will build learning systems that
+            change everything — systems that make us twice as smart. Dodo is
+            not that. It&rsquo;s me building a draft of a tool to help me
+            learn, and along the way learning a bit more about how I learn.
+            Maybe it leads to an idea; maybe it&rsquo;s useful to someone else
+            too.
           </p>
-          <div className="dd-ctas">
-            <a className="dd-btn dd-btn-primary" href={TESTFLIGHT_MAILTO}>
-              Request TestFlight access
-            </a>
-            <a className="dd-btn" href={GITHUB_URL}>
-              GitHub
-            </a>
-            <a className="dd-btn" href={SUBSTACK_URL}>
-              About
-            </a>
-          </div>
-          <ul className="dd-feat">
+          <p>
+            There&rsquo;s no magic to it. The most important thing is finding
+            the books, videos, and other angles into the material you care
+            about — you do that, not the AI. The next most important thing is
+            truly engaging with it. What the app adds is the reinforcement: a
+            tutor to talk things through with, flash cards, a daily quiz over
+            iMessage, and the stakes of an oral exam.
+          </p>
+          <p className="da-more">
+            <a href={SUBSTACK_URL}>Read the full story &rarr;</a>
+          </p>
+        </section>
+
+        <div className="da-tour-slot">
+          <DodoTour />
+        </div>
+
+        <section>
+          <div className="da-label">What it does</div>
+          <ul className="da-feat">
             <li>
               <strong>Topics from anything</strong> — send a URL, paste text,
               or name a book; Dodo ingests it (including YouTube transcripts)
@@ -63,9 +79,8 @@ export default function DodoPage() {
             <li>
               <strong>Flash cards with real scheduling</strong> — decks
               generated per topic, played as multiple choice, typed answers
-              (LLM-graded), mixed rounds, or out-loud voice rounds. SM-2
-              scheduling under the hood; thumbs-down buries a card,
-              double-thumbs-up makes it a priority.
+              (LLM-graded), mixed rounds, or out-loud voice rounds.
+              Thumbs-down buries a card, double-thumbs-up makes it a priority.
             </li>
             <li>
               <strong>Peck</strong> — a Duolingo-style level path across every
@@ -87,22 +102,45 @@ export default function DodoPage() {
             </li>
             <li>
               <strong>Voice</strong> — talk to your tutor, take voice rounds,
-              or do a walking review, over OpenAI Realtime.
+              or do a walking review.
             </li>
             <li>
               <strong>Audio summaries</strong> — a narrated summary of a
               topic, playable with the screen locked.
             </li>
+            <li>
+              <strong>What it doesn&rsquo;t yet do well: the main thing</strong>{' '}
+              — you can just chat with Dodo about anything, but the system
+              works best if you source the core learning material — a book, a
+              lecture series, a YouTube video — and partner with Dodo to
+              synthesize it.
+            </li>
           </ul>
-        </div>
-        <DodoTour />
-      </section>
+          <p className="da-more">
+            <a href={GITHUB_URL}>More in the repo &rarr;</a>
+          </p>
+        </section>
+
+        <section className="da-fine">
+          <div className="da-label">The fine print</div>
+          <p>
+            It&rsquo;s a v0.2 — MVP explorations, not a product. A native
+            iPhone/Mac app with an open-source backend, on TestFlight. If
+            you&rsquo;d like to try it, email me.
+          </p>
+          <p>
+            <a className="da-btn" href={TESTFLIGHT_MAILTO}>
+              Request TestFlight access
+            </a>
+          </p>
+        </section>
+      </article>
     </main>
   )
 }
 
 const css = `
-.dd {
+.da {
   --paper: #FBF5E6;
   --surface: #FFFDF7;
   --surface2: #F2EAD6;
@@ -121,53 +159,52 @@ const css = `
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   font-family: var(--serif);
 }
-.dd * { box-sizing: border-box; }
-.dd a { color: inherit; }
+.da * { box-sizing: border-box; }
+.da a { color: inherit; }
 
-/* ── Top bar ── */
-.dd-top {
-  max-width: 1020px; margin: 0 auto; padding: 26px 24px 0;
+.da-top {
+  max-width: 660px; margin: 0 auto; padding: 26px 24px 0;
   display: flex; align-items: center; justify-content: space-between;
 }
-.dd-mark { display: flex; align-items: center; gap: 10px; }
-.dd-appicon { width: 34px; height: 34px; border-radius: 9px; }
-.dd-word { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: -0.02em; }
-.dd-nav { display: flex; gap: 22px; font-family: var(--display); font-weight: 500; font-size: 15px; }
-.dd-nav a { text-decoration: none; border-bottom: 2px solid var(--marigold); padding-bottom: 1px; }
+.da-mark { display: flex; align-items: center; gap: 9px; }
+.da-appicon { width: 30px; height: 30px; border-radius: 8px; }
+.da-word { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
+.da-nav { display: flex; gap: 20px; font-family: var(--display); font-weight: 500; font-size: 14.5px; }
+.da-nav a { text-decoration: none; border-bottom: 2px solid var(--marigold); padding-bottom: 1px; }
 
-/* ── Hero ── */
-.dd-hero {
-  max-width: 1020px; margin: 0 auto;
-  padding: 64px 24px 72px;
-  display: grid; grid-template-columns: 1fr 340px; gap: 64px; align-items: center;
+.da-body { max-width: 660px; margin: 0 auto; padding: 52px 24px 80px; }
+.da-body h1 {
+  font-size: clamp(26px, 4.6vw, 33px); line-height: 1.32; font-weight: 400;
+  letter-spacing: -0.01em; margin: 0 0 44px;
 }
-.dd-hero h1 {
-  font-family: var(--display); font-weight: 600;
-  font-size: clamp(52px, 8vw, 84px); line-height: 0.98; letter-spacing: -0.03em;
-  margin: 0 0 22px;
-}
-.dd-hero h1 em { font-style: normal; color: var(--marigold-deep); }
-.dd-sub { font-size: 18px; line-height: 1.55; color: var(--ink2); max-width: 32em; margin: 0 0 18px; }
-.dd-ctas { margin: 28px 0 34px; }
-.dd-feat {
-  list-style: none; margin: 0; padding: 0; max-width: 34em;
-}
-.dd-feat li {
-  font-size: 15px; line-height: 1.55; color: var(--ink2);
-  margin-bottom: 11px;
-}
-.dd-feat strong {
-  font-family: var(--display); font-weight: 500; font-size: 14.5px; color: var(--ink);
-}
-.dd-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
-.dd-btn {
-  font-family: var(--display); font-weight: 600; font-size: 15.5px;
-  padding: 12px 22px; border-radius: 999px; text-decoration: none;
-  border: 1.5px solid var(--border); background: var(--surface);
-}
-.dd-btn-primary { background: var(--marigold); border-color: var(--marigold); color: #261C06; }
+.da-body h1 em { font-style: italic; color: var(--marigold-deep); }
 
-/* ── The tour (slideshow) ── */
+.da-label {
+  font-family: var(--display); font-weight: 600; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--marigold-deep);
+  margin-bottom: 14px;
+}
+.da-body section { margin-bottom: 46px; }
+.da-body p { font-size: 17.5px; line-height: 1.62; color: var(--ink); margin: 0 0 16px; }
+.da-more { font-family: var(--display); font-weight: 500; font-size: 15px; }
+.da-more a { color: var(--marigold-deep); text-decoration: none; }
+.da-more a:hover { text-decoration: underline; }
+
+.da-tour-slot { margin: 0 auto 52px; display: flex; justify-content: center; }
+
+.da-feat { list-style: none; margin: 0 0 18px; padding: 0; }
+.da-feat li { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin-bottom: 12px; }
+.da-feat strong { font-family: var(--display); font-weight: 500; font-size: 14.5px; color: var(--ink); }
+
+.da-fine { border-top: 1px solid var(--border); padding-top: 34px; }
+.da-fine p { color: var(--ink2); font-size: 16px; }
+.da-btn {
+  display: inline-block; font-family: var(--display); font-weight: 600; font-size: 15px;
+  padding: 11px 20px; border-radius: 999px; text-decoration: none;
+  background: var(--marigold); color: #261C06;
+}
+
+/* Reuse of the tour component (styles normally provided by /dodo) */
 .dd-tour { display: flex; flex-direction: column; align-items: center; }
 .dd-tour-phone {
   display: block; position: relative; padding: 0; cursor: pointer;
@@ -188,7 +225,7 @@ const css = `
 }
 .dd-tour-bar {
   width: 120px; height: 3px; border-radius: 2px; background: var(--surface2);
-  margin-top: 18px; overflow: hidden;
+  margin: 18px auto 0; overflow: hidden;
 }
 .dd-tour-bar span {
   display: block; height: 100%; background: var(--marigold); border-radius: 2px;
@@ -197,11 +234,5 @@ const css = `
 .dd-tour-on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .dd-tour-caption, .dd-tour-slide, .dd-tour-bar span { transition: none; }
-}
-
-/* ── Mobile ── */
-@media (max-width: 860px) {
-  .dd-hero { grid-template-columns: 1fr; gap: 44px; padding-top: 44px; }
-  .dd-ctas { justify-content: flex-start; }
 }
 `
