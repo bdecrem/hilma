@@ -252,7 +252,8 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
 
   return (
     <div
-      className="group relative"
+      id={project.name}
+      className="group relative scroll-mt-8"
       style={{
         animationDelay: `${index * 60}ms`,
         animation: vibeMode
@@ -516,7 +517,7 @@ export default function Projects() {
           </div>
           <div className={`mt-3 space-y-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
             <p>
-              currently: <a href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">setting up my mac plus</a> just so, in preparation for a year at stanford.
+              currently: <a href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">setting up my mac plus</a> just so, in preparation for a year at stanford, and working on <a href="#dodo" className="underline decoration-dotted underline-offset-2">dodo</a>.
             </p>
             <p>
               may 2025&ndash;2026: a year building agentic ai systems, mostly proofs of concept. a research agent on a knowledge graph of 200,000+ ai papers. a game studio where 6 agents built 65+ arcade games. a command-line daw with 7 custom synthesizers. a creative sidekick that has made 500+ generative artworks. plus, a prototype for a responsible ai incubator.
