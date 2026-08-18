@@ -308,3 +308,90 @@ struct AnimatedDodoView: View {
         .allowsHitTesting(false)
     }
 }
+
+/// A mascot that plays one reaction on appear, then settles into idle.
+/// Drop-in for results screens and waiting states.
+struct ReactionDodoView: View {
+    enum Reaction { case none, happy, excited, thinking }
+    var reaction: Reaction = .none
+    var height: CGFloat = 84
+    var seed: CGFloat = 7
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var start = Date()
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+            Canvas { ctx, size in
+                let t = CGFloat(timeline.date.timeIntervalSince(start))
+                let wall = CGFloat(timeline.date.timeIntervalSinceReferenceDate)
+                var pose = DodoMood.idle(wall, seed: seed, reduceMotion: reduceMotion)
+                if !reduceMotion {
+                    switch reaction {
+                    case .happy where t < 1.4:
+                        // A beat to land on screen, then the hop.
+                        var p = DodoMood.happy((t - 0.35) / 0.7)
+                        p.eyeScaleY = pose.eyeScaleY
+                        pose = p
+                    case .excited where t < 1.8:
+                        var p = DodoMood.excited((t - 0.35) / 1.1)
+                        p.scaleY *= pose.scaleY
+                        pose = p
+                    case .thinking:
+                        let u = min(1, t / 0.8)
+                        pose.rollDegrees += 3 * u
+                        pose.pupilOffset = CGSize(width: -2 * u, height: -2 * u)
+                        pose.leafSpread += -6 * u
+                    default:
+                        break
+                    }
+                }
+                var g = ctx
+                drawAnimatedDodo(&g, at: CGPoint(x: size.width / 2, y: size.height - 2), height: height, pose: pose)
+            }
+        }
+        .frame(width: height * 1.1, height: height + 4)
+        .allowsHitTesting(false)
+    }
+}
+
+/// The one-second cold-start moment: the mascot pops in with a sprout
+/// boing over butter paper, the wordmark fades up, then the whole thing
+/// hands off to the app. Purely decorative — Reduce Motion gets a still.
+struct LaunchSplashView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var start = Date()
+
+    var body: some View {
+        content.onAppear { start = Date() }
+    }
+
+    private var content: some View {
+        ZStack {
+            FeyndTheme.bg.ignoresSafeArea()
+            TimelineView(.animation(minimumInterval: 1.0 / 40.0)) { timeline in
+                let t = reduceMotion ? 1.0 : CGFloat(timeline.date.timeIntervalSince(start))
+                let pop = easeOutBack(max(0, min(1, t / 0.45)))
+                VStack(spacing: 18) {
+                    Canvas { ctx, size in
+                        var pose = DodoPose()
+                        pose.scaleX = pop
+                        pose.scaleY = pop
+                        // Sprout boing + one wing flap as the pop lands.
+                        let su = max(0, t - 0.4)
+                        pose.sproutAngle = 14 * exp(-3.4 * su) * sin(su * 15)
+                        pose.wingAngle = 42 * (su > 0 && su < 0.5 ? sin(su / 0.5 * .pi) : 0)
+                        var g = ctx
+                        drawAnimatedDodo(&g, at: CGPoint(x: size.width / 2, y: size.height - 4), height: 132, pose: pose)
+                    }
+                    .frame(width: 150, height: 140)
+                    Text("Dodo")
+                        .font(.custom("Fredoka", size: 30).weight(.semibold))
+                        .foregroundStyle(FeyndTheme.text)
+                        .opacity(Double(max(0, min(1, (t - 0.35) / 0.3))))
+                }
+                .offset(y: -12)
+            }
+        }
+    }
+}

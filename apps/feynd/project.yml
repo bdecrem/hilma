@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "46"
+    CURRENT_PROJECT_VERSION: "47"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -42,7 +42,8 @@ targets:
         NSPrincipalClass: Feynd.FeyndApplication
         # HTTPS only — skips TestFlight's export-compliance question.
         ITSAppUsesNonExemptEncryption: false
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         UIAppFonts:
           - Fredoka.ttf
         UISupportedInterfaceOrientations:

@@ -35,8 +35,33 @@ struct FeyndApp: App {
 struct RootView: View {
     @Environment(Session.self) private var session
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    /// One-second cold-start moment, then the app fades in under it.
+    @State private var showSplash = true
 
     var body: some View {
+        ZStack {
+            content
+            if showSplash {
+                LaunchSplashView()
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+        .task {
+            #if targetEnvironment(simulator)
+            // `-HoldSplash 1` — pin the splash for screenshot verification.
+            if UserDefaults.standard.bool(forKey: "HoldSplash") { return }
+            #endif
+            // The system launch screen covers roughly the first half-second,
+            // so the splash runs a beat longer than its animation to actually
+            // be seen for ~a second.
+            try? await Task.sleep(for: .milliseconds(1600))
+            withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         switch session.state {
         case .loading:
             ZStack {

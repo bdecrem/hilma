@@ -565,11 +565,16 @@ struct FlashResultsView: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 18) {
+                    // The dodo takes the result personally: eye-pop on a
+                    // perfect round, a happy hop on a good one, otherwise
+                    // just its usual breathing self.
+                    ReactionDodoView(reaction: isPerfect ? .excited : (fraction >= 0.7 ? .happy : .none))
+                        .padding(.top, 26)
+
                     Text(headline)
                         .font(.system(size: 26, weight: .bold))
                         .tracking(-0.5)
                         .foregroundStyle(FeyndTheme.text)
-                        .padding(.top, 40)
 
                     scoreRing
 
