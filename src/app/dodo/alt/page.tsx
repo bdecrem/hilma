@@ -29,12 +29,20 @@ export default function DodoAltPage() {
 
       <article className="da-body">
         <h1>
-          Dodo is a little AI learning companion — an open-source app for
-          actually <em>remembering</em> what you learn.
+          Dodo is an AI learning companion — an open-source app to help you
+          understand, explain back, and remember any book or topic.{' '}
+          <em>It&rsquo;s not finished.</em>
         </h1>
 
         <section>
           <div className="da-label">The idea</div>
+          <p>
+            I&rsquo;ve always been a self-improver: languages (Spanish: easy;
+            Chinese: not so much), music (guitar: my mother still believes;
+            synths &amp; Ableton: 🤷), sports (no, but I get yelled at less
+            after 10 years of surfing). I&rsquo;ve been through dozens of
+            tutors and learning systems.
+          </p>
           <p>
             Over the next few years, people will build learning systems that
             change everything — systems that make us twice as smart. Dodo is
