@@ -18,7 +18,16 @@ struct FlashTabView: View {
     @State private var showProfile = false
     @State private var showDecks = false
     @State private var showPebbles = false
+    @State private var showDemoReel = false
     @State private var pulse = false
+    /// Crossing into a new region (10→11, 20→21): the transition scene.
+    @State private var regionCrossing: RegionCrossing? = nil
+    /// Set when the just-played set cleared a band-ending level for the
+    /// first time; presented once its results cover is gone.
+    @State private var pendingCrossing: Int? = nil
+    /// The level in flight and whether it was still unlocked (first clear).
+    @State private var playingLevel: Int? = nil
+    @State private var playingWasFirstClear = false
     /// Whether the big in-scroll title is on screen (bar echoes it when not).
     @State private var bigTitleVisible = false
     /// Bumped by double-tapping the bar — the map jumps to the very top.
@@ -49,6 +58,11 @@ struct FlashTabView: View {
             VStack(spacing: 0) {
                 FeyndTopBar {
                     BarTitle(text: "Peck", bigTitleVisible: bigTitleVisible)
+                        // Hidden demo reel — a long press on the bar title
+                        // plays mascot + regions + both transitions.
+                        .onLongPressGesture(minimumDuration: 1.5) {
+                            showDemoReel = true
+                        }
                 } trailing: {
                     // Three pills share the bar with the echoed title — keep
                     // them tight so "Peck" never truncates against them.
@@ -100,16 +114,36 @@ struct FlashTabView: View {
             .presentationDetents([.height(430)])
         }
         .fullScreenCover(item: $activeSet) { start in
-            FlashSetView(start: start, topicLabel: nil) { _ in
+            FlashSetView(start: start, topicLabel: nil) { result in
+                noteRegionCrossing(start: start, result: result)
                 Task { await load() }
             }
             .environment(session)
         }
         .fullScreenCover(item: $voiceSet) { start in
-            FlashVoiceView(start: start, topicLabel: nil) { _ in
+            FlashVoiceView(start: start, topicLabel: nil) { result in
+                noteRegionCrossing(start: start, result: result)
                 Task { await load() }
             }
             .environment(session)
+        }
+        .fullScreenCover(item: $regionCrossing) { crossing in
+            PeckRegionTransitionView(crossing: crossing) {
+                regionCrossing = nil
+            }
+        }
+        .fullScreenCover(isPresented: $showDemoReel) {
+            DemoReelView { showDemoReel = false }
+        }
+        // The results cover just closed — if that set opened a region, play
+        // the transition now, over the freshly reloaded map.
+        .onChange(of: activeSet == nil && voiceSet == nil) { _, coversGone in
+            if coversGone, let cleared = pendingCrossing {
+                pendingCrossing = nil
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    regionCrossing = RegionCrossing(clearedLevel: cleared)
+                }
+            }
         }
         .onTitleVisibility { bigTitleVisible = $0 }
         .task {
@@ -140,6 +174,30 @@ struct FlashTabView: View {
             if UserDefaults.standard.bool(forKey: "OpenPebbles") {
                 UserDefaults.standard.removeObject(forKey: "OpenPebbles")
                 showPebbles = true
+            }
+            // `-ShowDemoReel 1` — the full showcase, for recordings.
+            if UserDefaults.standard.bool(forKey: "ShowDemoReel") {
+                UserDefaults.standard.removeObject(forKey: "ShowDemoReel")
+                showDemoReel = true
+            }
+            // `-ShowRegionTransition 10|20` — play the region scene headlessly.
+            let crossing = UserDefaults.standard.integer(forKey: "ShowRegionTransition")
+            if crossing == 10 || crossing == 20 {
+                UserDefaults.standard.removeObject(forKey: "ShowRegionTransition")
+                regionCrossing = RegionCrossing(clearedLevel: crossing)
+            }
+            // `-MockLevelCount N` — synthesize an N-level map (all but the
+            // last passed) so the region scenery can be screenshotted.
+            let mock = UserDefaults.standard.integer(forKey: "MockLevelCount")
+            if mock > 0, let st = state {
+                UserDefaults.standard.removeObject(forKey: "MockLevelCount")
+                let levels = (1...mock).map { lvl in
+                    JumboLevelInfo(level: lvl, mode: "mixed",
+                                   status: lvl < mock ? "passed" : "unlocked",
+                                   bestScore: 9, stars: lvl % 3 + 1, passScore: 8)
+                }
+                state = JumboState(xp: st.xp, cardCount: st.cardCount,
+                                   highestPassed: mock - 1, levels: levels)
             }
             #endif
             // Peck deep link while this tab wasn't mounted (cold start or
@@ -306,7 +364,7 @@ struct FlashTabView: View {
                     titleRow
                         .id("peck-top")
                     ZStack(alignment: .topLeading) {
-                        PeckIslandScenery(height: height)
+                        PeckWorldScenery(height: height, levelCount: count, pitch: pitch, bottomPad: bottomPad)
 
                         // Stepping-stone trail between consecutive nodes —
                         // round pebble dots, like the design's dotted path.
@@ -339,9 +397,8 @@ struct FlashTabView: View {
                         // The traveler walks the trail beside the current
                         // level, backpack on, sprout up.
                         if let i = currentIdx {
-                            DodoTraveler(size: 82)
-                                .position(x: max(34, xFor(i) - 72), y: yFor(i) + 44)
-                                .allowsHitTesting(false)
+                            AnimatedDodoView(height: 78)
+                                .position(x: max(34, xFor(i) - 72), y: yFor(i) + 40)
                         }
                     }
                     .frame(height: height)
@@ -362,6 +419,25 @@ struct FlashTabView: View {
                         proxy.scrollTo("peck-top", anchor: .top)
                     }
                 }
+                #if targetEnvironment(simulator)
+                // `-ScrollToLevel N` — jump the map near level N for
+                // region-scenery screenshots (approximate is fine).
+                .onAppear {
+                    if UserDefaults.standard.bool(forKey: "ScrollTop") {
+                        UserDefaults.standard.removeObject(forKey: "ScrollTop")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                            proxy.scrollTo("peck-top", anchor: .top)
+                        }
+                    }
+                    let target = UserDefaults.standard.integer(forKey: "ScrollToLevel")
+                    if target > 0 {
+                        UserDefaults.standard.removeObject(forKey: "ScrollToLevel")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                            proxy.scrollTo(target, anchor: .center)
+                        }
+                    }
+                }
+                #endif
             }
         }
     }
@@ -478,9 +554,23 @@ struct FlashTabView: View {
         }
     }
 
+    /// A finished set on a band-ending level (10, 20), first clear, passing
+    /// score → queue the region transition for when the cover closes.
+    private func noteRegionCrossing(start: FlashStart, result: FlashSubmitResult) {
+        guard let lvl = start.jumboLevel ?? playingLevel,
+              lvl == 10 || lvl == 20,
+              playingWasFirstClear,
+              result.total >= 10,
+              result.score >= jumboPassScore(mode: start.mode)
+        else { return }
+        pendingCrossing = lvl
+    }
+
     private func play(_ level: JumboLevelInfo, mode: String) {
         guard startingLevel == nil else { return }
         FlashSFX.shared.play(.start)
+        playingLevel = level.level
+        playingWasFirstClear = level.status == "unlocked"
         startingLevel = level.level
         Task {
             do {
@@ -535,13 +625,72 @@ enum PeckPalette {
     static let starDim     = FeyndTheme.adaptiveColor(dark: 0x4A4468, light: 0xC9D6CB)
 }
 
-/// The dodo's island, drawn tall: sun/moon and sky at the top, the sea with
-/// a little offshore islet, then rolling hills descending to the sunny
-/// meadow at the bottom where the trail begins. Same scene both modes —
-/// sunny morning in light, starry dusk in dark. All Canvas, no assets.
-private struct PeckIslandScenery: View {
+/// The dodo's world, drawn tall in region bands of ten levels each — the
+/// Claude Design "Peck landscapes" (branding/design/POINTERS.md): Sunrise
+/// Meadow (1–10, dawn) at the bottom, Fern Hollow (11–20, sunset) above it,
+/// Starfall Summit (21–30, night) on top, and the sea-and-sky finale above
+/// the highest band. Everything moves a little: clouds drift, a bunny hops,
+/// a butterfly loops, leaves fall, fireflies and stars twinkle, a campfire
+/// flickers. All Canvas, no assets; ambience freezes under Reduce Motion.
+private struct PeckWorldScenery: View {
     let height: CGFloat
-    @Environment(\.colorScheme) private var scheme
+    let levelCount: Int
+    let pitch: CGFloat
+    let bottomPad: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        if reduceMotion {
+            PeckWorldCanvas(height: height, levelCount: levelCount, pitch: pitch, bottomPad: bottomPad, t: 0)
+        } else {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
+                PeckWorldCanvas(height: height, levelCount: levelCount, pitch: pitch, bottomPad: bottomPad,
+                                t: CGFloat(timeline.date.timeIntervalSinceReferenceDate))
+            }
+        }
+    }
+}
+
+/// One region band's look.
+struct RegionSkin {
+    let skyTop: UInt32
+    let skyBottom: UInt32
+    let hills: [UInt32]          // far → near
+    let canopy: UInt32
+    let canopyShade: UInt32
+    let trunk: UInt32
+    let pathDot: UInt32
+    let pines: Bool
+}
+
+let REGION_SKINS: [RegionSkin] = [
+    // Sunrise Meadow — dawn creams and spring greens.
+    RegionSkin(skyTop: 0xC9E6DE, skyBottom: 0xFFEFD1,
+               hills: [0xCDE3B4, 0xB5D89A, 0x9CCB80, 0x7FBA66],
+               canopy: 0x6FAE5C, canopyShade: 0x5F9E4C, trunk: 0x8A6B4A,
+               pathDot: 0xFFFDF4, pines: false),
+    // Fern Hollow — sunset ambers over deep ferns.
+    RegionSkin(skyTop: 0xF2A87B, skyBottom: 0xFFDCA8,
+               hills: [0xA3B871, 0x84A765, 0x668F57, 0x4E7B4A],
+               canopy: 0x4F7D4A, canopyShade: 0x3E6B42, trunk: 0x5C4632,
+               pathDot: 0xFFF3DC, pines: false),
+    // Starfall Summit — night blues, pines, stars.
+    RegionSkin(skyTop: 0x0F161C, skyBottom: 0x1B2A38,
+               hills: [0x2C3B4A, 0x24313D, 0x1D2934, 0x16202A],
+               canopy: 0x10181F, canopyShade: 0x0C141B, trunk: 0x0C141B,
+               pathDot: 0xE8EEF2, pines: true),
+]
+
+func regionSkin(_ band: Int) -> RegionSkin {
+    REGION_SKINS[min(band, REGION_SKINS.count - 1)]
+}
+
+struct PeckWorldCanvas: View {
+    let height: CGFloat
+    let levelCount: Int
+    let pitch: CGFloat
+    let bottomPad: CGFloat
+    let t: CGFloat
 
     private func frac(_ v: Double) -> Double { v - v.rounded(.down) }
 
@@ -549,160 +698,282 @@ private struct PeckIslandScenery: View {
         Canvas { ctx, size in
             let w = size.width
             let h = size.height
-            let dark = scheme == .dark
-            func fill(_ p: Path, _ c: Color, _ o: Double = 1) {
-                ctx.fill(p, with: .color(c.opacity(o)))
+            let bands = max(1, Int(ceil(Double(levelCount) / 10.0)))
+            // Sea/sky finale strip above the highest band.
+            let finaleBottom: CGFloat = 350
+            // Band k's vertical span (world coords, bottom band k=0).
+            func bandBottom(_ k: Int) -> CGFloat {
+                k == 0 ? h : h - bottomPad - (CGFloat(k * 10) - 0.5) * pitch
+            }
+            func bandTop(_ k: Int) -> CGFloat {
+                k == bands - 1 ? finaleBottom : h - bottomPad - (CGFloat(k * 10 + 9) + 0.5) * pitch
             }
 
-            // Sky base + soft horizon glow.
-            fill(Path(CGRect(x: 0, y: 0, width: w, height: h)), PeckPalette.skyA)
-            fill(Path(ellipseIn: CGRect(x: -w * 0.35, y: 150, width: w * 1.7, height: 220)),
-                 PeckPalette.skyB, 0.8)
-
-            // Stars — dusk only.
-            if dark {
-                for i in 0..<12 {
-                    let fi = Double(i)
-                    let x = w * frac(fi * 0.6180339887 + 0.21)
-                    let y = 16 + 180 * frac(fi * 0.7548776662)
-                    let r = 1.4 + 1.0 * frac(fi * 0.37)
-                    fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
-                         PeckPalette.starColor, 0.9)
-                }
+            func fill(_ p: Path, _ hex: UInt32, _ o: Double = 1) {
+                ctx.fill(p, with: .color(Color(hex: hex).opacity(o)))
             }
 
-            // Sun (light) / moon (dark) with halo, upper right.
+            let topSkin = regionSkin(bands - 1)
+
+            // ── Sky: one gradient through every band's colors, finale on top.
+            var stops: [Gradient.Stop] = []
+            stops.append(.init(color: Color(hex: topSkin.skyTop), location: 0))
+            for k in stride(from: bands - 1, through: 0, by: -1) {
+                let skin = regionSkin(k)
+                let top = max(0.001, bandTop(k) / h)
+                stops.append(.init(color: Color(hex: skin.skyTop), location: top))
+                stops.append(.init(color: Color(hex: skin.skyBottom), location: min(0.999, top + 110 / h)))
+            }
+            ctx.fill(Path(CGRect(x: 0, y: 0, width: w, height: h)),
+                     with: .linearGradient(Gradient(stops: stops),
+                                           startPoint: .zero, endPoint: CGPoint(x: 0, y: h)))
+
+            // ── Finale: sun or moon, clouds/stars, the sea with its islet.
+            let night = topSkin.pines
             let sunC = CGPoint(x: w * 0.82, y: 84)
             fill(Path(ellipseIn: CGRect(x: sunC.x - 38, y: sunC.y - 38, width: 76, height: 76)),
-                 PeckPalette.sunMoon, 0.3)
+                 night ? 0xEDE6D2 : 0xFFD469, night ? 0.14 : 0.3)
             fill(Path(ellipseIn: CGRect(x: sunC.x - 26, y: sunC.y - 26, width: 52, height: 52)),
-                 PeckPalette.sunMoon)
-
-            // Two puffs of cloud.
-            for (cx, cy) in [(w * 0.20, 96.0), (w * 0.62, 158.0)] {
-                fill(Path(roundedRect: CGRect(x: cx - 38, y: cy, width: 76, height: 15), cornerRadius: 7.5), PeckPalette.cloud)
-                fill(Path(roundedRect: CGRect(x: cx - 20, y: cy - 10, width: 46, height: 13), cornerRadius: 6.5), PeckPalette.cloud)
+                 night ? 0xEDE6D2 : 0xFFD469)
+            if night {
+                for (mx, my, mr) in [(-10.0, -8.0, 6.0), (8.0, 8.0, 4.0), (2.0, -10.0, 2.6)] {
+                    fill(Path(ellipseIn: CGRect(x: sunC.x + mx - mr, y: sunC.y + my - mr, width: mr * 2, height: mr * 2)), 0xD8CFB8)
+                }
+                for i in 0..<14 {
+                    let fi = Double(i)
+                    let x = w * frac(fi * 0.6180339887 + 0.21)
+                    let y = 16 + 300 * frac(fi * 0.7548776662)
+                    let tw = i % 3 == 0 ? 0.15 + 0.85 * abs(sin(t * 1.1 + fi)) : 0.5
+                    let r = 1.4 + 1.0 * frac(fi * 0.37)
+                    fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)), 0xEDE6D2, tw)
+                }
+                // A shooting star every nine seconds.
+                let su = (t / 9).truncatingRemainder(dividingBy: 1)
+                if su > 0 && su < 0.12 {
+                    let e = su / 0.12
+                    let sx = 40 + 280 * e, sy = 60 + 110 * e
+                    var streak = Path()
+                    streak.move(to: CGPoint(x: sx - 30, y: sy - 11))
+                    streak.addLine(to: CGPoint(x: sx, y: sy))
+                    ctx.stroke(streak, with: .color(.white.opacity(0.9 * (1 - e))), lineWidth: 2)
+                    fill(Path(ellipseIn: CGRect(x: sx - 2.6, y: sy - 2.6, width: 5.2, height: 5.2)), 0xFFFFFF, 0.9 * (1 - e))
+                }
+            } else {
+                for (i, cy) in [96.0, 158.0].enumerated() {
+                    let drift = 22 * sin(t / (13 + Double(i) * 4) + Double(i) * 2)
+                    let cx = w * (i == 0 ? 0.20 : 0.62) + drift
+                    fill(Path(roundedRect: CGRect(x: cx - 38, y: cy, width: 76, height: 15), cornerRadius: 7.5), 0xFFFFFF, 0.9)
+                    fill(Path(roundedRect: CGRect(x: cx - 20, y: cy - 10, width: 46, height: 13), cornerRadius: 6.5), 0xFFFFFF, 0.9)
+                }
             }
-
-            // The sea, with a tiny offshore islet + palm.
             let seaTop: CGFloat = 235
-            let seaBottom: CGFloat = 350
-            fill(Path(CGRect(x: 0, y: seaTop, width: w, height: seaBottom - seaTop)), PeckPalette.sea)
-            let isl = CGPoint(x: w * 0.24, y: seaBottom - 8)
-            fill(Path(ellipseIn: CGRect(x: isl.x - 40, y: isl.y - 10, width: 80, height: 20)), PeckPalette.island)
+            fill(Path(CGRect(x: 0, y: seaTop, width: w, height: finaleBottom - seaTop)), night ? 0x1C3742 : 0x79C6C4)
+            let isl = CGPoint(x: w * 0.24, y: finaleBottom - 8)
+            fill(Path(ellipseIn: CGRect(x: isl.x - 40, y: isl.y - 10, width: 80, height: 20)), night ? 0x22453A : 0x4E8F6E)
             var mount = Path()
             mount.move(to: CGPoint(x: isl.x - 5, y: isl.y))
             mount.addCurve(to: CGPoint(x: isl.x + 2, y: isl.y - 28),
-                           control1: CGPoint(x: isl.x - 7, y: isl.y - 13),
-                           control2: CGPoint(x: isl.x - 5, y: isl.y - 21))
+                           control1: CGPoint(x: isl.x - 7, y: isl.y - 13), control2: CGPoint(x: isl.x - 5, y: isl.y - 21))
             mount.addCurve(to: CGPoint(x: isl.x + 1, y: isl.y),
-                           control1: CGPoint(x: isl.x + 4, y: isl.y - 21),
-                           control2: CGPoint(x: isl.x + 2, y: isl.y - 10))
+                           control1: CGPoint(x: isl.x + 4, y: isl.y - 21), control2: CGPoint(x: isl.x + 2, y: isl.y - 10))
             mount.closeSubpath()
-            fill(mount, PeckPalette.island)
-            for dir in [-1.0, 1.0] {
-                var frond = Path()
-                frond.move(to: CGPoint(x: isl.x + 2, y: isl.y - 26))
-                frond.addQuadCurve(to: CGPoint(x: isl.x + 2 + dir * 20, y: isl.y - 30),
-                                   control: CGPoint(x: isl.x + 2 + dir * 10, y: isl.y - 36))
-                frond.addQuadCurve(to: CGPoint(x: isl.x + 2, y: isl.y - 26),
-                                   control: CGPoint(x: isl.x + 2 + dir * 9, y: isl.y - 27))
-                frond.closeSubpath()
-                fill(frond, PeckPalette.palm)
-            }
+            fill(mount, night ? 0x22453A : 0x4E8F6E)
 
-            // Rolling hills — far, mid, near — then the meadow floor. Crest
-            // lines are gentle sine waves; each layer fills to the bottom.
-            let landTop = seaBottom
-            let landSpan = max(1, h - landTop - 150)
-            let layers: [(frac: Double, color: Color, amp: Double, phase: Double)] = [
-                (0.00, PeckPalette.hillFar, 26, 0.4),
-                (0.30, PeckPalette.hillMid, 34, 2.2),
-                (0.62, PeckPalette.hillNear, 30, 4.1),
-            ]
-            for layer in layers {
-                let crest = landTop + landSpan * layer.frac
-                var hill = Path()
-                hill.move(to: CGPoint(x: 0, y: h))
-                hill.addLine(to: CGPoint(x: 0, y: crest + 20))
-                let steps = 5
-                for s in 1...steps {
-                    let px = w * Double(s) / Double(steps)
-                    let py = crest + 20 - layer.amp * (0.5 + 0.5 * sin(Double(s) * 1.9 + layer.phase))
-                    let cx = w * (Double(s) - 0.5) / Double(steps)
-                    let cy = crest + 20 - layer.amp * (0.5 + 0.5 * sin((Double(s) - 0.5) * 1.9 + layer.phase + 1.1))
-                    hill.addQuadCurve(to: CGPoint(x: px, y: py), control: CGPoint(x: cx, y: cy))
+            // ── Bands, bottom-up.
+            for k in 0..<bands {
+                let skin = regionSkin(k)
+                let top = max(finaleBottom, bandTop(k))
+                let bottom = min(h, bandBottom(k))
+                guard bottom > top else { continue }
+                let span = bottom - top
+
+                // Ground: rolling hill layers below the band's horizon strip.
+                for (li, hex) in skin.hills.enumerated() {
+                    let crest = top + 104 + (span - 104) * (0.02 + CGFloat(li) * 0.24)
+                    var hill = Path()
+                    hill.move(to: CGPoint(x: 0, y: bottom))
+                    hill.addLine(to: CGPoint(x: 0, y: crest + 20))
+                    let steps = 5
+                    let phase = Double(li) * 1.9 + Double(k) * 0.8
+                    for st in 1...steps {
+                        let px = w * CGFloat(st) / CGFloat(steps)
+                        let py = crest + 20 - 42 * (0.5 + 0.5 * sin(Double(st) * 1.9 + phase))
+                        let cx = w * (CGFloat(st) - 0.5) / CGFloat(steps)
+                        let cy = crest + 20 - 42 * (0.5 + 0.5 * sin((Double(st) - 0.5) * 1.9 + phase + 1.1))
+                        hill.addQuadCurve(to: CGPoint(x: px, y: py), control: CGPoint(x: cx, y: cy))
+                    }
+                    hill.addLine(to: CGPoint(x: w, y: bottom))
+                    hill.closeSubpath()
+                    fill(hill, hex)
                 }
-                hill.addLine(to: CGPoint(x: w, y: h))
-                hill.closeSubpath()
-                fill(hill, layer.color)
+
+                // Trees or pines scattered down the band.
+                for i in 0..<10 {
+                    let fi = Double(i) + Double(k) * 11
+                    // Sides only — the trail and its traveler own the middle.
+                    let u = frac(fi * 0.6180339887 + 0.43)
+                    let x = u < 0.5 ? w * (0.045 + 0.19 * u * 2) : w * (0.76 + 0.2 * (u - 0.5) * 2)
+                    let y = top + 150 + (span - 170) * (0.22 + 0.7 * frac(fi * 0.7548776662))
+                    let kk = 0.75 + 0.5 * frac(fi * 0.53)
+                    if skin.pines {
+                        drawPine(&ctx, x: x, y: y, k: kk)
+                    } else {
+                        let sway = sin(t / (3.5 + frac(fi * 0.3) * 2) + fi) * 1.3
+                        drawRoundTree(&ctx, x: x, y: y, k: kk, sway: sway,
+                                      canopy: skin.canopy, shade: skin.canopyShade, trunk: skin.trunk)
+                    }
+                }
+
+                // Region ambience.
+                switch min(k, 2) {
+                case 0:
+                    // Flowers + a hopping bunny + a looping butterfly.
+                    for i in 0..<6 {
+                        let fi = Double(i)
+                        let x = w * (0.08 + 0.84 * frac(fi * 0.6180339887 + 0.7))
+                        let y = top + span * (0.45 + 0.5 * frac(fi * 0.917))
+                        drawFlower(&ctx, x: x, y: y, petal: i % 2 == 0 ? 0xF2A19A : 0xF0A830)
+                    }
+                    let bu = (t / 11).truncatingRemainder(dividingBy: 1)
+                    if bu > 0.04 && bu < 0.96 {
+                        let bx = -30 + (w + 60) * bu
+                        let by = top + span * 0.4 - 14 * abs(sin(bu * 34))
+                        drawBunny(&ctx, x: bx, y: by)
+                    }
+                    let fu = t / 15
+                    let fx = w * 0.28 + 46 * cos(fu) + 18 * cos(fu * 2.4)
+                    let fy = top + span * 0.62 + 26 * sin(fu * 1.7)
+                    drawButterfly(&ctx, x: fx, y: fy, flap: abs(sin(t * 8)))
+                case 1:
+                    // Fireflies + a falling leaf.
+                    for i in 0..<6 {
+                        let fi = Double(i)
+                        let x = w * (0.1 + 0.8 * frac(fi * 0.6180339887 + 0.19))
+                        let y = top + span * (0.35 + 0.55 * frac(fi * 0.754))
+                        let tw = abs(sin(t / (2.7 + frac(fi * 0.41)) + fi * 2))
+                        fill(Path(ellipseIn: CGRect(x: x - 2.2, y: y - 2.2, width: 4.4, height: 4.4)), 0xFFD98A, 0.15 + 0.8 * tw)
+                    }
+                    let lu = (t / 9).truncatingRemainder(dividingBy: 1)
+                    if lu > 0 && lu < 1 {
+                        let lx = w * 0.82 - 30 * sin(lu * 6)
+                        let ly = top + span * (0.1 + 0.75 * lu)
+                        var leaf = ctx
+                        leaf.translateBy(x: lx, y: ly)
+                        leaf.rotate(by: .degrees(lu * 520))
+                        leaf.fill(Path(ellipseIn: CGRect(x: -5, y: -2.4, width: 10, height: 4.8)),
+                                  with: .color(Color(hex: 0xD98E4A).opacity(0.9)))
+                    }
+                default:
+                    // Campfire flicker + its glow.
+                    let cf = CGPoint(x: w * 0.17, y: top + span * 0.55)
+                    let flick = 0.9 + 0.2 * sin(t * 9) + 0.1 * sin(t * 23)
+                    fill(Path(ellipseIn: CGRect(x: cf.x - 26, y: cf.y - 26, width: 52, height: 52)), 0xF0A830, 0.1 + 0.08 * flick)
+                    fill(Path(roundedRect: CGRect(x: cf.x - 14, y: cf.y - 2, width: 28, height: 5), cornerRadius: 2.5), 0x6B4A2E)
+                    var flame = Path()
+                    flame.move(to: CGPoint(x: cf.x, y: cf.y - 2))
+                    flame.addCurve(to: CGPoint(x: cf.x, y: cf.y - 2 - 26 * flick),
+                                   control1: CGPoint(x: cf.x - 8, y: cf.y - 10), control2: CGPoint(x: cf.x - 6, y: cf.y - 20 * flick))
+                    flame.addCurve(to: CGPoint(x: cf.x, y: cf.y - 2),
+                                   control1: CGPoint(x: cf.x + 6, y: cf.y - 13 * flick), control2: CGPoint(x: cf.x + 6, y: cf.y - 7))
+                    flame.closeSubpath()
+                    fill(flame, 0xF0A830)
+                }
+
             }
 
-            // Meadow floor.
+            // Meadow floor + grass tufts at the very bottom (band 0).
             var meadow = Path()
             let meadowTop = h - 140
             meadow.move(to: CGPoint(x: 0, y: h))
             meadow.addLine(to: CGPoint(x: 0, y: meadowTop + 14))
-            meadow.addQuadCurve(to: CGPoint(x: w * 0.55, y: meadowTop),
-                                control: CGPoint(x: w * 0.25, y: meadowTop - 16))
-            meadow.addQuadCurve(to: CGPoint(x: w, y: meadowTop + 10),
-                                control: CGPoint(x: w * 0.82, y: meadowTop + 18))
+            meadow.addQuadCurve(to: CGPoint(x: w * 0.55, y: meadowTop), control: CGPoint(x: w * 0.25, y: meadowTop - 16))
+            meadow.addQuadCurve(to: CGPoint(x: w, y: meadowTop + 10), control: CGPoint(x: w * 0.82, y: meadowTop + 18))
             meadow.addLine(to: CGPoint(x: w, y: h))
             meadow.closeSubpath()
-            fill(meadow, PeckPalette.grass)
-
-            // Round trees scattered down the hills. Canopy color by band:
-            // the lighter tree2 green only on the far/mid hills — on the
-            // near hill it matches the ground exactly and disappears.
-            for i in 0..<7 {
-                let fi = Double(i)
-                let x = w * (0.06 + 0.88 * frac(fi * 0.6180339887 + 0.43))
-                let y = landTop + 60 + (landSpan * 0.82) * frac(fi * 0.7548776662)
-                let r = 13.0 + 8.0 * frac(fi * 0.53)
-                let upperHalf = y < landTop + landSpan * 0.55
-                fill(Path(roundedRect: CGRect(x: x - 3, y: y - 4, width: 6, height: r + 8), cornerRadius: 3), PeckPalette.trunk)
-                fill(Path(ellipseIn: CGRect(x: x - r, y: y - r * 1.6, width: r * 2, height: r * 2)),
-                     upperHalf && i % 2 == 0 ? PeckPalette.tree2 : PeckPalette.tree1)
-            }
-
-            // A tall palm near the shore.
-            let palmX = w * 0.10
-            let palmBase = landTop + 46
-            var ptrunk = Path()
-            ptrunk.move(to: CGPoint(x: palmX, y: palmBase))
-            ptrunk.addQuadCurve(to: CGPoint(x: palmX + 8, y: palmBase - 44),
-                                control: CGPoint(x: palmX - 2, y: palmBase - 24))
-            ptrunk.addQuadCurve(to: CGPoint(x: palmX + 12, y: palmBase - 43),
-                                control: CGPoint(x: palmX + 11, y: palmBase - 44))
-            ptrunk.addQuadCurve(to: CGPoint(x: palmX + 4, y: palmBase),
-                                control: CGPoint(x: palmX + 2, y: palmBase - 24))
-            ptrunk.closeSubpath()
-            fill(ptrunk, PeckPalette.trunk)
-            for (dx, dy) in [(-22.0, -6.0), (20.0, -8.0), (-2.0, -22.0)] {
-                var frond = Path()
-                let tip = CGPoint(x: palmX + 9 + dx, y: palmBase - 44 + dy)
-                frond.move(to: CGPoint(x: palmX + 9, y: palmBase - 44))
-                frond.addQuadCurve(to: tip, control: CGPoint(x: palmX + 9 + dx * 0.5, y: palmBase - 52 + dy * 0.4))
-                frond.addQuadCurve(to: CGPoint(x: palmX + 9, y: palmBase - 44),
-                                   control: CGPoint(x: palmX + 9 + dx * 0.5, y: palmBase - 42 + dy * 0.6))
-                frond.closeSubpath()
-                fill(frond, PeckPalette.palm)
-            }
-
-            // Grass tufts on the meadow.
+            fill(meadow, 0x7FBA66)
             for i in 0..<8 {
                 let fi = Double(i)
                 let x = w * (0.05 + 0.9 * frac(fi * 0.6180339887 + 0.29))
                 let y = h - 24 - 80 * frac(fi * 0.47)
                 var tuft = Path()
                 tuft.move(to: CGPoint(x: x - 4, y: y))
-                tuft.addLine(to: CGPoint(x: x, y: y - 12))
+                tuft.addLine(to: CGPoint(x: x + 1.3 * sin(t * 1.4 + fi), y: y - 12))
                 tuft.addLine(to: CGPoint(x: x + 3, y: y))
                 tuft.closeSubpath()
-                fill(tuft, PeckPalette.tuft)
+                fill(tuft, 0x4C8C3D)
             }
         }
         .frame(height: height)
+    }
+
+    // MARK: props
+
+    private func drawRoundTree(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat, k: CGFloat, sway: CGFloat, canopy: UInt32, shade: UInt32, trunk: UInt32) {
+        var g = ctx
+        g.translateBy(x: x, y: y)
+        g.rotate(by: .degrees(sway))
+        g.scaleBy(x: k, y: k)
+        g.fill(Path(roundedRect: CGRect(x: -3, y: -40, width: 6, height: 42), cornerRadius: 3), with: .color(Color(hex: trunk)))
+        g.fill(Path(ellipseIn: CGRect(x: -26, y: -88, width: 52, height: 52)), with: .color(Color(hex: canopy)))
+        g.fill(Path(ellipseIn: CGRect(x: -22, y: -84, width: 26, height: 22)), with: .color(Color(hex: shade).opacity(0.55)))
+    }
+
+    private func drawPine(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat, k: CGFloat) {
+        var g = ctx
+        g.translateBy(x: x, y: y)
+        g.scaleBy(x: k, y: k)
+        g.fill(Path(CGRect(x: -1.5, y: -6, width: 3, height: 6)), with: .color(Color(hex: 0x0C141B)))
+        var p = Path()
+        p.move(to: CGPoint(x: 0, y: -46))
+        p.addLine(to: CGPoint(x: 14, y: -18)); p.addLine(to: CGPoint(x: 6, y: -20))
+        p.addLine(to: CGPoint(x: 17, y: -5)); p.addLine(to: CGPoint(x: -17, y: -5))
+        p.addLine(to: CGPoint(x: -6, y: -20)); p.addLine(to: CGPoint(x: -14, y: -18))
+        p.closeSubpath()
+        g.fill(p, with: .color(Color(hex: 0x10181F)))
+    }
+
+    private func drawFlower(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat, petal: UInt32) {
+        var g = ctx
+        g.translateBy(x: x, y: y)
+        var stem = Path()
+        stem.move(to: .zero)
+        stem.addCurve(to: CGPoint(x: 0, y: -14), control1: CGPoint(x: 0, y: -6), control2: CGPoint(x: -1, y: -10))
+        g.stroke(stem, with: .color(Color(hex: 0x5F9E4C)), lineWidth: 1.8)
+        for (px, py) in [(-3.0, -14.0), (3.0, -14.0), (-2.0, -18.6), (2.0, -18.6)] {
+            g.fill(Path(ellipseIn: CGRect(x: px - 2.4, y: py - 2.4, width: 4.8, height: 4.8)), with: .color(Color(hex: petal)))
+        }
+        g.fill(Path(ellipseIn: CGRect(x: -1.8, y: -17.8, width: 3.6, height: 3.6)), with: .color(Color(hex: 0xFFD98A)))
+    }
+
+    private func drawBunny(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat) {
+        var g = ctx
+        g.translateBy(x: x, y: y)
+        g.scaleBy(x: 0.8, y: 0.8)
+        g.fill(Path(ellipseIn: CGRect(x: -11, y: -8, width: 22, height: 16)), with: .color(Color(hex: 0xEFE3CB)))
+        g.fill(Path(ellipseIn: CGRect(x: -13.1, y: -6.1, width: 7.2, height: 7.2)), with: .color(.white))
+        g.fill(Path(ellipseIn: CGRect(x: 3.6, y: -12.4, width: 12.8, height: 12.8)), with: .color(Color(hex: 0xEFE3CB)))
+        var ear1 = Path()
+        ear1.move(to: CGPoint(x: 7, y: -11))
+        ear1.addCurve(to: CGPoint(x: 9.5, y: -26.5), control1: CGPoint(x: 5, y: -19), control2: CGPoint(x: 6.5, y: -24))
+        ear1.addCurve(to: CGPoint(x: 10, y: -11), control1: CGPoint(x: 11.8, y: -22), control2: CGPoint(x: 11.8, y: -16))
+        ear1.closeSubpath()
+        g.fill(ear1, with: .color(Color(hex: 0xEFE3CB)))
+        var ear2 = Path()
+        ear2.move(to: CGPoint(x: 12, y: -11))
+        ear2.addCurve(to: CGPoint(x: 18, y: -25), control1: CGPoint(x: 12.5, y: -19), control2: CGPoint(x: 15, y: -23.5))
+        ear2.addCurve(to: CGPoint(x: 15, y: -11), control1: CGPoint(x: 19, y: -21), control2: CGPoint(x: 17.2, y: -15))
+        ear2.closeSubpath()
+        g.fill(ear2, with: .color(Color(hex: 0xE3D2B2)))
+        g.fill(Path(ellipseIn: CGRect(x: 11.5, y: -7.8, width: 2.6, height: 2.6)), with: .color(Color(hex: 0x33383E)))
+    }
+
+    private func drawButterfly(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat, flap: CGFloat) {
+        var g = ctx
+        g.translateBy(x: x, y: y)
+        g.fill(Path(ellipseIn: CGRect(x: -1.4, y: -4, width: 2.8, height: 8)), with: .color(Color(hex: 0x8A6B4A)))
+        let rx = 1.2 + 3.0 * flap
+        g.fill(Path(ellipseIn: CGRect(x: -4 - rx, y: -6, width: rx * 2, height: 10)), with: .color(Color(hex: 0xF2A19A)))
+        g.fill(Path(ellipseIn: CGRect(x: 4 - rx, y: -6, width: rx * 2, height: 10)), with: .color(Color(hex: 0xF2A19A)))
     }
 }
 

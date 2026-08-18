@@ -23,6 +23,7 @@
 		3C49C0024049020E4395B2D0 /* voice-ballad.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 072B2FB661710AC500114B62 /* voice-ballad.m4a */; };
 		3EB1222C6738105EC8558353 /* FlashTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */; };
 		412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */; };
+		41A4306B14D9973624451800 /* DemoReelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D886D7625C13A1ABF92B7EF /* DemoReelView.swift */; };
 		4203B4F2027D753324C80557 /* PebblesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B51F13157C08741A506C42 /* PebblesView.swift */; };
 		42577E114FC7ADF0BE7A3051 /* FlashModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7DB0ED0D66A78BC46C7BEB /* FlashModels.swift */; };
 		445C46DD3C8AB7B90A505AEC /* AudioSummaryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */; };
@@ -34,6 +35,7 @@
 		681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */; };
 		69465CB76129F3A8475D3837 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A806446C086649CAB62568A4 /* FlashVoiceView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
+		75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */; };
 		75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7811C80A73490F1D2B650D /* SettingsView.swift */; };
 		80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8E1D52867446105B46D06E /* FeyndChrome.swift */; };
 		81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97210D8088451B57557247DA /* DeepLink.swift */; };
@@ -42,6 +44,7 @@
 		92AB59F1F628D34B68CB6AD4 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */; };
 		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
 		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
+		98F0EA996D408AAFFF3C436C /* AnimatedDodo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487F9BE215DF2E21F43AB5 /* AnimatedDodo.swift */; };
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
 		A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */; };
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
@@ -81,6 +84,7 @@
 		2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Fredoka-OFL.txt"; sourceTree = "<group>"; };
 		2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayerView.swift; sourceTree = "<group>"; };
 		3C7811C80A73490F1D2B650D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		3D886D7625C13A1ABF92B7EF /* DemoReelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoReelView.swift; sourceTree = "<group>"; };
 		4BB209A33541127135A75E53 /* SourceReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReaderView.swift; sourceTree = "<group>"; };
 		4E8E1D52867446105B46D06E /* FeyndChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndChrome.swift; sourceTree = "<group>"; };
 		5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
@@ -108,8 +112,10 @@
 		A62FA8AD3B3E792810622A3A /* F2API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F2API.swift; sourceTree = "<group>"; };
 		A806446C086649CAB62568A4 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
 		A838C8293EE5A7B38D62679D /* FlashCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardsView.swift; sourceTree = "<group>"; };
+		AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckRegionTransitionView.swift; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSettingsView.swift; sourceTree = "<group>"; };
+		B8487F9BE215DF2E21F43AB5 /* AnimatedDodo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedDodo.swift; sourceTree = "<group>"; };
 		B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fredoka.ttf; sourceTree = "<group>"; };
 		BB38EBAB179201757DE149C1 /* FlashSFX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSFX.swift; sourceTree = "<group>"; };
 		BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashTabView.swift; sourceTree = "<group>"; };
@@ -145,6 +151,7 @@
 		4373D04F4E053F1CAF5AA605 /* Feynd */ = {
 			isa = PBXGroup;
 			children = (
+				B8487F9BE215DF2E21F43AB5 /* AnimatedDodo.swift */,
 				8D6854393131D5ADEB1B75CE /* Assets.xcassets */,
 				8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */,
 				2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */,
@@ -152,6 +159,7 @@
 				6DDC42B73E361C8473ADE137 /* ChatSupport.swift */,
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
 				97210D8088451B57557247DA /* DeepLink.swift */,
+				3D886D7625C13A1ABF92B7EF /* DemoReelView.swift */,
 				EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */,
 				9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */,
 				A62FA8AD3B3E792810622A3A /* F2API.swift */,
@@ -179,6 +187,7 @@
 				703834C76580CEF4C08B88F3 /* OnboardingView.swift */,
 				C0564EA3B927E26544E7655B /* PasteView.swift */,
 				A0B51F13157C08741A506C42 /* PebblesView.swift */,
+				AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
 				E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */,
 				F75E071CC1F646CA33327FAB /* RecertNotifications.swift */,
@@ -325,12 +334,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				98F0EA996D408AAFFF3C436C /* AnimatedDodo.swift in Sources */,
 				13E521D2E87C8EC6DF8BFE61 /* AudioSummaryPlayer.swift in Sources */,
 				445C46DD3C8AB7B90A505AEC /* AudioSummaryPlayerView.swift in Sources */,
 				0FA243A66767AA35B699BE73 /* BookSummaryReaderView.swift in Sources */,
 				DFDA422D8540593189FE7815 /* ChatSupport.swift in Sources */,
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
 				81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */,
+				41A4306B14D9973624451800 /* DemoReelView.swift in Sources */,
 				F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */,
 				2653F9928D7A0873DFC35016 /* DoubleThumbsUp.swift in Sources */,
 				935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */,
@@ -356,6 +367,7 @@
 				D728F8652741BA0ADE44FB1F /* OnboardingView.swift in Sources */,
 				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
 				4203B4F2027D753324C80557 /* PebblesView.swift in Sources */,
+				75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
 				B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */,
 				C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */,
