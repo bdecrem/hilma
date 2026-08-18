@@ -397,7 +397,7 @@ struct FlashTabView: View {
                         // The traveler walks the trail beside the current
                         // level, backpack on, sprout up.
                         if let i = currentIdx {
-                            AnimatedDodoView(height: 78)
+                            AnimatedDodoView(height: 78, tickleable: true)
                                 .position(x: max(34, xFor(i) - 72), y: yFor(i) + 40)
                         }
                     }

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // The lively mascot — a Swift port of the Claude Design dodo (see
 // branding/design/mascot-animation-spec.md for the animation bible this
@@ -155,6 +156,28 @@ enum DodoMood {
         return p
     }
 
+    /// Tickled: a giggly wiggle — roll oscillation, squashy bounce, sprout
+    /// boing, cheeks up, a double blink. ~1s, then back to idle.
+    static func tickled(_ u01: CGFloat) -> DodoPose {
+        var p = DodoPose()
+        let u = max(0, min(1, u01))
+        let damp = exp(-2.6 * u)
+        p.rollDegrees = 5 * damp * sin(u * 22)
+        let bounce = abs(sin(u * .pi * 3)) * damp
+        p.yOffset = -8 * bounce
+        p.scaleY = 1 + 0.07 * bounce
+        p.scaleX = 1 - 0.05 * bounce
+        p.sproutAngle = 16 * damp * sin(u * 18 + 1)
+        p.cheekOpacity = 0.6 + 0.32 * bell(u)
+        p.wingAngle = 24 * damp * abs(sin(u * 12))
+        p.eyeScaleY = min(blinkShapePublic((u - 0.25) / 0.12), blinkShapePublic((u - 0.5) / 0.12))
+        return p
+    }
+
+    static func blinkShapePublic(_ u: CGFloat) -> CGFloat {
+        u > 0 && u < 1 ? 1 - 0.95 * sin(u * .pi) : 1
+    }
+
     /// Wrong answer, kept kind: ±3px shake (3 cycles, 240ms), sprout flops,
     /// one slow blink; fully back to idle inside a second.
     static func wrong(_ u01: CGFloat) -> DodoPose {
@@ -290,22 +313,64 @@ func drawAnimatedDodo(_ ctx: inout GraphicsContext, at p: CGPoint, height: CGFlo
 }
 
 /// Standalone idle mascot for placing in layouts (the Peck map traveler).
+/// `tickleable` makes a tap play a little reaction — tickle, hop, or
+/// eye-pop, cycling so repeat taps stay fun.
 struct AnimatedDodoView: View {
     var height: CGFloat = 82
     var seed: CGFloat = 0
+    var tickleable: Bool = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var reactionStart: Date? = nil
+    @State private var reactionKind = 0
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
             Canvas { ctx, size in
                 let t = CGFloat(timeline.date.timeIntervalSinceReferenceDate)
-                let pose = DodoMood.idle(t, seed: seed, reduceMotion: reduceMotion)
+                var pose = DodoMood.idle(t, seed: seed, reduceMotion: reduceMotion)
+                if !reduceMotion, let rs = reactionStart {
+                    let u = CGFloat(timeline.date.timeIntervalSince(rs))
+                    switch reactionKind % 3 {
+                    case 0 where u < 1.0:
+                        var p = DodoMood.tickled(u)
+                        p.eyeScaleY = min(p.eyeScaleY, pose.eyeScaleY)
+                        pose = p
+                    case 1 where u < 0.75:
+                        pose = DodoMood.happy(u / 0.7)
+                    case 2 where u < 1.1:
+                        var p = DodoMood.excited(u / 1.0)
+                        p.scaleY *= pose.scaleY
+                        pose = p
+                    default:
+                        break
+                    }
+                }
                 var g = ctx
                 drawAnimatedDodo(&g, at: CGPoint(x: size.width / 2, y: size.height - 2), height: height, pose: pose)
             }
         }
         .frame(width: height * 0.9, height: height + 4)
-        .allowsHitTesting(false)
+        .allowsHitTesting(tickleable)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard tickleable else { return }
+            reactionKind += 1
+            reactionStart = Date()
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            FlashSFX.shared.play(.tap)
+        }
+        #if targetEnvironment(simulator)
+        // `-TickleDodo 1` — auto-play a tickle for screenshot runs.
+        .onAppear {
+            if tickleable, UserDefaults.standard.bool(forKey: "TickleDodo") {
+                UserDefaults.standard.removeObject(forKey: "TickleDodo")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    reactionKind = 0
+                    reactionStart = Date()
+                }
+            }
+        }
+        #endif
     }
 }
 
