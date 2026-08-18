@@ -180,7 +180,7 @@ const css = `
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   opacity: 0; transition: opacity 0.55s ease;
 }
-.dd-tour-captions { display: grid; max-width: 320px; margin-top: 18px; }
+.dd-tour-captions { display: grid; max-width: 320px; margin-top: 14px; }
 .dd-tour-caption {
   grid-area: 1 / 1; margin: 0; text-align: center;
   font-size: 15px; line-height: 1.5; color: var(--ink2);
@@ -188,7 +188,7 @@ const css = `
 }
 .dd-tour-bar {
   width: 120px; height: 3px; border-radius: 2px; background: var(--surface2);
-  margin-top: 16px; overflow: hidden;
+  margin-top: 18px; overflow: hidden;
 }
 .dd-tour-bar span {
   display: block; height: 100%; background: var(--marigold); border-radius: 2px;

@@ -128,6 +128,9 @@ export default function DodoTour() {
           )
         )}
       </button>
+      <div className="dd-tour-bar" role="presentation">
+        <span style={{ transform: `scaleX(${(i + 1) / SLIDES.length})` }} />
+      </div>
       {/* All captions are stacked so the block keeps the height of the
           tallest one — the text swap never shifts the layout. */}
       <div className="dd-tour-captions">
@@ -140,9 +143,6 @@ export default function DodoTour() {
             {s.caption}
           </p>
         ))}
-      </div>
-      <div className="dd-tour-bar" role="presentation">
-        <span style={{ transform: `scaleX(${(i + 1) / SLIDES.length})` }} />
       </div>
     </div>
   )
