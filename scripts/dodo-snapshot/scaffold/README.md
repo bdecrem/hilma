@@ -1,10 +1,11 @@
 # Dodo 🦤
 
-**An AI learning companion for things you actually want to remember.**
+**An AI learning companion.**
 
-Feed Dodo a book, an article, a YouTube video, or your own notes. It becomes a topic you can chat with, get quizzed on, and — this is the part that matters — keep remembering, through spaced-repetition flash cards, voice quizzes, a daily card over iMessage, and mastery badges that dim unless you refresh them.
+Feed Dodo a book, an article, a YouTube video, or your own notes. It becomes a topic you can chat with, get quizzed on, and keep remembering, through spaced-repetition flash cards, voice quizzes, a daily card over iMessage, and mastery badges that dim unless you refresh them.
 
-Dodo is a native iPhone app backed by a Next.js API. This repo is a periodically-updated snapshot of the working codebase, published so people can read it, learn from it, fork the app, or run their own backend.
+Dodo is a native iPhone/MacOS app. It's open source (have your agent spin up your own backend if you'd like). It's just a v.0.2 and we'd love your feedback & patches.
+
 
 | | | |
 |---|---|---|
@@ -34,7 +35,7 @@ schema/   Numbered Supabase (Postgres) migrations — run in order
 docs/     Screenshots and reference docs
 ```
 
-One backend, two clients: the iPhone app and the web app hit the same `/api/f2/*` endpoints and share accounts.
+One backend, two clients: the iPhone/MacOS app and the web app hit the same `/api/f2/*` endpoints and share accounts.
 
 ## Running your own backend
 
