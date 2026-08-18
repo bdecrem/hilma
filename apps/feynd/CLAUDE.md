@@ -4,6 +4,14 @@ Native client for F2. **The app's product name is Dodo** — that's the springbo
 
 **Branding lives in [`branding/`](branding/BRANDING.md)** — the bookworm-dodo mark, app icon SVG source, Fredoka text mark spec, and the official color palette (dark "slate ink" / light "butter paper", marigold accent). The app icon PNGs are rendered from `branding/dodo-icon.svg` via `rsvg-convert`; regenerate all sizes from there, never hand-edit the PNGs.
 
+## Versioning: smallest possible increment, always
+
+Every build that goes anywhere (device, Mac, TestFlight) takes the SMALLEST
+version step that identifies it: bump the build number only, via
+`./apps/feynd/bump-build.sh` — never the marketing version. The marketing
+version (0.2 → 0.3…) moves only when Bart explicitly says so. TestFlight
+submissions follow the same rule: same version train, next build number.
+
 ## Bump the build number on every build
 
 **Run `./apps/feynd/bump-build.sh` before any build that lands on a device — phone, this Mac, or TestFlight.** No exceptions, and don't wait to be asked.
