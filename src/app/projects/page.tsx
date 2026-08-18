@@ -23,11 +23,12 @@ const projects: Project[] = [
     artifacts: [{ label: 'the tweet', url: 'https://x.com/bartdecrem/status/2073153628836339823' }],
   },
   {
-    name: 'feynd',
-    url: 'https://github.com/bdecrem/hilma',
-    shortDesc: 'experimental learning app, named after richard feynman. first module: "teach me about AI" — short videos paired with an interactive voice mode, so you can stop the lesson mid-sentence and argue with it.',
-    fullDesc: 'native ios. early days.',
+    name: 'dodo',
+    url: 'https://dodogo.cc',
+    shortDesc: 'an ai learning companion — an open-source app to help you understand, explain back, and remember any book or topic. feed it a book or a youtube video, talk it through with a tutor, then keep it: flash cards, voice quizzes, a daily card over imessage.',
+    fullDesc: 'native iphone/mac app. it\'s not finished.',
     status: 'respinning',
+    artifacts: [{ label: 'github', url: 'https://github.com/bdecrem/dodo' }],
   },
   {
     name: 'jambot',
