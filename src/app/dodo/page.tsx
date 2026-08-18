@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import FlashCardDemo from './FlashCardDemo'
+import DodoTour from './DodoTour'
 
 // Set this to the public TestFlight invite URL when the beta link exists;
 // null renders the button as "coming soon".
@@ -55,20 +56,7 @@ export default function DodoPage() {
         <FlashCardDemo />
       </section>
 
-      <section className="dd-shots">
-        <figure>
-          <Image src="/dodo/peck-map.png" alt="Peck — the level path across every deck" width={302} height={655} />
-          <figcaption>Peck, the level path</figcaption>
-        </figure>
-        <figure>
-          <Image src="/dodo/flash-hub.png" alt="Flash card rounds — mixed, choice, typed, voice" width={302} height={655} />
-          <figcaption>Four ways to play a deck</figcaption>
-        </figure>
-        <figure>
-          <Image src="/dodo/pebbles.png" alt="Pebbles — saved quotes" width={302} height={655} />
-          <figcaption>Pebbles, quotes worth keeping</figcaption>
-        </figure>
-      </section>
+      <DodoTour />
 
       <section className="dd-features">
         <h2>What it does</h2>
@@ -238,19 +226,47 @@ const css = `
   .fcd-reveal { animation: none; }
 }
 
-/* ── Screenshots ── */
-.dd-shots {
-  max-width: 1020px; margin: 0 auto; padding: 56px 24px 8px;
-  display: flex; gap: 26px; justify-content: center; flex-wrap: wrap;
+/* ── The tour (slideshow) ── */
+.dd-tour { max-width: 1020px; margin: 0 auto; padding: 56px 24px 8px; }
+.dd-tour-inner {
+  /* caption column = 780 - 268 - 64 = 448px wide */
+  max-width: 780px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 268px; gap: 64px; align-items: center;
 }
-.dd-shots figure { margin: 0; text-align: center; }
-.dd-shots img {
-  width: 100%; max-width: 268px; height: auto; border-radius: 28px;
+.dd-tour-eyebrow {
+  font-family: var(--display); font-weight: 600; font-size: 12px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--marigold-deep);
+  margin-bottom: 16px;
+}
+.dd-tour-count { color: var(--ink3); margin-left: 10px; letter-spacing: 0.06em; }
+.dd-tour-captions { display: grid; }
+.dd-tour-caption {
+  grid-area: 1 / 1; margin: 0;
+  font-size: 20px; line-height: 1.55; color: var(--ink);
+  opacity: 0; transition: opacity 0.45s ease;
+}
+.dd-tour-bar {
+  width: 140px; height: 3px; border-radius: 2px; background: var(--surface2);
+  margin-top: 24px; overflow: hidden;
+}
+.dd-tour-bar span {
+  display: block; height: 100%; background: var(--marigold); border-radius: 2px;
+  transform-origin: left; transition: transform 0.45s ease;
+}
+.dd-tour-phone {
+  display: block; position: relative; padding: 0; cursor: pointer;
+  width: 268px; aspect-ratio: 1260 / 2736;
+  border-radius: 28px; overflow: hidden; background: var(--paper);
   border: 1px solid var(--border); box-shadow: 0 14px 34px rgba(51,56,62,0.10);
 }
-.dd-shots figcaption {
-  font-family: var(--display); font-weight: 500; font-size: 13.5px;
-  color: var(--ink2); margin-top: 12px;
+.dd-tour-phone:focus-visible { outline: 3px solid var(--marigold); outline-offset: 3px; }
+.dd-tour-slide {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity 0.55s ease;
+}
+.dd-tour-on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .dd-tour-caption, .dd-tour-slide, .dd-tour-bar span { transition: none; }
 }
 
 /* ── Features ── */
@@ -294,5 +310,10 @@ const css = `
 @media (max-width: 860px) {
   .dd-hero { grid-template-columns: 1fr; gap: 40px; padding-top: 44px; }
   .dd-grid { grid-template-columns: 1fr; }
+  .dd-tour-inner { grid-template-columns: 1fr; gap: 28px; }
+  .dd-tour-phone { order: -1; justify-self: center; }
+  .dd-tour-copy { text-align: center; }
+  .dd-tour-caption { font-size: 17.5px; }
+  .dd-tour-bar { margin: 20px auto 0; }
 }
 `
