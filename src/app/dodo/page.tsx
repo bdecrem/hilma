@@ -18,7 +18,7 @@ export default function DodoPage() {
         </div>
         <nav className="dd-nav">
           <a href={GITHUB_URL}>GitHub</a>
-          <a href={SUBSTACK_URL}>Intro post</a>
+          <a href={SUBSTACK_URL}>About</a>
         </nav>
       </header>
 
@@ -30,22 +30,70 @@ export default function DodoPage() {
             <em>Keep it.</em>
           </h1>
           <p className="dd-sub">
-            Dodo is an AI learning companion for iPhone. Feed it a book, a
-            video, or an article — talk it through with a tutor, then keep it
-            for good with flash cards that know when you&rsquo;re about to
-            forget.
+            Feed Dodo a book, an article, a YouTube video, or your own notes.
+            It becomes a topic you can chat with, get quizzed on, and keep
+            remembering, through spaced-repetition flash cards, voice quizzes,
+            a daily card over iMessage, and mastery badges that dim unless you
+            refresh them.
+          </p>
+          <p className="dd-sub">
+            Dodo is a native iPhone/MacOS app. It&rsquo;s open source (have
+            your agent spin up your own backend if you&rsquo;d like).
+            It&rsquo;s just a v.0.2 and we&rsquo;d love your feedback &amp;
+            patches.
           </p>
           <div className="dd-ctas">
             <a className="dd-btn dd-btn-primary" href={TESTFLIGHT_MAILTO}>
               Request TestFlight access
             </a>
             <a className="dd-btn" href={GITHUB_URL}>
-              Read the code
+              GitHub
             </a>
             <a className="dd-btn" href={SUBSTACK_URL}>
-              The intro post
+              About
             </a>
           </div>
+          <ul className="dd-feat">
+            <li>
+              <strong>Topics from anything</strong> — send a URL, paste text,
+              or name a book; Dodo ingests it (including YouTube transcripts)
+              and it becomes a chat-able topic with an AI tutor grounded in
+              that material.
+            </li>
+            <li>
+              <strong>Flash cards with real scheduling</strong> — decks
+              generated per topic, played as multiple choice, typed answers
+              (LLM-graded), mixed rounds, or out-loud voice rounds. SM-2
+              scheduling under the hood; thumbs-down buries a card,
+              double-thumbs-up makes it a priority.
+            </li>
+            <li>
+              <strong>Peck</strong> — a Duolingo-style level path across every
+              deck you own.
+            </li>
+            <li>
+              <strong>Stars and mastery</strong> — quizzes earn stars per
+              topic; a final voice review earns a gold badge, and badges need
+              a periodic 3-question refresher to stay gold.
+            </li>
+            <li>
+              <strong>Daily card over iMessage</strong> — one card a day lands
+              in Messages; your reply is graded and banked into the next Peck
+              round.
+            </li>
+            <li>
+              <strong>Pebbles</strong> — save quotes worth keeping; one
+              resurfaces while a round is graded.
+            </li>
+            <li>
+              <strong>Voice</strong> — talk to your tutor, take voice rounds,
+              or do a walking review, over OpenAI Realtime.
+            </li>
+            <li>
+              <strong>Audio summaries</strong> — a narrated summary of a
+              topic, playable with the screen locked.
+            </li>
+          </ul>
         </div>
         <DodoTour />
       </section>
@@ -99,7 +147,18 @@ const css = `
   margin: 0 0 22px;
 }
 .dd-hero h1 em { font-style: normal; color: var(--marigold-deep); }
-.dd-sub { font-size: 19px; line-height: 1.55; color: var(--ink2); max-width: 30em; margin: 0 0 28px; }
+.dd-sub { font-size: 18px; line-height: 1.55; color: var(--ink2); max-width: 32em; margin: 0 0 18px; }
+.dd-ctas { margin: 28px 0 34px; }
+.dd-feat {
+  list-style: none; margin: 0; padding: 0; max-width: 34em;
+}
+.dd-feat li {
+  font-size: 15px; line-height: 1.55; color: var(--ink2);
+  margin-bottom: 11px;
+}
+.dd-feat strong {
+  font-family: var(--display); font-weight: 500; font-size: 14.5px; color: var(--ink);
+}
 .dd-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
 .dd-btn {
   font-family: var(--display); font-weight: 600; font-size: 15.5px;
