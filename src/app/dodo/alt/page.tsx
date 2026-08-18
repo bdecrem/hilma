@@ -13,7 +13,7 @@ export default function DodoPage() {
 
       <header className="dd-top">
         <div className="dd-mark">
-          <Image src="/dodo/appicon-dark.png" alt="" width={34} height={34} className="dd-appicon" />
+          <Image src="/dodo/appicon-tile.png" alt="" width={34} height={34} className="dd-appicon" />
           <span className="dd-word">dodo</span>
         </div>
         <nav className="dd-nav">
