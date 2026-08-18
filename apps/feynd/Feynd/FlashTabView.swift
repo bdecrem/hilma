@@ -812,7 +812,7 @@ struct PeckWorldCanvas: View {
                     let fi = Double(i) + Double(k) * 11
                     // Sides only — the trail and its traveler own the middle.
                     let u = frac(fi * 0.6180339887 + 0.43)
-                    let x = u < 0.5 ? w * (0.045 + 0.19 * u * 2) : w * (0.76 + 0.2 * (u - 0.5) * 2)
+                    let x = u < 0.5 ? w * (0.02 + 0.09 * u * 2) : w * (0.82 + 0.15 * (u - 0.5) * 2)
                     let y = top + 150 + (span - 170) * (0.22 + 0.7 * frac(fi * 0.7548776662))
                     let kk = 0.75 + 0.5 * frac(fi * 0.53)
                     if skin.pines {
