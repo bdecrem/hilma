@@ -109,6 +109,13 @@ export default function DodoAltPage() {
               <strong>Audio summaries</strong> — a narrated summary of a
               topic, playable with the screen locked.
             </li>
+            <li>
+              <strong>What it doesn&rsquo;t yet do well: the main thing</strong>{' '}
+              — you can just chat with Dodo about anything, but the system
+              works best if you source the core learning material — a book, a
+              lecture series, a YouTube video — and partner with Dodo to
+              synthesize it.
+            </li>
           </ul>
           <p className="da-more">
             <a href={GITHUB_URL}>More in the repo &rarr;</a>
