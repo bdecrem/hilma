@@ -1,11 +1,10 @@
 import Image from 'next/image'
-import FlashCardDemo from './FlashCardDemo'
 import DodoTour from './DodoTour'
 
-// Set this to the public TestFlight invite URL when the beta link exists;
-// null renders the button as "coming soon".
-const TESTFLIGHT_URL: string | null = null
 const GITHUB_URL = 'https://github.com/bdecrem/dodo'
+const SUBSTACK_URL = 'https://substack.com/inbox/post/211742287'
+const TESTFLIGHT_MAILTO =
+  'mailto:bdecrem@gmail.com?subject=Dodo%20TestFlight%20access'
 
 export default function DodoPage() {
   return (
@@ -19,11 +18,7 @@ export default function DodoPage() {
         </div>
         <nav className="dd-nav">
           <a href={GITHUB_URL}>GitHub</a>
-          {TESTFLIGHT_URL ? (
-            <a href={TESTFLIGHT_URL}>TestFlight</a>
-          ) : (
-            <span className="dd-soon-inline">TestFlight soon</span>
-          )}
+          <a href={SUBSTACK_URL}>Intro post</a>
         </nav>
       </header>
 
@@ -41,77 +36,19 @@ export default function DodoPage() {
             forget.
           </p>
           <div className="dd-ctas">
-            <a className="dd-btn dd-btn-primary" href={GITHUB_URL}>
+            <a className="dd-btn dd-btn-primary" href={TESTFLIGHT_MAILTO}>
+              Request TestFlight access
+            </a>
+            <a className="dd-btn" href={GITHUB_URL}>
               Read the code
             </a>
-            {TESTFLIGHT_URL ? (
-              <a className="dd-btn" href={TESTFLIGHT_URL}>
-                Join the beta
-              </a>
-            ) : (
-              <span className="dd-btn dd-btn-soon">Beta invite soon</span>
-            )}
+            <a className="dd-btn" href={SUBSTACK_URL}>
+              The intro post
+            </a>
           </div>
         </div>
-        <FlashCardDemo />
+        <DodoTour />
       </section>
-
-      <DodoTour />
-
-      <section className="dd-features">
-        <h2>What it does</h2>
-        <div className="dd-grid">
-          <div>
-            <h3>Topics from anything</h3>
-            <p>A URL, a YouTube video, a pasted chapter, your own notes — each becomes a topic with a tutor grounded in it.</p>
-          </div>
-          <div>
-            <h3>Cards that schedule themselves</h3>
-            <p>Spaced repetition under the hood. Thumbs-down buries a card forever; double-thumbs-up makes it a priority.</p>
-          </div>
-          <div>
-            <h3>A daily card over iMessage</h3>
-            <p>One question a day in Messages. Your reply is graded and banked into the next round.</p>
-          </div>
-          <div>
-            <h3>Voice rounds</h3>
-            <p>Dodo quizzes you out loud, game-show style, and grades what you said — on a walk, hands free.</p>
-          </div>
-          <div>
-            <h3>Badges that dim</h3>
-            <p>Master a topic and the badge goes gold. Ignore it long enough and it dims — a three-question refresher brings it back.</p>
-          </div>
-          <div>
-            <h3>Pebbles</h3>
-            <p>Save the lines worth keeping. One comes back to you while your round is being graded.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="dd-tech">
-        <h2>How it&rsquo;s built</h2>
-        <p className="dd-tech-line">
-          A SwiftUI iPhone app and a Next.js backend sharing one API. Postgres
-          on Supabase. Tutoring, grading, and card writing by Claude; voice
-          over OpenAI Realtime; the daily card rides on a Mac mini running
-          Messages.
-        </p>
-        <div className="dd-repo">
-          <code>ios/</code> <span>the SwiftUI app</span>
-          <code>web/</code> <span>Next.js backend + web client</span>
-          <code>schema/</code> <span>Supabase migrations</span>
-        </div>
-        <p className="dd-tech-note">
-          The repo is a periodically-synced snapshot of the working codebase —
-          MIT licensed, with setup notes for running your own backend, your own
-          build of the app, and even your own iMessage rig.
-        </p>
-      </section>
-
-      <footer className="dd-footer">
-        <span>Dodo · MIT © 2026 Bart Decrem</span>
-        <a href={GITHUB_URL}>github.com/bdecrem/dodo</a>
-      </footer>
     </main>
   )
 }
@@ -127,16 +64,13 @@ const css = `
   --ink3: #939DA5;
   --marigold: #DD9420;
   --marigold-deep: #B97A14;
-  --green: #46D18A;
-  --red: #E0635A;
-  --slate: #14191D;
   --display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
   --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
 
   background: var(--paper);
   color: var(--ink);
   min-height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   font-family: var(--serif);
 }
 .dd * { box-sizing: border-box; }
@@ -152,13 +86,12 @@ const css = `
 .dd-word { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: -0.02em; }
 .dd-nav { display: flex; gap: 22px; font-family: var(--display); font-weight: 500; font-size: 15px; }
 .dd-nav a { text-decoration: none; border-bottom: 2px solid var(--marigold); padding-bottom: 1px; }
-.dd-soon-inline { color: var(--ink3); }
 
 /* ── Hero ── */
 .dd-hero {
   max-width: 1020px; margin: 0 auto;
-  padding: 64px 24px 24px;
-  display: grid; grid-template-columns: 1fr 400px; gap: 56px; align-items: center;
+  padding: 64px 24px 72px;
+  display: grid; grid-template-columns: 1fr 340px; gap: 64px; align-items: center;
 }
 .dd-hero h1 {
   font-family: var(--display); font-weight: 600;
@@ -174,85 +107,9 @@ const css = `
   border: 1.5px solid var(--border); background: var(--surface);
 }
 .dd-btn-primary { background: var(--marigold); border-color: var(--marigold); color: #261C06; }
-.dd-btn-soon { color: var(--ink3); cursor: default; }
-
-/* ── The card (signature) ── */
-.fcd-wrap { width: 100%; }
-.fcd-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
-  padding: 26px 26px 24px; box-shadow: 0 10px 30px rgba(51,56,62,0.08);
-}
-.fcd-eyebrow {
-  font-family: var(--display); font-weight: 600; font-size: 12px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--marigold-deep);
-  margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
-}
-.fcd-xp {
-  background: rgba(221,148,32,0.16); color: var(--marigold-deep);
-  padding: 3px 10px; border-radius: 999px; letter-spacing: 0.04em;
-}
-.fcd-question { font-size: 21px; line-height: 1.4; margin: 0 0 18px; }
-.fcd-choices { display: grid; gap: 9px; }
-.fcd-choice {
-  font-family: var(--display); font-weight: 500; font-size: 15.5px; text-align: left;
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 16px; border-radius: 14px; cursor: pointer;
-  background: var(--paper); border: 1.5px solid var(--border); color: var(--ink);
-  transition: border-color 0.15s, background 0.15s, transform 0.15s;
-}
-.fcd-choice:hover { border-color: var(--marigold); }
-.fcd-choice:focus-visible { outline: 3px solid var(--marigold); outline-offset: 2px; }
-.fcd-right { background: rgba(70,209,138,0.16); border-color: var(--green); }
-.fcd-wrong { background: rgba(224,99,90,0.12); border-color: var(--red); animation: fcd-shake 0.3s; }
-@keyframes fcd-shake {
-  0%, 100% { transform: translateX(0); }
-  30% { transform: translateX(-5px); }
-  60% { transform: translateX(5px); }
-}
-.fcd-reveal { animation: fcd-in 0.35s ease-out; }
-@keyframes fcd-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: none; }
-}
-.fcd-punch { font-size: 16px; line-height: 1.55; color: var(--ink2); font-style: italic; margin: 0 0 18px; }
-.fcd-again {
-  font-family: var(--display); font-weight: 600; font-size: 14px;
-  background: none; border: 1.5px solid var(--border); border-radius: 999px;
-  padding: 9px 18px; cursor: pointer; color: var(--ink2);
-}
-.fcd-again:hover { border-color: var(--marigold); color: var(--ink); }
-@media (prefers-reduced-motion: reduce) {
-  .fcd-wrong { animation: none; }
-  .fcd-reveal { animation: none; }
-}
 
 /* ── The tour (slideshow) ── */
-.dd-tour { max-width: 1020px; margin: 0 auto; padding: 56px 24px 8px; }
-.dd-tour-inner {
-  /* caption column = 780 - 268 - 64 = 448px wide */
-  max-width: 780px; margin: 0 auto;
-  display: grid; grid-template-columns: 1fr 268px; gap: 64px; align-items: center;
-}
-.dd-tour-eyebrow {
-  font-family: var(--display); font-weight: 600; font-size: 12px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--marigold-deep);
-  margin-bottom: 16px;
-}
-.dd-tour-count { color: var(--ink3); margin-left: 10px; letter-spacing: 0.06em; }
-.dd-tour-captions { display: grid; }
-.dd-tour-caption {
-  grid-area: 1 / 1; margin: 0;
-  font-size: 20px; line-height: 1.55; color: var(--ink);
-  opacity: 0; transition: opacity 0.45s ease;
-}
-.dd-tour-bar {
-  width: 140px; height: 3px; border-radius: 2px; background: var(--surface2);
-  margin-top: 24px; overflow: hidden;
-}
-.dd-tour-bar span {
-  display: block; height: 100%; background: var(--marigold); border-radius: 2px;
-  transform-origin: left; transition: transform 0.45s ease;
-}
+.dd-tour { display: flex; flex-direction: column; align-items: center; }
 .dd-tour-phone {
   display: block; position: relative; padding: 0; cursor: pointer;
   width: 268px; aspect-ratio: 1260 / 2736;
@@ -264,56 +121,28 @@ const css = `
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   opacity: 0; transition: opacity 0.55s ease;
 }
+.dd-tour-captions { display: grid; max-width: 320px; margin-top: 18px; }
+.dd-tour-caption {
+  grid-area: 1 / 1; margin: 0; text-align: center;
+  font-size: 15px; line-height: 1.5; color: var(--ink2);
+  opacity: 0; transition: opacity 0.45s ease;
+}
+.dd-tour-bar {
+  width: 120px; height: 3px; border-radius: 2px; background: var(--surface2);
+  margin-top: 16px; overflow: hidden;
+}
+.dd-tour-bar span {
+  display: block; height: 100%; background: var(--marigold); border-radius: 2px;
+  transform-origin: left; transition: transform 0.45s ease;
+}
 .dd-tour-on { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .dd-tour-caption, .dd-tour-slide, .dd-tour-bar span { transition: none; }
 }
 
-/* ── Features ── */
-.dd-features { max-width: 1020px; margin: 0 auto; padding: 72px 24px 8px; }
-.dd h2 {
-  font-family: var(--display); font-weight: 600; font-size: 30px;
-  letter-spacing: -0.02em; margin: 0 0 28px;
-}
-.dd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px 44px; }
-.dd-grid h3 {
-  font-family: var(--display); font-weight: 600; font-size: 17px; margin: 0 0 6px;
-}
-.dd-grid p { font-size: 15.5px; line-height: 1.55; color: var(--ink2); margin: 0; }
-
-/* ── Tech ── */
-.dd-tech { max-width: 1020px; margin: 0 auto; padding: 64px 24px 72px; }
-.dd-tech-line { font-size: 17px; line-height: 1.6; color: var(--ink2); max-width: 42em; margin: 0 0 24px; }
-.dd-repo {
-  display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; align-items: baseline;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-  padding: 18px 22px; max-width: 460px; margin-bottom: 24px;
-}
-.dd-repo code {
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 14px;
-  color: var(--marigold-deep); font-weight: 600;
-}
-.dd-repo span { font-size: 14.5px; color: var(--ink2); }
-.dd-tech-note { font-size: 15.5px; line-height: 1.6; color: var(--ink2); max-width: 42em; margin: 0; }
-.dd-tech-note a { color: var(--marigold-deep); }
-
-/* ── Footer ── */
-.dd-footer {
-  background: var(--slate); color: #A0ACB4;
-  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
-  padding: 26px 24px calc(26px + env(safe-area-inset-bottom));
-  font-family: var(--display); font-weight: 500; font-size: 14px;
-}
-.dd-footer a { color: #F0A830; text-decoration: none; }
-
 /* ── Mobile ── */
 @media (max-width: 860px) {
-  .dd-hero { grid-template-columns: 1fr; gap: 40px; padding-top: 44px; }
-  .dd-grid { grid-template-columns: 1fr; }
-  .dd-tour-inner { grid-template-columns: 1fr; gap: 28px; }
-  .dd-tour-phone { order: -1; justify-self: center; }
-  .dd-tour-copy { text-align: center; }
-  .dd-tour-caption { font-size: 17.5px; }
-  .dd-tour-bar { margin: 20px auto 0; }
+  .dd-hero { grid-template-columns: 1fr; gap: 44px; padding-top: 44px; }
+  .dd-ctas { justify-content: flex-start; }
 }
 `
