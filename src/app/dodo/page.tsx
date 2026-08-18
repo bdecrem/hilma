@@ -17,7 +17,7 @@ export default function DodoAltPage() {
 
       <header className="da-top">
         <div className="da-mark">
-          <Image src="/dodo/appicon.png" alt="" width={30} height={30} className="da-appicon" />
+          <Image src="/dodo/appicon-dark.png" alt="" width={30} height={30} className="da-appicon" />
           <span className="da-word">dodo</span>
         </div>
         <nav className="da-nav">
