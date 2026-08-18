@@ -21,6 +21,20 @@ import {
   type F2Artifact,
 } from './artifacts'
 import {
+  confirmImessagePairing,
+  listImessageHandles,
+  removeImessageHandle,
+  sendPairingMessage,
+  startImessagePairing,
+} from './imessage'
+import {
+  MAX_VOICE_STYLE_CHARS,
+  getVoicePrefs,
+  isKnownVoice,
+  saveVoicePrefs,
+} from './realtime'
+import { RECERT_INTERVAL_DAYS } from './flash'
+import {
   createThread,
   getLatestThread,
   getThreadById,
@@ -608,6 +622,101 @@ const DODO_AGENT_TOOLS = [
     },
   },
   {
+    name: 'set_topic_stars',
+    description:
+      "Set THIS topic's star count (0-3) directly — the user's progress is theirs to edit. 3 stars = the gold mastery badge; setting below 3 removes the badge and its refresher schedule. Use when the user asks to remove/grant stars, clear the \"final review passed\" badge, or reset progress.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        stars: { type: 'integer', description: '0, 1, 2 or 3.' },
+      },
+      required: ['stars'],
+    },
+  },
+  {
+    name: 'update_topic',
+    description:
+      'Rename this topic, change its type, pin/unpin it, or include/exclude its deck from Peck. Only the fields you pass change.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        new_title: { type: 'string', description: 'New topic name.' },
+        kind: { type: 'string', description: 'Topic type: book | mini | general | web | video | audio | paste | chat.' },
+        pinned: { type: 'boolean', description: 'Pin (true) or unpin (false).' },
+        peck_excluded: { type: 'boolean', description: 'true takes its cards out of Peck sets and the daily card.' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'delete_topic',
+    description:
+      'Permanently delete a topic and everything on it. ONLY call after the user has explicitly and unambiguously asked to delete THIS topic in this conversation — never to tidy up on your own.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        topic_title: { type: 'string', description: "The topic's title, repeated back as confirmation." },
+      },
+      required: ['topic_title'],
+    },
+  },
+  {
+    name: 'get_settings',
+    description:
+      "The user's account settings: daily-card toggle, paired iMessage handles, refresher toggle, and voice preference. Read before changing anything.",
+    input_schema: { type: 'object' as const, properties: {}, required: [] },
+  },
+  {
+    name: 'update_settings',
+    description:
+      'Change account settings the user asked for: the daily iMessage card, the refresher toggle (off = mastery is forever), or the realtime voice + speaking-style. Only passed fields change.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        daily_card_enabled: { type: 'boolean', description: 'Daily card over iMessage (needs a paired handle to enable).' },
+        recert_enabled: { type: 'boolean', description: 'false = no refresher quizzes or nudges, badges never dim.' },
+        voice: { type: 'string', description: 'Realtime voice name; "" resets to default.' },
+        voice_style: { type: 'string', description: 'Standing speaking-style instruction; "" clears it.' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'pair_imessage',
+    description:
+      'Start pairing an iMessage handle (phone number or iCloud email) for the daily card: a 6-digit code is sent to that handle. The user reads the code back to you; then call confirm_imessage. Use remove target "remove_imessage" to unpair.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        handle: { type: 'string', description: 'Phone number (+1…) or iCloud email.' },
+      },
+      required: ['handle'],
+    },
+  },
+  {
+    name: 'confirm_imessage',
+    description: 'Finish iMessage pairing with the 6-digit code the user received.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        handle: { type: 'string', description: 'The handle being paired.' },
+        code: { type: 'string', description: 'The 6-digit code.' },
+      },
+      required: ['handle', 'code'],
+    },
+  },
+  {
+    name: 'remove_imessage',
+    description: 'Unpair an iMessage handle.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        handle: { type: 'string', description: 'The handle to remove.' },
+      },
+      required: ['handle'],
+    },
+  },
+  {
     name: 'list_flash_cards',
     description:
       "Read the topic's current deck with per-card learning state (priority/buried, times seen, streak, lapses, mastered, due date). ALWAYS call this before answering any question about the deck — what's in it, which cards are weak or unmastered, which are marked important, how many there are.",
@@ -745,6 +854,7 @@ How to work:
 - Deck and progress questions are answered from REAL DATA, never from memory or guesswork: "which cards am I weak on / haven't memorized", "what's in my deck" → list_flash_cards first; "what was my grade", "how am I doing", "what should I review" → get_progress first. You have full access to the deck, its learning stats, quiz scores, and review grades — never claim you can't see them.
 - "How I want to be tested" instructions ("only test me on X", "focus quizzes on Y") → set_study_focus. It scopes flash cards, quizzes, and the Final Review.
 - Quote cards ("pebbles" — the Quotes shelf): save_quote / update_quote / delete_quote, with list_quotes first for edits and deletes. "Save this quote", "add a pebble", "delete the Sapiens quote" all land here. You CAN add, edit, and delete them — never claim otherwise.
+- You have FULL AUTHORITY over everything in the user's own account — their topics, stars and badges (set_topic_stars), topic names/types/pins (update_topic), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage). "Remove the gold badge", "turn off refreshers", "pair my number", "rename this" are all yours to do — never claim you lack the ability. Destructive moves (delete_topic, dropping stars) only on an explicit ask, and say plainly what you changed.
 - If the message is just chat addressed to the dodo, answer it directly without tools.
 - Plain text replies, no markdown.`
 
@@ -973,6 +1083,153 @@ async function executeDodoTool(
           ? `Deleted the quote "${match.quote.body.slice(0, 60)}…" (${match.quote.id.slice(0, 8)}).`
           : 'Error: delete failed.',
       }
+    }
+    case 'set_topic_stars': {
+      const stars = Math.max(0, Math.min(3, Math.round(Number(input.stars))))
+      const update: Record<string, unknown> = { stars }
+      if (stars < 3) {
+        // Dropping below gold retires the badge machinery too.
+        update.hard_quiz_completed_at = null
+        update.recert_due_at = null
+        update.recert_stage = 0
+      } else {
+        update.hard_quiz_completed_at = new Date().toISOString()
+        update.recert_stage = 0
+        update.recert_due_at = new Date(
+          Date.now() + RECERT_INTERVAL_DAYS[0] * 86_400_000,
+        ).toISOString()
+      }
+      const { error } = await f2Supabase()
+        .from('f2_threads')
+        .update(update)
+        .eq('id', thread.id)
+        .eq('user_id', thread.user_id)
+      if (error) return { result: 'Error: could not update stars.' }
+      return {
+        result: stars < 3
+          ? `Stars set to ${stars} — the gold badge and its refresher schedule are gone.`
+          : 'Stars set to 3 — gold badge granted, first refresher in 30 days.',
+        mutated: true,
+      }
+    }
+    case 'update_topic': {
+      const update: Record<string, unknown> = {}
+      const changes: string[] = []
+      if (typeof input.new_title === 'string' && input.new_title.trim()) {
+        update.topic = input.new_title.trim()
+        changes.push(`renamed to "${update.topic}"`)
+      }
+      if (typeof input.kind === 'string' && input.kind.trim()) {
+        update.kind = input.kind.trim()
+        changes.push(`type → ${update.kind}`)
+      }
+      if (typeof input.pinned === 'boolean') {
+        update.pinned_at = input.pinned ? new Date().toISOString() : null
+        changes.push(input.pinned ? 'pinned' : 'unpinned')
+      }
+      if (typeof input.peck_excluded === 'boolean') {
+        update.peck_excluded = input.peck_excluded
+        changes.push(input.peck_excluded ? 'out of Peck' : 'back in Peck')
+      }
+      if (changes.length === 0) return { result: 'Error: nothing to change.' }
+      const { error } = await f2Supabase()
+        .from('f2_threads')
+        .update(update)
+        .eq('id', thread.id)
+        .eq('user_id', thread.user_id)
+      if (error) return { result: 'Error: update failed.' }
+      return { result: `Topic updated: ${changes.join(', ')}.`, mutated: true }
+    }
+    case 'delete_topic': {
+      const title = String(input.topic_title ?? '').trim().toLowerCase()
+      const actual = (thread.topic ?? '').trim().toLowerCase()
+      if (!title || !actual.includes(title.slice(0, 24))) {
+        return { result: `Error: title mismatch — this topic is "${thread.topic ?? '(untitled)'}". Repeat its title to confirm.` }
+      }
+      const { error } = await f2Supabase()
+        .from('f2_threads')
+        .delete()
+        .eq('id', thread.id)
+        .eq('user_id', thread.user_id)
+      if (error) return { result: 'Error: delete failed.' }
+      return { result: `Deleted "${thread.topic}". This chat thread is gone with it.`, mutated: true }
+    }
+    case 'get_settings': {
+      const sb = f2Supabase()
+      const { data } = await sb
+        .from('f2_users')
+        .select('daily_card_enabled, recert_enabled')
+        .eq('id', thread.user_id)
+        .maybeSingle()
+      const handles = await listImessageHandles(thread.user_id)
+      const prefs = await getVoicePrefs(thread.user_id)
+      return {
+        result: [
+          `Daily iMessage card: ${data?.daily_card_enabled ? 'on' : 'off'}`,
+          `Paired iMessage handles: ${handles.length ? handles.join(', ') : 'none'}`,
+          `Refreshers: ${data?.recert_enabled === false ? 'off (mastery is forever)' : 'on'}`,
+          `Voice: ${prefs.voice ?? 'default'}${prefs.style ? ` · style: ${prefs.style}` : ''}`,
+        ].join('\n'),
+      }
+    }
+    case 'update_settings': {
+      const changes: string[] = []
+      const sb = f2Supabase()
+      if (typeof input.recert_enabled === 'boolean') {
+        await sb.from('f2_users').update({ recert_enabled: input.recert_enabled }).eq('id', thread.user_id)
+        changes.push(`refreshers ${input.recert_enabled ? 'on' : 'off — mastery is forever now'}`)
+      }
+      if (typeof input.daily_card_enabled === 'boolean') {
+        if (input.daily_card_enabled) {
+          const handles = await listImessageHandles(thread.user_id)
+          if (handles.length === 0) {
+            return { result: 'Error: pair an iMessage handle first (pair_imessage) — the daily card is delivered there.' }
+          }
+        }
+        await sb.from('f2_users').update({ daily_card_enabled: input.daily_card_enabled }).eq('id', thread.user_id)
+        changes.push(`daily card ${input.daily_card_enabled ? 'on' : 'off'}`)
+      }
+      if (typeof input.voice === 'string' || typeof input.voice_style === 'string') {
+        const current = await getVoicePrefs(thread.user_id)
+        let voice = current.voice
+        if (typeof input.voice === 'string') {
+          const v = input.voice.trim()
+          if (v && !isKnownVoice(v)) return { result: `Error: unknown voice "${v}".` }
+          voice = v || null
+          changes.push(`voice → ${voice ?? 'default'}`)
+        }
+        let style = current.style
+        if (typeof input.voice_style === 'string') {
+          style = input.voice_style.trim().slice(0, MAX_VOICE_STYLE_CHARS) || null
+          changes.push(style ? 'speaking style updated' : 'speaking style cleared')
+        }
+        await saveVoicePrefs(thread.user_id, { voice, style })
+      }
+      if (changes.length === 0) return { result: 'Error: nothing to change.' }
+      return { result: `Settings updated: ${changes.join(', ')}.` }
+    }
+    case 'pair_imessage': {
+      const res = await startImessagePairing(thread.user_id, String(input.handle ?? ''))
+      if (!res.ok) return { result: `Error: ${res.error}` }
+      try {
+        await sendPairingMessage(res.handle, res.code)
+      } catch (e) {
+        console.error('[f2/agent] pairing send failed:', e)
+        return { result: 'Error: could not deliver the pairing code over iMessage — try again in a minute.' }
+      }
+      return {
+        result: `Code sent to ${res.handle}. Ask the user for the 6-digit code, then call confirm_imessage.`,
+      }
+    }
+    case 'confirm_imessage': {
+      const res = await confirmImessagePairing(
+        thread.user_id, String(input.handle ?? ''), String(input.code ?? ''))
+      if (!res.ok) return { result: `Error: ${res.error}` }
+      return { result: `Paired ${String(input.handle)} — the daily card can go there now.` }
+    }
+    case 'remove_imessage': {
+      await removeImessageHandle(thread.user_id, String(input.handle ?? ''))
+      return { result: `Removed ${String(input.handle)} from paired handles.` }
     }
     case 'list_flash_cards': {
       const all = await listFlashCards(thread.user_id, thread.id)
