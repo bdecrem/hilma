@@ -8,8 +8,12 @@ import {
 } from '@/lib/f2/threads'
 import { audioSummaryForClient } from '@/lib/f2/audio-summary'
 import { bookSummaryForClient } from '@/lib/f2/book-summary'
+import { fetchUrlContent, isUrl } from '@/lib/f2/url'
+import { nameTopic } from '@/lib/f2/name-topic'
 
 export const runtime = 'nodejs'
+// URL ingestion (transcript fetch + naming) can take a while.
+export const maxDuration = 60
 
 // Per-user, session-authed, live data — must never be cached by URLCache, a
 // CDN, or any proxy. (Next's default `public, max-age=0, must-revalidate` is
@@ -75,6 +79,38 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'invalid kind' }, { status: 400 })
     }
     kind = body.kind as TopicKind
+  }
+
+  // A URL pasted into the "name" slot means "make this the topic's source".
+  // The new-topic sheet is where people paste YouTube links, so treat it
+  // exactly like sending the link in chat: fetch content, store it as the
+  // primary source, and give the topic a real name.
+  if (isUrl(topic)) {
+    const url = topic
+    const fetched = await fetchUrlContent(url)
+    const named =
+      (await nameTopic({ body: fetched.body ?? '', documentTitle: fetched.title })) ??
+      fetched.title ??
+      url
+    const thread = await createThread({
+      userId: user.id,
+      client: 'web',
+      handle: user.username,
+      topic: named.slice(0, 200),
+      url,
+      content: fetched.body,
+      kind,
+    })
+    if (!thread) {
+      return NextResponse.json({ error: 'create failed' }, { status: 500 })
+    }
+    return NextResponse.json(
+      {
+        thread: { id: thread.id, topic: thread.topic, kind: thread.kind },
+        ingested: fetched.body !== null,
+      },
+      { headers: NO_STORE },
+    )
   }
 
   const thread = await createThread({
