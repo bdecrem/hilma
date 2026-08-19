@@ -25,6 +25,7 @@ struct FlashCardsView: View {
     @State private var startingMode: String? = nil
     @State private var editTarget: FlashCard? = nil
     @State private var showCards = false
+    @State private var showMoreCardsDialog = false
     @State private var newQuestion = ""
     @State private var addingCard = false
     @State private var remakeInstructions = ""
@@ -164,26 +165,35 @@ struct FlashCardsView: View {
         }
     }
 
+    /// Two rows of chips: quick single-digit top-ups up front, real deck
+    /// sizes below. All options visible — no dropdown to spelunk.
     private var countPicker: some View {
-        HStack(spacing: 6) {
-            ForEach([10, 15, 20, 25, 40, 50, 75], id: \.self) { n in
-                Button {
-                    generateCount = n
-                } label: {
-                    Text("\(n)")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(generateCount == n ? FeyndTheme.inkOnAccent : FeyndTheme.text2)
-                        .frame(width: 44, height: 40)
-                        .background(
-                            generateCount == n ? FeyndTheme.accent : FeyndTheme.surface,
-                            in: RoundedRectangle(cornerRadius: 12)
-                        )
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: generateCount == n ? 0 : 1))
-                }
-                .buttonStyle(.plain)
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                ForEach([1, 3, 5, 10, 15], id: \.self) { n in countChip(n) }
+            }
+            HStack(spacing: 6) {
+                ForEach([20, 25, 40, 50, 75], id: \.self) { n in countChip(n) }
             }
         }
         .padding(.top, 6)
+    }
+
+    private func countChip(_ n: Int) -> some View {
+        Button {
+            generateCount = n
+        } label: {
+            Text("\(n)")
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(generateCount == n ? FeyndTheme.inkOnAccent : FeyndTheme.text2)
+                .frame(width: 44, height: 40)
+                .background(
+                    generateCount == n ? FeyndTheme.accent : FeyndTheme.surface,
+                    in: RoundedRectangle(cornerRadius: 12)
+                )
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: generateCount == n ? 0 : 1))
+        }
+        .buttonStyle(.plain)
     }
 
     private var generateButton: some View {
@@ -233,29 +243,65 @@ struct FlashCardsView: View {
             Text("·").foregroundStyle(FeyndTheme.text3)
             StarRow(value: stars, size: 11, gap: 2)
             Spacer()
-            Button {
-                generate()
-            } label: {
-                let building = FlashDeckBuilder.shared.isBuilding(topicId)
-                HStack(spacing: 4) {
-                    if building {
-                        ProgressView().tint(FeyndTheme.text2).scaleEffect(0.7)
-                    } else {
-                        Image(systemName: "plus")
-                            .font(.system(size: 11, weight: .bold))
-                    }
-                    Text(building ? "Writing…" : "More cards")
-                        .font(.system(size: 12.5, weight: .semibold))
-                }
-                .foregroundStyle(FeyndTheme.text2)
-                .padding(.horizontal, 11)
-                .padding(.vertical, 6)
-                .background(FeyndTheme.surface, in: Capsule())
-                .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+            // Pick how many on the way in — 1 or 3 for a quick top-up, more
+            // for a real expansion. Menu on iPhone; Catalyst can't render a
+            // Menu's custom label, so the Mac gets a dialog instead.
+            #if targetEnvironment(macCatalyst)
+            Button { showMoreCardsDialog = true } label: {
+                moreCardsLabel
             }
             .buttonStyle(.plain)
             .disabled(FlashDeckBuilder.shared.isBuilding(topicId))
+            .confirmationDialog("How many cards?", isPresented: $showMoreCardsDialog) {
+                ForEach(MORE_COUNTS, id: \.self) { n in
+                    Button("\(n) card\(n == 1 ? "" : "s")") {
+                        generateCount = n
+                        generate()
+                    }
+                }
+            }
+            #else
+            Menu {
+                ForEach(MORE_COUNTS, id: \.self) { n in
+                    Button("\(n) card\(n == 1 ? "" : "s")") {
+                        generateCount = n
+                        generate()
+                    }
+                }
+            } label: {
+                moreCardsLabel
+            }
+            .buttonStyle(.plain)
+            .disabled(FlashDeckBuilder.shared.isBuilding(topicId))
+            #endif
         }
+    }
+
+    private let MORE_COUNTS = [1, 3, 5, 10, 15, 25]
+    @ViewBuilder
+    private var moreCardsLabel: some View {
+        let building = FlashDeckBuilder.shared.isBuilding(topicId)
+        HStack(spacing: 4) {
+            if building {
+                ProgressView().tint(FeyndTheme.text2).scaleEffect(0.7)
+            } else {
+                Image(systemName: "plus")
+                    .font(.system(size: 11, weight: .bold))
+            }
+            Text(building ? "Writing…" : "More cards")
+                .font(.system(size: 12.5, weight: .semibold))
+            if !building {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(FeyndTheme.text3)
+            }
+        }
+        .foregroundStyle(FeyndTheme.text2)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 6)
+        .background(FeyndTheme.surface, in: Capsule())
+        .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+        .contentShape(Capsule())
     }
 
     private var modeButtons: some View {
