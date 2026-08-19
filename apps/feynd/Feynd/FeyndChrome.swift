@@ -999,6 +999,10 @@ struct TabPill: View {
             .background(
                 Capsule().fill(isActive ? FeyndTheme.surface2 : Color.clear)
             )
+            // Whole pill is the hit target — .plain buttons only hit-test
+            // opaque pixels otherwise, which on the Mac shrinks the click
+            // area to the glyphs themselves.
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
     }

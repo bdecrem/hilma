@@ -57,6 +57,19 @@ struct ModelPickerMenu: View {
     }
 
     var body: some View {
+        #if targetEnvironment(macCatalyst)
+        // Catalyst doesn't render Menu's custom label reliably — the badge
+        // came out invisible. Use the native pull-down Picker: a real Mac
+        // control that always draws.
+        Picker("Model", selection: $selectedRaw) {
+            ForEach(F2ChatModel.allCases) { model in
+                Text(model.label).tag(model.rawValue)
+            }
+        }
+        .pickerStyle(.menu)
+        .fixedSize()
+        .accessibilityLabel("Chat model: \(selected.label)")
+        #else
         Menu {
             ForEach(F2ChatModel.allCases) { model in
                 Button {
@@ -107,5 +120,6 @@ struct ModelPickerMenu: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Chat model: \(selected.label)")
+        #endif
     }
 }
