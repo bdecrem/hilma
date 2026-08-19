@@ -30,7 +30,7 @@ export default function DodoAltPage() {
         <h1>
           Dodo is an AI learning companion: an open-source app to help you
           understand, explain back, and remember any book or topic.{' '}
-          <em>It&rsquo;s not finished.</em>
+          <em>100% agentic, 30% finished.</em>
         </h1>
 
         <section>
