@@ -279,7 +279,7 @@ struct FlashSetView: View {
             .accessibilityLabel(ThumbsDownCycle.accessibilityLabel(for: rating))
 
             Button { rate(q.cardId, rating == "priority" ? nil : "priority") } label: {
-                DoubleThumbsUp(active: rating == "priority", size: 13)
+                ThumbsUpIcon(active: rating == "priority", size: 13)
                     .frame(minWidth: 36, minHeight: 30)
                     .contentShape(Rectangle())
             }
@@ -846,7 +846,7 @@ struct MissClinicSheet: View {
                         activeTint: FeyndTheme.gold,
                         label: rating == "priority" ? "Priority" : "Make priority"
                     ) {
-                        DoubleThumbsUp(active: rating == "priority", size: 12)
+                        ThumbsUpIcon(active: rating == "priority", size: 12)
                     } action: {
                         setRating(rating == "priority" ? nil : "priority")
                     }

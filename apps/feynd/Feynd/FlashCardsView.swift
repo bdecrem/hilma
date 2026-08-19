@@ -449,7 +449,7 @@ struct FlashCardsView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel(ThumbsDownCycle.accessibilityLabel(for: card.rating))
                 Button { setRating(card, card.isPriority ? nil : "priority") } label: {
-                    DoubleThumbsUp(active: card.isPriority, size: 12)
+                    ThumbsUpIcon(active: card.isPriority, size: 12)
                         .frame(width: 34, height: 22)
                         .contentShape(Rectangle())
                 }

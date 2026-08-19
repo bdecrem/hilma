@@ -1,23 +1,16 @@
 import SwiftUI
 
-/// The double thumbs up — two thumbs, always, on or off. There is no single
-/// thumbs up anywhere in the app: the up-side verdict is binary (drill me on
-/// it). The down side has two degrees — see ThumbsDownStateIcon.
-struct DoubleThumbsUp: View {
+/// The thumbs up — one thumb, on or off. The up-side verdict is binary
+/// (drill me on it); only the down side has two degrees, expressed by thumb
+/// count — see ThumbsDownStateIcon.
+struct ThumbsUpIcon: View {
     let active: Bool
     var size: CGFloat = 13
 
     var body: some View {
-        HStack(spacing: -size * 0.28) {
-            thumb
-            thumb
-        }
-        .font(.system(size: size, weight: .semibold))
-        .foregroundStyle(active ? FeyndTheme.gold : FeyndTheme.text3)
-    }
-
-    private var thumb: some View {
         Image(systemName: active ? "hand.thumbsup.fill" : "hand.thumbsup")
+            .font(.system(size: size, weight: .semibold))
+            .foregroundStyle(active ? FeyndTheme.gold : FeyndTheme.text3)
     }
 }
 
