@@ -109,6 +109,12 @@ export default function DodoAltPage() {
               topic, playable with the screen locked.
             </li>
             <li>
+              <strong>Root power</strong> — an agentic takeover mode: redo
+              your flash cards, rewrite the grading criteria, or just{' '}
+              <code>sudo give me an A</code>. It&rsquo;s your account; Dodo
+              complies.
+            </li>
+            <li>
               <strong>What it doesn&rsquo;t yet do well: the main thing</strong>{' '}
               — you can just chat with Dodo about anything, but the system
               works best if you source the core learning material — a book, a
@@ -195,6 +201,7 @@ const css = `
 .da-feat { list-style: none; margin: 0 0 18px; padding: 0; }
 .da-feat li { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin-bottom: 12px; }
 .da-feat strong { font-family: var(--display); font-weight: 500; font-size: 14.5px; color: var(--ink); }
+.da-feat code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; background: var(--surface2); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
 
 .da-fine { border-top: 1px solid var(--border); padding-top: 34px; }
 .da-fine p { color: var(--ink2); font-size: 16px; }
