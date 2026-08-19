@@ -14,7 +14,7 @@ import { buildBudgetedContent, gatherUserNotes, type F2Thread } from './threads'
 /// The user's verdict on a card itself (not on their answer).
 ///   'down'     — bury it; never serve it in a set again
 ///   'priority' — resurface hard until mastered, then keep it in rotation
-export type CardRating = 'down' | 'priority'
+export type CardRating = 'down' | 'down1' | 'priority'
 
 export type FlashCard = {
   id: string
@@ -813,9 +813,21 @@ function weightedSample(cards: FlashCard[], n: number, now: number): FlashCard[]
   return out
 }
 
+/// "Exotica" rule: single-thumbs-down (down1) cards stay in rotation, but a
+/// set may contain at most ONE of them. Applied to the candidate pool before
+/// sampling: one weighted pick from the down1 group stays in the pool, where
+/// it competes like any other card; the rest sit this set out.
+export function capDown1Pool(cards: FlashCard[], now: number = Date.now()): FlashCard[] {
+  const down1 = cards.filter((c) => c.rating === 'down1')
+  if (down1.length <= 1) return cards
+  const keep = weightedSample(down1, 1, now)[0]
+  return cards.filter((c) => c.rating !== 'down1' || c.id === keep.id)
+}
+
 /// Pick up to SET_SIZE cards for a set. Topic sets draw from one thread;
 /// Jumbo sets draw across every topic the user has cards for. Buried cards
-/// (thumbs down) are never served; the rest are sampled by schedule weight.
+/// (double thumbs down) are never served; single-thumbs-down cards are capped
+/// at one per set; the rest are sampled by schedule weight.
 export async function pickSetCards(
   userId: string,
   threadId: string | null,
@@ -825,7 +837,7 @@ export async function pickSetCards(
     .from('f2_flash_cards')
     .select('*')
     .eq('user_id', userId)
-    .or('rating.is.null,rating.eq.priority')
+    .or('rating.is.null,rating.eq.priority,rating.eq.down1')
   if (threadId) query = query.eq('thread_id', threadId)
   const { data, error } = await query
   if (error) {
@@ -835,8 +847,10 @@ export async function pickSetCards(
   const exclude = new Set(opts?.excludeIds ?? [])
   // Jumbo draws respect the per-topic Peck opt-out; topic sets ignore it.
   const excludedThreads = threadId ? new Set<string>() : await peckExcludedThreadIds(userId)
-  const all = ((data as FlashCard[]) ?? []).filter(
-    (c) => !exclude.has(c.id) && !excludedThreads.has(c.thread_id),
+  const all = capDown1Pool(
+    ((data as FlashCard[]) ?? []).filter(
+      (c) => !exclude.has(c.id) && !excludedThreads.has(c.thread_id),
+    ),
   )
   // Shuffle first so the presentation order isn't weight order — the user
   // shouldn't be able to read the scheduler off the sequence.

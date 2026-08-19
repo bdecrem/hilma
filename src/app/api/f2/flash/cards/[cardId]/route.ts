@@ -29,7 +29,8 @@ export async function PATCH(
   let rating: CardRating | null | undefined
   if ('rating' in body) {
     if (body.rating === null) rating = null
-    else if (body.rating === 'down' || body.rating === 'priority') rating = body.rating
+    else if (body.rating === 'down' || body.rating === 'down1' || body.rating === 'priority')
+      rating = body.rating
     else {
       return NextResponse.json({ error: 'invalid rating' }, { status: 400 })
     }

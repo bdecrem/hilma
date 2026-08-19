@@ -1242,7 +1242,7 @@ async function executeDodoTool(
       const lines = cards.map((c, i) => {
         const flags = [
           c.rating === 'priority' ? 'PRIORITY' : null,
-          c.rating === 'down' ? 'BURIED' : null,
+          c.rating === 'down' ? 'BURIED' : c.rating === 'down1' ? 'RARE' : null,
           isMastered(c) ? 'mastered' : null,
         ]
           .filter(Boolean)
@@ -1293,7 +1293,7 @@ async function executeDodoTool(
       return {
         result: `Stars: ${thread.stars}/3${thread.hard_quiz_completed_at ? ' (Final Review passed)' : ''}
 Study focus: ${thread.study_focus ?? '(none set)'}
-Deck: ${cards.length} cards, ${mastered} mastered, ${cards.filter((c) => c.rating === 'priority').length} priority, ${cards.filter((c) => c.rating === 'down').length} buried
+Deck: ${cards.length} cards, ${mastered} mastered, ${cards.filter((c) => c.rating === 'priority').length} priority, ${cards.filter((c) => c.rating === 'down1').length} rare (served max once per set), ${cards.filter((c) => c.rating === 'down').length} buried
 
 Graded reviews:
 ${reviewLines.length ? reviewLines.join('\n') : '(no Final Review attempts yet)'}

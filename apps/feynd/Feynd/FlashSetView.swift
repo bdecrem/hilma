@@ -34,6 +34,8 @@ struct FlashSetView: View {
     /// questions the server sent so a card rated in an earlier round shows
     /// its state immediately.
     @State private var ratings: [String: String] = [:]
+    /// Last thumbs-down tap per card — the quick-second-tap downgrade window.
+    @State private var lastDownTap: [String: Date] = [:]
     @State private var draft = ""
     @FocusState private var draftFocused: Bool
     /// The user's saved quotes, fetched quietly at set start; one shows at
@@ -268,15 +270,13 @@ struct FlashSetView: View {
     private func thumbsRow(_ q: FlashQuestion) -> some View {
         let rating = ratings[q.cardId]
         return HStack(spacing: 2) {
-            Button { rate(q.cardId, rating == "down" ? nil : "down") } label: {
-                Image(systemName: rating == "down" ? "hand.thumbsdown.fill" : "hand.thumbsdown")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(rating == "down" ? Color(hex: 0xE0635A) : FeyndTheme.text3)
-                    .frame(width: 30, height: 30)
+            Button { rateDown(q.cardId, current: rating) } label: {
+                ThumbsDownStateIcon(rating: rating, size: 13)
+                    .frame(minWidth: 36, minHeight: 30)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(rating == "down" ? "Un-bury this card" : "Bury this card")
+            .accessibilityLabel(ThumbsDownCycle.accessibilityLabel(for: rating))
 
             Button { rate(q.cardId, rating == "priority" ? nil : "priority") } label: {
                 DoubleThumbsUp(active: rating == "priority", size: 13)
@@ -287,6 +287,13 @@ struct FlashSetView: View {
             .accessibilityLabel(rating == "priority" ? "Remove priority" : "Mark as priority")
         }
         .animation(.easeOut(duration: 0.15), value: rating)
+    }
+
+    /// First tap buries (double down); a quick second tap downgrades to
+    /// "show rarely" (single down); a later tap clears either state.
+    private func rateDown(_ cardId: String, current: String?) {
+        rate(cardId, ThumbsDownCycle.next(from: current, lastTap: lastDownTap[cardId]))
+        lastDownTap[cardId] = Date()
     }
 
     private func rate(_ cardId: String, _ rating: String?) {
@@ -780,6 +787,7 @@ struct MissClinicSheet: View {
     @State private var note: String
     @State private var savedNote: String
     @State private var noteSaved = false
+    @State private var lastClinicDownTap: Date?
     @State private var editing = false
     @State private var question: String
     @State private var answer: String
@@ -824,13 +832,14 @@ struct MissClinicSheet: View {
                 // Rate — same two verdicts as everywhere else.
                 HStack(spacing: 10) {
                     clinicChip(
-                        active: rating == "down",
+                        active: rating == "down" || rating == "down1",
                         activeTint: Color(hex: 0xE0635A),
-                        label: rating == "down" ? "Buried" : "Bury it"
+                        label: rating == "down" ? "Buried" : rating == "down1" ? "Rare" : "Bury it"
                     ) {
-                        Image(systemName: rating == "down" ? "hand.thumbsdown.fill" : "hand.thumbsdown")
+                        ThumbsDownStateIcon(rating: rating, size: 12)
                     } action: {
-                        setRating(rating == "down" ? nil : "down")
+                        setRating(ThumbsDownCycle.next(from: rating, lastTap: lastClinicDownTap))
+                        lastClinicDownTap = Date()
                     }
                     clinicChip(
                         active: rating == "priority",

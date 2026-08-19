@@ -11,6 +11,10 @@ struct FlashCardsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var cards: [FlashCard] = []
+    /// Sim-only: `-ShowCardList 1` also scrolls the hub down to the list.
+    @State private var scrollToCards = false
+    /// Last thumbs-down tap per card — the quick-second-tap downgrade window.
+    @State private var lastDownTap: [String: Date] = [:]
     @State private var sets: [FlashSetRecord] = []
     @State private var stars = 0
     @State private var loading = true
@@ -48,6 +52,8 @@ struct FlashCardsView: View {
             if UserDefaults.standard.bool(forKey: "ShowCardList") {
                 UserDefaults.standard.removeObject(forKey: "ShowCardList")
                 showCards = true
+                try? await Task.sleep(for: .milliseconds(400))
+                scrollToCards = true
             }
             if UserDefaults.standard.bool(forKey: "EditFirstCard"), let first = cards.first {
                 UserDefaults.standard.removeObject(forKey: "EditFirstCard")
@@ -197,19 +203,25 @@ struct FlashCardsView: View {
     // MARK: - Deck exists → modes + history + manage
 
     private var content: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                deckStrip
-                modeButtons
-                starLadderHint
-                if !sets.isEmpty { historySection }
-                manageSection
-                Color.clear.frame(height: 30)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    deckStrip
+                    modeButtons
+                    starLadderHint
+                    if !sets.isEmpty { historySection }
+                    manageSection
+                        .id("manage")
+                    Color.clear.frame(height: 30)
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 8)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 8)
+            .scrollIndicators(.hidden)
+            .onChange(of: scrollToCards) { _, wants in
+                if wants { withAnimation { proxy.scrollTo("manage", anchor: .top) } }
+            }
         }
-        .scrollIndicators(.hidden)
     }
 
     private var deckStrip: some View {
@@ -405,6 +417,12 @@ struct FlashCardsView: View {
                                 .tracking(0.5)
                                 .foregroundStyle(FeyndTheme.text3)
                         }
+                        if card.isRare {
+                            Text("RARE")
+                                .font(.system(size: 9, weight: .bold))
+                                .tracking(0.5)
+                                .foregroundStyle(Color(hex: 0xE0635A).opacity(0.75))
+                        }
                     }
                     Text(card.question)
                         .font(.system(size: 13.5, weight: .medium))
@@ -420,14 +438,16 @@ struct FlashCardsView: View {
             .buttonStyle(.plain)
 
             VStack(spacing: 4) {
-                Button { setRating(card, card.isBuried ? nil : "down") } label: {
-                    Image(systemName: card.isBuried ? "hand.thumbsdown.fill" : "hand.thumbsdown")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(card.isBuried ? Color(hex: 0xE0635A) : FeyndTheme.text3)
-                        .frame(width: 34, height: 22)
+                Button {
+                    setRating(card, ThumbsDownCycle.next(from: card.rating, lastTap: lastDownTap[card.id]))
+                    lastDownTap[card.id] = Date()
+                } label: {
+                    ThumbsDownStateIcon(rating: card.rating, size: 12)
+                        .frame(width: 38, height: 22)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(ThumbsDownCycle.accessibilityLabel(for: card.rating))
                 Button { setRating(card, card.isPriority ? nil : "priority") } label: {
                     DoubleThumbsUp(active: card.isPriority, size: 12)
                         .frame(width: 34, height: 22)
@@ -439,7 +459,7 @@ struct FlashCardsView: View {
         .padding(11)
         .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.borderSoft, lineWidth: 1))
-        .opacity(card.isBuried ? 0.55 : 1)
+        .opacity(card.isBuried ? 0.55 : card.isRare ? 0.8 : 1)
     }
 
 

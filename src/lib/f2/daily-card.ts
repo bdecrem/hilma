@@ -72,7 +72,7 @@ async function pickDailyCard(
     .from('f2_flash_cards')
     .select('*')
     .eq('user_id', userId)
-    .or('rating.is.null,rating.eq.priority')
+    .or('rating.is.null,rating.eq.priority,rating.eq.down1')
   if (error || !data) return null
   const exclude = new Set(excludeIds)
   const excludedThreads = await peckExcludedThreadIds(userId)

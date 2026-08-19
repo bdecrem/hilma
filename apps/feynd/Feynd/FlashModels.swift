@@ -16,6 +16,7 @@ struct FlashCard: Codable, Identifiable, Equatable, Hashable {
     var streak: Int?
 
     var isBuried: Bool { rating == "down" }
+    var isRare: Bool { rating == "down1" }
     var isPriority: Bool { rating == "priority" }
 
     enum CodingKeys: String, CodingKey {
