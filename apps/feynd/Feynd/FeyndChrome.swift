@@ -476,20 +476,38 @@ private struct ChatGlyph: View {
 
 /// Custom replacement for the iOS nav bar. 8/18/12 padding from JSX.
 /// Use `.toolbar(.hidden, for: .navigationBar)` on the host screen.
-struct FeyndTopBar<Center: View, Trailing: View>: View {
-    @ViewBuilder var center: () -> Center
-    @ViewBuilder var trailing: () -> Trailing
-    var onProfileTap: () -> Void = {}
+struct FeyndTopBar<Center: View, Trailing: View, Leading: View>: View {
+    var center: () -> Center
+    var trailing: () -> Trailing
+    /// Optional chip next to the avatar (Peck's streak flame). The leading
+    /// side has slack the trailing side doesn't, so accessories live here.
+    var leadingAccessory: () -> Leading
+    var onProfileTap: () -> Void
     /// Double-tapping the bar's center region jumps the screen back to the
     /// top (the avatar and trailing controls keep their own single taps).
-    var onDoubleTap: () -> Void = {}
+    var onDoubleTap: () -> Void
+
+    init(
+        @ViewBuilder center: @escaping () -> Center,
+        @ViewBuilder trailing: @escaping () -> Trailing,
+        @ViewBuilder leadingAccessory: @escaping () -> Leading,
+        onProfileTap: @escaping () -> Void = {},
+        onDoubleTap: @escaping () -> Void = {}
+    ) {
+        self.center = center
+        self.trailing = trailing
+        self.leadingAccessory = leadingAccessory
+        self.onProfileTap = onProfileTap
+        self.onDoubleTap = onDoubleTap
+    }
 
     var body: some View {
         HStack(spacing: 0) {
-            HStack {
+            HStack(spacing: 8) {
                 ProfileBadge()
                     .contentShape(Rectangle())
                     .onTapGesture { onProfileTap() }
+                leadingAccessory()
                 Spacer(minLength: 0)
             }
             .frame(minWidth: 42, alignment: .leading)
@@ -508,6 +526,23 @@ struct FeyndTopBar<Center: View, Trailing: View>: View {
         .padding(.horizontal, 18)
         .padding(.top, 8)
         .padding(.bottom, 12)
+    }
+}
+
+extension FeyndTopBar where Leading == EmptyView {
+    init(
+        @ViewBuilder center: @escaping () -> Center,
+        @ViewBuilder trailing: @escaping () -> Trailing,
+        onProfileTap: @escaping () -> Void = {},
+        onDoubleTap: @escaping () -> Void = {}
+    ) {
+        self.init(
+            center: center,
+            trailing: trailing,
+            leadingAccessory: { EmptyView() },
+            onProfileTap: onProfileTap,
+            onDoubleTap: onDoubleTap
+        )
     }
 }
 

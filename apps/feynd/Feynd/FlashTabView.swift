@@ -19,6 +19,7 @@ struct FlashTabView: View {
     @State private var showDecks = false
     @State private var showPebbles = false
     @State private var showDemoReel = false
+    @State private var streakModal: StreakMilestone? = nil
     @State private var pulse = false
     /// Crossing into a new region (10→11, 20→21): the transition scene.
     @State private var regionCrossing: RegionCrossing? = nil
@@ -71,6 +72,8 @@ struct FlashTabView: View {
                         deckStackButton
                         xpPill
                     }
+                } leadingAccessory: {
+                    streakPill
                 } onProfileTap: {
                     showProfile = true
                 } onDoubleTap: {
@@ -95,6 +98,9 @@ struct FlashTabView: View {
                 .feyndContentColumn()
             }
 
+        }
+        .fullScreenCover(item: $streakModal) { m in
+            StreakCelebrationView(milestone: m) { streakModal = nil }
         }
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
         .sheet(isPresented: $showPebbles) { PebblesView() }
@@ -197,9 +203,21 @@ struct FlashTabView: View {
                                    bestScore: 9, stars: lvl % 3 + 1, passScore: 8)
                 }
                 state = JumboState(xp: st.xp, cardCount: st.cardCount,
-                                   highestPassed: mock - 1, levels: levels)
+                                   highestPassed: mock - 1, levels: levels,
+                                   dailyStreak: st.dailyStreak, xpMultiplier: st.xpMultiplier)
+            }
+            // `-MockStreak N` — fake a streak for pill/modal screenshots.
+            let mockStreak = UserDefaults.standard.integer(forKey: "MockStreak")
+            if mockStreak > 0, let st = state {
+                UserDefaults.standard.removeObject(forKey: "MockStreak")
+                UserDefaults.standard.removeObject(forKey: "streakCelebrated")
+                let mult = mockStreak >= 14 ? 4 : mockStreak >= 10 ? 3 : mockStreak >= 4 ? 2 : 1
+                state = JumboState(xp: st.xp, cardCount: st.cardCount,
+                                   highestPassed: st.highestPassed, levels: st.levels,
+                                   dailyStreak: mockStreak, xpMultiplier: mult)
             }
             #endif
+            checkStreakMilestone()
             // Peck deep link while this tab wasn't mounted (cold start or
             // arriving from another tab): the pending flag survives until
             // the map is loaded, then the set opens directly.
@@ -224,6 +242,54 @@ struct FlashTabView: View {
     }
 
     // MARK: - Header bits
+
+    /// Milestone crossings get the sparkle modal, once each (largest first
+    /// so a returning long streak doesn't replay every step).
+    private func checkStreakMilestone() {
+        let streak = state?.dailyStreak ?? 0
+        let milestones = [4, 7, 10, 14, 21, 30, 50, 100]
+        let done = UserDefaults.standard.integer(forKey: "streakCelebrated")
+        guard let hit = milestones.last(where: { streak >= $0 && $0 > done }) else { return }
+        UserDefaults.standard.set(hit, forKey: "streakCelebrated")
+        streakModal = StreakMilestone(days: streak, multiplier: state?.xpMultiplier ?? 1)
+    }
+
+    /// The flame — consecutive daily-card days, with the XP multiplier it
+    /// has earned. Absent entirely until a streak exists; tap for the story.
+    @ViewBuilder
+    private var streakPill: some View {
+        let streak = state?.dailyStreak ?? 0
+        if streak >= 1 {
+            let mult = state?.xpMultiplier ?? 1
+            Button {
+                streakModal = StreakMilestone(days: streak, multiplier: mult, celebration: false)
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color(hex: 0xE8853A))
+                    Text("\(streak)")
+                        .font(.system(size: 13.5, weight: .bold))
+                        .foregroundStyle(FeyndTheme.text)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                    if mult > 1 {
+                        Text("×\(mult)")
+                            .font(.system(size: 11.5, weight: .heavy))
+                            .foregroundStyle(FeyndTheme.gold)
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                }
+                .padding(.horizontal, 9)
+                .frame(height: 31)   // matches xpPill — see the comment there
+                .background(FeyndTheme.surface, in: Capsule())
+                .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(streak)-day daily streak, XP times \(mult)")
+        }
+    }
 
     private var xpPill: some View {
         HStack(spacing: 5) {

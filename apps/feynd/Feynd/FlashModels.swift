@@ -269,11 +269,17 @@ struct JumboState: Codable, Equatable {
     let cardCount: Int
     let highestPassed: Int
     let levels: [JumboLevelInfo]
+    /// Daily-card streak (consecutive days) + the XP multiplier it earns.
+    /// Optional so payloads from older servers still decode.
+    let dailyStreak: Int?
+    let xpMultiplier: Int?
 
     enum CodingKeys: String, CodingKey {
         case xp, levels
         case cardCount = "card_count"
         case highestPassed = "highest_passed"
+        case dailyStreak = "daily_streak"
+        case xpMultiplier = "xp_multiplier"
     }
 }
 

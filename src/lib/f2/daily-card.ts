@@ -4,6 +4,7 @@
 // graded as a freeform answer — corrections + a little XP.
 
 import { f2Supabase } from './supabase'
+import { bumpDailyStreak, getDailyStreak, streakMultiplier } from './streak'
 import { sendIMessage } from './bluebubbles'
 import {
   cardWeight,
@@ -301,11 +302,16 @@ export async function maybeHandleDailyAnswer(
   }
   await setPeckCredits(userId, [credit])
 
-  const xp = correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT
+  // Answering the daily counts toward the streak; the multiplier applies
+  // to today's XP immediately (day 4 pays double on the spot).
+  const streak = await bumpDailyStreak(userId)
+  const mult = streakMultiplier(streak)
+  const xp = (correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT) * mult
   const total = await addXp(userId, xp)
 
   const head = correct ? '✅ Right.' : `❌ Not quite — the answer: ${card.answer}.`
-  const tail = `${xpTail(xp, total)} Press 1 for today's bonus question.`
+  const flame = streak >= 2 ? ` 🔥 ${streak}-day streak${mult > 1 ? ` — XP ×${mult}` : ''}.` : ''
+  const tail = `${xpTail(xp, total)}${flame} Press 1 for today's bonus question.`
   return `${head} ${feedback} ${tail}`.replace(/\s+/g, ' ').trim()
 }
 
@@ -382,7 +388,8 @@ async function gradeBonusAnswer(
   })
   await setPeckCredits(userId, credits)
 
-  const xp = correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT
+  const { multiplier: bonusMult } = await getDailyStreak(userId)
+  const xp = (correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT) * bonusMult
   const total = await addXp(userId, xp)
 
   const head = correct ? '✅ Right.' : `❌ Not quite — the answer: ${card.answer}.`

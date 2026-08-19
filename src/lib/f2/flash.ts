@@ -8,6 +8,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
+import { getDailyStreak } from './streak'
 import { contextCharBudget, llmComplete } from './llm'
 import { buildBudgetedContent, gatherUserNotes, type F2Thread } from './threads'
 
@@ -1280,7 +1281,10 @@ export async function recordFlashSet(input: {
   const sb = f2Supabase()
   const score = input.results.filter((r) => r.correct).length
   const total = input.results.length
-  const xp = xpForSet(score, total)
+  // Peck sets ride the daily-card streak: a live streak multiplies the take.
+  // Topic sets pay face value.
+  const mult = input.jumboLevel != null ? (await getDailyStreak(input.userId)).multiplier : 1
+  const xp = xpForSet(score, total) * mult
 
   const { data: setRow, error: setErr } = await sb
     .from('f2_flash_sets')
@@ -1552,6 +1556,9 @@ export type JumboState = {
   card_count: number
   highest_passed: number
   levels: JumboLevel[]
+  /// Daily-card streak (consecutive PT days) + the XP multiplier it earns.
+  daily_streak: number
+  xp_multiplier: number
 }
 
 /// Deterministic mode per Jumbo level. Mixed (half choice, half typed) is
@@ -1573,7 +1580,7 @@ function nodeStars(score: number, total: number): number {
 /// the next unlocked one, and a few locked previews past it.
 export async function getJumboState(userId: string): Promise<JumboState> {
   const sb = f2Supabase()
-  const [{ data: userRow }, cardCount, { data: sets, error }] = await Promise.all([
+  const [{ data: userRow }, cardCount, { data: sets, error }, streak] = await Promise.all([
     sb.from('f2_users').select('xp').eq('id', userId).maybeSingle(),
     countPeckCards(userId),
     sb
@@ -1581,6 +1588,7 @@ export async function getJumboState(userId: string): Promise<JumboState> {
       .select('jumbo_level, score, total, mode')
       .eq('user_id', userId)
       .not('jumbo_level', 'is', null),
+    getDailyStreak(userId),
   ])
   if (error) console.error('[f2/flash] getJumboState failed:', error)
 
@@ -1627,5 +1635,7 @@ export async function getJumboState(userId: string): Promise<JumboState> {
     card_count: cardCount,
     highest_passed: highestPassed,
     levels,
+    daily_streak: streak.streak,
+    xp_multiplier: streak.multiplier,
   }
 }
