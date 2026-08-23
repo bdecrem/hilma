@@ -53,6 +53,21 @@ export async function bumpDailyStreak(userId: string): Promise<number> {
   return next
 }
 
+/// Set the streak outright — repair after an outage, a reset, or any other
+/// user-ordered edit. `days` becomes the live value immediately (dated
+/// yesterday, so today's daily answer still bumps it by one); 0 clears.
+export async function setDailyStreak(userId: string, days: number): Promise<number> {
+  const clamped = Math.max(0, Math.round(days))
+  await f2Supabase()
+    .from('f2_users')
+    .update({
+      daily_streak: clamped,
+      daily_streak_date: clamped > 0 ? ptDay(new Date(Date.now() - 24 * 60 * 60 * 1000)) : null,
+    })
+    .eq('id', userId)
+  return clamped
+}
+
 /// Live streak for display / multipliers. A streak whose last counted day
 /// is before yesterday has lapsed and reads as 0 (nothing is written; the
 /// next answer starts over at 1).

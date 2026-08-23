@@ -76,6 +76,7 @@ import { nameTopic } from './name-topic'
 import { f2Supabase } from './supabase'
 import { llmComplete } from './llm'
 import { setAudioSummary } from './audio-summary'
+import { getDailyStreak, setDailyStreak, streakMultiplier } from './streak'
 import { maybeHandleDailyAnswer } from './daily-card'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
@@ -501,6 +502,7 @@ const DODO_AGENT_TOOLS = [
           type: 'string',
           description: 'ONLY when the user dictated the answer too. Omit to answer from the source material.',
         },
+        topic: { type: 'string', description: 'Another topic (by name) to file the card in. Omit = this topic.' },
       },
       required: ['question'],
     },
@@ -514,6 +516,7 @@ const DODO_AGENT_TOOLS = [
       properties: {
         count: { type: 'integer', description: 'How many to add. Default 10 when the user did not say.' },
         focus: { type: 'string', description: 'What the new cards should focus on, when the user said so.' },
+        topic: { type: 'string', description: 'Another topic (by name) to add the cards to. Omit = this topic.' },
       },
       required: ['count'],
     },
@@ -536,12 +539,13 @@ const DODO_AGENT_TOOLS = [
   {
     name: 'add_context_note',
     description:
-      "File a NEW note in the topic's context materials (not an edit of an existing one — use update_context_source for that). Keep the user's substance when they dictated it.",
+      "File a NEW note in a topic's context materials (not an edit of an existing one — use update_context_source for that). Keep the user's substance when they dictated it.",
     input_schema: {
       type: 'object' as const,
       properties: {
         title: { type: 'string', description: 'Short title for the note (a few words).' },
         content: { type: 'string', description: 'The note body. Plain prose.' },
+        topic: { type: 'string', description: 'Another topic (by name) to file it in. Omit = this topic.' },
       },
       required: ['title', 'content'],
     },
@@ -749,6 +753,39 @@ const DODO_AGENT_TOOLS = [
       required: ['focus'],
     },
   },
+  {
+    name: 'list_topics',
+    description:
+      "Every topic on the user's account (name, type, stars, pinned, Peck status). Call before creating a topic (avoid duplicates) or targeting another topic by name.",
+    input_schema: { type: 'object' as const, properties: {}, required: [] },
+  },
+  {
+    name: 'create_topic',
+    description:
+      'Create a NEW topic on the account. Give a url (its content is fetched — YouTube transcripts included — and the topic names itself) OR a title, optionally with source_text as its study material. Then file cards/notes into it by passing its name as `topic` on the other tools.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        title: { type: 'string', description: 'Topic name. Omit when giving a url (it will be auto-named).' },
+        url: { type: 'string', description: 'Source URL to ingest as the primary material.' },
+        source_text: { type: 'string', description: 'Text to store as the primary study material (user-dictated or from this chat).' },
+        kind: { type: 'string', description: 'Topic type: book | mini | general | web | video | audio | paste | chat. Omit to auto-classify.' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'set_daily_streak',
+    description:
+      "Set the user's daily-card streak (the Peck flame) to an exact day count — restore a streak lost to an outage or missed day, or reset it to 0. The multiplier follows automatically (x2 at 4+, x3 at 10+, x4 at 14+).",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        days: { type: 'integer', description: 'The streak day count. 0 clears it.' },
+      },
+      required: ['days'],
+    },
+  },
 ]
 
 /// Match one saved quote by id (prefix) or text/source snippet. Exactly one
@@ -854,7 +891,7 @@ How to work:
 - Deck and progress questions are answered from REAL DATA, never from memory or guesswork: "which cards am I weak on / haven't memorized", "what's in my deck" → list_flash_cards first; "what was my grade", "how am I doing", "what should I review" → get_progress first. You have full access to the deck, its learning stats, quiz scores, and review grades — never claim you can't see them.
 - "How I want to be tested" instructions ("only test me on X", "focus quizzes on Y") → set_study_focus. It scopes flash cards, quizzes, and the Final Review.
 - Quote cards ("pebbles" — the Quotes shelf): save_quote / update_quote / delete_quote, with list_quotes first for edits and deletes. "Save this quote", "add a pebble", "delete the Sapiens quote" all land here. You CAN add, edit, and delete them — never claim otherwise.
-- You have FULL AUTHORITY over everything in the user's own account — their topics, stars and badges (set_topic_stars), topic names/types/pins (update_topic), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage). "Remove the gold badge", "turn off refreshers", "pair my number", "rename this" are all yours to do — never claim you lack the ability. Destructive moves (delete_topic, dropping stars) only on an explicit ask, and say plainly what you changed.
+- You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage, or reset), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
 - If the message is just chat addressed to the dodo, answer it directly without tools.
 - Plain text replies, no markdown.`
 
@@ -958,6 +995,23 @@ ${instruction}`
   }
 }
 
+/// Resolve the optional cross-topic `topic` argument: absent = the active
+/// thread; otherwise match another of the user's topics by name.
+async function resolveTargetThread(
+  thread: F2Thread,
+  input: Record<string, unknown>,
+): Promise<{ target: F2Thread; error?: undefined } | { target?: undefined; error: string }> {
+  const name = String(input.topic ?? '').trim()
+  if (!name) return { target: thread }
+  const hit = await matchTopicByName(thread.user_id, name)
+  if (!hit) {
+    const topics = await listTopicsForUser(thread.user_id)
+    const listing = topics.slice(0, 40).map((t) => `- ${t.topic ?? t.url}`).join('\n')
+    return { error: `No single topic matches "${name}". Topics on the account:\n${listing}` }
+  }
+  return { target: hit }
+}
+
 /// Execute one client-side dodo tool. `mutated` tells the loop to refetch
 /// the thread so later tool calls see the new state.
 async function executeDodoTool(
@@ -1002,15 +1056,21 @@ async function executeDodoTool(
     case 'make_flash_card': {
       const question = String(input.question ?? '').trim()
       if (!question) return { result: 'Error: question required.' }
+      const t = await resolveTargetThread(thread, input)
+      if (!t.target) return { result: t.error }
       const answer = String(input.answer ?? '').trim() || undefined
-      const card = await authorFlashCard(thread, question, model, answer)
-      return { result: `Card added — "${card.question}" → "${card.answer}".` }
+      const card = await authorFlashCard(t.target, question, model, answer)
+      const where = t.target.id === thread.id ? '' : ` in "${t.target.topic}"`
+      return { result: `Card added${where} — "${card.question}" → "${card.answer}".` }
     }
     case 'add_flash_cards': {
       const count = Math.max(1, Math.min(30, Math.round(Number(input.count)) || 10))
       const focus = String(input.focus ?? '').trim()
-      const cards = await generateFlashCards(thread, count, model, focus || undefined)
-      return { result: `Added ${cards.length} cards to the deck${focus ? ` — ${focus}` : ''}.` }
+      const t = await resolveTargetThread(thread, input)
+      if (!t.target) return { result: t.error }
+      const cards = await generateFlashCards(t.target, count, model, focus || undefined)
+      const where = t.target.id === thread.id ? 'the deck' : `"${t.target.topic}"`
+      return { result: `Added ${cards.length} cards to ${where}${focus ? ` — ${focus}` : ''}.` }
     }
     case 'redo_flash_cards': {
       const instructions = String(input.instructions ?? '').trim()
@@ -1022,8 +1082,11 @@ async function executeDodoTool(
       const title = String(input.title ?? '').trim() || 'Note'
       const content = String(input.content ?? '').trim()
       if (!content) return { result: 'Error: content required.' }
-      await appendGeneratedSource(thread, title, content, true)
-      return { result: `Note "${title}" filed in the topic's context.`, mutated: true }
+      const t = await resolveTargetThread(thread, input)
+      if (!t.target) return { result: t.error }
+      await appendGeneratedSource(t.target, title, content, true)
+      const where = t.target.id === thread.id ? "the topic's" : `"${t.target.topic}"'s`
+      return { result: `Note "${title}" filed in ${where} context.`, mutated: t.target.id === thread.id }
     }
     case 'write_document': {
       const title = String(input.title ?? '').trim() || 'Document'
@@ -1300,6 +1363,70 @@ ${reviewLines.length ? reviewLines.join('\n') : '(no Final Review attempts yet)'
 
 Recent flash sets:
 ${setLines.length ? setLines.join('\n') : '(none played yet)'}`,
+      }
+    }
+    case 'list_topics': {
+      const topics = await listTopicsForUser(thread.user_id)
+      if (topics.length === 0) return { result: 'No topics on the account yet.' }
+      const lines = topics.map((t) => {
+        const bits = [
+          t.topic ?? t.url ?? '(untitled)',
+          t.kind ?? 'general',
+          `${t.stars ?? 0} star${(t.stars ?? 0) === 1 ? '' : 's'}`,
+        ]
+        if (t.pinned_at) bits.push('pinned')
+        if ((t as F2Thread & { peck_excluded?: boolean }).peck_excluded) bits.push('out of Peck')
+        if (t.id === thread.id) bits.push('← current')
+        return `- ${bits.join(' · ')}`
+      })
+      return { result: `${topics.length} topics:\n${lines.join('\n')}` }
+    }
+    case 'create_topic': {
+      const url = String(input.url ?? '').trim()
+      const givenTitle = String(input.title ?? '').trim()
+      const sourceText = String(input.source_text ?? '').trim()
+      if (!url && !givenTitle) return { result: 'Error: give a title or a url.' }
+      const kindRaw = String(input.kind ?? '').trim()
+      const kind = ['book', 'mini', 'general', 'web', 'video', 'audio', 'paste', 'chat'].includes(kindRaw)
+        ? (kindRaw as never)
+        : null
+
+      let topicName = givenTitle
+      let content: string | null = sourceText || null
+      let threadUrl: string | undefined
+      if (url) {
+        if (!isUrl(url)) return { result: `Error: "${url}" is not a valid URL.` }
+        const fetched = await fetchUrlContent(url)
+        threadUrl = url
+        content = fetched.body ?? content
+        if (!topicName) {
+          topicName =
+            (await nameTopic({ body: fetched.body ?? '', documentTitle: fetched.title })) ??
+            fetched.title ??
+            url
+        }
+      }
+      const created = await createThread({
+        userId: thread.user_id,
+        client: thread.client,
+        handle: thread.handle,
+        topic: topicName.slice(0, 200),
+        url: threadUrl,
+        content,
+        kind,
+      })
+      if (!created) return { result: 'Error: creating the topic failed.' }
+      return {
+        result: `Created topic "${created.topic}"${content ? ` with ${content.length.toLocaleString()} chars of source material` : ''}. File cards or notes into it by passing topic: "${created.topic}".`,
+      }
+    }
+    case 'set_daily_streak': {
+      const days = Math.round(Number(input.days))
+      if (!Number.isFinite(days) || days < 0) return { result: 'Error: days must be 0 or more.' }
+      const set = await setDailyStreak(thread.user_id, days)
+      const live = await getDailyStreak(thread.user_id)
+      return {
+        result: `Daily streak set to ${set} (XP multiplier now x${streakMultiplier(live.streak)}). The Peck flame shows it immediately.`,
       }
     }
     case 'set_study_focus': {
