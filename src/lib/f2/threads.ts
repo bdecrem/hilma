@@ -303,7 +303,7 @@ export async function listTopicsForUser(userId: string): Promise<F2Thread[]> {
 // Compute the new star value after a quiz. Monotonic — never decreases.
 //
 // New ladder (2026-08): chat quizzes of ANY kind award only the FIRST star.
-//   ★2 comes from flash sets (>=9/10 twice in a row — src/lib/f2/flash.ts)
+//   ★2 comes from flash sets (90%+ twice in a row — src/lib/f2/flash.ts)
 //   ★3 comes from an A-grade Final Review voice session.
 // 'hard' stays accepted for old clients but no longer reaches 3.
 export function nextStars(current: number, _kind: QuizKind): number {

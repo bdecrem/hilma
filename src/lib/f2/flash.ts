@@ -75,7 +75,12 @@ export type FlashSet = {
 }
 
 export const SET_SIZE = 10
-export const STAR2_SCORE = 9 // 9/10 on two consecutive full sets → star 2
+export const STAR2_SCORE = 9 // 90% threshold at the standard 10-card set size
+/// Star-2 quality: 90%+ on a complete set of any size. Decks smaller than
+/// SET_SIZE play full-deck sets (5/5, 4/4…), and those count too.
+export function isStar2Quality(score: number, total: number): boolean {
+  return total > 0 && score / total >= 0.9
+}
 
 /// Score needed to clear a Jumbo level, by the mode the set was played in.
 /// Voice is the hardest to perform (spoken recall, judged) so it passes at
@@ -1342,12 +1347,13 @@ export async function recordFlashSet(input: {
     totalXp = xpTotal
   }
 
-  // Star 2 for topic sets: this set and the previous one both >= 9/10.
+  // Star 2 for topic sets: this set and the previous one both at 90%+
+  // (9/10 on a standard set; 5/5 on a small deck counts the same).
   let star2 = false
   let stars: number | null = null
   let consecutive = 0
   if (input.threadId) {
-    const isHigh = total >= SET_SIZE && score >= STAR2_SCORE
+    const isHigh = isStar2Quality(score, total)
     const { data: prev } = await sb
       .from('f2_flash_sets')
       .select('score, total')
@@ -1357,7 +1363,7 @@ export async function recordFlashSet(input: {
       .order('created_at', { ascending: false })
       .limit(1)
     const prevHigh =
-      prev && prev.length > 0 && prev[0].total >= SET_SIZE && prev[0].score >= STAR2_SCORE
+      prev != null && prev.length > 0 && isStar2Quality(prev[0].score, prev[0].total)
     consecutive = isHigh ? (prevHigh ? 2 : 1) : 0
 
     const { data: threadRow } = await sb

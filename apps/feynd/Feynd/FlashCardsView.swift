@@ -362,8 +362,8 @@ struct FlashCardsView: View {
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(FeyndTheme.gold)
                 Text(streak == 1
-                     ? "9+ round banked — one more in a row earns the second star."
-                     : "Score 9/10 or better twice in a row to earn the second star.")
+                     ? "90%+ round banked — one more in a row earns the second star."
+                     : "Score 90% or better twice in a row to earn the second star.")
                     .font(.system(size: 12.5))
                     .foregroundStyle(FeyndTheme.text2)
             }
@@ -372,8 +372,8 @@ struct FlashCardsView: View {
     }
 
     private var currentHighStreak: Int {
-        guard let last = sets.first else { return 0 }
-        return (last.total >= 10 && last.score >= 9) ? 1 : 0
+        guard let last = sets.first, last.total > 0 else { return 0 }
+        return Double(last.score) / Double(last.total) >= 0.9 ? 1 : 0
     }
 
     private var historySection: some View {
@@ -390,7 +390,7 @@ struct FlashCardsView: View {
                         .frame(width: 26)
                     Text("\(s.score)/\(s.total)")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(s.score >= 9 ? FeyndTheme.gold : FeyndTheme.text)
+                        .foregroundStyle(s.total > 0 && Double(s.score) / Double(s.total) >= 0.9 ? FeyndTheme.gold : FeyndTheme.text)
                         .frame(width: 46, alignment: .leading)
                     Text("+\(s.xp) XP")
                         .font(.system(size: 12.5, weight: .semibold))
