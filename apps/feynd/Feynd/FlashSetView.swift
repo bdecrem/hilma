@@ -977,6 +977,21 @@ struct MissClinicSheet: View {
         }
         .scrollIndicators(.hidden)
         .background(FeyndTheme.bgRaised.ignoresSafeArea())
+        // Pinned close button — the only dismiss affordance on the Mac,
+        // where there's no sheet-swipe. ESC works too via the shortcut.
+        .overlay(alignment: .topTrailing) {
+            Button { closeModal(dismiss) } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.text2)
+                    .frame(width: 36, height: 36)
+                    .background(FeyndTheme.surface2, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            .padding(.top, 14)
+            .padding(.trailing, 14)
+        }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .sheet(isPresented: $editing) {
@@ -1027,7 +1042,7 @@ struct MissClinicSheet: View {
         Task {
             try? await F2API.shared.deleteFlashCard(cardId: row.cardId)
             try? await Task.sleep(for: .milliseconds(500))
-            dismiss()
+            closeModal(dismiss)
         }
     }
 
@@ -1052,7 +1067,7 @@ struct MissClinicSheet: View {
         }
         text += " Help me understand this."
         DeepLinkRouter.shared.requestTopicChat(threadId: threadId, draft: text)
-        dismiss()
+        closeModal(dismiss)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { onDiscuss() }
     }
 

@@ -178,14 +178,17 @@ final class F2API {
     }
 
     /// Create a bare topic from a typed title (the Topics screen's + button).
-    func createTopic(title: String, kind: String) async throws {
+    /// Returns the new thread's id.
+    @discardableResult
+    func createTopic(title: String, kind: String) async throws -> String {
         struct Body: Encodable {
             let topic: String
             let kind: String
         }
         struct Created: Decodable { let thread: Thread
             struct Thread: Decodable { let id: String } }
-        let _: Created = try await post("/api/f2/topics", body: Body(topic: title, kind: kind))
+        let created: Created = try await post("/api/f2/topics", body: Body(topic: title, kind: kind))
+        return created.thread.id
     }
 
     /// Rename a topic and/or set its user-chosen type (kind). Pass nil to

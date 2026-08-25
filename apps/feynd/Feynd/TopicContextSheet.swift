@@ -9,7 +9,11 @@ struct TopicContextSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Session.self) private var session
 
-    let topic: F2Topic
+    let topicId: String
+    let topicLabel: String
+    /// Fallback study-focus seed for when the thread fetch fails — list call
+    /// sites pass the row's (possibly stale) value, others leave it nil.
+    var seedFocus: String? = nil
 
     @State private var sources: [F2API.TopicSource] = []
     @State private var summaries: [F2API.SummaryVersion] = []
@@ -143,17 +147,17 @@ struct TopicContextSheet: View {
                 }
             }
         } message: {
-            Text("The AI will no longer use this material when answering questions about \"\(topic.displayLabel)\".")
+            Text("The AI will no longer use this material when answering questions about \"\(topicLabel)\".")
         }
         .sheet(item: $readerTarget) { version in
             TranscriptReaderView(
-                topicLabel: topic.displayLabel,
+                topicLabel: topicLabel,
                 version: version,
                 isCurrent: version.id == currentSummaryId,
             )
         }
         .sheet(item: $sourceReaderTarget) { src in
-            SourceReaderView(topicId: topic.id, source: src, heading: readerHeading(src))
+            SourceReaderView(topicId: topicId, source: src, heading: readerHeading(src))
         }
     }
 
@@ -224,7 +228,7 @@ struct TopicContextSheet: View {
                 }
                 let title = fileURL.deletingPathExtension().lastPathComponent
                 _ = try await F2API.shared.uploadTopicNotes(
-                    id: topic.id,
+                    id: topicId,
                     text: text,
                     title: title.isEmpty ? nil : title,
                 )
@@ -317,12 +321,12 @@ struct TopicContextSheet: View {
         defer { focusBusy = false }
         let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            let cardCount = try await F2API.shared.setStudyFocus(id: topic.id, focus: trimmed)
+            let cardCount = try await F2API.shared.setStudyFocus(id: topicId, focus: trimmed)
             studyFocus = trimmed.isEmpty ? nil : trimmed
             focusDraft = ""
             if cardCount > 0 {
                 deckRebuilding = true
-                let topicId = topic.id
+                let topicId = self.topicId
                 let instructions = trimmed.isEmpty
                     ? "My study focus was removed — rebuild the deck to cover the full source material evenly."
                     : "Rebuild the deck to match my study focus."
@@ -344,7 +348,7 @@ struct TopicContextSheet: View {
         addError = nil
         defer { addBusy = false }
         do {
-            _ = try await F2API.shared.addTopicSource(id: topic.id, url: url)
+            _ = try await F2API.shared.addTopicSource(id: topicId, url: url)
             addURL = ""
             await load()
         } catch {
@@ -473,7 +477,7 @@ struct TopicContextSheet: View {
                     .font(.system(size: 16, weight: .semibold))
                     .tracking(-0.2)
                     .foregroundStyle(FeyndTheme.text)
-                Text(topic.displayLabel)
+                Text(topicLabel)
                     .font(.system(size: 12))
                     .foregroundStyle(FeyndTheme.text3)
                     .lineLimit(1)
@@ -632,9 +636,9 @@ struct TopicContextSheet: View {
         do {
             // Sources are the primary content; summaries + thread (for the
             // study focus) are best-effort — a hiccup shouldn't blank the sheet.
-            async let sourcesTask = F2API.shared.listTopicSources(id: topic.id)
-            async let summariesTask = try? F2API.shared.listSummaries(id: topic.id)
-            async let threadTask = try? F2API.shared.getThread(id: topic.id)
+            async let sourcesTask = F2API.shared.listTopicSources(id: topicId)
+            async let summariesTask = try? F2API.shared.listSummaries(id: topicId)
+            async let threadTask = try? F2API.shared.getThread(id: topicId)
             sources = try await sourcesTask
             if let s = await summariesTask {
                 summaries = s.summaries
@@ -645,7 +649,7 @@ struct TopicContextSheet: View {
             if !focusSeeded {
                 focusSeeded = true
                 let fetchedThread = await threadTask
-                let fetched = fetchedThread?.studyFocus ?? topic.studyFocus
+                let fetched = fetchedThread?.studyFocus ?? seedFocus
                 let trimmed = (fetched ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 studyFocus = trimmed.isEmpty ? nil : trimmed
             }
@@ -660,7 +664,7 @@ struct TopicContextSheet: View {
         defer { deleting.remove(src.id) }
         do {
             try await F2API.shared.deleteTopicSource(
-                id: topic.id,
+                id: topicId,
                 kind: src.kind,
                 index: (src.kind == "additional" || src.kind == "quote") ? src.index : nil,
                 part: src.part,

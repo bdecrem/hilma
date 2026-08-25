@@ -8,6 +8,9 @@ struct TopicDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     let topicId: String
+    /// True when this is a "Just chat" session: the topic behind it is a
+    /// placeholder, and Back asks whether to name it or discard it.
+    var quickChat: Bool = false
 
     @State private var thread: F2Thread? = nil
     @State private var messages: [F2Message] = []
@@ -23,6 +26,11 @@ struct TopicDetailView: View {
     @State private var finalReviewPresented = false
     @State private var finalReviewVariant: FinalReviewView.Variant = .full
     @State private var secondChanceDialogPresented = false
+    @State private var contextPresented = false
+    // Quick-chat exit: name it (rename + keep) or discard (delete for good).
+    @State private var keepChatPrompt = false
+    @State private var topicNameDraft = ""
+    @State private var closingQuickChat = false
 
     var body: some View {
         ZStack {
@@ -58,6 +66,20 @@ struct TopicDetailView: View {
         }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
+        }
+        .sheet(isPresented: $contextPresented) {
+            TopicContextSheet(topicId: topicId,
+                              topicLabel: thread?.topic ?? "Topic",
+                              seedFocus: thread?.studyFocus)
+                .environment(session)
+        }
+        .alert("Keep this chat?", isPresented: $keepChatPrompt) {
+            TextField("Topic name", text: $topicNameDraft)
+            Button("Save topic") { finishQuickChat(keep: true) }
+            Button("Discard chat", role: .destructive) { finishQuickChat(keep: false) }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Give it a name to keep it as a topic — or discard it for good.")
         }
         .sheet(isPresented: $flashPresented) {
             FlashCardsView(topicId: topicId, topicLabel: thread?.topic ?? "Topic")
@@ -133,7 +155,7 @@ struct TopicDetailView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 8) {
-            IconCircleButton(systemImage: "chevron.left", fg: FeyndTheme.text) { dismiss() }
+            IconCircleButton(systemImage: "chevron.left", fg: FeyndTheme.text) { back() }
 
             VStack(spacing: 4) {
                 Text(thread?.topic ?? "Topic")
@@ -175,6 +197,37 @@ struct TopicDetailView: View {
         .padding(.horizontal, 14)
         .padding(.top, 8)
         .padding(.bottom, 14)
+    }
+
+    /// Back: normal topics just pop. A quick chat with something in it asks
+    /// to be named or discarded; an untouched one is discarded silently.
+    private func back() {
+        guard quickChat else { dismiss(); return }
+        guard !closingQuickChat else { return }
+        if messages.contains(where: { $0.role == "user" }) {
+            topicNameDraft = ""
+            keepChatPrompt = true
+        } else {
+            finishQuickChat(keep: false)
+        }
+    }
+
+    /// Resolve the quick chat: rename the placeholder (keep) or delete it
+    /// (discard), then pop. Both calls are quick; awaiting them keeps the
+    /// Topics list consistent when it reloads on appear.
+    private func finishQuickChat(keep: Bool) {
+        closingQuickChat = true
+        Task {
+            if keep {
+                let name = topicNameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !name.isEmpty {
+                    try? await F2API.shared.renameTopic(id: topicId, to: name, kind: nil)
+                }
+            } else {
+                try? await F2API.shared.deleteTopic(id: topicId)
+            }
+            dismiss()
+        }
     }
 
     /// Star 3's gate: stars 1+2 earned, not yet mastered.
@@ -363,6 +416,12 @@ struct TopicDetailView: View {
                         .opacity(busy ? 0.5 : 1)
                         .allowsHitTesting(!busy)
                     }
+                }
+
+                // The topic's context — sources, notes, study focus. Lives
+                // rightmost so it's reachable without leaving the chat.
+                ActionChip(label: "Context", systemImage: "doc.text.magnifyingglass") {
+                    contextPresented = true
                 }
 
                 // Source link — icon-only so it never crowds the main chips.

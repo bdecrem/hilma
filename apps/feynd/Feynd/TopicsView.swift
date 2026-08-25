@@ -23,11 +23,7 @@ struct TopicsView: View {
     @State private var renameTarget: F2Topic? = nil
     @State private var showNewTopic = false
     @State private var showProfile = false
-    @State private var addMaterialTarget: F2Topic? = nil
-    @State private var addMaterialURL = ""
-    @State private var addMaterialBusy = false
-    @State private var addMaterialError: String? = nil
-    @State private var contextTarget: F2Topic? = nil
+    @State private var contextTarget: TopicContextTarget? = nil
     @State private var flashTarget: F2Topic? = nil
     @State private var audioError: String? = nil
     /// True while a background task is polling for in-flight audio or book
@@ -126,8 +122,9 @@ struct TopicsView: View {
         // `session` through explicitly (see dismissTopmostPresentedModal in
         // FeyndChrome.swift for the underlying Catalyst bug).
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
-        .sheet(item: $contextTarget) { topic in
-            TopicContextSheet(topic: topic)
+        .sheet(item: $contextTarget) { target in
+            TopicContextSheet(topicId: target.id, topicLabel: target.label,
+                              seedFocus: target.seedFocus)
                 .environment(session)
         }
         .sheet(item: $flashTarget) { topic in
@@ -143,22 +140,19 @@ struct TopicsView: View {
             }
         }
         .sheet(isPresented: $showNewTopic) {
-            NewTopicSheet {
+            NewTopicSheet { id, title in
+                Task {
+                    await load()
+                    // Optional second step: the same Topic Context sheet, so
+                    // material can go in right away. Waits a beat for the
+                    // create sheet's dismissal to settle; cancel is free.
+                    try? await Task.sleep(for: .milliseconds(550))
+                    contextTarget = TopicContextTarget(id: id, label: title)
+                }
+            } onQuickChat: { id in
                 Task { await load() }
+                DeepLinkRouter.shared.requestQuickChat(topicId: id)
             }
-        }
-        .alert("Add material",
-               isPresented: Binding(get: { addMaterialTarget != nil },
-                                    set: { if !$0 { dismissAddMaterial() } })) {
-            TextField("https://…", text: $addMaterialURL)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled(true)
-                .keyboardType(.URL)
-            Button("Cancel", role: .cancel) { dismissAddMaterial() }
-            Button("Add") { commitAddMaterial() }
-                .disabled(addMaterialBusy)
-        } message: {
-            Text(addMaterialError ?? "Paste a URL — F2 will pull it in and add it to this topic's context.")
         }
         .alert("Audio summary",
                isPresented: Binding(get: { audioError != nil },
@@ -319,8 +313,11 @@ struct TopicsView: View {
                              isLast: idx == display.count - 1,
                              onRename: { startRename(topic) },
                              onDelete: { delete(topic) },
-                             onAddMaterial: { startAddMaterial(topic) },
-                             onViewContext: { contextTarget = topic },
+                             onViewContext: {
+                                 contextTarget = TopicContextTarget(
+                                     id: topic.id, label: topic.displayLabel,
+                                     seedFocus: topic.studyFocus)
+                             },
                              onGenerateAudio: { generateAudio(topic) },
                              onGenerateBook: { generateBook(topic) },
                              onViewBookSummary: { bookReaderTarget = topic },
@@ -426,36 +423,6 @@ struct TopicsView: View {
         renameTarget = topic
     }
 
-    private func startAddMaterial(_ topic: F2Topic) {
-        addMaterialURL = ""
-        addMaterialError = nil
-        addMaterialTarget = topic
-    }
-
-    private func dismissAddMaterial() {
-        addMaterialTarget = nil
-        addMaterialURL = ""
-        addMaterialError = nil
-        addMaterialBusy = false
-    }
-
-    private func commitAddMaterial() {
-        guard let target = addMaterialTarget else { return }
-        let url = addMaterialURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !url.isEmpty else { return }
-        addMaterialBusy = true
-        Task {
-            do {
-                _ = try await F2API.shared.addTopicSource(id: target.id, url: url)
-                await load()
-                dismissAddMaterial()
-            } catch {
-                addMaterialError = "Couldn't add: \(error.localizedDescription)"
-                addMaterialBusy = false
-            }
-        }
-    }
-
     private func commitRename(_ target: F2Topic, newName: String, newKind: String?) {
         renameTarget = nil
         let name = newName.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -502,7 +469,6 @@ struct TopicListRow: View {
     let isLast: Bool
     let onRename: () -> Void
     let onDelete: () -> Void
-    let onAddMaterial: () -> Void
     let onViewContext: () -> Void
     let onGenerateAudio: () -> Void
     let onGenerateBook: () -> Void
@@ -540,7 +506,6 @@ struct TopicListRow: View {
                     }
                     Button { onFlashCards() } label: { Label("Flash cards", systemImage: "bolt.fill") }
                     Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
-                    Button { onAddMaterial() } label: { Label("Add material", systemImage: "link.badge.plus") }
                     Button { onViewContext() } label: { Label("View context", systemImage: "doc.text.magnifyingglass") }
                     audioMenuItem
                     if topic.kind == "book" { bookMenuItems }
@@ -655,16 +620,33 @@ func relative(_ date: Date) -> String {
     return f.localizedString(for: date, relativeTo: Date())
 }
 
+/// What the Topic Context sheet needs to open — decoupled from F2Topic so
+/// the sheet can also be shown for a topic created seconds ago, or from a
+/// chat screen that only holds a thread.
+struct TopicContextTarget: Identifiable {
+    let id: String
+    let label: String
+    var seedFocus: String? = nil
+}
+
+/// The placeholder title a quick chat is born with — replaced when the user
+/// names it on the way out.
+let quickChatPlaceholderTitle = "Quick chat"
+
 /// The + button's sheet: type a title, pick a type, done. The topic starts
-/// bare — chat and Add Material give it substance later.
+/// bare — chat and the context sheet give it substance later. The footer
+/// offers the no-setup path: just start chatting.
 struct NewTopicSheet: View {
-    /// Called after the topic was created server-side.
-    let onCreated: () -> Void
+    /// Called after the topic was created server-side — (id, title).
+    let onCreated: (String, String) -> Void
+    /// Called after a quick-chat placeholder topic was created — (id).
+    let onQuickChat: (String) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var kind = "general"
     @State private var busy = false
+    @State private var quickBusy = false
     @State private var errorMessage: String? = nil
     @FocusState private var titleFocused: Bool
 
@@ -695,6 +677,23 @@ struct NewTopicSheet: View {
                 if let errorMessage {
                     Section { Text(errorMessage).foregroundStyle(.red) }
                 }
+                Section {
+                    Button { startQuickChat() } label: {
+                        VStack(spacing: 3) {
+                            Text(quickBusy ? "Starting…" : "Just chat")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(FeyndTheme.accent)
+                            Text("No topic — name it later if it's a keeper.")
+                                .font(.system(size: 12))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(busy || quickBusy)
+                    .listRowBackground(Color.clear)
+                }
             }
             .navigationTitle("New topic")
             .navigationBarTitleDisplayMode(.inline)
@@ -704,7 +703,7 @@ struct NewTopicSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(busy ? "Creating…" : "Create") { create() }
-                        .disabled(busy || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(busy || quickBusy || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
             .onAppear { titleFocused = true }
@@ -718,12 +717,30 @@ struct NewTopicSheet: View {
         busy = true
         Task {
             do {
-                try await F2API.shared.createTopic(title: name, kind: kind)
-                onCreated()
+                let id = try await F2API.shared.createTopic(title: name, kind: kind)
+                onCreated(id, name)
                 closeModal(dismiss)
             } catch {
                 errorMessage = "Couldn't create: \(error.localizedDescription)"
                 busy = false
+            }
+        }
+    }
+
+    /// "Just chat": create the placeholder topic, dismiss, and let the host
+    /// push the quick-chat screen.
+    private func startQuickChat() {
+        guard !busy && !quickBusy else { return }
+        quickBusy = true
+        Task {
+            do {
+                let id = try await F2API.shared.createTopic(
+                    title: quickChatPlaceholderTitle, kind: "chat")
+                onQuickChat(id)
+                closeModal(dismiss)
+            } catch {
+                errorMessage = "Couldn't start a chat: \(error.localizedDescription)"
+                quickBusy = false
             }
         }
     }

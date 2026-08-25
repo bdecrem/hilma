@@ -40,6 +40,10 @@ struct MainTabsView: View {
                                 TopicDetailView(topicId: topic.id)
                                     .toolbar(.hidden, for: .navigationBar)
                             }
+                            .navigationDestination(for: QuickChatRoute.self) { route in
+                                TopicDetailView(topicId: route.topicId, quickChat: true)
+                                    .toolbar(.hidden, for: .navigationBar)
+                            }
                     }
                 case .flash:
                     NavigationStack(path: $flashPath) {
@@ -97,6 +101,16 @@ struct MainTabsView: View {
                     try? await Task.sleep(for: .milliseconds(450))
                     topicsPath.append(t)
                 }
+            }
+        }
+        // "Just chat" from the New Topic sheet: push the fresh placeholder
+        // topic in quick-chat mode once the sheet has settled.
+        .onChange(of: DeepLinkRouter.shared.quickChatSignal) {
+            guard let id = DeepLinkRouter.shared.consumeQuickChat() else { return }
+            active = .topics
+            Task {
+                try? await Task.sleep(for: .milliseconds(400))
+                topicsPath.append(QuickChatRoute(topicId: id))
             }
         }
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in

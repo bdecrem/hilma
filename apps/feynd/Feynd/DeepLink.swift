@@ -54,4 +54,28 @@ final class DeepLinkRouter {
         pendingChatDraft = nil
         return d.text
     }
+
+    // MARK: Quick chat
+
+    /// "Just chat" from the New Topic sheet: a placeholder topic was created
+    /// server-side; push its chat in quick-chat mode (Back offers to name or
+    /// discard it).
+    var quickChatSignal = 0
+    var pendingQuickChatId: String?
+
+    func requestQuickChat(topicId: String) {
+        pendingQuickChatId = topicId
+        quickChatSignal += 1
+    }
+
+    func consumeQuickChat() -> String? {
+        defer { pendingQuickChatId = nil }
+        return pendingQuickChatId
+    }
+}
+
+/// Navigation payload for a quick chat — same TopicDetailView, but Back asks
+/// whether to keep (name) or discard the placeholder topic behind it.
+struct QuickChatRoute: Hashable {
+    let topicId: String
 }

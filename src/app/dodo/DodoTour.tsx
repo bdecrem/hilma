@@ -71,7 +71,8 @@ const SLIDES: Slide[] = [
   {
     src: '/dodo/tour/daily.mp4',
     video: true,
-    caption: 'A daily mini-quiz over iMessage, linked to your Peck Mode game.',
+    caption:
+      "A daily mini-quiz over iMessage, linked to your Peck Mode game. Don't break your streak!",
   },
 ]
 
