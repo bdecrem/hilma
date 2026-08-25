@@ -93,6 +93,8 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     /// When the gold badge needs its next refresher. Set on certification
     /// and on every renewal (30/60/90-day ladder). Nil until certified.
     var recertDueAt: Date?
+    /// Listed in the community directory. Nil on older backends.
+    var shared: Bool?
 
     var isPinned: Bool { pinnedAt != nil }
 
@@ -130,7 +132,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, topic, url, client, stars, kind
+        case id, topic, url, client, stars, kind, shared
         case quizCount = "quiz_count"
         case lastQuizzedAt = "last_quizzed_at"
         case hardQuizCompletedAt = "hard_quiz_completed_at"
@@ -167,6 +169,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
         secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
         recertDueAt = try c.decodeIfPresent(Date.self, forKey: .recertDueAt)
+        shared = try c.decodeIfPresent(Bool.self, forKey: .shared)
     }
 }
 

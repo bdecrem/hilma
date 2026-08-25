@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00FA62D14737E52644E26F61 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B09246FF15307342083E574 /* SignupView.swift */; };
 		08003C48F17C70F2C60C142B /* HelpSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C034E8A6E1CC456DE623630F /* HelpSheet.swift */; };
+		0A8249C1501816EDBB802A2F /* CommunitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70AD9918E6BD770826DEE32 /* CommunitySheet.swift */; };
 		0E7694CF618B45FF234EB3CB /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */; };
 		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
 		0FA243A66767AA35B699BE73 /* BookSummaryReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */; };
@@ -37,6 +38,7 @@
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
 		75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */; };
 		75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7811C80A73490F1D2B650D /* SettingsView.swift */; };
+		760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87227276409128E69ABE7D61 /* ReviewsSheet.swift */; };
 		80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8E1D52867446105B46D06E /* FeyndChrome.swift */; };
 		81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97210D8088451B57557247DA /* DeepLink.swift */; };
 		880554CC1BB76AA2496A93E8 /* voice-sage.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8B64197A30336810679C8C35 /* voice-sage.m4a */; };
@@ -98,6 +100,7 @@
 		78E1F1203E78919DA10B73C9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndTheme.swift; sourceTree = "<group>"; };
 		82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */ = {isa = PBXFileReference; path = "voice-shimmer.m4a"; sourceTree = "<group>"; };
+		87227276409128E69ABE7D61 /* ReviewsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewsSheet.swift; sourceTree = "<group>"; };
 		895F213807633430DF5ABD89 /* voice-marin.m4a */ = {isa = PBXFileReference; path = "voice-marin.m4a"; sourceTree = "<group>"; };
 		8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayer.swift; sourceTree = "<group>"; };
 		8B64197A30336810679C8C35 /* voice-sage.m4a */ = {isa = PBXFileReference; path = "voice-sage.m4a"; sourceTree = "<group>"; };
@@ -126,6 +129,7 @@
 		C034E8A6E1CC456DE623630F /* HelpSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSheet.swift; sourceTree = "<group>"; };
 		C0564EA3B927E26544E7655B /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
 		C0FB2FF36963A5F7793FAF80 /* voice-echo.m4a */ = {isa = PBXFileReference; path = "voice-echo.m4a"; sourceTree = "<group>"; };
+		C70AD9918E6BD770826DEE32 /* CommunitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunitySheet.swift; sourceTree = "<group>"; };
 		C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
 		CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabsView.swift; sourceTree = "<group>"; };
 		CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
@@ -160,6 +164,7 @@
 				A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */,
 				6DDC42B73E361C8473ADE137 /* ChatSupport.swift */,
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
+				C70AD9918E6BD770826DEE32 /* CommunitySheet.swift */,
 				97210D8088451B57557247DA /* DeepLink.swift */,
 				3D886D7625C13A1ABF92B7EF /* DemoReelView.swift */,
 				EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */,
@@ -193,6 +198,7 @@
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
 				E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */,
 				F75E071CC1F646CA33327FAB /* RecertNotifications.swift */,
+				87227276409128E69ABE7D61 /* ReviewsSheet.swift */,
 				2D359E2025298CA4A57C307D /* ScreenCache.swift */,
 				8BE40ACBCE23969C211C1B42 /* Secrets.swift */,
 				EC5668529933DC6749CB3D06 /* Session.swift */,
@@ -343,6 +349,7 @@
 				0FA243A66767AA35B699BE73 /* BookSummaryReaderView.swift in Sources */,
 				DFDA422D8540593189FE7815 /* ChatSupport.swift in Sources */,
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
+				0A8249C1501816EDBB802A2F /* CommunitySheet.swift in Sources */,
 				81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */,
 				41A4306B14D9973624451800 /* DemoReelView.swift in Sources */,
 				F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */,
@@ -374,6 +381,7 @@
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
 				B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */,
 				C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */,
+				760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */,
 				D577BB198B5846938AF1ECEB /* ScreenCache.swift in Sources */,
 				6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */,
 				C573E836F4F99984E9A8409E /* Session.swift in Sources */,

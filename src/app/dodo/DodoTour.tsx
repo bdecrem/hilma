@@ -58,7 +58,7 @@ const SLIDES: Slide[] = [
       "Optional refresher: after 30, 60, 90 days, you'll take a short refresher test to keep your status on that topic.",
   },
   {
-    src: '/dodo/tour/s1690.png',
+    src: '/dodo/tour/s1693.png',
     caption:
       'Peck Mode is a flash card game across all your topics. You can take the sets in multiple choice, text or voice modes.',
   },
@@ -66,7 +66,7 @@ const SLIDES: Slide[] = [
     src: '/dodo/tour/s1691.png',
     caption: 'You can control which of your topics are included.',
   },
-  { src: '/dodo/tour/s1690.png', caption: "Don't forget to tickle Dodo." },
+  { src: '/dodo/tour/s1693.png', caption: "Don't forget to tickle Dodo." },
   { src: '/dodo/tour/s1692.png', caption: 'Levels, settings and stuff.' },
   {
     src: '/dodo/tour/daily.mp4',

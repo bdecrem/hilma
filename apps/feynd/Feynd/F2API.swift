@@ -232,6 +232,95 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }
 
+    // MARK: - Review history
+
+    /// One graded review attempt (Final Review / Second Chance / Refresher).
+    struct ReviewAttempt: Decodable, Identifiable {
+        let id: String
+        let mode: String
+        let grade: String
+        let gradedAt: Date
+        let notes: String?
+        let strengths: [String]
+        let weaknesses: [String]
+
+        enum CodingKeys: String, CodingKey {
+            case id, mode, grade, notes, strengths, weaknesses
+            case gradedAt = "graded_at"
+        }
+
+        /// "Final Review" / "Second Chance" / "Refresher".
+        var modeLabel: String {
+            switch mode {
+            case "final_review": return "Final Review"
+            case "second_chance": return "Second Chance"
+            case "recert": return "Refresher"
+            default: return mode.replacingOccurrences(of: "_", with: " ").capitalized
+            }
+        }
+    }
+
+    /// Every graded review attempt on a topic, newest first.
+    func listReviews(topicId: String) async throws -> [ReviewAttempt] {
+        struct Response: Decodable { let reviews: [ReviewAttempt] }
+        let res: Response = try await get("/api/f2/topics/\(topicId)/reviews")
+        return res.reviews
+    }
+
+    // MARK: - Community topics
+
+    /// List (or delist) one of the user's own topics in the community
+    /// directory.
+    func setShared(topicId: String, shared: Bool) async throws {
+        struct Response: Decodable { let shared: Bool }
+        let _: Response = try await request(
+            "/api/f2/topics/\(topicId)/share",
+            method: shared ? "POST" : "DELETE",
+            body: nil as EmptyBody?)
+    }
+
+    struct CommunityTopic: Decodable, Identifiable {
+        let id: String
+        let threadId: String
+        let sharedAt: Date
+        let topic: String?
+        let url: String?
+        let kind: String?
+        let author: String
+
+        enum CodingKeys: String, CodingKey {
+            case id, topic, url, kind, author
+            case threadId = "thread_id"
+            case sharedAt = "shared_at"
+        }
+
+        var displayLabel: String {
+            if let topic, !topic.isEmpty { return topic }
+            if let url, let host = URL(string: url)?.host {
+                return host.replacingOccurrences(of: "www.", with: "")
+            }
+            return "(untitled)"
+        }
+    }
+
+    /// The community directory, newest share first.
+    func listCommunityTopics() async throws -> [CommunityTopic] {
+        struct Response: Decodable { let topics: [CommunityTopic] }
+        let res: Response = try await get("/api/f2/community")
+        return res.topics
+    }
+
+    /// Fork a community topic into the signed-in account; returns the new
+    /// topic's id.
+    func forkCommunityTopic(id: String) async throws -> String {
+        struct Response: Decodable {
+            let thread: Thread
+            struct Thread: Decodable { let id: String }
+        }
+        let res: Response = try await post("/api/f2/community/\(id)/fork", body: EmptyBody())
+        return res.thread.id
+    }
+
     /// Response from `POST /api/f2/topics/[id]/quiz`. Stars are not yet
     /// awarded — `pendingQuizKind` records which kind is in flight so the UI
     /// can show a Done button.

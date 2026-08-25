@@ -8,6 +8,7 @@ import {
 } from '@/lib/f2/threads'
 import { audioSummaryForClient } from '@/lib/f2/audio-summary'
 import { bookSummaryForClient } from '@/lib/f2/book-summary'
+import { sharedThreadIds } from '@/lib/f2/community'
 import { fetchUrlContent, isUrl } from '@/lib/f2/url'
 import { nameTopic } from '@/lib/f2/name-topic'
 
@@ -27,6 +28,7 @@ export async function GET() {
   }
 
   const threads = await listTopicsForUser(user.id)
+  const shared = await sharedThreadIds(user.id)
   const topics = threads.map((t) => ({
     id: t.id,
     topic: t.topic,
@@ -46,6 +48,9 @@ export async function GET() {
     client: t.client,
     pinned_at: t.pinned_at,
     study_focus: t.study_focus,
+    // Listed in the community directory (owner's own view drives the
+    // Share/Unshare menu item).
+    shared: shared.has(t.id),
     // Script text stays out of list payloads — clients only need state + URL.
     audio_summary: audioSummaryForClient(t.audio_summary),
     // Same for the book summary's markdown — status only.

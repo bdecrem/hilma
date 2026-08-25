@@ -24,6 +24,9 @@ struct TopicsView: View {
     @State private var showNewTopic = false
     @State private var showProfile = false
     @State private var contextTarget: TopicContextTarget? = nil
+    @State private var reviewsTarget: TopicContextTarget? = nil
+    @State private var communityPresented = false
+    @State private var shareError: String? = nil
     @State private var flashTarget: F2Topic? = nil
     @State private var audioError: String? = nil
     /// True while a background task is polling for in-flight audio or book
@@ -126,6 +129,22 @@ struct TopicsView: View {
             TopicContextSheet(topicId: target.id, topicLabel: target.label,
                               seedFocus: target.seedFocus)
                 .environment(session)
+        }
+        .sheet(item: $reviewsTarget) { target in
+            ReviewsSheet(topicId: target.id, topicLabel: target.label)
+        }
+        .sheet(isPresented: $communityPresented) {
+            CommunitySheet(onForked: {
+                Task { await load() }
+            })
+            .environment(session)
+        }
+        .alert("Community",
+               isPresented: Binding(get: { shareError != nil },
+                                    set: { if !$0 { shareError = nil } })) {
+            Button("OK") { shareError = nil }
+        } message: {
+            Text(shareError ?? "")
         }
         .sheet(item: $flashTarget) { topic in
             FlashCardsView(topicId: topic.id, topicLabel: topic.displayLabel)
@@ -263,9 +282,44 @@ struct TopicsView: View {
                 .font(.system(size: 13))
                 .foregroundStyle(FeyndTheme.text2)
                 .multilineTextAlignment(.center)
+            // The other way in: pick up something another learner shared.
+            Button { communityPresented = true } label: {
+                Label("Browse community topics", systemImage: "person.2")
+                    .font(.system(size: 13.5, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.accent)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 9)
+                    .background(FeyndTheme.surface, in: Capsule())
+                    .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 6)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 32)
+    }
+
+    /// Quiet footer under the last topic row — the door to the community
+    /// directory.
+    private var communityRow: some View {
+        Button { communityPresented = true } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "person.2")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.accent)
+                Text("Community topics")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.text2)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.text3)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 10)
     }
 
     private var rows: some View {
@@ -288,6 +342,7 @@ struct TopicsView: View {
                     sectionHeader("All topics")
                 }
                 topicList(unpinned)
+                communityRow
                 Color.clear.frame(height: 96)
             }
             .padding(.horizontal, 14)
@@ -318,6 +373,11 @@ struct TopicsView: View {
                                      id: topic.id, label: topic.displayLabel,
                                      seedFocus: topic.studyFocus)
                              },
+                             onReviews: {
+                                 reviewsTarget = TopicContextTarget(
+                                     id: topic.id, label: topic.displayLabel)
+                             },
+                             onToggleShare: { toggleShare(topic) },
                              onGenerateAudio: { generateAudio(topic) },
                              onGenerateBook: { generateBook(topic) },
                              onViewBookSummary: { bookReaderTarget = topic },
@@ -450,6 +510,23 @@ struct TopicsView: View {
         }
     }
 
+    /// Share / unshare in the community directory. Optimistic flip so the
+    /// menu label updates immediately; reverts on failure.
+    private func toggleShare(_ topic: F2Topic) {
+        let willShare = !(topic.shared ?? false)
+        let prev = topics
+        if let i = topics.firstIndex(where: { $0.id == topic.id }) {
+            topics[i].shared = willShare
+        }
+        Task {
+            do { try await F2API.shared.setShared(topicId: topic.id, shared: willShare) }
+            catch {
+                topics = prev
+                shareError = "Couldn't \(willShare ? "share" : "unshare"): \(error.localizedDescription)"
+            }
+        }
+    }
+
     private func togglePin(_ topic: F2Topic) {
         let willPin = !topic.isPinned
         let prev = topics
@@ -470,6 +547,8 @@ struct TopicListRow: View {
     let onRename: () -> Void
     let onDelete: () -> Void
     let onViewContext: () -> Void
+    let onReviews: () -> Void
+    let onToggleShare: () -> Void
     let onGenerateAudio: () -> Void
     let onGenerateBook: () -> Void
     let onViewBookSummary: () -> Void
@@ -507,6 +586,12 @@ struct TopicListRow: View {
                     Button { onFlashCards() } label: { Label("Flash cards", systemImage: "bolt.fill") }
                     Button { onRename() } label: { Label("Rename", systemImage: "pencil") }
                     Button { onViewContext() } label: { Label("View context", systemImage: "doc.text.magnifyingglass") }
+                    Button { onReviews() } label: { Label("Reviews", systemImage: "checkmark.seal") }
+                    Button { onToggleShare() } label: {
+                        topic.shared == true
+                            ? Label("Remove from community", systemImage: "minus.circle")
+                            : Label("Share to community", systemImage: "person.2")
+                    }
                     audioMenuItem
                     if topic.kind == "book" { bookMenuItems }
                     Button(role: .destructive) { onDelete() } label: { Label("Delete", systemImage: "trash") }
