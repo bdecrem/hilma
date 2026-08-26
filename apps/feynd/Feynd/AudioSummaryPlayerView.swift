@@ -56,6 +56,21 @@ struct AudioSummaryPlayerView: View {
                     .padding(.bottom, 40)
             }
         }
+        // Explicit close — the only way out on the Mac, where sheets have no
+        // swipe. Playback keeps running (that's the design; see header note).
+        .overlay(alignment: .topTrailing) {
+            Button { closeModal(dismiss) } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.text2)
+                    .frame(width: 36, height: 36)
+                    .background(FeyndTheme.surface2, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            .padding(.top, 12)
+            .padding(.trailing, 14)
+        }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.hidden)
         .onAppear { ctl.load(title: title, url: url) }

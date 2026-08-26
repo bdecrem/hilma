@@ -1082,6 +1082,7 @@ private struct LevelStartSheet: View {
 
     /// Which mode button was tapped — keeps the spinner on that row.
     @State private var pickedMode: String? = nil
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
@@ -1134,6 +1135,21 @@ private struct LevelStartSheet: View {
 
                 Spacer()
             }
+        }
+        // Explicit close — without it this sheet only offers ways to START
+        // a round, which traps the user on the Mac (no sheet-swipe there).
+        .overlay(alignment: .topTrailing) {
+            Button { closeModal(dismiss) } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.text2)
+                    .frame(width: 36, height: 36)
+                    .background(FeyndTheme.surface2, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            .padding(.top, 12)
+            .padding(.trailing, 14)
         }
         .onChange(of: starting) { _, nowStarting in
             if !nowStarting { pickedMode = nil }
