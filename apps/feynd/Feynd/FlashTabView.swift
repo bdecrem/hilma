@@ -762,6 +762,17 @@ struct PeckWorldCanvas: View {
 
     var body: some View {
         Canvas { ctx, size in
+            drawWorld(ctx, size: size)
+        }
+        .frame(height: height)
+    }
+
+    // Split out of the Canvas closure: the Catalyst release compile hit
+    // "unable to type-check this expression in reasonable time" on the
+    // giant closure; a named method type-checks fast. GraphicsContext
+    // copies draw to the same target, so the value parameter is fine.
+    private func drawWorld(_ context: GraphicsContext, size: CGSize) {
+            var ctx = context
             let w = size.width
             let h = size.height
             let bands = max(1, Int(ceil(Double(levelCount) / 10.0)))
@@ -968,8 +979,6 @@ struct PeckWorldCanvas: View {
                 tuft.closeSubpath()
                 fill(tuft, 0x4C8C3D)
             }
-        }
-        .frame(height: height)
     }
 
     // MARK: props

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Mac App Store / TestFlight requires the App Sandbox. Applied to
+	     RELEASE Catalyst builds only (see project.yml) — the local debug
+	     install stays unsandboxed so its container (cookies, defaults)
+	     doesn't move. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- Talks to feynd.cc + OpenAI Realtime. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- Voice mode (Talk to Dodo, voice rounds). -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+	<!-- Upload Notes picks a .txt through the open panel (powerbox). -->
+	<key>com.apple.security.files.user-selected.read-only</key>
+	<true/>
+</dict>
+</plist>

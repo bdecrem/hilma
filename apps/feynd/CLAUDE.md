@@ -83,6 +83,45 @@ export.plist: method `app-store-connect`, destination `upload`, signingStyle man
 
 Standing facts: profile "feynd appstore" (uuid 66b0aaaa…, IOS_APP_STORE, expires 2027-08) is installed in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`, minted via the ASC API against distribution cert 4YB38SZ2F2 (in this Mac's keychain). Device/sim builds are iPhone-only (`TARGETED_DEVICE_FAMILY[sdk=iphoneos*]` at TARGET level — project-level conditionals lose to the target's plain "1,2"). `ITSAppUsesNonExemptEncryption` and `NSCameraUsageDescription` (WebRTC links camera APIs) live in project.yml — removing either breaks processing. Poll `/v1/builds?filter[version]=N` until VALID; a processing rejection (e.g. 90683) only surfaces there, not at upload.
 
+## TestFlight for Mac (Catalyst upload — worked end to end 2026-08-25, 0.2 (61))
+
+Same app record as iOS; the Mac build shows under TestFlight's macOS side and
+the internal group picks it up automatically. Testers install via the
+TestFlight app on macOS.
+
+```bash
+./apps/feynd/bump-build.sh
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+xcodebuild archive -project Feynd.xcodeproj -scheme Feynd \
+  -destination 'generic/platform=macOS,variant=Mac Catalyst' \
+  -archivePath <path>/FeyndMac.xcarchive -configuration Release \
+  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=feynd catalyst appstore" \
+  "CODE_SIGN_IDENTITY=Apple Distribution"
+xcodebuild -exportArchive -archivePath <path>/FeyndMac.xcarchive \
+  -exportOptionsPlist export-mac.plist -exportPath <out> \
+  -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8 \
+  -authenticationKeyID 5A5HNSWA33 -authenticationKeyIssuerID 69a6de80-eb13-47e3-e053-5b8c7c11a4d1
+```
+
+export-mac.plist = the iOS export.plist plus `installerSigningCertificate:
+"3rd Party Mac Developer Installer"` — without that key the export fails with
+a misleading "profile doesn't include signing certificate …Installer" error.
+
+Standing facts:
+- Profile "feynd catalyst appstore" (MAC_CATALYST_APP_STORE, expires 2027-03)
+  minted via the ASC API against bundle-ID resource `L74V9QD69L` and
+  distribution cert `4YB38SZ2F2`; installed in the user profiles dir.
+- Installer cert `WUZK4CR87J` (MAC_INSTALLER_DISTRIBUTION, expires 2027-08) —
+  key + cert live in this Mac's login keychain; it signs the upload .pkg.
+- Release Catalyst builds are sandboxed via `Feynd/Feynd-macOS.entitlements`
+  (App Store requirement), wired Release-only in project.yml so the local
+  debug install in /Applications keeps its unsandboxed container (cookies,
+  logins). Don't add the entitlements to Debug.
+- `LSApplicationCategoryType` in project.yml is required for Mac uploads.
+- The Peck world Canvas closure is split into `drawWorld` in
+  FlashTabView.swift — the Catalyst RELEASE compile hits Swift's
+  type-check-time limit if that code lives inline in the closure.
+
 This Mac (Catalyst):
 ```bash
 xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd \

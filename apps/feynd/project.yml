@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "60"
+    CURRENT_PROJECT_VERSION: "61"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -42,6 +42,8 @@ targets:
         NSPrincipalClass: Feynd.FeyndApplication
         # HTTPS only — skips TestFlight's export-compliance question.
         ITSAppUsesNonExemptEncryption: false
+        # Mac App Store metadata — required for macOS (Catalyst) uploads.
+        LSApplicationCategoryType: public.app-category.education
         UILaunchScreen:
           UIColorName: LaunchBackground
         UIAppFonts:
@@ -98,3 +100,10 @@ targets:
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         MACOSX_DEPLOYMENT_TARGET: "14.0"
+      configs:
+        # TestFlight/Mac App Store Catalyst builds must be sandboxed; the
+        # debug build deliberately isn't, so the locally installed
+        # /Applications/Dodo.app keeps its unsandboxed container (cookies,
+        # defaults) across updates.
+        Release:
+          "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Feynd/Feynd-macOS.entitlements
