@@ -72,7 +72,9 @@ struct RootView: View {
             // First run gets the intro; "sign in" from its gate page (or a
             // finished replay) lands on the normal login screen.
             if hasSeenOnboarding {
-                LoginView()
+                // X returns to the intro — its gate offers Try-it (guest)
+                // and sign-in, so login is never a dead end.
+                LoginView(onBack: { hasSeenOnboarding = false })
             } else {
                 OnboardingView(mode: .firstRun) {
                     hasSeenOnboarding = true

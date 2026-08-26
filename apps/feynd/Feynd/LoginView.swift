@@ -4,6 +4,11 @@ import SwiftUI
 /// "Create an account" link at the bottom pushes to SignupView in the same
 /// navigation stack.
 struct LoginView: View {
+    /// Way out for anyone who landed here from the intro and changed their
+    /// mind (back to the intro's Try-it / sign-in gate). Without it this
+    /// screen is a trap: no account, no exit.
+    var onBack: (() -> Void)? = nil
+
     @Environment(Session.self) private var session
     @State private var username = ""
     @State private var password = ""
@@ -50,6 +55,21 @@ struct LoginView: View {
                     Text(err)
                         .font(.system(size: 13))
                         .foregroundStyle(Color(hex: 0xFF6B5B))
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if let onBack {
+                    Button { onBack() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(FeyndTheme.text2)
+                            .frame(width: 36, height: 36)
+                            .background(FeyndTheme.surface2, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
+                    .padding(.top, 10)
+                    .padding(.trailing, 16)
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
