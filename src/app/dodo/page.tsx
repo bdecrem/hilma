@@ -83,6 +83,11 @@ export default function DodoAltPage() {
               Thumbs-down buries a card, double-thumbs-up makes it a priority.
             </li>
             <li>
+              <strong>Community topics</strong> — share a topic to the public
+              directory; anyone can add it to their own library as an
+              editable copy, flash deck included.
+            </li>
+            <li>
               <strong>Peck</strong> — a Duolingo-style level path across every
               deck you own.
             </li>

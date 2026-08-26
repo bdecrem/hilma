@@ -98,6 +98,9 @@ struct OnboardingView: View {
                 introRow(icon: "quote.opening",
                          title: "Pebbles",
                          sub: "Save the lines worth keeping. Dodos swallowed little stones to digest their food — same idea.")
+                introRow(icon: "person.2",
+                         title: "Community topics",
+                         sub: "Add another learner's topic — flash cards included — or share your own.")
             }
             .padding(.horizontal, 44)
             Spacer()

@@ -14,6 +14,11 @@ const SLIDES: Slide[] = [
     caption:
       'Start a new topic with just a chat, or by sharing a link to a YouTube video, or uploading an article or book.',
   },
+  {
+    src: '/dodo/tour/s1694.png',
+    caption:
+      "Or borrow one: browse topics other learners have shared and add one to your library — sources and flash cards included. Share yours back.",
+  },
   { src: '/dodo/tour/s1679.png', caption: 'Talk it through — text or voice.' },
   { src: '/dodo/tour/s1680.png', caption: 'Talk it through — text or voice.' },
   {

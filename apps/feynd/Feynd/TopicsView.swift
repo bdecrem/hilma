@@ -195,6 +195,17 @@ struct TopicsView: View {
             if topics.isEmpty, let cached: [F2Topic] = ScreenCache.load(key: ScreenCache.topics) {
                 topics = cached
             }
+            #if targetEnvironment(simulator)
+            // `-OpenCommunity 1` — straight to the community directory for
+            // screenshot loops.
+            if UserDefaults.standard.bool(forKey: "OpenCommunity") {
+                UserDefaults.standard.removeObject(forKey: "OpenCommunity")
+                Task {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    communityPresented = true
+                }
+            }
+            #endif
             await load()
             await session.refreshProgress()
         }
