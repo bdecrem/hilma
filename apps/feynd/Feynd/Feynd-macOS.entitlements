@@ -11,6 +11,11 @@
 	<!-- Talks to feynd.cc + OpenAI Realtime. -->
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<!-- Voice mode is WebRTC: ICE binds local UDP sockets to receive media,
+	     which the sandbox counts as "server". Without this the Realtime
+	     connection fails on the TestFlight build (worked unsandboxed). -->
+	<key>com.apple.security.network.server</key>
+	<true/>
 	<!-- Voice mode (Talk to Dodo, voice rounds). -->
 	<key>com.apple.security.device.audio-input</key>
 	<true/>
