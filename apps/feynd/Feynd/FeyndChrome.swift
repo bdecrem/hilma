@@ -150,10 +150,15 @@ struct MiniTopicGlyph: View {
     /// the corner mark becomes a refresh arrow. Stars are untouched; the
     /// badge is stale, not lost.
     var dimmed: Bool = false
+    /// Quiz passed but not yet mastered — "actively read". A washed straw
+    /// tile: clearly warmer than untouched, clearly quieter than gold.
+    var activelyRead: Bool = false
 
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
-            .fill(verified ? FeyndTheme.accent.opacity(dimmed ? 0.38 : 1) : FeyndTheme.surface)
+            .fill(verified ? FeyndTheme.accent.opacity(dimmed ? 0.38 : 1)
+                  : activelyRead ? FeyndTheme.accent.opacity(0.18)
+                  : FeyndTheme.surface)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(verified ? (dimmed ? FeyndTheme.border : Color.clear) : FeyndTheme.border, lineWidth: 1)

@@ -109,7 +109,10 @@ struct TopicsView: View {
                 .sorted { ($0.recertDueAt ?? .distantFuture) < ($1.recertDueAt ?? .distantFuture) }
             let lapsed = topics.filter { $0.isCertified && $0.recertLapsed }
                 .sorted { ($0.recertDueAt ?? .distantPast) < ($1.recertDueAt ?? .distantPast) }
-            let inProgress = topics.filter { !$0.isCertified }
+            // Actively read: the quiz is passed (digested) but the topic
+            // isn't mastered — parked between the gold tiers and the pile.
+            let activelyRead = topics.filter { !$0.isCertified && $0.stars >= 1 }
+            let inProgress = topics.filter { !$0.isCertified && $0.stars == 0 }
             return [
                 TopicSection(id: "completed", title: "Completed",
                              systemImage: "checkmark.seal.fill", tint: FeyndTheme.gold,
@@ -117,6 +120,9 @@ struct TopicsView: View {
                 TopicSection(id: "lapsed", title: "Dimmed — refresher due",
                              systemImage: "seal", tint: FeyndTheme.gold.opacity(0.6),
                              topics: lapsed),
+                TopicSection(id: "actively-read", title: "Actively read",
+                             systemImage: "book.fill", tint: FeyndTheme.accent.opacity(0.55),
+                             topics: activelyRead),
                 TopicSection(id: "progress", title: "In progress", topics: inProgress),
             ].filter { !$0.topics.isEmpty }
         case .byType:
@@ -664,7 +670,7 @@ struct TopicListRow: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                MiniTopicGlyph(kind: topic.kind, size: 36, verified: topic.stars >= 3, dimmed: topic.recertLapsed)
+                MiniTopicGlyph(kind: topic.kind, size: 36, verified: topic.stars >= 3, dimmed: topic.recertLapsed, activelyRead: topic.stars >= 1 && topic.stars < 3)
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 5) {
