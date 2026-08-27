@@ -82,6 +82,18 @@ export default function DodoAltPage() {
               not done.
             </li>
           </ol>
+          <p className="da-name">
+            We were going to name the app after Richard Feynman. Then we came
+            across{' '}
+            <a
+              href="https://youtu.be/GnSvy3nH7l0?t=290"
+              target="_blank"
+              rel="noopener"
+            >
+              this story
+            </a>{' '}
+            and the kids in the back seat won.
+          </p>
           <p className="da-more">
             <a href={SUBSTACK_URL}>Read the full story &rarr;</a>
           </p>
@@ -233,6 +245,8 @@ const css = `
 .da-feyn { list-style: decimal; margin: 0 0 18px; padding-left: 24px; }
 .da-feyn li { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin-bottom: 10px; }
 .da-feyn li::marker { font-family: var(--display); font-weight: 600; color: var(--marigold-deep); }
+.da-name { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin: 0 0 14px; }
+.da-name a { color: var(--marigold-deep); text-decoration: underline; text-underline-offset: 2px; }
 .da-more { font-family: var(--display); font-weight: 500; font-size: 15px; }
 .da-more a { color: var(--marigold-deep); text-decoration: none; }
 .da-more a:hover { text-decoration: underline; }
