@@ -82,6 +82,12 @@ realtime endpoint (immediate re-evaluation — it wins outright); Realtime
 prices drop sharply (weakens the pilot's cost story); Dodo wants a
 signature branded voice (strengthens ElevenLabs).
 
+**Cadence (per Bart, 2026-08-26):** decision affirmed; re-run this
+comparison every few months — next pass ~Nov 2026. Prior art for the pilot:
+vibeceo8 already integrates Hume EVI successfully (voice/TTS in the
+sms-bot/discord toolchest), so the CLM route has in-house experience behind
+it, not just vendor docs.
+
 ## Sources
 
 - https://openai.com/index/advancing-voice-intelligence-with-new-models-in-the-api/
