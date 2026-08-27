@@ -103,6 +103,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.dodogo.cc' }],
           destination: '/dodo',
         },
+        // dodo.foo — the primary Dodo domain, same site as dodogo.cc
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'dodo.foo' }],
+          destination: '/dodo',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.dodo.foo' }],
+          destination: '/dodo',
+        },
         // dogear.bar root → /book-scout (the Dog-Ear app)
         {
           source: '/',
@@ -181,6 +192,17 @@ const nextConfig: NextConfig = {
         {
           source: '/:path((?!(?:dodo|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.dodogo.cc' }],
+          destination: '/dodo/:path',
+        },
+        // dodo.foo/anything → /dodo/anything
+        {
+          source: '/:path((?!(?:dodo|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'dodo.foo' }],
+          destination: '/dodo/:path',
+        },
+        {
+          source: '/:path((?!(?:dodo|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.dodo.foo' }],
           destination: '/dodo/:path',
         },
         // feynd.cc/anything → /f2/anything
