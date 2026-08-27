@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createUser, setSessionCookie } from '@/lib/f2/auth'
+import { notifyAdminNewAccount } from '@/lib/f2/admin-notify'
 import { seedIntroTopic } from '@/lib/f2/intro'
 
 export const runtime = 'nodejs'
@@ -29,6 +30,9 @@ export async function POST(req: Request) {
   }
   // Every fresh account starts with the intro topic (best-effort).
   await seedIntroTopic(result.id)
+  // Admin ping (best-effort; awaited because serverless won't outlive the
+  // response, but it can never fail the signup).
+  await notifyAdminNewAccount('signup', result.username)
 
   const res = NextResponse.json({
     user: {

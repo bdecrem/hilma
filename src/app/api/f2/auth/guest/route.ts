@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createGuestUser, setSessionCookie } from '@/lib/f2/auth'
 import { seedIntroTopic } from '@/lib/f2/intro'
+import { notifyAdminNewAccount } from '@/lib/f2/admin-notify'
 
 export const runtime = 'nodejs'
 
@@ -14,6 +15,7 @@ export async function POST() {
     return NextResponse.json({ error: result.error }, { status: result.status })
   }
   await seedIntroTopic(result.id)
+  await notifyAdminNewAccount('guest', result.username)
   const res = NextResponse.json({
     user: {
       id: result.id,
