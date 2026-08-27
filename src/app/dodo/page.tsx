@@ -230,7 +230,7 @@ const css = `
 .da-quote-mark { color: var(--marigold); font-weight: 700; }
 .da-quote-cite { font-family: var(--display); font-style: normal; font-weight: 500; font-size: 14px; color: var(--ink2); }
 .da-feyn-lead { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); margin: 0 0 10px; }
-.da-feyn { margin: 0 0 18px; padding-left: 24px; }
+.da-feyn { list-style: decimal; margin: 0 0 18px; padding-left: 24px; }
 .da-feyn li { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin-bottom: 10px; }
 .da-feyn li::marker { font-family: var(--display); font-weight: 600; color: var(--marigold-deep); }
 .da-more { font-family: var(--display); font-weight: 500; font-size: 15px; }
