@@ -1,0 +1,33 @@
+{
+  "size": [1080, 1920],
+  "fps": 30,
+  "xfade": 0.5,
+  "shots": [
+    { "kind": "title", "secs": 3.0, "caption": "" },
+    { "src": "frames/02-topics.png", "secs": 4.0,
+      "caption": "Feed it books, videos, articles — anything." },
+    { "src": "../../public/dodo/tour/s1679.png", "secs": 3.6,
+      "caption": "Then talk it through." },
+    { "src": "frames/04-flashhub.png", "secs": 3.6,
+      "caption": "It writes your flash cards." },
+    { "src": "../../public/dodo/tour/s1682.png", "secs": 3.8,
+      "caption": "Play them four ways — even out loud." },
+    { "src": "../../public/dodo/tour/s1685.png", "secs": 3.8,
+      "caption": "When you're ready: an oral exam." },
+    { "src": "../../public/dodo/tour/s1686.png", "secs": 3.0,
+      "caption": "You need an A." },
+    { "src": "../../public/dodo/tour/s1688.png", "secs": 3.8,
+      "caption": "Agent mode — you're in charge." },
+    { "src": "../../public/dodo/tour/s1689.png", "secs": 3.8,
+      "caption": "Badges dim. Refreshers keep them gold." },
+    { "src": "frames/06-peck.png", "secs": 4.2,
+      "caption": "Peck — one game across everything you know." },
+    { "src": "frames/07-pebbles.png", "secs": 3.8,
+      "caption": "Pebbles: keep the lines worth keeping." },
+    { "src": "frames/08-community.png", "secs": 3.6,
+      "caption": "Add topics other learners shared." },
+    { "kind": "video", "src": "../../public/dodo/tour/daily.mp4", "secs": 7.4,
+      "caption": "One card a day, over iMessage. Don't break your streak." },
+    { "kind": "outro", "secs": 3.4, "caption": "dodogo.cc" }
+  ]
+}
