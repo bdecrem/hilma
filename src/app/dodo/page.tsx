@@ -53,7 +53,8 @@ export default function DodoAltPage() {
           <p>
             There&rsquo;s no magic to it. The most important thing is finding
             the books, videos, and other angles into the material you care
-            about — you do that, not the AI. The next most important thing is
+            about — you do that, not the AI. (Though you can always just ask
+            Dodo to explain something.) The next most important thing is
             truly engaging with it. What the app adds is the reinforcement: a
             tutor to talk things through with, flash cards, a daily quiz over
             iMessage, and the stakes of an oral exam.
