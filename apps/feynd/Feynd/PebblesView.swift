@@ -107,8 +107,11 @@ struct PebblesView: View {
     private var carousel: some View {
         TabView(selection: $page) {
             ForEach(Array(artifacts.enumerated()), id: \.element.id) { i, artifact in
-                PebbleQuoteCard(artifact: artifact, showTopic: threadId == nil)
+                PebbleQuoteCard(artifact: artifact, showTopic: threadId == nil,
+                                fillsHeight: true,
+                                onOpenTopic: { closeModal(dismiss) })
                     .padding(.horizontal, 24)
+                    .padding(.vertical, 6)
                     .contextMenu {
                         Button(role: .destructive) {
                             confirmDeleteId = artifact.id
@@ -207,61 +210,135 @@ struct PebbleQuoteCard: View {
     let artifact: F2Artifact
     /// Off inside a single topic's shelf, where the chip is redundant.
     var showTopic: Bool = true
+    /// Carousel mode: the card fills its page and no band ever scrolls —
+    /// the footer pins to the card's floor, short quotes float centered.
+    /// Off (the grading screen) it stays compact and self-sizing.
+    var fillsHeight: Bool = false
+    /// Band F's hand-off: called before routing to the topic so the host
+    /// (a sheet) can dismiss itself.
+    var onOpenTopic: (() -> Void)? = nil
+
+    /// The six bands: type and quote mark step down as the quote grows.
+    /// Deterministic by length — the same pebble always renders the same.
+    private struct Band {
+        let quote: CGFloat
+        let spacing: CGFloat
+        let mark: CGFloat
+        let centered: Bool
+        let capped: Bool
+    }
+    private var band: Band {
+        switch artifact.body.count {
+        case ...90:  return Band(quote: 27, spacing: 8, mark: 56, centered: true, capped: false)
+        case ...200: return Band(quote: 23, spacing: 8, mark: 48, centered: true, capped: false)
+        case ...360: return Band(quote: 19, spacing: 7, mark: 40, centered: false, capped: false)
+        case ...600: return Band(quote: 16.5, spacing: 7, mark: 34, centered: false, capped: false)
+        case ...900: return Band(quote: 14.5, spacing: 6, mark: 30, centered: false, capped: false)
+        default:     return Band(quote: 13.5, spacing: 5, mark: 28, centered: false, capped: true)
+        }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            if fillsHeight && band.centered { Spacer(minLength: 0) }
+
             Text("\u{201C}")
-                .font(.system(size: 56, weight: .bold, design: .serif))
+                .font(.system(size: band.mark, weight: .bold, design: .serif))
                 .foregroundStyle(FeyndTheme.accent)
-                .frame(height: 34, alignment: .top)
-            ScrollView {
-                Text(artifact.body)
-                    .font(.system(size: quoteSize, design: .serif))
-                    .lineSpacing(6)
-                    .foregroundStyle(FeyndTheme.text)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            .scrollIndicators(.hidden)
-            .frame(maxHeight: 380)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, 8)
-            if artifact.source != nil || (showTopic && artifact.topic != nil) {
-                Rectangle()
-                    .fill(FeyndTheme.borderSoft)
-                    .frame(height: 1)
-                    .padding(.top, 20)
-                HStack(spacing: 8) {
-                    if let source = artifact.source {
-                        Text(source)
-                            .font(.system(size: 14, weight: .semibold))
-                            .italic()
-                            .foregroundStyle(FeyndTheme.text2)
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: 0)
-                    if showTopic, let topic = artifact.topic {
-                        Text(topic)
-                            .font(.system(size: 11.5, weight: .bold))
-                            .foregroundStyle(FeyndTheme.accent)
-                            .lineLimit(1)
-                            .padding(.horizontal, 11)
-                            .padding(.vertical, 5)
-                            .background(FeyndTheme.accentSoft, in: Capsule())
-                    }
-                }
-                .padding(.top, 14)
-            }
+                .frame(height: band.mark * 0.6, alignment: .top)
+
+            quoteBlock
+                .padding(.top, 8)
+
+            if fillsHeight { Spacer(minLength: band.centered ? 0 : 14) }
+            footer
         }
         .padding(26)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity,
+               maxHeight: fillsHeight ? .infinity : nil,
+               alignment: .leading)
         .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 24))
         .overlay(RoundedRectangle(cornerRadius: 24).stroke(FeyndTheme.border, lineWidth: 1))
     }
 
-    /// Long quotes step the type down so more fits before scrolling.
-    private var quoteSize: CGFloat {
-        artifact.body.count > 280 ? 17 : 20
+    @ViewBuilder
+    private var quoteBlock: some View {
+        if band.capped && fillsHeight {
+            // Past the type floor the card stops shrinking: the text fades
+            // out honestly and hands off to the topic. Still no scrolling.
+            VStack(alignment: .leading, spacing: 8) {
+                quoteText
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .clipped()
+                    .mask(LinearGradient(
+                        stops: [.init(color: .black, location: 0),
+                                .init(color: .black, location: 0.8),
+                                .init(color: .clear, location: 1)],
+                        startPoint: .top, endPoint: .bottom))
+                if artifact.threadId != nil {
+                    Button {
+                        openTopic()
+                    } label: {
+                        Text("Read the rest in the topic \u{2192}")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(FeyndTheme.accent)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        } else if band.capped {
+            // Compact host (grading screen): plain truncation, no link.
+            quoteText.lineLimit(9)
+        } else {
+            quoteText
+        }
+    }
+
+    private var quoteText: some View {
+        Text(artifact.body)
+            .font(.system(size: band.quote, design: .serif))
+            .lineSpacing(band.spacing)
+            .foregroundStyle(FeyndTheme.text)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // Safety valve for short phones: a band may shave a step rather
+            // than clip. Band F clips by design and skips it.
+            .minimumScaleFactor(band.capped ? 1 : 0.82)
+    }
+
+    @ViewBuilder
+    private var footer: some View {
+        if artifact.source != nil || (showTopic && artifact.topic != nil) {
+            Rectangle()
+                .fill(FeyndTheme.borderSoft)
+                .frame(height: 1)
+                .padding(.top, fillsHeight ? 0 : 20)
+            HStack(spacing: 8) {
+                if let source = artifact.source {
+                    Text(source)
+                        .font(.system(size: 14, weight: .semibold))
+                        .italic()
+                        .foregroundStyle(FeyndTheme.text2)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                if showTopic, let topic = artifact.topic {
+                    Text(topic)
+                        .font(.system(size: 11.5, weight: .bold))
+                        .foregroundStyle(FeyndTheme.accent)
+                        .lineLimit(1)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 5)
+                        .background(FeyndTheme.accentSoft, in: Capsule())
+                }
+            }
+            .padding(.top, 14)
+        }
+    }
+
+    private func openTopic() {
+        guard let threadId = artifact.threadId else { return }
+        onOpenTopic?()
+        DeepLinkRouter.shared.requestTopicChat(threadId: threadId, draft: "")
     }
 }
 

@@ -24,6 +24,15 @@ struct FlashTabView: View {
     /// Feeds the This Week renewal banner — Peck has no topics list of its
     /// own, so it keeps a lightweight copy (cache first, then refreshed).
     @State private var bannerTopics: [F2Topic] = []
+    /// Current scroll offset of the full-bleed world (world-space Y at the
+    /// viewport top) and the offset above which the viewport is inside the
+    /// night region — together they flip the floating chrome to dark glass.
+    @State private var worldOffsetY: CGFloat = .greatestFiniteMagnitude
+    @State private var worldNightCutoff: CGFloat = -1
+
+    private var nightChrome: Bool {
+        worldNightCutoff >= 0 && worldOffsetY < worldNightCutoff
+    }
     /// Crossing into a new region (10→11, 20→21): the transition scene.
     @State private var regionCrossing: RegionCrossing? = nil
     /// Set when the just-played set cleared a band-ending level for the
@@ -59,53 +68,40 @@ struct FlashTabView: View {
     var body: some View {
         ZStack {
             FeyndTheme.bg.ignoresSafeArea()
-            VStack(spacing: 0) {
-                FeyndTopBar {
-                    BarTitle(text: "Peck", bigTitleVisible: bigTitleVisible)
-                        // Hidden demo reel — a long press on the bar title
-                        // plays mascot + regions + both transitions.
-                        .onLongPressGesture(minimumDuration: 1.5) {
-                            showDemoReel = true
-                        }
-                } trailing: {
-                    // Three pills share the bar with the echoed title — keep
-                    // them tight so "Peck" never truncates against them.
-                    HStack(spacing: 6) {
-                        pebblesButton
-                        deckStackButton
-                        xpPill
-                    }
-                } leadingAccessory: {
-                    streakPill
-                } onProfileTap: {
-                    showProfile = true
-                } onDoubleTap: {
-                    scrollTopSignal += 1
-                }
-
-                ThisWeekBanner(topics: bannerTopics)
-                    .padding(.horizontal, 14)
-                    .padding(.top, 4)
-                    .padding(.bottom, 2)
-
+            if let state, state.cardCount >= 10 {
+                // Full bleed: the world owns the screen — sky under the
+                // clock, grass under the home bar — and the chrome floats
+                // over it on frosted pills. The tab pill (MainTabsView) is
+                // the one fixed anchor shared with the rest of the app.
+                levelMap(state)
+                    .ignoresSafeArea()
+                nightMist
+                floatingChrome
+            } else {
+                // Pre-map states (building the first deck, loading, errors)
+                // keep the classic framed chrome.
                 VStack(spacing: 0) {
-                    if loading && state == nil {
-                        titleRow
-                        ProgressView().tint(FeyndTheme.text2)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else if let state, state.cardCount < 10 {
-                        titleRow
-                        lockedHero(state)
-                    } else if let state {
-                        levelMap(state)
-                    } else {
-                        titleRow
-                        errorHero
+                    classicTopBar
+                    ThisWeekBanner(topics: bannerTopics)
+                        .padding(.horizontal, 14)
+                        .padding(.top, 4)
+                        .padding(.bottom, 2)
+                    VStack(spacing: 0) {
+                        if loading && state == nil {
+                            titleRow
+                            ProgressView().tint(FeyndTheme.text2)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else if let state {
+                            titleRow
+                            lockedHero(state)
+                        } else {
+                            titleRow
+                            errorHero
+                        }
                     }
+                    .feyndContentColumn()
                 }
-                .feyndContentColumn()
             }
-
         }
         .fullScreenCover(item: $streakModal) { m in
             StreakCelebrationView(milestone: m) { streakModal = nil }
@@ -297,7 +293,7 @@ struct FlashTabView: View {
                 }
                 .padding(.horizontal, 9)
                 .frame(height: 31)   // matches xpPill — see the comment there
-                .background(FeyndTheme.surface, in: Capsule())
+                .background(.thinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
                 .contentShape(Capsule())
             }
@@ -325,7 +321,7 @@ struct FlashTabView: View {
         // the XP text have different intrinsic heights and would otherwise
         // render three subtly different capsules.
         .frame(height: 31)
-        .background(FeyndTheme.surface, in: Capsule())
+        .background(.thinMaterial, in: Capsule())
         .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         .fixedSize(horizontal: true, vertical: false)
         .accessibilityLabel("\(state?.xp ?? 0) experience points")
@@ -339,7 +335,7 @@ struct FlashTabView: View {
                 .foregroundStyle(FeyndTheme.text)
                 .padding(.horizontal, 9)
                 .frame(height: 31)   // matches xpPill — see the comment there
-                .background(FeyndTheme.surface, in: Capsule())
+                .background(.thinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         }
         .buttonStyle(.plain)
@@ -355,11 +351,78 @@ struct FlashTabView: View {
                 .foregroundStyle(FeyndTheme.text)
                 .padding(.horizontal, 9)
                 .frame(height: 31)   // matches xpPill — see the comment there
-                .background(FeyndTheme.surface, in: Capsule())
+                .background(.thinMaterial, in: Capsule())
                 .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Manage your decks")
+    }
+
+    /// The framed chrome used by pre-map states (first deck, loading, error).
+    private var classicTopBar: some View {
+        FeyndTopBar {
+            BarTitle(text: "Peck", bigTitleVisible: bigTitleVisible)
+                // Hidden demo reel — a long press on the bar title plays
+                // mascot + regions + both transitions.
+                .onLongPressGesture(minimumDuration: 1.5) {
+                    showDemoReel = true
+                }
+        } trailing: {
+            HStack(spacing: 6) {
+                pebblesButton
+                deckStackButton
+                xpPill
+            }
+        } leadingAccessory: {
+            streakPill
+        } onProfileTap: {
+            showProfile = true
+        } onDoubleTap: {
+            scrollTopSignal += 1
+        }
+    }
+
+    /// Full-bleed chrome: the same pills, floating over the world on
+    /// frosted glass. In the night region the whole strip flips to dark
+    /// glass by swapping the color scheme the pills resolve against.
+    private var floatingChrome: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                ProfileBadge()
+                    .contentShape(Rectangle())
+                    .onTapGesture { showProfile = true }
+                    // The demo reel keeps its hidden door.
+                    .onLongPressGesture(minimumDuration: 1.5) { showDemoReel = true }
+                streakPill
+                Spacer(minLength: 8)
+                pebblesButton
+                deckStackButton
+                xpPill
+            }
+            ThisWeekBanner(topics: bannerTopics)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 6)
+        .environment(\.colorScheme, nightChrome ? .dark : .light)
+        .animation(.easeOut(duration: 0.25), value: nightChrome)
+    }
+
+    /// Summit mist: a whisper of light at the very top of the night region
+    /// so the system clock stays readable over the dark sky.
+    @ViewBuilder
+    private var nightMist: some View {
+        if nightChrome {
+            VStack(spacing: 0) {
+                LinearGradient(colors: [.white.opacity(0.26), .clear],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 72)
+                Spacer()
+            }
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+            .transition(.opacity)
+        }
     }
 
     private var titleRow: some View {
@@ -439,11 +502,24 @@ struct FlashTabView: View {
             let yFor: (Int) -> CGFloat = { i in height - bottomPad - CGFloat(i) * pitch }
             let xFor: (Int) -> CGFloat = { i in centerX + zig(i) * (amp * w / 430) }
             let currentIdx = state.levels.firstIndex(where: { $0.status == "unlocked" })
+            // Bottom edge of the night region (band 2, Starfall) in world
+            // coords — when the viewport top scrolls above it, the floating
+            // chrome flips to dark glass. Bands under three never go night.
+            let bands = max(1, Int(ceil(Double(count) / 10.0)))
+            let nightCutoff: CGFloat = bands >= 3
+                ? height - bottomPad - (CGFloat(2 * 10) - 0.5) * pitch - 120
+                : -1
 
             ScrollViewReader { proxy in
                 ScrollView {
-                    titleRow
+                    Color.clear.frame(height: 1)
                         .id("peck-top")
+                    GeometryReader { g in
+                        Color.clear.preference(
+                            key: PeckScrollOffsetKey.self,
+                            value: -g.frame(in: .named("peckWorld")).minY)
+                    }
+                    .frame(height: 0)
                     ZStack(alignment: .topLeading) {
                         PeckWorldScenery(height: height, levelCount: count, pitch: pitch, bottomPad: bottomPad)
 
@@ -483,11 +559,16 @@ struct FlashTabView: View {
                         }
                     }
                     .frame(height: height)
-                    .clipShape(RoundedRectangle(cornerRadius: 22))
-                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(FeyndTheme.border, lineWidth: 1))
-                    .padding(.horizontal, 12)
-                    Color.clear.frame(height: 96) // keep TabPill off the meadow
+                    // Keep the TabPill off the last node — in grass, not
+                    // cream, so the meadow runs to the screen's edge.
+                    Rectangle()
+                        .fill(Color(hex: 0x7FBA66))
+                        .frame(height: 96)
                 }
+                .coordinateSpace(name: "peckWorld")
+                .onPreferenceChange(PeckScrollOffsetKey.self) { worldOffsetY = $0 }
+                .onAppear { worldNightCutoff = nightCutoff }
+                .onChange(of: count) { _, _ in worldNightCutoff = nightCutoff }
                 .scrollIndicators(.hidden)
                 // Open at the meadow — the journey starts at the bottom, and
                 // the frontier node is always in the lowest unlocked stretch.
@@ -1205,5 +1286,14 @@ private struct LevelStartSheet: View {
         }
         .buttonStyle(.plain)
         .disabled(starting)
+    }
+}
+
+
+/// Scroll offset of the Peck world (world-space Y at the viewport top).
+private struct PeckScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = .greatestFiniteMagnitude
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = min(value, nextValue())
     }
 }
