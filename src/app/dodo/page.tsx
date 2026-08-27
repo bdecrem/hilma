@@ -117,6 +117,13 @@ export default function DodoAltPage() {
               that material.
             </li>
             <li>
+              <strong>Two levels of accountability</strong> — active reading
+              or full understanding. Pass a quiz and a topic counts as
+              actively read. Or go all the way: flash cards, a final voice
+              review, periodic refreshers, and a gold badge that means you
+              truly know it.
+            </li>
+            <li>
               <strong>Flash cards with real scheduling</strong> — decks
               generated per topic, played as multiple choice, typed answers
               (LLM-graded), mixed rounds, or out-loud voice rounds.
@@ -130,11 +137,6 @@ export default function DodoAltPage() {
             <li>
               <strong>Peck</strong> — a Duolingo-style level path across every
               deck you own.
-            </li>
-            <li>
-              <strong>Stars and mastery</strong> — quizzes earn stars per
-              topic; a final voice review earns a gold badge, and badges need
-              a periodic 3-question refresher to stay gold.
             </li>
             <li>
               <strong>Daily card over iMessage</strong> — one card a day lands
