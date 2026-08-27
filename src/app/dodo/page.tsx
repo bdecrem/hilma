@@ -58,6 +58,30 @@ export default function DodoAltPage() {
             tutor to talk things through with, flash cards, a daily quiz over
             iMessage, and the stakes of an oral exam.
           </p>
+          <blockquote className="da-quote">
+            <p className="da-quote-text">
+              <span className="da-quote-mark">&ldquo;</span>What I cannot
+              create, I do not understand.&rdquo;
+            </p>
+            <cite className="da-quote-cite">&mdash; Richard Feynman</cite>
+          </blockquote>
+          <p className="da-feyn-lead">Dodo uses the Feynman technique:</p>
+          <ol className="da-feyn">
+            <li>
+              Pick a concept and write down everything you know about it, in
+              plain language, as if teaching a kid.
+            </li>
+            <li>
+              Notice where you get stuck, hand-wave, or fall back on jargon.
+              Those gaps are exactly what you don&rsquo;t actually understand
+              &mdash; jargon is usually a costume for a fuzzy idea.
+            </li>
+            <li>Go back to the source and fill just those gaps.</li>
+            <li>
+              Simplify again. If you can&rsquo;t say it plainly, you&rsquo;re
+              not done.
+            </li>
+          </ol>
           <p className="da-more">
             <a href={SUBSTACK_URL}>Read the full story &rarr;</a>
           </p>
@@ -201,6 +225,14 @@ const css = `
 }
 .da-body section { margin-bottom: 46px; }
 .da-body p { font-size: 17.5px; line-height: 1.62; color: var(--ink); margin: 0 0 16px; }
+.da-quote { margin: 28px 0 22px; padding: 4px 0 4px 22px; border-left: 3px solid var(--marigold); }
+.da-quote-text { font-size: 20px; line-height: 1.5; color: var(--ink); margin: 0 0 6px; }
+.da-quote-mark { color: var(--marigold); font-weight: 700; }
+.da-quote-cite { font-family: var(--display); font-style: normal; font-weight: 500; font-size: 14px; color: var(--ink2); }
+.da-feyn-lead { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); margin: 0 0 10px; }
+.da-feyn { margin: 0 0 18px; padding-left: 24px; }
+.da-feyn li { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin-bottom: 10px; }
+.da-feyn li::marker { font-family: var(--display); font-weight: 600; color: var(--marigold-deep); }
 .da-more { font-family: var(--display); font-weight: 500; font-size: 15px; }
 .da-more a { color: var(--marigold-deep); text-decoration: none; }
 .da-more a:hover { text-decoration: underline; }
