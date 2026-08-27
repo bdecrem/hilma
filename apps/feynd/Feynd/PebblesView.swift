@@ -295,7 +295,11 @@ struct PebbleQuoteCard: View {
     }
 
     private var quoteText: some View {
-        Text(artifact.body)
+        // The big marigold mark opens the quote; a small inline mark closes
+        // it at text size. Capped (band F) cards stay open-ended — closing a
+        // truncated quote would claim an ending it doesn't show.
+        (Text(artifact.body)
+         + (band.capped ? Text("") : Text("\u{201D}").foregroundColor(FeyndTheme.accent).bold()))
             .font(.system(size: band.quote, design: .serif))
             .lineSpacing(band.spacing)
             .foregroundStyle(FeyndTheme.text)
