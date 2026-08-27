@@ -33,7 +33,7 @@ import {
   isKnownVoice,
   saveVoicePrefs,
 } from './realtime'
-import { RECERT_INTERVAL_DAYS } from './flash'
+import { RECERT_INTERVAL_DAYS, scheduleRecertDue } from './flash'
 import {
   createThread,
   getLatestThread,
@@ -1158,9 +1158,9 @@ async function executeDodoTool(
       } else {
         update.hard_quiz_completed_at = new Date().toISOString()
         update.recert_stage = 0
-        update.recert_due_at = new Date(
-          Date.now() + RECERT_INTERVAL_DAYS[0] * 86_400_000,
-        ).toISOString()
+        update.recert_due_at = await scheduleRecertDue(
+          thread.user_id, thread.id, Date.now(), RECERT_INTERVAL_DAYS[0],
+        )
       }
       const { error } = await f2Supabase()
         .from('f2_threads')

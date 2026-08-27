@@ -21,6 +21,9 @@ struct FlashTabView: View {
     @State private var showDemoReel = false
     @State private var streakModal: StreakMilestone? = nil
     @State private var pulse = false
+    /// Feeds the This Week renewal banner — Peck has no topics list of its
+    /// own, so it keeps a lightweight copy (cache first, then refreshed).
+    @State private var bannerTopics: [F2Topic] = []
     /// Crossing into a new region (10→11, 20→21): the transition scene.
     @State private var regionCrossing: RegionCrossing? = nil
     /// Set when the just-played set cleared a band-ending level for the
@@ -79,6 +82,11 @@ struct FlashTabView: View {
                 } onDoubleTap: {
                     scrollTopSignal += 1
                 }
+
+                ThisWeekBanner(topics: bannerTopics)
+                    .padding(.horizontal, 14)
+                    .padding(.top, 4)
+                    .padding(.bottom, 2)
 
                 VStack(spacing: 0) {
                     if loading && state == nil {
@@ -156,6 +164,13 @@ struct FlashTabView: View {
             if state == nil, let cached: JumboState = ScreenCache.load(key: ScreenCache.jumbo) {
                 state = cached
             }
+            // Renewal banner data: paint from the cached topics list, then
+            // refresh quietly so the week's due date is current.
+            if bannerTopics.isEmpty,
+               let cachedTopics: [F2Topic] = ScreenCache.load(key: ScreenCache.topics) {
+                bannerTopics = cachedTopics
+            }
+            Task { bannerTopics = (try? await F2API.shared.listTopics()) ?? bannerTopics }
             await load()
             #if targetEnvironment(simulator)
             // Headless-verification hook: `simctl launch … -AutoPlayLevel 3`

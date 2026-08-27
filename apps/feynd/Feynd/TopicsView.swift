@@ -4,15 +4,29 @@ import SwiftUI
 /// Library eyebrow, 34pt title, Recent pill, meta strip, rows with mini glyph
 /// + 16.5pt title + star meta + kebab. Custom chrome end-to-end.
 enum TopicSort: String, CaseIterable, Identifiable {
-    case recent, alphabetical, byStars
+    case recent, alphabetical, byStars, byCompletion, byType
     var id: String { rawValue }
     var label: String {
         switch self {
         case .recent: return "Recent"
         case .alphabetical: return "A–Z"
         case .byStars: return "By stars"
+        case .byCompletion: return "By completion"
+        case .byType: return "By type"
         }
     }
+    /// Shorter form for the bar pill, where "By completion" would crowd
+    /// the title.
+    var pillLabel: String {
+        switch self {
+        case .byCompletion: return "Completion"
+        case .byType: return "Type"
+        default: return label
+        }
+    }
+    /// Grouped views own the whole list — they replace the pinned split
+    /// with their own sections.
+    var isGrouped: Bool { self == .byCompletion || self == .byType }
 }
 
 struct TopicsView: View {
@@ -57,6 +71,9 @@ struct TopicsView: View {
             // 0-star topics first (what needs work), then 1, 2, 3.
             // Within a star bucket, preserve the server's recent-first order.
             return list.sorted { $0.stars < $1.stars }
+        case .byCompletion, .byType:
+            // Grouped views build their own sections; flat order unused.
+            return list
         }
     }
 
@@ -71,6 +88,52 @@ struct TopicsView: View {
     /// Everything not pinned, in the active sort order.
     private var unpinnedTopics: [F2Topic] {
         applySort(topics.filter { !$0.isPinned })
+    }
+
+    /// One section of a grouped view (By completion / By type).
+    private struct TopicSection: Identifiable {
+        let id: String
+        let title: String
+        var systemImage: String? = nil
+        var tint: Color? = nil
+        let topics: [F2Topic]
+    }
+
+    /// The grouped views' sections, empty ones dropped. Nil for flat sorts.
+    private var groupedSections: [TopicSection]? {
+        switch sort {
+        case .byCompletion:
+            // Soonest renewal first inside Completed — the list doubles as
+            // the renewal schedule.
+            let completed = topics.filter { $0.isCertified && !$0.recertLapsed }
+                .sorted { ($0.recertDueAt ?? .distantFuture) < ($1.recertDueAt ?? .distantFuture) }
+            let lapsed = topics.filter { $0.isCertified && $0.recertLapsed }
+                .sorted { ($0.recertDueAt ?? .distantPast) < ($1.recertDueAt ?? .distantPast) }
+            let inProgress = topics.filter { !$0.isCertified }
+            return [
+                TopicSection(id: "completed", title: "Completed",
+                             systemImage: "checkmark.seal.fill", tint: FeyndTheme.gold,
+                             topics: completed),
+                TopicSection(id: "lapsed", title: "Dimmed — refresher due",
+                             systemImage: "seal", tint: FeyndTheme.gold.opacity(0.6),
+                             topics: lapsed),
+                TopicSection(id: "progress", title: "In progress", topics: inProgress),
+            ].filter { !$0.topics.isEmpty }
+        case .byType:
+            // Books lead; the rest follow the Rename sheet's kind order.
+            let order: [(kind: String, title: String)] = [
+                ("book", "Books"), ("mini", "Mini topics"), ("general", "General topics"),
+                ("web", "Web pages"), ("video", "Videos"), ("audio", "Audio"),
+                ("paste", "Pasted text"), ("chat", "Chats"), ("fallback", "Other"),
+            ]
+            return order.compactMap { entry in
+                let matches = topics.filter { ($0.kind ?? "fallback") == entry.kind }
+                guard !matches.isEmpty else { return nil }
+                return TopicSection(id: entry.kind, title: entry.title, topics: matches)
+            }
+        default:
+            return nil
+        }
     }
 
     var body: some View {
@@ -255,7 +318,7 @@ struct TopicsView: View {
             }
         } label: {
             HStack(spacing: 4) {
-                Text(sort.label)
+                Text(sort.pillLabel)
                     .font(.system(size: 12.5, weight: .medium))
                 Image(systemName: "chevron.down")
                     .font(.system(size: 9, weight: .semibold))
@@ -310,33 +373,45 @@ struct TopicsView: View {
         .padding(.horizontal, 32)
     }
 
-    /// Quiet footer under the last topic row — the door to the community
-    /// directory.
+    /// The door to the community directory — a proper card under the list,
+    /// styled like the app's other destination cards so it reads as a place
+    /// to go, not a footnote.
     private var communityRow: some View {
         Button { communityPresented = true } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "person.2")
-                    .font(.system(size: 13, weight: .semibold))
+            HStack(spacing: 12) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(FeyndTheme.accent)
-                Text("Community topics")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(FeyndTheme.text2)
+                    .frame(width: 36, height: 36)
+                    .background(FeyndTheme.accent.opacity(0.13), in: Circle())
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Community topics")
+                        .font(.system(size: 15, weight: .semibold))
+                        .tracking(-0.2)
+                        .foregroundStyle(FeyndTheme.text)
+                    Text("Add topics other learners shared — cards included")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(FeyndTheme.text2)
+                }
+                Spacer()
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 10, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(FeyndTheme.text3)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(13)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .padding(.top, 10)
+        .padding(.top, 18)
     }
 
     private var rows: some View {
         let pinned = pinnedTopics
         let unpinned = unpinnedTopics
         let hasPinned = !pinned.isEmpty
+        let sections = groupedSections
         return ScrollViewReader { proxy in
             ScrollView {
             // Bottom inset large enough to keep the floating TabPill from
@@ -345,14 +420,28 @@ struct TopicsView: View {
                 titleRow.padding(.horizontal, -14)
                     .id("topics-top")
                 metaStrip
-                if hasPinned {
-                    sectionHeader("Pinned")
-                    topicList(pinned)
-                    // Only label the second group when there's a pinned group
-                    // above it to distinguish; otherwise it's just "the list".
-                    sectionHeader("All topics")
+                ThisWeekBanner(topics: topics, navigable: true)
+                    .padding(.top, 2)
+                    .padding(.bottom, 4)
+                if let sections {
+                    // Grouped views (By completion / By type) own the whole
+                    // list; pins keep their glyph but don't float.
+                    ForEach(sections) { section in
+                        sectionHeader(section.title,
+                                      systemImage: section.systemImage,
+                                      tint: section.tint)
+                        topicList(section.topics)
+                    }
+                } else {
+                    if hasPinned {
+                        sectionHeader("Pinned")
+                        topicList(pinned)
+                        // Only label the second group when there's a pinned
+                        // group above it to distinguish.
+                        sectionHeader("All topics")
+                    }
+                    topicList(unpinned)
                 }
-                topicList(unpinned)
                 communityRow
                 Color.clear.frame(height: 96)
             }
@@ -399,8 +488,14 @@ struct TopicsView: View {
         }
     }
 
-    private func sectionHeader(_ text: String) -> some View {
-        HStack {
+    private func sectionHeader(_ text: String, systemImage: String? = nil,
+                               tint: Color? = nil) -> some View {
+        HStack(spacing: 5) {
+            if let systemImage {
+                Image(systemName: systemImage)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(tint ?? FeyndTheme.text3)
+            }
             Text(text.uppercased())
                 .font(.system(size: 11, weight: .semibold))
                 .tracking(0.6)

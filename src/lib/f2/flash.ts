@@ -1466,14 +1466,16 @@ export async function awardFinalReviewStar(
   userId: string,
   threadId: string,
 ): Promise<void> {
+  // Certification starts the recert clock: first refresher ~30 days out,
+  // landed on a free Friday (see scheduleRecertDue).
+  const dueAt = await scheduleRecertDue(userId, threadId, Date.now(), RECERT_INTERVAL_DAYS[0])
   const { error } = await f2Supabase()
     .from('f2_threads')
     .update({
       stars: 3,
       hard_quiz_completed_at: new Date().toISOString(),
-      // Certification starts the recert clock: first refresher in 30 days.
       recert_stage: 0,
-      recert_due_at: new Date(Date.now() + RECERT_INTERVAL_DAYS[0] * 86_400_000).toISOString(),
+      recert_due_at: dueAt,
     })
     .eq('id', threadId)
     .eq('user_id', userId)
@@ -1491,6 +1493,49 @@ export function recertIntervalDays(stage: number): number {
   return RECERT_INTERVAL_DAYS[Math.min(Math.max(stage, 0), RECERT_INTERVAL_DAYS.length - 1)]
 }
 
+/// Renewals always land on a Friday (17:00 UTC — morning in the US, where
+/// the testers are), and a user never has two in the same week: the raw
+/// interval date snaps to the Friday on/after it, then walks forward week
+/// by week past any Friday another topic already claims. Keeps the weekly
+/// load at one refresher, max.
+const FRIDAY_UTC_HOUR = 17
+
+export function nextFridayOnOrAfter(ms: number): Date {
+  const d = new Date(ms)
+  const friday = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), FRIDAY_UTC_HOUR))
+  // getUTCDay(): Fri = 5.
+  const ahead = (5 - friday.getUTCDay() + 7) % 7
+  friday.setUTCDate(friday.getUTCDate() + ahead)
+  if (friday.getTime() < ms) friday.setUTCDate(friday.getUTCDate() + 7)
+  return friday
+}
+
+export async function scheduleRecertDue(
+  userId: string,
+  threadId: string,
+  fromMs: number,
+  intervalDays: number,
+): Promise<string> {
+  const due = nextFridayOnOrAfter(fromMs + intervalDays * 86_400_000)
+  const { data, error } = await f2Supabase()
+    .from('f2_threads')
+    .select('id, recert_due_at')
+    .eq('user_id', userId)
+    .not('recert_due_at', 'is', null)
+    .neq('id', threadId)
+  if (error) {
+    console.error('[f2/flash] scheduleRecertDue lookup failed:', error)
+    return due.toISOString()
+  }
+  const taken = new Set(
+    (data ?? []).map((t) => (t.recert_due_at as string).slice(0, 10)),
+  )
+  for (let i = 0; i < 52 && taken.has(due.toISOString().slice(0, 10)); i++) {
+    due.setUTCDate(due.getUTCDate() + 7)
+  }
+  return due.toISOString()
+}
+
 /// A or B renews — the refresher checks retention, not first-pass mastery.
 export function recertRenews(grade: FinalReviewGrade['grade']): boolean {
   return grade === 'A' || grade === 'B'
@@ -1506,9 +1551,9 @@ export async function applyRecertRenewal(
   currentStage: number,
 ): Promise<string> {
   const nextStage = currentStage + 1
-  const dueAt = new Date(
-    Date.now() + recertIntervalDays(nextStage) * 86_400_000,
-  ).toISOString()
+  const dueAt = await scheduleRecertDue(
+    userId, threadId, Date.now(), recertIntervalDays(nextStage),
+  )
   const { error } = await f2Supabase()
     .from('f2_threads')
     .update({ recert_stage: nextStage, recert_due_at: dueAt })
