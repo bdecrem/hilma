@@ -27,6 +27,11 @@ export type FlashCard = {
   /// works without the choices visible (the common case).
   open_question: string | null
   distractors: string[]
+  /// Fill-in-the-word form, present only when the card's fact pivots on one
+  /// crisp term/name/number: a complete sentence with the term as ___, and
+  /// the exact missing word(s). Mixed sets play these as cloze.
+  cloze_text: string | null
+  cloze_answer: string | null
   created_at: string
   rating: CardRating | null
   rated_at: string | null
@@ -146,7 +151,18 @@ Rules:
   equivalent standalone rewording with the exact same canonical answer. Omit
   open_question for every card whose question already stands alone.
 - Cover the topic broadly; no two cards should test the same fact.
-- No trick questions, no "all of the above".${script ? `
+- No trick questions, no "all of the above".
+- CLOZE FORM (cloze_text + cloze_answer): add it ONLY when the card's fact
+  pivots on one crisp term, proper name, or number of 1-3 words that the
+  learner should be able to produce from memory — a coined concept ("creative
+  destruction"), a named thing ("encomienda", "Cepheid"), a key figure
+  ("150", "1859"). cloze_text is one complete sentence stating the fact with
+  that term replaced by ___ (exactly three underscores); the sentence must
+  uniquely determine the answer without containing or echoing it, and typing
+  the word must be the real test — not guessable from grammar alone.
+  cloze_answer is the exact missing word(s), 1-3 words. Most reasoning cards
+  ("why did X happen") should NOT get one — expect a cloze on roughly a
+  quarter of cards, and skip it whenever in doubt.${script ? `
 
 WHAT TO TEST — the learner has an audio summary of this topic, and it is what
 they actually listened to. Treat it as the authority on what matters: the deck
@@ -217,6 +233,15 @@ Create exactly ${n} flash cards.`
                     items: { type: 'string' },
                     description: 'Exactly 3 wrong choices.',
                   },
+                  cloze_text: {
+                    type: 'string',
+                    description:
+                      'ONLY for genuinely good fill-in-the-word candidates: one sentence stating the fact with the key term as ___.',
+                  },
+                  cloze_answer: {
+                    type: 'string',
+                    description: 'The exact missing word(s), 1-3 words.',
+                  },
                 },
                 required: ['question', 'answer', 'distractors'],
               },
@@ -236,18 +261,25 @@ Create exactly ${n} flash cards.`
     answer?: string
     open_question?: string
     distractors?: string[]
+    cloze_text?: string
+    cloze_answer?: string
   }[]
   const rows = raw
     .filter((c) => c.question?.trim() && c.answer?.trim())
     .slice(0, n)
-    .map((c) => ({
-      user_id: thread.user_id,
-      thread_id: thread.id,
-      question: c.question!.trim(),
-      answer: c.answer!.trim(),
-      open_question: c.open_question?.trim() || null,
-      distractors: (c.distractors ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3),
-    }))
+    .map((c) => {
+      const cloze = validCloze(c.cloze_text, c.cloze_answer)
+      return {
+        user_id: thread.user_id,
+        thread_id: thread.id,
+        question: c.question!.trim(),
+        answer: c.answer!.trim(),
+        open_question: c.open_question?.trim() || null,
+        distractors: (c.distractors ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3),
+        cloze_text: cloze?.text ?? null,
+        cloze_answer: cloze?.answer ?? null,
+      }
+    })
   if (rows.length === 0) throw new Error('Card generation produced no usable cards')
 
   const { data, error } = await f2Supabase()
@@ -316,6 +348,12 @@ Produce the finished card.`
                   question: { type: 'string' },
                   answer: { type: 'string' },
                   distractors: { type: 'array', items: { type: 'string' } },
+                  cloze_text: {
+                    type: 'string',
+                    description:
+                      'ONLY if the answer is one crisp 1-3 word term/name/number: one sentence stating the fact with it as ___.',
+                  },
+                  cloze_answer: { type: 'string', description: 'The exact missing word(s).' },
                 },
                 required: ['question', 'answer', 'distractors'],
               },
@@ -331,10 +369,13 @@ Produce the finished card.`
     question?: string
     answer?: string
     distractors?: string[]
+    cloze_text?: string
+    cloze_answer?: string
   }[])[0]
   if (!c?.question?.trim() || !c.answer?.trim()) {
     throw new Error('Card authoring produced no usable card')
   }
+  const cloze = validCloze(c.cloze_text, c.cloze_answer)
   const { data, error } = await f2Supabase()
     .from('f2_flash_cards')
     .insert({
@@ -343,6 +384,8 @@ Produce the finished card.`
       question: c.question.trim(),
       answer: c.answer.trim(),
       distractors: (c.distractors ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3),
+      cloze_text: cloze?.text ?? null,
+      cloze_answer: cloze?.answer ?? null,
     })
     .select('*')
     .single()
@@ -918,6 +961,41 @@ export function choicesForCard(card: FlashCard): string[] {
 /// whose base question leans on the visible choices ("Which of these…").
 export function openFormQuestion(card: FlashCard): string {
   return card.open_question?.trim() || card.question
+}
+
+/// Sanity-check a generated cloze pair. Returns the cleaned pair, or null
+/// when the model's attempt breaks the format (no blank, answer leaked into
+/// the sentence, answer too long) — a bad cloze silently degrades to a
+/// normal card rather than shipping a broken question.
+export function validCloze(
+  text: string | undefined | null,
+  answer: string | undefined | null,
+): { text: string; answer: string } | null {
+  const t = (text ?? '').trim()
+  const a = (answer ?? '').trim()
+  if (!t || !a) return null
+  if (!t.includes('___')) return null
+  if (a.split(/\s+/).length > 3) return null
+  if (t.toLowerCase().includes(a.toLowerCase())) return null
+  return { text: t, answer: a }
+}
+
+/// Deterministic cloze grading — no judge. Lowercase, collapse whitespace,
+/// drop a leading article, strip punctuation, so "The Encomienda." matches
+/// "encomienda" and "20,000" matches "20000". The iOS client mirrors this
+/// for instant feedback; this is the authoritative version.
+export function clozeMatch(given: string | null | undefined, answer: string): boolean {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[.,;:!?"'’“”()]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/^(the|a|an)\s+/, '')
+  const g = norm(given ?? '')
+  return g.length > 0 && g === norm(answer)
 }
 
 // ---------------------------------------------------------------------------

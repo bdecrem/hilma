@@ -38,6 +38,8 @@ struct FlashSetView: View {
     @State private var lastDownTap: [String: Date] = [:]
     @State private var draft = ""
     @FocusState private var draftFocused: Bool
+    /// Cloze feedback: set once the word is checked, cleared on advance.
+    @State private var clozeVerdict: Bool? = nil
     /// The user's saved quotes, fetched quietly at set start; one shows at
     /// random on the grading screen. Empty list = plain spinner, as before.
     @State private var pebbles: [F2Artifact] = []
@@ -148,10 +150,10 @@ struct FlashSetView: View {
             if index < questions.count {
                 questionCard(questions[index])
                 Spacer(minLength: 8)
-                if currentIsChoice {
-                    choiceButtons(questions[index])
-                } else {
-                    textAnswerRow
+                switch questionFormat(questions[index]) {
+                case "choice": choiceButtons(questions[index])
+                case "cloze": clozeAnswerRow(questions[index])
+                default: textAnswerRow
                 }
             }
             Spacer(minLength: 24)
@@ -430,15 +432,120 @@ struct FlashSetView: View {
         .onAppear { draftFocused = true }
     }
 
+    // MARK: Cloze mode — type the missing word, instant verdict
+
+    private func clozeAnswerRow(_ q: FlashQuestion) -> some View {
+        VStack(spacing: 10) {
+            TextField("Type the missing word…", text: $draft)
+                .textFieldStyle(.plain)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(clozeVerdict == nil ? FeyndTheme.text : (clozeVerdict! ? Color(hex: 0x2E9E63) : Color(hex: 0xE0635A)))
+                .tint(FeyndTheme.accent)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+                .focused($draftFocused)
+                .onSubmit { checkCloze(q) }
+                .disabled(clozeVerdict != nil)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 13)
+                .background(clozeFill, in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(clozeStroke, lineWidth: 1.5))
+
+            if clozeVerdict == false, let word = q.clozeAnswer {
+                (Text("The word: ").foregroundStyle(FeyndTheme.text2)
+                    + Text(word).bold().foregroundStyle(FeyndTheme.text))
+                    .font(.system(size: 15))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .transition(.opacity)
+            }
+
+            if clozeVerdict == nil {
+                HStack(spacing: 10) {
+                    Button {
+                        answers[index] = nil
+                        draft = ""
+                        advance()
+                    } label: {
+                        Text("Skip")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(FeyndTheme.text2)
+                            .padding(.horizontal, 22)
+                            .padding(.vertical, 12)
+                            .background(FeyndTheme.surface2, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+
+                    Button { checkCloze(q) } label: {
+                        Text("Check")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(FeyndTheme.inkOnAccent)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(FeyndTheme.accent, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .opacity(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+                }
+            }
+        }
+        .animation(.easeOut(duration: 0.18), value: clozeVerdict)
+        .onAppear { draftFocused = true }
+    }
+
+    private var clozeFill: Color {
+        guard let v = clozeVerdict else { return FeyndTheme.bgRaised }
+        return v ? Color(hex: 0x46D18A).opacity(0.16) : Color(hex: 0xE0635A).opacity(0.14)
+    }
+
+    private var clozeStroke: Color {
+        guard let v = clozeVerdict else { return FeyndTheme.border }
+        return v ? Color(hex: 0x46D18A).opacity(0.8) : Color(hex: 0xE0635A).opacity(0.8)
+    }
+
+    private func checkCloze(_ q: FlashQuestion) {
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard clozeVerdict == nil, !text.isEmpty else { return }
+        answers[index] = text
+        // Mirrors the server's clozeMatch — the server verdict is authoritative.
+        let ok = Self.clozeNormalize(text) == Self.clozeNormalize(q.clozeAnswer ?? q.answer ?? "")
+        clozeVerdict = ok
+        draftFocused = false
+        FlashSFX.shared.play(ok ? .correct : .wrong)
+        UINotificationFeedbackGenerator().notificationOccurred(ok ? .success : .error)
+        let delay: Double = ok ? 0.7 : 1.6
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            draft = ""
+            advance()
+        }
+    }
+
+    /// Lowercase, strip accents/punctuation/leading article, collapse spaces —
+    /// the same rule as the server's clozeMatch.
+    static func clozeNormalize(_ s: String) -> String {
+        var t = s.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .init(identifier: "en_US"))
+            .lowercased()
+        t = t.replacingOccurrences(of: "[.,;:!?\"'’“”()]", with: "", options: .regularExpression)
+        t = t.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+        for article in ["the ", "a ", "an "] where t.hasPrefix(article) {
+            t = String(t.dropFirst(article.count))
+            break
+        }
+        return t
+    }
+
     // MARK: Flow
 
     private func advance() {
         picked = nil
+        clozeVerdict = nil
         if index + 1 < questions.count {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                 index += 1
             }
-            if questionFormat(questions[index]) == "text" { draftFocused = true }
+            let f = questionFormat(questions[index])
+            if f == "text" || f == "cloze" { draftFocused = true }
         } else {
             submit()
         }

@@ -134,19 +134,27 @@ export async function POST(req: Request) {
   // Text/voice show the question with no choices, so choice-dependent cards
   // serve their standalone rewording there. Mixed sets alternate every
   // other question — choice, text, choice, text — each carrying its
-  // `format` (still a half/half split overall).
+  // `format`; a card with an authored cloze form plays as fill-in-the-word
+  // instead of either half (topic and Peck sets alike).
   const fresh = cards.map((c, i) => {
-    const format: FlashSetMode =
-      mode === 'mixed' ? (i % 2 === 0 ? 'choice' : 'text') : mode
+    const cloze = mode === 'mixed' && c.cloze_text && c.cloze_answer
+    const format: FlashSetMode | 'cloze' = cloze
+      ? 'cloze'
+      : mode === 'mixed'
+        ? (i % 2 === 0 ? 'choice' : 'text')
+        : mode
     return {
       card_id: c.id,
-      question: format === 'choice' ? c.question : openFormQuestion(c),
+      question: format === 'cloze' ? c.cloze_text! : format === 'choice' ? c.question : openFormQuestion(c),
       rating: c.rating,
       topic: topicLabels.get(c.thread_id) ?? null,
       ...(mode === 'mixed' ? { format } : {}),
       ...(format === 'choice'
         ? { choices: choicesForCard(c), answer: c.answer }
         : {}),
+      // Cloze grades instantly on the client (like choice, this is the
+      // user's own deck) — the blank word and full answer ride along.
+      ...(format === 'cloze' ? { cloze_answer: c.cloze_answer, answer: c.answer } : {}),
     }
   })
 

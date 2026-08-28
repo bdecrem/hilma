@@ -116,17 +116,20 @@ struct FlashQuestion: Codable, Identifiable, Equatable {
     /// the daily iMessage card. The set opens past these; their verdicts
     /// count in the final score.
     let prefilled: PrefilledAnswer?
-    /// Mixed sets only: "choice" or "text" — how THIS question plays.
+    /// Mixed sets only: "choice", "text", or "cloze" — how THIS question plays.
     let format: String?
+    /// Cloze questions: the exact missing word(s), for instant grading.
+    let clozeAnswer: String?
 
     enum CodingKeys: String, CodingKey {
         case question, choices, answer, rating, topic, prefilled, format
         case cardId = "card_id"
+        case clozeAnswer = "cloze_answer"
     }
 
     init(cardId: String, question: String, choices: [String]?, answer: String?,
          rating: String?, topic: String?, prefilled: PrefilledAnswer? = nil,
-         format: String? = nil) {
+         format: String? = nil, clozeAnswer: String? = nil) {
         self.cardId = cardId
         self.question = question
         self.choices = choices
@@ -135,6 +138,7 @@ struct FlashQuestion: Codable, Identifiable, Equatable {
         self.topic = topic
         self.prefilled = prefilled
         self.format = format
+        self.clozeAnswer = clozeAnswer
     }
 }
 

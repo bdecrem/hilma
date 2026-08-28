@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { f2Supabase } from '@/lib/f2/supabase'
 import {
+  clozeMatch,
   getFlashCardsByIds,
   getPeckCredits,
   judgeTextAnswers,
@@ -108,17 +109,22 @@ export async function POST(req: Request) {
       if (mode === 'choice') {
         correct = ordered.map((c, i) => (given[i] ?? '').trim() === c.answer)
       } else if (mode === 'mixed') {
-        // Choice-format answers grade by exact match; typed ones go to the
-        // judge (credited cards keep their fixed verdicts either way).
+        // Choice-format answers grade by exact match, cloze by deterministic
+        // word match; only genuinely typed ones go to the judge (credited
+        // cards keep their fixed verdicts either way).
         const formats = (body.answers ?? []).map((a) => a.format ?? 'text')
         const judged = await judgeTextAnswers(
           ordered,
           given.map((g, i) =>
-            creditById.has(ordered[i].id) || formats[i] === 'choice' ? null : g,
+            creditById.has(ordered[i].id) || formats[i] !== 'text' ? null : g,
           ),
         )
         correct = ordered.map((c, i) =>
-          formats[i] === 'choice' ? (given[i] ?? '').trim() === c.answer : judged[i],
+          formats[i] === 'choice'
+            ? (given[i] ?? '').trim() === c.answer
+            : formats[i] === 'cloze'
+              ? clozeMatch(given[i], c.cloze_answer ?? c.answer)
+              : judged[i],
         )
       } else {
         // Don't spend the judge on credited cards — their verdict is fixed.
@@ -149,9 +155,11 @@ export async function POST(req: Request) {
     // cards: as it was asked over iMessage).
     question:
       creditById.get(c.id)?.question ??
-      (mode === 'choice' || (mode === 'mixed' && (body.answers?.[i]?.format === 'choice'))
-        ? c.question
-        : openFormQuestion(c)),
+      (mode === 'mixed' && body.answers?.[i]?.format === 'cloze'
+        ? (c.cloze_text ?? openFormQuestion(c))
+        : mode === 'choice' || (mode === 'mixed' && (body.answers?.[i]?.format === 'choice'))
+          ? c.question
+          : openFormQuestion(c)),
     answer: c.answer,
     given: given[i],
     correct: correct[i],
