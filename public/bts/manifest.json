@@ -1,0 +1,154 @@
+{
+ "members": [
+  {
+   "slug": "rm",
+   "name": "RM"
+  },
+  {
+   "slug": "jin",
+   "name": "Jin"
+  },
+  {
+   "slug": "suga",
+   "name": "Suga"
+  },
+  {
+   "slug": "jhope",
+   "name": "J-Hope"
+  },
+  {
+   "slug": "jimin",
+   "name": "Jimin"
+  },
+  {
+   "slug": "v",
+   "name": "V"
+  },
+  {
+   "slug": "jungkook",
+   "name": "Jungkook"
+  }
+ ],
+ "images": [
+  {
+   "member": "rm",
+   "file": "/bts/rm/00.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/01.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/02.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/03.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/04.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/06.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/07.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/08.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/09.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/10.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/11.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/12.jpg"
+  },
+  {
+   "member": "rm",
+   "file": "/bts/rm/14.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/00.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/01.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/100.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/101.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/102.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/103.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/104.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/100.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/101.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/102.png"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/103.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/104.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/105.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/106.jpg"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/100.png"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/101.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/100.jpg"
+  }
+ ]
+}
