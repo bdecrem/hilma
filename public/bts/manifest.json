@@ -92,10 +92,6 @@
   },
   {
    "member": "jin",
-   "file": "/bts/jin/100.jpg"
-  },
-  {
-   "member": "jin",
    "file": "/bts/jin/101.jpg"
   },
   {
@@ -104,11 +100,23 @@
   },
   {
    "member": "jin",
-   "file": "/bts/jin/103.jpg"
+   "file": "/bts/jin/104.jpg"
   },
   {
    "member": "jin",
-   "file": "/bts/jin/104.jpg"
+   "file": "/bts/jin/106.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/107.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/108.jpg"
+  },
+  {
+   "member": "jin",
+   "file": "/bts/jin/109.png"
   },
   {
    "member": "suga",
@@ -128,15 +136,27 @@
   },
   {
    "member": "suga",
-   "file": "/bts/suga/104.jpg"
-  },
-  {
-   "member": "suga",
    "file": "/bts/suga/105.jpg"
   },
   {
    "member": "suga",
    "file": "/bts/suga/106.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/107.png"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/108.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/110.jpg"
+  },
+  {
+   "member": "suga",
+   "file": "/bts/suga/111.png"
   },
   {
    "member": "jhope",
@@ -148,15 +168,35 @@
   },
   {
    "member": "jhope",
-   "file": "/bts/jhope/102.jpg"
-  },
-  {
-   "member": "jhope",
    "file": "/bts/jhope/103.jpg"
   },
   {
    "member": "jhope",
    "file": "/bts/jhope/104.jpg"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/105.jpg"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/107.jpg"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/108.jpg"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/109.jpg"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/110.png"
+  },
+  {
+   "member": "jhope",
+   "file": "/bts/jhope/111.jpg"
   },
   {
    "member": "jimin",
@@ -171,8 +211,108 @@
    "file": "/bts/jimin/102.png"
   },
   {
+   "member": "jimin",
+   "file": "/bts/jimin/106.jpg"
+  },
+  {
+   "member": "jimin",
+   "file": "/bts/jimin/107.jpg"
+  },
+  {
+   "member": "jimin",
+   "file": "/bts/jimin/108.jpg"
+  },
+  {
+   "member": "jimin",
+   "file": "/bts/jimin/109.jpg"
+  },
+  {
+   "member": "jimin",
+   "file": "/bts/jimin/111.jpg"
+  },
+  {
+   "member": "jimin",
+   "file": "/bts/jimin/113.jpg"
+  },
+  {
+   "member": "jimin",
+   "file": "/bts/jimin/114.jpg"
+  },
+  {
    "member": "v",
-   "file": "/bts/v/100.jpg"
+   "file": "/bts/v/102.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/103.png"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/104.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/105.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/107.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/108.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/109.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/110.jpg"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/111.png"
+  },
+  {
+   "member": "v",
+   "file": "/bts/v/112.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/100.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/101.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/102.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/103.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/104.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/105.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/106.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/107.jpg"
+  },
+  {
+   "member": "jungkook",
+   "file": "/bts/jungkook/108.jpg"
   }
  ]
 }
