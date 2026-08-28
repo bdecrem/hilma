@@ -175,7 +175,11 @@ struct FlashTabView: View {
             let auto = UserDefaults.standard.integer(forKey: "AutoPlayLevel")
             if auto > 0, let level = state?.levels.first(where: { $0.level == auto }) {
                 UserDefaults.standard.removeObject(forKey: "AutoPlayLevel")
-                play(level, mode: "text")
+                // `-AutoPlayMode mixed` overrides the default text mode
+                // (mixed is where cloze questions live).
+                let mode = UserDefaults.standard.string(forKey: "AutoPlayMode") ?? "text"
+                UserDefaults.standard.removeObject(forKey: "AutoPlayMode")
+                play(level, mode: mode)
             }
             // `-OpenProfile 1` — straight to the settings sheet.
             if UserDefaults.standard.bool(forKey: "OpenProfile") {

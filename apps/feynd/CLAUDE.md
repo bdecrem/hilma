@@ -54,7 +54,7 @@ Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is lock
 `simctl launch` arguments for screenshot-driven verification without taps:
 - `-TestLoginUser <u> -TestLoginPass <p>` — signs in during bootstrap (use the newx-test account, never Bart's). Point `Secrets.swift` at `.dev` first when the feature under test needs unpushed server code — and restore `.production` after.
 - `-StartTab peck|chat|topics` — opens on that tab.
-- `-AutoPlayLevel <n>` — opens Peck level *n*'s set in text mode with zero taps (shows prefilled Peck credits when the account has them).
+- `-AutoPlayLevel <n>` — opens Peck level *n*'s set in text mode with zero taps (shows prefilled Peck credits when the account has them). Add `-AutoPlayMode mixed` to play it mixed instead (where cloze/fill-in-the-word questions live).
 - `-OpenPebbles 1` — straight to the Pebbles quote carousel; add `-OpenPebbleAdd 1` to land on the save-a-quote form. Pair with `-AutoPlayLevel <n> -AutoFinishSet 1` instead to catch the grading screen's random quote.
 - `-OpenTopic <threadId>` — push into that topic's detail; add `-OpenFlashCards 1` for its flash hub, `-EditFirstCard 1` (+ `-ShowCardList 1`) for the card-edit sheet, or `-OpenTopicQuotes 1` for the per-topic Quotes shelf.
 - `-OpenCommunity 1` — open the community-topics directory sheet from the Topics tab.
