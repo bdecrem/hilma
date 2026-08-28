@@ -81,6 +81,16 @@ xcodebuild -exportArchive -archivePath <path>/Feynd.xcarchive \
 
 export.plist: method `app-store-connect`, destination `upload`, signingStyle manual, cert `Apple Distribution`, profile `feynd appstore`, teamID 274T5WCVD2.
 
+One-beta-review-per-train: ASC 422s a new review submission while another
+build of the same train is WAITING_FOR_REVIEW — expire the waiting one first.
+But NEVER expire an APPROVED build until its replacement is itself APPROVED:
+expiring the approved one leaves the public TestFlight link with no
+installable build on that platform until review clears (this happened on
+macOS with build 70 on 2026-08-28). Poll order per platform: upload new →
+wait VALID → add to Testers group → expire any WAITING_FOR_REVIEW builds →
+submit new for review → wait APPROVED → only then expire the old approved
+build.
+
 Standing facts: profile "feynd appstore" (uuid 66b0aaaa…, IOS_APP_STORE, expires 2027-08) is installed in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`, minted via the ASC API against distribution cert 4YB38SZ2F2 (in this Mac's keychain). Device/sim builds are iPhone-only (`TARGETED_DEVICE_FAMILY[sdk=iphoneos*]` at TARGET level — project-level conditionals lose to the target's plain "1,2"). `ITSAppUsesNonExemptEncryption` and `NSCameraUsageDescription` (WebRTC links camera APIs) live in project.yml — removing either breaks processing. Poll `/v1/builds?filter[version]=N` until VALID; a processing rejection (e.g. 90683) only surfaces there, not at upload.
 
 ## TestFlight for Mac (Catalyst upload — worked end to end 2026-08-25, 0.2 (61))
