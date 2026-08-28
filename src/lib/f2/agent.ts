@@ -55,6 +55,7 @@ import {
 } from './threads'
 import {
   authorFlashCard,
+  completePeckLevels,
   generateFlashCards,
   isMastered,
   listFlashCards,
@@ -775,6 +776,22 @@ const DODO_AGENT_TOOLS = [
     },
   },
   {
+    name: 'complete_peck_level',
+    description:
+      "Mark a Peck level as passed without playing it — the user's level map is theirs to edit. Levels pass in order, so this clears every unpassed level up to the one given and unlocks the next. Granted levels pay no XP. Only on an explicit ask.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        level: {
+          type: 'integer',
+          description:
+            'The level to mark passed. Omit to pass the currently unlocked level.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'set_daily_streak',
     description:
       "Set the user's daily-card streak (the Peck flame) to an exact day count — restore a streak lost to an outage or missed day, or reset it to 0. The multiplier follows automatically (x2 at 4+, x3 at 10+, x4 at 14+).",
@@ -891,7 +908,7 @@ How to work:
 - Deck and progress questions are answered from REAL DATA, never from memory or guesswork: "which cards am I weak on / haven't memorized", "what's in my deck" → list_flash_cards first; "what was my grade", "how am I doing", "what should I review" → get_progress first. You have full access to the deck, its learning stats, quiz scores, and review grades — never claim you can't see them.
 - "How I want to be tested" instructions ("only test me on X", "focus quizzes on Y") → set_study_focus. It scopes flash cards, quizzes, and the Final Review.
 - Quote cards ("pebbles" — the Quotes shelf): save_quote / update_quote / delete_quote, with list_quotes first for edits and deletes. "Save this quote", "add a pebble", "delete the Sapiens quote" all land here. You CAN add, edit, and delete them — never claim otherwise.
-- You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage, or reset), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
+- You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage, or reset), Peck levels (complete_peck_level — mark a level passed so the next unlocks), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
 - If the message is just chat addressed to the dodo, answer it directly without tools.
 - Plain text replies, no markdown.`
 
@@ -1418,6 +1435,23 @@ ${setLines.length ? setLines.join('\n') : '(none played yet)'}`,
       if (!created) return { result: 'Error: creating the topic failed.' }
       return {
         result: `Created topic "${created.topic}"${content ? ` with ${content.length.toLocaleString()} chars of source material` : ''}. File cards or notes into it by passing topic: "${created.topic}".`,
+      }
+    }
+    case 'complete_peck_level': {
+      const raw = input.level == null ? null : Math.round(Number(input.level))
+      if (raw != null && (!Number.isFinite(raw) || raw < 1))
+        return { result: 'Error: level must be 1 or more.' }
+      const { target, granted, highest_passed } = await completePeckLevels(
+        thread.user_id,
+        raw,
+      )
+      if (!granted.length)
+        return {
+          result: `Level ${target} is already passed — level ${highest_passed + 1} is the one unlocked now.`,
+        }
+      return {
+        result: `Marked level${granted.length > 1 ? 's' : ''} ${granted.join(', ')} passed — level ${highest_passed + 1} is unlocked.`,
+        mutated: true,
       }
     }
     case 'set_daily_streak': {

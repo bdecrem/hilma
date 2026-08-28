@@ -1690,3 +1690,42 @@ export async function getJumboState(userId: string): Promise<JumboState> {
     xp_multiplier: streak.multiplier,
   }
 }
+
+/// Agent grant: mark Peck levels passed without playing them. Levels pass
+/// strictly in order, so this fills every uncleared level up to `level`
+/// (null = the currently unlocked one) with a synthetic passing set —
+/// empty results, 0 XP, so granted levels never pay like played ones.
+export async function completePeckLevels(
+  userId: string,
+  level: number | null,
+): Promise<{ target: number; granted: number[]; highest_passed: number }> {
+  const state = await getJumboState(userId)
+  const target =
+    level != null ? Math.max(1, Math.round(level)) : state.highest_passed + 1
+  const granted: number[] = []
+  for (let l = 1; l <= target; l++) {
+    if (state.levels.find((x) => x.level === l)?.status === 'passed') continue
+    const mode = jumboLevelMode(l)
+    const { error } = await f2Supabase().from('f2_flash_sets').insert({
+      user_id: userId,
+      thread_id: null,
+      jumbo_level: l,
+      mode,
+      score: jumboPassScore(mode),
+      total: SET_SIZE,
+      results: [],
+      xp: 0,
+    })
+    if (error) {
+      console.error('[f2/flash] completePeckLevels insert failed:', error)
+      break
+    }
+    granted.push(l)
+  }
+  return {
+    target,
+    granted,
+    highest_passed:
+      granted[granted.length - 1] === target ? target : state.highest_passed,
+  }
+}
