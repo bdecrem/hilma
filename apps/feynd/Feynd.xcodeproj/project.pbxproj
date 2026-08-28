@@ -42,6 +42,7 @@
 		760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87227276409128E69ABE7D61 /* ReviewsSheet.swift */; };
 		80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8E1D52867446105B46D06E /* FeyndChrome.swift */; };
 		81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97210D8088451B57557247DA /* DeepLink.swift */; };
+		8386C28BBB0F9D1DBC9C32D6 /* PeckOddsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */; };
 		880554CC1BB76AA2496A93E8 /* voice-sage.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8B64197A30336810679C8C35 /* voice-sage.m4a */; };
 		8C6244F78751CFD513251E76 /* FlashDeckBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */; };
 		92AB59F1F628D34B68CB6AD4 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */; };
@@ -112,6 +113,7 @@
 		97210D8088451B57557247DA /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
 		9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleThumbsUp.swift; sourceTree = "<group>"; };
 		9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
+		9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckOddsSheet.swift; sourceTree = "<group>"; };
 		A0B51F13157C08741A506C42 /* PebblesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PebblesView.swift; sourceTree = "<group>"; };
 		A2D50815A6970CB706216ED4 /* ThisWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThisWeekBanner.swift; sourceTree = "<group>"; };
 		A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookSummaryReaderView.swift; sourceTree = "<group>"; };
@@ -198,6 +200,7 @@
 				703834C76580CEF4C08B88F3 /* OnboardingView.swift */,
 				C0564EA3B927E26544E7655B /* PasteView.swift */,
 				A0B51F13157C08741A506C42 /* PebblesView.swift */,
+				9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */,
 				AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
 				E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */,
@@ -382,6 +385,7 @@
 				D728F8652741BA0ADE44FB1F /* OnboardingView.swift in Sources */,
 				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
 				4203B4F2027D753324C80557 /* PebblesView.swift in Sources */,
+				8386C28BBB0F9D1DBC9C32D6 /* PeckOddsSheet.swift in Sources */,
 				75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
 				B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */,

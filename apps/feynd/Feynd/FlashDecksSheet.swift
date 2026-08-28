@@ -13,6 +13,7 @@ struct FlashDecksSheet: View {
     @State private var loading = true
     @State private var loadError: String? = nil
     @State private var deckTarget: FlashDeck? = nil
+    @State private var showOdds = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -48,12 +49,22 @@ struct FlashDecksSheet: View {
             .scrollIndicators(.hidden)
         }
         .background(FeyndTheme.bgRaised.ignoresSafeArea())
-        .task { await load() }
+        .task {
+            await load()
+            // `-OpenPeckOdds 1` — straight to the draw-odds sheet (verification hook).
+            if UserDefaults.standard.bool(forKey: "OpenPeckOdds") {
+                UserDefaults.standard.removeObject(forKey: "OpenPeckOdds")
+                showOdds = true
+            }
+        }
         .fullScreenCover(item: $deckTarget) { deck in
             FlashCardsView(topicId: deck.threadId, topicLabel: deck.displayLabel)
                 .environment(session)
                 // Counts change when cards are added, edited, or buried.
                 .onDisappear { Task { await load() } }
+        }
+        .sheet(isPresented: $showOdds) {
+            PeckOddsSheet(decks: $decks)
         }
     }
 
@@ -79,6 +90,16 @@ struct FlashDecksSheet: View {
                     .foregroundStyle(FeyndTheme.text3)
             }
             HStack {
+                // The odds — per-topic Peck draw weights.
+                Button { showOdds = true } label: {
+                    Image(systemName: "die.face.5")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.accent)
+                        .frame(width: 36, height: 36)
+                        .background(FeyndTheme.surface2, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Draw odds")
                 Spacer()
                 Button { closeModal(dismiss) } label: {
                     Image(systemName: "xmark")
@@ -90,7 +111,7 @@ struct FlashDecksSheet: View {
                 .buttonStyle(.plain)
                 .keyboardShortcut(.cancelAction)
             }
-            .padding(.trailing, 14)
+            .padding(.horizontal, 14)
         }
         .padding(.top, 12)
         .padding(.bottom, 12)

@@ -408,6 +408,21 @@ export async function peckExcludedThreadIds(userId: string): Promise<Set<string>
   return new Set(((data ?? []) as { id: string }[]).map((t) => t.id))
 }
 
+/// Per-topic Peck draw multipliers (peck_weight, default 1). Only weights
+/// that differ from 1 matter; a missing thread reads as 1.
+export async function peckWeightsByThread(userId: string): Promise<Map<string, number>> {
+  const { data } = await f2Supabase()
+    .from('f2_threads')
+    .select('id, peck_weight')
+    .eq('user_id', userId)
+    .neq('peck_weight', 1)
+  const map = new Map<string, number>()
+  for (const t of (data ?? []) as { id: string; peck_weight: number | null }[]) {
+    if (typeof t.peck_weight === 'number' && t.peck_weight > 0) map.set(t.id, t.peck_weight)
+  }
+  return map
+}
+
 /// Playable Peck pool: non-buried cards on decks not opted out of Peck.
 export async function countPeckCards(userId: string): Promise<number> {
   const excluded = await peckExcludedThreadIds(userId)
@@ -440,6 +455,8 @@ export type FlashDeck = {
   thread_id: string
   /// True when the user opted this deck out of Peck (jumbo) sets.
   peck_excluded: boolean
+  /// Peck draw multiplier for this deck's cards (default 1).
+  peck_weight: number
   topic: string | null
   url: string | null
   kind: string | null
@@ -458,7 +475,7 @@ export async function listDecks(userId: string): Promise<FlashDeck[]> {
     sb.from('f2_flash_cards').select('thread_id, rating').eq('user_id', userId),
     sb
       .from('f2_threads')
-      .select('id, topic, url, kind, stars, updated_at, peck_excluded')
+      .select('id, topic, url, kind, stars, updated_at, peck_excluded, peck_weight')
       .eq('user_id', userId),
   ])
   if (cardErr) {
@@ -487,6 +504,7 @@ export async function listDecks(userId: string): Promise<FlashDeck[]> {
     stars: number | null
     updated_at: string
     peck_excluded: boolean | null
+    peck_weight: number | null
   }[]
   return threads
     .filter((t) => counts.has(t.id))
@@ -496,6 +514,7 @@ export async function listDecks(userId: string): Promise<FlashDeck[]> {
       return {
         thread_id: t.id,
         peck_excluded: t.peck_excluded === true,
+        peck_weight: typeof t.peck_weight === 'number' && t.peck_weight > 0 ? t.peck_weight : 1,
         topic: t.topic,
         url: t.url,
         kind: t.kind,
@@ -795,8 +814,17 @@ export function cardWeight(card: FlashCard, now: number = Date.now()): number {
 
 /// Weighted sample without replacement — each draw picks proportionally to
 /// weight, so scheduling shapes the odds without making sets deterministic.
-function weightedSample(cards: FlashCard[], n: number, now: number): FlashCard[] {
-  const pool = cards.map((card) => ({ card, weight: cardWeight(card, now) }))
+/// `boost` layers a per-card multiplier on top (the per-topic Peck weight).
+function weightedSample(
+  cards: FlashCard[],
+  n: number,
+  now: number,
+  boost?: (card: FlashCard) => number,
+): FlashCard[] {
+  const pool = cards.map((card) => ({
+    card,
+    weight: cardWeight(card, now) * (boost?.(card) ?? 1),
+  }))
   const out: FlashCard[] = []
   while (out.length < n && pool.length > 0) {
     const total = pool.reduce((sum, p) => sum + p.weight, 0)
@@ -851,8 +879,10 @@ export async function pickSetCards(
     return []
   }
   const exclude = new Set(opts?.excludeIds ?? [])
-  // Jumbo draws respect the per-topic Peck opt-out; topic sets ignore it.
+  // Jumbo draws respect the per-topic Peck opt-out and draw weight; topic
+  // sets ignore both.
   const excludedThreads = threadId ? new Set<string>() : await peckExcludedThreadIds(userId)
+  const weights = threadId ? null : await peckWeightsByThread(userId)
   const all = capDown1Pool(
     ((data as FlashCard[]) ?? []).filter(
       (c) => !exclude.has(c.id) && !excludedThreads.has(c.thread_id),
@@ -860,7 +890,11 @@ export async function pickSetCards(
   )
   // Shuffle first so the presentation order isn't weight order — the user
   // shouldn't be able to read the scheduler off the sequence.
-  return shuffle(weightedSample(all, opts?.n ?? SET_SIZE, Date.now()))
+  return shuffle(
+    weightedSample(all, opts?.n ?? SET_SIZE, Date.now(), (c) =>
+      weights?.get(c.thread_id) ?? 1,
+    ),
+  )
 }
 
 function shuffle<T>(arr: T[]): T[] {

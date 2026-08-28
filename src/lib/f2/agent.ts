@@ -649,6 +649,7 @@ const DODO_AGENT_TOOLS = [
         kind: { type: 'string', description: 'Topic type: book | mini | general | web | video | audio | paste | chat.' },
         pinned: { type: 'boolean', description: 'Pin (true) or unpin (false).' },
         peck_excluded: { type: 'boolean', description: 'true takes its cards out of Peck sets and the daily card.' },
+        peck_weight: { type: 'number', description: 'Peck draw multiplier for this deck (0.5 = half as often, 2 or 5 = more often, 1 = normal).' },
       },
       required: [],
     },
@@ -1210,6 +1211,13 @@ async function executeDodoTool(
       if (typeof input.peck_excluded === 'boolean') {
         update.peck_excluded = input.peck_excluded
         changes.push(input.peck_excluded ? 'out of Peck' : 'back in Peck')
+      }
+      if (input.peck_weight !== undefined) {
+        const w = Number(input.peck_weight)
+        if (!Number.isFinite(w) || w <= 0) return { result: 'Error: peck_weight must be a positive number.' }
+        const clamped = Math.max(0.25, Math.min(10, w))
+        update.peck_weight = clamped
+        changes.push(`Peck draw weight x${clamped}`)
       }
       if (changes.length === 0) return { result: 'Error: nothing to change.' }
       const { error } = await f2Supabase()

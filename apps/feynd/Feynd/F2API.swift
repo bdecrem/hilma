@@ -212,6 +212,12 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(peck_excluded: excluded))
     }
 
+    /// Set a topic's Peck draw multiplier (0.5 / 1 / 2 / 5).
+    func setPeckWeight(id: String, weight: Double) async throws {
+        struct Body: Encodable { let peck_weight: Double }
+        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(peck_weight: weight))
+    }
+
     /// Save (or clear, with "") the topic's study focus. Returns how many
     /// flash cards the topic currently has so the caller can rebuild a deck
     /// that was generated under the old focus.

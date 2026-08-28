@@ -50,7 +50,7 @@ export async function PATCH(
   }
   const { id } = await ctx.params
 
-  let body: { topic?: string; pinned?: boolean; study_focus?: string | null; kind?: string; peck_excluded?: boolean }
+  let body: { topic?: string; pinned?: boolean; study_focus?: string | null; kind?: string; peck_excluded?: boolean; peck_weight?: number }
   try {
     body = await req.json()
   } catch {
@@ -64,6 +64,14 @@ export async function PATCH(
   }
   if (typeof body.peck_excluded === 'boolean') {
     update.peck_excluded = body.peck_excluded
+  }
+  // Peck draw multiplier — rough dial, clamped to the chip range.
+  if (body.peck_weight !== undefined) {
+    const w = Number(body.peck_weight)
+    if (!Number.isFinite(w) || w <= 0) {
+      return NextResponse.json({ error: 'invalid peck_weight' }, { status: 400 })
+    }
+    update.peck_weight = Math.max(0.25, Math.min(10, w))
   }
   if (body.topic !== undefined) {
     const topic = body.topic.trim()
@@ -90,7 +98,8 @@ export async function PATCH(
     update.pinned_at === undefined &&
     update.study_focus === undefined &&
     update.kind === undefined &&
-    update.peck_excluded === undefined
+    update.peck_excluded === undefined &&
+    update.peck_weight === undefined
   ) {
     return NextResponse.json({ error: 'nothing to update' }, { status: 400 })
   }
