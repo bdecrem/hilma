@@ -11,8 +11,61 @@ enum F2APIError: Error, LocalizedError {
         case .unauthenticated: return "Not signed in."
         case .http(let code, let msg): return "Server returned \(code): \(msg ?? "no message")."
         case .decode(let e): return "Couldn't read server response: \(e.localizedDescription)."
-        case .transport(let e): return e.localizedDescription
+        case .transport(let e):
+            if let u = e as? URLError, Backend.isConnectionFailure(u) {
+                return "Couldn't reach Dodo securely (\(u.localizedDescription)). Check VPN, Wi-Fi, or cellular and try again."
+            }
+            return e.localizedDescription
         }
+    }
+}
+
+/// Backend host selection with certificate/connection failover.
+///
+/// feynd.cc is served with a Let's Encrypt certificate; hilma-nine.vercel.app
+/// is the same deployment behind a Google Trust Services certificate. A phone
+/// that can't complete the TLS handshake with one (filtering VPN, carrier
+/// middlebox, stale trust store) usually can with the other. On a connection
+/// failure the client retries once, then retries on the other host, and if
+/// that works it sticks with it (persisted) so every later request just works.
+enum Backend {
+    static let primary = Secrets.backendBaseURL
+    static let fallback = URL(string: "https://hilma-nine.vercel.app")!
+    private static let key = "f2.backend.useFallback"
+
+    /// Failover only applies to the production host — a dev/tunnel URL has no twin.
+    static var failoverAvailable: Bool { primary.host == "feynd.cc" }
+
+    static var usingFallback: Bool {
+        get { failoverAvailable && UserDefaults.standard.bool(forKey: key) }
+        set { UserDefaults.standard.set(newValue, forKey: key) }
+    }
+
+    static var baseURL: URL { usingFallback ? fallback : primary }
+    static var otherURL: URL { usingFallback ? primary : fallback }
+
+    static func isConnectionFailure(_ e: URLError) -> Bool {
+        switch e.code {
+        case .secureConnectionFailed, .serverCertificateHasBadDate, .serverCertificateUntrusted,
+             .serverCertificateHasUnknownRoot, .serverCertificateNotYetValid,
+             .clientCertificateRejected, .clientCertificateRequired,
+             .cannotConnectToHost, .cannotFindHost, .dnsLookupFailed, .networkConnectionLost:
+            return true
+        default:
+            return false
+        }
+    }
+
+    /// Rebuild `req` against `host`, keeping path, query, method, headers, body.
+    static func rehost(_ req: URLRequest, to host: URL) -> URLRequest? {
+        guard let url = req.url, var comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
+        comps.scheme = host.scheme
+        comps.host = host.host
+        comps.port = host.port
+        guard let newURL = comps.url else { return nil }
+        var out = req
+        out.url = newURL
+        return out
     }
 }
 
@@ -549,7 +602,7 @@ final class F2API {
     /// the storage slot — but taken for symmetry with the row.
     func readSourceText(id: String, kind: String, index: Int) async throws -> SourceText {
         var comps = URLComponents(
-            url: Secrets.backendBaseURL.appendingPathComponent("/api/f2/topics/\(id)/sources"),
+            url: Backend.baseURL.appendingPathComponent("/api/f2/topics/\(id)/sources"),
             resolvingAgainstBaseURL: false,
         )!
         comps.queryItems = [
@@ -560,7 +613,7 @@ final class F2API {
         var req = URLRequest(url: comps.url!)
         req.httpMethod = "GET"
         req.setValue("application/json", forHTTPHeaderField: "Accept")
-        let (data, response) = try await session.data(for: req)
+        let (data, response) = try await perform(req)
         guard let http = response as? HTTPURLResponse else { throw F2APIError.http(0, "non-HTTP response") }
         if http.statusCode == 401 { throw F2APIError.unauthenticated }
         if http.statusCode >= 400 { throw F2APIError.http(http.statusCode, errorMessage(from: data, response: http)) }
@@ -592,7 +645,7 @@ final class F2API {
     /// (or PNG when transparency matters; the design uses round masks so JPEG
     /// is fine). Server enforces 1 MB and image/jpeg|png at the bucket level.
     func uploadAvatar(imageData: Data, mime: String = "image/jpeg") async throws -> String {
-        let url = Secrets.backendBaseURL.appendingPathComponent("/api/f2/avatar")
+        let url = Backend.baseURL.appendingPathComponent("/api/f2/avatar")
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -613,7 +666,7 @@ final class F2API {
 
         let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await session.data(for: req)
+            (data, response) = try await perform(req)
         } catch {
             throw F2APIError.transport(error)
         }
@@ -994,6 +1047,29 @@ final class F2API {
     private struct EmptyBody: Codable {}
     private struct EmptyResponse: Codable {}
 
+    /// All HTTP goes through here. Connection/TLS failures get one retry on
+    /// the same host, then one attempt on the twin host (see `Backend`).
+    private func perform(_ req: URLRequest) async throws -> (Data, URLResponse) {
+        do {
+            return try await session.data(for: req)
+        } catch let e as URLError where Backend.isConnectionFailure(e) {
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            do {
+                return try await session.data(for: req)
+            } catch let e2 as URLError where Backend.isConnectionFailure(e2) {
+                // If another request already flipped hosts, retry on the current
+                // base; otherwise try the twin.
+                let target = (req.url?.host == Backend.baseURL.host) ? Backend.otherURL : Backend.baseURL
+                guard Backend.failoverAvailable,
+                      let alt = Backend.rehost(req, to: target) else { throw e2 }
+                let result = try await session.data(for: alt)
+                // Set, don't toggle: concurrent requests can all fail over at once.
+                Backend.usingFallback = (target.host == Backend.fallback.host)
+                return result
+            }
+        }
+    }
+
     private func get<R: Decodable>(_ path: String) async throws -> R {
         try await request(path, method: "GET", body: nil as EmptyBody?)
     }
@@ -1007,7 +1083,7 @@ final class F2API {
     }
 
     private func postRaw<B: Encodable>(_ path: String, body: B) async throws -> Data {
-        let url = Secrets.backendBaseURL.appendingPathComponent(path)
+        let url = Backend.baseURL.appendingPathComponent(path)
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -1017,7 +1093,7 @@ final class F2API {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: req)
+            (data, response) = try await perform(req)
         } catch {
             throw F2APIError.transport(error)
         }
@@ -1035,7 +1111,7 @@ final class F2API {
     }
 
     private func request<B: Encodable, R: Decodable>(_ path: String, method: String, body: B?) async throws -> R {
-        let url = Secrets.backendBaseURL.appendingPathComponent(path)
+        let url = Backend.baseURL.appendingPathComponent(path)
         var req = URLRequest(url: url)
         req.httpMethod = method
         req.cachePolicy = .reloadIgnoringLocalCacheData   // never read a cached response
@@ -1048,7 +1124,7 @@ final class F2API {
         let data: Data
         let response: URLResponse
         do {
-            (data, response) = try await session.data(for: req)
+            (data, response) = try await perform(req)
         } catch {
             throw F2APIError.transport(error)
         }
@@ -1077,8 +1153,8 @@ final class F2API {
     }
 
     func clearCookies() {
-        let host = Secrets.backendBaseURL.host ?? ""
-        for cookie in HTTPCookieStorage.shared.cookies ?? [] where cookie.domain.contains(host) || cookie.name == "f2_session" {
+        let hosts = [Backend.primary.host ?? "", Backend.fallback.host ?? ""]
+        for cookie in HTTPCookieStorage.shared.cookies ?? [] where hosts.contains(where: { cookie.domain.contains($0) }) || cookie.name == "f2_session" {
             HTTPCookieStorage.shared.deleteCookie(cookie)
         }
     }
