@@ -252,9 +252,10 @@ struct PebbleQuoteCard: View {
     /// Photo pebble: the picture fills the card, caption + footer below.
     private var imageCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            PebbleImage(url: artifact.imageUrl ?? "", corner: 16)
+            if fillsHeight { Spacer(minLength: 0) }
+            PebbleImage(url: artifact.imageUrl ?? "", corner: 16, matted: fillsHeight)
                 .frame(maxWidth: .infinity)
-                .frame(maxHeight: fillsHeight ? .infinity : 260)
+                .frame(maxHeight: fillsHeight ? nil : 280)
                 .onTapGesture { showFullImage = true }
             if !artifact.body.isEmpty {
                 Text(artifact.body)
@@ -264,10 +265,8 @@ struct PebbleQuoteCard: View {
                     .lineLimit(fillsHeight ? 6 : 3)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 14)
-                    .padding(.bottom, 12)
-            } else {
-                Spacer().frame(height: 4)
             }
+            if fillsHeight { Spacer(minLength: 12) } else { Spacer().frame(height: 4) }
             footer
         }
         .padding(18)
@@ -398,38 +397,50 @@ struct PebbleQuoteCard: View {
     }
 }
 
-/// Remote photo with the surface as placeholder; fills and clips.
+/// Remote photo shown whole — real aspect ratio, never cropped. In the
+/// carousel it's centered on a soft matte that fills the card's photo area
+/// (a print in a mat); compact hosts let it size itself under `maxHeight`.
 struct PebbleImage: View {
     let url: String
-    var corner: CGFloat = 16
-    var contentMode: ContentMode = .fill
+    var corner: CGFloat = 14
+    /// Carousel mode: fill the available box with a matte, fit the photo inside.
+    var matted: Bool = true
 
     var body: some View {
-        GeometryReader { geo in
-            AsyncImage(url: URL(string: url)) { phase in
-                switch phase {
-                case .success(let img):
+        AsyncImage(url: URL(string: url)) { phase in
+            switch phase {
+            case .success(let img):
+                if matted {
+                    // .fit reports the fitted size, so the matte hugs the photo.
                     img.resizable()
-                        .aspectRatio(contentMode: contentMode)
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .clipped()
-                case .failure:
-                    ZStack {
-                        FeyndTheme.surface2
-                        Image(systemName: "photo")
-                            .font(.system(size: 26))
-                            .foregroundStyle(FeyndTheme.text3)
-                    }
-                default:
-                    ZStack {
-                        FeyndTheme.surface2
-                        ProgressView().tint(FeyndTheme.accent)
-                    }
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: corner - 4))
+                        .padding(10)
+                        .background(FeyndTheme.surface2, in: RoundedRectangle(cornerRadius: corner))
+                } else {
+                    img.resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: corner))
                 }
+            case .failure:
+                placeholder(Image(systemName: "photo"))
+            default:
+                placeholder(nil)
             }
-            .frame(width: geo.size.width, height: geo.size.height)
         }
         .clipShape(RoundedRectangle(cornerRadius: corner))
+    }
+
+    private func placeholder(_ icon: Image?) -> some View {
+        ZStack {
+            FeyndTheme.surface2
+            if let icon {
+                icon.font(.system(size: 26)).foregroundStyle(FeyndTheme.text3)
+            } else {
+                ProgressView().tint(FeyndTheme.accent)
+            }
+        }
+        .frame(minHeight: 160)
     }
 }
 
