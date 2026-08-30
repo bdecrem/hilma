@@ -7,10 +7,12 @@
  * protocol; this agent turns those lines into calls against the F2 backend
  * (feynd.cc, the same /api/f2/* the phone uses) on behalf of ONE user.
  *
- * Auth: no password on the wire. The agent mints the user's f2_session cookie
- * itself from F2_SESSION_SECRET (same HMAC as src/lib/f2/auth.ts) for the
- * user id in DODO_F2_USER_ID. Both come from ~/.macplus-backend.env via
- * run-service.sh. Trusted-LAN only, like every other agent here.
+ * Auth: no password on the wire. Preferred: DODO_MACHINE_TOKEN — traded at
+ * POST /api/f2/auth/machine for a session token (the server pairs the token
+ * with one user; this is what production uses, since Vercel's session secret
+ * isn't readable). Fallback for local testing: F2_SESSION_SECRET +
+ * DODO_F2_USER_ID mint the cookie directly (same HMAC as src/lib/f2/auth.ts).
+ * All from ~/.macplus-backend.env via run-service.sh. Trusted-LAN only.
  *
  * Dependency-free node (like agent-rsh / agent-pixel):
  *   node server.mjs --listen 2339
@@ -35,7 +37,7 @@
  *     DERR <text>
  *     DOK
  *
- * Env: F2_SESSION_SECRET (required), DODO_F2_USER_ID (required),
+ * Env: DODO_MACHINE_TOKEN (prod) or F2_SESSION_SECRET + DODO_F2_USER_ID (local),
  *      DODO_F2_BASE (default https://feynd.cc), DODO_MODEL (optional registry key),
  *      DODO_PACE_BPS (output pacing, default 2400; use 960 for the Mini vMac harness).
  */
@@ -49,6 +51,7 @@ const PORT = (() => {
 const BASE = (process.env.DODO_F2_BASE || 'https://feynd.cc').replace(/\/$/, '');
 const SECRET = process.env.F2_SESSION_SECRET || '';
 const USER_ID = process.env.DODO_F2_USER_ID || '';
+const MACHINE_TOKEN = process.env.DODO_MACHINE_TOKEN || '';
 const MODEL = process.env.DODO_MODEL || '';
 const MAX_LINE = 900;          // longest wire line body (a paragraph); the Plus wraps by pixel width
 const HISTORY = 14;            // messages replayed on OPEN
@@ -64,15 +67,36 @@ function log(m) { console.error(`[dodo ${new Date().toISOString()}] ${m}`); }
 
 /* ---------------- F2 session + HTTP ---------------- */
 
+let machineSession = '';       // token from /api/f2/auth/machine (30-day; refetched on 401)
+
 /** Same shape as signSession() in src/lib/f2/auth.ts: `${userId}.${exp}.${hmac}` */
-function sessionCookie() {
+function localSession() {
   const exp = Date.now() + 60 * 60 * 1000;   // an hour is plenty; minted per call
   const payload = `${USER_ID}.${exp}`;
   const sig = createHmac('sha256', SECRET).update(payload).digest('hex');
-  return `f2_session=${payload}.${sig}`;
+  return `${payload}.${sig}`;
 }
 
-async function f2(path, init = {}) {
+async function fetchMachineSession() {
+  const res = await fetch(BASE + '/api/f2/auth/machine', {
+    method: 'POST',
+    headers: { 'x-f2-machine-token': MACHINE_TOKEN, Accept: 'application/json' },
+  });
+  if (!res.ok) throw new Error(`machine auth failed (${res.status})`);
+  const j = await res.json();
+  machineSession = j.session;
+  log(`machine session for ${String(j.user_id).slice(0, 8)}`);
+}
+
+async function sessionCookie() {
+  if (MACHINE_TOKEN) {
+    if (!machineSession) await fetchMachineSession();
+    return `f2_session=${machineSession}`;
+  }
+  return `f2_session=${localSession()}`;
+}
+
+async function f2(path, init = {}, retry = true) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), REPLY_TIMEOUT_MS);
   try {
@@ -82,10 +106,15 @@ async function f2(path, init = {}) {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        Cookie: sessionCookie(),
+        Cookie: await sessionCookie(),
         ...(init.headers || {}),
       },
     });
+    if (res.status === 401 && MACHINE_TOKEN && retry) {
+      machineSession = '';                     // expired/rotated: mint again once
+      clearTimeout(t);
+      return f2(path, init, false);
+    }
     const text = await res.text();
     let json = null;
     try { json = JSON.parse(text); } catch { /* non-JSON error page */ }
@@ -322,8 +351,8 @@ class Session {
 
 /* ---------------- server ---------------- */
 
-if (!SECRET || !USER_ID) {
-  log('F2_SESSION_SECRET and DODO_F2_USER_ID are required (see ~/.macplus-backend.env)');
+if (!MACHINE_TOKEN && !(SECRET && USER_ID)) {
+  log('need DODO_MACHINE_TOKEN, or F2_SESSION_SECRET + DODO_F2_USER_ID (see ~/.macplus-backend.env)');
   process.exit(64);
 }
 
@@ -336,4 +365,4 @@ const server = net.createServer((sock) => {
   sock.on('error', (e) => log(`socket: ${e.message}`));
   sock.on('close', () => log('close'));
 });
-server.listen(PORT, () => log(`listening :${PORT} -> ${BASE} as ${USER_ID.slice(0, 8)}`));
+server.listen(PORT, () => log(`listening :${PORT} -> ${BASE} (${MACHINE_TOKEN ? 'machine token' : 'local secret for ' + USER_ID.slice(0, 8)})`));

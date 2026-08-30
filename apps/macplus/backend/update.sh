@@ -39,7 +39,7 @@ if [ -r "$DEVTREE/.env.local" ]; then
   umask 077
   {
     echo "# MacPlus backend secrets — synced from $DEVTREE/.env.local by backend/update.sh ($(date +%F))."
-    grep -E '^(ANTHROPIC_API_KEY|OPENAI_API_KEY|TOGETHER_API_KEY|SUPABASE_URL|SUPABASE_SERVICE_KEY|IMSG_HTTP_SECRET|F2_SESSION_SECRET|DODO_F2_USER_ID)=' "$DEVTREE/.env.local"
+    grep -E '^(ANTHROPIC_API_KEY|OPENAI_API_KEY|TOGETHER_API_KEY|SUPABASE_URL|SUPABASE_SERVICE_KEY|IMSG_HTTP_SECRET|F2_SESSION_SECRET|DODO_F2_USER_ID|DODO_MACHINE_TOKEN)=' "$DEVTREE/.env.local"
   } > "$ENVFILE.tmp" && mv "$ENVFILE.tmp" "$ENVFILE"
   echo "   re-synced $(grep -c '=' "$ENVFILE") keys -> $ENVFILE"
 else
