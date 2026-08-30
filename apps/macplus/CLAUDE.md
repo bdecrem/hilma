@@ -579,9 +579,15 @@ stars stay on the phone.
   **DODO_SERIAL** variant on `net/serlink.inc` (modem port, AT/ATDT/CONNECT,
   flow control off) — that's what the Mini vMac harness runs. `./build.sh test`
   = offline canned transcript (DODO_TEST).
-- **Mini side (`agent-dodo/server.mjs`, :2339)**: dependency-free node. Mints
-  the user's `f2_session` cookie from `F2_SESSION_SECRET` for `DODO_F2_USER_ID`
-  (both synced into `~/.macplus-backend.env` by `update.sh`) and proxies the
+- **Mini side (`agent-dodo/server.mjs`, :2339)**: dependency-free node. Auth:
+  `DODO_MACHINE_TOKEN` → `POST /api/f2/auth/machine` → a session for the one
+  user Vercel pairs it with (`F2_MACHINE_TOKEN` / `F2_MACHINE_USER_ID` = Bart;
+  Vercel's session secret is sensitive/unreadable, so the mini can't mint
+  cookies itself). Local testing uses `F2_SESSION_SECRET` + `DODO_F2_USER_ID`
+  against a local backend. All synced into `~/.macplus-backend.env` by
+  `update.sh` from the mini's `~/Documents/code/hilma/.env.local` (that file is
+  the source of truth on the mini — add new keys THERE, not to the env file).
+  Deployed + verified 2026-08-30 (LIST returns Bart's real topics). It proxies the
   line protocol (`LIST`/`OPEN n`/`LAST`/`SAY`/`NEW` up; `DLIST`/`DT n date|name`/
   `DTOPIC`/`DU`/`DA`/`D+`/`DWAIT`/`DERR`/`DEND` down) to feynd.cc. Replies are
   ASCII-folded, de-markdowned, one paragraph per wire line (≤900 chars), and
