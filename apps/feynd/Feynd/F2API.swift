@@ -961,6 +961,51 @@ final class F2API {
         return res.artifact
     }
 
+    /// Save a photo pebble: multipart upload, optional caption/source/topic.
+    func createImageArtifact(imageData: Data, mime: String = "image/jpeg", body: String?, source: String?, threadId: String?) async throws -> F2Artifact {
+        let url = Backend.baseURL.appendingPathComponent("/api/f2/artifacts/image")
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Accept")
+        let boundary = "feynd-\(UUID().uuidString)"
+        req.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var data = Data()
+        let crlf = "\r\n"
+        func append(_ s: String) { data.append(s.data(using: .utf8)!) }
+        func field(_ name: String, _ value: String?) {
+            guard let value, !value.isEmpty else { return }
+            append("--\(boundary)\(crlf)")
+            append("Content-Disposition: form-data; name=\"\(name)\"\(crlf)\(crlf)")
+            append(value + crlf)
+        }
+        field("body", body)
+        field("source", source)
+        field("thread_id", threadId)
+        let filename = mime == "image/png" ? "pebble.png" : "pebble.jpg"
+        append("--\(boundary)\(crlf)")
+        append("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\(crlf)")
+        append("Content-Type: \(mime)\(crlf)\(crlf)")
+        data.append(imageData)
+        append("\(crlf)--\(boundary)--\(crlf)")
+        req.httpBody = data
+
+        let (respData, response): (Data, URLResponse)
+        do {
+            (respData, response) = try await perform(req)
+        } catch {
+            throw F2APIError.transport(error)
+        }
+        guard let http = response as? HTTPURLResponse else { throw F2APIError.http(0, "non-HTTP response") }
+        if http.statusCode == 401 { throw F2APIError.unauthenticated }
+        if http.statusCode >= 400 { throw F2APIError.http(http.statusCode, errorMessage(from: respData, response: http)) }
+        do {
+            return try decoder.decode(ArtifactResponse.self, from: respData).artifact
+        } catch {
+            throw F2APIError.decode(error)
+        }
+    }
+
     func deleteArtifact(id: String) async throws {
         let _: EmptyResponse = try await request("/api/f2/artifacts/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }

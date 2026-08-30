@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import UIKit
 
 /// Pebbles — the keepsake shelf. Dodos swallowed little stones to grind up
@@ -238,7 +239,49 @@ struct PebbleQuoteCard: View {
         }
     }
 
+    @State private var showFullImage = false
+
     var body: some View {
+        if artifact.isImage {
+            imageCard
+        } else {
+            quoteCard
+        }
+    }
+
+    /// Photo pebble: the picture fills the card, caption + footer below.
+    private var imageCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            PebbleImage(url: artifact.imageUrl ?? "", corner: 16)
+                .frame(maxWidth: .infinity)
+                .frame(maxHeight: fillsHeight ? .infinity : 260)
+                .onTapGesture { showFullImage = true }
+            if !artifact.body.isEmpty {
+                Text(artifact.body)
+                    .font(.system(size: 16, design: .serif))
+                    .lineSpacing(5)
+                    .foregroundStyle(FeyndTheme.text)
+                    .lineLimit(fillsHeight ? 6 : 3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 14)
+                    .padding(.bottom, 12)
+            } else {
+                Spacer().frame(height: 4)
+            }
+            footer
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity,
+               maxHeight: fillsHeight ? .infinity : nil,
+               alignment: .leading)
+        .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 24))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(FeyndTheme.border, lineWidth: 1))
+        .fullScreenCover(isPresented: $showFullImage) {
+            PebbleImageViewer(url: artifact.imageUrl ?? "", caption: artifact.body)
+        }
+    }
+
+    private var quoteCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             if fillsHeight && band.centered { Spacer(minLength: 0) }
 
@@ -355,6 +398,89 @@ struct PebbleQuoteCard: View {
     }
 }
 
+/// Remote photo with the surface as placeholder; fills and clips.
+struct PebbleImage: View {
+    let url: String
+    var corner: CGFloat = 16
+    var contentMode: ContentMode = .fill
+
+    var body: some View {
+        GeometryReader { geo in
+            AsyncImage(url: URL(string: url)) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable()
+                        .aspectRatio(contentMode: contentMode)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
+                case .failure:
+                    ZStack {
+                        FeyndTheme.surface2
+                        Image(systemName: "photo")
+                            .font(.system(size: 26))
+                            .foregroundStyle(FeyndTheme.text3)
+                    }
+                default:
+                    ZStack {
+                        FeyndTheme.surface2
+                        ProgressView().tint(FeyndTheme.accent)
+                    }
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: corner))
+    }
+}
+
+/// Full-screen look at a photo pebble. Tap or swipe down to leave.
+struct PebbleImageViewer: View {
+    let url: String
+    let caption: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var drag: CGFloat = 0
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Color.black.ignoresSafeArea()
+            VStack(spacing: 16) {
+                Spacer(minLength: 0)
+                AsyncImage(url: URL(string: url)) { phase in
+                    if let img = phase.image {
+                        img.resizable().aspectRatio(contentMode: .fit)
+                    } else {
+                        ProgressView().tint(.white)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                if !caption.isEmpty {
+                    Text(caption)
+                        .font(.system(size: 15, design: .serif))
+                        .foregroundStyle(.white.opacity(0.85))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                }
+                Spacer(minLength: 0)
+            }
+            .offset(y: drag)
+            .gesture(
+                DragGesture().onChanged { drag = max(0, $0.translation.height) }
+                    .onEnded { if $0.translation.height > 120 { dismiss() } else { withAnimation { drag = 0 } } }
+            )
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
+                    .background(.white.opacity(0.18), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .padding(16)
+        }
+        .onTapGesture { dismiss() }
+    }
+}
+
 /// The little stone — an off-round ellipse, marigold.
 struct PebbleGlyph: View {
     var size: CGFloat = 16
@@ -385,7 +511,14 @@ struct PebbleAddSheet: View {
     @State private var pickedTopic: F2Topic? = nil
     @State private var saving = false
     @State private var saveError: String? = nil
+    @State private var pickerItem: PhotosPickerItem? = nil
+    /// Picked photo, downscaled to ≤1600px JPEG, ready to upload.
+    @State private var photoData: Data? = nil
+    @State private var photoPreview: UIImage? = nil
     @FocusState private var quoteFocused: Bool
+
+    private var hasText: Bool { !quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private var canSave: Bool { !saving && (hasText || photoData != nil) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -421,7 +554,7 @@ struct PebbleAddSheet: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    TextField("The quote…", text: $quote, axis: .vertical)
+                    TextField(photoData == nil ? "The quote…" : "Caption (optional)", text: $quote, axis: .vertical)
                         .font(.system(size: 16, design: .serif))
                         .foregroundStyle(FeyndTheme.text)
                         .tint(FeyndTheme.accent)
@@ -430,6 +563,8 @@ struct PebbleAddSheet: View {
                         .padding(14)
                         .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 14))
                         .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
+
+                    photoRow
 
                     TextField("Where it's from — e.g. Sapiens, ch. 5", text: $source)
                         .font(.system(size: 14.5))
@@ -485,8 +620,8 @@ struct PebbleAddSheet: View {
                         .background(FeyndTheme.accent, in: Capsule())
                     }
                     .buttonStyle(.plain)
-                    .disabled(saving || quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    .opacity(quote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+                    .disabled(!canSave)
+                    .opacity(canSave || saving ? 1 : 0.5)
                 }
                 .padding(.horizontal, 18)
                 .padding(.bottom, 30)
@@ -496,7 +631,29 @@ struct PebbleAddSheet: View {
         .background(FeyndTheme.bgRaised.ignoresSafeArea())
         .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
-        .onAppear { quoteFocused = true }
+        .onAppear {
+            quoteFocused = true
+            #if targetEnvironment(simulator)
+            // `-TestPebblePhoto <path>` — attach a photo from disk (headless
+            // verification of the downscale + upload path, no picker taps).
+            if let path = UserDefaults.standard.string(forKey: "TestPebblePhoto"),
+               let image = UIImage(contentsOfFile: path) {
+                UserDefaults.standard.removeObject(forKey: "TestPebblePhoto")
+                let scaled = image.downscaled(maxSide: 1600)
+                photoData = scaled.jpegData(compressionQuality: 0.82)
+                photoPreview = scaled
+                if UserDefaults.standard.bool(forKey: "TestPebbleSave") {
+                    UserDefaults.standard.removeObject(forKey: "TestPebbleSave")
+                    quote = "Saved from the app"
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) { save() }
+                }
+            }
+            #endif
+        }
+        .onChange(of: pickerItem) { _, item in
+            guard let item else { return }
+            Task { await loadPhoto(item) }
+        }
         .task {
             topics = (try? await F2API.shared.listTopics()) ?? []
             if pickedTopic == nil, let presetTopicId {
@@ -505,19 +662,92 @@ struct PebbleAddSheet: View {
         }
     }
 
+    /// "Add photo" picker, or the picked photo as a thumbnail with a remove ✕.
+    @ViewBuilder
+    private var photoRow: some View {
+        if let photoPreview {
+            HStack(spacing: 12) {
+                Image(uiImage: photoPreview)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                Text("Photo attached")
+                    .font(.system(size: 14.5, weight: .medium))
+                    .foregroundStyle(FeyndTheme.text)
+                Spacer()
+                Button {
+                    photoData = nil
+                    self.photoPreview = nil
+                    pickerItem = nil
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text2)
+                        .frame(width: 30, height: 30)
+                        .background(FeyndTheme.surface2, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Remove photo")
+            }
+            .padding(10)
+            .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
+        } else {
+            PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
+                HStack(spacing: 8) {
+                    Image(systemName: "photo.on.rectangle")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.accent)
+                    Text("Add a photo")
+                        .font(.system(size: 14.5, weight: .medium))
+                        .foregroundStyle(FeyndTheme.text3)
+                    Spacer()
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(FeyndTheme.bgRaised, in: RoundedRectangle(cornerRadius: 14))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.border, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func loadPhoto(_ item: PhotosPickerItem) async {
+        guard let raw = try? await item.loadTransferable(type: Data.self),
+              let image = UIImage(data: raw) else {
+            saveError = "Couldn't read that photo."
+            return
+        }
+        let scaled = image.downscaled(maxSide: 1600)
+        guard let jpeg = scaled.jpegData(compressionQuality: 0.82) else { return }
+        photoData = jpeg
+        photoPreview = scaled
+        saveError = nil
+    }
+
     private func save() {
         let body = quote.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !body.isEmpty, !saving else { return }
+        guard canSave else { return }
         saving = true
         saveError = nil
         Task {
             do {
                 let trimmedSource = source.trimmingCharacters(in: .whitespacesAndNewlines)
-                _ = try await F2API.shared.createArtifact(
-                    body: body,
-                    source: trimmedSource.isEmpty ? nil : trimmedSource,
-                    threadId: pickedTopic?.id
-                )
+                if let photoData {
+                    _ = try await F2API.shared.createImageArtifact(
+                        imageData: photoData,
+                        body: body.isEmpty ? nil : body,
+                        source: trimmedSource.isEmpty ? nil : trimmedSource,
+                        threadId: pickedTopic?.id
+                    )
+                } else {
+                    _ = try await F2API.shared.createArtifact(
+                        body: body,
+                        source: trimmedSource.isEmpty ? nil : trimmedSource,
+                        threadId: pickedTopic?.id
+                    )
+                }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 await onSaved()
                 dismiss()
@@ -525,6 +755,21 @@ struct PebbleAddSheet: View {
                 saveError = "Couldn't save it: \(error.localizedDescription)"
                 saving = false
             }
+        }
+    }
+}
+
+
+extension UIImage {
+    /// Longest side capped at `maxSide`, orientation baked in. Returns self when already small enough.
+    func downscaled(maxSide: CGFloat) -> UIImage {
+        let longest = max(size.width, size.height)
+        let scale = min(1, maxSide / longest)
+        let target = CGSize(width: (size.width * scale).rounded(), height: (size.height * scale).rounded())
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: target, format: format).image { _ in
+            draw(in: CGRect(origin: .zero, size: target))
         }
     }
 }

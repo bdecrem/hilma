@@ -320,11 +320,16 @@ struct F2Artifact: Codable, Identifiable, Equatable {
     let kind: String
     let body: String
     let source: String?
+    /// Public URL of the photo for kind == "image"; nil for quotes.
+    let imageUrl: String?
     /// Topic name of the linked thread, for the chip. Nil when unlinked.
     let topic: String?
+
+    var isImage: Bool { imageUrl != nil }
 
     enum CodingKeys: String, CodingKey {
         case id, kind, body, source, topic
         case threadId = "thread_id"
+        case imageUrl = "image_url"
     }
 }
