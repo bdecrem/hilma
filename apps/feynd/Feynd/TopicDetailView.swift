@@ -27,6 +27,8 @@ struct TopicDetailView: View {
     @State private var finalReviewVariant: FinalReviewView.Variant = .full
     @State private var secondChanceDialogPresented = false
     @State private var contextPresented = false
+    /// Redraw hook for the first-session banner's dismissal.
+    @State private var firstSessionDismissed = false
     // Quick-chat exit: name it (rename + keep) or discard (delete for good).
     @State private var keepChatPrompt = false
     @State private var topicNameDraft = ""
@@ -49,6 +51,7 @@ struct TopicDetailView: View {
                     .padding(.bottom, 4)
                 }
 
+                firstSessionBanner
                 recertBanner
 
                 if loading && thread == nil {
@@ -234,6 +237,60 @@ struct TopicDetailView: View {
     /// The recert nudge above the conversation: an alert card once the badge
     /// has dimmed, a soft one-liner in the final week. Both start the
     /// 3-question refresher directly.
+    /// Shown only in the session the topic was created in, until dismissed
+    /// or until the topic has something to read. Offers the Context sheet;
+    /// never opens it uninvited.
+    @ViewBuilder
+    private var firstSessionBanner: some View {
+        if !firstSessionDismissed,
+           DeepLinkRouter.shared.isFresh(topicId: topicId),
+           let t = thread, t.url == nil {
+            HStack(spacing: 10) {
+                Image(systemName: "text.book.closed")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.accent)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Give Dodo something to read")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(FeyndTheme.text)
+                    Text("A link or your notes — Dodo answers from them.")
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(FeyndTheme.text2)
+                }
+                Spacer(minLength: 6)
+                Button {
+                    contextPresented = true
+                } label: {
+                    Text("Add")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(FeyndTheme.inkOnAccent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(FeyndTheme.accent, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) { firstSessionDismissed = true }
+                    DeepLinkRouter.shared.endFirstSession(topicId: topicId)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text2)
+                        .frame(width: 28, height: 28)
+                        .background(FeyndTheme.surface2, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Dismiss")
+            }
+            .padding(12)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(FeyndTheme.accent.opacity(0.35), lineWidth: 1))
+            .padding(.horizontal, 14)
+            .padding(.bottom, 6)
+            .transition(.opacity.combined(with: .move(edge: .top)))
+        }
+    }
+
     @ViewBuilder
     private var recertBanner: some View {
         if let t = thread, t.recertLapsed {

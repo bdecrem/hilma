@@ -55,6 +55,17 @@ final class DeepLinkRouter {
         return d.text
     }
 
+    // MARK: Fresh topics (first-session banner)
+
+    /// Topics created in THIS app session. The topic chat shows a one-time
+    /// "give Dodo something to read" banner for them; dismissing it (or a
+    /// relaunch) ends the first session. Never persisted on purpose.
+    var freshTopicIds: Set<String> = []
+
+    func markFresh(topicId: String) { freshTopicIds.insert(topicId) }
+    func isFresh(topicId: String) -> Bool { freshTopicIds.contains(topicId) }
+    func endFirstSession(topicId: String) { freshTopicIds.remove(topicId) }
+
     // MARK: Quick chat
 
     /// "Just chat" from the New Topic sheet: a placeholder topic was created

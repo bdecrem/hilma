@@ -129,6 +129,11 @@ struct MainTabsView: View {
             // `-OpenTopic <id>` — push straight into a topic's detail screen.
             if let id = UserDefaults.standard.string(forKey: "OpenTopic") {
                 UserDefaults.standard.removeObject(forKey: "OpenTopic")
+                // `-FreshTopic 1` — treat it as just created (first-session banner).
+                if UserDefaults.standard.bool(forKey: "FreshTopic") {
+                    UserDefaults.standard.removeObject(forKey: "FreshTopic")
+                    DeepLinkRouter.shared.markFresh(topicId: id)
+                }
                 if let t = try? await F2API.shared.listTopics().first(where: { $0.id == id }) {
                     try? await Task.sleep(for: .seconds(1))
                     topicsPath.append(t)

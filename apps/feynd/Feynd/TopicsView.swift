@@ -228,14 +228,14 @@ struct TopicsView: View {
             }
         }
         .sheet(isPresented: $showNewTopic) {
-            NewTopicSheet { id, title in
+            NewTopicSheet { id, _ in
                 Task {
                     await load()
-                    // Optional second step: the same Topic Context sheet, so
-                    // material can go in right away. Waits a beat for the
-                    // create sheet's dismissal to settle; cancel is free.
-                    try? await Task.sleep(for: .milliseconds(550))
-                    contextTarget = TopicContextTarget(id: id, label: title)
+                    // Straight into the new topic's chat. Its first-session
+                    // banner offers link/notes; nothing pops on its own.
+                    DeepLinkRouter.shared.markFresh(topicId: id)
+                    try? await Task.sleep(for: .milliseconds(350))
+                    DeepLinkRouter.shared.requestTopicChat(threadId: id, draft: "")
                 }
             } onQuickChat: { id in
                 Task { await load() }
