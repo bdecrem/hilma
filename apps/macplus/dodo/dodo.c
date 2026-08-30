@@ -21,9 +21,29 @@
 #include <Dialogs.h>
 #include <OSUtils.h>
 #include <ToolUtils.h>
+#include <Devices.h>
+#include <Serial.h>
+#include <Files.h>
 #include "nettcp.h"
 #include "applog.inc"
 #include "winfull.inc"
+
+/* Transport: direct TCP (MacTCP) on the Plus; with DODO_SERIAL, the modem port
+   (RetroWiFi SI, or Mini vMac's bridged port -> vmodem) with the same shape. */
+#ifdef DODO_SERIAL
+#include "serlink.inc"
+#define LinkConnect()      SLConnect(DODO_IP, DODO_PORT)
+#define LinkAvailable()    SLAvailable()
+#define LinkRecv(b, n)     SLRecv((b), (n))
+#define LinkSend(b, n)     SLSend((b), (n))
+#define LinkClose()        SLClose()
+#else
+#define LinkConnect()      NetConnect(&gConn, NetParseIP(DODO_IP), DODO_PORT)
+#define LinkAvailable()    NetAvailable(&gConn)
+#define LinkRecv(b, n)     NetRecv(&gConn, (b), (n), 1)
+#define LinkSend(b, n)     NetSend(&gConn, (b), (n))
+#define LinkClose()        NetClose(&gConn)
+#endif
 
 #define DODO_IP   "192.168.7.50"
 #define DODO_PORT 2339
@@ -205,18 +225,6 @@ static void DrawTranscript(void)
 		}
 		y -= gLineH;
 	}
-	/* scroll hint at the top-right when not at the bottom */
-	if (gScroll > 0) {
-		char b[24]; short n = 0; short more = gScroll;
-		b[n++] = 'v'; b[n++] = ' ';
-		if (more >= 100) b[n++] = (char)('0' + more / 100);
-		if (more >= 10)  b[n++] = (char)('0' + (more / 10) % 10);
-		b[n++] = (char)('0' + more % 10); b[n++] = ' '; b[n++] = 'm'; b[n++] = 'o'; b[n++] = 'r'; b[n++] = 'e';
-		TextSize(9);
-		MoveTo(r.right - MARGIN - TextWidth(b, 0, n), r.top + 12);
-		DrawText(b, 0, n);
-		TextSize(12);
-	}
 	gDirty = false;
 }
 
@@ -245,6 +253,18 @@ static void DrawInput(void)
 		DrawText(gInput + start, 0, gInLen - start);
 		/* cursor */
 		{ Point p; GetPen(&p); MoveTo(p.h + 1, y + 2); LineTo(p.h + 1, y - gAscent + 1); }
+	}
+	/* scrolled up: say how far, at the right edge of the input row */
+	if (gScroll > 0) {
+		char b[24]; short n = 0, more = gScroll;
+		if (more >= 100) b[n++] = (char)('0' + more / 100);
+		if (more >= 10)  b[n++] = (char)('0' + (more / 10) % 10);
+		b[n++] = (char)('0' + more % 10);
+		{ const char *t = " lines below"; while (*t) b[n++] = *t++; }
+		TextSize(9);
+		MoveTo(r.right - MARGIN - TextWidth(b, 0, n), y);
+		DrawText(b, 0, n);
+		TextSize(12);
 	}
 	gInDirty = false;
 }
@@ -364,7 +384,7 @@ static Boolean SendLine(const char *cmd, const char *arg)
 	for (i = 0; cmd[i] && n < 400; i++) buf[n++] = cmd[i];
 	if (arg && arg[0]) { buf[n++] = ' '; for (i = 0; arg[i] && n < 410; i++) buf[n++] = arg[i]; }
 	buf[n++] = '\r'; buf[n++] = '\n';
-	if (NetSend(&gConn, buf, (unsigned short)n) != noErr) {
+	if (LinkSend(buf, (unsigned short)n) != noErr) {
 		gConnected = false; gMode = MODE_OFFLINE;
 		scopy(gStatus, "Connection lost. Cmd-R to reconnect.", sizeof(gStatus));
 		gInDirty = true;
@@ -431,8 +451,11 @@ static void RxOk(void) {}
 static void Pump(void)
 {
 	unsigned char buf[256]; long avail, got;
+#ifdef DODO_TEST
+	return;                                  /* offline: nothing to pump */
+#endif
 	if (!gConnected) return;
-	avail = NetAvailable(&gConn);
+	avail = LinkAvailable();
 	if (avail < 0) {
 		gConnected = false; gMode = MODE_OFFLINE;
 		scopy(gStatus, "Connection lost. Cmd-R to reconnect.", sizeof(gStatus));
@@ -448,7 +471,7 @@ static void Pump(void)
 		return;
 	}
 	if (avail > (long)sizeof(buf)) avail = sizeof(buf);
-	got = NetRecv(&gConn, buf, (unsigned short)avail, 1);
+	got = LinkRecv(buf, (unsigned short)avail);
 	if (got > 0) RxFeed(buf, (short)got);
 }
 
@@ -456,7 +479,7 @@ static void Connect(void)
 {
 	scopy(gStatus, "Connecting to Dodo...", sizeof(gStatus));
 	gMode = MODE_OFFLINE; DrawInput();
-	if (NetConnect(&gConn, NetParseIP(DODO_IP), DODO_PORT) == noErr) {
+	if (LinkConnect() == noErr) {
 		gConnected = true; AppLog("connected");
 		gMode = MODE_LISTWAIT;   /* LAST answers with a transcript; reuse the wait path */
 		gMode = MODE_WAIT;
@@ -466,7 +489,7 @@ static void Connect(void)
 	} else {
 		AppLog("connect failed");
 		gConnected = false; gMode = MODE_OFFLINE;
-		scopy(gStatus, "Couldn't reach the mini (is MacTCP up?). Cmd-R to retry.", sizeof(gStatus));
+		scopy(gStatus, "Couldn't reach the mini. Cmd-R to retry.", sizeof(gStatus));
 	}
 	gInDirty = true;
 }
@@ -537,10 +560,10 @@ static void KeyChat(char c, Boolean cmd)
 		if (c == 30) gScroll += step; else gScroll -= step;
 		if (gScroll < 0) gScroll = 0;
 		if (gScroll > gCount - 1) gScroll = gCount - 1;
-		gDirty = true; return;
+		gDirty = gInDirty = true; return;
 	}
-	if (c == 11) { gScroll += Rows(); if (gScroll > gCount - 1) gScroll = gCount - 1; gDirty = true; return; }   /* page up */
-	if (c == 12) { gScroll -= Rows(); if (gScroll < 0) gScroll = 0; gDirty = true; return; }                     /* page down */
+	if (c == 11) { gScroll += Rows(); if (gScroll > gCount - 1) gScroll = gCount - 1; gDirty = gInDirty = true; return; }   /* page up */
+	if (c == 12) { gScroll -= Rows(); if (gScroll < 0) gScroll = 0; gDirty = gInDirty = true; return; }                     /* page down */
 	if (gMode != MODE_CHAT) return;
 	if (c == 13 || c == 3) { SendChat(); return; }
 	if (c == 8) { if (gInLen > 0) gInLen--; gInput[gInLen] = 0; gInDirty = true; return; }
@@ -613,7 +636,7 @@ static void DoMenu(long sel)
 	} else if (menu == kFileMenu) {
 		if (item == kFileNew) BeginNew();
 		else if (item == kFileTopics) AskList();
-		else if (item == kFileReconnect) { if (gConnected) NetClose(&gConn); gConnected = false; Connect(); }
+		else if (item == kFileReconnect) { if (gConnected) LinkClose(); gConnected = false; Connect(); }
 		else if (item == kFileQuit) gDone = true;
 	} else if (menu == kEditMenu) {
 		SystemEdit(item - 1);
@@ -667,6 +690,9 @@ int main(void)
 				case autoKey: {
 					char c = (char)(ev.message & charCodeMask);
 					Boolean cmd = (ev.modifiers & cmdKey) != 0;
+					if (cmd && c == '.' && (gMode == MODE_LIST || gMode == MODE_NEW)) {   /* Cmd-. cancels (no Esc on a Plus keyboard) */
+						gMode = MODE_CHAT; DrawAll(); break;
+					}
 					if (cmd && c != 30 && c != 31) {
 						long s = MenuKey(c);
 						if (HiWord(s)) DoMenu(s);
@@ -695,7 +721,7 @@ int main(void)
 		Pump();
 		Redraw();
 	}
-	if (gConnected) NetClose(&gConn);
+	if (gConnected) LinkClose();
 	AppLogClose();
 	return 0;
 }

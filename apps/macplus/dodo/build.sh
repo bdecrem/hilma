@@ -14,6 +14,7 @@ cd "$(dirname "$0")"
 rm -rf build && mkdir build && cd build
 EXTRA=""
 if [ "${1:-}" = "test" ]; then EXTRA="-DCMAKE_C_FLAGS=-DDODO_TEST"; echo "(DODO_TEST offline build)"; fi
+if [ "${1:-}" = "serial" ]; then EXTRA="-DCMAKE_C_FLAGS=-DDODO_SERIAL"; echo "(DODO_SERIAL modem-port build for the Mini vMac harness)"; fi
 cmake -DCMAKE_TOOLCHAIN_FILE="$TC" $EXTRA ..
 make
 echo

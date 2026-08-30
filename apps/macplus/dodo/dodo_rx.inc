@@ -16,7 +16,7 @@
  * Feed bytes with RxFeed(buf, n). Lines end in \n (\r ignored). Overlong lines
  * are truncated, never overflowed. Unknown lines are dropped.
  */
-#define RX_LINE_CAP 240
+#define RX_LINE_CAP 1000
 
 static char  gRxLine[RX_LINE_CAP];
 static short gRxLen = 0;

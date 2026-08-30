@@ -53,6 +53,7 @@ The **public open-source repo** is a sibling at `../macinclaude`, published to
 - **Macinclaude Foundry** (`foundry/`) — describe an app → Claude writes + Retro68 compiles → lands on disk
 - **Quote of the Day** (`quote/`) — daily quote, served over the WiFi service
 - **The Bridge** (`bridge/`) — over-the-air app delivery (drop a `.bin` in the mini outbox → installs on the Plus)
+- **Dodo for Macintosh** (`dodo/` + `agent-dodo/`, :2339) — the Plus as a dedicated Dodo (F2) machine: one chat window per topic, the topic is the title; Cmd-N asks a first question (Dodo names the topic), Cmd-L lists topics. See "Dodo for Macintosh" below
 - **Daily Pixel** (`pixel/` + `agent-pixel/`, :2337) — persistent collaborative 64x64 1-bit canvas; you draw with the mouse, Claude adds a few strokes daily (or on invite, Canvas ▸ Invite Claude), updates appear live while watching
 
 **Services / infrastructure**
@@ -461,7 +462,7 @@ by side:
 (Infrastructure ports, not user apps: rsh `:2329` (Plutonix instant shell), mux `:2330`,
 diag `:2331`, quote `:2332`, bridge `:2333`, screen `:2334`, netspeed `:2335`,
 porthole `:2336`, pixel `:2337` (Daily Pixel canvas), oracle `:2338`
-(hosted Oracle model, `agent-oracle/`), pssh `:2222`.
+(hosted Oracle model, `agent-oracle/`), dodo `:2339` (Dodo for Macintosh), pssh `:2222`.
 **How all mini-side services are deployed, updated, and restarted: [`BACKEND.md`](BACKEND.md).**)
 
 The mini-side agents are `agent-foundry/` and `agent-moose/` (each a standalone
@@ -557,6 +558,46 @@ INIT own the link.
   send recorded `is_from_me=1, is_sent=1, service=SMS` in chat.db). Shipped to the
   real Plus via the Bridge. Caveat: reads the *mini's* iMessage account, which can
   differ from the iMac's Messages.
+
+### Dodo for Macintosh — `dodo/` + `agent-dodo/` (2026-08-30)
+
+The Plus as Bart's dedicated Dodo machine (the way a Bloomberg is dedicated to
+finance). **Every conversation is a topic**: one window, the topic's name in the
+title bar, transcript above, one input line below, Return sends. **Cmd-N** =
+new topic from a first question (the server names it — `new_topic: true` on
+`POST /api/f2/messages`, added for this), **Cmd-L** = topics list (newest first,
+arrows + Return, or click), **Cmd-.** cancels an overlay (the Plus keyboard has
+no Esc), Up/Down scroll the transcript, **Cmd-R** reconnects. Quizzes / cards /
+stars stay on the phone.
+
+- **Plus side (`dodo/dodo.c`)**: Geneva 12 transcript pre-wrapped into a line
+  ring at insert time (`AddWrapped`, real `TextWidth`), user lines bold with
+  `> `, Dodo lines with a bold `Dodo:` prefix, blank lines between messages.
+  Overlays (Topics / New topic) are drawn in-window, no DLOG. Parser
+  `dodo_rx.inc` (shared with `rxtest.c`, host-tested). SIZE 2 MB.
+- **Transport**: direct TCP (`nettcp`) on the Plus. `./build.sh serial` builds a
+  **DODO_SERIAL** variant on `net/serlink.inc` (modem port, AT/ATDT/CONNECT,
+  flow control off) — that's what the Mini vMac harness runs. `./build.sh test`
+  = offline canned transcript (DODO_TEST).
+- **Mini side (`agent-dodo/server.mjs`, :2339)**: dependency-free node. Mints
+  the user's `f2_session` cookie from `F2_SESSION_SECRET` for `DODO_F2_USER_ID`
+  (both synced into `~/.macplus-backend.env` by `update.sh`) and proxies the
+  line protocol (`LIST`/`OPEN n`/`LAST`/`SAY`/`NEW` up; `DLIST`/`DT n date|name`/
+  `DTOPIC`/`DU`/`DA`/`D+`/`DWAIT`/`DERR`/`DEND` down) to feynd.cc. Replies are
+  ASCII-folded, de-markdowned, one paragraph per wire line (≤900 chars), and
+  **paced** (`DODO_PACE_BPS`, default 2400; 960 for the emulator) — an unpaced
+  burst lost the trailing `DEND` on the SCC bridge.
+- **Testing — always through the modem harness (Bart's standing instruction):**
+  run the agent locally against a local backend as the test user, then
+  `./build.sh serial` and `bash minivmac/e2e.sh Dodo 127.0.0.1:2339`. The
+  patched emulator is `~/mac-plus-apps/mctest/minivmac.app` (e2e.sh now finds
+  it). Verified 2026-08-30: LAST, SAY, LIST + arrows, NEW (named topic), Cmd-.,
+  scrolling — all live over vmodem. Stock Mini vMac (`vmac/`) only fits the
+  DODO_TEST build (no serial, no MacTCP).
+  ```bash
+  DODO_PACE_BPS=960 DODO_F2_BASE=http://localhost:3100 DODO_F2_USER_ID=<newx-test id> \
+    node agent-dodo/server.mjs --listen 2339
+  ```
 
 ### Macinclaude Surf (a web browser for the Plus) — `surf/` + `agent-surf/`
 

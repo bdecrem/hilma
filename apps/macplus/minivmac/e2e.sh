@@ -55,7 +55,8 @@ case "$APP" in
   Surf)         DISK="$MACPLUS/surf/build/Surf.dsk" ;;
   Atkinson)     DISK="$MACPLUS/atkinson/build/Atkinson.dsk" ;;
   Macinclaude)  DISK="$MACPLUS/macinclaude/build/Macinclaude.dsk" ;;
-  *) echo "unknown app '$APP' (HelloWiFi|Foundry|TalkingPlus|Surf|Atkinson|Macinclaude)"; exit 1 ;;
+  Dodo)         DISK="$MACPLUS/dodo/build/Dodo.dsk" ;;    # build with ./build.sh serial
+  *) echo "unknown app '$APP' (HelloWiFi|Foundry|TalkingPlus|Surf|Atkinson|Macinclaude|Dodo)"; exit 1 ;;
 esac
 if [ ! -f "$DISK" ]; then
   echo "no built disk at $DISK — build the app first (its build.sh), then re-run."
@@ -63,7 +64,10 @@ if [ ! -f "$DISK" ]; then
 fi
 
 [ -f "$VMAC/Disk605.dsk" ] || { echo "missing $VMAC/Disk605.dsk (the System 6 boot floppy)"; exit 1; }
-[ -x "$VMAC/Mini vMac.app/Contents/MacOS/minivmac" ] || { echo "missing patched Mini vMac in $VMAC"; exit 1; }
+# The PATCHED emulator (MNVM_SERIAL) lives in ~/mac-plus-apps/mctest; the vmac/ copy is stock.
+EMU="$HOME/mac-plus-apps/mctest/minivmac.app/Contents/MacOS/minivmac"
+[ -x "$EMU" ] || EMU="$VMAC/Mini vMac.app/Contents/MacOS/minivmac"
+strings "$EMU" | grep -q MNVM_SERIAL || { echo "no patched Mini vMac (MNVM_SERIAL) found — run minivmac/build.sh"; exit 1; }
 
 # 1. (re)start vmodem
 pkill -f "vmodem.py 5454" 2>/dev/null || true
@@ -75,7 +79,8 @@ echo "vmodem listening on 127.0.0.1:5454  (log: /tmp/vmodem.log)${REDIR:+  redir
 
 # 2. launch the emulator: boot floppy + the app disk, serial pointed at vmodem
 cd "$VMAC"
-MNVM_SERIAL=127.0.0.1:5454 "./Mini vMac.app/Contents/MacOS/minivmac" Disk605.dsk "$DISK" &
+killall minivmac 2>/dev/null || true; sleep 0.5
+MNVM_SERIAL=127.0.0.1:5454 "$EMU" Disk605.dsk "$DISK" &
 echo "emulator up: Disk605 (System 6) + $APP"
 echo
 echo "Next: double-click the $APP disk, then the app. Watch /tmp/vmodem.log for"

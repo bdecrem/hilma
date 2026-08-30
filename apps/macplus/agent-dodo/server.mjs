@@ -36,7 +36,8 @@
  *     DOK
  *
  * Env: F2_SESSION_SECRET (required), DODO_F2_USER_ID (required),
- *      DODO_F2_BASE (default https://feynd.cc), DODO_MODEL (optional registry key).
+ *      DODO_F2_BASE (default https://feynd.cc), DODO_MODEL (optional registry key),
+ *      DODO_PACE_BPS (output pacing, default 2400; use 960 for the Mini vMac harness).
  */
 import net from 'node:net';
 import { createHmac } from 'node:crypto';
@@ -49,10 +50,15 @@ const BASE = (process.env.DODO_F2_BASE || 'https://feynd.cc').replace(/\/$/, '')
 const SECRET = process.env.F2_SESSION_SECRET || '';
 const USER_ID = process.env.DODO_F2_USER_ID || '';
 const MODEL = process.env.DODO_MODEL || '';
-const MAX_LINE = 200;          // longest wire line body; the Plus wraps by pixel width
+const MAX_LINE = 900;          // longest wire line body (a paragraph); the Plus wraps by pixel width
 const HISTORY = 14;            // messages replayed on OPEN
 const LIST_MAX = 40;
 const REPLY_TIMEOUT_MS = 240_000;
+// Pace output to the wire (bytes/s). A full TCP burst overruns the small
+// buffers on the serial path (Mini vMac's SCC bridge, the RetroWiFi SI) and
+// drops bytes mid-frame — serial lesson #3 in apps/macplus/CLAUDE.md. Direct
+// MacTCP on the Plus doesn't need it but tolerates it fine. 0 = unpaced.
+const PACE_BPS = parseInt(process.env.DODO_PACE_BPS ?? '2400', 10);
 
 function log(m) { console.error(`[dodo ${new Date().toISOString()}] ${m}`); }
 
@@ -163,6 +169,8 @@ function shortDate(iso) {
 class Session {
   constructor(sock) {
     this.sock = sock;
+    this.out = [];           // paced output queue (lines)
+    this.pacing = false;
     this.buf = '';
     this.topics = [];        // from the last LIST (or LAST)
     this.current = null;     // { id, name }
@@ -172,7 +180,24 @@ class Session {
 
   send(line) {
     if (this.sock.destroyed) return;
-    this.sock.write(line + '\r\n');
+    if (!PACE_BPS) { this.sock.write(line + '\r\n'); return; }
+    this.out.push(line + '\r\n');
+    if (!this.pacing) this.pump();
+  }
+  /** Write queued output in 64-byte slices at PACE_BPS. */
+  pump() {
+    this.pacing = true;
+    const CH = 64;
+    const step = () => {
+      if (this.sock.destroyed || !this.out.length) { this.pacing = false; return; }
+      let s = this.out[0];
+      const piece = s.slice(0, CH);
+      s = s.slice(CH);
+      if (s.length) this.out[0] = s; else this.out.shift();
+      this.sock.write(piece);
+      setTimeout(step, Math.ceil(piece.length * 1000 / PACE_BPS));
+    };
+    step();
   }
   sendMessageLines(tag, lines) {
     lines.forEach((l, i) => this.send((i === 0 ? tag : 'D+') + ' ' + l));
