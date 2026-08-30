@@ -69,6 +69,12 @@ The **public open-source repo** is a sibling at `../macinclaude`, published to
 
 ---
 
+## Stanford move (2026-08-31) — see [`STANFORD.md`](STANFORD.md)
+
+The Plus + mini are moving to Bart's Stanford office. Network facts, what the mini
+must keep reachable for feynd.cc, and the recommended router/Tailscale setup are
+in `apps/macplus/STANFORD.md`.
+
 ## WHERE WE LEFT OFF (2026-07-01) — read this FIRST when resuming
 
 This is the current state. The 2026-06-11 section below is older history.
