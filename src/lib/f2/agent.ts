@@ -88,6 +88,11 @@ export type F2Message = {
   text: string
   client: F2Client
   threadId?: string
+  /** Force a brand-new topic for this message (ignore threadId / the latest
+   *  thread). The router still writes the opening reply; the topic is named by
+   *  the usual pipeline. Used by clients whose "New topic" is a first question
+   *  (Dodo for Macintosh). */
+  newTopic?: boolean
   /** Chat-model registry key (see lib/f2/llm.ts). Sent by the iOS/macOS
    *  picker; absent for web/iMessage, which keep the default model. Governs
    *  chat replies and quiz-question generation — topic naming, quiz grading,
@@ -132,7 +137,7 @@ export type F2Reply = {
 }
 
 export async function processMessage(input: F2Message): Promise<F2Reply> {
-  const { userId, client, handle, threadId, model } = input
+  const { userId, client, handle, threadId, model, newTopic } = input
   const text = input.text.trim()
   if (!text) return { reply: '' }
 
@@ -211,7 +216,7 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
     if (dailyReply) return { reply: dailyReply }
   }
 
-  return handleNonUrl(userId, client, handle, text, threadId, model)
+  return handleNonUrl(userId, client, handle, text, threadId, model, newTopic === true)
 }
 
 const QUOTE_PAIRS: Record<string, string> = {
@@ -1872,9 +1877,12 @@ async function handleNonUrl(
   userText: string,
   threadId: string | undefined,
   model: string | undefined,
+  forceNew = false,
 ): Promise<F2Reply> {
   let thread: F2Thread | null = null
-  if (threadId) {
+  if (forceNew) {
+    thread = null
+  } else if (threadId) {
     thread = await getThreadById(userId, threadId)
   } else {
     thread = await getLatestThread(userId)
@@ -1902,48 +1910,55 @@ async function handleNonUrl(
 
   const now = new Date().toISOString()
 
-  switch (action.kind) {
+  // A forced new topic always lands on a fresh thread, even when the router
+  // would have called it chitchat: the user asked for a topic.
+  const act: typeof action =
+    forceNew && (action.kind === 'chitchat' || action.kind === 'continue')
+      ? { kind: 'new_topic', reply: action.reply, topic: userText.slice(0, 80) }
+      : action
+
+  switch (act.kind) {
     case 'continue': {
       if (!thread) {
         // Defensive: model picked continue but there's no thread. Treat as chitchat.
-        return { reply: action.reply }
+        return { reply: act.reply }
       }
       await appendMessages(thread.id, thread.user_id, thread.messages, [
         { role: 'user', text: userText, created_at: now },
-        { role: 'assistant', text: action.reply, created_at: now },
+        { role: 'assistant', text: act.reply, created_at: now },
       ])
-      return { reply: action.reply, thread_id: thread.id }
+      return { reply: act.reply, thread_id: thread.id }
     }
     case 'new_topic': {
       // Same naming pipeline as the URL/paste paths. The routing LLM's pick
       // is fed in as a hint; Haiku rewrites it when it can do better given
       // the user's question + opening reply.
       const refined = await nameTopic({
-        body: `USER: ${userText}\n\nF2: ${action.reply}`,
-        documentTitle: action.topic,
+        body: `USER: ${userText}\n\nF2: ${act.reply}`,
+        documentTitle: act.topic,
       })
       const fresh = await createThread({
         userId,
         client,
         handle,
-        topic: refined || action.topic,
+        topic: refined || act.topic,
       })
       if (fresh) {
         await appendMessages(fresh.id, fresh.user_id, [], [
           { role: 'user', text: userText, created_at: now },
-          { role: 'assistant', text: action.reply, created_at: now },
+          { role: 'assistant', text: act.reply, created_at: now },
         ])
       }
-      return { reply: action.reply, thread_id: fresh?.id }
+      return { reply: act.reply, thread_id: fresh?.id }
     }
     case 'chitchat':
-      return { reply: action.reply }
+      return { reply: act.reply }
     case 'more_videos': {
       if (!thread) {
         // Defensive: the tool is only offered when a video thread is active.
         return { reply: 'F2: open a video topic first, then ask for more videos.' }
       }
-      return handleMoreVideos(thread, userText, action.refinement)
+      return handleMoreVideos(thread, userText, act.refinement)
     }
   }
 }

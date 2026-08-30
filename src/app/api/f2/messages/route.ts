@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
 
-  let body: { text?: string; thread_id?: string; model?: string }
+  let body: { text?: string; thread_id?: string; model?: string; new_topic?: boolean }
   try {
     body = await req.json()
   } catch {
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
     text,
     threadId: body.thread_id,
     model: body.model,
+    newTopic: body.new_topic === true,
   })
 
   // The `summary <instructions>` command already marked the thread's
