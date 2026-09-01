@@ -27,6 +27,9 @@ type SessionBody = {
   thread_id?: string
   // 'flash' mode: the selected deck (from /api/f2/flash/start), in order.
   card_ids?: string[]
+  // Hold-to-talk (a device-side Voice setting): mint the session without
+  // server turn detection; the client drives every turn.
+  hold_to_talk?: boolean
 }
 
 export async function POST(req: Request) {
@@ -148,10 +151,12 @@ export async function POST(req: Request) {
 
   // Flash rounds are fully scripted — no tools. Everything else keeps the
   // topic-context tool.
+  const holdToTalk = body.hold_to_talk === true
   const openaiSecret = await createOpenAIRealtimeClientSecret({
     instructions,
     voice,
     ...(mode === 'flash' ? { tools: [] } : {}),
+    ...(holdToTalk ? { turnDetection: 'manual' as const } : {}),
   })
 
   const voiceSession = await createVoiceSession({
@@ -189,6 +194,7 @@ export async function POST(req: Request) {
     realtime: {
       model: realtimeModel(),
       voice,
+      hold_to_talk: holdToTalk,
       calls_url: 'https://api.openai.com/v1/realtime/calls',
       data_channel: 'oai-events',
     },

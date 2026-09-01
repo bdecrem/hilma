@@ -21,6 +21,9 @@ struct VoiceSessionView: View {
     @State private var client: RealtimeVoiceClient
     @State private var muted = false
     @State private var ending = false
+    /// Hold-to-talk (Voice settings, per device). Read once at init so the
+    /// session and its controls agree for the whole call.
+    private let holdToTalk: Bool
 
     init(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
          title: String? = nil, onFinished: ((String?) -> Void)? = nil) {
@@ -28,7 +31,10 @@ struct VoiceSessionView: View {
         self.threadId = threadId
         self.title = title
         self.onFinished = onFinished
-        _client = State(initialValue: RealtimeVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds))
+        let hold = UserDefaults.standard.bool(forKey: VoiceSettingsView.holdToTalkKey)
+        self.holdToTalk = hold
+        _client = State(initialValue: RealtimeVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
+                                                          holdToTalk: hold))
     }
 
     var body: some View {
@@ -79,7 +85,7 @@ struct VoiceSessionView: View {
     private var activity: Double {
         switch client.phase {
         case .speaking: return 1.0
-        case .connected: return 0.35
+        case .connected: return client.talking ? 0.55 : (holdToTalk ? 0.2 : 0.35)
         default: return 0.12
         }
     }
@@ -130,9 +136,14 @@ struct VoiceSessionView: View {
         case .idle, .requestingPermission, .creatingSession, .connecting:
             return "Tuning in…"
         case .connected:
+            if holdToTalk {
+                return client.talking ? "Listening…"
+                    : client.status == "Thinking" ? "Dodo is thinking…"
+                    : "Hold the button and talk."
+            }
             return "Dodo is listening — just talk."
         case .speaking:
-            return "Dodo is speaking…"
+            return holdToTalk ? "Dodo is speaking — hold to cut in." : "Dodo is speaking…"
         case .failed(let m): return m
         case .ended: return "Session ended."
         }
@@ -140,11 +151,23 @@ struct VoiceSessionView: View {
 
     private var controls: some View {
         HStack(spacing: 16) {
-            CircleControlButton(
-                label: "Mute", systemImage: muted ? "mic.slash.fill" : "mic.fill",
-                danger: false
-            ) { muted.toggle() }
-            CircleControlButton(label: "Keyboard", systemImage: "keyboard", danger: false) { }
+            if holdToTalk {
+                HoldToTalkButton(
+                    talking: client.talking,
+                    enabled: client.phase == .connected || client.phase == .speaking,
+                    onDown: { client.beginTalking() },
+                    onUp: { client.endTalking() }
+                )
+            } else {
+                CircleControlButton(
+                    label: muted ? "Unmute" : "Mute", systemImage: muted ? "mic.slash.fill" : "mic.fill",
+                    danger: false
+                ) {
+                    muted.toggle()
+                    client.setMuted(muted)
+                }
+                CircleControlButton(label: "Keyboard", systemImage: "keyboard", danger: false) { }
+            }
             CircleControlButton(label: ending ? "…" : "End", systemImage: "phone.down.fill", danger: true) {
                 guard !ending else { return }
                 if let onFinished {
@@ -366,6 +389,62 @@ private struct VoiceSkyBackdrop: View {
         Capsule()
             .fill(Color.white.opacity(0.85))
             .frame(width: width, height: 15)
+    }
+}
+
+// MARK: - Hold-to-talk button
+
+/// The big press-and-hold mic: down opens the mic (and cuts Dodo off),
+/// up sends the turn. A drag gesture with zero distance fires on touch-down
+/// and on lift, which a Button can't do.
+struct HoldToTalkButton: View {
+    let talking: Bool
+    let enabled: Bool
+    let onDown: () -> Void
+    let onUp: () -> Void
+    @State private var pressed = false
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: talking ? "waveform" : "mic.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    .contentTransition(.symbolEffect(.replace))
+                Text(talking ? "Listening" : "Hold to talk")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            .foregroundStyle(talking ? Color(hex: 0x3E3324) : .white)
+            .frame(width: 168, height: 58)
+            .background(
+                Capsule().fill(talking ? Color(hex: 0xF6B04E) : Color(hex: 0x33383E))
+            )
+            .overlay(Capsule().stroke(talking ? Color(hex: 0xC9821F) : FeyndTheme.border, lineWidth: 1))
+            .shadow(color: (talking ? Color(hex: 0xF6B04E) : .black).opacity(talking ? 0.45 : 0.3),
+                    radius: talking ? 18 : 14, y: 4)
+            .scaleEffect(pressed ? 0.96 : 1)
+            .animation(.easeOut(duration: 0.12), value: pressed)
+            .opacity(enabled ? 1 : 0.5)
+            .contentShape(Capsule())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard enabled, !pressed else { return }
+                        pressed = true
+                        onDown()
+                    }
+                    .onEnded { _ in
+                        guard pressed else { return }
+                        pressed = false
+                        onUp()
+                    }
+            )
+            .accessibilityLabel(talking ? "Listening, release to send" : "Hold to talk")
+
+            Text(talking ? "Release to send" : "Press and hold")
+                .font(.system(size: 11, weight: .semibold))
+                .tracking(0.2)
+                .foregroundStyle(FeyndTheme.text2)
+        }
     }
 }
 

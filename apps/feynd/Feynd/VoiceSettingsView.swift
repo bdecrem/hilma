@@ -33,7 +33,12 @@ struct VoicePrefs: Codable, Equatable {
 /// Preview clips ship in the bundle (VoicePreviews/voice-<id>.m4a; regenerate
 /// with scripts/generate-voice-previews.mjs when the catalog changes).
 struct VoiceSettingsView: View {
+    /// UserDefaults key for hold-to-talk. Device-local on purpose: it's an
+    /// input-hardware choice (noisy room, this phone), not an account trait.
+    static let holdToTalkKey = "voiceHoldToTalk"
+
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
 
     @State private var prefs: VoicePrefs? = nil
     @State private var selected: String? = nil
@@ -172,6 +177,30 @@ struct VoiceSettingsView: View {
             }
 
             Text("Applies to every voice session on your account — flash rounds, final reviews, topic talks, and walks — on all your devices.")
+                .font(.system(size: 12.5))
+                .lineSpacing(2)
+                .foregroundStyle(FeyndTheme.text3)
+                .padding(.horizontal, 6)
+
+            SettingsSection(label: "Talking") {
+                SettingsCard {
+                    Toggle(isOn: $holdToTalk) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Hold to talk")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(FeyndTheme.text)
+                            Text("Press and hold a button while you speak. Dodo never gets cut off by background noise.")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                    }
+                    .tint(FeyndTheme.accent)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 11)
+                }
+            }
+
+            Text("Hold to talk is for noisy places — a café, a train. Off, Dodo listens hands-free and you can talk over it. This setting stays on this device.")
                 .font(.system(size: 12.5))
                 .lineSpacing(2)
                 .foregroundStyle(FeyndTheme.text3)

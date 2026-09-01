@@ -27,6 +27,15 @@ final class RealtimeVoiceClient: NSObject {
     /// Flash mode: the deck (card ids in question order) the server embeds
     /// in the session instructions.
     let cardIds: [String]?
+    /// Hold-to-talk: the session is minted without server turn detection.
+    /// The mic stays off until `beginTalking()`, and `endTalking()` commits
+    /// the utterance and asks for Dodo's reply. Room noise can't end or
+    /// interrupt a turn because the server never listens on its own.
+    let holdToTalk: Bool
+    /// True while the user holds the talk button (hold-to-talk only).
+    private(set) var talking = false
+    /// Hands-free mute (the Mute button) — mic track off, session alive.
+    private(set) var muted = false
 
     private var sessionResponse: F2API.RealtimeSessionResponse?
 
@@ -42,11 +51,52 @@ final class RealtimeVoiceClient: NSObject {
     private var transcript: [[String: String]] = []
     private var handledToolCallIds: Set<String> = []
 
-    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil) {
+    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil, holdToTalk: Bool = false) {
         self.mode = mode
         self.threadId = threadId
         self.cardIds = cardIds
+        self.holdToTalk = holdToTalk
         super.init()
+    }
+
+    // MARK: Mic control
+
+    /// Hands-free sessions: silence the mic without ending the call.
+    func setMuted(_ on: Bool) {
+        muted = on
+        applyMicState()
+    }
+
+    /// Hold-to-talk: the button went down. Cuts Dodo off if it was
+    /// mid-sentence, drops whatever silence the server buffered while the
+    /// mic was off, and opens the mic.
+    func beginTalking() {
+        guard holdToTalk, !talking, phase == .connected || phase == .speaking else { return }
+        if phase == .speaking {
+            sendEvent(["type": "response.cancel"])
+        }
+        sendEvent(["type": "input_audio_buffer.clear"])
+        talking = true
+        applyMicState()
+        status = "Listening"
+    }
+
+    /// Hold-to-talk: the button came up. Closes the mic, commits the
+    /// utterance as the user's turn, and asks for the reply.
+    func endTalking() {
+        guard talking else { return }
+        talking = false
+        applyMicState()
+        sendEvent(["type": "input_audio_buffer.commit"])
+        sendEvent(["type": "response.create"])
+        status = "Thinking"
+    }
+
+    /// The one place the mic track is switched: hold-to-talk opens it only
+    /// while talking; hands-free keeps it open unless muted.
+    private func applyMicState() {
+        let open = holdToTalk ? talking : !muted
+        localAudioTrack?.isEnabled = open
     }
 
     func start() async {
@@ -67,7 +117,8 @@ final class RealtimeVoiceClient: NSObject {
 
             phase = .creatingSession
             status = "Creating Realtime session..."
-            let session = try await F2API.shared.startRealtimeSession(mode: mode, threadId: threadId, cardIds: cardIds)
+            let session = try await F2API.shared.startRealtimeSession(mode: mode, threadId: threadId, cardIds: cardIds,
+                                                                       holdToTalk: holdToTalk)
             sessionResponse = session
             model = session.realtime.model
             voice = session.realtime.voice
@@ -136,7 +187,8 @@ final class RealtimeVoiceClient: NSObject {
 
         let audioSource = factory.audioSource(with: nil)
         let audioTrack = factory.audioTrack(with: audioSource, trackId: "f2-microphone")
-        audioTrack.isEnabled = true
+        // Hold-to-talk keeps the mic closed until the button is held.
+        audioTrack.isEnabled = !holdToTalk
         guard connection.add(audioTrack, streamIds: ["f2-realtime"]) != nil else {
             throw VoiceError.audioTrack
         }
@@ -247,9 +299,9 @@ final class RealtimeVoiceClient: NSObject {
         case "response.created":
             phase = .speaking
             status = "Speaking"
-        case "response.done":
+        case "response.done", "response.cancelled":
             phase = .connected
-            status = "Connected"
+            status = talking ? "Listening" : "Connected"
         case "conversation.item.input_audio_transcription.completed":
             if let transcriptText = event["transcript"] as? String {
                 appendTranscript(role: "user", text: transcriptText)

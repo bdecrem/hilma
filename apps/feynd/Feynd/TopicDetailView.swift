@@ -144,6 +144,12 @@ struct TopicDetailView: View {
                 try? await Task.sleep(for: .milliseconds(600))
                 flashPresented = true
             }
+            // `-OpenVoice 1` — this topic's voice session (with `-OpenTopic <id>`).
+            if UserDefaults.standard.bool(forKey: "OpenVoice") {
+                UserDefaults.standard.removeObject(forKey: "OpenVoice")
+                try? await Task.sleep(for: .milliseconds(600))
+                voicePresented = true
+            }
             // `-OpenTopicQuotes 1` — this topic's Quotes shelf.
             if UserDefaults.standard.bool(forKey: "OpenTopicQuotes") {
                 UserDefaults.standard.removeObject(forKey: "OpenTopicQuotes")

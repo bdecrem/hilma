@@ -784,13 +784,16 @@ final class F2API {
 
     /// `cardIds` is required for mode "flash" — the deck the quizmaster reads
     /// from, in question order.
-    func startRealtimeSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil) async throws -> RealtimeSessionResponse {
+    func startRealtimeSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
+                              holdToTalk: Bool = false) async throws -> RealtimeSessionResponse {
         struct Body: Encodable {
             let mode: String
             let thread_id: String?
             let card_ids: [String]?
+            let hold_to_talk: Bool
         }
-        return try await post("/api/f2/realtime/session", body: Body(mode: mode, thread_id: threadId, card_ids: cardIds))
+        return try await post("/api/f2/realtime/session",
+                              body: Body(mode: mode, thread_id: threadId, card_ids: cardIds, hold_to_talk: holdToTalk))
     }
 
     // MARK: Flash cards

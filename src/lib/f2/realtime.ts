@@ -460,6 +460,10 @@ export async function createOpenAIRealtimeClientSecret(input: {
   tools?: unknown[]
   /** Override the output voice (defaults to env / marin). */
   voice?: string
+  /** 'manual' = hold-to-talk: no server VAD. The client commits each
+   *  utterance (input_audio_buffer.commit + response.create) itself, so
+   *  room noise can never end or interrupt a turn. Default: semantic VAD. */
+  turnDetection?: 'semantic_vad' | 'manual'
 }) {
   const model = realtimeModel()
   const voice = input.voice ?? realtimeVoice()
@@ -471,9 +475,7 @@ export async function createOpenAIRealtimeClientSecret(input: {
       output_modalities: ['audio'],
       audio: {
         input: {
-          turn_detection: {
-            type: 'semantic_vad',
-          },
+          turn_detection: input.turnDetection === 'manual' ? null : { type: 'semantic_vad' },
           transcription: {
             model: process.env.OPENAI_REALTIME_TRANSCRIPTION_MODEL || 'gpt-realtime-whisper',
             language: 'en',
