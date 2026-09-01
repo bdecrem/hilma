@@ -117,7 +117,7 @@ async function testModel(key: string | null): Promise<boolean> {
 async function main() {
   const keys = process.argv.slice(2).length
     ? process.argv.slice(2).map((k) => (k === 'default' ? null : k))
-    : [null, 'opus-4-8', 'fable-5', 'glm-5.2']
+    : [null, 'opus-5', 'fable-5-1', 'glm-5.2']
 
   let allOk = true
   for (const key of keys) {

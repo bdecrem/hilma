@@ -16,14 +16,20 @@ import Anthropic from '@anthropic-ai/sdk'
 // ---------------------------------------------------------------------------
 // Registry
 
-export type LlmModelKey = 'sonnet-4-6' | 'opus-4-8' | 'opus-5' | 'fable-5' | 'glm-5.2'
+export type LlmModelKey = 'sonnet-4-6' | 'opus-4-8' | 'opus-5' | 'fable-5-1' | 'glm-5.2'
+
+/** Retired keys still sent by older clients (stored iOS picker selections),
+ *  mapped onto their successor. */
+const MODEL_ALIASES: Record<string, LlmModelKey> = {
+  'fable-5': 'fable-5-1',
+}
 
 type ModelSpec = {
   provider: 'anthropic' | 'together'
   apiModel: string
   label: string
   /** Anthropic thinking config. Omit entirely for models where thinking is
-   *  always on (Fable 5) or not wanted (Sonnet legacy path). */
+   *  always on (Fable 5.1) or not wanted (Sonnet legacy path). */
   thinking?: { type: 'adaptive' }
   /** output_config.effort — only sent when set. */
   effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
@@ -37,9 +43,13 @@ type ModelSpec = {
    *  the model's context window to leave room for history, tool schemas,
    *  thinking, and output. Book-sized topics get truncated to this. */
   contextCharBudget: number
-  /** On stop_reason "refusal" (Fable 5 safety classifiers), retry the same
+  /** On stop_reason "refusal" (Fable safety classifiers), retry the same
    *  request once on this model key. */
   refusalFallback?: LlmModelKey
+  /** Fable 5.1 returns 400 on tool_choice "any"/"tool". When false, forceTool
+   *  is emulated: tool_choice "auto", strict tool schemas, and a system-prompt
+   *  instruction that one tool call is required. */
+  supportsForcedToolChoice?: boolean
 }
 
 // 'sonnet-4-6' is the legacy default — requests that don't name a model
@@ -74,14 +84,16 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     maxTokensFloor: 8192,
     contextCharBudget: 3_000_000,
   },
-  'fable-5': {
+  'fable-5-1': {
     provider: 'anthropic',
-    apiModel: 'claude-fable-5',
-    label: 'Fable 5',
-    // Thinking is always on for Fable 5 — never send a thinking config.
+    apiModel: 'claude-fable-5-1',
+    label: 'Fable 5.1',
+    // Thinking is always on for Fable 5.1 — never send a thinking config.
     effort: 'medium',
     maxTokensFloor: 8192,
+    // Permitted fallback targets on Fable 5.1 are opus-4-8 and opus-5.
     refusalFallback: 'opus-4-8',
+    supportsForcedToolChoice: false,
     contextCharBudget: 3_000_000,
   },
   'glm-5.2': {
@@ -98,12 +110,12 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
 
 /** Keys the clients may select. The legacy default stays internal; 'opus-4-8'
  *  stays in the registry for old clients but the picker now offers Opus 5. */
-export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-5', 'fable-5', 'glm-5.2']
+export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-5', 'fable-5-1', 'glm-5.2']
 
 export const DEFAULT_MODEL: LlmModelKey = 'sonnet-4-6'
 
 export function isModelKey(key: string): key is LlmModelKey {
-  return key in MODELS
+  return key in MODELS || key in MODEL_ALIASES
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +152,7 @@ export type LlmResult =
 export function resolveModel(key: string | null | undefined): LlmModelKey {
   if (!key) return DEFAULT_MODEL
   if (!isModelKey(key)) throw new Error(`Unknown model key: ${key}`)
-  return key
+  return MODEL_ALIASES[key] ?? key
 }
 
 /** Char budget for inlined source material on this model. The chat layer
@@ -168,6 +180,24 @@ export async function llmComplete(req: LlmRequest): Promise<LlmResult> {
 // ---------------------------------------------------------------------------
 // Anthropic driver
 
+const FORCED_TOOL_INSTRUCTION =
+  'You MUST respond by calling exactly one of the provided tools. Never reply with plain text.'
+
+/** Strict tool use requires additionalProperties:false on every object in
+ *  the schema. Deep-copies so the shared tool definitions stay untouched. */
+function strictSchema(schema: unknown): unknown {
+  if (Array.isArray(schema)) return schema.map(strictSchema)
+  if (!schema || typeof schema !== 'object') return schema
+  const out: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(schema as Record<string, unknown>)) {
+    out[k] = strictSchema(v)
+  }
+  if (out.type === 'object' && !('additionalProperties' in out)) {
+    out.additionalProperties = false
+  }
+  return out
+}
+
 let _anthropic: Anthropic | null = null
 function anthropic(): Anthropic {
   if (_anthropic) return _anthropic
@@ -183,19 +213,37 @@ async function anthropicComplete(
   req: LlmRequest,
   maxTokens: number,
 ): Promise<LlmResult> {
+  const canForce = spec.supportsForcedToolChoice !== false
+  const emulateForce = Boolean(req.forceTool && req.tools?.length && !canForce)
+  const system = emulateForce
+    ? `${req.system}\n\n${FORCED_TOOL_INSTRUCTION}`
+    : req.system
+
   const params: Anthropic.MessageCreateParamsNonStreaming = {
     model: spec.apiModel,
     max_tokens: maxTokens,
     system: [
-      { type: 'text', text: req.system, cache_control: { type: 'ephemeral' } },
+      { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
     ],
     messages: req.messages,
   }
   if (spec.thinking) params.thinking = spec.thinking
   if (spec.effort) params.output_config = { effort: spec.effort }
   if (req.tools && req.tools.length > 0) {
-    params.tools = req.tools
-    if (req.forceTool) params.tool_choice = { type: 'any' }
+    if (req.forceTool && canForce) {
+      params.tools = req.tools
+      params.tool_choice = { type: 'any' }
+    } else if (emulateForce) {
+      // Strict schemas keep the valid-arguments guarantee "any" gave us.
+      params.tools = req.tools.map((t) => ({
+        ...t,
+        strict: true,
+        input_schema: strictSchema(t.input_schema) as LlmTool['input_schema'],
+      }))
+      params.tool_choice = { type: 'auto', disable_parallel_tool_use: true }
+    } else {
+      params.tools = req.tools
+    }
   }
 
   const options = spec.betaHeaders?.length
@@ -204,7 +252,7 @@ async function anthropicComplete(
 
   const response = await anthropic().messages.create(params, options)
 
-  // Safety classifiers (Fable 5) return HTTP 200 with stop_reason "refusal".
+  // Safety classifiers (Fable) return HTTP 200 with stop_reason "refusal".
   // Retry the identical request once on the fallback model.
   if (response.stop_reason === 'refusal') {
     if (spec.refusalFallback) {
