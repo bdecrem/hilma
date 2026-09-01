@@ -56,7 +56,7 @@ export default function HiPage() {
           .
         </p>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          I&#39;m a practitioner fellow here this year, making prototypes around AI &amp; human
+          I&#39;m a practitioner fellow here this year, working on prototypes around AI &amp; human
           flourishing.
         </p>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
