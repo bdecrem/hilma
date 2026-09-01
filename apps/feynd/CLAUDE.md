@@ -91,7 +91,7 @@ wait VALID → add to Testers group → expire any WAITING_FOR_REVIEW builds →
 submit new for review → wait APPROVED → only then expire the old approved
 build.
 
-Standing facts: profile "feynd appstore" (uuid 66b0aaaa…, IOS_APP_STORE, expires 2027-08) is installed in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`, minted via the ASC API against distribution cert 4YB38SZ2F2 (in this Mac's keychain). Device/sim builds are iPhone-only (`TARGETED_DEVICE_FAMILY[sdk=iphoneos*]` at TARGET level — project-level conditionals lose to the target's plain "1,2"). `ITSAppUsesNonExemptEncryption` and `NSCameraUsageDescription` (WebRTC links camera APIs) live in project.yml — removing either breaks processing. After upload run `node apps/feynd/testflight/asc-submit.mjs <buildNumber>` — it polls until VALID, adds the build to the public Testers group, expires any other build WAITING_FOR_REVIEW, and submits for beta review. Poll `/v1/builds?filter[version]=N` until VALID; a processing rejection (e.g. 90683) only surfaces there, not at upload.
+Standing facts: profile "feynd appstore" (uuid 66b0aaaa…, IOS_APP_STORE, expires 2027-08) is installed in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`, minted via the ASC API against distribution cert 4YB38SZ2F2 (in this Mac's keychain). Device/sim builds are iPhone-only (`TARGETED_DEVICE_FAMILY[sdk=iphoneos*]` at TARGET level — project-level conditionals lose to the target's plain "1,2"). `ITSAppUsesNonExemptEncryption` and `NSCameraUsageDescription` (WebRTC links camera APIs) live in project.yml — removing either breaks processing. After upload run `node apps/feynd/testflight/asc-submit.mjs <buildNumber> [IOS|MAC_OS]` (platform defaults to IOS; pass `MAC_OS` for a Catalyst upload) — it polls until VALID, adds the build to the public Testers group, expires any other build WAITING_FOR_REVIEW, and submits for beta review. Poll `/v1/builds?filter[version]=N` until VALID; a processing rejection (e.g. 90683) only surfaces there, not at upload.
 
 ## TestFlight for Mac (Catalyst upload — worked end to end 2026-08-25, 0.2 (61))
 
@@ -108,13 +108,13 @@ xcodebuild archive -project Feynd.xcodeproj -scheme Feynd \
   CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=feynd catalyst appstore" \
   "CODE_SIGN_IDENTITY=Apple Distribution"
 xcodebuild -exportArchive -archivePath <path>/FeyndMac.xcarchive \
-  -exportOptionsPlist export-mac.plist -exportPath <out> \
+  -exportOptionsPlist testflight/export-mac.plist -exportPath <out> \
   -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8 \
   -authenticationKeyID 5A5HNSWA33 -authenticationKeyIssuerID 69a6de80-eb13-47e3-e053-5b8c7c11a4d1
 ```
 
-export-mac.plist = the iOS export.plist plus `installerSigningCertificate:
-"3rd Party Mac Developer Installer"` — without that key the export fails with
+`testflight/export-mac.plist` (checked in) = the iOS export.plist plus
+`installerSigningCertificate: "3rd Party Mac Developer Installer"` — without that key the export fails with
 a misleading "profile doesn't include signing certificate …Installer" error.
 
 Standing facts:
