@@ -40,7 +40,7 @@ export default function HiPage() {
           Hey, I&#39;m Bart
         </h1>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          I build (tinker?) with new tech, following my curiosity towards projects that are
+          I build (tinker?) with new tech, following my curiosity into projects that are
           interesting, fun, and make a positive dent. Currently working on{' '}
           <a href="https://dodo.foo" style={linkStyle}>
             dodo.foo
@@ -56,7 +56,7 @@ export default function HiPage() {
           .
         </p>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          I&#39;m a practitioner fellow here this year, thinking and prototyping around AI &times;
+          I&#39;m a practitioner fellow here this year, thinking and prototyping on AI &times;
           human flourishing.
         </p>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
