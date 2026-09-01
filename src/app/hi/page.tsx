@@ -19,6 +19,12 @@ const linkStyle = {
   borderBottom: '2px solid #F4633A',
 }
 
+const footerLinkStyle = {
+  color: '#D64A22',
+  fontWeight: 600 as const,
+  textDecoration: 'none',
+}
+
 export default function HiPage() {
   return (
     <main
@@ -71,21 +77,20 @@ export default function HiPage() {
           </a>{' '}
           &mdash; especially if you want help using AI in your work.
         </p>
-        <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          <a href="/hi/about" style={linkStyle}>
+        <p style={{ fontSize: '17px', lineHeight: 1.5, margin: 0, marginTop: '10px', fontWeight: 600 }}>
+          <a href="/hi/about" style={footerLinkStyle}>
             About Me
           </a>
-        </p>
-        <p style={{ fontSize: '18px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          <a href="https://linkedin.com/in/bartdecrem" style={linkStyle}>
+          <span style={{ color: '#C4A889', margin: '0 10px' }}>&middot;</span>
+          <a href="https://linkedin.com/in/bartdecrem" style={footerLinkStyle}>
             LinkedIn
-          </a>{' '}
-          &middot;{' '}
-          <a href="https://x.com/bartdecrem" style={linkStyle}>
+          </a>
+          <span style={{ color: '#C4A889', margin: '0 10px' }}>&middot;</span>
+          <a href="https://x.com/bartdecrem" style={footerLinkStyle}>
             Twitter
-          </a>{' '}
-          &middot;{' '}
-          <a href="https://decremental.substack.com" style={linkStyle}>
+          </a>
+          <span style={{ color: '#C4A889', margin: '0 10px' }}>&middot;</span>
+          <a href="https://decremental.substack.com" style={footerLinkStyle}>
             Substack
           </a>
         </p>
