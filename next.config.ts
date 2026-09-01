@@ -27,6 +27,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.intheamber.com' }],
           destination: '/amber',
         },
+        // bartin16.xyz root → /hi (CASBS door page)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'bartin16.xyz' }],
+          destination: '/hi',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.bartin16.xyz' }],
+          destination: '/hi',
+        },
         // first100.dev root → /first100
         {
           source: '/',
