@@ -49,7 +49,8 @@ export default function AboutPage() {
           Bart has spent decades building technology for impact, community, and curiosity. In open
           source, he co-founded Eazel and the GNOME Foundation to make Linux easier to use, and ran
           marketing and business affairs for the Firefox 1.0, helping to preserve the open
-          internet.
+          internet and playing a key role in the historic Google search deal that came to fund the
+          browser ecosystem.
         </p>
         <p style={pStyle}>
           As a Fellow at Echoing Green, the leading social entrepreneurship program, Bart started
