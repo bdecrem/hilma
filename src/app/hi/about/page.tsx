@@ -77,6 +77,11 @@ export default function AboutPage() {
           Bart earned his JD at Stanford Law School. He is a practitioner fellow at CASBS.
         </p>
         <p style={{ ...pStyle, marginTop: '10px' }}>
+          <a href="/bart-decrem-cv.pdf" style={linkStyle}>
+            Full CV (PDF)
+          </a>
+        </p>
+        <p style={pStyle}>
           <a href="/hi" style={linkStyle}>
             ← Back
           </a>
