@@ -4,7 +4,7 @@ const baloo = Baloo_2({ subsets: ['latin'], weight: ['500', '700', '800'] })
 const sans = Source_Sans_3({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 export const metadata = {
-  title: "Hi, I'm Bart",
+  title: "Hi, I'm Bart, in 16",
   description: 'AI & human flourishing at CASBS. Swing by my desk anytime.',
 }
 

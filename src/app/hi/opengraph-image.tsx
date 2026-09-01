@@ -12,17 +12,15 @@ export default function OGImage() {
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '28px',
+          gap: '48px',
           background: '#FFF6EA',
           color: '#2B2118',
         }}
       >
-        <div style={{ fontSize: '170px', lineHeight: 1 }}>👋</div>
-        <div style={{ fontSize: '130px', fontWeight: 800 }}>Hi, I&#39;m Bart</div>
-        <div style={{ fontSize: '52px', color: '#D64A22', fontWeight: 600 }}>Study 16</div>
+        <div style={{ fontSize: '260px', lineHeight: 1 }}>👋</div>
+        <div style={{ fontSize: '200px', fontWeight: 800 }}>hi</div>
       </div>
     ),
     size
