@@ -57,7 +57,7 @@ struct DodoRadioDial: View {
                     .stroke(.white.opacity(0.55), lineWidth: 1.5)
                 if held {
                     RoundedRectangle(cornerRadius: 36)
-                        .stroke(marigold, lineWidth: 3)
+                        .strokeBorder(marigold, lineWidth: 3)
                 }
 
                 VStack(spacing: 18) {
@@ -207,7 +207,7 @@ struct DodoRadioDial: View {
             RoundedRectangle(cornerRadius: 14)
                 .fill(LinearGradient(colors: [.white.opacity(0.22), .clear], startPoint: .top, endPoint: .bottom))
             RoundedRectangle(cornerRadius: 14)
-                .stroke(plate.opacity(0.18), lineWidth: 1.2)
+                .strokeBorder(plate.opacity(0.18), lineWidth: 1.2)
         }
         .frame(width: 172, height: 80)
     }
@@ -294,7 +294,7 @@ struct DodoRadioDial: View {
             RoundedRectangle(cornerRadius: 18)
                 .fill(LinearGradient(colors: [.white.opacity(held ? 0.2 : 0.08), .clear], startPoint: .top, endPoint: .center))
             RoundedRectangle(cornerRadius: 18)
-                .stroke(held ? Color(hex: 0xFFD98A) : marigold, lineWidth: held ? 3 : 2)
+                .strokeBorder(held ? Color(hex: 0xFFD98A) : marigold, lineWidth: held ? 3 : 2)
 
             VStack(spacing: 8) {
                 Image(systemName: held ? "waveform" : "mic.fill")
