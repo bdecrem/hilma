@@ -1,6 +1,7 @@
-import { Baloo_2 } from 'next/font/google'
+import { Baloo_2, Source_Sans_3 } from 'next/font/google'
 
 const baloo = Baloo_2({ subsets: ['latin'], weight: ['500', '700', '800'] })
+const sans = Source_Sans_3({ subsets: ['latin'], weight: ['400', '500', '600'] })
 
 export const metadata = {
   title: "Hi, I'm Bart",
@@ -21,7 +22,7 @@ const linkStyle = {
 export default function HiPage() {
   return (
     <main
-      className={baloo.className}
+      className={sans.className}
       style={{
         minHeight: '100dvh',
         background: '#FFF6EA',
@@ -36,7 +37,7 @@ export default function HiPage() {
     >
       <div style={{ maxWidth: '560px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
         <div style={{ fontSize: '72px', lineHeight: 1 }}>👋</div>
-        <h1 style={{ fontSize: '44px', lineHeight: 1.1, margin: 0, fontWeight: 800 }}>
+        <h1 className={baloo.className} style={{ fontSize: '44px', lineHeight: 1.1, margin: 0, fontWeight: 800 }}>
           Hey, I&#39;m Bart
         </h1>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
