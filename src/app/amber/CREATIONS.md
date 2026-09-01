@@ -1,5 +1,20 @@
 # Amber Creations — Hilma
 
+## 2026-09-01
+
+### L67 — it keeps moving after you stop (escalation, Environment tier — first coupled fluid solver)
+- **URL:** /amber/escalation/L67
+- **Category:** Escalation (v3 SIGNAL) — seventeenth Environment-tier piece, eighth WebGL piece. **First coupled multi-field solver.** L65 = one state field (reaction-diffusion). L66 = agents + a trail field. L67 = five fields that constrain each other every frame: a stable-fluids Navier–Stokes solver (Stam 1999 / Harris GPU Gems 2004 formulation).
+- **Fields:** velocity (RG16F ping-pong), pressure (R16F ping-pong), divergence (R16F), curl (R16F), ink (RGBA16F ping-pong). Sim grid 256 desktop / 128 mobile on the short side, aspect-matched; ink grid 1024 / 640.
+- **Per frame (~30 passes):** curl → vorticity confinement (curl strength 30, re-energizes small swirls) → divergence with reflecting walls → pressure ×0.8 → 20 Jacobi iterations of ∇²p = ∇·u → gradient subtract (u ← u − ∇p, divergence-free) → semi-Lagrangian advection of velocity through itself (dissipation 0.2/s) → advection of ink with per-channel dissipation → display.
+- **Ink:** two channels. R = density (dissipation 0.4/s), G = freshness (0.85/s). Display mixes cream → lime by smoothstep(0.15, 0.7, G/R): a stroke is lime while you stir and cools to cream ~4s after you stop. Film response smoothstep(0.03, 0.95, 1 − exp(−2.8·density)) kills faint fog so the field goes back to black and threads stay crisp. Relief shading from the density gradient, temporal grain, radial vignette.
+- **Cursor:** drag = stir — gaussian velocity splat (Δcursor × 5000, radius 0.0018 in short-side² units) + a narrower fresh-ink splat (×0.16 radius, 0.12 per move event). Multi-pointer: one stroke per finger. Tap = drop — radial burst velocity p·(800/√r)·gaussian (zero at center) + fresh ink at 2× radius, lime pulse halo.
+- **At rest:** ambient drips every 2.8–5.5s at random points with tiny velocity and freshness 0 — they arrive already cooled, so only your touch is signal. Seed at load: 8 cream drips + one lime stroke that shows the gesture once.
+- **Audio:** E-minor drone — E2/B2/E3/G3 (82.41/123.47/164.81/196.0 Hz), detuned sine pairs, slow per-voice LFOs. Master lowpass 800Hz opens toward 2700Hz with stir energy. Drop = lowpass flick to 2400Hz + a sine bloop (740 → 494Hz, 0.9s decay) that bypasses the filter. Lower and darker than L66's C-minor.
+- **Process note:** tuned with Playwright against the SIGNAL rules over three passes. First pass deposited far too much ink (two stirs washed the whole field gray, lime lingered as olive); second pass overshot to nearly invisible; third pass landed: sparse cream threads at rest, lime only where you stir, black again ~10s after. Radial burst dropped 2400 → 800 so a tap is a ring, not a disc. Framebuffers resize with copy-through so an iOS URL-bar collapse doesn't reset the water. Pointer events when available, touch fallback otherwise — never both, no double splats. OG image is a real render (Playwright, 1200×630, one S-curve stir, labels scaled for card size) rather than a Satori approximation.
+- **Accent:** cream + LIME (same canon as L60–L66). Lime marks fresh ink and the tap halo only.
+- **Tweet text:** "L67: it keeps moving after you stop."
+
 ## 2026-05-06
 
 ### scent — a track for L66 (signal, techno + Physarum visualizer)

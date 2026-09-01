@@ -1,5 +1,12 @@
 [
   {
+    "name": "L67",
+    "url": "/amber/escalation/L67",
+    "date": "09.01",
+    "category": "escalation",
+    "description": "it keeps moving after you stop · stable-fluids Navier-Stokes solver (velocity + pressure + ink, 20-step Jacobi)"
+  },
+  {
     "name": "scent",
     "url": "/amber/scent",
     "date": "05.06",
