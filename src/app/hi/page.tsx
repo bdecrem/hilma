@@ -67,7 +67,7 @@ export default function HiPage() {
           human flourishing.
         </p>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          Excited to meet everyone. Swing by anytime, text me at{' '}
+          Excited to meet everyone. Swing by anytime (rm 16), text me at{' '}
           <a href="sms:6508989508" style={linkStyle}>
             650-898-9508
           </a>
