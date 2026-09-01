@@ -289,12 +289,21 @@ struct DodoRadioDial: View {
                     .blur(radius: 10)
                     .padding(-8)
             }
-            RoundedRectangle(cornerRadius: 18).fill(held ? marigoldDeep : inkDeep).offset(y: 6)
-            RoundedRectangle(cornerRadius: 18).fill(face)
-            RoundedRectangle(cornerRadius: 18)
+            let rim: CGFloat = held ? 3 : 2
+            // Drop edge, then the rim as a filled outer shape with the face
+            // inset by the rim width — a stroke rasterizes unevenly at
+            // Catalyst's 0.77 scale, an inset fill doesn't.
+            // The key's side (the 3D drop edge) is the rim's own colour, so
+            // the ring reads as the top of a solid keycap rather than a line
+            // floating above a dark slab.
+            RoundedRectangle(cornerRadius: 18).fill(held ? Color(hex: 0xA86A14) : marigoldDeep).offset(y: 6)
+            RoundedRectangle(cornerRadius: 18).fill(held ? Color(hex: 0xFFD98A) : marigold)
+            RoundedRectangle(cornerRadius: 18 - rim)
+                .fill(face)
+                .padding(rim)
+            RoundedRectangle(cornerRadius: 18 - rim)
                 .fill(LinearGradient(colors: [.white.opacity(held ? 0.2 : 0.08), .clear], startPoint: .top, endPoint: .center))
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(held ? Color(hex: 0xFFD98A) : marigold, lineWidth: held ? 3 : 2)
+                .padding(rim)
 
             VStack(spacing: 8) {
                 Image(systemName: held ? "waveform" : "mic.fill")
