@@ -60,16 +60,15 @@ export default function HiPage() {
           human flourishing.
         </p>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          I&#39;m excited to get to know everyone, and happy to be a resource if you want to use
-          AI in your own work. Swing by my desk anytime, text me at{' '}
+          Excited to meet everyone. Swing by anytime, text me at{' '}
           <a href="sms:6508989508" style={linkStyle}>
             650-898-9508
           </a>
           , or email{' '}
           <a href="mailto:bdecrem@gmail.com" style={linkStyle}>
             bdecrem@gmail.com
-          </a>
-          .
+          </a>{' '}
+          &mdash; especially if you want help using AI in your work.
         </p>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
           <a href="/hi/about" style={linkStyle}>
