@@ -40,8 +40,8 @@ export default function HiPage() {
           Hey, I&#39;m Bart
         </h1>
         <p style={{ fontSize: '21px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
-          I love new tech, and I&#39;m always noodling on how it can actually help us. More about
-          me at{' '}
+          I build (tinker?) with new tech, following my curiosity towards projects that are
+          interesting, fun, and make a positive dent. More about me at{' '}
           <a href="https://decremental.com" style={linkStyle}>
             decremental.com
           </a>
