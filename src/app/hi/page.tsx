@@ -56,9 +56,9 @@ export default function HiPage() {
           <a href="https://decremental.com/#macinclaude" style={linkStyle}>
             Mac Plus
           </a>
-          . 15 months of AI projects at{' '}
+          . See my last 15 months of AI projects{' '}
           <a href="https://decremental.com" style={linkStyle}>
-            decremental.com
+            here
           </a>
           .
         </p>
