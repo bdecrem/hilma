@@ -75,7 +75,7 @@ export default function HiPage() {
           <a href="mailto:bdecrem@gmail.com" style={linkStyle}>
             bdecrem@gmail.com
           </a>{' '}
-          &mdash; especially if you want help using AI in your work.
+          &mdash; esp. if I can help you using AI as part of your work.
         </p>
         <p style={{ fontSize: '17px', lineHeight: 1.5, margin: 0, marginTop: '10px', fontWeight: 600 }}>
           <a href="/hi/about" style={footerLinkStyle}>
