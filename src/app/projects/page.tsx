@@ -24,7 +24,7 @@ const projects: Project[] = [
   },
   {
     name: 'dodo',
-    url: 'https://dodogo.cc',
+    url: 'https://dodo.foo',
     shortDesc: 'an ai learning companion: an open-source app to help you understand, explain back, and remember any book or topic. feed it a book or a youtube video, talk it through with a tutor, then keep it: flash cards, voice quizzes, a daily card over imessage.',
     fullDesc: 'native iphone/mac app. it\'s not finished.',
     status: 'respinning',
