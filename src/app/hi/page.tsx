@@ -75,6 +75,19 @@ export default function HiPage() {
             About Me
           </a>
         </p>
+        <p style={{ fontSize: '18px', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
+          <a href="https://linkedin.com/in/bartdecrem" style={linkStyle}>
+            LinkedIn
+          </a>{' '}
+          &middot;{' '}
+          <a href="https://x.com/bartdecrem" style={linkStyle}>
+            Twitter
+          </a>{' '}
+          &middot;{' '}
+          <a href="https://decremental.substack.com" style={linkStyle}>
+            Substack
+          </a>
+        </p>
       </div>
     </main>
   )
