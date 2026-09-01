@@ -1,7 +1,7 @@
-import { Baloo_2, Source_Serif_4 } from 'next/font/google'
+import { Baloo_2, Source_Sans_3 } from 'next/font/google'
 
 const baloo = Baloo_2({ subsets: ['latin'], weight: ['500', '700', '800'] })
-const serif = Source_Serif_4({ subsets: ['latin'], weight: ['400', '600'], style: ['normal'] })
+const sans = Source_Sans_3({ subsets: ['latin'], weight: ['400', '600'] })
 
 export const metadata = {
   title: 'Bart Decrem',
@@ -29,7 +29,7 @@ const pStyle = {
 export default function AboutPage() {
   return (
     <main
-      className={serif.className}
+      className={sans.className}
       style={{
         minHeight: '100dvh',
         background: '#FFF6EA',
