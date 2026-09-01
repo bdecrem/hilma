@@ -16,7 +16,11 @@
 # mini's BlueBubbles — deliberately no SendGrid.
 
 set -u
-MINI="admin@192.168.7.50"
+# 2026-09-01: mini moved to CASBS — Stanford IP, reachable from on-campus
+# machines (e.g. the iMac M1 there). Off-campus SSH likely blocked at the
+# Stanford border; if this check runs from home it needs a tunnel or a move
+# to an on-campus machine.
+MINI="admin@171.66.240.175"
 REPO="/Users/bartdecrem/Documents/coding2025/hilma"
 CLAUDE_BIN="/Users/bartdecrem/.local/bin/claude"
 TESTVID="dQw4w9WgXcQ"
