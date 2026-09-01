@@ -38,7 +38,6 @@ struct VoiceSettingsView: View {
     static let holdToTalkKey = "voiceHoldToTalk"
 
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
 
     @State private var prefs: VoicePrefs? = nil
     @State private var selected: String? = nil
@@ -182,29 +181,6 @@ struct VoiceSettingsView: View {
                 .foregroundStyle(FeyndTheme.text3)
                 .padding(.horizontal, 6)
 
-            SettingsSection(label: "Talking") {
-                SettingsCard {
-                    Toggle(isOn: $holdToTalk) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Hold to talk")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(FeyndTheme.text)
-                            Text("Press and hold a button while you speak. Dodo never gets cut off by background noise.")
-                                .font(.system(size: 12.5))
-                                .foregroundStyle(FeyndTheme.text3)
-                        }
-                    }
-                    .tint(FeyndTheme.accent)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 11)
-                }
-            }
-
-            Text("Hold to talk is for noisy places — a café, a train. Off, Dodo listens hands-free and you can talk over it. This setting stays on this device.")
-                .font(.system(size: 12.5))
-                .lineSpacing(2)
-                .foregroundStyle(FeyndTheme.text3)
-                .padding(.horizontal, 6)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 44)

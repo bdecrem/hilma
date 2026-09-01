@@ -1,0 +1,229 @@
+<title>Dodo Radio Faces</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #FFFBF0; --bg-2: #F5EDD8; --surface: #FFFDF6;
+    --ink: #33383E; --ink-2: #5B6470; --ink-3: #8A929B; --line: #E6DCC3;
+    --marigold: #F0A830; --marigold-deep: #C9821F;
+    --display: "Fredoka", system-ui, sans-serif;
+    --body: "Nunito Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #1E2329; --bg-2: #262C33; --surface: #262C33; --ink: #F9EFDA; --ink-2: #C9C2B0; --ink-3: #8E9299; --line: #363D46; } }
+  :root[data-theme="dark"] { --bg: #1E2329; --bg-2: #262C33; --surface: #262C33; --ink: #F9EFDA; --ink-2: #C9C2B0; --ink-3: #8E9299; --line: #363D46; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15.5px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+  .eyebrow { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--marigold-deep); }
+  h1 { font-family: var(--display); font-weight: 600; font-size: 40px; line-height: 1.05; margin: 6px 0 10px; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { max-width: 66ch; color: var(--ink-2); margin: 0 0 38px; }
+  .concept { display: grid; grid-template-columns: 300px 1fr; gap: 32px; align-items: start; padding: 28px 0; border-top: 1px solid var(--line); }
+  .concept h2 { font-family: var(--display); font-weight: 600; font-size: 26px; margin: 0 0 8px; line-height: 1.1; }
+  .concept .kicker { font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .concept p { margin: 0 0 10px; color: var(--ink-2); font-size: 14.5px; }
+  .concept ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+  .concept li + li { margin-top: 4px; }
+  .frames { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .frame { background: #F7F0E1; border-radius: 22px; padding: 10px 10px 8px; display: grid; gap: 8px; justify-items: center; border: 1px solid var(--line); }
+  .frame svg { width: 100%; height: auto; display: block; }
+  .frame b { font-family: var(--mono); font-weight: 600; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: #8A929B; }
+  .hero { grid-column: 1 / -1; }
+  .hero svg { max-width: 560px; margin: 0 auto; }
+  @media (max-width: 900px) { .concept { grid-template-columns: 1fr; } .frames { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Dodo · voice session · the face, two more ways</div>
+  <h1>Let one instrument be the character</h1>
+  <p class="lede">The v2 face tried to be a dodo and a control panel at once, and the knob ended up as a nose. These two drop the face entirely. Each puts a single real instrument where the face was, and the instrument's behavior is the expression: what it shows while Dodo listens, while you talk, and while Dodo speaks. The body, grille, feet and sprout stay from v2.</p>
+
+  <section class="concept">
+    <div>
+      <div class="kicker">Concept A</div>
+      <h2>The dial</h2>
+      <p>A glass tuning window across the top, the way a 1960s Braun or Grundig set had. Printed on the band: LISTEN on the left, a marigold TALK zone on the right, tiny dodo footprints for tick marks. One red needle.</p>
+      <p>The needle is the whole performance. It rests on LISTEN. Hold to talk and it swings into the marigold zone and quivers with your voice. Release and it drifts back while Dodo thinks, then trembles on LISTEN as Dodo speaks. Nothing is a face, yet the thing clearly has a mood.</p>
+      <ul>
+        <li>Hold-to-talk: the speaker section is replaced by one raised key that fills the center of the radio. Ink face, marigold rim, a mic glyph and PRESS TO TALK engraved on it. It is the only thing on the body that looks pressable, and it is.</li>
+        <li>Engaged: the key sinks, turns solid marigold with a halo, the legend flips to LISTENING, the needle swings into TALK and the dial glass lights. Release: the key returns to ink, ONE MOMENT while Dodo thinks. While Dodo speaks the legend reads PRESS TO CUT IN.</li>
+        <li>Under the radio, small: "Press and hold the button to talk."</li>
+        <li>Hands-free: the perforated speaker stays. The needle idles at LISTEN and shivers with Dodo's voice. Mute is the small switch on the grille's shoulder.</li>
+        <li>Illustrator's note: the band is printed slightly off-register, like a real silkscreened dial.</li>
+      </ul>
+    </div>
+    <div class="frames" id="a"></div>
+  </section>
+
+  <section class="concept">
+    <div>
+      <div class="kicker">Concept B</div>
+      <h2>The scope</h2>
+      <p>One round oscilloscope screen, ink glass with a marigold trace. A cyclops radio. Idle, the trace draws a gentle arc, a closed-eye smile, which is the one wink in the whole design. Speak, and it becomes your live waveform. Dodo speaks, and it becomes Dodo's. Thinking is a slow dotted sweep.</p>
+      <p>This is the more graphic of the two and the more animated: the trace is real audio, so the character is literally made of the conversation.</p>
+      <ul>
+        <li>Hold-to-talk target: the whole radio. Held, the screen's bezel ring lights marigold and the trace goes bright.</li>
+        <li>Hands-free: the bezel stays dark; the trace alone carries the state.</li>
+        <li>Illustrator's note: a faint phosphor grid behind the trace, and a small TX lamp beside the screen so transmit still has a hardware tell.</li>
+      </ul>
+    </div>
+    <div class="frames" id="b"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const M = 'JetBrains Mono, monospace';
+  // Shared body (v2), 300x300 viewBox, face area supplied by the concept.
+  function body(faceSvg, o, keyMode = false) {
+    const { held = false, speaking = false, thinking = false, ptt = false, label = 'WHY NATIONS FAIL' } = o;
+    const isKey = keyMode && (ptt || held || thinking);
+    const dy = held ? 5 : 0;
+    const bars = speaking ? [26, 44, 34, 54, 40, 50, 30] : held ? [16, 26, 20, 32, 22, 28, 18] : [8, 12, 10, 14, 10, 12, 8];
+    const barsSvg = bars.map((h, i) => `<rect x="${84 + i * 20}" y="${212 - h / 2}" width="7" height="${h}" rx="3.5" fill="#F0A830" opacity="${speaking || held ? 1 : .5}"/>`).join('');
+    return `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bodyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6EFDF"/><stop offset="1" stop-color="#E6DCC6"/></linearGradient>
+        <pattern id="holes" width="7" height="7" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3.5" r="1.6" fill="#171B1F" opacity=".9"/></pattern>
+        <pattern id="grid" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M8 0H0V8" fill="none" stroke="#F0A830" stroke-opacity=".12" stroke-width=".6"/></pattern>
+        <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="8"/></filter>
+        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <ellipse cx="150" cy="284" rx="${held ? 96 : 108}" ry="${held ? 8 : 12}" fill="#3E3324" opacity="${held ? .14 : .2}" filter="url(#soft)"/>
+      <g transform="translate(0 ${dy})">
+        <g transform="translate(206 26)">
+          <path d="M0 22c1-8 0-14-1-20" stroke="#5F9E4C" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <ellipse cx="-11" cy="2" rx="12" ry="6" fill="#7BB662" transform="rotate(-22 -11 2)"/>
+          <ellipse cx="9" cy="-4" rx="12" ry="6" fill="#5F9E4C" transform="rotate(18 9 -4)"/>
+        </g>
+        <rect x="46" y="48" width="208" height="228" rx="34" fill="#D9CDB4"/>
+        <rect x="46" y="44" width="208" height="228" rx="34" fill="url(#bodyG)"/>
+        <rect x="46" y="44" width="208" height="228" rx="34" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5"/>
+        ${held ? `<rect x="46" y="44" width="208" height="228" rx="34" fill="none" stroke="#F0A830" stroke-width="3" stroke-opacity=".9"/>` : ''}
+        ${faceSvg}
+        ${isKey ? key(o) : `<g>
+          <rect x="68" y="168" width="164" height="86" rx="16" fill="#1F2429"/>
+          <rect x="68" y="166" width="164" height="86" rx="16" fill="#2B3036"/>
+          ${barsSvg}
+          <rect x="68" y="166" width="164" height="86" rx="16" fill="url(#holes)"/>
+        </g>`}
+        <rect x="90" y="252" width="120" height="0" fill="none"/>
+        <rect x="76" y="270" width="22" height="7" rx="3.5" fill="#33383E"/>
+        <rect x="202" y="270" width="22" height="7" rx="3.5" fill="#33383E"/>
+      </g>
+    </svg>`;
+  }
+
+  // The press-to-talk key: the whole center section is one raised button.
+  // Idle: ink key, marigold rim and legend. Held: the key sinks and turns
+  // solid marigold with a pulsing halo — nothing on screen is louder.
+  function key(o) {
+    const { held = false, thinking = false, speaking = false } = o;
+    const kd = held ? 4 : 0;
+    const face = held ? '#F0A830' : '#2B3036';
+    const legend = held ? 'LISTENING' : thinking ? 'ONE MOMENT' : speaking ? 'PRESS TO CUT IN' : 'PRESS TO TALK';
+    const legendFill = held ? '#3E3324' : '#F0A830';
+    return `<g>
+      ${held ? `<rect x="60" y="158" width="180" height="102" rx="22" fill="#F0A830" opacity=".35" filter="url(#soft)"/>` : ''}
+      <rect x="68" y="${172}" width="164" height="86" rx="18" fill="${held ? '#C9821F' : '#14181C'}"/>
+      <rect x="68" y="${166 + kd}" width="164" height="86" rx="18" fill="${face}"/>
+      <rect x="68" y="${166 + kd}" width="164" height="30" rx="18" fill="#fff" opacity="${held ? .18 : .07}"/>
+      <rect x="68" y="${166 + kd}" width="164" height="86" rx="18" fill="none" stroke="${held ? '#FFD98A' : '#F0A830'}" stroke-width="${held ? 3 : 2}"/>
+      <g transform="translate(150 ${196 + kd})" fill="none" stroke="${legendFill}" stroke-width="2.6" stroke-linecap="round">
+        <rect x="-5" y="-13" width="10" height="17" rx="5" fill="${legendFill}" stroke="none"/>
+        <path d="M-10 0a10 10 0 0 0 20 0M0 10v6M-6 16h12"/>
+      </g>
+      <text x="150" y="${237 + kd}" text-anchor="middle" font-family="${M}" font-weight="600" font-size="9.5" letter-spacing="2.2" fill="${legendFill}">${legend}</text>
+    </g>`;
+  }
+
+  // ---- Concept A: the dial
+  function dialFace(o) {
+    const { held = false, speaking = false, thinking = false } = o;
+    // needle angle: LISTEN (left) ... TALK (right)
+    const x = held ? 214 : thinking ? 150 : 96;
+    const jitter = speaking || held ? 3 : 0;
+    const ticks = Array.from({ length: 15 }, (_, i) => {
+      const tx = 76 + i * 10.6;
+      const tall = i % 5 === 0;
+      return `<rect x="${tx.toFixed(1)}" y="${tall ? 116 : 120}" width="1.4" height="${tall ? 10 : 6}" fill="#3E3324" opacity=".55"/>`;
+    }).join('');
+    const prints = [86, 120, 154].map(px => `<g transform="translate(${px} 98)" fill="#3E3324" opacity=".35"><ellipse cx="0" cy="0" rx="2.2" ry="3"/><ellipse cx="-3" cy="-2.6" rx="1.2" ry="1.6"/><ellipse cx="3" cy="-2.6" rx="1.2" ry="1.6"/></g>`).join('');
+    return `
+      <g>
+        <rect x="66" y="66" width="168" height="80" rx="14" fill="#CFC3A8"/>
+        <rect x="66" y="64" width="168" height="80" rx="14" fill="#F3EBD8"/>
+        <!-- printed band -->
+        <rect x="160" y="70" width="68" height="68" rx="10" fill="#F0A830" opacity="${held ? .95 : .55}"/>
+        ${held ? `<rect x="160" y="70" width="68" height="68" rx="10" fill="#F0A830" opacity=".6" filter="url(#glow)"/>` : ''}
+        <text x="84" y="90" font-family="${M}" font-weight="600" font-size="8.5" letter-spacing="1.6" fill="#3E3324" opacity=".85">LISTEN</text>
+        <text x="200" y="90" font-family="${M}" font-weight="600" font-size="8.5" letter-spacing="1.6" fill="${held ? '#3E3324' : '#C9821F'}">TALK</text>
+        ${prints}
+        ${ticks}
+        <!-- needle -->
+        <g transform="translate(${x} 0)">
+          ${jitter ? `<rect x="-1.2" y="72" width="2.4" height="66" fill="#C84A3C" opacity=".35" transform="translate(${jitter} 0)"/><rect x="-1.2" y="72" width="2.4" height="66" fill="#C84A3C" opacity=".35" transform="translate(${-jitter} 0)"/>` : ''}
+          <rect x="-1" y="72" width="2" height="66" rx="1" fill="#C84A3C"/>
+          <rect x="-3" y="134" width="6" height="6" rx="1.5" fill="#33383E"/>
+        </g>
+        <!-- glass -->
+        <rect x="66" y="64" width="168" height="80" rx="14" fill="url(#bodyG)" opacity=".18"/>
+        <rect x="66" y="64" width="168" height="80" rx="14" fill="none" stroke="#3E3324" stroke-opacity=".18" stroke-width="1.2"/>
+        <path d="M78 70h140" stroke="#fff" stroke-opacity=".6" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- mute switch on the grille's shoulder -->
+        <rect x="216" y="150" width="14" height="8" rx="4" fill="#CFC3A8"/><circle cx="${o.muted ? 226 : 220}" cy="154" r="3" fill="#33383E"/>
+      </g>`;
+  }
+
+  // ---- Concept B: the scope
+  function scopeFace(o) {
+    const { held = false, speaking = false, thinking = false } = o;
+    let trace;
+    if (thinking) {
+      trace = `<path d="M106 104h88" stroke="#F0A830" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="2 7" opacity=".8"/>`;
+    } else if (held || speaking) {
+      const amp = held ? 14 : 20;
+      const pts = Array.from({ length: 45 }, (_, i) => {
+        const x = 106 + i * 2;
+        const e = Math.sin(i / 44 * Math.PI);
+        const y = 104 + amp * e * Math.sin(i * (held ? 0.9 : 0.6) + (held ? 0.4 : 1.7)) * (0.6 + 0.4 * Math.sin(i * 0.31));
+        return `${x},${y.toFixed(1)}`;
+      }).join(' ');
+      trace = `<polyline points="${pts}" fill="none" stroke="#F0A830" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>`;
+    } else {
+      trace = `<path d="M110 100q40 24 80 0" fill="none" stroke="#F0A830" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>`;
+    }
+    return `
+      <g>
+        <circle cx="150" cy="104" r="50" fill="#CFC3A8"/>
+        <circle cx="150" cy="102" r="50" fill="#E9E0CC"/>
+        <circle cx="150" cy="102" r="44" fill="#1F2429"/>
+        <circle cx="150" cy="102" r="44" fill="url(#grid)"/>
+        ${trace}
+        <circle cx="150" cy="102" r="44" fill="none" stroke="${held ? '#F0A830' : '#3E3324'}" stroke-opacity="${held ? 1 : .35}" stroke-width="${held ? 3 : 2}"/>
+        ${held ? `<circle cx="150" cy="102" r="47" fill="none" stroke="#F0A830" stroke-opacity=".35" stroke-width="5"/>` : ''}
+        <path d="M120 78a40 40 0 0 1 40-18" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="6" stroke-linecap="round"/>
+        <!-- TX lamp + mute switch -->
+        <circle cx="222" cy="72" r="5" fill="${held ? '#F0A830' : '#33383E'}"/>
+        ${held ? `<circle cx="222" cy="72" r="10" fill="#F0A830" opacity=".25"/>` : ''}
+        <text x="222" y="90" text-anchor="middle" font-family="${M}" font-weight="600" font-size="6.5" letter-spacing="1.2" fill="#3E3324" opacity=".55">TX</text>
+        <rect x="70" y="68" width="14" height="8" rx="4" fill="#CFC3A8"/><circle cx="74" cy="72" r="3" fill="#33383E"/>
+      </g>`;
+  }
+
+  function frames(id, face, keyMode) {
+    const set = [
+      ['Hands-free · listening', {}],
+      ['Hands-free · Dodo speaking', { speaking: true }],
+      ['Hold to talk · idle', { ptt: true }],
+      ['Hold to talk · held', { ptt: true, held: true }],
+      ['Hold to talk · thinking', { ptt: true, thinking: true }],
+      ['Hold to talk · Dodo speaking', { ptt: true, speaking: true }],
+    ];
+    document.getElementById(id).innerHTML = set.map(([cap, o]) =>
+      `<div class="frame">${body(face(o), o, keyMode)}<b>${cap}</b></div>`).join('');
+  }
+  frames('a', dialFace, true);
+  frames('b', scopeFace, false);
+})();
+</script>

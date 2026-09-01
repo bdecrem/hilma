@@ -30,6 +30,7 @@ struct ProfileSheet: View {
     @State private var dailyCardError: String? = nil
     @State private var showHelp = false
     @State private var showVoice = false
+    @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
     @State private var recertEnabled = true
     @State private var isGuest = false
     @State private var showClaim = false
@@ -423,6 +424,23 @@ struct ProfileSheet: View {
                     SettingsRow(label: "Voice & style") {
                         showVoice = true
                     }
+                    SettingsDivider()
+                    // Push to talk — device-local (it's about the room this
+                    // phone is in), so it lives here rather than on the
+                    // account-wide voice prefs.
+                    Toggle(isOn: $holdToTalk) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Push to talk")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(FeyndTheme.text)
+                            Text("Hold the radio's button while you speak. For noisy places.")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                    }
+                    .tint(FeyndTheme.accent)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 11)
                 }
             }
             SettingsSection(label: "iMessage") {

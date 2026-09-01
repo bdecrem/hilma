@@ -1,0 +1,210 @@
+<title>Dodo Radio v2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+  :root {
+    --bg: #FFFBF0; --bg-2: #F5EDD8; --surface: #FFFDF6;
+    --ink: #33383E; --ink-2: #5B6470; --ink-3: #8A929B; --line: #E6DCC3;
+    --marigold: #F0A830; --marigold-deep: #C9821F;
+    --display: "Fredoka", system-ui, sans-serif;
+    --body: "Nunito Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #1E2329; --bg-2: #262C33; --surface: #262C33; --ink: #F9EFDA; --ink-2: #C9C2B0; --ink-3: #8E9299; --line: #363D46; } }
+  :root[data-theme="dark"] { --bg: #1E2329; --bg-2: #262C33; --surface: #262C33; --ink: #F9EFDA; --ink-2: #C9C2B0; --ink-3: #8E9299; --line: #363D46; }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15.5px; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+  .eyebrow { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--marigold-deep); }
+  h1 { font-family: var(--display); font-weight: 600; font-size: 40px; line-height: 1.05; margin: 6px 0 10px; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { max-width: 66ch; color: var(--ink-2); margin: 0 0 34px; }
+
+  .boards { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: start; }
+  .board { display: grid; gap: 14px; }
+  .board h2 { font-family: var(--display); font-weight: 600; font-size: 20px; margin: 0; }
+  .board p { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 48ch; }
+  .phone { width: 100%; max-width: 372px; aspect-ratio: 372 / 806; border-radius: 44px; background: #1B2026; padding: 10px; box-shadow: 0 26px 50px -22px rgba(30,25,15,.5); margin: 0 auto; }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: #F7F0E1; }
+  .screen svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  .states { margin-top: 44px; }
+  .states h2 { font-family: var(--display); font-weight: 600; font-size: 20px; margin: 0 0 4px; }
+  .states p { margin: 0 0 16px; color: var(--ink-2); font-size: 14px; }
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .cell { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 12px 12px; display: grid; gap: 10px; justify-items: center; }
+  .cell svg { width: 100%; height: auto; }
+  .cell b { font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+
+  .notes { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .note { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px 20px; }
+  .note h3 { font-family: var(--display); font-weight: 600; font-size: 18px; margin: 0 0 6px; }
+  .note p { margin: 0; color: var(--ink-2); font-size: 14px; }
+  .note ul { margin: 8px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; }
+  .note li + li { margin-top: 4px; }
+  @media (max-width: 900px) { .boards, .notes { grid-template-columns: 1fr; } .strip { grid-template-columns: 1fr 1fr; } }
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Dodo · voice session · art concept v2</div>
+  <h1>A small, well-made radio that happens to be a dodo</h1>
+  <p class="lede">Same silhouette and palette as today, less nursery. The face becomes hardware: the eyes are two status lamps, the beak is the tuning knob, the grille is a real perforated speaker with a VU meter behind it. In hold-to-talk mode the grille swaps for one big soft key that fills the device, so the whole radio is the button.</p>
+
+  <div class="boards">
+    <section class="board">
+      <h2>Hands-free</h2>
+      <p>The default. Two lamps idle, the meter breathes while Dodo listens and jumps when it speaks. Mute lives on the dial: pressed in, the knob turns ink.</p>
+      <div class="phone"><div class="screen" id="board-a"></div></div>
+    </section>
+    <section class="board">
+      <h2>Hold to talk</h2>
+      <p>The speaker becomes the key. Press anywhere on the radio: the body sinks, the TX lamp goes marigold, the ring lights, and the meter follows your voice. Release and it hands the turn to Dodo.</p>
+      <div class="phone"><div class="screen" id="board-b"></div></div>
+    </section>
+  </div>
+
+  <div class="states">
+    <h2>Hold-to-talk states</h2>
+    <p>One object, four moods. The key's legend and the two lamps carry the state, so no sentence under the radio has to.</p>
+    <div class="strip">
+      <div class="cell" id="s1"><b>Idle · press to talk</b></div>
+      <div class="cell" id="s2"><b>Held · listening</b></div>
+      <div class="cell" id="s3"><b>Released · thinking</b></div>
+      <div class="cell" id="s4"><b>Dodo speaking</b></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h3>What changed from v1</h3>
+      <ul>
+        <li>Cartoon eyes and blush are gone. Two lamps in the same positions keep the face readable without the plush look.</li>
+        <li>The beak is now a knurled marigold knob with a pointer. It's the only saturated element on the body.</li>
+        <li>Bone-colored body with a slight top-light gradient, a shadow line at the base, and four dark rubber feet instead of marigold ones.</li>
+        <li>Real perforated grille. The VU meter sits behind it, so the bars read as light through metal, not stickers.</li>
+        <li>Label plate in small mono caps, engraved rather than a yellow tape. The sprout stays, smaller and off-center.</li>
+        <li>Backdrop calms down: a single soft sun glow, no clouds.</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>Hold-to-talk as a physical object</h3>
+      <p>The hit target is the entire radio, not a pill under it. That reads as a walkie-talkie: you grab the thing and squeeze. While held the body drops 6pt and its shadow tightens, the key face lifts a shade lighter with a marigold ring, the right lamp turns marigold as TX, and the meter tracks input level. On release the ring fades, the lamp blinks twice while Dodo thinks, then both lamps go steady and the meter goes big for the reply. Holding during a reply cuts it off: the meter collapses in one beat and TX lights.</p>
+      <ul>
+        <li>Legend on the key: a mic glyph and HOLD in mono caps. Held: LISTENING. Thinking: three dots. Speaking: the legend fades and the meter takes over.</li>
+        <li>Haptic on press and release, a soft double tick on cutoff.</li>
+        <li>End stays a separate red control below. Nothing else on screen.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // One drawing, parameterised. viewBox 0 0 372 806 for the phone boards,
+  // and a cropped 300x300 viewBox for the state strip.
+  function radio(o) {
+    const { ptt = false, pressed = false, speaking = false, thinking = false, muted = false, label = 'WHY NATIONS FAIL' } = o;
+    const dy = pressed ? 6 : 0;
+    const bars = speaking ? [30, 52, 40, 64, 46, 58, 34] : pressed ? [22, 36, 28, 44, 30, 38, 24] : [10, 14, 12, 18, 12, 14, 10];
+    const lampR = '#33383E', lampTX = pressed ? '#F0A830' : thinking ? '#F0A830' : '#33383E';
+    const lampL = speaking ? '#F0A830' : '#33383E';
+    const keyFill = pressed ? '#3A4048' : '#2B3036';
+    const legend = pressed ? 'LISTENING' : thinking ? '· · ·' : speaking ? '' : 'HOLD';
+    const barsSvg = bars.map((h, i) => `<rect x="${80 + i * 22}" y="${180 - h / 2}" width="8" height="${h}" rx="4" fill="#F0A830" opacity="${speaking || pressed ? 1 : 0.55}"/>`).join('');
+    const knob = `
+      <g transform="translate(150 96)">
+        <circle r="23" fill="${muted ? '#33383E' : '#C9821F'}"/>
+        <circle r="23" cy="-2" fill="${muted ? '#454B54' : '#F0A830'}"/>
+        <g stroke="${muted ? '#2A2F36' : '#C9821F'}" stroke-width="1.4" opacity=".7">
+          ${Array.from({ length: 24 }, (_, i) => { const a = i * Math.PI / 12; const c = Math.cos(a), s = Math.sin(a); return `<line x1="${(c * 18).toFixed(1)}" y1="${(s * 18 - 2).toFixed(1)}" x2="${(c * 22).toFixed(1)}" y2="${(s * 22 - 2).toFixed(1)}"/>`; }).join('')}
+        </g>
+        <circle r="13" cy="-2" fill="${muted ? '#4C535C' : '#F3B24A'}"/>
+        <rect x="-1.5" y="-14" width="3" height="8" rx="1.5" fill="${muted ? '#F9EFDA' : '#3E3324'}"/>
+      </g>`;
+    const grille = ptt ? `
+      <g>
+        <rect x="46" y="128" width="208" height="120" rx="22" fill="#1F2429"/>
+        <rect x="46" y="${126 + dy}" width="208" height="118" rx="22" fill="${keyFill}"/>
+        <rect x="46" y="${126 + dy}" width="208" height="118" rx="22" fill="none" stroke="${pressed ? '#F0A830' : 'rgba(255,255,255,.08)'}" stroke-width="${pressed ? 2.5 : 1}"/>
+        ${pressed ? `<rect x="50" y="${130 + dy}" width="200" height="110" rx="19" fill="none" stroke="#F0A830" stroke-opacity=".35" stroke-width="6"/>` : ''}
+        <rect x="46" y="${126 + dy}" width="208" height="30" rx="22" fill="url(#keyTop)"/>
+        <g transform="translate(0 ${dy})">${barsSvg}</g>
+        <g transform="translate(150 ${222 + dy})" fill="${pressed ? '#F0A830' : 'rgba(249,239,218,.8)'}" font-family="JetBrains Mono, monospace" font-weight="600" font-size="10" text-anchor="middle" letter-spacing="2.4">
+          ${legend === '' ? '' : `<text>${legend}</text>`}
+        </g>
+        ${!pressed && !thinking && !speaking ? `<g transform="translate(150 ${150 + dy})" fill="none" stroke="rgba(249,239,218,.85)" stroke-width="2.2" stroke-linecap="round"><rect x="-4" y="-11" width="8" height="14" rx="4"/><path d="M-8 0a8 8 0 0 0 16 0M0 8v5"/></g>` : ''}
+      </g>` : `
+      <g>
+        <rect x="58" y="128" width="184" height="104" rx="18" fill="#1F2429"/>
+        <rect x="58" y="126" width="184" height="102" rx="18" fill="#2B3036"/>
+        ${barsSvg}
+        <rect x="58" y="126" width="184" height="102" rx="18" fill="url(#holes)"/>
+      </g>`;
+    return `
+      <defs>
+        <linearGradient id="bodyG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6EFDF"/><stop offset="1" stop-color="#E6DCC6"/></linearGradient>
+        <linearGradient id="keyTop" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+        <pattern id="holes" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.9" fill="#171B1F" opacity=".9"/></pattern>
+        <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="10"/></filter>
+      </defs>
+      <g transform="translate(36 ${180 + dy})">
+        <!-- shadow -->
+        <ellipse cx="150" cy="${318 - dy}" rx="${pressed ? 118 : 132}" ry="${pressed ? 10 : 16}" fill="#3E3324" opacity="${pressed ? .16 : .22}" filter="url(#soft)"/>
+        <!-- sprout, off-centre -->
+        <g transform="translate(206 -4)">
+          <path d="M0 24c1-8 0-14-1-20" stroke="#5F9E4C" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <ellipse cx="-11" cy="2" rx="12" ry="6" fill="#7BB662" transform="rotate(-22 -11 2)"/>
+          <ellipse cx="9" cy="-4" rx="12" ry="6" fill="#5F9E4C" transform="rotate(18 9 -4)"/>
+        </g>
+        <!-- body -->
+        <rect x="30" y="20" width="240" height="288" rx="40" fill="#D9CDB4"/>
+        <rect x="30" y="16" width="240" height="288" rx="40" fill="url(#bodyG)"/>
+        <rect x="30" y="16" width="240" height="288" rx="40" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.5"/>
+        <!-- lamps -->
+        <circle cx="118" cy="66" r="6.5" fill="${lampL}"/><circle cx="116" cy="64" r="1.6" fill="#fff" opacity=".7"/>
+        <circle cx="182" cy="66" r="6.5" fill="${lampTX}"/><circle cx="180" cy="64" r="1.6" fill="#fff" opacity=".7"/>
+        ${(pressed || thinking) && ptt ? `<circle cx="182" cy="66" r="12" fill="#F0A830" opacity=".25"/>` : ''}
+        ${speaking ? `<circle cx="118" cy="66" r="12" fill="#F0A830" opacity=".25"/>` : ''}
+        <!-- knob -->
+        ${knob}
+        <!-- grille / key -->
+        ${grille}
+        <!-- label plate -->
+        <rect x="70" y="258" width="160" height="24" rx="6" fill="#E3D8C0"/>
+        <rect x="70" y="257" width="160" height="24" rx="6" fill="#EDE4CF"/>
+        <text x="150" y="273" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="600" font-size="9.5" letter-spacing="2" fill="#5C4632">${label}</text>
+        <!-- feet -->
+        <rect x="64" y="300" width="26" height="8" rx="4" fill="#33383E"/>
+        <rect x="210" y="300" width="26" height="8" rx="4" fill="#33383E"/>
+      </g>`;
+  }
+
+  function board(o, caption, sub) {
+    return `<svg viewBox="0 0 372 806" xmlns="http://www.w3.org/2000/svg">
+      <rect width="372" height="806" fill="#F7F0E1"/>
+      <circle cx="66" cy="132" r="70" fill="#FFD469" opacity=".22"/>
+      <circle cx="66" cy="132" r="30" fill="#FFD469" opacity=".7"/>
+      <text x="186" y="88" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-weight="700" font-size="11" letter-spacing="2.4" fill="#8A929B">TALKING ABOUT</text>
+      ${radio(o)}
+      <text x="186" y="640" text-anchor="middle" font-family="Fredoka, sans-serif" font-weight="500" font-size="21" fill="#33383E">${caption}</text>
+      ${sub ? `<text x="186" y="666" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-weight="600" font-size="12.5" fill="#8A929B">${sub}</text>` : ''}
+      <g transform="translate(186 732)">
+        <circle r="29" fill="#C84A3C"/><circle r="29" fill="none" stroke="#E0635A" stroke-width="1"/>
+        <path d="M-11 3c7-6 15-6 22 0l-3 5c-5-4-11-4-16 0z" fill="#fff"/>
+        <text y="46" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-weight="700" font-size="11" fill="#E88A82">End</text>
+      </g>
+    </svg>`;
+  }
+
+  function cell(o) {
+    return `<svg viewBox="30 150 300 320" xmlns="http://www.w3.org/2000/svg">${radio({ ...o, label: 'DODO · VOICE' })}</svg>`;
+  }
+
+  document.getElementById('board-a').innerHTML = board({}, 'Dodo is listening.', 'Just talk. Press the dial to mute.');
+  document.getElementById('board-b').innerHTML = board({ ptt: true, pressed: true }, 'Listening…', 'Release to send');
+  document.getElementById('s1').insertAdjacentHTML('afterbegin', cell({ ptt: true }));
+  document.getElementById('s2').insertAdjacentHTML('afterbegin', cell({ ptt: true, pressed: true }));
+  document.getElementById('s3').insertAdjacentHTML('afterbegin', cell({ ptt: true, thinking: true }));
+  document.getElementById('s4').insertAdjacentHTML('afterbegin', cell({ ptt: true, speaking: true }));
+})();
+</script>

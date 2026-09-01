@@ -1,9 +1,9 @@
 import SwiftUI
 
-/// Voice mode — the Dodo Radio. Talking to Dodo is a charming little
-/// tabletop machine that IS the dodo: sprout antenna, blinking eyes, beak
-/// dial, and a belly grille whose equalizer bars move with the session
-/// (big bounce while Dodo speaks, a calm idle while it listens). The sky
+/// Voice mode — the Dodo Radio (v3, "the dial": DodoRadioDial.swift). A
+/// small tabletop set with a sprout antenna and a glass tuning window; the
+/// red needle is the expression. Hands-free shows a speaker with a VU
+/// meter; hold-to-talk swaps it for one big press-to-talk key. The sky
 /// behind it matches the app's modes: sunny morning in light, starry dusk
 /// in dark. Palette comes straight from BRANDING.md / the Peck map.
 struct VoiceSessionView: View {
@@ -53,12 +53,18 @@ struct VoiceSessionView: View {
 
                 Spacer(minLength: 0)
 
-                DodoRadio(tape: tapeText, activity: activity)
+                DodoRadioDial(
+                    tape: tapeText,
+                    mood: mood,
+                    holdToTalk: holdToTalk,
+                    onKeyDown: { client.beginTalking() },
+                    onKeyUp: { client.endTalking() }
+                )
 
                 Spacer(minLength: 0)
 
                 Text(transcriptText)
-                    .font(.custom("Fredoka", size: 21).weight(.medium))
+                    .font(.custom("Fredoka", size: 19).weight(.medium))
                     .foregroundStyle(FeyndTheme.text)
                     .multilineTextAlignment(.center)
                     .textSelection(.enabled)
@@ -80,13 +86,20 @@ struct VoiceSessionView: View {
         (title ?? "Dodo voice session").uppercased()
     }
 
-    /// How lively the grille is: full bounce while speaking, gentle sway
-    /// while listening, near-still before the session is up.
-    private var activity: Double {
+    /// The radio's mood, derived from the client's phase and, in hold-to-talk,
+    /// whether the key is held or a reply is pending.
+    private var mood: DodoRadioDial.Mood {
         switch client.phase {
-        case .speaking: return 1.0
-        case .connected: return client.talking ? 0.55 : (holdToTalk ? 0.2 : 0.35)
-        default: return 0.12
+        case .idle, .requestingPermission, .creatingSession, .connecting:
+            return .tuning
+        case .connected:
+            if client.talking { return .talking }
+            if holdToTalk && client.status == "Thinking" { return .thinking }
+            return .listening
+        case .speaking:
+            return client.talking ? .talking : .speaking
+        case .failed, .ended:
+            return .ended
         }
     }
 
@@ -139,11 +152,11 @@ struct VoiceSessionView: View {
             if holdToTalk {
                 return client.talking ? "Listening…"
                     : client.status == "Thinking" ? "Dodo is thinking…"
-                    : "Hold the button and talk."
+                    : "Press and hold the button to talk."
             }
             return "Dodo is listening — just talk."
         case .speaking:
-            return holdToTalk ? "Dodo is speaking — hold to cut in." : "Dodo is speaking…"
+            return holdToTalk ? "Dodo is speaking — press the button to cut in." : "Dodo is speaking…"
         case .failed(let m): return m
         case .ended: return "Session ended."
         }
@@ -151,14 +164,9 @@ struct VoiceSessionView: View {
 
     private var controls: some View {
         HStack(spacing: 16) {
-            if holdToTalk {
-                HoldToTalkButton(
-                    talking: client.talking,
-                    enabled: client.phase == .connected || client.phase == .speaking,
-                    onDown: { client.beginTalking() },
-                    onUp: { client.endTalking() }
-                )
-            } else {
+            // Hold-to-talk: the radio's key is the mic control; only End
+            // lives down here.
+            if !holdToTalk {
                 CircleControlButton(
                     label: muted ? "Unmute" : "Mute", systemImage: muted ? "mic.slash.fill" : "mic.fill",
                     danger: false
@@ -184,154 +192,6 @@ struct VoiceSessionView: View {
                 }
             }
         }
-    }
-}
-
-// MARK: - The Dodo Radio
-
-/// The radio that is the dodo: sprout antenna, blinking eyes, blush, beak
-/// dial, equalizer grille, marigold feet, and a label tape naming the topic.
-struct DodoRadio: View {
-    let tape: String
-    /// 0…1 — how much the equalizer moves.
-    let activity: Double
-
-    private let barSpeeds: [Double] = [5.2, 6.4, 4.5, 6.9, 5.7, 4.9, 6.1]
-    private let barPhases: [Double] = [0.0, 1.3, 2.4, 3.1, 4.3, 5.2, 0.7]
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // Sprout antenna.
-            ZStack {
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(Color(hex: 0x6FAE5C))
-                    .frame(width: 6, height: 36)
-                Ellipse()
-                    .fill(Color(hex: 0x7BB662))
-                    .frame(width: 34, height: 18)
-                    .rotationEffect(.degrees(-24))
-                    .offset(x: -18, y: -14)
-                Ellipse()
-                    .fill(Color(hex: 0x5F9E4C))
-                    .frame(width: 34, height: 18)
-                    .rotationEffect(.degrees(22))
-                    .offset(x: 18, y: -16)
-            }
-            .frame(height: 40)
-            .zIndex(1)
-
-            // Body.
-            VStack(spacing: 0) {
-                TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
-                    let t = timeline.date.timeIntervalSinceReferenceDate
-                    VStack(spacing: 0) {
-                        // Face: blush · eye · eye · blush.
-                        HStack(spacing: 26) {
-                            cheek
-                            eye(t: t)
-                            eye(t: t)
-                            cheek
-                        }
-                        .padding(.top, 2)
-
-                        // Beak dial.
-                        ZStack {
-                            Ellipse()
-                                .fill(Color(hex: 0xC9821F))
-                                .frame(width: 52, height: 40)
-                                .offset(y: 2.5)
-                            Ellipse()
-                                .fill(Color(hex: 0xF0A830))
-                                .frame(width: 52, height: 40)
-                        }
-                        .padding(.top, 4)
-                        .padding(.bottom, 16)
-
-                        // Grille + equalizer.
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color(hex: 0x33383E))
-                            .frame(height: 106)
-                            .overlay(
-                                HStack(spacing: 7) {
-                                    ForEach(0..<7, id: \.self) { i in
-                                        Capsule()
-                                            .fill(Color(hex: 0xF6B04E))
-                                            .frame(width: 9, height: barHeight(i, t: t))
-                                    }
-                                }
-                            )
-                    }
-                }
-
-                // Label tape — the topic.
-                Text(tape)
-                    .font(.system(size: 11.5, weight: .heavy))
-                    .tracking(1.6)
-                    .lineLimit(1)
-                    .foregroundStyle(Color(hex: 0x3E3324))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 5)
-                    .background(Color(hex: 0xF6B04E), in: RoundedRectangle(cornerRadius: 7))
-                    .frame(maxWidth: 216)
-                    .padding(.top, 15)
-            }
-            .padding(EdgeInsets(top: 24, leading: 24, bottom: 21, trailing: 24))
-            .frame(width: 272)
-            .background(Color(hex: 0xF9EFDA), in: RoundedRectangle(cornerRadius: 34))
-            .overlay(
-                RoundedRectangle(cornerRadius: 34)
-                    .stroke(FeyndTheme.border.opacity(0.6), lineWidth: 1)
-            )
-            .shadow(color: .black.opacity(0.28), radius: 20, y: 10)
-
-            // Feet.
-            HStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(hex: 0xF0A830))
-                    .frame(width: 34, height: 12)
-                Spacer()
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(hex: 0xF0A830))
-                    .frame(width: 34, height: 12)
-            }
-            .padding(.horizontal, 54)
-            .frame(width: 272)
-            .offset(y: -3)
-        }
-        .accessibilityElement()
-        .accessibilityLabel(activity >= 1 ? "Dodo is speaking" : "Dodo is listening")
-    }
-
-    private var cheek: some View {
-        Ellipse()
-            .fill(Color(hex: 0xF2A19A))
-            .frame(width: 22, height: 13)
-            .opacity(0.65)
-            .offset(y: 8)
-    }
-
-    /// Blinking eye — closes for a beat every ~4.6s.
-    private func eye(t: Double) -> some View {
-        let phase = t.truncatingRemainder(dividingBy: 4.6)
-        let closed = phase > 4.38 && phase < 4.52
-        return ZStack {
-            Circle()
-                .fill(Color(hex: 0x33383E))
-                .frame(width: 30, height: 30)
-            Circle()
-                .fill(.white)
-                .frame(width: 10, height: 10)
-                .offset(x: -5, y: -5)
-        }
-        .scaleEffect(y: closed ? 0.12 : 1, anchor: .center)
-    }
-
-    /// Deterministic per-bar wave — amplitude scales with session activity.
-    private func barHeight(_ i: Int, t: Double) -> CGFloat {
-        let wave = 0.5 + 0.5 * sin(t * barSpeeds[i] + barPhases[i])
-        let base = 14.0
-        let amp = 8.0 + 52.0 * activity
-        return CGFloat(base + amp * wave)
     }
 }
 
@@ -369,7 +229,7 @@ private struct VoiceSkyBackdrop: View {
                         )
                 }
             } else {
-                // Morning: soft sun + two cloud puffs.
+                // Morning: one soft sun.
                 Circle()
                     .fill(Color(hex: 0xFFD469))
                     .frame(width: 56, height: 56)
@@ -378,74 +238,11 @@ private struct VoiceSkyBackdrop: View {
                             .frame(width: 92, height: 92)
                     )
                     .position(x: 66, y: 122)
-                cloud(width: 74).position(x: w - 82, y: 168)
-                cloud(width: 54).position(x: w - 120, y: 148)
             }
         }
         .allowsHitTesting(false)
     }
 
-    private func cloud(width: CGFloat) -> some View {
-        Capsule()
-            .fill(Color.white.opacity(0.85))
-            .frame(width: width, height: 15)
-    }
-}
-
-// MARK: - Hold-to-talk button
-
-/// The big press-and-hold mic: down opens the mic (and cuts Dodo off),
-/// up sends the turn. A drag gesture with zero distance fires on touch-down
-/// and on lift, which a Button can't do.
-struct HoldToTalkButton: View {
-    let talking: Bool
-    let enabled: Bool
-    let onDown: () -> Void
-    let onUp: () -> Void
-    @State private var pressed = false
-
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 10) {
-                Image(systemName: talking ? "waveform" : "mic.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .contentTransition(.symbolEffect(.replace))
-                Text(talking ? "Listening" : "Hold to talk")
-                    .font(.system(size: 16, weight: .semibold))
-            }
-            .foregroundStyle(talking ? Color(hex: 0x3E3324) : .white)
-            .frame(width: 168, height: 58)
-            .background(
-                Capsule().fill(talking ? Color(hex: 0xF6B04E) : Color(hex: 0x33383E))
-            )
-            .overlay(Capsule().stroke(talking ? Color(hex: 0xC9821F) : FeyndTheme.border, lineWidth: 1))
-            .shadow(color: (talking ? Color(hex: 0xF6B04E) : .black).opacity(talking ? 0.45 : 0.3),
-                    radius: talking ? 18 : 14, y: 4)
-            .scaleEffect(pressed ? 0.96 : 1)
-            .animation(.easeOut(duration: 0.12), value: pressed)
-            .opacity(enabled ? 1 : 0.5)
-            .contentShape(Capsule())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        guard enabled, !pressed else { return }
-                        pressed = true
-                        onDown()
-                    }
-                    .onEnded { _ in
-                        guard pressed else { return }
-                        pressed = false
-                        onUp()
-                    }
-            )
-            .accessibilityLabel(talking ? "Listening, release to send" : "Hold to talk")
-
-            Text(talking ? "Release to send" : "Press and hold")
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(0.2)
-                .foregroundStyle(FeyndTheme.text2)
-        }
-    }
 }
 
 // MARK: - Circle control button
