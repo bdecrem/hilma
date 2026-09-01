@@ -54,17 +54,6 @@ struct FlashTabView: View {
     private let bottomPad: CGFloat = 130
     private let amp: CGFloat = 78
 
-    /// -1, 0, +1, 0, -1, … period-4 zigzag keeps the path snaking without
-    /// ever leaving a phone-width column.
-    private func zig(_ i: Int) -> CGFloat {
-        switch i % 4 {
-        case 0: return 0
-        case 1: return -1
-        case 2: return 0
-        default: return 1
-        }
-    }
-
     var body: some View {
         ZStack {
             FeyndTheme.bg.ignoresSafeArea()
@@ -500,11 +489,12 @@ struct FlashTabView: View {
     private func levelMap(_ state: JumboState) -> some View {
         GeometryReader { geo in
             let w = min(geo.size.width, 430)
-            let centerX = geo.size.width / 2
             let count = state.levels.count
-            let height = topPad + CGFloat(max(0, count - 1)) * pitch + bottomPad
-            let yFor: (Int) -> CGFloat = { i in height - bottomPad - CGFloat(i) * pitch }
-            let xFor: (Int) -> CGFloat = { i in centerX + zig(i) * (amp * w / 430) }
+            let world = PeckGeometry(count: count, pitch: pitch, topPad: topPad, bottomPad: bottomPad,
+                                     centerX: geo.size.width / 2, amp: amp * w / 430)
+            let height = world.height
+            let yFor: (Int) -> CGFloat = { i in world.y(i) }
+            let xFor: (Int) -> CGFloat = { i in world.x(i) }
             let currentIdx = state.levels.firstIndex(where: { $0.status == "unlocked" })
             // Bottom edge of the night region (band 2, Starfall) in world
             // coords — when the viewport top scrolls above it, the floating
@@ -525,41 +515,25 @@ struct FlashTabView: View {
                     }
                     .frame(height: 0)
                     ZStack(alignment: .topLeading) {
-                        PeckWorldScenery(height: height, levelCount: count, pitch: pitch, bottomPad: bottomPad)
+                        PeckWorldScenery(height: height, levelCount: count, pitch: pitch, bottomPad: bottomPad,
+                                         scrollY: worldOffsetY, currentIdx: currentIdx ?? 0)
 
-                        // Stepping-stone trail between consecutive nodes —
-                        // round pebble dots, like the design's dotted path.
-                        Canvas { ctx, _ in
-                            var path = Path()
-                            for i in 0..<count {
-                                let p = CGPoint(x: xFor(i), y: yFor(i))
-                                if i == 0 { path.move(to: p) }
-                                else {
-                                    let prev = CGPoint(x: xFor(i - 1), y: yFor(i - 1))
-                                    let mid = CGPoint(x: (prev.x + p.x) / 2, y: (prev.y + p.y) / 2)
-                                    path.addQuadCurve(to: mid, control: CGPoint(x: prev.x, y: mid.y + pitch * 0.18))
-                                    path.addQuadCurve(to: p, control: CGPoint(x: p.x, y: mid.y - pitch * 0.18))
-                                }
-                            }
-                            ctx.stroke(
-                                path,
-                                with: .color(PeckPalette.pathDotColor.opacity(0.9)),
-                                style: StrokeStyle(lineWidth: 7, lineCap: .round, dash: [0.1, 17])
-                            )
-                        }
-                        .frame(height: height)
+                        // The road: worn behind you, stepping stones ahead,
+                        // fog beyond — plus gates, signposts, chests.
+                        PeckTrailLayer(geo: world, levels: state.levels, currentIdx: currentIdx)
 
                         ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
-                            levelNode(level)
+                            levelNode(level, index: i, currentIdx: currentIdx)
                                 .position(x: xFor(i), y: yFor(i))
                                 .id(level.level)
                         }
 
-                        // The traveler walks the trail beside the current
-                        // level, backpack on, sprout up.
+                        // The traveler stands on the road just below the
+                        // current stone, backpack on, sprout up.
                         if let i = currentIdx {
+                            let p = world.travelerPoint(current: i)
                             AnimatedDodoView(height: 78, tickleable: true)
-                                .position(x: max(34, xFor(i) - 72), y: yFor(i) + 40)
+                                .position(x: p.x, y: p.y)
                         }
                     }
                     .frame(height: height)
@@ -609,86 +583,97 @@ struct FlashTabView: View {
     }
 
     @ViewBuilder
-    private func levelNode(_ level: JumboLevelInfo) -> some View {
+    private func levelNode(_ level: JumboLevelInfo, index: Int, currentIdx: Int?) -> some View {
         let isCurrent = level.status == "unlocked"
         let isPassed = level.status == "passed"
+        let isGate = PeckMilestone.isGate(level.level)
+        // Chunky stone: radius R, lit face over a darker base.
+        let r: CGFloat = (isGate ? 40 : 32) * (nodeSize / 68)
+        // Locked stones fade the deeper they sit in the fog; only the next
+        // two carry a padlock, the rest show a ghosted number.
+        let frontier = currentIdx ?? level.level
+        let nearLocked = index <= frontier + 2
+        let lockedAlpha: Double = level.status == "locked" ? (nearLocked ? 0.9 : 0.55) : 1
 
         Button {
             guard level.status != "locked" else { return }
             FlashSFX.shared.play(.tap)
             sheetLevel = level
         } label: {
-            VStack(spacing: 5) {
-                ZStack {
-                    if isCurrent {
-                        // Pulsing marigold halo says "you are here".
-                        Circle()
-                            .stroke(PeckPalette.marigold.opacity(pulse ? 0.25 : 0.7), lineWidth: 3)
-                            .frame(width: nodeSize + (pulse ? 26 : 12), height: nodeSize + (pulse ? 26 : 12))
-                    }
+            ZStack {
+                // Ground shadow.
+                Ellipse()
+                    .fill(Color(hex: 0x281E0A).opacity(0.22))
+                    .frame(width: r * 2.2, height: r * 0.76)
+                    .offset(y: r * 0.55 + 8)
 
-                    if isPassed {
-                        // Cleared: sunny marigold stone with a soft halo.
-                        Circle()
-                            .fill(PeckPalette.marigold.opacity(0.25))
-                            .frame(width: nodeSize + 18, height: nodeSize + 18)
-                        Circle()
-                            .fill(PeckPalette.marigold)
-                            .frame(width: nodeSize, height: nodeSize)
-                            .shadow(color: PeckPalette.marigold.opacity(0.4), radius: 12, y: 3)
-                        Text("\(level.level)")
-                            .font(.custom("Fredoka", size: 26).weight(.semibold))
-                            .foregroundStyle(Color(hex: 0x3E3324))
-                    } else if isCurrent {
-                        // Current: marigold ring around a bright face.
-                        Circle()
-                            .fill(PeckPalette.marigold)
-                            .frame(width: nodeSize + 13, height: nodeSize + 13)
-                        Circle()
-                            .fill(PeckPalette.nodeCurFace)
-                            .frame(width: nodeSize, height: nodeSize)
-                        Text("\(level.level)")
-                            .font(.custom("Fredoka", size: 29).weight(.semibold))
-                            .foregroundStyle(PeckPalette.nodeCurNum)
-                    } else {
-                        // Locked: quiet foggy stone.
-                        Circle()
-                            .fill(PeckPalette.nodeLock)
-                            .frame(width: nodeSize - 8, height: nodeSize - 8)
+                if isPassed {
+                    Circle().fill(PeckPalette.marigoldDeep).frame(width: r * 2, height: r * 2).offset(y: 7)
+                    Circle().fill(PeckPalette.marigold).frame(width: r * 2, height: r * 2)
+                    Ellipse().fill(.white.opacity(0.35))
+                        .frame(width: r * 0.84, height: r * 0.44)
+                        .offset(x: -r * 0.3, y: -r * 0.45)
+                    Text("\(level.level)")
+                        .font(.custom("Fredoka", size: isGate ? 30 : 25).weight(.semibold))
+                        .foregroundStyle(Color(hex: 0x3E3324))
+                        .offset(y: 1)
+                    // Star arc carved into the stone — sockets stay visible.
+                    ForEach(0..<3, id: \.self) { s in
+                        let a = -Double.pi / 2 + Double(s - 1) * 0.62
+                        PeckStar(filled: s < level.stars)
+                            .offset(x: CGFloat(cos(a)) * (r + 9), y: CGFloat(sin(a)) * (r + 9))
+                    }
+                    if isGate {
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(Color(hex: 0xFFD98A))
+                            .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1)
+                            .offset(y: -r - 28)
+                    }
+                } else if isCurrent {
+                    // Pulsing marigold halo says "you are here".
+                    Circle()
+                        .stroke(PeckPalette.marigold.opacity(pulse ? 0.25 : 0.7), lineWidth: 3)
+                        .frame(width: r * 2 + (pulse ? 44 : 20), height: r * 2 + (pulse ? 44 : 20))
+                    Circle().fill(PeckPalette.marigoldDeep).frame(width: r * 2 + 12, height: r * 2 + 12).offset(y: 7)
+                    Circle().fill(PeckPalette.marigold).frame(width: r * 2 + 12, height: r * 2 + 12)
+                    Circle().fill(PeckPalette.nodeCurFace).frame(width: r * 2, height: r * 2)
+                    Text("\(level.level)")
+                        .font(.custom("Fredoka", size: 28).weight(.semibold))
+                        .foregroundStyle(PeckPalette.nodeCurNum)
+                        .offset(y: 1)
+                    // Bouncing map pin with the START plate.
+                    VStack(spacing: 2) {
+                        Text("START")
+                            .font(.custom("Fredoka", size: 11).weight(.semibold))
+                            .foregroundStyle(Color(hex: 0xFFF6E0))
+                            .padding(.horizontal, 10)
+                            .frame(height: 18)
+                            .background(Color(hex: 0x3E3324), in: Capsule())
+                        Image(systemName: "mappin")
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(PeckPalette.marigoldDeep)
+                            .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1)
+                    }
+                    .offset(y: -r - 34 - (pulse ? 8 : 0))
+                } else {
+                    Circle().fill(PeckPalette.nodeLockIcon).frame(width: r * 2 - 8, height: r * 2 - 8).offset(y: 6)
+                    Circle().fill(PeckPalette.nodeLock).frame(width: r * 2 - 8, height: r * 2 - 8)
+                    if nearLocked {
                         Image(systemName: "lock.fill")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(PeckPalette.nodeLockIcon)
+                    } else {
+                        Text("\(level.level)")
+                            .font(.custom("Fredoka", size: 22).weight(.semibold))
+                            .foregroundStyle(PeckPalette.nodeLockIcon.opacity(0.7))
                     }
-
-                    // Cleared levels plant a little victory flag.
-                    if isPassed {
-                        FlagMarker()
-                            .offset(x: nodeSize * 0.44, y: -nodeSize * 0.54)
-                    }
-                }
-                .frame(height: nodeSize + 26) // room for halo + flag, keeps rows even
-
-                if isPassed {
-                    HStack(spacing: 2) {
-                        ForEach(0..<3, id: \.self) { s in
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(s < level.stars ? PeckPalette.starGold : PeckPalette.starDim)
-                        }
-                    }
-                } else if isCurrent {
-                    Text("START")
-                        .font(.custom("Fredoka", size: 13).weight(.semibold))
-                        .tracking(3)
-                        .foregroundStyle(PeckPalette.startText)
-                        .shadow(color: .black.opacity(0.25), radius: 2)
-                } else {
-                    Color.clear.frame(height: 10)
                 }
             }
+            .frame(width: r * 2 + 40, height: r * 2 + 80) // room for halo, pin, star arc
         }
         .buttonStyle(.plain)
-        .opacity(level.status == "locked" ? 0.9 : 1)
+        .opacity(lockedAlpha)
         .accessibilityLabel("Level \(level.level), \(level.status)")
     }
 
@@ -782,6 +767,7 @@ enum PeckPalette {
     static let pathDotColor = FeyndTheme.adaptiveColor(dark: 0xD9C89A, light: 0xFFFDF4)
     static let starColor = Color(hex: 0xF3E9C8)   // dark-mode only, drawn conditionally
     static let marigold  = Color(hex: 0xF6B04E)
+    static let marigoldDeep = Color(hex: 0xC9821F)
     static let nodeCurFace = FeyndTheme.adaptiveColor(dark: 0x3B3560, light: 0xFFFDF4)
     static let nodeCurNum  = FeyndTheme.adaptiveColor(dark: 0xFFF6E0, light: 0x3E4A52)
     static let startText   = FeyndTheme.adaptiveColor(dark: 0xF6B04E, light: 0x8A5B14)
@@ -803,14 +789,20 @@ private struct PeckWorldScenery: View {
     let levelCount: Int
     let pitch: CGFloat
     let bottomPad: CGFloat
+    /// Viewport top in world coords — drives hill parallax.
+    let scrollY: CGFloat
+    /// The unlocked level's index — the parallax anchor (zero drift there).
+    let currentIdx: Int
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         if reduceMotion {
-            PeckWorldCanvas(height: height, levelCount: levelCount, pitch: pitch, bottomPad: bottomPad, t: 0)
+            PeckWorldCanvas(height: height, levelCount: levelCount, pitch: pitch, bottomPad: bottomPad,
+                            scrollY: scrollY, currentIdx: currentIdx, t: 0)
         } else {
             TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
                 PeckWorldCanvas(height: height, levelCount: levelCount, pitch: pitch, bottomPad: bottomPad,
+                                scrollY: scrollY, currentIdx: currentIdx,
                                 t: CGFloat(timeline.date.timeIntervalSinceReferenceDate))
             }
         }
@@ -827,6 +819,11 @@ struct RegionSkin {
     let trunk: UInt32
     let pathDot: UInt32
     let pines: Bool
+    /// The worn road's fill and edge (PeckTrailLayer).
+    let road: UInt32
+    let roadEdge: UInt32
+    /// Drifting weather: petals, leaves, stardust.
+    let particle: UInt32
 }
 
 let REGION_SKINS: [RegionSkin] = [
@@ -834,17 +831,20 @@ let REGION_SKINS: [RegionSkin] = [
     RegionSkin(skyTop: 0xC9E6DE, skyBottom: 0xFFEFD1,
                hills: [0xCDE3B4, 0xB5D89A, 0x9CCB80, 0x7FBA66],
                canopy: 0x6FAE5C, canopyShade: 0x5F9E4C, trunk: 0x8A6B4A,
-               pathDot: 0xFFFDF4, pines: false),
+               pathDot: 0xFFFDF4, pines: false,
+               road: 0xE9D3A3, roadEdge: 0xB8925C, particle: 0xF2A19A),
     // Fern Hollow — sunset ambers over deep ferns.
     RegionSkin(skyTop: 0xF2A87B, skyBottom: 0xFFDCA8,
                hills: [0xA3B871, 0x84A765, 0x668F57, 0x4E7B4A],
                canopy: 0x4F7D4A, canopyShade: 0x3E6B42, trunk: 0x5C4632,
-               pathDot: 0xFFF3DC, pines: false),
+               pathDot: 0xFFF3DC, pines: false,
+               road: 0xC9B48A, roadEdge: 0x7E6242, particle: 0xD98E4A),
     // Starfall Summit — night blues, pines, stars.
     RegionSkin(skyTop: 0x0F161C, skyBottom: 0x1B2A38,
                hills: [0x2C3B4A, 0x24313D, 0x1D2934, 0x16202A],
                canopy: 0x10181F, canopyShade: 0x0C141B, trunk: 0x0C141B,
-               pathDot: 0xE8EEF2, pines: true),
+               pathDot: 0xE8EEF2, pines: true,
+               road: 0xDCE4EA, roadEdge: 0x5C6B7A, particle: 0xEDE6D2),
 ]
 
 func regionSkin(_ band: Int) -> RegionSkin {
@@ -856,7 +856,17 @@ struct PeckWorldCanvas: View {
     let levelCount: Int
     let pitch: CGFloat
     let bottomPad: CGFloat
+    var scrollY: CGFloat = .greatestFiniteMagnitude
+    var currentIdx: Int = 0
     let t: CGFloat
+
+    /// World y of level i — same math as PeckGeometry.
+    private func levelY(_ i: Int) -> CGFloat { height - bottomPad - CGFloat(i) * pitch }
+    /// Scroll drift relative to the current level (0 until the first
+    /// offset arrives), scaled per hill layer for parallax.
+    private var drift: CGFloat {
+        scrollY == .greatestFiniteMagnitude ? 0 : scrollY - levelY(currentIdx)
+    }
 
     private func frac(_ v: Double) -> Double { v - v.rounded(.down) }
 
@@ -965,8 +975,10 @@ struct PeckWorldCanvas: View {
                 let span = bottom - top
 
                 // Ground: rolling hill layers below the band's horizon strip.
+                let parallax: [CGFloat] = [0.16, 0.10, 0.05, 0]
                 for (li, hex) in skin.hills.enumerated() {
                     let crest = top + 104 + (span - 104) * (0.02 + CGFloat(li) * 0.24)
+                        + drift * parallax[li] * 0.35
                     var hill = Path()
                     hill.move(to: CGPoint(x: 0, y: bottom))
                     hill.addLine(to: CGPoint(x: 0, y: crest + 20))
@@ -1056,6 +1068,40 @@ struct PeckWorldCanvas: View {
                     fill(flame, 0xF0A830)
                 }
 
+                // Landmarks — one hero set piece per region, on the road.
+                switch min(k, 2) {
+                case 0:
+                    if levelCount > 8 {
+                        drawWindmill(&ctx, x: w * 0.86, y: levelY(6) + 30)
+                        drawBalloon(&ctx, x: w * 0.18 + 30 * sin(t * 0.15), y: levelY(8) - 90)
+                    }
+                case 1:
+                    if levelCount > 17 {
+                        drawWaterfall(&ctx, x: w * 0.12, top: levelY(17) - 130, bottom: levelY(16) - 10)
+                    }
+                default:
+                    if levelCount > 27 {
+                        drawObservatory(&ctx, x: w * 0.84, y: levelY(27) + 20)
+                    }
+                }
+
+                // Weather: petals, leaves, stardust drifting down the band.
+                for i in 0..<16 {
+                    let fi = CGFloat(i)
+                    let u = frac(Double(t * (0.04 + 0.02 * frac(Double(fi) * 0.37)) + fi * 0.083))
+                    let x = w * frac(Double(fi) * 0.618 + 0.2) + 26 * sin(t * 0.7 + fi)
+                    let y = top + span * u
+                    if skin.pines {
+                        let tw = 0.5 + 0.4 * sin(t * 3 + fi)
+                        fill(Path(ellipseIn: CGRect(x: x - 1.3, y: y - 1.3, width: 2.6, height: 2.6)), skin.particle, tw)
+                    } else {
+                        var g = ctx
+                        g.translateBy(x: x, y: y)
+                        g.rotate(by: .radians(t + fi))
+                        g.fill(Path(ellipseIn: CGRect(x: -4, y: -2, width: 8, height: 4)),
+                               with: .color(Color(hex: skin.particle).opacity(0.8)))
+                    }
+                }
             }
 
             // Meadow floor + grass tufts at the very bottom (band 0).
@@ -1140,6 +1186,79 @@ struct PeckWorldCanvas: View {
         ear2.closeSubpath()
         g.fill(ear2, with: .color(Color(hex: 0xE3D2B2)))
         g.fill(Path(ellipseIn: CGRect(x: 11.5, y: -7.8, width: 2.6, height: 2.6)), with: .color(Color(hex: 0x33383E)))
+    }
+
+    private func drawWindmill(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat) {
+        var g = ctx
+        g.translateBy(x: x, y: y)
+        var tower = Path()
+        tower.move(to: CGPoint(x: -16, y: 0)); tower.addLine(to: CGPoint(x: 16, y: 0))
+        tower.addLine(to: CGPoint(x: 9, y: -70)); tower.addLine(to: CGPoint(x: -9, y: -70)); tower.closeSubpath()
+        g.fill(tower, with: .color(Color(hex: 0xEFE3CB)))
+        var shade = Path()
+        shade.move(to: CGPoint(x: -16, y: 0)); shade.addLine(to: CGPoint(x: 0, y: 0))
+        shade.addLine(to: CGPoint(x: 0, y: -70)); shade.addLine(to: CGPoint(x: -9, y: -70)); shade.closeSubpath()
+        g.fill(shade, with: .color(Color(hex: 0xD9C89A)))
+        g.fill(Path(roundedRect: CGRect(x: -12, y: -84, width: 24, height: 16), cornerRadius: 6), with: .color(Color(hex: 0xC9821F)))
+        g.fill(Path(roundedRect: CGRect(x: -5, y: -22, width: 10, height: 22), cornerRadius: 4), with: .color(Color(hex: 0x8A6B4A)))
+        g.translateBy(x: 0, y: -78)
+        g.rotate(by: .radians(t == 0 ? 0.4 : t * 0.9))
+        for _ in 0..<4 {
+            g.rotate(by: .degrees(90))
+            g.fill(Path(roundedRect: CGRect(x: -3, y: -44, width: 6, height: 40), cornerRadius: 3), with: .color(Color(hex: 0x8A6B4A)))
+            g.fill(Path(roundedRect: CGRect(x: 1, y: -42, width: 11, height: 30), cornerRadius: 3), with: .color(Color(hex: 0xFFFDF4).opacity(0.9)))
+        }
+        ctx.fill(Path(ellipseIn: CGRect(x: x - 4, y: y - 82, width: 8, height: 8)), with: .color(Color(hex: 0x3E3324)))
+    }
+
+    private func drawBalloon(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat) {
+        var g = ctx
+        g.translateBy(x: x, y: y + (t == 0 ? 0 : sin(t * 0.8) * 6))
+        g.fill(Path(ellipseIn: CGRect(x: -26, y: -32, width: 52, height: 64)), with: .color(Color(hex: 0xF0A830)))
+        g.fill(Path(ellipseIn: CGRect(x: -18, y: -32, width: 18, height: 64)), with: .color(Color(hex: 0xF2A19A)))
+        g.fill(Path(ellipseIn: CGRect(x: 0, y: -32, width: 18, height: 64)), with: .color(Color(hex: 0xF2A19A)))
+        var lines = Path()
+        lines.move(to: CGPoint(x: -10, y: 28)); lines.addLine(to: CGPoint(x: -7, y: 48))
+        lines.move(to: CGPoint(x: 10, y: 28)); lines.addLine(to: CGPoint(x: 7, y: 48))
+        g.stroke(lines, with: .color(Color(hex: 0x8A6B4A)), lineWidth: 1.5)
+        g.fill(Path(roundedRect: CGRect(x: -9, y: 46, width: 18, height: 12), cornerRadius: 3), with: .color(Color(hex: 0x8A6B4A)))
+    }
+
+    private func drawWaterfall(_ ctx: inout GraphicsContext, x: CGFloat, top: CGFloat, bottom: CGFloat) {
+        ctx.fill(Path(roundedRect: CGRect(x: x - 34, y: top, width: 68, height: bottom - top), cornerRadius: 10),
+                 with: .color(Color(hex: 0x3E6B42)))
+        ctx.fill(Path(CGRect(x: x - 12, y: top + 6, width: 24, height: bottom - top - 6)),
+                 with: .color(Color(hex: 0xD6F0EE).opacity(0.85)))
+        for i in 0..<8 {
+            let u = frac(Double(t * 0.5) + Double(i) * 0.13)
+            let yy = top + 6 + (bottom - top - 10) * u
+            ctx.fill(Path(CGRect(x: x - 10 + CGFloat(i % 3) * 7, y: yy, width: 5, height: 10)),
+                     with: .color(.white.opacity(0.5 * (1 - u))))
+        }
+        ctx.fill(Path(ellipseIn: CGRect(x: x - 46, y: bottom - 8, width: 92, height: 24)), with: .color(Color(hex: 0x7BC1BC)))
+        ctx.fill(Path(ellipseIn: CGRect(x: x - 24, y: bottom - 2, width: 28, height: 8)), with: .color(.white.opacity(0.55)))
+    }
+
+    private func drawObservatory(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat) {
+        ctx.fill(Path(roundedRect: CGRect(x: x - 30, y: y - 40, width: 60, height: 40), cornerRadius: 6),
+                 with: .color(Color(hex: 0x1B2A38)))
+        var dome = Path()
+        dome.addArc(center: CGPoint(x: x, y: y - 40), radius: 30, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+        dome.closeSubpath()
+        ctx.fill(dome, with: .color(Color(hex: 0x2C3B4A)))
+        ctx.fill(Path(CGRect(x: x - 3, y: y - 70, width: 6, height: 24)), with: .color(Color(hex: 0xEDE6D2)))
+        var g = ctx
+        g.translateBy(x: x, y: y - 58)
+        g.rotate(by: .radians(-CGFloat.pi / 2 + (t == 0 ? -0.4 : sin(t * 0.35) * 0.55)))
+        var beam = Path()
+        beam.move(to: .zero); beam.addLine(to: CGPoint(x: 260, y: -40)); beam.addLine(to: CGPoint(x: 260, y: 40)); beam.closeSubpath()
+        g.fill(beam, with: .linearGradient(
+            Gradient(colors: [Color(hex: 0xFFD98A).opacity(0.35), Color(hex: 0xFFD98A).opacity(0)]),
+            startPoint: .zero, endPoint: CGPoint(x: 260, y: 0)))
+        for wx: CGFloat in [-16, 0, 16] {
+            ctx.fill(Path(roundedRect: CGRect(x: x + wx - 4, y: y - 24, width: 8, height: 10), cornerRadius: 2),
+                     with: .color(Color(hex: 0xFFD98A).opacity(0.8)))
+        }
     }
 
     private func drawButterfly(_ ctx: inout GraphicsContext, x: CGFloat, y: CGFloat, flap: CGFloat) {
