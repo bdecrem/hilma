@@ -181,24 +181,53 @@ struct VoiceSessionView: View {
             }
             return ok()
         }
-        _ = await waitFor({ client.phase == .connected }, 20); log("connected")
-        client.beginTalking(); log("press-1")
+        let up = await waitFor({ client.phase == .connected && client.debugChannelOpen }, 25)
+        log(up ? "connected" : "FAIL never-connected")
+
+        // Turn 1: a long answer, so there is plenty of audio to cut into.
+        client.debugSay("Tell me about the Battle of Hastings in great detail. Talk for at least a full minute without stopping.", cutIn: false)
+        log("say-1")
+        let playing = await waitFor({ client.debugAudioPlaying }, 25)
+        log(playing ? "dodo-audio-playing" : "FAIL no-audio-for-turn-1")
         try? await Task.sleep(for: .seconds(4))
-        client.endTalking(); log("release-1")
-        _ = await waitFor({ client.phase == .speaking }, 20); log("dodo-speaking")
-        try? await Task.sleep(for: .milliseconds(2500))
-        client.beginTalking(); log("press-2-cut-in")
-        try? await Task.sleep(for: .milliseconds(1500))
-        client.endTalking(); log("release-2")
-        _ = await waitFor({ client.phase == .speaking }, 20); log("dodo-speaking-again")
-        try? await Task.sleep(for: .seconds(2))
-        // Quick tap mid-speech: Dodo must stop and stay quiet (empty commit
-        // → no reply), not re-answer its last thought.
-        client.beginTalking(); log("press-3-tap")
+        let before = await client.debugInboundAudio()
+        try? await Task.sleep(for: .seconds(1))
+        let e0 = await client.debugInboundAudio()
+        log("old-audio-rate=\((e0?.energy ?? 0) - (before?.energy ?? 0)) per s")
+
+        // Cut in with a topic change. Old audio must stop arriving; the
+        // reply must answer the NEW question.
+        client.debugSay("Stop. Different question: what is the capital of France? Answer only that, in one short sentence.", cutIn: true)
+        log("cut-in")
+        var prev = e0
+        var leaked = 0.0
+        var newAudioAt: Double? = nil
+        for i in 1...30 {
+            try? await Task.sleep(for: .milliseconds(200))
+            let e = await client.debugInboundAudio()
+            let dE = (e?.energy ?? 0) - (prev?.energy ?? 0)
+            let playing = client.debugAudioPlaying
+            NSLog("F2_REALTIME_TEST inbound t=%.1fs dE=%.6f playing=%d", Double(i) * 0.2, dE, playing ? 1 : 0)
+            // Energy that arrives after the first 400ms while nothing new
+            // is playing is the old reply leaking through.
+            if i > 2, !playing { leaked += dE }
+            if playing, newAudioAt == nil { newAudioAt = Double(i) * 0.2 }
+            prev = e
+            if playing, i > 5 { break }
+        }
+        log(leaked < 0.0005 ? "PASS old-audio-stopped leaked=\(leaked)" : "FAIL old-audio-leaked leaked=\(leaked)")
+        log("new-audio-at=\(newAudioAt.map { String($0) } ?? "never")")
+        _ = await waitFor({ client.debugLastAssistantText.localizedCaseInsensitiveContains("Paris") }, 25)
+        let reply = client.debugLastAssistantText
+        log(reply.localizedCaseInsensitiveContains("Paris") ? "PASS new-question-answered" : "FAIL reply-ignored-cut-in reply=\(reply.prefix(120))")
+
+        // Quick tap mid-speech: Dodo must stop and stay quiet.
+        _ = await waitFor({ client.debugAudioPlaying }, 10)
+        client.beginTalking(); log("press-tap")
         try? await Task.sleep(for: .milliseconds(80))
-        client.endTalking(); log("release-3-tap")
-        try? await Task.sleep(for: .seconds(6))
-        log(client.phase == .speaking ? "FAIL tap produced a reply" : "tap-stayed-quiet")
+        client.endTalking(); log("release-tap")
+        try? await Task.sleep(for: .seconds(5))
+        log(client.debugAudioPlaying || client.phase == .speaking ? "FAIL tap produced audio" : "PASS tap-stayed-quiet")
         log("done")
     }
     #endif

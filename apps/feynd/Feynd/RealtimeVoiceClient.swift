@@ -60,6 +60,22 @@ final class RealtimeVoiceClient: NSObject {
     /// re-answers its last thought.
     private var commitTask: Task<Void, Never>?
     private var awaitingCommit = false
+    /// Server-side truth, independent of `phase`: is a response being
+    /// generated, and is the WebRTC output audio buffer playing? (The
+    /// server finishes generating long before its audio buffer drains.)
+    private var responseActive = false
+    private var audioPlaying = false
+    /// A reply was requested while a response was still active: cancel
+    /// first, create when the server reports it done.
+    private var pendingCreate = false
+    /// response.cancel already sent for the active response (a second one
+    /// just errors "no active response").
+    private var cancelSent = false
+    #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
+    private(set) var debugLastAssistantText = ""
+    var debugAudioPlaying: Bool { audioPlaying }
+    var debugChannelOpen: Bool { dataChannel?.readyState == .open }
+    #endif
     private static let releaseGrace: Duration = .milliseconds(300)
     /// Speech gate for a release: the server accepts any ≥100ms buffer,
     /// silence included, so the client decides whether the user actually
@@ -177,13 +193,61 @@ final class RealtimeVoiceClient: NSObject {
     private func handleCommitted() {
         guard awaitingCommit else { return }
         awaitingCommit = false
-        if phase == .speaking {
-            // A response slipped in during the hold; the user's turn wins.
-            sendEvent(["type": "response.cancel"])
-        }
-        sendEvent(["type": "response.create"])
-        NSLog("F2_REALTIME_PTT committed -> response.create")
+        requestReply()
     }
+
+    /// Ask for Dodo's reply to the turn that was just added. If a response
+    /// is still active (one slipped in during the hold), cancel it and
+    /// create once the server confirms it's done — creating immediately
+    /// races the cancel and 400s ("already has an active response").
+    private func requestReply() {
+        if responseActive {
+            pendingCreate = true
+            if !cancelSent {
+                cancelSent = true
+                sendEvent(["type": "response.cancel"])
+            }
+            NSLog("F2_REALTIME_PTT reply requested — waiting for the active response to end")
+        } else {
+            sendEvent(["type": "response.create"])
+            NSLog("F2_REALTIME_PTT reply requested -> response.create")
+        }
+    }
+
+    #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
+    /// Test rig: the simulator mic is silent, so a drill speaks by injecting
+    /// a text user turn. `cutIn` runs the exact press path first.
+    func debugSay(_ text: String, cutIn: Bool) {
+        if cutIn { beginTalking() }
+        sendEvent([
+            "type": "conversation.item.create",
+            "item": ["type": "message", "role": "user",
+                     "content": [["type": "input_text", "text": text]]],
+        ])
+        if cutIn {
+            talking = false
+            applyMicState()
+            sendEvent(["type": "input_audio_buffer.clear"])
+        }
+        status = "Thinking"
+        requestReply()
+    }
+
+    /// Test rig: cumulative energy + seconds of audio RECEIVED from Dodo
+    /// (inbound-rtp), to prove the old reply actually stops arriving.
+    func debugInboundAudio() async -> (energy: Double, duration: Double)? {
+        guard let connection = peerConnection else { return nil }
+        let report = await connection.statistics()
+        for statistic in report.statistics.values where statistic.type == "inbound-rtp" {
+            if Self.statisticText("kind", from: statistic) == "audio",
+               let e = statistic.values["totalAudioEnergy"] as? NSNumber,
+               let d = statistic.values["totalSamplesDuration"] as? NSNumber {
+                return (e.doubleValue, d.doubleValue)
+            }
+        }
+        return nil
+    }
+    #endif
 
     /// Stop Dodo mid-sentence, now. Mutes playback locally (the server has
     /// usually finished generating already, and the audio still queued in
@@ -193,11 +257,21 @@ final class RealtimeVoiceClient: NSObject {
     /// listened to. Playback is re-enabled on the next `response.created`.
     private func cutOffDodo() {
         remoteAudioTrack?.isEnabled = false
-        if phase == .speaking {
+        if responseActive, !cancelSent {
+            cancelSent = true
             sendEvent(["type": "response.cancel"])
         }
-        if let itemId = speakingItemId {
-            let heardMs = Int(max(0, Date().timeIntervalSince(speakingAudioStart ?? Date())) * 1000)
+        // WebRTC: the server keeps its own output audio buffer and keeps
+        // streaming it after the response is done — cancel and truncate
+        // don't empty it. This does.
+        sendEvent(["type": "output_audio_buffer.clear"])
+        audioPlaying = false
+        // Only an item whose audio has started can be truncated.
+        // The clock (first transcript delta) runs a little ahead of the
+        // audio; an audio_end_ms past the real length is rejected outright,
+        // so shave a margin and skip when nothing was heard yet.
+        if let itemId = speakingItemId, let start = speakingAudioStart,
+           case let heardMs = Int(Date().timeIntervalSince(start) * 1000) - 400, heardMs > 0 {
             sendEvent([
                 "type": "conversation.item.truncate",
                 "item_id": itemId,
@@ -413,18 +487,39 @@ final class RealtimeVoiceClient: NSObject {
             let type = event["type"] as? String
         else { return }
 
+        if !type.hasSuffix(".delta") {
+            NSLog("F2_REALTIME_EV %@", type)
+        }
         switch type {
         case "response.created":
+            responseActive = true
+            cancelSent = false
             // The user has the floor while the key is held: a reply that
             // starts now (e.g. the follow-up after a tool result) gets
             // cancelled and Dodo answers the user's turn on release instead.
             if talking {
+                cancelSent = true
                 sendEvent(["type": "response.cancel"])
                 break
             }
             phase = .speaking
             status = "Speaking"
             remoteAudioTrack?.isEnabled = true
+        case "output_audio_buffer.started":
+            // WebRTC: Dodo's audio is now actually playing.
+            audioPlaying = true
+            if speakingAudioStart == nil { speakingAudioStart = Date() }
+            if !talking {
+                phase = .speaking
+                status = "Speaking"
+                remoteAudioTrack?.isEnabled = true
+            }
+        case "output_audio_buffer.stopped", "output_audio_buffer.cleared":
+            audioPlaying = false
+            if !responseActive {
+                phase = .connected
+                status = talking ? "Listening" : "Connected"
+            }
         case "response.output_item.added":
             if let item = event["item"] as? [String: Any],
                item["type"] as? String == "message",
@@ -439,8 +534,16 @@ final class RealtimeVoiceClient: NSObject {
             // First transcript delta ≈ first audio — the clock for truncation.
             if speakingAudioStart == nil { speakingAudioStart = Date() }
         case "response.done", "response.cancelled":
-            phase = .connected
-            status = talking ? "Listening" : "Connected"
+            responseActive = false
+            if pendingCreate {
+                pendingCreate = false
+                sendEvent(["type": "response.create"])
+                NSLog("F2_REALTIME_PTT active response done -> response.create")
+            }
+            if !audioPlaying {
+                phase = .connected
+                status = talking ? "Listening" : "Connected"
+            }
         case "conversation.item.input_audio_transcription.completed":
             if let transcriptText = event["transcript"] as? String {
                 appendTranscript(role: "user", text: transcriptText)
@@ -465,8 +568,7 @@ final class RealtimeVoiceClient: NSObject {
                 NSLog("F2_REALTIME_PTT empty commit — no reply requested")
                 break
             }
-            status = message
-            NSLog("F2_REALTIME_EVENT_ERROR %@", message)
+            NSLog("F2_REALTIME_EVENT_ERROR %@ (%@)", message, code)
         default:
             break
         }
@@ -475,6 +577,10 @@ final class RealtimeVoiceClient: NSObject {
     private func appendTranscript(role: String, text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        NSLog("F2_REALTIME_TRANSCRIPT %@: %@", role, String(trimmed.prefix(160)))
+        #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
+        if role == "assistant" { debugLastAssistantText = trimmed }
+        #endif
         transcript.append([
             "role": role,
             "text": trimmed,
