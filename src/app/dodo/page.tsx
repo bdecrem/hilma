@@ -218,6 +218,8 @@ const css = `
   min-height: 100dvh;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   font-family: var(--body);
+  overflow-x: clip;
+  -webkit-text-size-adjust: 100%;
 }
 @media (prefers-color-scheme: dark) {
   .da {
@@ -233,6 +235,7 @@ const css = `
 .da-top {
   max-width: 660px; margin: 0 auto; padding: 26px 24px 0;
   display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px 16px;
 }
 .da-mark { display: flex; align-items: center; gap: 10px; }
 .da-mini { width: 30px; height: 30px; border-radius: 8px; background: #FCE5D0; overflow: hidden; }
@@ -308,10 +311,10 @@ const css = `
 .da a.da-btn:hover { background: var(--slate); color: #FFFDF7; }
 
 /* The tour (DodoTour) */
-.dd-tour { position: relative; display: flex; flex-direction: column; align-items: center; }
+.dd-tour { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; }
 .dd-tour-phone {
   display: block; position: relative; padding: 0; cursor: pointer;
-  width: 268px; aspect-ratio: 1260 / 2736;
+  width: min(268px, 100%); aspect-ratio: 1260 / 2736;
   border-radius: 28px; overflow: hidden; background: var(--surface);
   border: 1px solid var(--border); box-shadow: 0 18px 40px var(--shadow);
 }
@@ -320,7 +323,7 @@ const css = `
   position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
   opacity: 0; transition: opacity 0.55s ease;
 }
-.dd-tour-captions { display: grid; max-width: 320px; margin-top: 14px; }
+.dd-tour-captions { display: grid; width: 100%; max-width: 320px; margin-top: 14px; }
 .dd-tour-caption {
   grid-area: 1 / 1; margin: 0; text-align: center;
   font-size: 15px; line-height: 1.5; color: var(--ink2);
