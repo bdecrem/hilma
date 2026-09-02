@@ -36,7 +36,7 @@ const projects: Project[] = [
     shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style command line app with a deep custom toolset: a suite of instruments and effects plugins that you can also play <a href="https://webtoys.ai/jb01/ui/jb01/index.html" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">from the web</a>. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
     fullDesc: 'think ableton live, rebuilt for the command line. 7 synthesizers, 5 effects processors. outputs midi, wav, stems.',
     status: 'neglected',
-    artifacts: [{ label: 'the video', url: 'https://youtu.be/pCwjurIdBsU' }],
+    artifacts: [{ label: 'dk019 clip', url: 'https://youtu.be/pCwjurIdBsU' }],
   },
   {
     name: 'amber',
