@@ -15,5 +15,5 @@ for(const g of groups.filter(g=>g.attributes.name==="Testers"||g.attributes.publ
 const all=(await api(`/builds?filter[app]=${APP}&filter[preReleaseVersion.platform]=${PLAT}&filter[expired]=false&include=buildBetaDetail&limit=20&sort=-uploadedDate`));
 const det=Object.fromEntries((all.included||[]).map(i=>[i.id,i.attributes]));
 for(const b of all.data){const s=det[b.relationships?.buildBetaDetail?.data?.id]?.externalBuildState;console.log(" ",b.attributes.version,s);
-  if(b.id!==build.id&&s==="WAITING_FOR_REVIEW"){await api(`/builds/${b.id}`,"PATCH",{data:{type:"builds",id:b.id,attributes:{expired:true}}});console.log("  expired",b.attributes.version)}}
+  if(b.id!==build.id&&(s==="WAITING_FOR_REVIEW"||s==="WAITING_FOR_BETA_REVIEW")){await api(`/builds/${b.id}`,"PATCH",{data:{type:"builds",id:b.id,attributes:{expired:true}}});console.log("  expired",b.attributes.version)}}
 try{await api(`/betaAppReviewSubmissions`,"POST",{data:{type:"betaAppReviewSubmissions",relationships:{build:{data:{type:"builds",id:build.id}}}}});console.log("submitted "+VER+" for beta review")}catch(e){console.log("submit:",e.message.slice(0,300))}
