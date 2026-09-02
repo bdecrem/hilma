@@ -11,6 +11,27 @@ bookworm dodo reading a book.
 on its head (still learning), cream face, marigold beak, blush cheeks, mitten
 wings gripping an open cream book. Drawn on a 200×200 viewBox.
 
+## The mascot, v3 (2026-09-01)
+
+Same bird, same front camera, same proportions as the mark — with volume:
+radial shading on head and body, an iris ring and twin highlights, soft-edged
+blush, a gradient beak with a highlight and smile crease, leaf midribs, three
+crown feathers, toe notches, and a ground shadow. The app draws it in
+`Feynd/AnimatedDodo.swift` (`drawAnimatedDodo`); the web draws the identical
+geometry in `src/app/dodo/DodoMascot.tsx`. Both share the pose math from
+`design/mascot-animation-spec.md`.
+
+Launch screen (`LaunchSplashView`): pop in from the feet, sprout boing,
+wing flap, eyes open with overshoot then a double blink, cheeks warm in,
+the lowercase wordmark rises letter by letter, a small hello hop, then the
+idle loop — over a peach bloom, a faint sun, and drifting motes on the
+theme ground. ~2.1s; the app holds the splash 2.5s.
+
+Site (dodo.foo): Fredoka for display, Nunito for body; butter paper ground
+with the splash's peach bloom behind the tour; marigold for action, slate for
+wayfinding, sprout for the "open source" tag. OG image is baked at
+`src/app/dodo/opengraph-image.png` (source: the launch page's bird + wordmark).
+
 ## App icon
 
 `dodo-icon.svg` — the mark full-bleed over peach `#FCE5D0`. Export square

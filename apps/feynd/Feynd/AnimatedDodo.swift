@@ -218,34 +218,68 @@ func drawAnimatedDodo(_ ctx: inout GraphicsContext, at p: CGPoint, height: CGFlo
         fill(path, hex)
     }
 
-    // Feet (lifts raise leg + pad together).
-    var feet = g
-    feet.translateBy(x: 0, y: -pose.leftFootLift)
-    feet.fill(Path(roundedRect: CGRect(x: -9, y: 44, width: 6, height: 12), cornerRadius: 3), with: .color(Color(hex: 0xF0A830)))
-    feet.fill(Path(roundedRect: CGRect(x: -13, y: 53, width: 12, height: 5), cornerRadius: 2.5), with: .color(Color(hex: 0xF0A830)))
-    var feetR = g
-    feetR.translateBy(x: 0, y: -pose.rightFootLift)
-    feetR.fill(Path(roundedRect: CGRect(x: 3, y: 44, width: 6, height: 12), cornerRadius: 3), with: .color(Color(hex: 0xF0A830)))
-    feetR.fill(Path(roundedRect: CGRect(x: 1, y: 53, width: 12, height: 5), cornerRadius: 2.5), with: .color(Color(hex: 0xF0A830)))
+    // Shading helpers — the volume the mascot earned in v3 (see
+    // branding/design: Dodo Launch v3). Gradients only; geometry unchanged.
+    func radial(_ path: Path, _ stops: [(UInt32, CGFloat)], center: CGPoint, r: CGFloat) {
+        let grad = Gradient(stops: stops.map { .init(color: Color(hex: $0.0), location: $0.1) })
+        g.fill(path, with: .radialGradient(grad, center: center, startRadius: 0, endRadius: r))
+    }
+    func linear(_ path: Path, _ stops: [(UInt32, CGFloat)], from a: CGPoint, to b: CGPoint) {
+        let grad = Gradient(stops: stops.map { .init(color: Color(hex: $0.0), location: $0.1) })
+        g.fill(path, with: .linearGradient(grad, startPoint: a, endPoint: b))
+    }
+    func stroke(_ path: Path, _ hex: UInt32, _ opacity: CGFloat, _ width: CGFloat) {
+        g.stroke(path, with: .color(Color(hex: hex).opacity(opacity)),
+                 style: StrokeStyle(lineWidth: width, lineCap: .round))
+    }
+    let footStops: [(UInt32, CGFloat)] = [(0xF3B546, 0), (0xD9931F, 1)]
+
+    // Feet (lifts raise leg + pad together), with toe notches.
+    for side: CGFloat in [-1, 1] {
+        var foot = g
+        foot.translateBy(x: 0, y: side == -1 ? -pose.leftFootLift : -pose.rightFootLift)
+        let legX: CGFloat = side == -1 ? -9 : 3
+        let padX: CGFloat = side == -1 ? -13 : 1
+        let grad = Gradient(stops: footStops.map { .init(color: Color(hex: $0.0), location: $0.1) })
+        foot.fill(Path(roundedRect: CGRect(x: legX, y: 44, width: 6, height: 12), cornerRadius: 3),
+                  with: .linearGradient(grad, startPoint: CGPoint(x: 0, y: 44), endPoint: CGPoint(x: 0, y: 58)))
+        foot.fill(Path(roundedRect: CGRect(x: padX, y: 53, width: 12, height: 5), cornerRadius: 2.5),
+                  with: .linearGradient(grad, startPoint: CGPoint(x: 0, y: 50), endPoint: CGPoint(x: 0, y: 58)))
+        for toe: CGFloat in [3.8, 7.4] {
+            foot.fill(Path(roundedRect: CGRect(x: padX + toe, y: 55.6, width: 1.6, height: 2.4), cornerRadius: 0.8),
+                      with: .color(Color(hex: 0xC9821F).opacity(0.55)))
+        }
+    }
 
     // Body + belly.
-    fill(Path(ellipseIn: CGRect(x: -20, y: 16, width: 40, height: 32)), 0x7C9EB2)
-    fill(Path(ellipseIn: CGRect(x: -12, y: 25, width: 24, height: 20)), 0xF9EFDA)
+    radial(Path(ellipseIn: CGRect(x: -20, y: 16, width: 40, height: 32)),
+           [(0x8FB0C4, 0), (0x7C9EB2, 0.6), (0x5A7E93, 1)], center: CGPoint(x: -4, y: 25), r: 27)
+    radial(Path(ellipseIn: CGRect(x: -12, y: 25, width: 24, height: 20)),
+           [(0xFFFBF0, 0), (0xEBDDBE, 1)], center: CGPoint(x: 0, y: 32), r: 12)
+    var crease = Path()
+    crease.move(to: CGPoint(x: -9, y: 27))
+    crease.addQuadCurve(to: CGPoint(x: 9, y: 27), control: CGPoint(x: 0, y: 23))
+    stroke(crease, 0x5A7E93, 0.35, 0.9)
 
     // Wings — resting rotation baked in; flap adds about the shoulder.
     for side: CGFloat in [-1, 1] {
-        var wing = Path(roundedRect: CGRect(x: side == -1 ? -30 : 16, y: 24, width: 14, height: 11), cornerRadius: 5.5)
         let restCX: CGFloat = 23 * side, restCY: CGFloat = 29
-        wing = wing.applying(
-            CGAffineTransform(translationX: restCX, y: restCY)
-                .rotated(by: side * -20 * .pi / 180)
-                .translatedBy(x: -restCX, y: -restCY))
         let shoulderX: CGFloat = 18 * side, shoulderY: CGFloat = 26
-        wing = wing.applying(
-            CGAffineTransform(translationX: shoulderX, y: shoulderY)
-                .rotated(by: side * -pose.wingAngle * .pi / 180)
-                .translatedBy(x: -shoulderX, y: -shoulderY))
-        fill(wing, 0x6A8FA3)
+        let t = CGAffineTransform(translationX: shoulderX, y: shoulderY)
+            .rotated(by: side * -pose.wingAngle * .pi / 180)
+            .translatedBy(x: -shoulderX, y: -shoulderY)
+            .translatedBy(x: restCX, y: restCY)
+            .rotated(by: side * -20 * .pi / 180)
+            .translatedBy(x: -restCX, y: -restCY)
+        let wing = Path(roundedRect: CGRect(x: side == -1 ? -30 : 16, y: 24, width: 14, height: 11), cornerRadius: 5.5)
+            .applying(t)
+        let wc = CGPoint(x: restCX - 2 * side, y: 27).applying(t)
+        radial(wing, [(0x7EA2B6, 0), (0x5C8095, 1)], center: wc, r: 9)
+        var feather = Path()
+        feather.move(to: CGPoint(x: side == -1 ? -27 : 18.5, y: side == -1 ? 31.5 : 31.2))
+        feather.addQuadCurve(to: CGPoint(x: side == -1 ? -18.5 : 27, y: side == -1 ? 31.2 : 31.5),
+                             control: CGPoint(x: 23 * side, y: 29))
+        stroke(feather.applying(t), 0x4E7186, 0.5, 0.8)
     }
 
     // Sprout — three leaves rotating about the stem base (0,-26).
@@ -253,37 +287,54 @@ func drawAnimatedDodo(_ ctx: inout GraphicsContext, at p: CGPoint, height: CGFlo
     sprout.translateBy(x: 0, y: -26)
     sprout.rotate(by: .degrees(pose.sproutAngle))
     sprout.translateBy(x: 0, y: 26)
-    func leaf(_ points: Path, _ hex: UInt32, spread: CGFloat) {
-        var lp = points
-        if spread != 0 {
-            lp = lp.applying(
-                CGAffineTransform(translationX: 0, y: -26)
-                    .rotated(by: spread * .pi / 180)
-                    .translatedBy(x: 0, y: 26))
-        }
-        sprout.fill(lp, with: .color(Color(hex: hex)))
+    func spreadT(_ spread: CGFloat) -> CGAffineTransform {
+        CGAffineTransform(translationX: 0, y: -26).rotated(by: spread * .pi / 180).translatedBy(x: 0, y: 26)
     }
     var stem = Path()
     stem.move(to: CGPoint(x: -0.9, y: -26))
     stem.addCurve(to: CGPoint(x: 2.2, y: -32), control1: CGPoint(x: -1.1, y: -28.6), control2: CGPoint(x: -0.4, y: -30.3))
     stem.addCurve(to: CGPoint(x: 1.3, y: -26), control1: CGPoint(x: 2.8, y: -30.7), control2: CGPoint(x: 2.2, y: -28.6))
     stem.closeSubpath()
-    leaf(stem, 0x6FAE5C, spread: 0)
-    var leafL = Path()
-    leafL.move(to: CGPoint(x: 0.9, y: -30.9))
-    leafL.addCurve(to: CGPoint(x: -16.1, y: -34.4), control1: CGPoint(x: -3.9, y: -36.5), control2: CGPoint(x: -11.3, y: -37.4))
-    leafL.addCurve(to: CGPoint(x: 0.9, y: -30.9), control1: CGPoint(x: -13.9, y: -28.7), control2: CGPoint(x: -5.7, y: -27.4))
-    leafL.closeSubpath()
-    leaf(leafL, 0x7BB662, spread: -pose.leafSpread)
-    var leafR = Path()
-    leafR.move(to: CGPoint(x: 1.7, y: -32.2))
-    leafR.addCurve(to: CGPoint(x: 16.1, y: -37.8), control1: CGPoint(x: 3.9, y: -37.8), control2: CGPoint(x: 10.9, y: -39.6))
-    leafR.addCurve(to: CGPoint(x: 1.7, y: -32.2), control1: CGPoint(x: 15.2, y: -32.2), control2: CGPoint(x: 8.3, y: -29.2))
-    leafR.closeSubpath()
-    leaf(leafR, 0x5F9E4C, spread: pose.leafSpread)
+    sprout.fill(stem, with: .color(Color(hex: 0x6FAE5C)))
+    do {
+        let t = spreadT(-pose.leafSpread)
+        var leafL = Path()
+        leafL.move(to: CGPoint(x: 0.9, y: -30.9))
+        leafL.addCurve(to: CGPoint(x: -16.1, y: -34.4), control1: CGPoint(x: -3.9, y: -36.5), control2: CGPoint(x: -11.3, y: -37.4))
+        leafL.addCurve(to: CGPoint(x: 0.9, y: -30.9), control1: CGPoint(x: -13.9, y: -28.7), control2: CGPoint(x: -5.7, y: -27.4))
+        leafL.closeSubpath()
+        let grad = Gradient(colors: [Color(hex: 0x8CC470), Color(hex: 0x63A24F)])
+        sprout.fill(leafL.applying(t), with: .linearGradient(grad, startPoint: CGPoint(x: 0, y: -30).applying(t), endPoint: CGPoint(x: -16, y: -35).applying(t)))
+        var rib = Path()
+        rib.move(to: CGPoint(x: 0, y: -31.2))
+        rib.addQuadCurve(to: CGPoint(x: -14.2, y: -34.2), control: CGPoint(x: -7, y: -33.8))
+        sprout.stroke(rib.applying(t), with: .color(.white.opacity(0.45)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+    }
+    do {
+        let t = spreadT(pose.leafSpread)
+        var leafR = Path()
+        leafR.move(to: CGPoint(x: 1.7, y: -32.2))
+        leafR.addCurve(to: CGPoint(x: 16.1, y: -37.8), control1: CGPoint(x: 3.9, y: -37.8), control2: CGPoint(x: 10.9, y: -39.6))
+        leafR.addCurve(to: CGPoint(x: 1.7, y: -32.2), control1: CGPoint(x: 15.2, y: -32.2), control2: CGPoint(x: 8.3, y: -29.2))
+        leafR.closeSubpath()
+        let grad = Gradient(colors: [Color(hex: 0x6FAE5C), Color(hex: 0x4E8C3E)])
+        sprout.fill(leafR.applying(t), with: .linearGradient(grad, startPoint: CGPoint(x: 2, y: -32).applying(t), endPoint: CGPoint(x: 16, y: -38).applying(t)))
+        var rib = Path()
+        rib.move(to: CGPoint(x: 2.6, y: -32.6))
+        rib.addQuadCurve(to: CGPoint(x: 14.4, y: -37.2), control: CGPoint(x: 8.5, y: -35.6))
+        sprout.stroke(rib.applying(t), with: .color(.white.opacity(0.4)), style: StrokeStyle(lineWidth: 0.7, lineCap: .round))
+    }
 
-    // Head + hooded face.
-    fill(Path(ellipseIn: CGRect(x: -26, y: -26, width: 52, height: 52)), 0x7C9EB2)
+    // Head, three crown feathers, hooded face.
+    radial(Path(ellipseIn: CGRect(x: -26, y: -26, width: 52, height: 52)),
+           [(0x93B3C6, 0), (0x7C9EB2, 0.55), (0x5F8398, 1)], center: CGPoint(x: -6, y: -10), r: 32)
+    for (x0, y0, dx1, dy1, dx2, dy2, op): (CGFloat, CGFloat, CGFloat, CGFloat, CGFloat, CGFloat, CGFloat) in
+        [(-7, -24.5, -1.4, -2.6, -0.4, -4.6, 0.7), (-3.2, -25.6, -0.6, -2.6, 0.6, -4.4, 0.7), (-10.6, -22.6, -1.8, -2, -1.4, -4.2, 0.55)] {
+        var f = Path()
+        f.move(to: CGPoint(x: x0, y: y0))
+        f.addQuadCurve(to: CGPoint(x: x0 + dx2, y: y0 + dy2), control: CGPoint(x: x0 + dx1, y: y0 + dy1))
+        stroke(f, 0x5F8398, op, 1)
+    }
     var face = Path()
     face.move(to: CGPoint(x: -20, y: 4))
     face.addCurve(to: CGPoint(x: -6.5, y: -12), control1: CGPoint(x: -20, y: -7), control2: CGPoint(x: -15, y: -13))
@@ -292,24 +343,44 @@ func drawAnimatedDodo(_ ctx: inout GraphicsContext, at p: CGPoint, height: CGFlo
     face.addCurve(to: CGPoint(x: 0, y: 24), control1: CGPoint(x: 20, y: 16), control2: CGPoint(x: 11, y: 24))
     face.addCurve(to: CGPoint(x: -20, y: 4), control1: CGPoint(x: -11, y: 24), control2: CGPoint(x: -20, y: 16))
     face.closeSubpath()
-    fill(face, 0xF9EFDA)
+    radial(face, [(0xFFFBF0, 0), (0xF9EFDA, 0.7), (0xEBDDBE, 1)], center: CGPoint(x: 0, y: -2), r: 24)
 
-    // Eyes — pupil + highlight scale about the eye center, blink via scaleY.
+    // Cheeks — soft-edged blush.
+    for side: CGFloat in [-1, 1] {
+        let c = CGPoint(x: 15.6 * side, y: 8.4)
+        let blush = Color(hex: 0xF2A19A)
+        let grad = Gradient(stops: [.init(color: blush.opacity(pose.cheekOpacity), location: 0),
+                                    .init(color: blush.opacity(pose.cheekOpacity * 0.7), location: 0.6),
+                                    .init(color: blush.opacity(0), location: 1)])
+        g.fill(Path(ellipseIn: CGRect(x: c.x - 5.4, y: c.y - 3.6, width: 10.8, height: 7.2)),
+               with: .radialGradient(grad, center: c, startRadius: 0, endRadius: 5.4))
+    }
+
+    // Eyes — iris depth + twin highlights; blink via scaleY about the centre.
     for side: CGFloat in [-1, 1] {
         let cx = 9.4 * side
         var eye = g
         eye.translateBy(x: cx + pose.pupilOffset.width, y: -2 + pose.pupilOffset.height)
         eye.scaleBy(x: pose.pupilScale, y: pose.pupilScale * pose.eyeScaleY)
-        eye.fill(Path(ellipseIn: CGRect(x: -5.5, y: -5.5, width: 11, height: 11)), with: .color(Color(hex: 0x33383E)))
+        let grad = Gradient(stops: [.init(color: Color(hex: 0x4A5560), location: 0),
+                                    .init(color: Color(hex: 0x33383E), location: 0.72),
+                                    .init(color: Color(hex: 0x22262B), location: 1)])
+        eye.fill(Path(ellipseIn: CGRect(x: -5.5, y: -5.5, width: 11, height: 11)),
+                 with: .radialGradient(grad, center: .zero, startRadius: 0, endRadius: 5.5))
         eye.fill(Path(ellipseIn: CGRect(x: -1.8 * side - 2.1, y: -4.1, width: 4.2, height: 4.2)), with: .color(.white))
+        eye.fill(Path(ellipseIn: CGRect(x: 1.9 * side - 0.9, y: 1.4, width: 1.8, height: 1.8)), with: .color(.white.opacity(0.75)))
     }
 
-    // Beak + nostrils + cheeks.
-    fill(Path(ellipseIn: CGRect(x: -6.8, y: 1.3, width: 13.6, height: 10)), 0xF0A830)
+    // Beak — gradient, a highlight, nostrils, and a smile crease.
+    linear(Path(ellipseIn: CGRect(x: -6.8, y: 1.3, width: 13.6, height: 10)),
+           [(0xF8C86E, 0), (0xF0A830, 0.5), (0xD08A1C, 1)], from: CGPoint(x: 0, y: 1.3), to: CGPoint(x: 0, y: 11.3))
+    g.fill(Path(ellipseIn: CGRect(x: -4.2, y: 2.6, width: 4, height: 2)), with: .color(.white.opacity(0.32)))
     fill(Path(ellipseIn: CGRect(x: -3.55, y: 4.05, width: 1.9, height: 1.9)), 0xC9821F)
     fill(Path(ellipseIn: CGRect(x: 1.65, y: 4.05, width: 1.9, height: 1.9)), 0xC9821F)
-    fill(Path(ellipseIn: CGRect(x: -19.8, y: 5.8, width: 8.4, height: 5.2)), 0xF2A19A, pose.cheekOpacity)
-    fill(Path(ellipseIn: CGRect(x: 11.4, y: 5.8, width: 8.4, height: 5.2)), 0xF2A19A, pose.cheekOpacity)
+    var smile = Path()
+    smile.move(to: CGPoint(x: -5.6, y: 8.2))
+    smile.addQuadCurve(to: CGPoint(x: 5.6, y: 8.2), control: CGPoint(x: 0, y: 10.6))
+    stroke(smile, 0xC9821F, 0.55, 0.7)
 }
 
 /// Standalone idle mascot for placing in layouts (the Peck map traveler).
@@ -425,38 +496,128 @@ struct ReactionDodoView: View {
 /// hands off to the app. Purely decorative — Reduce Motion gets a still.
 struct LaunchSplashView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var colorScheme
     @State private var start = Date()
 
     var body: some View {
         content.onAppear { start = Date() }
     }
 
+    // The v3 launch (branding/design: Dodo Launch v3):
+    //   0.00  pop in from the feet (overshoot), ground shadow blooms with it
+    //   0.40  sprout boing lags the landing; wing flap
+    //   0.50  eyes open with a small overshoot, then a double blink at 1.15
+    //   0.70  cheeks warm in
+    //   0.80  wordmark rises, letter by letter
+    //   1.50  a small hello hop, then settle into the idle loop
+    private func pose(_ t: CGFloat) -> DodoPose {
+        if reduceMotion {
+            var p = DodoMood.idle(t, reduceMotion: true)
+            p.eyeScaleY = 1
+            return p
+        }
+        if t < 1.5 {
+            var p = DodoPose()
+            let pop = easeOutBack(max(0, min(1, t / 0.45)))
+            p.scaleX = pop; p.scaleY = pop
+            let su = max(0, t - 0.4)
+            p.sproutAngle = 14 * exp(-3.4 * su) * sin(su * 15)
+            p.wingAngle = 42 * bellPublic(su / 0.5) + 26 * bellPublic((su - 0.55) / 0.45)
+            if t < 0.5 {
+                p.eyeScaleY = 0.05
+            } else {
+                let ou = max(0, min(1, (t - 0.5) / 0.22))
+                p.eyeScaleY = min(1, easeOutBack(ou))
+                p.pupilScale = 1 + 0.15 * (1 - ou)
+            }
+            p.eyeScaleY = min(p.eyeScaleY, DodoMood.blinkShapePublic((t - 1.15) / 0.12),
+                              DodoMood.blinkShapePublic((t - 1.37) / 0.12))
+            p.cheekOpacity = 0.6 * max(0, min(1, (t - 0.7) / 0.3))
+            return p
+        }
+        var a = DodoMood.idle(t)
+        let hu = (t - 1.5) / 0.6
+        if hu < 1.05 {
+            let h = DodoMood.happy(hu)
+            a.scaleX = h.scaleX; a.scaleY = h.scaleY; a.yOffset = h.yOffset * 0.8
+            a.sproutAngle += h.sproutAngle; a.wingAngle = h.wingAngle; a.cheekOpacity = h.cheekOpacity
+            if hu < 0.9 { a.eyeScaleY = 1 }
+        }
+        return a
+    }
+
     private var content: some View {
-        ZStack {
+        let dark = colorScheme == .dark
+        let bloom = Color(hex: dark ? 0x243038 : 0xFCE5D0)
+        let sun = Color(hex: dark ? 0x6B4A14 : 0xF6C46A)
+        let mote = Color(hex: dark ? 0xF6C46A : 0xF0A830)
+        return ZStack {
             FeyndTheme.bg.ignoresSafeArea()
             TimelineView(.animation(minimumInterval: 1.0 / 40.0)) { timeline in
-                let t = reduceMotion ? 1.0 : CGFloat(timeline.date.timeIntervalSince(start))
-                let pop = easeOutBack(max(0, min(1, t / 0.45)))
-                VStack(spacing: 18) {
-                    Canvas { ctx, size in
-                        var pose = DodoPose()
-                        pose.scaleX = pop
-                        pose.scaleY = pop
-                        // Sprout boing + one wing flap as the pop lands.
-                        let su = max(0, t - 0.4)
-                        pose.sproutAngle = 14 * exp(-3.4 * su) * sin(su * 15)
-                        pose.wingAngle = 42 * (su > 0 && su < 0.5 ? sin(su / 0.5 * .pi) : 0)
-                        var g = ctx
-                        drawAnimatedDodo(&g, at: CGPoint(x: size.width / 2, y: size.height - 4), height: 132, pose: pose)
+                let t = reduceMotion ? 3.0 : CGFloat(timeline.date.timeIntervalSince(start))
+                let p = pose(t)
+                GeometryReader { geo in
+                    let w = geo.size.width, h = geo.size.height
+                    ZStack {
+                        // Ground: a peach bloom behind the bird, a faint sun up top,
+                        // a slow breath in the bloom, and a few drifting motes.
+                        RadialGradient(colors: [sun, .clear], center: .init(x: 0.5, y: 0.16), startRadius: 0, endRadius: w * 0.36)
+                            .opacity(0.32)
+                        RadialGradient(colors: [bloom, .clear], center: .init(x: 0.5, y: 0.5), startRadius: 0, endRadius: w * 0.62)
+                        RadialGradient(colors: [bloom, .clear], center: .init(x: 0.5, y: 0.52), startRadius: 0, endRadius: w * 0.5)
+                            .opacity(reduceMotion ? 0 : 0.35 + 0.35 * sin(t * 2 * .pi / 6.4))
+                        if !reduceMotion {
+                            Canvas { ctx, size in
+                                for i in 0..<5 {
+                                    let fi = CGFloat(i)
+                                    let period: CGFloat = 9 + 1.3 * fi
+                                    let u = ((t + fi * 2.1) / period).truncatingRemainder(dividingBy: 1)
+                                    let x = size.width * (0.33 + 0.075 * fi) + 12 * sin(t * 0.5 + fi)
+                                    let y = size.height * 0.68 - u * size.height * 0.46
+                                    let alpha = u < 0.12 ? u / 0.12 * 0.45 : 0.45 - 0.45 * (u - 0.12) / 0.88
+                                    let r: CGFloat = 1.6 + 1.2 * u
+                                    ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: 2 * r, height: 2 * r)),
+                                             with: .color(mote.opacity(alpha)))
+                                }
+                            }
+                        }
                     }
-                    .frame(width: 150, height: 140)
-                    Text("Dodo")
-                        .font(.custom("Fredoka", size: 30).weight(.semibold))
-                        .foregroundStyle(FeyndTheme.text)
-                        .opacity(Double(max(0, min(1, (t - 0.35) / 0.3))))
+                    .frame(width: w, height: h)
+                    .ignoresSafeArea()
+
+                    VStack(spacing: 14) {
+                        Canvas { ctx, size in
+                            var g = ctx
+                            let feet = CGPoint(x: size.width / 2, y: size.height - 6)
+                            // Ground shadow: grows with the pop, tightens with the hop.
+                            let lift = max(0, min(1, -p.yOffset / 26))
+                            let s = min(1, p.scaleX)
+                            let rx = 29 * s * (1 - 0.35 * lift), ry = 5 * s * (1 - 0.3 * lift)
+                            g.fill(Path(ellipseIn: CGRect(x: feet.x - rx, y: feet.y + 3 - ry, width: 2 * rx, height: 2 * ry)),
+                                   with: .color(Color(hex: dark ? 0x000000 : 0x3E3324).opacity((dark ? 0.35 : 0.13) * (1 - 0.5 * lift))))
+                            drawAnimatedDodo(&g, at: feet, height: 132, pose: p)
+                        }
+                        .frame(width: 170, height: 150)
+                        HStack(spacing: 0) {
+                            ForEach(Array("dodo".enumerated()), id: \.offset) { i, ch in
+                                let u = reduceMotion ? 1 : max(0, min(1, (t - 0.8 - CGFloat(i) * 0.05) / 0.55))
+                                Text(String(ch))
+                                    .font(.custom("Fredoka", size: 34).weight(.semibold))
+                                    .foregroundStyle(FeyndTheme.text)
+                                    .opacity(Double(u))
+                                    .offset(y: 10 * (1 - easeOutBack(u)))
+                            }
+                        }
+                        .tracking(-0.6)
+                    }
+                    .frame(width: w, height: h)
+                    .offset(y: -12)
                 }
-                .offset(y: -12)
             }
         }
     }
+}
+
+private func bellPublic(_ u: CGFloat) -> CGFloat {
+    u > 0 && u < 1 ? sin(u * .pi) : 0
 }

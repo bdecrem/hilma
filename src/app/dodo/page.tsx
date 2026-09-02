@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import DodoTour from './DodoTour'
+import DodoMascot from './DodoMascot'
 
 // The dodogo.cc homepage — an essay-style introduction to Dodo, hybrid of
 // the blog post (the idea) and the repo README (the features). The older
@@ -17,8 +17,11 @@ export default function DodoAltPage() {
 
       <header className="da-top">
         <div className="da-mark">
-          <Image src="/dodo/appicon-tile.png" alt="" width={30} height={30} className="da-appicon" />
+          <div className="da-mini" aria-hidden="true">
+            <DodoMascot size={30} shadow={false} />
+          </div>
           <span className="da-word">dodo</span>
+          <span className="da-tag">open source</span>
         </div>
         <nav className="da-nav">
           <a href={GITHUB_URL}>GitHub</a>
@@ -204,14 +207,26 @@ const css = `
   --ink3: #939DA5;
   --marigold: #DD9420;
   --marigold-deep: #B97A14;
+  --slate: #6A8FA3;
+  --sprout: #5F9E4C;
+  --peach: #FCE5D0;
+  --shadow: rgba(62,51,36,0.14);
   --display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
-  --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --body: var(--font-nunito), 'Nunito', 'Avenir Next', system-ui, sans-serif;
 
   background: var(--paper);
   color: var(--ink);
   min-height: 100dvh;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  font-family: var(--serif);
+  font-family: var(--body);
+}
+@media (prefers-color-scheme: dark) {
+  .da {
+    --paper: #14191D; --surface: #202830; --surface2: #2B343D; --border: #333E48;
+    --ink: #F7F0DE; --ink2: #A0ACB4; --ink3: #64717B;
+    --marigold: #F0A830; --marigold-deep: #F6C46A; --slate: #8FB0C4; --sprout: #7BB662;
+    --peach: #243038; --shadow: rgba(0,0,0,0.4);
+  }
 }
 .da * { box-sizing: border-box; }
 .da a { color: inherit; }
@@ -220,51 +235,72 @@ const css = `
   max-width: 660px; margin: 0 auto; padding: 26px 24px 0;
   display: flex; align-items: center; justify-content: space-between;
 }
-.da-mark { display: flex; align-items: center; gap: 9px; }
-.da-appicon { width: 30px; height: 30px; border-radius: 8px; }
+.da-mark { display: flex; align-items: center; gap: 10px; }
+.da-mini { width: 34px; height: 34px; border-radius: 9px; background: var(--peach); display: grid; place-items: center; }
 .da-word { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
+.da-tag {
+  font-family: var(--display); font-weight: 500; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--sprout); border: 1px solid color-mix(in srgb, var(--sprout) 45%, transparent);
+  border-radius: 999px; padding: 3px 8px; margin-left: 2px;
+}
 .da-nav { display: flex; gap: 20px; font-family: var(--display); font-weight: 500; font-size: 14.5px; }
 .da-nav a { text-decoration: none; border-bottom: 2px solid var(--marigold); padding-bottom: 1px; }
+.da-nav a:hover { border-color: var(--slate); }
 
-.da-body { max-width: 660px; margin: 0 auto; padding: 52px 24px 80px; }
+.da-body { max-width: 660px; margin: 0 auto; padding: 46px 24px 72px; }
 .da-body h1 {
-  font-size: clamp(26px, 4.6vw, 33px); line-height: 1.32; font-weight: 400;
-  letter-spacing: -0.01em; margin: 0 0 44px;
+  font-family: var(--display); font-weight: 500;
+  font-size: clamp(25px, 4.6vw, 32px); line-height: 1.28;
+  letter-spacing: -0.012em; margin: 0 0 40px; text-wrap: balance;
 }
-.da-body h1 em { font-style: italic; color: var(--marigold-deep); }
+.da-body h1 em { font-style: normal; color: var(--marigold-deep); }
 
 .da-label {
   font-family: var(--display); font-weight: 600; font-size: 12px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--marigold-deep);
-  margin-bottom: 14px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
 }
-.da-body section { margin-bottom: 46px; }
-.da-body p { font-size: 17.5px; line-height: 1.62; color: var(--ink); margin: 0 0 16px; }
-.da-quote { margin: 28px 0 22px; padding: 4px 0 4px 22px; border-left: 3px solid var(--marigold); }
-.da-quote-text { font-size: 20px; line-height: 1.5; color: var(--ink); margin: 0 0 6px; }
-.da-quote-mark { color: var(--marigold); font-weight: 700; }
-.da-quote-cite { font-family: var(--display); font-style: normal; font-weight: 500; font-size: 14px; color: var(--ink2); }
-.da-feyn-lead { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); margin: 0 0 10px; }
-.da-feyn { list-style: decimal; margin: 0 0 18px; padding-left: 24px; }
-.da-feyn li { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin-bottom: 10px; }
-.da-feyn li::marker { font-family: var(--display); font-weight: 600; color: var(--marigold-deep); }
-.da-name { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin: 0 0 14px; }
-.da-name a { color: var(--marigold-deep); text-decoration: underline; text-underline-offset: 2px; }
+.da-label::before { content: ""; width: 8px; height: 8px; border-radius: 2.5px; background: var(--marigold); }
+.da-body section { margin-bottom: 44px; }
+.da-body p { font-size: 17px; line-height: 1.6; color: var(--ink); margin: 0 0 16px; }
+.da-quote { margin: 26px 0 22px; padding: 6px 0 6px 20px; border-left: 3px solid var(--slate); }
+.da-quote-text { font-family: var(--display); font-weight: 500; font-size: 21px; line-height: 1.4; color: var(--ink); margin: 0 0 6px; }
+.da-quote-mark { color: var(--marigold); }
+.da-quote-cite { font-style: normal; font-size: 14px; color: var(--ink2); }
+.da-feyn-lead { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); margin: 0 0 12px; }
+.da-feyn { list-style: none; counter-reset: step; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.da-feyn li {
+  counter-increment: step; position: relative; padding-left: 38px;
+  font-size: 15.5px; line-height: 1.55; color: var(--ink2);
+}
+.da-feyn li::before {
+  content: counter(step); position: absolute; left: 0; top: 0;
+  font-family: var(--display); font-weight: 600; font-size: 13px;
+  color: #261C06; background: var(--marigold); width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center;
+}
+.da-name { font-size: 15.5px; line-height: 1.55; color: var(--ink2); margin: 0 0 14px; }
+.da-name a { color: var(--slate); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--slate) 50%, transparent); }
 .da-more { font-family: var(--display); font-weight: 500; font-size: 15px; }
 .da-more a { color: var(--marigold-deep); text-decoration: none; }
 .da-more a:hover { text-decoration: underline; }
 
-.da-tour-slot { margin: 0 auto 52px; display: flex; justify-content: center; }
+.da-tour-slot { position: relative; margin: 0 auto 52px; display: flex; justify-content: center; padding: 22px 0 6px; }
+.da-tour-slot::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 62% 50% at 50% 46%, var(--peach) 0%, transparent 72%);
+}
 .da-video-slot { margin-bottom: 34px; }
 .da-overview {
   width: 300px; max-width: 100%; aspect-ratio: 1080 / 1920;
   border-radius: 28px; border: 1px solid var(--border);
-  background: var(--paper); box-shadow: 0 14px 34px rgba(51,56,62,0.10);
+  background: var(--paper); box-shadow: 0 18px 40px var(--shadow);
 }
 
-.da-feat { list-style: none; margin: 0 0 18px; padding: 0; }
-.da-feat li { font-size: 15.5px; line-height: 1.58; color: var(--ink2); margin-bottom: 12px; }
-.da-feat strong { font-family: var(--display); font-weight: 500; font-size: 14.5px; color: var(--ink); }
+.da-feat { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 12px; }
+.da-feat li { position: relative; padding-left: 22px; font-size: 15.5px; line-height: 1.55; color: var(--ink2); }
+.da-feat li::before { content: ""; position: absolute; left: 0; top: 8px; width: 8px; height: 8px; border-radius: 2.5px; background: var(--marigold); }
+.da-feat strong { font-family: var(--display); font-weight: 500; font-size: 15px; color: var(--ink); }
 .da-feat code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; background: var(--surface2); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
 
 .da-fine { border-top: 1px solid var(--border); padding-top: 34px; }
@@ -272,16 +308,16 @@ const css = `
 .da-btn {
   display: inline-block; font-family: var(--display); font-weight: 600; font-size: 15px;
   padding: 11px 20px; border-radius: 999px; text-decoration: none;
-  background: var(--marigold); color: #261C06;
+  background: var(--marigold); color: #261C06; box-shadow: 0 6px 0 -2px var(--marigold-deep);
 }
 
-/* Reuse of the tour component (styles normally provided by /dodo) */
-.dd-tour { display: flex; flex-direction: column; align-items: center; }
+/* The tour (DodoTour) */
+.dd-tour { position: relative; display: flex; flex-direction: column; align-items: center; }
 .dd-tour-phone {
   display: block; position: relative; padding: 0; cursor: pointer;
   width: 268px; aspect-ratio: 1260 / 2736;
-  border-radius: 28px; overflow: hidden; background: var(--paper);
-  border: 1px solid var(--border); box-shadow: 0 14px 34px rgba(51,56,62,0.10);
+  border-radius: 28px; overflow: hidden; background: var(--surface);
+  border: 1px solid var(--border); box-shadow: 0 18px 40px var(--shadow);
 }
 .dd-tour-phone:focus-visible { outline: 3px solid var(--marigold); outline-offset: 3px; }
 .dd-tour-slide {

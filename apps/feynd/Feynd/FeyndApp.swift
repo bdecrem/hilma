@@ -55,7 +55,8 @@ struct RootView: View {
             // The system launch screen covers roughly the first half-second,
             // so the splash runs a beat longer than its animation to actually
             // be seen for ~a second.
-            try? await Task.sleep(for: .milliseconds(1600))
+            // The v3 launch runs ~2.1s (pop, eyes, wordmark, hello hop).
+            try? await Task.sleep(for: .milliseconds(2500))
             withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
         }
     }

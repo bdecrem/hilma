@@ -1,10 +1,16 @@
 import type { Metadata, Viewport } from 'next'
-import { Fredoka } from 'next/font/google'
+import { Fredoka, Nunito } from 'next/font/google'
 
 const fredoka = Fredoka({
   subsets: ['latin'],
   weight: ['500', '600'],
   variable: '--font-fredoka',
+})
+
+const nunito = Nunito({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-nunito',
 })
 
 export const metadata: Metadata = {
@@ -21,5 +27,5 @@ export const viewport: Viewport = {
 }
 
 export default function DodoLayout({ children }: { children: React.ReactNode }) {
-  return <div className={fredoka.variable}>{children}</div>
+  return <div className={`${fredoka.variable} ${nunito.variable}`}>{children}</div>
 }
