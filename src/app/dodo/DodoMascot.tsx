@@ -97,7 +97,7 @@ export default function DodoMascot({
   seed?: number
   launch?: boolean
   shadow?: boolean
-  /** 'face' = the app-icon crop: head and sprout only, square. */
+  /** 'face' = the app-icon crop: head, sprout and wings, feet cropped below, square. */
   crop?: 'full' | 'face'
   className?: string
 }) {
@@ -144,7 +144,7 @@ export default function DodoMascot({
       className={className}
       width={size}
       height={face ? size : (size * 134) / 124}
-      viewBox={face ? '-30 -42 60 60' : '-62 -66 124 134'}
+      viewBox={face ? '-38 -46 76 76' : '-62 -66 124 134'}
       aria-hidden="true"
       style={{ overflow: face ? 'hidden' : 'visible', display: 'block' }}
     >

@@ -235,8 +235,8 @@ const css = `
   display: flex; align-items: center; justify-content: space-between;
 }
 .da-mark { display: flex; align-items: center; gap: 10px; }
-.da-mini { width: 30px; height: 30px; border-radius: 8px; background: var(--peach); overflow: hidden; }
-.da-mini svg { width: 30px; height: 30px; transform: scale(1.12); transform-origin: 50% 60%; }
+.da-mini { width: 30px; height: 30px; border-radius: 8px; background: #FCE5D0; overflow: hidden; }
+.da-mini svg { width: 30px; height: 30px; }
 .da-word { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
 .da-nav { display: flex; gap: 20px; font-family: var(--display); font-weight: 500; font-size: 14.5px; }
 .da-nav a { text-decoration: none; border-bottom: 2px solid var(--marigold); padding-bottom: 1px; }
