@@ -5,8 +5,6 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // Unlisted static page (public/1ziu1wahxw/index.html) at a clean URL
-        { source: '/1ziu1wahxw', destination: '/1ziu1wahxw/index.html' },
         // decremental.com and www.decremental.com serve the /projects page at root
         {
           source: '/',
