@@ -136,7 +136,7 @@ struct TopicDetailView: View {
             if let text = DeepLinkRouter.shared.consumeChatDraft(threadId: topicId) {
                 draft = text
             }
-            #if targetEnvironment(simulator)
+            #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
             // `-OpenFlashCards 1` (with `-OpenTopic <id>`) — straight to this
             // topic's flash hub for screenshot loops.
             if UserDefaults.standard.bool(forKey: "OpenFlashCards") {

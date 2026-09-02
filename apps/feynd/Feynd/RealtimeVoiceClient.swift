@@ -53,6 +53,30 @@ final class RealtimeVoiceClient: NSObject {
     /// started, so a cut-in can truncate it to what was actually heard.
     private var speakingItemId: String?
     private var speakingAudioStart: Date?
+    /// Hold-to-talk release: the mic stays open for a short grace so the
+    /// tail of the utterance lands before the commit, then we wait for the
+    /// server's `input_audio_buffer.committed` before asking for a reply —
+    /// a rejected (empty) commit must NOT produce a response, or Dodo just
+    /// re-answers its last thought.
+    private var commitTask: Task<Void, Never>?
+    private var awaitingCommit = false
+    private static let releaseGrace: Duration = .milliseconds(300)
+    /// Speech gate for a release: the server accepts any ≥100ms buffer,
+    /// silence included, so the client decides whether the user actually
+    /// said something. A press shorter than `minHoldMs` is a "stop" tap;
+    /// a hold whose mic energy (WebRTC media-source totalAudioEnergy)
+    /// stays under `minEnergy` is a silent hold. Either way: no commit, no
+    /// reply — Dodo stays cut off and waits.
+    private var pressedAt: Date?
+    private var pressEnergy: (energy: Double, duration: Double)?
+    private static let minHoldMs = 350.0
+    /// Mean mic power over the hold (energy / seconds, i.e. mean squared
+    /// linear level): quiet rooms sit around 1e-4 (level 0.01), soft speech
+    /// from 1e-3 (level 0.03) up. `-PTTMinPower <x>` overrides for tuning.
+    private static var minPower: Double {
+        if let v = UserDefaults.standard.string(forKey: "PTTMinPower"), let d = Double(v) { return d }
+        return 3e-4
+    }
     private var dataChannel: RTCDataChannel?
     private var audioRouteObserver: NSObjectProtocol?
     private var statisticsTask: Task<Void, Never>?
@@ -80,6 +104,16 @@ final class RealtimeVoiceClient: NSObject {
     /// mic was off, and opens the mic.
     func beginTalking() {
         guard holdToTalk, !talking, phase == .connected || phase == .speaking else { return }
+        // A press during the release grace restarts the turn.
+        commitTask?.cancel()
+        commitTask = nil
+        awaitingCommit = false
+        pressedAt = Date()
+        pressEnergy = nil
+        Task { [weak self] in
+            let m = await self?.micEnergy()
+            await MainActor.run { self?.pressEnergy = m }
+        }
         cutOffDodo()
         sendEvent(["type": "input_audio_buffer.clear"])
         talking = true
@@ -92,14 +126,63 @@ final class RealtimeVoiceClient: NSObject {
     func endTalking() {
         guard talking else { return }
         talking = false
-        applyMicState()
+        status = "Thinking"
+        // Press length is measured here, before the grace.
+        let heldMs = (Date().timeIntervalSince(pressedAt ?? Date())) * 1000
+        // Mic stays open through the grace (applyMicState runs after it).
+        commitTask = Task { [weak self] in
+            try? await Task.sleep(for: Self.releaseGrace)
+            guard let self, !Task.isCancelled else { return }
+            let mic = await self.micEnergy()
+            guard !Task.isCancelled, !self.talking else { return }
+            let dE = (mic?.energy ?? 0) - (self.pressEnergy?.energy ?? 0)
+            let dT = (mic?.duration ?? 0) - (self.pressEnergy?.duration ?? 0)
+            let power = dT > 0 ? dE / dT : 0
+            // The power gate only engages once the counter is live (>0);
+            // a mic that reports no energy at all falls back to duration.
+            let energyLive = (mic?.energy ?? 0) > 0
+            let spoke = heldMs >= Self.minHoldMs && (!energyLive || power >= Self.minPower)
+            NSLog("F2_REALTIME_PTT release held_ms=%.0f power=%.6f (dE=%.6f dT=%.2f) spoke=%d",
+                  heldMs, power, dE, dT, spoke ? 1 : 0)
+            self.applyMicState()
+            if spoke {
+                self.awaitingCommit = true
+                self.sendEvent(["type": "input_audio_buffer.commit"])
+            } else {
+                // Tap or silent hold: just a "stop". Drop the buffer, no reply.
+                self.sendEvent(["type": "input_audio_buffer.clear"])
+                self.status = "Connected"
+            }
+        }
+    }
+
+    /// Cumulative mic energy + captured seconds from WebRTC's media-source
+    /// stats (nil until the connection reports them).
+    private func micEnergy() async -> (energy: Double, duration: Double)? {
+        guard let connection = peerConnection else { return nil }
+        let report = await connection.statistics()
+        for statistic in report.statistics.values where statistic.type == "media-source" {
+            if Self.statisticText("kind", from: statistic) == "audio",
+               let e = statistic.values["totalAudioEnergy"] as? NSNumber,
+               let d = statistic.values["totalSamplesDuration"] as? NSNumber {
+                NSLog("F2_REALTIME_MIC level=%@ energy=%@ duration=%@",
+                      Self.statisticText("audioLevel", from: statistic), e, d)
+                return (e.doubleValue, d.doubleValue)
+            }
+        }
+        return nil
+    }
+
+    /// The server confirmed the user's turn exists — now ask for the reply.
+    private func handleCommitted() {
+        guard awaitingCommit else { return }
+        awaitingCommit = false
         if phase == .speaking {
             // A response slipped in during the hold; the user's turn wins.
             sendEvent(["type": "response.cancel"])
         }
-        sendEvent(["type": "input_audio_buffer.commit"])
         sendEvent(["type": "response.create"])
-        status = "Thinking"
+        NSLog("F2_REALTIME_PTT committed -> response.create")
     }
 
     /// Stop Dodo mid-sentence, now. Mutes playback locally (the server has
@@ -350,6 +433,8 @@ final class RealtimeVoiceClient: NSObject {
                 speakingItemId = id
                 speakingAudioStart = nil
             }
+        case "input_audio_buffer.committed":
+            handleCommitted()
         case "response.audio_transcript.delta", "response.output_audio_transcript.delta":
             // First transcript delta ≈ first audio — the clock for truncation.
             if speakingAudioStart == nil { speakingAudioStart = Date() }
@@ -369,7 +454,17 @@ final class RealtimeVoiceClient: NSObject {
         case "response.output_item.done":
             handleOutputItemDone(event)
         case "error":
-            let message = ((event["error"] as? [String: Any])?["message"] as? String) ?? "Realtime error"
+            let err = event["error"] as? [String: Any]
+            let message = (err?["message"] as? String) ?? "Realtime error"
+            let code = (err?["code"] as? String) ?? ""
+            if awaitingCommit, code == "input_audio_buffer_commit_empty" {
+                // Nothing (or too little) was said after the press — Dodo
+                // stays cut off and waits; no reply is requested.
+                awaitingCommit = false
+                status = talking ? "Listening" : "Connected"
+                NSLog("F2_REALTIME_PTT empty commit — no reply requested")
+                break
+            }
             status = message
             NSLog("F2_REALTIME_EVENT_ERROR %@", message)
         default:
@@ -448,7 +543,7 @@ final class RealtimeVoiceClient: NSObject {
         ])
         // Mid-hold, the reply waits: endTalking's response.create will pick
         // up this tool result together with the user's utterance.
-        if !talking {
+        if !talking && !awaitingCommit {
             sendEvent(["type": "response.create"])
         }
     }

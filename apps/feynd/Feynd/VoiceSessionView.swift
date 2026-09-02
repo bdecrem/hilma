@@ -77,7 +77,7 @@ struct VoiceSessionView: View {
         }
         .task {
             await client.start()
-            #if targetEnvironment(simulator)
+            #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
             // `-VoiceCutInTest 1` — headless hold-to-talk drill: one turn,
             // then press again while Dodo is still speaking. Read the
             // F2_REALTIME_TEST / F2_REALTIME_CUT_IN lines in the sim log.
@@ -170,7 +170,7 @@ struct VoiceSessionView: View {
         }
     }
 
-    #if targetEnvironment(simulator)
+    #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
     private func runCutInDrill() async {
         func log(_ m: String) { NSLog("F2_REALTIME_TEST %@ phase=%@ status=%@", m, String(describing: client.phase), client.status) }
         func waitFor(_ ok: @escaping () -> Bool, _ seconds: Double) async -> Bool {
@@ -183,7 +183,7 @@ struct VoiceSessionView: View {
         }
         _ = await waitFor({ client.phase == .connected }, 20); log("connected")
         client.beginTalking(); log("press-1")
-        try? await Task.sleep(for: .seconds(2))
+        try? await Task.sleep(for: .seconds(4))
         client.endTalking(); log("release-1")
         _ = await waitFor({ client.phase == .speaking }, 20); log("dodo-speaking")
         try? await Task.sleep(for: .milliseconds(2500))
@@ -192,6 +192,13 @@ struct VoiceSessionView: View {
         client.endTalking(); log("release-2")
         _ = await waitFor({ client.phase == .speaking }, 20); log("dodo-speaking-again")
         try? await Task.sleep(for: .seconds(2))
+        // Quick tap mid-speech: Dodo must stop and stay quiet (empty commit
+        // → no reply), not re-answer its last thought.
+        client.beginTalking(); log("press-3-tap")
+        try? await Task.sleep(for: .milliseconds(80))
+        client.endTalking(); log("release-3-tap")
+        try? await Task.sleep(for: .seconds(6))
+        log(client.phase == .speaking ? "FAIL tap produced a reply" : "tap-stayed-quiet")
         log("done")
     }
     #endif

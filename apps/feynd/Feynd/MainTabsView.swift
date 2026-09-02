@@ -116,7 +116,7 @@ struct MainTabsView: View {
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL { route(url) }
         }
-        #if targetEnvironment(simulator)
+        #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
         // `simctl launch … -OpenURL dodo://peck` — drives route() without
         // SpringBoard's untappable "Open in Dodo?" dialog, so screenshot
         // loops can verify deep-link behavior end to end.
