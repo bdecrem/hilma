@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""Build the 'inline ten' variant of the CASBS Ten artifact: one alphabetical
+grid of all 40 fellows, with the ten picks outlined in blue instead of pulled
+out into a ranked section at the top. Reads the saved artifact HTML, writes
+public/1ziu1wahxw/index.html (an unlisted, noindex URL on the hilma site;
+next.config.ts rewrites /1ziu1wahxw to it) plus the OG card source at /tmp/casbs-og.html."""
+import re, sys, unicodedata, pathlib
+
+SRC = pathlib.Path(sys.argv[1])
+SLUG = '1ziu1wahxw'
+OUT = pathlib.Path(f'public/{SLUG}/index.html')
+OG_HTML = pathlib.Path('/tmp/casbs-og.html')
+html = SRC.read_text()
+
+PICK = re.compile(r'<article class="pick">\s*<div class="pick-num">(\d+)</div>\s*'
+    r'<img class="pick-photo" src="([^"]+)" alt="([^"]*)" width="112" height="112">\s*'
+    r'<div class="pick-body">\s*<div class="tag (tag-field|tag-bart)">([^<]*)</div>\s*'
+    r'<h3><a href="([^"]+)" target="_blank" rel="noopener">([^<]*)</a></h3>\s*'
+    r'<div class="school">(.*?)</div>\s*<p class="why">(.*?)</p>\s*<p class="bio">(.*?)</p>\s*</div>\s*</article>', re.S)
+CARD = re.compile(r'<article class="card">\s*<img src="([^"]+)" alt="([^"]*)" width="60" height="60">\s*<div>\s*'
+    r'<h4><a href="([^"]+)" target="_blank" rel="noopener">([^<]*)</a></h4>\s*'
+    r'<div class="school">(.*?)</div>\s*<p>(.*?)</p>\s*</div>\s*</article>', re.S)
+
+people = []
+for num, src, alt, tagcls, tag, href, name, school, why, bio in PICK.findall(html):
+    people.append(dict(pick=True, rank=int(num), src=src, alt=alt, tagcls=tagcls, tag=tag, href=href, name=name, school=school, why=why, bio=bio))
+for src, alt, href, name, school, bio in CARD.findall(html):
+    people.append(dict(pick=False, src=src, alt=alt, href=href, name=name, school=school, bio=bio))
+assert sum(p['pick'] for p in people) == 10 and len(people) == 40, (len(people), sum(p['pick'] for p in people))
+
+# Surname sort. Multi-word surnames keep the order the original page used.
+SURNAME = {'Lewis Abedi Asante': 'Asante', 'John Casellas Connors': 'Casellas Connors', 'Inbal Ben Ami Bartal': 'Ben Ami Bartal'}
+def key(p):
+    s = SURNAME.get(p['name']) or p['name'].split()[-1]
+    return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().casefold(), p['name']
+people.sort(key=key)
+
+# The saved artifact has two <style> blocks; the first is the frame runtime's reset.
+style = next(s for s in re.findall(r'<style>(.*?)</style>', html, re.S) if '--paper' in s)
+style = style.replace(':root {\n', ':root {\n  color-scheme: light dark;\n', 1)
+style += """
+/* Inline-ten variant: no ranked section; the ten picks sit in the A-Z grid with
+   a quiet blue ring. Blue is deliberately off the page's cardinal/green axis. */
+:root { --pick: #4F74B3; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pick: #7E9FDA; } }
+:root[data-theme="dark"] { --pick: #7E9FDA; }
+.legend .l-pick::before { background: none; border: 1.5px solid var(--pick); border-radius: 2px; }
+.card.is-pick { border-color: var(--pick); box-shadow: 0 0 0 0.5px var(--pick); }
+.card .tag { margin-bottom: 3px; }
+.card .why { font-family: "Newsreader", Georgia, serif; font-style: italic; font-size: 0.98rem;
+  color: var(--ink); line-height: 1.35; margin: 6px 0 0; }
+.card .why + p { margin-top: 5px; }
+"""
+
+def card(p):
+    extra = ''
+    why = ''
+    cls = 'card'
+    if p['pick']:
+        cls = 'card is-pick'
+        extra = f'\n          <div class="tag {p["tagcls"]}">{p["tag"]}</div>'
+        why = f'\n          <p class="why">{p["why"]}</p>'
+    return f'''      <article class="{cls}">
+        <img src="{p['src']}" alt="{p['alt']}" width="60" height="60">
+        <div>{extra}
+          <h4><a href="{p['href']}" target="_blank" rel="noopener">{p['name']}</a></h4>
+          <div class="school">{p['school']}</div>{why}
+          <p>{p['bio']}</p>
+        </div>
+      </article>'''
+
+out = f'''<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CASBS class of 2026</title>
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="CASBS class of 2026">
+<meta property="og:description" content="The 2026 fellows, A to Z.">
+<meta property="og:image" content="https://hilma-nine.vercel.app/{SLUG}/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..600&family=Source+Sans+3:ital,wght@0,400..700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>{style}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>CASBS class of 2026</h1>
+  </header>
+  <section>
+    <h2>The Forty</h2>
+    <div class="grid">
+{chr(10).join(card(p) for p in people)}
+    </div>
+  </section>
+  <footer>Source: casbs.stanford.edu &middot; August 2026 &middot; photos &copy; CASBS</footer>
+</div>
+</body>
+</html>
+'''
+OUT.parent.mkdir(parents=True, exist_ok=True)
+OUT.write_text(out)
+print(f'wrote {OUT} ({len(out)//1024} KB)')
+tiles = ''.join(f'<img src="{p["src"]}" class="{"pick" if p["pick"] else ""}">' for p in people)
+OG_HTML.write_text(f'''<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,750&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+body {{ margin:0; width:1200px; height:630px; background:#F6F5F1; color:#24211C; position:relative; overflow:hidden; }}
+.t {{ position:absolute; left:64px; top:0; height:630px; width:420px; display:flex; flex-direction:column; justify-content:center; }}
+h1 {{ font-family:"Newsreader",Georgia,serif; font-weight:750; font-size:64px; line-height:1.02; letter-spacing:-0.015em; margin:0; }}
+.k {{ font-family:"IBM Plex Mono",monospace; font-size:15px; letter-spacing:0.14em; text-transform:uppercase; color:#6E6A5F; margin-top:22px; }}
+.g {{ position:absolute; left:524px; top:126px; display:grid; grid-template-columns:repeat(8,66px); gap:12px; }}
+.g img {{ width:66px; height:66px; border-radius:6px; object-fit:cover; display:block; box-sizing:border-box; }}
+.g img.pick {{ outline:3px solid #4F74B3; outline-offset:2px; border-radius:6px; }}
+</style></head><body>
+<div class="t"><h1>CASBS class of 2026</h1><div class="k">Forty fellows, A to Z</div></div>
+<div class="g">{tiles}</div>
+</body></html>''')
+print(f'wrote {OG_HTML}')
+for i, p in enumerate(people, 1):
+    print(f"{i:2d} {'●' if p['pick'] else ' '} {p['name']}")
