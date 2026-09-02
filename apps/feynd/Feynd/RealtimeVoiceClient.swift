@@ -45,6 +45,14 @@ final class RealtimeVoiceClient: NSObject {
     private var peerConnectionFactory: RTCPeerConnectionFactory?
     private var peerConnection: RTCPeerConnection?
     private var localAudioTrack: RTCAudioTrack?
+    /// Dodo's voice. Hold-to-talk silences it the instant the key goes down
+    /// (WebRTC keeps playing buffered audio long after the server has
+    /// finished generating) and re-enables it when the next reply starts.
+    private var remoteAudioTrack: RTCAudioTrack?
+    /// The assistant message currently being played, and when its audio
+    /// started, so a cut-in can truncate it to what was actually heard.
+    private var speakingItemId: String?
+    private var speakingAudioStart: Date?
     private var dataChannel: RTCDataChannel?
     private var audioRouteObserver: NSObjectProtocol?
     private var statisticsTask: Task<Void, Never>?
@@ -72,9 +80,7 @@ final class RealtimeVoiceClient: NSObject {
     /// mic was off, and opens the mic.
     func beginTalking() {
         guard holdToTalk, !talking, phase == .connected || phase == .speaking else { return }
-        if phase == .speaking {
-            sendEvent(["type": "response.cancel"])
-        }
+        cutOffDodo()
         sendEvent(["type": "input_audio_buffer.clear"])
         talking = true
         applyMicState()
@@ -87,9 +93,38 @@ final class RealtimeVoiceClient: NSObject {
         guard talking else { return }
         talking = false
         applyMicState()
+        if phase == .speaking {
+            // A response slipped in during the hold; the user's turn wins.
+            sendEvent(["type": "response.cancel"])
+        }
         sendEvent(["type": "input_audio_buffer.commit"])
         sendEvent(["type": "response.create"])
         status = "Thinking"
+    }
+
+    /// Stop Dodo mid-sentence, now. Mutes playback locally (the server has
+    /// usually finished generating already, and the audio still queued in
+    /// the WebRTC buffer would otherwise play out), cancels a response that
+    /// is still generating, and truncates the assistant item to the audio
+    /// heard so far so the conversation matches what the user actually
+    /// listened to. Playback is re-enabled on the next `response.created`.
+    private func cutOffDodo() {
+        remoteAudioTrack?.isEnabled = false
+        if phase == .speaking {
+            sendEvent(["type": "response.cancel"])
+        }
+        if let itemId = speakingItemId {
+            let heardMs = Int(max(0, Date().timeIntervalSince(speakingAudioStart ?? Date())) * 1000)
+            sendEvent([
+                "type": "conversation.item.truncate",
+                "item_id": itemId,
+                "content_index": 0,
+                "audio_end_ms": heardMs,
+            ])
+            NSLog("F2_REALTIME_CUT_IN item=%@ heard_ms=%d", itemId, heardMs)
+            speakingItemId = nil
+            speakingAudioStart = nil
+        }
     }
 
     /// The one place the mic track is switched: hold-to-talk opens it only
@@ -297,8 +332,27 @@ final class RealtimeVoiceClient: NSObject {
 
         switch type {
         case "response.created":
+            // The user has the floor while the key is held: a reply that
+            // starts now (e.g. the follow-up after a tool result) gets
+            // cancelled and Dodo answers the user's turn on release instead.
+            if talking {
+                sendEvent(["type": "response.cancel"])
+                break
+            }
             phase = .speaking
             status = "Speaking"
+            remoteAudioTrack?.isEnabled = true
+        case "response.output_item.added":
+            if let item = event["item"] as? [String: Any],
+               item["type"] as? String == "message",
+               item["role"] as? String == "assistant",
+               let id = item["id"] as? String {
+                speakingItemId = id
+                speakingAudioStart = nil
+            }
+        case "response.audio_transcript.delta", "response.output_audio_transcript.delta":
+            // First transcript delta ≈ first audio — the clock for truncation.
+            if speakingAudioStart == nil { speakingAudioStart = Date() }
         case "response.done", "response.cancelled":
             phase = .connected
             status = talking ? "Listening" : "Connected"
@@ -392,7 +446,11 @@ final class RealtimeVoiceClient: NSObject {
                 "output": output
             ]
         ])
-        sendEvent(["type": "response.create"])
+        // Mid-hold, the reply waits: endTalking's response.create will pick
+        // up this tool result together with the user's utterance.
+        if !talking {
+            sendEvent(["type": "response.create"])
+        }
     }
 
     private func sendEvent(_ object: [String: Any]) {
@@ -564,7 +622,9 @@ extension RealtimeVoiceClient: RTCPeerConnectionDelegate {
         for audioTrack in stream.audioTracks {
             audioTrack.isEnabled = true
         }
+        let track = stream.audioTracks.first
         Task { @MainActor in
+            self.remoteAudioTrack = track
             NSLog("F2_REALTIME_WEBRTC remote audio stream added")
         }
     }

@@ -77,6 +77,14 @@ struct VoiceSessionView: View {
         }
         .task {
             await client.start()
+            #if targetEnvironment(simulator)
+            // `-VoiceCutInTest 1` — headless hold-to-talk drill: one turn,
+            // then press again while Dodo is still speaking. Read the
+            // F2_REALTIME_TEST / F2_REALTIME_CUT_IN lines in the sim log.
+            if holdToTalk, UserDefaults.standard.bool(forKey: "VoiceCutInTest") {
+                await runCutInDrill()
+            }
+            #endif
         }
         .onDisappear { client.stop() }
     }
@@ -161,6 +169,32 @@ struct VoiceSessionView: View {
         case .ended: return "Session ended."
         }
     }
+
+    #if targetEnvironment(simulator)
+    private func runCutInDrill() async {
+        func log(_ m: String) { NSLog("F2_REALTIME_TEST %@ phase=%@ status=%@", m, String(describing: client.phase), client.status) }
+        func waitFor(_ ok: @escaping () -> Bool, _ seconds: Double) async -> Bool {
+            let deadline = Date().addingTimeInterval(seconds)
+            while Date() < deadline {
+                if ok() { return true }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            return ok()
+        }
+        _ = await waitFor({ client.phase == .connected }, 20); log("connected")
+        client.beginTalking(); log("press-1")
+        try? await Task.sleep(for: .seconds(2))
+        client.endTalking(); log("release-1")
+        _ = await waitFor({ client.phase == .speaking }, 20); log("dodo-speaking")
+        try? await Task.sleep(for: .milliseconds(2500))
+        client.beginTalking(); log("press-2-cut-in")
+        try? await Task.sleep(for: .milliseconds(1500))
+        client.endTalking(); log("release-2")
+        _ = await waitFor({ client.phase == .speaking }, 20); log("dodo-speaking-again")
+        try? await Task.sleep(for: .seconds(2))
+        log("done")
+    }
+    #endif
 
     private var controls: some View {
         HStack(spacing: 16) {
