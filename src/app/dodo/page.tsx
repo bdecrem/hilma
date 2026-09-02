@@ -238,7 +238,9 @@ const css = `
   flex-wrap: wrap; gap: 12px 16px;
 }
 .da-mark { display: flex; align-items: center; gap: 10px; }
-.da-mini { width: 30px; height: 30px; border-radius: 8px; background: #FCE5D0; overflow: hidden; }
+/* Masthead tile: the bird's deep slate, not the icon peach — peach was the one
+   low-contrast element on paper and the loudest one on slate ink. Fixed across modes. */
+.da-mini { width: 30px; height: 30px; border-radius: 8px; background: #34505F; overflow: hidden; }
 .da-mini svg { width: 30px; height: 30px; }
 .da-word { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
 .da-nav { display: flex; gap: 20px; font-family: var(--display); font-weight: 500; font-size: 14.5px; }

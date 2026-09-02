@@ -29,7 +29,8 @@ theme ground. ~2.1s; the app holds the splash 2.5s.
 
 Site (dodo.foo): Fredoka for display, Nunito for body; butter paper ground
 with the splash's peach bloom behind the tour; marigold for action, slate for
-wayfinding, sprout for the "open source" tag. OG image is baked at
+wayfinding, sprout for the "open source" tag. The masthead tile is the bird's
+deep slate `#34505F` (fixed across modes), not the icon peach. OG image is baked at
 `src/app/dodo/opengraph-image.png` (source: the launch page's bird + wordmark).
 
 ## App icon
