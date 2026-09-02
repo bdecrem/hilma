@@ -547,74 +547,128 @@ struct LaunchSplashView: View {
     }
 
     private var content: some View {
-        let dark = colorScheme == .dark
-        let bloom = Color(hex: dark ? 0x243038 : 0xFCE5D0)
-        let sun = Color(hex: dark ? 0x6B4A14 : 0xF6C46A)
-        let mote = Color(hex: dark ? 0xF6C46A : 0xF0A830)
-        return ZStack {
+        ZStack {
             FeyndTheme.bg.ignoresSafeArea()
             TimelineView(.animation(minimumInterval: 1.0 / 40.0)) { timeline in
                 let t = reduceMotion ? 3.0 : CGFloat(timeline.date.timeIntervalSince(start))
-                let p = pose(t)
-                GeometryReader { geo in
-                    let w = geo.size.width, h = geo.size.height
-                    ZStack {
-                        // Ground: a peach bloom behind the bird, a faint sun up top,
-                        // a slow breath in the bloom, and a few drifting motes.
-                        RadialGradient(colors: [sun, .clear], center: .init(x: 0.5, y: 0.16), startRadius: 0, endRadius: w * 0.36)
-                            .opacity(0.32)
-                        RadialGradient(colors: [bloom, .clear], center: .init(x: 0.5, y: 0.5), startRadius: 0, endRadius: w * 0.62)
-                        RadialGradient(colors: [bloom, .clear], center: .init(x: 0.5, y: 0.52), startRadius: 0, endRadius: w * 0.5)
-                            .opacity(reduceMotion ? 0 : 0.35 + 0.35 * sin(t * 2 * .pi / 6.4))
-                        if !reduceMotion {
-                            Canvas { ctx, size in
-                                for i in 0..<5 {
-                                    let fi = CGFloat(i)
-                                    let period: CGFloat = 9 + 1.3 * fi
-                                    let u = ((t + fi * 2.1) / period).truncatingRemainder(dividingBy: 1)
-                                    let x = size.width * (0.33 + 0.075 * fi) + 12 * sin(t * 0.5 + fi)
-                                    let y = size.height * 0.68 - u * size.height * 0.46
-                                    let alpha = u < 0.12 ? u / 0.12 * 0.45 : 0.45 - 0.45 * (u - 0.12) / 0.88
-                                    let r: CGFloat = 1.6 + 1.2 * u
-                                    ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: 2 * r, height: 2 * r)),
-                                             with: .color(mote.opacity(alpha)))
-                                }
-                            }
-                        }
-                    }
-                    .frame(width: w, height: h)
-                    .ignoresSafeArea()
-
-                    VStack(spacing: 14) {
-                        Canvas { ctx, size in
-                            var g = ctx
-                            let feet = CGPoint(x: size.width / 2, y: size.height - 6)
-                            // Ground shadow: grows with the pop, tightens with the hop.
-                            let lift = max(0, min(1, -p.yOffset / 26))
-                            let s = min(1, p.scaleX)
-                            let rx = 29 * s * (1 - 0.35 * lift), ry = 5 * s * (1 - 0.3 * lift)
-                            g.fill(Path(ellipseIn: CGRect(x: feet.x - rx, y: feet.y + 3 - ry, width: 2 * rx, height: 2 * ry)),
-                                   with: .color(Color(hex: dark ? 0x000000 : 0x3E3324).opacity((dark ? 0.35 : 0.13) * (1 - 0.5 * lift))))
-                            drawAnimatedDodo(&g, at: feet, height: 132, pose: p)
-                        }
-                        .frame(width: 170, height: 150)
-                        HStack(spacing: 0) {
-                            ForEach(Array("dodo".enumerated()), id: \.offset) { i, ch in
-                                let u = reduceMotion ? 1 : max(0, min(1, (t - 0.8 - CGFloat(i) * 0.05) / 0.55))
-                                Text(String(ch))
-                                    .font(.custom("Fredoka", size: 34).weight(.semibold))
-                                    .foregroundStyle(FeyndTheme.text)
-                                    .opacity(Double(u))
-                                    .offset(y: 10 * (1 - easeOutBack(u)))
-                            }
-                        }
-                        .tracking(-0.6)
-                    }
-                    .frame(width: w, height: h)
-                    .offset(y: -12)
-                }
+                SplashFrame(t: t, pose: pose(t), reduceMotion: reduceMotion, dark: colorScheme == .dark)
             }
         }
+    }
+}
+
+/// One frame of the launch: ground, mascot, wordmark. Split into small
+/// views — the Release compiler times out on one big expression.
+private struct SplashFrame: View {
+    let t: CGFloat
+    let pose: DodoPose
+    let reduceMotion: Bool
+    let dark: Bool
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack {
+                SplashGround(t: t, reduceMotion: reduceMotion, dark: dark, size: geo.size)
+                VStack(spacing: 14) {
+                    SplashMascot(pose: pose, dark: dark)
+                    SplashWordmark(t: t, reduceMotion: reduceMotion)
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .offset(y: -12)
+            }
+        }
+    }
+}
+
+/// Peach bloom behind the bird, a faint sun up top, a slow breath in the
+/// bloom, and a few drifting motes.
+private struct SplashGround: View {
+    let t: CGFloat
+    let reduceMotion: Bool
+    let dark: Bool
+    let size: CGSize
+
+    var body: some View {
+        let bloom = Color(hex: dark ? 0x243038 : 0xFCE5D0)
+        let sun = Color(hex: dark ? 0x6B4A14 : 0xF6C46A)
+        let breath: Double = reduceMotion ? 0 : Double(0.35 + 0.35 * sin(t * 2 * CGFloat.pi / 6.4))
+        ZStack {
+            RadialGradient(colors: [sun, .clear], center: .init(x: 0.5, y: 0.16), startRadius: 0, endRadius: size.width * 0.36)
+                .opacity(0.32)
+            RadialGradient(colors: [bloom, .clear], center: .init(x: 0.5, y: 0.5), startRadius: 0, endRadius: size.width * 0.62)
+            RadialGradient(colors: [bloom, .clear], center: .init(x: 0.5, y: 0.52), startRadius: 0, endRadius: size.width * 0.5)
+                .opacity(breath)
+            if !reduceMotion {
+                SplashMotes(t: t, dark: dark)
+            }
+        }
+        .frame(width: size.width, height: size.height)
+        .ignoresSafeArea()
+    }
+}
+
+private struct SplashMotes: View {
+    let t: CGFloat
+    let dark: Bool
+
+    var body: some View {
+        let mote = Color(hex: dark ? 0xF6C46A : 0xF0A830)
+        Canvas { ctx, size in
+            for i in 0..<5 {
+                let fi = CGFloat(i)
+                let period: CGFloat = 9 + 1.3 * fi
+                let u = ((t + fi * 2.1) / period).truncatingRemainder(dividingBy: 1)
+                let x = size.width * (0.33 + 0.075 * fi) + 12 * sin(t * 0.5 + fi)
+                let y = size.height * 0.68 - u * size.height * 0.46
+                let alpha: CGFloat = u < 0.12 ? u / 0.12 * 0.45 : 0.45 - 0.45 * (u - 0.12) / 0.88
+                let r: CGFloat = 1.6 + 1.2 * u
+                let rect = CGRect(x: x - r, y: y - r, width: 2 * r, height: 2 * r)
+                ctx.fill(Path(ellipseIn: rect), with: .color(mote.opacity(Double(alpha))))
+            }
+        }
+    }
+}
+
+/// The bird over its ground shadow (grows with the pop, tightens with the hop).
+private struct SplashMascot: View {
+    let pose: DodoPose
+    let dark: Bool
+
+    var body: some View {
+        Canvas { ctx, size in
+            var g = ctx
+            let feet = CGPoint(x: size.width / 2, y: size.height - 6)
+            let lift: CGFloat = max(0, min(1, -pose.yOffset / 26))
+            let s: CGFloat = min(1, pose.scaleX)
+            let rx: CGFloat = 29 * s * (1 - 0.35 * lift)
+            let ry: CGFloat = 5 * s * (1 - 0.3 * lift)
+            let shadowAlpha: Double = Double((dark ? 0.35 : 0.13) * (1 - 0.5 * lift))
+            let rect = CGRect(x: feet.x - rx, y: feet.y + 3 - ry, width: 2 * rx, height: 2 * ry)
+            g.fill(Path(ellipseIn: rect), with: .color(Color(hex: dark ? 0x000000 : 0x3E3324).opacity(shadowAlpha)))
+            drawAnimatedDodo(&g, at: feet, height: 132, pose: pose)
+        }
+        .frame(width: 170, height: 150)
+    }
+}
+
+/// Lowercase wordmark rising letter by letter (0.8s + 50ms stagger).
+private struct SplashWordmark: View {
+    let t: CGFloat
+    let reduceMotion: Bool
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(0..<4, id: \.self) { i in
+                let raw: CGFloat = (t - 0.8 - CGFloat(i) * 0.05) / 0.55
+                let u: CGFloat = reduceMotion ? 1 : max(0, min(1, raw))
+                Text(i % 2 == 0 ? "d" : "o")
+                    .font(.custom("Fredoka", size: 34).weight(.semibold))
+                    .foregroundStyle(FeyndTheme.text)
+                    .opacity(Double(u))
+                    .offset(y: 10 * (1 - easeOutBack(u)))
+            }
+        }
+        .tracking(-0.6)
     }
 }
 

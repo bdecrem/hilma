@@ -18,10 +18,9 @@ export default function DodoAltPage() {
       <header className="da-top">
         <div className="da-mark">
           <div className="da-mini" aria-hidden="true">
-            <DodoMascot size={30} shadow={false} />
+            <DodoMascot size={30} shadow={false} crop="face" />
           </div>
           <span className="da-word">dodo</span>
-          <span className="da-tag">open source</span>
         </div>
         <nav className="da-nav">
           <a href={GITHUB_URL}>GitHub</a>
@@ -236,13 +235,9 @@ const css = `
   display: flex; align-items: center; justify-content: space-between;
 }
 .da-mark { display: flex; align-items: center; gap: 10px; }
-.da-mini { width: 34px; height: 34px; border-radius: 9px; background: var(--peach); display: grid; place-items: center; }
+.da-mini { width: 30px; height: 30px; border-radius: 8px; background: var(--peach); overflow: hidden; }
+.da-mini svg { width: 30px; height: 30px; transform: scale(1.12); transform-origin: 50% 60%; }
 .da-word { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
-.da-tag {
-  font-family: var(--display); font-weight: 500; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--sprout); border: 1px solid color-mix(in srgb, var(--sprout) 45%, transparent);
-  border-radius: 999px; padding: 3px 8px; margin-left: 2px;
-}
 .da-nav { display: flex; gap: 20px; font-family: var(--display); font-weight: 500; font-size: 14.5px; }
 .da-nav a { text-decoration: none; border-bottom: 2px solid var(--marigold); padding-bottom: 1px; }
 .da-nav a:hover { border-color: var(--slate); }
@@ -305,11 +300,12 @@ const css = `
 
 .da-fine { border-top: 1px solid var(--border); padding-top: 34px; }
 .da-fine p { color: var(--ink2); font-size: 16px; }
-.da-btn {
+.da a.da-btn {
   display: inline-block; font-family: var(--display); font-weight: 600; font-size: 15px;
-  padding: 11px 20px; border-radius: 999px; text-decoration: none;
-  background: var(--marigold); color: #261C06; box-shadow: 0 6px 0 -2px var(--marigold-deep);
+  padding: 12px 22px; border-radius: 999px; text-decoration: none;
+  background: var(--ink); color: var(--paper);
 }
+.da a.da-btn:hover { background: var(--slate); color: #FFFDF7; }
 
 /* The tour (DodoTour) */
 .dd-tour { position: relative; display: flex; flex-direction: column; align-items: center; }

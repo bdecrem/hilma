@@ -90,12 +90,15 @@ export default function DodoMascot({
   seed = 0,
   launch: withLaunch = false,
   shadow = true,
+  crop = 'full',
   className,
 }: {
   size?: number
   seed?: number
   launch?: boolean
   shadow?: boolean
+  /** 'face' = the app-icon crop: head and sprout only, square. */
+  crop?: 'full' | 'face'
   className?: string
 }) {
   const uid = useId().replace(/:/g, '')
@@ -133,15 +136,17 @@ export default function DodoMascot({
     return () => cancelAnimationFrame(raf)
   }, [seed, withLaunch])
 
-  // 124 wide × 134 tall art box (room for the hop and the shadow).
+  // Full: 124 wide × 134 tall art box (room for the hop and the shadow).
+  // Face: a square around the head, the way the app icon crops the mark.
+  const face = crop === 'face'
   return (
     <svg
       className={className}
       width={size}
-      height={(size * 134) / 124}
-      viewBox="-62 -66 124 134"
+      height={face ? size : (size * 134) / 124}
+      viewBox={face ? '-30 -42 60 60' : '-62 -66 124 134'}
       aria-hidden="true"
-      style={{ overflow: 'visible', display: 'block' }}
+      style={{ overflow: face ? 'hidden' : 'visible', display: 'block' }}
     >
       <defs>
         <radialGradient id={id('head')} cx="0.38" cy="0.3" r="0.8"><stop offset="0" stopColor="#93B3C6" /><stop offset="0.55" stopColor="#7C9EB2" /><stop offset="1" stopColor="#5F8398" /></radialGradient>
