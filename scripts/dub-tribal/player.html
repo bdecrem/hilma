@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<title>silt — player</title>
+<style>
+  :root { color-scheme: dark; --bg: #050505; --ink: #f2f0ea; --dim: rgba(242,240,234,0.5); --faint: rgba(242,240,234,0.16); --line: rgba(242,240,234,0.28); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); color: var(--ink); font-family: 'SF Mono', 'Fira Code', Menlo, 'Courier New', monospace; }
+  body { min-height: 100dvh; padding: calc(28px + env(safe-area-inset-top)) 20px calc(28px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 26px; max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 12px; font-weight: 400; letter-spacing: 5px; color: var(--dim); }
+  h1 span { color: var(--faint); letter-spacing: 3px; }
+  .readout { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+  .readout .big { font-size: 34px; letter-spacing: 1px; }
+  .readout .big small { font-size: 13px; color: var(--dim); letter-spacing: 3px; margin-left: 10px; }
+  .readout .right { font-size: 12px; color: var(--dim); letter-spacing: 2px; text-align: right; line-height: 1.8; }
+  .transport { display: flex; align-items: center; gap: 18px; }
+  button { font-family: inherit; background: none; color: var(--ink); border: 1px solid var(--line); cursor: pointer; }
+  #play { width: 64px; height: 64px; border-radius: 50%; font-size: 20px; flex: none; }
+  #play:focus-visible, .chip:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+  .skip { height: 40px; padding: 0 14px; font-size: 11px; letter-spacing: 2px; border-color: var(--faint); color: var(--dim); }
+  .scrub { position: relative; height: 64px; }
+  .sections { position: absolute; left: 0; right: 0; top: 0; height: 36px; display: flex; }
+  .sections i { display: block; height: 100%; border-left: 1px solid var(--faint); position: relative; }
+  .sections i::after { content: attr(data-n); position: absolute; left: 4px; top: 4px; font-size: 8px; letter-spacing: 1px; color: var(--faint); white-space: nowrap; overflow: hidden; max-width: calc(100% - 4px); }
+  .sections i.on { background: rgba(242,240,234,0.06); }
+  .sections i.on::after { color: var(--dim); }
+  #seek { -webkit-appearance: none; appearance: none; position: absolute; left: 0; right: 0; top: 36px; width: 100%; height: 28px; background: transparent; margin: 0; cursor: pointer; }
+  #seek::-webkit-slider-runnable-track { height: 2px; background: var(--faint); margin-top: 13px; }
+  #seek::-moz-range-track { height: 2px; background: var(--faint); }
+  #seek::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); margin-top: -10px; border: 6px solid var(--bg); }
+  #seek::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: var(--ink); border: 0; }
+  #played { position: absolute; left: 0; top: 49px; height: 2px; background: var(--ink); pointer-events: none; width: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 8px 12px; font-size: 10px; letter-spacing: 2px; border-color: var(--faint); color: var(--dim); text-transform: uppercase; }
+  .chip.on { border-color: var(--line); color: var(--ink); }
+  .foot { font-size: 9px; letter-spacing: 3px; color: var(--faint); line-height: 1.9; }
+  .foot b { font-weight: 400; color: var(--dim); }
+</style>
+</head>
+<body>
+  <h1>SILT <span>· HALLMAN × DK · v2</span></h1>
+  <div class="readout">
+    <div class="big"><span id="time">0:00</span><small id="dur">/ 8:10</small></div>
+    <div class="right"><span id="sec">fog</span><br>bar <span id="bar">1</span> · <span id="chord">Gm7</span></div>
+  </div>
+  <div class="transport">
+    <button id="play" aria-label="Play">▶</button>
+    <button class="skip" id="back">−8 BARS</button>
+    <button class="skip" id="fwd">+8 BARS</button>
+  </div>
+  <div class="scrub">
+    <div class="sections" id="sections"></div>
+    <div id="played"></div>
+    <input id="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Scrub">
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="foot">126 BPM · G MINOR · 256 BARS · <b>1 bar = 1.905 s</b><br>SECTIONS: FOG 1 · BUILD 17 · ASSEMBLE 33 · PLATEAU 65 · SUBTRACT 97 · BREAKDOWN 113 · PAYOFF 129 · PLATEAU 2 161 · OUTRO 193 · FOG 225</div>
+  <audio id="a" preload="metadata" src="silt.m4a"></audio>
+<script>
+const BPM = 126, BAR = 240 / BPM, BARS = 256;
+const SECTIONS = [['fog',1,16],['build',17,32],['assemble',33,64],['plateau',65,96],['subtract',97,112],['breakdown',113,128],['payoff',129,160],['plateau 2',161,192],['outro',193,224],['fog',225,256]];
+const CYCLE = ['Gm7','Gm9','Ebmaj7','Cm7'];
+const chordAt = (b) => (b <= 16 || b >= 225) ? 'Gm7' : (b >= 113 && b <= 128) ? 'Ebmaj7' : b >= 129 ? CYCLE[Math.floor((b - 129) / 8) % 4] : CYCLE[Math.floor((b - 17) / 8) % 4];
+const a = document.getElementById('a'), seek = document.getElementById('seek'), play = document.getElementById('play');
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+const $ = (id) => document.getElementById(id);
+const fmt = (t) => { t = Math.max(0, t | 0); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
+const barAt = (t) => Math.min(BARS, Math.floor(t / BAR) + 1);
+// sections drawn under the scrub bar, proportional to their length
+const secEl = $('sections'), chips = $('chips');
+for (const [name, from, to] of SECTIONS) { const i = document.createElement('i'); i.style.width = ((to - from + 1) / BARS * 100) + '%'; i.dataset.n = name; secEl.appendChild(i);
+  const c = document.createElement('button'); c.className = 'chip'; c.textContent = name + ' ' + from; c.addEventListener('click', () => { a.currentTime = (from - 1) * BAR + 0.001; if (a.paused) a.play(); }); chips.appendChild(c); }
+let scrubbing = false;
+function paint() { const t = a.currentTime || 0, d = a.duration || BARS * BAR + 2; if (!scrubbing) seek.value = Math.round(t / d * 1000); $('played').style.width = (t / d * 100) + '%'; $('time').textContent = fmt(t); $('dur').textContent = '/ ' + fmt(d); const b = barAt(t); $('bar').textContent = b; $('chord').textContent = chordAt(b); const si = SECTIONS.findIndex(s => b >= s[1] && b <= s[2]); $('sec').textContent = si >= 0 ? SECTIONS[si][0] : '—'; [...secEl.children].forEach((el, i) => el.classList.toggle('on', i === si)); [...chips.children].forEach((el, i) => el.classList.toggle('on', i === si)); }
+a.addEventListener('timeupdate', paint); a.addEventListener('loadedmetadata', paint); a.addEventListener('seeked', paint);
+a.addEventListener('play', () => { play.textContent = '❚❚'; play.setAttribute('aria-label', 'Pause'); }); a.addEventListener('pause', () => { play.textContent = '▶'; play.setAttribute('aria-label', 'Play'); }); a.addEventListener('ended', () => { play.textContent = '▶'; });
+play.addEventListener('click', () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} a.paused ? a.play() : a.pause(); });
+$('back').addEventListener('click', () => { a.currentTime = Math.max(0, a.currentTime - 8 * BAR); }); $('fwd').addEventListener('click', () => { a.currentTime = Math.min((a.duration || 1e9) - 0.5, a.currentTime + 8 * BAR); });
+const toTime = () => (seek.value / 1000) * (a.duration || BARS * BAR + 2);
+seek.addEventListener('input', () => { scrubbing = true; $('time').textContent = fmt(toTime()); const b = barAt(toTime()); $('bar').textContent = b; $('chord').textContent = chordAt(b); $('played').style.width = (seek.value / 10) + '%'; });
+seek.addEventListener('change', () => { a.currentTime = toTime(); scrubbing = false; paint(); });
+document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); play.click(); } if (e.code === 'ArrowRight') $('fwd').click(); if (e.code === 'ArrowLeft') $('back').click(); });
+paint();
+</script>
+</body>
+</html>
