@@ -80,7 +80,7 @@ a.addEventListener('play', () => { play.textContent = '❚❚'; play.setAttribut
 play.addEventListener('click', () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} a.paused ? a.play() : a.pause(); });
 $('back').addEventListener('click', () => { a.currentTime = Math.max(0, a.currentTime - 8 * BAR); }); $('fwd').addEventListener('click', () => { a.currentTime = Math.min((a.duration || 1e9) - 0.5, a.currentTime + 8 * BAR); });
 const toTime = () => (seek.value / 1000) * (a.duration || BARS * BAR + 2);
-seek.addEventListener('input', () => { scrubbing = true; $('time').textContent = fmt(toTime()); const b = barAt(toTime()); $('bar').textContent = b; $('chord').textContent = chordAt(b); $('played').style.width = (seek.value / 10) + '%'; });
+seek.addEventListener('input', () => { scrubbing = true; $('time').textContent = fmt(toTime()); const b = barAt(toTime()); $('bar').textContent = b; $('chord').textContent = chordAt(b); $('played').style.width = (seek.value / 10) + '%'; const si = SECTIONS.findIndex(s => b >= s[1] && b <= s[2]); $('sec').textContent = si >= 0 ? SECTIONS[si][0] : '—'; [...secEl.children].forEach((el, i) => el.classList.toggle('on', i === si)); [...chips.children].forEach((el, i) => el.classList.toggle('on', i === si)); });
 seek.addEventListener('change', () => { a.currentTime = toTime(); scrubbing = false; paint(); });
 document.addEventListener('keydown', (e) => { if (e.code === 'Space') { e.preventDefault(); play.click(); } if (e.code === 'ArrowRight') $('fwd').click(); if (e.code === 'ArrowLeft') $('back').click(); });
 paint();
