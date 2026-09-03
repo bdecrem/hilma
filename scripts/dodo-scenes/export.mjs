@@ -39,6 +39,7 @@ const FORMATS = {
   'wide-title': { w: 1920, h: 1080, set: null },
   'wide-outro': { w: 1920, h: 1080, set: null },
   strip: { w: 1600, h: 640, set: null },
+  og: { w: 1200, h: 630, set: null },
 }
 const isClip = (s) => Boolean(s.clip) || s.capture === 'record'
 const manifest = JSON.parse(fs.readFileSync(path.join(HERE, 'scenes.json'), 'utf8'))
@@ -92,6 +93,7 @@ try {
         fs.writeFileSync(stem + '.json', JSON.stringify({ scene: s.id, format: f, theme, ...JSON.parse(rect ?? '{}') }) + '\n')
         log(`${f}/${theme}/${path.basename(stem)}.png`)
         if (f === 'strip' && theme === 'light') fs.copyFileSync(stem + '.png', path.join(ROOT, 'public/dodo/hero-strip.png'))
+        if (f === 'og' && theme === 'light') fs.copyFileSync(stem + '.png', path.join(ROOT, 'src/app/dodo/opengraph-image.png'))
         if (spec.layers && isClip(s)) {
           // Clip scenes also export the ground and the bird as separate
           // layers; the assembler plays the clip between them.

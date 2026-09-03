@@ -66,8 +66,8 @@ export function Screen({
   )
 }
 
-export type Format = 'appstore-6.9' | 'appstore-6.5' | 'story' | 'story-title' | 'story-outro' | 'card' | 'wide' | 'wide-title' | 'wide-outro' | 'strip'
-export type Kind = 'portrait' | 'card' | 'strip' | 'title' | 'outro'
+export type Format = 'appstore-6.9' | 'appstore-6.5' | 'story' | 'story-title' | 'story-outro' | 'card' | 'wide' | 'wide-title' | 'wide-outro' | 'strip' | 'og'
+export type Kind = 'portrait' | 'card' | 'strip' | 'title' | 'outro' | 'og'
 /** `set` = which manifest set the format walks; null formats render once. */
 export const FORMATS: Record<Format, { w: number; h: number; kind: Kind; set: string | null }> = {
   'appstore-6.9': { w: 1320, h: 2868, kind: 'portrait', set: 'appstore' },
@@ -80,6 +80,7 @@ export const FORMATS: Record<Format, { w: number; h: number; kind: Kind; set: st
   'wide-title': { w: 1920, h: 1080, kind: 'title', set: null },
   'wide-outro': { w: 1920, h: 1080, kind: 'outro', set: null },
   strip: { w: 1600, h: 640, kind: 'strip', set: null },
+  og: { w: 1200, h: 630, kind: 'og', set: null },
 }
 /** Export layers: the whole frame, the ground alone (no screen, no bird), or the bird alone on transparent. */
 export type Layer = 'all' | 'bg' | 'bird'
@@ -115,6 +116,32 @@ export default function DodoFrame({ scene, format, theme = 'light', layer = 'all
   const rootStyle = (extra: CSSProperties): CSSProperties =>
     layer === 'bird' ? { ...extra, background: 'transparent' } : extra
   const rectAttr = (r: ScreenRect) => JSON.stringify({ ...r, w: W, h: H })
+
+  if (spec.kind === 'og') {
+    // The link card: one marigold ground, the bird rising into frame from
+    // the bottom-left and looking at the two words that name the app's
+    // promise. Fixed colours — a link preview has no theme.
+    const bird = 700
+    const headX = 340, headY = 432
+    const left = headX - bird / 2
+    const top = headY - (66 / 124) * bird
+    const motes = [[90, 110, 7, 0.55], [210, 62, 5, 0.45], [560, 92, 9, 0.5], [1090, 118, 6, 0.45], [1146, 332, 8, 0.5], [1010, 548, 5, 0.4], [700, 572, 7, 0.45], [150, 330, 4, 0.4], [470, 196, 6, 0.5]]
+    return (
+      <div className="df df-og" data-theme="light" data-screen={rectAttr({ left: 0, top: 0, width: 0, height: 0, radius: 0 })}
+        style={{ width: W, height: H, background: `radial-gradient(circle at ${headX}px ${headY + 10}px, #F8CB6B 0%, #F3B443 34%, #F0A830 64%)` }}>
+        {motes.map(([x, y, r, o], i) => (
+          <span key={i} style={{ position: 'absolute', left: x - r, top: y - r, width: r * 2, height: r * 2, borderRadius: '50%', background: '#FFFBF0', opacity: o }} />
+        ))}
+        <div className="df-og-words" style={{ left: 618, top: 186 }}>
+          <div className="df-og-learn">Learn it.</div>
+          <div className="df-og-keep">Keep it.</div>
+        </div>
+        <div className="df-bird" style={{ position: 'absolute', left, top, width: bird, height: bird * BIRD_H }}>
+          <DodoMascot size={bird} still={0} gaze={2.4} shadow={false} />
+        </div>
+      </div>
+    )
+  }
 
   if (spec.kind === 'title' || spec.kind === 'outro') {
     // Sized off the short side so the card reads the same in 9:16 and 16:9.
@@ -267,6 +294,9 @@ export const frameCss = `
   letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
 .df-tag { position: absolute; left: 0; right: 0; text-align: center; font-family: var(--display); font-weight: 500; line-height: 1; color: var(--ink2); }
 .df-tag-site { font-weight: 600; color: var(--marigold-deep); }
+.df-og-words { position: absolute; font-family: var(--display); font-weight: 600; font-size: 112px; line-height: 1.06; letter-spacing: -0.025em; }
+.df-og-learn { color: #33383E; }
+.df-og-keep { color: #FFFBF0; }
 .df-bird { pointer-events: none; }
 .df-bird svg { display: block; }
 @media (prefers-reduced-motion: reduce) { .df-img { transition: none; } .df-img-push { transform: none; } }

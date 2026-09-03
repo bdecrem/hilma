@@ -144,6 +144,7 @@ export default function DodoMascot({
   beat = 'idle',
   beatKey = 0,
   still,
+  gaze = 0,
   className,
 }: {
   size?: number
@@ -155,6 +156,8 @@ export default function DodoMascot({
   beatKey?: number
   /** Freeze one frame with the reaction at this progress (0–1) — for exports. */
   still?: number
+  /** Pupil offset in art units (−3…3): a glance to the side, for stills. */
+  gaze?: number
   /** 'face' = the app-icon crop: head, sprout and wings, feet cropped below, square. */
   crop?: 'full' | 'face'
   className?: string
@@ -180,6 +183,7 @@ export default function DodoMascot({
       const rx = reaction.current
       if (still !== undefined) {
         if (beat !== 'idle') react(beat, Math.min(0.999, Math.max(0, still)), p)
+        p.px += gaze
       } else if (rx && !reduce) {
         const u = (now - rx.start) / (BEAT_SECS[rx.kind] * 1000)
         if (u >= 1) reaction.current = null
@@ -205,7 +209,7 @@ export default function DodoMascot({
     }
     raf = requestAnimationFrame(frame)
     return () => cancelAnimationFrame(raf)
-  }, [seed, withLaunch, still, beat])
+  }, [seed, withLaunch, still, beat, gaze])
 
   // Full: 124 wide × 134 tall art box (room for the hop and the shadow).
   // Face: a square around the head, the way the app icon crops the mark.
