@@ -14,7 +14,8 @@ export type Scene = {
   sets: string[]
   bird: Beat
   focus?: Focus
-  capture?: 'still' | 'clip' | 'record'
+  capture?: 'still' | 'mockup' | 'clip' | 'record'
+  mockup?: string
   clip?: string
   seconds?: number
   trim?: [number, number]

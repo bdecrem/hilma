@@ -60,7 +60,9 @@ after every run: legacy and missing frames are labelled in marigold.
   `seed-state.json`.
 - `settle` — seconds to wait before the screenshot.
 - `legacy` — a hand-made still to use until the screen has a launch hook.
-  `clip` — an mp4 to use as is. Both are flagged on the contact sheet.
+  `mockup` — an HTML screen under `mockups/` (420×912 CSS px, rendered at
+  3x) for moments outside the app, like the daily card in Messages.
+  `clip` — an mp4 to use as is. Legacy and clip are flagged on the contact sheet.
 - `focus` — the screen window (fractions of width/height) the hero and App
   Store frames zoom to; omit for full frame.
 - `bird` — the mascot's reaction in the hero: `idle`, `point`, `peek`,

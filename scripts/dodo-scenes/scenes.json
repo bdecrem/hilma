@@ -1,5 +1,5 @@
 {
-  "$comment": "Dodo showcase manifest. One entry per app moment; every showcase surface (site hero, tour, App Store shots, video) renders from this list. Lines use **word** to mark the one marigold word. $T_<KEY> in launch args resolves to a demo-account topic id from seed-state.json. capture: still | clip (an mp4 under clips/) | record (simctl recordVideo for `seconds`, then `trim` [start, length]). Run `pnpm dodo:scenes` after editing; see README.md.",
+  "$comment": "Dodo showcase manifest. One entry per app moment; every showcase surface (site hero, tour, App Store shots, video) renders from this list. Lines use **word** to mark the one marigold word. $T_<KEY> in launch args resolves to a demo-account topic id from seed-state.json. capture: still | mockup (an HTML screen under mockups/, rendered at 3x) | clip (an mp4 under clips/) | record (simctl recordVideo for `seconds`, then `trim` [start, length]). Run `pnpm dodo:scenes` after editing; see README.md.",
   "sim": "iPhone Air",
   "runtime": "iOS 26.4",
   "$runtime": "Preferred simulator runtime. The iOS 27 beta drops some launch hooks (the profile sheet never renders); 26.4 renders every scene. Falls back to the newest runtime when this one is not installed.",
@@ -318,10 +318,9 @@
     {
       "id": "daily",
       "line": "One card a day, **over iMessage.**",
-      "tour": "A daily mini-quiz over iMessage, linked to your Peck game. Don't break your streak.",
-      "clip": "scripts/dodo-scenes/clips/daily.mp4",
-      "capture": "clip",
-      "seconds": 7.0,
+      "tour": "A daily card over iMessage: one question, your answer, a grade. Don't break the streak.",
+      "mockup": "scripts/dodo-scenes/mockups/daily.html",
+      "capture": "mockup",
       "bird": "cheer",
       "sets": [
         "hero",

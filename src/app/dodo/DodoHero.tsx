@@ -98,7 +98,7 @@ export default function DodoHero() {
 
 const heroCss = `
 .dh { overflow: visible; background: transparent; display: grid; grid-template-columns: 318px 1fr; gap: 18px 28px;
-  align-items: center; margin: 8px 0 44px; }
+  align-items: center; margin: 0 0 52px; }
 .dh-stage { position: relative; width: 318px; height: 512px; }
 .dh-bloom { position: absolute; inset: -30px -40px; pointer-events: none;
   background: radial-gradient(ellipse 58% 52% at 56% 50%, var(--peach) 0%, transparent 70%); }

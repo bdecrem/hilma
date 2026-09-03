@@ -19,6 +19,7 @@ import path from 'node:path'
 import { execFileSync, spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { chromium } from 'playwright'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(HERE, '../..')
@@ -82,7 +83,34 @@ function findApp() {
   return apps[0]
 }
 
+// Mockup scenes are HTML screens (420×912 CSS px) rendered at 3x — the
+// same 1260×2736 as the simulator captures — for moments that happen
+// outside the app, like the daily card in Messages.
+async function renderMockups() {
+  const list = scenes.filter((s) => s.mockup)
+  if (!list.length) return
+  fs.mkdirSync(RAW, { recursive: true })
+  const browser = await chromium.launch()
+  try {
+    for (const theme of themes) {
+      const page = await browser.newPage({ viewport: { width: 420, height: 912 }, deviceScaleFactor: 3, colorScheme: theme })
+      for (const s of list) {
+        await page.goto('file://' + path.join(ROOT, s.mockup), { waitUntil: 'networkidle' })
+        await page.evaluate(() => document.fonts.ready)
+        await page.waitForTimeout(150)
+        await page.screenshot({ path: path.join(RAW, `${s.id}.${theme}.png`) })
+        log(`rendered ${s.id} (${theme}) from ${path.basename(s.mockup)}`)
+      }
+      await page.close()
+    }
+  } finally {
+    await browser.close()
+  }
+}
+
 async function capture() {
+  await renderMockups()
+  if (!scenes.some((s) => s.launch)) return
   const pass = process.env.DODO_DEMO_PASS
   if (!pass) throw new Error('DODO_DEMO_PASS is not set in .env.local')
   const sim = pickSim()

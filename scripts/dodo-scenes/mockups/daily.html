@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=420, initial-scale=1">
+<title>Dodo daily card — iMessage mockup</title>
+<style>
+  /* One iPhone screen at 420×912 CSS px; capture.mjs renders it at 3x =
+     1260×2736, the same as the simulator captures. iOS Messages, light. */
+  :root { --blue: #1F8FFF; --bubble: #E9E9EB; --ink: #000; --sub: #8E8E93; --line: rgba(60,60,67,0.18); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 420px; height: 912px; overflow: hidden; background: #fff;
+    font-family: -apple-system, 'SF Pro Text', 'Helvetica Neue', system-ui, sans-serif; color: var(--ink);
+    -webkit-font-smoothing: antialiased; }
+  .status { position: absolute; top: 0; left: 0; right: 0; height: 54px; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 0 40px 6px 44px; font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
+  .status .time { padding-bottom: 1px; }
+  .status .icons { display: flex; align-items: center; gap: 6px; }
+  .status svg { display: block; }
+  .nav { position: absolute; top: 54px; left: 0; right: 0; height: 92px; background: rgba(249,249,249,0.94); border-bottom: 0.5px solid var(--line);
+    display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; }
+  .nav .back { display: flex; align-items: center; gap: 4px; padding-left: 10px; color: var(--blue); font-size: 17px; }
+  .nav .back .badge { background: rgba(120,120,128,0.16); color: var(--blue); font-size: 15px; font-weight: 500; border-radius: 12px; padding: 2px 8px; }
+  .nav .who { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .nav .avatar { width: 50px; height: 50px; border-radius: 50%; background: #FCE5D0; display: grid; place-items: center; overflow: hidden; }
+  .nav .avatar svg { width: 42px; height: 42px; margin-top: 6px; }
+  .nav .name { font-size: 12px; color: var(--ink); display: flex; align-items: center; gap: 2px; }
+  .nav .name span { color: var(--sub); font-size: 11px; }
+  .nav .cam { justify-self: end; padding-right: 18px; color: var(--blue); }
+  .thread { position: absolute; top: 146px; left: 0; right: 0; bottom: 96px; padding: 16px 16px 0; display: flex; flex-direction: column; gap: 6px; }
+  .stamp { text-align: center; font-size: 12px; color: var(--sub); margin: 4px 0 8px; }
+  .stamp b { font-weight: 600; color: var(--sub); }
+  .msg { max-width: 78%; padding: 9px 13px 10px; font-size: 17px; line-height: 1.28; letter-spacing: -0.2px; border-radius: 19px; position: relative; white-space: pre-line; }
+  .in { align-self: flex-start; background: var(--bubble); color: var(--ink); border-bottom-left-radius: 5px; }
+  .out { align-self: flex-end; background: var(--blue); color: #fff; border-bottom-right-radius: 5px; }
+  .in::after, .out::after { content: ""; position: absolute; bottom: 0; width: 10px; height: 14px; }
+  .in::after { left: -5px; background: radial-gradient(circle at 0 0, transparent 9px, var(--bubble) 9.5px) no-repeat; transform: scaleX(-1); }
+  .out::after { right: -5px; background: radial-gradient(circle at 0 0, transparent 9px, var(--blue) 9.5px) no-repeat; }
+  .delivered { align-self: flex-end; font-size: 11px; color: var(--sub); margin: -2px 6px 6px 0; }
+  .gap { height: 10px; }
+  .composer { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: #fff; display: flex; align-items: flex-start; gap: 10px; padding: 8px 14px 0; }
+  .plus { width: 34px; height: 34px; border-radius: 50%; background: rgba(120,120,128,0.14); color: var(--sub); display: grid; place-items: center; font-size: 24px; font-weight: 300; line-height: 1; margin-top: 2px; }
+  .field { flex: 1; height: 38px; border: 1px solid rgba(60,60,67,0.25); border-radius: 19px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px 0 14px; color: var(--sub); font-size: 17px; }
+  .home { position: absolute; bottom: 8px; left: 50%; width: 140px; height: 5px; margin-left: -70px; border-radius: 3px; background: #000; }
+</style>
+</head>
+<body>
+  <div class="status">
+    <div class="time">9:41</div>
+    <div class="icons">
+      <svg width="19" height="12" viewBox="0 0 19 12"><rect x="0" y="8" width="3.5" height="4" rx="1" fill="#000"/><rect x="5" y="5.5" width="3.5" height="6.5" rx="1" fill="#000"/><rect x="10" y="3" width="3.5" height="9" rx="1" fill="#000"/><rect x="15" y="0" width="3.5" height="12" rx="1" fill="#000"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 11.6 5.9 9a3.7 3.7 0 0 1 5.2 0Zm4.3-4.3a6.1 6.1 0 0 0-8.6 0L2.5 5.6a8.5 8.5 0 0 1 12 0ZM16.5 3.9a11 11 0 0 0-16 0L.9 2.2a13.4 13.4 0 0 1 15.2 0Z" fill="#000"/></svg>
+      <svg width="28" height="13" viewBox="0 0 28 13"><rect x="0.5" y="0.5" width="24" height="12" rx="3.5" stroke="#000" stroke-opacity="0.35" fill="none"/><rect x="2" y="2" width="21" height="9" rx="2" fill="#000"/><path d="M26 4.5v4a2 2 0 0 0 0-4Z" fill="#000" fill-opacity="0.4"/></svg>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="back"><svg width="12" height="20" viewBox="0 0 12 20"><path d="M10 2 2 10l8 8" fill="none" stroke="#1F8FFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="badge">95</span></div>
+    <div class="who">
+      <div class="avatar"><svg viewBox="0 0 200 200"><path d="M98 46 C97.5 40 99 36 105 32 C106.5 35 105 40 103 46 Z" fill="#6FAE5C"/><path d="M102 35 C91 22 74 20 63 27 C68 40 87 43 102 35 Z" fill="#7BB662"/><path d="M104 32 C109 19 125 15 137 19 C135 32 119 39 104 32 Z" fill="#5F9E4C"/><circle cx="100" cy="104" r="60" fill="#7C9EB2"/><path d="M54.4 113.6 C54.4 87.2 66.4 72.8 85.6 75.2 Q100 87.2 114.4 75.2 C133.6 72.8 145.6 87.2 145.6 113.6 C145.6 142.4 126 159.2 100 159.2 C73.6 159.2 54.4 142.4 54.4 113.6 Z" fill="#F9EFDA"/><circle cx="78.4" cy="99.2" r="12.6" fill="#33383E"/><circle cx="74.2" cy="94.4" r="4.8" fill="#fff"/><circle cx="121.6" cy="99.2" r="12.6" fill="#33383E"/><circle cx="117.4" cy="94.4" r="4.8" fill="#fff"/><ellipse cx="100" cy="118.4" rx="15.6" ry="11.4" fill="#F0A830"/><ellipse cx="64" cy="123.2" rx="9.6" ry="6" fill="#F2A19A" opacity="0.6"/><ellipse cx="136" cy="123.2" rx="9.6" ry="6" fill="#F2A19A" opacity="0.6"/></svg></div>
+      <div class="name">Dodo <span>›</span></div>
+    </div>
+    <div class="cam"><svg width="26" height="18" viewBox="0 0 26 18"><rect x="1" y="1" width="16" height="16" rx="4" fill="none" stroke="#1F8FFF" stroke-width="2"/><path d="M17 7.5 24 4v10l-7-3.5Z" fill="none" stroke="#1F8FFF" stroke-width="2" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div class="thread">
+    <div class="stamp"><b>Today</b> 9:00 AM</div>
+    <div class="msg in">🐦 Dodo daily card — The Odyssey
+
+Why does Odysseus tell the Cyclops that his name is Nobody?
+
+Reply with your answer. Your own words are fine.</div>
+    <div class="gap"></div>
+    <div class="msg out">So when he yells that Nobody is hurting him, the other Cyclopes shrug and go home.</div>
+    <div class="delivered">Delivered</div>
+    <div class="msg in">A. That's the trick — and the boast he can't resist afterwards is what costs him ten years.
+
++90 XP banked for your next Peck round.
+🔥 7-day streak · ×2</div>
+  </div>
+  <div class="composer">
+    <div class="plus">+</div>
+    <div class="field"><span>iMessage</span><svg width="14" height="20" viewBox="0 0 14 20"><rect x="4" y="1" width="6" height="11" rx="3" fill="none" stroke="#8E8E93" stroke-width="1.6"/><path d="M1.5 9a5.5 5.5 0 0 0 11 0M7 14.5V18M4 18h6" fill="none" stroke="#8E8E93" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+  </div>
+  <div class="home"></div>
+</body>
+</html>

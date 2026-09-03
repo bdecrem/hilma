@@ -30,12 +30,13 @@ export default function DodoAltPage() {
       </header>
 
       <article className="da-body">
-        <DodoHero />
         <h1>
           Dodo is an AI learning companion: an open-source app to help you
           understand, explain back, and remember any book or topic.{' '}
           <em>100% agentic, 30% finished.</em>
         </h1>
+
+        <DodoHero />
 
         <section>
           <div className="da-label">The idea</div>
