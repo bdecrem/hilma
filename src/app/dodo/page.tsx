@@ -1,4 +1,5 @@
 import DodoTour from './DodoTour'
+import DodoHero from './DodoHero'
 import DodoMascot from './DodoMascot'
 
 // The dodogo.cc homepage — an essay-style introduction to Dodo, hybrid of
@@ -29,6 +30,7 @@ export default function DodoAltPage() {
       </header>
 
       <article className="da-body">
+        <DodoHero />
         <h1>
           Dodo is an AI learning companion: an open-source app to help you
           understand, explain back, and remember any book or topic.{' '}
@@ -102,7 +104,7 @@ export default function DodoAltPage() {
           </p>
         </section>
 
-        {/* Overview video (scripts/dodo-video) parked while it's iterated on:
+        {/* Overview video (scripts/dodo-scenes/video.mjs) parked while it's iterated on:
             <video className="da-overview" src="/dodo/tour/overview.mp4"
                    poster="/dodo/tour/overview-poster.jpg" controls playsInline /> */}
 

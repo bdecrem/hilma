@@ -150,6 +150,14 @@ struct TopicDetailView: View {
                 try? await Task.sleep(for: .milliseconds(600))
                 voicePresented = true
             }
+            // `-OpenFinalReview 1` — this topic's final review (the oral
+            // exam) as the user would start it, for the showcase captures.
+            if UserDefaults.standard.bool(forKey: "OpenFinalReview") {
+                UserDefaults.standard.removeObject(forKey: "OpenFinalReview")
+                try? await Task.sleep(for: .milliseconds(600))
+                finalReviewVariant = .full
+                finalReviewPresented = true
+            }
             // `-OpenTopicQuotes 1` — this topic's Quotes shelf.
             if UserDefaults.standard.bool(forKey: "OpenTopicQuotes") {
                 UserDefaults.standard.removeObject(forKey: "OpenTopicQuotes")

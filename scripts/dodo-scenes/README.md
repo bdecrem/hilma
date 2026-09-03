@@ -9,13 +9,30 @@ one command.
 
 ```bash
 pnpm dodo:seed              # once, or after changing the demo content
+pnpm dodo:scenes            # capture → build → export: everything below in one go
 pnpm dodo:capture           # simulator → raw/ → public/dodo/scenes + contact-sheet.png
 pnpm dodo:capture --dark    # also capture the dark appearance (off by default)
 pnpm dodo:capture --only peck,chat
 pnpm dodo:capture --export  # re-export from raw/ without touching the simulator
+pnpm dodo:export            # Playwright → out/<format>/ (App Store, story, card, wide, strip)
+pnpm dodo:video             # out/story frames → out/video/overview.mp4 (+ --wide for 16:9)
 ```
 
-`capture.mjs` needs a simulator build of the Feynd scheme in DerivedData
+Surfaces and where they come from:
+
+| Surface | From | Where it lands |
+|---|---|---|
+| Site hero + tour | `public/dodo/scenes/*.webp|mp4` | `DodoHero.tsx`, `DodoTour.tsx` (live) |
+| App Store screenshots | `pnpm dodo:export` | `out/appstore-6.9/`, `out/appstore-6.5/` — drag into App Store Connect |
+| Overview video | `pnpm dodo:video` | `out/video/overview.mp4` → `public/dodo/tour/overview.mp4`; `--wide` for 16:9 |
+| Feature card (one scene, 16:9) | `pnpm dodo:export --formats card` | `out/card/` — for announcing a feature |
+| README strip | `pnpm dodo:export --formats strip` | `public/dodo/hero-strip.png` |
+
+Every static frame is a screenshot of `/dodo/scene/<id>?format=…` — the same
+React frame (`DodoFrame.tsx`) the hero uses, so exports match the page.
+
+`export.mjs` needs a production build (`pnpm build`) and starts `next start`
+on port 3077 itself. `capture.mjs` needs a simulator build of the Feynd scheme in DerivedData
 (`xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd -destination
 'platform=iOS Simulator,name=iPhone Air' build`). Look at `contact-sheet.png`
 after every run: legacy and missing frames are labelled in marigold.

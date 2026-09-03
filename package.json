@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "dodo:seed": "node scripts/dodo-scenes/seed.mjs",
-    "dodo:capture": "node scripts/dodo-scenes/capture.mjs"
+    "dodo:capture": "node scripts/dodo-scenes/capture.mjs",
+    "dodo:export": "node scripts/dodo-scenes/export.mjs",
+    "dodo:scenes": "node scripts/dodo-scenes/capture.mjs && pnpm build && node scripts/dodo-scenes/export.mjs",
+    "dodo:video": "node scripts/dodo-scenes/video.mjs"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",

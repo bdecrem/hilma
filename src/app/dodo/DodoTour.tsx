@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import manifest from '../../../scripts/dodo-scenes/scenes.json'
+import { clipFor, scenes, stillFor } from './scenes'
 
 // The tour: every slide is a scene from scripts/dodo-scenes/scenes.json
 // (the one list behind the hero, the tour, the App Store shots and the
@@ -9,13 +9,9 @@ import manifest from '../../../scripts/dodo-scenes/scenes.json'
 // To change the tour, edit the manifest — never this file's slide list.
 type Slide = { src: string; video?: boolean; caption: string }
 
-const SLIDES: Slide[] = manifest.scenes
+const SLIDES: Slide[] = scenes
   .filter((s) => s.sets.includes('tour'))
-  .map((s) => ({
-    src: `/dodo/scenes/${s.id}.${'clip' in s ? 'mp4' : 'webp'}`,
-    video: 'clip' in s,
-    caption: s.tour,
-  }))
+  .map((s) => ({ src: clipFor(s) ?? stillFor(s), video: Boolean(clipFor(s)), caption: s.tour }))
 
 // Reading-time hold per slide; the video slide holds for its full run.
 function holdFor(slide: Slide): number {

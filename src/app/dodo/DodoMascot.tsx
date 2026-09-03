@@ -143,6 +143,7 @@ export default function DodoMascot({
   crop = 'full',
   beat = 'idle',
   beatKey = 0,
+  still,
   className,
 }: {
   size?: number
@@ -152,6 +153,8 @@ export default function DodoMascot({
   /** One-shot reaction over the idle loop; replayed whenever `beatKey` changes. */
   beat?: Beat
   beatKey?: number
+  /** Freeze one frame with the reaction at this progress (0–1) — for exports. */
+  still?: number
   /** 'face' = the app-icon crop: head, sprout and wings, feet cropped below, square. */
   crop?: 'full' | 'face'
   className?: string
@@ -172,10 +175,12 @@ export default function DodoMascot({
     let raf = 0
     const start = performance.now()
     const frame = (now: number) => {
-      const t = (now - start) / 1000
+      const t = still !== undefined ? 0.7 : (now - start) / 1000
       const p = compose(t, seed, withLaunch, reduce)
       const rx = reaction.current
-      if (rx && !reduce) {
+      if (still !== undefined) {
+        if (beat !== 'idle') react(beat, Math.min(0.999, Math.max(0, still)), p)
+      } else if (rx && !reduce) {
         const u = (now - rx.start) / (BEAT_SECS[rx.kind] * 1000)
         if (u >= 1) reaction.current = null
         else react(rx.kind, u, p)
@@ -196,11 +201,11 @@ export default function DodoMascot({
         r.shadow.setAttribute('transform', `translate(0 60) scale(${s * (1 - 0.35 * lift)} ${s * (1 - 0.3 * lift)}) translate(0 -60)`)
         r.shadow.setAttribute('opacity', String(0.13 * (1 - 0.5 * lift)))
       }
-      if (!reduce || t < 0.1 || reaction.current) raf = requestAnimationFrame(frame)
+      if (still === undefined && (!reduce || t < 0.1 || reaction.current)) raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
     return () => cancelAnimationFrame(raf)
-  }, [seed, withLaunch])
+  }, [seed, withLaunch, still, beat])
 
   // Full: 124 wide × 134 tall art box (room for the hop and the shadow).
   // Face: a square around the head, the way the app icon crops the mark.

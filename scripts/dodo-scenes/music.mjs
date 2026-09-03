@@ -3,7 +3,8 @@
 // library recipe (vibeceo/jambot/library.json → deep_house, core tier —
 // proven params only). ~65s at 122 BPM, D minor, mixed as a bed, not a
 // track: soft round kick, sparse hats, sustained sub-leaning bass.
-// Rerun to regenerate music.wav next to this script.
+// Rerun to regenerate music.wav next to this script (scripts/dodo-scenes/video.mjs
+// does it automatically when the file is missing).
 import { JambotHeadless } from '../../../vibeceo/jambot/headless.js';
 import { copyFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';

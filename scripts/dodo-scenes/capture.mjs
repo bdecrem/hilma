@@ -16,7 +16,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 
@@ -93,6 +93,9 @@ async function capture() {
 
   sh('xcrun', ['simctl', 'bootstatus', sim.udid, '-b'])
   sh('xcrun', ['simctl', 'install', sim.udid, app])
+  // The final review asks for the microphone; a system permission alert
+  // would sit over every capture after it (and survives relaunches).
+  sh('xcrun', ['simctl', 'privacy', sim.udid, 'grant', 'microphone', BUNDLE])
   sh('xcrun', ['simctl', 'spawn', sim.udid, 'defaults', 'write', BUNDLE, 'streakCelebrated', '-int', '9999'])
   sh('xcrun', ['simctl', 'status_bar', sim.udid, 'override', '--time', '9:41', '--batteryState', 'charged',
     '--batteryLevel', '100', '--cellularBars', '4', '--wifiBars', '3'])
@@ -111,6 +114,13 @@ async function capture() {
     for (const s of scenes) {
       if (!s.launch) continue
       launch(...s.launch.map(resolve))
+      if (s.capture === 'record') {
+        // Record from launch; the scene's `trim` picks the moment out in export.
+        const mov = path.join(RAW, `${s.id}.${theme}.mp4`)
+        await record(sim.udid, mov, s.seconds ?? 12)
+        log(`recorded ${s.id} (${theme}) ${s.seconds ?? 12}s`)
+        continue
+      }
       const file = path.join(RAW, `${s.id}.${theme}.png`)
       const r = await stableShot(sim.udid, file, s.settle ?? 6)
       const note = r.blank ? ' — BLANK, check the launch args' : r.stable ? '' : ' — never settled (animated screen?)'
@@ -155,6 +165,13 @@ async function stableShot(udid, file, minSettle, maxWait = 30) {
   }
 }
 
+async function record(udid, file, seconds) {
+  const p = spawn('xcrun', ['simctl', 'io', udid, 'recordVideo', '--codec', 'h264', '--force', file], { stdio: 'ignore' })
+  await sleep(seconds)
+  p.kill('SIGINT')
+  await new Promise((r) => p.on('exit', r))
+}
+
 // ---- export ------------------------------------------------------------------
 // Site assets: 840px-wide WebP (3x for the 268px tour frame is 804px). Legacy
 // stills and clips are copied as they are.
@@ -164,21 +181,29 @@ async function exportAssets() {
   for (const s of manifest.scenes) {
     for (const theme of themes) {
       let src = null
-      let flags = []
-      if (s.legacy) { src = path.join(ROOT, s.legacy); flags.push('legacy') }
-      else if (s.clip) { src = path.join(ROOT, s.clip); flags.push('clip') }
-      else src = path.join(RAW, `${s.id}.${theme}.png`)
+      const flags = []
+      const isClip = Boolean(s.clip) || s.capture === 'record'
+      if (s.clip) { src = path.join(ROOT, s.clip); flags.push('clip') }
+      else if (s.capture === 'record') { src = path.join(RAW, `${s.id}.${theme}.mp4`); flags.push('clip') }
+      else {
+        // A live capture wins; the legacy still is the fallback until the screen has a hook.
+        src = path.join(RAW, `${s.id}.${theme}.png`)
+        if (!fs.existsSync(src) && s.legacy) { src = path.join(ROOT, s.legacy); flags.push('legacy') }
+      }
       if (!fs.existsSync(src)) { log(`MISSING ${s.id} (${theme}) — ${path.relative(ROOT, src)}`); thumbs.push({ s, theme, flags: [...flags, 'missing'] }); continue }
       const suffix = theme === 'light' ? '' : `.${theme}`
-      if (s.clip) {
+      if (isClip) {
+        // Trim, scale to 630 wide (2x the tour frame), strip audio; poster
+        // from the midpoint doubles as the still for static frames.
         const dst = path.join(OUT, `${s.id}${suffix}.mp4`)
-        fs.copyFileSync(src, dst)
-        // Poster for the contact sheet.
-        try {
-          const poster = path.join(RAW, `${s.id}.poster.png`)
-          sh('ffmpeg', ['-y', '-v', 'error', '-ss', '3', '-i', src, '-frames:v', '1', poster])
-          thumbs.push({ s, theme, flags, file: poster })
-        } catch { thumbs.push({ s, theme, flags }) }
+        const trim = s.trim ? ['-ss', String(s.trim[0]), '-t', String(s.trim[1])] : []
+        sh('ffmpeg', ['-y', '-v', 'error', ...trim, '-i', src, '-vf', "scale='min(630,iw)':-2", '-an',
+          '-c:v', 'libx264', '-preset', 'medium', '-crf', '23', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', dst])
+        const poster = path.join(RAW, `${s.id}.${theme}.poster.png`)
+        const mid = (s.trim ? s.trim[1] : s.seconds ?? 7) / 2
+        sh('ffmpeg', ['-y', '-v', 'error', '-ss', String(mid), '-i', dst, '-frames:v', '1', poster])
+        await sharp(poster).resize({ width: 840, withoutEnlargement: true }).webp({ quality: 88 }).toFile(path.join(OUT, `${s.id}${suffix}.webp`))
+        thumbs.push({ s, theme, flags, file: poster })
         continue
       }
       const dst = path.join(OUT, `${s.id}${suffix}.webp`)

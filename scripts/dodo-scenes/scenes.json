@@ -1,5 +1,5 @@
 {
-  "$comment": "Dodo showcase manifest. One entry per app moment; every showcase surface (site hero, tour, App Store shots, video) renders from this list. Lines use **word** to mark the one marigold word. $T_<KEY> in launch args resolves to a demo-account topic id from seed-state.json. Run `pnpm dodo:capture` after editing; see README.md.",
+  "$comment": "Dodo showcase manifest. One entry per app moment; every showcase surface (site hero, tour, App Store shots, video) renders from this list. Lines use **word** to mark the one marigold word. $T_<KEY> in launch args resolves to a demo-account topic id from seed-state.json. capture: still | clip (an mp4 under clips/) | record (simctl recordVideo for `seconds`, then `trim` [start, length]). Run `pnpm dodo:scenes` after editing; see README.md.",
   "sim": "iPhone Air",
   "runtime": "iOS 26.4",
   "$runtime": "Preferred simulator runtime. The iOS 27 beta drops some launch hooks (the profile sheet never renders); 26.4 renders every scene. Falls back to the newest runtime when this one is not installed.",
@@ -108,10 +108,10 @@
       "settle": 8,
       "capture": "still",
       "focus": {
-        "x": 0.04,
-        "y": 0.13,
-        "w": 0.92,
-        "h": 0.42
+        "x": 0.03,
+        "y": 0.185,
+        "w": 0.94,
+        "h": 0.345
       },
       "bird": "point",
       "sets": [
@@ -146,12 +146,22 @@
       "id": "exam",
       "line": "Then, an oral exam. **You need an A.**",
       "tour": "Once the flash card sets are done: a final review, out loud. Let the agent drive or set your own format. You need an A to pass.",
+      "launch": [
+        "-StartTab",
+        "topics",
+        "-OpenTopic",
+        "$T_ODYSSEY",
+        "-OpenFinalReview",
+        "1"
+      ],
+      "settle": 12,
       "legacy": "scripts/dodo-scenes/legacy/exam.png",
       "capture": "still",
       "bird": "hop",
       "sets": [
         "hero",
         "tour",
+        "appstore",
         "video"
       ]
     },
@@ -202,9 +212,9 @@
       "capture": "still",
       "focus": {
         "x": 0.0,
-        "y": 0.09,
+        "y": 0.4,
         "w": 1.0,
-        "h": 0.46
+        "h": 0.28
       },
       "bird": "idle",
       "sets": [
@@ -227,6 +237,28 @@
         "hero",
         "tour",
         "appstore",
+        "video"
+      ]
+    },
+    {
+      "id": "peck-clear",
+      "line": "Clear ten levels, **cross into the next region.**",
+      "tour": "Clear a level and the map celebrates. Ten of them open a new region.",
+      "launch": [
+        "-StartTab",
+        "peck",
+        "-ShowRegionTransition",
+        "10"
+      ],
+      "capture": "record",
+      "seconds": 17,
+      "trim": [
+        5.5,
+        9.5
+      ],
+      "bird": "cheer",
+      "sets": [
+        "tour",
         "video"
       ]
     },
@@ -295,6 +327,27 @@
         "hero",
         "tour",
         "video"
+      ]
+    },
+    {
+      "id": "streak",
+      "line": "Don't break **the streak.**",
+      "tour": "Seven days in a row doubles your XP. Don't break the streak.",
+      "launch": [
+        "-StartTab",
+        "peck"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "focus": {
+        "x": 0.0,
+        "y": 0.045,
+        "w": 1.0,
+        "h": 0.3
+      },
+      "bird": "cheer",
+      "sets": [
+        "appstore"
       ]
     }
   ]
