@@ -22,6 +22,16 @@ Bart has gotten angry about this, hard. When a task is started, **finish it in t
 
 State all of this plainly; this is a standing expectation, not a one-off.
 
+## Never host deliverables on claude.ai artifacts — we have our own hosting
+
+Do not publish pages, previews, or any work product for Bart as claude.ai Artifacts (the `Artifact` tool), even "private" ones. Everything Bart needs to open lives on our own infrastructure:
+
+- **Web pages / creations:** the right home in this repo (Vercel: hilma-nine.vercel.app and its domains), or the sibling project the work belongs to (daskollektiv.rip for DK tracks, intheamber.com for Amber). Pushing is still a separate go-ahead — but when Bart asks for "a link I can click", the answer is a link on our hosting, never an artifact.
+- **Quick previews before a push:** a tunn3l URL from this machine (see the Tunn3l section; `../tunn3l/`), pointed at a local static server or the dev server.
+- **Files he just needs to open (audio, video, images, PDFs):** send them with `SendUserFile`, and keep a copy under `~/Desktop/<project>/` so they outlive the session scratchpad.
+
+This rule came from the SILT track (2026-09-02): the page was posted as an artifact and Bart said "Don't ever post artifacts you make for me on Claude.ai. We have our own hosting." No exceptions.
+
 ## Flag when Extra High effort may help
 
 At the start of a non-trivial feature or debugging request — and again after I've scoped it and read the relevant code — flag to Bart (one line, with the reason) when it may be worth switching the effort level to Extra High via `/effort`. I can't flip the switch myself; I only flag and Bart decides.
