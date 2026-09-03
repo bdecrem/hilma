@@ -48,10 +48,15 @@ const SECTIONS = [
 const TARGET_RMS = { fog: -26, build: -19, assemble: -15.5, plateau: -13.5, subtract: -14.5, breakdown: -24, payoff: -12.5, plateau2: -13, outro: -18, fogout: -31 };
 const sec = (b) => SECTIONS.find(s => b >= s.from && b <= s.to).name;
 const inRange = (b, a, z) => b >= a && b <= z;
-const ROOTS = ['G3', 'C3', 'F3', 'D3'];              // Gm7 -> Cm7 -> Fm7 -> Dm7, 8 bars each
-const SUB_OF = { G3: 'G1', C3: 'C2', F3: 'F1', D3: 'D2' };
-const ACID_ROOT = { G3: 'G1', C3: 'C2', F3: 'F1', D3: 'D1' };
-const chordAt = (b) => (b <= 16 || b >= 225) ? 'G3' : ROOTS[Math.floor((b - 17) / 8) % 4];
+// Chord plan: i / i(add9) / VI / iv over a 32-bar cycle; the breakdown lifts to VI,
+// the drop lands back on i. Three voicings = three JP9000 renders summed in the mix.
+const CHORD_CYCLE = ['Gm7', 'Gm9', 'Ebmaj7', 'Cm7'];
+const CHORD = { Gm7: { root: 'G3', shape: 'm7' }, Gm9: { root: 'G3', shape: 'm9' }, Ebmaj7: { root: 'D#3', shape: 'maj7' }, Cm7: { root: 'C3', shape: 'm7' } };
+const SHAPES = { m7: [0, 3, 7, 10], m9: [0, 3, 10, 14], maj7: [0, 4, 7, 11] };
+const SUB_OF = { Gm7: 'G1', Gm9: 'G1', Ebmaj7: 'D#2', Cm7: 'C2' };
+const ACID_ROOT = { Gm7: 'G1', Gm9: 'G1', Ebmaj7: 'D#2', Cm7: 'C2' };
+const chordAt = (b) => (b <= 16 || b >= 225) ? 'Gm7' : inRange(b, 113, 128) ? 'Ebmaj7' : b >= 129 ? CHORD_CYCLE[Math.floor((b - 129) / 8) % 4] : CHORD_CYCLE[Math.floor((b - 17) / 8) % 4];
+const chordRoot = (b) => CHORD[chordAt(b)].root;
 const DROPOUT_BARS = new Set([128, 168, 184]);       // kick + sub silent, tails ring
 
 // ============================================================ PATTERN BUILDERS
@@ -77,14 +82,14 @@ for (let b = 1; b <= BARS; b++) {
   const drop = DROPOUT_BARS.has(b);
   const kickOn = (inRange(b, 17, 112) || inRange(b, 129, 216)) && !drop;
   const hatOn = (inRange(b, 21, 112) || inRange(b, 129, 208)) && !drop;
-  const rimOn = (inRange(b, 33, 96) || inRange(b, 105, 112) || inRange(b, 129, 200)) && !drop;
-  const tomsFull = (inRange(b, 57, 96) || inRange(b, 129, 192)) && !drop;
-  const tomsLT = inRange(b, 49, 56) || inRange(b, 193, 200);
-  const rideOn = inRange(b, 81, 112) || inRange(b, 145, 192);
-  const clapOn = inRange(b, 129, 160);
+  const rimOn = (inRange(b, 41, 96) || inRange(b, 129, 160) || (inRange(b, 161, 192) && Math.floor((b - 161) / 8) % 2 === 0)) && !drop;
+  const tomsFull = (inRange(b, 65, 96) || inRange(b, 129, 192)) && !drop;
+  const tomsLT = inRange(b, 57, 64) || inRange(b, 193, 200);
+  const rideOn = inRange(b, 137, 160);
+  const clapOn = inRange(b, 129, 160) && b % 2 === 0;
   const shakerOn = inRange(b, 41, 128) || inRange(b, 129, 208);
-  const ghost7 = inRange(b, 73, 96) ? -8 : inRange(b, 161, 192) ? -4 : null;
-  const ohEvery = (s === 'plateau' || s === 'subtract' || s === 'plateau2') ? 4 : s === 'breakdown' ? 1 : 0;
+  const ghost7 = inRange(b, 161, 192) ? -4 : null;
+  const ohEvery = (s === 'plateau' || s === 'subtract' || s === 'plateau2') ? 4 : s === 'breakdown' ? 2 : 0;
 
   if (kickOn) for (const st of [0, 4, 8, 12]) put(jt90, 'kick', b, st, V(st === 0 ? 0 : -0.6, st === 0));
   if (hatOn) for (const st of [2, 6, 10, 14]) put(jt90, 'ch', b, st, V(-7 + (st === 6 || st === 14 ? 1.5 : 0) + hum(b, st, 2)));
@@ -113,7 +118,7 @@ const subPat = Array.from({ length: STEPS }, () => ({ note: 'G1', gate: false, a
 for (let b = 1; b <= BARS; b++) {
   const on = (inRange(b, 9, 127) || inRange(b, 129, 215)) && !DROPOUT_BARS.has(b);
   if (!on) continue;
-  const note = SUB_OF[chordAt(b)];
+  const note = SUB_OF[chordAt(b)];   // chord-name keyed
   for (let st = 0; st < 16; st++) subPat[(b - 1) * 16 + st] = { note, gate: true, accent: st === 0, slide: st !== 0 };
 }
 // ---- JT30 acid: closed "pressure" notes from 65, real answers to the toms from 129
@@ -122,19 +127,18 @@ const A = (b, st, note, accent = false, slide = false) => { acid[(b - 1) * 16 + 
 const up = (n, semis) => { const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']; const m = n.match(/^([A-G]#?)(\d)$/); const i = names.indexOf(m[1]) + 12 * +m[2] + semis; return names[i % 12] + Math.floor(i / 12); };
 for (let b = 1; b <= BARS; b++) {
   const s = sec(b), root = ACID_ROOT[chordAt(b)];
-  if ((s === 'plateau' || s === 'subtract') && b % 2 === 0) A(b, 14, root);                      // pressure: felt, not heard
   const phrase = (b - 129) % 4;                                                                     // payoff / plateau2 4-bar phrases
   const answers = inRange(b, 129, 160) || (inRange(b, 161, 192) && Math.floor((b - 161) / 4) % 2 === 0);
   if (answers && phrase === 2) { A(b, 0, root, true); A(b, 2, root, false, true); A(b, 4, up(root, 3)); A(b, 8, up(root, 7), true); A(b, 10, up(root, 7), false, true); A(b, 12, up(root, 5)); A(b, 14, root); }
-  if (answers && phrase === 3) { A(b, 2, up(root, 10)); A(b, 6, root, true, false); A(b, 7, root, false, true); A(b, 8, up(root, 12), true, true); A(b, 9, up(root, 12), false, true); A(b, 10, up(root, 12), false, true); }
+  if (answers && phrase === 3) { A(b, 6, root, true, false); A(b, 7, root, false, true); A(b, 8, up(root, 12), true, true); A(b, 9, up(root, 12), false, true); A(b, 10, up(root, 12), false, true); }
   if (inRange(b, 193, 208) && b % 4 === 1) { A(b, 6, root); A(b, 7, root, false, true); A(b, 8, up(root, 7), false, true); }
 }
 // ---- JP9000 chord stab: offbeat placements per section
-const STAB_STEPS = { fog: (b) => b % 2 === 1 ? [6] : [], build: () => [6], assemble: () => [6, 14], plateau: () => [2, 6, 14], subtract: () => [6], breakdown: (b) => b % 2 === 1 ? [6] : [], payoff: () => [6, 14], plateau2: () => [2, 6, 14], outro: (b) => b <= 208 ? [6] : (b % 2 === 1 ? [6] : []), fogout: (b) => (b % 4 === 1 && b <= 241) ? [6] : [] };
+const STAB_STEPS = { fog: (b) => b % 4 === 1 ? [6] : [], build: (b) => b % 2 === 1 ? [6] : [], assemble: () => [6], plateau: (b) => b % 4 === 3 ? [6, 14] : [6], subtract: (b) => b % 2 === 1 ? [6] : [], breakdown: (b) => b % 2 === 1 ? [6] : [], payoff: () => [6, 14], plateau2: (b) => b % 2 === 1 ? [2, 6, 14] : [6, 14], outro: (b) => b <= 208 ? (b % 2 === 1 ? [6] : []) : (b % 4 === 1 ? [6] : []), fogout: (b) => (b % 4 === 1 && b <= 241) ? [6] : [] };
 const chordPat = Array.from({ length: STEPS }, () => ({ note: 'G3', gate: false, accent: false, velocity: 1 }));
 for (let b = 1; b <= BARS; b++) {
   const s = sec(b); if (DROPOUT_BARS.has(b) && s !== 'breakdown') continue;
-  for (const st of STAB_STEPS[s](b)) chordPat[(b - 1) * 16 + st] = { note: chordAt(b), gate: true, accent: st === 6, velocity: s === 'fog' || s === 'fogout' ? 0.75 : s === 'breakdown' ? 0.85 : 1 };
+  for (const st of STAB_STEPS[s](b)) chordPat[(b - 1) * 16 + st] = { note: chordRoot(b), gate: true, accent: st === 6, velocity: s === 'fog' || s === 'fogout' ? 0.75 : s === 'breakdown' ? 0.85 : 1 };
 }
 
 // ---- engine automation lanes (per step)
@@ -145,8 +149,8 @@ const acidCutoff = laneByBar((b) => { const s = sec(b); if (s === 'plateau' || s
 // ============================================================ MIX-STAGE LANES (per bar)
 const laneBars = (fn) => Array.from({ length: BARS + 2 }, (_, i) => fn(Math.min(BARS, i + 1)));
 const lerpIn = (b, from, to, a, z) => a + (z - a) * Math.max(0, Math.min(1, (b - from) / Math.max(1, to - from)));
-const chordLP = laneBars((b) => ({ fog: 600, build: 620, assemble: 820, plateau: lerpIn(b, 65, 96, 1100, 1700), subtract: 900, breakdown: lerpIn(b, 113, 128, 1300, 340), payoff: 1500, plateau2: lerpIn(b, 161, 192, 1500, 1900), outro: lerpIn(b, 193, 224, 900, 520), fogout: 700 }[sec(b)]));
-const dlyFb = laneBars((b) => ({ fog: 0.86, build: 0.7, assemble: 0.66, plateau: lerpIn(b, 65, 96, 0.7, 0.8), subtract: 0.82, breakdown: 0.9, payoff: 0.7, plateau2: 0.76, outro: lerpIn(b, 193, 224, 0.82, 0.9), fogout: 0.9 }[sec(b)]));
+const chordLP = laneBars((b) => ({ fog: 600, build: 700, assemble: 900, plateau: lerpIn(b, 65, 96, 1300, 2100), subtract: 1100, breakdown: lerpIn(b, 113, 128, 1600, 420), payoff: 2200, plateau2: lerpIn(b, 161, 192, 2100, 2500), outro: lerpIn(b, 193, 224, 1200, 520), fogout: 700 }[sec(b)]));
+const dlyFb = laneBars((b) => ({ fog: 0.86, build: 0.72, assemble: 0.66, plateau: lerpIn(b, 65, 96, 0.62, 0.72), subtract: 0.8, breakdown: 0.9, payoff: 0.66, plateau2: 0.7, outro: lerpIn(b, 193, 224, 0.82, 0.9), fogout: 0.9 }[sec(b)]));
 const dlyLP = laneBars((b) => ({ fog: 2200, build: 2600, assemble: 2800, plateau: 3000, subtract: 2400, breakdown: 1600, payoff: 3000, plateau2: 3200, outro: 2000, fogout: 1400 }[sec(b)]));
 const dlyTimeSteps = laneBars((b) => inRange(b, 177, 192) ? 5 : 3);          // 3/16 dub time; 5/16 for the plateau-2 move
 const chordGain = laneBars((b) => ({ fog: 1.0, build: 0.95, breakdown: 1.0, fogout: 1.0 }[sec(b)] ?? 1));
@@ -154,7 +158,7 @@ const chordGain = laneBars((b) => ({ fog: 1.0, build: 0.95, breakdown: 1.0, fogo
 const kickGain = laneBars((b) => ({ build: lerpIn(b, 17, 32, -9, -2), assemble: lerpIn(b, 33, 64, -2.5, -0.5), payoff: 1, outro: lerpIn(b, 193, 216, -3, -12) }[sec(b)] ?? 0));
 const subGain = laneBars((b) => ({ fog: lerpIn(b, 9, 16, -18, -10), build: lerpIn(b, 17, 32, -12, -4), assemble: lerpIn(b, 33, 64, -3, -0.5), breakdown: b <= 120 ? -9 : lerpIn(b, 121, 127, -12, -30), outro: b <= 208 ? -4 : lerpIn(b, 209, 215, -8, -18) }[sec(b)] ?? 0));
 const percGain = laneBars((b) => ({ assemble: lerpIn(b, 33, 64, -4, -1), subtract: -2, payoff: 1, outro: lerpIn(b, 193, 224, -1, -10) }[sec(b)] ?? 0));
-const acidGain = laneBars((b) => ({ plateau: -6, subtract: -8, outro: lerpIn(b, 193, 208, -2, -14) }[sec(b)] ?? 0));
+const acidGain = laneBars((b) => ({ payoff: 0, plateau2: -1, outro: lerpIn(b, 193, 208, -4, -16) }[sec(b)] ?? 0));
 const pinkGain = laneBars((b) => dB((sec(b) === 'fog' || sec(b) === 'fogout' || sec(b) === 'breakdown') ? -46 : -56));
 const crackleGain = laneBars((b) => (sec(b) === 'fog' || sec(b) === 'fogout' || sec(b) === 'breakdown') ? dB(-36) : dB(-48));
 const duckDb = laneBars((b) => (sec(b) === 'payoff' || sec(b) === 'plateau2') ? 10 : 8);
@@ -163,7 +167,7 @@ const duckDb = laneBars((b) => (sec(b) === 'payoff' || sec(b) === 'plateau2') ? 
 const stemPath = (n) => join(OUT, 'stems', `${n}.wav`);
 const LEVELS = { jt90: 0, jb01: 6, jb202: -5, jt30: -9, jp9000: -6 };
 const JT90_VOICE_LEVELS = { kick: 2, rimshot: -5, lowtom: -4, midtom: -8, hitom: -6, ch: -11, oh: -14, ride: -17, clap: -12 };
-const newSession = async () => { const jb = await createHeadless({ bpm: BPM, outputDir: OUT }); await jb.tool('set_swing', { amount: 8 }); return jb; };
+const newSession = async () => { const jb = await createHeadless({ bpm: BPM, outputDir: OUT }); await jb.tool('set_swing', { amount: 0 }); return jb; };
 // Each stem gets its OWN session with only that instrument set up: an instrument that
 // is merely turned down still renders, and JB01's render cost grows with the square
 // of its hit count (512 hits = 75 s), so a shared session made every stem pay for it.
@@ -199,7 +203,7 @@ async function setupJB01(jb, pattern = jb01) {
 // hit count (512 hits = 75 s), so render it in 16-bar chunks padded with 2 empty
 // bars for the tails, and overlap-add the chunks at their absolute positions.
 async function renderJB01Chunked() {
-  const CH = 4, PAD = 1; const total = Math.ceil((BARS * BAR + 2) * SR);
+  const CH = 4, PAD = 1; const total = Math.ceil((BARS * BAR + 2) * SR); const LAT = Math.round(0.0087 * SR);   // JB01 schedules 8.7 ms late (measured)
   const accL = new Float32Array(total), accR = new Float32Array(total);
   for (let c = 0; c < BARS; c += CH) {
     const bars = Math.min(CH, BARS - c);
@@ -207,8 +211,8 @@ async function renderJB01Chunked() {
     if (!Object.values(chunk).some(arr => arr.some(st => st.velocity > 0))) continue;   // silent chunk: nothing to add
     const jb = await newSession(); await setupJB01(jb, chunk);
     const tmp = join(OUT, 'stems', `_jb01_chunk.wav`); await jb.render(tmp, bars + PAD);
-    const w = readWav(tmp); const off = Math.round(c * BAR * SR);
-    for (let i = 0; i < w.L.length && off + i < total; i++) { accL[off + i] += w.L[i]; accR[off + i] += w.R[i]; }
+    const w = readWav(tmp); const off = Math.round(c * BAR * SR) - LAT;
+    for (let i = Math.max(0, -off); i < w.L.length && off + i < total; i++) { accL[off + i] += w.L[i]; accR[off + i] += w.R[i]; }
   }
   writeWav(stemPath('jb01'), accL, accR);
 }
@@ -224,23 +228,26 @@ async function setupJT30(jb) {
   jb.session._nodes.jt30.setPattern(acid);
   await jb.tool('tweak', { path: 'jt30.level', value: LEVELS.jt30 });
 }
-async function setupJP9000(jb) {
+async function setupJP9000(jb, shape = 'm7') {
   await jb.tool('add_jp9000', { preset: 'empty' });
-  for (const [id, semi] of [['osc1', 0], ['osc2', 3], ['osc3', 7], ['osc4', 10]]) { await jb.tool('add_module', { type: 'osc-saw', id }); if (semi) await jb.tool('tweak_module', { module: id, param: 'octave', value: semi }); await jb.tool('tweak_module', { module: id, param: 'detune', value: (semi % 2 ? 6 : -5) }); }
+  const iv = SHAPES[shape];
+  for (const [id, semi] of [['osc1', iv[0]], ['osc2', iv[1]], ['osc3', iv[2]], ['osc4', iv[3]]]) { await jb.tool('add_module', { type: 'osc-saw', id }); if (semi) await jb.tool('tweak_module', { module: id, param: 'octave', value: semi }); await jb.tool('tweak_module', { module: id, param: 'detune', value: (semi % 2 ? 6 : -5) }); }
   for (const id of ['mix1:mixer', 'flt1:filter-lp24', 'env1:env-adsr', 'vca1:vca']) { const [i, t] = id.split(':'); await jb.tool('add_module', { type: t, id: i }); }
   for (const [a, b] of [['osc1.audio', 'mix1.in1'], ['osc2.audio', 'mix1.in2'], ['osc3.audio', 'mix1.in3'], ['osc4.audio', 'mix1.in4'], ['mix1.audio', 'flt1.audio'], ['env1.cv', 'flt1.cutoffCV'], ['flt1.audio', 'vca1.audio'], ['env1.cv', 'vca1.cv']]) await jb.tool('connect_modules', { from: a, to: b });
   await jb.tool('set_jp9000_output', { module: 'vca1' });
   await jb.tool('set_trigger_modules', { modules: ['osc1', 'osc2', 'osc3', 'osc4', 'env1'] });
-  for (const [m, p, v] of [['mix1', 'master', 0.6], ['flt1', 'cutoff', 1500], ['flt1', 'resonance', 28], ['flt1', 'envAmount', 45], ['env1', 'attack', 0], ['env1', 'decay', 30], ['env1', 'sustain', 0], ['env1', 'release', 22], ['vca1', 'gain', 0.5]]) await jb.tool('tweak_module', { module: m, param: p, value: v });
+  for (const [m, p, v] of [['mix1', 'master', 0.6], ['flt1', 'cutoff', 1400], ['flt1', 'resonance', 34], ['flt1', 'envAmount', 40], ['env1', 'attack', 0], ['env1', 'decay', 40], ['env1', 'sustain', 0], ['env1', 'release', 25], ['vca1', 'gain', 0.5]]) await jb.tool('tweak_module', { module: m, param: p, value: v });
   await jb.tool('add_effect', { target: 'jp9000', effect: 'reverb', decay: 3.6, damping: 62, mix: 16, predelay: 18, size: 72, width: 100 });
-  await jb.tool('add_jp9000_pattern', { pattern: chordPat });
-  if (jb.session._nodes.jp9000._pattern?.length !== STEPS) jb.session._nodes.jp9000._pattern = chordPat;
+  const pat = chordPat.map((st, i) => (st.gate && CHORD[chordAt(Math.floor(i / 16) + 1)].shape === shape) ? st : { ...st, gate: false });
+  await jb.tool('add_jp9000_pattern', { pattern: pat });
+  if (jb.session._nodes.jp9000._pattern?.length !== STEPS) jb.session._nodes.jp9000._pattern = pat;
   await jb.tool('tweak', { path: 'jp9000.level', value: LEVELS.jp9000 });
 }
 const STEM_SETUP = {
   kick: (jb) => setupJT90(jb, { kickOnly: true }),
   perc909: (jb) => setupJT90(jb, { noKick: true }),
-  jb01: null, jb202: setupJB202, jt30: setupJT30, jp9000: setupJP9000,   // jb01 is chunked (see renderJB01Chunked)
+  jb01: null, jb202: setupJB202, jt30: setupJT30,   // jb01 is chunked (see renderJB01Chunked)
+  jp_m7: (jb) => setupJP9000(jb, 'm7'), jp_m9: (jb) => setupJP9000(jb, 'm9'), jp_maj7: (jb) => setupJP9000(jb, 'maj7'),
 };
 async function renderStems() {
   const t0 = Date.now();
@@ -299,10 +306,11 @@ function limiter(L, R, ceiling = 0.89) { const n = L.length, look = 48; const re
 // ============================================================ MIX
 // reference window for gain staging: everything is playing here
 const REF = { from: 137, to: 152 };
-const STEM_TARGET_RMS = { kick: -14, perc909: -17.5, jb01: -32, jb202: -14.5, jt30: -22, jp9000: -20 };
+const STEM_TARGET_RMS = { kick: -14, perc909: -17.5, jb01: -32, jb202: -14.5, jt30: -20, jp9000: -19 };
 function stemRms(S, from = REF.from, to = REF.to) { const a = Math.round((from - 1) * BAR * SR), z = Math.min(S.L.length, Math.round(to * BAR * SR)); let e = 0; for (let i = a; i < z; i++) { const m = 0.5 * (S.L[i] + S.R[i]); e += m * m; } return 20 * Math.log10(Math.sqrt(e / (z - a)) + 1e-9); }
 function mix() {
-  const S = Object.fromEntries(['kick', 'perc909', 'jb01', 'jb202', 'jt30', 'jp9000'].map(n => [n, readWav(stemPath(n))]));
+  const S = Object.fromEntries(['kick', 'perc909', 'jb01', 'jb202', 'jt30', 'jp_m7', 'jp_m9', 'jp_maj7'].map(n => [n, readWav(stemPath(n))]));
+  { const n0 = Math.min(S.jp_m7.L.length, S.jp_m9.L.length, S.jp_maj7.L.length); const L = new Float32Array(n0), R = new Float32Array(n0); for (let i = 0; i < n0; i++) { L[i] = S.jp_m7.L[i] + S.jp_m9.L[i] + S.jp_maj7.L[i]; R[i] = S.jp_m7.R[i] + S.jp_m9.R[i] + S.jp_maj7.R[i]; } S.jp9000 = { L, R, sr: SR }; delete S.jp_m7; delete S.jp_m9; delete S.jp_maj7; }
   const n = Math.min(...Object.values(S).map(s => s.L.length)); const out = { L: new Float32Array(n), R: new Float32Array(n) };
   // gain staging by measurement: each stem normalized to its target RMS over the reference bars
   const trim = {}; for (const [name, st] of Object.entries(S)) { const r = stemRms(st); trim[name] = dB(STEM_TARGET_RMS[name] - r); console.log(`  stem ${name.padEnd(8)} ref RMS ${r.toFixed(1)} dBFS -> trim ${(STEM_TARGET_RMS[name] - r).toFixed(1)} dB`); }
@@ -316,7 +324,7 @@ function mix() {
   { const lp = { L: runBiquad(S.jp9000.L, (i) => biquadLP(laneAt(chordLP, i), 0.9)), R: runBiquad(S.jp9000.R, (i) => biquadLP(laneAt(chordLP, i), 0.9)) };
     for (let i = 0; i < n; i++) { const g = laneAt(chordGain, i) * (1 - (1 - duck[i]) * 0.6) * trim.jp9000; lp.L[i] *= g; lp.R[i] *= g; }
     const wet = dubDelay(lp.L, lp.R);
-    addLane(lp, dB(-1), null); addLane(wet, dB(-2.5), null); }
+    addLane(lp, dB(-1), null); addLane(wet, dB(-3.5), null); }
   { const pk = pinkNoise(n), cr = crackle(n); for (let i = 0; i < n; i++) { const c = laneAt(crackleGain, i), g = laneAt(pinkGain, i); out.L[i] += pk[i] * g + cr[i] * c; out.R[i] += pk[(i + 977) % n] * g + cr[(i + 1301) % n] * c; } }
   const gr = glueComp(out.L, out.R); tape(out.L, out.R);
   let peak = 0; for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(out.L[i]), Math.abs(out.R[i]));
@@ -339,7 +347,7 @@ function measure(M) {
 }
 function writeScore() {
   const bars = Array.from({ length: BARS }, (_, i) => { const b = i + 1; return { bar: b, section: sec(b), chord: chordAt(b), stabs: STAB_STEPS[sec(b)](b), kick: [0, 4, 8, 12].filter(st => jt90.kick[i * 16 + st].velocity > 0), toms: [12, 14].filter(st => jt90.lowtom[i * 16 + st].velocity > 0).length > 0, rim: Object.keys(cascaraStepMap(b)).filter(st => jt90.rimshot[i * 16 + +st].velocity > 0).map(Number), acid: acid.slice(i * 16, i * 16 + 16).map((s, st) => s.gate ? st : -1).filter(x => x >= 0), lanes: { chordLP: Math.round(chordLP[i]), fb: +dlyFb[i].toFixed(2), dlyLP: dlyLP[i], dlySteps: dlyTimeSteps[i], duckDb: duckDb[i] } }; });
-  writeFileSync(join(OUT, 'silt-score.json'), JSON.stringify({ title: 'silt', bpm: BPM, key: 'G minor', bars: BARS, barSeconds: BAR, sections: SECTIONS, bars: bars }, null, 0));
+  writeFileSync(join(OUT, 'silt-score.json'), JSON.stringify({ title: 'silt', version: 2, bpm: BPM, key: 'G minor', barSeconds: BAR, sections: SECTIONS, bars: bars }, null, 0));
 }
 
 // ============================================================ MAIN

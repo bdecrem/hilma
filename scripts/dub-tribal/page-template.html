@@ -102,7 +102,7 @@ function frame(now) {
   const vis = playing ? visAt(t) : 0.35, sec = sectionAt(t);
   const foggy = 1 - vis;
   // score readout
-  if ((frameN & 15) === 0) { document.getElementById('sec').textContent = playing ? sec.toUpperCase() : 'SILT'; document.getElementById('barno').textContent = playing ? 'bar ' + barAt(t) : 'bar —'; document.getElementById('chord').textContent = (playing ? D.chords[barAt(t) - 1] : 'G3').replace(/\d/, '') + 'm7'; document.getElementById('timebar').style.width = (100 * t / D.duration).toFixed(2) + '%'; }
+  if ((frameN & 15) === 0) { document.getElementById('sec').textContent = playing ? sec.toUpperCase() : 'SILT'; document.getElementById('barno').textContent = playing ? 'bar ' + barAt(t) : 'bar —'; document.getElementById('chord').textContent = playing ? D.chords[barAt(t) - 1] : 'Gm7'; document.getElementById('timebar').style.width = (100 * t / D.duration).toFixed(2) + '%'; }
 
   // trail fade: slower in fog (things linger), faster in clear water; periodic 1-level difference scrub kills stuck pixels
   ctx.fillStyle = `rgba(5,5,5,${0.07 + 0.13 * vis})`; ctx.fillRect(0, 0, W, H);
