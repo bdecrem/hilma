@@ -1,4 +1,3 @@
-import DodoTour from './DodoTour'
 import DodoHero from './DodoHero'
 import DodoMascot from './DodoMascot'
 
@@ -104,14 +103,6 @@ export default function DodoAltPage() {
             <a href={SUBSTACK_URL}>Read the full story &rarr;</a>
           </p>
         </section>
-
-        {/* Overview video (scripts/dodo-scenes/video.mjs) parked while it's iterated on:
-            <video className="da-overview" src="/dodo/tour/overview.mp4"
-                   poster="/dodo/tour/overview-poster.jpg" controls playsInline /> */}
-
-        <div className="da-tour-slot">
-          <DodoTour />
-        </div>
 
         <section>
           <div className="da-label">What it does</div>
@@ -268,8 +259,6 @@ const css = `
 .da-body section:last-child { padding-bottom: 8px; }
 /* The hero is the statement's demonstration, so its break sits closer than a chapter gap. */
 .da-body section.dh { margin-top: 38px; padding-top: 36px; }
-/* The tour's caption block already reserves room for its longest caption. */
-.da-tour-slot + section { margin-top: 26px; }
 .da-body p { font-size: 17px; line-height: 1.6; color: var(--ink); margin: 0 0 16px; }
 .da-quote { margin: 26px 0 22px; padding: 6px 0 6px 20px; border-left: 3px solid var(--slate); }
 .da-quote-text { font-family: var(--display); font-weight: 500; font-size: 21px; line-height: 1.4; color: var(--ink); margin: 0 0 6px; }
@@ -293,18 +282,6 @@ const css = `
 .da-more a { color: var(--marigold-deep); text-decoration: none; }
 .da-more a:hover { text-decoration: underline; }
 
-.da-tour-slot { position: relative; margin: 64px auto 0; display: flex; justify-content: center; padding: 12px 0 0; }
-.da-tour-slot::before {
-  content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(ellipse 62% 50% at 50% 46%, var(--peach) 0%, transparent 72%);
-}
-.da-video-slot { margin-bottom: 34px; }
-.da-overview {
-  width: 300px; max-width: 100%; aspect-ratio: 1080 / 1920;
-  border-radius: 28px; border: 1px solid var(--border);
-  background: var(--paper); box-shadow: 0 18px 40px var(--shadow);
-}
-
 .da-feat { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 12px; }
 .da-feat li { position: relative; padding-left: 22px; font-size: 15.5px; line-height: 1.55; color: var(--ink2); }
 .da-feat li::before { content: ""; position: absolute; left: 0; top: 8px; width: 8px; height: 8px; border-radius: 2.5px; background: var(--marigold); }
@@ -318,36 +295,4 @@ const css = `
   background: var(--ink); color: var(--paper);
 }
 .da a.da-btn:hover { background: var(--slate); color: #FFFDF7; }
-
-/* The tour (DodoTour) */
-.dd-tour { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; }
-.dd-tour-phone {
-  display: block; position: relative; padding: 0; cursor: pointer;
-  width: min(268px, 100%); aspect-ratio: 1260 / 2736;
-  border-radius: 28px; overflow: hidden; background: var(--surface);
-  border: 1px solid var(--border); box-shadow: 0 18px 40px var(--shadow);
-}
-.dd-tour-phone:focus-visible { outline: 3px solid var(--marigold); outline-offset: 3px; }
-.dd-tour-slide {
-  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-  opacity: 0; transition: opacity 0.55s ease;
-}
-.dd-tour-captions { display: grid; width: 100%; max-width: 320px; margin-top: 14px; }
-.dd-tour-caption {
-  grid-area: 1 / 1; margin: 0; text-align: center;
-  font-size: 15px; line-height: 1.5; color: var(--ink2);
-  opacity: 0; transition: opacity 0.45s ease;
-}
-.dd-tour-bar {
-  width: 120px; height: 3px; border-radius: 2px; background: var(--surface2);
-  margin: 18px auto 0; overflow: hidden;
-}
-.dd-tour-bar span {
-  display: block; height: 100%; background: var(--marigold); border-radius: 2px;
-  transform-origin: left; transition: transform 0.45s ease;
-}
-.dd-tour-on { opacity: 1; }
-@media (prefers-reduced-motion: reduce) {
-  .dd-tour-caption, .dd-tour-slide, .dd-tour-bar span { transition: none; }
-}
 `
