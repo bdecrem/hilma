@@ -1,0 +1,159 @@
+<title>SILT</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#050505">
+<style>
+  :root { color-scheme: dark; --bg: #050505; --ink: #f2f0ea; --ink-dim: rgba(242,240,234,0.42); --ink-faint: rgba(242,240,234,0.14); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: var(--bg); }
+  body { overflow: hidden; font-family: 'SF Mono', 'Fira Code', 'Menlo', 'Courier New', monospace; color: var(--ink); cursor: crosshair; -webkit-tap-highlight-color: transparent; }
+  canvas { position: fixed; top: 0; left: 0; }
+  #title { position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 18px; font-size: 9px; letter-spacing: 4px; color: var(--ink-faint); z-index: 10; pointer-events: none; }
+  #score { position: fixed; top: calc(14px + env(safe-area-inset-top)); right: 18px; font-size: 9px; letter-spacing: 2px; color: var(--ink-faint); z-index: 10; pointer-events: none; text-align: right; font-variant-numeric: tabular-nums; line-height: 1.7; }
+  #score b { font-weight: 400; color: var(--ink-dim); }
+  #credits { position: fixed; bottom: calc(16px + env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; font-size: 8px; letter-spacing: 4px; color: var(--ink-faint); z-index: 10; pointer-events: none; }
+  #overlay { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  #play-btn { width: 56px; height: 56px; border-radius: 50%; border: 1px solid rgba(242,240,234,0.10); background: rgba(5,5,5,0.55); color: rgba(242,240,234,0.38); font-size: 18px; cursor: pointer; pointer-events: auto; transition: opacity 0.6s, border-color 0.4s; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+  #play-btn:hover, #play-btn:focus-visible { border-color: rgba(242,240,234,0.28); color: rgba(242,240,234,0.6); outline: none; }
+  #play-btn.playing { opacity: 0; pointer-events: none; }
+  #time { position: fixed; bottom: calc(34px + env(safe-area-inset-bottom)); left: 0; right: 0; height: 1px; z-index: 9; pointer-events: none; }
+  #time i { display: block; height: 1px; width: 0; background: var(--ink-faint); }
+  @media (max-width: 480px) { #credits { font-size: 7px; letter-spacing: 2.5px; } #title, #score { font-size: 8px; letter-spacing: 3px; } }
+  @media (prefers-reduced-motion: reduce) { #play-btn { transition: none; } }
+</style>
+<canvas id="c"></canvas>
+<div id="title">DAS KOLLEKTIV · SILT</div>
+<div id="score"><span id="sec">—</span><br><b id="barno">bar —</b> · <b id="chord">Gm7</b></div>
+<div id="overlay"><button id="play-btn" aria-label="Play silt">▶</button></div>
+<div id="time"><i id="timebar"></i></div>
+<div id="credits">HALLMAN × DK · JAMBOT · DUB TECHNO · 126 · Gm</div>
+<script id="siltdata" type="application/json">__DATA__</script>
+<audio id="a" preload="auto" src="__AUDIO_SRC__"></audio>
+<script>
+// ============================================================
+// SILT — sediment in water. The page reads the SCORE (exact kick / stab / rim /
+// tom / acid times, chord per bar, the delay's feedback + time lanes) and the
+// baked 30 fps band envelopes; audio is a plain <audio> element (iOS-safe:
+// no WebAudio, playback audio session claimed in the gesture).
+// ============================================================
+const D = JSON.parse(document.getElementById('siltdata').textContent);
+const audio = document.getElementById('a');
+try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+const btn = document.getElementById('play-btn');
+btn.addEventListener('click', async () => { try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {} try { await audio.play(); } catch (e) { console.warn('play blocked', e); } });
+audio.addEventListener('play', () => btn.classList.add('playing'));
+audio.addEventListener('pause', () => btn.classList.remove('playing'));
+audio.addEventListener('ended', () => btn.classList.remove('playing'));
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+const DPR = Math.min(window.devicePixelRatio || 1, 2);
+let W, H, CX, CY, R0, FLOOR, SURF;
+function resize() { W = innerWidth; H = innerHeight; canvas.width = W * DPR; canvas.height = H * DPR; canvas.style.width = W + 'px'; canvas.style.height = H + 'px'; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); CX = W / 2; CY = H / 2; R0 = Math.min(W, H); FLOOR = H * 0.86; SURF = H * 0.22; }
+resize(); addEventListener('resize', resize);
+ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, W, H);
+
+// ---- baked data
+const b64 = (s) => { const bin = atob(s), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a; };
+const EK = b64(D.env.kick), EL = b64(D.env.low), EM = b64(D.env.mid), EH = b64(D.env.high);
+const FPS = D.fps, BAR = D.barSeconds, STEP = BAR / 16;
+const env = { kick: 0, low: 0, mid: 0, high: 0 };
+const barAt = (t) => Math.min(D.bars, Math.floor(t / BAR) + 1);
+const laneAt = (t) => D.lanes[Math.max(0, barAt(t) - 1)];       // [chordLP Hz, feedback, delay steps]
+const sectionAt = (t) => D.sectionOfBar[Math.max(0, barAt(t) - 1)];
+// visibility 0..1 from the chord lowpass lane (the "fog"): 340 Hz = thick fog, 1900 = clear water
+const visAt = (t) => { const lp = laneAt(t)[0]; return Math.max(0, Math.min(1, (lp - 330) / 1500)); };
+
+// ---- event cursors: each list is sorted; we fire everything between the last time and now
+const cursors = {}; for (const k of Object.keys(D.events)) cursors[k] = 0;
+function drain(kind, t, fn) { const ev = D.events[kind]; let i = cursors[kind]; if (i > 0 && ev[i - 1] > t) { i = 0; while (i < ev.length && ev[i] < t - 0.05) i++; } while (i < ev.length && ev[i] <= t) { if (ev[i] > t - 0.25) fn(ev[i]); i++; } cursors[kind] = i; }
+
+// ---- the organism
+const N = REDUCED ? 260 : 620;
+const grains = []; for (let i = 0; i < N; i++) grains.push({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, s: 0.6 + Math.random() * 1.3, l: 0.25 + Math.random() * 0.75, ph: Math.random() * 6.283 });
+const rings = [];        // stab rings {x,y,r,life,fb,k} — k = which delay repeat it is
+const stones = [];       // tom stones {x,y,vy,col,settled}
+const strata = [];       // settled stone heights per column bucket
+const sparks = [];       // rim sparks on the waterline
+const threads = [];      // acid strokes {x0,y0,x1,y1,life}
+let lift = 0, kickFlash = 0, lastIdx = -1, frameN = 0, lastNow = performance.now(), swirl = 0;
+let centre = { x: 0.5, y: 0.5 };
+const COLS = 24; for (let i = 0; i < COLS; i++) strata.push(0);
+
+function fireStab(t) {
+  // stab origin wanders slowly per bar (a lissajous), like a mixing-desk hand moving
+  const b = barAt(t); const ox = CX + Math.sin(b * 0.37) * W * 0.22 + Math.sin(b * 0.11) * W * 0.08, oy = SURF + (FLOOR - SURF) * (0.35 + 0.3 * Math.sin(b * 0.23));
+  const [, fb, steps] = laneAt(t);
+  rings.push({ x: ox, y: oy, r: 4, life: 1, k: 0, born: t, fb, steps });
+}
+function fireTom(t, idx) { const col = idx % 3; const x = W * (0.22 + col * 0.28) + (Math.random() - 0.5) * W * 0.12; stones.push({ x, y: SURF + 8, vy: 40 + Math.random() * 30, col: Math.floor(x / W * COLS), settled: false, size: 2 + Math.random() * 2 }); }
+function fireRim(t) { sparks.push({ x: Math.random() * W, y: SURF + (Math.random() - 0.5) * 6, life: 1, vx: (Math.random() - 0.5) * 60 }); }
+function fireKick(t) { lift = 1; kickFlash = 1; }
+let acidIdx = 0;
+function fireAcid(t) { const x0 = W * (0.15 + 0.7 * Math.random()), y0 = FLOOR - 10 - Math.random() * (FLOOR - SURF) * 0.5; const dx = (Math.random() - 0.5) * W * 0.35, dy = -(20 + Math.random() * 80); threads.push({ x0, y0, x1: x0 + dx, y1: y0 + dy, life: 1 }); }
+
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - lastNow) / 1000); lastNow = now;
+  const t = audio.currentTime || 0; const playing = !audio.paused && !audio.ended;
+  // baked envelopes, smoothed
+  if (playing) { const idx = Math.min(D.frames - 1, (t * FPS) | 0); const k = 0.5; env.kick += (EK[idx] / 255 - env.kick) * k; env.low += (EL[idx] / 255 - env.low) * k; env.mid += (EM[idx] / 255 - env.mid) * k; env.high += (EH[idx] / 255 - env.high) * k; lastIdx = idx;
+    drain('kick', t, fireKick); drain('stab', t, fireStab); let ti = 0; drain('tom', t, (tt) => fireTom(tt, ti++ + Math.floor(tt / STEP))); drain('rim', t, fireRim); drain('acid', t, fireAcid); }
+  else { env.kick *= 0.95; env.low *= 0.97; env.mid *= 0.97; env.high *= 0.97; }
+  const vis = playing ? visAt(t) : 0.35, sec = sectionAt(t);
+  const foggy = 1 - vis;
+  // score readout
+  if ((frameN & 15) === 0) { document.getElementById('sec').textContent = playing ? sec.toUpperCase() : 'SILT'; document.getElementById('barno').textContent = playing ? 'bar ' + barAt(t) : 'bar —'; document.getElementById('chord').textContent = (playing ? D.chords[barAt(t) - 1] : 'G3').replace(/\d/, '') + 'm7'; document.getElementById('timebar').style.width = (100 * t / D.duration).toFixed(2) + '%'; }
+
+  // trail fade: slower in fog (things linger), faster in clear water; periodic 1-level difference scrub kills stuck pixels
+  ctx.fillStyle = `rgba(5,5,5,${0.07 + 0.13 * vis})`; ctx.fillRect(0, 0, W, H);
+  if ((frameN = (frameN + 1) & 3) === 0) { ctx.globalCompositeOperation = 'difference'; ctx.fillStyle = 'rgb(1,1,1)'; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }
+
+  // waterline: a faint breathing line at SURF, brighter with the highs (hats live up here)
+  ctx.strokeStyle = `rgba(242,240,234,${0.05 + 0.18 * env.high})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, SURF + Math.sin(t * 0.7) * 2); ctx.lineTo(W, SURF - Math.sin(t * 0.5) * 2); ctx.stroke();
+
+  // grains: drift down, lifted by kicks, stirred by the mids, dimmed by fog
+  lift *= 0.86; kickFlash *= 0.8; swirl += dt * (0.2 + env.mid * 0.6);
+  const drift = REDUCED ? 3 : 4 + env.low * 9;   // sediment drifts, it doesn't rain
+  ctx.fillStyle = '#f2f0ea';
+  for (const g of grains) {
+    g.vy += (drift - g.vy) * 0.05 - lift * 260 * dt * (0.5 + 0.5 * Math.sin(g.ph)) ; g.vx += (Math.sin(swirl + g.ph) * (6 + 14 * env.mid) - g.vx) * 0.04;
+    g.y += g.vy * dt; g.x += g.vx * dt;
+    if (g.y > FLOOR - strata[Math.floor(g.x / W * COLS) | 0] * 0.5) { g.y = SURF - 10 - Math.random() * 40; g.x = Math.random() * W; }
+    if (g.x < 0) g.x += W; if (g.x > W) g.x -= W;
+    ctx.globalAlpha = g.l * (0.16 + 0.5 * vis) * (g.y > SURF ? 1 : 0.35);
+    ctx.fillRect(g.x, g.y, g.s, g.s);
+  }
+  ctx.globalAlpha = 1;
+
+  // stab rings + their delay repeats: a ring re-casts itself `steps` 16ths later at `fb` of its brightness
+  for (let i = rings.length - 1; i >= 0; i--) { const r = rings[i]; r.r += dt * (60 + 40 * env.mid); r.life -= dt * 0.55;
+    if (r.k < 9 && !r.spawned && t - r.born >= r.steps * STEP - 0.01) { r.spawned = true; if (r.fb > 0.05 && Math.pow(r.fb, r.k + 1) > 0.12) rings.push({ x: r.x + (r.k % 2 ? -1 : 1) * W * 0.08 * Math.min(1, r.k * 0.5 + 0.5), y: r.y + Math.sin(r.k) * 12, r: 4, life: 1, k: r.k + 1, born: t, fb: r.fb, steps: r.steps }); }
+    if (r.life <= 0) { rings.splice(i, 1); continue; }
+    const amp = Math.pow(r.fb, r.k) * r.life; if (amp < 0.01) continue;
+    ctx.strokeStyle = `rgba(242,240,234,${0.55 * amp * (0.4 + 0.6 * vis)})`; ctx.lineWidth = Math.max(0.6, 1.6 - r.k * 0.15);
+    ctx.beginPath(); ctx.arc(r.x, r.y, r.r, 0, 6.283); ctx.stroke(); }
+
+  // stones: fall, settle into strata at the floor; strata compact slowly outside tribal sections
+  for (let i = stones.length - 1; i >= 0; i--) { const s = stones[i]; if (!s.settled) { s.vy += 140 * dt; s.y += s.vy * dt; const floorHere = FLOOR - strata[s.col]; if (s.y >= floorHere) { s.y = floorHere; s.settled = true; strata[s.col] = Math.min(H * 0.22, strata[s.col] + s.size * 0.9); } }
+    ctx.globalAlpha = (s.settled ? 0.5 : 0.9) * (0.5 + 0.5 * vis); ctx.fillRect(s.x, s.y, s.size, s.size); if (s.settled && Math.random() < 0.002) stones.splice(i, 1); }
+  ctx.globalAlpha = 1;
+  if (sec === 'breakdown' || sec === 'outro' || sec === 'fogout' || sec === 'fog' || !playing) for (let c = 0; c < COLS; c++) strata[c] = Math.max(0, strata[c] - dt * 1.2);
+  // strata outline
+  ctx.strokeStyle = `rgba(242,240,234,${0.10 + 0.12 * env.low})`; ctx.lineWidth = 1; ctx.beginPath();
+  for (let c = 0; c <= COLS; c++) { const x = c / COLS * W, h = strata[Math.min(COLS - 1, c)]; c === 0 ? ctx.moveTo(x, FLOOR - h) : ctx.lineTo(x, FLOOR - h); } ctx.stroke();
+
+  // rim sparks on the waterline
+  for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i]; s.life -= dt * 2.4; s.x += s.vx * dt; s.y -= 18 * dt; if (s.life <= 0) { sparks.splice(i, 1); continue; } ctx.globalAlpha = s.life * 0.8; ctx.fillRect(s.x, s.y, 1.5, 1.5); }
+  ctx.globalAlpha = 1;
+
+  // acid threads: the 303's answers, drawn as sweeping strokes low in the water
+  for (let i = threads.length - 1; i >= 0; i--) { const th = threads[i]; th.life -= dt * 0.9; if (th.life <= 0) { threads.splice(i, 1); continue; } const p = 1 - th.life; ctx.strokeStyle = `rgba(242,240,234,${0.35 * th.life})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(th.x0, th.y0); ctx.quadraticCurveTo((th.x0 + th.x1) / 2, th.y0 - 40, th.x0 + (th.x1 - th.x0) * Math.min(1, p * 1.6), th.y0 + (th.y1 - th.y0) * Math.min(1, p * 1.6)); ctx.stroke(); }
+
+  // kick: a pressure ring from the centre of mass, and a brief centre flash
+  if (kickFlash > 0.05) { ctx.strokeStyle = `rgba(242,240,234,${0.12 * kickFlash})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(CX, (SURF + FLOOR) / 2, R0 * (0.05 + (1 - kickFlash) * 0.35), 0, 6.283); ctx.stroke(); }
+
+  // idle attract: a slow grain drift and one faint ring so the page isn't dead before play
+  if (!playing && Math.random() < 0.004) rings.push({ x: CX + (Math.random() - 0.5) * W * 0.3, y: (SURF + FLOOR) / 2, r: 4, life: 1, k: 3, born: t, fb: 0.7, steps: 99 });
+}
+requestAnimationFrame(frame);
+</script>
