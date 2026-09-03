@@ -98,7 +98,7 @@ export default function DodoHero() {
 
 const heroCss = `
 .dh { overflow: visible; background: transparent; display: grid; grid-template-columns: 318px 1fr; gap: 18px 28px;
-  align-items: center; margin: 0 0 52px; }
+  align-items: center; margin: 4px 0 0; }
 .dh-stage { position: relative; width: 318px; height: 512px; }
 .dh-bloom { position: absolute; inset: -30px -40px; pointer-events: none;
   background: radial-gradient(ellipse 58% 52% at 56% 50%, var(--peach) 0%, transparent 70%); }
@@ -123,7 +123,7 @@ const heroCss = `
 .dh-dots button:focus-visible { outline: 2px solid var(--marigold); outline-offset: 3px; }
 @keyframes dh-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (max-width: 660px) {
-  .dh { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px; margin-bottom: 40px; }
+  .dh { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px; margin-top: 10px; }
   .dh-copy { order: -1; }
   .dh-sub { margin: 0 auto; }
   .dh-dots { justify-content: center; }

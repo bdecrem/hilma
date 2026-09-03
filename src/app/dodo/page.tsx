@@ -261,10 +261,15 @@ const css = `
 .da-label {
   font-family: var(--display); font-weight: 600; font-size: 12px;
   letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate);
-  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
 }
 .da-label::before { content: ""; width: 8px; height: 8px; border-radius: 2.5px; background: var(--marigold); }
-.da-body section { margin-bottom: 44px; }
+.da-body section { margin: 56px 0 0; padding-top: 44px; border-top: 1px solid var(--border); }
+.da-body section:last-child { padding-bottom: 8px; }
+/* The hero is the statement's demonstration, so its break sits closer than a chapter gap. */
+.da-body section.dh { margin-top: 38px; padding-top: 36px; }
+/* The tour's caption block already reserves room for its longest caption. */
+.da-tour-slot + section { margin-top: 26px; }
 .da-body p { font-size: 17px; line-height: 1.6; color: var(--ink); margin: 0 0 16px; }
 .da-quote { margin: 26px 0 22px; padding: 6px 0 6px 20px; border-left: 3px solid var(--slate); }
 .da-quote-text { font-family: var(--display); font-weight: 500; font-size: 21px; line-height: 1.4; color: var(--ink); margin: 0 0 6px; }
@@ -284,11 +289,11 @@ const css = `
 }
 .da-name { font-size: 15.5px; line-height: 1.55; color: var(--ink2); margin: 0 0 14px; }
 .da-name a { color: var(--slate); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--slate) 50%, transparent); }
-.da-more { font-family: var(--display); font-weight: 500; font-size: 15px; }
+.da-more { font-family: var(--display); font-weight: 500; font-size: 15px; margin: 4px 0 0; }
 .da-more a { color: var(--marigold-deep); text-decoration: none; }
 .da-more a:hover { text-decoration: underline; }
 
-.da-tour-slot { position: relative; margin: 0 auto 52px; display: flex; justify-content: center; padding: 22px 0 6px; }
+.da-tour-slot { position: relative; margin: 64px auto 0; display: flex; justify-content: center; padding: 12px 0 0; }
 .da-tour-slot::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background: radial-gradient(ellipse 62% 50% at 50% 46%, var(--peach) 0%, transparent 72%);
@@ -306,7 +311,6 @@ const css = `
 .da-feat strong { font-family: var(--display); font-weight: 500; font-size: 15px; color: var(--ink); }
 .da-feat code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; background: var(--surface2); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
 
-.da-fine { border-top: 1px solid var(--border); padding-top: 34px; }
 .da-fine p { color: var(--ink2); font-size: 16px; }
 .da a.da-btn {
   display: inline-block; font-family: var(--display); font-weight: 600; font-size: 15px;
