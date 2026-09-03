@@ -7,17 +7,26 @@ import { useEffect, useId, useRef } from 'react'
 // r=26 at 0,0, feet at y=58). Idle loop by default; `launch` plays the
 // v3 entrance first (pop, sprout boing, eyes open, cheeks, hello hop).
 // Transforms only, no path morphing; respects prefers-reduced-motion.
+// `beat` plays a one-shot reaction over the idle loop (the showcase hero
+// changes it per scene): hop, cheer, point (right wing up, toward the
+// screen), peek (rises from below the ground line). Bump `beatKey` to replay.
 
 type Pose = {
   sx: number; sy: number; roll: number; y: number; sprout: number; spread: number
   eyeY: number; pupil: number; px: number; py: number; wing: number; cheek: number
+  /** Explicit right-wing rotation (default mirrors `wing`); reactions use it. */
+  wingR?: number
 }
+
+export type Beat = 'idle' | 'hop' | 'cheer' | 'point' | 'peek'
+const BEAT_SECS: Record<Beat, number> = { idle: 0, hop: 0.6, cheer: 1.6, point: 2.0, peek: 1.0 }
 
 const bell = (u: number) => (u > 0 && u < 1 ? Math.sin(u * Math.PI) : 0)
 const easeOutBack = (u: number) => { const c = 1.70158, t = u - 1; return 1 + (c + 1) * t * t * t + c * t * t }
 const hash01 = (n: number, salt: number) => { const v = Math.sin(n * 127.1 + salt * 311.7) * 43758.5453; return v - Math.floor(v) }
 const blinkShape = (u: number) => (u > 0 && u < 1 ? 1 - 0.95 * Math.sin(u * Math.PI) : 1)
 const clamp01 = (u: number) => Math.max(0, Math.min(1, u))
+const easeInOut = (u: number) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2)
 const base = (): Pose => ({ sx: 1, sy: 1, roll: 0, y: 0, sprout: 0, spread: 0, eyeY: 1, pupil: 1, px: 0, py: 0, wing: 0, cheek: 0.6 })
 
 function idle(t: number, seed: number, reduce: boolean): Pose {
@@ -57,6 +66,47 @@ function hop(u01: number): Pose {
   return p
 }
 
+// Reactions overlay the idle pose `a` at progress u ∈ [0, 1).
+function react(kind: Beat, u: number, a: Pose) {
+  switch (kind) {
+    case 'idle':
+      return
+    case 'hop': {
+      const h = hop(u)
+      a.sx = h.sx; a.sy = h.sy; a.y = h.y; a.sprout += h.sprout; a.wing = h.wing; a.cheek = h.cheek
+      if (u < 0.9) a.eyeY = 1
+      return
+    }
+    case 'cheer': {
+      const j = bell(u / 0.4) + bell((u - 0.45) / 0.4)
+      a.y = -18 * j
+      a.sy = 1 + 0.08 * j; a.sx = 1 - 0.06 * j
+      a.wing = 48 + 10 * Math.sin(u * 46)
+      a.cheek = 0.95
+      a.pupil = 1.08
+      a.eyeY = u > 0.92 ? blinkShape((u - 0.92) / 0.08) : 1
+      a.sprout += 10 * Math.sin(u * 22) * (1 - u)
+      return
+    }
+    case 'point': {
+      const up = u < 0.2 ? easeInOut(u / 0.2) : u > 0.82 ? 1 - easeInOut((u - 0.82) / 0.18) : 1
+      a.wingR = -100 * up
+      a.roll = 4 * up
+      a.px = 2.2 * up
+      a.cheek = 0.6 + 0.25 * up
+      return
+    }
+    case 'peek': {
+      const rise = easeOutBack(clamp01(u / 0.55))
+      a.y = 34 * (1 - rise)
+      a.eyeY = u < 0.4 ? 0.08 : Math.min(1, easeOutBack(clamp01((u - 0.4) / 0.2)))
+      a.eyeY = Math.min(a.eyeY, blinkShape((u - 0.78) / 0.1))
+      a.cheek = 0.6 + 0.3 * clamp01((u - 0.5) / 0.3)
+      return
+    }
+  }
+}
+
 function launch(t: number): Pose {
   const p = base()
   const pop = easeOutBack(clamp01(t / 0.45))
@@ -91,12 +141,17 @@ export default function DodoMascot({
   launch: withLaunch = false,
   shadow = true,
   crop = 'full',
+  beat = 'idle',
+  beatKey = 0,
   className,
 }: {
   size?: number
   seed?: number
   launch?: boolean
   shadow?: boolean
+  /** One-shot reaction over the idle loop; replayed whenever `beatKey` changes. */
+  beat?: Beat
+  beatKey?: number
   /** 'face' = the app-icon crop: head, sprout and wings, feet cropped below, square. */
   crop?: 'full' | 'face'
   className?: string
@@ -105,6 +160,11 @@ export default function DodoMascot({
   const id = (k: string) => `${uid}-${k}`
   const refs = useRef<Record<string, SVGGElement | SVGEllipseElement | null>>({})
   const set = (k: string) => (el: SVGGElement | SVGEllipseElement | null) => { refs.current[k] = el }
+  const reaction = useRef<{ kind: Beat; start: number } | null>(null)
+
+  useEffect(() => {
+    reaction.current = beat === 'idle' ? null : { kind: beat, start: performance.now() }
+  }, [beat, beatKey])
 
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -114,6 +174,12 @@ export default function DodoMascot({
     const frame = (now: number) => {
       const t = (now - start) / 1000
       const p = compose(t, seed, withLaunch, reduce)
+      const rx = reaction.current
+      if (rx && !reduce) {
+        const u = (now - rx.start) / (BEAT_SECS[rx.kind] * 1000)
+        if (u >= 1) reaction.current = null
+        else react(rx.kind, u, p)
+      }
       r.rig?.setAttribute('transform', `translate(0 58) translate(0 ${p.y}) scale(${p.sx} ${p.sy}) rotate(${p.roll}) translate(0 -58)`)
       r.sprout?.setAttribute('transform', `rotate(${p.sprout} 0 -26)`)
       r.leafL?.setAttribute('transform', `rotate(${-p.spread} 0 -26)`)
@@ -122,7 +188,7 @@ export default function DodoMascot({
       r.eyeL?.setAttribute('transform', `translate(${-9.4 + p.px} ${-2 + p.py}) scale(${p.pupil} ${ey})`)
       r.eyeR?.setAttribute('transform', `translate(${9.4 + p.px} ${-2 + p.py}) scale(${p.pupil} ${ey})`)
       r.wingL?.setAttribute('transform', `rotate(${p.wing} -18 26)`)
-      r.wingR?.setAttribute('transform', `rotate(${-p.wing} 18 26)`)
+      r.wingR?.setAttribute('transform', `rotate(${p.wingR ?? -p.wing} 18 26)`)
       r.cheeks?.setAttribute('opacity', String(p.cheek))
       if (r.shadow) {
         const lift = Math.min(1, -p.y / 26)
@@ -130,7 +196,7 @@ export default function DodoMascot({
         r.shadow.setAttribute('transform', `translate(0 60) scale(${s * (1 - 0.35 * lift)} ${s * (1 - 0.3 * lift)}) translate(0 -60)`)
         r.shadow.setAttribute('opacity', String(0.13 * (1 - 0.5 * lift)))
       }
-      if (!reduce || t < 0.1) raf = requestAnimationFrame(frame)
+      if (!reduce || t < 0.1 || reaction.current) raf = requestAnimationFrame(frame)
     }
     raf = requestAnimationFrame(frame)
     return () => cancelAnimationFrame(raf)

@@ -1,0 +1,13 @@
+{
+  "user_id": "2d50cf5d-f2cb-4bed-b1c9-d81d5ec5b5e5",
+  "username": "demo",
+  "base": "https://feynd.cc",
+  "topics": {
+    "ODYSSEY": "5b729c3d-9b91-454d-92a0-69b4f6b22e69",
+    "NATIONS": "e011dbec-5a00-4d56-859d-fe4f774a826e",
+    "EINSTEIN": "8018136d-40c2-41a3-8762-7fbff1ffb26c",
+    "IMMUNE": "ec66745e-46ce-4ad4-a2da-79d3002e28ee",
+    "NEURAL": "4c3942b5-acff-4b02-9e6c-cf647238a3f7"
+  },
+  "seeded_at": "2026-09-03T02:52:24.996Z"
+}

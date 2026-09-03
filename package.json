@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "dodo:seed": "node scripts/dodo-scenes/seed.mjs",
+    "dodo:capture": "node scripts/dodo-scenes/capture.mjs"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",

@@ -23,11 +23,25 @@ final class FlashSFX {
     private let format: AVAudioFormat
     private var buffers: [Effect: AVAudioPCMBuffer] = [:]
 
+    /// `-NoSFX 1` (simulator only): never touch the audio engine. The
+    /// simulator's audio server can time out its RPC the first time the
+    /// engine's output node is created and abort the whole process — fatal
+    /// for the headless screenshot runs in scripts/dodo-scenes.
+    private let muted: Bool = {
+        #if targetEnvironment(simulator)
+        return UserDefaults.standard.bool(forKey: "NoSFX")
+        #else
+        return false
+        #endif
+    }()
+
     private init() {
         format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
-        engine.attach(player)
-        engine.connect(player, to: engine.mainMixerNode, format: format)
-        engine.mainMixerNode.outputVolume = 0.6
+        if !muted {
+            engine.attach(player)
+            engine.connect(player, to: engine.mainMixerNode, format: format)
+            engine.mainMixerNode.outputVolume = 0.6
+        }
 
         // Note frequencies (Hz): C5 523, E5 659, G5 784, C6 1047, E6 1319.
         buffers[.tap] = tone([(659, 0.055)])
@@ -41,7 +55,7 @@ final class FlashSFX {
     }
 
     func play(_ effect: Effect) {
-        guard let buffer = buffers[effect] else { return }
+        guard !muted, let buffer = buffers[effect] else { return }
         // Ambient: silent-switch aware, never interrupts other audio. Re-set
         // each time — a voice session may have claimed .playAndRecord since.
         try? AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])

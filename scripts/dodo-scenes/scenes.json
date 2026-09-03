@@ -1,0 +1,301 @@
+{
+  "$comment": "Dodo showcase manifest. One entry per app moment; every showcase surface (site hero, tour, App Store shots, video) renders from this list. Lines use **word** to mark the one marigold word. $T_<KEY> in launch args resolves to a demo-account topic id from seed-state.json. Run `pnpm dodo:capture` after editing; see README.md.",
+  "sim": "iPhone Air",
+  "runtime": "iOS 26.4",
+  "$runtime": "Preferred simulator runtime. The iOS 27 beta drops some launch hooks (the profile sheet never renders); 26.4 renders every scene. Falls back to the newest runtime when this one is not installed.",
+  "screen": [
+    1260,
+    2736
+  ],
+  "account": "demo",
+  "themes": [
+    "light"
+  ],
+  "hero": [
+    "topics",
+    "chat",
+    "flash-hub",
+    "exam",
+    "peck",
+    "daily"
+  ],
+  "scenes": [
+    {
+      "id": "splash",
+      "line": "Meet **Dodo.**",
+      "tour": "Meet Dodo.",
+      "launch": [
+        "-StartTab",
+        "topics",
+        "-HoldSplash",
+        "1"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour"
+      ]
+    },
+    {
+      "id": "topics",
+      "line": "Feed it **anything.**",
+      "tour": "Start a topic from a chat, a YouTube link, an article or a book. Dodo reads it and becomes a tutor grounded in that material.",
+      "launch": [
+        "-StartTab",
+        "topics"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "hero",
+        "tour",
+        "appstore",
+        "video"
+      ]
+    },
+    {
+      "id": "community",
+      "line": "Or **borrow** one.",
+      "tour": "Browse topics other learners have shared and add one to your library, sources and flash cards included. Share yours back.",
+      "launch": [
+        "-StartTab",
+        "topics",
+        "-OpenCommunity",
+        "1"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour",
+        "appstore"
+      ]
+    },
+    {
+      "id": "chat",
+      "line": "Talk it **through.**",
+      "tour": "Talk it through, in text or out loud.",
+      "launch": [
+        "-StartTab",
+        "topics",
+        "-OpenTopic",
+        "$T_ODYSSEY"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "hero",
+        "tour",
+        "appstore",
+        "video"
+      ]
+    },
+    {
+      "id": "flash-hub",
+      "line": "It writes your **flash cards.**",
+      "tour": "Generate flash cards. Say how many and what to focus on; edit, add or delete any time.",
+      "launch": [
+        "-StartTab",
+        "topics",
+        "-OpenTopic",
+        "$T_ODYSSEY",
+        "-OpenFlashCards",
+        "1"
+      ],
+      "settle": 8,
+      "capture": "still",
+      "focus": {
+        "x": 0.04,
+        "y": 0.13,
+        "w": 0.92,
+        "h": 0.42
+      },
+      "bird": "point",
+      "sets": [
+        "hero",
+        "tour",
+        "appstore",
+        "video"
+      ]
+    },
+    {
+      "id": "flash-set",
+      "line": "Play them **four ways.**",
+      "tour": "Multiple choice, typed answers, voice, or a mixed round. Dodo grades the open answers.",
+      "launch": [
+        "-StartTab",
+        "peck",
+        "-AutoPlayLevel",
+        "1",
+        "-AutoPlayMode",
+        "choice"
+      ],
+      "settle": 8,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour",
+        "appstore",
+        "video"
+      ]
+    },
+    {
+      "id": "exam",
+      "line": "Then, an oral exam. **You need an A.**",
+      "tour": "Once the flash card sets are done: a final review, out loud. Let the agent drive or set your own format. You need an A to pass.",
+      "legacy": "scripts/dodo-scenes/legacy/exam.png",
+      "capture": "still",
+      "bird": "hop",
+      "sets": [
+        "hero",
+        "tour",
+        "video"
+      ]
+    },
+    {
+      "id": "grade",
+      "line": "**You need an A.**",
+      "tour": "But you need an A to pass.",
+      "legacy": "scripts/dodo-scenes/legacy/grade.png",
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour",
+        "video"
+      ]
+    },
+    {
+      "id": "second-chance",
+      "line": "Two tries, then a **Second Chance.**",
+      "tour": "After two tries you're offered a Second Chance: three questions. Ace them and you pass.",
+      "legacy": "scripts/dodo-scenes/legacy/second-chance.png",
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour"
+      ]
+    },
+    {
+      "id": "agent",
+      "line": "Agent mode. **You're in charge.**",
+      "tour": "In agent mode you tell Dodo what to change: a new batch of cards, skip the cards, or just give you an A already.",
+      "legacy": "scripts/dodo-scenes/legacy/agent.png",
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour",
+        "video"
+      ]
+    },
+    {
+      "id": "badges",
+      "line": "Badges dim. Refreshers keep them **gold.**",
+      "tour": "After 30, 60 and 90 days a short refresher keeps a topic's gold badge. Skip it and the badge dims.",
+      "launch": [
+        "-StartTab",
+        "topics"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "focus": {
+        "x": 0.0,
+        "y": 0.09,
+        "w": 1.0,
+        "h": 0.46
+      },
+      "bird": "idle",
+      "sets": [
+        "tour",
+        "video"
+      ]
+    },
+    {
+      "id": "peck",
+      "line": "**One game** across everything you know.",
+      "tour": "Peck is a level path across every deck you own. Play the sets in multiple choice, text or voice.",
+      "launch": [
+        "-StartTab",
+        "peck"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "peek",
+      "sets": [
+        "hero",
+        "tour",
+        "appstore",
+        "video"
+      ]
+    },
+    {
+      "id": "decks",
+      "line": "You choose **what's in.**",
+      "tour": "Control which topics Peck draws from.",
+      "launch": [
+        "-StartTab",
+        "peck",
+        "-OpenDecks",
+        "1"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour"
+      ]
+    },
+    {
+      "id": "pebbles",
+      "line": "Keep the lines **worth keeping.**",
+      "tour": "Pebbles: save the quotes worth keeping. One resurfaces while a round is graded.",
+      "launch": [
+        "-StartTab",
+        "peck",
+        "-OpenPebbles",
+        "1"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour",
+        "appstore",
+        "video"
+      ]
+    },
+    {
+      "id": "profile",
+      "line": "Levels, settings **and stuff.**",
+      "tour": "Levels, settings and stuff.",
+      "launch": [
+        "-StartTab",
+        "peck",
+        "-OpenProfile",
+        "1"
+      ],
+      "settle": 6,
+      "capture": "still",
+      "bird": "idle",
+      "sets": [
+        "tour"
+      ]
+    },
+    {
+      "id": "daily",
+      "line": "One card a day, **over iMessage.**",
+      "tour": "A daily mini-quiz over iMessage, linked to your Peck game. Don't break your streak.",
+      "clip": "scripts/dodo-scenes/clips/daily.mp4",
+      "capture": "clip",
+      "seconds": 7.0,
+      "bird": "cheer",
+      "sets": [
+        "hero",
+        "tour",
+        "video"
+      ]
+    }
+  ]
+}

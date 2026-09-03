@@ -51,6 +51,8 @@ Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is lock
 
 ## Headless verification hooks (simulator + Catalyst Debug only, compiled out of device builds)
 
+The marketing captures (site tour/hero, App Store shots, video) are driven by these same hooks from `scripts/dodo-scenes/scenes.json` — see that folder's README. A new screen that should appear in the showcase needs a hook here and one scene entry there.
+
 `simctl launch` arguments for screenshot-driven verification without taps:
 - `-TestLoginUser <u> -TestLoginPass <p>` — signs in during bootstrap (use the newx-test account, never Bart's). Point `Secrets.swift` at `.dev` first when the feature under test needs unpushed server code — and restore `.production` after.
 - `-StartTab peck|chat|topics` — opens on that tab.
@@ -60,6 +62,7 @@ Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is lock
 - `-OpenCommunity 1` — open the community-topics directory sheet from the Topics tab.
 - `-OpenVoice 1` (with `-OpenTopic <id>`) — straight into that topic's voice session; `-voiceHoldToTalk 1` for push-to-talk. Add `-VoiceCutInTest 1` to run the scripted hold-to-talk drill: it injects text user turns (`debugSay`) since the sim mic is silent, cuts into Dodo's live audio with a topic change, measures inbound-rtp audio energy to prove the old reply stops arriving (PASS/FAIL `old-audio-stopped`), checks the reply answers the new question (PASS/FAIL `new-question-answered`), then taps mid-speech (PASS/FAIL `tap-stayed-quiet`) and read `F2_REALTIME_TEST` / `F2_REALTIME_CUT_IN` / `F2_REALTIME_EVENT_ERROR` in the sim log — the notification prompt is skipped with `-recertEnabled 0`. The simulator mic is digitally silent (WebRTC media-source audioLevel stays 0), so the drill exercises the protocol, not the speech gate: a release only commits when the press lasted ≥350ms and mean mic power (`-PTTMinPower`, default 3e-4) was reached — silent taps/holds just stop Dodo. Check `F2_REALTIME_PTT release … power=` on a real device to tune. The Catalyst Debug binary ignores a HOME override and shares Bart's login, so don't run `-TestLoginUser` there.
 - `-HoldSplash 1` — pin the launch splash for screenshots. `-TickleDodo 1` — auto-play the map traveler's tickle.
+- `-NoSFX 1` — never start the flash sound-effects audio engine. The simulator's audio server can abort the process (AURemoteIO RPC timeout) when the engine first initialises, which kills any run that opens a flash set headlessly. The showcase capture in `scripts/dodo-scenes` passes it on every launch.
 - `-SkipNotifPrompt 1` — suppress the recert notification-permission request so the system alert never covers screenshots. If the alert is already pending from a run without the flag, uninstall the app AND reboot the sim to clear it — it survives app relaunches.
 - `dodo://peck` via `simctl openurl` exercises deep-link routing, but SpringBoard shows an "Open in Dodo?" dialog that can't be tapped headlessly and persists over the app until the sim reboots (`simctl shutdown` + `boot` clears it). Production uses the universal link `https://feynd.cc/peck` (AASA served by `/api/f2/aasa` via a next.config rewrite).
 
