@@ -93,7 +93,8 @@ try {
         fs.writeFileSync(stem + '.json', JSON.stringify({ scene: s.id, format: f, theme, ...JSON.parse(rect ?? '{}') }) + '\n')
         log(`${f}/${theme}/${path.basename(stem)}.png`)
         if (f === 'strip' && theme === 'light') fs.copyFileSync(stem + '.png', path.join(ROOT, 'public/dodo/hero-strip.png'))
-        if (f === 'og' && theme === 'light') fs.copyFileSync(stem + '.png', path.join(ROOT, 'src/app/dodo/opengraph-image.png'))
+        // The og format stays in the export folder. src/app/dodo/opengraph-image.png
+        // is the Peck card (copied from src/app/f2/peck), not an export.
         if (spec.layers && isClip(s)) {
           // Clip scenes also export the ground and the bird as separate
           // layers; the assembler plays the clip between them.
