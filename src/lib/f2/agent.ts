@@ -87,7 +87,7 @@ import { f2Supabase } from './supabase'
 import { llmComplete } from './llm'
 import { setAudioSummary } from './audio-summary'
 import { getDailyStreak, setDailyStreak, streakMultiplier } from './streak'
-import { maybeHandleDailyAnswer } from './daily-card'
+import { IMESSAGE_DAILY_ONLY_REPLY, maybeHandleDailyAnswer } from './daily-card'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -149,6 +149,19 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   const { userId, client, handle, threadId, model, newTopic } = input
   const text = input.text.trim()
   if (!text) return { reply: '' }
+
+  // iMessage (and SMS) is the daily-card channel and nothing else: the
+  // daily question, its "press 1" bonus offer, and the multiple-choice
+  // bonus. A text that isn't a move in that state machine gets a pointer
+  // to the app — it must never reach the command router or topic chat.
+  // Before this gate a stray text (a late "A", a follow-up remark) fell
+  // through to handleNonUrl, which continued the user's latest topic and
+  // ran that topic's open quiz over iMessage (2026-09-04, the Fresco mini).
+  // Regression check: scripts/f2-imessage-gate-check.ts.
+  if (client === 'imessage' || client === 'sms') {
+    const dailyReply = await maybeHandleDailyAnswer(userId, text)
+    return { reply: dailyReply ?? IMESSAGE_DAILY_ONLY_REPLY }
+  }
 
   // A quote was typed outside any topic last turn; this message names the
   // target topic. Resolving it takes priority over all other routing.
@@ -215,14 +228,6 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
 
   if (isUrl(firstToken)) {
     return handleNewUrl(userId, client, handle, firstToken)
-  }
-
-  // Daily flash card: over iMessage, a plain text while a daily card is
-  // pending is its answer — graded with a correction and a little XP.
-  // Commands and URLs above still work mid-pending.
-  if (client === 'imessage' || client === 'sms') {
-    const dailyReply = await maybeHandleDailyAnswer(userId, text)
-    if (dailyReply) return { reply: dailyReply }
   }
 
   return handleNonUrl(userId, client, handle, text, threadId, model, newTopic === true)

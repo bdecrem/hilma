@@ -30,6 +30,12 @@ export const DAILY_XP_ATTEMPT = 5
 /// link — opens the Peck tab in Dodo, falls back to the web app.
 const PECK_URL = 'https://feynd.cc/peck'
 
+/// Reply to any iMessage that isn't a move in the daily-card state machine.
+/// iMessage carries the daily card and nothing else — chat, topics, and
+/// commands live in the app (see the gate at the top of processMessage).
+export const IMESSAGE_DAILY_ONLY_REPLY =
+  `Dodo only does the daily card over iMessage. For chat, topics and everything else, open the app: ${PECK_URL}`
+
 /// A pending daily card goes stale after this long — answers after that
 /// fall through to normal chat routing. The bonus offer and bonus question
 /// expire on the same clock.
@@ -235,8 +241,8 @@ function xpTail(xp: number, total: number | null): string {
 /// If this user is mid daily-card flow, consume `text` as its next move:
 /// grade the freeform answer (SM-2 review + XP + correction + bonus offer),
 /// accept "1" as taking the bonus, or grade the bonus letter. Returns the
-/// reply, or null when nothing is pending (caller falls through to normal
-/// routing).
+/// reply, or null when nothing is pending (the caller answers with
+/// IMESSAGE_DAILY_ONLY_REPLY — over iMessage nothing else is routed).
 export async function maybeHandleDailyAnswer(
   userId: string,
   text: string,
@@ -255,8 +261,10 @@ export async function maybeHandleDailyAnswer(
       return null
     }
     // Only a bare "1" (allowing "1." / "1!") takes the offer — anything
-    // else is normal chat and leaves the offer standing.
-    if (text.replace(/[^0-9a-z]/gi, '') !== '1') return null
+    // else gets the app pointer with a reminder, and the offer stands.
+    if (text.replace(/[^0-9a-z]/gi, '') !== '1') {
+      return `Press 1 for today's bonus question. ${IMESSAGE_DAILY_ONLY_REPLY}`
+    }
     return sendBonusQuestion(userId)
   }
 
