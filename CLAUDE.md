@@ -8,16 +8,16 @@ When a step is doable with the tools available, do it — don't punt it to Bart 
 
 - **Verification is my job, not Bart's.** "Verify behavior" means I drive it. I have a browser (Playwright + Chrome MCP), a shell, DB access, and the iOS simulator. If checking the fix means loading a page, logging in, querying the database, or launching the app, I do that myself and report what I observed. Asking Bart to "load the page and tell me what you see" or "let me know if it works" is the lazy punt to avoid.
 - **Don't stop at "it compiles."** A passing `pnpm build` / `xcodebuild` is necessary, not sufficient. Exercise the actual feature before saying it's done (see the F2 "spec first, then verify behavior" gates below).
-- **Don't offer when you can act.** Replace "want me to verify?" / "you could check X" with the verified result. The only things worth asking before doing are genuinely gated actions (push to prod, destructive ops, sending messages, mutating Bart's real data) — those still need an explicit go-ahead.
+- **Don't offer when you can act.** Replace "want me to verify?" / "you could check X" with the verified result. The only things worth asking before doing are genuinely sensitive actions (destructive ops, sending messages to other people, mutating Bart's real data, spending money) — those still need an explicit go-ahead. Pushing is NOT one of them (see Deploying).
 - **If a step is truly blocked, say so plainly** — name the blocker (no credentials, endpoint down, tool not connected) instead of quietly handing the work back.
 
 ### Finish the work — always. There is no "paused" or "want me to continue?"
 
 Bart has gotten angry about this, hard. When a task is started, **finish it in the same turn** — all of it, end to end. The answer to "would we ever not want the work finished?" is **no**. Do not leave a task "paused," "partially done," or "in the working tree for later." Do not stop at a blocker you can route around, and do not end a turn with "say the word and I'll pick it back up" — just pick it back up and finish.
 
-- **Never ask permission to finish.** "Want me to resume X?" / "should I keep going?" / "let me know and I'll…" are all banned. If X is part of what was asked and is doable, do it now. The only pause is for a genuinely gated action (push to prod, destructive op, spending money, mutating real data in a risky way) or a hard external blocker only Bart can clear (unlock the phone, provide a credential) — and even then, finish everything else around it first.
+- **Never ask permission to finish.** "Want me to resume X?" / "should I keep going?" / "let me know and I'll…" are all banned. If X is part of what was asked and is doable, do it now. The only pause is for a genuinely sensitive action (destructive op, spending money, mutating real data in a risky way) or a hard external blocker only Bart can clear (unlock the phone, provide a credential) — and even then, finish everything else around it first.
 - **A blocker on one sub-part doesn't stop the rest.** Route around it: if a Vercel path can't do something, do it locally; if an API can't raise a limit, re-encode to fit; if the phone is locked, finish all the code + commits + verification and only the physical install waits. Deliver everything that isn't literally blocked.
-- **"Finish" includes verify + commit + (when this session has been deploying) push + deploy.** Don't hand back compiled-but-unverified, or verified-but-uncommitted. Carry it all the way to the working, shipped state that was asked for.
+- **"Finish" includes verify + commit + push.** Don't hand back compiled-but-unverified, verified-but-uncommitted, or committed-but-unpushed. Carry it all the way to the working, shipped state that was asked for.
 - Leaving half-finished work and reporting it as a status update is the single fastest way to make Bart furious. Finishing without being re-prodded is the expectation, every time.
 
 State all of this plainly; this is a standing expectation, not a one-off.
@@ -26,7 +26,7 @@ State all of this plainly; this is a standing expectation, not a one-off.
 
 Do not publish pages, previews, or any work product for Bart as claude.ai Artifacts (the `Artifact` tool), even "private" ones. Everything Bart needs to open lives on our own infrastructure:
 
-- **Web pages / creations:** the right home in this repo (Vercel: hilma-nine.vercel.app and its domains), or the sibling project the work belongs to (daskollektiv.rip for DK tracks, intheamber.com for Amber). Pushing is still a separate go-ahead — but when Bart asks for "a link I can click", the answer is a link on our hosting, never an artifact.
+- **Web pages / creations:** the right home in this repo (Vercel: hilma-nine.vercel.app and its domains), or the sibling project the work belongs to (daskollektiv.rip for DK tracks, intheamber.com for Amber). When Bart asks for "a link I can click", the answer is a link on our hosting, never an artifact.
 - **Quick previews before a push:** a tunn3l URL from this machine (see the Tunn3l section; `../tunn3l/`), pointed at a local static server or the dev server.
 - **Files he just needs to open (audio, video, images, PDFs):** send them with `SendUserFile`, and keep a copy under `~/Desktop/<project>/` so they outlive the session scratchpad.
 
@@ -165,7 +165,7 @@ Voice is reachable from the Voice button in `TopicDetailView`. The backend mints
 
 **Commit regularly — don't wait to be asked.** Commit at logical checkpoints as work lands: a feature finished, a fix verified, a refactor done, a risky change about to start (so there's a clean state to fall back to). Frequent small commits with clear messages beat one big commit at the end — they make the work easy to follow and easy to revert. This is a standing habit, not something to ask permission for each time.
 
-**Pushing is separate — push only when Bart explicitly asks.** Pushing triggers a live Vercel deploy, a production action. "Commit and push" is two actions; "commit" is one. If Bart says "commit," commit and stop. Treat every push as needing its own go-ahead, even right after committing on his request.
+**Push by default — don't ask.** After committing verified work, push it. Bart said so on 2026-09-04, after being asked for push permission one time too many: "in THE VAST MAJORITY of cases you should push your changes and commit etc, only asking for permission if something is particularly sensitive." A bug fix that sits committed-but-unpushed is not fixed. Ask first only when the push itself is particularly sensitive — e.g. it changes auth/billing/data-migration behavior, touches another person's live data, or ships something Bart explicitly said he wants to review first. If Bart says "commit" and nothing else, commit and push.
 
 **ALWAYS run `pnpm build` locally before pushing.** If the build fails locally, it will fail on Vercel too — and ALL pages (not just the broken one) will stop deploying until the build is fixed. A broken build blocks the entire site.
 
