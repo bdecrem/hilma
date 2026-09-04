@@ -159,48 +159,52 @@ enum PeckWeekNotifications {
     }
 }
 
-/// A little wooden board planted beside the traveler on the Peck map:
-/// "NEXT SET · due in 5 days" — the weekly deadline, always in view where
-/// the map opens. Same wood as the trail's rest-stop signposts. Only
-/// stands while there is a streak to keep.
+/// A little wooden board planted beside the current stone on the Peck
+/// map — "DUE IN 5 DAYS", the weekly deadline, always in view where the
+/// map opens. Same wood, 92pt width, and proportions as the trail's
+/// rest-stop signposts (`PeckTrailLayer.drawSignpost`), one line instead
+/// of two; the copy is chosen to fit that width ("DUE IN 1 DAY", not
+/// "DUE TOMORROW!"). Only stands while there is a streak to keep.
 struct PeckDueSign: View {
-    let due: String
     let daysLeft: Int
 
     private var atRisk: Bool { daysLeft <= 1 }
 
     private var when: String {
         switch daysLeft {
-        case ...0: return "due tonight!"
-        case 1: return "due tomorrow!"
-        default: return "due in \(daysLeft) days"
+        case ...0: return "tonight"
+        case 1: return "in 1 day"
+        default: return "in \(daysLeft) days"
         }
     }
 
+    /// Vertical layout, matched to the rest-stop sign: board 26 tall whose
+    /// center sits 23pt above the stone's center; post 34 tall ending 24pt
+    /// below it. The view is 60 tall, so position it at stone.y - 6.
+    static let boardHeight: CGFloat = 26
+    static let postHeight: CGFloat = 34
+    static let centerOffsetY: CGFloat = -6
+
     var body: some View {
-        // Board 96×32 on a 6×58 post; the view's origin is the post's foot.
         VStack(spacing: 0) {
-            VStack(spacing: 1) {
-                Text("NEXT SET")
-                    .font(.custom("Fredoka", size: 10.5).weight(.semibold))
-                    .foregroundStyle(Color(hex: 0x3E3324))
-                Text(when)
-                    .font(.custom("Fredoka", size: 12).weight(.semibold))
-                    .foregroundStyle(atRisk ? Color(hex: 0xA8321F) : Color(hex: 0x5C4632))
-            }
-            .frame(width: 96, height: 32)
-            .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(atRisk ? Color(hex: 0xE0A36A) : Color(hex: 0xB78B5A))
-            )
-            .overlay(alignment: .top) {
-                RoundedRectangle(cornerRadius: 2)
-                    .fill(.white.opacity(0.25))
-                    .frame(height: 4)
-            }
+            Text("DUE \(when)".uppercased())
+                .font(.custom("Fredoka", size: 11).weight(.semibold))
+                .foregroundStyle(atRisk ? Color(hex: 0xA8321F) : Color(hex: 0x3E3324))
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+                .frame(width: 92, height: Self.boardHeight)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(atRisk ? Color(hex: 0xE0A36A) : Color(hex: 0xB78B5A))
+                )
+                .overlay(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(.white.opacity(0.25))
+                        .frame(height: 4)
+                }
             RoundedRectangle(cornerRadius: 2)
                 .fill(Color(hex: 0x8A6B4A))
-                .frame(width: 6, height: 26)
+                .frame(width: 6, height: Self.postHeight)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Next Peck set due \(when)")

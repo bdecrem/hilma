@@ -566,15 +566,24 @@ struct FlashTabView: View {
                             let p = world.travelerPoint(current: i)
                             AnimatedDodoView(height: 78, tickleable: true)
                                 .position(x: p.x, y: p.y)
-                            // The due-date board stands beside the traveler on
-                            // the current stone's side — the previous and next
-                            // stones both sit across the road. Board center is
-                            // 30pt above the post's foot (32 board + 26 post).
-                            if let due = state.peckDue, let left = state.peckDaysLeft {
-                                let side: CGFloat = i == 0 ? 1 : (world.zig(i) > 0 ? 1 : -1)
-                                PeckDueSign(due: due, daysLeft: left)
-                                    .position(x: i == 0 ? xFor(0) + 86 : p.x + side * 92,
-                                              y: p.y + 24)
+                            // The due-date board is planted beside the current
+                            // stone the way a rest-stop sign is planted beside
+                            // its stone (drawMilestones: ±78 for a plain stone;
+                            // the current one wears a 6pt rim, so ±86 keeps the
+                            // board just touching it). It stands on the side
+                            // away from the traveler, who is always on the road
+                            // side — except on a rest stop, where it takes the
+                            // side opposite that sign. Clamped so the board
+                            // never runs off the screen edge.
+                            if state.peckDue != nil, let left = state.peckDaysLeft {
+                                let stone = world.point(i)
+                                let restSide: CGFloat = world.zig(i) > 0 ? -1 : 1
+                                let side: CGFloat = PeckMilestone.isRest(state.levels[i].level)
+                                    ? -restSide
+                                    : (p.x < stone.x ? 1 : -1)
+                                let x = min(max(stone.x + side * 86, 54), geo.size.width - 54)
+                                PeckDueSign(daysLeft: left)
+                                    .position(x: x, y: stone.y + PeckDueSign.centerOffsetY)
                             }
                         }
                     }
