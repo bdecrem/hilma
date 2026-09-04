@@ -8,7 +8,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
-import { getDailyStreak } from './streak'
+import { getDailyStreak, markPeckWeek } from './streak'
 import { contextCharBudget, llmComplete } from './llm'
 import { buildBudgetedContent, gatherUserNotes, type F2Thread } from './threads'
 
@@ -1444,6 +1444,16 @@ export async function recordFlashSet(input: {
     throw new Error('Could not save the set')
   }
 
+  // A full Peck level (any mode, any score) satisfies the week's streak
+  // requirement — the 7-day clock restarts today.
+  if (input.jumboLevel != null && total >= SET_SIZE) {
+    try {
+      await markPeckWeek(input.userId)
+    } catch (e) {
+      console.error('[f2/flash] markPeckWeek failed:', e)
+    }
+  }
+
   // Advance each answered card's schedule (SM-2). Best-effort: a scheduling
   // hiccup must not cost the user the set they just played.
   try {
@@ -1744,6 +1754,11 @@ export type JumboState = {
   /// Daily-card streak (consecutive PT days) + the XP multiplier it earns.
   daily_streak: number
   xp_multiplier: number
+  /// Weekly Peck rule: last PT day (YYYY-MM-DD, inclusive) a full level
+  /// must be played to keep the streak, and whole days until then
+  /// (0 = today). Null without a streak.
+  peck_due: string | null
+  peck_days_left: number | null
 }
 
 /// Deterministic mode per Jumbo level. Mixed (half choice, half typed) is
@@ -1822,6 +1837,8 @@ export async function getJumboState(userId: string): Promise<JumboState> {
     levels,
     daily_streak: streak.streak,
     xp_multiplier: streak.multiplier,
+    peck_due: streak.peck_due,
+    peck_days_left: streak.peck_days_left,
   }
 }
 

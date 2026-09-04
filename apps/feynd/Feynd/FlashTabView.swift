@@ -71,6 +71,10 @@ struct FlashTabView: View {
                 // keep the classic framed chrome.
                 VStack(spacing: 0) {
                     classicTopBar
+                    PeckWeekBanner(state: state)
+                        .padding(.horizontal, 14)
+                        .padding(.top, 4)
+                        .padding(.bottom, 2)
                     ThisWeekBanner(topics: bannerTopics)
                         .padding(.horizontal, 14)
                         .padding(.top, 4)
@@ -170,6 +174,13 @@ struct FlashTabView: View {
                 UserDefaults.standard.removeObject(forKey: "AutoPlayMode")
                 play(level, mode: mode)
             }
+            // `-OpenStreakModal 1` — the flame's status card, no tap.
+            if UserDefaults.standard.bool(forKey: "OpenStreakModal"), let st = state {
+                UserDefaults.standard.removeObject(forKey: "OpenStreakModal")
+                streakModal = StreakMilestone(days: st.dailyStreak ?? 0, multiplier: st.xpMultiplier ?? 1,
+                                              celebration: false,
+                                              peckDue: st.peckDue, peckDaysLeft: st.peckDaysLeft)
+            }
             // `-OpenProfile 1` — straight to the settings sheet.
             if UserDefaults.standard.bool(forKey: "OpenProfile") {
                 UserDefaults.standard.removeObject(forKey: "OpenProfile")
@@ -208,7 +219,8 @@ struct FlashTabView: View {
                 }
                 state = JumboState(xp: st.xp, cardCount: st.cardCount,
                                    highestPassed: mock - 1, levels: levels,
-                                   dailyStreak: st.dailyStreak, xpMultiplier: st.xpMultiplier)
+                                   dailyStreak: st.dailyStreak, xpMultiplier: st.xpMultiplier,
+                                   peckDue: st.peckDue, peckDaysLeft: st.peckDaysLeft)
             }
             // `-MockStreak N` — fake a streak for pill/modal screenshots.
             let mockStreak = UserDefaults.standard.integer(forKey: "MockStreak")
@@ -218,7 +230,24 @@ struct FlashTabView: View {
                 let mult = mockStreak >= 14 ? 4 : mockStreak >= 10 ? 3 : mockStreak >= 4 ? 2 : 1
                 state = JumboState(xp: st.xp, cardCount: st.cardCount,
                                    highestPassed: st.highestPassed, levels: st.levels,
-                                   dailyStreak: mockStreak, xpMultiplier: mult)
+                                   dailyStreak: mockStreak, xpMultiplier: mult,
+                                   peckDue: st.peckDue, peckDaysLeft: st.peckDaysLeft)
+            }
+            // `-MockPeckDue N` — fake the weekly Peck deadline N days out
+            // (0 = today) for banner/modal screenshots; needs a streak, so
+            // one is faked too when absent.
+            if UserDefaults.standard.object(forKey: "MockPeckDue") != nil, let st = state {
+                let left = UserDefaults.standard.integer(forKey: "MockPeckDue")
+                UserDefaults.standard.removeObject(forKey: "MockPeckDue")
+                UserDefaults.standard.removeObject(forKey: "peckWeekBannerDismissed")
+                let streak = max(st.dailyStreak ?? 0, 12)
+                let mult = streak >= 14 ? 4 : streak >= 10 ? 3 : streak >= 4 ? 2 : 1
+                let due = Calendar.current.date(byAdding: .day, value: left, to: Date()) ?? Date()
+                let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+                state = JumboState(xp: st.xp, cardCount: st.cardCount,
+                                   highestPassed: st.highestPassed, levels: st.levels,
+                                   dailyStreak: streak, xpMultiplier: mult,
+                                   peckDue: f.string(from: due), peckDaysLeft: left)
             }
             #endif
             checkStreakMilestone()
@@ -255,7 +284,8 @@ struct FlashTabView: View {
         let done = UserDefaults.standard.integer(forKey: "streakCelebrated")
         guard let hit = milestones.last(where: { streak >= $0 && $0 > done }) else { return }
         UserDefaults.standard.set(hit, forKey: "streakCelebrated")
-        streakModal = StreakMilestone(days: streak, multiplier: state?.xpMultiplier ?? 1)
+        streakModal = StreakMilestone(days: streak, multiplier: state?.xpMultiplier ?? 1,
+                                      peckDue: state?.peckDue, peckDaysLeft: state?.peckDaysLeft)
     }
 
     /// The flame — consecutive daily-card days, with the XP multiplier it
@@ -266,7 +296,8 @@ struct FlashTabView: View {
         if streak >= 1 {
             let mult = state?.xpMultiplier ?? 1
             Button {
-                streakModal = StreakMilestone(days: streak, multiplier: mult, celebration: false)
+                streakModal = StreakMilestone(days: streak, multiplier: mult, celebration: false,
+                                              peckDue: state?.peckDue, peckDaysLeft: state?.peckDaysLeft)
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill")
@@ -392,6 +423,7 @@ struct FlashTabView: View {
                 deckStackButton
                 xpPill
             }
+            PeckWeekBanner(state: state)
             ThisWeekBanner(topics: bannerTopics)
             Spacer()
         }
@@ -685,6 +717,8 @@ struct FlashTabView: View {
         do {
             state = try await F2API.shared.jumboState()
             if let state { ScreenCache.save(state, key: ScreenCache.jumbo) }
+            // Streak-deadline reminders follow the freshest server state.
+            PeckWeekNotifications.sync(state: state)
         } catch {
             // With a cached map on screen, a failed refresh stays quiet —
             // stale beats an alert. Only a truly empty screen reports.

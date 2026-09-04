@@ -280,6 +280,11 @@ struct JumboState: Codable, Equatable {
     /// Optional so payloads from older servers still decode.
     let dailyStreak: Int?
     let xpMultiplier: Int?
+    /// Weekly Peck rule: the last day (YYYY-MM-DD, inclusive) a full level
+    /// must be played to keep the streak, and days until then (0 = today).
+    /// Nil without a streak, or from older servers.
+    var peckDue: String? = nil
+    var peckDaysLeft: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case xp, levels
@@ -287,6 +292,8 @@ struct JumboState: Codable, Equatable {
         case highestPassed = "highest_passed"
         case dailyStreak = "daily_streak"
         case xpMultiplier = "xp_multiplier"
+        case peckDue = "peck_due"
+        case peckDaysLeft = "peck_days_left"
     }
 }
 

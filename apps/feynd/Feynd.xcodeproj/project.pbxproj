@@ -14,6 +14,7 @@
 		0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */; };
 		0FA243A66767AA35B699BE73 /* BookSummaryReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */; };
 		10B1D2F87038A86CCA5D73B6 /* voice-marin.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 895F213807633430DF5ABD89 /* voice-marin.m4a */; };
+		10BEA785EEA3FDC166572F22 /* PeckWeekBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */; };
 		13E521D2E87C8EC6DF8BFE61 /* AudioSummaryPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */; };
 		1654FB2047C765ABA53E6523 /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */; };
 		16E7DC3843C38B1750CD4B06 /* PeckTrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */; };
@@ -85,6 +86,7 @@
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
 		0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */ = {isa = PBXFileReference; path = "voice-coral.m4a"; sourceTree = "<group>"; };
 		121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
+		178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckWeekBanner.swift; sourceTree = "<group>"; };
 		21950791B59DF2C423867D07 /* voice-cedar.m4a */ = {isa = PBXFileReference; path = "voice-cedar.m4a"; sourceTree = "<group>"; };
 		21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptReaderView.swift; sourceTree = "<group>"; };
 		2D359E2025298CA4A57C307D /* ScreenCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCache.swift; sourceTree = "<group>"; };
@@ -208,6 +210,7 @@
 				9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */,
 				AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */,
 				CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */,
+				178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
 				E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */,
 				F75E071CC1F646CA33327FAB /* RecertNotifications.swift */,
@@ -395,6 +398,7 @@
 				8386C28BBB0F9D1DBC9C32D6 /* PeckOddsSheet.swift in Sources */,
 				75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */,
 				16E7DC3843C38B1750CD4B06 /* PeckTrail.swift in Sources */,
+				10BEA785EEA3FDC166572F22 /* PeckWeekBanner.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
 				B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */,
 				C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */,

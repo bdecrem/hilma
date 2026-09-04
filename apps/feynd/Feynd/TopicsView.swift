@@ -32,6 +32,9 @@ enum TopicSort: String, CaseIterable, Identifiable {
 struct TopicsView: View {
     @Environment(Session.self) private var session
     @State private var topics: [F2Topic] = []
+    /// Feeds the streak-at-risk banner (weekly Peck rule) — cache first,
+    /// refreshed alongside the topics list.
+    @State private var jumbo: JumboState? = nil
     @State private var loading = false
     @State private var loadError: String? = nil
     @State private var renameTarget: F2Topic? = nil
@@ -264,6 +267,9 @@ struct TopicsView: View {
             if topics.isEmpty, let cached: [F2Topic] = ScreenCache.load(key: ScreenCache.topics) {
                 topics = cached
             }
+            if jumbo == nil, let cached: JumboState = ScreenCache.load(key: ScreenCache.jumbo) {
+                jumbo = cached
+            }
             #if targetEnvironment(simulator)
             // `-OpenCommunity 1` — straight to the community directory for
             // screenshot loops.
@@ -426,6 +432,9 @@ struct TopicsView: View {
                 titleRow.padding(.horizontal, -14)
                     .id("topics-top")
                 metaStrip
+                PeckWeekBanner(state: jumbo)
+                    .padding(.top, 2)
+                    .padding(.bottom, 4)
                 ThisWeekBanner(topics: topics, navigable: true)
                     .padding(.top, 2)
                     .padding(.bottom, 4)
@@ -528,6 +537,14 @@ struct TopicsView: View {
             loadError = error.localizedDescription
         }
         startAudioPollingIfNeeded()
+        // Streak deadline for the Peck banner — quiet refresh, cache stays
+        // on a failure.
+        Task {
+            if let fresh = try? await F2API.shared.jumboState() {
+                jumbo = fresh
+                ScreenCache.save(fresh, key: ScreenCache.jumbo)
+            }
+        }
     }
 
     /// Fire off summary generation, mirror the pending state locally, and

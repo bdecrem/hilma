@@ -9,6 +9,9 @@ struct StreakMilestone: Identifiable {
     /// True when this is a milestone crossing (big copy); false when the
     /// user just tapped the pill to peek.
     var celebration: Bool = true
+    /// Weekly Peck deadline (server day + days left), when known.
+    var peckDue: String? = nil
+    var peckDaysLeft: Int? = nil
     var id: Int { days * (celebration ? 1 : -1) }
 }
 
@@ -107,7 +110,16 @@ struct StreakCelebrationView: View {
         let now = m > 1
             ? "Every answer pays ×\(m) — daily cards and Peck rounds alike."
             : "Answer the daily card every day to build it."
-        return "\(now) \(next)"
+        return "\(now) \(next)\(peckLine)"
+    }
+
+    /// The weekly rule, always stated so the deadline is never a surprise.
+    private var peckLine: String {
+        guard let due = milestone.peckDue, let left = milestone.peckDaysLeft else { return "" }
+        let when = PeckWeek.dueWord(due: due, daysLeft: left)
+        return left <= 1
+            ? "\n\nOne Peck level a week keeps it alive — due \(when)."
+            : "\n\nOne Peck level a week keeps it alive — next due \(when)."
     }
 
     private struct Sparkle: Identifiable {

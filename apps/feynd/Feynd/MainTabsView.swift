@@ -92,6 +92,11 @@ struct MainTabsView: View {
         .onOpenURL { route($0) }
         // Card clinic "Discuss with Dodo": switch to Topics and push the
         // card's topic. The destination view picks up the prefilled draft.
+        // In-app "play a Peck level" intents (the streak banner on Topics)
+        // land on the Peck tab the same way the universal link does.
+        .onChange(of: DeepLinkRouter.shared.peckPlaySignal) {
+            active = .flash
+        }
         .onChange(of: DeepLinkRouter.shared.topicChatSignal) {
             guard let id = DeepLinkRouter.shared.consumeChatNavigation() else { return }
             active = .topics

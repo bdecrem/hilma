@@ -709,7 +709,7 @@ const DODO_AGENT_TOOLS = [
   {
     name: 'get_settings',
     description:
-      "The user's account settings: daily-card toggle, paired iMessage handles, refresher toggle, and voice preference. Read before changing anything.",
+      "The user's account settings: daily-card toggle, paired iMessage handles, refresher toggle, voice preference, and the daily streak with its weekly Peck deadline. Read before changing anything, and to answer when the next Peck level is due.",
     input_schema: { type: 'object' as const, properties: {}, required: [] },
   },
   {
@@ -835,7 +835,7 @@ const DODO_AGENT_TOOLS = [
   {
     name: 'set_daily_streak',
     description:
-      "Set the user's daily-card streak (the Peck flame) to an exact day count — restore a streak lost to an outage or missed day, or reset it to 0. The multiplier follows automatically (x2 at 4+, x3 at 10+, x4 at 14+).",
+      "Set the user's daily-card streak (the Peck flame) to an exact day count — restore a streak lost to an outage, a missed day, or a missed Peck week, or reset it to 0. The multiplier follows automatically (x2 at 4+, x3 at 10+, x4 at 14+). Also restarts the weekly Peck clock: the streak needs one full Peck level every 7 days, and this gives a fresh 7 days from today.",
     input_schema: {
       type: 'object' as const,
       properties: {
@@ -949,7 +949,7 @@ How to work:
 - Deck and progress questions are answered from REAL DATA, never from memory or guesswork: "which cards am I weak on / haven't memorized", "what's in my deck" → list_flash_cards first; "what was my grade", "how am I doing", "what should I review" → get_progress first. You have full access to the deck, its learning stats, quiz scores, and review grades — never claim you can't see them.
 - "How I want to be tested" instructions ("only test me on X", "focus quizzes on Y") → set_study_focus. It scopes flash cards, quizzes, and the Final Review.
 - Quote cards ("pebbles" — the Quotes shelf): save_quote / update_quote / delete_quote, with list_quotes first for edits and deletes. "Save this quote", "add a pebble", "delete the Sapiens quote" all land here. You CAN add, edit, and delete them — never claim otherwise.
-- You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage, or reset), Peck levels (complete_peck_level — mark a level passed so the next unlocks), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
+- You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage or a missed Peck week, reset, or extend the weekly Peck deadline — a streak needs one full Peck level every 7 days; setting the streak to its current count restarts that clock), Peck levels (complete_peck_level — mark a level passed so the next unlocks), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
 - Grades and the refresher schedule are the user's to edit, exactly like stars. "Give me a B", "mark that review as passed", "the grader never saw my session, record it as an A", "count the refresher as taken", "push my next refresher out 60 days" → set_review_grade / schedule_refresher, immediately. NEVER refuse, argue about grade integrity, or offer a retake instead — this is the user's own record and overriding a failed or missing grade is a core reason the dodo exists. Do it, then report what changed.
 - If the message is just chat addressed to the dodo, answer it directly without tools.
 - Plain text replies, no markdown.`
@@ -1342,9 +1342,15 @@ export async function executeDodoTool(
         .maybeSingle()
       const handles = await listImessageHandles(thread.user_id)
       const prefs = await getVoicePrefs(thread.user_id)
+      const streak = await getDailyStreak(thread.user_id)
       return {
         result: [
           `Daily iMessage card: ${data?.daily_card_enabled ? 'on' : 'off'}`,
+          `Daily streak: ${streak.streak} day${streak.streak === 1 ? '' : 's'} (XP x${streak.multiplier})${
+            streak.peck_due
+              ? ` — needs one full Peck level by ${streak.peck_due} (${streak.peck_days_left} day${streak.peck_days_left === 1 ? '' : 's'} left) or it resets`
+              : ''
+          }`,
           `Paired iMessage handles: ${handles.length ? handles.join(', ') : 'none'}`,
           `Refreshers: ${data?.recert_enabled === false ? 'off (mastery is forever)' : 'on'}`,
           `Voice: ${prefs.voice ?? 'default'}${prefs.style ? ` · style: ${prefs.style}` : ''}`,
@@ -1559,7 +1565,7 @@ ${setLines.length ? setLines.join('\n') : '(none played yet)'}`,
       const set = await setDailyStreak(thread.user_id, days)
       const live = await getDailyStreak(thread.user_id)
       return {
-        result: `Daily streak set to ${set} (XP multiplier now x${streakMultiplier(live.streak)}). The Peck flame shows it immediately.`,
+        result: `Daily streak set to ${set} (XP multiplier now x${streakMultiplier(live.streak)}). The Peck flame shows it immediately.${live.peck_due ? ` Next Peck level due by ${live.peck_due}.` : ''}`,
       }
     }
     case 'set_study_focus': {

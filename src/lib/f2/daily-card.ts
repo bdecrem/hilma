@@ -4,7 +4,7 @@
 // graded as a freeform answer — corrections + a little XP.
 
 import { f2Supabase } from './supabase'
-import { bumpDailyStreak, getDailyStreak, streakMultiplier } from './streak'
+import { bumpDailyStreak, getDailyStreak, peckNag, streakMultiplier } from './streak'
 import { sendIMessage } from './bluebubbles'
 import {
   cardWeight,
@@ -311,7 +311,8 @@ export async function maybeHandleDailyAnswer(
 
   const head = correct ? '✅ Right.' : `❌ Not quite — the answer: ${card.answer}.`
   const flame = streak >= 2 ? ` 🔥 ${streak}-day streak${mult > 1 ? ` — XP ×${mult}` : ''}.` : ''
-  const tail = `${xpTail(xp, total)}${flame} Press 1 for today's bonus question.`
+  const nag = peckNag(await getDailyStreak(userId))
+  const tail = `${xpTail(xp, total)}${flame}${nag} Press 1 for today's bonus question.`
   return `${head} ${feedback} ${tail}`.replace(/\s+/g, ' ').trim()
 }
 
@@ -388,11 +389,11 @@ async function gradeBonusAnswer(
   })
   await setPeckCredits(userId, credits)
 
-  const { multiplier: bonusMult } = await getDailyStreak(userId)
-  const xp = (correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT) * bonusMult
+  const bonusStreak = await getDailyStreak(userId)
+  const xp = (correct ? DAILY_XP_CORRECT : DAILY_XP_ATTEMPT) * bonusStreak.multiplier
   const total = await addXp(userId, xp)
 
   const head = correct ? '✅ Right.' : `❌ Not quite — the answer: ${card.answer}.`
-  const tail = `${xpTail(xp, total)} Both answers count on your Peck map — keep going in Dodo: ${PECK_URL}`
+  const tail = `${xpTail(xp, total)}${peckNag(bonusStreak)} Both answers count on your Peck map — keep going in Dodo: ${PECK_URL}`
   return `${head} ${tail}`.replace(/\s+/g, ' ').trim()
 }
