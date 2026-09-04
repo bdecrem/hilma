@@ -1024,16 +1024,38 @@ async function judgeJson<T>(
   schema: Record<string, unknown>,
   model: string = JUDGE_MODEL,
 ): Promise<T> {
-  const res = await anthropic().messages.create({
-    model,
-    max_tokens: 1500,
-    system,
-    output_config: { format: { type: 'json_schema', schema } },
-    messages: [{ role: 'user', content: user }],
-  })
-  const block = res.content.find((b) => b.type === 'text')
-  const raw = block?.type === 'text' ? block.text.trim() : ''
-  return JSON.parse(raw) as T
+  // Opus 5 thinks by default and thinking counts against max_tokens — a
+  // tight cap left the grader with no text block at all (2026-09-03: a
+  // 15-minute Final Review died on "Unexpected end of JSON input"). Give the
+  // call room, and when the model still returns nothing, say why and retry
+  // once instead of crashing on an empty parse.
+  let lastErr = ''
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await anthropic().messages.create({
+      model,
+      max_tokens: 16000,
+      system,
+      output_config: { format: { type: 'json_schema', schema } },
+      messages: [{ role: 'user', content: user }],
+    })
+    const block = res.content.find((b) => b.type === 'text')
+    const raw = block?.type === 'text' ? block.text.trim() : ''
+    if (raw) {
+      try {
+        return JSON.parse(raw) as T
+      } catch (e) {
+        lastErr = `unparseable JSON (stop_reason=${res.stop_reason}): ${raw.slice(0, 200)} — ${e}`
+      }
+    } else {
+      const detail =
+        res.stop_reason === 'refusal' && res.stop_details
+          ? ` category=${res.stop_details.category ?? 'null'} ${res.stop_details.explanation ?? ''}`
+          : ''
+      lastErr = `empty response (stop_reason=${res.stop_reason}${detail}, blocks=${res.content.map((b) => b.type).join(',') || 'none'})`
+    }
+    console.error(`[f2/flash] judgeJson attempt ${attempt + 1} on ${model}: ${lastErr}`)
+  }
+  throw new Error(`judgeJson failed on ${model}: ${lastErr}`)
 }
 
 const VERDICTS_SCHEMA = {

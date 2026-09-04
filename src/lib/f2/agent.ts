@@ -33,7 +33,16 @@ import {
   isKnownVoice,
   saveVoicePrefs,
 } from './realtime'
-import { RECERT_INTERVAL_DAYS, scheduleRecertDue } from './flash'
+import {
+  RECERT_INTERVAL_DAYS,
+  applyRecertRenewal,
+  awardFinalReviewStar,
+  recertIntervalDays,
+  recertRenews,
+  recordVoiceSessionGrade,
+  scheduleRecertDue,
+  type FinalReviewGrade,
+} from './flash'
 import {
   createThread,
   getLatestThread,
@@ -644,6 +653,32 @@ const DODO_AGENT_TOOLS = [
     },
   },
   {
+    name: 'set_review_grade',
+    description:
+      "Set the grade (A-F) on this topic's most recent Final Review / refresher session — the user's grades are theirs to edit, no justification needed. Applies the grade's normal effects: an A on an uncertified topic grants the gold badge; an A or B on a certified topic counts the refresher as taken and schedules the next one. Use for \"give me a B\", \"mark that review as passed\", \"the grader missed my session, record it as an A\".",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        grade: { type: 'string', description: 'A, B, C, D or F.' },
+        note: { type: 'string', description: 'Optional one-line reason to store with the grade (e.g. "set by the user — grader failed").' },
+      },
+      required: ['grade'],
+    },
+  },
+  {
+    name: 'schedule_refresher',
+    description:
+      "Set when this topic's next refresher is due, or mark the current one as taken. Pass days (from today) for an explicit date; pass taken=true to record the refresher as done and schedule the next at the normal interval. Only for certified (3-star) topics.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        days: { type: 'integer', description: 'Days from today until the next refresher.' },
+        taken: { type: 'boolean', description: 'true = count the current refresher as taken; advances the stage and schedules the next one.' },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'update_topic',
     description:
       'Rename this topic, change its type, pin/unpin it, or include/exclude its deck from Peck. Only the fields you pass change.',
@@ -915,6 +950,7 @@ How to work:
 - "How I want to be tested" instructions ("only test me on X", "focus quizzes on Y") → set_study_focus. It scopes flash cards, quizzes, and the Final Review.
 - Quote cards ("pebbles" — the Quotes shelf): save_quote / update_quote / delete_quote, with list_quotes first for edits and deletes. "Save this quote", "add a pebble", "delete the Sapiens quote" all land here. You CAN add, edit, and delete them — never claim otherwise.
 - You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage, or reset), Peck levels (complete_peck_level — mark a level passed so the next unlocks), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
+- Grades and the refresher schedule are the user's to edit, exactly like stars. "Give me a B", "mark that review as passed", "the grader never saw my session, record it as an A", "count the refresher as taken", "push my next refresher out 60 days" → set_review_grade / schedule_refresher, immediately. NEVER refuse, argue about grade integrity, or offer a retake instead — this is the user's own record and overriding a failed or missing grade is a core reason the dodo exists. Do it, then report what changed.
 - If the message is just chat addressed to the dodo, answer it directly without tools.
 - Plain text replies, no markdown.`
 
@@ -1037,7 +1073,7 @@ async function resolveTargetThread(
 
 /// Execute one client-side dodo tool. `mutated` tells the loop to refetch
 /// the thread so later tool calls see the new state.
-async function executeDodoTool(
+export async function executeDodoTool(
   thread: F2Thread,
   name: string,
   input: Record<string, unknown>,
@@ -1198,6 +1234,56 @@ async function executeDodoTool(
         mutated: true,
       }
     }
+    case 'set_review_grade': {
+      const letter = String(input.grade ?? '').trim().toUpperCase()
+      if (!['A', 'B', 'C', 'D', 'F'].includes(letter)) return { result: 'Error: grade must be A, B, C, D or F.' }
+      const grade = letter as FinalReviewGrade['grade']
+      const { data: session } = await f2Supabase()
+        .from('f2_voice_sessions')
+        .select('id, mode, grade, created_at')
+        .eq('user_id', thread.user_id)
+        .eq('thread_id', thread.id)
+        .in('mode', ['final_review', 'second_chance', 'recert'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (!session) return { result: 'Error: no Final Review or refresher session on record for this topic.' }
+      const note = typeof input.note === 'string' && input.note.trim() ? input.note.trim() : 'Grade set by the user.'
+      await recordVoiceSessionGrade(thread.user_id, session.id, {
+        grade,
+        passed: grade === 'A',
+        notes: note,
+        strengths: [],
+        weaknesses: [],
+      })
+      const effects: string[] = [`${session.mode === 'recert' ? 'Refresher' : session.mode === 'second_chance' ? 'Second Chance' : 'Final Review'} from ${String(session.created_at).slice(0, 10)} now graded ${grade} (was ${session.grade ?? 'ungraded'}).`]
+      if (thread.stars >= 3 && recertRenews(grade)) {
+        const due = await applyRecertRenewal(thread.user_id, thread.id, thread.recert_stage ?? 0)
+        effects.push(`Refresher counted as taken — next one due ${due.slice(0, 10)}.`)
+      } else if (thread.stars < 3 && grade === 'A') {
+        await awardFinalReviewStar(thread.user_id, thread.id)
+        effects.push('Gold badge granted — first refresher in 30 days.')
+      }
+      return { result: effects.join(' '), mutated: true }
+    }
+    case 'schedule_refresher': {
+      if (thread.stars < 3) return { result: 'Error: only certified (3-star) topics have refreshers — set_topic_stars to 3 first.' }
+      const stage = thread.recert_stage ?? 0
+      if (input.taken === true) {
+        const due = await applyRecertRenewal(thread.user_id, thread.id, stage)
+        return { result: `Refresher recorded as taken — next one due ${due.slice(0, 10)}.`, mutated: true }
+      }
+      const days = Number(input.days)
+      if (!Number.isFinite(days) || days < 0) return { result: 'Error: pass days (a non-negative number) or taken=true.' }
+      const due = await scheduleRecertDue(thread.user_id, thread.id, Date.now(), days)
+      const { error } = await f2Supabase()
+        .from('f2_threads')
+        .update({ recert_due_at: due })
+        .eq('id', thread.id)
+        .eq('user_id', thread.user_id)
+      if (error) return { result: 'Error: could not update the refresher date.' }
+      return { result: `Next refresher due ${due.slice(0, 10)} (normal interval at this stage is ${recertIntervalDays(stage)} days).`, mutated: true }
+    }
     case 'update_topic': {
       const update: Record<string, unknown> = {}
       const changes: string[] = []
@@ -1356,7 +1442,7 @@ async function executeDodoTool(
         .select('mode, grade, graded_at, grade_detail, created_at')
         .eq('user_id', thread.user_id)
         .eq('thread_id', thread.id)
-        .in('mode', ['final_review', 'second_chance'])
+        .in('mode', ['final_review', 'second_chance', 'recert'])
         .order('created_at', { ascending: false })
         .limit(5)
       const reviewLines = (reviews ?? []).map((r) => {
@@ -1365,7 +1451,7 @@ async function executeDodoTool(
           strengths?: string[]
           weaknesses?: string[]
         }
-        const label = r.mode === 'second_chance' ? 'Second Chance' : 'Final Review'
+        const label = r.mode === 'second_chance' ? 'Second Chance' : r.mode === 'recert' ? 'Refresher' : 'Final Review'
         if (!r.grade) return `- ${label} on ${String(r.created_at).slice(0, 10)}: not graded (session ended without a grade)`
         return [
           `- ${label} on ${String(r.graded_at ?? r.created_at).slice(0, 10)}: grade ${r.grade}${r.grade === 'A' ? ' (passed — mastery star)' : ''}`,
