@@ -566,6 +566,16 @@ struct FlashTabView: View {
                             let p = world.travelerPoint(current: i)
                             AnimatedDodoView(height: 78, tickleable: true)
                                 .position(x: p.x, y: p.y)
+                            // The due-date board stands beside the traveler on
+                            // the current stone's side — the previous and next
+                            // stones both sit across the road. Board center is
+                            // 30pt above the post's foot (32 board + 26 post).
+                            if let due = state.peckDue, let left = state.peckDaysLeft {
+                                let side: CGFloat = i == 0 ? 1 : (world.zig(i) > 0 ? 1 : -1)
+                                PeckDueSign(due: due, daysLeft: left)
+                                    .position(x: i == 0 ? xFor(0) + 86 : p.x + side * 92,
+                                              y: p.y + 24)
+                            }
                         }
                     }
                     .frame(height: height)
