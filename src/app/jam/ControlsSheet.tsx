@@ -17,15 +17,18 @@ type Props = {
   groups: ControlGroup[]
   desc: SessionDescription | null
   rendering: boolean
+  /** Bars of the last render (an arrangement's total, not the loop length). */
+  loopBars?: number | null
   onTrack: (key: 'bpm' | 'swing' | 'bars', value: number) => void
   onParam: (path: string, value: number | string, label: string) => void
 }
 
-const BAR_CHOICES = [1, 2, 4, 8]
+const BAR_CHOICES = [1, 2, 4, 8, 16, 32, 64, 128]
 type Mode = 'sliders' | 'panels'
 const MODE_KEY = 'jam:controlsMode'
 
-export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, onTrack, onParam }: Props) {
+export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, loopBars, onTrack, onParam }: Props) {
+  const inSong = !!desc && desc.arrangement.length > 0
   // Two control UIs side by side for comparison: the slider list, and the
   // synths' own panels (knobs, wave buttons) skinned like their web UIs.
   const [mode, setMode] = useState<Mode>('sliders')
@@ -81,20 +84,30 @@ export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups,
             t={swing / 100}
             onInput={(t) => onTrack('swing', Math.round(t * 100))}
           />
-          <div className="flex items-center justify-between py-2">
-            <span className="text-sm text-white/70">length</span>
-            <div className="flex gap-1 rounded-full bg-white/5 p-1">
-              {BAR_CHOICES.map((b) => (
-                <button
-                  key={b}
-                  onClick={() => onTrack('bars', b)}
-                  className={`rounded-full px-3 py-1 text-sm font-medium transition ${bars === b ? 'bg-[#ffb02e] text-black' : 'text-white/70'}`}
-                >
-                  {b} {b === 1 ? 'bar' : 'bars'}
-                </button>
-              ))}
+          {inSong ? (
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-white/70">length</span>
+              <span className="text-sm text-white/80">
+                arrangement · {loopBars ?? bars} bars
+                <span className="ml-2 text-xs text-white/40">({desc?.arrangement.length} sections, set in chat)</span>
+              </span>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-start justify-between gap-3 py-2">
+              <span className="pt-1 text-sm text-white/70">length</span>
+              <div className="flex flex-wrap justify-end gap-1">
+                {BAR_CHOICES.map((b) => (
+                  <button
+                    key={b}
+                    onClick={() => onTrack('bars', b)}
+                    className={`rounded-full px-2.5 py-1 text-sm font-medium transition ${bars === b ? 'bg-[#ffb02e] text-black' : 'bg-white/5 text-white/70'}`}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Section>
 
         {mode === 'panels' && <AltPanels desc={desc} onParam={onParam} />}

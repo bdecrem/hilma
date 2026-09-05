@@ -43,6 +43,9 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const [playing, setPlaying] = useState(false)
   const [pos, setPos] = useState(0)
   const [hasBuffer, setHasBuffer] = useState(false)
+  // Bars of what is looping right now: the arrangement's total in song mode
+  // (64 for a 64-bar song), the loop length otherwise.
+  const [loopBars, setLoopBars] = useState<number | null>(null)
   const [rendering, setRendering] = useState(false)
   const [desc, setDesc] = useState<SessionDescription | null>(null)
   const [groups, setGroups] = useState<ControlGroup[]>([])
@@ -99,7 +102,9 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       await api.saveTrack(track.id, {
         title: titleRef.current,
         bpm: session.bpm,
-        bars: session.bars || 2,
+        // What the library/catalog should say: the arrangement's total when
+        // there is one, otherwise the loop length.
+        bars: lastRenderRef.current?.bars ?? session.bars ?? 2,
         session: jam.serializeSession(session),
         messages: messagesRef.current,
         feed: feedRef.current.slice(-200),
@@ -184,6 +189,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     }
     const p = player()
     p.setBuffer(r.buffer, loopSecondsFor(r.bars, r.bpm))
+    setLoopBars(r.bars)
     setHasBuffer(true)
     if (autoplay && !p.playing) p.play()
   }, [refreshDesc])
@@ -444,7 +450,9 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const bpm = desc?.bpm ?? track.bpm ?? 128
   const bars = desc?.bars ?? track.bars ?? 2
   const swing = desc?.swing ?? 0
-  const barNow = Math.min(bars, Math.floor(pos * bars) + 1)
+  const inSong = !!desc && desc.arrangement.length > 0
+  const shownBars = loopBars ?? bars
+  const barNow = Math.min(shownBars, Math.floor(pos * shownBars) + 1)
   const ready = status === 'ready'
   const canSend = ready && !busy && input.trim().length > 0
 
@@ -482,7 +490,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
             </button>
           )}
           <div className="font-mono text-[11px] text-white/50">
-            {Math.round(bpm)} BPM · {bars} {bars === 1 ? 'bar' : 'bars'}{swing ? ` · swing ${swing}` : ''}
+            {Math.round(bpm)} BPM · {shownBars} {shownBars === 1 ? 'bar' : 'bars'}{inSong ? ' · song' : ''}{swing ? ` · swing ${swing}` : ''}
             {saveState === 'saving' && <span className="ml-2 text-white/35">saving…</span>}
             {saveState === 'failed' && <span className="ml-2 text-[#ff5c7a]">not saved</span>}
           </div>
@@ -589,7 +597,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
               <div className="h-full rounded-full bg-[#5ee0ff] transition-[width] duration-75" style={{ width: `${Math.round(pos * 100)}%` }} />
             </div>
             <div className="mt-1 font-mono text-[11px] text-white/45">
-              {rendering ? 'rendering…' : hasBuffer ? (playing ? `bar ${barNow}/${bars}` : 'ready') : 'no render yet'}
+              {rendering ? 'rendering…' : hasBuffer ? (playing ? `bar ${barNow}/${shownBars}` : 'ready') : 'no render yet'}
             </div>
           </div>
           <button
@@ -649,6 +657,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         groups={groups}
         desc={desc}
         rendering={rendering}
+        loopBars={loopBars}
         onTrack={onTrack}
         onParam={onParam}
       />

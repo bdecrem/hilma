@@ -33,7 +33,7 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
       className="flex min-h-[100dvh] flex-col overflow-y-auto bg-[#0d0e12] px-6 pb-10 text-[#f2f2f5]"
       style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 40px)' }}
     >
-      <h1 className="text-5xl font-extrabold tracking-[-0.06em]">JAM</h1>
+      <h1 className="text-5xl font-extrabold tracking-[-0.06em]">JAMBOT</h1>
       <p className="mt-2 text-white/55">Talk to a groovebox. Keep every track.</p>
       {hint && <p className="mt-3 rounded-xl bg-[#b6ff3d]/10 px-3 py-2 text-sm text-[#b6ff3d]">{hint}</p>}
 

@@ -15,7 +15,7 @@ async function isPublished(slug: string): Promise<boolean> {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  if (!/^[a-z0-9]{4,16}$/.test(slug)) return { title: 'Jam' }
+  if (!/^[a-z0-9]{4,16}$/.test(slug)) return { title: 'Jambot' }
   try {
     const { data } = await jamDb()
       .from('jam_tracks')
@@ -23,14 +23,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .eq('slug', slug)
       .not('published_at', 'is', null)
       .maybeSingle()
-    if (!data) return { title: 'Jam' }
+    if (!data) return { title: 'Jambot' }
     const u = data.jam_users as unknown as { username: string } | { username: string }[] | null
     const username = (Array.isArray(u) ? u[0]?.username : u?.username) ?? 'someone'
-    const title = `${data.title} — ${username} on Jam`
+    const title = `${data.title} — ${username} on Jambot`
     const description = `${data.bpm} BPM, ${data.bars} bars. Play it, then remix it with the groovebox.`
     return { title, description, openGraph: { title, description }, twitter: { card: 'summary_large_image', title, description } }
   } catch {
-    return { title: 'Jam' }
+    return { title: 'Jambot' }
   }
 }
 

@@ -64,7 +64,7 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
     >
       <header className="flex items-center justify-between px-4 pb-2 pt-3">
         <div className="flex items-baseline gap-3">
-          <h1 className="text-2xl font-extrabold tracking-[-0.06em]">JAM</h1>
+          <h1 className="text-2xl font-extrabold tracking-[-0.06em]">JAMBOT</h1>
           <span className="text-xs text-white/50">{user.username}</span>
         </div>
         <button onClick={onSignOut} className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">

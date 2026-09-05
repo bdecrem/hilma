@@ -16,6 +16,7 @@ export default function PublicTrack({ slug }: { slug: string }) {
   const [status, setStatus] = useState<'loading' | 'rendering' | 'ready' | 'failed'>('loading')
   const [playing, setPlaying] = useState(false)
   const [pos, setPos] = useState(0)
+  const [loopBars, setLoopBars] = useState<number | null>(null)
   const [me, setMe] = useState<string | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
@@ -43,6 +44,7 @@ export default function PublicTrack({ slug }: { slug: string }) {
         const r = await jam.renderSessionToBuffer(session, session.bars || track.bars || 2)
         if (cancelled) return
         player().setBuffer(r.buffer, loopSecondsFor(r.bars, session.bpm))
+        setLoopBars(r.bars)   // an arrangement's total, not the loop length
         setStatus('ready')
       } catch (e) {
         if (cancelled) return
@@ -65,7 +67,7 @@ export default function PublicTrack({ slug }: { slug: string }) {
     const url = publicTrackUrl(slug)
     const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
     try {
-      if (nav.share) { await nav.share({ title: track?.title || 'Jam', url }); return }
+      if (nav.share) { await nav.share({ title: track?.title || 'Jambot', url }); return }
       await navigator.clipboard.writeText(url)
       setNote('Link copied.')
     } catch { setNote(url) }
@@ -86,7 +88,7 @@ export default function PublicTrack({ slug }: { slug: string }) {
     }
   }
 
-  const bars = track?.bars ?? 2
+  const bars = loopBars ?? track?.bars ?? 2
   const barNow = Math.min(bars, Math.floor(pos * bars) + 1)
 
   return (
@@ -95,7 +97,7 @@ export default function PublicTrack({ slug }: { slug: string }) {
       style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
     >
       <header className="flex items-center justify-between">
-        <a href="/jam" className="text-2xl font-extrabold tracking-[-0.06em]">JAM</a>
+        <a href="/jam" className="text-2xl font-extrabold tracking-[-0.06em]">JAMBOT</a>
         <a href="/jam" className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">{me ? 'My tracks' : 'Sign in'}</a>
       </header>
 
@@ -105,7 +107,7 @@ export default function PublicTrack({ slug }: { slug: string }) {
         <main className="mt-10 flex flex-1 flex-col">
           <p className="text-xs uppercase tracking-widest text-[#5ee0ff]">{track.remix ? 'Remix' : 'Track'} by {track.username}</p>
           <h1 className="mt-1 text-3xl font-bold leading-tight">{track.title}</h1>
-          <p className="mt-1 font-mono text-xs text-white/50">{track.bpm} BPM · {track.bars} {track.bars === 1 ? 'bar' : 'bars'}</p>
+          <p className="mt-1 font-mono text-xs text-white/50">{track.bpm} BPM · {bars} {bars === 1 ? 'bar' : 'bars'}</p>
 
           <div className="mt-10 flex items-center gap-4">
             <button

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'Jam — talk to a groovebox'
+export const alt = 'Jambot — talk to a groovebox'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -33,7 +33,7 @@ export default function Image() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 28 }}>
-          <div style={{ fontSize: 132, fontWeight: 800, letterSpacing: -6, lineHeight: 1 }}>JAM</div>
+          <div style={{ fontSize: 112, fontWeight: 800, letterSpacing: -5, lineHeight: 1 }}>JAMBOT</div>
           <div style={{ fontSize: 40, color: '#9a9ba6', letterSpacing: -1 }}>talk to a groovebox</div>
         </div>
 
