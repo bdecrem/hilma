@@ -4,11 +4,12 @@
 // only adds the API key. The request body is exactly what core/agent.js
 // hands its `llm` function: { system, messages, tools, max_tokens }.
 //
-// Gated by JAM_PASSWORD (header x-jam-key) so a public URL can't become an
-// open proxy for the key.
+// Requires a signed-in Jam account (jam_session cookie) so a public URL
+// can't become an open proxy for the key.
 
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
+import { getJamUser } from '@/lib/jam/auth'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -27,12 +28,9 @@ function getClient() {
 }
 
 export async function POST(req: NextRequest) {
-  const password = process.env.JAM_PASSWORD
-  if (!password) {
-    return NextResponse.json({ error: 'JAM_PASSWORD is not set on the server' }, { status: 500 })
-  }
-  if (req.headers.get('x-jam-key') !== password) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const user = await getJamUser()
+  if (!user) {
+    return NextResponse.json({ error: 'not signed in' }, { status: 401 })
   }
 
   let body: { system?: unknown; messages?: unknown; tools?: unknown; max_tokens?: unknown }
