@@ -125,6 +125,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.dodo.foo' }],
           destination: '/dodo',
         },
+        // jambot.to root → /jam (Jam — Jambot in the browser)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'jambot.to' }],
+          destination: '/jam',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.jambot.to' }],
+          destination: '/jam',
+        },
         // dogear.bar root → /book-scout (the Dog-Ear app)
         {
           source: '/',
@@ -215,6 +226,17 @@ const nextConfig: NextConfig = {
           source: '/:path((?!(?:dodo|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.dodo.foo' }],
           destination: '/dodo/:path',
+        },
+        // jambot.to/anything → /jam/anything (opengraph-image etc.)
+        {
+          source: '/:path((?!(?:jam|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'jambot.to' }],
+          destination: '/jam/:path',
+        },
+        {
+          source: '/:path((?!(?:jam|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.jambot.to' }],
+          destination: '/jam/:path',
         },
         // feynd.cc/anything → /f2/anything
         // Excludes /f2/* (avoid /f2/f2/…) AND /api/* and /_next/* — afterFiles
