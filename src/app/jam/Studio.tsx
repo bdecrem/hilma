@@ -328,6 +328,24 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     try {
       const r = await jam.executeTool('tweak', { path, value }, session, {})
       if (/^Error/.test(r)) { note(r, true); return }
+      // Song mode: the arrangement renders each section from the params
+      // captured inside the saved patterns, so a live tweak alone changes
+      // nothing you can hear. Write the value into every saved pattern of
+      // that instrument (load → tweak → save), then restore the current one.
+      const [inst, ...rest] = path.split('.')
+      const saved = session.patterns?.[inst] as Record<string, unknown> | undefined
+      const inSong = Array.isArray(session.arrangement) && session.arrangement.length > 0
+      const nodeLevel = rest.length === 1 && rest[0] === 'level'
+      if (inSong && saved && rest.length > 0 && !nodeLevel && inst !== 'fx') {
+        const names = Object.keys(saved)
+        const current: string | undefined = session.currentPattern?.[inst] || names[names.length - 1]
+        for (const name of names) {
+          await jam.executeTool('load_pattern', { instrument: inst, name }, session, {})
+          await jam.executeTool('tweak', { path, value }, session, {})
+          await jam.executeTool('save_pattern', { instrument: inst, name }, session, {})
+        }
+        if (current) await jam.executeTool('load_pattern', { instrument: inst, name: current }, session, {})
+      }
       controlNotesRef.current.set(path, `${label} → ${path} = ${value}`)
       scheduleRender()
       scheduleSave()
