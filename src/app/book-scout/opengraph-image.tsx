@@ -5,19 +5,32 @@ export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
 // Fetch a Shantell Sans weight from Google Fonts as a usable font file for Satori.
-async function loadFont(weight: number): Promise<ArrayBuffer> {
-  const css = await (
-    await fetch(`https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@${weight}`, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' },
-    })
-  ).text()
-  const url = css.match(/src:\s*url\((https:[^)]+)\)/)?.[1]
-  if (!url) throw new Error('font url not found')
-  return (await fetch(url)).arrayBuffer()
+// Fails soft: this image is prerendered at build time, and Vercel's build
+// network has timed out on fonts.googleapis.com (2026-09-05, twice), which
+// blocked every deploy of the site. No font beats no deploy.
+async function loadFont(weight: number): Promise<ArrayBuffer | null> {
+  try {
+    const css = await (
+      await fetch(`https://fonts.googleapis.com/css2?family=Shantell+Sans:wght@${weight}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)' },
+        signal: AbortSignal.timeout(8000),
+      })
+    ).text()
+    const url = css.match(/src:\s*url\((https:[^)]+)\)/)?.[1]
+    if (!url) throw new Error('font url not found')
+    return await (await fetch(url, { signal: AbortSignal.timeout(8000) })).arrayBuffer()
+  } catch (err) {
+    console.warn('[book-scout og] font unavailable, using default:', (err as Error).message)
+    return null
+  }
 }
 
 export default async function OG() {
   const [bold, regular] = await Promise.all([loadFont(700), loadFont(400)])
+  const fonts = [
+    bold && { name: 'Shantell Sans', data: bold, weight: 700 as const, style: 'normal' as const },
+    regular && { name: 'Shantell Sans', data: regular, weight: 400 as const, style: 'normal' as const },
+  ].filter((f): f is NonNullable<typeof f> => !!f)
   return new ImageResponse(
     (
       <div
@@ -58,10 +71,7 @@ export default async function OG() {
     ),
     {
       ...size,
-      fonts: [
-        { name: 'Shantell Sans', data: bold, weight: 700, style: 'normal' },
-        { name: 'Shantell Sans', data: regular, weight: 400, style: 'normal' },
-      ],
+      ...(fonts.length ? { fonts } : {}),
     },
   )
 }
