@@ -1,10 +1,17 @@
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { jamDb } from '@/lib/jam/db'
 import PublicTrack from './PublicTrack'
 
 export const dynamic = 'force-dynamic'
 
 type Props = { params: Promise<{ slug: string }> }
+
+async function isPublished(slug: string): Promise<boolean> {
+  if (!/^[a-z0-9]{4,16}$/.test(slug)) return false
+  const { data } = await jamDb().from('jam_tracks').select('id').eq('slug', slug).not('published_at', 'is', null).maybeSingle()
+  return !!data
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
@@ -29,5 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicTrackPage({ params }: Props) {
   const { slug } = await params
+  if (!(await isPublished(slug))) notFound()
   return <PublicTrack slug={slug} />
 }
