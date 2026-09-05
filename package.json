@@ -11,9 +11,11 @@
     "dodo:capture": "node scripts/dodo-scenes/capture.mjs",
     "dodo:export": "node scripts/dodo-scenes/export.mjs",
     "dodo:scenes": "node scripts/dodo-scenes/capture.mjs && pnpm build && node scripts/dodo-scenes/export.mjs",
-    "dodo:video": "node scripts/dodo-scenes/video.mjs"
+    "dodo:video": "node scripts/dodo-scenes/video.mjs",
+    "jam:build": "node scripts/jam/build-jambot.mjs"
   },
   "dependencies": {
+    "@breezystack/lamejs": "1.2.7",
     "@sendgrid/mail": "^8.1.6",
     "@supabase/supabase-js": "^2.101.1",
     "bcryptjs": "^3.0.3",
@@ -32,6 +34,7 @@
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "esbuild": "0.28.2",
     "eslint": "^9.25.1",
     "eslint-config-next": "^15.3.2",
     "playwright": "^1.59.1",

@@ -80,6 +80,20 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Peri (iOS)** | `apps/peri/` | Xcode (XcodeGen, same workflow as Feynd) | Voice-only walking tutor — OpenAI Realtime over WebRTC (`/api/f4/walk/*`, `src/lib/f4/`). Peri speaks first, quizzes the Loci card deck conversationally, records reviews via server-authed tools. Harness: `scripts/test-walk-realtime.mjs` |
 | **MacPlus** | `apps/macplus/` | Retro68 → BlueSCSI SD card (manual) | Native classic-Mac (System 6, 68000) apps for Bart's real Macintosh Plus. See `apps/macplus/CLAUDE.md` |
 | **Tap Tap Dodo (iOS)** | `apps/taptapdodo/` | Xcode (XcodeGen, same workflow as Feynd) | Three-lane rhythm game starring a dodo — SpriteKit + AVAudioEngine synthesis, zero audio files, seeded procedural charts, 5 synth-genre sets. See `apps/taptapdodo/CLAUDE.md` |
+| **Jam (web)** | `src/app/jam/` + `public/jam/` | Vercel (`/jam`) | Mobile chat UI for Jambot: the whole groovebox (session, tools, agent loop, rendering) runs in the browser from a committed bundle; the server only signs LLM calls. See "Jam" below |
+
+### Jam — Jambot in the browser
+
+`/jam` is a phone-first chat with the Jambot agent (`../vibeceo/jambot`). Say "techno beat at 128", hear it loop seconds later, open **Controls** for sliders (tempo, swing, bars, per-voice level/decay/tune, filter params, effect mix), **Save** as MP3 or WAV.
+
+How it's wired:
+- `public/jam/jambot-web.js` is an esbuild bundle of `../vibeceo/jambot` (core + tools + synth engines + JT90 sample WAVs + library.json), built by `pnpm jam:build` (`scripts/jam/build-jambot.mjs`). **It is committed** because Vercel builds hilma alone and can't see `../vibeceo`. After any jambot change that the web app should pick up: commit in vibeceo, run `pnpm jam:build` here, commit the new bundle. The bundle banner and `public/jam/jambot-web.meta.json` carry the jambot commit hash.
+- Node-only modules are replaced by shims in `scripts/jam/shims/` (fs is a read-only virtual file system of the JSON/WAV files jambot reads). Tool modules that need a real file system or sox (jbs/sampler, analyze, render-to-file, project tools) are excluded; `render` is re-registered to return an AudioBuffer.
+- The agent loop is `core/agent.js` in jambot — the same loop the CLI runs. The browser passes an `llm` function that POSTs to `/api/jam/llm`, which adds the API key and forwards one Messages call. `JAM_PASSWORD` (env, header `x-jam-key`) gates that route; the page asks for it once and keeps it in localStorage. `JAM_MODEL` overrides the model (default `claude-opus-5`).
+- Playback: `audio.ts` loops the exact bar length and hot-swaps re-renders at the same phase, so slider changes don't restart the groove. Slider changes go through the `tweak` tool and are reported to the agent as a `[controls] …` note on the next message.
+- State (Anthropic messages + serialized session + feed) persists in localStorage under `jam:v1`.
+
+Verifying: drive it in Playwright at 390×844 against `pnpm dev` — send a prompt, confirm tool chips + auto-play, open Controls and move a slider (check `localStorage['jam:v1']` for the engine value), Save → MP3 (Playwright captures the download; `afinfo` it).
 
 ### Building an F2 feature — spec first, then verify behavior
 
