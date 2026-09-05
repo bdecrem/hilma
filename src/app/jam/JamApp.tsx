@@ -35,13 +35,43 @@ export default function JamApp() {
     }
   }, [])
 
+  // "/jam?remix=<slug>" — a visitor tapped Remix on a public track. Once
+  // they are signed in, copy it into their library and open it.
+  const [remixSlug, setRemixSlug] = useState<string | null>(null)
+  useEffect(() => {
+    try {
+      const slug = new URLSearchParams(window.location.search).get('remix')
+      if (slug && /^[a-z0-9]{4,16}$/.test(slug)) setRemixSlug(slug)
+    } catch { /* noop */ }
+  }, [])
+
+  const doRemix = useCallback(async (slug: string) => {
+    setRemixSlug(null)
+    try { window.history.replaceState(null, '', window.location.pathname) } catch { /* noop */ }
+    setOpening(true)
+    try {
+      const { track } = await api.remix(slug)
+      await openTrack(track.id)
+    } catch (e) {
+      if (e instanceof NotSignedIn) { setUser(null); return }
+      setError((e as Error).message)
+    } finally {
+      setOpening(false)
+    }
+  }, [openTrack])
+
+  useEffect(() => {
+    if (user && remixSlug) void doRemix(remixSlug)
+  }, [user, remixSlug, doRemix])
+
   useEffect(() => {
     api.me()
       .then(({ user }) => {
         setUser(user)
         let last: string | null = null
         try { last = localStorage.getItem(LAST_TRACK) } catch { /* noop */ }
-        if (last) void openTrack(last, { silent: true })
+        const hasRemix = /[?&]remix=/.test(window.location.search)
+        if (last && !hasRemix) void openTrack(last, { silent: true })
       })
       .catch(() => setUser(null))
   }, [openTrack])
@@ -78,7 +108,7 @@ export default function JamApp() {
     )
   }
 
-  if (!user) return <AuthScreen onSignedIn={(u) => setUser(u)} />
+  if (!user) return <AuthScreen onSignedIn={(u) => setUser(u)} hint={remixSlug ? 'Sign in (or create an account) and the remix opens in your library.' : undefined} />
 
   if (track) {
     return (

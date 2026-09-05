@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react'
 import { api, type JamUser, type TrackMeta } from './api'
+import Catalog from './Catalog'
 
 type Props = {
   user: JamUser
@@ -93,6 +94,8 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
                 <div className="truncate text-[15px] font-semibold">{t.title}</div>
                 <div className="mt-0.5 font-mono text-[11px] text-white/45">
                   {t.bpm} BPM · {t.bars} {t.bars === 1 ? 'bar' : 'bars'} · {relTime(t.updated_at)}
+                  {t.published_at && <span className="ml-2 rounded-full bg-[#b6ff3d]/15 px-1.5 py-px text-[10px] text-[#b6ff3d]">public</span>}
+                  {t.remix_of && <span className="ml-2 text-[10px] text-white/40">remix</span>}
                 </div>
               </button>
               {confirmDelete === t.id ? (
@@ -113,6 +116,8 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
             </li>
           ))}
         </ul>
+
+        <Catalog title="Catalog — published by everyone" emptyText="Nothing published yet. Open a track and tap Publish." />
       </main>
     </div>
   )

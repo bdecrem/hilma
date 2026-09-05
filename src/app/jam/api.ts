@@ -13,6 +13,30 @@ export type TrackMeta = {
   bars: number
   created_at: string
   updated_at: string
+  /** Set when the track is public (catalog + /t/<slug>). */
+  published_at?: string | null
+  /** Public link id; minted on first publish and kept afterwards. */
+  slug?: string | null
+  remix_of?: string | null
+}
+
+/** A published track as anyone sees it (no owner ids). */
+export type PublicTrackMeta = {
+  slug: string
+  title: string
+  bpm: number
+  bars: number
+  published_at: string
+  remix: boolean
+  username: string
+}
+
+export type PublicTrack = PublicTrackMeta & { session: unknown }
+
+export function publicTrackUrl(slug: string) {
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  // On the jambot.to domain /t/<slug> rewrites to /jam/t/<slug>; elsewhere use the full path.
+  return /jambot\.to$/.test(typeof window !== 'undefined' ? window.location.hostname : '') ? `${origin}/t/${slug}` : `${origin}/jam/t/${slug}`
 }
 
 export type FeedItem =
@@ -59,4 +83,11 @@ export const api = {
     call<{ track: TrackMeta }>(`/api/jam/tracks/${id}`, { method: 'PUT', body: JSON.stringify(patch) }),
   deleteTrack: (id: string) => call<{ ok: true }>(`/api/jam/tracks/${id}`, { method: 'DELETE' }),
   duplicateTrack: (id: string) => call<{ track: TrackMeta }>(`/api/jam/tracks/${id}/duplicate`, { method: 'POST' }),
+  publish: (id: string) => call<{ track: TrackMeta }>(`/api/jam/tracks/${id}/publish`, { method: 'POST' }),
+  unpublish: (id: string) => call<{ track: TrackMeta }>(`/api/jam/tracks/${id}/publish`, { method: 'DELETE' }),
+
+  // Public (no sign-in)
+  catalog: () => call<{ tracks: PublicTrackMeta[] }>('/api/jam/public'),
+  publicTrack: (slug: string) => call<{ track: PublicTrack }>(`/api/jam/public/${slug}`),
+  remix: (slug: string) => call<{ track: TrackMeta }>(`/api/jam/public/${slug}/remix`, { method: 'POST' }),
 }

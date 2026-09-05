@@ -12,7 +12,7 @@ import {
   type JambotModule, type JamSession, type AgentMessage, type ToolDef,
   type RenderResult, type LlmRequest, type LlmResponse, type SessionDescription,
 } from './jambot'
-import { api, NotSignedIn, type Track, type FeedItem } from './api'
+import { api, NotSignedIn, publicTrackUrl, type Track, type FeedItem } from './api'
 import { LoopPlayer, loopSecondsFor } from './audio'
 import { encodeMp3, wavBlob, deliver, trackFilename, type ExportFormat } from './export'
 import { buildControlGroups, type ControlGroup } from './controls'
@@ -53,6 +53,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const [title, setTitle] = useState(track.title)
   const [editingTitle, setEditingTitle] = useState(false)
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle')
+  const [pub, setPub] = useState<{ published: boolean; slug: string | null }>({ published: !!track.published_at, slug: track.slug ?? null })
+  const [pubBusy, setPubBusy] = useState(false)
 
   const jamRef = useRef<JambotModule | null>(null)
   const toolsRef = useRef<ToolDef[]>([])
@@ -116,6 +118,38 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
     saveTimerRef.current = window.setTimeout(() => { saveTimerRef.current = null; void saveNow() }, 800)
   }, [saveNow])
+
+  // ---- publish / share -----------------------------------------------------
+
+  const publish = async () => {
+    if (pubBusy) return
+    setPubBusy(true)
+    try {
+      if (dirtyRef.current || saveTimerRef.current) await saveNow()
+      const { track: t } = pub.published ? await api.unpublish(track.id) : await api.publish(track.id)
+      setPub({ published: !!t.published_at, slug: t.slug ?? null })
+      if (t.published_at) addItem({ id: nid(), kind: 'note', text: `Published. Anyone can play and remix it at ${publicTrackUrl(t.slug || '')}` })
+      else addItem({ id: nid(), kind: 'note', text: 'Unpublished. The link is off; publishing again restores it.' })
+    } catch (e) {
+      if (e instanceof NotSignedIn) { onAuthLost(); return }
+      addItem({ id: nid(), kind: 'note', text: (e as Error).message, error: true })
+    } finally {
+      setPubBusy(false)
+    }
+  }
+
+  const share = async () => {
+    if (!pub.slug) return
+    const url = publicTrackUrl(pub.slug)
+    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
+    try {
+      if (nav.share) { await nav.share({ title: titleRef.current, url }); return }
+      await navigator.clipboard.writeText(url)
+      addItem({ id: nid(), kind: 'note', text: `Link copied: ${url}` })
+    } catch {
+      addItem({ id: nid(), kind: 'note', text: url })
+    }
+  }
 
   const refreshDesc = useCallback(() => {
     const jam = jamRef.current
@@ -452,6 +486,21 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
             {saveState === 'saving' && <span className="ml-2 text-white/35">saving…</span>}
             {saveState === 'failed' && <span className="ml-2 text-[#ff5c7a]">not saved</span>}
           </div>
+        </div>
+        <div className="flex shrink-0 gap-1.5">
+          {pub.published && (
+            <button onClick={share} className="rounded-full bg-[#5ee0ff] px-3 py-1 text-xs font-semibold text-black active:scale-95" aria-label="Share link">
+              Share
+            </button>
+          )}
+          <button
+            onClick={publish}
+            disabled={pubBusy || !ready || (!pub.published && !hasBuffer)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold active:scale-95 disabled:opacity-40 ${pub.published ? 'bg-white/10 text-white/80' : 'bg-[#b6ff3d] text-black'}`}
+            title={pub.published ? 'Take it off the catalog' : 'Put it on the catalog so anyone can play and remix it'}
+          >
+            {pubBusy ? '…' : pub.published ? 'Unpublish' : 'Publish'}
+          </button>
         </div>
       </header>
 

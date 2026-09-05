@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { api, type JamUser } from './api'
+import Catalog from './Catalog'
 
-export default function AuthScreen({ onSignedIn }: { onSignedIn: (u: JamUser) => void }) {
+export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUser) => void; hint?: string }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -29,11 +30,12 @@ export default function AuthScreen({ onSignedIn }: { onSignedIn: (u: JamUser) =>
 
   return (
     <div
-      className="flex h-[100dvh] flex-col bg-[#0d0e12] px-6 text-[#f2f2f5]"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 64px)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="flex min-h-[100dvh] flex-col overflow-y-auto bg-[#0d0e12] px-6 pb-10 text-[#f2f2f5]"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 48px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 40px)' }}
     >
       <h1 className="text-5xl font-extrabold tracking-[-0.06em]">JAM</h1>
       <p className="mt-2 text-white/55">Talk to a groovebox. Keep every track.</p>
+      {hint && <p className="mt-3 rounded-xl bg-[#b6ff3d]/10 px-3 py-2 text-sm text-[#b6ff3d]">{hint}</p>}
 
       <form onSubmit={submit} className="mt-10 flex flex-col gap-3">
         <input
@@ -69,6 +71,8 @@ export default function AuthScreen({ onSignedIn }: { onSignedIn: (u: JamUser) =>
       >
         {mode === 'login' ? 'New here? Create an account' : 'Have an account? Sign in'}
       </button>
+
+      <Catalog title="Listen — published tracks" emptyText="Nothing published yet." />
     </div>
   )
 }

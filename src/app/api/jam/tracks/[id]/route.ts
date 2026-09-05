@@ -9,7 +9,7 @@ import { jamDb } from '@/lib/jam/db'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const FULL = 'id, title, bpm, bars, session, messages, feed, created_at, updated_at'
+const FULL = 'id, title, bpm, bars, session, messages, feed, created_at, updated_at, published_at, slug, remix_of'
 const UUID_RE = /^[0-9a-f-]{36}$/i
 
 type Ctx = { params: Promise<{ id: string }> }

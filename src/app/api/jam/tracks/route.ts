@@ -8,7 +8,7 @@ import { jamDb } from '@/lib/jam/db'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const TRACK_META = 'id, title, bpm, bars, created_at, updated_at'
+const TRACK_META = 'id, title, bpm, bars, created_at, updated_at, published_at, slug, remix_of'
 
 export async function GET() {
   const user = await getJamUser()
