@@ -94,8 +94,13 @@ export function buildControlGroups(desc: SessionDescription): ControlGroup[] {
       }
     } else {
       // Mono synth: ranked key params (paths may be 'filterCutoff' or 'bass.cutoff')
+      // JT10's sub oscillator is off while subMode is 0, so its level
+      // slider would be a no-op — leave it out until the agent turns it on.
+      const subMode = byPath.get('lead.subMode')?.value
+      const subOff = inst.id === 'jt10' && (subMode === 0 || subMode === '0' || subMode === undefined)
       const ranked = inst.params
         .filter((p) => !p.sub.endsWith('.level') && p.sub !== 'level')
+        .filter((p) => !(subOff && p.sub.endsWith('subLevel')))
         .map((p) => ({ p, rank: rankKey(p.sub.split('.').pop() || p.sub) }))
         .filter((x) => x.rank < 999)
         .sort((a, b) => a.rank - b.rank)

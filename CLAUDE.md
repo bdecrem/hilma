@@ -94,6 +94,10 @@ How it's wired:
 - Client: `JamApp.tsx` (shell: auth → library → studio, remembers the last open track in localStorage), `AuthScreen.tsx`, `Library.tsx`, `Studio.tsx` (the chat/transport/controls). A track stores the serialized session, the Anthropic message history and the visible feed; Studio autosaves 800 ms after any change and flushes on back / page hide, so reopening a track resumes the conversation and the sound exactly.
 - Playback: `audio.ts` loops the exact bar length and hot-swaps re-renders at the same phase, so slider changes don't restart the groove. Slider changes go through the `tweak` tool and are reported to the agent as a `[controls] …` note on the next message.
 
+Song mode caveat: with an arrangement set, renders use the params captured inside each saved pattern, so a live `tweak` changes nothing audible. The sliders write through (load_pattern → tweak → save_pattern per saved pattern) and the `tweak` tool result says so for the agent. `node scripts/jam/controls-sweep.mjs` (run from `../vibeceo/jambot`) moves every slider the Controls sheet exposes from min to max in loop and song mode and fails any control that doesn't change the audio — run it after touching instruments, params, song-tools, or controls.ts.
+
+Domain: jambot.to (Namecheap DNS → Vercel A 216.150.1.1 / www CNAME, host rewrites in next.config.ts).
+
 Verifying: drive it in Playwright at 390×844 against `pnpm dev` — sign in, New track, send a prompt, confirm tool chips + auto-play, open Controls and move a slider, Export → MP3 (Playwright captures the download; `afinfo` it), back to the library, reopen the track and confirm it resumes. Replay a saved track's tool calls headlessly in Node (`select messages from jam_tracks`) when a render goes wrong — that is how the JB202 waveform bug was found.
 
 ### Building an F2 feature — spec first, then verify behavior
