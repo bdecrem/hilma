@@ -321,7 +321,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   // ---- controls ------------------------------------------------------------
 
-  const onParam = useCallback(async (path: string, value: number, label: string) => {
+  const onParam = useCallback(async (path: string, value: number | string, label: string) => {
     const jam = jamRef.current
     const session = sessionRef.current
     if (!jam || !session) return
@@ -347,12 +347,13 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         if (current) await jam.executeTool('load_pattern', { instrument: inst, name: current }, session, {})
       }
       controlNotesRef.current.set(path, `${label} → ${path} = ${value}`)
+      refreshDesc()   // panels/knobs read their values from the description
       scheduleRender()
       scheduleSave()
     } catch (e) {
       note((e as Error).message, true)
     }
-  }, [note, scheduleRender, scheduleSave])
+  }, [note, refreshDesc, scheduleRender, scheduleSave])
 
   const onTrack = useCallback(async (k: 'bpm' | 'swing' | 'bars', value: number) => {
     const jam = jamRef.current
@@ -597,6 +598,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         swing={swing}
         bars={bars}
         groups={groups}
+        desc={desc}
         rendering={rendering}
         onTrack={onTrack}
         onParam={onParam}

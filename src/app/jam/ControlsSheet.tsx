@@ -5,6 +5,8 @@
 
 import { useEffect, useState } from 'react'
 import { type Control, type ControlGroup, formatControl, fromSlider, toSlider } from './controls'
+import type { SessionDescription } from './jambot'
+import AltPanels from './alt/panels'
 
 type Props = {
   open: boolean
@@ -13,14 +15,25 @@ type Props = {
   swing: number
   bars: number
   groups: ControlGroup[]
+  desc: SessionDescription | null
   rendering: boolean
   onTrack: (key: 'bpm' | 'swing' | 'bars', value: number) => void
-  onParam: (path: string, value: number, label: string) => void
+  onParam: (path: string, value: number | string, label: string) => void
 }
 
 const BAR_CHOICES = [1, 2, 4, 8]
+type Mode = 'sliders' | 'panels'
+const MODE_KEY = 'jam:controlsMode'
 
-export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, rendering, onTrack, onParam }: Props) {
+export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, onTrack, onParam }: Props) {
+  // Two control UIs side by side for comparison: the slider list, and the
+  // synths' own panels (knobs, wave buttons) skinned like their web UIs.
+  const [mode, setMode] = useState<Mode>('sliders')
+  useEffect(() => {
+    try { const m = localStorage.getItem(MODE_KEY); if (m === 'panels' || m === 'sliders') setMode(m) } catch { /* noop */ }
+  }, [])
+  const pickMode = (m: Mode) => { setMode(m); try { localStorage.setItem(MODE_KEY, m) } catch { /* noop */ } }
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -38,8 +51,12 @@ export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups,
         className="flex items-center justify-between border-b border-white/10 px-4 pb-3"
         style={{ paddingTop: 'calc(env(safe-area-inset-top) + 12px)' }}
       >
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-3">
           <h2 className="text-lg font-bold tracking-tight">Controls</h2>
+          <div className="flex rounded-full bg-white/5 p-0.5 text-xs">
+            <button onClick={() => pickMode('sliders')} className={`rounded-full px-2.5 py-1 ${mode === 'sliders' ? 'bg-white/15 text-white' : 'text-white/50'}`}>Sliders</button>
+            <button onClick={() => pickMode('panels')} className={`rounded-full px-2.5 py-1 ${mode === 'panels' ? 'bg-white/15 text-white' : 'text-white/50'}`}>Synth panels</button>
+          </div>
           <span className={`text-xs ${rendering ? 'text-[#ffb02e]' : 'text-white/40'}`}>{rendering ? 'rendering…' : 'live'}</span>
         </div>
         <button
@@ -80,13 +97,15 @@ export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups,
           </div>
         </Section>
 
-        {groups.length === 0 && (
+        {mode === 'panels' && <AltPanels desc={desc} onParam={onParam} />}
+
+        {mode === 'sliders' && groups.length === 0 && (
           <p className="mt-8 text-center text-sm text-white/40">
             Nothing to tweak yet. Ask for a beat first.
           </p>
         )}
 
-        {groups.map((g) => (
+        {mode === 'sliders' && groups.map((g) => (
           <Section key={g.id} title={g.title} subtitle={g.subtitle}>
             {g.controls.map((c) => (
               <ParamRow key={c.path} control={c} onCommit={(v) => onParam(c.path, v, `${g.title} ${c.label}`)} />

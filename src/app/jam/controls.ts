@@ -58,12 +58,12 @@ function rankKey(name: string) {
   return i === -1 ? 999 : i
 }
 
-function toControl(path: string, label: string, value: number, d: ParamDescriptor): Control | null {
+export function toControl(path: string, label: string, value: number, d: ParamDescriptor): Control | null {
   if (typeof value !== 'number' || !isFinite(value)) return null
   if (d.unit === 'choice' || !isFinite(d.min) || !isFinite(d.max) || d.max <= d.min) return null
   const unit = d.unit || ''
   const log = unit === 'Hz' && d.min > 0 && d.max / d.min >= 20
-  const step = unit === 'dB' ? 0.5 : unit === 'Hz' ? 1 : unit === 'semitones' ? 1 : unit === 'ms' ? 1 : 1
+  const step = unit === 'dB' ? 0.5 : unit === 's' || unit === 'seconds' ? 0.1 : unit === '0-1' ? 0.01 : 1
   return { path, label, min: d.min, max: d.max, step, unit, scale: log ? 'log' : 'lin', value }
 }
 
@@ -163,6 +163,9 @@ export function formatControl(c: Control, value: number) {
     case 'Hz': return value >= 1000 ? `${(value / 1000).toFixed(2).replace(/\.?0+$/, '')} kHz` : `${Math.round(value)} Hz`
     case 'semitones': return `${value > 0 ? '+' : ''}${Math.round(value)} st`
     case 'ms': return `${Math.round(value)} ms`
+    case 's':
+    case 'seconds': return `${value.toFixed(1)} s`
+    case '0-1': return value.toFixed(2)
     case 'cents': return `${value > 0 ? '+' : ''}${Math.round(value)} c`
     default: return `${Math.round(value)}`
   }

@@ -13,6 +13,8 @@ export type ParamDescriptor = {
   max: number
   unit: string
   default?: number | string
+  /** Choice params: valid values (synth params use `options`, older effect nodes `choices`). */
+  options?: (string | number)[]
   choices?: string[]
 }
 
