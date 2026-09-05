@@ -31,6 +31,7 @@ const WEB_TOOL_MODULES = [
   () => import('../../../vibeceo/jambot/tools/jt-tools.js'),
   () => import('../../../vibeceo/jambot/tools/automation-tools.js'),
   () => import('../../../vibeceo/jambot/tools/routing-tools.js'),
+  () => import('../../../vibeceo/jambot/tools/instrument-tools.js'),
 ];
 
 // Tools that exist in the modules above but make no sense in the browser.

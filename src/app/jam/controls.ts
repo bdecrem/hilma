@@ -97,7 +97,7 @@ export function buildControlGroups(desc: SessionDescription): ControlGroup[] {
       // JT10's sub oscillator is off while subMode is 0, so its level
       // slider would be a no-op — leave it out until the agent turns it on.
       const subMode = byPath.get('lead.subMode')?.value
-      const subOff = inst.id === 'jt10' && (subMode === 0 || subMode === '0' || subMode === undefined)
+      const subOff = (inst.type || inst.id) === 'jt10' && (subMode === 0 || subMode === '0' || subMode === undefined)
       const ranked = inst.params
         .filter((p) => !p.sub.endsWith('.level') && p.sub !== 'level')
         .filter((p) => !(subOff && p.sub.endsWith('subLevel')))
@@ -111,9 +111,12 @@ export function buildControlGroups(desc: SessionDescription): ControlGroup[] {
       }
     }
 
+    // Added instances (jb202-2, lead2) show the type name plus their id.
+    const type = inst.type || inst.id
+    const baseName = INSTRUMENT_NAMES[type] || type
     groups.push({
       id: inst.id,
-      title: INSTRUMENT_NAMES[inst.id] || inst.id,
+      title: inst.id === type ? baseName : `${baseName} · ${inst.id}`,
       subtitle: inst.voices.length ? inst.voices.join(' · ') : undefined,
       controls,
     })

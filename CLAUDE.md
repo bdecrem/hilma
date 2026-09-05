@@ -98,6 +98,8 @@ Song mode caveat: with an arrangement set, renders use the params captured insid
 
 Domain: jambot.to (Namecheap DNS → Vercel A 216.150.1.1 / www CNAME, host rewrites in next.config.ts).
 
+Multiple instances: the agent can `add_instrument({ type: 'jb202' })` for a second JB202 (id `jb202-2`); the Controls sheet groups them as "JB202 bass · jb202-2", sliders and song-mode write-through key on the id, tracks persist the instance list. Verified with the jamtest account (two JB202s + delay on the second).
+
 Verifying: drive it in Playwright at 390×844 against `pnpm dev` — sign in, New track, send a prompt, confirm tool chips + auto-play, open Controls and move a slider, Export → MP3 (Playwright captures the download; `afinfo` it), back to the library, reopen the track and confirm it resumes. Replay a saved track's tool calls headlessly in Node (`select messages from jam_tracks`) when a render goes wrong — that is how the JB202 waveform bug was found.
 
 ### Building an F2 feature — spec first, then verify behavior

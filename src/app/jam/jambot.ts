@@ -26,6 +26,8 @@ export type ParamEntry = {
 
 export type InstrumentDescription = {
   id: string
+  /** Instrument type (jb202, jt90, …); equals id for the built-in instance. */
+  type: string
   active: boolean
   voices: string[]
   pattern: unknown

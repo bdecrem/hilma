@@ -17,7 +17,7 @@ export default function JamApp() {
   const [opening, setOpening] = useState(false)
   const [error, setError] = useState('')
 
-  const openTrack = useCallback(async (id: string) => {
+  const openTrack = useCallback(async (id: string, opts: { silent?: boolean } = {}) => {
     setOpening(true)
     setError('')
     try {
@@ -27,7 +27,9 @@ export default function JamApp() {
     } catch (e) {
       if (e instanceof NotSignedIn) { setUser(null); return }
       try { localStorage.removeItem(LAST_TRACK) } catch { /* noop */ }
-      setError((e as Error).message)
+      // A remembered track that was deleted elsewhere just means "show the
+      // library" — no banner for that.
+      if (!opts.silent) setError((e as Error).message)
     } finally {
       setOpening(false)
     }
@@ -39,7 +41,7 @@ export default function JamApp() {
         setUser(user)
         let last: string | null = null
         try { last = localStorage.getItem(LAST_TRACK) } catch { /* noop */ }
-        if (last) void openTrack(last)
+        if (last) void openTrack(last, { silent: true })
       })
       .catch(() => setUser(null))
   }, [openTrack])
@@ -92,9 +94,13 @@ export default function JamApp() {
   return (
     <>
       {error && (
-        <div className="fixed left-0 right-0 top-0 z-50 bg-[#ff5c7a] px-4 py-2 text-center text-sm font-medium text-black" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}>
-          {error}
-        </div>
+        <button
+          onClick={() => setError('')}
+          className="fixed left-0 right-0 top-0 z-50 bg-[#ff5c7a] px-4 py-2 text-center text-sm font-medium text-black"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}
+        >
+          {error} · tap to dismiss
+        </button>
       )}
       <Library user={user} onOpen={openTrack} onNew={newTrack} onSignOut={signOut} />
     </>
