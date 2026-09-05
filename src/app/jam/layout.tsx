@@ -10,6 +10,9 @@ const instrument = Instrument_Sans({ subsets: ['latin'], weight: ['400', '500', 
 const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' })
 
 export const metadata: Metadata = {
+  // Absolute URLs in og:image etc. must point at jambot.to: the project
+  // serves several domains and Next otherwise picks one where /jam/* 404s.
+  metadataBase: new URL('https://jambot.to'),
   title: 'Jambot — a groovebox you talk to',
   description:
     'Describe a beat, hear it in seconds, turn the knobs, keep every track. Publish it and let anyone remix it.',
