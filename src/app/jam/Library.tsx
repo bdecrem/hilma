@@ -45,6 +45,17 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
     }
   }
 
+  const duplicate = async (id: string) => {
+    try {
+      const { track } = await api.duplicateTrack(id)
+      setTracks((t) => (t ? [track, ...t] : [track]))
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setConfirmDelete(null)
+    }
+  }
+
   return (
     <div
       className="flex h-[100dvh] flex-col bg-[#0d0e12] text-[#f2f2f5]"
@@ -86,6 +97,7 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
               </button>
               {confirmDelete === t.id ? (
                 <div className="flex items-center gap-1 pr-2">
+                  <button onClick={() => duplicate(t.id)} className="rounded-full bg-[#5ee0ff] px-3 py-1 text-xs font-semibold text-black">Duplicate</button>
                   <button onClick={() => remove(t.id)} className="rounded-full bg-[#ff5c7a] px-3 py-1 text-xs font-semibold text-black">Delete</button>
                   <button onClick={() => setConfirmDelete(null)} className="rounded-full bg-white/10 px-3 py-1 text-xs">Keep</button>
                 </div>
