@@ -1,0 +1,299 @@
+/* Jambot — desk-instrument design system.
+   Putty enamel panel, screen-printed condensed labels, rubber keys in ink,
+   909-orange LEDs, cobalt fader caps. Scoped under .jb (see layout.tsx). */
+
+.jb {
+  --panel: #dcdfd8;      /* enamel */
+  --panel-2: #e9ebe5;    /* raised card */
+  --panel-3: #cfd3cb;    /* recessed well / transport */
+  --panel-4: #f5f6f2;    /* paper (inputs) */
+  --ink: #14161a;
+  --ink-2: #3a3d44;
+  --ink-3: #6b6f78;
+  --rule: #b6bab1;
+  --orange: #ff4f1f;
+  --orange-soft: #ffb39c;
+  --cobalt: #2c5bff;
+  --green: #0f9f6e;
+  --led-off: #b7bbb2;
+  --font-panel-stack: var(--font-panel), 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body-stack: var(--font-body), 'Instrument Sans', system-ui, sans-serif;
+  --font-mono-stack: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--font-body-stack);
+  color: var(--ink);
+  background: var(--panel);
+  -webkit-font-smoothing: antialiased;
+}
+
+.jb *:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; }
+.jb button { font-family: inherit; }
+
+/* ---------- type ---------- */
+.jb-wordmark {
+  font-family: var(--font-panel-stack);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 0.9;
+  color: var(--ink);
+}
+.jb-wordmark--hero { font-size: 72px; }
+.jb-wordmark--bar { font-size: 22px; }
+/* the mark: a raised LED after the word, never a period */
+.jb-wordmark .dot {
+  display: inline-block;
+  width: 0.2em; height: 0.2em;
+  margin-left: 0.1em;
+  vertical-align: 0.62em;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0.12em var(--orange), 0 0 0.35em rgba(255, 79, 31, 0.55);
+}
+
+.jb-eyebrow {
+  font-family: var(--font-panel-stack);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.jb-title {
+  font-family: var(--font-panel-stack);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+.jb-title--xl { font-size: 40px; letter-spacing: 0.01em; }
+.jb-readout {
+  font-family: var(--font-mono-stack);
+  font-size: 12px;
+  color: var(--ink-2);
+  letter-spacing: 0.02em;
+}
+.jb-readout b { font-weight: 500; color: var(--ink); }
+.jb-readout .lit { color: var(--orange); }
+.jb-muted { color: var(--ink-3); }
+.jb-body { font-size: 15px; line-height: 1.5; }
+
+/* group box: screen-printed label with an etched rule */
+.jb-group { display: flex; align-items: center; gap: 10px; margin: 22px 0 8px; }
+.jb-group::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
+/* ---------- surfaces ---------- */
+.jb-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  background: var(--panel);
+}
+.jb-screen--fixed { height: 100dvh; min-height: 0; }
+.jb-card {
+  background: var(--panel-2);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 #fff;
+}
+.jb-well {
+  background: var(--panel-3);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- rubber keys ---------- */
+.jb-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--ink);
+  color: var(--panel-2);
+  font-family: var(--font-panel-stack);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: transform 0.05s, box-shadow 0.05s, opacity 0.15s;
+}
+.jb-key:active { transform: translateY(2px); box-shadow: 0 0 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.jb-key:disabled { opacity: 0.35; cursor: default; transform: none; }
+.jb-key--orange { background: var(--orange); color: var(--ink); box-shadow: 0 2px 0 #a8300f, inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.jb-key--orange:active { box-shadow: 0 0 0 #a8300f, inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.jb-key--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.jb-key--ghost:active { box-shadow: inset 0 0 0 1.5px var(--ink); }
+.jb-key--panel { background: var(--panel-4); color: var(--ink); box-shadow: 0 2px 0 var(--rule), inset 0 1px 0 #fff; }
+.jb-key--panel:active { box-shadow: 0 0 0 var(--rule), inset 0 1px 0 #fff; }
+.jb-key--sm { height: 34px; padding: 0 12px; font-size: 12px; border-radius: 9px; }
+.jb-key--xs { height: 28px; padding: 0 10px; font-size: 11px; border-radius: 8px; letter-spacing: 0.1em; }
+.jb-key--square { width: 56px; height: 56px; padding: 0; border-radius: 14px; }
+.jb-key--wide { width: 100%; }
+
+/* LED */
+.jb-led {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--led-off);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.25);
+  flex: none;
+}
+.jb-led.on { background: var(--orange); box-shadow: 0 0 6px var(--orange), 0 0 14px rgba(255, 79, 31, 0.5); }
+.jb-led.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+/* ---------- step strip (signature) ---------- */
+.jb-strip { display: grid; grid-template-rows: repeat(3, auto); gap: 3px; width: 100%; }
+.jb-strip-row { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; }
+.jb-strip-cell {
+  height: 6px; border-radius: 2px;
+  background: var(--led-off);
+  opacity: 0.55;
+  transition: opacity 0.08s, background-color 0.08s, box-shadow 0.08s;
+}
+.jb-strip-cell.hit { opacity: 1; }
+.jb-strip-row.k .hit { background: var(--orange); }
+.jb-strip-row.s .hit { background: var(--cobalt); }
+.jb-strip-row.h .hit { background: var(--ink); }
+/* playhead: rests darken, hits get the ring — reads as one column, not stacked outlines */
+.jb-strip-cell.now { background: var(--ink-3); opacity: 0.9; }
+.jb-strip-cell.hit.now { box-shadow: 0 0 0 1.5px var(--ink); opacity: 1; }
+.jb-strip-row.k .hit.now { background: var(--orange); box-shadow: 0 0 0 1.5px var(--ink), 0 0 8px var(--orange); }
+.jb-strip-row.s .hit.now { background: var(--cobalt); }
+.jb-strip-row.h .hit.now { background: var(--ink); }
+.jb-strip.big .jb-strip-cell { height: 10px; border-radius: 3px; }
+.jb-strip.big { gap: 4px; }
+.jb-strip.big .jb-strip-row { gap: 4px; }
+.jb-strip-row:nth-child(4n+1) .jb-strip-cell:nth-child(4n+1) { opacity: 0.75; } /* beat markers */
+.jb-strip-cell.hit:nth-child(n) { opacity: 1; }
+
+/* idle chase on the hero: one LED walking the strip */
+@keyframes jb-chase { 0% { transform: translateX(0); } 100% { transform: translateX(calc(100% * 15)); } }
+.jb-chase { position: relative; }
+.jb-chase::after {
+  content: '';
+  position: absolute; left: 0; top: -2px; bottom: -2px;
+  width: calc((100% - 15 * 3px) / 16);
+  border-radius: 3px;
+  box-shadow: 0 0 0 1.5px var(--orange), 0 0 10px var(--orange);
+  animation: jb-chase 3.2s steps(15, end) infinite;
+}
+@media (prefers-reduced-motion: reduce) { .jb-chase::after { animation: none; display: none; } }
+
+/* ---------- inputs ---------- */
+.jb-field {
+  width: 100%;
+  min-width: 0;
+  background: var(--panel-4);
+  border: 1.5px solid var(--rule);
+  border-radius: 11px;
+  padding: 12px 14px;
+  font-family: var(--font-body-stack);
+  font-size: 16px;
+  color: var(--ink);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.jb-field::placeholder { color: var(--ink-3); }
+.jb-field:focus { border-color: var(--cobalt); outline: none; }
+
+/* fader (range) */
+.jb-fader { -webkit-appearance: none; appearance: none; width: 100%; height: 30px; background: transparent; margin: 0; }
+.jb-fader::-webkit-slider-runnable-track { height: 5px; border-radius: 3px; background: var(--ink-3); box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3); }
+.jb-fader::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 26px; height: 26px; margin-top: -10.5px; border-radius: 6px;
+  background: linear-gradient(180deg, #4e78ff, var(--cobalt));
+  border: 2px solid var(--panel-4);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+}
+.jb-fader::-moz-range-track { height: 5px; border-radius: 3px; background: var(--ink-3); }
+.jb-fader::-moz-range-thumb { width: 22px; height: 22px; border-radius: 6px; background: var(--cobalt); border: 2px solid var(--panel-4); }
+
+/* segmented */
+.jb-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--panel-3); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12); gap: 2px; }
+.jb-seg button {
+  border: 0; background: transparent; color: var(--ink-2);
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 6px 11px; border-radius: 999px; cursor: pointer;
+}
+.jb-seg button.on { background: var(--ink); color: var(--panel-2); }
+
+/* ---------- chat ---------- */
+.jb-bubble {
+  align-self: flex-end;
+  max-width: 82%;
+  background: var(--ink);
+  color: var(--panel-2);
+  border-radius: 16px 16px 4px 16px;
+  padding: 10px 14px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.jb-answer { max-width: 92%; font-size: 15.5px; line-height: 1.5; color: var(--ink); white-space: pre-wrap; }
+.jb-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  max-width: 100%;
+  padding: 3px 9px 3px 7px;
+  border-radius: 6px;
+  background: var(--panel-3);
+  color: var(--ink-2);
+  font-family: var(--font-mono-stack);
+  font-size: 11px;
+  border: 0;
+  cursor: pointer;
+}
+.jb-chip .jb-led { width: 6px; height: 6px; }
+.jb-chip.err { color: var(--orange); }
+.jb-chip-out {
+  margin-top: 4px; max-height: 190px; overflow: auto;
+  background: var(--panel-4); border: 1px solid var(--rule); border-radius: 8px; padding: 8px 10px;
+  font-family: var(--font-mono-stack); font-size: 11px; line-height: 1.45; color: var(--ink-2); white-space: pre-wrap;
+}
+.jb-note { font-family: var(--font-mono-stack); font-size: 11.5px; color: var(--ink-3); }
+.jb-note.err { color: var(--orange); }
+.jb-thinking { display: inline-flex; align-items: center; gap: 8px; }
+@keyframes jb-blink { 50% { opacity: 0.25; } }
+.jb-thinking .jb-led { animation: jb-blink 0.9s infinite; }
+@media (prefers-reduced-motion: reduce) { .jb-thinking .jb-led { animation: none; } }
+
+/* ---------- transport ---------- */
+.jb-transport {
+  background: var(--panel-3);
+  border-top: 1px solid var(--rule);
+  box-shadow: inset 0 1px 0 #fff;
+  padding: 10px 14px 8px;
+}
+.jb-composer { padding: 8px 14px calc(env(safe-area-inset-bottom) + 10px); display: flex; gap: 8px; align-items: flex-end; background: var(--panel-3); }
+.jb-composer textarea { resize: none; max-height: 128px; min-height: 48px; line-height: 1.35; padding-top: 12px; }
+
+/* ---------- sheet ---------- */
+.jb-sheet {
+  position: fixed; inset: 0; z-index: 40;
+  display: flex; flex-direction: column;
+  background: var(--panel);
+  transition: transform 0.3s ease-out;
+}
+.jb-sheet-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--panel-2);
+}
+.jb-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.jb-slider-row { padding: 8px 0 2px; border-bottom: 1px solid var(--rule); }
+.jb-slider-row:last-child { border-bottom: 0; }
+.jb-slider-row .lbl { font-size: 14px; color: var(--ink-2); }
+
+/* list rows */
+.jb-track { display: flex; align-items: stretch; overflow: hidden; }
+.jb-track-main { flex: 1; min-width: 0; padding: 12px 14px; text-align: left; background: none; border: 0; cursor: pointer; color: inherit; }
+.jb-track-main:active { background: rgba(0, 0, 0, 0.04); }
+.jb-track-name { font-family: var(--font-panel-stack); font-weight: 600; font-size: 19px; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jb-tag { display: inline-block; font-family: var(--font-panel-stack); font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; }
+.jb-tag--green { background: var(--green); color: #fff; }
+.jb-tag--ink { background: var(--ink); color: var(--panel-2); }
+.jb-tag--outline { box-shadow: inset 0 0 0 1px var(--ink-3); color: var(--ink-3); }

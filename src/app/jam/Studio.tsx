@@ -1,6 +1,6 @@
 'use client'
 
-// Studio — one track: chat with Jambot, hear it, tweak it, save it.
+// Studio — one track: chat with Jambot, hear it, tweak it, keep it.
 //
 // Everything runs in the browser: the Jambot session, the tools, the agent
 // loop, and rendering (OfflineAudioContext). The server signs one Messages
@@ -12,14 +12,15 @@ import {
   type JambotModule, type JamSession, type AgentMessage, type ToolDef,
   type RenderResult, type LlmRequest, type LlmResponse, type SessionDescription,
 } from './jambot'
-import { api, NotSignedIn, publicTrackUrl, type Track, type FeedItem } from './api'
+import { api, NotSignedIn, publicTrackUrl, type Track, type FeedItem, type Strip } from './api'
 import { LoopPlayer, loopSecondsFor } from './audio'
 import { encodeMp3, wavBlob, deliver, trackFilename, type ExportFormat } from './export'
 import { buildControlGroups, type ControlGroup } from './controls'
 import ControlsSheet from './ControlsSheet'
+import LedStrip from './LedStrip'
 
 const SUGGESTIONS = [
-  'techno beat at 128 with a 909 kick',
+  'techno at 128 with a 909 kick and offbeat hats',
   'dub techno: soft kick, chord stabs into a long delay',
   'add a deep sub bassline',
   'make the kick punchier and add swing',
@@ -27,6 +28,27 @@ const SUGGESTIONS = [
 
 let idCounter = 0
 const nid = () => `${Date.now().toString(36)}-${(idCounter++).toString(36)}`
+
+/** The transport strip, read live from the session description. */
+function stripFromDesc(desc: SessionDescription | null): Strip | null {
+  if (!desc) return null
+  for (const id of ['jt90', 'jb01']) {
+    const inst = desc.instruments.find((i) => i.id === id && i.active)
+    const p = inst?.pattern as Record<string, ({ velocity?: number } | null)[]> | undefined
+    if (!p) continue
+    const row = (voices: string[]) => Array.from({ length: 16 }, (_, i) => (voices.some((v) => (p[v]?.[i]?.velocity ?? 0) > 0) ? '1' : '0')).join('')
+    return { k: row(['kick']), s: row(['snare', 'clap', 'rimshot']), h: row(['ch', 'oh', 'ride', 'crash', 'cymbal']) }
+  }
+  // No drums: the first mono synth's gates on the middle row.
+  for (const id of ['jb202', 'jt30', 'jt10']) {
+    const inst = desc.instruments.find((i) => i.id === id && i.active)
+    const p = inst?.pattern as ({ gate?: boolean } | null)[] | undefined
+    if (!Array.isArray(p)) continue
+    const s = Array.from({ length: 16 }, (_, i) => (p[i]?.gate ? '1' : '0')).join('')
+    if (s.includes('1')) return { k: '0'.repeat(16), s, h: '0'.repeat(16) }
+  }
+  return null
+}
 
 type Props = {
   track: Track
@@ -43,8 +65,6 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const [playing, setPlaying] = useState(false)
   const [pos, setPos] = useState(0)
   const [hasBuffer, setHasBuffer] = useState(false)
-  // Bars of what is looping right now: the arrangement's total in song mode
-  // (64 for a 64-bar song), the loop length otherwise.
   const [loopBars, setLoopBars] = useState<number | null>(null)
   const [rendering, setRendering] = useState(false)
   const [desc, setDesc] = useState<SessionDescription | null>(null)
@@ -82,12 +102,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     feedRef.current = updater(feedRef.current)
     setFeed(feedRef.current)
   }, [])
-
   const addItem = useCallback((item: FeedItem) => setFeedBoth((f) => [...f, item]), [setFeedBoth])
-
-  const note = useCallback((text: string, error = false) => {
-    addItem({ id: nid(), kind: 'note', text, error })
-  }, [addItem])
+  const note = useCallback((text: string, error = false) => addItem({ id: nid(), kind: 'note', text, error }), [addItem])
 
   // ---- persistence ---------------------------------------------------------
 
@@ -102,8 +118,6 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       await api.saveTrack(track.id, {
         title: titleRef.current,
         bpm: session.bpm,
-        // What the library/catalog should say: the arrangement's total when
-        // there is one, otherwise the loop length.
         bars: lastRenderRef.current?.bars ?? session.bars ?? 2,
         session: jam.serializeSession(session),
         messages: messagesRef.current,
@@ -123,38 +137,6 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current)
     saveTimerRef.current = window.setTimeout(() => { saveTimerRef.current = null; void saveNow() }, 800)
   }, [saveNow])
-
-  // ---- publish / share -----------------------------------------------------
-
-  const publish = async () => {
-    if (pubBusy) return
-    setPubBusy(true)
-    try {
-      if (dirtyRef.current || saveTimerRef.current) await saveNow()
-      const { track: t } = pub.published ? await api.unpublish(track.id) : await api.publish(track.id)
-      setPub({ published: !!t.published_at, slug: t.slug ?? null })
-      if (t.published_at) addItem({ id: nid(), kind: 'note', text: `Published. Anyone can play and remix it at ${publicTrackUrl(t.slug || '')}` })
-      else addItem({ id: nid(), kind: 'note', text: 'Unpublished. The link is off; publishing again restores it.' })
-    } catch (e) {
-      if (e instanceof NotSignedIn) { onAuthLost(); return }
-      addItem({ id: nid(), kind: 'note', text: (e as Error).message, error: true })
-    } finally {
-      setPubBusy(false)
-    }
-  }
-
-  const share = async () => {
-    if (!pub.slug) return
-    const url = publicTrackUrl(pub.slug)
-    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
-    try {
-      if (nav.share) { await nav.share({ title: titleRef.current, url }); return }
-      await navigator.clipboard.writeText(url)
-      addItem({ id: nid(), kind: 'note', text: `Link copied: ${url}` })
-    } catch {
-      addItem({ id: nid(), kind: 'note', text: url })
-    }
-  }
 
   const refreshDesc = useCallback(() => {
     const jam = jamRef.current
@@ -181,8 +163,6 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   const applyRender = useCallback((r: RenderResult, autoplay: boolean) => {
     lastRenderRef.current = r
-    // Keep the session's bar count in step with what was actually rendered
-    // (the agent may ask for 4 bars while the session still says 2).
     if (sessionRef.current && !r.hasArrangement && sessionRef.current.bars !== r.bars) {
       sessionRef.current.bars = r.bars
       refreshDesc()
@@ -213,10 +193,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   const scheduleRender = useCallback(() => {
     if (renderTimerRef.current) window.clearTimeout(renderTimerRef.current)
-    renderTimerRef.current = window.setTimeout(() => {
-      renderTimerRef.current = null
-      void renderNow(false)
-    }, 220)
+    renderTimerRef.current = window.setTimeout(() => { renderTimerRef.current = null; void renderNow(false) }, 220)
   }, [renderNow])
 
   useEffect(() => {
@@ -239,12 +216,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         jamRef.current = jam
         toolsRef.current = tools
         if (track.session) {
-          try {
-            sessionRef.current = jam.deserializeSession(track.session)
-          } catch (e) {
-            console.warn('[jam] could not restore session, starting fresh', e)
-            sessionRef.current = jam.createSession({ bpm: track.bpm || 128 })
-          }
+          try { sessionRef.current = jam.deserializeSession(track.session) }
+          catch (e) { console.warn('[jam] could not restore session, starting fresh', e); sessionRef.current = jam.createSession({ bpm: track.bpm || 128 }) }
         } else {
           sessionRef.current = jam.createSession({ bpm: track.bpm || 128 })
         }
@@ -258,18 +231,12 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         setStatus('error')
       }
     })()
-    return () => {
-      cancelled = true
-      playerRef.current?.stop()
-    }
+    return () => { cancelled = true; playerRef.current?.stop() }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track.id])
 
-  useEffect(() => {
-    feedEndRef.current?.scrollIntoView({ block: 'end' })
-  }, [feed, busy])
+  useEffect(() => { feedEndRef.current?.scrollIntoView({ block: 'end' }) }, [feed, busy])
 
-  // Flush unsaved work when leaving the page.
   useEffect(() => {
     const flush = () => { if (dirtyRef.current) void saveNow() }
     window.addEventListener('pagehide', flush)
@@ -310,7 +277,6 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
     addItem({ id: nid(), kind: 'user', text })
     if (titleRef.current === 'Untitled') {
-      // First sentence, cut at a word boundary, no trailing punctuation.
       let t = text.replace(/\s+/g, ' ').split(/[.!?:;]\s/)[0].trim()
       if (t.length > 40) t = t.slice(0, 40).replace(/\s+\S*$/, '')
       t = t.replace(/[\s,.:;!?-]+$/, '') || 'Untitled'
@@ -324,10 +290,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
     try {
       await jam.runAgent({
-        task,
-        session,
-        messages: messagesRef.current,
-        llm,
+        task, session, messages: messagesRef.current, llm,
         executeTool: jam.executeTool,
         tools: toolsRef.current,
         systemPrompt: jam.JAMBOT_PROMPT + jam.WEB_PROMPT_ADDENDUM,
@@ -335,11 +298,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         buildGenreContext: (t) => jam.buildGenreContext(jam.detectGenres(t)),
         callbacks: {
           onResponse: (t) => addItem({ id: nid(), kind: 'assistant', text: t }),
-          onTool: (name, inp) => {
-            const id = nid()
-            pendingToolIdsRef.current.push(id)
-            addItem({ id, kind: 'tool', name, input: inp })
-          },
+          onTool: (name, inp) => { const id = nid(); pendingToolIdsRef.current.push(id); addItem({ id, kind: 'tool', name, input: inp }) },
           onToolResult: (result, name, isError) => {
             const id = pendingToolIdsRef.current.shift()
             setFeedBoth((f) => f.map((it) => (it.id === id && it.kind === 'tool' ? { ...it, result, isError } : it)))
@@ -368,10 +327,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     try {
       const r = await jam.executeTool('tweak', { path, value }, session, {})
       if (/^Error/.test(r)) { note(r, true); return }
-      // Song mode: the arrangement renders each section from the params
-      // captured inside the saved patterns, so a live tweak alone changes
-      // nothing you can hear. Write the value into every saved pattern of
-      // that instrument (load → tweak → save), then restore the current one.
+      // Song mode: arrangement renders use the params captured inside each
+      // saved pattern, so write the value into every saved pattern too.
       const [inst, ...rest] = path.split('.')
       const saved = session.patterns?.[inst] as Record<string, unknown> | undefined
       const inSong = Array.isArray(session.arrangement) && session.arrangement.length > 0
@@ -387,7 +344,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         if (current) await jam.executeTool('load_pattern', { instrument: inst, name: current }, session, {})
       }
       controlNotesRef.current.set(path, `${label} → ${path} = ${value}`)
-      refreshDesc()   // panels/knobs read their values from the description
+      refreshDesc()
       scheduleRender()
       scheduleSave()
     } catch (e) {
@@ -429,9 +386,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     setSaveOpen(false)
     setExporting({ format, progress: 0 })
     try {
-      const blob = format === 'mp3'
-        ? await encodeMp3(r.buffer, (p) => setExporting({ format, progress: p }))
-        : wavBlob(r.buffer, jam.audioBufferToWav)
+      const blob = format === 'mp3' ? await encodeMp3(r.buffer, (p) => setExporting({ format, progress: p })) : wavBlob(r.buffer, jam.audioBufferToWav)
       const how = await deliver(blob, trackFilename(r.bpm, format))
       note(how === 'shared' ? `${format.toUpperCase()} ready.` : `${format.toUpperCase()} downloaded.`)
     } catch (e) {
@@ -440,6 +395,38 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       setExporting(null)
     }
   }, [note])
+
+  // ---- publish / share -----------------------------------------------------
+
+  const publish = async () => {
+    if (pubBusy) return
+    setPubBusy(true)
+    try {
+      if (dirtyRef.current || saveTimerRef.current) await saveNow()
+      const { track: t } = pub.published ? await api.unpublish(track.id) : await api.publish(track.id)
+      setPub({ published: !!t.published_at, slug: t.slug ?? null })
+      if (t.published_at) note(`Published. Anyone can play and remix it at ${publicTrackUrl(t.slug || '')}`)
+      else note('Unpublished. The link is off; publishing again restores it.')
+    } catch (e) {
+      if (e instanceof NotSignedIn) { onAuthLost(); return }
+      note((e as Error).message, true)
+    } finally {
+      setPubBusy(false)
+    }
+  }
+
+  const share = async () => {
+    if (!pub.slug) return
+    const url = publicTrackUrl(pub.slug)
+    const nav = navigator as Navigator & { share?: (d: ShareData) => Promise<void> }
+    try {
+      if (nav.share) { await nav.share({ title: titleRef.current, url }); return }
+      await navigator.clipboard.writeText(url)
+      note(`Link copied: ${url}`)
+    } catch {
+      note(url)
+    }
+  }
 
   const toggleExpanded = (id: string) => {
     setExpanded((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n })
@@ -453,28 +440,16 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const inSong = !!desc && desc.arrangement.length > 0
   const shownBars = loopBars ?? bars
   const barNow = Math.min(shownBars, Math.floor(pos * shownBars) + 1)
+  const step = playing ? Math.floor(pos * shownBars * 16) % 16 : null
+  const strip = stripFromDesc(desc)
   const ready = status === 'ready'
   const canSend = ready && !busy && input.trim().length > 0
 
   return (
-    <div
-      className="flex h-[100dvh] flex-col bg-[#0d0e12] text-[#f2f2f5]"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
-    >
-      <style>{`
-        .jam-range { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; }
-        .jam-range::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.14); }
-        .jam-range::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -9px; border-radius: 50%; background: #ffb02e; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
-        .jam-range::-moz-range-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.14); }
-        .jam-range::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: #ffb02e; }
-        .jam-feed::-webkit-scrollbar { width: 0; }
-        textarea { field-sizing: content; }
-      `}</style>
-
+    <div className="jb-screen jb-screen--fixed">
+      {/* header: printed panel strip */}
       <header className="flex items-center gap-2 px-3 pb-2 pt-3">
-        <button onClick={back} className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80" aria-label="Back to tracks">
-          ‹ Tracks
-        </button>
+        <button onClick={back} className="jb-key jb-key--panel jb-key--xs shrink-0" aria-label="Back to tracks">‹ Tracks</button>
         <div className="min-w-0 flex-1">
           {editingTitle ? (
             <input
@@ -482,29 +457,27 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
               defaultValue={title}
               onBlur={(e) => commitTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') commitTitle((e.target as HTMLInputElement).value); if (e.key === 'Escape') setEditingTitle(false) }}
-              className="w-full rounded-lg bg-white/10 px-2 py-0.5 text-[15px] font-semibold outline-none ring-1 ring-[#ffb02e]/60"
+              className="jb-field"
+              style={{ padding: '4px 8px', fontFamily: 'var(--font-panel-stack)', textTransform: 'uppercase', fontWeight: 600, fontSize: 18 }}
             />
           ) : (
-            <button onClick={() => setEditingTitle(true)} className="block w-full truncate text-left text-[15px] font-semibold" title="Rename">
+            <button onClick={() => setEditingTitle(true)} className="jb-track-name block w-full text-left" style={{ background: 'none', border: 0, padding: 0 }} title="Rename">
               {title}
             </button>
           )}
-          <div className="font-mono text-[11px] text-white/50">
-            {Math.round(bpm)} BPM · {shownBars} {shownBars === 1 ? 'bar' : 'bars'}{inSong ? ' · song' : ''}{swing ? ` · swing ${swing}` : ''}
-            {saveState === 'saving' && <span className="ml-2 text-white/35">saving…</span>}
-            {saveState === 'failed' && <span className="ml-2 text-[#ff5c7a]">not saved</span>}
+          <div className="jb-readout">
+            <b>{Math.round(bpm)}</b> BPM · {shownBars} {shownBars === 1 ? 'bar' : 'bars'}{inSong ? ' · song' : ''}{swing ? ` · swing ${swing}` : ''}
+            {saveState === 'saving' && <span className="jb-muted"> · saving</span>}
+            {saveState === 'failed' && <span className="lit"> · not saved</span>}
           </div>
         </div>
         <div className="flex shrink-0 gap-1.5">
-          {pub.published && (
-            <button onClick={share} className="rounded-full bg-[#5ee0ff] px-3 py-1 text-xs font-semibold text-black active:scale-95" aria-label="Share link">
-              Share
-            </button>
-          )}
+          {pub.published && <button onClick={share} className="jb-key jb-key--panel jb-key--xs" aria-label="Share link">Share</button>}
           <button
             onClick={publish}
             disabled={pubBusy || !ready || (!pub.published && !hasBuffer)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold active:scale-95 disabled:opacity-40 ${pub.published ? 'bg-white/10 text-white/80' : 'bg-[#b6ff3d] text-black'}`}
+            className={`jb-key jb-key--xs ${pub.published ? 'jb-key--ghost' : ''}`}
+            style={pub.published ? undefined : { background: 'var(--green)', color: '#fff', boxShadow: '0 2px 0 #0a6a49' }}
             title={pub.published ? 'Take it off the catalog' : 'Put it on the catalog so anyone can play and remix it'}
           >
             {pubBusy ? '…' : pub.published ? 'Unpublish' : 'Publish'}
@@ -512,26 +485,21 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         </div>
       </header>
 
-      <main className="jam-feed flex-1 overflow-y-auto px-4 pb-4">
-        {status === 'loading' && <p className="mt-16 text-center text-sm text-white/50">Loading the groovebox…</p>}
+      <main className="flex-1 overflow-y-auto px-4 pb-4">
+        {status === 'loading' && <p className="jb-note mt-16 text-center">Loading the groovebox…</p>}
         {status === 'error' && (
-          <div className="mt-16 rounded-2xl border border-[#ff5c7a]/40 bg-[#ff5c7a]/10 p-4 text-sm">
+          <div className="jb-card mt-16 p-4 text-sm">
             <p className="font-semibold">Couldn&apos;t load Jambot.</p>
-            <p className="mt-1 text-white/70">{loadError}</p>
+            <p className="jb-muted mt-1">{loadError}</p>
           </div>
         )}
 
         {ready && feed.length === 0 && (
           <div className="mt-10">
-            <p className="text-center text-lg font-semibold">What should we make?</p>
-            <p className="mt-1 text-center text-sm text-white/50">Say it like you&apos;d say it to a producer.</p>
-            <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <p className="jb-eyebrow text-center">Say it like you&apos;d say it to a producer</p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
               {SUGGESTIONS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => { setInput(s); inputRef.current?.focus() }}
-                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-white/80 active:bg-white/15"
-                >
+                <button key={s} onClick={() => { setInput(s); inputRef.current?.focus() }} className="jb-key jb-key--panel jb-key--sm" style={{ textTransform: 'none', letterSpacing: 0, fontFamily: 'var(--font-body-stack)', fontWeight: 500 }}>
                   {s}
                 </button>
               ))}
@@ -539,113 +507,78 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
           </div>
         )}
 
-        <div className="mt-2 flex flex-col gap-2">
+        <div className="mt-2 flex flex-col gap-2.5">
           {feed.map((it) => {
-            if (it.kind === 'user') {
-              return (
-                <div key={it.id} className="ml-10 self-end rounded-2xl rounded-br-md bg-[#ffb02e] px-3.5 py-2 text-[15px] leading-snug text-black">
-                  {it.text}
-                </div>
-              )
-            }
-            if (it.kind === 'assistant') {
-              return <div key={it.id} className="mr-6 whitespace-pre-wrap text-[15px] leading-relaxed text-white/90">{it.text}</div>
-            }
-            if (it.kind === 'note') {
-              return <div key={it.id} className={`text-xs ${it.error ? 'text-[#ff5c7a]' : 'text-white/45'}`}>{it.text}</div>
-            }
+            if (it.kind === 'user') return <div key={it.id} className="jb-bubble">{it.text}</div>
+            if (it.kind === 'assistant') return <div key={it.id} className="jb-answer">{it.text}</div>
+            if (it.kind === 'note') return <div key={it.id} className={`jb-note${it.error ? ' err' : ''}`}>{it.text}</div>
             const open = expanded.has(it.id)
             const pending = it.result === undefined
             return (
               <div key={it.id} className="mr-6">
-                <button
-                  onClick={() => toggleExpanded(it.id)}
-                  className={`inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-0.5 font-mono text-[11px] ${
-                    it.isError ? 'border-[#ff5c7a]/50 text-[#ff5c7a]' : pending ? 'border-white/15 text-white/50' : 'border-[#5ee0ff]/30 text-[#5ee0ff]'
-                  }`}
-                >
+                <button onClick={() => toggleExpanded(it.id)} className={`jb-chip${it.isError ? ' err' : ''}`}>
+                  <span className={`jb-led ${pending ? '' : it.isError ? 'on' : 'green'}`} />
                   <span className="truncate">{it.name}</span>
-                  <span>{pending ? '…' : it.isError ? '✕' : '✓'}</span>
                 </button>
-                {open && (
-                  <pre className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-black/40 p-2 font-mono text-[11px] leading-snug text-white/70">
-                    {JSON.stringify(it.input)}
-                    {it.result ? `\n→ ${it.result}` : ''}
-                  </pre>
-                )}
+                {open && <pre className="jb-chip-out">{JSON.stringify(it.input)}{it.result ? `\n→ ${it.result}` : ''}</pre>}
               </div>
             )
           })}
-          {busy && <div className="text-xs text-[#ffb02e]">thinking…</div>}
+          {busy && <div className="jb-thinking jb-note"><span className="jb-led on" />working</div>}
         </div>
         <div ref={feedEndRef} />
       </main>
 
       {/* transport */}
-      <div className="border-t border-white/10 px-4 pt-2">
-        <div className="flex items-center gap-3">
+      <div className="jb-transport">
+        <LedStrip strip={strip} step={step} />
+        <div className="mt-3 flex items-center gap-3">
           <button
             onClick={() => player().toggle()}
             disabled={!hasBuffer}
             aria-label={playing ? 'Stop' : 'Play'}
-            className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[#ffb02e] text-black disabled:opacity-30 active:scale-95"
+            className="jb-key jb-key--square"
           >
             {playing ? <StopIcon /> : <PlayIcon />}
           </button>
           <div className="min-w-0 flex-1">
-            <div className="h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-[#5ee0ff] transition-[width] duration-75" style={{ width: `${Math.round(pos * 100)}%` }} />
+            <div className="flex items-center gap-2">
+              <span className={`jb-led ${playing ? 'on' : rendering ? 'green' : ''}`} />
+              <span className="jb-readout">
+                {rendering ? 'rendering' : hasBuffer ? (playing ? <>bar <b>{barNow}</b>/{shownBars}</> : 'ready') : 'no sound yet'}
+              </span>
             </div>
-            <div className="mt-1 font-mono text-[11px] text-white/45">
-              {rendering ? 'rendering…' : hasBuffer ? (playing ? `bar ${barNow}/${shownBars}` : 'ready') : 'no render yet'}
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--rule)' }}>
+              <div className="h-full rounded-full" style={{ width: `${Math.round(pos * 100)}%`, background: 'var(--ink)' }} />
             </div>
           </div>
-          <button
-            onClick={() => setControlsOpen(true)}
-            disabled={!ready}
-            className="rounded-full bg-white/10 px-3.5 py-2 text-sm font-medium disabled:opacity-40 active:bg-white/20"
-          >
-            Controls
-          </button>
-          <button
-            onClick={() => setSaveOpen((s) => !s)}
-            disabled={!hasBuffer || !!exporting}
-            className="rounded-full bg-white/10 px-3.5 py-2 text-sm font-medium disabled:opacity-40 active:bg-white/20"
-          >
-            {exporting ? `${Math.round(exporting.progress * 100)}%` : 'Export'}
+          <button onClick={() => setControlsOpen(true)} disabled={!ready} className="jb-key jb-key--sm">Controls</button>
+          <button onClick={() => setSaveOpen((s) => !s)} disabled={!hasBuffer || !!exporting} className="jb-key jb-key--panel jb-key--sm">
+            {exporting ? `${Math.round(exporting.progress * 100)}%` : 'Bounce'}
           </button>
         </div>
         {saveOpen && (
           <div className="mt-2 flex justify-end gap-2">
-            <button onClick={() => doExport('mp3')} className="rounded-full bg-[#b6ff3d] px-4 py-1.5 text-sm font-semibold text-black">MP3</button>
-            <button onClick={() => doExport('wav')} className="rounded-full bg-white/15 px-4 py-1.5 text-sm font-semibold">WAV</button>
+            <button onClick={() => doExport('mp3')} className="jb-key jb-key--orange jb-key--sm">MP3</button>
+            <button onClick={() => doExport('wav')} className="jb-key jb-key--ghost jb-key--sm">WAV</button>
           </div>
         )}
       </div>
 
-      {/* input */}
-      <form
-        className="flex items-end gap-2 px-4 pt-2"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 10px)' }}
-        onSubmit={(e) => { e.preventDefault(); void send(input) }}
-      >
+      {/* composer */}
+      <form className="jb-composer" onSubmit={(e) => { e.preventDefault(); void send(input) }}>
         <textarea
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(input) } }}
           rows={1}
-          placeholder={ready ? 'make me a techno beat at 128…' : 'loading…'}
+          placeholder={ready ? 'tell it what to play…' : 'loading…'}
           disabled={!ready}
-          className="max-h-32 min-h-[44px] min-w-0 flex-1 resize-none rounded-2xl bg-white/8 px-4 py-2.5 text-base leading-snug outline-none ring-1 ring-white/10 placeholder:text-white/30 focus:ring-[#ffb02e]/60"
+          className="jb-field"
+          style={{ fieldSizing: 'content' } as React.CSSProperties}
         />
-        <button
-          type="submit"
-          disabled={!canSend}
-          className="h-11 shrink-0 rounded-2xl bg-[#ffb02e] px-4 text-sm font-semibold text-black disabled:opacity-30 active:scale-95"
-        >
-          Send
-        </button>
+        <button type="submit" disabled={!canSend} className="jb-key jb-key--orange" style={{ height: 48 }}>Send</button>
       </form>
 
       <ControlsSheet
@@ -668,17 +601,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 }
 
 function PlayIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden>
-      <path d="M6 3.5v13l11-6.5z" fill="currentColor" />
-    </svg>
-  )
+  return <svg width="22" height="22" viewBox="0 0 20 20" aria-hidden><path d="M6 3.5v13l11-6.5z" fill="currentColor" /></svg>
 }
-
 function StopIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-      <rect x="3" y="3" width="12" height="12" rx="2" fill="currentColor" />
-    </svg>
-  )
+  return <svg width="20" height="20" viewBox="0 0 18 18" aria-hidden><rect x="3" y="3" width="12" height="12" rx="2" fill="currentColor" /></svg>
 }

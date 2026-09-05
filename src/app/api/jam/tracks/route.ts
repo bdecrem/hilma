@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server'
 import { getJamUser } from '@/lib/jam/auth'
 import { jamDb } from '@/lib/jam/db'
+import { stripFromSession } from '@/lib/jam/strip'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -15,7 +16,7 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: 'not signed in' }, { status: 401 })
   const { data, error } = await jamDb()
     .from('jam_tracks')
-    .select(TRACK_META)
+    .select(`${TRACK_META}, session`)
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false })
     .limit(200)
@@ -23,7 +24,9 @@ export async function GET() {
     console.error('[jam] list tracks', error)
     return NextResponse.json({ error: 'Could not load tracks.' }, { status: 500 })
   }
-  return NextResponse.json({ tracks: data ?? [] })
+  // The session travels only to compute the rhythm strip for the card.
+  const tracks = (data ?? []).map(({ session, ...meta }) => ({ ...meta, strip: stripFromSession(session) }))
+  return NextResponse.json({ tracks })
 }
 
 export async function POST(req: Request) {

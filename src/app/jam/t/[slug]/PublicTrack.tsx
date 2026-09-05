@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { api, NotSignedIn, publicTrackUrl, type PublicTrack as PublicTrackData } from '../../api'
 import { loadJambot, type JambotModule } from '../../jambot'
 import { LoopPlayer, loopSecondsFor } from '../../audio'
+import LedStrip from '../../LedStrip'
 
 export default function PublicTrack({ slug }: { slug: string }) {
   const router = useRouter()
@@ -44,11 +45,11 @@ export default function PublicTrack({ slug }: { slug: string }) {
         const r = await jam.renderSessionToBuffer(session, session.bars || track.bars || 2)
         if (cancelled) return
         player().setBuffer(r.buffer, loopSecondsFor(r.bars, session.bpm))
-        setLoopBars(r.bars)   // an arrangement's total, not the loop length
+        setLoopBars(r.bars)
         setStatus('ready')
       } catch (e) {
         if (cancelled) return
-        setError((e as Error).message === 'not found' ? 'This track is not public (or the link is wrong).' : (e as Error).message)
+        setError((e as Error).message === 'not found' ? 'This track is not public, or the link is wrong.' : (e as Error).message)
         setStatus('failed')
       }
     })()
@@ -90,62 +91,66 @@ export default function PublicTrack({ slug }: { slug: string }) {
 
   const bars = loopBars ?? track?.bars ?? 2
   const barNow = Math.min(bars, Math.floor(pos * bars) + 1)
+  const step = playing ? Math.floor(pos * bars * 16) % 16 : null
 
   return (
-    <div
-      className="flex h-[100dvh] flex-col bg-[#0d0e12] px-5 text-[#f2f2f5]"
-      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 16px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
-    >
-      <header className="flex items-center justify-between">
-        <a href="/jam" className="text-2xl font-extrabold tracking-[-0.06em]">JAMBOT</a>
-        <a href="/jam" className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/70">{me ? 'My tracks' : 'Sign in'}</a>
+    <div className="jb-screen px-5" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 24px)' }}>
+      <header className="flex items-center justify-between pt-4">
+        <a href="/jam" className="jb-wordmark jb-wordmark--bar">Jambot<span className="dot" /></a>
+        <a href="/jam" className="jb-key jb-key--panel jb-key--xs">{me ? 'My tracks' : 'Sign in'}</a>
       </header>
 
-      {error && <p className="mt-10 rounded-2xl border border-[#ff5c7a]/40 bg-[#ff5c7a]/10 p-4 text-sm">{error}</p>}
+      {error && <p className="jb-card mt-10 p-4 text-sm">{error}</p>}
 
       {track && (
         <main className="mt-10 flex flex-1 flex-col">
-          <p className="text-xs uppercase tracking-widest text-[#5ee0ff]">{track.remix ? 'Remix' : 'Track'} by {track.username}</p>
-          <h1 className="mt-1 text-3xl font-bold leading-tight">{track.title}</h1>
-          <p className="mt-1 font-mono text-xs text-white/50">{track.bpm} BPM · {bars} {bars === 1 ? 'bar' : 'bars'}</p>
+          <p className="jb-eyebrow">{track.remix ? 'Remix' : 'Track'} · {track.username}</p>
+          <h1 className="jb-title jb-title--xl mt-2">{track.title}</h1>
+          <p className="jb-readout mt-2"><b>{track.bpm}</b> BPM · {bars} {bars === 1 ? 'bar' : 'bars'}</p>
 
-          <div className="mt-10 flex items-center gap-4">
-            <button
-              onClick={() => player().toggle()}
-              disabled={status !== 'ready'}
-              aria-label={playing ? 'Stop' : 'Play'}
-              className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#ffb02e] text-black disabled:opacity-30 active:scale-95"
-            >
-              {playing ? (
-                <svg width="22" height="22" viewBox="0 0 18 18"><rect x="3" y="3" width="12" height="12" rx="2" fill="currentColor" /></svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 20 20"><path d="M6 3.5v13l11-6.5z" fill="currentColor" /></svg>
-              )}
-            </button>
-            <div className="min-w-0 flex-1">
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                <div className="h-full rounded-full bg-[#5ee0ff] transition-[width] duration-75" style={{ width: `${Math.round(pos * 100)}%` }} />
-              </div>
-              <div className="mt-1 font-mono text-[11px] text-white/45">
-                {status === 'loading' ? 'loading…' : status === 'rendering' ? 'rendering…' : status === 'failed' ? 'unavailable' : playing ? `bar ${barNow}/${bars}` : 'ready'}
+          <div className="jb-well mt-8 p-4">
+            <LedStrip strip={track.strip} step={step} big />
+            <div className="mt-4 flex items-center gap-4">
+              <button
+                onClick={() => player().toggle()}
+                disabled={status !== 'ready'}
+                aria-label={playing ? 'Stop' : 'Play'}
+                className="jb-key jb-key--square"
+                style={{ width: 64, height: 64 }}
+              >
+                {playing ? <StopIcon /> : <PlayIcon />}
+              </button>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className={`jb-led ${playing ? 'on' : ''}`} />
+                  <span className="jb-readout">
+                    {status === 'loading' ? 'loading' : status === 'rendering' ? 'rendering' : status === 'failed' ? 'unavailable' : playing ? <>bar <b>{barNow}</b>/{bars}</> : 'ready'}
+                  </span>
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--rule)' }}>
+                  <div className="h-full rounded-full" style={{ width: `${Math.round(pos * 100)}%`, background: 'var(--ink)' }} />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 flex gap-2">
-            <button
-              onClick={remix}
-              disabled={busy || status === 'failed'}
-              className="rounded-2xl bg-[#b6ff3d] px-5 py-3 text-sm font-semibold text-black disabled:opacity-40 active:scale-[0.98]"
-            >
+          <div className="mt-6 flex gap-2">
+            <button onClick={remix} disabled={busy || status === 'failed'} className="jb-key jb-key--orange" style={{ flex: 1 }}>
               {busy ? '…' : me === null ? 'Sign in to remix' : 'Remix'}
             </button>
-            <button onClick={share} className="rounded-2xl bg-white/10 px-5 py-3 text-sm font-semibold active:bg-white/20">Share</button>
+            <button onClick={share} className="jb-key jb-key--ghost">Share</button>
           </div>
-          {note && <p className="mt-3 break-all text-xs text-white/50">{note}</p>}
-          <p className="mt-6 text-xs text-white/40">Remixing copies the whole track into your library, sound and all, so you can tell the groovebox what to change.</p>
+          {note && <p className="jb-note mt-3 break-all">{note}</p>}
+          <p className="jb-body jb-muted mt-6 text-sm">Remix copies the whole track into your library, sound and all, so you can tell the groovebox what to change.</p>
         </main>
       )}
     </div>
   )
+}
+
+function PlayIcon() {
+  return <svg width="22" height="22" viewBox="0 0 20 20" aria-hidden><path d="M6 3.5v13l11-6.5z" fill="currentColor" /></svg>
+}
+function StopIcon() {
+  return <svg width="20" height="20" viewBox="0 0 18 18" aria-hidden><rect x="3" y="3" width="12" height="12" rx="2" fill="currentColor" /></svg>
 }

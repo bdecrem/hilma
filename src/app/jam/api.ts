@@ -6,6 +6,9 @@ import type { AgentMessage } from './jambot'
 
 export type JamUser = { id: string; username: string }
 
+/** 16-step rhythm of a track (kick / snare / hats), '1' per hit. */
+export type Strip = { k: string; s: string; h: string }
+
 export type TrackMeta = {
   id: string
   title: string
@@ -13,6 +16,7 @@ export type TrackMeta = {
   bars: number
   created_at: string
   updated_at: string
+  strip?: Strip | null
   /** Set when the track is public (catalog + /t/<slug>). */
   published_at?: string | null
   /** Public link id; minted on first publish and kept afterwards. */
@@ -29,6 +33,7 @@ export type PublicTrackMeta = {
   published_at: string
   remix: boolean
   username: string
+  strip?: Strip | null
 }
 
 export type PublicTrack = PublicTrackMeta & { session: unknown }

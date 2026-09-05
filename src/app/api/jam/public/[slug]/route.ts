@@ -2,6 +2,7 @@
 
 import { NextResponse } from 'next/server'
 import { jamDb } from '@/lib/jam/db'
+import { stripFromSession } from '@/lib/jam/strip'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ slug: string }
   const u = data.jam_users as unknown as { username: string } | { username: string }[] | null
   const username = Array.isArray(u) ? u[0]?.username : u?.username
   return NextResponse.json({
-    track: { slug: data.slug, title: data.title, bpm: data.bpm, bars: data.bars, session: data.session, published_at: data.published_at, remix: !!data.remix_of, username: username ?? 'someone' },
+    track: { slug: data.slug, title: data.title, bpm: data.bpm, bars: data.bars, session: data.session, published_at: data.published_at, remix: !!data.remix_of, username: username ?? 'someone', strip: stripFromSession(data.session) },
   })
 }

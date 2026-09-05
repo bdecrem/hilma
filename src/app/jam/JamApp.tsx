@@ -102,8 +102,8 @@ export default function JamApp() {
 
   if (user === undefined || opening) {
     return (
-      <div className="grid h-[100dvh] place-items-center bg-[#0d0e12] text-sm text-white/50">
-        {opening ? 'Opening track…' : '…'}
+      <div className="jb-screen items-center justify-center">
+        <span className="jb-readout">{opening ? 'opening track' : 'loading'}</span>
       </div>
     )
   }
@@ -126,8 +126,8 @@ export default function JamApp() {
       {error && (
         <button
           onClick={() => setError('')}
-          className="fixed left-0 right-0 top-0 z-50 bg-[#ff5c7a] px-4 py-2 text-center text-sm font-medium text-black"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)' }}
+          className="fixed left-0 right-0 top-0 z-50 px-4 py-2 text-center text-sm font-medium"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top) + 8px)', background: 'var(--orange)', color: 'var(--ink)' }}
         >
           {error} · tap to dismiss
         </button>
