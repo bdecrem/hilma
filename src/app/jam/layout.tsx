@@ -16,6 +16,14 @@ export const metadata: Metadata = {
   title: 'Jambot — a groovebox you talk to',
   description:
     'Describe a beat, hear it in seconds, turn the knobs, keep every track. Publish it and let anyone remix it.',
+  icons: {
+    icon: [
+      { url: '/jam/favicon.ico', sizes: 'any' },
+      { url: '/jam/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/jam/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    apple: '/jam/apple-touch-icon.png',
+  },
 }
 
 export const viewport: Viewport = {

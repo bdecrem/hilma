@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { MARK_DARK_B64 } from './mark-dark-b64'
 
 export const runtime = 'edge'
 export const alt = 'Jambot — a groovebox you talk to'
@@ -31,11 +32,20 @@ export default function Image() {
           fontFamily: 'Arial Narrow, Arial, sans-serif',
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 26, letterSpacing: 6, color: '#6b6f78', textTransform: 'uppercase' }}>A groovebox you talk to</div>
-          <div style={{ display: 'flex', alignItems: 'flex-start', fontSize: 168, fontWeight: 800, letterSpacing: 8, lineHeight: 1, textTransform: 'uppercase', marginTop: 8 }}>
-            Jambot
-            <div style={{ width: 34, height: 34, borderRadius: 17, background: '#ff4f1f', marginLeft: 14, marginTop: 18, boxShadow: '0 0 24px #ff4f1f' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
+          {/* Monogram mark: ink tile, putty J, orange dot — the app icon and site mark. */}
+          <img
+            src={`data:image/png;base64,${MARK_DARK_B64}`}
+            width={112}
+            height={112}
+            style={{ borderRadius: 25, boxShadow: '0 6px 20px rgba(0,0,0,0.28)' }}
+          />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 26, letterSpacing: 6, color: '#6b6f78', textTransform: 'uppercase' }}>A groovebox you talk to</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', fontSize: 168, fontWeight: 800, letterSpacing: 8, lineHeight: 1, textTransform: 'uppercase', marginTop: 8 }}>
+              Jambot
+              <div style={{ width: 34, height: 34, borderRadius: 17, background: '#ff4f1f', marginLeft: 14, marginTop: 18, boxShadow: '0 0 24px #ff4f1f' }} />
+            </div>
           </div>
         </div>
 
