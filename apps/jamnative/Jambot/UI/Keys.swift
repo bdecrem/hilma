@@ -326,7 +326,7 @@ struct JBSheetHeader<Below: View>: View {
                         .foregroundStyle(JBTheme.ink)
                     if let status {
                         HStack(spacing: 6) {
-                            JBLed(on: status.lit, color: status.lit ? JBTheme.orange : JBTheme.green, alwaysLit: true)
+                            JBLed(on: status.lit, color: status.lit ? JBTheme.orange : JBTheme.green, alwaysLit: true, pulse: status.lit)
                             Text(status.text)
                                 .font(JBTheme.monoFont(12))
                                 .foregroundStyle(JBTheme.ink2)
@@ -362,15 +362,24 @@ struct JBLed: View {
     var size: CGFloat = 8
     /// Paint `color` even when `on` is false (a green "live" status LED).
     var alwaysLit: Bool = false
+    /// Breathe while lit — the busy ("working") and rendering states.
+    var pulse: Bool = false
+    @State private var phase = false
 
     var body: some View {
         let lit = on || alwaysLit
+        let pulsing = pulse && lit
         Circle()
             .fill(lit ? color : JBTheme.ledOff)
             .overlay(Circle().stroke(Color.black.opacity(lit ? 0 : 0.18), lineWidth: 0.5))
-            .shadow(color: lit ? color.opacity(0.9) : .clear, radius: 3)
-            .shadow(color: lit ? color.opacity(0.5) : .clear, radius: 7)
+            .shadow(color: lit ? color.opacity(0.9) : .clear, radius: pulsing && phase ? 5 : 3)
+            .shadow(color: lit ? color.opacity(0.5) : .clear, radius: pulsing && phase ? 10 : 7)
             .frame(width: size, height: size)
+            .scaleEffect(pulsing ? (phase ? 1.3 : 0.85) : 1)
+            .opacity(pulsing ? (phase ? 1 : 0.4) : 1)
+            .animation(pulsing ? .easeInOut(duration: 0.55).repeatForever(autoreverses: true) : .easeOut(duration: 0.2), value: phase)
+            .onAppear { if pulsing { phase = true } }
+            .onChange(of: pulsing) { _, now in phase = now }
     }
 }
 

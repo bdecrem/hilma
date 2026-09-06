@@ -244,6 +244,12 @@ iOS 18 single-size set: `icon-1024.png` (light = `jambot-monogram-light.png`),
 PNGs again; there is no generator script any more (the old `make_icon.py` wordmark
 icon is retired).
 
+If the Dock shows the old icon for the Debug Catalyst app (its DerivedData path is pinned in
+Bart's Dock), the bundle is fine — it is the Dock/IconServices cache. Flush it:
+`lsregister -f <app>` (`/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister`),
+`touch <app>`, `rm -rf /private/var/folders/*/*/C/com.apple.iconservices*`, `killall Dock iconservicesagent`.
+Verified 2026-09-06: the built `AppIcon.icns` was the monogram all along.
+
 `Jambot/Assets.xcassets/LaunchBackground.colorset` carries the panel colour for both
 appearances (`#DCDFD8` light / `#1B1D20` dark) used by `UILaunchScreen` in
 `project.yml` — no image, just the background colour.

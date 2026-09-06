@@ -101,3 +101,9 @@ Codable types (`SessionDescription`, `InstrumentDescription`, `ParamEntry`, `Par
 - 2026-09-06 11:35 — Build 0.1 (7) uploaded to TestFlight for iOS (delivery b03a8e8b) and Mac (2cd117c4), both VALID, added to the Public group, build 6 expired from review, build 7 submitted for beta review. Public link unchanged: https://testflight.apple.com/join/gDfvCAp1. iPhone install of build 7 pending (device unreachable, CoreDevice 4016).
 
 - 2026-09-06 13:50 — Starter prompts on an empty track (the web app's suggestions): four keys under "Say it like you'd say it to a producer"; a tap fills the composer and focuses it (not sends). `-studioScript starter:<n>` mirrors the tap. Verified light + dark in the simulator (.shots/starters*). Build 0.1 (8).
+
+## 2026-09-06 afternoon — build 9: pulsing busy LED, Dock icon, Catalyst click test
+- `JBLed` gained `pulse:` (scale 0.85↔1.3, opacity 0.4↔1, glow, 0.55 s ease in/out, repeat forever). Used by the chat "working" row, the transport LED while rendering, and every sheet header's status LED while rendering. Verified on Catalyst with a burst of window captures during an agent turn (LED visibly brighter/larger in some frames, dimmer/smaller in others).
+- The "old app icon" on the Catalyst build was the Dock's icon cache for the pinned DerivedData Debug app; the built icns was already the monogram. Flushed (see CLAUDE.md → Branding) — Dock now shows the J monogram.
+- Catalyst, real clicks: Controls → Done closes the overlay; Bounce → Done closes it; About → Done closes the sheet. All verified by screenshot in the running Debug build.
+- Build 9 installed on the iPhone. TestFlight stays on build 8 (in beta review for iOS + Mac) — uploading 9 would expire 8 and restart the review.

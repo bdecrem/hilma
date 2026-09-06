@@ -200,7 +200,7 @@ struct StudioView: View {
                         }
                         if model.busy {
                             HStack(spacing: 8) {
-                                Circle().fill(JBTheme.orange).frame(width: 8, height: 8)
+                                JBLed(on: true, pulse: true)
                                 Text("working").font(JBTheme.monoFont(11)).foregroundStyle(JBTheme.ink3)
                             }
                         }
@@ -300,7 +300,7 @@ struct StudioView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
-                        JBLed(on: model.playing, color: model.playing ? JBTheme.orange : JBTheme.green, alwaysLit: model.rendering)
+                        JBLed(on: model.playing, color: model.playing ? JBTheme.orange : JBTheme.green, alwaysLit: model.rendering, pulse: model.rendering)
                         transportReadout
                             .font(JBTheme.monoFont(12))
                             .foregroundStyle(JBTheme.ink2)
