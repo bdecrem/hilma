@@ -1,0 +1,399 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0664D303E9DE0A0B645191F3 /* JambotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C9CF3DDA02BFBA91480B21 /* JambotApp.swift */; };
+		2B9342970531B05B7C9A3E79 /* engine-bridge.js in Resources */ = {isa = PBXBuildFile; fileRef = 8BA2A7A824A5E68BDECE534D /* engine-bridge.js */; };
+		30967C76F384338543510088 /* StudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D15A9536B1E49E8B57EE31 /* StudioView.swift */; };
+		36C9BE2DDAF4422C8A06647E /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EB6492B54FE77C5FDD699E /* LibraryView.swift */; };
+		4F2C821931A511B52DCD89A0 /* EngineAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F781EB146E39FB9AF861C5B7 /* EngineAPI.swift */; };
+		78CBD596858AAA5B97DE5DC2 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC29BE3630772FD81CDBA68 /* Session.swift */; };
+		88430EC0B18990BFD910693B /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634F2B8FEE6C7A07C993E2A8 /* Secrets.swift */; };
+		953BA62F0D171491D4A31FC6 /* jambot-web.js in Resources */ = {isa = PBXBuildFile; fileRef = 0D25CB049B7B68321A266250 /* jambot-web.js */; };
+		A5F786A070F4A2EE419B662C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB67BE8C59ED172D19BB6206 /* Assets.xcassets */; };
+		B63F55AD21D5D510D5C8F5D8 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C676DD94ECD890F582F36DC /* LoginView.swift */; };
+		BD739C0B70337A662B30E4D5 /* JamAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E07E19922B40CA6EF838FE /* JamAPI.swift */; };
+		C1FA03C37F7ABD2FC3B0A2D3 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CFCD0042E6B7FD3C00572C /* Models.swift */; };
+		DE4D0B6ED65FD718F010ED27 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E8781284FECD33F6F3D21A /* Theme.swift */; };
+		E4835208DF114AC584EB250A /* engine.html in Resources */ = {isa = PBXBuildFile; fileRef = E76528A65410F14C3553B840 /* engine.html */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0D25CB049B7B68321A266250 /* jambot-web.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "jambot-web.js"; sourceTree = "<group>"; };
+		17D15A9536B1E49E8B57EE31 /* StudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioView.swift; sourceTree = "<group>"; };
+		34F6FB688AFBF8C5E621FB9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5C676DD94ECD890F582F36DC /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		634F2B8FEE6C7A07C993E2A8 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		8BA2A7A824A5E68BDECE534D /* engine-bridge.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "engine-bridge.js"; sourceTree = "<group>"; };
+		A0EB6492B54FE77C5FDD699E /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		B5E07E19922B40CA6EF838FE /* JamAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JamAPI.swift; sourceTree = "<group>"; };
+		B9CFCD0042E6B7FD3C00572C /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		BB67BE8C59ED172D19BB6206 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		CCC29BE3630772FD81CDBA68 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		D19763223E7ACA6AEB0281D0 /* Jambot.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Jambot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8C9CF3DDA02BFBA91480B21 /* JambotApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JambotApp.swift; sourceTree = "<group>"; };
+		E6E8781284FECD33F6F3D21A /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		E76528A65410F14C3553B840 /* engine.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = engine.html; sourceTree = "<group>"; };
+		F781EB146E39FB9AF861C5B7 /* EngineAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineAPI.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		663EBED140D857BE909ECB12 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D19763223E7ACA6AEB0281D0 /* Jambot.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6FB9C033A44AB582B3F64723 = {
+			isa = PBXGroup;
+			children = (
+				A0A40C44BE5B4BB63241FA53 /* jam */,
+				B706FEEB4150384E17BE0A11 /* Jambot */,
+				663EBED140D857BE909ECB12 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		779D70831477A29DDE89FD45 /* UI */ = {
+			isa = PBXGroup;
+			children = (
+				A0EB6492B54FE77C5FDD699E /* LibraryView.swift */,
+				5C676DD94ECD890F582F36DC /* LoginView.swift */,
+				17D15A9536B1E49E8B57EE31 /* StudioView.swift */,
+			);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		A0A40C44BE5B4BB63241FA53 /* jam */ = {
+			isa = PBXGroup;
+			children = (
+				0D25CB049B7B68321A266250 /* jambot-web.js */,
+			);
+			name = jam;
+			path = ../../public/jam;
+			sourceTree = "<group>";
+		};
+		B706FEEB4150384E17BE0A11 /* Jambot */ = {
+			isa = PBXGroup;
+			children = (
+				BB67BE8C59ED172D19BB6206 /* Assets.xcassets */,
+				34F6FB688AFBF8C5E621FB9C /* Info.plist */,
+				B5E07E19922B40CA6EF838FE /* JamAPI.swift */,
+				D8C9CF3DDA02BFBA91480B21 /* JambotApp.swift */,
+				B9CFCD0042E6B7FD3C00572C /* Models.swift */,
+				634F2B8FEE6C7A07C993E2A8 /* Secrets.swift */,
+				CCC29BE3630772FD81CDBA68 /* Session.swift */,
+				E6E8781284FECD33F6F3D21A /* Theme.swift */,
+				C4CD26C36C6D9E5D8730C26C /* Engine */,
+				779D70831477A29DDE89FD45 /* UI */,
+			);
+			path = Jambot;
+			sourceTree = "<group>";
+		};
+		C4CD26C36C6D9E5D8730C26C /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				8BA2A7A824A5E68BDECE534D /* engine-bridge.js */,
+				E76528A65410F14C3553B840 /* engine.html */,
+				F781EB146E39FB9AF861C5B7 /* EngineAPI.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6CF560107A76C211FFB69FAF /* Jambot */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8322B811F1CDE9E8286C00CD /* Build configuration list for PBXNativeTarget "Jambot" */;
+			buildPhases = (
+				71DFD3A13D41855B1F20B19F /* Sources */,
+				72136656EC91DF4530B47B8B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Jambot;
+			packageProductDependencies = (
+			);
+			productName = Jambot;
+			productReference = D19763223E7ACA6AEB0281D0 /* Jambot.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8421BF2E114D6DC6C7300F30 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					6CF560107A76C211FFB69FAF = {
+						DevelopmentTeam = 274T5WCVD2;
+					};
+				};
+			};
+			buildConfigurationList = 82FFEDB6248ACD9A2AB35716 /* Build configuration list for PBXProject "Jambot" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 6FB9C033A44AB582B3F64723;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 663EBED140D857BE909ECB12 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6CF560107A76C211FFB69FAF /* Jambot */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		72136656EC91DF4530B47B8B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A5F786A070F4A2EE419B662C /* Assets.xcassets in Resources */,
+				2B9342970531B05B7C9A3E79 /* engine-bridge.js in Resources */,
+				E4835208DF114AC584EB250A /* engine.html in Resources */,
+				953BA62F0D171491D4A31FC6 /* jambot-web.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		71DFD3A13D41855B1F20B19F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4F2C821931A511B52DCD89A0 /* EngineAPI.swift in Sources */,
+				BD739C0B70337A662B30E4D5 /* JamAPI.swift in Sources */,
+				0664D303E9DE0A0B645191F3 /* JambotApp.swift in Sources */,
+				36C9BE2DDAF4422C8A06647E /* LibraryView.swift in Sources */,
+				B63F55AD21D5D510D5C8F5D8 /* LoginView.swift in Sources */,
+				C1FA03C37F7ABD2FC3B0A2D3 /* Models.swift in Sources */,
+				88430EC0B18990BFD910693B /* Secrets.swift in Sources */,
+				78CBD596858AAA5B97DE5DC2 /* Session.swift in Sources */,
+				30967C76F384338543510088 /* StudioView.swift in Sources */,
+				DE4D0B6ED65FD718F010ED27 /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		45D3325D01D812325251F47C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Jambot/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Jambot;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
+			};
+			name = Debug;
+		};
+		8FE761BE3325F0682439B129 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		AA1BD4B203C5944FC67793C1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Jambot/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Jambot;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
+			};
+			name = Release;
+		};
+		EEDF7520FC6A47F3C0BA6053 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		82FFEDB6248ACD9A2AB35716 /* Build configuration list for PBXProject "Jambot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8FE761BE3325F0682439B129 /* Debug */,
+				EEDF7520FC6A47F3C0BA6053 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8322B811F1CDE9E8286C00CD /* Build configuration list for PBXNativeTarget "Jambot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45D3325D01D812325251F47C /* Debug */,
+				AA1BD4B203C5944FC67793C1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8421BF2E114D6DC6C7300F30 /* Project object */;
+}

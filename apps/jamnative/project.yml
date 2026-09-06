@@ -1,0 +1,71 @@
+name: Jambot
+options:
+  bundleIdPrefix: com.bartdecrem
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: 274T5WCVD2
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+targets:
+  Jambot:
+    type: application
+    platform: iOS
+    sources:
+      - path: Jambot
+        excludes:
+          - "Secrets.swift.example"
+      # The engine bundle jambot-web.js is hilma's committed build output
+      # (public/jam/jambot-web.js) — never copy it, reference it in place so
+      # the app always ships whatever was last built with `pnpm jam:build`.
+      - path: ../../public/jam/jambot-web.js
+        buildPhase: resources
+    info:
+      path: Jambot/Info.plist
+      properties:
+        CFBundleDisplayName: Jambot
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleName: Jambot
+        # HTTPS only — skips TestFlight's export-compliance question.
+        ITSAppUsesNonExemptEncryption: false
+        # Mac App Store metadata — required for macOS (Catalyst) uploads.
+        LSApplicationCategoryType: public.app-category.music
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        # Keep playback alive with the screen locked — the go/no-go for this
+        # test build (see DESIGN.md).
+        UIBackgroundModes:
+          - audio
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.Jambot
+        # 1 = iPhone, 2 = iPad. Catalyst piggybacks on the iPad device
+        # family; device/simulator builds are iPhone-only.
+        TARGETED_DEVICE_FAMILY: "1,2"
+        "TARGETED_DEVICE_FAMILY[sdk=iphoneos*]": "1"
+        "TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]": "1"
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        # Bart's phone runs an iOS beta — the Xcode debug-dylib stub launch
+        # path aborts at startup there. Ship a single binary instead.
+        ENABLE_DEBUG_DYLIB: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Mac Catalyst — same bundle ID, Mac runs the iPad layout with
+        # native window chrome (resizable).
+        SUPPORTS_MACCATALYST: YES
+        DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
