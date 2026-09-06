@@ -9,7 +9,7 @@
 //   2. the request has to be a Jambot agent call: the system prompt carries
 //      the Jambot marker and tools are present — 400 otherwise
 //   3. a per-user daily token budget (JAM_DAILY_TOKENS, src/lib/jam/usage.ts)
-//      — 429 once it is spent
+//      — 429 once it is spent; admins are exempt (usage still recorded)
 //
 // Upstream failures never come back as 401/403: the client treats 401 as
 // "signed out", and a rejected server-side API key is not the user's problem.
@@ -79,9 +79,10 @@ export async function POST(req: NextRequest) {
     console.error('[jam/llm] budget config', (e as Error).message)
     return err('The music service is misconfigured (token budget). Try again later.', 500)
   }
+  // Admins (jam_users.is_admin) have no cap — their usage is still recorded.
   try {
     const used = await getDailyUsage(user.id)
-    if (used.total > limit) {
+    if (used.total > limit && !user.admin) {
       console.warn('[jam/llm] daily budget spent', user.username, used.total, '>', limit)
       return err(`Daily limit reached (${Math.round(used.total / 1000)}k of ${Math.round(limit / 1000)}k tokens). It resets at midnight UTC.`, 429)
     }
