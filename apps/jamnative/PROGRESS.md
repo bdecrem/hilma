@@ -107,3 +107,4 @@ Codable types (`SessionDescription`, `InstrumentDescription`, `ParamEntry`, `Par
 - The "old app icon" on the Catalyst build was the Dock's icon cache for the pinned DerivedData Debug app; the built icns was already the monogram. Flushed (see CLAUDE.md → Branding) — Dock now shows the J monogram.
 - Catalyst, real clicks: Controls → Done closes the overlay; Bounce → Done closes it; About → Done closes the sheet. All verified by screenshot in the running Debug build.
 - Build 9 installed on the iPhone. TestFlight stays on build 8 (in beta review for iOS + Mac) — uploading 9 would expire 8 and restart the review.
+- Build 10: engine bundle `2026-09-06+jambot@bdfae18a2` — muted / un-soloed instruments are skipped entirely at render time (they used to keep playing through reverb/delay send buses; Bart's "Bd" lead). Replayed his session headlessly: all synths muted now renders silence (was -22.9 dBFS RMS). Installed on the iPhone; Catalyst Debug app relaunched.
