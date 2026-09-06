@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, type JamUser } from './api'
 import Catalog from './Catalog'
 
@@ -40,16 +40,58 @@ const SAY = [
   'mute the lead, solo the acid',
 ]
 
-/** The masthead lockup: the app icon's J is the J of JAMBOT; one orange LED. */
-function Lockup() {
+/** One phone at a time in a card: swipe (scroll-snap) or tap a dot; the
+ *  caption below follows the visible slide. Auto-advances every 5 s until
+ *  the visitor touches it (never with reduced motion). */
+function Gallery() {
+  const track = useRef<HTMLDivElement | null>(null)
+  const [i, setI] = useState(0)
+  const touched = useRef(false)
+  const go = useCallback((k: number) => {
+    const el = track.current
+    if (!el) return
+    const n = ((k % SCENES.length) + SCENES.length) % SCENES.length
+    el.scrollTo({ left: n * el.clientWidth, behavior: 'smooth' })
+  }, [])
+  const onScroll = () => {
+    const el = track.current
+    if (!el) return
+    setI(Math.max(0, Math.min(SCENES.length - 1, Math.round(el.scrollLeft / el.clientWidth))))
+  }
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const t = window.setInterval(() => { if (!touched.current) go(i + 1) }, 5000)
+    return () => window.clearInterval(t)
+  }, [i, go])
+  const s = SCENES[i]
   return (
-    <a className="jl-brand" href="/" aria-label="Jambot">
-      <svg className="jl-tile" viewBox="0 0 1024 1024" width={34} height={34} aria-hidden="true">
-        <rect width="1024" height="1024" rx="225" className="tile" />
-        <path d="M582,186 H768 V605 A256,256 0 0 1 256,605 V512 H442 V605 A70,70 0 0 0 582,605 Z" className="glyph" />
-      </svg>
-      <span className="jl-word" aria-hidden="true">ambot<span className="dot" /></span>
-    </a>
+    <section className="jl-gallery" aria-label="Screens from the iPhone app">
+      <div
+        ref={track}
+        className="jl-track"
+        onScroll={onScroll}
+        onPointerDown={() => { touched.current = true }}
+        onTouchStart={() => { touched.current = true }}
+      >
+        {SCENES.map((sc) => (
+          <div key={sc.id} className="jl-slide">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/jam/scenes/${sc.id}.webp`} alt={sc.line} width={840} height={1826} loading="lazy" />
+          </div>
+        ))}
+      </div>
+      <div className="jl-caption">
+        <div className="jl-words" key={s.id}>
+          <h3>{s.line}</h3>
+          <p>{s.sub}</p>
+        </div>
+        <div className="jl-dots" role="tablist" aria-label="Screens">
+          {SCENES.map((sc, k) => (
+            <button key={sc.id} role="tab" aria-selected={k === i} aria-label={sc.line} className={k === i ? 'on' : ''} onClick={() => { touched.current = true; go(k) }} />
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -150,7 +192,9 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
     <div className="jb-screen jl-page">
       <div className="jl">
         <header className="jl-top">
-          <Lockup />
+          <a className="jl-brand" href="/" aria-label="Jambot">
+            <span className="jb-wordmark jb-wordmark--bar">Jambot<span className="dot" /></span>
+          </a>
           <nav className="jl-nav">
             <a href={GITHUB_URL} target="_blank" rel="noopener">GitHub</a>
             <button type="button" onClick={() => openForm('login')}>Sign in</button>
@@ -164,19 +208,7 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
 
         <hr className="jl-rule" />
 
-        {/* Scenes: 205px cards, three across at 720 (205×3 + 28×2 = 671 in the 672 column), a snap row on phones. */}
-        <div className="jl-scenes" aria-label="Screens from the iPhone app">
-          {SCENES.map((s) => (
-            <figure key={s.id} className="jl-scene">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/jam/scenes/${s.id}.webp`} alt={s.line} width={840} height={1826} loading="lazy" />
-              <figcaption>
-                <h3>{s.line}</h3>
-                <p>{s.sub}</p>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
+        <Gallery />
 
         <div className="jl-cta">
           <button type="button" onClick={() => scrollTo('listen')} className="jb-key jb-key--orange">Remix a track</button>

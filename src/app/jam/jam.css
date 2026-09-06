@@ -375,18 +375,7 @@
 .jb .jb-screen.jl-page { box-shadow: none; }
 .jb .jl { padding: 0 24px calc(env(safe-area-inset-bottom) + 96px); }
 .jb .jl-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 28px 0 0; }
-.jb .jl-brand { display: inline-flex; align-items: center; gap: 3px; text-decoration: none; color: inherit; }
-.jb .jl-tile { display: block; width: 34px; height: 34px; flex: none; }
-.jb .jl-tile .tile { fill: var(--ink); }
-.jb .jl-tile .glyph { fill: var(--panel); }
-.jb .jl-word {
-  font-family: var(--font-panel-stack); font-weight: 700; font-size: 29px; letter-spacing: 0.06em; text-transform: uppercase;
-  line-height: 1; color: var(--ink); margin-top: 1px;
-}
-.jb .jl-word .dot {
-  display: inline-block; width: 0.2em; height: 0.2em; margin-left: 0.1em; vertical-align: 0.62em; border-radius: 50%;
-  background: var(--orange); box-shadow: 0 0 0.12em var(--orange), 0 0 0.35em rgba(255, 79, 31, 0.55);
-}
+.jb .jl-brand { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
 .jb .jl-nav { display: flex; gap: 22px; align-items: center; }
 .jb .jl-nav a, .jb .jl-nav button {
   font-family: var(--font-panel-stack); font-weight: 600; font-size: 13.5px; letter-spacing: 0.12em; text-transform: uppercase;
@@ -400,23 +389,44 @@
 }
 .jb .jl-h1 em { font-style: normal; color: var(--orange); }
 .jb .jl-rule { border: 0; border-top: 1px solid var(--rule); margin: 48px 0 0; }
-.jb .jl-scenes {
-  display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory;
-  margin: 0 -24px; padding: 52px 24px 12px; scrollbar-width: none;
+/* gallery card: one phone per slide (scroll-snap), caption + dots below;
+   on wide screens the phone sits left and the caption right, like dodo's hero.
+   Card inner width 672 − 2×24 = 624; phone 240 on wide, min(220px, 54vw) on phones. */
+.jb .jl-gallery {
+  margin: 44px 0 0; padding: 28px 24px 22px;
+  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 22px;
+  display: grid; gap: 22px;
 }
-.jb .jl-scenes::-webkit-scrollbar { display: none; }
-.jb .jl-scene { flex: 0 0 205px; margin: 0; scroll-snap-align: start; }
-.jb .jl-scene img {
-  width: 100%; height: auto; aspect-ratio: 840 / 1826; display: block; border-radius: 26px;
+.jb .jl-track {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+  margin: 0; padding: 0; border-radius: 22px;
+}
+.jb .jl-track::-webkit-scrollbar { display: none; }
+.jb .jl-slide { flex: 0 0 100%; scroll-snap-align: center; display: flex; justify-content: center; }
+.jb .jl-slide img {
+  width: min(200px, 50vw); height: auto; aspect-ratio: 840 / 1826; display: block; border-radius: 22px;
   border: 1px solid var(--rule); background: var(--panel-3);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.38);
 }
-.jb .jl-scene h3 {
-  font-family: var(--font-panel-stack); font-weight: 600; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase;
-  line-height: 1.12; margin: 20px 0 8px; color: var(--ink);
+.jb .jl-caption { text-align: center; }
+.jb .jl-words { animation: jl-in 0.35s ease both; }
+.jb .jl-caption h3 {
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 19px; letter-spacing: 0.02em; text-transform: uppercase;
+  line-height: 1.1; margin: 0 0 8px; color: var(--ink); text-wrap: balance;
 }
-.jb .jl-scene p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin: 0; }
-@media (max-width: 600px) { .jb .jl-scene { flex-basis: 66vw; } }
+.jb .jl-caption p { font-size: 14px; line-height: 1.5; color: var(--ink-2); margin: 0 auto; max-width: 34ch; min-height: 3lh; }
+.jb .jl-dots { display: flex; justify-content: center; gap: 6px; margin-top: 18px; }
+.jb .jl-dots button { width: 22px; height: 4px; border-radius: 2px; border: 0; padding: 0; background: var(--panel-4); cursor: pointer; }
+.jb .jl-dots button.on { background: var(--orange); }
+@keyframes jl-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+@media (min-width: 640px) {
+  .jb .jl-gallery { grid-template-columns: 288px 1fr; align-items: center; gap: 28px; padding: 32px 32px 28px; }
+  .jb .jl-slide img { width: 240px; }
+  .jb .jl-caption { text-align: left; }
+  .jb .jl-caption h3 { font-size: 24px; }
+  .jb .jl-caption p { margin: 0; font-size: 15px; }
+  .jb .jl-dots { justify-content: flex-start; }
+}
 .jb .jl-cta { display: flex; flex-direction: column; gap: 12px; margin-top: 48px; }
 .jb .jl-cta--tight { margin-top: 0; }
 .jb .jl-cta .jb-key { height: 54px; font-size: 15px; }
