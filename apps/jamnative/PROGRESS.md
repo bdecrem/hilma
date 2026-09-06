@@ -10,7 +10,7 @@ finishes a step (check the box, one line of what was verified, commit).
 - [x] 2a. Engine host — `Engine/engine.html`, `Engine/engine-bridge.js` (session, controls port, tweak write-through, render → Int16 base64 chunks, agent loop with LLM proxied through Swift), Swift `EngineHost` (WKWebView, request/response table, async API), `AudioPlayer` (AVAudioEngine loop with phase-keeping swap), `AVAudioSession` playback category. Verified in the simulator with a headless test view or unit test: `ready`, `loadSession` of a saved track JSON, `render` of 16 bars decodes to the right frame count and plays.
 - [x] 2b. Screens — `LoginView`, `LibraryView`, `StudioView` (chat, transport, Controls sheet with Faders + M/S) against the `EngineAPI` protocol; compiles with a mock engine; screenshots at iPhone 16 size.
 - [x] 3. Integration — real engine behind the screens, autosave, sign in as jamtest, open "SEQ TEST techno copy", play, fader, chat turn; Catalyst build runs; background-audio go/no-go recorded here.
-- [ ] 4. Device — `bump-build.sh`, install on Bart's iPhone (needs the phone unlocked), note the build number here.
+- [ ] 4. Device — installed build 0.1 (3) on Bart's iPhone Air 2026-09-05 22:47 (profile "Jambot dev" via scripts/ios/asc-dev-profile.py); launch blocked only by the lock screen. OPEN: the locked-screen test — play, lock, does audio continue; move a fader, lock, does the render land. Record the result here.
 
 ## Log
 

@@ -67,3 +67,4 @@ apps/*/build-device/
 
 # jam song builds (scripts/jam/songs/*.mjs outputs)
 /scripts/jam/songs/out/
+/apps/jamnative/build-device/

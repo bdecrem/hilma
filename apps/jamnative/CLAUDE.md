@@ -87,3 +87,19 @@ change needed here).
 6. Background-audio go/no-go: start playback, background the app, confirm
    audio continues; trigger a render while backgrounded and confirm it
    completes
+
+## Device install (no Apple ID in Xcode on this Mac)
+
+Profiles are minted through the App Store Connect API, same as Tap Tap Dodo:
+
+```bash
+python3 scripts/ios/asc-dev-profile.py com.bartdecrem.Jambot "Jambot dev" 00008150-000038820EFB801C   # once per year / new device
+./bump-build.sh
+xcodebuild -project Jambot.xcodeproj -scheme Jambot -destination 'generic/platform=iOS' \
+  -derivedDataPath build-device CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=Jambot dev" \
+  "CODE_SIGN_IDENTITY=Apple Development" build
+xcrun devicectl device install app --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27 build-device/Build/Products/Debug-iphoneos/Jambot.app
+xcrun devicectl device process launch --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27 com.bartdecrem.Jambot   # phone must be unlocked
+```
+
+Bundle id `A43853Z8U5`, profile "Jambot dev" (expires 2027-09-06), certificate `9AYMK558AW` (the keychain's Apple Development: Bart Decrem). `build-device/` is gitignored.
