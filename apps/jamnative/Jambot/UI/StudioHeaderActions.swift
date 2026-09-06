@@ -82,7 +82,7 @@ struct StudioHeaderActions<Leading: View>: View {
             .frame(minHeight: 32)
 
             if editingTitle {
-                TextField("Track title", text: $draftTitle)
+                TextField("Track title", text: $draftTitle, prompt: jbPrompt("Track title"))
                     .font(JBTheme.panelFont(22, weight: .semibold))
                     .textInputAutocapitalization(.words)
                     .focused($titleFocused)

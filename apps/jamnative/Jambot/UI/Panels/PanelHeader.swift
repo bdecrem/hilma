@@ -145,6 +145,7 @@ struct PanelShellView<Body: View>: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(JBTheme.panelEdge, lineWidth: 1))
         .shadow(color: .black.opacity(0.18), radius: 2, y: 1)
     }
 }

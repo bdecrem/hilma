@@ -107,7 +107,13 @@ tooling/sim-run.sh s-lib -autoLogin jamtest jamtest1 \
 Launch args: `-autoLogin <user> <pass>`, `-openTrack "<title>"`, `-openControls`,
 `-studioScript "<steps>"`, `-libraryScript "<steps>"`, `-studioScriptLog <file>`,
 `-studioShotDir <dir>`, `-studioExportDir <dir>` (where `bounce:wav|aac` writes),
-`-openAbout`, `-openCatalogTrack "<title>"`, `-previewBounce`, `-mockEngine`.
+`-openAbout`, `-openCatalogTrack "<title>"`, `-previewBounce`, `-mockEngine`,
+`-forceSignedOut` (login screen, cookie dropped), `-loginScroll catalog`. Library steps
+`new` (creates a track, opens Studio and waits for the `-studioScript` to `back`),
+`scroll:catalog`, `appearance[:system|light|dark]` (logs stored setting + the window's
+effective style); studio steps `openBounce` / `closeBounce`. Give UserDefaults a second
+before the harness reinstalls (`appearance:dark;wait:2`) — `simctl install` migrates the
+container and can outrun cfprefsd.
 Standalone harnesses (each replaces the app UI): `-engineSmoke` (+`-engineSmokeAgent`
 / `-engineSmokeBackground` / `-engineSmokeSeq`), `-seqPreview` (+`-seqScript`,
 `-seqShotDir`), `-panelsPreview` (+`-panelsPreviewOpen <id|none>`, `-panelsPreviewKnob`),
@@ -168,20 +174,35 @@ Bundle id `A43853Z8U5`, profile "Jambot dev" (expires 2027-09-06), certificate `
 
 ## Branding (app icon, launch screen)
 
-`branding/make_icon.py` (Pillow — `python3 -c "import PIL"` to check) generates the
-1024×1024 source icon and every `AppIcon.appiconset` size: putty enamel background
-(`#e3e4dc` with a subtle top-left light gradient + a hairline inset border), "JAMBOT"
-in DIN Condensed Bold (falls back to Helvetica Bold if that font is missing), a raised
-909-orange (`#ff5a1f`) glowing LED disc after the T (never a period — offset toward
-cap-height, not sitting on the baseline), and a 16-step LED strip motif (orange /
-cobalt / ink rows) below the wordmark. Re-run `python3 branding/make_icon.py` after
-any icon tweak — it overwrites both `branding/icon-1024.png` (source of truth) and
-`Jambot/Assets.xcassets/AppIcon.appiconset/icon-*.png`, plus `branding/preview-{60,120,180}.png`
-for eyeballing legibility at small sizes before committing.
+The app icon is the **monogram** (the "J" with the orange LED) from
+`misc/jambotlogos/` — the grid mark is a UI motif only. `AppIcon.appiconset` is the
+iOS 18 single-size set: `icon-1024.png` (light = `jambot-monogram-light.png`),
+`icon-1024-dark.png` (`luminosity: dark` = `jambot-monogram-dark.png`),
+`icon-1024-tinted.png` (`luminosity: tinted` = grayscale + alpha of
+`jambot-monogram-dark-transparent.png` from `jambot-icons.zip`), plus the
+`ios-marketing` entry. `branding/` keeps the three 1024 sources and
+`icon-preview.png` (60/120/180 on light/dark/tinted grounds). To regenerate, copy the
+PNGs again; there is no generator script any more (the old `make_icon.py` wordmark
+icon is retired).
 
-`Jambot/Assets.xcassets/LaunchBackground.colorset` already carries the putty light
-value / near-black dark value used by `UILaunchScreen` in `project.yml` — no image,
-just the background colour.
+`Jambot/Assets.xcassets/LaunchBackground.colorset` carries the panel colour for both
+appearances (`#DCDFD8` light / `#1B1D20` dark) used by `UILaunchScreen` in
+`project.yml` — no image, just the background colour.
+
+## Appearance (dark / light)
+
+Every `JBTheme` colour token is dynamic (`Theme.swift` → `dynamic(light, dark)` builds a
+`Color(uiColor: UIColor { trait in … })`), so views never branch on the scheme. About →
+Appearance (System / Light / Dark) writes `UserDefaults["jam.appearance"]`;
+`.jbAppearance()` applies it with `.preferredColorScheme` on `RootView` **and on every
+sheet's content** (sheets are their own presentation). Rules when adding UI: solid ink
+keys use `keyFill / keyLabel / keyLip` (never `ink` + `.white`/`.black`), paper keys use
+`panel4` + `panelKeyLip` + `highlight`, labels on orange use `onOrange`, fields pass their
+placeholder through `jbPrompt()` (the system placeholder colour flips in dark mode), and
+sheets get `.presentationBackground(JBTheme.panel)`. The synth panel skins
+(`PanelPalette`) are fixed dark instruments in both modes. Shoot both modes with
+`tooling/shoot-screens.sh dark|light` (→ `.shots/final-<mode>/`; `SIM_DEV="iPhone SE 3"`
+for 375 pt) and look at every PNG.
 
 ## Catalyst + keyboard shortcuts (wired in stage 10)
 

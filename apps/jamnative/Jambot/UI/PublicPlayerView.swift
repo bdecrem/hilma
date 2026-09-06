@@ -176,6 +176,7 @@ struct PublicPlayerView: View {
         .columnWidth()
         .frame(maxWidth: .infinity)
         .background(JBTheme.panel)
+        .presentationBackground(JBTheme.panel)
         .task { if model.status == .loading { await model.load() } }
         .onDisappear { model.stop() }
     }

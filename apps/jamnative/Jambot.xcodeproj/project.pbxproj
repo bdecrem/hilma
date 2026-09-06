@@ -24,6 +24,7 @@
 		34122948F9B42B4649CB451B /* SeqPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B14AE6A5F0A365F6FC08141 /* SeqPreview.swift */; };
 		34C338E77A5B584486B7359F /* BounceSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28E5D850B703ACC6EB399D37 /* BounceSheet.swift */; };
 		36C9BE2DDAF4422C8A06647E /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EB6492B54FE77C5FDD699E /* LibraryView.swift */; };
+		3A11848B5580B23CBFC2CFE9 /* jambot-web.meta.json in Resources */ = {isa = PBXBuildFile; fileRef = 07E0776AF107FB47A299DB19 /* jambot-web.meta.json */; };
 		3BB651D6008EC9F15F80B664 /* ControlsMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD2992921692D435A640418 /* ControlsMath.swift */; };
 		3CCA5B8F0C3AFE009E12D86B /* CatalystSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BBA993DB75B8D7BBB759507 /* CatalystSupport.swift */; };
 		480EFD8DA54412A887EA3BB1 /* PublicPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071020314187E2CFF9B4FC1F /* PublicPlayerView.swift */; };
@@ -63,6 +64,7 @@
 /* Begin PBXFileReference section */
 		0234BBBDFE0FDFB36E8E229B /* Exporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Exporter.swift; sourceTree = "<group>"; };
 		071020314187E2CFF9B4FC1F /* PublicPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PublicPlayerView.swift; sourceTree = "<group>"; };
+		07E0776AF107FB47A299DB19 /* jambot-web.meta.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "jambot-web.meta.json"; sourceTree = "<group>"; };
 		08AF9044CEF43269A6E5872C /* StudioModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioModel.swift; sourceTree = "<group>"; };
 		0B14AE6A5F0A365F6FC08141 /* SeqPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeqPreview.swift; sourceTree = "<group>"; };
 		0D25CB049B7B68321A266250 /* jambot-web.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "jambot-web.js"; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 			isa = PBXGroup;
 			children = (
 				0D25CB049B7B68321A266250 /* jambot-web.js */,
+				07E0776AF107FB47A299DB19 /* jambot-web.meta.json */,
 			);
 			name = jam;
 			path = ../../public/jam;
@@ -304,6 +307,7 @@
 				2B9342970531B05B7C9A3E79 /* engine-bridge.js in Resources */,
 				E4835208DF114AC584EB250A /* engine.html in Resources */,
 				953BA62F0D171491D4A31FC6 /* jambot-web.js in Resources */,
+				3A11848B5580B23CBFC2CFE9 /* jambot-web.meta.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -21,6 +21,8 @@ final class LibraryModel {
     var publicTrack: PublicTrackMeta? = nil
     private(set) var playerModel: PublicPlayerModel? = nil
     var catalogReload = 0
+    /// DEBUG driver: an anchor id the list should scroll to ("catalog").
+    var scrollTarget: String? = nil
     /// Set by the view: the server said 401.
     var onAuthLost: (() -> Void)?
 
@@ -129,6 +131,7 @@ struct LibraryView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 header
+                ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         sectionRow
@@ -162,6 +165,7 @@ struct LibraryView: View {
 
                         CatalogView(engine: EngineFactory.make(), onOpen: { model.openPublic($0) }, reloadToken: model.catalogReload)
                             .padding(.top, 8)
+                            .id("catalog")
                     }
                     .padding(16)
                     .columnWidth()
@@ -171,6 +175,13 @@ struct LibraryView: View {
                     await model.load(openLaunchTrack: false)
                     model.catalogReload += 1
                 }
+                // DEBUG-only: the `scroll:catalog` library-script step (no
+                // screen control, so screenshots below the fold need this).
+                .onChange(of: model.scrollTarget) { _, target in
+                    guard let target else { return }
+                    withAnimation { proxy.scrollTo(target, anchor: .top) }
+                }
+                }
             }
             .background(JBTheme.panel)
             .navigationDestination(item: $model.openTrack) { t in
@@ -178,6 +189,7 @@ struct LibraryView: View {
             }
             .sheet(isPresented: $model.showAbout) {
                 AboutView(engineVersion: EngineFactory.host?.engineVersion)
+                    .jbAppearance()
             }
             .alert("Delete this track?", isPresented: Binding(get: { model.deleteTarget != nil }, set: { if !$0 { model.deleteTarget = nil } })) {
                 Button("Delete", role: .destructive) {
@@ -213,11 +225,13 @@ struct LibraryView: View {
             NavigationStack {
                 PublicPlayerView(meta: t, engine: EngineFactory.make(), onRemixed: { model.remixed($0) }, externalModel: model.playerModel)
             }
+            .jbAppearance()
         }
         .sheet(isPresented: $debugBounce) {
             BounceSheet(render: RenderResult(bars: 16, bpm: 128, hasArrangement: true, message: "debug",
                                               sampleRate: 44100, channels: 2, length: 44100 * 2,
                                               pcm: Exporter.syntheticSine()), bpm: 128)
+                .jbAppearance()
         }
         .onChange(of: model.openTrack) { _, now in
             // Back from Studio: the title / bpm / bars / updated_at changed.

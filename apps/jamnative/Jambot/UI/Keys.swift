@@ -69,9 +69,10 @@ struct JBKeyStyle: ButtonStyle {
 
     private var foreground: Color {
         switch variant {
-        case .orange, .ghost, .panel: return JBTheme.ink
+        case .orange: return JBTheme.onOrange
+        case .ghost, .panel: return JBTheme.ink
         case .green: return .white
-        case .ink: return JBTheme.panel2
+        case .ink: return JBTheme.keyLabel
         }
     }
 }
@@ -88,25 +89,28 @@ struct JBRubber: View {
         case .ghost: return .clear
         case .panel: return JBTheme.panel4
         case .green: return JBTheme.green
-        case .ink: return JBTheme.ink
+        case .ink: return JBTheme.keyFill
         }
     }
     private var lip: Color {
         switch variant {
         case .orange: return Color(hex: 0xA8300F)
         case .ghost: return .clear
-        case .panel: return JBTheme.rule
+        case .panel: return JBTheme.panelKeyLip
         case .green: return Color(hex: 0x0A6A49)
-        case .ink: return .black
+        case .ink: return JBTheme.keyLip
         }
     }
-    private var highlight: Double {
+    /// The `inset 0 1px 0` top highlight. Paper keys use the theme's
+    /// highlight token (white by day, a faint sheen at night); the coloured
+    /// keys keep a fixed white at the CSS opacity.
+    private var highlight: Color {
         switch variant {
-        case .orange: return 0.35
-        case .ghost: return 0
-        case .panel: return 1
-        case .green: return 0.25
-        case .ink: return 0.12
+        case .orange: return Color.white.opacity(0.35)
+        case .ghost: return .clear
+        case .panel: return JBTheme.highlight
+        case .green: return Color.white.opacity(0.25)
+        case .ink: return Color.white.opacity(0.12)
         }
     }
 
@@ -119,7 +123,7 @@ struct JBRubber: View {
                 shape.fill(lip).offset(y: pressed ? 0 : 2)
                 shape.fill(face)
                     .overlay(
-                        shape.stroke(Color.white.opacity(highlight), lineWidth: 1)
+                        shape.stroke(highlight, lineWidth: 1)
                             .padding(0.5)
                             .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .init(x: 0.5, y: 0.3)))
                     )
@@ -138,9 +142,17 @@ struct JBFieldStyle: ViewModifier {
             .padding(.horizontal, 14)
             .background(JBTheme.panel4)
             .foregroundStyle(JBTheme.ink)
+            .tint(JBTheme.cobalt)
             .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(JBTheme.rule, lineWidth: 1.5))
     }
+}
+
+/// `.jb-field::placeholder { color: var(--ink-3) }` — the system placeholder
+/// colour flips to light grey under iOS dark mode and vanishes on the
+/// paper field, so every field passes its prompt through this.
+func jbPrompt(_ text: String) -> Text {
+    Text(text).foregroundColor(JBTheme.ink3)
 }
 
 extension View {
@@ -218,6 +230,50 @@ struct JBGroupRow<Trailing: View>: View {
             trailing()
         }
         .opacity(dimmed ? 0.45 : 1)
+    }
+}
+
+// MARK: - Segmented function keys (`.jb-seg--wide`)
+
+/// Full-width pill row in a recessed well: the picked segment is a solid
+/// ink key (dark-on-light by day, light-on-dark at night), the rest are
+/// ink-2 labels. Used for Faders · Panels · Seq and System · Light · Dark.
+struct JBSegmented<T: Hashable & Identifiable>: View {
+    let options: [T]
+    @Binding var selection: T
+    let label: (T) -> String
+
+    init(_ options: [T], selection: Binding<T>, label: @escaping (T) -> String) {
+        self.options = options; self._selection = selection; self.label = label
+    }
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(options) { m in
+                let on = selection == m
+                Button {
+                    selection = m
+                } label: {
+                    Text(label(m))
+                        .font(JBTheme.panelFont(13, weight: .semibold))
+                        .tracking(1.3)
+                        .textCase(.uppercase)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 32)
+                        .background(on ? JBTheme.keyFill : .clear)
+                        .foregroundStyle(on ? JBTheme.keyLabel : JBTheme.ink2)
+                        .clipShape(Capsule())
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .background(
+            Capsule().fill(JBTheme.panel3)
+                .overlay(Capsule().stroke(Color.black.opacity(0.12), lineWidth: 1.5).blur(radius: 1.5).mask(Capsule()))
+        )
     }
 }
 
@@ -313,7 +369,7 @@ struct JBFader: View {
             let x = Self.cap / 2 + travel * CGFloat(max(0, min(1, t)))
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .fill(JBTheme.ink3)
+                    .fill(JBTheme.faderTrack)
                     .overlay(
                         RoundedRectangle(cornerRadius: 3, style: .continuous)
                             .stroke(Color.black.opacity(0.3), lineWidth: 1)
@@ -378,9 +434,9 @@ struct JBMSKeys: View {
                 .background {
                     let shape = RoundedRectangle(cornerRadius: 7, style: .continuous)
                     ZStack {
-                        shape.fill(on ? lip : JBTheme.rule).offset(y: 1)
+                        shape.fill(on ? lip : JBTheme.panelKeyLip).offset(y: 1)
                         shape.fill(on ? color : JBTheme.panel4)
-                            .overlay(shape.stroke(Color.white.opacity(on ? 0.2 : 1), lineWidth: 1).padding(0.5)
+                            .overlay(shape.stroke(on ? Color.white.opacity(0.2) : JBTheme.highlight, lineWidth: 1).padding(0.5)
                                 .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .init(x: 0.5, y: 0.4))))
                     }
                 }
@@ -404,10 +460,10 @@ struct JBTag: View {
             .font(JBTheme.panelFont(10.5, weight: .semibold))
             .tracking(1.4)
             .textCase(.uppercase)
-            .foregroundStyle(style == .outline ? JBTheme.ink3 : (style == .ink ? JBTheme.panel2 : .white))
+            .foregroundStyle(style == .outline ? JBTheme.ink3 : (style == .ink ? JBTheme.keyLabel : .white))
             .padding(.horizontal, 6)
             .padding(.vertical, 1)
-            .background(style == .green ? JBTheme.green : (style == .ink ? JBTheme.ink : .clear))
+            .background(style == .green ? JBTheme.green : (style == .ink ? JBTheme.keyFill : .clear))
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).stroke(style == .outline ? JBTheme.ink3 : .clear, lineWidth: 1))
     }
@@ -423,7 +479,7 @@ struct JBCardStyle: ViewModifier {
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(JBTheme.rule, lineWidth: 1))
             .overlay(alignment: .top) {
                 // inset 0 1px 0 #fff
-                RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white, lineWidth: 1).padding(1)
+                RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(JBTheme.highlight, lineWidth: 1).padding(1)
                     .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .init(x: 0.5, y: 0.08)))
             }
     }

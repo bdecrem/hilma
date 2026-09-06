@@ -18,6 +18,7 @@ struct LoginView: View {
     private static let hero = Strip(k: "1000100010001000", s: "0000100000001000", h: "0010001000100010")
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 JBEyebrow(text: "A groovebox you talk to")
@@ -41,6 +42,7 @@ struct LoginView: View {
                 // straight to the username field instead.
                 CatalogView(title: "Listen", emptyText: "Nothing published yet.", engine: nil, onSignedOutTap: { usernameFocused = true })
                     .padding(.top, 36)
+                    .id("catalog")
 
                 Spacer(minLength: 40)
             }
@@ -50,6 +52,14 @@ struct LoginView: View {
         }
         .background(JBTheme.panel)
         .task {
+            // DEBUG-only: `-loginScroll catalog` scrolls the signed-out screen
+            // to the catalog for a headless screenshot.
+            if LibraryModel.launchArgValue("-loginScroll") == "catalog" {
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                withAnimation { proxy.scrollTo("catalog", anchor: .top) }
+            }
+        }
+        .task {
             // idle chase: one LED walking the strip, 3.2 s per lap
             guard !reduceMotion else { return }
             var i = 0
@@ -58,6 +68,7 @@ struct LoginView: View {
                 i = (i + 1) % 16
                 try? await Task.sleep(nanoseconds: 200_000_000)
             }
+        }
         }
     }
 
@@ -77,13 +88,13 @@ struct LoginView: View {
             }
             .padding(.bottom, 4)
 
-            TextField("username", text: $username)
+            TextField("username", text: $username, prompt: jbPrompt("username"))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .textContentType(.username)
                 .focused($usernameFocused)
                 .jbField()
-            SecureField("password", text: $password)
+            SecureField("password", text: $password, prompt: jbPrompt("password"))
                 .textContentType(isSignup ? .newPassword : .password)
                 .jbField()
 

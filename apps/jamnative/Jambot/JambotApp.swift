@@ -53,6 +53,11 @@ struct RootView: View {
             content
         }
         .catalystWindowChrome()
+        // Appearance (System / Light / Dark from About) — every JBTheme token
+        // is dynamic, so this one modifier flips the whole instrument. The
+        // status bar follows the scheme automatically.
+        .jbAppearance()
+        .tint(JBTheme.cobalt)
         .task {
             // Warm the engine while the user is still in the Library so the
             // first track opens without waiting for the bundle to load.

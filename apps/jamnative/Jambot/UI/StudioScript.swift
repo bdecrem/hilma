@@ -37,6 +37,7 @@ import os
 ///   rename:<title>         the header's tap-to-rename commit
 ///   publish / unpublish    the header key (saves first)
 ///   bounce:wav|aac         write the last render with Exporter to -studioExportDir (or tmp); logs path + bytes
+///   openBounce / closeBounce   the Bounce sheet (for screenshots)
 ///   cache                  log the render cache's track ids
 ///   nowplaying             log the last Now Playing dictionary
 ///   save                   flush the autosave and wait for it
@@ -188,7 +189,7 @@ enum StudioScript {
                 if parts.first == "open", parts.count > 1 {
                     UserDefaults.standard.set(parts[1] == "none" ? "__closed__" : parts[1], forKey: "jam.panelsOpen")
                     try? await Task.sleep(nanoseconds: 700_000_000)
-                    emit("  panels open \(parts[1]); effects=\(model.desc?.effects?.map { "\($0.target):\($0.chain.map(\.type))" } ?? [])")
+                    emit("  panels open \(parts[1]); effects=\(model.desc?.effects?.map { "\($0.target):\($0.chain.map { "\($0.id)/\($0.type)" })" } ?? [])")
                 } else {
                     emit("  unknown panels step '\(arg)'")
                 }
@@ -252,6 +253,12 @@ enum StudioScript {
                 } catch {
                     emit("  bounce \(format.rawValue) FAILED: \(error.localizedDescription)")
                 }
+            case "openBounce":
+                model.bounceOpen = true
+                try? await Task.sleep(nanoseconds: 900_000_000)
+            case "closeBounce":
+                model.bounceOpen = false
+                try? await Task.sleep(nanoseconds: 700_000_000)
             case "cache":
                 let ids = await RenderCache.shared.cachedTrackIds()
                 emit("  cache: \(ids.count) tracks \(ids)")

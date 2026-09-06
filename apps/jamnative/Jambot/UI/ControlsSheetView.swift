@@ -22,6 +22,9 @@ enum ControlsMode: String, CaseIterable, Identifiable {
 struct ControlsSheetView: View {
     @Bindable var model: StudioModel
     @AppStorage(ControlsMode.storageKey) private var modeRaw: String = ControlsMode.faders.rawValue
+    /// The open Panels section (written by PanelsView) — the sheet scrolls it
+    /// into view like the web's accordion, since this ScrollView owns the scrolling.
+    @AppStorage("jam.panelsOpen") private var panelsOpen: String = ""
 
     private static let barChoices = [1, 2, 4, 8, 16, 32, 64, 128]
 
@@ -31,8 +34,9 @@ struct ControlsSheetView: View {
         VStack(spacing: 0) {
             JBSheetHeader("Controls", status: (lit: model.rendering, text: model.rendering ? "rendering" : "live"),
                           onDone: { model.controlsOpen = false }) {
-                segmented
+                JBSegmented(ControlsMode.allCases, selection: Binding(get: { mode }, set: { modeRaw = $0.rawValue }), label: \.label)
             }
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     switch mode {
@@ -62,44 +66,20 @@ struct ControlsSheetView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 40)
             }
+            .onChange(of: panelsOpen) { _, id in
+                guard mode == .panels, !id.isEmpty, id != "__closed__" else { return }
+                withAnimation(.easeOut(duration: 0.25)) { proxy.scrollTo(id, anchor: .top) }
+            }
+            }
         }
         .background(JBTheme.panel)
         .columnWidth()
         .frame(maxWidth: .infinity)
         .background(JBTheme.panel)
+        .presentationBackground(JBTheme.panel)
         .onAppear { model.hitsWanted = mode == .panels }
         .onChange(of: modeRaw) { _, _ in model.hitsWanted = mode == .panels }
         .onDisappear { model.hitsWanted = false }
-    }
-
-    // MARK: - Function-key row (`.jb-seg--wide`)
-
-    private var segmented: some View {
-        HStack(spacing: 2) {
-            ForEach(ControlsMode.allCases) { m in
-                Button {
-                    modeRaw = m.rawValue
-                } label: {
-                    Text(m.label)
-                        .font(JBTheme.panelFont(13, weight: .semibold))
-                        .tracking(1.3)
-                        .textCase(.uppercase)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 32)
-                        .background(mode == m ? JBTheme.ink : .clear)
-                        .foregroundStyle(mode == m ? JBTheme.panel2 : JBTheme.ink2)
-                        .clipShape(Capsule())
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(mode == m ? .isSelected : [])
-            }
-        }
-        .padding(3)
-        .background(
-            Capsule().fill(JBTheme.panel3)
-                .overlay(Capsule().stroke(Color.black.opacity(0.12), lineWidth: 1.5).blur(radius: 1.5).mask(Capsule()))
-        )
     }
 
     private func empty(_ text: String) -> some View {
@@ -144,10 +124,16 @@ struct ControlsSheetView: View {
                 } else {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("length").font(JBTheme.bodyFont(14)).foregroundStyle(JBTheme.ink2)
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 40, maximum: 48), spacing: 6)], spacing: 6) {
+                        // 8 keys, 4 per row on a phone (2 × 4), one row of 8 in a regular-width
+                        // column. Card inner width = screen − 32 (sheet) − 24 (card): 375 → 319,
+                        // 393 → 337, 402 → 345, 720 column → 664; min 72 + 6 gap gives
+                        // floor((w + 6) / 78) = 4 / 4 / 4 / 8 columns, and "128" (≈ 30 pt at
+                        // 12 pt semibold + 1.44 tracking) fits inside 72 − 24 padding on one line.
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 72, maximum: 120), spacing: 6)], spacing: 6) {
                             ForEach(Self.barChoices, id: \.self) { b in
                                 Button("\(b)") { model.onTrack(key: "bars", value: Double(b)) }
                                     .buttonStyle(JBKeyStyle(variant: model.bars == b ? .orange : .panel, size: .small, wide: true))
+                                    .accessibilityAddTraits(model.bars == b ? .isSelected : [])
                             }
                         }
                     }

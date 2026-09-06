@@ -188,7 +188,7 @@ struct SeqView: View {
             .padding(.horizontal, 14)
             .frame(maxWidth: .infinity)
             .frame(height: 44)
-            .background(SeqRubber(face: JBTheme.panel4, lip: JBTheme.rule, radius: 11))
+            .background(SeqRubber.panel(radius: 11))
         }
         .accessibilityLabel("Instrument")
     }
@@ -239,11 +239,11 @@ struct SeqView: View {
                 VStack(spacing: 2) {
                     Text("\(i + 1)")
                         .font(JBTheme.panelFont(17, weight: .semibold))
-                        .foregroundStyle(on ? JBTheme.panel2 : JBTheme.ink)
+                        .foregroundStyle(on ? JBTheme.keyLabel : JBTheme.ink)
                         .opacity(playsHere ? 1 : 0.45)
                     Text("\(s.bars) \(s.bars == 1 ? "bar" : "bars")")
                         .font(JBTheme.monoFont(10, weight: .regular))
-                        .foregroundStyle(on ? JBTheme.ledOff : JBTheme.ink3)
+                        .foregroundStyle(on ? JBTheme.keyLabel.opacity(0.6) : JBTheme.ink3)
                 }
                 .frame(minWidth: 58 - 20)
                 .padding(.horizontal, 10)
@@ -253,7 +253,7 @@ struct SeqView: View {
                     .animation(.easeOut(duration: playing && onBeat ? 0.03 : 0.18), value: onBeat)
                     .padding(6)
             }
-            .background(SeqRubber(face: on ? JBTheme.ink : JBTheme.panel4, lip: on ? .black : JBTheme.rule, radius: 10))
+            .background(on ? SeqRubber.ink(radius: 10) : SeqRubber.panel(radius: 10))
         }
         .buttonStyle(SeqPressStyle())
         .accessibilityLabel("Section \(i + 1), \(s.bars) bars")
@@ -549,30 +549,30 @@ struct SeqPad: View {
     var slide: Bool = false
     var pitch: Double? = nil
 
-    /// color-mix(panel-3 86%, ink) — the shaded beat columns.
-    private static let beatFace = Color(hex: 0xB5B9B2)
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .topTrailing) {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(state == .off ? (beat ? Self.beatFace : JBTheme.panel3) : JBTheme.orange)
+                    .fill(state == .off ? (beat ? JBTheme.beatFace : JBTheme.panel3) : JBTheme.orange)
                     .overlay(
                         // Recessed well when off, a lit top edge when on.
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .stroke(state == .off ? Color.black.opacity(0.10) : Color.white.opacity(0.35), lineWidth: 1)
+                            .stroke(state == .off ? JBTheme.wellEdge : Color.white.opacity(0.35), lineWidth: 1)
                             .padding(0.5)
                             .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .center))
                     )
+                // Marks on a lit (orange) pad stay dark in both modes, like the
+                // label on an orange key.
                 if state == .accent {
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .strokeBorder(JBTheme.ink, lineWidth: 2)
-                    Circle().fill(JBTheme.ink).frame(width: 5, height: 5).padding(5)
+                        .strokeBorder(JBTheme.onOrange, lineWidth: 2)
+                    Circle().fill(JBTheme.onOrange).frame(width: 5, height: 5).padding(5)
                 }
                 if let note {
                     Text(note)
                         .font(JBTheme.monoFont(12, weight: .medium))
-                        .foregroundStyle(JBTheme.ink)
+                        .foregroundStyle(JBTheme.onOrange)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -581,13 +581,13 @@ struct SeqPad: View {
                 if slide {
                     Text("~")
                         .font(JBTheme.monoFont(11, weight: .regular))
-                        .foregroundStyle(JBTheme.ink)
+                        .foregroundStyle(JBTheme.onOrange)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .padding(EdgeInsets(top: 3, leading: 5, bottom: 0, trailing: 0))
                 }
                 if let pitch {
                     RoundedRectangle(cornerRadius: 1)
-                        .fill(JBTheme.ink)
+                        .fill(JBTheme.onOrange)
                         .frame(width: max(2, (geo.size.width - 8) * pitch), height: 2)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                         .padding(4)
@@ -628,8 +628,19 @@ struct SeqLed: View {
 struct SeqRubber: View {
     let face: Color
     let lip: Color
+    /// The `inset 0 1px 0` top highlight.
+    let highlight: Color
     let radius: CGFloat
     var pressed: Bool = false
+
+    /// Solid ink key: dark-on-light by day, light-on-dark at night.
+    static func ink(radius: CGFloat, pressed: Bool = false) -> SeqRubber {
+        SeqRubber(face: JBTheme.keyFill, lip: JBTheme.keyLip, highlight: Color.white.opacity(0.12), radius: radius, pressed: pressed)
+    }
+    /// Paper key (`--panel`).
+    static func panel(radius: CGFloat, pressed: Bool = false) -> SeqRubber {
+        SeqRubber(face: JBTheme.panel4, lip: JBTheme.panelKeyLip, highlight: JBTheme.highlight, radius: radius, pressed: pressed)
+    }
 
     var body: some View {
         ZStack {
@@ -637,7 +648,7 @@ struct SeqRubber: View {
             RoundedRectangle(cornerRadius: radius, style: .continuous).fill(face)
                 .overlay(
                     RoundedRectangle(cornerRadius: radius, style: .continuous)
-                        .stroke(Color.white.opacity(face == JBTheme.ink ? 0.12 : 1), lineWidth: 1)
+                        .stroke(highlight, lineWidth: 1)
                         .padding(0.5)
                         .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .init(x: 0.5, y: 0.25)))
                 )
@@ -683,12 +694,12 @@ struct SeqKeyStyle: ButtonStyle {
             .frame(maxWidth: fill ? .infinity : nil)
             .background {
                 switch variant {
-                case .ink: SeqRubber(face: JBTheme.ink, lip: .black, radius: radius, pressed: pressed)
-                case .panel: SeqRubber(face: JBTheme.panel4, lip: JBTheme.rule, radius: radius, pressed: pressed)
+                case .ink: SeqRubber.ink(radius: radius, pressed: pressed)
+                case .panel: SeqRubber.panel(radius: radius, pressed: pressed)
                 case .ghost: RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(armed ? JBTheme.orange : JBTheme.ink, lineWidth: 1.5)
                 }
             }
-            .foregroundStyle(armed ? JBTheme.orange : variant == .ink ? JBTheme.panel2 : JBTheme.ink)
+            .foregroundStyle(armed ? JBTheme.orange : variant == .ink ? JBTheme.keyLabel : JBTheme.ink)
             .offset(y: pressed && variant != .ghost ? 2 : 0)
             .opacity(isEnabled ? 1 : 0.35)
             .animation(.easeOut(duration: 0.05), value: pressed)

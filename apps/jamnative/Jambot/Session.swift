@@ -20,6 +20,13 @@ final class Session {
             await login(username: user, password: pass)
             return
         }
+        // DEBUG-only: `-forceSignedOut` drops any stored cookie and shows the
+        // login screen (headless screenshots of it, no tap needed).
+        if CommandLine.arguments.contains("-forceSignedOut") {
+            JamAPI.shared.clearCookies()
+            state = .signedOut
+            return
+        }
         do {
             let user = try await JamAPI.shared.me()
             state = .signedIn(user)

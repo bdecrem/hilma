@@ -58,9 +58,11 @@ struct StudioView: View {
         }
         .sheet(isPresented: $model.controlsOpen) {
             ControlsSheetView(model: model)
+                .jbAppearance()
         }
         .sheet(isPresented: $model.bounceOpen) {
             BounceSheet(render: model.lastRender, bpm: model.bpm)
+                .jbAppearance()
         }
     }
 
@@ -169,10 +171,10 @@ struct StudioView: View {
                 Spacer(minLength: 40)
                 Text(text)
                     .font(JBTheme.bodyFont(15))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(JBTheme.keyLabel)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 14)
-                    .background(JBTheme.ink)
+                    .background(JBTheme.keyFill)
                     .clipShape(RoundedCorner(radius: 16, corners: [.topLeft, .topRight, .bottomLeft]))
             }
         case .assistant(_, let text):
@@ -308,7 +310,7 @@ struct StudioView: View {
 
     private var composer: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            TextField("tell it what to play…", text: $model.input, axis: .vertical)
+            TextField("tell it what to play…", text: $model.input, prompt: jbPrompt("tell it what to play…"), axis: .vertical)
                 .lineLimit(1...4)
                 .jbField()
                 .focused($composerFocused)

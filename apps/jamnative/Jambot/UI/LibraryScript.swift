@@ -1,5 +1,7 @@
 import Foundation
 import os
+import UIKit
+import SwiftUI
 
 /// DEBUG-only driver for the Library: `-libraryScript "<step>;<step>;…"`
 /// runs after the track list has loaded, through the same `LibraryModel`
@@ -18,6 +20,9 @@ import os
 ///   playerPos               log the player's state
 ///   remix                   the player's Remix key (lands in the library, opens Studio)
 ///   closePlayer / closeStudio / about / closeAbout
+///   new                     "+ New track" (creates, opens Studio; remembered as "last")
+///   scroll:catalog          scroll the list to the public catalog (screenshots below the fold)
+///   appearance[:system|light|dark]   log the Appearance setting + the window's effective style; with an arg, set it (what the About control does)
 ///   cache                   log the render cache's track ids
 ///   shot:<name>             screenshot handshake (see StudioScript.shot)
 ///   note:<text>
@@ -100,6 +105,36 @@ enum LibraryScript {
             case "closePlayer":
                 model.closePublic()
                 try? await Task.sleep(nanoseconds: 700_000_000)
+            case "new":
+                await model.createAndOpen()
+                last = model.openTrack
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                emit("  new → '\(last?.title ?? "-")' id=\(last?.id ?? "-") studioOpen=\(model.openTrack != nil) error=\(model.error)")
+                // A -studioScript runs inside the opened Studio; wait for it to `back` out.
+                if StudioScript.steps != nil {
+                    let deadline = Date().addingTimeInterval(120)
+                    while model.openTrack != nil, Date() < deadline { try? await Task.sleep(nanoseconds: 300_000_000) }
+                    try? await Task.sleep(nanoseconds: 800_000_000)
+                    await model.load(openLaunchTrack: false)
+                }
+            case "scroll":
+                model.scrollTarget = arg
+                try? await Task.sleep(nanoseconds: 900_000_000)
+            case "appearance":
+                if !arg.isEmpty {
+                    UserDefaults.standard.set(arg, forKey: JBTheme.Appearance.storageKey)
+                    try? await Task.sleep(nanoseconds: 700_000_000)
+                }
+                let stored = UserDefaults.standard.string(forKey: JBTheme.Appearance.storageKey) ?? "(unset)"
+                let style = await MainActor.run { () -> String in
+                    let win = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.flatMap(\.windows).first { $0.isKeyWindow }
+                    switch win?.traitCollection.userInterfaceStyle {
+                    case .dark?: return "dark"
+                    case .light?: return "light"
+                    default: return "unspecified"
+                    }
+                }
+                emit("  appearance: stored=\(stored) setting=\(JBTheme.Appearance.current.rawValue) window=\(style)")
             case "closeStudio":
                 model.openTrack = nil
                 try? await Task.sleep(nanoseconds: 1_200_000_000)

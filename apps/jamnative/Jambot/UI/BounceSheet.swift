@@ -56,6 +56,7 @@ struct BounceSheet: View {
         }
         .presentationDetents([.height(240)])
         .background(JBTheme.panel)
+        .presentationBackground(JBTheme.panel)
         .sheet(item: $shareURL) { url in
             ShareSheet(items: [url])
         }

@@ -14,6 +14,14 @@ struct AboutView: View {
     /// present, then to "unknown".
     var engineVersion: String? = nil
 
+    /// System / Light / Dark — `jam.appearance`, applied at the root and on
+    /// every sheet by `.jbAppearance()`.
+    @AppStorage(JBTheme.Appearance.storageKey) private var appearanceRaw: String = JBTheme.Appearance.system.rawValue
+
+    private var appearance: Binding<JBTheme.Appearance> {
+        Binding(get: { JBTheme.Appearance(rawValue: appearanceRaw) ?? .system }, set: { appearanceRaw = $0.rawValue })
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             JBSheetHeader("About", onDone: { dismiss() })
@@ -38,6 +46,12 @@ struct AboutView: View {
                         }
                         .padding(.horizontal, 12)
                         .jbCard()
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        JBGroupRow("Appearance")
+                        JBSegmented(JBTheme.Appearance.allCases, selection: appearance, label: \.label)
+                            .accessibilityIdentifier("appearanceControl")
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -66,6 +80,7 @@ struct AboutView: View {
         .columnWidth()
         .frame(maxWidth: .infinity)
         .background(JBTheme.panel)
+        .presentationBackground(JBTheme.panel)
     }
 
     private func row(_ label: String, _ value: String) -> some View {
@@ -94,6 +109,8 @@ struct AboutView: View {
               let data = try? Data(contentsOf: url),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return nil }
+        // `pnpm jam:build` writes { stamp: "2026-09-06+jambot@0821d34b7", bytes, inputs }.
+        if let stamp = json["stamp"] as? String, !stamp.isEmpty { return stamp }
         let commit = json["commit"] as? String ?? json["jambotCommit"] as? String
         let builtAt = json["builtAt"] as? String ?? json["date"] as? String
         switch (builtAt, commit) {

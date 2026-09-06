@@ -26,6 +26,9 @@ targets:
       # the app always ships whatever was last built with `pnpm jam:build`.
       - path: ../../public/jam/jambot-web.js
         buildPhase: resources
+      # Its build stamp ("2026-09-06+jambot@<hash>") — shown in About → Engine.
+      - path: ../../public/jam/jambot-web.meta.json
+        buildPhase: resources
     info:
       path: Jambot/Info.plist
       properties:
