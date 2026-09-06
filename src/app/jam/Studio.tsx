@@ -113,11 +113,47 @@ function writeThroughSavedPatterns(session: JamSession, path: string): number {
   return n
 }
 
-/** Release the audio hardware. LoopPlayer has no close() yet, so reach its context. */
+/**
+ * Song mode, effect faders: 'fx.<key>.<effectId>.<param>' where key is an
+ * instrument id or '<instrument>.<voice>'. The live chain is what renders (in
+ * every section), but save_pattern snapshots the instrument's inserts into the
+ * pattern (channelInserts) and load_pattern restores that snapshot — so the
+ * live effect's new params are copied onto the same effect inside every saved
+ * pattern of that instrument, or the agent's next load_pattern would put the
+ * fader back where it was at save time. Effects not present in a snapshot are
+ * left alone. Returns how many saved patterns were updated. Mirrored in
+ * ../vibeceo/jambot/tests/test-web-writethrough.js and scripts/jam/controls-sweep.mjs.
+ */
+function writeThroughSavedInserts(session: JamSession, path: string): number {
+  const segs = path.split('.')
+  if (segs[0] !== 'fx' || segs.length < 4) return 0
+  if (!Array.isArray(session.arrangement) || session.arrangement.length === 0) return 0
+  const effectId = segs[segs.length - 2]
+  const key = segs.slice(1, -2).join('.')
+  const inst = key.split('.')[0]
+  if (inst === 'master') return 0
+  type LiveEffect = { id: string; _node?: { getParams(): Record<string, unknown> } }
+  const live = (session.mixer?.effectChains?.[key] as LiveEffect[] | undefined)?.find((e) => e.id === effectId)
+  if (!live?._node) return 0
+  const params = { ...live._node.getParams() }
+  type SavedEffect = { id: string; type: string; params?: Record<string, unknown> }
+  const saved = session.patterns?.[inst] as Record<string, { channelInserts?: Record<string, SavedEffect[]> | null } | null> | undefined
+  if (!saved) return 0
+  let n = 0
+  for (const entry of Object.values(saved)) {
+    const snap = entry?.channelInserts
+    if (!snap || typeof snap !== 'object') continue
+    const e = snap[key]?.find((x) => x.id === effectId)
+    if (!e) continue
+    e.params = params
+    n++
+  }
+  return n
+}
+
+/** Release the audio hardware. */
 function closePlayer(p: LoopPlayer) {
-  p.stop()
-  const ctx = (p as unknown as { ctx?: AudioContext | null }).ctx
-  if (ctx && ctx.state !== 'closed') ctx.close().catch(() => { /* already gone */ })
+  p.close()
 }
 
 type Props = {
@@ -517,9 +553,11 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     try {
       const r = await jam.executeTool('tweak', { path, value }, session, {})
       if (/^Error/.test(r)) { note(r, true); return }
-      // Song mode: the arrangement plays the saved patterns' own params, so
-      // the new value goes into every saved pattern too (live node untouched).
-      writeThroughSavedPatterns(session, path)
+      // Song mode: the arrangement plays the saved patterns' own params and
+      // inserts, so the new value goes into every saved pattern too (live
+      // node untouched).
+      if (path.startsWith('fx.')) writeThroughSavedInserts(session, path)
+      else writeThroughSavedPatterns(session, path)
       controlNotesRef.current.set(path, `${label} → ${path} = ${value}`)
       refreshDesc()
       scheduleRender()
@@ -643,10 +681,24 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   return (
     <div className="jb-screen jb-screen--fixed">
-      {/* header: printed panel strip */}
-      <header className="flex items-center gap-2 px-3 pb-2 pt-3">
-        <button onClick={back} className="jb-key jb-key--panel jb-key--xs shrink-0" aria-label="Back to tracks">‹ Tracks</button>
-        <div className="min-w-0 flex-1">
+      {/* header: nav row (back · actions) over the title block, all on the chat's 16px margin */}
+      <header className="jb-studio-head">
+        <div className="jb-nav">
+          <button onClick={back} className="jb-back" aria-label="Back to tracks"><span className="chev">‹</span>Tracks</button>
+          <div className="flex shrink-0 gap-1.5">
+            {pub.published && <button onClick={share} className="jb-key jb-key--panel jb-key--xs" aria-label="Share link">Share</button>}
+            <button
+              onClick={publish}
+              disabled={pubBusy || !ready || (!pub.published && !hasBuffer)}
+              className={`jb-key jb-key--xs ${pub.published ? 'jb-key--ghost' : ''}`}
+              style={pub.published ? undefined : { background: 'var(--green)', color: '#fff', boxShadow: '0 2px 0 #0a6a49' }}
+              title={pub.published ? 'Take it off the catalog' : 'Put it on the catalog so anyone can play and remix it'}
+            >
+              {pubBusy ? '…' : pub.published ? 'Unpublish' : 'Publish'}
+            </button>
+          </div>
+        </div>
+        <div className="jb-title-block">
           {editingTitle ? (
             <input
               autoFocus
@@ -654,30 +706,18 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
               onBlur={(e) => commitTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') commitTitle((e.target as HTMLInputElement).value); if (e.key === 'Escape') setEditingTitle(false) }}
               className="jb-field"
-              style={{ padding: '4px 8px', fontFamily: 'var(--font-panel-stack)', textTransform: 'uppercase', fontWeight: 600, fontSize: 18 }}
+              style={{ padding: '4px 8px', fontFamily: 'var(--font-panel-stack)', textTransform: 'uppercase', fontWeight: 600, fontSize: 22 }}
             />
           ) : (
-            <button onClick={() => setEditingTitle(true)} className="jb-track-name block w-full text-left" style={{ background: 'none', border: 0, padding: 0 }} title="Rename">
+            <button onClick={() => setEditingTitle(true)} className="jb-track-name jb-track-name--studio block w-full text-left" style={{ background: 'none', border: 0, padding: 0 }} title="Rename">
               {title}
             </button>
           )}
-          <div className="jb-readout">
+          <div className="jb-readout mt-1">
             <b>{Math.round(bpm)}</b> BPM · {shownBars} {shownBars === 1 ? 'bar' : 'bars'}{inSong ? (sectionNow ? ` · section ${sectionNow}` : ' · song') : ''}{swing ? ` · swing ${swing}` : ''}
             {saveState === 'saving' && <span className="jb-muted"> · saving</span>}
             {saveState === 'failed' && <span className="lit"> · not saved</span>}
           </div>
-        </div>
-        <div className="flex shrink-0 gap-1.5">
-          {pub.published && <button onClick={share} className="jb-key jb-key--panel jb-key--xs" aria-label="Share link">Share</button>}
-          <button
-            onClick={publish}
-            disabled={pubBusy || !ready || (!pub.published && !hasBuffer)}
-            className={`jb-key jb-key--xs ${pub.published ? 'jb-key--ghost' : ''}`}
-            style={pub.published ? undefined : { background: 'var(--green)', color: '#fff', boxShadow: '0 2px 0 #0a6a49' }}
-            title={pub.published ? 'Take it off the catalog' : 'Put it on the catalog so anyone can play and remix it'}
-          >
-            {pubBusy ? '…' : pub.published ? 'Unpublish' : 'Publish'}
-          </button>
         </div>
       </header>
 

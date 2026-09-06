@@ -91,6 +91,12 @@
   background: var(--panel);
 }
 .jb-screen--fixed { height: 100dvh; min-height: 0; }
+/* Wide screens: the app is a phone-width instrument, so keep it a centred 720px column
+   (screens and the Controls sheet alike) instead of stretching the header and chat edge to edge. */
+@media (min-width: 760px) {
+  .jb-screen { width: 100%; max-width: 720px; margin: 0 auto; box-shadow: -1px 0 0 var(--rule), 1px 0 0 var(--rule); }
+  .jb-sheet { left: 0; right: 0; width: 100%; max-width: 720px; margin: 0 auto; box-shadow: -1px 0 0 var(--rule), 1px 0 0 var(--rule); }
+}
 .jb-card {
   background: var(--panel-2);
   border: 1px solid var(--rule);
@@ -295,6 +301,20 @@
 .jb-track { display: flex; align-items: stretch; overflow: hidden; }
 .jb-track-main { flex: 1; min-width: 0; padding: 12px 14px; text-align: left; background: none; border: 0; cursor: pointer; color: inherit; }
 .jb-track-main:active { background: rgba(0, 0, 0, 0.04); }
+/* Studio header: 16px margin like the chat; nav row 32px (text back link left, xs keys right),
+   then the title block. Title 26px/1.05 + 4px + readout 12px. */
+.jb-studio-head { padding: 10px 16px 8px; }
+.jb-nav { display: flex; align-items: center; justify-content: space-between; min-height: 32px; }
+.jb-back {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: none; border: 0; padding: 0 8px 0 0; min-height: 32px; cursor: pointer;
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-2);
+}
+.jb-back .chev { font-size: 18px; line-height: 1; margin-top: -2px; }
+.jb-back:hover { color: var(--ink); }
+.jb-title-block { margin-top: 6px; min-width: 0; }
+.jb-track-name--studio { font-size: 26px; letter-spacing: 0.01em; line-height: 1.05; }
 .jb-track-name { font-family: var(--font-panel-stack); font-weight: 600; font-size: 19px; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jb-tag { display: inline-block; font-family: var(--font-panel-stack); font-weight: 600; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; padding: 1px 6px; border-radius: 4px; }
 .jb-tag--green { background: var(--green); color: #fff; }
