@@ -336,66 +336,114 @@
 .jb-tag--ink { background: var(--ink); color: var(--panel-2); }
 .jb-tag--outline { box-shadow: inset 0 0 0 1px var(--ink-3); color: var(--ink-3); }
 
+/* ---------- night palette ----------
+   Same tokens as the native app's dark appearance (Theme.swift). Toggled on
+   the .jb wrapper by the landing; keys invert (light key, ink label) so the
+   ink rubber key doesn't vanish on the dark panel. */
+.jb.jb--dark {
+  --panel: #1b1d20;
+  --panel-2: #24272b;
+  --panel-3: #141618;
+  --panel-4: #2c3035;
+  --ink: #ecEEe8;
+  --ink-2: #b9bcb4;
+  --ink-3: #8a8e86;
+  --rule: #3a3e43;
+  --orange: #ff5a2a;
+  --orange-soft: #8a3a22;
+  --cobalt: #5a80ff;
+  --green: #1db981;
+  --led-off: #3a3e43;
+  color-scheme: dark;
+}
+.jb.jb--dark .jb-key { background: #e6e8e1; color: #14161a; box-shadow: 0 2px 0 #0a0b0c, inset 0 1px 0 #fff; }
+.jb.jb--dark .jb-key:active { box-shadow: 0 0 0 #0a0b0c, inset 0 1px 0 #fff; }
+.jb.jb--dark .jb-key--orange { background: var(--orange); color: #14161a; box-shadow: 0 2px 0 #7a2a10, inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.jb.jb--dark .jb-key--orange:active { box-shadow: 0 0 0 #7a2a10, inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.jb.jb--dark .jb-key--panel { background: var(--panel-4); color: var(--ink); box-shadow: 0 2px 0 #0a0b0c, inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+.jb.jb--dark .jb-key--panel:active { box-shadow: 0 0 0 #0a0b0c, inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+.jb.jb--dark .jb-key--ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--ink-3); }
+.jb.jb--dark .jb-card { box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+.jb.jb--dark .jb-track-main:active { background: rgba(255, 255, 255, 0.04); }
+.jb.jb--dark .jb-wordmark .dot, .jb.jb--dark .jl-word .dot { box-shadow: 0 0 0.12em var(--orange), 0 0 0.4em rgba(255, 90, 42, 0.6); }
+
 /* ---------- landing (signed-out jambot.to) ----------
-   Essay layout after dodo.foo: masthead, statement, six phone scenes, CTAs,
-   then sections split by rules. 720px column via .jb-screen; 16px margins.
-   Scenes: 214px cards, three across at 720 (214×3 + 22×2 = 686). */
-.jb .jl { padding: 0 16px calc(env(safe-area-inset-bottom) + 48px); }
-.jb .jl-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 22px 0 0; }
-.jb .jl-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
-.jb .jl-brand img { width: 30px; height: 30px; border-radius: 7px; display: block; }
-.jb .jl-nav { display: flex; gap: 18px; align-items: center; }
+   Essay layout after dodo.foo: masthead, statement, a rule, six phone scenes,
+   CTAs, then sections split by rules. 720px column via .jb-screen with 24px
+   margins (672 inside); no side rules on this page. Scenes: 205px cards,
+   three across (205×3 + 28×2 = 671), a snap row on phones. */
+.jb .jb-screen.jl-page { box-shadow: none; }
+.jb .jl { padding: 0 24px calc(env(safe-area-inset-bottom) + 96px); }
+.jb .jl-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 28px 0 0; }
+.jb .jl-brand { display: inline-flex; align-items: center; gap: 3px; text-decoration: none; color: inherit; }
+.jb .jl-tile { display: block; width: 34px; height: 34px; flex: none; }
+.jb .jl-tile .tile { fill: var(--ink); }
+.jb .jl-tile .glyph { fill: var(--panel); }
+.jb .jl-word {
+  font-family: var(--font-panel-stack); font-weight: 700; font-size: 29px; letter-spacing: 0.06em; text-transform: uppercase;
+  line-height: 1; color: var(--ink); margin-top: 1px;
+}
+.jb .jl-word .dot {
+  display: inline-block; width: 0.2em; height: 0.2em; margin-left: 0.1em; vertical-align: 0.62em; border-radius: 50%;
+  background: var(--orange); box-shadow: 0 0 0.12em var(--orange), 0 0 0.35em rgba(255, 79, 31, 0.55);
+}
+.jb .jl-nav { display: flex; gap: 22px; align-items: center; }
 .jb .jl-nav a, .jb .jl-nav button {
-  font-family: var(--font-panel-stack); font-weight: 600; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--ink-2); text-decoration: none; background: none; border: 0; border-bottom: 2px solid var(--orange); padding: 0 0 1px; cursor: pointer;
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 13.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-2); text-decoration: none; background: none; border: 0; border-bottom: 2px solid var(--orange); padding: 0 0 2px; cursor: pointer;
 }
 .jb .jl-nav a:hover, .jb .jl-nav button:hover { color: var(--ink); }
 .jb .jl-h1 {
   font-family: var(--font-body-stack); font-weight: 500;
-  font-size: clamp(24px, 4.4vw, 30px); line-height: 1.3; letter-spacing: -0.01em;
-  margin: 44px 0 0; color: var(--ink); text-wrap: balance;
+  font-size: clamp(26px, 4.6vw, 32px); line-height: 1.3; letter-spacing: -0.012em;
+  margin: 92px 0 0; color: var(--ink); text-wrap: balance;
 }
 .jb .jl-h1 em { font-style: normal; color: var(--orange); }
+.jb .jl-rule { border: 0; border-top: 1px solid var(--rule); margin: 48px 0 0; }
 .jb .jl-scenes {
-  display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory;
-  margin: 0 -16px; padding: 30px 16px 8px; scrollbar-width: none;
+  display: flex; gap: 28px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -24px; padding: 52px 24px 12px; scrollbar-width: none;
 }
 .jb .jl-scenes::-webkit-scrollbar { display: none; }
-.jb .jl-scene { flex: 0 0 214px; margin: 0; scroll-snap-align: start; }
+.jb .jl-scene { flex: 0 0 205px; margin: 0; scroll-snap-align: start; }
 .jb .jl-scene img {
   width: 100%; height: auto; aspect-ratio: 840 / 1826; display: block; border-radius: 26px;
   border: 1px solid var(--rule); background: var(--panel-3);
-  box-shadow: 0 12px 30px rgba(20, 22, 26, 0.16), 0 1px 0 #fff inset;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
 }
 .jb .jl-scene h3 {
   font-family: var(--font-panel-stack); font-weight: 600; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase;
-  line-height: 1.1; margin: 14px 0 6px; color: var(--ink);
+  line-height: 1.12; margin: 20px 0 8px; color: var(--ink);
 }
-.jb .jl-scene p { font-size: 13.5px; line-height: 1.45; color: var(--ink-2); margin: 0; }
+.jb .jl-scene p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin: 0; }
 @media (max-width: 600px) { .jb .jl-scene { flex-basis: 66vw; } }
-.jb .jl-cta { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; }
+.jb .jl-cta { display: flex; flex-direction: column; gap: 12px; margin-top: 48px; }
+.jb .jl-cta--tight { margin-top: 0; }
+.jb .jl-cta .jb-key { height: 54px; font-size: 15px; }
 @media (min-width: 480px) { .jb .jl-cta { flex-direction: row; } .jb .jl-cta .jb-key { flex: 1; } }
-.jb .jl-tf { margin: 14px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.jb .jl-tf { margin: 20px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-2); }
 .jb .jl-tf a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+.jb .jl-formwrap { margin-top: 28px; }
 .jb .jl-form { margin: 0; }
-.jb .jl-section { margin-top: 52px; padding-top: 36px; border-top: 1px solid var(--rule); }
-.jb .jl-label { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.jb .jl-hint { margin: 0; border-radius: 10px; background: rgba(29, 185, 129, 0.14); color: var(--green); padding: 8px 12px; font-size: 14px; }
+.jb .jl-section { margin-top: 72px; padding-top: 48px; border-top: 1px solid var(--rule); }
+.jb .jl-label { display: flex; align-items: center; gap: 8px; margin-bottom: 22px; }
 .jb .jl-led { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 6px var(--orange); }
-.jb .jl-p { font-size: 16.5px; line-height: 1.6; color: var(--ink); margin: 0 0 14px; }
+.jb .jl-p { font-size: 17px; line-height: 1.65; color: var(--ink); margin: 0 0 18px; }
+.jb .jl-p--muted { color: var(--ink-2); }
 .jb .jl-p strong { font-weight: 600; }
 .jb .jl-p code, .jb .jl-feat code {
   font-family: var(--font-mono-stack); font-size: 13px; color: var(--ink);
   background: var(--panel-4); border: 1px solid var(--rule); border-radius: 6px; padding: 1px 6px; white-space: nowrap;
 }
-.jb .jl-say { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.jb .jl-say { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
 .jb .jl-say li {
   font-family: var(--font-mono-stack); font-size: 12.5px; color: var(--ink-2);
-  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px;
+  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 999px; padding: 7px 13px;
 }
-.jb .jl-feat { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-.jb .jl-feat li { position: relative; padding-left: 20px; font-size: 15px; line-height: 1.55; color: var(--ink-2); }
-.jb .jl-feat li::before { content: ''; position: absolute; left: 0; top: 8px; width: 8px; height: 8px; border-radius: 2px; background: var(--orange); }
+.jb .jl-feat { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.jb .jl-feat li { position: relative; padding-left: 22px; font-size: 15.5px; line-height: 1.6; color: var(--ink-2); }
+.jb .jl-feat li::before { content: ''; position: absolute; left: 0; top: 9px; width: 8px; height: 8px; border-radius: 2px; background: var(--orange); }
 .jb .jl-feat strong { color: var(--ink); font-weight: 600; }
-.jb .jl-more { margin: 16px 0 0; font-family: var(--font-panel-stack); font-weight: 600; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
+.jb .jl-more { margin: 18px 0 0; font-family: var(--font-panel-stack); font-weight: 600; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
 .jb .jl-more a { color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--orange); padding-bottom: 1px; }
-.jb .jl-foot { margin-top: 48px; text-align: center; }

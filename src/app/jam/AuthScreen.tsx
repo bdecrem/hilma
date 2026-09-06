@@ -7,8 +7,9 @@ import Catalog from './Catalog'
 // The signed-out jambot.to homepage: an essay-style landing in the manner of
 // dodo.foo — a developer talking to developers — with six phone screenshots,
 // the idea, what it does, the fine print, then the public catalog and the
-// sign-in / create-account form. Signed-in visitors never see this (JamApp
-// routes them straight to the library).
+// sign-in / create-account form. Dark by default (the night palette shared
+// with the native app); the app itself stays on the putty panel. Signed-in
+// visitors never see this (JamApp routes them straight to the library).
 //
 // "jam:seen" only decides whether the auth form opens automatically for a
 // returning signed-out visitor; it never skips the page.
@@ -16,6 +17,8 @@ import Catalog from './Catalog'
 const GITHUB_URL = 'https://github.com/bdecrem/jambot'
 const TESTFLIGHT_URL = 'https://testflight.apple.com/join/gDfvCAp1'
 const SEEN_KEY = 'jam:seen'
+const DARK_BG = '#1b1d20'
+const LIGHT_BG = '#dcdfd8'
 
 // Six beats, each a real screen from the iPhone app (public/jam/scenes/*.webp,
 // exported from the simulator at 840×1826).
@@ -37,6 +40,19 @@ const SAY = [
   'mute the lead, solo the acid',
 ]
 
+/** The masthead lockup: the app icon's J is the J of JAMBOT; one orange LED. */
+function Lockup() {
+  return (
+    <a className="jl-brand" href="/" aria-label="Jambot">
+      <svg className="jl-tile" viewBox="0 0 1024 1024" width={34} height={34} aria-hidden="true">
+        <rect width="1024" height="1024" rx="225" className="tile" />
+        <path d="M582,186 H768 V605 A256,256 0 0 1 256,605 V512 H442 V605 A70,70 0 0 0 582,605 Z" className="glyph" />
+      </svg>
+      <span className="jl-word" aria-hidden="true">ambot<span className="dot" /></span>
+    </a>
+  )
+}
+
 export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUser) => void; hint?: string }) {
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [formOpen, setFormOpen] = useState(false)
@@ -45,6 +61,20 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const formRef = useRef<HTMLFormElement | null>(null)
+
+  // Night palette while the landing is up: the tokens live on the .jb layout
+  // wrapper, so flipping a class there recolours the catalog cards, keys and
+  // form too; the Safari bar follows via theme-color. Restored on sign-in.
+  useEffect(() => {
+    const root = document.querySelector('.jb')
+    const meta = document.querySelector('meta[name="theme-color"]')
+    root?.classList.add('jb--dark')
+    meta?.setAttribute('content', DARK_BG)
+    return () => {
+      root?.classList.remove('jb--dark')
+      meta?.setAttribute('content', LIGHT_BG)
+    }
+  }, [])
 
   // Read the pre-existing value once (into a ref, not state) before writing —
   // React's dev-mode double effect invoke would otherwise read back its own
@@ -91,7 +121,7 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
           {mode === 'login' ? 'create an account' : 'I have an account'}
         </button>
       </div>
-      {hint && <p className="rounded-xl bg-[#0f9f6e]/12 px-3 py-2 text-sm text-[#0a7a54]">{hint}</p>}
+      {hint && <p className="jl-hint">{hint}</p>}
       <input
         value={username}
         onChange={(e) => setUsername(e.target.value)}
@@ -117,14 +147,10 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
   )
 
   return (
-    <div className="jb-screen">
+    <div className="jb-screen jl-page">
       <div className="jl">
         <header className="jl-top">
-          <a className="jl-brand" href="/" aria-label="Jambot">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/jam/mark-dark.png" alt="" width={30} height={30} />
-            <span className="jb-wordmark jb-wordmark--bar">Jambot<span className="dot" /></span>
-          </a>
+          <Lockup />
           <nav className="jl-nav">
             <a href={GITHUB_URL} target="_blank" rel="noopener">GitHub</a>
             <button type="button" onClick={() => openForm('login')}>Sign in</button>
@@ -132,11 +158,13 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
         </header>
 
         <h1 className="jl-h1">
-          Jambot is an AI groovebox: talk to it the way you’d talk to a producer and it programs real synth engines — 909 drums, 303 acid, 101 leads — in your browser, on your phone and in your terminal.{' '}
+          Jambot is Claude Code for grooves: describe a beat and an agent programs real synth engines — 909 drums, 303 acid, 101 leads — in your browser, on your phone and in your terminal.{' '}
           <em>Every parameter tweakable, every pattern yours.</em>
         </h1>
 
-        {/* Scenes: 214px cards, three across at 720 (214×3 + 22×2 = 686), a snap row on phones. */}
+        <hr className="jl-rule" />
+
+        {/* Scenes: 205px cards, three across at 720 (205×3 + 28×2 = 671 in the 672 column), a snap row on phones. */}
         <div className="jl-scenes" aria-label="Screens from the iPhone app">
           {SCENES.map((s) => (
             <figure key={s.id} className="jl-scene">
@@ -159,7 +187,7 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
           <a href={TESTFLIGHT_URL} target="_blank" rel="noopener">request TestFlight access</a>.
         </p>
 
-        {formOpen && <div className="mt-5">{form}</div>}
+        {formOpen && <div className="jl-formwrap">{form}</div>}
 
         <section className="jl-section">
           <div className="jl-label"><span className="jl-led" /><span className="jb-eyebrow">The idea</span></div>
@@ -199,7 +227,7 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
 
         <section className="jl-section">
           <div className="jl-label"><span className="jl-led" /><span className="jb-eyebrow">The fine print</span></div>
-          <p className="jl-p jb-muted">
+          <p className="jl-p jl-p--muted">
             It’s a v0.x — a sketchpad, not a product. The web app is free to try; the iPhone and Mac app is on TestFlight; the CLI is open source. Tracks you publish are public, tracks you don’t are yours alone.
           </p>
           <p className="jl-tf">
@@ -209,23 +237,19 @@ export default function AuthScreen({ onSignedIn, hint }: { onSignedIn: (u: JamUs
 
         <section id="listen" className="jl-section">
           <div className="jl-label"><span className="jl-led" /><span className="jb-eyebrow">Listen, then remix</span></div>
-          <p className="jl-p jb-muted">Pick a track, press play, hit Remix. You’ll be asked for an account and the copy opens in your library.</p>
+          <p className="jl-p jl-p--muted">Pick a track, press play, hit Remix. You’ll be asked for an account and the copy opens in your library.</p>
           <Catalog title="Catalog" emptyText="Nothing published yet." />
         </section>
 
         {!formOpen && (
           <section className="jl-section">
             <div className="jl-label"><span className="jl-led" /><span className="jb-eyebrow">Start</span></div>
-            <div className="jl-cta">
+            <div className="jl-cta jl-cta--tight">
               <button type="button" onClick={() => openForm('signup')} className="jb-key jb-key--orange">Make a new track</button>
               <button type="button" onClick={() => openForm('login')} className="jb-key jb-key--panel">Sign in</button>
             </div>
           </section>
         )}
-
-        <footer className="jl-foot">
-          <span className="jb-readout">Made by Bart Decrem · jambot.to</span>
-        </footer>
       </div>
     </div>
   )
