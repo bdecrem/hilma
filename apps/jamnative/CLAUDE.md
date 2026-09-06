@@ -172,6 +172,65 @@ xcrun devicectl device process launch --device 9FBCF85E-F1E3-5646-93DC-F51E897B1
 
 Bundle id `A43853Z8U5`, profile "Jambot dev" (expires 2027-09-06), certificate `9AYMK558AW` (the keychain's Apple Development: Bart Decrem). `build-device/` is gitignored.
 
+## TestFlight (iOS + Mac; worked end to end 2026-09-06, build 0.1 (6))
+
+App Store Connect app record: **"Jambot: talk, groove."**, id `6809181971`, bundle
+`com.bartdecrem.Jambot`, SKU `20260905` (created by Bart in the ASC web UI — the API
+cannot create app records). Beta group **"Public"** (`d0521115-2fda-442f-89d2-8bf9ffc93c06`),
+public link on, limit 1000: https://testflight.apple.com/join/gDfvCAp1 — the link
+installs once a build in the group is approved by beta review.
+
+```bash
+cd apps/jamnative
+./bump-build.sh                                                     # unique CFBundleVersion per upload
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer     # RELEASE Xcode — ASC rejects beta-SDK uploads
+KEY="-authenticationKeyPath $HOME/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8 -authenticationKeyID 5A5HNSWA33 -authenticationKeyIssuerID 69a6de80-eb13-47e3-e053-5b8c7c11a4d1"
+
+# iOS
+xcodebuild archive -project Jambot.xcodeproj -scheme Jambot -destination 'generic/platform=iOS' \
+  -archivePath build-testflight/Jambot.xcarchive -configuration Release \
+  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=Jambot appstore" "CODE_SIGN_IDENTITY=Apple Distribution"
+xcodebuild -exportArchive -archivePath build-testflight/Jambot.xcarchive \
+  -exportOptionsPlist testflight/export.plist -exportPath build-testflight/ipa $KEY      # → Jambot.ipa
+xcrun altool --upload-app -f build-testflight/ipa/Jambot.ipa -t ios \
+  --apiKey 5A5HNSWA33 --apiIssuer 69a6de80-eb13-47e3-e053-5b8c7c11a4d1
+node testflight/asc-submit.mjs <buildNumber> IOS
+
+# Mac (Catalyst) — same app record, shows under TestFlight's macOS side
+xcodebuild archive -project Jambot.xcodeproj -scheme Jambot -destination 'generic/platform=macOS,variant=Mac Catalyst' \
+  -archivePath build-testflight/JambotMac.xcarchive -configuration Release \
+  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=Jambot catalyst appstore" "CODE_SIGN_IDENTITY=Apple Distribution"
+xcodebuild -exportArchive -archivePath build-testflight/JambotMac.xcarchive \
+  -exportOptionsPlist testflight/export-mac.plist -exportPath build-testflight/pkg $KEY   # → Jambot.pkg
+xcrun altool --upload-app -f build-testflight/pkg/Jambot.pkg -t macos \
+  --apiKey 5A5HNSWA33 --apiIssuer 69a6de80-eb13-47e3-e053-5b8c7c11a4d1
+node testflight/asc-submit.mjs <buildNumber> MAC_OS
+```
+
+`testflight/asc-submit.mjs <build> [IOS|MAC_OS]` polls until the build is VALID, fills the
+beta-review metadata if empty (contact Bart, demo account `jamtest` / `jamtest1`, en-US beta
+description), makes sure the "Public" group exists with its public link on, adds the build,
+expires any other build of that platform still WAITING_FOR_REVIEW (never an approved one),
+submits for beta review and prints the public link. `xcrun altool --validate-app` with the
+same flags checks a package without uploading.
+
+Standing facts:
+- Profiles (minted with `python3 scripts/ios/asc-profile.py com.bartdecrem.Jambot "<name>" <kind>`,
+  installed in `~/Library/Developer/Xcode/UserData/Provisioning Profiles/`): "Jambot appstore"
+  (IOS_APP_STORE, uuid `9ae09204-fbc4-4013-8ce9-70cc877fba3d`), "Jambot catalyst appstore"
+  (MAC_CATALYST_APP_STORE, uuid `f8874e55-2e59-43c8-b58e-78dfd18d4292`, `.provisionprofile`),
+  "Jambot dev" (uuid `ffe142d9-95c3-4c75-b7e2-f8bd719d380b`). All against the keychain's
+  "Apple Distribution: Bart Decrem" / "Apple Development: Bart Decrem" (team 274T5WCVD2).
+- Installer cert `WUZK4CR87J` ("3rd Party Mac Developer Installer") signs the Mac .pkg;
+  `export-mac.plist` names it via `installerSigningCertificate`.
+- Release Catalyst builds are sandboxed by `Jambot/Jambot-macOS.entitlements`
+  (app-sandbox, network.client, files.user-selected.read-write), wired Release-only in
+  `project.yml` — `altool --validate-app` rejects an unsandboxed Mac package ("App sandbox
+  not enabled"). Debug Catalyst builds stay unsandboxed.
+- `ITSAppUsesNonExemptEncryption: false` and `LSApplicationCategoryType` in `project.yml`
+  are required for processing; keep them.
+- `build-testflight/` is gitignored (archives, ipa, pkg, logs).
+
 ## Branding (app icon, launch screen)
 
 The app icon is the **monogram** (the "J" with the orange LED) from

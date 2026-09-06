@@ -72,6 +72,7 @@
 		1458A7CBA94357FCF3635FE4 /* EngineFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineFactory.swift; sourceTree = "<group>"; };
 		16864BF1298FDEFFB63967E4 /* LibraryScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryScript.swift; sourceTree = "<group>"; };
 		17D15A9536B1E49E8B57EE31 /* StudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioView.swift; sourceTree = "<group>"; };
+		1EB192505AA562D3460286B7 /* Jambot-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Jambot-macOS.entitlements"; sourceTree = "<group>"; };
 		2643112F369151EFB752FAF6 /* StudioScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioScript.swift; sourceTree = "<group>"; };
 		28E5D850B703ACC6EB399D37 /* BounceSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BounceSheet.swift; sourceTree = "<group>"; };
 		2D36D9025DDAE37C9487E8C0 /* InstrumentPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstrumentPanels.swift; sourceTree = "<group>"; };
@@ -206,6 +207,7 @@
 				1458A7CBA94357FCF3635FE4 /* EngineFactory.swift */,
 				34F6FB688AFBF8C5E621FB9C /* Info.plist */,
 				B5E07E19922B40CA6EF838FE /* JamAPI.swift */,
+				1EB192505AA562D3460286B7 /* Jambot-macOS.entitlements */,
 				D8C9CF3DDA02BFBA91480B21 /* JambotApp.swift */,
 				B9CFCD0042E6B7FD3C00572C /* Models.swift */,
 				634F2B8FEE6C7A07C993E2A8 /* Secrets.swift */,
@@ -430,7 +432,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -467,6 +469,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Jambot/Jambot-macOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				ENABLE_DEBUG_DYLIB = NO;
@@ -522,7 +525,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

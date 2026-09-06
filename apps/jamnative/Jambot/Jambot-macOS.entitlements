@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Mac App Store / TestFlight requires the App Sandbox. Applied to
+	     RELEASE Catalyst builds only (see project.yml) — the local debug
+	     install stays unsandboxed so its container (cookies, defaults)
+	     doesn't move. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- Talks to jambot.to (API + LLM proxy). -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- Bounce writes MP3/WAV through the save/share panel (powerbox). -->
+	<key>com.apple.security.files.user-selected.read-write</key>
+	<true/>
+</dict>
+</plist>

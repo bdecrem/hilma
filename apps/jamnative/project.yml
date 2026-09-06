@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.1"
-    CURRENT_PROJECT_VERSION: "5"
+    CURRENT_PROJECT_VERSION: "6"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 targets:
@@ -72,3 +72,9 @@ targets:
         DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         MACOSX_DEPLOYMENT_TARGET: "14.0"
+      configs:
+        # App Store / TestFlight Catalyst uploads must be sandboxed
+        # (Jambot/Jambot-macOS.entitlements). Release only — the local
+        # debug Mac install keeps its unsandboxed container.
+        Release:
+          "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Jambot/Jambot-macOS.entitlements
