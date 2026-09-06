@@ -45,6 +45,12 @@ final class EngineSmokeRunner: ObservableObject {
     func run() async {
         let args = CommandLine.arguments
         do {
+            if args.contains("-engineSmokeSeq") {
+                try await seqChecks()
+                log("SMOKE DONE")
+                finished = true
+                return
+            }
             try await checks(agent: args.contains("-engineSmokeAgent"))
             if args.contains("-engineSmokeBackground") {
                 await backgroundProbe()
@@ -167,6 +173,126 @@ final class EngineSmokeRunner: ObservableObject {
         log("agent done: \(events) events in \(String(format: "%.1f", Date().timeIntervalSince(t0))) s; history now \(history.count) messages (last role=\(history.last?.role ?? "-")) → \(history.count > track.messages.count ? "PASS" : "FAIL")")
     }
 
+    // MARK: - Sequencer bridge (-engineSmokeSeq)
+
+    /// Exercises `pattern` / `seq` / `hits` on the jamtest song-mode track.
+    /// Nothing is saved: the session lives and dies in the web view.
+    private func seqChecks() async throws {
+        log("seq smoke start")
+        try await host.ready()
+        log("ready: version=\(host.engineVersion ?? "?") tools=\(host.toolNames.count)")
+        _ = try await JamAPI.shared.login(username: "jamtest", password: "jamtest1")
+        let tracks = try await JamAPI.shared.tracks()
+        guard let meta = tracks.first(where: { $0.title == "SEQ TEST techno copy" }) else {
+            throw NSError(domain: "smoke", code: 1, userInfo: [NSLocalizedDescriptionKey: "track 'SEQ TEST techno copy' not found"])
+        }
+        let track = try await JamAPI.shared.track(meta.id)
+        let loaded = try await host.loadSession(session: track.session, bpm: track.bpm)
+        let arr = loaded.desc.arrangement
+        log("loadSession: bars=\(loaded.desc.bars) arrangement=\(arr.map { "\($0.bars)b \($0.patterns)" })")
+        guard arr.count >= 2 else { throw NSError(domain: "smoke", code: 3, userInfo: [NSLocalizedDescriptionKey: "need a 2-section arrangement"]) }
+
+        func drumsSummary(_ p: SeqPattern) -> String {
+            guard let d = p.drums else { return "not drums" }
+            return d.compactMap { v, row -> String? in
+                let on = row.enumerated().filter { $0.element.isOn }.map { "\($0.offset + 1)\($0.element.accent ? "!" : "")" }
+                return on.isEmpty ? nil : "\(v)[\(on.joined(separator: ","))]"
+            }.sorted().joined(separator: " ")
+        }
+        func state(_ s: DrumStep) -> String { !s.isOn ? "off" : s.accent ? "accent" : "hit" }
+
+        // 1. read the section-1 pattern
+        let p0 = try await host.pattern(inst: "jt90", section: 0)
+        log("pattern(jt90, section 1): kind=\(p0.kind) type=\(p0.type) name=\(p0.name ?? "-") length=\(p0.length) voices=\(p0.drums?.keys.sorted() ?? []) → \(p0.isDrums && p0.length % 16 == 0 ? "PASS" : "FAIL")")
+        log("  hits: \(drumsSummary(p0))")
+
+        // 2. cycle a kick step: off → hit → accent → off (first kick step that is off)
+        let kick0 = p0.drums?["kick"] ?? []
+        let i = kick0.firstIndex { !$0.isOn } ?? 0
+        log("cycleDrum kick step \(i + 1) (starts \(state(kick0[i])))")
+        var seen: [String] = []
+        var last = p0
+        for _ in 0..<3 {
+            let r = try await host.seq(.cycleDrum(voice: "kick", i: i), inst: "jt90", section: 0)
+            last = r.pattern
+            seen.append(state(r.pattern.drums!["kick"]![i]))
+        }
+        let expect = state(kick0[i]) == "off" ? ["hit", "accent", "off"] : state(kick0[i]) == "hit" ? ["accent", "off", "hit"] : ["off", "hit", "accent"]
+        log("  cycle → \(seen) (expected \(expect)) \(seen == expect ? "PASS" : "FAIL"); pattern name in result=\(last.name ?? "-") length=\(last.length)")
+
+        // 3. hits at a kick step contains jt90/kick (section scope and song scope)
+        let pk = try await host.pattern(inst: "jt90", section: 0)
+        if let ks = pk.drums?["kick"]?.firstIndex(where: { $0.isOn }) {
+            let hSec = try await host.hits(step: ks, scope: .section(index: 0))
+            let hSong = try await host.hits(step: ks, scope: .song) // section 1 starts at bar 0
+            log("hits(step \(ks + 1), section 1) = \(hSec) → \(hSec["jt90"]?.contains("kick") == true ? "PASS" : "FAIL"); song scope = \(hSong) → \(hSong["jt90"]?.contains("kick") == true ? "PASS" : "FAIL")")
+            let off = pk.drums?["kick"]?.firstIndex(where: { !$0.isOn }) ?? -1
+            if off >= 0 {
+                let hOff = try await host.hits(step: off, scope: .section(index: 0))
+                log("hits(step \(off + 1), section 1) = \(hOff) → \(hOff["jt90"]?.contains("kick") != true ? "PASS (no kick)" : "FAIL")")
+            }
+        } else {
+            log("hits: no kick step lit in section 1 → skipped")
+        }
+
+        // 4. mono: toggleGate on jb202 step 2 + setNote A#1
+        let monoInst = loaded.desc.instruments.first { ["jb202", "jt30", "jt10"].contains($0.type) && arr[0].patterns[$0.id] != nil }?.id ?? "jb202"
+        let m0 = try await host.pattern(inst: monoInst, section: 0)
+        log("pattern(\(monoInst), section 1): kind=\(m0.kind) name=\(m0.name ?? "-") length=\(m0.length) step2=\(m0.mono.map { "\($0[1])" } ?? "-")")
+        let g1 = try await host.seq(.toggleGate(i: 1), inst: monoInst, section: 0)
+        let g2 = try await host.seq(.setNote(i: 1, note: "A#1"), inst: monoInst, section: 0)
+        let before = m0.mono![1].gate, afterGate = g1.pattern.mono![1].gate, note = g2.pattern.mono![1].note
+        log("  toggleGate step 2: \(before) → \(afterGate) \(afterGate != before ? "PASS" : "FAIL"); setNote A#1 → \(note) \(note == "A#1" ? "PASS" : "FAIL") (gate still \(g2.pattern.mono![1].gate))")
+        let flat = try await host.seq(.setNote(i: 1, note: "Bb1"), inst: monoInst, section: 0)
+        log("  setNote Bb1 canonicalises to \(flat.pattern.mono![1].note) \(flat.pattern.mono![1].note == "A#1" ? "PASS" : "FAIL")")
+        _ = try await host.seq(.toggleGate(i: 1), inst: monoInst, section: 0) // back
+
+        // 5. resize 2 bars keeps steps; back to the original length
+        let r2 = try await host.seq(.resize(bars: 2), inst: "jt90", section: 0)
+        let kept = zip(pk.drums!["kick"]!, r2.pattern.drums!["kick"]!).allSatisfy { $0.0 == $0.1 }
+        let descBars = r2.desc.bars
+        log("resize 2 bars: length \(pk.length) → \(r2.pattern.length) \(r2.pattern.length == 32 ? "PASS" : "FAIL"); first \(pk.length) kick steps kept \(kept ? "PASS" : "FAIL"); desc.bars=\(descBars) (song mode: unchanged expected)")
+        let back = try await host.seq(.resize(bars: pk.bars), inst: "jt90", section: 0)
+        log("  resize back → length \(back.pattern.length) \(back.pattern.length == pk.length ? "PASS" : "FAIL")")
+
+        // 6. section-2 edits land in the saved pattern B, not A
+        let nameA = arr[0].patterns["jt90"] ?? "?", nameB = arr[1].patterns["jt90"] ?? "?"
+        func savedPattern(_ name: String) async throws -> JSONValue {
+            let s = try await host.serialize()
+            if case .object(let o) = s, case .object(let pats) = o["patterns"] ?? .null, case .object(let inst) = pats["jt90"] ?? .null,
+               case .object(let entry) = inst[name] ?? .null { return entry["pattern"] ?? .null }
+            return .null
+        }
+        let a0 = try await savedPattern(nameA), b0 = try await savedPattern(nameB)
+        let pB = try await host.pattern(inst: "jt90", section: 1)
+        let j = pB.drums?["snare"]?.firstIndex { !$0.isOn } ?? 3
+        let eB = try await host.seq(.cycleDrum(voice: "snare", i: j), inst: "jt90", section: 1)
+        let a1 = try await savedPattern(nameA), b1 = try await savedPattern(nameB)
+        log("section 2 edit (snare step \(j + 1) on pattern \(eB.pattern.name ?? "-")): A(\(nameA)) unchanged \(a0 == a1 ? "PASS" : "FAIL"); B(\(nameB)) changed \(b0 != b1 ? "PASS" : "FAIL") \(nameA == nameB ? "(same pattern in both sections — B check not meaningful)" : "")")
+        _ = try await host.seq(.cycleDrum(voice: "snare", i: j), inst: "jt90", section: 1)
+        _ = try await host.seq(.cycleDrum(voice: "snare", i: j), inst: "jt90", section: 1) // back to off
+
+        // 7. clear
+        let c = try await host.seq(.clear, inst: "jt90", section: 1)
+        let allOff = c.pattern.drums!.values.allSatisfy { row in row.allSatisfy { !$0.isOn } }
+        log("clear section 2: all off \(allOff ? "PASS" : "FAIL") length kept \(c.pattern.length == pB.length ? "PASS" : "FAIL")")
+
+        // 8. loop mode (no section): the live node
+        let live = try await host.pattern(inst: "jt90", section: nil)
+        let li = live.drums?["ch"]?.firstIndex { !$0.isOn } ?? 1
+        let le = try await host.seq(.cycleDrum(voice: "ch", i: li), inst: "jt90", section: nil)
+        log("loop mode: live pattern name=\(live.name ?? "-") length=\(live.length); ch step \(li + 1) → \(state(le.pattern.drums!["ch"]![li])) \(le.pattern.drums!["ch"]![li].isOn ? "PASS" : "FAIL")")
+        for _ in 0..<2 { _ = try await host.seq(.cycleDrum(voice: "ch", i: li), inst: "jt90", section: nil) }
+
+        // 9. errors answer as errors
+        do { _ = try await host.pattern(inst: "nope", section: nil); log("pattern(nope): no error → FAIL") }
+        catch { log("pattern(nope) → error '\(error.localizedDescription)' PASS") }
+        do { _ = try await host.seq(.toggleGate(i: 0), inst: "jt90", section: 0); log("toggleGate on drums: no error → FAIL") }
+        catch { log("toggleGate on jt90 → error '\(error.localizedDescription)' PASS") }
+        do { _ = try await host.seq(.cycleDrum(voice: "kick", i: 0), inst: "jt90", section: 7); log("section 8: no error → FAIL") }
+        catch { log("section 8 → error '\(error.localizedDescription)' PASS") }
+    }
+
     // MARK: - Background probe
 
     private func backgroundProbe() async {
@@ -225,6 +351,17 @@ final class EngineSmokeRunner: ObservableObject {
 }
 
 struct EngineSmokeView: View {
+    var body: some View {
+        // -seqPreview: the sequencer harness (UI/Seq/SeqPreview.swift) instead of the log view.
+        if CommandLine.arguments.contains("-seqPreview") {
+            SeqPreviewView()
+        } else {
+            EngineSmokeLogView()
+        }
+    }
+}
+
+private struct EngineSmokeLogView: View {
     @StateObject private var runner = EngineSmokeRunner()
 
     var body: some View {

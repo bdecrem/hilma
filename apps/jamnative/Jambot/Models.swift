@@ -143,6 +143,54 @@ struct Track: Codable, Identifiable, Equatable {
     }
 }
 
+/// A published track as anyone sees it (no owner ids) — mirrors
+/// `PublicTrackMeta` in `src/app/jam/api.ts`. Listed by `GET /api/jam/public`.
+struct PublicTrackMeta: Codable, Identifiable, Equatable, Hashable {
+    var id: String { slug }
+    let slug: String
+    let title: String
+    let bpm: Int
+    let bars: Int
+    let publishedAt: String
+    let remix: Bool
+    let username: String
+    var strip: Strip?
+
+    enum CodingKeys: String, CodingKey {
+        case slug, title, bpm, bars, remix, username, strip
+        case publishedAt = "published_at"
+    }
+}
+
+/// One public track with its full session — `GET /api/jam/public/:slug`.
+struct PublicTrack: Codable, Equatable {
+    let slug: String
+    let title: String
+    let bpm: Int
+    let bars: Int
+    let publishedAt: String
+    let remix: Bool
+    let username: String
+    var strip: Strip?
+    var session: JSONValue?
+
+    enum CodingKeys: String, CodingKey {
+        case slug, title, bpm, bars, remix, username, strip, session
+        case publishedAt = "published_at"
+    }
+
+    var meta: PublicTrackMeta {
+        PublicTrackMeta(slug: slug, title: title, bpm: bpm, bars: bars, publishedAt: publishedAt, remix: remix, username: username, strip: strip)
+    }
+}
+
+/// Public URL for a published track — `https://jambot.to/t/<slug>`, mirrors
+/// `publicTrackUrl` in `src/app/jam/api.ts` (native always talks to the
+/// production domain, so no host-detection is needed).
+func publicTrackURL(_ slug: String) -> URL {
+    URL(string: "https://jambot.to/t/\(slug)")!
+}
+
 /// Patch body for `PUT /api/jam/tracks/:id` — only send what changed.
 struct TrackPatch: Encodable {
     var title: String?

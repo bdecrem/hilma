@@ -153,6 +153,44 @@ final class JamAPI {
         let _: OkResponse = try await delete("/api/jam/tracks/\(id)")
     }
 
+    func duplicateTrack(_ id: String) async throws -> TrackMeta {
+        let res: TrackMetaResponse = try await post("/api/jam/tracks/\(id)/duplicate")
+        return res.track
+    }
+
+    func publish(_ id: String) async throws -> TrackMeta {
+        let res: TrackMetaResponse = try await post("/api/jam/tracks/\(id)/publish")
+        return res.track
+    }
+
+    func unpublish(_ id: String) async throws -> TrackMeta {
+        let res: TrackMetaResponse = try await delete("/api/jam/tracks/\(id)/publish")
+        return res.track
+    }
+
+    // MARK: Catalog (public, no sign-in required)
+
+    private struct CatalogResponse: Decodable { let tracks: [PublicTrackMeta] }
+    private struct PublicTrackResponse: Decodable { let track: PublicTrack }
+
+    func catalog() async throws -> [PublicTrackMeta] {
+        let res: CatalogResponse = try await get("/api/jam/public")
+        return res.tracks
+    }
+
+    func publicTrack(_ slug: String) async throws -> PublicTrack {
+        let res: PublicTrackResponse = try await get("/api/jam/public/\(slug)")
+        return res.track
+    }
+
+    /// Copies a published track into the signed-in user's library as
+    /// "<title> remix" with a fresh chat. Requires a session cookie —
+    /// callers should route a signed-out tap to sign-in first.
+    func remix(_ slug: String) async throws -> TrackMeta {
+        let res: TrackMetaResponse = try await post("/api/jam/public/\(slug)/remix")
+        return res.track
+    }
+
     // MARK: LLM proxy (engine host)
 
     /// POST /api/jam/llm with the exact body the engine's agent loop built

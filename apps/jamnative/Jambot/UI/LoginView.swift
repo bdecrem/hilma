@@ -6,74 +6,85 @@ struct LoginView: View {
     @State private var password = ""
     @State private var isSignup = false
     @State private var busy = false
+    @FocusState private var usernameFocused: Bool
 
     var body: some View {
-        VStack(spacing: 18) {
-            Spacer()
+        ScrollView {
+            VStack(spacing: 18) {
+                Spacer(minLength: 40)
 
-            VStack(spacing: 2) {
-                Text("JAMBOT")
-                    .font(JBTheme.panelFont(34, weight: .bold))
-                    .foregroundStyle(JBTheme.ink)
-                Circle()
-                    .fill(JBTheme.orange)
-                    .frame(width: 8, height: 8)
-                    .shadow(color: JBTheme.orange.opacity(0.6), radius: 6)
-            }
-            .padding(.bottom, 24)
-
-            VStack(spacing: 10) {
-                TextField("Username", text: $username)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .jbField()
-                SecureField("Password", text: $password)
-                    .jbField()
-            }
-            .padding(.horizontal, 28)
-
-            if let error = session.loginError {
-                Text(error)
-                    .font(JBTheme.bodyFont(13))
-                    .foregroundStyle(JBTheme.orange)
-                    .padding(.horizontal, 28)
-            }
-
-            Button {
-                Task {
-                    busy = true
-                    if isSignup {
-                        await session.signup(username: username, password: password)
-                    } else {
-                        await session.login(username: username, password: password)
-                    }
-                    busy = false
+                VStack(spacing: 2) {
+                    Text("JAMBOT")
+                        .font(JBTheme.panelFont(34, weight: .bold))
+                        .foregroundStyle(JBTheme.ink)
+                    Circle()
+                        .fill(JBTheme.orange)
+                        .frame(width: 8, height: 8)
+                        .shadow(color: JBTheme.orange.opacity(0.6), radius: 6)
                 }
-            } label: {
-                Text(busy ? "…" : (isSignup ? "SIGN UP" : "SIGN IN"))
-                    .font(JBTheme.panelFont(16, weight: .bold))
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(JBKeyStyle(variant: .orange))
-            .padding(.horizontal, 28)
-            .disabled(username.isEmpty || password.isEmpty || busy)
+                .padding(.bottom, 24)
 
-            Button(isSignup ? "Have an account? Sign in" : "New here? Sign up") {
-                isSignup.toggle()
-            }
-            .font(JBTheme.bodyFont(13))
-            .foregroundStyle(JBTheme.ink3)
+                VStack(spacing: 10) {
+                    TextField("Username", text: $username)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .focused($usernameFocused)
+                        .jbField()
+                    SecureField("Password", text: $password)
+                        .jbField()
+                }
+                .padding(.horizontal, 28)
 
-            Spacer()
-            Spacer()
+                if let error = session.loginError {
+                    Text(error)
+                        .font(JBTheme.bodyFont(13))
+                        .foregroundStyle(JBTheme.orange)
+                        .padding(.horizontal, 28)
+                }
+
+                Button {
+                    Task {
+                        busy = true
+                        if isSignup {
+                            await session.signup(username: username, password: password)
+                        } else {
+                            await session.login(username: username, password: password)
+                        }
+                        busy = false
+                    }
+                } label: {
+                    Text(busy ? "…" : (isSignup ? "SIGN UP" : "SIGN IN"))
+                        .font(JBTheme.panelFont(16, weight: .bold))
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(JBKeyStyle(variant: .orange))
+                .padding(.horizontal, 28)
+                .disabled(username.isEmpty || password.isEmpty || busy)
+
+                Button(isSignup ? "Have an account? Sign in" : "New here? Sign up") {
+                    isSignup.toggle()
+                }
+                .font(JBTheme.bodyFont(13))
+                .foregroundStyle(JBTheme.ink3)
+
+                // Signed-out visitors can browse but not play (the shared
+                // engine host isn't warmed pre-login) — tapping a row jumps
+                // straight to the username field instead.
+                CatalogView(engine: nil, onSignedOutTap: { usernameFocused = true })
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+
+                Spacer(minLength: 40)
+            }
         }
+        .background(JBTheme.panel)
     }
 }
 
 // MARK: - Shared control styles (Theme.swift only holds raw tokens; the
 // small view helpers below are used across Login/Library/Studio).
 
-enum JBKeyVariant { case orange, ghost, panel }
+enum JBKeyVariant { case orange, ghost, panel, green }
 
 struct JBKeyStyle: ButtonStyle {
     var variant: JBKeyVariant = .panel
@@ -104,6 +115,7 @@ struct JBKeyStyle: ButtonStyle {
         case .orange: return JBTheme.orange
         case .ghost: return .clear
         case .panel: return JBTheme.panel4
+        case .green: return JBTheme.green
         }
     }
 
@@ -112,6 +124,7 @@ struct JBKeyStyle: ButtonStyle {
         case .orange: return JBTheme.ink
         case .ghost: return JBTheme.ink
         case .panel: return JBTheme.ink
+        case .green: return .white
         }
     }
 }

@@ -143,6 +143,13 @@ final class EngineHost: NSObject, ObservableObject, EngineAPI {
         return try Self.decode(SessionDescription.self, field: "desc", in: result)
     }
 
+    func tweakChoice(path: String, value: String) async throws -> SessionDescription {
+        // The bridge's `tweak` hands the value to the engine's tweak tool
+        // untouched, so a string reaches choice params as-is.
+        let result = try await call("tweak", ["path": path, "value": value])
+        return try Self.decode(SessionDescription.self, field: "desc", in: result)
+    }
+
     func setTrack(key: String, value: Double) async throws -> SessionDescription {
         try Self.decode(SessionDescription.self, field: "desc", in: try await call("setTrack", ["key": key, "value": value]))
     }
@@ -174,6 +181,36 @@ final class EngineHost: NSObject, ObservableObject, EngineAPI {
 
     func agentMessages() async throws -> [AgentMessage] {
         try Self.decode([AgentMessage].self, field: "messages", in: try await call("agentMessages"))
+    }
+
+    // MARK: Sequencer (stage 5)
+
+    func hits(step: Int, scope: RenderScope) async throws -> [String: [String]] {
+        try Self.decode([String: [String]].self, field: "hits", in: try await call("hits", ["step": step, "scope": scope.bridgeValue]))
+    }
+
+    func pattern(inst: String, section: Int?) async throws -> SeqPattern {
+        var args: [String: Any] = ["inst": inst]
+        if let section { args["section"] = section }
+        return try Self.decodeWhole(SeqPattern.self, from: try await call("pattern", args))
+    }
+
+    func seq(op: String, inst: String, section: Int?, args: JSONValue) async throws -> SeqResult {
+        var call: [String: Any] = ["op": op, "inst": inst, "args": args.anyValue]
+        if let section { call["section"] = section }
+        let result = try await self.call("seq", call)
+        return SeqResult(desc: try Self.decode(SessionDescription.self, field: "desc", in: result),
+                         pattern: try Self.decode(SeqPattern.self, field: "pattern", in: result))
+    }
+
+    private static func decodeWhole<T: Decodable>(_ type: T.Type, from result: Any) throws -> T {
+        do {
+            let data = try JSONSerialization.data(withJSONObject: result, options: [.fragmentsAllowed])
+            return try JSONDecoder().decode(T.self, from: data)
+        } catch {
+            log.error("decode \(String(describing: T.self), privacy: .public): \(String(describing: error), privacy: .public)")
+            throw EngineError.badPayload("could not decode \(String(describing: T.self)): \(error.localizedDescription)")
+        }
     }
 
     // MARK: - Calls

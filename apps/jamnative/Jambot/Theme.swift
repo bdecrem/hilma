@@ -34,6 +34,75 @@ enum JBTheme {
     static func monoFont(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
+
+    /// Per-synth panel palettes, for the Panels tab (stage 6) — exact port
+    /// of `src/app/jam/alt/panels-mobile.css` `[data-skin]` custom
+    /// properties (`--ph-bg` / `--ph-accent` / `--ph-glow` / `--ph-dim` /
+    /// `--ph-rule`). Kept here so any agent can reach for a consistent
+    /// palette without re-deriving hex values. Not wired into any view by
+    /// this stage.
+    enum PanelPalette {
+        case jb202, jt30, jt10, jt90, jb01, fx
+
+        /// `--ph-bg` — panel background.
+        var background: Color {
+            switch self {
+            case .jb202: return Color(hex: 0x162130)
+            case .jt30: return Color(hex: 0x141414)
+            case .jt10: return Color(hex: 0x2A2A2A)
+            case .jt90: return Color(hex: 0x141414)
+            case .jb01: return Color(hex: 0x2A2018)
+            case .fx: return Color(hex: 0x1B1D27)
+            }
+        }
+
+        /// `--ph-accent` — lit LEDs, active knob indicators, headers.
+        var accent: Color {
+            switch self {
+            case .jb202: return Color(hex: 0x6FF1C3)
+            case .jt30: return Color(hex: 0xFBBF24)
+            case .jt10: return Color(hex: 0x6AA8F0)
+            case .jt90: return Color(hex: 0xF87171)
+            case .jb01: return Color(hex: 0xFFB840)
+            case .fx: return Color(hex: 0x8AEAFF)
+            }
+        }
+
+        /// `--ph-dim` — secondary/label text on the panel background.
+        var dim: Color {
+            switch self {
+            case .jb202: return Color(hex: 0x88AA99)
+            case .jt30: return Color(hex: 0x8F8F8F)
+            case .jt10: return Color(hex: 0x9A9A9A)
+            case .jt90: return Color(hex: 0x8F8F8F)
+            case .jb01: return Color(hex: 0xA89880)
+            case .fx: return Color(hex: 0x8D93A8)
+            }
+        }
+
+        /// `--ph-rule` — hairline dividers within the panel.
+        var rule: Color {
+            switch self {
+            case .jb202: return Color(hex: 0x24404A)
+            case .jt30: return Color(hex: 0x2A2A2A)
+            case .jt10: return Color(hex: 0x444444)
+            case .jt90: return Color(hex: 0x2A2A2A)
+            case .jb01: return Color(hex: 0x3D3025)
+            case .fx: return Color(hex: 0x2B3044)
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .jb202: return "JB202"
+            case .jt30: return "JT-30"
+            case .jt10: return "JT-10"
+            case .jt90: return "JT-90"
+            case .jb01: return "JB01"
+            case .fx: return "FX"
+            }
+        }
+    }
 }
 
 extension Color {

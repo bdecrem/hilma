@@ -106,6 +106,15 @@ Parity with jambot.to, native. Everything below is additive to the test build.
 
 Swift `EngineAPI` gains `hits(step:scope:)`, `seq(op:inst:section:args:)`, `pattern(inst:section:)`. `SessionDescription.instruments[].pattern` is not decoded (too big); the Seq view uses `pattern`.
 
+## As built (stage 10, 2026-09-06) — where the app deviates from the tables above
+
+- Panels shows the Track card (tempo / swing / length) above the accordion, like the web's sheet; Seq is the bare sequencer.
+- Bounce is a key in the transport row next to Controls (not a header action).
+- The bridge's `describe()` also returns `effects: [{ target, chain: [{ id, type, params, descriptors }] }]` (descriptors normalised like an instrument's) and every descriptor carries `default` when the engine has one; Swift mirrors them as `SessionDescription.effects` / `ParamDescriptor.defaultValue`.
+- `EngineAPI.tweakChoice(path:value:)` sets string-valued choice params through the same bridge `tweak` call.
+- The agent's own render autoplays (web parity); a Faders/Panels change while "Loop section" is lit re-renders the section.
+- Headless drivers: `-studioScript` (see `UI/StudioScript.swift` for the vocabulary), `-libraryScript` (`UI/LibraryScript.swift`), `tooling/sim-run.sh` / `tooling/catalyst-run.sh` service the `shot:<name>` screenshot handshake.
+
 ## Verification (every stage)
 
 Headless only: `xcrun simctl` + the DEBUG launch args (`-autoLogin jamtest jamtest1`, `-openTrack "<title>"`, `-openControls`, `-studioScript "<steps>"` in `UI/StudioScript.swift`; extend the script vocabulary for new features, e.g. `tab:seq`, `seq:tap:kick:2`, `panels:open:jb202`, `bounce:wav`). Screenshots under `apps/jamnative/.shots/`. Never computer-use / request_access. Device installs use `scripts/ios/asc-dev-profile.py` + the commands in `apps/jamnative/CLAUDE.md`; the phone may be locked — say so rather than waiting.

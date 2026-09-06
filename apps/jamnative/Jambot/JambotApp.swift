@@ -6,10 +6,24 @@ struct JambotApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if CommandLine.arguments.contains("-engineSmoke") {
+            let args = CommandLine.arguments
+            if args.contains("-engineSmoke") {
                 // Headless engine verification (see Engine/EngineSmoke.swift):
                 // xcrun simctl launch --console-pty "iPhone 16" com.bartdecrem.Jambot -engineSmoke
+                // (-engineSmokeAgent / -engineSmokeBackground / -engineSmokeSeq pick the run.)
                 EngineSmokeView()
+            } else if args.contains("-seqPreview") {
+                // The sequencer harness on the real engine (UI/Seq/SeqPreview.swift).
+                SeqPreviewView()
+            } else if args.contains("-panelsPreview") {
+                // Panels fixture, every synth + an effect (UI/Panels/PanelsPreview.swift).
+                PanelsPreviewHost()
+            } else if args.contains("-audioSmoke") {
+                // Render cache, Now Playing, hot swap, interruptions (Services/AudioSmoke.swift).
+                AudioSmokeView()
+            } else if args.contains("-exportSmoke") {
+                // WAV/AAC writers against a synthetic sine (Services/ExportSmoke.swift).
+                ExportSmokeView()
             } else {
                 RootView()
                     .environment(session)
@@ -38,6 +52,7 @@ struct RootView: View {
             }
             content
         }
+        .catalystWindowChrome()
         .task {
             // Warm the engine while the user is still in the Library so the
             // first track opens without waiting for the bundle to load.

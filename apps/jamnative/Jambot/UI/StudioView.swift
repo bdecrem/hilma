@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// Chat + transport + Controls sheet for one track. Port of
-/// `src/app/jam/Studio.tsx` (Faders-only Controls, no Seq/Panels/publish —
-/// see DESIGN.md for what's out of scope in this test build).
+/// `src/app/jam/Studio.tsx`: header (back · Share · Publish over the
+/// tap-to-rename title and the readout), chat feed, transport (Play/Stop,
+/// readout, LED strip, Bounce, Controls), composer.
 struct StudioView: View {
     @State private var model: StudioModel
     @Environment(\.scenePhase) private var scenePhase
@@ -22,8 +23,17 @@ struct StudioView: View {
             transport
             composer
         }
+        .columnWidth()
+        .frame(maxWidth: .infinity)
         .background(JBTheme.panel)
         .navigationBarBackButtonHidden(true)
+        .background {
+            // Space toggles play/stop while the composer isn't typing.
+            if !composerFocused {
+                Color.clear.jambotPlayStopShortcut { model.togglePlay() }
+            }
+        }
+        .jambotControlsShortcut { model.controlsOpen.toggle() }
         .task {
             model.onAuthLost = { session.authLost() }
             await model.load()
@@ -41,8 +51,7 @@ struct StudioView: View {
             }
         }
         .onDisappear {
-            model.stopPlayheadClock()
-            model.flushSave()
+            model.close()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { model.flushSave() }
@@ -50,42 +59,43 @@ struct StudioView: View {
         .sheet(isPresented: $model.controlsOpen) {
             ControlsSheetView(model: model)
         }
+        .sheet(isPresented: $model.bounceOpen) {
+            BounceSheet(render: model.lastRender, bpm: model.bpm)
+        }
     }
 
     // MARK: - Header
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    Text("‹ TRACKS")
-                        .font(JBTheme.panelFont(12, weight: .semibold))
-                        .tracking(1.2)
-                        .foregroundStyle(JBTheme.ink2)
-                        .padding(.vertical, 4)
-                        .padding(.trailing, 12)
-                }
-                .buttonStyle(.plain)
-                Spacer()
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(model.title.uppercased())
-                    .font(JBTheme.panelFont(26, weight: .semibold))
-                    .foregroundStyle(JBTheme.ink)
-                    .lineLimit(1)
-                HStack(spacing: 4) {
-                    Text("\(model.bpm)").fontWeight(.medium) + Text(" BPM · \(model.shownBars) \(model.shownBars == 1 ? "bar" : "bars")\(model.inSong ? " · song" : "")\(model.swing > 0 ? " · swing \(Int(model.swing.rounded()))" : "")")
-                    if model.saveState == .saving {
-                        Text(" · saving").foregroundStyle(JBTheme.ink3)
-                    } else if model.saveState == .failed {
-                        Text(" · not saved").foregroundStyle(JBTheme.orange)
+        VStack(alignment: .leading, spacing: 4) {
+            StudioHeaderActions(
+                state: model.sharing,
+                onRename: { model.rename($0) },
+                onPublishToggle: { Task { await model.togglePublish() } },
+                leading: {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("‹ TRACKS")
+                            .font(JBTheme.panelFont(12, weight: .semibold))
+                            .tracking(1.2)
+                            .foregroundStyle(JBTheme.ink2)
+                            .padding(.vertical, 4)
+                            .padding(.trailing, 12)
                     }
+                    .buttonStyle(.plain)
                 }
-                .font(JBTheme.monoFont(12))
-                .foregroundStyle(JBTheme.ink2)
+            )
+            HStack(spacing: 4) {
+                Text("\(model.bpm)").fontWeight(.medium) + Text(" BPM · \(model.shownBars) \(model.shownBars == 1 ? "bar" : "bars")\(model.inSong ? (model.sectionNow.map { " · section \($0)" } ?? " · song") : "")\(model.swing > 0 ? " · swing \(Int(model.swing.rounded()))" : "")")
+                if model.saveState == .saving {
+                    Text(" · saving").foregroundStyle(JBTheme.ink3)
+                } else if model.saveState == .failed {
+                    Text(" · not saved").foregroundStyle(JBTheme.orange)
+                }
             }
+            .font(JBTheme.monoFont(12))
+            .foregroundStyle(JBTheme.ink2)
         }
         .padding(.horizontal, 16)
         .padding(.top, 10)
@@ -216,8 +226,8 @@ struct StudioView: View {
 
     private var transport: some View {
         VStack(spacing: 10) {
-            LedStripView(strip: model.strip, step: model.playStep16)
-            HStack(spacing: 12) {
+            LedStripView(strip: model.strip, step: model.ledStep)
+            HStack(spacing: 10) {
                 Button {
                     model.togglePlay()
                 } label: {
@@ -232,9 +242,11 @@ struct StudioView: View {
                         Circle()
                             .fill(model.playing ? JBTheme.orange : (model.rendering ? JBTheme.green : JBTheme.ledOff))
                             .frame(width: 7, height: 7)
-                        Text(transportLabel)
+                        Text(model.transportLabel)
                             .font(JBTheme.monoFont(12))
                             .foregroundStyle(JBTheme.ink2)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
                     }
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -245,6 +257,9 @@ struct StudioView: View {
                     .frame(height: 5)
                 }
 
+                Button("Bounce") { model.bounceOpen = true }
+                    .buttonStyle(JBKeyStyle(variant: .panel, small: true))
+                    .disabled(model.lastRender == nil)
                 Button("Controls") { model.controlsOpen = true }
                     .buttonStyle(JBKeyStyle(variant: .panel, small: true))
             }
@@ -254,13 +269,6 @@ struct StudioView: View {
         .padding(.bottom, 8)
         .background(JBTheme.panel3)
         .overlay(Rectangle().fill(JBTheme.rule).frame(height: 1), alignment: .top)
-    }
-
-    private var transportLabel: String {
-        if model.rendering { return "rendering" }
-        if !model.hasBuffer { return "no sound yet" }
-        if model.playing { return "bar \(model.barNow)/\(model.shownBars)" }
-        return "ready"
     }
 
     // MARK: - Composer
@@ -283,6 +291,7 @@ struct StudioView: View {
             }
             .buttonStyle(JBKeyStyle(variant: .orange))
             .disabled(model.status != .ready || model.busy || model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .jambotSendShortcut { model.send(model.input) }
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)
