@@ -76,12 +76,15 @@ struct StudioView: View {
                     Button {
                         dismiss()
                     } label: {
-                        Text("‹ TRACKS")
-                            .font(JBTheme.panelFont(12, weight: .semibold))
-                            .tracking(1.2)
-                            .foregroundStyle(JBTheme.ink2)
-                            .padding(.vertical, 4)
-                            .padding(.trailing, 12)
+                        HStack(alignment: .center, spacing: 3) {
+                            Text("‹").font(.system(size: 18, weight: .semibold)).offset(y: -1)
+                            Text("TRACKS")
+                                .font(JBTheme.panelFont(12, weight: .semibold))
+                                .tracking(1.44)
+                        }
+                        .foregroundStyle(JBTheme.ink2)
+                        .frame(minHeight: 32)
+                        .padding(.trailing, 8)
                     }
                     .buttonStyle(.plain)
                 }
@@ -151,6 +154,7 @@ struct StudioView: View {
                 .padding(.bottom, 12)
                 .id("bottom")
             }
+            .defaultScrollAnchor(.bottom)
             .onChange(of: model.feed.count) { _, _ in
                 withAnimation { scroll.scrollTo("bottom", anchor: .bottom) }
             }
@@ -234,19 +238,18 @@ struct StudioView: View {
                     Image(systemName: model.playing ? "stop.fill" : "play.fill")
                         .font(.system(size: 18))
                 }
-                .buttonStyle(JBKeyStyle(variant: .panel, square: true))
+                .buttonStyle(JBKeyStyle(variant: .ink, square: true))
                 .disabled(!model.hasBuffer)
+                .accessibilityLabel(model.playing ? "Stop" : "Play")
 
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 6) {
-                        Circle()
-                            .fill(model.playing ? JBTheme.orange : (model.rendering ? JBTheme.green : JBTheme.ledOff))
-                            .frame(width: 7, height: 7)
-                        Text(model.transportLabel)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        JBLed(on: model.playing, color: model.playing ? JBTheme.orange : JBTheme.green, alwaysLit: model.rendering)
+                        transportReadout
                             .font(JBTheme.monoFont(12))
                             .foregroundStyle(JBTheme.ink2)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+                            .minimumScaleFactor(0.75)
                     }
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
@@ -254,14 +257,16 @@ struct StudioView: View {
                             Capsule().fill(JBTheme.ink).frame(width: geo.size.width * model.pos)
                         }
                     }
-                    .frame(height: 5)
+                    .frame(height: 6)
                 }
+                .layoutPriority(-1)
 
-                Button("Bounce") { model.bounceOpen = true }
-                    .buttonStyle(JBKeyStyle(variant: .panel, small: true))
-                    .disabled(model.lastRender == nil)
                 Button("Controls") { model.controlsOpen = true }
-                    .buttonStyle(JBKeyStyle(variant: .panel, small: true))
+                    .buttonStyle(JBKeyStyle(variant: .ink, size: .small))
+                    .disabled(model.status != .ready)
+                Button("Bounce") { model.bounceOpen = true }
+                    .buttonStyle(JBKeyStyle(variant: .panel, size: .small))
+                    .disabled(model.lastRender == nil)
             }
         }
         .padding(.horizontal, 14)
@@ -271,18 +276,41 @@ struct StudioView: View {
         .overlay(Rectangle().fill(JBTheme.rule).frame(height: 1), alignment: .top)
     }
 
+    /// "bar **2**/16" / "section **1** · bar **3**/8" — the numbers in ink,
+    /// the rest ink-2, like `.jb-readout b`.
+    private var transportReadout: Text {
+        let label = model.transportLabel
+        var out = Text("")
+        var run = ""
+        func flush() { if !run.isEmpty { out = out + Text(run); run = "" } }
+        var i = label.startIndex
+        while i < label.endIndex {
+            let ch = label[i]
+            if ch.isNumber {
+                flush()
+                var j = i
+                while j < label.endIndex, label[j].isNumber { j = label.index(after: j) }
+                // only the first number of "n/N" is emphasised
+                let isDenominator = i > label.startIndex && label[label.index(before: i)] == "/"
+                let num = Text(String(label[i..<j]))
+                out = out + (isDenominator ? num : num.fontWeight(.medium).foregroundColor(JBTheme.ink))
+                i = j
+            } else {
+                run.append(ch)
+                i = label.index(after: i)
+            }
+        }
+        flush()
+        return out
+    }
+
     // MARK: - Composer
 
     private var composer: some View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField("tell it what to play…", text: $model.input, axis: .vertical)
-                .font(JBTheme.bodyFont(16))
                 .lineLimit(1...4)
-                .padding(.vertical, 12)
-                .padding(.horizontal, 14)
-                .background(JBTheme.panel4)
-                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(JBTheme.rule, lineWidth: 1.5))
+                .jbField()
                 .focused($composerFocused)
                 .disabled(model.status != .ready)
 

@@ -28,61 +28,45 @@ struct ControlsSheetView: View {
     private var mode: ControlsMode { ControlsMode(rawValue: modeRaw) ?? .faders }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
+            JBSheetHeader("Controls", status: (lit: model.rendering, text: model.rendering ? "rendering" : "live"),
+                          onDone: { model.controlsOpen = false }) {
                 segmented
-                    .padding(.horizontal, 16)
-                    .padding(.top, 6)
-                    .padding(.bottom, 10)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
-                        switch mode {
-                        case .faders:
-                            trackCard
-                            ForEach(model.groups) { group in
-                                groupSection(group)
-                            }
-                            if model.groups.isEmpty {
-                                empty("Nothing to tweak yet. Ask for a beat first.")
-                            }
-                        case .panels:
-                            trackCard
-                            PanelsView(desc: model.desc, hits: model.hits, effects: PanelEffectTarget.from(model.desc?.effects), scrolls: false,
-                                       onParam: model.onPanelParam, onMix: model.onMix)
-                        case .seq:
-                            if let desc = model.desc {
-                                SeqView(engine: model.engine, desc: desc, playStep16: model.playStep16, playScope: model.playedScope,
-                                        instId: $model.seqInst, section: $model.seqSection, notes: model.seqNotes, externalModel: model.seqModel,
-                                        onEdited: model.onSeqEdited, onScope: model.setRenderScope, onDesc: model.onSeqDesc)
-                            } else {
-                                empty("Nothing to sequence yet. Ask for a beat first.")
-                            }
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    switch mode {
+                    case .faders:
+                        trackCard
+                        ForEach(model.groups) { group in
+                            groupSection(group)
+                        }
+                        if model.groups.isEmpty {
+                            empty("Nothing to tweak yet. Ask for a beat first.")
+                        }
+                    case .panels:
+                        trackCard
+                        PanelsView(desc: model.desc, hits: model.hits, effects: PanelEffectTarget.from(model.desc?.effects), scrolls: false,
+                                   onParam: model.onPanelParam, onMix: model.onMix)
+                    case .seq:
+                        if let desc = model.desc {
+                            SeqView(engine: model.engine, desc: desc, playStep16: model.playStep16, playScope: model.playedScope,
+                                    instId: $model.seqInst, section: $model.seqSection, notes: model.seqNotes, externalModel: model.seqModel,
+                                    onEdited: model.onSeqEdited, onScope: model.setRenderScope, onDesc: model.onSeqDesc)
+                        } else {
+                            empty("Nothing to sequence yet. Ask for a beat first.")
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 40)
                 }
-            }
-            .background(JBTheme.panel)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(JBTheme.panel, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
-                        Text("CONTROLS").font(JBTheme.panelFont(16, weight: .semibold))
-                        Circle().fill(model.rendering ? JBTheme.orange : JBTheme.green).frame(width: 6, height: 6)
-                        Text(model.rendering ? "rendering" : "live")
-                            .font(JBTheme.monoFont(11))
-                            .foregroundStyle(JBTheme.ink2)
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { model.controlsOpen = false }
-                        .buttonStyle(JBKeyStyle(variant: .orange, small: true))
-                }
+                .padding(.horizontal, 16)
+                .padding(.top, 10)
+                .padding(.bottom, 40)
             }
         }
+        .background(JBTheme.panel)
+        .columnWidth()
+        .frame(maxWidth: .infinity)
+        .background(JBTheme.panel)
         .onAppear { model.hitsWanted = mode == .panels }
         .onChange(of: modeRaw) { _, _ in model.hitsWanted = mode == .panels }
         .onDisappear { model.hitsWanted = false }
@@ -96,14 +80,16 @@ struct ControlsSheetView: View {
                 Button {
                     modeRaw = m.rawValue
                 } label: {
-                    Text(m.label.uppercased())
+                    Text(m.label)
                         .font(JBTheme.panelFont(13, weight: .semibold))
                         .tracking(1.3)
+                        .textCase(.uppercase)
                         .frame(maxWidth: .infinity)
                         .frame(height: 32)
                         .background(mode == m ? JBTheme.ink : .clear)
                         .foregroundStyle(mode == m ? JBTheme.panel2 : JBTheme.ink2)
                         .clipShape(Capsule())
+                        .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(mode == m ? .isSelected : [])
@@ -112,7 +98,7 @@ struct ControlsSheetView: View {
         .padding(3)
         .background(
             Capsule().fill(JBTheme.panel3)
-                .overlay(Capsule().stroke(Color.black.opacity(0.08), lineWidth: 1).blur(radius: 1).mask(Capsule()))
+                .overlay(Capsule().stroke(Color.black.opacity(0.12), lineWidth: 1.5).blur(radius: 1.5).mask(Capsule()))
         )
     }
 
@@ -128,8 +114,8 @@ struct ControlsSheetView: View {
     // MARK: - Track card
 
     private var trackCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            groupLabel("TRACK")
+        VStack(alignment: .leading, spacing: 8) {
+            JBGroupRow("Track")
             VStack(spacing: 0) {
                 SliderRow(
                     label: "tempo",
@@ -161,7 +147,7 @@ struct ControlsSheetView: View {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 40, maximum: 48), spacing: 6)], spacing: 6) {
                             ForEach(Self.barChoices, id: \.self) { b in
                                 Button("\(b)") { model.onTrack(key: "bars", value: Double(b)) }
-                                    .buttonStyle(JBKeyStyle(variant: model.bars == b ? .orange : .panel, small: true))
+                                    .buttonStyle(JBKeyStyle(variant: model.bars == b ? .orange : .panel, size: .small, wide: true))
                             }
                         }
                     }
@@ -169,9 +155,7 @@ struct ControlsSheetView: View {
                 }
             }
             .padding(.horizontal, 12)
-            .background(JBTheme.panel2)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(JBTheme.rule, lineWidth: 1))
+            .jbCard()
         }
     }
 
@@ -180,18 +164,16 @@ struct ControlsSheetView: View {
     private func groupSection(_ group: ControlGroup) -> some View {
         let isFx = group.id.hasPrefix("fx.")
         let silenced = !isFx && PanelParams.isSilenced(group.id, tracks: model.desc?.tracks, anySolo: model.desc?.anySolo)
-        return VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                groupLabel(group.title.uppercased())
-                if let subtitle = group.subtitle {
-                    Text(subtitle)
-                        .font(JBTheme.monoFont(11))
-                        .foregroundStyle(JBTheme.ink3)
+        let mute = model.desc?.tracks?[group.id]?.mute ?? false
+        let solo = model.desc?.tracks?[group.id]?.solo ?? false
+        return VStack(alignment: .leading, spacing: 8) {
+            JBGroupRow(group.title, subtitle: group.subtitle, dimmed: silenced) {
+                if !isFx {
+                    JBMSKeys(mute: mute, solo: solo,
+                             onMute: { model.onMix(id: group.id, what: "mute", on: !mute) },
+                             onSolo: { model.onMix(id: group.id, what: "solo", on: !solo) })
                 }
-                Rectangle().fill(JBTheme.rule).frame(height: 1)
-                if !isFx { muteSoloKeys(group.id) }
             }
-            .opacity(silenced ? 0.55 : 1)
             VStack(spacing: 0) {
                 ForEach(Array(group.controls.enumerated()), id: \.element.id) { idx, control in
                     ParamRow(control: control) { v in
@@ -203,41 +185,8 @@ struct ControlsSheetView: View {
                 }
             }
             .padding(.horizontal, 12)
-            .background(JBTheme.panel2)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(JBTheme.rule, lineWidth: 1))
+            .jbCard()
         }
-    }
-
-    private func groupLabel(_ text: String) -> some View {
-        Text(text)
-            .font(JBTheme.panelFont(12, weight: .semibold))
-            .tracking(1.5)
-            .foregroundStyle(JBTheme.ink3)
-            .padding(.bottom, 8)
-    }
-
-    @ViewBuilder
-    private func muteSoloKeys(_ id: String) -> some View {
-        let mute = model.desc?.tracks?[id]?.mute ?? false
-        let solo = model.desc?.tracks?[id]?.solo ?? false
-        HStack(spacing: 4) {
-            msKey("M", on: mute, color: JBTheme.orange) { model.onMix(id: id, what: "mute", on: !mute) }
-            msKey("S", on: solo, color: JBTheme.green) { model.onMix(id: id, what: "solo", on: !solo) }
-        }
-        .padding(.bottom, 8)
-    }
-
-    private func msKey(_ label: String, on: Bool, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(label)
-                .font(JBTheme.panelFont(11, weight: .bold))
-                .frame(width: 26, height: 26)
-                .background(on ? color : JBTheme.panel4)
-                .foregroundStyle(on ? .white : JBTheme.ink3)
-                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -276,8 +225,8 @@ struct SliderRow: View {
     let onInput: (Double) -> Void
 
     var body: some View {
-        VStack(spacing: 6) {
-            HStack {
+        VStack(spacing: 2) {
+            HStack(alignment: .firstTextBaseline) {
                 Text(label)
                     .font(JBTheme.bodyFont(14))
                     .foregroundStyle(JBTheme.ink2)
@@ -286,10 +235,10 @@ struct SliderRow: View {
                     .font(JBTheme.monoFont(12, weight: .medium))
                     .foregroundStyle(JBTheme.ink)
             }
-            Slider(value: Binding(get: { max(0, min(1, t)) }, set: onInput), in: 0...1)
-                .tint(JBTheme.cobalt)
+            JBFader(t: t, onInput: onInput)
         }
-        .padding(.vertical, 10)
+        .padding(.top, 8)
+        .padding(.bottom, 2)
     }
 }
 

@@ -672,7 +672,7 @@ struct SeqKeyStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let pressed = configuration.isPressed
         configuration.label
-            .font(JBTheme.panelFont(fontSize, weight: .semibold))
+            .font(.system(size: fontSize, weight: .semibold))
             .tracking(tracking)
             .textCase(.uppercase)
             .lineLimit(1)

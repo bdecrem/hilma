@@ -106,7 +106,9 @@ final class StudioModel {
     /// sum of its sections; a section audition its own length), like the
     /// web's `shownBars`.
     var shownBars: Int { lastRenderBars ?? bars }
-    var strip: Strip? { track?.strip }
+    /// Live from the session like the web (`stripFromDesc`); the saved
+    /// track's strip only until the first `describe()` lands.
+    var strip: Strip? { desc?.strip ?? track?.strip }
     var barNow: Int { min(shownBars, Int(pos * Double(shownBars)) + 1) }
     var engineStamp: String { EngineFactory.host?.engineVersion ?? "mock" }
     /// The transport readout — "section 2 · bar 3/8" during an audition.

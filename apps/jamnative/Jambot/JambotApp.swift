@@ -64,7 +64,14 @@ struct RootView: View {
     private var content: some View {
         switch session.state {
         case .loading:
-            ProgressView().tint(JBTheme.orange)
+            // Launch-screen continuity: the wordmark on the putty panel
+            // while /me resolves (a bare spinner sat in the top-left corner).
+            VStack(spacing: 14) {
+                JBWordmark(size: 44)
+                JBLed(on: true).opacity(0.85)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(JBTheme.panel)
         case .signedOut:
             LoginView()
         case .signedIn:

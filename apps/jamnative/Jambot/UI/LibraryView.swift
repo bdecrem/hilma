@@ -227,11 +227,7 @@ struct LibraryView: View {
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
-            HStack(spacing: 2) {
-                Text("JAMBOT")
-                    .font(JBTheme.panelFont(22, weight: .bold))
-                Circle().fill(JBTheme.orange).frame(width: 6, height: 6)
-            }
+            JBWordmark(size: 22)
             if case .signedIn(let user) = session.state {
                 Text(user.username)
                     .font(JBTheme.monoFont(12))
@@ -257,25 +253,21 @@ struct LibraryView: View {
     }
 
     private var sectionRow: some View {
-        HStack(alignment: .center, spacing: 10) {
-            Text("YOUR TRACKS")
-                .font(JBTheme.panelFont(12, weight: .semibold))
-                .tracking(1.5)
-                .foregroundStyle(JBTheme.ink3)
-            Rectangle().fill(JBTheme.rule).frame(height: 1)
+        JBGroupRow("Your tracks") {
             Button(model.creating ? "Starting…" : "+ New track") {
                 Task { await model.createAndOpen() }
             }
-            .buttonStyle(JBKeyStyle(variant: .orange, small: true))
+            .buttonStyle(JBKeyStyle(variant: .orange, size: .small))
             .disabled(model.creating)
         }
         .padding(.top, 6)
     }
 
-    /// A track card plus its "…" menu (Duplicate / Delete), laid out so the
-    /// menu key sits beside the card without stealing the card's own tap.
+    /// A track card with its "…" menu (Duplicate / Delete) inside the card
+    /// at the trailing edge, like the web's `.jb-track` row: the card body
+    /// opens the track, the menu key doesn't steal that tap.
     private func trackRow(_ t: TrackMeta) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .center, spacing: 0) {
             Button { model.openTrack = t } label: { trackCard(t) }
                 .buttonStyle(.plain)
             Menu {
@@ -290,57 +282,50 @@ struct LibraryView: View {
                     Label("Delete", systemImage: "trash")
                 }
             } label: {
-                Image(systemName: model.busyTrackId == t.id ? "ellipsis.circle.fill" : "ellipsis.circle")
-                    .font(.system(size: 20))
-                    .foregroundStyle(JBTheme.ink3)
-                    .frame(width: 32, height: 32)
+                Text("…")
+                    .font(JBTheme.monoFont(18))
+                    .foregroundStyle(JBTheme.ink2)
+                    .frame(width: 44)
+                    .frame(maxHeight: .infinity)
+                    .contentShape(Rectangle())
+                    .opacity(model.busyTrackId == t.id ? 0.35 : 1)
             }
             .disabled(model.busyTrackId == t.id)
+            .accessibilityLabel("Track options")
         }
+        .jbCard()
     }
 
     private func trackCard(_ t: TrackMeta) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(t.title.uppercased())
-                    .font(JBTheme.panelFont(16, weight: .semibold))
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(t.title)
+                    .font(JBTheme.panelFont(19, weight: .semibold))
+                    .tracking(0.4)
+                    .textCase(.uppercase)
                     .foregroundStyle(JBTheme.ink)
                     .lineLimit(1)
-                Spacer()
-                if t.publishedAt != nil {
-                    tag("PUBLIC", bg: JBTheme.green, fg: .white)
-                }
-                if t.remixOf != nil {
-                    tag("REMIX", bg: .clear, fg: JBTheme.ink3, outline: true)
-                }
+                    .truncationMode(.tail)
+                Spacer(minLength: 0)
+                if t.publishedAt != nil { JBTag(text: "public", style: .green) }
+                if t.remixOf != nil { JBTag(text: "remix", style: .outline) }
             }
             LedStripView(strip: t.strip)
-            HStack(spacing: 4) {
-                Text("\(t.bpm)").fontWeight(.medium) + Text(" BPM · \(t.bars) \(t.bars == 1 ? "bar" : "bars") · \(relTime(t.updatedAt))")
-            }
-            .font(JBTheme.monoFont(12))
-            .foregroundStyle(JBTheme.ink2)
+            readout("\(t.bpm)", " BPM · \(t.bars) \(t.bars == 1 ? "bar" : "bars") · \(relTime(t.updatedAt))")
         }
-        .padding(14)
+        .padding(.vertical, 12)
+        .padding(.leading, 14)
+        .padding(.trailing, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(JBTheme.panel2)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(JBTheme.rule, lineWidth: 1))
+        .contentShape(Rectangle())
     }
 
-    private func tag(_ text: String, bg: Color, fg: Color, outline: Bool = false) -> some View {
-        Text(text)
-            .font(JBTheme.panelFont(10, weight: .semibold))
-            .tracking(1)
-            .foregroundStyle(fg)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 1)
-            .background(bg)
-            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .stroke(outline ? JBTheme.ink3 : .clear, lineWidth: 1)
-            )
+    /// `.jb-readout` with the leading number in ink (`<b>`).
+    private func readout(_ strong: String, _ rest: String) -> some View {
+        (Text(strong).fontWeight(.medium).foregroundColor(JBTheme.ink) + Text(rest).foregroundColor(JBTheme.ink2))
+            .font(JBTheme.monoFont(12))
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
     }
 }
 

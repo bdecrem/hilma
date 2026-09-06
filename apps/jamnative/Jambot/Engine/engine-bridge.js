@@ -124,10 +124,31 @@
     try { return JSON.parse(JSON.stringify(v ?? {})) ?? {} } catch { return {} }
   }
 
+  /** The transport strip — port of Studio.tsx `stripFromDesc` (kick / snare-clap / hats from the live drum pattern; a mono synth's gates on the middle row otherwise). */
+  function stripFromDesc(d) {
+    const insts = d.instruments || []
+    for (const id of ['jt90', 'jb01']) {
+      const inst = insts.find((i) => i.id === id && i.active)
+      const p = inst && inst.pattern
+      if (!p || Array.isArray(p)) continue
+      const row = (voices) => Array.from({ length: 16 }, (_, i) => (voices.some((v) => ((p[v] && p[v][i] && p[v][i].velocity) || 0) > 0) ? '1' : '0')).join('')
+      return { k: row(['kick']), s: row(['snare', 'clap', 'rimshot']), h: row(['ch', 'oh', 'ride', 'crash', 'cymbal']) }
+    }
+    for (const id of ['jb202', 'jt30', 'jt10']) {
+      const inst = insts.find((i) => i.id === id && i.active)
+      const p = inst && inst.pattern
+      if (!Array.isArray(p)) continue
+      const s = Array.from({ length: 16 }, (_, i) => (p[i] && p[i].gate ? '1' : '0')).join('')
+      if (s.includes('1')) return { k: '0'.repeat(16), s, h: '0'.repeat(16) }
+    }
+    return null
+  }
+
   function describe() {
     const d = requireJam().describeSession(requireSession())
     return {
       ...d,
+      strip: stripFromDesc(d),
       swing: isNum(d.swing) ? d.swing : 0,
       instruments: (d.instruments || []).map((inst) => ({
         ...inst,

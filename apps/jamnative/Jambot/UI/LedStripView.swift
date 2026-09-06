@@ -22,12 +22,13 @@ struct LedStripView: View {
 
     var body: some View {
         VStack(spacing: big ? 4 : 3) {
-            ForEach(rows, id: \.0) { _, bits, hitColor in
+            ForEach(rows, id: \.0) { row, bits, hitColor in
                 HStack(spacing: big ? 4 : 3) {
                     ForEach(0..<16, id: \.self) { i in
                         let hit = i < bits.count && bits[i] == "1"
                         let now = step == i
-                        cell(hit: hit, now: now, hitColor: hitColor)
+                        // beat markers: the top row's 1 · 5 · 9 · 13 rest a shade darker
+                        cell(hit: hit, now: now, hitColor: hitColor, beat: row == "k" && i % 4 == 0)
                     }
                 }
             }
@@ -35,10 +36,10 @@ struct LedStripView: View {
     }
 
     @ViewBuilder
-    private func cell(hit: Bool, now: Bool, hitColor: Color) -> some View {
+    private func cell(hit: Bool, now: Bool, hitColor: Color, beat: Bool) -> some View {
         RoundedRectangle(cornerRadius: big ? 3 : 2, style: .continuous)
             .fill(hit ? hitColor : (now ? JBTheme.ink3 : JBTheme.ledOff))
-            .opacity(hit || now ? (hit ? 1 : 0.9) : 0.55)
+            .opacity(hit || now ? (hit ? 1 : 0.9) : (beat ? 0.75 : 0.55))
             .overlay(
                 RoundedRectangle(cornerRadius: big ? 3 : 2, style: .continuous)
                     .stroke(hit && now ? JBTheme.ink : .clear, lineWidth: 1.5)

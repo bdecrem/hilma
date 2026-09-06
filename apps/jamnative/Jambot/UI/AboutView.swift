@@ -15,54 +15,67 @@ struct AboutView: View {
     var engineVersion: String? = nil
 
     var body: some View {
-        NavigationStack {
-            List {
-                Section("BUILD") {
-                    row("Version", appVersion)
-                    row("Build", appBuild)
-                    row("Engine", engineVersion ?? Self.engineVersionFromBundle() ?? "unknown")
-                }
-                Section("ACCOUNT") {
-                    if case .signedIn(let user) = session.state {
-                        row("Signed in as", user.username)
+        VStack(spacing: 0) {
+            JBSheetHeader("About", onDone: { dismiss() })
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        JBWordmark(size: 40)
+                        Text("native")
+                            .font(JBTheme.monoFont(12))
+                            .foregroundStyle(JBTheme.ink3)
                     }
-                    row("Backend", Secrets.backendBaseURL.host ?? Secrets.backendBaseURL.absoluteString)
-                }
-                Section {
-                    Button("Sign out", role: .destructive) {
+                    .padding(.top, 8)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        JBGroupRow("Build")
+                        VStack(spacing: 0) {
+                            row("Version", appVersion)
+                            Divider().overlay(JBTheme.rule)
+                            row("Build", appBuild)
+                            Divider().overlay(JBTheme.rule)
+                            row("Engine", engineVersion ?? Self.engineVersionFromBundle() ?? "unknown")
+                        }
+                        .padding(.horizontal, 12)
+                        .jbCard()
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        JBGroupRow("Account")
+                        VStack(spacing: 0) {
+                            if case .signedIn(let user) = session.state {
+                                row("Signed in as", user.username)
+                                Divider().overlay(JBTheme.rule)
+                            }
+                            row("Backend", Secrets.backendBaseURL.host ?? Secrets.backendBaseURL.absoluteString)
+                        }
+                        .padding(.horizontal, 12)
+                        .jbCard()
+                    }
+
+                    Button("Sign out") {
                         Task { await session.logout() }
                     }
-                    .foregroundStyle(JBTheme.orange)
+                    .buttonStyle(JBKeyStyle(variant: .ghost, size: .small))
                 }
-            }
-            .scrollContentBackground(.hidden)
-            .background(JBTheme.panel)
-            .tint(JBTheme.ink)
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(JBTheme.panel, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack(spacing: 2) {
-                        Text("JAMBOT").font(JBTheme.panelFont(16, weight: .bold))
-                        Circle().fill(JBTheme.orange).frame(width: 5, height: 5).offset(y: -4)
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .buttonStyle(JBKeyStyle(variant: .orange, small: true))
-                }
+                .padding(16)
+                .padding(.bottom, 40)
             }
         }
+        .background(JBTheme.panel)
+        .columnWidth()
+        .frame(maxWidth: .infinity)
+        .background(JBTheme.panel)
     }
 
     private func row(_ label: String, _ value: String) -> some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline) {
             Text(label).font(JBTheme.bodyFont(14)).foregroundStyle(JBTheme.ink2)
             Spacer()
-            Text(value).font(JBTheme.monoFont(13)).foregroundStyle(JBTheme.ink)
+            Text(value).font(JBTheme.monoFont(12, weight: .medium)).foregroundStyle(JBTheme.ink)
+                .lineLimit(1).minimumScaleFactor(0.7)
         }
-        .listRowBackground(JBTheme.panel2)
+        .padding(.vertical, 12)
     }
 
     private var appVersion: String {

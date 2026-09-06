@@ -92,7 +92,7 @@ change needed here).
 
 Everything is driven with launch arguments; nothing needs a tap. The shell side is
 `tooling/sim-run.sh <tag> <launch args…>` (installs the last simulator build on
-"iPhone 16", launches, services the `shot:<name>` handshake into `.shots/<tag>/`,
+"iPhone 16" — or `SIM_DEV="iPhone SE 3"` for the 375 pt width check — launches, services the `shot:<name>` handshake into `.shots/<tag>/`,
 prints the script log) and `tooling/catalyst-run.sh` for the Mac build.
 
 ```bash
@@ -121,6 +121,19 @@ Catalyst window screenshots need Screen Recording access for the terminal
 (`screencapture -l <window id>` otherwise says "could not create image from window");
 `tooling/catalyst-run.sh` still runs the script and prints the log, and the window
 bounds can be checked with a `CGWindowListCopyWindowInfo` one-liner.
+
+## Design system (stage 11)
+
+`Jambot/UI/Keys.swift` holds the shared controls that mirror `src/app/jam/jam.css`:
+`JBKeyStyle` (`.jb-key` — variants orange/ghost/panel/green/ink, sizes `.regular` 48 /
+`.small` 34 / `.xs` 28, `square:`, `wide:`; lip + press sink + disabled 0.35),
+`JBWordmark`, `JBEyebrow` + `JBGroupRow` (label · rule · trailing keys), `JBSheetHeader`
+(every sheet's header: title, optional LED status, DONE key, optional second row),
+`JBLed`, `JBFader` (cobalt cap), `JBMSKeys`, `JBTag`, `.jbCard()`, `.jbField()`. Raw
+colour/font tokens stay in `Theme.swift`. Keys use the body face (SF, uppercase,
+0.12em) like the web's shipped keys; silkscreen labels use the condensed face.
+Reference shots of the web app: `JAM_URL=https://jambot.to node scripts/jam/shoot-web-ref.mjs`
+(→ `.shots/web/`), to compare against `tooling/sim-run.sh` shots.
 
 ## What the app does (stage 10)
 

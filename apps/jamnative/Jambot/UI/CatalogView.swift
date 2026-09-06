@@ -24,14 +24,8 @@ struct CatalogView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .center, spacing: 10) {
-                Text(title)
-                    .font(JBTheme.panelFont(12, weight: .semibold))
-                    .tracking(1.5)
-                    .foregroundStyle(JBTheme.ink3)
-                Rectangle().fill(JBTheme.rule).frame(height: 1)
-            }
-            .padding(.top, 6)
+            JBGroupRow(title)
+                .padding(.top, 6)
 
             if !error.isEmpty {
                 Text(error)
@@ -72,9 +66,11 @@ struct CatalogView: View {
 
     private func row(_ t: PublicTrackMeta) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text(t.title.uppercased())
-                    .font(JBTheme.panelFont(15, weight: .semibold))
+            HStack(alignment: .firstTextBaseline) {
+                Text(t.title)
+                    .font(JBTheme.panelFont(19, weight: .semibold))
+                    .tracking(0.4)
+                    .textCase(.uppercase)
                     .foregroundStyle(JBTheme.ink)
                     .lineLimit(1)
                 Spacer()
@@ -83,14 +79,16 @@ struct CatalogView: View {
                     .foregroundStyle(JBTheme.ink3)
             }
             LedStripView(strip: t.strip)
-            Text("\(t.bpm) BPM · \(t.bars) \(t.bars == 1 ? "bar" : "bars")\(t.remix ? " · remix" : "") · \(relTime(t.publishedAt))")
+            (Text("\(t.bpm)").fontWeight(.medium).foregroundColor(JBTheme.ink)
+             + Text(" BPM · \(t.bars) \(t.bars == 1 ? "bar" : "bars")\(t.remix ? " · remix" : "") · \(relTime(t.publishedAt))").foregroundColor(JBTheme.ink2))
                 .font(JBTheme.monoFont(12))
-                .foregroundStyle(JBTheme.ink2)
+                .lineLimit(1)
         }
-        .padding(14)
-        .background(JBTheme.panel2)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(JBTheme.rule, lineWidth: 1))
+        .padding(.vertical, 12)
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .jbCard()
     }
 
     private func load() async {

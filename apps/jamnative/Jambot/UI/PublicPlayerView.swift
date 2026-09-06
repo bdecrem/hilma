@@ -117,25 +117,22 @@ struct PublicPlayerView: View {
 
     var body: some View {
         let model = self.model
-        VStack(spacing: 18) {
-            HStack {
-                Button("Close") { dismiss() }
-                    .buttonStyle(JBKeyStyle(variant: .panel, small: true))
-                Spacer()
-            }
-
+        VStack(spacing: 0) {
+            JBSheetHeader("Catalog", onDone: { dismiss() })
+            VStack(spacing: 18) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(meta.title.uppercased())
-                    .font(JBTheme.panelFont(24, weight: .semibold))
+                Text(meta.title)
+                    .font(JBTheme.panelFont(26, weight: .semibold))
+                    .tracking(0.3)
+                    .textCase(.uppercase)
                     .foregroundStyle(JBTheme.ink)
-                HStack(spacing: 4) {
-                    Text("by \(meta.username)")
-                    Text("· \(meta.bpm) BPM · \(meta.bars) \(meta.bars == 1 ? "bar" : "bars")\(meta.remix ? " · remix" : "")")
-                }
-                .font(JBTheme.monoFont(13))
-                .foregroundStyle(JBTheme.ink2)
+                    .lineLimit(2)
+                (Text("by ").foregroundColor(JBTheme.ink2) + Text(meta.username).fontWeight(.medium).foregroundColor(JBTheme.ink)
+                 + Text(" · \(meta.bpm) BPM · \(meta.bars) \(meta.bars == 1 ? "bar" : "bars")\(meta.remix ? " · remix" : "")").foregroundColor(JBTheme.ink2))
+                    .font(JBTheme.monoFont(12))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 6)
 
             LedStripView(strip: meta.strip, step: model.playing ? Int(model.pos * Double(max(1, meta.bars)) * 16) % 16 : nil, big: true)
 
@@ -149,7 +146,7 @@ struct PublicPlayerView: View {
                         .font(.system(size: 20))
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(JBKeyStyle(variant: .panel))
+                .buttonStyle(JBKeyStyle(variant: .ink, wide: true))
                 .disabled(model.status != .ready)
 
                 Button(model.remixing ? "…" : "Remix") {
@@ -172,8 +169,12 @@ struct PublicPlayerView: View {
             }
 
             Spacer()
+            }
+            .padding(16)
         }
-        .padding(20)
+        .background(JBTheme.panel)
+        .columnWidth()
+        .frame(maxWidth: .infinity)
         .background(JBTheme.panel)
         .task { if model.status == .loading { await model.load() } }
         .onDisappear { model.stop() }

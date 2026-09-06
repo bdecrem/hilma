@@ -7,10 +7,10 @@
 # <name>.want; this takes the screenshot and removes it) until "script done".
 set -u
 TAG="$1"; shift
-DEV="iPhone 16"
+DEV="${SIM_DEV:-iPhone 16}"
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$HERE/.shots/$TAG"; mkdir -p "$OUT/export"
-APP="$(xcodebuild -project "$HERE/Jambot.xcodeproj" -scheme Jambot -showBuildSettings -destination "platform=iOS Simulator,name=$DEV" 2>/dev/null | grep -m1 BUILT_PRODUCTS_DIR | awk '{print $3}')/Jambot.app"
+APP="$(xcodebuild -project "$HERE/Jambot.xcodeproj" -scheme Jambot -showBuildSettings -destination "generic/platform=iOS Simulator" 2>/dev/null | grep -m1 BUILT_PRODUCTS_DIR | awk '{print $3}')/Jambot.app"
 LOG="$OUT/script.log"; : > "$LOG"
 xcrun simctl boot "$DEV" 2>/dev/null
 xcrun simctl terminate "$DEV" com.bartdecrem.Jambot 2>/dev/null

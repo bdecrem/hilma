@@ -85,14 +85,17 @@ struct SessionDescription: Codable, Equatable {
     /// app does not understand yields `nil` rather than failing the whole
     /// description.
     var effects: [EffectTargetDescription]?
+    /// The transport LED strip read live from the session (Studio.tsx
+    /// `stripFromDesc`, computed in the bridge); nil when nothing plays.
+    var strip: Strip?
 
     init(bpm: Int, swing: Double, bars: Int, instruments: [InstrumentDescription], arrangement: [ArrangementEntry],
-         tracks: [String: TrackMixState]?, anySolo: Bool?, effects: [EffectTargetDescription]? = nil) {
+         tracks: [String: TrackMixState]?, anySolo: Bool?, effects: [EffectTargetDescription]? = nil, strip: Strip? = nil) {
         self.bpm = bpm; self.swing = swing; self.bars = bars; self.instruments = instruments
-        self.arrangement = arrangement; self.tracks = tracks; self.anySolo = anySolo; self.effects = effects
+        self.arrangement = arrangement; self.tracks = tracks; self.anySolo = anySolo; self.effects = effects; self.strip = strip
     }
 
-    private enum CodingKeys: String, CodingKey { case bpm, swing, bars, instruments, arrangement, tracks, anySolo, effects }
+    private enum CodingKeys: String, CodingKey { case bpm, swing, bars, instruments, arrangement, tracks, anySolo, effects, strip }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -104,6 +107,7 @@ struct SessionDescription: Codable, Equatable {
         tracks = try c.decodeIfPresent([String: TrackMixState].self, forKey: .tracks)
         anySolo = try c.decodeIfPresent(Bool.self, forKey: .anySolo)
         effects = try? c.decodeIfPresent([EffectTargetDescription].self, forKey: .effects)
+        strip = try? c.decodeIfPresent(Strip.self, forKey: .strip)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -116,6 +120,7 @@ struct SessionDescription: Codable, Equatable {
         try c.encodeIfPresent(tracks, forKey: .tracks)
         try c.encodeIfPresent(anySolo, forKey: .anySolo)
         try c.encodeIfPresent(effects, forKey: .effects)
+        try c.encodeIfPresent(strip, forKey: .strip)
     }
 }
 

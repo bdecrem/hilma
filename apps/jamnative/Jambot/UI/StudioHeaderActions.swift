@@ -66,7 +66,7 @@ struct StudioHeaderActions<Leading: View>: View {
                 Spacer()
                 if state.published, let url = state.publicURL {
                     Button("Share") { showShare = true }
-                        .buttonStyle(JBKeyStyle(variant: .panel, small: true))
+                        .buttonStyle(JBKeyStyle(variant: .panel, size: .xs))
                         .sheet(isPresented: $showShare) {
                             ShareSheet(items: [state.title, url])
                         }
@@ -75,10 +75,11 @@ struct StudioHeaderActions<Leading: View>: View {
                     state.error = nil
                     onPublishToggle()
                 }
-                .buttonStyle(JBKeyStyle(variant: state.published ? .ghost : .green, small: true))
+                .buttonStyle(JBKeyStyle(variant: state.published ? .ghost : .green, size: .xs))
                 .disabled(state.busy)
                 .accessibilityIdentifier("publishKey")
             }
+            .frame(minHeight: 32)
 
             if editingTitle {
                 TextField("Track title", text: $draftTitle)

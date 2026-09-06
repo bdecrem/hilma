@@ -19,17 +19,14 @@ struct BounceSheet: View {
     @State private var shareURL: URL?
 
     var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Text("BOUNCE")
-                    .font(JBTheme.panelFont(14, weight: .semibold))
-                    .tracking(1.2)
-                    .foregroundStyle(JBTheme.ink3)
-                Spacer()
-                Button("Close") { dismiss() }
-                    .buttonStyle(JBKeyStyle(variant: .panel, small: true))
+        VStack(spacing: 0) {
+            JBSheetHeader("Bounce", onDone: { dismiss() })
+            VStack(alignment: .leading, spacing: 16) {
+            if let render {
+                Text("\(render.bars) \(render.bars == 1 ? "bar" : "bars") · \(bpm) BPM · \(render.channels == 2 ? "stereo" : "mono") \(render.sampleRate / 1000) kHz")
+                    .font(JBTheme.monoFont(12))
+                    .foregroundStyle(JBTheme.ink2)
             }
-
             if render == nil {
                 Text("Nothing rendered yet.")
                     .font(JBTheme.bodyFont(14))
@@ -41,8 +38,7 @@ struct BounceSheet: View {
                         Button(busy == format ? "…" : format.label) {
                             Task { await export(format) }
                         }
-                        .buttonStyle(JBKeyStyle(variant: .orange))
-                        .frame(maxWidth: .infinity)
+                        .buttonStyle(JBKeyStyle(variant: format == .wav ? .ghost : .orange, wide: true))
                         .disabled(busy != nil)
                     }
                 }
@@ -55,9 +51,10 @@ struct BounceSheet: View {
             }
 
             Spacer(minLength: 0)
+            }
+            .padding(16)
         }
-        .padding(20)
-        .presentationDetents([.height(220)])
+        .presentationDetents([.height(240)])
         .background(JBTheme.panel)
         .sheet(item: $shareURL) { url in
             ShareSheet(items: [url])

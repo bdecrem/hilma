@@ -34,6 +34,7 @@
 		6C3B3EC5D140462C03B458AC /* PanelHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4015345348C37ED1E09707B /* PanelHeader.swift */; };
 		735CF69EE666FA7AB4394008 /* EngineSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7441D10B05B18724069ACD9D /* EngineSmoke.swift */; };
 		78CBD596858AAA5B97DE5DC2 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC29BE3630772FD81CDBA68 /* Session.swift */; };
+		7917ABEFDA29D0514CF97C7E /* Keys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681ECB0B133EE4C1A1489013 /* Keys.swift */; };
 		81C589BE1BBE2E43E462BF88 /* KeyboardShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D35EBC2DCAF60DE56031D85 /* KeyboardShortcuts.swift */; };
 		84F01BA1CA3ED08AFF73571B /* ControlsSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5465CFCEED1EBF5CDBCD14D /* ControlsSheetView.swift */; };
 		8711FE97BF663F49E6AFD47A /* StudioScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2643112F369151EFB752FAF6 /* StudioScript.swift */; };
@@ -81,6 +82,7 @@
 		5C676DD94ECD890F582F36DC /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		634F2B8FEE6C7A07C993E2A8 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		66AA281FA08A1317046E9F63 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
+		681ECB0B133EE4C1A1489013 /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
 		6BBA993DB75B8D7BBB759507 /* CatalystSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalystSupport.swift; sourceTree = "<group>"; };
 		6FF822860A07AA13AFF6E162 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		70DD72277973DCA6AB73DFAC /* AudioSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSmoke.swift; sourceTree = "<group>"; };
@@ -158,6 +160,7 @@
 				3BD2992921692D435A640418 /* ControlsMath.swift */,
 				B5465CFCEED1EBF5CDBCD14D /* ControlsSheetView.swift */,
 				4D35EBC2DCAF60DE56031D85 /* KeyboardShortcuts.swift */,
+				681ECB0B133EE4C1A1489013 /* Keys.swift */,
 				0ED0122182D5E6C7A3B1A7D0 /* LedStripView.swift */,
 				16864BF1298FDEFFB63967E4 /* LibraryScript.swift */,
 				A0EB6492B54FE77C5FDD699E /* LibraryView.swift */,
@@ -331,6 +334,7 @@
 				BD739C0B70337A662B30E4D5 /* JamAPI.swift in Sources */,
 				0664D303E9DE0A0B645191F3 /* JambotApp.swift in Sources */,
 				81C589BE1BBE2E43E462BF88 /* KeyboardShortcuts.swift in Sources */,
+				7917ABEFDA29D0514CF97C7E /* Keys.swift in Sources */,
 				89DB77706835B26C4D691E31 /* KnobControl.swift in Sources */,
 				FF3A693865FE26D281892D09 /* LedStripView.swift in Sources */,
 				EF87CCE3FFAAC3ABF663929F /* LibraryScript.swift in Sources */,
