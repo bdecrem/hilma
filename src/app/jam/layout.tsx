@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://jambot.to'),
   title: 'Jambot — a groovebox you talk to',
   description:
-    'Describe a beat, hear it in seconds, turn the knobs, keep every track. Publish it and let anyone remix it.',
+    'An AI groovebox: talk to it like a producer and it programs real synth engines — 909 drums, 303 acid, 101 leads — in your browser, on your phone and in your terminal. Every parameter tweakable, every pattern yours.',
   icons: {
     icon: [
       { url: '/jam/favicon.ico', sizes: 'any' },

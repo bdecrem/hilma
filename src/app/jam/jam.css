@@ -335,3 +335,67 @@
 .jb-tag--green { background: var(--green); color: #fff; }
 .jb-tag--ink { background: var(--ink); color: var(--panel-2); }
 .jb-tag--outline { box-shadow: inset 0 0 0 1px var(--ink-3); color: var(--ink-3); }
+
+/* ---------- landing (signed-out jambot.to) ----------
+   Essay layout after dodo.foo: masthead, statement, six phone scenes, CTAs,
+   then sections split by rules. 720px column via .jb-screen; 16px margins.
+   Scenes: 214px cards, three across at 720 (214×3 + 22×2 = 686). */
+.jb .jl { padding: 0 16px calc(env(safe-area-inset-bottom) + 48px); }
+.jb .jl-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 22px 0 0; }
+.jb .jl-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.jb .jl-brand img { width: 30px; height: 30px; border-radius: 7px; display: block; }
+.jb .jl-nav { display: flex; gap: 18px; align-items: center; }
+.jb .jl-nav a, .jb .jl-nav button {
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-2); text-decoration: none; background: none; border: 0; border-bottom: 2px solid var(--orange); padding: 0 0 1px; cursor: pointer;
+}
+.jb .jl-nav a:hover, .jb .jl-nav button:hover { color: var(--ink); }
+.jb .jl-h1 {
+  font-family: var(--font-body-stack); font-weight: 500;
+  font-size: clamp(24px, 4.4vw, 30px); line-height: 1.3; letter-spacing: -0.01em;
+  margin: 44px 0 0; color: var(--ink); text-wrap: balance;
+}
+.jb .jl-h1 em { font-style: normal; color: var(--orange); }
+.jb .jl-scenes {
+  display: flex; gap: 22px; overflow-x: auto; scroll-snap-type: x mandatory;
+  margin: 0 -16px; padding: 30px 16px 8px; scrollbar-width: none;
+}
+.jb .jl-scenes::-webkit-scrollbar { display: none; }
+.jb .jl-scene { flex: 0 0 214px; margin: 0; scroll-snap-align: start; }
+.jb .jl-scene img {
+  width: 100%; height: auto; aspect-ratio: 840 / 1826; display: block; border-radius: 26px;
+  border: 1px solid var(--rule); background: var(--panel-3);
+  box-shadow: 0 12px 30px rgba(20, 22, 26, 0.16), 0 1px 0 #fff inset;
+}
+.jb .jl-scene h3 {
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase;
+  line-height: 1.1; margin: 14px 0 6px; color: var(--ink);
+}
+.jb .jl-scene p { font-size: 13.5px; line-height: 1.45; color: var(--ink-2); margin: 0; }
+@media (max-width: 600px) { .jb .jl-scene { flex-basis: 66vw; } }
+.jb .jl-cta { display: flex; flex-direction: column; gap: 10px; margin-top: 26px; }
+@media (min-width: 480px) { .jb .jl-cta { flex-direction: row; } .jb .jl-cta .jb-key { flex: 1; } }
+.jb .jl-tf { margin: 14px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.jb .jl-tf a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+.jb .jl-form { margin: 0; }
+.jb .jl-section { margin-top: 52px; padding-top: 36px; border-top: 1px solid var(--rule); }
+.jb .jl-label { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.jb .jl-led { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+.jb .jl-p { font-size: 16.5px; line-height: 1.6; color: var(--ink); margin: 0 0 14px; }
+.jb .jl-p strong { font-weight: 600; }
+.jb .jl-p code, .jb .jl-feat code {
+  font-family: var(--font-mono-stack); font-size: 13px; color: var(--ink);
+  background: var(--panel-4); border: 1px solid var(--rule); border-radius: 6px; padding: 1px 6px; white-space: nowrap;
+}
+.jb .jl-say { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.jb .jl-say li {
+  font-family: var(--font-mono-stack); font-size: 12.5px; color: var(--ink-2);
+  background: var(--panel-2); border: 1px solid var(--rule); border-radius: 999px; padding: 6px 12px;
+}
+.jb .jl-feat { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.jb .jl-feat li { position: relative; padding-left: 20px; font-size: 15px; line-height: 1.55; color: var(--ink-2); }
+.jb .jl-feat li::before { content: ''; position: absolute; left: 0; top: 8px; width: 8px; height: 8px; border-radius: 2px; background: var(--orange); }
+.jb .jl-feat strong { color: var(--ink); font-weight: 600; }
+.jb .jl-more { margin: 16px 0 0; font-family: var(--font-panel-stack); font-weight: 600; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; }
+.jb .jl-more a { color: var(--ink); text-decoration: none; border-bottom: 2px solid var(--orange); padding-bottom: 1px; }
+.jb .jl-foot { margin-top: 48px; text-align: center; }
