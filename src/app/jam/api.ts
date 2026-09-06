@@ -4,7 +4,7 @@
 
 import type { AgentMessage } from './jambot'
 
-export type JamUser = { id: string; username: string }
+export type JamUser = { id: string; username: string; /** may rename / delete any catalog track */ admin?: boolean }
 
 /** 16-step rhythm of a track (kick / snare / hats), '1' per hit. */
 export type Strip = { k: string; s: string; h: string }
@@ -95,4 +95,9 @@ export const api = {
   catalog: () => call<{ tracks: PublicTrackMeta[] }>('/api/jam/public'),
   publicTrack: (slug: string) => call<{ track: PublicTrack }>(`/api/jam/public/${slug}`),
   remix: (slug: string) => call<{ track: TrackMeta }>(`/api/jam/public/${slug}/remix`, { method: 'POST' }),
+
+  // Admin only (jam_users.is_admin): any track in the catalog
+  renamePublicTrack: (slug: string, title: string) =>
+    call<{ track: { slug: string; title: string } }>(`/api/jam/public/${slug}`, { method: 'PATCH', body: JSON.stringify({ title }) }),
+  deletePublicTrack: (slug: string) => call<{ ok: true }>(`/api/jam/public/${slug}`, { method: 'DELETE' }),
 }

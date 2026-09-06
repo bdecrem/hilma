@@ -8,7 +8,12 @@ import { cookies } from 'next/headers'
 import type { NextResponse } from 'next/server'
 import { jamDb } from './db'
 
-export type JamUser = { id: string; username: string }
+export type JamUser = {
+  id: string
+  username: string
+  /** jam_users.is_admin — may rename / delete any track in the public catalog. */
+  admin: boolean
+}
 
 const COOKIE_NAME = 'jam_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 90 // 90 days
@@ -89,11 +94,11 @@ export async function getJamUser(): Promise<JamUser | null> {
   if (!v) return null
   const { data, error } = await jamDb()
     .from('jam_users')
-    .select('id, username')
+    .select('id, username, is_admin')
     .eq('id', v.userId)
     .maybeSingle()
   if (error || !data) return null
-  return data as JamUser
+  return { id: data.id as string, username: data.username as string, admin: !!data.is_admin }
 }
 
 export async function createUser(
@@ -114,7 +119,7 @@ export async function createUser(
     console.error('[jam] createUser failed:', error)
     return { error: 'Could not create the account.', status: 500 }
   }
-  return data as JamUser
+  return { id: data.id as string, username: data.username as string, admin: false }
 }
 
 export async function authenticate(
@@ -124,11 +129,11 @@ export async function authenticate(
   const username = normalizeUsername(usernameRaw)
   const { data } = await jamDb()
     .from('jam_users')
-    .select('id, username, password_hash')
+    .select('id, username, password_hash, is_admin')
     .eq('username', username)
     .maybeSingle()
   if (!data) return null
   const ok = await bcrypt.compare(password, data.password_hash as string)
   if (!ok) return null
-  return { id: data.id as string, username: data.username as string }
+  return { id: data.id as string, username: data.username as string, admin: !!data.is_admin }
 }

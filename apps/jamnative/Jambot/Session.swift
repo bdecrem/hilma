@@ -10,6 +10,11 @@ final class Session {
     }
 
     var state: State = .loading
+    /// The signed-in user, if any.
+    var user: JamUser? {
+        if case .signedIn(let u) = state { return u }
+        return nil
+    }
     var loginError: String? = nil
 
     func bootstrap() async {

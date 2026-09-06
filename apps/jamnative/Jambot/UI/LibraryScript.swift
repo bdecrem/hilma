@@ -73,6 +73,29 @@ enum LibraryScript {
                 let ok = await model.delete(t)
                 emit("  deleteLast '\(t.title)' ok=\(ok) error=\(model.error) remaining=\(model.tracks?.count ?? 0) stillListed=\(model.tracks?.contains { $0.id == t.id } ?? false)")
                 if ok { last = nil }
+            case "me":
+                if let u = try? await JamAPI.shared.me() { emit("  me: \(u.username) admin=\(u.admin)") } else { emit("  me: FAILED") }
+            case "adminRename":
+                // adminRename:<catalog title>|<new title>
+                let parts = arg.split(separator: "|", maxSplits: 1).map { String($0).trimmingCharacters(in: .whitespaces) }
+                guard parts.count == 2, let match = try? await JamAPI.shared.catalog().first(where: { $0.title.localizedCaseInsensitiveContains(parts[0]) }) else {
+                    emit("  adminRename: no public track matching '\(arg)'"); break
+                }
+                do {
+                    let title = try await JamAPI.shared.renamePublicTrack(match.slug, title: parts[1])
+                    model.catalogReload += 1
+                    emit("  adminRename '\(match.title)' → '\(title)' slug=\(match.slug)")
+                } catch { emit("  adminRename FAILED: \(error.localizedDescription)") }
+            case "adminDelete":
+                guard let match = try? await JamAPI.shared.catalog().first(where: { $0.title.localizedCaseInsensitiveContains(arg) }) else {
+                    emit("  adminDelete: no public track matching '\(arg)'"); break
+                }
+                do {
+                    try await JamAPI.shared.deletePublicTrack(match.slug)
+                    model.catalogReload += 1
+                    let still = (try? await JamAPI.shared.catalog())?.contains { $0.slug == match.slug } ?? false
+                    emit("  adminDelete '\(match.title)' slug=\(match.slug) stillListed=\(still)")
+                } catch { emit("  adminDelete FAILED: \(error.localizedDescription)") }
             case "openCatalog":
                 guard let match = try? await JamAPI.shared.catalog().first(where: { $0.title.localizedCaseInsensitiveContains(arg) }) else {
                     emit("  openCatalog: no public track matching '\(arg)'"); break

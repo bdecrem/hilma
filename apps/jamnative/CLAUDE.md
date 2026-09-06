@@ -104,6 +104,13 @@ tooling/sim-run.sh s-lib -autoLogin jamtest jamtest1 \
   -libraryScript "list;duplicate:SEQ TEST techno copy;deleteLast;openCatalog:Exp1;player:play;wait:3;remix;closeStudio;deleteLast;about;shot:about"
 ```
 
+Admin (jam_users.is_admin, Bart only): `JamUser.admin` from `/me` / login; `CatalogView(admin:)` puts the
+"…" menu (Rename → alert with a text field, Delete → confirm) on every catalog row, calling
+`JamAPI.renamePublicTrack` / `deletePublicTrack` (`PATCH` / `DELETE /api/jam/public/<slug>`). Library
+script steps `me`, `adminRename:<catalog title>|<new title>`, `adminDelete:<catalog title>` verify it
+headlessly — with `jamtest` flipped to admin temporarily (`node scripts/jam/set-admin.mjs jamtest on|off`
+in hilma) and only against jamtest's own published copy.
+
 Launch args: `-autoLogin <user> <pass>`, `-openTrack "<title>"`, `-openControls`,
 `-studioScript "<steps>"`, `-libraryScript "<steps>"`, `-studioScriptLog <file>`,
 `-studioShotDir <dir>`, `-studioExportDir <dir>` (where `bounce:wav|aac` writes),

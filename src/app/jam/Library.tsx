@@ -123,7 +123,7 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
           ))}
         </ul>
 
-        <Catalog title="Catalog · published by everyone" emptyText="Nothing published yet. Open a track and press Publish." />
+        <Catalog title="Catalog · published by everyone" emptyText="Nothing published yet. Open a track and press Publish." admin={!!user.admin} />
       </main>
     </div>
   )

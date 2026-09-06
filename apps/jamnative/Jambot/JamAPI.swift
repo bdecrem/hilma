@@ -88,6 +88,9 @@ final class JamAPI {
     private func delete<T: Decodable>(_ path: String) async throws -> T {
         try await request(path, method: "DELETE", body: nil)
     }
+    private func patch<T: Decodable>(_ path: String, body: Encodable) async throws -> T {
+        try await request(path, method: "PATCH", body: body)
+    }
 
     func clearCookies() {
         guard let cookies = HTTPCookieStorage.shared.cookies else { return }
@@ -189,6 +192,25 @@ final class JamAPI {
     func remix(_ slug: String) async throws -> TrackMeta {
         let res: TrackMetaResponse = try await post("/api/jam/public/\(slug)/remix")
         return res.track
+    }
+
+    // MARK: Admin (jam_users.is_admin) — any track in the catalog
+
+    private struct RenameBody: Encodable { let title: String }
+    private struct PublicRenameResponse: Decodable {
+        struct Renamed: Decodable { let slug: String; let title: String }
+        let track: Renamed
+    }
+
+    /// PATCH /api/jam/public/:slug { title } — admins only (403 otherwise).
+    func renamePublicTrack(_ slug: String, title: String) async throws -> String {
+        let res: PublicRenameResponse = try await patch("/api/jam/public/\(slug)", body: RenameBody(title: title))
+        return res.track.title
+    }
+
+    /// DELETE /api/jam/public/:slug — admins only; removes the owner's track.
+    func deletePublicTrack(_ slug: String) async throws {
+        let _: OkResponse = try await delete("/api/jam/public/\(slug)")
     }
 
     // MARK: LLM proxy (engine host)

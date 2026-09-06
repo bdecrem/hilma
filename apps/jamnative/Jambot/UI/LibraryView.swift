@@ -165,7 +165,7 @@ struct LibraryView: View {
                             }
                         }
 
-                        CatalogView(engine: EngineFactory.make(), onOpen: { model.openPublic($0) }, reloadToken: model.catalogReload)
+                        CatalogView(engine: EngineFactory.make(), onOpen: { model.openPublic($0) }, reloadToken: model.catalogReload, admin: session.user?.admin ?? false)
                             .padding(.top, 8)
                             .id("catalog")
                     }

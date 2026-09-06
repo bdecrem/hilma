@@ -35,13 +35,21 @@ export async function launch({ viewport = PHONE, headless = true } = {}) {
 export async function signIn(page, { user = process.env.JAM_USER || 'jamtest', pass = process.env.JAM_PASS || 'jamtest1' } = {}) {
   const base = process.env.JAM_URL || 'http://localhost:3100'
   await page.goto(`${base}/jam`, { waitUntil: 'networkidle' })
-  // Already signed in? The library shows "Your tracks" / a New track key.
-  const already = await page.getByRole('button', { name: /new track/i }).count()
+  // Already signed in? The library header has the Sign out key. (The
+  // signed-out landing also has a "Make a new track" CTA, so that key is
+  // not the tell.)
+  const already = await page.getByRole('button', { name: /^sign out$/i }).count()
   if (already) return
-  await page.getByPlaceholder(/username/i).fill(user)
+  // The landing keeps the form closed for first-time visitors: open it.
+  const username = page.getByPlaceholder(/username/i)
+  if (!(await username.isVisible().catch(() => false))) {
+    await page.getByRole('button', { name: /^sign in$/i }).first().click()
+    await username.waitFor({ timeout: 5000 })
+  }
+  await username.fill(user)
   await page.getByPlaceholder(/password/i).fill(pass)
-  await page.getByRole('button', { name: /sign in|log in/i }).first().click()
-  await page.getByRole('button', { name: /new track/i }).waitFor({ timeout: 15000 })
+  await page.getByRole('button', { name: /^sign in$/i }).last().click()
+  await page.getByRole('button', { name: /^sign out$/i }).waitFor({ timeout: 15000 })
 }
 
 /** Sign in and open a track by title; resolves once the groovebox is loaded. */

@@ -7,6 +7,21 @@ import Foundation
 struct JamUser: Codable, Equatable {
     let id: String
     let username: String
+    /// jam_users.is_admin — may rename / delete any track in the public
+    /// catalog. Absent from older servers, so it decodes as false.
+    var admin: Bool = false
+
+    init(id: String, username: String, admin: Bool = false) {
+        self.id = id; self.username = username; self.admin = admin
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, username, admin }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        username = try c.decode(String.self, forKey: .username)
+        admin = try c.decodeIfPresent(Bool.self, forKey: .admin) ?? false
+    }
 }
 
 /// 16-step rhythm of a track (kick / snare / hats), '1' per hit.

@@ -17,10 +17,17 @@ struct CatalogView: View {
     var onOpen: ((PublicTrackMeta) -> Void)? = nil
     /// Bumping this reloads the list (pull-to-refresh in the Library).
     var reloadToken: Int = 0
+    /// Signed-in admin (jam_users.is_admin): every row gets the "…" menu
+    /// the Library puts on its own rows — Rename / Delete — for any track.
+    var admin: Bool = false
 
     @State private var tracks: [PublicTrackMeta]? = nil
     @State private var error: String = ""
     @State private var openTrack: PublicTrackMeta? = nil
+    @State private var renameTarget: PublicTrackMeta? = nil
+    @State private var renameText: String = ""
+    @State private var deleteTarget: PublicTrackMeta? = nil
+    @State private var busySlug: String? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -45,14 +52,18 @@ struct CatalogView: View {
 
             VStack(spacing: 8) {
                 ForEach(tracks ?? []) { t in
-                    Button {
-                        if let onOpen, engine != nil { onOpen(t) }
-                        else if engine != nil { openTrack = t }
-                        else { onSignedOutTap?() }
-                    } label: {
-                        row(t)
+                    HStack(alignment: .center, spacing: 0) {
+                        Button {
+                            if let onOpen, engine != nil { onOpen(t) }
+                            else if engine != nil { openTrack = t }
+                            else { onSignedOutTap?() }
+                        } label: {
+                            row(t)
+                        }
+                        .buttonStyle(.plain)
+                        if admin { adminMenu(t) }
                     }
-                    .buttonStyle(.plain)
+                    .jbCard()
                 }
             }
         }
@@ -61,6 +72,73 @@ struct CatalogView: View {
             if let engine {
                 NavigationStack { PublicPlayerView(meta: t, engine: engine) }
             }
+        }
+        .alert("Rename track", isPresented: Binding(get: { renameTarget != nil }, set: { if !$0 { renameTarget = nil } })) {
+            TextField("Title", text: $renameText)
+            Button("Rename") { if let t = renameTarget { Task { await rename(t, to: renameText) } } }
+            Button("Cancel", role: .cancel) { renameTarget = nil }
+        } message: {
+            Text(renameTarget.map { "\"\($0.title)\" by \($0.username)" } ?? "")
+        }
+        .alert("Delete this track?", isPresented: Binding(get: { deleteTarget != nil }, set: { if !$0 { deleteTarget = nil } })) {
+            Button("Delete", role: .destructive) { if let t = deleteTarget { Task { await remove(t) } } }
+            Button("Cancel", role: .cancel) { deleteTarget = nil }
+        } message: {
+            Text(deleteTarget.map { "\"\($0.title)\" by \($0.username) can't be recovered — it is deleted from their library too." } ?? "")
+        }
+    }
+
+    /// The admin's "…" key at the card's trailing edge (same as the
+    /// Library's track rows): Rename / Delete for any catalog track.
+    private func adminMenu(_ t: PublicTrackMeta) -> some View {
+        Menu {
+            Button {
+                renameText = t.title
+                renameTarget = t
+            } label: {
+                Label("Rename", systemImage: "pencil")
+            }
+            Button(role: .destructive) {
+                deleteTarget = t
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        } label: {
+            Text("…")
+                .font(JBTheme.monoFont(18))
+                .foregroundStyle(JBTheme.ink2)
+                .frame(width: 44)
+                .frame(maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .opacity(busySlug == t.slug ? 0.35 : 1)
+        }
+        .disabled(busySlug == t.slug)
+        .accessibilityLabel("Track options")
+    }
+
+    private func rename(_ t: PublicTrackMeta, to raw: String) async {
+        renameTarget = nil
+        let title = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty, title != t.title else { return }
+        busySlug = t.slug
+        defer { busySlug = nil }
+        do {
+            _ = try await JamAPI.shared.renamePublicTrack(t.slug, title: title)
+            await load()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private func remove(_ t: PublicTrackMeta) async {
+        deleteTarget = nil
+        busySlug = t.slug
+        defer { busySlug = nil }
+        do {
+            try await JamAPI.shared.deletePublicTrack(t.slug)
+            await load()
+        } catch {
+            self.error = error.localizedDescription
         }
     }
 
@@ -88,7 +166,6 @@ struct CatalogView: View {
         .padding(.horizontal, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
-        .jbCard()
     }
 
     private func load() async {
