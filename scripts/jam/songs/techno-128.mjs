@@ -17,9 +17,9 @@
 //   73  lift — open hats bloom, tom figure, B riff creeps back under a filter
 //   81  kick and sub return on his B section (re-drop)
 //   89  second rise: cutoff + drive climb into the peak
-//   97  PEAK — driven B bass, offbeat open hats, 13-note JT10, JT30 acid answer
+//   97  PEAK — driven B bass, offbeat open hats, 14-note JT10, JT30 acid answer
 //   105 toms join under the peak
-//   113 reduction — his B line, dim melody
+//   113 reduction — his B line back on plain 8th hats, dim melody
 //   121 his original A drums + half sub, for the next DJ
 //
 //   node scripts/jam/songs/techno-128.mjs                 # full build + render
@@ -27,9 +27,9 @@
 //   AUDITION=7 node scripts/jam/songs/techno-128.mjs      # render section 7 only
 //   BASE16=/path/to/base16.wav …                          # loudness check against his 16-bar loop
 //
-// Outputs in $OUT (default scripts/jam/songs/out/techno-128, gitignored):
-// song.wav, metrics.txt, track.json (title, bpm, bars, session, plan, messages,
-// feed), toolcalls.log.
+// Outputs in $OUT (default scripts/jam/songs/out/techno-128, gitignored): song.wav,
+// metrics.txt, track.json (title, bpm, bars, session, plan, messages, feed),
+// toolcalls.log. The build is deterministic — outputs are byte-identical run to run.
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -39,7 +39,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const HILMA = resolve(HERE, '../../..')
 const JAMBOT = resolve(HILMA, '../vibeceo/jambot')
 const BASE = resolve(HERE, 'techno-128-base.json')
-const OUT = process.env.OUT || resolve(HERE, 'out', 'techno-128')
+const OUT = process.env.OUT || resolve(HERE, 'out', 'techno-128')   // gitignored
 mkdirSync(OUT, { recursive: true })
 
 const { deserializeSession, serializeSession } = await import(`${JAMBOT}/core/session.js`)
@@ -103,12 +103,14 @@ const leadA = session.patterns.jt10.A.pattern    // 64 steps, 7 notes: E4 G4 A4 
 // +2.5, where it alone peaked -0.4 dBFS and was 83 % of the loop's energy.
 // Balance: his loop was sub-driven, so the sub stays the biggest thing in RMS
 // with the kick peaking just over it; stabs under the sub; melody a hint.
-// These are starting points — every node level is moved by the same delta
-// after the first render so the mix peaks at -0.5 dBFS with no master trim.
-await t('tweak', { path: 'jt90.level', value: 4 })
-await t('tweak', { path: 'jb202.level', value: -6 })
-await t('tweak', { path: 'jb202-2.level', value: -0.5 })
-await t('tweak', { path: 'jt10.level', value: -4 })
+// These are the gain-staged values of the final render (every node moved by
+// the same delta so the mix peaks at -0.5 dBFS with no master trim); the gain
+// stage in section 9 re-runs only if a change moves the peak, so AUDITION
+// renders sit at the delivered levels.
+await t('tweak', { path: 'jt90.level', value: -0.2 })
+await t('tweak', { path: 'jb202.level', value: -10.2 })
+await t('tweak', { path: 'jb202-2.level', value: -4.7 })
+await t('tweak', { path: 'jt10.level', value: -8.2 })
 
 // The saved session lost the delay his chat set on the JT10 (it came back as
 // the default analog 375 ms). Restore his settings: dotted-8th ping-pong.
@@ -153,9 +155,10 @@ await t('automate', { path: 'jt90.oh.level', values: linRamp(256, -10, -5) })
 await t('save_pattern', { instrument: 'jt90', name: 'AH16' })
 await t('clear_automation', { path: 'jt90' })
 
-// BH (4 bars): his B steps for the drops, hats a notch louder; bar 4 of every
-// four the open hat moves to step 10 and a ghost kick lands on the and-of-4 —
-// cheap Berlin fills that help a DJ count.
+// BH (4 bars): his B steps for the drops, hats at the peak's level (-4 / -3)
+// so the drops read on a phone; bar 4 of every four the open hat moves to
+// step 10 and a ghost kick lands on the and-of-4 — cheap Berlin fills that
+// help a DJ count.
 await t('load_pattern', { instrument: 'jt90', name: 'B' })
 await t('add_jt90', {
   bars: 4, clear: true,
@@ -163,7 +166,7 @@ await t('add_jt90', {
   ch: everyBar(4, EIGHTHS),
   oh: [14, 30, 46, 58],
 })
-await t('tweak_multi', { params: { 'jt90.ch.level': -6, 'jt90.oh.level': -5 } })
+await t('tweak_multi', { params: { 'jt90.ch.level': -4, 'jt90.oh.level': -3 } })
 await t('save_pattern', { instrument: 'jt90', name: 'BH' })
 
 // C (2 bars): 8ths with offbeat-16th ghosts, a second open hat in bar 2.
@@ -174,7 +177,7 @@ await t('add_jt90', {
   ch: velSteps(32, everyBar(2, EIGHTHS), ghosts16(2, [14, 22, 30]), 0.45),
   oh: [14, 22, 30],
 })
-await t('tweak_multi', { params: { 'jt90.ch.level': -5, 'jt90.oh.level': -5, 'jt90.oh.decay': 58 } })
+await t('tweak_multi', { params: { 'jt90.ch.level': -4, 'jt90.oh.level': -4, 'jt90.oh.decay': 58 } })
 await t('save_pattern', { instrument: 'jt90', name: 'C' })
 
 // BREAK (1 bar): no kick — closed 8ths and his open hat on 14 keep time.
@@ -185,8 +188,10 @@ await t('save_pattern', { instrument: 'jt90', name: 'BREAK' })
 
 // BREAK2 (8 bars): still no kick and no closed hats, so the offbeat open hats
 // actually ring (nothing chokes them) while they bloom over the 8 bars
-// (level -24 -> -4 dB, decay 25 -> 92). Bars 5-8: rimshot on 3 and 11 and the
-// mid/hi tom figure tuned to a fifth (midtom -7, hitom -2) answer the riff.
+// (level -14 -> -4 dB, decay 30 -> 92). They start near the closed hats'
+// break level so the lift takes over from BREAK instead of opening from a
+// hole. Bars 5-8: rimshot on 3 and 11 and the mid/hi tom figure tuned to a
+// fifth (midtom -7, hitom -2) answer the riff.
 await t('load_pattern', { instrument: 'jt90', name: 'A' })
 await t('add_jt90', {
   bars: 8, clear: true,
@@ -200,8 +205,8 @@ await t('tweak_multi', { params: {
   'jt90.midtom.level': -13, 'jt90.midtom.tune': -7, 'jt90.midtom.decay': 55,
   'jt90.hitom.level': -15, 'jt90.hitom.tune': -2, 'jt90.hitom.decay': 45,
 } })
-await t('automate', { path: 'jt90.oh.level', values: linRamp(128, -24, -4) })
-await t('automate', { path: 'jt90.oh.decay', values: linRamp(128, 25, 92) })
+await t('automate', { path: 'jt90.oh.level', values: linRamp(128, -14, -4) })
+await t('automate', { path: 'jt90.oh.decay', values: linRamp(128, 30, 92) })
 await t('save_pattern', { instrument: 'jt90', name: 'BREAK2' })
 await t('clear_automation', { path: 'jt90' })
 
@@ -326,7 +331,8 @@ await t('tweak_multi', { params: { 'jb202.filterCutoff': 700, 'jb202.drive': 52,
 await t('save_pattern', { instrument: 'jb202', name: 'DRIVE' })
 
 // ---------------------------------------------------------------------------
-// 5. JT10 — his 7 notes, a fuller 13-note phrase for the peak, a dim restatement
+// 5. JT10 — his 7 notes, a 14-note phrase for the peak (his seven plus seven
+//    answers on the offbeats), a dim restatement
 // ---------------------------------------------------------------------------
 const leadFull = clone(leadA)
 for (const [i, tok] of Object.entries({ 12: 'D5', 26: 'C5', 30: 'G4~', 42: 'D5', 46: 'B4', 50: 'G4', 58: 'C5' })) {
@@ -356,7 +362,7 @@ await t('tweak_multi', { params: {
   'jt10-2.cutoff': 2100, 'jt10-2.resonance': 30, 'jt10-2.envMod': 45, 'jt10-2.keyTrack': 50,
   'jt10-2.attack': 2, 'jt10-2.decay': 45, 'jt10-2.sustain': 20, 'jt10-2.release': 45, 'jt10-2.glideTime': 0.25,
 } })
-await t('tweak', { path: 'jt10-2.level', value: 0 })
+await t('tweak', { path: 'jt10-2.level', value: -4.2 })
 await t('add_sidechain', { target: 'jt10-2', trigger: 'kick', amount: 0.4 })
 await t('add_effect', { target: 'jt10-2', effect: 'delay', mode: 'pingpong', sync: 'dotted8th', feedback: 60, mix: 55, lowcut: 300, highcut: 5500 })
 await t('add_effect', { target: 'jt10-2', effect: 'reverb', decay: 3.2, mix: 28, lowcut: 250, damping: 65, size: 70, predelay: 30 })
@@ -365,16 +371,20 @@ await t('save_pattern', { instrument: 'jt10-2', name: 'A' })
 // break's texture under the returning kick instead of cutting it at bar 81.
 await t('tweak_multi', { params: { 'jt10-2.sawLevel': 28, 'jt10-2.pulseLevel': 25 } })
 await t('save_pattern', { instrument: 'jt10-2', name: 'LOW' })
+// Live pattern silent: with the arrangement off (loop mode in the app) he
+// hears his loop, not his loop plus the wash. The saved A / LOW carry the notes.
 await t('load_pattern', { instrument: 'jt10-2', name: 'A' })
+await t('add_jt10', { instrument: 'jt10-2', pattern: seq({}, 4), bars: 4 })
 
 // ---------------------------------------------------------------------------
 // 7. JT30 acid — one 16-bar answer to the 202's B line, A minor, peak only
 // ---------------------------------------------------------------------------
 await t('add_jt30', { pattern: seq({ 1: 'A2', 3: 'A2!~', 4: 'C3', 6: 'E3', 9: 'A2!', 11: 'G2', 13: 'A2~', 14: 'C3!', 15: 'E3~' }) })
 await t('tweak_multi', { params: { 'jt30.waveform': 'sawtooth', 'jt30.cutoff': 380, 'jt30.resonance': 74, 'jt30.envMod': 62, 'jt30.decay': 42, 'jt30.accent': 72, 'jt30.drive': 22 } })
-await t('tweak', { path: 'jt30.level', value: -8 })
+await t('tweak', { path: 'jt30.level', value: -9.7 })
 await t('add_sidechain', { target: 'jt30', trigger: 'kick', amount: 0.35 })
 await t('save_pattern', { instrument: 'jt30', name: 'ACID' })
+await t('add_jt30', { pattern: seq({}) }) // live pattern silent — loop mode stays his loop
 
 // ---------------------------------------------------------------------------
 // 8. Arrangement — 128 bars, 15 sections, structural events on 16-bar boundaries
@@ -391,17 +401,20 @@ const plan = [
   { bars: 8, name: 'Breakdown lift', patterns: { jt90: 'BREAK2', jb202: 'FILT', 'jt10-2': 'A' }, what_happens: 'Offbeat open hats bloom over 8 bars (level and decay automation), rimshot and a tom figure tuned to a fifth in the last 4; his B riff creeps back under a closed filter 130 -> 420 Hz.' },
   { bars: 8, name: 'Build 2', patterns: { jt90: 'BH', jb202: 'B', 'jb202-2': 'A', jt10: 'A', 'jt10-2': 'LOW' }, what_happens: 'Kick and sub return on his B section with the drop-1 drums; the 7 notes are back, the wash carries on quietly underneath.' },
   { bars: 8, name: 'Build 2 rise', patterns: { jt90: 'C', jb202: 'RISE2', 'jb202-2': 'A', jt10: 'A', 'jt10-2': 'LOW' }, what_happens: 'Ghost hats; his B line rises 420 -> 700 Hz with drive climbing 25 -> 52 into the peak.' },
-  { bars: 8, name: 'Peak', patterns: { jt90: 'D', jb202: 'DRIVE', 'jb202-2': 'A', jt10: 'FULL', jt30: 'ACID' }, what_happens: 'Driven B bass, offbeat open hats and a rimshot figure, kick +1.5 dB, the melody grown to 13 notes, and the JT30 acid line answering in A minor.' },
+  { bars: 8, name: 'Peak', patterns: { jt90: 'D', jb202: 'DRIVE', 'jb202-2': 'A', jt10: 'FULL', jt30: 'ACID' }, what_happens: 'Driven B bass, offbeat open hats and a rimshot figure, kick +1.5 dB, the melody doubled to 14 notes, and the JT30 acid line answering in A minor.' },
   { bars: 8, name: 'Peak toms', patterns: { jt90: 'D2', jb202: 'DRIVE', 'jb202-2': 'A', jt10: 'FULL', jt30: 'ACID' }, what_happens: 'The tom figure joins under the peak.' },
-  { bars: 8, name: 'Reduction', patterns: { jt90: 'C', jb202: 'B8', 'jb202-2': 'A', jt10: 'DIM' }, what_happens: 'Acid and toms gone, bass back on his clean patch, the 7 notes return dimmer.' },
+  { bars: 8, name: 'Reduction', patterns: { jt90: 'AH', jb202: 'B8', 'jb202-2': 'A', jt10: 'DIM' }, what_happens: 'Acid, toms and open hats gone, hats back to plain 8ths at -11, bass on his clean patch, the 7 notes return dimmer — the first step of a 16-bar wind-down.' },
   { bars: 8, name: 'Outro', patterns: { jt90: 'A', 'jb202-2': 'IN' }, what_happens: 'His original A drums, verbatim, over the half-level sub — kick and sub for the next record.' },
 ]
 if (plan.reduce((n, s) => n + s.bars, 0) !== 128) throw new Error('plan is not 128 bars')
 await t('set_arrangement', { sections: plan.map((s) => ({ bars: s.bars, ...s.patterns })) })
 
-// Leave the live instruments on Bart's own patterns. The web app's engine
-// reads the LIVE jt90 pattern for the sidechain trigger, so jt90 must end on
-// A (kick on the 4s) or nothing ducks.
+// Leave the live instruments on Bart's own patterns, so loop mode (arrangement
+// off) in the app is his loop: jt90 A, jb202 B, jb202-2 A, jt10 A, and the two
+// added instances silent (above). Song mode ducks each section to that
+// section's saved drum pattern (jambot 2bcd3eccf, the engine the web bundle
+// ships), so nothing here depends on what is loaded live; the kick-less
+// sections do not pump.
 await t('load_pattern', { instrument: 'jt90', name: 'A' })
 await t('load_pattern', { instrument: 'jb202', name: 'B' })
 await t('load_pattern', { instrument: 'jb202-2', name: 'A' })
@@ -423,6 +436,7 @@ async function render() {
 }
 
 if (process.env.AUDITION) {
+  // Node levels above are the delivered ones, so a single section renders at the song's mix.
   const i = Number(process.env.AUDITION) - 1
   const full = session.arrangement
   session.arrangement = [full[i]]
@@ -440,6 +454,7 @@ console.log(`RENDER 1: ${r.message}  [${r.seconds.toFixed(1)} s, peak ${(20 * Ma
 
 // Gain stage: move every instrument level by the same delta so the mix peaks at
 // -0.5 dBFS with no master trim. Balance untouched; node levels cap at +6 dB.
+// With the baked levels in section 1 this is a no-op (|delta| <= 0.05 dB).
 const TARGET_PEAK_DB = -0.5
 let delta = TARGET_PEAK_DB - 20 * Math.log10(r.peak)
 const headroom = Math.min(...NODES.map((id) => 6 - session.getNode(id).getLevel()))
@@ -464,7 +479,7 @@ console.log(metrics)
 console.log(`levels: ${levels}`)
 
 // The loop this grew from, for a loudness sanity check (optional file).
-const BASE16 = process.env.BASE16 || resolve(HERE, 'out', 'base16.wav')
+const BASE16 = process.env.BASE16 || resolve(HERE, 'out', 'base16.wav')   // optional: a 16-bar render of his loop for the loudness check
 if (existsSync(BASE16)) {
   const base = analyzeWav(readWav(readFileSync(BASE16)), session.bpm, [8, 8]).rows
   const baseRms = base.reduce((a, row) => a + row.rmsDb, 0) / base.length
@@ -481,13 +496,20 @@ const same = r2.message === r.message && r2.bars === r.bars && Math.abs(r2.peak 
 console.log(`ROUND TRIP: ${same ? 'ok' : 'MISMATCH'} — ${r2.message} (peak ${r2.peak.toFixed(3)})`)
 if (!same) process.exitCode = 1
 
+// Loop mode: what he hears if he switches the arrangement off in the app —
+// the live patterns, i.e. his loop with the added instances silent.
+again.arrangement = []
+const r3 = await renderSessionToBuffer(again, 4)
+const loopRows = analyzeWav(readWav(Buffer.from(audioBufferToWav(r3.buffer))), again.bpm, [4]).rows
+console.log(`LOOP MODE (arrangement off, 4 bars): ${r3.message} — ${loopRows[0].rmsDb.toFixed(1)} dBFS RMS`)
+
 // ---------------------------------------------------------------------------
 // 10. track.json — what the web app saves as a track
 // ---------------------------------------------------------------------------
 const brief = 'Turn my techno beat at 128 into a full 128-bar song sketch. Keep my patterns — the tuned-down 909 kick, the A1 sub, the 202 stabs and the octave-jump B line, the seven high notes on the JT10 — but grow it into something a DJ could play: a mixable intro, elements coming in on 8 and 16 bar phrases, a first drop, a breakdown where the kick goes out and the melody carries it, a peak with real new energy, then bring it back down to kick and sub. Berlin, dry, hypnotic, A minor, no cheese.'
 const description = [
-  'Kick and half the sub for sixteen bars while the closed hats fade in, then your A stabs rise out of a closed filter for sixteen bars, hats creeping up, into your B section at 33: full sub, the octave-jump line, the seven notes on the dotted-8th ping-pong, a ghost kick and a displaced open hat every fourth bar. At 57 the filter sinks under water and a dub copy of the JT10 takes the melody; at 65 the kick and sub are gone, your stabs an octave up as a hollow ghost over closed 8ths, and from 73 open hats bloom over a rimshot and a tom figure while the B riff creeps back under a filter. Kick and sub land again at 81 on your B section, a second rise pushes cutoff and drive into the peak at 97 with offbeat open hats, the kick up 1.5 dB, the melody grown to thirteen notes and a JT30 acid line answering in A minor for sixteen bars only; it reduces at 113 and ends on your original A drums over kick and half sub for the next record.',
-  'Your saved A and B patterns are untouched; the new ones sit next to them. I restored the ping-pong delay your chat set on the JT10 (it had reverted to the analog default), brought the melodic 202 up from -24 dB where it was inaudible, kept the sub the biggest thing in the mix with the kick just over it, and moved every level together so the mix peaks at -0.5 dBFS with no master trim. In the app the ducking follows the drum pattern that is loaded live, so keep A or another kick pattern loaded or the pump disappears; and in song mode a slider writes through to every saved pattern of that instrument, so touching hats or cutoff flattens the per-section evolution for that parameter.',
+  'Kick and half the sub open it, the closed hats fade in over bars 9-16, and your A stabs rise out of a closed filter for sixteen bars into your B section at 33: full sub, the octave-jump line, the seven notes on the dotted-8th ping-pong your chat set (the save had lost it), a ghost kick and a displaced open hat every fourth bar. At 57 the filter sinks under water and a dub copy of the JT10 takes the melody, at 65 the kick and sub are gone and your stabs ring an octave up as a hollow ghost over closed 8ths, and from 73 open hats bloom over a rimshot and a tom figure while the B riff creeps back under a filter. Kick and sub land again at 81 on your B section, a second rise pushes cutoff and drive into the peak at 97 with offbeat open hats, the kick up 1.5 dB, the melody doubled to fourteen notes and a JT30 acid line answering in A minor for sixteen bars only, then it reduces at 113 and ends on your original A drums over kick and half sub for the next record.',
+  'Your saved A and B patterns are untouched with the new ones next to them; I brought the melodic 202 up from -24 dB where it was inaudible, kept the sub the biggest thing in the mix with the kick just over it, and gain-staged everything to peak at -0.5 dBFS with no master trim; in song mode a slider writes through to every saved pattern of that instrument, so touching hats or cutoff flattens the per-section evolution for that parameter.',
 ].join('\n\n')
 
 writeFileSync(`${OUT}/track.json`, JSON.stringify({
