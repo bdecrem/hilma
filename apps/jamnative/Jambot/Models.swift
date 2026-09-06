@@ -10,13 +10,13 @@ struct JamUser: Codable, Equatable {
 }
 
 /// 16-step rhythm of a track (kick / snare / hats), '1' per hit.
-struct Strip: Codable, Equatable {
+struct Strip: Codable, Equatable, Hashable {
     let k: String
     let s: String
     let h: String
 }
 
-struct TrackMeta: Codable, Identifiable, Equatable {
+struct TrackMeta: Codable, Identifiable, Equatable, Hashable {
     let id: String
     var title: String
     var bpm: Int

@@ -1,28 +1,309 @@
 import SwiftUI
 
-/// Placeholder — chat feed, transport, and Controls sheet ship in stage 2b
-/// (screens) wired to a real EngineHost in stage 3 (integration). Present
-/// so the EngineAPI protocol has a caller to compile against.
+/// Chat + transport + Controls sheet for one track. Port of
+/// `src/app/jam/Studio.tsx` (Faders-only Controls, no Seq/Panels/publish —
+/// see DESIGN.md for what's out of scope in this test build).
 struct StudioView: View {
-    let trackId: String
-    let engine: EngineAPI
+    @State private var model: StudioModel
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
+    @Environment(Session.self) private var session
+    @FocusState private var composerFocused: Bool
+    @State private var expandedTools: Set<String> = []
+
+    init(trackId: String, initialMeta: TrackMeta?, engine: EngineAPI) {
+        _model = State(initialValue: StudioModel(trackId: trackId, initialMeta: initialMeta, engine: engine))
+    }
 
     var body: some View {
-        VStack {
-            Text("STUDIO")
-                .font(JBTheme.panelFont(20, weight: .bold))
-                .foregroundStyle(JBTheme.ink)
-            Text(trackId)
-                .font(JBTheme.monoFont(12))
-                .foregroundStyle(JBTheme.ink3)
-            Spacer()
+        VStack(spacing: 0) {
+            header
+            content
+            transport
+            composer
         }
-        .padding(.top, 20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(JBTheme.panel)
+        .navigationBarBackButtonHidden(true)
+        .task {
+            model.onAuthLost = { session.authLost() }
+            await model.load()
+            model.startPlayheadClock()
+            // DEBUG-only: `-openControls` opens the Controls sheet right
+            // after load, for headless simulator screenshots (see "NO
+            // SCREEN CONTROL" in DESIGN.md/PROGRESS.md verify steps).
+            if CommandLine.arguments.contains("-openControls") {
+                model.controlsOpen = true
+            }
+            // DEBUG-only: `-studioScript "play;wait:4;…"` drives the studio
+            // headlessly (see UI/StudioScript.swift).
+            if let steps = StudioScript.steps {
+                await StudioScript.run(steps, model: model, back: { dismiss() })
+            }
+        }
+        .onDisappear {
+            model.stopPlayheadClock()
+            model.flushSave()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background { model.flushSave() }
+        }
+        .sheet(isPresented: $model.controlsOpen) {
+            ControlsSheetView(model: model)
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Text("‹ TRACKS")
+                        .font(JBTheme.panelFont(12, weight: .semibold))
+                        .tracking(1.2)
+                        .foregroundStyle(JBTheme.ink2)
+                        .padding(.vertical, 4)
+                        .padding(.trailing, 12)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(model.title.uppercased())
+                    .font(JBTheme.panelFont(26, weight: .semibold))
+                    .foregroundStyle(JBTheme.ink)
+                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    Text("\(model.bpm)").fontWeight(.medium) + Text(" BPM · \(model.shownBars) \(model.shownBars == 1 ? "bar" : "bars")\(model.inSong ? " · song" : "")\(model.swing > 0 ? " · swing \(Int(model.swing.rounded()))" : "")")
+                    if model.saveState == .saving {
+                        Text(" · saving").foregroundStyle(JBTheme.ink3)
+                    } else if model.saveState == .failed {
+                        Text(" · not saved").foregroundStyle(JBTheme.orange)
+                    }
+                }
+                .font(JBTheme.monoFont(12))
+                .foregroundStyle(JBTheme.ink2)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Chat feed
+
+    @ViewBuilder
+    private var content: some View {
+        ScrollViewReader { scroll in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    switch model.status {
+                    case .loading:
+                        Text("Loading the groovebox…")
+                            .font(JBTheme.monoFont(12))
+                            .foregroundStyle(JBTheme.ink3)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 60)
+                    case .error(let message):
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Couldn't load Jambot.").font(JBTheme.bodyFont(15, weight: .semibold))
+                            Text(message).font(JBTheme.bodyFont(13)).foregroundStyle(JBTheme.ink3)
+                        }
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(JBTheme.panel2)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .padding(.top, 40)
+                    case .ready:
+                        if model.feed.isEmpty {
+                            Text("SAY IT LIKE YOU'D SAY IT TO A PRODUCER")
+                                .font(JBTheme.panelFont(11, weight: .semibold))
+                                .tracking(1)
+                                .foregroundStyle(JBTheme.ink3)
+                                .frame(maxWidth: .infinity)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 40)
+                        }
+                        ForEach(model.feed) { item in
+                            feedRow(item)
+                        }
+                        if model.busy {
+                            HStack(spacing: 8) {
+                                Circle().fill(JBTheme.orange).frame(width: 8, height: 8)
+                                Text("working").font(JBTheme.monoFont(11)).foregroundStyle(JBTheme.ink3)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 12)
+                .id("bottom")
+            }
+            .onChange(of: model.feed.count) { _, _ in
+                withAnimation { scroll.scrollTo("bottom", anchor: .bottom) }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func feedRow(_ item: FeedItem) -> some View {
+        switch item {
+        case .user(_, let text):
+            HStack {
+                Spacer(minLength: 40)
+                Text(text)
+                    .font(JBTheme.bodyFont(15))
+                    .foregroundStyle(.white)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 14)
+                    .background(JBTheme.ink)
+                    .clipShape(RoundedCorner(radius: 16, corners: [.topLeft, .topRight, .bottomLeft]))
+            }
+        case .assistant(_, let text):
+            Text(text)
+                .font(JBTheme.bodyFont(15.5))
+                .foregroundStyle(JBTheme.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        case .note(_, let text, let error):
+            Text(text)
+                .font(JBTheme.monoFont(11.5))
+                .foregroundStyle((error ?? false) ? JBTheme.orange : JBTheme.ink3)
+        case .tool(let id, let name, let input, let result, let isError):
+            VStack(alignment: .leading, spacing: 4) {
+                Button {
+                    if expandedTools.contains(id) { expandedTools.remove(id) } else { expandedTools.insert(id) }
+                } label: {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(result == nil ? JBTheme.ledOff : ((isError ?? false) ? JBTheme.orange : JBTheme.green))
+                            .frame(width: 6, height: 6)
+                        Text(name).font(JBTheme.monoFont(11))
+                    }
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 9)
+                    .background(JBTheme.panel3)
+                    .foregroundStyle((isError ?? false) ? JBTheme.orange : JBTheme.ink2)
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                if expandedTools.contains(id) {
+                    Text(jsonDescription(input) + (result.map { "\n→ \($0)" } ?? ""))
+                        .font(JBTheme.monoFont(11))
+                        .foregroundStyle(JBTheme.ink2)
+                        .padding(8)
+                        .background(JBTheme.panel4)
+                        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(JBTheme.rule, lineWidth: 1))
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            }
+        }
+    }
+
+    private func jsonDescription(_ v: JSONValue) -> String {
+        switch v {
+        case .null: return "null"
+        case .bool(let b): return "\(b)"
+        case .number(let n): return "\(n)"
+        case .string(let s): return s
+        case .array(let a): return "[" + a.map(jsonDescription).joined(separator: ", ") + "]"
+        case .object(let o): return "{" + o.map { "\($0.key): \(jsonDescription($0.value))" }.joined(separator: ", ") + "}"
+        }
+    }
+
+    // MARK: - Transport
+
+    private var transport: some View {
+        VStack(spacing: 10) {
+            LedStripView(strip: model.strip, step: model.playStep16)
+            HStack(spacing: 12) {
+                Button {
+                    model.togglePlay()
+                } label: {
+                    Image(systemName: model.playing ? "stop.fill" : "play.fill")
+                        .font(.system(size: 18))
+                }
+                .buttonStyle(JBKeyStyle(variant: .panel, square: true))
+                .disabled(!model.hasBuffer)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(model.playing ? JBTheme.orange : (model.rendering ? JBTheme.green : JBTheme.ledOff))
+                            .frame(width: 7, height: 7)
+                        Text(transportLabel)
+                            .font(JBTheme.monoFont(12))
+                            .foregroundStyle(JBTheme.ink2)
+                    }
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(JBTheme.rule)
+                            Capsule().fill(JBTheme.ink).frame(width: geo.size.width * model.pos)
+                        }
+                    }
+                    .frame(height: 5)
+                }
+
+                Button("Controls") { model.controlsOpen = true }
+                    .buttonStyle(JBKeyStyle(variant: .panel, small: true))
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 10)
+        .padding(.bottom, 8)
+        .background(JBTheme.panel3)
+        .overlay(Rectangle().fill(JBTheme.rule).frame(height: 1), alignment: .top)
+    }
+
+    private var transportLabel: String {
+        if model.rendering { return "rendering" }
+        if !model.hasBuffer { return "no sound yet" }
+        if model.playing { return "bar \(model.barNow)/\(model.shownBars)" }
+        return "ready"
+    }
+
+    // MARK: - Composer
+
+    private var composer: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            TextField("tell it what to play…", text: $model.input, axis: .vertical)
+                .font(JBTheme.bodyFont(16))
+                .lineLimit(1...4)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 14)
+                .background(JBTheme.panel4)
+                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(JBTheme.rule, lineWidth: 1.5))
+                .focused($composerFocused)
+                .disabled(model.status != .ready)
+
+            Button("Send") {
+                model.send(model.input)
+            }
+            .buttonStyle(JBKeyStyle(variant: .orange))
+            .disabled(model.status != .ready || model.busy || model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 8)
+        .padding(.bottom, 10)
+        .background(JBTheme.panel3)
+    }
+}
+
+/// Rounded rect with per-corner radii, for the chat bubble's tail corner.
+private struct RoundedCorner: Shape {
+    var radius: CGFloat = 12
+    var corners: UIRectCorner = .allCorners
+
+    func path(in rect: CGRect) -> Path {
+        Path(UIBezierPath(roundedRect: rect, byRoundingCorners: corners, cornerRadii: CGSize(width: radius, height: radius)).cgPath)
     }
 }
 
 #Preview {
-    StudioView(trackId: "preview", engine: MockEngine())
+    NavigationStack {
+        StudioView(trackId: "preview", initialMeta: nil, engine: MockEngine())
+    }
+    .environment(Session())
 }

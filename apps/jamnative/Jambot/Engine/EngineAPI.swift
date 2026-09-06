@@ -152,6 +152,17 @@ protocol EngineAPI: AnyObject {
     /// `[controls] …` slider-change notes the web app appends before a
     /// message (see DESIGN.md / Studio.tsx).
     func agent(task: String, messages: [AgentMessage], notes: [String]) -> AsyncThrowingStream<AgentEvent, Error>
+
+    /// The Anthropic-format history after the last `agent` turn — the run
+    /// appends the user turn, the assistant turns and every tool result to
+    /// the messages it was given. Save this with the track (PUT `messages`).
+    /// Added in stage 2a; a default (empty) implementation keeps `MockEngine`
+    /// conforming.
+    func agentMessages() async throws -> [AgentMessage]
+}
+
+extension EngineAPI {
+    func agentMessages() async throws -> [AgentMessage] { [] }
 }
 
 enum RenderScope: Equatable {

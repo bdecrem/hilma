@@ -1,18 +1,23 @@
-<!--
-  PLACEHOLDER — stage 2a writes the real content.
-
-  This page is loaded into a hidden WKWebView ("engine host"). It will load
-  jambot-web.js (bundled by reference from ../../public/jam/jambot-web.js —
-  never copy it) and engine-bridge.js, which owns one session and answers
-  Swift's `bridge.call(id, name, argsJSON)` calls per the table in
-  ../../DESIGN.md. See EngineAPI.swift for the Swift-side contract this page
-  must satisfy.
--->
 <!doctype html>
+<!--
+  Engine host page — loaded into a hidden WKWebView by EngineHost.swift via
+  the jambot-engine:// scheme (EngineSchemeHandler serves this file,
+  engine-bridge.js and jambot-web.js straight from the app bundle, so the
+  page has a real origin and the ES-module bundle imports cleanly — file://
+  origins can't import modules in WebKit).
+
+  jambot-web.js is hilma's committed engine bundle, referenced by path in
+  project.yml from ../../public/jam/jambot-web.js — never copied here.
+
+  engine-bridge.js owns the one session and answers Swift's
+  bridge.call(id, name, argsJSON) calls per the table in ../../DESIGN.md.
+-->
 <html>
-<head><meta charset="utf-8"></head>
+<head>
+  <meta charset="utf-8">
+  <title>Jambot engine host</title>
+</head>
 <body>
-<script src="jambot-web.js"></script>
 <script src="engine-bridge.js"></script>
 </body>
 </html>

@@ -152,6 +152,34 @@ final class JamAPI {
     func deleteTrack(_ id: String) async throws {
         let _: OkResponse = try await delete("/api/jam/tracks/\(id)")
     }
+
+    // MARK: LLM proxy (engine host)
+
+    /// POST /api/jam/llm with the exact body the engine's agent loop built
+    /// ({ system, messages, tools, max_tokens }); returns the raw Messages
+    /// API response JSON for the engine to consume. 401 → `.unauthenticated`,
+    /// any other non-2xx → `.http` with the server's `error` message.
+    func llm(body: Data) async throws -> Data {
+        var req = URLRequest(url: url("/api/jam/llm"))
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "content-type")
+        req.httpBody = body
+        let (data, response): (Data, URLResponse)
+        do {
+            (data, response) = try await session.data(for: req)
+        } catch {
+            throw JamAPIError.transport(error)
+        }
+        guard let http = response as? HTTPURLResponse else {
+            throw JamAPIError.transport(URLError(.badServerResponse))
+        }
+        if http.statusCode == 401 { throw JamAPIError.unauthenticated }
+        guard (200..<300).contains(http.statusCode) else {
+            let msg = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
+            throw JamAPIError.http(http.statusCode, msg)
+        }
+        return data
+    }
 }
 
 /// Type-erasing box so `request(_:method:body:)` can accept any Encodable

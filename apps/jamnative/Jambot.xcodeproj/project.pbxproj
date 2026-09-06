@@ -11,26 +11,44 @@
 		2B9342970531B05B7C9A3E79 /* engine-bridge.js in Resources */ = {isa = PBXBuildFile; fileRef = 8BA2A7A824A5E68BDECE534D /* engine-bridge.js */; };
 		30967C76F384338543510088 /* StudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D15A9536B1E49E8B57EE31 /* StudioView.swift */; };
 		36C9BE2DDAF4422C8A06647E /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0EB6492B54FE77C5FDD699E /* LibraryView.swift */; };
+		3BB651D6008EC9F15F80B664 /* ControlsMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BD2992921692D435A640418 /* ControlsMath.swift */; };
 		4F2C821931A511B52DCD89A0 /* EngineAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F781EB146E39FB9AF861C5B7 /* EngineAPI.swift */; };
+		5885AF6C744A7CC63C15C563 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FF822860A07AA13AFF6E162 /* AudioPlayer.swift */; };
+		735CF69EE666FA7AB4394008 /* EngineSmoke.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7441D10B05B18724069ACD9D /* EngineSmoke.swift */; };
 		78CBD596858AAA5B97DE5DC2 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC29BE3630772FD81CDBA68 /* Session.swift */; };
+		84F01BA1CA3ED08AFF73571B /* ControlsSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5465CFCEED1EBF5CDBCD14D /* ControlsSheetView.swift */; };
+		8711FE97BF663F49E6AFD47A /* StudioScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2643112F369151EFB752FAF6 /* StudioScript.swift */; };
 		88430EC0B18990BFD910693B /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 634F2B8FEE6C7A07C993E2A8 /* Secrets.swift */; };
 		953BA62F0D171491D4A31FC6 /* jambot-web.js in Resources */ = {isa = PBXBuildFile; fileRef = 0D25CB049B7B68321A266250 /* jambot-web.js */; };
 		A5F786A070F4A2EE419B662C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB67BE8C59ED172D19BB6206 /* Assets.xcassets */; };
 		B63F55AD21D5D510D5C8F5D8 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C676DD94ECD890F582F36DC /* LoginView.swift */; };
+		BC3B43EA39A45664A8E63C63 /* EngineHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66AA281FA08A1317046E9F63 /* EngineHost.swift */; };
 		BD739C0B70337A662B30E4D5 /* JamAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E07E19922B40CA6EF838FE /* JamAPI.swift */; };
 		C1FA03C37F7ABD2FC3B0A2D3 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9CFCD0042E6B7FD3C00572C /* Models.swift */; };
+		CB789674B5E8D40B2BE6B0DD /* StudioModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08AF9044CEF43269A6E5872C /* StudioModel.swift */; };
 		DE4D0B6ED65FD718F010ED27 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E8781284FECD33F6F3D21A /* Theme.swift */; };
 		E4835208DF114AC584EB250A /* engine.html in Resources */ = {isa = PBXBuildFile; fileRef = E76528A65410F14C3553B840 /* engine.html */; };
+		EF27EF7F9E090014ADD6A7D5 /* EngineFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1458A7CBA94357FCF3635FE4 /* EngineFactory.swift */; };
+		FF3A693865FE26D281892D09 /* LedStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED0122182D5E6C7A3B1A7D0 /* LedStripView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		08AF9044CEF43269A6E5872C /* StudioModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioModel.swift; sourceTree = "<group>"; };
 		0D25CB049B7B68321A266250 /* jambot-web.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "jambot-web.js"; sourceTree = "<group>"; };
+		0ED0122182D5E6C7A3B1A7D0 /* LedStripView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedStripView.swift; sourceTree = "<group>"; };
+		1458A7CBA94357FCF3635FE4 /* EngineFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineFactory.swift; sourceTree = "<group>"; };
 		17D15A9536B1E49E8B57EE31 /* StudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioView.swift; sourceTree = "<group>"; };
+		2643112F369151EFB752FAF6 /* StudioScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioScript.swift; sourceTree = "<group>"; };
 		34F6FB688AFBF8C5E621FB9C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3BD2992921692D435A640418 /* ControlsMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlsMath.swift; sourceTree = "<group>"; };
 		5C676DD94ECD890F582F36DC /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		634F2B8FEE6C7A07C993E2A8 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		66AA281FA08A1317046E9F63 /* EngineHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineHost.swift; sourceTree = "<group>"; };
+		6FF822860A07AA13AFF6E162 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
+		7441D10B05B18724069ACD9D /* EngineSmoke.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EngineSmoke.swift; sourceTree = "<group>"; };
 		8BA2A7A824A5E68BDECE534D /* engine-bridge.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "engine-bridge.js"; sourceTree = "<group>"; };
 		A0EB6492B54FE77C5FDD699E /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		B5465CFCEED1EBF5CDBCD14D /* ControlsSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlsSheetView.swift; sourceTree = "<group>"; };
 		B5E07E19922B40CA6EF838FE /* JamAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JamAPI.swift; sourceTree = "<group>"; };
 		B9CFCD0042E6B7FD3C00572C /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		BB67BE8C59ED172D19BB6206 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -63,8 +81,13 @@
 		779D70831477A29DDE89FD45 /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				3BD2992921692D435A640418 /* ControlsMath.swift */,
+				B5465CFCEED1EBF5CDBCD14D /* ControlsSheetView.swift */,
+				0ED0122182D5E6C7A3B1A7D0 /* LedStripView.swift */,
 				A0EB6492B54FE77C5FDD699E /* LibraryView.swift */,
 				5C676DD94ECD890F582F36DC /* LoginView.swift */,
+				08AF9044CEF43269A6E5872C /* StudioModel.swift */,
+				2643112F369151EFB752FAF6 /* StudioScript.swift */,
 				17D15A9536B1E49E8B57EE31 /* StudioView.swift */,
 			);
 			path = UI;
@@ -83,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				BB67BE8C59ED172D19BB6206 /* Assets.xcassets */,
+				1458A7CBA94357FCF3635FE4 /* EngineFactory.swift */,
 				34F6FB688AFBF8C5E621FB9C /* Info.plist */,
 				B5E07E19922B40CA6EF838FE /* JamAPI.swift */,
 				D8C9CF3DDA02BFBA91480B21 /* JambotApp.swift */,
@@ -99,9 +123,12 @@
 		C4CD26C36C6D9E5D8730C26C /* Engine */ = {
 			isa = PBXGroup;
 			children = (
+				6FF822860A07AA13AFF6E162 /* AudioPlayer.swift */,
 				8BA2A7A824A5E68BDECE534D /* engine-bridge.js */,
 				E76528A65410F14C3553B840 /* engine.html */,
 				F781EB146E39FB9AF861C5B7 /* EngineAPI.swift */,
+				66AA281FA08A1317046E9F63 /* EngineHost.swift */,
+				7441D10B05B18724069ACD9D /* EngineSmoke.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -179,14 +206,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5885AF6C744A7CC63C15C563 /* AudioPlayer.swift in Sources */,
+				3BB651D6008EC9F15F80B664 /* ControlsMath.swift in Sources */,
+				84F01BA1CA3ED08AFF73571B /* ControlsSheetView.swift in Sources */,
 				4F2C821931A511B52DCD89A0 /* EngineAPI.swift in Sources */,
+				EF27EF7F9E090014ADD6A7D5 /* EngineFactory.swift in Sources */,
+				BC3B43EA39A45664A8E63C63 /* EngineHost.swift in Sources */,
+				735CF69EE666FA7AB4394008 /* EngineSmoke.swift in Sources */,
 				BD739C0B70337A662B30E4D5 /* JamAPI.swift in Sources */,
 				0664D303E9DE0A0B645191F3 /* JambotApp.swift in Sources */,
+				FF3A693865FE26D281892D09 /* LedStripView.swift in Sources */,
 				36C9BE2DDAF4422C8A06647E /* LibraryView.swift in Sources */,
 				B63F55AD21D5D510D5C8F5D8 /* LoginView.swift in Sources */,
 				C1FA03C37F7ABD2FC3B0A2D3 /* Models.swift in Sources */,
 				88430EC0B18990BFD910693B /* Secrets.swift in Sources */,
 				78CBD596858AAA5B97DE5DC2 /* Session.swift in Sources */,
+				CB789674B5E8D40B2BE6B0DD /* StudioModel.swift in Sources */,
+				8711FE97BF663F49E6AFD47A /* StudioScript.swift in Sources */,
 				30967C76F384338543510088 /* StudioView.swift in Sources */,
 				DE4D0B6ED65FD718F010ED27 /* Theme.swift in Sources */,
 			);
@@ -254,7 +290,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -346,7 +382,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

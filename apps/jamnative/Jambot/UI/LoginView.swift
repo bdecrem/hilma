@@ -77,18 +77,24 @@ enum JBKeyVariant { case orange, ghost, panel }
 
 struct JBKeyStyle: ButtonStyle {
     var variant: JBKeyVariant = .panel
+    var small: Bool = false
+    var square: Bool = false
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.vertical, 12)
-            .padding(.horizontal, 16)
+            .font(JBTheme.panelFont(small ? 12 : 15, weight: .semibold))
+            .tracking(small ? 0.6 : 1.2)
+            .frame(width: square ? (small ? 34 : 56) : nil, height: square ? (small ? 34 : 56) : (small ? 34 : 48))
+            .padding(.vertical, square ? 0 : (small ? 0 : 12))
+            .padding(.horizontal, square ? 0 : (small ? 12 : 18))
             .background(background)
             .foregroundStyle(foreground)
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: small ? 9 : 11, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: small ? 9 : 11, style: .continuous)
                     .stroke(variant == .ghost ? JBTheme.ink : .clear, lineWidth: 1.5)
             )
+            .opacity(configuration.isPressed ? 0.85 : 1)
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
     }
