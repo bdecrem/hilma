@@ -12,6 +12,17 @@ finishes a step (check the box, one line of what was verified, commit).
 - [x] 3. Integration — real engine behind the screens, autosave, sign in as jamtest, open "SEQ TEST techno copy", play, fader, chat turn; Catalyst build runs; background-audio go/no-go recorded here.
 - [ ] 4. Device — installed build 0.1 (3) on Bart's iPhone Air 2026-09-05 22:47 (profile "Jambot dev" via scripts/ios/asc-dev-profile.py); launch blocked only by the lock screen. OPEN: the locked-screen test — play, lock, does audio continue; move a fader, lock, does the render land. Record the result here.
 
+## Full app (approved 2026-09-05 22:55) — see DESIGN.md "Full app"
+
+- [ ] 5. Seq tab (native sequencer) + bridge additions `hits` / `seq` / `pattern` (Fable)
+- [ ] 6. Panels tab (rotary knob control, per-synth panels, effects, accordion, M/S, hit LEDs) (Sonnet)
+- [ ] 7. Tracks & sharing: Library menu (duplicate/delete), rename, Publish/Unpublish/Share, Catalog + public player + Remix, Bounce WAV/AAC, About screen (Sonnet)
+- [ ] 8. Audio: on-device render cache, Now Playing + remote commands, interruptions/route changes (Fable)
+- [ ] 9. Branding + Catalyst: app icon, launch screen, keyboard shortcuts, window sizing, 720pt column (Sonnet)
+- [ ] 10. Integration: three-tab Controls sheet, LEDs wired, everything verified in the simulator via -studioScript, Catalyst build, device build installed, docs (Fable)
+- [ ] 11. Design review pass against the web app's look; fixes (Fable)
+- [ ] 12. TestFlight: app record + distribution profile via ASC API (see apps/feynd/CLAUDE.md TestFlight sections and apps/feynd/testflight/), archive, export, upload iOS (and Catalyst if it goes cleanly), asc-submit
+
 ## Log
 
 - 2026-09-05 — Design written (`DESIGN.md`). Nothing built yet.

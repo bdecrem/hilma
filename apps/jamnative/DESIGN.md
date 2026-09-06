@@ -71,3 +71,41 @@ default `https://jambot.to`). Test account for the simulator: `jamtest` / `jamte
 - Catalyst: `-destination 'platform=macOS,variant=Mac Catalyst'`
 - Simulator: boot iPhone 16, install, launch `com.bartdecrem.Jambot`, `xcrun simctl io "iPhone 16" screenshot`, sign in as jamtest, open "SEQ TEST techno copy", Play, move a fader, send "make the kick shorter".
 - Background-audio check (the go/no-go): start playback, background the app (simulator: `xcrun simctl … ` home button, or on device lock the screen) — audio must continue; then trigger a render while backgrounded and confirm it completes.
+
+---
+
+# Full app (approved 2026-09-05 after the test build passed)
+
+Parity with jambot.to, native. Everything below is additive to the test build.
+
+## Screens and features
+
+| Area | Native behaviour | Web reference |
+|---|---|---|
+| Controls sheet | Three tabs in the header: **Faders · Panels · Seq** (remembered per device). Track sliders stay above Faders. | `src/app/jam/ControlsSheet.tsx` |
+| Seq | Native port of the step sequencer: instrument pulldown (Menu/Picker), section pills with bar counts and the playhead LED (pulses on the beat), **Loop section** key (audition scope), overview strip of the whole pattern with the visible window + playhead, ‹ page › with 8 steps per page (16 on regular-width layouts) and swipe, drum rows per voice (tap cycles off → hit → accent; beat columns shaded; labels BD SD CP RS LT MT HT CH OH CR RD / JB01: BD SD CP CH OH LT HT CY), mono synths as a note row + step editor (STEP n ‹ ›, note 34pt, −OCT −1 +1 +OCT, ACC, SLIDE, OFF; pitch bar under each gated pad), LENGTH 1·2·4, two-tap CLEAR. Edits go through the engine (see bridge additions) → re-render 300 ms → autosave → a coalesced `[controls]` note. | `src/app/jam/seq/Sequencer.tsx`, `seq/model.ts`, `seq/seq.css` |
+| Panels | Native accordion (one open, remembered): per-synth panels in that synth's palette (JB202 dark teal, JT-30 dark/red, JT-10 slate/blue, JT-90 black/red, JB01 dark, effects navy/cyan — colours in `alt/panels-mobile.css` `--ph-*` and `alt/skins.css`), header with LED + name + summary readout + chevron + **M/S** keys beside it; body = knobs (44pt rotary control: 150pt drag for full range, double-tap resets to descriptor default, floating value while dragging), choice toggles (waveforms, modes), JT-10 vertical sliders, JT-90/JB01 voice cards in a 2-column grid with a voice LED. Header LED and voice LEDs flash on the instrument's hits. Layout math like the web (4 knobs per row at 358pt; centred rows). | `src/app/jam/alt/panels.tsx`, `alt/Knob.tsx`, `alt/panels-mobile.css`, `alt/skins.css` (colour values) |
+| Hit LEDs | `hits(step:scope:)` from the engine each 16th (drives Panels LEDs and the Seq playing pill); transport LED strip already lit by the playhead. | `seq/model.ts` `hitsAt` |
+| Library | "…" per track: Duplicate, Delete (confirm); public/remix tags; Catalog section ("From everyone") under the library and on the login screen (public tracks play in a read-only player at `/jam/t/<slug>`-equivalent: title, author, LED strip, Play, **Remix** → copies into the signed-in library). Pull to refresh. | `Library.tsx`, `Catalog.tsx`, `src/app/jam/t/[slug]/*`, `api.ts` |
+| Studio header | Tap title to rename; Publish / Unpublish (green key) and Share (system share sheet with the public URL `https://jambot.to/t/<slug>`). | `Studio.tsx` |
+| Bounce | Sheet: **WAV** and **AAC (.m4a)** written from the last render (AVAssetWriter for AAC) → share sheet / Files. (MP3 needs the browser encoder; AAC is the native equivalent.) | `export.ts` |
+| Render cache | On-device: last whole-track render per track as Int16 in `Caches/renders/<trackId>.pcm` + sidecar JSON, keyed by SHA-256 of the serialized session + engine stamp; opening an unchanged track plays instantly; keep the 6 most recent. | `renderCache.ts` |
+| Playback | Lock-screen / Control Center: `MPNowPlayingInfoCenter` (title, artist "Jambot", elapsed/duration = loop), `MPRemoteCommandCenter` play/pause/toggle; interruption + route-change handling; audio keeps rendering in the background (verified on device in the test build). | — |
+| About | Settings/About screen from the Library header (build number, engine bundle stamp, signed-in user, sign out). Bart checks build numbers here. | Dodo's About |
+| Catalyst / iPad | Centred 720pt column on regular width; keyboard: space play/stop, ⌘↩ send, ⌘K controls, ⌘, About; window min size 390×700; menus. | `jam.css` wide rules |
+| Branding | App icon: putty enamel square, "JAMBOT" in condensed black uppercase with the raised orange LED after the T (never a dot); launch screen = putty colour + wordmark. | `src/app/jam/jam.css` wordmark, `opengraph-image.tsx` |
+
+## Bridge additions (engine-bridge.js + EngineHost.swift + EngineAPI.swift)
+
+| call | args | result |
+|---|---|---|
+| `hits` | `{ step, scope }` | `{ hits: { instId: [voice…] } }` — port of `hitsAt` (mono synths report `['gate']`) |
+| `seq` | `{ op, inst, section?, args }` | `{ desc, pattern }` — ops: `cycleDrum { voice, i }`, `toggleGate { i }`, `setNote { i, note }`, `toggleAccent { i }`, `toggleSlide { i }`, `resize { bars }`, `clear`. Song mode (`section` given): edit `session.patterns[inst][name].pattern` for that section's pattern name and mirror into the live node when it is the loaded one; loop mode: the live node. Port `seq/model.ts` (normalise voices, never mutate in place). Returns the target pattern (dense) so the UI has no second round trip. |
+| `pattern` | `{ inst, section? }` | `{ pattern, name, length, kind }` — read the target pattern for the Seq view |
+| `encodeWav` | — | not needed (Swift writes WAV from the PCM it already has) |
+
+Swift `EngineAPI` gains `hits(step:scope:)`, `seq(op:inst:section:args:)`, `pattern(inst:section:)`. `SessionDescription.instruments[].pattern` is not decoded (too big); the Seq view uses `pattern`.
+
+## Verification (every stage)
+
+Headless only: `xcrun simctl` + the DEBUG launch args (`-autoLogin jamtest jamtest1`, `-openTrack "<title>"`, `-openControls`, `-studioScript "<steps>"` in `UI/StudioScript.swift`; extend the script vocabulary for new features, e.g. `tab:seq`, `seq:tap:kick:2`, `panels:open:jb202`, `bounce:wav`). Screenshots under `apps/jamnative/.shots/`. Never computer-use / request_access. Device installs use `scripts/ios/asc-dev-profile.py` + the commands in `apps/jamnative/CLAUDE.md`; the phone may be locked — say so rather than waiting.
