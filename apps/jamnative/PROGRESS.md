@@ -23,6 +23,16 @@ finishes a step (check the box, one line of what was verified, commit).
 - [ ] 11. Design review pass against the web app's look; fixes (Fable)
 - [ ] 12. TestFlight: app record + distribution profile via ASC API (see apps/feynd/CLAUDE.md TestFlight sections and apps/feynd/testflight/), archive, export, upload iOS (and Catalyst if it goes cleanly), asc-submit
 
+## Resuming the full-app build (any session, any account)
+
+The stage plan above is executed by the multi-agent script `tooling/full-app.workflow.js`
+(builders in parallel → integrate → design review → TestFlight). From a Claude Code
+session in the hilma repo: "Run the workflow at apps/jamnative/tooling/full-app.workflow.js"
+(Workflow tool, scriptPath = that file). Stages that are already checked above are done on
+disk/in git — tell the session to skip them, or just run the integrator/reviewer stages by
+hand from DESIGN.md. 2026-09-06 00:0x: the first launch died instantly on the account's
+session limit (resets 12:10 AM PT); nothing from stages 5–12 has been built yet.
+
 ## Log
 
 - 2026-09-05 — Design written (`DESIGN.md`). Nothing built yet.
