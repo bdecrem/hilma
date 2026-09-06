@@ -1,0 +1,133 @@
+{
+  "month_label": "September 2026",
+  "genre": "thrillers",
+  "researched_on": "2026-09-06",
+  "notes": "Hand-run of the Book Scout research step (no admin credentials in the session, so the /run endpoint could not be used). Same rules as research.ts: available now on Kindle, attributed to a named human source, recent. Titles already sent in the June 2026 issues were excluded.",
+  "books": [
+    {
+      "title": "Heart of Glass",
+      "author": "Jennifer Hillier",
+      "pub_date": "Aug 2026",
+      "one_line": "Twenty-five years after three teenage girls met a charming drifter at a Seaside, Washington amusement park, the man convicted as the Carnival Killer recants, reopening an old crime and starting a new one.",
+      "sources": [
+        { "name": "The Poisoned Pen (Scottsdale) — Deb Lewis", "said": "A twisty 'who really did it' with a satisfying ending that you root for long before you know it will come." },
+        { "name": "CrimeReads — Molly Odintz", "said": "Classic Jennifer Hillier, featuring an old crime, a new murder, and a whole lot of secrets." }
+      ]
+    },
+    {
+      "title": "The Blue Flame",
+      "author": "George Pelecanos",
+      "pub_date": "Aug 4, 2026",
+      "one_line": "Derek Strange, now in his seventies and retired from the force, takes on a case for a defense attorney in Washington, D.C., working it with questions and patience rather than technology; Pelecanos's first Strange novel in fourteen years.",
+      "sources": [
+        { "name": "NPR — Maureen Corrigan", "said": "Does for Washington, D.C., what Raymond Chandler did for LA… I hope it's never extinguished." },
+        { "name": "The New York Times Book Review — Sarah Weinman", "said": "A book about aging, and about the tools still at your disposal when youth is a long-ago memory." },
+        { "name": "BookMarks (Literary Hub)", "said": "Rated Rave on eight critic reviews, including Tom Nolan in the Wall Street Journal." }
+      ]
+    },
+    {
+      "title": "The Amateur",
+      "author": "Chris Bohjalian",
+      "pub_date": "Aug 2026",
+      "one_line": "A 1970s moral fable that reworks Nabokov's classic into a slow-burning literary thriller about polite society and what it permits.",
+      "sources": [
+        { "name": "CrimeReads — Molly Odintz", "said": "Quite simply, a masterpiece. I cannot praise this novel enough. Delicate, haunting, complex, and startling; a wide-ranging condemnation of polite society." },
+        { "name": "Kirkus Reviews — 20 Best Books to Read in August", "said": "Nabokov's classic reinvented as a 1970s moral fable, with brilliantly developed characters and period detail." }
+      ]
+    },
+    {
+      "title": "All We Hide",
+      "author": "Robyn Gigl",
+      "pub_date": "Aug 2026",
+      "one_line": "First in a new series: trans detective Lauren Kelly investigates the decades-old murder of a former high-school classmate while fighting discrimination inside her own department.",
+      "sources": [
+        { "name": "The Poisoned Pen (Scottsdale) — Deb Lewis", "said": "Filled with characters so real you might be tempted to reach out and give them a call. Excellent." },
+        { "name": "CrimeReads — Molly Odintz", "said": "The first in a new series featuring trans detective Lauren Kelly, as she fights rampant departmental discrimination." }
+      ]
+    },
+    {
+      "title": "Children of Wolves",
+      "author": "Lawrence Osborne",
+      "pub_date": "Aug 2026",
+      "one_line": "A character study of expats and drifters at a seaside hotel in Turkey, with the action moving on to Istanbul.",
+      "sources": [
+        { "name": "Kirkus Reviews — 20 Best Books to Read in August", "said": "A quietly gripping novel that begs for a sequel." },
+        { "name": "CrimeReads — Molly Odintz", "said": "This time around, it's a seaside hotel in Turkey, with the action moving to Istanbul, as well." }
+      ]
+    },
+    {
+      "title": "You'll Be Sorry",
+      "author": "Lisa Gardner",
+      "pub_date": "Aug 4, 2026",
+      "one_line": "A standalone about a newlywed couple who move to a remote New Hampshire mountain town, an abandoned lodge, and a family of six who vanished thirty years earlier, until a dog starts digging.",
+      "sources": [
+        { "name": "Kirkus Reviews", "said": "Thriller maven Lisa Gardner's latest delivers small-town chills, New England style." },
+        { "name": "The Poisoned Pen (Scottsdale)", "said": "Featured as a store debut event in August." }
+      ]
+    },
+    {
+      "title": "One Good Eye",
+      "author": "Kevin Wade",
+      "pub_date": "Aug 11, 2026",
+      "one_line": "Second Jeep Mullane novel from the Blue Bloods showrunner, following his Edgar-nominated debut Johnny Careless.",
+      "sources": [
+        { "name": "The Poisoned Pen (Scottsdale) — Deb Lewis", "said": "Picked for August; John Sandford calls it a 'fast-moving classic crime novel.'" }
+      ]
+    },
+    {
+      "title": "The Unknown",
+      "author": "Riley Sager",
+      "pub_date": "Aug 2026",
+      "one_line": "A standalone set on a remote Vermont island that blends psychological suspense, gothic mystery, and a supernatural thread.",
+      "sources": [
+        { "name": "CrimeReads — Molly Odintz", "said": "Combining horror and mystery in a delightfully creepy, pastiche-savvy standalone." }
+      ]
+    },
+    {
+      "title": "God's Country",
+      "author": "William Kent Krueger",
+      "pub_date": "Aug 2026",
+      "one_line": "The latest Cork O'Connor novel, in which Cork uncovers a conspiracy surrounding Minnesota's Boundary Waters.",
+      "sources": [
+        { "name": "CrimeReads — Molly Odintz", "said": "Cork uncovers a terrible conspiracy surrounding Minnesota's Boundary Waters." }
+      ]
+    },
+    {
+      "title": "The Intrigue",
+      "author": "Silvia Moreno-Garcia",
+      "pub_date": "Jul 14, 2026",
+      "one_line": "Noir in 1940s Veracruz: a con artist targets the owner of a small-town boardinghouse, and her niece demands half the take.",
+      "sources": [
+        { "name": "NPR Books", "said": "Recommended as an end-of-summer escape read alongside Richard Russo and George Pelecanos." },
+        { "name": "Kirkus Reviews", "said": "A rock-solid novel from a born storyteller. Clever, taut, and just flat-out fun." }
+      ]
+    },
+    {
+      "title": "Promised Land",
+      "author": "Henry Wise",
+      "pub_date": "Sep 1, 2026",
+      "one_line": "Sequel to Holy City: a missing-person case forces deputy sheriff Will Seems to confront how history anchors and corrupts the present in rural Virginia.",
+      "sources": [
+        { "name": "CrimeReads — Molly Odintz", "said": "Wise brings gothic notes to the classic detective plot, creating an atmosphere all his own." }
+      ]
+    },
+    {
+      "title": "The Secret Dinner",
+      "author": "Raphael Montes (tr. Zoë Perry)",
+      "pub_date": "Aug 2026",
+      "one_line": "Broke roommates in Brazil make rent by hosting private dinners for the ultrawealthy, where the menu is human flesh.",
+      "sources": [
+        { "name": "CrimeReads — Molly Odintz", "said": "A group of broke roommates finds a novel way to make rent: hosting private dinners for the ultrawealthy, where they serve human flesh." }
+      ]
+    }
+  ],
+  "not_yet_available": [
+    "Our Noble Selves — Kate Atkinson (Sep 10)",
+    "We Chase Shadows — Richard Osman (Sep 15)",
+    "American Nightmare — Kelly McWilliams (Sep 15)",
+    "Incarnate — Alma Katsu (Sep 22)",
+    "Trad Wife — Sarah Langan, US edition (Sep 29)",
+    "The Wreckers — George Makana Clark (Sep 10)",
+    "Murder on the Upper East Side — Gigi Waldorf, US edition (Sep 8)"
+  ]
+}
