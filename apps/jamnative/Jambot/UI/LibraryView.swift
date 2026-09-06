@@ -14,6 +14,8 @@ final class LibraryModel {
     var error: String = ""
     var creating = false
     var openTrack: TrackMeta? = nil
+    var dismissAbout: (() -> Void)?
+    var dismissPublic: (() -> Void)?
     var showAbout = false
     var deleteTarget: TrackMeta? = nil
     var busyTrackId: String? = nil
@@ -190,6 +192,10 @@ struct LibraryView: View {
             .sheet(isPresented: $model.showAbout) {
                 AboutView(engineVersion: EngineFactory.host?.engineVersion)
                     .jbAppearance()
+                    // Catalyst sheets don't inherit the Observation environment: without this AboutView's
+                    // @Environment(Session.self) traps (EXC_BREAKPOINT in EnvironmentValues.subscript).
+                    .environment(session)
+                    .jbDismissHook { model.dismissAbout = $0 }
             }
             .alert("Delete this track?", isPresented: Binding(get: { model.deleteTarget != nil }, set: { if !$0 { model.deleteTarget = nil } })) {
                 Button("Delete", role: .destructive) {
@@ -221,18 +227,19 @@ struct LibraryView: View {
                 await LibraryScript.run(steps, model: model)
             }
         }
-        .sheet(item: $model.publicTrack, onDismiss: { model.playerModel?.stop() }) { t in
+        .background { Color.clear.sheet(item: $model.publicTrack, onDismiss: { model.playerModel?.stop() }) { t in
             NavigationStack {
                 PublicPlayerView(meta: t, engine: EngineFactory.make(), onRemixed: { model.remixed($0) }, externalModel: model.playerModel)
             }
             .jbAppearance()
-        }
-        .sheet(isPresented: $debugBounce) {
+            .jbDismissHook { model.dismissPublic = $0 }
+        } }
+        .background { Color.clear.sheet(isPresented: $debugBounce) {
             BounceSheet(render: RenderResult(bars: 16, bpm: 128, hasArrangement: true, message: "debug",
                                               sampleRate: 44100, channels: 2, length: 44100 * 2,
                                               pcm: Exporter.syntheticSine()), bpm: 128)
                 .jbAppearance()
-        }
+        } }
         .onChange(of: model.openTrack) { _, now in
             // Back from Studio: the title / bpm / bars / updated_at changed.
             if now == nil { Task { await model.load(openLaunchTrack: false) } }

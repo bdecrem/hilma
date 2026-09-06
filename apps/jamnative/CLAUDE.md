@@ -292,3 +292,10 @@ need an interactive permission prompt (out of scope — no screen control). The 
 running; the window-chrome sizing itself is unverified visually pending someone with
 Accessibility access to Terminal, or a future stage's screenshot from an actual
 attached window id.
+
+## Catalyst presentation rules (learned 2026-09-06)
+
+- A `.sheet` presented from a view inside `navigationDestination` (the Studio) cannot be dismissed on Mac Catalyst — neither by its binding nor by `dismiss()`. Studio panels (Controls, Bounce) are therefore in-window overlays in `StudioView` (`.overlay { if model.controlsOpen { … } }`), like the web app's `.jb-sheet`. Sheets on the Library root (About, public player) work as sheets.
+- Catalyst sheets do not inherit the Observation environment: any sheet content that reads `@Environment(Session.self)` must be given `.environment(session)` explicitly or it traps.
+- `tooling/catalyst-sheet-probe.sh "<studioScript>" [seconds]` runs a script against the Catalyst build and prints the app's windows every 4 s (works with the screen locked) — the way to check presentations without screen control.
+- Every `JBSheetHeader` Done key also answers Escape and ⌘W.

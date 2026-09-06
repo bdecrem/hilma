@@ -56,14 +56,37 @@ struct StudioView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background { model.flushSave() }
         }
-        .sheet(isPresented: $model.controlsOpen) {
-            ControlsSheetView(model: model)
-                .jbAppearance()
+        // Controls and Bounce are in-window panels that slide up over the
+        // studio (the web app's .jb-sheet), not .sheet presentations: on Mac
+        // Catalyst a sheet presented from inside a navigationDestination can
+        // never be dismissed — not through its binding, not through
+        // dismiss() (tooling/catalyst-sheet-probe.sh). Overlays behave the
+        // same on iPhone, iPad and Mac.
+        .overlay {
+            if model.controlsOpen {
+                ControlsSheetView(model: model)
+                    .background(JBTheme.panel.ignoresSafeArea())
+                    .transition(.move(edge: .bottom))
+                    .zIndex(2)
+            }
         }
-        .sheet(isPresented: $model.bounceOpen) {
-            BounceSheet(render: model.lastRender, bpm: model.bpm)
-                .jbAppearance()
+        .overlay {
+            if model.bounceOpen {
+                ZStack(alignment: .bottom) {
+                    Color.black.opacity(0.28).ignoresSafeArea()
+                        .onTapGesture { model.bounceOpen = false }
+                        .transition(.opacity)
+                    BounceSheet(render: model.lastRender, bpm: model.bpm, onDone: { model.bounceOpen = false })
+                        .frame(maxWidth: 560)
+                        .background(JBTheme.panel)
+                        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))
+                        .transition(.move(edge: .bottom))
+                }
+                .zIndex(3)
+            }
         }
+        .animation(.easeOut(duration: 0.26), value: model.controlsOpen)
+        .animation(.easeOut(duration: 0.22), value: model.bounceOpen)
     }
 
     // MARK: - Header

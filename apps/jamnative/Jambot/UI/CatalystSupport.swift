@@ -91,14 +91,14 @@ struct ColumnWidth: ViewModifier {
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     func body(content: Content) -> some View {
-        if sizeClass == .regular {
-            HStack(spacing: 0) {
-                Spacer(minLength: 0)
-                content.frame(maxWidth: maxWidth)
-                Spacer(minLength: 0)
-            }
-        } else {
-            content
+        // One structure in both size classes. An if/else here gave the
+        // wrapped view two identities; on Mac Catalyst the size class flips
+        // while a sheet is up, the presenting view was recreated, and the
+        // sheet it had presented could never be dismissed through its binding.
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            content.frame(maxWidth: sizeClass == .regular ? maxWidth : .infinity)
+            Spacer(minLength: 0)
         }
     }
 }

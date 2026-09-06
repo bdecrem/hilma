@@ -103,6 +103,7 @@ enum LibraryScript {
                     emit("  remix FAILED: \(pm.error ?? "?")")
                 }
             case "closePlayer":
+                model.dismissPublic?()
                 model.closePublic()
                 try? await Task.sleep(nanoseconds: 700_000_000)
             case "new":
@@ -145,6 +146,7 @@ enum LibraryScript {
                 emit("  about: build \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") ?? "?") (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") ?? "?")) engine=\(EngineFactory.host?.engineVersion ?? "-")")
             case "closeAbout":
                 model.showAbout = false
+                model.dismissAbout?()
                 try? await Task.sleep(nanoseconds: 700_000_000)
             case "cache":
                 let ids = await RenderCache.shared.cachedTrackIds()

@@ -12,6 +12,8 @@ import SwiftUI
 struct BounceSheet: View {
     let render: RenderResult?
     let bpm: Int
+    /// Set when shown as an in-window overlay (Studio); nil when presented as a sheet.
+    var onDone: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var busy: ExportFormat?
@@ -20,7 +22,7 @@ struct BounceSheet: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            JBSheetHeader("Bounce", onDone: { dismiss() })
+            JBSheetHeader("Bounce", onDone: { if let onDone { onDone() } else { dismiss() } })
             VStack(alignment: .leading, spacing: 16) {
             if let render {
                 Text("\(render.bars) \(render.bars == 1 ? "bar" : "bars") · \(bpm) BPM · \(render.channels == 2 ? "stereo" : "mono") \(render.sampleRate / 1000) kHz")
@@ -54,6 +56,7 @@ struct BounceSheet: View {
             }
             .padding(16)
         }
+        .frame(height: onDone == nil ? nil : 240, alignment: .top)
         .presentationDetents([.height(240)])
         .background(JBTheme.panel)
         .presentationBackground(JBTheme.panel)

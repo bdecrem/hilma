@@ -283,6 +283,26 @@ struct JBSegmented<T: Hashable & Identifiable>: View {
 /// `jb-title` face, an optional LED + mono status beside it, an orange
 /// DONE key at the right, and an optional second line (the function-key
 /// row on the Controls sheet).
+/// Hands the presentation's own `dismiss` action to whoever presented the
+/// sheet. On Mac Catalyst a sheet does not close when its `isPresented`
+/// binding is set to false (verified with tooling/catalyst-sheet-probe.sh:
+/// Controls and Bounce stayed up through every bisect), while the
+/// environment `dismiss()` closes it everywhere — so Done keys and the debug
+/// scripts go through this instead of the binding.
+struct JBDismissHook: ViewModifier {
+    let register: (@escaping () -> Void) -> Void
+    @Environment(\.dismiss) private var dismiss
+    func body(content: Content) -> some View {
+        content.onAppear { register { dismiss() } }
+    }
+}
+
+extension View {
+    func jbDismissHook(_ register: @escaping (@escaping () -> Void) -> Void) -> some View {
+        modifier(JBDismissHook(register: register))
+    }
+}
+
 struct JBSheetHeader<Below: View>: View {
     let title: String
     var status: (lit: Bool, text: String)? = nil
