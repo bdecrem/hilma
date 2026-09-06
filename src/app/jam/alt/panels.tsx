@@ -17,6 +17,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { InstrumentDescription, ParamEntry, SessionDescription, ParamDescriptor } from '../jambot'
 import { type Control, toControl, formatControl } from '../controls'
 import { Knob, VSlider, Choice, type KnobLayout } from './Knob'
+import type { Hits } from '../seq/model'
 
 export type OnParam = (path: string, value: number | string, label: string) => void
 
@@ -270,7 +271,7 @@ function voiceParams(inst: InstrumentDescription, voice: string) {
   return inst.params.filter((p) => p.sub.startsWith(voice + '.') && p.descriptor.unit !== 'choice' && typeof p.value === 'number')
 }
 
-function JT90Panel({ inst, onParam }: { inst: InstrumentDescription; onParam: OnParam }) {
+function JT90Panel({ inst, onParam, hitVoices = [] }: { inst: InstrumentDescription; onParam: OnParam; hitVoices?: string[] }) {
   const name = inst.id
   const voices = inst.voices.length ? inst.voices : Object.keys(JT90_VOICES)
   return (
@@ -285,7 +286,7 @@ function JT90Panel({ inst, onParam }: { inst: InstrumentDescription; onParam: On
             {voices.map((v) => (
               <div key={v} className="voice-panel">
                 <div className="voice-panel-header">
-                  <div className="voice-panel-led active" />
+                  <div className={`voice-panel-led active${hitVoices.includes(v) ? ' hit' : ''}`} />
                   <span className="voice-panel-name">{JT90_VOICES[v] || v}</span>
                 </div>
                 <div className="knobs-container">
@@ -310,7 +311,7 @@ const JB01_VOICES: Record<string, string> = {
   kick: 'KICK', snare: 'SNARE', clap: 'CLAP', ch: 'C.HAT', oh: 'O.HAT', lowtom: 'L.TOM', hitom: 'H.TOM', cymbal: 'CYMBAL',
 }
 
-function JB01Panel({ inst, onParam }: { inst: InstrumentDescription; onParam: OnParam }) {
+function JB01Panel({ inst, onParam, hitVoices = [] }: { inst: InstrumentDescription; onParam: OnParam; hitVoices?: string[] }) {
   const name = inst.id
   const voices = inst.voices.length ? inst.voices : Object.keys(JB01_VOICES)
   return (
@@ -324,7 +325,7 @@ function JB01Panel({ inst, onParam }: { inst: InstrumentDescription; onParam: On
             </div>
             {voices.map((v) => (
               <div key={v} className="voice-channel" data-voice={v}>
-                <div className="voice-header"><span className="voice-name">{JB01_VOICES[v] || v.toUpperCase()}</span></div>
+                <div className="voice-header"><span className={`jam-voice-led${hitVoices.includes(v) ? ' hit' : ''}`} aria-hidden /><span className="voice-name">{JB01_VOICES[v] || v.toUpperCase()}</span></div>
                 <div className="voice-knobs">
                   {voiceParams(inst, v).map((p) => {
                     const label = (p.sub.split('.').pop() || p.sub).toUpperCase()
@@ -390,14 +391,25 @@ function EffectPanel({ target, id, type, params, descriptors, onParam }: {
 
 // ---- Accordion ------------------------------------------------------------
 
-const PANELS: Record<string, (p: { inst: InstrumentDescription; onParam: OnParam }) => React.ReactElement | null> = {
+const PANELS: Record<string, (p: { inst: InstrumentDescription; onParam: OnParam; hitVoices?: string[] }) => React.ReactElement | null> = {
   jb202: JB202Panel, jt30: JT30Panel, jt10: JT10Panel, jt90: JT90Panel, jb01: JB01Panel,
 }
 const DISPLAY: Record<string, string> = { jb202: 'JB202', jt30: 'JT-30', jt10: 'JT-10', jt90: 'JT-90', jb01: 'JB01' }
 
 type PanelItem = { id: string; skin: string; name: string; sub?: string; summary: string; body: React.ReactElement }
 
-function PanelShell({ item, open, userOpened, onToggle }: { item: PanelItem; open: boolean; userOpened: boolean; onToggle: () => void }) {
+/** Header LED: an instrument lights on any of its hits; an effect lights with its target
+ *  (a voice target like jt90.oh only when that voice hits). */
+function isHit(id: string, hits: Hits): boolean {
+  if (!id.startsWith('fx.')) return (hits[id]?.length ?? 0) > 0
+  const target = id.slice(3, id.lastIndexOf('.'))
+  const [inst, voice] = target.split('.')
+  const h = hits[inst]
+  if (!h?.length) return false
+  return voice ? h.includes(voice) : true
+}
+
+function PanelShell({ item, open, userOpened, hit, onToggle }: { item: PanelItem; open: boolean; userOpened: boolean; hit: boolean; onToggle: () => void }) {
   const bodyId = `jam-panel-${item.id.replace(/[^a-z0-9-]/gi, '-')}`
   const ref = useRef<HTMLElement | null>(null)
   // A panel the user just opened comes into view (the one above it may have collapsed).
@@ -407,7 +419,7 @@ function PanelShell({ item, open, userOpened, onToggle }: { item: PanelItem; ope
   return (
     <section ref={ref} className={`jam-panel${open ? ' is-open' : ''}`} data-skin={item.skin} data-panel={item.id}>
       <button type="button" className="jam-panel-head" aria-expanded={open} aria-controls={open ? bodyId : undefined} onClick={onToggle}>
-        <span className="jam-panel-led" aria-hidden />
+        <span className={`jam-panel-led${hit ? ' hit' : ''}`} aria-hidden />
         <span className="jam-panel-name">{item.name}{item.sub && <small>{item.sub}</small>}</span>
         <span className="jam-panel-sum">{item.summary}</span>
         <span className="jam-panel-chev" aria-hidden />
@@ -417,7 +429,7 @@ function PanelShell({ item, open, userOpened, onToggle }: { item: PanelItem; ope
   )
 }
 
-export default function AltPanels({ desc, onParam }: { desc: SessionDescription | null; onParam: OnParam }) {
+export default function AltPanels({ desc, onParam, hits = {} }: { desc: SessionDescription | null; onParam: OnParam; hits?: Hits }) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [narrow, setNarrow] = useState(true)          // phone-first default until measured
   const [picked, setPicked] = useState<string | null>(null)   // user's choice this mount ('' = all closed)
@@ -443,7 +455,7 @@ export default function AltPanels({ desc, onParam }: { desc: SessionDescription 
       if (!inst.active || !Panel) continue
       items.push({
         id: inst.id, skin: type, name: DISPLAY[type] || type.toUpperCase(), sub: inst.id === type ? undefined : inst.id,
-        summary: instrumentSummary(inst), body: <Panel inst={inst} onParam={onParam} />,
+        summary: instrumentSummary(inst), body: <Panel inst={inst} onParam={onParam} hitVoices={hits[inst.id] || []} />,
       })
     }
     for (const e of desc.effects) {
@@ -474,7 +486,7 @@ export default function AltPanels({ desc, onParam }: { desc: SessionDescription 
   return (
     <div ref={rootRef} className={`jam-panels mt-4${narrow ? ' jam-panels--narrow' : ''}`}>
       {items.length === 0 && <p className="jb-body jb-muted mt-4 text-center">Nothing to tweak yet. Ask for a beat first.</p>}
-      {items.map((item) => <PanelShell key={item.id} item={item} open={open === item.id} userOpened={picked === item.id} onToggle={() => toggle(item.id)} />)}
+      {items.map((item) => <PanelShell key={item.id} item={item} open={open === item.id} userOpened={picked === item.id} hit={isHit(item.id, hits)} onToggle={() => toggle(item.id)} />)}
     </div>
   )
 }

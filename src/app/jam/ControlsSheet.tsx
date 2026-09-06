@@ -8,7 +8,7 @@ import { type Control, type ControlGroup, formatControl, fromSlider, toSlider } 
 import type { JamSession, SessionDescription } from './jambot'
 import AltPanels from './alt/panels'
 import Sequencer, { type SeqEdit } from './seq/Sequencer'
-import type { RenderScope } from './seq/model'
+import type { RenderScope, Hits } from './seq/model'
 
 type Props = {
   open: boolean
@@ -29,6 +29,8 @@ type Props = {
   playStep16: number | null
   /** Scope of the render that is playing right now. */
   playScope: RenderScope
+  /** Instruments/voices sounding at the current step (LEDs). */
+  hits: Hits
   onScope: (s: RenderScope) => void
   onSeqEdit: SeqEdit
 }
@@ -38,7 +40,7 @@ type Mode = 'sliders' | 'panels' | 'seq'
 const MODE_KEY = 'jam:controlsMode'
 const isMode = (m: unknown): m is Mode => m === 'sliders' || m === 'panels' || m === 'seq'
 
-export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, loopBars, onTrack, onParam, getSession, playStep16, playScope, onScope, onSeqEdit }: Props) {
+export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, loopBars, onTrack, onParam, getSession, playStep16, playScope, hits, onScope, onSeqEdit }: Props) {
   const inSong = !!desc && desc.arrangement.length > 0
   const [mode, setMode] = useState<Mode>('sliders')
   useEffect(() => {
@@ -142,7 +144,7 @@ export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups,
           </>
         )}
 
-        {mode === 'panels' && <AltPanels desc={desc} onParam={onParam} />}
+        {mode === 'panels' && <AltPanels desc={desc} onParam={onParam} hits={hits} />}
 
         {mode === 'sliders' && groups.length === 0 && (
           <p className="jb-body jb-muted mt-8 text-center">Nothing to tweak yet. Ask for a beat first.</p>

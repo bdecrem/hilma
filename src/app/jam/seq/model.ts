@@ -287,6 +287,61 @@ export function sectionAtBar(arr: Section[], bar: number): number | null {
   return null
 }
 
+/** Section the playhead is in (song scope: by bar; section audition: that section). */
+export function playingSection(arr: Section[], scope: RenderScope, playStep16: number | null): number | null {
+  if (playStep16 == null || !arr.length) return null
+  if (scope.kind === 'section') return Math.min(scope.index, arr.length - 1)
+  return sectionAtBar(arr, Math.floor(playStep16 / 16))
+}
+
+/** instId → voices hitting at this step ('gate' for mono synths). Reads the pattern that is
+ *  actually sounding: the live node in loop mode, the section's saved pattern in song mode. */
+export type Hits = Record<string, string[]>
+export function hitsAt(
+  session: { arrangement?: Section[]; patterns?: Record<string, Record<string, { pattern?: unknown }>>; instrument?: (id: string) => { pattern?: unknown } | null } | null,
+  instruments: { id: string; type: string; active: boolean }[],
+  scope: RenderScope,
+  playStep16: number | null,
+): Hits {
+  const out: Hits = {}
+  if (!session || playStep16 == null) return out
+  const arr = Array.isArray(session.arrangement) ? session.arrangement : []
+  const inSong = arr.length > 0
+  let secIdx: number | null = null
+  let sectionStartStep = 0
+  if (inSong) {
+    secIdx = playingSection(arr, scope, playStep16)
+    if (secIdx == null) return out
+    sectionStartStep = scope.kind === 'section' ? 0 : sectionStarts(arr)[secIdx] * 16
+  }
+  for (const inst of instruments) {
+    const kind = kindOf(inst.type || inst.id)
+    if (!kind) continue
+    let pattern: unknown = null
+    if (inSong) {
+      const name = arr[secIdx as number]?.patterns?.[inst.id]
+      if (!name) continue
+      pattern = session.patterns?.[inst.id]?.[name]?.pattern ?? null
+    } else {
+      if (!inst.active) continue
+      pattern = session.instrument?.(inst.id)?.pattern ?? null
+    }
+    if (!pattern) continue
+    const len = patternLength(pattern, kind)
+    if (!len) continue
+    const local = (((playStep16 - sectionStartStep) % len) + len) % len
+    if (kind === 'drums') {
+      const p = pattern as Record<string, ({ velocity?: number } | null)[]>
+      const voices = Object.keys(p).filter((v) => (p[v]?.[local]?.velocity ?? 0) > 0)
+      if (voices.length) out[inst.id] = voices
+    } else {
+      const p = pattern as ({ gate?: boolean } | null)[]
+      if (p[local]?.gate) out[inst.id] = ['gate']
+    }
+  }
+  return out
+}
+
 /** Format a list of section numbers: "2, 4". */
 export function listSections(nums: number[]) {
   return nums.join(', ')

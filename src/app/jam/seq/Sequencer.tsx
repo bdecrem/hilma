@@ -112,6 +112,10 @@ export default function Sequencer({ desc, getSession, active, instId, onInst, se
   const pickInst = (next: string) => { onInst(next); setPageRaw(0); setSelRaw(0) }
   const pickSection = (i: number) => { onSection(i); setPageRaw(0) }
 
+  // Section the playhead is in (song scope by bar, audition = that section); its pill LED pulses on the beat.
+  const playingSec = inSong ? M.playingSection(arr, playScope, playStep16) : null
+  const onBeat = playStep16 != null && playStep16 % 4 === 0
+
   // ---- section audition -------------------------------------------------------
   const [loopSec, setLoopSec] = useState(true)
   useEffect(() => { if (active) setLoopSec(true) }, [active])
@@ -260,8 +264,10 @@ export default function Sequencer({ desc, getSession, active, instId, onInst, se
                 role="tab"
                 aria-selected={i === secIdx}
                 onClick={() => pickSection(i)}
-                className={`seq-pill${i === secIdx ? ' on' : ''}${id && !s.patterns?.[id] ? ' silent' : ''}`}
+                className={`seq-pill${i === secIdx ? ' on' : ''}${id && !s.patterns?.[id] ? ' silent' : ''}${i === playingSec ? ' playing' : ''}${i === playingSec && onBeat ? ' beat' : ''}`}
+                data-playing={i === playingSec ? 'true' : undefined}
               >
+                <span className="led" aria-hidden />
                 <span className="n">{i + 1}</span>
                 <span className="b">{s.bars} {s.bars === 1 ? 'bar' : 'bars'}</span>
               </button>

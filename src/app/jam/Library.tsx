@@ -74,22 +74,24 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 pb-8">
-        <button
-          onClick={() => { void startNew() }}
-          disabled={creating}
-          className="jb-key jb-key--orange jb-key--wide"
-          style={{ height: 56, fontSize: 17 }}
-        >
-          {creating ? 'Starting…' : '+ New track'}
-        </button>
+        {/* Section row: eyebrow, rule, and the one primary action as a small key — not a banner. */}
+        <div className="jb-group" style={{ marginTop: 10 }}>
+          <span className="jb-eyebrow">Your tracks</span>
+          <button
+            onClick={() => { void startNew() }}
+            disabled={creating}
+            className="jb-key jb-key--orange jb-key--sm"
+            style={{ order: 2 }}
+          >
+            {creating ? 'Starting…' : '+ New track'}
+          </button>
+        </div>
 
         {error && <p className="jb-note err mt-4">{error}</p>}
         {tracks === null && !error && <p className="jb-note mt-8 text-center">Loading…</p>}
         {tracks && tracks.length === 0 && (
           <p className="jb-body jb-muted mt-8 text-center">No tracks yet. Start one and tell it what you want to hear.</p>
         )}
-
-        {tracks && tracks.length > 0 && <div className="jb-group"><span className="jb-eyebrow">Your tracks</span></div>}
         <ul className="flex flex-col gap-2">
           {tracks?.map((t) => (
             <li key={t.id} className="jb-card jb-track">

@@ -6,7 +6,7 @@
 // loop, and rendering (OfflineAudioContext). The server signs one Messages
 // API call at a time (/api/jam/llm) and stores the track (/api/jam/tracks).
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   loadJambot, JAMBOT_BUILD,
   type JambotModule, type JamSession, type AgentMessage, type ToolDef,
@@ -18,8 +18,9 @@ import { encodeMp3, wavBlob, deliver, trackFilename, type ExportFormat } from '.
 import { buildControlGroups, type ControlGroup } from './controls'
 import ControlsSheet from './ControlsSheet'
 import LedStrip from './LedStrip'
-import { sameScope, type RenderScope } from './seq/model'
+import { sameScope, hitsAt, type RenderScope, type Hits } from './seq/model'
 import { sanitizeHistory } from './history'
+import { renderCacheKey, loadCachedRender, saveRender } from './renderCache'
 
 const SONG: RenderScope = { kind: 'song' }
 
@@ -191,6 +192,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   const jamRef = useRef<JambotModule | null>(null)
   const renderScopeRef = useRef<RenderScope>(SONG)
+  const cacheTimerRef = useRef<number | null>(null)
   const seqEditsRef = useRef<Map<string, { edits: string[]; dropped: number }>>(new Map())
   const toolsRef = useRef<ToolDef[]>([])
   const sessionRef = useRef<JamSession>(null)
@@ -314,8 +316,28 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     return playerRef.current
   }
 
+  // Key of the current session state for the render cache (serialized session + engine stamp).
+  const currentRenderKey = useCallback(async () => {
+    const jam = jamRef.current
+    const session = sessionRef.current
+    if (!jam || !session) return null
+    return renderCacheKey(JSON.stringify(jam.serializeSession(session)), JAMBOT_BUILD)
+  }, [])
+
   const applyRender = useCallback((r: RenderResult, autoplay: boolean, scope: RenderScope = SONG) => {
     lastRenderRef.current = r
+    // Whole-track renders go to the on-device cache (debounced: a slider storm writes once),
+    // so the next open of this track skips the render.
+    if (scope.kind === 'song') {
+      if (cacheTimerRef.current) window.clearTimeout(cacheTimerRef.current)
+      cacheTimerRef.current = window.setTimeout(() => {
+        cacheTimerRef.current = null
+        void (async () => {
+          const key = await currentRenderKey()
+          if (key && lastRenderRef.current === r) await saveRender(track.id, key, r)
+        })()
+      }, 1500)
+    }
     const renderedBars = Math.min(128, Math.max(1, Math.round(r.bars)))
     if (sessionRef.current && !r.hasArrangement && sessionRef.current.bars !== renderedBars) {
       sessionRef.current.bars = renderedBars
@@ -327,7 +349,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     setPlayedScope(scope)
     setHasBuffer(true)
     if (autoplay && !p.playing) p.play()
-  }, [refreshDesc])
+  }, [refreshDesc, currentRenderKey, track.id])
 
   const renderNow = useCallback(async (autoplay: boolean) => {
     const jam = jamRef.current
@@ -422,7 +444,14 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
           w.__jamNotes = controlNotesRef.current
         }
         const d = jam.describeSession(sessionRef.current)
-        if (d.instruments.some((i) => i.active)) void renderNow(false)
+        if (d.instruments.some((i) => i.active)) {
+          // Same session as last time on this device → play the cached render, no wait.
+          const key = await currentRenderKey()
+          const cached = key ? await loadCachedRender(track.id, key) : null
+          if (cancelled) return
+          if (cached) applyRender({ ...cached, bpm: sessionRef.current.bpm }, false)
+          else void renderNow(false)
+        }
       } catch (e) {
         if (cancelled) return
         setLoadError((e as Error).message)
@@ -436,6 +465,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       // session stays only while an agent turn is still finishing — its
       // final save needs it.
       if (renderTimerRef.current) { window.clearTimeout(renderTimerRef.current); renderTimerRef.current = null }
+      if (cacheTimerRef.current) { window.clearTimeout(cacheTimerRef.current); cacheTimerRef.current = null }
       renderSeq.current++ // a render that lands after this is ignored (renderNow checks the seq)
       if (playerRef.current) { closePlayer(playerRef.current); playerRef.current = null }
       lastRenderRef.current = null
@@ -673,6 +703,13 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const shownBars = loopBars ?? bars
   const barNow = Math.min(shownBars, Math.floor(pos * shownBars) + 1)
   const playStep16 = playing ? Math.floor(pos * shownBars * 16) : null
+  // Which instruments/voices sound at this step — drives the panel and section LEDs.
+  // Recomputed only when the step changes (~8×/s at 128 BPM), not every frame.
+  const hits: Hits = useMemo(
+    () => hitsAt(sessionRef.current, desc?.instruments ?? [], playedScope, playStep16),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [playStep16, playedScope, desc],
+  )
   const step = playStep16 === null ? null : playStep16 % 16
   const sectionNow = playedScope.kind === 'section' ? playedScope.index + 1 : null
   const strip = stripFromDesc(desc)
@@ -832,6 +869,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         getSession={getSession}
         playStep16={playStep16}
         playScope={playedScope}
+        hits={hits}
         onScope={setRenderScope}
         onSeqEdit={onSeqEdit}
       />
