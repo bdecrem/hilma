@@ -5,6 +5,13 @@ import SwiftUI
 /// tap-to-rename title and the readout), chat feed, transport (Play/Stop,
 /// readout, LED strip, Bounce, Controls), composer.
 struct StudioView: View {
+    /// Starter prompts for an empty track (the web app's SUGGESTIONS).
+    static let starters = [
+        "techno at 128 with a 909 kick and offbeat hats",
+        "dub techno: soft kick, chord stabs into a long delay",
+        "an acid line on the 303 over a 909 kick at 130",
+        "minimal house at 122 with a fat 202 bass",
+    ]
     @State private var model: StudioModel
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
@@ -156,13 +163,37 @@ struct StudioView: View {
                         .padding(.top, 40)
                     case .ready:
                         if model.feed.isEmpty {
-                            Text("SAY IT LIKE YOU'D SAY IT TO A PRODUCER")
-                                .font(JBTheme.panelFont(11, weight: .semibold))
-                                .tracking(1)
-                                .foregroundStyle(JBTheme.ink3)
-                                .frame(maxWidth: .infinity)
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 40)
+                            // Empty track: the web app's starter prompts. Tapping one
+                            // fills the composer (not sends) so it can be edited first.
+                            VStack(spacing: 10) {
+                                Text("SAY IT LIKE YOU'D SAY IT TO A PRODUCER")
+                                    .font(JBTheme.panelFont(11, weight: .semibold))
+                                    .tracking(1)
+                                    .foregroundStyle(JBTheme.ink3)
+                                    .frame(maxWidth: .infinity)
+                                    .multilineTextAlignment(.center)
+                                    .padding(.bottom, 8)
+                                ForEach(StudioView.starters, id: \.self) { prompt in
+                                    Button {
+                                        model.input = prompt
+                                        composerFocused = true
+                                    } label: {
+                                        Text(prompt)
+                                            .font(JBTheme.bodyFont(15, weight: .medium))
+                                            .foregroundStyle(JBTheme.ink)
+                                            .multilineTextAlignment(.leading)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 12)
+                                            .background(JBTheme.panel2)
+                                            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(JBTheme.rule, lineWidth: 1))
+                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityIdentifier("starter")
+                                }
+                            }
+                            .padding(.top, 36)
                         }
                         ForEach(model.feed) { item in
                             feedRow(item)

@@ -172,6 +172,11 @@ enum StudioScript {
                 let texts = added.compactMap { if case .assistant(_, let t) = $0 { return t } else { return nil } }
                 let notes = added.compactMap { if case .note(_, let t, _) = $0 { return t } else { return nil } }
                 emit("  send done in \(String(format: "%.1f", Date().timeIntervalSince(t0)))s: tools=\(tools) text=\(texts.map { String($0.prefix(120)) }) notes=\(notes) busy=\(model.busy) save=\(model.saveState) playing=\(model.playing)")
+            case "starter":
+                // starter:<n> — put the nth starter prompt in the composer (what a tap does)
+                let n = max(1, min(StudioView.starters.count, Int(arg) ?? 1))
+                model.input = StudioView.starters[n - 1]
+                emit("  starter \(n): input=\(model.input)")
             case "controls":
                 model.controlsOpen = true
                 try? await Task.sleep(nanoseconds: 900_000_000)
