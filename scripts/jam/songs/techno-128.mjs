@@ -382,7 +382,7 @@ await t('save_pattern', { instrument: 'jt30', name: 'ACID' })
 const plan = [
   { bars: 8, name: 'Intro', patterns: { jt90: 'K', 'jb202-2': 'IN' }, what_happens: 'His tuned-down kick and the A1 sub at half level. Mixable, dry.' },
   { bars: 8, name: 'Intro hats', patterns: { jt90: 'HIN', 'jb202-2': 'IN' }, what_happens: 'Closed 8ths and the open hat on 14 fade in from nothing over 8 bars.' },
-  { bars: 16, name: 'Build 1', patterns: { jt90: 'AH16', jb202: 'RISE', 'jb202-2': 'MID' }, what_happens: 'The sub steps up; his A stabs enter as a filtered pulse and rise 90 -> 420 Hz over 16 bars into his patch while the hats walk up 3 dB.' },
+  { bars: 16, name: 'Build 1', patterns: { jt90: 'AH16', jb202: 'RISE', 'jb202-2': 'MID' }, what_happens: 'The sub steps up; his A stabs enter as a filtered pulse and rise 90 -> 420 Hz over 16 bars into his patch while the hats walk up 5 dB to the drop level.' },
   { bars: 8, name: 'Drop 1', patterns: { jt90: 'BH', jb202: 'B', 'jb202-2': 'A', jt10: 'A' }, what_happens: 'His B section as he built it: full sub, octave-jump bassline, hats louder, the 7-note JT10 melody on dotted-8th ping-pong. Every 4th bar the open hat displaces and a ghost kick lands on the and-of-4.' },
   { bars: 8, name: 'Drop 1 hold', patterns: { jt90: 'BH', jb202: 'B8', 'jb202-2': 'A', jt10: 'A' }, what_happens: 'Holds; the G1 in the last bar drops to F1.' },
   { bars: 8, name: 'Drop 1 var', patterns: { jt90: 'C', jb202: 'A8', 'jb202-2': 'A', jt10: 'A' }, what_happens: 'Offbeat-16th ghost hats, a second open hat; bass back to the A stabs, one bar with D2 / F1 substitutions.' },

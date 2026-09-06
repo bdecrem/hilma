@@ -1,7 +1,9 @@
 // Sweep every control the Jam Controls sheet exposes, per instrument, in
 // loop mode and song mode. A control passes when moving it from min to max
 // changes the rendered audio (waveform difference > -40 dB). Mirrors
-// Studio.onParam (tweak + song-mode write-through) and controls.ts.
+// Studio.onParam (tweak + song-mode write-through into the saved patterns'
+// params and insert snapshots — keep applyParam in step with Studio.tsx and
+// ../vibeceo/jambot/tests/test-web-writethrough.js) and controls.ts.
 //
 //   cd ../vibeceo/jambot && node ../../hilma/scripts/jam/controls-sweep.mjs
 //
@@ -40,24 +42,72 @@ function controlsFor(session) {
   return out;
 }
 
-// Studio.onParam
+// === mirror of Studio.writeThroughSavedPatterns / writeThroughSavedInserts ===
+function writeThroughSavedPatterns(session, path) {
+  const [inst, ...rest] = path.split('.');
+  if (!Array.isArray(session.arrangement) || session.arrangement.length === 0) return 0;
+  if (inst === 'fx' || rest.length === 0) return 0;
+  if (rest.length === 1 && rest[0] === 'level') return 0;
+  const saved = session.patterns?.[inst];
+  if (!saved) return 0;
+  const acc = session.instrument?.(inst);
+  if (!acc || acc.kind === 'sampler' || acc.kind === 'modular') return 0;
+  let voice = null;
+  let key;
+  if (acc.kind === 'drums') {
+    [voice] = rest;
+    key = rest.slice(1).join('.');
+    if (!key) return 0;
+  } else {
+    const sub = rest.join('.');
+    const live = Object.keys(acc.params || {});
+    const match = live.filter((k) => sub === k || sub.endsWith(`.${k}`)).sort((a, b) => b.length - a.length)[0];
+    if (!match) return 0;
+    key = match;
+  }
+  const value = voice ? acc.params?.[voice]?.[key] : acc.params?.[key];
+  if (value === undefined) return 0;
+  let n = 0;
+  for (const entry of Object.values(saved)) {
+    if (!entry || typeof entry !== 'object') continue;
+    const params = (entry.params ||= {});
+    if (voice) { const vp = (params[voice] ||= {}); vp[key] = value; } else { params[key] = value; }
+    n++;
+  }
+  return n;
+}
+
+function writeThroughSavedInserts(session, path) {
+  const segs = path.split('.');
+  if (segs[0] !== 'fx' || segs.length < 4) return 0;
+  if (!Array.isArray(session.arrangement) || session.arrangement.length === 0) return 0;
+  const effectId = segs[segs.length - 2];
+  const key = segs.slice(1, -2).join('.');
+  const inst = key.split('.')[0];
+  if (inst === 'master') return 0;
+  const live = session.mixer?.effectChains?.[key]?.find((e) => e.id === effectId);
+  if (!live?._node) return 0;
+  const params = { ...live._node.getParams() };
+  const saved = session.patterns?.[inst];
+  if (!saved) return 0;
+  let n = 0;
+  for (const entry of Object.values(saved)) {
+    const snap = entry?.channelInserts;
+    if (!snap || typeof snap !== 'object') continue;
+    const e = snap[key]?.find((x) => x.id === effectId);
+    if (!e) continue;
+    e.params = params;
+    n++;
+  }
+  return n;
+}
+
+// Studio.onParam: tweak the live node, then write through to the saved patterns.
 async function applyParam(session, path, value) {
   const r = await executeTool('tweak', { path, value }, session, {});
   if (/^Error/.test(r)) return r;
-  const [inst, ...rest] = path.split('.');
-  const saved = session.patterns?.[inst];
-  const inSong = Array.isArray(session.arrangement) && session.arrangement.length > 0;
-  const nodeLevel = rest.length === 1 && rest[0] === 'level';
-  if (inSong && saved && rest.length > 0 && !nodeLevel && inst !== 'fx') {
-    const names = Object.keys(saved);
-    const current = session.currentPattern?.[inst] || names[names.length - 1];
-    for (const name of names) {
-      await executeTool('load_pattern', { instrument: inst, name }, session, {});
-      await executeTool('tweak', { path, value }, session, {});
-      await executeTool('save_pattern', { instrument: inst, name }, session, {});
-    }
-    if (current) await executeTool('load_pattern', { instrument: inst, name: current }, session, {});
-  }
+  if (path.startsWith('fx.')) writeThroughSavedInserts(session, path);
+  else writeThroughSavedPatterns(session, path);
   return r;
 }
 
