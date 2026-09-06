@@ -18,6 +18,7 @@ import type { InstrumentDescription, ParamEntry, SessionDescription, ParamDescri
 import { type Control, toControl, formatControl } from '../controls'
 import { Knob, VSlider, Choice, type KnobLayout } from './Knob'
 import type { Hits } from '../seq/model'
+import MuteSolo, { isSilenced, type OnMix } from '../MuteSolo'
 
 export type OnParam = (path: string, value: number | string, label: string) => void
 
@@ -396,7 +397,7 @@ const PANELS: Record<string, (p: { inst: InstrumentDescription; onParam: OnParam
 }
 const DISPLAY: Record<string, string> = { jb202: 'JB202', jt30: 'JT-30', jt10: 'JT-10', jt90: 'JT-90', jb01: 'JB01' }
 
-type PanelItem = { id: string; skin: string; name: string; sub?: string; summary: string; body: React.ReactElement }
+type PanelItem = { id: string; skin: string; name: string; sub?: string; summary: string; body: React.ReactElement; instrument?: boolean }
 
 /** Header LED: an instrument lights on any of its hits; an effect lights with its target
  *  (a voice target like jt90.oh only when that voice hits). */
@@ -409,7 +410,7 @@ function isHit(id: string, hits: Hits): boolean {
   return voice ? h.includes(voice) : true
 }
 
-function PanelShell({ item, open, userOpened, hit, onToggle }: { item: PanelItem; open: boolean; userOpened: boolean; hit: boolean; onToggle: () => void }) {
+function PanelShell({ item, open, userOpened, hit, silenced, mix, onToggle }: { item: PanelItem; open: boolean; userOpened: boolean; hit: boolean; silenced: boolean; mix: React.ReactNode; onToggle: () => void }) {
   const bodyId = `jam-panel-${item.id.replace(/[^a-z0-9-]/gi, '-')}`
   const ref = useRef<HTMLElement | null>(null)
   // A panel the user just opened comes into view (the one above it may have collapsed).
@@ -417,19 +418,23 @@ function PanelShell({ item, open, userOpened, hit, onToggle }: { item: PanelItem
     if (open && userOpened) ref.current?.scrollIntoView({ block: 'nearest' })
   }, [open, userOpened])
   return (
-    <section ref={ref} className={`jam-panel${open ? ' is-open' : ''}`} data-skin={item.skin} data-panel={item.id}>
-      <button type="button" className="jam-panel-head" aria-expanded={open} aria-controls={open ? bodyId : undefined} onClick={onToggle}>
-        <span className={`jam-panel-led${hit ? ' hit' : ''}`} aria-hidden />
-        <span className="jam-panel-name">{item.name}{item.sub && <small>{item.sub}</small>}</span>
-        <span className="jam-panel-sum">{item.summary}</span>
-        <span className="jam-panel-chev" aria-hidden />
-      </button>
+    <section ref={ref} className={`jam-panel${open ? ' is-open' : ''}${silenced ? ' is-silenced' : ''}`} data-skin={item.skin} data-panel={item.id}>
+      {/* The M/S keys sit beside the head button (buttons can't nest), sharing its bar. */}
+      <div className="jam-panel-bar">
+        <button type="button" className="jam-panel-head" aria-expanded={open} aria-controls={open ? bodyId : undefined} onClick={onToggle}>
+          <span className={`jam-panel-led${hit ? ' hit' : ''}`} aria-hidden />
+          <span className="jam-panel-name">{item.name}{item.sub && <small>{item.sub}</small>}</span>
+          <span className="jam-panel-sum">{item.summary}</span>
+          <span className="jam-panel-chev" aria-hidden />
+        </button>
+        {mix}
+      </div>
       {open && <div className="jam-panel-body" id={bodyId}>{item.body}</div>}
     </section>
   )
 }
 
-export default function AltPanels({ desc, onParam, hits = {} }: { desc: SessionDescription | null; onParam: OnParam; hits?: Hits }) {
+export default function AltPanels({ desc, onParam, hits = {}, onMix }: { desc: SessionDescription | null; onParam: OnParam; hits?: Hits; onMix?: OnMix }) {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const [narrow, setNarrow] = useState(true)          // phone-first default until measured
   const [picked, setPicked] = useState<string | null>(null)   // user's choice this mount ('' = all closed)
@@ -455,7 +460,7 @@ export default function AltPanels({ desc, onParam, hits = {} }: { desc: SessionD
       if (!inst.active || !Panel) continue
       items.push({
         id: inst.id, skin: type, name: DISPLAY[type] || type.toUpperCase(), sub: inst.id === type ? undefined : inst.id,
-        summary: instrumentSummary(inst), body: <Panel inst={inst} onParam={onParam} hitVoices={hits[inst.id] || []} />,
+        summary: instrumentSummary(inst), body: <Panel inst={inst} onParam={onParam} hitVoices={hits[inst.id] || []} />, instrument: true,
       })
     }
     for (const e of desc.effects) {
@@ -486,7 +491,18 @@ export default function AltPanels({ desc, onParam, hits = {} }: { desc: SessionD
   return (
     <div ref={rootRef} className={`jam-panels mt-4${narrow ? ' jam-panels--narrow' : ''}`}>
       {items.length === 0 && <p className="jb-body jb-muted mt-4 text-center">Nothing to tweak yet. Ask for a beat first.</p>}
-      {items.map((item) => <PanelShell key={item.id} item={item} open={open === item.id} userOpened={picked === item.id} hit={isHit(item.id, hits)} onToggle={() => toggle(item.id)} />)}
+      {items.map((item) => (
+        <PanelShell
+          key={item.id}
+          item={item}
+          open={open === item.id}
+          userOpened={picked === item.id}
+          hit={isHit(item.id, hits)}
+          silenced={!!item.instrument && isSilenced(item.id, desc?.tracks, desc?.anySolo)}
+          mix={item.instrument && onMix ? <MuteSolo id={item.id} tracks={desc?.tracks} anySolo={desc?.anySolo} onMix={onMix} tone="panel" /> : null}
+          onToggle={() => toggle(item.id)}
+        />
+      ))}
     </div>
   )
 }

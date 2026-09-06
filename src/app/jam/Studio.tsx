@@ -597,6 +597,25 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     }
   }, [note, refreshDesc, scheduleRender, scheduleSave])
 
+  // M / S keys: track mute / solo through the same tools the agent uses.
+  const onMix = useCallback(async (id: string, what: 'mute' | 'solo', on: boolean) => {
+    const jam = jamRef.current
+    const session = sessionRef.current
+    if (!jam || !session) return
+    try {
+      const r = what === 'mute'
+        ? await jam.executeTool('mute_track', { track: id, mute: on }, session, {})
+        : await jam.executeTool('solo_track', { track: id, solo: on, exclusive: false }, session, {})
+      if (/^Error/.test(r)) { note(r, true); return }
+      controlNotesRef.current.set(`mix:${id}:${what}`, `${id} ${what} ${on ? 'on' : 'off'}`)
+      refreshDesc()
+      scheduleRender()
+      scheduleSave()
+    } catch (e) {
+      note((e as Error).message, true)
+    }
+  }, [note, refreshDesc, scheduleRender, scheduleSave])
+
   const onTrack = useCallback(async (k: 'bpm' | 'swing' | 'bars', value: number) => {
     const jam = jamRef.current
     const session = sessionRef.current
@@ -866,6 +885,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         loopBars={loopBars}
         onTrack={onTrack}
         onParam={onParam}
+        onMix={onMix}
         getSession={getSession}
         playStep16={playStep16}
         playScope={playedScope}

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { type Control, type ControlGroup, formatControl, fromSlider, toSlider } from './controls'
 import type { JamSession, SessionDescription } from './jambot'
 import AltPanels from './alt/panels'
+import MuteSolo, { isSilenced, type OnMix } from './MuteSolo'
 import Sequencer, { type SeqEdit } from './seq/Sequencer'
 import type { RenderScope, Hits } from './seq/model'
 
@@ -23,6 +24,7 @@ type Props = {
   loopBars?: number | null
   onTrack: (key: 'bpm' | 'swing' | 'bars', value: number) => void
   onParam: (path: string, value: number | string, label: string) => void
+  onMix: OnMix
   // ---- sequencer ----
   getSession: () => JamSession | null
   /** Absolute 16th of the playing render, null when stopped. */
@@ -40,7 +42,7 @@ type Mode = 'sliders' | 'panels' | 'seq'
 const MODE_KEY = 'jam:controlsMode'
 const isMode = (m: unknown): m is Mode => m === 'sliders' || m === 'panels' || m === 'seq'
 
-export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, loopBars, onTrack, onParam, getSession, playStep16, playScope, hits, onScope, onSeqEdit }: Props) {
+export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, loopBars, onTrack, onParam, onMix, getSession, playStep16, playScope, hits, onScope, onSeqEdit }: Props) {
   const inSong = !!desc && desc.arrangement.length > 0
   const [mode, setMode] = useState<Mode>('sliders')
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups,
           </>
         )}
 
-        {mode === 'panels' && <AltPanels desc={desc} onParam={onParam} hits={hits} />}
+        {mode === 'panels' && <AltPanels desc={desc} onParam={onParam} hits={hits} onMix={onMix} />}
 
         {mode === 'sliders' && groups.length === 0 && (
           <p className="jb-body jb-muted mt-8 text-center">Nothing to tweak yet. Ask for a beat first.</p>
@@ -152,9 +154,10 @@ export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups,
 
         {mode === 'sliders' && groups.map((g) => (
           <section key={g.id}>
-            <div className="jb-group">
+            <div className={`jb-group${!g.id.startsWith('fx.') && isSilenced(g.id, desc?.tracks, desc?.anySolo) ? ' is-silenced' : ''}`}>
               <span className="jb-eyebrow">{g.title}</span>
               {g.subtitle && <span className="jb-readout jb-muted">{g.subtitle}</span>}
+              {!g.id.startsWith('fx.') && <MuteSolo id={g.id} tracks={desc?.tracks} anySolo={desc?.anySolo} onMix={onMix} />}
             </div>
             <div className="jb-card px-3">
               {g.controls.map((c) => (

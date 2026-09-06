@@ -81,6 +81,21 @@
 /* group box: screen-printed label with an etched rule */
 .jb-group { display: flex; align-items: center; gap: 10px; margin: 22px 0 8px; }
 .jb-group::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+.jb-group.is-silenced .jb-eyebrow, .jb-group.is-silenced .jb-readout { opacity: 0.45; }
+
+/* M / S keys (mute, solo) — 26px squares after the rule on a group row */
+.jb-ms { display: inline-flex; gap: 4px; order: 2; }
+.jb-ms-key {
+  width: 26px; height: 26px; padding: 0; border: 0; border-radius: 7px;
+  background: var(--panel-4); color: var(--ink-3);
+  font-family: var(--font-panel-stack); font-weight: 700; font-size: 11px; line-height: 1;
+  box-shadow: 0 1px 0 var(--rule), inset 0 1px 0 #fff;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 0.08s, color 0.08s, box-shadow 0.08s;
+}
+.jb-ms-key:active { transform: translateY(1px); }
+.jb-ms-key.m.on { background: var(--orange); color: #fff; box-shadow: 0 1px 0 #b23a0f; }
+.jb-ms-key.s.on { background: var(--green); color: #fff; box-shadow: 0 1px 0 #0a6a49; }
 
 /* ---------- surfaces ---------- */
 .jb-screen {

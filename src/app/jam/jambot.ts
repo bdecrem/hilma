@@ -51,6 +51,9 @@ export type SessionDescription = {
   patterns: Record<string, string[]>
   arrangement: { bars: number; patterns: Record<string, string> }[]
   automation: string[]
+  /** Per-instrument mixer state from mute_track / solo_track (absent until routing exists). */
+  tracks?: Record<string, { mute: boolean; solo: boolean; volume: number }>
+  anySolo?: boolean
 }
 
 export type ToolDef = { name: string; description: string; input_schema: unknown }
