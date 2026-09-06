@@ -317,6 +317,10 @@ struct JBSheetHeader<Below: View>: View {
                 Button(doneLabel, action: onDone)
                     .buttonStyle(JBKeyStyle(variant: .orange, size: .small))
                     .accessibilityIdentifier("sheetDone")
+                    // Escape and ⌘W close the sheet too (Catalyst form sheets
+                    // have no close box of their own).
+                    .keyboardShortcut(.cancelAction)
+                    .background { Button("", action: onDone).keyboardShortcut("w", modifiers: .command).opacity(0).accessibilityHidden(true) }
             }
             below()
         }
