@@ -18,6 +18,10 @@ import { encodeMp3, wavBlob, deliver, trackFilename, type ExportFormat } from '.
 import { buildControlGroups, type ControlGroup } from './controls'
 import ControlsSheet from './ControlsSheet'
 import LedStrip from './LedStrip'
+import { sameScope, type RenderScope } from './seq/model'
+import { sanitizeHistory } from './history'
+
+const SONG: RenderScope = { kind: 'song' }
 
 const SUGGESTIONS = [
   'techno at 128 with a 909 kick and offbeat hats',
@@ -50,6 +54,72 @@ function stripFromDesc(desc: SessionDescription | null): Strip | null {
   return null
 }
 
+/**
+ * Song mode: arrangement renders use the params captured inside each saved
+ * pattern, so a live `tweak` has to reach every saved pattern of that
+ * instrument too. This writes the live node's new engine value straight into
+ * the saved copies — the same value `save_pattern` would capture — without
+ * the old load_pattern → tweak → save_pattern round-trip, which replaced the
+ * live pattern, params, automation and inserts with each saved copy and so
+ * wiped anything programmed since the last save. Nothing on the live node,
+ * the automation, the inserts or `currentPattern` is touched here, which is
+ * also why it is safe to run while the agent is mid-turn.
+ *
+ * Returns how many saved patterns were updated. Mirrored (kept in step by
+ * hand) in ../vibeceo/jambot/tests/test-web-writethrough.js.
+ */
+function writeThroughSavedPatterns(session: JamSession, path: string): number {
+  const [inst, ...rest] = path.split('.')
+  if (!Array.isArray(session.arrangement) || session.arrangement.length === 0) return 0
+  if (inst === 'fx' || rest.length === 0) return 0
+  if (rest.length === 1 && rest[0] === 'level') return 0 // node output level lives outside patterns
+  const saved = session.patterns?.[inst] as Record<string, { params?: Record<string, unknown> } | null> | undefined
+  if (!saved) return 0
+  const acc = session.instrument?.(inst)
+  if (!acc || acc.kind === 'sampler' || acc.kind === 'modular') return 0
+
+  let voice: string | null = null
+  let key: string
+  if (acc.kind === 'drums') {
+    // 'jt90.kick.decay' → params.kick.decay
+    ;[voice] = rest
+    key = rest.slice(1).join('.')
+    if (!key) return 0
+  } else {
+    // Mono synths store flat params without the node's voice prefix:
+    // 'jb202.bass.filterCutoff' → params.filterCutoff. Pick the live key the
+    // control path ends with.
+    const sub = rest.join('.')
+    const live = Object.keys(acc.params || {})
+    const match = live.filter((k) => sub === k || sub.endsWith(`.${k}`)).sort((a, b) => b.length - a.length)[0]
+    if (!match) return 0
+    key = match
+  }
+  const value = voice ? acc.params?.[voice]?.[key] : acc.params?.[key]
+  if (value === undefined) return 0
+
+  let n = 0
+  for (const entry of Object.values(saved)) {
+    if (!entry || typeof entry !== 'object') continue
+    const params = (entry.params ||= {})
+    if (voice) {
+      const vp = (params[voice] ||= {}) as Record<string, unknown>
+      vp[key] = value
+    } else {
+      params[key] = value
+    }
+    n++
+  }
+  return n
+}
+
+/** Release the audio hardware. LoopPlayer has no close() yet, so reach its context. */
+function closePlayer(p: LoopPlayer) {
+  p.stop()
+  const ctx = (p as unknown as { ctx?: AudioContext | null }).ctx
+  if (ctx && ctx.state !== 'closed') ctx.close().catch(() => { /* already gone */ })
+}
+
 type Props = {
   track: Track
   onBack: () => void
@@ -78,8 +148,14 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle')
   const [pub, setPub] = useState<{ published: boolean; slug: string | null }>({ published: !!track.published_at, slug: track.slug ?? null })
   const [pubBusy, setPubBusy] = useState(false)
+  // What the next render covers (whole arrangement, or one section while the
+  // sequencer auditions it) and what the buffer now playing actually covers.
+  const [renderScope, setRenderScopeState] = useState<RenderScope>(SONG)
+  const [playedScope, setPlayedScope] = useState<RenderScope>(SONG)
 
   const jamRef = useRef<JambotModule | null>(null)
+  const renderScopeRef = useRef<RenderScope>(SONG)
+  const seqEditsRef = useRef<Map<string, { edits: string[]; dropped: number }>>(new Map())
   const toolsRef = useRef<ToolDef[]>([])
   const sessionRef = useRef<JamSession>(null)
   const messagesRef = useRef<AgentMessage[]>(track.messages || [])
@@ -92,6 +168,11 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const renderSeqRef = useRef(0)
   const saveTimerRef = useRef<number | null>(null)
   const dirtyRef = useRef(false)
+  const busyRef = useRef(false)
+  // Save ordering: one PUT in flight at a time, at most one queued behind it.
+  const saveInFlightRef = useRef<Promise<void> | null>(null)
+  const saveQueuedRef = useRef<Promise<void> | null>(null)
+  const saveSeqRef = useRef(0)
   const pendingToolIdsRef = useRef<string[]>([])
   const feedEndRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
@@ -107,30 +188,66 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   // ---- persistence ---------------------------------------------------------
 
-  const saveNow = useCallback(async () => {
-    const jam = jamRef.current
-    const session = sessionRef.current
-    if (!jam || !session) return
+  /**
+   * Save the track as it is right now. Saves are strictly serial: a PUT that
+   * starts later also lands later, so a slow older body can never overwrite
+   * a newer one in the database. While one save is in flight, a second call
+   * queues exactly one follow-up (it snapshots the latest state when it
+   * starts); further calls share that follow-up. Resolves when this call's
+   * state is on the server (or the attempt has failed and marked dirty).
+   */
+  const saveNow = useCallback((): Promise<void> => {
     if (saveTimerRef.current) { window.clearTimeout(saveTimerRef.current); saveTimerRef.current = null }
-    dirtyRef.current = false
-    setSaveState('saving')
-    try {
-      await api.saveTrack(track.id, {
+
+    const runSave = async (): Promise<void> => {
+      const jam = jamRef.current
+      const session = sessionRef.current
+      if (!jam || !session) return
+      const seq = ++saveSeqRef.current
+      dirtyRef.current = false
+      setSaveState('saving')
+      // Snapshot now: the body must not change while the request is on the wire.
+      const body = {
         title: titleRef.current,
         bpm: session.bpm,
         bars: lastRenderRef.current?.bars ?? session.bars ?? 2,
         session: jam.serializeSession(session),
-        messages: messagesRef.current,
+        // Never persist a half tool round (the sanitizer drops a trailing
+        // unanswered tool_use), so a reload always resumes a valid history.
+        messages: sanitizeHistory(messagesRef.current),
         feed: feedRef.current.slice(-200),
-      })
-      setSaveState('saved')
-    } catch (e) {
-      if (e instanceof NotSignedIn) { onAuthLost(); return }
-      console.warn('[jam] save failed', e)
-      setSaveState('failed')
-      dirtyRef.current = true
+      }
+      try {
+        await api.saveTrack(track.id, body)
+        if (seq === saveSeqRef.current) setSaveState('saved')
+      } catch (e) {
+        if (e instanceof NotSignedIn) { onAuthLost(); return }
+        console.warn('[jam] save failed', e)
+        if (seq === saveSeqRef.current) setSaveState('failed')
+        dirtyRef.current = true
+      }
     }
+
+    const start = (): Promise<void> => {
+      const p: Promise<void> = runSave().finally(() => { if (saveInFlightRef.current === p) saveInFlightRef.current = null })
+      saveInFlightRef.current = p
+      return p
+    }
+
+    if (saveInFlightRef.current) {
+      if (!saveQueuedRef.current) {
+        saveQueuedRef.current = saveInFlightRef.current.then(() => { saveQueuedRef.current = null; return start() })
+      }
+      return saveQueuedRef.current
+    }
+    return start()
   }, [track.id, onAuthLost])
+
+  /** Wait until everything dirty or in flight is on the server. */
+  const settleSaves = useCallback(async () => {
+    if (dirtyRef.current || saveTimerRef.current) await saveNow()
+    else await (saveQueuedRef.current ?? saveInFlightRef.current ?? Promise.resolve())
+  }, [saveNow])
 
   const scheduleSave = useCallback(() => {
     dirtyRef.current = true
@@ -161,15 +278,17 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     return playerRef.current
   }
 
-  const applyRender = useCallback((r: RenderResult, autoplay: boolean) => {
+  const applyRender = useCallback((r: RenderResult, autoplay: boolean, scope: RenderScope = SONG) => {
     lastRenderRef.current = r
-    if (sessionRef.current && !r.hasArrangement && sessionRef.current.bars !== r.bars) {
-      sessionRef.current.bars = r.bars
+    const renderedBars = Math.min(128, Math.max(1, Math.round(r.bars)))
+    if (sessionRef.current && !r.hasArrangement && sessionRef.current.bars !== renderedBars) {
+      sessionRef.current.bars = renderedBars
       refreshDesc()
     }
     const p = player()
     p.setBuffer(r.buffer, loopSecondsFor(r.bars, r.bpm))
     setLoopBars(r.bars)
+    setPlayedScope(scope)
     setHasBuffer(true)
     if (autoplay && !p.playing) p.play()
   }, [refreshDesc])
@@ -181,9 +300,31 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     const seq = ++renderSeqRef.current
     setRendering(true)
     try {
-      const r = await jam.renderSessionToBuffer(session, session.bars || 2)
+      let scope = renderScopeRef.current
+      const arrangement: { bars: number }[] = Array.isArray(session.arrangement) ? session.arrangement : []
+      if (scope.kind === 'section' && !arrangement[scope.index]) {
+        // The arrangement changed under us (agent cleared or shortened it).
+        scope = SONG
+        renderScopeRef.current = SONG
+        setRenderScopeState(SONG)
+      }
+      let r: RenderResult
+      if (scope.kind === 'section') {
+        // Audition one section from its saved patterns: render a view of the
+        // session whose arrangement is just that section. The view inherits
+        // everything else (nodes, clock, patterns, mixer) from the real
+        // session and nothing is mutated, so a describeSession() or an edit
+        // landing mid-render still sees the whole arrangement.
+        const view = Object.create(session)
+        view.arrangement = [arrangement[scope.index]]
+        r = await jam.renderSessionToBuffer(view, arrangement[scope.index].bars)
+      } else {
+        // Loop mode: at least the longest programmed pattern, capped at 128 (same rule as the agent's render tool).
+        const loopBarsWanted = jam.resolveRenderBars(session).bars
+        r = await jam.renderSessionToBuffer(session, loopBarsWanted)
+      }
       if (seq !== renderSeqRef.current) return
-      applyRender({ ...r, bpm: session.bpm }, autoplay)
+      applyRender({ ...r, bpm: session.bpm }, autoplay, scope)
     } catch (e) {
       note(`Render failed: ${(e as Error).message}`, true)
     } finally {
@@ -191,10 +332,20 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     }
   }, [applyRender, note])
 
-  const scheduleRender = useCallback(() => {
+  const scheduleRender = useCallback((delay = 220) => {
     if (renderTimerRef.current) window.clearTimeout(renderTimerRef.current)
-    renderTimerRef.current = window.setTimeout(() => { renderTimerRef.current = null; void renderNow(false) }, 220)
+    renderTimerRef.current = window.setTimeout(() => { renderTimerRef.current = null; void renderNow(false) }, delay)
   }, [renderNow])
+
+  /** Sequencer audition: loop one section or the whole song. Re-renders on change. */
+  const setRenderScope = useCallback((scope: RenderScope) => {
+    if (sameScope(renderScopeRef.current, scope)) return
+    renderScopeRef.current = scope
+    setRenderScopeState(scope)
+    if (!sessionRef.current) return
+    const inSong = Array.isArray(sessionRef.current.arrangement) && sessionRef.current.arrangement.length > 0
+    if (scope.kind === 'section' || inSong) scheduleRender(150)
+  }, [scheduleRender])
 
   useEffect(() => {
     if (!playing) { setPos(0); return }
@@ -208,6 +359,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   useEffect(() => {
     let cancelled = false
+    const renderSeq = renderSeqRef
     ;(async () => {
       try {
         const jam = await loadJambot()
@@ -215,6 +367,10 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         if (cancelled) return
         jamRef.current = jam
         toolsRef.current = tools
+        // A stored history can end in an unanswered tool_use (a cut-off turn,
+        // or an autosave that caught a half round); repair it before it is
+        // ever sent, or every later message 400s and the track is dead.
+        messagesRef.current = sanitizeHistory(track.messages || [])
         if (track.session) {
           try { sessionRef.current = jam.deserializeSession(track.session) }
           catch (e) { console.warn('[jam] could not restore session, starting fresh', e); sessionRef.current = jam.createSession({ bpm: track.bpm || 128 }) }
@@ -223,6 +379,12 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         }
         refreshDesc()
         setStatus('ready')
+        if (process.env.NODE_ENV !== 'production') {
+          // Dev hook for browser tests: the live session and the pending agent notes.
+          const w = window as unknown as { __jamSession?: unknown; __jamNotes?: Map<string, string> }
+          w.__jamSession = sessionRef.current
+          w.__jamNotes = controlNotesRef.current
+        }
         const d = jam.describeSession(sessionRef.current)
         if (d.instruments.some((i) => i.active)) void renderNow(false)
       } catch (e) {
@@ -231,7 +393,23 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         setStatus('error')
       }
     })()
-    return () => { cancelled = true; playerRef.current?.stop() }
+    return () => {
+      cancelled = true
+      // Leaving the track: silence and release the audio hardware, drop the
+      // last render (a long song is tens of MB) and any pending render. The
+      // session stays only while an agent turn is still finishing — its
+      // final save needs it.
+      if (renderTimerRef.current) { window.clearTimeout(renderTimerRef.current); renderTimerRef.current = null }
+      renderSeq.current++ // a render that lands after this is ignored (renderNow checks the seq)
+      if (playerRef.current) { closePlayer(playerRef.current); playerRef.current = null }
+      lastRenderRef.current = null
+      if (!busyRef.current) sessionRef.current = null
+      if (process.env.NODE_ENV !== 'production') {
+        const w = window as unknown as { __jamSession?: unknown; __jamNotes?: unknown }
+        delete w.__jamSession
+        delete w.__jamNotes
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track.id])
 
@@ -239,9 +417,13 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   useEffect(() => {
     const flush = () => { if (dirtyRef.current) void saveNow() }
+    const onVisibility = () => { if (document.visibilityState === 'hidden') flush() }
     window.addEventListener('pagehide', flush)
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush() })
-    return () => window.removeEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [saveNow])
 
   // ---- LLM proxy -----------------------------------------------------------
@@ -273,6 +455,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
     const notes = Array.from(controlNotesRef.current.values())
     controlNotesRef.current.clear()
+    seqEditsRef.current.clear()
     const task = notes.length ? `${text}\n\n[controls] ${notes.join('; ')}` : text
 
     addItem({ id: nid(), kind: 'user', text })
@@ -285,12 +468,18 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     }
     setInput('')
     setBusy(true)
+    busyRef.current = true
     setSaveOpen(false)
     pendingToolIdsRef.current = []
 
+    // runAgent appends to this array in place, so keep the sanitized copy as
+    // the live history.
+    const history = sanitizeHistory(messagesRef.current)
+    messagesRef.current = history
+
     try {
       await jam.runAgent({
-        task, session, messages: messagesRef.current, llm,
+        task, session, messages: history, llm,
         executeTool: jam.executeTool,
         tools: toolsRef.current,
         systemPrompt: jam.JAMBOT_PROMPT + jam.WEB_PROMPT_ADDENDUM,
@@ -313,6 +502,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       note((e as Error).message || 'Something went wrong.', true)
     } finally {
       setBusy(false)
+      busyRef.current = false
       refreshDesc()
       void saveNow()
     }
@@ -327,22 +517,9 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     try {
       const r = await jam.executeTool('tweak', { path, value }, session, {})
       if (/^Error/.test(r)) { note(r, true); return }
-      // Song mode: arrangement renders use the params captured inside each
-      // saved pattern, so write the value into every saved pattern too.
-      const [inst, ...rest] = path.split('.')
-      const saved = session.patterns?.[inst] as Record<string, unknown> | undefined
-      const inSong = Array.isArray(session.arrangement) && session.arrangement.length > 0
-      const nodeLevel = rest.length === 1 && rest[0] === 'level'
-      if (inSong && saved && rest.length > 0 && !nodeLevel && inst !== 'fx') {
-        const names = Object.keys(saved)
-        const current: string | undefined = session.currentPattern?.[inst] || names[names.length - 1]
-        for (const name of names) {
-          await jam.executeTool('load_pattern', { instrument: inst, name }, session, {})
-          await jam.executeTool('tweak', { path, value }, session, {})
-          await jam.executeTool('save_pattern', { instrument: inst, name }, session, {})
-        }
-        if (current) await jam.executeTool('load_pattern', { instrument: inst, name: current }, session, {})
-      }
+      // Song mode: the arrangement plays the saved patterns' own params, so
+      // the new value goes into every saved pattern too (live node untouched).
+      writeThroughSavedPatterns(session, path)
       controlNotesRef.current.set(path, `${label} → ${path} = ${value}`)
       refreshDesc()
       scheduleRender()
@@ -365,6 +542,23 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     scheduleSave()
   }, [refreshDesc, scheduleRender, scheduleSave])
 
+  /**
+   * A sequencer edit already landed in the session. Fold it into one agent
+   * note per instrument+pattern (last 8 edits), then refresh, re-render, save.
+   */
+  const onSeqEdit = useCallback((key: string, head: string, edit: string) => {
+    const entry = seqEditsRef.current.get(key) || { edits: [], dropped: 0 }
+    entry.edits.push(edit)
+    while (entry.edits.length > 8) { entry.edits.shift(); entry.dropped++ }
+    seqEditsRef.current.set(key, entry)
+    controlNotesRef.current.set(key, `${head}: ${entry.dropped ? '…, ' : ''}${entry.edits.join(', ')}`)
+    refreshDesc()
+    scheduleRender(300)
+    scheduleSave()
+  }, [refreshDesc, scheduleRender, scheduleSave])
+
+  const getSession = useCallback(() => sessionRef.current, [])
+
   const commitTitle = (t: string) => {
     const clean = t.trim().slice(0, 80) || 'Untitled'
     titleRef.current = clean
@@ -375,7 +569,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
   const back = async () => {
     playerRef.current?.stop()
-    if (dirtyRef.current || saveTimerRef.current) await saveNow()
+    await settleSaves()
     onBack()
   }
 
@@ -402,7 +596,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     if (pubBusy) return
     setPubBusy(true)
     try {
-      if (dirtyRef.current || saveTimerRef.current) await saveNow()
+      await settleSaves()
       const { track: t } = pub.published ? await api.unpublish(track.id) : await api.publish(track.id)
       setPub({ published: !!t.published_at, slug: t.slug ?? null })
       if (t.published_at) note(`Published. Anyone can play and remix it at ${publicTrackUrl(t.slug || '')}`)
@@ -440,7 +634,9 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const inSong = !!desc && desc.arrangement.length > 0
   const shownBars = loopBars ?? bars
   const barNow = Math.min(shownBars, Math.floor(pos * shownBars) + 1)
-  const step = playing ? Math.floor(pos * shownBars * 16) % 16 : null
+  const playStep16 = playing ? Math.floor(pos * shownBars * 16) : null
+  const step = playStep16 === null ? null : playStep16 % 16
+  const sectionNow = playedScope.kind === 'section' ? playedScope.index + 1 : null
   const strip = stripFromDesc(desc)
   const ready = status === 'ready'
   const canSend = ready && !busy && input.trim().length > 0
@@ -466,7 +662,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
             </button>
           )}
           <div className="jb-readout">
-            <b>{Math.round(bpm)}</b> BPM · {shownBars} {shownBars === 1 ? 'bar' : 'bars'}{inSong ? ' · song' : ''}{swing ? ` · swing ${swing}` : ''}
+            <b>{Math.round(bpm)}</b> BPM · {shownBars} {shownBars === 1 ? 'bar' : 'bars'}{inSong ? (sectionNow ? ` · section ${sectionNow}` : ' · song') : ''}{swing ? ` · swing ${swing}` : ''}
             {saveState === 'saving' && <span className="jb-muted"> · saving</span>}
             {saveState === 'failed' && <span className="lit"> · not saved</span>}
           </div>
@@ -545,7 +741,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
             <div className="flex items-center gap-2">
               <span className={`jb-led ${playing ? 'on' : rendering ? 'green' : ''}`} />
               <span className="jb-readout">
-                {rendering ? 'rendering' : hasBuffer ? (playing ? <>bar <b>{barNow}</b>/{shownBars}</> : 'ready') : 'no sound yet'}
+                {rendering ? 'rendering' : hasBuffer ? (playing ? <>{sectionNow ? <>section <b>{sectionNow}</b> · </> : null}bar <b>{barNow}</b>/{shownBars}</> : sectionNow ? <>section <b>{sectionNow}</b> · ready</> : 'ready') : 'no sound yet'}
               </span>
             </div>
             <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: 'var(--rule)' }}>
@@ -593,9 +789,14 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         loopBars={loopBars}
         onTrack={onTrack}
         onParam={onParam}
+        getSession={getSession}
+        playStep16={playStep16}
+        playScope={playedScope}
+        onScope={setRenderScope}
+        onSeqEdit={onSeqEdit}
       />
 
-      <div className="hidden" data-jambot-build={JAMBOT_BUILD} />
+      <div className="hidden" data-jambot-build={JAMBOT_BUILD} data-render-scope={renderScope.kind === 'section' ? `section-${renderScope.index}` : 'song'} />
     </div>
   )
 }

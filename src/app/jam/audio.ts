@@ -98,6 +98,17 @@ export class LoopPlayer {
     }
   }
 
+  /** Release the audio hardware: stop, close the context, drop the buffer. */
+  close() {
+    this.stop()
+    const ctx = this.ctx
+    this.ctx = null
+    this.gain = null
+    this.buffer = null
+    this.loopSeconds = 0
+    if (ctx && ctx.state !== 'closed') ctx.close().catch(() => { /* already gone */ })
+  }
+
   /** 0..1 within the loop. */
   position() {
     if (!this.playing || !this.ctx || !this.loopSeconds) return 0

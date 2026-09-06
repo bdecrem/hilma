@@ -25,7 +25,7 @@ export type ControlGroup = {
   controls: Control[]
 }
 
-const INSTRUMENT_NAMES: Record<string, string> = {
+export const INSTRUMENT_NAMES: Record<string, string> = {
   jb01: 'JB01 drums',
   jt90: 'JT90 drums',
   jb202: 'JB202 bass',

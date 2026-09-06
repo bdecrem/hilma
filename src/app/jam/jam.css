@@ -221,6 +221,9 @@
   padding: 6px 11px; border-radius: 999px; cursor: pointer;
 }
 .jb-seg button.on { background: var(--ink); color: var(--panel-2); }
+/* full-width function-key row (sheet header, second line) */
+.jb-seg--wide { display: flex; width: 100%; }
+.jb-seg--wide button { flex: 1; padding: 8px 0; font-size: 13px; }
 
 /* ---------- chat ---------- */
 .jb-bubble {

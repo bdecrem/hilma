@@ -8,7 +8,7 @@
 
 import { createSession, serializeSession, deserializeSession } from '../../../vibeceo/jambot/core/session.js';
 import { renderSessionToBuffer } from '../../../vibeceo/jambot/core/render.js';
-import { runAgent } from '../../../vibeceo/jambot/core/agent.js';
+import { runAgent as runAgentCore } from '../../../vibeceo/jambot/core/agent.js';
 import {
   buildSessionContext, describeSession, readProducerValue, formatProducerValue,
 } from '../../../vibeceo/jambot/core/status.js';
@@ -41,13 +41,51 @@ const HIDDEN_TOOLS = new Set([
   'create_jbs_kit',
 ]);
 
+/** Same ceiling as `tweak({ path: 'bars' })` and the Controls sheet. A 300-bar
+ * render is ~200 MB of float audio — enough to kill a phone tab. */
+export const MAX_RENDER_BARS = 128;
+
+/**
+ * Bars for a loop-mode render: the requested count (else session.bars, else
+ * 2), never shorter than the longest programmed pattern — a 4-bar drum fill
+ * must be heard whole, not cut at session.bars — and clamped to
+ * 1..MAX_RENDER_BARS. Arrangements set their own length inside render.js, so
+ * this is ignored there.
+ * @returns {{ bars: number, longest: number, longestId: string|null }}
+ */
+export function resolveRenderBars(session, requested) {
+  const asked = Number(requested);
+  const base = Number.isFinite(asked) && asked > 0 ? asked : (Number(session?.bars) || 2);
+
+  let longest = 0;
+  let longestId = null;
+  const active = describeSession(session).instruments.filter(i => i.active);
+  for (const inst of active) {
+    const node = typeof session.getNode === 'function' ? session.getNode(inst.id) : session._nodes?.[inst.id];
+    const n = typeof node?.getPatternBars === 'function' ? Math.ceil(node.getPatternBars()) : 0;
+    if (Number.isFinite(n) && n > longest) { longest = n; longestId = inst.id; }
+  }
+
+  const bars = Math.min(MAX_RENDER_BARS, Math.max(1, Math.round(Math.max(base, longest))));
+  return { bars, longest, longestId };
+}
+
 /** Browser render tool: renders to an AudioBuffer, hands it to the host. */
 registerTool('render', async (input, session, context) => {
-  const bars = input?.bars || session.bars || 2;
+  const hasArrangement = Array.isArray(session.arrangement) && session.arrangement.length > 0;
+  const { bars, longest, longestId } = resolveRenderBars(session, input?.bars);
   const result = await renderSessionToBuffer(session, bars);
   session.lastRender = { bars: result.bars, bpm: session.bpm, at: Date.now() };
   context.onRender?.({ ...result, bpm: session.bpm });
-  return result.message;
+
+  let message = result.message;
+  if (!hasArrangement) {
+    const asked = Number(input?.bars);
+    const wanted = Number.isFinite(asked) && asked > 0 ? asked : (Number(session.bars) || 2);
+    if (bars === longest && longest > wanted) message += ` (${longest} bars to fit the ${longestId} pattern)`;
+    else if (wanted > MAX_RENDER_BARS) message += ` (capped at ${MAX_RENDER_BARS} bars)`;
+  }
+  return message;
 });
 
 let toolsReady = null;
@@ -63,14 +101,24 @@ export async function ready() {
         .map(t => t.name === 'render'
           ? {
               ...t,
-              description: 'Render the current session so the user can hear it. Call this after every change to the track. If an arrangement is set, renders the full song; otherwise renders the current patterns for the given number of bars.',
-              input_schema: { type: 'object', properties: { bars: { type: 'number', description: 'Bars to render (default: session bars, ignored if arrangement is set)' } }, required: [] },
+              description: 'Render the current session so the user can hear it. Call this after every change to the track. If an arrangement is set, renders the full song; otherwise renders the current patterns for the given number of bars (at least as long as the longest pattern, at most 128).',
+              input_schema: { type: 'object', properties: { bars: { type: 'number', description: 'Bars to render, 1-128 (default: session bars, ignored if arrangement is set)' } }, required: [] },
             }
           : t);
     });
   }
   await toolsReady;
   return WEB_TOOLS;
+}
+
+/** The /api/jam/llm route caps max_tokens at 16384; Opus 5's adaptive thinking
+ * shares that budget with the reply, and a 16-section set_arrangement plus a
+ * few 16-step patterns overran the loop's 8192 default. */
+export const WEB_MAX_TOKENS = 16384;
+
+/** The core loop with the web's max_tokens default; callers may still override. */
+export function runAgent(opts) {
+  return runAgentCore({ maxTokens: WEB_MAX_TOKENS, ...opts });
 }
 
 export const WEB_PROMPT_ADDENDUM = `
@@ -85,7 +133,7 @@ You are running inside the Jam web app on the user's phone or laptop.
 
 export {
   createSession, serializeSession, deserializeSession,
-  renderSessionToBuffer, runAgent, executeTool,
+  renderSessionToBuffer, executeTool,
   buildSessionContext, describeSession, readProducerValue, formatProducerValue,
   detectGenres, buildGenreContext, audioBufferToWav,
   JAMBOT_PROMPT,

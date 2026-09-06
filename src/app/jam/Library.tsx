@@ -10,7 +10,8 @@ import LedStrip from './LedStrip'
 type Props = {
   user: JamUser
   onOpen: (id: string) => void
-  onNew: () => void
+  /** Creates and opens a track; resolves (or rejects) when the attempt is over. */
+  onNew: () => void | Promise<void>
   onSignOut: () => void
 }
 
@@ -46,6 +47,22 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
     }
   }
 
+  // The key reads "Starting…" only while the create request is in flight.
+  // If it fails (the shell shows its banner, or onNew throws) the key comes
+  // back so the user can try again without reloading.
+  const startNew = async () => {
+    if (creating) return
+    setCreating(true)
+    setError('')
+    try {
+      await onNew()
+    } catch (e) {
+      setError((e as Error).message || 'Could not create the track.')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   return (
     <div className="jb-screen jb-screen--fixed">
       <header className="flex items-center justify-between px-4 pb-3 pt-3">
@@ -58,7 +75,7 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
 
       <main className="flex-1 overflow-y-auto px-4 pb-8">
         <button
-          onClick={() => { if (creating) return; setCreating(true); onNew() }}
+          onClick={() => { void startNew() }}
           disabled={creating}
           className="jb-key jb-key--orange jb-key--wide"
           style={{ height: 56, fontSize: 17 }}

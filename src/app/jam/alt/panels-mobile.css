@@ -1,0 +1,297 @@
+/* Panels tab: accordion shell + phone-width layouts for the synth skins.
+   skins.css is generated (scoped copies of the synths' own stylesheets) and
+   assumes a laptop-wide page; everything here overrides it with more specific
+   selectors under .jam-panels. `.jam-panels--narrow` is toggled by a
+   ResizeObserver in panels.tsx when the root is narrower than 700px.
+
+   Width math (iPhone portrait): sheet 390 − 2×16 padding = 358 panel width;
+   body padding 12 ⇒ 334 inner; a 4-cell knob row ⇒ 83.5px per cell; a 2-column
+   voice grid with an 8px gap ⇒ 163px cards, 6px card padding ⇒ 151 inner,
+   3 knob cells of 50px (44px knobs). */
+
+/* ---------- accordion shell ---------- */
+.jam-panels { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.jam-panel {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--ph-bg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+
+/* Header palette per skin (the synths' own accent on their own ground). */
+.jam-panel[data-skin='jt90'] { --ph-bg: #141414; --ph-accent: #f87171; --ph-glow: rgba(239, 68, 68, 0.55); --ph-text: #fafafa; --ph-dim: #8f8f8f; --ph-rule: #2a2a2a; --ph-font: 'Space Grotesk', system-ui, sans-serif; --ph-mono: 'JetBrains Mono', ui-monospace, monospace; }
+.jam-panel[data-skin='jt30'] { --ph-bg: #141414; --ph-accent: #fbbf24; --ph-glow: rgba(245, 158, 11, 0.55); --ph-text: #fafafa; --ph-dim: #8f8f8f; --ph-rule: #2a2a2a; --ph-font: 'Space Grotesk', system-ui, sans-serif; --ph-mono: 'JetBrains Mono', ui-monospace, monospace; }
+.jam-panel[data-skin='jt10'] { --ph-bg: #2a2a2a; --ph-accent: #6aa8f0; --ph-glow: rgba(74, 144, 217, 0.55); --ph-text: #f0f0f0; --ph-dim: #9a9a9a; --ph-rule: #444; --ph-font: 'Space Grotesk', system-ui, sans-serif; --ph-mono: 'JetBrains Mono', ui-monospace, monospace; }
+.jam-panel[data-skin='jb202'] { --ph-bg: #162130; --ph-accent: #6ff1c3; --ph-glow: rgba(79, 209, 163, 0.55); --ph-text: #e8e8e8; --ph-dim: #88aa99; --ph-rule: #24404a; --ph-font: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace; --ph-mono: var(--ph-font); }
+.jam-panel[data-skin='jb01'] { --ph-bg: #2a2018; --ph-accent: #ffb840; --ph-glow: rgba(240, 160, 48, 0.55); --ph-text: #f5e8d8; --ph-dim: #a89880; --ph-rule: #3d3025; --ph-font: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace; --ph-mono: var(--ph-font); }
+.jam-panel[data-skin='fx'] { --ph-bg: #1b1d27; --ph-accent: #8aeaff; --ph-glow: rgba(94, 224, 255, 0.5); --ph-text: #e8e8ec; --ph-dim: #8d93a8; --ph-rule: #2b3044; --ph-font: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace; --ph-mono: var(--ph-font); }
+
+.jam-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px 0 16px;
+  border: 0;
+  background: var(--ph-bg);
+  color: var(--ph-text);
+  font-family: var(--ph-font);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.jam-panel-head:active { background: color-mix(in srgb, var(--ph-bg) 88%, #fff); }
+.jam-panel.is-open .jam-panel-head { border-bottom: 1px solid var(--ph-rule); }
+.jam-panel-led {
+  flex: none;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--ph-accent);
+  box-shadow: 0 0 6px var(--ph-glow), 0 0 14px var(--ph-glow);
+}
+.jam-panel-name {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ph-accent);
+  white-space: nowrap;
+}
+.jam-panel-name small { margin-left: 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: none; color: var(--ph-dim); }
+.jam-panel-sum {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-family: var(--ph-mono);
+  font-size: 11px;
+  color: var(--ph-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.jam-panel-chev {
+  flex: none;
+  width: 8px; height: 8px;
+  margin: -4px 2px 0 2px;
+  border-right: 1.5px solid var(--ph-dim);
+  border-bottom: 1.5px solid var(--ph-dim);
+  transform: rotate(45deg);
+  transition: transform 0.15s, margin 0.15s;
+}
+.jam-panel.is-open .jam-panel-chev { margin: 4px 2px 0 2px; transform: rotate(-135deg); }
+.jam-panel-body { min-width: 0; }
+
+/* ---------- knob drag feedback (all skins, both widths) ---------- */
+.jam-panels .knob-group, .jam-panels .knob-wrapper, .jam-panels .control { position: relative; }
+.jam-knob-float {
+  position: absolute;
+  left: 50%; top: -32px;
+  transform: translateX(-50%);
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: #14161a;
+  color: #ff4f1f;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 79, 31, 0.5);
+}
+.jam-panels .jam-dragging .knob-value { color: #ff4f1f; font-size: 12px; font-weight: 600; }
+.jam-panels .jam-dragging .knob, .jam-panels .jam-dragging .slider { outline: 2px solid #ff4f1f; outline-offset: 2px; }
+
+/* ---------- strip the page framing the originals carry (both widths) ---------- */
+.jam-panels .skin-jb01, .jam-panels .skin-jb202, .jam-panels .skin-jt10, .jam-panels .skin-jt30, .jam-panels .skin-jt90, .jam-panels .skin-fx {
+  padding: 0;
+  max-width: 100%;
+  border-radius: 0;
+  background-image: none;
+}
+.jam-panels .skin-jb01 .drum-machine, .jam-panels .skin-jb202 .synth-panel, .jam-panels .skin-jt10 .synth-container,
+.jam-panels .skin-jt30 .panel, .jam-panels .skin-jt90 .panel, .jam-panels .skin-fx .fx-panel {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 12px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.jam-panels .skin-jb01 .voices-section, .jam-panels .skin-jb202 .controls-grid, .jam-panels .skin-jt30 .controls, .jam-panels .skin-jt90 .voice-controls { margin-bottom: 0; }
+.jam-panels .skin-jb01 .knob-group, .jam-panels .skin-jb202 .knob-group, .jam-panels .skin-fx .knob-group, .jam-panels .skin-jt90 .knob-wrapper, .jam-panels .skin-jt30 .knob-wrapper, .jam-panels .skin-jt10 .control { min-width: 0; max-width: 100%; }
+.jam-panels .knob-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+/* Value readouts the originals left nearly invisible */
+.jam-panels .skin-jt10 .knob-value { color: var(--text-secondary); }
+
+/* Master strips (JT-90 / JB01): LED + name on the left, the level knob on the right. */
+.jam-panels .skin-jb01 .voice-channel.jam-master .voice-name { background: var(--accent-dim); color: #1a1512; }
+
+/* ---------- wide (≥ 700px container): the original grids, kept inside the sheet ---------- */
+.jam-panels:not(.jam-panels--narrow) .skin-jt10 .control-panel { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .controls-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .filter-section { grid-column: auto; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob-row, .jam-panels:not(.jam-panels--narrow) .skin-fx .knob-row { flex-wrap: wrap; align-items: flex-end; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb01 .voices-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb01 .knob { width: 44px; height: 44px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb01 .knob::after { top: 6px; height: 12px; width: 3px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb01 .knob-group label { font-size: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb01 .knob-value { font-size: 10.5px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob { width: 44px; height: 44px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob::after { top: 6px; width: 3px; height: 11px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob.knob-large { width: 52px; height: 52px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob.knob-large::after { top: 7px; height: 13px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob.knob-small { width: 40px; height: 40px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob.knob-small::after { top: 5px; width: 3px; height: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob-group label { font-size: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jb202 .knob-value { font-size: 10.5px; }
+.jam-panels:not(.jam-panels--narrow) .skin-fx .knob { width: 44px; height: 44px; }
+.jam-panels:not(.jam-panels--narrow) .skin-fx .knob.knob-large { width: 52px; height: 52px; }
+.jam-panels:not(.jam-panels--narrow) .skin-fx .knob-group label { font-size: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-fx .knob-value { font-size: 10.5px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt90 .voice-controls { padding: 12px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt90 .params-grid { gap: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt90 .voice-panel { min-width: 150px; flex: 1 1 150px; padding: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt90 .knob-wrapper .knob { width: 44px; height: 44px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt90 .knob-wrapper .knob::before { width: 3px; height: 13px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt90 .knob-label, .jam-panels:not(.jam-panels--narrow) .skin-jt90 .knob-value { font-size: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt30 .controls { flex-wrap: wrap; justify-content: center; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt30 .knob-group { flex-wrap: wrap; justify-content: center; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt30 .knob-label, .jam-panels:not(.jam-panels--narrow) .skin-jt30 .knob-value { font-size: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt10 .control label, .jam-panels:not(.jam-panels--narrow) .skin-jt10 .knob-value { font-size: 10px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt10 .knob.small { width: 40px; height: 40px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt10 .knob.small::before { height: 12px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt10 .slider { width: 40px; height: 100px; }
+.jam-panels:not(.jam-panels--narrow) .skin-jt10 .slider::before { width: 32px; height: 16px; bottom: calc(var(--value, 50%) - 8px); }
+
+/* ---------- narrow (< 700px container): phone layout ---------- */
+
+/* Knob rows become centered 4-per-row grids: each cell is a quarter of the row,
+   so 3 knobs sit centered, 7 wrap as 4 + 3, and gaps stay even. */
+.jam-panels--narrow .skin-jb202 .knob-row,
+.jam-panels--narrow .skin-fx .knob-row,
+.jam-panels--narrow .skin-jt30 .knob-group,
+.jam-panels--narrow .skin-jt10 .controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 14px 0;
+}
+.jam-panels--narrow .skin-jb202 .knob-row > *,
+.jam-panels--narrow .skin-fx .knob-row > *,
+.jam-panels--narrow .skin-jt30 .knob-group > *,
+.jam-panels--narrow .skin-jt10 .controls-row > * {
+  flex: 0 0 25%;
+  max-width: 25%;
+  min-width: 0;
+}
+
+/* --- JB202: OSC1 | OSC2 side by side, then FILTER / ENVs / OUTPUT full width --- */
+.jam-panels--narrow .skin-jb202 .controls-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.jam-panels--narrow .skin-jb202 .filter-section, .jam-panels--narrow .skin-jb202 .env-section, .jam-panels--narrow .skin-jb202 .output-section { grid-column: 1 / -1; }
+.jam-panels--narrow .skin-jb202 .control-section { padding: 12px 6px; }
+.jam-panels--narrow .skin-jb202 .control-section h3 { font-size: 11px; margin-bottom: 12px; }
+.jam-panels--narrow .skin-jb202 .osc-section .knob-row > * { flex-basis: 33.333%; max-width: 33.333%; }
+.jam-panels--narrow .skin-jb202 .wave-toggle { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 0 2px 12px; }
+.jam-panels--narrow .skin-jb202 .wave-btn { padding: 0; min-height: 32px; font-size: 10px; }
+.jam-panels--narrow .skin-jb202 .knob { width: 44px; height: 44px; }
+.jam-panels--narrow .skin-jb202 .knob::after { top: 6px; width: 3px; height: 11px; }
+.jam-panels--narrow .skin-jb202 .knob.knob-large { width: 56px; height: 56px; }
+.jam-panels--narrow .skin-jb202 .knob.knob-large::after { top: 7px; height: 14px; }
+.jam-panels--narrow .skin-jb202 .knob.knob-small { width: 40px; height: 40px; }
+.jam-panels--narrow .skin-jb202 .knob.knob-small::after { top: 5px; width: 3px; height: 10px; }
+.jam-panels--narrow .skin-jb202 .knob-group { gap: 5px; }
+.jam-panels--narrow .skin-jb202 .knob-group label { font-size: 10px; }
+.jam-panels--narrow .skin-jb202 .knob-value { font-size: 11px; min-width: 0; }
+
+/* --- JT-30: waveform switch on top, seven knobs as 4 + 3 --- */
+.jam-panels--narrow .skin-jt30 .controls { display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 12px 6px 14px; }
+.jam-panels--narrow .skin-jt30 .controls-divider { display: none; }
+.jam-panels--narrow .skin-jt30 .waveform-toggle { display: grid; grid-template-columns: repeat(2, 80px); gap: 4px; width: max-content; margin: 0 auto; }
+.jam-panels--narrow .skin-jt30 .wave-btn { width: auto; height: 36px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; }
+.jam-panels--narrow .skin-jt30 .knob { width: 48px; height: 48px; }
+.jam-panels--narrow .skin-jt30 .knob-wrapper { gap: 5px; }
+.jam-panels--narrow .skin-jt30 .knob-label { font-size: 10px; }
+.jam-panels--narrow .skin-jt30 .knob-value { font-size: 11px; }
+
+/* --- JT-10: sections stacked (SUB and VCA share a row), sliders 44×120 --- */
+.jam-panels--narrow .skin-jt10 .control-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: dense; }
+.jam-panels--narrow .skin-jt10 .vco-section, .jam-panels--narrow .skin-jt10 .filter-section, .jam-panels--narrow .skin-jt10 .env-section, .jam-panels--narrow .skin-jt10 .lfo-section { grid-column: 1 / -1; }
+.jam-panels--narrow .skin-jt10 .section { padding: 12px 6px 14px; gap: 12px; }
+.jam-panels--narrow .skin-jt10 .section h3 { font-size: 11px; margin: 0; text-align: center; }
+.jam-panels--narrow .skin-jt10 .control { gap: 5px; }
+.jam-panels--narrow .skin-jt10 .control label { font-size: 10px; color: var(--text-secondary); }
+.jam-panels--narrow .skin-jt10 .knob-value { font-size: 11px; }
+.jam-panels--narrow .skin-jt10 .knob.small { width: 40px; height: 40px; }
+.jam-panels--narrow .skin-jt10 .knob.small::before { height: 12px; }
+.jam-panels--narrow .skin-jt10 .slider { width: 44px; height: 120px; }
+.jam-panels--narrow .skin-jt10 .slider::before { width: 36px; height: 16px; bottom: calc(var(--value, 50%) - 8px); }
+/* half-width SUB / VCA: one knob centered in the cell */
+.jam-panels--narrow .skin-jt10 .sub-section .controls-row > *, .jam-panels--narrow .skin-jt10 .volume-section .controls-row > * { flex-basis: 100%; max-width: 100%; }
+.jam-panels--narrow .skin-jt10 .sub-mode-switch { align-items: center; gap: 6px; }
+.jam-panels--narrow .skin-jt10 .mode-label { font-size: 10px; }
+.jam-panels--narrow .skin-jt10 .mode-buttons { gap: 4px; }
+.jam-panels--narrow .skin-jt10 .mode-btn { min-width: 40px; min-height: 32px; padding: 0 8px; font-size: 11px; }
+/* LFO: RATE + the three destinations in one 4-knob row, waveform switch below */
+.jam-panels--narrow .skin-jt10 .lfo-section { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 14px 0; }
+.jam-panels--narrow .skin-jt10 .lfo-section h3 { flex: 0 0 100%; }
+.jam-panels--narrow .skin-jt10 .lfo-section .controls-row, .jam-panels--narrow .skin-jt10 .lfo-section .lfo-destinations { display: contents; }
+.jam-panels--narrow .skin-jt10 .lfo-section .control { flex: 0 0 25%; max-width: 25%; }
+.jam-panels--narrow .skin-jt10 .lfo-section .lfo-waveform { flex: 0 0 100%; order: 1; display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; }
+.jam-panels--narrow .skin-jt10 .wave-btn { min-height: 32px; padding: 0 10px; font-size: 11px; }
+
+/* --- JT-90: master strip, then a 2-column grid of equal voice cards --- */
+.jam-panels--narrow .skin-jt90 .voice-controls { padding: 0; background: none; border: 0; }
+.jam-panels--narrow .skin-jt90 .params-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.jam-panels--narrow .skin-jt90 .voice-panel { min-width: 0; padding: 10px 6px 12px; }
+.jam-panels--narrow .skin-jt90 .voice-panel-header { margin: 0 4px 10px; padding-bottom: 8px; }
+.jam-panels--narrow .skin-jt90 .voice-panel-name { font-size: 11px; }
+.jam-panels--narrow .skin-jt90 .knobs-container { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 12px 0; }
+.jam-panels--narrow .skin-jt90 .knobs-container > * { flex: 0 0 33.333%; max-width: 33.333%; }
+.jam-panels--narrow .skin-jt90 .knob-wrapper { gap: 5px; }
+.jam-panels--narrow .skin-jt90 .knob-wrapper .knob { width: 44px; height: 44px; }
+.jam-panels--narrow .skin-jt90 .knob-wrapper .knob::before { width: 3px; height: 13px; }
+.jam-panels--narrow .skin-jt90 .knob-label { font-size: 10px; }
+.jam-panels--narrow .skin-jt90 .knob-value { font-size: 10.5px; }
+.jam-panels--narrow .skin-jt90 .voice-panel.jam-master { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 8px 10px; }
+.jam-panels--narrow .skin-jt90 .voice-panel.jam-master .voice-panel-header { margin: 0; padding: 0; border: 0; }
+.jam-panels--narrow .skin-jt90 .voice-panel.jam-master .knobs-container { display: flex; }
+.jam-panels--narrow .skin-jt90 .voice-panel.jam-master .knob-wrapper { flex: 0 0 auto; max-width: none; flex-direction: row; align-items: center; gap: 10px; }
+
+/* --- JB01: same shape as the JT-90 --- */
+.jam-panels--narrow .skin-jb01 .voices-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.jam-panels--narrow .skin-jb01 .voice-channel { padding: 10px 6px 12px; }
+.jam-panels--narrow .skin-jb01 .voice-header { margin: 0 4px 10px; padding-bottom: 8px; }
+.jam-panels--narrow .skin-jb01 .voice-name { font-size: 11px; padding: 3px 8px; }
+.jam-panels--narrow .skin-jb01 .voice-knobs { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: 12px 0; }
+.jam-panels--narrow .skin-jb01 .voice-knobs > * { flex: 0 0 33.333%; max-width: 33.333%; }
+.jam-panels--narrow .skin-jb01 .knob-group { gap: 5px; }
+.jam-panels--narrow .skin-jb01 .knob { width: 44px; height: 44px; }
+.jam-panels--narrow .skin-jb01 .knob::after { top: 6px; width: 3px; height: 12px; }
+.jam-panels--narrow .skin-jb01 .knob-group label { font-size: 10px; }
+.jam-panels--narrow .skin-jb01 .knob-value { font-size: 10.5px; min-width: 0; }
+.jam-panels--narrow .skin-jb01 .voice-channel.jam-master { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 8px 10px; }
+.jam-panels--narrow .skin-jb01 .voice-channel.jam-master .voice-header { margin: 0; padding: 0; border: 0; }
+.jam-panels--narrow .skin-jb01 .voice-channel.jam-master .voice-knobs { display: flex; }
+.jam-panels--narrow .skin-jb01 .voice-channel.jam-master .knob-group { flex: 0 0 auto; max-width: none; flex-direction: row; align-items: center; gap: 10px; }
+
+/* --- Effects --- */
+.jam-panels--narrow .skin-fx .control-section { padding: 12px 6px 14px; }
+.jam-panels--narrow .skin-fx .wave-toggle { gap: 4px; }
+.jam-panels--narrow .skin-fx .wave-btn { min-height: 32px; padding: 0 10px; font-size: 10px; }
+.jam-panels--narrow .skin-fx .fx-choice--many .wave-toggle { width: 100%; }
+.jam-panels--narrow .skin-fx .fx-choice--many .wave-btn { flex: 0 0 calc((100% - 8px) / 3); padding: 0 4px; overflow: hidden; text-overflow: ellipsis; }
+.jam-panels--narrow .skin-fx .fx-choice-label { font-size: 10px; }
+.jam-panels--narrow .skin-fx .knob { width: 44px; height: 44px; }
+.jam-panels--narrow .skin-fx .knob::after { top: 6px; height: 11px; }
+.jam-panels--narrow .skin-fx .knob.knob-large { width: 56px; height: 56px; }
+.jam-panels--narrow .skin-fx .knob.knob-large::after { top: 7px; height: 14px; }
+.jam-panels--narrow .skin-fx .knob-group { gap: 5px; min-width: 0; }
+.jam-panels--narrow .skin-fx .knob-group label { font-size: 10px; }
+.jam-panels--narrow .skin-fx .knob-value { font-size: 11px; min-width: 0; }

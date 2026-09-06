@@ -104,6 +104,10 @@ export interface JambotModule {
   serializeSession(session: JamSession): unknown
   deserializeSession(data: unknown): JamSession
   renderSessionToBuffer(session: JamSession, bars: number): Promise<RenderResult>
+  /** Loop-mode render length: the requested count (else session.bars), never shorter than the longest programmed pattern, 1..MAX_RENDER_BARS. */
+  resolveRenderBars(session: JamSession, requested?: number): { bars: number; longest: number; longestId: string | null }
+  MAX_RENDER_BARS: number
+  WEB_MAX_TOKENS: number
   runAgent(opts: {
     task: string
     session: JamSession

@@ -95,10 +95,11 @@ export default function JamApp() {
     setUser(null)
   }
 
-  const authLost = () => {
+  // Stable identity: Studio's save/visibility effects depend on it.
+  const authLost = useCallback(() => {
     setTrack(null)
     setUser(null)
-  }
+  }, [])
 
   if (user === undefined || opening) {
     return (

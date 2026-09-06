@@ -1,0 +1,152 @@
+/* Step sequencer — rubber steps on the enamel panel, orange = lit LED.
+   Scoped under .jb like the rest of the Jambot design system.
+
+   Geometry (iPhone portrait 390):
+     sheet content = 390 − 2×16 padding = 358
+     grid = 52 label + 8 gaps × 4 + 8 pads → pads (358 − 52 − 32) / 8 = 34.25 wide
+     drum pads 38 tall, mono pads 48 tall, gaps 4
+     JT90: 11 rows × 38 + 10 × 4 = 458 (+ 18 header + 4) */
+
+/* ---------- instrument picker (native select as a rubber key) ---------- */
+.jb .seq-pick { position: relative; }
+.jb .seq-pick select {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 44px;
+  padding: 0 40px 0 14px;
+  border: 0; border-radius: 11px;
+  background: var(--panel-4); color: var(--ink);
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 15px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  box-shadow: 0 2px 0 var(--rule), inset 0 1px 0 #fff;
+  cursor: pointer;
+}
+.jb .seq-pick select:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--rule), inset 0 1px 0 #fff; }
+.jb .seq-pick::after {
+  content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-52%);
+  font-size: 15px; color: var(--ink-2); pointer-events: none;
+}
+
+/* ---------- section row ---------- */
+.jb .seq-head { display: flex; align-items: center; gap: 10px; margin: 18px 0 8px; }
+.jb .seq-head .rule { flex: 1; height: 1px; background: var(--rule); }
+.jb .seq-led-key .jb-led { margin-right: 2px; }
+.jb .seq-pills { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 4px; }
+.jb .seq-pills::-webkit-scrollbar { display: none; }
+.jb .seq-pill {
+  flex: none; min-width: 58px; height: 46px; padding: 0 10px;
+  border: 0; border-radius: 10px;
+  background: var(--panel-4); color: var(--ink);
+  box-shadow: 0 2px 0 var(--rule), inset 0 1px 0 #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  cursor: pointer; transition: transform 0.05s, box-shadow 0.05s;
+}
+.jb .seq-pill:active { transform: translateY(2px); box-shadow: 0 0 0 var(--rule), inset 0 1px 0 #fff; }
+.jb .seq-pill .n { font-family: var(--font-panel-stack); font-weight: 600; font-size: 17px; line-height: 1; }
+.jb .seq-pill .b { font-family: var(--font-mono-stack); font-size: 10px; line-height: 1; color: var(--ink-3); letter-spacing: 0.02em; }
+.jb .seq-pill.on { background: var(--ink); color: var(--panel-2); box-shadow: 0 2px 0 #000, inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.jb .seq-pill.on .b { color: var(--led-off); }
+.jb .seq-pill.silent .n { opacity: 0.45; }
+.jb .seq-caption { margin-top: 6px; min-height: 16px; }
+
+/* ---------- overview strip ---------- */
+.jb .seq-ov { display: flex; gap: 8px; margin: 14px 0 6px; }
+.jb .seq-ov-bar { flex: 1; display: flex; gap: 3px; min-width: 0; }
+.jb .seq-ov-page {
+  position: relative; flex: 1; display: flex; gap: 2px; min-width: 0;
+  padding: 8px 2px; border: 0; background: none; cursor: pointer;
+}
+.jb .seq-ov-page.on::before {
+  content: ''; position: absolute; inset: 4px 0; border-radius: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.jb .seq-ov-cell { flex: 1; height: 4px; border-radius: 1px; background: var(--led-off); opacity: 0.6; min-width: 0; }
+.jb .seq-ov-cell.hit { background: var(--orange); opacity: 1; }
+.jb .seq-ov-cell.now { box-shadow: 0 0 0 1.5px var(--ink); opacity: 1; }
+
+/* ---------- page nav ---------- */
+.jb .seq-nav { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; }
+.jb .seq-nav .jb-key { width: 56px; height: 44px; padding: 0; font-size: 22px; letter-spacing: 0; flex: none; }
+.jb .seq-nav-readout {
+  flex: 1; text-align: center;
+  font-family: var(--font-mono-stack); font-size: 12px; letter-spacing: 0.06em; color: var(--ink-2);
+}
+.jb .seq-nav-readout b { font-weight: 500; color: var(--ink); }
+
+/* ---------- grid ---------- */
+.jb .seq-grid {
+  display: grid; grid-template-columns: 52px repeat(8, minmax(0, 1fr)); gap: 4px;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.jb .seq-grid.wide { grid-template-columns: 52px repeat(16, minmax(0, 1fr)); }
+.jb .seq-grid.off { opacity: 0.35; pointer-events: none; }
+.jb .seq-colhead {
+  height: 18px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono-stack); font-size: 11px; color: var(--ink-3); letter-spacing: 0.02em;
+}
+.jb .seq-colhead.now { color: var(--orange); font-weight: 500; }
+.jb .seq-lbl {
+  display: flex; align-items: center; padding-left: 2px; min-width: 0; overflow: hidden;
+  font-family: var(--font-panel-stack); font-weight: 600; font-size: 13px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-2); white-space: nowrap;
+}
+.jb .seq-lbl.muted { color: var(--ink-3); opacity: 0.55; }
+
+.jb .seq-pad {
+  --inner: inset 0 1px 2px rgba(0, 0, 0, 0.16);
+  --ring: 0 0 0 0 transparent;
+  position: relative; height: 38px; padding: 0; border: 0; border-radius: 6px; min-width: 0;
+  background: var(--panel-3); color: var(--ink);
+  box-shadow: var(--inner), var(--ring);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.06s, box-shadow 0.06s;
+}
+.jb .seq-pad:active { transform: translateY(1px); }
+.jb .seq-pad.beat { background: color-mix(in srgb, var(--panel-3) 86%, var(--ink)); }
+.jb .seq-pad.hit { background: var(--orange); --inner: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 1px 0 rgba(0, 0, 0, 0.18); }
+.jb .seq-pad.acc { --inner: inset 0 0 0 2px var(--ink), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.jb .seq-pad.acc::after {
+  content: ''; position: absolute; top: 5px; right: 5px; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink);
+}
+.jb .seq-pad.now { --ring: 0 0 0 1.5px var(--ink); }
+.jb .seq-pad.sel { --ring: 0 0 0 2px var(--cobalt); }
+.jb .seq-pad.sel.now { --ring: 0 0 0 2px var(--cobalt), 0 0 0 3.5px var(--panel-4); }
+
+/* mono note pads */
+.jb .seq-pad--note { height: 48px; }
+.jb .seq-pad--note .note {
+  font-family: var(--font-mono-stack); font-size: 12px; font-weight: 500; letter-spacing: 0; line-height: 1;
+  display: block; transform: translateY(-2px);
+}
+.jb .seq-pad--note .slide {
+  position: absolute; top: 3px; left: 5px; font-family: var(--font-mono-stack); font-size: 11px; line-height: 1; color: var(--ink);
+}
+.jb .seq-pad--note .pitch {
+  position: absolute; left: 4px; bottom: 4px; height: 2px; border-radius: 1px; background: var(--ink);
+  min-width: 2px;
+}
+
+/* ---------- step editor (mono) ---------- */
+.jb .seq-editor { margin-top: 12px; padding: 12px 12px 14px; }
+.jb .seq-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.jb .seq-editor-head .keys { display: flex; gap: 6px; }
+.jb .seq-editor-head .keys .jb-key { width: 48px; height: 40px; padding: 0; font-size: 20px; letter-spacing: 0; }
+.jb .seq-note-row { display: flex; align-items: baseline; gap: 12px; margin-top: 6px; }
+.jb .seq-note {
+  font-family: var(--font-panel-stack); font-weight: 700; font-size: 34px; line-height: 1; letter-spacing: 0.02em; color: var(--ink);
+  min-width: 64px;
+}
+.jb .seq-note.off { color: var(--ink-3); }
+.jb .seq-keys { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.jb .seq-keys--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.jb .seq-keys .jb-key { height: 44px; padding: 0 4px; font-size: 13px; letter-spacing: 0.08em; min-width: 0; }
+
+/* ---------- footer ---------- */
+.jb .seq-foot { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.jb .seq-foot .spacer { flex: 1; }
+.jb .seq-foot .jb-key--xs { min-width: 36px; }
+.jb .seq-foot .armed { color: var(--orange); box-shadow: inset 0 0 0 1.5px var(--orange); }
+
+/* ---------- empty / silent states ---------- */
+.jb .seq-empty { padding: 14px 12px; }
+.jb .seq-hint { margin-top: 4px; }

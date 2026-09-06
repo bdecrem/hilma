@@ -64,3 +64,6 @@ misc/Kindle_Books_Recent_200.csv
 misc/kindle-library.md
 rivian-contracts-finance/
 apps/*/build-device/
+
+# jam song builds (scripts/jam/songs/*.mjs outputs)
+/scripts/jam/songs/out/

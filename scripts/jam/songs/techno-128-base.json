@@ -1,0 +1,4516 @@
+{
+ "bars": 8,
+ "clock": {
+  "bpm": 128,
+  "swing": 0.05,
+  "beatsPerBar": 4,
+  "stepsPerBeat": 4
+ },
+ "mixer": {
+  "effectChains": {
+   "jt10": [
+    {
+     "id": "sidechain1",
+     "type": "sidechain",
+     "params": {
+      "hold": 20,
+      "amount": 0.5,
+      "attack": 5,
+      "release": 100,
+      "trigger": "kick"
+     }
+    },
+    {
+     "id": "delay1",
+     "type": "delay",
+     "params": {
+      "mix": 30,
+      "mode": "analog",
+      "sync": "off",
+      "time": 375,
+      "lowcut": 80,
+      "spread": 100,
+      "highcut": 8000,
+      "feedback": 50,
+      "saturation": 20
+     }
+    }
+   ],
+   "jb202": [
+    {
+     "id": "sidechain1",
+     "type": "sidechain",
+     "params": {
+      "hold": 20,
+      "amount": 0.5,
+      "attack": 5,
+      "release": 100,
+      "trigger": "kick"
+     }
+    }
+   ],
+   "jb202-2": [
+    {
+     "id": "sidechain1",
+     "type": "sidechain",
+     "params": {
+      "hold": 20,
+      "amount": 0.5,
+      "attack": 5,
+      "release": 100,
+      "trigger": "kick"
+     }
+    }
+   ]
+  },
+  "masterVolume": 0.8,
+  "masterInserts": [],
+  "channelInserts": {}
+ },
+ "params": {
+  "nodes": {
+   "jbs": {
+    "id": "jbs",
+    "kitId": null,
+    "level": 0,
+    "patternLength": 16
+   },
+   "bass": {
+    "id": "jb202",
+    "params": {
+     "level": 0,
+     "bass.drive": 0.25,
+     "bass.ampDecay": 0.22,
+     "bass.ampAttack": 0,
+     "bass.osc1Level": 0.7,
+     "bass.osc2Level": 0.85,
+     "bass.ampRelease": 0.12,
+     "bass.ampSustain": 0.3,
+     "bass.osc1Detune": 0.5,
+     "bass.osc1Octave": 0,
+     "bass.osc2Detune": 0.57,
+     "bass.osc2Octave": -1200,
+     "bass.filterDecay": 0.22,
+     "bass.filterAttack": 0,
+     "bass.filterCutoff": 0.45545239750006705,
+     "bass.osc1Waveform": "square",
+     "bass.osc2Waveform": "sine",
+     "bass.filterRelease": 0.3,
+     "bass.filterSustain": 0.2,
+     "bass.filterEnvAmount": 0.725,
+     "bass.filterResonance": 0.28
+    },
+    "pattern": [
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "C2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "D2",
+      "slide": true,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "G1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "E2",
+      "slide": true,
+      "accent": false
+     }
+    ]
+   },
+   "jb01": {
+    "id": "jb01",
+    "params": {
+     "level": -6,
+     "ch.tone": 0.5,
+     "ch.tune": 0,
+     "oh.tone": 0.5,
+     "oh.tune": 0,
+     "ch.decay": 0.2,
+     "ch.level": 0.5011872336272724,
+     "oh.decay": 0.6,
+     "oh.level": 0.5011872336272724,
+     "clap.tone": 0.5,
+     "kick.tune": 0,
+     "clap.decay": 0.5,
+     "clap.level": 0.5011872336272724,
+     "hitom.tune": 0,
+     "kick.decay": 0.8,
+     "kick.level": 0.5011872336272724,
+     "kick.sweep": 1,
+     "snare.tone": 0.5,
+     "snare.tune": 0,
+     "cymbal.tune": 0,
+     "hitom.decay": 0.5,
+     "hitom.level": 0.5011872336272724,
+     "kick.attack": 0.5,
+     "lowtom.tune": 0,
+     "snare.decay": 0.5,
+     "snare.level": 0.5011872336272724,
+     "cymbal.decay": 0.7,
+     "cymbal.level": 0.5011872336272724,
+     "lowtom.decay": 0.5,
+     "lowtom.level": 0.5011872336272724,
+     "snare.snappy": 0.5
+    },
+    "pattern": {
+     "ch": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "oh": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "clap": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "kick": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "hitom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "snare": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "cymbal": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "lowtom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ]
+    }
+   },
+   "jt10": {
+    "id": "jt10",
+    "params": {
+     "level": 0,
+     "lead.decay": 0.45,
+     "lead.attack": 0.02,
+     "lead.cutoff": 0.7281701090145034,
+     "lead.envMod": 0.45,
+     "lead.release": 0.35,
+     "lead.sustain": 0.2,
+     "lead.sawLevel": 0.55,
+     "lead.subLevel": 0,
+     "lead.glideTime": 1,
+     "lead.pulseWidth": 0.35
+    },
+    "pattern": [
+     {
+      "a": true,
+      "i": 6,
+      "n": "E4"
+     },
+     {
+      "i": 14,
+      "n": "G4"
+     },
+     {
+      "i": 22,
+      "n": "A4"
+     },
+     {
+      "i": 34,
+      "n": "E4"
+     },
+     {
+      "a": true,
+      "i": 38,
+      "n": "C5"
+     },
+     {
+      "i": 54,
+      "n": "B4"
+     },
+     {
+      "i": 62,
+      "n": "A4",
+      "s": true
+     }
+    ],
+    "patternLength": 64
+   },
+   "jt30": {
+    "id": "jt30",
+    "params": {
+     "level": 0
+    },
+    "patternLength": 16
+   },
+   "jt90": {
+    "id": "jt90",
+    "params": {
+     "oh.tone": 0.94,
+     "ch.decay": 0.39,
+     "ch.level": 0.017782794100389233,
+     "oh.decay": 0.62,
+     "oh.level": 0.07943282347242815,
+     "kick.tune": -700,
+     "clap.decay": 0,
+     "clap.level": 0.0005011872336272723,
+     "kick.decay": 1,
+     "kick.level": 0.26607250597988097,
+     "ride.level": 0.0005011872336272723,
+     "kick.attack": 0.4
+    },
+    "pattern": {
+     "ch": [
+      {
+       "i": 0,
+       "v": 1
+      },
+      {
+       "i": 2,
+       "v": 1
+      },
+      {
+       "i": 4,
+       "v": 1
+      },
+      {
+       "i": 6,
+       "v": 1
+      },
+      {
+       "i": 8,
+       "v": 1
+      },
+      {
+       "i": 10,
+       "v": 1
+      },
+      {
+       "i": 12,
+       "v": 1
+      },
+      {
+       "i": 14,
+       "v": 1
+      }
+     ],
+     "oh": [
+      {
+       "i": 14,
+       "v": 1
+      }
+     ],
+     "clap": [
+      {
+       "i": 4,
+       "v": 1
+      },
+      {
+       "i": 12,
+       "v": 1
+      }
+     ],
+     "kick": [
+      {
+       "i": 0,
+       "v": 1
+      },
+      {
+       "i": 4,
+       "v": 1
+      },
+      {
+       "i": 8,
+       "v": 1
+      },
+      {
+       "i": 12,
+       "v": 1
+      }
+     ],
+     "ride": [
+      {
+       "i": 0,
+       "v": 1
+      },
+      {
+       "i": 8,
+       "v": 1
+      }
+     ]
+    },
+    "patternLength": 16
+   },
+   "lead": {
+    "id": "jb202",
+    "params": {
+     "level": 0,
+     "bass.drive": 0.25,
+     "bass.ampDecay": 0.22,
+     "bass.ampAttack": 0,
+     "bass.osc1Level": 0.7,
+     "bass.osc2Level": 0.85,
+     "bass.ampRelease": 0.12,
+     "bass.ampSustain": 0.3,
+     "bass.osc1Detune": 0.5,
+     "bass.osc1Octave": 0,
+     "bass.osc2Detune": 0.57,
+     "bass.osc2Octave": -1200,
+     "bass.filterDecay": 0.22,
+     "bass.filterAttack": 0,
+     "bass.filterCutoff": 0.45545239750006705,
+     "bass.osc1Waveform": "square",
+     "bass.osc2Waveform": "sine",
+     "bass.filterRelease": 0.3,
+     "bass.filterSustain": 0.2,
+     "bass.filterEnvAmount": 0.725,
+     "bass.filterResonance": 0.28
+    },
+    "pattern": [
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "C2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "D2",
+      "slide": true,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "G1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "E2",
+      "slide": true,
+      "accent": false
+     }
+    ]
+   },
+   "drums": {
+    "id": "jb01",
+    "params": {
+     "level": -6,
+     "ch.tone": 0.5,
+     "ch.tune": 0,
+     "oh.tone": 0.5,
+     "oh.tune": 0,
+     "ch.decay": 0.2,
+     "ch.level": 0.5011872336272724,
+     "oh.decay": 0.6,
+     "oh.level": 0.5011872336272724,
+     "clap.tone": 0.5,
+     "kick.tune": 0,
+     "clap.decay": 0.5,
+     "clap.level": 0.5011872336272724,
+     "hitom.tune": 0,
+     "kick.decay": 0.8,
+     "kick.level": 0.5011872336272724,
+     "kick.sweep": 1,
+     "snare.tone": 0.5,
+     "snare.tune": 0,
+     "cymbal.tune": 0,
+     "hitom.decay": 0.5,
+     "hitom.level": 0.5011872336272724,
+     "kick.attack": 0.5,
+     "lowtom.tune": 0,
+     "snare.decay": 0.5,
+     "snare.level": 0.5011872336272724,
+     "cymbal.decay": 0.7,
+     "cymbal.level": 0.5011872336272724,
+     "lowtom.decay": 0.5,
+     "lowtom.level": 0.5011872336272724,
+     "snare.snappy": 0.5
+    },
+    "pattern": {
+     "ch": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "oh": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "clap": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "kick": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "hitom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "snare": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "cymbal": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "lowtom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ]
+    }
+   },
+   "jb202": {
+    "id": "jb202",
+    "params": {
+     "level": 0,
+     "bass.drive": 0.25,
+     "bass.ampDecay": 0.22,
+     "bass.ampAttack": 0,
+     "bass.osc1Level": 0.7,
+     "bass.osc2Level": 0.85,
+     "bass.ampRelease": 0.12,
+     "bass.ampSustain": 0.3,
+     "bass.osc1Detune": 0.5,
+     "bass.osc1Octave": 0,
+     "bass.osc2Detune": 0.57,
+     "bass.osc2Octave": -1200,
+     "bass.filterDecay": 0.22,
+     "bass.filterAttack": 0,
+     "bass.filterCutoff": 0.45545239750006705,
+     "bass.osc1Waveform": "square",
+     "bass.osc2Waveform": "sine",
+     "bass.filterRelease": 0.3,
+     "bass.filterSustain": 0.2,
+     "bass.filterEnvAmount": 0.725,
+     "bass.filterResonance": 0.28
+    },
+    "pattern": [
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "C2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "D2",
+      "slide": true,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "G1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "E2",
+      "slide": true,
+      "accent": false
+     }
+    ]
+   },
+   "synth": {
+    "id": "jb202",
+    "params": {
+     "level": 0,
+     "bass.drive": 0.25,
+     "bass.ampDecay": 0.22,
+     "bass.ampAttack": 0,
+     "bass.osc1Level": 0.7,
+     "bass.osc2Level": 0.85,
+     "bass.ampRelease": 0.12,
+     "bass.ampSustain": 0.3,
+     "bass.osc1Detune": 0.5,
+     "bass.osc1Octave": 0,
+     "bass.osc2Detune": 0.57,
+     "bass.osc2Octave": -1200,
+     "bass.filterDecay": 0.22,
+     "bass.filterAttack": 0,
+     "bass.filterCutoff": 0.45545239750006705,
+     "bass.osc1Waveform": "square",
+     "bass.osc2Waveform": "sine",
+     "bass.filterRelease": 0.3,
+     "bass.filterSustain": 0.2,
+     "bass.filterEnvAmount": 0.725,
+     "bass.filterResonance": 0.28
+    },
+    "pattern": [
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "C2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "D2",
+      "slide": true,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "G1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "E2",
+      "slide": true,
+      "accent": false
+     }
+    ]
+   },
+   "jp9000": {
+    "id": "jp9000",
+    "rack": {
+     "output": null,
+     "modules": [],
+     "outputPort": "audio",
+     "sampleRate": 44100,
+     "connections": []
+    },
+    "patternLength": 16
+   },
+   "jb202-2": {
+    "id": "jb202-2",
+    "params": {
+     "level": 0,
+     "bass.drive": 0.62,
+     "bass.ampDecay": 0.72,
+     "bass.ampAttack": 0,
+     "bass.osc1Level": 0.55,
+     "bass.osc2Level": 1,
+     "bass.ampRelease": 0.15,
+     "bass.ampSustain": 0.6,
+     "bass.osc1Detune": 0.5,
+     "bass.osc1Octave": 0,
+     "bass.osc2Detune": 0.5,
+     "bass.osc2Octave": 0,
+     "bass.filterDecay": 0.47,
+     "bass.filterAttack": 0,
+     "bass.filterCutoff": 0.1618351542953625,
+     "bass.osc1Waveform": "triangle",
+     "bass.osc2Waveform": "sine",
+     "bass.filterRelease": 0.3,
+     "bass.filterSustain": 0.2,
+     "bass.filterEnvAmount": 0.6,
+     "bass.filterResonance": 0
+    },
+    "pattern": [
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     }
+    ]
+   },
+   "sampler": {
+    "id": "jbs",
+    "kitId": null,
+    "level": 0,
+    "patternLength": 16
+   },
+   "fx.jt10.delay1": {
+    "id": "delay1",
+    "params": {
+     "mix": 30,
+     "mode": "analog",
+     "sync": "off",
+     "time": 375,
+     "lowcut": 80,
+     "spread": 100,
+     "highcut": 8000,
+     "feedback": 50,
+     "saturation": 20
+    }
+   },
+   "fx.jt10.sidechain1": {
+    "id": "sidechain1",
+    "params": {
+     "hold": 20,
+     "amount": 0.5,
+     "attack": 5,
+     "release": 100,
+     "trigger": "kick"
+    }
+   },
+   "fx.jb202.sidechain1": {
+    "id": "sidechain1",
+    "params": {
+     "hold": 20,
+     "amount": 0.5,
+     "attack": 5,
+     "release": 100,
+     "trigger": "kick"
+    }
+   },
+   "fx.jb202-2.sidechain1": {
+    "id": "sidechain1",
+    "params": {
+     "hold": 20,
+     "amount": 0.5,
+     "attack": 5,
+     "release": 100,
+     "trigger": "kick"
+    }
+   }
+  },
+  "automation": {}
+ },
+ "jbsLevel": 0,
+ "patterns": {
+  "jbs": {},
+  "jb01": {},
+  "jt10": {
+   "A": {
+    "params": {
+     "decay": 0.45,
+     "attack": 0.02,
+     "cutoff": 0.7281701090145034,
+     "envMod": 0.45,
+     "lfoRate": 0.3,
+     "lfoToPW": 0,
+     "release": 0.35,
+     "subMode": 0,
+     "sustain": 0.2,
+     "keyTrack": 0.5,
+     "sawLevel": 0.55,
+     "subLevel": 0,
+     "glideTime": 1,
+     "resonance": 0.3,
+     "lfoToPitch": 0,
+     "pulseLevel": 0.5,
+     "pulseWidth": 0.35,
+     "filterDecay": null,
+     "lfoToFilter": 0,
+     "lfoWaveform": "triangle",
+     "filterAttack": null,
+     "filterRelease": null,
+     "filterSustain": null
+    },
+    "pattern": [
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "E4",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "G4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "C5",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "B4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A4",
+      "slide": true,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "E4",
+      "slide": false,
+      "accent": false
+     }
+    ],
+    "channelInserts": null
+   }
+  },
+  "jt30": {},
+  "jt90": {
+   "A": {
+    "swing": 0,
+    "params": {
+     "ch": {
+      "tone": 1,
+      "tune": 0,
+      "decay": 0.39,
+      "level": 0.017782794100389233
+     },
+     "oh": {
+      "tone": 0.94,
+      "tune": 0,
+      "decay": 0.62,
+      "level": 0.07943282347242815
+     },
+     "clap": {
+      "tone": 0.13,
+      "decay": 0,
+      "level": 0.0005011872336272723
+     },
+     "kick": {
+      "tune": -700,
+      "decay": 1,
+      "level": 0.26607250597988097,
+      "sweep": 0.5,
+      "attack": 0.4
+     },
+     "ride": {
+      "tune": 0,
+      "decay": 1,
+      "level": 0.0005011872336272723
+     },
+     "crash": {
+      "tune": 0,
+      "decay": 1,
+      "level": 0.5011872336272724
+     },
+     "hitom": {
+      "tune": 0,
+      "decay": 0.55,
+      "level": 0.5011872336272724
+     },
+     "snare": {
+      "tone": 0.5,
+      "tune": 0,
+      "decay": 0.4,
+      "level": 0.5011872336272724,
+      "snappy": 0.5
+     },
+     "lowtom": {
+      "tune": -200,
+      "decay": 1,
+      "level": 0.5011872336272724
+     },
+     "midtom": {
+      "tune": -500,
+      "decay": 0.8,
+      "level": 0.5011872336272724
+     },
+     "rimshot": {
+      "tune": -700,
+      "decay": 0.1,
+      "level": 0.5011872336272724
+     }
+    },
+    "pattern": {
+     "ch": [
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "oh": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "clap": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "kick": [
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "ride": [
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "crash": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "hitom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "snare": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "lowtom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "midtom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "rimshot": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ]
+    },
+    "accentLevel": 1,
+    "channelInserts": null
+   },
+   "B": {
+    "swing": 0,
+    "params": {
+     "ch": {
+      "tone": 1,
+      "tune": 0,
+      "decay": 0.39,
+      "level": 0.017782794100389233
+     },
+     "oh": {
+      "tone": 0.94,
+      "tune": 0,
+      "decay": 0.62,
+      "level": 0.07943282347242815
+     },
+     "clap": {
+      "tone": 0.13,
+      "decay": 0,
+      "level": 0.0005011872336272723
+     },
+     "kick": {
+      "tune": -700,
+      "decay": 1,
+      "level": 0.26607250597988097,
+      "sweep": 0.5,
+      "attack": 0.4
+     },
+     "ride": {
+      "tune": 0,
+      "decay": 1,
+      "level": 0.0005011872336272723
+     },
+     "crash": {
+      "tune": 0,
+      "decay": 1,
+      "level": 0.5011872336272724
+     },
+     "hitom": {
+      "tune": 0,
+      "decay": 0.55,
+      "level": 0.5011872336272724
+     },
+     "snare": {
+      "tone": 0.5,
+      "tune": 0,
+      "decay": 0.4,
+      "level": 0.5011872336272724,
+      "snappy": 0.5
+     },
+     "lowtom": {
+      "tune": -200,
+      "decay": 1,
+      "level": 0.5011872336272724
+     },
+     "midtom": {
+      "tune": -500,
+      "decay": 0.8,
+      "level": 0.5011872336272724
+     },
+     "rimshot": {
+      "tune": -700,
+      "decay": 0.1,
+      "level": 0.5011872336272724
+     }
+    },
+    "pattern": {
+     "ch": [
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "oh": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "clap": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "kick": [
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "ride": [
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 1
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "crash": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "hitom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "snare": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "lowtom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "midtom": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ],
+     "rimshot": [
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      },
+      {
+       "accent": false,
+       "velocity": 0
+      }
+     ]
+    },
+    "accentLevel": 1,
+    "channelInserts": null
+   }
+  },
+  "jb202": {
+   "A": {
+    "params": {
+     "drive": 0.25,
+     "ampDecay": 0.22,
+     "ampAttack": 0,
+     "osc1Level": 0.7,
+     "osc2Level": 0.85,
+     "ampRelease": 0.12,
+     "ampSustain": 0.3,
+     "osc1Detune": 0.5,
+     "osc1Octave": 0,
+     "osc2Detune": 0.57,
+     "osc2Octave": -1200,
+     "filterDecay": 0.22,
+     "filterAttack": 0,
+     "filterCutoff": 0.45545239750006705,
+     "osc1Waveform": "square",
+     "osc2Waveform": "sine",
+     "filterRelease": 0.3,
+     "filterSustain": 0.2,
+     "filterEnvAmount": 0.725,
+     "filterResonance": 0.28
+    },
+    "pattern": [
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "C2",
+      "slide": true,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": true,
+      "note": "G1",
+      "slide": true,
+      "accent": false
+     }
+    ],
+    "channelInserts": null
+   },
+   "B": {
+    "params": {
+     "drive": 0.25,
+     "ampDecay": 0.22,
+     "ampAttack": 0,
+     "osc1Level": 0.7,
+     "osc2Level": 0.85,
+     "ampRelease": 0.12,
+     "ampSustain": 0.3,
+     "osc1Detune": 0.5,
+     "osc1Octave": 0,
+     "osc2Detune": 0.57,
+     "osc2Octave": -1200,
+     "filterDecay": 0.22,
+     "filterAttack": 0,
+     "filterCutoff": 0.45545239750006705,
+     "osc1Waveform": "square",
+     "osc2Waveform": "sine",
+     "filterRelease": 0.3,
+     "filterSustain": 0.2,
+     "filterEnvAmount": 0.725,
+     "filterResonance": 0.28
+    },
+    "pattern": [
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "C2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "D2",
+      "slide": true,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A2",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "G1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "E2",
+      "slide": true,
+      "accent": false
+     }
+    ],
+    "channelInserts": null
+   }
+  },
+  "jp9000": {},
+  "jb202-2": {
+   "A": {
+    "params": {
+     "drive": 0.62,
+     "ampDecay": 0.72,
+     "ampAttack": 0,
+     "osc1Level": 0.55,
+     "osc2Level": 1,
+     "ampRelease": 0.15,
+     "ampSustain": 0.6,
+     "osc1Detune": 0.5,
+     "osc1Octave": 0,
+     "osc2Detune": 0.5,
+     "osc2Octave": 0,
+     "filterDecay": 0.47,
+     "filterAttack": 0,
+     "filterCutoff": 0.1618351542953625,
+     "osc1Waveform": "triangle",
+     "osc2Waveform": "sine",
+     "filterRelease": 0.3,
+     "filterSustain": 0.2,
+     "filterEnvAmount": 0.6,
+     "filterResonance": 0
+    },
+    "pattern": [
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": true
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": true,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     },
+     {
+      "gate": false,
+      "note": "A1",
+      "slide": false,
+      "accent": false
+     }
+    ],
+    "channelInserts": null
+   }
+  }
+ },
+ "jb01Level": 0,
+ "jt10Level": -14,
+ "jt30Level": 0,
+ "jt90Level": 1,
+ "jb202Level": -24,
+ "arrangement": [
+  {
+   "bars": 8,
+   "patterns": {
+    "jt90": "A",
+    "jb202": "A",
+    "jb202-2": "A"
+   }
+  },
+  {
+   "bars": 8,
+   "patterns": {
+    "jt10": "A",
+    "jt90": "B",
+    "jb202": "B",
+    "jb202-2": "A"
+   }
+  }
+ ],
+ "instruments": [
+  {
+   "id": "jb01",
+   "type": "jb01",
+   "level": 0
+  },
+  {
+   "id": "jb202",
+   "type": "jb202",
+   "level": -24
+  },
+  {
+   "id": "jbs",
+   "type": "jbs",
+   "level": 0
+  },
+  {
+   "id": "jt10",
+   "type": "jt10",
+   "level": -14
+  },
+  {
+   "id": "jt30",
+   "type": "jt30",
+   "level": 0
+  },
+  {
+   "id": "jt90",
+   "type": "jt90",
+   "level": 1
+  },
+  {
+   "id": "jp9000",
+   "type": "jp9000",
+   "level": 0
+  },
+  {
+   "id": "jb202-2",
+   "type": "jb202",
+   "level": 2.5
+  }
+ ],
+ "jp9000Level": 0,
+ "currentPattern": {
+  "jbs": "A",
+  "jb01": "A",
+  "jt10": "A",
+  "jt30": "A",
+  "jt90": "B",
+  "jb202": "B",
+  "jp9000": "A",
+  "jb202-2": "A"
+ }
+}

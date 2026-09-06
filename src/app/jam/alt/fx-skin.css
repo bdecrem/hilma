@@ -1,5 +1,6 @@
-/* Delay / reverb panels for the synth-panel controls. Same knob idiom as the
-   JB202 skin (rotated .knob with a top indicator), neutral cool palette. */
+/* Delay / reverb / sidechain panels for the synth-panel controls. Same knob
+   idiom as the JB202 skin (rotated .knob with a top indicator), neutral cool
+   palette. Layout rules for the sheet live in panels-mobile.css. */
 .skin-fx {
   --bg-dark: #14151c;
   --bg-panel: #1b1d27;
@@ -18,13 +19,12 @@
   border-radius: 12px;
 }
 .skin-fx .fx-panel { background: var(--bg-panel); border-radius: 10px; padding: 14px; }
-.skin-fx .fx-header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-.skin-fx .logo-text { font-size: 22px; font-weight: 700; color: var(--accent-bright); letter-spacing: 2px; }
-.skin-fx .logo-sub { font-size: 10px; color: var(--text-dim); letter-spacing: 3px; }
 .skin-fx .fx-sections { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .skin-fx .control-section { background: var(--bg-section); border-radius: 8px; padding: 12px; }
 .skin-fx .control-section h3 { font-size: 11px; color: var(--accent); letter-spacing: 1px; margin: 0 0 10px; text-align: center; }
-.skin-fx .wave-toggle { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.skin-fx .fx-choice { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-bottom: 12px; }
+.skin-fx .fx-choice-label { font-size: 9px; color: var(--text-dim); letter-spacing: 1px; }
+.skin-fx .wave-toggle { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
 .skin-fx .wave-btn { background: var(--bg-dark); border: 1px solid var(--accent-dim); color: var(--text-dim); padding: 4px 10px; font-size: 10px; font-family: inherit; cursor: pointer; border-radius: 4px; }
 .skin-fx .wave-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg-dark); }
 .skin-fx .knob-row { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
@@ -34,14 +34,3 @@
 .skin-fx .knob { width: 40px; height: 40px; background: var(--knob-bg); border-radius: 50%; cursor: pointer; position: relative; border: 2px solid var(--accent-dim); }
 .skin-fx .knob::after { content: ''; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 3px; height: 10px; background: var(--knob-indicator); border-radius: 2px; }
 .skin-fx .knob.knob-large { width: 50px; height: 50px; }
-
-/* Shared wrapper for all panels inside the sheet */
-.jam-panels { display: flex; flex-direction: column; gap: 14px; }
-.jam-panels > * { overflow: hidden; border-radius: 12px; min-width: 0; }
-/* The originals assume a laptop-wide page; inside a phone-width sheet the
-   JT-10 grid must drop to two columns or its VCF/VCA cells get clipped. */
-.jam-panels .skin-jt10 .control-panel { grid-template-columns: repeat(2, 1fr); }
-.jam-panels .skin-jb202 .controls-grid { grid-template-columns: 1fr; }
-.jam-panels .skin-jt30 .controls { flex-wrap: wrap; gap: 0.75rem; }
-.jam-panels .skin-jt30 .knob-group { flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
-.jam-panels .jam-panel-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
