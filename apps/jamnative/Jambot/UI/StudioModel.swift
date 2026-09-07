@@ -606,7 +606,10 @@ final class StudioModel {
         voteTask = Task {
             try? await Task.sleep(nanoseconds: 350_000_000)
             guard !Task.isCancelled else { return }
-            await sendVote(turn, score)
+            // The request itself runs detached: a later tap cancels a pending
+            // debounce, never a request already on the wire (that surfaced
+            // as "Couldn't save the vote: cancelled" in build 14).
+            await Task.detached { await self.sendVote(turn, score) }.value
         }
     }
 
@@ -626,6 +629,9 @@ final class StudioModel {
             Self.log.notice("vote \(score) on turn \(turn.id, privacy: .public) tasteUpdated=\(r.tasteUpdated)")
         } catch {
             if isAuthLoss(error) { onAuthLost?(); return }
+            // A superseded request is not a failure worth a note.
+            if error is CancellationError { return }
+            if case JamAPIError.transport(let e) = error, (e as? URLError)?.code == .cancelled { return }
             feed.append(.note(id: UUID().uuidString, text: "Couldn't save the vote: \(error.localizedDescription)", error: true))
         }
     }
