@@ -20,6 +20,10 @@ struct KnobControl: View {
     var debugForceDrag: Bool = false
     var onChange: (Double) -> Void
 
+    @Environment(\.panelScale) private var panelScale
+    /// The drawn size: `size` on a phone, up to 1.25× in a wide panel.
+    private var s: CGFloat { size * panelScale }
+
     @State private var dragT: Double? = nil
     @State private var dragStartT: Double = 0
     @State private var moved = false
@@ -53,9 +57,9 @@ struct KnobControl: View {
                         .allowsHitTesting(false)
                 }
                 face
-                    .frame(width: size, height: size)
+                    .frame(width: s, height: s)
             }
-            .frame(height: size)
+            .frame(height: s)
             Text(label.uppercased())
                 .font(.system(size: 9.5, weight: .semibold))
                 .tracking(0.4)
@@ -74,13 +78,13 @@ struct KnobControl: View {
     private var face: some View {
         ZStack {
             Circle()
-                .fill(RadialGradient(colors: [skin.knobFace.0, skin.knobFace.1], center: UnitPoint(x: 0.3, y: 0.3), startRadius: 0, endRadius: size * 0.75))
+                .fill(RadialGradient(colors: [skin.knobFace.0, skin.knobFace.1], center: UnitPoint(x: 0.3, y: 0.3), startRadius: 0, endRadius: s * 0.75))
                 .overlay(Circle().stroke(dragging ? JBTheme.orange : skin.knobRing, lineWidth: dragging ? 2 : 1.5))
                 .shadow(color: .black.opacity(0.4), radius: 3, x: 0, y: 2)
             Capsule()
                 .fill(skin.knobIndicator)
-                .frame(width: max(2, size * 0.07), height: size * 0.26)
-                .offset(y: -size * 0.37)
+                .frame(width: max(2, s * 0.07), height: s * 0.26)
+                .offset(y: -s * 0.37)
                 .shadow(color: skin.knobIndicator.opacity(0.7), radius: 3)
                 .rotationEffect(.degrees(degrees))
         }

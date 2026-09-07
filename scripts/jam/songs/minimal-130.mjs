@@ -21,7 +21,7 @@
 //   1   PULSE  kick + one-note sub
 //   9   RIM    a rimshot on the "a" of 3 through a 16th delay; closed 8ths creep in
 //   17  STABS  his A stabs rise out of a closed filter; the rim grows a second hit
-//   25  LINE   his seven JT10 notes on the dotted-8th ping-pong; a dark open hat
+//   25  LINE   one dark open hat joins; the stabs settle (no top line — Bart's call)
 //   32  GHOST  one bar: kick and sub out, hats, rim and stabs hang
 //   33  PEAK   kick back on his B line, the rim lattice, one dark open hat
 //   41  PEAK 2 the stabs step out and a low JT30 answers, filter opening then snapping back; toms; two bars of ride
@@ -239,10 +239,10 @@ const plan = [
   { name: 'Pulse', bars: 8, patterns: { jt90: 'K', 'jb202-2': 'SUB' } },
   { name: 'Rim', bars: 8, patterns: { jt90: 'R1', 'jb202-2': 'SUB' } },
   { name: 'Stabs', bars: 8, patterns: { jt90: 'R2', 'jb202-2': 'SUB', jb202: 'RISE' } },
-  { name: 'Line', bars: 7, patterns: { jt90: 'R2O', 'jb202-2': 'SUB', jb202: 'A', jt10: 'A' } },
-  { name: 'Ghost', bars: 1, patterns: { jt90: 'GHOST', jb202: 'A', jt10: 'A' } },
-  { name: 'Peak', bars: 8, patterns: { jt90: 'P1', 'jb202-2': 'SUB', jb202: 'B', jt10: 'A' } },
-  { name: 'Peak 2', bars: 8, patterns: { jt90: 'P2', 'jb202-2': 'SUB', jt10: 'A', jt30: 'ACID2' } },
+  { name: 'Hat', bars: 7, patterns: { jt90: 'R2O', 'jb202-2': 'SUB', jb202: 'A' } },
+  { name: 'Ghost', bars: 1, patterns: { jt90: 'GHOST', jb202: 'A' } },
+  { name: 'Peak', bars: 8, patterns: { jt90: 'P1', 'jb202-2': 'SUB', jb202: 'B' } },
+  { name: 'Peak 2', bars: 8, patterns: { jt90: 'P2', 'jb202-2': 'SUB', jt30: 'ACID2' } },
   { name: 'Strip', bars: 8, patterns: { jt90: 'S', 'jb202-2': 'SUB', jb202: 'FALL' } },
   { name: 'Out', bars: 8, patterns: { jt90: 'K', 'jb202-2': 'SUB', jb202: 'DIM' } },
 ]
@@ -250,17 +250,18 @@ await t('set_arrangement', { sections: plan.map((s) => ({ bars: s.bars, ...s.pat
 const BARS = plan.reduce((a, s) => a + s.bars, 0)
 if (BARS !== 64) throw new Error(`arrangement is ${BARS} bars`)
 
+// The JT10 line stays saved as pattern A but out of the song and muted in loop mode.
+await t('mute_track', { track: 'jt10', mute: true })
 // Live patterns = the peak, so loop mode in the app plays the full groove.
 await t('load_pattern', { instrument: 'jt90', name: 'P1' })
 await t('load_pattern', { instrument: 'jb202', name: 'B' })
 await t('load_pattern', { instrument: 'jb202-2', name: 'SUB' })
-await t('load_pattern', { instrument: 'jt10', name: 'A' })
 await t('load_pattern', { instrument: 'jt30', name: 'ACID' })
 
 // ---------------------------------------------------------------------------
 // 8. Render, gain-stage, measure
 // ---------------------------------------------------------------------------
-const NODES = ['jt90', 'jb202', 'jb202-2', 'jt10', 'jt30']
+const NODES = ['jt90', 'jb202', 'jb202-2', 'jt30']
 const sectionBars = plan.map((s) => s.bars)
 async function render() {
   const r = await renderSessionToBuffer(session, BARS)
@@ -332,10 +333,10 @@ if (!same) process.exitCode = 1
 // ---------------------------------------------------------------------------
 // 9. track.json — what the app saves as a track
 // ---------------------------------------------------------------------------
-const brief = 'Make me one tasteful minimal techno track at 130, A minor, Mills school: my tuned-down 909 kick and one-note sub, my 202 stabs and the seven JT10 notes, a rimshot carrying the syncopation through a short delay, a low 303 answer at the peak only. 64 bars, changes only on 8-bar boundaries, one element at a time, tension from subtraction. Dry, hypnotic, no clap, no risers, no cheese.'
+const brief = 'Make me one tasteful minimal techno track at 130, A minor, Mills school: my tuned-down 909 kick and one-note sub, my 202 stabs, a rimshot carrying the syncopation through a short delay, a low 303 answer at the peak only, no top line. 64 bars, changes only on 8-bar boundaries, one element at a time, tension from subtraction. Dry, hypnotic, no clap, no risers, no cheese.'
 const description = [
-  'Kick and your one-note sub open it. At 9 a rimshot lands on the "a" of 3 through a 16th delay while the closed 8ths creep up over the eight bars; at 17 your A stabs rise out of a closed filter and the rim grows a second hit; at 25 your seven JT10 notes arrive on the dotted-8th ping-pong with one dark open hat per bar. Bar 32 is a ghost bar: kick and sub out, hats, rim and stabs hanging. At 33 the kick returns on your B line with the full rim lattice; at 41 the stabs step out and a JT30 answers low in A minor — five notes, one slide — with its filter opening across the section and snapping shut at the end, a low tom on every second bar, a mid tom every fourth, and the ride for two bars only. At 49 everything but kick, hats, one rim and the sub is gone while the A stabs sink under the filter, and from 57 it is kick, sub and the stabs closed and quiet for the next record.',
-  'Every pattern, lane and effect is yours to open: jt90 K/R1/R2/R2O/GHOST/P1/P2/S, jb202 RISE/A/B/FALL/DIM, jb202-2 SUB, jt10 A, jt30 ACID/ACID2. Loop mode plays the peak. Levels are gain-staged to peak at -0.5 dBFS with no master trim; in song mode a slider writes through to every saved pattern of that instrument.',
+  'Kick and your one-note sub open it. At 9 a rimshot lands on the "a" of 3 through a 16th delay while the closed 8ths creep up over the eight bars; at 17 your A stabs rise out of a closed filter and the rim grows a second hit; at 25 one dark open hat joins. Bar 32 is a ghost bar: kick and sub out, hats, rim and stabs hanging. At 33 the kick returns on your B line with the full rim lattice; at 41 the stabs step out and a JT30 answers low in A minor — five notes, one slide — with its filter opening across the section and snapping shut at the end, a low tom on every second bar, a mid tom every fourth, and the ride for two bars only. At 49 everything but kick, hats, one rim and the sub is gone while the A stabs sink under the filter, and from 57 it is kick, sub and the stabs closed and quiet for the next record.',
+  'Every pattern, lane and effect is yours to open: jt90 K/R1/R2/R2O/GHOST/P1/P2/S, jb202 RISE/A/B/FALL/DIM, jb202-2 SUB, jt30 ACID/ACID2 (the JT10 line is saved as A but muted and out of the song). Loop mode plays the peak. Levels are gain-staged to peak at -0.5 dBFS with no master trim; in song mode a slider writes through to every saved pattern of that instrument.',
 ].join('\n\n')
 
 writeFileSync(`${OUT}/track.json`, JSON.stringify({

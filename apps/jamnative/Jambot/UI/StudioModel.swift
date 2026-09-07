@@ -33,7 +33,18 @@ final class StudioModel {
     var feed: [FeedItem] = []
     var input: String = ""
     var busy = false
-    var controlsOpen = false
+    var controlsOpen = false {
+        didSet {
+            // Remember the session as Controls opened; Revert puts it back.
+            if controlsOpen && !oldValue {
+                controlsDirty = false
+                Task { controlsBaseline = try? await engine.serialize() }
+            }
+        }
+    }
+    /// Something changed since Controls opened (any fader, knob, M/S, Seq or track edit).
+    var controlsDirty = false
+    private var controlsBaseline: JSONValue?
     var bounceOpen = false
 
     var playing = false
@@ -147,6 +158,7 @@ final class StudioModel {
             // Votes and snapshots are a bonus on top of the track: a failed read costs the rows, not the load.
             if let v = try? await JamAPI.shared.votes(trackId: trackId) { votes = v.votes }
             if let snaps = try? await JamAPI.shared.snapshots(trackId: trackId) { snapshots = Set(snaps.map(\.turnId)) }
+            let asOpened = turns.last.flatMap { $0.endId != $0.id && !snapshots.contains($0.id) ? $0.id : nil }
             try await engine.ready()
             // `loadSession` throws on a corrupt saved session (the web
             // silently starts fresh). Staying in `.error` here means nothing
@@ -157,6 +169,9 @@ final class StudioModel {
             groups = try await engine.controls()
             status = .ready
             attachNowPlaying()
+            // A track whose last turn predates snapshots (or was imported) gets
+            // one as it opens, so ↺ on that turn undoes later hand edits.
+            if let asOpened { await saveSnapshot(turnId: asOpened, session: track.session, messages: messages, feed: Array(feed.suffix(200))) }
             // Cache-first: an unchanged track plays instantly.
             let started = Date()
             if let key = await cacheKey(), let cached = await RenderCache.shared.load(trackId: trackId, key: key) {
@@ -282,6 +297,7 @@ final class StudioModel {
     // MARK: - Controls sheet actions
 
     func onTrack(key: String, value: Double) {
+        controlsDirty = true
         Task {
             do {
                 desc = try await engine.setTrack(key: key, value: value)
@@ -293,6 +309,7 @@ final class StudioModel {
     }
 
     func onParam(path: String, value: Double, label: String) {
+        controlsDirty = true
         Task {
             do {
                 desc = try await engine.tweak(path: path, value: value)
@@ -322,6 +339,7 @@ final class StudioModel {
     }
 
     func onMix(id: String, what: String, on: Bool) {
+        controlsDirty = true
         Task {
             do {
                 desc = try await engine.mix(id: id, what: what, on: on)
@@ -341,6 +359,7 @@ final class StudioModel {
     /// An edit landed in the engine: re-render (300 ms), remember the
     /// coalesced note, autosave.
     func onSeqEdited(key: String, text: String) {
+        controlsDirty = true
         note(key: key, text: text)
         scheduleRender(delayMs: 300)
         scheduleSave()
@@ -549,6 +568,27 @@ final class StudioModel {
         await snap.value
     }
 
+    /// Controls → Revert: the session as it was when the panel opened.
+    func revertControls() async {
+        guard let base = controlsBaseline, !busy else { return }
+        do {
+            let loaded = try await engine.loadSession(session: base, bpm: bpm)
+            desc = loaded.desc
+            lastSerialized = base
+            if let g = try? await engine.controls() { groups = g }
+            pendingNotes = []
+            seqNotes.reset()
+            renderScope = .song
+            controlsDirty = false
+            await renderNow()
+            await saveNow()
+            feed.append(.note(id: UUID().uuidString, text: "Controls reverted to how they were when you opened them.", error: false))
+        } catch {
+            if isAuthLoss(error) { onAuthLost?(); return }
+            feed.append(.note(id: UUID().uuidString, text: "Couldn't revert: \(error.localizedDescription)", error: true))
+        }
+    }
+
     // MARK: - Rollback (↺ on an earlier turn)
 
     /// Turn ids with a server snapshot (the five most recent).
@@ -563,8 +603,8 @@ final class StudioModel {
     /// the last turn is the current state.
     var rollbackable: Set<String> {
         guard !busy, !rollingBack else { return [] }
-        let earlier = turns.dropLast().suffix(5)
-        return Set(earlier.map(\.id).filter { snapshots.contains($0) })
+        // The last turn too: ↺ there undoes anything done by hand since.
+        return Set(turns.suffix(5).map(\.id).filter { snapshots.contains($0) })
     }
 
     /// The track right after this turn, so ↺ can bring it back. Losing one

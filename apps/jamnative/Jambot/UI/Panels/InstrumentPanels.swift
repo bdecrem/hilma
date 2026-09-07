@@ -56,6 +56,22 @@ private struct SectionCard<Content: View>: View {
     }
 }
 
+/// Section cards stack on a phone and sit side by side once the panel is
+/// wide enough for two or three (a wide Catalyst window, an iPad) — the
+/// SwiftUI reading of the web skins' desktop grids.
+private struct AdaptiveSections<Content: View>: View {
+    var minWidth: CGFloat = 320
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.adaptive(minimum: minWidth, maximum: 640), spacing: 8, alignment: .top)], alignment: .center, spacing: 8) {
+            content()
+        }
+    }
+}
+
+/// Drum voice cards: two per row on a phone, as many as fit when wide.
+private let VOICE_GRID = [GridItem(.adaptive(minimum: 168, maximum: 360), spacing: 8, alignment: .top)]
+
 private let JB202_WAVES = ["sawtooth": "SAW", "square": "SQR", "triangle": "TRI", "sine": "SIN"]
 
 // MARK: - JB202
@@ -67,7 +83,7 @@ struct JB202Panel: View {
 
     var body: some View {
         let name = inst.id
-        VStack(spacing: 8) {
+        AdaptiveSections {
             HStack(alignment: .top, spacing: 8) {
                 oscSection("OSC 1", "osc1", name: name)
                 oscSection("OSC 2", "osc2", name: name)
@@ -154,7 +170,7 @@ struct JT10Panel: View {
 
     var body: some View {
         let name = inst.id
-        VStack(spacing: 8) {
+        AdaptiveSections {
             SectionCard(title: "VCO", skin: skin) {
                 CenteredFlowLayout(columns: 3) {
                     paramKnob(inst, sub: "sawLevel", label: "SAW", skin: skin, name: name, onParam: onParam)
@@ -278,9 +294,8 @@ struct JT90Panel: View {
     var body: some View {
         let name = inst.id
         let voices = inst.voices.isEmpty ? JT90_VOICES.map(\.0) : inst.voices
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())], spacing: 8) {
+        LazyVGrid(columns: VOICE_GRID, spacing: 8) {
             VoiceCard(name: "Master", hit: false, skin: skin, params: [], inst: inst, onParam: onParam, instName: name, master: true)
-                .gridCellColumns(2)
             ForEach(voices, id: \.self) { v in
                 VoiceCard(name: JT90_VOICES.first(where: { $0.0 == v })?.1 ?? v, hit: hitVoices.contains(v), skin: skin,
                           params: PanelParams.voiceParams(inst, voice: v), inst: inst, onParam: onParam, instName: name)
@@ -298,9 +313,8 @@ struct JB01Panel: View {
     var body: some View {
         let name = inst.id
         let voices = inst.voices.isEmpty ? JB01_VOICES.map(\.0) : inst.voices
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible())], spacing: 8) {
+        LazyVGrid(columns: VOICE_GRID, spacing: 8) {
             VoiceCard(name: "Master", hit: false, skin: skin, params: [], inst: inst, onParam: onParam, instName: name, master: true)
-                .gridCellColumns(2)
             ForEach(voices, id: \.self) { v in
                 VoiceCard(name: JB01_VOICES.first(where: { $0.0 == v })?.1 ?? v.uppercased(), hit: hitVoices.contains(v), skin: skin,
                           params: PanelParams.voiceParams(inst, voice: v), inst: inst, onParam: onParam, instName: name)

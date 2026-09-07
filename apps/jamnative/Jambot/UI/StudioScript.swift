@@ -181,6 +181,11 @@ enum StudioScript {
                 model.castVote(n, on: turn)
                 await model.voteTask?.value
                 emit("  vote \(n): turn=\(turn.id) actions=\(turn.actions.count) rows=\(model.turnEnds.count) stored=\(model.votes)")
+            case "revert":
+                let before = descValue(model, arg.isEmpty ? "jt90.ch.level" : arg)
+                let dirty = model.controlsDirty
+                await model.revertControls()
+                emit("  revert: dirty before=\(dirty) \(arg.isEmpty ? "jt90.ch.level" : arg) \(before) → \(descValue(model, arg.isEmpty ? "jt90.ch.level" : arg)) dirty after=\(model.controlsDirty)")
             case "snapshots":
                 emit("  snapshots=\(model.snapshots.count) rollbackable=\(model.rollbackable.count) turns=\(model.turns.count) feed=\(model.feed.count)")
             case "rollback":

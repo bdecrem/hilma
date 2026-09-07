@@ -33,6 +33,8 @@ struct ControlsSheetView: View {
     var body: some View {
         VStack(spacing: 0) {
             JBSheetHeader("Controls", status: (lit: model.rendering, text: model.rendering ? "rendering" : "live"),
+                          secondaryLabel: model.controlsDirty ? "Revert" : nil,
+                          onSecondary: { Task { await model.revertControls() } },
                           onDone: { model.controlsOpen = false }) {
                 JBSegmented(ControlsMode.allCases, selection: Binding(get: { mode }, set: { modeRaw = $0.rawValue }), label: \.label)
             }
@@ -73,7 +75,8 @@ struct ControlsSheetView: View {
             }
         }
         .background(JBTheme.panel)
-        .columnWidth()
+        // Wider than the Studio's 720 column: the synth panels use the room.
+        .columnWidth(1100)
         .frame(maxWidth: .infinity)
         .background(JBTheme.panel)
         .presentationBackground(JBTheme.panel)

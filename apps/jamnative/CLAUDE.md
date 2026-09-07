@@ -285,6 +285,21 @@ sheets get `.presentationBackground(JBTheme.panel)`. The synth panel skins
 `tooling/shoot-screens.sh dark|light` (→ `.shots/final-<mode>/`; `SIM_DEV="iPhone SE 3"`
 for 375 pt) and look at every PNG.
 
+## Responsive panels (2026-09-07)
+
+The Controls panel runs in a 1100pt column (`ControlsSheetView` `.columnWidth(1100)`; the Studio keeps
+720). `PanelsView` measures its width and sets `\.panelScale` (`PanelMetrics.scale`: 1× up to a phone,
+1.25× from a 700pt column); `KnobControl` draws at `size × panelScale`. `InstrumentPanels`: section
+cards sit in `AdaptiveSections` (an adaptive `LazyVGrid`, min 320pt per card → 1 column on a phone, 2–3
+when wide) and the JT-90 / JB01 voice cards in `VOICE_GRID` (min 168pt → 2 per row on a phone, 5+ when
+wide). Debug launch arg `-windowSize 1200x900` opens the Catalyst window at that size for layout checks
+(the geometry request is retried at 0.6 s and 1.5 s against the requested size). Phone layout is unchanged.
+
+Controls → Revert: `StudioModel.controlsOpen` `didSet` captures `controlsBaseline` (engine.serialize);
+every edit sets `controlsDirty`, `JBSheetHeader(secondaryLabel: "Revert")` shows while dirty,
+`revertControls()` reloads the baseline, re-renders, saves. Script step `revert[:<param path>]`.
+↺ shows on the last turn too, and `load()` saves an as-opened snapshot when the last turn has none.
+
 ## Catalyst + keyboard shortcuts (wired in stage 10)
 
 - `Jambot/UI/CatalystSupport.swift` — `View.catalystWindowChrome(title:)` sets the Mac

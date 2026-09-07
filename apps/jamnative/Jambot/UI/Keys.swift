@@ -307,12 +307,19 @@ struct JBSheetHeader<Below: View>: View {
     let title: String
     var status: (lit: Bool, text: String)? = nil
     var doneLabel: String = "Done"
+    /// An optional ghost key before Done (Controls' "Revert" while dirty):
+    /// shown when `secondaryLabel` is set.
+    var secondaryLabel: String? = nil
+    var onSecondary: (() -> Void)? = nil
     var onDone: () -> Void
     @ViewBuilder var below: () -> Below
 
     init(_ title: String, status: (lit: Bool, text: String)? = nil, doneLabel: String = "Done",
+         secondaryLabel: String? = nil, onSecondary: (() -> Void)? = nil,
          onDone: @escaping () -> Void, @ViewBuilder below: @escaping () -> Below = { EmptyView() }) {
-        self.title = title; self.status = status; self.doneLabel = doneLabel; self.onDone = onDone; self.below = below
+        self.title = title; self.status = status; self.doneLabel = doneLabel
+        self.secondaryLabel = secondaryLabel; self.onSecondary = onSecondary
+        self.onDone = onDone; self.below = below
     }
 
     var body: some View {
@@ -334,6 +341,11 @@ struct JBSheetHeader<Below: View>: View {
                     }
                 }
                 Spacer(minLength: 8)
+                if let secondaryLabel {
+                    Button(secondaryLabel) { onSecondary?() }
+                        .buttonStyle(JBKeyStyle(variant: .ghost, size: .small))
+                        .accessibilityIdentifier("sheetSecondary")
+                }
                 Button(doneLabel, action: onDone)
                     .buttonStyle(JBKeyStyle(variant: .orange, size: .small))
                     .accessibilityIdentifier("sheetDone")

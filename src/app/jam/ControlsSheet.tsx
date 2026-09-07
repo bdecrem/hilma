@@ -14,6 +14,9 @@ import type { RenderScope, Hits } from './seq/model'
 type Props = {
   open: boolean
   onClose: () => void
+  /** Something changed since the sheet opened; Revert puts the session back. */
+  dirty?: boolean
+  onRevert?: () => void
   bpm: number
   swing: number
   bars: number
@@ -42,7 +45,7 @@ type Mode = 'sliders' | 'panels' | 'seq'
 const MODE_KEY = 'jam:controlsMode'
 const isMode = (m: unknown): m is Mode => m === 'sliders' || m === 'panels' || m === 'seq'
 
-export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups, desc, rendering, loopBars, onTrack, onParam, onMix, getSession, playStep16, playScope, hits, onScope, onSeqEdit }: Props) {
+export default function ControlsSheet({ open, onClose, dirty = false, onRevert, bpm, swing, bars, groups, desc, rendering, loopBars, onTrack, onParam, onMix, getSession, playStep16, playScope, hits, onScope, onSeqEdit }: Props) {
   const inSong = !!desc && desc.arrangement.length > 0
   const [mode, setMode] = useState<Mode>('sliders')
   useEffect(() => {
@@ -87,7 +90,12 @@ export default function ControlsSheet({ open, onClose, bpm, swing, bars, groups,
               <span className="jb-readout">{rendering ? 'rendering' : 'live'}</span>
             </span>
           </div>
-          <button onClick={onClose} className="jb-key jb-key--orange jb-key--sm">Done</button>
+          <span className="flex items-center gap-2">
+            {dirty && onRevert && (
+              <button onClick={onRevert} className="jb-key jb-key--ghost jb-key--sm" title="Put everything back the way it was when you opened Controls">Revert</button>
+            )}
+            <button onClick={onClose} className="jb-key jb-key--orange jb-key--sm">Done</button>
+          </span>
         </div>
         <div className="jb-seg jb-seg--wide" role="tablist" aria-label="Control view">
           <button role="tab" aria-selected={mode === 'sliders'} onClick={() => pickMode('sliders')} className={mode === 'sliders' ? 'on' : ''}>Faders</button>

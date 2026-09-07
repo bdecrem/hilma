@@ -43,7 +43,15 @@ enum CatalystSupport {
                 // shows up (setting the UIWindow frame does nothing on
                 // Catalyst — the NSWindow keeps its 1024×768 default).
                 let origin = windowScene.effectiveGeometry.systemFrame.origin
-                let target = CGRect(origin: origin, size: defaultSize)
+                var size = defaultSize
+                #if DEBUG
+                // `-windowSize 1200x900` (headless layout checks) opens the window at that size.
+                if let i = CommandLine.arguments.firstIndex(of: "-windowSize"), i + 1 < CommandLine.arguments.count {
+                    let parts = CommandLine.arguments[i + 1].lowercased().split(separator: "x").compactMap { Double($0) }
+                    if parts.count == 2 { size = CGSize(width: parts[0], height: parts[1]) }
+                }
+                #endif
+                let target = CGRect(origin: origin, size: size)
                 let apply = {
                     windowScene.requestGeometryUpdate(.Mac(systemFrame: target)) { error in
                         Logger(subsystem: "com.bartdecrem.Jambot", category: "catalyst").error("window geometry update failed: \(error.localizedDescription, privacy: .public)")
@@ -52,8 +60,10 @@ enum CatalystSupport {
                 apply()
                 // AppKit's window restoration can land after the first
                 // appearance and put the remembered frame back; ask again.
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    if windowScene.effectiveGeometry.systemFrame.size != defaultSize { apply() }
+                for delay in [0.6, 1.5] {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                        if windowScene.effectiveGeometry.systemFrame.size != size { apply() }
+                    }
                 }
                 Self.sizedScenes.insert(ObjectIdentifier(windowScene))
             }

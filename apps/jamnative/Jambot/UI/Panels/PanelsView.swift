@@ -94,10 +94,21 @@ struct PanelsView: View {
         }
     }
 
+    @State private var measuredWidth: CGFloat = 0
+
     var body: some View {
         let list = items
         let ids = list.map(\.id)
         let open = resolveOpen(ids)
+        content(list: list, open: open)
+            // Responsive panels: the knobs and section grids follow the width
+            // this view actually gets (phone → 1×, wide Catalyst window → 1.25×).
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { measuredWidth = $0 }
+            .environment(\.panelScale, PanelMetrics.scale(forWidth: measuredWidth))
+    }
+
+    @ViewBuilder
+    private func content(list: [PanelItem], open: String?) -> some View {
         Group {
             if scrolls {
                 ScrollViewReader { proxy in

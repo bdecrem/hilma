@@ -245,3 +245,22 @@ extension Color {
     /// `Color(hex: UInt32)` initializer in Theme.swift.
     init(hex: Int) { self.init(hex: UInt32(hex)) }
 }
+
+
+// MARK: - Panel scale (responsive knobs)
+
+/// How much bigger the panel controls draw than on a phone. `PanelsView`
+/// measures its own width and sets this: 1.0 up to a phone-sized panel,
+/// rising to 1.25 in a wide Catalyst window or on an iPad, so the knobs grow
+/// with the room they get instead of floating in it.
+private struct PanelScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }
+extension EnvironmentValues {
+    var panelScale: CGFloat {
+        get { self[PanelScaleKey.self] }
+        set { self[PanelScaleKey.self] = newValue }
+    }
+}
+enum PanelMetrics {
+    /// Phone widths stay at 1; a 720pt column reaches the cap.
+    static func scale(forWidth w: CGFloat) -> CGFloat { min(1.25, max(1, w / 560)) }
+}

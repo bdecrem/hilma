@@ -242,8 +242,13 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const voteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** Turn ids that have a server snapshot (the five most recent) — ↺ shows on those. */
   const [snapshots, setSnapshots] = useState<Set<string>>(() => new Set())
+  const [snapshotsLoaded, setSnapshotsLoaded] = useState(false)
+  const openSnapRef = useRef(false)
   const [rollbackAsk, setRollbackAsk] = useState<string | null>(null)
   const [rollingBack, setRollingBack] = useState(false)
+  /** The session as it was when Controls opened; Revert goes back to it. */
+  const controlsBaselineRef = useRef<unknown>(null)
+  const [controlsDirty, setControlsDirty] = useState(false)
   const [groups, setGroups] = useState<ControlGroup[]>([])
   const [controlsOpen, setControlsOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
@@ -292,6 +297,16 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   }, [])
   const addItem = useCallback((item: FeedItem) => setFeedBoth((f) => [...f, item]), [setFeedBoth])
   const note = useCallback((text: string, error = false) => addItem({ id: nid(), kind: 'note', text, error }), [addItem])
+
+  /** The track right after a turn, so ↺ can bring it back (the server keeps five per track). */
+  const saveSnapshot = useCallback((turnId: string) => {
+    const jam = jamRef.current
+    const session = sessionRef.current
+    if (!jam || !session) return
+    api.saveSnapshot(track.id, { turnId, session: jam.serializeSession(session), messages: messagesRef.current, feed: feedRef.current.slice(-200) })
+      .then(() => setSnapshots((prev) => new Set(prev).add(turnId)))
+      .catch(() => {})
+  }, [track.id])
 
   // ---- persistence ---------------------------------------------------------
 
@@ -644,22 +659,17 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       void saveNow()
       // Snapshot the track right after this turn so ↺ can bring it back
       // (the server keeps the five most recent). Losing one only loses the ↺.
-      const jamNow = jamRef.current
-      const sessionNow = sessionRef.current
-      if (jamNow && sessionNow) {
-        api.saveSnapshot(track.id, { turnId, session: jamNow.serializeSession(sessionNow), messages: messagesRef.current, feed: feedRef.current.slice(-200) })
-          .then(() => setSnapshots((prev) => new Set(prev).add(turnId)))
-          .catch(() => {})
-      }
+      saveSnapshot(turnId)
     }
-  }, [busy, llm, addItem, setFeedBoth, refreshDesc, applyRender, note, saveNow, onAuthLost, track.id])
+  }, [busy, llm, addItem, setFeedBoth, refreshDesc, applyRender, note, saveNow, onAuthLost, saveSnapshot])
 
   // ---- turn votes (👍 / 👎 on the last agent turn) ---------------------------
 
   useEffect(() => {
     api.votes(track.id).then((r) => setVotes(r.votes)).catch(() => { /* votes are optional on open */ })
-    api.snapshots(track.id).then((r) => setSnapshots(new Set(r.snapshots.map((x) => x.turnId)))).catch(() => { /* no ↺ then */ })
+    api.snapshots(track.id).then((r) => { setSnapshots(new Set(r.snapshots.map((x) => x.turnId))); setSnapshotsLoaded(true) }).catch(() => { /* no ↺ then */ })
   }, [track.id])
+
 
   // A turn = a user message and everything the agent did until the next one.
   const turns = useMemo(() => {
@@ -695,9 +705,45 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const rollbackable = useMemo(() => {
     const ids = new Set<string>()
     if (busy || rollingBack) return ids
-    for (const { turn } of turns.slice(0, -1).slice(-5)) if (snapshots.has(turn.id)) ids.add(turn.id)
+    for (const { turn } of turns.slice(-5)) if (snapshots.has(turn.id)) ids.add(turn.id)
     return ids
   }, [turns, snapshots, busy, rollingBack])
+
+  // A track whose last turn predates snapshots (or was imported) gets one as
+  // it opens, so ↺ on that turn undoes anything done by hand afterwards.
+  useEffect(() => {
+    if (!snapshotsLoaded || !desc || busy || openSnapRef.current) return
+    const last = turns[turns.length - 1]
+    if (!last || last.endId === last.turn.id || snapshots.has(last.turn.id)) return
+    openSnapRef.current = true
+    saveSnapshot(last.turn.id)
+  }, [snapshotsLoaded, desc, busy, turns, snapshots, saveSnapshot])
+
+  // Controls: remember the session as opened; Revert puts it back.
+  useEffect(() => {
+    if (!controlsOpen) return
+    const jam = jamRef.current
+    const session = sessionRef.current
+    controlsBaselineRef.current = jam && session ? jam.serializeSession(session) : null
+    setControlsDirty(false)
+  }, [controlsOpen])
+
+  const revertControls = useCallback(async () => {
+    const jam = jamRef.current
+    const base = controlsBaselineRef.current
+    if (!jam || !base || busyRef.current) return
+    sessionRef.current = jam.deserializeSession(base)
+    if (typeof window !== 'undefined') { const w = window as unknown as { __jamSession?: unknown }; if ('__jamSession' in w) w.__jamSession = sessionRef.current }
+    controlNotesRef.current.clear()
+    seqEditsRef.current.clear()
+    renderScopeRef.current = SONG
+    setRenderScopeState(SONG)
+    refreshDesc()
+    setControlsDirty(false)
+    await renderNow(false)
+    await saveNow()
+    note('Controls reverted to how they were when you opened them.')
+  }, [refreshDesc, renderNow, saveNow, note])
 
   const rollbackTo = useCallback(async (turn: Turn) => {
     const jam = jamRef.current
@@ -709,6 +755,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       const idx = turns.findIndex((x) => x.turn.id === turn.id)
       const dropped = turns.slice(idx + 1).map(({ turn: t }) => ({ turnId: t.id, prompt: t.prompt, calls: t.calls.slice(0, 40) }))
       sessionRef.current = jam.deserializeSession(snapshot.session)
+  if (typeof window !== 'undefined') { const w = window as unknown as { __jamSession?: unknown }; if ('__jamSession' in w) w.__jamSession = sessionRef.current }
       messagesRef.current = sanitizeHistory(snapshot.messages)
       setFeedBoth(() => snapshot.feed)
       renderScopeRef.current = SONG
@@ -1072,15 +1119,17 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         desc={desc}
         rendering={rendering}
         loopBars={loopBars}
-        onTrack={onTrack}
-        onParam={onParam}
-        onMix={onMix}
+        dirty={controlsDirty}
+        onRevert={() => { void revertControls() }}
+        onTrack={(k, v) => { setControlsDirty(true); return onTrack(k, v) }}
+        onParam={(p, v, l) => { setControlsDirty(true); return onParam(p, v, l) }}
+        onMix={(id, what, on) => { setControlsDirty(true); return onMix(id, what, on) }}
         getSession={getSession}
         playStep16={playStep16}
         playScope={playedScope}
         hits={hits}
         onScope={setRenderScope}
-        onSeqEdit={onSeqEdit}
+        onSeqEdit={(key, head, edit) => { setControlsDirty(true); onSeqEdit(key, head, edit) }}
       />
 
       <div className="hidden" data-jambot-build={JAMBOT_BUILD} data-render-scope={renderScope.kind === 'section' ? `section-${renderScope.index}` : 'song'} />
