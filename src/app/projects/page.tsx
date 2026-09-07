@@ -32,11 +32,15 @@ const projects: Project[] = [
   },
   {
     name: 'jambot',
-    url: 'https://github.com/bdecrem/jambot',
-    shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style command line app with a deep custom toolset: a suite of instruments and effects plugins that you can also play <a href="https://webtoys.ai/jb01/ui/jb01/index.html" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">from the web</a>. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
-    fullDesc: 'think ableton live, rebuilt for the command line. 7 synthesizers, 5 effects processors. outputs midi, wav, stems.',
-    status: 'neglected',
-    artifacts: [{ label: 'dk019 clip', url: 'https://youtu.be/pCwjurIdBsU' }],
+    url: 'https://jambot.to',
+    shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style agent with a deep custom toolset: 909 drums, 303 acid, 101 leads, effects, song mode. it started as a command line app and is now also an iphone app, a mac app, and a web app at <a href="https://jambot.to" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">jambot.to</a>: talk, groove, publish, remix. it learns your taste from your thumbs and your corrections. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
+    fullDesc: 'think ableton live, rebuilt for an agent. 7 synthesizers, 5 effects processors. outputs midi, wav, stems. cli, iphone, mac, web.',
+    status: 'active',
+    artifacts: [
+      { label: 'github', url: 'https://github.com/bdecrem/jambot' },
+      { label: 'testflight', url: 'https://testflight.apple.com/join/gDfvCAp1' },
+      { label: 'dk019 clip', url: 'https://youtu.be/pCwjurIdBsU' },
+    ],
   },
   {
     name: 'amber',
@@ -518,7 +522,7 @@ export default function Projects() {
           </div>
           <div className={`mt-3 space-y-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
             <p>
-              currently: <a href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">setting up my mac plus</a> just so, in preparation for a year at stanford, and working on <a href="#dodo" className="underline decoration-dotted underline-offset-2">dodo</a>.
+              currently: <a href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">setting up my mac plus</a> just so, in preparation for a year at stanford, working on <a href="#dodo" className="underline decoration-dotted underline-offset-2">dodo</a>, and still noodling on <a href="#jambot" className="underline decoration-dotted underline-offset-2">jambot</a>.
             </p>
             <p>
               may 2025&ndash;2026: a year building agentic ai systems, mostly proofs of concept. a research agent on a knowledge graph of 200,000+ ai papers. a game studio where 6 agents built 65+ arcade games. a command-line daw with 7 custom synthesizers. a creative sidekick that has made 500+ generative artworks. plus, a prototype for a responsible ai incubator.
