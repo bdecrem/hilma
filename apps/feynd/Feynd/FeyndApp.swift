@@ -49,6 +49,11 @@ struct RootView: View {
         }
         .task {
             #if targetEnvironment(simulator)
+            // `-ExportPeckWorld <host dir>` — write the Peck island scenery
+            // (10/20/30 levels) to PNGs there; design handoff, no sign-in.
+            if let dir = UserDefaults.standard.string(forKey: "ExportPeckWorld") {
+                exportPeckWorld(to: dir)
+            }
             // `-HoldSplash 1` — pin the splash for screenshot verification.
             if UserDefaults.standard.bool(forKey: "HoldSplash") { return }
             #endif

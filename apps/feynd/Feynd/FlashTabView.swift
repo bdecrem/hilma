@@ -1473,3 +1473,52 @@ private struct PeckScrollOffsetKey: PreferenceKey {
         value = min(value, nextValue())
     }
 }
+
+#if targetEnvironment(simulator)
+/// `-ExportPeckWorld <host dir>` — renders the island scenery the Peck map
+/// scrolls over, at the map's real pitch, for 10, 20 and 30 levels (one,
+/// two, all three regions — the finale follows the top band) to
+/// `<dir>/peck-world-<n>.png` at 3x, with a `peck-world.log` beside them.
+/// The app draws this live and ships no image of it, so this is how the
+/// art leaves the app. Geometry numbers match FlashTabView's path geometry
+/// (pitch / topPad / bottomPad). The 30-level world is ~10.6k px tall,
+/// past what `ImageRenderer.uiImage` will rasterize (it returns nil), so
+/// the SwiftUI drawing is replayed into a plain CoreGraphics bitmap.
+@MainActor
+func exportPeckWorld(to dir: String) {
+    let pitch: CGFloat = 116, topPad: CGFloat = 40, bottomPad: CGFloat = 130
+    let width: CGFloat = 430
+    let scale: CGFloat = 3
+    var log: [String] = []
+    for count in [10, 20, 30] {
+        let height = topPad + CGFloat(count - 1) * pitch + bottomPad
+        let world = PeckWorldCanvas(height: height, levelCount: count, pitch: pitch, bottomPad: bottomPad, t: 0)
+            .frame(width: width, height: height)
+        let renderer = ImageRenderer(content: world)
+        var image: CGImage?
+        renderer.render(rasterizationScale: scale) { size, draw in
+            let w = Int((size.width * scale).rounded()), h = Int((size.height * scale).rounded())
+            guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0,
+                                      space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+                log.append("\(count): no bitmap context for \(w)x\(h)"); return
+            }
+            ctx.scaleBy(x: scale, y: scale)
+            draw(ctx)
+            image = ctx.makeImage()
+        }
+        let url = URL(fileURLWithPath: dir).appendingPathComponent("peck-world-\(count).png")
+        guard let image, let data = UIImage(cgImage: image).pngData() else {
+            log.append("\(count): render produced no image"); continue
+        }
+        do {
+            try data.write(to: url)
+            log.append("\(count): wrote \(url.lastPathComponent) \(image.width)x\(image.height)")
+        } catch {
+            log.append("\(count): write failed \(error)")
+        }
+    }
+    try? log.joined(separator: "\n").appending("\n")
+        .write(to: URL(fileURLWithPath: dir).appendingPathComponent("peck-world.log"), atomically: true, encoding: .utf8)
+}
+#endif
