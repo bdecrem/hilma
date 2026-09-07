@@ -195,10 +195,10 @@ struct StudioView: View {
                             }
                             .padding(.top, 36)
                         }
-                        let marks = model.voteMarks
+                        let ends = model.turnEnds
                         ForEach(model.feed) { item in
                             feedRow(item)
-                            if let score = marks[item.id] { voteMark(score) }
+                            if let turn = ends[item.id] { voteRow(turn) }
                         }
                         if model.busy {
                             HStack(spacing: 8) {
@@ -365,27 +365,19 @@ struct StudioView: View {
     // MARK: - Composer
 
     private var composer: some View {
-        VStack(spacing: 8) {
-            HStack(alignment: .bottom, spacing: 8) {
-                TextField("tell it what to play…", text: $model.input, prompt: jbPrompt("tell it what to play…"), axis: .vertical)
-                    .lineLimit(1...4)
-                    .jbField()
-                    .focused($composerFocused)
-                    .disabled(model.status != .ready)
+        HStack(alignment: .bottom, spacing: 8) {
+            TextField("tell it what to play…", text: $model.input, prompt: jbPrompt("tell it what to play…"), axis: .vertical)
+                .lineLimit(1...4)
+                .jbField()
+                .focused($composerFocused)
+                .disabled(model.status != .ready)
 
-                Button("Send") {
-                    model.send(model.input)
-                }
-                .buttonStyle(JBKeyStyle(variant: .orange))
-                .disabled(model.status != .ready || model.busy || model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .jambotSendShortcut { model.send(model.input) }
+            Button("Send") {
+                model.send(model.input)
             }
-            // Rate the last agent turn: 👍 / 👎, tap again for two and three
-            // thumbs, a fourth tap clears. Same "label · rule · keys" row as
-            // the rest of the desk.
-            if model.ratable, let turn = model.lastTurn {
-                voteRow(turn)
-            }
+            .buttonStyle(JBKeyStyle(variant: .orange))
+            .disabled(model.status != .ready || model.busy || model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .jambotSendShortcut { model.send(model.input) }
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)
@@ -393,41 +385,42 @@ struct StudioView: View {
         .background(JBTheme.panel3)
     }
 
+    // MARK: - Turn votes
+
+    /// The quiet icon row under a turn's last message (the ChatGPT-style
+    /// strip): thin thumbs in ink-3, filled in ink when on; a tap adds a
+    /// thumb (×2, ×3 as a small count), the fourth tap clears.
     private func voteRow(_ turn: StudioModel.Turn) -> some View {
         let score = model.votes[turn.id] ?? 0
         let up = max(0, score)
         let down = max(0, -score)
-        return JBGroupRow("LAST TURN") {
-            voteKey(String(repeating: "👍", count: max(1, up)), on: up > 0, label: "Thumbs up\(up > 0 ? " (\(up))" : "")") {
-                model.castVote(up == 3 ? 0 : up + 1)
-            }
-            voteKey(String(repeating: "👎", count: max(1, down)), on: down > 0, label: "Thumbs down\(down > 0 ? " (\(down))" : "")") {
-                model.castVote(down == 3 ? 0 : -(down + 1))
-            }
+        return HStack(spacing: 6) {
+            voteButton(symbol: "hand.thumbsup", count: up, label: "Thumbs up") { model.castVote(up == 3 ? 0 : up + 1, on: turn) }
+            voteButton(symbol: "hand.thumbsdown", count: down, label: "Thumbs down") { model.castVote(down == 3 ? 0 : -(down + 1), on: turn) }
+            Spacer(minLength: 0)
         }
+        .padding(.top, -4)
+        .padding(.leading, -6)
         .accessibilityIdentifier("voteRow")
     }
 
-    private func voteKey(_ text: String, on: Bool, label: String, action: @escaping () -> Void) -> some View {
+    private func voteButton(symbol: String, count: Int, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(text).font(.system(size: 13)).frame(minWidth: 28)
+            HStack(spacing: 3) {
+                Image(systemName: count > 0 ? "\(symbol).fill" : symbol)
+                    .font(.system(size: 14, weight: .regular))
+                if count > 1 {
+                    Text("\(count)").font(JBTheme.monoFont(10.5))
+                }
+            }
+            .foregroundStyle(count > 0 ? JBTheme.ink : JBTheme.ink3)
+            .opacity(count > 0 ? 1 : 0.75)
+            .frame(minWidth: 30, minHeight: 28)
+            .padding(.horizontal, 4)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(JBKeyStyle(variant: .panel, size: .xs))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(JBTheme.ink, lineWidth: on ? 1.5 : 0)
-                .padding(.bottom, 2) // above the key's lip
-        )
-        .accessibilityLabel(label)
-    }
-
-    /// An earlier turn's vote, after the turn's last item (`.jb-vote-mark`).
-    private func voteMark(_ score: Int) -> some View {
-        Text(String(repeating: score > 0 ? "👍" : "👎", count: min(3, abs(score))))
-            .font(.system(size: 11))
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.top, -6)
-            .accessibilityLabel("Your vote on that turn")
+        .buttonStyle(.plain)
+        .accessibilityLabel(count > 0 ? "\(label) (\(count))" : label)
     }
 }
 

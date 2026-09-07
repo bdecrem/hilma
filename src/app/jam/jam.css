@@ -303,17 +303,16 @@
 }
 .jb-rate-star.on { color: var(--orange); }
 
-/* ---------- turn votes (👍 / 👎 under the composer) ---------- */
-.jb-composer:has(+ .jb-vote) { padding-bottom: 4px; }
-.jb-vote {
-  display: flex; align-items: center; gap: 10px;
-  padding: 2px 14px calc(env(safe-area-inset-bottom) + 10px);
-  background: var(--panel-3);
+/* ---------- turn votes: the quiet icon row under a turn's last message ---------- */
+.jb-vote-row { display: flex; align-items: center; gap: 6px; margin: -4px 0 2px -6px; }
+.jb-vote-btn {
+  display: inline-flex; align-items: center; gap: 3px;
+  min-width: 30px; height: 28px; padding: 0 6px; border: 0; border-radius: 7px;
+  background: none; color: var(--ink-3); opacity: 0.75; cursor: pointer;
 }
-.jb-vote-rule { flex: 1; height: 1px; background: var(--rule); }
-.jb-vote-key { min-width: 44px; padding: 0 8px; font-size: 13px; letter-spacing: -0.04em; }
-.jb-vote-key.on { outline: 1.5px solid var(--ink); outline-offset: -1.5px; }
-.jb-vote-mark { font-size: 11px; line-height: 1; text-align: right; color: var(--ink-3); margin-top: -4px; padding-right: 2px; }
+.jb-vote-btn:hover { opacity: 1; background: rgba(0, 0, 0, 0.04); }
+.jb-vote-btn.on { color: var(--ink); opacity: 1; }
+.jb-vote-n { font-family: var(--font-mono-stack); font-size: 10.5px; line-height: 1; }
 
 /* ---------- sheet ---------- */
 .jb-sheet {

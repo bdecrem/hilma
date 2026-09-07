@@ -36,7 +36,35 @@ const nid = () => `${Date.now().toString(36)}-${(idCounter++).toString(36)}`
 
 /** The transport strip, read live from the session description. */
 type Turn = { id: string; prompt: string; actions: string[]; reply: string }
-const thumbs = (score: number) => (score > 0 ? '👍' : '👎').repeat(Math.min(3, Math.abs(score)))
+
+/** Thin line thumbs (Feather), 15 px; filled when the vote is on. */
+function ThumbIcon({ down = false, on = false }: { down?: boolean; on?: boolean }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill={on ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={down ? { transform: 'scale(-1)' } : undefined}>
+      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+    </svg>
+  )
+}
+
+/**
+ * The quiet vote row under a turn's last message (the ChatGPT-style icon
+ * strip): 👍 👎 as thin icons in ink-3, filled in ink when on; a tap adds a
+ * thumb (×2, ×3 shown as a small count), the fourth tap clears.
+ */
+function VoteRow({ score, onVote }: { score: number; onVote: (score: number) => void }) {
+  const up = score > 0 ? score : 0
+  const down = score < 0 ? -score : 0
+  return (
+    <div className="jb-vote-row" role="group" aria-label="Rate this turn">
+      <button type="button" onClick={() => onVote(up === 3 ? 0 : up + 1)} className={`jb-vote-btn${up ? ' on' : ''}`} aria-label={`Thumbs up${up ? ` (${up})` : ''}`} aria-pressed={up > 0}>
+        <ThumbIcon on={up > 0} />{up > 1 && <span className="jb-vote-n">{up}</span>}
+      </button>
+      <button type="button" onClick={() => onVote(down === 3 ? 0 : -(down + 1))} className={`jb-vote-btn${down ? ' on' : ''}`} aria-label={`Thumbs down${down ? ` (${down})` : ''}`} aria-pressed={down > 0}>
+        <ThumbIcon down on={down > 0} />{down > 1 && <span className="jb-vote-n">{down}</span>}
+      </button>
+    </div>
+  )
+}
 
 function stripFromDesc(desc: SessionDescription | null): Strip | null {
   if (!desc) return null
@@ -603,19 +631,19 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     if (cur) out.push(cur)
     return out
   }, [feed])
-  const lastTurn = turns.length ? turns[turns.length - 1] : null
-  // Only a finished turn with agent output is ratable (not a bare user message).
-  const ratable = !!lastTurn && lastTurn.endId !== lastTurn.turn.id && !busy
-  // Earlier turns show their vote as a small mark after their last item.
-  const voteMarks = useMemo(() => {
-    const m: Record<string, number> = {}
-    for (const { turn, endId } of turns.slice(0, -1)) { const sc = votes[turn.id]; if (sc) m[endId] = sc }
+  // Every finished turn with agent output gets the quiet 👍 / 👎 row after
+  // its last item (the turn still streaming — the last one while busy — waits).
+  const turnEnds = useMemo(() => {
+    const m: Record<string, Turn> = {}
+    turns.forEach(({ turn, endId }, i) => {
+      if (endId === turn.id) return
+      if (i === turns.length - 1 && busy) return
+      m[endId] = turn
+    })
     return m
-  }, [turns, votes])
+  }, [turns, busy])
 
-  const castVote = useCallback((score: number) => {
-    if (!lastTurn) return
-    const { turn } = lastTurn
+  const castVote = useCallback((turn: Turn, score: number) => {
     setVotes((v) => { const n = { ...v }; if (score === 0) delete n[turn.id]; else n[turn.id] = score; return n })
     if (voteTimer.current) clearTimeout(voteTimer.current)
     voteTimer.current = setTimeout(() => {
@@ -630,7 +658,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         state: d ? { bpm: d.bpm, bars: d.bars, swing: d.swing, instruments: d.instruments.filter((i) => i.active).map((i) => i.id), sections: d.arrangement.length } : undefined,
       }).catch((e) => note((e as Error).message || 'Could not save the vote.', true))
     }, 350)
-  }, [lastTurn, desc, track.id, note])
+  }, [desc, track.id, note])
 
   // ---- controls ------------------------------------------------------------
 
@@ -876,11 +904,11 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
                 </div>
               )
             }
-            const mark = voteMarks[it.id]
+            const turn = turnEnds[it.id]
             return (
               <Fragment key={it.id}>
                 {el}
-                {mark ? <div className="jb-vote-mark" aria-label="Your vote on that turn">{thumbs(mark)}</div> : null}
+                {turn ? <VoteRow score={votes[turn.id] ?? 0} onVote={(sc) => castVote(turn, sc)} /> : null}
               </Fragment>
             )
           })}
@@ -940,23 +968,6 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         />
         <button type="submit" disabled={!canSend} className="jb-key jb-key--orange" style={{ height: 48 }}>Send</button>
       </form>
-      {ratable && lastTurn && (() => {
-        const sc = votes[lastTurn.turn.id] ?? 0
-        const up = sc > 0 ? sc : 0
-        const down = sc < 0 ? -sc : 0
-        return (
-          <div className="jb-vote">
-            <span className="jb-eyebrow">Last turn</span>
-            <span className="jb-vote-rule" />
-            <button type="button" onClick={() => castVote(up === 3 ? 0 : up + 1)} className={`jb-key jb-key--panel jb-key--xs jb-vote-key${up ? ' on' : ''}`} aria-label={`Thumbs up${up ? ` (${up})` : ''}`}>
-              {'👍'.repeat(up || 1)}
-            </button>
-            <button type="button" onClick={() => castVote(down === 3 ? 0 : -(down + 1))} className={`jb-key jb-key--panel jb-key--xs jb-vote-key${down ? ' on' : ''}`} aria-label={`Thumbs down${down ? ` (${down})` : ''}`}>
-              {'👎'.repeat(down || 1)}
-            </button>
-          </div>
-        )
-      })()}
 
       <ControlsSheet
         open={controlsOpen}

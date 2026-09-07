@@ -175,13 +175,15 @@ enum StudioScript {
             case "vote":
                 // vote:<-3..3> on the last agent turn; waits for the server ack.
                 let n = Int(arg) ?? 0
-                let before = model.ratable
-                model.castVote(n)
+                guard let turn = model.turnEnds.values.max(by: { a, b in
+                    (model.feed.firstIndex { $0.id == a.endId } ?? 0) < (model.feed.firstIndex { $0.id == b.endId } ?? 0)
+                }) else { emit("  vote: no finished turn to rate"); break }
+                model.castVote(n, on: turn)
                 await model.voteTask?.value
-                emit("  vote \(n): ratable=\(before) turn=\(model.lastTurn?.id ?? "-") actions=\(model.lastTurn?.actions.count ?? 0) stored=\(model.votes)")
+                emit("  vote \(n): turn=\(turn.id) actions=\(turn.actions.count) rows=\(model.turnEnds.count) stored=\(model.votes)")
             case "votes":
                 let v = try? await JamAPI.shared.votes(trackId: model.trackId)
-                emit("  votes server=\(v?.votes ?? [:]) taste=\(v?.taste.votes ?? 0) note=\(v?.taste.note.map { String($0.prefix(160)) } ?? "nil") marks=\(model.voteMarks)")
+                emit("  votes server=\(v?.votes ?? [:]) taste=\(v?.taste.votes ?? 0) note=\(v?.taste.note.map { String($0.prefix(160)) } ?? "nil") rows=\(model.turnEnds.count)")
             case "starter":
                 // starter:<n> — put the nth starter prompt in the composer (what a tap does)
                 let n = max(1, min(StudioView.starters.count, Int(arg) ?? 1))

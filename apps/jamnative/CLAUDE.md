@@ -111,9 +111,9 @@ script steps `me`, `adminRename:<catalog title>|<new title>`, `adminDelete:<cata
 headlessly — with `jamtest` flipped to admin temporarily (`node scripts/jam/set-admin.mjs jamtest on|off`
 in hilma) and only against jamtest's own published copy.
 
-Taste signals: `StudioModel` derives turns from the feed (`turns`, `lastTurn`, `ratable`, `voteMarks`),
-`castVote(-3…3)` debounces to `JamAPI.vote`; the "LAST TURN · 👍 👎" row sits under the composer and
-earlier turns get a mark. `LibraryModel.rate(track, stars)` → `JamAPI.rateTrack` (the "…" menu's Rate
+Taste signals: `StudioModel` derives turns from the feed (`turns`, `turnEnds` = finished turns keyed by
+their last feed id), `castVote(-3…3, on:)` debounces to `JamAPI.vote`; `StudioView.voteRow` is the quiet
+thumbs row (SF `hand.thumbsup` / `.fill`, ×2/×3 count) under each finished turn's last message. `LibraryModel.rate(track, stars)` → `JamAPI.rateTrack` (the "…" menu's Rate
 submenu, stars on the card). Script steps: studio `vote:<n>`, `votes`; library `rate:<title>|<stars>`.
 
 Launch args: `-autoLogin <user> <pass>`, `-openTrack "<title>"`, `-openControls`,

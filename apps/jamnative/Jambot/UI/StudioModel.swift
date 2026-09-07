@@ -585,22 +585,22 @@ final class StudioModel {
 
     var lastTurn: Turn? { turns.last }
 
-    /// Only a finished turn with agent output can be rated.
-    var ratable: Bool {
-        guard let t = lastTurn else { return false }
-        return t.endId != t.id && !busy
-    }
-
-    /// Earlier turns' votes, keyed by the feed id they should appear after.
-    var voteMarks: [String: Int] {
-        var m: [String: Int] = [:]
-        for t in turns.dropLast() { if let s = votes[t.id], s != 0 { m[t.endId] = s } }
+    /// Finished turns with agent output, keyed by the feed id of their last
+    /// item — where the quiet 👍 / 👎 row goes. The turn still streaming
+    /// (the last one while busy) waits.
+    var turnEnds: [String: Turn] {
+        var m: [String: Turn] = [:]
+        let all = turns
+        for (i, t) in all.enumerated() {
+            if t.endId == t.id { continue }
+            if i == all.count - 1 && busy { continue }
+            m[t.endId] = t
+        }
         return m
     }
 
-    /// -3..3; 0 clears. Debounced so cycling 👍 → 👍👍 → 👍👍👍 sends once.
-    func castVote(_ score: Int) {
-        guard let turn = lastTurn else { return }
+    /// -3..3; 0 clears. Debounced so cycling 👍 → ×2 → ×3 sends once.
+    func castVote(_ score: Int, on turn: Turn) {
         if score == 0 { votes.removeValue(forKey: turn.id) } else { votes[turn.id] = score }
         voteTask?.cancel()
         voteTask = Task {
