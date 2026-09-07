@@ -44,8 +44,15 @@ final class JamAPI {
     private struct EmptyBody: Encodable {}
     private struct EmptyResponse: Decodable {}
 
+    /// `path` may carry a query string (`/api/jam/votes?track=…`);
+    /// `appendingPathComponent` would percent-encode the `?` and 404.
     private func url(_ path: String) -> URL {
-        Secrets.backendBaseURL.appendingPathComponent(path)
+        if let q = path.firstIndex(of: "?") {
+            var comps = URLComponents(url: Secrets.backendBaseURL.appendingPathComponent(String(path[..<q])), resolvingAgainstBaseURL: false)!
+            comps.percentEncodedQuery = String(path[path.index(after: q)...])
+            return comps.url!
+        }
+        return Secrets.backendBaseURL.appendingPathComponent(path)
     }
 
     private func request<T: Decodable>(_ path: String, method: String, body: Encodable?) async throws -> T {
