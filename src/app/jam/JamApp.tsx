@@ -116,6 +116,7 @@ export default function JamApp() {
       <Studio
         key={track.id}
         track={track}
+        admin={!!user.admin}
         onBack={() => { setTrack(null); try { localStorage.removeItem(LAST_TRACK) } catch { /* noop */ } }}
         onAuthLost={authLost}
       />

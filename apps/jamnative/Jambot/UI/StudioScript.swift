@@ -181,6 +181,11 @@ enum StudioScript {
                 model.castVote(n, on: turn)
                 await model.voteTask?.value
                 emit("  vote \(n): turn=\(turn.id) actions=\(turn.actions.count) rows=\(model.turnEnds.count) stored=\(model.votes)")
+            case "admin":
+                model.isAdmin = arg != "off"
+                emit("  admin=\(model.isAdmin)")
+            case "maxmode":
+                emit("  maxMode=\(model.maxMode) header=\(JamAPI.shared.maxMode) lastNote=\(model.feed.last.flatMap { if case .note(_, let t, _) = $0 { return t } else { return nil } } ?? "-")")
             case "revert":
                 let before = descValue(model, arg.isEmpty ? "jt90.ch.level" : arg)
                 let dirty = model.controlsDirty

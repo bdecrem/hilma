@@ -7,10 +7,10 @@ import SwiftUI
 struct StudioView: View {
     /// Starter prompts for an empty track (the web app's SUGGESTIONS).
     static let starters = [
+        "minimal techno at 130, Mills school: tuned-down 909 kick, one-note sub, a rimshot through a short delay",
         "techno at 128 with a 909 kick and offbeat hats",
         "dub techno: soft kick, chord stabs into a long delay",
         "an acid line on the 303 over a 909 kick at 130",
-        "minimal house at 122 with a fat 202 bass",
     ]
     @State private var model: StudioModel
     @Environment(\.scenePhase) private var scenePhase
@@ -45,6 +45,7 @@ struct StudioView: View {
         .jambotControlsShortcut { model.controlsOpen.toggle() }
         .task {
             model.onAuthLost = { session.authLost() }
+            model.isAdmin = session.user?.admin ?? false
             await model.load()
             model.startPlayheadClock()
             // DEBUG-only: `-openControls` opens the Controls sheet right
@@ -125,6 +126,9 @@ struct StudioView: View {
             )
             HStack(spacing: 4) {
                 Text("\(model.bpm)").fontWeight(.medium) + Text(" BPM · \(model.shownBars) \(model.shownBars == 1 ? "bar" : "bars")\(model.inSong ? (model.sectionNow.map { " · section \($0)" } ?? " · song") : "")\(model.swing > 0 ? " · swing \(Int(model.swing.rounded()))" : "")")
+                if model.maxMode {
+                    Text(" · max").foregroundStyle(JBTheme.orange)
+                }
                 if model.saveState == .saving {
                     Text(" · saving").foregroundStyle(JBTheme.ink3)
                 } else if model.saveState == .failed {

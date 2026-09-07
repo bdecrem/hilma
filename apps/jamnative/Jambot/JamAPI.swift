@@ -280,12 +280,15 @@ final class JamAPI {
     /// The track whose Studio is open — sent as x-jam-track on LLM calls so
     /// the server can mine each turn for a correction of the last (taste v2).
     var currentTrackId: String?
+    /// "jambot max" (admins): the server runs this session on the newest Fable at extra-high effort.
+    var maxMode = false
 
     func llm(body: Data) async throws -> Data {
         var req = URLRequest(url: url("/api/jam/llm"))
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "content-type")
         if let currentTrackId { req.setValue(currentTrackId, forHTTPHeaderField: "x-jam-track") }
+        if maxMode { req.setValue("1", forHTTPHeaderField: "x-jam-max") }
         req.httpBody = body
         let (data, response): (Data, URLResponse)
         do {

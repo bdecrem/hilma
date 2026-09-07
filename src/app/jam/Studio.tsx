@@ -25,10 +25,10 @@ import { renderCacheKey, loadCachedRender, saveRender } from './renderCache'
 const SONG: RenderScope = { kind: 'song' }
 
 const SUGGESTIONS = [
+  'minimal techno at 130, Mills school: tuned-down 909 kick, one-note sub, a rimshot through a short delay',
   'techno at 128 with a 909 kick and offbeat hats',
   'dub techno: soft kick, chord stabs into a long delay',
-  'add a deep sub bassline',
-  'make the kick punchier and add swing',
+  'an acid line on the 303 over a 909 kick at 130',
 ]
 
 let idCounter = 0
@@ -221,11 +221,13 @@ function closePlayer(p: LoopPlayer) {
 
 type Props = {
   track: Track
+  /** Admins can type the secret "jambot max" to run this session on the newest Fable at extra-high effort. */
+  admin?: boolean
   onBack: () => void
   onAuthLost: () => void
 }
 
-export default function Studio({ track, onBack, onAuthLost }: Props) {
+export default function Studio({ track, admin = false, onBack, onAuthLost }: Props) {
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [loadError, setLoadError] = useState('')
   const [feed, setFeed] = useState<FeedItem[]>(track.feed || [])
@@ -249,6 +251,9 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   /** The session as it was when Controls opened; Revert goes back to it. */
   const controlsBaselineRef = useRef<unknown>(null)
   const [controlsDirty, setControlsDirty] = useState(false)
+  /** "jambot max" (admins): every LLM call of this session carries x-jam-max. */
+  const [maxMode, setMaxMode] = useState(false)
+  const maxModeRef = useRef(false)
   const [groups, setGroups] = useState<ControlGroup[]>([])
   const [controlsOpen, setControlsOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
@@ -582,7 +587,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     const res = await fetch('/api/jam/llm', {
       method: 'POST',
       // x-jam-track lets the server mine this turn for a correction of the last one (taste v2).
-      headers: { 'content-type': 'application/json', 'x-jam-track': track.id },
+      headers: { 'content-type': 'application/json', 'x-jam-track': track.id, ...(maxModeRef.current ? { 'x-jam-max': '1' } : {}) },
       body: JSON.stringify({ system: req.system, messages: req.messages, tools: req.tools, max_tokens: req.max_tokens }),
       signal: req.signal,
       credentials: 'same-origin',
@@ -602,6 +607,15 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     const jam = jamRef.current
     const session = sessionRef.current
     if (!text || busy || !jam || !session) return
+    // Secret command (admins): "jambot max" / "jambot max off" — not sent to the agent.
+    if (admin && /^jambot max( off)?$/i.test(text)) {
+      const on = !/off$/i.test(text)
+      maxModeRef.current = on
+      setMaxMode(on)
+      setInput('')
+      note(on ? 'Jambot max: the newest Fable at extra-high effort, for this session.' : 'Jambot max off: back to the standard model.')
+      return
+    }
     player().unlock()
 
     const notes = Array.from(controlNotesRef.current.values())
@@ -661,7 +675,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       // (the server keeps the five most recent). Losing one only loses the ↺.
       saveSnapshot(turnId)
     }
-  }, [busy, llm, addItem, setFeedBoth, refreshDesc, applyRender, note, saveNow, onAuthLost, saveSnapshot])
+  }, [busy, llm, addItem, setFeedBoth, refreshDesc, applyRender, note, saveNow, onAuthLost, saveSnapshot, admin])
 
   // ---- turn votes (👍 / 👎 on the last agent turn) ---------------------------
 
@@ -989,6 +1003,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
           )}
           <div className="jb-readout mt-1">
             <b>{Math.round(bpm)}</b> BPM · {shownBars} {shownBars === 1 ? 'bar' : 'bars'}{inSong ? (sectionNow ? ` · section ${sectionNow}` : ' · song') : ''}{swing ? ` · swing ${swing}` : ''}
+            {maxMode && <span className="lit"> · max</span>}
             {saveState === 'saving' && <span className="jb-muted"> · saving</span>}
             {saveState === 'failed' && <span className="lit"> · not saved</span>}
           </div>

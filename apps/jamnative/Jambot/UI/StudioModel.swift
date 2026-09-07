@@ -45,6 +45,10 @@ final class StudioModel {
     /// Something changed since Controls opened (any fader, knob, M/S, Seq or track edit).
     var controlsDirty = false
     private var controlsBaseline: JSONValue?
+    /// Set by the view from the signed-in user; gates the secret "jambot max".
+    var isAdmin = false
+    /// "jambot max": this session's LLM calls run on the newest Fable at extra-high effort.
+    var maxMode = false
     var bounceOpen = false
 
     var playing = false
@@ -148,6 +152,8 @@ final class StudioModel {
     func load() async {
         status = .loading
         JamAPI.shared.currentTrackId = trackId
+        JamAPI.shared.maxMode = false
+        maxMode = false
         do {
             let track = try await JamAPI.shared.track(trackId)
             self.track = track
@@ -490,6 +496,15 @@ final class StudioModel {
     func send(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !busy, status == .ready else { return }
+        // Secret command (admins): "jambot max" / "jambot max off" — never sent to the agent.
+        if isAdmin, let m = trimmed.range(of: "^jambot max( off)?$", options: [.regularExpression, .caseInsensitive]), m.lowerBound == trimmed.startIndex {
+            let on = !trimmed.lowercased().hasSuffix("off")
+            maxMode = on
+            JamAPI.shared.maxMode = on
+            input = ""
+            feed.append(.note(id: UUID().uuidString, text: on ? "Jambot max: the newest Fable at extra-high effort, for this session." : "Jambot max off: back to the standard model.", error: false))
+            return
+        }
         input = ""
         let turnId = UUID().uuidString
         feed.append(.user(id: turnId, text: trimmed))

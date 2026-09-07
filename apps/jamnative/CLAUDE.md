@@ -120,6 +120,11 @@ studio `vote:<n>`, `votes`, `snapshots`, `rollback:<n>` (n turns before the last
 `rate:<title>|<stars>`, `star:<title>|on|off`. Rollback: `StudioModel.saveSnapshot` after each turn,
 `rollbackable` (five most recent earlier turns with a snapshot), `rollback(to:)`; the row asks inline.
 
+Secret command `jambot max` (admins; `StudioModel.isAdmin` is set from the session user in `StudioView.task`):
+flips `StudioModel.maxMode` + `JamAPI.shared.maxMode` (→ `x-jam-max: 1` on LLM calls, server switches to the
+newest Fable at xhigh effort), feed note, "· max" in the header; `jambot max off` clears; `load()` resets it.
+Script steps `admin:on|off` (forces the gate for headless checks) and `maxmode`.
+
 Launch args: `-autoLogin <user> <pass>`, `-openTrack "<title>"`, `-openControls`,
 `-studioScript "<steps>"`, `-libraryScript "<steps>"`, `-studioScriptLog <file>`,
 `-studioShotDir <dir>`, `-studioExportDir <dir>` (where `bounce:wav|aac` writes),

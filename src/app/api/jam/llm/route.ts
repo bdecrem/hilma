@@ -28,6 +28,8 @@ export const runtime = 'nodejs'
 export const maxDuration = 120
 
 const DEFAULT_MODEL = 'claude-opus-5'
+/** "jambot max": the newest Fable, extra-high effort (JAM_MAX_MODEL overrides). */
+const MAX_MODEL = 'claude-fable-5-1'
 const MAX_TOKENS_CAP = 16384
 
 /** Every Jambot system prompt starts with this (JAMBOT-PROMPT.md). */
@@ -97,8 +99,12 @@ export async function POST(req: NextRequest) {
     return err('The music service is misconfigured (usage accounting is unavailable). Try again later.', 500)
   }
 
-  const model = process.env.JAM_MODEL || DEFAULT_MODEL
+  // "jambot max" (admins only, per open track): the newest Fable at extra-high
+  // effort. The client sends x-jam-max: 1 on every call of that session.
+  const maxMode = req.headers.get('x-jam-max') === '1' && user.admin
+  const model = maxMode ? (process.env.JAM_MAX_MODEL || MAX_MODEL) : (process.env.JAM_MODEL || DEFAULT_MODEL)
   const maxTokens = Math.min(typeof max_tokens === 'number' ? max_tokens : 8192, MAX_TOKENS_CAP)
+  if (maxMode) console.log('[jam/llm] max mode', user.username, model)
 
   // The user's taste — the summarized note plus their last few votes
   // verbatim — rides along at the end of the system prompt. A transient
@@ -116,6 +122,7 @@ export async function POST(req: NextRequest) {
     res = await getClient().messages.create({
       model,
       max_tokens: maxTokens,
+      ...(maxMode ? { output_config: { effort: 'xhigh' as const } } : {}),
       system: systemPrompt as Anthropic.MessageCreateParams['system'],
       tools: tools as Anthropic.MessageCreateParams['tools'],
       messages: messages as Anthropic.MessageParam[],
