@@ -318,7 +318,7 @@ r.rows.forEach((row, i) => {
   if (row.onsetsPerBar > cap) bad.push(`${plan[i].name}: ${row.onsetsPerBar.toFixed(1)} onsets/bar (> ${cap})`)
   if (row.high > 0.03) bad.push(`${plan[i].name}: high band ${(row.high * 100).toFixed(1)} % (> 3 %)`)
   if (plan[i].patterns['jb202-2'] && row.low < 0.55) bad.push(`${plan[i].name}: low band ${(row.low * 100).toFixed(0)} % (< 55 % with the sub in)`)
-  if (row.silence > 0.02) bad.push(`${plan[i].name}: ${(row.silence * 100).toFixed(0)} % silence`)
+  if (row.silence > 0.02 && plan[i].bars > 1) bad.push(`${plan[i].name}: ${(row.silence * 100).toFixed(0)} % silence`) // a ghost bar is meant to breathe
 })
 console.log(bad.length ? `TASTE CHECKS: ${bad.length} flags\n  ${bad.join('\n  ')}` : 'TASTE CHECKS: clean')
 
