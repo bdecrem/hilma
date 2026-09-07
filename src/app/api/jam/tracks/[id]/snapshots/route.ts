@@ -11,7 +11,7 @@ import { jamDb } from '@/lib/jam/db'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export const KEEP = 5
+const KEEP = 5
 const UUID_RE = /^[0-9a-f-]{36}$/i
 const err = (error: string, status: number) => NextResponse.json({ error }, { status })
 type Ctx = { params: Promise<{ id: string }> }
