@@ -482,12 +482,12 @@ final class StudioModel {
         pendingNotes = []
         seqNotes.reset()
 
-        Task { await runTurn(trimmed, notes: notes) }
+        Task { await runTurn(trimmed, notes: notes, turnId: turnId) }
     }
 
     /// Runs one agent turn and waits for it to finish (the debug script
     /// driver awaits this; `send` fires it and returns).
-    func runTurn(_ task: String, notes: [String]) async {
+    func runTurn(_ task: String, notes: [String], turnId: String? = nil) async {
         let started = Date()
         var pendingToolIds: [String] = []
         do {
@@ -535,9 +535,18 @@ final class StudioModel {
         // any half tool round dropped.
         if let history = try? await engine.agentMessages(), !history.isEmpty { messages = history }
         if let g = try? await engine.controls() { groups = g }
+        // Capture the snapshot before the studio is free again: the next
+        // turn (a script, or a fast user) must not leak into it, and the
+        // turn id was fixed at turn start for the same reason.
+        let snapId = turnId ?? currentTurnId
+        let snapSession = try? await engine.serialize()
+        let snapMessages = messages
+        let snapFeed = Array(feed.suffix(200))
         busy = false
         await saveNow()
-        await saveSnapshot()
+        let snap = Task { await self.saveSnapshot(turnId: snapId, session: snapSession, messages: snapMessages, feed: snapFeed) }
+        pendingSnapshot = snap
+        await snap.value
     }
 
     // MARK: - Rollback (↺ on an earlier turn)
@@ -545,6 +554,9 @@ final class StudioModel {
     /// Turn ids with a server snapshot (the five most recent).
     var snapshots: Set<String> = []
     private var currentTurnId: String?
+    /// The previous turn's snapshot save, still on the wire after `busy`
+    /// went false — a rollback waits for it so it can't land afterwards.
+    private var pendingSnapshot: Task<Void, Never>?
     var rollingBack = false
 
     /// ↺ goes on the five most recent earlier turns that have a snapshot —
@@ -557,11 +569,10 @@ final class StudioModel {
 
     /// The track right after this turn, so ↺ can bring it back. Losing one
     /// only loses the ↺ for that turn.
-    private func saveSnapshot() async {
-        guard let turnId = currentTurnId, status == .ready else { return }
+    private func saveSnapshot(turnId: String?, session: JSONValue?, messages: [AgentMessage], feed: [FeedItem]) async {
+        guard let turnId, let session, status == .ready else { return }
         do {
-            let session = try await engine.serialize()
-            try await JamAPI.shared.saveSnapshot(trackId: trackId, body: SnapshotBody(turnId: turnId, session: session, messages: messages, feed: Array(feed.suffix(200))))
+            try await JamAPI.shared.saveSnapshot(trackId: trackId, body: SnapshotBody(turnId: turnId, session: session, messages: messages, feed: feed))
             snapshots.insert(turnId)
         } catch {
             Self.log.notice("snapshot not saved: \(error.localizedDescription, privacy: .public)")
@@ -572,6 +583,7 @@ final class StudioModel {
         guard !busy, !rollingBack else { return }
         rollingBack = true
         defer { rollingBack = false }
+        await pendingSnapshot?.value
         do {
             let snap = try await JamAPI.shared.snapshot(trackId: trackId, turnId: turn.id)
             let all = turns
@@ -589,6 +601,7 @@ final class StudioModel {
             await renderNow()
             await saveNow()
             try? await JamAPI.shared.rollback(trackId: trackId, body: RollbackBody(turnId: turn.id, dropped: dropped))
+            for t in all.dropFirst(idx + 1) { snapshots.remove(t.id) }
             let label = turn.prompt.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression).prefix(48)
             feed.append(.note(id: UUID().uuidString, text: "Rolled back to “\(label)”.", error: false))
             Self.log.notice("rolled back to turn \(turn.id, privacy: .public), dropped \(dropped.count)")
