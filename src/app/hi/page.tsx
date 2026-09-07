@@ -56,6 +56,10 @@ export default function HiPage() {
           <a href="https://decremental.com/#macinclaude" style={linkStyle}>
             Mac Plus
           </a>
+          , and still noodling on{' '}
+          <a href="https://decremental.com/#jambot" style={linkStyle}>
+            Jambot
+          </a>
           . See my last 15 months of AI projects{' '}
           <a href="https://decremental.com" style={linkStyle}>
             here

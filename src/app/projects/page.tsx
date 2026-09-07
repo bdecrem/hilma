@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-type Status = 'active' | 'wip' | 'respinning' | 'neglected' | 'retired'
+type Status = 'active' | 'wip' | 'respinning' | 'neglected' | 'retired' | 'cantquit'
 
 interface Project {
   name: string
@@ -35,7 +35,7 @@ const projects: Project[] = [
     url: 'https://jambot.to',
     shortDesc: 'built a fully agentic system to help me produce music. not a "make me a song" button. a claude code-style agent with a deep custom toolset: 909 drums, 303 acid, 101 leads, effects, song mode. it started as a command line app and is now also an iphone app, a mac app, and a web app at <a href="https://jambot.to" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">jambot.to</a>: talk, groove, publish, remix. it learns your taste from your thumbs and your corrections. plus apis so <a href="https://www.daskollektiv.rip" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">other ai agents</a> can make tracks too.',
     fullDesc: 'think ableton live, rebuilt for an agent. 7 synthesizers, 5 effects processors. outputs midi, wav, stems. cli, iphone, mac, web.',
-    status: 'active',
+    status: 'cantquit',
     artifacts: [
       { label: 'github', url: 'https://github.com/bdecrem/jambot' },
       { label: 'testflight', url: 'https://testflight.apple.com/join/gDfvCAp1' },
@@ -197,6 +197,7 @@ const lightTheme = {
     respinning: { label: 'booting up', color: 'text-amber-600', bg: 'bg-amber-50', dot: 'bg-amber-400' },
     neglected: { label: 'neglect (benign)', color: 'text-slate-400', bg: 'bg-slate-50', dot: 'bg-slate-300' },
     retired: { label: '\uD83E\uDED7†', color: 'text-stone-400', bg: 'bg-stone-50', dot: 'bg-stone-300' },
+    cantquit: { label: "can't quit you", color: 'text-rose-600', bg: 'bg-rose-50', dot: 'bg-rose-400' },
   },
   accent: {
     active: 'from-emerald-300 via-teal-300 to-cyan-300',
@@ -204,6 +205,7 @@ const lightTheme = {
     respinning: 'from-amber-300 via-orange-300 to-yellow-300',
     neglected: 'from-stone-200 via-stone-300 to-stone-200',
     retired: 'from-stone-200 via-stone-300 to-stone-200',
+    cantquit: 'from-rose-300 via-orange-300 to-rose-300',
   },
 }
 
@@ -227,6 +229,7 @@ const darkTheme = {
     respinning: { label: 'booting up', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
     neglected: { label: 'neglect (benign)', color: 'text-neutral-400', bg: 'bg-neutral-700', dot: 'bg-neutral-500' },
     retired: { label: '\uD83E\uDED7†', color: 'text-neutral-400', bg: 'bg-neutral-700', dot: 'bg-neutral-500' },
+    cantquit: { label: "can't quit you", color: 'text-rose-400', bg: 'bg-rose-900/30', dot: 'bg-rose-500' },
   },
   accent: {
     active: 'from-emerald-500/40 via-emerald-500/40 to-emerald-500/40',
@@ -234,6 +237,7 @@ const darkTheme = {
     respinning: 'from-amber-500/40 via-amber-500/40 to-amber-500/40',
     neglected: 'from-neutral-700 via-neutral-700 to-neutral-700',
     retired: 'from-neutral-700 via-neutral-700 to-neutral-700',
+    cantquit: 'from-rose-500/40 via-orange-500/40 to-rose-500/40',
   },
 }
 
