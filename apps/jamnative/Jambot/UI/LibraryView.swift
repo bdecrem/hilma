@@ -58,6 +58,25 @@ final class LibraryModel {
     }
 
     @discardableResult
+    /// Favourite on/off: an orange-edged card sorted first (and a taste signal).
+    func star(_ t: TrackMeta) async {
+        let on = t.starredAt == nil
+        if let idx = tracks?.firstIndex(where: { $0.id == t.id }) { tracks?[idx].starredAt = on ? ISO8601DateFormatter().string(from: Date()) : nil }
+        do {
+            let meta = try await JamAPI.shared.starTrack(t.id, starred: on)
+            if let idx = tracks?.firstIndex(where: { $0.id == t.id }) { tracks?[idx].starredAt = meta.starredAt }
+        } catch {
+            if case JamAPIError.unauthenticated = error { onAuthLost?(); return }
+            self.error = error.localizedDescription
+        }
+    }
+
+    /// Starred tracks first, otherwise the server's order (last edited first).
+    var orderedTracks: [TrackMeta]? {
+        guard let tracks else { return nil }
+        return tracks.filter { $0.starredAt != nil } + tracks.filter { $0.starredAt == nil }
+    }
+
     /// Star rating of the creation (1–5, nil clears) — a taste signal.
     func rate(_ t: TrackMeta, _ stars: Int?) async {
         if let idx = tracks?.firstIndex(where: { $0.id == t.id }) { tracks?[idx].rating = stars }
@@ -172,7 +191,7 @@ struct LibraryView: View {
                         }
 
                         VStack(spacing: 8) {
-                            ForEach(model.tracks ?? []) { t in
+                            ForEach(model.orderedTracks ?? []) { t in
                                 trackRow(t)
                             }
                         }
@@ -303,6 +322,19 @@ struct LibraryView: View {
         HStack(alignment: .center, spacing: 0) {
             Button { model.openTrack = t } label: { trackCard(t) }
                 .buttonStyle(.plain)
+            VStack(spacing: 0) {
+            // Favourite: ☆ / ★ above the "…" key; the card gets an orange edge.
+            Button {
+                Task { await model.star(t) }
+            } label: {
+                Text(t.starredAt == nil ? "☆" : "★")
+                    .font(.system(size: 17))
+                    .foregroundStyle(t.starredAt == nil ? JBTheme.ink3 : JBTheme.orange)
+                    .frame(width: 44, height: 32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(t.starredAt == nil ? "Star" : "Unstar")
             Menu {
                 // Star rating of the whole creation (taste signal); the
                 // current star clears it, like the web's row of stars.
@@ -341,8 +373,15 @@ struct LibraryView: View {
             }
             .disabled(model.busyTrackId == t.id)
             .accessibilityLabel("Track options")
+            }
+            .padding(.vertical, 6)
         }
         .jbCard()
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(JBTheme.orange, lineWidth: 1.5)
+                .opacity(t.starredAt == nil ? 0 : 1)
+        )
     }
 
     private func trackCard(_ t: TrackMeta) -> some View {

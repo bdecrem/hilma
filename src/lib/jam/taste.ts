@@ -36,7 +36,7 @@ const STARTING_POINTS_MAX = 30
 const GOOD_TRACKS_FOR_POINTS = 8
 const NOTE_MAX_CHARS = 1200
 
-export type SignalSource = 'vote' | 'correction' | 'praise' | 'bounce' | 'publish'
+export type SignalSource = 'vote' | 'correction' | 'praise' | 'bounce' | 'publish' | 'star' | 'rollback'
 
 export type ToolCall = { name: string; input?: unknown }
 
@@ -122,15 +122,20 @@ export async function recordVote(userId: string, v: VoteInput): Promise<void> {
   return recordSignal(userId, { ...v, source: 'vote' })
 }
 
-/** A whole-track implicit signal: bounce (export) +2, publish +3. One row per track and kind. */
-export async function recordImplicit(userId: string, trackId: string, kind: 'bounce' | 'publish', title?: string): Promise<void> {
+/** A whole-track signal: bounce (export) +2, publish +3, star +3. One row per track and kind. */
+export async function recordImplicit(userId: string, trackId: string, kind: 'bounce' | 'publish' | 'star', title?: string): Promise<void> {
   return recordSignal(userId, {
     trackId,
     turnId: `track:${kind}`,
-    score: kind === 'publish' ? 3 : 2,
+    score: kind === 'bounce' ? 2 : 3,
     source: kind,
     prompt: title,
   })
+}
+
+/** Remove a whole-track signal (an unstar). */
+export async function removeImplicit(userId: string, trackId: string, kind: 'bounce' | 'publish' | 'star'): Promise<void> {
+  return recordSignal(userId, { trackId, turnId: `track:${kind}`, score: 0 })
 }
 
 /** turnId → score for one track (the Studio's thumbs rows read the `vote` rows). */
@@ -174,6 +179,8 @@ export async function recentSignals(userId: string, limit = RECENT_IN_PROMPT): P
       case 'praise': return `${thumbs(score)} they praised the result of "${asked}"${did}${reason}`
       case 'bounce': return `${thumbs(score)} they bounced (exported) "${asked}"`
       case 'publish': return `${thumbs(score)} they published "${asked}"`
+      case 'star': return `${thumbs(score)} they starred "${asked}"`
+      case 'rollback': return `${thumbs(score)} they rolled back past the turn "${asked}"${did}`
       default: return `${thumbs(score)} on "${asked}"${did}${said}`
     }
   })
@@ -245,8 +252,8 @@ const round = (x: number) => (Math.abs(x) >= 100 ? Math.round(x) : Math.round(x 
 export async function startingPoints(userId: string): Promise<string[]> {
   const db = jamDb()
   const [{ data: sig, error: se }, { data: rated, error: re }] = await Promise.all([
-    db.from('jam_votes').select('track_id').eq('user_id', userId).in('source', ['bounce', 'publish']),
-    db.from('jam_tracks').select('id').eq('user_id', userId).gte('rating', 4),
+    db.from('jam_votes').select('track_id').eq('user_id', userId).in('source', ['bounce', 'publish', 'star']),
+    db.from('jam_tracks').select('id').eq('user_id', userId).or('rating.gte.4,starred_at.not.is.null'),
   ])
   if (se) throw new Error(`jam_votes read failed: ${se.message}`)
   if (re) throw new Error(`jam_tracks read failed: ${re.message}`)
@@ -413,7 +420,7 @@ export async function maybeRefreshTaste(userId: string): Promise<boolean> {
 
 const NOTE_SYSTEM = `You write a short private production note about one Jambot user, from the signals they gave on the agent's work.
 
-Jambot is an AI groovebox: the user asks for beats in words and an agent programs drum machines and synths (909 and 808-style drums, 303 acid, 101 leads, 202 bass, delay, reverb, sidechain, song arrangements). Signals, each on one turn unless said otherwise: vote = an explicit thumbs, +1..+3 liked (more = stronger), -1..-3 disliked; correction = the user pushed back on what the agent had just done (its reason says what was wrong), -1..-3 by strength; praise = they explicitly liked a result; bounce = they exported the whole track; publish = they put the whole track on the public catalog; star ratings rate a whole finished track 1–5. Each signal lists the tool calls the agent made (with parameter paths and values in the agent's units) — attach preferences to those concrete parameters when the signals support it. Whole-track signals (stars, bounce, publish) weigh more than a single turn.
+Jambot is an AI groovebox: the user asks for beats in words and an agent programs drum machines and synths (909 and 808-style drums, 303 acid, 101 leads, 202 bass, delay, reverb, sidechain, song arrangements). Signals, each on one turn unless said otherwise: vote = an explicit thumbs, +1..+3 liked (more = stronger), -1..-3 disliked; correction = the user pushed back on what the agent had just done (its reason says what was wrong), -1..-3 by strength; praise = they explicitly liked a result; rollback = they went back to an earlier point, throwing that turn's work away; bounce = they exported the whole track; publish = they put the whole track on the public catalog; star = they marked the whole track a favourite; star ratings rate a whole finished track 1–5. Each signal lists the tool calls the agent made (with parameter paths and values in the agent's units) — attach preferences to those concrete parameters when the signals support it. Whole-track signals (stars, bounce, publish) weigh more than a single turn.
 
 Write at most 120 words of plain text in exactly this shape, one line each, and leave a line out when the signals say nothing about it:
 Likes: …

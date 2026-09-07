@@ -44,6 +44,8 @@ struct TrackMeta: Codable, Identifiable, Equatable, Hashable {
     var remixOf: String?
     /// The user's own 1–5 star rating of the creation (taste signal).
     var rating: Int?
+    /// Favourite: set when starred (orange-edged card, sorted first).
+    var starredAt: String?
 
     enum CodingKeys: String, CodingKey {
         case id, title, bpm, bars, strip, slug, rating
@@ -51,8 +53,30 @@ struct TrackMeta: Codable, Identifiable, Equatable, Hashable {
         case updatedAt = "updated_at"
         case publishedAt = "published_at"
         case remixOf = "remix_of"
+        case starredAt = "starred_at"
     }
 }
+
+// MARK: - Rollback snapshots
+
+struct SnapshotMeta: Decodable, Equatable { let turnId: String; let createdAt: String }
+struct SnapshotList: Decodable { let snapshots: [SnapshotMeta] }
+struct Snapshot: Decodable {
+    let turnId: String
+    let session: JSONValue?
+    let messages: [AgentMessage]
+    let feed: [FeedItem]
+    let createdAt: String
+}
+struct SnapshotResponse: Decodable { let snapshot: Snapshot }
+struct SnapshotBody: Encodable {
+    let turnId: String
+    let session: JSONValue?
+    let messages: [AgentMessage]
+    let feed: [FeedItem]
+}
+struct RollbackBody: Encodable { let turnId: String; let dropped: [JSONValue] }
+struct StarBody: Encodable { let starred: Bool }
 
 // MARK: - Taste signals (turn votes, star ratings)
 

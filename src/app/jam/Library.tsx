@@ -37,6 +37,20 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
     }
   }
 
+  // Favourite: an orange-edged card sorted first (and a whole-track taste signal).
+  const star = async (t: TrackMeta) => {
+    const on = !t.starred_at
+    setTracks((ts) => (ts ? ts.map((x) => (x.id === t.id ? { ...x, starred_at: on ? new Date().toISOString() : null } : x)) : ts))
+    try {
+      const { track } = await api.saveTrack(t.id, { starred: on })
+      setTracks((ts) => (ts ? ts.map((x) => (x.id === t.id ? { ...x, starred_at: track.starred_at ?? null } : x)) : ts))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  // Starred tracks first, otherwise the server's order (last edited first).
+  const ordered = tracks ? [...tracks.filter((t) => t.starred_at), ...tracks.filter((t) => !t.starred_at)] : null
+
   // Star rating of the creation (1–5; tapping the current star clears it).
   const rate = async (id: string, stars: number | null) => {
     setTracks((t) => (t ? t.map((x) => (x.id === id ? { ...x, rating: stars } : x)) : t))
@@ -104,8 +118,8 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
           <p className="jb-body jb-muted mt-8 text-center">No tracks yet. Start one and tell it what you want to hear.</p>
         )}
         <ul className="flex flex-col gap-2">
-          {tracks?.map((t) => (
-            <li key={t.id} className="jb-card jb-track">
+          {ordered?.map((t) => (
+            <li key={t.id} className={`jb-card jb-track${t.starred_at ? ' is-starred' : ''}`}>
               <button onClick={() => onOpen(t.id)} className="jb-track-main">
                 <div className="jb-row">
                   <span className="jb-track-name">{t.title}</span>
@@ -119,6 +133,10 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
                   <b>{t.bpm}</b> BPM · {t.bars} {t.bars === 1 ? 'bar' : 'bars'} · {relTime(t.updated_at)}
                   {t.rating ? <span className="jb-stars" aria-label={`${t.rating} of 5 stars`}> · {'★'.repeat(t.rating)}</span> : null}
                 </div>
+              </button>
+              <div className="jb-track-side">
+              <button onClick={() => star(t)} className={`jb-star${t.starred_at ? ' on' : ''}`} aria-label={t.starred_at ? 'Unstar' : 'Star'} aria-pressed={!!t.starred_at} title={t.starred_at ? 'Starred' : 'Star this track'}>
+                {t.starred_at ? '★' : '☆'}
               </button>
               {menu === t.id ? (
                 <div className="flex flex-col justify-center gap-1 pr-2">
@@ -146,6 +164,7 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
                   …
                 </button>
               )}
+              </div>
             </li>
           ))}
         </ul>

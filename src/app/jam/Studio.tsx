@@ -51,9 +51,35 @@ function ThumbIcon({ down = false, on = false }: { down?: boolean; on?: boolean 
  * strip): 👍 👎 as thin icons in ink-3, filled in ink when on; a tap adds a
  * thumb (×2, ×3 shown as a small count), the fourth tap clears.
  */
-function VoteRow({ score, onVote }: { score: number; onVote: (score: number) => void }) {
+function RewindIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 4v6h6" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+    </svg>
+  )
+}
+
+type VoteRowProps = {
+  score: number
+  onVote: (score: number) => void
+  /** ↺ is offered on the five most recent earlier turns that have a snapshot. */
+  canRollback?: boolean
+  asking?: boolean
+  onRollback?: (what: 'ask' | 'confirm' | 'cancel') => void
+}
+
+function VoteRow({ score, onVote, canRollback = false, asking = false, onRollback }: VoteRowProps) {
   const up = score > 0 ? score : 0
   const down = score < 0 ? -score : 0
+  if (asking) {
+    return (
+      <div className="jb-vote-row" role="group" aria-label="Roll back">
+        <span className="jb-vote-ask">Back to here? Later turns and edits are dropped.</span>
+        <button type="button" onClick={() => onRollback?.('confirm')} className="jb-key jb-key--orange jb-key--xs">Roll back</button>
+        <button type="button" onClick={() => onRollback?.('cancel')} className="jb-key jb-key--ghost jb-key--xs">Keep</button>
+      </div>
+    )
+  }
   return (
     <div className="jb-vote-row" role="group" aria-label="Rate this turn">
       <button type="button" onClick={() => onVote(up === 3 ? 0 : up + 1)} className={`jb-vote-btn${up ? ' on' : ''}`} aria-label={`Thumbs up${up ? ` (${up})` : ''}`} aria-pressed={up > 0}>
@@ -62,6 +88,11 @@ function VoteRow({ score, onVote }: { score: number; onVote: (score: number) => 
       <button type="button" onClick={() => onVote(down === 3 ? 0 : -(down + 1))} className={`jb-vote-btn${down ? ' on' : ''}`} aria-label={`Thumbs down${down ? ` (${down})` : ''}`} aria-pressed={down > 0}>
         <ThumbIcon down on={down > 0} />{down > 1 && <span className="jb-vote-n">{down}</span>}
       </button>
+      {canRollback && (
+        <button type="button" onClick={() => onRollback?.('ask')} className="jb-vote-btn" aria-label="Roll back to this point" title="Roll back to this point">
+          <RewindIcon />
+        </button>
+      )}
     </div>
   )
 }
@@ -209,6 +240,10 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   /** turnId (the user message that started the turn) → -3..3, from jam_votes. */
   const [votes, setVotes] = useState<Record<string, number>>({})
   const voteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** Turn ids that have a server snapshot (the five most recent) — ↺ shows on those. */
+  const [snapshots, setSnapshots] = useState<Set<string>>(() => new Set())
+  const [rollbackAsk, setRollbackAsk] = useState<string | null>(null)
+  const [rollingBack, setRollingBack] = useState(false)
   const [groups, setGroups] = useState<ControlGroup[]>([])
   const [controlsOpen, setControlsOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
@@ -559,7 +594,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     seqEditsRef.current.clear()
     const task = notes.length ? `${text}\n\n[controls] ${notes.join('; ')}` : text
 
-    addItem({ id: nid(), kind: 'user', text })
+    const turnId = nid()
+    addItem({ id: turnId, kind: 'user', text })
     if (titleRef.current === 'Untitled') {
       let t = text.replace(/\s+/g, ' ').split(/[.!?:;]\s/)[0].trim()
       if (t.length > 40) t = t.slice(0, 40).replace(/\s+\S*$/, '')
@@ -606,13 +642,23 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       busyRef.current = false
       refreshDesc()
       void saveNow()
+      // Snapshot the track right after this turn so ↺ can bring it back
+      // (the server keeps the five most recent). Losing one only loses the ↺.
+      const jamNow = jamRef.current
+      const sessionNow = sessionRef.current
+      if (jamNow && sessionNow) {
+        api.saveSnapshot(track.id, { turnId, session: jamNow.serializeSession(sessionNow), messages: messagesRef.current, feed: feedRef.current.slice(-200) })
+          .then(() => setSnapshots((prev) => new Set(prev).add(turnId)))
+          .catch(() => {})
+      }
     }
-  }, [busy, llm, addItem, setFeedBoth, refreshDesc, applyRender, note, saveNow, onAuthLost])
+  }, [busy, llm, addItem, setFeedBoth, refreshDesc, applyRender, note, saveNow, onAuthLost, track.id])
 
   // ---- turn votes (👍 / 👎 on the last agent turn) ---------------------------
 
   useEffect(() => {
     api.votes(track.id).then((r) => setVotes(r.votes)).catch(() => { /* votes are optional on open */ })
+    api.snapshots(track.id).then((r) => setSnapshots(new Set(r.snapshots.map((x) => x.turnId)))).catch(() => { /* no ↺ then */ })
   }, [track.id])
 
   // A turn = a user message and everything the agent did until the next one.
@@ -643,6 +689,41 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     })
     return m
   }, [turns, busy])
+
+  // ↺ on the five most recent earlier turns that have a snapshot (the last
+  // turn is the current state — nothing to go back to).
+  const rollbackable = useMemo(() => {
+    const ids = new Set<string>()
+    if (busy || rollingBack) return ids
+    for (const { turn } of turns.slice(0, -1).slice(-5)) if (snapshots.has(turn.id)) ids.add(turn.id)
+    return ids
+  }, [turns, snapshots, busy, rollingBack])
+
+  const rollbackTo = useCallback(async (turn: Turn) => {
+    const jam = jamRef.current
+    if (!jam || busyRef.current) return
+    setRollbackAsk(null)
+    setRollingBack(true)
+    try {
+      const { snapshot } = await api.snapshot(track.id, turn.id)
+      const idx = turns.findIndex((x) => x.turn.id === turn.id)
+      const dropped = turns.slice(idx + 1).map(({ turn: t }) => ({ turnId: t.id, prompt: t.prompt, calls: t.calls.slice(0, 40) }))
+      sessionRef.current = jam.deserializeSession(snapshot.session)
+      messagesRef.current = sanitizeHistory(snapshot.messages)
+      setFeedBoth(() => snapshot.feed)
+      renderScopeRef.current = SONG
+      setRenderScopeState(SONG)
+      refreshDesc()
+      await renderNow(false)
+      await saveNow()
+      api.rollback(track.id, { turnId: turn.id, dropped }).catch(() => {})
+      note(`Rolled back to “${turn.prompt.replace(/\s+/g, ' ').slice(0, 48)}”.`)
+    } catch (e) {
+      note(`Couldn't roll back: ${(e as Error).message}`, true)
+    } finally {
+      setRollingBack(false)
+    }
+  }, [turns, track.id, setFeedBoth, refreshDesc, renderNow, saveNow, note])
 
   const castVote = useCallback((turn: Turn, score: number) => {
     setVotes((v) => { const n = { ...v }; if (score === 0) delete n[turn.id]; else n[turn.id] = score; return n })
@@ -912,7 +993,15 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
             return (
               <Fragment key={it.id}>
                 {el}
-                {turn ? <VoteRow score={votes[turn.id] ?? 0} onVote={(sc) => castVote(turn, sc)} /> : null}
+                {turn ? (
+                  <VoteRow
+                    score={votes[turn.id] ?? 0}
+                    onVote={(sc) => castVote(turn, sc)}
+                    canRollback={rollbackable.has(turn.id)}
+                    asking={rollbackAsk === turn.id}
+                    onRollback={(what) => { if (what === 'ask') setRollbackAsk(turn.id); else if (what === 'cancel') setRollbackAsk(null); else void rollbackTo(turn) }}
+                  />
+                ) : null}
               </Fragment>
             )
           })}

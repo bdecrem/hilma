@@ -18,6 +18,8 @@ struct StudioView: View {
     @Environment(Session.self) private var session
     @FocusState private var composerFocused: Bool
     @State private var expandedTools: Set<String> = []
+    /// The turn whose row is asking "Back to here?" (↺ tapped).
+    @State private var rollbackAsk: String? = nil
 
     init(trackId: String, initialMeta: TrackMeta?, engine: EngineAPI) {
         _model = State(initialValue: StudioModel(trackId: trackId, initialMeta: initialMeta, engine: engine))
@@ -390,18 +392,49 @@ struct StudioView: View {
     /// The quiet icon row under a turn's last message (the ChatGPT-style
     /// strip): thin thumbs in ink-3, filled in ink when on; a tap adds a
     /// thumb (×2, ×3 as a small count), the fourth tap clears.
+    @ViewBuilder
     private func voteRow(_ turn: StudioModel.Turn) -> some View {
         let score = model.votes[turn.id] ?? 0
         let up = max(0, score)
         let down = max(0, -score)
-        return HStack(spacing: 6) {
-            voteButton(symbol: "hand.thumbsup", count: up, label: "Thumbs up") { model.castVote(up == 3 ? 0 : up + 1, on: turn) }
-            voteButton(symbol: "hand.thumbsdown", count: down, label: "Thumbs down") { model.castVote(down == 3 ? 0 : -(down + 1), on: turn) }
-            Spacer(minLength: 0)
+        if rollbackAsk == turn.id {
+            // ↺ tapped: the row itself asks, no alert (Catalyst-safe, and quieter).
+            HStack(spacing: 8) {
+                Text("Back to here? Later turns and edits are dropped.")
+                    .font(JBTheme.monoFont(11.5))
+                    .foregroundStyle(JBTheme.ink2)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+                Button("Roll back") { rollbackAsk = nil; Task { await model.rollback(to: turn) } }
+                    .buttonStyle(JBKeyStyle(variant: .orange, size: .xs))
+                Button("Keep") { rollbackAsk = nil }
+                    .buttonStyle(JBKeyStyle(variant: .ghost, size: .xs))
+            }
+            .padding(.top, -2)
+            .accessibilityIdentifier("rollbackAsk")
+        } else {
+            HStack(spacing: 6) {
+                voteButton(symbol: "hand.thumbsup", count: up, label: "Thumbs up") { model.castVote(up == 3 ? 0 : up + 1, on: turn) }
+                voteButton(symbol: "hand.thumbsdown", count: down, label: "Thumbs down") { model.castVote(down == 3 ? 0 : -(down + 1), on: turn) }
+                if model.rollbackable.contains(turn.id) {
+                    Button { rollbackAsk = turn.id } label: {
+                        Image(systemName: "arrow.uturn.backward")
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundStyle(JBTheme.ink3)
+                            .opacity(0.75)
+                            .frame(minWidth: 30, minHeight: 28)
+                            .padding(.horizontal, 4)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Roll back to this point")
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.top, -4)
+            .padding(.leading, -6)
+            .accessibilityIdentifier("voteRow")
         }
-        .padding(.top, -4)
-        .padding(.leading, -6)
-        .accessibilityIdentifier("voteRow")
     }
 
     private func voteButton(symbol: String, count: Int, label: String, action: @escaping () -> Void) -> some View {

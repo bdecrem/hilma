@@ -181,6 +181,17 @@ enum StudioScript {
                 model.castVote(n, on: turn)
                 await model.voteTask?.value
                 emit("  vote \(n): turn=\(turn.id) actions=\(turn.actions.count) rows=\(model.turnEnds.count) stored=\(model.votes)")
+            case "snapshots":
+                emit("  snapshots=\(model.snapshots.count) rollbackable=\(model.rollbackable.count) turns=\(model.turns.count) feed=\(model.feed.count)")
+            case "rollback":
+                // rollback:<n> — n turns before the last (default 1)
+                let n = max(1, Int(arg) ?? 1)
+                let all = model.turns
+                guard all.count > n, model.rollbackable.contains(all[all.count - 1 - n].id) else { emit("  rollback: no snapshot \(n) back (turns=\(all.count), rollbackable=\(model.rollbackable.count))"); break }
+                let target = all[all.count - 1 - n]
+                let before = model.feed.count
+                await model.rollback(to: target)
+                emit("  rollback to '\(target.prompt.prefix(40))': feed \(before) → \(model.feed.count) turns=\(model.turns.count) bars=\(model.shownBars) hasBuffer=\(model.lastRender != nil) save=\(model.saveState)")
             case "votes":
                 let v = try? await JamAPI.shared.votes(trackId: model.trackId)
                 emit("  votes server=\(v?.votes ?? [:]) taste=\(v?.taste.votes ?? 0) note=\(v?.taste.note.map { String($0.prefix(160)) } ?? "nil") rows=\(model.turnEnds.count)")

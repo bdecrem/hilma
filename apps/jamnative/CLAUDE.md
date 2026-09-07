@@ -116,7 +116,9 @@ their last feed id), `castVote(-3…3, on:)` debounces to `JamAPI.vote`; `Studio
 thumbs row (SF `hand.thumbsup` / `.fill`, ×2/×3 count) under each finished turn's last message. `LibraryModel.rate(track, stars)` → `JamAPI.rateTrack` (the "…" menu's Rate
 submenu, stars on the card). `JamAPI.currentTrackId` (set by `StudioModel.load`) goes out as `x-jam-track` on LLM calls so the
 server mines corrections; `BounceSheet.onExported` → `StudioModel.signal("bounce")`. Script steps:
-studio `vote:<n>`, `votes`; library `rate:<title>|<stars>`.
+studio `vote:<n>`, `votes`, `snapshots`, `rollback:<n>` (n turns before the last); library
+`rate:<title>|<stars>`, `star:<title>|on|off`. Rollback: `StudioModel.saveSnapshot` after each turn,
+`rollbackable` (five most recent earlier turns with a snapshot), `rollback(to:)`; the row asks inline.
 
 Launch args: `-autoLogin <user> <pass>`, `-openTrack "<title>"`, `-openControls`,
 `-studioScript "<steps>"`, `-libraryScript "<steps>"`, `-studioScriptLog <file>`,

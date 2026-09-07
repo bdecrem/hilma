@@ -201,6 +201,32 @@ final class JamAPI {
         return res.track
     }
 
+    // MARK: Rollback snapshots (one per agent turn, the five most recent)
+
+    func snapshots(trackId: String) async throws -> [SnapshotMeta] {
+        let res: SnapshotList = try await get("/api/jam/tracks/\(trackId)/snapshots")
+        return res.snapshots
+    }
+
+    func saveSnapshot(trackId: String, body: SnapshotBody) async throws {
+        let _: OkResponse = try await post("/api/jam/tracks/\(trackId)/snapshots", body: body)
+    }
+
+    func snapshot(trackId: String, turnId: String) async throws -> Snapshot {
+        let res: SnapshotResponse = try await get("/api/jam/tracks/\(trackId)/snapshots/\(turnId)")
+        return res.snapshot
+    }
+
+    func rollback(trackId: String, body: RollbackBody) async throws {
+        let _: OkResponse = try await post("/api/jam/tracks/\(trackId)/rollback", body: body)
+    }
+
+    /// PUT /api/jam/tracks/:id { starred } — favourite on/off.
+    func starTrack(_ id: String, starred: Bool) async throws -> TrackMeta {
+        let res: TrackMetaResponse = try await put("/api/jam/tracks/\(id)", body: StarBody(starred: starred))
+        return res.track
+    }
+
     // MARK: Taste signals
 
     /// GET /api/jam/votes?track=<id> — the user's votes on this track's turns + their taste note.

@@ -81,6 +81,13 @@ enum LibraryScript {
                 await model.rate(t, stars)
                 let now = model.tracks?.first { $0.id == t.id }?.rating
                 emit("  rate '\(t.title)' → \(stars.map(String.init) ?? "clear") server=\(now.map(String.init) ?? "nil") error=\(model.error)")
+            case "star":
+                // star:<title>|on|off
+                let parts = arg.split(separator: "|", maxSplits: 1).map { String($0).trimmingCharacters(in: .whitespaces) }
+                guard parts.count == 2, let t = find(parts[0]) else { emit("  star: no track matching '\(arg)'"); break }
+                if (t.starredAt == nil) == (parts[1] == "on") { await model.star(t) }
+                let now = model.tracks?.first { $0.id == t.id }?.starredAt
+                emit("  star '\(t.title)' \(parts[1]) → starredAt=\(now ?? "nil") first=\(model.orderedTracks?.first?.title ?? "-") error=\(model.error)")
             case "me":
                 if let u = try? await JamAPI.shared.me() { emit("  me: \(u.username) admin=\(u.admin)") } else { emit("  me: FAILED") }
             case "adminRename":

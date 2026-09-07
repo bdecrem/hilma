@@ -24,6 +24,8 @@ export type TrackMeta = {
   remix_of?: string | null
   /** The user's own 1–5 star rating of the creation (taste signal), if any. */
   rating?: number | null
+  /** Favourite: set when starred (orange-edged card, sorted first). */
+  starred_at?: string | null
 }
 
 /** A published track as anyone sees it (no owner ids). */
@@ -100,7 +102,7 @@ export const api = {
   createTrack: (title?: string) =>
     call<{ track: Track }>('/api/jam/tracks', { method: 'POST', body: JSON.stringify({ title }) }),
   track: (id: string) => call<{ track: Track }>(`/api/jam/tracks/${id}`),
-  saveTrack: (id: string, patch: Partial<Pick<Track, 'title' | 'bpm' | 'bars' | 'session' | 'messages' | 'feed' | 'rating'>>) =>
+  saveTrack: (id: string, patch: Partial<Pick<Track, 'title' | 'bpm' | 'bars' | 'session' | 'messages' | 'feed' | 'rating'>> & { starred?: boolean }) =>
     call<{ track: TrackMeta }>(`/api/jam/tracks/${id}`, { method: 'PUT', body: JSON.stringify(patch) }),
   deleteTrack: (id: string) => call<{ ok: true }>(`/api/jam/tracks/${id}`, { method: 'DELETE' }),
   duplicateTrack: (id: string) => call<{ track: TrackMeta }>(`/api/jam/tracks/${id}/duplicate`, { method: 'POST' }),
@@ -115,6 +117,15 @@ export const api = {
   // Turn votes (👍 / 👎 on the last agent turn) and the taste note they build
   votes: (trackId: string) => call<{ votes: Record<string, number>; taste: Taste; recent?: string[]; starting?: string[] }>(`/api/jam/votes?track=${trackId}`),
   vote: (body: VoteBody) => call<{ ok: true; score: number; tasteUpdated: boolean }>('/api/jam/votes', { method: 'POST', body: JSON.stringify(body) }),
+  // Rollback: one snapshot per agent turn (the five most recent), restored by ↺ in the turn's row
+  snapshots: (trackId: string) => call<{ snapshots: { turnId: string; createdAt: string }[] }>(`/api/jam/tracks/${trackId}/snapshots`),
+  saveSnapshot: (trackId: string, body: { turnId: string; session: unknown; messages: unknown; feed: unknown }) =>
+    call<{ ok: true }>(`/api/jam/tracks/${trackId}/snapshots`, { method: 'POST', body: JSON.stringify(body) }),
+  snapshot: (trackId: string, turnId: string) =>
+    call<{ snapshot: { turnId: string; session: unknown; messages: AgentMessage[]; feed: FeedItem[]; createdAt: string } }>(`/api/jam/tracks/${trackId}/snapshots/${encodeURIComponent(turnId)}`),
+  rollback: (trackId: string, body: { turnId: string; dropped: { turnId: string; prompt: string; calls: unknown[] }[] }) =>
+    call<{ ok: true }>(`/api/jam/tracks/${trackId}/rollback`, { method: 'POST', body: JSON.stringify(body) }),
+
   /** Implicit whole-track signal (taste v2): a bounce that produced a file. */
   signal: (trackId: string, kind: 'bounce') => call<{ ok: true }>('/api/jam/signals', { method: 'POST', body: JSON.stringify({ trackId, kind }) }),
 

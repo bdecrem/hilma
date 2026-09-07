@@ -313,6 +313,13 @@
 .jb-vote-btn:hover { opacity: 1; background: rgba(0, 0, 0, 0.04); }
 .jb-vote-btn.on { color: var(--ink); opacity: 1; }
 .jb-vote-n { font-family: var(--font-mono-stack); font-size: 10.5px; line-height: 1; }
+.jb-vote-ask { font-family: var(--font-mono-stack); font-size: 11.5px; color: var(--ink-2); margin: 0 4px 0 6px; }
+
+/* ---------- starred tracks (favourites) ---------- */
+.jb-track-side { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 6px 0 8px; }
+.jb-star { background: none; border: 0; padding: 4px 12px; font-size: 17px; line-height: 1; color: var(--ink-3); cursor: pointer; }
+.jb-star.on { color: var(--orange); }
+.jb-track.is-starred { border-color: var(--orange); box-shadow: inset 0 0 0 1px var(--orange), inset 0 1px 0 #fff; }
 
 /* ---------- sheet ---------- */
 .jb-sheet {

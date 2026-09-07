@@ -144,8 +144,9 @@ final class StudioModel {
             sharing.apply(track.meta)
             self.messages = track.messages
             self.feed = track.feed
-            // Votes are a bonus on top of the track: a failed read costs the marks, not the load.
+            // Votes and snapshots are a bonus on top of the track: a failed read costs the rows, not the load.
             if let v = try? await JamAPI.shared.votes(trackId: trackId) { votes = v.votes }
+            if let snaps = try? await JamAPI.shared.snapshots(trackId: trackId) { snapshots = Set(snaps.map(\.turnId)) }
             try await engine.ready()
             // `loadSession` throws on a corrupt saved session (the web
             // silently starts fresh). Staying in `.error` here means nothing
@@ -471,7 +472,9 @@ final class StudioModel {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, !busy, status == .ready else { return }
         input = ""
-        feed.append(.user(id: UUID().uuidString, text: trimmed))
+        let turnId = UUID().uuidString
+        feed.append(.user(id: turnId, text: trimmed))
+        currentTurnId = turnId
         if title == "Untitled" { title = Self.autoTitle(from: trimmed) }
         busy = true
 
@@ -534,6 +537,65 @@ final class StudioModel {
         if let g = try? await engine.controls() { groups = g }
         busy = false
         await saveNow()
+        await saveSnapshot()
+    }
+
+    // MARK: - Rollback (↺ on an earlier turn)
+
+    /// Turn ids with a server snapshot (the five most recent).
+    var snapshots: Set<String> = []
+    private var currentTurnId: String?
+    var rollingBack = false
+
+    /// ↺ goes on the five most recent earlier turns that have a snapshot —
+    /// the last turn is the current state.
+    var rollbackable: Set<String> {
+        guard !busy, !rollingBack else { return [] }
+        let earlier = turns.dropLast().suffix(5)
+        return Set(earlier.map(\.id).filter { snapshots.contains($0) })
+    }
+
+    /// The track right after this turn, so ↺ can bring it back. Losing one
+    /// only loses the ↺ for that turn.
+    private func saveSnapshot() async {
+        guard let turnId = currentTurnId, status == .ready else { return }
+        do {
+            let session = try await engine.serialize()
+            try await JamAPI.shared.saveSnapshot(trackId: trackId, body: SnapshotBody(turnId: turnId, session: session, messages: messages, feed: Array(feed.suffix(200))))
+            snapshots.insert(turnId)
+        } catch {
+            Self.log.notice("snapshot not saved: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    func rollback(to turn: Turn) async {
+        guard !busy, !rollingBack else { return }
+        rollingBack = true
+        defer { rollingBack = false }
+        do {
+            let snap = try await JamAPI.shared.snapshot(trackId: trackId, turnId: turn.id)
+            let all = turns
+            let idx = all.firstIndex { $0.id == turn.id } ?? all.count
+            let dropped: [JSONValue] = all.dropFirst(idx + 1).map { t in
+                .object(["turnId": .string(t.id), "prompt": .string(t.prompt), "calls": .array(Array(t.calls.prefix(40)))])
+            }
+            let loaded = try await engine.loadSession(session: snap.session, bpm: bpm)
+            desc = loaded.desc
+            lastSerialized = snap.session
+            messages = snap.messages
+            feed = snap.feed
+            if let g = try? await engine.controls() { groups = g }
+            renderScope = .song
+            await renderNow()
+            await saveNow()
+            try? await JamAPI.shared.rollback(trackId: trackId, body: RollbackBody(turnId: turn.id, dropped: dropped))
+            let label = turn.prompt.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression).prefix(48)
+            feed.append(.note(id: UUID().uuidString, text: "Rolled back to “\(label)”.", error: false))
+            Self.log.notice("rolled back to turn \(turn.id, privacy: .public), dropped \(dropped.count)")
+        } catch {
+            if isAuthLoss(error) { onAuthLost?(); return }
+            feed.append(.note(id: UUID().uuidString, text: "Couldn't roll back: \(error.localizedDescription)", error: true))
+        }
     }
 
     /// First sentence of the first message, ≤ 40 chars — the web's rule.
