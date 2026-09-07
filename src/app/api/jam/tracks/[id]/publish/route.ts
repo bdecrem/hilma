@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server'
 import { randomBytes } from 'node:crypto'
 import { getJamUser } from '@/lib/jam/auth'
 import { jamDb } from '@/lib/jam/db'
+import { maybeRefreshTaste, recordImplicit } from '@/lib/jam/taste'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -37,6 +38,13 @@ async function setPublished(req: Request, ctx: { params: Promise<{ id: string }>
     if (error || !data) {
       console.error('[jam] publish', error)
       return NextResponse.json({ error: 'Could not update the track.' }, { status: 500 })
+    }
+    if (publish) {
+      // Taste v2: publishing is a strong whole-track signal (a bonus on top of the publish).
+      try {
+        await recordImplicit(user.id, id, 'publish', (data as { title?: string }).title)
+        await maybeRefreshTaste(user.id)
+      } catch (e) { console.error('[jam] publish signal', (e as Error).message) }
     }
     return NextResponse.json({ track: data })
   }

@@ -60,6 +60,8 @@ export type VoteBody = {
   prompt?: string
   reply?: string
   actions?: string[]
+  /** The turn's tool calls with their inputs (parameter attribution). */
+  calls?: { name: string; input?: unknown }[]
   state?: Record<string, unknown>
 }
 export type Taste = { note: string | null; votes: number; updatedAt: string | null }
@@ -111,8 +113,10 @@ export const api = {
   remix: (slug: string) => call<{ track: TrackMeta }>(`/api/jam/public/${slug}/remix`, { method: 'POST' }),
 
   // Turn votes (👍 / 👎 on the last agent turn) and the taste note they build
-  votes: (trackId: string) => call<{ votes: Record<string, number>; taste: Taste }>(`/api/jam/votes?track=${trackId}`),
+  votes: (trackId: string) => call<{ votes: Record<string, number>; taste: Taste; recent?: string[]; starting?: string[] }>(`/api/jam/votes?track=${trackId}`),
   vote: (body: VoteBody) => call<{ ok: true; score: number; tasteUpdated: boolean }>('/api/jam/votes', { method: 'POST', body: JSON.stringify(body) }),
+  /** Implicit whole-track signal (taste v2): a bounce that produced a file. */
+  signal: (trackId: string, kind: 'bounce') => call<{ ok: true }>('/api/jam/signals', { method: 'POST', body: JSON.stringify({ trackId, kind }) }),
 
   // Admin only (jam_users.is_admin): any track in the catalog
   renamePublicTrack: (slug: string, title: string) =>

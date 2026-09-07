@@ -64,6 +64,8 @@ struct VoteBody: Encodable {
     var prompt: String? = nil
     var reply: String? = nil
     var actions: [String] = []
+    /// The turn's tool calls with their inputs (parameter attribution).
+    var calls: [JSONValue] = []
     var state: JSONValue? = nil
 }
 

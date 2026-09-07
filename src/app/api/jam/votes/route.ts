@@ -1,5 +1,5 @@
-// GET  /api/jam/votes?track=<id> → { votes: { turnId: score }, taste, recent: [what the agent is told] }
-// POST /api/jam/votes { trackId, turnId, score, prompt?, reply?, actions?, state? }
+// GET  /api/jam/votes?track=<id> → { votes: { turnId: score }, taste, recent, starting } (recent + starting = what the agent is told)
+// POST /api/jam/votes { trackId, turnId, score, prompt?, reply?, actions?, calls?, state? }
 //      → { ok, score, tasteUpdated }   (score 0 removes the vote)
 //
 // One vote per agent turn, on the signed-in user's own track. Votes feed the
@@ -9,7 +9,7 @@
 import { NextResponse } from 'next/server'
 import { getJamUser } from '@/lib/jam/auth'
 import { jamDb } from '@/lib/jam/db'
-import { getTaste, listVotes, maybeRefreshTaste, recentVotes, recordVote } from '@/lib/jam/taste'
+import { getTaste, listVotes, maybeRefreshTaste, recentSignals, recordVote, startingPoints, trimCalls } from '@/lib/jam/taste'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -29,8 +29,8 @@ export async function GET(req: Request) {
   const trackId = new URL(req.url).searchParams.get('track') || ''
   if (!UUID_RE.test(trackId)) return err('track required', 400)
   try {
-    const [votes, taste, recent] = await Promise.all([listVotes(user.id, trackId), getTaste(user.id), recentVotes(user.id)])
-    return NextResponse.json({ votes, taste, recent })
+    const [votes, taste, recent, starting] = await Promise.all([listVotes(user.id, trackId), getTaste(user.id), recentSignals(user.id), startingPoints(user.id)])
+    return NextResponse.json({ votes, taste, recent, starting })
   } catch (e) {
     console.error('[jam/votes] read', (e as Error).message)
     return err('Could not load the votes.', 500)
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   if (!user) return err('not signed in', 401)
   let body: {
     trackId?: unknown; turnId?: unknown; score?: unknown
-    prompt?: unknown; reply?: unknown; actions?: unknown; state?: unknown
+    prompt?: unknown; reply?: unknown; actions?: unknown; calls?: unknown; state?: unknown
   }
   try { body = await req.json() } catch { return err('Invalid JSON', 400) }
 
@@ -64,6 +64,7 @@ export async function POST(req: Request) {
       prompt: typeof body.prompt === 'string' ? body.prompt.slice(0, 2000) : undefined,
       reply: typeof body.reply === 'string' ? body.reply.slice(0, 1000) : undefined,
       actions,
+      calls: trimCalls(body.calls),
       state,
     })
   } catch (e) {

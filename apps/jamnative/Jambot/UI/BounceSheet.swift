@@ -14,6 +14,8 @@ struct BounceSheet: View {
     let bpm: Int
     /// Set when shown as an in-window overlay (Studio); nil when presented as a sheet.
     var onDone: (() -> Void)? = nil
+    /// Called once a file exists (a bounce is a taste signal).
+    var onExported: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @State private var busy: ExportFormat?
@@ -75,6 +77,7 @@ struct BounceSheet: View {
             }.value
             busy = nil
             shareURL = url
+            onExported?()
         } catch {
             busy = nil
             self.error = error.localizedDescription

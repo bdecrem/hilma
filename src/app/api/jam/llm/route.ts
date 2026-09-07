@@ -11,14 +11,18 @@
 //   3. a per-user daily token budget (JAM_DAILY_TOKENS, src/lib/jam/usage.ts)
 //      — 429 once it is spent; admins are exempt (usage still recorded)
 //
+// The user's taste (src/lib/jam/taste.ts) is appended to the system prompt,
+// and after each turn-starting call the new message is mined for a
+// correction of the previous turn (header x-jam-track names the track).
+//
 // Upstream failures never come back as 401/403: the client treats 401 as
 // "signed out", and a rejected server-side API key is not the user's problem.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { getJamUser } from '@/lib/jam/auth'
 import { dailyTokenLimit, getDailyUsage, recordUsage, type AnthropicUsage } from '@/lib/jam/usage'
-import { appendTaste, getTasteNote, recentVotes } from '@/lib/jam/taste'
+import { appendTaste, getTasteNote, mineCorrection, recentSignals, startingPoints } from '@/lib/jam/taste'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -28,6 +32,7 @@ const MAX_TOKENS_CAP = 16384
 
 /** Every Jambot system prompt starts with this (JAMBOT-PROMPT.md). */
 const JAMBOT_MARKER = 'You are Jambot'
+const TRACK_RE = /^[0-9a-f-]{36}$/i
 
 let _client: Anthropic | null = null
 function getClient() {
@@ -100,8 +105,8 @@ export async function POST(req: NextRequest) {
   // read failure costs the taste for this turn, not the turn.
   let systemPrompt = system
   try {
-    const [note, recent] = await Promise.all([getTasteNote(user.id), recentVotes(user.id)])
-    systemPrompt = appendTaste(system, note, recent)
+    const [note, recent, starting] = await Promise.all([getTasteNote(user.id), recentSignals(user.id), startingPoints(user.id)])
+    systemPrompt = appendTaste(system, note, recent, starting)
   } catch (e) {
     console.warn('[jam/llm] taste read', (e as Error).message)
   }
@@ -133,6 +138,23 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error('[jam/llm] usage write', (e as Error).message)
     return err('The music service is misconfigured (usage accounting failed). Try again later.', 500)
+  }
+
+  // Taste v2: after the response is on its way, judge the user's new
+  // message against the previous turn (correction / praise) — only on the
+  // call that starts a turn (its last message is user text, not a tool
+  // result). Clients name the track in x-jam-track; older clients don't,
+  // and then nothing is mined.
+  const trackId = req.headers.get('x-jam-track') || ''
+  if (TRACK_RE.test(trackId)) {
+    after(async () => {
+      try {
+        const kind = await mineCorrection(user.id, trackId, messages)
+        if (kind === 'correction' || kind === 'praise') console.log('[jam/llm] mined', kind, 'for', user.username)
+      } catch (e) {
+        console.error('[jam/llm] mining', (e as Error).message)
+      }
+    })
   }
 
   return NextResponse.json(res)

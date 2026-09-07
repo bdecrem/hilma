@@ -136,6 +136,7 @@ final class StudioModel {
 
     func load() async {
         status = .loading
+        JamAPI.shared.currentTrackId = trackId
         do {
             let track = try await JamAPI.shared.track(trackId)
             self.track = track
@@ -555,6 +556,8 @@ final class StudioModel {
         let id: String
         let prompt: String
         var actions: [String] = []
+        /// `{ name, input }` per tool call, for parameter attribution.
+        var calls: [JSONValue] = []
         var reply: String = ""
         var endId: String
     }
@@ -573,8 +576,12 @@ final class StudioModel {
                 cur = Turn(id: id, prompt: text, endId: id)
             case .assistant(let id, let text):
                 if var c = cur { c.reply = c.reply.isEmpty ? text : c.reply + "\n" + text; c.endId = id; cur = c }
-            case .tool(let id, let name, _, _, _):
-                if var c = cur { c.actions.append(name); c.endId = id; cur = c }
+            case .tool(let id, let name, let input, _, _):
+                if var c = cur {
+                    c.actions.append(name)
+                    c.calls.append(.object(["name": .string(name), "input": input]))
+                    c.endId = id; cur = c
+                }
             case .note(let id, _, _):
                 if var c = cur { c.endId = id; cur = c }
             }
@@ -625,7 +632,7 @@ final class StudioModel {
         do {
             let r = try await JamAPI.shared.vote(VoteBody(trackId: trackId, turnId: turn.id, score: score,
                                                           prompt: turn.prompt, reply: String(turn.reply.prefix(600)),
-                                                          actions: Array(turn.actions.prefix(40)), state: state))
+                                                          actions: Array(turn.actions.prefix(40)), calls: Array(turn.calls.prefix(40)), state: state))
             Self.log.notice("vote \(score) on turn \(turn.id, privacy: .public) tasteUpdated=\(r.tasteUpdated)")
         } catch {
             if isAuthLoss(error) { onAuthLost?(); return }
@@ -633,6 +640,15 @@ final class StudioModel {
             if error is CancellationError { return }
             if case JamAPIError.transport(let e) = error, (e as? URLError)?.code == .cancelled { return }
             feed.append(.note(id: UUID().uuidString, text: "Couldn't save the vote: \(error.localizedDescription)", error: true))
+        }
+    }
+
+    /// An implicit whole-track signal (taste v2): a bounce that produced a file.
+    func signal(_ kind: String) {
+        let id = trackId
+        Task {
+            do { try await JamAPI.shared.signal(trackId: id, kind: kind) }
+            catch { Self.log.notice("signal \(kind, privacy: .public) not recorded: \(error.localizedDescription, privacy: .public)") }
         }
     }
 

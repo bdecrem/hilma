@@ -35,7 +35,7 @@ let idCounter = 0
 const nid = () => `${Date.now().toString(36)}-${(idCounter++).toString(36)}`
 
 /** The transport strip, read live from the session description. */
-type Turn = { id: string; prompt: string; actions: string[]; reply: string }
+type Turn = { id: string; prompt: string; actions: string[]; calls: { name: string; input?: unknown }[]; reply: string }
 
 /** Thin line thumbs (Feather), 15 px; filled when the vote is on. */
 function ThumbIcon({ down = false, on = false }: { down?: boolean; on?: boolean }) {
@@ -531,7 +531,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const llm = useCallback(async (req: LlmRequest): Promise<LlmResponse> => {
     const res = await fetch('/api/jam/llm', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      // x-jam-track lets the server mine this turn for a correction of the last one (taste v2).
+      headers: { 'content-type': 'application/json', 'x-jam-track': track.id },
       body: JSON.stringify({ system: req.system, messages: req.messages, tools: req.tools, max_tokens: req.max_tokens }),
       signal: req.signal,
       credentials: 'same-origin',
@@ -542,7 +543,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       throw new Error(j.error || `LLM error ${res.status}`)
     }
     return res.json()
-  }, [])
+  }, [track.id])
 
   // ---- send ----------------------------------------------------------------
 
@@ -621,10 +622,10 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     for (const it of feed) {
       if (it.kind === 'user') {
         if (cur) out.push(cur)
-        cur = { turn: { id: it.id, prompt: it.text, actions: [], reply: '' }, endId: it.id }
+        cur = { turn: { id: it.id, prompt: it.text, actions: [], calls: [], reply: '' }, endId: it.id }
       } else if (cur) {
         cur.endId = it.id
-        if (it.kind === 'tool') cur.turn.actions.push(it.name)
+        if (it.kind === 'tool') { cur.turn.actions.push(it.name); cur.turn.calls.push({ name: it.name, input: it.input }) }
         else if (it.kind === 'assistant') cur.turn.reply = cur.turn.reply ? `${cur.turn.reply}\n${it.text}` : it.text
       }
     }
@@ -655,6 +656,7 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         prompt: turn.prompt,
         reply: turn.reply.slice(0, 600),
         actions: turn.actions.slice(0, 40),
+        calls: turn.calls.slice(0, 40),
         state: d ? { bpm: d.bpm, bars: d.bars, swing: d.swing, instruments: d.instruments.filter((i) => i.active).map((i) => i.id), sections: d.arrangement.length } : undefined,
       }).catch((e) => note((e as Error).message || 'Could not save the vote.', true))
     }, 350)
@@ -756,6 +758,8 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
       const blob = format === 'mp3' ? await encodeMp3(r.buffer, (p) => setExporting({ format, progress: p })) : wavBlob(r.buffer, jam.audioBufferToWav)
       const how = await deliver(blob, trackFilename(r.bpm, format))
       note(how === 'shared' ? `${format.toUpperCase()} ready.` : `${format.toUpperCase()} downloaded.`)
+      // A bounce is a whole-track taste signal (v2); losing it is not worth a note.
+      api.signal(track.id, 'bounce').catch(() => {})
     } catch (e) {
       note(`Export failed: ${(e as Error).message}`, true)
     } finally {

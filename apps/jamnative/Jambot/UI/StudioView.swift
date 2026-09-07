@@ -83,7 +83,7 @@ struct StudioView: View {
                     Color.black.opacity(0.28).ignoresSafeArea()
                         .onTapGesture { model.bounceOpen = false }
                         .transition(.opacity)
-                    BounceSheet(render: model.lastRender, bpm: model.bpm, onDone: { model.bounceOpen = false })
+                    BounceSheet(render: model.lastRender, bpm: model.bpm, onDone: { model.bounceOpen = false }, onExported: { model.signal("bounce") })
                         .frame(maxWidth: 560)
                         .background(JBTheme.panel)
                         .clipShape(UnevenRoundedRectangle(topLeadingRadius: 18, topTrailingRadius: 18))

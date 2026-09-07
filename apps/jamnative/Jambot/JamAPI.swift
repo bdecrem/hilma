@@ -213,6 +213,13 @@ final class JamAPI {
         try await post("/api/jam/votes", body: body)
     }
 
+    private struct SignalBody: Encodable { let trackId: String; let kind: String }
+
+    /// POST /api/jam/signals — an implicit whole-track signal (a bounce that produced a file).
+    func signal(trackId: String, kind: String) async throws {
+        let _: OkResponse = try await post("/api/jam/signals", body: SignalBody(trackId: trackId, kind: kind))
+    }
+
     /// PUT /api/jam/tracks/:id { rating } — 1–5 stars for the whole creation, nil clears.
     func rateTrack(_ id: String, stars: Int?) async throws -> TrackMeta {
         let res: TrackMetaResponse = try await put("/api/jam/tracks/\(id)", body: RatingBody(rating: stars))
@@ -244,10 +251,15 @@ final class JamAPI {
     /// ({ system, messages, tools, max_tokens }); returns the raw Messages
     /// API response JSON for the engine to consume. 401 → `.unauthenticated`,
     /// any other non-2xx → `.http` with the server's `error` message.
+    /// The track whose Studio is open — sent as x-jam-track on LLM calls so
+    /// the server can mine each turn for a correction of the last (taste v2).
+    var currentTrackId: String?
+
     func llm(body: Data) async throws -> Data {
         var req = URLRequest(url: url("/api/jam/llm"))
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "content-type")
+        if let currentTrackId { req.setValue(currentTrackId, forHTTPHeaderField: "x-jam-track") }
         req.httpBody = body
         let (data, response): (Data, URLResponse)
         do {
