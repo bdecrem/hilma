@@ -22,6 +22,8 @@ export type TrackMeta = {
   /** Public link id; minted on first publish and kept afterwards. */
   slug?: string | null
   remix_of?: string | null
+  /** The user's own 1–5 star rating of the creation (taste signal), if any. */
+  rating?: number | null
 }
 
 /** A published track as anyone sees it (no owner ids). */
@@ -49,6 +51,18 @@ export type FeedItem =
   | { id: string; kind: 'assistant'; text: string }
   | { id: string; kind: 'tool'; name: string; input: Record<string, unknown>; result?: string; isError?: boolean }
   | { id: string; kind: 'note'; text: string; error?: boolean }
+
+/** One vote on an agent turn: -3..3, 0 removes it. */
+export type VoteBody = {
+  trackId: string
+  turnId: string
+  score: number
+  prompt?: string
+  reply?: string
+  actions?: string[]
+  state?: Record<string, unknown>
+}
+export type Taste = { note: string | null; votes: number; updatedAt: string | null }
 
 export type Track = TrackMeta & {
   session: unknown | null
@@ -84,7 +98,7 @@ export const api = {
   createTrack: (title?: string) =>
     call<{ track: Track }>('/api/jam/tracks', { method: 'POST', body: JSON.stringify({ title }) }),
   track: (id: string) => call<{ track: Track }>(`/api/jam/tracks/${id}`),
-  saveTrack: (id: string, patch: Partial<Pick<Track, 'title' | 'bpm' | 'bars' | 'session' | 'messages' | 'feed'>>) =>
+  saveTrack: (id: string, patch: Partial<Pick<Track, 'title' | 'bpm' | 'bars' | 'session' | 'messages' | 'feed' | 'rating'>>) =>
     call<{ track: TrackMeta }>(`/api/jam/tracks/${id}`, { method: 'PUT', body: JSON.stringify(patch) }),
   deleteTrack: (id: string) => call<{ ok: true }>(`/api/jam/tracks/${id}`, { method: 'DELETE' }),
   duplicateTrack: (id: string) => call<{ track: TrackMeta }>(`/api/jam/tracks/${id}/duplicate`, { method: 'POST' }),
@@ -95,6 +109,10 @@ export const api = {
   catalog: () => call<{ tracks: PublicTrackMeta[] }>('/api/jam/public'),
   publicTrack: (slug: string) => call<{ track: PublicTrack }>(`/api/jam/public/${slug}`),
   remix: (slug: string) => call<{ track: TrackMeta }>(`/api/jam/public/${slug}/remix`, { method: 'POST' }),
+
+  // Turn votes (👍 / 👎 on the last agent turn) and the taste note they build
+  votes: (trackId: string) => call<{ votes: Record<string, number>; taste: Taste }>(`/api/jam/votes?track=${trackId}`),
+  vote: (body: VoteBody) => call<{ ok: true; score: number; tasteUpdated: boolean }>('/api/jam/votes', { method: 'POST', body: JSON.stringify(body) }),
 
   // Admin only (jam_users.is_admin): any track in the catalog
   renamePublicTrack: (slug: string, title: string) =>

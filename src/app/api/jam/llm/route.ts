@@ -18,6 +18,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { getJamUser } from '@/lib/jam/auth'
 import { dailyTokenLimit, getDailyUsage, recordUsage, type AnthropicUsage } from '@/lib/jam/usage'
+import { appendTaste, getTasteNote, recentVotes } from '@/lib/jam/taste'
 
 export const runtime = 'nodejs'
 export const maxDuration = 120
@@ -94,12 +95,23 @@ export async function POST(req: NextRequest) {
   const model = process.env.JAM_MODEL || DEFAULT_MODEL
   const maxTokens = Math.min(typeof max_tokens === 'number' ? max_tokens : 8192, MAX_TOKENS_CAP)
 
+  // The user's taste — the summarized note plus their last few votes
+  // verbatim — rides along at the end of the system prompt. A transient
+  // read failure costs the taste for this turn, not the turn.
+  let systemPrompt = system
+  try {
+    const [note, recent] = await Promise.all([getTasteNote(user.id), recentVotes(user.id)])
+    systemPrompt = appendTaste(system, note, recent)
+  } catch (e) {
+    console.warn('[jam/llm] taste read', (e as Error).message)
+  }
+
   let res: Anthropic.Message
   try {
     res = await getClient().messages.create({
       model,
       max_tokens: maxTokens,
-      system: system as Anthropic.MessageCreateParams['system'],
+      system: systemPrompt as Anthropic.MessageCreateParams['system'],
       tools: tools as Anthropic.MessageCreateParams['tools'],
       messages: messages as Anthropic.MessageParam[],
     })

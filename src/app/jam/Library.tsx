@@ -1,6 +1,7 @@
 'use client'
 
-// The user's tracks. Tap to resume, New to start one, "…" for duplicate/delete.
+// The user's tracks. Tap to resume, New to start one, "…" for the star rating
+// (a taste signal: how good the whole creation is), duplicate, delete.
 
 import { useEffect, useState } from 'react'
 import { api, type JamUser, type TrackMeta } from './api'
@@ -33,6 +34,16 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
       setError((e as Error).message)
     } finally {
       setMenu(null)
+    }
+  }
+
+  // Star rating of the creation (1–5; tapping the current star clears it).
+  const rate = async (id: string, stars: number | null) => {
+    setTracks((t) => (t ? t.map((x) => (x.id === id ? { ...x, rating: stars } : x)) : t))
+    try {
+      await api.saveTrack(id, { rating: stars })
+    } catch (e) {
+      setError((e as Error).message)
     }
   }
 
@@ -106,10 +117,26 @@ export default function Library({ user, onOpen, onNew, onSignOut }: Props) {
                 <div className="mt-2"><LedStrip strip={t.strip} /></div>
                 <div className="jb-readout mt-2">
                   <b>{t.bpm}</b> BPM · {t.bars} {t.bars === 1 ? 'bar' : 'bars'} · {relTime(t.updated_at)}
+                  {t.rating ? <span className="jb-stars" aria-label={`${t.rating} of 5 stars`}> · {'★'.repeat(t.rating)}</span> : null}
                 </div>
               </button>
               {menu === t.id ? (
                 <div className="flex flex-col justify-center gap-1 pr-2">
+                  <div className="jb-rate" role="radiogroup" aria-label="Rate this creation">
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={(t.rating ?? 0) === n}
+                        aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                        onClick={() => rate(t.id, t.rating === n ? null : n)}
+                        className={`jb-rate-star${(t.rating ?? 0) >= n ? ' on' : ''}`}
+                      >
+                        {(t.rating ?? 0) >= n ? '★' : '☆'}
+                      </button>
+                    ))}
+                  </div>
                   <button onClick={() => duplicate(t.id)} className="jb-key jb-key--panel jb-key--xs">Duplicate</button>
                   <button onClick={() => remove(t.id)} className="jb-key jb-key--orange jb-key--xs">Delete</button>
                   <button onClick={() => setMenu(null)} className="jb-key jb-key--ghost jb-key--xs">Keep</button>

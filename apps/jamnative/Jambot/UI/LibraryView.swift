@@ -58,6 +58,18 @@ final class LibraryModel {
     }
 
     @discardableResult
+    /// Star rating of the creation (1–5, nil clears) — a taste signal.
+    func rate(_ t: TrackMeta, _ stars: Int?) async {
+        if let idx = tracks?.firstIndex(where: { $0.id == t.id }) { tracks?[idx].rating = stars }
+        do {
+            let meta = try await JamAPI.shared.rateTrack(t.id, stars: stars)
+            if let idx = tracks?.firstIndex(where: { $0.id == t.id }) { tracks?[idx].rating = meta.rating }
+        } catch {
+            if case JamAPIError.unauthenticated = error { onAuthLost?(); return }
+            self.error = error.localizedDescription
+        }
+    }
+
     func duplicate(_ t: TrackMeta) async -> TrackMeta? {
         busyTrackId = t.id
         defer { busyTrackId = nil }
@@ -292,6 +304,22 @@ struct LibraryView: View {
             Button { model.openTrack = t } label: { trackCard(t) }
                 .buttonStyle(.plain)
             Menu {
+                // Star rating of the whole creation (taste signal); the
+                // current star clears it, like the web's row of stars.
+                Menu {
+                    ForEach(1...5, id: \.self) { n in
+                        Button {
+                            Task { await model.rate(t, t.rating == n ? nil : n) }
+                        } label: {
+                            Label(String(repeating: "★", count: n), systemImage: (t.rating ?? 0) == n ? "checkmark" : "")
+                        }
+                    }
+                    if t.rating != nil {
+                        Button(role: .destructive) { Task { await model.rate(t, nil) } } label: { Label("Clear rating", systemImage: "xmark") }
+                    }
+                } label: {
+                    Label(t.rating.map { "Rated \(String(repeating: "★", count: $0))" } ?? "Rate", systemImage: t.rating == nil ? "star" : "star.fill")
+                }
                 Button {
                     Task { await model.duplicate(t) }
                 } label: {
@@ -332,7 +360,7 @@ struct LibraryView: View {
                 if t.remixOf != nil { JBTag(text: "remix", style: .outline) }
             }
             LedStripView(strip: t.strip)
-            readout("\(t.bpm)", " BPM · \(t.bars) \(t.bars == 1 ? "bar" : "bars") · \(relTime(t.updatedAt))")
+            readout("\(t.bpm)", " BPM · \(t.bars) \(t.bars == 1 ? "bar" : "bars") · \(relTime(t.updatedAt))", stars: t.rating)
         }
         .padding(.vertical, 12)
         .padding(.leading, 14)
@@ -342,8 +370,10 @@ struct LibraryView: View {
     }
 
     /// `.jb-readout` with the leading number in ink (`<b>`).
-    private func readout(_ strong: String, _ rest: String) -> some View {
-        (Text(strong).fontWeight(.medium).foregroundColor(JBTheme.ink) + Text(rest).foregroundColor(JBTheme.ink2))
+    private func readout(_ strong: String, _ rest: String, stars: Int? = nil) -> some View {
+        (Text(strong).fontWeight(.medium).foregroundColor(JBTheme.ink)
+         + Text(rest).foregroundColor(JBTheme.ink2)
+         + Text(stars.map { " · " + String(repeating: "★", count: max(0, min(5, $0))) } ?? "").foregroundColor(JBTheme.orange))
             .font(JBTheme.monoFont(12))
             .lineLimit(1)
             .minimumScaleFactor(0.85)

@@ -9,7 +9,7 @@ import { stripFromSession } from '@/lib/jam/strip'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const TRACK_META = 'id, title, bpm, bars, created_at, updated_at, published_at, slug, remix_of'
+const TRACK_META = 'id, title, bpm, bars, created_at, updated_at, published_at, slug, remix_of, rating'
 
 export async function GET() {
   const user = await getJamUser()

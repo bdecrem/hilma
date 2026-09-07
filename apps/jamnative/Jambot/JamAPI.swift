@@ -194,6 +194,24 @@ final class JamAPI {
         return res.track
     }
 
+    // MARK: Taste signals
+
+    /// GET /api/jam/votes?track=<id> — the user's votes on this track's turns + their taste note.
+    func votes(trackId: String) async throws -> TrackVotes {
+        try await get("/api/jam/votes?track=\(trackId)")
+    }
+
+    /// POST /api/jam/votes — one vote on an agent turn (score 0 removes it).
+    func vote(_ body: VoteBody) async throws -> VoteResponse {
+        try await post("/api/jam/votes", body: body)
+    }
+
+    /// PUT /api/jam/tracks/:id { rating } — 1–5 stars for the whole creation, nil clears.
+    func rateTrack(_ id: String, stars: Int?) async throws -> TrackMeta {
+        let res: TrackMetaResponse = try await put("/api/jam/tracks/\(id)", body: RatingBody(rating: stars))
+        return res.track
+    }
+
     // MARK: Admin (jam_users.is_admin) — any track in the catalog
 
     private struct RenameBody: Encodable { let title: String }

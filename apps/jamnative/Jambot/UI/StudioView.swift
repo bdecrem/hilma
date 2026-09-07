@@ -195,8 +195,10 @@ struct StudioView: View {
                             }
                             .padding(.top, 36)
                         }
+                        let marks = model.voteMarks
                         ForEach(model.feed) { item in
                             feedRow(item)
+                            if let score = marks[item.id] { voteMark(score) }
                         }
                         if model.busy {
                             HStack(spacing: 8) {
@@ -363,24 +365,69 @@ struct StudioView: View {
     // MARK: - Composer
 
     private var composer: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            TextField("tell it what to play…", text: $model.input, prompt: jbPrompt("tell it what to play…"), axis: .vertical)
-                .lineLimit(1...4)
-                .jbField()
-                .focused($composerFocused)
-                .disabled(model.status != .ready)
+        VStack(spacing: 8) {
+            HStack(alignment: .bottom, spacing: 8) {
+                TextField("tell it what to play…", text: $model.input, prompt: jbPrompt("tell it what to play…"), axis: .vertical)
+                    .lineLimit(1...4)
+                    .jbField()
+                    .focused($composerFocused)
+                    .disabled(model.status != .ready)
 
-            Button("Send") {
-                model.send(model.input)
+                Button("Send") {
+                    model.send(model.input)
+                }
+                .buttonStyle(JBKeyStyle(variant: .orange))
+                .disabled(model.status != .ready || model.busy || model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .jambotSendShortcut { model.send(model.input) }
             }
-            .buttonStyle(JBKeyStyle(variant: .orange))
-            .disabled(model.status != .ready || model.busy || model.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .jambotSendShortcut { model.send(model.input) }
+            // Rate the last agent turn: 👍 / 👎, tap again for two and three
+            // thumbs, a fourth tap clears. Same "label · rule · keys" row as
+            // the rest of the desk.
+            if model.ratable, let turn = model.lastTurn {
+                voteRow(turn)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.top, 8)
         .padding(.bottom, 10)
         .background(JBTheme.panel3)
+    }
+
+    private func voteRow(_ turn: StudioModel.Turn) -> some View {
+        let score = model.votes[turn.id] ?? 0
+        let up = max(0, score)
+        let down = max(0, -score)
+        return JBGroupRow("LAST TURN") {
+            voteKey(String(repeating: "👍", count: max(1, up)), on: up > 0, label: "Thumbs up\(up > 0 ? " (\(up))" : "")") {
+                model.castVote(up == 3 ? 0 : up + 1)
+            }
+            voteKey(String(repeating: "👎", count: max(1, down)), on: down > 0, label: "Thumbs down\(down > 0 ? " (\(down))" : "")") {
+                model.castVote(down == 3 ? 0 : -(down + 1))
+            }
+        }
+        .accessibilityIdentifier("voteRow")
+    }
+
+    private func voteKey(_ text: String, on: Bool, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(text).font(.system(size: 13)).frame(minWidth: 28)
+        }
+        .buttonStyle(JBKeyStyle(variant: .panel, size: .xs))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(JBTheme.ink, lineWidth: on ? 1.5 : 0)
+                .padding(.bottom, 2) // above the key's lip
+        )
+        .accessibilityLabel(label)
+    }
+
+    /// An earlier turn's vote, after the turn's last item (`.jb-vote-mark`).
+    private func voteMark(_ score: Int) -> some View {
+        Text(String(repeating: score > 0 ? "👍" : "👎", count: min(3, abs(score))))
+            .font(.system(size: 11))
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.top, -6)
+            .accessibilityLabel("Your vote on that turn")
     }
 }
 

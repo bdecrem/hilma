@@ -294,6 +294,27 @@
 .jb-composer { padding: 8px 14px calc(env(safe-area-inset-bottom) + 10px); display: flex; gap: 8px; align-items: flex-end; background: var(--panel-3); }
 .jb-composer textarea { resize: none; max-height: 128px; min-height: 48px; line-height: 1.35; padding-top: 12px; }
 
+/* ---------- star rating (track "…" menu) ---------- */
+.jb-stars { color: var(--orange); letter-spacing: 0.04em; }
+.jb-rate { display: flex; justify-content: center; gap: 2px; padding: 2px 0 4px; }
+.jb-rate-star {
+  width: 22px; height: 26px; padding: 0; border: 0; background: none;
+  font-size: 17px; line-height: 1; color: var(--ink-3); cursor: pointer;
+}
+.jb-rate-star.on { color: var(--orange); }
+
+/* ---------- turn votes (👍 / 👎 under the composer) ---------- */
+.jb-composer:has(+ .jb-vote) { padding-bottom: 4px; }
+.jb-vote {
+  display: flex; align-items: center; gap: 10px;
+  padding: 2px 14px calc(env(safe-area-inset-bottom) + 10px);
+  background: var(--panel-3);
+}
+.jb-vote-rule { flex: 1; height: 1px; background: var(--rule); }
+.jb-vote-key { min-width: 44px; padding: 0 8px; font-size: 13px; letter-spacing: -0.04em; }
+.jb-vote-key.on { outline: 1.5px solid var(--ink); outline-offset: -1.5px; }
+.jb-vote-mark { font-size: 11px; line-height: 1; text-align: right; color: var(--ink-3); margin-top: -4px; padding-right: 2px; }
+
 /* ---------- sheet ---------- */
 .jb-sheet {
   position: fixed; inset: 0; z-index: 40;

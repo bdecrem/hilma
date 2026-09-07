@@ -143,6 +143,8 @@ final class StudioModel {
             sharing.apply(track.meta)
             self.messages = track.messages
             self.feed = track.feed
+            // Votes are a bonus on top of the track: a failed read costs the marks, not the load.
+            if let v = try? await JamAPI.shared.votes(trackId: trackId) { votes = v.votes }
             try await engine.ready()
             // `loadSession` throws on a corrupt saved session (the web
             // silently starts fresh). Staying in `.error` here means nothing
@@ -543,6 +545,89 @@ final class StudioModel {
         }
         t = t.replacingOccurrences(of: "[\\s,.:;!?-]+$", with: "", options: .regularExpression)
         return t.isEmpty ? "Untitled" : t
+    }
+
+    // MARK: - Turn votes (👍 / 👎 on the last agent turn — a taste signal)
+
+    /// A turn: the user message that started it and everything the agent
+    /// did until the next one. `endId` is the feed id of its last item.
+    struct Turn: Equatable {
+        let id: String
+        let prompt: String
+        var actions: [String] = []
+        var reply: String = ""
+        var endId: String
+    }
+
+    /// turnId → -3..3, from jam_votes (loaded with the track).
+    var votes: [String: Int] = [:]
+    var voteTask: Task<Void, Never>?
+
+    var turns: [Turn] {
+        var out: [Turn] = []
+        var cur: Turn? = nil
+        for item in feed {
+            switch item {
+            case .user(let id, let text):
+                if let c = cur { out.append(c) }
+                cur = Turn(id: id, prompt: text, endId: id)
+            case .assistant(let id, let text):
+                if var c = cur { c.reply = c.reply.isEmpty ? text : c.reply + "\n" + text; c.endId = id; cur = c }
+            case .tool(let id, let name, _, _, _):
+                if var c = cur { c.actions.append(name); c.endId = id; cur = c }
+            case .note(let id, _, _):
+                if var c = cur { c.endId = id; cur = c }
+            }
+        }
+        if let c = cur { out.append(c) }
+        return out
+    }
+
+    var lastTurn: Turn? { turns.last }
+
+    /// Only a finished turn with agent output can be rated.
+    var ratable: Bool {
+        guard let t = lastTurn else { return false }
+        return t.endId != t.id && !busy
+    }
+
+    /// Earlier turns' votes, keyed by the feed id they should appear after.
+    var voteMarks: [String: Int] {
+        var m: [String: Int] = [:]
+        for t in turns.dropLast() { if let s = votes[t.id], s != 0 { m[t.endId] = s } }
+        return m
+    }
+
+    /// -3..3; 0 clears. Debounced so cycling 👍 → 👍👍 → 👍👍👍 sends once.
+    func castVote(_ score: Int) {
+        guard let turn = lastTurn else { return }
+        if score == 0 { votes.removeValue(forKey: turn.id) } else { votes[turn.id] = score }
+        voteTask?.cancel()
+        voteTask = Task {
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            guard !Task.isCancelled else { return }
+            await sendVote(turn, score)
+        }
+    }
+
+    private func sendVote(_ turn: Turn, _ score: Int) async {
+        var state: JSONValue? = nil
+        if let d = desc {
+            state = .object([
+                "bpm": .number(Double(d.bpm)), "bars": .number(Double(d.bars)), "swing": .number(d.swing),
+                "instruments": .array(d.instruments.filter(\.active).map { .string($0.id) }),
+                "sections": .number(Double(d.arrangement.count)),
+            ])
+        }
+        do {
+            let r = try await JamAPI.shared.vote(VoteBody(trackId: trackId, turnId: turn.id, score: score,
+                                                          prompt: turn.prompt, reply: String(turn.reply.prefix(600)),
+                                                          actions: Array(turn.actions.prefix(40)), state: state))
+            Self.log.notice("vote \(score) on turn \(turn.id, privacy: .public) tasteUpdated=\(r.tasteUpdated)")
+        } catch {
+            if isAuthLoss(error) { onAuthLost?(); return }
+            feed.append(.note(id: UUID().uuidString, text: "Couldn't save the vote: \(error.localizedDescription)", error: true))
+        }
     }
 
     // MARK: - Save

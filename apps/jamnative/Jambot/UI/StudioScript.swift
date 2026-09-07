@@ -172,6 +172,16 @@ enum StudioScript {
                 let texts = added.compactMap { if case .assistant(_, let t) = $0 { return t } else { return nil } }
                 let notes = added.compactMap { if case .note(_, let t, _) = $0 { return t } else { return nil } }
                 emit("  send done in \(String(format: "%.1f", Date().timeIntervalSince(t0)))s: tools=\(tools) text=\(texts.map { String($0.prefix(120)) }) notes=\(notes) busy=\(model.busy) save=\(model.saveState) playing=\(model.playing)")
+            case "vote":
+                // vote:<-3..3> on the last agent turn; waits for the server ack.
+                let n = Int(arg) ?? 0
+                let before = model.ratable
+                model.castVote(n)
+                await model.voteTask?.value
+                emit("  vote \(n): ratable=\(before) turn=\(model.lastTurn?.id ?? "-") actions=\(model.lastTurn?.actions.count ?? 0) stored=\(model.votes)")
+            case "votes":
+                let v = try? await JamAPI.shared.votes(trackId: model.trackId)
+                emit("  votes server=\(v?.votes ?? [:]) taste=\(v?.taste.votes ?? 0) note=\(v?.taste.note.map { String($0.prefix(160)) } ?? "nil") marks=\(model.voteMarks)")
             case "starter":
                 // starter:<n> — put the nth starter prompt in the composer (what a tap does)
                 let n = max(1, min(StudioView.starters.count, Int(arg) ?? 1))

@@ -1,15 +1,16 @@
 // GET    /api/jam/tracks/:id → full track (session, messages, feed)
-// PUT    /api/jam/tracks/:id → save any subset of { title, bpm, bars, session, messages, feed }
+// PUT    /api/jam/tracks/:id → save any subset of { title, bpm, bars, session, messages, feed, rating (1–5 or null) }
 // DELETE /api/jam/tracks/:id
 
 import { NextResponse } from 'next/server'
 import { getJamUser } from '@/lib/jam/auth'
 import { jamDb } from '@/lib/jam/db'
+import { maybeRefreshTaste } from '@/lib/jam/taste'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const FULL = 'id, title, bpm, bars, session, messages, feed, created_at, updated_at, published_at, slug, remix_of'
+const FULL = 'id, title, bpm, bars, session, messages, feed, created_at, updated_at, published_at, slug, remix_of, rating'
 const UUID_RE = /^[0-9a-f-]{36}$/i
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -41,7 +42,7 @@ export async function PUT(req: Request, ctx: Ctx) {
 
   let body: {
     title?: unknown; bpm?: unknown; bars?: unknown
-    session?: unknown; messages?: unknown; feed?: unknown
+    session?: unknown; messages?: unknown; feed?: unknown; rating?: unknown
   }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
 
@@ -52,19 +53,27 @@ export async function PUT(req: Request, ctx: Ctx) {
   if (body.session !== undefined) patch.session = body.session
   if (Array.isArray(body.messages)) patch.messages = body.messages
   if (Array.isArray(body.feed)) patch.feed = body.feed
+  // Star rating of the whole creation (taste signal): 1–5, null clears it.
+  let ratingChanged = false
+  if (body.rating === null) { patch.rating = null; ratingChanged = true }
+  else if (typeof body.rating === 'number' && Number.isInteger(body.rating) && body.rating >= 1 && body.rating <= 5) { patch.rating = body.rating; ratingChanged = true }
 
   const { data, error } = await jamDb()
     .from('jam_tracks')
     .update(patch)
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, title, bpm, bars, created_at, updated_at')
+    .select('id, title, bpm, bars, created_at, updated_at, rating')
     .maybeSingle()
   if (error) {
     console.error('[jam] save track', error)
     return NextResponse.json({ error: 'Could not save the track.' }, { status: 500 })
   }
   if (!data) return NextResponse.json({ error: 'not found' }, { status: 404 })
+  if (ratingChanged) {
+    // A rating is a taste signal; the note is a bonus on top of a saved rating.
+    try { await maybeRefreshTaste(user.id) } catch (e) { console.error('[jam] taste after rating', (e as Error).message) }
+  }
   return NextResponse.json({ track: data })
 }
 

@@ -6,7 +6,7 @@
 // loop, and rendering (OfflineAudioContext). The server signs one Messages
 // API call at a time (/api/jam/llm) and stores the track (/api/jam/tracks).
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   loadJambot, JAMBOT_BUILD,
   type JambotModule, type JamSession, type AgentMessage, type ToolDef,
@@ -35,6 +35,9 @@ let idCounter = 0
 const nid = () => `${Date.now().toString(36)}-${(idCounter++).toString(36)}`
 
 /** The transport strip, read live from the session description. */
+type Turn = { id: string; prompt: string; actions: string[]; reply: string }
+const thumbs = (score: number) => (score > 0 ? '👍' : '👎').repeat(Math.min(3, Math.abs(score)))
+
 function stripFromDesc(desc: SessionDescription | null): Strip | null {
   if (!desc) return null
   for (const id of ['jt90', 'jb01']) {
@@ -175,6 +178,9 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
   const [loopBars, setLoopBars] = useState<number | null>(null)
   const [rendering, setRendering] = useState(false)
   const [desc, setDesc] = useState<SessionDescription | null>(null)
+  /** turnId (the user message that started the turn) → -3..3, from jam_votes. */
+  const [votes, setVotes] = useState<Record<string, number>>({})
+  const voteTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [groups, setGroups] = useState<ControlGroup[]>([])
   const [controlsOpen, setControlsOpen] = useState(false)
   const [saveOpen, setSaveOpen] = useState(false)
@@ -574,6 +580,58 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
     }
   }, [busy, llm, addItem, setFeedBoth, refreshDesc, applyRender, note, saveNow, onAuthLost])
 
+  // ---- turn votes (👍 / 👎 on the last agent turn) ---------------------------
+
+  useEffect(() => {
+    api.votes(track.id).then((r) => setVotes(r.votes)).catch(() => { /* votes are optional on open */ })
+  }, [track.id])
+
+  // A turn = a user message and everything the agent did until the next one.
+  const turns = useMemo(() => {
+    const out: { turn: Turn; endId: string }[] = []
+    let cur: { turn: Turn; endId: string } | null = null
+    for (const it of feed) {
+      if (it.kind === 'user') {
+        if (cur) out.push(cur)
+        cur = { turn: { id: it.id, prompt: it.text, actions: [], reply: '' }, endId: it.id }
+      } else if (cur) {
+        cur.endId = it.id
+        if (it.kind === 'tool') cur.turn.actions.push(it.name)
+        else if (it.kind === 'assistant') cur.turn.reply = cur.turn.reply ? `${cur.turn.reply}\n${it.text}` : it.text
+      }
+    }
+    if (cur) out.push(cur)
+    return out
+  }, [feed])
+  const lastTurn = turns.length ? turns[turns.length - 1] : null
+  // Only a finished turn with agent output is ratable (not a bare user message).
+  const ratable = !!lastTurn && lastTurn.endId !== lastTurn.turn.id && !busy
+  // Earlier turns show their vote as a small mark after their last item.
+  const voteMarks = useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const { turn, endId } of turns.slice(0, -1)) { const sc = votes[turn.id]; if (sc) m[endId] = sc }
+    return m
+  }, [turns, votes])
+
+  const castVote = useCallback((score: number) => {
+    if (!lastTurn) return
+    const { turn } = lastTurn
+    setVotes((v) => { const n = { ...v }; if (score === 0) delete n[turn.id]; else n[turn.id] = score; return n })
+    if (voteTimer.current) clearTimeout(voteTimer.current)
+    voteTimer.current = setTimeout(() => {
+      const d = desc
+      api.vote({
+        trackId: track.id,
+        turnId: turn.id,
+        score,
+        prompt: turn.prompt,
+        reply: turn.reply.slice(0, 600),
+        actions: turn.actions.slice(0, 40),
+        state: d ? { bpm: d.bpm, bars: d.bars, swing: d.swing, instruments: d.instruments.filter((i) => i.active).map((i) => i.id), sections: d.arrangement.length } : undefined,
+      }).catch((e) => note((e as Error).message || 'Could not save the vote.', true))
+    }, 350)
+  }, [lastTurn, desc, track.id, note])
+
   // ---- controls ------------------------------------------------------------
 
   const onParam = useCallback(async (path: string, value: number | string, label: string) => {
@@ -801,19 +859,29 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
 
         <div className="mt-2 flex flex-col gap-2.5">
           {feed.map((it) => {
-            if (it.kind === 'user') return <div key={it.id} className="jb-bubble">{it.text}</div>
-            if (it.kind === 'assistant') return <div key={it.id} className="jb-answer">{it.text}</div>
-            if (it.kind === 'note') return <div key={it.id} className={`jb-note${it.error ? ' err' : ''}`}>{it.text}</div>
-            const open = expanded.has(it.id)
-            const pending = it.result === undefined
+            let el: React.ReactNode
+            if (it.kind === 'user') el = <div className="jb-bubble">{it.text}</div>
+            else if (it.kind === 'assistant') el = <div className="jb-answer">{it.text}</div>
+            else if (it.kind === 'note') el = <div className={`jb-note${it.error ? ' err' : ''}`}>{it.text}</div>
+            else {
+              const open = expanded.has(it.id)
+              const pending = it.result === undefined
+              el = (
+                <div className="mr-6">
+                  <button onClick={() => toggleExpanded(it.id)} className={`jb-chip${it.isError ? ' err' : ''}`}>
+                    <span className={`jb-led ${pending ? '' : it.isError ? 'on' : 'green'}`} />
+                    <span className="truncate">{it.name}</span>
+                  </button>
+                  {open && <pre className="jb-chip-out">{JSON.stringify(it.input)}{it.result ? `\n→ ${it.result}` : ''}</pre>}
+                </div>
+              )
+            }
+            const mark = voteMarks[it.id]
             return (
-              <div key={it.id} className="mr-6">
-                <button onClick={() => toggleExpanded(it.id)} className={`jb-chip${it.isError ? ' err' : ''}`}>
-                  <span className={`jb-led ${pending ? '' : it.isError ? 'on' : 'green'}`} />
-                  <span className="truncate">{it.name}</span>
-                </button>
-                {open && <pre className="jb-chip-out">{JSON.stringify(it.input)}{it.result ? `\n→ ${it.result}` : ''}</pre>}
-              </div>
+              <Fragment key={it.id}>
+                {el}
+                {mark ? <div className="jb-vote-mark" aria-label="Your vote on that turn">{thumbs(mark)}</div> : null}
+              </Fragment>
             )
           })}
           {busy && <div className="jb-thinking jb-note"><span className="jb-led on" />working</div>}
@@ -872,6 +940,23 @@ export default function Studio({ track, onBack, onAuthLost }: Props) {
         />
         <button type="submit" disabled={!canSend} className="jb-key jb-key--orange" style={{ height: 48 }}>Send</button>
       </form>
+      {ratable && lastTurn && (() => {
+        const sc = votes[lastTurn.turn.id] ?? 0
+        const up = sc > 0 ? sc : 0
+        const down = sc < 0 ? -sc : 0
+        return (
+          <div className="jb-vote">
+            <span className="jb-eyebrow">Last turn</span>
+            <span className="jb-vote-rule" />
+            <button type="button" onClick={() => castVote(up === 3 ? 0 : up + 1)} className={`jb-key jb-key--panel jb-key--xs jb-vote-key${up ? ' on' : ''}`} aria-label={`Thumbs up${up ? ` (${up})` : ''}`}>
+              {'👍'.repeat(up || 1)}
+            </button>
+            <button type="button" onClick={() => castVote(down === 3 ? 0 : -(down + 1))} className={`jb-key jb-key--panel jb-key--xs jb-vote-key${down ? ' on' : ''}`} aria-label={`Thumbs down${down ? ` (${down})` : ''}`}>
+              {'👎'.repeat(down || 1)}
+            </button>
+          </div>
+        )
+      })()}
 
       <ControlsSheet
         open={controlsOpen}

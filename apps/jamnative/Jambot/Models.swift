@@ -42,13 +42,56 @@ struct TrackMeta: Codable, Identifiable, Equatable, Hashable {
     var publishedAt: String?
     var slug: String?
     var remixOf: String?
+    /// The user's own 1–5 star rating of the creation (taste signal).
+    var rating: Int?
 
     enum CodingKeys: String, CodingKey {
-        case id, title, bpm, bars, strip, slug
+        case id, title, bpm, bars, strip, slug, rating
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case publishedAt = "published_at"
         case remixOf = "remix_of"
+    }
+}
+
+// MARK: - Taste signals (turn votes, star ratings)
+
+/// One vote on an agent turn: -3..3 (0 removes it). Mirrors api.ts VoteBody.
+struct VoteBody: Encodable {
+    let trackId: String
+    let turnId: String
+    let score: Int
+    var prompt: String? = nil
+    var reply: String? = nil
+    var actions: [String] = []
+    var state: JSONValue? = nil
+}
+
+struct Taste: Decodable, Equatable {
+    let note: String?
+    let votes: Int
+    let updatedAt: String?
+}
+
+struct TrackVotes: Decodable {
+    /// turnId (the user message that started the turn) → score
+    let votes: [String: Int]
+    let taste: Taste
+}
+
+struct VoteResponse: Decodable {
+    let ok: Bool
+    let score: Int
+    let tasteUpdated: Bool
+}
+
+/// `{ "rating": 3 }` or `{ "rating": null }` (clears) — nil must be sent, not omitted.
+struct RatingBody: Encodable {
+    let rating: Int?
+    enum CodingKeys: String, CodingKey { case rating }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        if let rating { try c.encode(rating, forKey: .rating) } else { try c.encodeNil(forKey: .rating) }
     }
 }
 

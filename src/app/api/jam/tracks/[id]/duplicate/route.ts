@@ -34,7 +34,7 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
   const { data, error: insErr } = await db
     .from('jam_tracks')
     .insert({ user_id: user.id, title, bpm: src.bpm, bars: src.bars, session: src.session, messages: src.messages, feed: src.feed })
-    .select('id, title, bpm, bars, created_at, updated_at')
+    .select('id, title, bpm, bars, created_at, updated_at, rating')
     .single()
   if (insErr || !data) {
     console.error('[jam] duplicate insert', insErr)
