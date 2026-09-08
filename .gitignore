@@ -54,6 +54,8 @@ supabase/.temp/
 
 # Xcode build artifacts
 apps/*/build/
+apps/*/build-mac/
+apps/*/.shots/
 apps/*/DerivedData/
 apps/*/*/DerivedData/
 apps/*/*.xcodeproj/xcuserdata/
