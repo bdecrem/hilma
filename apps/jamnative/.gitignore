@@ -3,3 +3,4 @@ Jambot/Secrets.swift
 DerivedData/
 build-device/
 build-testflight/
+build-mac/
