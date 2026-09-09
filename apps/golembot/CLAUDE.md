@@ -54,7 +54,7 @@ already the host for unattended services.
 | Secrets | `~/.golembot.env`, chmod 600, `DISCORD_BOT_TOKEN=…` |
 | launchd job | `~/Library/LaunchAgents/com.golembot.strays.plist` |
 | Log | `~/Library/Logs/golembot/strays.log` |
-| Repo the agent works in | `~/Documents/code/hilma` |
+| Repo the agent works in | `~/hilma-bot` (its own clone, deps installed, `gh` supplies push credentials) |
 | Preview URL | `bart-mini.tunn3l.sh` |
 
 **The home iMac (`iMac.local`, user `bartdecrem`) keeps the original as a cold
@@ -149,3 +149,8 @@ for the full list, it is more current than the README):
 - **A launchd `ProgramArguments` string is XML**, so `&&` in the command makes
   the plist unparseable and the job silently never loads. Use `;` with `set -e`.
   `plutil -lint <plist>` catches it.
+- **The bot gets its own checkout, `~/hilma-bot`.** The mini's other two copies
+  are not safe for it: `~/Documents/code/hilma` was 396 commits behind with
+  uncommitted macplus edits, and `~/hilma-deploy` is the macplus services' deploy
+  clone. Pushing works because `gh` is authenticated as bdecrem with `repo`
+  scope and is wired in as the git credential helper.
