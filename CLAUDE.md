@@ -80,6 +80,7 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Peri (iOS)** | `apps/peri/` | Xcode (XcodeGen, same workflow as Feynd) | Voice-only walking tutor — OpenAI Realtime over WebRTC (`/api/f4/walk/*`, `src/lib/f4/`). Peri speaks first, quizzes the Loci card deck conversationally, records reviews via server-authed tools. Harness: `scripts/test-walk-realtime.mjs` |
 | **MacPlus** | `apps/macplus/` | Retro68 → BlueSCSI SD card (manual) | Native classic-Mac (System 6, 68000) apps for Bart's real Macintosh Plus. See `apps/macplus/CLAUDE.md` |
 | **Tap Tap Dodo (iOS)** | `apps/taptapdodo/` | Xcode (XcodeGen, same workflow as Feynd) | Three-lane rhythm game starring a dodo — SpriteKit + AVAudioEngine synthesis, zero audio files, seeded procedural charts, 5 synth-genre sets. See `apps/taptapdodo/CLAUDE.md` |
+| **GolemBot** | `apps/golembot/` | Mac mini (launchd) | Discord-driven Claude Code agents. @mention **Strays** in kochitolabs and it builds, verifies, commits and pushes, then replies with a link. Config + runbook only; the bridge itself is the open-source [golembot](https://github.com/0xranx/golembot). See `apps/golembot/CLAUDE.md` |
 | **Jam (web)** | `src/app/jam/` + `public/jam/` | Vercel (`/jam`) | Mobile chat UI for Jambot: the whole groovebox (session, tools, agent loop, rendering) runs in the browser from a committed bundle; the server only signs LLM calls. See "Jam" below |
 
 ### Jam — Jambot in the browser

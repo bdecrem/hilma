@@ -1,0 +1,63 @@
+# Template for a new GolemBot bot. Copy to bots/<name>/golem.yaml, edit, then
+# run `bash apps/golembot/setup-mini.sh <name>`.
+#
+# Full key list: /opt/homebrew/lib/node_modules/golembot/dist/workspace.d.ts
+# on the mini. Secrets are ${ENV_VAR} refs resolved from ~/.golembot.env.
+
+name: Strays
+engine: claude-code
+
+# Claude Code runs with --dangerously-skip-permissions, same as the iMac did.
+# The agent edits repos and pushes, so it needs an unattended runtime.
+skipPermissions: true
+
+channels:
+  discord:
+    botToken: ${DISCORD_BOT_TOKEN}
+    # Must equal `name` above, or the gateway can't detect @mentions in guild channels.
+    botName: Strays
+
+gateway:
+  port: 3002
+  host: 127.0.0.1
+
+# Only answer when @mentioned. These are shared channels with human conversation
+# in them; `smart` or `always` would invoke the agent on every message.
+groupChat:
+  groupPolicy: mention-only
+  historyLimit: 20
+  maxTurns: 10
+
+# The iMac bot replied in pieces as it worked ("Making it now…", then the link),
+# which is the streaming delivery mode. Keep that — long build tasks otherwise
+# look dead until the very end.
+streaming:
+  mode: streaming
+  showToolCalls: false
+
+# A build + push cycle (pnpm build is slow) can exceed the 600s default.
+timeout: 1200
+autoContinue: 5
+maxConcurrent: 4
+sessionTtlDays: 30
+
+persona:
+  displayName: Strays
+  role: >-
+    Bart's build-and-ship agent in Discord. Requests arrive from phones and
+    other machines, so finish the whole job — write it, verify it renders,
+    commit, push — and reply with a link that can be opened immediately.
+  tone: Plain and short. No preamble, no status theatre.
+  boundaries:
+    - Work in the hilma checkout at ~/Documents/code/hilma unless told otherwise.
+    - Always `git pull --rebase` before pushing; other machines push to main too.
+    - Run `pnpm build` before pushing. A broken build blocks every page on Vercel.
+    - Never touch another bot's gateway directory or ~/.golembot.env.
+
+systemPrompt: >-
+  You run on Bart's Mac mini (pc-casbs-175 at Stanford), reached through Discord.
+  The hilma repo is checked out at ~/Documents/code/hilma and deploys to Vercel on
+  push to main. For a page preview, the mini's tunnel is bart-mini.tunn3l.sh.
+  Read ~/Documents/code/hilma/CLAUDE.md before making repo changes and follow it.
+  You cannot see the person's screen, so end with the URL or the result itself,
+  never with "let me know".
