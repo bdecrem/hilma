@@ -923,14 +923,6 @@ static void InitToolbox(void)
     FlushEvents(everyEvent, 0);
 }
 
-static void Banner(void)
-{
-    EmitLine("    M A C I N C L A U D E");
-    EmitLine("    ~~~~~~~~~~~~~~~~~~~~~");
-    EmitLine("    Claude Code for the 1986 Mac.");
-    EmitLine("");
-}
-
 /* ================= splash ================= */
 
 /* The Claude spark: 12 rays around (cx,cy), alternating long/short. */
@@ -949,19 +941,42 @@ static void DrawSpark(short cx, short cy, short rad)
     SetRect(&d, cx - 2, cy - 2, cx + 3, cy + 3); PaintOval(&d);
 }
 
-/* compact Macintosh silhouette, a Claude spark glowing on its screen. */
-static void DrawCompactMac(short cx, short topY)
+/* The robot - the same rows the agent prints as its boot screen (ROBOT in
+ * agent/src/main.ts), painted solid here: one 6x11 px block per '@' cell (a
+ * Monaco 9 cell), so the splash and the ASCII banner are the same creature -
+ * solid on the title card, textured once the terminal takes over. '=' are its
+ * ear bolts, drawn as slim bars so they read as "=" at pixel scale too. */
+#define ROBOT_ROWS 11
+#define ROBOT_COLS 31
+#define CELL_W 6
+#define CELL_H 11
+static const char *kRobot[ROBOT_ROWS] = {
+    "    @@@@@@@@@@@@@@@@@@@@@@@    ",
+    "  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ",
+    "  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ",
+    "==@@@@@     @@@@@@@     @@@@@==",
+    "==@@@@@     @@@@@@@     @@@@@==",
+    "  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ",
+    "  @@@@@@@             @@@@@@@  ",
+    "  @@@@@@@@@         @@@@@@@@@  ",
+    "  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ",
+    "  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ",
+    "    @@@@@@@@@@@@@@@@@@@@@@@    ",
+};
+
+static void DrawRobot(short left, short top)
 {
-    Rect body, scr, slot, dot;
-    short w = 70, h = 86, L = cx - w / 2, T = topY;
-    PenSize(2, 2);
-    SetRect(&body, L, T, L + w, T + h);        FrameRoundRect(&body, 16, 16);
-    SetRect(&scr, L + 9, T + 9, L + w - 9, T + 47); FrameRoundRect(&scr, 8, 8);
-    MoveTo(L + 9, T + 55); LineTo(L + w - 9, T + 55);   /* chin separator */
-    PenSize(1, 1);
-    DrawSpark((scr.left + scr.right) / 2, (scr.top + scr.bottom) / 2, 13);
-    SetRect(&slot, L + w - 30, T + h - 17, L + w - 10, T + h - 12); PaintRect(&slot);
-    SetRect(&dot, L + 11, T + h - 20, L + 19, T + h - 12); PaintOval(&dot);
+    short r, c; Rect b;
+    for (r = 0; r < ROBOT_ROWS; r++) {
+        for (c = 0; c < ROBOT_COLS; c++) {
+            char ch = kRobot[r][c];
+            if (ch == ' ') continue;
+            SetRect(&b, left + c * CELL_W, top + r * CELL_H,
+                        left + (c + 1) * CELL_W, top + (r + 1) * CELL_H);
+            if (ch == '=') InsetRect(&b, 0, 3);
+            PaintRect(&b);
+        }
+    }
 }
 
 static void CenterText(short winW, short y, ConstStr255Param s)
@@ -969,25 +984,24 @@ static void CenterText(short winW, short y, ConstStr255Param s)
     MoveTo((winW - StringWidth(s)) / 2, y); DrawString(s);
 }
 
-/* Startup splash: compact-Mac hero + Chicago title + loading line + bar. Held
+/* Startup splash - the title card: spark, mast, the solid robot, wordmark, one
+ * status line. Same column the terminal banner uses. Layout (WIN_H = 300):
+ * spark centre y=52 (rays to 68), mast 70..80, robot 80..201 (11 rows x 11px),
+ * wordmark baseline 234, status 260 -> 36px above, 40px below: centred. Held
  * briefly, then cleared so the terminal takes over. */
 static void ShowSplash(void)
 {
-    Rect rp, bar, fill; short bx; long t;
+    Rect rp; long t;
+    short cx = WIN_W / 2, top = 80;
     SetPort(gWin);
     rp = gWin->portRect; EraseRect(&rp);
-    DrawCompactMac(WIN_W / 2, 14);
+    DrawSpark(cx, 52, 16);
+    PenSize(2, 2); MoveTo(cx - 1, 70); LineTo(cx - 1, top); PenSize(1, 1);
+    DrawRobot(cx - (ROBOT_COLS * CELL_W) / 2, top);
     TextFont(systemFont); TextFace(bold); TextSize(20);
-    CenterText(WIN_W, 130, "\pMACINCLAUDE");
-    CenterText(WIN_W, 152, "\pCODE");
+    CenterText(WIN_W, 234, "\pMACINCLAUDE");
     TextFace(0); TextSize(12);
-    CenterText(WIN_W, 184, "\pwaking up claude ...");
-    bx = (WIN_W - 240) / 2;
-    SetRect(&bar, bx, 198, bx + 240, 216);
-    PenSize(2, 2); FrameRoundRect(&bar, 12, 12); PenSize(1, 1);
-    SetRect(&fill, bx + 4, 202, bx + 4 + 232 * 6 / 10, 212); PaintRoundRect(&fill, 8, 8);
-    TextSize(9);
-    CenterText(WIN_W, 238, "\pa coding companion for the 1986 mac");
+    CenterText(WIN_W, 260, "\pwaking up claude ...");
     Delay(120, &t);
     EraseRect(&rp);
     TextFont(monaco); TextSize(9); TextFace(0);     /* restore for the console */
@@ -1005,7 +1019,6 @@ int main(void)
 
     ShowSplash();
     PrefsLocate();
-    Banner();
 
     gHaveCfg = LoadPrefs();
     if (!gHaveCfg) {

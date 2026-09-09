@@ -213,6 +213,9 @@ function handleSlash(line: string): SlashResult {
       tt.line(`Commands: /help  /quit  /clear  /cols N  /cwd  /model [1..${MODELS.length}]`);
       tt.line('Type plain text to talk to Claude. All tools run automatically (no approvals).');
       tt.line('Knowledge: ask "what did i say about X" - searches your F2 notes + docsrepo.');
+      tt.line(`cwd:   ${cfg.cwd}`);
+      tt.line(`docs:  ${cfg.docs} + F2 store`);
+      tt.line(`model: ${choiceLabel(MODELS[current])} @ ${cfg.cols} cols`);
       return 'continue';
     case 'quit': case 'exit': tt.line('Goodbye.'); return 'quit';
     case 'clear': tt.clear(); return 'continue';
@@ -263,29 +266,51 @@ async function promptUser(inputQ: AsyncQueue<string>): Promise<'go' | 'quit' | '
   }
 }
 
+/* ---------- boot screen ----------
+ * The first thing the Plus shows once the agent answers, so it is a title card,
+ * not a status dump: one centred column - the Claude spark on its mast, the
+ * robot, the wordmark, a single line of status (cwd/docs moved under /help).
+ * The robot is solid '@' - the densest glyph in Monaco 9 - with the face cut
+ * out in white; '=' are its ear bolts. The app paints these same rows as its
+ * QuickDraw splash (macinclaude.c kRobot, one 6x11 px block per cell), so the
+ * splash and this banner are the same creature, solid then textured.
+ * Centred on the Plus window's true width (504px / 6px Monaco = 84 columns),
+ * not the 80-column wrap width; every line is well under 80 so nothing wraps.
+ * Budget: 23 visible lines (262px / 11px). 21 here + the '> ' prompt = 22. */
+const PLUS_COLS = 84;
+const ROBOT = [
+  '\\  |  /',
+  '-  *  -',
+  '/  |  \\',
+  '   |   ',
+  '    @@@@@@@@@@@@@@@@@@@@@@@    ',
+  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
+  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
+  '==@@@@@     @@@@@@@     @@@@@==',
+  '==@@@@@     @@@@@@@     @@@@@==',
+  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
+  '  @@@@@@@             @@@@@@@  ',
+  '  @@@@@@@@@         @@@@@@@@@  ',
+  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
+  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
+  '    @@@@@@@@@@@@@@@@@@@@@@@    ',
+];
+const centred = (s: string) => ' '.repeat(Math.max(0, Math.floor((PLUS_COLS - s.length) / 2))) + s;
+function bootScreen(): void {
+  const cwdName = cfg.cwd.replace(/\/+$/, '').split('/').pop() || cfg.cwd;
+  tt.clear();                                   // the connect chatter goes; clean canvas
+  tt.line('');
+  for (const row of ROBOT) tt.line(centred(row));
+  tt.line('');
+  tt.line(centred('M A C I N C L A U D E'));
+  tt.line('');
+  tt.line(centred(`${choiceLabel(MODELS[current]).toLowerCase()}  |  ${cwdName}  |  /help`));
+  tt.line('');
+}
+
 /* ---------- main ---------- */
 async function main() {
-  const banner = [
-    '',
-    '     .---------.',
-    '    |  _______  |',
-    '    |  | o o |  |          M A C I N C L A U D E',
-    '    |  |  -  |  |          ~~~~~~~~~~~~~~~~~~~~~',
-    '    |  | \\_/ |  |                p l u s',
-    '    |  |_____|  |',
-    '    | o  [===]  |          a coding companion',
-    '    |___________|          for the 1986 mac —',
-    '     \\_________/           no modem required.',
-    '',
-  ];
-  for (const ln of banner) tt.line(ln);
-  tt.line(`  cwd:    ${cfg.cwd}`);
-  tt.line(`  docs:   ${cfg.docs} + F2 store`);
-  tt.line(`  model:  ${choiceLabel(MODELS[current])} @ ${cfg.cols} cols`);
-  tt.line('');
-  tt.line('  type a task.  /help for commands.  /model to switch models.');
-  tt.line('  ask "what did i say about X" to search your notes.');
-  tt.line('');
+  bootScreen();
 
   // A /model switch can't change effort on a live SDK session, so we tear the
   // query down and rebuild it under the new model/effort, passing `resume` so
