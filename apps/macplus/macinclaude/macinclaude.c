@@ -1023,9 +1023,10 @@ static void DrawRobot(short left, short top, short cw, short ch)
 
 /* The hero lockup at the top of the transcript: the splash robot at 2/3 size
  * (4x7 px cells -> 124x77), spark + mast above it, the wordmark to its right
- * centred on the robot. Left-aligned like the conversation that follows.
- * Geometry (window coords): spark centre (70,16) r=11 -> rays 5..27; mast
- * 28..36; robot 36..113; wordmark baseline 81 = robot centre 74 + cap/2. */
+ * (MACINCLAUDE / CODE, two lines) centred on the robot. Left-aligned like the
+ * conversation that follows. Geometry (window coords): spark centre (70,16)
+ * r=11 -> rays 5..27; mast 28..36; robot 36..113 (centre 74); the two Chicago
+ * 20 lines (cap 14, 24 apart) span 55..93 -> baselines 69 and 93. */
 static void DrawHero(void)
 {
     short L = 8, top = 36, cx = L + (ROBOT_COLS * 4) / 2;
@@ -1036,7 +1037,8 @@ static void DrawHero(void)
     PenSize(2, 2); MoveTo(cx - 1, 28); LineTo(cx - 1, top); PenSize(1, 1);
     DrawRobot(L, top, 4, 7);
     TextFont(systemFont); TextFace(bold); TextSize(20);
-    MoveTo(L + ROBOT_COLS * 4 + 16, 81); DrawString("\pMACINCLAUDE");
+    MoveTo(L + ROBOT_COLS * 4 + 16, 69); DrawString("\pMACINCLAUDE");
+    MoveTo(L + ROBOT_COLS * 4 + 16, 93); DrawString("\pCODE");
     TextFont(monaco); TextSize(9); TextFace(0);
 }
 
