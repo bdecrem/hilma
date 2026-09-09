@@ -10,6 +10,47 @@ Provider × Anywhere"). We did not write it. This folder holds *our
 configuration and ops*, the same way `apps/macplus` holds source + runbook but
 not the Retro68 toolchain.
 
+## Status — 2026-09-09
+
+**Live on the Mac mini.** `com.golembot.strays` runs under launchd on
+`admin@171.66.240.175` (pc-casbs-175 at Stanford), Discord shows `connected`,
+and the agent was verified end to end through `POST /chat`. The migration off
+the home iMac is done.
+
+**The home iMac keeps the code as a cold backup.** `~/Documents/coding2025/bang/`
+is untouched; only the launchd job was stopped and its plist parked in
+`~/Library/LaunchAgents/disabled/`. Rolling back is moving that file back and
+bootstrapping it — but stop the mini job first, see the two-gateways warning
+below. The second bot, **Bang** (port 3001, `#bangbang`), was never migrated and
+still runs at home.
+
+### Open items
+
+1. **Swap API-key auth for the subscription OAuth token.** The mini's `claude`
+   CLI has never been logged in, so the engine currently authenticates with
+   `ANTHROPIC_API_KEY` (lifted from `~/.macplus-backend.env`). That bills the
+   API per message — a one-line test reply cost ~$0.17. To move it onto Bart's
+   Claude subscription instead:
+
+   ```bash
+   ssh admin@171.66.240.175
+   /opt/homebrew/bin/claude setup-token      # prints a URL, complete it in a browser
+   ```
+
+   Then drop `ANTHROPIC_API_KEY` from `~/.golembot.env` and
+   `launchctl kickstart -k gui/501/com.golembot.strays`. GolemBot also accepts
+   the token directly as `oauthToken:` in `golem.yaml` — keep it out of git and
+   reference an env var if you use that field.
+
+2. **Rotate the Discord bot token.** During the cutover the token was read back
+   from `/api/status`, which returns it in plaintext, so it ended up in a Claude
+   transcript. Reset it in the Developer Portal and run
+   `bash apps/golembot/set-token.sh strays`.
+
+3. **No `model` is pinned.** The iMac ran `model: fable`; the mini config leaves
+   it unset and takes the engine default. Set `model:` in
+   `bots/strays/golem.yaml` if the default drifts.
+
 ## The two bots
 
 | Bot | Discord | Gateway port | Purpose |
@@ -29,6 +70,11 @@ Discord (kochitolabs)
        ├─ HTTP API + dashboard on 127.0.0.1:<port>  (/health, /api/status, /chat)
        └─ spawns `claude` (Claude Code CLI, --dangerously-skip-permissions)
             └─ does the work in a real repo checkout, replies through the gateway
+
+Engine auth is separate from Discord auth, and the failure looks nothing like a
+Discord problem: the gateway connects fine and the bot answers every message with
+`API Error: 401 OAuth access token has expired`. Fix that on the machine, not in
+`golem.yaml`.
 ```
 
 - **One config file, `golem.yaml`**, in the bot's *assistant directory*. The
@@ -51,7 +97,7 @@ already the host for unattended services.
 | Thing | Path on the mini |
 |-------|------------------|
 | Assistant directory | `~/golembot/strays/` (`golem.yaml`, `.golem/`) |
-| Secrets | `~/.golembot.env`, chmod 600, `DISCORD_BOT_TOKEN=…` |
+| Secrets | `~/.golembot.env`, chmod 600 — `DISCORD_BOT_TOKEN` and (for now) `ANTHROPIC_API_KEY` |
 | launchd job | `~/Library/LaunchAgents/com.golembot.strays.plist` |
 | Log | `~/Library/Logs/golembot/strays.log` |
 | Repo the agent works in | `~/hilma-bot` (its own clone, deps installed, `gh` supplies push credentials) |
@@ -149,6 +195,13 @@ for the full list, it is more current than the README):
 - **A launchd `ProgramArguments` string is XML**, so `&&` in the command makes
   the plist unparseable and the job silently never loads. Use `;` with `set -e`.
   `plutil -lint <plist>` catches it.
+- **Pasting a token twice is silent.** A double-paste into a hidden prompt
+  stored 144 characters, and Discord answered only `An invalid token was
+  provided.` A Discord bot token is ~72 chars — check the length before
+  suspecting anything else. `cutover.sh` now reports the length it wrote.
+- **`/api/status` returns the bot token in plaintext.** It is bound to
+  127.0.0.1, but anything that reads it (a debugging session, a log paste)
+  burns the token. Treat that endpoint as a secret.
 - **The bot gets its own checkout, `~/hilma-bot`.** The mini's other two copies
   are not safe for it: `~/Documents/code/hilma` was 396 commits behind with
   uncommitted macplus edits, and `~/hilma-deploy` is the macplus services' deploy
