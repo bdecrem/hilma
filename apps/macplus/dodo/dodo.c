@@ -113,6 +113,7 @@ static char       gStatus[100];          /* what the input row shows while waiti
 static char       gTitle[90] = "Dodo";
 static Boolean    gDirty = true;         /* transcript needs redraw */
 static Boolean    gInDirty = true;       /* input row needs redraw */
+static Boolean    gOvDirty = true;       /* list / new-topic overlay needs redraw */
 static short      gCurStyle = ST_DODO;   /* style of the message being received */
 
 /* ---- tiny string helpers (no libc surprises on the 68000) ---- */
@@ -288,6 +289,8 @@ static void DrawButton(const Rect *b, const char *label, Boolean isDefault)
 	UseChatFont();
 }
 
+#include "fitwidth.inc"
+
 static void ListBox(Rect *box, Rect *rowsR, Rect *cancelB, Rect *openB)
 {
 	Rect r = gWin->portRect; short w = 330, h = 44 + ROW_MAX * 16 + 44;
@@ -308,17 +311,23 @@ static void DrawList(void)
 	MoveTo(box.left + 12, box.top + 20); DrawString("\pTopics");
 	FrameRect(&rows);
 	UseChatFont();
+	{ Rect clip = rows; InsetRect(&clip, 1, 1); ClipRect(&clip); }   /* nothing escapes the list frame */
 	for (i = 0; i < ROW_MAX; i++) {
-		short t = gListTop + i;
+		short t = gListTop + i, dw, avail, nl;
+		char shown[72];
 		if (t >= gTopN) break;
 		SetRect(&rr, rows.left + 1, rows.top + 1 + i * 16, rows.right - 1, rows.top + 1 + (i + 1) * 16);
 		y = rr.top + 12;
-		MoveTo(rr.left + 5, y); DrawText(gTopName[t], 0, slen(gTopName[t]));
-		MoveTo(rr.right - 5 - TextWidth(gTopDate[t], 0, slen(gTopDate[t])), y);
+		dw = TextWidth(gTopDate[t], 0, slen(gTopDate[t]));
+		avail = (rr.right - 5 - dw - 8) - (rr.left + 5);          /* room left of the date */
+		nl = FitWidth(gTopName[t], avail, shown, sizeof(shown));
+		MoveTo(rr.left + 5, y); DrawText(shown, 0, nl);
+		MoveTo(rr.right - 5 - dw, y);
 		DrawText(gTopDate[t], 0, slen(gTopDate[t]));
 		if (t == gSel) InvertRect(&rr);
 	}
 	if (gTopN == 0) { MoveTo(rows.left + 8, rows.top + 20); DrawString("\pNo topics yet - Cmd-N starts one."); }
+	ClipRect(&gWin->portRect);
 	DrawButton(&cancelB, "Cancel", false);
 	DrawButton(&openB, "Open", true);
 }
@@ -359,11 +368,21 @@ static void DrawAll(void)
 	DrawInput();
 	if (gMode == MODE_LIST) DrawList();
 	else if (gMode == MODE_NEW) DrawNewTopic();
+	gOvDirty = false;
 }
 
 static void Redraw(void)
 {
-	if (gMode == MODE_LIST || gMode == MODE_NEW) { DrawAll(); return; }
+	if (gMode == MODE_LIST || gMode == MODE_NEW) {
+		Boolean under = (Boolean)(gDirty || gInDirty);   /* overlay sits on top, so repaint it after */
+		if (gDirty) DrawTranscript();
+		if (gInDirty) DrawInput();
+		if (under || gOvDirty) {
+			if (gMode == MODE_LIST) DrawList(); else DrawNewTopic();
+			gOvDirty = false;
+		}
+		return;
+	}
 	if (gDirty) DrawTranscript();
 	if (gInDirty) DrawInput();
 }
@@ -441,7 +460,7 @@ static void RxErr(const char *text)
 static void RxEnd(void)
 {
 	if (gMode == MODE_WAIT) { gMode = MODE_CHAT; gScroll = 0; gInDirty = true; }
-	else if (gMode == MODE_LISTWAIT) { gMode = MODE_LIST; gDirty = true; }
+	else if (gMode == MODE_LISTWAIT) { gMode = MODE_LIST; gDirty = true; gOvDirty = true; }
 	gDirty = true;
 }
 static void RxOk(void) {}
@@ -549,7 +568,7 @@ static void BeginNew(void)
 {
 	if (!gConnected || gMode == MODE_WAIT) return;
 	gMode = MODE_NEW; gNewLen = 0; gNew[0] = 0;
-	DrawAll();
+	gOvDirty = true;
 }
 
 /* ---- keys ---- */
@@ -579,16 +598,16 @@ static void KeyList(char c)
 	if (c == 31 && gSel < gTopN - 1) gSel++;
 	if (gSel < gListTop) gListTop = gSel;
 	if (gSel >= gListTop + ROW_MAX) gListTop = gSel - ROW_MAX + 1;
-	DrawList();
+	gOvDirty = true;
 }
 
 static void KeyNew(char c)
 {
 	if (c == 27) { gMode = MODE_CHAT; DrawAll(); return; }
 	if (c == 13 || c == 3) { StartNewTopic(); return; }
-	if (c == 8) { if (gNewLen > 0) gNewLen--; gNew[gNewLen] = 0; DrawNewTopic(); return; }
+	if (c == 8) { if (gNewLen > 0) gNewLen--; gNew[gNewLen] = 0; gOvDirty = true; return; }
 	if (c < 32) return;
-	if (gNewLen < (short)sizeof(gNew) - 1) { gNew[gNewLen++] = c; gNew[gNewLen] = 0; DrawNewTopic(); }
+	if (gNewLen < (short)sizeof(gNew) - 1) { gNew[gNewLen++] = c; gNew[gNewLen] = 0; gOvDirty = true; }
 }
 
 /* ---- mouse in the overlays ---- */
@@ -602,7 +621,7 @@ static void ClickList(Point where)
 		short row = (where.v - rows.top - 1) / 16;
 		if (row >= 0 && gListTop + row < gTopN) {
 			if (gListTop + row == gSel) { OpenSelected(); return; }   /* second click opens */
-			gSel = gListTop + row; DrawList();
+			gSel = gListTop + row; gOvDirty = true;
 		}
 	}
 }
@@ -656,7 +675,9 @@ static void TestSeed(void)
 	TestFeed("DU so no stories for centuries?\n");
 	TestFeed("DA Right. Literature shows up around 2600 BC, and even then it's mostly hymns and king lists. Gilgamesh as we know it is a thousand years after the first receipt.\n");
 	TestFeed("DEND\n");
-	TestFeed("DLIST\nDT 1 today|Sumerian\nDT 2 today|Fresco\nDT 3 Aug 24|French Belgium US Revolutions\nDT 4 Aug 22|Superintelligence - Bostrom\nDT 5 Aug 19|Manifold\nDT 6 Aug 18|Unit Distance problem\nDT 7 Aug 12|Einstein - Isaacson\nDEND\n");
+	/* Row 3 is the title that used to run out of its row on the Plus - keep a
+	   long one here so the list fitter stays honest. */
+	TestFeed("DLIST\nDT 1 today|Sumerian\nDT 2 today|Fresco\nDT 3 Aug 25|Why Nations Fail - James Robinson Daron Acemoglu\nDT 4 Aug 24|French Belgium US Revolutions\nDT 5 Aug 22|Superintelligence - Bostrom\nDT 6 Aug 19|Manifold\nDT 7 Aug 18|Unit Distance problem\nDT 8 Aug 12|Einstein - Isaacson\nDEND\n");
 	gMode = MODE_CHAT;
 	scopy(gInput, "how did they teach it", sizeof(gInput)); gInLen = slen(gInput);
 }

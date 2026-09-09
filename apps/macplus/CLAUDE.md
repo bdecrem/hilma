@@ -581,6 +581,21 @@ stars stay on the phone.
   `> `, Dodo lines with a bold `Dodo:` prefix, blank lines between messages.
   Overlays (Topics / New topic) are drawn in-window, no DLOG. Parser
   `dodo_rx.inc` (shared with `rxtest.c`, host-tested). SIZE 2 MB.
+- **Overlay redraw is dirty-flagged (`gOvDirty`).** `Redraw()` used to call
+  `DrawAll()` on EVERY event-loop pass while the Topics / New-topic overlay was
+  up, so the box repainted continuously and visibly flickered. Now the overlay
+  repaints only when its own state changes, or when the transcript/input under
+  it was redrawn. Anything that changes the overlay (selection, typing, the list
+  arriving) sets `gOvDirty` instead of drawing inline.
+- **Long topic titles are fitted, not clipped by luck (`fitwidth.inc`).** A title
+  wider than its row used to run over the date and out of the list frame ("Why
+  Nations Fail - James Robinson Daron Acemoglu" did exactly that). `FitWidth()`
+  trims to the room left of the date and marks the cut with a MacRoman ellipsis;
+  `DrawList` also sets `ClipRect` to the list frame so nothing can escape the box
+  even if the metrics are off. Host-tested by `dodo/fit_test.c`
+  (`cc -Wall -o /tmp/fit_test fit_test.c && /tmp/fit_test`), which shares the one
+  copy of the function via the `.inc`. The DODO_TEST seed keeps a deliberately
+  long title in row 3 so the fitter stays exercised.
 - **Transport**: direct TCP (`nettcp`) on the Plus. `./build.sh serial` builds a
   **DODO_SERIAL** variant on `net/serlink.inc` (modem port, AT/ATDT/CONNECT,
   flow control off) — that's what the Mini vMac harness runs. `./build.sh test`
