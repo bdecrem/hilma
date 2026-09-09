@@ -20,7 +20,7 @@ OG_HTML = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else '/tmp/casbs-og.html
 
 html = json.loads(TS.read_text().split('export const html = ', 1)[1])
 
-CARD = re.compile(r'<article class="card">\s*<img src="([^"]+)" alt="([^"]*)" width="60" height="60">\s*<div>\s*'
+CARD = re.compile(r'<article class="card"[^>]*>\s*<img src="([^"]+)" alt="([^"]*)" width="60" height="60">\s*<div>\s*'
     r'<h4><a href="([^"]+)" target="_blank" rel="noopener">([^<]*)</a></h4>\s*'
     r'<div class="school">(.*?)</div>\s*<p>(.*?)</p>\s*</div>\s*</article>', re.S)
 
@@ -39,15 +39,22 @@ for s in json.loads(DATA.read_text()):
         name=s['name'], school=s['school'], bio=s['bio'], surname=s.get('surname')))
     assert people[-1]['bio'].startswith('<b>Scholar</b>'), s['name']
 
-# Surname sort. Multi-word surnames keep the order the original page used.
+# Two orders: first name (the page default) and surname. Multi-word surnames keep
+# the order the original page used. Both are baked into every card as data-first /
+# data-last indices; the toggle at the top just swaps the CSS order property.
 SURNAME = {'Lewis Abedi Asante': 'Asante', 'John Casellas Connors': 'Casellas Connors', 'Inbal Ben Ami Bartal': 'Ben Ami Bartal'}
-def key(p):
-    s = p['surname'] or SURNAME.get(p['name']) or p['name'].split()[-1]
-    return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().casefold(), p['name']
-people.sort(key=key)
+def fold(s):
+    return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().casefold()
+def surname(p):
+    return p['surname'] or SURNAME.get(p['name']) or p['name'].split()[-1]
+for i, p in enumerate(sorted(people, key=lambda p: (fold(surname(p)), fold(p['name'])))):
+    p['olast'] = i
+people.sort(key=lambda p: (fold(p['name']), fold(surname(p))))
+for i, p in enumerate(people):
+    p['ofirst'] = i
 
 def card(p):
-    return f'''      <article class="card">
+    return f'''      <article class="card" data-first="{p['ofirst']}" data-last="{p['olast']}">
         <img src="{p['src']}" alt="{p['alt']}" width="60" height="60">
         <div>
           <h4><a href="{p['href']}" target="_blank" rel="noopener">{p['name']}</a></h4>
@@ -64,6 +71,67 @@ assert n == 1
 MARK_CSS = '.card p b { color: var(--ink); font-weight: 700; }'
 if MARK_CSS not in out:
     out = out.replace('</style>', f'/* Visiting scholars: blurb opens with a bold "Scholar". */\n{MARK_CSS}\n</style>', 1)
+
+# Sort toggle: first name (default, and the DOM order of the grid) or surname.
+# Markup, CSS and script are each fenced by comments so a re-run replaces them.
+SORT_BAR = """<!--sortbar-->
+    <div class="sortbar" hidden>
+      <span>Sort by</span>
+      <div class="seg" role="group" aria-label="Sort order">
+        <button type="button" class="seg-btn is-on" data-sort="first" aria-pressed="true">First name</button>
+        <button type="button" class="seg-btn" data-sort="last" aria-pressed="false">Last name</button>
+      </div>
+    </div>
+<!--/sortbar-->"""
+
+SORT_CSS = """/* Sort toggle above the grid. */
+.sortbar { display: flex; align-items: center; gap: 12px; margin-top: 14px;
+  font-family: "IBM Plex Mono", monospace; font-size: 0.72rem; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--muted); }
+.sortbar[hidden] { display: none; }
+.seg { display: flex; background: var(--card); border: 1px solid var(--hairline);
+  border-radius: 999px; overflow: hidden; }
+.seg-btn { appearance: none; -webkit-appearance: none; border: 0; background: transparent;
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--muted);
+  padding: 6px 14px; line-height: 1.2; cursor: pointer; }
+.seg-btn + .seg-btn { border-left: 1px solid var(--hairline); }
+.seg-btn:hover { color: var(--ink); }
+.seg-btn.is-on { background: var(--accent); color: var(--paper); }
+.seg-btn:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 2px; }"""
+
+SORT_JS = """<!--sortjs-->
+<script>
+(function () {
+  var bar = document.querySelector('.sortbar');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.grid .card'));
+  var btns = Array.prototype.slice.call(document.querySelectorAll('.seg-btn'));
+  if (!bar || !cards.length) return;
+  function apply(mode) {
+    cards.forEach(function (c) { c.style.order = c.getAttribute('data-' + mode); });
+    btns.forEach(function (b) {
+      var on = b.getAttribute('data-sort') === mode;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+  btns.forEach(function (b) {
+    b.addEventListener('click', function () { apply(b.getAttribute('data-sort')); });
+  });
+  apply('first');
+  bar.hidden = false;   // no JS, no toggle: the grid stays in first-name order
+})();
+</script>
+<!--/sortjs-->"""
+
+out = re.sub(r'<!--sortbar-->.*?<!--/sortbar-->\n?', '', out, flags=re.S)
+out = out.replace('    <div class="grid">', SORT_BAR + '\n    <div class="grid">', 1)
+
+if SORT_CSS not in out:
+    out = out.replace('</style>', SORT_CSS + '\n</style>', 1)
+
+out = re.sub(r'<!--sortjs-->.*?<!--/sortjs-->\n?', '', out, flags=re.S)
+out = out.replace('</body>', SORT_JS + '\n</body>', 1)
+
 
 fellows = sum(1 for p in people if not p['bio'].startswith('<b>Scholar</b>'))
 scholars = len(people) - fellows
