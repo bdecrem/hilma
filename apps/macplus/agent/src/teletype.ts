@@ -130,6 +130,12 @@ export class Teletype {
     process.stdout.write('\x1b[2J\x1b[H');
   }
 
+  /** Private mode 9001: the Macinclaude client's hero strip (its solid robot
+   * lockup above the transcript). Unknown to every other terminal - ignored. */
+  hero(on: boolean): void {
+    process.stdout.write(on ? '\x1b[?9001h' : '\x1b[?9001l');
+  }
+
   close(): void {
     this.rl.close();
   }

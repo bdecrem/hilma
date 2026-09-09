@@ -151,7 +151,16 @@ static void PrefillInput(const char *s);
 static void InvalInput(void);
 static void DrawInputChrome(void);
 static void LayoutTE(void);       /* (re)position the TE views from WIN_W/WIN_H */
-static void Relayout(void);       /* after a zoom: refresh dims, re-lay-out, redraw */
+static void Relayout(void);       /* after a zoom / hero change: re-lay-out, redraw */
+static void DrawHero(void);       /* the solid robot lockup above the transcript */
+
+/* The hero: the splash's solid robot, 2/3 size, top-left above the transcript,
+ * shown while the boot screen is on. The agent turns it on with the private
+ * mode ESC[?9001h (right after its clear-screen); it goes away by itself the
+ * moment the transcript outgrows the room left under it - i.e. it scrolls off
+ * like any other boot text - or on the next clear-screen. */
+static Boolean gHero = false;
+#define HERO_H  120               /* strip height: spark 5..27, mast, robot 36..113, pad */
 
 static char       gSerBuf[2048];            /* receive scratch (TCP -> parser) */
 
@@ -189,6 +198,11 @@ static void Emit(const char *s)
     }
     TESetSelect(32767, 32767, gTE);
     TEInsert((Ptr)s, n, gTE);
+    if (gHero) {
+        short totalH = (*gTE)->nLines * (*gTE)->lineHeight;
+        short viewH  = (*gTE)->viewRect.bottom - (*gTE)->viewRect.top;
+        if (totalH > viewH) { gHero = false; Relayout(); }
+    }
     ScrollToBottom();
 }
 
@@ -209,9 +223,12 @@ static void CatStr(char *buf, short *len, const char *s)
 
 /* Render incoming bytes to the console, filtering ANSI/control noise.
  * The agent sends clean ASCII + CRLF; the only escapes it emits are CSI
- * sequences (clear-screen on /clear). We honor ESC[2J as a console clear and
- * drop the rest, so nothing shows up as garbage dots. */
-static Boolean gInEsc = false;       /* mid CSI escape sequence */
+ * sequences. We honor ESC[2J (console clear) and the private modes
+ * ESC[?9001h / ESC[?9001l (hero on / off) and drop every other sequence, so
+ * nothing shows up as garbage. Parser: ESC then '[' opens a CSI; parameter
+ * and intermediate bytes 0x20..0x3F accumulate; a final byte 0x40..0x7E ends
+ * it. ESC followed by anything else is a two-byte escape: dropped. */
+static short   gEsc = 0;             /* 0 = text, 1 = saw ESC, 2 = inside CSI */
 static char    gEscBuf[16];
 static short   gEscLen = 0;
 
@@ -219,7 +236,23 @@ static void ClearConsole(void)
 {
     TESetSelect(0, (*gTE)->teLength, gTE);
     TEDelete(gTE);
+    if (gHero) { gHero = false; Relayout(); }
     ScrollToBottom();
+}
+
+static Boolean EscIs(const char *p)
+{
+    short i;
+    for (i = 0; i < gEscLen; i++) if (p[i] == 0 || p[i] != gEscBuf[i]) return false;
+    return p[gEscLen] == 0;
+}
+
+/* A complete CSI arrived (params in gEscBuf, final byte c). */
+static void DoCSI(unsigned char c)
+{
+    if (c == 'J') ClearConsole();
+    else if (c == 'h' && EscIs("?9001")) { if (!gHero) { gHero = true; Relayout(); } }
+    else if (c == 'l' && EscIs("?9001")) { if (gHero)  { gHero = false; Relayout(); } }
 }
 
 static void DumpTerm(const unsigned char *buf, short len)
@@ -227,16 +260,23 @@ static void DumpTerm(const unsigned char *buf, short len)
     char line[200]; short k = 0; short i;
     for (i = 0; i < len; i++) {
         unsigned char c = buf[i];
-        if (gInEsc) {
-            if (gEscLen < (short)sizeof(gEscBuf)) gEscBuf[gEscLen++] = (char)c;
-            /* CSI ends on a final byte 0x40..0x7E */
-            if (c >= 0x40 && c <= 0x7E) {
-                if (c == 'J') { if (k > 0) { line[k] = 0; Emit(line); k = 0; } ClearConsole(); }
-                gInEsc = false; gEscLen = 0;
+        if (gEsc == 1) {                      /* the byte after ESC */
+            if (c == '[') { gEsc = 2; gEscLen = 0; }
+            else gEsc = 0;                    /* two-byte escape: dropped */
+            continue;
+        }
+        if (gEsc == 2) {                      /* inside a CSI */
+            if (c >= 0x20 && c <= 0x3F) {
+                if (gEscLen < (short)sizeof(gEscBuf) - 1) gEscBuf[gEscLen++] = (char)c;
+            } else {
+                if (k > 0) { line[k] = 0; Emit(line); k = 0; }   /* keep order */
+                gEscBuf[gEscLen] = 0;
+                if (c >= 0x40 && c <= 0x7E) DoCSI(c);
+                gEsc = 0; gEscLen = 0;
             }
             continue;
         }
-        if (c == 27) { gInEsc = true; gEscLen = 0; continue; }
+        if (c == 27) { gEsc = 1; continue; }
         if (c == 0) continue;                 /* drop NULs */
         if (c == 8 || c == 127) {             /* destructive backspace echo: the
                                                * PTY erases with BS/space/BS, so
@@ -384,7 +424,7 @@ static Boolean DialAgent(void)
 
     gConnected = true;
     AppLog("connected");
-    gInEsc = false; gEscLen = 0;
+    gEsc = 0; gEscLen = 0;
     EmitLine("--- connected. you're talking to Claude. ---");
     EmitLine("");
     return true;
@@ -761,6 +801,7 @@ static void HandleEvent(EventRecord *ev)
             WindowPtr w = (WindowPtr)ev->message;
             BeginUpdate(w);
             SetPort(w);
+            if (gHero) DrawHero();
             { Rect r = (*gTE)->viewRect; EraseRect(&r); TEUpdate(&r, gTE); }
             DrawInputChrome();
             { Rect r = (*gInputTE)->viewRect; EraseRect(&r); TEUpdate(&r, gInputTE); }
@@ -812,7 +853,7 @@ static void LayoutTE(void)
 {
     short sepY = WIN_H - INPUT_H;
     Rect v;
-    SetRect(&v, TE_PAD, TE_PAD, WIN_W - TE_PAD, sepY - 2);
+    SetRect(&v, TE_PAD, gHero ? HERO_H : TE_PAD, WIN_W - TE_PAD, sepY - 2);
     (*gTE)->viewRect = v;
     (*gTE)->destRect.left = v.left; (*gTE)->destRect.right = v.right;
     TECalText(gTE);
@@ -863,9 +904,11 @@ static void Relayout(void)
     WIN_H = gWin->portRect.bottom - gWin->portRect.top;
     LayoutTE();
     rp = gWin->portRect; EraseRect(&rp);
+    if (gHero) DrawHero();
     { Rect r = (*gTE)->viewRect; TEUpdate(&r, gTE); }
     DrawInputChrome();
     { Rect r = (*gInputTE)->viewRect; TEUpdate(&r, gInputTE); }
+    ScrollToBottom();               /* the view top moved: re-pin the text to it */
 }
 
 /* redraw just the input field (after edits/sends) */
@@ -964,19 +1007,37 @@ static const char *kRobot[ROBOT_ROWS] = {
     "    @@@@@@@@@@@@@@@@@@@@@@@    ",
 };
 
-static void DrawRobot(short left, short top)
+static void DrawRobot(short left, short top, short cw, short ch)
 {
     short r, c; Rect b;
     for (r = 0; r < ROBOT_ROWS; r++) {
         for (c = 0; c < ROBOT_COLS; c++) {
-            char ch = kRobot[r][c];
-            if (ch == ' ') continue;
-            SetRect(&b, left + c * CELL_W, top + r * CELL_H,
-                        left + (c + 1) * CELL_W, top + (r + 1) * CELL_H);
-            if (ch == '=') InsetRect(&b, 0, 3);
+            char g = kRobot[r][c];
+            if (g == ' ') continue;
+            SetRect(&b, left + c * cw, top + r * ch, left + (c + 1) * cw, top + (r + 1) * ch);
+            if (g == '=') InsetRect(&b, 0, (ch - 1) / 4 + 1);   /* ear bolts: slim bars */
             PaintRect(&b);
         }
     }
+}
+
+/* The hero lockup at the top of the transcript: the splash robot at 2/3 size
+ * (4x7 px cells -> 124x77), spark + mast above it, the wordmark to its right
+ * centred on the robot. Left-aligned like the conversation that follows.
+ * Geometry (window coords): spark centre (70,16) r=11 -> rays 5..27; mast
+ * 28..36; robot 36..113; wordmark baseline 81 = robot centre 74 + cap/2. */
+static void DrawHero(void)
+{
+    short L = 8, top = 36, cx = L + (ROBOT_COLS * 4) / 2;
+    Rect strip;
+    SetPort(gWin);
+    SetRect(&strip, 0, 0, WIN_W, HERO_H); EraseRect(&strip);
+    DrawSpark(cx, 16, 11);
+    PenSize(2, 2); MoveTo(cx - 1, 28); LineTo(cx - 1, top); PenSize(1, 1);
+    DrawRobot(L, top, 4, 7);
+    TextFont(systemFont); TextFace(bold); TextSize(20);
+    MoveTo(L + ROBOT_COLS * 4 + 16, 81); DrawString("\pMACINCLAUDE");
+    TextFont(monaco); TextSize(9); TextFace(0);
 }
 
 static void CenterText(short winW, short y, ConstStr255Param s)
@@ -997,7 +1058,7 @@ static void ShowSplash(void)
     rp = gWin->portRect; EraseRect(&rp);
     DrawSpark(cx, 52, 16);
     PenSize(2, 2); MoveTo(cx - 1, 70); LineTo(cx - 1, top); PenSize(1, 1);
-    DrawRobot(cx - (ROBOT_COLS * CELL_W) / 2, top);
+    DrawRobot(cx - (ROBOT_COLS * CELL_W) / 2, top, CELL_W, CELL_H);
     TextFont(systemFont); TextFace(bold); TextSize(20);
     CenterText(WIN_W, 234, "\pMACINCLAUDE");
     TextFace(0); TextSize(12);

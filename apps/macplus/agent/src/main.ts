@@ -267,44 +267,19 @@ async function promptUser(inputQ: AsyncQueue<string>): Promise<'go' | 'quit' | '
 }
 
 /* ---------- boot screen ----------
- * The first thing the Plus shows once the agent answers, so it is a title card,
- * not a status dump: one centred column - the Claude spark on its mast, the
- * robot, the wordmark, a single line of status (cwd/docs moved under /help).
- * The robot is solid '@' - the densest glyph in Monaco 9 - with the face cut
- * out in white; '=' are its ear bolts. The app paints these same rows as its
- * QuickDraw splash (macinclaude.c kRobot, one 6x11 px block per cell), so the
- * splash and this banner are the same creature, solid then textured.
- * Centred on the Plus window's true width (504px / 6px Monaco = 84 columns),
- * not the 80-column wrap width; every line is well under 80 so nothing wraps.
- * Budget: 23 visible lines (262px / 11px). 21 here + the '> ' prompt = 22. */
-const PLUS_COLS = 84;
-const ROBOT = [
-  '\\  |  /',
-  '-  *  -',
-  '/  |  \\',
-  '   |   ',
-  '    @@@@@@@@@@@@@@@@@@@@@@@    ',
-  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
-  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
-  '==@@@@@     @@@@@@@     @@@@@==',
-  '==@@@@@     @@@@@@@     @@@@@==',
-  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
-  '  @@@@@@@             @@@@@@@  ',
-  '  @@@@@@@@@         @@@@@@@@@  ',
-  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
-  '  @@@@@@@@@@@@@@@@@@@@@@@@@@@  ',
-  '    @@@@@@@@@@@@@@@@@@@@@@@    ',
-];
-const centred = (s: string) => ' '.repeat(Math.max(0, Math.floor((PLUS_COLS - s.length) / 2))) + s;
+ * The first thing the Plus shows once the agent answers - a title card, not a
+ * status dump. The robot itself is drawn by the app: after the clear we raise
+ * the private mode ESC[?9001h and the Plus client paints its splash robot
+ * (solid QuickDraw, 2/3 size) top-left above the transcript with the wordmark
+ * beside it - see DrawHero in macinclaude.c. Any other terminal ignores the
+ * mode, so there the boot screen is just the status line. The strip yields on
+ * its own once the conversation needs the room. Only one line of status here
+ * (model | cwd | /help); cwd/docs in full live under /help. */
 function bootScreen(): void {
   const cwdName = cfg.cwd.replace(/\/+$/, '').split('/').pop() || cfg.cwd;
   tt.clear();                                   // the connect chatter goes; clean canvas
-  tt.line('');
-  for (const row of ROBOT) tt.line(centred(row));
-  tt.line('');
-  tt.line(centred('M A C I N C L A U D E'));
-  tt.line('');
-  tt.line(centred(`${choiceLabel(MODELS[current]).toLowerCase()}  |  ${cwdName}  |  /help`));
+  tt.hero(true);
+  tt.line(` ${choiceLabel(MODELS[current]).toLowerCase()}  |  ${cwdName}  |  /help`);
   tt.line('');
 }
 
