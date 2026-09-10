@@ -9,7 +9,8 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   warm paper of the live homepage (#fff6ea / #2b2118 / #d64a22). The three photo objects are now plain links —
   Dodo → dodo.foo, Jambot → jambot.to, Mac Plus → github.com/bdecrem/Macinclaude — and reveal their destination on
   hover instead of opening the dialog, so alt3 no longer renders `.project-dialog`. The footer carries the live
-  homepage's links: phone, About me, decremental.com, Substack, LinkedIn, X.
+  homepage's links: phone, About me, decremental.com, Substack, LinkedIn, X. The floating edition switcher is gone
+  from alt3 (alt4 still has it); reach the drafts by URL.
 - `/hi/alt4` — **Room for play**: a chrome 16, draggable project objects, hover reveals, and a small user-initiated rhythm sketch. Edit `../alt4/html.ts`.
 
 The HTML route handlers use the repository’s existing full-document pattern (`/1ziu1wahxw`) so the designs retain their CSS and native browser interactions without inheriting the homepage’s React layout or global Tailwind resets. Both return noindex/nofollow. Their small navigation links only to each other and the original homepage.

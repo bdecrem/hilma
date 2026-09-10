@@ -15,8 +15,7 @@ export const body = `<header class="three-header"><a href="/hi">Bart Decrem<span
   </div>
   <div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work.</p><a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com ↗</a></div></div>
 </main>
-<footer class="three-footer"><a href="sms:6508989508">650 898 9508</a><a href="/hi/about">About me</a><a href="https://decremental.com" target="_blank" rel="noopener">decremental.com ↗</a><a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack ↗</a><a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn ↗</a><a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X ↗</a></footer>
-<nav class="edition-nav" aria-label="Alternate homepage designs"><a class="edition-label" href="/hi">HOME /</a><a href="/hi/alt3" aria-current="page" title="Small wonders">03</a><a href="/hi/alt4" title="Room for play">04</a></nav>`
+<footer class="three-footer"><a href="sms:6508989508">650 898 9508</a><a href="/hi/about">About me</a><a href="https://decremental.com" target="_blank" rel="noopener">decremental.com ↗</a><a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack ↗</a><a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn ↗</a><a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X ↗</a></footer>`
 
 export const html = alternateDocument({
   title: "Bart in 16 — Small wonders",
