@@ -13,9 +13,9 @@ export const body = `<header class="three-header"><a href="/hi">Bart Decrem<span
     <div class="letter-line"><span>and old things</span><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a></div>
     <div class="letter-line last-letter"><span><em>new again.</em></span><span class="letter-period" aria-hidden="true">✳</span></div>
   </div>
-  <div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work.</p><a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com ↗</a></div></div>
+  <div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work — or text me at <a href="sms:6508989508">650-898-9508</a>, or email <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a>.</p></div></div>
 </main>
-<footer class="three-footer"><a href="sms:6508989508">650 898 9508</a><a href="/hi/about">About me</a><a href="https://decremental.com" target="_blank" rel="noopener">decremental.com ↗</a><a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack ↗</a><a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn ↗</a><a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X ↗</a></footer>`
+<footer class="three-footer"><a href="/hi/about">About me</a><a href="https://decremental.com" target="_blank" rel="noopener">decremental.com ↗</a><a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack ↗</a><a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn ↗</a><a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X ↗</a></footer>`
 
 export const html = alternateDocument({
   title: "Bart in 16 — Small wonders",

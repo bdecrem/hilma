@@ -903,7 +903,7 @@ button:focus-visible,a:focus-visible {
 }
 
 .three-bio {
-  max-width: 44ch;
+  max-width: 52ch;
 }
 
 .three-bio p {
@@ -914,10 +914,16 @@ button:focus-visible,a:focus-visible {
   color: #6f6152;
 }
 
-.three-bio>a {
-  font-size: 14px;
-  font-weight: 600;
+.three-bio a {
   color: var(--clay);
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 1.5px solid #f4633a55;
+  transition: border-color .2s;
+}
+
+.three-bio a:hover {
+  border-color: var(--clay);
 }
 
 .three-footer {
