@@ -49,8 +49,10 @@ done
 # token (<@&roleId>), which the stock adapter does not count as a mention, so
 # mention-only bots stay silent. Re-applied here because a golembot upgrade
 # overwrites dist/. Idempotent; a missing patch file is not fatal.
-PATCHF="$HOME/golembot/discord-role-mention.mjs"
-[ -f "$PATCHF" ] && "$BREW/node" "$PATCHF" || echo "(no role-mention patch on disk)"
+for pf in discord-role-mention smart-stream; do
+  PATCHF="$HOME/golembot/$pf.mjs"
+  [ -f "$PATCHF" ] && "$BREW/node" "$PATCHF" || echo "(no $pf patch on disk)"
+done
 
 mkdir -p "$DIR" "$LOGD" "$HOME/Library/LaunchAgents"
 cat > "$DIR/golem.yaml"                     # config arrives on stdin
@@ -114,12 +116,12 @@ REMOTE
 
 if [ "$MODE" = "--local" ]; then
   mkdir -p ~/golembot
-  cp "$HERE/patches/discord-role-mention.mjs" ~/golembot/discord-role-mention.mjs
+  cp "$HERE/patches/"*.mjs ~/golembot/
   remote_script > /tmp/golembot-setup.sh
   bash /tmp/golembot-setup.sh "$BOT" < "$SRC"
 else
   ssh -o ConnectTimeout=15 "$MINI_SSH" 'mkdir -p ~/golembot'
-  scp -q "$HERE/patches/discord-role-mention.mjs" "$MINI_SSH:~/golembot/discord-role-mention.mjs"
+  scp -q "$HERE/patches/"*.mjs "$MINI_SSH:~/golembot/"
   remote_script | ssh -o ConnectTimeout=15 "$MINI_SSH" "cat > /tmp/golembot-setup.sh"
   ssh -o ConnectTimeout=15 "$MINI_SSH" "bash /tmp/golembot-setup.sh '$BOT'" < "$SRC"
 fi
