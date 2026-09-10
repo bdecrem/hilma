@@ -28,6 +28,15 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   by rules — the separator span carries a space after it and none before, so a wrapped line never
   starts with a dangling rule, and without that space the run cannot break at all. On desktop the
   separators are display:none and the footer stays a flex row.
+  The three photos answer to touch as well as hover. On a device with no pointer, the first tap
+  lifts a photo to the middle of the screen at up to 3.2x with its address under it, over a
+  dimmed, blurred page; tapping it again follows the link, and the scrim, Escape, a scroll or a
+  resize put it back. The hover rules moved inside `@media (hover: hover)` so a tap cannot leave
+  a sticky hover behind. Two details make the address land right: it divides its size and offset
+  by the scale so it stays 13px whatever the photo does, and the script measures the *open*
+  arrangement first (`.is-measuring` is the open photo positions without the parent scale),
+  because the photos fan out on open and each box holds them differently — measuring at rest
+  put the Mac's address 20px too low.
   `/hi/card` renders the sentence as a 1600x900 poster (`.edition-card`, photos about a third
   larger, three wide lines instead of five narrow ones) — `node scripts/hi/make-card.mjs`
   screenshots it to `~/Desktop/bartin16-linkedin.png` with the dev server running.

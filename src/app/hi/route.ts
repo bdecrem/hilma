@@ -1,5 +1,5 @@
 import { styles } from './_alts/styles'
-import { body, bodyWithForm, formScript } from './home'
+import { body, bodyWithForm, formScript, objectsScript } from './home'
 
 const TITLE = "Hi, I'm Bart in 16"
 const DESCRIPTION =
@@ -39,6 +39,7 @@ function page(host: string) {
 </head>
 <body class="edition-three${decremental ? ' site-decremental' : ''}">
 ${decremental ? bodyWithForm : body}
+<script>${objectsScript}</script>
 ${decremental ? `<script>${formScript}</script>` : ''}
 </body>
 </html>`

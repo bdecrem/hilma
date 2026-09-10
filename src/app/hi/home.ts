@@ -50,6 +50,68 @@ export const cardBody = `<main class="three-main">
   </div>
 </main>`
 
+// Touch only: the first tap on a photo lifts it to the middle of the screen at ~3x with
+// its address showing, over a scrim. Tapping the open photo again follows the link; the
+// scrim, Escape, a scroll or a resize put it back. Devices with a real pointer keep the
+// hover behaviour and never run any of this.
+export const objectsScript = `
+if (window.matchMedia('(hover: none)').matches) {
+  const objects = [...document.querySelectorAll('.inline-object')]
+  const scrim = document.createElement('div')
+  scrim.className = 'obj-scrim'
+  document.body.appendChild(scrim)
+  let open = null
+
+  const close = () => {
+    if (!open) return
+    open.classList.remove('is-open')
+    open.removeAttribute('aria-expanded')
+    open.style.removeProperty('--ox')
+    open.style.removeProperty('--oy')
+    open.style.removeProperty('--ok')
+    open = null
+    scrim.classList.remove('on')
+  }
+
+  const openIt = el => {
+    close()
+    const r = el.getBoundingClientRect()
+    const vw = document.documentElement.clientWidth
+    const vh = document.documentElement.clientHeight
+    // as big as fits, capped at 3.2x, then drift to the middle of the screen
+    const k = Math.min(3.2, (vw * 0.82) / r.width, (vh * 0.56) / r.height)
+    // Each object's photos sit differently inside its box, and they shift again when the
+    // open state fans them out, so read the open arrangement first (unscaled) and hang the
+    // address off the photos' real bottom edge.
+    el.classList.add('is-measuring')
+    const photoBottom = Math.max(...[...el.querySelectorAll('img')].map(i => i.getBoundingClientRect().bottom))
+    el.classList.remove('is-measuring')
+    el.style.setProperty('--otag', (photoBottom - r.top).toFixed(1) + 'px')
+    el.style.setProperty('--ok', k.toFixed(3))
+    el.style.setProperty('--ox', Math.round(vw / 2 - (r.left + r.width / 2)) + 'px')
+    el.style.setProperty('--oy', Math.round(vh * 0.44 - (r.top + r.height / 2)) + 'px')
+    el.classList.add('is-open')
+    el.setAttribute('aria-expanded', 'true')
+    scrim.classList.add('on')
+    open = el
+  }
+
+  objects.forEach(el => el.addEventListener('click', e => {
+    if (open === el) return          // second tap follows the link
+    e.preventDefault()
+    openIt(el)
+  }))
+
+  scrim.addEventListener('click', close)
+  document.addEventListener('click', e => {
+    if (open && !open.contains(e.target)) close()
+  }, true)
+  window.addEventListener('scroll', close, { passive: true })
+  window.addEventListener('resize', close)
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close() })
+}
+`
+
 export const formScript = `
 const dialog = document.querySelector('.note-dialog')
 const form = dialog && dialog.querySelector('.three-form')

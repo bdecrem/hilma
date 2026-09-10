@@ -750,6 +750,8 @@ button:focus-visible,a:focus-visible {
   padding: 0;
   margin: 0 5px;
   z-index: 2;
+  transform: translate(0,0) scale(1);
+  transition: transform .55s cubic-bezier(.16,1,.3,1);
 }
 
 .inline-object img {
@@ -778,14 +780,85 @@ button:focus-visible,a:focus-visible {
   object-position: center 34%;
 }
 
-.inline-object:hover .inline-front,.inline-object:focus-visible .inline-front {
-  transform: translate(-18px,-14px) rotate(-12deg) scale(1.22);
-  box-shadow: 3px 12px 16px #4a301c2e;
+@media (hover: hover) {
+  .inline-object:hover .inline-front,.inline-object:focus-visible .inline-front {
+    transform: translate(-18px,-14px) rotate(-12deg) scale(1.22);
+    box-shadow: 3px 12px 16px #4a301c2e;
+  }
+  .inline-object:hover .inline-back,.inline-object:focus-visible .inline-back {
+    transform: translate(16px,-8px) rotate(12deg) scale(1.22);
+    box-shadow: 3px 12px 16px #4a301c2e;
+  }
+  .inline-object:hover .object-index,.inline-object:focus-visible .object-index {
+    opacity: 1;
+    color: var(--clay);
+  }
 }
 
-.inline-object:hover .inline-back,.inline-object:focus-visible .inline-back {
-  transform: translate(16px,-8px) rotate(12deg) scale(1.22);
-  box-shadow: 3px 12px 16px #4a301c2e;
+/* Touch: a tap lifts the object to the middle of the screen at ~3x with its address
+   showing, over a scrim. Tapping it again follows the link; anywhere else closes.
+   JS sets --ox/--oy/--ok per object, measured from where it actually sits. */
+
+.obj-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #2b2118;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .4s ease;
+}
+
+.obj-scrim.on {
+  opacity: .52;
+  pointer-events: auto;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inline-object,
+  .inline-object img,
+  .obj-scrim {
+    transition-duration: .01ms;
+  }
+}
+
+.inline-object.is-open {
+  z-index: 60;
+  transform: translate(var(--ox,0px),var(--oy,0px)) scale(var(--ok,3));
+}
+
+.inline-object.is-open img {
+  box-shadow: 1px 4px 7px #4a301c3d;
+}
+
+/* .is-measuring is .is-open's photo positions without the parent's scale, so the script
+   can read where the address should hang before the swoosh starts. */
+.inline-object.is-measuring img {
+  transition: none;
+}
+
+.inline-object.is-open .inline-front,
+.inline-object.is-measuring .inline-front {
+  transform: translate(-13%,-7%) rotate(-11deg);
+}
+
+.inline-object.is-open .inline-back,
+.inline-object.is-measuring .inline-back {
+  transform: translate(11%,-4%) rotate(11deg);
+}
+
+/* The address rides on a scaled parent, so divide by the scale to keep it a
+   constant 13px sitting 16px under the photo, instead of tripling into the line below. */
+.inline-object.is-open .object-index {
+  opacity: 1;
+  transition: opacity .3s ease .22s;
+  color: #ff7a4d;
+  font-size: calc(13px / var(--ok,3));
+  letter-spacing: calc(.4px / var(--ok,3));
+  top: calc(var(--otag,0px) + 15px / var(--ok,3));
+  bottom: auto;
 }
 
 .inline-jam {
@@ -850,11 +923,6 @@ button:focus-visible,a:focus-visible {
   letter-spacing: .04em;
   opacity: 0;
   transition: opacity .3s;
-}
-
-.inline-object:hover .object-index,.inline-object:focus-visible .object-index {
-  opacity: 1;
-  color: var(--clay);
 }
 
 .inline-jam .object-index {
