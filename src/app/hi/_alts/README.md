@@ -3,6 +3,13 @@
 Unfinished concepts retained for future editing. The existing `src/app/hi/page.tsx` and domain rewrite remain unchanged.
 
 - `/hi/alt3` — **Small wonders**: supplied app screenshots woven into a personal introduction. Edit `../alt3/html.ts`.
+  Revised 2026-09-09 to Bart's brief: the "builder, tinkerer" kicker, the "a small collection…" caption with its
+  project index, and both hairlines are gone; the CASBS paragraph stays. One typeface does the whole page (Inter
+  Tight — the serif italics are retired here, alt4 still uses them) with emphasis carried by the clay accent, on the
+  warm paper of the live homepage (#fff6ea / #2b2118 / #d64a22). The three photo objects are now plain links —
+  Dodo → dodo.foo, Jambot → jambot.to, Mac Plus → github.com/bdecrem/Macinclaude — and reveal their destination on
+  hover instead of opening the dialog, so alt3 no longer renders `.project-dialog`. The footer carries the live
+  homepage's links: phone, About me, decremental.com, Substack, LinkedIn, X.
 - `/hi/alt4` — **Room for play**: a chrome 16, draggable project objects, hover reveals, and a small user-initiated rhythm sketch. Edit `../alt4/html.ts`.
 
 The HTML route handlers use the repository’s existing full-document pattern (`/1ziu1wahxw`) so the designs retain their CSS and native browser interactions without inheriting the homepage’s React layout or global Tailwind resets. Both return noindex/nofollow. Their small navigation links only to each other and the original homepage.

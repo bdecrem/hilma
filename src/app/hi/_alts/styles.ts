@@ -696,9 +696,11 @@ button:focus-visible,a:focus-visible {
 /* III — images as punctuation, not as a project grid. */
 
 .edition-three {
-  background: #edf0f2;
-  color: #20342d;
+  background: #fff6ea;
+  color: #2b2118;
   padding: 0 7%;
+  --clay: #d64a22;
+  --muted: #9c8a74;
 }
 
 .three-header {
@@ -716,13 +718,13 @@ button:focus-visible,a:focus-visible {
 }
 
 .three-header>a:first-child>span {
-  color: #9ba8a2;
+  color: var(--muted);
   margin: 0 8px;
 }
 
 .three-header>.mono {
   font-size: 9px;
-  color: #8f9e96;
+  color: var(--muted);
   justify-self: center;
 }
 
@@ -732,35 +734,23 @@ button:focus-visible,a:focus-visible {
 
 .three-main {
   max-width: 1110px;
-  margin: 39px auto 0;
-}
-
-.three-kicker {
-  display: flex;
-  justify-content: space-between;
-  border-top: 1px solid #acb8b1;
-  padding-top: 16px;
-  margin-bottom: 38px;
-  color: #839189;
-}
-
-.three-kicker>.mono {
-  font-size: 8px;
+  margin: 58px auto 0;
 }
 
 .three-title {
-  font: 400 clamp(45px,5vw,76px)/1 Instrument,serif;
-  letter-spacing: -.02em;
-  margin: 0 0 20px;
+  font: 400 clamp(40px,4.2vw,62px)/1.02 Tight,Arial,sans-serif;
+  letter-spacing: -.035em;
+  margin: 0 0 30px;
 }
 
 .three-title em {
-  font-weight: 400;
+  font-style: normal;
+  color: var(--clay);
 }
 
 .three-letter {
   margin-left: 8.8%;
-  padding-bottom: 33px;
+  padding-bottom: 4px;
 }
 
 .letter-line {
@@ -776,21 +766,22 @@ button:focus-visible,a:focus-visible {
 }
 
 .letter-line em {
-  font: italic 400 1.15em/.9 Instrument,serif;
-  letter-spacing: -.02em;
+  font-style: normal;
+  color: var(--clay);
 }
 
 .letter-aside {
   font-size: 8px;
   letter-spacing: .025em;
   line-height: 1.7;
-  color: #8d9d93;
+  color: var(--muted);
   margin-left: auto;
   padding-right: 10px;
 }
 
 .inline-object {
   position: relative;
+  text-decoration: none;
   border: 0;
   background: none;
   display: inline-block;
@@ -804,8 +795,8 @@ button:focus-visible,a:focus-visible {
 
 .inline-object img {
   position: absolute;
-  border: 4px solid #e4e9de;
-  box-shadow: 2px 4px 5px #23362f1a;
+  border: 4px solid #fffdf8;
+  box-shadow: 2px 4px 6px #4a301c1f;
   object-fit: cover;
   transition: transform .65s cubic-bezier(.15,.9,.2,1.3),box-shadow .4s;
   width: 71px;
@@ -830,12 +821,12 @@ button:focus-visible,a:focus-visible {
 
 .inline-object:hover .inline-front,.inline-object:focus-visible .inline-front {
   transform: translate(-18px,-14px) rotate(-12deg) scale(1.22);
-  box-shadow: 3px 12px 14px #23362f25;
+  box-shadow: 3px 12px 16px #4a301c2e;
 }
 
 .inline-object:hover .inline-back,.inline-object:focus-visible .inline-back {
   transform: translate(16px,-8px) rotate(12deg) scale(1.22);
-  box-shadow: 3px 12px 14px #23362f25;
+  box-shadow: 3px 12px 16px #4a301c2e;
 }
 
 .inline-jam {
@@ -846,7 +837,7 @@ button:focus-visible,a:focus-visible {
 .inline-jam img {
   width: 102px;
   height: 74px;
-  border-color: #cfcdc0;
+  border-color: #fffdf8;
 }
 
 .inline-jam .inline-front {
@@ -873,7 +864,7 @@ button:focus-visible,a:focus-visible {
   width: 108px;
   height: 83px;
   object-position: 50% 65%;
-  border: 5px solid #fff;
+  border: 5px solid #fffdf8;
   border-bottom-width: 14px;
   transform: rotate(-7deg);
   transition: transform .5s;
@@ -885,25 +876,34 @@ button:focus-visible,a:focus-visible {
 
 .object-index {
   position: absolute;
-  right: -7px;
-  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -15px;
+  white-space: nowrap;
   font-size: 8px;
-  color: #81978b;
-  letter-spacing: 0;
+  color: var(--muted);
+  letter-spacing: .04em;
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.inline-object:hover .object-index,.inline-object:focus-visible .object-index {
+  opacity: 1;
+  color: var(--clay);
 }
 
 .inline-jam .object-index {
-  right: -8px;
-  top: -9px;
+  bottom: -12px;
 }
 
 .last-letter {
   padding-left: 1px;
+  min-height: 96px;
 }
 
 .letter-period {
-  font-size: 54px;
-  color: #8caa60;
+  font-size: 44px;
+  color: var(--clay);
   margin-left: 8px;
   display: inline-block;
   transition: transform .9s;
@@ -914,63 +914,44 @@ button:focus-visible,a:focus-visible {
 }
 
 .three-bottom {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 45px;
-  border-top: 1px solid #acb8b1;
-  padding: 30px 0 41px;
-}
-
-.three-bottom-caption>.mono {
-  font-size: 9px;
-  color: #8c9c92;
-}
-
-.three-project-index {
-  display: flex;
-  gap: 23px;
-  margin-top: 29px;
-}
-
-.three-project-index button {
-  padding: 0;
-  background: none;
-  border: 0;
-  font-size: 13px;
-  color: #597363;
-}
-
-.three-project-index sup {
-  font: 8px Plex,monospace;
-  margin-right: 4px;
-  color: #98aaa0;
+  padding: 34px 0 46px;
 }
 
 .three-bio {
-  padding-left: 18%;
+  max-width: 44ch;
 }
 
 .three-bio p {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 17px;
+  line-height: 1.55;
   letter-spacing: -.01em;
-  margin: 0 0 17px;
-  color: #6b8073;
+  margin: 0 0 15px;
+  color: #6f6152;
 }
 
 .three-bio>a {
-  font-size: 12px;
-  color: #2c5640;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--clay);
 }
 
 .three-footer {
   display: flex;
-  gap: 28px;
+  flex-wrap: wrap;
+  gap: 12px 26px;
   max-width: 1110px;
   margin: auto;
   padding: 0 0 90px;
-  font-size: 10px;
-  color: #7d9486;
+  font-size: 12px;
+  color: #8d7c68;
+}
+
+.three-footer a {
+  transition: color .2s;
+}
+
+.three-footer a:hover {
+  color: var(--clay);
 }
 
 @media (max-width:1100px) {
@@ -1007,10 +988,7 @@ button:focus-visible,a:focus-visible {
     display: none;
   }
   .three-bio {
-    padding-left: 0;
-  }
-  .three-bottom {
-    gap: 30px;
+    max-width: none;
   }
 }
 
@@ -1123,18 +1101,9 @@ button:focus-visible,a:focus-visible {
   .three-main {
     margin-top: 23px;
   }
-  .three-kicker {
-    margin-bottom: 35px;
-  }
-  .three-kicker>.mono {
-    font-size: 7px;
-  }
-  .three-kicker>.mono:last-child {
-    display: none;
-  }
   .three-title {
-    font-size: 48px;
-    margin-bottom: 22px;
+    font-size: 38px;
+    margin-bottom: 24px;
   }
   .three-letter {
     margin: 0;
@@ -1187,31 +1156,23 @@ button:focus-visible,a:focus-visible {
     border-bottom-width: 11px;
   }
   .object-index {
-    font-size: 6px;
-    top: -4px;
-    right: -1px;
-  }
-  .inline-jam .object-index {
-    top: -4px;
-    right: -5px;
+    font-size: 7px;
+    bottom: -13px;
   }
   .letter-period {
-    font-size: 30px;
+    font-size: 26px;
   }
   .three-bottom {
-    grid-template-columns: 1fr;
-    gap: 30px;
-    padding: 26px 0 30px;
-  }
-  .three-project-index {
-    margin-top: 20px;
+    padding: 20px 0 30px;
   }
   .three-bio p {
     font-size: 16px;
   }
   .three-footer {
-    flex-wrap: wrap;
-    gap: 18px 22px;
+    display: grid;
+    grid-template-columns: repeat(2,auto);
+    justify-content: start;
+    gap: 16px 30px;
     padding-bottom: 100px;
   }
 }
