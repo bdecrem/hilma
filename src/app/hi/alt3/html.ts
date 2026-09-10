@@ -3,11 +3,11 @@ import { alternateDocument } from '../_alts/document'
 // Small wonders — draft homepage. One sans voice (Inter Tight) on warm paper,
 // emphasis carried by colour instead of a second serif family; the three
 // photo objects link straight out to the projects.
-export const body = `<header class="three-header"><a href="/hi">Bart Decrem<span> / </span>16</a><span class="mono">A FEW THINGS<br>THAT MAKE ME TICK.</span><a href="mailto:bdecrem@gmail.com">Say hello ↗</a></header>
+export const body = `<header class="three-header"><a href="/hi">Bart Decrem<span> / </span>16</a><a href="mailto:bdecrem@gmail.com">Say hello ↗</a></header>
 <main class="three-main">
   <h1 class="three-title">Hey, I’m <em>Bart.</em></h1>
   <div class="three-letter" aria-label="I like making learning stick, machines sing, and old things new again.">
-    <div class="letter-line"><span>I like making</span><span class="letter-aside mono">SMALL EXPERIMENTS.<br>OPEN POSSIBILITIES.</span></div>
+    <div class="letter-line"><span>I like making</span></div>
     <div class="letter-line"><a class="inline-object inline-dodo" href="https://dodo.foo" target="_blank" rel="noopener" aria-label="Dodo — dodo.foo"><img class="inline-front" src="/hi/alts/assets/dodo-peck.png" alt="Dodo’s playful Peck learning path"><img class="inline-back" src="/hi/alts/assets/dodo-topics.png" alt="Dodo’s topics library"><span class="object-index mono">dodo.foo ↗</span></a><span>learning <em>stick,</em></span></div>
     <div class="letter-line"><span>machines</span><a class="inline-object inline-jam" href="https://jambot.to" target="_blank" rel="noopener" aria-label="Jambot — jambot.to"><img class="inline-front" src="/hi/alts/assets/jambot-controls.png" alt="Jambot synth controls"><img class="inline-back" src="/hi/alts/assets/jambot-tracks.png" alt="Jambot track sequencers"><span class="object-index mono">jambot.to ↗</span></a><span><em>sing,</em></span></div>
     <div class="letter-line"><span>and old things</span><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a></div>

@@ -704,8 +704,8 @@ button:focus-visible,a:focus-visible {
 }
 
 .three-header {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   height: 122px;
   font-size: 14px;
@@ -720,12 +720,6 @@ button:focus-visible,a:focus-visible {
 .three-header>a:first-child>span {
   color: var(--muted);
   margin: 0 8px;
-}
-
-.three-header>.mono {
-  font-size: 9px;
-  color: var(--muted);
-  justify-self: center;
 }
 
 .three-header>a:last-child {
@@ -768,15 +762,6 @@ button:focus-visible,a:focus-visible {
 .letter-line em {
   font-style: normal;
   color: var(--clay);
-}
-
-.letter-aside {
-  font-size: 8px;
-  letter-spacing: .025em;
-  line-height: 1.7;
-  color: var(--muted);
-  margin-left: auto;
-  padding-right: 10px;
 }
 
 .inline-object {
@@ -984,9 +969,6 @@ button:focus-visible,a:focus-visible {
   .three-letter {
     margin-left: 4%;
   }
-  .letter-aside {
-    display: none;
-  }
   .three-bio {
     max-width: none;
   }
@@ -1092,11 +1074,7 @@ button:focus-visible,a:focus-visible {
   }
   .three-header {
     height: 94px;
-    grid-template-columns: 1fr auto;
     font-size: 13px;
-  }
-  .three-header>.mono {
-    display: none;
   }
   .three-main {
     margin-top: 23px;
