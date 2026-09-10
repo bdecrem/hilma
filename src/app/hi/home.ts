@@ -1,7 +1,7 @@
 // bartin16.xyz — "Small wonders". One sans voice (Inter Tight) on warm paper, the three
 // photo objects linking straight out to the projects. Styles live in `_alts/styles.ts`
 // under `.edition-three`, shared with the /hi/alt4 draft.
-export const body = `<main class="three-main">
+const FLOW = `<main class="three-main">
   <h1 class="three-title">Hey, I’m Bart.</h1>
   <div class="three-letter" aria-label="I like making learning stick, machines sing, and old things new again.">
     <div class="letter-line"><span>I like making</span></div>
@@ -10,6 +10,49 @@ export const body = `<main class="three-main">
     <div class="letter-line"><span>and old things</span><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a></div>
     <div class="letter-line last-letter"><span><em>new again.</em></span></div>
   </div>
-  <div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>
+  @@BIO@@
 </main>
 <footer class="three-footer"><a href="/hi/about">About me</a><a href="https://decremental.com/projects" target="_blank" rel="noopener">decremental.com</a><a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack</a><a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn</a><a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X</a></footer>`
+
+// bartin16.xyz keeps the email and phone number in the paragraph; decremental.com
+// swaps them for a message form (posts to /api/contact).
+export const body = FLOW.replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
+
+export const bodyWithForm = FLOW.replace('@@BIO@@', `<div class="three-bottom has-form"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work.</p></div>
+    <form class="three-form" novalidate>
+      <p class="form-label">Shoot me a message</p>
+      <textarea class="form-field" name="message" rows="2" placeholder="what’s on your mind" required></textarea>
+      <div class="form-foot"><button class="form-send" type="submit">Send</button><span class="form-hint">opens your mail app</span></div>
+    </form></div>`)
+
+// A landscape poster of the same sentence, rendered at /hi/card and screenshotted into
+// the LinkedIn image. The three photo objects are lifted straight out of FLOW so they can
+// never drift from the page; only the line breaks change, because a 16:9 frame wants three
+// wide lines where the page wants five narrow ones.
+const OBJECTS = FLOW.match(/<a class="inline-object[\s\S]*?<\/a>/g) as string[]
+const [DODO, JAM, MAC] = OBJECTS
+
+export const cardBody = `<main class="three-main">
+  <div class="three-letter" aria-label="I like making learning stick, machines sing, and old things new again.">
+    <div class="letter-line"><span>I like making</span>${DODO}<span>learning <em>stick,</em></span></div>
+    <div class="letter-line"><span>machines</span>${JAM}<span><em>sing,</em> and old things</span></div>
+    <div class="letter-line last-letter">${MAC}<span><em>new again.</em></span></div>
+  </div>
+  <div class="card-credit"><span class="card-name">Bart Decrem</span><span class="card-site">bartin16.xyz</span></div>
+</main>`
+
+export const formScript = `
+document.querySelectorAll('.three-form').forEach(form => {
+  const box = form.querySelector('textarea')
+  const grow = () => { box.style.height = 'auto'; box.style.height = box.scrollHeight + 'px' }
+  box.addEventListener('input', grow)
+  form.addEventListener('submit', e => {
+    e.preventDefault()
+    const message = box.value.trim()
+    if (!message) { box.focus(); return }
+    window.location.href = 'mailto:bdecrem@gmail.com'
+      + '?subject=' + encodeURIComponent('Hello from decremental.com')
+      + '&body=' + encodeURIComponent(message)
+  })
+})
+`

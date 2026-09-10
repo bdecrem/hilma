@@ -894,6 +894,101 @@ button:focus-visible,a:focus-visible {
   border-color: var(--clay);
 }
 
+/* decremental.com's contact block: the bio on the left, a quiet message form beside it.
+   Fields are ruled lines rather than boxes, so they read as part of the page. */
+
+.three-bottom.has-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px 56px;
+  align-items: flex-start;
+}
+
+.three-form {
+  flex: 0 1 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-label {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #2b2118;
+}
+
+.form-field {
+  width: 100%;
+  padding: 6px 0;
+  font: 400 16px/1.4 Tight,Arial,sans-serif;
+  color: #2b2118;
+  background: none;
+  border: 0;
+  border-bottom: 1.5px solid #e2d3bf;
+  border-radius: 0;
+  outline: none;
+  transition: border-color .2s;
+  -webkit-appearance: none;
+}
+
+textarea.form-field {
+  resize: none;
+  overflow: hidden;
+  min-height: 46px;
+}
+
+.form-field::placeholder {
+  color: #b6a48d;
+}
+
+.form-field:focus {
+  border-bottom-color: var(--clay);
+}
+
+.form-trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.form-foot {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.form-hint {
+  font-size: 13px;
+  color: #a5937c;
+}
+
+.form-send {
+  padding: 8px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff6ea;
+  background: var(--clay);
+  border: 0;
+  border-radius: 999px;
+  transition: opacity .2s,transform .2s;
+}
+
+.form-send:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.form-send:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.form-field:focus + .form-foot .form-hint {
+  color: var(--clay);
+}
+
 .three-footer {
   display: flex;
   flex-wrap: wrap;
@@ -1130,6 +1225,39 @@ button:focus-visible,a:focus-visible {
   .three-bottom {
     padding: 12px 0 26px;
   }
+  .site-decremental .letter-line {
+    min-height: 58px;
+  }
+  .site-decremental .last-letter {
+    min-height: 54px;
+  }
+  .site-decremental .three-bottom {
+    padding-bottom: 20px;
+  }
+  .site-decremental .three-bio p {
+    margin-bottom: 9px;
+  }
+  .three-bottom.has-form {
+    gap: 10px;
+  }
+  .three-form {
+    max-width: none;
+    gap: 8px;
+  }
+  .form-label {
+    font-size: 16px;
+  }
+  .form-field {
+    font-size: 16px;
+    padding: 5px 0;
+  }
+  textarea.form-field {
+    min-height: 36px;
+  }
+  .form-send {
+    padding: 7px 18px;
+    font-size: 14px;
+  }
   .three-bio p {
     font-size: 15px;
     line-height: 1.45;
@@ -1147,6 +1275,114 @@ button:focus-visible,a:focus-visible {
     width: 100%;
     padding-bottom: 22px;
   }
+}
+
+/* The 1600x900 share poster (/hi/card): the same sentence, photos about a third larger
+   relative to the type, no bio or footer. Fixed pixel sizes on purpose — it is a canvas,
+   not a page, and it is only ever rendered at that one size. */
+
+.edition-card {
+  width: 1600px;
+  height: 900px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.edition-card .three-main {
+  margin: 0;
+  padding: 0 96px;
+  max-width: none;
+  width: 100%;
+}
+
+.edition-card .three-title,
+.edition-card .three-footer {
+  display: none;
+}
+
+.edition-card .three-letter {
+  margin: 0;
+  padding: 0;
+}
+
+.edition-card .letter-line {
+  font-size: 90px;
+  min-height: 176px;
+  gap: 30px;
+}
+
+.edition-card .last-letter {
+  min-height: 226px;
+  padding-left: 0;
+}
+
+.edition-card .inline-object {
+  width: 182px;
+  height: 165px;
+  margin: 0 8px;
+}
+
+.edition-card .inline-object img {
+  width: 118px;
+  height: 165px;
+  border-width: 6px;
+}
+
+.edition-card .inline-object .inline-back {
+  left: 60px;
+}
+
+.edition-card .inline-jam {
+  width: 232px;
+  height: 132px;
+}
+
+.edition-card .inline-jam img {
+  width: 170px;
+  height: 123px;
+}
+
+.edition-card .inline-jam .inline-back {
+  left: 65px;
+  top: -8px;
+}
+
+.edition-card .inline-jam .inline-front {
+  top: 11px;
+}
+
+.edition-card .inline-mac {
+  width: 164px;
+  height: 238px;
+  margin: 0 26px 0 0;
+}
+
+.edition-card .inline-mac img {
+  width: 140px;
+  height: 192px;
+  border: 11px solid #fffdf8;
+  border-bottom-width: 34px;
+}
+
+.card-credit {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 20px;
+  padding: 8px 4px 0 0;
+  font-size: 28px;
+}
+
+.card-name {
+  font-weight: 600;
+  color: #2b2118;
+}
+
+.card-site {
+  color: var(--clay);
 }
 
 /* Short phones (SE, or any phone with the browser bars taking a big bite): the same
@@ -1211,6 +1447,26 @@ button:focus-visible,a:focus-visible {
   .three-footer {
     gap: 9px 26px;
     padding-bottom: 14px;
+  }
+  /* The wider phone tier's .site-decremental rules outrank the bare selectors above
+     on specificity, so restate them here or decremental ends up taller than bartin16. */
+  .site-decremental .letter-line {
+    min-height: 46px;
+  }
+  .site-decremental .last-letter {
+    min-height: 42px;
+  }
+  .site-decremental .three-bio p {
+    margin-bottom: 7px;
+  }
+  .three-form {
+    gap: 6px;
+  }
+  .form-label {
+    font-size: 15px;
+  }
+  textarea.form-field {
+    min-height: 32px;
   }
 }
 

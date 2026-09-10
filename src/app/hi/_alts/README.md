@@ -15,6 +15,14 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   block on the bottom edge, and a second tier at `max-height: 700px` steps everything down ~15%
   for short phones. Both `.three-main` and `.three-footer` need explicit `margin: … 0` there —
   the base `margin: auto` would otherwise shrink-to-fit and centre them inside the flex column.
+  The two hosts differ only in their contact block: bartin16.xyz keeps the email and phone
+  number in the paragraph, decremental.com gets "Shoot me a message" and a mailto form (no
+  backend — Send opens the visitor's mail app). `route.ts` picks by Host header and adds a
+  `site-decremental` body class so the variant can be styled anywhere; with the form, the
+  one-screen phone fit holds from the iPhone 13 mini up, and an SE scrolls a little.
+  `/hi/card` renders the sentence as a 1600x900 poster (`.edition-card`, photos about a third
+  larger, three wide lines instead of five narrow ones) — `node scripts/hi/make-card.mjs`
+  screenshots it to `~/Desktop/bartin16-linkedin.png` with the dev server running.
   Revised 2026-09-09 to Bart's brief: the "builder, tinkerer" kicker, the "a small collection…" caption with its
   project index, and both hairlines are gone; the CASBS paragraph stays. One typeface does the whole page (Inter
   Tight — the serif italics are retired here, alt4 still uses them) with emphasis carried by the clay accent, on the
