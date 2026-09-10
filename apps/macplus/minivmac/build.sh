@@ -31,7 +31,11 @@ echo ">> generating project (Mac Plus, Cocoa)"
 cd "$SRC"
 [ -x ./setup_t ] || gcc -o setup_t setup/tool.c
 ./setup_t -n "minivmac-mc" -e xcd -t mcar -m Plus -api cco -magnify 1 -mf 2 -sound 1 > setup.sh
+# Mini vMac's generated setup.sh expects a shell without `nounset` — it relies on
+# ${my_project_d} expanding to empty (build in cwd). Disable -u just around it.
+set +u
 . ./setup.sh
+set -u
 
 # 4. build + codesign
 echo ">> xcodebuild"

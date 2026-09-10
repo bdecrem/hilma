@@ -247,12 +247,12 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       //     overlaps it, even on landscape / short viewports. Triggered by the
       //     showText-watching effect above, which flips textShownRef and calls
       //     resizeRef.current().
-      const vFraction = isBare ? 0.88 : (textShown ? 0.34 : 0.50)
-      const biasFraction = isBare ? 0 : (textShown ? 0.22 : 0.08)
+      // Canvas vertical budget: smaller + biased up during animation so the
+      // top-left "last attempt:" / "landed on:" ticker has its own clean
+      // strip above the grid. Shrinks further when the closing text appears.
+      const vFraction = isBare ? 0.88 : (textShown ? 0.34 : 0.42)
+      const biasFraction = isBare ? 0 : (textShown ? 0.22 : 0.10)
       // Two honest bounds: fit the width (cols) and fit the vertical budget (rows).
-      // The earlier code also had a `maxCellH = W * vFraction / COLS` clamp, which
-      // used viewport WIDTH as a vertical bound — on portrait mobile that capped
-      // the cell at ~half its natural size. Dropped.
       const maxCellW = Math.floor(W * 0.94 / COLS)
       const vBudget = Math.floor(H * vFraction / ROWS)
       CELL = Math.max(3, Math.min(maxCellW, vBudget))
@@ -494,11 +494,13 @@ export default function BioRenderer({ run }: { run: NoonRun }) {
       )}
 
       {/* CONCEPT TICKER — "last attempt:" during failures, "landed on:" on win.
-          Anchored top-left so viewers see which concept is dissolving/landing. */}
+          Anchored top-left ABOVE the canvas. Max height + overflow hidden so
+          long concept names don't grow the block into the canvas zone. */}
       {!isBare && (
         <div style={{
-          position: 'fixed', top: '12vh', left: '5vw',
-          maxWidth: 320, pointerEvents: 'none',
+          position: 'fixed', top: '4vh', left: '5vw',
+          maxWidth: 320, maxHeight: '12vh', overflow: 'hidden',
+          pointerEvents: 'none',
           opacity: conceptOpacity,
           transition: 'opacity 0.8s',
         }}>
