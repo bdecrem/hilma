@@ -86,7 +86,7 @@ Net: a Claude Code user sits down at the Plus and immediately knows how to drive
 | Persisted artifacts (transcripts/drafts) | vibeceo8 `sms-bot/lib/agents/report-storage.ts` |
 | Permission tiers (if multi-user later) | vibeceo8 `amber-email/agent.py` |
 
-Default model **`claude-sonnet-4-6`** (haiku-4-5 for a fast/cheap `/model` option).
+Default model **`claude-opus-5`** at high effort; `/model` also offers Opus 5 (medium), Sonnet 5, and Fable 5.1 (high/medium).
 
 ## The baud + screen budget (rules the Teletype layer enforces)
 
