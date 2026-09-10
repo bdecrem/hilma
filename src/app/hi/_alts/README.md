@@ -22,8 +22,12 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   Send opens the visitor's own mail app. Its footer reads "More about me" and "All my AI
   projects". `route.ts` picks by Host header and adds a `site-decremental` body class so the
   variant can be styled anywhere; `@@BIO@@` and `@@LINKS@@` in FLOW are where the two diverge.
-  Because decremental carries less text, that variant centres on phones rather than stretching
-  to the bottom edge, which would leave a hole mid-page.
+  On phones both variants centre and are sized to nearly fill the screen: the flow lines run at
+  8.9vw against about 6% of horizontal headroom, so leftover space falls as an even margin top
+  and bottom instead of a hole under the headline. The footer becomes one wrapping line divided
+  by rules — the separator span carries a space after it and none before, so a wrapped line never
+  starts with a dangling rule, and without that space the run cannot break at all. On desktop the
+  separators are display:none and the footer stays a flex row.
   `/hi/card` renders the sentence as a 1600x900 poster (`.edition-card`, photos about a third
   larger, three wide lines instead of five narrow ones) — `node scripts/hi/make-card.mjs`
   screenshots it to `~/Desktop/bartin16-linkedin.png` with the dev server running.

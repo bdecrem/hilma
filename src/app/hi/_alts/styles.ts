@@ -1038,6 +1038,10 @@ textarea.form-field {
   color: #857563;
 }
 
+.foot-sep {
+  display: none;
+}
+
 .three-footer a {
   padding-bottom: 2px;
   border-bottom: 1.5px solid transparent;
@@ -1187,93 +1191,79 @@ textarea.form-field {
     flex-direction: column;
     min-height: 100dvh;
   }
-  .three-main {
-    margin: 26px 0 0;
-    width: 100%;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-  .three-bottom {
-    margin-top: auto;
-  }
-  /* decremental.com carries one short paragraph instead of two, so stretching to the
-     bottom edge would leave a hole mid-page. Centre that variant instead. */
-  .site-decremental {
+  /* Both variants centre and are sized to nearly fill the screen, so any leftover space
+     falls as an even margin top and bottom instead of a hole under the headline. */
+  .edition-three {
     justify-content: center;
   }
-  .site-decremental .three-main {
-    flex: none;
-    margin-top: 0;
-  }
-  .site-decremental .three-bottom {
-    margin-top: 0;
-    padding-top: 26px;
+  .three-main {
+    margin: 0;
+    width: 100%;
   }
   .three-title {
-    font-size: 19px;
-    margin-bottom: 10px;
+    font-size: 21px;
+    margin-bottom: 12px;
   }
   .three-letter {
     margin: 0;
     padding-bottom: 8px;
   }
   .letter-line {
-    font-size: clamp(29px,7.75vw,54px);
-    gap: 8px;
-    min-height: 62px;
+    font-size: clamp(28px,8.9vw,60px);
+    gap: 9px;
+    min-height: 71px;
   }
   .last-letter {
-    min-height: 58px;
+    min-height: 67px;
   }
   .letter-line em {
     font-size: 1.17em;
   }
   .inline-object {
-    width: 62px;
-    height: 58px;
+    width: 71px;
+    height: 67px;
     margin: 0 1px;
   }
   .inline-object img {
-    width: 39px;
-    height: 56px;
+    width: 45px;
+    height: 64px;
     border-width: 3px;
   }
   .inline-object .inline-back {
-    left: 20px;
+    left: 23px;
   }
   .inline-jam {
-    width: 72px;
-    height: 50px;
+    width: 83px;
+    height: 58px;
   }
   .inline-jam img {
-    width: 53px;
-    height: 42px;
+    width: 61px;
+    height: 48px;
   }
   .inline-jam .inline-back {
-    left: 22px;
+    left: 25px;
     top: 2px;
   }
   .inline-jam .inline-front {
-    top: 6px;
+    top: 7px;
   }
   .inline-mac {
-    width: 54px;
-    height: 76px;
-    margin-left: 7px;
+    width: 62px;
+    height: 88px;
+    margin-left: 8px;
   }
   .inline-mac img {
-    width: 44px;
-    height: 60px;
+    width: 51px;
+    height: 70px;
     border-width: 4px;
-    border-bottom-width: 12px;
+    border-bottom-width: 13px;
   }
   .object-index {
     font-size: 7px;
     bottom: -13px;
   }
   .three-bottom {
-    padding: 12px 0 26px;
+    padding: 24px 0 26px;
   }
   .three-form {
     max-width: none;
@@ -1294,21 +1284,26 @@ textarea.form-field {
     font-size: 14px;
   }
   .three-bio p {
-    font-size: 15px;
-    line-height: 1.45;
-    margin: 0 0 11px;
+    font-size: 16px;
+    line-height: 1.48;
+    margin: 0 0 12px;
   }
   .three-bio p:last-child {
     margin-bottom: 0;
   }
   .three-footer {
-    display: grid;
-    grid-template-columns: repeat(2,auto);
-    justify-content: start;
-    gap: 11px 30px;
+    display: block;
     margin: 0;
     width: 100%;
     padding-bottom: 22px;
+    font-size: 14px;
+    line-height: 1.9;
+  }
+  .foot-sep {
+    display: inline;
+    /* No space before the rule, one after, so a wrapped line never starts with it. */
+    margin-left: 9px;
+    color: #c4b39c;
   }
 }
 
@@ -1421,7 +1416,7 @@ textarea.form-field {
     padding-bottom: 4px;
   }
   .letter-line {
-    font-size: 26px;
+    font-size: min(26px,7.2vw);
     min-height: 50px;
   }
   .last-letter {
