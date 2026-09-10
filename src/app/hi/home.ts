@@ -22,7 +22,7 @@ export const bodyWithForm = FLOW.replace('@@BIO@@', `<div class="three-bottom ha
     <form class="three-form" novalidate>
       <p class="form-label">Shoot me a message</p>
       <textarea class="form-field" name="message" rows="2" placeholder="what’s on your mind" required></textarea>
-      <div class="form-foot"><button class="form-send" type="submit">Send</button><span class="form-hint">opens your mail app</span></div>
+      <div class="form-foot"><a class="form-send" href="mailto:bdecrem@gmail.com?subject=Hello%20from%20decremental.com">Send</a><span class="form-hint">opens your mail app</span></div>
     </form></div>`)
 
 // A landscape poster of the same sentence, rendered at /hi/card and screenshotted into
@@ -44,15 +44,15 @@ export const cardBody = `<main class="three-main">
 export const formScript = `
 document.querySelectorAll('.three-form').forEach(form => {
   const box = form.querySelector('textarea')
-  const grow = () => { box.style.height = 'auto'; box.style.height = box.scrollHeight + 'px' }
-  box.addEventListener('input', grow)
-  form.addEventListener('submit', e => {
-    e.preventDefault()
+  const send = form.querySelector('.form-send')
+  const base = 'mailto:bdecrem@gmail.com?subject=' + encodeURIComponent('Hello from decremental.com')
+  const sync = () => {
+    box.style.height = 'auto'
+    box.style.height = box.scrollHeight + 'px'
     const message = box.value.trim()
-    if (!message) { box.focus(); return }
-    window.location.href = 'mailto:bdecrem@gmail.com'
-      + '?subject=' + encodeURIComponent('Hello from decremental.com')
-      + '&body=' + encodeURIComponent(message)
-  })
+    send.href = message ? base + '&body=' + encodeURIComponent(message) : base
+  }
+  box.addEventListener('input', sync)
+  form.addEventListener('submit', e => { e.preventDefault(); send.click() })
 })
 `

@@ -966,6 +966,8 @@ textarea.form-field {
 }
 
 .form-send {
+  display: inline-block;
+  text-decoration: none;
   padding: 8px 20px;
   font-size: 15px;
   font-weight: 600;
