@@ -841,7 +841,7 @@ static void SetUpMenus(void)
      * search your saved notes, clear the screen. (Dashes, not parens, in the
      * item text: AppendMenu treats "(" as a disable marker.) */
     gClaudeM = NewMenu(kClaudeMenu, "\pClaude");
-    AppendMenu(gClaudeM, "\pSonnet 5;Opus 4.8 - medium;Opus 4.8 - high;Fable 5 - medium;Fable 5 - high;(-;Search My Notes.../F;Clear Screen");
+    AppendMenu(gClaudeM, "\pOpus 5 - high;Opus 5 - medium;Sonnet 5;Fable 5.1 - high;Fable 5.1 - medium;(-;Search My Notes.../F;Clear Screen");
     InsertMenu(gClaudeM, 0);
 
     DrawMenuBar();

@@ -28,7 +28,7 @@ function parseArgs() {
   };
   return {
     cols: Math.max(20, Math.min(200, parseInt(get('--cols', '80'), 10) || 80)),
-    model: get('--model', 'claude-sonnet-5'),
+    model: get('--model', 'claude-opus-5'),
     cwd: get('--cwd', process.cwd()),
     // Knowledge repo of markdown docs (the docsrepo sibling). Searchable in
     // addition to --cwd; override with --docs <dir>.
@@ -82,6 +82,14 @@ THE PERSON YOU ARE TALKING TO IS ON A REAL 1986 MACINTOSH PLUS. A 512x342 1-bit 
 - NEVER run a long-lived or foreground process — no "pnpm dev", "pnpm start", "next dev/start", "vercel dev", file watchers, or "tail -f". They never return, and approvals are OFF, so they will hang this session forever — nobody can Ctrl-C from a 1986 terminal. To check a build use "pnpm build" (it runs and exits). To check runtime behavior, use your own browser/tools on the mini in a way that terminates; never leave a server running. If you ever truly must start one, background it AND cap it (e.g. append " & sleep 3; kill %1") so the command returns.
 - Prefer deliverables usable from a 1986 terminal: committed code, files written to the repo, and tight text summaries. Not screenshots or "preview it here" flows.
 
+HOW TO WORK HERE (this link makes these matter more than they would anywhere else):
+- Say what you are about to do, in one short sentence, BEFORE your first tool call - and again when you find something load-bearing or change direction. The Plus shows nothing while you think, so a silent minute reads as a dead connection.
+- When you have enough information to act, act. Don't re-derive what is already settled, re-litigate a decision already made, or lay out options you won't pursue. If you are weighing a choice, give the recommendation, not the survey.
+- Deliver what was asked, at the scope asked. Make routine judgment calls yourself; check in only when different readings would mean materially different work. Don't add features, refactor, or introduce abstractions the task doesn't need - a bug fix doesn't need surrounding cleanup, and a one-shot operation doesn't need a helper. Finish the whole task and report done only when it is; if part of it is genuinely blocked, do the rest and say plainly what is missing.
+- Before reporting progress, audit each claim against a tool result from this session. The person cannot check anything themselves - your text is all they get. If a build fails, say so with the output; if you skipped a step, say that; when something is done and verified, state it plainly without hedging.
+- Delegate to subagents rarely. Their work is invisible from here and each one adds minutes of silence. Use one only for a genuinely large, independent investigation - never to review or double-check your own work. Verification belongs in your own loop.
+- Lead with the outcome: your first sentence after finishing answers "what happened". Detail comes after, and only the detail that changes what they do next. Plain sentences, not arrow chains, stacked abbreviations, or shorthand you invented while working.
+
 HILMA REPO CONVENTIONS (the cwd is the "hilma" repo; its CLAUDE.md is NOT auto-loaded, so follow these — read CLAUDE.md yourself if you need more):
 - NEVER create files at the repo root. Everything has a home: web pages/routes -> src/app/<name>/page.tsx (Next.js 15 App Router); shared React components -> src/components/; shared utils/helpers -> src/lib/; standalone non-Next apps -> apps/; raw static HTML/images/fonts -> public/; throwaway scripts -> scripts/; docs/plans -> docs/. If unsure, ask rather than dump at root.
 - Use the "@/..." import alias for src/... . Server Components by default; add "use client" only when the file needs hooks/browser APIs. TypeScript strict. Keep deps lean.
@@ -101,7 +109,11 @@ BUILDING NATIVE APPS FOR BART'S REAL MACINTOSH PLUS (this repo also does this, u
 You are ALSO a knowledge librarian for Bart. Two knowledge sources sit beside the code:
 - The F2 store: Bart's saved reading (web pages, videos, pasted notes, chats), each with content, extra sources, and quotes. Reach it with the f2 tools: mcp__f2__list_topics (browse), mcp__f2__search (keyword), mcp__f2__get_topic (full detail of one).
 - docsrepo at ${cfg.docs}: markdown research docs (mostly AI-builder programs/accelerators under aibuilders/). Find with Grep/Glob/Read there.
-When Bart asks "what was that doc/article about ...", "did I save anything on ...", or similar, SEARCH these sources (F2 first for saved reading, docsrepo for the research docs; both if unsure), then give a tight summary with the title. Never paste a whole doc or topic content back — summarize. Cite the title (and short id for F2) so he can find it again.`;
+When Bart asks "what was that doc/article about ...", "did I save anything on ...", or similar, SEARCH these sources (F2 first for saved reading, docsrepo for the research docs; both if unsure), then give a tight summary with the title. Never paste a whole doc or topic content back — summarize. Cite the title (and short id for F2) so he can find it again.
+
+<tone_preference>
+Keep outputs short and plain. Every line costs a second of wire time.
+</tone_preference>`;
 
 /* ---------- async input queue (drives the SDK's streaming-input prompt) ---------- */
 class AsyncQueue<T> {
@@ -190,15 +202,17 @@ function handleMsg(msg: any): void {
 // The SDK only lets you change `model` on a live session (Query.setModel); there
 // is no runtime setter for effort. So a switch tears the session down and rebuilds
 // it under the new model/effort, resuming the prior session_id to keep context.
-// Sonnet 5 is the default (one entry, default effort); Opus 4.8 and Fable 5 each
-// get the two effort levels, listed as separate picks.
-type ModelChoice = { label: string; model: string; effort?: 'medium' | 'high' };
+// Opus 5 (high) is the default; Fable 5.1 is the most capable pick when a job is
+// worth the wait. Both list two effort levels as separate picks. Sonnet 5 sits in
+// the middle as the quick one. The preferred effort for each model is listed FIRST,
+// because `current` is seeded by the first entry matching --model.
+type ModelChoice = { label: string; model: string; effort?: 'medium' | 'high' | 'xhigh' };
 const MODELS: ModelChoice[] = [
+  { label: 'Opus 5',     model: 'claude-opus-5',    effort: 'high' },
+  { label: 'Opus 5',     model: 'claude-opus-5',    effort: 'medium' },
   { label: 'Sonnet 5',   model: 'claude-sonnet-5' },
-  { label: 'Opus 4.8',   model: 'claude-opus-4-8', effort: 'medium' },
-  { label: 'Opus 4.8',   model: 'claude-opus-4-8', effort: 'high' },
-  { label: 'Fable 5',    model: 'claude-fable-5',  effort: 'medium' },
-  { label: 'Fable 5',    model: 'claude-fable-5',  effort: 'high' },
+  { label: 'Fable 5.1',  model: 'claude-fable-5-1', effort: 'high' },
+  { label: 'Fable 5.1',  model: 'claude-fable-5-1', effort: 'medium' },
 ];
 const choiceLabel = (m: ModelChoice) => (m.effort ? `${m.label} (${m.effort})` : m.label);
 // Currently selected pick (index into MODELS); seeded from --model.

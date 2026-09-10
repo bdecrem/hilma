@@ -36,15 +36,17 @@ ANTHROPIC_API_KEY=sk-... ./node_modules/.bin/tsx src/main.ts --cwd /path/to/hilm
 ```
 Flags: `--cwd <dir>` (working directory / corpus; its `.env.local` is auto-loaded for the F2 keys),
 `--docs <dir>` (the docsrepo knowledge root, default `/Users/admin/Documents/code/docsrepo`),
-`--model <id>` (default `claude-sonnet-4-6`, picks the starting `/model` entry), `--cols <n>` (wrap width, default 80).
+`--model <id>` (default `claude-opus-5`, picks the starting `/model` entry), `--cols <n>` (wrap width, default 80).
 In-session: `/help /quit /clear /cols N /cwd /model`.
 
-`/model` lists the model/effort picks and `/model N` switches to one — Sonnet 4.6,
-Opus 4.8 (medium/high), Fable 5 (medium/high). Effort can't be changed on a live
+`/model` lists the model/effort picks and `/model N` switches to one — Opus 5
+(high/medium), Sonnet 5, Fable 5.1 (high/medium). Effort can't be changed on a live
 SDK session (only `model` has a runtime setter), so a switch rebuilds the query
 under the new model/effort and `resume`s the prior `session_id`, keeping the
-conversation. Opus 4.8 and Fable 5 each expose medium + high as separate picks
+conversation. Opus 5 and Fable 5.1 each expose high + medium as separate picks
 (sidestepping a dedicated effort UI); Sonnet is a single entry at the SDK default.
+The preferred effort for a model is listed first, since the starting pick is the
+first entry matching `--model`.
 
 ## Deployed location / run it on the mini (as of 2026-06-11)
 Source of truth lives here in the repo (`apps/macplus/agent/`). On the **Mac mini** it runs from the
