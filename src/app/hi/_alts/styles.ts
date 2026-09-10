@@ -1050,80 +1050,167 @@ button:focus-visible,a:focus-visible {
   .edition-three {
     padding: 0 6%;
   }
+  .edition-three {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
   .three-main {
-    margin-top: 74px;
+    margin: 26px 0 0;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .three-bottom {
+    margin-top: auto;
   }
   .three-title {
-    font-size: 20px;
-    margin-bottom: 18px;
+    font-size: 19px;
+    margin-bottom: 10px;
   }
   .three-letter {
     margin: 0;
-    padding-bottom: 30px;
+    padding-bottom: 8px;
   }
   .letter-line {
     font-size: clamp(29px,7.75vw,54px);
     gap: 8px;
-    min-height: 77px;
+    min-height: 62px;
+  }
+  .last-letter {
+    min-height: 58px;
   }
   .letter-line em {
     font-size: 1.17em;
   }
   .inline-object {
-    width: 75px;
-    height: 71px;
+    width: 62px;
+    height: 58px;
     margin: 0 1px;
   }
   .inline-object img {
-    width: 47px;
-    height: 68px;
+    width: 39px;
+    height: 56px;
     border-width: 3px;
   }
   .inline-object .inline-back {
-    left: 24px;
+    left: 20px;
   }
   .inline-jam {
-    width: 85px;
-    height: 60px;
-  }
-  .inline-jam img {
-    width: 63px;
+    width: 72px;
     height: 50px;
   }
+  .inline-jam img {
+    width: 53px;
+    height: 42px;
+  }
   .inline-jam .inline-back {
-    left: 26px;
+    left: 22px;
     top: 2px;
   }
   .inline-jam .inline-front {
-    top: 7px;
+    top: 6px;
   }
   .inline-mac {
-    width: 64px;
-    height: 93px;
+    width: 54px;
+    height: 76px;
     margin-left: 7px;
   }
   .inline-mac img {
-    width: 54px;
-    height: 74px;
-    border-width: 5px;
-    border-bottom-width: 14px;
+    width: 44px;
+    height: 60px;
+    border-width: 4px;
+    border-bottom-width: 12px;
   }
   .object-index {
     font-size: 7px;
     bottom: -13px;
   }
   .three-bottom {
-    padding: 20px 0 30px;
+    padding: 12px 0 26px;
   }
   .three-bio p {
-    font-size: 16px;
+    font-size: 15px;
+    line-height: 1.45;
+    margin: 0 0 11px;
+  }
+  .three-bio p:last-child {
+    margin-bottom: 0;
   }
   .three-footer {
     display: grid;
     grid-template-columns: repeat(2,auto);
     justify-content: start;
-    gap: 16px 30px;
-    padding-bottom: 100px;
+    gap: 11px 30px;
+    margin: 0;
+    width: 100%;
+    padding-bottom: 22px;
+  }
+}
+
+/* Short phones (SE, or any phone with the browser bars taking a big bite): the same
+   layout, stepped down ~15% so the footer still lands inside the first screen. */
+
+@media (max-width:700px) and (max-height:700px) {
+  .three-main {
+    margin-top: 14px;
+  }
+  .three-title {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .three-letter {
+    padding-bottom: 4px;
+  }
+  .letter-line {
+    font-size: 26px;
+    min-height: 50px;
+  }
+  .last-letter {
+    min-height: 46px;
+  }
+  .inline-object {
+    width: 53px;
+    height: 49px;
+  }
+  .inline-object img {
+    width: 33px;
+    height: 47px;
+  }
+  .inline-object .inline-back {
+    left: 17px;
+  }
+  .inline-jam {
+    width: 61px;
+    height: 43px;
+  }
+  .inline-jam img {
+    width: 45px;
+    height: 36px;
+  }
+  .inline-jam .inline-back {
+    left: 19px;
+  }
+  .inline-mac {
+    width: 46px;
+    height: 65px;
+  }
+  .inline-mac img {
+    width: 37px;
+    height: 51px;
+    border-bottom-width: 10px;
+  }
+  .three-bottom {
+    padding: 8px 0 18px;
+  }
+  .three-bio p {
+    font-size: 14px;
+    margin-bottom: 9px;
+  }
+  .three-footer {
+    gap: 9px 26px;
+    padding-bottom: 14px;
   }
 }
 

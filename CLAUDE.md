@@ -71,7 +71,7 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Tunn3l** | `../tunn3l/` (own repo: `bdecrem/tunn3l`) | DigitalOcean droplet (tunn3l.sh) | Tunnel service — moved to standalone repo |
 | **Collab** | `apps/collab/` | — | Collaboration plugin |
 | **MCP Dashboard** | `apps/mcp-dashboard/` + `src/app/apps/mcp-dashboard/` | Vercel | MCP server dashboard |
-| **Decremental** | `src/app/projects/` | Vercel (decremental.com) | Projects page |
+| **Decremental** | `src/app/projects/` | Vercel (decremental.com/projects) | The project list. Light mode only on the landing page's warm paper (#fff6ea) in Inter Tight — the dark theme and its toggle were removed 2026-09-09. decremental.com's **root** now serves the bartin16 landing instead. |
 | **Bart in 16** | `src/app/hi/` | Vercel (bartin16.xyz) | Bart's personal homepage. `/hi` is a whole-document route (`route.ts` + `home.ts`), not a React page, so the design keeps its own stylesheet — `_alts/styles.ts` under `.edition-three`, shared with the `/hi/alt4` draft. The React homepage it replaced on 2026-09-09 is in `_archive/`. OG card at `public/hi/og.png` is composited from a Playwright shot of the page itself (`scripts` note: regenerate it after a type or layout change). Display tracking on the big flow lines stays near -.016em; anything near -.05em collides "rn" into "m" in "learning", worst in Safari. |
 | **Writer** | `src/app/writer/` | Vercel | Writing tool |
 | **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |

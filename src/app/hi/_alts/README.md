@@ -8,6 +8,13 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   previous React homepage is archived in `../_archive/`. `/hi/alt3` re-uses the same body behind
   noindex, so edit `../home.ts` and both follow. The `.edition-three` block in `styles.ts` is
   therefore live stylesheet, not draft — `.edition-four` beside it is still a draft.
+  It is also the front door of decremental.com (host rewrite in `next.config.ts`); the project
+  list moved to decremental.com/projects, which the landing's footer links to.
+  On phones the page is built to land inside one screen: `.edition-three` is a flex column at
+  `100dvh`, `.three-bottom` takes the slack with `margin-top: auto` so the bio and footer stay a
+  block on the bottom edge, and a second tier at `max-height: 700px` steps everything down ~15%
+  for short phones. Both `.three-main` and `.three-footer` need explicit `margin: … 0` there —
+  the base `margin: auto` would otherwise shrink-to-fit and centre them inside the flex column.
   Revised 2026-09-09 to Bart's brief: the "builder, tinkerer" kicker, the "a small collection…" caption with its
   project index, and both hairlines are gone; the CASBS paragraph stays. One typeface does the whole page (Inter
   Tight — the serif italics are retired here, alt4 still uses them) with emphasis carried by the clay accent, on the

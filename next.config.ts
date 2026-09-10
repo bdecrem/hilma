@@ -5,16 +5,17 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // decremental.com and www.decremental.com serve the /projects page at root
+        // decremental.com and www.decremental.com share the bartin16 landing at root;
+        // the project list itself lives at decremental.com/projects (no rewrite needed).
         {
           source: '/',
           has: [{ type: 'host', value: 'decremental.com' }],
-          destination: '/projects',
+          destination: '/hi',
         },
         {
           source: '/',
           has: [{ type: 'host', value: 'www.decremental.com' }],
-          destination: '/projects',
+          destination: '/hi',
         },
         // intheamber.com root → /amber feed
         {

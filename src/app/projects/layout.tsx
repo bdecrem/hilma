@@ -1,4 +1,8 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter_Tight } from 'next/font/google'
+
+// Same face as the bartin16.xyz landing this site now shares a front door with.
+const tight = Inter_Tight({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
 
 export const metadata: Metadata = {
   title: 'decremental',
@@ -14,13 +18,11 @@ export const metadata: Metadata = {
   },
 }
 
-// Full-bleed: match the default light gradient's warm peach base so the
-// Safari URL bar / status bar area blends with the page.
+// Full-bleed: the warm paper of the landing page, so the Safari URL bar blends in.
+// Light only — this page has no dark theme.
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FFEEE4' },
-    { media: '(prefers-color-scheme: dark)', color: '#1a1a1a' },
-  ],
+  themeColor: '#fff6ea',
+  colorScheme: 'light',
 }
 
 export default function ProjectsLayout({ children }: { children: React.ReactNode }) {
@@ -30,10 +32,9 @@ export default function ProjectsLayout({ children }: { children: React.ReactNode
         html, body {
           margin: 0;
           padding: 0;
-          background: #FFEEE4;
-        }
-        @media (prefers-color-scheme: dark) {
-          html, body { background: #1a1a1a; }
+          background: #fff6ea;
+          color-scheme: light;
+          font-family: ${tight.style.fontFamily}, system-ui, -apple-system, sans-serif;
         }
       `}</style>
       {children}

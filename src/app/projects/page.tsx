@@ -152,10 +152,10 @@ const projects: Project[] = [
 
 // ── Gradient background ──
 const gradPalette = {
-  a: { r: 255, g: 238, b: 228 },
-  b: { r: 240, g: 235, b: 255 },
-  c: { r: 235, g: 248, b: 240 },
-  d: { r: 255, g: 255, b: 255 },
+  a: { r: 255, g: 236, b: 219 },
+  b: { r: 255, g: 250, b: 242 },
+  c: { r: 252, g: 242, b: 232 },
+  d: { r: 255, g: 246, b: 234 },
 }
 
 function gLerp(a: number, b: number, t: number) { return a + (b - a) * t }
@@ -177,20 +177,22 @@ function renderGradient(el: HTMLDivElement, x: number, y: number) {
 }
 
 // ── Themes ──
+// Surfaces borrow the landing page's paper (#fff6ea), card white (#fffdf8) and
+// ink (#2b2118) so the two sites read as one.
 const lightTheme = {
-  card: 'bg-white/70 hover:bg-white/90 border-stone-200/60 hover:border-stone-300/80 hover:shadow-stone-200/40',
-  cardExpanded: 'shadow-stone-200/40 bg-white/90',
-  title: 'text-stone-800',
-  subtitle: 'text-stone-400',
-  name: 'text-stone-800',
+  card: 'bg-[#fffdf8]/70 hover:bg-[#fffdf8]/95 border-[#eddfcd]/70 hover:border-[#e0cdb4]/90 hover:shadow-[#e6d6c2]/40',
+  cardExpanded: 'shadow-[#e6d6c2]/40 bg-[#fffdf8]/95',
+  title: 'text-[#2b2118]',
+  subtitle: 'text-[#6f6152]',   // same body ink as the landing; #9c8a74 was tuned for the old dark theme
+  name: 'text-[#2b2118]',
   shortDesc: 'text-stone-500',
   fullDesc: 'text-stone-600',
-  link: 'text-stone-500 hover:text-stone-800',
-  linkDecor: 'decoration-stone-300 hover:decoration-stone-500',
-  artifactLink: 'text-stone-400 hover:text-stone-600 decoration-stone-200',
-  plus: 'text-stone-300',
-  footer: 'text-stone-300 border-stone-100',
-  footerHint: 'text-stone-200',
+  link: 'text-stone-500 hover:text-[#d64a22]',
+  linkDecor: 'decoration-stone-300 hover:decoration-[#d64a22]',
+  artifactLink: 'text-[#9c8a74] hover:text-[#d64a22] decoration-stone-200',
+  plus: 'text-[#c9b8a2]',
+  footer: 'text-[#bcaa95] border-[#f0e4d5]',
+  footerHint: 'text-[#d8cbb9]',
   statusConfig: {
     active: { label: 'live', color: 'text-emerald-600', bg: 'bg-emerald-50', dot: 'bg-emerald-400' },
     wip: { label: 'wip', color: 'text-violet-600', bg: 'bg-violet-50', dot: 'bg-violet-400' },
@@ -206,38 +208,6 @@ const lightTheme = {
     neglected: 'from-stone-200 via-stone-300 to-stone-200',
     retired: 'from-stone-200 via-stone-300 to-stone-200',
     cantquit: 'from-rose-300 via-orange-300 to-rose-300',
-  },
-}
-
-const darkTheme = {
-  card: 'bg-neutral-800 hover:bg-neutral-750 border-neutral-700 hover:border-neutral-600 hover:shadow-none',
-  cardExpanded: 'shadow-none bg-neutral-800',
-  title: 'text-white',
-  subtitle: 'text-neutral-400',
-  name: 'text-white',
-  shortDesc: 'text-neutral-300',
-  fullDesc: 'text-neutral-400',
-  link: 'text-neutral-400 hover:text-white',
-  linkDecor: 'decoration-neutral-600 hover:decoration-neutral-400',
-  artifactLink: 'text-neutral-500 hover:text-neutral-300 decoration-neutral-600',
-  plus: 'text-neutral-500',
-  footer: 'text-neutral-500 border-neutral-800',
-  footerHint: 'text-neutral-600',
-  statusConfig: {
-    active: { label: 'live', color: 'text-emerald-400', bg: 'bg-emerald-900/30', dot: 'bg-emerald-500' },
-    wip: { label: 'wip', color: 'text-violet-400', bg: 'bg-violet-900/30', dot: 'bg-violet-500' },
-    respinning: { label: 'booting up', color: 'text-amber-400', bg: 'bg-amber-900/30', dot: 'bg-amber-500' },
-    neglected: { label: 'neglect (benign)', color: 'text-neutral-400', bg: 'bg-neutral-700', dot: 'bg-neutral-500' },
-    retired: { label: '\uD83E\uDED7†', color: 'text-neutral-400', bg: 'bg-neutral-700', dot: 'bg-neutral-500' },
-    cantquit: { label: "can't quit you", color: 'text-rose-400', bg: 'bg-rose-900/30', dot: 'bg-rose-500' },
-  },
-  accent: {
-    active: 'from-emerald-500/40 via-emerald-500/40 to-emerald-500/40',
-    wip: 'from-violet-500/40 via-violet-500/40 to-violet-500/40',
-    respinning: 'from-amber-500/40 via-amber-500/40 to-amber-500/40',
-    neglected: 'from-neutral-700 via-neutral-700 to-neutral-700',
-    retired: 'from-neutral-700 via-neutral-700 to-neutral-700',
-    cantquit: 'from-rose-500/40 via-orange-500/40 to-rose-500/40',
   },
 }
 
@@ -345,7 +315,7 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
 // ── Contact CLI ──
 type ContactState = 'message' | 'email' | 'sending' | 'sent'
 
-function ContactCLI({ isVisible, onClose, dark }: { isVisible: boolean; onClose: () => void; dark: boolean }) {
+function ContactCLI({ isVisible, onClose }: { isVisible: boolean; onClose: () => void }) {
   const [input, setInput] = useState('')
   const [state, setState] = useState<ContactState>('message')
   const [message, setMessage] = useState('')
@@ -377,11 +347,11 @@ function ContactCLI({ isVisible, onClose, dark }: { isVisible: boolean; onClose:
 
   if (!isVisible) return null
 
-  const bg = dark ? 'rgba(26,26,26,0.95)' : 'rgba(255,255,255,0.95)'
-  const border = dark ? 'rgba(64,64,64,0.5)' : 'rgba(214,211,209,0.6)'
-  const textColor = dark ? '#e5e5e5' : '#1c1917'
-  const mutedColor = dark ? '#737373' : '#a8a29e'
-  const accentColor = dark ? '#86efac' : '#059669'
+  const bg = 'rgba(255,253,248,0.95)'
+  const border = 'rgba(214,211,209,0.6)'
+  const textColor = '#2b2118'
+  const mutedColor = '#9c8a74'
+  const accentColor = '#059669'
 
   return (
     <div
@@ -432,7 +402,6 @@ export default function Projects() {
   const [mounted, setMounted] = useState(false)
   const [vibeMode, setVibeMode] = useState(false)
   const [showCLI, setShowCLI] = useState(false)
-  const [dark, setDark] = useState(true)
 
   const gradRef = useRef<HTMLDivElement>(null)
   const gradX = useRef(0.5)
@@ -481,28 +450,22 @@ export default function Projects() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showCLI])
 
-  const theme = dark ? darkTheme : lightTheme
+  const theme = lightTheme
 
   return (
-    <div
-      className="min-h-dvh overflow-x-hidden transition-colors duration-700"
-      style={dark ? { backgroundColor: '#1a1a1a' } : undefined}
-    >
-      {/* Gradient background (light mode only) */}
+    <div className="min-h-dvh overflow-x-hidden" style={{ backgroundColor: '#fff6ea' }}>
+      {/* Gradient background */}
       <div
         ref={gradRef}
-        className="fixed inset-0 transition-opacity duration-700"
-        style={{
-          transition: 'background 0.6s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.7s ease',
-          opacity: dark ? 0 : 1,
-        }}
+        className="fixed inset-0"
+        style={{ transition: 'background 0.6s cubic-bezier(0.22, 1, 0.36, 1)' }}
       />
 
-      {/* Film grain (light mode only) */}
+      {/* Film grain */}
       <div
-        className="fixed inset-0 pointer-events-none transition-opacity duration-700"
+        className="fixed inset-0 pointer-events-none"
         style={{
-          opacity: dark ? 0 : 0.035,
+          opacity: 0.035,
           backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
           backgroundSize: '128px 128px',
         }}
@@ -518,13 +481,13 @@ export default function Projects() {
             transition: 'all 0.6s ease',
           }}
         >
-          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight cursor-default transition-colors duration-700 ${theme.title}`}>
+          <h1 className={`text-3xl sm:text-4xl font-bold tracking-tight cursor-default ${theme.title}`}>
             things i&apos;m building
           </h1>
-          <div className={`mt-1 text-xs italic tracking-wide transition-colors duration-700 ${theme.subtitle}`}>
+          <div className={`mt-1 text-xs italic tracking-wide ${theme.subtitle}`}>
             bart decrem
           </div>
-          <div className={`mt-3 space-y-3 text-sm sm:text-base leading-relaxed sm:max-w-lg transition-colors duration-700 ${theme.subtitle}`}>
+          <div className={`mt-3 space-y-3 text-sm sm:text-base leading-relaxed sm:max-w-lg ${theme.subtitle}`}>
             <p>
               currently: <a href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">setting up my mac plus</a> just so, in preparation for a year at stanford, working on <a href="#dodo" className="underline decoration-dotted underline-offset-2">dodo</a>, and still noodling on <a href="#jambot" className="underline decoration-dotted underline-offset-2">jambot</a>.
             </p>
@@ -542,7 +505,7 @@ export default function Projects() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="x"
-              className={`transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
+              className="transition-colors duration-300 text-stone-400 hover:text-stone-700"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644z" />
@@ -553,7 +516,7 @@ export default function Projects() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="substack"
-              className={`transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
+              className="transition-colors duration-300 text-stone-400 hover:text-stone-700"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24L12 18.11 22.539 24V10.812H1.46zM22.539 0H1.46v2.836h21.08V0z" />
@@ -564,7 +527,7 @@ export default function Projects() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="linkedin"
-              className={`transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
+              className="transition-colors duration-300 text-stone-400 hover:text-stone-700"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124zM7.119 20.452H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z" />
@@ -582,42 +545,24 @@ export default function Projects() {
 
         {/* Footer */}
         <div
-          className={`mt-16 pt-8 border-t text-center transition-colors duration-700 ${theme.footer}`}
+          className={`mt-16 pt-8 border-t text-center ${theme.footer}`}
           style={{
             opacity: mounted ? 1 : 0,
             transition: 'opacity 0.6s ease 0.8s',
           }}
         >
-          <div className="flex justify-center mb-4">
-            <button
-              onClick={() => setDark(d => !d)}
-              aria-label={dark ? 'switch to light mode' : 'switch to dark mode'}
-              className={`p-1.5 rounded-full transition-colors duration-300 ${dark ? 'text-neutral-500 hover:text-neutral-200' : 'text-stone-400 hover:text-stone-700'}`}
-            >
-              {dark ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4"/>
-                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-                </svg>
-              )}
-            </button>
-          </div>
-          <p className={`text-xs tracking-wide cursor-default select-none transition-colors duration-700 ${theme.footer}`}>
+          <p className={`text-xs tracking-wide cursor-default select-none ${theme.footer}`}>
             <span>
-              {dark
-                ? <>built after <span className="footer-trigger" onClick={() => setDark(false)}>dark</span> with next.js, <span className="footer-trigger" onClick={() => setVibeMode(v => !v)}>caffeine</span>, and no regrets<span className="footer-cursor" onClick={() => setShowCLI(true)}>&nbsp;</span></>
-                : <>built with next.js, tailwind, and questionable amounts of <span className="footer-trigger" onClick={() => setDark(true)}>dark</span> roast <span className="footer-trigger" onClick={() => setVibeMode(v => !v)}>caffeine</span><span className="footer-cursor" onClick={() => setShowCLI(true)}>&nbsp;</span></>}
+              built with next.js, tailwind, and questionable amounts of dark roast{' '}
+              <span className="footer-trigger" onClick={() => setVibeMode(v => !v)}>caffeine</span>
+              <span className="footer-cursor" onClick={() => setShowCLI(true)}>&nbsp;</span>
             </span>
           </p>
         </div>
       </div>
 
       {/* Contact CLI */}
-      <ContactCLI isVisible={showCLI} onClose={() => setShowCLI(false)} dark={dark} />
+      <ContactCLI isVisible={showCLI} onClose={() => setShowCLI(false)} />
 
       <style>{`
         .footer-trigger {
