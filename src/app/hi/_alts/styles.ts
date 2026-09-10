@@ -707,10 +707,18 @@ button:focus-visible,a:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 122px;
+  height: 108px;
   font-size: 14px;
   max-width: 1400px;
   margin: auto;
+}
+
+.three-header a {
+  transition: color .2s;
+}
+
+.three-header a:hover {
+  color: var(--clay);
 }
 
 .three-header>a:first-child {
@@ -723,27 +731,24 @@ button:focus-visible,a:focus-visible {
 }
 
 .three-header>a:last-child {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .three-main {
   max-width: 1110px;
-  margin: 58px auto 0;
+  margin: 44px auto 0;
 }
 
 .three-title {
-  font: 400 clamp(40px,4.2vw,62px)/1.02 Tight,Arial,sans-serif;
-  letter-spacing: -.035em;
-  margin: 0 0 30px;
-}
-
-.three-title em {
-  font-style: normal;
-  color: var(--clay);
+  font: 400 clamp(22px,2.1vw,28px)/1.2 Tight,Arial,sans-serif;
+  letter-spacing: -.02em;
+  color: #6f6152;
+  margin: 0 0 22px;
 }
 
 .three-letter {
-  margin-left: 8.8%;
+  margin-left: 0;
   padding-bottom: 4px;
 }
 
@@ -756,12 +761,13 @@ button:focus-visible,a:focus-visible {
   font-size: clamp(48px,6.6vw,99px);
   font-weight: 400;
   line-height: 1.06;
-  letter-spacing: -.055em;
+  letter-spacing: -.016em;
 }
 
 .letter-line em {
   font-style: normal;
-  color: var(--clay);
+  font-weight: 600;
+  letter-spacing: -.024em;
 }
 
 .inline-object {
@@ -886,18 +892,6 @@ button:focus-visible,a:focus-visible {
   min-height: 96px;
 }
 
-.letter-period {
-  font-size: 44px;
-  color: var(--clay);
-  margin-left: 8px;
-  display: inline-block;
-  transition: transform .9s;
-}
-
-.last-letter:hover .letter-period {
-  transform: rotate(180deg);
-}
-
 .three-bottom {
   padding: 34px 0 46px;
 }
@@ -929,20 +923,24 @@ button:focus-visible,a:focus-visible {
 .three-footer {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 26px;
+  gap: 12px 30px;
   max-width: 1110px;
   margin: auto;
-  padding: 0 0 90px;
-  font-size: 12px;
-  color: #8d7c68;
+  padding: 0 0 84px;
+  font-size: 13px;
+  letter-spacing: -.005em;
+  color: #857563;
 }
 
 .three-footer a {
-  transition: color .2s;
+  padding-bottom: 2px;
+  border-bottom: 1.5px solid transparent;
+  transition: color .2s,border-color .2s;
 }
 
 .three-footer a:hover {
   color: var(--clay);
+  border-color: #f4633a55;
 }
 
 @media (max-width:1100px) {
@@ -1079,15 +1077,15 @@ button:focus-visible,a:focus-visible {
     padding: 0 6%;
   }
   .three-header {
-    height: 94px;
+    height: 84px;
     font-size: 13px;
   }
   .three-main {
     margin-top: 23px;
   }
   .three-title {
-    font-size: 38px;
-    margin-bottom: 24px;
+    font-size: 20px;
+    margin-bottom: 18px;
   }
   .three-letter {
     margin: 0;
@@ -1142,9 +1140,6 @@ button:focus-visible,a:focus-visible {
   .object-index {
     font-size: 7px;
     bottom: -13px;
-  }
-  .letter-period {
-    font-size: 26px;
   }
   .three-bottom {
     padding: 20px 0 30px;
