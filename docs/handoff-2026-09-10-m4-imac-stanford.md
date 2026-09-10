@@ -33,31 +33,19 @@ are pieces Bart rejected), `public/amber/tracks/*.m4a` (4 MB), `docs/amber-morni
 `docs/moltbook-integration.md`, `scripts/{add-princess.ts,moltbook-sanitize.ts}`,
 `scripts/loop/` (2026-09-03), `tunnel.log`.
 
-### ⚠️ vibeceo needs a merge — do this early
+### vibeceo — resolved: remote won
 
-`../vibeceo` on the M1 was **7 ahead, 22 behind** origin/main. The 22 remote commits
-are a big Jambot stream (instrument instances, effect serialization, choice-param
-validation, mute/solo in `describeSession`) pushed from another machine. The 7 local
-ones are: `INVENTORY.md` + `tests/inventory.js`, an FFT/spectral analyzer pass, a
-`jbs-node.js` pattern-length fix, a JT90 sample-exact step-timing fix, an sms-bot
-Dockerfile `npm ci` fix, and three `hallman-*.js` scripts.
+`../vibeceo` on the M1 was 7 ahead / 22 behind. Bart's call: **the remote version
+of Jambot wins.** Local `main` was reset hard to `origin/main` and the full suite
+(`node jambot/tests/run-tests.js`) passes there, including the 67 effects/routing
+checks. Nothing to merge — on the M4 just `git pull` and work from origin/main.
 
-**Three files overlap:** `jambot/CLAUDE.md`, `jambot/instruments/jbs-node.js`,
-`jambot/tools/mixer-tools.js`.
-
-The M1 did **not** merge — blind-merging an audio engine with no time to listen to
-the output is how you get a silently broken instrument (see the "ONLY proven patch
-values" rule). Instead the local work is parked on a remote branch, losing nothing:
-
-```
-git fetch origin
-git log --oneline origin/main..origin/imac-m1-handoff-2026-09-10   # the 7 commits
-```
-
-Merge that branch into main on the M4 when there's time to run
-`node jambot/tests/inventory.js` and actually listen to a render. `../vibeceo`'s
-`main` on the M1 is otherwise stale — **on the M4, just `git pull` and work from
-origin/main**, then merge the branch.
+The 7 discarded commits are kept on `origin/imac-m1-handoff-2026-09-10` (tip
+`d33b506c0`) purely as an archive: an `INVENTORY.md` + `tests/inventory.js`, an
+FFT/spectral analyzer pass, a `jbs-node.js` pattern-length fix, a JT90 step-timing
+fix, an sms-bot Dockerfile `npm ci` fix, and three `hallman-*.js` scripts. Some of
+that may have been fixed independently on the remote side. Cherry-pick from it only
+if something turns out to be missing; don't merge it wholesale.
 
 ---
 
