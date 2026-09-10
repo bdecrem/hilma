@@ -8,8 +8,8 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   Tight — the serif italics are retired here, alt4 still uses them) with emphasis carried by the clay accent, on the
   warm paper of the live homepage (#fff6ea / #2b2118 / #d64a22). The three photo objects are now plain links —
   Dodo → dodo.foo, Jambot → jambot.to, Mac Plus → github.com/bdecrem/Macinclaude — and reveal their destination on
-  hover instead of opening the dialog, so alt3 no longer renders `.project-dialog`. The phone number and email sit in the
-  CASBS paragraph as a sentence, the way the live homepage says it; the footer carries the rest of its links:
+  hover instead of opening the dialog, so alt3 no longer renders `.project-dialog`. The email and phone number sit in the
+  CASBS paragraph as their own sentence ("I'm at … or …"), the way the live homepage says it; the footer carries the rest of its links:
   About me, decremental.com, Substack, LinkedIn, X. The floating edition switcher, the header's
   "a few things that make me tick" strapline and the "small experiments / open possibilities" aside are gone from
   alt3 (alt4 still has the switcher); reach the drafts by URL.
