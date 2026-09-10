@@ -780,16 +780,31 @@ button:focus-visible,a:focus-visible {
   object-position: center 34%;
 }
 
+/* Desktop hover zoom. --hz (the paired photos) and --hzm (the Mac) are the only
+   numbers to turn; both were 1.22 / 1.16 until 2026-09-10 and are now 30% larger.
+   Everything else is derived so the lift keeps its shape as they grow: x spreads
+   in proportion to the zoom, and y pins the photo's bottom edge where it already
+   sits (front 96px, back 102px, Mac 114px from the object's top) so a bigger
+   photo grows upward instead of down into its address label.
+     front y = 96  - (49.5 + 49.5 * hz)   back y = 102 - (49.5 + 49.5 * hz)
+     mac   y = 114 - (57.5 + 57.5 * hzm)                                      */
 @media (hover: hover) {
+  .edition-three {
+    --hz: 1.586;
+    --hzm: 1.508;
+  }
+  .inline-object:hover,.inline-object:focus-visible {
+    z-index: 3;
+  }
   .inline-object:hover .inline-front,.inline-object:focus-visible .inline-front {
-    transform: translate(-18px,-14px) rotate(-12deg) scale(1.22);
+    transform: translate(calc(-14.75px * var(--hz)),calc(46.5px - 49.5px * var(--hz))) rotate(-12deg) scale(var(--hz));
     box-shadow: 3px 12px 16px #4a301c2e;
   }
   .inline-object:hover .inline-back,.inline-object:focus-visible .inline-back {
-    transform: translate(16px,-8px) rotate(12deg) scale(1.22);
+    transform: translate(calc(13.11px * var(--hz)),calc(52.5px - 49.5px * var(--hz))) rotate(12deg) scale(var(--hz));
     box-shadow: 3px 12px 16px #4a301c2e;
   }
-  .inline-object:hover .object-index,.inline-object:focus-visible .object-index {
+  .inline-object:hover .object-index,.inline-object:focus-visible .object-index,.mac-slot:hover .object-index {
     opacity: 1;
     color: var(--clay);
   }
@@ -886,6 +901,42 @@ button:focus-visible,a:focus-visible {
   top: -5px;
 }
 
+/* The Mac object is the page's one real photograph, and the README it links to has
+   no pictures in it, so a second micro-link under the address opens the full JPG.
+   Pointer devices only: a touch tap already lifts the photo to 3x over the scrim. */
+.mac-slot {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.object-alt {
+  display: none;
+}
+
+@media (hover: hover) {
+  .object-alt {
+    display: block;
+    position: absolute;
+    left: 50%;
+    bottom: -20px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-size: 8px;
+    letter-spacing: .04em;
+    color: var(--muted);
+    text-decoration: none;
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .mac-slot:hover .object-alt,.object-alt:focus-visible {
+    opacity: 1;
+  }
+  .object-alt:hover,.object-alt:focus-visible {
+    color: var(--clay);
+  }
+}
+
 .inline-mac {
   width: 98px;
   height: 142px;
@@ -903,9 +954,11 @@ button:focus-visible,a:focus-visible {
   transition: transform .5s,box-shadow .4s;
 }
 
-.inline-mac:hover img,.inline-mac:focus-visible img {
-  transform: rotate(-1deg) translateY(-10px) scale(1.16);
-  box-shadow: 3px 12px 16px #4a301c2e;
+@media (hover: hover) {
+  .inline-mac:hover img,.inline-mac:focus-visible img,.mac-slot:hover .inline-mac img {
+    transform: rotate(-1deg) translateY(calc(56.5px - 57.5px * var(--hzm))) scale(var(--hzm));
+    box-shadow: 3px 12px 16px #4a301c2e;
+  }
 }
 
 .inline-mac .object-index {
