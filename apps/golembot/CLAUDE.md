@@ -26,30 +26,25 @@ still runs at home.
 
 ### Open items
 
-1. **Swap API-key auth for the subscription OAuth token.** The mini's `claude`
-   CLI has never been logged in, so the engine currently authenticates with
-   `ANTHROPIC_API_KEY` (lifted from `~/.macplus-backend.env`). That bills the
-   API per message — a one-line test reply cost ~$0.17. To move it onto Bart's
-   Claude subscription instead:
-
-   ```bash
-   ssh admin@171.66.240.175
-   /opt/homebrew/bin/claude setup-token      # prints a URL, complete it in a browser
-   ```
-
-   Then drop `ANTHROPIC_API_KEY` from `~/.golembot.env` and
-   `launchctl kickstart -k gui/501/com.golembot.strays`. GolemBot also accepts
-   the token directly as `oauthToken:` in `golem.yaml` — keep it out of git and
-   reference an env var if you use that field.
+1. **~~Swap API-key auth for the subscription OAuth token.~~ Done 2026-09-10.**
+   `~/.golembot.env` now carries `CLAUDE_CODE_OAUTH_TOKEN` (from
+   `/opt/homebrew/bin/claude setup-token`, run on the mini) and no
+   `ANTHROPIC_API_KEY` — the API key had to *go*, not just be joined, because the
+   CLI resolves `ANTHROPIC_API_KEY` first and would have kept billing the API.
+   **Rotate this token too**: it was pasted into a Claude transcript. Re-run
+   `setup-token` on the mini and rewrite the one line in `~/.golembot.env`.
 
 2. **Rotate the Discord bot token.** During the cutover the token was read back
    from `/api/status`, which returns it in plaintext, so it ended up in a Claude
    transcript. Reset it in the Developer Portal and run
    `bash apps/golembot/set-token.sh strays`.
 
-3. **No `model` is pinned.** The iMac ran `model: fable`; the mini config leaves
-   it unset and takes the engine default. Set `model:` in
-   `bots/strays/golem.yaml` if the default drifts.
+3. **~~No `model` is pinned.~~ Done 2026-09-10 — `model: claude-opus-5`.** Unset,
+   the engine defaults to Fable 5, which draws on the extended-usage credit
+   balance rather than the plan; when that balance ran dry the bot answered every
+   mention with "You're out of usage credits. Run /usage-credits to keep using
+   Fable 5." That reads like a broken bot, so pin the model rather than inherit
+   the default.
 
 ## The two bots
 
