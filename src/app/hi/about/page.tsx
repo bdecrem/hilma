@@ -128,9 +128,6 @@ export default function AboutPage() {
             </a>
             .
           </p>
-          <p>
-            <a href="/bart-decrem-cv.pdf">Full CV (PDF)</a>
-          </p>
         </div>
         <div className="about-foot">
           <a href="/hi">← Back</a>
