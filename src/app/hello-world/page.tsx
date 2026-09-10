@@ -27,17 +27,19 @@ export default function HelloWorldPage() {
           color: '#2b0a1e',
         }}
       >
-        Hello, world
+        Hello World
       </h1>
       <p
         style={{
           margin: 0,
           fontSize: 'clamp(0.95rem, 3.5vw, 1.15rem)',
           color: '#7a0f3f',
-          letterSpacing: '0.01em',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          fontWeight: 600,
         }}
       >
-        Built on the mini, shipped to Vercel.
+        For Bart &amp; Reuben
       </p>
     </main>
   );

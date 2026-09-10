@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Hello, world',
-  description: 'Built on the mini, shipped to Vercel.',
+  title: 'Hello World',
+  description: 'For Bart & Reuben.',
 };
 
 export const viewport: Viewport = {

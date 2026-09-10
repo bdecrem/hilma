@@ -28,10 +28,19 @@ export default function OgImage() {
             color: '#2b0a1e',
           }}
         >
-          Hello, world
+          Hello World
         </div>
-        <div style={{ display: 'flex', marginTop: 28, fontSize: 40, color: '#7a0f3f' }}>
-          Built on the mini, shipped to Vercel.
+        <div
+          style={{
+            display: 'flex',
+            marginTop: 28,
+            fontSize: 40,
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            color: '#7a0f3f',
+          }}
+        >
+          FOR BART &amp; REUBEN
         </div>
       </div>
     ),
