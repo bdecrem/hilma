@@ -1295,7 +1295,9 @@ textarea.form-field {
 
 .edition-card .three-main {
   margin: 0;
-  padding: 0 96px;
+  /* Optical centring, not box centring: the tilted photos bleed ~10px past the text
+     column on the left, and the block ends higher than its box does. */
+  padding: 50px 86px 0 106px;
   max-width: none;
   width: 100%;
 }
@@ -1317,8 +1319,9 @@ textarea.form-field {
 }
 
 .edition-card .last-letter {
-  min-height: 226px;
+  min-height: 296px;
   padding-left: 0;
+  gap: 8px;
 }
 
 .edition-card .inline-object {
@@ -1357,35 +1360,18 @@ textarea.form-field {
 }
 
 .edition-card .inline-mac {
-  width: 164px;
-  height: 238px;
-  margin: 0 26px 0 0;
+  width: 206px;
+  height: 296px;
+  margin: 0 -26px 0 0;
 }
 
 .edition-card .inline-mac img {
-  width: 140px;
-  height: 192px;
-  border: 11px solid #fffdf8;
-  border-bottom-width: 34px;
+  width: 176px;
+  height: 242px;
+  border: 13px solid #fffdf8;
+  border-bottom-width: 41px;
 }
 
-.card-credit {
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 20px;
-  padding: 8px 4px 0 0;
-  font-size: 28px;
-}
-
-.card-name {
-  font-weight: 600;
-  color: #2b2118;
-}
-
-.card-site {
-  color: var(--clay);
-}
 
 /* Short phones (SE, or any phone with the browser bars taking a big bite): the same
    layout, stepped down ~15% so the footer still lands inside the first screen. */

@@ -38,7 +38,6 @@ export const cardBody = `<main class="three-main">
     <div class="letter-line"><span>machines</span>${JAM}<span><em>sing,</em> and old things</span></div>
     <div class="letter-line last-letter">${MAC}<span><em>new again.</em></span></div>
   </div>
-  <div class="card-credit"><span class="card-name">Bart Decrem</span><span class="card-site">bartin16.xyz</span></div>
 </main>`
 
 export const formScript = `
