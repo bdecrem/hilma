@@ -72,6 +72,7 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Collab** | `apps/collab/` | — | Collaboration plugin |
 | **MCP Dashboard** | `apps/mcp-dashboard/` + `src/app/apps/mcp-dashboard/` | Vercel | MCP server dashboard |
 | **Decremental** | `src/app/projects/` | Vercel (decremental.com) | Projects page |
+| **Bart in 16** | `src/app/hi/` | Vercel (bartin16.xyz) | Bart's personal homepage. `/hi` is a whole-document route (`route.ts` + `home.ts`), not a React page, so the design keeps its own stylesheet — `_alts/styles.ts` under `.edition-three`, shared with the `/hi/alt4` draft. The React homepage it replaced on 2026-09-09 is in `_archive/`. OG card at `public/hi/og.png` is composited from a Playwright shot of the page itself (`scripts` note: regenerate it after a type or layout change). Display tracking on the big flow lines stays near -.016em; anything near -.05em collides "rn" into "m" in "learning", worst in Safari. |
 | **Writer** | `src/app/writer/` | Vercel | Writing tool |
 | **Amber** | `src/app/amber/` | Vercel | Generative art + daily creations (~25 pieces) |
 | **F2 (web)** | `src/app/f2/` | Vercel (feynd.cc) | Learning app — chat + topics + paste, user-scoped |

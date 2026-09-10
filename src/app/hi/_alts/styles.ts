@@ -698,46 +698,14 @@ button:focus-visible,a:focus-visible {
 .edition-three {
   background: #fff6ea;
   color: #2b2118;
-  padding: 0 7%;
+  padding: 0 calc(7% + env(safe-area-inset-right)) env(safe-area-inset-bottom) calc(7% + env(safe-area-inset-left));
   --clay: #d64a22;
   --muted: #9c8a74;
 }
 
-.three-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 108px;
-  font-size: 14px;
-  max-width: 1400px;
-  margin: auto;
-}
-
-.three-header a {
-  transition: color .2s;
-}
-
-.three-header a:hover {
-  color: var(--clay);
-}
-
-.three-header>a:first-child {
-  font-weight: 600;
-}
-
-.three-header>a:first-child>span {
-  color: var(--muted);
-  margin: 0 8px;
-}
-
-.three-header>a:last-child {
-  font-size: 13px;
-  font-weight: 600;
-}
-
 .three-main {
   max-width: 1110px;
-  margin: 44px auto 0;
+  margin: 112px auto 0;
 }
 
 .three-title {
@@ -846,23 +814,29 @@ button:focus-visible,a:focus-visible {
 }
 
 .inline-mac {
-  width: 111px;
-  height: 89px;
-  margin-left: 14px;
+  width: 98px;
+  height: 142px;
+  margin-left: 18px;
 }
 
 .inline-mac img {
-  width: 108px;
-  height: 83px;
-  object-position: 50% 65%;
-  border: 5px solid #fffdf8;
-  border-bottom-width: 14px;
-  transform: rotate(-7deg);
-  transition: transform .5s;
+  width: 84px;
+  height: 115px;
+  object-position: center;
+  border: 7px solid #fffdf8;
+  border-bottom-width: 20px;
+  border-radius: 1px;
+  transform: rotate(-5deg);
+  transition: transform .5s,box-shadow .4s;
 }
 
 .inline-mac:hover img,.inline-mac:focus-visible img {
-  transform: rotate(0) translateY(-8px) scale(1.2);
+  transform: rotate(-1deg) translateY(-10px) scale(1.16);
+  box-shadow: 3px 12px 16px #4a301c2e;
+}
+
+.inline-mac .object-index {
+  bottom: -6px;
 }
 
 .object-index {
@@ -1076,12 +1050,8 @@ button:focus-visible,a:focus-visible {
   .edition-three {
     padding: 0 6%;
   }
-  .three-header {
-    height: 84px;
-    font-size: 13px;
-  }
   .three-main {
-    margin-top: 23px;
+    margin-top: 74px;
   }
   .three-title {
     font-size: 20px;
@@ -1128,14 +1098,15 @@ button:focus-visible,a:focus-visible {
     top: 7px;
   }
   .inline-mac {
-    width: 76px;
-    height: 66px;
+    width: 64px;
+    height: 93px;
+    margin-left: 7px;
   }
   .inline-mac img {
-    width: 73px;
-    height: 62px;
-    border-width: 3px;
-    border-bottom-width: 11px;
+    width: 54px;
+    height: 74px;
+    border-width: 5px;
+    border-bottom-width: 14px;
   }
   .object-index {
     font-size: 7px;

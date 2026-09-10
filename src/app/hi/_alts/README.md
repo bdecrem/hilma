@@ -2,7 +2,12 @@
 
 Unfinished concepts retained for future editing. The existing `src/app/hi/page.tsx` and domain rewrite remain unchanged.
 
-- `/hi/alt3` — **Small wonders**: supplied app screenshots woven into a personal introduction. Edit `../alt3/html.ts`.
+- `/hi/alt3` — **Small wonders**: supplied app screenshots woven into a personal introduction.
+  **This design shipped on 2026-09-09 as the bartin16.xyz homepage.** Its markup now lives in
+  `../home.ts`, served by `../route.ts` with real (indexable) metadata and `public/hi/og.png`; the
+  previous React homepage is archived in `../_archive/`. `/hi/alt3` re-uses the same body behind
+  noindex, so edit `../home.ts` and both follow. The `.edition-three` block in `styles.ts` is
+  therefore live stylesheet, not draft — `.edition-four` beside it is still a draft.
   Revised 2026-09-09 to Bart's brief: the "builder, tinkerer" kicker, the "a small collection…" caption with its
   project index, and both hairlines are gone; the CASBS paragraph stays. One typeface does the whole page (Inter
   Tight — the serif italics are retired here, alt4 still uses them) with emphasis carried by the clay accent, on the
