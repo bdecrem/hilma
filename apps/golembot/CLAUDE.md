@@ -199,6 +199,23 @@ for the full list, it is more current than the README):
   stored 144 characters, and Discord answered only `An invalid token was
   provided.` A Discord bot token is ~72 chars — check the length before
   suspecting anything else. `cutover.sh` now reports the length it wrote.
+- **Discord's picker resolves "@Strays" to the bot's ROLE, not the bot.** When a
+  bot joins, Discord auto-creates a managed role with the same name (here
+  `strays`, id `1532809294850818151`). Typing `@strays` autocompletes to that
+  role, so the message carries `<@&roleId>` and never the bot's own
+  `<@userId>` token — the stock adapter sets `mentioned=false`, and under
+  `groupPolicy: mention-only` the gateway is silent with nothing in the log.
+  Pasting the raw `<@1532808338402709645>` works, which makes it look like a
+  flaky bot rather than a mention-parsing bug. Fixed by
+  `patches/discord-role-mention.mjs`, which teaches the adapter that a role the
+  bot holds counts as a mention (and strips the token from the text).
+  `setup-mini.sh` re-applies it after every install, because upgrading golembot
+  overwrites `dist/`. To check it survived:
+  `ssh admin@171.66.240.175 'grep -c golembot-role-mention-patch /opt/homebrew/lib/node_modules/golembot/dist/channels/discord.js'`
+- **A gateway can sit "connected" for a day and receive nothing.** The fleet
+  registry, `/health` and `/api/status` all report `connected` from cached
+  state, so the only real liveness signal is the log's mtime. If it has not
+  moved since the last known message, `launchctl kickstart -k` it.
 - **`/api/status` returns the bot token in plaintext.** It is bound to
   127.0.0.1, but anything that reads it (a debugging session, a log paste)
   burns the token. Treat that endpoint as a secret.

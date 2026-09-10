@@ -45,6 +45,13 @@ for pkg in golembot discord.js; do
   "$BREW/npm" ls -g --depth=0 2>/dev/null | grep -q "$pkg" || "$BREW/npm" install -g "$pkg" >/dev/null
 done
 
+# Role-mention patch. Discord's picker turns "@Strays" into the bot's managed ROLE
+# token (<@&roleId>), which the stock adapter does not count as a mention, so
+# mention-only bots stay silent. Re-applied here because a golembot upgrade
+# overwrites dist/. Idempotent; a missing patch file is not fatal.
+PATCHF="$HOME/golembot/discord-role-mention.mjs"
+[ -f "$PATCHF" ] && "$BREW/node" "$PATCHF" || echo "(no role-mention patch on disk)"
+
 mkdir -p "$DIR" "$LOGD" "$HOME/Library/LaunchAgents"
 cat > "$DIR/golem.yaml"                     # config arrives on stdin
 
@@ -99,9 +106,13 @@ REMOTE
 }
 
 if [ "$MODE" = "--local" ]; then
+  mkdir -p ~/golembot
+  cp "$HERE/patches/discord-role-mention.mjs" ~/golembot/discord-role-mention.mjs
   remote_script > /tmp/golembot-setup.sh
   bash /tmp/golembot-setup.sh "$BOT" < "$SRC"
 else
+  ssh -o ConnectTimeout=15 "$MINI_SSH" 'mkdir -p ~/golembot'
+  scp -q "$HERE/patches/discord-role-mention.mjs" "$MINI_SSH:~/golembot/discord-role-mention.mjs"
   remote_script | ssh -o ConnectTimeout=15 "$MINI_SSH" "cat > /tmp/golembot-setup.sh"
   ssh -o ConnectTimeout=15 "$MINI_SSH" "bash /tmp/golembot-setup.sh '$BOT'" < "$SRC"
 fi
