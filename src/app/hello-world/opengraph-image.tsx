@@ -15,7 +15,7 @@ export default function OgImage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0b0f14',
+          background: '#ff69b4',
           fontFamily: 'system-ui, sans-serif',
         }}
       >
@@ -25,14 +25,12 @@ export default function OgImage() {
             fontSize: 150,
             fontWeight: 800,
             letterSpacing: '-0.04em',
-            backgroundImage: 'linear-gradient(100deg, #7dd3fc 0%, #a78bfa 50%, #fb923c 100%)',
-            backgroundClip: 'text',
-            color: 'transparent',
+            color: '#2b0a1e',
           }}
         >
           Hello, world
         </div>
-        <div style={{ display: 'flex', marginTop: 28, fontSize: 40, color: '#8ea0b3' }}>
+        <div style={{ display: 'flex', marginTop: 28, fontSize: 40, color: '#7a0f3f' }}>
           Built on the mini, shipped to Vercel.
         </div>
       </div>

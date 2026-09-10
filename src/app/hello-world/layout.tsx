@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0b0f14',
+  themeColor: '#ff69b4',
 };
 
 export default function HelloWorldLayout({ children }: { children: React.ReactNode }) {
