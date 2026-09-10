@@ -31,6 +31,8 @@ Toolbox, built with [Retro68](https://github.com/autc04/Retro68)) and a
 | **Plutonix** (`plutonix/`) | A small Unix subsystem *on the Plus* — a real shell + pipelines + ~18 stream tools, plus `ssh`/`rsh` into your modern Mac. |
 | **Foundry** (`foundry/`) | Describe an app in a sentence → the Mac writes it, compiles it with Retro68, and delivers the finished app to your Plus. |
 | **The Bridge** (`bridge/`) | Over-the-air app delivery: drop a built app in a folder and it installs itself onto the Plus over the network. |
+| **Dodo** (`dodo/`) | A tutor on the Plus: one window per topic, ask a question and it answers, names the topic, and remembers the thread *(talks to the author's own learning backend — a personal-integration example to adapt).* |
+| **Daily Pixel** (`pixel/`) | A shared 64×64 1-bit canvas that persists. You draw with the mouse; Claude adds a few strokes each day, and you watch them appear. |
 | **iMessage** (`imessage/`) | Read and reply to messages from the Plus *(personal-integration example — see its note).* |
 | **Quote / NetSpeed / Porthole / Sudoku / SerialDoc** | A daily quote, a link speed test, a bitmap viewer, a 36-puzzle Sudoku, and a serial-port diagnostic. |
 

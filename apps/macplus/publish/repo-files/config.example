@@ -26,4 +26,4 @@ MACINCLAUDE_HOST=192.168.1.50
 # The agent ports (must match what each app dials). Defaults:
 #   macinclaude 2324   paint 2325   surf 2326   foundry 2327   imessage 2328
 #   rsh 2329   mux 2330   diag 2331   quote 2332   bridge 2333   screen 2334
-#   netspeed 2335   porthole 2336   ssh 2222
+#   netspeed 2335   porthole 2336   pixel 2337   dodo 2339   ssh 2222

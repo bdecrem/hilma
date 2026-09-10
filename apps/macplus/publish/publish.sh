@@ -23,7 +23,7 @@ mkdir -p "$DEST"
 find "$DEST" -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
 rsync -a \
   --exclude='.git' --exclude='.DS_Store' \
-  --exclude='node_modules/' --exclude='build/' \
+  --exclude='node_modules/' --exclude='build/' --exclude='build-test/' --exclude='build-*/' \
   --exclude='*.bin' --exclude='*.dsk' --exclude='*.APPL' --exclude='*.rsrc' \
   --exclude='*.o' --exclude='*.obj' --exclude='package-lock.json' \
   --exclude='publish/' \
@@ -33,8 +33,10 @@ rsync -a \
   --exclude='design/' \
   `# retired / orphaned apps (MacinTalk freezes the Plus; jukebox has no Plus app):` \
   --exclude='talkingplus/' --exclude='agent-moose/' --exclude='agent-jukebox/' \
-  `# experimental + bundles third-party code (llama2.c) — hold from the public release:` \
-  --exclude='drunk85/' \
+  `# experimental + bundles third-party code (llama2.c) — hold from the public release.` \
+  `# agent-oracle is drunk85's mini-side half: its weights are a *.bin (stripped above),` \
+  `# so publishing it alone would ship an agent that cannot run.` \
+  --exclude='drunk85/' --exclude='agent-oracle/' \
   "$SRC/" "$DEST/"
 
 # --- 2. sanitize machine-specific values ---------------------------------------

@@ -24,6 +24,8 @@ Each agent listens on its own port so they can run side by side:
 | 2334 | `agent-screen/` | screen-grab helper |
 | 2335 | `agent-netspeed/` | link speed test |
 | 2336 | `agent-porthole/` | bitmap viewer feed |
+| 2337 | `agent-pixel/` | the shared daily canvas |
+| 2339 | `agent-dodo/` | the tutor *(personal integration)* |
 | 2222 | `agent-pssh/` | SSH-2 server for the Plus's `ssh` client |
 
 ## Running one
