@@ -16,10 +16,11 @@ const FLOW = `<main class="three-main">
 
 // bartin16.xyz keeps the email and phone number in the paragraph; decremental.com
 // swaps them for a message form (posts to /api/contact).
-// bartin16.xyz keeps the email and phone number in the paragraph.
+// bartin16.xyz is just the invitation plus the email and phone number; decremental.com
+// keeps the CASBS line and puts the message form behind “talk to you”.
 export const body = FLOW
   .replace('@@LINKS@@', `<a href="/hi/about">About me</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://decremental.com/projects" target="_blank" rel="noopener">decremental.com</a>`)
-  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>Come say hi, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
+  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>Come say hi, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
 
 // decremental.com: one line, and the message form lives behind "talk to you" in a dialog.
 export const bodyWithForm = FLOW
