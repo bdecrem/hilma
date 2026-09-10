@@ -897,18 +897,57 @@ button:focus-visible,a:focus-visible {
 /* decremental.com's contact block: the bio on the left, a quiet message form beside it.
    Fields are ruled lines rather than boxes, so they read as part of the page. */
 
-.three-bottom.has-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 26px 56px;
-  align-items: flex-start;
-}
-
 .three-form {
-  flex: 0 1 340px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.talk-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--clay);
+  font-weight: 600;
+  border-bottom: 1.5px solid #f4633a55;
+  transition: border-color .2s;
+}
+
+.talk-link:hover {
+  border-bottom-color: var(--clay);
+}
+
+.note-dialog {
+  width: min(440px,calc(100vw - 40px));
+  padding: 30px 30px 28px;
+  border: 0;
+  border-radius: 16px;
+  background: #fffdf8;
+  color: #2b2118;
+  box-shadow: 0 24px 60px #4a301c33;
+  overflow: visible;
+}
+
+.note-dialog::backdrop {
+  background: #2b211859;
+}
+
+.note-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  padding: 4px 8px;
+  font-size: 22px;
+  line-height: 1;
+  color: #b6a48d;
+  background: none;
+  border: 0;
+  transition: color .2s;
+}
+
+.note-close:hover {
+  color: var(--clay);
 }
 
 .form-label {
@@ -985,10 +1024,6 @@ textarea.form-field {
 .form-send:disabled {
   opacity: .5;
   cursor: default;
-}
-
-.form-field:focus + .form-foot .form-hint {
-  color: var(--clay);
 }
 
 .three-footer {
@@ -1162,6 +1197,19 @@ textarea.form-field {
   .three-bottom {
     margin-top: auto;
   }
+  /* decremental.com carries one short paragraph instead of two, so stretching to the
+     bottom edge would leave a hole mid-page. Centre that variant instead. */
+  .site-decremental {
+    justify-content: center;
+  }
+  .site-decremental .three-main {
+    flex: none;
+    margin-top: 0;
+  }
+  .site-decremental .three-bottom {
+    margin-top: 0;
+    padding-top: 26px;
+  }
   .three-title {
     font-size: 19px;
     margin-bottom: 10px;
@@ -1226,21 +1274,6 @@ textarea.form-field {
   }
   .three-bottom {
     padding: 12px 0 26px;
-  }
-  .site-decremental .letter-line {
-    min-height: 58px;
-  }
-  .site-decremental .last-letter {
-    min-height: 54px;
-  }
-  .site-decremental .three-bottom {
-    padding-bottom: 20px;
-  }
-  .site-decremental .three-bio p {
-    margin-bottom: 9px;
-  }
-  .three-bottom.has-form {
-    gap: 10px;
   }
   .three-form {
     max-width: none;
@@ -1438,15 +1471,6 @@ textarea.form-field {
   }
   /* The wider phone tier's .site-decremental rules outrank the bare selectors above
      on specificity, so restate them here or decremental ends up taller than bartin16. */
-  .site-decremental .letter-line {
-    min-height: 46px;
-  }
-  .site-decremental .last-letter {
-    min-height: 42px;
-  }
-  .site-decremental .three-bio p {
-    margin-bottom: 7px;
-  }
   .three-form {
     gap: 6px;
   }

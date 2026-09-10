@@ -12,18 +12,28 @@ const FLOW = `<main class="three-main">
   </div>
   @@BIO@@
 </main>
-<footer class="three-footer"><a href="/hi/about">About me</a><a href="https://decremental.com/projects" target="_blank" rel="noopener">decremental.com</a><a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack</a><a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn</a><a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X</a></footer>`
+<footer class="three-footer">@@LINKS@@<a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack</a><a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn</a><a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X</a></footer>`
 
 // bartin16.xyz keeps the email and phone number in the paragraph; decremental.com
 // swaps them for a message form (posts to /api/contact).
-export const body = FLOW.replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
+// bartin16.xyz keeps the email and phone number in the paragraph.
+export const body = FLOW
+  .replace('@@LINKS@@', `<a href="/hi/about">About me</a><a href="https://decremental.com/projects" target="_blank" rel="noopener">decremental.com</a>`)
+  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
 
-export const bodyWithForm = FLOW.replace('@@BIO@@', `<div class="three-bottom has-form"><div class="three-bio"><p>This year I’m at CASBS, exploring AI × human flourishing.</p><p>My door is open. Swing by room 16, especially if you want to talk AI &amp; your work.</p></div>
-    <form class="three-form" novalidate>
-      <p class="form-label">Shoot me a message</p>
-      <textarea class="form-field" name="message" rows="2" placeholder="what’s on your mind" required></textarea>
-      <div class="form-foot"><a class="form-send" href="mailto:bdecrem@gmail.com?subject=Hello%20from%20decremental.com">Send</a><span class="form-hint">opens your mail app</span></div>
-    </form></div>`)
+// decremental.com: one line, and the message form lives behind "talk to you" in a dialog.
+export const bodyWithForm = FLOW
+  .replace('@@LINKS@@', `<a href="/hi/about">More about me</a><a href="https://decremental.com/projects">All my AI projects</a>`)
+  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at <a href="https://casbs.stanford.edu/" target="_blank" rel="noopener">CASBS</a>, exploring AI × human flourishing. Would love to <button type="button" class="talk-link" data-note>talk to you</button> if you’re into that.</p></div></div>`)
+  + `
+<dialog class="note-dialog">
+  <button type="button" class="note-close" data-note-close aria-label="Close">×</button>
+  <form class="three-form" novalidate>
+    <p class="form-label">Shoot me a message</p>
+    <textarea class="form-field" name="message" rows="3" placeholder="what’s on your mind" required></textarea>
+    <div class="form-foot"><a class="form-send" href="mailto:bdecrem@gmail.com?subject=Hello%20from%20decremental.com">Send</a><span class="form-hint">opens your mail app</span></div>
+  </form>
+</dialog>`
 
 // A landscape poster of the same sentence, rendered at /hi/card and screenshotted into
 // the LinkedIn image. The three photo objects are lifted straight out of FLOW so they can
@@ -41,7 +51,9 @@ export const cardBody = `<main class="three-main">
 </main>`
 
 export const formScript = `
-document.querySelectorAll('.three-form').forEach(form => {
+const dialog = document.querySelector('.note-dialog')
+const form = dialog && dialog.querySelector('.three-form')
+if (form) {
   const box = form.querySelector('textarea')
   const send = form.querySelector('.form-send')
   const base = 'mailto:bdecrem@gmail.com?subject=' + encodeURIComponent('Hello from decremental.com')
@@ -53,5 +65,11 @@ document.querySelectorAll('.three-form').forEach(form => {
   }
   box.addEventListener('input', sync)
   form.addEventListener('submit', e => { e.preventDefault(); send.click() })
-})
+  document.querySelectorAll('[data-note]').forEach(el => el.addEventListener('click', () => {
+    dialog.showModal()
+    box.focus()
+  }))
+  dialog.querySelector('[data-note-close]').addEventListener('click', () => dialog.close())
+  dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close() })
+}
 `

@@ -15,11 +15,15 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   block on the bottom edge, and a second tier at `max-height: 700px` steps everything down ~15%
   for short phones. Both `.three-main` and `.three-footer` need explicit `margin: … 0` there —
   the base `margin: auto` would otherwise shrink-to-fit and centre them inside the flex column.
-  The two hosts differ only in their contact block: bartin16.xyz keeps the email and phone
-  number in the paragraph, decremental.com gets "Shoot me a message" and a mailto form (no
-  backend — Send opens the visitor's mail app). `route.ts` picks by Host header and adds a
-  `site-decremental` body class so the variant can be styled anywhere; with the form, the
-  one-screen phone fit holds from the iPhone 13 mini up, and an SE scrolls a little.
+  The two hosts differ in their contact block and footer labels. bartin16.xyz keeps the email
+  and phone number in the paragraph and the CASBS door invitation. decremental.com links CASBS
+  out to casbs.stanford.edu, replaces the door paragraph with one line ending in "talk to you",
+  and puts the message form in a native `<dialog>` behind that link — a mailto form, no backend,
+  Send opens the visitor's own mail app. Its footer reads "More about me" and "All my AI
+  projects". `route.ts` picks by Host header and adds a `site-decremental` body class so the
+  variant can be styled anywhere; `@@BIO@@` and `@@LINKS@@` in FLOW are where the two diverge.
+  Because decremental carries less text, that variant centres on phones rather than stretching
+  to the bottom edge, which would leave a hole mid-page.
   `/hi/card` renders the sentence as a 1600x900 poster (`.edition-card`, photos about a third
   larger, three wide lines instead of five narrow ones) — `node scripts/hi/make-card.mjs`
   screenshots it to `~/Desktop/bartin16-linkedin.png` with the dev server running.
