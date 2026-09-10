@@ -51,7 +51,7 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   "a few things that make me tick" strapline and the "small experiments / open possibilities" aside are gone from
   alt3 (alt4 still has the switcher); reach the drafts by URL.
   Polished the same day: one left axis (the flow block no longer sits indented from the title), "Hey, I'm Bart." dropped
-  to a 22-28px muted salutation so the flow line is the page's only headline, emphasis on "stick / sing / new again."
+  to a 22-28px muted salutation so the flow line is the page's only headline, emphasis on "stick / jam / new again."
   carried by weight (semibold) instead of colour so clay now means "this is a link", the decorative asterisk after
   "new again." removed, and the footer set in the same warm ink at 13px without the "↗" arrows (they now underline in
   clay on hover). Display tracking on the flow lines is -.016em: anything near -.05em collides "rn" into "m" in
