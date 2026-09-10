@@ -29,10 +29,15 @@ gateway:
   port: 3002
   host: 127.0.0.1
 
-# Only answer when @mentioned. These are shared channels with human conversation
-# in them; `smart` or `always` would invoke the agent on every message.
+# `smart`: the agent is invoked on every message and decides for itself whether to
+# answer, replying with the [PASS] sentinel (which the gateway swallows) when it
+# has nothing to add. mention-only was dropping ordinary follow-ups — "make me a
+# hello world page" right after an answered mention went unanswered — because it
+# gates before the agent ever sees the message. The cost is an Opus 5 call on
+# every message in the channel, including ones between two humans; on the
+# subscription that is weekly-limit spend, not dollars.
 groupChat:
-  groupPolicy: mention-only
+  groupPolicy: smart
   historyLimit: 20
   maxTurns: 10
 

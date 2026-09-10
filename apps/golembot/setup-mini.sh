@@ -95,7 +95,14 @@ if ! grep -q '^DISCORD_BOT_TOKEN=.' "$ENVF" 2>/dev/null; then
   exit 0
 fi
 
+# bootout is asynchronous: it returns before launchd has finished tearing the job
+# down, and bootstrapping into that window fails with "Bootstrap failed: 5: Input/
+# output error" — leaving the bot stopped. Wait for the label to actually go.
 launchctl bootout "gui/$UID/$LABEL" 2>/dev/null || true
+for _ in $(seq 1 25); do
+  launchctl print "gui/$UID/$LABEL" >/dev/null 2>&1 || break
+  sleep 0.2
+done
 launchctl bootstrap "gui/$UID" "$PLIST"
 launchctl enable "gui/$UID/$LABEL"
 sleep 4
