@@ -45,11 +45,11 @@ for pkg in golembot discord.js; do
   "$BREW/npm" ls -g --depth=0 2>/dev/null | grep -q "$pkg" || "$BREW/npm" install -g "$pkg" >/dev/null
 done
 
-# Role-mention patch. Discord's picker turns "@Strays" into the bot's managed ROLE
-# token (<@&roleId>), which the stock adapter does not count as a mention, so
-# mention-only bots stay silent. Re-applied here because a golembot upgrade
-# overwrites dist/. Idempotent; a missing patch file is not fatal.
-for pf in discord-role-mention smart-stream; do
+# Our dist patches (see patches/*.mjs for what each one does): role mentions,
+# streaming smart-mode replies, the Sonnet triage gate, the model fallback.
+# Re-applied here because a golembot upgrade overwrites dist/. Idempotent; a
+# missing patch file is not fatal, a patch whose anchor is gone IS (set -e).
+for pf in discord-role-mention smart-stream smart-triage model-fallback; do
   PATCHF="$HOME/golembot/$pf.mjs"
   [ -f "$PATCHF" ] && "$BREW/node" "$PATCHF" || echo "(no $pf patch on disk)"
 done

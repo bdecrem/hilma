@@ -39,15 +39,47 @@ still runs at home.
    transcript. Reset it in the Developer Portal and run
    `bash apps/golembot/set-token.sh strays`.
 
-3. **~~No `model` is pinned.~~ Done 2026-09-10 — `model: claude-opus-5`.** Unset,
-   the engine defaults to Fable 5. Fable is covered by the Max plan but has its
-   *own* weekly bucket (`/usage` shows "Current week (Fable)" next to the
+3. **~~No `model` is pinned.~~ Done 2026-09-11 — `model: claude-fable-5-1`
+   with `fallbackModel: claude-opus-5`.** Fable is covered by the Max plan but
+   has its *own* weekly bucket (`/usage` shows "Current week (Fable)" next to the
    all-models bar); when that bucket empties before the weekly reset the CLI
    answers every call with "You're out of usage credits. Run /usage-credits to
    keep using Fable 5." (usage credits are the optional pay-as-you-go overflow,
-   off on this account). That reads like a broken bot, so pin the model rather
-   than inherit the default, or give the gateway an Opus fallback for when the
-   Fable bucket is spent.
+   off on this account). `patches/model-fallback.mjs` catches that and replays
+   the turn on Opus — see "Triage gate + model fallback" below.
+
+## Triage gate + model fallback (2026-09-11)
+
+Stock `groupPolicy: smart` spawns the full Claude Code agent on *every* message
+in the channel and lets the agent answer `[PASS]` — an Opus/Fable run per line
+of two humans chatting. Two dist patches change that:
+
+- **`patches/smart-triage.mjs`** (gateway.js). A message that does not @mention
+  the bot first goes to `groupChat.triageModel` (Sonnet): one headless
+  `claude -p --tools "" --system-prompt … --setting-sources "" --strict-mcp-config`
+  call, ~1k input tokens, ~2 s, on the same OAuth token. It sees the humans'
+  recent lines (the gateway's in-memory group history, now timestamped) merged
+  with the bot's own last replies (from `.golem/history/<channel>.jsonl`) and
+  answers RESPOND or PASS; only RESPOND reaches the agent. @mentions, replies to
+  the bot and DMs skip the gate. Rules are `groupChat.triageRules` in
+  `golem.yaml`. A gate failure logs `triage failed … staying silent` and does
+  NOT fall open into an agent run. Every decision logs one line:
+  `[discord] triage respond · claude-sonnet-5 · 2126ms · 898 in · "…"`.
+- **`patches/model-fallback.mjs`** (index.js + gateway.js + workspace.js). When
+  the pinned model fails with an out-of-usage / limit message (as an error event
+  or as a short reply text), the assistant switches to `fallbackModel` for
+  `fallbackHoldMinutes` (360), replays the same turn, and the gateway drops the
+  failed attempt's text so the channel only sees the real reply. Log line:
+  `[assistant] model claude-fable-5-1 unavailable ("…") — Switching to fallback model claude-opus-5 for 360 min`.
+
+Both are applied by `setup-mini.sh` after every install (same mechanism as the
+role-mention patch), both are idempotent, and both abort loudly if a golembot
+upgrade moved their anchors — then read the new `dist/` and re-anchor. Verified
+2026-09-11 against a local copy of golembot 0.49.2: `triage-harness.mjs` (six
+conversation shapes against real Sonnet, 6/6) and `fallback-harness.mjs`
+(stubbed engine, both failure shapes) — the harnesses live in the session
+scratchpad, recreate from the patch comments if needed. Check the patches
+survived: `ssh admin@171.66.240.175 'grep -c golembot-smart-triage-patch /opt/homebrew/lib/node_modules/golembot/dist/gateway.js; grep -c golembot-model-fallback-patch /opt/homebrew/lib/node_modules/golembot/dist/index.js'`.
 
 ## The two bots
 
@@ -159,6 +191,8 @@ for the full list, it is more current than the README):
 | `channels.discord.botName` | **Must equal `name`**, or @mentions in guild channels are not detected |
 | `gateway.port` / `host` | HTTP API + dashboard, bound to 127.0.0.1 |
 | `groupChat.groupPolicy` | `mention-only` (default) / `smart` / `always` |
+| `groupChat.triageModel` / `triageRules` / `triageTimeoutSeconds` | **Ours** (smart-triage patch): the cheap gate in front of smart mode |
+| `fallbackModel` / `fallbackHoldMinutes` | **Ours** (model-fallback patch): where to go when `model` is out of plan usage |
 | `streaming.mode` | `buffered` or `streaming` (we stream, so long jobs show progress) |
 | `timeout` | Agent invocation timeout in seconds, default 600 |
 | `autoContinue` | Gateway re-invokes the agent when it emits `[CONTINUE]` |

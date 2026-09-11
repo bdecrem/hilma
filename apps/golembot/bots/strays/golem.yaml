@@ -9,11 +9,13 @@
 name: Strays
 engine: claude-code
 
-# Pin the model. Left unset, the engine defaults to Fable 5. Fable is on the Max
-# plan but has its own weekly bucket (see /usage); when that empties before the
-# weekly reset the CLI answers every call with "You're out of usage credits" and
-# the bot looks broken. Opus 5 draws on the all-models bucket.
-model: claude-opus-5
+# Fable, with Opus as the fallback. Fable has its own weekly bucket on the Max
+# plan; when it is spent the CLI answers every call with "You're out of usage
+# credits" and the bot looks broken. patches/model-fallback.mjs catches that,
+# replays the turn on fallbackModel and stays there for fallbackHoldMinutes.
+model: claude-fable-5-1
+fallbackModel: claude-opus-5
+fallbackHoldMinutes: 360
 
 # Claude Code runs with --dangerously-skip-permissions, same as the iMac did.
 # The agent edits repos and pushes, so it needs an unattended runtime.
@@ -29,17 +31,26 @@ gateway:
   port: 3002
   host: 127.0.0.1
 
-# `smart`: the agent is invoked on every message and decides for itself whether to
-# answer, replying with the [PASS] sentinel (which the gateway swallows) when it
-# has nothing to add. mention-only was dropping ordinary follow-ups — "make me a
-# hello world page" right after an answered mention went unanswered — because it
-# gates before the agent ever sees the message. The cost is an Opus 5 call on
-# every message in the channel, including ones between two humans; on the
-# subscription that is weekly-limit spend, not dollars.
+# `smart`: every message in the channel is considered, not just @mentions —
+# mention-only was dropping ordinary follow-ups ("make me a hello world page"
+# right after an answered mention). Stock smart mode spawns the full agent on
+# every message and lets it answer [PASS]; patches/smart-triage.mjs puts a gate
+# in front of that: a message without an @mention first goes to triageModel
+# (one headless, no-tools call, ~1k tokens, ~2 s) which answers RESPOND or
+# PASS, and only RESPOND reaches the agent. @mentions and DMs skip the gate.
 groupChat:
   groupPolicy: smart
   historyLimit: 20
   maxTurns: 10
+  triageModel: claude-sonnet-5
+  triageTimeoutSeconds: 45
+  triageRules: |
+    RESPOND when the newest message is an instruction, request or question aimed at the bot, even without an @mention.
+    RESPOND when it follows up on something the bot just said or did (the bot's recent replies are shown as [bot:Strays]).
+    RESPOND when someone asks for something the bot could build, fix, look up or explain and nobody else is being asked.
+    PASS when people are talking to each other, thinking out loud, or discussing something the bot has no part in.
+    PASS on bare acknowledgements, reactions and small talk that ask for nothing.
+    When in doubt and the bot spoke within the last few messages, RESPOND.
 
 # The iMac bot replied in pieces as it worked ("Making it now…", then the link),
 # which is the streaming delivery mode. Keep that — long build tasks otherwise
@@ -81,10 +92,10 @@ systemPrompt: >-
   never with "let me know".
 
 
-  WHEN TO ACT. This is a shared channel, so you see messages that are not for
-  you. If the message @mentions you, it is for you: do the work and report back.
-  If it does not, the prompt says so explicitly, and then it depends on how clear
-  the request is. Unmistakably aimed at you — an instruction, or a follow-up to
+  WHEN TO ACT. This is a shared channel. If the message @mentions you, it is
+  for you: do the work and report back. If it does not, the prompt says so
+  explicitly; a first pass has already judged the message worth a look from you,
+  and then it depends on how clear the request is. Unmistakably aimed at you — an instruction, or a follow-up to
   something you were just asked — do it, no permission needed. Plausibly two
   people talking to each other, or thinking out loud — reply with one short line
   offering to do it, and then stop and wait for an answer; do not start. Clearly
