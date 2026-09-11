@@ -9,10 +9,10 @@
 name: Strays
 engine: claude-code
 
-# Pin the model. Left unset, the engine defaults to Fable 5, which bills against
-# the extended-usage credit balance and dies with "You're out of usage credits"
-# the moment that runs dry — the bot then answers every mention with that error.
-# Opus 5 is covered by the subscription itself.
+# Pin the model. Left unset, the engine defaults to Fable 5. Fable is on the Max
+# plan but has its own weekly bucket (see /usage); when that empties before the
+# weekly reset the CLI answers every call with "You're out of usage credits" and
+# the bot looks broken. Opus 5 draws on the all-models bucket.
 model: claude-opus-5
 
 # Claude Code runs with --dangerously-skip-permissions, same as the iMac did.

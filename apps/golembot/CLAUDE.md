@@ -40,11 +40,14 @@ still runs at home.
    `bash apps/golembot/set-token.sh strays`.
 
 3. **~~No `model` is pinned.~~ Done 2026-09-10 — `model: claude-opus-5`.** Unset,
-   the engine defaults to Fable 5, which draws on the extended-usage credit
-   balance rather than the plan; when that balance ran dry the bot answered every
-   mention with "You're out of usage credits. Run /usage-credits to keep using
-   Fable 5." That reads like a broken bot, so pin the model rather than inherit
-   the default.
+   the engine defaults to Fable 5. Fable is covered by the Max plan but has its
+   *own* weekly bucket (`/usage` shows "Current week (Fable)" next to the
+   all-models bar); when that bucket empties before the weekly reset the CLI
+   answers every call with "You're out of usage credits. Run /usage-credits to
+   keep using Fable 5." (usage credits are the optional pay-as-you-go overflow,
+   off on this account). That reads like a broken bot, so pin the model rather
+   than inherit the default, or give the gateway an Opus fallback for when the
+   Fable bucket is spent.
 
 ## The two bots
 
