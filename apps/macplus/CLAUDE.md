@@ -406,9 +406,10 @@ The bring-up steps above (open port, `AT`, `ATDT`-dial) are the manual ZTerm rit
 - **Connection menu:** Connect/Reconnect, Disconnect (`+++`/`ATH`), Settings… Any failed step prints a
   plain status line naming what broke (no `OK`, no `CONNECT`) — no silent fallback.
 - **Status (2026-06-07):** built & compiles clean with Retro68 (`CODE×9, DLOG, DITL, SIZE`); `.dsk`
-  staged in `~/mac-plus-apps/vmac/`. **Not yet driven in Mini vMac** (the emulator's screen didn't render
-  into the screenshot tool that session) and the live connect needs the real Plus (no serial in the
-  emulator). The mini agent on 2324 runs as LaunchAgent **`sh.macplus.code`** from the deploy
+  staged in `~/mac-plus-apps/vmac/`. **Driven in Mini vMac 2026-09-11:** `./build.sh serial` builds a
+  `MACINCLAUDE_SERIAL` variant on `net/serlink.inc` (same shape as Dodo's), then
+  `bash minivmac/e2e.sh Macinclaude 171.66.240.175:2324` dials the live agent on the mini — banner and
+  prompt render. The stock build is MacTCP-only and fails with "network error" in the emulator. The mini agent on 2324 runs as LaunchAgent **`sh.macplus.code`** from the deploy
   clone — see [`BACKEND.md`](BACKEND.md). (The old `sh.claude-plus.terminal` root daemon +
   `~/claude-plus` rsync copy were retired 2026-06-11.)
 

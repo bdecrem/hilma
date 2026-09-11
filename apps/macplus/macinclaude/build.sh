@@ -11,8 +11,10 @@ if [ ! -f "$TC" ]; then
 fi
 
 cd "$(dirname "$0")"
+EXTRA=""
+if [ "${1:-}" = "serial" ]; then EXTRA="-DCMAKE_C_FLAGS=-DMACINCLAUDE_SERIAL"; echo "(MACINCLAUDE_SERIAL modem-port build for the Mini vMac harness)"; fi
 rm -rf build && mkdir build && cd build
-cmake -DCMAKE_TOOLCHAIN_FILE="$TC" ..
+cmake -DCMAKE_TOOLCHAIN_FILE="$TC" $EXTRA ..
 make
 echo
 echo "Built:"

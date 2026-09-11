@@ -43,6 +43,25 @@
 #include <SegLoad.h>
 
 #include "nettcp.h"       /* WiFi/TCP transport (BlueSCSI DaynaPORT + MacTCP) */
+/* Transport: direct TCP (MacTCP) on the Plus; with MACINCLAUDE_SERIAL, the modem
+   port (RetroWiFi SI, or Mini vMac's bridged port -> vmodem) with the same shape.
+   Build with ./build.sh serial for the minivmac/e2e.sh harness. */
+#ifdef MACINCLAUDE_SERIAL
+#include "serlink.inc"
+#define LinkConnect(hostC, port)  SLConnect((hostC), (port))
+#define LinkAvailable()           SLAvailable()
+#define LinkRecv(b, n, t)         SLRecv((b), (n))
+#define LinkSend(b, n)            SLSend((b), (n))
+#define LinkClose()               SLClose()
+#define LinkErrStr(e)             ((e) == -2 ? "modem not answering" : (e) == -3 ? "no CONNECT" : "modem port")
+#else
+#define LinkConnect(hostC, port)  NetConnect(&gConn, NetParseIP(hostC), (port))
+#define LinkAvailable()           NetAvailable(&gConn)
+#define LinkRecv(b, n, t)         NetRecv(&gConn, (b), (n), (t))
+#define LinkSend(b, n)            NetSend(&gConn, (b), (n))
+#define LinkClose()               NetClose(&gConn)
+#define LinkErrStr(e)             NetErrStr(e)
+#endif
 #include "applog.inc"            /* key-event logging to the mini's shared logs */
 #include "winfull.inc"           /* full-screen window + close/zoom (maximize) box */
 
@@ -313,7 +332,7 @@ static void DumpTerm(const unsigned char *buf, short len)
 static void SendBytes(const char *s, long n)
 {
     if (!gConnected || n <= 0) return;
-    NetSend(&gConn, s, (unsigned short)n);
+    LinkSend(s, (unsigned short)n);
 }
 static void SendStr(const char *s) { long n; StrLen(s, &n); SendBytes(s, n); }
 
@@ -322,10 +341,10 @@ static void DrainInput(void)
 {
     long avail;
     if (!gConnected) return;
-    while ((avail = NetAvailable(&gConn)) > 0) {
+    while ((avail = LinkAvailable()) > 0) {
         unsigned short cnt = (avail > (long)sizeof(gSerBuf))
                              ? (unsigned short)sizeof(gSerBuf) : (unsigned short)avail;
-        if (NetRecv(&gConn, gSerBuf, cnt, 2) <= 0) break;
+        if (LinkRecv(gSerBuf, cnt, 2) <= 0) break;
     }
 }
 
@@ -401,7 +420,6 @@ static void SavePrefs(void)
 static Boolean DialAgent(void)
 {
     char hostC[256];
-    unsigned long ip;
     OSErr err;
 
     if (gConnected) return true;
@@ -409,14 +427,14 @@ static Boolean DialAgent(void)
     EmitLine("");
     EmitLine("Connecting to Macinclaude...");
     P2C(gCfg.host, hostC);
-    ip = NetParseIP(hostC);
-    if (ip == 0) { EmitLine("  bad server IP - check Connection > Settings."); return false; }
-
-    err = NetConnect(&gConn, ip, gCfg.tcpPort);
+#ifndef MACINCLAUDE_SERIAL
+    if (NetParseIP(hostC) == 0) { EmitLine("  bad server IP - check Connection > Settings."); return false; }
+#endif
+    err = LinkConnect(hostC, gCfg.tcpPort);
     if (err != noErr) {
         char b[80]; short n = 0;
         CatStr(b, &n, "  connect failed: ");
-        CatStr(b, &n, (char *)NetErrStr(err));
+        CatStr(b, &n, (char *)LinkErrStr(err));
         b[n] = 0; EmitLine(b);
         AppLog("connect failed");
         return false;
@@ -432,7 +450,7 @@ static Boolean DialAgent(void)
 
 static void Disconnect(void)
 {
-    if (gConnected) NetClose(&gConn);
+    if (gConnected) LinkClose();
     gConnected = false;
     EmitLine("");
     EmitLine("--- disconnected ---");
@@ -444,7 +462,7 @@ static void PumpTerminal(void)
 {
     long avail, got;
     if (!gConnected) return;
-    avail = NetAvailable(&gConn);
+    avail = LinkAvailable();
     if (avail <= 0) {
         if (avail < 0) {       /* connection gone */
             gConnected = false;
@@ -454,7 +472,7 @@ static void PumpTerminal(void)
         return;
     }
     if (avail > (long)sizeof(gSerBuf)) avail = sizeof(gSerBuf);
-    got = NetRecv(&gConn, gSerBuf, (unsigned short)avail, 5);
+    got = LinkRecv(gSerBuf, (unsigned short)avail, 5);
     if (got <= 0) return;
     DumpTerm((unsigned char *)gSerBuf, (short)got);
 }
