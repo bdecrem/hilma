@@ -1,4 +1,10 @@
-# /amber-schedule
+# /amber-schedule — RETIRED 2026-09-11
+
+**Do not run this.** Bart retired the daily Amber posts on 2026-09-11 ("no more amber posts"). Kept for reference only; if invoked, do nothing and tell Bart it is retired.
+
+---
+
+(Original instructions below.)
 
 Set up Amber's daily creation cron. This runs in-session — it fires as long as this Claude Code terminal stays open.
 
