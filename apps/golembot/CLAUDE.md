@@ -251,6 +251,12 @@ for the full list, it is more current than the README):
 - **`/api/status` returns the bot token in plaintext.** It is bound to
   127.0.0.1, but anything that reads it (a debugging session, a log paste)
   burns the token. Treat that endpoint as a secret.
+- **The mini's Claude Code must be new enough for the pinned model.** Fable 5.1
+  needs 2.1.251+; with 2.1.220 the bot answered every mention with `API Error:
+  400 Claude Code 2.1.220 does not support this model`. The triage gate (Sonnet)
+  kept working, so the log showed `triage respond` followed by the engine error.
+  `setup-mini.sh` now upgrades the CLI (an npm global on the mini) when it is
+  older than that.
 - **The bot gets its own checkout, `~/hilma-bot`.** The mini's other two copies
   are not safe for it: `~/Documents/code/hilma` was 396 commits behind with
   uncommitted macplus edits, and `~/hilma-deploy` is the macplus services' deploy

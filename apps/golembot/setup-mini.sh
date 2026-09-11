@@ -45,6 +45,17 @@ for pkg in golembot discord.js; do
   "$BREW/npm" ls -g --depth=0 2>/dev/null | grep -q "$pkg" || "$BREW/npm" install -g "$pkg" >/dev/null
 done
 
+# Claude Code itself must be new enough for the pinned model. Fable 5.1 needs
+# 2.1.251+; an older CLI answers every mention with "API Error: 400 Claude Code
+# x.y.z does not support this model" (2026-09-11). The CLI is an npm global here.
+MIN_CLAUDE=2.1.251
+have=$("$BREW/claude" --version 2>/dev/null | awk '{print $1}')
+if [ "$(printf '%s\n%s\n' "$MIN_CLAUDE" "$have" | sort -V | head -1)" != "$MIN_CLAUDE" ]; then
+  echo "claude $have < $MIN_CLAUDE — upgrading"
+  "$BREW/npm" install -g @anthropic-ai/claude-code@latest >/dev/null
+fi
+echo "claude  -> $("$BREW/claude" --version)"
+
 # Our dist patches (see patches/*.mjs for what each one does): role mentions,
 # streaming smart-mode replies, the Sonnet triage gate, the model fallback.
 # Re-applied here because a golembot upgrade overwrites dist/. Idempotent; a
