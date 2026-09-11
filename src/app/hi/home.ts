@@ -3,12 +3,12 @@
 // under `.edition-three`, shared with the /hi/alt4 draft.
 const FLOW = `<main class="three-main">
   <h1 class="three-title">Hey, I’m Bart.</h1>
-  <div class="three-letter" aria-label="I like making learning stick, machines jam, and old things new again.">
+  <div class="three-letter" aria-label="I like making ideas stick, machines jam, and old Macs think again.">
     <div class="letter-line"><span>I like making</span></div>
-    <div class="letter-line"><a class="inline-object inline-dodo" href="https://dodo.foo" target="_blank" rel="noopener" aria-label="Dodo — dodo.foo"><img class="inline-front" src="/hi/alts/assets/dodo-peck.png" alt="Dodo’s playful Peck learning path"><img class="inline-back" src="/hi/alts/assets/dodo-topics.png" alt="Dodo’s topics library"><span class="object-index mono">dodo.foo ↗</span></a><span>learning <em>stick,</em></span></div>
+    <div class="letter-line"><a class="inline-object inline-dodo" href="https://dodo.foo" target="_blank" rel="noopener" aria-label="Dodo — dodo.foo"><img class="inline-front" src="/hi/alts/assets/dodo-peck.png" alt="Dodo’s playful Peck learning path"><img class="inline-back" src="/hi/alts/assets/dodo-topics.png" alt="Dodo’s topics library"><span class="object-index mono">dodo.foo ↗</span></a><span>ideas <em>stick,</em></span></div>
     <div class="letter-line"><span>machines</span><a class="inline-object inline-jam" href="https://jambot.to" target="_blank" rel="noopener" aria-label="Jambot — jambot.to"><img class="inline-front" src="/hi/alts/assets/jambot-controls.png" alt="Jambot synth controls"><img class="inline-back" src="/hi/alts/assets/jambot-tracks.png" alt="Jambot track sequencers"><span class="object-index mono">jambot.to ↗</span></a><span><em>jam,</em></span></div>
-    <div class="letter-line"><span>and old things</span><span class="mac-slot"><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude/blob/main/README.md" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a><a class="object-alt mono" href="/hi/alts/assets/mac-plus.jpg" target="_blank" rel="noopener">full photo ↗</a></span></div>
-    <div class="letter-line last-letter"><span><em>new again.</em></span></div>
+    <div class="letter-line"><span>and old Macs</span><span class="mac-slot"><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude/blob/main/README.md" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a><a class="object-alt mono" href="/hi/alts/assets/mac-plus.jpg" target="_blank" rel="noopener">full photo ↗</a></span></div>
+    <div class="letter-line last-letter"><span><em>think again.</em></span></div>
   </div>
   @@BIO@@
 </main>
@@ -44,10 +44,10 @@ const OBJECTS = FLOW.match(/<a class="inline-object[\s\S]*?<\/a>/g) as string[]
 const [DODO, JAM, MAC] = OBJECTS
 
 export const cardBody = `<main class="three-main">
-  <div class="three-letter" aria-label="I like making learning stick, machines jam, and old things new again.">
-    <div class="letter-line"><span>I like making</span>${DODO}<span>learning <em>stick,</em></span></div>
-    <div class="letter-line"><span>machines</span>${JAM}<span><em>jam,</em> and old things</span></div>
-    <div class="letter-line last-letter">${MAC}<span><em>new again.</em></span></div>
+  <div class="three-letter" aria-label="I like making ideas stick, machines jam, and old Macs think again.">
+    <div class="letter-line"><span>I like making</span>${DODO}<span>ideas <em>stick,</em></span></div>
+    <div class="letter-line"><span>machines</span>${JAM}<span><em>jam,</em> and old Macs</span></div>
+    <div class="letter-line last-letter">${MAC}<span><em>think again.</em></span></div>
   </div>
 </main>`
 
