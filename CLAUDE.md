@@ -179,14 +179,13 @@ Key files (`apps/feynd/Feynd/`):
 
 **Backend contract:** the iOS app hits the exact same `/api/f2/*` endpoints as the web (login/logout/me, messages, topics CRUD, ingest, latest, quiz). One backend, multiple fronts.
 
-### Dodo voice (Realtime)
+### Dodo voice (GPT-Live)
 
-Voice mode runs through OpenAI Realtime. Code lives in `src/lib/f2/realtime.ts`, `src/app/api/f2/realtime/**`, `apps/feynd/Feynd/RealtimeVoiceClient.swift`, `apps/feynd/Feynd/VoiceSessionView.swift`, and `apps/f2/schema/007_f2_voice_sessions.sql`. Two reference docs:
+Dodo's voice surfaces — Talk to Dodo (global / topic), spoken flash rounds, the Final Review, the Second Chance and the recert refresher — run on **OpenAI GPT-Live (`gpt-live-1`)** since 2026-09-11 (they were on Realtime `gpt-realtime-2.1` before). Code: `src/lib/f2/live.ts` (prompts + session config + the OpenAI call), `src/app/api/f2/live/session/**` (start = SDP exchange, finish = transcript), `src/lib/f2/realtime.ts` (voice-session rows, prefs, the voice catalog — shared), `apps/feynd/Feynd/LiveVoiceClient.swift` (the screens in `VoiceSessionView.swift` / `FlashVoiceView.swift` are unchanged), `apps/f2/schema/007_f2_voice_sessions.sql`. Reference: [`docs/f2-gpt-live-reference.md`](docs/f2-gpt-live-reference.md).
 
-- [`docs/f2-realtime-api-reference.md`](docs/f2-realtime-api-reference.md) — the API surface this repo uses (OpenAI endpoints, event names, F2 wrapper, iOS event flow), plus a list of official OpenAI docs to recheck since the Realtime schema has shifted.
-- [`docs/f2-realtime-voice-proposal.md`](docs/f2-realtime-voice-proposal.md) — strategy doc with architectural rationale (WebRTC vs WebSocket, client-mediated vs sideband tools, retrieval, phasing). Note: shipped code is Phase 1 with WebSocket; the WebRTC recommendation is a future step.
+How it is shaped: the live model owns the conversation (full duplex — it listens while speaking and handles interruptions itself; there is no turn loop, no commits, no `response.create`) and gets a short prompt with the script, a ≤24K-char excerpt of the material and a delegation policy; a **Responses backend** (`gpt-5.6-luna`, env `OPENAI_LIVE_BACKEND_MODEL`) gets the FULL material in its own prompt and the live model delegates to it for details and fact checks. No function tools on the client. The phone's WebRTC SDP offer goes through our server to `POST /v1/live/sessions` — there are no ephemeral client secrets for Live. Transcripts arrive as timestamped fragments per speaker; the client groups them into turns for the graders.
 
-Voice is reachable from the Voice button in `TopicDetailView`. The backend mints an ephemeral OpenAI client secret per session and stores transcripts in `f2_voice_sessions`. Tool calls derive `user_id` from the session cookie, never from model args.
+Verify with `npx tsx scripts/test-live-dodo.ts [mode] [--nudge] [--answer "…"]` (headless: the exact server session over WebSocket, answers with macOS `say`, prints transcripts + delegations) and the simulator drill `-VoiceLiveTest 1` (see `apps/feynd/CLAUDE.md`). The legacy `/api/f2/realtime/session` + `/tool` routes stay only for Dodo builds older than 0.2 (106). **Peri (`src/lib/f4`) and Loci still use Realtime** — `docs/f2-realtime-api-reference.md` covers those.
 
 ### Feynd iOS — voice-tutor archive
 

@@ -1,3 +1,6 @@
+// LEGACY (2026-09-11): get_topic_context for the Realtime-era Dodo client.
+// GPT-Live sessions give the backend the full material instead and run no
+// tool loop. Delete with /api/f2/realtime/session.
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getTopicContext } from '@/lib/f2/realtime'

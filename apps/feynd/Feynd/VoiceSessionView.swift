@@ -18,7 +18,7 @@ struct VoiceSessionView: View {
     let onFinished: ((String?) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
-    @State private var client: RealtimeVoiceClient
+    @State private var client: LiveVoiceClient
     @State private var muted = false
     @State private var ending = false
     /// Hold-to-talk (Voice settings, per device). Read once at init so the
@@ -33,8 +33,8 @@ struct VoiceSessionView: View {
         self.onFinished = onFinished
         let hold = UserDefaults.standard.bool(forKey: VoiceSettingsView.holdToTalkKey)
         self.holdToTalk = hold
-        _client = State(initialValue: RealtimeVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
-                                                          holdToTalk: hold))
+        _client = State(initialValue: LiveVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
+                                                      holdToTalk: hold))
     }
 
     var body: some View {
@@ -78,11 +78,10 @@ struct VoiceSessionView: View {
         .task {
             await client.start()
             #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
-            // `-VoiceCutInTest 1` — headless hold-to-talk drill: one turn,
-            // then press again while Dodo is still speaking. Read the
-            // F2_REALTIME_TEST / F2_REALTIME_CUT_IN lines in the sim log.
-            if holdToTalk, UserDefaults.standard.bool(forKey: "VoiceCutInTest") {
-                await runCutInDrill()
+            // `-VoiceLiveTest 1` — headless GPT-Live drill; read the
+            // F2_LIVE_TEST lines in the sim log.
+            if UserDefaults.standard.bool(forKey: "VoiceLiveTest") {
+                await runLiveDrill()
             }
             #endif
         }
@@ -171,8 +170,13 @@ struct VoiceSessionView: View {
     }
 
     #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
-    private func runCutInDrill() async {
-        func log(_ m: String) { NSLog("F2_REALTIME_TEST %@ phase=%@ status=%@", m, String(describing: client.phase), client.status) }
+    /// `-VoiceLiveTest 1` — headless GPT-Live drill. The sim mic is silent,
+    /// so it checks the protocol, not the speech: session starts, Dodo
+    /// speaks (its scripted opening, or a nudged greeting in Talk mode),
+    /// audio actually arrives, a hold-to-talk press/release leaves the
+    /// session healthy, and End closes gracefully + uploads the transcript.
+    private func runLiveDrill() async {
+        func log(_ m: String) { NSLog("F2_LIVE_TEST %@ phase=%@ status=%@", m, String(describing: client.phase), client.status) }
         func waitFor(_ ok: @escaping () -> Bool, _ seconds: Double) async -> Bool {
             let deadline = Date().addingTimeInterval(seconds)
             while Date() < deadline {
@@ -181,53 +185,40 @@ struct VoiceSessionView: View {
             }
             return ok()
         }
-        let up = await waitFor({ client.phase == .connected && client.debugChannelOpen }, 25)
-        log(up ? "connected" : "FAIL never-connected")
+        let up = await waitFor({ client.debugSessionStarted && client.debugChannelOpen }, 30)
+        log(up ? "PASS session-started" : "FAIL never-started")
+        guard up else { log("done"); return }
 
-        // Turn 1: a long answer, so there is plenty of audio to cut into.
-        client.debugSay("Tell me about the Battle of Hastings in great detail. Talk for at least a full minute without stopping.", cutIn: false)
-        log("say-1")
-        let playing = await waitFor({ client.debugAudioPlaying }, 25)
-        log(playing ? "dodo-audio-playing" : "FAIL no-audio-for-turn-1")
-        try? await Task.sleep(for: .seconds(4))
-        let before = await client.debugInboundAudio()
-        try? await Task.sleep(for: .seconds(1))
-        let e0 = await client.debugInboundAudio()
-        log("old-audio-rate=\((e0?.energy ?? 0) - (before?.energy ?? 0)) per s")
-
-        // Cut in with a topic change. Old audio must stop arriving; the
-        // reply must answer the NEW question.
-        client.debugSay("Stop. Different question: what is the capital of France? Answer only that, in one short sentence.", cutIn: true)
-        log("cut-in")
-        var prev = e0
-        var leaked = 0.0
-        var newAudioAt: Double? = nil
-        for i in 1...30 {
-            try? await Task.sleep(for: .milliseconds(200))
-            let e = await client.debugInboundAudio()
-            let dE = (e?.energy ?? 0) - (prev?.energy ?? 0)
-            let playing = client.debugAudioPlaying
-            NSLog("F2_REALTIME_TEST inbound t=%.1fs dE=%.6f playing=%d", Double(i) * 0.2, dE, playing ? 1 : 0)
-            // Energy that arrives after the first 400ms while nothing new
-            // is playing is the old reply leaking through.
-            if i > 2, !playing { leaked += dE }
-            if playing, newAudioAt == nil { newAudioAt = Double(i) * 0.2 }
-            prev = e
-            if playing, i > 5 { break }
+        if mode == "global" || mode == "topic" {
+            // Talk mode waits for the user; an appended instruction alone
+            // does not reliably start the model, so follow the docs'
+            // greeting recipe: instruction, then a commentary prompt.
+            client.debugInstruct("Greet the user by name in one short sentence and ask what they'd like to talk about. Speak now, without waiting for them, then listen.")
+            client.debugCommentary("Begin the conversation now, following the instructions provided.")
+            log("nudged-greeting")
         }
-        log(leaked < 0.0005 ? "PASS old-audio-stopped leaked=\(leaked)" : "FAIL old-audio-leaked leaked=\(leaked)")
-        log("new-audio-at=\(newAudioAt.map { String($0) } ?? "never")")
-        _ = await waitFor({ client.debugLastAssistantText.localizedCaseInsensitiveContains("Paris") }, 25)
-        let reply = client.debugLastAssistantText
-        log(reply.localizedCaseInsensitiveContains("Paris") ? "PASS new-question-answered" : "FAIL reply-ignored-cut-in reply=\(reply.prefix(120))")
+        let spoke = await waitFor({ !client.debugLastAssistantText.isEmpty }, 25)
+        log(spoke ? "PASS dodo-spoke text=\(client.debugLastAssistantText.prefix(120))" : "FAIL dodo-silent")
 
-        // Quick tap mid-speech: Dodo must stop and stay quiet.
-        _ = await waitFor({ client.debugAudioPlaying }, 10)
-        client.beginTalking(); log("press-tap")
-        try? await Task.sleep(for: .milliseconds(80))
-        client.endTalking(); log("release-tap")
-        try? await Task.sleep(for: .seconds(5))
-        log(client.debugAudioPlaying || client.phase == .speaking ? "FAIL tap produced audio" : "PASS tap-stayed-quiet")
+        let before = await client.debugInboundAudio()
+        try? await Task.sleep(for: .seconds(2))
+        let after = await client.debugInboundAudio()
+        let energy = (after?.energy ?? 0) - (before?.energy ?? 0)
+        log(energy > 0 ? "PASS audio-arrived energy=\(energy)" : "FAIL no-audio energy=\(energy)")
+
+        if holdToTalk {
+            client.beginTalking(); log("press")
+            try? await Task.sleep(for: .milliseconds(600))
+            client.endTalking(); log("release")
+            let settled = await waitFor({ client.phase == .connected || client.phase == .speaking }, 10)
+            log(settled ? "PASS ptt-settled" : "FAIL ptt-unsettled")
+        }
+        // Let Dodo finish its opening so the transcript has a real turn.
+        _ = await waitFor({ client.phase == .connected && client.status != "Thinking" }, 20)
+
+        let id = await client.end()
+        log(client.debugCloseReason == "close_requested" ? "PASS closed-gracefully" : "FAIL close-reason=\(client.debugCloseReason ?? "none")")
+        log(id != nil && client.debugTranscriptUploaded ? "PASS transcript-uploaded turns=\(client.debugTurnCount)" : "FAIL transcript-not-uploaded")
         log("done")
     }
     #endif

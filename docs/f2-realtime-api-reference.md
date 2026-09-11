@@ -1,5 +1,7 @@
 # F2 Realtime Voice API Reference
 
+> **Superseded for Dodo on 2026-09-11.** Dodo's voice surfaces (Talk to Dodo, flash rounds, Final Review, Second Chance, recert) now run on GPT-Live — see [`f2-gpt-live-reference.md`](f2-gpt-live-reference.md). This document still describes the Realtime API as used by **Peri** (`src/lib/f4`, `/api/f4/walk/*`) and Loci, and by the legacy `/api/f2/realtime/*` routes kept for old Dodo builds.
+
 Last updated: 2026-05-26
 
 This document is for code agents working on Feynd/F2 voice features. It describes the OpenAI Realtime API surface used by this repo, the F2 backend wrapper around it, and the iOS client event flow.

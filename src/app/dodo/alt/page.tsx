@@ -87,7 +87,7 @@ export default function DodoPage() {
             </li>
             <li>
               <strong>Voice</strong> — talk to your tutor, take voice rounds,
-              or do a walking review, over OpenAI Realtime.
+              or do a walking review, over OpenAI GPT-Live.
             </li>
             <li>
               <strong>Audio summaries</strong> — a narrated summary of a

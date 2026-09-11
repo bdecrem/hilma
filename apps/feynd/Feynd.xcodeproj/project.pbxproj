@@ -39,6 +39,7 @@
 		681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */; };
 		69465CB76129F3A8475D3837 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A806446C086649CAB62568A4 /* FlashVoiceView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
+		7544C2674BBB478E832E676C /* LiveVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */; };
 		75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */; };
 		75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7811C80A73490F1D2B650D /* SettingsView.swift */; };
 		760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87227276409128E69ABE7D61 /* ReviewsSheet.swift */; };
@@ -55,7 +56,6 @@
 		A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */; };
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
 		A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */; };
-		B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */; };
 		BCA3E817690080EE71E51E2C /* voice-coral.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */; };
 		C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F75E071CC1F646CA33327FAB /* RecertNotifications.swift */; };
 		C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */; };
@@ -142,9 +142,9 @@
 		C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
 		CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabsView.swift; sourceTree = "<group>"; };
 		CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
+		CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceClient.swift; sourceTree = "<group>"; };
 		CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckTrail.swift; sourceTree = "<group>"; };
 		D7F0A9210791EF3A42D9CABF /* Feynd-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Feynd-macOS.entitlements"; sourceTree = "<group>"; };
-		E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeVoiceClient.swift; sourceTree = "<group>"; };
 		EC5668529933DC6749CB3D06 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoArt.swift; sourceTree = "<group>"; };
 		EE7DB0ED0D66A78BC46C7BEB /* FlashModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashModels.swift; sourceTree = "<group>"; };
@@ -200,6 +200,7 @@
 				121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */,
 				B119830CA567768C3502310E /* Info.plist */,
 				CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */,
+				CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */,
 				78E1F1203E78919DA10B73C9 /* LoginView.swift */,
 				CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */,
 				C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */,
@@ -212,7 +213,6 @@
 				CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */,
 				178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
-				E9F83585EDB4349923DB6B4B /* RealtimeVoiceClient.swift */,
 				F75E071CC1F646CA33327FAB /* RecertNotifications.swift */,
 				87227276409128E69ABE7D61 /* ReviewsSheet.swift */,
 				2D359E2025298CA4A57C307D /* ScreenCache.swift */,
@@ -388,6 +388,7 @@
 				08003C48F17C70F2C60C142B /* HelpSheet.swift in Sources */,
 				0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */,
 				470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */,
+				7544C2674BBB478E832E676C /* LiveVoiceClient.swift in Sources */,
 				E837DB371B838AB27BC85493 /* LoginView.swift in Sources */,
 				412B1DB5969B3F94545080B6 /* MainTabsView.swift in Sources */,
 				0E7694CF618B45FF234EB3CB /* ModelPicker.swift in Sources */,
@@ -400,7 +401,6 @@
 				16E7DC3843C38B1750CD4B06 /* PeckTrail.swift in Sources */,
 				10BEA785EEA3FDC166572F22 /* PeckWeekBanner.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
-				B1418FAF333043559861D7B2 /* RealtimeVoiceClient.swift in Sources */,
 				C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */,
 				760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */,
 				D577BB198B5846938AF1ECEB /* ScreenCache.swift in Sources */,
@@ -457,7 +457,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 105;
+				CURRENT_PROJECT_VERSION = 106;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -545,7 +545,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 105;
+				CURRENT_PROJECT_VERSION = 106;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

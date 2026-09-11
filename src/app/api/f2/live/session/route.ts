@@ -1,8 +1,3 @@
-// LEGACY (2026-09-11): the Realtime (gpt-realtime-2.1) session route, kept
-// only so Dodo builds older than 0.2 (106) keep working until TestFlight
-// moves on. New builds use /api/f2/live/session (GPT-Live). Delete this
-// route, /api/f2/realtime/tool, getTopicContext and the Realtime prompt
-// builders in src/lib/f2/realtime.ts together once those builds are gone.
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getThreadById } from '@/lib/f2/threads'
@@ -10,31 +5,41 @@ import { f2Supabase } from '@/lib/f2/supabase'
 import { getFlashCardsByIds, getSecondChanceState, openFormQuestion } from '@/lib/f2/flash'
 import {
   applyVoiceStyle,
-  buildFinalReviewInstructions,
-  buildRecertInstructions,
-  buildSecondChanceInstructions,
-  buildFlashVoiceInstructions,
-  buildRealtimeInstructions,
-  createOpenAIRealtimeClientSecret,
   createVoiceSession,
   getVoicePrefs,
-  realtimeModel,
   realtimeVoice,
-  updateVoiceSessionRealtimeId,
   type RealtimeMode,
 } from '@/lib/f2/realtime'
+import {
+  buildBackendInstructions,
+  buildLiveFinalReviewInstructions,
+  buildLiveFlashInstructions,
+  buildLiveRecertInstructions,
+  buildLiveSecondChanceInstructions,
+  buildLiveSessionConfig,
+  buildLiveTalkInstructions,
+  createLiveWebRTCSession,
+  liveBackendModel,
+  liveModel,
+  liveOpeningInstruction,
+} from '@/lib/f2/live'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
+// POST /api/f2/live/session — start a GPT-Live voice session for Dodo.
+// The client sends its WebRTC SDP offer; we build the session (live prompt,
+// backend prompt, voice) and exchange the offer with OpenAI on its behalf.
 type SessionBody = {
   mode?: RealtimeMode
   thread_id?: string
   // 'flash' mode: the selected deck (from /api/f2/flash/start), in order.
   card_ids?: string[]
-  // Hold-to-talk (a device-side Voice setting): mint the session without
-  // server turn detection; the client drives every turn.
+  // Hold-to-talk (a device-side Voice setting): the mic is muted except
+  // while the key is held. Folded into the live prompt.
   hold_to_talk?: boolean
+  // The phone's WebRTC SDP offer.
+  sdp?: string
 }
 
 export async function POST(req: Request) {
@@ -54,6 +59,11 @@ export async function POST(req: Request) {
   if (!['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert'].includes(mode)) {
     return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
   }
+  // Pass the offer through untouched: SDP needs its final line ending.
+  const sdp = typeof body.sdp === 'string' && body.sdp.trim() ? body.sdp : ''
+  if (!sdp) {
+    return NextResponse.json({ error: 'sdp offer required' }, { status: 400 })
+  }
 
   let thread = null
   if (
@@ -71,22 +81,24 @@ export async function POST(req: Request) {
   }
 
   let instructions: string
+  let cards: { question: string; answer: string }[] | undefined
   if (mode === 'flash') {
     const ids = body.card_ids ?? []
     if (ids.length === 0) {
       return NextResponse.json({ error: 'card_ids required' }, { status: 400 })
     }
-    const cards = await getFlashCardsByIds(user.id, ids)
-    const byId = new Map(cards.map((c) => [c.id, c]))
+    const rows = await getFlashCardsByIds(user.id, ids)
+    const byId = new Map(rows.map((c) => [c.id, c]))
     const ordered = ids.map((id) => byId.get(id)).filter((c) => c != null)
     if (ordered.length !== ids.length) {
       return NextResponse.json({ error: 'unknown card in set' }, { status: 400 })
     }
-    instructions = buildFlashVoiceInstructions({
+    // Spoken rounds have no choices on screen — ask the standalone form.
+    cards = ordered.map((c) => ({ question: openFormQuestion(c), answer: c.answer }))
+    instructions = buildLiveFlashInstructions({
       userName: user.username,
       topicLabel: thread ? (thread.topic ?? thread.url) : null,
-      // Spoken rounds have no choices on screen — ask the standalone form.
-      cards: ordered.map((c) => ({ question: openFormQuestion(c), answer: c.answer })),
+      cards,
     })
   } else if (mode === 'final_review') {
     // The client gates this behind stars 1+2; enforce server-side too.
@@ -96,7 +108,7 @@ export async function POST(req: Request) {
         { status: 403 },
       )
     }
-    instructions = buildFinalReviewInstructions({ userName: user.username, thread: thread! })
+    instructions = buildLiveFinalReviewInstructions({ userName: user.username, thread: thread! })
   } else if (mode === 'second_chance') {
     // Only within the 24h window after a failed 2nd+ Final Review attempt,
     // and never once the topic is mastered.
@@ -110,7 +122,7 @@ export async function POST(req: Request) {
         { status: 403 },
       )
     }
-    instructions = buildSecondChanceInstructions({
+    instructions = buildLiveSecondChanceInstructions({
       userName: user.username,
       thread: thread!,
       weaknesses: sc.last_weaknesses,
@@ -136,14 +148,14 @@ export async function POST(req: Request) {
       .maybeSingle()
     const weaknesses =
       ((lastGraded?.grade_detail as { weaknesses?: string[] } | null)?.weaknesses ?? [])
-    instructions = buildRecertInstructions({
+    instructions = buildLiveRecertInstructions({
       userName: user.username,
       thread: thread!,
       weaknesses,
     })
   } else {
-    instructions = buildRealtimeInstructions({
-      mode,
+    instructions = buildLiveTalkInstructions({
+      mode: mode === 'topic' ? 'topic' : 'global',
       userName: user.username,
       thread,
     })
@@ -154,22 +166,34 @@ export async function POST(req: Request) {
   const voice = prefs.voice ?? realtimeVoice()
   instructions = applyVoiceStyle(instructions, prefs.style)
 
-  // Flash rounds are fully scripted — no tools. Everything else keeps the
-  // topic-context tool.
   const holdToTalk = body.hold_to_talk === true
-  const openaiSecret = await createOpenAIRealtimeClientSecret({
+  const session = buildLiveSessionConfig({
     instructions,
+    backendInstructions: buildBackendInstructions({
+      mode,
+      userName: user.username,
+      thread,
+      cards,
+    }),
     voice,
-    ...(mode === 'flash' ? { tools: [] } : {}),
-    ...(holdToTalk ? { turnDetection: 'manual' as const } : {}),
+    holdToTalk,
+    userName: user.username,
   })
+
+  let live: { sessionId: string; answerSdp: string }
+  try {
+    live = await createLiveWebRTCSession({ session, sdp })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'live session failed'
+    return NextResponse.json({ error: message }, { status: 502 })
+  }
 
   const voiceSession = await createVoiceSession({
     userId: user.id,
     mode,
     threadId: body.thread_id,
-    realtimeSessionId: openaiSecret.session?.id,
-    model: realtimeModel(),
+    realtimeSessionId: live.sessionId,
+    model: liveModel(),
     voice,
   })
 
@@ -177,35 +201,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'voice session create failed' }, { status: 500 })
   }
 
-  if (openaiSecret.session?.id) {
-    await updateVoiceSessionRealtimeId({
-      userId: user.id,
-      voiceSessionId: voiceSession.id,
-      realtimeSessionId: openaiSecret.session.id,
-    })
-  }
-
   return NextResponse.json({
-    client_secret: {
-      value: openaiSecret.value,
-      expires_at: openaiSecret.expires_at,
-    },
-    openai_session_id: openaiSecret.session?.id,
     voice_session: {
       id: voiceSession.id,
       mode,
       thread_id: body.thread_id ?? null,
     },
-    realtime: {
-      model: realtimeModel(),
+    live: {
+      session_id: live.sessionId,
+      model: liveModel(),
+      backend_model: liveBackendModel(),
       voice,
       hold_to_talk: holdToTalk,
-      calls_url: 'https://api.openai.com/v1/realtime/calls',
+      sdp_answer: live.answerSdp,
       data_channel: 'oai-events',
+      // Sent by the client as session.instructions.append once
+      // session.started arrives; null = Dodo waits for the user.
+      opening_instruction: liveOpeningInstruction(mode, user.username),
     },
   })
 }
 
 export async function GET() {
-  return NextResponse.json({ ok: true, route: 'f2/realtime/session' })
+  return NextResponse.json({ ok: true, route: 'f2/live/session' })
 }
