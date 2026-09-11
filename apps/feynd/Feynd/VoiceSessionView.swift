@@ -281,13 +281,13 @@ private struct VoiceSkyBackdrop: View {
                 .position(x: 62, y: 118)
                 ForEach(0..<8, id: \.self) { i in
                     let fi = Double(i)
+                    let alpha: Double = 0.30 + 0.35 * (fi * 0.618).truncatingRemainder(dividingBy: 1)
+                    let sx: Double = w * (0.10 + 0.82 * (fi * 0.618 + 0.21).truncatingRemainder(dividingBy: 1))
+                    let sy: Double = 70 + 620 * (fi * 0.755).truncatingRemainder(dividingBy: 1)
                     Circle()
-                        .fill(Color(hex: 0xF3E9C8).opacity(0.30 + 0.35 * ((fi * 0.618).truncatingRemainder(dividingBy: 1))))
+                        .fill(Color(hex: 0xF3E9C8).opacity(alpha))
                         .frame(width: 3, height: 3)
-                        .position(
-                            x: w * (0.10 + 0.82 * ((fi * 0.618 + 0.21).truncatingRemainder(dividingBy: 1))),
-                            y: 70 + 620 * ((fi * 0.755).truncatingRemainder(dividingBy: 1))
-                        )
+                        .position(x: sx, y: sy)
                 }
             } else {
                 // Morning: one soft sun.

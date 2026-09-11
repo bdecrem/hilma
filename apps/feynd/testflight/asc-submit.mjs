@@ -1,6 +1,6 @@
 import crypto from "crypto"; import fs from "fs";
-const KID="5A5HNSWA33", ISS="69a6de80-eb13-47e3-e053-5b8c7c11a4d1", APP="6773165027", VER=process.argv[2], PLAT=process.argv[3]??"IOS"; if(!VER){console.error("usage: node asc-submit.mjs <buildNumber> [IOS|MAC_OS]");process.exit(1)};
-const key=fs.readFileSync(process.env.HOME+"/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8");
+const KID="748UX45NAP", ISS="69a6de80-eb13-47e3-e053-5b8c7c11a4d1", APP="6773165027", VER=process.argv[2], PLAT=process.argv[3]??"IOS"; if(!VER){console.error("usage: node asc-submit.mjs <buildNumber> [IOS|MAC_OS]");process.exit(1)};
+const key=fs.readFileSync(process.env.HOME+"/.appstoreconnect/private_keys/AuthKey_748UX45NAP.p8");
 const b64=o=>Buffer.from(JSON.stringify(o)).toString("base64url");
 const now=Math.floor(Date.now()/1000);
 const unsigned=b64({alg:"ES256",kid:KID,typ:"JWT"})+"."+b64({iss:ISS,iat:now,exp:now+1100,aud:"appstoreconnect-v1"});
