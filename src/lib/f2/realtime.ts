@@ -41,11 +41,12 @@ export function realtimeVoice(): string {
   return process.env.OPENAI_REALTIME_VOICE || DEFAULT_VOICE
 }
 
-/// The Realtime voices users can pick from, probed against the live API
-/// (fable/onyx/nova are TTS-only and rejected; alloy/verse accepted but
-/// left out to keep the list at 8). Preview clips for these ship in the
-/// Dodo app bundle — regenerate with scripts/generate-voice-previews.mjs
-/// if this list changes.
+/// The voices users can pick from. All twenty are accepted by GPT-Live
+/// (gpt-live-1, Dodo's voice sessions — probed 2026-09-11). The first eight
+/// also exist on Realtime (Peri's walks); the twelve GPT-Live-only voices
+/// below them fall back to Peri's default on a walk (see isRealtimeVoice).
+/// Preview clips for all of these ship in the Dodo app bundle — regenerate
+/// with scripts/generate-voice-previews.mjs if this list changes.
 export const REALTIME_VOICES = [
   { id: 'marin', label: 'Marin', blurb: 'Bright and natural — the default.' },
   { id: 'cedar', label: 'Cedar', blurb: 'Grounded and easygoing, lower register.' },
@@ -55,7 +56,26 @@ export const REALTIME_VOICES = [
   { id: 'echo', label: 'Echo', blurb: 'Clear and direct.' },
   { id: 'sage', label: 'Sage', blurb: 'Soft and unhurried.' },
   { id: 'shimmer', label: 'Shimmer', blurb: 'Crisp, with energy.' },
+  { id: 'gleam', label: 'Gleam', blurb: 'North American, warm and even.' },
+  { id: 'meridian', label: 'Meridian', blurb: 'North American, steady and low.' },
+  { id: 'quartz', label: 'Quartz', blurb: 'Australian, bright and clear.' },
+  { id: 'ripple', label: 'Ripple', blurb: 'Australian, relaxed and open.' },
+  { id: 'vesper', label: 'Vesper', blurb: 'British, measured and dry.' },
+  { id: 'willow', label: 'Willow', blurb: 'Irish, light and musical.' },
+  { id: 'stone', label: 'Stone', blurb: 'Irish, deep and unhurried.' },
+  { id: 'delta', label: 'Delta', blurb: 'Southern U.S., easy and warm.' },
+  { id: 'cinder', label: 'Cinder', blurb: 'Southern U.S., low and slow.' },
+  { id: 'beacon', label: 'Beacon', blurb: 'Filipino English, clear and friendly.' },
+  { id: 'bossa', label: 'Bossa', blurb: 'Brazilian, soft — a Portuguese lilt in English.' },
+  { id: 'tempo', label: 'Tempo', blurb: 'Brazilian, lively — a Portuguese lilt in English.' },
 ]
+
+/// The subset the Realtime API (gpt-realtime-2.1, Peri) still accepts.
+const REALTIME_COMPATIBLE = new Set(['marin', 'cedar', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer'])
+
+export function isRealtimeVoice(voice: string): boolean {
+  return REALTIME_COMPATIBLE.has(voice)
+}
 
 export const MAX_VOICE_STYLE_CHARS = 400
 

@@ -18,6 +18,7 @@ import {
   createOpenAIRealtimeClientSecret,
   createVoiceSession,
   getVoicePrefs,
+  isRealtimeVoice,
   realtimeModel,
   realtimeVoice,
   updateVoiceSessionRealtimeId,
@@ -151,7 +152,8 @@ export async function POST(req: Request) {
 
   // Per-user voice + delivery style, account-wide across all voice surfaces.
   const prefs = await getVoicePrefs(user.id)
-  const voice = prefs.voice ?? realtimeVoice()
+  // GPT-Live-only picks don't exist on Realtime; old builds get the default.
+  const voice = prefs.voice && isRealtimeVoice(prefs.voice) ? prefs.voice : realtimeVoice()
   instructions = applyVoiceStyle(instructions, prefs.style)
 
   // Flash rounds are fully scripted — no tools. Everything else keeps the

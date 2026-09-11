@@ -5,6 +5,7 @@ import {
   createOpenAIRealtimeClientSecret,
   createVoiceSession,
   getVoicePrefs,
+  isRealtimeVoice,
   realtimeModel,
   updateVoiceSessionRealtimeId,
 } from '@/lib/f2/realtime'
@@ -68,7 +69,12 @@ export async function POST(req: Request) {
 
   // Per-user voice + delivery style, shared with the F2 voice surfaces.
   const prefs = await getVoicePrefs(user.id)
-  const voice = prefs.voice ?? walkVoice()
+  // GPT-Live-only picks (quartz, vesper, …) don't exist on Realtime yet;
+  // a walk uses Peri's default voice for those rather than failing.
+  const voice = prefs.voice && isRealtimeVoice(prefs.voice) ? prefs.voice : walkVoice()
+  if (prefs.voice && voice !== prefs.voice) {
+    console.log(`[f4/walk] voice ${prefs.voice} is GPT-Live only; using ${voice}`)
+  }
   instructions = applyVoiceStyle(instructions, prefs.style)
 
   let openaiSecret

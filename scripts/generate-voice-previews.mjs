@@ -23,7 +23,10 @@ const FRAME_MS = 100
 const FRAME_BYTES = (SAMPLE_RATE * 2 * FRAME_MS) / 1000
 
 // Keep in sync with REALTIME_VOICES in src/lib/f2/realtime.ts.
-const VOICES = ['marin', 'cedar', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer']
+const VOICES = [
+  'marin', 'cedar', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer',
+  'gleam', 'meridian', 'quartz', 'ripple', 'vesper', 'willow', 'stone', 'delta', 'cinder', 'beacon', 'bossa', 'tempo',
+]
 
 const LINE =
   "Hi! I'm one of the voices you can pick for Dodo. We'll talk through your topics, run your flash rounds, and get you through your final reviews."
@@ -144,7 +147,11 @@ function generate(voice, key) {
         case 'error':
           fail(new Error(`${voice}: ${JSON.stringify(msg.error ?? msg)}`))
           break
+        case 'session.output_transcript.delta':
+          if (process.env.PREVIEW_DEBUG) console.error(`  [${voice}] said: ${msg.delta}`)
+          break
         default:
+          if (process.env.PREVIEW_DEBUG && !msg.type.endsWith('.delta')) console.error(`  [${voice}] ${msg.type}`)
           break
       }
     })

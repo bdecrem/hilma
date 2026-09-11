@@ -40,7 +40,7 @@ Session config (`buildLiveSessionConfig`):
 
 WebRTC omits `audio.format` (the SDP negotiates it). The WebSocket harness adds `audio.format: { type: "audio/pcm", rate: 24000 }`.
 
-Voices: all eight in `REALTIME_VOICES` (marin, cedar, ash, ballad, coral, echo, sage, shimmer) are accepted by `gpt-live-1` (probed 2026-09-11), so the picker and `/api/f2/voice-prefs` are unchanged. GPT-Live also offers quartz, ripple, vesper, willow, stone, gleam, meridian, bossa, tempo, beacon, delta, cinder if the catalog ever grows — regenerate the preview clips after any change.
+Voices: `REALTIME_VOICES` has twenty entries, all accepted by `gpt-live-1` (probed 2026-09-11): the eight Realtime-era voices (marin, cedar, ash, ballad, coral, echo, sage, shimmer) plus the GPT-Live-only gleam, meridian, quartz, ripple, vesper, willow, stone, delta, cinder, beacon, bossa, tempo. Realtime rejects the twelve new ones, so Peri's walk route (and the legacy Realtime route) substitute their default via `isRealtimeVoice`. Regenerate the preview clips after any change.
 
 ## Connection flow (iOS, WebRTC)
 

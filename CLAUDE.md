@@ -22,6 +22,28 @@ Bart has gotten angry about this, hard. When a task is started, **finish it in t
 
 State all of this plainly; this is a standing expectation, not a one-off.
 
+## Small change = small job. Ship it in under a minute.
+
+If I described something as a one-line / two-line / trivial change, that is a
+commitment about time, not just diff size. Do exactly that edit, run the one
+check that proves it (tsc or the build), commit, push, done. Do NOT expand it:
+no probing adjacent systems, no regenerating assets, no fallbacks for cases
+nobody asked about, no verification tours. If the edit turns out to need more
+than that, STOP after the edit, ship what's safe, and say in one line what
+else it would take — Bart decides whether to spend the time.
+
+Concretely: when the ask is a small, low-risk edit, hand it to a subagent with
+`model: "haiku"` and a scope of "make this edit, run the build, commit, push,
+report" so the main session's habit of widening the job never kicks in. If
+Bart is between things (a train, a meeting), that's the only mode allowed.
+
+And never sit silent for more than ~60 seconds: a quick "doing X, ~N min"
+beats thinking in the dark.
+
+This rule came from 2026-09-11: "add the twelve voices" was called a
+one-line change, then grew into twenty minutes of probes, fallbacks and
+audio regeneration. Bart missed his train.
+
 ## Never host deliverables on claude.ai artifacts — we have our own hosting
 
 Do not publish pages, previews, or any work product for Bart as claude.ai Artifacts (the `Artifact` tool), even "private" ones. Everything Bart needs to open lives on our own infrastructure:
