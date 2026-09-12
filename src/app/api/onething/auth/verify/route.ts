@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
-import { COOKIE, ensureUser, normalizePhone, signSession, verifyCode } from '@/lib/onething/core'
+import { NextResponse, after } from 'next/server'
+import { COOKIE, ensureUser, findUserByPhone, normalizePhone, signSession, verifyCode, welcomeNewUser } from '@/lib/onething/core'
 
 export const runtime = 'nodejs'
 
@@ -11,8 +11,20 @@ export async function POST(req: Request) {
   if (!(await verifyCode(phone, code))) {
     return NextResponse.json({ error: 'That code is wrong or expired.' }, { status: 401 })
   }
-  const user = await ensureUser(phone)
-  const res = NextResponse.json({ ok: true })
+  const existing = await findUserByPhone(phone)
+  const user = existing ?? (await ensureUser(phone))
+  if (!existing) {
+    // First sign-in from this number: the account exists now; say hello and ask
+    // today's question after the response goes out (a send can take ~15s).
+    after(async () => {
+      try {
+        await welcomeNewUser(user)
+      } catch (e) {
+        console.error('[onething] welcome send failed', e)
+      }
+    })
+  }
+  const res = NextResponse.json({ ok: true, created: !existing })
   res.cookies.set({
     name: COOKIE,
     value: signSession(user.id),

@@ -92,12 +92,11 @@
 /* the pitch */
 .ot-hero { margin-top: 44px; }
 .ot-h1 {
-  margin: 0; max-width: 13ch;
-  font-family: var(--display); font-weight: 400; font-size: clamp(38px, 9.4vw, 56px);
-  line-height: 1.02; letter-spacing: -0.02em; font-variation-settings: 'SOFT' 100, 'opsz' 72;
+  margin: 0; max-width: 18ch;
+  font-family: var(--display); font-weight: 400; font-size: clamp(32px, 8vw, 46px);
+  line-height: 1.08; letter-spacing: -0.02em; font-variation-settings: 'SOFT' 100, 'opsz' 60;
 }
-.ot-h1 em { font-style: italic; color: var(--moss-deep); }
-.ot-lede { margin: 18px 0 0; max-width: 46ch; font-size: 17px; line-height: 1.55; color: var(--ink-3); }
+.ot-lede { margin: 14px 0 0; max-width: 40ch; font-size: 17px; line-height: 1.55; color: var(--ink-3); }
 
 .ot-chat { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; max-width: 440px; }
 .ot-bubble { max-width: 86%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
@@ -129,13 +128,10 @@
   margin: 0; font-family: var(--display); font-weight: 400; font-size: 27px;
   line-height: 1.15; letter-spacing: -0.015em; font-variation-settings: 'SOFT' 100, 'opsz' 40;
 }
-.ot-card h2 em { font-style: italic; color: var(--moss-deep); }
 
 /* how it grows */
-.ot-how { margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-@media (max-width: 520px) { .ot-how { grid-template-columns: 1fr; gap: 14px; } }
-.ot-how h3 { margin: 0 0 4px; font-family: var(--display); font-weight: 600; font-size: 17px; font-variation-settings: 'SOFT' 100; }
-.ot-how p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink-3); }
+.ot-caption { margin: 40px 0 0; font-family: var(--hand); font-size: 21px; line-height: 1.1; color: var(--ink-2); }
+.ot-caption + .ot-ladder { margin-top: 10px; }
 
 .ot-ladder {
   margin-top: 26px; padding: 14px 4px 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 2px;
@@ -194,26 +190,12 @@
 .ot-thread i { position: absolute; top: 0; bottom: 0; left: 0; width: var(--w, 0%); background: repeating-linear-gradient(90deg, var(--moss) 0 6px, transparent 6px 9px); }
 .ot-thread-k { margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
 
-/* the year */
-.ot-year { margin-top: 36px; }
-.ot-yearhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
-.ot-yearhead h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: -0.01em; font-variation-settings: 'SOFT' 100, 'opsz' 40; }
-.ot-yearhead span { font-size: 13px; color: var(--ink-2); }
-.ot-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 16px; }
-@media (min-width: 560px) { .ot-months { grid-template-columns: repeat(4, 1fr); gap: 22px 20px; } }
-.ot-month { display: flex; flex-direction: column; gap: 6px; }
-.ot-month .m { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
-.ot-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.ot-days .c { aspect-ratio: 1; padding: 0; border: 0; border-radius: 3px; background: var(--cell); cursor: default; }
-.ot-days .c.pad { background: transparent; }
-.ot-days .c.future { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
-.ot-days .c.on { background: var(--moss); cursor: pointer; transition: background 0.1s; }
-.ot-days .c.on:hover { background: var(--moss-deep); }
-.ot-days .c.sel { background: var(--ink); }
-.ot-days .c.today { box-shadow: inset 0 0 0 2px var(--marigold); }
-.ot-read { margin-top: 22px; padding: 16px 20px 18px; min-height: 84px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px; }
-.ot-read .d { font-family: var(--hand); font-size: 20px; line-height: 1.1; color: var(--ink-2); }
-.ot-read .t { margin: 6px 0 0; font-family: var(--display); font-style: italic; font-size: 20px; line-height: 1.4; font-variation-settings: 'SOFT' 60; }
+/* lately: the last few days, read back */
+.ot-lately { margin-top: 36px; }
+.ot-lately h2 { margin: 0 0 4px; font-family: var(--hand); font-weight: 500; font-size: 23px; line-height: 1.1; color: var(--ink-2); }
+.ot-line { padding: 12px 0 14px; border-top: 1px dashed var(--line-2); }
+.ot-line .d { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.ot-line .t { margin: 3px 0 0; font-family: var(--display); font-style: italic; font-size: 19px; line-height: 1.4; font-variation-settings: 'SOFT' 60; }
 
 /* footer */
 .ot-foot { margin-top: 48px; padding-top: 18px; border-top: 1px dashed var(--line-2); font-size: 13px; line-height: 1.6; color: var(--ink-2); }

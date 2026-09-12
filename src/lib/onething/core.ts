@@ -177,6 +177,11 @@ export function promptText(): string {
   return `Onething: what is one thing that happened in the last 24 hours? One sentence. Just reply here.\n${SITE_URL}`
 }
 
+/// The first text a new account gets: what this is, and today's question.
+export function welcomeText(): string {
+  return `Welcome to Onething. Every day at ten I’ll text you one question; you answer in one sentence.\nHere’s today’s: what is one thing that happened in the last 24 hours? Just reply here.\n${SITE_URL}`
+}
+
 export function reminderText(streak: number): string {
   const line = streak > 0
     ? `Onething: still time. One sentence keeps your ${streak}-day streak alive. What happened today?`
@@ -278,6 +283,14 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
   return { prompted, reminded }
 }
 
+/// A brand-new account (web sign-in or the "onething" keyword): say hello and ask
+/// today's question right away, so the loop starts now instead of at the next tick.
+/// `chatGuid` replies in the thread the person wrote from; otherwise a new chat.
+export async function welcomeNewUser(user: User, chatGuid?: string): Promise<void> {
+  await sendIMessage(chatGuid ? { chatGuid, text: welcomeText() } : { addresses: [user.phone], text: welcomeText() })
+  await f2Supabase().from('onething_users').update({ prompt_day: localDay() }).eq('id', user.id)
+}
+
 /// Send today's question to one person right now (first-run / manual).
 export async function promptNow(phone: string): Promise<User> {
   const user = await ensureUser(phone)
@@ -289,6 +302,9 @@ export async function promptNow(phone: string): Promise<User> {
 // ---------- inbound (called from Dodo's BlueBubbles webhook) ----------
 
 const FORCE_PREFIX = /^(1|one|onething)\s*[:\-]\s*/i
+// A number we have never heard from joins by texting "onething" (optionally with a
+// first sentence after a colon). Plain "1:" from a stranger is left to Dodo.
+const JOIN_PREFIX = /^(onething|one thing)\b\s*[:\-]?\s*/i
 
 function phoneFromChatGuid(chatGuid: string): string | null {
   // "iMessage;-;+16508989508" → "+16508989508"
@@ -297,8 +313,9 @@ function phoneFromChatGuid(chatGuid: string): string | null {
 }
 
 /// Returns true when Onething claimed the message: the sender is an
-/// Onething user AND (a prompt is outstanding OR the text starts "1:").
-/// Otherwise false, and Dodo handles it as before.
+/// Onething user AND (a prompt is outstanding OR the text starts "1:"),
+/// or a new number texting "onething" to join. Otherwise false, and Dodo
+/// handles it as before.
 export async function handleInbound(args: {
   handle: string
   chatGuid: string
@@ -309,7 +326,20 @@ export async function handleInbound(args: {
     phoneFromChatGuid(args.chatGuid)
   if (!phone) return false
   const user = await findUserByPhone(phone)
-  if (!user) return false
+  if (!user) {
+    if (!JOIN_PREFIX.test(args.text)) return false
+    const fresh = await ensureUser(phone)
+    const first = args.text.replace(JOIN_PREFIX, '').trim()
+    if (first.length < 2) {
+      await welcomeNewUser(fresh, args.chatGuid)
+      return true
+    }
+    const day = localDay()
+    const r = await recordEntry(fresh, day, first)
+    await f2Supabase().from('onething_users').update({ prompt_day: day }).eq('id', fresh.id)
+    await sendIMessage({ chatGuid: args.chatGuid, text: `Welcome to Onething. ${confirmText(r)}` })
+    return true
+  }
 
   const now = new Date()
   const today = localDay(now)

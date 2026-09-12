@@ -23,16 +23,16 @@ const FAVICON =
 export const metadata: Metadata = {
   metadataBase: new URL('https://onething.ink'),
   title: 'onething',
-  description: 'A tiny journal that texts you. One sentence a day, kept for a year.',
+  description: 'Every day at ten, a text asks what happened. You answer in one sentence. By December, you have a year.',
   icons: { icon: FAVICON },
   openGraph: {
     title: 'onething',
-    description: 'A tiny journal that texts you. One sentence a day, kept for a year.',
+    description: 'Every day at ten, a text asks what happened. You answer in one sentence. By December, you have a year.',
     url: 'https://onething.ink',
     siteName: 'onething',
     type: 'website',
   },
-  twitter: { card: 'summary_large_image', title: 'onething', description: 'A tiny journal that texts you. One sentence a day, kept for a year.' },
+  twitter: { card: 'summary_large_image', title: 'onething', description: 'Every day at ten, a text asks what happened. You answer in one sentence. By December, you have a year.' },
 };
 
 export const viewport: Viewport = {

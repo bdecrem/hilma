@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'nodejs';
-export const alt = 'onething — a tiny journal that texts you';
+export const alt = 'onething — one sentence a day, by text';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -45,7 +45,7 @@ export default async function OgImage() {
   return new ImageResponse(
     (
       <div style={{ width: '100%', height: '100%', display: 'flex', background: PAPER, color: INK, fontFamily: family, padding: '64px 72px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: 640 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: 720 }}>
           <div style={{ display: 'flex', alignItems: 'center', fontSize: 40, fontStyle: 'italic', fontWeight: 600, letterSpacing: '-0.02em' }}>
             <svg width="34" height="34" viewBox="0 0 24 24" style={{ marginRight: 10 }}>
               <path d="M12 21V11" stroke={INK} strokeWidth="2" strokeLinecap="round" fill="none" />
@@ -55,12 +55,12 @@ export default async function OgImage() {
             onething
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ display: 'flex', fontSize: 64, lineHeight: 1.05, letterSpacing: '-0.02em' }}>A tiny journal</div>
-            <div style={{ display: 'flex', fontSize: 64, lineHeight: 1.05, letterSpacing: '-0.02em', fontStyle: 'italic', fontWeight: 600, color: '#375f45' }}>that texts you.</div>
+            <div style={{ display: 'flex', fontSize: 54, lineHeight: 1.08, letterSpacing: '-0.02em' }}>Every day at ten,</div>
+            <div style={{ display: 'flex', fontSize: 54, lineHeight: 1.08, letterSpacing: '-0.02em' }}>a text asks what happened.</div>
             <div style={{ display: 'flex', marginTop: 22, fontSize: 26, color: INK2 }}>One sentence a day, kept for a year.</div>
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto', width: 340 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginLeft: 'auto', width: 300 }}>
           <svg width="260" height="217" viewBox="0 0 120 100">
             <path d="M14 84 H106" stroke="#d6c9b1" strokeWidth="2" strokeLinecap="round" />
             <path d="M60 84 C60 70 60 52 60 34" stroke={INK} strokeWidth="2.4" strokeLinecap="round" fill="none" />
