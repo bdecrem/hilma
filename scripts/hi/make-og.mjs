@@ -12,14 +12,17 @@ const browser = await chromium.launch()
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 2 })
 await page.goto(URL, { waitUntil: 'networkidle' })
 
-// The card is the page's own sentence with the surrounding chrome dropped and a byline
-// added: 74px lines fit all five in the 630px frame with the same 6% side gutter.
+// The card is the page's own hero and sentence with the surrounding chrome dropped and a
+// byline added: a 104px hero over 60px lines fits all five in the 630px frame with the same
+// 6% side gutter.
 await page.addStyleTag({
   content: `
-    .three-title,.three-bottom,.three-footer,.object-alt { display: none !important }
+    .three-bottom,.three-footer,.object-alt { display: none !important }
     body { padding: 0 !important; overflow: hidden }
-    .three-main { max-width: none !important; margin: 44px 0 0 72px !important }
-    .letter-line { font-size: 74px !important; min-height: 86px !important; gap: 15px !important }
+    .three-main { max-width: none !important; margin: 36px 0 0 72px !important }
+    .three-title { font-size: 104px !important; margin: 0 0 10px !important }
+    .letter-line { font-size: 60px !important; min-height: 72px !important; gap: 15px !important }
+    .last-letter { min-height: 64px !important }
     .inline-object { transform: scale(.75); margin: 0 -12px !important }
     .og-byline {
       position: fixed; right: 72px; bottom: 40px;

@@ -705,14 +705,28 @@ button:focus-visible,a:focus-visible {
 
 .three-main {
   max-width: 1110px;
-  margin: 112px auto 0;
+  margin: 64px auto 0;
 }
 
+/* The hero: one word, about 1.4x the flow lines, semibold like their emphasis. */
 .three-title {
-  font: 400 clamp(22px,2.1vw,28px)/1.2 Tight,Arial,sans-serif;
-  letter-spacing: -.02em;
-  color: #6f6152;
-  margin: 0 0 22px;
+  font: 600 clamp(56px,9.4vw,140px)/1 Tight,Arial,sans-serif;
+  letter-spacing: -.035em;
+  color: #2b2118;
+  margin: 0 0 26px;
+}
+
+/* A word in the flow that links out (CASBS): no dressing, clay on hover like the photos' addresses. */
+.flow-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color .2s;
+}
+
+@media (hover: hover) {
+  .flow-link:hover,.flow-link:focus-visible {
+    color: var(--clay);
+  }
 }
 
 .three-letter {
@@ -1202,7 +1216,7 @@ textarea.form-field {
     min-height: 105px;
   }
   .three-letter {
-    margin-left: 4%;
+    margin-left: 0;
   }
   .three-bio {
     max-width: none;
@@ -1322,7 +1336,7 @@ textarea.form-field {
     width: 100%;
   }
   .three-title {
-    font-size: 21px;
+    font-size: clamp(40px,16.5vw,96px);
     margin-bottom: 12px;
   }
   .three-letter {
@@ -1451,9 +1465,13 @@ textarea.form-field {
   width: 100%;
 }
 
-.edition-card .three-title,
 .edition-card .three-footer {
   display: none;
+}
+
+.edition-card .three-title {
+  font-size: 124px;
+  margin: 0 0 10px;
 }
 
 .edition-card .three-letter {
@@ -1530,7 +1548,7 @@ textarea.form-field {
     margin-top: 14px;
   }
   .three-title {
-    font-size: 18px;
+    font-size: min(48px,13.5vw);
     margin-bottom: 8px;
   }
   .three-letter {
