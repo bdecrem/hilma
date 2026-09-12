@@ -29,12 +29,83 @@ function prettyPhone(p: string): string {
   return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
 }
 
-function LeafMark() {
+function PencilMark() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden>
-      <path d="M12 21V11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-      <path d="M12 14c-4.5 0-7.5-3.5-7.5-7.5C8.5 6.5 12 9.5 12 14z" fill="#4a7c59" />
-      <path d="M12 11.5c4.5 0 7.5-3.5 7.5-7.5C15 4 12 7 12 11.5z" fill="#8fb996" />
+    <svg viewBox="0 0 32 32" aria-hidden>
+      <g fill="none" stroke="#35332f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 27 L9 17 L21 5 L27 11 L15 23 Z" />
+        <path d="M21 5 L27 11 M6 27 L9 24" />
+      </g>
+      <path d="M9 17 L15 23 L12 25 L7 20 Z" fill="#f3c64b" />
+    </svg>
+  );
+}
+
+/** Spiral binding along the top edge, like a flip sketchbook. */
+function Coil() {
+  return (
+    <svg className="ot-coil" viewBox="0 0 600 40" preserveAspectRatio="none" aria-hidden>
+      <defs>
+        <pattern id="ot-coil" patternUnits="userSpaceOnUse" width="30" height="40">
+          <ellipse cx="15" cy="21" rx="5.5" ry="4" fill="#e6e2d9" />
+          <path d="M9 4 C 4 10, 4 30, 15 34 C 24 37, 27 22, 21 15" fill="none" stroke="#8f8b84" strokeWidth="2.2" strokeLinecap="round" />
+        </pattern>
+      </defs>
+      <rect width="600" height="40" fill="url(#ot-coil)" />
+    </svg>
+  );
+}
+
+/** Coloured-pencil hatching the plant's leaves fill with (referenced from CSS). */
+function Defs() {
+  return (
+    <svg className="ot-defs" aria-hidden>
+      <defs>
+        <pattern id="ot-hatch-green" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(-38)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#4f9a63" strokeWidth="3" strokeLinecap="round" />
+        </pattern>
+        <pattern id="ot-hatch-green-light" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(38)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#9ccc9c" strokeWidth="3" strokeLinecap="round" />
+        </pattern>
+        <pattern id="ot-hatch-wood" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(60)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#e7c9a2" strokeWidth="2.6" strokeLinecap="round" />
+        </pattern>
+        <filter id="ot-wob" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="5" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="2" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+        <pattern id="ot-hy" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(38)">
+          <line x1="0" y1="0" x2="0" y2="7" stroke="#f3c64b" strokeWidth="3.6" strokeLinecap="round" />
+        </pattern>
+        <pattern id="ot-hp" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(-30)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#f0a3a0" strokeWidth="3" strokeLinecap="round" />
+        </pattern>
+        <pattern id="ot-hg" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(20)">
+          <line x1="0" y1="0" x2="0" y2="5" stroke="#c9c6bf" strokeWidth="2.4" strokeLinecap="round" />
+        </pattern>
+      </defs>
+    </svg>
+  );
+}
+
+/** The pencil from the hello page, leaning in to say it. */
+function Mascot() {
+  return (
+    <svg className="ot-mascot" viewBox="0 0 120 200" aria-hidden>
+      <g filter="url(#ot-wob)" stroke="#35332f" strokeLinecap="round" strokeLinejoin="round" fill="none" transform="rotate(14 60 120)">
+        <path d="M60 196 L 48 170 L 72 170 Z" fill="#35332f" strokeWidth="2.2" />
+        <path d="M48 170 L 72 170 L 84 146 L 36 146 Z" fill="url(#ot-hatch-wood)" strokeWidth="2.4" />
+        <rect x="36" y="16" width="48" height="130" rx="4" fill="url(#ot-hy)" strokeWidth="2.8" />
+        <rect x="34" y="-8" width="52" height="24" rx="3" fill="url(#ot-hg)" strokeWidth="2.4" />
+        <rect x="36" y="-30" width="48" height="24" rx="8" fill="url(#ot-hp)" strokeWidth="2.6" />
+        <ellipse cx="50" cy="78" rx="3.2" ry="4.2" fill="#35332f" stroke="none" />
+        <ellipse cx="71" cy="78" rx="3.2" ry="4.2" fill="#35332f" stroke="none" />
+        <path d="M51 95 Q 60 104, 70 95" strokeWidth="2.6" />
+        <circle cx="43" cy="89" r="4.5" fill="url(#ot-hp)" stroke="none" />
+        <circle cx="78" cy="89" r="4.5" fill="url(#ot-hp)" stroke="none" />
+        <path d="M84 62 C 100 54, 106 40, 100 26 M100 26 L 92 20 M100 26 L 108 20 M100 26 L 102 15" strokeWidth="2.8" />
+        <path d="M36 70 C 22 78, 18 92, 24 104" strokeWidth="2.8" />
+      </g>
     </svg>
   );
 }
@@ -43,7 +114,7 @@ function Mast({ right, bare }: { right?: React.ReactNode; bare?: boolean }) {
   return (
     <header className="ot-mast">
       <div className="ot-brand">
-        <h1 className="ot-wordmark"><LeafMark />onething</h1>
+        <h1 className="ot-wordmark"><PencilMark /><u>onething</u></h1>
         {!bare && <span className="ot-tagline">one sentence a day, by text</span>}
       </div>
       {right}
@@ -108,18 +179,23 @@ export default function Onething() {
   async function signout() { await fetch('/api/onething/auth/signout', { method: 'POST' }); setMe({ user: null }); }
 
   if (me === null) {
-    return <main className="ot-main"><Mast /></main>;
+    return <><Coil /><Defs /><main className="ot-main"><Mast /></main></>;
   }
 
   if (!me.user) {
     return (
+      <>
+      <Coil /><Defs />
       <main className="ot-main">
         <Mast />
         <section className="ot-hero">
-          <h1 className="ot-h1">Every day at ten, a text asks what happened.</h1>
-          <p className="ot-lede">You answer in one sentence. By December, you have a year.</p>
-          <Peek />
+          <Mascot />
+          <div className="ot-hero-text">
+            <h1 className="ot-h1">Every day at ten, a text asks what happened.</h1>
+            <p className="ot-lede">You answer in one sentence. By December, you have a year.</p>
+          </div>
         </section>
+        <Peek />
 
         <section className="ot-card">
           <span className="ot-tape" aria-hidden />
@@ -147,6 +223,7 @@ export default function Onething() {
           <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
         </footer>
       </main>
+      </>
     );
   }
 
@@ -163,15 +240,19 @@ export default function Onething() {
     : `${b.streak} ${b.streak === 1 ? 'day' : 'days'} in a row${b.best > b.streak ? ` · best ${b.best}` : ''}`;
 
   return (
+    <>
+    <Coil /><Defs />
     <main className="ot-main">
       <Mast bare right={<span className="ot-who">{prettyPhone(me.user.phone)} · <button className="ot-link" onClick={signout}>sign out</button></span>} />
 
+      <div className="ot-ask">
+      <Mascot />
       <section className="ot-card ot-today">
         <span className={`ot-tape${b.doneToday ? ' green' : ''}`} aria-hidden />
         <div className="ot-date">{longDay(today)}</div>
         {b.doneToday ? (
           <>
-            <span className="ot-stamp">✓ kept</span>
+            <span className="ot-stamp">kept!</span>
             <p className="ot-kept">{todayEntry?.text}</p>
           </>
         ) : (
@@ -186,6 +267,7 @@ export default function Onething() {
           </form>
         )}
       </section>
+      </div>
 
       <section className="ot-garden" aria-label="level, streak and points">
         <Plant level={b.index} size={120} />
@@ -216,5 +298,6 @@ export default function Onething() {
         <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
       </footer>
     </main>
+    </>
   );
 }
