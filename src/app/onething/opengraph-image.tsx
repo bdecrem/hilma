@@ -4,21 +4,29 @@ export const runtime = 'edge';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-async function instrumentSerif(): Promise<ArrayBuffer | null> {
+type Face = { data: ArrayBuffer; style: 'normal' | 'italic' }
+
+async function instrumentSerif(): Promise<Face[]> {
   try {
-    const css = await fetch('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&display=swap', {
+    const css = await fetch('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap', {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0' },
-    }).then((r) => r.text());
-    const url = css.match(/src: url\(([^)]+)\)/)?.[1];
-    if (!url) return null;
-    return await fetch(url).then((r) => r.arrayBuffer());
+    }).then((r) => r.text())
+    const faces: Face[] = []
+    for (const block of css.split('@font-face').slice(1)) {
+      const url = block.match(/src: url\(([^)]+)\)/)?.[1]
+      if (!url) continue
+      const style = /font-style: italic/.test(block) ? 'italic' : 'normal'
+      faces.push({ data: await fetch(url).then((r) => r.arrayBuffer()), style })
+    }
+    return faces
   } catch {
-    return null;
+    return []
   }
 }
 
 export default async function OgImage() {
-  const font = await instrumentSerif();
+  const faces = await instrumentSerif();
+  const font = faces.length > 0;
   return new ImageResponse(
     (
       <div
@@ -34,8 +42,9 @@ export default async function OgImage() {
           fontFamily: font ? 'Instrument Serif' : 'serif',
         }}
       >
-        <div style={{ display: 'flex', fontSize: 22, letterSpacing: '0.16em', color: '#6a6257', fontFamily: 'monospace' }}>
-          ● A DAILY LEDGER · ONE LINE, KEPT
+        <div style={{ display: 'flex', alignItems: 'center', fontSize: 22, letterSpacing: '0.16em', color: '#6a6257' }}>
+          <div style={{ width: 12, height: 12, borderRadius: 6, background: '#ff4a1c', marginRight: 14 }} />
+          A DAILY LEDGER · ONE LINE, KEPT
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', fontSize: 210, lineHeight: 0.85, letterSpacing: '-0.04em' }}>
@@ -50,7 +59,7 @@ export default async function OgImage() {
     ),
     {
       ...size,
-      fonts: font ? [{ name: 'Instrument Serif', data: font, style: 'italic' as const, weight: 400 as const }] : undefined,
+      fonts: font ? faces.map((f) => ({ name: 'Instrument Serif', data: f.data, style: f.style, weight: 400 as const })) : undefined,
     }
   );
 }
