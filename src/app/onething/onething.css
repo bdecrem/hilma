@@ -1,96 +1,227 @@
+/* onething — a small paper journal. Cream paper with a little grain, ink, two
+   greens for what grows, marigold for the tape and today's cell. */
+
 .ot {
-  --ink: #111;
-  --mute: #767676;
-  --line: #e2e2e2;
-  --cell: #ececec;
-  --accent: #0a2fff;
+  --paper: #f7f0e4;
+  --paper-2: #fffaf1;
+  --ink: #2c2420;
+  --ink-2: #7a6d61;
+  --ink-3: #4a403a;
+  --line: #e6dbc8;
+  --line-2: #d6c9b1;
+  --cell: #ebe1cf;
+  --moss: #4a7c59;
+  --moss-deep: #375f45;
+  --moss-2: #b9d2bc;
+  --moss-3: #e4ecdf;
+  --marigold: #e5a83a;
+  --tomato: #c9553a;
+  --soil: #cdae82;
+  --display: var(--font-display), Georgia, 'Times New Roman', serif;
+  --body: var(--font-body), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --hand: var(--font-hand), 'Bradley Hand', 'Segoe Print', cursive;
+  position: relative;
   min-height: 100dvh;
-  background: #fff;
+  background: var(--paper);
   color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 15px;
+  font-family: var(--body);
+  font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 .ot * { box-sizing: border-box; }
+
+/* paper grain */
+.ot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.075;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
 .ot-main {
-  max-width: 680px;
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
   margin: 0 auto;
-  padding: calc(env(safe-area-inset-top) + 22px) calc(env(safe-area-inset-right) + 20px) calc(env(safe-area-inset-bottom) + 64px) calc(env(safe-area-inset-left) + 20px);
+  padding: calc(env(safe-area-inset-top) + 26px) calc(env(safe-area-inset-right) + 22px) calc(env(safe-area-inset-bottom) + 56px) calc(env(safe-area-inset-left) + 22px);
 }
-.ot-head { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
-.ot-logo { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
-.ot-logo b { color: var(--accent); font-weight: 600; }
-.ot-small { font-size: 13px; color: var(--mute); }
-.ot-btnlink { background: none; border: 0; padding: 0; font: inherit; font-size: 13px; color: var(--mute); cursor: pointer; }
-.ot-btnlink:hover { color: var(--ink); }
 
-.ot-h { font-size: clamp(30px, 7.6vw, 44px); line-height: 1.05; letter-spacing: -0.03em; font-weight: 600; margin: 40px 0 0; max-width: 16ch; }
-.ot-p { margin: 22px 0 0; max-width: 46ch; font-size: 17px; line-height: 1.5; }
-.ot-p + .ot-p { margin-top: 12px; }
-.ot-note { margin: 10px 0 0; font-size: 13px; color: var(--mute); max-width: 46ch; }
-
-.ot-form { margin-top: 32px; display: flex; gap: 10px; align-items: stretch; max-width: 440px; }
-.ot-in {
-  flex: 1; min-width: 0; height: 44px; padding: 0 12px;
-  border: 1px solid var(--ink); border-radius: 0; background: #fff; color: var(--ink);
-  font: inherit; font-size: 16px; outline: none;
+/* masthead */
+.ot-mast { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.ot-brand { display: flex; flex-direction: column; }
+.ot-wordmark {
+  display: inline-flex; align-items: center; gap: 7px; margin: 0;
+  font-family: var(--display); font-style: italic; font-weight: 600; font-size: 31px;
+  letter-spacing: -0.02em; line-height: 1; font-variation-settings: 'SOFT' 100, 'opsz' 48;
 }
-.ot-in:focus { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.ot-in.code { letter-spacing: 0.3em; font-variant-numeric: tabular-nums; }
+.ot-wordmark svg { width: 24px; height: 24px; flex: none; }
+.ot-tagline { margin-top: 6px; font-family: var(--hand); font-size: 21px; line-height: 1; color: var(--ink-2); }
+.ot-who { font-size: 13px; color: var(--ink-2); text-align: right; white-space: nowrap; }
+
+/* buttons, inputs, notes */
 .ot-btn {
-  height: 44px; padding: 0 18px; border: 1px solid var(--ink); border-radius: 0;
-  background: var(--ink); color: #fff; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; white-space: nowrap;
+  height: 46px; padding: 0 20px; border: 0; border-radius: 999px;
+  background: var(--moss); color: var(--paper); font: inherit; font-weight: 700; font-size: 15px;
+  cursor: pointer; white-space: nowrap; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.16);
+  transition: background 0.15s, transform 0.1s;
 }
-.ot-btn:hover { background: var(--accent); border-color: var(--accent); }
-.ot-btn:disabled { opacity: 0.35; cursor: default; background: var(--ink); border-color: var(--ink); }
-.ot-err { margin: 10px 0 0; font-size: 13px; color: #c40f0f; }
+.ot-btn:hover { background: var(--moss-deep); }
+.ot-btn:active { transform: translateY(1px); }
+.ot-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+.ot-in {
+  flex: 1; min-width: 0; height: 46px; padding: 0 14px;
+  border: 1.5px solid var(--line-2); border-radius: 10px; background: #fff; color: var(--ink);
+  font: inherit; font-size: 16px; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ot-in:focus { border-color: var(--moss); box-shadow: 0 0 0 3px var(--moss-3); }
+.ot-in.code { letter-spacing: 0.3em; font-variant-numeric: tabular-nums; }
+.ot-form { margin-top: 18px; display: flex; gap: 10px; }
+.ot-link {
+  background: none; border: 0; padding: 0; font: inherit; color: var(--moss-deep); cursor: pointer;
+  text-decoration: underline; text-decoration-color: var(--moss-2); text-underline-offset: 3px;
+}
+.ot-link:hover { text-decoration-color: var(--moss-deep); }
+.ot-note { margin: 12px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.ot-err { margin: 10px 0 0; font-size: 13px; color: var(--tomato); }
+
+/* the pitch */
+.ot-hero { margin-top: 44px; }
+.ot-h1 {
+  margin: 0; max-width: 13ch;
+  font-family: var(--display); font-weight: 400; font-size: clamp(38px, 9.4vw, 56px);
+  line-height: 1.02; letter-spacing: -0.02em; font-variation-settings: 'SOFT' 100, 'opsz' 72;
+}
+.ot-h1 em { font-style: italic; color: var(--moss-deep); }
+.ot-lede { margin: 18px 0 0; max-width: 46ch; font-size: 17px; line-height: 1.55; color: var(--ink-3); }
+
+.ot-chat { margin-top: 28px; display: flex; flex-direction: column; gap: 10px; max-width: 440px; }
+.ot-bubble { max-width: 86%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; }
+.ot-bubble.them { align-self: flex-start; background: var(--paper-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.ot-bubble.me {
+  align-self: flex-end; background: var(--moss); color: var(--paper); border-bottom-right-radius: 4px;
+  font-family: var(--display); font-style: italic; font-size: 16.5px; font-variation-settings: 'SOFT' 60;
+}
+.ot-bubble .t { display: block; margin-top: 3px; font-family: var(--body); font-style: normal; font-size: 11px; color: var(--ink-2); }
+.ot-bubble.me .t { color: #d3e2d3; }
+
+/* paper cards with a strip of washi tape */
+.ot-card {
+  position: relative; margin-top: 40px; padding: 30px 24px 24px;
+  background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 1px 0 rgba(60, 40, 20, 0.04), 0 14px 32px -20px rgba(60, 40, 20, 0.28);
+}
+.ot-tape {
+  position: absolute; top: -12px; left: 50%; width: 108px; height: 24px;
+  transform: translateX(-50%) rotate(-2.5deg); border-radius: 1px; opacity: 0.92; mix-blend-mode: multiply;
+  background: repeating-linear-gradient(135deg, rgba(229, 168, 58, 0.62) 0 7px, rgba(229, 168, 58, 0.36) 7px 14px);
+  box-shadow: 0 1px 2px rgba(60, 40, 20, 0.14);
+}
+.ot-tape.green {
+  transform: translateX(-50%) rotate(2deg);
+  background: repeating-linear-gradient(135deg, rgba(74, 124, 89, 0.5) 0 7px, rgba(74, 124, 89, 0.28) 7px 14px);
+}
+.ot-card h2 {
+  margin: 0; font-family: var(--display); font-weight: 400; font-size: 27px;
+  line-height: 1.15; letter-spacing: -0.015em; font-variation-settings: 'SOFT' 100, 'opsz' 40;
+}
+.ot-card h2 em { font-style: italic; color: var(--moss-deep); }
+
+/* how it grows */
+.ot-how { margin-top: 40px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+@media (max-width: 520px) { .ot-how { grid-template-columns: 1fr; gap: 14px; } }
+.ot-how h3 { margin: 0 0 4px; font-family: var(--display); font-weight: 600; font-size: 17px; font-variation-settings: 'SOFT' 100; }
+.ot-how p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink-3); }
+
+.ot-ladder {
+  margin-top: 26px; padding: 14px 4px 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 2px;
+  border-top: 1px dashed var(--line-2); border-bottom: 1px dashed var(--line-2);
+}
+.ot-rung { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; line-height: 1.15; text-align: center; color: var(--ink-2); }
+.ot-rung .ot-plant { opacity: 0.3; width: 100%; max-width: 44px; height: auto; }
+.ot-rung.done .ot-plant, .ot-rung.now .ot-plant, .ot-rung.all .ot-plant { opacity: 1; }
+.ot-rung.now { color: var(--ink); font-weight: 700; }
+.ot-rung.now::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--marigold); margin-top: 1px; }
+
+/* the plant */
+.ot-plant { display: block; overflow: visible; }
+.ot-plant .p-ground { stroke: var(--line-2); stroke-width: 2; stroke-linecap: round; }
+.ot-plant .p-trunk { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; }
+.ot-plant .p-leaf { fill: var(--moss); stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.ot-plant .p-leaf-light { fill: var(--moss-2); stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.ot-plant .p-soil { fill: var(--soil); stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.ot-plant .p-seed { fill: var(--ink); }
+
+/* today */
+.ot-date { font-family: var(--hand); font-size: 23px; line-height: 1; color: var(--ink-2); }
+.ot-q {
+  margin: 10px 0 0; font-family: var(--display); font-weight: 400; font-size: 26px;
+  line-height: 1.15; letter-spacing: -0.015em; font-variation-settings: 'SOFT' 100, 'opsz' 40;
+}
+.ot-ta {
+  display: block; width: 100%; min-height: 128px; margin-top: 14px; padding: 0 2px;
+  border: 0; border-bottom: 1.5px solid var(--line-2); border-radius: 0; outline: none; resize: vertical;
+  background: repeating-linear-gradient(transparent 0 31px, var(--line) 31px 32px); background-attachment: local;
+  color: var(--ink); font-family: var(--display); font-style: italic; font-size: 19px; line-height: 32px;
+  font-variation-settings: 'SOFT' 60;
+}
+.ot-ta::placeholder { color: #b8ac9a; }
+.ot-ta:focus { border-bottom-color: var(--moss); }
+.ot-row { margin-top: 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ot-nudge { font-family: var(--hand); font-size: 19px; line-height: 1.1; color: var(--ink-2); }
+.ot-nudge .ot-link { font-family: var(--body); font-size: 13px; margin-left: 8px; }
+.ot-stamp {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 4px 10px;
+  border: 1.5px solid var(--moss); border-radius: 6px; color: var(--moss-deep);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; transform: rotate(-2.5deg);
+}
+.ot-kept { margin: 12px 0 0; font-family: var(--display); font-style: italic; font-size: 22px; line-height: 1.4; font-variation-settings: 'SOFT' 60; }
+
+/* the garden: level, streak, points */
+.ot-garden {
+  margin-top: 26px; padding: 18px 22px; display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: center;
+  background: var(--moss-3); border-radius: 12px;
+}
+@media (max-width: 420px) { .ot-garden { grid-template-columns: 92px 1fr; gap: 12px; padding: 14px 16px; } }
+.ot-garden .ot-plant { width: 100%; height: auto; }
+.ot-level { font-family: var(--display); font-weight: 600; font-size: 25px; line-height: 1.1; letter-spacing: -0.01em; font-variation-settings: 'SOFT' 100; }
+.ot-level small { display: block; margin-top: 3px; font-family: var(--hand); font-weight: 500; font-size: 20px; line-height: 1.1; color: var(--ink-2); }
+.ot-thread { position: relative; height: 7px; margin-top: 12px; border-radius: 4px; background: #fff; border: 1px solid var(--moss-2); overflow: hidden; }
+.ot-thread i { position: absolute; top: 0; bottom: 0; left: 0; width: var(--w, 0%); background: repeating-linear-gradient(90deg, var(--moss) 0 6px, transparent 6px 9px); }
+.ot-thread-k { margin-top: 6px; font-size: 12.5px; color: var(--ink-2); }
 
 /* the year */
 .ot-year { margin-top: 36px; }
-.ot-yearhead { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--mute); margin-bottom: 12px; }
-.ot-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 16px; }
-@media (min-width: 560px) { .ot-months { grid-template-columns: repeat(4, 1fr); gap: 24px 20px; } }
+.ot-yearhead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.ot-yearhead h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: -0.01em; font-variation-settings: 'SOFT' 100, 'opsz' 40; }
+.ot-yearhead span { font-size: 13px; color: var(--ink-2); }
+.ot-months { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 16px; }
+@media (min-width: 560px) { .ot-months { grid-template-columns: repeat(4, 1fr); gap: 22px 20px; } }
 .ot-month { display: flex; flex-direction: column; gap: 6px; }
-.ot-month .m { font-size: 11px; color: var(--mute); letter-spacing: 0.02em; }
-.ot-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.ot-days .c { aspect-ratio: 1; background: var(--cell); border: 0; padding: 0; border-radius: 0; cursor: default; }
+.ot-month .m { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.ot-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.ot-days .c { aspect-ratio: 1; padding: 0; border: 0; border-radius: 3px; background: var(--cell); cursor: default; }
 .ot-days .c.pad { background: transparent; }
-.ot-days .c.on { background: var(--ink); cursor: pointer; }
-.ot-days .c.on:hover, .ot-days .c.sel { background: var(--accent); }
-.ot-days .c.today { box-shadow: inset 0 0 0 2px var(--accent); }
-.ot-days .c.today.on { background: var(--accent); }
-.ot-days .c.future { background: #f6f6f6; }
+.ot-days .c.future { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.ot-days .c.on { background: var(--moss); cursor: pointer; transition: background 0.1s; }
+.ot-days .c.on:hover { background: var(--moss-deep); }
+.ot-days .c.sel { background: var(--ink); }
+.ot-days .c.today { box-shadow: inset 0 0 0 2px var(--marigold); }
+.ot-read { margin-top: 22px; padding: 16px 20px 18px; min-height: 84px; background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px; }
+.ot-read .d { font-family: var(--hand); font-size: 20px; line-height: 1.1; color: var(--ink-2); }
+.ot-read .t { margin: 6px 0 0; font-family: var(--display); font-style: italic; font-size: 20px; line-height: 1.4; font-variation-settings: 'SOFT' 60; }
 
-.ot-read { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line); min-height: 76px; }
-.ot-read .d { font-size: 13px; color: var(--mute); }
-.ot-read .t { margin: 6px 0 0; font-size: 19px; line-height: 1.4; letter-spacing: -0.01em; }
+/* footer */
+.ot-foot { margin-top: 48px; padding-top: 18px; border-top: 1px dashed var(--line-2); font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.ot-foot code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; padding: 1px 5px; color: var(--ink); background: var(--paper-2); border: 1px solid var(--line); border-radius: 4px; }
+.ot-sign { margin-top: 14px; font-family: var(--hand); font-size: 21px; line-height: 1.1; color: var(--ink); }
+.ot-sign a { color: var(--moss-deep); text-decoration: none; border-bottom: 1.5px solid var(--moss-2); }
+.ot-sign a:hover { border-bottom-color: var(--moss-deep); }
 
-/* today */
-.ot-today { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--ink); }
-.ot-today .q { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
-.ot-today textarea {
-  display: block; width: 100%; margin-top: 14px; min-height: 96px; padding: 12px;
-  border: 1px solid var(--ink); border-radius: 0; background: #fff; color: var(--ink);
-  font: inherit; font-size: 17px; line-height: 1.45; resize: vertical; outline: none;
+@media (prefers-reduced-motion: reduce) {
+  .ot-btn, .ot-in, .ot-days .c.on { transition: none; }
 }
-.ot-today textarea:focus { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.ot-today .row { display: flex; gap: 14px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
-.ot-nudge { font-size: 13px; color: var(--mute); }
-.ot-nudge button { background: none; border: 0; padding: 0; font: inherit; color: var(--accent); cursor: pointer; margin-left: 6px; }
-.ot-kept { margin: 12px 0 0; font-size: 17px; line-height: 1.45; }
-.ot-kept + .ot-small { margin-top: 6px; display: block; }
-
-/* stats */
-.ot-stats { margin-top: 36px; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--ink); }
-.ot-stat { padding: 14px 12px 16px 0; border-right: 1px solid var(--line); }
-.ot-stat:last-child { border-right: 0; }
-.ot-stat + .ot-stat { padding-left: 12px; }
-.ot-stat .v { font-size: clamp(34px, 9vw, 48px); font-weight: 600; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; }
-.ot-stat .v.txt { font-size: clamp(18px, 5vw, 24px); letter-spacing: -0.02em; padding-top: 10px; }
-.ot-stat .k { font-size: 12px; color: var(--mute); margin-top: 6px; }
-.ot-bar { height: 2px; background: var(--line); margin-top: 10px; }
-.ot-bar i { display: block; height: 100%; background: var(--ink); }
-
-.ot-foot { margin-top: 44px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--mute); line-height: 1.6; }
-.ot-foot code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--ink); background: #f2f2f2; padding: 1px 4px; }

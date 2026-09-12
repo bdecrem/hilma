@@ -137,6 +137,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.jambot.to' }],
           destination: '/jam',
         },
+        // onething.ink root → /onething (one sentence a day, by text)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'onething.ink' }],
+          destination: '/onething',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.onething.ink' }],
+          destination: '/onething',
+        },
         // dogear.bar root → /book-scout (the Dog-Ear app)
         {
           source: '/',
@@ -238,6 +249,17 @@ const nextConfig: NextConfig = {
           source: '/:path((?!(?:jam|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.jambot.to' }],
           destination: '/jam/:path',
+        },
+        // onething.ink/anything → /onething/anything (opengraph-image etc.)
+        {
+          source: '/:path((?!(?:onething|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'onething.ink' }],
+          destination: '/onething/:path',
+        },
+        {
+          source: '/:path((?!(?:onething|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.onething.ink' }],
+          destination: '/onething/:path',
         },
         // feynd.cc/anything → /f2/anything
         // Excludes /f2/* (avoid /f2/f2/…) AND /api/* and /_next/* — afterFiles

@@ -9,6 +9,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { sendIMessage } from '@/lib/f2/bluebubbles'
+import { LEVELS, type Level } from './levels'
 
 export const TZ = 'America/Los_Angeles'
 export const PROMPT_HOUR = 10 // 10am local: the daily question
@@ -36,18 +37,7 @@ export type Entry = {
   updated_at: string
 }
 
-export type Level = { name: string; min: number }
-
-// Levels are earned on cumulative points, so a broken streak never demotes you.
-export const LEVELS: Level[] = [
-  { name: 'Seed', min: 0 },
-  { name: 'Sprout', min: 40 },
-  { name: 'Sapling', min: 150 },
-  { name: 'Tree', min: 400 },
-  { name: 'Grove', min: 1000 },
-  { name: 'Forest', min: 2500 },
-  { name: 'Old Growth', min: 6000 },
-]
+export { LEVELS, type Level }
 
 const MILESTONES: Record<number, number> = {
   3: 20, 7: 50, 14: 100, 30: 300, 60: 600, 100: 1000, 365: 5000,
@@ -181,7 +171,7 @@ export async function recordEntry(user: User, day: string, text: string): Promis
 
 // ---------- copy ----------
 
-export const SITE_URL = 'https://hilma-nine.vercel.app/onething'
+export const SITE_URL = 'https://onething.ink'
 
 export function promptText(): string {
   return `Onething: what is one thing that happened in the last 24 hours? One sentence. Just reply here.\n${SITE_URL}`
