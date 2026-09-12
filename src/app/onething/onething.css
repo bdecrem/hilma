@@ -1,0 +1,205 @@
+.ot {
+  --paper: #f4efe6;
+  --card: #fffdf7;
+  --ink: #16130f;
+  --ink-2: #6a6257;
+  --rule: rgba(22, 19, 15, 0.14);
+  --ember: #ff4a1c;
+  --mark: #ffe75c;
+  --serif: var(--ot-serif), 'Instrument Serif', Georgia, serif;
+  --mono: var(--ot-mono), 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  position: relative;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+.ot::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(60vw 40vh at 100% -10%, rgba(255, 74, 28, 0.16), transparent 60%),
+    radial-gradient(50vw 30vh at -10% 100%, rgba(255, 231, 92, 0.25), transparent 60%);
+}
+.ot::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0 0.06 0 0 0 0.10 0'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+}
+.ot-main {
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 26px) calc(env(safe-area-inset-right) + 22px) calc(env(safe-area-inset-bottom) + 56px) calc(env(safe-area-inset-left) + 22px);
+}
+.ot-mono {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.ot-dot {
+  display: inline-block;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--ember);
+  margin-right: 8px;
+  vertical-align: 1px;
+  animation: ot-pulse 2.4s ease-in-out infinite;
+}
+@keyframes ot-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.8); } }
+.ot-word {
+  font-size: clamp(56px, 15vw, 84px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  margin: 10px 0 0;
+  font-weight: 400;
+}
+.ot-word em { font-style: italic; color: var(--ember); }
+.ot-hero {
+  font-size: clamp(30px, 8.4vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  margin: 44px 0 0;
+  font-weight: 400;
+}
+.ot-hero em { font-style: italic; }
+.mark {
+  background: linear-gradient(transparent 58%, var(--mark) 58%, var(--mark) 94%, transparent 94%);
+  padding: 0 0.08em;
+  margin: 0 -0.08em;
+}
+.ot-cycle {
+  margin-top: 22px;
+  min-height: 3.2em;
+  font-size: clamp(20px, 5.6vw, 26px);
+  font-style: italic;
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+.ot-cycle .q { display: inline-block; animation: ot-in 0.7s ease both; }
+@keyframes ot-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.ot-lede {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  margin: 26px 0 0;
+  max-width: 46ch;
+}
+.ot-form { margin-top: 36px; }
+.ot-field {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1.5px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 30px;
+  padding: 8px 0 10px;
+  outline: none;
+  border-radius: 0;
+}
+.ot-field::placeholder { color: rgba(22, 19, 15, 0.28); font-style: italic; }
+.ot-field.code { font-family: var(--mono); font-size: 34px; letter-spacing: 0.35em; }
+.ot-btn {
+  margin-top: 18px;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 16px 24px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease, opacity 0.2s;
+}
+.ot-btn:hover { background: var(--ember); transform: translateY(-1px); }
+.ot-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+.ot-btn.ghost { background: transparent; color: var(--ink-2); padding-left: 0; }
+.ot-btn.ghost:hover { color: var(--ember); transform: none; }
+.ot-err { font-family: var(--mono); font-size: 13px; color: var(--ember); margin-top: 14px; }
+
+/* signed in */
+.ot-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.ot-top .ot-word { font-size: clamp(40px, 11vw, 56px); }
+.ot-link { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); background: none; border: 0; cursor: pointer; padding: 6px 0; }
+.ot-link:hover { color: var(--ember); }
+
+.ot-streak { margin-top: 40px; display: grid; grid-template-columns: auto 1fr; gap: 0 22px; align-items: end; }
+.ot-streak .n {
+  font-size: clamp(120px, 34vw, 168px);
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  font-style: italic;
+  margin: 0;
+  color: var(--ink);
+}
+.ot-streak .n.zero { color: var(--ink-2); }
+.ot-streak .side { padding-bottom: 10px; }
+.ot-streak .side .big { font-size: clamp(22px, 6vw, 28px); line-height: 1.1; margin: 6px 0 0; }
+.ot-strip { margin-top: 26px; display: flex; gap: 6px; align-items: center; }
+.ot-strip .d {
+  width: 100%; aspect-ratio: 1; max-width: 30px; border-radius: 50%;
+  border: 1.5px solid var(--rule); box-sizing: border-box;
+}
+.ot-strip .d.on { background: var(--ink); border-color: var(--ink); }
+.ot-strip .d.today { border-color: var(--ember); animation: ot-pulse 2.4s ease-in-out infinite; }
+.ot-strip .d.today.on { background: var(--ember); animation: none; }
+.ot-meta { margin-top: 14px; display: flex; justify-content: space-between; gap: 12px; }
+.ot-bar { height: 3px; background: var(--rule); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.ot-bar i { display: block; height: 100%; background: var(--ember); transition: width 0.7s ease; }
+
+.ot-card {
+  position: relative;
+  margin: 44px -4px 0;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  padding: 22px 22px 20px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 18px 40px -26px rgba(22, 19, 15, 0.45);
+  transform: rotate(-0.6deg);
+}
+.ot-card > * { transform: rotate(0.6deg); }
+.ot-card .q { font-size: clamp(24px, 6.6vw, 30px); line-height: 1.12; margin: 8px 0 0; letter-spacing: -0.01em; }
+.ot-card .spark { margin-top: 12px; font-style: italic; color: var(--ink-2); font-size: 18px; }
+.ot-card .spark button { font: inherit; background: none; border: 0; color: var(--ember); cursor: pointer; padding: 0; margin-left: 6px; }
+.ot-area {
+  width: 100%; box-sizing: border-box; margin-top: 16px;
+  border: 0; border-bottom: 1.5px solid var(--ink); background: transparent;
+  font-family: var(--serif); font-size: 24px; line-height: 1.3; color: var(--ink);
+  padding: 6px 0 10px; min-height: 84px; resize: none; outline: none; border-radius: 0;
+}
+.ot-area::placeholder { color: rgba(22, 19, 15, 0.28); font-style: italic; }
+.ot-stamp {
+  position: absolute; top: -14px; right: 14px;
+  width: 64px; height: 64px; border-radius: 50%;
+  border: 2px solid var(--ember); color: var(--ember);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2;
+  transform: rotate(8deg); background: rgba(255, 253, 247, 0.9);
+}
+.ot-done { font-size: clamp(22px, 6vw, 28px); line-height: 1.2; margin: 6px 0 0; }
+.ot-flash { margin-top: 10px; }
+
+.ot-ledger { margin-top: 48px; }
+.ot-ledger .row { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: baseline; padding: 16px 0; border-top: 1px solid var(--rule); }
+.ot-ledger .row:last-child { border-bottom: 1px solid var(--rule); }
+.ot-ledger .s { font-size: clamp(19px, 5vw, 22px); line-height: 1.35; margin: 0; }
+.ot-empty { font-style: italic; color: var(--ink-2); font-size: 20px; line-height: 1.4; margin-top: 12px; }
+.ot-foot { margin-top: 44px; font-family: var(--mono); font-size: 11px; line-height: 1.8; color: var(--ink-2); letter-spacing: 0.02em; }
+.ot-foot code { font-family: inherit; color: var(--ink); }

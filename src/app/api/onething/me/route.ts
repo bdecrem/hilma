@@ -5,7 +5,9 @@ import { COOKIE, findUserById, listEntries, localDay, scoreboard, verifySession,
 export const runtime = 'nodejs'
 
 export async function GET() {
-  const userId = verifySession((await cookies()).get(COOKIE)?.value)
+  // Local screenshots only: never set on Vercel, ignored in production builds.
+  const devAs = process.env.NODE_ENV !== 'production' ? process.env.ONETHING_DEV_AS : undefined
+  const userId = devAs ?? verifySession((await cookies()).get(COOKIE)?.value)
   if (!userId) return NextResponse.json({ user: null })
   const user = await findUserById(userId)
   if (!user) return NextResponse.json({ user: null })
