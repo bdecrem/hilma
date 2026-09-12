@@ -181,22 +181,24 @@ export async function recordEntry(user: User, day: string, text: string): Promis
 
 // ---------- copy ----------
 
+export const SITE_URL = 'https://hilma-nine.vercel.app/onething'
+
 export function promptText(): string {
-  return 'Onething: what is one thing that happened in the last 24 hours? One sentence. Just reply here.'
+  return `Onething: what is one thing that happened in the last 24 hours? One sentence. Just reply here.\n${SITE_URL}`
 }
 
 export function reminderText(streak: number): string {
-  if (streak > 0) {
-    return `Onething: still time. One sentence keeps your ${streak}-day streak alive. What happened today?`
-  }
-  return 'Onething: one sentence before midnight starts a streak. What happened today?'
+  const line = streak > 0
+    ? `Onething: still time. One sentence keeps your ${streak}-day streak alive. What happened today?`
+    : 'Onething: one sentence before midnight starts a streak. What happened today?'
+  return `${line}\n${SITE_URL}`
 }
 
 export function confirmText(r: Recorded): string {
-  if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.`
+  if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
   const flame = r.streak >= 3 ? ' 🔥' : ''
   const bonus = r.bonus ? ` Milestone: +${r.bonus}.` : ''
-  return `Got it. Day ${r.streak}${flame} · +${r.earned} points (${r.points} total) · ${r.level.name}.${bonus}`
+  return `Got it. Day ${r.streak}${flame} · +${r.earned} points (${r.points} total) · ${r.level.name}.${bonus}\n${SITE_URL}`
 }
 
 // ---------- sessions (stateless HMAC cookie, same secret family as F2) ----------
