@@ -57,10 +57,11 @@ fi
 echo "claude  -> $("$BREW/claude" --version)"
 
 # Our dist patches (see patches/*.mjs for what each one does): role mentions,
-# streaming smart-mode replies, the Sonnet triage gate, the model fallback.
+# streaming smart-mode replies, the Sonnet triage gate, the model fallback, and
+# the human-resets-maxTurns fix.
 # Re-applied here because a golembot upgrade overwrites dist/. Idempotent; a
 # missing patch file is not fatal, a patch whose anchor is gone IS (set -e).
-for pf in discord-role-mention smart-stream smart-triage model-fallback; do
+for pf in discord-role-mention smart-stream smart-triage model-fallback group-turn-reset; do
   PATCHF="$HOME/golembot/$pf.mjs"
   [ -f "$PATCHF" ] && "$BREW/node" "$PATCHF" || echo "(no $pf patch on disk)"
 done

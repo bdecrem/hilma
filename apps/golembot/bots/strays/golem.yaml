@@ -41,6 +41,10 @@ gateway:
 groupChat:
   groupPolicy: smart
   historyLimit: 20
+  # Loop valve. Stock golembot counts every reply in the channel and only resets
+  # after an hour of total silence, so in a busy channel the bot went deaf after
+  # ten jobs (2026-09-12). patches/group-turn-reset.mjs makes any human message
+  # reset the counter, so this now caps consecutive bot-triggered replies only.
   maxTurns: 10
   triageModel: claude-sonnet-5
   triageTimeoutSeconds: 45

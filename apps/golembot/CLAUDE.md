@@ -72,8 +72,21 @@ of two humans chatting. Two dist patches change that:
   failed attempt's text so the channel only sees the real reply. Log line:
   `[assistant] model claude-fable-5-1 unavailable ("…") — Switching to fallback model claude-opus-5 for 360 min`.
 
-Both are applied by `setup-mini.sh` after every install (same mechanism as the
-role-mention patch), both are idempotent, and both abort loudly if a golembot
+- **`patches/group-turn-reset.mjs`** (gateway.js, 2026-09-12). `groupChat.maxTurns`
+  is a loop valve: after N bot replies in a group the gateway skips every further
+  message there. Stock golembot only resets the counter after an hour of *total*
+  silence in the group, and every human message refreshes that clock, so in a busy
+  channel it never reset — after ten jobs Strays went deaf with nothing but a
+  verbose-log line (`maxTurns (10) reached … skipping`) to show for it. The patch
+  makes any non-bot message clear the counter, so maxTurns now caps *consecutive
+  bot-triggered replies*, which is the bot-to-bot runaway the valve exists for.
+  (Discord's adapter drops other bots' messages at the door anyway.) Regression
+  test: `patches/test/turn-reset-harness.mjs` drives `handleMessage()` with a
+  stubbed assistant — stock answers 2/4 human messages at maxTurns 2, patched 4/4,
+  and both still cap a run of bot-sent messages at 2.
+
+All three are applied by `setup-mini.sh` after every install (same mechanism as the
+role-mention patch), all are idempotent, and all abort loudly if a golembot
 upgrade moved their anchors — then read the new `dist/` and re-anchor. Verified
 2026-09-11 against a local copy of golembot 0.49.2: `triage-harness.mjs` (six
 conversation shapes against real Sonnet, 6/6) and `fallback-harness.mjs`
@@ -244,6 +257,12 @@ for the full list, it is more current than the README):
   `setup-mini.sh` re-applies it after every install, because upgrading golembot
   overwrites `dist/`. To check it survived:
   `ssh admin@171.66.240.175 'grep -c golembot-role-mention-patch /opt/homebrew/lib/node_modules/golembot/dist/channels/discord.js'`
+- **The bot goes deaf after ten jobs in a busy channel.** `/health`, `/api/status`
+  and Discord all say connected, the log shows `maxTurns (10) reached for group …,
+  skipping` after each ignored message, and nothing else. That is the group loop
+  valve with its silence-only reset; fixed by `patches/group-turn-reset.mjs` (see
+  "Triage gate + model fallback"). Before the patch the only cure was a restart or
+  an hour with nobody typing in the channel.
 - **A gateway can sit "connected" for a day and receive nothing.** The fleet
   registry, `/health` and `/api/status` all report `connected` from cached
   state, so the only real liveness signal is the log's mtime. If it has not
