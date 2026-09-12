@@ -1,45 +1,64 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number };
 type Level = { name: string; min: number };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
 type Me = { user: { phone: string; since: string } | null; today?: string; board?: Board; entries?: Entry[] };
 
-const EXAMPLES = [
-  'Saw a heron stand perfectly still for ten minutes.',
-  'Deleted the feature instead of fixing it. Felt great.',
-  'Mom called. We talked about the fig tree.',
-  'Found the coffee place with the good window.',
-  'Got the last loaf before the fog rolled in.',
-  'Said no to a meeting and read on the steps instead.',
-];
-
-const SPARKS = [
-  'Something you noticed and nobody else did.',
+const NUDGES = [
+  'Something you noticed that nobody else did.',
   'Something small that worked.',
-  'Something you would tell a friend at dinner.',
-  'A thing you changed your mind about.',
   'The best ten minutes.',
-  'Something that made you laugh, even a little.',
-  'A thing you finished. Or started.',
+  'A thing you changed your mind about.',
   'Who you talked to, and one line they said.',
+  'A thing you finished. Or started.',
 ];
-
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-function addDays(day: string, n: number): string {
+function pad(n: number) { return String(n).padStart(2, '0'); }
+function longDay(day: string): string {
   const [y, m, d] = day.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
-}
-function shortDay(day: string): string {
-  const [, m, d] = day.split('-').map(Number);
-  return `${MONTHS[m - 1]} ${d}`;
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
 }
 function prettyPhone(p: string): string {
   const m = p.match(/^\+1(\d{3})(\d{3})(\d{4})$/);
-  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : p;
+  return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
+}
+
+/** Twelve month blocks, each a 7-wide grid of days starting Monday. */
+function Year({ year, today, have, sel, onPick, demo }: {
+  year: number; today?: string; have: Set<string>; sel?: string | null; onPick?: (d: string) => void; demo?: boolean;
+}) {
+  return (
+    <div className="ot-months" aria-label={`${year}`}>
+      {MONTHS.map((name, mi) => {
+        const first = new Date(Date.UTC(year, mi, 1));
+        const offset = (first.getUTCDay() + 6) % 7; // Monday = 0
+        const count = new Date(Date.UTC(year, mi + 1, 0)).getUTCDate();
+        const cells: React.ReactNode[] = [];
+        for (let i = 0; i < offset; i++) cells.push(<span key={`p${i}`} className="c pad" />);
+        for (let d = 1; d <= count; d++) {
+          const day = `${year}-${pad(mi + 1)}-${pad(d)}`;
+          const on = have.has(day);
+          const future = !!today && day > today;
+          const cls = `c${on ? ' on' : ''}${day === today ? ' today' : ''}${day === sel ? ' sel' : ''}${future ? ' future' : ''}`;
+          cells.push(
+            on && onPick
+              ? <button key={day} type="button" className={cls} aria-label={day} onClick={() => onPick(day)} />
+              : <span key={day} className={cls} aria-hidden={demo} />
+          );
+        }
+        return (
+          <div className="ot-month" key={name}>
+            <div className="m">{name}</div>
+            <div className="ot-days">{cells}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function Onething() {
@@ -50,19 +69,14 @@ export default function Onething() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [text, setText] = useState('');
-  const [flash, setFlash] = useState('');
-  const [ex, setEx] = useState(0);
-  const [spark, setSpark] = useState(() => Math.floor(Math.random() * SPARKS.length));
+  const [sel, setSel] = useState<string | null>(null);
+  const [nudge, setNudge] = useState(0);
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
     setMe((await r.json()) as Me);
   }, []);
   useEffect(() => { load(); }, [load]);
-  useEffect(() => {
-    const t = setInterval(() => setEx((i) => (i + 1) % EXAMPLES.length), 3200);
-    return () => clearInterval(t);
-  }, []);
 
   async function post(url: string, body: unknown) {
     setBusy(true); setErr('');
@@ -71,68 +85,57 @@ export default function Onething() {
       const j = await r.json();
       if (!r.ok) { setErr(j.error ?? 'Something went wrong.'); return null; }
       return j;
-    } catch {
-      setErr('Network hiccup. Try again.'); return null;
-    } finally { setBusy(false); }
+    } catch { setErr('Network error. Try again.'); return null; }
+    finally { setBusy(false); }
   }
   async function start() { if (await post('/api/onething/auth/start', { phone })) setStage('code'); }
-  async function verify() {
-    if (await post('/api/onething/auth/verify', { phone, code })) { setCode(''); setStage('phone'); await load(); }
-  }
-  async function save() {
-    const j = await post('/api/onething/entry', { text });
-    if (j) {
-      setText('');
-      setFlash(j.edited ? 'Updated.' : `+${j.earned} points${j.bonus ? ` · milestone +${j.bonus}` : ''}`);
-      await load();
-      setTimeout(() => setFlash(''), 6000);
-    }
-  }
+  async function verify() { if (await post('/api/onething/auth/verify', { phone, code })) { setCode(''); setStage('phone'); await load(); } }
+  async function save() { if (await post('/api/onething/entry', { text })) { setText(''); setSel(null); await load(); } }
   async function signout() { await fetch('/api/onething/auth/signout', { method: 'POST' }); setMe({ user: null }); }
 
-  const Word = (
-    <h1 className="ot-word"><em>1</em>thing</h1>
-  );
+  const demo = useMemo(() => {
+    // A believable partial year for the signed-out page: most days filled, a few gaps.
+    const s = new Set<string>();
+    let x = 7;
+    for (let m = 0; m < 9; m++) {
+      const count = new Date(Date.UTC(2026, m + 1, 0)).getUTCDate();
+      for (let d = 1; d <= count; d++) { x = (x * 48271) % 2147483647; if (x % 9 !== 0) s.add(`2026-${pad(m + 1)}-${pad(d)}`); }
+    }
+    return s;
+  }, []);
 
   if (me === null) {
-    return <main className="ot-main"><div className="ot-mono"><span className="ot-dot" />a daily ledger</div>{Word}</main>;
+    return <main className="ot-main"><header className="ot-head"><h1 className="ot-logo"><b>1</b>thing</h1></header></main>;
   }
 
   if (!me.user) {
     return (
       <main className="ot-main">
-        <div className="ot-mono"><span className="ot-dot" />a daily ledger · one line, kept</div>
-        {Word}
-        <h2 className="ot-hero">
-          Every day at ten, a text: <em>what&rsquo;s <span className="mark">one thing</span> that happened?</em>
-        </h2>
-        <div className="ot-cycle" aria-live="polite">
-          <span className="q" key={ex}>&ldquo;{EXAMPLES[ex]}&rdquo;</span>
-        </div>
-        <p className="ot-lede">
-          You reply with a sentence. That&rsquo;s the whole habit. Miss it and you get one nudge at ten that night.
-          Keep going and the streak grows. Every line stays here, in order, for as long as you want it.
-        </p>
-        <div className="ot-form">
-          {stage === 'phone' ? (
-            <form onSubmit={(e) => { e.preventDefault(); start(); }}>
-              <div className="ot-mono">your number</div>
-              <input className="ot-field" inputMode="tel" autoComplete="tel" placeholder="(650) 555 0199" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              <button className="ot-btn" disabled={busy} type="submit">{busy ? 'texting…' : 'text me a code →'}</button>
-              <p className="ot-lede" style={{ marginTop: 14 }}>iMessage only. No password, no email, nothing to install.</p>
-            </form>
-          ) : (
-            <form onSubmit={(e) => { e.preventDefault(); verify(); }}>
-              <div className="ot-mono">code, texted to {phone}</div>
-              <input className="ot-field code" inputMode="numeric" autoComplete="one-time-code" placeholder="······" value={code} onChange={(e) => setCode(e.target.value)} autoFocus />
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button className="ot-btn" disabled={busy} type="submit">{busy ? 'checking…' : 'sign in →'}</button>
-                <button type="button" className="ot-btn ghost" onClick={() => { setStage('phone'); setErr(''); }}>different number</button>
-              </div>
-            </form>
-          )}
-          {err && <p className="ot-err">{err}</p>}
-        </div>
+        <header className="ot-head">
+          <h1 className="ot-logo"><b>1</b>thing</h1>
+          <span className="ot-small">one sentence a day, by text</span>
+        </header>
+        <h2 className="ot-h">Every day at ten, a text asks what happened. You answer in one sentence.</h2>
+        <p className="ot-p">That is the whole thing. No app to open, no prompt to remember. The sentence goes into a cell for that day, and the year fills in.</p>
+        <p className="ot-p">Miss a day and there is one reminder at ten that night. Answer and the streak grows.</p>
+        {stage === 'phone' ? (
+          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); start(); }}>
+            <input className="ot-in" inputMode="tel" autoComplete="tel" placeholder="Phone number" aria-label="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <button className="ot-btn" disabled={busy} type="submit">{busy ? 'Sending' : 'Text me a code'}</button>
+          </form>
+        ) : (
+          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); verify(); }}>
+            <input className="ot-in code" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" aria-label="Code" value={code} onChange={(e) => setCode(e.target.value)} autoFocus />
+            <button className="ot-btn" disabled={busy} type="submit">{busy ? 'Checking' : 'Sign in'}</button>
+          </form>
+        )}
+        {stage === 'code' && <p className="ot-note">Sent to {phone}. <button className="ot-btnlink" onClick={() => { setStage('phone'); setErr(''); }}>Wrong number?</button></p>}
+        {err && <p className="ot-err">{err}</p>}
+        <p className="ot-note">Works over iMessage. No password, no email, nothing to install.</p>
+        <section className="ot-year" aria-hidden>
+          <div className="ot-yearhead"><span>What a year looks like</span><span>one cell per day</span></div>
+          <Year year={2026} have={demo} demo />
+        </section>
       </main>
     );
   }
@@ -140,84 +143,69 @@ export default function Onething() {
   const b = me.board!;
   const entries = me.entries ?? [];
   const today = me.today ?? '';
+  const year = Number(today.slice(0, 4));
   const have = new Set(entries.map((e) => e.day));
-  const strip = Array.from({ length: 14 }, (_, i) => addDays(today, i - 13));
+  const byDay = new Map(entries.map((e) => [e.day, e]));
+  const shown = sel ? byDay.get(sel) : (byDay.get(today) ?? entries[0]);
+  const inYear = entries.filter((e) => e.day.startsWith(`${year}-`)).length;
   const span = b.next ? b.next.min - b.level.min : 1;
   const progress = b.next ? Math.min(1, (b.points - b.level.min) / span) : 1;
 
   return (
     <main className="ot-main">
-      <div className="ot-top">
-        <div>
-          <div className="ot-mono"><span className="ot-dot" />{prettyPhone(me.user.phone)}</div>
-          {Word}
-        </div>
-        <button className="ot-link" onClick={signout}>sign out</button>
-      </div>
+      <header className="ot-head">
+        <h1 className="ot-logo"><b>1</b>thing</h1>
+        <span className="ot-small">{prettyPhone(me.user.phone)} · <button className="ot-btnlink" onClick={signout}>sign out</button></span>
+      </header>
 
-      <section className="ot-streak" aria-label="streak">
-        <p className={`n${b.streak === 0 ? ' zero' : ''}`}>{b.streak === 0 ? '0' : b.streak}</p>
-        <div className="side">
-          <div className="ot-mono">{b.streak === 1 ? 'day in a row' : 'days in a row'}{b.streak >= 3 ? ' 🔥' : ''}</div>
-          <p className="big">
-            {b.streak === 0 ? <em>Today is day one.</em> : b.doneToday ? <em>Done for today.</em> : <em>Still open today.</em>}
-          </p>
+      <section className="ot-year">
+        <div className="ot-yearhead"><span>{year}</span><span>{inYear} of 365</span></div>
+        <Year year={year} today={today} have={have} sel={sel ?? shown?.day} onPick={setSel} />
+        <div className="ot-read">
+          {shown ? (
+            <>
+              <div className="d">{shown.day === today ? 'Today' : longDay(shown.day)} · day {shown.streak}</div>
+              <p className="t">{shown.text}</p>
+            </>
+          ) : (
+            <div className="d">Nothing kept yet. Today&rsquo;s cell is outlined.</div>
+          )}
         </div>
       </section>
 
-      <div className="ot-strip" aria-label="last two weeks">
-        {strip.map((d) => (
-          <span key={d} className={`d${have.has(d) ? ' on' : ''}${d === today ? ' today' : ''}`} title={shortDay(d)} />
-        ))}
-      </div>
-      <div className="ot-meta ot-mono">
-        <span>{b.points} pts · {b.level.name}</span>
-        <span>{b.next ? `${b.next.min - b.points} to ${b.next.name}` : 'old growth'}{b.best > 1 ? ` · best ${b.best}` : ''}</span>
-      </div>
-      <div className="ot-bar"><i style={{ width: `${progress * 100}%` }} /></div>
-
-      <section className="ot-card">
-        {b.doneToday && <div className="ot-stamp">kept<br />today</div>}
-        <div className="ot-mono">{shortDay(today)} · today</div>
+      <section className="ot-today">
         {b.doneToday ? (
           <>
-            <p className="ot-done"><em>&ldquo;{entries.find((e) => e.day === today)?.text}&rdquo;</em></p>
-            {flash && <div className="ot-flash ot-mono" style={{ color: 'var(--ember)' }}>{flash}</div>}
+            <p className="q">Today is kept.</p>
+            <p className="ot-kept">{byDay.get(today)?.text}</p>
+            <span className="ot-small">Next question tomorrow at ten. Reply to it, or type here.</span>
           </>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); save(); }}>
             <p className="q">What&rsquo;s one thing that happened in the last 24 hours?</p>
-            <p className="spark">
-              {SPARKS[spark]}
-              <button type="button" onClick={() => setSpark((s) => (s + 1) % SPARKS.length)}>another spark ↻</button>
-            </p>
-            <textarea className="ot-area" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder="One sentence." rows={2} />
-            <button className="ot-btn" disabled={busy || text.trim().length < 2} type="submit">{busy ? 'keeping…' : 'keep it →'}</button>
+            <textarea value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder="One sentence." rows={3} />
+            <div className="row">
+              <button className="ot-btn" disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Saving' : 'Keep it'}</button>
+              <span className="ot-nudge">{NUDGES[nudge]}<button type="button" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)}>another</button></span>
+            </div>
             {err && <p className="ot-err">{err}</p>}
           </form>
         )}
       </section>
 
-      <section className="ot-ledger">
-        <div className="ot-mono">the ledger · {entries.length} {entries.length === 1 ? 'line' : 'lines'}</div>
-        {entries.length === 0 ? (
-          <p className="ot-empty">Nothing yet. Your first line lands here. The next text comes at ten.</p>
-        ) : (
-          <div style={{ marginTop: 10 }}>
-            {entries.map((e) => (
-              <div className="row" key={e.id}>
-                <span className="ot-mono">{e.day === today ? 'today' : shortDay(e.day)}</span>
-                <p className="s">{e.text}</p>
-                <span className="ot-mono">d{e.streak}</span>
-              </div>
-            ))}
-          </div>
-        )}
+      <section className="ot-stats" aria-label="streak and points">
+        <div className="ot-stat"><div className="v">{b.streak}</div><div className="k">{b.streak === 1 ? 'day in a row' : 'days in a row'}{b.best > b.streak ? ` · best ${b.best}` : ''}</div></div>
+        <div className="ot-stat"><div className="v">{b.points}</div><div className="k">points</div></div>
+        <div className="ot-stat">
+          <div className="v txt">{b.level.name}</div>
+          <div className="k">{b.next ? `${b.next.min - b.points} to ${b.next.name}` : 'highest level'}</div>
+          <div className="ot-bar"><i style={{ width: `${progress * 100}%` }} /></div>
+        </div>
       </section>
 
       <footer className="ot-foot">
-        Texts at 10:05am and, if the day is still open, 10:05pm Pacific.<br />
-        Reply to any of them — or start a text with <code>1:</code> to log a line any time.
+        Texts arrive at 10:05 in the morning and, if the day is still open, 10:05 at night, Pacific time.
+        Reply to either, or start any text with <code>1:</code> to keep a sentence at any hour.
       </footer>
     </main>
   );

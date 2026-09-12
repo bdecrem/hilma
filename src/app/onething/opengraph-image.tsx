@@ -1,65 +1,53 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-type Face = { data: ArrayBuffer; style: 'normal' | 'italic' }
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-async function instrumentSerif(): Promise<Face[]> {
-  try {
-    const css = await fetch('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap', {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:20.0) Gecko/20100101 Firefox/20.0' },
-    }).then((r) => r.text())
-    const faces: Face[] = []
-    for (const block of css.split('@font-face').slice(1)) {
-      const url = block.match(/src: url\(([^)]+)\)/)?.[1]
-      if (!url) continue
-      const style = /font-style: italic/.test(block) ? 'italic' : 'normal'
-      faces.push({ data: await fetch(url).then((r) => r.arrayBuffer()), style })
-    }
-    return faces
-  } catch {
-    return []
-  }
-}
-
-export default async function OgImage() {
-  const faces = await instrumentSerif();
-  const font = faces.length > 0;
+export default function OgImage() {
+  let x = 7;
+  const months = MONTHS.map((name, mi) => {
+    const first = new Date(Date.UTC(2026, mi, 1));
+    const offset = (first.getUTCDay() + 6) % 7;
+    const count = new Date(Date.UTC(2026, mi + 1, 0)).getUTCDate();
+    const cells: { on: boolean; pad?: boolean }[] = [];
+    for (let i = 0; i < offset; i++) cells.push({ on: false, pad: true });
+    for (let d = 1; d <= count; d++) { x = (x * 48271) % 2147483647; cells.push({ on: mi < 9 && x % 9 !== 0 }); }
+    return { name, cells };
+  });
+  const S = 9, G = 2;
   return new ImageResponse(
     (
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '64px 88px 72px',
-          background: 'linear-gradient(135deg, #f4efe6 0%, #f4efe6 55%, #fbe0d4 100%)',
-          color: '#16130f',
-          fontFamily: font ? 'Instrument Serif' : 'serif',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', fontSize: 22, letterSpacing: '0.16em', color: '#6a6257' }}>
-          <div style={{ width: 12, height: 12, borderRadius: 6, background: '#ff4a1c', marginRight: 14 }} />
-          A DAILY LEDGER · ONE LINE, KEPT
+      <div style={{ width: '100%', height: '100%', display: 'flex', background: '#fff', color: '#111', fontFamily: 'sans-serif', padding: '64px 72px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: 520 }}>
+          <div style={{ display: 'flex', fontSize: 34, fontWeight: 600, letterSpacing: '-0.02em' }}>
+            <span style={{ color: '#0a2fff' }}>1</span><span>thing</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', fontSize: 54, fontWeight: 600, lineHeight: 1.05, letterSpacing: '-0.03em' }}>
+              One sentence a day, by text.
+            </div>
+            <div style={{ display: 'flex', marginTop: 22, fontSize: 24, color: '#767676', lineHeight: 1.35 }}>
+              365 cells. Fill one a day.
+            </div>
+          </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 210, lineHeight: 0.85, letterSpacing: '-0.04em' }}>
-            <span style={{ color: '#ff4a1c', fontStyle: 'italic' }}>1</span>
-            <span>thing</span>
-          </div>
-          <div style={{ display: 'flex', marginTop: 34, fontSize: 52, lineHeight: 1.1, fontStyle: 'italic', color: '#16130f' }}>
-            Every day at ten, a text: what&rsquo;s one thing that happened?
-          </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', width: 536, marginLeft: 'auto', alignContent: 'center', gap: '22px 24px' }}>
+          {months.map((m) => (
+            <div key={m.name} style={{ display: 'flex', flexDirection: 'column', width: 7 * S + 6 * G }}>
+              <div style={{ display: 'flex', fontSize: 12, color: '#767676', marginBottom: 6 }}>{m.name}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', width: 7 * S + 6 * G, gap: G }}>
+                {m.cells.map((c, i) => (
+                  <div key={i} style={{ width: S, height: S, background: c.pad ? 'transparent' : c.on ? '#111' : '#ececec' }} />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     ),
-    {
-      ...size,
-      fonts: font ? faces.map((f) => ({ name: 'Instrument Serif', data: f.data, style: f.style, weight: 400 as const })) : undefined,
-    }
+    size
   );
 }
