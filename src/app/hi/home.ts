@@ -3,12 +3,12 @@
 // under `.edition-three`, shared with the /hi/alt4 draft.
 const FLOW = `<main class="three-main">
   <h1 class="three-title">Hey, I’m Bart.</h1>
-  <div class="three-letter" aria-label="I like making ideas stick, machines jam, and old Macs think again.">
-    <div class="letter-line"><span>I like making</span></div>
-    <div class="letter-line"><a class="inline-object inline-dodo" href="https://dodo.foo" target="_blank" rel="noopener" aria-label="Dodo — dodo.foo"><img class="inline-front" src="/hi/alts/assets/dodo-peck.png" alt="Dodo’s playful Peck learning path"><img class="inline-back" src="/hi/alts/assets/dodo-topics.png" alt="Dodo’s topics library"><span class="object-index mono">dodo.foo ↗</span></a><span>ideas <em>stick,</em></span></div>
-    <div class="letter-line"><span>machines</span><a class="inline-object inline-jam" href="https://jambot.to" target="_blank" rel="noopener" aria-label="Jambot — jambot.to"><img class="inline-front" src="/hi/alts/assets/jambot-controls.png" alt="Jambot synth controls"><img class="inline-back" src="/hi/alts/assets/jambot-tracks.png" alt="Jambot track sequencers"><span class="object-index mono">jambot.to ↗</span></a><span><em>jam,</em></span></div>
-    <div class="letter-line"><span>and old Macs</span><span class="mac-slot"><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude/blob/main/README.md" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a><a class="object-alt mono" href="/hi/alts/assets/mac-plus.jpg" target="_blank" rel="noopener">full photo ↗</a></span></div>
-    <div class="letter-line last-letter"><span><em>think again.</em></span></div>
+  <div class="three-letter" aria-label="I’m tinkering with tools that learn, toys that jam, and old things that still inspire.">
+    <div class="letter-line"><span>I’m tinkering with</span></div>
+    <div class="letter-line"><span><em>tools</em></span><a class="inline-object inline-dodo" href="https://dodo.foo" target="_blank" rel="noopener" aria-label="Dodo — dodo.foo"><img class="inline-front" src="/hi/alts/assets/dodo-peck.png" alt="Dodo’s playful Peck learning path"><img class="inline-back" src="/hi/alts/assets/dodo-topics.png" alt="Dodo’s topics library"><span class="object-index mono">dodo.foo ↗</span></a><span>that learn,</span></div>
+    <div class="letter-line"><span><em>toys</em></span><a class="inline-object inline-jam" href="https://jambot.to" target="_blank" rel="noopener" aria-label="Jambot — jambot.to"><img class="inline-front" src="/hi/alts/assets/jambot-controls.png" alt="Jambot synth controls"><img class="inline-back" src="/hi/alts/assets/jambot-tracks.png" alt="Jambot track sequencers"><span class="object-index mono">jambot.to ↗</span></a><span>that jam,</span></div>
+    <div class="letter-line"><span>and old <em>things</em></span><span class="mac-slot"><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude/blob/main/README.md" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a><a class="object-alt mono" href="/hi/alts/assets/mac-plus.jpg" target="_blank" rel="noopener">full photo ↗</a></span></div>
+    <div class="letter-line last-letter"><span>that still inspire.</span></div>
   </div>
   @@BIO@@
 </main>
@@ -16,16 +16,16 @@ const FLOW = `<main class="three-main">
 
 // bartin16.xyz keeps the email and phone number in the paragraph; decremental.com
 // swaps them for a message form (posts to /api/contact).
-// bartin16.xyz is just the invitation plus the email and phone number; decremental.com
-// keeps the CASBS line and puts the message form behind “talk to you”.
+// Both hosts carry the CASBS line; bartin16.xyz follows it with the invitation plus the
+// email and phone number, decremental.com puts the message form behind “talk to you”.
 export const body = FLOW
   .replace('@@LINKS@@', `<a href="/hi/about">About me</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://decremental.com/projects" target="_blank" rel="noopener">decremental.com</a>`)
-  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>Come say hi, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
+  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at <a href="https://casbs.stanford.edu/" target="_blank" rel="noopener">CASBS</a>, spending my tokens on AI × human flourishing.</p><p>Come say hi, especially if you want to talk AI &amp; your work. I’m at <a href="mailto:bdecrem@gmail.com">bdecrem@gmail.com</a> or <a href="sms:6508989508">650-898-9508</a>.</p></div></div>`)
 
 // decremental.com: one line, and the message form lives behind "talk to you" in a dialog.
 export const bodyWithForm = FLOW
   .replace('@@LINKS@@', `<a href="/hi/about">More about me</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://decremental.com/projects">All my AI projects</a>`)
-  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at <a href="https://casbs.stanford.edu/" target="_blank" rel="noopener">CASBS</a>, exploring AI × human flourishing. Would love to <button type="button" class="talk-link" data-note>talk to you</button> if you’re into that.</p></div></div>`)
+  .replace('@@BIO@@', `<div class="three-bottom"><div class="three-bio"><p>This year I’m at <a href="https://casbs.stanford.edu/" target="_blank" rel="noopener">CASBS</a>, spending my tokens on AI × human flourishing. Would love to <button type="button" class="talk-link" data-note>talk to you</button> if you’re into that.</p></div></div>`)
   + `
 <dialog class="note-dialog">
   <button type="button" class="note-close" data-note-close aria-label="Close">×</button>
@@ -44,10 +44,10 @@ const OBJECTS = FLOW.match(/<a class="inline-object[\s\S]*?<\/a>/g) as string[]
 const [DODO, JAM, MAC] = OBJECTS
 
 export const cardBody = `<main class="three-main">
-  <div class="three-letter" aria-label="I like making ideas stick, machines jam, and old Macs think again.">
-    <div class="letter-line"><span>I like making</span>${DODO}<span>ideas <em>stick,</em></span></div>
-    <div class="letter-line"><span>machines</span>${JAM}<span><em>jam,</em> and old Macs</span></div>
-    <div class="letter-line last-letter">${MAC}<span><em>think again.</em></span></div>
+  <div class="three-letter" aria-label="I’m tinkering with tools that learn, toys that jam, and old things that still inspire.">
+    <div class="letter-line"><span>I’m tinkering with <em>tools</em></span>${DODO}</div>
+    <div class="letter-line"><span>that learn, <em>toys</em></span>${JAM}<span>that jam,</span></div>
+    <div class="letter-line last-letter"><span>and old <em>things</em></span>${MAC}<span>that still inspire.</span></div>
   </div>
 </main>`
 

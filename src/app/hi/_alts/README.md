@@ -56,6 +56,11 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   "new again." removed, and the footer set in the same warm ink at 13px without the "↗" arrows (they now underline in
   clay on hover). Display tracking on the flow lines is -.016em: anything near -.05em collides "rn" into "m" in
   "learning", in Safari especially. Screenshot both engines after touching it — WebKit is installed for Playwright.
+  Copy since 2026-09-12: "I'm tinkering with tools that learn, toys that jam, and old things that still inspire." —
+  the bold words are the three nouns and each photo sits right after its noun (tools → Dodo, toys → Jambot, things →
+  the Mac Plus). Both hosts carry "This year I'm at CASBS, spending my tokens on AI × human flourishing." under it
+  (bartin16 then the invitation with email and phone, decremental then "talk to you"); the bio column is 58ch so that
+  line does not leave a one-word widow on desktop.
 - `/hi/alt4` — **Room for play**: a chrome 16, draggable project objects, hover reveals, and a small user-initiated rhythm sketch. Edit `../alt4/html.ts`.
 
 The HTML route handlers use the repository’s existing full-document pattern (`/1ziu1wahxw`) so the designs retain their CSS and native browser interactions without inheriting the homepage’s React layout or global Tailwind resets. Both return noindex/nofollow. Their small navigation links only to each other and the original homepage.

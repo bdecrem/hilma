@@ -992,7 +992,7 @@ button:focus-visible,a:focus-visible {
 }
 
 .three-bio {
-  max-width: 52ch;
+  max-width: 58ch;
 }
 
 .three-bio p {
