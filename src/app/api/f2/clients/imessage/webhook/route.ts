@@ -3,6 +3,7 @@ import { authWebhook, isRecentOutbound, sendIMessage } from '@/lib/f2/bluebubble
 import { processMessage } from '@/lib/f2/agent'
 import { findUserByDailyChatGuid, findUserByImessageHandle } from '@/lib/f2/imessage'
 import { f2Supabase } from '@/lib/f2/supabase'
+import { handleInbound as onethingInbound, isOnethingChat } from '@/lib/onething/inbound'
 
 export const runtime = 'nodejs'
 // BlueBubbles fire-and-forget: if we don't ack fast it drops the message
@@ -72,14 +73,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, skipped: 'from-me' })
     }
     const owner = await findUserByDailyChatGuid(chatGuid)
-    if (!owner) {
+    // Onething users answer in a chat that can also register as from-me
+    // (the mini sends as the user's own Apple ID); let those through too.
+    if (!owner && !(await isOnethingChat(chatGuid))) {
       return NextResponse.json({ ok: true, skipped: 'from-me' })
     }
     if (await isRecentOutbound(text)) {
       console.log(`[f2/imessage] echo ${guid}: our own send in ${chatGuid}`)
       return NextResponse.json({ ok: true, skipped: 'echo' })
     }
-    userId = owner.id
+    userId = owner?.id ?? null
     userLabel = chatGuid
     console.log(`[f2/imessage] self-chat reply ${guid} in ${chatGuid}: ${text.slice(0, 80)}`)
   }
@@ -99,6 +102,13 @@ export async function POST(req: Request) {
 
   after(async () => {
     try {
+      // Onething first. It claims the message only when this sender is an
+      // Onething user with today's question outstanding (or the text starts
+      // "1:"); everything else goes to Dodo exactly as before.
+      if (await onethingInbound({ handle, chatGuid, text })) {
+        console.log(`[f2/imessage] ${guid} answered onething`)
+        return
+      }
       // Strict: the handle must be paired to a real F2 account (or the
       // chat resolved via daily_chat_guid — in the self-chat channel the
       // user's replies can arrive from an account alias, e.g. the me.com
