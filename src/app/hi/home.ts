@@ -3,12 +3,12 @@
 // under `.edition-three`, shared with the /hi/alt4 draft.
 const FLOW = `<main class="three-main">
   <h1 class="three-title">Hey, I’m Bart.</h1>
-  <div class="three-letter" aria-label="I’m tinkering with tools that learn, toys that jam, and old things that still inspire.">
-    <div class="letter-line"><span>I’m tinkering with</span></div>
+  <div class="three-letter" aria-label="I like making tools that learn, toys that jam, and old things new again.">
+    <div class="letter-line"><span>I like making</span></div>
     <div class="letter-line"><span><em>tools</em></span><a class="inline-object inline-dodo" href="https://dodo.foo" target="_blank" rel="noopener" aria-label="Dodo — dodo.foo"><img class="inline-front" src="/hi/alts/assets/dodo-peck.png" alt="Dodo’s playful Peck learning path"><img class="inline-back" src="/hi/alts/assets/dodo-topics.png" alt="Dodo’s topics library"><span class="object-index mono">dodo.foo ↗</span></a><span>that learn,</span></div>
     <div class="letter-line"><span><em>toys</em></span><a class="inline-object inline-jam" href="https://jambot.to" target="_blank" rel="noopener" aria-label="Jambot — jambot.to"><img class="inline-front" src="/hi/alts/assets/jambot-controls.png" alt="Jambot synth controls"><img class="inline-back" src="/hi/alts/assets/jambot-tracks.png" alt="Jambot track sequencers"><span class="object-index mono">jambot.to ↗</span></a><span>that jam,</span></div>
     <div class="letter-line"><span>and old <em>things</em></span><span class="mac-slot"><a class="inline-object inline-mac" href="https://github.com/bdecrem/Macinclaude/blob/main/README.md" target="_blank" rel="noopener" aria-label="Macinclaude on GitHub"><img src="/hi/alts/assets/mac-plus.jpg" alt="The Macintosh Plus on Bart’s desk"><span class="object-index mono">macinclaude ↗</span></a><a class="object-alt mono" href="/hi/alts/assets/mac-plus.jpg" target="_blank" rel="noopener">full photo ↗</a></span></div>
-    <div class="letter-line last-letter"><span>that still inspire.</span></div>
+    <div class="letter-line last-letter"><span>new again.</span></div>
   </div>
   @@BIO@@
 </main>
@@ -44,10 +44,10 @@ const OBJECTS = FLOW.match(/<a class="inline-object[\s\S]*?<\/a>/g) as string[]
 const [DODO, JAM, MAC] = OBJECTS
 
 export const cardBody = `<main class="three-main">
-  <div class="three-letter" aria-label="I’m tinkering with tools that learn, toys that jam, and old things that still inspire.">
-    <div class="letter-line"><span>I’m tinkering with <em>tools</em></span>${DODO}</div>
-    <div class="letter-line"><span>that learn, <em>toys</em></span>${JAM}<span>that jam,</span></div>
-    <div class="letter-line last-letter"><span>and old <em>things</em></span>${MAC}<span>that still inspire.</span></div>
+  <div class="three-letter" aria-label="I like making tools that learn, toys that jam, and old things new again.">
+    <div class="letter-line"><span>I like making <em>tools</em></span>${DODO}<span>that learn,</span></div>
+    <div class="letter-line"><span><em>toys</em></span>${JAM}<span>that jam, and old</span></div>
+    <div class="letter-line last-letter"><span><em>things</em></span>${MAC}<span>new again.</span></div>
   </div>
 </main>`
 
