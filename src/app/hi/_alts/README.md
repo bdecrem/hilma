@@ -56,12 +56,6 @@ Unfinished concepts retained for future editing. The existing `src/app/hi/page.t
   "new again." removed, and the footer set in the same warm ink at 13px without the "↗" arrows (they now underline in
   clay on hover). Display tracking on the flow lines is -.016em: anything near -.05em collides "rn" into "m" in
   "learning", in Safari especially. Screenshot both engines after touching it — WebKit is installed for Playwright.
-  Copy since 2026-09-12 (both hosts): the hero is the one word "inspire." (`.three-title`, now 600 weight at about
-  1.4x the flow lines, ink not muted — "Hey, I'm Bart." is gone) over the sentence "This year I'm at CASBS, spending
-  my tokens on AI × human flourishing." with the same three photos inline (Dodo before "CASBS,", Jambot before
-  "tokens", the Mac Plus after "human"); "CASBS" links out through `.flow-link` (no dressing, clay on hover, like the
-  photo addresses). decremental.com's contact line is now just "Would love to talk to you if you're into that."; the
-  card and `scripts/hi/make-og.mjs` show the hero too.
 - `/hi/alt4` — **Room for play**: a chrome 16, draggable project objects, hover reveals, and a small user-initiated rhythm sketch. Edit `../alt4/html.ts`.
 
 The HTML route handlers use the repository’s existing full-document pattern (`/1ziu1wahxw`) so the designs retain their CSS and native browser interactions without inheriting the homepage’s React layout or global Tailwind resets. Both return noindex/nofollow. Their small navigation links only to each other and the original homepage.

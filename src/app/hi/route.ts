@@ -3,7 +3,7 @@ import { body, bodyWithForm, formScript, objectsScript } from './home'
 
 const TITLE = "Hi, I'm Bart in 16"
 const DESCRIPTION =
-  'inspire. This year I’m at CASBS, spending my tokens on AI × human flourishing. Bart Decrem.'
+  'I like making ideas stick, machines jam, and old Macs think again. Bart Decrem, practitioner fellow at CASBS.'
 const URL_BARTIN16 = 'https://bartin16.xyz/'
 const IMAGE = 'https://bartin16.xyz/hi/og.png'
 
