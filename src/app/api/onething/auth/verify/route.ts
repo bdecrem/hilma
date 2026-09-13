@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'That code is wrong or expired.' }, { status: 401 })
   }
   const existing = await findUserByPhone(phone)
-  const user = existing ?? (await ensureUser(phone))
+  const user = existing ?? (await ensureUser(phone, 'web'))
   if (!existing) {
     // First sign-in from this number: the account exists now; say hello and ask
     // today's question after the response goes out (a send can take ~15s).

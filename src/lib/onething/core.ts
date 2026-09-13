@@ -9,6 +9,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { sendIMessage } from '@/lib/f2/bluebubbles'
+import { notifySignup, type SignupSource } from './notify'
 import { LEVELS, type Level } from './levels'
 
 export const TZ = 'America/Los_Angeles'
@@ -108,12 +109,14 @@ export async function findUserById(id: string): Promise<User | null> {
   return (data as User) ?? null
 }
 
-export async function ensureUser(phone: string): Promise<User> {
+export async function ensureUser(phone: string, source: SignupSource = 'manual'): Promise<User> {
   const existing = await findUserByPhone(phone)
   if (existing) return existing
   const { data, error } = await f2Supabase().from('onething_users').insert({ phone }).select('*').single()
   if (error) throw new Error(`onething: create user failed: ${error.message}`)
-  return data as User
+  const user = data as User
+  await notifySignup(user.phone, source, user.id)
+  return user
 }
 
 export async function listEntries(userId: string, limit = 400): Promise<Entry[]> {
@@ -366,7 +369,7 @@ export async function handleInbound(args: {
   const user = await findUserByPhone(phone)
   if (!user) {
     if (!JOIN_PREFIX.test(args.text)) return false
-    const fresh = await ensureUser(phone)
+    const fresh = await ensureUser(phone, 'imessage')
     const first = args.text.replace(JOIN_PREFIX, '').trim()
     if (first.length < 2) {
       await welcomeNewUser(fresh, args.chatGuid)
