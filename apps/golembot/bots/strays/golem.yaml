@@ -52,8 +52,9 @@ groupChat:
     RESPOND when the newest message is an instruction, request or question aimed at the bot, even without an @mention.
     RESPOND when it follows up on something the bot just said or did (the bot's recent replies are shown as [bot:Strays]).
     RESPOND when someone asks for something the bot could build, fix, look up or explain and nobody else is being asked.
+    RESPOND to thanks, praise or a reaction aimed at the bot's own work (the bot delivered something within the last few messages and nobody else is being addressed) — it earns one short line back, not silence.
     PASS when people are talking to each other, thinking out loud, or discussing something the bot has no part in.
-    PASS on bare acknowledgements, reactions and small talk that ask for nothing.
+    PASS on acknowledgements, reactions and small talk between the humans that are not about the bot's work.
     When in doubt and the bot spoke within the last few messages, RESPOND.
 
 # The iMac bot replied in pieces as it worked ("Making it now…", then the link),

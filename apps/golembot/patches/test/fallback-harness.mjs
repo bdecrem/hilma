@@ -2,8 +2,8 @@
 // with the out-of-credits message, the fallback model answers.
 import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { createAssistant } from (process.env.GOLEMBOT_DIST ?? './node_modules/golembot/dist') + '/index.js';
-import { ClaudeCodeEngine } from (process.env.GOLEMBOT_DIST ?? './node_modules/golembot/dist') + '/engines/claude-code.js';
+const { createAssistant } = await import((process.env.GOLEMBOT_DIST ?? './node_modules/golembot/dist') + '/index.js');
+const { ClaudeCodeEngine } = await import((process.env.GOLEMBOT_DIST ?? './node_modules/golembot/dist') + '/engines/claude-code.js');
 
 const dir = join(process.cwd(), 'fallback-ws');
 rmSync(dir, { recursive: true, force: true });

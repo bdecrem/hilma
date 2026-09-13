@@ -62,7 +62,11 @@ of two humans chatting. Two dist patches change that:
   with the bot's own last replies (from `.golem/history/<channel>.jsonl`) and
   answers RESPOND or PASS; only RESPOND reaches the agent. @mentions, replies to
   the bot and DMs skip the gate. Rules are `groupChat.triageRules` in
-  `golem.yaml`. A gate failure logs `triage failed … staying silent` and does
+  `golem.yaml`. Thanks and praise aimed at the bot's own work are RESPOND
+  (2026-09-12: "This is so good" / "Thanks strays" right after a delivery were
+  being PASSed, which from the phone looks like the bot ignoring you); thanks
+  between humans stays PASS. `patches/test/triage-harness.mjs` reads the rules
+  from `bots/strays/golem.yaml`, so re-run it after editing them. A gate failure logs `triage failed … staying silent` and does
   NOT fall open into an agent run. Every decision logs one line:
   `[discord] triage respond · claude-sonnet-5 · 2126ms · 898 in · "…"`.
 - **`patches/model-fallback.mjs`** (index.js + gateway.js + workspace.js). When
@@ -90,8 +94,9 @@ role-mention patch), all are idempotent, and all abort loudly if a golembot
 upgrade moved their anchors — then read the new `dist/` and re-anchor. Verified
 2026-09-11 against a local copy of golembot 0.49.2: `triage-harness.mjs` (six
 conversation shapes against real Sonnet, 6/6) and `fallback-harness.mjs`
-(stubbed engine, both failure shapes) — the harnesses live in the session
-scratchpad, recreate from the patch comments if needed. Check the patches
+(stubbed engine, both failure shapes) — the harnesses live in `patches/test/`:
+`GOLEMBOT_DIST=/opt/homebrew/lib/node_modules/golembot/dist node <harness>` from
+any scratch directory. Check the patches
 survived: `ssh admin@171.66.240.175 'grep -c golembot-smart-triage-patch /opt/homebrew/lib/node_modules/golembot/dist/gateway.js; grep -c golembot-model-fallback-patch /opt/homebrew/lib/node_modules/golembot/dist/index.js'`.
 
 ## The two bots
