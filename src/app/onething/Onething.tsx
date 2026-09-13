@@ -24,6 +24,9 @@ function shortDay(day: string): string {
   const [y, m, d] = day.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
+function lines(text: string): string[] {
+  return text.split('\n').map((t) => t.trim()).filter(Boolean);
+}
 function prettyPhone(p: string): string {
   const m = p.match(/^\+1(\d{3})(\d{3})(\d{4})$/);
   return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
@@ -156,6 +159,9 @@ export default function Onething() {
   const [err, setErr] = useState('');
   const [text, setText] = useState('');
   const [nudge, setNudge] = useState(0);
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<{ day: string; index: number } | null>(null);
+  const [editText, setEditText] = useState('');
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
@@ -175,7 +181,20 @@ export default function Onething() {
   }
   async function start() { if (await post('/api/onething/auth/start', { phone })) setStage('code'); }
   async function verify() { if (await post('/api/onething/auth/verify', { phone, code })) { setCode(''); setStage('phone'); await load(); } }
-  async function save() { if (await post('/api/onething/entry', { text })) { setText(''); await load(); } }
+  async function save() { if (await post('/api/onething/entry', { text })) { setText(''); setAdding(false); await load(); } }
+  async function saveEdit() {
+    if (!editing) return;
+    setBusy(true); setErr('');
+    try {
+      const r = await fetch('/api/onething/entry', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...editing, text: editText }) });
+      const j = await r.json();
+      if (!r.ok) { setErr(j.error ?? 'Something went wrong.'); return; }
+      setEditing(null); setEditText('');
+      await load();
+    } catch { setErr('Network error. Try again.'); }
+    finally { setBusy(false); }
+  }
+  function startEdit(day: string, index: number, current: string) { setEditing({ day, index }); setEditText(current); setErr(''); }
   async function signout() { await fetch('/api/onething/auth/signout', { method: 'POST' }); setMe({ user: null }); }
 
   if (me === null) {
@@ -229,6 +248,36 @@ export default function Onething() {
 
   const b = me.board!;
   const levels = me.levels ?? LEVELS;
+
+  /** Every thought kept on a day, in order, each one editable in place. */
+  const Thoughts = ({ day, text, big }: { day: string; text: string; big?: boolean }) => {
+    const all = lines(text);
+    return (
+      <ol className={`ot-thoughts${big ? ' big' : ''}`}>
+        {all.map((t, i) => (
+          <li key={i} className="ot-thought">
+            {editing && editing.day === day && editing.index === i ? (
+              <form className="ot-editing" onSubmit={(e) => { e.preventDefault(); saveEdit(); }}>
+                <textarea className="ot-ta small" value={editText} maxLength={600} onChange={(e) => setEditText(e.target.value)} rows={2} autoFocus aria-label="edit this thought" />
+                <div className="ot-row">
+                  <button className="ot-btn" type="submit" disabled={busy || editText.trim().length === 1}>{busy ? 'Saving…' : 'Save'}</button>
+                  <button type="button" className="ot-link" onClick={() => { setEditing(null); setErr(''); }}>cancel</button>
+                  {all.length > 1 && <span className="ot-note" style={{ margin: 0 }}>leave it empty to remove this one.</span>}
+                </div>
+                {err && <p className="ot-err">{err}</p>}
+              </form>
+            ) : (
+              <>
+                {all.length > 1 && <span className="n">{i + 1}.</span>}
+                <p className="t">{t}</p>
+                <button type="button" className="ot-link edit" onClick={() => startEdit(day, i, t)} aria-label={`edit thought ${i + 1}`}>edit</button>
+              </>
+            )}
+          </li>
+        ))}
+      </ol>
+    );
+  };
   const entries = me.entries ?? [];
   const today = me.today ?? '';
   const todayEntry = entries.find((e) => e.day === today);
@@ -250,18 +299,20 @@ export default function Onething() {
       <section className="ot-card ot-today">
         <span className={`ot-tape${b.doneToday ? ' green' : ''}`} aria-hidden />
         <div className="ot-date">{longDay(today)}</div>
-        {b.doneToday ? (
+        {b.doneToday && !adding ? (
           <>
             <span className="ot-stamp">kept!</span>
-            <p className="ot-kept">{todayEntry?.text}</p>
+            <Thoughts day={today} text={todayEntry?.text ?? ''} big />
+            <p className="ot-more"><button type="button" className="ot-link" onClick={() => { setAdding(true); setErr(''); }}>add another thought</button></p>
           </>
         ) : (
           <form onSubmit={(e) => { e.preventDefault(); save(); }}>
-            <h2 className="ot-q">One thing that happened in the last 24 hours?</h2>
+            <h2 className="ot-q">{b.doneToday ? 'One more thing?' : 'One thing that happened in the last 24 hours?'}</h2>
             <textarea className="ot-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder="One sentence." rows={3} />
             <div className="ot-row">
               <button className="ot-btn" disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Keeping…' : 'Keep it'}</button>
               <span className="ot-nudge">{NUDGES[nudge]}<button type="button" className="ot-link" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)}>another</button></span>
+              {adding && <button type="button" className="ot-link" onClick={() => { setAdding(false); setText(''); setErr(''); }}>cancel</button>}
             </div>
             {err && <p className="ot-err">{err}</p>}
           </form>
@@ -287,7 +338,7 @@ export default function Onething() {
           {lately.map((e) => (
             <div className="ot-line" key={e.id}>
               <div className="d">{shortDay(e.day)}</div>
-              <p className="t">{e.text}</p>
+              <Thoughts day={e.day} text={e.text} />
             </div>
           ))}
         </section>

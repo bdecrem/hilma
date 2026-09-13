@@ -127,9 +127,18 @@ export async function listEntries(userId: string, limit = 400): Promise<Entry[]>
   return (data ?? []) as Entry[]
 }
 
+/// A day's row holds every thought for that day, one per line, in order.
+/// (The table has one row per user per day; a second "1:" text used to
+/// overwrite the first.)
+export function lines(text: string): string[] {
+  return text.split('\n').map((t) => t.trim()).filter(Boolean)
+}
+
 export type Recorded = {
   entry: Entry
   edited: boolean
+  /// set when this sentence was added to a day that already had one: its number for the day
+  added?: number
   streak: number
   points: number
   earned: number
@@ -144,15 +153,16 @@ export async function recordEntry(user: User, day: string, text: string): Promis
   const entries = await listEntries(user.id, 2)
   const same = entries.find((e) => e.day === day)
   if (same) {
+    const all = [...lines(same.text), text]
     const { data, error } = await sb
       .from('onething_entries')
-      .update({ text, updated_at: new Date().toISOString() })
+      .update({ text: all.join('\n'), updated_at: new Date().toISOString() })
       .eq('id', same.id)
       .select('*')
       .single()
-    if (error) throw new Error(`onething: edit failed: ${error.message}`)
+    if (error) throw new Error(`onething: append failed: ${error.message}`)
     return {
-      entry: data as Entry, edited: true, streak: same.streak, points: same.points,
+      entry: data as Entry, edited: false, added: all.length, streak: same.streak, points: same.points,
       earned: 0, bonus: 0, level: levelFor(same.points).level,
     }
   }
@@ -167,6 +177,33 @@ export async function recordEntry(user: User, day: string, text: string): Promis
     .single()
   if (error) throw new Error(`onething: save failed: ${error.message}`)
   return { entry: data as Entry, edited: false, streak, points, earned: base + bonus, bonus, level: levelFor(points).level }
+}
+
+/// Replace one thought on one day (by its position). An empty text removes
+/// it, but a day always keeps at least one sentence.
+export async function editEntryLine(user: User, day: string, index: number, text: string): Promise<Entry> {
+  const sb = f2Supabase()
+  const { data: row, error: e1 } = await sb
+    .from('onething_entries')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('day', day)
+    .maybeSingle()
+  if (e1) throw new Error(`onething: load failed: ${e1.message}`)
+  if (!row) throw new Error('Nothing kept on that day.')
+  const all = lines((row as Entry).text)
+  if (index < 0 || index >= all.length) throw new Error('That thought is not there any more.')
+  if (text) all[index] = text
+  else all.splice(index, 1)
+  if (all.length === 0) throw new Error('A day keeps at least one sentence.')
+  const { data, error } = await sb
+    .from('onething_entries')
+    .update({ text: all.join('\n'), updated_at: new Date().toISOString() })
+    .eq('id', (row as Entry).id)
+    .select('*')
+    .single()
+  if (error) throw new Error(`onething: edit failed: ${error.message}`)
+  return data as Entry
 }
 
 // ---------- copy ----------
@@ -191,6 +228,7 @@ export function reminderText(streak: number): string {
 
 export function confirmText(r: Recorded): string {
   if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
+  if (r.added) return `Kept, thought ${r.added} for today. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
   const flame = r.streak >= 3 ? ' 🔥' : ''
   const bonus = r.bonus ? ` Milestone: +${r.bonus}.` : ''
   return `Got it. Day ${r.streak}${flame} · +${r.earned} points (${r.points} total) · ${r.level.name}.${bonus}\n${SITE_URL}`

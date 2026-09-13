@@ -148,6 +148,19 @@
 }
 .ot-kept { margin: 10px 0 0; font-size: 25px; line-height: 1.3; }
 
+/* every thought on a day, numbered once there is more than one */
+.ot-thoughts { list-style: none; margin: 10px 0 0; padding: 0; }
+.ot-thought { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; }
+.ot-thought + .ot-thought { border-top: 2px dashed var(--faint); padding-top: 8px; margin-top: 4px; }
+.ot-thought .n { flex: none; min-width: 1.3em; color: var(--soft); font-size: 19px; }
+.ot-thought .t { margin: 0; flex: 1; font-size: 22px; line-height: 1.3; }
+.ot-thoughts.big .ot-thought .t { font-size: 25px; }
+.ot-thought .edit { flex: none; font-size: 17px; color: var(--soft); text-decoration-color: var(--faint); }
+.ot-thought .edit:hover, .ot-thought .edit:focus-visible { color: var(--red); text-decoration-color: var(--red); }
+.ot-editing { flex: 1; }
+.ot-ta.small { min-height: 72px; margin-top: 4px; }
+.ot-more { margin: 10px 0 0; font-size: 20px; }
+
 /* the garden: level, streak, points */
 .ot-garden {
   margin-top: 26px; padding: 16px 20px; display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: center;
@@ -166,7 +179,7 @@
 .ot-lately h2 { margin: 0 0 4px; font-weight: 700; font-size: 26px; line-height: 1.1; transform: rotate(-1deg); display: inline-block; }
 .ot-line { padding: 10px 0 12px; border-top: 2px dashed var(--faint); }
 .ot-line .d { font-size: 17px; color: var(--soft); }
-.ot-line .t { margin: 2px 0 0; font-size: 22px; line-height: 1.3; }
+.ot-line .ot-thoughts { margin-top: 2px; }
 
 /* footer */
 .ot-foot { margin-top: 44px; padding-top: 16px; border-top: 2px dashed var(--faint); font-size: 19px; line-height: 1.4; color: var(--soft); }
