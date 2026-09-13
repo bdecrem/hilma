@@ -4,8 +4,13 @@
 .ot {
   --paper: #faf8f3;
   --graphite: #35332f;
-  --soft: #9a968f;
+  --soft: #74706a;        /* 4.6:1 on the paper — small text is readable */
+  --softer: #9a968f;      /* decorative only: the ground line, faded plants */
   --faint: #dcd8cf;
+  --fs-h1: clamp(30px, 8vw, 42px);
+  --fs-h2: 27px;
+  --fs-body: 22px;
+  --fs-small: 17px;
   --pencil: #f3c64b;
   --red: #d8534b;
   --pink: #f0a3a0;
@@ -17,7 +22,7 @@
   background: var(--paper);
   color: var(--graphite);
   font-family: var(--hand);
-  font-size: 21px;
+  font-size: var(--fs-body);
   line-height: 1.3;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -47,15 +52,16 @@
 .ot-wordmark { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 36px; font-weight: 700; line-height: 1; transform: rotate(-2deg); }
 .ot-wordmark svg { width: 30px; height: 30px; flex: none; }
 .ot-wordmark u { text-decoration: none; background: linear-gradient(transparent 62%, var(--pencil) 62%, var(--pencil) 88%, transparent 88%); }
-.ot-tagline { margin-top: 6px; font-size: 20px; line-height: 1; color: var(--soft); }
-.ot-who { font-size: 18px; color: var(--soft); text-align: right; white-space: nowrap; }
+.ot-tagline { margin-top: 6px; font-size: var(--fs-small); line-height: 1; color: var(--soft); }
+.ot-who { font-size: var(--fs-small); color: var(--soft); text-align: right; white-space: nowrap; }
 
 /* buttons, inputs, notes */
 .ot-btn {
-  font: inherit; font-size: 22px; font-weight: 700; color: var(--graphite);
-  padding: 8px 18px 6px; cursor: pointer; white-space: nowrap; transform: rotate(-1.2deg);
+  font: inherit; font-size: var(--fs-body); font-weight: 700; color: var(--graphite);
+  height: 46px; padding: 2px 18px 0; display: inline-flex; align-items: center; cursor: pointer; white-space: nowrap; transform: rotate(-1.2deg);
   border: 2px solid var(--graphite); border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-  background: repeating-linear-gradient(38deg, var(--pencil) 0 2.6px, transparent 2.6px 6.5px);
+  /* a paler, sparser hatch than the tape so the label stays readable over it */
+  background: repeating-linear-gradient(38deg, rgba(243,198,75,.55) 0 2px, transparent 2px 7px);
   transition: transform .12s ease;
 }
 .ot-btn:hover, .ot-btn:focus-visible { transform: rotate(1deg) scale(1.03); outline: none; }
@@ -63,32 +69,51 @@
 .ot-in {
   flex: 1; min-width: 0; height: 46px; padding: 4px 6px 0;
   border: 0; border-bottom: 2px solid var(--graphite); border-radius: 0; background: transparent; color: var(--graphite);
-  font: inherit; font-size: 24px; outline: none;
+  font: inherit; font-size: var(--fs-body); outline: none;
 }
 .ot-in::placeholder { color: var(--soft); }
 .ot-in:focus { border-bottom-color: var(--red); }
 .ot-in.code { letter-spacing: .3em; }
-.ot-form { margin-top: 14px; display: flex; gap: 12px; align-items: flex-end; }
+.ot-form { margin-top: 14px; display: flex; gap: 12px; align-items: center; }
+/* a phone is too narrow for the number and the button side by side without
+   truncating the placeholder — the button goes under the line instead */
+@media (max-width: 430px) { .ot-form { flex-wrap: wrap; } .ot-form .ot-in { flex-basis: 100%; } }
 .ot-link {
   background: none; border: 0; padding: 0; font: inherit; color: var(--red); cursor: pointer;
   text-decoration: underline wavy var(--pink); text-underline-offset: 4px;
 }
 .ot-link:hover, .ot-link:focus-visible { text-decoration-color: var(--red); outline: none; }
-.ot-note { margin: 12px 0 0; font-size: 19px; line-height: 1.3; color: var(--soft); }
-.ot-err { margin: 10px 0 0; font-size: 20px; color: var(--red); }
+.ot-note { margin: 12px 0 0; font-size: var(--fs-small); line-height: 1.3; color: var(--soft); }
+.ot-err { margin: 10px 0 0; font-size: var(--fs-body); color: var(--red); }
 
 /* the pitch: the pencil leans in beside the headline */
-.ot-hero { margin-top: 30px; display: grid; grid-template-columns: 84px 1fr; gap: 8px; align-items: end; }
-.ot-mascot { width: 84px; height: 138px; display: block; }
-.ot-h1 { margin: 0; max-width: 16ch; font-size: clamp(30px, 8vw, 42px); font-weight: 700; line-height: 1.08; }
-.ot-lede { margin: 10px 0 0; max-width: 34ch; font-size: 22px; line-height: 1.3; color: var(--graphite); }
+/* The left edge: wordmark and card sit on the margin; the mascot indents the
+   headline, and the demo thread follows that same indent so mascot, headline
+   and conversation read as one column. --indent is the mascot column + gap. */
+.ot { --indent: 72px; }
+.ot-hero { position: relative; margin-top: 30px; display: grid; grid-template-columns: 64px 1fr; gap: 8px; align-items: end; }
+.ot-mascot { width: 64px; height: 105px; display: block; }
+.ot-h1 { margin: 0; max-width: 16ch; font-size: var(--fs-h1); font-weight: 700; line-height: 1.08; }
+.ot-lede { margin: 10px 0 0; max-width: 34ch; font-size: var(--fs-body); line-height: 1.3; color: var(--graphite); }
 .ot-hero-text { padding-bottom: 6px; }
+@media (min-width: 480px) {
+  .ot { --indent: 92px; }
+  .ot-hero { grid-template-columns: 84px 1fr; }
+  .ot-mascot { width: 84px; height: 138px; }
+}
+@media (min-width: 1000px) {
+  /* the pencil leans in from the margin, twice the size, as on the OG card */
+  .ot { --indent: 0px; }
+  .ot-hero { grid-template-columns: 1fr; margin-top: 44px; }
+  .ot-hero .ot-mascot { position: absolute; left: -200px; bottom: -24px; width: 168px; height: 276px; }
+}
 
-.ot-chat { margin-top: 26px; display: flex; flex-direction: column; gap: 10px; max-width: 440px; }
-.ot-bubble { position: relative; max-width: 86%; padding: 8px 14px 8px; font-size: 20px; line-height: 1.25; border: 2px solid var(--graphite); }
-.ot-bubble.them { align-self: flex-start; border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; background: var(--paper); }
-.ot-bubble.me { align-self: flex-end; border-radius: 15px 255px 15px 225px / 225px 15px 255px 15px; background: repeating-linear-gradient(-30deg, rgba(240,163,160,.55) 0 1.8px, transparent 1.8px 7px); }
-.ot-bubble .t { display: block; margin-top: 2px; font-size: 15px; color: var(--soft); }
+/* the demo thread: a quotation, drawn lighter than the UI around it */
+.ot-chat { margin: 26px 0 0 var(--indent); display: flex; flex-direction: column; gap: 10px; max-width: 440px; }
+.ot-bubble { position: relative; max-width: 92%; padding: 8px 14px 8px; font-size: var(--fs-body); line-height: 1.25; border: 1.5px solid #a9a59c; }
+.ot-bubble.them { align-self: flex-start; border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; background: #f4f1ea; }
+.ot-bubble.me { align-self: flex-end; border-radius: 15px 255px 15px 225px / 225px 15px 255px 15px; background: repeating-linear-gradient(-30deg, rgba(240,163,160,.28) 0 1.6px, transparent 1.6px 8px); }
+.ot-bubble .t { display: block; margin-top: 2px; font-size: var(--fs-small); color: var(--soft); }
 
 /* paper cards held down with a strip of masking tape */
 .ot-card { position: relative; margin-top: 40px; padding: 28px 22px 22px; background: var(--paper); border: 2px solid var(--graphite); border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; }
@@ -99,16 +124,18 @@
   background: repeating-linear-gradient(38deg, var(--pencil) 0 2.6px, var(--paper) 2.6px 6.5px);
 }
 .ot-tape.green { transform: translateX(-50%) rotate(2deg); background: repeating-linear-gradient(-38deg, var(--green-2) 0 2.4px, var(--paper) 2.4px 6px); }
-.ot-card h2 { margin: 0; font-size: 28px; font-weight: 700; line-height: 1.15; }
+.ot-card h2 { margin: 0; font-size: var(--fs-h2); font-weight: 700; line-height: 1.15; }
 
 /* how it grows */
-.ot-caption { margin: 36px 0 0; font-size: 22px; line-height: 1.1; color: var(--soft); transform: rotate(-1deg); display: inline-block; }
+.ot-caption { margin: 36px 0 0; font-size: var(--fs-body); line-height: 1.1; color: var(--soft); transform: rotate(-1deg); display: inline-block; }
 .ot-caption + .ot-ladder { margin-top: 10px; }
 .ot-ladder {
-  margin-top: 26px; padding: 14px 4px 8px; display: flex; align-items: flex-start; justify-content: space-between; gap: 2px;
-  border-top: 2px dashed var(--faint); border-bottom: 2px dashed var(--faint);
+  margin-top: 26px; padding: 14px 4px 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 2px;
+  border-top: 2px dashed var(--faint);
 }
-.ot-rung { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 16px; line-height: 1.1; text-align: center; color: var(--soft); }
+.ot-ladder.bare .ot-rung span { display: none; }
+.ot-rung { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: var(--fs-small); line-height: 1.1; text-align: center; color: var(--soft); white-space: nowrap; }
+@media (max-width: 480px) { .ot-ladder:not(.bare) .ot-rung:not(.now) span { display: none; } }
 .ot-rung .ot-plant { opacity: .28; width: 100%; max-width: 44px; height: auto; }
 .ot-rung.done .ot-plant, .ot-rung.now .ot-plant, .ot-rung.all .ot-plant { opacity: 1; }
 .ot-rung.now { color: var(--graphite); font-weight: 700; }
@@ -116,7 +143,7 @@
 
 /* the plant, pencilled: graphite outlines, green pencil hatching for leaves */
 .ot-plant { display: block; overflow: visible; }
-.ot-plant .p-ground { stroke: var(--soft); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 6 5; }
+.ot-plant .p-ground { stroke: var(--softer); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 6 5; }
 .ot-plant .p-trunk { fill: none; stroke: var(--graphite); stroke-width: 2.4; stroke-linecap: round; }
 .ot-plant .p-leaf { fill: url(#ot-hatch-green); stroke: var(--graphite); stroke-width: 1.8; stroke-linejoin: round; }
 .ot-plant .p-leaf-light { fill: url(#ot-hatch-green-light); stroke: var(--graphite); stroke-width: 1.8; stroke-linejoin: round; }
@@ -126,40 +153,45 @@
 /* today: the pencil asks, the card answers */
 .ot-ask { margin-top: 44px; display: grid; grid-template-columns: 72px 1fr; gap: 4px; align-items: end; }
 .ot-ask .ot-mascot { width: 72px; height: 118px; }
+@media (max-width: 480px) {
+  .ot-ask { grid-template-columns: 44px 1fr; gap: 2px; }
+  .ot-ask .ot-mascot { width: 44px; height: 72px; }
+  .ot { --fs-h2: 25px; }
+}
 .ot-ask .ot-card { margin-top: 0; }
 .ot-today { margin-top: 44px; }
-.ot-date { font-size: 20px; line-height: 1; color: var(--soft); transform: rotate(-1deg); display: inline-block; }
-.ot-q { margin: 8px 0 0; font-size: 27px; font-weight: 700; line-height: 1.15; }
+.ot-date { font-size: var(--fs-small); line-height: 1; color: var(--soft); transform: rotate(-1deg); display: block; width: fit-content; }
+.ot-q { margin: 8px 0 0; font-size: var(--fs-h2); font-weight: 700; line-height: 1.15; }
 .ot-ta {
   display: block; width: 100%; min-height: 128px; margin-top: 12px; padding: 4px 4px 0;
   border: 0; border-bottom: 2px solid var(--graphite); border-radius: 0; outline: none; resize: vertical;
   background: repeating-linear-gradient(transparent 0 30px, var(--faint) 30px 31.5px); background-attachment: local;
-  color: var(--graphite); font: inherit; font-size: 23px; line-height: 31.5px;
+  color: var(--graphite); font: inherit; font-size: var(--fs-body); line-height: 31.5px;
 }
 .ot-ta::placeholder { color: var(--soft); }
 .ot-ta:focus { border-bottom-color: var(--red); }
 .ot-row { margin-top: 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.ot-nudge { font-size: 19px; line-height: 1.15; color: var(--soft); }
-.ot-nudge .ot-link { font-size: 19px; margin-left: 8px; }
+.ot-nudge { font-size: var(--fs-small); line-height: 1.15; color: var(--soft); }
+.ot-nudge .ot-link { font-size: var(--fs-small); margin-left: 8px; }
 .ot-stamp {
   display: inline-block; margin-top: 12px; padding: 2px 12px 0;
   border: 2px solid var(--red); color: var(--red); border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-  font-size: 19px; font-weight: 700; transform: rotate(-3deg);
+  font-size: var(--fs-small); font-weight: 700; transform: rotate(-3deg);
 }
-.ot-kept { margin: 10px 0 0; font-size: 25px; line-height: 1.3; }
+.ot-kept { margin: 10px 0 0; font-size: var(--fs-h2); line-height: 1.3; }
 
 /* every thought on a day, numbered once there is more than one */
 .ot-thoughts { list-style: none; margin: 10px 0 0; padding: 0; }
 .ot-thought { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; }
 .ot-thought + .ot-thought { border-top: 2px dashed var(--faint); padding-top: 8px; margin-top: 4px; }
-.ot-thought .n { flex: none; min-width: 1.3em; color: var(--soft); font-size: 19px; }
-.ot-thought .t { margin: 0; flex: 1; font-size: 22px; line-height: 1.3; }
-.ot-thoughts.big .ot-thought .t { font-size: 25px; }
-.ot-thought .edit { flex: none; font-size: 17px; color: var(--soft); text-decoration-color: var(--faint); }
+.ot-thought .n { flex: none; min-width: 1.3em; color: var(--soft); font-size: var(--fs-small); }
+.ot-thought .t { margin: 0; flex: 1; font-size: var(--fs-body); line-height: 1.3; }
+.ot-thoughts.big .ot-thought .t { font-size: var(--fs-h2); }
+.ot-thought .edit { flex: none; font-size: var(--fs-small); color: var(--soft); text-decoration-color: var(--faint); }
 .ot-thought .edit:hover, .ot-thought .edit:focus-visible { color: var(--red); text-decoration-color: var(--red); }
 .ot-editing { flex: 1; }
 .ot-ta.small { min-height: 72px; margin-top: 4px; }
-.ot-more { margin: 10px 0 0; font-size: 20px; }
+.ot-more { margin: 10px 0 0; font-size: var(--fs-body); }
 
 /* the garden: level, streak, points */
 .ot-garden {
@@ -168,23 +200,23 @@
 }
 @media (max-width: 420px) { .ot-garden { grid-template-columns: 92px 1fr; gap: 12px; padding: 12px 14px; } }
 .ot-garden .ot-plant { width: 100%; height: auto; }
-.ot-level { font-size: 30px; font-weight: 700; line-height: 1.05; }
-.ot-level small { display: block; margin-top: 3px; font-weight: 400; font-size: 20px; line-height: 1.1; color: var(--soft); }
+.ot-level { font-size: var(--fs-h2); font-weight: 700; line-height: 1.05; }
+.ot-level small { display: block; margin-top: 3px; font-weight: 400; font-size: var(--fs-small); line-height: 1.1; color: var(--soft); }
 .ot-thread { position: relative; height: 14px; margin-top: 10px; overflow: hidden; border: 2px solid var(--graphite); border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; background: var(--paper); }
 .ot-thread i { position: absolute; top: 0; bottom: 0; left: 0; width: var(--w, 0%); background: repeating-linear-gradient(38deg, var(--pencil) 0 2.6px, transparent 2.6px 6.5px); }
-.ot-thread-k { margin-top: 6px; font-size: 18px; color: var(--soft); }
+.ot-thread-k { margin-top: 6px; font-size: var(--fs-small); color: var(--soft); }
 
 /* lately */
 .ot-lately { margin-top: 36px; }
-.ot-lately h2 { margin: 0 0 4px; font-weight: 700; font-size: 26px; line-height: 1.1; transform: rotate(-1deg); display: inline-block; }
+.ot-lately h2 { margin: 0 0 4px; font-weight: 700; font-size: var(--fs-h2); line-height: 1.1; transform: rotate(-1deg); display: inline-block; }
 .ot-line { padding: 10px 0 12px; border-top: 2px dashed var(--faint); }
-.ot-line .d { font-size: 17px; color: var(--soft); }
+.ot-line .d { font-size: var(--fs-small); color: var(--soft); }
 .ot-line .ot-thoughts { margin-top: 2px; }
 
 /* footer */
-.ot-foot { margin-top: 44px; padding-top: 16px; border-top: 2px dashed var(--faint); font-size: 19px; line-height: 1.4; color: var(--soft); }
-.ot-foot code { font-family: inherit; font-size: 19px; color: var(--graphite); border-bottom: 2px solid var(--pencil); }
-.ot-sign { margin-top: 12px; font-size: 22px; line-height: 1.1; color: var(--graphite); transform: rotate(-1.5deg); display: inline-block; }
+.ot-foot { margin-top: 36px; padding-top: 16px; border-top: 2px dashed var(--faint); font-size: var(--fs-small); line-height: 1.4; color: var(--soft); }
+.ot-foot code { font-family: inherit; font-size: var(--fs-small); color: var(--graphite); border-bottom: 2px solid var(--pencil); }
+.ot-sign { margin-top: 12px; font-size: var(--fs-body); line-height: 1.1; color: var(--graphite); transform: rotate(-1.5deg); display: inline-block; }
 .ot-sign a { color: var(--graphite); text-decoration: none; border-bottom: 2px solid var(--pencil); }
 .ot-sign a:hover { border-bottom-color: var(--red); }
 

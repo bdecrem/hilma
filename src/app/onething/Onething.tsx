@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LEVELS, type Level } from '@/lib/onething/levels';
 import Plant from './Plant';
+import copy from '@/lib/onething/copy.json';
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
@@ -129,9 +130,9 @@ function Mast({ right, bare }: { right?: React.ReactNode; bare?: boolean }) {
 function Peek() {
   return (
     <div className="ot-chat" aria-label="an example exchange">
-      <div className="ot-bubble them">Onething: what is one thing that happened in the last 24 hours? One sentence. Just reply here.<span className="t">10:05 AM</span></div>
+      <div className="ot-bubble them">{copy.morning[0]}<span className="t">10:05 AM</span></div>
       <div className="ot-bubble me">The fog gave way to sun just as we sat down outside with coffee.<span className="t">10:12 AM</span></div>
-      <div className="ot-bubble them">Got it. Day 4 🔥 · +18 points (146 total) · Sprout.<span className="t">10:12 AM</span></div>
+      <div className="ot-bubble them">{copy.kept[0].replace('{n}', '4')}<span className="t">10:12 AM</span></div>
     </div>
   );
 }
@@ -139,11 +140,11 @@ function Peek() {
 /** The seven levels, left to right. `index` marks the current one; -1 shows all of them lit. */
 function Ladder({ index, levels }: { index: number; levels: Level[] }) {
   return (
-    <div className="ot-ladder" aria-label="levels">
+    <div className={`ot-ladder${index < 0 ? ' bare' : ''}`} aria-label="levels">
       {levels.map((l, i) => (
         <div key={l.name} className={`ot-rung${index < 0 ? ' all' : i < index ? ' done' : i === index ? ' now' : ''}`}>
           <Plant level={i} size={40} />
-          <span>{l.name}</span>
+          <span>{l.name.replace(' ', '\u00a0')}</span>
         </div>
       ))}
     </div>
@@ -263,7 +264,7 @@ export default function Onething() {
           <h2>Start your year.</h2>
           {stage === 'phone' ? (
             <form className="ot-form" onSubmit={(e) => { e.preventDefault(); start(); }}>
-              <input className="ot-in" inputMode="tel" autoComplete="tel" placeholder="Your phone number" aria-label="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <input className="ot-in" inputMode="tel" autoComplete="tel" placeholder="Phone number" aria-label="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
               <button className="ot-btn" disabled={busy} type="submit">{busy ? 'Sending…' : 'Text me a code'}</button>
             </form>
           ) : (
