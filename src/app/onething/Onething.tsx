@@ -6,7 +6,7 @@ import Plant from './Plant';
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
-type Me = { user: { phone: string; since: string } | null; today?: string; board?: Board; entries?: Entry[]; levels?: Level[] };
+type Me = { user: { phone: string; since: string; tz?: string } | null; today?: string; board?: Board; entries?: Entry[]; levels?: Level[] };
 
 const NUDGES = [
   'Something small that worked.',
@@ -219,7 +219,10 @@ export default function Onething() {
     finally { setBusy(false); }
   }
   async function start() { if (await post('/api/onething/auth/start', { phone })) setStage('code'); }
-  async function verify() { if (await post('/api/onething/auth/verify', { phone, code })) { setCode(''); setStage('phone'); await load(); } }
+  async function verify() {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // the 10am / 10pm texts follow this clock
+    if (await post('/api/onething/auth/verify', { phone, code, tz })) { setCode(''); setStage('phone'); await load(); }
+  }
   async function save() { if (await post('/api/onething/entry', { text })) { setText(''); setAdding(false); await load(); } }
   async function saveEdit() {
     if (!editing) return;
@@ -360,7 +363,7 @@ export default function Onething() {
       )}
 
       <footer className="ot-foot">
-        <p style={{ margin: 0 }}>Texts come at ten, morning and night, Pacific. Reply to either, or start any text with <code>1:</code>.</p>
+        <p style={{ margin: 0 }}>Texts come at ten, morning and night{me.user.tz ? ` (${me.user.tz.replace(/_/g, ' ')} time)` : ''}. Reply to either, or start any text with <code>1:</code>.</p>
         <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
       </footer>
     </main>

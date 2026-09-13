@@ -12,7 +12,7 @@ import { sendIMessage } from '@/lib/f2/bluebubbles'
 import { notifySignup, type SignupSource } from './notify'
 import { LEVELS, type Level } from './levels'
 
-export const TZ = 'America/Los_Angeles'
+export const TZ = 'America/Los_Angeles' // default zone; every user carries their own (User.tz)
 export const PROMPT_HOUR = 10 // 10am local: the daily question
 export const REMIND_HOUR = 22 // 12h later: the streak reminder
 const GRACE_HOUR = 4 // replies before 4am still count for yesterday's prompt
@@ -25,6 +25,9 @@ export type User = {
   created_at: string
   prompt_day: string | null
   reminder_day: string | null
+  /// IANA zone the 10am / 10pm texts follow (schema 002). Browser zone on web
+  /// sign-in; a guess from the country code for iMessage joins.
+  tz: string
 }
 
 export type Entry = {
@@ -55,6 +58,46 @@ export function localDay(d = new Date(), tz = TZ): string {
 export function localHour(d = new Date(), tz = TZ): number {
   const h = new Intl.DateTimeFormat('en-US', { timeZone: tz, hour: 'numeric', hour12: false }).format(d)
   return Number(h) % 24
+}
+
+export function isValidTz(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/// The zone a user's texts follow. Rows from before schema 002 have none.
+export function tzFor(user: Pick<User, 'tz'>): string {
+  return user.tz && isValidTz(user.tz) ? user.tz : TZ
+}
+
+// A first guess from the country code, for numbers that join over iMessage
+// (no browser to ask). Countries with several zones get their biggest city's;
+// +1 stays Pacific because that is where nearly everyone here is. A web
+// sign-in later replaces the guess with the browser's real zone.
+const TZ_BY_COUNTRY: Array<[string, string]> = [
+  ['+1', 'America/Los_Angeles'],
+  ['+31', 'Europe/Amsterdam'], ['+32', 'Europe/Brussels'], ['+33', 'Europe/Paris'],
+  ['+34', 'Europe/Madrid'], ['+351', 'Europe/Lisbon'], ['+353', 'Europe/Dublin'],
+  ['+358', 'Europe/Helsinki'], ['+39', 'Europe/Rome'], ['+41', 'Europe/Zurich'],
+  ['+43', 'Europe/Vienna'], ['+44', 'Europe/London'], ['+45', 'Europe/Copenhagen'],
+  ['+46', 'Europe/Stockholm'], ['+47', 'Europe/Oslo'], ['+48', 'Europe/Warsaw'],
+  ['+49', 'Europe/Berlin'], ['+52', 'America/Mexico_City'], ['+55', 'America/Sao_Paulo'],
+  ['+61', 'Australia/Sydney'], ['+64', 'Pacific/Auckland'], ['+65', 'Asia/Singapore'],
+  ['+81', 'Asia/Tokyo'], ['+82', 'Asia/Seoul'], ['+852', 'Asia/Hong_Kong'],
+  ['+86', 'Asia/Shanghai'], ['+91', 'Asia/Kolkata'], ['+971', 'Asia/Dubai'],
+  ['+972', 'Asia/Jerusalem'],
+]
+
+export function tzFromPhone(phone: string): string {
+  let best: [string, string] | null = null
+  for (const pair of TZ_BY_COUNTRY) {
+    if (phone.startsWith(pair[0]) && (!best || pair[0].length > best[0].length)) best = pair
+  }
+  return best?.[1] ?? TZ
 }
 
 export function addDays(day: string, n: number): string {
@@ -109,10 +152,11 @@ export async function findUserById(id: string): Promise<User | null> {
   return (data as User) ?? null
 }
 
-export async function ensureUser(phone: string, source: SignupSource = 'manual'): Promise<User> {
+export async function ensureUser(phone: string, source: SignupSource = 'manual', tz?: string): Promise<User> {
   const existing = await findUserByPhone(phone)
   if (existing) return existing
-  const { data, error } = await f2Supabase().from('onething_users').insert({ phone }).select('*').single()
+  const zone = tz && isValidTz(tz) ? tz : tzFromPhone(phone)
+  const { data, error } = await f2Supabase().from('onething_users').insert({ phone, tz: zone }).select('*').single()
   if (error) {
     // Two joins at once (a web verify and an iMessage "onething" a second apart):
     // the unique phone made the second insert lose; that row is the account.
@@ -125,6 +169,14 @@ export async function ensureUser(phone: string, source: SignupSource = 'manual')
   const user = data as User
   await notifySignup(user.phone, source, user.id)
   return user
+}
+
+/// A web sign-in knows the browser's zone; keep the account on it.
+export async function setUserTz(user: User, tz: string): Promise<User> {
+  if (!isValidTz(tz) || tz === user.tz) return user
+  const { error } = await f2Supabase().from('onething_users').update({ tz }).eq('id', user.id)
+  if (error) throw new Error(`onething: tz update failed: ${error.message}`)
+  return { ...user, tz }
 }
 
 export async function findEntry(userId: string, day: string): Promise<Entry | null> {
@@ -335,10 +387,21 @@ export async function verifyCode(phone: string, code: string): Promise<boolean> 
 
 // ---------- the hourly tick (Vercel cron) ----------
 
+/// What the hourly tick owes this user right now, on their own clock. Pure, so
+/// it can be tested across zones: 'prompt' inside the 10am–10pm window when
+/// today's question has not gone out; 'reminder' from 10pm once it has and the
+/// reminder has not; otherwise nothing.
+export function dueFor(user: Pick<User, 'tz' | 'prompt_day' | 'reminder_day'>, now = new Date()): 'prompt' | 'reminder' | null {
+  const tz = tzFor(user)
+  const today = localDay(now, tz)
+  const hour = localHour(now, tz)
+  if (hour >= PROMPT_HOUR && hour < REMIND_HOUR && user.prompt_day !== today) return 'prompt'
+  if (hour >= REMIND_HOUR && user.prompt_day === today && user.reminder_day !== today) return 'reminder'
+  return null
+}
+
 export async function tick(now = new Date()): Promise<{ prompted: string[]; reminded: string[]; failed: string[] }> {
   const sb = f2Supabase()
-  const today = localDay(now)
-  const hour = localHour(now)
   const prompted: string[] = []
   const reminded: string[] = []
   const { data, error } = await sb.from('onething_users').select('*').order('created_at')
@@ -349,13 +412,15 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
     // stop the loop: everyone after it still gets their text this hour, and the
     // failed one is retried next hour because its day markers stay unset.
     try {
-      if (hour >= PROMPT_HOUR && hour < REMIND_HOUR && user.prompt_day !== today) {
+      const due = dueFor(user, now)
+      const today = localDay(now, tzFor(user))
+      if (due === 'prompt') {
         await sendIMessage({ addresses: [user.phone], text: promptText() })
         await sb.from('onething_users').update({ prompt_day: today }).eq('id', user.id)
         prompted.push(user.phone)
         continue
       }
-      if (hour >= REMIND_HOUR && user.prompt_day === today && user.reminder_day !== today) {
+      if (due === 'reminder') {
         const entries = await listEntries(user.id, 1)
         const board = scoreboard(entries, today)
         if (!board.doneToday) {
@@ -377,15 +442,16 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
 /// `chatGuid` replies in the thread the person wrote from; otherwise a new chat.
 export async function welcomeNewUser(user: User, chatGuid?: string): Promise<void> {
   await sendIMessage(chatGuid ? { chatGuid, text: welcomeText() } : { addresses: [user.phone], text: welcomeText() })
-  await f2Supabase().from('onething_users').update({ prompt_day: localDay() }).eq('id', user.id)
+  await f2Supabase().from('onething_users').update({ prompt_day: localDay(new Date(), tzFor(user)) }).eq('id', user.id)
 }
 
 /// Send today's question to one person right now (first-run / manual).
 export async function promptNow(phone: string): Promise<User> {
   const user = await ensureUser(phone)
+  const today = localDay(new Date(), tzFor(user))
   await sendIMessage({ addresses: [phone], text: promptText() })
-  await f2Supabase().from('onething_users').update({ prompt_day: localDay() }).eq('id', user.id)
-  return { ...user, prompt_day: localDay() }
+  await f2Supabase().from('onething_users').update({ prompt_day: today }).eq('id', user.id)
+  return { ...user, prompt_day: today }
 }
 
 // ---------- inbound (called from Dodo's BlueBubbles webhook) ----------
@@ -431,7 +497,7 @@ export async function handleInbound(args: {
       await welcomeNewUser(fresh, args.chatGuid)
       return true
     }
-    const day = localDay()
+    const day = localDay(new Date(), tzFor(fresh))
     const r = await recordEntry(fresh, day, first)
     await f2Supabase().from('onething_users').update({ prompt_day: day }).eq('id', fresh.id)
     await sendIMessage({ chatGuid: args.chatGuid, text: `Welcome to Onething. ${confirmText(r)}` })
@@ -439,8 +505,9 @@ export async function handleInbound(args: {
   }
 
   const now = new Date()
-  const today = localDay(now)
-  const hour = localHour(now)
+  const tz = tzFor(user)
+  const today = localDay(now, tz)
+  const hour = localHour(now, tz)
   const forced = FORCE_PREFIX.test(args.text)
 
   // Which day is this sentence for? Today, unless it is the small hours and

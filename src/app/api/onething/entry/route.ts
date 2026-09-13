@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { COOKIE, editEntryLine, findUserById, localDay, recordEntry, verifySession } from '@/lib/onething/core'
+import { COOKIE, editEntryLine, findUserById, localDay, recordEntry, tzFor, verifySession } from '@/lib/onething/core'
 
 export const runtime = 'nodejs'
 
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { text?: string }
   const text = (body.text ?? '').trim().slice(0, 600)
   if (text.length < 2) return NextResponse.json({ error: 'One sentence, anything at all.' }, { status: 400 })
-  const r = await recordEntry(user, localDay(), text)
+  const r = await recordEntry(user, localDay(new Date(), tzFor(user)), text)
   return NextResponse.json({ ok: true, ...r })
 }
 
