@@ -4,6 +4,7 @@ export default function HelloStraysPage() {
   return (
     <main
       style={{
+        position: 'relative',
         minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
@@ -33,11 +34,11 @@ export default function HelloStraysPage() {
       <h1
         style={{
           margin: 0,
-          fontSize: 'clamp(2.5rem, 9vw, 5.5rem)',
+          fontSize: 'clamp(3.25rem, 13vw, 8rem)',
           fontWeight: 700,
           lineHeight: 1.02,
           letterSpacing: '-0.025em',
-          maxWidth: '12ch',
+          maxWidth: '10ch',
         }}
       >
         Hello from Strays.
@@ -77,6 +78,21 @@ export default function HelloStraysPage() {
       >
         Back to bartin16.xyz &rarr;
       </a>
+      <footer
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 'calc(env(safe-area-inset-bottom) + 1.25rem)',
+          textAlign: 'center',
+          fontSize: '0.8rem',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: '#8a8078',
+        }}
+      >
+        built from a phone
+      </footer>
     </main>
   );
 }
