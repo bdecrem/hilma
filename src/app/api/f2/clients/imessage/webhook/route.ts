@@ -68,23 +68,17 @@ export async function POST(req: Request) {
   // something we ourselves sent recently.
   let userId: string | null = null
   let userLabel = handle
+  let owner: { id: string } | null = null
   if (data.isFromMe) {
     if (!text || !chatGuid || !guid) {
       return NextResponse.json({ ok: true, skipped: 'from-me' })
     }
-    const owner = await findUserByDailyChatGuid(chatGuid)
+    owner = await findUserByDailyChatGuid(chatGuid)
     // Onething users answer in a chat that can also register as from-me
     // (the mini sends as the user's own Apple ID); let those through too.
     if (!owner && !(await isOnethingChat(chatGuid))) {
       return NextResponse.json({ ok: true, skipped: 'from-me' })
     }
-    if (await isRecentOutbound(text)) {
-      console.log(`[f2/imessage] echo ${guid}: our own send in ${chatGuid}`)
-      return NextResponse.json({ ok: true, skipped: 'echo' })
-    }
-    userId = owner?.id ?? null
-    userLabel = chatGuid
-    console.log(`[f2/imessage] self-chat reply ${guid} in ${chatGuid}: ${text.slice(0, 80)}`)
   }
 
   if (!text || !chatGuid || !guid || (!data.isFromMe && !handle)) {
@@ -92,10 +86,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, skipped: 'missing-fields' })
   }
 
+  // Dedup BEFORE the echo check. BlueBubbles can deliver the same message
+  // again hours later (2026-09-13: a sign-up note we sent at 06:58Z came back
+  // at 12:32Z, after the echo window had lapsed, and was saved as a thought).
+  // Claiming the guid first means a second delivery is a duplicate no matter
+  // how old the echo ledger entry is.
   const fresh = await claimGuid(guid)
   if (!fresh) {
     console.log(`[f2/imessage] dup ${guid}: already processed`)
     return NextResponse.json({ ok: true, skipped: 'duplicate' })
+  }
+
+  if (data.isFromMe) {
+    if (await isRecentOutbound(text)) {
+      console.log(`[f2/imessage] echo ${guid}: our own send in ${chatGuid}`)
+      return NextResponse.json({ ok: true, skipped: 'echo' })
+    }
+    userId = owner?.id ?? null
+    userLabel = chatGuid
+    console.log(`[f2/imessage] self-chat reply ${guid} in ${chatGuid}: ${text.slice(0, 80)}`)
   }
 
   console.log(`[f2/imessage] accepted ${guid} from ${userLabel}: ${text.slice(0, 80)}`)

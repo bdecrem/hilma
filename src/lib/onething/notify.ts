@@ -18,7 +18,9 @@ async function textBart(phone: string, source: SignupSource): Promise<void> {
   if (phone === BART) return
   const how = { web: 'signed in on the site', imessage: 'texted "onething"', manual: 'was added by hand' }[source]
   try {
-    await sendIMessage({ addresses: [BART], text: `Onething: new sign-up ${phone} (${how}).` })
+    // Not "Onething: …" — that is the force prefix, and this note lands in the
+    // same chat as Bart's own answers (core.ts OWN_TEXT knows this wording).
+    await sendIMessage({ addresses: [BART], text: `New Onething sign-up: ${phone} (${how}).` })
   } catch (e) {
     console.error('[onething] sign-up text failed:', e)
   }

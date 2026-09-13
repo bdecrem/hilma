@@ -113,7 +113,15 @@ export async function ensureUser(phone: string, source: SignupSource = 'manual')
   const existing = await findUserByPhone(phone)
   if (existing) return existing
   const { data, error } = await f2Supabase().from('onething_users').insert({ phone }).select('*').single()
-  if (error) throw new Error(`onething: create user failed: ${error.message}`)
+  if (error) {
+    // Two joins at once (a web verify and an iMessage "onething" a second apart):
+    // the unique phone made the second insert lose; that row is the account.
+    if (error.code === '23505') {
+      const raced = await findUserByPhone(phone)
+      if (raced) return raced
+    }
+    throw new Error(`onething: create user failed: ${error.message}`)
+  }
   const user = data as User
   await notifySignup(user.phone, source, user.id)
   return user
@@ -239,6 +247,27 @@ export function reminderText(streak: number): string {
   return `${line}\n${SITE_URL}`
 }
 
+/// Every text Onething sends starts one of these ways. An inbound message that
+/// does is one of our own coming back (the mini sends as the user's own Apple
+/// ID, so our sends echo into the webhook as from-me, sometimes hours later
+/// when Messages syncs) — never something a person typed. Keep in step with
+/// the templates above and with notify.ts.
+const OWN_TEXT = [
+  /^Onething: what is one thing/i,
+  /^Welcome to Onething\./i,
+  /^Onething: (still time|one sentence before midnight)/i,
+  /^(Got it|Kept, thought|Updated)\b.*\b(Day \d+|points)/i,
+  /^Your Onething code is \d{6}/i,
+  /^New Onething sign-up:/i,
+  /^Onething: new sign-up /i, // wording before 2026-09-13; echoes of it still arrive
+  /^One sentence, anything at all\. What happened\?$/i,
+]
+
+export function looksLikeOurs(text: string): boolean {
+  const t = text.trim()
+  return OWN_TEXT.some((re) => re.test(t))
+}
+
 export function confirmText(r: Recorded): string {
   if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
   if (r.added) return `Kept, thought ${r.added} for today. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
@@ -306,32 +335,41 @@ export async function verifyCode(phone: string, code: string): Promise<boolean> 
 
 // ---------- the hourly tick (Vercel cron) ----------
 
-export async function tick(now = new Date()): Promise<{ prompted: string[]; reminded: string[] }> {
+export async function tick(now = new Date()): Promise<{ prompted: string[]; reminded: string[]; failed: string[] }> {
   const sb = f2Supabase()
   const today = localDay(now)
   const hour = localHour(now)
   const prompted: string[] = []
   const reminded: string[] = []
-  const { data, error } = await sb.from('onething_users').select('*')
+  const { data, error } = await sb.from('onething_users').select('*').order('created_at')
   if (error) throw new Error(`onething: tick load failed: ${error.message}`)
+  const failed: string[] = []
   for (const user of (data ?? []) as User[]) {
-    if (hour >= PROMPT_HOUR && hour < REMIND_HOUR && user.prompt_day !== today) {
-      await sendIMessage({ addresses: [user.phone], text: promptText() })
-      await sb.from('onething_users').update({ prompt_day: today }).eq('id', user.id)
-      prompted.push(user.phone)
-      continue
-    }
-    if (hour >= REMIND_HOUR && user.prompt_day === today && user.reminder_day !== today) {
-      const entries = await listEntries(user.id, 1)
-      const board = scoreboard(entries, today)
-      if (!board.doneToday) {
-        await sendIMessage({ addresses: [user.phone], text: reminderText(board.streak) })
-        reminded.push(user.phone)
+    // One number that cannot be reached (a test account, a dead line) must not
+    // stop the loop: everyone after it still gets their text this hour, and the
+    // failed one is retried next hour because its day markers stay unset.
+    try {
+      if (hour >= PROMPT_HOUR && hour < REMIND_HOUR && user.prompt_day !== today) {
+        await sendIMessage({ addresses: [user.phone], text: promptText() })
+        await sb.from('onething_users').update({ prompt_day: today }).eq('id', user.id)
+        prompted.push(user.phone)
+        continue
       }
-      await sb.from('onething_users').update({ reminder_day: today }).eq('id', user.id)
+      if (hour >= REMIND_HOUR && user.prompt_day === today && user.reminder_day !== today) {
+        const entries = await listEntries(user.id, 1)
+        const board = scoreboard(entries, today)
+        if (!board.doneToday) {
+          await sendIMessage({ addresses: [user.phone], text: reminderText(board.streak) })
+          reminded.push(user.phone)
+        }
+        await sb.from('onething_users').update({ reminder_day: today }).eq('id', user.id)
+      }
+    } catch (e) {
+      console.error(`[onething] tick failed for ${user.phone}:`, e)
+      failed.push(user.phone)
     }
   }
-  return { prompted, reminded }
+  return { prompted, reminded, failed }
 }
 
 /// A brand-new account (web sign-in or the "onething" keyword): say hello and ask
@@ -376,6 +414,14 @@ export async function handleInbound(args: {
     (args.handle.startsWith('+') ? normalizePhone(args.handle) : null) ??
     phoneFromChatGuid(args.chatGuid)
   if (!phone) return false
+  // Our own text coming back (see OWN_TEXT). Claim it and do nothing: it must
+  // not become a thought — the sign-up note and the daily question both start
+  // "Onething:", which is also the force prefix — and it must not fall through
+  // to Dodo either, which would grade it as an answer in the same chat.
+  if (looksLikeOurs(args.text)) {
+    console.log(`[onething] ignoring our own text echoed from ${phone}: ${args.text.slice(0, 60)}`)
+    return true
+  }
   const user = await findUserByPhone(phone)
   if (!user) {
     if (!JOIN_PREFIX.test(args.text)) return false
