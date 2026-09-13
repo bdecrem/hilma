@@ -150,6 +150,45 @@ function Ladder({ index, levels }: { index: number; levels: Level[] }) {
   );
 }
 
+/** Every thought kept on a day, in order, each one editable in place.
+ * A top-level component on purpose: defined inside Onething() it was a new
+ * component type on every render, so React remounted the whole list — and the
+ * edit textarea — on each keystroke (caret jumping to the end, keyboard flicker). */
+type ThoughtsProps = {
+  day: string; text: string; big?: boolean;
+  editing: { day: string; index: number } | null; editText: string; busy: boolean; err: string;
+  onEditText: (t: string) => void; onStart: (day: string, index: number, current: string) => void;
+  onSave: () => void; onCancel: () => void;
+};
+function Thoughts({ day, text, big, editing, editText, busy, err, onEditText, onStart, onSave, onCancel }: ThoughtsProps) {
+  const all = lines(text);
+  return (
+    <ol className={`ot-thoughts${big ? ' big' : ''}`}>
+      {all.map((t, i) => (
+        <li key={i} className="ot-thought">
+          {editing && editing.day === day && editing.index === i ? (
+            <form className="ot-editing" onSubmit={(e) => { e.preventDefault(); onSave(); }}>
+              <textarea className="ot-ta small" value={editText} maxLength={600} onChange={(e) => onEditText(e.target.value)} rows={2} autoFocus aria-label="edit this thought" />
+              <div className="ot-row">
+                <button className="ot-btn" type="submit" disabled={busy || editText.trim().length === 1}>{busy ? 'Saving…' : 'Save'}</button>
+                <button type="button" className="ot-link" onClick={onCancel}>cancel</button>
+                {all.length > 1 && <span className="ot-note" style={{ margin: 0 }}>leave it empty to remove this one.</span>}
+              </div>
+              {err && <p className="ot-err">{err}</p>}
+            </form>
+          ) : (
+            <>
+              {all.length > 1 && <span className="n">{i + 1}.</span>}
+              <p className="t">{t}</p>
+              <button type="button" className="ot-link edit" onClick={() => onStart(day, i, t)} aria-label={`edit thought ${i + 1}`}>edit</button>
+            </>
+          )}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export default function Onething() {
   const [me, setMe] = useState<Me | null>(null);
   const [phone, setPhone] = useState('');
@@ -249,34 +288,10 @@ export default function Onething() {
   const b = me.board!;
   const levels = me.levels ?? LEVELS;
 
-  /** Every thought kept on a day, in order, each one editable in place. */
-  const Thoughts = ({ day, text, big }: { day: string; text: string; big?: boolean }) => {
-    const all = lines(text);
-    return (
-      <ol className={`ot-thoughts${big ? ' big' : ''}`}>
-        {all.map((t, i) => (
-          <li key={i} className="ot-thought">
-            {editing && editing.day === day && editing.index === i ? (
-              <form className="ot-editing" onSubmit={(e) => { e.preventDefault(); saveEdit(); }}>
-                <textarea className="ot-ta small" value={editText} maxLength={600} onChange={(e) => setEditText(e.target.value)} rows={2} autoFocus aria-label="edit this thought" />
-                <div className="ot-row">
-                  <button className="ot-btn" type="submit" disabled={busy || editText.trim().length === 1}>{busy ? 'Saving…' : 'Save'}</button>
-                  <button type="button" className="ot-link" onClick={() => { setEditing(null); setErr(''); }}>cancel</button>
-                  {all.length > 1 && <span className="ot-note" style={{ margin: 0 }}>leave it empty to remove this one.</span>}
-                </div>
-                {err && <p className="ot-err">{err}</p>}
-              </form>
-            ) : (
-              <>
-                {all.length > 1 && <span className="n">{i + 1}.</span>}
-                <p className="t">{t}</p>
-                <button type="button" className="ot-link edit" onClick={() => startEdit(day, i, t)} aria-label={`edit thought ${i + 1}`}>edit</button>
-              </>
-            )}
-          </li>
-        ))}
-      </ol>
-    );
+  const thoughtProps = {
+    editing, editText, busy, err,
+    onEditText: setEditText, onStart: startEdit, onSave: saveEdit,
+    onCancel: () => { setEditing(null); setErr(''); },
   };
   const entries = me.entries ?? [];
   const today = me.today ?? '';
@@ -302,7 +317,7 @@ export default function Onething() {
         {b.doneToday && !adding ? (
           <>
             <span className="ot-stamp">kept!</span>
-            <Thoughts day={today} text={todayEntry?.text ?? ''} big />
+            <Thoughts day={today} text={todayEntry?.text ?? ''} big {...thoughtProps} />
             <p className="ot-more"><button type="button" className="ot-link" onClick={() => { setAdding(true); setErr(''); }}>add another thought</button></p>
           </>
         ) : (
@@ -338,7 +353,7 @@ export default function Onething() {
           {lately.map((e) => (
             <div className="ot-line" key={e.id}>
               <div className="d">{shortDay(e.day)}</div>
-              <Thoughts day={e.day} text={e.text} />
+              <Thoughts day={e.day} text={e.text} {...thoughtProps} />
             </div>
           ))}
         </section>
