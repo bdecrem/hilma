@@ -1,0 +1,49 @@
+{
+  "_": "Onething's texts, one picked at random per send (src/lib/onething/core.ts). Indie-journal register: quiet, specific, no exclamation marks, no verdict on what the person wrote. {n} is the streak day. Every outbound text is one of these lines plus the site URL, and looksLikeOurs() matches against this file to keep our own echoes from being saved as thoughts — so add lines here, never inline in code.",
+  "morning": [
+    "Morning. One sentence about today, whenever it comes to you.",
+    "What's the sentence for today? No hurry. It can be small.",
+    "Something happened, or will. Write it down in one line.",
+    "A sentence a day. Today's is still blank. Yours whenever.",
+    "What do you want to remember about today? One line will hold it.",
+    "Today, in a sentence. The plain version is usually the true one.",
+    "If today were one line in a notebook, what would it say?",
+    "One sentence. Weather counts. Breakfast counts. Whatever's actually there.",
+    "Here's the page for today. It only needs a line.",
+    "What's one thing you noticed? That's the whole assignment.",
+    "Nothing to prove today. Just leave a sentence behind.",
+    "Write the day down before it gets away. One line is enough.",
+    "Today's line. Doesn't have to be good. Has to be yours.",
+    "A single sentence for the record. Ordinary is fine. Ordinary is most of it.",
+    "Somewhere in today there's a sentence. Send it when you find it.",
+    "The notebook is open. One line, then close it.",
+    "What's true this morning? Say it in a sentence.",
+    "One sentence, sent whenever. That's the entire deal.",
+    "Today asks one question: what was it like? Answer in a line.",
+    "Small entry, real entry. What's today's?"
+  ],
+  "reminder": [
+    "Still time. One sentence before the day closes.",
+    "The page for today is empty. A line will fill it.",
+    "Late's fine. What did today turn out to be?",
+    "Before you sleep: one sentence. Even \"long day\" counts.",
+    "Today hasn't been written down yet. It won't take long.",
+    "A line for today, if there's one in you.",
+    "Last call for today's sentence. Tired is a valid subject.",
+    "Whatever today was, give it a sentence so it isn't lost.",
+    "One line and the day is kept. Still time.",
+    "If you've got nothing, \"nothing much\" is a sentence too. Send that."
+  ],
+  "kept": [
+    "Kept. That's day {n}.",
+    "Got it. Day {n} in the book.",
+    "Saved. The notebook is a line longer.",
+    "Kept. Day {n}. Whatever it was, it's in.",
+    "Written down. Day {n}, and it counts.",
+    "Kept safe. See you tomorrow.",
+    "Got it. One more line than yesterday.",
+    "Day {n}. The page has its sentence.",
+    "Day {n}. Written down, which is the whole point.",
+    "Kept. Small thing, done again."
+  ]
+}

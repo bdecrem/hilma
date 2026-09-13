@@ -11,6 +11,7 @@ import { f2Supabase } from '@/lib/f2/supabase'
 import { sendIMessage } from '@/lib/f2/bluebubbles'
 import { notifySignup, type SignupSource } from './notify'
 import { LEVELS, type Level } from './levels'
+import copy from './copy.json'
 
 export const TZ = 'America/Los_Angeles' // default zone; every user carries their own (User.tz)
 export const PROMPT_HOUR = 10 // 10am local: the daily question
@@ -291,8 +292,16 @@ export async function editEntryLine(user: User, day: string, index: number, text
 
 export const SITE_URL = 'https://onething.ink'
 
+/// The texts live in copy.json (morning question, evening reminder, the line
+/// back after an entry lands); each send picks one at random. Every one of
+/// them ends with the site URL on its own line.
+const COPY: { morning: string[]; reminder: string[]; kept: string[] } = copy
+function pick(lines: string[]): string {
+  return lines[Math.floor(Math.random() * lines.length)]
+}
+
 export function promptText(): string {
-  return `Onething: what is one thing that happened in the last 24 hours? One sentence. Just reply here.\n${SITE_URL}`
+  return `${pick(COPY.morning)}\n${SITE_URL}`
 }
 
 /// The first text a new account gets: what this is, and today's question.
@@ -300,18 +309,20 @@ export function welcomeText(): string {
   return `Welcome to Onething. Every day at ten I’ll text you one question; you answer in one sentence.\nHere’s today’s: what is one thing that happened in the last 24 hours? Just reply here.\n${SITE_URL}`
 }
 
-export function reminderText(streak: number): string {
-  const line = streak > 0
-    ? `Onething: still time. One sentence keeps your ${streak}-day streak alive. What happened today?`
-    : 'Onething: one sentence before midnight starts a streak. What happened today?'
-  return `${line}\n${SITE_URL}`
+export function reminderText(_streak: number): string {
+  return `${pick(COPY.reminder)}\n${SITE_URL}`
 }
 
-/// Every text Onething sends starts one of these ways. An inbound message that
-/// does is one of our own coming back (the mini sends as the user's own Apple
-/// ID, so our sends echo into the webhook as from-me, sometimes hours later
-/// when Messages syncs) — never something a person typed. Keep in step with
-/// the templates above and with notify.ts.
+/// An inbound message that is one of our own texts is an echo (the mini sends
+/// as the user's own Apple ID, so our sends come back through the webhook as
+/// from-me, sometimes hours later when Messages syncs) — never something a
+/// person typed. The random lines are matched exactly against copy.json (with
+/// {n} as any number and the trailing site URL stripped); the fixed templates
+/// and the wordings from before 2026-09-13, whose echoes still arrive, by
+/// prefix. Keep in step with the templates above and with notify.ts.
+const COPY_LINES: RegExp[] = [...COPY.morning, ...COPY.reminder, ...COPY.kept].map(
+  (line) => new RegExp(`^${line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{n\\\}/g, '\\d+')}$`, 'i'),
+)
 const OWN_TEXT = [
   /^Onething: what is one thing/i,
   /^Welcome to Onething\./i,
@@ -325,15 +336,15 @@ const OWN_TEXT = [
 
 export function looksLikeOurs(text: string): boolean {
   const t = text.trim()
-  return OWN_TEXT.some((re) => re.test(t))
+  if (OWN_TEXT.some((re) => re.test(t))) return true
+  const body = t.endsWith(SITE_URL) ? t.slice(0, -SITE_URL.length).trim() : t
+  return COPY_LINES.some((re) => re.test(body))
 }
 
 export function confirmText(r: Recorded): string {
   if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
   if (r.added) return `Kept, thought ${r.added} for today. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
-  const flame = r.streak >= 3 ? ' 🔥' : ''
-  const bonus = r.bonus ? ` Milestone: +${r.bonus}.` : ''
-  return `Got it. Day ${r.streak}${flame} · +${r.earned} points (${r.points} total) · ${r.level.name}.${bonus}\n${SITE_URL}`
+  return `${pick(COPY.kept).replace('{n}', String(r.streak))}\n${SITE_URL}`
 }
 
 // ---------- sessions (stateless HMAC cookie, same secret family as F2) ----------
