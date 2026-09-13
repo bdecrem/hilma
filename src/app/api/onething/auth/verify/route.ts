@@ -1,5 +1,5 @@
 import { NextResponse, after } from 'next/server'
-import { COOKIE, ensureUser, findUserByPhone, isValidTz, normalizePhone, setUserTz, signSession, verifyCode, welcomeNewUser } from '@/lib/onething/core'
+import { ensureUser, findUserByPhone, isValidTz, normalizePhone, sessionCookie, setUserTz, verifyCode, welcomeNewUser } from '@/lib/onething/core'
 
 export const runtime = 'nodejs'
 
@@ -29,14 +29,6 @@ export async function POST(req: Request) {
     })
   }
   const res = NextResponse.json({ ok: true, created: !existing })
-  res.cookies.set({
-    name: COOKIE,
-    value: signSession(user.id),
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365,
-  })
+  res.cookies.set(sessionCookie(user.id))
   return res
 }

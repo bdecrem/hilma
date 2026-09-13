@@ -349,6 +349,22 @@ export function signSession(userId: string): string {
   return `${userId}.${sig}`
 }
 
+/// The session cookie, one definition for sign-in and for renewal. A year,
+/// httpOnly (Safari keeps server-set cookies; script-written ones it purges
+/// after a week without a visit), and re-issued on every visit so an active
+/// person never reaches the cliff.
+export function sessionCookie(userId: string) {
+  return {
+    name: COOKIE,
+    value: signSession(userId),
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 365,
+  }
+}
+
 export function verifySession(token: string | undefined): string | null {
   if (!token) return null
   const i = token.lastIndexOf('.')

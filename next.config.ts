@@ -288,6 +288,21 @@ const nextConfig: NextConfig = {
         destination: 'https://decremental.com/:path+',
         permanent: true,
       },
+      // The journal lives at onething.ink only. Served from the vercel host too,
+      // it was a second origin with its own cookie jar: sign in on one, and the
+      // other looks signed out. (API routes stay — the cron calls them here.)
+      {
+        source: '/onething',
+        has: [{ type: 'host', value: 'hilma-nine.vercel.app' }],
+        destination: 'https://onething.ink/',
+        permanent: true,
+      },
+      {
+        source: '/onething/:path+',
+        has: [{ type: 'host', value: 'hilma-nine.vercel.app' }],
+        destination: 'https://onething.ink/:path+',
+        permanent: true,
+      },
     ]
   },
 }
