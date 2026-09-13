@@ -1,11 +1,30 @@
-// A note to Bart every time a new number joins. SendGrid, same sender the
-// rest of hilma uses. Never throws: a failed email must not block a sign-up.
+// A note to Bart every time a new number joins: an iMessage to his phone,
+// plus the same note by email (SendGrid, same sender the rest of hilma uses)
+// for when that account has sends again. Never throws: a failed note must
+// not block a sign-up.
+
+import { sendIMessage } from '@/lib/f2/bluebubbles'
 
 const TO = 'bdecrem@gmail.com'
+const BART = '+16508989508'
 
 export type SignupSource = 'web' | 'imessage' | 'manual'
 
 export async function notifySignup(phone: string, source: SignupSource, userId: string): Promise<void> {
+  await Promise.all([textBart(phone, source), emailBart(phone, source, userId)])
+}
+
+async function textBart(phone: string, source: SignupSource): Promise<void> {
+  if (phone === BART) return
+  const how = { web: 'signed in on the site', imessage: 'texted "onething"', manual: 'was added by hand' }[source]
+  try {
+    await sendIMessage({ addresses: [BART], text: `Onething: new sign-up ${phone} (${how}).` })
+  } catch (e) {
+    console.error('[onething] sign-up text failed:', e)
+  }
+}
+
+async function emailBart(phone: string, source: SignupSource, userId: string): Promise<void> {
   const key = process.env.SENDGRID_API_KEY
   if (!key) {
     console.warn('[onething] SENDGRID_API_KEY not set; sign-up email skipped')
