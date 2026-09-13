@@ -40,6 +40,10 @@ const cases = [
     hist: [human('bartdecrem', 'hmm, I wonder whether we should move the mini back home at some point'), human('kira', 'maybe after the semester')] },
   { name: 'named without @mention', expect: 'respond',
     hist: [human('bartdecrem', 'strays, what did the last build say?')] },
+  { name: 'bare hello in a cold channel', expect: 'respond',
+    hist: [human('bartdecrem', 'Hi')] },
+  { name: 'hello to another human', expect: 'pass',
+    hist: [human('bartdecrem', 'hi kira, you around?')] },
 ];
 
 let fails = 0;

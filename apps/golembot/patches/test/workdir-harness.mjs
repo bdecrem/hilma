@@ -50,10 +50,13 @@ check(a.cwd.endsWith('/workdir-ws/repo'), `workdir set → CLI runs in the repo 
 check(!!a.appended && a.appended.includes('PERSONA MARKER 4711'), 'persona (assistant dir CLAUDE.md) appended as system prompt');
 check(a.appended?.includes('## System Instructions'), 'the appended text is the generated AGENTS.md');
 check(existsSync(join(a.dir, '.golem', 'sessions.json')), 'session state still lives in the assistant directory');
+const ss = a.argv.indexOf('--setting-sources');
+check(ss >= 0 && a.argv[ss + 1] === 'project,local', 'user-level settings (this machine\'s plugins) excluded');
 
 const b = await run('without', []);
 check(b.cwd.endsWith('/workdir-ws/without'), `no workdir → CLI runs in the assistant directory (${b.cwd.split('/').slice(-1)})`);
 check(b.appended === undefined, 'no workdir → nothing appended');
+check(!b.argv.includes('--setting-sources'), 'no workdir → setting sources untouched');
 
 const c = await run('missing', [`workdir: ${join(root, 'does-not-exist')}`]);
 check(/workdir does not exist/.test(c.error) && c.argv.length === 0, `missing workdir → refused before spawning (${c.error.slice(0, 40)})`);

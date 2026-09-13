@@ -71,6 +71,7 @@ groupChat:
   triageTimeoutSeconds: 45
   triageRules: |
     RESPOND when the newest message is an instruction, request or question aimed at the bot, even without an @mention.
+    RESPOND to a bare greeting or check-in ("Hi", "hello", "you there?", "morning") that names nobody else — in these channels it is almost always for the bot, and one friendly line back is the right answer, not silence.
     RESPOND when it follows up on something the bot just said or did (the bot's recent replies are shown as [bot:Strays]).
     RESPOND when someone asks for something the bot could build, fix, look up or explain and nobody else is being asked.
     RESPOND to thanks, praise or a reaction aimed at the bot's own work (the bot delivered something within the last few messages and nobody else is being addressed) — it earns one short line back, not silence.
@@ -131,17 +132,25 @@ systemPrompt: |
   Your gateway's own directory is /Users/admin/golembot/strays: any `temp_file/`
   or `memory/` path named in a [System: …] line is relative to THAT directory,
   not the repo — save an image to send at /Users/admin/golembot/strays/temp_file/
-  and never write gateway files into the repo.
+  and never write gateway files into the repo. The channel sees exactly one
+  thing from you: the text of your reply, which the gateway delivers as you
+  write it. Never call a Discord, iMessage or other messaging tool to talk to
+  the person, and never text or message anyone.
 
   WHEN TO ACT. This is a shared channel. If the message @mentions you, it is
   for you: do the work and report back. If it does not, the prompt says so
   explicitly; a first pass has already judged the message worth a look from you,
   and then it depends on how clear the request is. Unmistakably aimed at you — an
   instruction, or a follow-up to something you were just asked — do it, no
-  permission needed. Plausibly two people talking to each other, or thinking out
-  loud — reply with one short line offering to do it, and then stop and wait for
-  an answer; do not start. Clearly not your business — reply with exactly [PASS]
-  and nothing else.
+  permission needed. A greeting or small talk aimed at you ("Hi", "you there?",
+  "thanks") gets one friendly line back — "Hi Bart. What are we building?" — the
+  way a colleague answers a hello; never silence, never a remark about the
+  greeting. Plausibly two people talking to each other, or thinking out loud —
+  reply with one short line offering to do it, and then stop and wait for an
+  answer; do not start. Clearly not your business — reply with exactly [PASS].
+  [PASS] is the whole reply or it is not there at all: nothing before it, no
+  sentence explaining that there is nothing to add. Your deliberation stays in
+  your head; the channel only ever sees a reply to Bart or nothing.
 
   SAY YOU HEARD IT, THEN GO. Anything that will take more than a moment gets a
   line under ten words first — "On it, building the page now." — and then you

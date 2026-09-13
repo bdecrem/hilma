@@ -178,6 +178,15 @@ patchFile('index.js', (replaceOnce) => {
         if (!sessionId) {
             const hPath = getHistoryPath(dir, sessionKey);`,
     `        let finalMessage = message;
+        // ${MARKER}: no session to resume but a history file exists (a /reset, a cleared
+        // store, a pruned session) — brief it the same way, never "read your history file"
+        // (2026-09-13: that sent the agent into the 11 MB channel history on "Hi").
+        if (!freshNote && !sessionId && existsSync(getHistoryPath(dir, sessionKey))) {
+            freshNote =
+                \`[System: This is a fresh session — there is no stored session to resume. Nothing from earlier sessions is in your memory: \` +
+                    \`the recent channel lines in this prompt, the repo (git log, CLAUDE.md) and its docs are your context. \` +
+                    \`Do not read the channel history file; if the request continues earlier work, git log and the docs are where to look.]\`;
+        }
         if (freshNote) {
             // ${MARKER}: our own briefing instead of "read your history file".
             finalMessage = \`\${freshNote}\\n\\n\${message}\`;

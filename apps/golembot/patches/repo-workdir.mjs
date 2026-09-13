@@ -16,7 +16,10 @@
  * Config (golem.yaml, top level): workdir: /absolute/path/to/repo
  * When set, the CLI is spawned with that cwd and the assistant directory's
  * CLAUDE.md (→ AGENTS.md, the persona + system instructions) is passed with
- * `--append-system-prompt`, so it still applies — after the repo's rules.
+ * `--append-system-prompt`, so it still applies — after the repo's rules. User-
+ * level settings are excluded (`--setting-sources project,local`): they enable
+ * this machine's interactive plugins (Discord/iMessage MCP), which the bot must
+ * not have — it used the Discord reply tool to post once (2026-09-13).
  * Everything else (skills injection, .golem state, media paths, memory) keeps
  * using the assistant directory; the persona tells the agent that paths in
  * [System: …] lines are relative to it. Session transcripts move to
@@ -92,6 +95,12 @@ patchFile('engines/claude-code.js', (replaceOnce) => {
                 if (persona)
                     args.push('--append-system-prompt', persona);
             }
+            // Only the repo's settings, never this machine's user-level ones: those
+            // enable the interactive session's plugins (Discord and iMessage MCP
+            // servers), and on 2026-09-13 the bot found the Discord reply tool and
+            // used it to post its "on it" line instead of replying through the gateway.
+            if (!opts.provider)
+                args.push('--setting-sources', 'project,local');
         }
         const env = {
             ...process.env,`,

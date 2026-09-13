@@ -101,6 +101,25 @@ ever fired; the bot itself answered "Fable 5.1"). The setup around it was:
    push), LEAVE THE DOCS RIGHT (the repo CLAUDE.md is the bot's only memory
    across jobs) and IF YOU WERE CUT OFF. "Be frugal about verifying" is gone.
 
+First real message after the deploy (Bart: "Hi") exposed two more things, fixed
+the same day: (a) with the session store cleared, stock golembot's "read your
+history file to restore context" hint fired and the agent went digging in the
+11 MB channel history — the fresh-session patch now briefs a no-session turn
+the same way it briefs a rotated one and says not to read that file; (b) the
+agent answered the greeting with its deliberation ("A bare greeting in a shared
+channel with no ask attached. Nothing to add.") followed by `[PASS]` on its own
+line — the gateway held the sentinel but the paragraph had already streamed.
+The persona now says a greeting aimed at the bot gets one friendly line back,
+and that `[PASS]` is the whole reply or not there at all.
+
+`patches/test/live-conversation.mjs` is the end-to-end check for all of this:
+it drives `gateway.handleMessage()` with the LIVE dist, the live assistant
+directory (real golem.yaml, workdir, persona, triage, patches) and a fake
+Discord adapter that prints what the channel would see, through a scripted
+conversation — "Hi" (no mention → triage), a build request (@mention), two
+tweaks without a mention, "thanks". The agent really commits and pushes; it
+costs real money and takes minutes. `set -a; . ~/.golembot.env; set +a` first.
+
 Harnesses in `patches/test/`: `effort-harness.mjs`, `timeout-harness.mjs`,
 `fresh-session-harness.mjs`, `workdir-harness.mjs` (all stubbed, no API calls;
 the effort and workdir ones put a fake `claude` on PATH that records argv and
