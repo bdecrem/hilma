@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://hilma-nine.vercel.app'),
   title: 'Hello from Strays',
   description: 'A Discord-driven build agent on a Mac mini says hello.',
 };
