@@ -119,6 +119,17 @@ export async function ensureUser(phone: string, source: SignupSource = 'manual')
   return user
 }
 
+export async function findEntry(userId: string, day: string): Promise<Entry | null> {
+  const { data, error } = await f2Supabase()
+    .from('onething_entries')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('day', day)
+    .maybeSingle()
+  if (error) throw new Error(`onething: find entry failed: ${error.message}`)
+  return (data as Entry) ?? null
+}
+
 export async function listEntries(userId: string, limit = 400): Promise<Entry[]> {
   const { data, error } = await f2Supabase()
     .from('onething_entries')
@@ -153,8 +164,7 @@ export type Recorded = {
 /// from the entry before it. Editing today's sentence keeps its score.
 export async function recordEntry(user: User, day: string, text: string): Promise<Recorded> {
   const sb = f2Supabase()
-  const entries = await listEntries(user.id, 2)
-  const same = entries.find((e) => e.day === day)
+  const same = await findEntry(user.id, day)
   if (same) {
     const all = [...lines(same.text), text]
     const { data, error } = await sb
@@ -169,7 +179,7 @@ export async function recordEntry(user: User, day: string, text: string): Promis
       earned: 0, bonus: 0, level: levelFor(same.points).level,
     }
   }
-  const prev = entries[0] ?? null
+  const prev = (await listEntries(user.id, 1))[0] ?? null
   const streak = prev && prev.day === addDays(day, -1) ? prev.streak + 1 : 1
   const { base, bonus } = pointsForEntry(streak)
   const points = (prev?.points ?? 0) + base + bonus
@@ -389,12 +399,13 @@ export async function handleInbound(args: {
 
   // Which day is this sentence for? Today, unless it is the small hours and
   // yesterday's question is still unanswered.
+  // (Look the day up directly: the latest row is not necessarily this day's,
+  // which once let chat replies pile onto yesterday as extra thoughts.)
   let day = today
-  if (hour < GRACE_HOUR && user.prompt_day === addDays(today, -1)) {
-    const y = await listEntries(user.id, 1)
-    if (!y.some((e) => e.day === user.prompt_day)) day = user.prompt_day
+  if (hour < GRACE_HOUR && user.prompt_day === addDays(today, -1) && !(await findEntry(user.id, user.prompt_day))) {
+    day = user.prompt_day
   }
-  const pending = user.prompt_day === day && !(await listEntries(user.id, 1)).some((e) => e.day === day)
+  const pending = user.prompt_day === day && !(await findEntry(user.id, day))
   if (!pending && !forced) return false
 
   const text = args.text.replace(FORCE_PREFIX, '').trim()
