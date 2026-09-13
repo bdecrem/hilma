@@ -48,6 +48,81 @@ still runs at home.
    off on this account). `patches/model-fallback.mjs` catches that and replays
    the turn on Opus — see "Triage gate + model fallback" below.
 
+## Reliability (2026-09-13) — why the same model was worse here than in Claude Code
+
+Onething (2026-09-12/13) shipped from Strays with six behaviour bugs that an
+interactive Claude Code session on the same Fable 5.1 then fixed in an
+afternoon. The model was not the difference (the log showed no Opus fallback
+ever fired; the bot itself answered "Fable 5.1"). The setup around it was:
+
+1. **One never-cleared session per channel.** Stock golembot resumes the same
+   Claude Code session for `sessionTtlDays`. The straykids session was 339
+   turns / 11.6 MB and every call carried ~465k tokens of unrelated earlier
+   jobs — it never compacts, Fable's 1M window is never full. A four-command
+   question cost $9.97. → **`patches/fresh-session.mjs`**: a job starts a new
+   session when the conversation's last turn is older than
+   `freshSessionAfterMinutes` (120) or the resumed transcript's last call was
+   over `freshSessionAfterTokens` (100k; read from
+   `~/.claude/projects/<workdir>/<session>.jsonl`). The prompt opens with a
+   `[System: This is a fresh session — …]` briefing (why, the recent channel
+   lines + the repo are the context, where the old transcript is — tail it, do
+   not read it). `/reset` still forces one by hand. Log line:
+   `[assistant] fresh session for discord:… : the previous turn was 3h12m ago (limit 120 min) (was <id>, ~465k tokens)`.
+2. **The repo's CLAUDE.md was never loaded.** The CLI ran in
+   `~/golembot/strays`, so its only CLAUDE.md was the generated persona, which
+   said "read ~/hilma-bot/CLAUDE.md" (mostly not done) and "BE FRUGAL ABOUT
+   VERIFYING" (the opposite of the repo's gates). A CLAUDE.md `@import` cannot
+   reach outside the project directory (nor can a symlink; `--add-dir` does not
+   load CLAUDE.md files — all tested). → **`patches/repo-workdir.mjs`**:
+   `workdir: /Users/admin/hilma-bot` runs the CLI inside the repo, so its
+   CLAUDE.md, `.claude/commands` and `.claude/skills` load exactly as for an
+   interactive session; the assistant directory's AGENTS.md (persona + system
+   instructions) is passed with `--append-system-prompt`. `.golem/` state,
+   media (`temp_file/`) and group memory stay in the assistant directory — the
+   persona says so. Session transcripts move to
+   `~/.claude/projects/-Users-admin-hilma-bot/`; the old ids were cleared on
+   deploy (`.golem/sessions.pre-workdir-2026-09-13.json` is the backup).
+3. **No effort level.** Stock passes only `--model`. → **`patches/engine-effort.mjs`**:
+   `effort: high` → `--effort high` (low|medium|high|xhigh|max; a bad value is
+   refused before spawning).
+4. **A hard 20-minute kill.** Two runs died at the limit ("Done?" → timed out,
+   twice) with half-edited trees the next turn resumed blind. → `timeout: 3600`
+   and **`patches/graceful-timeout.mjs`**: the channel notice says what a
+   cut-off means ("Cut off by the 60-minute limit while still working. Whatever
+   was pushed is live; unpushed edits are still in the working tree. Say
+   "continue" …"), and the next turn in that conversation opens with a
+   `[System: Your previous run … was cut off …]` note: check `git status` and
+   `git log -3`, say what state it is in, finish, do not start over.
+5. **Phone one-liners went straight to code.** The persona (`bots/strays/golem.yaml`)
+   now has SPEC BEFORE CODE (four to eight lines of what the person will get,
+   decisions made explicit, then proceed without waiting), VERIFY BEHAVIOUR,
+   NOT JUST THE BUILD (drive the flow once in Playwright/curl/DB; logic that
+   decides when or whether something happens gets a small tsx test before the
+   push), LEAVE THE DOCS RIGHT (the repo CLAUDE.md is the bot's only memory
+   across jobs) and IF YOU WERE CUT OFF. "Be frugal about verifying" is gone.
+
+Harnesses in `patches/test/`: `effort-harness.mjs`, `timeout-harness.mjs`,
+`fresh-session-harness.mjs`, `workdir-harness.mjs` (all stubbed, no API calls;
+the effort and workdir ones put a fake `claude` on PATH that records argv and
+cwd). Run them against a scratch copy of the dist — the package's dependencies
+resolve through a symlinked `node_modules`:
+
+```bash
+rm -rf /tmp/gb-pkg && mkdir /tmp/gb-pkg && cp -R /opt/homebrew/lib/node_modules/golembot/dist /tmp/gb-pkg/dist \
+  && ln -s /opt/homebrew/lib/node_modules/golembot/node_modules /tmp/gb-pkg/node_modules \
+  && cp /opt/homebrew/lib/node_modules/golembot/package.json /tmp/gb-pkg/
+for p in engine-effort graceful-timeout fresh-session repo-workdir; do node apps/golembot/patches/$p.mjs /tmp/gb-pkg/dist; done
+cd /tmp && for h in effort timeout fresh-session workdir fallback turn-reset; do GOLEMBOT_DIST=/tmp/gb-pkg/dist node ~/Documents/code/hilma/apps/golembot/patches/test/$h-harness.mjs; done
+```
+
+Verified live 2026-09-13 through `POST /chat`: the agent's `pwd` is
+`/Users/admin/hilma-bot`, it quotes the repo CLAUDE.md (the Vercel URL) and the
+persona ("SPEC BEFORE CODE"), on a fresh session, for $0.78 (the same kind of
+question cost $9.97 the day before); `ps -eo args | grep 'claude .*--effort'`
+during a turn shows `--effort high` (the gateway log does not print the CLI's
+argv). Check the patches survived an upgrade:
+`grep -c golembot-fresh-session-patch dist/index.js; grep -c golembot-repo-workdir-patch dist/engines/claude-code.js`.
+
 ## Triage gate + model fallback (2026-09-11)
 
 Stock `groupPolicy: smart` spawns the full Claude Code agent on *every* message
@@ -126,8 +201,9 @@ Discord problem: the gateway connects fine and the bot answers every message wit
 ```
 
 - **One config file, `golem.yaml`**, in the bot's *assistant directory*. The
-  gateway is started with `golembot gateway -d <that dir>`, and that directory
-  is also the agent's working directory.
+  gateway is started with `golembot gateway -d <that dir>`. Stock golembot also
+  makes that directory the agent's cwd; ours runs the CLI in `workdir`
+  (the repo) since 2026-09-13 — see "Reliability".
 - **Secrets are `${ENV_VAR}` references.** The token is never in `golem.yaml`.
 - **Runtime state** (`.golem/` — per-channel history as
   `.golem/history/discord:<channel-id>.jsonl`, plus sessions) lives in the
@@ -212,7 +288,10 @@ for the full list, it is more current than the README):
 | `groupChat.triageModel` / `triageRules` / `triageTimeoutSeconds` | **Ours** (smart-triage patch): the cheap gate in front of smart mode |
 | `fallbackModel` / `fallbackHoldMinutes` | **Ours** (model-fallback patch): where to go when `model` is out of plan usage |
 | `streaming.mode` | `buffered` or `streaming` (we stream, so long jobs show progress) |
-| `timeout` | Agent invocation timeout in seconds, default 600 |
+| `timeout` | Agent invocation timeout in seconds, default 600 — ours is 3600 (graceful-timeout patch briefs the next turn on a cut-off) |
+| `workdir` | **Ours** (repo-workdir patch): the CLI's cwd — the repo, so its CLAUDE.md/commands/skills load; persona goes in via `--append-system-prompt` |
+| `effort` | **Ours** (engine-effort patch): `--effort` low/medium/high/xhigh/max |
+| `freshSessionAfterMinutes` / `freshSessionAfterTokens` | **Ours** (fresh-session patch): start a new Claude Code session for a new job (idle gap, or resumed context too big) |
 | `autoContinue` | Gateway re-invokes the agent when it emits `[CONTINUE]` |
 | `persona` / `systemPrompt` | Identity and standing instructions |
 | `permissions` | `allowedPaths` / `deniedPaths` / `allowedCommands` / `deniedCommands` |
@@ -286,3 +365,18 @@ for the full list, it is more current than the README):
   uncommitted macplus edits, and `~/hilma-deploy` is the macplus services' deploy
   clone. Pushing works because `gh` is authenticated as bdecrem with `repo`
   scope and is wired in as the git credential helper.
+- **Stock golembot never clears a session, and Fable never compacts.** One
+  session per channel, resumed for 30 days: 339 turns and ~465k tokens of
+  context on every call by 2026-09-13, which is where the onething bugs came
+  from (and $10 questions). See "Reliability" — `patches/fresh-session.mjs`.
+- **A CLAUDE.md `@import` cannot point outside the project directory.** Tested
+  2026-09-13: an absolute path, a relative path and an in-project symlink to
+  `~/hilma-bot/CLAUDE.md` all arrive at the model as an unexpanded `@…` line
+  ("NOT FOUND"); a plain in-project file imports fine; `--add-dir` grants tool
+  access but loads no CLAUDE.md. The only way to give the bot the repo's
+  instructions is to run the CLI in the repo (`workdir`).
+- **Changing the CLI's cwd orphans every stored session id.** Claude Code keeps
+  transcripts per project directory, so `--resume <id>` from a different cwd
+  fails ("session" in the error → stock golembot clears it and retries fresh,
+  so it self-heals; we cleared `.golem/sessions.json` on deploy anyway).
+

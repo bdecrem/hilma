@@ -104,6 +104,7 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **MacPlus** | `apps/macplus/` | Retro68 → BlueSCSI SD card (manual) | Native classic-Mac (System 6, 68000) apps for Bart's real Macintosh Plus. See `apps/macplus/CLAUDE.md` |
 | **Tap Tap Dodo (iOS)** | `apps/taptapdodo/` | Xcode (XcodeGen, same workflow as Feynd) | Three-lane rhythm game starring a dodo — SpriteKit + AVAudioEngine synthesis, zero audio files, seeded procedural charts, 5 synth-genre sets. See `apps/taptapdodo/CLAUDE.md` |
 | **GolemBot** (Strays / Bang) | `apps/golembot/` | Mac mini `admin@171.66.240.175`, launchd `com.golembot.strays` | **Discord → Claude Code.** @mention **Strays** in the kochitolabs server (`#straykids`, `#bangbang`) and an agent on the mini builds, verifies, commits, pushes and replies with a link. It works in its own checkout `~/hilma-bot`. This folder is config + runbook; the bridge is the open-source [golembot](https://github.com/0xranx/golembot). **Read [`apps/golembot/CLAUDE.md`](apps/golembot/CLAUDE.md) before touching it** |
+| **Onething** | `src/app/onething/` + `src/app/api/onething/` + `src/lib/onething/` + `apps/onething/schema/` | Vercel (onething.ink) | One sentence a day over iMessage, with a streak and a small paper-journal page. Built by Strays from Discord 2026-09-12. See "Onething" below |
 | **Jam (web)** | `src/app/jam/` + `public/jam/` | Vercel (`/jam`) | Mobile chat UI for Jambot: the whole groovebox (session, tools, agent loop, rendering) runs in the browser from a committed bundle; the server only signs LLM calls. See "Jam" below |
 
 ### Jam — Jambot in the browser
@@ -157,6 +158,18 @@ Admins (2026-09-06): `jam_users.is_admin` (`apps/jam/schema/004_jam_admin.sql`; 
 Multiple instances: the agent can `add_instrument({ type: 'jb202' })` for a second JB202 (id `jb202-2`); the Controls sheet groups them as "JB202 bass · jb202-2", sliders and song-mode write-through key on the id, tracks persist the instance list. Verified with the jamtest account (two JB202s + delay on the second).
 
 Verifying: drive it in Playwright at 390×844 against `pnpm dev` — sign in, New track, send a prompt, confirm tool chips + auto-play, open Controls and move a slider, Export → MP3 (Playwright captures the download; `afinfo` it), back to the library, reopen the track and confirm it resumes. Replay a saved track's tool calls headlessly in Node (`select messages from jam_tracks`) when a render goes wrong — that is how the JB202 waveform bug was found.
+
+### Onething — one sentence a day
+
+`onething.ink`. Every user gets a question by iMessage at 10am in their own zone, answers with one sentence, and keeps a streak; a reminder goes at 10pm if the day has no entry (never within four hours of the question itself). Levels (Seed → Old Growth, `levels.ts`) are earned on cumulative points, so a broken streak never demotes anyone. The web page is a small paper journal: sign in by phone + code, httpOnly cookie `onething_session` that `/api/onething/me` re-issues on every visit; the vercel host redirects all page paths to onething.ink so there is one cookie origin (API routes stay on both, the cron calls them).
+
+How it is wired:
+- **Storage:** the `onething_*` tables in the F2 Supabase project (`apps/onething/schema/001-003`, applied by hand with `supabase db query --linked -f` BEFORE the deploy that needs them — 002 added `tz`, 003 `prompted_at`; the inserts fail loudly without the column).
+- **iMessage:** outbound through Dodo's BlueBubbles sender (`src/lib/f2/bluebubbles.ts`); inbound arrives on Dodo's BlueBubbles webhook, which asks `src/lib/onething/inbound.ts` first and falls through to Dodo when Onething does not claim the message. Texting "onething" joins; a text starting "Onething:" is force-saved as a thought; the webhook claims the message guid before the echo check, and the echo ledger looks back three days, because the mini sends as Bart's own Apple ID and BlueBubbles re-delivers our own texts when they are read (one came back as a "thought" on 2026-09-13).
+- **The tick:** `vercel.json` cron hits `/api/onething/tick` at :05 every hour. `dueFor()` in `core.ts` is pure and decides per user, in the user's zone, whether it is question time, reminder time, or nothing — extend its test (LA / Brussels / Tokyo, 18 instants, in the fix commit `fcc6441a`) whenever the timing rules change. `findEntry` looks a day up directly; never use "latest row" for "that day's row".
+- **New sign-ups** text and email Bart (`notify.ts`; never throws).
+
+The six fixes of 2026-09-13 were all behaviour bugs in one-line-from-a-phone features: every user on Pacific time, a reminder an hour after a late sign-up's question, a React component declared inside the page component (remounted per keystroke), the webhook echo, "latest row" for "today", and cookies split across two hosts. Each would have been caught by a written spec or a focused test — which is what the Strays persona now requires (see `apps/golembot/CLAUDE.md`, "Reliability").
 
 ### Building an F2 feature — spec first, then verify behavior
 
