@@ -15,6 +15,12 @@ import { LEVELS, type Level } from './levels'
 export const TZ = 'America/Los_Angeles' // default zone; every user carries their own (User.tz)
 export const PROMPT_HOUR = 10 // 10am local: the daily question
 export const REMIND_HOUR = 22 // 12h later: the streak reminder
+/// No reminder within this long of the question itself. The reminder exists
+/// for people who had the whole day and forgot; someone who was asked at 9pm
+/// (a late sign-up's welcome text, a manual prompt) has not forgotten anything
+/// yet, and a second text an hour later reads as nagging. If four hours pass
+/// before midnight the reminder still goes at the next hourly tick.
+export const REMIND_MIN_GAP_MS = 4 * 60 * 60 * 1000
 const GRACE_HOUR = 4 // replies before 4am still count for yesterday's prompt
 const CODE_TTL_MIN = 10
 export const COOKIE = 'onething_session'
@@ -25,6 +31,8 @@ export type User = {
   created_at: string
   prompt_day: string | null
   reminder_day: string | null
+  /// when the day's question last went out (schema 003); null on older rows
+  prompted_at: string | null
   /// IANA zone the 10am / 10pm texts follow (schema 002). Browser zone on web
   /// sign-in; a guess from the country code for iMessage joins.
   tz: string
@@ -391,12 +399,16 @@ export async function verifyCode(phone: string, code: string): Promise<boolean> 
 /// it can be tested across zones: 'prompt' inside the 10am–10pm window when
 /// today's question has not gone out; 'reminder' from 10pm once it has and the
 /// reminder has not; otherwise nothing.
-export function dueFor(user: Pick<User, 'tz' | 'prompt_day' | 'reminder_day'>, now = new Date()): 'prompt' | 'reminder' | null {
+export function dueFor(user: Pick<User, 'tz' | 'prompt_day' | 'reminder_day' | 'prompted_at'>, now = new Date()): 'prompt' | 'reminder' | null {
   const tz = tzFor(user)
   const today = localDay(now, tz)
   const hour = localHour(now, tz)
   if (hour >= PROMPT_HOUR && hour < REMIND_HOUR && user.prompt_day !== today) return 'prompt'
-  if (hour >= REMIND_HOUR && user.prompt_day === today && user.reminder_day !== today) return 'reminder'
+  if (hour >= REMIND_HOUR && user.prompt_day === today && user.reminder_day !== today) {
+    const askedAt = user.prompted_at ? new Date(user.prompted_at).getTime() : 0
+    if (now.getTime() - askedAt < REMIND_MIN_GAP_MS) return null // asked too recently; maybe next hour
+    return 'reminder'
+  }
   return null
 }
 
@@ -416,7 +428,7 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
       const today = localDay(now, tzFor(user))
       if (due === 'prompt') {
         await sendIMessage({ addresses: [user.phone], text: promptText() })
-        await sb.from('onething_users').update({ prompt_day: today }).eq('id', user.id)
+        await sb.from('onething_users').update({ prompt_day: today, prompted_at: now.toISOString() }).eq('id', user.id)
         prompted.push(user.phone)
         continue
       }
@@ -442,16 +454,18 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
 /// `chatGuid` replies in the thread the person wrote from; otherwise a new chat.
 export async function welcomeNewUser(user: User, chatGuid?: string): Promise<void> {
   await sendIMessage(chatGuid ? { chatGuid, text: welcomeText() } : { addresses: [user.phone], text: welcomeText() })
-  await f2Supabase().from('onething_users').update({ prompt_day: localDay(new Date(), tzFor(user)) }).eq('id', user.id)
+  const now = new Date()
+  await f2Supabase().from('onething_users').update({ prompt_day: localDay(now, tzFor(user)), prompted_at: now.toISOString() }).eq('id', user.id)
 }
 
 /// Send today's question to one person right now (first-run / manual).
 export async function promptNow(phone: string): Promise<User> {
   const user = await ensureUser(phone)
-  const today = localDay(new Date(), tzFor(user))
+  const now = new Date()
+  const today = localDay(now, tzFor(user))
   await sendIMessage({ addresses: [phone], text: promptText() })
-  await f2Supabase().from('onething_users').update({ prompt_day: today }).eq('id', user.id)
-  return { ...user, prompt_day: today }
+  await f2Supabase().from('onething_users').update({ prompt_day: today, prompted_at: now.toISOString() }).eq('id', user.id)
+  return { ...user, prompt_day: today, prompted_at: now.toISOString() }
 }
 
 // ---------- inbound (called from Dodo's BlueBubbles webhook) ----------
@@ -499,7 +513,7 @@ export async function handleInbound(args: {
     }
     const day = localDay(new Date(), tzFor(fresh))
     const r = await recordEntry(fresh, day, first)
-    await f2Supabase().from('onething_users').update({ prompt_day: day }).eq('id', fresh.id)
+    await f2Supabase().from('onething_users').update({ prompt_day: day, prompted_at: new Date().toISOString() }).eq('id', fresh.id)
     await sendIMessage({ chatGuid: args.chatGuid, text: `Welcome to Onething. ${confirmText(r)}` })
     return true
   }
