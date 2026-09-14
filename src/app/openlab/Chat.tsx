@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -78,7 +79,8 @@ export default function Chat() {
       <div style={{ width: '100%', maxWidth: 680, margin: '0 auto', padding: '20px 18px 0', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <header style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 18 }}>
           <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.18em', color: '#b8552c' }}>OPENLAB</span>
-          <span style={{ fontSize: 13, color: '#8a7d72' }}>qwen3.5 9B on a Mac mini at Stanford, on our own rules</span>
+          <span style={{ fontSize: 13, color: '#8a7d72', flex: 1 }}>qwen3.5 9B on a Mac mini at Stanford, on our own rules</span>
+          <Link href="/openlab/about" style={{ fontSize: 13, color: '#b8552c', whiteSpace: 'nowrap' }}>What is this?</Link>
         </header>
 
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 16 }}>

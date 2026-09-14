@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   // The Openlab chat route reads the constitution from apps/ at runtime.
   outputFileTracingIncludes: {
     '/api/openlab/chat': ['./apps/openlab/01-constitution/constitution.md'],
+    '/openlab/about': ['./apps/openlab/README.md'],
   },
   async rewrites() {
     return {

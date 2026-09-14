@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { isSignedIn } from '@/lib/openlab/auth';
 
 // Chat with the model on the Stanford Mac mini (qwen3.5:9b via Ollama),
 // with the Openlab constitution as the system prompt. Streams plain text.
@@ -20,6 +21,7 @@ function constitution() {
 type Msg = { role: 'user' | 'assistant'; content: string };
 
 export async function POST(req: Request) {
+  if (!(await isSignedIn())) return new Response('passcode required', { status: 401 });
   const url = process.env.OPENLAB_MINI_URL;
   const token = process.env.OPENLAB_MINI_TOKEN;
   if (!url || !token) return new Response('OPENLAB_MINI_URL / OPENLAB_MINI_TOKEN not set', { status: 500 });

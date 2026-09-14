@@ -103,7 +103,11 @@ constitution. How it is wired:
   prompt, calls the proxy with `OPENLAB_MINI_URL` / `OPENLAB_MINI_TOKEN` (set
   in Vercel production and `.env.local`), streams the text back.
   `OPENLAB_MODEL` overrides `qwen3.5:9b`.
-- Page: `src/app/openlab/Chat.tsx`, warm-paper look, phone first.
+- Page: `src/app/openlab/Chat.tsx`, warm-paper look, phone first. Behind a
+  passcode (`OPENLAB_PASSCODE`, Vercel production and `.env.local`): the
+  gate in `Gate.tsx` posts to `/api/openlab/auth`, which sets a year-long
+  httpOnly cookie holding a hash of the passcode (`src/lib/openlab/auth.ts`);
+  the chat route and `/openlab/about` (this README, rendered) check it.
 
 Editing `constitution.md` changes the chat on the next deploy, and the
 baseline in 01 on the next run.
