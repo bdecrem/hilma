@@ -1,11 +1,11 @@
 // Thin seam between Dodo's BlueBubbles webhook and Onething, so the webhook
 // imports one small module and Onething's failures can never break Dodo.
-import { findUserByPhone, handleInbound as core, normalizePhone } from './core'
+import { findUserByPhone, normalizeHandle } from './core'
+import { handleInbound as core } from './flow'
 
 export async function isOnethingChat(chatGuid: string): Promise<boolean> {
   try {
-    const addr = chatGuid.split(';').pop() ?? ''
-    const phone = addr.startsWith('+') ? normalizePhone(addr) : null
+    const phone = normalizeHandle(chatGuid.split(';').pop() ?? '')
     return !!phone && !!(await findUserByPhone(phone))
   } catch (e) {
     console.error('[onething] chat lookup failed', e)

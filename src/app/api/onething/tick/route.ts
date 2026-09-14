@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { normalizePhone, promptNow, tick } from '@/lib/onething/core'
+import { normalizePhone } from '@/lib/onething/core'
+import { promptNow, tick } from '@/lib/onething/flow'
 
 // GET /api/onething/tick — hourly from Vercel Cron (Authorization: Bearer
 // CRON_SECRET). 10am local sends the question, 10pm sends the reminder to

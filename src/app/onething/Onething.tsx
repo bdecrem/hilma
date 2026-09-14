@@ -7,7 +7,13 @@ import copy from '@/lib/onething/copy.json';
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
-type Me = { user: { phone: string; since: string; tz?: string } | null; today?: string; board?: Board; entries?: Entry[]; levels?: Level[] };
+type BuddyView = { id: string; name: string; streak: number; best: number; inToday: boolean; nextBonusIn: number; startsTomorrow: boolean };
+type InviteView = { id: string; name: string; since: string };
+type Me = {
+  user: { phone: string; since: string; tz?: string; name?: string | null } | null;
+  today?: string; board?: Board; entries?: Entry[]; levels?: Level[];
+  buddies?: BuddyView[]; sent?: InviteView[]; received?: InviteView[]; bonus?: { every: number; points: number };
+};
 
 const NUDGES = [
   'Something small that worked.',
@@ -31,6 +37,16 @@ function lines(text: string): string[] {
 function prettyPhone(p: string): string {
   const m = p.match(/^\+1(\d{3})(\d{3})(\d{4})$/);
   return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
+}
+
+/** A pencilled checkbox: ticked when that buddy's sentence is in for today. */
+function Tick({ on }: { on: boolean }) {
+  return (
+    <svg className="ot-tick" viewBox="0 0 20 20" aria-hidden>
+      <rect x="2" y="2" width="16" height="16" rx="3" fill="none" stroke="#35332f" strokeWidth="2" />
+      {on && <path d="M5 10.5 L8.5 14 L15 6.5" fill="none" stroke="#4f9a63" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />}
+    </svg>
+  );
 }
 
 function PencilMark() {
@@ -202,6 +218,11 @@ export default function Onething() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<{ day: string; index: number } | null>(null);
   const [editText, setEditText] = useState('');
+  const [view, setView] = useState<'journal' | 'settings'>('journal');
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [inviteTo, setInviteTo] = useState('');
+  const [ending, setEnding] = useState<string | null>(null);
+  const [note, setNote] = useState('');
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
@@ -238,6 +259,21 @@ export default function Onething() {
     finally { setBusy(false); }
   }
   function startEdit(day: string, index: number, current: string) { setEditing({ day, index }); setEditText(current); setErr(''); }
+  async function saveName() {
+    setBusy(true); setErr(''); setNote('');
+    try {
+      const r = await fetch('/api/onething/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: nameDraft ?? '' }) });
+      if (!r.ok) { setErr('Could not save that.'); return; }
+      setNameDraft(null); setNote('Saved.'); await load();
+    } catch { setErr('Network error. Try again.'); }
+    finally { setBusy(false); }
+  }
+  async function buddy(body: Record<string, string>) {
+    setNote('');
+    const j = await post('/api/onething/buddies', body);
+    if (j) { setInviteTo(''); setEnding(null); await load(); }
+    return j;
+  }
   async function signout() { await fetch('/api/onething/auth/signout', { method: 'POST' }); setMe({ user: null }); }
 
   if (me === null) {
@@ -306,12 +342,99 @@ export default function Onething() {
   const streakLine = b.streak === 0
     ? 'no streak yet'
     : `${b.streak} ${b.streak === 1 ? 'day' : 'days'} in a row${b.best > b.streak ? ` · best ${b.best}` : ''}`;
+  const buddies = me.buddies ?? [];
+  const sent = me.sent ?? [];
+  const received = me.received ?? [];
+  const bonus = me.bonus ?? { every: 7, points: 25 };
+  const together = (x: BuddyView) => x.startsTomorrow
+    ? 'starts tomorrow'
+    : x.streak === 0 ? 'no days together yet' : `${x.streak} ${x.streak === 1 ? 'day' : 'days'} together${x.best > x.streak ? ` · best ${x.best}` : ''} · next bonus in ${x.nextBonusIn}`;
+
+  if (view === 'settings') {
+    return (
+      <>
+      <Coil /><Defs />
+      <main className="ot-main">
+        <Mast bare right={<span className="ot-who"><button className="ot-link" onClick={() => { setView('journal'); setErr(''); setNote(''); }}>← journal</button></span>} />
+
+        <section className="ot-card">
+          <span className="ot-tape" aria-hidden />
+          <h2>Your name</h2>
+          <p className="ot-note">What buddies see instead of your number.</p>
+          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); saveName(); }}>
+            <input className="ot-in" placeholder={prettyPhone(me.user.phone)} aria-label="Your name" maxLength={24} value={nameDraft ?? me.user.name ?? ''} onChange={(e) => setNameDraft(e.target.value)} />
+            <button className="ot-btn" type="submit" disabled={busy || nameDraft === null}>{busy ? 'Saving…' : 'Save'}</button>
+          </form>
+        </section>
+
+        <section className="ot-card">
+          <span className="ot-tape green" aria-hidden />
+          <h2>Buddies</h2>
+          <p className="ot-note">Pick anyone. A buddy streak counts a day when you both wrote, a miss by either one resets it, and every {bonus.every} days it holds you both get {bonus.points} points. Your own streak and points are never touched.</p>
+
+          {received.length > 0 && (
+            <ul className="ot-buddies" aria-label="invites waiting on you">
+              {received.map((i) => (
+                <li key={i.id} className="ot-buddy">
+                  <span className="who">{i.name} invited you.</span>
+                  <span className="acts">
+                    <button className="ot-link" onClick={() => buddy({ action: 'accept', id: i.id })} disabled={busy}>say yes</button>
+                    <button className="ot-link quiet" onClick={() => buddy({ action: 'cancel', id: i.id })} disabled={busy}>not now</button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {(buddies.length > 0 || sent.length > 0) && (
+            <ul className="ot-buddies" aria-label="your buddies">
+              {buddies.map((x) => (
+                <li key={x.id} className={`ot-buddy${ending === x.id ? ' ending' : ''}`}>
+                  <span className="who">{x.name}<small>{together(x)}</small></span>
+                  <span className="acts">
+                    {ending === x.id ? (
+                      <>
+                        <span className="ot-note" style={{ margin: 0 }}>Sure?</span>
+                        <button className="ot-link" onClick={() => buddy({ action: 'end', id: x.id })} disabled={busy}>end it</button>
+                        <button className="ot-link quiet" onClick={() => setEnding(null)}>keep going</button>
+                      </>
+                    ) : (
+                      <button className="ot-link quiet" onClick={() => setEnding(x.id)}>end</button>
+                    )}
+                  </span>
+                </li>
+              ))}
+              {sent.map((i) => (
+                <li key={i.id} className="ot-buddy">
+                  <span className="who">{i.name}<small>invited {shortDay(i.since.slice(0, 10))} · waiting for a yes</small></span>
+                  <span className="acts"><button className="ot-link quiet" onClick={() => buddy({ action: 'cancel', id: i.id })} disabled={busy}>cancel</button></span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); buddy({ action: 'invite', to: inviteTo }); }}>
+            <input className="ot-in" inputMode="email" autoComplete="off" placeholder="Phone or iCloud email" aria-label="Phone number or iCloud email" value={inviteTo} onChange={(e) => setInviteTo(e.target.value)} />
+            <button className="ot-btn" type="submit" disabled={busy || inviteTo.trim().length < 5}>{busy ? 'Sending…' : 'Invite'}</button>
+          </form>
+          <p className="ot-note">They get one text from us. Nothing changes until they say yes.</p>
+          {err && <p className="ot-err">{err}</p>}
+          {note && <p className="ot-note">{note}</p>}
+        </section>
+
+        <footer className="ot-foot">
+          <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
+        </footer>
+      </main>
+      </>
+    );
+  }
 
   return (
     <>
     <Coil /><Defs />
     <main className="ot-main">
-      <Mast bare right={<span className="ot-who">{prettyPhone(me.user.phone)} · <button className="ot-link" onClick={signout}>sign out</button></span>} />
+      <Mast bare right={<span className="ot-who">{me.user.name || prettyPhone(me.user.phone)} · <button className="ot-link" onClick={() => { setView('settings'); setErr(''); setNote(''); }}>settings</button> · <button className="ot-link" onClick={signout}>sign out</button></span>} />
 
       <div className="ot-ask">
       <Mascot />
@@ -322,6 +445,13 @@ export default function Onething() {
           <>
             <span className="ot-stamp">kept!</span>
             <Thoughts day={today} text={todayEntry?.text ?? ''} big {...thoughtProps} />
+            {buddies.some((x) => !x.startsTomorrow) && (
+              <ul className="ot-ticks" aria-label="buddies today">
+                {buddies.filter((x) => !x.startsTomorrow).map((x) => (
+                  <li key={x.id} className={x.inToday ? 'in' : ''}><Tick on={x.inToday} />{x.name}{x.inToday ? '' : ' · waiting'}</li>
+                ))}
+              </ul>
+            )}
             <p className="ot-more"><button type="button" className="ot-link" onClick={() => { setAdding(true); setErr(''); }}>add another thought</button></p>
           </>
         ) : (
@@ -347,6 +477,9 @@ export default function Onething() {
             <i style={{ ['--w' as string]: `${progress * 100}%` }} />
           </div>
           <div className="ot-thread-k">{b.points} {b.points === 1 ? 'point' : 'points'}{b.next ? ` · ${b.next.min - b.points} to ${b.next.name}` : ''}</div>
+          {buddies.map((x) => (
+            <div key={x.id} className="ot-buddy-line">{x.name} · {together(x)}</div>
+          ))}
         </div>
       </section>
       <Ladder index={b.index} levels={levels} />

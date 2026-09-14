@@ -1,5 +1,5 @@
 {
-  "_": "Onething's texts, one picked at random per send (src/lib/onething/core.ts). Indie-journal register: quiet, specific, no exclamation marks, no verdict on what the person wrote. {n} is the streak day. Every outbound text is one of these lines plus the site URL, and looksLikeOurs() matches against this file to keep our own echoes from being saved as thoughts — so add lines here, never inline in code.",
+  "_": "Onething's texts. morning / reminder / kept: one picked at random per send (src/lib/onething/core.ts). buddy: fixed templates for the buddy-streak lines (src/lib/onething/buddies.ts). Indie-journal register: quiet, specific, no exclamation marks, no verdict on what the person wrote. {n} is a streak day, {points} a number, {name} / {names} / {in} / {out} are people. Every outbound text starts with one of these lines (extra lines follow, the site URL last), and looksLikeOurs() matches inbound text against this file to keep our own echoes from being saved as thoughts — so add lines here, never inline in code.",
   "morning": [
     "Morning. One sentence about today, whenever it comes to you.",
     "What's the sentence for today? No hurry. It can be small.",
@@ -45,5 +45,21 @@
     "Day {n}. The page has its sentence.",
     "Day {n}. Written down, which is the whole point.",
     "Kept. Small thing, done again."
-  ]
+  ],
+  "buddy": {
+    "inOne": "{name}'s in too.",
+    "outOne": "{name}'s still to come.",
+    "inMany": "{names} are in too.",
+    "outMany": "{names} still to come.",
+    "mixed": "{in} in, {out} still to come.",
+    "bonus": "Day {n} with {name}. {points} points for both of you.",
+    "reminderOne": "{name}'s in for today. One sentence keeps it going.",
+    "reminderMany": "{names} are in for today. One sentence keeps it going.",
+    "reset": "Buddy streak with {name} reset to zero. Yours is fine.",
+    "invite": "{name} wants to be your Onething buddy: you both write one sentence a day, and every week you both keep it, you both get bonus points. Reply YES to join, or ignore this and nothing happens.",
+    "accepted": "You and {name} are buddies. It starts with tomorrow's sentence.",
+    "acceptedInviter": "{name} said yes. Buddy streak starts tomorrow.",
+    "nameAsk": "What should your buddies call you? Reply with just a name.",
+    "nameSet": "{name}, noted. That's what your buddies will see."
+  }
 }

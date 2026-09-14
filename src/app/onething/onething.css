@@ -221,3 +221,20 @@
 .ot-sign a:hover { border-bottom-color: var(--red); }
 
 @media (prefers-reduced-motion: reduce) { .ot-btn { transition: none; } }
+
+/* buddies: the list in settings, the ticks on today's card, a line in the garden */
+.ot-buddies { list-style: none; margin: 14px 0 0; padding: 0; }
+.ot-buddy { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 2px dashed var(--faint); }
+.ot-buddy .who { min-width: 0; font-size: var(--fs-body); }
+.ot-buddy .who small { display: block; font-size: var(--fs-small); color: var(--soft); line-height: 1.2; }
+.ot-buddy .acts { flex: none; display: flex; align-items: center; gap: 10px; font-size: var(--fs-small); }
+.ot-buddy .acts .ot-link { font-size: var(--fs-small); }
+.ot-buddy.ending { flex-wrap: wrap; }
+.ot-buddy.ending .acts { flex-basis: 100%; justify-content: flex-end; }
+.ot-link.quiet { color: var(--soft); text-decoration-color: var(--faint); }
+.ot-link.quiet:hover, .ot-link.quiet:focus-visible { color: var(--red); text-decoration-color: var(--red); }
+.ot-ticks { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs-small); color: var(--soft); }
+.ot-ticks li { display: inline-flex; align-items: center; gap: 6px; }
+.ot-ticks li.in { color: var(--graphite); }
+.ot-tick { width: 18px; height: 18px; flex: none; }
+.ot-buddy-line { margin-top: 6px; font-size: var(--fs-small); color: var(--soft); }

@@ -1,5 +1,6 @@
 import { NextResponse, after } from 'next/server'
-import { ensureUser, findUserByPhone, isValidTz, normalizePhone, sessionCookie, setUserTz, verifyCode, welcomeNewUser } from '@/lib/onething/core'
+import { ensureUser, findUserByPhone, isValidTz, normalizePhone, sessionCookie, setUserTz, verifyCode } from '@/lib/onething/core'
+import { welcomeNewUser } from '@/lib/onething/flow'
 
 export const runtime = 'nodejs'
 

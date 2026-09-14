@@ -22,7 +22,7 @@ export const REMIND_HOUR = 22 // 12h later: the streak reminder
 /// yet, and a second text an hour later reads as nagging. If four hours pass
 /// before midnight the reminder still goes at the next hourly tick.
 export const REMIND_MIN_GAP_MS = 4 * 60 * 60 * 1000
-const GRACE_HOUR = 4 // replies before 4am still count for yesterday's prompt
+export const GRACE_HOUR = 4 // replies before 4am still count for yesterday's prompt
 const CODE_TTL_MIN = 10
 export const COOKIE = 'onething_session'
 
@@ -37,6 +37,10 @@ export type User = {
   /// IANA zone the 10am / 10pm texts follow (schema 002). Browser zone on web
   /// sign-in; a guess from the country code for iMessage joins.
   tz: string
+  /// what buddies see instead of the number (schema 004); null until set
+  name: string | null
+  /// when the name was asked for by text — asked once, never again
+  name_asked_at: string | null
 }
 
 export type Entry = {
@@ -122,6 +126,34 @@ export function normalizePhone(raw: string): string | null {
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
   if (digits.length >= 8 && digits.length <= 15 && raw.trim().startsWith('+')) return `+${digits}`
   return null
+}
+
+export function isEmailHandle(raw: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw.trim())
+}
+
+/// An iMessage handle: a phone (E.164) or an iCloud email. Either kind lives
+/// in the `phone` column; emails are lower-cased so the same person matches.
+export function normalizeHandle(raw: string): string | null {
+  const t = raw.trim()
+  if (isEmailHandle(t)) return t.toLowerCase()
+  return normalizePhone(t)
+}
+
+export function prettyHandle(h: string): string {
+  const m = h.match(/^\+1(\d{3})(\d{3})(\d{4})$/)
+  return m ? `${m[1]} ${m[2]} ${m[3]}` : h
+}
+
+/// What other people see: the name if there is one, else the number.
+export function displayName(u: Pick<User, 'name' | 'phone'>): string {
+  return u.name?.trim() || prettyHandle(u.phone)
+}
+
+export async function setUserName(user: User, name: string | null): Promise<User> {
+  const { error } = await f2Supabase().from('onething_users').update({ name }).eq('id', user.id)
+  if (error) throw new Error(`onething: name update failed: ${error.message}`)
+  return { ...user, name }
 }
 
 // ---------- scoring ----------
@@ -295,13 +327,20 @@ export const SITE_URL = 'https://onething.ink'
 /// The texts live in copy.json (morning question, evening reminder, the line
 /// back after an entry lands); each send picks one at random. Every one of
 /// them ends with the site URL on its own line.
-const COPY: { morning: string[]; reminder: string[]; kept: string[] } = copy
+type BuddyKey = keyof typeof copy.buddy
+const COPY: { morning: string[]; reminder: string[]; kept: string[]; buddy: Record<BuddyKey, string> } = copy
 function pick(lines: string[]): string {
   return lines[Math.floor(Math.random() * lines.length)]
 }
 
-export function promptText(): string {
-  return `${pick(COPY.morning)}\n${SITE_URL}`
+/// A buddy-streak line from copy.json with its placeholders filled.
+export function buddyCopy(key: BuddyKey, vars: Record<string, string | number> = {}): string {
+  return COPY.buddy[key].replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m))
+}
+
+/// The morning question; `extra` lines (a buddy-streak reset) go under it.
+export function promptText(extra: string[] = []): string {
+  return [pick(COPY.morning), ...extra, SITE_URL].join('\n')
 }
 
 /// The first text a new account gets: what this is, and today's question.
@@ -309,8 +348,21 @@ export function welcomeText(): string {
   return `Welcome to Onething. Every day at ten I’ll text you one question; you answer in one sentence.\nHere’s today’s: what is one thing that happened in the last 24 hours? Just reply here.\n${SITE_URL}`
 }
 
-export function reminderText(_streak: number): string {
-  return `${pick(COPY.reminder)}\n${SITE_URL}`
+/// The evening reminder; when buddies have already written today it says so
+/// instead — the same text slot, sharper, never an additional send.
+export function reminderText(_streak: number, buddiesIn: string[] = []): string {
+  const line = buddiesIn.length === 0
+    ? pick(COPY.reminder)
+    : buddiesIn.length === 1
+      ? buddyCopy('reminderOne', { name: buddiesIn[0] })
+      : buddyCopy('reminderMany', { names: joinNames(buddiesIn) })
+  return `${line}\n${SITE_URL}`
+}
+
+/// "Sam", "Sam and Priya", "Sam, Priya and Lee".
+export function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? ''
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`
 }
 
 /// An inbound message that is one of our own texts is an echo (the mini sends
@@ -320,9 +372,15 @@ export function reminderText(_streak: number): string {
 /// {n} as any number and the trailing site URL stripped); the fixed templates
 /// and the wordings from before 2026-09-13, whose echoes still arrive, by
 /// prefix. Keep in step with the templates above and with notify.ts.
-const COPY_LINES: RegExp[] = [...COPY.morning, ...COPY.reminder, ...COPY.kept].map(
-  (line) => new RegExp(`^${line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\{n\\\}/g, '\\d+')}$`, 'i'),
-)
+function templateRe(line: string): RegExp {
+  const esc = line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return new RegExp(`^${esc.replace(/\\\{(n|points)\\\}/g, '\\d+').replace(/\\\{(name|names|in|out)\\\}/g, '.+?')}$`, 'i')
+}
+/// Buddy templates that can OPEN a text. The tails (who is in, a bonus, a
+/// reset, the name question) only ever follow a line from the lists above, so
+/// they are not echo evidence on their own — "Sam's in too." can be a diary line.
+export const BUDDY_FIRST_LINES: BuddyKey[] = ['reminderOne', 'reminderMany', 'invite', 'accepted', 'acceptedInviter', 'nameSet']
+const COPY_LINES: RegExp[] = [...COPY.morning, ...COPY.reminder, ...COPY.kept, ...BUDDY_FIRST_LINES.map((k) => COPY.buddy[k])].map(templateRe)
 const OWN_TEXT = [
   /^Onething: what is one thing/i,
   /^Welcome to Onething\./i,
@@ -338,13 +396,18 @@ export function looksLikeOurs(text: string): boolean {
   const t = text.trim()
   if (OWN_TEXT.some((re) => re.test(t))) return true
   const body = t.endsWith(SITE_URL) ? t.slice(0, -SITE_URL.length).trim() : t
-  return COPY_LINES.some((re) => re.test(body))
+  // Every text of ours opens with a line from copy.json; buddy tails, reset
+  // notes and the name question follow on their own lines.
+  const first = body.split('\n')[0].trim()
+  return COPY_LINES.some((re) => re.test(first))
 }
 
-export function confirmText(r: Recorded): string {
+/// The line back after a sentence lands; `tail` lines (who else is in, a
+/// buddy bonus, the name question) sit between it and the URL.
+export function confirmText(r: Recorded, tail: string[] = []): string {
   if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
   if (r.added) return `Kept, thought ${r.added} for today. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
-  return `${pick(COPY.kept).replace('{n}', String(r.streak))}\n${SITE_URL}`
+  return [pick(COPY.kept).replace('{n}', String(r.streak)), ...tail, SITE_URL].join('\n')
 }
 
 // ---------- sessions (stateless HMAC cookie, same secret family as F2) ----------
@@ -439,135 +502,4 @@ export function dueFor(user: Pick<User, 'tz' | 'prompt_day' | 'reminder_day' | '
   return null
 }
 
-export async function tick(now = new Date()): Promise<{ prompted: string[]; reminded: string[]; failed: string[] }> {
-  const sb = f2Supabase()
-  const prompted: string[] = []
-  const reminded: string[] = []
-  const { data, error } = await sb.from('onething_users').select('*').order('created_at')
-  if (error) throw new Error(`onething: tick load failed: ${error.message}`)
-  const failed: string[] = []
-  for (const user of (data ?? []) as User[]) {
-    // One number that cannot be reached (a test account, a dead line) must not
-    // stop the loop: everyone after it still gets their text this hour, and the
-    // failed one is retried next hour because its day markers stay unset.
-    try {
-      const due = dueFor(user, now)
-      const today = localDay(now, tzFor(user))
-      if (due === 'prompt') {
-        await sendIMessage({ addresses: [user.phone], text: promptText() })
-        await sb.from('onething_users').update({ prompt_day: today, prompted_at: now.toISOString() }).eq('id', user.id)
-        prompted.push(user.phone)
-        continue
-      }
-      if (due === 'reminder') {
-        const entries = await listEntries(user.id, 1)
-        const board = scoreboard(entries, today)
-        if (!board.doneToday) {
-          await sendIMessage({ addresses: [user.phone], text: reminderText(board.streak) })
-          reminded.push(user.phone)
-        }
-        await sb.from('onething_users').update({ reminder_day: today }).eq('id', user.id)
-      }
-    } catch (e) {
-      console.error(`[onething] tick failed for ${user.phone}:`, e)
-      failed.push(user.phone)
-    }
-  }
-  return { prompted, reminded, failed }
-}
-
-/// A brand-new account (web sign-in or the "onething" keyword): say hello and ask
-/// today's question right away, so the loop starts now instead of at the next tick.
-/// `chatGuid` replies in the thread the person wrote from; otherwise a new chat.
-export async function welcomeNewUser(user: User, chatGuid?: string): Promise<void> {
-  await sendIMessage(chatGuid ? { chatGuid, text: welcomeText() } : { addresses: [user.phone], text: welcomeText() })
-  const now = new Date()
-  await f2Supabase().from('onething_users').update({ prompt_day: localDay(now, tzFor(user)), prompted_at: now.toISOString() }).eq('id', user.id)
-}
-
-/// Send today's question to one person right now (first-run / manual).
-export async function promptNow(phone: string): Promise<User> {
-  const user = await ensureUser(phone)
-  const now = new Date()
-  const today = localDay(now, tzFor(user))
-  await sendIMessage({ addresses: [phone], text: promptText() })
-  await f2Supabase().from('onething_users').update({ prompt_day: today, prompted_at: now.toISOString() }).eq('id', user.id)
-  return { ...user, prompt_day: today, prompted_at: now.toISOString() }
-}
-
-// ---------- inbound (called from Dodo's BlueBubbles webhook) ----------
-
-const FORCE_PREFIX = /^(1|one|onething)\s*[:\-]\s*/i
-// A number we have never heard from joins by texting "onething" (optionally with a
-// first sentence after a colon). Plain "1:" from a stranger is left to Dodo.
-const JOIN_PREFIX = /^(onething|one thing)\b\s*[:\-]?\s*/i
-
-function phoneFromChatGuid(chatGuid: string): string | null {
-  // "iMessage;-;+16508989508" → "+16508989508"
-  const addr = chatGuid.split(';').pop() ?? ''
-  return addr.startsWith('+') ? normalizePhone(addr) : null
-}
-
-/// Returns true when Onething claimed the message: the sender is an
-/// Onething user AND (a prompt is outstanding OR the text starts "1:"),
-/// or a new number texting "onething" to join. Otherwise false, and Dodo
-/// handles it as before.
-export async function handleInbound(args: {
-  handle: string
-  chatGuid: string
-  text: string
-}): Promise<boolean> {
-  const phone =
-    (args.handle.startsWith('+') ? normalizePhone(args.handle) : null) ??
-    phoneFromChatGuid(args.chatGuid)
-  if (!phone) return false
-  // Our own text coming back (see OWN_TEXT). Claim it and do nothing: it must
-  // not become a thought — the sign-up note and the daily question both start
-  // "Onething:", which is also the force prefix — and it must not fall through
-  // to Dodo either, which would grade it as an answer in the same chat.
-  if (looksLikeOurs(args.text)) {
-    console.log(`[onething] ignoring our own text echoed from ${phone}: ${args.text.slice(0, 60)}`)
-    return true
-  }
-  const user = await findUserByPhone(phone)
-  if (!user) {
-    if (!JOIN_PREFIX.test(args.text)) return false
-    const fresh = await ensureUser(phone, 'imessage')
-    const first = args.text.replace(JOIN_PREFIX, '').trim()
-    if (first.length < 2) {
-      await welcomeNewUser(fresh, args.chatGuid)
-      return true
-    }
-    const day = localDay(new Date(), tzFor(fresh))
-    const r = await recordEntry(fresh, day, first)
-    await f2Supabase().from('onething_users').update({ prompt_day: day, prompted_at: new Date().toISOString() }).eq('id', fresh.id)
-    await sendIMessage({ chatGuid: args.chatGuid, text: `Welcome to Onething. ${confirmText(r)}` })
-    return true
-  }
-
-  const now = new Date()
-  const tz = tzFor(user)
-  const today = localDay(now, tz)
-  const hour = localHour(now, tz)
-  const forced = FORCE_PREFIX.test(args.text)
-
-  // Which day is this sentence for? Today, unless it is the small hours and
-  // yesterday's question is still unanswered.
-  // (Look the day up directly: the latest row is not necessarily this day's,
-  // which once let chat replies pile onto yesterday as extra thoughts.)
-  let day = today
-  if (hour < GRACE_HOUR && user.prompt_day === addDays(today, -1) && !(await findEntry(user.id, user.prompt_day))) {
-    day = user.prompt_day
-  }
-  const pending = user.prompt_day === day && !(await findEntry(user.id, day))
-  if (!pending && !forced) return false
-
-  const text = args.text.replace(FORCE_PREFIX, '').trim()
-  if (text.length < 2) {
-    await sendIMessage({ chatGuid: args.chatGuid, text: 'One sentence, anything at all. What happened?' })
-    return true
-  }
-  const r = await recordEntry(user, day, text)
-  await sendIMessage({ chatGuid: args.chatGuid, text: confirmText(r) })
-  return true
-}
+// The hourly tick, the welcome, and the inbound webhook handler live in flow.ts.

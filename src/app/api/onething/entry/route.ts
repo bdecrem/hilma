@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { COOKIE, editEntryLine, findUserById, localDay, recordEntry, tzFor, verifySession } from '@/lib/onething/core'
+import { afterKept } from '@/lib/onething/buddies'
 
 export const runtime = 'nodejs'
 
@@ -12,8 +13,11 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { text?: string }
   const text = (body.text ?? '').trim().slice(0, 600)
   if (text.length < 2) return NextResponse.json({ error: 'One sentence, anything at all.' }, { status: 400 })
-  const r = await recordEntry(user, localDay(new Date(), tzFor(user)), text)
-  return NextResponse.json({ ok: true, ...r })
+  const day = localDay(new Date(), tzFor(user))
+  const r = await recordEntry(user, day, text)
+  // A new day may move a buddy streak (and pay a bonus); appends do not.
+  const buddyLines = r.added || r.edited ? [] : await afterKept(user, day)
+  return NextResponse.json({ ok: true, ...r, buddyLines })
 }
 
 // PUT { day, index, text } — change one thought on one day. Empty text removes it.
