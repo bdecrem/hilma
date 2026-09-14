@@ -2,6 +2,10 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   devIndicators: false,
+  // The Openlab chat route reads the constitution from apps/ at runtime.
+  outputFileTracingIncludes: {
+    '/api/openlab/chat': ['./apps/openlab/01-constitution/constitution.md'],
+  },
   async rewrites() {
     return {
       beforeFiles: [

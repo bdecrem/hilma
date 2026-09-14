@@ -84,3 +84,26 @@ Next in line (not started):
   from "No" to a hedged "Yes". Principle 3's "unless the person asks for
   depth" is not being honoured by a 9B on a prompt alone. That gap is the
   first thing training should close. Speed: about 11 tok/s on the mini.
+
+## The chat page
+
+hilma-nine.vercel.app/openlab is a chat with the mini's model under the
+constitution. How it is wired:
+
+- Mini: `apps/openlab/chat/mini-proxy.mjs` (launchd `com.openlab.proxy`,
+  port 11440) is a bearer-token gate in front of Ollama; token in
+  `~/.openlab.env` on the mini (chmod 600). `sh.tunn3l.openlab-mini` exposes
+  it as https://openlab-mini.tunn3l.sh (`/health` is open, `/api/*` needs the
+  token). Both plists live in `apps/openlab/chat/` and are installed in
+  `~/Library/LaunchAgents/`; the proxy runs from `~/hilma-deploy`, so pull
+  there after changing it.
+- Vercel: `src/app/api/openlab/chat/route.ts` reads
+  `01-constitution/constitution.md` (traced into the function via
+  `outputFileTracingIncludes` in next.config.ts), prepends it as the system
+  prompt, calls the proxy with `OPENLAB_MINI_URL` / `OPENLAB_MINI_TOKEN` (set
+  in Vercel production and `.env.local`), streams the text back.
+  `OPENLAB_MODEL` overrides `qwen3.5:9b`.
+- Page: `src/app/openlab/Chat.tsx`, warm-paper look, phone first.
+
+Editing `constitution.md` changes the chat on the next deploy, and the
+baseline in 01 on the next run.
