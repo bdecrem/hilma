@@ -30,6 +30,8 @@
   -webkit-font-smoothing: antialiased;
 }
 .ot * { box-sizing: border-box; }
+/* the page itself never scrolls sideways, whatever a phone does with a rotated edge */
+html:has(.ot), body:has(.ot) { overflow-x: hidden; }
 .ot-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .ot-page {
   position: relative; max-width: 640px; margin: 0 auto;
@@ -94,7 +96,8 @@
 .ot-btn:disabled { opacity: .45; cursor: default; transform: rotate(-1deg); box-shadow: 2px 2px 0 var(--ink); }
 .ot-in {
   flex: 1; min-width: 0; padding: 6px 2px; border: 0; border-bottom: 2px solid var(--ink); border-radius: 0; background: transparent;
-  font: inherit; font-size: 15px; color: var(--ink); outline: none;
+  /* 16px, never less: iOS Safari zooms the whole page into a smaller field on focus, and it stays panning sideways after */
+  font: inherit; font-size: 16px; color: var(--ink); outline: none;
 }
 .ot-in::placeholder { color: var(--faint); }
 .ot-in:focus { border-bottom-color: var(--red); }
@@ -126,7 +129,8 @@
 .ot-ruler { margin-top: 4px; display: flex; justify-content: space-between; align-items: flex-end; height: 8px; }
 .ot-ruler span { display: block; width: 1.5px; height: 5px; background: var(--dim); }
 .ot-ruler span.now { height: 8px; background: var(--red); }
-.ot-ruler-k { margin-top: 2px; display: flex; justify-content: space-between; gap: 12px; font-size: 9.5px; letter-spacing: .5px; color: var(--dim); white-space: nowrap; }
+.ot-ruler-k { margin-top: 2px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0 12px; font-size: 9.5px; letter-spacing: .5px; color: var(--dim); }
+.ot-ruler-k span { white-space: nowrap; }
 .ot-ruler-k b { color: var(--red); }
 @media (max-width: 400px) {
   .ot-garden { gap: 12px; }
@@ -137,7 +141,7 @@
 /* a buddy is a small stitched tag under the garden, not a second card */
 .ot-buddy-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
 .ot-buddy-tag {
-  display: inline-block; padding: 2px 8px; font-size: 10.5px; line-height: 1.5; color: var(--red); white-space: nowrap;
+  display: inline-block; max-width: 100%; padding: 2px 8px; font-size: 10.5px; line-height: 1.5; color: var(--red);
   border: 1.5px dashed var(--red); transform: rotate(-.6deg);
 }
 .ot-buddy-tag b { letter-spacing: .5px; text-transform: uppercase; }
