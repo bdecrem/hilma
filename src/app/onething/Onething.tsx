@@ -265,6 +265,7 @@ export default function Onething() {
   const [editText, setEditText] = useState('');
   const [view, setView] = useState<'journal' | 'settings'>('journal');
   const [monthsBack, setMonthsBack] = useState(0);
+  const [details, setDetails] = useState(false); // the numbers behind the streak line, on request
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [you, setYou] = useState<{ err: string; note: string }>({ err: '', note: '' });
   const [inviteTo, setInviteTo] = useState('');
@@ -536,24 +537,30 @@ export default function Onething() {
             <h2 className="ot-stage">{b.level.name}</h2>
             <span className="ot-month-tag">{MONTHS[tm - 1].toUpperCase()} {ty}</span>
           </div>
-          <div className="ot-stats">
-            <b>{b.points} pts</b> · {streakWord}{b.best > b.streak ? ` · best ${b.best}` : ''} · +{perDay} a day
+          <div className="ot-streak">
+            {streakWord}
+            <button type="button" className="ot-info" aria-label="streak details" aria-expanded={details} aria-controls="ot-details" onClick={() => setDetails((d) => !d)}>i</button>
           </div>
-          <div>
-            <div className="ot-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
-              <i className={progress >= 1 ? 'full' : ''} style={{ ['--w' as string]: `${progress * 100}%` }} />
+          {details && (
+            <div className="ot-stats" id="ot-details">
+              <b>{b.points} pts</b> · +{perDay} a day{b.best > b.streak ? ` · best ${b.best}` : ''}
             </div>
-            <div className="ot-ruler" aria-hidden>
-              {levels.map((l, i) => <span key={l.name} className={i === b.index ? 'now' : ''} />)}
-            </div>
+          )}
+          <div className="ot-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
+            <i className={progress >= 1 ? 'full' : ''} style={{ ['--w' as string]: `${progress * 100}%` }} />
+          </div>
+          <div className="ot-ruler" aria-hidden>
+            {levels.map((l, i) => <span key={l.name} className={i === b.index ? 'now' : ''} />)}
+          </div>
+          {details && (
             <div className="ot-ruler-k">
               <span><b>{b.level.name.toUpperCase()}</b>{b.next ? ` · ${b.next.name.toUpperCase()} ${toNext === 0 ? 'TODAY' : toNext !== null ? `IN ${toNext} ${toNext === 1 ? 'DAY' : 'DAYS'}` : `AT ${b.next.min} PTS`}` : ' · THE TOP'}</span>
               {b.next && <span>{levels[levels.length - 1].name.toUpperCase()}</span>}
             </div>
-          </div>
+          )}
         </div>
       </section>
-      {buddies.length > 0 && (
+      {details && buddies.length > 0 && (
         <div className="ot-buddy-tags" aria-label="buddy streaks">
           {buddies.map((x) => (
             <span className="ot-buddy-tag" key={x.id}>
