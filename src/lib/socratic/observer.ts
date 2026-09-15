@@ -8,6 +8,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { getClient } from './anthropic'
+import { runClaudeCode, useClaudeCode } from './claude-code'
 import type { Module, Move, Verdict } from './types'
 import { ANSWER_TYPES, MOVES } from './types'
 
@@ -69,18 +70,18 @@ ${m.method}
 
 export async function observe(m: Module, tutorMessage: string, studentMessage: string): Promise<{ verdict: Verdict; usage: Anthropic.Usage; model: string; latencyMs: number }> {
   const model = observerModel()
+  const user = `<tutor>\n${tutorMessage}\n</tutor>\n\n<student>\n${studentMessage}\n</student>`
+  if (useClaudeCode()) {
+    const r = await runClaudeCode({ model, effort: 'low', system: observerPrompt(m), schema: VERDICT_SCHEMA, prompt: user })
+    return { verdict: r.output as Verdict, usage: { ...r.usage, cost_usd: r.costUsd } as unknown as Anthropic.Usage, model, latencyMs: r.latencyMs }
+  }
   const t0 = Date.now()
   const res = await getClient().messages.create({
     model,
     max_tokens: 1024,
     output_config: { effort: 'low', format: { type: 'json_schema', schema: VERDICT_SCHEMA } },
     system: [{ type: 'text', text: observerPrompt(m), cache_control: { type: 'ephemeral' } }],
-    messages: [
-      {
-        role: 'user',
-        content: `<tutor>\n${tutorMessage}\n</tutor>\n\n<student>\n${studentMessage}\n</student>`,
-      },
-    ],
+    messages: [{ role: 'user', content: user }],
   })
   if (res.stop_reason === 'refusal') throw new Error('observer refused')
   const text = res.content.find((b): b is Anthropic.TextBlock => b.type === 'text')?.text

@@ -8,8 +8,9 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import { getClient } from './anthropic'
+import { runClaudeCode, useClaudeCode } from './claude-code'
 import { partialReply } from './partial'
-import { OPENING_MESSAGE, TUTOR_OUTPUT_SCHEMA, systemBlocks } from './prompts'
+import { OPENING_MESSAGE, TUTOR_OUTPUT_SCHEMA, systemBlocks, systemPrompt } from './prompts'
 import type { Arm, Module, Turn, TutorMeta } from './types'
 import { ANSWER_TYPES, MASTERY_KEYS, MOVES, PHASES } from './types'
 
@@ -72,6 +73,7 @@ export type TutorResult = {
  * parsed reply and self-report once the message is complete.
  */
 export async function runTutor(arm: Arm, m: Module, turns: Turn[], onDelta: (text: string) => void): Promise<TutorResult> {
+  if (useClaudeCode()) return runTutorLocal(arm, m, turns, onDelta)
   const model = tutorModel()
   const t0 = Date.now()
   const stream = getClient().messages.stream({
@@ -105,4 +107,38 @@ export async function runTutor(arm: Arm, m: Module, turns: Turn[], onDelta: (tex
   // Anything the partial decoder missed (it stops at a cut-off escape).
   if (reply.length > sent) onDelta(reply.slice(sent))
   return { reply, meta, usage: final.usage, model, latencyMs: Date.now() - t0 }
+}
+
+/**
+ * The same turn through the Claude Code CLI (SOC_BACKEND=claude-code): the
+ * conversation lives in a Claude Code session named by the socratic session
+ * id, so only this turn's student message is sent; the coach note rides in
+ * the same message, as it does in the API path.
+ */
+async function runTutorLocal(arm: Arm, m: Module, turns: Turn[], onDelta: (text: string) => void): Promise<TutorResult> {
+  const model = tutorModel()
+  const last = turns[turns.length - 1]
+  if (!last || last.role !== 'student') throw new Error('runTutor: last turn must be the student')
+  const text = last.hidden ? OPENING_MESSAGE : last.content
+  const prompt = last.coach ? `${text}\n\n${last.coach}` : text
+  let sent = 0
+  const r = await runClaudeCode({
+    model,
+    effort: tutorEffort(),
+    system: systemPrompt(arm, m),
+    schema: TUTOR_OUTPUT_SCHEMA,
+    prompt,
+    session: { id: last.session_id },
+    onPartialJson: (json) => {
+      const reply = partialReply(json)
+      if (reply.length > sent) {
+        onDelta(reply.slice(sent))
+        sent = reply.length
+      }
+    },
+  })
+  if (!isMeta(r.output)) throw new Error('tutor output did not match the schema')
+  const { reply, ...meta } = r.output
+  if (reply.length > sent) onDelta(reply.slice(sent))
+  return { reply, meta, usage: { ...r.usage, cost_usd: r.costUsd } as unknown as Anthropic.Usage, model, latencyMs: r.latencyMs }
 }
