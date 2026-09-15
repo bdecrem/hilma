@@ -181,13 +181,11 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; }
   .ot-dayno { left: -40px; width: 18px; }
 }
 
-/* thoughts: the first in the hand, the rest as dashes under it, each editable */
+/* thoughts: every one on a day in the same hand, peers on their own lines, each editable */
 .ot-thoughts { list-style: none; margin: 0; padding: 0; }
 .ot-thought { display: flex; align-items: baseline; gap: 8px; }
 .ot-thought .t { margin: 0; flex: 1; min-width: 0; font-family: var(--hand); font-weight: 600; font-size: 22px; line-height: 1.25; color: var(--ink); overflow-wrap: anywhere; }
-.ot-thought + .ot-thought { margin-top: 4px; }
-.ot-thought + .ot-thought .t { padding-left: 16px; font-weight: 400; font-size: 20px; color: var(--body); }
-.ot-thought + .ot-thought .t::before { content: '— '; }
+.ot-thought + .ot-thought { margin-top: 6px; }
 .ot-thought .edit { flex: none; font-size: 10px; color: var(--faint); border-bottom-color: transparent; opacity: 0; transition: opacity .12s ease; }
 .ot-thought:hover .edit, .ot-thought:focus-within .edit, .ot-thought .edit:focus-visible { opacity: 1; }
 @media (hover: none) { .ot-thought .edit { opacity: 1; } }
