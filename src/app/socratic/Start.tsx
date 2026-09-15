@@ -16,6 +16,10 @@ type Props = {
   modules: ModuleInfo[]
   defaultModule: string
   arms: Record<Arm, { name: string; blurb: string }>
+  /** The full build (local machine) shows the "create a new topic" link; the public one does not. */
+  canCreate: boolean
+  /** On the public build, where the full build lives; null on the full build itself. */
+  fullUrl: string | null
 }
 
 type Recent = { id: string; arm: Arm; at: string }
@@ -44,7 +48,7 @@ export function rememberSession(r: Recent) {
   } catch {}
 }
 
-export default function Start({ modules, defaultModule, arms }: Props) {
+export default function Start({ modules, defaultModule, arms, canCreate, fullUrl }: Props) {
   const router = useRouter()
   const params = useSearchParams()
   const [pid, setPid] = useState('')
@@ -146,12 +150,14 @@ export default function Start({ modules, defaultModule, arms }: Props) {
           {busy ? 'Opening…' : 'Begin session'}
         </button>
         {error && <p className="soc-error">{error}</p>}
-        <p className="soc-textlink-row">
-          Teaching something else?{' '}
-          <a className="soc-textlink" href="/socratic/new">
-            Create a new topic
-          </a>
-        </p>
+        {canCreate && (
+          <p className="soc-textlink-row">
+            Teaching something else?{' '}
+            <a className="soc-textlink" href="/socratic/new">
+              Create a new topic
+            </a>
+          </p>
+        )}
       </section>
 
       {recent.length > 0 && (
@@ -166,6 +172,13 @@ export default function Start({ modules, defaultModule, arms }: Props) {
             </a>
           ))}
         </section>
+      )}
+
+      {fullUrl && (
+        <p className="soc-foot">
+          This is the study build, with the one Torts topic. The full build, with more topics and a page that drafts a new topic from your own material, runs on a machine at CASBS:{' '}
+          <a href={fullUrl}>{fullUrl.replace(/^https?:\/\//, '')}</a>
+        </p>
       )}
     </main>
   )

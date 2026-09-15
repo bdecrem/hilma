@@ -11,7 +11,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { useClaudeCode } from '@/lib/socratic/claude-code'
 import { draftModule, slugify, sourceText, type SourceText } from '@/lib/socratic/draft'
-import { FILE_MODULES, getModule, moduleInfo } from '@/lib/socratic/modules'
+import { allModules, FILE_MODULES, getModule, moduleInfo } from '@/lib/socratic/modules'
 import { getModuleRow, insertModuleRow } from '@/lib/socratic/store'
 import { authorized } from '@/app/socratic/sessions/auth'
 
@@ -21,7 +21,7 @@ export const maxDuration = 300
 const MAX_SOURCE_CHARS = 400_000
 
 function canCreate(key: string | undefined): boolean {
-  return useClaudeCode() || authorized(key)
+  return allModules() && (useClaudeCode() || authorized(key))
 }
 
 const err = (error: string, status: number) => NextResponse.json({ error }, { status })
