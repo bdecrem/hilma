@@ -318,7 +318,7 @@ export const SITE_URL = 'https://onething.ink'
 /// back after an entry lands); each send picks one at random. Every one of
 /// them ends with the site URL on its own line.
 type BuddyKey = keyof typeof copy.buddy
-const COPY: { morning: string[]; reminder: string[]; kept: string[]; buddy: Record<BuddyKey, string> } = copy
+const COPY: { morning: string[]; reminder: string[]; kept: string[]; retired: string[]; buddy: Record<BuddyKey, string> } = copy
 function pick(lines: string[]): string {
   return lines[Math.floor(Math.random() * lines.length)]
 }
@@ -335,7 +335,7 @@ export function promptText(extra: string[] = []): string {
 
 /// The first text a new account gets: what this is, and today's question.
 export function welcomeText(): string {
-  return `Welcome to Onething. Every day at ten I’ll text you one question; you answer in one sentence.\nHere’s today’s: what is one thing that happened in the last 24 hours? Just reply here.\n${SITE_URL}`
+  return `Welcome to Onething. Every day at ten I’ll ask about your day; you answer with one thing that happened, in a sentence.\nHere’s today’s: what’s one thing that happened today? Just reply here.\n${SITE_URL}`
 }
 
 /// The evening reminder; when buddies have already written today it says so
@@ -370,7 +370,7 @@ function templateRe(line: string): RegExp {
 /// reset, the name question) only ever follow a line from the lists above, so
 /// they are not echo evidence on their own — "Sam's in too." can be a diary line.
 export const BUDDY_FIRST_LINES: BuddyKey[] = ['reminderOne', 'reminderMany', 'invite', 'accepted', 'acceptedInviter', 'nameSet']
-const COPY_LINES: RegExp[] = [...COPY.morning, ...COPY.reminder, ...COPY.kept, ...BUDDY_FIRST_LINES.map((k) => COPY.buddy[k])].map(templateRe)
+const COPY_LINES: RegExp[] = [...COPY.morning, ...COPY.reminder, ...COPY.kept, ...COPY.retired, ...BUDDY_FIRST_LINES.map((k) => COPY.buddy[k])].map(templateRe)
 const OWN_TEXT = [
   /^Onething: what is one thing/i,
   /^Welcome to Onething\./i,

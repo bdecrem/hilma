@@ -362,7 +362,7 @@ export default function Onething() {
       <main className="ot-page">
         <header className="ot-mast landing">
           <Wordmark h1 />
-          <div className="ot-tagline">one sentence a day, by text</div>
+          <div className="ot-tagline">one observation a day, by text</div>
         </header>
         <h2 className="ot-h1">Every day at ten, a text asks what happened.</h2>
         <p className="ot-lede">You answer in one sentence. By December, you have a year.</p>
@@ -617,7 +617,7 @@ export default function Onething() {
               )}
               {open ? (
                 <form onSubmit={(e) => { e.preventDefault(); save(); }}>
-                  <p className="ot-q">{r.entry ? 'One more thing?' : 'One thing that happened in the last 24 hours?'}</p>
+                  <p className="ot-q">{r.entry ? 'One more thing?' : 'One thing that happened today?'}</p>
                   <textarea className="ot-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder="One sentence." rows={3} aria-label="today's sentence" />
                   <div className="ot-acts">
                     <button className="ot-btn" disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Keeping…' : 'Keep it'}</button>

@@ -12,7 +12,7 @@ const check = (ok: boolean, label: string) => {
 }
 
 // Every line, as sent (with the URL) and as Messages sometimes echoes it (trimmed, no URL).
-for (const [kind, lines] of Object.entries({ morning: copy.morning, reminder: copy.reminder, kept: copy.kept })) {
+for (const [kind, lines] of Object.entries({ morning: copy.morning, reminder: copy.reminder, kept: copy.kept, retired: copy.retired })) {
   let ok = true
   for (const line of lines) {
     const sent = `${line.replace('{n}', '17')}\n${SITE_URL}`
