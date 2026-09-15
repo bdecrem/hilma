@@ -10,8 +10,11 @@ import { isArm } from '@/lib/socratic/arms'
 import type { Arm } from '@/lib/socratic/types'
 import { createSession } from './api'
 
+type ModuleInfo = { id: string; title: string; subtitle: string; course: string; source: string }
+
 type Props = {
-  module: { id: string; title: string; subtitle: string; course: string; source: string }
+  modules: ModuleInfo[]
+  defaultModule: string
   arms: Record<Arm, { name: string; blurb: string }>
 }
 
@@ -41,11 +44,13 @@ export function rememberSession(r: Recent) {
   } catch {}
 }
 
-export default function Start({ module: m, arms }: Props) {
+export default function Start({ modules, defaultModule, arms }: Props) {
   const router = useRouter()
   const params = useSearchParams()
   const [pid, setPid] = useState('')
   const [arm, setArm] = useState<Arm>('B')
+  const [moduleId, setModuleId] = useState(defaultModule)
+  const m = modules.find((x) => x.id === moduleId) ?? modules[0]
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [recent, setRecent] = useState<Recent[]>([])
@@ -62,8 +67,10 @@ export default function Start({ module: m, arms }: Props) {
     if (!p) p = randomPid()
     setPid(p)
     if (isArm(qArm)) setArm(qArm)
+    const qModule = params.get('module')
+    if (qModule && modules.some((x) => x.id === qModule)) setModuleId(qModule)
     setRecent(readRecent())
-  }, [params])
+  }, [params, modules])
 
   async function begin() {
     setBusy(true)
@@ -97,6 +104,18 @@ export default function Start({ module: m, arms }: Props) {
       </section>
 
       <section className="soc-card">
+        {modules.length > 1 && (
+          <div className="soc-field">
+            <label htmlFor="soc-module">Topic</label>
+            <select id="soc-module" value={m.id} onChange={(e) => setModuleId(e.target.value)}>
+              {modules.map((x) => (
+                <option key={x.id} value={x.id}>
+                  {x.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="soc-field">
           <label htmlFor="soc-pid">Participant code</label>
           <input

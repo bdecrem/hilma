@@ -8,7 +8,9 @@
 // the method says must be corrected — and screenshots each stage into the
 // scratchpad. Prints the session id so the DB rows can be checked.
 //
-// Env: SOC_URL (default http://localhost:3100), SOC_SHOTS (screenshot dir).
+// Env: SOC_URL (default http://localhost:3100), SOC_SHOTS (screenshot dir),
+// SOC_MODULE (module id for the topic picker; default module otherwise),
+// SOC_SCRIPT (JSON array of the two student messages, for a non-default module).
 
 import { chromium, devices } from 'playwright'
 import fs from 'node:fs'
@@ -17,6 +19,7 @@ const arm = (process.argv[2] || 'B').toUpperCase()
 const pid = process.argv[3] || `pw-${arm.toLowerCase()}`
 const base = process.env.SOC_URL || 'http://localhost:3100'
 const shots = process.env.SOC_SHOTS || '.'
+const moduleId = process.env.SOC_MODULE || ''
 fs.mkdirSync(shots, { recursive: true })
 
 const SCRIPT = {
@@ -25,6 +28,7 @@ const SCRIPT = {
   C: ['Ready.', "Yes, she's liable. She knew he was a bad driver, she knew he was going to use the money for the car, and she still paid him. So she should be on the hook."],
 }[arm]
 if (!SCRIPT) throw new Error(`arm must be A, B or C (got ${arm})`)
+if (process.env.SOC_SCRIPT) SCRIPT.splice(0, SCRIPT.length, ...JSON.parse(process.env.SOC_SCRIPT))
 
 const browser = await chromium.launch({ headless: true })
 const context = await browser.newContext({ ...devices['iPhone 14'], viewport: { width: 390, height: 844 } })
@@ -59,7 +63,12 @@ async function lastTutor() {
   return page.locator('.soc-tutor').last().innerText()
 }
 
-await page.goto(`${base}/socratic?arm=${arm}&pid=${pid}`, { waitUntil: 'networkidle' })
+await page.goto(`${base}/socratic?arm=${arm}&pid=${pid}${moduleId ? `&module=${moduleId}` : ''}`, { waitUntil: 'networkidle' })
+if (moduleId) {
+  const picked = await page.locator('#soc-module').inputValue()
+  if (picked !== moduleId) throw new Error(`topic picker shows ${picked}, wanted ${moduleId}`)
+  console.log(`[${stamp()}] topic: ${await page.locator('h1').innerText()}`)
+}
 await page.screenshot({ path: `${shots}/soc-${arm}-0-start.png`, fullPage: true })
 const pressed = await page.locator('.soc-seg button[aria-pressed="true"]').innerText()
 console.log(`[${stamp()}] start page; condition pressed: ${pressed.split('\n')[0]}`)

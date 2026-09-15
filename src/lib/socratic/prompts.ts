@@ -33,7 +33,8 @@ export const TUTOR_OUTPUT_SCHEMA = {
   additionalProperties: false,
 } as const
 
-const OUTPUT_FORMAT = `## Output format
+function outputFormat(m: Module): string {
+  return `## Output format
 
 Every reply is one JSON object; the API enforces the schema. Fields:
 
@@ -41,7 +42,8 @@ Every reply is one JSON object; the API enforces the schema. Fields:
 - \`phase\` — where the session is after this reply: \`overview\` (you just gave the overview), \`readiness\` (you asked whether they're ready and are waiting), \`questioning\` (working through the material), \`mastery\` (the mastery check / wrap-up), \`done\` (the session has been wrapped up).
 - \`move\` — the primary thing this reply does: ${MOVES.map((m) => `\`${m}\``).join(', ')}.
 - \`student_answer\` — how you read the student's most recent message (\`none\` on the opening turn): ${ANSWER_TYPES.map((m) => `\`${m}\``).join(', ')}.
-- \`mastery\` — the four mastery flags as you currently judge them from what the student has actually said (not what you told them): \`holding\` (they stated the Vince v. Wilson holding correctly), \`structure\` (they described the two-part structure of the claim), \`both_sides\` (they argued both sides of the employer hypothetical without lapsing into a list of facts), \`line_drawing\` (they engaged the line-drawing or sympathetic-group challenge). Once a flag is true it stays true.`
+- \`mastery\` — the four mastery flags as you currently judge them from what the student has actually said (not what you told them): ${MASTERY_KEYS.map((k) => `\`${k}\` (${m.masteryCriteria[k]})`).join(', ')}. Once a flag is true it stays true.`
+}
 
 function moduleHeader(m: Module) {
   return `# ${m.title}\n### ${m.subtitle}\n${m.source}.`
@@ -49,9 +51,9 @@ function moduleHeader(m: Module) {
 
 /** Arm A: a knowledgeable, friendly tutor that explains and answers. The control. */
 function assistantPrompt(m: Module): string {
-  return `You are a knowledgeable, friendly law tutor helping a first-year law student study Torts, one-on-one, in a chat. The topic is below. Teach it the way a good study assistant does: explain clearly, answer questions directly and completely, give examples, and when the student asks what the right answer or the best argument is, give it. You may occasionally check that they've followed you, but your job is to explain, not to cross-examine — don't withhold answers or turn the student's questions back on them.
+  return `You are a knowledgeable, friendly tutor helping a student study one topic, one-on-one, in a chat. The topic is below. Teach it the way a good study assistant does: explain clearly, answer questions directly and completely, give examples, and when the student asks what the right answer or the best argument is, give it. You may occasionally check that they've followed you, but your job is to explain, not to cross-examine — don't withhold answers or turn the student's questions back on them.
 
-Open the session with a clear, organized overview of the material (a few paragraphs, not an essay), state the employer hypothetical as an interesting question worth thinking about, and invite the student to ask whatever they'd like or to try the hypothetical with you. From then on, follow the student's lead. Report \`phase\` as \`overview\` for the opening reply and \`questioning\` afterwards (\`done\` if the student says they're finished). Your \`move\` is normally \`answer\`; use \`teach\` when you correct a doctrinal mistake and \`recap\` when you summarize where things stand.
+Open the session with a clear, organized overview of the material (a few paragraphs, not an essay), state the hypothetical as an interesting question worth thinking about, and invite the student to ask whatever they'd like or to try the hypothetical with you. From then on, follow the student's lead. Report \`phase\` as \`overview\` for the opening reply and \`questioning\` afterwards (\`done\` if the student says they're finished). Your \`move\` is normally \`answer\`; use \`teach\` when you correct a doctrinal mistake and \`recap\` when you summarize where things stand.
 
 ${moduleHeader(m)}
 
@@ -63,7 +65,7 @@ ${m.doctrine}
 
 ${m.hypothetical}
 
-${OUTPUT_FORMAT}`
+${outputFormat(m)}`
 }
 
 /** Arms B and C: the study script, Zeiler's method, the transcript for voice. */
@@ -76,7 +78,7 @@ A second agent, the coach, reads each student message before you do and appends 
 `
     : ''
 
-  return `You are about to run a one-on-one Socratic tutoring session on negligent entrustment, modeled directly on a real BU Law transcript of Professor Kathryn Zeiler teaching this material. Everything below — the doctrine, the case, the hypothetical, and the *method* — comes from that class. Your job is not just to convey the content; it is to reproduce the way she gets students to reason, including the specific corrective moves she makes when a student's answer falls short.
+  return `${m.framing}
 
 Do not paraphrase this into a generic "let's learn about torts" session — the value here is the specificity of her method.
 
@@ -86,7 +88,7 @@ ${moduleHeader(m)}
 
 ${m.doctrine}
 
-### 2. The hypothetical that drives the session — the "employer as entruster" extension
+### 2. The hypothetical that drives the session — ${m.hypotheticalTitle}
 
 ${m.hypothetical}
 
@@ -106,7 +108,12 @@ ${m.questionBank}
 
 ${m.tone}
 ${coach}
-${OUTPUT_FORMAT}
+${outputFormat(m)}${transcriptAppendix(m)}`
+}
+
+function transcriptAppendix(m: Module): string {
+  if (!m.transcript.trim()) return ''
+  return `
 
 ## Appendix — the class transcript this session is modelled on
 

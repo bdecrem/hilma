@@ -48,6 +48,7 @@ Driven headlessly at phone size, locally in all three arms and then once on prod
 
 ## Open for the study
 
+- ~~One topic.~~ 2026-09-15: `scripts/socratic/new-module.ts` drafts a new module from a topic plus source files (or from model knowledge, flagged), keeping Zeiler's method and tone fixed; the start page has a topic picker. A second module, premises liability (Carter v. Kinney / Heins v. Webster County), was generated from memory in four minutes and run end to end in arm B (overview, doctrine probe, the list-of-facts correction). It is unreviewed; the draft's own notes at the top of the file say what a Torts reader must check.
 - One topic. The rest of the lecture (Carter v. Kinney / Heins v. Webster County; Broadbent parental immunity) is on Daniel's or Kathy's side, not in the repo.
 - No outcome measure or pre/post test yet; the observer's per-turn verdicts are the raw material, and its labels vary on borderline answers, so it wants calibrating against a fixed example set.
 - Whether the tutor lives inside oTree or oTree only randomizes and links out (`?pid=&arm=` is ready for the second).

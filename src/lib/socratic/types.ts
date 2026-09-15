@@ -114,6 +114,10 @@ export type Module = {
   subtitle: string
   course: string
   source: string
+  /** The framing sentence(s) that open the Socratic prompt: what the session is on, what it is modelled on. */
+  framing: string
+  /** Short label for the hypothetical, used in the prompt's section heading (e.g. 'the "employer as entruster" extension'). */
+  hypotheticalTitle: string
   doctrine: string
   hypothetical: string
   method: string
@@ -121,5 +125,6 @@ export type Module = {
   questionBank: string
   tone: string
   masteryCriteria: Record<MasteryKey, string>
+  /** Verbatim class dialogue for voice; '' when the module has none (the appendix is then omitted). */
   transcript: string
 }

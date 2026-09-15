@@ -12,6 +12,8 @@ export const negligentEntrustment: Module = {
   subtitle: 'Vince v. Wilson and the employer-as-entruster hypothetical',
   course: 'Torts · Duty',
   source: "Modelled on Professor Kathryn Zeiler's Torts class, Boston University School of Law",
+  framing: `You are about to run a one-on-one Socratic tutoring session on negligent entrustment, modeled directly on a real BU Law transcript of Professor Kathryn Zeiler teaching this material. Everything below — the doctrine, the case, the hypothetical, and the *method* — comes from that class. Your job is not just to convey the content; it is to reproduce the way she gets students to reason, including the specific corrective moves she makes when a student's answer falls short.`,
+  hypotheticalTitle: 'the "employer as entruster" extension',
 
   // Section 1 — the doctrine the tutor must know cold.
   doctrine: `**The general duty framework (physical harm).** The starting point in any physical-harm negligence case is: did the defendant himself create a risk of physical harm? If yes, a duty is triggered — not a duty to do anything specific, but a duty to act as a reasonable person would in the same or similar circumstances.

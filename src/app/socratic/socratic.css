@@ -193,7 +193,8 @@
   text-transform: uppercase;
   color: var(--ink-3);
 }
-.soc-field input {
+.soc-field input,
+.soc-field select {
   font: inherit;
   font-size: 16px;
   height: 44px;
@@ -203,7 +204,8 @@
   background: #fff;
   color: var(--ink);
 }
-.soc-field input:focus {
+.soc-field input:focus,
+.soc-field select:focus {
   outline: 2px solid var(--claret);
   outline-offset: 1px;
 }
