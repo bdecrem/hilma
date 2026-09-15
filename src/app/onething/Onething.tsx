@@ -1,16 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { LEVELS, type Level } from '@/lib/onething/levels';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { LEVELS, pointsForEntry, type Level } from '@/lib/onething/levels';
 import Plant from './Plant';
 import copy from '@/lib/onething/copy.json';
+import { squareJpeg } from './picture';
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
-type BuddyView = { id: string; name: string; streak: number; best: number; inToday: boolean; nextBonusIn: number; startsTomorrow: boolean };
+type BuddyView = { id: string; name: string; avatar: string | null; streak: number; best: number; inToday: boolean; nextBonusIn: number; startsTomorrow: boolean };
 type InviteView = { id: string; name: string; since: string };
+type Person = { phone: string; since: string; tz?: string; name?: string | null; avatar?: string | null };
 type Me = {
-  user: { phone: string; since: string; tz?: string; name?: string | null } | null;
+  user: Person | null;
   today?: string; board?: Board; entries?: Entry[]; levels?: Level[];
   buddies?: BuddyView[]; sent?: InviteView[]; received?: InviteView[]; bonus?: { every: number; points: number };
 };
@@ -23,12 +25,26 @@ const NUDGES = [
   'Who you talked to, and one line they said.',
   'A thing you finished. Or started.',
 ];
-function longDay(day: string): string {
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+// ---------- days ----------
+function parts(day: string): [number, number, number] {
   const [y, m, d] = day.split('-').map(Number);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' });
+  return [y, m, d];
+}
+function ymd(y: number, m: number, d: number): string {
+  return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+function daysInMonth(y: number, m: number): number {
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+/// `n` months before (y, m).
+function monthBack(y: number, m: number, n: number): [number, number] {
+  const i = y * 12 + (m - 1) - n;
+  return [Math.floor(i / 12), (i % 12) + 1];
 }
 function shortDay(day: string): string {
-  const [y, m, d] = day.split('-').map(Number);
+  const [y, m, d] = parts(day);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 function lines(text: string): string[] {
@@ -38,43 +54,50 @@ function prettyPhone(p: string): string {
   const m = p.match(/^\+1(\d{3})(\d{3})(\d{4})$/);
   return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
 }
-
-/** A pencilled checkbox: ticked when that buddy's sentence is in for today. */
-function Tick({ on }: { on: boolean }) {
-  return (
-    <svg className="ot-tick" viewBox="0 0 20 20" aria-hidden>
-      <rect x="2" y="2" width="16" height="16" rx="3" fill="none" stroke="#35332f" strokeWidth="2" />
-      {on && <path d="M5 10.5 L8.5 14 L15 6.5" fill="none" stroke="#4f9a63" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />}
-    </svg>
-  );
+/// What goes in the circle when there is no picture: initials, or the last two digits.
+function initials(name: string | null | undefined, phone: string): string {
+  const n = (name ?? '').trim();
+  if (n) return n.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+  return phone.replace(/\D/g, '').slice(-2) || '·';
+}
+/// Tally marks, five to a group.
+function tally(n: number): string {
+  const out: string[] = [];
+  for (let k = n; k > 0; k -= 5) out.push('|'.repeat(Math.min(5, k)));
+  return out.join(' ');
+}
+/// Days until the next level at one sentence a day from here; 0 = with today's sentence.
+function daysToNext(b: Board): number | null {
+  if (!b.next) return null;
+  let s = b.streak, p = b.points;
+  for (let d = 1; d <= 400; d++) {
+    s += 1;
+    const { base, bonus } = pointsForEntry(s);
+    p += base + bonus;
+    if (p >= b.next.min) return b.doneToday ? d : d - 1;
+  }
+  return null;
 }
 
-function PencilMark() {
-  return (
-    <svg viewBox="0 0 32 32" aria-hidden>
-      <g fill="none" stroke="#35332f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 27 L9 17 L21 5 L27 11 L15 23 Z" />
-        <path d="M21 5 L27 11 M6 27 L9 24" />
-      </g>
-      <path d="M9 17 L15 23 L12 25 L7 20 Z" fill="#f3c64b" />
-    </svg>
-  );
+type Row = { day: string; n: number; entry?: Entry; kind: 'today' | 'kept' | 'missed' };
+/// The month's page, newest day first: today (open or kept), kept days, and
+/// missed days since the account began — a leaf drooped.
+function monthRows(y: number, m: number, today: string, since: string, byDay: Map<string, Entry>): Row[] {
+  const [ty, tm, td] = parts(today);
+  const last = y === ty && m === tm ? td : daysInMonth(y, m);
+  const sinceDay = since.slice(0, 10);
+  const rows: Row[] = [];
+  for (let d = last; d >= 1; d--) {
+    const day = ymd(y, m, d);
+    const entry = byDay.get(day);
+    if (day === today) rows.push({ day, n: d, entry, kind: 'today' });
+    else if (entry) rows.push({ day, n: d, entry, kind: 'kept' });
+    else if (day >= sinceDay) rows.push({ day, n: d, kind: 'missed' });
+  }
+  return rows;
 }
 
-/** Spiral binding along the top edge, like a flip sketchbook. */
-function Coil() {
-  return (
-    <svg className="ot-coil" viewBox="0 0 600 40" preserveAspectRatio="none" aria-hidden>
-      <defs>
-        <pattern id="ot-coil" patternUnits="userSpaceOnUse" width="30" height="40">
-          <ellipse cx="15" cy="21" rx="5.5" ry="4" fill="#e6e2d9" />
-          <path d="M9 4 C 4 10, 4 30, 15 34 C 24 37, 27 22, 21 15" fill="none" stroke="#8f8b84" strokeWidth="2.2" strokeLinecap="round" />
-        </pattern>
-      </defs>
-      <rect width="600" height="40" fill="url(#ot-coil)" />
-    </svg>
-  );
-}
+// ---------- small pieces ----------
 
 /** Coloured-pencil hatching the plant's leaves fill with (referenced from CSS). */
 function Defs() {
@@ -90,80 +113,65 @@ function Defs() {
         <pattern id="ot-hatch-wood" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(60)">
           <line x1="0" y1="0" x2="0" y2="6" stroke="#e7c9a2" strokeWidth="2.6" strokeLinecap="round" />
         </pattern>
-        <filter id="ot-wob" x="-5%" y="-5%" width="110%" height="110%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" seed="5" result="n" />
-          <feDisplacementMap in="SourceGraphic" in2="n" scale="2" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-        <pattern id="ot-hy" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(38)">
-          <line x1="0" y1="0" x2="0" y2="7" stroke="#f3c64b" strokeWidth="3.6" strokeLinecap="round" />
-        </pattern>
-        <pattern id="ot-hp" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(-30)">
-          <line x1="0" y1="0" x2="0" y2="6" stroke="#f0a3a0" strokeWidth="3" strokeLinecap="round" />
-        </pattern>
-        <pattern id="ot-hg" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(20)">
-          <line x1="0" y1="0" x2="0" y2="5" stroke="#c9c6bf" strokeWidth="2.4" strokeLinecap="round" />
-        </pattern>
       </defs>
     </svg>
   );
 }
 
-/** The pencil from the hello page, leaning in to say it. */
-function Mascot() {
+function Wordmark({ h1 }: { h1?: boolean }) {
+  const inner = <>onething<span>.ink</span></>;
+  return h1 ? <h1 className="ot-wordmark">{inner}</h1> : <a className="ot-wordmark" href="/onething">{inner}</a>;
+}
+
+/** The circle: their picture, or initials on a scrap of tape. */
+function Avatar({ person, size = 28 }: { person: { name?: string | null; phone: string; avatar?: string | null }; size?: number }) {
   return (
-    <svg className="ot-mascot" viewBox="0 0 120 200" aria-hidden>
-      <g filter="url(#ot-wob)" stroke="#35332f" strokeLinecap="round" strokeLinejoin="round" fill="none" transform="rotate(14 60 120)">
-        <path d="M60 196 L 48 170 L 72 170 Z" fill="#35332f" strokeWidth="2.2" />
-        <path d="M48 170 L 72 170 L 84 146 L 36 146 Z" fill="url(#ot-hatch-wood)" strokeWidth="2.4" />
-        <rect x="36" y="16" width="48" height="130" rx="4" fill="url(#ot-hy)" strokeWidth="2.8" />
-        <rect x="34" y="-8" width="52" height="24" rx="3" fill="url(#ot-hg)" strokeWidth="2.4" />
-        <rect x="36" y="-30" width="48" height="24" rx="8" fill="url(#ot-hp)" strokeWidth="2.6" />
-        <ellipse cx="50" cy="78" rx="3.2" ry="4.2" fill="#35332f" stroke="none" />
-        <ellipse cx="71" cy="78" rx="3.2" ry="4.2" fill="#35332f" stroke="none" />
-        <path d="M51 95 Q 60 104, 70 95" strokeWidth="2.6" />
-        <circle cx="43" cy="89" r="4.5" fill="url(#ot-hp)" stroke="none" />
-        <circle cx="78" cy="89" r="4.5" fill="url(#ot-hp)" stroke="none" />
-        <path d="M84 62 C 100 54, 106 40, 100 26 M100 26 L 92 20 M100 26 L 108 20 M100 26 L 102 15" strokeWidth="2.8" />
-        <path d="M36 70 C 22 78, 18 92, 24 104" strokeWidth="2.8" />
-      </g>
+    <span className="ot-avatar" style={{ ['--s' as string]: `${size}px` }} aria-hidden={!person.avatar}>
+      {person.avatar ? <img src={person.avatar} alt="" /> : initials(person.name, person.phone)}
+    </span>
+  );
+}
+
+function Gear() {
+  return (
+    <svg viewBox="0 0 20 20" aria-hidden fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="10" r="2.6" />
+      <path d="M10 2.5v2.2M10 15.3v2.2M2.5 10h2.2M15.3 10h2.2M4.7 4.7l1.6 1.6M13.7 13.7l1.6 1.6M4.7 15.3l1.6-1.6M13.7 6.3l1.6-1.6" />
+      <circle cx="10" cy="10" r="5.6" strokeDasharray="2.2 2.6" />
     </svg>
   );
 }
 
-function Mast({ right, bare }: { right?: React.ReactNode; bare?: boolean }) {
+/** Signed-in masthead: wordmark left; picture, name and a typewriter key on the right.
+ * The key opens a small menu: the other screen, and sign out. */
+function Mast({ me, view, onView, onSignout }: { me: Person; view: 'journal' | 'settings'; onView: (v: 'journal' | 'settings') => void; onSignout: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('mousedown', away);
+    document.addEventListener('keydown', key);
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', key); };
+  }, [open]);
   return (
     <header className="ot-mast">
-      <div className="ot-brand">
-        <h1 className="ot-wordmark"><PencilMark /><u>onething</u></h1>
-        {!bare && <span className="ot-tagline">one sentence a day, by text</span>}
+      <Wordmark />
+      <div className="ot-who" ref={ref}>
+        <Avatar person={me} />
+        <span className="name">{me.name || prettyPhone(me.phone)}</span>
+        <button type="button" className="ot-gear" aria-label="menu" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <Gear />
+        </button>
+        {open && (
+          <ul className="ot-menu" role="menu">
+            <li><button type="button" role="menuitem" onClick={() => { setOpen(false); onView(view === 'journal' ? 'settings' : 'journal'); }}>{view === 'journal' ? 'settings' : 'the page'}</button></li>
+            <li><button type="button" role="menuitem" className="red" onClick={() => { setOpen(false); onSignout(); }}>sign out</button></li>
+          </ul>
+        )}
       </div>
-      {right}
     </header>
-  );
-}
-
-/** The demo thread on the signed-out page: what the texts actually look like. */
-function Peek() {
-  return (
-    <div className="ot-chat" aria-label="an example exchange">
-      <div className="ot-bubble them">{copy.morning[0]}<span className="t">10:05 AM</span></div>
-      <div className="ot-bubble me">The fog gave way to sun just as we sat down outside with coffee.<span className="t">10:12 AM</span></div>
-      <div className="ot-bubble them">{copy.kept[0].replace('{n}', '4')}<span className="t">10:12 AM</span></div>
-    </div>
-  );
-}
-
-/** The seven levels, left to right. `index` marks the current one; -1 shows all of them lit. */
-function Ladder({ index, levels }: { index: number; levels: Level[] }) {
-  return (
-    <div className={`ot-ladder${index < 0 ? ' bare' : ''}`} aria-label="levels">
-      {levels.map((l, i) => (
-        <div key={l.name} className={`ot-rung${index < 0 ? ' all' : i < index ? ' done' : i === index ? ' now' : ''}`}>
-          <Plant level={i} size={40} />
-          <span>{l.name.replace(' ', '\u00a0')}</span>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -172,30 +180,29 @@ function Ladder({ index, levels }: { index: number; levels: Level[] }) {
  * component type on every render, so React remounted the whole list — and the
  * edit textarea — on each keystroke (caret jumping to the end, keyboard flicker). */
 type ThoughtsProps = {
-  day: string; text: string; big?: boolean;
+  day: string; text: string;
   editing: { day: string; index: number } | null; editText: string; busy: boolean; err: string;
   onEditText: (t: string) => void; onStart: (day: string, index: number, current: string) => void;
   onSave: () => void; onCancel: () => void;
 };
-function Thoughts({ day, text, big, editing, editText, busy, err, onEditText, onStart, onSave, onCancel }: ThoughtsProps) {
+function Thoughts({ day, text, editing, editText, busy, err, onEditText, onStart, onSave, onCancel }: ThoughtsProps) {
   const all = lines(text);
   return (
-    <ol className={`ot-thoughts${big ? ' big' : ''}`}>
+    <ol className="ot-thoughts">
       {all.map((t, i) => (
         <li key={i} className="ot-thought">
           {editing && editing.day === day && editing.index === i ? (
             <form className="ot-editing" onSubmit={(e) => { e.preventDefault(); onSave(); }}>
               <textarea className="ot-ta small" value={editText} maxLength={600} onChange={(e) => onEditText(e.target.value)} rows={2} autoFocus aria-label="edit this thought" />
-              <div className="ot-row">
+              <div className="ot-acts">
                 <button className="ot-btn" type="submit" disabled={busy || editText.trim().length === 1}>{busy ? 'Saving…' : 'Save'}</button>
-                <button type="button" className="ot-link" onClick={onCancel}>cancel</button>
+                <button type="button" className="ot-link quiet" onClick={onCancel}>cancel</button>
                 {all.length > 1 && <span className="ot-note" style={{ margin: 0 }}>leave it empty to remove this one.</span>}
               </div>
               {err && <p className="ot-err">{err}</p>}
             </form>
           ) : (
             <>
-              {all.length > 1 && <span className="n">{i + 1}.</span>}
               <p className="t">{t}</p>
               <button type="button" className="ot-link edit" onClick={() => onStart(day, i, t)} aria-label={`edit thought ${i + 1}`}>edit</button>
             </>
@@ -205,6 +212,45 @@ function Thoughts({ day, text, big, editing, editText, busy, err, onEditText, on
     </ol>
   );
 }
+
+/** The demo exchange on the landing page: what the texts actually look like. */
+function Peek() {
+  return (
+    <div className="ot-lines peek" aria-label="an example exchange">
+      <div className="ot-row sys">{copy.morning[0]}</div>
+      <div className="ot-row hand">
+        <div className="ot-row-head"><span>The fog gave way to sun just as we sat down outside with coffee.</span><span className="ot-stamp">kept!</span></div>
+      </div>
+      <div className="ot-row sys">{copy.kept[0].replace('{n}', '4')}</div>
+    </div>
+  );
+}
+
+/** The seven stages, left to right, growing. Every other label steps back on a phone. */
+function Stages({ levels }: { levels: Level[] }) {
+  return (
+    <div className="ot-stages" aria-label="levels">
+      {levels.map((l, i) => (
+        <div key={l.name} className={`ot-stage-item${i % 2 === 1 ? ' quiet' : ''}`} style={{ ['--grow' as string]: 1 + i * 0.22, ['--max' as string]: `${44 + i * 7}px` }}>
+          <Plant level={i} size={44 + i * 7} />
+          <span className="n">{l.name.replace(' ', ' ')}</span>
+          <span className="p">{i === 0 ? 'day 1' : `${l.min} pts`}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Foot({ tz, bare }: { tz?: string; bare?: boolean }) {
+  return (
+    <footer className={`ot-foot${bare ? ' bare' : ''}`}>
+      {tz !== undefined && <p>Texts come at ten, morning and night{tz ? ` (${tz.replace(/_/g, ' ')} time)` : ''}. Reply to either, or start any text with <code>1:</code>.</p>}
+      <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
+    </footer>
+  );
+}
+
+// ---------- the page ----------
 
 export default function Onething() {
   const [me, setMe] = useState<Me | null>(null);
@@ -219,10 +265,13 @@ export default function Onething() {
   const [editing, setEditing] = useState<{ day: string; index: number } | null>(null);
   const [editText, setEditText] = useState('');
   const [view, setView] = useState<'journal' | 'settings'>('journal');
+  const [monthsBack, setMonthsBack] = useState(0);
   const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [you, setYou] = useState<{ err: string; note: string }>({ err: '', note: '' });
   const [inviteTo, setInviteTo] = useState('');
   const [ending, setEnding] = useState<string | null>(null);
   const [note, setNote] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
@@ -260,12 +309,35 @@ export default function Onething() {
   }
   function startEdit(day: string, index: number, current: string) { setEditing({ day, index }); setEditText(current); setErr(''); }
   async function saveName() {
-    setBusy(true); setErr(''); setNote('');
+    setBusy(true); setYou({ err: '', note: '' });
     try {
       const r = await fetch('/api/onething/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: nameDraft ?? '' }) });
-      if (!r.ok) { setErr('Could not save that.'); return; }
-      setNameDraft(null); setNote('Saved.'); await load();
-    } catch { setErr('Network error. Try again.'); }
+      if (!r.ok) { setYou({ err: 'Could not save that.', note: '' }); return; }
+      await load(); setNameDraft(null); setYou({ err: '', note: 'Saved.' });
+    } catch { setYou({ err: 'Network error. Try again.', note: '' }); }
+    finally { setBusy(false); }
+  }
+  async function pickPicture(f: File | undefined) {
+    if (!f) return;
+    setBusy(true); setYou({ err: '', note: '' });
+    try {
+      const blob = await squareJpeg(f);
+      const fd = new FormData();
+      fd.append('file', blob, 'picture.jpg');
+      const r = await fetch('/api/onething/avatar', { method: 'POST', body: fd });
+      const j = await r.json();
+      if (!r.ok) { setYou({ err: j.error ?? 'Could not save that picture.', note: '' }); return; }
+      await load(); setYou({ err: '', note: 'Picture saved.' });
+    } catch (e) { setYou({ err: (e as Error).message || 'Could not read that picture.', note: '' }); }
+    finally { setBusy(false); if (fileRef.current) fileRef.current.value = ''; }
+  }
+  async function removePicture() {
+    setBusy(true); setYou({ err: '', note: '' });
+    try {
+      const r = await fetch('/api/onething/avatar', { method: 'DELETE' });
+      if (!r.ok) { setYou({ err: 'Could not remove that picture.', note: '' }); return; }
+      await load(); setYou({ err: '', note: 'Picture removed.' });
+    } catch { setYou({ err: 'Network error. Try again.', note: '' }); }
     finally { setBusy(false); }
   }
   async function buddy(body: Record<string, string>) {
@@ -274,28 +346,30 @@ export default function Onething() {
     if (j) { setInviteTo(''); setEnding(null); await load(); }
     return j;
   }
-  async function signout() { await fetch('/api/onething/auth/signout', { method: 'POST' }); setMe({ user: null }); }
+  async function signout() {
+    await fetch('/api/onething/auth/signout', { method: 'POST' });
+    setMe({ user: null }); setView('journal'); setErr(''); setNote('');
+  }
+  function go(v: 'journal' | 'settings') { setView(v); setErr(''); setNote(''); setYou({ err: '', note: '' }); setEnding(null); }
 
   if (me === null) {
-    return <><Coil /><Defs /><main className="ot-main"><Mast /></main></>;
+    return <><Defs /><main className="ot-page"><header className="ot-mast landing"><Wordmark h1 /></header></main></>;
   }
 
   if (!me.user) {
     return (
       <>
-      <Coil /><Defs />
-      <main className="ot-main">
-        <Mast />
-        <section className="ot-hero">
-          <Mascot />
-          <div className="ot-hero-text">
-            <h1 className="ot-h1">Every day at ten, a text asks what happened.</h1>
-            <p className="ot-lede">You answer in one sentence. By December, you have a year.</p>
-          </div>
-        </section>
+      <Defs />
+      <main className="ot-page">
+        <header className="ot-mast landing">
+          <Wordmark h1 />
+          <div className="ot-tagline">one sentence a day, by text</div>
+        </header>
+        <h2 className="ot-h1">Every day at ten, a text asks what happened.</h2>
+        <p className="ot-lede">You answer in one sentence. By December, you have a year.</p>
         <Peek />
 
-        <section className="ot-card">
+        <section className="ot-box">
           <span className="ot-tape" aria-hidden />
           <h2>Start your year.</h2>
           {stage === 'phone' ? (
@@ -315,11 +389,9 @@ export default function Onething() {
         </section>
 
         <p className="ot-caption">Streaks earn points. Points grow a plant.</p>
-        <Ladder index={-1} levels={LEVELS} />
-
-        <footer className="ot-foot">
-          <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
-        </footer>
+        <p className="ot-pitch">Bring a buddy — every day you both write, you both earn extra. You never see their words, only that they showed up.</p>
+        <Stages levels={LEVELS} />
+        <Foot bare />
       </main>
       </>
     );
@@ -327,7 +399,6 @@ export default function Onething() {
 
   const b = me.board!;
   const levels = me.levels ?? LEVELS;
-
   const thoughtProps = {
     editing, editText, busy, err,
     onEditText: setEditText, onStart: startEdit, onSave: saveEdit,
@@ -335,42 +406,50 @@ export default function Onething() {
   };
   const entries = me.entries ?? [];
   const today = me.today ?? '';
-  const todayEntry = entries.find((e) => e.day === today);
-  const lately = entries.filter((e) => e.day !== today).slice(0, 5);
-  const span = b.next ? b.next.min - b.level.min : 1;
-  const progress = b.next ? Math.min(1, (b.points - b.level.min) / span) : 1;
-  const streakLine = b.streak === 0
-    ? 'no streak yet'
-    : `${b.streak} ${b.streak === 1 ? 'day' : 'days'} in a row${b.best > b.streak ? ` · best ${b.best}` : ''}`;
   const buddies = me.buddies ?? [];
   const sent = me.sent ?? [];
   const received = me.received ?? [];
   const bonus = me.bonus ?? { every: 7, points: 25 };
   const together = (x: BuddyView) => x.startsTomorrow
     ? 'starts tomorrow'
-    : x.streak === 0 ? 'no days together yet' : `${x.streak} ${x.streak === 1 ? 'day' : 'days'} together${x.best > x.streak ? ` · best ${x.best}` : ''} · next bonus in ${x.nextBonusIn}`;
+    : x.streak === 0 ? 'no days together yet' : `${x.streak} ${x.streak === 1 ? 'day' : 'days'} together`;
+  const bestNext = (x: BuddyView) => x.startsTomorrow ? '' : `${x.best > x.streak ? `best ${x.best} · ` : ''}next bonus in ${x.nextBonusIn} ${x.nextBonusIn === 1 ? 'day' : 'days'}`;
 
   if (view === 'settings') {
     return (
       <>
-      <Coil /><Defs />
-      <main className="ot-main">
-        <Mast bare right={<span className="ot-who"><button className="ot-link" onClick={() => { setView('journal'); setErr(''); setNote(''); }}>← journal</button></span>} />
+      <Defs />
+      <main className="ot-page">
+        <Mast me={me.user} view={view} onView={go} onSignout={signout} />
+        <p className="ot-back"><button className="ot-link" onClick={() => go('journal')}>← back to the page</button></p>
 
-        <section className="ot-card">
-          <span className="ot-tape" aria-hidden />
-          <h2>Your name</h2>
-          <p className="ot-note">What buddies see instead of your number.</p>
+        <section className="ot-section" aria-label="you">
+          <h2>You</h2>
+          <p className="ot-sys">What buddies see instead of your number.</p>
+          <div className="ot-you">
+            <Avatar person={me.user} size={72} />
+            <div className="ot-you-acts">
+              <label className="ot-link" style={{ cursor: busy ? 'default' : 'pointer' }}>
+                {busy ? 'Saving…' : me.user.avatar ? 'change picture' : 'add a picture'}
+                <input ref={fileRef} type="file" accept="image/*" hidden disabled={busy} onChange={(e) => pickPicture(e.target.files?.[0])} aria-label="profile picture" />
+              </label>
+              {me.user.avatar && <button type="button" className="ot-link quiet" disabled={busy} onClick={removePicture}>remove</button>}
+              <p className="ot-note">A square works best. It is cropped and shrunk before it leaves your phone.</p>
+            </div>
+          </div>
           <form className="ot-form" onSubmit={(e) => { e.preventDefault(); saveName(); }}>
             <input className="ot-in" placeholder={prettyPhone(me.user.phone)} aria-label="Your name" maxLength={24} value={nameDraft ?? me.user.name ?? ''} onChange={(e) => setNameDraft(e.target.value)} />
             <button className="ot-btn" type="submit" disabled={busy || nameDraft === null}>{busy ? 'Saving…' : 'Save'}</button>
           </form>
+          {you.err && <p className="ot-err">{you.err}</p>}
+          {you.note && <p className="ot-note">{you.note}</p>}
         </section>
 
-        <section className="ot-card">
-          <span className="ot-tape green" aria-hidden />
+        <div className="ot-hr" />
+
+        <section className="ot-section" aria-label="buddies">
           <h2>Buddies</h2>
-          <p className="ot-note">Pick anyone. A buddy streak counts a day when you both wrote, a miss by either one resets it, and every {bonus.every} days it holds you both get {bonus.points} points. Your own streak and points are never touched.</p>
+          <p className="ot-sys">Pick anyone. A buddy streak counts a day when you both wrote, a miss by either one resets it, and every {bonus.every} days it holds you both get {bonus.points} points. Your own streak and points are never touched.</p>
 
           {received.length > 0 && (
             <ul className="ot-buddies" aria-label="invites waiting on you">
@@ -390,7 +469,8 @@ export default function Onething() {
             <ul className="ot-buddies" aria-label="your buddies">
               {buddies.map((x) => (
                 <li key={x.id} className={`ot-buddy${ending === x.id ? ' ending' : ''}`}>
-                  <span className="who">{x.name}<small>{together(x)}</small></span>
+                  <Avatar person={{ name: x.name, phone: x.name, avatar: x.avatar }} size={36} />
+                  <span className="who">{x.name}<small>{together(x)}{bestNext(x) ? ` · ${bestNext(x)}` : ''}</small></span>
                   <span className="acts">
                     {ending === x.id ? (
                       <>
@@ -422,84 +502,148 @@ export default function Onething() {
           {note && <p className="ot-note">{note}</p>}
         </section>
 
-        <footer className="ot-foot">
-          <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
-        </footer>
+        <Foot />
       </main>
       </>
     );
   }
 
+  // ----- the page -----
+  const [ty, tm] = parts(today);
+  const [sy, sm] = parts(me.user.since.slice(0, 10));
+  const oldest = (ty * 12 + tm) - (sy * 12 + sm); // months back to the account's first month
+  const back = Math.min(monthsBack, Math.max(0, oldest));
+  const [vy, vm] = monthBack(ty, tm, back);
+  const byDay = new Map(entries.map((e) => [e.day, e]));
+  const rows = monthRows(vy, vm, today, me.user.since, byDay);
+  const kept = rows.filter((r) => r.entry).length;
+  const elapsed = rows.length;
+  const span = b.next ? b.next.min - b.level.min : 1;
+  const progress = b.next ? Math.min(1, (b.points - b.level.min) / span) : 1;
+  const perDay = pointsForEntry(b.streak + 1).base;
+  const toNext = daysToNext(b);
+  const streakWord = b.streak === 0 ? 'no streak yet' : `${b.streak}-day streak`;
+  const inToday = buddies.filter((x) => !x.startsTomorrow && x.inToday).map((x) => x.name);
+  const outToday = buddies.filter((x) => !x.startsTomorrow && !x.inToday).map((x) => x.name);
+  const showedUp = [
+    inToday.length ? `${inToday.join(', ')} wrote today ✓` : '',
+    outToday.length ? `${outToday.join(', ')} still to come` : '',
+  ].filter(Boolean).join(' · ');
+
   return (
     <>
-    <Coil /><Defs />
-    <main className="ot-main">
-      <Mast bare right={<span className="ot-who">{me.user.name || prettyPhone(me.user.phone)} · <button className="ot-link" onClick={() => { setView('settings'); setErr(''); setNote(''); }}>settings</button> · <button className="ot-link" onClick={signout}>sign out</button></span>} />
-
-      <div className="ot-ask">
-      <Mascot />
-      <section className="ot-card ot-today">
-        <span className={`ot-tape${b.doneToday ? ' green' : ''}`} aria-hidden />
-        <div className="ot-date">{longDay(today)}</div>
-        {b.doneToday && !adding ? (
-          <>
-            <span className="ot-stamp">kept!</span>
-            <Thoughts day={today} text={todayEntry?.text ?? ''} big {...thoughtProps} />
-            {buddies.some((x) => !x.startsTomorrow) && (
-              <ul className="ot-ticks" aria-label="buddies today">
-                {buddies.filter((x) => !x.startsTomorrow).map((x) => (
-                  <li key={x.id} className={x.inToday ? 'in' : ''}><Tick on={x.inToday} />{x.name}{x.inToday ? '' : ' · waiting'}</li>
-                ))}
-              </ul>
-            )}
-            <p className="ot-more"><button type="button" className="ot-link" onClick={() => { setAdding(true); setErr(''); }}>add another thought</button></p>
-          </>
-        ) : (
-          <form onSubmit={(e) => { e.preventDefault(); save(); }}>
-            <h2 className="ot-q">{b.doneToday ? 'One more thing?' : 'One thing that happened in the last 24 hours?'}</h2>
-            <textarea className="ot-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder="One sentence." rows={3} />
-            <div className="ot-row">
-              <button className="ot-btn" disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Keeping…' : 'Keep it'}</button>
-              <span className="ot-nudge">{NUDGES[nudge]}<button type="button" className="ot-link" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)}>another</button></span>
-              {adding && <button type="button" className="ot-link" onClick={() => { setAdding(false); setText(''); setErr(''); }}>cancel</button>}
-            </div>
-            {err && <p className="ot-err">{err}</p>}
-          </form>
-        )}
-      </section>
-      </div>
+    <Defs />
+    <main className="ot-page">
+      <Mast me={me.user} view={view} onView={go} onSignout={signout} />
 
       <section className="ot-garden" aria-label="level, streak and points">
-        <Plant level={b.index} size={120} />
-        <div>
-          <div className="ot-level">{b.level.name}<small>{streakLine}</small></div>
-          <div className="ot-thread" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
-            <i style={{ ['--w' as string]: `${progress * 100}%` }} />
+        <div className="ot-frame"><Plant level={b.index} size={86} /></div>
+        <div className="ot-garden-text">
+          <div>
+            <div className="ot-garden-top">
+              <h2 className="ot-stage">{b.level.name}</h2>
+              <span className="ot-month-tag">{MONTHS[tm - 1].toUpperCase()} {ty}</span>
+            </div>
+            <div className="ot-stats">
+              <b>{b.points} pts</b> · {streakWord}{b.best > b.streak ? ` · best ${b.best}` : ''}{b.next ? ` · ${b.next.min - b.points} to ${b.next.name}` : ' · the top of the garden'}
+            </div>
           </div>
-          <div className="ot-thread-k">{b.points} {b.points === 1 ? 'point' : 'points'}{b.next ? ` · ${b.next.min - b.points} to ${b.next.name}` : ''}</div>
-          {buddies.map((x) => (
-            <div key={x.id} className="ot-buddy-line">{x.name} · {together(x)}</div>
-          ))}
+          <div>
+            <div className="ot-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
+              <i className={progress >= 1 ? 'full' : ''} style={{ ['--w' as string]: `${progress * 100}%` }} />
+            </div>
+            <div className="ot-ruler" aria-hidden>
+              {levels.map((l, i) => <span key={l.name} className={i === b.index ? 'now' : ''} />)}
+            </div>
+            <div className="ot-ruler-k" aria-hidden>
+              <b>{b.level.name.toUpperCase()}{b.next ? ` · NEXT: ${b.next.name.toUpperCase()}` : ''}</b>
+              <span>{levels[levels.length - 1].name.toUpperCase()}</span>
+            </div>
+          </div>
         </div>
       </section>
-      <Ladder index={b.index} levels={levels} />
 
-      {lately.length > 0 && (
-        <section className="ot-lately" aria-label="recent days">
-          <h2>Lately</h2>
-          {lately.map((e) => (
-            <div className="ot-line" key={e.id}>
-              <div className="d">{shortDay(e.day)}</div>
-              <Thoughts day={e.day} text={e.text} {...thoughtProps} />
+      <div className="ot-ledger">
+        <div className="ot-card">
+          <div>
+            <div className="k">Your streak</div>
+            <div className="v">{b.streak === 0 ? 'starts today' : `${b.streak} ${b.streak === 1 ? 'day' : 'days'}`}</div>
+          </div>
+          <div className="r"><b>+{perDay} pts</b>/day</div>
+        </div>
+        {buddies.map((x) => (
+          <div className="ot-card buddy" key={x.id}>
+            <div>
+              <div className="k">Buddy streak · {x.name}</div>
+              <div className="v">{together(x)}</div>
+              {bestNext(x) && <div className="s">{bestNext(x)}</div>}
             </div>
-          ))}
-        </section>
+            <div className="r"><b>+{bonus.points} pts</b>/{bonus.every} days</div>
+          </div>
+        ))}
+      </div>
+      <p className="ot-ledger-note">
+        <b>+{perDay} a day</b> while the streak holds
+        {toNext !== null && b.next ? ` · ${b.next.name} ${toNext === 0 ? 'with today’s sentence' : `in ${toNext} ${toNext === 1 ? 'day' : 'days'}`}` : ''}
+      </p>
+      {buddies.length > 0 && (
+        <p className="ot-ledger-sub">{showedUp ? `${showedUp} — ` : ''}you never see each other’s words, only that you both showed up.</p>
       )}
 
-      <footer className="ot-foot">
-        <p style={{ margin: 0 }}>Texts come at ten, morning and night{me.user.tz ? ` (${me.user.tz.replace(/_/g, ' ')} time)` : ''}. Reply to either, or start any text with <code>1:</code>.</p>
-        <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
-      </footer>
+      <div className="ot-hr" />
+
+      <ol className="ot-lines" aria-label={`${MONTHS[vm - 1]} ${vy}`}>
+        {rows.map((r) => {
+          if (r.kind === 'missed') {
+            return <li key={r.day} className="ot-row missed"><span className="ot-dayno faint">{r.n}</span><span className="ot-droop">— A LEAF DROOPED —</span></li>;
+          }
+          if (r.kind === 'kept') {
+            return (
+              <li key={r.day} className="ot-row">
+                <span className="ot-dayno">{r.n}</span>
+                <Thoughts day={r.day} text={r.entry!.text} {...thoughtProps} />
+              </li>
+            );
+          }
+          // today: kept, or still open
+          const open = !r.entry || adding;
+          return (
+            <li key={r.day} className="ot-row today">
+              <span className="ot-dayno now">{r.n}</span>
+              {r.entry && (
+                <div className="ot-row-head">
+                  <Thoughts day={r.day} text={r.entry.text} {...thoughtProps} />
+                  <span className="ot-stamp">kept!</span>
+                </div>
+              )}
+              {open ? (
+                <form onSubmit={(e) => { e.preventDefault(); save(); }}>
+                  <p className="ot-q">{r.entry ? 'One more thing?' : 'One thing that happened in the last 24 hours?'}</p>
+                  <textarea className="ot-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder="One sentence." rows={3} aria-label="today's sentence" />
+                  <div className="ot-acts">
+                    <button className="ot-btn" disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Keeping…' : 'Keep it'}</button>
+                    <span className="ot-nudge">{NUDGES[nudge]}<button type="button" className="ot-link" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)}>another</button></span>
+                    {adding && <button type="button" className="ot-link quiet" onClick={() => { setAdding(false); setText(''); setErr(''); }}>cancel</button>}
+                  </div>
+                  {err && !editing && <p className="ot-err">{err}</p>}
+                </form>
+              ) : (
+                <p className="ot-plus"><button type="button" className="ot-link" onClick={() => { setAdding(true); setErr(''); }}>+ add another thought</button></p>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="ot-tally">
+        <span>{back === 0 ? 'THIS MONTH' : `${MONTHS[vm - 1].toUpperCase()} ${vy}`} <span className="marks">{tally(kept)}</span> {kept} / {elapsed}</span>
+        <span className="nav">
+          {back < oldest && <button type="button" className="ot-link" onClick={() => setMonthsBack(back + 1)}>← {MONTHS[monthBack(vy, vm, 1)[1] - 1].toUpperCase()}</button>}
+          {back > 0 && <button type="button" className="ot-link" onClick={() => setMonthsBack(back - 1)}>{MONTHS[monthBack(vy, vm, -1)[1] - 1].toUpperCase()} →</button>}
+        </span>
+      </div>
+
+      <Foot tz={me.user.tz ?? ''} />
     </main>
     </>
   );

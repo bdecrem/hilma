@@ -1,6 +1,7 @@
-// A throwaway account for reviewing the site on localhost, with eight days of
-// sentences (a Sapling, streak alive through yesterday so today is still
-// open), one active buddy six days in, one invite out, one invite waiting.
+// A throwaway account for reviewing the site on localhost: joined 17 days
+// ago, eight days of sentences (a Sapling, streak alive through yesterday so
+// today is still open, the days before that missed), one active buddy six
+// days in, one invite out, one invite waiting.
 // Sends nothing. Numbers are +1999…, like buddy-db-check.ts. Production's
 // hourly tick will try to text them and fail quietly until `down`.
 //   set -a; . .env.local; set +a; npx tsx scripts/onething/review-user.ts up    # prints the ids
@@ -26,8 +27,8 @@ async function down() {
   console.log('removed', ids.length, 'accounts')
 }
 
-async function mkUser(phone: string, name: string | null): Promise<User> {
-  const { data, error } = await sb.from('onething_users').insert({ phone, tz: 'America/Los_Angeles', name }).select('*').single()
+async function mkUser(phone: string, name: string | null, created_at?: string): Promise<User> {
+  const { data, error } = await sb.from('onething_users').insert({ phone, tz: 'America/Los_Angeles', name, ...(created_at ? { created_at } : {}) }).select('*').single()
   if (error) throw new Error(error.message)
   return data as User
 }
@@ -48,7 +49,7 @@ async function seedDays(user: User, texts: string[], through: string) {
 async function up() {
   await down()
   const yesterday = addDays(localDay(new Date(), 'America/Los_Angeles'), -1)
-  const me = await mkUser(PHONES.me, 'Ada')
+  const me = await mkUser(PHONES.me, 'Ada', `${addDays(yesterday, -16)}T18:00:00Z`)
   const buddy = await mkUser(PHONES.buddy, 'Sam')
   const waiting = await mkUser(PHONES.waiting, 'Priya')
   const points = await seedDays(me, [

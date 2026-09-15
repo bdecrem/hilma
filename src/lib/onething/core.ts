@@ -10,7 +10,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import { f2Supabase } from '@/lib/f2/supabase'
 import { sendIMessage } from '@/lib/f2/bluebubbles'
 import { notifySignup, type SignupSource } from './notify'
-import { LEVELS, type Level } from './levels'
+import { LEVELS, pointsForEntry, type Level } from './levels'
 import copy from './copy.json'
 
 export const TZ = 'America/Los_Angeles' // default zone; every user carries their own (User.tz)
@@ -54,11 +54,7 @@ export type Entry = {
   updated_at: string
 }
 
-export { LEVELS, type Level }
-
-const MILESTONES: Record<number, number> = {
-  3: 20, 7: 50, 14: 100, 30: 300, 60: 600, 100: 1000, 365: 5000,
-}
+export { LEVELS, pointsForEntry, type Level }
 
 // ---------- time ----------
 
@@ -162,12 +158,6 @@ export function levelFor(points: number): { level: Level; next: Level | null; in
   let i = 0
   for (let k = 0; k < LEVELS.length; k++) if (points >= LEVELS[k].min) i = k
   return { level: LEVELS[i], next: LEVELS[i + 1] ?? null, index: i }
-}
-
-export function pointsForEntry(streak: number): { base: number; bonus: number } {
-  const base = 10 + 2 * Math.min(streak, 25)
-  const bonus = MILESTONES[streak] ?? 0
-  return { base, bonus }
 }
 
 // The scoreboard is the latest entry. A streak is alive if the last entry
