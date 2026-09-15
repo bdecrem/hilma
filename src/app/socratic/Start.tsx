@@ -146,6 +146,12 @@ export default function Start({ modules, defaultModule, arms }: Props) {
           {busy ? 'Opening…' : 'Begin session'}
         </button>
         {error && <p className="soc-error">{error}</p>}
+        <p className="soc-textlink-row">
+          Teaching something else?{' '}
+          <a className="soc-textlink" href="/socratic/new">
+            Create a new topic
+          </a>
+        </p>
       </section>
 
       {recent.length > 0 && (

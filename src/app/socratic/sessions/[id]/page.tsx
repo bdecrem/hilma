@@ -27,7 +27,7 @@ export default async function SessionDetail({ params, searchParams }: { params: 
   const session = await getSession(id)
   if (!session) return <Denied />
   const turns = await listTurns(id)
-  const mod = getModule(session.module)
+  const mod = await getModule(session.module)
 
   const students = turns.filter((t) => t.role === 'student' && !t.hidden)
   const verdicts = students.map((t) => t.meta).filter(isVerdict)

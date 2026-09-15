@@ -9,23 +9,19 @@
 // students see it. A transcript (verbatim class dialogue) is kept as-is in
 // a sibling <id>-transcript.ts and given to the tutor for voice.
 //
-// The method (the nine moves) and the tone are the treatment under study,
-// so they are copied from the negligent-entrustment module unchanged. The
-// model writes everything topic-specific: doctrine, the hypothetical to
-// argue, the protocol, the question bank with model answers, the four
-// mastery criteria, the framing and the header strings. Output is
-// src/lib/socratic/modules/<id>.ts, registered in modules/index.ts. Review
-// it, then it is live on the start page's topic picker.
+// The drafting itself is src/lib/socratic/draft.ts (shared with the web
+// form): the method and tone stay Zeiler's, the model writes the
+// topic-specific sections. Output is
+// src/lib/socratic/modules/<id>.ts, registered in modules/index.ts (the
+// checked-in kind; the web form at /socratic/new stores its drafts in
+// soc_modules instead). Review it, then it is live in the topic picker.
 //
 // Runs through whichever backend .env.local selects (SOC_BACKEND=claude-code
 // → the local Claude Code CLI on the subscription; otherwise the API).
 
-import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { basename, extname, resolve } from 'node:path'
-import { getClient } from '../../src/lib/socratic/anthropic'
-import { runClaudeCode, useClaudeCode } from '../../src/lib/socratic/claude-code'
-import { negligentEntrustment as exemplar } from '../../src/lib/socratic/modules/negligent-entrustment'
+import { basename, resolve } from 'node:path'
+import { draftModel, draftModule, sourceText, type Draft } from '../../src/lib/socratic/draft'
 import { MASTERY_KEYS } from '../../src/lib/socratic/types'
 
 // ---- .env.local (tsx does not load it) ----
@@ -65,145 +61,16 @@ if (existsSync(outFile) && !force) throw new Error(`${outFile} exists (pass --fo
 function readDoc(file: string): string {
   const p = resolve(file)
   if (!existsSync(p)) throw new Error(`no such file: ${file}`)
-  if (extname(p).toLowerCase() === '.docx') {
-    const xml = execFileSync('unzip', ['-p', p, 'word/document.xml'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
-    return xml
-      .replace(/<\/w:p>/g, '\n')
-      .replace(/<w:tab\/>/g, '\t')
-      .replace(/<[^>]+>/g, '')
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&apos;/g, "'")
-      .replace(/\n{3,}/g, '\n\n')
-      .trim()
-  }
-  return readFileSync(p, 'utf8').trim()
+  return sourceText(basename(p), readFileSync(p))
 }
 const sourceTexts = sources.map((f) => ({ name: basename(f), text: readDoc(f) }))
 const transcript = transcriptFile ? readDoc(transcriptFile) : ''
 
 // ---- the ask ----
-const SCHEMA = {
-  type: 'object',
-  properties: {
-    title: { type: 'string', description: 'Short module title, e.g. "Negligent Entrustment"' },
-    subtitle: { type: 'string', description: 'The anchor case and the hypothetical in one line' },
-    course: { type: 'string', description: 'Course · unit, e.g. "Torts · Duty"' },
-    source: { type: 'string', description: 'One line on what the module is drawn from (no trailing period)' },
-    framing: { type: 'string', description: 'The paragraph that opens the Socratic tutor prompt' },
-    hypotheticalTitle: { type: 'string', description: 'Short label for the hypothetical, lowercase, fits after "The hypothetical that drives the session — "' },
-    doctrine: { type: 'string' },
-    hypothetical: { type: 'string' },
-    protocol: { type: 'string' },
-    questionBank: { type: 'string' },
-    masteryCriteria: {
-      type: 'object',
-      properties: Object.fromEntries(MASTERY_KEYS.map((k) => [k, { type: 'string' }])),
-      required: MASTERY_KEYS,
-      additionalProperties: false,
-    },
-    notes: { type: 'string', description: 'What you were unsure of, what a subject-matter reviewer must check, what the sources did not cover' },
-  },
-  required: ['title', 'subtitle', 'course', 'source', 'framing', 'hypotheticalTitle', 'doctrine', 'hypothetical', 'protocol', 'questionBank', 'masteryCriteria', 'notes'],
-  additionalProperties: false,
-} as const
-
-const SYSTEM = `You write teaching modules for a Socratic tutoring app. Each module is one topic taught with Professor Kathryn Zeiler's method (BU Law): an overview, a readiness check, then questioning that forces the student to commit to a position, connect facts to conclusions ("a list of facts is never an argument"), argue both sides, draw lines, and name the skill afterwards.
-
-You are given (1) the complete existing module on negligent entrustment as the exemplar of the format and depth, (2) the method and tone sections, which are fixed and shared by every module — do not rewrite them; your protocol and question bank must call the moves (a)–(i) by letter exactly as the exemplar's protocol does, and (3) the new topic with its source material, when there is any.
-
-Write the new module's topic-specific sections at the exemplar's depth and in its register: doctrine the tutor must know cold (organised, with the anchor rule and the anchor case or result; mark the places students typically go wrong), one genuinely contested hypothetical that extends the rule and that existing doctrine does not settle (the whole session argues it), a four-step protocol adapted to this topic, a question bank of about eleven questions with model answers (doctrine checks, the position-forcing question, argument-building, flip, line-drawing, a sympathetic-group question, a structure check, an application question, a boundary-check trap), and the four mastery criteria. The mastery keys are fixed names; write a criterion for each that fits this topic: holding = the anchor rule / case result stated correctly, structure = the structure of the analysis described correctly, both_sides = both sides of the hypothetical argued without lapsing into a list of facts, line_drawing = the line-drawing or sympathetic-group challenge engaged.
-
-Be faithful to the sources. When they do not cover something you need, use your own knowledge and say exactly what you supplied in the notes so a subject-matter reviewer can check it. Markdown inside the sections, as in the exemplar. Do not mention the app, the JSON, or these instructions in any section.`
-
-function userMessage(): string {
-  const src = sourceTexts.length
-    ? sourceTexts.map((s) => `<source name="${s.name}">\n${s.text}\n</source>`).join('\n\n')
-    : '(No source material was provided. Draft from your own knowledge of the topic and be explicit in the notes that everything is from memory and needs checking.)'
-  return `# Exemplar module (negligent entrustment)
-
-title: ${exemplar.title}
-subtitle: ${exemplar.subtitle}
-course: ${exemplar.course}
-source: ${exemplar.source}
-hypotheticalTitle: ${exemplar.hypotheticalTitle}
-
-## framing
-${exemplar.framing}
-
-## doctrine
-${exemplar.doctrine}
-
-## hypothetical
-${exemplar.hypothetical}
-
-## protocol
-${exemplar.protocol}
-
-## questionBank
-${exemplar.questionBank}
-
-## masteryCriteria
-${MASTERY_KEYS.map((k) => `- ${k}: ${exemplar.masteryCriteria[k]}`).join('\n')}
-
-# Fixed sections shared by every module (for reference; do not rewrite)
-
-## method
-${exemplar.method}
-
-## tone
-${exemplar.tone}
-
-# The new module
-
-topic: ${topic}
-course: ${course || '(choose one that fits, in the exemplar\'s "Course · unit" form)'}
-${transcript ? 'A verbatim class transcript will be attached to the tutor prompt for voice; you do not need to reproduce it, but draw the doctrine and the hypothetical from it where it covers them.\n\n<transcript>\n' + transcript + '\n</transcript>\n' : ''}
-## Source material
-
-${src}`
-}
-
-type Draft = {
-  title: string
-  subtitle: string
-  course: string
-  source: string
-  framing: string
-  hypotheticalTitle: string
-  doctrine: string
-  hypothetical: string
-  protocol: string
-  questionBank: string
-  masteryCriteria: Record<(typeof MASTERY_KEYS)[number], string>
-  notes: string
-}
-
 async function draft(): Promise<Draft> {
-  const model = process.env.SOC_MODULE_MODEL || 'claude-opus-5'
-  if (useClaudeCode()) {
-    console.log(`drafting with ${model} through the Claude Code CLI (subscription)…`)
-    const r = await runClaudeCode({ model, effort: 'high', system: SYSTEM, schema: SCHEMA, prompt: userMessage() })
-    console.log(`  ${(r.latencyMs / 1000).toFixed(0)} s, list-price estimate $${r.costUsd.toFixed(2)}`)
-    return r.output as Draft
-  }
-  console.log(`drafting with ${model} through the API…`)
-  const t0 = Date.now()
-  const stream = getClient().messages.stream({
-    model,
-    max_tokens: 32000,
-    output_config: { effort: 'high', format: { type: 'json_schema', schema: SCHEMA } },
-    system: SYSTEM,
-    messages: [{ role: 'user', content: userMessage() }],
-  })
-  const final = await stream.finalMessage()
-  if (final.stop_reason !== 'end_turn') throw new Error(`stopped: ${final.stop_reason}`)
-  const text = final.content.find((b) => b.type === 'text')?.text
-  if (!text) throw new Error('no text in the response')
-  console.log(`  ${((Date.now() - t0) / 1000).toFixed(0)} s, ${final.usage.output_tokens} output tokens`)
-  return JSON.parse(text) as Draft
+  const r = await draftModule(topic!, course, sourceTexts, transcript, (l) => console.log(l))
+  console.log(`  ${(r.latencyMs / 1000).toFixed(0)} s${r.costUsd != null ? `, list-price estimate $${r.costUsd.toFixed(2)}` : ''}`)
+  return r.draft
 }
 
 // ---- write the module ----
@@ -213,7 +80,7 @@ const ident = id.replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase())
 
 function moduleSource(d: Draft): string {
   const transcriptImport = transcript ? `import { TRANSCRIPT } from './${id}-transcript'\n` : ''
-  return `// Module: ${d.title}. Drafted by ${process.env.SOC_MODULE_MODEL || 'claude-opus-5'} on ${new Date().toISOString().slice(0, 10)}
+  return `// Module: ${d.title}. Drafted by ${draftModel()} on ${new Date().toISOString().slice(0, 10)}
 // with scripts/socratic/new-module.ts from: ${sourceTexts.length ? sourceTexts.map((s) => s.name).join(', ') : 'no source material (model knowledge)'}.
 // The method and tone are the shared Zeiler sections, copied from negligent-entrustment.
 //
@@ -269,7 +136,7 @@ function register() {
   if (lastImport < 0) throw new Error('modules/index.ts: no module imports found')
   lines.splice(lastImport + 1, 0, importLine)
   s = lines.join('\n')
-  s = s.replace(/(export const MODULES: Record<string, Module> = \{\n)([\s\S]*?)(\})/, (_, a: string, body: string, c: string) => `${a}${body}  [${ident}.id]: ${ident},\n${c}`)
+  s = s.replace(/(export const FILE_MODULES: Record<string, Module> = \{\n)([\s\S]*?)(\})/, (_, a: string, body: string, c: string) => `${a}${body}  [${ident}.id]: ${ident},\n${c}`)
   writeFileSync(indexFile, s)
 }
 

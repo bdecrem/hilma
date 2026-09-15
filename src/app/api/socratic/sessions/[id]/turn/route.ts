@@ -58,7 +58,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   const session = await getSession(id)
   if (!session) return err('not found', 404)
   if (session.ended_at) return err('This session has ended.', 409)
-  const mod = getModule(session.module)
+  const mod = await getModule(session.module)
   if (!mod) return err('module missing', 500)
 
   const turns = await listTurns(id)

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const arm = body.arm ?? 'B'
   if (!isArm(arm)) return NextResponse.json({ error: 'arm must be A, B or C' }, { status: 400 })
   const moduleId = typeof body.module === 'string' && body.module ? body.module : DEFAULT_MODULE
-  if (!getModule(moduleId)) return NextResponse.json({ error: 'unknown module' }, { status: 400 })
+  if (!(await getModule(moduleId))) return NextResponse.json({ error: 'unknown module' }, { status: 400 })
 
   try {
     const session = await createSession({ participant, arm, module: moduleId })

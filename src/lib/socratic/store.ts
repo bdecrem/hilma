@@ -1,6 +1,7 @@
 // Persistence for sessions and turns (soc_sessions / soc_turns).
 
 import { socDb } from './db'
+import type { Draft } from './draft'
 import type { Arm, Mastery, Phase, Session, Turn } from './types'
 import { EMPTY_MASTERY, MASTERY_KEYS } from './types'
 
@@ -87,4 +88,36 @@ export function publicTurn(t: Turn): PublicTurn {
 
 export function isPhase(x: unknown): x is Phase {
   return x === 'overview' || x === 'readiness' || x === 'questioning' || x === 'mastery' || x === 'done'
+}
+
+// ---- modules drafted from the web form (soc_modules) ----
+
+export type ModuleRow = {
+  id: string
+  created_at: string
+  topic: string
+  course: string
+  sources: string[]
+  draft: Draft
+  transcript: string
+  model: string | null
+  notes: string
+}
+
+export async function getModuleRow(id: string): Promise<ModuleRow | null> {
+  const { data, error } = await socDb().from('soc_modules').select('*').eq('id', id).maybeSingle()
+  if (error) throw new Error(`getModuleRow: ${error.message}`)
+  return (data as ModuleRow | null) ?? null
+}
+
+export async function listModuleRows(): Promise<ModuleRow[]> {
+  const { data, error } = await socDb().from('soc_modules').select('*').order('created_at', { ascending: true })
+  if (error) throw new Error(`listModuleRows: ${error.message}`)
+  return (data ?? []) as ModuleRow[]
+}
+
+export async function insertModuleRow(row: Omit<ModuleRow, 'created_at'>): Promise<ModuleRow> {
+  const { data, error } = await socDb().from('soc_modules').insert(row).select('*').single()
+  if (error) throw new Error(`insertModuleRow: ${error.message}`)
+  return data as ModuleRow
 }

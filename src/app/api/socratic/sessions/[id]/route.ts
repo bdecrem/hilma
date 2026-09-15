@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   try {
     const session = await getSession(id)
     if (!session) return NextResponse.json({ error: 'not found' }, { status: 404 })
-    const mod = getModule(session.module)
+    const mod = await getModule(session.module)
     if (!mod) return NextResponse.json({ error: 'module missing' }, { status: 500 })
     const turns = await listTurns(id)
     return NextResponse.json({
