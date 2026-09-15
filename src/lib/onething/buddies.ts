@@ -13,6 +13,7 @@ import {
   addDays, buddyCopy, displayName, findUserById, findUserByPhone, joinNames, listEntries, localDay, tzFor,
   SITE_URL, type User,
 } from './core'
+import { avatarUrlFor } from './avatar'
 
 export const BONUS_EVERY = 7
 export const BONUS_POINTS = 25
@@ -264,6 +265,8 @@ export async function resetLines(user: User, today: string): Promise<string[]> {
 export type BuddyView = {
   id: string
   name: string
+  /// their profile picture, if they set one
+  avatar: string | null
   streak: number
   best: number
   inToday: boolean
@@ -287,10 +290,10 @@ export async function buddyViews(user: User, today: string): Promise<{ buddies: 
       continue
     }
     if (!other || !row.start_day) continue
-    const theirs = await entryDays(other.id)
+    const [theirs, avatar] = await Promise.all([entryDays(other.id), avatarUrlFor(other.id)])
     const r = pairStreak(mine, theirs, row.start_day, today)
     buddies.push({
-      id: row.id, name: displayName(other), streak: r.streak, best: Math.max(row.best, r.streak),
+      id: row.id, name: displayName(other), avatar, streak: r.streak, best: Math.max(row.best, r.streak),
       inToday: theirs.has(today), nextBonusIn: nextBonusIn(r.streak), startsTomorrow: row.start_day > today,
     })
   }

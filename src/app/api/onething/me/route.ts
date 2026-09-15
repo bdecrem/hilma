@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { COOKIE, findUserById, listEntries, localDay, scoreboard, sessionCookie, setUserName, tzFor, verifySession, LEVELS } from '@/lib/onething/core'
 import { BONUS_EVERY, BONUS_POINTS, buddyViews } from '@/lib/onething/buddies'
+import { avatarUrlFor } from '@/lib/onething/avatar'
 
 export const runtime = 'nodejs'
 
@@ -14,9 +15,9 @@ export async function GET() {
   if (!user) return NextResponse.json({ user: null })
   const entries = await listEntries(user.id)
   const today = localDay(new Date(), tzFor(user))
-  const views = await buddyViews(user, today)
+  const [views, avatar] = await Promise.all([buddyViews(user, today), avatarUrlFor(user.id)])
   const res = NextResponse.json({
-    user: { phone: user.phone, since: user.created_at, tz: tzFor(user), name: user.name },
+    user: { phone: user.phone, since: user.created_at, tz: tzFor(user), name: user.name, avatar },
     today,
     board: scoreboard(entries, today),
     levels: LEVELS,
