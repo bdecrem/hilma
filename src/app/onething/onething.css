@@ -203,12 +203,10 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; }
 .ot-nudge .ot-link { margin-left: 8px; font-size: 11px; }
 .ot-q { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mute); }
 
-/* the tally at the foot of the month */
-.ot-tally { margin-top: 22px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; font-size: 11px; letter-spacing: .5px; color: var(--dim); }
-.ot-tally .marks { font-family: var(--hand); font-weight: 400; font-size: 22px; letter-spacing: 2px; color: var(--ink); vertical-align: -3px; }
-.ot-tally .ot-link { font-size: 11px; letter-spacing: .5px; color: var(--dim); border-bottom-color: transparent; }
-.ot-tally .ot-link:hover, .ot-tally .ot-link:focus-visible { color: var(--red); border-bottom-color: var(--red); }
-.ot-tally .nav { display: flex; gap: 16px; }
+/* the way to other months, at the foot of the page */
+.ot-months { margin-top: 22px; display: flex; justify-content: flex-end; gap: 16px; font-size: 11px; letter-spacing: .5px; }
+.ot-months .ot-link { font-size: 11px; letter-spacing: .5px; color: var(--dim); border-bottom-color: transparent; }
+.ot-months .ot-link:hover, .ot-months .ot-link:focus-visible { color: var(--red); border-bottom-color: var(--red); }
 
 /* ---------- landing ---------- */
 .ot-h1 { margin: 36px 0 16px; font-family: var(--hand); font-weight: 600; font-size: clamp(46px, 11.5vw, 64px); line-height: 1; color: var(--ink); text-wrap: pretty; }

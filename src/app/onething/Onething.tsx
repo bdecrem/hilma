@@ -60,12 +60,6 @@ function initials(name: string | null | undefined, phone: string): string {
   if (n) return n.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return phone.replace(/\D/g, '').slice(-2) || '·';
 }
-/// Tally marks, five to a group.
-function tally(n: number): string {
-  const out: string[] = [];
-  for (let k = n; k > 0; k -= 5) out.push('|'.repeat(Math.min(5, k)));
-  return out.join(' ');
-}
 /// Days until the next level at one sentence a day from here; 0 = with today's sentence.
 function daysToNext(b: Board): number | null {
   if (!b.next) return null;
@@ -516,8 +510,6 @@ export default function Onething() {
   const [vy, vm] = monthBack(ty, tm, back);
   const byDay = new Map(entries.map((e) => [e.day, e]));
   const rows = monthRows(vy, vm, today, me.user.since, byDay);
-  const kept = rows.filter((r) => r.entry).length;
-  const elapsed = rows.length;
   const span = b.next ? b.next.min - b.level.min : 1;
   const progress = b.next ? Math.min(1, (b.points - b.level.min) / span) : 1;
   const perDay = pointsForEntry(b.streak + 1).base;
@@ -615,13 +607,12 @@ export default function Onething() {
         })}
       </ol>
 
-      <div className="ot-tally">
-        <span>{back === 0 ? 'THIS MONTH' : `${MONTHS[vm - 1].toUpperCase()} ${vy}`} <span className="marks">{tally(kept)}</span> {kept} / {elapsed}</span>
-        <span className="nav">
+      {(back < oldest || back > 0) && (
+        <div className="ot-months">
           {back < oldest && <button type="button" className="ot-link" onClick={() => setMonthsBack(back + 1)}>← {MONTHS[monthBack(vy, vm, 1)[1] - 1].toUpperCase()}</button>}
           {back > 0 && <button type="button" className="ot-link" onClick={() => setMonthsBack(back - 1)}>{MONTHS[monthBack(vy, vm, -1)[1] - 1].toUpperCase()} →</button>}
-        </span>
-      </div>
+        </div>
+      )}
 
       <Foot tz={me.user.tz ?? ''} />
     </main>
