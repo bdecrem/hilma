@@ -522,12 +522,6 @@ export default function Onething() {
   const perDay = pointsForEntry(b.streak + 1).base;
   const toNext = daysToNext(b);
   const streakWord = b.streak === 0 ? 'no streak yet' : `${b.streak}-day streak`;
-  const inToday = buddies.filter((x) => !x.startsTomorrow && x.inToday).map((x) => x.name);
-  const outToday = buddies.filter((x) => !x.startsTomorrow && !x.inToday).map((x) => x.name);
-  const showedUp = [
-    inToday.length ? `${inToday.join(', ')} wrote today ✓` : '',
-    outToday.length ? `${outToday.join(', ')} still to come` : '',
-  ].filter(Boolean).join(' · ');
 
   return (
     <>
@@ -536,16 +530,14 @@ export default function Onething() {
       <Mast me={me.user} view={view} onView={go} onSignout={signout} />
 
       <section className="ot-garden" aria-label="level, streak and points">
-        <div className="ot-frame"><Plant level={b.index} size={86} /></div>
+        <div className="ot-frame"><Plant level={b.index} size={64} /></div>
         <div className="ot-garden-text">
-          <div>
-            <div className="ot-garden-top">
-              <h2 className="ot-stage">{b.level.name}</h2>
-              <span className="ot-month-tag">{MONTHS[tm - 1].toUpperCase()} {ty}</span>
-            </div>
-            <div className="ot-stats">
-              <b>{b.points} pts</b> · {streakWord}{b.best > b.streak ? ` · best ${b.best}` : ''}{b.next ? ` · ${b.next.min - b.points} to ${b.next.name}` : ' · the top of the garden'}
-            </div>
+          <div className="ot-garden-top">
+            <h2 className="ot-stage">{b.level.name}</h2>
+            <span className="ot-month-tag">{MONTHS[tm - 1].toUpperCase()} {ty}</span>
+          </div>
+          <div className="ot-stats">
+            <b>{b.points} pts</b> · {streakWord}{b.best > b.streak ? ` · best ${b.best}` : ''} · +{perDay} a day
           </div>
           <div>
             <div className="ot-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
@@ -554,39 +546,21 @@ export default function Onething() {
             <div className="ot-ruler" aria-hidden>
               {levels.map((l, i) => <span key={l.name} className={i === b.index ? 'now' : ''} />)}
             </div>
-            <div className="ot-ruler-k" aria-hidden>
-              <b>{b.level.name.toUpperCase()}{b.next ? ` · NEXT: ${b.next.name.toUpperCase()}` : ''}</b>
-              <span>{levels[levels.length - 1].name.toUpperCase()}</span>
+            <div className="ot-ruler-k">
+              <span><b>{b.level.name.toUpperCase()}</b>{b.next ? ` · ${b.next.name.toUpperCase()} ${toNext === 0 ? 'TODAY' : toNext !== null ? `IN ${toNext} ${toNext === 1 ? 'DAY' : 'DAYS'}` : `AT ${b.next.min} PTS`}` : ' · THE TOP'}</span>
+              {b.next && <span>{levels[levels.length - 1].name.toUpperCase()}</span>}
             </div>
           </div>
         </div>
       </section>
-
-      <div className="ot-ledger">
-        <div className="ot-card">
-          <div>
-            <div className="k">Your streak</div>
-            <div className="v">{b.streak === 0 ? 'starts today' : `${b.streak} ${b.streak === 1 ? 'day' : 'days'}`}</div>
-          </div>
-          <div className="r"><b>+{perDay} pts</b>/day</div>
-        </div>
-        {buddies.map((x) => (
-          <div className="ot-card buddy" key={x.id}>
-            <div>
-              <div className="k">Buddy streak · {x.name}</div>
-              <div className="v">{together(x)}</div>
-              {bestNext(x) && <div className="s">{bestNext(x)}</div>}
-            </div>
-            <div className="r"><b>+{bonus.points} pts</b>/{bonus.every} days</div>
-          </div>
-        ))}
-      </div>
-      <p className="ot-ledger-note">
-        <b>+{perDay} a day</b> while the streak holds
-        {toNext !== null && b.next ? ` · ${b.next.name} ${toNext === 0 ? 'with today’s sentence' : `in ${toNext} ${toNext === 1 ? 'day' : 'days'}`}` : ''}
-      </p>
       {buddies.length > 0 && (
-        <p className="ot-ledger-sub">{showedUp ? `${showedUp} — ` : ''}you never see each other’s words, only that you both showed up.</p>
+        <div className="ot-buddy-tags" aria-label="buddy streaks">
+          {buddies.map((x) => (
+            <span className="ot-buddy-tag" key={x.id}>
+              <b>{x.name}</b> · {together(x)}{x.startsTomorrow ? '' : ` · +${bonus.points} in ${x.nextBonusIn} ${x.nextBonusIn === 1 ? 'day' : 'days'} · ${x.inToday ? 'wrote today ✓' : 'still to come'}`}
+            </span>
+          ))}
+        </div>
       )}
 
       <div className="ot-hr" />
