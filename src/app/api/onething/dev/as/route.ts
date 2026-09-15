@@ -14,7 +14,8 @@ export async function GET(req: Request) {
   const id = new URL(req.url).searchParams.get('id') ?? ''
   const user = await findUserById(id)
   if (!user) return NextResponse.json({ error: 'No such account.' }, { status: 404 })
-  const res = NextResponse.redirect(new URL('/onething', req.url))
+  // A relative Location, so it also works through a tunnel that rewrites the host.
+  const res = new NextResponse(null, { status: 307, headers: { Location: '/onething' } })
   res.cookies.set(sessionCookie(user.id))
   return res
 }
