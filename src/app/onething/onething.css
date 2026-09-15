@@ -46,9 +46,8 @@
 .ot-wordmark span { color: var(--red); }
 .ot-tagline { margin-top: 2px; font-size: 12px; letter-spacing: .5px; color: var(--dim); }
 
-/* who's signed in: picture, name, and a typewriter key for the menu */
+/* who's signed in: the picture, and a bare gear for the menu */
 .ot-who { position: relative; display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--mute); }
-.ot-who .name { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ot-avatar {
   flex: none; display: inline-flex; align-items: center; justify-content: center; overflow: hidden;
   width: var(--s, 28px); height: var(--s, 28px); border-radius: 50%; border: 1.5px solid var(--ink);
@@ -57,12 +56,12 @@
 }
 .ot-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .ot-gear {
-  flex: none; width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
-  border: 1.5px solid var(--ink); background: var(--paper); box-shadow: 2px 2px 0 var(--ink); color: var(--ink); transition: transform .1s ease, box-shadow .1s ease;
+  flex: none; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  border: 0; background: none; color: var(--ink); transition: transform .15s ease, color .1s ease;
 }
-.ot-gear svg { width: 18px; height: 18px; }
-.ot-gear:hover, .ot-gear:focus-visible { outline: none; transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
-.ot-gear[aria-expanded="true"] { transform: translate(2px, 2px); box-shadow: none; }
+.ot-gear svg { width: 22px; height: 22px; }
+.ot-gear:hover, .ot-gear:focus-visible { outline: none; color: var(--red); transform: rotate(20deg); }
+.ot-gear[aria-expanded="true"] { color: var(--red); transform: rotate(45deg); }
 .ot-menu {
   position: absolute; right: 0; top: calc(100% + 8px); z-index: 5; min-width: 150px; margin: 0; padding: 6px 0; list-style: none;
   background: var(--paper); border: 1.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink);

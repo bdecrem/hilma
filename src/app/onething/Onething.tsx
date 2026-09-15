@@ -142,8 +142,8 @@ function Gear() {
   );
 }
 
-/** Signed-in masthead: wordmark left; picture, name and a typewriter key on the right.
- * The key opens a small menu: the other screen, and sign out. */
+/** Signed-in masthead: wordmark left; the picture and a gear on the right.
+ * The gear opens a small menu: the other screen, and sign out. */
 function Mast({ me, view, onView, onSignout }: { me: Person; view: 'journal' | 'settings'; onView: (v: 'journal' | 'settings') => void; onSignout: () => void }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -159,8 +159,7 @@ function Mast({ me, view, onView, onSignout }: { me: Person; view: 'journal' | '
     <header className="ot-mast">
       <Wordmark />
       <div className="ot-who" ref={ref}>
-        <Avatar person={me} />
-        <span className="name">{me.name || prettyPhone(me.phone)}</span>
+        <Avatar person={me} size={32} />
         <button type="button" className="ot-gear" aria-label="menu" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
           <Gear />
         </button>
