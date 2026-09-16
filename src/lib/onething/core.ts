@@ -249,6 +249,8 @@ export type Recorded = {
   earned: number
   bonus: number
   level: Level
+  /// this sentence crossed a level threshold (Seed → Sprout, …)
+  leveledUp: boolean
 }
 
 /// Save (or overwrite) the sentence for `day`, computing streak and points
@@ -267,7 +269,7 @@ export async function recordEntry(user: User, day: string, text: string): Promis
     if (error) throw new Error(`onething: append failed: ${error.message}`)
     return {
       entry: data as Entry, edited: false, added: all.length, streak: same.streak, points: same.points,
-      earned: 0, bonus: 0, level: levelFor(same.points).level,
+      earned: 0, bonus: 0, level: levelFor(same.points).level, leveledUp: false,
     }
   }
   const prev = (await listEntries(user.id, 1))[0] ?? null
@@ -280,7 +282,9 @@ export async function recordEntry(user: User, day: string, text: string): Promis
     .select('*')
     .single()
   if (error) throw new Error(`onething: save failed: ${error.message}`)
-  return { entry: data as Entry, edited: false, streak, points, earned: base + bonus, bonus, level: levelFor(points).level }
+  const level = levelFor(points)
+  const leveledUp = level.index > levelFor(prev?.points ?? 0).index
+  return { entry: data as Entry, edited: false, streak, points, earned: base + bonus, bonus, level: level.level, leveledUp }
 }
 
 /// Replace one thought on one day (by its position). An empty text removes
@@ -318,7 +322,7 @@ export const SITE_URL = 'https://onething.ink'
 /// back after an entry lands); each send picks one at random. All but the
 /// morning question end with the site URL on its own line.
 type BuddyKey = keyof typeof copy.buddy
-const COPY: { morning: string[]; reminder: string[]; kept: string[]; retired: string[]; buddy: Record<BuddyKey, string> } = copy
+const COPY: { morning: string[]; reminder: string[]; kept: string[]; retired: string[]; milestone: string; levelUp: string; buddy: Record<BuddyKey, string> } = copy
 function pick(lines: string[]): string {
   return lines[Math.floor(Math.random() * lines.length)]
 }
@@ -395,11 +399,17 @@ export function looksLikeOurs(text: string): boolean {
 }
 
 /// The line back after a sentence lands; `tail` lines (who else is in, a
-/// buddy bonus, the name question) sit between it and the URL.
+/// buddy bonus, the name question) follow it. The site link is sent only on a
+/// milestone or level-up day — every day, iMessage's link preview made the
+/// reply a card instead of a line.
 export function confirmText(r: Recorded, tail: string[] = []): string {
-  if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
-  if (r.added) return `Kept, thought ${r.added} for today. Day ${r.streak} stands, ${r.points} points.\n${SITE_URL}`
-  return [pick(COPY.kept).replace('{n}', String(r.streak)), ...tail, SITE_URL].join('\n')
+  if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.`
+  if (r.added) return `Kept, thought ${r.added} for today. Day ${r.streak} stands, ${r.points} points.`
+  const lines = [pick(COPY.kept).replace('{n}', String(r.streak)), ...tail]
+  if (r.bonus > 0) lines.push(COPY.milestone.replace('{n}', String(r.streak)).replace('{bonus}', String(r.bonus)))
+  if (r.leveledUp) lines.push(COPY.levelUp.replace('{level}', r.level.name))
+  if (r.bonus > 0 || r.leveledUp) lines.push(SITE_URL)
+  return lines.join('\n')
 }
 
 // ---------- sessions (stateless HMAC cookie, same secret family as F2) ----------

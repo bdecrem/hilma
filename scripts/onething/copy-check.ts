@@ -27,18 +27,23 @@ for (const [kind, lines] of Object.entries({ morning: copy.morning, reminder: co
 // The builders only ever produce lines from the file.
 let built = true
 for (let i = 0; i < 200; i++) {
-  const r = { streak: 3, edited: false } as Parameters<typeof confirmText>[0]
-  // The morning question carries no link (a text to reply to); the others end with the URL.
-  for (const t of [reminderText(3), confirmText(r)]) {
+  const plain = { streak: 4, edited: false, bonus: 0, leveledUp: false } as Parameters<typeof confirmText>[0]
+  const milestone = { streak: 7, edited: false, bonus: 50, leveledUp: true, level: { name: 'Sprout', min: 40 } } as Parameters<typeof confirmText>[0]
+  // The morning question carries no link (a text to reply to); the reminder and a
+  // milestone / level-up kept reply end with the URL; an ordinary kept reply has none.
+  for (const [t, link] of [[reminderText(3), true], [confirmText(plain), false], [confirmText(milestone), true]] as const) {
     if (!looksLikeOurs(t)) { built = false; console.log(`  builder produced unrecognised text: ${t}`) }
-    if (!t.endsWith(`\n${SITE_URL}`)) { built = false; console.log(`  missing URL line: ${t}`) }
-    if (t.includes('{n}')) { built = false; console.log(`  unreplaced {n}: ${t}`) }
+    if (t.endsWith(`\n${SITE_URL}`) !== link) { built = false; console.log(`  URL line ${link ? 'missing' : 'present'}: ${t}`) }
+    if (t.includes(SITE_URL) !== link) { built = false; console.log(`  URL ${link ? 'missing' : 'present'}: ${t}`) }
+    if (/\{\w+\}/.test(t)) { built = false; console.log(`  unreplaced placeholder: ${t}`) }
   }
+  const m = confirmText(milestone)
+  if (!m.includes('Day 7. Milestone: 50 bonus points.') || !m.includes("You're a Sprout now.")) { built = false; console.log(`  milestone tail wrong: ${m}`) }
   const q = promptText()
   if (!looksLikeOurs(q)) { built = false; console.log(`  builder produced unrecognised text: ${q}`) }
   if (q.includes(SITE_URL)) { built = false; console.log(`  morning question must not carry a link: ${q}`) }
 }
-check(built, '200 random builds: recognised, URL on reminder/kept only, {n} replaced')
+check(built, '200 random builds: recognised, URL on reminder and milestone kept only, placeholders replaced')
 
 // Human sentences that must NOT be swallowed as echoes.
 const human = [
