@@ -79,7 +79,7 @@ export async function* streamTurn(id: string, message?: string): AsyncGenerator<
 
 export const PHASE_LABELS: Record<Phase, string> = {
   overview: 'Overview',
-  readiness: 'Ready?',
+  readiness: 'Begin',
   questioning: 'Questions',
   mastery: 'Mastery',
   done: 'Done',

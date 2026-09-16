@@ -17,7 +17,7 @@ console.log(`[${stamp()}] new-topic page; draft button disabled: ${await page.ge
 await page.getByRole('button', { name: /use this example/i }).click()
 console.log(`[${stamp()}] example filled; course = ${await page.locator('#soc-course').inputValue()}`)
 await page.getByRole('button', { name: /draft the topic/i }).click()
-await page.waitForSelector('.soc-progress', { timeout: 10000 })
+await page.waitForSelector('.soc-drafting', { timeout: 10000 })
 await page.waitForTimeout(3000)
 await page.screenshot({ path: `${shots}/new-1-drafting.png` })
 console.log(`[${stamp()}] drafting… (${await page.locator('.soc-elapsed').innerText()})`)

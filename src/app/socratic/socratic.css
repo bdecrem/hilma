@@ -819,7 +819,7 @@
   color: var(--ink);
 }
 
-.soc-progress {
+.soc-drafting {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -828,16 +828,16 @@
   padding: 10px 0 4px;
   color: var(--ink-2);
 }
-.soc-progress .soc-thinking {
+.soc-drafting .soc-thinking {
   margin: 0;
 }
-.soc-progress b {
+.soc-drafting b {
   font-family: var(--serif);
   font-size: 18px;
   font-weight: 600;
   color: var(--ink);
 }
-.soc-progress .soc-elapsed {
+.soc-drafting .soc-elapsed {
   font-variant-numeric: tabular-nums;
   color: var(--ink-3);
   font-size: 13px;

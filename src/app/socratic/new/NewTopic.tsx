@@ -237,7 +237,7 @@ export default function NewTopic({ allowed, keyParam }: Props) {
         </div>
 
         {state === 'drafting' ? (
-          <div className="soc-progress">
+          <div className="soc-drafting">
             <span className="soc-thinking">
               <i />
               <i />
