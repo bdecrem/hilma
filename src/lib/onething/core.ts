@@ -315,8 +315,8 @@ export async function editEntryLine(user: User, day: string, index: number, text
 export const SITE_URL = 'https://onething.ink'
 
 /// The texts live in copy.json (morning question, evening reminder, the line
-/// back after an entry lands); each send picks one at random. Every one of
-/// them ends with the site URL on its own line.
+/// back after an entry lands); each send picks one at random. All but the
+/// morning question end with the site URL on its own line.
 type BuddyKey = keyof typeof copy.buddy
 const COPY: { morning: string[]; reminder: string[]; kept: string[]; retired: string[]; buddy: Record<BuddyKey, string> } = copy
 function pick(lines: string[]): string {
@@ -329,8 +329,10 @@ export function buddyCopy(key: BuddyKey, vars: Record<string, string | number> =
 }
 
 /// The morning question; `extra` lines (a buddy-streak reset) go under it.
+/// No site link here (2026-09-16): the question is a text to reply to, not a
+/// page to open. The link rides on the "kept" reply and the reminder instead.
 export function promptText(extra: string[] = []): string {
-  return [pick(COPY.morning), ...extra, SITE_URL].join('\n')
+  return [pick(COPY.morning), ...extra].join('\n')
 }
 
 /// The first text a new account gets: what this is, and today's question.
