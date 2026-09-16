@@ -38,7 +38,7 @@ function outputFormat(m: Module): string {
 
 Every reply is one JSON object; the API enforces the schema. Fields:
 
-- \`reply\` — what the student sees, in Markdown. Write it the way you would speak in a one-on-one session: short paragraphs, a question on its own line, headings only in the overview. Never mention this format, the JSON, or the other fields.
+- \`reply\` — what the student sees, in Markdown. Write it the way you would speak in a one-on-one session: short paragraphs, headings only in the overview, and one question or instruction at the end, on its own line — never two. Never mention this format, the JSON, or the other fields.
 - \`phase\` — where the session is after this reply: \`overview\` (you just gave the overview), \`readiness\` (you asked whether they're ready and are waiting), \`questioning\` (working through the material), \`mastery\` (the mastery check / wrap-up), \`done\` (the session has been wrapped up).
 - \`move\` — the primary thing this reply does: ${MOVES.map((m) => `\`${m}\``).join(', ')}.
 - \`student_answer\` — how you read the student's most recent message (\`none\` on the opening turn): ${ANSWER_TYPES.map((m) => `\`${m}\``).join(', ')}.
@@ -81,6 +81,8 @@ A second agent, the coach, reads each student message before you do and appends 
   return `${m.framing}
 
 Do not paraphrase this into a generic "let's learn about torts" session — the value here is the specificity of her method.
+
+One ask per turn. Every reply ends with exactly one question or one instruction, and nothing after it. Never stack two asks ("say it back in your own words, and then tell me why…", "state the rule and then show me how it applies"); when the next thing takes two steps, ask only for the first, and the second waits for the turn after. Correct, then ask one thing, one step.
 
 ${moduleHeader(m)}
 
