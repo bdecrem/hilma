@@ -104,7 +104,8 @@ export async function fetchYouTubeTranscriptLocal(
 }
 
 // Top-level dispatcher used by fetchUrlContent. If F2_YOUTUBE_FETCH_URL is
-// set (Vercel), call the mini's proxy to borrow its residential IP. Otherwise
+// set (Vercel), call the mini's proxy (scripts/f2-youtube-proxy.mjs, which only
+// serves the /api/f2/ path — shared with Dodo) to borrow its residential IP. Otherwise
 // fetch directly (works in local dev or anywhere with a residential IP).
 export async function fetchYouTubeTranscript(
   videoId: string,
@@ -122,7 +123,7 @@ export async function fetchYouTubeTranscript(
 
   try {
     const res = await fetch(
-      `${proxyBase}/api/polly/youtube-transcript?v=${encodeURIComponent(videoId)}`,
+      `${proxyBase}/api/f2/youtube-transcript?v=${encodeURIComponent(videoId)}`,
       {
         headers: { 'x-f2-secret': secret },
         signal: AbortSignal.timeout(15000),
