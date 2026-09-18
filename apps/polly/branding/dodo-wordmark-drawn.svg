@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 224" width="480" height="224">
+  <!-- Alternate drawn-letterform wordmark (design turn 2, option 2a):
+       hand-drawn "dod" letterforms in warm ink with the teal bird as the
+       final o. The primary text mark is Fredoka (see BRANDING.md); this is
+       the display/illustrative variant. -->
+  <circle cx="78" cy="132" r="46" fill="#2B2422"/>
+  <rect x="106" y="38" width="34" height="140" rx="17" fill="#2B2422"/>
+  <circle cx="74" cy="134" r="14" fill="#FFFFFF"/>
+  <circle cx="192" cy="132" r="46" fill="#2B2422"/>
+  <circle cx="192" cy="132" r="14" fill="#FFFFFF"/>
+  <circle cx="300" cy="132" r="46" fill="#2B2422"/>
+  <rect x="328" y="38" width="34" height="140" rx="17" fill="#2B2422"/>
+  <circle cx="296" cy="134" r="14" fill="#FFFFFF"/>
+  <rect x="390" y="168" width="11" height="34" rx="5.5" fill="#F0A830"/>
+  <rect x="416" y="168" width="11" height="34" rx="5.5" fill="#F0A830"/>
+  <rect x="376" y="194" width="28" height="11" rx="5.5" fill="#F0A830"/>
+  <rect x="402" y="194" width="28" height="11" rx="5.5" fill="#F0A830"/>
+  <circle cx="461" cy="101" r="13" fill="#2F7D6B"/>
+  <circle cx="464" cy="125" r="10" fill="#2F7D6B"/>
+  <circle cx="404" cy="118" r="54" fill="#2F7D6B"/>
+  <circle cx="382" cy="100" r="16" fill="#FFFFFF"/>
+  <circle cx="375" cy="102" r="7.5" fill="#2B2422"/>
+  <circle cx="372" cy="98" r="2.5" fill="#FFFFFF"/>
+  <path d="M368 116 Q330 106 318 118 Q313 126 320 133 Q336 146 372 138 Q380 126 368 116 Z" fill="#F0A830"/>
+</svg>

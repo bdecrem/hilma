@@ -1,0 +1,647 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		088F50BE52606B088DFDBEEB /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5B099CB79824BBD0F6C37B7 /* ProfileSheet.swift */; };
+		0F99B97BB8F39260F8E1B1AD /* voice-shimmer.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1FD765467020187E78414521 /* voice-shimmer.m4a */; };
+		1007CB453D092616BCE16BDC /* FlashDeckBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C7065F7AEE07806FA19C40E /* FlashDeckBuilder.swift */; };
+		182B1B26C7FF9C520CC07A6A /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = F3C9CCF1063B707F37B910D8 /* WebRTC */; };
+		184D4423F8B547D6E22D5019 /* PollyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3858E022373D538F409DB04B /* PollyApp.swift */; };
+		18C2E5DFD3AE0AA8B35C9707 /* ThisWeekBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60CEE4FFACF1BAD1BAAAA2D5 /* ThisWeekBanner.swift */; };
+		1BEED833CA85CE9364D166D5 /* VoiceSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE7AF5671D6F07D26DDFE816 /* VoiceSessionView.swift */; };
+		1C8F55D5FCCD2A79A044568A /* PeckRegionTransitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C76E3DFCED3649ADD9A34B /* PeckRegionTransitionView.swift */; };
+		206460008089DCC45C5865FB /* ChatSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A8FBE6F67116F4DEFB20E42 /* ChatSupport.swift */; };
+		246548D7CC43C7687013DBF8 /* PeckWeekBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 603E01E08B8B728CE6A200DF /* PeckWeekBanner.swift */; };
+		2688E3A7CA01784F84C8BB7C /* DodoRadioDial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 371A2903B297C6C0225D83C7 /* DodoRadioDial.swift */; };
+		2AA43395C8511253CAF8DD02 /* TranscriptReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0B9E0DC76A611306BD8EFC /* TranscriptReaderView.swift */; };
+		3685AE30D4DE6DCEE14032EE /* voice-cedar.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6D10CD0ECA12C060F39C167A /* voice-cedar.m4a */; };
+		403FFB6C157E697A5BDED060 /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEE3F13B24BFB491B2C562A7 /* TopicsView.swift */; };
+		46B45F858BEE2B465E319EFD /* DemoReelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 764A037A63716DF5F6DD2BAC /* DemoReelView.swift */; };
+		49F61F78B1C3B3F384B42F91 /* AudioSummaryPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 878EC882FF3327ED952C098E /* AudioSummaryPlayerView.swift */; };
+		4F751749FDDCD82F8CCE9984 /* LevelUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */; };
+		5CAAB97B3F1F18A3034B44EA /* PollyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E95E8B3E338ADAAEFD2F692 /* PollyAPI.swift */; };
+		5D2AF2D7978E8222AB48D0CB /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677BF1E6C991ED458811F463 /* FlashSFX.swift */; };
+		651715D824202472955C92DD /* voice-marin.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CB2931FD7DCB0BC1510666BE /* voice-marin.m4a */; };
+		6AB820BBA0F8D5F1F0CD0937 /* Fredoka.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EC98158D99E6CCF6CDD4772A /* Fredoka.ttf */; };
+		6C9F1C83CB28B69E1DD8C563 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2F0FFAC4A0072FAE9DFD7 /* SignupView.swift */; };
+		6D07DED5D2502CB48BDA3F63 /* SourceReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9060FD2C33DB0CB08BD4F34 /* SourceReaderView.swift */; };
+		6EEC25FE74D845199B4FDD10 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FF9E44C898CCEDDF2880657 /* Session.swift */; };
+		729EEDF2A3F2C1CBDE3C5D18 /* voice-ash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 92B74A361016287675C7A21B /* voice-ash.m4a */; };
+		73A28E3BB79088A4E6303EA9 /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C5A7639E2BE2676107C234 /* VoiceSettingsView.swift */; };
+		73C19EBCEE8F87D275A68010 /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F4E8AA765DF3DAD19020E6C /* DeepLink.swift */; };
+		761123514B1329C579308C17 /* PollyTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBD81EB0E4780235D00A3DB9 /* PollyTheme.swift */; };
+		78737257CFE3B357AD93768D /* HelpSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10BA032B491A270FA59FA28E /* HelpSheet.swift */; };
+		7917C3D50B1A0B33D378E44D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 12B6ECDCD2331D3CCD6EE588 /* Assets.xcassets */; };
+		7926186F0994079AB9FC5EF0 /* PollyChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6718E978E19140D7AE623F4C /* PollyChrome.swift */; };
+		7AD88F0D60FDCF806065846A /* FlashCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB05D05F1847EBF944237328 /* FlashCardsView.swift */; };
+		7AEE284B87BD97E6E0C2CD31 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3D5252E8DB78C29CFD1DBBF /* PasteView.swift */; };
+		7B49C30A22A73A88772836A2 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFE2838F934397636E6E186E /* LoginView.swift */; };
+		8154E10F90B73E8D9D14C9EB /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 417B8498CEEE02486E78DBC0 /* Fredoka-OFL.txt */; };
+		889ED93C6DEF16F12DB60D22 /* MainTabsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA77C32425C28C9A1632818 /* MainTabsView.swift */; };
+		89814DA42805496B863D62A5 /* CommunitySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18951FF2405801F43229FEB7 /* CommunitySheet.swift */; };
+		9068795F61744A66028D7F55 /* BookSummaryReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD1156DB725546F7B762EB7 /* BookSummaryReaderView.swift */; };
+		92FEE454B28141C659B3D545 /* voice-sage.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1662FDE04FBFE09922F01C1A /* voice-sage.m4a */; };
+		9360C0CA51EF96D795354059 /* DoubleThumbsUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CBE18142AA16E4877C38ABE /* DoubleThumbsUp.swift */; };
+		961731A09B264B7802B31526 /* ScreenCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A11E9BD993B274550AD9C /* ScreenCache.swift */; };
+		966BBEA5540A4A169600C7B0 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */; };
+		986CF240300248D6B3C06340 /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA3A6EE6D565D4FB1674D32 /* ReviewsSheet.swift */; };
+		995EE9F5093CAAA927BE65F1 /* PebblesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C9D0ACF86BFDA31B5771162 /* PebblesView.swift */; };
+		A3AFFC5658774ACF55B8C3C5 /* FlashSetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A330872A693580CE2070A4E6 /* FlashSetView.swift */; };
+		A5EE9095FB60F05AB96F4C06 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA503B8D3F528FE6B823C76 /* IMessagePairingView.swift */; };
+		AC281320FDF269F018166521 /* StreakCelebrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD63E55697413F99721979E5 /* StreakCelebrationView.swift */; };
+		AE5D6E68807E93A80E84C7F3 /* FlashModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18404EAFD60DA7E4A6140A2E /* FlashModels.swift */; };
+		B2BFAE3E640229A73D29EE51 /* AnimatedDodo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12C6C2EC912628954EF063E6 /* AnimatedDodo.swift */; };
+		B2C5706FC6C76FF636B05479 /* voice-coral.m4a in Resources */ = {isa = PBXBuildFile; fileRef = BCFCF78251F085F8EB9D8D32 /* voice-coral.m4a */; };
+		B3CA8E6E7F137717A75FEAED /* voice-ballad.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 9049704A260306A8984D50C2 /* voice-ballad.m4a */; };
+		B3D41E5C9859BD5133A29C25 /* RecertNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 585E651DCAEB140C66B1A318 /* RecertNotifications.swift */; };
+		C03954E0C6F7725A41FAE86C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBBDC96035EAC4AB19908098 /* OnboardingView.swift */; };
+		C3E5259293883F2916EE5CD7 /* PeckOddsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32070B1DB5E2210ABCAEE4D /* PeckOddsSheet.swift */; };
+		C8A19BA8AC971A9ACAF2BF39 /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18A4149BE4FBF883373CC86 /* ModelPicker.swift */; };
+		CA4DA11FE605FAB119440042 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406B207C89E57DA611A0679 /* FlashVoiceView.swift */; };
+		CA51C59B8F8044DBCE8E95A6 /* TopicContextSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC7A8F37E56B7BF21E7908E /* TopicContextSheet.swift */; };
+		D98A145834351ECA7EFF1025 /* FlashTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DED964CC0BF7F93ED42382F /* FlashTabView.swift */; };
+		DD71EC7E67BB9501BD374AAD /* DodoArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B82471D94B61EA020F233EA /* DodoArt.swift */; };
+		DD95C64ABB1C882A3F65B658 /* AudioSummaryPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBEB362E2782BFBC0F6EEAD /* AudioSummaryPlayer.swift */; };
+		E0F772B62A9089B7C5455440 /* voice-echo.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CB295959D0D8AA24B0F31C9F /* voice-echo.m4a */; };
+		E79A7ADBFDDF4B8D837F1AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60BA3AFEFD55422ACC8EF41 /* SettingsView.swift */; };
+		E83349CBB0D5C10617E7D9DC /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0795C7E474A21C98DCDDFE51 /* Secrets.swift */; };
+		E84BE82820A525676818ACFD /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9100A5E331910F9D14CCB43 /* Models.swift */; };
+		ED4B66C95DC492BB7A156282 /* PollyApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA104D86091EEA323716658 /* PollyApplication.swift */; };
+		F267D09DD42887EE403853B7 /* PeckTrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13DDF7FD5F5A004ED185787 /* PeckTrail.swift */; };
+		F97F19F60725E87D791BB91D /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AF65C860BA3F154F3A64BE /* TopicDetailView.swift */; };
+		FA561662208B2DA5E3ADF303 /* ColorSchemePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8F19FB24EA516E8FEB8E0 /* ColorSchemePreference.swift */; };
+		FCF35092364C5841BC81F24B /* RealtimeVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D42FC5814631BE8846F67CC7 /* RealtimeVoiceClient.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0795C7E474A21C98DCDDFE51 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		0A8FBE6F67116F4DEFB20E42 /* ChatSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSupport.swift; sourceTree = "<group>"; };
+		0DBEB362E2782BFBC0F6EEAD /* AudioSummaryPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayer.swift; sourceTree = "<group>"; };
+		10BA032B491A270FA59FA28E /* HelpSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSheet.swift; sourceTree = "<group>"; };
+		12B6ECDCD2331D3CCD6EE588 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		12C6C2EC912628954EF063E6 /* AnimatedDodo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedDodo.swift; sourceTree = "<group>"; };
+		1662FDE04FBFE09922F01C1A /* voice-sage.m4a */ = {isa = PBXFileReference; path = "voice-sage.m4a"; sourceTree = "<group>"; };
+		18404EAFD60DA7E4A6140A2E /* FlashModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashModels.swift; sourceTree = "<group>"; };
+		18951FF2405801F43229FEB7 /* CommunitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunitySheet.swift; sourceTree = "<group>"; };
+		1D0B9E0DC76A611306BD8EFC /* TranscriptReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptReaderView.swift; sourceTree = "<group>"; };
+		1FD765467020187E78414521 /* voice-shimmer.m4a */ = {isa = PBXFileReference; path = "voice-shimmer.m4a"; sourceTree = "<group>"; };
+		2701EDEA08D8354D6CA26CE4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2DED964CC0BF7F93ED42382F /* FlashTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashTabView.swift; sourceTree = "<group>"; };
+		2FA503B8D3F528FE6B823C76 /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
+		2FF9E44C898CCEDDF2880657 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		371A2903B297C6C0225D83C7 /* DodoRadioDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoRadioDial.swift; sourceTree = "<group>"; };
+		3858E022373D538F409DB04B /* PollyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollyApp.swift; sourceTree = "<group>"; };
+		417B8498CEEE02486E78DBC0 /* Fredoka-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Fredoka-OFL.txt"; sourceTree = "<group>"; };
+		481A11E9BD993B274550AD9C /* ScreenCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCache.swift; sourceTree = "<group>"; };
+		4CA104D86091EEA323716658 /* PollyApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollyApplication.swift; sourceTree = "<group>"; };
+		4DA77C32425C28C9A1632818 /* MainTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabsView.swift; sourceTree = "<group>"; };
+		585E651DCAEB140C66B1A318 /* RecertNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecertNotifications.swift; sourceTree = "<group>"; };
+		58C5A7639E2BE2676107C234 /* VoiceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSettingsView.swift; sourceTree = "<group>"; };
+		5BC79FF13275961C8E28C63A /* Polly-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Polly-macOS.entitlements"; sourceTree = "<group>"; };
+		603E01E08B8B728CE6A200DF /* PeckWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckWeekBanner.swift; sourceTree = "<group>"; };
+		60CEE4FFACF1BAD1BAAAA2D5 /* ThisWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThisWeekBanner.swift; sourceTree = "<group>"; };
+		6718E978E19140D7AE623F4C /* PollyChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollyChrome.swift; sourceTree = "<group>"; };
+		677BF1E6C991ED458811F463 /* FlashSFX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSFX.swift; sourceTree = "<group>"; };
+		6B82471D94B61EA020F233EA /* DodoArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoArt.swift; sourceTree = "<group>"; };
+		6C7065F7AEE07806FA19C40E /* FlashDeckBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDeckBuilder.swift; sourceTree = "<group>"; };
+		6D10CD0ECA12C060F39C167A /* voice-cedar.m4a */ = {isa = PBXFileReference; path = "voice-cedar.m4a"; sourceTree = "<group>"; };
+		764A037A63716DF5F6DD2BAC /* DemoReelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoReelView.swift; sourceTree = "<group>"; };
+		79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
+		8406B207C89E57DA611A0679 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
+		878EC882FF3327ED952C098E /* AudioSummaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayerView.swift; sourceTree = "<group>"; };
+		8C9D0ACF86BFDA31B5771162 /* PebblesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PebblesView.swift; sourceTree = "<group>"; };
+		8CBE18142AA16E4877C38ABE /* DoubleThumbsUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleThumbsUp.swift; sourceTree = "<group>"; };
+		9049704A260306A8984D50C2 /* voice-ballad.m4a */ = {isa = PBXFileReference; path = "voice-ballad.m4a"; sourceTree = "<group>"; };
+		92B74A361016287675C7A21B /* voice-ash.m4a */ = {isa = PBXFileReference; path = "voice-ash.m4a"; sourceTree = "<group>"; };
+		9E95E8B3E338ADAAEFD2F692 /* PollyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollyAPI.swift; sourceTree = "<group>"; };
+		9F4E8AA765DF3DAD19020E6C /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
+		A330872A693580CE2070A4E6 /* FlashSetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSetView.swift; sourceTree = "<group>"; };
+		A60BA3AFEFD55422ACC8EF41 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A9100A5E331910F9D14CCB43 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		AB05D05F1847EBF944237328 /* FlashCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardsView.swift; sourceTree = "<group>"; };
+		AEE3F13B24BFB491B2C562A7 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
+		B18A4149BE4FBF883373CC86 /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
+		B1C2F0FFAC4A0072FAE9DFD7 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
+		B1E8F19FB24EA516E8FEB8E0 /* ColorSchemePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchemePreference.swift; sourceTree = "<group>"; };
+		BBA3A6EE6D565D4FB1674D32 /* ReviewsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewsSheet.swift; sourceTree = "<group>"; };
+		BCFCF78251F085F8EB9D8D32 /* voice-coral.m4a */ = {isa = PBXFileReference; path = "voice-coral.m4a"; sourceTree = "<group>"; };
+		BEC7A8F37E56B7BF21E7908E /* TopicContextSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicContextSheet.swift; sourceTree = "<group>"; };
+		C32070B1DB5E2210ABCAEE4D /* PeckOddsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckOddsSheet.swift; sourceTree = "<group>"; };
+		C5C76E3DFCED3649ADD9A34B /* PeckRegionTransitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckRegionTransitionView.swift; sourceTree = "<group>"; };
+		CB2931FD7DCB0BC1510666BE /* voice-marin.m4a */ = {isa = PBXFileReference; path = "voice-marin.m4a"; sourceTree = "<group>"; };
+		CB295959D0D8AA24B0F31C9F /* voice-echo.m4a */ = {isa = PBXFileReference; path = "voice-echo.m4a"; sourceTree = "<group>"; };
+		D3D5252E8DB78C29CFD1DBBF /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
+		D42FC5814631BE8846F67CC7 /* RealtimeVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealtimeVoiceClient.swift; sourceTree = "<group>"; };
+		DFE2838F934397636E6E186E /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		E5B099CB79824BBD0F6C37B7 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
+		E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
+		EBBDC96035EAC4AB19908098 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		EBD81EB0E4780235D00A3DB9 /* PollyTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollyTheme.swift; sourceTree = "<group>"; };
+		EC98158D99E6CCF6CDD4772A /* Fredoka.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fredoka.ttf; sourceTree = "<group>"; };
+		ECD1156DB725546F7B762EB7 /* BookSummaryReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookSummaryReaderView.swift; sourceTree = "<group>"; };
+		F13DDF7FD5F5A004ED185787 /* PeckTrail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckTrail.swift; sourceTree = "<group>"; };
+		F3AF65C860BA3F154F3A64BE /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
+		F6AD3120BD8F3F5A5F437C92 /* Polly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Polly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F9060FD2C33DB0CB08BD4F34 /* SourceReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReaderView.swift; sourceTree = "<group>"; };
+		FD63E55697413F99721979E5 /* StreakCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCelebrationView.swift; sourceTree = "<group>"; };
+		FE7AF5671D6F07D26DDFE816 /* VoiceSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSessionView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		770D693ABC54A6DA24B04251 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				182B1B26C7FF9C520CC07A6A /* WebRTC in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0094AFCFD1B7B5661B9468F6 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				417B8498CEEE02486E78DBC0 /* Fredoka-OFL.txt */,
+				EC98158D99E6CCF6CDD4772A /* Fredoka.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
+		1E181A3F1F971D45264B9036 /* Polly */ = {
+			isa = PBXGroup;
+			children = (
+				12C6C2EC912628954EF063E6 /* AnimatedDodo.swift */,
+				12B6ECDCD2331D3CCD6EE588 /* Assets.xcassets */,
+				0DBEB362E2782BFBC0F6EEAD /* AudioSummaryPlayer.swift */,
+				878EC882FF3327ED952C098E /* AudioSummaryPlayerView.swift */,
+				ECD1156DB725546F7B762EB7 /* BookSummaryReaderView.swift */,
+				0A8FBE6F67116F4DEFB20E42 /* ChatSupport.swift */,
+				B1E8F19FB24EA516E8FEB8E0 /* ColorSchemePreference.swift */,
+				18951FF2405801F43229FEB7 /* CommunitySheet.swift */,
+				9F4E8AA765DF3DAD19020E6C /* DeepLink.swift */,
+				764A037A63716DF5F6DD2BAC /* DemoReelView.swift */,
+				6B82471D94B61EA020F233EA /* DodoArt.swift */,
+				371A2903B297C6C0225D83C7 /* DodoRadioDial.swift */,
+				8CBE18142AA16E4877C38ABE /* DoubleThumbsUp.swift */,
+				AB05D05F1847EBF944237328 /* FlashCardsView.swift */,
+				6C7065F7AEE07806FA19C40E /* FlashDeckBuilder.swift */,
+				79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */,
+				18404EAFD60DA7E4A6140A2E /* FlashModels.swift */,
+				A330872A693580CE2070A4E6 /* FlashSetView.swift */,
+				677BF1E6C991ED458811F463 /* FlashSFX.swift */,
+				2DED964CC0BF7F93ED42382F /* FlashTabView.swift */,
+				8406B207C89E57DA611A0679 /* FlashVoiceView.swift */,
+				10BA032B491A270FA59FA28E /* HelpSheet.swift */,
+				2FA503B8D3F528FE6B823C76 /* IMessagePairingView.swift */,
+				2701EDEA08D8354D6CA26CE4 /* Info.plist */,
+				E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */,
+				DFE2838F934397636E6E186E /* LoginView.swift */,
+				4DA77C32425C28C9A1632818 /* MainTabsView.swift */,
+				B18A4149BE4FBF883373CC86 /* ModelPicker.swift */,
+				A9100A5E331910F9D14CCB43 /* Models.swift */,
+				EBBDC96035EAC4AB19908098 /* OnboardingView.swift */,
+				D3D5252E8DB78C29CFD1DBBF /* PasteView.swift */,
+				8C9D0ACF86BFDA31B5771162 /* PebblesView.swift */,
+				C32070B1DB5E2210ABCAEE4D /* PeckOddsSheet.swift */,
+				C5C76E3DFCED3649ADD9A34B /* PeckRegionTransitionView.swift */,
+				F13DDF7FD5F5A004ED185787 /* PeckTrail.swift */,
+				603E01E08B8B728CE6A200DF /* PeckWeekBanner.swift */,
+				5BC79FF13275961C8E28C63A /* Polly-macOS.entitlements */,
+				9E95E8B3E338ADAAEFD2F692 /* PollyAPI.swift */,
+				3858E022373D538F409DB04B /* PollyApp.swift */,
+				4CA104D86091EEA323716658 /* PollyApplication.swift */,
+				6718E978E19140D7AE623F4C /* PollyChrome.swift */,
+				EBD81EB0E4780235D00A3DB9 /* PollyTheme.swift */,
+				E5B099CB79824BBD0F6C37B7 /* ProfileSheet.swift */,
+				D42FC5814631BE8846F67CC7 /* RealtimeVoiceClient.swift */,
+				585E651DCAEB140C66B1A318 /* RecertNotifications.swift */,
+				BBA3A6EE6D565D4FB1674D32 /* ReviewsSheet.swift */,
+				481A11E9BD993B274550AD9C /* ScreenCache.swift */,
+				0795C7E474A21C98DCDDFE51 /* Secrets.swift */,
+				2FF9E44C898CCEDDF2880657 /* Session.swift */,
+				A60BA3AFEFD55422ACC8EF41 /* SettingsView.swift */,
+				B1C2F0FFAC4A0072FAE9DFD7 /* SignupView.swift */,
+				F9060FD2C33DB0CB08BD4F34 /* SourceReaderView.swift */,
+				FD63E55697413F99721979E5 /* StreakCelebrationView.swift */,
+				60CEE4FFACF1BAD1BAAAA2D5 /* ThisWeekBanner.swift */,
+				BEC7A8F37E56B7BF21E7908E /* TopicContextSheet.swift */,
+				F3AF65C860BA3F154F3A64BE /* TopicDetailView.swift */,
+				AEE3F13B24BFB491B2C562A7 /* TopicsView.swift */,
+				1D0B9E0DC76A611306BD8EFC /* TranscriptReaderView.swift */,
+				FE7AF5671D6F07D26DDFE816 /* VoiceSessionView.swift */,
+				58C5A7639E2BE2676107C234 /* VoiceSettingsView.swift */,
+				0094AFCFD1B7B5661B9468F6 /* Fonts */,
+				A7B7D2D4E57930978219EDE7 /* VoicePreviews */,
+			);
+			path = Polly;
+			sourceTree = "<group>";
+		};
+		2A7596B39DDEAF6D112B0A32 = {
+			isa = PBXGroup;
+			children = (
+				1E181A3F1F971D45264B9036 /* Polly */,
+				E3462FD0D841AEECA52AF5F3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A7B7D2D4E57930978219EDE7 /* VoicePreviews */ = {
+			isa = PBXGroup;
+			children = (
+				92B74A361016287675C7A21B /* voice-ash.m4a */,
+				9049704A260306A8984D50C2 /* voice-ballad.m4a */,
+				6D10CD0ECA12C060F39C167A /* voice-cedar.m4a */,
+				BCFCF78251F085F8EB9D8D32 /* voice-coral.m4a */,
+				CB295959D0D8AA24B0F31C9F /* voice-echo.m4a */,
+				CB2931FD7DCB0BC1510666BE /* voice-marin.m4a */,
+				1662FDE04FBFE09922F01C1A /* voice-sage.m4a */,
+				1FD765467020187E78414521 /* voice-shimmer.m4a */,
+			);
+			path = VoicePreviews;
+			sourceTree = "<group>";
+		};
+		E3462FD0D841AEECA52AF5F3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F6AD3120BD8F3F5A5F437C92 /* Polly.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		53462219DF463E5802CC2091 /* Polly */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2ADA9786435A39B11F27DFA1 /* Build configuration list for PBXNativeTarget "Polly" */;
+			buildPhases = (
+				7F3CA44983292A9645AB885E /* Sources */,
+				A7DFA4304AB2707073D5A30C /* Resources */,
+				770D693ABC54A6DA24B04251 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Polly;
+			packageProductDependencies = (
+				F3C9CCF1063B707F37B910D8 /* WebRTC */,
+			);
+			productName = Polly;
+			productReference = F6AD3120BD8F3F5A5F437C92 /* Polly.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		55B07B71ED1DEB8021F50776 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					53462219DF463E5802CC2091 = {
+						DevelopmentTeam = 274T5WCVD2;
+					};
+				};
+			};
+			buildConfigurationList = 05C77ABEA459BC4743AD1EE1 /* Build configuration list for PBXProject "Polly" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 2A7596B39DDEAF6D112B0A32;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5EF4FC2E3EA8654FCE10AB72 /* XCRemoteSwiftPackageReference "WebRTC" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E3462FD0D841AEECA52AF5F3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				53462219DF463E5802CC2091 /* Polly */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A7DFA4304AB2707073D5A30C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7917C3D50B1A0B33D378E44D /* Assets.xcassets in Resources */,
+				8154E10F90B73E8D9D14C9EB /* Fredoka-OFL.txt in Resources */,
+				6AB820BBA0F8D5F1F0CD0937 /* Fredoka.ttf in Resources */,
+				729EEDF2A3F2C1CBDE3C5D18 /* voice-ash.m4a in Resources */,
+				B3CA8E6E7F137717A75FEAED /* voice-ballad.m4a in Resources */,
+				3685AE30D4DE6DCEE14032EE /* voice-cedar.m4a in Resources */,
+				B2C5706FC6C76FF636B05479 /* voice-coral.m4a in Resources */,
+				E0F772B62A9089B7C5455440 /* voice-echo.m4a in Resources */,
+				651715D824202472955C92DD /* voice-marin.m4a in Resources */,
+				92FEE454B28141C659B3D545 /* voice-sage.m4a in Resources */,
+				0F99B97BB8F39260F8E1B1AD /* voice-shimmer.m4a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7F3CA44983292A9645AB885E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2BFAE3E640229A73D29EE51 /* AnimatedDodo.swift in Sources */,
+				DD95C64ABB1C882A3F65B658 /* AudioSummaryPlayer.swift in Sources */,
+				49F61F78B1C3B3F384B42F91 /* AudioSummaryPlayerView.swift in Sources */,
+				9068795F61744A66028D7F55 /* BookSummaryReaderView.swift in Sources */,
+				206460008089DCC45C5865FB /* ChatSupport.swift in Sources */,
+				FA561662208B2DA5E3ADF303 /* ColorSchemePreference.swift in Sources */,
+				89814DA42805496B863D62A5 /* CommunitySheet.swift in Sources */,
+				73C19EBCEE8F87D275A68010 /* DeepLink.swift in Sources */,
+				46B45F858BEE2B465E319EFD /* DemoReelView.swift in Sources */,
+				DD71EC7E67BB9501BD374AAD /* DodoArt.swift in Sources */,
+				2688E3A7CA01784F84C8BB7C /* DodoRadioDial.swift in Sources */,
+				9360C0CA51EF96D795354059 /* DoubleThumbsUp.swift in Sources */,
+				7AD88F0D60FDCF806065846A /* FlashCardsView.swift in Sources */,
+				1007CB453D092616BCE16BDC /* FlashDeckBuilder.swift in Sources */,
+				966BBEA5540A4A169600C7B0 /* FlashDecksSheet.swift in Sources */,
+				AE5D6E68807E93A80E84C7F3 /* FlashModels.swift in Sources */,
+				5D2AF2D7978E8222AB48D0CB /* FlashSFX.swift in Sources */,
+				A3AFFC5658774ACF55B8C3C5 /* FlashSetView.swift in Sources */,
+				D98A145834351ECA7EFF1025 /* FlashTabView.swift in Sources */,
+				CA4DA11FE605FAB119440042 /* FlashVoiceView.swift in Sources */,
+				78737257CFE3B357AD93768D /* HelpSheet.swift in Sources */,
+				A5EE9095FB60F05AB96F4C06 /* IMessagePairingView.swift in Sources */,
+				4F751749FDDCD82F8CCE9984 /* LevelUpView.swift in Sources */,
+				7B49C30A22A73A88772836A2 /* LoginView.swift in Sources */,
+				889ED93C6DEF16F12DB60D22 /* MainTabsView.swift in Sources */,
+				C8A19BA8AC971A9ACAF2BF39 /* ModelPicker.swift in Sources */,
+				E84BE82820A525676818ACFD /* Models.swift in Sources */,
+				C03954E0C6F7725A41FAE86C /* OnboardingView.swift in Sources */,
+				7AEE284B87BD97E6E0C2CD31 /* PasteView.swift in Sources */,
+				995EE9F5093CAAA927BE65F1 /* PebblesView.swift in Sources */,
+				C3E5259293883F2916EE5CD7 /* PeckOddsSheet.swift in Sources */,
+				1C8F55D5FCCD2A79A044568A /* PeckRegionTransitionView.swift in Sources */,
+				F267D09DD42887EE403853B7 /* PeckTrail.swift in Sources */,
+				246548D7CC43C7687013DBF8 /* PeckWeekBanner.swift in Sources */,
+				5CAAB97B3F1F18A3034B44EA /* PollyAPI.swift in Sources */,
+				184D4423F8B547D6E22D5019 /* PollyApp.swift in Sources */,
+				ED4B66C95DC492BB7A156282 /* PollyApplication.swift in Sources */,
+				7926186F0994079AB9FC5EF0 /* PollyChrome.swift in Sources */,
+				761123514B1329C579308C17 /* PollyTheme.swift in Sources */,
+				088F50BE52606B088DFDBEEB /* ProfileSheet.swift in Sources */,
+				FCF35092364C5841BC81F24B /* RealtimeVoiceClient.swift in Sources */,
+				B3D41E5C9859BD5133A29C25 /* RecertNotifications.swift in Sources */,
+				986CF240300248D6B3C06340 /* ReviewsSheet.swift in Sources */,
+				961731A09B264B7802B31526 /* ScreenCache.swift in Sources */,
+				E83349CBB0D5C10617E7D9DC /* Secrets.swift in Sources */,
+				6EEC25FE74D845199B4FDD10 /* Session.swift in Sources */,
+				E79A7ADBFDDF4B8D837F1AEC /* SettingsView.swift in Sources */,
+				6C9F1C83CB28B69E1DD8C563 /* SignupView.swift in Sources */,
+				6D07DED5D2502CB48BDA3F63 /* SourceReaderView.swift in Sources */,
+				AC281320FDF269F018166521 /* StreakCelebrationView.swift in Sources */,
+				18C2E5DFD3AE0AA8B35C9707 /* ThisWeekBanner.swift in Sources */,
+				CA51C59B8F8044DBCE8E95A6 /* TopicContextSheet.swift in Sources */,
+				F97F19F60725E87D791BB91D /* TopicDetailView.swift in Sources */,
+				403FFB6C157E697A5BDED060 /* TopicsView.swift in Sources */,
+				2AA43395C8511253CAF8DD02 /* TranscriptReaderView.swift in Sources */,
+				1BEED833CA85CE9364D166D5 /* VoiceSessionView.swift in Sources */,
+				73A28E3BB79088A4E6303EA9 /* VoiceSettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0E113EA7B47265A89DC8641E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		7BB2862653678B1E91C41030 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Polly/Polly-macOS.entitlements";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Polly/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Polly;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
+			};
+			name = Release;
+		};
+		D63D7E36D06F862441789365 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Polly/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Polly;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
+			};
+			name = Debug;
+		};
+		FCE197B08D2DA49313C83956 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		05C77ABEA459BC4743AD1EE1 /* Build configuration list for PBXProject "Polly" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FCE197B08D2DA49313C83956 /* Debug */,
+				0E113EA7B47265A89DC8641E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2ADA9786435A39B11F27DFA1 /* Build configuration list for PBXNativeTarget "Polly" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D63D7E36D06F862441789365 /* Debug */,
+				7BB2862653678B1E91C41030 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		5EF4FC2E3EA8654FCE10AB72 /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stasel/WebRTC.git";
+			requirement = {
+				kind = exactVersion;
+				version = 147.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F3C9CCF1063B707F37B910D8 /* WebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5EF4FC2E3EA8654FCE10AB72 /* XCRemoteSwiftPackageReference "WebRTC" */;
+			productName = WebRTC;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 55B07B71ED1DEB8021F50776 /* Project object */;
+}

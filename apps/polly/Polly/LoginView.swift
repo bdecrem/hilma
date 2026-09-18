@@ -1,0 +1,193 @@
+import SwiftUI
+
+/// Login screen — styled with PollyTheme so it matches the rest of the app.
+/// "Create an account" link at the bottom pushes to SignupView in the same
+/// navigation stack.
+struct LoginView: View {
+    /// Way out for anyone who landed here from the intro and changed their
+    /// mind (back to the intro's Try-it / sign-in gate). Without it this
+    /// screen is a trap: no account, no exit.
+    var onBack: (() -> Void)? = nil
+
+    @Environment(Session.self) private var session
+    @State private var username = ""
+    @State private var password = ""
+    @State private var busy = false
+
+    var body: some View {
+        NavigationStack {
+            PollyAuthShell(
+                title: "polly",
+                tagline: "Learn a language.",
+                primaryLabel: busy ? "Signing in…" : "Sign in",
+                primaryDisabled: busy || username.isEmpty || password.isEmpty,
+                onPrimary: signIn,
+                footer: {
+                    NavigationLink {
+                        SignupView()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("New here?")
+                                .foregroundStyle(PollyTheme.text2)
+                            Text("Create an account")
+                                .foregroundStyle(PollyTheme.accent)
+                                .fontWeight(.semibold)
+                        }
+                        .font(.system(size: 14))
+                    }
+                    .buttonStyle(.plain)
+                }
+            ) {
+                PollyAuthField(
+                    placeholder: "email or username",
+                    text: $username,
+                    contentType: .username,
+                    autocapitalization: .never
+                )
+                PollyAuthField(
+                    placeholder: "password",
+                    text: $password,
+                    contentType: .password,
+                    isSecure: true
+                )
+
+                if let err = session.loginError {
+                    Text(err)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color(hex: 0xFF6B5B))
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if let onBack {
+                    Button { onBack() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(PollyTheme.text2)
+                            .frame(width: 36, height: 36)
+                            .background(PollyTheme.surface2, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.cancelAction)
+                    .padding(.top, 10)
+                    .padding(.trailing, 16)
+                }
+            }
+            .toolbar(.hidden, for: .navigationBar)
+        }
+    }
+
+    private func signIn() {
+        Task {
+            busy = true
+            await session.login(username: username, password: password)
+            busy = false
+        }
+    }
+}
+
+/// Shared layout chrome for Login + Signup: hero title, tagline, body fields,
+/// coral CTA, footer link slot. Centered, max-width 480 so Catalyst windows
+/// don't stretch it edge-to-edge.
+struct PollyAuthShell<Body: View, Footer: View>: View {
+    let title: String
+    let tagline: String
+    let primaryLabel: String
+    let primaryDisabled: Bool
+    var onPrimary: () -> Void
+    @ViewBuilder var footer: () -> Footer
+    @ViewBuilder var content: () -> Body
+
+    var body: some View {
+        ZStack {
+            PollyTheme.bg.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        // Brand type: Fredoka SemiBold, the Dodo text mark
+                        // (−0.4px tracking at 27px, scaled to this size).
+                        .font(.custom("Fredoka", size: 44).weight(.semibold))
+                        .tracking(-0.65)
+                        .foregroundStyle(PollyTheme.text)
+                    Text(tagline)
+                        .font(.system(size: 16))
+                        .foregroundStyle(PollyTheme.text2)
+                }
+                .padding(.bottom, 32)
+
+                VStack(spacing: 12) { content() }
+
+                Button(action: onPrimary) {
+                    Text(primaryLabel)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(primaryDisabled
+                                         ? PollyTheme.text3
+                                         : PollyTheme.inkOnAccent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            (primaryDisabled ? PollyTheme.surface2 : PollyTheme.accent),
+                            in: RoundedRectangle(cornerRadius: 12)
+                        )
+                }
+                .buttonStyle(.plain)
+                .disabled(primaryDisabled)
+                .padding(.top, 24)
+
+                Spacer()
+
+                HStack { Spacer(); footer(); Spacer() }
+                    .padding(.bottom, 24)
+            }
+            .padding(.horizontal, 28)
+            .padding(.top, 80)
+            .frame(maxWidth: 480)
+            .frame(maxWidth: .infinity)
+        }
+    }
+}
+
+/// Themed input field used by Login + Signup. Wraps TextField/SecureField with
+/// the warm-surface look that matches the rest of the app's chrome.
+struct PollyAuthField: View {
+    let placeholder: String
+    @Binding var text: String
+    var contentType: UITextContentType? = nil
+    var autocapitalization: TextInputAutocapitalization = .sentences
+    var keyboardType: UIKeyboardType = .default
+    var isSecure: Bool = false
+
+    var body: some View {
+        Group {
+            if isSecure {
+                SecureField(placeholder, text: $text)
+            } else {
+                TextField(placeholder, text: $text)
+                    .textInputAutocapitalization(autocapitalization)
+                    .autocorrectionDisabled()
+                    .keyboardType(keyboardType)
+            }
+        }
+        .font(.system(size: 16))
+        .foregroundStyle(PollyTheme.text)
+        .tint(PollyTheme.accent)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(PollyTheme.bgRaised, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(PollyTheme.border, lineWidth: 1))
+        .modifier(ContentTypeModifier(type: contentType))
+    }
+}
+
+/// Optional textContentType — applied only when caller passes one, so
+/// SecureField + TextField both work cleanly.
+private struct ContentTypeModifier: ViewModifier {
+    let type: UITextContentType?
+    func body(content: Content) -> some View {
+        if let type {
+            content.textContentType(type)
+        } else {
+            content
+        }
+    }
+}

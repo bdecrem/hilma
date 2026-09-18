@@ -1,0 +1,567 @@
+<title>Peck World v2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+  :root {
+    --bg: #FFFBF0;        /* butter paper */
+    --bg-2: #F5EDD8;
+    --surface: #FFFDF6;
+    --ink: #33383E;
+    --ink-2: #5B6470;
+    --ink-3: #8A929B;
+    --line: #E6DCC3;
+    --marigold: #F0A830;
+    --marigold-deep: #C9821F;
+    --slate: #7C9EB2;
+    --sprout: #6FAE5C;
+    --phone: #1B2026;
+    --display: "Fredoka", "Nunito Sans", system-ui, sans-serif;
+    --body: "Nunito Sans", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1E2329; --bg-2: #262C33; --surface: #262C33;
+      --ink: #F9EFDA; --ink-2: #C9C2B0; --ink-3: #8E9299; --line: #363D46;
+      --phone: #0E1216;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1E2329; --bg-2: #262C33; --surface: #262C33;
+    --ink: #F9EFDA; --ink-2: #C9C2B0; --ink-3: #8E9299; --line: #363D46;
+    --phone: #0E1216;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--body); font-size: 15.5px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 40px 28px 72px; }
+
+  header { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; margin-bottom: 34px; }
+  .eyebrow { font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--marigold-deep); }
+  h1 { font-family: var(--display); font-weight: 600; font-size: 44px; line-height: 1.05; margin: 6px 0 10px; letter-spacing: -0.01em; text-wrap: balance; }
+  .lede { max-width: 62ch; color: var(--ink-2); margin: 0; }
+  .stat { text-align: right; font-family: var(--display); font-weight: 600; color: var(--ink-2); font-size: 13px; line-height: 1.4; }
+  .stat b { display: block; color: var(--ink); font-size: 26px; font-variant-numeric: tabular-nums; }
+
+  .stage { display: grid; grid-template-columns: 430px 1fr; gap: 48px; align-items: start; }
+  .phone-col { position: sticky; top: 28px; }
+  .phone {
+    width: 402px; height: 852px; margin: 0 auto; border-radius: 52px; background: var(--phone);
+    padding: 12px; box-shadow: 0 30px 60px -20px rgba(30,25,15,.45), inset 0 0 0 2px rgba(255,255,255,.06);
+    position: relative;
+  }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 42px; overflow: hidden; background: #FFEFD1; }
+  canvas#world { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .scroller { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; cursor: grab; }
+  .scroller::-webkit-scrollbar { display: none; }
+  .spacer { width: 1px; }
+  .island { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 120px; height: 34px; border-radius: 20px; background: #000; z-index: 3; }
+  .hud {
+    position: absolute; top: 60px; left: 16px; right: 16px; z-index: 2; display: flex; justify-content: space-between; align-items: center; pointer-events: none;
+    font-family: var(--display); font-weight: 600; font-size: 13px; color: #3E3324;
+  }
+  .hud .pill { background: rgba(255,251,240,.86); backdrop-filter: blur(10px); border: 1px solid rgba(62,51,36,.12); border-radius: 999px; padding: 7px 12px; display: flex; gap: 8px; align-items: center; box-shadow: 0 4px 14px rgba(62,51,36,.12); }
+  .hud .pill .n { font-variant-numeric: tabular-nums; }
+  .hud .ribbon { position: relative; }
+  .hud .ribbon i { display: inline-block; width: 74px; height: 6px; border-radius: 3px; background: rgba(62,51,36,.14); overflow: hidden; vertical-align: middle; }
+  .hud .ribbon i b { display: block; width: 43%; height: 100%; background: var(--marigold); border-radius: 3px; }
+  .hint { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 2; pointer-events: none; font-family: var(--display); font-weight: 600; font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: rgba(62,51,36,.55); background: rgba(255,251,240,.7); backdrop-filter: blur(8px); border-radius: 999px; padding: 5px 11px; }
+  .under { margin: 18px auto 0; max-width: 402px; font-size: 13px; color: var(--ink-3); text-align: center; }
+
+  .notes { display: grid; gap: 14px; }
+  .move { display: grid; grid-template-columns: 54px 1fr; gap: 16px; padding: 18px 20px 18px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+  .move .glyph { width: 54px; height: 54px; border-radius: 16px; background: var(--bg-2); display: grid; place-items: center; }
+  .move .glyph svg { width: 34px; height: 34px; }
+  .move h3 { font-family: var(--display); font-weight: 600; font-size: 20px; margin: 2px 0 6px; line-height: 1.15; }
+  .move p { margin: 0; color: var(--ink-2); max-width: 60ch; }
+  .move dl { display: grid; grid-template-columns: 74px 1fr; gap: 4px 12px; margin: 10px 0 0; font-size: 14px; }
+  .move dt { font-family: var(--display); font-weight: 600; font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); padding-top: 3px; }
+  .move dd { margin: 0; color: var(--ink-2); }
+  .move dd.now { color: var(--ink); }
+  .foot { margin-top: 26px; padding: 18px 20px; border-radius: 18px; background: var(--bg-2); color: var(--ink-2); font-size: 14px; }
+  .foot h4 { font-family: var(--display); font-weight: 600; font-size: 14px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 8px; }
+  .foot ul { margin: 0; padding-left: 18px; }
+  .foot li + li { margin-top: 4px; }
+
+  @media (max-width: 960px) {
+    .stage { grid-template-columns: 1fr; }
+    .phone-col { position: static; }
+    header { grid-template-columns: 1fr; }
+    .stat { text-align: left; }
+  }
+  @media (max-width: 460px) {
+    .phone { width: 100%; height: auto; aspect-ratio: 402 / 852; padding: 8px; border-radius: 36px; }
+    .screen { border-radius: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hud .ribbon i b { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Dodo · Peck tab · design proposal</div>
+      <h1>The island, drawn as a place you walk</h1>
+      <p class="lede">Same three regions, same trail math, same palette. Six moves turn the map from a nice backdrop into the game board: a road that shows where you've been, stones with weight, landmarks, milestones with their own shapes, fog that lifts, and a world that moves in depth. The phone is live, scroll it.</p>
+    </div>
+    <div class="stat"><b>6</b>moves, all Canvas,<br>no new assets</div>
+  </header>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone">
+        <div class="screen">
+          <div class="island"></div>
+          <canvas id="world"></canvas>
+          <div class="scroller" id="scroller"><div class="spacer" id="spacer"></div></div>
+          <div class="hud">
+            <div class="pill ribbon"><span>Fern Hollow</span><i><b></b></i><span class="n">13/30</span></div>
+            <div class="pill"><span style="color:#C9821F">★</span><span class="n">31</span></div>
+          </div>
+          <div class="hint">scroll the trail</div>
+        </div>
+      </div>
+      <p class="under">Levels 1–12 cleared, 13 unlocked. Sunrise Meadow below, Fern Hollow here, Starfall Summit above the fog.</p>
+    </div>
+
+    <div class="notes">
+      <section class="move">
+        <div class="glyph"><svg viewBox="0 0 34 34" fill="none"><path d="M6 28c6-6 4-12 10-14s10 2 12-8" stroke="#C9821F" stroke-width="5" stroke-linecap="round"/><path d="M6 28c6-6 4-12 10-14" stroke="#F0A830" stroke-width="2.5" stroke-linecap="round"/><path d="M16 14s10 2 12-8" stroke="#F0A830" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 5"/></svg></div>
+        <div>
+          <h3>A road, not a dotted line</h3>
+          <p>The trail is drawn as a real path with an edge and a worn center. Segments you've walked are solid and carry the dodo's footprints. The segment to the next level is stepping stones. Everything past that dissolves into fog. One glance tells you where you are and how far the road goes.</p>
+          <dl><dt>Today</dt><dd>Uniform 7pt dots between every node, same for cleared and locked.</dd><dt>Proposed</dt><dd class="now">Three path states: worn, stepping stones, fogged. Footprints on worn stretches.</dd></dl>
+        </div>
+      </section>
+
+      <section class="move">
+        <div class="glyph"><svg viewBox="0 0 34 34"><ellipse cx="17" cy="27" rx="12" ry="4" fill="rgba(0,0,0,.18)"/><circle cx="17" cy="19" r="11" fill="#C9821F"/><circle cx="17" cy="15" r="11" fill="#F0A830"/><path d="M11 6l1.6 3.3 3.6.5-2.6 2.5.6 3.6L11 14.2 7.8 15.9l.6-3.6L5.8 9.8l3.6-.5z" fill="#FFD98A" transform="translate(6 -4) scale(.75)"/></svg></div>
+        <div>
+          <h3>Stones with weight</h3>
+          <p>Level nodes become chunky tiles: a lit top face over a darker base, sitting in a soft ground shadow. Stars sit in an arc carved into the stone, with empty sockets for the ones you haven't earned yet. Missing stars become something to go back for.</p>
+          <dl><dt>Today</dt><dd>Flat circles with a drop shadow, stars as three tiny glyphs under the node.</dd><dt>Proposed</dt><dd class="now">Two-tone 3D tiles, star arc with sockets, current tile gets a bouncing map pin.</dd></dl>
+        </div>
+      </section>
+
+      <section class="move">
+        <div class="glyph"><svg viewBox="0 0 34 34"><path d="M17 9v18" stroke="#8A6B4A" stroke-width="3"/><path d="M17 9l7-7M17 9l7 7M17 9l-7-7M17 9l-7 7" stroke="#F9EFDA" stroke-width="3.5" stroke-linecap="round"/><path d="M17 9l7-7M17 9l7 7M17 9l-7-7M17 9l-7 7" stroke="#7C9EB2" stroke-width="2" stroke-linecap="round"/><path d="M11 28h12l-1-6h-10z" fill="#E3D2B2"/></svg></div>
+        <div>
+          <h3>Landmarks make it a place</h3>
+          <p>Each region gets one hero set piece the road passes: a turning windmill and a drifting balloon in the Meadow, a waterfall with a rope bridge in the Hollow (the road actually crosses the gorge), an observatory sweeping its beam over a campfire at the Summit. You remember where level 17 is because it's the bridge.</p>
+          <dl><dt>Today</dt><dd>Trees, flowers, a bunny, fireflies, a campfire. Lovely, but nothing to navigate by.</dd><dt>Proposed</dt><dd class="now">One landmark per region, on the road, animated.</dd></dl>
+        </div>
+      </section>
+
+      <section class="move">
+        <div class="glyph"><svg viewBox="0 0 34 34"><path d="M7 30V14a10 10 0 0 1 20 0v16" stroke="#8A6B4A" stroke-width="3.5" fill="none"/><path d="M4 30h26" stroke="#8A6B4A" stroke-width="3.5" stroke-linecap="round"/><path d="M12 12l2 4 3-6 3 6 2-4v6H12z" fill="#F0A830"/></svg></div>
+        <div>
+          <h3>Milestones with their own shape</h3>
+          <p>Every tenth level is a Gate: a larger crowned stone under an arch that names the next region. Every fifth is a rest stop with a signpost that reads your score in that region. A small chest sits beside a few levels in each region, closed until you clear that level. Three node types instead of one gives the trail rhythm.</p>
+          <dl><dt>Today</dt><dd>All 30 nodes identical apart from state.</dd><dt>Proposed</dt><dd class="now">Gates at 10/20/30, rest stops at 5/15/25, chests at 3, 7 and 12, 16 and 22, 26.</dd></dl>
+        </div>
+      </section>
+
+      <section class="move">
+        <div class="glyph"><svg viewBox="0 0 34 34"><rect x="2" y="2" width="30" height="30" rx="8" fill="#7C9EB2"/><ellipse cx="12" cy="22" rx="9" ry="5" fill="#F9EFDA" opacity=".9"/><ellipse cx="23" cy="18" rx="9" ry="5" fill="#F9EFDA" opacity=".7"/><circle cx="24" cy="9" r="3.5" fill="#F9EFDA"/></svg></div>
+        <div>
+          <h3>Fog of discovery</h3>
+          <p>Locked levels sit in a bank of fog that thins as you approach; the next locked stone is half revealed, the ones beyond are silhouettes. The Summit's stars show through the haze before you get there, so the mountain feels earned. Clearing a level visibly pushes the fog back.</p>
+          <dl><dt>Today</dt><dd>Locked nodes are grey circles with a padlock, fully visible to the horizon.</dd><dt>Proposed</dt><dd class="now">Fog bank with a breathing edge at the frontier; locks only on the next two stones.</dd></dl>
+        </div>
+      </section>
+
+      <section class="move">
+        <div class="glyph"><svg viewBox="0 0 34 34"><path d="M2 26c6-9 10-9 16 0s10 9 14 0" stroke="#5F9E4C" stroke-width="3" fill="none"/><path d="M2 20c5-7 9-7 14 0s9 7 16 0" stroke="#9CCB80" stroke-width="3" fill="none"/><path d="M2 14c4-5 8-5 12 0s8 5 18 0" stroke="#CDE3B4" stroke-width="3" fill="none"/></svg></div>
+        <div>
+          <h3>Depth and weather</h3>
+          <p>Far hills scroll slower than near ones, so the world has depth when you move through it. Each region gets its own weather: petals drifting across the Meadow, leaves in the Hollow, stardust at the Summit. The sun in the finale hands off to the moon as you climb. The HUD ribbon shows region, position and star count without leaving the map.</p>
+          <dl><dt>Today</dt><dd>Single flat scroll, sparse ambient sprites.</dd><dt>Proposed</dt><dd class="now">Three parallax layers, per-region particles, floating HUD ribbon.</dd></dl>
+        </div>
+      </section>
+
+      <div class="foot">
+        <h4>Build notes</h4>
+        <ul>
+          <li>Everything here is Canvas, matching how the map is drawn today. It ports into PeckWorldCanvas and the node builder in FlashTabView without new assets. Roughly a day.</li>
+          <li>The region transition choreography (Clear / Walk / Gate / Settle) already exists and fits the new Gate stones as-is.</li>
+          <li>Reduce Motion freezes the ambience, as today. Sound and haptics on chest open and star collect would be the next layer, not in this mockup.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ---------- world constants (mirrors FlashTabView: y(i) = H - bottomPad - i*pitch)
+  const W = 378, PITCH = 116, BOTTOM = 210, TOP = 400, COUNT = 30, AMP = 96;
+  const H = TOP + (COUNT - 1) * PITCH + BOTTOM;
+  const FINALE_BOTTOM = 350;
+  const CURRENT = 12; // zero-based index of the unlocked level (level 13)
+  const stars = [3,2,3,3,1,2,3,2,3,3,2,1]; // levels 1..12
+  const SKINS = [
+    { skyTop:'#C9E6DE', skyBottom:'#FFEFD1', hills:['#CDE3B4','#B5D89A','#9CCB80','#7FBA66'], canopy:'#6FAE5C', shade:'#5F9E4C', trunk:'#8A6B4A', road:'#E9D3A3', roadEdge:'#B8925C', pines:false, particle:'#F2A19A' },
+    { skyTop:'#F2A87B', skyBottom:'#FFDCA8', hills:['#A3B871','#84A765','#668F57','#4E7B4A'], canopy:'#4F7D4A', shade:'#3E6B42', trunk:'#5C4632', road:'#C9B48A', roadEdge:'#7E6242', pines:false, particle:'#D98E4A' },
+    { skyTop:'#0F161C', skyBottom:'#1B2A38', hills:['#2C3B4A','#24313D','#1D2934','#16202A'], canopy:'#10181F', shade:'#0C141B', trunk:'#0C141B', road:'#DCE4EA', roadEdge:'#5C6B7A', pines:true, particle:'#EDE6D2' },
+  ];
+  const skin = k => SKINS[Math.min(k, 2)];
+  const frac = v => v - Math.floor(v);
+  const zig = i => Math.sin(i * 1.9 + 0.6);
+  const yFor = i => H - BOTTOM - i * PITCH;
+  const xFor = i => W / 2 + zig(i) * AMP;
+  const bandBottom = k => k === 0 ? H : H - BOTTOM - (k * 10 - 0.5) * PITCH;
+  const bandTop = k => k === 2 ? FINALE_BOTTOM : H - BOTTOM - (k * 10 + 9 + 0.5) * PITCH;
+  const status = i => i < CURRENT ? 'passed' : i === CURRENT ? 'current' : 'locked';
+
+  const canvas = document.getElementById('world');
+  const scroller = document.getElementById('scroller');
+  const spacer = document.getElementById('spacer');
+  const ctx = canvas.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let vw = 0, vh = 0, dpr = 1, scale = 1;
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    vw = r.width; vh = r.height;
+    scale = vw / W;
+    canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr);
+    spacer.style.height = (H * scale) + 'px';
+  }
+  resize();
+  addEventListener('resize', resize);
+  // open on the current level
+  requestAnimationFrame(() => { scroller.scrollTop = (yFor(CURRENT) - (vh / scale) * 0.58) * scale; });
+
+  // drag to scroll (desktop review)
+  let drag = null;
+  scroller.addEventListener('mousedown', e => { drag = { y: e.clientY, top: scroller.scrollTop }; scroller.style.cursor = 'grabbing'; });
+  addEventListener('mousemove', e => { if (drag) scroller.scrollTop = drag.top - (e.clientY - drag.y); });
+  addEventListener('mouseup', () => { drag = null; scroller.style.cursor = 'grab'; });
+
+  // ---------- helpers
+  const circle = (x, y, r, fill) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); };
+  const ellipse = (x, y, rx, ry, fill) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); };
+  const rrect = (x, y, w, h, r, fill) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = fill; ctx.fill(); };
+  const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; };
+  function star(x, y, r, fill) {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) { const rr = i % 2 ? r * 0.45 : r; const a = -Math.PI / 2 + i * Math.PI / 5; ctx.lineTo(x + rr * Math.cos(a), y + rr * Math.sin(a)); }
+    ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  }
+  function trailPath(from, to) {
+    // quad-curve chain exactly like the app
+    ctx.beginPath();
+    let p0 = { x: xFor(from), y: yFor(from) };
+    ctx.moveTo(p0.x, p0.y);
+    for (let i = from + 1; i <= to; i++) {
+      const p = { x: xFor(i), y: yFor(i) };
+      const mid = { x: (p0.x + p.x) / 2, y: (p0.y + p.y) / 2 };
+      ctx.quadraticCurveTo(p0.x, mid.y + PITCH * 0.18, mid.x, mid.y);
+      ctx.quadraticCurveTo(p.x, mid.y - PITCH * 0.18, p.x, p.y);
+      p0 = p;
+    }
+  }
+  function pointOnSeg(i, u) { // approximate point between node i and i+1
+    const a = { x: xFor(i), y: yFor(i) }, b = { x: xFor(i + 1), y: yFor(i + 1) };
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    if (u < 0.5) { const t = u * 2, c = { x: a.x, y: mid.y + PITCH * 0.18 }; return { x: (1-t)*(1-t)*a.x + 2*(1-t)*t*c.x + t*t*mid.x, y: (1-t)*(1-t)*a.y + 2*(1-t)*t*c.y + t*t*mid.y }; }
+    const t = (u - 0.5) * 2, c = { x: b.x, y: mid.y - PITCH * 0.18 };
+    return { x: (1-t)*(1-t)*mid.x + 2*(1-t)*t*c.x + t*t*b.x, y: (1-t)*(1-t)*mid.y + 2*(1-t)*t*c.y + t*t*b.y };
+  }
+
+  // ---------- props
+  function roundTree(x, y, k, sway, s) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(sway * Math.PI / 180); ctx.scale(k, k);
+    rrect(-3, -40, 6, 42, 3, s.trunk); circle(0, -62, 26, s.canopy); ellipse(-9, -73, 13, 11, rgba(s.shade, 0.55));
+    ctx.restore();
+  }
+  function pine(x, y, k) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+    ctx.fillStyle = '#0C141B'; ctx.fillRect(-1.5, -6, 3, 6);
+    ctx.beginPath(); ctx.moveTo(0, -46); ctx.lineTo(14, -18); ctx.lineTo(6, -20); ctx.lineTo(17, -5); ctx.lineTo(-17, -5); ctx.lineTo(-6, -20); ctx.lineTo(-14, -18); ctx.closePath();
+    ctx.fillStyle = '#10181F'; ctx.fill(); ctx.restore();
+  }
+  function flower(x, y, petal) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.strokeStyle = '#5F9E4C'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(0, 0); ctx.bezierCurveTo(0, -6, -1, -10, 0, -14); ctx.stroke();
+    for (const [px, py] of [[-3,-14],[3,-14],[-2,-18.6],[2,-18.6]]) circle(px, py, 2.4, petal);
+    circle(0, -16, 1.8, '#FFD98A'); ctx.restore();
+  }
+  function windmill(x, y, t) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(16, 0); ctx.lineTo(9, -70); ctx.lineTo(-9, -70); ctx.closePath(); ctx.fillStyle = '#EFE3CB'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-16, 0); ctx.lineTo(0, 0); ctx.lineTo(0, -70); ctx.lineTo(-9, -70); ctx.closePath(); ctx.fillStyle = '#D9C89A'; ctx.fill();
+    rrect(-12, -84, 24, 16, 6, '#C9821F');
+    rrect(-5, -22, 10, 22, 4, '#8A6B4A');
+    ctx.translate(0, -78); ctx.rotate(reduce ? 0.4 : t * 0.9);
+    for (let i = 0; i < 4; i++) { ctx.rotate(Math.PI / 2); rrect(-3, -44, 6, 40, 3, '#8A6B4A'); rrect(1, -42, 11, 30, 3, 'rgba(255,253,244,.9)'); }
+    ctx.restore(); circle(x, y - 78, 4, '#3E3324');
+  }
+  function balloon(x, y, t) {
+    const bob = reduce ? 0 : Math.sin(t * 0.8) * 6;
+    ctx.save(); ctx.translate(x, y + bob);
+    ellipse(0, 0, 26, 32, '#F0A830'); ellipse(-9, 0, 9, 32, '#F2A19A'); ellipse(9, 0, 9, 32, '#F2A19A');
+    ctx.strokeStyle = '#8A6B4A'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-10, 28); ctx.lineTo(-7, 48); ctx.moveTo(10, 28); ctx.lineTo(7, 48); ctx.stroke();
+    rrect(-9, 46, 18, 12, 3, '#8A6B4A'); ctx.restore();
+  }
+  function waterfall(x, top, bottom, t) {
+    // cliff + falling water with moving highlights
+    rrect(x - 34, top, 68, bottom - top, 10, '#3E6B42');
+    ctx.fillStyle = 'rgba(214,240,238,.85)'; ctx.fillRect(x - 12, top + 6, 24, bottom - top - 6);
+    for (let i = 0; i < 8; i++) {
+      const u = frac(t * 0.5 + i * 0.13);
+      const yy = top + 6 + (bottom - top - 10) * u;
+      ctx.fillStyle = `rgba(255,255,255,${0.5 * (1 - u)})`; ctx.fillRect(x - 10 + (i % 3) * 7, yy, 5, 10);
+    }
+    ellipse(x, bottom + 4, 46, 12, '#7BC1BC'); ellipse(x - 10, bottom + 2, 14, 4, 'rgba(255,255,255,.55)');
+  }
+  function gorge(i) { // dark gap under the bridge segment
+    const p = pointOnSeg(i, 0.5);
+    ellipse(p.x, p.y + 6, 92, 26, '#2B3F2E'); ellipse(p.x, p.y + 8, 70, 16, '#1E2E22');
+  }
+  function bridge(i) {
+    const n = 14;
+    for (let s = 0; s <= n; s++) {
+      const p = pointOnSeg(i, 0.2 + 0.6 * s / n), q = pointOnSeg(i, 0.2 + 0.6 * (s + 0.4) / n);
+      const ang = Math.atan2(q.y - p.y, q.x - p.x);
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(ang); rrect(-4, -11, 8, 22, 2, s % 2 ? '#B78B5A' : '#A57A4C'); ctx.restore();
+    }
+    ctx.strokeStyle = '#5C4632'; ctx.lineWidth = 2; ctx.beginPath();
+    for (let s = 0; s <= n; s++) { const p = pointOnSeg(i, 0.2 + 0.6 * s / n); s ? ctx.lineTo(p.x - 12, p.y - 14) : ctx.moveTo(p.x - 12, p.y - 14); }
+    ctx.stroke(); ctx.beginPath();
+    for (let s = 0; s <= n; s++) { const p = pointOnSeg(i, 0.2 + 0.6 * s / n); s ? ctx.lineTo(p.x + 12, p.y - 14) : ctx.moveTo(p.x + 12, p.y - 14); }
+    ctx.stroke();
+  }
+  function observatory(x, y, t) {
+    rrect(x - 30, y - 40, 60, 40, 6, '#1B2A38'); ctx.beginPath(); ctx.arc(x, y - 40, 30, Math.PI, 0); ctx.fillStyle = '#2C3B4A'; ctx.fill();
+    ctx.fillStyle = '#EDE6D2'; ctx.fillRect(x - 3, y - 70, 6, 24);
+    const a = -Math.PI / 2 + (reduce ? -0.4 : Math.sin(t * 0.35) * 0.55);
+    ctx.save(); ctx.translate(x, y - 58); ctx.rotate(a);
+    const g = ctx.createLinearGradient(0, 0, 260, 0); g.addColorStop(0, 'rgba(255,217,138,.35)'); g.addColorStop(1, 'rgba(255,217,138,0)');
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(260, -40); ctx.lineTo(260, 40); ctx.closePath(); ctx.fillStyle = g; ctx.fill(); ctx.restore();
+    for (const wx of [-16, 0, 16]) rrect(x + wx - 4, y - 24, 8, 10, 2, 'rgba(255,217,138,.8)');
+  }
+  function campfire(x, y, t) {
+    const f = 0.9 + 0.2 * Math.sin(t * 9) + 0.1 * Math.sin(t * 23);
+    circle(x, y, 30, rgba('#F0A830', 0.1 + 0.08 * f)); rrect(x - 14, y - 2, 28, 5, 2.5, '#6B4A2E');
+    ctx.beginPath(); ctx.moveTo(x, y - 2); ctx.bezierCurveTo(x - 8, y - 10, x - 6, y - 20 * f, x, y - 2 - 26 * f); ctx.bezierCurveTo(x + 6, y - 13 * f, x + 6, y - 7, x, y - 2); ctx.fillStyle = '#F0A830'; ctx.fill();
+    circle(x, y - 12 * f, 4, '#FFD98A');
+  }
+  function signpost(x, y, lines) {
+    rrect(x - 3, y - 54, 6, 56, 2, '#8A6B4A');
+    rrect(x - 42, y - 58, 84, 30, 6, '#B78B5A'); rrect(x - 42, y - 58, 84, 4, 2, 'rgba(255,255,255,.25)');
+    ctx.fillStyle = '#3E3324'; ctx.textAlign = 'center';
+    ctx.font = '600 11px Fredoka'; ctx.fillText(lines[0], x, y - 45);
+    ctx.font = '500 10px Fredoka'; ctx.fillStyle = '#5C4632'; ctx.fillText(lines[1], x, y - 33);
+  }
+  function chest(x, y, open) {
+    ellipse(x, y + 6, 16, 5, 'rgba(0,0,0,.18)');
+    rrect(x - 14, y - 8, 28, 16, 4, '#8A6B4A');
+    if (open) { rrect(x - 14, y - 20, 28, 10, 4, '#6B4A2E'); circle(x, y - 6, 5, '#FFD98A'); circle(x - 7, y - 4, 3, '#F0A830'); circle(x + 7, y - 4, 3, '#F0A830'); }
+    else { rrect(x - 14, y - 14, 28, 10, 4, '#A57A4C'); rrect(x - 3, y - 8, 6, 7, 1.5, '#F0A830'); }
+  }
+  function dodo(x, y, t) {
+    const bob = reduce ? 0 : Math.abs(Math.sin(t * 6)) * 5;
+    const flap = reduce ? 0 : Math.sin(t * 6) * 0.3;
+    ctx.save(); ctx.translate(x, y - bob);
+    ellipse(0, 26, 16, 5, 'rgba(0,0,0,.18)');
+    // feet
+    rrect(-11, 18, 10, 6, 3, '#F0A830'); rrect(1, 18, 10, 6, 3, '#F0A830');
+    // body
+    ellipse(0, 2, 19, 21, '#7C9EB2'); ellipse(0, 8, 11, 12, '#F9EFDA');
+    // wings
+    ctx.save(); ctx.translate(-17, 2); ctx.rotate(-flap); ellipse(0, 0, 6, 9, '#6A8FA3'); ctx.restore();
+    ctx.save(); ctx.translate(17, 2); ctx.rotate(flap); ellipse(0, 0, 6, 9, '#6A8FA3'); ctx.restore();
+    // head
+    circle(0, -18, 17, '#7C9EB2'); ellipse(0, -14, 12, 11, '#F9EFDA');
+    circle(-5, -16, 3.2, '#33383E'); circle(5, -16, 3.2, '#33383E'); circle(-4, -17, 1.1, '#fff'); circle(6, -17, 1.1, '#fff');
+    ellipse(0, -10, 4.5, 3, '#F0A830'); circle(-10, -10, 2.6, '#F2A19A'); circle(10, -10, 2.6, '#F2A19A');
+    // sprout
+    ctx.strokeStyle = '#5F9E4C'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -35); ctx.quadraticCurveTo(1, -41, 0, -44); ctx.stroke();
+    ellipse(-5, -45, 6, 3, '#7BB662'); ellipse(6, -47, 6, 3, '#7BB662');
+    // backpack strap
+    ctx.strokeStyle = '#C9821F'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-8, -6); ctx.lineTo(-2, 12); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- main draw
+  function draw(t) {
+    const scrollY = scroller.scrollTop / scale;
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, 0, 0);
+    ctx.translate(0, -scrollY);
+    const viewTop = scrollY, viewBot = scrollY + vh / scale;
+    const visible = (y0, y1) => y1 > viewTop - 80 && y0 < viewBot + 80;
+
+    // sky
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, SKINS[2].skyTop);
+    for (let k = 2; k >= 0; k--) { const s = skin(k); const top = Math.max(0.001, bandTop(k) / H); g.addColorStop(top, s.skyTop); g.addColorStop(Math.min(0.999, top + 110 / H), s.skyBottom); }
+    ctx.fillStyle = g; ctx.fillRect(0, viewTop, W, vh / scale + 1);
+
+    // finale: moon + stars + sea
+    if (visible(0, FINALE_BOTTOM)) {
+      const sc = { x: W * 0.82, y: 84 };
+      circle(sc.x, sc.y, 38, 'rgba(237,230,210,.14)'); circle(sc.x, sc.y, 26, '#EDE6D2');
+      for (const [mx, my, mr] of [[-10,-8,6],[8,8,4],[2,-10,2.6]]) circle(sc.x + mx, sc.y + my, mr, '#D8CFB8');
+      for (let i = 0; i < 18; i++) { const x = W * frac(i * 0.618 + 0.21), y = 16 + 300 * frac(i * 0.7548); const tw = i % 3 === 0 ? 0.15 + 0.85 * Math.abs(Math.sin(t * 1.1 + i)) : 0.5; circle(x, y, 1.4 + frac(i * 0.37), `rgba(237,230,210,${tw})`); }
+      const su = frac(t / 9); if (su < 0.12) { const e = su / 0.12; const sx = 40 + 280 * e, sy = 60 + 110 * e; ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - e)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sx - 30, sy - 11); ctx.lineTo(sx, sy); ctx.stroke(); }
+      ctx.fillStyle = '#1C3742'; ctx.fillRect(0, 235, W, FINALE_BOTTOM - 235);
+      for (let i = 0; i < 5; i++) { const x = frac(t * 0.05 + i * 0.2) * W; ctx.fillStyle = 'rgba(237,230,210,.12)'; ctx.fillRect(x - 20, 250 + i * 18, 40, 2); }
+      const isl = { x: W * 0.24, y: FINALE_BOTTOM - 8 }; ellipse(isl.x, isl.y, 40, 10, '#22453A');
+      ctx.beginPath(); ctx.moveTo(isl.x - 5, isl.y); ctx.bezierCurveTo(isl.x - 7, isl.y - 13, isl.x - 5, isl.y - 21, isl.x + 2, isl.y - 28); ctx.bezierCurveTo(isl.x + 4, isl.y - 21, isl.x + 2, isl.y - 10, isl.x + 1, isl.y); ctx.fillStyle = '#22453A'; ctx.fill();
+      // lighthouse beam on the islet: the final destination
+      circle(isl.x + 1, isl.y - 30, 3, '#FFD98A'); circle(isl.x + 1, isl.y - 30, 10, rgba('#FFD98A', 0.12 + 0.1 * Math.sin(t * 2)));
+    }
+
+    // bands
+    for (let k = 0; k < 3; k++) {
+      const s = skin(k);
+      const top = Math.max(FINALE_BOTTOM, bandTop(k)), bottom = Math.min(H, bandBottom(k));
+      if (!visible(top - 120, bottom)) continue;
+      const span = bottom - top;
+      // hills with parallax: far layers drift with scroll
+      const par = [0.16, 0.10, 0.05, 0];
+      s.hills.forEach((hex, li) => {
+        const crest = top + 104 + (span - 104) * (0.02 + li * 0.24) + (scrollY - yFor(CURRENT)) * par[li] * 0.35;
+        ctx.beginPath(); ctx.moveTo(0, bottom + 40); ctx.lineTo(0, crest + 20);
+        const steps = 5, phase = li * 1.9 + k * 0.8;
+        for (let st = 1; st <= steps; st++) {
+          const px = W * st / steps, py = crest + 20 - 42 * (0.5 + 0.5 * Math.sin(st * 1.9 + phase));
+          const cx = W * (st - 0.5) / steps, cy = crest + 20 - 42 * (0.5 + 0.5 * Math.sin((st - 0.5) * 1.9 + phase + 1.1));
+          ctx.quadraticCurveTo(cx, cy, px, py);
+        }
+        ctx.lineTo(W, bottom + 40); ctx.closePath(); ctx.fillStyle = hex; ctx.fill();
+      });
+      // trees
+      for (let i = 0; i < 10; i++) {
+        const fi = i + k * 11, u = frac(fi * 0.618 + 0.43);
+        const x = u < 0.5 ? W * (0.02 + 0.09 * u * 2) : W * (0.82 + 0.15 * (u - 0.5) * 2);
+        const y = top + 150 + (span - 170) * (0.22 + 0.7 * frac(fi * 0.7548));
+        const kk = 0.75 + 0.5 * frac(fi * 0.53);
+        s.pines ? pine(x, y, kk) : roundTree(x, y, kk, reduce ? 0 : Math.sin(t / (3.5 + frac(fi * 0.3) * 2) + fi) * 1.3, s);
+      }
+      // landmarks + ambience
+      if (k === 0) {
+        for (let i = 0; i < 6; i++) flower(W * (0.08 + 0.84 * frac(i * 0.618 + 0.7)), top + span * (0.45 + 0.5 * frac(i * 0.917)), i % 2 ? '#F0A830' : '#F2A19A');
+        windmill(W * 0.86, yFor(6) + 30, t);
+        balloon(W * 0.18 + 30 * Math.sin(t * 0.15), yFor(8) - 90, t);
+      } else if (k === 1) {
+        waterfall(W * 0.12, yFor(17) - 130, yFor(16) - 10, t);
+        for (let i = 0; i < 7; i++) { const x = W * (0.1 + 0.8 * frac(i * 0.618 + 0.19)), y = top + span * (0.35 + 0.55 * frac(i * 0.754)); const tw = Math.abs(Math.sin(t / (2.7 + frac(i * 0.41)) + i * 2)); circle(x, y, 2.2, `rgba(255,217,138,${0.15 + 0.8 * tw})`); }
+      } else {
+        observatory(W * 0.84, yFor(27) + 20, t);
+        campfire(W * 0.16, yFor(23) + 30, t);
+      }
+    }
+
+    // meadow floor
+    ctx.beginPath(); const mt = H - 140; ctx.moveTo(0, H + 40); ctx.lineTo(0, mt + 14); ctx.quadraticCurveTo(W * 0.25, mt - 16, W * 0.55, mt); ctx.quadraticCurveTo(W * 0.82, mt + 18, W, mt + 10); ctx.lineTo(W, H + 40); ctx.closePath(); ctx.fillStyle = '#7FBA66'; ctx.fill();
+
+    // gorge under the bridge segment (14 -> 15)
+    gorge(14);
+
+    // ---- the road: worn / stepping stones / fogged
+    const roadSkin = i => skin(Math.floor(i / 10));
+    // fogged (beyond next)
+    ctx.save(); ctx.globalAlpha = 0.35; trailPath(CURRENT, COUNT - 1); ctx.setLineDash([0.1, 17]); ctx.lineCap = 'round'; ctx.lineWidth = 7; ctx.strokeStyle = '#FFFDF4'; ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+    // worn: edge then fill, per band color
+    for (let i = 0; i < CURRENT - 1; i++) {
+      const s = roadSkin(i + 1);
+      trailPath(i, i + 1); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.lineWidth = 17; ctx.strokeStyle = s.roadEdge; ctx.stroke();
+      ctx.lineWidth = 11; ctx.strokeStyle = s.road; ctx.stroke();
+    }
+    // stepping stones to the current node
+    {
+      const s = roadSkin(CURRENT);
+      for (let j = 1; j <= 5; j++) { const p = pointOnSeg(CURRENT - 1, j / 6); ellipse(p.x, p.y + 2, 9, 6, rgba(s.roadEdge, 0.5)); ellipse(p.x, p.y, 9, 6, s.road); }
+    }
+    // footprints on the last two worn stretches
+    for (let i = Math.max(0, CURRENT - 3); i < CURRENT - 1; i++) for (let j = 1; j < 7; j++) {
+      const p = pointOnSeg(i, j / 7), q = pointOnSeg(i, j / 7 + 0.02), ang = Math.atan2(q.y - p.y, q.x - p.x);
+      ctx.save(); ctx.translate(p.x + (j % 2 ? -4 : 4), p.y); ctx.rotate(ang); ellipse(0, 0, 2.2, 3.6, 'rgba(90,60,30,.35)'); ctx.restore();
+    }
+    // bridge planks over the road on the gorge segment
+    bridge(14);
+
+    // ---- fog bank over locked territory
+    {
+      const fogTop = yFor(CURRENT + 1) - 40, breathe = reduce ? 0 : Math.sin(t * 0.9) * 8;
+      const fg = ctx.createLinearGradient(0, fogTop + 60 + breathe, 0, fogTop - 300);
+      fg.addColorStop(0, 'rgba(255,251,240,0)'); fg.addColorStop(0.35, 'rgba(255,251,240,.55)'); fg.addColorStop(1, 'rgba(255,251,240,.78)');
+      ctx.fillStyle = fg; ctx.fillRect(0, FINALE_BOTTOM - 40, W, fogTop + 60 + breathe - (FINALE_BOTTOM - 40));
+      for (let i = 0; i < 6; i++) { const x = W * frac(i * 0.618 + 0.1) + (reduce ? 0 : 14 * Math.sin(t * 0.3 + i)); const y = fogTop - 30 - i * 120; ellipse(x, y + breathe, 90, 22, 'rgba(255,251,240,.35)'); }
+    }
+
+    // ---- nodes
+    for (let i = 0; i < COUNT; i++) {
+      const x = xFor(i), y = yFor(i), st = status(i), lvl = i + 1;
+      if (!visible(y - 90, y + 60)) continue;
+      const gate = lvl % 10 === 0, rest = lvl % 5 === 0 && !gate, hasChest = [3,7,12,16,22,26].includes(lvl);
+      const R = gate ? 40 : 32;
+      if (gate) { // arch behind the crowned stone
+        const s = skin(Math.min(2, Math.floor(i / 10) + 1));
+        ctx.lineWidth = 12; ctx.strokeStyle = '#8A6B4A'; ctx.beginPath(); ctx.arc(x, y - 6, 62, Math.PI, 0); ctx.stroke();
+        ctx.lineWidth = 12; ctx.beginPath(); ctx.moveTo(x - 62, y - 6); ctx.lineTo(x - 62, y + 34); ctx.moveTo(x + 62, y - 6); ctx.lineTo(x + 62, y + 34); ctx.stroke();
+        rrect(x - 58, y - 92, 116, 24, 7, s.pines ? '#1B2A38' : '#C9821F');
+        ctx.fillStyle = '#FFF6E0'; ctx.font = '600 11px Fredoka'; ctx.textAlign = 'center'; ctx.fillText(lvl === 10 ? 'TO FERN HOLLOW' : lvl === 20 ? 'TO STARFALL SUMMIT' : 'TO THE SEA', x, y - 76);
+      }
+      if (rest) { const r0 = Math.floor(i / 10) * 10; signpost(x + (zig(i) > 0 ? -78 : 78), y + 20, ['REST STOP', `${Math.max(0, Math.min(10, CURRENT - r0))} of 10 cleared here`]); }
+      if (hasChest) chest(x + (zig(i) > 0 ? -60 : 60), y + 16, st === 'passed');
+
+      const lockedAlpha = st === 'locked' ? (i <= CURRENT + 2 ? 0.9 : 0.55) : 1;
+      ctx.save(); ctx.globalAlpha = lockedAlpha;
+      ellipse(x, y + R * 0.55 + 8, R * 1.1, R * 0.38, 'rgba(40,30,10,.22)');
+      if (st === 'passed') {
+        circle(x, y + 7, R, '#C9821F'); circle(x, y, R, '#F0A830'); ellipse(x - R * 0.3, y - R * 0.45, R * 0.42, R * 0.22, 'rgba(255,255,255,.35)');
+        ctx.fillStyle = '#3E3324'; ctx.font = `600 ${gate ? 30 : 25}px Fredoka`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(lvl, x, y + 1);
+        const n = stars[i] ?? 0;
+        for (let s = 0; s < 3; s++) { const a = -Math.PI / 2 + (s - 1) * 0.62; const sx = x + Math.cos(a) * (R + 9), sy = y + Math.sin(a) * (R + 9); star(sx, sy, 7.5, s < n ? '#FFD98A' : 'rgba(62,51,36,.28)'); if (s < n) star(sx, sy, 4.5, '#F0A830'); }
+        if (gate) { // crown
+          ctx.save(); ctx.translate(x, y - R - 26); ctx.beginPath(); ctx.moveTo(-14, 6); ctx.lineTo(-14, -8); ctx.lineTo(-7, 0); ctx.lineTo(0, -12); ctx.lineTo(7, 0); ctx.lineTo(14, -8); ctx.lineTo(14, 6); ctx.closePath(); ctx.fillStyle = '#FFD98A'; ctx.fill(); ctx.restore();
+        }
+      } else if (st === 'current') {
+        const pulse = reduce ? 0.5 : 0.5 + 0.5 * Math.sin(t * 2.6);
+        ctx.lineWidth = 3; ctx.strokeStyle = rgba('#F0A830', 0.7 - 0.45 * pulse); ctx.beginPath(); ctx.arc(x, y, R + 10 + 12 * pulse, 0, Math.PI * 2); ctx.stroke();
+        circle(x, y + 7, R + 6, '#C9821F'); circle(x, y, R + 6, '#F0A830'); circle(x, y, R, '#FFFDF4');
+        ctx.fillStyle = '#3E4A52'; ctx.font = '600 28px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(lvl, x, y + 1);
+        // bouncing pin + START
+        const hop = reduce ? 0 : Math.abs(Math.sin(t * 3)) * 8;
+        ctx.save(); ctx.translate(x, y - R - 26 - hop);
+        ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(-10, -4); ctx.arc(0, -8, 10, Math.PI * 0.85, Math.PI * 0.15); ctx.lineTo(0, 12); ctx.closePath(); ctx.fillStyle = '#C9821F'; ctx.fill(); circle(0, -8, 4, '#FFF6E0');
+        rrect(-24, -40, 48, 18, 9, '#3E3324'); ctx.fillStyle = '#FFF6E0'; ctx.font = '600 11px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('START', 0, -31);
+        ctx.restore();
+      } else {
+        circle(x, y + 6, R - 4, '#8FA695'); circle(x, y, R - 4, '#C4D6C8');
+        if (i <= CURRENT + 2) { rrect(x - 7, y - 3, 14, 11, 3, '#8FA695'); ctx.lineWidth = 3; ctx.strokeStyle = '#8FA695'; ctx.beginPath(); ctx.arc(x, y - 4, 5, Math.PI, 0); ctx.stroke(); }
+        else { ctx.fillStyle = 'rgba(62,74,82,.35)'; ctx.font = '600 22px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(lvl, x, y + 1); }
+      }
+      ctx.restore();
+    }
+
+    // dodo on the road just below the current stone
+    { const p = pointOnSeg(CURRENT - 1, 0.42); dodo(p.x, p.y - 6, t); }
+
+    // weather particles per band
+    for (let k = 0; k < 3; k++) {
+      const s = skin(k), top = Math.max(FINALE_BOTTOM, bandTop(k)), bottom = Math.min(H, bandBottom(k));
+      if (!visible(top, bottom)) continue;
+      for (let i = 0; i < 16; i++) {
+        const u = frac(t * (0.04 + 0.02 * frac(i * 0.37)) + i * 0.083), x = W * frac(i * 0.618 + 0.2) + (reduce ? 0 : 26 * Math.sin(t * 0.7 + i)), y = top + (bottom - top) * u;
+        if (k === 2) circle(x, y, 1.3, rgba(s.particle, 0.5 + 0.4 * Math.sin(t * 3 + i)));
+        else { ctx.save(); ctx.translate(x, y); ctx.rotate(t + i); ellipse(0, 0, 4, 2, rgba(s.particle, 0.8)); ctx.restore(); }
+      }
+    }
+  }
+
+  let last = 0;
+  function frame(ms) {
+    if (!reduce || last === 0) { if (ms - last > 1000 / 30 || last === 0) { last = ms; draw(ms / 1000); } }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  scroller.addEventListener('scroll', () => { if (reduce) draw(0); });
+})();
+</script>

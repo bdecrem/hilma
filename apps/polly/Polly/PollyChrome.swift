@@ -1,0 +1,1049 @@
+import SwiftUI
+
+/// Visual atoms ported from the design's `feynd-atoms.jsx`.
+/// Every padding / radius / size / color matches the JSX source.
+
+// MARK: - Stars
+
+/// Three-cell row to match the backend cap (1st quiz, 2nd quiz, hard quiz).
+/// Filled stars use coral-gold; empties use the faintest text token so they
+/// recede but stay visible against the warm-dark bg.
+struct StarRow: View {
+    let value: Int
+    var max: Int = 3
+    var size: CGFloat = 11
+    var gap: CGFloat = 2
+    /// When true, the topic is closed for further quizzes — only render the
+    /// filled stars; no empty outlines suggest more is available.
+    var locked: Bool = false
+
+    var body: some View {
+        let cells = locked ? value : max
+        HStack(spacing: gap) {
+            ForEach(0..<cells, id: \.self) { i in
+                Image(systemName: i < value ? "star.fill" : "star")
+                    .font(.system(size: size, weight: .semibold))
+                    .foregroundStyle(i < value ? PollyTheme.gold : PollyTheme.text4)
+            }
+        }
+        .accessibilityElement()
+        .accessibilityLabel(locked ? "\(value) stars, topic complete" : "\(value) of \(max) stars")
+    }
+}
+
+// MARK: - Profile badge
+
+/// Avatar + thin level ring + "L<n>" chip docked below.
+/// Sized to match the JSX exactly: avatar 38, ring +4 = 42, chip overlaps by 7
+/// below the ring (so total visual height ≈ 51).
+struct ProfileBadge: View {
+    @Environment(Session.self) private var session
+    var size: CGFloat = 38
+
+    private var initial: String {
+        if case let .signedIn(user) = session.state, let first = user.username.first {
+            return String(first).uppercased()
+        }
+        return "?"
+    }
+
+    private var avatarUrl: URL? {
+        if case let .signedIn(user) = session.state, let s = user.avatarUrl {
+            return URL(string: s)
+        }
+        return nil
+    }
+
+    var body: some View {
+        let p = session.progress
+        let ring = size + 4
+        ZStack {
+            // Solid slate ring — the mascot's body color framing its marigold
+            // disc. No progress semantics; the L chip below carries level.
+            Circle()
+                .stroke(PollyTheme.slate, lineWidth: 2.5)
+                .frame(width: ring, height: ring)
+
+            // Avatar disc — uploaded photo if present, otherwise warm gradient + initial.
+            avatarDisc(size: size)
+        }
+        // L chip docks BELOW the badge, centered. The frame height includes
+        // room for the overhang so nothing clips.
+        .overlay(alignment: .bottom) {
+            Text("L\(p.level)")
+                .font(.system(size: 9.5, weight: .bold))
+                .tracking(0.4)
+                .foregroundStyle(PollyTheme.text)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 1.5)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(PollyTheme.surface2)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(PollyTheme.border, lineWidth: 1)
+                )
+                .offset(y: 7)
+        }
+        .frame(width: ring, height: ring + 14)
+        .accessibilityLabel("Level \(p.level), \(p.topicCount) topics")
+    }
+
+    /// Round avatar — uploaded photo when one is set on the session user,
+    /// otherwise the warm coral gradient + initial.
+    @ViewBuilder
+    private func avatarDisc(size: CGFloat) -> some View {
+        if let url = avatarUrl {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let img):
+                    img.resizable().scaledToFill()
+                default:
+                    gradientFallback(size: size)
+                }
+            }
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+            .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1).blendMode(.plusLighter))
+            .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+        } else {
+            gradientFallback(size: size)
+        }
+    }
+
+    private func gradientFallback(size: CGFloat) -> some View {
+        Circle()
+            .fill(PollyTheme.avatarGradient)
+            .frame(width: size, height: size)
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    .blendMode(.plusLighter)
+            )
+            .shadow(color: .black.opacity(0.4), radius: 1, y: 1)
+            .overlay(
+                Text(initial)
+                    .font(.system(size: size * 0.42, weight: .semibold))
+                    .foregroundStyle(.white)
+            )
+    }
+}
+
+// MARK: - Mini topic glyph (used on the left of every topic row)
+
+/// 36pt rounded-square chip whose inner glyph reflects the topic's source
+/// kind: chat / web / audio / video / paste / fallback. Pass a `nil` kind
+/// for legacy threads — falls back to the line+nodes mark.
+///
+/// Native SwiftUI renderings of the six SVG glyphs spec'd in
+/// `src/app/f2/topic-icons-preview/page.tsx`. All use the coral token so
+/// they shift slightly between light + dark like the rest of the chrome.
+struct MiniTopicGlyph: View {
+    var kind: String? = nil
+    var size: CGFloat = 36
+    /// Final Review passed (3 stars) — renders the inverted tile: accent
+    /// fill with the glyph knocked out in ink. Both colors come from the
+    /// theme, so light and dark modes each get their own accent/ink pair.
+    var verified: Bool = false
+    /// Certified but past the refresher due date — the gold goes matte and
+    /// the corner mark becomes a refresh arrow. Stars are untouched; the
+    /// badge is stale, not lost.
+    var dimmed: Bool = false
+    /// Quiz passed but not yet mastered — "actively read". A washed straw
+    /// tile: clearly warmer than untouched, clearly quieter than gold.
+    var activelyRead: Bool = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 10)
+            .fill(verified ? PollyTheme.accent.opacity(dimmed ? 0.38 : 1)
+                  : activelyRead ? PollyTheme.accent.opacity(0.18)
+                  : PollyTheme.surface)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(verified ? (dimmed ? PollyTheme.border : Color.clear) : PollyTheme.border, lineWidth: 1)
+            )
+            .frame(width: size, height: size)
+            .overlay(
+                tintedGlyph
+                    .frame(width: size * 0.55, height: size * 0.55)
+            )
+            .overlay(alignment: .bottomTrailing) {
+                if verified {
+                    engravedMark
+                        .padding(size * 0.12)
+                }
+            }
+    }
+
+    /// Tiny debossed checkmark in the tile's corner — a watermark stamped
+    /// into the gold, not a badge. Two layers fake the engraving: a hairline
+    /// white catch-light just below the stroke, then low-opacity ink on top.
+    private var engravedMark: some View {
+        let s = size * 0.24
+        let symbol = dimmed ? "arrow.clockwise" : "checkmark"
+        return ZStack {
+            Image(systemName: symbol)
+                .font(.system(size: s, weight: .bold))
+                .foregroundStyle(.white.opacity(0.35))
+                .offset(y: s * 0.09)
+            Image(systemName: symbol)
+                .font(.system(size: s, weight: .bold))
+                .foregroundStyle(PollyTheme.inkOnAccent.opacity(dimmed ? 0.55 : 0.30))
+        }
+    }
+
+    /// The glyphs paint themselves in the accent color; on an accent tile
+    /// that would vanish, so recolor by masking ink through the glyph's
+    /// alpha. inkOnAccent is the theme's designated on-accent ink.
+    @ViewBuilder
+    private var tintedGlyph: some View {
+        if verified {
+            PollyTheme.inkOnAccent.mask(glyph)
+        } else {
+            glyph
+        }
+    }
+
+    @ViewBuilder
+    private var glyph: some View {
+        // viewBox is 20×20 in all source SVGs; each sub-glyph scales itself.
+        switch kind {
+        case "chat":  ChatGlyph()
+        case "web":   WebGlyph()
+        case "audio": AudioGlyph()
+        case "video": VideoGlyph()
+        case "paste": PasteGlyph()
+        case "book":  BookGlyph()
+        case "mini":  MiniKindGlyph()
+        case "general": GeneralGlyph()
+        default:      FallbackGlyph()
+        }
+    }
+}
+
+/// All sub-glyphs draw in their own coordinate space using GeometryReader
+/// so they scale cleanly to whatever frame MiniTopicGlyph hands them.
+
+/// `Canvas` lets us paint at the exact 20×20 viewBox coordinates the SVGs
+/// use, then scale to fit. Cheaper than building Path+Shape for every glyph
+/// and visually identical.
+
+private struct WebGlyph: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let stroke = 1.2 * s
+
+            // Outer circle.
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: 4 * s, y: 4 * s, width: 12 * s, height: 12 * s)),
+                with: coral, lineWidth: stroke
+            )
+            // Horizontal equator.
+            var equator = Path()
+            equator.move(to: CGPoint(x: 4 * s, y: 10 * s))
+            equator.addLine(to: CGPoint(x: 16 * s, y: 10 * s))
+            ctx.stroke(equator, with: coral, lineWidth: stroke)
+            // Inner ellipse (meridian).
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: 7 * s, y: 4 * s, width: 6 * s, height: 12 * s)),
+                with: coral, lineWidth: stroke
+            )
+            // Filled nodes at the equator ends.
+            let r = 2.2 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 4 * s - r, y: 10 * s - r, width: r*2, height: r*2)), with: coral)
+            ctx.fill(Path(ellipseIn: CGRect(x: 16 * s - r, y: 10 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct AudioGlyph: View {
+    // Music note — line stem + flag + filled circle notehead.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let stroke = 1.2 * s
+
+            var stem = Path()
+            stem.move(to: CGPoint(x: 13 * s, y: 4.5 * s))
+            stem.addLine(to: CGPoint(x: 13 * s, y: 13.5 * s))
+            ctx.stroke(stem, with: coral, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+
+            var flag = Path()
+            flag.move(to: CGPoint(x: 13 * s, y: 4.5 * s))
+            flag.addLine(to: CGPoint(x: 16.5 * s, y: 7 * s))
+            ctx.stroke(flag, with: coral, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+
+            let r = 2.8 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 10.6 * s - r, y: 13.5 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct VideoGlyph: View {
+    // Play triangle inside a screen frame.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let stroke = 1.2 * s
+
+            let frame = RoundedRectangle(cornerRadius: 2 * s).path(
+                in: CGRect(x: 3 * s, y: 5 * s, width: 14 * s, height: 10 * s)
+            )
+            ctx.stroke(frame, with: coral, lineWidth: stroke)
+
+            var play = Path()
+            play.move(to: CGPoint(x: 8.5 * s, y: 7.8 * s))
+            play.addLine(to: CGPoint(x: 8.5 * s, y: 12.2 * s))
+            play.addLine(to: CGPoint(x: 12.6 * s, y: 10 * s))
+            play.closeSubpath()
+            ctx.fill(play, with: coral)
+        }
+    }
+}
+
+private struct PasteGlyph: View {
+    // Three rows with leading dots — pasted text.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let stroke = 1.2 * s
+            let lines: [(CGFloat, CGFloat)] = [
+                (15, 6), (14, 10), (12, 14),
+            ]
+            for (xEnd, y) in lines {
+                var line = Path()
+                line.move(to: CGPoint(x: 7 * s, y: y * s))
+                line.addLine(to: CGPoint(x: xEnd * s, y: y * s))
+                ctx.stroke(line, with: coral, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
+            }
+            let r = 2.2 * s
+            for y in [6.0, 10.0, 14.0] {
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: 4.5 * s - r, y: CGFloat(y) * s - r, width: r*2, height: r*2)),
+                    with: coral
+                )
+            }
+        }
+    }
+}
+
+private struct BookGlyph: View {
+    // Open book: two page curves meeting at a center spine.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
+
+            var left = Path()
+            left.move(to: CGPoint(x: 10 * s, y: 6 * s))
+            left.addCurve(to: CGPoint(x: 4.5 * s, y: 5.6 * s),
+                          control1: CGPoint(x: 8.5 * s, y: 4.8 * s),
+                          control2: CGPoint(x: 6 * s, y: 4.8 * s))
+            left.addLine(to: CGPoint(x: 4.5 * s, y: 14 * s))
+            left.addCurve(to: CGPoint(x: 10 * s, y: 14.4 * s),
+                          control1: CGPoint(x: 6 * s, y: 13.2 * s),
+                          control2: CGPoint(x: 8.5 * s, y: 13.2 * s))
+            ctx.stroke(left, with: coral, style: style)
+
+            var right = Path()
+            right.move(to: CGPoint(x: 10 * s, y: 6 * s))
+            right.addCurve(to: CGPoint(x: 15.5 * s, y: 5.6 * s),
+                           control1: CGPoint(x: 11.5 * s, y: 4.8 * s),
+                           control2: CGPoint(x: 14 * s, y: 4.8 * s))
+            right.addLine(to: CGPoint(x: 15.5 * s, y: 14 * s))
+            right.addCurve(to: CGPoint(x: 10 * s, y: 14.4 * s),
+                           control1: CGPoint(x: 14 * s, y: 13.2 * s),
+                           control2: CGPoint(x: 11.5 * s, y: 13.2 * s))
+            ctx.stroke(right, with: coral, style: style)
+
+            var spine = Path()
+            spine.move(to: CGPoint(x: 10 * s, y: 6 * s))
+            spine.addLine(to: CGPoint(x: 10 * s, y: 14.4 * s))
+            ctx.stroke(spine, with: coral, lineWidth: 1.2 * s)
+        }
+    }
+}
+
+private struct MiniKindGlyph: View {
+    // Little spark: three short rays through a filled center node.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
+            let rays: [(CGFloat, CGFloat, CGFloat, CGFloat)] = [
+                (10, 5.5, 10, 14.5),
+                (6.1, 7.75, 13.9, 12.25),
+                (6.1, 12.25, 13.9, 7.75),
+            ]
+            for (x1, y1, x2, y2) in rays {
+                var ray = Path()
+                ray.move(to: CGPoint(x: x1 * s, y: y1 * s))
+                ray.addLine(to: CGPoint(x: x2 * s, y: y2 * s))
+                ctx.stroke(ray, with: coral, style: style)
+            }
+            let r = 2.2 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 10 * s - r, y: 10 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct GeneralGlyph: View {
+    // Lightbulb: bulb circle + filament node + two base lines.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
+
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: 5.8 * s, y: 4 * s, width: 8.4 * s, height: 8.4 * s)),
+                with: coral, lineWidth: 1.2 * s
+            )
+            let r = 1.6 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 10 * s - r, y: 8.2 * s - r, width: r*2, height: r*2)), with: coral)
+            for (x1, x2, y) in [(8.3, 11.7, 13.6), (8.8, 11.2, 15.6)] as [(CGFloat, CGFloat, CGFloat)] {
+                var line = Path()
+                line.move(to: CGPoint(x: x1 * s, y: y * s))
+                line.addLine(to: CGPoint(x: x2 * s, y: y * s))
+                ctx.stroke(line, with: coral, style: style)
+            }
+        }
+    }
+}
+
+private struct FallbackGlyph: View {
+    // Original line + 2 dots glyph, unchanged.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let stroke = 1.2 * s
+            var line = Path()
+            line.move(to: CGPoint(x: 4 * s, y: 14 * s))
+            line.addLine(to: CGPoint(x: 16 * s, y: 6 * s))
+            ctx.stroke(line, with: coral, lineWidth: stroke)
+            let r = 2.2 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 4 * s - r, y: 14 * s - r, width: r*2, height: r*2)), with: coral)
+            ctx.fill(Path(ellipseIn: CGRect(x: 16 * s - r, y: 6 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct ChatGlyph: View {
+    // Speech bubble outline with two dots inside — same path data as the
+    // SVG in src/app/f2/topic-icons-preview/page.tsx.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let stroke = 1.2 * s
+
+            // Rounded speech bubble. Use addRoundedRect for the body, then
+            // append the tail as a triangle joined to the bottom-left corner.
+            var bubble = Path()
+            bubble.addRoundedRect(
+                in: CGRect(x: 3 * s, y: 4 * s, width: 14 * s, height: 9 * s),
+                cornerSize: CGSize(width: 2 * s, height: 2 * s)
+            )
+            // Tail: small triangle pointing down-left from the bubble's bottom.
+            var tail = Path()
+            tail.move(to: CGPoint(x: 6 * s, y: 13 * s))
+            tail.addLine(to: CGPoint(x: 6 * s, y: 16 * s))
+            tail.addLine(to: CGPoint(x: 9 * s, y: 13 * s))
+            tail.closeSubpath()
+
+            ctx.stroke(bubble, with: coral,
+                       style: StrokeStyle(lineWidth: stroke, lineJoin: .round))
+            ctx.stroke(tail, with: coral,
+                       style: StrokeStyle(lineWidth: stroke, lineJoin: .round))
+
+            // Two filled dots inside the bubble.
+            let r = 1.6 * s
+            for x in [7.5, 12.5] {
+                ctx.fill(
+                    Path(ellipseIn: CGRect(x: CGFloat(x) * s - r, y: 8.6 * s - r, width: r*2, height: r*2)),
+                    with: coral
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Top bar (3-column custom header)
+
+/// Custom replacement for the iOS nav bar. 8/18/12 padding from JSX.
+/// Use `.toolbar(.hidden, for: .navigationBar)` on the host screen.
+struct PollyTopBar<Center: View, Trailing: View, Leading: View>: View {
+    var center: () -> Center
+    var trailing: () -> Trailing
+    /// Optional chip next to the avatar (Peck's streak flame). The leading
+    /// side has slack the trailing side doesn't, so accessories live here.
+    var leadingAccessory: () -> Leading
+    var onProfileTap: () -> Void
+    /// Double-tapping the bar's center region jumps the screen back to the
+    /// top (the avatar and trailing controls keep their own single taps).
+    var onDoubleTap: () -> Void
+
+    init(
+        @ViewBuilder center: @escaping () -> Center,
+        @ViewBuilder trailing: @escaping () -> Trailing,
+        @ViewBuilder leadingAccessory: @escaping () -> Leading,
+        onProfileTap: @escaping () -> Void = {},
+        onDoubleTap: @escaping () -> Void = {}
+    ) {
+        self.center = center
+        self.trailing = trailing
+        self.leadingAccessory = leadingAccessory
+        self.onProfileTap = onProfileTap
+        self.onDoubleTap = onDoubleTap
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            HStack(spacing: 8) {
+                ProfileBadge()
+                    .contentShape(Rectangle())
+                    .onTapGesture { onProfileTap() }
+                leadingAccessory()
+                Spacer(minLength: 0)
+            }
+            .frame(minWidth: 42, alignment: .leading)
+
+            center()
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { onDoubleTap() }
+
+            HStack {
+                Spacer(minLength: 0)
+                trailing()
+            }
+            .frame(minWidth: 42, alignment: .trailing)
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
+    }
+}
+
+extension PollyTopBar where Leading == EmptyView {
+    init(
+        @ViewBuilder center: @escaping () -> Center,
+        @ViewBuilder trailing: @escaping () -> Trailing,
+        onProfileTap: @escaping () -> Void = {},
+        onDoubleTap: @escaping () -> Void = {}
+    ) {
+        self.init(
+            center: center,
+            trailing: trailing,
+            leadingAccessory: { EmptyView() },
+            onProfileTap: onProfileTap,
+            onDoubleTap: onDoubleTap
+        )
+    }
+}
+
+// MARK: - Circular icon button (Plus, Back, Kebab, Close)
+
+struct IconCircleButton: View {
+    let systemImage: String
+    var size: CGFloat = 36
+    var fg: Color = PollyTheme.text
+    /// Wire this button to the Escape key (for modal close affordances).
+    var cancelShortcut = false
+    var action: () -> Void
+
+    var body: some View {
+        let button = Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(fg)
+                .frame(width: size, height: size)
+                .background(PollyTheme.surface, in: Circle())
+                .overlay(Circle().stroke(PollyTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        if cancelShortcut {
+            button.keyboardShortcut(.cancelAction)
+        } else {
+            button
+        }
+    }
+}
+
+// MARK: - Catalyst-proof modal dismissal
+
+/// Close the current modal without relying on the SwiftUI environment.
+///
+/// On Mac Catalyst, sheet/cover content can receive a detached environment —
+/// the same Catalyst bug that keeps @Observable values from flowing into
+/// sheets — which leaves `\.dismiss` silently inert and close
+/// buttons dead. UIKit's presentation stack is always authoritative, so on
+/// Catalyst this walks to the topmost presented controller and dismisses it
+/// directly. iOS keeps the environment path untouched.
+@MainActor
+func closeModal(_ dismiss: DismissAction) {
+    #if targetEnvironment(macCatalyst)
+    if !dismissTopmostPresentedModal() { dismiss() }
+    #else
+    dismiss()
+    #endif
+}
+
+/// Walk UIKit's presentation stack and dismiss the topmost presented
+/// controller. Returns false when nothing is presented. Respects
+/// `interactiveDismissDisabled` (`isModalInPresentation`) so protected
+/// states (mid-grading, etc.) stay up. Backs both `closeModal` and the
+/// Escape menu command in PollyApp.
+@MainActor
+@discardableResult
+func dismissTopmostPresentedModal(respectingModalLock: Bool = false) -> Bool {
+    let windows = UIApplication.shared.connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .flatMap(\.windows)
+    guard var top = (windows.first(where: \.isKeyWindow) ?? windows.first)?.rootViewController,
+          top.presentedViewController != nil
+    else { return false }
+    while let presented = top.presentedViewController { top = presented }
+    if respectingModalLock && top.isModalInPresentation { return false }
+    top.dismiss(animated: true)
+    return true
+}
+
+// MARK: - Action chip (Quiz me / Talk to F2 / Key points)
+
+struct ActionChip: View {
+    let label: String
+    let systemImage: String
+    var iconTint: Color = PollyTheme.accent
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(iconTint)
+                Text(label)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(PollyTheme.text)
+            }
+            .padding(.leading, 11)
+            .padding(.trailing, 14)
+            .padding(.vertical, 8)
+            .background(PollyTheme.surface, in: Capsule())
+            .overlay(Capsule().stroke(PollyTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Day divider
+
+struct DayDivider: View {
+    let label: String
+
+    var body: some View {
+        Text(label.uppercased())
+            .font(.system(size: 11.5, weight: .semibold))
+            .tracking(0.4)
+            .foregroundStyle(PollyTheme.text3)
+            .frame(maxWidth: .infinity)
+            .padding(.top, 6)
+            .padding(.bottom, 10)
+    }
+}
+
+// MARK: - Chat bubble width plumbing
+//
+// Bubbles cap their width at 75% of the conversation row's available width.
+// `ChatScrollView` measures itself once with a GeometryReader and publishes
+// the width via this environment value; every bubble reads it.
+
+private struct ChatRowWidthKey: EnvironmentKey {
+    /// Phone-sized default so previews + first-frame renders look right.
+    static let defaultValue: CGFloat = 390
+}
+
+extension EnvironmentValues {
+    var chatRowWidth: CGFloat {
+        get { self[ChatRowWidthKey.self] }
+        set { self[ChatRowWidthKey.self] = newValue }
+    }
+}
+
+/// Convenience used by AI + User bubbles.
+private func bubbleMaxWidth(for rowWidth: CGFloat) -> CGFloat {
+    // Floor: bubbles never get tinier than what fits on an iPhone.
+    // Ceiling: ~75% of the row keeps lines readable even on a 1600pt Catalyst window.
+    max(280, rowWidth * 0.75)
+}
+
+// MARK: - Chat bubbles (custom shape with one-corner-flat tail)
+
+/// 20pt rounded everywhere except one corner that's 4pt — the tail anchor.
+struct BubbleShape: Shape {
+    let isUser: Bool
+    func path(in rect: CGRect) -> Path {
+        let big: CGFloat = 20
+        let tiny: CGFloat = 4
+        let tl = big
+        let tr = big
+        let br = isUser ? tiny : big
+        let bl = isUser ? big : tiny
+        return Path { p in
+            p.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+            p.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
+            p.addArc(center: CGPoint(x: rect.maxX - tr, y: rect.minY + tr), radius: tr, startAngle: .degrees(-90), endAngle: .degrees(0), clockwise: false)
+            p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
+            p.addArc(center: CGPoint(x: rect.maxX - br, y: rect.maxY - br), radius: br, startAngle: .degrees(0), endAngle: .degrees(90), clockwise: false)
+            p.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
+            p.addArc(center: CGPoint(x: rect.minX + bl, y: rect.maxY - bl), radius: bl, startAngle: .degrees(90), endAngle: .degrees(180), clockwise: false)
+            p.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
+            p.addArc(center: CGPoint(x: rect.minX + tl, y: rect.minY + tl), radius: tl, startAngle: .degrees(180), endAngle: .degrees(270), clockwise: false)
+            p.closeSubpath()
+        }
+    }
+}
+
+/// Detect bare URLs in reply text and mark them as tappable links —
+/// F2 replies are plain text (video lists include raw youtube.com URLs), so
+/// without this SwiftUI renders them as inert text.
+func linkified(_ text: String) -> AttributedString {
+    var attributed = AttributedString(text)
+    guard let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue) else {
+        return attributed
+    }
+    let ns = text as NSString
+    for match in detector.matches(in: text, range: NSRange(location: 0, length: ns.length)) {
+        guard let url = match.url,
+              let range = Range(match.range, in: attributed) else { continue }
+        attributed[range].link = url
+        attributed[range].foregroundColor = PollyTheme.blue
+        attributed[range].underlineStyle = .single
+    }
+    return attributed
+}
+
+struct AIBubble<Content: View>: View {
+    @Environment(\.chatRowWidth) private var rowWidth
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            DodoMiniMark(size: 26)
+            content()
+                .font(.system(size: 16))
+                .foregroundStyle(PollyTheme.text)
+                .lineSpacing(2)
+                // Normal copy: long-press → Copy on iOS, cursor selection
+                // on the Mac. Replaces the old copy-whole-chat button.
+                .textSelection(.enabled)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(BubbleShape(isUser: false).fill(PollyTheme.surface))
+                .overlay(BubbleShape(isUser: false).stroke(PollyTheme.border, lineWidth: 1))
+                .frame(maxWidth: bubbleMaxWidth(for: rowWidth), alignment: .leading)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+    }
+}
+
+struct UserBubble: View {
+    @Environment(\.chatRowWidth) private var rowWidth
+    let text: String
+
+    var body: some View {
+        HStack {
+            Spacer(minLength: 0)
+            Text(text)
+                .font(.system(size: 16))
+                .foregroundStyle(.white)
+                .textSelection(.enabled)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .background(BubbleShape(isUser: true).fill(PollyTheme.blue))
+                .frame(maxWidth: bubbleMaxWidth(for: rowWidth), alignment: .trailing)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Source card (article preview under topic detail header)
+
+struct SourceCard: View {
+    let title: String
+    let host: String
+    var letter: String
+
+    var body: some View {
+        HStack(spacing: 11) {
+            RoundedRectangle(cornerRadius: 7)
+                .fill(Color(hex: 0x1F1814))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 7).stroke(PollyTheme.border, lineWidth: 1)
+                )
+                .frame(width: 30, height: 30)
+                .overlay(
+                    Text(letter)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(PollyTheme.accent)
+                )
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .font(.system(size: 13.5, weight: .semibold))
+                    .foregroundStyle(PollyTheme.text)
+                    .lineLimit(1)
+                Text(host)
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(PollyTheme.text3)
+            }
+            Spacer(minLength: 8)
+            Image(systemName: "arrow.up.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(PollyTheme.text3)
+        }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 11)
+        .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(PollyTheme.border, lineWidth: 1))
+        .padding(.horizontal, 16)
+    }
+}
+
+// MARK: - Composer (flat, no system material)
+
+struct PollyComposer: View {
+    @Binding var draft: String
+    let busy: Bool
+    let onSend: () -> Void
+
+    private var canSend: Bool {
+        !busy && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Custom pill. No `.regularMaterial` — sits flat on PollyTheme.bg.
+            ZStack(alignment: .leading) {
+                if draft.isEmpty {
+                    Text("Send a URL or ask a question…")
+                        .font(.system(size: 16))
+                        .foregroundStyle(PollyTheme.text3)
+                        .padding(.leading, 16)
+                }
+                // Catalyst: single-line + .onSubmit so the hardware Return
+                // submits. axis: .vertical would make the TextField claim
+                // Return as a newline and swallow .keyboardShortcut /
+                // .onKeyPress. The field still wraps visually for long
+                // pasted text — we just trade in-field newlines for send.
+                //
+                // iPhone/iPad: keep the multi-line composer; soft-keyboard
+                // Return inserts newlines, Send is the round button.
+                #if targetEnvironment(macCatalyst)
+                TextField("", text: $draft)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 16))
+                    .foregroundStyle(PollyTheme.text)
+                    .tint(PollyTheme.accent)
+                    .padding(.horizontal, 16)
+                    .submitLabel(.send)
+                    .onSubmit { if canSend { onSend() } }
+                #else
+                TextField("", text: $draft, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 16))
+                    .foregroundStyle(PollyTheme.text)
+                    .tint(PollyTheme.accent)
+                    .lineLimit(1...5)
+                    .padding(.horizontal, 16)
+                #endif
+            }
+            .padding(.vertical, 11)
+            .background(PollyTheme.bgRaised, in: RoundedRectangle(cornerRadius: 22))
+            .overlay(RoundedRectangle(cornerRadius: 22).stroke(PollyTheme.border, lineWidth: 1))
+
+            Button(action: { if canSend { onSend() } }) {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 15, weight: .heavy))
+                    .foregroundStyle(canSend ? PollyTheme.inkOnAccent : Color(hex: 0x6A4A3D))
+                    .frame(width: 36, height: 36)
+                    .background(canSend ? PollyTheme.accent : PollyTheme.surface2, in: Circle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!canSend)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Tab pill (floating Chat / Topics)
+
+/// Maximum width the main column ever uses. Keeps Catalyst windows from
+/// stretching topic rows / chat bubbles edge-to-edge on wide displays.
+/// iOS phones never get wider than this anyway, so it's a no-op there.
+let POLLY_CONTENT_MAX_WIDTH: CGFloat = 720
+
+/// Centers + clamps content to `POLLY_CONTENT_MAX_WIDTH`. Use on inner
+/// columns (Topics list, chat scroll, composer row) so wide Mac/iPad windows
+/// don't stretch row labels across half a meter of pixels.
+extension View {
+    func pollyContentColumn() -> some View {
+        self.frame(maxWidth: POLLY_CONTENT_MAX_WIDTH)
+            .frame(maxWidth: .infinity, alignment: .center)
+    }
+}
+
+// MARK: - Semi-sticky screen titles
+
+/// Whether the big in-scroll Fredoka title is currently on screen. When a
+/// lazy container culls the title (or it scrolls under the pinned bar), the
+/// preference falls back to false and the bar echoes the screen name.
+private struct TitleVisibleKey: PreferenceKey {
+    static let defaultValue = false
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
+    }
+}
+
+extension View {
+    /// Attach to the big title row inside a scroll view — reports whether
+    /// its bottom edge is still below the pinned top bar.
+    func titleVisibilityMarker() -> some View {
+        background(GeometryReader { g in
+            Color.clear.preference(key: TitleVisibleKey.self,
+                                   value: g.frame(in: .global).maxY > 118)
+        })
+    }
+
+    func onTitleVisibility(_ update: @escaping (Bool) -> Void) -> some View {
+        onPreferenceChange(TitleVisibleKey.self, perform: update)
+    }
+}
+
+/// Compact screen name for the pinned top bar — appears only once the big
+/// in-scroll title has floated out of view.
+struct BarTitle: View {
+    let text: String
+    let bigTitleVisible: Bool
+
+    var body: some View {
+        Text(text)
+            .font(.custom("Fredoka", size: 18).weight(.semibold))
+            .tracking(-0.2)
+            .foregroundStyle(PollyTheme.text)
+            .opacity(bigTitleVisible ? 0 : 1)
+            .animation(.easeInOut(duration: 0.16), value: bigTitleVisible)
+            .accessibilityHidden(bigTitleVisible)
+    }
+}
+
+/// The big in-scroll Fredoka screen title, shared by Chat / Topics / Peck.
+struct ScreenTitle: View {
+    let text: String
+    var subtitle: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .bottom) {
+                Text(text)
+                    .font(.custom("Fredoka", size: 38).weight(.semibold))
+                    .tracking(-0.4)
+                    .foregroundStyle(PollyTheme.text)
+                Spacer()
+            }
+            if let subtitle {
+                Text(subtitle)
+                    .font(.system(size: 12, weight: .semibold))
+                    .tracking(0.2)
+                    .foregroundStyle(PollyTheme.text3)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
+    }
+}
+
+enum PollyTab: String, CaseIterable {
+    case topics, flash
+    var label: String {
+        switch self {
+        case .topics: return "Topics"
+        case .flash: return "Peck"
+        }
+    }
+    var iconSystem: String {
+        switch self {
+        case .topics: return "list.bullet"
+        case .flash: return "bolt.fill"
+        }
+    }
+}
+
+struct TabPill: View {
+    @Binding var active: PollyTab
+    var onTap: (PollyTab) -> Void = { _ in }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(PollyTab.allCases, id: \.self) { tab in
+                tabButton(tab)
+            }
+        }
+        .padding(4)
+        .background(
+            // Translucent backdrop — warm-dark in dark mode, warm-paper in light.
+            Capsule().fill(PollyTheme.tabPillBg.opacity(0.78))
+        )
+        .background(
+            Capsule().fill(.ultraThinMaterial)
+        )
+        .overlay(Capsule().stroke(PollyTheme.border, lineWidth: 1))
+        // Two tabs at the same per-button width the three-tab pill had:
+        // 4 pad + 104 + 4 gap + 104 + 4 pad = 220.
+        .frame(width: 220)
+        .shadow(color: .black.opacity(0.45), radius: 30, y: 8)
+    }
+
+    @ViewBuilder
+    private func tabButton(_ tab: PollyTab) -> some View {
+        let isActive = active == tab
+        Button {
+            active = tab
+            onTap(tab)
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: tab.iconSystem)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(isActive ? PollyTheme.accent : PollyTheme.text3)
+                Text(tab.label)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(isActive ? PollyTheme.text : PollyTheme.text2)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 46)
+            .background(
+                Capsule().fill(isActive ? PollyTheme.surface2 : Color.clear)
+            )
+            // Whole pill is the hit target — .plain buttons only hit-test
+            // opaque pixels otherwise, which on the Mac shrinks the click
+            // area to the glyphs themselves.
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
