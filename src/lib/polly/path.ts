@@ -219,7 +219,7 @@ function lessonSchema() {
 
 const LESSON_RULES = (lang: string) => `How to write a lesson:
 - One scene the learner could really be in, picked for what they like talking about. A model conversation of 8–12 short lines between "You" and one other person, at the learner's level: a beginner gets three-to-six-word lines in the present tense.
-- About 8 key words the scene needs, each with a short English meaning and its line from the conversation. 4–6 whole expressions from the conversation (greetings, set formulas, a useful question).
+- About 8 key words the scene needs, each with a short English meaning and the line from the conversation that contains it — the spoken words only, never the speaker's name, and never a line the word is not in (a word that only names a speaker gets a short example sentence instead). 4–6 whole expressions from the conversation (greetings, set formulas, a useful question).
 - ONE grammar point, the one the conversation leans on most and the learner is ready for. Explain it like a friend would: what it does, how it is built, two or three examples from the conversation. No tables.
 - Every ${lang} word in the lesson must appear in the conversation, the word list or the expressions — never assume vocabulary the learner wasn't given.
 - Natural, current ${lang}, as spoken. Plain text, no markdown.`

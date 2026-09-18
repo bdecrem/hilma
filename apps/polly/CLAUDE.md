@@ -99,6 +99,76 @@ Verified 2026-09-18 on a throwaway guest user with Lo Scandalo's transcript
 (deck, chat quiz, prompts), then the user was deleted. Extraction fails soft:
 the topic keeps working on the raw transcript.
 
+## Agentic Learning Mode — the level check, the path, Polly's lessons (2026-09-18)
+
+A voice conversation finds the learner's level, Polly plans a five-lesson
+path from it and writes the lessons one at a time. Backend
+`src/lib/polly/path.ts`, schema 005 (applied); app `Polly/PathViews.swift`.
+
+- **The level check** is voice mode `placement` (`buildLivePlacementInstructions`
+  in live.ts): Polly's first utterance is exactly the greeting
+  (`PLACEMENT_GREETINGS`: Ciao! / Bonjour ! / 안녕하세요!), then she waits. The
+  session response carries `silence_nudge { after_ms, instruction, commentary }`;
+  `LiveVoiceClient.armSilenceNudge` sends it once if the learner says nothing
+  for 3.5 s after the greeting ends. It has to be BOTH events —
+  `session.instructions.append` and `session.commentary.append`: an appended
+  instruction alone does not make the live model speak mid-session. Then a
+  chat that gets a notch harder each turn (present → past → future →
+  opinion) until the learner stumbles twice; English from the start for a
+  beginner. No corrections, no teaching.
+- **Placement** (`POST /api/polly/path/placement { voice_session_id }`,
+  `placeLearner`): one Opus call (`POLLY_PATH_MODEL`, ~25 s) reads the
+  transcript → level A0–C1, "you can…", "what's shaky", interests, a path of
+  `PATH_LENGTH` = 5 lessons (title, scene, grammar), and lesson 1 in full.
+  Stored on `polly_courses` (`level`, `placement`, `path`). A retake replaces
+  the path: untouched lessons are deleted, started ones stay as ordinary
+  topics with `path_position` null.
+- **A lesson is its own topic kind, `lesson`** — only Polly sets it (not in
+  `ALL_TOPIC_KINDS`, no picker offers it, a rename can't change it). Its plan
+  is a `LessonPlan` like a guest lesson's (host "Polly", `story_summary` = the
+  conversation) plus `scene`, `dialogue[]`, `grammar_explained`, `level`, so
+  chat, cards and voice work unchanged; `lessonBlock` has a Polly-lesson
+  wording. The thread's `content` is the lesson as text.
+- **Three steps**, any order, `polly_threads.lesson_steps`: **Talk** — a
+  `topic` voice session on the lesson (Polly speaks first and plays the other
+  person in the scene; counts once the learner spoke ≥ 3 turns, marked in the
+  session's finish call); **Words** and **Grammar** — a card set each.
+  `ensureLessonDeck` builds two decks side by side, each only if missing: the
+  words (`lesson_step` 'words', the guest-lesson drill prompt) and ten grammar
+  drills (`generateGrammarCards`, 'grammar': gap / pick-the-right-one / say-it,
+  lesson vocabulary only). `flash/start` takes `lesson_step`; `flash/submit`
+  marks the step from the cards played and answers `lesson_step` /
+  `lesson_finished`. The decks land a few seconds after the lesson; a step
+  started before that gets a 409 and the app asks the lesson route to build
+  what's missing.
+- **The next lesson** is written when all three steps are done
+  (`ensureCurrentLesson` in `after()`, routes have `maxDuration` 300): from the
+  path's outline plus how the last one went (missed cards, the Talk
+  transcript). `GET /api/polly/path` retries a write that didn't land;
+  `writing_since` on the path entry keeps two triggers from both paying.
+  Lessons further on stay titles — "locked" is simply "no topic yet".
+- **App:** `PathCard` on top of Topics (before the check: "Talk to Polly";
+  after: level chip, five-segment progress, next lesson, Start / Continue; ✕
+  or "…" → Hide; the sort menu brings it back; `path_card_dismissed_at` is
+  server-side so it follows the account; a new path un-hides it), `PathList`
+  under it (numbered nodes on a line: done / current with three step dots /
+  being written / locked) — path lessons are drawn there and left out of the
+  topic list; `PlacementFlowView` (intro → call → "Building your plan" →
+  result with "Start lesson 1" / "Not right? Talk again" / "Later");
+  `LessonStepsCard` on the lesson's topic screen (Read it → `LessonSheet`
+  with the conversation and an English toggle; Talk / Words / Grammar).
+- **Checks:** `npx tsx scripts/polly/path-check.ts [beginner|some]` (library
+  level: placement, decks, steps, lesson 2, double-trigger), `node
+  scripts/polly/path-http-check.mjs [base]` (the same over HTTP as the app
+  does it, against production by default — also proves `after()` writes
+  lesson 2 on Vercel), `npx tsx scripts/polly/test-live-placement.ts
+  [it|fr|ko] [--no-silence]` (the greeting, the silence nudge, the reply, over
+  the Live WebSocket). Each makes a throwaway guest and deletes it. Launch
+  hooks: `-OpenPlacement 1`, `-PlacementAutoStart 1` (starts the call; the
+  sim's silent mic exercises the nudge — look for `F2_LIVE_NUDGE sent`),
+  `-PlacementSession <voice session id>` (skips the call and builds the plan
+  from that transcript).
+
 ## iMessage
 
 Polly shares the iMessage inbox with Dodo and Onething: one BlueBubbles

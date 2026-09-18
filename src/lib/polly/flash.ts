@@ -412,15 +412,24 @@ export async function ensureLessonDeck(thread: PollyThread): Promise<number> {
   const l = ensured.lesson
   if (!l) return 0
   const existing = await listFlashCards(ensured.user_id, ensured.id)
-  if (existing.length > 0) return 0
+  // A lesson Polly wrote has two decks — the words, and drills on its
+  // grammar point (the Words and Grammar steps) — built side by side; each
+  // is made only if it is missing, so one failing doesn't strand the other.
+  const polly = isPollyLesson(ensured)
+  const needWords = polly ? !existing.some((c) => c.lesson_step !== 'grammar') : existing.length === 0
+  const needGrammar = polly && !!l.grammar_point && !existing.some((c) => c.lesson_step === 'grammar')
+  if (!needWords && !needGrammar) return 0
   const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, l.key_words.length * 2 + Math.min(l.phrases.length, 4)))
   try {
-    // A lesson Polly wrote has two decks: the words, and drills on its
-    // grammar point (the Words and Grammar steps).
-    const [cards, grammar] = await Promise.all([
-      generateLessonCards(ensured, n),
-      isPollyLesson(ensured) && l.grammar_point ? generateGrammarCards(ensured, SET_SIZE) : Promise.resolve([]),
+    const [words, grammarDeck] = await Promise.allSettled([
+      needWords ? generateLessonCards(ensured, n) : Promise.resolve([]),
+      needGrammar ? generateGrammarCards(ensured, SET_SIZE) : Promise.resolve([]),
     ])
+    for (const r of [words, grammarDeck]) {
+      if (r.status === 'rejected') console.error(`[polly/lesson] a deck failed for ${ensured.id}:`, r.reason)
+    }
+    const cards = words.status === 'fulfilled' ? words.value : []
+    const grammar = grammarDeck.status === 'fulfilled' ? grammarDeck.value : []
     console.log(`[polly/lesson] built the deck for ${ensured.id}: ${cards.length} cards${grammar.length ? ` + ${grammar.length} grammar` : ''}`)
     return cards.length + grammar.length
   } catch (err) {

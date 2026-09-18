@@ -82,7 +82,12 @@ struct TopicDetailView: View {
                     ProgressView().tint(PollyTheme.text2)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    ChatScrollView(messages: messages, busy: busy)
+                    if thread?.isPollyLesson == true {
+                        ChatScrollView(messages: messages, busy: busy,
+                                       emptyHint: "Read the lesson, then do the three steps in any order. Ask me anything about it here.")
+                    } else {
+                        ChatScrollView(messages: messages, busy: busy)
+                    }
                 }
 
                 chipRow
@@ -596,6 +601,9 @@ struct TopicDetailView: View {
             do {
                 stepSet = try await PollyAPI.shared.startFlashSet(threadId: topicId, mode: "mixed", lessonStep: step)
             } catch PollyAPIError.http(409, _) {
+                // No cards for this step yet: they are being made, or their
+                // build failed — the lesson route builds whatever is missing.
+                _ = try? await PollyAPI.shared.ensureLesson(topicId: topicId)
                 stepError = "Polly is still making this lesson's cards. Try again in a moment."
             } catch {
                 stepError = error.localizedDescription

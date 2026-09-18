@@ -328,6 +328,13 @@ struct PlacementFlowView: View {
                 voiceSessionId = id
                 build(id)
             }
+            // `-PlacementAutoStart 1` — skip the intro and start the call (the
+            // sim's silent mic then exercises the greeting + English nudge;
+            // read F2_LIVE_NUDGE / F2_LIVE_TRANSCRIPT in the log).
+            if UserDefaults.standard.bool(forKey: "PlacementAutoStart") {
+                UserDefaults.standard.removeObject(forKey: "PlacementAutoStart")
+                stage = .talking
+            }
             #endif
         }
     }

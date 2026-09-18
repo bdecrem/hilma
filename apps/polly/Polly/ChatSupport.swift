@@ -14,6 +14,8 @@ struct ChatScrollView<Header: View>: View {
     let busy: Bool
     /// Bump to jump the transcript back to its top (oldest message).
     var scrollToTop: Int = 0
+    /// The line shown while the transcript is empty.
+    var emptyHint: String = "Paste a URL to learn from, or ask me anything to begin."
     /// Optional content rendered above the oldest message — the Chat tab
     /// puts its big scrolling screen title here.
     @ViewBuilder var header: () -> Header
@@ -39,7 +41,7 @@ struct ChatScrollView<Header: View>: View {
                     header()
                         .id("chat-top")
                     if messages.isEmpty && !busy {
-                        Text("Paste a URL to learn from, or ask me anything to begin.")
+                        Text(emptyHint)
                             .font(.system(size: 14))
                             .foregroundStyle(PollyTheme.text3)
                             .multilineTextAlignment(.center)
@@ -123,7 +125,8 @@ struct TypingDots: View {
 
 extension ChatScrollView where Header == EmptyView {
     /// Headerless variant — Topic detail uses the plain transcript.
-    init(messages: [PollyMessage], busy: Bool) {
+    init(messages: [PollyMessage], busy: Bool, emptyHint: String? = nil) {
         self.init(messages: messages, busy: busy) { EmptyView() }
+        if let emptyHint { self.emptyHint = emptyHint }
     }
 }

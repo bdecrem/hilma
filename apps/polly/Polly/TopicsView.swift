@@ -398,7 +398,7 @@ struct TopicsView: View {
 
     private var metaStrip: some View {
         HStack {
-            Text("\(topics.count) TOPICS")
+            Text("\(listTopics.count) \(listTopics.count == 1 ? "TOPIC" : "TOPICS")")
                 .font(.system(size: 12, weight: .semibold))
                 .tracking(0.2)
                 .foregroundStyle(PollyTheme.text3)
@@ -483,7 +483,7 @@ struct TopicsView: View {
             LazyVStack(spacing: 0) {
                 titleRow.padding(.horizontal, -14)
                     .id("topics-top")
-                if !topics.isEmpty { metaStrip }
+                if !listTopics.isEmpty { metaStrip }
                 // Agentic Learning Mode: the card (until hidden), then the
                 // lessons of the path, kept together above everything else.
                 if showsPathCard, let path {
