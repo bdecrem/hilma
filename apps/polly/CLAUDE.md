@@ -72,9 +72,12 @@ saves on first use and is called by card generation, chat, and the voice
 session route; the topics PATCH warms it in `after()` when the kind becomes
 `guest_lesson` and clears it when it stops being one. `lessonBlock(thread)`
 is the plan as prompt text, shared by every surface:
-- cards: `generateLessonCards` in flash.ts — meaning cards (story sentence →
-  English) and production cards (English → term, with the story sentence as
-  cloze), every key word first; same card shape as any deck;
+- cards: `generateLessonCards` in flash.ts — quick drills, not study notes
+  (Bart, 2026-09-18: "fun fill in the gap and multiple choice, no academic
+  essay around each"): GAP cards (a ≤12-word line from the lesson with the
+  word blanked and the English hint in parentheses; play as fill-in), MEANING
+  («term»? → English), SAY IT (English → term), TU O LEI; question ≤ 12
+  words, answer ≤ 5, every key word first; same card shape as any deck;
 - chat: `lessonGuidance` in chat.ts — quizzes make the learner USE the words
   (cloze, translate, formal/informal, retell); the reflection quiz asks in the
   target language;

@@ -317,23 +317,25 @@ async function generateLessonCards(
 ): Promise<FlashCard[]> {
   const l = thread.lesson!
   const subject = thread.topic ?? thread.url ?? 'this lesson'
-  const system = `You write flash cards for a language-learning app. The learner's own language is English; they are practising ${l.language} with a lesson they have already listened to. Produce exactly ${n} cards that practise the LANGUAGE of the lesson — its words and expressions in context — never facts about the story's subject.${lessonBlock(thread)}
+  const system = `You write flash cards for a language-learning app — quick, playful drills like Duolingo, not study notes. The learner's own language is English; they are practising ${l.language} with a lesson they have already listened to. Produce exactly ${n} cards on the lesson's words and expressions. Never test facts about the story's subject.${lessonBlock(thread)}
 
-What to make (mix these; every card cites the lesson's own sentences):
-- Meaning cards: the ${l.language} term inside its story sentence → the English meaning. question: 'In the lesson: "<sentence>" — what does <term> mean here?'; answer: the meaning in a few English words.
-- Production cards: English → ${l.language}. question: 'How does the lesson say "<meaning>"?'; answer: the ${l.language} term. Give these a cloze too: cloze_text is the story sentence with the term as ___ (exactly three underscores), cloze_answer the term (1–3 words).
-- One or two usage cards when the host makes a usage point (formal vs informal address, a set formula): question about which form fits a situation from the lesson; answer the form.
-- Cover EVERY key word the host teaches first (a meaning card and a production card each when the count allows), then the further expressions. No two cards on the same term in the same direction.
+Card types (mix them; roughly half GAP cards):
+- GAP — fill the missing word. Take a short line from the lesson (trim it to 12 words or fewer, keep it natural), blank the target word or phrase with ___ (exactly three underscores), and add the English meaning in parentheses at the end as the hint. Put that whole line in BOTH question and cloze_text; answer and cloze_answer are the missing ${l.language} word(s), 1–3 words; distractors are 3 other ${l.language} words that fit the grammar of the gap.
+  e.g. question: 'Mangiare la pizza con l'ananas è un'___. (heresy)'  answer: 'eresia'
+- MEANING — multiple choice on a term. question is just the term in guillemets and a question mark, e.g. '«un amante»?'; answer is its English meaning in 1–5 words; distractors are 3 English meanings of the same length that are wrong but tempting (another word from the lesson, a false friend).
+- SAY IT — English to ${l.language}. question: 'In ${l.language}: to have a soft spot for'; answer: the ${l.language} expression; distractors: 3 other ${l.language} expressions from the lesson.
+- TU O LEI — only when the host makes a usage point: one situation from the story in 6 words or fewer, e.g. 'Talking to an inquisitor: tu or Lei?'; answer: the form; distractors: 3 other forms.
 
-Format rules:
-- The canonical answer is short: a term, or a few words of meaning.
-- Exactly 3 distractors of the same shape and language as the answer (${l.language} distractors for a ${l.language} answer, English for English) — plausible near-misses: other words from the lesson, false friends, a related meaning. Never the correct answer in other words.
-- Questions must stand alone in typed and voice modes: no "which of these".
-- No markdown. Keep the ${l.language} exactly as the lesson has it.${thread.study_focus ? `
+Coverage: every key word gets a GAP card AND one MEANING or SAY IT card first, then one card per further expression. No two cards with the same question.
+
+Hard rules:
+- question ≤ 12 words. answer ≤ 5 words. No 'In the lesson:', no quotes around sentences, no explanations, no grammar notes, no sentence longer than the gap line itself.
+- Exactly 3 distractors, same language and shape as the answer. Never a paraphrase of the correct answer.
+- Keep the ${l.language} exactly as the lesson has it. Plain text, no markdown. Omit open_question.${thread.study_focus ? `
 
 STUDY FOCUS — the learner asked to practise only this: "${thread.study_focus}". Stay inside it.` : ''}${styleInstructions ? `
 
-The learner asked for the deck THEIR way — follow this where it doesn't break the format rules:
+The learner asked for the deck THEIR way — follow this where it doesn't break the hard rules:
 ${styleInstructions}` : ''}`
 
   const user = `Lesson: ${subject}
