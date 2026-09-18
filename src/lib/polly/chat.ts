@@ -102,14 +102,16 @@ function fitToBudget(content: string, model: string | null | undefined): string 
   )
 }
 
-function buildSystem(thread: PollyThread | null, model?: string | null): string {
+function buildSystem(thread: PollyThread | null, model?: string | null, learner = ''): string {
   const baseRules = `Reply rules:
 - Be direct. No preambles ("Great question", "Based on the article").
 - Plain text, no markdown.
 - Keep replies tight unless the user asks for more.`
 
   if (!thread) {
-    return `You are Polly — a learning companion. The user has no active learning thread yet.
+    return `You are Polly — a learning companion.${learner}
+
+The user has no active learning thread yet.
 
 For every message, pick exactly one tool:
 - start_new_topic: if the user wants to learn something. Even simple framings like "explain photosynthesis" or "what is X" should start a topic — that's the whole point of Polly.
@@ -134,7 +136,9 @@ ${baseRules}`
     ? '\n- more_videos: the user asks for more/other/different videos on this topic. The system runs the search — do not invent video titles or links yourself.'
     : ''
 
-  return `You are Polly — a learning companion. The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
+  return `You are Polly — a learning companion.${learner}
+
+The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
 
 For every message, pick exactly one tool:
 - continue_chat: the user is advancing the current topic — follow-up questions, quiz answers, "tell me more", clarifications.
@@ -205,11 +209,12 @@ export async function routeAndReply(
   thread: PollyThread | null,
   userText: string,
   model?: string | null,
+  learner = '',
 ): Promise<RouterAction> {
   const tools = threadHasVideos(thread) ? [...TOOLS, MORE_VIDEOS_TOOL] : TOOLS
   const result = await llmComplete({
     model,
-    system: buildSystem(thread, model),
+    system: buildSystem(thread, model, learner),
     messages: [
       ...(thread ? historyOf(thread) : []),
       { role: 'user', content: userText },

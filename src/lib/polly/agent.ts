@@ -83,6 +83,7 @@ import {
   acknowledgeReflectionAnswer,
 } from './chat'
 import { nameTopic } from './name-topic'
+import { activeLanguage, learnerLine } from './language'
 import { pollySupabase } from './supabase'
 import { llmComplete } from './llm'
 import { setAudioSummary } from './audio-summary'
@@ -1756,7 +1757,7 @@ async function handleNewNone(
     const result = await llmComplete({
       model,
       system:
-        `You are Polly — a learning companion. The user just started a fresh learning topic: "${title}". ` +
+        `You are Polly — a learning companion.${learnerLine(await activeLanguage(userId))} The user just started a fresh learning topic: "${title}". ` +
         'Open it: 2-4 sentences framing what the subject covers and asking where they want to start. ' +
         'Be direct, no preambles, plain text, no markdown.',
       messages: [{ role: 'user', content: userMessage }],
@@ -1999,7 +2000,7 @@ async function handleNonUrl(
 
   let action
   try {
-    action = await routeAndReply(thread, userText, model)
+    action = await routeAndReply(thread, userText, model, learnerLine(await activeLanguage(userId)))
   } catch (err) {
     console.error('[polly] routeAndReply failed:', err)
     return { reply: 'Polly: hit an error talking to Claude. Try again in a moment.' }

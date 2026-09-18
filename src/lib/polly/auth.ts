@@ -12,10 +12,13 @@ export type PollyUser = {
   is_guest?: boolean
   /// The Settings "Refresher" toggle; false = mastery is forever.
   recert_enabled?: boolean
+  /// Active course's language code (it/fr/ko); null until the first run picked one.
+  language?: string | null
 }
 
 const COOKIE_NAME = 'polly_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
+const USERNAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{1,23}$/
 
 function sessionSecret(): string {
   const s = process.env.F2_SESSION_SECRET
@@ -65,21 +68,37 @@ export async function getSessionUser(): Promise<PollyUser | null> {
   if (!verified) return null
   const { data, error } = await pollySupabase()
     .from('polly_users')
-    .select('id, username, avatar_url, is_guest, recert_enabled')
+    .select('id, username, avatar_url, is_guest, recert_enabled, active_course:polly_courses!polly_users_active_course_id_fkey(language)')
     .eq('id', verified.userId)
     .maybeSingle()
   if (error || !data) return null
-  return data as PollyUser
+  const { active_course, ...user } = data as unknown as PollyUser & { active_course: { language: string } | null }
+  return { ...user, language: active_course?.language ?? null }
 }
 
 /// Create a claimable guest account — the try-before-signup path. Username
 /// is an opaque handle; the random password is never shown (the session
 /// cookie is the only key until the account is claimed).
-export async function createGuestUser(): Promise<
+export async function createGuestUser(input: { username?: string } = {}): Promise<
   { id: string; username: string } | { error: string; status: number }
 > {
-  const suffix = randomBytes(6).toString('hex')
-  const username = `guest-${suffix}`
+  let username: string
+  if (input.username !== undefined) {
+    // First-run "what should Polly call you?" — the name is the account.
+    const chosen = input.username.trim()
+    if (!USERNAME_RE.test(chosen)) {
+      return { error: 'Names are 2–24 letters, numbers, dots, dashes or underscores.', status: 400 }
+    }
+    const { data: taken } = await pollySupabase()
+      .from('polly_users')
+      .select('id')
+      .ilike('username', chosen)
+      .maybeSingle()
+    if (taken) return { error: 'That name is taken — try another.', status: 409 }
+    username = chosen
+  } else {
+    username = `guest-${randomBytes(6).toString('hex')}`
+  }
   const password_hash = await hashPassword(randomBytes(24).toString('hex'))
   const { data, error } = await pollySupabase()
     .from('polly_users')
@@ -87,6 +106,7 @@ export async function createGuestUser(): Promise<
     .select('id, username')
     .single()
   if (error || !data) {
+    if (error?.code === '23505') return { error: 'That name is taken — try another.', status: 409 }
     console.error('[polly] createGuestUser failed:', error)
     return { error: 'Could not start a session.', status: 500 }
   }
