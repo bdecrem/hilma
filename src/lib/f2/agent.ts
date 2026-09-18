@@ -1401,11 +1401,9 @@ export async function executeDodoTool(
     case 'pair_imessage': {
       const res = await startImessagePairing(thread.user_id, String(input.handle ?? ''))
       if (!res.ok) return { result: `Error: ${res.error}` }
-      try {
-        await sendPairingMessage(res.handle, res.code)
-      } catch (e) {
-        console.error('[f2/agent] pairing send failed:', e)
-        return { result: 'Error: could not deliver the pairing code over iMessage — try again in a minute.' }
+      const sent = await sendPairingMessage(res.handle, res.code)
+      if (!sent.ok) {
+        return { result: `Error: could not deliver the pairing code over iMessage (${sent.error}) — try again in a minute.` }
       }
       return {
         result: `Code sent to ${res.handle}. Ask the user for the 6-digit code, then call confirm_imessage.`,

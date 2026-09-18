@@ -169,13 +169,38 @@ Verifying: drive it in Playwright at 390×844 against `pnpm dev` — sign in, Ne
 
 How it is wired:
 - **Storage:** the `onething_*` tables in the F2 Supabase project (`apps/onething/schema/001-003`, applied by hand with `supabase db query --linked -f` BEFORE the deploy that needs them — 002 added `tz`, 003 `prompted_at`; the inserts fail loudly without the column).
-- **iMessage:** outbound through Dodo's BlueBubbles sender (`src/lib/f2/bluebubbles.ts`); inbound arrives on Dodo's BlueBubbles webhook, which asks `src/lib/onething/inbound.ts` first and falls through to Dodo when Onething does not claim the message. Texting "onething" joins; a text starting "Onething:" is force-saved as a thought; the webhook claims the message guid before the echo check, and the echo ledger looks back three days, because the mini sends as Bart's own Apple ID and BlueBubbles re-delivers our own texts when they are read (one came back as a "thought" on 2026-09-13).
+- **iMessage:** outbound through Dodo's BlueBubbles sender (`src/lib/f2/bluebubbles.ts`); inbound arrives on the shared iMessage webhook, whose dispatcher asks `src/lib/onething/inbound.ts` first (see "iMessage — one inbox, three apps" below). Texting "onething" joins; a text starting "Onething:" is force-saved as a thought; the webhook claims the message guid before the echo check, and the echo ledger looks back three days, because the mini sends as Bart's own Apple ID and BlueBubbles re-delivers our own texts when they are read (one came back as a "thought" on 2026-09-13).
 - **The tick:** `vercel.json` cron hits `/api/onething/tick` at :05 every hour. `dueFor()` in `core.ts` is pure and decides per user, in the user's zone, whether it is question time, reminder time, or nothing — extend its test (LA / Brussels / Tokyo, 18 instants, in the fix commit `fcc6441a`) whenever the timing rules change. `findEntry` looks a day up directly; never use "latest row" for "that day's row".
 - **The texts** (morning question, evening reminder, the line back after an entry) live in `src/lib/onething/copy.json`, one picked at random per send; `looksLikeOurs()` matches inbound text against that file so our own echoes are never saved as thoughts. Add lines there, never inline, and run `npx tsx scripts/onething/copy-check.ts` after editing it. Kept lines never refer to yesterday or earlier entries (random pick, so "one more than yesterday" reads as a claim about the record — Bart hit this 2026-09-16). The site link goes on the kept reply only on a milestone day (`bonus > 0`) or a level-up (`Recorded.leveledUp`), with the `milestone` / `levelUp` tails from copy.json; the daily reply is link-free so iMessage doesn't turn it into a preview card.
 - **New sign-ups** text and email Bart (`notify.ts`; never throws).
 - **Buddy streaks + names** (2026-09-14, `buddies.ts`, schema 004 applied): a pair counts a day when both wrote, a miss by either resets it to zero, every 7 days it holds both get 25 points (paid once per day mark via `last_bonus_day`, bumped onto each person's latest entry). Personal streaks and points are never touched. As many buddies as you like, one `onething_buddies` row per pair, `pairStreak()` recomputed from entry days every time (the row's `streak`/`best` are a copy, kept so a reset can be noticed). Invite from settings by phone or iCloud email (either kind of handle lives in the `phone` column); the invitee replies YES by text (or accepts on the site), the pair starts with the acceptor's tomorrow, the inviter gets one line. Ending is silent to the other person. No extra texts: the buddy state rides inside the "kept" reply (tails), the evening reminder ("Sam's in for today…") and the morning question (one reset line). A name is what buddies see instead of the number: asked ONCE by text when someone accepts over iMessage (`name_asked_at`), the reply sets it if it reads as a name within 24 h (`nameReplyFor` in `flow.ts`), or set in settings. `flow.ts` holds the tick, welcome and inbound handler (moved out of core.ts). Checks: `npx tsx scripts/onething/buddy-check.ts` (pure logic + echo guard) and `scripts/onething/buddy-db-check.ts` (two throwaway users on the real tables, cleaned up).
 
 The six fixes of 2026-09-13 were all behaviour bugs in one-line-from-a-phone features: every user on Pacific time, a reminder an hour after a late sign-up's question, a React component declared inside the page component (remounted per keystroke), the webhook echo, "latest row" for "today", and cookies split across two hosts. Each would have been caught by a written spec or a focused test — which is what the Strays persona now requires (see `apps/golembot/CLAUDE.md`, "Reliability").
+
+### iMessage — one inbox, three apps (2026-09-18)
+
+BlueBubbles on the Mac mini posts every new message to one webhook
+(`/api/f2/clients/imessage/webhook`; `/api/polly/clients/imessage/webhook` is
+an alias of it, same dedup table). The mini is a dumb pipe — BlueBubbles in,
+the `imsghttp` send agent out (`F2_IMESSAGE_SEND_URL`, tunnel `imsg-mini`) —
+because the tables that say who a handle belongs to live on Vercel. The
+webhook authenticates, drops from-me echoes (both apps' outbound ledgers),
+claims the guid, then `dispatchInbound` in `src/lib/imessage/dispatch.ts`
+decides: Onething claims first (its own rules); then the handle's pairings —
+Dodo only or Polly only goes straight there, unpaired is dropped; paired to
+both → a `polly …` / `dodo …` prefix wins (the same words that address each
+app's agent), else the app that handled this handle's last message within
+six hours keeps it (`imessage_routes`, schema f2/049), else one Haiku call
+(`IMESSAGE_CLASSIFIER_MODEL`) says language-learning or not, default Dodo.
+Check: the decision table in the 2026-09-18 session ran on two throwaway
+users sharing a handle (prefix, sticky, expired sticky, classifier, unpaired).
+
+Pairing codes (`/api/{f2,polly}/imessage/start`) send synchronously and
+return 502 with "the iMessage server is unreachable" when the mini's tunnels
+are down; the code stays stored so a retry reuses it. When every `*-mini`
+tunnel answers "No tunnel found", the mini is off the network (2026-09-18:
+its CASBS gateway reported host unreachable) — a person in the room has to
+look at it; nothing here can fix that.
 
 ### Socratic — the Zeiler-method tutor (2026-09-14)
 

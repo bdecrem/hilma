@@ -1,9 +1,11 @@
 import { NextResponse, after } from 'next/server'
-import { authWebhook, isRecentOutbound, sendIMessage } from '@/lib/f2/bluebubbles'
-import { processMessage } from '@/lib/f2/agent'
-import { findUserByDailyChatGuid, findUserByImessageHandle } from '@/lib/f2/imessage'
+import { authWebhook, isRecentOutbound } from '@/lib/f2/bluebubbles'
+import { isRecentOutbound as isRecentPollyOutbound } from '@/lib/polly/bluebubbles'
+import { findUserByDailyChatGuid } from '@/lib/f2/imessage'
+import { findUserByDailyChatGuid as findPollyUserByDailyChatGuid } from '@/lib/polly/imessage'
 import { f2Supabase } from '@/lib/f2/supabase'
-import { handleInbound as onethingInbound, isOnethingChat } from '@/lib/onething/inbound'
+import { isOnethingChat } from '@/lib/onething/inbound'
+import { dispatchInbound } from '@/lib/imessage/dispatch'
 
 export const runtime = 'nodejs'
 // BlueBubbles fire-and-forget: if we don't ack fast it drops the message
@@ -66,14 +68,15 @@ export async function POST(req: Request) {
   // daily-card channel, the user's replies ALSO register as from-me, so
   // that chat's from-me messages are accepted unless the text matches
   // something we ourselves sent recently.
-  let userId: string | null = null
   let userLabel = handle
-  let owner: { id: string } | null = null
+  let owner: { app: 'dodo' | 'polly'; id: string } | null = null
   if (data.isFromMe) {
     if (!text || !chatGuid || !guid) {
       return NextResponse.json({ ok: true, skipped: 'from-me' })
     }
-    owner = await findUserByDailyChatGuid(chatGuid)
+    const dodoOwner = await findUserByDailyChatGuid(chatGuid)
+    const pollyOwner = dodoOwner ? null : await findPollyUserByDailyChatGuid(chatGuid)
+    owner = dodoOwner ? { app: 'dodo', id: dodoOwner.id } : pollyOwner ? { app: 'polly', id: pollyOwner.id } : null
     // Onething users answer in a chat that can also register as from-me
     // (the mini sends as the user's own Apple ID); let those through too.
     if (!owner && !(await isOnethingChat(chatGuid))) {
@@ -98,49 +101,22 @@ export async function POST(req: Request) {
   }
 
   if (data.isFromMe) {
-    if (await isRecentOutbound(text)) {
+    // Either app may have sent it — both ledgers count as an echo.
+    if ((await isRecentOutbound(text)) || (await isRecentPollyOutbound(text))) {
       console.log(`[f2/imessage] echo ${guid}: our own send in ${chatGuid}`)
       return NextResponse.json({ ok: true, skipped: 'echo' })
     }
-    userId = owner?.id ?? null
     userLabel = chatGuid
     console.log(`[f2/imessage] self-chat reply ${guid} in ${chatGuid}: ${text.slice(0, 80)}`)
   }
 
   console.log(`[f2/imessage] accepted ${guid} from ${userLabel}: ${text.slice(0, 80)}`)
 
+  // Onething, Polly or Dodo — the dispatcher decides (src/lib/imessage/
+  // dispatch.ts) and runs the app that owns the message.
   after(async () => {
     try {
-      // Onething first. It claims the message only when this sender is an
-      // Onething user with today's question outstanding (or the text starts
-      // "1:"); everything else goes to Dodo exactly as before.
-      if (await onethingInbound({ handle, chatGuid, text })) {
-        console.log(`[f2/imessage] ${guid} answered onething`)
-        return
-      }
-      // Strict: the handle must be paired to a real F2 account (or the
-      // chat resolved via daily_chat_guid — in the self-chat channel the
-      // user's replies can arrive from an account alias, e.g. the me.com
-      // address, that was never explicitly paired). No env-var fallback —
-      // every account gets its own inbox.
-      const paired =
-        (userId ? { id: userId } : null) ??
-        (await findUserByImessageHandle(handle)) ??
-        (await findUserByDailyChatGuid(chatGuid))
-      if (!paired) {
-        console.log(`[f2/imessage] ${guid} dropped — unpaired handle ${handle}`)
-        return
-      }
-      const result = await processMessage({
-        userId: paired.id,
-        handle: userLabel,
-        text,
-        client: 'imessage',
-      })
-      if (result.reply) {
-        await sendIMessage({ chatGuid, text: result.reply })
-        console.log(`[f2/imessage] replied ${guid}`)
-      }
+      await dispatchInbound({ guid, handle, chatGuid, text, fromMeOwner: owner, replyLabel: userLabel })
     } catch (e) {
       console.error(`[f2/imessage] processing failed for ${guid}`, e)
     }

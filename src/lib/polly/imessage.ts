@@ -96,14 +96,20 @@ export async function startImessagePairing(
 /// pending row + returns 200 immediately (so the client UI can advance),
 /// then schedules this via `after()` so AppleScript's 10–20s delivery
 /// chain doesn't blow the Vercel function timeout.
-export async function sendPairingMessage(handle: string, code: string): Promise<void> {
+export async function sendPairingMessage(
+  handle: string,
+  code: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     await sendIMessage({
       addresses: [handle],
       text: `Your Polly confirmation code is ${code}. Expires in ${CODE_TTL_MIN} minutes.`,
     })
+    return { ok: true }
   } catch (e) {
     console.error('[polly/imessage] send failed (code already stored; user can retry):', e)
+    const msg = e instanceof Error ? e.message : String(e)
+    return { ok: false, error: /tunnel|fetch failed|timeout|abort/i.test(msg) ? 'the iMessage server is unreachable' : msg.slice(0, 160) }
   }
 }
 

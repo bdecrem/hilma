@@ -99,6 +99,15 @@ Verified 2026-09-18 on a throwaway guest user with Lo Scandalo's transcript
 (deck, chat quiz, prompts), then the user was deleted. Extraction fails soft:
 the topic keeps working on the raw transcript.
 
+## iMessage
+
+Polly shares the iMessage inbox with Dodo and Onething: one BlueBubbles
+webhook, one dispatcher (`src/lib/imessage/dispatch.ts`; see the root
+CLAUDE.md, "iMessage — one inbox, three apps"). A handle paired to both Polly
+and Dodo is routed by prefix (`polly …`), then by which app spoke last, then
+by a Haiku classifier. Pairing (`/api/polly/imessage/start`) sends the code
+synchronously and answers 502 when the mini is unreachable.
+
 ## App Store Connect / TestFlight (set up 2026-09-17, from Bart's MacBook Air)
 
 - App record **"Polly: Learn any language"**, id `6813318254`, SKU `polly`;

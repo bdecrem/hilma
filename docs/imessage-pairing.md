@@ -1,3 +1,5 @@
+> **2026-09-18:** the webhook now feeds a dispatcher shared by Dodo, Polly and Onething (`src/lib/imessage/dispatch.ts`; root CLAUDE.md "iMessage — one inbox, three apps"). Nothing below changes on the mini side; Polly's webhook URL is an alias of Dodo's.
+
 # BlueBubbles ↔ F2 — iMessage pairing (Mac mini setup notes)
 
 Audience: the agent running on the Mac mini that hosts the BlueBubbles

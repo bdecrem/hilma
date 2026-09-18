@@ -1,11 +1,11 @@
-import { NextResponse, after } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { startImessagePairing, sendPairingMessage } from '@/lib/f2/imessage'
 
 export const runtime = 'nodejs'
 // Sending via BlueBubbles can take ~15s end-to-end (Tunn3l + AppleScript +
-// Messages.app). We use after() to keep the user-facing response fast, but
-// bump maxDuration so the background send has room to finish.
+// Messages.app); the send agent is quick. The send is awaited so the app
+// learns whether the text went out — hence the generous maxDuration.
 export const maxDuration = 60
 
 // POST /api/f2/imessage/start
@@ -33,10 +33,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: result.error }, { status: result.status })
   }
 
-  // Kick off the iMessage send in the background; client doesn't wait.
-  after(async () => {
-    await sendPairingMessage(result.handle, result.code)
-  })
+  // Send now and say whether it went. The code is stored either way, so a
+  // retry after the mini comes back reuses the same pending row. (Until
+  // 2026-09-18 this ran in after(): a dead tunnel to the mini failed silently
+  // and the user sat on the code screen waiting for a text that never came.)
+  const sent = await sendPairingMessage(result.handle, result.code)
+  if (!sent.ok) {
+    return NextResponse.json(
+      { error: `Couldn't send the code: ${sent.error}. Try again in a minute.`, handle: result.handle },
+      { status: 502 },
+    )
+  }
 
   return NextResponse.json({
     ok: true,
