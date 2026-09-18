@@ -193,12 +193,30 @@ synchronously and answers 502 when the mini is unreachable.
 - Beta groups: "internal" (all builds) and "Testers" with the public link
   https://testflight.apple.com/join/5apKPyf7. Beta review contact = Bart;
   demo account not required (guest sign-in).
-- Mac (Catalyst) uploads need a Mac Installer Distribution certificate and
-  the team already has three (Apple's cap); none of their private keys are
-  on the Air, so Catalyst TestFlight waits until one is revoked or its
-  .p12 is copied over from the iMac.
+- Mac (Catalyst) uploads need a Mac Installer Distribution certificate; the
+  team's three (Apple's cap) have their private keys on the iMac, not the
+  Air, so Mac builds ship from the iMac.
 
-iOS upload, from `apps/polly`:
+**Shipping, from either Mac: `./apps/polly/testflight/ship.sh [ios|mac|both] [version]`**
+— bumps the build, archives, uploads, waits for processing, adds the build to
+Testers and submits it for beta review. Signing is manual and per machine
+(each Mac holds a different Apple Distribution key); the script tells the
+machines apart by which API key file is present:
+- **iMac M4** (set up 2026-09-18): API key `AH7Q68TW6S`, profiles
+  "polly appstore imac" + "polly catalyst appstore imac" on this Mac's
+  distribution cert `4YB38SZ2F2`, plus "polly dev" for device installs; files
+  `polly-*.mobileprovision` / `.provisionprofile` in the Xcode profiles dir.
+  The iMac also holds a Mac Installer key, so **Mac (Catalyst) builds ship
+  from here** — 0.1 (10) went up for both platforms on 2026-09-18.
+- **MacBook Air**: key `FA7268Q94U`, profiles "polly appstore" /
+  "polly catalyst appstore" (cert `94KFQFP9A4`); iOS only.
+"Another build is in review" on the submit step is harmless: the build is
+already with the internal group, and external review frees up when the
+earlier build's review ends. Minting a profile for another Mac: the ASC API
+`POST /profiles` with that Mac's distribution cert id (match the keychain
+cert's serial against `GET /certificates`).
+
+The same by hand, from `apps/polly`:
 ```bash
 ./bump-build.sh
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
