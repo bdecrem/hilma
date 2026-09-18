@@ -4,6 +4,8 @@ import SwiftUI
 /// the server creates the user and sets the session cookie, and Session
 /// transitions to .signedIn. No verification step (decided 2026-05-26).
 struct SignupView: View {
+    /// Language picked on the first run; starts the course with the account.
+    var language: String? = nil
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
     @State private var email = ""
@@ -71,7 +73,7 @@ struct SignupView: View {
         error = nil
         Task {
             do {
-                let user = try await PollyAPI.shared.signup(email: email, password: password)
+                let user = try await PollyAPI.shared.signup(email: email, password: password, language: language)
                 session.state = .signedIn(user)
                 await session.refreshProgress()
                 dismiss()

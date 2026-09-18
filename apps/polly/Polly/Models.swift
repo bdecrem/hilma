@@ -6,19 +6,22 @@ struct PollyUser: Codable, Equatable {
     var avatarUrl: String?
     /// Try-before-signup account; claiming keeps the id and all progress.
     var isGuest: Bool = false
+    /// Active course language code (it/fr/ko); nil until the first run picked one.
+    var language: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, username
+        case id, username, language
         case avatarUrl = "avatar_url"
         case isGuest = "is_guest"
     }
 
     // Tolerant decode — handles backends that don't yet return avatar_url.
-    init(id: String, username: String, avatarUrl: String? = nil, isGuest: Bool = false) {
+    init(id: String, username: String, avatarUrl: String? = nil, isGuest: Bool = false, language: String? = nil) {
         self.id = id
         self.username = username
         self.avatarUrl = avatarUrl
         self.isGuest = isGuest
+        self.language = language
     }
 
     init(from decoder: Decoder) throws {
@@ -27,6 +30,7 @@ struct PollyUser: Codable, Equatable {
         username = try c.decode(String.self, forKey: .username)
         avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
         isGuest = try c.decodeIfPresent(Bool.self, forKey: .isGuest) ?? false
+        language = try c.decodeIfPresent(String.self, forKey: .language)
     }
 }
 

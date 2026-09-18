@@ -71,14 +71,17 @@ final class Session {
         }
     }
 
-    /// Try-before-signup: create + sign into a seeded guest account.
-    func startGuest() async {
+    /// First run: create + sign into the account for this name and language
+    /// (both optional; without them it is an anonymous guest).
+    func startGuest(username: String? = nil, language: String? = nil) async {
         loginError = nil
         do {
-            let user = try await PollyAPI.shared.guestLogin()
+            let user = try await PollyAPI.shared.guestLogin(username: username, language: language)
             state = .signedIn(user)
             ScreenCache.save(user, key: ScreenCache.sessionUser)
             await refreshProgress()
+        } catch PollyAPIError.http(_, let msg) where msg != nil {
+            loginError = msg   // "That name is taken", "Names are 2–24…" — the server's words
         } catch {
             loginError = error.localizedDescription
         }

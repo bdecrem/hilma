@@ -134,7 +134,7 @@ struct TopicContextSheet: View {
             Button("Save") { Task { await commitFocus(focusDraft) } }
                 .disabled(focusBusy)
         } message: {
-            Text(focusError ?? "What should F2 test you on? Flash cards, quizzes, and the Final Review will stick to it — e.g. “Only the first half — I haven’t finished the book.”")
+            Text(focusError ?? "What should Polly test you on? Flash cards, quizzes, and the Final Review will stick to it — e.g. “Only the first half — I haven’t finished the book.”")
         }
         .alert("Remove this source?",
                isPresented: Binding(get: { confirmDelete != nil },

@@ -364,7 +364,7 @@ struct TopicsView: View {
             Text("No topics yet")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(PollyTheme.text)
-            Text("Send F2 a URL or ask a question to get started.")
+            Text("Ask Polly anything — a word, a phrase, a question — and your first chapter starts.")
                 .font(.system(size: 13))
                 .foregroundStyle(PollyTheme.text2)
                 .multilineTextAlignment(.center)

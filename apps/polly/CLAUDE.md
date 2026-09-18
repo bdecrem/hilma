@@ -12,7 +12,15 @@ bump-build rule (`./apps/polly/bump-build.sh` before any build that lands on a
 device), `ENABLE_DEBUG_DYLIB: NO`, never installing to the phone in the
 background, `pkill` before replacing the Mac app, and the headless launch
 hooks (`-TestLoginUser`, `-StartTab`, `-AutoPlayLevel`, `-NoSFX`,
-`-SkipNotifPrompt`, …).
+`-SkipNotifPrompt`, …). Polly-specific: `-OnboardingPage 1|2|3` opens the first
+run on that page, `-AutoTryPolly 1` drives it (Italian + a random name) to the
+signed-in tabs with zero taps.
+
+First run (2026-09-17): two intro panels → "Which language?" (Italian, French,
+Korean; `PollyLanguage` in OnboardingView.swift) → "What should Polly call
+you?" — the name is the account (`POST /api/polly/auth/guest { username,
+language }`, no password, claimable with an email from Profile), with "Sign up
+with email" and "I already have an account" as the alternatives.
 
 Differences from Dodo so far:
 - Deep-link scheme is `polly://`. No universal links / Associated Domains

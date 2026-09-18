@@ -137,16 +137,18 @@ final class PollyAPI {
     /// Create a fresh account with email + password. Server enforces 8+ char
     /// password and email format, returns 409 if the email is already taken.
     /// Auto-signs in (session cookie set on the response).
-    func signup(email: String, password: String) async throws -> PollyUser {
-        struct Body: Encodable { let email: String; let password: String }
-        let res: LoginResponse = try await post("/api/polly/auth/signup", body: Body(email: email, password: password))
+    func signup(email: String, password: String, language: String? = nil) async throws -> PollyUser {
+        struct Body: Encodable { let email: String; let password: String; let language: String? }
+        let res: LoginResponse = try await post("/api/polly/auth/signup", body: Body(email: email, password: password, language: language))
         return res.user
     }
 
-    /// Try-before-signup: server creates a claimable guest account seeded
-    /// with the intro topic and signs it in via the session cookie.
-    func guestLogin() async throws -> PollyUser {
-        let res: LoginResponse = try await post("/api/polly/auth/guest", body: EmptyBody())
+    /// First-run account: the chosen name and language ARE the account (no
+    /// password; claimable later with an email from Profile). Both optional —
+    /// with neither the server hands back an anonymous guest.
+    func guestLogin(username: String? = nil, language: String? = nil) async throws -> PollyUser {
+        struct Body: Encodable { let username: String?; let language: String? }
+        let res: LoginResponse = try await post("/api/polly/auth/guest", body: Body(username: username, language: language))
         return res.user
     }
 
@@ -1219,7 +1221,7 @@ final class PollyAPI {
         }
         if contentType.contains("text/html") {
             if response.statusCode == 404 {
-                return "The F2 voice endpoint is not available on this server."
+                return "The Polly voice endpoint is not available on this server."
             }
             return "The server returned an HTML error page."
         }
