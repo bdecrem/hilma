@@ -1,20 +1,21 @@
 import SwiftUI
 
-/// The Dodo character, drawn natively. Ported from the Claude Design project
+/// Polly — the scarlet-macaw take on the Dodo character, drawn natively. Ported from the Claude Design project
 /// (apps/feynd/branding/dodo-logo.dc.html, turn 5's `#trav` traveler) so the
 /// art stays vector-crisp at any size with zero assets. Colors are the fixed
-/// brand values from BRANDING.md — the character never re-tints per mode.
+/// brand values from BRANDING.md — the character never re-tints per mode. Polly palette: apps/polly/branding.
 enum DodoInk {
-    static let slate  = Color(hex: 0x7C9EB2)
-    static let wing   = Color(hex: 0x6A8FA3)
+    static let slate  = Color(hex: 0xE8452C)   // scarlet — the macaw body
+    static let wing   = Color(hex: 0x3B6FD4)   // cobalt
     static let cream  = Color(hex: 0xF9EFDA)
     static let eye    = Color(hex: 0x33383E)
     static let beak   = Color(hex: 0xF0A830)
     static let beakNostril = Color(hex: 0xC9821F)
     static let blush  = Color(hex: 0xF2A19A)
-    static let sproutStem = Color(hex: 0x6FAE5C)
-    static let sproutLeft = Color(hex: 0x7BB662)
-    static let sproutRight = Color(hex: 0x5F9E4C)
+    static let sproutStem = Color(hex: 0xD63A22)
+    static let sproutLeft = Color(hex: 0x3B6FD4)
+    static let sproutRight = Color(hex: 0xFF8A3D)
+    static let plume  = Color(hex: 0xF7C948)   // gold centre feather
     static let feet   = Color(hex: 0xF0A830)
 }
 
@@ -55,6 +56,16 @@ private func drawDodoHead(_ ctx: GraphicsContext, _ t: CGAffineTransform) {
                    control1: CGPoint(x: 15.2, y: -32.2), control2: CGPoint(x: 8.3, y: -29.2))
     leafR.closeSubpath()
     fill(leafR, DodoInk.sproutRight)
+
+    // Centre feather — gold, in front.
+    var plume = Path()
+    plume.move(to: CGPoint(x: -1.7, y: -24.7))
+    plume.addCurve(to: CGPoint(x: 1.3, y: -40.7),
+                   control1: CGPoint(x: -3, y: -30.3), control2: CGPoint(x: -1.3, y: -36.4))
+    plume.addCurve(to: CGPoint(x: 2.2, y: -24.7),
+                   control1: CGPoint(x: 3.9, y: -36.4), control2: CGPoint(x: 3.9, y: -29.5))
+    plume.closeSubpath()
+    fill(plume, DodoInk.plume)
 
     // Head + hooded cream face.
     fill(Path(ellipseIn: CGRect(x: -26, y: -26, width: 52, height: 52)), DodoInk.slate)

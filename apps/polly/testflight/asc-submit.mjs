@@ -1,6 +1,6 @@
 import crypto from "crypto"; import fs from "fs";
-const KID="5A5HNSWA33", ISS="69a6de80-eb13-47e3-e053-5b8c7c11a4d1", APP=process.env.POLLY_ASC_APP_ID, VER=process.argv[2], PLAT=process.argv[3]??"IOS"; if(!APP){console.error("set POLLY_ASC_APP_ID (Polly has no App Store Connect record id checked in yet)");process.exit(1)};if(!VER){console.error("usage: node asc-submit.mjs <buildNumber> [IOS|MAC_OS]");process.exit(1)};
-const key=fs.readFileSync(process.env.HOME+"/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8");
+const KID=process.env.ASC_KEY_ID??"FA7268Q94U", ISS="69a6de80-eb13-47e3-e053-5b8c7c11a4d1", APP=process.env.POLLY_ASC_APP_ID??"6813318254", VER=process.argv[2], PLAT=process.argv[3]??"IOS"; if(!VER){console.error("usage: node asc-submit.mjs <buildNumber> [IOS|MAC_OS]");process.exit(1)};
+const key=fs.readFileSync(process.env.HOME+"/.appstoreconnect/private_keys/AuthKey_"+KID+".p8");
 const b64=o=>Buffer.from(JSON.stringify(o)).toString("base64url");
 const now=Math.floor(Date.now()/1000);
 const unsigned=b64({alg:"ES256",kid:KID,typ:"JWT"})+"."+b64({iss:ISS,iat:now,exp:now+1100,aud:"appstoreconnect-v1"});
