@@ -34,6 +34,13 @@ Differences from Dodo so far:
   (not minted yet — Polly has no App Store Connect record yet).
 - The mascot is Dodo's bird as a scarlet macaw with a tri-colour plume (see `branding/BRANDING.md`); the files keep their `Dodo*` names.
 
+Catalyst debug build and the microphone: the Debug config signs with
+`Polly/Polly-macOS-debug.entitlements` (just `device.audio-input`, no
+sandbox). Xcode turns the hardened runtime on for Catalyst, and a hardened
+app without that entitlement gets the mic refused with no prompt — the app
+shows "Microphone access denied" and `tccutil reset` changes nothing
+(hit on the iMac 2026-09-18). Dodo's Catalyst debug build has the same gap.
+
 Simulator build:
 ```bash
 xcodebuild -project apps/polly/Polly.xcodeproj -scheme Polly \
