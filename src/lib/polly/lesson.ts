@@ -51,10 +51,26 @@ export type LessonPlan = {
   closing_question: string | null
   extracted_at: string
   model: string
+  // Polly's own lessons (kind 'lesson', written by src/lib/polly/path.ts)
+  // use the same plan; there host is "Polly", the "story" is the model
+  // conversation of the scene, and these are set too.
+  /** The situation in one English line ("Ordering at a café"). */
+  scene?: string
+  /** The model conversation, line by line. */
+  dialogue?: { speaker: string; line: string; english: string }[]
+  /** The grammar point explained in plain English, with examples. */
+  grammar_explained?: string
+  /** CEFR-style level the lesson was written for ("A1"). */
+  level?: string
 }
 
 export function isGuestLesson(thread: Pick<PollyThread, 'kind'>): boolean {
   return thread.kind === 'guest_lesson'
+}
+
+/// A lesson Polly wrote for the learner's path (see path.ts).
+export function isPollyLesson(thread: Pick<PollyThread, 'kind'>): boolean {
+  return thread.kind === 'lesson'
 }
 
 const LESSON_MODEL = process.env.POLLY_LESSON_MODEL || 'sonnet-4-6'
@@ -196,6 +212,7 @@ function termLines(list: LessonTerm[]): string {
 /// every surface sees the same lesson; each adds its own instructions.
 export function lessonBlock(thread: PollyThread): string {
   const l = thread.lesson
+  if (l && isPollyLesson(thread)) return pollyLessonBlock(thread, l)
   if (!isGuestLesson(thread) || !l) return ''
   const who = l.host ? `${l.host}${l.series ? ` (${l.series})` : ''}` : l.series ?? 'the host'
   return `
@@ -217,4 +234,28 @@ ${l.story_summary_english}${l.grammar_point ? `
 Usage point the host makes: ${l.grammar_point}` : ''}${l.closing_question ? `
 
 The host's closing question to the listener: "${l.closing_question}"` : ''}`
+}
+
+/// The same, for a lesson Polly wrote: a scene, its model conversation, the
+/// words and the one grammar point.
+function pollyLessonBlock(thread: PollyThread, l: LessonPlan): string {
+  const dialogue = (l.dialogue ?? []).map((d) => `${d.speaker}: ${d.line}  (${d.english})`).join('\n')
+  return `
+
+POLLY LESSON — this topic is lesson ${thread.path_position ?? '?'} on the learner's ${l.language} path, written by Polly for their level (${l.level ?? 'beginner'}). The learner's own language is English. What matters is that they can USE this language in the scene; stay inside the lesson unless they ask for more:
+
+The scene: ${l.scene ?? thread.topic ?? ''}
+
+The lesson's words:
+${termLines(l.key_words) || '(none)'}
+
+Expressions from the conversation:
+${termLines(l.phrases) || '(none)'}
+
+The model conversation (${l.language}, English in parentheses):
+${dialogue || l.story_summary}${l.grammar_point ? `
+
+The grammar point: ${l.grammar_point}${l.grammar_explained ? `\n${l.grammar_explained}` : ''}` : ''}${l.closing_question ? `
+
+A question to carry the conversation further: "${l.closing_question}"` : ''}`
 }

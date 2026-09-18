@@ -92,7 +92,10 @@ export async function PATCH(
     if (!ALL_TOPIC_KINDS.includes(body.kind as TopicKind)) {
       return NextResponse.json({ error: 'invalid kind' }, { status: 400 })
     }
-    update.kind = body.kind
+    // A lesson Polly wrote keeps its kind: its plan and its place on the
+    // path hang off it, so a rename that also carries a kind leaves it be.
+    const current = await getThreadById(user.id, id)
+    if (current?.kind !== 'lesson') update.kind = body.kind
   }
   if (
     update.topic === undefined &&

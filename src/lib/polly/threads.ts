@@ -83,6 +83,12 @@ export type PollyThread = {
   /** A guest lesson's plan, pulled from the transcript once (see
    *  lib/polly/lesson.ts). Null until extracted; null for other kinds. */
   lesson: LessonPlan | null
+  /** Polly's own lessons (kind 'lesson'): 1-based place on the learner's
+   *  path, null once a retaken level check replaced that path. */
+  path_position: number | null
+  /** Which of a lesson's three steps are done → ISO time (see path.ts). */
+  lesson_steps: { talk?: string; words?: string; grammar?: string } | null
+  lesson_done_at: string | null
 }
 
 /// One source-of-truth concatenation of every body the user has attached to a
@@ -176,10 +182,14 @@ export type QuizKind = 'standard' | 'hard' | 'reflection'
 ///   'immersion'    — raw target-language material, no teaching attached
 ///                    (a book, a news story, a film, a show);
 ///   'ask'          — "teach me about X", no source.
+/// And one only Polly sets (never in ALL_TOPIC_KINDS, so no picker offers it):
+///   'lesson'       — a lesson Polly wrote for the learner's path after the
+///                    level check (see path.ts).
 export type TopicKind =
   | 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
   | 'book' | 'mini' | 'general'
   | 'guest_lesson' | 'immersion' | 'ask'
+  | 'lesson'
 
 export const ALL_TOPIC_KINDS: TopicKind[] = [
   'chat', 'web', 'audio', 'video', 'paste', 'fallback', 'book', 'mini', 'general',

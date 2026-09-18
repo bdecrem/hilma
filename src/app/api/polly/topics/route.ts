@@ -49,6 +49,10 @@ export async function GET() {
     client: t.client,
     pinned_at: t.pinned_at,
     study_focus: t.study_focus,
+    // Lessons Polly wrote: their place on the path and which steps are done.
+    path_position: t.path_position,
+    lesson_steps: t.lesson_steps,
+    lesson_done_at: t.lesson_done_at,
     // Listed in the community directory (owner's own view drives the
     // Share/Unshare menu item).
     shared: shared.has(t.id),

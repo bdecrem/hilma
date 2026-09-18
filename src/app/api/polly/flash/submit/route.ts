@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
 import { pollySupabase } from '@/lib/polly/supabase'
+import { getThreadById } from '@/lib/polly/threads'
+import { ensureCurrentLesson, markLessonStep } from '@/lib/polly/path'
 import {
   clozeMatch,
   getFlashCardsByIds,
@@ -16,8 +18,9 @@ import {
 } from '@/lib/polly/flash'
 
 export const runtime = 'nodejs'
-// Text/voice judging is one Haiku call.
-export const maxDuration = 60
+// Text/voice judging is one Haiku call; finishing a lesson's last step
+// writes the next lesson in after().
+export const maxDuration = 300
 
 type SubmitBody = {
   mode?: FlashSetMode
@@ -188,9 +191,24 @@ export async function POST(req: Request) {
       )
       await setPeckCredits(user.id, remaining.length > 0 ? remaining : null)
     }
+    // A set played on a lesson Polly wrote is one of its steps: the
+    // grammar drills if that is what these cards were, else the words. The
+    // step that finishes the lesson gets the next one written.
+    let lessonStep: 'words' | 'grammar' | null = null
+    let lessonFinished = false
+    if (threadId) {
+      const thread = await getThreadById(user.id, threadId)
+      if (thread?.kind === 'lesson') {
+        lessonStep = ordered.every((c) => c.lesson_step === 'grammar') ? 'grammar' : 'words'
+        lessonFinished = (await markLessonStep(thread, lessonStep)).finished
+        if (lessonFinished) after(() => ensureCurrentLesson(user.id, user.username))
+      }
+    }
     return NextResponse.json({
       score: recorded.set.score,
       total: recorded.set.total,
+      lesson_step: lessonStep,
+      lesson_finished: lessonFinished,
       results,
       xp_awarded: recorded.xp_awarded,
       total_xp: recorded.total_xp,

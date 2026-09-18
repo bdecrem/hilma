@@ -24,6 +24,9 @@ type StartBody = {
   /// then open with any banked Peck credits (daily iMessage answers)
   /// already scored. Older clients get plain sets and credits keep.
   accept_prefill?: boolean
+  /// Topic sets on a lesson Polly wrote: which step's cards to play —
+  /// 'words' (everything but the grammar drills) or 'grammar'.
+  lesson_step?: 'words' | 'grammar'
 }
 
 /// Same display rule the clients use for deck rows: topic name, else the
@@ -107,6 +110,7 @@ export async function POST(req: Request) {
   const cards = await pickSetCards(user.id, threadId, {
     excludeIds: credits.map((c) => c.card_id),
     n: SET_SIZE - credits.length,
+    lessonStep: threadId && (body.lesson_step === 'words' || body.lesson_step === 'grammar') ? body.lesson_step : null,
   })
   if (cards.length === 0 && credits.length === 0) {
     return NextResponse.json(

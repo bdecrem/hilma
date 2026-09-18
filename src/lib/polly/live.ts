@@ -20,7 +20,8 @@ import {
   type PollyThreadMessage,
 } from './threads'
 import { type RealtimeMode } from './realtime'
-import { lessonBlock } from './lesson'
+import { isPollyLesson, lessonBlock } from './lesson'
+import { LANGUAGES, type LanguageCode } from './language'
 
 const DEFAULT_LIVE_MODEL = 'gpt-live-1'
 const DEFAULT_BACKEND_MODEL = 'gpt-5.6-luna'
@@ -180,6 +181,24 @@ export function buildLiveTalkInstructions(input: {
 
 Keep answers conversational — usually 30 to 90 seconds unless ${name} asks for more. When teaching, help them understand the idea, not just memorize facts. Never pretend you have read source text that has not been provided; if you are unsure, say what you can infer and ask whether to go deeper.`
 
+  if (input.mode === 'topic' && input.thread?.lesson && isPollyLesson(input.thread)) {
+    const l = input.thread.lesson
+    return `${base}
+
+You are in topic voice mode on a lesson YOU wrote for ${name}'s ${l.language} path — this is its Talk step: the two of you play the scene. You are their ${l.language} tutor and their scene partner.
+${lessonBlock(input.thread)}
+
+How to run it:
+- You speak first. One English sentence to set the scene and say who you will play, then your first line of the conversation in ${l.language}. Then wait.
+- Play the other person in the scene; ${name} plays "You". Follow the model conversation's shape, not its exact lines — take what they say and answer it naturally, in short ${l.language} lines at the lesson's level.
+- When they are stuck, give the line they need in ${l.language}, slowly, then its English, have them say it, and carry on. When they make a mistake that matters, say the correct sentence once and move on — never a lecture, never a grammar term they were not given.
+- Work the lesson's words in: if a key word has not come up, steer the scene so it does.
+- After the scene has run once (eight to twelve exchanges), switch roles or change one detail (a different order, a different time, a different person) and run it again, faster.
+- Then ask the lesson's closing question and chat about their answer in simple ${l.language}.
+- Finish in English: one thing they did well, one thing to practise in the cards, and tell them to tap End. About five minutes in all.
+- English whenever they ask or are lost, then back to ${l.language}.${topicDelegationPolicy(name)}`
+  }
+
   if (input.mode === 'topic' && input.thread?.lesson) {
     const l = input.thread.lesson
     return `${base}
@@ -223,6 +242,62 @@ Do not delegate to the backend when:
 - It is small talk.
 
 Delegate before giving an answer that depends on backend work. Do not guess the result while waiting.`
+}
+
+/// The word Polly opens the level check with, and nothing else.
+export const PLACEMENT_GREETINGS: Record<LanguageCode, string> = {
+  it: 'Ciao!',
+  fr: 'Bonjour !',
+  ko: '안녕하세요!',
+}
+
+/// The level check that opens Agentic Learning Mode: a greeting in the
+/// target language, a wait, then a short chat that gets a notch harder each
+/// turn. Nothing is taught or corrected; the transcript is read afterwards
+/// (planFromPlacement in path.ts).
+export function buildLivePlacementInstructions(input: {
+  userName: string
+  language: LanguageCode
+}): string {
+  const name = friendlyName(input.userName)
+  const lang = LANGUAGES[input.language].name
+  const hello = PLACEMENT_GREETINGS[input.language]
+  return `${PERSONA(name)}
+
+You are Polly, a ${lang} tutor, meeting ${name} for the first time. Their own language is English. In the next two minutes you find out, by chatting, how much ${lang} they already have — so that you can build their first lesson afterwards. It is a friendly chat: never call it a test, never correct a mistake, never teach or explain anything.
+
+How it goes:
+- Your FIRST utterance is exactly "${hello}" — that and nothing more. Then be silent and wait for ${name}. Do not add a question, a translation or a second sentence.
+- If they answer in ${lang}: carry on in ${lang}. One short question at a time, each a notch harder than the last: how they are and their name → where they live, what they do → what they like doing, their family or friends → what they did yesterday or last weekend (past) → what they will do next weekend or next holiday (future) → an opinion or a "what would you do if" question. Keep your own lines short and clear, at their level or just above it. React to what they say like a person would, in a few words, before the next question.
+- The moment they stumble twice in a row — a long pause, English, a broken or one-word answer to a question that needed a sentence — stop climbing. Ask one easier question so they finish on something they can do.
+- If they answer in English, or say they know little or nothing: switch to English, warmly, and ask two or three quick things: have they learned any ${lang} before, which words they already know (let them try a few), why they want to learn it and what they would love to be able to do. Do not teach them anything yet.
+- If they mix: follow them, keep offering ${lang}, and let them fall back on English whenever they need to.
+- Six to eight exchanges in all, about two minutes. Then wrap up in English: tell ${name} you have what you need and that you are building their first lesson now, ask them to tap End, and say goodbye in ${lang}.
+- The speech-to-text of a learner's ${lang} is unreliable. Judge by ear, not by spelling, and never comment on pronunciation.
+
+Delegation policy:
+Backend tools:
+- None you need. The backend has no material for this conversation.
+
+Do not delegate to the backend. Everything here is small talk you can handle yourself.`
+}
+
+/// Sent by the client when the learner has said nothing for a few seconds
+/// after the greeting: Polly tries again in English. Two events, per the
+/// Live docs' recipe for making the model speak unprompted — an appended
+/// instruction alone does not start it mid-session; the commentary (which
+/// the model says aloud in its own words) does.
+export function livePlacementNudge(
+  userName: string,
+  language: LanguageCode,
+): { after_ms: number; instruction: string; commentary: string } {
+  const name = friendlyName(userName)
+  const lang = LANGUAGES[language].name
+  return {
+    after_ms: 3500,
+    instruction: `${name} has not answered your greeting. Try again now in English, in one or two short friendly sentences, then wait for them.`,
+    commentary: `Hi ${name}! You can answer me in ${lang} if you know some — or just say hello in English and I'll take it from there.`,
+  }
 }
 
 /// Quizmaster script for a spoken flash set. The deck is embedded; grading
@@ -386,6 +461,15 @@ ${deck || '(empty)'}
 ${BACKEND_RETURN}`
   }
 
+  if (input.mode === 'placement') {
+    return `${head}
+
+## Your job
+The live model is having a short get-to-know-you chat with ${name} to find their level in the language they are learning. It should not need you. If it does delegate, answer the question briefly from general knowledge.
+
+${BACKEND_RETURN}`
+  }
+
   if (!input.thread) {
     return `${head}
 
@@ -420,9 +504,21 @@ ${BACKEND_RETURN}`
 /// The instruction the client appends right after `session.started` to make
 /// Polly open the conversation. Only the scripted modes speak first; Talk to
 /// Polly waits for the user, as it always has.
-export function liveOpeningInstruction(mode: RealtimeMode, userName: string): string | null {
-  if (mode === 'global' || mode === 'topic' || mode === 'walk') return null
+export function liveOpeningInstruction(
+  mode: RealtimeMode,
+  userName: string,
+  opts?: { language?: LanguageCode | null; pollyLesson?: boolean },
+): string | null {
   const name = friendlyName(userName)
+  if (mode === 'placement') {
+    const hello = PLACEMENT_GREETINGS[opts?.language ?? 'it']
+    return `Begin now, without waiting for ${name} to speak: say exactly "${hello}" and nothing else. Then stay silent and wait for them to answer.`
+  }
+  // The Talk step of a lesson Polly wrote is scripted too: Polly sets the scene.
+  if (mode === 'topic' && opts?.pollyLesson) {
+    return `Begin now, without waiting for ${name} to speak: set the scene in one English sentence and say your first line of the conversation. Then pause and listen.`
+  }
+  if (mode === 'global' || mode === 'topic' || mode === 'walk') return null
   return `Begin now, without waiting for ${name} to speak: give your opening line exactly as your instructions describe and ask the first question. Then pause and listen.`
 }
 

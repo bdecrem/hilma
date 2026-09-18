@@ -10,7 +10,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { pollySupabase } from './supabase'
 import { getDailyStreak, markPeckWeek } from './streak'
 import { contextCharBudget, llmComplete, type LlmTool } from './llm'
-import { ensureLesson, lessonBlock } from './lesson'
+import { ensureLesson, isPollyLesson, lessonBlock } from './lesson'
 import { buildBudgetedContent, gatherUserNotes, type PollyThread } from './threads'
 
 /// The user's verdict on a card itself (not on their answer).
@@ -50,6 +50,10 @@ export type FlashCard = {
   scheduled_days: number
   due_at: string | null
   streak: number
+  /// On a lesson Polly wrote: which step the card belongs to. Null elsewhere
+  /// (and on cards the learner added to a lesson later — those play with
+  /// the words).
+  lesson_step: 'words' | 'grammar' | null
 }
 
 export type FlashSetMode = 'choice' | 'text' | 'voice' | 'mixed'
@@ -275,7 +279,12 @@ function cardTool(): LlmTool {
 }
 
 /// Validate, trim, cap at n and insert the generated cards.
-async function saveGeneratedCards(thread: PollyThread, n: number, raw: RawCard[]): Promise<FlashCard[]> {
+async function saveGeneratedCards(
+  thread: PollyThread,
+  n: number,
+  raw: RawCard[],
+  lessonStep: 'words' | 'grammar' | null = null,
+): Promise<FlashCard[]> {
   const rows = raw
     .filter((c) => c.question?.trim() && c.answer?.trim())
     .slice(0, n)
@@ -290,6 +299,7 @@ async function saveGeneratedCards(thread: PollyThread, n: number, raw: RawCard[]
         distractors: (c.distractors ?? []).map((d) => String(d).trim()).filter(Boolean).slice(0, 3),
         cloze_text: cloze?.text ?? null,
         cloze_answer: cloze?.answer ?? null,
+        lesson_step: lessonStep,
       }
     })
   if (rows.length === 0) throw new Error('Card generation produced no usable cards')
@@ -356,7 +366,40 @@ Create exactly ${n} flash cards.`
   if (result.type !== 'tool_call') {
     throw new Error('Card generation returned no structured cards')
   }
-  return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[])
+  return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[],
+                            isPollyLesson(thread) ? 'words' : null)
+}
+
+/// The Grammar step of a lesson Polly wrote: a set of quick drills on the
+/// lesson's one grammar point, built only from the lesson's own vocabulary.
+async function generateGrammarCards(thread: PollyThread, n: number): Promise<FlashCard[]> {
+  const l = thread.lesson!
+  const system = `You write grammar drills for a language-learning app — quick and playful, like Duolingo, never a worksheet. The learner's own language is English; they are practising ${l.language}. Produce exactly ${n} cards that drill ONE grammar point and nothing else.${lessonBlock(thread)}
+
+Card types (mix them; at least half GAP cards):
+- GAP — a short ${l.language} sentence (8 words or fewer) with the form under drill blanked as ___ (exactly three underscores), and the English meaning of the whole sentence in parentheses at the end. Put that line in BOTH question and cloze_text; answer and cloze_answer are the missing form, 1–3 words; distractors are 3 other forms of the SAME word (wrong person, wrong gender, wrong tense) — the mistakes a learner really makes.
+  e.g. question: 'Io ___ un caffè, per favore. (I'd like a coffee, please.)'  answer: 'vorrei'
+- PICK — 'Which is right?' with the answer being a correct short sentence and the distractors three versions with one grammar mistake each.
+- SAY IT — English to ${l.language}: 'In ${l.language}: we are tired'; the answer applies the grammar point; distractors get the form wrong.
+
+Hard rules:
+- Use ONLY vocabulary from the lesson (its conversation, words and expressions) plus the most basic function words. New sentences, same words.
+- Vary the person, number or gender across the cards so the pattern shows.
+- question ≤ 14 words. answer ≤ 6 words. No explanations, no rule statements, no grammar terms in the question.
+- Exactly 3 distractors. Plain text, no markdown. Omit open_question.`
+
+  const result = await llmComplete({
+    system,
+    messages: [{ role: 'user', content: `The grammar point: ${l.grammar_point}
+${l.grammar_explained ?? ''}
+
+Create exactly ${n} cards.` }],
+    maxTokens: 8_000,
+    forceTool: true,
+    tools: [cardTool()],
+  })
+  if (result.type !== 'tool_call') throw new Error('Grammar card generation returned no structured cards')
+  return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[], 'grammar')
 }
 
 /// A guest lesson comes with its deck: once the plan exists, build the cards
@@ -372,9 +415,14 @@ export async function ensureLessonDeck(thread: PollyThread): Promise<number> {
   if (existing.length > 0) return 0
   const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, l.key_words.length * 2 + Math.min(l.phrases.length, 4)))
   try {
-    const cards = await generateLessonCards(ensured, n)
-    console.log(`[polly/lesson] built the deck for ${ensured.id}: ${cards.length} cards`)
-    return cards.length
+    // A lesson Polly wrote has two decks: the words, and drills on its
+    // grammar point (the Words and Grammar steps).
+    const [cards, grammar] = await Promise.all([
+      generateLessonCards(ensured, n),
+      isPollyLesson(ensured) && l.grammar_point ? generateGrammarCards(ensured, SET_SIZE) : Promise.resolve([]),
+    ])
+    console.log(`[polly/lesson] built the deck for ${ensured.id}: ${cards.length} cards${grammar.length ? ` + ${grammar.length} grammar` : ''}`)
+    return cards.length + grammar.length
   } catch (err) {
     console.error(`[polly/lesson] deck build failed for ${ensured.id}:`, err)
     return 0
@@ -996,7 +1044,7 @@ export function capDown1Pool(cards: FlashCard[], now: number = Date.now()): Flas
 export async function pickSetCards(
   userId: string,
   threadId: string | null,
-  opts?: { excludeIds?: string[]; n?: number },
+  opts?: { excludeIds?: string[]; n?: number; lessonStep?: 'words' | 'grammar' | null },
 ): Promise<FlashCard[]> {
   let query = pollySupabase()
     .from('polly_flash_cards')
@@ -1004,6 +1052,10 @@ export async function pickSetCards(
     .eq('user_id', userId)
     .or('rating.is.null,rating.eq.priority,rating.eq.down1')
   if (threadId) query = query.eq('thread_id', threadId)
+  // A lesson's step: the grammar drills, or everything else (the words and
+  // any card the learner added).
+  if (opts?.lessonStep === 'grammar') query = query.eq('lesson_step', 'grammar')
+  else if (opts?.lessonStep === 'words') query = query.or('lesson_step.is.null,lesson_step.eq.words')
   const { data, error } = await query
   if (error) {
     console.error('[polly/flash] pickSetCards failed:', error)

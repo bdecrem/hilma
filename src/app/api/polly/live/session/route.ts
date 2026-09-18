@@ -15,6 +15,7 @@ import {
   buildBackendInstructions,
   buildLiveFinalReviewInstructions,
   buildLiveFlashInstructions,
+  buildLivePlacementInstructions,
   buildLiveRecertInstructions,
   buildLiveSecondChanceInstructions,
   buildLiveSessionConfig,
@@ -23,7 +24,9 @@ import {
   liveBackendModel,
   liveModel,
   liveOpeningInstruction,
+  livePlacementNudge,
 } from '@/lib/polly/live'
+import { activeLanguage } from '@/lib/polly/language'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -57,7 +60,7 @@ export async function POST(req: Request) {
   }
 
   const mode = body.mode ?? 'global'
-  if (!['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert'].includes(mode)) {
+  if (!['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert', 'placement'].includes(mode)) {
     return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
   }
   // Pass the offer through untouched: SDP needs its final line ending.
@@ -84,7 +87,14 @@ export async function POST(req: Request) {
 
   let instructions: string
   let cards: { question: string; answer: string }[] | undefined
-  if (mode === 'flash') {
+  const language = mode === 'placement' ? await activeLanguage(user.id) : null
+  if (mode === 'placement') {
+    // The level check: no topic, the learner's course language.
+    if (!language) {
+      return NextResponse.json({ error: 'Pick a language first.' }, { status: 409 })
+    }
+    instructions = buildLivePlacementInstructions({ userName: user.username, language })
+  } else if (mode === 'flash') {
     const ids = body.card_ids ?? []
     if (ids.length === 0) {
       return NextResponse.json({ error: 'card_ids required' }, { status: 400 })
@@ -219,7 +229,13 @@ export async function POST(req: Request) {
       data_channel: 'oai-events',
       // Sent by the client as session.instructions.append once
       // session.started arrives; null = Polly waits for the user.
-      opening_instruction: liveOpeningInstruction(mode, user.username),
+      opening_instruction: liveOpeningInstruction(mode, user.username, {
+        language,
+        pollyLesson: thread?.kind === 'lesson',
+      }),
+      // The level check only: what to append when the learner says nothing
+      // for `after_ms` after Polly's greeting. Null elsewhere.
+      silence_nudge: mode === 'placement' && language ? livePlacementNudge(user.username, language) : null,
     },
   })
 }

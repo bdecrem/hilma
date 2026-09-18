@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
 import { finishVoiceSession } from '@/lib/polly/realtime'
+import { ensureCurrentLesson, talkStepFromSession } from '@/lib/polly/path'
 
 export const runtime = 'nodejs'
+// Finishing a lesson's last step writes the next lesson in after().
+export const maxDuration = 300
 
 type FinishBody = {
   transcript?: unknown
@@ -38,5 +41,10 @@ export async function PATCH(
   if (!ok) {
     return NextResponse.json({ error: 'update failed' }, { status: 500 })
   }
-  return NextResponse.json({ ok: true })
+  // A voice session on a lesson Polly wrote is its Talk step, once the
+  // learner really spoke; the step that finishes the lesson gets the next
+  // one written.
+  const talk = await talkStepFromSession({ userId: user.id, voiceSessionId: id })
+  if (talk.finished) after(() => ensureCurrentLesson(user.id, user.username))
+  return NextResponse.json({ ok: true, lesson_finished: talk.finished })
 }
