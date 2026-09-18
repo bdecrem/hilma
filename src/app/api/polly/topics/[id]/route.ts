@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
 import { ALL_TOPIC_KINDS, getThreadById, type TopicKind } from '@/lib/polly/threads'
+import { clearLesson, ensureLesson } from '@/lib/polly/lesson'
 import { getSecondChanceState, listFlashCards } from '@/lib/polly/flash'
 import { pollySupabase } from '@/lib/polly/supabase'
 
@@ -125,6 +126,17 @@ export async function PATCH(
   let flash_card_count: number | undefined
   if (update.study_focus !== undefined) {
     flash_card_count = (await listFlashCards(user.id, id)).length
+  }
+  // Newly a guest lesson (or no longer one): pull the lesson plan out of the
+  // transcript now, after the response, so it's ready when practice starts.
+  // Every practice surface also ensures it lazily, so this is only a warm-up.
+  if (update.kind !== undefined) {
+    after(async () => {
+      const fresh = await getThreadById(user.id, id)
+      if (!fresh) return
+      if (fresh.kind === 'guest_lesson') await ensureLesson(fresh)
+      else if (fresh.lesson) await clearLesson(id, user.id)
+    })
   }
   return NextResponse.json({ thread: data, flash_card_count })
 }

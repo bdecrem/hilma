@@ -9,7 +9,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { pollySupabase } from './supabase'
 import { getDailyStreak, markPeckWeek } from './streak'
-import { contextCharBudget, llmComplete } from './llm'
+import { contextCharBudget, llmComplete, type LlmTool } from './llm'
+import { ensureLesson, lessonBlock } from './lesson'
 import { buildBudgetedContent, gatherUserNotes, type PollyThread } from './threads'
 
 /// The user's verdict on a card itself (not on their answer).
@@ -120,6 +121,9 @@ export async function generateFlashCards(
   styleInstructions?: string,
 ): Promise<FlashCard[]> {
   const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, Math.round(count)))
+  // A guest lesson practises its teacher's words, not facts about the story.
+  thread = await ensureLesson(thread)
+  if (thread.lesson) return generateLessonCards(thread, n, model, styleInstructions)
   const subject = thread.topic ?? thread.url ?? 'this topic'
   // Full material, sized to the generating model's real window (3M chars on
   // the 1M-token Anthropic models) — never a reflexive cap.
@@ -209,61 +213,69 @@ Create exactly ${n} flash cards.`
     messages: [{ role: 'user', content: user }],
     maxTokens: 12_000,
     forceTool: true,
-    tools: [
-      {
-        name: 'create_flash_cards',
-        description: 'Record the generated flash cards.',
-        input_schema: {
-          type: 'object',
-          properties: {
-            cards: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  question: { type: 'string' },
-                  answer: { type: 'string' },
-                  open_question: {
-                    type: 'string',
-                    description:
-                      'ONLY when the question depends on seeing the choices: an equivalent standalone rewording with the same canonical answer.',
-                  },
-                  distractors: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'Exactly 3 wrong choices.',
-                  },
-                  cloze_text: {
-                    type: 'string',
-                    description:
-                      'ONLY for genuinely good fill-in-the-word candidates: one sentence stating the fact with the key term as ___.',
-                  },
-                  cloze_answer: {
-                    type: 'string',
-                    description: 'The exact missing word(s), 1-3 words.',
-                  },
-                },
-                required: ['question', 'answer', 'distractors'],
-              },
-            },
-          },
-          required: ['cards'],
-        },
-      },
-    ],
+    tools: [cardTool()],
   })
 
   if (result.type !== 'tool_call') {
     throw new Error('Card generation returned no structured cards')
   }
-  const raw = (result.input.cards ?? []) as {
-    question?: string
-    answer?: string
-    open_question?: string
-    distractors?: string[]
-    cloze_text?: string
-    cloze_answer?: string
-  }[]
+  return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[])
+}
+
+type RawCard = {
+  question?: string
+  answer?: string
+  open_question?: string
+  distractors?: string[]
+  cloze_text?: string
+  cloze_answer?: string
+}
+
+function cardTool(): LlmTool {
+  return {
+    name: 'create_flash_cards',
+    description: 'Record the generated flash cards.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        cards: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              question: { type: 'string' },
+              answer: { type: 'string' },
+              open_question: {
+                type: 'string',
+                description:
+                  'ONLY when the question depends on seeing the choices: an equivalent standalone rewording with the same canonical answer.',
+              },
+              distractors: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Exactly 3 wrong choices.',
+              },
+              cloze_text: {
+                type: 'string',
+                description:
+                  'ONLY for genuinely good fill-in-the-word candidates: one sentence stating the fact with the key term as ___.',
+              },
+              cloze_answer: {
+                type: 'string',
+                description: 'The exact missing word(s), 1-3 words.',
+              },
+            },
+            required: ['question', 'answer', 'distractors'],
+          },
+        },
+      },
+      required: ['cards'],
+    },
+  }
+}
+
+/// Validate, trim, cap at n and insert the generated cards.
+async function saveGeneratedCards(thread: PollyThread, n: number, raw: RawCard[]): Promise<FlashCard[]> {
   const rows = raw
     .filter((c) => c.question?.trim() && c.answer?.trim())
     .slice(0, n)
@@ -291,6 +303,58 @@ Create exactly ${n} flash cards.`
     throw new Error('Could not save generated cards')
   }
   return data as FlashCard[]
+}
+
+/// Language cards for a guest lesson: the host's key words and the story's
+/// expressions, each tested in its story sentence. Same card shape as every
+/// other deck (question / answer / 3 distractors / optional cloze), so the
+/// multiple-choice, typed and voice modes all work unchanged.
+async function generateLessonCards(
+  thread: PollyThread,
+  n: number,
+  model?: string | null,
+  styleInstructions?: string,
+): Promise<FlashCard[]> {
+  const l = thread.lesson!
+  const subject = thread.topic ?? thread.url ?? 'this lesson'
+  const system = `You write flash cards for a language-learning app. The learner's own language is English; they are practising ${l.language} with a lesson they have already listened to. Produce exactly ${n} cards that practise the LANGUAGE of the lesson — its words and expressions in context — never facts about the story's subject.${lessonBlock(thread)}
+
+What to make (mix these; every card cites the lesson's own sentences):
+- Meaning cards: the ${l.language} term inside its story sentence → the English meaning. question: 'In the lesson: "<sentence>" — what does <term> mean here?'; answer: the meaning in a few English words.
+- Production cards: English → ${l.language}. question: 'How does the lesson say "<meaning>"?'; answer: the ${l.language} term. Give these a cloze too: cloze_text is the story sentence with the term as ___ (exactly three underscores), cloze_answer the term (1–3 words).
+- One or two usage cards when the host makes a usage point (formal vs informal address, a set formula): question about which form fits a situation from the lesson; answer the form.
+- Cover EVERY key word the host teaches first (a meaning card and a production card each when the count allows), then the further expressions. No two cards on the same term in the same direction.
+
+Format rules:
+- The canonical answer is short: a term, or a few words of meaning.
+- Exactly 3 distractors of the same shape and language as the answer (${l.language} distractors for a ${l.language} answer, English for English) — plausible near-misses: other words from the lesson, false friends, a related meaning. Never the correct answer in other words.
+- Questions must stand alone in typed and voice modes: no "which of these".
+- No markdown. Keep the ${l.language} exactly as the lesson has it.${thread.study_focus ? `
+
+STUDY FOCUS — the learner asked to practise only this: "${thread.study_focus}". Stay inside it.` : ''}${styleInstructions ? `
+
+The learner asked for the deck THEIR way — follow this where it doesn't break the format rules:
+${styleInstructions}` : ''}`
+
+  const user = `Lesson: ${subject}
+
+Full transcript (for exact wording and extra example sentences):
+${buildBudgetedContent(thread, contextCharBudget(model)).slice(0, 200_000) || '(none)'}
+
+Create exactly ${n} flash cards.`
+
+  const result = await llmComplete({
+    model,
+    system,
+    messages: [{ role: 'user', content: user }],
+    maxTokens: 12_000,
+    forceTool: true,
+    tools: [cardTool()],
+  })
+  if (result.type !== 'tool_call') {
+    throw new Error('Card generation returned no structured cards')
+  }
+  return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[])
 }
 
 /// Turn a user-drafted question into a full card: clean up typos/wording

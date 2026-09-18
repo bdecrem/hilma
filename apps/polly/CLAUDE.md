@@ -59,6 +59,32 @@ about X"). They lead the Type pickers and the by-type sections; glyphs are
 `src/lib/polly/threads.ts`, the agent tool descriptions, and schema 003
 (the check constraint). Per-kind attributes are next.
 
+## Guest lessons — the lesson plan (2026-09-18)
+
+A `guest_lesson` topic gets its teacher's structure pulled out of the
+transcript once and stored in `polly_threads.lesson` (schema 004):
+`src/lib/polly/lesson.ts` — `extractLesson` (Sonnet, `POLLY_LESSON_MODEL`)
+returns host, series, language, the key words the host teaches (term,
+English meaning, the sentence from the episode), 4–8 further expressions from
+the story, the story in brief in the target language and in English, a usage
+point, and the host's closing question. `ensureLesson(thread)` extracts and
+saves on first use and is called by card generation, chat, and the voice
+session route; the topics PATCH warms it in `after()` when the kind becomes
+`guest_lesson` and clears it when it stops being one. `lessonBlock(thread)`
+is the plan as prompt text, shared by every surface:
+- cards: `generateLessonCards` in flash.ts — meaning cards (story sentence →
+  English) and production cards (English → term, with the story sentence as
+  cloze), every key word first; same card shape as any deck;
+- chat: `lessonGuidance` in chat.ts — quizzes make the learner USE the words
+  (cloze, translate, formal/informal, retell); the reflection quiz asks in the
+  target language;
+- voice: talk mode on a guest lesson opens with "retell the story", fixes two
+  or three things, drills the key words, then asks the host's closing
+  question; Final Review / Second Chance / recert get `lessonExamBlock`.
+Verified 2026-09-18 on a throwaway guest user with Lo Scandalo's transcript
+(deck, chat quiz, prompts), then the user was deleted. Extraction fails soft:
+the topic keeps working on the raw transcript.
+
 ## App Store Connect / TestFlight (set up 2026-09-17, from Bart's MacBook Air)
 
 - App record **"Polly: Learn any language"**, id `6813318254`, SKU `polly`;

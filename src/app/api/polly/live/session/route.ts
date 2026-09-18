@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
 import { getThreadById } from '@/lib/polly/threads'
+import { ensureLesson } from '@/lib/polly/lesson'
 import { pollySupabase } from '@/lib/polly/supabase'
 import { getFlashCardsByIds, getSecondChanceState, openFormQuestion } from '@/lib/polly/flash'
 import {
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
     if (!thread) {
       return NextResponse.json({ error: 'topic not found' }, { status: 404 })
     }
+    thread = await ensureLesson(thread)
   }
 
   let instructions: string

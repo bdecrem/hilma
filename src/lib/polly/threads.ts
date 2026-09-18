@@ -1,4 +1,5 @@
 import { pollySupabase } from './supabase'
+import type { LessonPlan } from './lesson'
 import type { PollyClient } from './agent'
 import type { VideoBand } from './videos'
 import type { AudioSummary } from './audio-summary'
@@ -79,6 +80,9 @@ export type PollyThread = {
    *  first half — I haven't finished the book"). Honored by flash card
    *  generation, chat quizzes, and the Final Review. Null = no focus. */
   study_focus: string | null
+  /** A guest lesson's plan, pulled from the transcript once (see
+   *  lib/polly/lesson.ts). Null until extracted; null for other kinds. */
+  lesson: LessonPlan | null
 }
 
 /// One source-of-truth concatenation of every body the user has attached to a

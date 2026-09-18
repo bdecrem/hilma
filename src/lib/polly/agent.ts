@@ -84,6 +84,7 @@ import {
 } from './chat'
 import { nameTopic } from './name-topic'
 import { activeLanguage, learnerLine } from './language'
+import { ensureLesson } from './lesson'
 import { pollySupabase } from './supabase'
 import { llmComplete } from './llm'
 import { setAudioSummary } from './audio-summary'
@@ -2000,6 +2001,7 @@ async function handleNonUrl(
 
   let action
   try {
+    if (thread) thread = await ensureLesson(thread)
     action = await routeAndReply(thread, userText, model, learnerLine(await activeLanguage(userId)))
   } catch (err) {
     console.error('[polly] routeAndReply failed:', err)

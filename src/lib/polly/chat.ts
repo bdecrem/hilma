@@ -1,4 +1,5 @@
 import { buildFullContent, type PollyThread } from './threads'
+import { lessonBlock } from './lesson'
 import { llmComplete, contextCharBudget, type LlmTool } from './llm'
 
 // All chat replies go through the model registry in llm.ts. `model` params
@@ -102,6 +103,20 @@ function fitToBudget(content: string, model: string | null | undefined): string 
   )
 }
 
+/// A guest lesson's plan plus how to tutor on it in chat.
+function lessonGuidance(thread: PollyThread): string {
+  const block = lessonBlock(thread)
+  if (!block) return ''
+  const lang = thread.lesson!.language
+  return `${block}
+
+How to tutor on a guest lesson:
+- Practice, not facts. When they ask for a quiz or to be tested, make them USE the key words and expressions: fill the word into a story sentence, translate a phrase either way, say the same thing formally vs informally, or retell part of the story in ${lang}. One item at a time; correct briefly and specifically; give the fix in ${lang} and the English.
+- Answer meaning and grammar questions from the lesson's own sentences first.
+- If they write in ${lang}, correct only what blocks understanding, then answer in simple ${lang} with English after it.
+- The host's closing question is a good thing to ask when they've worked through the words.`
+}
+
 function buildSystem(thread: PollyThread | null, model?: string | null, learner = ''): string {
   const baseRules = `Reply rules:
 - Be direct. No preambles ("Great question", "Based on the article").
@@ -138,7 +153,7 @@ ${baseRules}`
 
   return `You are Polly — a learning companion.${learner}
 
-The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}
+The user has an ACTIVE learning thread on: ${subject}.${sourceBlock}${lessonGuidance(thread)}
 
 For every message, pick exactly one tool:
 - continue_chat: the user is advancing the current topic — follow-up questions, quiz answers, "tell me more", clarifications.
@@ -170,7 +185,9 @@ export async function askReflectionQuestion(
 
   const system = `You are Polly — a learning companion. The user just asked for a Reflection Quiz on: ${subject}.
 
-Ask exactly ONE thoughtful, open-ended question inviting personal reflection on this material — what they take away, how it lands for them, what it shifts. Don't test recall. Don't lead. No preamble ("Great question", "Let's reflect"). No markdown. Plain text, one question, that's it.${sourceBlock}`
+Ask exactly ONE thoughtful, open-ended question inviting personal reflection on this material — what they take away, how it lands for them, what it shifts. Don't test recall. Don't lead. No preamble ("Great question", "Let's reflect"). No markdown. Plain text, one question, that's it.${sourceBlock}${lessonBlock(thread)}${thread.lesson ? `
+
+Since this is a guest lesson: ask the question in simple ${thread.lesson.language} with an English gloss in parentheses after it, and invite them to answer in ${thread.lesson.language} if they can — a couple of sentences is plenty.` : ''}`
 
   const result = await llmComplete({
     model,

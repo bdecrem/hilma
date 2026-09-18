@@ -20,6 +20,7 @@ import {
   type PollyThreadMessage,
 } from './threads'
 import { type RealtimeMode } from './realtime'
+import { lessonBlock } from './lesson'
 
 const DEFAULT_LIVE_MODEL = 'gpt-live-1'
 const DEFAULT_BACKEND_MODEL = 'gpt-5.6-luna'
@@ -91,6 +92,17 @@ Quiz count: ${thread.quiz_count}
 Last quizzed: ${thread.last_quizzed_at ?? 'never'}
 Recent messages:
 ${recent || '(none)'}${source}`
+}
+
+/// For the spoken exams on a guest lesson: the plan, and the rule that the
+/// exam is on the language, not the story's subject.
+function lessonExamBlock(name: string, thread: PollyThread): string {
+  const block = lessonBlock(thread)
+  if (!block) return ''
+  const lang = thread.lesson!.language
+  return `${block}
+
+Because this is a guest lesson, the exam is on the LANGUAGE: ${name} must show they can use the key words and expressions — in a sentence of their own, translated either way, or in a short retelling of the story in ${lang}. Ask in simple ${lang} with English after it when needed, accept answers in either language but give credit for ${lang}, and never ask about dates, names or plot for their own sake.`
 }
 
 function studyFocusBlock(name: string, thread: PollyThread, verb: string): string {
@@ -167,6 +179,23 @@ export function buildLiveTalkInstructions(input: {
   const base = `${PERSONA(name)}
 
 Keep answers conversational — usually 30 to 90 seconds unless ${name} asks for more. When teaching, help them understand the idea, not just memorize facts. Never pretend you have read source text that has not been provided; if you are unsure, say what you can infer and ask whether to go deeper.`
+
+  if (input.mode === 'topic' && input.thread?.lesson) {
+    const l = input.thread.lesson
+    return `${base}
+
+You are in topic voice mode on a GUEST LESSON: ${name} has listened to a ${l.language} lesson and is here to practise speaking. You are their ${l.language} tutor, speaking with them.
+
+${summarizeThreadForLive(input.thread)}${lessonBlock(input.thread)}
+
+How to run the practice:
+- Open in ${l.language}, briefly, with one English sentence after it, and ask ${name} to retell the story in their own words in ${l.language}. Take a beginner's ${l.language} as it comes: let them finish, no interrupting for small mistakes.
+- After the retelling, pick two or three things to fix — a wrong word, a wrong ending, a missing key word — and give the correct sentence in ${l.language}, then the English. Then move on.
+- Work through the key words: ask them to use each one in a sentence of their own, or ask what it means in the story's sentence. One at a time. If a word is missing from their retelling, that's the first one to ask about.
+- Then ask the host's closing question${l.closing_question ? '' : ' (or a question of your own about the story)'} and discuss their answer in ${l.language}, simply.
+- Speak ${l.language} slowly and simply, at the lesson's level; switch to English whenever ${name} is stuck or asks, then back. Follow their lead if they'd rather talk about the story, ask about grammar, or drill one word.
+- Never turn this into a quiz about the story's subject (dates, names, history). The words and the speaking are the point.${topicDelegationPolicy(name)}`
+  }
 
   if (input.mode === 'topic' && input.thread) {
     return `${base}
@@ -252,7 +281,7 @@ export function buildLiveFinalReviewInstructions(input: {
 
 You are conducting ${name}'s FINAL REVIEW — a spoken oral exam on a topic they have been studying. Passing at the highest level earns their mastery star, so be thorough and fair. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}
+${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}
 
 How to conduct the review:
 - Open by telling ${name} this is their Final Review and there's a star on the line, then ask the first question: what's their main takeaway from this material?
@@ -277,7 +306,7 @@ export function buildLiveSecondChanceInstructions(input: {
 
 You are giving ${name} their SECOND CHANCE — a short spoken retake after a Final Review that fell just short. Exactly THREE questions. Their mastery star is on the line: to pass, their three answers together must be A-level. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${weak.length > 0 ? `
+${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}${weak.length > 0 ? `
 
 WHERE THEY FELL SHORT LAST TIME — build your three questions primarily from these areas, so they can prove they've closed the gaps:
 ${weak.map((w) => `- ${w}`).join('\n')}` : ''}
@@ -302,7 +331,7 @@ export function buildLiveRecertInstructions(input: {
 
 You are giving ${name} a quick REFRESHER on a topic they mastered a while ago — the check that keeps their gold badge shining. Exactly THREE questions, about five minutes. This is a retention check, not the original exam: warm, brisk, and confidence-building. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${weak.length > 0 ? `
+${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}${weak.length > 0 ? `
 
 FLAGGED LAST TIME — make one of your three questions revisit these, so the refresher closes old gaps:
 ${weak.map((w) => `- ${w}`).join('\n')}` : ''}
