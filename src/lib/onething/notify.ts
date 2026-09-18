@@ -1,4 +1,5 @@
-// A note to Bart every time a new number joins: an iMessage to his phone,
+// A note to Bart every time a new number joins (and the email sender that
+// send.ts reuses for the demo number): an iMessage to his phone,
 // plus the same note by email (SendGrid, same sender the rest of hilma uses)
 // for when that account has sends again. Never throws: a failed note must
 // not block a sign-up.
@@ -6,12 +7,12 @@
 import { sendIMessage } from '@/lib/f2/bluebubbles'
 
 const TO = 'bdecrem@gmail.com'
-const BART = '+16508989508'
+export const BART = '+16508989508'
 
 export type SignupSource = 'web' | 'imessage' | 'manual'
 
 export async function notifySignup(phone: string, source: SignupSource, userId: string): Promise<void> {
-  await Promise.all([textBart(phone, source), emailBart(phone, source, userId)])
+  await Promise.all([textBart(phone, source), emailSignup(phone, source, userId)])
 }
 
 async function textBart(phone: string, source: SignupSource): Promise<void> {
@@ -26,12 +27,7 @@ async function textBart(phone: string, source: SignupSource): Promise<void> {
   }
 }
 
-async function emailBart(phone: string, source: SignupSource, userId: string): Promise<void> {
-  const key = process.env.SENDGRID_API_KEY
-  if (!key) {
-    console.warn('[onething] SENDGRID_API_KEY not set; sign-up email skipped')
-    return
-  }
+async function emailSignup(phone: string, source: SignupSource, userId: string): Promise<void> {
   const when = new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'medium', timeStyle: 'short' })
   const how = { web: 'signed in on the website', imessage: 'texted "onething"', manual: 'was added by hand' }[source]
   const pretty = phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, '($1) $2-$3')
@@ -41,6 +37,17 @@ async function emailBart(phone: string, source: SignupSource, userId: string): P
 <p style="margin:0 0 6px;color:#9a968f">Number: ${phone}<br>User id: ${userId}</p>
 <p style="margin:18px 0 0"><a href="https://onething.ink" style="color:#d8534b">onething.ink</a></p>
 </div>`
+  await emailBart(`onething: new sign-up ${pretty}`, html)
+}
+
+/// One email to Bart through SendGrid (the sender the rest of hilma uses).
+/// Logs and returns on failure; the caller's flow goes on either way.
+export async function emailBart(subject: string, html: string): Promise<void> {
+  const key = process.env.SENDGRID_API_KEY
+  if (!key) {
+    console.warn(`[onething] SENDGRID_API_KEY not set; email skipped: ${subject}`)
+    return
+  }
   try {
     const res = await fetch('https://api.sendgrid.com/v3/mail/send', {
       method: 'POST',
@@ -48,13 +55,13 @@ async function emailBart(phone: string, source: SignupSource, userId: string): P
       body: JSON.stringify({
         personalizations: [{ to: [{ email: TO }] }],
         from: { email: 'amber@intheamber.com', name: 'onething' },
-        subject: `onething: new sign-up ${pretty}`,
+        subject,
         content: [{ type: 'text/html', value: html }],
       }),
       signal: AbortSignal.timeout(8000),
     })
-    if (!res.ok) console.error(`[onething] sign-up email failed (${res.status}): ${await res.text()}`)
+    if (!res.ok) console.error(`[onething] email failed (${res.status}, ${subject}): ${await res.text()}`)
   } catch (e) {
-    console.error('[onething] sign-up email failed:', e)
+    console.error(`[onething] email failed (${subject}):`, e)
   }
 }

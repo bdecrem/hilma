@@ -8,7 +8,7 @@
 // keeps a copy only so "reset to zero" can be noticed and `best` remembered.
 
 import { f2Supabase } from '@/lib/f2/supabase'
-import { sendIMessage } from '@/lib/f2/bluebubbles'
+import { sendText } from './send'
 import {
   addDays, buddyCopy, displayName, findUserById, findUserByPhone, joinNames, listEntries, localDay, tzFor,
   SITE_URL, type User,
@@ -161,7 +161,7 @@ export async function invite(inviter: User, handle: string, now = new Date()): P
     .select('*')
     .single()
   if (error) throw new Error(`onething: invite failed: ${error.message}`)
-  await sendIMessage({ addresses: [handle], text: `${buddyCopy('invite', { name: displayName(inviter) })}\n${SITE_URL}` })
+  await sendText({ addresses: [handle], text: `${buddyCopy('invite', { name: displayName(inviter) })}\n${SITE_URL}` })
   return data as Buddy
 }
 
@@ -177,7 +177,7 @@ export async function accept(b: Buddy, invitee: User, now = new Date()): Promise
   if (error) throw new Error(`onething: accept failed: ${error.message}`)
   const inviter = await findUserById(b.inviter_id)
   if (inviter) {
-    await sendIMessage({ addresses: [inviter.phone], text: `${buddyCopy('acceptedInviter', { name: displayName(invitee) })}\n${SITE_URL}` })
+    await sendText({ addresses: [inviter.phone], text: `${buddyCopy('acceptedInviter', { name: displayName(invitee) })}\n${SITE_URL}` })
   }
   return inviter
 }

@@ -3,7 +3,7 @@
 // is where a text turns into an entry, a name, or a yes.
 
 import { f2Supabase } from '@/lib/f2/supabase'
-import { sendIMessage } from '@/lib/f2/bluebubbles'
+import { sendText } from './send'
 import {
   GRACE_HOUR, addDays, buddyCopy, confirmText, dueFor, ensureUser, findEntry, findUserByPhone, listEntries,
   localDay, localHour, looksLikeOurs, normalizeHandle, promptText, recordEntry, reminderText, scoreboard,
@@ -30,7 +30,7 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
       if (due === 'prompt') {
         // A buddy streak that broke yesterday is mentioned once, here, under the question.
         const resets = await resetLines(user, today)
-        await sendIMessage({ addresses: [user.phone], text: promptText(resets) })
+        await sendText({ addresses: [user.phone], text: promptText(resets) })
         await sb.from('onething_users').update({ prompt_day: today, prompted_at: now.toISOString() }).eq('id', user.id)
         prompted.push(user.phone)
         continue
@@ -40,7 +40,7 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
         const board = scoreboard(entries, today)
         if (!board.doneToday) {
           const buddiesIn = await buddiesInToday(user, today)
-          await sendIMessage({ addresses: [user.phone], text: reminderText(board.streak, buddiesIn) })
+          await sendText({ addresses: [user.phone], text: reminderText(board.streak, buddiesIn) })
           reminded.push(user.phone)
         }
         await sb.from('onething_users').update({ reminder_day: today }).eq('id', user.id)
@@ -57,7 +57,7 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
 /// today's question right away, so the loop starts now instead of at the next tick.
 /// `chatGuid` replies in the thread the person wrote from; otherwise a new chat.
 export async function welcomeNewUser(user: User, chatGuid?: string): Promise<void> {
-  await sendIMessage(chatGuid ? { chatGuid, text: welcomeText() } : { addresses: [user.phone], text: welcomeText() })
+  await sendText(chatGuid ? { chatGuid, text: welcomeText() } : { addresses: [user.phone], text: welcomeText() })
   const now = new Date()
   await f2Supabase().from('onething_users').update({ prompt_day: localDay(now, tzFor(user)), prompted_at: now.toISOString() }).eq('id', user.id)
 }
@@ -67,7 +67,7 @@ export async function promptNow(phone: string): Promise<User> {
   const user = await ensureUser(phone)
   const now = new Date()
   const today = localDay(now, tzFor(user))
-  await sendIMessage({ addresses: [phone], text: promptText() })
+  await sendText({ addresses: [phone], text: promptText() })
   await f2Supabase().from('onething_users').update({ prompt_day: today, prompted_at: now.toISOString() }).eq('id', user.id)
   return { ...user, prompt_day: today, prompted_at: now.toISOString() }
 }
@@ -135,7 +135,7 @@ export async function handleInbound(args: {
       const inviter = await accept(invite, user, now)
       const lines = [buddyCopy('accepted', { name: inviter ? (inviter.name?.trim() || inviter.phone) : 'your buddy' })]
       lines.push(...(await askName(user, now)))
-      await sendIMessage({ chatGuid: args.chatGuid, text: [...lines, SITE_URL].join('\n') })
+      await sendText({ chatGuid: args.chatGuid, text: [...lines, SITE_URL].join('\n') })
       if (created) await welcomeNewUser(user, args.chatGuid)
       return true
     }
@@ -152,7 +152,7 @@ export async function handleInbound(args: {
     const day = localDay(now, tzFor(fresh))
     const r = await recordEntry(fresh, day, first)
     await f2Supabase().from('onething_users').update({ prompt_day: day, prompted_at: now.toISOString() }).eq('id', fresh.id)
-    await sendIMessage({ chatGuid: args.chatGuid, text: `Welcome to Onething. ${confirmText(r)}` })
+    await sendText({ chatGuid: args.chatGuid, text: `Welcome to Onething. ${confirmText(r)}` })
     return true
   }
 
@@ -175,7 +175,7 @@ export async function handleInbound(args: {
   const name = nameReplyFor(user, args.text, pending, now)
   if (name && !forced) {
     await setUserName(user, name)
-    await sendIMessage({ chatGuid: args.chatGuid, text: `${buddyCopy('nameSet', { name })}\n${SITE_URL}` })
+    await sendText({ chatGuid: args.chatGuid, text: `${buddyCopy('nameSet', { name })}\n${SITE_URL}` })
     return true
   }
 
@@ -183,11 +183,11 @@ export async function handleInbound(args: {
 
   const text = args.text.replace(FORCE_PREFIX, '').trim()
   if (text.length < 2) {
-    await sendIMessage({ chatGuid: args.chatGuid, text: 'One sentence, anything at all. What happened?' })
+    await sendText({ chatGuid: args.chatGuid, text: 'One sentence, anything at all. What happened?' })
     return true
   }
   const r = await recordEntry(user, day, text)
   const tail = r.added || r.edited ? [] : await afterKept(user, day)
-  await sendIMessage({ chatGuid: args.chatGuid, text: confirmText(r, tail) })
+  await sendText({ chatGuid: args.chatGuid, text: confirmText(r, tail) })
   return true
 }

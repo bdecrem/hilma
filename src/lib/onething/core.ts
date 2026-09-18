@@ -8,7 +8,7 @@
 
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { f2Supabase } from '@/lib/f2/supabase'
-import { sendIMessage } from '@/lib/f2/bluebubbles'
+import { DEMO_PREFIX, isDemoPhone, sendText } from './send'
 import { notifySignup, type SignupSource } from './notify'
 import { LEVELS, pointsForEntry, type Level } from './levels'
 import copy from './copy.json'
@@ -198,7 +198,8 @@ export async function ensureUser(phone: string, source: SignupSource = 'manual',
     throw new Error(`onething: create user failed: ${error.message}`)
   }
   const user = data as User
-  await notifySignup(user.phone, source, user.id)
+  // The demo number is Bart's own; no sign-up note for it.
+  if (!isDemoPhone(user.phone)) await notifySignup(user.phone, source, user.id)
   return user
 }
 
@@ -389,7 +390,8 @@ const OWN_TEXT = [
 ]
 
 export function looksLikeOurs(text: string): boolean {
-  const t = text.trim()
+  // The demo account's texts land in Bart's own chat, prefixed; the echo is ours too.
+  const t = text.trim().startsWith(DEMO_PREFIX.trim()) ? text.trim().slice(DEMO_PREFIX.trim().length).trim() : text.trim()
   if (OWN_TEXT.some((re) => re.test(t))) return true
   const body = t.endsWith(SITE_URL) ? t.slice(0, -SITE_URL.length).trim() : t
   // Every text of ours opens with a line from copy.json; buddy tails, reset
@@ -466,7 +468,7 @@ export async function startCode(phone: string): Promise<void> {
     .from('onething_codes')
     .insert({ phone, code_hash: hashCode(phone, code), expires_at })
   if (error) throw new Error(`onething: code insert failed: ${error.message}`)
-  await sendIMessage({ addresses: [phone], text: `Your Onething code is ${code}. It expires in ${CODE_TTL_MIN} minutes.` })
+  await sendText({ addresses: [phone], text: `Your Onething code is ${code}. It expires in ${CODE_TTL_MIN} minutes.` })
 }
 
 export async function verifyCode(phone: string, code: string): Promise<boolean> {
