@@ -64,11 +64,19 @@ async function recordOutbound(args: SendArgs): Promise<void> {
   }
 }
 
-/// Was this exact text sent by US recently? Distinguishes our own from-me
-/// echoes from messages the user actually typed in the self-chat.
+/// How far back the echo check looks. Echoes are usually seconds behind the
+/// send, but Messages-in-iCloud can replay a send into chat.db hours later
+/// (2026-09-13: an Onething sign-up note came back 5.5 h after it went out,
+/// outlived the old 30-minute window, and was saved as one of Bart's
+/// thoughts). A person retyping one of our texts verbatim within three days
+/// is the only thing this can misfile, and that costs nothing.
+const OUTBOUND_ECHO_WINDOW_MS = 3 * 24 * 60 * 60 * 1000
+
+/// Was this exact text sent by US within the echo window? Distinguishes our
+/// own from-me echoes from messages the user actually typed in the self-chat.
 export async function isRecentOutbound(text: string): Promise<boolean> {
   const { pollySupabase } = await import('./supabase')
-  const since = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+  const since = new Date(Date.now() - OUTBOUND_ECHO_WINDOW_MS).toISOString()
   const { data, error } = await pollySupabase()
     .from('polly_imessage_outbound')
     .select('id')

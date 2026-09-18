@@ -737,23 +737,15 @@ final class PollyAPI {
         return res.thread.id
     }
 
-    // MARK: Realtime voice
+    // MARK: Live voice (GPT-Live)
 
-    struct RealtimeSessionResponse: Codable {
-        let clientSecret: ClientSecret
-        let openaiSessionId: String?
+    /// POST /api/polly/live/session — the server builds the GPT-Live session
+    /// (live prompt, backend prompt, voice), exchanges our WebRTC SDP offer
+    /// with OpenAI, and returns the answer. No client secret: the phone
+    /// never talks to OpenAI over HTTP.
+    struct LiveSessionResponse: Codable {
         let voiceSession: VoiceSession
-        let realtime: RealtimeConfig
-
-        struct ClientSecret: Codable {
-            let value: String
-            let expiresAt: Int
-
-            enum CodingKeys: String, CodingKey {
-                case value
-                case expiresAt = "expires_at"
-            }
-        }
+        let live: LiveConfig
 
         struct VoiceSession: Codable {
             let id: String
@@ -766,39 +758,49 @@ final class PollyAPI {
             }
         }
 
-        struct RealtimeConfig: Codable {
+        struct LiveConfig: Codable {
+            let sessionId: String
             let model: String
+            let backendModel: String
             let voice: String
-            let callsUrl: URL
+            let holdToTalk: Bool
+            let sdpAnswer: String
             let dataChannel: String
+            /// Appended as `session.instructions.append` once the session
+            /// starts, so Dodo opens the conversation. Nil = Dodo waits.
+            let openingInstruction: String?
 
             enum CodingKeys: String, CodingKey {
                 case model, voice
-                case callsUrl = "calls_url"
+                case sessionId = "session_id"
+                case backendModel = "backend_model"
+                case holdToTalk = "hold_to_talk"
+                case sdpAnswer = "sdp_answer"
                 case dataChannel = "data_channel"
+                case openingInstruction = "opening_instruction"
             }
         }
 
         enum CodingKeys: String, CodingKey {
-            case clientSecret = "client_secret"
-            case openaiSessionId = "openai_session_id"
             case voiceSession = "voice_session"
-            case realtime
+            case live
         }
     }
 
     /// `cardIds` is required for mode "flash" — the deck the quizmaster reads
-    /// from, in question order.
-    func startRealtimeSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
-                              holdToTalk: Bool = false) async throws -> RealtimeSessionResponse {
+    /// from, in question order. `sdp` is the phone's WebRTC offer.
+    func startLiveSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
+                          holdToTalk: Bool = false, sdp: String) async throws -> LiveSessionResponse {
         struct Body: Encodable {
             let mode: String
             let thread_id: String?
             let card_ids: [String]?
             let hold_to_talk: Bool
+            let sdp: String
         }
-        return try await post("/api/polly/realtime/session",
-                              body: Body(mode: mode, thread_id: threadId, card_ids: cardIds, hold_to_talk: holdToTalk))
+        return try await post("/api/polly/live/session",
+                              body: Body(mode: mode, thread_id: threadId, card_ids: cardIds,
+                                         hold_to_talk: holdToTalk, sdp: sdp))
     }
 
     // MARK: Flash cards
@@ -913,7 +915,7 @@ final class PollyAPI {
     }
 
     /// Submit a finished VOICE set — graded server-side from the session
-    /// transcript, so this must run after finishRealtimeSession.
+    /// transcript, so this must run after finishLiveSession.
     func submitVoiceFlashSet(threadId: String?, jumboLevel: Int?, cardIds: [String], voiceSessionId: String) async throws -> FlashSubmitResult {
         struct Body: Encodable {
             let mode: String
@@ -1079,20 +1081,15 @@ final class PollyAPI {
         return try await put("/api/polly/voice-prefs", body: Body(voice: voice, voice_style: style))
     }
 
-    func callRealtimeTool(name: String, arguments: [String: String]) async throws -> Data {
-        struct Body: Encodable {
-            let name: String
-            let arguments: [String: String]
-        }
-        return try await postRaw("/api/polly/realtime/tool", body: Body(name: name, arguments: arguments))
-    }
-
-    func finishRealtimeSession(id: String, transcript: [[String: String]], summary: String? = nil) async throws {
+    func finishLiveSession(id: String, transcript: [[String: String]], summary: String? = nil,
+                           usage: [String: Int]? = nil) async throws {
         struct Body: Encodable {
             let transcript: [[String: String]]
             let summary: String?
+            let usage: [String: Int]?
         }
-        let _: EmptyResponse = try await request("/api/polly/realtime/session/\(id)", method: "PATCH", body: Body(transcript: transcript, summary: summary))
+        let _: EmptyResponse = try await request("/api/polly/live/session/\(id)", method: "PATCH",
+                                                 body: Body(transcript: transcript, summary: summary, usage: usage))
     }
 
     // MARK: HTTP plumbing
@@ -1221,7 +1218,7 @@ final class PollyAPI {
         }
         if contentType.contains("text/html") {
             if response.statusCode == 404 {
-                return "The Polly voice endpoint is not available on this server."
+                return "The F2 voice endpoint is not available on this server."
             }
             return "The server returned an HTML error page."
         }
