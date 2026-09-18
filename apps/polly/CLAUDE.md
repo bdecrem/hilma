@@ -81,6 +81,10 @@ is the plan as prompt text, shared by every surface:
 - voice: talk mode on a guest lesson opens with "retell the story", fixes two
   or three things, drills the key words, then asks the host's closing
   question; Final Review / Second Chance / recert get `lessonExamBlock`.
+The deck comes with the plan: `ensureLessonDeck` (flash.ts) builds it —
+two cards per key word plus up to four story expressions — when the topic
+has no cards yet; called by the lesson route, the kind PATCH and topic
+creation (all in `after()`), never by card generation itself.
 In the app: `LessonCard` under the source card (byline + key words) opens
 `LessonSheet` (Polly/LessonSheet.swift: key words, story expressions, the
 story with an English toggle, usage point, the host's question); `PollyThread`

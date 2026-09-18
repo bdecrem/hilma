@@ -357,6 +357,28 @@ Create exactly ${n} flash cards.`
   return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[])
 }
 
+/// A guest lesson comes with its deck: once the plan exists, build the cards
+/// from it — two per key word (meaning + production) plus a few of the
+/// story's expressions — unless the topic already has cards. Called after
+/// the plan is warmed (the lesson route, the kind change), never from card
+/// generation itself. Returns the number of cards made.
+export async function ensureLessonDeck(thread: PollyThread): Promise<number> {
+  const ensured = await ensureLesson(thread)
+  const l = ensured.lesson
+  if (!l) return 0
+  const existing = await listFlashCards(ensured.user_id, ensured.id)
+  if (existing.length > 0) return 0
+  const n = Math.max(GENERATE_MIN, Math.min(GENERATE_MAX, l.key_words.length * 2 + Math.min(l.phrases.length, 4)))
+  try {
+    const cards = await generateLessonCards(ensured, n)
+    console.log(`[polly/lesson] built the deck for ${ensured.id}: ${cards.length} cards`)
+    return cards.length
+  } catch (err) {
+    console.error(`[polly/lesson] deck build failed for ${ensured.id}:`, err)
+    return 0
+  }
+}
+
 /// Turn a user-drafted question into a full card: clean up typos/wording
 /// (keeping the intent), answer it from the topic's material, and write the
 /// multiple-choice distractors. When the learner dictated the answer too

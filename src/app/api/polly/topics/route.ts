@@ -10,7 +10,7 @@ import { audioSummaryForClient } from '@/lib/polly/audio-summary'
 import { bookSummaryForClient } from '@/lib/polly/book-summary'
 import { sharedThreadIds } from '@/lib/polly/community'
 import { fetchUrlContent, isUrl } from '@/lib/polly/url'
-import { ensureLesson } from '@/lib/polly/lesson'
+import { ensureLessonDeck } from '@/lib/polly/flash'
 import { nameTopic } from '@/lib/polly/name-topic'
 
 export const runtime = 'nodejs'
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'create failed' }, { status: 500 })
     }
     if (thread.kind === 'guest_lesson') {
-      after(() => ensureLesson(thread))
+      after(() => ensureLessonDeck(thread))
     }
     return NextResponse.json(
       {
