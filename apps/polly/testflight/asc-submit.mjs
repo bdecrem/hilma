@@ -1,4 +1,4 @@
-import crypto from "crypto"; import fs from "fs";
+import crypto from "crypto"; import fs from "fs"; import dns from "dns"; dns.setDefaultResultOrder("ipv4first"); // node's IPv6-first lookup hangs on some networks (2026-09-17)
 const KID=process.env.ASC_KEY_ID??"FA7268Q94U", ISS="69a6de80-eb13-47e3-e053-5b8c7c11a4d1", APP=process.env.POLLY_ASC_APP_ID??"6813318254", VER=process.argv[2], PLAT=process.argv[3]??"IOS"; if(!VER){console.error("usage: node asc-submit.mjs <buildNumber> [IOS|MAC_OS]");process.exit(1)};
 const key=fs.readFileSync(process.env.HOME+"/.appstoreconnect/private_keys/AuthKey_"+KID+".p8");
 const b64=o=>Buffer.from(JSON.stringify(o)).toString("base64url");
