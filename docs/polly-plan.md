@@ -38,7 +38,7 @@ It starts ~80% identical and is expected to diverge. Working name: Polly (parrot
 ## Order of work (each step a commit)
 
 1. Copy + rename the iOS app; build and run it unchanged. **Done 2026-09-17.**
-2. Fork the backend to `/api/polly/*` + `polly_*` tables (baseline clone); point the app at it; verify with a Polly test account.
+2. Fork the backend to `/api/polly/*` + `polly_*` tables (baseline clone); point the app at it; verify with a Polly test account. **Done 2026-09-17** (schema 001 applied; verified against production).
 3. iMessage router in front of both apps.
-4. Diverge: language picker, courses, linear chapters, language-shaped cards; trim the non-v1 features.
-5. App Store Connect record, profiles, TestFlight.
+4. Diverge: language picker, courses, linear chapters, language-shaped cards; trim the non-v1 features. **Started 2026-09-17:** `polly_courses` (schema 002), first-run language + name flow, tutor prompt knows the language. Chapters, language-shaped cards and the trim are next.
+5. App Store Connect record, profiles, TestFlight. **Done 2026-09-17 (iOS)** — public link https://testflight.apple.com/join/5apKPyf7; Catalyst waits on a Mac Installer certificate (see apps/polly/CLAUDE.md).
