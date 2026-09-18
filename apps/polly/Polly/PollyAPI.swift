@@ -235,6 +235,14 @@ final class PollyAPI {
         return res.thread
     }
 
+    /// POST /api/polly/topics/[id]/lesson — a guest lesson's plan, extracted
+    /// now if it hasn't been. Slow the first time (one LLM call, ~20–40 s).
+    func ensureLesson(topicId: String) async throws -> PollyLesson? {
+        struct Res: Decodable { let lesson: PollyLesson? }
+        let res: Res = try await post("/api/polly/topics/\(topicId)/lesson", body: EmptyBody())
+        return res.lesson
+    }
+
     /// Create a bare topic from a typed title (the Topics screen's + button).
     /// Returns the new thread's id.
     @discardableResult

@@ -13,6 +13,8 @@ struct TopicDetailView: View {
     var quickChat: Bool = false
 
     @State private var thread: PollyThread? = nil
+    @State private var lessonPresented = false
+    @State private var lessonLoading = false
     @State private var messages: [PollyMessage] = []
     @State private var draft = ""
     @State private var busy = false
@@ -51,6 +53,13 @@ struct TopicDetailView: View {
                     .padding(.bottom, 4)
                 }
 
+                // A guest lesson's plan — host, key words — one tap from the
+                // whole thing. Appears as soon as the backend has extracted it.
+                if let t = thread, t.isGuestLesson {
+                    LessonCard(lesson: t.lesson, loading: lessonLoading) { lessonPresented = true }
+                        .padding(.bottom, 4)
+                }
+
                 firstSessionBanner
                 recertBanner
 
@@ -69,6 +78,11 @@ struct TopicDetailView: View {
         }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
+        }
+        .sheet(isPresented: $lessonPresented) {
+            if let lesson = thread?.lesson {
+                LessonSheet(topicLabel: thread?.topic ?? "Topic", lesson: lesson)
+            }
         }
         .sheet(isPresented: $contextPresented) {
             TopicContextSheet(topicId: topicId,
@@ -163,6 +177,16 @@ struct TopicDetailView: View {
                 UserDefaults.standard.removeObject(forKey: "OpenTopicQuotes")
                 try? await Task.sleep(for: .milliseconds(600))
                 quotesPresented = true
+            }
+            // `-OpenLesson 1` — a guest lesson's plan sheet (waits for the
+            // plan to load first).
+            if UserDefaults.standard.bool(forKey: "OpenLesson") {
+                UserDefaults.standard.removeObject(forKey: "OpenLesson")
+                for _ in 0..<50 where thread?.lesson == nil {
+                    try? await Task.sleep(for: .milliseconds(200))
+                }
+                try? await Task.sleep(for: .milliseconds(400))
+                lessonPresented = true
             }
             #endif
         }
@@ -518,8 +542,20 @@ struct TopicDetailView: View {
             let t = try await PollyAPI.shared.getThread(id: topicId)
             thread = t
             messages = t.messages
+            if t.isGuestLesson, t.lesson == nil { await warmLesson() }
         } catch {
             messages = []
+        }
+    }
+
+    /// A guest lesson opened before its plan exists: ask the backend to
+    /// extract it now (one slow call) so the Lesson card fills in.
+    private func warmLesson() async {
+        guard !lessonLoading else { return }
+        lessonLoading = true
+        defer { lessonLoading = false }
+        if let lesson = try? await PollyAPI.shared.ensureLesson(topicId: topicId) {
+            thread?.lesson = lesson
         }
     }
 

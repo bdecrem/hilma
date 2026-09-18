@@ -81,6 +81,13 @@ is the plan as prompt text, shared by every surface:
 - voice: talk mode on a guest lesson opens with "retell the story", fixes two
   or three things, drills the key words, then asks the host's closing
   question; Final Review / Second Chance / recert get `lessonExamBlock`.
+In the app: `LessonCard` under the source card (byline + key words) opens
+`LessonSheet` (Polly/LessonSheet.swift: key words, story expressions, the
+story with an English toggle, usage point, the host's question); `PollyThread`
+carries `kind` + `lesson`, and a guest lesson opened before its plan exists
+calls `POST /api/polly/topics/[id]/lesson` (`ensureLesson(topicId:)`) so the
+card fills in. Launch hook `-OpenLesson 1` (with `-OpenTopic <id>`) opens the
+sheet for screenshots.
 Verified 2026-09-18 on a throwaway guest user with Lo Scandalo's transcript
 (deck, chat quiz, prompts), then the user was deleted. Extraction fails soft:
 the topic keeps working on the raw transcript.

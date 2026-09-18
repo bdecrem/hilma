@@ -190,6 +190,43 @@ struct PollyMessage: Codable, Identifiable, Equatable {
     }
 }
 
+/// A guest lesson's plan — the teacher's own structure, pulled from the
+/// transcript once by the backend (lib/polly/lesson.ts). Shown in the
+/// Lesson card at the top of the topic and its sheet.
+struct PollyLessonTerm: Codable, Equatable, Identifiable {
+    var id: String { term }
+    let term: String
+    let meaning: String
+    let sentence: String
+}
+
+struct PollyLesson: Codable, Equatable {
+    let host: String?
+    let series: String?
+    let language: String
+    let keyWords: [PollyLessonTerm]
+    let phrases: [PollyLessonTerm]
+    let storySummary: String
+    let storySummaryEnglish: String
+    let grammarPoint: String?
+    let closingQuestion: String?
+
+    enum CodingKeys: String, CodingKey {
+        case host, series, language, phrases
+        case keyWords = "key_words"
+        case storySummary = "story_summary"
+        case storySummaryEnglish = "story_summary_english"
+        case grammarPoint = "grammar_point"
+        case closingQuestion = "closing_question"
+    }
+
+    /// "Lesson by Silvia · Italiando Storie", or whatever parts exist.
+    var byline: String {
+        let who = [host.map { "by \($0)" }, series].compactMap { $0 }
+        return (["Lesson"] + who).joined(separator: " · ")
+    }
+}
+
 struct PollyThread: Codable {
     let id: String
     var topic: String?
@@ -206,6 +243,12 @@ struct PollyThread: Codable {
     /// See PollyTopic.secondChanceUntil — topic-detail payload only.
     var secondChanceUntil: Date?
     var recertDueAt: Date?
+    /// Topic kind (see PollyTopic.kind); "guest_lesson" shows the Lesson card.
+    var kind: String?
+    /// The lesson plan of a guest lesson, nil until the backend extracts it.
+    var lesson: PollyLesson?
+
+    var isGuestLesson: Bool { kind == "guest_lesson" }
 
     var isCertified: Bool { stars >= 3 }
     var recertLapsed: Bool {
@@ -238,6 +281,7 @@ struct PollyThread: Codable {
         case studyFocus = "study_focus"
         case secondChanceUntil = "second_chance_until"
         case recertDueAt = "recert_due_at"
+        case kind, lesson
     }
 
     init(from decoder: Decoder) throws {
@@ -246,6 +290,8 @@ struct PollyThread: Codable {
         topic = try c.decodeIfPresent(String.self, forKey: .topic)
         url = try c.decodeIfPresent(String.self, forKey: .url)
         messages = try c.decodeIfPresent([PollyMessage].self, forKey: .messages) ?? []
+        kind = try c.decodeIfPresent(String.self, forKey: .kind)
+        lesson = try? c.decodeIfPresent(PollyLesson.self, forKey: .lesson)
         quizCount = try c.decodeIfPresent(Int.self, forKey: .quizCount) ?? 0
         lastQuizzedAt = try c.decodeIfPresent(Date.self, forKey: .lastQuizzedAt)
         stars = try c.decodeIfPresent(Int.self, forKey: .stars) ?? 0
