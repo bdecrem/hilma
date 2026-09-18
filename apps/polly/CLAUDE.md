@@ -16,6 +16,10 @@ hooks (`-TestLoginUser`, `-StartTab`, `-AutoPlayLevel`, `-NoSFX`,
 run on that page, `-AutoTryPolly 1` drives it (Italian + a random name) to the
 signed-in tabs with zero taps.
 
+A signed-out app always shows the first run (no "seen the intro" flag — Dodo's
+persisted across TestFlight updates and hid the flow); "I already have an
+account" opens the login screen.
+
 First run (2026-09-17): two intro panels → "Which language?" (Italian, French,
 Korean; `PollyLanguage` in OnboardingView.swift) → "What should Polly call
 you?" — the name is the account (`POST /api/polly/auth/guest { username,

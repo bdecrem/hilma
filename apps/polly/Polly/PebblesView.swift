@@ -149,7 +149,7 @@ struct PebblesView: View {
                 .font(.system(size: 20, weight: .bold))
                 .tracking(-0.3)
                 .foregroundStyle(PollyTheme.text)
-            Text("Dodos swallowed little stones to grind up their food. Save the lines you want to keep — they'll come back to you between rounds.")
+            Text("Parrots keep the phrases they hear. Save the lines you want to keep — they'll come back to you between rounds.")
                 .font(.system(size: 14))
                 .lineSpacing(3)
                 .foregroundStyle(PollyTheme.text2)

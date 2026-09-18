@@ -34,7 +34,8 @@ struct PollyApp: App {
 
 struct RootView: View {
     @Environment(Session.self) private var session
-    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    /// Signed out and the person asked for the login screen (vs the first run).
+    @State private var showLogin = false
     /// One-second cold-start moment, then the app fades in under it.
     @State private var showSplash = true
 
@@ -75,21 +76,22 @@ struct RootView: View {
                 ProgressView()
             }
         case .signedOut:
-            // First run gets the intro; "sign in" from its gate page (or a
-            // finished replay) lands on the normal login screen.
-            if hasSeenOnboarding {
-                // X returns to the intro — its gate offers Try-it (guest)
-                // and sign-in, so login is never a dead end.
-                LoginView(onBack: { hasSeenOnboarding = false })
+            // Signed out = the first run, every time: intro, language, name.
+            // (Dodo remembers a "seen the intro" flag and shows the login
+            // screen instead; Polly doesn't — a signed-out person has no
+            // account to log into unless they say so, and the flag made a
+            // build that had been tapped through once skip the flow for
+            // good.) "I already have an account" opens the login screen;
+            // its X comes back here.
+            if showLogin {
+                LoginView(onBack: { showLogin = false })
             } else {
                 OnboardingView(mode: .firstRun) {
-                    hasSeenOnboarding = true
+                    showLogin = true
                 }
-                .onDisappear { hasSeenOnboarding = true }
             }
         case .signedIn:
             MainTabsView()
-                .onAppear { hasSeenOnboarding = true }
         }
     }
 }
