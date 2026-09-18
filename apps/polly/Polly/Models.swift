@@ -76,7 +76,8 @@ struct PollyTopic: Codable, Identifiable, Equatable, Hashable {
     var hardQuizCompletedAt: Date?
     var pendingQuizKind: String?
     /// Topic kind: chat | web | audio | video | paste | fallback, plus the
-    /// user-set types book | mini | general. Drives the glyph in the topic
+    /// user-set types book | mini | general and Polly's own guest_lesson |
+    /// immersion | ask. Drives the glyph in the topic
     /// row. Auto-classified at thread creation; overridable from the Rename
     /// Topic sheet.
     var kind: String?

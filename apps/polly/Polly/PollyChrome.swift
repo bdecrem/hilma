@@ -217,6 +217,9 @@ struct MiniTopicGlyph: View {
         case "book":  BookGlyph()
         case "mini":  MiniKindGlyph()
         case "general": GeneralGlyph()
+        case "guest_lesson": GuestLessonGlyph()
+        case "immersion": ImmersionGlyph()
+        case "ask":   AskGlyph()
         default:      FallbackGlyph()
         }
     }
@@ -415,6 +418,94 @@ private struct GeneralGlyph: View {
                 line.addLine(to: CGPoint(x: x2 * s, y: y * s))
                 ctx.stroke(line, with: coral, style: style)
             }
+        }
+    }
+}
+
+// MARK: Polly's three language-learning kinds (2026-09-18)
+
+private struct GuestLessonGlyph: View {
+    // Mortarboard: a diamond cap over a shallow band, tassel hanging right.
+    // Someone else's lesson, hosted here.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round, lineJoin: .round)
+
+            var cap = Path()
+            cap.move(to: CGPoint(x: 10 * s, y: 4.6 * s))
+            cap.addLine(to: CGPoint(x: 17 * s, y: 8 * s))
+            cap.addLine(to: CGPoint(x: 10 * s, y: 11.4 * s))
+            cap.addLine(to: CGPoint(x: 3 * s, y: 8 * s))
+            cap.closeSubpath()
+            ctx.stroke(cap, with: coral, style: style)
+
+            // Band under the cap: two verticals joined by a bottom curve.
+            var band = Path()
+            band.move(to: CGPoint(x: 6.2 * s, y: 9.6 * s))
+            band.addLine(to: CGPoint(x: 6.2 * s, y: 13 * s))
+            band.addQuadCurve(to: CGPoint(x: 13.8 * s, y: 13 * s),
+                              control: CGPoint(x: 10 * s, y: 16.2 * s))
+            band.addLine(to: CGPoint(x: 13.8 * s, y: 9.6 * s))
+            ctx.stroke(band, with: coral, style: style)
+
+            // Tassel from the cap's right corner.
+            var tassel = Path()
+            tassel.move(to: CGPoint(x: 17 * s, y: 8 * s))
+            tassel.addLine(to: CGPoint(x: 17 * s, y: 12.2 * s))
+            ctx.stroke(tassel, with: coral, style: style)
+            let r = 1.3 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 17 * s - r, y: 13.2 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct ImmersionGlyph: View {
+    // Three waves — in over your head, in the good way.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round)
+            for y in [6.5, 10.0, 13.5] as [CGFloat] {
+                var wave = Path()
+                wave.move(to: CGPoint(x: 3.5 * s, y: y * s))
+                wave.addQuadCurve(to: CGPoint(x: 6.75 * s, y: y * s),
+                                  control: CGPoint(x: 5.125 * s, y: (y - 2.2) * s))
+                wave.addQuadCurve(to: CGPoint(x: 10 * s, y: y * s),
+                                  control: CGPoint(x: 8.375 * s, y: (y + 2.2) * s))
+                wave.addQuadCurve(to: CGPoint(x: 13.25 * s, y: y * s),
+                                  control: CGPoint(x: 11.625 * s, y: (y - 2.2) * s))
+                wave.addQuadCurve(to: CGPoint(x: 16.5 * s, y: y * s),
+                                  control: CGPoint(x: 14.875 * s, y: (y + 2.2) * s))
+                ctx.stroke(wave, with: coral, style: style)
+            }
+        }
+    }
+}
+
+private struct AskGlyph: View {
+    // A question mark: hook, stem, dot. "Teach me about…"
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.5 * s, lineCap: .round)
+
+            var hook = Path()
+            hook.move(to: CGPoint(x: 6.8 * s, y: 7.6 * s))
+            hook.addCurve(to: CGPoint(x: 13.2 * s, y: 7.6 * s),
+                          control1: CGPoint(x: 6.8 * s, y: 3.4 * s),
+                          control2: CGPoint(x: 13.2 * s, y: 3.4 * s))
+            hook.addCurve(to: CGPoint(x: 10 * s, y: 11.4 * s),
+                          control1: CGPoint(x: 13.2 * s, y: 9.8 * s),
+                          control2: CGPoint(x: 10 * s, y: 9.6 * s))
+            hook.addLine(to: CGPoint(x: 10 * s, y: 13 * s))
+            ctx.stroke(hook, with: coral, style: style)
+
+            let r = 1.3 * s
+            ctx.fill(Path(ellipseIn: CGRect(x: 10 * s - r, y: 16 * s - r, width: r*2, height: r*2)), with: coral)
         }
     }
 }

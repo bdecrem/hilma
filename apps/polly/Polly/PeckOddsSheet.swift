@@ -219,6 +219,9 @@ struct PeckOddsSheet: View {
 
     private func kindLabel(_ kind: String?) -> String {
         switch kind {
+        case "guest_lesson": return "LESSON"
+        case "immersion": return "IMMERSION"
+        case "ask": return "ASK"
         case "book": return "BOOK"
         case "mini": return "MINI"
         case "video": return "VIDEO"

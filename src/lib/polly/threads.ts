@@ -166,12 +166,20 @@ export type QuizKind = 'standard' | 'hard' | 'reflection'
 /// 'book' | 'mini' | 'general' are user-set types (Rename Topic sheet) that
 /// classification never produces — the user picks them to say what a topic
 /// IS rather than where it came from.
+/// Polly's own three (2026-09-18, also user-set for now):
+///   'guest_lesson' — a lesson someone else made that Polly hosts (a podcast
+///                    episode with key words + a story + a check);
+///   'immersion'    — raw target-language material, no teaching attached
+///                    (a book, a news story, a film, a show);
+///   'ask'          — "teach me about X", no source.
 export type TopicKind =
   | 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
   | 'book' | 'mini' | 'general'
+  | 'guest_lesson' | 'immersion' | 'ask'
 
 export const ALL_TOPIC_KINDS: TopicKind[] = [
   'chat', 'web', 'audio', 'video', 'paste', 'fallback', 'book', 'mini', 'general',
+  'guest_lesson', 'immersion', 'ask',
 ]
 
 const VIDEO_HOSTS = /^(?:[\w-]+\.)*(?:youtube\.com|youtu\.be|vimeo\.com)$/i

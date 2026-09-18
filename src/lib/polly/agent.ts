@@ -692,7 +692,7 @@ const POLLY_AGENT_TOOLS = [
       type: 'object' as const,
       properties: {
         new_title: { type: 'string', description: 'New topic name.' },
-        kind: { type: 'string', description: 'Topic type: book | mini | general | web | video | audio | paste | chat.' },
+        kind: { type: 'string', description: 'Topic type: guest_lesson (a lesson someone else made, e.g. a podcast episode) | immersion (raw target-language material: book, news, film, show) | ask (teach me about X) | book | mini | general | web | video | audio | paste | chat.' },
         pinned: { type: 'boolean', description: 'Pin (true) or unpin (false).' },
         peck_excluded: { type: 'boolean', description: 'true takes its cards out of Peck sets and the daily card.' },
         peck_weight: { type: 'number', description: 'Peck draw multiplier for this deck (0.5 = half as often, 2 or 5 = more often, 1 = normal).' },
@@ -817,7 +817,7 @@ const POLLY_AGENT_TOOLS = [
         title: { type: 'string', description: 'Topic name. Omit when giving a url (it will be auto-named).' },
         url: { type: 'string', description: 'Source URL to ingest as the primary material.' },
         source_text: { type: 'string', description: 'Text to store as the primary study material (user-dictated or from this chat).' },
-        kind: { type: 'string', description: 'Topic type: book | mini | general | web | video | audio | paste | chat. Omit to auto-classify.' },
+        kind: { type: 'string', description: 'Topic type: guest_lesson | immersion | ask | book | mini | general | web | video | audio | paste | chat. Omit to auto-classify.' },
       },
       required: [],
     },
@@ -1515,7 +1515,7 @@ ${setLines.length ? setLines.join('\n') : '(none played yet)'}`,
       const sourceText = String(input.source_text ?? '').trim()
       if (!url && !givenTitle) return { result: 'Error: give a title or a url.' }
       const kindRaw = String(input.kind ?? '').trim()
-      const kind = ['book', 'mini', 'general', 'web', 'video', 'audio', 'paste', 'chat'].includes(kindRaw)
+      const kind = ['book', 'mini', 'general', 'guest_lesson', 'immersion', 'ask', 'web', 'video', 'audio', 'paste', 'chat'].includes(kindRaw)
         ? (kindRaw as never)
         : null
 

@@ -129,8 +129,9 @@ struct TopicsView: View {
                 TopicSection(id: "progress", title: "In progress", topics: inProgress),
             ].filter { !$0.topics.isEmpty }
         case .byType:
-            // Books lead; the rest follow the Rename sheet's kind order.
+            // Polly's three kinds lead; the rest follow the Rename sheet's kind order.
             let order: [(kind: String, title: String)] = [
+                ("guest_lesson", "Guest lessons"), ("immersion", "Immersion"), ("ask", "Ask"),
                 ("book", "Books"), ("mini", "Mini topics"), ("general", "General topics"),
                 ("web", "Web pages"), ("video", "Videos"), ("audio", "Audio"),
                 ("paste", "Pasted text"), ("chat", "Chats"), ("fallback", "Other"),
@@ -858,7 +859,7 @@ struct NewTopicSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
-    @State private var kind = "general"
+    @State private var kind = "ask"
     @State private var busy = false
     @State private var quickBusy = false
     @State private var errorMessage: String? = nil
@@ -875,10 +876,13 @@ struct NewTopicSheet: View {
                 Section("Type") {
                     HStack(spacing: 12) {
                         MiniTopicGlyph(kind: kind, size: 30)
-                        // Only the three human types here — the source kinds
+                        // Only the human types here (Polly's three + Dodo's three) — the source kinds
                         // (web/video/…) describe material, and a typed-in
                         // topic has none yet.
                         Picker("Type", selection: $kind) {
+                            Text("Guest Lesson").tag("guest_lesson")
+                            Text("Immersion").tag("immersion")
+                            Text("Ask").tag("ask")
                             Text("Book").tag("book")
                             Text("Mini Topic").tag("mini")
                             Text("General Topic").tag("general")
@@ -975,6 +979,9 @@ struct RenameTopicSheet: View {
     /// Dropdown order: the main user types first, the auto source kinds
     /// after, the unclassified default last.
     static let kindOptions: [(value: String, label: String)] = [
+        ("guest_lesson", "Guest Lesson"),
+        ("immersion", "Immersion"),
+        ("ask", "Ask"),
         ("book", "Book"),
         ("mini", "Mini Topic"),
         ("general", "General Topic"),

@@ -47,6 +47,18 @@ xcodebuild -project apps/polly/Polly.xcodeproj -scheme Polly \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
+## Topic kinds (2026-09-18)
+
+On top of Dodo's inherited kinds, Polly has three of its own, user-set for
+now: `guest_lesson` (a lesson someone else made that Polly hosts — a podcast
+episode with key words, a story, a check; Lo Scandalo is one), `immersion`
+(raw target-language material: book, news, film, show) and `ask` ("teach me
+about X"). They lead the Type pickers and the by-type sections; glyphs are
+`GuestLessonGlyph` / `ImmersionGlyph` / `AskGlyph` in PollyChrome.swift
+(mortarboard, waves, question mark). Backend: `TopicKind` in
+`src/lib/polly/threads.ts`, the agent tool descriptions, and schema 003
+(the check constraint). Per-kind attributes are next.
+
 ## App Store Connect / TestFlight (set up 2026-09-17, from Bart's MacBook Air)
 
 - App record **"Polly: Learn any language"**, id `6813318254`, SKU `polly`;
