@@ -1,6 +1,6 @@
 import Foundation
 
-// MARK: - Flash cards (mirrors /api/f2/flash/* and /api/f2/topics/[id]/flash)
+// MARK: - Flash cards (mirrors /api/polly/flash/* and /api/polly/topics/[id]/flash)
 
 struct FlashCard: Codable, Identifiable, Equatable, Hashable {
     let id: String

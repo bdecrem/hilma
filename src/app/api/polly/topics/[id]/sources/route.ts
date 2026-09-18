@@ -1,0 +1,398 @@
+import { NextResponse } from 'next/server'
+import { getSessionUser } from '@/lib/polly/auth'
+import {
+  classifyTopicKind,
+  getThreadById,
+  type PollyAdditionalSource,
+} from '@/lib/polly/threads'
+import { fetchUrlContent, isUrl } from '@/lib/polly/url'
+import { pollySupabase } from '@/lib/polly/supabase'
+
+export const runtime = 'nodejs'
+// URL fetches (especially YouTube via the proxy) can take ~10s.
+export const maxDuration = 60
+
+// Each storage row (primary or additional[i]) is exposed to the UI as one or
+// two display items. For video/audio URLs that have an extracted transcript,
+// we split the URL itself from the transcript so the user can delete just
+// one without losing the other. Plain articles + pastes stay bundled.
+type SourcePart = 'source' | 'url' | 'transcript' | 'quote'
+type SourceKind = 'primary' | 'additional' | 'quote'
+
+type SourceItem = {
+  /** Stable id for the UI row. */
+  id: string
+  /** Which storage slot this comes from. */
+  kind: SourceKind
+  /** Index into additional_sources (or quotes for kind='quote'), else 0. */
+  index: number
+  /** Whether this row represents the whole bundled source, or just one half. */
+  part: SourcePart
+  /** Classified shape ('video' | 'audio' | 'web' | 'paste' | 'fallback'). */
+  topic_kind: ReturnType<typeof classifyTopicKind>
+  url: string | null
+  /** For quotes, this carries the quote text itself. */
+  title: string | null
+  /** Attribution for a quote row, when supplied. Null/absent otherwise. */
+  author?: string | null
+  /** True for user-uploaded notes (Upload Notes). */
+  note?: boolean
+  content_length: number
+  added_at: string | null
+}
+
+function expandSource(input: {
+  kind: SourceKind
+  index: number
+  url: string | null
+  title: string | null
+  content: string | null
+  added_at: string | null
+  note?: boolean
+}): SourceItem[] {
+  const topicKind = classifyTopicKind({
+    url: input.url,
+    content: input.content,
+    topic: null,
+  })
+  const isMedia = topicKind === 'audio' || topicKind === 'video'
+  const hasUrl = !!input.url
+  const hasContent = (input.content?.length ?? 0) > 0
+  const baseId = `${input.kind}-${input.index}`
+
+  // Media URL with an actual transcript → two rows so the user can drop one
+  // half independently of the other.
+  if (isMedia && hasUrl && hasContent) {
+    return [
+      {
+        id: `${baseId}-url`,
+        kind: input.kind,
+        index: input.index,
+        part: 'url',
+        topic_kind: topicKind,
+        url: input.url,
+        title: input.title,
+        content_length: 0,
+        added_at: input.added_at,
+      },
+      {
+        id: `${baseId}-transcript`,
+        kind: input.kind,
+        index: input.index,
+        part: 'transcript',
+        topic_kind: topicKind,
+        url: input.url,
+        title: input.title,
+        content_length: input.content?.length ?? 0,
+        added_at: input.added_at,
+      },
+    ]
+  }
+
+  // Everything else stays as a single bundled row.
+  if (!hasUrl && !hasContent) return []
+  return [
+    {
+      id: `${baseId}-source`,
+      kind: input.kind,
+      index: input.index,
+      part: 'source',
+      topic_kind: topicKind,
+      url: input.url,
+      title: input.title,
+      note: input.note,
+      content_length: input.content?.length ?? 0,
+      added_at: input.added_at,
+    },
+  ]
+}
+
+// GET /api/polly/topics/[id]/sources
+// Returns every displayable source row for the View Context modal — primary
+// first, then each additional source. Media URLs with transcripts are split
+// into two rows; everything else is a single bundled row.
+//
+// With `?read=1&kind=&index=&part=` it instead returns the full text of a
+// single row ({ content, title, url }), so the client can open a source to
+// read it on demand rather than shipping every body in the list payload.
+export async function GET(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
+  const { id } = await ctx.params
+  const thread = await getThreadById(user.id, id)
+  if (!thread) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 })
+  }
+
+  const sp = new URL(req.url).searchParams
+  if (sp.get('read') === '1') {
+    const kind = sp.get('kind')
+    const index = Number(sp.get('index') ?? '0')
+    let content: string | null = null
+    let title: string | null = null
+    let url: string | null = null
+    if (kind === 'primary') {
+      content = thread.content
+      url = thread.url
+    } else if (kind === 'additional') {
+      const s = thread.additional_sources?.[index]
+      content = s?.content ?? null
+      title = s?.title ?? null
+      url = s?.url ?? null
+    } else if (kind === 'quote') {
+      content = thread.quotes?.[index]?.text ?? null
+    } else {
+      return NextResponse.json({ error: 'invalid kind' }, { status: 400 })
+    }
+    return NextResponse.json({ content: content ?? '', title, url })
+  }
+
+  const items: SourceItem[] = []
+  items.push(
+    ...expandSource({
+      kind: 'primary',
+      index: 0,
+      url: thread.url,
+      title: null,
+      content: thread.content,
+      added_at: thread.created_at,
+    }),
+  )
+  for (let i = 0; i < (thread.additional_sources?.length ?? 0); i++) {
+    const s = thread.additional_sources[i]
+    items.push(
+      ...expandSource({
+        kind: 'additional',
+        index: i,
+        url: s.url,
+        title: s.title,
+        content: s.content,
+        added_at: s.added_at,
+        note: s.note,
+      }),
+    )
+  }
+
+  // Quotes the user captured for this topic — one row each, carrying the quote
+  // text in `title`. Listed after the sources.
+  for (let i = 0; i < (thread.quotes?.length ?? 0); i++) {
+    const q = thread.quotes[i]
+    items.push({
+      id: `quote-${i}`,
+      kind: 'quote',
+      index: i,
+      part: 'quote',
+      topic_kind: 'fallback',
+      url: null,
+      title: q.text,
+      author: q.author ?? null,
+      content_length: q.text?.length ?? 0,
+      added_at: q.created_at,
+    })
+  }
+
+  return NextResponse.json({ items })
+}
+
+// POST /api/polly/topics/[id]/sources
+// Body: { url: string }            → fetch the URL and attach its content
+//   or: { text: string, title? }   → attach the text as the user's own NOTES
+//
+// The notes path (Upload Notes in the app) stores the raw text with
+// note:true, which guarantees point-by-point coverage in audio summaries no
+// matter how long the notes are.
+const NOTES_UPLOAD_MAX_CHARS = 200_000
+
+export async function POST(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
+
+  const { id } = await ctx.params
+  const thread = await getThreadById(user.id, id)
+  if (!thread) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 })
+  }
+
+  let body: { url?: string; text?: string; title?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  let entry: PollyAdditionalSource
+  const text = body.text?.trim()
+  if (text) {
+    if (text.length > NOTES_UPLOAD_MAX_CHARS) {
+      return NextResponse.json(
+        { error: `notes too large (max ${NOTES_UPLOAD_MAX_CHARS.toLocaleString()} characters)` },
+        { status: 413 },
+      )
+    }
+    entry = {
+      url: null,
+      title: body.title?.trim() || 'My notes',
+      content: text,
+      added_at: new Date().toISOString(),
+      note: true,
+    }
+  } else {
+    const url = body.url?.trim()
+    if (!url || !isUrl(url)) {
+      return NextResponse.json({ error: 'url or text required' }, { status: 400 })
+    }
+    const fetched = await fetchUrlContent(url)
+    entry = {
+      url,
+      title: fetched.title,
+      content: fetched.body,
+      added_at: new Date().toISOString(),
+    }
+  }
+  const next = [...(thread.additional_sources ?? []), entry]
+
+  const { error } = await pollySupabase()
+    .from('polly_threads')
+    .update({
+      additional_sources: next,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('[polly] add source failed:', error)
+    return NextResponse.json({ error: 'update failed' }, { status: 500 })
+  }
+
+  return NextResponse.json({
+    source: entry,
+    total: next.length,
+    fetched: entry.content !== null,
+  })
+}
+
+// DELETE /api/polly/topics/[id]/sources
+// Body: { kind, index?, part }
+//   part = 'source'     → drop the whole entry (both url and content)
+//   part = 'url'        → clear the URL but keep the content body
+//   part = 'transcript' → clear the content but keep the URL
+//
+// For kind='additional', if both halves end up empty we drop the entry
+// from the array entirely rather than leaving an empty stub behind.
+export async function DELETE(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> },
+) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
+
+  const { id } = await ctx.params
+  const thread = await getThreadById(user.id, id)
+  if (!thread) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 })
+  }
+
+  let body: { kind?: string; index?: number; part?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const part = (body.part ?? 'source') as SourcePart
+  if (part !== 'source' && part !== 'url' && part !== 'transcript' && part !== 'quote') {
+    return NextResponse.json({ error: "part must be 'source', 'url', 'transcript', or 'quote'" }, { status: 400 })
+  }
+
+  const sb = pollySupabase()
+
+  if (body.kind === 'quote') {
+    const idx = body.index
+    const arr = thread.quotes ?? []
+    if (typeof idx !== 'number' || idx < 0 || idx >= arr.length) {
+      return NextResponse.json({ error: 'invalid index' }, { status: 400 })
+    }
+    const next = arr.filter((_, i) => i !== idx)
+    const { error } = await sb
+      .from('polly_threads')
+      .update({ quotes: next, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .eq('user_id', user.id)
+    if (error) {
+      console.error('[polly] delete quote failed:', error)
+      return NextResponse.json({ error: 'delete failed' }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true, total: next.length })
+  }
+
+  if (body.kind === 'primary') {
+    const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    if (part === 'source' || part === 'url') update.url = null
+    if (part === 'source' || part === 'transcript') update.content = null
+    const { error } = await sb
+      .from('polly_threads')
+      .update(update)
+      .eq('id', id)
+      .eq('user_id', user.id)
+    if (error) {
+      console.error('[polly] delete primary source failed:', error)
+      return NextResponse.json({ error: 'delete failed' }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true })
+  }
+
+  if (body.kind === 'additional') {
+    const idx = body.index
+    const arr = thread.additional_sources ?? []
+    if (typeof idx !== 'number' || idx < 0 || idx >= arr.length) {
+      return NextResponse.json({ error: 'invalid index' }, { status: 400 })
+    }
+
+    let next: PollyAdditionalSource[]
+    if (part === 'source') {
+      next = arr.filter((_, i) => i !== idx)
+    } else {
+      const entry = arr[idx]
+      const updated: PollyAdditionalSource = {
+        ...entry,
+        url: part === 'url' ? null : entry.url,
+        content: part === 'transcript' ? null : entry.content,
+      }
+      const hasUrl = !!updated.url
+      const hasContent = (updated.content?.length ?? 0) > 0
+      // If we just cleared both halves, drop the entry entirely.
+      next = !hasUrl && !hasContent
+        ? arr.filter((_, i) => i !== idx)
+        : arr.map((s, i) => (i === idx ? updated : s))
+    }
+
+    const { error } = await sb
+      .from('polly_threads')
+      .update({
+        additional_sources: next,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .eq('user_id', user.id)
+    if (error) {
+      console.error('[polly] delete additional source failed:', error)
+      return NextResponse.json({ error: 'delete failed' }, { status: 500 })
+    }
+    return NextResponse.json({ ok: true, total: next.length })
+  }
+
+  return NextResponse.json({ error: 'kind must be primary or additional' }, { status: 400 })
+}

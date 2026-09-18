@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Chat-model selection, shared by every chat surface (Chat tab, topic
-/// chats). The selected key is sent with each /api/f2/messages call; the
+/// chats). The selected key is sent with each /api/polly/messages call; the
 /// backend registry (src/lib/f2/llm.ts) maps keys to providers. Keys must
 /// match that registry exactly.
 enum PollyChatModel: String, CaseIterable, Identifiable {

@@ -33,8 +33,8 @@ struct HelpSheet: View {
             detail: "One open question, one reply, one star — marks the topic done. Works even when quizzes are locked."
         ),
         Command(
-            usage: "dodo <instruction>",
-            detail: "Put the dodo to work on this topic's materials — it reads before editing, searches the web to verify, and reports back: \"dodo clean up the briefing memo and verify the open items\", \"dodo make a flash card asking …\", \"dodo redo the flash cards focusing on dates\", \"dodo write a study guide and add it to context\", \"dodo only test me on the first half\". Keep talking to it with more \"dodo\" messages."
+            usage: "polly <instruction>",
+            detail: "Put Polly to work on this topic's materials — it reads before editing, searches the web to verify, and reports back: \"polly clean up the briefing memo and verify the open items\", \"polly make a flash card asking …\", \"polly redo the flash cards focusing on dates\", \"polly write a study guide and add it to context\", \"polly only test me on the first half\". Keep talking to it with more \"polly\" messages."
         ),
         Command(
             usage: "summary <instructions>",

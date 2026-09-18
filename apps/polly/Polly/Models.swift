@@ -50,7 +50,7 @@ struct PollyAudioSummary: Codable, Equatable, Hashable {
 
 /// Status of the web-researched study-context summary for book topics.
 /// The topics list carries status only; the markdown itself comes from
-/// GET /api/f2/topics/[id]/book-summary (see BookSummaryReaderView).
+/// GET /api/polly/topics/[id]/book-summary (see BookSummaryReaderView).
 struct PollyBookSummary: Codable, Equatable, Hashable {
     let status: String        // "generating" | "ready" | "error"
     let error: String?
@@ -271,7 +271,7 @@ func pollyLevelTitle(_ level: Int) -> String {
     }
 }
 
-/// User-wide learning progress. Mirror of `/api/f2/progress`.
+/// User-wide learning progress. Mirror of `/api/polly/progress`.
 struct PollyProgress: Codable, Equatable {
     var level: Int
     var topicCount: Int

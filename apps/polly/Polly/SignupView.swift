@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Email + password signup. Instant: on submit we POST to /api/f2/auth/signup,
+/// Email + password signup. Instant: on submit we POST to /api/polly/auth/signup,
 /// the server creates the user and sets the session cookie, and Session
 /// transitions to .signedIn. No verification step (decided 2026-05-26).
 struct SignupView: View {

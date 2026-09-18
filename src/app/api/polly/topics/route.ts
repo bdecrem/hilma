@@ -1,0 +1,135 @@
+import { NextResponse } from 'next/server'
+import { getSessionUser } from '@/lib/polly/auth'
+import {
+  ALL_TOPIC_KINDS,
+  createThread,
+  listTopicsForUser,
+  type TopicKind,
+} from '@/lib/polly/threads'
+import { audioSummaryForClient } from '@/lib/polly/audio-summary'
+import { bookSummaryForClient } from '@/lib/polly/book-summary'
+import { sharedThreadIds } from '@/lib/polly/community'
+import { fetchUrlContent, isUrl } from '@/lib/polly/url'
+import { nameTopic } from '@/lib/polly/name-topic'
+
+export const runtime = 'nodejs'
+// URL ingestion (transcript fetch + naming) can take a while.
+export const maxDuration = 60
+
+// Per-user, session-authed, live data — must never be cached by URLCache, a
+// CDN, or any proxy. (Next's default `public, max-age=0, must-revalidate` is
+// both wrong here and was being replayed stale by the iOS URLSession cache.)
+const NO_STORE = { 'Cache-Control': 'no-store' }
+
+export async function GET() {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: NO_STORE })
+  }
+
+  const threads = await listTopicsForUser(user.id)
+  const shared = await sharedThreadIds(user.id)
+  const topics = threads.map((t) => ({
+    id: t.id,
+    topic: t.topic,
+    url: t.url,
+    last_quizzed_at: t.last_quizzed_at,
+    quiz_count: t.quiz_count,
+    stars: t.stars,
+    hard_quiz_completed_at: t.hard_quiz_completed_at,
+    recert_stage: t.recert_stage,
+    // Refresher toggle off = mastery is forever: the client never sees a
+    // due date, so banners, chips, and local reminders all stay dark.
+    recert_due_at: user.recert_enabled === false ? null : t.recert_due_at,
+    pending_quiz_kind: t.pending_quiz_kind,
+    kind: t.kind,
+    created_at: t.created_at,
+    updated_at: t.updated_at,
+    client: t.client,
+    pinned_at: t.pinned_at,
+    study_focus: t.study_focus,
+    // Listed in the community directory (owner's own view drives the
+    // Share/Unshare menu item).
+    shared: shared.has(t.id),
+    // Script text stays out of list payloads — clients only need state + URL.
+    audio_summary: audioSummaryForClient(t.audio_summary),
+    // Same for the book summary's markdown — status only.
+    book_summary: bookSummaryForClient(t.book_summary),
+  }))
+  return NextResponse.json({ topics }, { headers: NO_STORE })
+}
+
+// POST — create a bare topic from a typed title (the Topics screen's +
+// button). No source material yet; chat and Add Material fill it in later.
+export async function POST(req: Request) {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
+
+  let body: { topic?: string; kind?: string }
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const topic = body.topic?.trim().slice(0, 200)
+  if (!topic) {
+    return NextResponse.json({ error: 'topic required' }, { status: 400 })
+  }
+  let kind: TopicKind | null = null
+  if (body.kind !== undefined) {
+    if (!ALL_TOPIC_KINDS.includes(body.kind as TopicKind)) {
+      return NextResponse.json({ error: 'invalid kind' }, { status: 400 })
+    }
+    kind = body.kind as TopicKind
+  }
+
+  // A URL pasted into the "name" slot means "make this the topic's source".
+  // The new-topic sheet is where people paste YouTube links, so treat it
+  // exactly like sending the link in chat: fetch content, store it as the
+  // primary source, and give the topic a real name.
+  if (isUrl(topic)) {
+    const url = topic
+    const fetched = await fetchUrlContent(url)
+    const named =
+      (await nameTopic({ body: fetched.body ?? '', documentTitle: fetched.title })) ??
+      fetched.title ??
+      url
+    const thread = await createThread({
+      userId: user.id,
+      client: 'web',
+      handle: user.username,
+      topic: named.slice(0, 200),
+      url,
+      content: fetched.body,
+      kind,
+    })
+    if (!thread) {
+      return NextResponse.json({ error: 'create failed' }, { status: 500 })
+    }
+    return NextResponse.json(
+      {
+        thread: { id: thread.id, topic: thread.topic, kind: thread.kind },
+        ingested: fetched.body !== null,
+      },
+      { headers: NO_STORE },
+    )
+  }
+
+  const thread = await createThread({
+    userId: user.id,
+    client: 'web',
+    handle: user.username,
+    topic,
+    kind,
+  })
+  if (!thread) {
+    return NextResponse.json({ error: 'create failed' }, { status: 500 })
+  }
+  return NextResponse.json(
+    { thread: { id: thread.id, topic: thread.topic, kind: thread.kind } },
+    { headers: NO_STORE },
+  )
+}

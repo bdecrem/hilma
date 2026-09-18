@@ -86,9 +86,8 @@ struct MainTabsView: View {
                    value: session.pendingLevelUp)
         .animation(.spring(response: 0.4, dampingFraction: 0.85),
                    value: FlashDeckBuilder.shared.toast)
-        // Deep links land on the Peck tab: dodo://peck (custom scheme) and
-        // https://feynd.cc/peck (universal link — the daily iMessage flow
-        // texts this one).
+        // Deep links land on the Peck tab: polly://peck (custom scheme). Dodo also has
+        // https://feynd.cc/peck (universal link); Polly gets one with its own domain.
         .onOpenURL { route($0) }
         // Card clinic "Discuss with Dodo": switch to Topics and push the
         // card's topic. The destination view picks up the prefilled draft.
@@ -150,7 +149,7 @@ struct MainTabsView: View {
         // so the Settings light/dark/system toggle actually drives the UI.
     }
 
-    /// dodo://peck has "peck" as the host; https://feynd.cc/peck has it as
+    /// polly://peck has "peck" as the host; a universal link has it as
     /// the path. Check both so either form of the link switches tabs.
     /// The peck link means "continue playing": besides switching tabs it
     /// asks the Flash tab to open the current level's set immediately —

@@ -1,7 +1,7 @@
 import AVFoundation
 import SwiftUI
 
-// MARK: - DTOs (/api/f2/voice-prefs)
+// MARK: - DTOs (/api/polly/voice-prefs)
 
 struct VoiceOption: Codable, Identifiable, Equatable {
     let id: String

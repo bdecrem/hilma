@@ -28,6 +28,9 @@ enum PollyAPIError: Error, LocalizedError {
 /// middlebox, stale trust store) usually can with the other. On a connection
 /// failure the client retries once, then retries on the other host, and if
 /// that works it sticks with it (persisted) so every later request just works.
+///
+/// Polly has no domain of its own yet: production is hilma-nine.vercel.app,
+/// so failover stays off until Polly gets a twin host like Dodo's feynd.cc.
 enum Backend {
     static let primary = Secrets.backendBaseURL
     static let fallback = URL(string: "https://hilma-nine.vercel.app")!
@@ -127,7 +130,7 @@ final class PollyAPI {
 
     func login(username: String, password: String) async throws -> PollyUser {
         struct Body: Encodable { let username: String; let password: String }
-        let res: LoginResponse = try await post("/api/f2/auth/login", body: Body(username: username, password: password))
+        let res: LoginResponse = try await post("/api/polly/auth/login", body: Body(username: username, password: password))
         return res.user
     }
 
@@ -136,14 +139,14 @@ final class PollyAPI {
     /// Auto-signs in (session cookie set on the response).
     func signup(email: String, password: String) async throws -> PollyUser {
         struct Body: Encodable { let email: String; let password: String }
-        let res: LoginResponse = try await post("/api/f2/auth/signup", body: Body(email: email, password: password))
+        let res: LoginResponse = try await post("/api/polly/auth/signup", body: Body(email: email, password: password))
         return res.user
     }
 
     /// Try-before-signup: server creates a claimable guest account seeded
     /// with the intro topic and signs it in via the session cookie.
     func guestLogin() async throws -> PollyUser {
-        let res: LoginResponse = try await post("/api/f2/auth/guest", body: EmptyBody())
+        let res: LoginResponse = try await post("/api/polly/auth/guest", body: EmptyBody())
         return res.user
     }
 
@@ -151,17 +154,17 @@ final class PollyAPI {
     /// id, so topics, cards, pebbles, and XP all survive.
     func claimAccount(email: String, password: String) async throws -> PollyUser {
         struct Body: Encodable { let email: String; let password: String }
-        let res: LoginResponse = try await post("/api/f2/auth/claim", body: Body(email: email, password: password))
+        let res: LoginResponse = try await post("/api/polly/auth/claim", body: Body(email: email, password: password))
         return res.user
     }
 
     func me() async throws -> PollyUser {
-        let res: LoginResponse = try await get("/api/f2/auth/me")
+        let res: LoginResponse = try await get("/api/polly/auth/me")
         return res.user
     }
 
     func logout() async throws {
-        let _: EmptyResponse = try await post("/api/f2/auth/logout", body: EmptyBody())
+        let _: EmptyResponse = try await post("/api/polly/auth/logout", body: EmptyBody())
         clearCookies()
     }
 
@@ -201,7 +204,7 @@ final class PollyAPI {
             let thread_id: String?
             let model: String?
         }
-        return try await post("/api/f2/messages", body: Body(text: text, thread_id: threadId, model: model))
+        return try await post("/api/polly/messages", body: Body(text: text, thread_id: threadId, model: model))
     }
 
     // MARK: Topics
@@ -214,19 +217,19 @@ final class PollyAPI {
     }
 
     func listTopics() async throws -> [PollyTopic] {
-        let res: TopicsResponse = try await get("/api/f2/topics")
+        let res: TopicsResponse = try await get("/api/polly/topics")
         return res.topics
     }
 
     struct LatestResponse: Codable { let thread: PollyThread? }
 
     func latestThread() async throws -> PollyThread? {
-        let res: LatestResponse = try await get("/api/f2/latest")
+        let res: LatestResponse = try await get("/api/polly/latest")
         return res.thread
     }
 
     func getThread(id: String) async throws -> PollyThread {
-        let res: ThreadResponse = try await get("/api/f2/topics/\(id)")
+        let res: ThreadResponse = try await get("/api/polly/topics/\(id)")
         return res.thread
     }
 
@@ -240,7 +243,7 @@ final class PollyAPI {
         }
         struct Created: Decodable { let thread: Thread
             struct Thread: Decodable { let id: String } }
-        let created: Created = try await post("/api/f2/topics", body: Body(topic: title, kind: kind))
+        let created: Created = try await post("/api/polly/topics", body: Body(topic: title, kind: kind))
         return created.thread.id
     }
 
@@ -251,24 +254,24 @@ final class PollyAPI {
             let topic: String
             let kind: String?
         }
-        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(topic: newTopic, kind: kind))
+        let _: EmptyResponse = try await request("/api/polly/topics/\(id)", method: "PATCH", body: Body(topic: newTopic, kind: kind))
     }
 
     func setPinned(id: String, pinned: Bool) async throws {
         struct Body: Encodable { let pinned: Bool }
-        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(pinned: pinned))
+        let _: EmptyResponse = try await request("/api/polly/topics/\(id)", method: "PATCH", body: Body(pinned: pinned))
     }
 
     /// Include or exclude a topic's deck from Peck (jumbo) sets.
     func setPeckExcluded(id: String, excluded: Bool) async throws {
         struct Body: Encodable { let peck_excluded: Bool }
-        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(peck_excluded: excluded))
+        let _: EmptyResponse = try await request("/api/polly/topics/\(id)", method: "PATCH", body: Body(peck_excluded: excluded))
     }
 
     /// Set a topic's Peck draw multiplier (0.5 / 1 / 2 / 5).
     func setPeckWeight(id: String, weight: Double) async throws {
         struct Body: Encodable { let peck_weight: Double }
-        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(peck_weight: weight))
+        let _: EmptyResponse = try await request("/api/polly/topics/\(id)", method: "PATCH", body: Body(peck_weight: weight))
     }
 
     /// Save (or clear, with "") the topic's study focus. Returns how many
@@ -283,12 +286,12 @@ final class PollyAPI {
             let flashCardCount: Int?
             enum CodingKeys: String, CodingKey { case flashCardCount = "flash_card_count" }
         }
-        let res: Response = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(studyFocus: focus))
+        let res: Response = try await request("/api/polly/topics/\(id)", method: "PATCH", body: Body(studyFocus: focus))
         return res.flashCardCount ?? 0
     }
 
     func deleteTopic(id: String) async throws {
-        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "DELETE", body: nil as EmptyBody?)
+        let _: EmptyResponse = try await request("/api/polly/topics/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }
 
     // MARK: - Review history
@@ -322,7 +325,7 @@ final class PollyAPI {
     /// Every graded review attempt on a topic, newest first.
     func listReviews(topicId: String) async throws -> [ReviewAttempt] {
         struct Response: Decodable { let reviews: [ReviewAttempt] }
-        let res: Response = try await get("/api/f2/topics/\(topicId)/reviews")
+        let res: Response = try await get("/api/polly/topics/\(topicId)/reviews")
         return res.reviews
     }
 
@@ -333,7 +336,7 @@ final class PollyAPI {
     func setShared(topicId: String, shared: Bool) async throws {
         struct Response: Decodable { let shared: Bool }
         let _: Response = try await request(
-            "/api/f2/topics/\(topicId)/share",
+            "/api/polly/topics/\(topicId)/share",
             method: shared ? "POST" : "DELETE",
             body: nil as EmptyBody?)
     }
@@ -365,7 +368,7 @@ final class PollyAPI {
     /// The community directory, newest share first.
     func listCommunityTopics() async throws -> [CommunityTopic] {
         struct Response: Decodable { let topics: [CommunityTopic] }
-        let res: Response = try await get("/api/f2/community")
+        let res: Response = try await get("/api/polly/community")
         return res.topics
     }
 
@@ -376,11 +379,11 @@ final class PollyAPI {
             let thread: Thread
             struct Thread: Decodable { let id: String }
         }
-        let res: Response = try await post("/api/f2/community/\(id)/fork", body: EmptyBody())
+        let res: Response = try await post("/api/polly/community/\(id)/fork", body: EmptyBody())
         return res.thread.id
     }
 
-    /// Response from `POST /api/f2/topics/[id]/quiz`. Stars are not yet
+    /// Response from `POST /api/polly/topics/[id]/quiz`. Stars are not yet
     /// awarded — `pendingQuizKind` records which kind is in flight so the UI
     /// can show a Done button.
     struct QuizResponse: Codable {
@@ -407,11 +410,11 @@ final class PollyAPI {
             let kind: String
             let model: String?
         }
-        let res: QuizResponse = try await post("/api/f2/topics/\(id)/quiz", body: Body(kind: kind, model: model))
+        let res: QuizResponse = try await post("/api/polly/topics/\(id)/quiz", body: Body(kind: kind, model: model))
         return res
     }
 
-    /// Response from `POST /api/f2/topics/[id]/quiz/complete` — star is now
+    /// Response from `POST /api/polly/topics/[id]/quiz/complete` — star is now
     /// awarded based on whichever kind was pending. For Quiz 2 (going from
     /// 1★ to 2★), `passed/accepted/total/notes` describe how the LLM grader
     /// judged the user's answers. Other paths set `passed: true`,
@@ -438,7 +441,7 @@ final class PollyAPI {
     /// The server awards the star (or no-ops if nothing was pending).
     func completeQuiz(id: String) async throws -> QuizCompleteResponse {
         let res: QuizCompleteResponse = try await request(
-            "/api/f2/topics/\(id)/quiz/complete",
+            "/api/polly/topics/\(id)/quiz/complete",
             method: "POST",
             body: nil as EmptyBody?
         )
@@ -446,7 +449,7 @@ final class PollyAPI {
     }
 
     func fetchProgress() async throws -> PollyProgress {
-        try await get("/api/f2/progress")
+        try await get("/api/polly/progress")
     }
 
     // MARK: Audio summary
@@ -462,7 +465,7 @@ final class PollyAPI {
     /// already in flight for this topic.
     func generateAudioSummary(id: String, model: String? = nil) async throws -> PollyAudioSummary? {
         struct Body: Encodable { let model: String? }
-        let res: AudioSummaryStartResponse = try await post("/api/f2/topics/\(id)/audio-summary", body: Body(model: model))
+        let res: AudioSummaryStartResponse = try await post("/api/polly/topics/\(id)/audio-summary", body: Body(model: model))
         return res.audioSummary
     }
 
@@ -486,12 +489,12 @@ final class PollyAPI {
 
     func generateBookSummary(id: String) async throws -> PollyBookSummary? {
         struct Body: Encodable {}
-        let res: BookSummaryResponse = try await post("/api/f2/topics/\(id)/book-summary", body: Body())
+        let res: BookSummaryResponse = try await post("/api/polly/topics/\(id)/book-summary", body: Body())
         return res.bookSummary
     }
 
     func fetchBookSummary(id: String) async throws -> BookSummaryFull? {
-        let res: BookSummaryFullResponse = try await get("/api/f2/topics/\(id)/book-summary")
+        let res: BookSummaryFullResponse = try await get("/api/polly/topics/\(id)/book-summary")
         return res.bookSummary
     }
 
@@ -509,7 +512,7 @@ final class PollyAPI {
     /// voice prompts see going forward.
     func addTopicSource(id: String, url: String) async throws -> AddSourceResponse {
         try await request(
-            "/api/f2/topics/\(id)/sources",
+            "/api/polly/topics/\(id)/sources",
             method: "POST",
             body: AddSourceRequest(url: url),
         )
@@ -520,7 +523,7 @@ final class PollyAPI {
     func uploadTopicNotes(id: String, text: String, title: String?) async throws -> AddSourceResponse {
         struct Body: Encodable { let text: String; let title: String? }
         return try await request(
-            "/api/f2/topics/\(id)/sources",
+            "/api/polly/topics/\(id)/sources",
             method: "POST",
             body: Body(text: text, title: title),
         )
@@ -557,7 +560,7 @@ final class PollyAPI {
     /// content on the thread row, if any) plus every additional source the
     /// user has appended. Used by the "View Topic Context" modal.
     func listTopicSources(id: String) async throws -> [TopicSource] {
-        let res: ListSourcesResponse = try await get("/api/f2/topics/\(id)/sources")
+        let res: ListSourcesResponse = try await get("/api/polly/topics/\(id)/sources")
         return res.items
     }
 
@@ -592,7 +595,7 @@ final class PollyAPI {
     /// Full audio-summary transcripts for a topic, base first. Backs the
     /// Summaries section + reader in the Topic Context sheet.
     func listSummaries(id: String) async throws -> SummariesResponse {
-        try await get("/api/f2/topics/\(id)/summaries")
+        try await get("/api/polly/topics/\(id)/summaries")
     }
 
     struct SourceText: Codable { let content: String; let title: String?; let url: String? }
@@ -602,7 +605,7 @@ final class PollyAPI {
     /// the storage slot — but taken for symmetry with the row.
     func readSourceText(id: String, kind: String, index: Int) async throws -> SourceText {
         var comps = URLComponents(
-            url: Backend.baseURL.appendingPathComponent("/api/f2/topics/\(id)/sources"),
+            url: Backend.baseURL.appendingPathComponent("/api/polly/topics/\(id)/sources"),
             resolvingAgainstBaseURL: false,
         )!
         comps.queryItems = [
@@ -628,7 +631,7 @@ final class PollyAPI {
     /// "transcript" clears just the content body.
     func deleteTopicSource(id: String, kind: String, index: Int?, part: String) async throws {
         let _: EmptyResponse = try await request(
-            "/api/f2/topics/\(id)/sources",
+            "/api/polly/topics/\(id)/sources",
             method: "DELETE",
             body: DeleteSourceRequest(kind: kind, index: index, part: part),
         )
@@ -645,7 +648,7 @@ final class PollyAPI {
     /// (or PNG when transparency matters; the design uses round masks so JPEG
     /// is fine). Server enforces 1 MB and image/jpeg|png at the bucket level.
     func uploadAvatar(imageData: Data, mime: String = "image/jpeg") async throws -> String {
-        let url = Backend.baseURL.appendingPathComponent("/api/f2/avatar")
+        let url = Backend.baseURL.appendingPathComponent("/api/polly/avatar")
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -686,7 +689,7 @@ final class PollyAPI {
 
     /// Remove the current user's avatar.
     func deleteAvatar() async throws {
-        let _: EmptyResponse = try await request("/api/f2/avatar", method: "DELETE", body: nil as EmptyBody?)
+        let _: EmptyResponse = try await request("/api/polly/avatar", method: "DELETE", body: nil as EmptyBody?)
     }
 
     // MARK: iMessage pairing
@@ -703,32 +706,32 @@ final class PollyAPI {
     struct IMessageConfirmResponse: Codable { let handle: String }
 
     func listImessageHandles() async throws -> [String] {
-        let res: IMessageHandlesResponse = try await get("/api/f2/imessage/handles")
+        let res: IMessageHandlesResponse = try await get("/api/polly/imessage/handles")
         return res.handles
     }
 
     /// Step 1 — server sends a 6-digit code via iMessage to the handle.
     func startImessagePairing(handle: String) async throws -> String {
         struct Body: Encodable { let handle: String }
-        let res: IMessageStartResponse = try await post("/api/f2/imessage/start", body: Body(handle: handle))
+        let res: IMessageStartResponse = try await post("/api/polly/imessage/start", body: Body(handle: handle))
         return res.handle
     }
 
     /// Step 2 — verify the 6-digit code; on success the handle is bound.
     func confirmImessagePairing(handle: String, code: String) async throws -> String {
         struct Body: Encodable { let handle: String; let code: String }
-        let res: IMessageConfirmResponse = try await post("/api/f2/imessage/confirm", body: Body(handle: handle, code: code))
+        let res: IMessageConfirmResponse = try await post("/api/polly/imessage/confirm", body: Body(handle: handle, code: code))
         return res.handle
     }
 
     func removeImessageHandle(handle: String) async throws {
         struct Body: Encodable { let handle: String }
-        let _: EmptyResponse = try await request("/api/f2/imessage/handles", method: "DELETE", body: Body(handle: handle))
+        let _: EmptyResponse = try await request("/api/polly/imessage/handles", method: "DELETE", body: Body(handle: handle))
     }
 
     func ingestPaste(title: String?, text: String) async throws -> String {
         struct Body: Encodable { let title: String?; let text: String }
-        let res: IngestResponse = try await post("/api/f2/topics/ingest", body: Body(title: title?.isEmpty == true ? nil : title, text: text))
+        let res: IngestResponse = try await post("/api/polly/topics/ingest", body: Body(title: title?.isEmpty == true ? nil : title, text: text))
         return res.thread.id
     }
 
@@ -792,7 +795,7 @@ final class PollyAPI {
             let card_ids: [String]?
             let hold_to_talk: Bool
         }
-        return try await post("/api/f2/realtime/session",
+        return try await post("/api/polly/realtime/session",
                               body: Body(mode: mode, thread_id: threadId, card_ids: cardIds, hold_to_talk: holdToTalk))
     }
 
@@ -800,7 +803,7 @@ final class PollyAPI {
 
     /// Deck + set history for one topic.
     func getTopicFlash(id: String) async throws -> TopicFlash {
-        try await get("/api/f2/topics/\(id)/flash")
+        try await get("/api/polly/topics/\(id)/flash")
     }
 
     struct GenerateCardsResponse: Codable { let cards: [FlashCard] }
@@ -809,7 +812,7 @@ final class PollyAPI {
     /// LLM read of the source) — callers should show progress.
     func generateFlashCards(topicId: String, count: Int, model: String? = nil) async throws -> [FlashCard] {
         struct Body: Encodable { let count: Int; let model: String? }
-        let res: GenerateCardsResponse = try await post("/api/f2/topics/\(topicId)/flash", body: Body(count: count, model: model))
+        let res: GenerateCardsResponse = try await post("/api/polly/topics/\(topicId)/flash", body: Body(count: count, model: model))
         return res.cards
     }
 
@@ -817,12 +820,12 @@ final class PollyAPI {
 
     func updateFlashCard(cardId: String, question: String, answer: String, distractors: [String]) async throws -> FlashCard {
         struct Body: Encodable { let question: String; let answer: String; let distractors: [String] }
-        let res: UpdateCardResponse = try await request("/api/f2/flash/cards/\(cardId)", method: "PATCH", body: Body(question: question, answer: answer, distractors: distractors))
+        let res: UpdateCardResponse = try await request("/api/polly/flash/cards/\(cardId)", method: "PATCH", body: Body(question: question, answer: answer, distractors: distractors))
         return res.card
     }
 
     func deleteFlashCard(cardId: String) async throws {
-        let _: EmptyResponse = try await request("/api/f2/flash/cards/\(cardId)", method: "DELETE", body: nil as EmptyBody?)
+        let _: EmptyResponse = try await request("/api/polly/flash/cards/\(cardId)", method: "DELETE", body: nil as EmptyBody?)
     }
 
     /// Rate a card: "down" buries it, "priority" pushes it up the rotation,
@@ -832,7 +835,7 @@ final class PollyAPI {
     /// and distractors from the topic's source material.
     func authorFlashCard(threadId: String, question: String) async throws -> FlashCard {
         struct Body: Encodable { let thread_id: String; let question: String }
-        let res: UpdateCardResponse = try await post("/api/f2/flash/cards", body: Body(thread_id: threadId, question: question))
+        let res: UpdateCardResponse = try await post("/api/polly/flash/cards", body: Body(thread_id: threadId, question: question))
         return res.card
     }
 
@@ -841,7 +844,7 @@ final class PollyAPI {
         struct Body: Encodable { let grading_note: String? }
         let trimmed = note.trimmingCharacters(in: .whitespacesAndNewlines)
         let _: UpdateCardResponse = try await request(
-            "/api/f2/flash/cards/\(cardId)", method: "PATCH",
+            "/api/polly/flash/cards/\(cardId)", method: "PATCH",
             body: Body(grading_note: trimmed.isEmpty ? nil : trimmed))
     }
 
@@ -857,7 +860,7 @@ final class PollyAPI {
             }
         }
         let res: UpdateCardResponse = try await request(
-            "/api/f2/flash/cards/\(cardId)", method: "PATCH", body: Body(rating: rating))
+            "/api/polly/flash/cards/\(cardId)", method: "PATCH", body: Body(rating: rating))
         return res.card
     }
 
@@ -865,14 +868,14 @@ final class PollyAPI {
 
     /// Every topic that has flash cards — the Flash tab's deck manager.
     func listFlashDecks() async throws -> [FlashDeck] {
-        let res: DecksResponse = try await get("/api/f2/flash/decks")
+        let res: DecksResponse = try await get("/api/polly/flash/decks")
         return res.decks
     }
 
     /// Start a topic set (mode chosen by the user).
     func startFlashSet(threadId: String, mode: String) async throws -> FlashStart {
         struct Body: Encodable { let mode: String; let thread_id: String }
-        return try await post("/api/f2/flash/start", body: Body(mode: mode, thread_id: threadId))
+        return try await post("/api/polly/flash/start", body: Body(mode: mode, thread_id: threadId))
     }
 
     /// Start a Jumbo level (mode fixed by the level).
@@ -886,7 +889,7 @@ final class PollyAPI {
             /// Peck credits (daily iMessage answers) may open the set.
             let accept_prefill: Bool
         }
-        return try await post("/api/f2/flash/start", body: Body(jumbo_level: level, mode: mode, accept_prefill: true))
+        return try await post("/api/polly/flash/start", body: Body(jumbo_level: level, mode: mode, accept_prefill: true))
     }
 
     struct FlashAnswer: Encodable {
@@ -904,7 +907,7 @@ final class PollyAPI {
             let jumbo_level: Int?
             let answers: [FlashAnswer]
         }
-        return try await post("/api/f2/flash/submit", body: Body(mode: mode, thread_id: threadId, jumbo_level: jumboLevel, answers: answers))
+        return try await post("/api/polly/flash/submit", body: Body(mode: mode, thread_id: threadId, jumbo_level: jumboLevel, answers: answers))
     }
 
     /// Submit a finished VOICE set — graded server-side from the session
@@ -917,18 +920,18 @@ final class PollyAPI {
             let card_ids: [String]
             let voice_session_id: String
         }
-        return try await post("/api/f2/flash/submit", body: Body(mode: "voice", thread_id: threadId, jumbo_level: jumboLevel, card_ids: cardIds, voice_session_id: voiceSessionId))
+        return try await post("/api/polly/flash/submit", body: Body(mode: "voice", thread_id: threadId, jumbo_level: jumboLevel, card_ids: cardIds, voice_session_id: voiceSessionId))
     }
 
     func jumboState() async throws -> JumboState {
-        try await get("/api/f2/flash/jumbo")
+        try await get("/api/polly/flash/jumbo")
     }
 
     /// User drafts a question; the server polishes it, answers it from the
     /// topic material, and writes the wrong choices.
     func authorFlashCard(topicId: String, question: String, model: String? = nil) async throws -> FlashCard {
         struct Body: Encodable { let question: String; let model: String? }
-        let res: UpdateCardResponse = try await post("/api/f2/topics/\(topicId)/flash/card", body: Body(question: question, model: model))
+        let res: UpdateCardResponse = try await post("/api/polly/topics/\(topicId)/flash/card", body: Body(question: question, model: model))
         return res.card
     }
 
@@ -936,14 +939,14 @@ final class PollyAPI {
     /// existing cards. Slow — run through FlashDeckBuilder.
     func redoFlashDeck(topicId: String, instructions: String, model: String? = nil) async throws -> [FlashCard] {
         struct Body: Encodable { let instructions: String; let model: String? }
-        let res: GenerateCardsResponse = try await post("/api/f2/topics/\(topicId)/flash/redo", body: Body(instructions: instructions, model: model))
+        let res: GenerateCardsResponse = try await post("/api/polly/topics/\(topicId)/flash/redo", body: Body(instructions: instructions, model: model))
         return res.cards
     }
 
     /// Grade a finished Final Review voice session. A → star 3.
     func submitFinalReview(topicId: String, voiceSessionId: String) async throws -> FinalReviewResult {
         struct Body: Encodable { let voice_session_id: String }
-        return try await post("/api/f2/topics/\(topicId)/final-review", body: Body(voice_session_id: voiceSessionId))
+        return try await post("/api/polly/topics/\(topicId)/final-review", body: Body(voice_session_id: voiceSessionId))
     }
 
     // MARK: - Artifacts (Pebbles)
@@ -953,20 +956,20 @@ final class PollyAPI {
 
     /// Every artifact the user has saved, newest first.
     func listArtifacts() async throws -> [PollyArtifact] {
-        let res: ArtifactsResponse = try await get("/api/f2/artifacts")
+        let res: ArtifactsResponse = try await get("/api/polly/artifacts")
         return res.artifacts
     }
 
     /// Save a quote. `threadId` links it to a topic for the chip; optional.
     func createArtifact(body: String, source: String?, threadId: String?) async throws -> PollyArtifact {
         struct Body: Encodable { let body: String; let source: String?; let thread_id: String? }
-        let res: ArtifactResponse = try await post("/api/f2/artifacts", body: Body(body: body, source: source, thread_id: threadId))
+        let res: ArtifactResponse = try await post("/api/polly/artifacts", body: Body(body: body, source: source, thread_id: threadId))
         return res.artifact
     }
 
     /// Save a photo pebble: multipart upload, optional caption/source/topic.
     func createImageArtifact(imageData: Data, mime: String = "image/jpeg", body: String?, source: String?, threadId: String?) async throws -> PollyArtifact {
-        let url = Backend.baseURL.appendingPathComponent("/api/f2/artifacts/image")
+        let url = Backend.baseURL.appendingPathComponent("/api/polly/artifacts/image")
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -1010,7 +1013,7 @@ final class PollyAPI {
     }
 
     func deleteArtifact(id: String) async throws {
-        let _: EmptyResponse = try await request("/api/f2/artifacts/\(id)", method: "DELETE", body: nil as EmptyBody?)
+        let _: EmptyResponse = try await request("/api/polly/artifacts/\(id)", method: "DELETE", body: nil as EmptyBody?)
     }
 
     // MARK: - Profile extras
@@ -1042,7 +1045,7 @@ final class PollyAPI {
 
     /// Daily flash card over iMessage: enabled + whether a handle is paired.
     func dailyCardStatus() async throws -> DailyCardStatus {
-        try await get("/api/f2/profile")
+        try await get("/api/polly/profile")
     }
 
     /// Flip the Refresher toggle. Off = mastery is forever: the server stops
@@ -1050,7 +1053,7 @@ final class PollyAPI {
     func setRecertEnabled(_ enabled: Bool) async throws -> Bool {
         struct Body: Encodable { let recert_enabled: Bool }
         struct Res: Codable { let recert_enabled: Bool }
-        let res: Res = try await put("/api/f2/profile", body: Body(recert_enabled: enabled))
+        let res: Res = try await put("/api/polly/profile", body: Body(recert_enabled: enabled))
         return res.recert_enabled
     }
 
@@ -1058,20 +1061,20 @@ final class PollyAPI {
     func setDailyCardEnabled(_ enabled: Bool) async throws -> Bool {
         struct Body: Encodable { let daily_card_enabled: Bool }
         struct Res: Codable { let daily_card_enabled: Bool }
-        let res: Res = try await put("/api/f2/profile", body: Body(daily_card_enabled: enabled))
+        let res: Res = try await put("/api/polly/profile", body: Body(daily_card_enabled: enabled))
         return res.daily_card_enabled
     }
 
     // MARK: - Voice preferences
 
     func voicePrefs() async throws -> VoicePrefs {
-        try await get("/api/f2/voice-prefs")
+        try await get("/api/polly/voice-prefs")
     }
 
     /// Empty string resets a field to the server default.
     func saveVoicePrefs(voice: String, style: String) async throws -> VoicePrefs {
         struct Body: Encodable { let voice: String; let voice_style: String }
-        return try await put("/api/f2/voice-prefs", body: Body(voice: voice, voice_style: style))
+        return try await put("/api/polly/voice-prefs", body: Body(voice: voice, voice_style: style))
     }
 
     func callRealtimeTool(name: String, arguments: [String: String]) async throws -> Data {
@@ -1079,7 +1082,7 @@ final class PollyAPI {
             let name: String
             let arguments: [String: String]
         }
-        return try await postRaw("/api/f2/realtime/tool", body: Body(name: name, arguments: arguments))
+        return try await postRaw("/api/polly/realtime/tool", body: Body(name: name, arguments: arguments))
     }
 
     func finishRealtimeSession(id: String, transcript: [[String: String]], summary: String? = nil) async throws {
@@ -1087,7 +1090,7 @@ final class PollyAPI {
             let transcript: [[String: String]]
             let summary: String?
         }
-        let _: EmptyResponse = try await request("/api/f2/realtime/session/\(id)", method: "PATCH", body: Body(transcript: transcript, summary: summary))
+        let _: EmptyResponse = try await request("/api/polly/realtime/session/\(id)", method: "PATCH", body: Body(transcript: transcript, summary: summary))
     }
 
     // MARK: HTTP plumbing

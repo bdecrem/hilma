@@ -3,7 +3,7 @@ import SwiftUI
 /// The web-researched study-context summary for a book topic. Opens right
 /// after "Generate Book Summary" (showing progress while the server searches
 /// and writes) and any time later from "View Book Summary". The markdown is
-/// fetched fresh from GET /api/f2/topics/[id]/book-summary — the topics list
+/// fetched fresh from GET /api/polly/topics/[id]/book-summary — the topics list
 /// only carries the status.
 struct BookSummaryReaderView: View {
     let topicId: String
