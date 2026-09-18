@@ -777,9 +777,23 @@ final class PollyAPI {
             /// Appended as `session.instructions.append` once the session
             /// starts, so Dodo opens the conversation. Nil = Dodo waits.
             let openingInstruction: String?
+            /// The level check only: what to send when the learner says
+            /// nothing for `afterMs` after Polly's greeting. Nil elsewhere.
+            let silenceNudge: SilenceNudge?
+
+            struct SilenceNudge: Codable {
+                let afterMs: Int
+                let instruction: String
+                let commentary: String
+                enum CodingKeys: String, CodingKey {
+                    case instruction, commentary
+                    case afterMs = "after_ms"
+                }
+            }
 
             enum CodingKeys: String, CodingKey {
                 case model, voice
+                case silenceNudge = "silence_nudge"
                 case sessionId = "session_id"
                 case backendModel = "backend_model"
                 case holdToTalk = "hold_to_talk"
@@ -885,9 +899,11 @@ final class PollyAPI {
     }
 
     /// Start a topic set (mode chosen by the user).
-    func startFlashSet(threadId: String, mode: String) async throws -> FlashStart {
-        struct Body: Encodable { let mode: String; let thread_id: String }
-        return try await post("/api/polly/flash/start", body: Body(mode: mode, thread_id: threadId))
+    /// `lessonStep` ("words" | "grammar") picks one step's cards on a lesson
+    /// Polly wrote; nil plays the whole deck.
+    func startFlashSet(threadId: String, mode: String, lessonStep: String? = nil) async throws -> FlashStart {
+        struct Body: Encodable { let mode: String; let thread_id: String; let lesson_step: String? }
+        return try await post("/api/polly/flash/start", body: Body(mode: mode, thread_id: threadId, lesson_step: lessonStep))
     }
 
     /// Start a Jumbo level (mode fixed by the level).
@@ -1098,6 +1114,40 @@ final class PollyAPI {
         }
         let _: EmptyResponse = try await request("/api/polly/live/session/\(id)", method: "PATCH",
                                                  body: Body(transcript: transcript, summary: summary, usage: usage))
+    }
+
+    // MARK: The path (Agentic Learning Mode)
+
+    private struct PathResponse: Codable { let path: PollyPath? }
+
+    /// The level check's verdict and the lessons in order. Nil before the
+    /// account has a course.
+    func getPath() async throws -> PollyPath? {
+        let res: PathResponse = try await get("/api/polly/path")
+        return res.path
+    }
+
+    /// Hide or restore the path card on the Topics screen.
+    func setPathCardDismissed(_ dismissed: Bool) async throws -> PollyPath? {
+        struct Body: Encodable { let dismissed: Bool }
+        let res: PathResponse = try await request("/api/polly/path", method: "PATCH", body: Body(dismissed: dismissed))
+        return res.path
+    }
+
+    struct PlacementResponse: Codable {
+        let path: PollyPath
+        let lessonThreadId: String
+        enum CodingKeys: String, CodingKey {
+            case path
+            case lessonThreadId = "lesson_thread_id"
+        }
+    }
+
+    /// The level check is over: the server reads its transcript, plans the
+    /// path and writes lesson 1. Slow (30–60 s) — show progress.
+    func submitPlacement(voiceSessionId: String) async throws -> PlacementResponse {
+        struct Body: Encodable { let voice_session_id: String }
+        return try await post("/api/polly/path/placement", body: Body(voice_session_id: voiceSessionId))
     }
 
     // MARK: HTTP plumbing

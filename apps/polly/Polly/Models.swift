@@ -100,8 +100,14 @@ struct PollyTopic: Codable, Identifiable, Equatable, Hashable {
     var recertDueAt: Date?
     /// Listed in the community directory. Nil on older backends.
     var shared: Bool?
+    /// A lesson Polly wrote (kind "lesson"): its 1-based place on the path.
+    /// Nil for every other topic, and for a lesson whose path was replaced
+    /// by a retaken level check.
+    var pathPosition: Int?
 
     var isPinned: Bool { pinnedAt != nil }
+    /// On the learner's path — drawn in the path list, not the topic list.
+    var isOnPath: Bool { kind == "lesson" && pathPosition != nil }
 
     /// Gold badge earned (Final Review passed).
     var isCertified: Bool { stars >= 3 }
@@ -150,6 +156,7 @@ struct PollyTopic: Codable, Identifiable, Equatable, Hashable {
         case studyFocus = "study_focus"
         case secondChanceUntil = "second_chance_until"
         case recertDueAt = "recert_due_at"
+        case pathPosition = "path_position"
     }
 
     // Custom init so the iOS app keeps working against backends that don't
@@ -175,6 +182,7 @@ struct PollyTopic: Codable, Identifiable, Equatable, Hashable {
         secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
         recertDueAt = try c.decodeIfPresent(Date.self, forKey: .recertDueAt)
         shared = try c.decodeIfPresent(Bool.self, forKey: .shared)
+        pathPosition = try c.decodeIfPresent(Int.self, forKey: .pathPosition)
     }
 }
 
@@ -200,6 +208,13 @@ struct PollyLessonTerm: Codable, Equatable, Identifiable {
     let sentence: String
 }
 
+struct PollyDialogueLine: Codable, Equatable, Identifiable {
+    var id: String { "\(speaker)|\(line)" }
+    let speaker: String
+    let line: String
+    let english: String
+}
+
 struct PollyLesson: Codable, Equatable {
     let host: String?
     let series: String?
@@ -210,18 +225,29 @@ struct PollyLesson: Codable, Equatable {
     let storySummaryEnglish: String
     let grammarPoint: String?
     let closingQuestion: String?
+    // Lessons Polly wrote (kind "lesson") also carry these.
+    /// The situation in one English line.
+    var scene: String?
+    /// The model conversation, line by line.
+    var dialogue: [PollyDialogueLine]?
+    /// The grammar point explained in plain English.
+    var grammarExplained: String?
+    /// The level it was written for ("A1").
+    var level: String?
 
     enum CodingKeys: String, CodingKey {
-        case host, series, language, phrases
+        case host, series, language, phrases, scene, dialogue, level
         case keyWords = "key_words"
         case storySummary = "story_summary"
         case storySummaryEnglish = "story_summary_english"
         case grammarPoint = "grammar_point"
         case closingQuestion = "closing_question"
+        case grammarExplained = "grammar_explained"
     }
 
     /// "Lesson by Silvia · Italiando Storie", or whatever parts exist.
     var byline: String {
+        if dialogue != nil { return ["Lesson by Polly", level].compactMap { $0 }.joined(separator: " · ") }
         let who = [host.map { "by \($0)" }, series].compactMap { $0 }
         return (["Lesson"] + who).joined(separator: " · ")
     }
@@ -247,8 +273,14 @@ struct PollyThread: Codable {
     var kind: String?
     /// The lesson plan of a guest lesson, nil until the backend extracts it.
     var lesson: PollyLesson?
+    /// Lessons Polly wrote: place on the path, and which steps are done.
+    var pathPosition: Int?
+    var lessonSteps: PollyLessonSteps?
+    var lessonDoneAt: Date?
 
     var isGuestLesson: Bool { kind == "guest_lesson" }
+    /// A lesson Polly wrote for the learner's path.
+    var isPollyLesson: Bool { kind == "lesson" }
 
     var isCertified: Bool { stars >= 3 }
     var recertLapsed: Bool {
@@ -282,6 +314,9 @@ struct PollyThread: Codable {
         case secondChanceUntil = "second_chance_until"
         case recertDueAt = "recert_due_at"
         case kind, lesson
+        case pathPosition = "path_position"
+        case lessonSteps = "lesson_steps"
+        case lessonDoneAt = "lesson_done_at"
     }
 
     init(from decoder: Decoder) throws {
@@ -292,6 +327,9 @@ struct PollyThread: Codable {
         messages = try c.decodeIfPresent([PollyMessage].self, forKey: .messages) ?? []
         kind = try c.decodeIfPresent(String.self, forKey: .kind)
         lesson = try? c.decodeIfPresent(PollyLesson.self, forKey: .lesson)
+        pathPosition = try? c.decodeIfPresent(Int.self, forKey: .pathPosition)
+        lessonSteps = try? c.decodeIfPresent(PollyLessonSteps.self, forKey: .lessonSteps)
+        lessonDoneAt = try? c.decodeIfPresent(Date.self, forKey: .lessonDoneAt)
         quizCount = try c.decodeIfPresent(Int.self, forKey: .quizCount) ?? 0
         lastQuizzedAt = try c.decodeIfPresent(Date.self, forKey: .lastQuizzedAt)
         stars = try c.decodeIfPresent(Int.self, forKey: .stars) ?? 0
@@ -301,6 +339,71 @@ struct PollyThread: Codable {
         studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
         secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
         recertDueAt = try c.decodeIfPresent(Date.self, forKey: .recertDueAt)
+    }
+}
+
+/// Which of a lesson's three steps are done (the backend stores the time
+/// each was finished; the app only needs whether).
+struct PollyLessonSteps: Codable, Equatable {
+    var talk: String?
+    var words: String?
+    var grammar: String?
+}
+
+// MARK: - The path (Agentic Learning Mode)
+
+/// GET /api/polly/path — the level check's verdict and the lessons in order.
+struct PollyPath: Codable, Equatable {
+    let language: String
+    let languageName: String
+    let level: String?
+    let placement: Placement?
+    var cardDismissed: Bool
+    let lessons: [Lesson]
+
+    struct Placement: Codable, Equatable {
+        let level: String
+        let canDo: String
+        let shaky: String
+        let interests: [String]
+        enum CodingKeys: String, CodingKey {
+            case level, shaky, interests
+            case canDo = "can_do"
+        }
+    }
+
+    struct Lesson: Codable, Equatable, Identifiable {
+        var id: Int { position }
+        let position: Int
+        let title: String
+        let scene: String
+        let grammar: String
+        let threadId: String?
+        /// done | current | writing | locked
+        let state: String
+        let steps: Steps
+        struct Steps: Codable, Equatable {
+            let talk: Bool
+            let words: Bool
+            let grammar: Bool
+            var doneCount: Int { [talk, words, grammar].filter { $0 }.count }
+        }
+        enum CodingKeys: String, CodingKey {
+            case position, title, scene, grammar, state, steps
+            case threadId = "thread_id"
+        }
+    }
+
+    /// The level check has been taken.
+    var isPlaced: Bool { level != nil && !lessons.isEmpty }
+    var current: Lesson? { lessons.first { $0.state == "current" || $0.state == "writing" } }
+    var doneCount: Int { lessons.filter { $0.state == "done" }.count }
+    var isFinished: Bool { isPlaced && doneCount == lessons.count }
+
+    enum CodingKeys: String, CodingKey {
+        case language, level, placement, lessons
+        case languageName = "language_name"
+        case cardDismissed = "card_dismissed"
     }
 }
 

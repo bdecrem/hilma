@@ -65,19 +65,30 @@ struct LessonSheet: View {
             header
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
+                    // A lesson Polly wrote leads with its conversation; a
+                    // guest lesson with the host's key words.
+                    if let lines = lesson.dialogue, !lines.isEmpty {
+                        conversation(lines)
+                    }
                     if !lesson.keyWords.isEmpty {
-                        section("Key words", lesson.keyWords)
+                        section(lesson.dialogue == nil ? "Key words" : "Words", lesson.keyWords)
                     }
                     if !lesson.phrases.isEmpty {
-                        section("From the story", lesson.phrases)
+                        section(lesson.dialogue == nil ? "From the story" : "Expressions", lesson.phrases)
                     }
-                    story
+                    if lesson.dialogue == nil { story }
                     if let g = lesson.grammarPoint, !g.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
-                            eyebrow("Usage")
+                            eyebrow(lesson.dialogue == nil ? "Usage" : "Grammar")
                             Text(g)
-                                .font(.system(size: 14))
+                                .font(.system(size: 14, weight: lesson.grammarExplained == nil ? .regular : .semibold))
                                 .foregroundStyle(PollyTheme.text)
+                            if let more = lesson.grammarExplained, !more.isEmpty {
+                                Text(more)
+                                    .font(.system(size: 14))
+                                    .lineSpacing(3)
+                                    .foregroundStyle(PollyTheme.text2)
+                            }
                         }
                     }
                     if let q = lesson.closingQuestion, !q.isEmpty {
@@ -176,6 +187,50 @@ struct LessonSheet: View {
                     }
                 }
             }
+            .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(PollyTheme.border, lineWidth: 1))
+        }
+    }
+
+    /// The model conversation of a lesson Polly wrote: each line with its
+    /// English under it (the toggle hides the English, to test yourself).
+    private func conversation(_ lines: [PollyDialogueLine]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                eyebrow("The conversation")
+                Spacer()
+                Button {
+                    withAnimation(.easeInOut(duration: 0.15)) { storyInEnglish.toggle() }
+                } label: {
+                    Text(storyInEnglish ? "Hide English" : "Show English")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(PollyTheme.accent)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(PollyTheme.surface2, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            VStack(alignment: .leading, spacing: 11) {
+                ForEach(Array(lines.enumerated()), id: \.offset) { _, d in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(d.speaker.uppercased())
+                            .font(.system(size: 10, weight: .bold))
+                            .tracking(0.7)
+                            .foregroundStyle(d.speaker == "You" ? PollyTheme.accent : PollyTheme.text3)
+                        Text(d.line)
+                            .font(.system(size: 15.5, weight: .medium))
+                            .foregroundStyle(PollyTheme.text)
+                        if storyInEnglish {
+                            Text(d.english)
+                                .font(.system(size: 13))
+                                .foregroundStyle(PollyTheme.text2)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
             .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(PollyTheme.border, lineWidth: 1))
         }

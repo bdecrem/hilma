@@ -15,6 +15,12 @@ struct TopicDetailView: View {
     @State private var thread: PollyThread? = nil
     @State private var lessonPresented = false
     @State private var lessonLoading = false
+    /// A lesson Polly wrote: the step whose card set is being fetched, the
+    /// set once it is, and the Talk step's voice session.
+    @State private var startingStep: String? = nil
+    @State private var stepSet: FlashStart? = nil
+    @State private var stepError: String? = nil
+    @State private var talkPresented = false
     @State private var messages: [PollyMessage] = []
     @State private var draft = ""
     @State private var busy = false
@@ -60,7 +66,16 @@ struct TopicDetailView: View {
                         .padding(.bottom, 4)
                 }
 
-                firstSessionBanner
+                // A lesson Polly wrote: its scene and its three steps.
+                if let t = thread, t.isPollyLesson {
+                    LessonStepsCard(thread: t, startingStep: startingStep,
+                                    onPlan: { lessonPresented = true },
+                                    onTalk: { talkPresented = true },
+                                    onCards: { startStep($0) })
+                        .padding(.bottom, 4)
+                }
+
+                if thread?.isPollyLesson != true { firstSessionBanner }
                 recertBanner
 
                 if loading && thread == nil {
@@ -78,6 +93,26 @@ struct TopicDetailView: View {
         }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)
+        }
+        // The Talk step: ending the call uploads the transcript, the server
+        // marks the step, and the reload picks it up.
+        .fullScreenCover(isPresented: $talkPresented) {
+            VoiceSessionView(mode: "topic", threadId: topicId, title: thread?.topic) { _ in
+                talkPresented = false
+                Task { await load() }
+            }
+        }
+        // The Words and Grammar steps: one card set each.
+        .fullScreenCover(item: $stepSet) { start in
+            FlashSetView(start: start, topicLabel: thread?.topic) { _ in
+                Task { await load() }
+            }
+            .environment(session)
+        }
+        .alert("Cards", isPresented: Binding(get: { stepError != nil }, set: { if !$0 { stepError = nil } })) {
+            Button("OK") { stepError = nil }
+        } message: {
+            Text(stepError ?? "")
         }
         .sheet(isPresented: $lessonPresented) {
             if let lesson = thread?.lesson {
@@ -550,6 +585,24 @@ struct TopicDetailView: View {
 
     /// A guest lesson opened before its plan exists: ask the backend to
     /// extract it now (one slow call) so the Lesson card fills in.
+    /// Start the Words or Grammar step: a mixed set of that step's cards.
+    /// The decks are built right after the lesson is written, so a lesson
+    /// opened in its first seconds may not have them yet.
+    private func startStep(_ step: String) {
+        guard startingStep == nil else { return }
+        startingStep = step
+        Task {
+            defer { startingStep = nil }
+            do {
+                stepSet = try await PollyAPI.shared.startFlashSet(threadId: topicId, mode: "mixed", lessonStep: step)
+            } catch PollyAPIError.http(409, _) {
+                stepError = "Polly is still making this lesson's cards. Try again in a moment."
+            } catch {
+                stepError = error.localizedDescription
+            }
+        }
+    }
+
     private func warmLesson() async {
         guard !lessonLoading else { return }
         lessonLoading = true

@@ -73,6 +73,7 @@
 		B8558853B50133AB49686718 /* voice-bossa.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C829B79F6AE938BCE1BF6A76 /* voice-bossa.m4a */; };
 		C03954E0C6F7725A41FAE86C /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBBDC96035EAC4AB19908098 /* OnboardingView.swift */; };
 		C3E5259293883F2916EE5CD7 /* PeckOddsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C32070B1DB5E2210ABCAEE4D /* PeckOddsSheet.swift */; };
+		C608E232BD2B3AEB77DEA198 /* PathViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC90AAA532DC5D24D0A00F17 /* PathViews.swift */; };
 		C8A19BA8AC971A9ACAF2BF39 /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B18A4149BE4FBF883373CC86 /* ModelPicker.swift */; };
 		C8D693F0043D94E90E0F37C8 /* voice-vesper.m4a in Resources */ = {isa = PBXBuildFile; fileRef = D33C241203B394B7D3A89168 /* voice-vesper.m4a */; };
 		CA4DA11FE605FAB119440042 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406B207C89E57DA611A0679 /* FlashVoiceView.swift */; };
@@ -164,6 +165,7 @@
 		D3D5252E8DB78C29CFD1DBBF /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
 		D7071DF7D3534266FEC5705F /* voice-cinder.m4a */ = {isa = PBXFileReference; path = "voice-cinder.m4a"; sourceTree = "<group>"; };
 		DC3EC88BC813F4C9286BCF6B /* voice-meridian.m4a */ = {isa = PBXFileReference; path = "voice-meridian.m4a"; sourceTree = "<group>"; };
+		DC90AAA532DC5D24D0A00F17 /* PathViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathViews.swift; sourceTree = "<group>"; };
 		DFE2838F934397636E6E186E /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		E5B099CB79824BBD0F6C37B7 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
 		E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 				A9100A5E331910F9D14CCB43 /* Models.swift */,
 				EBBDC96035EAC4AB19908098 /* OnboardingView.swift */,
 				D3D5252E8DB78C29CFD1DBBF /* PasteView.swift */,
+				DC90AAA532DC5D24D0A00F17 /* PathViews.swift */,
 				8C9D0ACF86BFDA31B5771162 /* PebblesView.swift */,
 				C32070B1DB5E2210ABCAEE4D /* PeckOddsSheet.swift */,
 				C5C76E3DFCED3649ADD9A34B /* PeckRegionTransitionView.swift */,
@@ -442,6 +445,7 @@
 				E84BE82820A525676818ACFD /* Models.swift in Sources */,
 				C03954E0C6F7725A41FAE86C /* OnboardingView.swift in Sources */,
 				7AEE284B87BD97E6E0C2CD31 /* PasteView.swift in Sources */,
+				C608E232BD2B3AEB77DEA198 /* PathViews.swift in Sources */,
 				995EE9F5093CAAA927BE65F1 /* PebblesView.swift in Sources */,
 				C3E5259293883F2916EE5CD7 /* PeckOddsSheet.swift in Sources */,
 				1C8F55D5FCCD2A79A044568A /* PeckRegionTransitionView.swift in Sources */,

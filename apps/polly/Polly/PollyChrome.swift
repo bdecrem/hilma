@@ -217,6 +217,7 @@ struct MiniTopicGlyph: View {
         case "book":  BookGlyph()
         case "mini":  MiniKindGlyph()
         case "general": GeneralGlyph()
+        case "lesson": PathLessonGlyph()
         case "guest_lesson": GuestLessonGlyph()
         case "immersion": ImmersionGlyph()
         case "ask":   AskGlyph()
@@ -423,6 +424,35 @@ private struct GeneralGlyph: View {
 }
 
 // MARK: Polly's three language-learning kinds (2026-09-18)
+
+private struct PathLessonGlyph: View {
+    // Three stepping stones climbing to the right, joined by a line: a
+    // lesson on the learner's path. The first stone is filled (you are here).
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.2 * s, lineCap: .round, lineJoin: .round)
+            let stones: [CGPoint] = [CGPoint(x: 5, y: 14.5), CGPoint(x: 10, y: 10), CGPoint(x: 15, y: 5.5)]
+            let r: CGFloat = 2.1
+
+            // Links run stone edge to stone edge (unit vector along the path
+            // is (0.743, -0.669) for a (5, -4.5) step).
+            for i in 0..<2 {
+                let a = stones[i], b = stones[i + 1]
+                var link = Path()
+                link.move(to: CGPoint(x: (a.x + 0.743 * (r + 0.6)) * s, y: (a.y - 0.669 * (r + 0.6)) * s))
+                link.addLine(to: CGPoint(x: (b.x - 0.743 * (r + 0.6)) * s, y: (b.y + 0.669 * (r + 0.6)) * s))
+                ctx.stroke(link, with: coral, style: style)
+            }
+            for (i, p) in stones.enumerated() {
+                let rect = CGRect(x: (p.x - r) * s, y: (p.y - r) * s, width: r * 2 * s, height: r * 2 * s)
+                if i == 0 { ctx.fill(Path(ellipseIn: rect), with: coral) }
+                ctx.stroke(Path(ellipseIn: rect), with: coral, style: style)
+            }
+        }
+    }
+}
 
 private struct GuestLessonGlyph: View {
     // Mortarboard: a diamond cap over a shallow band, tassel hanging right.

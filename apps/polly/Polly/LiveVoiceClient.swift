@@ -96,6 +96,10 @@ final class LiveVoiceClient: NSObject {
     private var speakingTimer: Task<Void, Never>?
     private var thinkingTimer: Task<Void, Never>?
     private var releaseTask: Task<Void, Never>?
+    /// The level check's one-time nudge: armed when Polly's greeting ends,
+    /// disarmed by the learner's first word.
+    private var nudgeTask: Task<Void, Never>?
+    private var nudgeSpent = false
     private var eventCounter = 0
     private static let releaseGrace: Duration = .milliseconds(300)
 
@@ -464,6 +468,9 @@ final class LiveVoiceClient: NSObject {
             }
             markSpeaking()
         case "session.input_transcript.delta":
+            // The learner answered: no nudge needed, now or later.
+            nudgeSpent = true
+            nudgeTask?.cancel()
             if let delta = event["delta"] as? String {
                 appendFragment(role: "user", delta: delta,
                                startMs: event["start_ms"] as? Int ?? 0,
@@ -525,6 +532,28 @@ final class LiveVoiceClient: NSObject {
             guard let self, !Task.isCancelled, self.phase == .speaking else { return }
             self.phase = .connected
             self.status = self.talking ? "Listening" : "Connected"
+            self.armSilenceNudge()
+        }
+    }
+
+    /// Level check: Polly has said her greeting and gone quiet. If the
+    /// learner says nothing for the server's `after_ms`, send the nudge once
+    /// — an instruction plus a commentary, which is what makes the model
+    /// speak unprompted — and Polly tries again in English.
+    private func armSilenceNudge() {
+        guard !nudgeSpent, let nudge = sessionResponse?.live.silenceNudge else { return }
+        nudgeTask?.cancel()
+        nudgeTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(nudge.afterMs))
+            guard let self, !Task.isCancelled, !self.nudgeSpent, !self.talking,
+                  self.phase == .connected else { return }
+            self.nudgeSpent = true
+            self.sendEvent(["type": "session.instructions.append", "event_id": self.nextEventId("nudge"),
+                            "delegation_id": NSNull(), "content": nudge.instruction])
+            self.sendEvent(["type": "session.commentary.append", "event_id": self.nextEventId("nudge-say"),
+                            "delegation_id": NSNull(), "content": nudge.commentary])
+            NSLog("F2_LIVE_NUDGE sent")
+            self.setThinking()
         }
     }
 
@@ -683,6 +712,7 @@ final class LiveVoiceClient: NSObject {
         speakingTimer?.cancel()
         thinkingTimer?.cancel()
         releaseTask?.cancel()
+        nudgeTask?.cancel()
         if let pending = iceGatheringContinuation {
             iceGatheringContinuation = nil
             pending.resume()

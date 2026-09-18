@@ -32,6 +32,11 @@ enum TopicSort: String, CaseIterable, Identifiable {
 struct TopicsView: View {
     @Environment(Session.self) private var session
     @State private var topics: [PollyTopic] = []
+    /// Agentic Learning Mode: the level check's verdict and the lessons in
+    /// order (PathViews.swift). Nil until loaded.
+    @State private var path: PollyPath? = nil
+    @State private var placementPresented = false
+    @State private var pollingPath = false
     /// Feeds the streak-at-risk banner (weekly Peck rule) — cache first,
     /// refreshed alongside the topics list.
     @State private var jumbo: JumboState? = nil
@@ -83,14 +88,27 @@ struct TopicsView: View {
     /// Pinned topics float above everything, newest-pinned first, regardless
     /// of the active sort.
     private var pinnedTopics: [PollyTopic] {
-        topics.filter(\.isPinned).sorted {
+        listTopics.filter(\.isPinned).sorted {
             ($0.pinnedAt ?? .distantPast) > ($1.pinnedAt ?? .distantPast)
         }
     }
 
     /// Everything not pinned, in the active sort order.
     private var unpinnedTopics: [PollyTopic] {
-        applySort(topics.filter { !$0.isPinned })
+        applySort(listTopics.filter { !$0.isPinned })
+    }
+
+    /// The topic list proper: lessons on the path are drawn in the path
+    /// list above it, not here.
+    private var listTopics: [PollyTopic] {
+        guard path?.isPlaced == true else { return topics }
+        return topics.filter { !$0.isOnPath }
+    }
+
+    /// The path card shows until the learner hides it.
+    private var showsPathCard: Bool {
+        guard let path else { return false }
+        return !path.cardDismissed
     }
 
     /// One section of a grouped view (By completion / By type).
@@ -108,6 +126,7 @@ struct TopicsView: View {
         case .byCompletion:
             // Soonest renewal first inside Completed — the list doubles as
             // the renewal schedule.
+            let topics = listTopics
             let completed = topics.filter { $0.isCertified && !$0.recertLapsed }
                 .sorted { ($0.recertDueAt ?? .distantFuture) < ($1.recertDueAt ?? .distantFuture) }
             let lapsed = topics.filter { $0.isCertified && $0.recertLapsed }
@@ -130,8 +149,9 @@ struct TopicsView: View {
             ].filter { !$0.topics.isEmpty }
         case .byType:
             // Polly's three kinds lead; the rest follow the Rename sheet's kind order.
+            let topics = listTopics
             let order: [(kind: String, title: String)] = [
-                ("guest_lesson", "Guest lessons"), ("immersion", "Immersion"), ("ask", "Ask"),
+                ("lesson", "Polly's lessons"), ("guest_lesson", "Guest lessons"), ("immersion", "Immersion"), ("ask", "Ask"),
                 ("book", "Books"), ("mini", "Mini topics"), ("general", "General topics"),
                 ("web", "Web pages"), ("video", "Videos"), ("audio", "Audio"),
                 ("paste", "Pasted text"), ("chat", "Chats"), ("fallback", "Other"),
@@ -171,7 +191,7 @@ struct TopicsView: View {
                         ProgressView()
                             .tint(PollyTheme.text2)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else if topics.isEmpty {
+                    } else if topics.isEmpty && !showsPathCard {
                         titleRow
                         emptyState
                     } else {
@@ -198,6 +218,20 @@ struct TopicsView: View {
         // `session` through explicitly (see dismissTopmostPresentedModal in
         // PollyChrome.swift for the underlying Catalyst bug).
         .sheet(isPresented: $showProfile) { ProfileSheet().environment(session) }
+        .fullScreenCover(isPresented: $placementPresented) {
+            PlacementFlowView(languageName: path?.languageName ?? "your new language") { fresh, lessonId in
+                placementPresented = false
+                if let fresh { path = fresh }
+                Task {
+                    await load()
+                    if let lessonId {
+                        try? await Task.sleep(for: .milliseconds(350))
+                        DeepLinkRouter.shared.requestTopicChat(threadId: lessonId, draft: "")
+                    }
+                }
+            }
+            .environment(session)
+        }
         .sheet(item: $contextTarget) { target in
             TopicContextSheet(topicId: target.id, topicLabel: target.label,
                               seedFocus: target.seedFocus)
@@ -281,6 +315,15 @@ struct TopicsView: View {
                     communityPresented = true
                 }
             }
+            // `-OpenPlacement 1` — straight into the level check (add
+            // `-PlacementSession <id>` to skip the call; see PlacementFlowView).
+            if UserDefaults.standard.bool(forKey: "OpenPlacement") {
+                UserDefaults.standard.removeObject(forKey: "OpenPlacement")
+                Task {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    placementPresented = true
+                }
+            }
             #endif
             await load()
             await session.refreshProgress()
@@ -327,6 +370,14 @@ struct TopicsView: View {
                     } else {
                         Text(option.label)
                     }
+                }
+            }
+            // The hidden path card's way back.
+            if path?.cardDismissed == true {
+                Divider()
+                Button { setPathCardDismissed(false) } label: {
+                    Label(path?.isPlaced == true ? "Show my path card" : "Show \"Talk to Polly\"",
+                          systemImage: "point.topleft.down.to.point.bottomright.curvepath")
                 }
             }
         } label: {
@@ -432,7 +483,21 @@ struct TopicsView: View {
             LazyVStack(spacing: 0) {
                 titleRow.padding(.horizontal, -14)
                     .id("topics-top")
-                metaStrip
+                if !topics.isEmpty { metaStrip }
+                // Agentic Learning Mode: the card (until hidden), then the
+                // lessons of the path, kept together above everything else.
+                if showsPathCard, let path {
+                    PathCard(path: path, topics: topics,
+                             onStartCheck: { placementPresented = true },
+                             onDismiss: { setPathCardDismissed(true) })
+                        .padding(.top, 2)
+                        .padding(.bottom, 6)
+                }
+                if let path, path.isPlaced {
+                    sectionHeader("Your path · \(path.languageName) \(path.level ?? "")")
+                    PathList(path: path, topics: topics)
+                    if !listTopics.isEmpty { sectionHeader("Topics") }
+                }
                 PeckWeekBanner(state: jumbo)
                     .padding(.top, 2)
                     .padding(.bottom, 4)
@@ -538,6 +603,8 @@ struct TopicsView: View {
             loadError = error.localizedDescription
         }
         startAudioPollingIfNeeded()
+        if let fresh = try? await PollyAPI.shared.getPath() { path = fresh }
+        startPathPollingIfNeeded()
         // Streak deadline for the Peck banner — quiet refresh, cache stays
         // on a failure.
         Task {
@@ -545,6 +612,33 @@ struct TopicsView: View {
                 jumbo = fresh
                 ScreenCache.save(fresh, key: ScreenCache.jumbo)
             }
+        }
+    }
+
+    /// While Polly is writing the next lesson, check back every few seconds
+    /// so the row turns into a lesson without a pull-to-refresh.
+    private func startPathPollingIfNeeded() {
+        guard !pollingPath, path?.lessons.contains(where: { $0.state == "writing" }) == true else { return }
+        pollingPath = true
+        Task {
+            defer { pollingPath = false }
+            for _ in 0..<40 {
+                try? await Task.sleep(for: .seconds(6))
+                guard let fresh = try? await PollyAPI.shared.getPath() else { continue }
+                let wasWriting = path?.lessons.contains { $0.state == "writing" } == true
+                path = fresh
+                if !fresh.lessons.contains(where: { $0.state == "writing" }) {
+                    if wasWriting, let list = try? await PollyAPI.shared.listTopics() { topics = list }
+                    return
+                }
+            }
+        }
+    }
+
+    private func setPathCardDismissed(_ dismissed: Bool) {
+        withAnimation(.easeOut(duration: 0.2)) { path?.cardDismissed = dismissed }
+        Task {
+            if let fresh = try? await PollyAPI.shared.setPathCardDismissed(dismissed) { path = fresh }
         }
     }
 
@@ -1007,6 +1101,8 @@ struct RenameTopicSheet: View {
                     TextField("Title", text: $draft, axis: .vertical)
                         .lineLimit(1...3)
                 }
+                // A lesson Polly wrote keeps its type.
+                if topic.kind != "lesson" {
                 Section("Type") {
                     HStack(spacing: 12) {
                         MiniTopicGlyph(kind: kind, size: 30)
@@ -1019,6 +1115,7 @@ struct RenameTopicSheet: View {
                         .labelsHidden()
                         Spacer()
                     }
+                }
                 }
             }
             .navigationTitle("Rename topic")
