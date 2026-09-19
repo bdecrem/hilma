@@ -60,7 +60,9 @@ struct InfinityHomeView: View {
                let ready = chats.first(where: { $0.hasAnalysis }) {
                 UserDefaults.standard.removeObject(forKey: "OpenInfinityDrill")
                 try? await Task.sleep(for: .milliseconds(600))
-                if which == "vocab" { vocabChat = ready } else if which == "grammar" { grammarChat = ready }
+                if which == "vocab" { vocabChat = ready }
+                else if which == "grammar" { grammarChat = ready }
+                else if which == "quiz" { await startQuiz(ready) }
             }
             #endif
         }
