@@ -111,7 +111,7 @@ struct TopicDetailView: View {
             }
         }
         .sheet(isPresented: $showInfinitySessions, onDismiss: { infinityRefresh += 1 }) {
-            InfinityHomeView(topicId: topicId).environment(session)
+            InfinityHomeView(topicId: topicId, title: thread?.topic ?? "Infinity Chat").environment(session)
         }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)

@@ -1,3 +1,5 @@
+import { activeLanguage } from '@/lib/polly/language'
+import { infinityTitle } from '@/lib/polly/infinity'
 import { NextResponse, after } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
 import {
@@ -98,7 +100,8 @@ export async function POST(req: Request) {
       userId: user.id,
       client: 'web',
       handle: user.username,
-      topic: 'Infinity Chat',
+      // Titled in the language the learner is studying.
+      topic: infinityTitle(await activeLanguage(user.id)),
       kind,
     })
     if (!thread) {

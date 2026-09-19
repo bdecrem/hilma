@@ -8,6 +8,7 @@ import SwiftUI
 
 struct InfinityHomeView: View {
     let topicId: String
+    var title: String = "Infinity Chat"
 
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
@@ -67,7 +68,7 @@ struct InfinityHomeView: View {
             #endif
         }
         .fullScreenCover(isPresented: $talkPresented) {
-            VoiceSessionView(mode: "topic", threadId: topicId, title: "Infinity Chat") { sessionId in
+            VoiceSessionView(mode: "topic", threadId: topicId, title: title) { sessionId in
                 talkPresented = false
                 if let sessionId { Task { await recordChat(sessionId) } }
             }
@@ -107,7 +108,7 @@ struct InfinityHomeView: View {
             IconCircleButton(systemImage: "chevron.left", fg: PollyTheme.text) { dismiss() }
             HStack(spacing: 7) {
                 MiniTopicGlyph(kind: "infinity", size: 22)
-                Text("Infinity Chat")
+                Text(title)
                     .font(.system(size: 17, weight: .semibold)).tracking(-0.3)
                     .foregroundStyle(PollyTheme.text)
             }

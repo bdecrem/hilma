@@ -13,6 +13,16 @@ const INFINITY_MODEL = process.env.POLLY_INFINITY_MODEL || 'sonnet-4-6'
 const TITLE_MODEL = process.env.POLLY_INFINITY_TITLE_MODEL || 'sonnet-4-6'
 export const MAX_FIXES = 5
 
+/// "Infinity Chat" in the language the learner is studying (the topic title).
+const INFINITY_TITLE: Record<string, string> = {
+  it: 'Chat infinita',
+  fr: 'Chat infini',
+  ko: '무한 대화',
+}
+export function infinityTitle(language: LanguageCode | null): string {
+  return (language && INFINITY_TITLE[language]) || 'Infinity Chat'
+}
+
 // ---------- shapes ----------
 
 /// One curated fix: what the learner said, the clean version, why, and the
@@ -85,7 +95,8 @@ export async function createInfinityChat(input: {
   voiceSessionId: string
 }): Promise<InfinityChat> {
   const rows = await sessionTranscript(input.userId, input.voiceSessionId)
-  const title = await quickTitle(rows).catch(() => null)
+  const language = await activeLanguage(input.userId)
+  const title = await quickTitle(rows, language).catch(() => null)
   const { data, error } = await pollySupabase()
     .from('polly_infinity_chats')
     .insert({
@@ -298,7 +309,7 @@ For each fix give: what they said (lightly cleaned of transcription noise, still
 
 Then, from the useful language in the chat, up to 8 vocab pairs (a ${lang} term and its short English meaning) — these get drilled both directions. And for the grammar-tagged fixes, a tiny grammar point each: a short title, one plain line explaining it, and 1–3 quick fill-in drills (prompt + answer).
 
-Also give the whole conversation a short, friendly 2–4 word title (English), like a chat label ("Ordering coffee", "Weekend plans").
+Also give the whole conversation a short, friendly 2–4 word title IN ${lang} (the language the learner is studying, NOT English), like a chat label.
 
 Warm, specific, encouraging. This is a consumer app, not a report.`
 
@@ -314,7 +325,7 @@ Warm, specific, encouraging. This is a consumer app, not a report.`
       input_schema: {
         type: 'object',
         properties: {
-          title: { type: 'string', description: 'A friendly 2–4 word English label for the chat.' },
+          title: { type: 'string', description: `A friendly 2–4 word label for the chat, in ${lang} (not English).` },
           fixes: {
             type: 'array',
             description: `At most ${MAX_FIXES}, curated. Fewer is fine. Never pad.`,
@@ -398,13 +409,15 @@ Warm, specific, encouraging. This is a consumer app, not a report.`
   return { title: String(r.title ?? '').trim() || input.fallbackTitle || 'A quick chat', fixes, vocab, grammar }
 }
 
-/// A cheap 2–4 word label so the feed reads nicely before clean-up.
-async function quickTitle(rows: TranscriptRow[]): Promise<string | null> {
+/// A cheap 2–4 word label, in the language the learner is studying, so the feed
+/// reads nicely before clean-up.
+async function quickTitle(rows: TranscriptRow[], language: LanguageCode | null): Promise<string | null> {
   const convo = transcriptText(rows)
   if (!convo.trim()) return null
+  const lang = language ? LANGUAGES[language].name : 'the language being practised'
   const result = await llmComplete({
     model: TITLE_MODEL,
-    system: 'Give a short, friendly 2–4 word English label for this practice conversation, like a chat title ("Ordering coffee", "Weekend plans"). Just the label.',
+    system: `Give a short, friendly 2–4 word label for this practice conversation, IN ${lang} (the language the learner is studying, not English) — like a chat title. Natural and simple. Just the label, in ${lang}.`,
     messages: [{ role: 'user', content: convo.slice(0, 4000) }],
     maxTokens: 200,
     forceTool: true,
