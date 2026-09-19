@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
+import { accountRootId } from '@/lib/polly/profiles'
+import { isQuality } from '@/lib/polly/quality'
 import { pollySupabase } from '@/lib/polly/supabase'
 
 export const runtime = 'nodejs'
@@ -14,7 +16,7 @@ export async function GET() {
   }
   const { data } = await pollySupabase()
     .from('polly_users')
-    .select('daily_card_enabled, imessage_handles, daily_chat_guid, recert_enabled, is_guest')
+    .select('daily_card_enabled, imessage_handles, daily_chat_guid, recert_enabled, is_guest, content_quality')
     .eq('id', user.id)
     .maybeSingle()
   const handles = (data?.imessage_handles as string[] | null) ?? []
@@ -23,6 +25,7 @@ export async function GET() {
     imessage_paired: handles.length > 0 || data?.daily_chat_guid != null,
     recert_enabled: data?.recert_enabled !== false,
     is_guest: Boolean(data?.is_guest),
+    content_quality: isQuality(data?.content_quality) ? data.content_quality : 'fast',
   })
 }
 
@@ -33,11 +36,31 @@ export async function PUT(req: Request) {
   if (!user) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
-  let body: { daily_card_enabled?: boolean; recert_enabled?: boolean }
+  let body: { daily_card_enabled?: boolean; recert_enabled?: boolean; content_quality?: unknown }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  // Content quality (Fast / Thorough) — account-wide: every language profile
+  // of the account gets it (src/lib/polly/quality.ts).
+  if (body.content_quality !== undefined) {
+    if (!isQuality(body.content_quality)) {
+      return NextResponse.json({ error: "content_quality must be 'fast' or 'deep'" }, { status: 400 })
+    }
+    const rootId = await accountRootId(user.id)
+    const { error } = await pollySupabase()
+      .from('polly_users')
+      .update({ content_quality: body.content_quality })
+      .or(`id.eq.${rootId},account_id.eq.${rootId}`)
+    if (error) {
+      console.error('[polly/profile] content_quality update failed:', error)
+      return NextResponse.json({ error: 'Could not save.' }, { status: 500 })
+    }
+    if (typeof body.recert_enabled !== 'boolean' && typeof body.daily_card_enabled !== 'boolean') {
+      return NextResponse.json({ content_quality: body.content_quality })
+    }
   }
 
   // The Refresher toggle — independent of the daily card.

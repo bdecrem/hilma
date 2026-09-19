@@ -42,7 +42,7 @@ struct ProfileSheet: View {
         return nil
     }
     @State private var showLanguages = false
-    @AppStorage(CleanupQuality.key) private var cleanupQualityRaw = CleanupQuality.fast.rawValue
+    @State private var contentQuality: ContentQuality = .fast
 
     var body: some View {
         VStack(spacing: 0) {
@@ -132,11 +132,23 @@ struct ProfileSheet: View {
                 dailyCardEnabled = status.dailyCardEnabled
                 dailyCardPaired = status.imessagePaired
                 recertEnabled = status.recertEnabled
+                contentQuality = ContentQuality(rawValue: status.contentQuality) ?? .fast
                 isGuest = status.isGuest
                 // Mirror for views that render before this sheet ever loads
                 // (the topic screen's Refresher chip, notification sync).
                 UserDefaults.standard.set(status.recertEnabled, forKey: "recertEnabled")
             } catch { /* keep defaults */ }
+        }
+    }
+
+    private func setContentQuality(_ quality: ContentQuality) async {
+        let before = contentQuality
+        contentQuality = quality // optimistic
+        do {
+            contentQuality = try await PollyAPI.shared.setContentQuality(quality)
+        } catch {
+            contentQuality = before
+            dailyCardError = error.localizedDescription
         }
     }
 
@@ -566,20 +578,22 @@ struct ProfileSheet: View {
                         .padding(.horizontal, 14).padding(.vertical, 10)
                         SettingsDivider()
                     }
-                    // Infinity Chat clean-up: speed vs. a sharper read.
+                    // Content quality — one setting over everything Polly
+                    // writes or grades (src/lib/polly/quality.ts).
                     VStack(alignment: .leading, spacing: 8) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Clean-up")
+                            Text("Polly's care")
                                 .font(.system(size: 15)).tracking(-0.2).foregroundStyle(PollyTheme.text)
-                            Text(cleanupQualityRaw == CleanupQuality.deep.rawValue
-                                 ? "Polly reads your chat more closely — a few seconds longer"
-                                 : "Your fixes are ready in about ten seconds")
+                            Text(contentQuality == .deep
+                                 ? "Clean-ups, cards and grading take a closer look — a few seconds longer"
+                                 : "Clean-ups, cards and grading come back as quickly as possible")
                                 .font(.system(size: 12.5)).foregroundStyle(PollyTheme.text3)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         HStack(spacing: 4) {
-                            ForEach(CleanupQuality.allCases, id: \.self) { q in
-                                let on = q.rawValue == cleanupQualityRaw
-                                Button { cleanupQualityRaw = q.rawValue } label: {
+                            ForEach(ContentQuality.allCases, id: \.self) { q in
+                                let on = q == contentQuality
+                                Button { Task { await setContentQuality(q) } } label: {
                                     Text(q.label)
                                         .font(.system(size: 14, weight: on ? .semibold : .medium))
                                         .tracking(-0.1)

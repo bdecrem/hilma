@@ -12,6 +12,7 @@
 
 import { llmComplete } from './llm'
 import { activeLanguage, LANGUAGES } from './language'
+import { qualityFor, tierFor, type Tier } from './quality'
 import { pollySupabase } from './supabase'
 import { buildFullContent, type PollyThread } from './threads'
 
@@ -73,12 +74,12 @@ export function isPollyLesson(thread: Pick<PollyThread, 'kind'>): boolean {
   return thread.kind === 'lesson'
 }
 
-const LESSON_MODEL = process.env.POLLY_LESSON_MODEL || 'sonnet-5'
 
 /// Pull the lesson plan out of the transcript. Pure LLM call; nothing saved.
 export async function extractLesson(
   thread: PollyThread,
   languageHint: string | null,
+  tier: Tier = tierFor('lessonPlan', 'fast'),
 ): Promise<LessonPlan> {
   const material = buildFullContent(thread)
   if (!material.trim()) throw new Error('No material to extract a lesson from')
@@ -100,10 +101,11 @@ Extract, faithfully and only from the transcript:
 Rules: a key word's or phrase's example sentence must contain the term as taught (if the transcript has a variant wording of the same line, use the taught one); spell the target language correctly, with every accent and apostrophe, and capitalise the formal "Lei"; quote the transcript, don't invent; transcripts have no punctuation in places and mis-hear words — fix obvious transcription errors in a term, nothing else. Plain text in every field, no markdown.`
 
   const result = await llmComplete({
-    model: LESSON_MODEL,
+    model: process.env.POLLY_LESSON_MODEL || tier.model,
+    effort: tier.effort,
     system,
     messages: [{ role: 'user', content: `Topic title: ${thread.topic ?? '(untitled)'}\nURL: ${thread.url ?? 'none'}\n\nTranscript:\n${material.slice(0, 400_000)}` }],
-    maxTokens: 6_000,
+    maxTokens: 16_000,
     forceTool: true,
     tools: [
       {
@@ -148,7 +150,7 @@ Rules: a key word's or phrase's example sentence must contain the term as taught
     grammar_point: r.grammar_point?.toString().trim() || null,
     closing_question: r.closing_question?.toString().trim() || null,
     extracted_at: new Date().toISOString(),
-    model: LESSON_MODEL,
+    model: `${process.env.POLLY_LESSON_MODEL || tier.model}:${tier.effort ?? 'default'}`,
   }
   if (plan.key_words.length + plan.phrases.length === 0 || !plan.story_summary) {
     throw new Error('Lesson extraction came back empty')
@@ -177,7 +179,8 @@ export async function ensureLesson(thread: PollyThread): Promise<PollyThread> {
   if (!isGuestLesson(thread) || thread.lesson) return thread
   try {
     const hint = await activeLanguage(thread.user_id)
-    const plan = await extractLesson(thread, hint ? LANGUAGES[hint].name : null)
+    const tier = tierFor('lessonPlan', await qualityFor(thread.user_id))
+    const plan = await extractLesson(thread, hint ? LANGUAGES[hint].name : null, tier)
     const { error } = await pollySupabase()
       .from('polly_threads')
       .update({ lesson: plan, updated_at: new Date().toISOString() })

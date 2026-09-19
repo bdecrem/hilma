@@ -874,11 +874,9 @@ final class PollyAPI {
     }
 
     /// Curate the ≤5 fixes + vocab + grammar (idempotent). Slow — one LLM pass.
-    /// `quality` is the Settings preference (CleanupQuality): "fast" or "deep".
     func cleanUpInfinityChat(id: String) async throws -> InfinityChat {
-        struct Body: Encodable { let quality: String }
         let res: InfinityChatResponse = try await request("/api/polly/infinity/chats/\(id)/cleanup",
-                                                          method: "POST", body: Body(quality: CleanupQuality.current.rawValue))
+                                                          method: "POST", body: EmptyBody())
         return res.chat
     }
 
@@ -1132,8 +1130,11 @@ final class PollyAPI {
         /// The Refresher toggle; false = mastery is forever.
         var recertEnabled: Bool = true
         var isGuest: Bool = false
+        /// Fast / Thorough ("fast" | "deep") — see ContentQuality.
+        var contentQuality: String = "fast"
 
         enum CodingKeys: String, CodingKey {
+            case contentQuality = "content_quality"
             case dailyCardEnabled = "daily_card_enabled"
             case imessagePaired = "imessage_paired"
             case recertEnabled = "recert_enabled"
@@ -1146,6 +1147,7 @@ final class PollyAPI {
             imessagePaired = try c.decodeIfPresent(Bool.self, forKey: .imessagePaired) ?? false
             recertEnabled = try c.decodeIfPresent(Bool.self, forKey: .recertEnabled) ?? true
             isGuest = try c.decodeIfPresent(Bool.self, forKey: .isGuest) ?? false
+            contentQuality = try c.decodeIfPresent(String.self, forKey: .contentQuality) ?? "fast"
         }
     }
 
@@ -1153,6 +1155,15 @@ final class PollyAPI {
     func dailyCardStatus() async throws -> DailyCardStatus {
         try await get("/api/polly/profile")
     }
+
+    /// Fast / Thorough — the account's content quality ("fast" | "deep").
+    func setContentQuality(_ quality: ContentQuality) async throws -> ContentQuality {
+        struct Body: Encodable { let content_quality: String }
+        struct Res: Codable { let content_quality: String }
+        let res: Res = try await put("/api/polly/profile", body: Body(content_quality: quality.rawValue))
+        return ContentQuality(rawValue: res.content_quality) ?? .fast
+    }
+
 
     /// Flip the Refresher toggle. Off = mastery is forever: the server stops
     /// returning recert due dates and drops every refresher nudge.

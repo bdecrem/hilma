@@ -22,11 +22,12 @@ type Row = {
   realtime_voice: string | null
   voice_style: string | null
   recert_enabled: boolean
+  content_quality: string
   active_course: { language: string } | null
 }
 
 const ROW =
-  'id, username, account_id, avatar_url, is_guest, realtime_voice, voice_style, recert_enabled, ' +
+  'id, username, account_id, avatar_url, is_guest, realtime_voice, voice_style, recert_enabled, content_quality, ' +
   'active_course:polly_courses!polly_users_active_course_id_fkey(language)'
 
 /// The account's root user id for any of its profiles.
@@ -142,6 +143,7 @@ export async function profileForLanguage(
       realtime_voice: from.realtime_voice,
       voice_style: from.voice_style,
       recert_enabled: from.recert_enabled,
+      content_quality: from.content_quality,
     })
     .select('id')
     .single()

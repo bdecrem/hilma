@@ -7,6 +7,8 @@
 // from polly_flash_sets history — only XP is stored (polly_users.xp).
 
 import Anthropic from '@anthropic-ai/sdk'
+import { qualityFor, tierFor, type Tier } from './quality'
+import { activeLanguage, LANGUAGES } from './language'
 import { pollySupabase } from './supabase'
 import { getDailyStreak, markPeckWeek } from './streak'
 import { contextCharBudget, llmComplete, type LlmTool } from './llm'
@@ -128,6 +130,9 @@ export async function generateFlashCards(
   // A guest lesson practises its teacher's words, not facts about the story.
   thread = await ensureLesson(thread)
   if (thread.lesson) return generateLessonCards(thread, n, model, styleInstructions)
+  // The app's picked model wins; without one, the learner's content quality.
+  const tier: Tier = model ? { model } : tierFor('topicCards', await qualityFor(thread.user_id))
+  model = tier.model
   const subject = thread.topic ?? thread.url ?? 'this topic'
   // Full material, sized to the generating model's real window (3M chars on
   // the 1M-token Anthropic models) — never a reflexive cap.
@@ -213,6 +218,7 @@ Create exactly ${n} flash cards.`
 
   const result = await llmComplete({
     model,
+    effort: tier.effort,
     system,
     messages: [{ role: 'user', content: user }],
     maxTokens: 12_000,
@@ -226,7 +232,7 @@ Create exactly ${n} flash cards.`
   return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[])
 }
 
-type RawCard = {
+export type RawCard = {
   question?: string
   answer?: string
   open_question?: string
@@ -325,6 +331,20 @@ async function generateLessonCards(
   model?: string | null,
   styleInstructions?: string,
 ): Promise<FlashCard[]> {
+  // The app's picked model wins; without one, the learner's content quality.
+  const tier: Tier = model ? { model } : tierFor('lessonCards', await qualityFor(thread.user_id))
+  const raw = await draftLessonCards(thread, n, tier, styleInstructions)
+  return saveGeneratedCards(thread, n, raw, isPollyLesson(thread) ? 'words' : null)
+}
+
+/// The LLM half of generateLessonCards — nothing saved (the bench calls it).
+export async function draftLessonCards(
+  thread: PollyThread,
+  n: number,
+  tier: Tier,
+  styleInstructions?: string,
+): Promise<RawCard[]> {
+  const model = tier.model
   const l = thread.lesson!
   const subject = thread.topic ?? thread.url ?? 'this lesson'
   const system = `You write flash cards for a language-learning app — quick, playful drills like Duolingo, not study notes. The learner's own language is English; they are practising ${l.language} with a lesson they have already listened to. Produce exactly ${n} cards on the lesson's words and expressions. Never test facts about the story's subject.${lessonBlock(thread)}
@@ -357,6 +377,7 @@ Create exactly ${n} flash cards.`
 
   const result = await llmComplete({
     model,
+    effort: tier.effort,
     system,
     messages: [{ role: 'user', content: user }],
     maxTokens: 12_000,
@@ -366,13 +387,18 @@ Create exactly ${n} flash cards.`
   if (result.type !== 'tool_call') {
     throw new Error('Card generation returned no structured cards')
   }
-  return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[],
-                            isPollyLesson(thread) ? 'words' : null)
+  return (result.input.cards ?? []) as RawCard[]
 }
 
 /// The Grammar step of a lesson Polly wrote: a set of quick drills on the
 /// lesson's one grammar point, built only from the lesson's own vocabulary.
 async function generateGrammarCards(thread: PollyThread, n: number): Promise<FlashCard[]> {
+  const raw = await draftGrammarCards(thread, n, tierFor('grammarCards', await qualityFor(thread.user_id)))
+  return saveGeneratedCards(thread, n, raw, 'grammar')
+}
+
+/// The LLM half of generateGrammarCards — nothing saved (the bench calls it).
+export async function draftGrammarCards(thread: PollyThread, n: number, tier: Tier): Promise<RawCard[]> {
   const l = thread.lesson!
   const system = `You write grammar drills for a language-learning app — quick and playful, like Duolingo, never a worksheet. The learner's own language is English; they are practising ${l.language}. Produce exactly ${n} cards that drill ONE grammar point and nothing else.${lessonBlock(thread)}
 
@@ -389,6 +415,8 @@ Hard rules:
 - Exactly 3 distractors. Plain text, no markdown. Omit open_question.`
 
   const result = await llmComplete({
+    model: tier.model,
+    effort: tier.effort,
     system,
     messages: [{ role: 'user', content: `The grammar point: ${l.grammar_point}
 ${l.grammar_explained ?? ''}
@@ -399,7 +427,7 @@ Create exactly ${n} cards.` }],
     tools: [cardTool()],
   })
   if (result.type !== 'tool_call') throw new Error('Grammar card generation returned no structured cards')
-  return saveGeneratedCards(thread, n, (result.input.cards ?? []) as RawCard[], 'grammar')
+  return (result.input.cards ?? []) as RawCard[]
 }
 
 /// A guest lesson comes with its deck: once the plan exists, build the cards
@@ -1172,6 +1200,7 @@ async function judgeJson<T>(
   user: string,
   schema: Record<string, unknown>,
   model: string = JUDGE_MODEL,
+  effort?: Tier['effort'],
 ): Promise<T> {
   // Opus 5 thinks by default and thinking counts against max_tokens — a
   // tight cap left the grader with no text block at all (2026-09-03: a
@@ -1184,7 +1213,7 @@ async function judgeJson<T>(
       model,
       max_tokens: 16000,
       system,
-      output_config: { format: { type: 'json_schema', schema } },
+      output_config: { format: { type: 'json_schema', schema }, ...(effort ? { effort } : {}) },
       messages: [{ role: 'user', content: user }],
     })
     const block = res.content.find((b) => b.type === 'text')
@@ -1227,12 +1256,43 @@ const VERDICTS_SCHEMA = {
   additionalProperties: false,
 }
 
+/// The grading rubric. Dodo's cards test ideas, so "same idea, any wording"
+/// is the right bar there. In a language app the wording IS the subject: an
+/// answer in the language under study has to be correct in that language —
+/// "sono stancato" does not pass for "sono stanco" because it means the same.
+/// English-side answers (meanings) keep the idea bar.
+export function judgeRubric(language: string | null): string {
+  const learner = `When an item carries a grading instruction from the learner, apply it — it adjusts the bar for that card.`
+  if (!language) {
+    return `You grade flash-card answers. For each item, decide whether the user's answer expresses the same idea as the canonical answer. Accept different wording, minor imprecision, and partial detail as long as the core idea is right. Reject answers that are wrong, empty of content, or describe a different concept. ${learner}`
+  }
+  return `You grade flash-card answers in a language-learning app. The learner's own language is English; they are studying ${language}. Look at what each card asks for.
+
+When the expected answer is in ENGLISH (the meaning of a ${language} word or phrase), grade the idea: accept synonyms, paraphrase and partial detail as long as the meaning is right.
+
+When the expected answer is in ${language}, grade the ${language}: the learner's answer must be correct ${language} that says the same thing.
+- Accept: missing or wrong accents and apostrophes, capitalisation, punctuation; a one-letter slip that does not produce a different word or form; an added or dropped optional subject pronoun; a correct synonym or an equally natural way to say it (la sera / la serata), including a more or less complete version of the same correct phrase.
+- Reject: a wrong verb form, tense or person; wrong gender or number agreement; a wrong preposition or article; wrong word order; an invented word; a word from another language (Spanish, English); the wrong register when the card is about register (tu vs Lei); a different meaning.
+Speech-to-text answers may be mis-transcribed — judge what was evidently said, but do not repair the learner's grammar for them.
+
+${learner}`
+}
+
+async function activeLanguageName(userId: string): Promise<string | null> {
+  const code = await activeLanguage(userId)
+  return code ? LANGUAGES[code].name : null
+}
+
 /// Judge typed open-ended answers against each card's canonical answer.
 /// Bar: the answer captures the main idea of the canonical answer — wording
 /// and detail may differ. Empty answers are wrong without asking the model.
 export async function judgeTextAnswers(
   cards: FlashCard[],
   given: (string | null)[],
+  tier?: Tier,
+  /** The language under study ("Italian"); undefined = look it up, null = the
+   *  plain idea-matching rubric (Dodo's). */
+  rubricLanguage?: string | null,
 ): Promise<boolean[]> {
   const toJudge = cards
     .map((c, i) => ({ card: c, givenText: (given[i] ?? '').trim(), index: i }))
@@ -1247,12 +1307,15 @@ export async function judgeTextAnswers(
     )
     .join('\n\n')
 
-  const system = `You grade flash-card answers. For each item, decide whether the user's answer expresses the same idea as the canonical answer. Accept different wording, minor imprecision, and partial detail as long as the core idea is right. Reject answers that are wrong, empty of content, or describe a different concept. When an item carries a grading instruction from the learner, apply it — it adjusts the bar for that card.`
+  const system = judgeRubric(rubricLanguage === undefined && cards[0] ? await activeLanguageName(cards[0].user_id) : (rubricLanguage ?? null))
 
+  const judgeTier = tier ?? tierFor('answerJudge', cards[0] ? await qualityFor(cards[0].user_id) : 'fast')
   const parsed = await judgeJson<{ verdicts: { index: number; correct: boolean }[] }>(
     system,
     `Grade these flash-card answers:\n\n${listing}\n\nReturn a verdict for every item, keyed by its index.`,
     VERDICTS_SCHEMA,
+    judgeTier.model,
+    judgeTier.effort,
   )
   for (const v of parsed.verdicts ?? []) {
     if (v.index >= 0 && v.index < out.length) out[v.index] = Boolean(v.correct)
