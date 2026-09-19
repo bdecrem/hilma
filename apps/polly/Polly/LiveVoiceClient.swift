@@ -100,6 +100,11 @@ final class LiveVoiceClient: NSObject {
     /// disarmed by the learner's first word.
     private var nudgeTask: Task<Void, Never>?
     private var nudgeSpent = false
+    /// The greeting nudge is armed at most once — after Polly's very first
+    /// quiet. Without this it re-armed every time Polly finished a turn, so a
+    /// one-word answer that never transcribed let it fire mid-conversation
+    /// (Bart, 2026-09-18: said "Ciao", got the English nudge anyway).
+    private var nudgeArmed = false
     private var eventCounter = 0
     private static let releaseGrace: Duration = .milliseconds(300)
 
@@ -138,6 +143,8 @@ final class LiveVoiceClient: NSObject {
         releaseTask = nil
         thinkingTimer?.cancel()
         talking = true
+        nudgeSpent = true
+        nudgeTask?.cancel()
         remoteAudioTrack?.isEnabled = false
         applyMicState()
         sendEvent(["type": "session.input_audio.unmute", "event_id": nextEventId("unmute")])
@@ -541,7 +548,8 @@ final class LiveVoiceClient: NSObject {
     /// — an instruction plus a commentary, which is what makes the model
     /// speak unprompted — and Polly tries again in English.
     private func armSilenceNudge() {
-        guard !nudgeSpent, let nudge = sessionResponse?.live.silenceNudge else { return }
+        guard !nudgeSpent, !nudgeArmed, let nudge = sessionResponse?.live.silenceNudge else { return }
+        nudgeArmed = true
         nudgeTask?.cancel()
         nudgeTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(nudge.afterMs))
