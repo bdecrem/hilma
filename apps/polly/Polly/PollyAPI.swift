@@ -120,6 +120,12 @@ final class PollyAPI {
             let str = try container.decode(String.self)
             if let date = isoFractional.date(from: str) { return date }
             if let date = isoBasic.date(from: str) { return date }
+            // Postgres timestamptz has VARIABLE fractional digits (".92",
+            // ".643568"); ISO8601DateFormatter only accepts a fixed precision,
+            // so one odd-length fraction (e.g. a 2-digit ".92") would otherwise
+            // fail the whole payload. Strip the fraction and parse the rest.
+            let stripped = str.replacingOccurrences(of: #"\.\d+"#, with: "", options: .regularExpression)
+            if let date = isoBasic.date(from: stripped) { return date }
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unparseable date: \(str)")
         }
     }
@@ -841,7 +847,7 @@ final class PollyAPI {
 
     /// The conversations in an Infinity topic, newest first.
     func listInfinityChats(threadId: String) async throws -> [InfinityChat] {
-        let res: InfinityChatsResponse = try await get("/api/polly/infinity/chats?thread_id=\(threadId)")
+        let res: InfinityChatsResponse = try await get("/api/polly/infinity/topics/\(threadId)/chats")
         return res.chats
     }
 

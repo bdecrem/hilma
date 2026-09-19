@@ -325,6 +325,14 @@ struct TopicsView: View {
                     communityPresented = true
                 }
             }
+            // `-OpenTopic <id>` — deep-link straight into a topic for screenshots.
+            if let tid = UserDefaults.standard.string(forKey: "OpenTopic"), !tid.isEmpty {
+                UserDefaults.standard.removeObject(forKey: "OpenTopic")
+                Task {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    DeepLinkRouter.shared.requestTopicChat(threadId: tid, draft: "")
+                }
+            }
             // `-OpenNewTopic 1` — open the + sheet for screenshot loops.
             if UserDefaults.standard.bool(forKey: "OpenNewTopic") {
                 UserDefaults.standard.removeObject(forKey: "OpenNewTopic")
