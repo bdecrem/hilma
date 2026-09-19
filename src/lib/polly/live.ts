@@ -152,6 +152,23 @@ Do not delegate to the backend when:
 Delegate before giving an answer that depends on backend work. Do not guess the result while waiting; keep the conversation natural.`
 }
 
+/// Keeps a tutor conversation in the target language. A learner asking how to
+/// say a word ("come si dice…"), dropping one English word into a sentence, or
+/// fumbling once is working IN the language, not quitting it — so the tutor
+/// supplies the word and stays put rather than flipping the whole chat to
+/// English. Shared by placement and the two lesson-practice builders.
+/// (Bart, 2026-09-18: the level check bailed to English the moment he asked
+/// "come si dice in italiano" mid-sentence; staying in character is the point.)
+function stayInLanguage(name: string, lang: string): string {
+  return `
+
+Staying in ${lang}:
+- ${lang} is the language of this conversation; keep it there. You are ${name}'s tutor — sometimes playing a part in a scene, sometimes just their instructor — and holding them in ${lang} as much as they can manage, gently, is the job. Do not drop out of the language at the first bump.
+- When ${name} reaches for a word — "come si dice…", "how do you say…", an English word dropped into a ${lang} sentence — that is them working IN ${lang}, not giving up on it. Give them the ${lang} word, say it in ${lang}, and carry straight on in ${lang}. Answering a "how do you say" is NEVER a reason to switch the conversation to English.
+- One unknown word, a filler, an English loanword, a small mistake — none of these is a reason to leave ${lang}. Hand them the word if they wanted it and keep going.
+- Turn to English only when ${name} is genuinely lost, asks you outright to explain something in English, or clearly has very little ${lang} yet — and the moment they are steady again, come back to ${lang}.`
+}
+
 function examDelegationPolicy(name: string): string {
   return `
 
@@ -196,7 +213,7 @@ How to run it:
 - After the scene has run once (eight to twelve exchanges), switch roles or change one detail (a different order, a different time, a different person) and run it again, faster.
 - Then ask the lesson's closing question and chat about their answer in simple ${l.language}.
 - Finish in English: one thing they did well, one thing to practise in the cards, and tell them to tap End. About five minutes in all.
-- English whenever they ask or are lost, then back to ${l.language}.${topicDelegationPolicy(name)}`
+- English whenever they ask or are truly lost, then straight back to ${l.language}.${stayInLanguage(name, l.language)}${topicDelegationPolicy(name)}`
   }
 
   if (input.mode === 'topic' && input.thread?.lesson) {
@@ -213,7 +230,7 @@ How to run the practice:
 - Work through the key words: ask them to use each one in a sentence of their own, or ask what it means in the story's sentence. One at a time. If a word is missing from their retelling, that's the first one to ask about.
 - Then ask the host's closing question${l.closing_question ? '' : ' (or a question of your own about the story)'} and discuss their answer in ${l.language}, simply.
 - Speak ${l.language} slowly and simply, at the lesson's level; switch to English whenever ${name} is stuck or asks, then back. Follow their lead if they'd rather talk about the story, ask about grammar, or drill one word.
-- Never turn this into a quiz about the story's subject (dates, names, history). The words and the speaking are the point.${topicDelegationPolicy(name)}`
+- Never turn this into a quiz about the story's subject (dates, names, history). The words and the speaking are the point.${stayInLanguage(name, l.language)}${topicDelegationPolicy(name)}`
   }
 
   if (input.mode === 'topic' && input.thread) {
@@ -271,9 +288,9 @@ How it goes:
 - If they answer in ${lang}: carry on in ${lang}. One short question at a time, each a notch harder than the last: how they are and their name → where they live, what they do → what they like doing, their family or friends → what they did yesterday or last weekend (past) → what they will do next weekend or next holiday (future) → an opinion or a "what would you do if" question. Keep your own lines short and clear, at their level or just above it. React to what they say like a person would, in a few words, before the next question.
 - The moment they stumble twice in a row — a long pause, English, a broken or one-word answer to a question that needed a sentence — stop climbing. Ask one easier question so they finish on something they can do.
 - If they answer in English, or say they know little or nothing: switch to English, warmly, and ask two or three quick things: have they learned any ${lang} before, which words they already know (let them try a few), why they want to learn it and what they would love to be able to do. Do not teach them anything yet.
-- If they mix: follow them, keep offering ${lang}, and let them fall back on English whenever they need to.
+- If they mix ${lang} and English, or ask how to say a word ("come si dice…"): stay in ${lang}. Take what they give you, hand them the ${lang} word they were reaching for, and keep going — one English word or a "how do you say" is them working in ${lang}, not a reason to switch the whole chat to English.
 - Six to eight exchanges in all, about two minutes. Then wrap up in English: tell ${name} you have what you need and that you are building their first lesson now, ask them to tap End, and say goodbye in ${lang}.
-- The speech-to-text of a learner's ${lang} is unreliable. Judge by ear, not by spelling, and never comment on pronunciation.
+- The speech-to-text of a learner's ${lang} is unreliable. Judge by ear, not by spelling, and never comment on pronunciation.${stayInLanguage(name, lang)}
 
 Delegation policy:
 Backend tools:
@@ -293,10 +310,14 @@ export function livePlacementNudge(
 ): { after_ms: number; instruction: string; commentary: string } {
   const name = friendlyName(userName)
   const lang = LANGUAGES[language].name
+  const hello = PLACEMENT_GREETINGS[language]
   return {
-    after_ms: 3500,
-    instruction: `${name} has not answered your greeting. Try again now in English, in one or two short friendly sentences, then wait for them.`,
-    commentary: `Hi ${name}! You can answer me in ${lang} if you know some — or just say hello in English and I'll take it from there.`,
+    // A longer fuse than a first draft's 3.5 s: a real one-word answer often
+    // transcribes late, and a nudge that lands on someone who did answer is
+    // worse than one that waits a beat. The client also fires this only once.
+    after_ms: 6000,
+    instruction: `${name} has not answered your greeting yet — they may be unsure how to begin. Warmly greet them again: say "${hello}", ask one very easy ${lang} question such as how they are, and add one short English sentence letting them know they can reply in ${lang} or in English, whichever is easier. Then wait for them.`,
+    commentary: `Re-greet ${name} warmly in ${lang} — "${hello}" and a simple "how are you?" — then, in one short English sentence, reassure them they can answer in ${lang} or English, whatever's easier, and wait.`,
   }
 }
 
