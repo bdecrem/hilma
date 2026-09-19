@@ -39,6 +39,11 @@ export type InfinityAnalysis = {
   fixes: Fix[]         // ≤ MAX_FIXES, curated
   vocab: VocabCard[]   // ≤ 8
   grammar: GrammarPoint[]
+  /// The quiz deck built from this conversation (polly_flash_cards ids on the
+  /// Infinity topic; Peck-eligible by default). Set after clean-up.
+  card_ids?: string[]
+  /// When the learner passed the quiz for this conversation.
+  mastered_at?: string | null
 }
 
 export type InfinityChat = {
@@ -125,9 +130,16 @@ export async function cleanUpChat(userId: string, id: string): Promise<InfinityC
   const language = await activeLanguage(userId)
   const rows = chat.voice_session_id ? await sessionTranscript(userId, chat.voice_session_id) : []
   const analysis = await analyzeConversation({ language, transcript: rows, fallbackTitle: chat.title })
+  // Build the quiz deck (real flash cards on the Infinity topic → Peck) and
+  // remember its ids on the analysis, so this conversation has a set to master.
+  const cardIds = await generateInfinityCards(userId, chat.thread_id, analysis).catch((e) => {
+    console.error('[infinity] card generation failed:', e)
+    return [] as string[]
+  })
+  const stored: InfinityAnalysis = { ...analysis, card_ids: cardIds, mastered_at: null }
   const { data, error } = await pollySupabase()
     .from('polly_infinity_chats')
-    .update({ analysis, title: analysis.title || chat.title, updated_at: new Date().toISOString() })
+    .update({ analysis: stored, title: analysis.title || chat.title, updated_at: new Date().toISOString() })
     .eq('id', id)
     .eq('user_id', userId)
     .select('*')
@@ -148,6 +160,122 @@ export async function completeCleanup(userId: string, id: string, cleanupSession
     .eq('id', id)
     .eq('user_id', userId)
   if (error) throw new Error(`infinity: complete failed: ${error.message}`)
+}
+
+// ---------- the quiz: real flash cards + mastery ----------
+
+function shuffle<T>(a: T[]): T[] {
+  const out = [...a]
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
+function pick<T>(pool: T[], n: number, not: Set<string>, key: (t: T) => string): T[] {
+  return shuffle(pool.filter((x) => !not.has(key(x)))).slice(0, n)
+}
+
+/// Turn a cleaned-up conversation into a real deck on the Infinity topic:
+/// vocab BOTH ways (Italian⇄English) as multiple-choice, grammar drills as
+/// fill-in-the-blank. They live in polly_flash_cards on the topic, so they are
+/// Peck-eligible by default. Deterministic — no LLM, instant to grade.
+/// Returns the new card ids.
+export async function generateInfinityCards(userId: string, threadId: string, analysis: InfinityAnalysis): Promise<string[]> {
+  const sb = pollySupabase()
+  const rows: Record<string, unknown>[] = []
+  const vocab = analysis.vocab ?? []
+
+  for (const v of vocab) {
+    const term = v.term.trim(), meaning = v.meaning.trim()
+    if (!term || !meaning) continue
+    // term → English (multiple choice)
+    const enDistractors = pick(vocab, 3, new Set([meaning]), (x) => x.meaning).map((x) => x.meaning)
+    if (enDistractors.length >= 2) {
+      rows.push({ user_id: userId, thread_id: threadId, question: `What does “${term}” mean?`, answer: meaning,
+                  distractors: enDistractors, cloze_text: null, cloze_answer: null, lesson_step: 'words' })
+    }
+    // English → term (multiple choice)
+    const itDistractors = pick(vocab, 3, new Set([term]), (x) => x.term).map((x) => x.term)
+    if (itDistractors.length >= 2) {
+      rows.push({ user_id: userId, thread_id: threadId, question: `How do you say “${meaning}” in Italian?`, answer: term,
+                  distractors: itDistractors, cloze_text: null, cloze_answer: null, lesson_step: 'words' })
+    }
+  }
+
+  for (const g of analysis.grammar ?? []) {
+    for (const d of g.drills ?? []) {
+      const prompt = d.prompt.trim(), ans = d.answer.trim()
+      if (!prompt || !ans) continue
+      // The drill prompts already read like "... → Io ___ andato al bar." Keep
+      // the sentence with the blank as the fill-in card.
+      const cloze = prompt.includes('_') ? prompt : `${prompt}  (___)`
+      rows.push({ user_id: userId, thread_id: threadId, question: prompt, answer: ans,
+                  distractors: [], cloze_text: cloze, cloze_answer: ans, lesson_step: 'grammar' })
+    }
+  }
+
+  if (rows.length === 0) return []
+  const { data, error } = await sb.from('polly_flash_cards').insert(rows).select('id')
+  if (error) throw new Error(`infinity: card insert failed: ${error.message}`)
+  return (data ?? []).map((r) => r.id as string)
+}
+
+type QuizQuestion = {
+  card_id: string
+  question: string
+  format: 'choice' | 'cloze'
+  choices?: string[]
+  answer: string
+  cloze_answer?: string
+  rating: string | null
+  topic: string | null
+}
+
+/// Build this conversation's quiz set (a FlashStart the app hands to the same
+/// FlashSetView Dodo uses). Every card is choice or fill-in — instant to grade.
+export async function buildInfinityQuiz(userId: string, chatId: string): Promise<{ mode: string; thread_id: string; total: number; questions: QuizQuestion[] } | null> {
+  const chat = await getInfinityChat(userId, chatId)
+  if (!chat || !chat.analysis) return null
+  const ids = chat.analysis.card_ids ?? []
+  if (ids.length === 0) return null
+  const { data } = await pollySupabase()
+    .from('polly_flash_cards')
+    .select('id, question, answer, distractors, cloze_text, cloze_answer, rating')
+    .eq('user_id', userId)
+    .in('id', ids)
+  const byId = new Map((data ?? []).map((c) => [c.id as string, c]))
+  const questions: QuizQuestion[] = []
+  for (const id of shuffle(ids)) {
+    const c = byId.get(id)
+    if (!c) continue
+    if (c.cloze_text && c.cloze_answer) {
+      questions.push({ card_id: c.id, question: c.cloze_text, format: 'cloze', answer: c.answer,
+                       cloze_answer: c.cloze_answer, rating: c.rating ?? null, topic: null })
+    } else {
+      const choices = shuffle([c.answer, ...((c.distractors as string[]) ?? [])])
+      questions.push({ card_id: c.id, question: c.question, format: 'choice', choices, answer: c.answer,
+                       rating: c.rating ?? null, topic: null })
+    }
+  }
+  return { mode: 'mixed', thread_id: chat.thread_id, total: questions.length, questions }
+}
+
+/// Mark this conversation mastered (the learner passed its quiz).
+export async function masterConversation(userId: string, chatId: string): Promise<InfinityChat | null> {
+  const chat = await getInfinityChat(userId, chatId)
+  if (!chat || !chat.analysis) return chat
+  const analysis: InfinityAnalysis = { ...chat.analysis, mastered_at: new Date().toISOString() }
+  const { data, error } = await pollySupabase()
+    .from('polly_infinity_chats')
+    .update({ analysis, updated_at: new Date().toISOString() })
+    .eq('id', chatId)
+    .eq('user_id', userId)
+    .select('*')
+    .single()
+  if (error) throw new Error(`infinity: master failed: ${error.message}`)
+  return data as InfinityChat
 }
 
 // ---------- the curation (the whole point) ----------

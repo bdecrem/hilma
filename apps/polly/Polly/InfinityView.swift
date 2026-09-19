@@ -19,6 +19,8 @@ struct InfinityHomeView: View {
     @State private var vocabChat: InfinityChat? = nil
     @State private var grammarChat: InfinityChat? = nil
     @State private var preparingId: String? = nil
+    @State private var quizPreparingId: String? = nil
+    @State private var quizSheet: InfinityQuizSheet? = nil
     @State private var errorText: String? = nil
 
     var body: some View {
@@ -81,6 +83,15 @@ struct InfinityHomeView: View {
         }
         .sheet(item: $grammarChat) { chat in
             InfinityGrammarView(chat: chat).environment(session)
+        }
+        .fullScreenCover(item: $quizSheet, onDismiss: { Task { await load() } }) { q in
+            FlashSetView(start: q.start, topicLabel: "Infinity Chat") { result in
+                // A pass masters the conversation (Dodo's flash-quality bar).
+                if result.total > 0 && result.score * 5 >= result.total * 4 {
+                    Task { _ = try? await PollyAPI.shared.masterInfinityChat(chatId: q.chat.id) }
+                }
+            }
+            .environment(session)
         }
         .alert("Hmm", isPresented: Binding(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
             Button("OK") { errorText = nil }
@@ -152,13 +163,34 @@ struct InfinityHomeView: View {
                 Spacer(minLength: 0)
             }
             if chat.hasAnalysis {
-                HStack(spacing: 8) {
-                    pill("Review", "sparkles") { cleanupChat = chat }
-                    if (chat.analysis?.vocab.isEmpty == false) {
-                        pill("Vocab", "rectangle.on.rectangle.angled") { vocabChat = chat }
+                VStack(spacing: 8) {
+                    if chat.hasQuiz {
+                        Button { Task { await startQuiz(chat) } } label: {
+                            HStack(spacing: 8) {
+                                if quizPreparingId == chat.id {
+                                    ProgressView().tint(PollyTheme.inkOnAccent).scaleEffect(0.8)
+                                    Text("Loading quiz…").font(.system(size: 15, weight: .semibold))
+                                } else {
+                                    Image(systemName: chat.isMastered ? "checkmark.seal.fill" : "graduationcap.fill")
+                                        .font(.system(size: 14, weight: .bold))
+                                    Text(chat.isMastered ? "Quiz again" : "Quiz · master it").font(.system(size: 15, weight: .semibold))
+                                }
+                            }
+                            .foregroundStyle(PollyTheme.inkOnAccent)
+                            .frame(maxWidth: .infinity).padding(.vertical, 12)
+                            .background((chat.isMastered ? PollyTheme.sprout : PollyTheme.accent), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(quizPreparingId != nil)
                     }
-                    if (chat.analysis?.grammar.isEmpty == false) {
-                        pill("Grammar", "puzzlepiece.fill") { grammarChat = chat }
+                    HStack(spacing: 8) {
+                        pill("Review", "sparkles") { cleanupChat = chat }
+                        if (chat.analysis?.vocab.isEmpty == false) {
+                            pill("Vocab", "rectangle.on.rectangle.angled") { vocabChat = chat }
+                        }
+                        if (chat.analysis?.grammar.isEmpty == false) {
+                            pill("Grammar", "puzzlepiece.fill") { grammarChat = chat }
+                        }
                     }
                 }
             } else {
@@ -184,18 +216,18 @@ struct InfinityHomeView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(PollyTheme.surface))
         .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .stroke(chat.isCleanedUp ? PollyTheme.sprout.opacity(0.5) : PollyTheme.border, lineWidth: 1))
+            .stroke(chat.isMastered ? PollyTheme.gold.opacity(0.7) : chat.isCleanedUp ? PollyTheme.sprout.opacity(0.5) : PollyTheme.border, lineWidth: chat.isMastered ? 1.5 : 1))
     }
 
     private func statusChip(_ chat: InfinityChat) -> some View {
-        let cleaned = chat.isCleanedUp
+        let mastered = chat.isMastered, cleaned = chat.isCleanedUp
         return HStack(spacing: 5) {
-            Image(systemName: cleaned ? "checkmark.circle.fill" : "sparkles")
+            Image(systemName: mastered ? "checkmark.seal.fill" : cleaned ? "checkmark.circle.fill" : "sparkles")
                 .font(.system(size: 10, weight: .bold))
-            Text(cleaned ? "Cleaned up" : "Ready to clean up")
+            Text(mastered ? "Mastered" : cleaned ? "Cleaned up" : "Ready to clean up")
                 .font(.system(size: 11.5, weight: .semibold))
         }
-        .foregroundStyle(cleaned ? PollyTheme.sprout : PollyTheme.accent)
+        .foregroundStyle(mastered ? PollyTheme.gold : cleaned ? PollyTheme.sprout : PollyTheme.accent)
     }
 
     private func pill(_ title: String, _ symbol: String, action: @escaping () -> Void) -> some View {
@@ -245,6 +277,17 @@ struct InfinityHomeView: View {
         }
     }
 
+    private func startQuiz(_ chat: InfinityChat) async {
+        quizPreparingId = chat.id
+        defer { quizPreparingId = nil }
+        do {
+            let start = try await PollyAPI.shared.infinityQuiz(chatId: chat.id)
+            quizSheet = InfinityQuizSheet(chat: chat, start: start)
+        } catch {
+            errorText = "Couldn't build the quiz: \(error.localizedDescription)"
+        }
+    }
+
     private func startCleanup(_ chat: InfinityChat) async {
         preparingId = chat.id
         defer { preparingId = nil }
@@ -262,4 +305,11 @@ struct InfinityHomeView: View {
             errorText = "Couldn't clean that up: \(error.localizedDescription)"
         }
     }
+}
+
+/// Identifiable wrapper so a conversation's quiz can drive a fullScreenCover.
+struct InfinityQuizSheet: Identifiable {
+    let id = UUID()
+    let chat: InfinityChat
+    let start: FlashStart
 }

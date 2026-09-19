@@ -864,7 +864,20 @@ final class PollyAPI {
         return res.chat
     }
 
-    /// The clean-up walk is done.
+    /// This conversation's quiz set (mixed choice + fill-in), in the FlashStart
+    /// shape FlashSetView already knows how to run.
+    func infinityQuiz(chatId: String) async throws -> FlashStart {
+        let res: FlashStart = try await request("/api/polly/infinity/chats/\(chatId)/quiz", method: "POST", body: EmptyBody())
+        return res
+    }
+
+    /// Mark this conversation mastered (passed its quiz).
+    func masterInfinityChat(chatId: String) async throws -> InfinityChat {
+        let res: InfinityChatResponse = try await request("/api/polly/infinity/chats/\(chatId)/master", method: "POST", body: EmptyBody())
+        return res.chat
+    }
+
+        /// The clean-up walk is done.
     func completeInfinityCleanup(id: String, cleanupSessionId: String?) async throws -> InfinityChat {
         struct Body: Encodable { let cleanup_session_id: String? }
         let res: InfinityChatResponse = try await request("/api/polly/infinity/chats/\(id)/complete",

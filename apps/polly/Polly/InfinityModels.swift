@@ -25,6 +25,8 @@ struct InfinityChat: Codable, Identifiable, Equatable {
     }
 
     var isCleanedUp: Bool { cleanedUpAt != nil }
+    var isMastered: Bool { analysis?.masteredAt != nil }
+    var hasQuiz: Bool { (analysis?.cardIds?.isEmpty == false) }
     var hasAnalysis: Bool { (analysis?.fixes.isEmpty == false) }
     var displayTitle: String { (title?.isEmpty == false ? title! : "A quick chat") }
 }
@@ -34,6 +36,16 @@ struct InfinityAnalysis: Codable, Equatable {
     let fixes: [InfinityFix]
     let vocab: [InfinityVocab]
     let grammar: [InfinityGrammar]
+    /// The quiz deck's card ids (set after clean-up); present once a quiz exists.
+    var cardIds: [String]?
+    /// When the learner passed this conversation's quiz.
+    var masteredAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case title, fixes, vocab, grammar
+        case cardIds = "card_ids"
+        case masteredAt = "mastered_at"
+    }
 }
 
 struct InfinityFix: Codable, Equatable, Identifiable {
