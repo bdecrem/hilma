@@ -80,3 +80,17 @@ struct InfinityDrill: Codable, Equatable, Identifiable {
     let prompt: String
     let answer: String
 }
+
+/// How carefully Polly reads a chat back when cleaning it up — a per-device
+/// Settings preference (Profile → Learning), sent with the clean-up request.
+/// fast = Sonnet 5 at medium effort (~9 s); deep = Opus 5 at high effort
+/// (~12 s): it catches more and explains more exactly. See CLEANUP_TIERS in
+/// src/lib/polly/infinity.ts.
+enum CleanupQuality: String, CaseIterable {
+    case fast, deep
+    static let key = "infinityCleanupQuality"
+    static var current: CleanupQuality {
+        CleanupQuality(rawValue: UserDefaults.standard.string(forKey: key) ?? "") ?? .fast
+    }
+    var label: String { self == .fast ? "Fast" : "Thorough" }
+}

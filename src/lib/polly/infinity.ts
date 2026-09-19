@@ -9,7 +9,23 @@ import { llmComplete } from './llm'
 import { activeLanguage, LANGUAGES, type LanguageCode } from './language'
 import { pollySupabase } from './supabase'
 
-const INFINITY_MODEL = process.env.POLLY_INFINITY_MODEL || 'sonnet-5'
+/// The clean-up runs at one of two qualities, picked per request (a Settings
+/// preference in the app): 'fast' keeps the wait short, 'deep' trades seconds
+/// for a better-judged set of fixes. Env overrides are "model" or
+/// "model:effort" (POLLY_INFINITY_DEEP="opus-5:high").
+export type CleanupQuality = 'fast' | 'deep'
+type Effort = 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+function tier(env: string | undefined, model: string, effort: Effort, maxTokens: number) {
+  const [m, e] = (env ?? '').split(':')
+  return { model: m || model, effort: ((e as Effort) || effort), maxTokens }
+}
+export const CLEANUP_TIERS: Record<CleanupQuality, { model: string; effort: Effort; maxTokens: number }> = {
+  fast: tier(process.env.POLLY_INFINITY_MODEL, 'sonnet-5', 'medium', 4_000),
+  deep: tier(process.env.POLLY_INFINITY_DEEP, 'opus-5', 'high', 16_000),
+}
+export function isCleanupQuality(v: unknown): v is CleanupQuality {
+  return v === 'fast' || v === 'deep'
+}
 const TITLE_MODEL = process.env.POLLY_INFINITY_TITLE_MODEL || 'sonnet-5'
 export const MAX_FIXES = 5
 
@@ -52,6 +68,8 @@ export type InfinityAnalysis = {
   /// The quiz deck built from this conversation (polly_flash_cards ids on the
   /// Infinity topic; Peck-eligible by default). Set after clean-up.
   card_ids?: string[]
+  /// Which model and effort curated this ("opus-5:high") — for comparing qualities later.
+  curated_by?: string
   /// When the learner passed the quiz for this conversation.
   mastered_at?: string | null
 }
@@ -134,20 +152,21 @@ export async function getInfinityChat(userId: string, id: string): Promise<Infin
 
 /// Run (or return the already-run) curation. Reads the chat's transcript,
 /// curates ≤5 fixes + vocab + grammar, saves and returns the analysis.
-export async function cleanUpChat(userId: string, id: string): Promise<InfinityChat | null> {
+export async function cleanUpChat(userId: string, id: string, quality: CleanupQuality = 'fast'): Promise<InfinityChat | null> {
   const chat = await getInfinityChat(userId, id)
   if (!chat) return null
   if (chat.analysis) return chat // already curated; the walk can start
   const language = await activeLanguage(userId)
   const rows = chat.voice_session_id ? await sessionTranscript(userId, chat.voice_session_id) : []
-  const analysis = await analyzeConversation({ language, transcript: rows, fallbackTitle: chat.title })
+  const analysis = await analyzeConversation({ language, transcript: rows, fallbackTitle: chat.title, quality })
   // Build the quiz deck (real flash cards on the Infinity topic → Peck) and
   // remember its ids on the analysis, so this conversation has a set to master.
   const cardIds = await generateInfinityCards(userId, chat.thread_id, analysis).catch((e) => {
     console.error('[infinity] card generation failed:', e)
     return [] as string[]
   })
-  const stored: InfinityAnalysis = { ...analysis, card_ids: cardIds, mastered_at: null }
+  const tier = CLEANUP_TIERS[quality]
+  const stored: InfinityAnalysis = { ...analysis, card_ids: cardIds, mastered_at: null, curated_by: `${tier.model}:${tier.effort}` }
   const { data, error } = await pollySupabase()
     .from('polly_infinity_chats')
     .update({ analysis: stored, title: analysis.title || chat.title, updated_at: new Date().toISOString() })
@@ -323,11 +342,13 @@ export async function masterConversation(userId: string, chatId: string): Promis
 
 // ---------- the curation (the whole point) ----------
 
-async function analyzeConversation(input: {
+export async function analyzeConversation(input: {
   language: LanguageCode | null
   transcript: TranscriptRow[]
   fallbackTitle: string | null
+  quality?: CleanupQuality
 }): Promise<InfinityAnalysis> {
+  const tier = CLEANUP_TIERS[input.quality ?? 'fast']
   const lang = input.language ? LANGUAGES[input.language].name : 'the language'
   const convo = transcriptText(input.transcript)
   if (!convo.trim()) {
@@ -346,10 +367,11 @@ Also give the whole conversation a short, friendly 2–4 word title IN ${lang} (
 Warm, specific, encouraging. This is a consumer app, not a report.`
 
   const result = await llmComplete({
-    model: INFINITY_MODEL,
+    model: tier.model,
+    effort: tier.effort,
     system,
     messages: [{ role: 'user', content: `The conversation:\n\n${convo}` }],
-    maxTokens: 4_000,
+    maxTokens: tier.maxTokens,
     forceTool: true,
     tools: [{
       name: 'record_cleanup',

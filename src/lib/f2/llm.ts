@@ -141,6 +141,9 @@ export type LlmRequest = {
   /** Force the model to call one of `tools` (Anthropic tool_choice "any" /
    *  OpenAI "required"). */
   forceTool?: boolean
+  /** Thinking effort for this call; overrides the model's registry default
+   *  (Anthropic models only). */
+  effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
 }
 
 export type LlmResult =
@@ -226,7 +229,8 @@ async function anthropicComplete(
     messages: req.messages,
   }
   if (spec.thinking) params.thinking = spec.thinking
-  if (spec.effort) params.output_config = { effort: spec.effort }
+  const effort = req.effort ?? spec.effort
+  if (effort) params.output_config = { effort }
   if (req.tools && req.tools.length > 0) {
     if (req.forceTool && canForce) {
       params.tools = req.tools

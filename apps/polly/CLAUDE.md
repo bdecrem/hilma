@@ -214,6 +214,23 @@ query knowing about languages. `src/lib/polly/profiles.ts`:
 - The old `POST /api/polly/courses` (flip `active_course_id` in place, data
   shared) is unused by the app; don't build on it.
 
+## Infinity Chat clean-up quality (2026-09-19)
+
+The clean-up curation (`analyzeConversation` in `src/lib/polly/infinity.ts`)
+runs at one of two qualities, a per-device preference in Profile → Learning →
+**Clean-up** (`CleanupQuality` in InfinityModels.swift, sent as `{ quality }`
+with `POST /infinity/chats/:id/cleanup`; older builds send nothing and get
+fast): **Fast** = Sonnet 5 at medium effort (~9 s), **Thorough** = Opus 5 at
+high effort (~10–13 s). `CLEANUP_TIERS` holds both; env overrides are
+`POLLY_INFINITY_MODEL` / `POLLY_INFINITY_DEEP` as `model` or `model:effort`.
+The analysis records `curated_by` ("opus-5:high"). Chosen from a bake-off on
+Bart's two real chats (`scripts/polly/cleanup-bench.ts <transcripts.json>
+[model:effort …]`): Opus 5 high caught what Sonnet missed (notte → sera and
+the place of "già", "siamo andati" for the family), kept a correct "sono
+stato al…" that Sonnet "fixed", and stated the participle rule truthfully;
+xhigh was no better and padded a non-error; Fable 5.1 medium was as good but
+18–28 s. `LlmRequest.effort` overrides a model's registry effort per call.
+
 ## iMessage
 
 Polly shares the iMessage inbox with Dodo and Onething: one BlueBubbles

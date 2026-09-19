@@ -42,16 +42,28 @@ struct ProfileSheet: View {
         return nil
     }
     @State private var showLanguages = false
+    @AppStorage(CleanupQuality.key) private var cleanupQualityRaw = CleanupQuality.fast.rawValue
 
     var body: some View {
         VStack(spacing: 0) {
             handle
             header
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
                     hero
                     sections
                 }
+            }
+            #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
+            // `-ProfileScrollTo learning` — bring a section into view for screenshots.
+            .task {
+                if UserDefaults.standard.string(forKey: "ProfileScrollTo") == "learning" {
+                    try? await Task.sleep(for: .milliseconds(600))
+                    proxy.scrollTo("settings-learning", anchor: .top)
+                }
+            }
+            #endif
             }
             .scrollIndicators(.hidden)
         }
@@ -554,6 +566,37 @@ struct ProfileSheet: View {
                         .padding(.horizontal, 14).padding(.vertical, 10)
                         SettingsDivider()
                     }
+                    // Infinity Chat clean-up: speed vs. a sharper read.
+                    VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Clean-up")
+                                .font(.system(size: 15)).tracking(-0.2).foregroundStyle(PollyTheme.text)
+                            Text(cleanupQualityRaw == CleanupQuality.deep.rawValue
+                                 ? "Polly reads your chat more closely — a few seconds longer"
+                                 : "Your fixes are ready in about ten seconds")
+                                .font(.system(size: 12.5)).foregroundStyle(PollyTheme.text3)
+                        }
+                        HStack(spacing: 4) {
+                            ForEach(CleanupQuality.allCases, id: \.self) { q in
+                                let on = q.rawValue == cleanupQualityRaw
+                                Button { cleanupQualityRaw = q.rawValue } label: {
+                                    Text(q.label)
+                                        .font(.system(size: 14, weight: on ? .semibold : .medium))
+                                        .tracking(-0.1)
+                                        .foregroundStyle(on ? PollyTheme.text : PollyTheme.text2)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 9)
+                                        .background(RoundedRectangle(cornerRadius: 8).fill(on ? PollyTheme.surface3 : Color.clear))
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(3)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(PollyTheme.surface2))
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    SettingsDivider()
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Refreshers")
@@ -592,6 +635,7 @@ struct ProfileSheet: View {
                     }
                 }
             }
+            .id("settings-learning")
             SettingsSection(label: "Account") {
                 SettingsCard {
                     SettingsRow(label: "Signed in as", detail: username)

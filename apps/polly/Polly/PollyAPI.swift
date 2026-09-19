@@ -874,9 +874,11 @@ final class PollyAPI {
     }
 
     /// Curate the ≤5 fixes + vocab + grammar (idempotent). Slow — one LLM pass.
+    /// `quality` is the Settings preference (CleanupQuality): "fast" or "deep".
     func cleanUpInfinityChat(id: String) async throws -> InfinityChat {
+        struct Body: Encodable { let quality: String }
         let res: InfinityChatResponse = try await request("/api/polly/infinity/chats/\(id)/cleanup",
-                                                          method: "POST", body: EmptyBody())
+                                                          method: "POST", body: Body(quality: CleanupQuality.current.rawValue))
         return res.chat
     }
 
