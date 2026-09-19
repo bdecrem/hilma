@@ -284,7 +284,7 @@ export default function Onething() {
     finally { setBusy(false); }
   }
   async function start() {
-    const j = await post('/api/onething/auth/start', { phone });
+    const j = await post('/api/onething/auth/start', { phone, tz: Intl.DateTimeFormat().resolvedOptions().timeZone, locale: navigator.language }); // zone + language place a number typed without its country code
     if (j) { if (j.phone) setPhone(j.phone); setStage('code'); } // show the number as we read it, country code included
   }
   async function verify() {
@@ -382,7 +382,7 @@ export default function Onething() {
           )}
           {stage === 'code' && <p className="ot-note">We texted a code to {phone}. <button className="ot-link" onClick={() => { setStage('phone'); setErr(''); }}>Wrong number?</button></p>}
           {err && <p className="ot-err">{err}</p>}
-          <p className="ot-note">iMessage only. No password, nothing to install.{stage === 'phone' && ' Outside the US, start with your country code.'}</p>
+          <p className="ot-note">iMessage only. No password, nothing to install.</p>
         </section>
 
         <p className="ot-caption">Streaks earn points. Points grow a plant.</p>

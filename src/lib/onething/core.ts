@@ -7,6 +7,8 @@
 // when Onething does not claim the message.
 
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
+import { isSupportedCountry as isSupportedCountryCore, parsePhoneNumberFromString as parsePhoneCore, type CountryCode, type MetadataJson } from 'libphonenumber-js/core'
+import phoneMetadataModule from 'libphonenumber-js/max/metadata'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { DEMO_PREFIX, isDemoPhone, sendText } from './send'
 import { notifySignup, type SignupSource } from './notify'
@@ -116,23 +118,60 @@ export function addDays(day: string, n: number): string {
 
 // ---------- phones ----------
 
-/// E.164 from what people type. The phone keypad on an iPhone hides "+" behind
-/// the +*# key, so a number outside the US arrives as "44 7911 123456",
-/// "0044 7911 123456" or "+44 (0)7911 123456" as often as with a plus — all
-/// three are the same number. A national number with its trunk zero
-/// ("07911 123456") says nothing about the country and is refused; the form
-/// asks for the country code.
-export function normalizePhone(raw: string): string | null {
-  const t = raw.trim().replace(/\(0\)/g, '')
+// The library's /max entry breaks under tsx (its metadata arrives wrapped in
+// { default }), so the scripts and the routes share this unwrapped copy.
+const PHONE_METADATA = ((phoneMetadataModule as unknown as { default?: MetadataJson }).default ?? phoneMetadataModule) as MetadataJson
+type ParseOptions = { defaultCallingCode: string } | { defaultCountry: CountryCode }
+const parsePhoneNumberFromString = (text: string, opts?: ParseOptions) => parsePhoneCore(text, opts ?? {}, PHONE_METADATA)
+const isSupportedCountry = (c: string): c is CountryCode => isSupportedCountryCore(c as CountryCode, PHONE_METADATA)
+
+/// Where a number typed without a country code probably belongs: the browser's
+/// zone and language at sign-in, the inviter's own number for a buddy invite.
+export type PhoneHint = { tz?: string | null; locale?: string | null; phone?: string | null }
+
+/// Calling codes to try for a national number, best guess first. +1 is never
+/// a hint: ten digits already read as a US number further down.
+function hintedCountries(hint?: PhoneHint): ParseOptions[] {
+  const out: ParseOptions[] = []
+  const tz = hint?.tz ?? ''
+  const byTz = tz.startsWith('Australia/') ? '+61' : TZ_BY_COUNTRY.find((pair) => pair[1] === tz)?.[0]
+  if (byTz && byTz !== '+1') out.push({ defaultCallingCode: byTz.slice(1) })
+  try {
+    const region = hint?.locale ? new Intl.Locale(hint.locale).region : undefined
+    if (region && region !== 'US' && isSupportedCountry(region)) out.push({ defaultCountry: region })
+  } catch { /* not a locale; no hint */ }
+  const own = hint?.phone ? parsePhoneNumberFromString(hint.phone)?.countryCallingCode : undefined
+  if (own && own !== '1') out.push({ defaultCallingCode: own })
+  return out
+}
+
+/// E.164 from whatever people type: spaces, dashes, dots and brackets are
+/// noise; "+44 7911 123456", "44 7911 123456", "0044 …", "011 44 …" and
+/// "+44 (0)7911 …" are the same number (the iPhone phone keypad hides "+"
+/// behind the +*# key, so it is often missing). A national number
+/// ("07911 123456", "0475 12 34 56") is read in the hinted country when it is
+/// a valid number there; with no hint that fits, a leading zero is refused and
+/// the form asks for the country code. Ten digits stay a US number. Handles
+/// that arrive from iMessage carry their plus and pass through as before.
+export function normalizePhone(raw: string, hint?: PhoneHint): string | null {
+  const t = raw.trim().replace(/\uFF0B/g, '+').replace(/\(\s*0\s*\)/g, '')
   const digits = t.replace(/[^\d]/g, '')
   const intl = (d: string) => (d.length >= 8 && d.length <= 15 && !d.startsWith('0') ? `+${d}` : null)
-  if (t.startsWith('+')) return intl(digits)
+  const valid = (text: string, opts?: ParseOptions) => {
+    const p = parsePhoneNumberFromString(text, opts)
+    return p?.isValid() ? p.number : null
+  }
+  if (t.startsWith('+') && !digits.startsWith('0')) return intl(digits)
   if (digits.startsWith('00')) return intl(digits.slice(2))
+  for (const country of hintedCountries(hint)) {
+    const n = valid(digits, country)
+    if (n) return n
+  }
+  if (digits.startsWith('011')) return valid(`+${digits.slice(3)}`) // the US exit code
   if (digits.startsWith('0')) return null
   if (digits.length === 10) return `+1${digits}`
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
-  if (digits.length >= 11) return intl(digits) // country code typed without the plus
-  return null
+  return valid(`+${digits}`) // country code typed without the plus
 }
 
 export function isEmailHandle(raw: string): boolean {
@@ -141,10 +180,10 @@ export function isEmailHandle(raw: string): boolean {
 
 /// An iMessage handle: a phone (E.164) or an iCloud email. Either kind lives
 /// in the `phone` column; emails are lower-cased so the same person matches.
-export function normalizeHandle(raw: string): string | null {
+export function normalizeHandle(raw: string, hint?: PhoneHint): string | null {
   const t = raw.trim()
   if (isEmailHandle(t)) return t.toLowerCase()
-  return normalizePhone(t)
+  return normalizePhone(t, hint)
 }
 
 export function prettyHandle(h: string): string {

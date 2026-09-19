@@ -5,11 +5,12 @@ export const runtime = 'nodejs'
 export const maxDuration = 60
 
 export async function POST(req: Request) {
-  const body = (await req.json().catch(() => ({}))) as { phone?: string }
-  const phone = normalizePhone(body.phone ?? '')
+  const body = (await req.json().catch(() => ({}))) as { phone?: string; tz?: string; locale?: string }
+  // The browser's zone and language say where a number typed without a country code belongs.
+  const phone = normalizePhone(body.phone ?? '', { tz: body.tz, locale: body.locale })
   if (!phone) {
     return NextResponse.json(
-      { error: 'Enter your full phone number. Outside the US, start with the country code, like 44 7911 123456 (no leading 0).' },
+      { error: 'That does not read as a phone number. Try it with the country code, like +44 7911 123456.' },
       { status: 400 },
     )
   }

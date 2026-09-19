@@ -2,15 +2,17 @@
 // phone keypad hides "+", so numbers outside the US arrive without it
 // (2026-09-19: a +44 number could not sign in at all).
 //   npx tsx scripts/onething/phone-check.ts
-import { normalizeHandle, normalizePhone } from '../../src/lib/onething/core'
+import { normalizeHandle, normalizePhone, type PhoneHint } from '../../src/lib/onething/core'
 
 let failures = 0
-const is = (raw: string, want: string | null) => {
-  const got = normalizePhone(raw)
+const is = (raw: string, want: string | null, hint?: PhoneHint) => {
+  const got = normalizePhone(raw, hint)
   const ok = got === want
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${JSON.stringify(raw)} → ${got}${ok ? '' : ` (want ${want})`}`)
+  console.log(`${ok ? 'PASS' : 'FAIL'} ${JSON.stringify(raw)}${hint ? ` ${JSON.stringify(hint)}` : ''} → ${got}${ok ? '' : ` (want ${want})`}`)
   if (!ok) failures++
 }
+const UK: PhoneHint = { tz: 'Europe/London', locale: 'en-GB' }
+const BE: PhoneHint = { tz: 'Europe/Brussels', locale: 'nl-BE' }
 
 // US, as before
 is('6505550123', '+16505550123')
@@ -33,8 +35,44 @@ is('+32 475 12 34 56', '+32475123456')
 is('32475123456', '+32475123456')
 is('0032 475 12 34 56', '+32475123456')
 
-// national format: no country to go on → refused, the form asks for the code
+// punctuation is noise
+is('650-555-0123', '+16505550123')
+is('650.555.0123', '+16505550123')
+is('1-650-555-0123', '+16505550123')
+is('+44-7911-123456', '+447911123456')
+is('+44.7911.123456', '+447911123456')
+is(' +44 7911-123 456 ', '+447911123456')
+is('\uFF0B44 7911 123456', '+447911123456') // full-width plus
+is('011 44 7911 123456', '+447911123456') // the US exit code
+is('+0044 7911 123456', '+447911123456')
+
+// national format, placed by the browser's zone and language
+is('07911 123456', '+447911123456', UK)
+is('07911-123-456', '+447911123456', UK)
+is('7911 123456', '+447911123456', UK)
+is('(07911) 123456', '+447911123456', UK)
+is('+07911 123456', '+447911123456', UK)
+is('44 7911 123456', '+447911123456', UK)
+is('07911 123456', '+447911123456', { tz: 'America/Los_Angeles', locale: 'en-GB' }) // travelling, British phone
+is('07911 123456', '+447911123456', { tz: 'Europe/London', locale: 'en-US' }) // in London, American English
+is('0475 12 34 56', '+32475123456', BE)
+is('0475/12.34.56', '+32475123456', BE)
+is('475 12 34 56', '+32475123456', BE)
+is('06 12 34 56 78', '+33612345678', { tz: 'Europe/Paris' })
+is('0412 345 678', '+61412345678', { tz: 'Australia/Melbourne' })
+is('98765 43210', '+919876543210', { tz: 'Asia/Kolkata' }) // ten digits, valid in India → not a US number
+is('138 0013 8000', '+8613800138000', { tz: 'Asia/Shanghai' }) // eleven digits starting with 1
+// a US number typed abroad is still a US number
+is('650 555 0123', '+16505550123', UK)
+is('(650) 555-0123', '+16505550123', BE)
+is('1 650 555 0123', '+16505550123', UK)
+// a buddy invite: the inviter's own number places it
+is('0475 12 34 56', '+32475123456', { phone: '+32475752394' })
+is('07911 123456', '+447911123456', { phone: '+447700900123', tz: 'America/Los_Angeles' })
+
+// national format with no country to go on → refused, the form asks for the code
 is('07911 123456', null)
+is('07911 123456', null, { tz: 'America/Los_Angeles', locale: 'en-US' })
 is('0475 12 34 56', null) // ten digits, was read as +1 before
 is('+0 7911 123456', null)
 

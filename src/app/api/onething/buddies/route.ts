@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { action?: string; to?: string; id?: string }
   try {
     if (body.action === 'invite') {
-      const handle = normalizeHandle(body.to ?? '')
+      const handle = normalizeHandle(body.to ?? '', { phone: user.phone, tz: user.tz }) // a buddy's national number is read in the inviter's country
       if (!handle) return NextResponse.json({ error: 'A phone number or an iCloud email.' }, { status: 400 })
       const row = await invite(user, handle)
       return NextResponse.json({ ok: true, id: row.id })

@@ -6,7 +6,7 @@ export const runtime = 'nodejs'
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { phone?: string; code?: string; tz?: string }
-  const phone = normalizePhone(body.phone ?? '')
+  const phone = normalizePhone(body.phone ?? '', { tz: body.tz })
   const code = (body.code ?? '').replace(/\D/g, '')
   // The browser's zone; the daily texts follow it. Ignored when it is not a real zone.
   const tz = typeof body.tz === 'string' && isValidTz(body.tz) ? body.tz : undefined
