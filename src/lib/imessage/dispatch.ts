@@ -15,13 +15,12 @@
 //   4. Both → an explicit prefix wins ("polly …" / "dodo …" — the same words
 //      that address each app's own agent, so the message still reads right
 //      once it lands); else the app that handled this handle's last message
-//      within STICKY_MS keeps it; else a one-word Haiku call decides whether
+//      — or sent it the daily card — within STICKY_MS keeps it; else a one-word Haiku call decides whether
 //      the text is about learning a language; else Dodo.
 //
 // Every decision for a paired handle is written to imessage_routes.
 
 import Anthropic from '@anthropic-ai/sdk'
-import { f2Supabase } from '@/lib/f2/supabase'
 import { processMessage as dodoProcess } from '@/lib/f2/agent'
 import {
   findUserByDailyChatGuid as dodoDailyChat,
@@ -35,8 +34,9 @@ import {
 } from '@/lib/polly/imessage'
 import { sendIMessage as pollySend } from '@/lib/polly/bluebubbles'
 import { handleInbound as onethingInbound } from '@/lib/onething/inbound'
+import { lastRoute, rememberRoute as remember, type Route } from './routes'
 
-export type Route = 'onething' | 'polly' | 'dodo' | 'drop'
+export type { Route }
 
 /// How long a conversation stays with the app that last handled it.
 const STICKY_MS = 6 * 60 * 60 * 1000
@@ -123,28 +123,6 @@ export async function dispatchInbound(m: Inbound): Promise<Route> {
     if (result.reply) await dodoSend({ chatGuid: m.chatGuid, text: result.reply })
   }
   return d.route
-}
-
-async function lastRoute(handle: string): Promise<{ route: Route; at: number } | null> {
-  const { data, error } = await f2Supabase()
-    .from('imessage_routes')
-    .select('route, routed_at')
-    .eq('handle', handle)
-    .maybeSingle()
-  if (error) {
-    console.error('[imessage] route lookup failed:', error)
-    return null
-  }
-  if (!data) return null
-  return { route: data.route as Route, at: new Date(data.routed_at as string).getTime() }
-}
-
-async function remember(handle: string, route: Route, reason: string): Promise<void> {
-  if (route === 'drop' || !handle) return
-  const { error } = await f2Supabase()
-    .from('imessage_routes')
-    .upsert({ handle, route, reason, routed_at: new Date().toISOString() }, { onConflict: 'handle' })
-  if (error) console.error('[imessage] route save failed:', error)
 }
 
 let _anthropic: Anthropic | null = null

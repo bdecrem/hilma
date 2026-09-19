@@ -6,6 +6,7 @@
 import { f2Supabase } from './supabase'
 import { bumpDailyStreak, getDailyStreak, peckNag, streakMultiplier } from './streak'
 import { sendIMessage } from './bluebubbles'
+import { rememberRoute } from '@/lib/imessage/routes'
 import {
   cardWeight,
   choicesForCard,
@@ -205,6 +206,9 @@ Reply with your answer (your own words are fine).${recertPs}`
         await sendIMessage({ chatGuid: u.daily_chat_guid, text })
       } else {
         await sendIMessage({ addresses: [handle!], text })
+        // The answer belongs to the app that asked: a handle paired to both
+        // Dodo and Polly is routed by who spoke last.
+        await rememberRoute(handle!, 'dodo', 'daily card sent')
       }
       await markCardsShown(u.id, [card.id])
       out.push({ user: u.username, status: 'sent' })

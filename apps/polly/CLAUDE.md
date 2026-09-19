@@ -243,6 +243,15 @@ and Dodo is routed by prefix (`polly …`), then by which app spoke last, then
 by a Haiku classifier. Pairing (`/api/polly/imessage/start`) sends the code
 synchronously and answers 502 when the mini is unreachable.
 
+The daily card has its own Vercel cron: `/api/polly/daily-card` at 15:00 UTC
+(`vercel.json`) — an hour before Dodo's card and two before Onething's 10am
+Pacific question, because Onething claims any text while its question is open.
+It was missing until 2026-09-19 (the route was cloned from Dodo, the cron
+entry was not, so no card had ever gone out). Sending a card writes
+`imessage_routes` for the handle (`rememberRoute` in
+`src/lib/imessage/routes.ts`, Dodo's card does the same), so for someone
+paired to both apps the answer goes back to the app that asked.
+
 ## App Store Connect / TestFlight (set up 2026-09-17, from Bart's MacBook Air)
 
 - App record **"Polly: Learn any language"**, id `6813318254`, SKU `polly`;

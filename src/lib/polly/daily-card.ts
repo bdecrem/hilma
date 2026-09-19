@@ -1,4 +1,5 @@
-// The daily flash card over iMessage. A cron (api/f2/daily-card) sends one
+// The daily flash card over iMessage. A cron (api/polly/daily-card, 15:00 UTC
+// — an hour before Dodo's, two before Onething's 10am question) sends one
 // scheduler-picked question to every user with a phone number on their
 // profile; the reply comes back through the BlueBubbles webhook and is
 // graded as a freeform answer — corrections + a little XP.
@@ -6,6 +7,7 @@
 import { pollySupabase } from './supabase'
 import { bumpDailyStreak, getDailyStreak, peckNag, streakMultiplier } from './streak'
 import { sendIMessage } from './bluebubbles'
+import { rememberRoute } from '@/lib/imessage/routes'
 import {
   cardWeight,
   choicesForCard,
@@ -207,6 +209,9 @@ Reply with your answer (your own words are fine).${recertPs}`
         await sendIMessage({ chatGuid: u.daily_chat_guid, text })
       } else {
         await sendIMessage({ addresses: [handle!], text })
+        // The answer belongs to the app that asked: a handle paired to both
+        // Dodo and Polly is routed by who spoke last.
+        await rememberRoute(handle!, 'polly', 'daily card sent')
       }
       await markCardsShown(u.id, [card.id])
       out.push({ user: u.username, status: 'sent' })

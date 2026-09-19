@@ -191,7 +191,8 @@ claims the guid, then `dispatchInbound` in `src/lib/imessage/dispatch.ts`
 decides: Onething claims first (its own rules); then the handle's pairings —
 Dodo only or Polly only goes straight there, unpaired is dropped; paired to
 both → a `polly …` / `dodo …` prefix wins (the same words that address each
-app's agent), else the app that handled this handle's last message within
+app's agent), else the app that handled this handle's last message — or sent it
+its daily card (`rememberRoute`, `src/lib/imessage/routes.ts`) — within
 six hours keeps it (`imessage_routes`, schema f2/049), else one Haiku call
 (`IMESSAGE_CLASSIFIER_MODEL`) says language-learning or not, default Dodo.
 Check: the decision table in the 2026-09-18 session ran on two throwaway
