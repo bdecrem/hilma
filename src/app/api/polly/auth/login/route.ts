@@ -4,6 +4,7 @@ import {
   setSessionCookie,
   verifyPassword,
 } from '@/lib/polly/auth'
+import { landingProfileId } from '@/lib/polly/profiles'
 import { pollySupabase } from '@/lib/polly/supabase'
 
 export const runtime = 'nodejs'
@@ -38,20 +39,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid credentials' }, { status: 401 })
   }
 
-  // Fetch full profile so the iOS app gets the avatar in one round-trip.
+  // Land in the language profile the learner used last (schema 007); an
+  // account with one language is its own profile.
+  const profileId = await landingProfileId(user.id)
   const { data: profile } = await pollySupabase()
     .from('polly_users')
-    .select('id, username, avatar_url')
+    .select('avatar_url, is_guest, active_course:polly_courses!polly_users_active_course_id_fkey(language)')
+    .eq('id', profileId)
+    .maybeSingle()
+  const { data: root } = await pollySupabase()
+    .from('polly_users')
+    .select('username')
     .eq('id', user.id)
     .maybeSingle()
-
+  const course = (profile as { active_course?: { language?: string } | null } | null)?.active_course
   const res = NextResponse.json({
     user: {
-      id: user.id,
-      username: profile?.username ?? identifier,
+      id: profileId,
+      username: root?.username ?? identifier,
       avatar_url: profile?.avatar_url ?? null,
+      is_guest: Boolean(profile?.is_guest),
+      language: course?.language ?? null,
     },
   })
-  setSessionCookie(res, user.id)
+  setSessionCookie(res, profileId)
   return res
 }

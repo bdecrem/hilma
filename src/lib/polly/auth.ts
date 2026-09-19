@@ -68,11 +68,24 @@ export async function getSessionUser(): Promise<PollyUser | null> {
   if (!verified) return null
   const { data, error } = await pollySupabase()
     .from('polly_users')
-    .select('id, username, avatar_url, is_guest, recert_enabled, active_course:polly_courses!polly_users_active_course_id_fkey(language)')
+    .select('id, username, avatar_url, is_guest, recert_enabled, account_id, active_course:polly_courses!polly_users_active_course_id_fkey(language)')
     .eq('id', verified.userId)
     .maybeSingle()
   if (error || !data) return null
-  const { active_course, ...user } = data as unknown as PollyUser & { active_course: { language: string } | null }
+  const { active_course, account_id, ...user } = data as unknown as PollyUser & {
+    active_course: { language: string } | null
+    account_id: string | null
+  }
+  // A language profile (schema 007) shows the account's name, not its own
+  // internal "<name>+<lang>" handle.
+  if (account_id) {
+    const { data: root } = await pollySupabase()
+      .from('polly_users')
+      .select('username')
+      .eq('id', account_id)
+      .maybeSingle()
+    if (root?.username) user.username = root.username as string
+  }
   return { ...user, language: active_course?.language ?? null }
 }
 

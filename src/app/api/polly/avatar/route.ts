@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
+import { accountRootId } from '@/lib/polly/profiles'
 import { pollySupabase } from '@/lib/polly/supabase'
 
 export const runtime = 'nodejs'
@@ -69,10 +70,12 @@ export async function POST(req: Request) {
   const { data: pub } = sb.storage.from('f2-avatars').getPublicUrl(path)
   const avatar_url = pub.publicUrl
 
+  // The avatar belongs to the account: every language profile gets it.
+  const rootId = await accountRootId(user.id)
   const { error: updErr } = await sb
     .from('polly_users')
     .update({ avatar_url })
-    .eq('id', user.id)
+    .or(`id.eq.${rootId},account_id.eq.${rootId}`)
   if (updErr) {
     console.error('[polly] polly_users.avatar_url update failed:', updErr)
     return NextResponse.json({ error: 'persist failed' }, { status: 500 })
@@ -98,10 +101,11 @@ export async function DELETE() {
       .remove(existing.map(o => `${user.id}/${o.name}`))
   }
 
+  const rootId = await accountRootId(user.id)
   const { error } = await sb
     .from('polly_users')
     .update({ avatar_url: null })
-    .eq('id', user.id)
+    .or(`id.eq.${rootId},account_id.eq.${rootId}`)
   if (error) {
     console.error('[polly] avatar clear failed:', error)
     return NextResponse.json({ error: 'persist failed' }, { status: 500 })
