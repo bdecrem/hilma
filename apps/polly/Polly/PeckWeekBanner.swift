@@ -17,7 +17,7 @@ enum PeckWeek {
     /// "today" / "tomorrow" / "Sunday" / "in 7 days".
     static func dueWord(due: String, daysLeft: Int) -> String {
         switch daysLeft {
-        case ...0: return L("today", "oggi", "aujourd'hui", "오늘")
+        case ...0: return L("today", "oggi", "aujourd’hui", "오늘")
         case 1: return L("tomorrow", "domani", "demain", "내일")
         case 2...6:
             if let date = parse(due) { return date.formatted(.dateTime.weekday(.wide)) }
@@ -83,12 +83,14 @@ struct PeckWeekBanner: View {
                 .background(Self.ember.opacity(0.14), in: Circle())
 
             (Text(L("Your ", "La tua ", "Ta ", "")).foregroundColor(PollyTheme.text2)
-             + Text(L("\(hit.streak)-day streak", "serie di \(hit.streak) giorni",
-                      "série de \(hit.streak) jours", "\(hit.streak)일 연속 기록"))
+             + Text(L("\(hit.streak)-day streak",
+                      hit.streak == 1 ? "serie di 1 giorno" : "serie di \(hit.streak) giorni",
+                      hit.streak < 2 ? "série de \(hit.streak) jour" : "série de \(hit.streak) jours",
+                      "\(hit.streak)일 연속 기록"))
                 .bold().foregroundColor(PollyTheme.text)
              + Text(L(" needs a Peck level by \(by).",
                       " ha bisogno di un livello Peck entro \(by).",
-                      " a besoin d'un niveau Peck avant \(by).",
+                      " a besoin d’un niveau Peck avant \(by).",
                       "을 지키려면 \(by)까지 Peck 레벨을 하나 해야 해요."))
                 .foregroundColor(PollyTheme.text2))
                 .font(.system(size: 13.5))
@@ -193,9 +195,9 @@ struct PeckDueSign: View {
     private var board: String {
         switch daysLeft {
         case ...0: return L("DUE tonight", "ENTRO STASERA", "AVANT CE SOIR", "오늘 밤까지")
-        case 1: return L("DUE in 1 day", "ENTRO 1 GIORNO", "D'ICI 1 JOUR", "1일 남음")
+        case 1: return L("DUE in 1 day", "ENTRO 1 GIORNO", "D’ICI 1 JOUR", "1일 남음")
         default: return L("DUE in \(daysLeft) days", "ENTRO \(daysLeft) GIORNI",
-                          "D'ICI \(daysLeft) JOURS", "\(daysLeft)일 남음")
+                          "D’ICI \(daysLeft) JOURS", "\(daysLeft)일 남음")
         }
     }
 

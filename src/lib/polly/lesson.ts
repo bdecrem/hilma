@@ -97,7 +97,7 @@ Extract, faithfully and only from the transcript:
 - grammar_point: one usage or grammar point the teacher calls out (formal vs informal address, a tense, a construction), one line, else null.
 - closing_question: the question the teacher asks the listener at the end, verbatim in the target language, else null. Not calls to subscribe or rate.
 
-Rules: quote the transcript, don't invent; transcripts have no punctuation in places and mis-hear words — fix obvious transcription errors in a term, nothing else. Plain text in every field, no markdown.`
+Rules: a key word's or phrase's example sentence must contain the term as taught (if the transcript has a variant wording of the same line, use the taught one); spell the target language correctly, with every accent and apostrophe, and capitalise the formal "Lei"; quote the transcript, don't invent; transcripts have no punctuation in places and mis-hear words — fix obvious transcription errors in a term, nothing else. Plain text in every field, no markdown.`
 
   const result = await llmComplete({
     model: LESSON_MODEL,

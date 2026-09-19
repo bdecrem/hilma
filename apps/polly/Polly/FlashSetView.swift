@@ -755,9 +755,9 @@ struct FlashResultsView: View {
     }
 
     private var headline: String {
-        if isPerfect { return L("Perfect!", "Perfetto!", "Parfait !", "완벽해요!") }
-        if fraction >= 0.9 { return L("So close to perfect!", "Quasi perfetto!", "Presque parfait !", "거의 완벽했어요!") }
-        if fraction >= 0.7 { return L("Nice round!", "Bel giro!", "Belle manche !", "잘했어요!") }
+        if isPerfect { return L("Perfect!", "Perfetto!", "Parfait\u{202F}!", "완벽해요!") }
+        if fraction >= 0.9 { return L("So close to perfect!", "Quasi perfetto!", "Presque parfait\u{202F}!", "거의 완벽했어요!") }
+        if fraction >= 0.7 { return L("Nice round!", "Bel giro!", "Belle manche\u{202F}!", "잘했어요!") }
         if fraction >= 0.4 { return L("Getting there.", "Ci siamo quasi.", "Ça vient.", "점점 나아지고 있어요.") }
         return L("Tough round.", "Giro tosto.", "Manche difficile.", "어려운 라운드였어요.")
     }
@@ -790,14 +790,14 @@ struct FlashResultsView: View {
     private var banners: some View {
         if result.star2Awarded {
             bannerRow(icon: "star.fill", tint: PollyTheme.gold,
-                      text: L("Second star earned — two 9+ rounds in a row!", "Seconda stella — due giri da 9+ di fila!", "Deuxième étoile — deux manches à 9+ d'affilée !", "두 번째 별 획득 — 9점 이상 두 번 연속!"))
+                      text: L("Second star earned — two 9+ rounds in a row!", "Seconda stella — due giri da 9+ di fila!", "Deuxième étoile — deux manches à 9+ d’affilée\u{202F}!", "두 번째 별 획득 — 9점 이상 두 번 연속!"))
         } else if result.consecutiveHighSets == 1 && (result.stars ?? 2) < 2 && jumboLevel == nil {
             bannerRow(icon: "flame.fill", tint: PollyTheme.accent,
-                      text: L("9+ round! One more in a row for the second star.", "Giro da 9+! Un altro di fila e arriva la seconda stella.", "Manche à 9+ ! Encore une d'affilée pour la deuxième étoile.", "9점 이상! 한 번 더 연속하면 두 번째 별이에요."))
+                      text: L("9+ round! One more in a row for the second star.", "Giro da 9+! Un altro di fila e arriva la seconda stella.", "Manche à 9+\u{202F}! Encore une d’affilée pour la deuxième étoile.", "9점 이상! 한 번 더 연속하면 두 번째 별이에요."))
         }
         if passedJumbo {
             bannerRow(icon: "checkmark.seal.fill", tint: PollyTheme.gold,
-                      text: L("Level \(jumboLevel!) cleared — the path continues!", "Livello \(jumboLevel!) superato — il percorso continua!", "Niveau \(jumboLevel!) réussi — le parcours continue !", "레벨 \(jumboLevel!) 통과 — 학습 경로가 이어져요!"))
+                      text: L("Level \(jumboLevel!) cleared — the path continues!", "Livello \(jumboLevel!) superato — il percorso continua!", "Niveau \(jumboLevel!) réussi — le parcours continue\u{202F}!", "레벨 \(jumboLevel!) 통과 — 학습 경로가 이어져요!"))
         }
     }
 

@@ -454,11 +454,13 @@ struct FlashTabView: View {
             text: "Peck",
             subtitle: state.map { st in
                 let n = st.cardCount, m = st.highestPassed
-                return m == 1
-                    ? L("\(n) CARDS · \(m) LEVEL CLEARED", "\(n) CARTE · \(m) LIVELLO SUPERATO",
-                        "\(n) CARTES · \(m) NIVEAU TERMINÉ", "카드 \(n)장 · \(m)레벨 완료")
-                    : L("\(n) CARDS · \(m) LEVELS CLEARED", "\(n) CARTE · \(m) LIVELLI SUPERATI",
-                        "\(n) CARTES · \(m) NIVEAUX TERMINÉS", "카드 \(n)장 · \(m)레벨 완료")
+                // Number agreement per language: English and Italian are
+                // singular only at 1; French is singular at 0 and 1; Korean
+                // has no plural.
+                let en = "\(n) \(n == 1 ? "CARD" : "CARDS") · \(m) \(m == 1 ? "LEVEL" : "LEVELS") CLEARED"
+                let it = "\(n) \(n == 1 ? "CARTA" : "CARTE") · \(m) \(m == 1 ? "LIVELLO SUPERATO" : "LIVELLI SUPERATI")"
+                let fr = "\(n) \(n < 2 ? "CARTE" : "CARTES") · \(m) \(m < 2 ? "NIVEAU TERMINÉ" : "NIVEAUX TERMINÉS")"
+                return L(en, it, fr, "카드 \(n)장 · \(m)레벨 완료")
             }
         )
         .titleVisibilityMarker()
@@ -478,7 +480,7 @@ struct FlashTabView: View {
                     .foregroundStyle(PollyTheme.accent)
             }
             Text(L("The path opens at 10 cards", "Il percorso si apre a 10 carte",
-                   "Le parcours s'ouvre à 10 cartes", "카드 10장이면 길이 열려요"))
+                   "Le parcours s’ouvre à 10 cartes", "카드 10장이면 길이 열려요"))
                 .font(.system(size: 21, weight: .bold))
                 .tracking(-0.4)
                 .foregroundStyle(PollyTheme.text)

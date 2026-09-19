@@ -87,9 +87,35 @@ Warm, playful, short — a consumer app, not courseware. Informal address:
 Italian **tu**, French **tu**, Korean **해요체** (polite-informal; never
 합쇼체 -습니다 except in a legal/system notice). Buttons are imperatives or
 bare nouns, as short as the English. Don't translate word for word; write
-what a native app would say. Keep punctuation conventions: French gets a
-(narrow) space before `? ! :` — use a plain space; Italian and French use
-`…` and `—` as English does; Korean drops the final period on labels.
+what a native app would say.
+
+## Orthography and typography (copy-edited 2026-09-19 — keep it this way)
+
+- **Every accent, always, capitals included**: POSSIBILITÀ, PIÙ, RÉVISION,
+  Épinglés, À ranger, È. An unaccented capital is a spelling mistake in
+  Italian and French, not a style. Watch the pairs that change meaning:
+  *infinita* (adjective: "Chat infinita", no accent) vs *infinità* (the noun
+  "infinity"); *e* (and) vs *è* (is); *perché, più, già, così, città*.
+- **Typographic apostrophe ’** in Italian and French (l’inglese, un’altra,
+  aujourd’hui, d’affilée) — never the straight '. (Card *answers* on the
+  server keep whatever the learner would type; grading strips both.)
+- **French spacing**: a narrow no-break space before `! ? ;` —
+  `"Parfait\u{202F}!"` — and a no-break space before `:` and inside guillemets
+  — `"Cette semaine\u{00A0}: "`, `«\u{00A0}Commencer\u{00A0}»`. Written as
+  escapes so they are visible in source. Italian guillemets take no space:
+  «Inizia una chat».
+- **Sentence case** in Italian, French and Korean titles ("Serata sushi",
+  not "Serata Sushi"); ALL-CAPS eyebrows stay all-caps with their accents.
+- **Euphonic d** in Italian before the same vowel: *ed esce*, *ad
+  aspettare*.
+- The formal pronoun is capitalised: **Lei**.
+- French "chat" is masculine and reads as *cat* — the app says
+  **discussion** ("Discussion infinie", never "Chat infini").
+- One English term, one translation. The oral exam is **Esame finale /
+  Examen final / 최종 시험** everywhere (it was also "Ripasso finale" once);
+  *Ripasso / Révision / 복습* is only the Refresher.
+- Korean: 해요체 throughout; "Mastered" is **마스터** (마스터하기), a status
+  is a noun phrase (정리 전, 정리됨), a button is a verb (정리하기).
 
 ## Glossary (use these — consistency matters more than elegance)
 
@@ -97,7 +123,8 @@ what a native app would say. Keep punctuation conventions: French gets a
 |---|---|---|---|
 | Topics | Argomenti | Sujets | 주제 |
 | Topic | Argomento | Sujet | 주제 |
-| Chat (tab / noun) | Chat | Discussion | 대화 |
+| Chat (tab / noun) | Chat (f.) | Discussion | 대화 |
+| Infinity Chat (topic title) | Chat infinita | Discussion infinie | 무한 대화 |
 | Cards / flash cards | Carte | Cartes | 카드 |
 | Deck | Mazzo | Paquet | 덱 |
 | Lesson | Lezione | Leçon | 레슨 |
@@ -114,12 +141,14 @@ what a native app would say. Keep punctuation conventions: French gets a
 | Let's talk | Parliamo | Parlons | 이야기해요 |
 | Quiz | Quiz | Quiz | 퀴즈 |
 | Clean up | Sistema | Ranger | 정리 |
-| Ready to clean up | Da sistemare | À ranger | 정리하기 |
+| Ready to clean up (status) | Da sistemare | À ranger | 정리 전 |
 | Cleaned up | Sistemata | Rangée | 정리됨 |
-| Mastered | Padroneggiata/o | Maîtrisé(e) | 완성 |
-| Master it | Padroneggiala | Maîtrise-la | 완성하기 |
+| Mastered | Padroneggiata/o | Maîtrisé(e) | 마스터 |
+| Master it | Padroneggiala | Maîtrise-la | 마스터하기 |
 | Refresher | Ripasso | Révision | 복습 |
-| Review (noun) | Ripasso | Révision | 복습 |
+| Final Review (the oral exam) | Esame finale | Examen final | 최종 시험 |
+| Reviews (exam records) | Esami | Examens | 시험 기록 |
+| Second Chance | Seconda possibilità | Seconde chance | 재도전 |
 | Study | Studia | Réviser | 학습 |
 | Practice | Esercitati | Entraîne-toi | 연습 |
 | Start | Inizia | Commencer | 시작 |
@@ -138,7 +167,7 @@ what a native app would say. Keep punctuation conventions: French gets a
 | Close | Chiudi | Fermer | 닫기 |
 | Retry / Try again | Riprova | Réessayer | 다시 시도 |
 | Skip | Salta | Passer | 건너뛰기 |
-| Loading… | Carico… | Chargement… | 불러오는 중… |
+| Loading… | Caricamento… | Chargement… | 불러오는 중… |
 | Settings | Impostazioni | Réglages | 설정 |
 | Profile | Profilo | Profil | 프로필 |
 | Account | Account | Compte | 계정 |
@@ -155,7 +184,7 @@ what a native app would say. Keep punctuation conventions: French gets a
 | Correct | Giusto | Correct | 정답 |
 | Wrong / Not quite | Non proprio | Pas tout à fait | 아쉬워요 |
 | Something went wrong | Qualcosa è andato storto | Une erreur s'est produite | 문제가 발생했어요 |
-| Guest Lesson | Lezione ospite | Leçon invitée | 게스트 레슨 |
+| Guest Lesson | Lezione ospite | Leçon d’invité | 게스트 레슨 |
 | Immersion | Immersione | Immersion | 몰입 |
 | Ask | Chiedi | Demande | 질문 |
 | Today | Oggi | Aujourd'hui | 오늘 |

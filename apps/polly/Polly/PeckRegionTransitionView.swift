@@ -352,7 +352,7 @@ struct PeckRegionTransitionView: View {
         if t > 0.35 && t < 2.2 {
             Text(L("Level \(crossing.clearedLevel) cleared!",
                    "Livello \(crossing.clearedLevel) superato!",
-                   "Niveau \(crossing.clearedLevel) terminé !",
+                   "Niveau \(crossing.clearedLevel) terminé\u{202F}!",
                    "레벨 \(crossing.clearedLevel) 완료!"))
                 .font(.custom("Fredoka", size: 17).weight(.semibold))
                 .foregroundStyle(Color(hex: 0x2A2E33))

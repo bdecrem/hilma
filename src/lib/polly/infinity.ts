@@ -16,7 +16,7 @@ export const MAX_FIXES = 5
 /// "Infinity Chat" in the language the learner is studying (the topic title).
 const INFINITY_TITLE: Record<string, string> = {
   it: 'Chat infinita',
-  fr: 'Chat infini',
+  fr: 'Discussion infinie', // not "Chat infini" — that reads as "infinite cat"; the app says Discussion everywhere
   ko: '무한 대화',
 }
 export function infinityTitle(language: LanguageCode | null): string {
@@ -188,6 +188,27 @@ function pick<T>(pool: T[], n: number, not: Set<string>, key: (t: T) => string):
   return shuffle(pool.filter((x) => !not.has(key(x)))).slice(0, n)
 }
 
+/// A drill's answer must be just what goes in the blank: the card is graded
+/// by exact match, so "Lei è stanca." for "Lei è ___." fails a learner who
+/// types "stanca". When the model hands back the whole sentence, cut the
+/// sentence around the blank away.
+export function blankOnly(prompt: string, answer: string): string {
+  const m = prompt.match(/_{2,}/)
+  if (!m || m.index === undefined) return answer
+  const sentence = prompt.slice(prompt.lastIndexOf('→') + 1)
+  const at = sentence.search(/_{2,}/)
+  if (at < 0) return answer
+  const before = sentence.slice(0, at).trim()
+  const after = sentence.slice(at).replace(/^_+/, '').replace(/\s*\([^)]*\)\s*$/, '').trim()
+  const a = answer.trim()
+  if (a.length <= before.length + after.length) return answer
+  if (before && !a.toLowerCase().startsWith(before.toLowerCase())) return answer
+  if (after && !a.toLowerCase().endsWith(after.toLowerCase())) return answer
+  if (!before && !after) return answer
+  const cut = a.slice(before.length, a.length - after.length).trim()
+  return cut || answer
+}
+
 /// Turn a cleaned-up conversation into a real deck on the Infinity topic:
 /// vocab BOTH ways (Italian⇄English) as multiple-choice, grammar drills as
 /// fill-in-the-blank. They live in polly_flash_cards on the topic, so they are
@@ -197,6 +218,8 @@ export async function generateInfinityCards(userId: string, threadId: string, an
   const sb = pollySupabase()
   const rows: Record<string, unknown>[] = []
   const vocab = analysis.vocab ?? []
+  const language = await activeLanguage(userId)
+  const languageName = language ? LANGUAGES[language].name : 'the language you are learning'
 
   for (const v of vocab) {
     const term = v.term.trim(), meaning = v.meaning.trim()
@@ -210,14 +233,14 @@ export async function generateInfinityCards(userId: string, threadId: string, an
     // English → term (multiple choice)
     const itDistractors = pick(vocab, 3, new Set([term]), (x) => x.term).map((x) => x.term)
     if (itDistractors.length >= 2) {
-      rows.push({ user_id: userId, thread_id: threadId, question: `How do you say “${meaning}” in Italian?`, answer: term,
+      rows.push({ user_id: userId, thread_id: threadId, question: `How do you say “${meaning}” in ${languageName}?`, answer: term,
                   distractors: itDistractors, cloze_text: null, cloze_answer: null, lesson_step: 'words' })
     }
   }
 
   for (const g of analysis.grammar ?? []) {
     for (const d of g.drills ?? []) {
-      const prompt = d.prompt.trim(), ans = d.answer.trim()
+      const prompt = d.prompt.trim(), ans = blankOnly(d.prompt.trim(), d.answer.trim())
       if (!prompt || !ans) continue
       // The drill prompts already read like "... → Io ___ andato al bar." Keep
       // the sentence with the blank as the fill-in card.
@@ -312,11 +335,11 @@ async function analyzeConversation(input: {
   }
   const system = `You are Polly, a warm ${lang} tutor reviewing a messy practice conversation with a learner whose own language is English. They talk freely, mix English in, and make mistakes — that is exactly what this space is for, and none of it is a problem. The transcript is speech-to-text: expect mis-heard words and missing punctuation, and judge what they evidently meant.
 
-Your ONE job is CURATION. From everything the learner said, pick the FEW things most worth fixing for THIS person right now — AT MOST ${MAX_FIXES}, fewer if fewer are worth it. Choose what will help them most: a wrong verb form they leaned on, a word they reached for in English, a phrase that came out unnatural, a small grammar slip that recurs. IGNORE typos, pronunciation, and anything trivial. Never pad to five.
+Your ONE job is CURATION. From everything the learner said, pick the FEW things most worth fixing for THIS person right now — AT MOST ${MAX_FIXES}, fewer if fewer are worth it. Choose what will help them most: a wrong verb form they leaned on, a word they reached for in English, a phrase that came out unnatural, a small grammar slip that recurs. IGNORE typos, pronunciation, and anything trivial. Never pad to five, and never list something they said correctly as a fix — a fix is a real error. When a word came from another language they know (Spanish "algo", "otra"), say so in the why-line: that is the most useful thing to hear.
 
 For each fix give: what they said (lightly cleaned of transcription noise, still theirs), the natural ${lang} version, ONE plain-English line on why (no grammar jargon, no terms they were not taught), a tag (grammar | vocab | phrasing), and the short ${lang} phrase for them to say out loud.
 
-Then, from the useful language in the chat, up to 8 vocab pairs (a ${lang} term and its short English meaning) — these get drilled both directions. And for the grammar-tagged fixes, a tiny grammar point each: a short title, one plain line explaining it, and 1–3 quick fill-in drills (prompt + answer).
+Then, from the useful language in the chat, up to 8 vocab pairs (a ${lang} term and its short English meaning) — these get drilled both directions, so the two sides must match exactly: a noun carries the article that fits the English ("un ristorante di pesce" = "a seafood restaurant", "la serata" = "the evening"), a verb is the infinitive = "to …". Spell ${lang} correctly, with every accent and apostrophe. And for the grammar-tagged fixes, a tiny grammar point each: a short title, one plain line explaining it (true as stated — no rule of thumb that is wrong in general), and 1–3 quick fill-in drills. A drill is ONE short ${lang} sentence with exactly one blank written ___ that stands for a WHOLE word or phrase, never part of a word; you may put the English before it ("She is tired. → Lei è ___.") and, when the blank is a verb form, the infinitive in parentheses at the end ("Noi abbiamo ___ la pizza. (mangiare)"). The drill's answer is ONLY what goes in the blank ("stanca", "mangiato") — never the whole sentence — and must be the one natural answer.
 
 Also give the whole conversation a short, friendly 2–4 word title IN ${lang} (the language the learner is studying, NOT English), like a chat label.
 

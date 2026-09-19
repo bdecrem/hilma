@@ -97,7 +97,7 @@ struct InfinityCleanupView: View {
                 .font(.system(size: 15, weight: .bold)).foregroundStyle(PollyTheme.accent)
                 .padding(.vertical, 14)
 
-            label(L("TRY", "PROVA", "ESSAIE", "이렇게 해봐요"))
+            label(L("TRY", "PROVA", "ESSAIE", "이렇게 말해봐요"))
             Text(fix.fixed)
                 .font(.custom("Fredoka", size: 26).weight(.semibold))
                 .foregroundStyle(PollyTheme.text)

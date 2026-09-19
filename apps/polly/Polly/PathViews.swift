@@ -466,7 +466,7 @@ struct PlacementFlowView: View {
                 }
                 .buttonStyle(.plain)
                 HStack(spacing: 22) {
-                    Button(L("Not right? Talk again", "Non ci siamo? Riparliamo", "Pas juste ? On reparle", "아닌 것 같아요? 다시 대화")) { stage = .talking }
+                    Button(L("Not right? Talk again", "Non ti convince? Riparliamone", "Pas d’accord\u{202F}? On en reparle", "아닌 것 같아요? 다시 대화")) { stage = .talking }
                     Button(L("Later", "Più tardi", "Plus tard", "나중에")) { onClose(path, nil) }
                 }
                 .font(.system(size: 14, weight: .medium))
@@ -533,7 +533,7 @@ struct LessonStepsCard: View {
                             .multilineTextAlignment(.leading)
                     }
                     Spacer(minLength: 8)
-                    Text(L("Read it", "Leggila", "La lire", "읽기"))
+                    Text(L("Read it", "Leggila", "Lis-la", "읽기"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(PollyTheme.accent)
                     Image(systemName: "chevron.right")

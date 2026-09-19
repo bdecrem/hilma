@@ -187,7 +187,7 @@ struct FinalReviewView: View {
         guard let due = r.recertDueAt else { return "" }
         let fmt = DateFormatter()
         fmt.dateFormat = "MMM d"
-        return L(" until \(fmt.string(from: due))", " fino al \(fmt.string(from: due))", " jusqu'au \(fmt.string(from: due))", " \(fmt.string(from: due))까지")
+        return L(" until \(fmt.string(from: due))", " fino al \(fmt.string(from: due))", " jusqu’au \(fmt.string(from: due))", " \(fmt.string(from: due))까지")
     }
 
     private func gradeReveal(_ r: FinalReviewResult) -> some View {
@@ -195,7 +195,7 @@ struct FinalReviewView: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    Text(variant == .secondChance ? L("SECOND CHANCE", "SECONDA POSSIBILITÀ", "SECONDE CHANCE", "두 번째 기회")
+                    Text(variant == .secondChance ? L("SECOND CHANCE", "SECONDA POSSIBILITÀ", "SECONDE CHANCE", "재도전")
                         : variant == .recert ? L("REFRESHER", "RIPASSO", "RÉVISION", "복습") : L("FINAL REVIEW", "ESAME FINALE", "EXAMEN FINAL", "최종 시험"))
                         .font(.system(size: 12, weight: .heavy))
                         .tracking(1.6)
@@ -226,8 +226,8 @@ struct FinalReviewView: View {
                             Image(systemName: variant == .recert ? "seal.fill" : "star.fill")
                                 .foregroundStyle(PollyTheme.gold)
                             Text(variant == .recert
-                                ? L("Badge renewed — gold\(renewalDateSuffix(r))!", "Distintivo rinnovato — oro\(renewalDateSuffix(r))!", "Badge renouvelé — or\(renewalDateSuffix(r)) !", "배지 갱신 — 골드\(renewalDateSuffix(r))!")
-                                : L("Third star earned — topic mastered!", "Terza stella — argomento padroneggiato!", "Troisième étoile — sujet maîtrisé !", "세 번째 별 획득 — 주제 완성!"))
+                                ? L("Badge renewed — gold\(renewalDateSuffix(r))!", "Distintivo rinnovato — oro\(renewalDateSuffix(r))!", "Badge renouvelé — or\(renewalDateSuffix(r))\u{202F}!", "배지 갱신 — 골드\(renewalDateSuffix(r))!")
+                                : L("Third star earned — topic mastered!", "Terza stella — argomento padroneggiato!", "Troisième étoile — sujet maîtrisé\u{202F}!", "세 번째 별 획득 — 주제 마스터!"))
                                 .font(.system(size: 15, weight: .bold))
                                 .foregroundStyle(PollyTheme.text)
                         }

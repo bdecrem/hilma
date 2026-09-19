@@ -346,7 +346,7 @@ final class PollyAPI {
         /// "Final Review" / "Second Chance" / "Refresher".
         var modeLabel: String {
             switch mode {
-            case "final_review": return L("Final Review", "Esame finale", "Examen final", "최종 리뷰")
+            case "final_review": return L("Final Review", "Esame finale", "Examen final", "최종 시험")
             case "second_chance": return L("Second Chance", "Seconda possibilità", "Seconde chance", "재도전")
             case "recert": return L("Refresher", "Ripasso", "Révision", "복습")
             default: return mode.replacingOccurrences(of: "_", with: " ").capitalized

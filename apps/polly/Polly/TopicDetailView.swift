@@ -532,7 +532,7 @@ struct TopicDetailView: View {
                     .allowsHitTesting(!busy)
 
                     if canTakeFinalReview {
-                        ActionChip(label: L("Final Review", "Ripasso finale", "Révision finale", "최종 복습"),
+                        ActionChip(label: L("Final Review", "Esame finale", "Examen final", "최종 시험"),
                                    systemImage: "checkmark.seal.fill", iconTint: PollyTheme.gold) {
                             // Within 24h of a failed 2nd+ attempt, offer the
                             // 3-question Second Chance alongside the full exam.

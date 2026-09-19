@@ -160,7 +160,7 @@ struct TopicsView: View {
             // translated; only the section title is.
             let order: [(kind: String, title: String)] = [
                 ("lesson", L("Polly's lessons", "Le lezioni di Polly", "Les leçons de Polly", "Polly의 레슨")),
-                ("guest_lesson", L("Guest lessons", "Lezioni ospiti", "Leçons invitées", "게스트 레슨")),
+                ("guest_lesson", L("Guest lessons", "Lezioni ospiti", "Leçons d’invités", "게스트 레슨")),
                 ("immersion", L("Immersion", "Immersione", "Immersion", "몰입")),
                 ("ask", L("Ask", "Chiedi", "Demande", "질문")),
                 ("book", L("Books", "Libri", "Livres", "책")),
@@ -449,7 +449,7 @@ struct TopicsView: View {
             Image(systemName: "tray")
                 .font(.system(size: 32))
                 .foregroundStyle(PollyTheme.text3)
-            Text(L("No topics yet", "Ancora nessun argomento", "Aucun sujet pour l'instant", "아직 주제가 없어요"))
+            Text(L("No topics yet", "Ancora nessun argomento", "Aucun sujet pour l’instant", "아직 주제가 없어요"))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(PollyTheme.text)
             Text("Ask Polly anything — a word, a phrase, a question — and your first chapter starts.")

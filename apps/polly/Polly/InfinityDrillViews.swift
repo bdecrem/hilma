@@ -40,7 +40,7 @@ struct InfinityVocabView: View {
 
     private var header: some View {
         HStack {
-            Text(L("Vocab", "Vocaboli", "Vocab", "단어")).font(.custom("Fredoka", size: 20).weight(.semibold)).foregroundStyle(PollyTheme.text)
+            Text(L("Vocab", "Vocaboli", "Vocabulaire", "단어")).font(.custom("Fredoka", size: 20).weight(.semibold)).foregroundStyle(PollyTheme.text)
             Spacer()
             Button {
                 withAnimation { termFirst.toggle(); revealed = false }
@@ -102,7 +102,7 @@ struct InfinityVocabView: View {
     private var done: some View {
         VStack(spacing: 14) {
             ZStack { Circle().fill(PollyTheme.accentSoft).frame(width: 78, height: 78); DodoMiniMark(size: 64) }
-            Text(L("Nice run!", "Bel giro!", "Beau parcours !", "잘했어요!")).font(.custom("Fredoka", size: 24).weight(.semibold)).foregroundStyle(PollyTheme.text)
+            Text(L("Nice run!", "Bel giro!", "Bien joué\u{202F}!", "잘했어요!")).font(.custom("Fredoka", size: 24).weight(.semibold)).foregroundStyle(PollyTheme.text)
             HStack(spacing: 12) {
                 Button { withAnimation { index = 0; revealed = false } } label: {
                     Text("Again").font(.system(size: 15, weight: .semibold)).foregroundStyle(PollyTheme.accent)

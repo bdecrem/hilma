@@ -77,7 +77,7 @@ struct LessonSheet: View {
                     }
                     if !lesson.phrases.isEmpty {
                         section(lesson.dialogue == nil
-                                ? L("From the story", "Dalla storia", "Dans l'histoire", "이야기 속에서")
+                                ? L("From the story", "Dalla storia", "Dans l’histoire", "이야기 속에서")
                                 : L("Expressions", "Espressioni", "Expressions", "표현"), lesson.phrases)
                     }
                     if lesson.dialogue == nil { story }
@@ -246,7 +246,7 @@ struct LessonSheet: View {
     private var story: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                eyebrow(L("The story", "La storia", "L'histoire", "이야기"))
+                eyebrow(L("The story", "La storia", "L’histoire", "이야기"))
                 Spacer()
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { storyInEnglish.toggle() }

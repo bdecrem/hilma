@@ -50,7 +50,7 @@ struct CommunitySheet: View {
                 Image(systemName: "person.2")
                     .font(.system(size: 30))
                     .foregroundStyle(PollyTheme.text3)
-                Text(L("Nothing shared yet", "Ancora niente di condiviso", "Rien de partagé", "아직 공유된 게 없어요"))
+                Text(L("Nothing shared yet", "Ancora niente di condiviso", "Rien de partagé pour l’instant", "아직 공유된 게 없어요"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PollyTheme.text)
                 Text("Share one of your topics from its ··· menu and it shows up here for everyone.")
@@ -175,7 +175,7 @@ struct CommunitySheet: View {
                     .foregroundStyle(PollyTheme.text)
                 Text(L("Shared by other learners — add one to make it yours",
                        "Condivisi da altri studenti — aggiungine uno e diventa tuo",
-                       "Partagés par d'autres — ajoutes-en un et il est à toi",
+                       "Partagés par d’autres — ajoutes-en un et il est à toi",
                        "다른 학습자들이 공유했어요 — 추가하면 내 것이 돼요"))
                     .font(.system(size: 12))
                     .foregroundStyle(PollyTheme.text3)

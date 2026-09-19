@@ -47,7 +47,7 @@ struct ReviewsSheet: View {
                 Image(systemName: "checkmark.seal")
                     .font(.system(size: 30))
                     .foregroundStyle(PollyTheme.text3)
-                Text(L("No reviews yet", "Ancora nessun ripasso", "Aucune révision", "아직 복습 기록이 없어요"))
+                Text(L("No reviews yet", "Ancora nessun esame", "Aucun examen pour l’instant", "아직 시험 기록이 없어요"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PollyTheme.text)
                 Text("Take a Final Review from this topic's chat — every graded attempt lands here.")
@@ -122,7 +122,7 @@ struct ReviewsSheet: View {
     private var header: some View {
         ZStack {
             VStack(spacing: 2) {
-                Text(L("Reviews", "Ripassi", "Révisions", "복습"))
+                Text(L("Reviews", "Esami", "Examens", "시험 기록"))
                     .font(.system(size: 16, weight: .semibold))
                     .tracking(-0.2)
                     .foregroundStyle(PollyTheme.text)
@@ -196,7 +196,7 @@ struct ReviewDetailView: View {
                     .padding(.top, 8)
 
                     if let notes = attempt.notes, !notes.isEmpty {
-                        section(L("Examiner's notes", "Note dell'esaminatore", "Notes de l'examinateur", "평가 메모")) {
+                        section(L("Examiner's notes", "Note dell’esaminatore", "Notes de l’examinateur", "평가 메모")) {
                             Text(notes)
                                 .font(.system(size: 14.5))
                                 .foregroundStyle(PollyTheme.text)
@@ -231,7 +231,7 @@ struct ReviewDetailView: View {
     private var detailHeader: some View {
         ZStack {
             VStack(spacing: 2) {
-                Text(L("Review", "Ripasso", "Révision", "복습"))
+                Text(L("Review", "Esame", "Examen", "시험"))
                     .font(.system(size: 16, weight: .semibold))
                     .tracking(-0.2)
                     .foregroundStyle(PollyTheme.text)

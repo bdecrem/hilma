@@ -131,14 +131,14 @@ struct InfinityHomeView: View {
                     Text(L("Let's talk", "Parliamo", "Parlons", "이야기해요"))
                         .font(.custom("Fredoka", size: 24).weight(.semibold))
                         .foregroundStyle(PollyTheme.text)
-                    Text(L("Just chat — messy is good, mix in English, don't worry. We tidy it up after.", "Chiacchiera e basta — va bene fare pasticci, mescola pure l'inglese. Sistemiamo tutto dopo.", "Discute, c'est tout — le désordre c'est bien, mélange l'anglais. On range après.", "그냥 편하게 이야기해요 — 엉망이어도, 영어를 섞어도 괜찮아요. 나중에 정리해요."))
+                    Text(L("Just chat — messy is good, mix in English, don't worry. We tidy it up after.", "Chiacchiera e basta — va bene fare pasticci, mescola pure l’inglese. Sistemiamo tutto dopo.", "Discute, c’est tout — le désordre c’est bien, mélange l’anglais. On range après.", "그냥 편하게 이야기해요 — 엉망이어도, 영어를 섞어도 괜찮아요. 나중에 정리해요."))
                         .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text2)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 HStack(spacing: 8) {
                     Image(systemName: "mic.fill").font(.system(size: 15, weight: .bold))
-                    Text(L("Start a chat", "Inizia una chat", "Commencer", "대화 시작")).font(.system(size: 16, weight: .semibold))
+                    Text(L("Start a chat", "Inizia una chat", "Commencer une discussion", "대화 시작")).font(.system(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(PollyTheme.inkOnAccent)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
@@ -177,7 +177,7 @@ struct InfinityHomeView: View {
                                 } else {
                                     Image(systemName: chat.isMastered ? "checkmark.seal.fill" : "graduationcap.fill")
                                         .font(.system(size: 14, weight: .bold))
-                                    Text(chat.isMastered ? L("Quiz again","Rifai il quiz","Refaire le quiz","다시 퀴즈") : L("Quiz · master it","Quiz · padroneggiala","Quiz · maîtrise-la","퀴즈 · 완성하기")).font(.system(size: 15, weight: .semibold))
+                                    Text(chat.isMastered ? L("Quiz again","Rifai il quiz","Refaire le quiz","퀴즈 다시 풀기") : L("Quiz · master it","Quiz · padroneggiala","Quiz · maîtrise-la","퀴즈 · 마스터하기")).font(.system(size: 15, weight: .semibold))
                                 }
                             }
                             .foregroundStyle(PollyTheme.inkOnAccent)
@@ -188,7 +188,7 @@ struct InfinityHomeView: View {
                         .disabled(quizPreparingId != nil)
                     }
                     HStack(spacing: 8) {
-                        pill(L("Review","Rivedi","Revoir","복습"), "sparkles") { cleanupChat = chat }
+                        pill(L("Review","Rivedi","Revoir","다시 보기"), "sparkles") { cleanupChat = chat }
                         if (chat.analysis?.vocab.isEmpty == false) {
                             pill(L("Vocab","Vocaboli","Vocab","단어"), "rectangle.on.rectangle.angled") { vocabChat = chat }
                         }
@@ -228,7 +228,7 @@ struct InfinityHomeView: View {
         return HStack(spacing: 5) {
             Image(systemName: mastered ? "checkmark.seal.fill" : cleaned ? "checkmark.circle.fill" : "sparkles")
                 .font(.system(size: 10, weight: .bold))
-            Text(mastered ? L("Mastered","Padroneggiata","Maîtrisée","완성") : cleaned ? L("Cleaned up","Sistemata","Rangée","정리됨") : L("Ready to clean up","Da sistemare","À ranger","정리하기"))
+            Text(mastered ? L("Mastered","Padroneggiata","Maîtrisée","마스터") : cleaned ? L("Cleaned up","Sistemata","Rangée","정리됨") : L("Ready to clean up","Da sistemare","À ranger","정리 전"))
                 .font(.system(size: 11.5, weight: .semibold))
         }
         .foregroundStyle(mastered ? PollyTheme.gold : cleaned ? PollyTheme.sprout : PollyTheme.accent)
@@ -250,10 +250,10 @@ struct InfinityHomeView: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
-            Text(L("No chats yet", "Ancora nessuna chat", "Aucune discussion", "아직 대화가 없어요"))
+            Text(L("No chats yet", "Ancora nessuna chat", "Aucune discussion pour l’instant", "아직 대화가 없어요"))
                 .font(.custom("Fredoka", size: 18).weight(.semibold))
                 .foregroundStyle(PollyTheme.text2)
-            Text(L("Tap Start a chat and just talk. Your conversations show up here to clean up.", "Tocca Inizia una chat e parla. Le tue conversazioni compaiono qui, pronte da sistemare.", "Touche Commencer et parle. Tes conversations apparaissent ici, à ranger.", "‘대화 시작’을 누르고 이야기해요. 대화가 여기에 나타나 정리할 수 있어요."))
+            Text(L("Tap Start a chat and just talk. Your conversations show up here to clean up.", "Tocca «Inizia una chat» e parla. Le tue conversazioni compaiono qui, pronte da sistemare.", "Touche «\u{00A0}Commencer une discussion\u{00A0}» et parle. Tes conversations apparaissent ici, à ranger.", "‘대화 시작’을 누르고 이야기해요. 대화가 여기에 나타나 정리할 수 있어요."))
                 .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text3)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -369,13 +369,13 @@ struct InfinityChatBar: View {
     private var subtitle: String {
         guard let a = active else {
             return loaded ? L("Start a chat, then clean it up", "Inizia una chat, poi sistemala", "Commence, puis range-la", "대화를 시작하고 정리해요")
-                          : L("Loading…", "Carico…", "Chargement…", "불러오는 중…")
+                          : L("Loading…", "Caricamento…", "Chargement…", "불러오는 중…")
         }
         let n = chats.count
         let tail = n > 1 ? L(" · \(n) chats", " · \(n) chat", " · \(n) discussions", " · 대화 \(n)개") : ""
-        if a.isMastered { return L("Mastered", "Padroneggiata", "Maîtrisée", "완성") + tail }
-        if a.hasAnalysis { return L("Quiz to master it", "Fai il quiz per padroneggiarla", "Quiz pour la maîtriser", "퀴즈로 완성하기") + tail }
-        return L("Ready to clean up", "Da sistemare", "À ranger", "정리하기") + tail
+        if a.isMastered { return L("Mastered", "Padroneggiata", "Maîtrisée", "마스터") + tail }
+        if a.hasAnalysis { return L("Quiz to master it", "Fai il quiz per padroneggiarla", "Quiz pour la maîtriser", "퀴즈로 마스터하기") + tail }
+        return L("Ready to clean up", "Da sistemare", "À ranger", "정리 전") + tail
     }
     private var cta: String {
         guard let a = active else { return L("Start", "Inizia", "Commencer", "시작") }
