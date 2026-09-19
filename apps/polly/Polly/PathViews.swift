@@ -2,147 +2,212 @@ import SwiftUI
 
 // Agentic Learning Mode, the app side (backend: src/lib/polly/path.ts).
 //
-//   PathCard            the card on top of Topics. Before the level check:
-//                       "Talk to Polly". After: level, progress, the next
-//                       lesson, Start. Dismissable either way; "Your path"
-//                       in the sort menu's neighbour brings it back.
-//   PathList            the lessons in order, joined by a line: done,
-//                       current, being written, locked.
+//   PathCard            the one card on top of Topics. Before the level check:
+//                       "Talk to Polly". After: the journey — a trail of
+//                       stepping-stones (done / current / writing / locked)
+//                       and the current lesson with a Start button. The •••
+//                       menu holds Talk again / Start over / Hide.
 //   PlacementFlowView   intro → the voice level check → "building your
 //                       plan" → the result (level, can do, shaky, lesson 1).
 //   LessonStepsCard     on a lesson's topic screen: Talk, Words, Grammar.
 
 // MARK: - Topics card
 
+/// Agentic Learning Mode on the Topics screen. ONE friendly card that *is* the
+/// path: a header, a row of stepping-stones for the lessons, and the current
+/// lesson with a big Start button. Before the level check it's the "Talk to
+/// Polly" invitation instead. The ••• menu holds Talk again / Start over /
+/// Hide. Redesigned 2026-09-18 (Bart: the old card plus a separate path list
+/// below it were cluttered and not fun — folded into this one).
 struct PathCard: View {
     let path: PollyPath
-    /// Topics by id, to turn the current lesson into a navigation value.
+    /// Topics by id, to turn a lesson into a navigation value.
     let topics: [PollyTopic]
     var onStartCheck: () -> Void
     var onDismiss: () -> Void
+    var onStartOver: () -> Void
+
+    @State private var confirmStartOver = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if path.isPlaced { placed } else { unplaced }
         }
-        .padding(14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(PollyTheme.accentDim, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(PollyTheme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(PollyTheme.accentDim, lineWidth: 1))
+        .confirmationDialog("Start over?", isPresented: $confirmStartOver, titleVisibility: .visible) {
+            Button("Remove this path", role: .destructive) { onStartOver() }
+            Button("Keep it", role: .cancel) {}
+        } message: {
+            Text("Polly forgets this plan and you can talk again for a fresh one. Lessons you've already started stay as topics.")
+        }
     }
 
-    // Before the level check.
+    // MARK: before the level check
+
     private var unplaced: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 12) {
-                MiniTopicGlyph(kind: "lesson", size: 40)
+                mascot(52)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Talk to Polly")
-                        .font(.custom("Fredoka", size: 19).weight(.semibold))
+                    Text("Let's find your level")
+                        .font(.custom("Fredoka", size: 20).weight(.semibold))
                         .foregroundStyle(PollyTheme.text)
-                    Text("Two minutes of chatting in \(path.languageName), or in English if you're new. Then I'll build your first lesson.")
+                    Text("Chat with me for two minutes in \(path.languageName) — English is fine if you're new — and I'll build your first lesson.")
                         .font(.system(size: 13.5))
                         .foregroundStyle(PollyTheme.text2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
-                dismissButton
+                hideButton
             }
-            Button(action: onStartCheck) {
-                Label("Start talking", systemImage: "mic.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(PollyTheme.inkOnAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .background(PollyTheme.accent, in: RoundedRectangle(cornerRadius: 12))
-            }
-            .buttonStyle(.plain)
+            bigButton("Talk to Polly", "mic.fill", action: onStartCheck)
         }
     }
 
-    // After it: level, progress, the next lesson.
+    // MARK: after it — the journey
+
     private var placed: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Text("\(path.languageName) · \(path.level ?? "")")
-                    .font(.system(size: 11.5, weight: .bold))
-                    .tracking(0.4)
-                    .foregroundStyle(PollyTheme.inkOnAccent)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 4)
-                    .background(PollyTheme.accent, in: Capsule())
-                Text(path.isFinished ? "Path finished" : "Lesson \(min(path.doneCount + 1, path.lessons.count)) of \(path.lessons.count)")
-                    .font(.system(size: 12.5, weight: .medium))
-                    .foregroundStyle(PollyTheme.text2)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 9) {
+                mascot(34)
+                Text("Your \(path.languageName) journey")
+                    .font(.custom("Fredoka", size: 18).weight(.semibold))
+                    .foregroundStyle(PollyTheme.text)
+                if let level = path.level {
+                    Text(level)
+                        .font(.system(size: 11, weight: .bold)).tracking(0.3)
+                        .foregroundStyle(PollyTheme.inkOnAccent)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(PollyTheme.gold, in: Capsule())
+                }
                 Spacer(minLength: 0)
-                Menu {
-                    Button { onStartCheck() } label: { Label("Retake level check", systemImage: "mic") }
-                    Button(role: .destructive) { onDismiss() } label: { Label("Hide this card", systemImage: "eye.slash") }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(PollyTheme.text3)
-                        .frame(width: 28, height: 28)
-                        .background(PollyTheme.surface2, in: Circle())
-                }
-                dismissButton
+                menu
             }
+            trail
+            if path.isFinished { finished } else if let next = path.current { current(next) }
+        }
+    }
 
-            // Five segments, one per lesson.
-            HStack(spacing: 4) {
-                ForEach(path.lessons) { l in
+    /// The stepping-stones: one per lesson, joined by a line that lights as you go.
+    private var trail: some View {
+        HStack(spacing: 0) {
+            ForEach(Array(path.lessons.enumerated()), id: \.element.id) { idx, lesson in
+                stop(lesson)
+                if idx < path.lessons.count - 1 {
                     Capsule()
-                        .fill(l.state == "done" ? PollyTheme.accent
-                              : l.state == "locked" ? PollyTheme.surface3 : PollyTheme.accentDim)
-                        .frame(height: 5)
+                        .fill(lesson.state == "done" ? PollyTheme.accent : PollyTheme.surface3)
+                        .frame(height: 3)
+                        .frame(maxWidth: .infinity)
                 }
             }
+        }
+        .padding(.horizontal, 2)
+    }
 
-            if path.isFinished {
-                Text("All \(path.lessons.count) lessons done. Talk to Polly again and I'll plan the next stretch.")
-                    .font(.system(size: 13.5))
+    @ViewBuilder
+    private func stop(_ l: PollyPath.Lesson) -> some View {
+        if let topic = topics.first(where: { $0.id == l.threadId }) {
+            NavigationLink(value: topic) { stopDot(l) }.buttonStyle(.plain)
+        } else {
+            stopDot(l)
+        }
+    }
+
+    @ViewBuilder
+    private func stopDot(_ l: PollyPath.Lesson) -> some View {
+        switch l.state {
+        case "done":
+            Circle().fill(PollyTheme.accent).frame(width: 30, height: 30)
+                .overlay(Image(systemName: "checkmark").font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(PollyTheme.inkOnAccent))
+        case "current":
+            Circle().fill(PollyTheme.surface).frame(width: 36, height: 36)
+                .overlay(Circle().stroke(PollyTheme.accent, lineWidth: 2.5))
+                .overlay(Text("\(l.position)").font(.custom("Fredoka", size: 16).weight(.semibold))
+                    .foregroundStyle(PollyTheme.accent))
+                .shadow(color: PollyTheme.accent.opacity(0.35), radius: 5)
+        case "writing":
+            Circle().fill(PollyTheme.surface).frame(width: 36, height: 36)
+                .overlay(Circle().stroke(PollyTheme.accentDim, lineWidth: 2.5))
+                .overlay(ProgressView().tint(PollyTheme.accent).scaleEffect(0.7))
+        default:
+            Circle().fill(PollyTheme.surface2).frame(width: 26, height: 26)
+                .overlay(Text("\(l.position)").font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(PollyTheme.text3))
+        }
+    }
+
+    private func current(_ next: PollyPath.Lesson) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(next.title)
+                    .font(.custom("Fredoka", size: 18).weight(.semibold))
+                    .foregroundStyle(PollyTheme.text)
+                Text(next.state == "writing" ? "Polly is writing this lesson…"
+                     : (next.scene.isEmpty ? next.grammar : next.scene))
+                    .font(.system(size: 13))
                     .foregroundStyle(PollyTheme.text2)
-                Button(action: onStartCheck) { startLabel("Talk to Polly", systemImage: "mic.fill") }
-                    .buttonStyle(.plain)
-            } else if let next = path.current {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(next.title)
-                        .font(.custom("Fredoka", size: 18).weight(.semibold))
-                        .foregroundStyle(PollyTheme.text)
-                    Text(next.state == "writing" ? "Polly is writing this lesson…" : next.grammar)
-                        .font(.system(size: 13))
-                        .foregroundStyle(PollyTheme.text2)
-                        .lineLimit(2)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if let topic = topics.first(where: { $0.id == next.threadId }) {
+                NavigationLink(value: topic) {
+                    bigLabel(next.steps.doneCount == 0 ? "Start lesson" : "Continue · \(next.steps.doneCount)/3", "play.fill")
+                }.buttonStyle(.plain)
+            } else {
+                HStack(spacing: 8) {
+                    ProgressView().tint(PollyTheme.text3).scaleEffect(0.8)
+                    Text("Ready in a minute").font(.system(size: 13)).foregroundStyle(PollyTheme.text3)
                 }
-                if let topic = topics.first(where: { $0.id == next.threadId }) {
-                    NavigationLink(value: topic) {
-                        startLabel(next.steps.doneCount == 0 ? "Start lesson" : "Continue · \(next.steps.doneCount) of 3 steps",
-                                   systemImage: "play.fill")
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    HStack(spacing: 8) {
-                        ProgressView().tint(PollyTheme.text3).scaleEffect(0.8)
-                        Text("Ready in a minute").font(.system(size: 13)).foregroundStyle(PollyTheme.text3)
-                    }
-                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(PollyTheme.surface2.opacity(0.6), in: RoundedRectangle(cornerRadius: 13))
             }
         }
     }
 
-    private func startLabel(_ text: String, systemImage: String) -> some View {
-        Label(text, systemImage: systemImage)
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(PollyTheme.inkOnAccent)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 11)
-            .background(PollyTheme.accent, in: RoundedRectangle(cornerRadius: 12))
+    private var finished: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("You finished all \(path.lessons.count) lessons! Talk to me again and I'll plan the next stretch.")
+                .font(.system(size: 14))
+                .foregroundStyle(PollyTheme.text2)
+                .fixedSize(horizontal: false, vertical: true)
+            bigButton("Talk to Polly", "mic.fill", action: onStartCheck)
+        }
     }
 
-    private var dismissButton: some View {
+    // MARK: bits
+
+    private func mascot(_ size: CGFloat) -> some View {
+        ZStack {
+            Circle().fill(PollyTheme.accentSoft).frame(width: size, height: size)
+            DodoMiniMark(size: size * 0.82)
+        }
+    }
+
+    private var menu: some View {
+        Menu {
+            Button { onStartCheck() } label: { Label("Talk to Polly again", systemImage: "mic") }
+            Button(role: .destructive) { confirmStartOver = true } label: {
+                Label("Start over", systemImage: "arrow.counterclockwise")
+            }
+            Button { onDismiss() } label: { Label("Hide", systemImage: "eye.slash") }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(PollyTheme.text3)
+                .frame(width: 30, height: 30)
+                .background(PollyTheme.surface2, in: Circle())
+        }
+    }
+
+    private var hideButton: some View {
         Button(action: onDismiss) {
             Image(systemName: "xmark")
-                .font(.system(size: 9.5, weight: .bold))
+                .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(PollyTheme.text3)
                 .frame(width: 28, height: 28)
                 .background(PollyTheme.surface2, in: Circle())
@@ -150,132 +215,20 @@ struct PathCard: View {
         .buttonStyle(.plain)
         .accessibilityLabel("Hide this card")
     }
-}
 
-// MARK: - The path list
-
-struct PathList: View {
-    let path: PollyPath
-    let topics: [PollyTopic]
-
-    private static let node: CGFloat = 28
-    private static let rowHeight: CGFloat = 58
-
-    var body: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(path.lessons.enumerated()), id: \.element.id) { idx, lesson in
-                let topic = topics.first { $0.id == lesson.threadId }
-                Group {
-                    if let topic {
-                        NavigationLink(value: topic) { row(lesson, idx: idx, tappable: true) }
-                            .buttonStyle(.plain)
-                    } else {
-                        row(lesson, idx: idx, tappable: false)
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 4)
-        .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(PollyTheme.border, lineWidth: 1))
+    private func bigButton(_ text: String, _ symbol: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) { bigLabel(text, symbol) }.buttonStyle(.plain)
     }
 
-    private func row(_ l: PollyPath.Lesson, idx: Int, tappable: Bool) -> some View {
-        let locked = l.state == "locked"
-        return HStack(spacing: 12) {
-            // The node, on a line that runs the row's full height except
-            // above the first node and below the last.
-            ZStack {
-                VStack(spacing: 0) {
-                    Rectangle().fill(idx == 0 ? Color.clear : lineColor(before: idx))
-                        .frame(width: 2, height: Self.rowHeight / 2)
-                    Rectangle().fill(idx == path.lessons.count - 1 ? Color.clear : lineColor(before: idx + 1))
-                        .frame(width: 2, height: Self.rowHeight / 2)
-                }
-                nodeView(l)
-            }
-            .frame(width: Self.node, height: Self.rowHeight)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(l.title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(locked ? PollyTheme.text3 : PollyTheme.text)
-                    .lineLimit(1)
-                Text(subtitle(l))
-                    .font(.system(size: 12))
-                    .foregroundStyle(PollyTheme.text3)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 6)
-            if l.state == "current" {
-                StepDots(steps: l.steps)
-            } else if l.state == "writing" {
-                ProgressView().tint(PollyTheme.text3).scaleEffect(0.75)
-            } else if locked {
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(PollyTheme.text4)
-            }
-            if tappable {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(PollyTheme.text3)
-            }
+    private func bigLabel(_ text: String, _ symbol: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol).font(.system(size: 14, weight: .bold))
+            Text(text).font(.system(size: 15.5, weight: .semibold))
         }
-        .frame(height: Self.rowHeight)
-        .contentShape(Rectangle())
-    }
-
-    /// The line segment leading INTO lesson `idx` is lit once the lesson
-    /// before it is done.
-    private func lineColor(before idx: Int) -> Color {
-        guard idx >= 1, idx - 1 < path.lessons.count else { return .clear }
-        return path.lessons[idx - 1].state == "done" ? PollyTheme.accent : PollyTheme.surface3
-    }
-
-    @ViewBuilder
-    private func nodeView(_ l: PollyPath.Lesson) -> some View {
-        switch l.state {
-        case "done":
-            Circle().fill(PollyTheme.accent)
-                .frame(width: Self.node, height: Self.node)
-                .overlay(Image(systemName: "checkmark").font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(PollyTheme.inkOnAccent))
-        case "current", "writing":
-            Circle().fill(PollyTheme.surface)
-                .frame(width: Self.node, height: Self.node)
-                .overlay(Circle().stroke(PollyTheme.accent, lineWidth: 2))
-                .overlay(Text("\(l.position)").font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(PollyTheme.accent))
-        default:
-            Circle().fill(PollyTheme.surface2)
-                .frame(width: Self.node, height: Self.node)
-                .overlay(Text("\(l.position)").font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(PollyTheme.text3))
-        }
-    }
-
-    private func subtitle(_ l: PollyPath.Lesson) -> String {
-        switch l.state {
-        case "writing": return "Polly is writing this one…"
-        default: return l.grammar
-        }
-    }
-}
-
-/// Three small dots: Talk, Words, Grammar.
-struct StepDots: View {
-    let steps: PollyPath.Lesson.Steps
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach([steps.talk, steps.words, steps.grammar].indices, id: \.self) { i in
-                Circle()
-                    .fill([steps.talk, steps.words, steps.grammar][i] ? PollyTheme.accent : PollyTheme.surface3)
-                    .frame(width: 7, height: 7)
-            }
-        }
-        .accessibilityLabel("\(steps.doneCount) of 3 steps done")
+        .foregroundStyle(PollyTheme.inkOnAccent)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 13)
+        .background(PollyTheme.accent, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 

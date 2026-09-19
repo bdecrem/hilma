@@ -266,19 +266,28 @@ struct TopicsView: View {
             }
         }
         .sheet(isPresented: $showNewTopic) {
-            NewTopicSheet { id, _ in
-                Task {
-                    await load()
-                    // Straight into the new topic's chat. Its first-session
-                    // banner offers link/notes; nothing pops on its own.
-                    DeepLinkRouter.shared.markFresh(topicId: id)
-                    try? await Task.sleep(for: .milliseconds(350))
-                    DeepLinkRouter.shared.requestTopicChat(threadId: id, draft: "")
+            NewTopicSheet(
+                onStartPath: {
+                    showNewTopic = false
+                    // Let the sheet finish dismissing before the full-screen
+                    // level check comes up (Catalyst dislikes overlapping modals).
+                    Task { try? await Task.sleep(for: .milliseconds(350)); placementPresented = true }
+                },
+                onCreated: { id, _ in
+                    Task {
+                        await load()
+                        // Straight into the new topic's chat. Its first-session
+                        // banner offers link/notes; nothing pops on its own.
+                        DeepLinkRouter.shared.markFresh(topicId: id)
+                        try? await Task.sleep(for: .milliseconds(350))
+                        DeepLinkRouter.shared.requestTopicChat(threadId: id, draft: "")
+                    }
+                },
+                onQuickChat: { id in
+                    Task { await load() }
+                    DeepLinkRouter.shared.requestQuickChat(topicId: id)
                 }
-            } onQuickChat: { id in
-                Task { await load() }
-                DeepLinkRouter.shared.requestQuickChat(topicId: id)
-            }
+            )
         }
         .alert("Audio summary",
                isPresented: Binding(get: { audioError != nil },
@@ -489,14 +498,15 @@ struct TopicsView: View {
                 if showsPathCard, let path {
                     PathCard(path: path, topics: topics,
                              onStartCheck: { placementPresented = true },
-                             onDismiss: { setPathCardDismissed(true) })
+                             onDismiss: { setPathCardDismissed(true) },
+                             onStartOver: { startOver() })
                         .padding(.top, 2)
                         .padding(.bottom, 6)
                 }
-                if let path, path.isPlaced {
-                    sectionHeader("Your path · \(path.languageName) \(path.level ?? "")")
-                    PathList(path: path, topics: topics)
-                    if !listTopics.isEmpty { sectionHeader("Topics") }
+                // The lessons live inside the card's trail now; only the other
+                // topics get a header, and only when the card is showing above.
+                if showsPathCard, path?.isPlaced == true, !listTopics.isEmpty {
+                    sectionHeader("Topics")
                 }
                 PeckWeekBanner(state: jumbo)
                     .padding(.top, 2)
@@ -632,6 +642,17 @@ struct TopicsView: View {
                     return
                 }
             }
+        }
+    }
+
+    /// Remove the path entirely so a fresh level check can rebuild it. The card
+    /// flips back to "Talk to Polly"; started lessons return to the topic list.
+    private func startOver() {
+        Task {
+            if let fresh = try? await PollyAPI.shared.deletePath() {
+                withAnimation(.easeOut(duration: 0.2)) { path = fresh }
+            }
+            await load()
         }
     }
 
@@ -946,6 +967,8 @@ let quickChatPlaceholderTitle = "Quick chat"
 /// bare — chat and the context sheet give it substance later. The footer
 /// offers the no-setup path: just start chatting.
 struct NewTopicSheet: View {
+    /// Tapped the "learning path" shortcut — the caller presents the level check.
+    let onStartPath: () -> Void
     /// Called after the topic was created server-side — (id, title).
     let onCreated: (String, String) -> Void
     /// Called after a quick-chat placeholder topic was created — (id).
@@ -962,6 +985,30 @@ struct NewTopicSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Button { onStartPath() } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle().fill(PollyTheme.accentSoft).frame(width: 38, height: 38)
+                                DodoMiniMark(size: 31)
+                            }
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text("Build a learning path")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(PollyTheme.text)
+                                Text("Talk to Polly for two minutes; she plans your lessons.")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(PollyTheme.text3)
+                            }
+                            Spacer(minLength: 0)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(PollyTheme.text3)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
                 Section("Title") {
                     TextField("What are you learning?", text: $title, axis: .vertical)
                         .lineLimit(1...3)

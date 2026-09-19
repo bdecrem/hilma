@@ -486,6 +486,23 @@ async function retireOldPath(userId: string, course: CourseRow): Promise<void> {
   }
 }
 
+/// Remove the learner's path so they can start fresh from the level check. The
+/// generated lessons they never started are deleted; ones they've begun stay
+/// as ordinary topics (same as a retake). The course drops back to unplaced —
+/// the Topics card returns to "Talk to Polly". Returns the fresh view.
+/// (Bart, 2026-09-18: wanted a way to wipe Your Path and redo it from scratch.)
+export async function resetCourse(userId: string): Promise<PathView | null> {
+  const course = await activeCourse(userId)
+  if (!course) return null
+  await retireOldPath(userId, course)
+  const { error } = await pollySupabase()
+    .from('polly_courses')
+    .update({ level: null, placement: null, path: [], path_card_dismissed_at: null })
+    .eq('id', course.id)
+  if (error) console.error('[polly/path] reset failed:', error)
+  return pathView(userId)
+}
+
 // ---------------------------------------------------------------------------
 // Steps, finishing a lesson, writing the next one
 // ---------------------------------------------------------------------------

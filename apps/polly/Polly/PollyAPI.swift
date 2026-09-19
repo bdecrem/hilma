@@ -1134,6 +1134,13 @@ final class PollyAPI {
         return res.path
     }
 
+    /// Remove the current path so the learner can build a new one from scratch.
+    /// Finished lessons stay as ordinary topics. Returns the fresh, unplaced path.
+    func deletePath() async throws -> PollyPath? {
+        let res: PathResponse = try await request("/api/polly/path", method: "DELETE", body: EmptyBody())
+        return res.path
+    }
+
     struct PlacementResponse: Codable {
         let path: PollyPath
         let lessonThreadId: String

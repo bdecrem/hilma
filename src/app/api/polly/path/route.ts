@@ -1,6 +1,6 @@
 import { NextResponse, after } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
-import { ensureCurrentLesson, pathView, setPathCardDismissed } from '@/lib/polly/path'
+import { ensureCurrentLesson, pathView, resetCourse, setPathCardDismissed } from '@/lib/polly/path'
 
 export const runtime = 'nodejs'
 // Opening the path can write the next lesson in after() (the retry when the
@@ -43,4 +43,15 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'update failed' }, { status: 500 })
   }
   return NextResponse.json({ path: await pathView(user.id) })
+}
+
+// DELETE /api/polly/path — remove the path and drop back to unplaced, so the
+// learner can build a new one from scratch. Finished lessons stay as topics.
+export async function DELETE() {
+  const user = await getSessionUser()
+  if (!user) {
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  }
+  const view = await resetCourse(user.id)
+  return NextResponse.json({ path: view })
 }
