@@ -36,6 +36,7 @@ struct ProfileSheet: View {
     @State private var showClaim = false
     @State private var showIntro = false
     @State private var pathCardHidden = false
+    @AppStorage(UILang.key) private var studyUI = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -499,6 +500,21 @@ struct ProfileSheet: View {
             }
             SettingsSection(label: "Learning") {
                 SettingsCard {
+                    if let langName = UILang.studyLanguageName(session) {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("App in \(langName)")
+                                    .font(.system(size: 15)).tracking(-0.2).foregroundStyle(PollyTheme.text)
+                                Text(studyUI ? "Polly's buttons and labels show in \(langName)"
+                                             : "Showing the app in English")
+                                    .font(.system(size: 12.5)).foregroundStyle(PollyTheme.text3)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $studyUI).labelsHidden().tint(PollyTheme.accent)
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 10)
+                        SettingsDivider()
+                    }
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Refreshers")

@@ -90,6 +90,7 @@
 		E79A7ADBFDDF4B8D837F1AEC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60BA3AFEFD55422ACC8EF41 /* SettingsView.swift */; };
 		E83349CBB0D5C10617E7D9DC /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0795C7E474A21C98DCDDFE51 /* Secrets.swift */; };
 		E84BE82820A525676818ACFD /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9100A5E331910F9D14CCB43 /* Models.swift */; };
+		EBEE4FB1B109E72AA7F4912D /* LangUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D227AFDDE07040EB37AC37A /* LangUI.swift */; };
 		ED4B66C95DC492BB7A156282 /* PollyApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA104D86091EEA323716658 /* PollyApplication.swift */; };
 		F267D09DD42887EE403853B7 /* PeckTrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13DDF7FD5F5A004ED185787 /* PeckTrail.swift */; };
 		F97F19F60725E87D791BB91D /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AF65C860BA3F154F3A64BE /* TopicDetailView.swift */; };
@@ -136,6 +137,7 @@
 		6E93235A256C484000829EAC /* InfinityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfinityView.swift; sourceTree = "<group>"; };
 		764A037A63716DF5F6DD2BAC /* DemoReelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoReelView.swift; sourceTree = "<group>"; };
 		79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
+		7D227AFDDE07040EB37AC37A /* LangUI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LangUI.swift; sourceTree = "<group>"; };
 		8406B207C89E57DA611A0679 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
 		878EC882FF3327ED952C098E /* AudioSummaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayerView.swift; sourceTree = "<group>"; };
 		8C9D0ACF86BFDA31B5771162 /* PebblesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PebblesView.swift; sourceTree = "<group>"; };
@@ -241,6 +243,7 @@
 				28B5C5B91D28C8C93B00BFB1 /* InfinityModels.swift */,
 				6E93235A256C484000829EAC /* InfinityView.swift */,
 				2701EDEA08D8354D6CA26CE4 /* Info.plist */,
+				7D227AFDDE07040EB37AC37A /* LangUI.swift */,
 				AE59ECE4EA76264D43506C62 /* LessonSheet.swift */,
 				E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */,
 				98B868E0302B4920360BA1AE /* LiveVoiceClient.swift */,
@@ -452,6 +455,7 @@
 				AA069BB9D15F8B902DE01F7E /* InfinityDrillViews.swift in Sources */,
 				DCFEB7CC5B74E375BBC28B54 /* InfinityModels.swift in Sources */,
 				318A69764E260E811D8049D0 /* InfinityView.swift in Sources */,
+				EBEE4FB1B109E72AA7F4912D /* LangUI.swift in Sources */,
 				A737FE302A68BB0B99F110CF /* LessonSheet.swift in Sources */,
 				4F751749FDDCD82F8CCE9984 /* LevelUpView.swift in Sources */,
 				8488F95FD935AED50C034543 /* LiveVoiceClient.swift in Sources */,

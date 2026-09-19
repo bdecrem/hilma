@@ -12,6 +12,7 @@ struct InfinityHomeView: View {
 
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(UILang.key) private var studyUI = true
 
     @State private var chats: [InfinityChat] = []
     @State private var loading = true
@@ -24,6 +25,9 @@ struct InfinityHomeView: View {
     @State private var quizSheet: InfinityQuizSheet? = nil
     @State private var errorText: String? = nil
 
+    private var ui: String { UILang.code(session) }
+    private func L(_ en: String, _ it: String, _ fr: String, _ ko: String) -> String { loc(ui, en: en, it: it, fr: fr, ko: ko) }
+
     var body: some View {
         ZStack {
             PollyTheme.bg.ignoresSafeArea()
@@ -34,7 +38,7 @@ struct InfinityHomeView: View {
                         talkCard
                         if !chats.isEmpty {
                             HStack {
-                                Text("Your chats").font(.system(size: 13, weight: .semibold))
+                                Text(L("Your chats", "Le tue chat", "Tes discussions", "내 대화")).font(.system(size: 13, weight: .semibold))
                                     .tracking(0.3).foregroundStyle(PollyTheme.text3)
                                 Spacer()
                             }
@@ -127,17 +131,17 @@ struct InfinityHomeView: View {
                     DodoMiniMark(size: 60)
                 }
                 VStack(spacing: 5) {
-                    Text("Let's talk")
+                    Text(L("Let's talk", "Parliamo", "Parlons", "이야기해요"))
                         .font(.custom("Fredoka", size: 24).weight(.semibold))
                         .foregroundStyle(PollyTheme.text)
-                    Text("Just chat — messy is good, mix in English, don't worry. We tidy it up after.")
+                    Text(L("Just chat — messy is good, mix in English, don't worry. We tidy it up after.", "Chiacchiera e basta — va bene fare pasticci, mescola pure l'inglese. Sistemiamo tutto dopo.", "Discute, c'est tout — le désordre c'est bien, mélange l'anglais. On range après.", "그냥 편하게 이야기해요 — 엉망이어도, 영어를 섞어도 괜찮아요. 나중에 정리해요."))
                         .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text2)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 HStack(spacing: 8) {
                     Image(systemName: "mic.fill").font(.system(size: 15, weight: .bold))
-                    Text("Start a chat").font(.system(size: 16, weight: .semibold))
+                    Text(L("Start a chat", "Inizia una chat", "Commencer", "대화 시작")).font(.system(size: 16, weight: .semibold))
                 }
                 .foregroundStyle(PollyTheme.inkOnAccent)
                 .frame(maxWidth: .infinity).padding(.vertical, 14)
@@ -172,11 +176,11 @@ struct InfinityHomeView: View {
                             HStack(spacing: 8) {
                                 if quizPreparingId == chat.id {
                                     ProgressView().tint(PollyTheme.inkOnAccent).scaleEffect(0.8)
-                                    Text("Loading quiz…").font(.system(size: 15, weight: .semibold))
+                                    Text(L("Loading quiz…","Carico il quiz…","Chargement du quiz…","퀴즈 불러오는 중…")).font(.system(size: 15, weight: .semibold))
                                 } else {
                                     Image(systemName: chat.isMastered ? "checkmark.seal.fill" : "graduationcap.fill")
                                         .font(.system(size: 14, weight: .bold))
-                                    Text(chat.isMastered ? "Quiz again" : "Quiz · master it").font(.system(size: 15, weight: .semibold))
+                                    Text(chat.isMastered ? L("Quiz again","Rifai il quiz","Refaire le quiz","다시 퀴즈") : L("Quiz · master it","Quiz · padroneggiala","Quiz · maîtrise-la","퀴즈 · 완성하기")).font(.system(size: 15, weight: .semibold))
                                 }
                             }
                             .foregroundStyle(PollyTheme.inkOnAccent)
@@ -187,12 +191,12 @@ struct InfinityHomeView: View {
                         .disabled(quizPreparingId != nil)
                     }
                     HStack(spacing: 8) {
-                        pill("Review", "sparkles") { cleanupChat = chat }
+                        pill(L("Review","Rivedi","Revoir","복습"), "sparkles") { cleanupChat = chat }
                         if (chat.analysis?.vocab.isEmpty == false) {
-                            pill("Vocab", "rectangle.on.rectangle.angled") { vocabChat = chat }
+                            pill(L("Vocab","Vocaboli","Vocab","단어"), "rectangle.on.rectangle.angled") { vocabChat = chat }
                         }
                         if (chat.analysis?.grammar.isEmpty == false) {
-                            pill("Grammar", "puzzlepiece.fill") { grammarChat = chat }
+                            pill(L("Grammar","Grammatica","Grammaire","문법"), "puzzlepiece.fill") { grammarChat = chat }
                         }
                     }
                 }
@@ -201,10 +205,10 @@ struct InfinityHomeView: View {
                     HStack(spacing: 8) {
                         if preparingId == chat.id {
                             ProgressView().tint(PollyTheme.inkOnAccent).scaleEffect(0.8)
-                            Text("Polly's reading it back…").font(.system(size: 14.5, weight: .semibold))
+                            Text(L("Polly's reading it back…","Polly la rilegge…","Polly la relit…","Polly가 다시 읽는 중…")).font(.system(size: 14.5, weight: .semibold))
                         } else {
                             Image(systemName: "sparkles").font(.system(size: 14, weight: .bold))
-                            Text("Clean it up").font(.system(size: 15, weight: .semibold))
+                            Text(L("Clean it up","Sistemala","Ranger","정리하기")).font(.system(size: 15, weight: .semibold))
                         }
                     }
                     .foregroundStyle(PollyTheme.inkOnAccent)
@@ -227,7 +231,7 @@ struct InfinityHomeView: View {
         return HStack(spacing: 5) {
             Image(systemName: mastered ? "checkmark.seal.fill" : cleaned ? "checkmark.circle.fill" : "sparkles")
                 .font(.system(size: 10, weight: .bold))
-            Text(mastered ? "Mastered" : cleaned ? "Cleaned up" : "Ready to clean up")
+            Text(mastered ? L("Mastered","Padroneggiata","Maîtrisée","완성") : cleaned ? L("Cleaned up","Sistemata","Rangée","정리됨") : L("Ready to clean up","Da sistemare","À ranger","정리하기"))
                 .font(.system(size: 11.5, weight: .semibold))
         }
         .foregroundStyle(mastered ? PollyTheme.gold : cleaned ? PollyTheme.sprout : PollyTheme.accent)
@@ -249,10 +253,10 @@ struct InfinityHomeView: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
-            Text("No chats yet")
+            Text(L("No chats yet", "Ancora nessuna chat", "Aucune discussion", "아직 대화가 없어요"))
                 .font(.custom("Fredoka", size: 18).weight(.semibold))
                 .foregroundStyle(PollyTheme.text2)
-            Text("Tap Start a chat and just talk. Your conversations show up here to clean up.")
+            Text(L("Tap Start a chat and just talk. Your conversations show up here to clean up.", "Tocca Inizia una chat e parla. Le tue conversazioni compaiono qui, pronte da sistemare.", "Touche Commencer et parle. Tes conversations apparaissent ici, à ranger.", "‘대화 시작’을 누르고 이야기해요. 대화가 여기에 나타나 정리할 수 있어요."))
                 .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text3)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -325,10 +329,14 @@ struct InfinityChatBar: View {
     var refresh: Int = 0
     var onSessions: () -> Void
 
+    @Environment(Session.self) private var session
+    @AppStorage(UILang.key) private var studyUI = true
     @State private var chats: [InfinityChat] = []
     @State private var loaded = false
 
     private var active: InfinityChat? { chats.first }
+    private var ui: String { UILang.code(session) }
+    private func L(_ en: String, _ it: String, _ fr: String, _ ko: String) -> String { loc(ui, en: en, it: it, fr: fr, ko: ko) }
 
     var body: some View {
         Button(action: onSessions) {
@@ -361,23 +369,25 @@ struct InfinityChatBar: View {
     }
 
     private var title: String {
-        guard let a = active else { return "Talk to Polly" }
+        guard let a = active else { return L("Talk to Polly", "Parla con Polly", "Parle avec Polly", "Polly와 대화") }
         return a.displayTitle
     }
     private var subtitle: String {
-        guard let a = active else { return loaded ? "Start a chat, then clean it up" : "Loading…" }
+        guard let a = active else {
+            return loaded ? L("Start a chat, then clean it up", "Inizia una chat, poi sistemala", "Commence, puis range-la", "대화를 시작하고 정리해요")
+                          : L("Loading…", "Carico…", "Chargement…", "불러오는 중…")
+        }
         let n = chats.count
-        let tail = n > 1 ? " · \(n) chats" : ""
-        if a.isMastered { return "Mastered" + tail }
-        if a.hasAnalysis { return "Quiz to master it" + tail }
-        return "Ready to clean up" + tail
+        let tail = n > 1 ? loc(ui, en: " · \(n) chats", it: " · \(n) chat", fr: " · \(n) discussions", ko: " · 대화 \(n)개") : ""
+        if a.isMastered { return L("Mastered", "Padroneggiata", "Maîtrisée", "완성") + tail }
+        if a.hasAnalysis { return L("Quiz to master it", "Fai il quiz per padroneggiarla", "Quiz pour la maîtriser", "퀴즈로 완성하기") + tail }
+        return L("Ready to clean up", "Da sistemare", "À ranger", "정리하기") + tail
     }
     private var cta: String {
-        guard let a = active else { return "Start" }
-        if a.hasAnalysis && !a.isMastered { return "Quiz" }
-        if a.isMastered { return "Study" }
-        return "Clean up"
-    }
+        guard let a = active else { return L("Start", "Inizia", "Commencer", "시작") }
+        if a.hasAnalysis && !a.isMastered { return L("Quiz", "Quiz", "Quiz", "퀴즈") }
+        if a.isMastered { return L("Study", "Studia", "Réviser", "학습") }
+        return L("Clean up", "Sistema", "Ranger", "정리") }
 
     private func load() async {
         chats = (try? await PollyAPI.shared.listInfinityChats(threadId: topicId)) ?? []
