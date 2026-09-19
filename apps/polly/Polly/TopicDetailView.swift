@@ -14,6 +14,8 @@ struct TopicDetailView: View {
 
     @State private var thread: PollyThread? = nil
     @State private var lessonPresented = false
+    @State private var showInfinitySessions = false
+    @State private var infinityRefresh = 0
     @State private var lessonLoading = false
     /// A lesson Polly wrote: the step whose card set is being fetched, the
     /// set once it is, and the Talk step's voice session.
@@ -46,13 +48,15 @@ struct TopicDetailView: View {
         ZStack {
             PollyTheme.bg.ignoresSafeArea()
 
-            if thread?.isInfinity == true {
-                // Infinity Chat replaces the chat UI with its own home.
-                InfinityHomeView(topicId: topicId)
-                    .environment(session)
-            } else {
             VStack(spacing: 0) {
                 header
+
+                // Infinity Chat: the normal chat window, with a prominent study
+                // bar on top and the chip pills hidden.
+                if thread?.isInfinity == true {
+                    InfinityChatBar(topicId: topicId, refresh: infinityRefresh) { showInfinitySessions = true }
+                        .padding(.bottom, 4)
+                }
 
                 // No column clamp — bubbles + composer grow with the window.
                 if let t = thread, t.url != nil, let host = t.sourceHost {
@@ -80,8 +84,10 @@ struct TopicDetailView: View {
                         .padding(.bottom, 4)
                 }
 
-                if thread?.isPollyLesson != true { firstSessionBanner }
-                recertBanner
+                if thread?.isInfinity != true {
+                    if thread?.isPollyLesson != true { firstSessionBanner }
+                    recertBanner
+                }
 
                 if loading && thread == nil {
                     ProgressView().tint(PollyTheme.text2)
@@ -90,17 +96,22 @@ struct TopicDetailView: View {
                     if thread?.isPollyLesson == true {
                         ChatScrollView(messages: messages, busy: busy,
                                        emptyHint: "Read the lesson, then do the three steps in any order. Ask me anything about it here.")
+                    } else if thread?.isInfinity == true {
+                        ChatScrollView(messages: messages, busy: busy,
+                                       emptyHint: "Just chat — messy is good, mix in English. Type “Polly …” to ask me to do something. Clean up and quiz from the bar up top.")
                     } else {
                         ChatScrollView(messages: messages, busy: busy)
                     }
                 }
 
-                chipRow
+                if thread?.isInfinity != true { chipRow }
                 PollyComposer(draft: $draft, busy: busy, onSend: send)
 
                 Color.clear.frame(height: 86) // room for floating TabPill
             }
-            }
+        }
+        .sheet(isPresented: $showInfinitySessions, onDismiss: { infinityRefresh += 1 }) {
+            InfinityHomeView(topicId: topicId).environment(session)
         }
         .sheet(isPresented: $voicePresented) {
             VoiceSessionView(mode: "topic", threadId: topicId)

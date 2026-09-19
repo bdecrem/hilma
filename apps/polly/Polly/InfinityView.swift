@@ -315,3 +315,73 @@ struct InfinityQuizSheet: Identifiable {
     let chat: InfinityChat
     let start: FlashStart
 }
+
+/// The prominent study bar pinned atop the Infinity chat window. It summarizes
+/// the newest conversation and opens the full study sheet (TALK, clean-up,
+/// quiz, drills). `refresh` bumps when that sheet closes so it re-reads.
+struct InfinityChatBar: View {
+    let topicId: String
+    var refresh: Int = 0
+    var onSessions: () -> Void
+
+    @State private var chats: [InfinityChat] = []
+    @State private var loaded = false
+
+    private var active: InfinityChat? { chats.first }
+
+    var body: some View {
+        Button(action: onSessions) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(PollyTheme.accentSoft).frame(width: 40, height: 40)
+                    MiniTopicGlyph(kind: "infinity", size: 24)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(PollyTheme.text).lineLimit(1)
+                    Text(subtitle).font(.system(size: 12.5))
+                        .foregroundStyle(active?.isMastered == true ? PollyTheme.gold : PollyTheme.text2).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                Text(cta)
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(PollyTheme.inkOnAccent)
+                    .padding(.horizontal, 13).padding(.vertical, 7)
+                    .background(PollyTheme.accent, in: Capsule())
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity)
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(PollyTheme.surface))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(PollyTheme.accentDim, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 14)
+        .task(id: refresh) { await load() }
+    }
+
+    private var title: String {
+        guard let a = active else { return "Talk to Polly" }
+        return a.displayTitle
+    }
+    private var subtitle: String {
+        guard let a = active else { return loaded ? "Start a chat, then clean it up" : "Loading…" }
+        let n = chats.count
+        let tail = n > 1 ? " · \(n) chats" : ""
+        if a.isMastered { return "Mastered" + tail }
+        if a.hasQuiz { return "Quiz to master it" + tail }
+        if a.isCleanedUp || a.hasAnalysis { return "Cleaned up" + tail }
+        return "Ready to clean up" + tail
+    }
+    private var cta: String {
+        guard let a = active else { return "Start" }
+        if a.hasQuiz && !a.isMastered { return "Quiz" }
+        if a.hasAnalysis { return "Study" }
+        return "Clean up"
+    }
+
+    private func load() async {
+        chats = (try? await PollyAPI.shared.listInfinityChats(threadId: topicId)) ?? []
+        loaded = true
+    }
+}
+
