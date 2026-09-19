@@ -1158,9 +1158,11 @@ struct TabPill: View {
             Capsule().fill(.ultraThinMaterial)
         )
         .overlay(Capsule().stroke(PollyTheme.border, lineWidth: 1))
-        // Two tabs at the same per-button width the three-tab pill had:
-        // 4 pad + 104 + 4 gap + 104 + 4 pad = 220.
-        .frame(width: 220)
+        // Sized by its labels, not a fixed width: the tab names change with
+        // the studied language ("Topics" / "Argomenti" / "주제"). Every tab is
+        // as wide as the widest label + 18pt a side, never under the 104pt
+        // the English pill had: 4 pad + tab + 4 gap + tab + 4 pad.
+        .fixedSize()
         .shadow(color: .black.opacity(0.45), radius: 30, y: 8)
     }
 
@@ -1171,15 +1173,16 @@ struct TabPill: View {
             active = tab
             onTap(tab)
         } label: {
-            HStack(spacing: 7) {
-                Image(systemName: tab.iconSystem)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(isActive ? PollyTheme.accent : PollyTheme.text3)
-                Text(tab.label)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(isActive ? PollyTheme.text : PollyTheme.text2)
+            ZStack {
+                // Hidden copies of every tab's label make all tabs as wide
+                // as the widest one, so the pill stays symmetric.
+                ForEach(PollyTab.allCases, id: \.self) { other in
+                    tabLabel(other, isActive: false).hidden()
+                }
+                tabLabel(tab, isActive: isActive)
             }
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 18)
+            .frame(minWidth: 104)
             .frame(height: 46)
             .background(
                 Capsule().fill(isActive ? PollyTheme.surface2 : Color.clear)
@@ -1190,5 +1193,18 @@ struct TabPill: View {
             .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+    }
+
+    private func tabLabel(_ tab: PollyTab, isActive: Bool) -> some View {
+        HStack(spacing: 7) {
+            Image(systemName: tab.iconSystem)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(isActive ? PollyTheme.accent : PollyTheme.text3)
+            Text(tab.label)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(isActive ? PollyTheme.text : PollyTheme.text2)
+                .lineLimit(1)
+        }
+        .fixedSize()
     }
 }
