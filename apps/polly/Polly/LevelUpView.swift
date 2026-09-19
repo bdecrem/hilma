@@ -104,12 +104,12 @@ struct LevelUpView: View {
 
     private var copy: some View {
         VStack(spacing: 6) {
-            Text("LEVEL UP")
+            Text(L("LEVEL UP", "NUOVO LIVELLO", "NIVEAU SUPÉRIEUR", "레벨 업"))
                 .font(.system(size: 13, weight: .bold))
                 .tracking(2.4)
                 .foregroundStyle(PollyTheme.accent)
 
-            Text("Level \(level)")
+            Text(L("Level \(level)", "Livello \(level)", "Niveau \(level)", "레벨 \(level)"))
                 .font(.system(size: 52, weight: .bold))
                 .tracking(-0.8)
                 .foregroundStyle(PollyTheme.text)
@@ -131,7 +131,7 @@ struct LevelUpView: View {
 
     private var dismissButton: some View {
         Button(action: onDismiss) {
-            Text("Keep going")
+            Text(L("Keep going", "Continua", "Continuer", "계속하기"))
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(PollyTheme.text)
                 .frame(maxWidth: .infinity)

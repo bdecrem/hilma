@@ -36,7 +36,7 @@ struct ProfileSheet: View {
     @State private var showClaim = false
     @State private var showIntro = false
     @State private var pathCardHidden = false
-    @AppStorage(UILang.key) private var studyUI = true
+    private var studyUI: Bool { UILanguage.shared.studyUI }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -510,7 +510,7 @@ struct ProfileSheet: View {
                                     .font(.system(size: 12.5)).foregroundStyle(PollyTheme.text3)
                             }
                             Spacer()
-                            Toggle("", isOn: $studyUI).labelsHidden().tint(PollyTheme.accent)
+                            Toggle("", isOn: Binding(get: { UILanguage.shared.studyUI }, set: { UILanguage.shared.studyUI = $0 })).labelsHidden().tint(PollyTheme.accent)
                         }
                         .padding(.horizontal, 14).padding(.vertical, 10)
                         SettingsDivider()

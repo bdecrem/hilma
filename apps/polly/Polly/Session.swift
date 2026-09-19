@@ -9,7 +9,13 @@ final class Session {
         case signedIn(PollyUser)
     }
 
-    var state: State = .loading
+    var state: State = .loading {
+        didSet {
+            // The UI language follows the signed-in learner's language.
+            if case let .signedIn(user) = state { UILanguage.shared.studyLanguage = user.language }
+            else if state == .signedOut { UILanguage.shared.studyLanguage = nil }
+        }
+    }
     var loginError: String? = nil
 
     /// User-wide stars + level. Refreshed after login and after each quiz so

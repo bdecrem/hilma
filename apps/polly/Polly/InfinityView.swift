@@ -12,7 +12,6 @@ struct InfinityHomeView: View {
 
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UILang.key) private var studyUI = true
 
     @State private var chats: [InfinityChat] = []
     @State private var loading = true
@@ -25,8 +24,6 @@ struct InfinityHomeView: View {
     @State private var quizSheet: InfinityQuizSheet? = nil
     @State private var errorText: String? = nil
 
-    private var ui: String { UILang.code(session) }
-    private func L(_ en: String, _ it: String, _ fr: String, _ ko: String) -> String { loc(ui, en: en, it: it, fr: fr, ko: ko) }
 
     var body: some View {
         ZStack {
@@ -330,13 +327,10 @@ struct InfinityChatBar: View {
     var onSessions: () -> Void
 
     @Environment(Session.self) private var session
-    @AppStorage(UILang.key) private var studyUI = true
     @State private var chats: [InfinityChat] = []
     @State private var loaded = false
 
     private var active: InfinityChat? { chats.first }
-    private var ui: String { UILang.code(session) }
-    private func L(_ en: String, _ it: String, _ fr: String, _ ko: String) -> String { loc(ui, en: en, it: it, fr: fr, ko: ko) }
 
     var body: some View {
         Button(action: onSessions) {
@@ -378,7 +372,7 @@ struct InfinityChatBar: View {
                           : L("Loading…", "Carico…", "Chargement…", "불러오는 중…")
         }
         let n = chats.count
-        let tail = n > 1 ? loc(ui, en: " · \(n) chats", it: " · \(n) chat", fr: " · \(n) discussions", ko: " · 대화 \(n)개") : ""
+        let tail = n > 1 ? L(" · \(n) chats", " · \(n) chat", " · \(n) discussions", " · 대화 \(n)개") : ""
         if a.isMastered { return L("Mastered", "Padroneggiata", "Maîtrisée", "완성") + tail }
         if a.hasAnalysis { return L("Quiz to master it", "Fai il quiz per padroneggiarla", "Quiz pour la maîtriser", "퀴즈로 완성하기") + tail }
         return L("Ready to clean up", "Da sistemare", "À ranger", "정리하기") + tail

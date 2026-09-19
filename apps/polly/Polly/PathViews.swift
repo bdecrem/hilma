@@ -52,7 +52,7 @@ struct PathCard: View {
             HStack(alignment: .top, spacing: 12) {
                 mascot(52)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Let's find your level")
+                    Text(L("Let's find your level", "Troviamo il tuo livello", "Trouvons ton niveau", "레벨을 알아봐요"))
                         .font(.custom("Fredoka", size: 20).weight(.semibold))
                         .foregroundStyle(PollyTheme.text)
                     Text("Chat with me for two minutes in \(path.languageName) — English is fine if you're new — and I'll build your first lesson.")
@@ -63,7 +63,7 @@ struct PathCard: View {
                 Spacer(minLength: 0)
                 hideButton
             }
-            bigButton("Talk to Polly", "mic.fill", action: onStartCheck)
+            bigButton(L("Talk to Polly", "Parla con Polly", "Parle avec Polly", "Polly와 대화"), "mic.fill", action: onStartCheck)
         }
     }
 
@@ -73,7 +73,7 @@ struct PathCard: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 9) {
                 mascot(34)
-                Text("Your \(path.languageName) journey")
+                Text(L("Your \(path.languageName) journey", "Il tuo percorso", "Ton parcours", "나의 학습 경로"))
                     .font(.custom("Fredoka", size: 18).weight(.semibold))
                     .foregroundStyle(PollyTheme.text)
                 if let level = path.level {
@@ -146,7 +146,7 @@ struct PathCard: View {
                 Text(next.title)
                     .font(.custom("Fredoka", size: 18).weight(.semibold))
                     .foregroundStyle(PollyTheme.text)
-                Text(next.state == "writing" ? "Polly is writing this lesson…"
+                Text(next.state == "writing" ? L("Polly is writing this lesson…", "Polly sta scrivendo questa lezione…", "Polly écrit cette leçon…", "Polly가 이 레슨을 쓰는 중…")
                      : (next.scene.isEmpty ? next.grammar : next.scene))
                     .font(.system(size: 13))
                     .foregroundStyle(PollyTheme.text2)
@@ -155,12 +155,14 @@ struct PathCard: View {
             }
             if let topic = topics.first(where: { $0.id == next.threadId }) {
                 NavigationLink(value: topic) {
-                    bigLabel(next.steps.doneCount == 0 ? "Start lesson" : "Continue · \(next.steps.doneCount)/3", "play.fill")
+                    bigLabel(next.steps.doneCount == 0
+                             ? L("Start lesson", "Inizia la lezione", "Commencer la leçon", "레슨 시작")
+                             : L("Continue · \(next.steps.doneCount)/3", "Continua · \(next.steps.doneCount)/3", "Continuer · \(next.steps.doneCount)/3", "계속 · \(next.steps.doneCount)/3"), "play.fill")
                 }.buttonStyle(.plain)
             } else {
                 HStack(spacing: 8) {
                     ProgressView().tint(PollyTheme.text3).scaleEffect(0.8)
-                    Text("Ready in a minute").font(.system(size: 13)).foregroundStyle(PollyTheme.text3)
+                    Text(L("Ready in a minute", "Pronta tra un minuto", "Prête dans une minute", "잠시 후 준비돼요")).font(.system(size: 13)).foregroundStyle(PollyTheme.text3)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
@@ -175,7 +177,7 @@ struct PathCard: View {
                 .font(.system(size: 14))
                 .foregroundStyle(PollyTheme.text2)
                 .fixedSize(horizontal: false, vertical: true)
-            bigButton("Talk to Polly", "mic.fill", action: onStartCheck)
+            bigButton(L("Talk to Polly", "Parla con Polly", "Parle avec Polly", "Polly와 대화"), "mic.fill", action: onStartCheck)
         }
     }
 
@@ -261,7 +263,7 @@ struct PlacementFlowView: View {
             switch stage {
             case .intro: intro
             case .talking:
-                VoiceSessionView(mode: "placement", title: "Getting to know you") { id in
+                VoiceSessionView(mode: "placement", title: L("Getting to know you", "Facciamo conoscenza", "On fait connaissance", "서로 알아가기")) { id in
                     guard let id else { onClose(nil, nil); return }
                     voiceSessionId = id
                     build(id)
@@ -315,7 +317,7 @@ struct PlacementFlowView: View {
             closeButton
             Spacer()
             MiniTopicGlyph(kind: "lesson", size: 64)
-            Text("Let's talk for two minutes")
+            Text(L("Let's talk for two minutes", "Parliamo due minuti", "Parlons deux minutes", "2분만 이야기해요"))
                 .font(.custom("Fredoka", size: 26).weight(.semibold))
                 .foregroundStyle(PollyTheme.text)
                 .multilineTextAlignment(.center)
@@ -329,7 +331,7 @@ struct PlacementFlowView: View {
             .padding(.horizontal, 30)
             Spacer()
             Button { stage = .talking } label: {
-                Label("Start talking", systemImage: "mic.fill")
+                Label(L("Start talking", "Iniziamo a parlare", "Commencer à parler", "말하기 시작"), systemImage: "mic.fill")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PollyTheme.inkOnAccent)
                     .frame(maxWidth: .infinity)
@@ -361,7 +363,7 @@ struct PlacementFlowView: View {
         VStack(spacing: 18) {
             Spacer()
             ProgressView().tint(PollyTheme.accent).scaleEffect(1.3)
-            Text("Building your plan")
+            Text(L("Building your plan", "Preparo il tuo piano", "Je prépare ton plan", "학습 계획 만드는 중"))
                 .font(.custom("Fredoka", size: 22).weight(.semibold))
                 .foregroundStyle(PollyTheme.text)
             Text("Polly is going back over your conversation and writing lesson 1. About a minute.")
@@ -398,7 +400,7 @@ struct PlacementFlowView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("YOUR LEVEL")
+                        Text(L("YOUR LEVEL", "IL TUO LIVELLO", "TON NIVEAU", "나의 레벨"))
                             .font(.system(size: 11, weight: .bold)).tracking(1.6)
                             .foregroundStyle(PollyTheme.text3)
                         Text("\(path.languageName) · \(path.level ?? "")")
@@ -455,7 +457,7 @@ struct PlacementFlowView: View {
             }
             VStack(spacing: 10) {
                 Button { onClose(path, res.lessonThreadId) } label: {
-                    Label("Start lesson 1", systemImage: "play.fill")
+                    Label(L("Start lesson 1", "Inizia la lezione 1", "Commencer la leçon 1", "레슨 1 시작"), systemImage: "play.fill")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(PollyTheme.inkOnAccent)
                         .frame(maxWidth: .infinity)
@@ -464,8 +466,8 @@ struct PlacementFlowView: View {
                 }
                 .buttonStyle(.plain)
                 HStack(spacing: 22) {
-                    Button("Not right? Talk again") { stage = .talking }
-                    Button("Later") { onClose(path, nil) }
+                    Button(L("Not right? Talk again", "Non ci siamo? Riparliamo", "Pas juste ? On reparle", "아닌 것 같아요? 다시 대화")) { stage = .talking }
+                    Button(L("Later", "Più tardi", "Plus tard", "나중에")) { onClose(path, nil) }
                 }
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(PollyTheme.text2)
@@ -531,7 +533,7 @@ struct LessonStepsCard: View {
                             .multilineTextAlignment(.leading)
                     }
                     Spacer(minLength: 8)
-                    Text("Read it")
+                    Text(L("Read it", "Leggila", "La lire", "읽기"))
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(PollyTheme.accent)
                     Image(systemName: "chevron.right")
@@ -543,10 +545,10 @@ struct LessonStepsCard: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 8) {
-                step("Talk", "mic.fill", done: steps?.talk != nil, busy: false) { onTalk() }
-                step("Words", "rectangle.on.rectangle.angled", done: steps?.words != nil,
+                step(L("Talk", "Parla", "Parle", "말하기"), "mic.fill", done: steps?.talk != nil, busy: false) { onTalk() }
+                step(L("Words", "Parole", "Mots", "단어"), "rectangle.on.rectangle.angled", done: steps?.words != nil,
                      busy: startingStep == "words") { onCards("words") }
-                step("Grammar", "puzzlepiece.fill", done: steps?.grammar != nil,
+                step(L("Grammar", "Grammatica", "Grammaire", "문법"), "puzzlepiece.fill", done: steps?.grammar != nil,
                      busy: startingStep == "grammar") { onCards("grammar") }
             }
         }

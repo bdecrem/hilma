@@ -71,15 +71,21 @@ struct LessonSheet: View {
                         conversation(lines)
                     }
                     if !lesson.keyWords.isEmpty {
-                        section(lesson.dialogue == nil ? "Key words" : "Words", lesson.keyWords)
+                        section(lesson.dialogue == nil
+                                ? L("Key words", "Parole chiave", "Mots clés", "핵심 단어")
+                                : L("Words", "Parole", "Mots", "단어"), lesson.keyWords)
                     }
                     if !lesson.phrases.isEmpty {
-                        section(lesson.dialogue == nil ? "From the story" : "Expressions", lesson.phrases)
+                        section(lesson.dialogue == nil
+                                ? L("From the story", "Dalla storia", "Dans l'histoire", "이야기 속에서")
+                                : L("Expressions", "Espressioni", "Expressions", "표현"), lesson.phrases)
                     }
                     if lesson.dialogue == nil { story }
                     if let g = lesson.grammarPoint, !g.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
-                            eyebrow(lesson.dialogue == nil ? "Usage" : "Grammar")
+                            eyebrow(lesson.dialogue == nil
+                                    ? L("Usage", "Uso", "Usage", "쓰임")
+                                    : L("Grammar", "Grammatica", "Grammaire", "문법"))
                             Text(g)
                                 .font(.system(size: 14, weight: lesson.grammarExplained == nil ? .regular : .semibold))
                                 .foregroundStyle(PollyTheme.text)
@@ -93,7 +99,8 @@ struct LessonSheet: View {
                     }
                     if let q = lesson.closingQuestion, !q.isEmpty {
                         VStack(alignment: .leading, spacing: 6) {
-                            eyebrow((lesson.host ?? "The host") + " asks")
+                            let host = lesson.host ?? "The host"
+                            eyebrow(L("\(host) asks", "\(host) chiede", "\(host) demande", "\(host)의 질문"))
                             Text(q)
                                 .font(.system(size: 15, weight: .semibold))
                                 .italic()
@@ -197,7 +204,7 @@ struct LessonSheet: View {
     private func conversation(_ lines: [PollyDialogueLine]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                eyebrow("The conversation")
+                eyebrow(L("The conversation", "La conversazione", "La conversation", "대화"))
                 Spacer()
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { storyInEnglish.toggle() }
@@ -239,7 +246,7 @@ struct LessonSheet: View {
     private var story: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                eyebrow("The story")
+                eyebrow(L("The story", "La storia", "L'histoire", "이야기"))
                 Spacer()
                 Button {
                     withAnimation(.easeInOut(duration: 0.15)) { storyInEnglish.toggle() }

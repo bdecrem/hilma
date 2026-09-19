@@ -412,17 +412,17 @@ struct PollyPath: Codable, Equatable {
 /// Kept in lockstep with `levelTitle()` in `src/lib/f2/progress.ts`.
 func pollyLevelTitle(_ level: Int) -> String {
     switch level {
-    case ..<1: return "Newcomer"
-    case 1: return "Beginner"
-    case 2: return "Curious"
-    case 3: return "Student"
-    case 4: return "Apprentice"
-    case 5: return "Scholar"
-    case 6: return "Adept"
-    case 7: return "Practitioner"
-    case 8: return "Expert"
-    case 9: return "Master"
-    default: return "Sage"
+    case ..<1: return L("Newcomer", "Nuovo arrivato", "Nouveau venu", "새내기")
+    case 1: return L("Beginner", "Principiante", "Débutant", "입문자")
+    case 2: return L("Curious", "Curioso", "Curieux", "호기심쟁이")
+    case 3: return L("Student", "Studente", "Élève", "학생")
+    case 4: return L("Apprentice", "Apprendista", "Apprenti", "견습생")
+    case 5: return L("Scholar", "Studioso", "Érudit", "학자")
+    case 6: return L("Adept", "Iniziato", "Initié", "숙련자")
+    case 7: return L("Practitioner", "Praticante", "Praticien", "실천가")
+    case 8: return L("Expert", "Esperto", "Expert", "전문가")
+    case 9: return L("Master", "Maestro", "Maître", "달인")
+    default: return L("Sage", "Saggio", "Sage", "현자")
     }
 }
 

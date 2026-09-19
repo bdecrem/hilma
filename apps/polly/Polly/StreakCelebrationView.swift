@@ -56,7 +56,9 @@ struct StreakCelebrationView: View {
                 }
                 .scaleEffect(heroScale)
 
-                Text(milestone.celebration ? "\(milestone.days)-day streak!" : "\(milestone.days)-day streak")
+                Text(milestone.celebration
+                     ? L("\(milestone.days)-day streak!", "\(milestone.days) giorni di fila!", "\(milestone.days) jours d'affilée !", "\(milestone.days)일 연속!")
+                     : L("\(milestone.days)-day streak", "\(milestone.days) giorni di fila", "\(milestone.days) jours d'affilée", "\(milestone.days)일 연속"))
                     .font(.system(size: 30, weight: .bold, design: .rounded))
                     .foregroundStyle(PollyTheme.text)
 
@@ -71,7 +73,7 @@ struct StreakCelebrationView: View {
                 Spacer()
 
                 Button(action: onDismiss) {
-                    Text("Keep it going")
+                    Text(L("Keep it going", "Continua così", "Continue comme ça", "계속 가요"))
                         .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundStyle(Color(hex: 0x261C06))
                         .frame(maxWidth: .infinity)

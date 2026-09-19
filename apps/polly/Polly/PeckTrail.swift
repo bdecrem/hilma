@@ -85,9 +85,9 @@ enum PeckMilestone {
     static func hasChest(_ level: Int) -> Bool { [3, 7, 12, 16, 22, 26].contains(level) }
     static func gateBanner(_ level: Int) -> String {
         switch level {
-        case 10: return "TO FERN HOLLOW"
-        case 20: return "TO STARFALL SUMMIT"
-        default: return "TO THE SEA"
+        case 10: return L("TO FERN HOLLOW", "VERSO VALFELCE", "VERS VAL-FOUGÈRE", "고사리 골짜기로")
+        case 20: return L("TO STARFALL SUMMIT", "VERSO CIMA STELLATA", "VERS LE PIC ÉTOILÉ", "별빛 봉우리로")
+        default: return L("TO THE SEA", "VERSO IL MARE", "VERS LA MER", "바다로")
         }
     }
 }
@@ -273,7 +273,9 @@ struct PeckTrailCanvas: View {
                 let r0 = (i / 10) * 10
                 let cleared = max(0, min(10, cur - r0))
                 drawSignpost(&ctx, at: CGPoint(x: p.x + side * 78, y: p.y + 20),
-                             title: "REST STOP", sub: "\(cleared) of 10 cleared here")
+                             title: L("REST STOP", "SOSTA", "HALTE", "쉼터"),
+                             sub: L("\(cleared) of 10 cleared here", "\(cleared) di 10 superati",
+                                    "\(cleared) sur 10 terminés", "\(cleared)/10 완료"))
             }
             if PeckMilestone.hasChest(lvl) {
                 drawChest(&ctx, at: CGPoint(x: p.x + side * 60, y: p.y + 16),

@@ -28,7 +28,7 @@ struct InfinityChat: Codable, Identifiable, Equatable {
     var isMastered: Bool { analysis?.masteredAt != nil }
     var hasQuiz: Bool { (analysis?.cardIds?.isEmpty == false) }
     var hasAnalysis: Bool { (analysis?.fixes.isEmpty == false) }
-    var displayTitle: String { (title?.isEmpty == false ? title! : "A quick chat") }
+    var displayTitle: String { (title?.isEmpty == false ? title! : L("A quick chat", "Due chiacchiere", "Une petite discussion", "짧은 대화")) }
 }
 
 struct InfinityAnalysis: Codable, Equatable {

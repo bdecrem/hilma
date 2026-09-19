@@ -500,14 +500,15 @@ struct TopicDetailView: View {
                     // Star 1 comes from the quiz; once it's earned the chip
                     // retires and the flash ladder takes over.
                     if (thread?.stars ?? 0) < 1 {
-                        ActionChip(label: "Quiz me", systemImage: "questionmark.circle") {
+                        ActionChip(label: L("Quiz me", "Mettimi alla prova", "Interroge-moi", "퀴즈 내줘"),
+                                   systemImage: "questionmark.circle") {
                             quiz(kind: "standard")
                         }
                         .opacity(busy ? 0.5 : 1)
                         .allowsHitTesting(!busy)
                     }
 
-                    ActionChip(label: "Flash", systemImage: "bolt.fill") {
+                    ActionChip(label: L("Flash", "Carte", "Cartes", "카드"), systemImage: "bolt.fill") {
                         flashPresented = true
                     }
                     .opacity(busy ? 0.5 : 1)
@@ -531,7 +532,8 @@ struct TopicDetailView: View {
                     .allowsHitTesting(!busy)
 
                     if canTakeFinalReview {
-                        ActionChip(label: "Final Review", systemImage: "checkmark.seal.fill", iconTint: PollyTheme.gold) {
+                        ActionChip(label: L("Final Review", "Ripasso finale", "Révision finale", "최종 복습"),
+                                   systemImage: "checkmark.seal.fill", iconTint: PollyTheme.gold) {
                             // Within 24h of a failed 2nd+ attempt, offer the
                             // 3-question Second Chance alongside the full exam.
                             if thread?.secondChanceAvailable == true {
@@ -546,7 +548,8 @@ struct TopicDetailView: View {
                     }
 
                     if thread?.isCertified == true && recertEnabledPref {
-                        ActionChip(label: "Refresher", systemImage: "arrow.clockwise",
+                        ActionChip(label: L("Refresher", "Ripasso", "Révision", "복습"),
+                                   systemImage: "arrow.clockwise",
                                    iconTint: (thread?.recertLapsed == true || thread?.recertDueSoon == true) ? PollyTheme.gold : PollyTheme.accent) {
                             finalReviewVariant = .recert
                             finalReviewPresented = true
@@ -555,14 +558,15 @@ struct TopicDetailView: View {
                         .allowsHitTesting(!busy)
                     }
 
-                    ActionChip(label: "Talk to Polly", systemImage: "mic.fill") {
+                    ActionChip(label: L("Talk to Polly", "Parla con Polly", "Parle avec Polly", "Polly와 대화"),
+                               systemImage: "mic.fill") {
                         voicePresented = true
                     }
                     .opacity(busy ? 0.5 : 1)
                     .allowsHitTesting(!busy)
 
                     if audioSummaryURL != nil {
-                        ActionChip(label: "Play", systemImage: "play.fill") {
+                        ActionChip(label: L("Play", "Ascolta", "Écouter", "듣기"), systemImage: "play.fill") {
                             playerPresented = true
                         }
                         .opacity(busy ? 0.5 : 1)

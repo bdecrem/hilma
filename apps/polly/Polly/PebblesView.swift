@@ -74,7 +74,7 @@ struct PebblesView: View {
     private var header: some View {
         HStack(spacing: 8) {
             PebbleGlyph(size: 16)
-            Text("Pebbles")
+            Text(L("Pebbles", "Sassolini", "Cailloux", "조약돌"))
                 .font(.system(size: 17, weight: .bold))
                 .tracking(-0.2)
                 .foregroundStyle(PollyTheme.text)
@@ -145,7 +145,9 @@ struct PebblesView: View {
         VStack(spacing: 14) {
             Spacer()
             PebbleGlyph(size: 44)
-            Text(threadId == nil ? "No pebbles yet" : "No pebbles from this topic yet")
+            Text(threadId == nil
+                 ? L("No pebbles yet", "Ancora nessun sassolino", "Aucun caillou pour l'instant", "아직 조약돌이 없어요")
+                 : L("No pebbles from this topic yet", "Ancora nessun sassolino da questo argomento", "Aucun caillou de ce sujet pour l'instant", "이 주제에서 모은 조약돌이 아직 없어요"))
                 .font(.system(size: 20, weight: .bold))
                 .tracking(-0.3)
                 .foregroundStyle(PollyTheme.text)

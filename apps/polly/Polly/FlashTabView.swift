@@ -453,7 +453,14 @@ struct FlashTabView: View {
     private var titleRow: some View {
         ScreenTitle(
             text: "Peck",
-            subtitle: state.map { "\($0.cardCount) CARDS · \($0.highestPassed) LEVEL\($0.highestPassed == 1 ? "" : "S") CLEARED" }
+            subtitle: state.map { st in
+                let n = st.cardCount, m = st.highestPassed
+                return m == 1
+                    ? L("\(n) CARDS · \(m) LEVEL CLEARED", "\(n) CARTE · \(m) LIVELLO SUPERATO",
+                        "\(n) CARTES · \(m) NIVEAU TERMINÉ", "카드 \(n)장 · \(m)레벨 완료")
+                    : L("\(n) CARDS · \(m) LEVELS CLEARED", "\(n) CARTE · \(m) LIVELLI SUPERATI",
+                        "\(n) CARTES · \(m) NIVEAUX TERMINÉS", "카드 \(n)장 · \(m)레벨 완료")
+            }
         )
         .titleVisibilityMarker()
     }
@@ -471,7 +478,8 @@ struct FlashTabView: View {
                     .font(.system(size: 44))
                     .foregroundStyle(PollyTheme.accent)
             }
-            Text("The path opens at 10 cards")
+            Text(L("The path opens at 10 cards", "Il percorso si apre a 10 carte",
+                   "Le parcours s'ouvre à 10 cartes", "카드 10장이면 길이 열려요"))
                 .font(.system(size: 21, weight: .bold))
                 .tracking(-0.4)
                 .foregroundStyle(PollyTheme.text)
@@ -695,7 +703,7 @@ struct FlashTabView: View {
                         .offset(y: 1)
                     // Bouncing map pin with the START plate.
                     VStack(spacing: 2) {
-                        Text("START")
+                        Text(L("START", "INIZIA", "COMMENCER", "시작"))
                             .font(.custom("Fredoka", size: 11).weight(.semibold))
                             .foregroundStyle(Color(hex: 0xFFF6E0))
                             .padding(.horizontal, 10)
@@ -1365,7 +1373,8 @@ private struct LevelStartSheet: View {
                     .frame(width: 38, height: 5)
                     .padding(.top, 10)
 
-                Text("LEVEL \(level.level)")
+                Text(L("LEVEL \(level.level)", "LIVELLO \(level.level)",
+                       "NIVEAU \(level.level)", "레벨 \(level.level)"))
                     .font(.system(size: 12, weight: .heavy))
                     .tracking(1.6)
                     .foregroundStyle(PollyTheme.accent)

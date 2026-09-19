@@ -1127,8 +1127,8 @@ enum PollyTab: String, CaseIterable {
     case topics, flash
     var label: String {
         switch self {
-        case .topics: return "Topics"
-        case .flash: return "Peck"
+        case .topics: return L("Topics", "Argomenti", "Sujets", "주제")
+        case .flash: return "Peck"      // brand name — never translated
         }
     }
     var iconSystem: String {

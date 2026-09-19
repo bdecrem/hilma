@@ -45,7 +45,7 @@ struct VoiceSessionView: View {
             VStack(spacing: 0) {
                 headerRow
 
-                Text("TALKING ABOUT")
+                Text(L("TALKING ABOUT", "PARLIAMO DI", "ON PARLE DE", "대화 주제"))
                     .font(.system(size: 11, weight: .bold))
                     .tracking(2.2)
                     .foregroundStyle(PollyTheme.text3)

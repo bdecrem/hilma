@@ -17,12 +17,13 @@ enum PeckWeek {
     /// "today" / "tomorrow" / "Sunday" / "in 7 days".
     static func dueWord(due: String, daysLeft: Int) -> String {
         switch daysLeft {
-        case ...0: return "today"
-        case 1: return "tomorrow"
+        case ...0: return L("today", "oggi", "aujourd'hui", "오늘")
+        case 1: return L("tomorrow", "domani", "demain", "내일")
         case 2...6:
             if let date = parse(due) { return date.formatted(.dateTime.weekday(.wide)) }
-            return "in \(daysLeft) days"
-        default: return "in \(daysLeft) days"
+            return L("in \(daysLeft) days", "tra \(daysLeft) giorni", "dans \(daysLeft) jours", "\(daysLeft)일 후")
+        default:
+            return L("in \(daysLeft) days", "tra \(daysLeft) giorni", "dans \(daysLeft) jours", "\(daysLeft)일 후")
         }
     }
 
@@ -71,16 +72,24 @@ struct PeckWeekBanner: View {
     }
 
     private func card(_ hit: Warning) -> some View {
-        HStack(spacing: 11) {
+        let by = hit.daysLeft <= 0
+            ? L("tonight", "stasera", "ce soir", "오늘 밤")
+            : L("tomorrow", "domani", "demain", "내일")
+        return HStack(spacing: 11) {
             Image(systemName: "flame.fill")
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(Self.ember)
                 .frame(width: 28, height: 28)
                 .background(Self.ember.opacity(0.14), in: Circle())
 
-            (Text("Your ").foregroundColor(PollyTheme.text2)
-             + Text("\(hit.streak)-day streak").bold().foregroundColor(PollyTheme.text)
-             + Text(" needs a Peck level by \(hit.daysLeft <= 0 ? "tonight" : "tomorrow").")
+            (Text(L("Your ", "La tua ", "Ta ", "")).foregroundColor(PollyTheme.text2)
+             + Text(L("\(hit.streak)-day streak", "serie di \(hit.streak) giorni",
+                      "série de \(hit.streak) jours", "\(hit.streak)일 연속 기록"))
+                .bold().foregroundColor(PollyTheme.text)
+             + Text(L(" needs a Peck level by \(by).",
+                      " ha bisogno di un livello Peck entro \(by).",
+                      " a besoin d'un niveau Peck avant \(by).",
+                      "을 지키려면 \(by)까지 Peck 레벨을 하나 해야 해요."))
                 .foregroundColor(PollyTheme.text2))
                 .font(.system(size: 13.5))
                 .lineLimit(2)
@@ -170,11 +179,23 @@ struct PeckDueSign: View {
 
     private var atRisk: Bool { daysLeft <= 1 }
 
+    /// English, on purpose: this only feeds the accessibility label.
     private var when: String {
         switch daysLeft {
         case ...0: return "tonight"
         case 1: return "in 1 day"
         default: return "in \(daysLeft) days"
+        }
+    }
+
+    /// The board's own line — kept short on purpose (the plank is 92pt), so
+    /// it is worded per language rather than built from `when`.
+    private var board: String {
+        switch daysLeft {
+        case ...0: return L("DUE tonight", "ENTRO STASERA", "AVANT CE SOIR", "오늘 밤까지")
+        case 1: return L("DUE in 1 day", "ENTRO 1 GIORNO", "D'ICI 1 JOUR", "1일 남음")
+        default: return L("DUE in \(daysLeft) days", "ENTRO \(daysLeft) GIORNI",
+                          "D'ICI \(daysLeft) JOURS", "\(daysLeft)일 남음")
         }
     }
 
@@ -187,7 +208,7 @@ struct PeckDueSign: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("DUE \(when)".uppercased())
+            Text(board.uppercased())
                 .font(.custom("Fredoka", size: 11).weight(.semibold))
                 .foregroundStyle(atRisk ? Color(hex: 0xA8321F) : Color(hex: 0x3E3324))
                 .lineLimit(1)

@@ -60,7 +60,12 @@ struct InfinityCleanupView: View {
             }
             .buttonStyle(.plain)
             Spacer()
-            Text(phase == .practicing ? "One more time" : "Clean-up · \(min(index + 1, fixes.count)) of \(fixes.count)")
+            Text(phase == .practicing
+                 ? L("One more time", "Ancora una volta", "Encore une fois", "한 번 더")
+                 : L("Clean-up · \(min(index + 1, fixes.count)) of \(fixes.count)",
+                     "Sistemiamo · \(min(index + 1, fixes.count)) di \(fixes.count)",
+                     "Rangement · \(min(index + 1, fixes.count)) sur \(fixes.count)",
+                     "정리 · \(fixes.count)개 중 \(min(index + 1, fixes.count))"))
                 .font(.system(size: 13, weight: .semibold)).foregroundStyle(PollyTheme.text3)
             Spacer()
             statusDot
@@ -81,7 +86,7 @@ struct InfinityCleanupView: View {
 
     private func card(_ fix: InfinityFix) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            label("YOU SAID")
+            label(L("YOU SAID", "HAI DETTO", "TU AS DIT", "이렇게 말했어요"))
             Text("“\(fix.said)”")
                 .font(.system(size: 18)).foregroundStyle(PollyTheme.text2)
                 .strikethrough(color: PollyTheme.text4)
@@ -92,7 +97,7 @@ struct InfinityCleanupView: View {
                 .font(.system(size: 15, weight: .bold)).foregroundStyle(PollyTheme.accent)
                 .padding(.vertical, 14)
 
-            label("TRY")
+            label(L("TRY", "PROVA", "ESSAIE", "이렇게 해봐요"))
             Text(fix.fixed)
                 .font(.custom("Fredoka", size: 26).weight(.semibold))
                 .foregroundStyle(PollyTheme.text)
@@ -161,7 +166,9 @@ struct InfinityCleanupView: View {
             if holdToTalk { pttButton }
             switch phase {
             case .walking:
-                bigButton(index >= fixes.count - 1 ? "Got it" : "Got it — next", "arrow.right") { advance() }
+                bigButton(index >= fixes.count - 1
+                          ? L("Got it", "Capito", "Compris", "알겠어요")
+                          : L("Got it — next", "Capito — avanti", "Compris — suivant", "알겠어요 — 다음"), "arrow.right") { advance() }
             case .allDone:
                 bigButton("Run it again", "arrowshape.turn.up.left.fill") { runAgain() }
                 Button { end(complete: true) } label: {

@@ -136,25 +136,42 @@ struct TopicsView: View {
             let activelyRead = topics.filter { !$0.isCertified && $0.stars >= 1 }
             let inProgress = topics.filter { !$0.isCertified && $0.stars == 0 }
             return [
-                TopicSection(id: "completed", title: "Completed",
+                TopicSection(id: "completed",
+                             title: L("Completed", "Completati", "Terminés", "완료"),
                              systemImage: "checkmark.seal.fill", tint: PollyTheme.gold,
                              topics: completed),
-                TopicSection(id: "lapsed", title: "Dimmed — refresher due",
+                TopicSection(id: "lapsed",
+                             title: L("Dimmed — refresher due", "Sbiaditi — ripasso in scadenza",
+                                      "Ternis — révision à faire", "흐려짐 — 복습할 때"),
                              systemImage: "seal", tint: PollyTheme.gold.opacity(0.6),
                              topics: lapsed),
-                TopicSection(id: "actively-read", title: "Actively read",
+                TopicSection(id: "actively-read",
+                             title: L("Actively read", "In lettura", "En cours de lecture", "읽는 중"),
                              systemImage: "book.fill", tint: PollyTheme.accent.opacity(0.55),
                              topics: activelyRead),
-                TopicSection(id: "progress", title: "In progress", topics: inProgress),
+                TopicSection(id: "progress",
+                             title: L("In progress", "In corso", "En cours", "진행 중"),
+                             topics: inProgress),
             ].filter { !$0.topics.isEmpty }
         case .byType:
             // Polly's three kinds lead; the rest follow the Rename sheet's kind order.
             let topics = listTopics
+            // The kind (first element) is the server's raw value — never
+            // translated; only the section title is.
             let order: [(kind: String, title: String)] = [
-                ("lesson", "Polly's lessons"), ("guest_lesson", "Guest lessons"), ("immersion", "Immersion"), ("ask", "Ask"),
-                ("book", "Books"), ("mini", "Mini topics"), ("general", "General topics"),
-                ("web", "Web pages"), ("video", "Videos"), ("audio", "Audio"),
-                ("paste", "Pasted text"), ("chat", "Chats"), ("fallback", "Other"),
+                ("lesson", L("Polly's lessons", "Le lezioni di Polly", "Les leçons de Polly", "Polly의 레슨")),
+                ("guest_lesson", L("Guest lessons", "Lezioni ospiti", "Leçons invitées", "게스트 레슨")),
+                ("immersion", L("Immersion", "Immersione", "Immersion", "몰입")),
+                ("ask", L("Ask", "Chiedi", "Demande", "질문")),
+                ("book", L("Books", "Libri", "Livres", "책")),
+                ("mini", L("Mini topics", "Mini argomenti", "Mini sujets", "미니 주제")),
+                ("general", L("General topics", "Argomenti generali", "Sujets généraux", "일반 주제")),
+                ("web", L("Web pages", "Pagine web", "Pages web", "웹 페이지")),
+                ("video", L("Videos", "Video", "Vidéos", "영상")),
+                ("audio", L("Audio", "Audio", "Audio", "오디오")),
+                ("paste", L("Pasted text", "Testo incollato", "Texte collé", "붙여넣은 텍스트")),
+                ("chat", L("Chats", "Chat", "Discussions", "대화")),
+                ("fallback", L("Other", "Altro", "Autres", "기타")),
             ]
             return order.compactMap { entry in
                 let matches = topics.filter { ($0.kind ?? "fallback") == entry.kind }
@@ -172,7 +189,8 @@ struct TopicsView: View {
 
             VStack(spacing: 0) {
                 PollyTopBar {
-                    BarTitle(text: "Topics", bigTitleVisible: bigTitleVisible)
+                    BarTitle(text: L("Topics", "Argomenti", "Sujets", "주제"),
+                             bigTitleVisible: bigTitleVisible)
                 } trailing: {
                     // The sort pill lives in the pinned bar so it stays
                     // reachable however far the list is scrolled.
@@ -362,7 +380,7 @@ struct TopicsView: View {
     // MARK: - Sections
 
     private var titleRow: some View {
-        ScreenTitle(text: "Topics")
+        ScreenTitle(text: L("Topics", "Argomenti", "Sujets", "주제"))
             .titleVisibilityMarker()
     }
 
@@ -431,7 +449,7 @@ struct TopicsView: View {
             Image(systemName: "tray")
                 .font(.system(size: 32))
                 .foregroundStyle(PollyTheme.text3)
-            Text("No topics yet")
+            Text(L("No topics yet", "Ancora nessun argomento", "Aucun sujet pour l'instant", "아직 주제가 없어요"))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(PollyTheme.text)
             Text("Ask Polly anything — a word, a phrase, a question — and your first chapter starts.")
@@ -515,7 +533,7 @@ struct TopicsView: View {
                 // The lessons live inside the card's trail now; only the other
                 // topics get a header, and only when the card is showing above.
                 if showsPathCard, path?.isPlaced == true, !listTopics.isEmpty {
-                    sectionHeader("Topics")
+                    sectionHeader(L("Topics", "Argomenti", "Sujets", "주제"))
                 }
                 PeckWeekBanner(state: jumbo)
                     .padding(.top, 2)
@@ -534,11 +552,11 @@ struct TopicsView: View {
                     }
                 } else {
                     if hasPinned {
-                        sectionHeader("Pinned")
+                        sectionHeader(L("Pinned", "In evidenza", "Épinglés", "고정됨"))
                         topicList(pinned)
                         // Only label the second group when there's a pinned
                         // group above it to distinguish.
-                        sectionHeader("All topics")
+                        sectionHeader(L("All topics", "Tutti gli argomenti", "Tous les sujets", "모든 주제"))
                     }
                     topicList(unpinned)
                 }

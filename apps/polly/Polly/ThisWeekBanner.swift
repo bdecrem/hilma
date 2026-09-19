@@ -34,9 +34,13 @@ struct ThisWeekBanner: View {
                 .frame(width: 28, height: 28)
                 .background(PollyTheme.gold.opacity(0.14), in: Circle())
 
-            (Text("This week: ").foregroundColor(PollyTheme.text2)
+            (Text(L("This week: ", "Questa settimana: ", "Cette semaine : ", "이번 주: "))
+                .foregroundColor(PollyTheme.text2)
              + Text(hit.topic.displayLabel).bold().foregroundColor(PollyTheme.text)
-             + Text(" refresher — due \(dayWord(hit.due)).").foregroundColor(PollyTheme.text2))
+             + Text(L(" refresher — due \(dayWord(hit.due)).",
+                      " — ripasso da fare \(dayWord(hit.due)).",
+                      " — révision à faire \(dayWord(hit.due)).",
+                      " 복습 — \(dayWord(hit.due))까지.")).foregroundColor(PollyTheme.text2))
                 .font(.system(size: 13.5))
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
@@ -79,8 +83,8 @@ struct ThisWeekBanner: View {
 
     private func dayWord(_ due: Date) -> String {
         let cal = Calendar.current
-        if cal.isDateInToday(due) { return "today" }
-        if cal.isDateInTomorrow(due) { return "tomorrow" }
+        if cal.isDateInToday(due) { return L("today", "oggi", "aujourd'hui", "오늘") }
+        if cal.isDateInTomorrow(due) { return L("tomorrow", "domani", "demain", "내일") }
         return due.formatted(.dateTime.weekday(.wide))
     }
 

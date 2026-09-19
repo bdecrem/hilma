@@ -14,8 +14,16 @@ struct RegionCrossing: Identifiable {
     var id: Int { clearedLevel }
 
     var nextLevel: Int { clearedLevel + 1 }
-    var regionName: String { clearedLevel == 10 ? "Fern Hollow" : "Starfall Summit" }
-    var regionSpan: String { clearedLevel == 10 ? "Levels 11–20" : "Levels 21–30" }
+    var regionName: String {
+        clearedLevel == 10
+            ? L("Fern Hollow", "Valfelce", "Val-Fougère", "고사리 골짜기")
+            : L("Starfall Summit", "Cima Stellata", "Pic Étoilé", "별빛 봉우리")
+    }
+    var regionSpan: String {
+        clearedLevel == 10
+            ? L("Levels 11–20", "Livelli 11–20", "Niveaux 11–20", "레벨 11–20")
+            : L("Levels 21–30", "Livelli 21–30", "Niveaux 21–30", "레벨 21–30")
+    }
     /// World sky, bottom (old region) → top (new region).
     var skyStops: [(CGFloat, UInt32)] {
         clearedLevel == 10
@@ -299,7 +307,8 @@ struct PeckRegionTransitionView: View {
         c.draw(Text("\(crossing.nextLevel)").font(.custom("Fredoka", size: 24).weight(.semibold)).foregroundColor(Color(hex: 0x33383E)), at: CGPoint(x: 0, y: 1))
         let startOp = anim(0, 1, t, Cue.settle + 0.2, Cue.settle + 0.7, easeOutCubic)
         if startOp > 0 {
-            c.draw(Text("START").font(.custom("Fredoka", size: 13).weight(.semibold)).tracking(3)
+            c.draw(Text(L("START", "INIZIA", "COMMENCER", "시작"))
+                    .font(.custom("Fredoka", size: 13).weight(.semibold)).tracking(3)
                     .foregroundColor(Color(hex: 0xC77E2B).opacity(startOp)), at: CGPoint(x: 0, y: 52))
         }
     }
@@ -315,7 +324,7 @@ struct PeckRegionTransitionView: View {
             VStack(spacing: 4) {
                 SproutGlyph()
                     .frame(width: 64, height: 28)
-                Text("NEW REGION")
+                Text(L("NEW REGION", "NUOVA REGIONE", "NOUVELLE RÉGION", "새로운 지역"))
                     .font(.system(size: 11, weight: .heavy))
                     .tracking(3)
                     .foregroundStyle(Color(hex: 0xC77E2B))
@@ -341,7 +350,10 @@ struct PeckRegionTransitionView: View {
     @ViewBuilder
     private func caption(t: CGFloat) -> some View {
         if t > 0.35 && t < 2.2 {
-            Text("Level \(crossing.clearedLevel) cleared!")
+            Text(L("Level \(crossing.clearedLevel) cleared!",
+                   "Livello \(crossing.clearedLevel) superato!",
+                   "Niveau \(crossing.clearedLevel) terminé !",
+                   "레벨 \(crossing.clearedLevel) 완료!"))
                 .font(.custom("Fredoka", size: 17).weight(.semibold))
                 .foregroundStyle(Color(hex: 0x2A2E33))
                 .padding(.horizontal, 18)

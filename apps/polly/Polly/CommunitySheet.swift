@@ -50,7 +50,7 @@ struct CommunitySheet: View {
                 Image(systemName: "person.2")
                     .font(.system(size: 30))
                     .foregroundStyle(PollyTheme.text3)
-                Text("Nothing shared yet")
+                Text(L("Nothing shared yet", "Ancora niente di condiviso", "Rien de partagé", "아직 공유된 게 없어요"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(PollyTheme.text)
                 Text("Share one of your topics from its ··· menu and it shows up here for everyone.")
@@ -102,14 +102,14 @@ struct CommunitySheet: View {
     @ViewBuilder
     private func trailingControl(_ topic: PollyAPI.CommunityTopic) -> some View {
         if topic.author == myUsername {
-            Text("Yours")
+            Text(L("Yours", "Tuo", "À toi", "내 주제"))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(PollyTheme.text3)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(PollyTheme.surface2, in: Capsule())
         } else if forked.contains(topic.id) {
-            Label("Added", systemImage: "checkmark")
+            Label(L("Added", "Aggiunto", "Ajouté", "추가됨"), systemImage: "checkmark")
                 .font(.system(size: 12.5, weight: .semibold))
                 .foregroundStyle(PollyTheme.text2)
         } else {
@@ -118,7 +118,7 @@ struct CommunitySheet: View {
                     if forking.contains(topic.id) {
                         ProgressView().controlSize(.mini).tint(PollyTheme.inkOnAccent)
                     } else {
-                        Text("Add")
+                        Text(L("Add", "Aggiungi", "Ajouter", "추가"))
                             .font(.system(size: 13, weight: .bold))
                     }
                 }
@@ -169,11 +169,14 @@ struct CommunitySheet: View {
     private var header: some View {
         ZStack {
             VStack(spacing: 2) {
-                Text("Community topics")
+                Text(L("Community topics", "Argomenti della community", "Sujets de la communauté", "커뮤니티 주제"))
                     .font(.system(size: 16, weight: .semibold))
                     .tracking(-0.2)
                     .foregroundStyle(PollyTheme.text)
-                Text("Shared by other learners — add one to make it yours")
+                Text(L("Shared by other learners — add one to make it yours",
+                       "Condivisi da altri studenti — aggiungine uno e diventa tuo",
+                       "Partagés par d'autres — ajoutes-en un et il est à toi",
+                       "다른 학습자들이 공유했어요 — 추가하면 내 것이 돼요"))
                     .font(.system(size: 12))
                     .foregroundStyle(PollyTheme.text3)
                     .lineLimit(1)
