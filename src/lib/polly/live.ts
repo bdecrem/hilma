@@ -323,6 +323,61 @@ export function livePlacementNudge(
 
 /// Quizmaster script for a spoken flash set. The deck is embedded; grading
 /// happens afterwards from the transcript (judgeVoiceSet in flash.ts).
+/// Infinity Chat free conversation: just talk, low pressure. English is fine,
+/// mistakes are fine, NOTHING is corrected here — that's Clean-up's job later.
+export function buildLiveInfinityChatInstructions(input: {
+  userName: string
+  language: LanguageCode | null
+}): string {
+  const name = friendlyName(input.userName)
+  const lang = input.language ? LANGUAGES[input.language].name : 'the language they are learning'
+  return `${PERSONA(name)}
+
+You are having an easy, open ${lang} conversation with ${name} — this is Infinity Chat: a low-pressure space to just TALK. No lesson, no test.
+
+How it goes:
+- Speak first: a warm ${lang} hello and one easy, real question (how they are, what they're up to). Keep your turns short, at their level or a touch above.
+- Just have a real conversation. Follow what ${name} brings up, be curious, react like a person, one thing at a time.
+- ${name} may mix in English, reach for words, or make mistakes — completely fine and expected. Take what they mean and keep it flowing. Do NOT correct, do NOT teach, do NOT stop to explain grammar. (That all happens later, in Clean-up — never here.)
+- If they're stuck, offer the ${lang} they need in one breath and move on; keep it light.
+- Stay mostly in ${lang} so they get real input, but never make them feel tested. Warm, unhurried, genuinely interested.
+
+You do not need the backend for this — it's a free conversation. Handle everything yourself.`
+}
+
+/// Clean-up: Polly walks ${name} through the curated fixes, ONE at a time,
+/// app-driven (the client appends "Now move to number N" between cards). Voice
+/// half of the voice+card experience; the cards live in the app.
+export function buildLiveCleanupInstructions(input: {
+  userName: string
+  language: LanguageCode | null
+  fixes: { said: string; fixed: string; kind: string; note: string; say_it: string }[]
+}): string {
+  const name = friendlyName(input.userName)
+  const lang = input.language ? LANGUAGES[input.language].name : 'the language'
+  const n = input.fixes.length
+  const list = input.fixes
+    .map((f, i) => `${i + 1}. They said: "${f.said}"  →  better: "${f.fixed}"  (${f.kind}) — ${f.note}  · have them say: "${f.say_it}"`)
+    .join('\n')
+  return `${PERSONA(name)}
+
+You and ${name} are doing Clean-up on a ${lang} conversation they just had. Together you tidy up a few things — warmly, like a friend, never a teacher marking work. There ${n === 1 ? 'is 1 thing' : `are ${n} things`}, and the app shows one card at a time.
+
+The ${n} ${n === 1 ? 'thing' : 'things'} (in order):
+${list || '(nothing to fix — tell them it was great and to keep chatting)'}
+
+How to run it — this matters:
+- Handle ONE at a time, IN ORDER, and ONLY the one you are on. Never list them, never jump ahead, never preview the next.
+- For the current one: warmly say what they said and the cleaner way, why in a few plain words (no grammar jargon), then have them say the ${lang} phrase out loud. When they do, react kindly (nice / almost — one gentle nudge), then STOP and wait.
+- Do NOT move on by yourself. The app sends a short note like "Now move to number 2"; only then take the next one.
+- Keep every turn short and light — quick and encouraging, never a lecture.
+- When the app says they're all done, tell ${name} they did great and ask if they'd like to run the whole conversation again, cleanly. If yes, have a short natural ${lang} exchange using what you just fixed.
+
+Start with number 1.
+
+You do not need the backend for this — you have everything above.`
+}
+
 export function buildLiveFlashInstructions(input: {
   userName: string
   topicLabel: string | null
@@ -482,6 +537,15 @@ ${deck || '(empty)'}
 ${BACKEND_RETURN}`
   }
 
+  if (input.mode === 'cleanup' || (input.mode === 'topic' && input.thread?.kind === 'infinity')) {
+    return `${head}
+
+## Your job
+The live model is ${input.mode === 'cleanup' ? 'tidying up a past conversation with' : 'having a free, low-pressure conversation with'} ${name}. It should not need you. If it ever delegates, answer briefly from general knowledge.
+
+${BACKEND_RETURN}`
+  }
+
   if (input.mode === 'placement') {
     return `${head}
 
@@ -528,9 +592,15 @@ ${BACKEND_RETURN}`
 export function liveOpeningInstruction(
   mode: RealtimeMode,
   userName: string,
-  opts?: { language?: LanguageCode | null; pollyLesson?: boolean },
+  opts?: { language?: LanguageCode | null; pollyLesson?: boolean; infinity?: boolean },
 ): string | null {
   const name = friendlyName(userName)
+  if (mode === 'cleanup') {
+    return `Begin now, without waiting for ${name} to speak: warmly say you'll tidy up a few things together, then start with number 1 — say what they said and the cleaner way, and have them repeat it. Address only number 1, then wait.`
+  }
+  if (mode === 'topic' && opts?.infinity) {
+    return `Begin now, without waiting for ${name} to speak: give a warm hello in their language and one easy opening question. Then listen.`
+  }
   if (mode === 'placement') {
     const hello = PLACEMENT_GREETINGS[opts?.language ?? 'it']
     return `Begin now, without waiting for ${name} to speak: say exactly "${hello}" and nothing else. Then stay silent and wait for them to answer.`

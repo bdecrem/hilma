@@ -812,17 +812,58 @@ final class PollyAPI {
     /// `cardIds` is required for mode "flash" — the deck the quizmaster reads
     /// from, in question order. `sdp` is the phone's WebRTC offer.
     func startLiveSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
-                          holdToTalk: Bool = false, sdp: String) async throws -> LiveSessionResponse {
+                          chatId: String? = nil, holdToTalk: Bool = false, sdp: String) async throws -> LiveSessionResponse {
         struct Body: Encodable {
             let mode: String
             let thread_id: String?
             let card_ids: [String]?
+            let chat_id: String?
             let hold_to_talk: Bool
             let sdp: String
         }
         return try await post("/api/polly/live/session",
                               body: Body(mode: mode, thread_id: threadId, card_ids: cardIds,
-                                         hold_to_talk: holdToTalk, sdp: sdp))
+                                         chat_id: chatId, hold_to_talk: holdToTalk, sdp: sdp))
+    }
+
+    // MARK: Infinity Chat
+
+    private struct InfinityChatResponse: Codable { let chat: InfinityChat }
+    private struct InfinityChatsResponse: Codable { let chats: [InfinityChat] }
+
+    /// Record a finished free chat as a conversation in an Infinity topic.
+    func createInfinityChat(threadId: String, voiceSessionId: String) async throws -> InfinityChat {
+        struct Body: Encodable { let thread_id: String; let voice_session_id: String }
+        let res: InfinityChatResponse = try await post("/api/polly/infinity/chats",
+                                                       body: Body(thread_id: threadId, voice_session_id: voiceSessionId))
+        return res.chat
+    }
+
+    /// The conversations in an Infinity topic, newest first.
+    func listInfinityChats(threadId: String) async throws -> [InfinityChat] {
+        let res: InfinityChatsResponse = try await get("/api/polly/infinity/chats?thread_id=\(threadId)")
+        return res.chats
+    }
+
+    /// One conversation, with its analysis if clean-up has run.
+    func getInfinityChat(id: String) async throws -> InfinityChat {
+        let res: InfinityChatResponse = try await get("/api/polly/infinity/chats/\(id)")
+        return res.chat
+    }
+
+    /// Curate the ≤5 fixes + vocab + grammar (idempotent). Slow — one LLM pass.
+    func cleanUpInfinityChat(id: String) async throws -> InfinityChat {
+        let res: InfinityChatResponse = try await request("/api/polly/infinity/chats/\(id)/cleanup",
+                                                          method: "POST", body: EmptyBody())
+        return res.chat
+    }
+
+    /// The clean-up walk is done.
+    func completeInfinityCleanup(id: String, cleanupSessionId: String?) async throws -> InfinityChat {
+        struct Body: Encodable { let cleanup_session_id: String? }
+        let res: InfinityChatResponse = try await request("/api/polly/infinity/chats/\(id)/complete",
+                                                          method: "POST", body: Body(cleanup_session_id: cleanupSessionId))
+        return res.chat
     }
 
     // MARK: Flash cards

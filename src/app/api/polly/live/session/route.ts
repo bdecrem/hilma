@@ -13,8 +13,10 @@ import {
 } from '@/lib/polly/realtime'
 import {
   buildBackendInstructions,
+  buildLiveCleanupInstructions,
   buildLiveFinalReviewInstructions,
   buildLiveFlashInstructions,
+  buildLiveInfinityChatInstructions,
   buildLivePlacementInstructions,
   buildLiveRecertInstructions,
   buildLiveSecondChanceInstructions,
@@ -27,6 +29,7 @@ import {
   livePlacementNudge,
 } from '@/lib/polly/live'
 import { activeLanguage } from '@/lib/polly/language'
+import { getInfinityChat } from '@/lib/polly/infinity'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -37,6 +40,8 @@ export const maxDuration = 30
 type SessionBody = {
   mode?: RealtimeMode
   thread_id?: string
+  // 'cleanup' mode: the Infinity Chat conversation being tidied up.
+  chat_id?: string
   // 'flash' mode: the selected deck (from /api/polly/flash/start), in order.
   card_ids?: string[]
   // Hold-to-talk (a device-side Voice setting): the mic is muted except
@@ -60,7 +65,7 @@ export async function POST(req: Request) {
   }
 
   const mode = body.mode ?? 'global'
-  if (!['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert', 'placement'].includes(mode)) {
+  if (!['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert', 'placement', 'cleanup'].includes(mode)) {
     return NextResponse.json({ error: 'invalid mode' }, { status: 400 })
   }
   // Pass the offer through untouched: SDP needs its final line ending.
@@ -87,8 +92,26 @@ export async function POST(req: Request) {
 
   let instructions: string
   let cards: { question: string; answer: string }[] | undefined
-  const language = mode === 'placement' ? await activeLanguage(user.id) : null
-  if (mode === 'placement') {
+  // Loaded after thread resolution for the infinity free-chat case.
+  let language = mode === 'placement' || mode === 'cleanup' ? await activeLanguage(user.id) : null
+  if (mode === 'cleanup') {
+    // Clean-up walk over a curated Infinity Chat conversation.
+    if (!body.chat_id) {
+      return NextResponse.json({ error: 'chat_id required' }, { status: 400 })
+    }
+    const chat = await getInfinityChat(user.id, body.chat_id)
+    if (!chat) {
+      return NextResponse.json({ error: 'conversation not found' }, { status: 404 })
+    }
+    if (!chat.analysis) {
+      return NextResponse.json({ error: 'Run clean-up first.' }, { status: 409 })
+    }
+    instructions = buildLiveCleanupInstructions({
+      userName: user.username,
+      language,
+      fixes: chat.analysis.fixes,
+    })
+  } else if (mode === 'placement') {
     // The level check: no topic, the learner's course language.
     if (!language) {
       return NextResponse.json({ error: 'Pick a language first.' }, { status: 409 })
@@ -165,6 +188,10 @@ export async function POST(req: Request) {
       thread: thread!,
       weaknesses,
     })
+  } else if (mode === 'topic' && thread?.kind === 'infinity') {
+    // Infinity Chat free conversation: just talk, no corrections.
+    language = await activeLanguage(user.id)
+    instructions = buildLiveInfinityChatInstructions({ userName: user.username, language })
   } else {
     instructions = buildLiveTalkInstructions({
       mode: mode === 'topic' ? 'topic' : 'global',
@@ -232,6 +259,7 @@ export async function POST(req: Request) {
       opening_instruction: liveOpeningInstruction(mode, user.username, {
         language,
         pollyLesson: thread?.kind === 'lesson',
+        infinity: thread?.kind === 'infinity',
       }),
       // The level check only: what to append when the learner says nothing
       // for `after_ms` after Polly's greeting. Null elsewhere.

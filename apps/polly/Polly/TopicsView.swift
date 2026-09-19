@@ -989,9 +989,19 @@ struct NewTopicSheet: View {
         NavigationStack {
             Form {
                 Section("Title") {
-                    TextField("What are you learning?", text: $title, axis: .vertical)
-                        .lineLimit(1...3)
-                        .focused($titleFocused)
+                    if kind == "infinity" {
+                        // Infinity Chat is always titled "Infinity Chat".
+                        HStack(spacing: 8) {
+                            MiniTopicGlyph(kind: "infinity", size: 20)
+                            Text("Infinity Chat").foregroundStyle(PollyTheme.text)
+                            Spacer()
+                            Text("always").font(.system(size: 12)).foregroundStyle(PollyTheme.text3)
+                        }
+                    } else {
+                        TextField("What are you learning?", text: $title, axis: .vertical)
+                            .lineLimit(1...3)
+                            .focused($titleFocused)
+                    }
                 }
                 Section("Type") {
                     HStack(spacing: 12) {
@@ -1000,6 +1010,7 @@ struct NewTopicSheet: View {
                         // (web/video/…) describe material, and a typed-in
                         // topic has none yet.
                         Picker("Type", selection: $kind) {
+                            Text("Infinity Chat").tag("infinity")
                             Text("Guest Lesson").tag("guest_lesson")
                             Text("Immersion").tag("immersion")
                             Text("Ask").tag("ask")
@@ -1058,7 +1069,7 @@ struct NewTopicSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(busy ? "Creating…" : "Create") { create() }
-                        .disabled(busy || quickBusy || title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .disabled(busy || quickBusy || (kind != "infinity" && title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
                 }
             }
             .onAppear { titleFocused = true }
@@ -1067,7 +1078,8 @@ struct NewTopicSheet: View {
     }
 
     private func create() {
-        let name = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Infinity Chat's title is fixed; every other kind needs a name.
+        let name = kind == "infinity" ? "Infinity Chat" : title.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
         busy = true
         Task {

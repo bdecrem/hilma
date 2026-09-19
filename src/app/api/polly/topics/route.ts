@@ -91,6 +91,25 @@ export async function POST(req: Request) {
     kind = body.kind as TopicKind
   }
 
+  // Infinity Chat: always titled "Infinity Chat", whatever the learner typed,
+  // and never treated as a URL. It's a container for its conversations.
+  if (kind === 'infinity') {
+    const thread = await createThread({
+      userId: user.id,
+      client: 'web',
+      handle: user.username,
+      topic: 'Infinity Chat',
+      kind,
+    })
+    if (!thread) {
+      return NextResponse.json({ error: 'create failed' }, { status: 500 })
+    }
+    return NextResponse.json(
+      { thread: { id: thread.id, topic: thread.topic, kind: thread.kind } },
+      { headers: NO_STORE },
+    )
+  }
+
   // A URL pasted into the "name" slot means "make this the topic's source".
   // The new-topic sheet is where people paste YouTube links, so treat it
   // exactly like sending the link in chat: fetch content, store it as the

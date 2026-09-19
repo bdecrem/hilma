@@ -221,6 +221,7 @@ struct MiniTopicGlyph: View {
         case "guest_lesson": GuestLessonGlyph()
         case "immersion": ImmersionGlyph()
         case "ask":   AskGlyph()
+        case "infinity": InfinityKindGlyph()
         default:      FallbackGlyph()
         }
     }
@@ -511,6 +512,29 @@ private struct ImmersionGlyph: View {
                                   control: CGPoint(x: 14.875 * s, y: (y + 2.2) * s))
                 ctx.stroke(wave, with: coral, style: style)
             }
+        }
+    }
+}
+
+private struct InfinityKindGlyph: View {
+    // The endless conversation: an ∞ drawn as two joined loops.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let coral = GraphicsContext.Shading.color(PollyTheme.accent)
+            let style = StrokeStyle(lineWidth: 1.7 * s, lineCap: .round, lineJoin: .round)
+            var p = Path()
+            let midY = 10.0 * s
+            p.move(to: CGPoint(x: 10 * s, y: midY))
+            // left loop
+            p.addCurve(to: CGPoint(x: 10 * s, y: midY),
+                       control1: CGPoint(x: 6 * s, y: 4.5 * s),
+                       control2: CGPoint(x: 2.5 * s, y: 15.5 * s))
+            // right loop
+            p.addCurve(to: CGPoint(x: 10 * s, y: midY),
+                       control1: CGPoint(x: 14 * s, y: 15.5 * s),
+                       control2: CGPoint(x: 17.5 * s, y: 4.5 * s))
+            ctx.stroke(p, with: coral, style: style)
         }
     }
 }

@@ -281,6 +281,7 @@ struct PollyThread: Codable {
     var isGuestLesson: Bool { kind == "guest_lesson" }
     /// A lesson Polly wrote for the learner's path.
     var isPollyLesson: Bool { kind == "lesson" }
+    var isInfinity: Bool { kind == "infinity" }
 
     var isCertified: Bool { stars >= 3 }
     var recertLapsed: Bool {

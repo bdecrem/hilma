@@ -21,6 +21,7 @@
 		2688E3A7CA01784F84C8BB7C /* DodoRadioDial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 371A2903B297C6C0225D83C7 /* DodoRadioDial.swift */; };
 		2AA43395C8511253CAF8DD02 /* TranscriptReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D0B9E0DC76A611306BD8EFC /* TranscriptReaderView.swift */; };
 		2FB52B8249B3D9866EC07182 /* voice-willow.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 5966B4FC800CA3798AE7929E /* voice-willow.m4a */; };
+		318A69764E260E811D8049D0 /* InfinityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E93235A256C484000829EAC /* InfinityView.swift */; };
 		3685AE30D4DE6DCEE14032EE /* voice-cedar.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6D10CD0ECA12C060F39C167A /* voice-cedar.m4a */; };
 		403FFB6C157E697A5BDED060 /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEE3F13B24BFB491B2C562A7 /* TopicsView.swift */; };
 		46B45F858BEE2B465E319EFD /* DemoReelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 764A037A63716DF5F6DD2BAC /* DemoReelView.swift */; };
@@ -32,6 +33,7 @@
 		5CAAB97B3F1F18A3034B44EA /* PollyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E95E8B3E338ADAAEFD2F692 /* PollyAPI.swift */; };
 		5D2AF2D7978E8222AB48D0CB /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677BF1E6C991ED458811F463 /* FlashSFX.swift */; };
 		651715D824202472955C92DD /* voice-marin.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CB2931FD7DCB0BC1510666BE /* voice-marin.m4a */; };
+		6578AE06ACB91801421A8C1F /* InfinityCleanupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F91B9A3F8EDB29201F1FAD72 /* InfinityCleanupView.swift */; };
 		6A4196F38E2438F93AAFF314 /* voice-gleam.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 9691FB5254E79D8A57EC0086 /* voice-gleam.m4a */; };
 		6AB820BBA0F8D5F1F0CD0937 /* Fredoka.ttf in Resources */ = {isa = PBXBuildFile; fileRef = EC98158D99E6CCF6CDD4772A /* Fredoka.ttf */; };
 		6C9F1C83CB28B69E1DD8C563 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2F0FFAC4A0072FAE9DFD7 /* SignupView.swift */; };
@@ -64,6 +66,7 @@
 		A3AFFC5658774ACF55B8C3C5 /* FlashSetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A330872A693580CE2070A4E6 /* FlashSetView.swift */; };
 		A5EE9095FB60F05AB96F4C06 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA503B8D3F528FE6B823C76 /* IMessagePairingView.swift */; };
 		A737FE302A68BB0B99F110CF /* LessonSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE59ECE4EA76264D43506C62 /* LessonSheet.swift */; };
+		AA069BB9D15F8B902DE01F7E /* InfinityDrillViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B2EAC5022B94871CCAF3745 /* InfinityDrillViews.swift */; };
 		AC281320FDF269F018166521 /* StreakCelebrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD63E55697413F99721979E5 /* StreakCelebrationView.swift */; };
 		AE5D6E68807E93A80E84C7F3 /* FlashModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18404EAFD60DA7E4A6140A2E /* FlashModels.swift */; };
 		B2BFAE3E640229A73D29EE51 /* AnimatedDodo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12C6C2EC912628954EF063E6 /* AnimatedDodo.swift */; };
@@ -79,6 +82,7 @@
 		CA4DA11FE605FAB119440042 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8406B207C89E57DA611A0679 /* FlashVoiceView.swift */; };
 		CA51C59B8F8044DBCE8E95A6 /* TopicContextSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC7A8F37E56B7BF21E7908E /* TopicContextSheet.swift */; };
 		D98A145834351ECA7EFF1025 /* FlashTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DED964CC0BF7F93ED42382F /* FlashTabView.swift */; };
+		DCFEB7CC5B74E375BBC28B54 /* InfinityModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28B5C5B91D28C8C93B00BFB1 /* InfinityModels.swift */; };
 		DD71EC7E67BB9501BD374AAD /* DodoArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B82471D94B61EA020F233EA /* DodoArt.swift */; };
 		DD95C64ABB1C882A3F65B658 /* AudioSummaryPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBEB362E2782BFBC0F6EEAD /* AudioSummaryPlayer.swift */; };
 		DE28B95B6AD40777F6C50D1E /* voice-tempo.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 404F0BF5FBC0705C4035F06F /* voice-tempo.m4a */; };
@@ -105,6 +109,7 @@
 		1D0B9E0DC76A611306BD8EFC /* TranscriptReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptReaderView.swift; sourceTree = "<group>"; };
 		1FD765467020187E78414521 /* voice-shimmer.m4a */ = {isa = PBXFileReference; path = "voice-shimmer.m4a"; sourceTree = "<group>"; };
 		2701EDEA08D8354D6CA26CE4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		28B5C5B91D28C8C93B00BFB1 /* InfinityModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfinityModels.swift; sourceTree = "<group>"; };
 		2DED964CC0BF7F93ED42382F /* FlashTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashTabView.swift; sourceTree = "<group>"; };
 		2ED71FFC52222A3C620C1BAA /* voice-ripple.m4a */ = {isa = PBXFileReference; path = "voice-ripple.m4a"; sourceTree = "<group>"; };
 		2FA503B8D3F528FE6B823C76 /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
@@ -119,6 +124,7 @@
 		585E651DCAEB140C66B1A318 /* RecertNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecertNotifications.swift; sourceTree = "<group>"; };
 		58C5A7639E2BE2676107C234 /* VoiceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSettingsView.swift; sourceTree = "<group>"; };
 		5966B4FC800CA3798AE7929E /* voice-willow.m4a */ = {isa = PBXFileReference; path = "voice-willow.m4a"; sourceTree = "<group>"; };
+		5B2EAC5022B94871CCAF3745 /* InfinityDrillViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfinityDrillViews.swift; sourceTree = "<group>"; };
 		5BC79FF13275961C8E28C63A /* Polly-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Polly-macOS.entitlements"; sourceTree = "<group>"; };
 		603E01E08B8B728CE6A200DF /* PeckWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckWeekBanner.swift; sourceTree = "<group>"; };
 		60CEE4FFACF1BAD1BAAAA2D5 /* ThisWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThisWeekBanner.swift; sourceTree = "<group>"; };
@@ -127,6 +133,7 @@
 		6B82471D94B61EA020F233EA /* DodoArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoArt.swift; sourceTree = "<group>"; };
 		6C7065F7AEE07806FA19C40E /* FlashDeckBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDeckBuilder.swift; sourceTree = "<group>"; };
 		6D10CD0ECA12C060F39C167A /* voice-cedar.m4a */ = {isa = PBXFileReference; path = "voice-cedar.m4a"; sourceTree = "<group>"; };
+		6E93235A256C484000829EAC /* InfinityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfinityView.swift; sourceTree = "<group>"; };
 		764A037A63716DF5F6DD2BAC /* DemoReelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoReelView.swift; sourceTree = "<group>"; };
 		79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
 		8406B207C89E57DA611A0679 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
@@ -177,6 +184,7 @@
 		F3AF65C860BA3F154F3A64BE /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
 		F6AD3120BD8F3F5A5F437C92 /* Polly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Polly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F9060FD2C33DB0CB08BD4F34 /* SourceReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReaderView.swift; sourceTree = "<group>"; };
+		F91B9A3F8EDB29201F1FAD72 /* InfinityCleanupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfinityCleanupView.swift; sourceTree = "<group>"; };
 		FD63E55697413F99721979E5 /* StreakCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCelebrationView.swift; sourceTree = "<group>"; };
 		FE7AF5671D6F07D26DDFE816 /* VoiceSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSessionView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -228,6 +236,10 @@
 				8406B207C89E57DA611A0679 /* FlashVoiceView.swift */,
 				10BA032B491A270FA59FA28E /* HelpSheet.swift */,
 				2FA503B8D3F528FE6B823C76 /* IMessagePairingView.swift */,
+				F91B9A3F8EDB29201F1FAD72 /* InfinityCleanupView.swift */,
+				5B2EAC5022B94871CCAF3745 /* InfinityDrillViews.swift */,
+				28B5C5B91D28C8C93B00BFB1 /* InfinityModels.swift */,
+				6E93235A256C484000829EAC /* InfinityView.swift */,
 				2701EDEA08D8354D6CA26CE4 /* Info.plist */,
 				AE59ECE4EA76264D43506C62 /* LessonSheet.swift */,
 				E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */,
@@ -436,6 +448,10 @@
 				CA4DA11FE605FAB119440042 /* FlashVoiceView.swift in Sources */,
 				78737257CFE3B357AD93768D /* HelpSheet.swift in Sources */,
 				A5EE9095FB60F05AB96F4C06 /* IMessagePairingView.swift in Sources */,
+				6578AE06ACB91801421A8C1F /* InfinityCleanupView.swift in Sources */,
+				AA069BB9D15F8B902DE01F7E /* InfinityDrillViews.swift in Sources */,
+				DCFEB7CC5B74E375BBC28B54 /* InfinityModels.swift in Sources */,
+				318A69764E260E811D8049D0 /* InfinityView.swift in Sources */,
 				A737FE302A68BB0B99F110CF /* LessonSheet.swift in Sources */,
 				4F751749FDDCD82F8CCE9984 /* LevelUpView.swift in Sources */,
 				8488F95FD935AED50C034543 /* LiveVoiceClient.swift in Sources */,

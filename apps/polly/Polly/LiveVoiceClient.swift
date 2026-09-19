@@ -43,6 +43,7 @@ final class LiveVoiceClient: NSObject {
 
     let mode: String
     let threadId: String?
+    let chatId: String?
     /// Flash mode: the deck (card ids in question order) the server embeds
     /// in the session instructions.
     let cardIds: [String]?
@@ -117,9 +118,10 @@ final class LiveVoiceClient: NSObject {
     var debugTurnCount: Int { turns.count }
     #endif
 
-    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil, holdToTalk: Bool = false) {
+    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil, chatId: String? = nil, holdToTalk: Bool = false) {
         self.mode = mode
         self.threadId = threadId
+        self.chatId = chatId
         self.cardIds = cardIds
         self.holdToTalk = holdToTalk
         super.init()
@@ -245,7 +247,7 @@ final class LiveVoiceClient: NSObject {
             phase = .creatingSession
             status = "Creating voice session..."
             let session = try await PollyAPI.shared.startLiveSession(
-                mode: mode, threadId: threadId, cardIds: cardIds, holdToTalk: holdToTalk, sdp: offerSDP)
+                mode: mode, threadId: threadId, cardIds: cardIds, chatId: chatId, holdToTalk: holdToTalk, sdp: offerSDP)
             sessionResponse = session
             model = session.live.model
             voice = session.live.voice
@@ -600,6 +602,18 @@ final class LiveVoiceClient: NSObject {
                     "created_at": formatter.string(from: base.addingTimeInterval(Double(turn.startMs) / 1000)),
                 ]
             }
+    }
+
+    /// Drive an app-led voice flow (Infinity Chat clean-up): append a fresh
+    /// instruction and a spoken cue so Polly moves to the thing the app is now
+    /// showing. Same two-event mechanism as the placement nudge — an appended
+    /// instruction alone doesn't make the live model speak; the commentary does.
+    func sendCue(instruction: String, speak: String) {
+        guard sessionStarted, phase != .ended else { return }
+        sendEvent(["type": "session.instructions.append", "event_id": nextEventId("cue"),
+                   "delegation_id": NSNull(), "content": instruction])
+        sendEvent(["type": "session.commentary.append", "event_id": nextEventId("cue-say"),
+                   "delegation_id": NSNull(), "content": speak])
     }
 
     private func nextEventId(_ label: String) -> String {

@@ -13,7 +13,7 @@ import {
 // 'placement' = the level check that opens Agentic Learning Mode (path.ts).
 export type RealtimeMode =
   | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance' | 'recert'
-  | 'placement'
+  | 'placement' | 'cleanup'
 
 export type VoiceSession = {
   id: string

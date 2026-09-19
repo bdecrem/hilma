@@ -189,11 +189,12 @@ export type TopicKind =
   | 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
   | 'book' | 'mini' | 'general'
   | 'guest_lesson' | 'immersion' | 'ask'
+  | 'infinity'
   | 'lesson'
 
 export const ALL_TOPIC_KINDS: TopicKind[] = [
   'chat', 'web', 'audio', 'video', 'paste', 'fallback', 'book', 'mini', 'general',
-  'guest_lesson', 'immersion', 'ask',
+  'guest_lesson', 'immersion', 'ask', 'infinity',
 ]
 
 const VIDEO_HOSTS = /^(?:[\w-]+\.)*(?:youtube\.com|youtu\.be|vimeo\.com)$/i

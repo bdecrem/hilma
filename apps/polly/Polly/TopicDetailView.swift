@@ -46,6 +46,11 @@ struct TopicDetailView: View {
         ZStack {
             PollyTheme.bg.ignoresSafeArea()
 
+            if thread?.isInfinity == true {
+                // Infinity Chat replaces the chat UI with its own home.
+                InfinityHomeView(topicId: topicId)
+                    .environment(session)
+            } else {
             VStack(spacing: 0) {
                 header
 
@@ -94,6 +99,7 @@ struct TopicDetailView: View {
                 PollyComposer(draft: $draft, busy: busy, onSend: send)
 
                 Color.clear.frame(height: 86) // room for floating TabPill
+            }
             }
         }
         .sheet(isPresented: $voicePresented) {
