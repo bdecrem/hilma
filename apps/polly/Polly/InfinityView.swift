@@ -49,7 +49,19 @@ struct InfinityHomeView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .task { await load() }
+        .task {
+            await load()
+            #if targetEnvironment(simulator)
+            // `-OpenInfinityDrill vocab|grammar` — present a drill for the first
+            // cleaned-up chat, for screenshot loops.
+            if let which = UserDefaults.standard.string(forKey: "OpenInfinityDrill"),
+               let ready = chats.first(where: { $0.hasAnalysis }) {
+                UserDefaults.standard.removeObject(forKey: "OpenInfinityDrill")
+                try? await Task.sleep(for: .milliseconds(600))
+                if which == "vocab" { vocabChat = ready } else if which == "grammar" { grammarChat = ready }
+            }
+            #endif
+        }
         .fullScreenCover(isPresented: $talkPresented) {
             VoiceSessionView(mode: "topic", threadId: topicId, title: "Infinity Chat") { sessionId in
                 talkPresented = false
@@ -190,10 +202,10 @@ struct InfinityHomeView: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: symbol).font(.system(size: 12, weight: .semibold))
-                Text(title).font(.system(size: 13.5, weight: .semibold))
+                Text(title).font(.system(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.75)
             }
             .foregroundStyle(PollyTheme.text)
-            .padding(.horizontal, 13).padding(.vertical, 9)
+            .padding(.horizontal, 8).padding(.vertical, 9)
             .frame(maxWidth: .infinity)
             .background(PollyTheme.surface2.opacity(0.7), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
         }
