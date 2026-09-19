@@ -25,9 +25,9 @@ struct PathCard: View {
     let topics: [PollyTopic]
     var onStartCheck: () -> Void
     var onDismiss: () -> Void
-    var onStartOver: () -> Void
+    var onDelete: () -> Void
 
-    @State private var confirmStartOver = false
+    @State private var confirmDelete = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -37,11 +37,11 @@ struct PathCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(PollyTheme.surface))
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(PollyTheme.accentDim, lineWidth: 1))
-        .confirmationDialog("Start over?", isPresented: $confirmStartOver, titleVisibility: .visible) {
-            Button("Remove this path", role: .destructive) { onStartOver() }
+        .confirmationDialog("Delete this path?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete path", role: .destructive) { onDelete() }
             Button("Keep it", role: .cancel) {}
         } message: {
-            Text("Polly forgets this plan and you can talk again for a fresh one. Lessons you've already started stay as topics.")
+            Text("Polly forgets this plan and the card goes back to \"Talk to Polly\". Lessons you've already started stay as topics.")
         }
     }
 
@@ -191,10 +191,10 @@ struct PathCard: View {
     private var menu: some View {
         Menu {
             Button { onStartCheck() } label: { Label("Talk to Polly again", systemImage: "mic") }
-            Button(role: .destructive) { confirmStartOver = true } label: {
-                Label("Start over", systemImage: "arrow.counterclockwise")
-            }
             Button { onDismiss() } label: { Label("Hide", systemImage: "eye.slash") }
+            Button(role: .destructive) { confirmDelete = true } label: {
+                Label("Delete path", systemImage: "trash")
+            }
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 14, weight: .bold))

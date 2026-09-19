@@ -267,6 +267,7 @@ struct TopicsView: View {
         }
         .sheet(isPresented: $showNewTopic) {
             NewTopicSheet(
+                showPathOption: path?.isPlaced != true,
                 onStartPath: {
                     showNewTopic = false
                     // Let the sheet finish dismissing before the full-screen
@@ -324,6 +325,14 @@ struct TopicsView: View {
                     communityPresented = true
                 }
             }
+            // `-OpenNewTopic 1` — open the + sheet for screenshot loops.
+            if UserDefaults.standard.bool(forKey: "OpenNewTopic") {
+                UserDefaults.standard.removeObject(forKey: "OpenNewTopic")
+                Task {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    showNewTopic = true
+                }
+            }
             // `-OpenPlacement 1` — straight into the level check (add
             // `-PlacementSession <id>` to skip the call; see PlacementFlowView).
             if UserDefaults.standard.bool(forKey: "OpenPlacement") {
@@ -379,14 +388,6 @@ struct TopicsView: View {
                     } else {
                         Text(option.label)
                     }
-                }
-            }
-            // The hidden path card's way back.
-            if path?.cardDismissed == true {
-                Divider()
-                Button { setPathCardDismissed(false) } label: {
-                    Label(path?.isPlaced == true ? "Show my path card" : "Show \"Talk to Polly\"",
-                          systemImage: "point.topleft.down.to.point.bottomright.curvepath")
                 }
             }
         } label: {
@@ -499,7 +500,7 @@ struct TopicsView: View {
                     PathCard(path: path, topics: topics,
                              onStartCheck: { placementPresented = true },
                              onDismiss: { setPathCardDismissed(true) },
-                             onStartOver: { startOver() })
+                             onDelete: { deleteLearningPath() })
                         .padding(.top, 2)
                         .padding(.bottom, 6)
                 }
@@ -645,9 +646,9 @@ struct TopicsView: View {
         }
     }
 
-    /// Remove the path entirely so a fresh level check can rebuild it. The card
+    /// Delete the path entirely so a fresh level check can rebuild it. The card
     /// flips back to "Talk to Polly"; started lessons return to the topic list.
-    private func startOver() {
+    private func deleteLearningPath() {
         Task {
             if let fresh = try? await PollyAPI.shared.deletePath() {
                 withAnimation(.easeOut(duration: 0.2)) { path = fresh }
@@ -967,6 +968,8 @@ let quickChatPlaceholderTitle = "Quick chat"
 /// bare — chat and the context sheet give it substance later. The footer
 /// offers the no-setup path: just start chatting.
 struct NewTopicSheet: View {
+    /// Show the "learning path" shortcut — only when the learner isn't on one.
+    let showPathOption: Bool
     /// Tapped the "learning path" shortcut — the caller presents the level check.
     let onStartPath: () -> Void
     /// Called after the topic was created server-side — (id, title).
@@ -985,30 +988,6 @@ struct NewTopicSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    Button { onStartPath() } label: {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle().fill(PollyTheme.accentSoft).frame(width: 38, height: 38)
-                                DodoMiniMark(size: 31)
-                            }
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text("Build a learning path")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(PollyTheme.text)
-                                Text("Talk to Polly for two minutes; she plans your lessons.")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(PollyTheme.text3)
-                            }
-                            Spacer(minLength: 0)
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(PollyTheme.text3)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                }
                 Section("Title") {
                     TextField("What are you learning?", text: $title, axis: .vertical)
                         .lineLimit(1...3)
@@ -1037,6 +1016,23 @@ struct NewTopicSheet: View {
                     Section { Text(errorMessage).foregroundStyle(.red) }
                 }
                 Section {
+                    if showPathOption {
+                        Button { onStartPath() } label: {
+                            VStack(spacing: 3) {
+                                Text("Build a learning path")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(PollyTheme.accent)
+                                Text("Talk to Polly and she plans your lessons.")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(PollyTheme.text3)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(busy || quickBusy)
+                        .listRowBackground(Color.clear)
+                    }
                     Button { startQuickChat() } label: {
                         VStack(spacing: 3) {
                             Text(quickBusy ? "Starting…" : "Just chat")

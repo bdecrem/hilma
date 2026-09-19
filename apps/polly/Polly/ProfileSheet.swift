@@ -35,6 +35,7 @@ struct ProfileSheet: View {
     @State private var isGuest = false
     @State private var showClaim = false
     @State private var showIntro = false
+    @State private var pathCardHidden = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -96,6 +97,7 @@ struct ProfileSheet: View {
             await session.refreshProgress()
             do { imessageHandles = try await PollyAPI.shared.listImessageHandles() }
             catch {}
+            if let p = try? await PollyAPI.shared.getPath() { pathCardHidden = p.cardDismissed }
             if case let .signedIn(user) = session.state { isGuest = user.isGuest }
             do {
                 let status = try await PollyAPI.shared.dailyCardStatus()
@@ -522,6 +524,13 @@ struct ProfileSheet: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
+                    if pathCardHidden {
+                        SettingsDivider()
+                        SettingsRow(label: "Show learning path card") {
+                            pathCardHidden = false
+                            Task { _ = try? await PollyAPI.shared.setPathCardDismissed(false) }
+                        }
+                    }
                     SettingsDivider()
                     SettingsRow(label: "See the intro again") {
                         showIntro = true
