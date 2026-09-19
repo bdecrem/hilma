@@ -56,7 +56,7 @@ struct InfinityHomeView: View {
         .task {
             await load()
             #if targetEnvironment(simulator)
-            // `-OpenInfinityDrill vocab|grammar` — present a drill for the first
+            // `-OpenInfinityDrill vocab|grammar|quiz|cleanup` — present a drill for the first
             // cleaned-up chat, for screenshot loops.
             if let which = UserDefaults.standard.string(forKey: "OpenInfinityDrill"),
                let ready = chats.first(where: { $0.hasAnalysis }) {
@@ -65,6 +65,7 @@ struct InfinityHomeView: View {
                 if which == "vocab" { vocabChat = ready }
                 else if which == "grammar" { grammarChat = ready }
                 else if which == "quiz" { await startQuiz(ready) }
+                else if which == "cleanup" { await startCleanup(ready) }
             }
             #endif
         }

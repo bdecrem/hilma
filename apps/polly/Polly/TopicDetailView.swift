@@ -229,6 +229,14 @@ struct TopicDetailView: View {
                 finalReviewVariant = .full
                 finalReviewPresented = true
             }
+            // `-OpenInfinitySessions 1` — the Infinity study sheet (TALK, the
+            // chats with Clean up / Vocab / Grammar); `-OpenInfinityDrill`
+            // then opens a drill from inside it.
+            if UserDefaults.standard.bool(forKey: "OpenInfinitySessions") {
+                UserDefaults.standard.removeObject(forKey: "OpenInfinitySessions")
+                try? await Task.sleep(for: .milliseconds(600))
+                showInfinitySessions = true
+            }
             // `-OpenTopicQuotes 1` — this topic's Quotes shelf.
             if UserDefaults.standard.bool(forKey: "OpenTopicQuotes") {
                 UserDefaults.standard.removeObject(forKey: "OpenTopicQuotes")

@@ -234,6 +234,22 @@ in the studied language must be correct in that language — Dodo's "same idea,
 any wording" bar only applies to English-side answers.
 `npx tsx scripts/polly/quality-bench.ts <cleanup|plan|cards|grammar|judge>`.
 
+## The screenshot set (2026-09-19)
+
+`scripts/polly/shots-seed.mjs <dir>` makes a throwaway demo guest on
+production (a five-lesson path from a canned level check, plus a copy of
+Bart's topics, Infinity chats and cards; SQL through the supabase CLI), and
+`scripts/polly/shots.sh <dir>` takes ~30 screens on the booted iOS simulator
+with launch hooks only — first run, Topics, Infinity Chat (chat window, study
+sheet, vocab, grammar, quiz, clean-up walk, talk), a path lesson, a guest
+lesson, Peck (sets, results, miss clinic), the level check, profile, language
+switcher — and a contact sheet. `--delete` on the seed script removes the
+account. Hooks added for it: `-OpenInfinitySessions 1` (the study sheet, with
+`-OpenTopic <infinity id>`) and `-OpenInfinityDrill cleanup`. Two things it
+ran into: the login route lowercases the identifier while guest names keep
+their case (the demo signs in by email), and a copied chat's
+`analysis.card_ids` must be remapped or its quiz comes back empty.
+
 ## iMessage
 
 Polly shares the iMessage inbox with Dodo and Onething: one BlueBubbles
