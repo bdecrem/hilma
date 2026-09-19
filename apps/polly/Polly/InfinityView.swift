@@ -167,7 +167,7 @@ struct InfinityHomeView: View {
             }
             if chat.hasAnalysis {
                 VStack(spacing: 8) {
-                    if chat.hasQuiz {
+                    if chat.hasAnalysis {
                         Button { Task { await startQuiz(chat) } } label: {
                             HStack(spacing: 8) {
                                 if quizPreparingId == chat.id {
@@ -369,14 +369,13 @@ struct InfinityChatBar: View {
         let n = chats.count
         let tail = n > 1 ? " · \(n) chats" : ""
         if a.isMastered { return "Mastered" + tail }
-        if a.hasQuiz { return "Quiz to master it" + tail }
-        if a.isCleanedUp || a.hasAnalysis { return "Cleaned up" + tail }
+        if a.hasAnalysis { return "Quiz to master it" + tail }
         return "Ready to clean up" + tail
     }
     private var cta: String {
         guard let a = active else { return "Start" }
-        if a.hasQuiz && !a.isMastered { return "Quiz" }
-        if a.hasAnalysis { return "Study" }
+        if a.hasAnalysis && !a.isMastered { return "Quiz" }
+        if a.isMastered { return "Study" }
         return "Clean up"
     }
 

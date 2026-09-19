@@ -249,8 +249,17 @@ type QuizQuestion = {
 export async function buildInfinityQuiz(userId: string, chatId: string): Promise<{ mode: string; thread_id: string; total: number; questions: QuizQuestion[] } | null> {
   const chat = await getInfinityChat(userId, chatId)
   if (!chat || !chat.analysis) return null
-  const ids = chat.analysis.card_ids ?? []
-  if (ids.length === 0) return null
+  let ids = chat.analysis.card_ids ?? []
+  // Retrofit: conversations cleaned up before quizzes existed have no deck —
+  // build it now (once) and remember it.
+  if (ids.length === 0) {
+    ids = await generateInfinityCards(userId, chat.thread_id, chat.analysis)
+    if (ids.length === 0) return null
+    const analysis: InfinityAnalysis = { ...chat.analysis, card_ids: ids }
+    await pollySupabase().from('polly_infinity_chats')
+      .update({ analysis, updated_at: new Date().toISOString() })
+      .eq('id', chatId).eq('user_id', userId)
+  }
   const { data } = await pollySupabase()
     .from('polly_flash_cards')
     .select('id, question, answer, distractors, cloze_text, cloze_answer, rating')
