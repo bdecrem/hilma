@@ -37,6 +37,11 @@ struct ProfileSheet: View {
     @State private var showIntro = false
     @State private var pathCardHidden = false
     private var studyUI: Bool { UILanguage.shared.studyUI }
+    private var currentLanguageCode: String? {
+        if case let .signedIn(user) = session.state { return user.language }
+        return nil
+    }
+    @State private var showLanguages = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -64,6 +69,10 @@ struct ProfileSheet: View {
         }
         .sheet(isPresented: $showVoice) {
             VoiceSettingsView()
+        }
+        .sheet(isPresented: $showLanguages) {
+            LanguageSwitcherView()
+                .environment(session)
         }
         .sheet(isPresented: $showIntro) {
             OnboardingView(mode: .replay)
@@ -93,6 +102,12 @@ struct ProfileSheet: View {
             Text(dailyCardError ?? "")
         }
         .task {
+            #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
+            // `-OpenLanguages 1` — straight to the language switcher.
+            if UserDefaults.standard.bool(forKey: "OpenLanguages"), LaunchOnce.take("OpenLanguages") {
+                showLanguages = true
+            }
+            #endif
             // Refresh user-wide progress so the ring + bar reflect any star
             // earned right before this sheet was opened.
             await session.refreshProgress()
@@ -500,6 +515,30 @@ struct ProfileSheet: View {
             }
             SettingsSection(label: "Learning") {
                 SettingsCard {
+                    // The language switcher — each language is its own
+                    // profile (LanguageSwitcherView.swift).
+                    Button { showLanguages = true } label: {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Language")
+                                    .font(.system(size: 15)).tracking(-0.2).foregroundStyle(PollyTheme.text)
+                                Text("Switch to another language, or start one")
+                                    .font(.system(size: 12.5)).foregroundStyle(PollyTheme.text3)
+                            }
+                            Spacer()
+                            if let code = currentLanguageCode, let lang = PollyLanguage(rawValue: code) {
+                                Text("\(lang.flag) \(lang.name)")
+                                    .font(.system(size: 15)).tracking(-0.2).foregroundStyle(PollyTheme.text2)
+                            }
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(PollyTheme.text3)
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 10)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    SettingsDivider()
                     if let langName = UILang.studyLanguageName(session) {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {

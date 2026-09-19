@@ -42,12 +42,18 @@ struct RootView: View {
     var body: some View {
         ZStack {
             content
+            if let code = session.languageFlip {
+                LanguageFlipView(code: code)
+                    .transition(.opacity)
+                    .zIndex(2)
+            }
             if showSplash {
                 LaunchSplashView()
                     .transition(.opacity)
-                    .zIndex(1)
+                    .zIndex(3)
             }
         }
+        .animation(.easeOut(duration: 0.35), value: session.languageFlip)
         .task {
             #if targetEnvironment(simulator)
             // `-ExportPeckWorld <host dir>` — write the Peck island scenery
@@ -90,8 +96,11 @@ struct RootView: View {
                     showLogin = true
                 }
             }
-        case .signedIn:
+        case .signedIn(let user):
+            // Keyed on the user: switching language is switching profile
+            // (Session.switchLanguage), and every tab must start fresh.
             MainTabsView()
+                .id(user.id)
         }
     }
 }

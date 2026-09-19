@@ -169,6 +169,51 @@ path from it and writes the lessons one at a time. Backend
   `-PlacementSession <voice session id>` (skips the call and builds the plan
   from that transcript).
 
+## The marquee in the studied language (2026-09-19)
+
+Polly stays an English app; only its marquee — tab names, main-screen titles
+and section headers, hero cards and their call to action, celebrations, level
+names, "Correct!" — renders in the language being studied, with a Settings
+toggle back to English. Settings, functional UI (editing, quiz mechanics,
+menus, sheets), dialogs, errors and long prose stay English on purpose. The
+scope, the rules, the voice and the glossary are in
+[`LOCALIZATION.md`](LOCALIZATION.md) — read it before adding a marquee string.
+Mechanism: `Polly/LangUI.swift` — a global `L("Done", "Fatto", "Terminé",
+"완료")` reading `UILanguage.shared` (`@Observable`; `Session.state`'s didSet
+feeds it the signed-in language), so any body that calls `L` re-renders when
+the toggle flips or the language switches. No .strings files.
+
+## Language profiles — the switcher (2026-09-19)
+
+Profile → Learning → **Language** opens `LanguageSwitcherView`: a tile per
+language, like Netflix's "Who's watching?". Each language is its own profile:
+its own `polly_users` row (schema 007: `account_id` → the root row that holds
+the credentials or the guest name; `last_profile_id` on the root), so topics,
+cards, Peck, the path, the streak and the level are all separate without any
+query knowing about languages. `src/lib/polly/profiles.ts`:
+- `GET /api/polly/languages` → the three tiles (`started`, `active`, level,
+  topic count, streak).
+- `POST /api/polly/languages/switch { language }` → finds or creates the
+  sibling profile (username `<root>+<lang>`, random password, a copy of the
+  avatar / guest flag / voice prefs, its `polly_courses` row) and re-issues
+  the session cookie for it. A started language switches on tap; a new one
+  asks "Start French from scratch?" first.
+- `/auth/me` reports the root's username for a sibling; a password login lands
+  in `last_profile_id`; claiming a guest puts the email on the root and clears
+  `is_guest` on every profile; the avatar is written account-wide.
+- App: `Session.switchLanguage(to:)` swaps the user, clears `ScreenCache` and
+  sets `languageFlip`; `RootView` keys `MainTabsView` on the user id (every
+  tab starts fresh, open sheets go down with it) and plays `LanguageFlipView`
+  (flag + hello) — it starts inside the switcher sheet the moment a tile is picked and stays over the new tabs ~2 s.
+- Not shared between profiles (yet): iMessage pairing and the daily card live
+  on the profile that set them up.
+- Checks: `node scripts/polly/language-switch-check.mjs [base]` (guest →
+  topic → French → isolation → back; prints the cleanup SQL). Launch hook
+  `-StartTab flash -OpenProfile 1 -OpenLanguages 1` opens the switcher and `-AutoSwitchLanguage fr` flips as soon as
+  the tiles load.
+- The old `POST /api/polly/courses` (flip `active_course_id` in place, data
+  shared) is unused by the app; don't build on it.
+
 ## iMessage
 
 Polly shares the iMessage inbox with Dodo and Onething: one BlueBubbles

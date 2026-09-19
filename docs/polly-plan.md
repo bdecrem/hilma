@@ -43,3 +43,4 @@ It starts ~80% identical and is expected to diverge. Working name: Polly (parrot
 4. Diverge: language picker, courses, linear chapters, language-shaped cards; trim the non-v1 features. **Started 2026-09-17:** `polly_courses` (schema 002), first-run language + name flow, tutor prompt knows the language. Chapters, language-shaped cards and the trim are next.
 5. App Store Connect record, profiles, TestFlight. **Done 2026-09-17 (iOS)** — public link https://testflight.apple.com/join/5apKPyf7; Catalyst waits on a Mac Installer certificate (see apps/polly/CLAUDE.md).
 6. Agentic Learning Mode — voice level check → a five-lesson path → lessons as a topic kind with Talk / Words / Grammar steps. **Done 2026-09-18** (see apps/polly/CLAUDE.md).
+7. The marquee in the studied language + language profiles (the Netflix-style switcher). **Done 2026-09-19** (see apps/polly/LOCALIZATION.md and apps/polly/CLAUDE.md).

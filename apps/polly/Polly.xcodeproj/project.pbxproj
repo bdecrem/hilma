@@ -59,6 +59,7 @@
 		9068795F61744A66028D7F55 /* BookSummaryReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECD1156DB725546F7B762EB7 /* BookSummaryReaderView.swift */; };
 		92FEE454B28141C659B3D545 /* voice-sage.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1662FDE04FBFE09922F01C1A /* voice-sage.m4a */; };
 		9360C0CA51EF96D795354059 /* DoubleThumbsUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CBE18142AA16E4877C38ABE /* DoubleThumbsUp.swift */; };
+		93B2F5188D61E4BC2B7631A6 /* LanguageSwitcherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE4A20346522BCA2215BDD6D /* LanguageSwitcherView.swift */; };
 		961731A09B264B7802B31526 /* ScreenCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 481A11E9BD993B274550AD9C /* ScreenCache.swift */; };
 		966BBEA5540A4A169600C7B0 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */; };
 		986CF240300248D6B3C06340 /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA3A6EE6D565D4FB1674D32 /* ReviewsSheet.swift */; };
@@ -175,6 +176,7 @@
 		D7071DF7D3534266FEC5705F /* voice-cinder.m4a */ = {isa = PBXFileReference; path = "voice-cinder.m4a"; sourceTree = "<group>"; };
 		DC3EC88BC813F4C9286BCF6B /* voice-meridian.m4a */ = {isa = PBXFileReference; path = "voice-meridian.m4a"; sourceTree = "<group>"; };
 		DC90AAA532DC5D24D0A00F17 /* PathViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathViews.swift; sourceTree = "<group>"; };
+		DE4A20346522BCA2215BDD6D /* LanguageSwitcherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageSwitcherView.swift; sourceTree = "<group>"; };
 		DFE2838F934397636E6E186E /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		E5B099CB79824BBD0F6C37B7 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
 		E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
@@ -243,6 +245,7 @@
 				28B5C5B91D28C8C93B00BFB1 /* InfinityModels.swift */,
 				6E93235A256C484000829EAC /* InfinityView.swift */,
 				2701EDEA08D8354D6CA26CE4 /* Info.plist */,
+				DE4A20346522BCA2215BDD6D /* LanguageSwitcherView.swift */,
 				7D227AFDDE07040EB37AC37A /* LangUI.swift */,
 				AE59ECE4EA76264D43506C62 /* LessonSheet.swift */,
 				E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */,
@@ -456,6 +459,7 @@
 				DCFEB7CC5B74E375BBC28B54 /* InfinityModels.swift in Sources */,
 				318A69764E260E811D8049D0 /* InfinityView.swift in Sources */,
 				EBEE4FB1B109E72AA7F4912D /* LangUI.swift in Sources */,
+				93B2F5188D61E4BC2B7631A6 /* LanguageSwitcherView.swift in Sources */,
 				A737FE302A68BB0B99F110CF /* LessonSheet.swift in Sources */,
 				4F751749FDDCD82F8CCE9984 /* LevelUpView.swift in Sources */,
 				8488F95FD935AED50C034543 /* LiveVoiceClient.swift in Sources */,
@@ -533,7 +537,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -647,7 +651,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

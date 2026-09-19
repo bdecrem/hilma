@@ -100,6 +100,39 @@ final class Session {
         ScreenCache.save(user, key: ScreenCache.sessionUser)
     }
 
+    /// The language being flipped into; RootView plays its hello over the
+    /// rebuilt tabs while this is set.
+    var languageFlip: String? = nil
+
+    /// Leave this language and sign into another — each language is its own
+    /// profile on the account (LanguageSwitcherView.swift). The server
+    /// re-issues the session cookie for that profile; here the new user is
+    /// swapped in and everything cached for the old one is dropped. RootView
+    /// keys the tabs on the user id, so every screen starts fresh.
+    /// Returns an error message, or nil when the switch happened.
+    func switchLanguage(to code: String) async -> String? {
+        do {
+            let user = try await PollyAPI.shared.switchLanguage(code)
+            ScreenCache.clear()
+            progress = .zero
+            pendingLevelUp = nil
+            hasLoadedProgressOnce = false
+            languageFlip = code
+            state = .signedIn(user)
+            ScreenCache.save(user, key: ScreenCache.sessionUser)
+            await refreshProgress()
+            // Long enough for the open sheets to drop away and the hello
+            // to be seen over the new tabs.
+            try? await Task.sleep(for: .milliseconds(2200))
+            languageFlip = nil
+            return nil
+        } catch PollyAPIError.http(_, let msg) where msg != nil {
+            return msg
+        } catch {
+            return "Couldn't switch languages. Check the connection and try again."
+        }
+    }
+
     func logout() async {
         try? await PollyAPI.shared.logout()
         state = .signedOut

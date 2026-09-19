@@ -171,6 +171,22 @@ final class PollyAPI {
         return res.user
     }
 
+    /// The language switcher's tiles: every language Polly teaches, which
+    /// ones this account studies, and the active one.
+    func languageProfiles() async throws -> [LanguageProfile] {
+        struct Response: Codable { let languages: [LanguageProfile] }
+        let res: Response = try await get("/api/polly/languages")
+        return res.languages
+    }
+
+    /// Sign out of this language and into another. The response carries the
+    /// new profile's session cookie (URLSession stores it) and its user.
+    func switchLanguage(_ code: String) async throws -> PollyUser {
+        struct Body: Encodable { let language: String }
+        let res: LoginResponse = try await post("/api/polly/languages/switch", body: Body(language: code))
+        return res.user
+    }
+
     func logout() async throws {
         let _: EmptyResponse = try await post("/api/polly/auth/logout", body: EmptyBody())
         clearCookies()

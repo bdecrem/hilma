@@ -182,8 +182,7 @@ struct FlashTabView: View {
                                               peckDue: st.peckDue, peckDaysLeft: st.peckDaysLeft)
             }
             // `-OpenProfile 1` — straight to the settings sheet.
-            if UserDefaults.standard.bool(forKey: "OpenProfile") {
-                UserDefaults.standard.removeObject(forKey: "OpenProfile")
+            if UserDefaults.standard.bool(forKey: "OpenProfile"), LaunchOnce.take("OpenProfile") {
                 showProfile = true
             }
             // `-OpenDecks 1` — straight to the deck manager.
