@@ -52,8 +52,10 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-7',
+      model: 'claude-opus-5',
       max_tokens: maxTokens,
+      // Opus 5 thinks by default; the caller's max_tokens is sized for the answer alone.
+      thinking: { type: 'disabled' },
       system: systemPrompt,
       messages,
     }),

@@ -89,8 +89,9 @@ export async function askWithTopic(opts: AskOptions): Promise<AskResult> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-7',
+      model: 'claude-opus-5',
       max_tokens: opts.maxTokens ?? 1200,
+      thinking: { type: 'disabled' },
       system: systemBlocks,
       messages,
     }),

@@ -18,7 +18,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 
 const PLAN_MODEL = 'claude-haiku-4-5'
-const RANK_MODEL = 'claude-sonnet-4-6'
+const RANK_MODEL = 'claude-sonnet-5'
 
 // Length bands ("new short / medium / long"). Each band collects a slightly
 // wider net than its target so the ranker has room to choose, and the rank
@@ -258,6 +258,9 @@ async function rankPicks(
     const res = await anthropic().messages.create({
       model: RANK_MODEL,
       max_tokens: 500,
+      // A short ranking: no thinking (Sonnet 5 thinks by default, and
+      // thinking tokens would eat this small budget).
+      thinking: { type: 'disabled' },
       system: rankSystem(band),
       messages: [
         {
@@ -266,7 +269,7 @@ async function rankPicks(
         },
       ],
     })
-    const block = res.content[0]
+    const block = res.content.find((b) => b.type === 'text')
     const raw = block?.type === 'text' ? block.text : ''
     const parsed = extractJson(raw)
     if (!Array.isArray(parsed)) return null

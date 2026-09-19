@@ -73,7 +73,7 @@ export function isPollyLesson(thread: Pick<PollyThread, 'kind'>): boolean {
   return thread.kind === 'lesson'
 }
 
-const LESSON_MODEL = process.env.POLLY_LESSON_MODEL || 'sonnet-4-6'
+const LESSON_MODEL = process.env.POLLY_LESSON_MODEL || 'sonnet-5'
 
 /// Pull the lesson plan out of the transcript. Pure LLM call; nothing saved.
 export async function extractLesson(

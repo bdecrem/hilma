@@ -16,12 +16,14 @@ import Anthropic from '@anthropic-ai/sdk'
 // ---------------------------------------------------------------------------
 // Registry
 
-export type LlmModelKey = 'sonnet-4-6' | 'opus-4-8' | 'opus-5' | 'fable-5-1' | 'glm-5.2'
+export type LlmModelKey = 'sonnet-5' | 'opus-5' | 'fable-5-1' | 'glm-5.2'
 
 /** Retired keys still sent by older clients (stored iOS picker selections),
  *  mapped onto their successor. */
 const MODEL_ALIASES: Record<string, LlmModelKey> = {
   'fable-5': 'fable-5-1',
+  'opus-4-8': 'opus-5',
+  'sonnet-4-6': 'sonnet-5',
 }
 
 type ModelSpec = {
@@ -52,33 +54,30 @@ type ModelSpec = {
   supportsForcedToolChoice?: boolean
 }
 
-// 'sonnet-4-6' is the legacy default — requests that don't name a model
-// (the web app) keep today's exact behavior. The iOS/macOS picker exposes
-// the other three.
+// Always the latest of each tier (Bart, 2026-09-19): Sonnet 5, Opus 5,
+// Fable 5.1. Retired keys resolve through MODEL_ALIASES. 'sonnet-5' is the
+// default — requests that don't name a model (the web app, the background
+// jobs) run on it. The iOS/macOS picker exposes the other three.
 const MODELS: Record<LlmModelKey, ModelSpec> = {
-  'sonnet-4-6': {
+  'sonnet-5': {
     provider: 'anthropic',
-    apiModel: 'claude-sonnet-4-6',
-    label: 'Sonnet 4.6',
-    // 1M-token context window so full transcripts / books fit.
-    betaHeaders: ['context-1m-2025-08-07'],
-    contextCharBudget: 3_000_000,
-  },
-  'opus-4-8': {
-    provider: 'anthropic',
-    apiModel: 'claude-opus-4-8',
-    label: 'Opus 4.8',
-    // Opus 4.8 runs without thinking unless asked; adaptive is the
-    // recommended default. 1M context is standard, no beta needed.
+    apiModel: 'claude-sonnet-5',
+    label: 'Sonnet 5',
+    // Thinking is on by default on Sonnet 5 (4.6 ran without); 'medium'
+    // effort is about Sonnet 4.6 at 'high'. 1M context is standard — the old
+    // context-1m beta header is gone. Thinking tokens count against
+    // max_tokens, hence the floor. New tokenizer (~30% more tokens for the
+    // same text), so the char budget is lower than 4.6's 3M.
     thinking: { type: 'adaptive' },
+    effort: 'medium',
     maxTokensFloor: 8192,
-    contextCharBudget: 3_000_000,
+    contextCharBudget: 2_400_000,
   },
   'opus-5': {
     provider: 'anthropic',
     apiModel: 'claude-opus-5',
     label: 'Opus 5',
-    // Same request shape as Opus 4.8 per the Models API: adaptive thinking
+    // Adaptive thinking
     // (budget_tokens unsupported), 1M context standard, full effort range.
     thinking: { type: 'adaptive' },
     maxTokensFloor: 8192,
@@ -92,7 +91,7 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     effort: 'medium',
     maxTokensFloor: 8192,
     // Permitted fallback targets on Fable 5.1 are opus-4-8 and opus-5.
-    refusalFallback: 'opus-4-8',
+    refusalFallback: 'opus-5',
     supportsForcedToolChoice: false,
     contextCharBudget: 3_000_000,
   },
@@ -108,11 +107,10 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
   },
 }
 
-/** Keys the clients may select. The legacy default stays internal; 'opus-4-8'
- *  stays in the registry for old clients but the picker now offers Opus 5. */
+/** Keys the clients may select. The default (Sonnet 5) stays internal. */
 export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-5', 'fable-5-1', 'glm-5.2']
 
-export const DEFAULT_MODEL: LlmModelKey = 'sonnet-4-6'
+export const DEFAULT_MODEL: LlmModelKey = 'sonnet-5'
 
 export function isModelKey(key: string): key is LlmModelKey {
   return key in MODELS || key in MODEL_ALIASES

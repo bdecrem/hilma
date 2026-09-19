@@ -23,6 +23,7 @@ export async function opusAsk(opts: {
   videoContext?: VideoContext
   system?: string              // override the default spoken-prose persona
   maxTokens?: number
+  /** Ignored since the Opus 5 move (non-default sampling params are rejected). */
   temperature?: number
 }): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -55,9 +56,11 @@ export async function opusAsk(opts: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-7',
+      model: 'claude-opus-5',
       max_tokens: opts.maxTokens ?? 700,
-      temperature: opts.temperature ?? 1,
+      // Opus 5 rejects non-default sampling params and thinks by default;
+      // these are short spoken answers sized without thinking.
+      thinking: { type: 'disabled' },
       system: systemBlocks,
       messages,
     }),

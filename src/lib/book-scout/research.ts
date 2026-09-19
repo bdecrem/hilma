@@ -61,7 +61,7 @@ When done, output ONLY a JSON array (no prose before or after), each item exactl
   // couple of minutes.
   for (let i = 0; i < 8; i++) {
     const res = await anthropic().messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       max_tokens: 12000,
       messages,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }],
@@ -113,8 +113,9 @@ Write a concise TASTE PROFILE for this reader that a book scout can reuse to rec
 Output ONLY the profile prose — no preamble, no headings.`
 
   const res = await anthropic().messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 700,
+    thinking: { type: 'disabled' },
     messages: [{ role: 'user', content: prompt }],
   })
   return res.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join(' ').trim()
@@ -151,7 +152,7 @@ When done, output ONLY a JSON array (no prose, no fences), 8 items:
   let final: Anthropic.Message | null = null
   for (let i = 0; i < 8; i++) {
     const res = await anthropic().messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-sonnet-5',
       max_tokens: 6000,
       messages,
       tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 6 }],

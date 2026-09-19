@@ -48,8 +48,9 @@ async function sonnetReview(apiKey: string, gridText: string, haikuName: string,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
+        model: 'claude-sonnet-5',
         max_tokens: 200,
+        thinking: { type: 'disabled' },
         messages: [{ role: 'user', content: `You are the senior curator for "Now What?" — a generative pixel art installation exploring what humans do after AGI. Art, science, community, connection, nature, play, building a better future.
 
 A fast screener named this 26x10 pixel grid "${haikuName}" and said: "${haikuReason}"

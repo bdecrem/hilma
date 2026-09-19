@@ -158,7 +158,7 @@ const PART_CONCURRENCY = 8
 const BOOK_WORD_THRESHOLD = 15_000
 // Fast, cheap, 3M-context model for the map digests + coverage checks. The
 // final writing (the reduce) stays on the user's chosen model.
-const MAP_MODEL = 'sonnet-4-6'
+const MAP_MODEL = 'sonnet-5'
 
 /// The anti-slop spoken voice, shared by the single-pass and map-reduce paths
 /// so every summary sounds the same (see feedback: no AI-slop / TED-talk voice).

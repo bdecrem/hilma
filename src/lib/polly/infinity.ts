@@ -9,8 +9,8 @@ import { llmComplete } from './llm'
 import { activeLanguage, LANGUAGES, type LanguageCode } from './language'
 import { pollySupabase } from './supabase'
 
-const INFINITY_MODEL = process.env.POLLY_INFINITY_MODEL || 'sonnet-4-6'
-const TITLE_MODEL = process.env.POLLY_INFINITY_TITLE_MODEL || 'sonnet-4-6'
+const INFINITY_MODEL = process.env.POLLY_INFINITY_MODEL || 'sonnet-5'
+const TITLE_MODEL = process.env.POLLY_INFINITY_TITLE_MODEL || 'sonnet-5'
 export const MAX_FIXES = 5
 
 /// "Infinity Chat" in the language the learner is studying (the topic title).

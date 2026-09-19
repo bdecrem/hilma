@@ -335,6 +335,37 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 - `DISCORD_*` — Discord bot credentials
 - `SENDGRID_API_KEY` — SendGrid email API
 
+## Claude models — always the latest of each tier
+
+Standing rule (Bart, 2026-09-19): every Claude call uses the newest model of
+its tier — **Fable 5.1 `claude-fable-5-1`**, **Opus 5 `claude-opus-5`**,
+**Sonnet 5 `claude-sonnet-5`**, **Haiku 4.5 `claude-haiku-4-5`**. When a new
+generation ships, move everything in one pass (code defaults, this file,
+`.env.local`, Vercel env) — don't leave a tier split across generations.
+
+- **Defaults live in code, not in env.** `.env.local` and Vercel should carry
+  a `*_MODEL` override only to deviate on purpose; a pinned env var is how a
+  stale model survives a migration. As of 2026-09-19 `.env.local` has none.
+- **Dodo and Polly** go through a registry: `src/lib/f2/llm.ts` /
+  `src/lib/polly/llm.ts` (`MODELS`, `DEFAULT_MODEL` = `sonnet-5`). Retired keys
+  that old app builds or env vars still send (`sonnet-4-6`, `opus-4-8`,
+  `fable-5`) resolve through `MODEL_ALIASES`, so moving a tier = one new
+  `MODELS` entry + one alias. `npx tsx scripts/polly/llm-smoke.ts` runs the
+  default, the aliases and Fable through the forced-tool path the chat uses.
+- **Request shape on the 5 generation** (what bit us or would have): Sonnet 5
+  and Opus 5 *think by default* and thinking tokens count against
+  `max_tokens` — a call with a small budget either sets
+  `thinking: { type: 'disabled' }` (short rankings, judges, extractions) or
+  gets a floor of 8192 (the registry's `maxTokensFloor`); thinking blocks come
+  first in `content`, so read the text with `content.find(b => b.type ===
+  'text')`, never `content[0]`; non-default `temperature` / `top_p` / `top_k`
+  and `budget_tokens` are a 400; the `context-1m` beta header is gone (1M is
+  standard); Fable 5.1 rejects forced `tool_choice` (the registry emulates it).
+  Sonnet 5's tokenizer makes ~30% more tokens from the same text.
+- Not covered by the 2026-09-19 pass (retired one-offs, left as they were):
+  `scripts/` Amber/noon/moltbook scripts, `apps/macplus/agent-*`,
+  `apps/design-agent`. Move them if they come back to life.
+
 ## Sending Email
 
 **When asked to send email, use SendGrid.** Don't use Gmail MCP tools (those only create drafts). Send via curl:
