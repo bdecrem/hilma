@@ -116,11 +116,22 @@ export function addDays(day: string, n: number): string {
 
 // ---------- phones ----------
 
+/// E.164 from what people type. The phone keypad on an iPhone hides "+" behind
+/// the +*# key, so a number outside the US arrives as "44 7911 123456",
+/// "0044 7911 123456" or "+44 (0)7911 123456" as often as with a plus — all
+/// three are the same number. A national number with its trunk zero
+/// ("07911 123456") says nothing about the country and is refused; the form
+/// asks for the country code.
 export function normalizePhone(raw: string): string | null {
-  const digits = raw.replace(/[^\d]/g, '')
+  const t = raw.trim().replace(/\(0\)/g, '')
+  const digits = t.replace(/[^\d]/g, '')
+  const intl = (d: string) => (d.length >= 8 && d.length <= 15 && !d.startsWith('0') ? `+${d}` : null)
+  if (t.startsWith('+')) return intl(digits)
+  if (digits.startsWith('00')) return intl(digits.slice(2))
+  if (digits.startsWith('0')) return null
   if (digits.length === 10) return `+1${digits}`
   if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
-  if (digits.length >= 8 && digits.length <= 15 && raw.trim().startsWith('+')) return `+${digits}`
+  if (digits.length >= 11) return intl(digits) // country code typed without the plus
   return null
 }
 

@@ -7,7 +7,12 @@ export const maxDuration = 60
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { phone?: string }
   const phone = normalizePhone(body.phone ?? '')
-  if (!phone) return NextResponse.json({ error: 'Enter a phone number.' }, { status: 400 })
+  if (!phone) {
+    return NextResponse.json(
+      { error: 'Enter your full phone number. Outside the US, start with the country code, like 44 7911 123456 (no leading 0).' },
+      { status: 400 },
+    )
+  }
   try {
     await startCode(phone)
   } catch (e) {

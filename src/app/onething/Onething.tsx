@@ -283,7 +283,10 @@ export default function Onething() {
     } catch { setErr('Network error. Try again.'); return null; }
     finally { setBusy(false); }
   }
-  async function start() { if (await post('/api/onething/auth/start', { phone })) setStage('code'); }
+  async function start() {
+    const j = await post('/api/onething/auth/start', { phone });
+    if (j) { if (j.phone) setPhone(j.phone); setStage('code'); } // show the number as we read it, country code included
+  }
   async function verify() {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // the 10am / 10pm texts follow this clock
     if (await post('/api/onething/auth/verify', { phone, code, tz })) { setCode(''); setStage('phone'); await load(); }
@@ -379,7 +382,7 @@ export default function Onething() {
           )}
           {stage === 'code' && <p className="ot-note">We texted a code to {phone}. <button className="ot-link" onClick={() => { setStage('phone'); setErr(''); }}>Wrong number?</button></p>}
           {err && <p className="ot-err">{err}</p>}
-          <p className="ot-note">iMessage only. No password, nothing to install.</p>
+          <p className="ot-note">iMessage only. No password, nothing to install.{stage === 'phone' && ' Outside the US, start with your country code.'}</p>
         </section>
 
         <p className="ot-caption">Streaks earn points. Points grow a plant.</p>
