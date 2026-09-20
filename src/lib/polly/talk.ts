@@ -72,6 +72,7 @@ const ENGLISH_MARKERS = new Set([
   'it', 'its', "it's", 'about', 'say', 'word', 'words', 'want', 'know', "don't", 'dont', 'went', 'have',
   'not', 'but', 'like', 'there', 'they', 'we', 'will', 'just', 'any', 'all', 'explain', 'difference', 'between',
   'rename', 'delete', 'add', 'list', 'quiz', 'test', 'remind', 'tell', 'i', "i'm", 'im',
+  'takes', 'needs', 'uses', 'because', 'here', 'masculine', 'feminine', 'plural', 'past', 'verb', 'ending',
 ])
 
 function tokens(text: string): string[] {
@@ -202,9 +203,9 @@ const REPLY_TOOL: LlmTool = {
         type: ['object', 'null'],
         description: 'The single most useful slip in their LAST message, or null when it was fine, was in English, or was only a typo/accent. Never more than one.',
         properties: {
-          said: { type: 'string', description: 'The slip exactly as they wrote it — the few words, not the sentence.' },
+          said: { type: 'string', description: 'The slip copied exactly from their NEW message — two to four words, never the whole sentence. If a whole sentence is in the wrong tense, quote its verb only.' },
           better: { type: 'string', description: 'The right form, as short as the slip.' },
-          why: { type: 'string', description: 'Why, in plain English, eight words or fewer. No grammar jargon beyond what a beginner knows.' },
+          why: { type: 'string', description: 'Why — ALWAYS IN ENGLISH, eight words or fewer ("andare takes essere", "sushi is masculine"). No grammar jargon beyond what a beginner knows.' },
         },
         required: ['said', 'better', 'why'],
       },
@@ -222,7 +223,7 @@ How you write:
 - In ${f.languageName} only, at their level or a touch above: short sentences, common words. A beginner gets five-to-eight-word sentences in the present tense.
 - React to what they actually said, like a person would, then ask ONE question. Never two. No lists, no lessons, no praise for its own sake.
 - If they wrote in English or reached for a word ("I went to the… palestra?"), take what they meant and answer in ${f.languageName}, putting the ${f.languageName} they were missing into your own reply so they see it used. Do not switch to English.
-- Corrections never go in your reply. If their last message had a real slip — a wrong form, agreement, auxiliary, preposition or word — put the single most useful one in "fix". One at most. Nothing for typos, missing accents, capitals or punctuation; nothing when they wrote English; nothing when it was fine. The proper teaching happens later, in the clean-up; here it is a whisper.${f.material ? `\n\n${f.material}` : ''}`
+- Corrections never go in your reply. If their last message had a real slip — a wrong form, agreement, auxiliary, preposition or word — put the single most useful one in "fix". One at most, and only from the message they just sent — never a slip from earlier in the conversation, even if it was never fixed. Nothing for typos, missing accents, capitals or punctuation; nothing when they wrote English; nothing when it was fine. The proper teaching happens later, in the clean-up; here it is a whisper.${f.material ? `\n\n${f.material}` : ''}`
 }
 
 async function practiceReply(f: Frame, name: string, history: TalkTurn[], text: string | null): Promise<TalkTurn> {
@@ -246,7 +247,14 @@ async function practiceReply(f: Frame, name: string, history: TalkTurn[], text: 
   const fix = raw && raw.said && raw.better
     ? { said: String(raw.said).trim(), better: String(raw.better).trim(), why: String(raw.why ?? '').trim() }
     : null
-  return { role: 'assistant', text: reply, lane: 'practice', fix: text === null ? null : fix }
+  // A fix belongs to the message it is folded under: drop one whose slip is
+  // not in what they just wrote (the model reaching back for an old one).
+  const mine = fix && text !== null && squash(text).includes(squash(fix.said)) && squash(fix.said) !== squash(fix.better)
+  return { role: 'assistant', text: reply, lane: 'practice', fix: mine ? fix : null }
+}
+
+function squash(s: string): string {
+  return s.toLowerCase().replace(/[…."“”«»!?,;:]+/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 // ---------- the agent lane ----------
@@ -256,13 +264,13 @@ async function practiceReply(f: Frame, name: string, history: TalkTurn[], text: 
 async function answerQuestion(f: Frame, history: TalkTurn[], text: string): Promise<string> {
   const res = await llmComplete({
     model: PRACTICE_MODEL,
-    system: `You are Polly, a ${f.languageName} tutor. The learner (English speaker, level: ${f.level}) has stepped out of a ${f.languageName} text conversation with you to ask a question in English. Answer it in English in ONE or TWO short sentences: the answer itself, with the ${f.languageName} word or form in it and, when it helps, one tiny example. No lists, no headings, no "great question", and do not continue the conversation — that happens right after you. If the material below answers it (a word the teacher taught, a line from the story), say so.${f.material ? `\n\n${f.material}` : ''}`,
+    system: `You are Polly, a ${f.languageName} tutor. The learner (English speaker, level: ${f.level}) has stepped out of a ${f.languageName} text conversation with you to ask a question in English. Answer it in English in ONE or TWO short sentences, forty words at most, plain text with no markdown: the answer itself, with the ${f.languageName} word or form in it and, when it helps, one tiny example. No lists, no headings, no "great question", and do not continue the conversation — that happens right after you. If the material below answers it (a word the teacher taught, a line from the story), say so.${f.material ? `\n\n${f.material}` : ''}`,
     messages: [{ role: 'user', content: `${transcript(history) ? `The conversation so far:\n${transcript(history)}\n\n` : ''}Their question:\n${text}` }],
     maxTokens: 300,
     noThinking: true,
   })
   if (res.type !== 'text' || !res.text.trim()) throw new Error('question answer was empty')
-  return res.text.trim()
+  return res.text.trim().replace(/\*\*/g, '')
 }
 
 /// The line that picks the conversation back up after the agent: Polly's

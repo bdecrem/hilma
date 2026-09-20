@@ -129,18 +129,20 @@ async function partB(base: string) {
     check(looksLikeNoEnglish(r.messages[0].text), 'the reply is in Italian')
     check(questions(r.messages[0].text) === 1, 'it ends on one question')
     check(!!r.messages[0].fix && /sono andat/i.test(r.messages[0].fix.better), 'one folded fix: ho andato → sono andato', JSON.stringify(r.messages[0].fix))
+    check(!!r.messages[0].fix && !looksLikeNoEnglish(r.messages[0].fix.why) && r.messages[0].fix.why.split(/\s+/).length <= 10 && r.messages[0].fix.said.split(/\s+/).length <= 4, 'the fix is a whisper: a few words, the why in English')
 
-    r = await say('Faccio corsa, trenta minuti. Poi mangio sushi con un amico.', '3. Clean Italian')
+    r = await say('Ho fatto corsa, trenta minuti. Poi ho mangiato sushi con un amico.', '3. Clean Italian')
     check(r.lane === 'practice' && r.messages[0].fix == null, 'no fix when there is nothing to fix', JSON.stringify(r.messages[0].fix))
 
     r = await say('Then I went to the… supermercato? to buy il pesce', "4. A beginner's mixed message")
     check(r.lane === 'practice' && r.intent === 'practice', 'practice, not agent')
     check(looksLikeNoEnglish(r.messages[0].text), 'Polly stays in Italian')
+    check(r.messages[0].fix == null, 'no stale fix from an earlier message', JSON.stringify(r.messages[0].fix))
     const pollyQuestion = r.messages[0].text
 
     r = await say('why is it "sono andato" and not "ho andato"?', '5. An English question')
     check(r.lane === 'agent' && r.intent === 'question' && r.messages.length === 2, 'agent lane: an answer, then the resume')
-    check(!looksLikeNoEnglish(r.messages[0].text) && sentences(r.messages[0].text) <= 3 && /essere/i.test(r.messages[0].text), 'answered in English, briefly, with the point (essere)')
+    check(!looksLikeNoEnglish(r.messages[0].text) && sentences(r.messages[0].text) <= 2 && r.messages[0].text.split(/\s+/).length <= 50 && !r.messages[0].text.includes('**') && /essere/i.test(r.messages[0].text), 'answered in English: two sentences at most, no markdown, with the point (essere)')
     check(r.messages[1].lane === 'practice' && looksLikeNoEnglish(r.messages[1].text) && questions(r.messages[1].text) >= 1, 'then Polly resumes in Italian with a question')
     console.log(`        (her question before the detour: ${pollyQuestion})`)
 
