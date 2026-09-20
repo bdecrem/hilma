@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6EFDF">
+<title>Polly · Infinity Chat — two directions</title>
+<meta property="og:title" content="Polly · Infinity Chat — two directions">
+<meta property="og:description" content="What's wrong with the current Infinity Chat UI, and two ways to fix it: text as the container, or text as a drawer.">
+<meta property="og:image" content="https://hilma-nine.vercel.app/polly/design/og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="design.css">
+</head>
+<body>
+<div class="doc">
+  <header class="top">
+    <img src="polly-mark.svg" alt="">
+    <div><div class="kicker">Polly · design exploration · 2026-09-19</div><div class="title">Infinity Chat: two directions</div></div>
+  </header>
+
+  <h1>Where does text chat go?</h1>
+  <p class="lede">Polly is voice-first: talk, get cleaned up, drill the cards, come back tomorrow. Most of the app already works that way. Infinity Chat is the one place where Dodo's text chat survived — as a wrapper around the real experience — and it shows. This page says what's wrong, then hands off to two proposals that answer the question differently.</p>
+
+  <div class="pillnav">
+    <a class="primary" href="direction-1.html">Direction 1 · The thread is the journey →</a>
+    <a class="primary" href="direction-2.html">Direction 2 · Voice first, text as a drawer →</a>
+  </div>
+
+  <h2>What's wrong today</h2>
+  <p>From the 2026-09-19 screenshot set and the code (<code>TopicDetailView</code>, <code>InfinityView</code>, <code>agent.ts</code>). The four screens below are the Infinity Chat path as it exists.</p>
+
+  <div class="shelf">
+    <div class="shot" style="position:relative">
+      <img class="real" src="now-chat-window.jpg" alt="">
+      <span class="mark red" style="left:12px;top:64px">1</span>
+      <span class="mark red" style="left:270px;top:112px">2</span>
+      <span class="mark red" style="left:12px;top:300px">3</span>
+      <span class="mark red" style="left:12px;top:560px">4</span>
+      <div class="cap"><b>The chat window (what a topic tap opens)</b>
+        <span class="n" style="background:#D9534F;color:#fff">1</span>The star row: per-topic mastery from Dodo. Infinity mastery is per conversation; the stars never fill here.<br>
+        <span class="n" style="background:#D9534F;color:#fff">2</span>The real feature is behind "Study" — one tap further, in a sheet.<br>
+        <span class="n" style="background:#D9534F;color:#fff">3</span>Asked to translate the chats' titles, the agent looks for "sources, notes, documents" — it doesn't know Infinity chats exist. Then a 130-word reply.<br>
+        <span class="n" style="background:#D9534F;color:#fff">4</span>"Send a URL or ask a question…" — Dodo's composer. No mic, no way to practice by typing, and the chip row is hidden for this kind.</div>
+    </div>
+    <div class="shot" style="position:relative">
+      <img class="real" src="now-study-sheet.jpg" alt="">
+      <span class="mark red" style="left:12px;top:64px">5</span>
+      <span class="mark red" style="left:12px;top:420px">6</span>
+      <div class="cap"><b>The study sheet (the actual product)</b>
+        <span class="n" style="background:#D9534F;color:#fff">5</span>This is Infinity Chat. It's good. It's presented as a modal over the chat window, so back/dismiss is ambiguous and it stacks: sheet → full-screen voice → sheet → full-screen quiz.<br>
+        <span class="n" style="background:#D9534F;color:#fff">6</span>Four actions per chat (Quiz again / Review / Vocab / Grammar), repeated per row. Three chats in, it's a wall of buttons and no sense of progress.</div>
+    </div>
+    <div class="shot" style="position:relative">
+      <img class="real" src="now-talk.jpg" alt="">
+      <div class="cap"><b>The voice session</b>
+        The radio is the best screen in the app and both directions keep it as is. "TALKING ABOUT · CHAT INFINITA" is the only thing to fix: the subtitle should name the chat you're continuing, or say nothing.</div>
+    </div>
+    <div class="shot" style="position:relative">
+      <img class="real" src="now-cleanup.jpg" alt="">
+      <div class="cap"><b>The clean-up walk</b>
+        Also kept as is in both directions. The problem is what happens after: the fixes vanish behind "Review" and never appear in any history you can scroll.</div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <div class="label">The diagnosis in one line</div>
+    Two homes for one feature. Topics → <em>chat window</em> (Dodo's container, wrong mental model, slow) → <em>study sheet</em> (the real thing, modal). Text practice doesn't exist at all, and the agent-admin thread you like is there but blind to the feature it's sitting on. The same shape repeats, more mildly, on the path lesson (a steps card over an empty chat that says "ask me anything").
+  </div>
+
+  <h2>Two answers</h2>
+  <div class="dirs">
+    <a class="dircard" href="direction-1.html">
+      <div class="k">Direction 1</div>
+      <div class="t">The thread is the journey</div>
+      <p>Keep the text chat as the master container and make it earn its place: every voice chat, fix, deck and typed exchange is a message in one thread you can scroll back through. Italian in the composer is practice; English is instructing Polly.</p>
+      <p><strong>Smaller change.</strong> Looks like a chat app. History is visible.</p>
+      <div class="go">See the screens →</div>
+    </a>
+    <a class="dircard" href="direction-2.html">
+      <div class="k">Direction 2</div>
+      <div class="t">Voice first, text as a drawer</div>
+      <p>The study sheet becomes the screen: a journey of chats, each a page with its fixes, words and grammar. Text lives in one drawer, on every screen, with two modes — Scrivi (practice) and Chiedi a Polly (the agent) — that always know where you opened them.</p>
+      <p><strong>Bigger change.</strong> Looks like a language app. Same pattern fixes lessons and Peck.</p>
+      <div class="go">See the screens →</div>
+    </a>
+  </div>
+
+  <h2>Side by side</h2>
+  <table class="cmp">
+    <tr><th></th><th>1 · Thread is the journey</th><th>2 · Text as a drawer</th></tr>
+    <tr><td>Infinity home</td><td>The chat thread, with conversation cards inline</td><td>A journey rail of chats + a "Parliamo" hero; no thread</td></tr>
+    <tr><td>One conversation</td><td>A card in the thread that expands (fixes posted under it)</td><td>Its own page: fixes · words · grammar · transcript; Quiz / Continue</td></tr>
+    <tr><td>Text practice</td><td>Type Italian in the composer; Polly replies in Italian, fixes fold under</td><td>Drawer → Scrivi; "Finish &amp; clean up" turns it into a chat like a voice one</td></tr>
+    <tr><td>Agent admin</td><td>Type English (or "Polly, …") in the same composer</td><td>Drawer → Chiedi a Polly, with the screen's context attached</td></tr>
+    <tr><td>How you tell the modes apart</td><td>Language detection + prefix; bubble colour</td><td>A segmented control; no detection</td></tr>
+    <tr><td>Reach from other screens</td><td>Each topic has its own thread (as today)</td><td>The same drawer button on every screen: lessons, Peck misses, Topics</td></tr>
+    <tr><td>History of what you asked</td><td>In the thread, forever</td><td>Per context in the drawer; less visible</td></tr>
+    <tr><td>Kept as is</td><td colspan="2">The radio voice screen, the clean-up walk, the quiz (<code>FlashSetView</code>), vocab/grammar drills, Peck, iMessage cards</td></tr>
+    <tr><td>Server work shared by both</td><td colspan="2">Infinity-aware agent tools (<code>list_chats</code>, <code>rename_chat</code>, <code>cards_from_chats</code>); a practice lane in the chat route; typed exchanges accepted as Infinity chats; terse agent replies</td></tr>
+    <tr><td>App work</td><td>Message kinds in <code>TopicDetailView</code>; mic-first composer; delete the bar + sheet</td><td>Route infinity → home; new chat page; shared <code>PollyDrawer</code>; lesson screens lose their chat</td></tr>
+    <tr><td>Rough size</td><td>~2 days</td><td>~4 days</td></tr>
+  </table>
+
+  <h2>My read</h2>
+  <p>Direction 2 is the one that matches what you said the product is. The tell is the current study sheet: you already built the voice-first screen and it's the best-organised thing in Infinity Chat; the chat window is only there because Dodo had one. Direction 1 is the safer refactor and the better answer if you decide the visible history of "what I asked Polly" matters more than the home screen not looking like a chat app.</p>
+  <p>One thing to take from Direction 1 regardless of the choice: fixes should persist somewhere you can scroll. Direction 2 does it on the chat page; Direction 1 does it in the thread. Today they're gone after the walk.</p>
+  <p class="muted">Hand-built mockups, Polly's light tokens (<code>PollyTheme.swift</code>), Fredoka for display. Screens are 390-pt phones at 300 px. Nothing here is implemented.</p>
+</div>
+</body>
+</html>
