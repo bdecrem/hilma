@@ -20,6 +20,8 @@
 //   --answer    what the test user says, one per turn (repeatable)
 //   --text      send the answers as text messages instead of speech
 //   --interrupt start speaking 1.5 s into Dodo's second reply (barge-in)
+//   --library   (with --guest, mode global) paste one topic in and index it first,
+//               then ask about a detail only that material holds
 //   --guest     sign in as a fresh guest account (use with mode `global`); for
 //               production runs: ELEVEN_SPEECH_ENGINE_ID=<prod engine> … --base https://feynd.cc --guest
 //
@@ -116,6 +118,22 @@ async function main() {
   } else {
     const { signSession } = await import('../src/lib/f2/auth')
     cookie = `f2_session=${signSession(TEST_USER_ID)}`
+  }
+
+  // --library: give the account something to know (global mode's whole point)
+  // — one pasted topic with a detail only the material holds — and index it.
+  if (args.includes('--library')) {
+    const text = `Notes on the Bellrock Shoal lighthouse. The Bellrock Shoal light was first lit on 3 February 1811 after four seasons of work under the engineer Marguerite Haldane, who had the lower courses cut as dovetailed granite blocks. The lamp burns colza oil behind a rotating frame of red and white glass, giving the light its signature: one white flash, then one red, every forty seconds. Keepers work in a rota of three, six weeks on the rock and two ashore at the signal tower in Arbrook, where a brass ball is dropped at one o'clock so that ships can set their chronometers.`
+    const ing = await fetch(`${base}/api/f2/topics/ingest`, {
+      method: 'POST', headers: { 'content-type': 'application/json', cookie },
+      body: JSON.stringify({ title: 'Bellrock lighthouse notes', text }),
+    })
+    check('library-ingested', ing.ok, String(ing.status))
+    for (let i = 0; i < 6; i++) {
+      const r = await fetch(`${base}/api/f2/global-chat/index`, { method: 'POST', headers: { cookie } })
+      const j = (await r.json()) as { index?: { pending: number } }
+      if ((j.index?.pending ?? 1) === 0) break
+    }
   }
 
   const startRes = await fetch(`${base}/api/f2/eleven/session`, {

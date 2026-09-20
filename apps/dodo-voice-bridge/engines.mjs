@@ -53,7 +53,10 @@ function engineBody(engine) {
     turn: {
       // Exams need room to think: no "are you still there?" for half a minute.
       turn_timeout: 30,
-      turn_eagerness: 'normal',
+      // 'patient': people studying pause mid-sentence to think (and language
+      // learners more so). On 'normal' a comma-length pause ended the turn,
+      // Dodo began answering half a question and was cut off by the rest of it.
+      turn_eagerness: 'patient',
     },
     conversation: {
       // A Final Review can run long; the default cap is ten minutes.
