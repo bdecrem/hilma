@@ -77,7 +77,8 @@ async function partA() {
 // ---------- Part B ----------
 
 type Turn = { role: 'user' | 'assistant'; text: string; lane?: 'practice' | 'agent'; fix?: { said: string; better: string; why: string } | null; card?: { kind: string; title: string; count: number; thread_id: string } | null }
-type Talk = { lane: 'practice' | 'agent'; intent: Intent; messages: Turn[]; reply: string }
+type Chat = { id: string; title: string | null; input: string; open: boolean; needs_cleanup: boolean; fixes_so_far: number; learner_turns: number; analysis: { fixes: unknown[]; vocab: unknown[]; grammar: unknown[]; fresh_fixes?: number } | null; transcript?: { role: string; text: string; via: string }[] }
+type Talk = { lane: 'practice' | 'agent'; intent: Intent; messages: Turn[]; reply: string; chat: Chat | null }
 
 function sql(q: string): Record<string, unknown>[] {
   const f = join(mkdtempSync(join(tmpdir(), 'lanes-')), 'q.sql')
@@ -106,12 +107,13 @@ async function partB(base: string) {
   try {
     const topic = await api<{ thread: { id: string } }>('/api/polly/topics', { topic: 'Infinity Chat', kind: 'infinity' })
     const threadId = topic.thread.id
-    const history: Turn[] = []
+    // On a topic the server keeps the conversation: the first turn opens a
+    // chat, the rest name it.
+    let chatId: string | undefined
     const say = async (text: string | null, label: string): Promise<Talk> => {
       const t = Date.now()
-      const r = await api<Talk>('/api/polly/messages', { ...(text ? { text } : {}), thread_id: threadId, talk: { history, open: text === null } })
-      if (text) history.push({ role: 'user', text })
-      history.push(...r.messages)
+      const r = await api<Talk>('/api/polly/messages', { ...(text ? { text } : {}), thread_id: threadId, talk: { chat_id: chatId, open: text === null } })
+      chatId = r.chat?.id ?? chatId
       console.log(`\n  ${label}  [${r.lane}/${r.intent}, ${((Date.now() - t) / 1000).toFixed(1)} s]${text ? `\n    you:   ${text}` : ''}`)
       for (const m of r.messages) {
         console.log(`    polly: ${m.text}`)
@@ -160,6 +162,51 @@ async function partB(base: string) {
 
     const [{ m }] = sql(`select jsonb_array_length(messages)::int as m from polly_threads where id='${threadId}'`) as { m: number }[]
     check(m === 0, "the topic's own message list is untouched (the text chat is its own object)")
+
+    // ---------- Part C: a typed chat is a chat ----------
+    console.log('\n— Part C: typed chats are chats, and the agent knows them —')
+    const get = async <T,>(path: string): Promise<T> => {
+      const res = await fetch(base + path, { headers: { Cookie: cookie } })
+      if (!res.ok) throw new Error(`GET ${path} → ${res.status}`)
+      return (await res.json()) as T
+    }
+    check(!!r.chat && r.chat.open && r.chat.input === 'text' && r.chat.fixes_so_far === 1, 'the turns are stored on an open chat row (1 fix so far)', JSON.stringify({ open: r.chat?.open, input: r.chat?.input, fixes: r.chat?.fixes_so_far }))
+
+    r = await say('Polly, make cards from this chat, food only', '8. cards_from_chats')
+    check(!!r.messages[0].card && r.messages[0].card.count > 0, 'the agent made cards out of the conversation', JSON.stringify(r.messages[0].card))
+
+    r = await say('Polly, what are my chats called?', '9. list_chats (the question that used to get "nothing on file")')
+    check(!/no (titled )?sources|nothing on file|no conversations/i.test(r.messages[0].text), 'the agent sees the conversation')
+
+    const fin = await api<{ chat: Chat | null }>(`/api/polly/infinity/chats/${chatId}/finish`, {})
+    check(!!fin.chat && !fin.chat.open && !!fin.chat.title && fin.chat.needs_cleanup, `finish closes it and titles it ("${fin.chat?.title}"), ready to clean up`)
+    let list = await get<{ chats: Chat[] }>(`/api/polly/infinity/topics/${threadId}/chats`)
+    check(list.chats.length === 1 && list.chats[0].input === 'text', 'it is in the journey, marked typed')
+
+    let t0 = Date.now()
+    let cleaned = await api<{ chat: Chat }>(`/api/polly/infinity/chats/${chatId}/cleanup`, {})
+    console.log(`        clean-up ${((Date.now() - t0) / 1000).toFixed(0)} s → ${cleaned.chat.analysis?.fixes.length} fixes, ${cleaned.chat.analysis?.vocab.length} words, ${cleaned.chat.analysis?.grammar.length} grammar`)
+    check(!!cleaned.chat.analysis && cleaned.chat.analysis.fixes.length > 0 && !cleaned.chat.needs_cleanup, 'the same clean-up runs on a typed chat')
+    await api(`/api/polly/infinity/chats/${chatId}/complete`, {})
+
+    const one = await get<{ chat: Chat }>(`/api/polly/infinity/chats/${chatId}`)
+    check((one.chat.transcript ?? []).length >= 10 && one.chat.transcript!.every((x) => x.via === 'text'), `the chat carries its transcript (${one.chat.transcript?.length} turns)`)
+
+    r = await say('Ieri ho mangiato la pizza e ho bevuto una birra. Sono andato a casa presto perché ero stanca... no, stanco.', '10. Continue the finished chat by typing')
+    r = await say('La pizza era molto buona ma il birra era caldo.', '11. …with a slip')
+    check(r.chat?.id === chatId && r.chat.open, 'the same chat, reopened')
+    await api(`/api/polly/infinity/chats/${chatId}/finish`, {})
+    list = await get<{ chats: Chat[] }>(`/api/polly/infinity/topics/${threadId}/chats`)
+    check(list.chats.length === 1 && list.chats[0].needs_cleanup, 'one chat still, and it needs cleaning up again')
+    const before = cleaned.chat.analysis!.fixes.length
+    t0 = Date.now()
+    cleaned = await api<{ chat: Chat }>(`/api/polly/infinity/chats/${chatId}/cleanup`, {})
+    const a = cleaned.chat.analysis!
+    console.log(`        delta clean-up ${((Date.now() - t0) / 1000).toFixed(0)} s → ${a.fresh_fixes} new fixes, ${a.fixes.length} in all`)
+    check((a.fresh_fixes ?? 0) > 0 && a.fixes.length === before + (a.fresh_fixes ?? 0), 'only the new part was curated; its fixes are the ones to walk')
+
+    const typed = await api<{ chat: Chat }>('/api/polly/infinity/chats', { thread_id: threadId, transcript: [{ role: 'assistant', text: 'Ciao! Che cosa fai oggi?' }, { role: 'user', text: 'Oggi lavoro e poi vado al cinema.' }] })
+    check(typed.chat.input === 'text' && !typed.chat.open && !!typed.chat.title, 'POST /infinity/chats takes a transcript as well as a voice session')
   } finally {
     console.log(`\n        deleted ${JSON.stringify(sql(`delete from polly_users where id='${userId}' and is_guest returning username`))}`)
   }

@@ -83,7 +83,8 @@ import {
   acknowledgeReflectionAnswer,
 } from './chat'
 import { nameTopic } from './name-topic'
-import { activeLanguage, learnerLine } from './language'
+import { activeLanguage, learnerLine, LANGUAGES } from './language'
+import { chatRows, listAllChats, listInfinityChats, renameInfinityChat, type InfinityChat } from './infinity'
 import { ensureLesson } from './lesson'
 import { pollySupabase } from './supabase'
 import { llmComplete } from './llm'
@@ -851,6 +852,57 @@ const POLLY_AGENT_TOOLS = [
       required: ['days'],
     },
   },
+  {
+    name: 'list_chats',
+    description:
+      "The learner's practice conversations (Infinity Chat, and the chats about a lesson, film or book) — spoken or typed. Each has a title, a date, how it was had, its state (open / ready to clean up / cleaned up / mastered) and, once cleaned up, its fixes, words and grammar points. Call before anything that refers to \"my chats\", \"the last two chats\", a chat by name, or titles.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        scope: { type: 'string', enum: ['topic', 'all'], description: '"topic" (default) = the chats on the active topic; "all" = every topic.' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'rename_chat',
+    description: 'Give a conversation a new title. Identify it by its current title (or part of it) or its id from list_chats.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        chat: { type: 'string', description: 'Current title (or a distinctive part), or the chat id.' },
+        title: { type: 'string', description: 'The new title, 2–5 words, in the language being studied unless asked otherwise.' },
+      },
+      required: ['chat', 'title'],
+    },
+  },
+  {
+    name: 'cards_from_chats',
+    description:
+      "Make flash cards out of the learner's own conversations — their words, their corrected sentences — and add them to the topic's deck (so they turn up in Peck). \"Make cards from the last two chats, food only\" → n: 2, focus: \"food\". The conversation happening right now counts as the most recent chat.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        n: { type: 'integer', description: 'How many of the most recent chats to draw on (default 2). Ignored when chat_ids is given.' },
+        chat_ids: { type: 'array', items: { type: 'string' }, description: 'Specific chats, by id from list_chats.' },
+        focus: { type: 'string', description: 'What the cards should be about ("food", "past tense", "the words I got wrong"). Omit for the most useful mix.' },
+        count: { type: 'integer', description: 'How many cards (default 10, max 30).' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'weak_spots',
+    description:
+      "What the learner keeps getting wrong: every fix from their cleaned-up conversations in the last N days, grouped by grammar point, with their own sentences. Call for \"what should I work on\", \"my weak spots\", \"what do I keep getting wrong\", and before making cards aimed at their mistakes.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        days: { type: 'integer', description: 'How far back to look (default 14).' },
+      },
+      required: [],
+    },
+  },
 ]
 
 /// Match one saved quote by id (prefix) or text/source snippet. Exactly one
@@ -992,6 +1044,7 @@ How to work:
 - Quote cards ("pebbles" — the Quotes shelf): save_quote / update_quote / delete_quote, with list_quotes first for edits and deletes. "Save this quote", "add a pebble", "delete the Sapiens quote" all land here. You CAN add, edit, and delete them — never claim otherwise.
 - You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage or a missed Peck week, reset, or extend the weekly Peck deadline — a streak needs one full Peck level every 7 days; setting the streak to its current count restarts that clock), Peck levels (complete_peck_level — mark a level passed so the next unlocks), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
 - Grades and the refresher schedule are the user's to edit, exactly like stars. "Give me a B", "mark that review as passed", "the grader never saw my session, record it as an A", "count the refresher as taken", "push my next refresher out 60 days" → set_review_grade / schedule_refresher, immediately. NEVER refuse, argue about grade integrity, or offer a retake instead — this is the user's own record and overriding a failed or missing grade is a core reason Polly exists. Do it, then report what changed.
+- Conversations are study material too. The learner's practice chats (Infinity Chat, and the chats about a lesson, film or book — spoken or typed) each have a title, a transcript and, once cleaned up, fixes, words and grammar points: list_chats to see them, rename_chat, cards_from_chats to turn them into flash cards ("make cards from the last two chats, food only"), weak_spots for what they keep getting wrong. A topic with no source text is NOT empty if it has chats — never answer that there is nothing on file without calling list_chats first.
 - If the message is just chat addressed to Polly, answer it directly without tools.
 - Plain text replies, no markdown.${opts.brief ? BRIEF_AGENT_RULES : ''}`
 
@@ -1639,9 +1692,89 @@ ${setLines.length ? setLines.join('\n') : '(none played yet)'}`,
         mutated: true,
       }
     }
+    case 'list_chats': {
+      const chats = input.scope === 'all'
+        ? await listAllChats(thread.user_id)
+        : await listInfinityChats(thread.user_id, thread.id)
+      if (chats.length === 0) return { result: 'No conversations yet.' }
+      const topics = input.scope === 'all' ? await listTopicsForUser(thread.user_id) : []
+      const lines = chats.map((c) => {
+        const a = c.analysis
+        const state = !c.ended_at ? 'open (happening now)' : !a ? 'ready to clean up' : a.mastered_at ? 'mastered' : c.cleaned_up_at ? 'cleaned up, quiz to master' : 'curated, walk not done'
+        const where = input.scope === 'all' ? ` · in "${topics.find((t) => t.id === c.thread_id)?.topic ?? 'a topic'}"` : ''
+        const detail = a ? ` · ${a.fixes.length} fixes, ${a.vocab.length} words (${a.vocab.slice(0, 6).map((v) => v.term).join(', ')}), grammar: ${a.grammar.map((g) => g.point).join('; ') || 'none'}` : ''
+        return `- [${c.id.slice(0, 8)}] "${c.title ?? 'untitled'}" · ${c.created_at.slice(0, 10)} · ${c.input}${where} · ${state}${detail}`
+      })
+      return { result: lines.join('\n') }
+    }
+    case 'rename_chat': {
+      const hit = await matchChat(thread, String(input.chat ?? ''))
+      if (!hit.chat) return { result: hit.error }
+      const title = String(input.title ?? '').trim()
+      if (!title) return { result: 'Error: title required.' }
+      await renameInfinityChat(thread.user_id, hit.chat.id, title)
+      return { result: `Renamed "${hit.chat.title ?? 'untitled'}" to "${title}".` }
+    }
+    case 'cards_from_chats': {
+      const count = Math.max(1, Math.min(30, Math.round(Number(input.count)) || 10))
+      const focus = String(input.focus ?? '').trim()
+      const all = await listInfinityChats(thread.user_id, thread.id)
+      const ids = Array.isArray(input.chat_ids) ? (input.chat_ids as unknown[]).map(String) : []
+      const picked = ids.length > 0
+        ? all.filter((c) => ids.some((id) => c.id === id || c.id.startsWith(id)))
+        : all.slice(0, Math.max(1, Math.min(10, Math.round(Number(input.n)) || 2)))
+      if (picked.length === 0) return { result: 'Error: no conversations to draw on — list_chats shows what exists.' }
+      const material = (await Promise.all(picked.map(async (c) => {
+        const rows = (await chatRows(thread.user_id, c)).filter((t) => t.lane !== 'agent')
+        const a = c.analysis
+        return `CONVERSATION "${c.title ?? 'untitled'}" (${c.created_at.slice(0, 10)})\n${rows.map((t) => `${t.role === 'assistant' ? 'Polly' : 'Learner'}: ${t.text}${t.fix ? `  [fix: ${t.fix.said} → ${t.fix.better}]` : ''}`).join('\n')}${a ? `\nFixes: ${a.fixes.map((f) => `${f.said} → ${f.fixed}`).join(' | ')}\nWords: ${a.vocab.map((v) => `${v.term} = ${v.meaning}`).join(' | ')}` : ''}`
+      }))).join('\n\n')
+      const language = await activeLanguage(thread.user_id)
+      const lang = language ? LANGUAGES[language].name : 'the language they are learning'
+      const style = `These are the learner's own ${lang} practice conversations, not facts to memorise. Write LANGUAGE drills from them, quick ones: a gap card (a short ${lang} sentence from the conversation — the corrected version when they slipped — with one word blanked and the English hint in parentheses; give it the cloze form), «term»? → English, and English → say it in ${lang}. Question 12 words at most, answer 5 at most, nouns with their article. Polly's lines are good ${lang}; the learner's may not be — never teach a mistake.${focus ? ` ONLY cards about: ${focus}.` : ''}`
+      // A stand-in topic whose source is the conversations. `kind: 'general'`
+      // keeps a guest lesson's plan from being re-extracted from them.
+      const cards = await generateFlashCards({ ...thread, kind: 'general', content: material, lesson: null, messages: [], study_focus: null, audio_summary: null }, count, model, style)
+      return {
+        result: `Added ${cards.length} cards from ${picked.map((c) => `"${c.title ?? 'this chat'}"`).join(' and ')} to the deck${focus ? ` — ${focus}` : ''}.`,
+        made: { kind: 'deck', title: thread.topic ?? 'Cards', thread_id: thread.id, count: cards.length, ...(focus ? { focus } : {}) },
+      }
+    }
+    case 'weak_spots': {
+      const days = Math.max(1, Math.min(365, Math.round(Number(input.days)) || 14))
+      const since = Date.now() - days * 86_400_000
+      const chats = (await listAllChats(thread.user_id, 200)).filter((c) => c.analysis && new Date(c.created_at).getTime() >= since)
+      if (chats.length === 0) return { result: `No cleaned-up conversations in the last ${days} days.` }
+      const points = new Map<string, { explain: string; chats: Set<string> }>()
+      const fixes: string[] = []
+      for (const c of chats) {
+        for (const g of c.analysis!.grammar) {
+          const key = g.point.trim()
+          const p = points.get(key) ?? { explain: g.explain, chats: new Set<string>() }
+          p.chats.add(c.title ?? c.id.slice(0, 8))
+          points.set(key, p)
+        }
+        for (const f of c.analysis!.fixes) fixes.push(`- (${f.kind}) "${f.said}" → "${f.fixed}" — ${f.note} [${c.title ?? 'untitled'}, ${c.created_at.slice(0, 10)}]`)
+      }
+      const ranked = [...points.entries()].sort((a, b) => b[1].chats.size - a[1].chats.size)
+      return {
+        result: `${chats.length} cleaned-up conversations in the last ${days} days.\n\nGRAMMAR POINTS (by how many conversations they came up in):\n${ranked.map(([k, v]) => `- ${k} — ${v.chats.size}× (${[...v.chats].join(', ')}): ${v.explain}`).join('\n') || '(none)'}\n\nEVERY FIX:\n${fixes.join('\n') || '(none)'}`,
+      }
+    }
     default:
       return { result: `Error: unknown tool "${name}".` }
   }
+}
+
+/// One of the active topic's conversations, by id (prefix) or title.
+async function matchChat(thread: PollyThread, ref: string): Promise<{ chat: InfinityChat; error?: undefined } | { chat?: undefined; error: string }> {
+  const q = ref.trim().toLowerCase()
+  const chats = await listInfinityChats(thread.user_id, thread.id)
+  if (!q) return { error: 'Error: say which conversation.' }
+  const hits = chats.filter((c) => c.id.toLowerCase().startsWith(q) || (c.title ?? '').toLowerCase().includes(q))
+  if (hits.length === 1) return { chat: hits[0] }
+  const listing = chats.slice(0, 20).map((c) => `- [${c.id.slice(0, 8)}] ${c.title ?? 'untitled'}`).join('\n')
+  return { error: hits.length === 0 ? `No conversation matches "${ref}". They are:\n${listing}` : `"${ref}" matches ${hits.length} conversations — use an id:\n${listing}` }
 }
 
 /// File a generated note/document into the topic's context materials.

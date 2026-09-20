@@ -5,6 +5,7 @@ import { isModelKey } from '@/lib/polly/llm'
 import { getThreadById } from '@/lib/polly/threads'
 import { generateAudioSummary, setAudioSummary } from '@/lib/polly/audio-summary'
 import { talkTurn, type TalkTurn } from '@/lib/polly/talk'
+import { appendChatTurns, chatForClient, chatRows, getInfinityChat, openTextChat } from '@/lib/polly/infinity'
 
 export const runtime = 'nodejs'
 // "setup:" / "new short|medium|long" / more_videos run a synchronous search +
@@ -20,10 +21,15 @@ export const maxDuration = 300
 // substitution). iMessage (and any future server-side client) calls
 // processMessage directly, not this route — keeps the session contract clean.
 //
-// `talk` marks a turn of the text chat (Direction 2b): { history, open? }.
-// That thread has no modes — the server picks the lane (lib/polly/talk.ts)
-// and answers { lane, intent, messages[], reply }. `talk.open` with no text
-// asks Polly to speak first. Without `talk` this is the topic chat, unchanged.
+// `talk` marks a turn of the text chat (Direction 2b). That thread has no
+// modes — the server picks the lane (lib/polly/talk.ts) and answers
+// { lane, intent, messages[], reply, chat }. `talk.open` with no text asks
+// Polly to speak first. On a topic the conversation is a chat row
+// (polly_infinity_chats): the first turn opens one, `talk.chat_id` continues
+// one (typed or spoken), and the turns are stored as they happen. Without a
+// topic, or with `talk.ephemeral` (the Peck miss clinic, `talk.card_id`),
+// nothing is stored and the client sends `talk.history`. Without `talk` this
+// is the topic chat, unchanged.
 export async function POST(req: Request) {
   const user = await getSessionUser()
   if (!user) {
@@ -32,7 +38,7 @@ export async function POST(req: Request) {
 
   let body: {
     text?: string; thread_id?: string; model?: string; new_topic?: boolean
-    talk?: { history?: unknown; open?: boolean }
+    talk?: { history?: unknown; open?: boolean; chat_id?: string; ephemeral?: boolean; card_id?: string }
   }
   try {
     body = await req.json()
@@ -54,11 +60,20 @@ export async function POST(req: Request) {
   }
 
   if (body.talk) {
-    const history = parseHistory(body.talk.history)
+    const stored = Boolean(body.thread_id) && body.talk.ephemeral !== true
+    let history = stored ? [] : parseHistory(body.talk.history)
     if (!history) {
       return NextResponse.json({ error: 'talk.history must be a list of { role, text }' }, { status: 400 })
     }
     try {
+      let chat = null
+      if (stored && body.talk.chat_id) {
+        chat = await getInfinityChat(user.id, body.talk.chat_id)
+        if (!chat || chat.thread_id !== body.thread_id) {
+          return NextResponse.json({ error: 'conversation not found' }, { status: 404 })
+        }
+        history = (await chatRows(user.id, chat)).map((t) => ({ role: t.role, text: t.text, lane: t.lane }))
+      }
       const talk = await talkTurn({
         userId: user.id,
         userName: user.username,
@@ -66,7 +81,15 @@ export async function POST(req: Request) {
         history,
         text: text ?? null,
         model: body.model,
+        cardId: body.talk.card_id,
       })
+      if (stored) {
+        chat = chat ?? (await openTextChat(user.id, body.thread_id!))
+        chat = await appendChatTurns(user.id, chat, [
+          ...(text ? [{ role: 'user' as const, text, via: 'text' as const }] : []),
+          ...talk.messages.map((m) => ({ role: 'assistant' as const, text: m.text, via: 'text' as const, lane: m.lane, fix: m.fix ?? null, card: m.card ?? null })),
+        ])
+      }
       if (talk.write_document) {
         const { thread_id, title, brief } = talk.write_document
         const userId = user.id
@@ -75,7 +98,11 @@ export async function POST(req: Request) {
         })
       }
       const { write_document: _job, ...out } = talk
-      return NextResponse.json({ ...out, reply: talk.messages.map((m) => m.text).join('\n\n') })
+      return NextResponse.json({
+        ...out,
+        reply: talk.messages.map((m) => m.text).join('\n\n'),
+        chat: chat ? chatForClient(chat) : null,
+      })
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
       console.error('[polly/talk] turn failed:', message)

@@ -20,6 +20,7 @@ import { ensureLesson, lessonBlock } from './lesson'
 import { llmComplete, type LlmTool } from './llm'
 import { activeCourse } from './path'
 import { buildBudgetedContent, getThreadById, type PollyThread } from './threads'
+import { getFlashCardsByIds } from './flash'
 
 export type Lane = 'practice' | 'agent'
 export type Intent = 'practice' | 'question' | 'instruction'
@@ -143,16 +144,29 @@ type Frame = {
   about: string
   /** Lesson plan / source excerpt, or ''. */
   material: string
+  /** What Polly's very first line should do, when the frame has a say. */
+  opener?: string
 }
 
-function frameFor(thread: PollyThread | null, language: LanguageCode | null, level: string | null): Frame {
+type CardContext = { question: string; answer: string }
+
+function frameFor(thread: PollyThread | null, language: LanguageCode | null, level: string | null, card?: CardContext | null): Frame {
   const languageName = language ? LANGUAGES[language].name : 'the language they are learning'
   const lvl = level ?? 'unknown — treat them as a beginner until they show otherwise'
+  if (card) {
+    return {
+      languageName, level: lvl,
+      about: `They just missed a flash card in a quiz and tapped "Talk it through with Polly". The card — question: "${card.question}" · answer: "${card.answer}". Get them to USE the answer: ask something easy whose natural reply needs it, then vary it once or twice (another person, another time). Stay on this card until they have it.`,
+      material: thread?.lesson ? lessonBlock(thread) : '',
+      opener: "skip the hello: ask the easy question whose answer needs the card's word",
+    }
+  }
   if (thread?.lesson && thread.kind === 'lesson') {
     return {
       languageName, level: thread.lesson.level ?? lvl,
       about: `This chat is the scene from a lesson you wrote for them: you play the other person, they play "You". Follow the model conversation's shape, not its lines; work the lesson's words in; when the scene has run, change one detail and run it again, then ask the closing question.`,
       material: lessonBlock(thread),
+      opener: 'set the scene in a few words and say your first line as the other person',
     }
   }
   if (thread?.lesson) {
@@ -160,6 +174,7 @@ function frameFor(thread: PollyThread | null, language: LanguageCode | null, lev
       languageName, level: lvl,
       about: `This chat is about a ${languageName} lesson they listened to (a guest lesson). Get them to retell the story in their own words, then work the teacher's key words in one at a time — ask them to use one, or what it meant in the story — and end on the host's closing question.`,
       material: lessonBlock(thread),
+      opener: 'ask them to retell the story in their own words',
     }
   }
   const material = thread && thread.kind !== 'infinity' ? buildBudgetedContent(thread, MATERIAL_CHARS) : ''
@@ -168,6 +183,7 @@ function frameFor(thread: PollyThread | null, language: LanguageCode | null, lev
       languageName, level: lvl,
       about: `This chat is about "${thread?.topic ?? 'their material'}" — something they are reading, watching or studying in ${languageName}. Talk about it with them: what happened, what they thought, what a line meant. Stay on it unless they take the conversation elsewhere.`,
       material: `THE MATERIAL (excerpt):\n${material}`,
+      opener: 'ask what they made of it, or about one thing in it',
     }
   }
   return {
@@ -229,7 +245,9 @@ How you write:
 async function practiceReply(f: Frame, name: string, history: TalkTurn[], text: string | null): Promise<TalkTurn> {
   const convo = transcript(history)
   const user = text === null
-    ? `${convo ? `The conversation so far:\n${convo}\n\n` : ''}Open the conversation: a short hello and one easy question. ("fix" is null.)`
+    ? convo
+      ? `The conversation so far:\n${convo}\n\nThey have come back to this conversation after a break. Pick it up: one short line that recalls where you were, and one question. No hello-how-are-you. ("fix" is null.)`
+      : `Open the conversation: a short hello and one easy question${f.opener ? ` — ${f.opener}` : ''}. ("fix" is null.)`
     : `${convo ? `The conversation so far:\n${convo}\n\n` : ''}Their new message:\n${text}`
   const res = await llmComplete({
     model: PRACTICE_MODEL,
@@ -302,15 +320,19 @@ export async function talkTurn(input: {
   /** The learner's message; null asks Polly to open the conversation. */
   text: string | null
   model?: string
+  /** The Peck miss clinic: the chat is about this card. */
+  cardId?: string
 }): Promise<TalkResult> {
-  const [language, course, rawThread] = await Promise.all([
+  const [language, course, rawThread, cards] = await Promise.all([
     activeLanguage(input.userId),
     activeCourse(input.userId),
     input.threadId ? getThreadById(input.userId, input.threadId) : Promise.resolve(null),
+    input.cardId ? getFlashCardsByIds(input.userId, [input.cardId]) : Promise.resolve([]),
   ])
   if (input.threadId && !rawThread) throw new Error('topic not found')
   const thread = rawThread ? await ensureLesson(rawThread) : null
-  const f = frameFor(thread, language, course?.level ?? null)
+  const about = cards[0] ? { question: cards[0].question, answer: cards[0].answer } : null
+  const f = frameFor(thread, language, course?.level ?? null, about)
   const history = input.history.slice(-HISTORY_TURNS * 2)
 
   if (input.text === null) {

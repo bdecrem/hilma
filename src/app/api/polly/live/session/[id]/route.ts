@@ -2,6 +2,7 @@ import { NextResponse, after } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
 import { finishVoiceSession } from '@/lib/polly/realtime'
 import { ensureCurrentLesson, talkStepFromSession } from '@/lib/polly/path'
+import { appendChatTurns, chatForClient, finishChat, getInfinityChat } from '@/lib/polly/infinity'
 
 export const runtime = 'nodejs'
 // Finishing a lesson's last step writes the next lesson in after().
@@ -11,6 +12,8 @@ type FinishBody = {
   transcript?: unknown
   summary?: string
   usage?: unknown
+  /** The chat this session continued: its turns are appended to it. */
+  continue_chat_id?: string
 }
 
 export async function PATCH(
@@ -46,5 +49,18 @@ export async function PATCH(
   // one written.
   const talk = await talkStepFromSession({ userId: user.id, voiceSessionId: id })
   if (talk.finished) after(() => ensureCurrentLesson(user.id, user.username))
-  return NextResponse.json({ ok: true, lesson_finished: talk.finished })
+
+  // A continued chat: what was said joins the chat, which closes again (the
+  // clean-up then reads only the new part).
+  let chat = null
+  if (body.continue_chat_id) {
+    const target = await getInfinityChat(user.id, body.continue_chat_id)
+    const rows = (Array.isArray(body.transcript) ? body.transcript : []) as { role?: string; text?: string }[]
+    const turns = rows
+      .filter((r) => r && typeof r.text === 'string' && r.text.trim())
+      .map((r) => ({ role: r.role === 'assistant' ? 'assistant' as const : 'user' as const, text: r.text!.trim(), via: 'voice' as const }))
+    if (target && turns.length > 0) await appendChatTurns(user.id, target, turns)
+    if (target) chat = await finishChat(user.id, target.id)
+  }
+  return NextResponse.json({ ok: true, lesson_finished: talk.finished, chat: chat ? chatForClient(chat) : null })
 }

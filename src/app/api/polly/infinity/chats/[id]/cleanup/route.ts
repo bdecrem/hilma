@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/polly/auth'
-import { cleanUpChat } from '@/lib/polly/infinity'
+import { chatForClient, cleanUpChat } from '@/lib/polly/infinity'
 
 export const runtime = 'nodejs'
 // The curation is one LLM pass over the transcript; give it room.
@@ -15,5 +15,5 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const { id } = await params
   const chat = await cleanUpChat(user.id, id)
   if (!chat) return NextResponse.json({ error: 'not found' }, { status: 404 })
-  return NextResponse.json({ chat })
+  return NextResponse.json({ chat: chatForClient(chat) })
 }

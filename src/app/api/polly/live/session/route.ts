@@ -29,7 +29,7 @@ import {
   livePlacementNudge,
 } from '@/lib/polly/live'
 import { activeLanguage } from '@/lib/polly/language'
-import { getInfinityChat } from '@/lib/polly/infinity'
+import { chatRows, getInfinityChat, walkFixes } from '@/lib/polly/infinity'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -42,6 +42,9 @@ type SessionBody = {
   thread_id?: string
   // 'cleanup' mode: the Infinity Chat conversation being tidied up.
   chat_id?: string
+  /** Continue this chat out loud (Direction 2b): a chat page's Continue, or
+   *  the text chat's mic. Polly gets the conversation so far and picks it up. */
+  continue_chat_id?: string
   // 'flash' mode: the selected deck (from /api/polly/flash/start), in order.
   card_ids?: string[]
   // Hold-to-talk (a device-side Voice setting): the mic is muted except
@@ -109,7 +112,7 @@ export async function POST(req: Request) {
     instructions = buildLiveCleanupInstructions({
       userName: user.username,
       language,
-      fixes: chat.analysis.fixes,
+      fixes: walkFixes(chat.analysis),
     })
   } else if (mode === 'placement') {
     // The level check: no topic, the learner's course language.
@@ -201,6 +204,19 @@ export async function POST(req: Request) {
   }
 
   // Per-user voice + delivery style, account-wide across all voice surfaces.
+  let continuing = false
+  if (body.continue_chat_id && mode === 'topic') {
+    const chat = await getInfinityChat(user.id, body.continue_chat_id)
+    if (!chat || chat.thread_id !== body.thread_id) {
+      return NextResponse.json({ error: 'conversation not found' }, { status: 404 })
+    }
+    const rows = (await chatRows(user.id, chat)).filter((t) => t.lane !== 'agent').slice(-40)
+    if (rows.length > 0) {
+      continuing = true
+      instructions += `\n\nYOU ARE CONTINUING A CONVERSATION${chat.title ? ` ("${chat.title}")` : ''} the two of you already started${rows.some((t) => t.via === 'text') ? ' (some of it was typed)' : ''}. Do not greet them as if it were new and do not start over: pick it up where it stopped. The conversation so far:\n${rows.map((t) => `${t.role === 'assistant' ? 'Polly' : 'Learner'}: ${t.text}`).join('\n').slice(-6000)}`
+    }
+  }
+
   const prefs = await getVoicePrefs(user.id)
   const voice = prefs.voice ?? realtimeVoice()
   instructions = applyVoiceStyle(instructions, prefs.style)
@@ -256,7 +272,9 @@ export async function POST(req: Request) {
       data_channel: 'oai-events',
       // Sent by the client as session.instructions.append once
       // session.started arrives; null = Polly waits for the user.
-      opening_instruction: liveOpeningInstruction(mode, user.username, {
+      opening_instruction: continuing
+        ? `Begin now, without waiting: in one short line, recall where the conversation stopped and ask one question that carries it on. Then listen.`
+        : liveOpeningInstruction(mode, user.username, {
         language,
         pollyLesson: thread?.kind === 'lesson',
         infinity: thread?.kind === 'infinity',

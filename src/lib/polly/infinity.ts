@@ -56,6 +56,10 @@ export type InfinityAnalysis = {
   curated_by?: string
   /// When the learner passed the quiz for this conversation.
   mastered_at?: string | null
+  /// How many fixes at the FRONT of `fixes` the walk has not covered yet. Set
+  /// when a continued chat's new part is curated (the walk then covers only
+  /// those); absent or 0 = walk them all / nothing new.
+  fresh_fixes?: number
 }
 
 export type InfinityChat = {
@@ -68,7 +72,35 @@ export type InfinityChat = {
   cleanup_session_id: string | null
   cleaned_up_at: string | null
   created_at: string
+  updated_at: string
+  /// How the conversation was had (schema 009).
+  input: ChatInput
+  /// The conversation itself, once this row owns it: typed turns as they
+  /// happen, voice continuations appended. Null on rows that still read their
+  /// voice session's transcript.
+  transcript: ChatTurn[] | null
+  /// Null while the chat is still open (a typed chat not finished yet).
+  ended_at: string | null
+  /// How many transcript turns the clean-up has read.
+  analyzed_turns: number
 }
+
+export type ChatInput = 'voice' | 'text' | 'mixed'
+
+/// One stored turn. `lane`, `fix` and `card` come from the text chat
+/// (talk.ts); voice turns carry role and text only.
+export type ChatTurn = {
+  role: 'user' | 'assistant'
+  text: string
+  via: 'voice' | 'text'
+  at: string
+  lane?: 'practice' | 'agent'
+  fix?: { said: string; better: string; why: string } | null
+  card?: { kind: string; title: string; thread_id: string; count: number; focus?: string } | null
+}
+
+/// A typed chat left alone this long finishes itself.
+const QUIET_MS = 60 * 60 * 1000
 
 type TranscriptRow = { role: string; text: string }
 
@@ -94,18 +126,28 @@ async function sessionTranscript(userId: string, voiceSessionId: string): Promis
 export async function createInfinityChat(input: {
   userId: string
   threadId: string
-  voiceSessionId: string
+  /** A finished voice session… */
+  voiceSessionId?: string
+  /** …or a typed conversation handed over whole. */
+  transcript?: { role: string; text: string }[]
 }): Promise<InfinityChat> {
-  const rows = await sessionTranscript(input.userId, input.voiceSessionId)
+  const typed = !input.voiceSessionId
+  const rows = input.voiceSessionId
+    ? await sessionTranscript(input.userId, input.voiceSessionId)
+    : (input.transcript ?? []).filter((r) => r && typeof r.text === 'string' && r.text.trim())
   const language = await activeLanguage(input.userId)
   const title = await quickTitle(rows, language).catch(() => null)
+  const now = new Date().toISOString()
   const { data, error } = await pollySupabase()
     .from('polly_infinity_chats')
     .insert({
       thread_id: input.threadId,
       user_id: input.userId,
-      voice_session_id: input.voiceSessionId,
+      voice_session_id: input.voiceSessionId ?? null,
       title,
+      input: typed ? 'text' : 'voice',
+      transcript: typed ? rows.map((r) => stamp(r, 'text', now)) : null,
+      ended_at: now,
     })
     .select('*')
     .single()
@@ -113,15 +155,120 @@ export async function createInfinityChat(input: {
   return data as InfinityChat
 }
 
-export async function listInfinityChats(userId: string, threadId: string): Promise<InfinityChat[]> {
+function stamp(r: { role: string; text: string }, via: 'voice' | 'text', at: string): ChatTurn {
+  return { role: r.role === 'assistant' ? 'assistant' : 'user', text: r.text.trim(), via, at }
+}
+
+/// A new, open typed chat on a topic (the text chat's first turn).
+export async function openTextChat(userId: string, threadId: string): Promise<InfinityChat> {
   const { data, error } = await pollySupabase()
     .from('polly_infinity_chats')
+    .insert({ thread_id: threadId, user_id: userId, input: 'text', transcript: [], ended_at: null })
     .select('*')
+    .single()
+  if (error) throw new Error(`infinity: open chat failed: ${error.message}`)
+  return data as InfinityChat
+}
+
+/// The conversation as stored turns — the row's own transcript, or (rows from
+/// before schema 009) its voice session's.
+export async function chatRows(userId: string, chat: InfinityChat): Promise<ChatTurn[]> {
+  if (Array.isArray(chat.transcript)) return chat.transcript
+  if (!chat.voice_session_id) return []
+  const rows = await sessionTranscript(userId, chat.voice_session_id)
+  return rows
+    .filter((r) => r && typeof r.text === 'string' && r.text.trim())
+    .map((r) => stamp(r, 'voice', chat.created_at))
+}
+
+/// Add turns to a chat — typed ones as they happen, a voice continuation when
+/// the radio hangs up. The row takes ownership of its transcript the first
+/// time (seeded from the voice session), a finished chat reopens, and a chat
+/// had both ways is marked `mixed`.
+export async function appendChatTurns(
+  userId: string,
+  chat: InfinityChat,
+  turns: Omit<ChatTurn, 'at'>[],
+): Promise<InfinityChat> {
+  if (turns.length === 0) return chat
+  const owned = Array.isArray(chat.transcript)
+  const before = await chatRows(userId, chat)
+  const now = new Date().toISOString()
+  const all = [...before, ...turns.map((t) => ({ ...t, at: now }))]
+  const spoke = (via: 'voice' | 'text') => all.some((t) => t.role === 'user' && t.via === via)
+  const input: ChatInput = spoke('voice') && spoke('text') ? 'mixed' : spoke('voice') ? 'voice' : spoke('text') ? 'text' : chat.input
+  const update: Record<string, unknown> = { transcript: all, input, updated_at: now, ended_at: null }
+  // A chat curated before it owned its transcript: everything it had is read.
+  if (!owned && chat.analysis) update.analyzed_turns = before.length
+  const { data, error } = await pollySupabase()
+    .from('polly_infinity_chats')
+    .update(update)
+    .eq('id', chat.id)
     .eq('user_id', userId)
-    .eq('thread_id', threadId)
-    .order('created_at', { ascending: false })
-  if (error) throw new Error(`infinity: list failed: ${error.message}`)
-  return (data ?? []) as InfinityChat[]
+    .select('*')
+    .single()
+  if (error) throw new Error(`infinity: append failed: ${error.message}`)
+  return data as InfinityChat
+}
+
+/// Close an open chat: title it, stamp it. One the learner never said
+/// anything in is dropped instead (returns null).
+export async function finishChat(userId: string, id: string): Promise<InfinityChat | null> {
+  const chat = await getInfinityChat(userId, id)
+  if (!chat) return null
+  const rows = await chatRows(userId, chat)
+  if (!rows.some((t) => t.role === 'user')) {
+    await pollySupabase().from('polly_infinity_chats').delete().eq('id', id).eq('user_id', userId)
+    return null
+  }
+  if (chat.ended_at && chat.title) return chat
+  const language = await activeLanguage(userId)
+  const title = chat.title ?? (await quickTitle(conversationOnly(rows), language).catch(() => null))
+  const { data, error } = await pollySupabase()
+    .from('polly_infinity_chats')
+    .update({ ended_at: chat.ended_at ?? new Date().toISOString(), title, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select('*')
+    .single()
+  if (error) throw new Error(`infinity: finish failed: ${error.message}`)
+  return data as InfinityChat
+}
+
+/// The conversation without the agent detours (an English "make me cards"
+/// and its answer are not something to title or curate).
+function conversationOnly(rows: ChatTurn[]): ChatTurn[] {
+  const out: ChatTurn[] = []
+  for (let i = 0; i < rows.length; i++) {
+    const t = rows[i]
+    if (t.role === 'assistant' && t.lane === 'agent') continue
+    // The learner's turn that an agent answer follows was the detour itself.
+    if (t.role === 'user' && rows[i + 1]?.role === 'assistant' && rows[i + 1]?.lane === 'agent') continue
+    out.push(t)
+  }
+  return out
+}
+
+export async function listInfinityChats(userId: string, threadId: string): Promise<InfinityChat[]> {
+  const read = async () => {
+    const { data, error } = await pollySupabase()
+      .from('polly_infinity_chats')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('thread_id', threadId)
+      .order('created_at', { ascending: false })
+    if (error) throw new Error(`infinity: list failed: ${error.message}`)
+    return (data ?? []) as InfinityChat[]
+  }
+  let chats = await read()
+  // Typed chats nobody finished: an hour of quiet finishes them.
+  const quiet = chats.filter((c) => !c.ended_at && Date.now() - new Date(c.updated_at).getTime() > QUIET_MS)
+  if (quiet.length > 0) {
+    await Promise.all(quiet.map((c) => finishChat(userId, c.id).catch((e) => console.error('[infinity] sweep failed:', e))))
+    chats = await read()
+  }
+  // An open chat with nothing said yet is not a chat.
+  return chats.filter((c) => c.ended_at || (c.transcript ?? []).some((t) => t.role === 'user'))
 }
 
 export async function getInfinityChat(userId: string, id: string): Promise<InfinityChat | null> {
@@ -134,27 +281,92 @@ export async function getInfinityChat(userId: string, id: string): Promise<Infin
   return (data as InfinityChat) ?? null
 }
 
+export async function renameInfinityChat(userId: string, id: string, title: string): Promise<boolean> {
+  const { data } = await pollySupabase()
+    .from('polly_infinity_chats')
+    .update({ title: title.trim().slice(0, 60), updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select('id')
+  return (data ?? []).length > 0
+}
+
+/// Every chat the learner has, across topics, newest first (the agent's view).
+export async function listAllChats(userId: string, limit = 40): Promise<InfinityChat[]> {
+  const { data } = await pollySupabase()
+    .from('polly_infinity_chats')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  return (data ?? []) as InfinityChat[]
+}
+
+/// What the app gets: the row plus what it would otherwise have to work out.
+export function chatForClient(chat: InfinityChat, opts: { transcript?: ChatTurn[] } = {}) {
+  const turns = chat.transcript ?? []
+  const said = turns.filter((t) => t.role === 'user')
+  const first = turns[0]?.at, last = turns[turns.length - 1]?.at
+  const { transcript: _t, ...row } = chat
+  return {
+    ...row,
+    open: !chat.ended_at,
+    /** Finished, and there is conversation the clean-up has not read. */
+    needs_cleanup: !!chat.ended_at && (!chat.analysis || (Array.isArray(chat.transcript) && chat.transcript.length > chat.analyzed_turns && chat.analyzed_turns > 0)),
+    minutes: first && last ? Math.max(1, Math.round((new Date(last).getTime() - new Date(first).getTime()) / 60000)) : null,
+    learner_turns: said.length,
+    fixes_so_far: turns.filter((t) => t.fix).length,
+    ...(opts.transcript ? { transcript: opts.transcript } : {}),
+  }
+}
+
 /// Run (or return the already-run) curation. Reads the chat's transcript,
 /// curates ≤5 fixes + vocab + grammar, saves and returns the analysis.
 export async function cleanUpChat(userId: string, id: string): Promise<InfinityChat | null> {
-  const chat = await getInfinityChat(userId, id)
+  let chat = await getInfinityChat(userId, id)
   if (!chat) return null
-  if (chat.analysis) return chat // already curated; the walk can start
+  if (!chat.ended_at) chat = (await finishChat(userId, id)) ?? null
+  if (!chat) return null
+  const all = await chatRows(userId, chat)
+  const unread = chat.analysis ? (Array.isArray(chat.transcript) ? all.slice(chat.analyzed_turns) : []) : all
+  // Already curated and nothing new said: the walk can start.
+  if (chat.analysis && !unread.some((t) => t.role === 'user')) return chat
   const language = await activeLanguage(userId)
   const quality = await qualityFor(userId)
-  const rows = chat.voice_session_id ? await sessionTranscript(userId, chat.voice_session_id) : []
-  const analysis = await analyzeConversation({ language, transcript: rows, fallbackTitle: chat.title, quality })
-  // Build the quiz deck (real flash cards on the Infinity topic → Peck) and
-  // remember its ids on the analysis, so this conversation has a set to master.
-  const cardIds = await generateInfinityCards(userId, chat.thread_id, analysis).catch((e) => {
+  const part = await analyzeConversation({ language, transcript: conversationOnly(unread), fallbackTitle: chat.title, quality })
+  // Build the quiz deck (real flash cards on the topic → Peck) and remember
+  // its ids on the analysis, so this conversation has a set to master.
+  const cardIds = await generateInfinityCards(userId, chat.thread_id, part).catch((e) => {
     console.error('[infinity] card generation failed:', e)
     return [] as string[]
   })
   const tier = tierFor('cleanup', quality)
-  const stored: InfinityAnalysis = { ...analysis, card_ids: cardIds, mastered_at: null, curated_by: `${tier.model}:${tier.effort}` }
+  const old = chat.analysis
+  // A continued chat: the new part's fixes go in front (the walk covers only
+  // those), its words and grammar join the rest, and the star has to be
+  // earned again on the bigger deck.
+  const stored: InfinityAnalysis = old
+    ? {
+        ...old,
+        fixes: [...part.fixes, ...old.fixes],
+        vocab: [...part.vocab.filter((v) => !old.vocab.some((o) => o.term.toLowerCase() === v.term.toLowerCase())), ...old.vocab],
+        grammar: [...part.grammar.filter((g) => !old.grammar.some((o) => o.point.toLowerCase() === g.point.toLowerCase())), ...old.grammar],
+        card_ids: [...(old.card_ids ?? []), ...cardIds],
+        mastered_at: null,
+        fresh_fixes: part.fixes.length,
+        curated_by: `${tier.model}:${tier.effort}`,
+      }
+    : { ...part, card_ids: cardIds, mastered_at: null, curated_by: `${tier.model}:${tier.effort}` }
   const { data, error } = await pollySupabase()
     .from('polly_infinity_chats')
-    .update({ analysis: stored, title: analysis.title || chat.title, updated_at: new Date().toISOString() })
+    .update({
+      analysis: stored,
+      title: old ? chat.title : (part.title || chat.title),
+      analyzed_turns: all.length,
+      // New fixes to walk → "ready to clean up" again; none → it stays done.
+      ...(old && part.fixes.length > 0 ? { cleaned_up_at: null } : {}),
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
     .eq('user_id', userId)
     .select('*')
@@ -163,11 +375,19 @@ export async function cleanUpChat(userId: string, id: string): Promise<InfinityC
   return data as InfinityChat
 }
 
+/// The fixes the walk should cover: the new part's on a continued chat, else all.
+export function walkFixes(analysis: InfinityAnalysis): Fix[] {
+  const fresh = analysis.fresh_fixes ?? 0
+  return fresh > 0 ? analysis.fixes.slice(0, fresh) : analysis.fixes
+}
+
 /// The clean-up walk is finished: remember which voice session did it.
 export async function completeCleanup(userId: string, id: string, cleanupSessionId?: string): Promise<void> {
+  const chat = await getInfinityChat(userId, id)
   const { error } = await pollySupabase()
     .from('polly_infinity_chats')
     .update({
+      ...(chat?.analysis?.fresh_fixes ? { analysis: { ...chat.analysis, fresh_fixes: 0 } } : {}),
       cleaned_up_at: new Date().toISOString(),
       cleanup_session_id: cleanupSessionId ?? null,
       updated_at: new Date().toISOString(),
