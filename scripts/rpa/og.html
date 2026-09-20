@@ -1,0 +1,34 @@
+<!doctype html>
+<!-- Rock Paper Anything — the OG card. Render with: npx tsx scripts/rpa/og.ts  → public/rpa/og.png -->
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@1,600&display=swap" rel="stylesheet">
+<style>
+  :root { --paper:#f2e8d5; --hi:#fbf5e6; --ink:#1b1a17; --ink2:#6b655a; --red:#ff4a1c; --blue:#2347c5; }
+  * { box-sizing: border-box; margin: 0; }
+  body { width:1200px; height:630px; overflow:hidden; background-color:var(--paper); position:relative; font-family:'DM Mono',monospace; color:var(--ink);
+    background-image: radial-gradient(circle at 1px 1px, rgba(27,26,23,.12) 1.2px, transparent 1.9px); background-size: 9px 9px; }
+  /* left column: 64px margin, title block 560px wide */
+  h1 { position:absolute; left:64px; top:70px; font:400 104px/0.9 'Bowlby One'; text-transform:uppercase; transform:rotate(-3deg); transform-origin:left center; }
+  h1 span { display:block; } h1 .any { color:var(--red); text-shadow:6px 6px 0 var(--blue); }
+  .lede { position:absolute; left:64px; top:430px; width:520px; font:italic 600 34px/1.25 Fraunces; }
+  .lede b { color:var(--red); font-weight:600; }
+  .foot { position:absolute; left:64px; bottom:48px; font-size:17px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink2); }
+  .foot i { font-style:normal; background:var(--red); color:var(--hi); padding:2px 8px; margin-right:10px; }
+  /* right column: tags between x=690 and x=1140; rows 96px apart starting at y=84 */
+  .tag { position:absolute; background:var(--hi); border:3px solid var(--ink); box-shadow:5px 5px 0 var(--ink); padding:12px 18px 20px; font:400 30px/1.2 'Bowlby One'; white-space:nowrap; }
+  .tag u { position:absolute; left:0; right:0; bottom:0; height:10px; background:rgba(27,26,23,.14); text-decoration:none; }
+  .tag u::before { content:''; position:absolute; inset:0 auto 0 0; width:var(--hp); background:var(--ink); }
+  .tag em { position:absolute; right:6px; top:-38px; font:400 38px/1 'Bowlby One'; color:var(--red); text-shadow:2px 2px 0 var(--hi); }
+  .tag small { font:400 16px 'DM Mono'; color:var(--ink); background:var(--paper); padding:0 5px; margin-left:8px; vertical-align:middle; }
+  .shot { position:absolute; left:790px; top:520px; font:italic 600 44px Fraunces; color:var(--blue); transform:rotate(-4deg); }
+  .gate { position:absolute; left:660px; right:0; bottom:0; height:30px; border-top:3px solid var(--ink); background:repeating-linear-gradient(135deg,var(--blue) 0 11px,transparent 11px 22px); }
+</style></head><body>
+  <h1><span>Rock</span><span>Paper</span><span class="any">Anything</span></h1>
+  <p class="lede">Type <b>anything</b>. If it beats them, it hurts them.</p>
+  <div class="tag" style="left:700px; top:84px; transform:rotate(-2deg); --hp:0%">darkness<em>−100<small>p .87</small></em><u></u></div>
+  <div class="tag" style="left:850px; top:196px; transform:rotate(1.5deg); --hp:16%">a vampire<em>−84<small>p .73</small></em><u></u></div>
+  <div class="tag" style="left:720px; top:308px; transform:rotate(-1deg); --hp:54%">a glacier<em>−56<small>p .60</small></em><u></u></div>
+  <div class="tag" style="left:880px; top:420px; transform:rotate(2deg); --hp:100%">a traffic jam<u></u></div>
+  <div class="shot">sunrise</div>
+  <div class="gate"></div>
+</body></html>
