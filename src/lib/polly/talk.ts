@@ -239,7 +239,7 @@ How you write:
 - In ${f.languageName} only, at their level or a touch above: short sentences, common words. A beginner gets five-to-eight-word sentences in the present tense.
 - React to what they actually said, like a person would, then ask ONE question. Never two. No lists, no lessons, no praise for its own sake.
 - If they wrote in English or reached for a word ("I went to the… palestra?"), take what they meant and answer in ${f.languageName}, putting the ${f.languageName} they were missing into your own reply so they see it used. Do not switch to English.
-- Corrections never go in your reply. If their last message had a real slip — a wrong form, agreement, auxiliary, preposition or word — put the single most useful one in "fix". One at most, and only from the message they just sent — never a slip from earlier in the conversation, even if it was never fixed. Nothing for typos, missing accents, capitals or punctuation; nothing when they wrote English; nothing when it was fine. The proper teaching happens later, in the clean-up; here it is a whisper.${f.material ? `\n\n${f.material}` : ''}`
+- Corrections never go in your reply. If their last message had a real slip — a wrong form, agreement, auxiliary, preposition or word — put the single most useful one in "fix". One at most, and only from the message they just sent — never a slip from earlier in the conversation, even if it was never fixed. Nothing for typos, missing accents, capitals or punctuation; nothing for the English parts of a mixed message (reaching for a word is not a mistake); nothing when it was fine. The proper teaching happens later, in the clean-up; here it is a whisper.${f.material ? `\n\n${f.material}` : ''}`
 }
 
 async function practiceReply(f: Frame, name: string, history: TalkTurn[], text: string | null): Promise<TalkTurn> {
@@ -267,7 +267,9 @@ async function practiceReply(f: Frame, name: string, history: TalkTurn[], text: 
     : null
   // A fix belongs to the message it is folded under: drop one whose slip is
   // not in what they just wrote (the model reaching back for an old one).
-  const mine = fix && text !== null && squash(text).includes(squash(fix.said)) && squash(fix.said) !== squash(fix.better)
+  // …and is a slip in the studied language: English they reached for is not
+  // an error (Polly's reply already shows them the words).
+  const mine = fix && text !== null && squash(text).includes(squash(fix.said)) && squash(fix.said) !== squash(fix.better) && looksLikeNoEnglish(fix.said)
   return { role: 'assistant', text: reply, lane: 'practice', fix: mine ? fix : null }
 }
 
