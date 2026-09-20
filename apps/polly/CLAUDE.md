@@ -47,6 +47,13 @@ xcodebuild -project apps/polly/Polly.xcodeproj -scheme Polly \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
+## Infinity Chat rebuild — decided 2026-09-19
+
+Direction 2b, "text as a peer to voice": the study sheet becomes the screen,
+every voice button gets a smaller "type instead" line, one modeless text
+thread. Build spec: [`docs/polly-infinity-2b.md`](../../docs/polly-infinity-2b.md);
+screens: `public/polly/design/direction-2b.html`. Not started.
+
 ## Topic kinds (2026-09-18)
 
 On top of Dodo's inherited kinds, Polly has three of its own, user-set for
