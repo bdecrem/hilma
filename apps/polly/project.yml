@@ -10,13 +10,18 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.1"
-    CURRENT_PROJECT_VERSION: "26"
+    CURRENT_PROJECT_VERSION: "27"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
   WebRTC:
     url: https://github.com/stasel/WebRTC.git
     exactVersion: 147.0.0
+  # The ElevenLabs voice engine (ElevenVoiceClient.swift). Rides on LiveKit,
+  # whose WebRTC build has prefixed symbols, so it coexists with the one above.
+  ElevenLabs:
+    url: https://github.com/elevenlabs/elevenlabs-swift-sdk.git
+    exactVersion: 3.3.1
 
 targets:
   Polly:
@@ -28,6 +33,7 @@ targets:
           - "Secrets.swift.example"
     dependencies:
       - package: WebRTC
+      - package: ElevenLabs
     info:
       path: Polly/Info.plist
       properties:
@@ -77,6 +83,15 @@ targets:
         # No entitlements on device builds yet — universal links (Polly.entitlements)
         # wait until Polly has its own domain and an AASA served for it.
         CODE_SIGN_ENTITLEMENTS: ""
+        # Device + App Store signing is manual and lives HERE, on the target,
+        # not on the xcodebuild command line: command-line settings apply to
+        # every target, and the Swift packages' resource bundles
+        # (LiveKit_LiveKit, ElevenLabs_ElevenLabs) refuse a provisioning
+        # profile. Machines whose profiles are named differently pass
+        # POLLY_PROFILE=… / POLLY_MAC_PROFILE=… (ship.sh does) — only this
+        # target reads them.
+        "CODE_SIGN_STYLE[sdk=iphoneos*]": Manual
+        "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]": $(POLLY_PROFILE)
         # 1 = iPhone, 2 = iPad. Catalyst piggybacks on the iPad device family,
         # but device/simulator builds are iPhone-only — App Store validation
         # otherwise demands iPad multitasking orientations + iPad icons.
@@ -103,7 +118,15 @@ targets:
         # defaults) across updates.
         Release:
           "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Polly/Polly-macOS.entitlements
+          POLLY_PROFILE: polly appstore
+          POLLY_MAC_PROFILE: polly catalyst appstore
+          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Distribution
+          "CODE_SIGN_STYLE[sdk=macosx*]": Manual
+          "PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]": $(POLLY_MAC_PROFILE)
+          "CODE_SIGN_IDENTITY[sdk=macosx*]": Apple Distribution
         # Unsandboxed, but the hardened runtime still needs the audio-input
         # entitlement or the mic is refused without a prompt.
         Debug:
           "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Polly/Polly-macOS-debug.entitlements
+          POLLY_PROFILE: polly dev
+          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Development

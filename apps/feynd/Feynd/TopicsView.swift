@@ -38,7 +38,16 @@ struct TopicsView: View {
     @State private var loading = false
     @State private var loadError: String? = nil
     @State private var renameTarget: F2Topic? = nil
+    #if targetEnvironment(simulator)
+    private static var hookSpent = false
+    #endif
     @State private var showNewTopic = false
+    /// Holding the + opens its one secondary action: the all-topics chat.
+    @State private var fabMenuOpen = false
+    @State private var fabPressing = false
+    @State private var fabHintVisible = false
+    @State private var showGlobalChat = false
+    @AppStorage("fabHoldHintShown") private var fabHoldHintShown = false
     @State private var showProfile = false
     @State private var contextTarget: TopicContextTarget? = nil
     @State private var reviewsTarget: TopicContextTarget? = nil
@@ -180,18 +189,38 @@ struct TopicsView: View {
                 .feyndContentColumn()
             }
 
-            // Floating new-topic button, tucked in the bottom-right corner
-            // beside the tab pill.
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    newTopicButton
-                }
+            // While the + is held open, everything behind it steps back; a
+            // tap anywhere closes it.
+            if fabMenuOpen {
+                FeyndTheme.bg.opacity(0.55)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle())
+                    .onTapGesture { closeFabMenu() }
+                    .transition(.opacity)
+                    .accessibilityHidden(true)
             }
+
+            // Floating new-topic button, tucked in the bottom-right corner
+            // beside the tab pill. Tap = new topic. Hold = its secondary
+            // action springs out above it.
+            VStack(alignment: .trailing, spacing: 10) {
+                Spacer()
+                if fabMenuOpen {
+                    globalChatPill
+                        .transition(.scale(scale: 0.5, anchor: .bottomTrailing).combined(with: .opacity))
+                } else if fabHintVisible {
+                    fabHoldHint
+                        .transition(.move(edge: .trailing).combined(with: .opacity))
+                }
+                newTopicButton
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
             .feyndContentColumn()
             .padding(.trailing, 8)
             .padding(.bottom, 66)
+        }
+        .fullScreenCover(isPresented: $showGlobalChat) {
+            GlobalChatView().environment(session)
         }
         // Catalyst sheets don't always inherit @Observable env values — pass
         // `session` through explicitly (see dismissTopmostPresentedModal in
@@ -270,7 +299,18 @@ struct TopicsView: View {
             if jumbo == nil, let cached: JumboState = ScreenCache.load(key: ScreenCache.jumbo) {
                 jumbo = cached
             }
+            maybeShowFabHint()
             #if targetEnvironment(simulator)
+            // `-OpenFabMenu 1` — the held + with its secondary action out;
+            // `-OpenGlobalChat 1` — straight into the all-topics chat.
+            if UserDefaults.standard.bool(forKey: "OpenFabMenu"), !Self.hookSpent {
+                Self.hookSpent = true
+                Task { try? await Task.sleep(for: .milliseconds(900)); openFabMenu() }
+            }
+            if UserDefaults.standard.bool(forKey: "OpenGlobalChat"), !Self.hookSpent {
+                Self.hookSpent = true
+                Task { try? await Task.sleep(for: .milliseconds(900)); showGlobalChat = true }
+            }
             // `-OpenCommunity 1` — straight to the community directory for
             // screenshot loops.
             if UserDefaults.standard.bool(forKey: "OpenCommunity") {
@@ -298,19 +338,97 @@ struct TopicsView: View {
 
     /// Floating + in the bottom-right corner. With the Chat tab gone this
     /// is THE way to start anything new, so it's a full-size FAB.
+    /// Tap → new topic. Hold → the + turns to an × and one secondary action
+    /// springs out above it: the chat across ALL topics (GlobalChatView).
     private var newTopicButton: some View {
-        Button { showNewTopic = true } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(FeyndTheme.inkOnAccent)
-                .frame(width: 54, height: 54)
-                .background(FeyndTheme.accent, in: Circle())
-                .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
-                .padding(6)
-                .contentShape(Circle())
+        Image(systemName: "plus")
+            .font(.system(size: 22, weight: .bold))
+            .foregroundStyle(FeyndTheme.inkOnAccent)
+            .rotationEffect(.degrees(fabMenuOpen ? 45 : 0))
+            .frame(width: 54, height: 54)
+            .background(FeyndTheme.accent, in: Circle())
+            .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
+            .scaleEffect(fabPressing ? 0.92 : 1)
+            .padding(6)
+            .contentShape(Circle())
+            .onTapGesture {
+                if fabMenuOpen { closeFabMenu() } else { showNewTopic = true }
+            }
+            .onLongPressGesture(minimumDuration: 0.32, maximumDistance: 24) {
+                openFabMenu()
+            } onPressingChanged: { pressing in
+                withAnimation(.spring(duration: 0.2)) { fabPressing = pressing }
+            }
+            .accessibilityElement()
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(fabMenuOpen ? "Close" : "New topic")
+            .accessibilityHint("Hold for a chat across all your topics")
+            .accessibilityAction(named: "Chat across all topics") { showGlobalChat = true }
+    }
+
+    /// The + button's one secondary action.
+    private var globalChatPill: some View {
+        Button {
+            closeFabMenu()
+            showGlobalChat = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "sparkles.rectangle.stack.fill")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(FeyndTheme.accent)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Ask across all topics")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(FeyndTheme.text)
+                    Text("One chat that knows your whole library")
+                        .font(.system(size: 12))
+                        .foregroundStyle(FeyndTheme.text3)
+                }
+            }
+            .padding(.leading, 14).padding(.trailing, 18).padding(.vertical, 11)
+            .background(FeyndTheme.surface, in: Capsule())
+            .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+            .shadow(color: .black.opacity(0.28), radius: 14, y: 5)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("New topic")
+        .padding(.trailing, 6)
+    }
+
+    /// Shown once, briefly, the first time there is a library worth asking
+    /// about: a held + is invisible otherwise.
+    private var fabHoldHint: some View {
+        Text("Hold + to ask across all topics")
+            .font(.system(size: 12.5, weight: .medium))
+            .foregroundStyle(FeyndTheme.text2)
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .background(FeyndTheme.surface, in: Capsule())
+            .overlay(Capsule().stroke(FeyndTheme.borderSoft, lineWidth: 1))
+            .padding(.trailing, 8)
+            .allowsHitTesting(false)
+    }
+
+    private func openFabMenu() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        fabHoldHintShown = true
+        withAnimation(.spring(duration: 0.34, bounce: 0.32)) {
+            fabHintVisible = false
+            fabMenuOpen = true
+        }
+    }
+
+    private func closeFabMenu() {
+        withAnimation(.spring(duration: 0.26)) { fabMenuOpen = false }
+    }
+
+    private func maybeShowFabHint() {
+        guard !fabHoldHintShown, topics.count >= 2, !fabMenuOpen else { return }
+        fabHoldHintShown = true
+        Task {
+            try? await Task.sleep(for: .milliseconds(1400))
+            withAnimation(.spring(duration: 0.4)) { fabHintVisible = true }
+            try? await Task.sleep(for: .seconds(4))
+            withAnimation(.easeOut(duration: 0.3)) { fabHintVisible = false }
+        }
     }
 
     /// Recent / A–Z toggle. Menu lets the user pick; current pick is shown

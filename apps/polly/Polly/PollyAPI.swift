@@ -831,6 +831,53 @@ final class PollyAPI {
         }
     }
 
+    /// The ElevenLabs engine's session: a WebRTC conversation token for the
+    /// ElevenLabs SDK. Claude writes the turns server-side; the phone only
+    /// carries audio. Finishes through the same `finishLiveSession`.
+    struct ElevenSessionResponse: Codable {
+        let voiceSession: LiveSessionResponse.VoiceSession
+        let eleven: ElevenConfig
+
+        struct ElevenConfig: Codable {
+            let conversationToken: String
+            let model: String
+            let holdToTalk: Bool
+            /// Passed to the SDK when the conversation starts; names this
+            /// session to our server on every turn.
+            let dynamicVariables: [String: String]
+            /// Sent as a text message once connected so Polly speaks first.
+            /// Nil = she waits for the learner.
+            let kickoff: String?
+
+            enum CodingKeys: String, CodingKey {
+                case model, kickoff
+                case conversationToken = "conversation_token"
+                case holdToTalk = "hold_to_talk"
+                case dynamicVariables = "dynamic_variables"
+            }
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case voiceSession = "voice_session"
+            case eleven
+        }
+    }
+
+    func startElevenSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
+                            continueChatId: String? = nil,
+                            holdToTalk: Bool = false) async throws -> ElevenSessionResponse {
+        struct Body: Encodable {
+            let mode: String
+            let thread_id: String?
+            let card_ids: [String]?
+            let continue_chat_id: String?
+            let hold_to_talk: Bool
+        }
+        return try await post("/api/polly/eleven/session",
+                              body: Body(mode: mode, thread_id: threadId, card_ids: cardIds,
+                                         continue_chat_id: continueChatId, hold_to_talk: holdToTalk))
+    }
+
     /// `cardIds` is required for mode "flash" — the deck the quizmaster reads
     /// from, in question order. `sdp` is the phone's WebRTC offer.
     func startLiveSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,

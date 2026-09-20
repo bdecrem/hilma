@@ -24,7 +24,7 @@ struct VoiceSessionView: View {
     let onKeyboard: ((String?) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
-    @State private var client: LiveVoiceClient
+    @State private var client: any PollyVoiceClient
     @State private var muted = false
     @State private var ending = false
     /// Hold-to-talk (Voice settings, per device). Read once at init so the
@@ -42,8 +42,10 @@ struct VoiceSessionView: View {
         self.onFinished = onFinished
         let hold = UserDefaults.standard.bool(forKey: VoiceSettingsView.holdToTalkKey)
         self.holdToTalk = hold
-        _client = State(initialValue: LiveVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
-                                                      continueChatId: continueChatId, holdToTalk: hold))
+        // GPT-Live or ElevenLabs + Claude — the Voice engine setting (modes the
+        // ElevenLabs engine does not run yet go to GPT-Live).
+        _client = State(initialValue: makePollyVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
+                                                           continueChatId: continueChatId, holdToTalk: hold))
     }
 
     var body: some View {

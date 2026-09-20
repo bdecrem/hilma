@@ -41,6 +41,16 @@ final class Session {
             NSLog("F2_SESSION test-login state=%@ home=%@", String(describing: state), NSHomeDirectory())
             if case .signedIn = state { return }
         }
+        // `-TestSessionToken <polly_session value>` — same purpose without a
+        // password (a guest's cookie, or one signed with signSession): the
+        // normal bootstrap below validates it.
+        if let token = defaults.string(forKey: "TestSessionToken"),
+           let host = Secrets.backendBaseURL.host,
+           let cookie = HTTPCookie(properties: [
+               .name: "polly_session", .value: token, .domain: host, .path: "/",
+           ]) {
+            HTTPCookieStorage.shared.setCookie(cookie)
+        }
         #endif
         // Instant start: restore the last signed-in user from disk so the
         // tabs (and their cached screens) render immediately, then validate

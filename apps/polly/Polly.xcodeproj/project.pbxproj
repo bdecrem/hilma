@@ -32,6 +32,7 @@
 		4F751749FDDCD82F8CCE9984 /* LevelUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E954CCDC2B0A1EC1F27A05A5 /* LevelUpView.swift */; };
 		528238C7C6C02FE094F05541 /* TalkPair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61CD2B57709467D2D192CE7B /* TalkPair.swift */; };
 		533B19B47C81199C5D5284C7 /* voice-delta.m4a in Resources */ = {isa = PBXBuildFile; fileRef = B095AD2F1116897BD91B5825 /* voice-delta.m4a */; };
+		56A7691A15AC53EABAEA0B47 /* ElevenVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B871F70601ACBD8CC23AF876 /* ElevenVoiceClient.swift */; };
 		5CAAB97B3F1F18A3034B44EA /* PollyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E95E8B3E338ADAAEFD2F692 /* PollyAPI.swift */; };
 		5D2AF2D7978E8222AB48D0CB /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677BF1E6C991ED458811F463 /* FlashSFX.swift */; };
 		651715D824202472955C92DD /* voice-marin.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CB2931FD7DCB0BC1510666BE /* voice-marin.m4a */; };
@@ -66,6 +67,7 @@
 		966BBEA5540A4A169600C7B0 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */; };
 		986CF240300248D6B3C06340 /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA3A6EE6D565D4FB1674D32 /* ReviewsSheet.swift */; };
 		995EE9F5093CAAA927BE65F1 /* PebblesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C9D0ACF86BFDA31B5771162 /* PebblesView.swift */; };
+		9C022B9DF21459CDE0426457 /* PollyVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABE1BDBBA86A6C3F14E507D /* PollyVoiceClient.swift */; };
 		A3AFFC5658774ACF55B8C3C5 /* FlashSetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A330872A693580CE2070A4E6 /* FlashSetView.swift */; };
 		A5EE9095FB60F05AB96F4C06 /* IMessagePairingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FA503B8D3F528FE6B823C76 /* IMessagePairingView.swift */; };
 		A737FE302A68BB0B99F110CF /* LessonSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE59ECE4EA76264D43506C62 /* LessonSheet.swift */; };
@@ -98,6 +100,7 @@
 		ED4B66C95DC492BB7A156282 /* PollyApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CA104D86091EEA323716658 /* PollyApplication.swift */; };
 		EF228AE203BA1FD63F25F262 /* TextChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2212B38C91198EE03DDD176F /* TextChatView.swift */; };
 		F267D09DD42887EE403853B7 /* PeckTrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13DDF7FD5F5A004ED185787 /* PeckTrail.swift */; };
+		F64DAE315CBA313626FD4DF7 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 41B2C5512E587ACD099EF651 /* ElevenLabs */; };
 		F97F19F60725E87D791BB91D /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AF65C860BA3F154F3A64BE /* TopicDetailView.swift */; };
 		FA561662208B2DA5E3ADF303 /* ColorSchemePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E8F19FB24EA516E8FEB8E0 /* ColorSchemePreference.swift */; };
 /* End PBXBuildFile section */
@@ -124,6 +127,7 @@
 		2FF9E44C898CCEDDF2880657 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		371A2903B297C6C0225D83C7 /* DodoRadioDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoRadioDial.swift; sourceTree = "<group>"; };
 		3858E022373D538F409DB04B /* PollyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollyApp.swift; sourceTree = "<group>"; };
+		3ABE1BDBBA86A6C3F14E507D /* PollyVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollyVoiceClient.swift; sourceTree = "<group>"; };
 		404F0BF5FBC0705C4035F06F /* voice-tempo.m4a */ = {isa = PBXFileReference; path = "voice-tempo.m4a"; sourceTree = "<group>"; };
 		417B8498CEEE02486E78DBC0 /* Fredoka-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Fredoka-OFL.txt"; sourceTree = "<group>"; };
 		481A11E9BD993B274550AD9C /* ScreenCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCache.swift; sourceTree = "<group>"; };
@@ -168,6 +172,7 @@
 		B1C2F0FFAC4A0072FAE9DFD7 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		B1E8F19FB24EA516E8FEB8E0 /* ColorSchemePreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorSchemePreference.swift; sourceTree = "<group>"; };
 		B37D4E061B7B9EAC337495A6 /* ChatFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatFlow.swift; sourceTree = "<group>"; };
+		B871F70601ACBD8CC23AF876 /* ElevenVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenVoiceClient.swift; sourceTree = "<group>"; };
 		BBA3A6EE6D565D4FB1674D32 /* ReviewsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewsSheet.swift; sourceTree = "<group>"; };
 		BCFCF78251F085F8EB9D8D32 /* voice-coral.m4a */ = {isa = PBXFileReference; path = "voice-coral.m4a"; sourceTree = "<group>"; };
 		BEC7A8F37E56B7BF21E7908E /* TopicContextSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicContextSheet.swift; sourceTree = "<group>"; };
@@ -207,6 +212,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				182B1B26C7FF9C520CC07A6A /* WebRTC in Frameworks */,
+				F64DAE315CBA313626FD4DF7 /* ElevenLabs in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,6 +245,7 @@
 				6B82471D94B61EA020F233EA /* DodoArt.swift */,
 				371A2903B297C6C0225D83C7 /* DodoRadioDial.swift */,
 				8CBE18142AA16E4877C38ABE /* DoubleThumbsUp.swift */,
+				B871F70601ACBD8CC23AF876 /* ElevenVoiceClient.swift */,
 				AB05D05F1847EBF944237328 /* FlashCardsView.swift */,
 				6C7065F7AEE07806FA19C40E /* FlashDeckBuilder.swift */,
 				79ED1804D6CBE28E2DE169FA /* FlashDecksSheet.swift */,
@@ -278,6 +285,7 @@
 				4CA104D86091EEA323716658 /* PollyApplication.swift */,
 				6718E978E19140D7AE623F4C /* PollyChrome.swift */,
 				EBD81EB0E4780235D00A3DB9 /* PollyTheme.swift */,
+				3ABE1BDBBA86A6C3F14E507D /* PollyVoiceClient.swift */,
 				E5B099CB79824BBD0F6C37B7 /* ProfileSheet.swift */,
 				585E651DCAEB140C66B1A318 /* RecertNotifications.swift */,
 				BBA3A6EE6D565D4FB1674D32 /* ReviewsSheet.swift */,
@@ -365,6 +373,7 @@
 			name = Polly;
 			packageProductDependencies = (
 				F3C9CCF1063B707F37B910D8 /* WebRTC */,
+				41B2C5512E587ACD099EF651 /* ElevenLabs */,
 			);
 			productName = Polly;
 			productReference = F6AD3120BD8F3F5A5F437C92 /* Polly.app */;
@@ -394,6 +403,7 @@
 			mainGroup = 2A7596B39DDEAF6D112B0A32;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				B8C0EAF92BCF6C3A652945B7 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */,
 				5EF4FC2E3EA8654FCE10AB72 /* XCRemoteSwiftPackageReference "WebRTC" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -457,6 +467,7 @@
 				DD71EC7E67BB9501BD374AAD /* DodoArt.swift in Sources */,
 				2688E3A7CA01784F84C8BB7C /* DodoRadioDial.swift in Sources */,
 				9360C0CA51EF96D795354059 /* DoubleThumbsUp.swift in Sources */,
+				56A7691A15AC53EABAEA0B47 /* ElevenVoiceClient.swift in Sources */,
 				7AD88F0D60FDCF806065846A /* FlashCardsView.swift in Sources */,
 				1007CB453D092616BCE16BDC /* FlashDeckBuilder.swift in Sources */,
 				966BBEA5540A4A169600C7B0 /* FlashDecksSheet.swift in Sources */,
@@ -493,6 +504,7 @@
 				ED4B66C95DC492BB7A156282 /* PollyApplication.swift in Sources */,
 				7926186F0994079AB9FC5EF0 /* PollyChrome.swift in Sources */,
 				761123514B1329C579308C17 /* PollyTheme.swift in Sources */,
+				9C022B9DF21459CDE0426457 /* PollyVoiceClient.swift in Sources */,
 				088F50BE52606B088DFDBEEB /* ProfileSheet.swift in Sources */,
 				B3D41E5C9859BD5133A29C25 /* RecertNotifications.swift in Sources */,
 				986CF240300248D6B3C06340 /* ReviewsSheet.swift in Sources */,
@@ -553,7 +565,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -586,6 +598,10 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Polly/Polly-macOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Distribution";
+				"CODE_SIGN_STYLE[sdk=iphoneos*]" = Manual;
+				"CODE_SIGN_STYLE[sdk=macosx*]" = Manual;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -596,7 +612,11 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				POLLY_MAC_PROFILE = "polly catalyst appstore";
+				POLLY_PROFILE = "polly appstore";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Polly;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "$(POLLY_PROFILE)";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "$(POLLY_MAC_PROFILE)";
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -613,6 +633,8 @@
 				CODE_SIGN_ENTITLEMENTS = "";
 				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "Polly/Polly-macOS-debug.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				"CODE_SIGN_STYLE[sdk=iphoneos*]" = Manual;
 				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
 				ENABLE_DEBUG_DYLIB = NO;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -623,7 +645,9 @@
 					"@executable_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				POLLY_PROFILE = "polly dev";
 				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Polly;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "$(POLLY_PROFILE)";
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = YES;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -667,7 +691,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -732,9 +756,22 @@
 				version = 147.0.0;
 			};
 		};
+		B8C0EAF92BCF6C3A652945B7 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elevenlabs/elevenlabs-swift-sdk.git";
+			requirement = {
+				kind = exactVersion;
+				version = 3.3.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		41B2C5512E587ACD099EF651 /* ElevenLabs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B8C0EAF92BCF6C3A652945B7 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */;
+			productName = ElevenLabs;
+		};
 		F3C9CCF1063B707F37B910D8 /* WebRTC */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5EF4FC2E3EA8654FCE10AB72 /* XCRemoteSwiftPackageReference "WebRTC" */;

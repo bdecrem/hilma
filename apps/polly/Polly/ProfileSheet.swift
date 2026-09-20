@@ -31,6 +31,7 @@ struct ProfileSheet: View {
     @State private var showHelp = false
     @State private var showVoice = false
     @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
+    @AppStorage(VoiceEngine.defaultsKey) private var voiceEngine = VoiceEngine.gptLive.rawValue
     @State private var recertEnabled = true
     @State private var isGuest = false
     @State private var showClaim = false
@@ -481,6 +482,26 @@ struct ProfileSheet: View {
                         }
                     }
                     .tint(PollyTheme.accent)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 11)
+                    SettingsDivider()
+                    // Which stack runs voice — device-local, read when a
+                    // session starts. GPT-Live is the default.
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Voice engine")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(PollyTheme.text)
+                        Picker("Voice engine", selection: $voiceEngine) {
+                            ForEach(VoiceEngine.allCases) { engine in
+                                Text(engine.label).tag(engine.rawValue)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        Text((VoiceEngine(rawValue: voiceEngine) ?? .gptLive).detail)
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(PollyTheme.text3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 11)
                 }

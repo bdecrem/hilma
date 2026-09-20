@@ -9,7 +9,10 @@
 #
 # Bumps the build number, archives, uploads, then waits for processing, adds
 # the build to the Testers group and submits it for beta review
-# (asc-submit.mjs). Signing is manual and per machine, because each Mac holds
+# (asc-submit.mjs). Signing is manual, set on the app TARGET in project.yml (a
+# command-line PROVISIONING_PROFILE_SPECIFIER would also hit the Swift
+# packages' resource bundles, which refuse one) — this script only names the
+# profile, via POLLY_PROFILE / POLLY_MAC_PROFILE. It is per machine, because each Mac holds
 # a different Apple Distribution private key:
 #   iMac M4      key AH7Q68TW6S, profiles "polly appstore imac" /
 #                "polly catalyst appstore imac" (cert 4YB38SZ2F2)
@@ -60,7 +63,7 @@ PLIST
   echo "== $1: archiving build $BUILD with \"$profile\""
   xcodebuild archive -project Polly.xcodeproj -scheme Polly -destination "$dest" \
     -archivePath "$archive" -configuration Release \
-    CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=$profile" "CODE_SIGN_IDENTITY=Apple Distribution" \
+    "POLLY_PROFILE=$profile" "POLLY_MAC_PROFILE=$profile" \
     > "$OUT/archive-$1.log" 2>&1 || { grep -E "error:" "$OUT/archive-$1.log" | head -20; echo "archive failed — $OUT/archive-$1.log"; exit 1; }
   echo "== $1: uploading"
   xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$plist" -exportPath "$OUT/export-$1" \

@@ -7,9 +7,9 @@ For picking this work up on another machine, moving the bridge, or rebuilding it
 | # | Piece | Where | State on 2026-09-20 |
 |---|---|---|---|
 | 1 | ElevenLabs account + API key | elevenlabs.io → Developers → API Keys | Starter plan; key in `.env.local`, Vercel and the bridge's env file |
-| 2 | Two Speech Engines, "Dodo" and "Dodo (dev)" | ElevenLabs (created by `engines.mjs`) | `seng_4101m2zmzxjhfzztr0yry2y1hmyn` (prod), `seng_0201m2zkd3xbey28ey55e7v86hjp` (dev) |
+| 2 | Four Speech Engines: "Dodo", "Dodo (dev)", "Polly", "Polly (dev)" | ElevenLabs (created by `engines.mjs`) | Dodo `seng_4101m2zmzxjhfzztr0yry2y1hmyn` (prod) / `seng_0201m2zkd3xbey28ey55e7v86hjp` (dev); Polly `seng_3101m2zv3xxrey3ssf3s19mq7pkb` (prod) / `seng_4601m2zv3xmwf7k9zwk5dsd9f1na` (dev) |
 | 3 | The voice bridge, publicly reachable over `wss://` | a Mac that stays on | launchd job on Bart's MacBook Air — a stand-in; belongs on the Mac mini |
-| 4 | Three env vars on Vercel (Production) | `vercel env` | set |
+| 4 | Four env vars on Vercel (Production): the three below + `POLLY_ELEVEN_SPEECH_ENGINE_ID` (Polly's prod engine) | `vercel env` | set |
 | 5 | `f2_voice_sessions.system_prompt` column | Supabase | applied (`apps/f2/schema/050_f2_eleven_voice.sql`) |
 | 6 | Dodo build 0.2 (110) or later | the phone | installed on Bart's iPhone |
 
@@ -57,7 +57,7 @@ The tunnel hostname changes on every restart; nothing else depends on it because
 
 ## The engines (piece 2)
 
-`node apps/dodo-voice-bridge/engines.mjs https://<bridge host>` creates or updates both, by name — voice (Jessica, `cgSgspJ2msm6clMCkdW9`), voice model (`eleven_v3_conversational`; `DODO_ELEVEN_TTS_MODEL=eleven_flash_v2` is ≈ 0.5 s quicker and flatter; English engines refuse `…_v2_5`), a 30 s turn timeout, a one-hour conversation cap, and the rule that forwards the conversation's `dodo_voice_session` variable to the bridge as the `x-dodo-voice-session` header. `run.sh` calls it for you. If the engines are ever deleted it recreates them with **new ids** — then update `ELEVEN_SPEECH_ENGINE_ID` in `.env.local` (dev id) and on Vercel (prod id) from the script's output.
+`node apps/dodo-voice-bridge/engines.mjs https://<bridge host>` creates or updates all four, by name — voice (Dodo: Jessica, `cgSgspJ2msm6clMCkdW9`; Polly: Alice, `Xb7hH8MSUJpSbSDYk0k2`, multilingual), voice model (`eleven_v3_conversational`; `DODO_ELEVEN_TTS_MODEL=eleven_flash_v2` is ≈ 0.5 s quicker and flatter; English engines refuse `…_v2_5`), a 30 s turn timeout, a one-hour conversation cap, and the rule that forwards the conversation's `dodo_voice_session` variable to the bridge as the `x-dodo-voice-session` header. `run.sh` calls it for you. If the engines are ever deleted it recreates them with **new ids** — then update `ELEVEN_SPEECH_ENGINE_ID` in `.env.local` (dev id) and on Vercel (prod id) from the script's output.
 
 ## Vercel (piece 4)
 

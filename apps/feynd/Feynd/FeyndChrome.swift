@@ -828,6 +828,7 @@ struct SourceCard: View {
 struct FeyndComposer: View {
     @Binding var draft: String
     let busy: Bool
+    var placeholder: String = "Send a URL or ask a question…"
     let onSend: () -> Void
 
     private var canSend: Bool {
@@ -839,7 +840,7 @@ struct FeyndComposer: View {
             // Custom pill. No `.regularMaterial` — sits flat on FeyndTheme.bg.
             ZStack(alignment: .leading) {
                 if draft.isEmpty {
-                    Text("Send a URL or ask a question…")
+                    Text(placeholder)
                         .font(.system(size: 16))
                         .foregroundStyle(FeyndTheme.text3)
                         .padding(.leading, 16)

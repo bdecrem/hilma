@@ -843,6 +843,75 @@ final class F2API {
                                          hold_to_talk: holdToTalk))
     }
 
+    // MARK: Global chat — one conversation across ALL of the user's topics
+
+    struct GlobalSource: Codable, Hashable, Identifiable {
+        let threadId: String
+        let topic: String
+        var id: String { threadId }
+
+        enum CodingKeys: String, CodingKey {
+            case topic
+            case threadId = "thread_id"
+        }
+    }
+
+    struct GlobalMessage: Codable, Identifiable, Equatable {
+        let role: String            // "user" | "assistant"
+        let text: String
+        let createdAt: Date?
+        /// "voice" for a turn spoken in a global voice session.
+        let via: String?
+        /// The topics an answer drew on; tappable.
+        let sources: [GlobalSource]?
+
+        var id: String { "\(role)-\(createdAt?.timeIntervalSince1970 ?? 0)-\(text.hashValue)" }
+
+        enum CodingKeys: String, CodingKey {
+            case role, text, via, sources
+            case createdAt = "created_at"
+        }
+    }
+
+    /// How much of the library Dodo has read (digest + search index).
+    struct GlobalIndexStatus: Codable, Equatable {
+        let topics: Int
+        let indexed: Int
+        let pending: Int
+    }
+
+    struct GlobalChatState: Codable {
+        let messages: [GlobalMessage]
+        let index: GlobalIndexStatus
+    }
+
+    struct GlobalReply: Codable {
+        let reply: String
+        let sources: [GlobalSource]
+        let messages: [GlobalMessage]
+    }
+
+    struct GlobalIndexResponse: Codable { let index: GlobalIndexStatus }
+
+    func globalChat() async throws -> GlobalChatState {
+        try await get("/api/f2/global-chat")
+    }
+
+    func sendGlobalChat(text: String, model: String? = nil) async throws -> GlobalReply {
+        struct Body: Encodable { let text: String; let model: String? }
+        return try await post("/api/f2/global-chat", body: Body(text: text, model: model))
+    }
+
+    func clearGlobalChat() async throws {
+        let _: EmptyResponse = try await request("/api/f2/global-chat", method: "DELETE", body: nil as EmptyBody?)
+    }
+
+    /// One ~25 s catch-up pass over topics Dodo hasn't read yet.
+    func indexGlobalChat() async throws -> GlobalIndexStatus {
+        let res: GlobalIndexResponse = try await post("/api/f2/global-chat/index", body: EmptyBody())
+        return res.index
+    }
+
     // MARK: Flash cards
 
     /// Deck + set history for one topic.

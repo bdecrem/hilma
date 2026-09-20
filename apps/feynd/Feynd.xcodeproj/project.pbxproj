@@ -59,6 +59,7 @@
 		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
 		98F0EA996D408AAFFF3C436C /* AnimatedDodo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487F9BE215DF2E21F43AB5 /* AnimatedDodo.swift */; };
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
+		9FF7D9F5ED7DF8FA04046359 /* GlobalChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DAD4659DAF66B25182287FB /* GlobalChatView.swift */; };
 		A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */; };
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
 		A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */; };
@@ -100,6 +101,7 @@
 		0A077252957BBEE41DCF582D /* FeyndApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndApp.swift; sourceTree = "<group>"; };
 		0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicDetailView.swift; sourceTree = "<group>"; };
 		0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicsView.swift; sourceTree = "<group>"; };
+		0DAD4659DAF66B25182287FB /* GlobalChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalChatView.swift; sourceTree = "<group>"; };
 		0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */ = {isa = PBXFileReference; path = "voice-coral.m4a"; sourceTree = "<group>"; };
 		121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IMessagePairingView.swift; sourceTree = "<group>"; };
 		12E8929D1275BD9EE7743E3F /* voice-gleam.m4a */ = {isa = PBXFileReference; path = "voice-gleam.m4a"; sourceTree = "<group>"; };
@@ -228,6 +230,7 @@
 				BB38EBAB179201757DE149C1 /* FlashSFX.swift */,
 				BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */,
 				A806446C086649CAB62568A4 /* FlashVoiceView.swift */,
+				0DAD4659DAF66B25182287FB /* GlobalChatView.swift */,
 				C034E8A6E1CC456DE623630F /* HelpSheet.swift */,
 				121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */,
 				B119830CA567768C3502310E /* Info.plist */,
@@ -445,6 +448,7 @@
 				ED0532A13EF17F943FC56DE3 /* FlashSetView.swift in Sources */,
 				3EB1222C6738105EC8558353 /* FlashTabView.swift in Sources */,
 				69465CB76129F3A8475D3837 /* FlashVoiceView.swift in Sources */,
+				9FF7D9F5ED7DF8FA04046359 /* GlobalChatView.swift in Sources */,
 				08003C48F17C70F2C60C142B /* HelpSheet.swift in Sources */,
 				0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */,
 				470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */,
@@ -517,7 +521,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 110;
+				CURRENT_PROJECT_VERSION = 111;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -613,7 +617,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 110;
+				CURRENT_PROJECT_VERSION = 111;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

@@ -150,7 +150,7 @@ struct InfinityHomeView: View {
     }
 
     #if targetEnvironment(simulator)
-    /// `-OpenInfinityDrill text|quiz|cleanup|page|vocab|grammar|voice|type` — screenshot
+    /// `-OpenInfinityDrill text|talk|quiz|cleanup|page|vocab|grammar|voice|type` — screenshot
     /// loops: the text chat, a chat's quiz / walk, or its page (and, on the page,
     /// a drill or Continue by voice / by typing).
     private func runLaunchHooks() async {
@@ -158,6 +158,9 @@ struct InfinityHomeView: View {
         guard let which = UserDefaults.standard.string(forKey: "OpenInfinityDrill"), LaunchOnce.take("OpenInfinityDrill") else { return }
         try? await Task.sleep(for: .milliseconds(600))
         if which == "text" { flow.type(); return }
+        // `talk` — a NEW spoken chat (pair with -VoiceLiveTest 1 and, for the
+        // ElevenLabs engine, -voiceEngine eleven).
+        if which == "talk" { flow.talk(); return }
         guard let ready = chats.first(where: { $0.hasAnalysis }) else { return }
         switch which {
         case "quiz": flow.quiz(ready)
