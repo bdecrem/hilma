@@ -10,14 +10,17 @@
 //
 //   ElevenLabs ──ws──▶ bridge ──http (streamed)──▶ /api/f2/eleven/turn ──▶ Claude
 //
-// One process serves several backends by path: wss://host/ws/prod and
-// wss://host/ws/dev are two Speech Engines (see README.md).
+// One process serves several backends by path — each path is one Speech
+// Engine (see README.md): /ws/prod and /ws/dev are Dodo's, /ws/polly-prod and
+// /ws/polly-dev are Polly's, whose turns go to /api/polly/eleven/turn.
 //
 // Env:
 //   ELEVENLABS_API_KEY   verifies the JWT ElevenLabs sends on every upgrade
 //   DODO_BRIDGE_SECRET   shared secret sent to the backend as x-bridge-secret
-//   DODO_BRIDGE_BACKENDS JSON map of path name → backend origin,
-//                        e.g. {"prod":"https://feynd.cc","dev":"http://localhost:3100"}
+//   DODO_BRIDGE_BACKENDS JSON map of path name → the URL a turn is POSTed to. A
+//                        bare origin means Dodo's route (/api/f2/eleven/turn):
+//                        {"prod":"https://feynd.cc",
+//                         "polly-prod":"https://hilma-nine.vercel.app/api/polly/eleven/turn"}
 //   PORT                 default 3901
 import { createServer } from 'node:http'
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
@@ -26,7 +29,12 @@ import { WebSocketServer } from 'ws'
 const PORT = Number(process.env.PORT || 3901)
 const API_KEY = (process.env.ELEVENLABS_API_KEY || '').trim()
 const SECRET = (process.env.DODO_BRIDGE_SECRET || '').trim()
-const BACKENDS = JSON.parse(process.env.DODO_BRIDGE_BACKENDS || '{}')
+const BACKENDS = Object.fromEntries(
+  Object.entries(JSON.parse(process.env.DODO_BRIDGE_BACKENDS || '{}')).map(([name, url]) => [
+    name,
+    new URL(url).pathname === '/' ? `${String(url).replace(/\/$/, '')}/api/f2/eleven/turn` : String(url),
+  ]),
+)
 
 if (!API_KEY) throw new Error('ELEVENLABS_API_KEY is not set')
 if (!SECRET) throw new Error('DODO_BRIDGE_SECRET is not set')
@@ -153,7 +161,7 @@ function handleConnection(ws, name, backend, voiceSessionId) {
     let firstChunkAt = null
     let chars = 0
     try {
-      const res = await fetch(`${backend}/api/f2/eleven/turn`, {
+      const res = await fetch(backend, {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-bridge-secret': SECRET },
         body: JSON.stringify({

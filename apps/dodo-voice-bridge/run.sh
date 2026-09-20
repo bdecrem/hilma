@@ -8,7 +8,7 @@
 # Env comes from ~/.dodo-voice-bridge.env when it exists (the mini, launchd),
 # else from the repo's .env.local (a dev machine):
 #   ELEVENLABS_API_KEY, DODO_BRIDGE_SECRET        required
-#   DODO_BRIDGE_BACKENDS                          default: prod → feynd.cc, dev → localhost:3100
+#   DODO_BRIDGE_BACKENDS                          default: Dodo prod/dev + Polly prod/dev (below)
 set -euo pipefail
 cd "$(dirname "$0")"
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -19,7 +19,8 @@ else
   set -a; eval "$(grep -E '^(ELEVENLABS_API_KEY|DODO_BRIDGE_SECRET)=' ../../.env.local)"; set +a
 fi
 export PORT="${PORT:-3901}"
-export DODO_BRIDGE_BACKENDS="${DODO_BRIDGE_BACKENDS:-{\"prod\":\"https://feynd.cc\",\"dev\":\"http://localhost:3100\"}}"
+DEFAULT_BACKENDS='{"prod":"https://feynd.cc","dev":"http://localhost:3100","polly-prod":"https://hilma-nine.vercel.app/api/polly/eleven/turn","polly-dev":"http://localhost:3100/api/polly/eleven/turn"}'
+export DODO_BRIDGE_BACKENDS="${DODO_BRIDGE_BACKENDS:-$DEFAULT_BACKENDS}"
 
 [ -d node_modules ] || npm install --no-audit --no-fund
 command -v cloudflared >/dev/null || { echo "cloudflared is not installed (brew install cloudflared)"; exit 1; }

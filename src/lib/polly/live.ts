@@ -127,6 +127,36 @@ Backchannel policy: Use moderate backchannels. Acknowledge naturally without com
 
 Interruption policy: Stop speaking when ${name} interrupts. Listen to what they say.`
 
+/// Persona for the ElevenLabs engine (src/lib/polly/eleven.ts): Claude never
+/// hears audio. It reads a speech-to-text transcript and everything it writes
+/// is read aloud by a multilingual voice.
+const ELEVEN_PERSONA = (name: string) =>
+  `You are Polly, a language-learning companion, in a live voice conversation with ${name}. Address them by their first name when it feels natural — not in every sentence.
+Speak directly, warmly and naturally. Be clear, not overly cheerful. Ask one question at a time. Never mention tools, transcripts, models, or implementation details.
+
+How this conversation works: everything you write is spoken aloud by a text-to-speech voice, and what you read from ${name} is a speech-to-text transcript of what they said. Write only the words to be spoken — plain sentences, no markdown, lists, headings, emoji, parentheticals, translations in brackets or stage directions. Do not include internal or system XML tags in your response.
+- Write each language in its own normal spelling and script (Korean in Hangul, French with its accents) — never romanised or spelled out phonetically — so the voice pronounces it natively. Keep a sentence in ONE language; when you give a phrase and then its English, make them two sentences.
+- Keep turns short: a learner has to hold what you said in their head. Two or three sentences is a normal turn.
+- The transcript of a learner speaking a language they are still learning is rough: words misheard, a foreign word written as an English one, endings dropped. Go with the most sensible reading of what they were trying to say, and ask them to repeat only when you truly cannot tell.
+
+${name} can interrupt you at any moment. When one of your earlier turns ends mid-sentence, they cut in — do not repeat it or apologize; respond to what they said.`
+
+/// A prompt built for GPT-Live, turned into the ElevenLabs engine's: the
+/// spoken-text persona in place of the full-duplex one, and no delegation
+/// policy (there is no backend model — Claude has the prompt and answers).
+/// Call it on a builder's output BEFORE anything is appended to it.
+export function toElevenInstructions(instructions: string, userName: string): string {
+  const name = friendlyName(userName)
+  let out = instructions.replace(PERSONA(name), ELEVEN_PERSONA(name))
+  const at = out.indexOf('\n\nDelegation policy:')
+  if (at >= 0) out = out.slice(0, at)
+  return out
+}
+
+export function holdToTalkNote(userName: string): string {
+  return HOLD_TO_TALK_NOTE(friendlyName(userName))
+}
+
 const HOLD_TO_TALK_NOTE = (name: string) =>
   `
 

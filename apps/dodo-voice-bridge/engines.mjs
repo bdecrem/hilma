@@ -1,14 +1,16 @@
-// Create or update Dodo's two Speech Engines on ElevenLabs and point them at
-// this bridge. Idempotent: engines are found by name.
+// Create or update the Speech Engines on ElevenLabs — two for Dodo, two for
+// Polly — and point them at this bridge. Idempotent: engines are found by name.
 //
 //   node engines.mjs <public https origin of the bridge>
 //   node engines.mjs https://something.trycloudflare.com
 //
-//   "Dodo (dev)"  → wss://<host>/ws/dev   (bridge forwards to a local dev server)
-//   "Dodo"        → wss://<host>/ws/prod  (bridge forwards to https://feynd.cc)
+//   "Dodo (dev)"   → wss://<host>/ws/dev         (a local dev server)
+//   "Dodo"         → wss://<host>/ws/prod        (https://feynd.cc)
+//   "Polly (dev)"  → wss://<host>/ws/polly-dev   (a local dev server, Polly's turn route)
+//   "Polly"        → wss://<host>/ws/polly-prod  (https://hilma-nine.vercel.app)
 //
-// Prints the engine ids — ELEVEN_SPEECH_ENGINE_ID in .env.local is the dev
-// one, on Vercel the prod one. run.sh calls this on every start because a
+// Prints the engine ids — ELEVEN_SPEECH_ENGINE_ID / POLLY_ELEVEN_SPEECH_ENGINE_ID
+// in .env.local are the dev ones, on Vercel the prod ones. run.sh calls this on every start because a
 // Cloudflare quick tunnel gets a new hostname each time.
 //
 // Env: ELEVENLABS_API_KEY.
@@ -19,9 +21,16 @@ const origin = (process.argv[2] || '').replace(/\/$/, '')
 if (!/^https:\/\//.test(origin)) throw new Error('usage: node engines.mjs https://<bridge host>')
 const wsBase = origin.replace(/^https:/, 'wss:')
 
+// Polly's voice speaks Italian, French and Korean as well as English: Alice
+// is one of the library's multilingual educator voices. DODO_ELEVEN_VOICE_ID /
+// POLLY_ELEVEN_VOICE_ID override.
+const DODO_VOICE = process.env.DODO_ELEVEN_VOICE_ID || 'cgSgspJ2msm6clMCkdW9' // Jessica — playful, bright, warm
+const POLLY_VOICE = process.env.POLLY_ELEVEN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2' // Alice — clear, engaging educator
 const ENGINES = [
-  { name: 'Dodo (dev)', path: '/ws/dev' },
-  { name: 'Dodo', path: '/ws/prod' },
+  { name: 'Dodo (dev)', path: '/ws/dev', voice: DODO_VOICE },
+  { name: 'Dodo', path: '/ws/prod', voice: DODO_VOICE },
+  { name: 'Polly (dev)', path: '/ws/polly-dev', voice: POLLY_VOICE },
+  { name: 'Polly', path: '/ws/polly-prod', voice: POLLY_VOICE },
 ]
 
 /// Everything about how Dodo sounds and takes turns lives here.
@@ -35,8 +44,7 @@ function engineBody(engine) {
       request_headers: { 'x-dodo-voice-session': { variable_name: 'dodo_voice_session' } },
     },
     tts: {
-      // Jessica — playful, bright, warm; a conversational voice.
-      voice_id: process.env.DODO_ELEVEN_VOICE_ID || 'cgSgspJ2msm6clMCkdW9',
+      voice_id: engine.voice,
       // The expressive conversational model. 'eleven_flash_v2' is ≈ 0.5 s
       // quicker to first sound and flatter; English engines accept only
       // flash/turbo v2 or this one (v2.5 is refused).

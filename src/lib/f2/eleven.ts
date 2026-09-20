@@ -71,9 +71,9 @@ function anthropic(): Anthropic {
 
 /// A WebRTC conversation token for the Speech Engine. The phone starts the
 /// conversation with it; the API key never leaves the server.
-export async function mintElevenConversationToken(): Promise<string> {
+export async function mintElevenConversationToken(engineId: string = elevenEngineId()): Promise<string> {
   const res = await fetch(
-    `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(elevenEngineId())}`,
+    `https://api.elevenlabs.io/v1/convai/conversation/token?agent_id=${encodeURIComponent(engineId)}`,
     { headers: { 'xi-api-key': elevenApiKey() } },
   )
   const text = await res.text()
