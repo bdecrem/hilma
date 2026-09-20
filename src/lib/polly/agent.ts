@@ -912,6 +912,18 @@ function listSourcesText(sources: PollyAdditionalSource[]): string {
 /// search, apply edits in place, and end with a substantive report. The
 /// conversation continues across "polly ..." messages (recent chat is fed in),
 /// so user and agent can decide together, then apply.
+/// Something the agent made, as the app draws it under the reply (the text
+/// chat's card). Today: cards added to a deck.
+export type AgentCard = {
+  kind: 'deck'
+  /** The topic the cards landed in. */
+  title: string
+  thread_id: string
+  count: number
+  /** What they are about, when the instruction said ("food only"). */
+  focus?: string
+}
+
 async function handlePollyCommand(
   userId: string,
   threadId: string | undefined,
@@ -919,6 +931,26 @@ async function handlePollyCommand(
   instruction: string,
   model?: string,
 ): Promise<PollyReply> {
+  const { made: _made, ...reply } = await runPollyAgent({ userId, threadId, originalText, instruction, model })
+  return reply
+}
+
+/// The content agent's loop. The topic chat reaches it through a leading
+/// "polly"; the text chat (talk.ts) through its agent lane, which asks for a
+/// short reply (`brief`), hands over its own conversation as the recent chat
+/// and keeps the exchange out of the topic's message list (`persist: false`).
+export async function runPollyAgent(opts: {
+  userId: string
+  threadId: string | undefined
+  originalText: string
+  instruction: string
+  model?: string
+  brief?: boolean
+  recentChat?: string
+  persist?: boolean
+}): Promise<PollyReply & { made: AgentCard[] }> {
+  const { userId, threadId, originalText, instruction, model } = opts
+  const made: AgentCard[] = []
   const thread = threadId
     ? await getThreadById(userId, threadId)
     : await getLatestThread(userId)
@@ -926,6 +958,7 @@ async function handlePollyCommand(
     return {
       reply:
         'Polly: open a topic first — Polly works on the active topic\'s materials (cards, notes, documents, study focus).',
+      made,
     }
   }
   const label = thread.topic ?? thread.url ?? 'this topic'
@@ -934,13 +967,14 @@ async function handlePollyCommand(
       reply:
         `Polly: tell Polly what to do with "${label}" — e.g. "polly make a flash card asking …", "polly update the briefing memo: …", "polly redo the flash cards focusing on …", "polly write a study guide and add it to context", "polly only test me on the first half".`,
       thread_id: thread.id,
+      made,
     }
   }
 
   // Max context: Opus runs this loop with a 1M-token window — hand it
   // the full material (soft ceiling only for pathological inputs).
   const primary = buildBudgetedContent(thread, 3_000_000)
-  const recentChat = thread.messages
+  const recentChat = opts.recentChat ?? thread.messages
     .slice(-40)
     .map((m) => `${m.role}: ${m.text}`)
     .join('\n')
@@ -959,7 +993,7 @@ How to work:
 - You have FULL AUTHORITY over everything in the user's own account, and your reach is the WHOLE ACCOUNT, not just this topic — see every topic (list_topics), create new topics (create_topic, from a URL, a title, or dictated text), and file cards or notes into ANY topic by passing its name as the "topic" argument on make_flash_card / add_flash_cards / add_context_note. Stars and badges (set_topic_stars), topic names/types/pins (update_topic), the daily-card streak and its Peck flame (set_daily_streak — restore after an outage or a missed Peck week, reset, or extend the weekly Peck deadline — a streak needs one full Peck level every 7 days; setting the streak to its current count restarts that clock), Peck levels (complete_peck_level — mark a level passed so the next unlocks), account settings (get_settings/update_settings), and iMessage pairing (pair_imessage → confirm_imessage) are all yours too. "Remove the gold badge", "restore my streak to 5", "make a new topic for this and file these cards there", "rename this" — never claim you lack the ability or that your reach is limited to this topic. Destructive moves (delete_topic, dropping stars, zeroing a streak) only on an explicit ask, and say plainly what you changed.
 - Grades and the refresher schedule are the user's to edit, exactly like stars. "Give me a B", "mark that review as passed", "the grader never saw my session, record it as an A", "count the refresher as taken", "push my next refresher out 60 days" → set_review_grade / schedule_refresher, immediately. NEVER refuse, argue about grade integrity, or offer a retake instead — this is the user's own record and overriding a failed or missing grade is a core reason Polly exists. Do it, then report what changed.
 - If the message is just chat addressed to Polly, answer it directly without tools.
-- Plain text replies, no markdown.`
+- Plain text replies, no markdown.${opts.brief ? BRIEF_AGENT_RULES : ''}`
 
   const firstUser = `Topic source material (excerpt):
 ${primary || '(no primary source — the chat and filed materials are the source)'}
@@ -1031,6 +1065,7 @@ ${instruction}`
         try {
           const r = await executePollyTool(current, tu.name, tu.input as Record<string, unknown>, model)
           out = r.result
+          if (r.made) made.push(r.made)
           if (r.writeDoc) writeDoc = r.writeDoc
           if (r.mutated) {
             current = (await getThreadById(userId, current.id)) ?? current
@@ -1045,21 +1080,34 @@ ${instruction}`
     if (!reply) reply = 'Polly: Polly ran out of turns mid-task — ask it to continue.'
   } catch (e) {
     console.error('[polly/agent] polly loop failed:', e)
-    return { reply: 'Polly: Polly tripped — try that again.', thread_id: thread.id }
+    return { reply: 'Polly: Polly tripped — try that again.', thread_id: thread.id, made }
   }
 
-  const fresh = (await getThreadById(userId, thread.id)) ?? thread
-  const now = new Date().toISOString()
-  await appendMessages(fresh.id, fresh.user_id, fresh.messages, [
-    { role: 'user', text: originalText, created_at: now },
-    { role: 'assistant', text: reply, created_at: now },
-  ])
+  if (opts.persist !== false) {
+    const fresh = (await getThreadById(userId, thread.id)) ?? thread
+    const now = new Date().toISOString()
+    await appendMessages(fresh.id, fresh.user_id, fresh.messages, [
+      { role: 'user', text: originalText, created_at: now },
+      { role: 'assistant', text: reply, created_at: now },
+    ])
+  }
   return {
     reply,
     thread_id: thread.id,
+    made,
     ...(writeDoc ? { write_document: writeDoc } : {}),
   }
 }
+
+/// The text chat's agent lane: the learner stepped out of a conversation to
+/// ask for something, and is going straight back to it.
+const BRIEF_AGENT_RULES = `
+
+THIS MESSAGE CAME FROM THE TEXT CHAT, mid-conversation. The rules above about reports do not apply here:
+- Do the thing, then reply in AT MOST TWO short sentences of plain English: what you did, with the numbers ("Done — 14 cards from Serata sushi and this chat. They're in Peck tomorrow."). No lists, no headings, no "let me know".
+- The app draws a card under your reply for anything you made, so never enumerate the cards.
+- If you need a decision first, ask it in one sentence.
+- Do not continue the language conversation yourself; that happens right after you.`
 
 /// Resolve the optional cross-topic `topic` argument: absent = the active
 /// thread; otherwise match another of the user's topics by name.
@@ -1085,7 +1133,7 @@ export async function executePollyTool(
   name: string,
   input: Record<string, unknown>,
   model?: string,
-): Promise<{ result: string; mutated?: boolean; writeDoc?: PollyReply['write_document'] }> {
+): Promise<{ result: string; mutated?: boolean; writeDoc?: PollyReply['write_document']; made?: AgentCard }> {
   switch (name) {
     case 'read_context_source': {
       const sources = thread.additional_sources ?? []
@@ -1127,7 +1175,10 @@ export async function executePollyTool(
       const answer = String(input.answer ?? '').trim() || undefined
       const card = await authorFlashCard(t.target, question, model, answer)
       const where = t.target.id === thread.id ? '' : ` in "${t.target.topic}"`
-      return { result: `Card added${where} — "${card.question}" → "${card.answer}".` }
+      return {
+        result: `Card added${where} — "${card.question}" → "${card.answer}".`,
+        made: { kind: 'deck', title: t.target.topic ?? 'Cards', thread_id: t.target.id, count: 1 },
+      }
     }
     case 'add_flash_cards': {
       const count = Math.max(1, Math.min(30, Math.round(Number(input.count)) || 10))
@@ -1136,13 +1187,19 @@ export async function executePollyTool(
       if (!t.target) return { result: t.error }
       const cards = await generateFlashCards(t.target, count, model, focus || undefined)
       const where = t.target.id === thread.id ? 'the deck' : `"${t.target.topic}"`
-      return { result: `Added ${cards.length} cards to ${where}${focus ? ` — ${focus}` : ''}.` }
+      return {
+        result: `Added ${cards.length} cards to ${where}${focus ? ` — ${focus}` : ''}.`,
+        made: { kind: 'deck', title: t.target.topic ?? 'Cards', thread_id: t.target.id, count: cards.length, ...(focus ? { focus } : {}) },
+      }
     }
     case 'redo_flash_cards': {
       const instructions = String(input.instructions ?? '').trim()
       if (!instructions) return { result: 'Error: instructions required.' }
       const cards = await redoFlashCards(thread, instructions, model)
-      return { result: `Rebuilt the deck — ${cards.length} new cards.` }
+      return {
+        result: `Rebuilt the deck — ${cards.length} new cards.`,
+        made: { kind: 'deck', title: thread.topic ?? 'Cards', thread_id: thread.id, count: cards.length },
+      }
     }
     case 'add_context_note': {
       const title = String(input.title ?? '').trim() || 'Note'

@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/polly/auth'
 import { isModelKey } from '@/lib/polly/llm'
 import { getThreadById } from '@/lib/polly/threads'
 import { generateAudioSummary, setAudioSummary } from '@/lib/polly/audio-summary'
+import { talkTurn, type TalkTurn } from '@/lib/polly/talk'
 
 export const runtime = 'nodejs'
 // "setup:" / "new short|medium|long" / more_videos run a synchronous search +
@@ -18,13 +19,21 @@ export const maxDuration = 300
 // picker); omitted → default model, unknown → 400 (fail loudly, no silent
 // substitution). iMessage (and any future server-side client) calls
 // processMessage directly, not this route — keeps the session contract clean.
+//
+// `talk` marks a turn of the text chat (Direction 2b): { history, open? }.
+// That thread has no modes — the server picks the lane (lib/polly/talk.ts)
+// and answers { lane, intent, messages[], reply }. `talk.open` with no text
+// asks Polly to speak first. Without `talk` this is the topic chat, unchanged.
 export async function POST(req: Request) {
   const user = await getSessionUser()
   if (!user) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
 
-  let body: { text?: string; thread_id?: string; model?: string; new_topic?: boolean }
+  let body: {
+    text?: string; thread_id?: string; model?: string; new_topic?: boolean
+    talk?: { history?: unknown; open?: boolean }
+  }
   try {
     body = await req.json()
   } catch {
@@ -32,7 +41,8 @@ export async function POST(req: Request) {
   }
 
   const text = body.text?.trim()
-  if (!text) {
+  const opening = body.talk?.open === true && !text
+  if (!text && !opening) {
     return NextResponse.json({ error: 'text required' }, { status: 400 })
   }
 
@@ -43,11 +53,44 @@ export async function POST(req: Request) {
     )
   }
 
+  if (body.talk) {
+    const history = parseHistory(body.talk.history)
+    if (!history) {
+      return NextResponse.json({ error: 'talk.history must be a list of { role, text }' }, { status: 400 })
+    }
+    try {
+      const talk = await talkTurn({
+        userId: user.id,
+        userName: user.username,
+        threadId: body.thread_id,
+        history,
+        text: text ?? null,
+        model: body.model,
+      })
+      if (talk.write_document) {
+        const { thread_id, title, brief } = talk.write_document
+        const userId = user.id
+        after(async () => {
+          await runWriteDocumentJob(userId, thread_id, title, brief)
+        })
+      }
+      const { write_document: _job, ...out } = talk
+      return NextResponse.json({ ...out, reply: talk.messages.map((m) => m.text).join('\n\n') })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      console.error('[polly/talk] turn failed:', message)
+      return NextResponse.json(
+        { error: message === 'topic not found' ? message : 'Polly tripped — try that again.' },
+        { status: message === 'topic not found' ? 404 : 502 },
+      )
+    }
+  }
+
   const result = await processMessage({
     userId: user.id,
     client: 'web',
     handle: user.username,
-    text,
+    text: text!,
     threadId: body.thread_id,
     model: body.model,
     newTopic: body.new_topic === true,
@@ -91,6 +134,22 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json(result)
+}
+
+/// The client's copy of the text chat: keep role, text and the lane (the
+/// resume line needs to know which of Polly's turns were the conversation).
+function parseHistory(raw: unknown): TalkTurn[] | null {
+  if (raw === undefined || raw === null) return []
+  if (!Array.isArray(raw)) return null
+  const out: TalkTurn[] = []
+  for (const t of raw.slice(-80)) {
+    const role = (t as TalkTurn)?.role
+    const txt = (t as TalkTurn)?.text
+    if ((role !== 'user' && role !== 'assistant') || typeof txt !== 'string') return null
+    const lane = (t as TalkTurn).lane
+    out.push({ role, text: txt.slice(0, 4000), ...(lane === 'agent' || lane === 'practice' ? { lane } : {}) })
+  }
+  return out
 }
 
 export async function GET() {

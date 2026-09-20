@@ -144,6 +144,10 @@ export type LlmRequest = {
   /** Thinking effort for this call; overrides the model's registry default
    *  (Anthropic models only). */
   effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
+  /** A live chat turn: thinking off, no effort config and no max-token floor,
+   *  so the reply comes back in a second or two (Anthropic models that accept
+   *  a thinking config only — Fable always thinks). */
+  noThinking?: boolean
 }
 
 export type LlmResult =
@@ -170,7 +174,8 @@ export function contextCharBudget(key: string | null | undefined): number {
 export async function llmComplete(req: LlmRequest): Promise<LlmResult> {
   const key = resolveModel(req.model)
   const spec = MODELS[key]
-  const maxTokens = Math.max(req.maxTokens, spec.maxTokensFloor ?? 0)
+  const quick = Boolean(req.noThinking && spec.thinking)
+  const maxTokens = quick ? req.maxTokens : Math.max(req.maxTokens, spec.maxTokensFloor ?? 0)
 
   if (spec.provider === 'anthropic') {
     return anthropicComplete(key, spec, req, maxTokens)
@@ -228,8 +233,10 @@ async function anthropicComplete(
     ],
     messages: req.messages,
   }
-  if (spec.thinking) params.thinking = spec.thinking
-  const effort = req.effort ?? spec.effort
+  const quick = Boolean(req.noThinking && spec.thinking)
+  if (quick) params.thinking = { type: 'disabled' }
+  else if (spec.thinking) params.thinking = spec.thinking
+  const effort = quick ? undefined : (req.effort ?? spec.effort)
   if (effort) params.output_config = { effort }
   if (req.tools && req.tools.length > 0) {
     if (req.forceTool && canForce) {
