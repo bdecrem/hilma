@@ -56,11 +56,11 @@ struct ProfileSheet: View {
                 }
             }
             #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
-            // `-ProfileScrollTo learning` — bring a section into view for screenshots.
+            // `-ProfileScrollTo learning|daily-card|account|…` — bring a section into view for screenshots.
             .task {
-                if UserDefaults.standard.string(forKey: "ProfileScrollTo") == "learning" {
+                if let section = UserDefaults.standard.string(forKey: "ProfileScrollTo") {
                     try? await Task.sleep(for: .milliseconds(600))
-                    proxy.scrollTo("settings-learning", anchor: .top)
+                    proxy.scrollTo("settings-" + section, anchor: .top)
                 }
             }
             #endif
@@ -649,7 +649,6 @@ struct ProfileSheet: View {
                     }
                 }
             }
-            .id("settings-learning")
             SettingsSection(label: "Account") {
                 SettingsCard {
                     SettingsRow(label: "Signed in as", detail: username)
@@ -822,6 +821,8 @@ struct SettingsSection<Content: View>: View {
                 .padding(.leading, 4)
             content()
         }
+        // Scroll anchor: `-ProfileScrollTo <label>` ("learning", "daily-card", …).
+        .id("settings-" + label.lowercased().replacingOccurrences(of: " ", with: "-"))
     }
 }
 

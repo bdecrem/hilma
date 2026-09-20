@@ -245,7 +245,11 @@ sheet, vocab, grammar, quiz, clean-up walk, talk), a path lesson, a guest
 lesson, Peck (sets, results, miss clinic), the level check, profile, language
 switcher — and a contact sheet. `--delete` on the seed script removes the
 account. Hooks added for it: `-OpenInfinitySessions 1` (the study sheet, with
-`-OpenTopic <infinity id>`) and `-OpenInfinityDrill cleanup`. Two things it
+`-OpenTopic <infinity id>`) and `-OpenInfinityDrill cleanup`. `-ProfileScrollTo <section>` now takes any
+settings section (`appearance`, `daily-card`, `learning`, `account`, …). For an
+English-UI set, `xcrun simctl spawn booted defaults write com.bartdecrem.Polly
+uiInStudyLanguage -bool NO` before the run (a launch argument doesn't work:
+the toggle is read with `as? Bool`). Two things it
 ran into: the login route lowercases the identifier while guest names keep
 their case (the demo signs in by email), and a copied chat's
 `analysis.card_ids` must be remapped or its quiz comes back empty.
