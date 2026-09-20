@@ -16,6 +16,12 @@ struct VoiceSessionView: View {
     /// session id (nil = abandoned via X / never connected). The host owns
     /// dismissal + whatever grading happens next.
     let onFinished: ((String?) -> Void)?
+    /// What the conversation is, when it has a name: the chat being continued.
+    /// Nil shows nothing under the status pill (a fresh chat has no subject).
+    let subject: String?
+    /// The radio's keyboard: hang up (the transcript is uploaded first) and
+    /// hand the conversation to the text chat. Nil hides the button.
+    let onKeyboard: ((String?) -> Void)?
 
     @Environment(\.dismiss) private var dismiss
     @State private var client: LiveVoiceClient
@@ -26,15 +32,18 @@ struct VoiceSessionView: View {
     private let holdToTalk: Bool
 
     init(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
-         title: String? = nil, onFinished: ((String?) -> Void)? = nil) {
+         title: String? = nil, subject: String? = nil, continueChatId: String? = nil,
+         onKeyboard: ((String?) -> Void)? = nil, onFinished: ((String?) -> Void)? = nil) {
         self.mode = mode
         self.threadId = threadId
         self.title = title
+        self.subject = subject
+        self.onKeyboard = onKeyboard
         self.onFinished = onFinished
         let hold = UserDefaults.standard.bool(forKey: VoiceSettingsView.holdToTalkKey)
         self.holdToTalk = hold
         _client = State(initialValue: LiveVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
-                                                      holdToTalk: hold))
+                                                      continueChatId: continueChatId, holdToTalk: hold))
     }
 
     var body: some View {
@@ -45,11 +54,17 @@ struct VoiceSessionView: View {
             VStack(spacing: 0) {
                 headerRow
 
-                Text(L("TALKING ABOUT", "PARLIAMO DI", "ON PARLE DE", "대화 주제"))
-                    .font(.system(size: 11, weight: .bold))
-                    .tracking(2.2)
-                    .foregroundStyle(PollyTheme.text3)
-                    .padding(.top, 14)
+                // The chat's own title when this carries one on; a fresh
+                // conversation is not "about" anything yet.
+                if let subject, !subject.isEmpty {
+                    Text(subject.uppercased())
+                        .font(.system(size: 11, weight: .bold))
+                        .tracking(2.2)
+                        .foregroundStyle(PollyTheme.text3)
+                        .lineLimit(1)
+                        .padding(.top, 14)
+                        .padding(.horizontal, 30)
+                }
 
                 Spacer(minLength: 0)
 
@@ -235,7 +250,16 @@ struct VoiceSessionView: View {
                     muted.toggle()
                     client.setMuted(muted)
                 }
-                CircleControlButton(label: "Keyboard", systemImage: "keyboard", danger: false) { }
+                if let onKeyboard {
+                    CircleControlButton(label: ending ? "…" : "Keyboard", systemImage: "keyboard", danger: false) {
+                        guard !ending else { return }
+                        ending = true
+                        Task {
+                            let id = await client.end()
+                            onKeyboard(id)
+                        }
+                    }
+                }
             }
             CircleControlButton(label: ending ? "…" : "End", systemImage: "phone.down.fill", danger: true) {
                 guard !ending else { return }

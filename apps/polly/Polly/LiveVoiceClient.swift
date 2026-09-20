@@ -44,6 +44,8 @@ final class LiveVoiceClient: NSObject {
     let mode: String
     let threadId: String?
     let chatId: String?
+    /// The chat this session carries on (its turns are appended to it).
+    let continueChatId: String?
     /// Flash mode: the deck (card ids in question order) the server embeds
     /// in the session instructions.
     let cardIds: [String]?
@@ -118,7 +120,9 @@ final class LiveVoiceClient: NSObject {
     var debugTurnCount: Int { turns.count }
     #endif
 
-    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil, chatId: String? = nil, holdToTalk: Bool = false) {
+    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil, chatId: String? = nil,
+         continueChatId: String? = nil, holdToTalk: Bool = false) {
+        self.continueChatId = continueChatId
         self.mode = mode
         self.threadId = threadId
         self.chatId = chatId
@@ -247,7 +251,8 @@ final class LiveVoiceClient: NSObject {
             phase = .creatingSession
             status = "Creating voice session..."
             let session = try await PollyAPI.shared.startLiveSession(
-                mode: mode, threadId: threadId, cardIds: cardIds, chatId: chatId, holdToTalk: holdToTalk, sdp: offerSDP)
+                mode: mode, threadId: threadId, cardIds: cardIds, chatId: chatId, continueChatId: continueChatId,
+                holdToTalk: holdToTalk, sdp: offerSDP)
             sessionResponse = session
             model = session.live.model
             voice = session.live.voice
@@ -645,7 +650,8 @@ final class LiveVoiceClient: NSObject {
                 id: id,
                 transcript: rows,
                 summary: rows.isEmpty ? nil : "Voice session with \(rows.count) transcribed turns.",
-                usage: usage
+                usage: usage,
+                continueChatId: continueChatId
             )
             transcriptUploaded = true
         } catch {

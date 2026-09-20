@@ -205,6 +205,23 @@ async function partB(base: string) {
     console.log(`        delta clean-up ${((Date.now() - t0) / 1000).toFixed(0)} s → ${a.fresh_fixes} new fixes, ${a.fixes.length} in all`)
     check((a.fresh_fixes ?? 0) > 0 && a.fixes.length === before + (a.fresh_fixes ?? 0), 'only the new part was curated; its fixes are the ones to walk')
 
+    // ---------- Part D: the same chat, carried on out loud ----------
+    console.log('\n— Part D: text → voice keeps the conversation —')
+    const [{ id: vsId }] = sql(`insert into polly_voice_sessions (user_id, thread_id, mode) values ('${userId}','${threadId}','topic') returning id`) as { id: string }[]
+    const patch = await fetch(`${base}/api/polly/live/session/${vsId}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json', Cookie: cookie },
+      body: JSON.stringify({ continue_chat_id: chatId, transcript: [
+        { role: 'assistant', text: 'Allora, dove hai mangiato la pizza?' },
+        { role: 'user', text: 'Ho mangiato a casa di un amico, lui cucina molto bene.' },
+      ] }),
+    })
+    const spoken = (await patch.json()) as { ok: boolean; chat: Chat | null }
+    check(patch.ok && spoken.chat?.id === chatId && spoken.chat.input === 'mixed' && !spoken.chat.open && spoken.chat.needs_cleanup,
+      'the radio hanging up appends to the chat: mixed, closed, ready to clean up again', JSON.stringify({ input: spoken.chat?.input, open: spoken.chat?.open, needs: spoken.chat?.needs_cleanup }))
+    const mixed = await get<{ chat: Chat }>(`/api/polly/infinity/chats/${chatId}`)
+    const vias = (mixed.chat.transcript ?? []).map((x) => x.via)
+    check(vias.slice(-2).every((v) => v === 'voice') && vias.includes('text'), 'its transcript has the typed turns, then the spoken ones')
+
     const typed = await api<{ chat: Chat }>('/api/polly/infinity/chats', { thread_id: threadId, transcript: [{ role: 'assistant', text: 'Ciao! Che cosa fai oggi?' }, { role: 'user', text: 'Oggi lavoro e poi vado al cinema.' }] })
     check(typed.chat.input === 'text' && !typed.chat.open && !!typed.chat.title, 'POST /infinity/chats takes a transcript as well as a voice session')
   } finally {

@@ -154,6 +154,19 @@ what a native app would say.
 | Start | Inizia | Commencer | 시작 |
 | Start over | Ricomincia | Recommencer | 처음부터 다시 |
 | Continue | Continua | Continuer | 계속 |
+| type instead (the pair's link) | scrivi invece | écris plutôt | 대신 입력하기 |
+| continue by typing | continua scrivendo | continue à l’écrit | 입력으로 이어가기 |
+| typing (text-chat header) | scrivi | à l’écrit | 입력 중 |
+| typed (a chat's mark) | scritta | écrite | 입력 |
+| Your journey | Il tuo percorso | Ton parcours | 나의 여정 |
+| Let's talk about it | Parliamone | Parlons-en | 이야기해 봐요 |
+| Your chats about this | Le tue chat su questo | Tes discussions là-dessus | 이 주제의 대화 |
+| Finish & clean up | Finisci e sistema | Terminer et ranger | 끝내고 정리하기 |
+| Pick it back up (an open chat) | Riprendila | Reprends-la | 이어서 하기 |
+| still open (status) | ancora aperta | encore ouverte | 진행 중 |
+| Ask Polly | Chiedi a Polly | Demande à Polly | Polly에게 묻기 |
+| Fixes | Correzioni | Corrections | 수정 |
+| Transcript | Trascrizione | Transcription | 대화 기록 |
 | Next | Avanti | Suivant | 다음 |
 | Back | Indietro | Retour | 뒤로 |
 | Done | Fatto | Terminé | 완료 |

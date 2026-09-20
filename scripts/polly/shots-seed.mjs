@@ -59,8 +59,8 @@ with tmap as (select id as old, gen_random_uuid() as new from polly_threads wher
 vmap as (select id as old, gen_random_uuid() as new from polly_voice_sessions where user_id='${BART}' and thread_id in (select old from tmap)),
 t as (insert into polly_threads (id,user_id,${tcols}) select m.new,'${id}',${pre(tcols, 's')} from polly_threads s join tmap m on m.old=s.id returning id),
 v as (insert into polly_voice_sessions (id,user_id,thread_id,${vcols}) select vm.new,'${id}',tm.new,${pre(vcols, 's')} from polly_voice_sessions s join vmap vm on vm.old=s.id join tmap tm on tm.old=s.thread_id returning id),
-i as (insert into polly_infinity_chats (thread_id,user_id,voice_session_id,title,analysis,cleanup_session_id,cleaned_up_at,created_at,updated_at)
-  select tm.new,'${id}',v1.new,s.title,s.analysis,v2.new,s.cleaned_up_at,s.created_at,s.updated_at from polly_infinity_chats s join tmap tm on tm.old=s.thread_id left join vmap v1 on v1.old=s.voice_session_id left join vmap v2 on v2.old=s.cleanup_session_id where s.user_id='${BART}' returning id),
+i as (insert into polly_infinity_chats (thread_id,user_id,voice_session_id,title,analysis,cleanup_session_id,cleaned_up_at,created_at,updated_at,input,transcript,ended_at,analyzed_turns)
+  select tm.new,'${id}',v1.new,s.title,s.analysis,v2.new,s.cleaned_up_at,s.created_at,s.updated_at,s.input,s.transcript,coalesce(s.ended_at,s.created_at),s.analyzed_turns from polly_infinity_chats s join tmap tm on tm.old=s.thread_id left join vmap v1 on v1.old=s.voice_session_id left join vmap v2 on v2.old=s.cleanup_session_id where s.user_id='${BART}' returning id),
 c as (insert into polly_flash_cards (user_id,thread_id,${ccols}) select '${id}',tm.new,${pre(ccols, 's')} from polly_flash_cards s join tmap tm on tm.old=s.thread_id where s.user_id='${BART}' returning id)
 select (select count(*) from t) as threads,(select count(*) from v) as voice,(select count(*) from i) as chats,(select count(*) from c) as cards`)
 console.log('copied', copied[0])

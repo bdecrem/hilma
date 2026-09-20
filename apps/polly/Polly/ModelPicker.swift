@@ -123,3 +123,20 @@ struct ModelPickerMenu: View {
         #endif
     }
 }
+
+/// The model choice as a submenu, for a topic header's "···" (Direction 2b
+/// moved it out of the header: the model is a setting, not a control).
+struct ChatModelMenuItems: View {
+    @AppStorage(PollyChatModel.storageKey) private var selectedRaw: String = PollyChatModel.defaultModel.rawValue
+
+    var body: some View {
+        Picker(selection: $selectedRaw) {
+            ForEach(PollyChatModel.allCases) { model in
+                Text(model.label).tag(model.rawValue)
+            }
+        } label: {
+            Label("Polly's model", systemImage: "sparkles")
+        }
+        .pickerStyle(.menu)
+    }
+}

@@ -892,6 +892,8 @@ struct MissClinicSheet: View {
     var onDiscuss: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(Session.self) private var session
+    @State private var talkContext: TextChatContext? = nil
     @State private var rating: String?
     @State private var note: String
     @State private var savedNote: String
@@ -1049,7 +1051,7 @@ struct MissClinicSheet: View {
                 }
 
                 clinicRow(icon: "bubble.left.and.bubble.right", title: "Talk it through with Polly",
-                          sub: "Opens this topic's chat about the card") {
+                          sub: "A short chat about this card") {
                     discuss()
                 }
 
@@ -1103,6 +1105,10 @@ struct MissClinicSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .fullScreenCover(item: $talkContext) { context in
+            TextChatView(context: context) { _ in talkContext = nil }
+                .environment(session)
+        }
         .sheet(isPresented: $editing) {
             FlashCardEditSheet(
                 card: FlashCard(
@@ -1175,9 +1181,12 @@ struct MissClinicSheet: View {
             text += " I answered \u{201C}\(given)\u{201D} and it was marked wrong."
         }
         text += " Help me understand this."
-        DeepLinkRouter.shared.requestTopicChat(threadId: threadId, draft: text)
-        closeModal(dismiss)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { onDiscuss() }
+        _ = text
+        // Direction 2b: the text chat, with the card as its context — right
+        // here, over the clinic, so the results stay where they are.
+        talkContext = TextChatContext(threadId: threadId, title: L("Talk it through", "Parliamone", "Parlons-en", "같이 풀어 봐요"),
+                                      about: L("about this card", "su questa carta", "sur cette carte", "이 카드에 대해"),
+                                      pill: question, cardId: row.cardId)
     }
 
     @ViewBuilder

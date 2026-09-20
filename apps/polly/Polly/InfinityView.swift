@@ -1,10 +1,13 @@
 import SwiftUI
 
-// Infinity Chat — the consumer-app face of an endless conversation.
-//   InfinityHomeView   the topic screen: a big TALK card + a feed of past
-//                      chats, each with Clean up / Vocab / Grammar.
-//   InfinityCleanupView   the voice + before/after-card walk (its own file).
-// Talk messy, clean it up, drill, repeat. Playful, not a dashboard.
+// Infinity Chat (Direction 2b) — the study sheet became the screen.
+//   InfinityHomeView   the topic's screen: the hero ("Parliamo", the pair) and
+//                      the journey — every conversation, spoken or typed.
+//   InfinityChatPage   one conversation's page: fixes, words, grammar,
+//                      transcript; Quiz and the pair as Continue.
+// Talk messy (or type messy), clean it up, master it, carry it on. The chat
+// window that used to sit underneath is gone; text is the quieter line under
+// the voice button, everywhere.
 
 struct InfinityHomeView: View {
     let topicId: String
@@ -15,15 +18,9 @@ struct InfinityHomeView: View {
 
     @State private var chats: [InfinityChat] = []
     @State private var loading = true
-    @State private var talkPresented = false
-    @State private var cleanupChat: InfinityChat? = nil
-    @State private var vocabChat: InfinityChat? = nil
-    @State private var grammarChat: InfinityChat? = nil
-    @State private var preparingId: String? = nil
-    @State private var quizPreparingId: String? = nil
-    @State private var quizSheet: InfinityQuizSheet? = nil
-    @State private var errorText: String? = nil
-
+    @State private var flow = ChatFlow()
+    @State private var openChat: InfinityChat? = nil
+    @State private var level: String? = nil
 
     var body: some View {
         ZStack {
@@ -32,221 +29,105 @@ struct InfinityHomeView: View {
                 header
                 ScrollView {
                     VStack(spacing: 16) {
-                        talkCard
+                        hero
                         if !chats.isEmpty {
                             HStack {
-                                Text(L("Your chats", "Le tue chat", "Tes discussions", "내 대화")).font(.system(size: 13, weight: .semibold))
-                                    .tracking(0.3).foregroundStyle(PollyTheme.text3)
+                                Text(L("Your journey", "Il tuo percorso", "Ton parcours", "나의 여정"))
+                                    .font(.system(size: 13, weight: .semibold)).tracking(0.3)
+                                    .foregroundStyle(PollyTheme.text3)
                                 Spacer()
                             }
                             .padding(.top, 4)
-                            ForEach(chats) { chatCard($0) }
+                            ChatRail(chats: chats, flow: flow) { openChat = $0 }
                         } else if loading {
                             ProgressView().tint(PollyTheme.text3).padding(.top, 30)
                         } else {
                             emptyState
                         }
+                        Color.clear.frame(height: 86) // room for the floating TabPill
                     }
                     .pollyContentColumn()
                     .padding(16)
                 }
+                .scrollIndicators(.hidden)
             }
         }
         .navigationBarBackButtonHidden(true)
+        .navigationDestination(item: $openChat) { chat in
+            InfinityChatPage(chatId: chat.id, seed: chat, topicId: topicId, topicTitle: title)
+                .toolbar(.hidden, for: .navigationBar)
+        }
+        .chatFlow(flow, session: session)
         .task {
+            flow.threadId = topicId
+            flow.title = title
+            flow.textContext = { chat in TextChatContext(threadId: topicId, title: chat?.displayTitle ?? title, chatId: chat?.id) }
             await load()
             #if targetEnvironment(simulator)
-            // `-OpenInfinityDrill vocab|grammar|quiz|cleanup` — present a drill for the first
-            // cleaned-up chat, for screenshot loops.
-            if let which = UserDefaults.standard.string(forKey: "OpenInfinityDrill"),
-               let ready = chats.first(where: { $0.hasAnalysis }) {
-                UserDefaults.standard.removeObject(forKey: "OpenInfinityDrill")
-                try? await Task.sleep(for: .milliseconds(600))
-                if which == "vocab" { vocabChat = ready }
-                else if which == "grammar" { grammarChat = ready }
-                else if which == "quiz" { await startQuiz(ready) }
-                else if which == "cleanup" { await startCleanup(ready) }
-            }
+            await runLaunchHooks()
             #endif
         }
-        .fullScreenCover(isPresented: $talkPresented) {
-            VoiceSessionView(mode: "topic", threadId: topicId, title: title) { sessionId in
-                talkPresented = false
-                if let sessionId { Task { await recordChat(sessionId) } }
-            }
-            .environment(session)
-        }
-        .fullScreenCover(item: $cleanupChat) { chat in
-            InfinityCleanupView(chat: chat) {
-                cleanupChat = nil
-                Task { await load() }
-            }
-            .environment(session)
-        }
-        .sheet(item: $vocabChat) { chat in
-            InfinityVocabView(chat: chat).environment(session)
-        }
-        .sheet(item: $grammarChat) { chat in
-            InfinityGrammarView(chat: chat).environment(session)
-        }
-        .fullScreenCover(item: $quizSheet, onDismiss: { Task { await load() } }) { q in
-            FlashSetView(start: q.start, topicLabel: "Infinity Chat") { result in
-                // A pass masters the conversation (Dodo's flash-quality bar).
-                if result.total > 0 && result.score * 5 >= result.total * 4 {
-                    Task { _ = try? await PollyAPI.shared.masterInfinityChat(chatId: q.chat.id) }
-                }
-            }
-            .environment(session)
-        }
-        .alert("Hmm", isPresented: Binding(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) {
-            Button("OK") { errorText = nil }
-        } message: { Text(errorText ?? "") }
+        .onChange(of: flow.changes) { Task { await load() } }
     }
 
-    // MARK: header
+    // MARK: header — "A1 · 4 chats · 14 words" (mastery is per chat; no stars here)
 
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .center, spacing: 8) {
             IconCircleButton(systemImage: "chevron.left", fg: PollyTheme.text) { dismiss() }
-            HStack(spacing: 7) {
-                MiniTopicGlyph(kind: "infinity", size: 22)
+            VStack(spacing: 3) {
                 Text(title)
                     .font(.system(size: 17, weight: .semibold)).tracking(-0.3)
-                    .foregroundStyle(PollyTheme.text)
+                    .foregroundStyle(PollyTheme.text).lineLimit(1)
+                Text(summary)
+                    .font(.system(size: 12, weight: .medium)).tracking(-0.1)
+                    .foregroundStyle(PollyTheme.gold)
             }
-            Spacer()
+            .frame(maxWidth: .infinity)
+            Menu {
+                ChatModelMenuItems()
+            } label: {
+                TopicKebab()
+            }
         }
         .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 12)
     }
 
-    // MARK: the TALK card
-
-    private var talkCard: some View {
-        Button { talkPresented = true } label: {
-            VStack(spacing: 14) {
-                ZStack {
-                    Circle().fill(PollyTheme.accentSoft).frame(width: 72, height: 72)
-                    DodoMiniMark(size: 60)
-                }
-                VStack(spacing: 5) {
-                    Text(L("Let's talk", "Parliamo", "Parlons", "이야기해요"))
-                        .font(.custom("Fredoka", size: 24).weight(.semibold))
-                        .foregroundStyle(PollyTheme.text)
-                    Text(L("Just chat — messy is good, mix in English, don't worry. We tidy it up after.", "Chiacchiera e basta — va bene fare pasticci, mescola pure l’inglese. Sistemiamo tutto dopo.", "Discute, c’est tout — le désordre c’est bien, mélange l’anglais. On range après.", "그냥 편하게 이야기해요 — 엉망이어도, 영어를 섞어도 괜찮아요. 나중에 정리해요."))
-                        .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text2)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                HStack(spacing: 8) {
-                    Image(systemName: "mic.fill").font(.system(size: 15, weight: .bold))
-                    Text(L("Start a chat", "Inizia una chat", "Commencer une discussion", "대화 시작")).font(.system(size: 16, weight: .semibold))
-                }
-                .foregroundStyle(PollyTheme.inkOnAccent)
-                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(PollyTheme.accent, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(PollyTheme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(PollyTheme.accentDim, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
+    private var summary: String {
+        let words = chats.reduce(0) { $0 + ($1.analysis?.vocab.count ?? 0) }
+        let n = chats.count
+        var parts: [String] = []
+        if let level { parts.append(level) }
+        parts.append("\(n) \(n == 1 ? L("chat", "chat", "discussion", "대화") : L("chats", "chat", "discussions", "대화"))")
+        if words > 0 { parts.append("\(words) \(L("words", "parole", "mots", "단어"))") }
+        return parts.joined(separator: " · ")
     }
 
-    // MARK: a chat in the feed
+    // MARK: the hero
 
-    private func chatCard(_ chat: InfinityChat) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(chat.displayTitle)
-                        .font(.custom("Fredoka", size: 18).weight(.semibold))
-                        .foregroundStyle(PollyTheme.text)
-                        .lineLimit(1)
-                    statusChip(chat)
-                }
-                Spacer(minLength: 0)
+    private var hero: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle().fill(PollyTheme.accentSoft).frame(width: 68, height: 68)
+                DodoMiniMark(size: 56)
             }
-            if chat.hasAnalysis {
-                VStack(spacing: 8) {
-                    if chat.hasAnalysis {
-                        Button { Task { await startQuiz(chat) } } label: {
-                            HStack(spacing: 8) {
-                                if quizPreparingId == chat.id {
-                                    ProgressView().tint(PollyTheme.inkOnAccent).scaleEffect(0.8)
-                                    Text(L("Loading quiz…","Carico il quiz…","Chargement du quiz…","퀴즈 불러오는 중…")).font(.system(size: 15, weight: .semibold))
-                                } else {
-                                    Image(systemName: chat.isMastered ? "checkmark.seal.fill" : "graduationcap.fill")
-                                        .font(.system(size: 14, weight: .bold))
-                                    Text(chat.isMastered ? L("Quiz again","Rifai il quiz","Refaire le quiz","퀴즈 다시 풀기") : L("Quiz · master it","Quiz · padroneggiala","Quiz · maîtrise-la","퀴즈 · 마스터하기")).font(.system(size: 15, weight: .semibold))
-                                }
-                            }
-                            .foregroundStyle(PollyTheme.inkOnAccent)
-                            .frame(maxWidth: .infinity).padding(.vertical, 12)
-                            .background((chat.isMastered ? PollyTheme.sprout : PollyTheme.accent), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(quizPreparingId != nil)
-                    }
-                    HStack(spacing: 8) {
-                        pill(L("Review","Rivedi","Revoir","다시 보기"), "sparkles") { cleanupChat = chat }
-                        if (chat.analysis?.vocab.isEmpty == false) {
-                            pill(L("Vocab","Vocaboli","Vocab","단어"), "rectangle.on.rectangle.angled") { vocabChat = chat }
-                        }
-                        if (chat.analysis?.grammar.isEmpty == false) {
-                            pill(L("Grammar","Grammatica","Grammaire","문법"), "puzzlepiece.fill") { grammarChat = chat }
-                        }
-                    }
-                }
-            } else {
-                Button { Task { await startCleanup(chat) } } label: {
-                    HStack(spacing: 8) {
-                        if preparingId == chat.id {
-                            ProgressView().tint(PollyTheme.inkOnAccent).scaleEffect(0.8)
-                            Text(L("Polly's reading it back…","Polly la rilegge…","Polly la relit…","Polly가 다시 읽는 중…")).font(.system(size: 14.5, weight: .semibold))
-                        } else {
-                            Image(systemName: "sparkles").font(.system(size: 14, weight: .bold))
-                            Text(L("Clean it up","Sistemala","Ranger","정리하기")).font(.system(size: 15, weight: .semibold))
-                        }
-                    }
-                    .foregroundStyle(PollyTheme.inkOnAccent)
-                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .background(PollyTheme.accent, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .disabled(preparingId != nil)
+            VStack(spacing: 4) {
+                Text(L("Let's talk", "Parliamo", "Parlons", "이야기해요"))
+                    .font(.custom("Fredoka", size: 24).weight(.semibold))
+                    .foregroundStyle(PollyTheme.text)
+                Text(L("Messy is good. Mix in English. We tidy up after.", "Va bene fare pasticci. Mescola pure l’inglese. Sistemiamo dopo.", "Le désordre, c’est bien. Mélange l’anglais. On range après.", "엉망이어도 좋아요. 영어를 섞어도 돼요. 나중에 정리해요."))
+                    .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text2)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            TalkPair(voiceLabel: L("Start a chat", "Inizia una chat", "Commencer une discussion", "대화 시작"),
+                     onVoice: { flow.talk() }, onType: { flow.type() })
+                .padding(.top, 2)
         }
-        .padding(15)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(PollyTheme.surface))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .stroke(chat.isMastered ? PollyTheme.gold.opacity(0.7) : chat.isCleanedUp ? PollyTheme.sprout.opacity(0.5) : PollyTheme.border, lineWidth: chat.isMastered ? 1.5 : 1))
-    }
-
-    private func statusChip(_ chat: InfinityChat) -> some View {
-        let mastered = chat.isMastered, cleaned = chat.isCleanedUp
-        return HStack(spacing: 5) {
-            Image(systemName: mastered ? "checkmark.seal.fill" : cleaned ? "checkmark.circle.fill" : "sparkles")
-                .font(.system(size: 10, weight: .bold))
-            Text(mastered ? L("Mastered","Padroneggiata","Maîtrisée","마스터") : cleaned ? L("Cleaned up","Sistemata","Rangée","정리됨") : L("Ready to clean up","Da sistemare","À ranger","정리 전"))
-                .font(.system(size: 11.5, weight: .semibold))
-        }
-        .foregroundStyle(mastered ? PollyTheme.gold : cleaned ? PollyTheme.sprout : PollyTheme.accent)
-    }
-
-    private func pill(_ title: String, _ symbol: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: symbol).font(.system(size: 12, weight: .semibold))
-                Text(title).font(.system(size: 13, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.75)
-            }
-            .foregroundStyle(PollyTheme.text)
-            .padding(.horizontal, 8).padding(.vertical, 9)
-            .frame(maxWidth: .infinity)
-            .background(PollyTheme.surface2.opacity(0.7), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-        }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 18).padding(.top, 20).padding(.bottom, 12)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(PollyTheme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(PollyTheme.accentDim, lineWidth: 1))
     }
 
     private var emptyState: some View {
@@ -254,7 +135,7 @@ struct InfinityHomeView: View {
             Text(L("No chats yet", "Ancora nessuna chat", "Aucune discussion pour l’instant", "아직 대화가 없어요"))
                 .font(.custom("Fredoka", size: 18).weight(.semibold))
                 .foregroundStyle(PollyTheme.text2)
-            Text(L("Tap Start a chat and just talk. Your conversations show up here to clean up.", "Tocca «Inizia una chat» e parla. Le tue conversazioni compaiono qui, pronte da sistemare.", "Touche «\u{00A0}Commencer une discussion\u{00A0}» et parle. Tes conversations apparaissent ici, à ranger.", "‘대화 시작’을 누르고 이야기해요. 대화가 여기에 나타나 정리할 수 있어요."))
+            Text(L("Talk or type — either way it shows up here, ready to clean up.", "Parla o scrivi — in ogni caso la trovi qui, pronta da sistemare.", "Parle ou écris — dans les deux cas elle apparaît ici, à ranger.", "말하거나 입력하세요 — 어느 쪽이든 여기에 나타나요."))
                 .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text3)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -262,53 +143,42 @@ struct InfinityHomeView: View {
         .padding(.top, 24).padding(.horizontal, 20)
     }
 
-    // MARK: actions
-
     private func load() async {
-        do {
-            chats = try await PollyAPI.shared.listInfinityChats(threadId: topicId)
-        } catch {
-            errorText = error.localizedDescription
-        }
+        if let fetched = try? await PollyAPI.shared.listInfinityChats(threadId: topicId) { chats = fetched }
         loading = false
+        if level == nil { level = (try? await PollyAPI.shared.getPath())?.level }
     }
 
-    private func recordChat(_ voiceSessionId: String) async {
-        do {
-            _ = try await PollyAPI.shared.createInfinityChat(threadId: topicId, voiceSessionId: voiceSessionId)
-            await load()
-        } catch {
-            errorText = "Couldn't save that chat: \(error.localizedDescription)"
+    #if targetEnvironment(simulator)
+    /// `-OpenInfinityDrill text|quiz|cleanup|page|vocab|grammar|voice|type` — screenshot
+    /// loops: the text chat, a chat's quiz / walk, or its page (and, on the page,
+    /// a drill or Continue by voice / by typing).
+    private func runLaunchHooks() async {
+        // Launch arguments outlive removeObject — take each hook once per launch.
+        guard let which = UserDefaults.standard.string(forKey: "OpenInfinityDrill"), LaunchOnce.take("OpenInfinityDrill") else { return }
+        try? await Task.sleep(for: .milliseconds(600))
+        if which == "text" { flow.type(); return }
+        guard let ready = chats.first(where: { $0.hasAnalysis }) else { return }
+        switch which {
+        case "quiz": flow.quiz(ready)
+        case "cleanup": flow.review(ready)
+        default:
+            UserDefaults.standard.set(which, forKey: "OpenChatSection")
+            openChat = ready
         }
     }
+    #endif
+}
 
-    private func startQuiz(_ chat: InfinityChat) async {
-        quizPreparingId = chat.id
-        defer { quizPreparingId = nil }
-        do {
-            let start = try await PollyAPI.shared.infinityQuiz(chatId: chat.id)
-            quizSheet = InfinityQuizSheet(chat: chat, start: start)
-        } catch {
-            errorText = "Couldn't build the quiz: \(error.localizedDescription)"
-        }
-    }
-
-    private func startCleanup(_ chat: InfinityChat) async {
-        preparingId = chat.id
-        defer { preparingId = nil }
-        do {
-            let ready = try await PollyAPI.shared.cleanUpInfinityChat(id: chat.id)
-            if ready.hasAnalysis {
-                cleanupChat = ready
-            } else {
-                // Nothing worth fixing — mark it done and refresh.
-                _ = try? await PollyAPI.shared.completeInfinityCleanup(id: chat.id, cleanupSessionId: nil)
-                await load()
-                errorText = "That one was already pretty clean — nice. Nothing to fix."
-            }
-        } catch {
-            errorText = "Couldn't clean that up: \(error.localizedDescription)"
-        }
+/// The "···" in a topic header.
+struct TopicKebab: View {
+    var body: some View {
+        Image(systemName: "ellipsis")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(PollyTheme.text)
+            .frame(width: 36, height: 36)
+            .background(PollyTheme.surface, in: Circle())
+            .overlay(Circle().stroke(PollyTheme.border, lineWidth: 1))
     }
 }
 
@@ -319,74 +189,357 @@ struct InfinityQuizSheet: Identifiable {
     let start: FlashStart
 }
 
-/// The prominent study bar pinned atop the Infinity chat window. It summarizes
-/// the newest conversation and opens the full study sheet (TALK, clean-up,
-/// quiz, drills). `refresh` bumps when that sheet closes so it re-reads.
-struct InfinityChatBar: View {
+// MARK: - A chat's page
+
+struct InfinityChatPage: View {
+    let chatId: String
+    /// What the list already knew, so the page paints at once.
+    let seed: InfinityChat?
     let topicId: String
-    var refresh: Int = 0
-    var onSessions: () -> Void
+    let topicTitle: String
 
     @Environment(Session.self) private var session
-    @State private var chats: [InfinityChat] = []
-    @State private var loaded = false
+    @Environment(\.dismiss) private var dismiss
 
-    private var active: InfinityChat? { chats.first }
+    @State private var chat: InfinityChat? = nil
+    @State private var flow = ChatFlow()
+    @State private var flipped: Set<String> = []
+    @State private var showAllFixes = false
+    @State private var showTranscript = false
+    @State private var vocabPresented = false
+    @State private var grammarPresented = false
+    @State private var renaming = false
+    @State private var titleDraft = ""
+    @State private var confirmDelete = false
+
+    private var shown: InfinityChat? { chat ?? seed }
 
     var body: some View {
-        Button(action: onSessions) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle().fill(PollyTheme.accentSoft).frame(width: 40, height: 40)
-                    MiniTopicGlyph(kind: "infinity", size: 24)
+        ZStack(alignment: .bottom) {
+            PollyTheme.bg.ignoresSafeArea()
+            VStack(spacing: 0) {
+                header
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
+                        if let c = shown {
+                            if let a = c.analysis, !a.fixes.isEmpty || !a.vocab.isEmpty || !a.grammar.isEmpty {
+                                fixes(a)
+                                words(a)
+                                grammar(a)
+                            } else {
+                                notYet(c)
+                            }
+                            transcript(c)
+                        } else {
+                            ProgressView().tint(PollyTheme.text3).frame(maxWidth: .infinity).padding(.top, 40)
+                        }
+                        Color.clear.frame(height: 250) // the footer + TabPill float over the end
+                    }
+                    .pollyContentColumn()
+                    .padding(.horizontal, 16).padding(.top, 4)
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(PollyTheme.text).lineLimit(1)
-                    Text(subtitle).font(.system(size: 12.5))
-                        .foregroundStyle(active?.isMastered == true ? PollyTheme.gold : PollyTheme.text2).lineLimit(1)
-                }
-                Spacer(minLength: 0)
-                Text(cta)
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(PollyTheme.inkOnAccent)
-                    .padding(.horizontal, 13).padding(.vertical, 7)
-                    .background(PollyTheme.accent, in: Capsule())
+                .scrollIndicators(.hidden)
             }
-            .padding(12)
+            footer
+        }
+        .navigationBarBackButtonHidden(true)
+        .chatFlow(flow, session: session)
+        .sheet(isPresented: $vocabPresented) {
+            if let c = shown { InfinityVocabView(chat: c).environment(session) }
+        }
+        .sheet(isPresented: $grammarPresented) {
+            if let c = shown { InfinityGrammarView(chat: c).environment(session) }
+        }
+        .alert(L("Rename chat", "Rinomina la chat", "Renommer la discussion", "대화 이름 바꾸기"), isPresented: $renaming) {
+            TextField("Title", text: $titleDraft)
+            Button("Save") {
+                let t = titleDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !t.isEmpty else { return }
+                Task { try? await PollyAPI.shared.renameInfinityChat(id: chatId, title: t); await load() }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+        .confirmationDialog("Delete this chat?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete chat", role: .destructive) {
+                Task { try? await PollyAPI.shared.deleteInfinityChat(id: chatId); dismiss() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("The cards it made stay in your deck.") }
+        .task {
+            flow.threadId = topicId
+            flow.title = topicTitle
+            flow.textContext = { c in TextChatContext(threadId: topicId, title: c?.displayTitle ?? topicTitle, chatId: c?.id) }
+            await load()
+            #if targetEnvironment(simulator)
+            if let which = UserDefaults.standard.string(forKey: "OpenChatSection") {
+                UserDefaults.standard.removeObject(forKey: "OpenChatSection") // set in-app, so this does clear it
+                try? await Task.sleep(for: .milliseconds(500))
+                if which == "vocab" { vocabPresented = true } else if which == "grammar" { grammarPresented = true }
+                else if which == "voice", let c = shown { flow.talk(continuing: c) }
+                else if which == "type", let c = shown { flow.type(continuing: c) }
+            }
+            #endif
+        }
+        .onChange(of: flow.changes) { Task { await load() } }
+    }
+
+    // MARK: header — "✓ Cleaned up · today · 🎤 6 min"
+
+    private var header: some View {
+        HStack(alignment: .center, spacing: 8) {
+            IconCircleButton(systemImage: "chevron.left", fg: PollyTheme.text) { dismiss() }
+            VStack(spacing: 3) {
+                Text(shown?.displayTitle ?? "")
+                    .font(.system(size: 17, weight: .semibold)).tracking(-0.3)
+                    .foregroundStyle(PollyTheme.text).lineLimit(1)
+                if let c = shown { statusLine(c) }
+            }
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(PollyTheme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(PollyTheme.accentDim, lineWidth: 1))
-            .contentShape(Rectangle())
+            Menu {
+                Button { titleDraft = shown?.title ?? ""; renaming = true } label: { Label("Rename", systemImage: "pencil") }
+                if shown?.isCleanedUp == true, let c = shown {
+                    Button { flow.review(c) } label: { Label(L("Walk the fixes again", "Ripassa le correzioni", "Revoir les corrections", "수정 다시 보기"), systemImage: "sparkles") }
+                }
+                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete chat", systemImage: "trash") }
+            } label: { TopicKebab() }
+        }
+        .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 10)
+    }
+
+    private func statusLine(_ c: InfinityChat) -> some View {
+        let state: String, tint: Color, symbol: String
+        if c.isOpen { state = L("Still open", "Ancora aperta", "Encore ouverte", "진행 중"); tint = PollyTheme.accent; symbol = "ellipsis.bubble" }
+        else if c.wantsCleanup { state = L("Ready to clean up", "Da sistemare", "À ranger", "정리 전"); tint = PollyTheme.accent; symbol = "sparkles" }
+        else if c.isMastered { state = L("Mastered", "Padroneggiata", "Maîtrisée", "마스터"); tint = PollyTheme.gold; symbol = "star.fill" }
+        else { state = L("Cleaned up", "Sistemata", "Rangée", "정리됨"); tint = PollyTheme.sprout; symbol = "checkmark" }
+        return HStack(spacing: 5) {
+            Image(systemName: symbol).font(.system(size: 10, weight: .bold))
+            Text(state)
+            Text("·")
+            Text(chatDay(c.createdAt))
+            Text("·")
+            Image(systemName: c.inputSymbol).font(.system(size: 10, weight: .semibold))
+            if c.isMixed { Image(systemName: "keyboard").font(.system(size: 10, weight: .semibold)) }
+            if let m = c.minutes, !c.isTyped { Text("\(m) min") }
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(tint)
+        .lineLimit(1)
+    }
+
+    // MARK: sections
+
+    private func sect(_ title: String, count: Int, action: (label: String, run: () -> Void)? = nil) -> some View {
+        HStack {
+            Text("\(title) · \(count)".uppercased())
+                .font(.system(size: 11.5, weight: .semibold)).tracking(0.7)
+                .foregroundStyle(PollyTheme.text3)
+            Spacer()
+            if let action {
+                Button(action: action.run) {
+                    HStack(spacing: 3) {
+                        Text(action.label)
+                        Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold))
+                    }
+                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(PollyTheme.accent)
+                    .frame(minHeight: 28).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 10)
+    }
+
+    /// Fixes, compact: you said → try → why.
+    @ViewBuilder
+    private func fixes(_ a: InfinityAnalysis) -> some View {
+        if !a.fixes.isEmpty {
+            sect(L("Fixes", "Correzioni", "Corrections", "수정"), count: a.fixes.count)
+            let list = showAllFixes ? a.fixes : Array(a.fixes.prefix(3))
+            ForEach(list) { f in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L("YOU SAID", "HAI DETTO", "TU AS DIT", "이렇게 말했어요"))
+                        .font(.system(size: 9.5, weight: .bold)).tracking(1).foregroundStyle(PollyTheme.text3)
+                    Text("“\(f.said)”").strikethrough().font(.system(size: 13.5)).foregroundStyle(PollyTheme.text3)
+                    Text(f.fixed).font(.custom("Fredoka", size: 17).weight(.semibold)).foregroundStyle(PollyTheme.text)
+                    Text(f.note).font(.system(size: 12.5)).foregroundStyle(PollyTheme.text2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(13)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(PollyTheme.border, lineWidth: 1))
+            }
+            if a.fixes.count > 3 && !showAllFixes {
+                Button { withAnimation(.easeOut(duration: 0.2)) { showAllFixes = true } } label: {
+                    Text("+\(a.fixes.count - 3) \(L("more", "altre", "de plus", "더 보기"))")
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(PollyTheme.accent)
+                        .frame(maxWidth: .infinity, minHeight: 32).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    /// Words as chips: tap one to flip it to its meaning.
+    @ViewBuilder
+    private func words(_ a: InfinityAnalysis) -> some View {
+        if !a.vocab.isEmpty {
+            sect(L("Words", "Parole", "Mots", "단어"), count: a.vocab.count,
+                 action: (L("Drill", "Esercitati", "S’entraîner", "연습"), { vocabPresented = true }))
+            FlowLayout(spacing: 7) {
+                ForEach(a.vocab) { v in
+                    let on = flipped.contains(v.term)
+                    Button {
+                        withAnimation(.easeOut(duration: 0.15)) { if on { flipped.remove(v.term) } else { flipped.insert(v.term) } }
+                    } label: {
+                        Text(on ? v.meaning : v.term)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(on ? PollyTheme.inkOnAccent : PollyTheme.text)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .background(on ? PollyTheme.accent : PollyTheme.surface, in: Capsule())
+                            .overlay(Capsule().stroke(on ? Color.clear : PollyTheme.border, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    /// Grammar: a point, its one line, its drills one tap away.
+    @ViewBuilder
+    private func grammar(_ a: InfinityAnalysis) -> some View {
+        if !a.grammar.isEmpty {
+            sect(L("Grammar", "Grammatica", "Grammaire", "문법"), count: a.grammar.count)
+            ForEach(a.grammar) { g in
+                Button { grammarPresented = true } label: {
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(g.point).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(PollyTheme.text)
+                                .multilineTextAlignment(.leading)
+                            Text("\(g.explain)").font(.system(size: 12.5)).foregroundStyle(PollyTheme.text2).lineLimit(2)
+                                .multilineTextAlignment(.leading)
+                            Text("\(g.drills.count) \(g.drills.count == 1 ? "drill" : "drills")")
+                                .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(PollyTheme.accent)
+                        }
+                        Spacer(minLength: 4)
+                        Image(systemName: "chevron.right").font(.system(size: 11, weight: .semibold)).foregroundStyle(PollyTheme.text4)
+                    }
+                    .padding(13)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(PollyTheme.border, lineWidth: 1))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func notYet(_ c: InfinityChat) -> some View {
+        VStack(spacing: 6) {
+            Text(c.isOpen ? L("This chat is still open", "Questa chat è ancora aperta", "Cette discussion est encore ouverte", "아직 진행 중인 대화예요")
+                          : L("Not cleaned up yet", "Non ancora sistemata", "Pas encore rangée", "아직 정리 전이에요"))
+                .font(.custom("Fredoka", size: 18).weight(.semibold)).foregroundStyle(PollyTheme.text2)
+            Text(L("Clean it up and Polly picks the few things worth fixing, the words you reached for, and the grammar behind them.", "Sistemala e Polly sceglie le poche cose da correggere, le parole che cercavi e la grammatica che c’è dietro.", "Range-la et Polly choisit les quelques points à corriger, les mots que tu cherchais et la grammaire derrière.", "정리하면 Polly가 고칠 만한 몇 가지와 찾던 단어, 그 뒤의 문법을 골라 줘요."))
+                .font(.system(size: 13.5)).foregroundStyle(PollyTheme.text3)
+                .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 26).padding(.horizontal, 12)
+    }
+
+    /// The conversation itself, folded away at the end.
+    @ViewBuilder
+    private func transcript(_ c: InfinityChat) -> some View {
+        let turns = (c.transcript ?? []).filter { $0.lane != "agent" }
+        if !turns.isEmpty {
+            Button { withAnimation(.easeOut(duration: 0.2)) { showTranscript.toggle() } } label: {
+                HStack {
+                    Text("\(L("Transcript", "Trascrizione", "Transcription", "대화 기록")) · \(turns.count)".uppercased())
+                        .font(.system(size: 11.5, weight: .semibold)).tracking(0.7).foregroundStyle(PollyTheme.text3)
+                    Spacer()
+                    Image(systemName: showTranscript ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 10, weight: .bold)).foregroundStyle(PollyTheme.text3)
+                }
+                .frame(minHeight: 32).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 8)
+            if showTranscript {
+                VStack(alignment: .leading, spacing: 9) {
+                    ForEach(turns) { t in
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(t.role == "user" ? L("YOU", "TU", "TOI", "나") : "POLLY")
+                                .font(.system(size: 9.5, weight: .bold)).tracking(1)
+                                .foregroundStyle(t.role == "user" ? PollyTheme.accent : PollyTheme.text3)
+                            Text(t.text).font(.system(size: 14)).foregroundStyle(PollyTheme.text)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+                .padding(13)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(PollyTheme.border, lineWidth: 1))
+            }
+        }
+    }
+
+    // MARK: footer — Quiz, then the pair as Continue
+
+    private var footer: some View {
+        VStack(spacing: 8) {
+            if let c = shown {
+                if c.isOpen {
+                    EmptyView()
+                } else if c.wantsCleanup {
+                    wideButton(flow.preparingCleanupId == c.id
+                               ? L("Polly's reading it back…", "Polly la rilegge…", "Polly la relit…", "Polly가 다시 읽는 중…")
+                               : L("Clean it up · 2 min", "Sistemala · 2 min", "Ranger · 2 min", "정리하기 · 2분"),
+                               symbol: "sparkles", tint: PollyTheme.accent, busy: flow.preparingCleanupId == c.id) { flow.cleanUp(c) }
+                } else if !c.isCleanedUp, c.hasAnalysis {
+                    wideButton(L("Walk through the fixes", "Ripassa le correzioni", "Parcourir les corrections", "수정 살펴보기"),
+                               symbol: "sparkles", tint: PollyTheme.accent, busy: false) { flow.review(c) }
+                } else if c.hasAnalysis {
+                    wideButton(flow.preparingQuizId == c.id ? L("Loading quiz…", "Carico il quiz…", "Chargement du quiz…", "퀴즈 불러오는 중…")
+                               : c.isMastered ? L("Quiz again", "Rifai il quiz", "Refaire le quiz", "퀴즈 다시 풀기")
+                               : L("Quiz · master it", "Quiz · padroneggiala", "Quiz · maîtrise-la", "퀴즈 · 마스터하기"),
+                               symbol: c.isMastered ? "checkmark.seal.fill" : "graduationcap.fill", tint: PollyTheme.sprout,
+                               busy: flow.preparingQuizId == c.id) { flow.quiz(c) }
+                }
+                TalkPair(voiceLabel: L("Continue this chat", "Continua questa chat", "Continuer cette discussion", "이 대화 이어가기"),
+                         typeLabel: L("continue by typing", "continua scrivendo", "continue à l’écrit", "입력으로 이어가기"),
+                         compact: true,
+                         onVoice: { flow.talk(continuing: c) }, onType: { flow.type(continuing: c) })
+            }
+        }
+        .pollyContentColumn()
+        .padding(.horizontal, 16).padding(.top, 12)
+        .padding(.bottom, 88) // above the floating TabPill
+        .background(
+            LinearGradient(colors: [PollyTheme.bg.opacity(0), PollyTheme.bg, PollyTheme.bg], startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+        )
+    }
+
+    private func wideButton(_ title: String, symbol: String, tint: Color, busy: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if busy { ProgressView().tint(PollyTheme.inkOnAccent).scaleEffect(0.8) }
+                else { Image(systemName: symbol).font(.system(size: 14, weight: .bold)) }
+                Text(title).font(.system(size: 15, weight: .semibold))
+            }
+            .foregroundStyle(PollyTheme.inkOnAccent)
+            .frame(maxWidth: .infinity).padding(.vertical, 12)
+            .background(tint, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 14)
-        .task(id: refresh) { await load() }
+        .disabled(busy)
     }
-
-    private var title: String {
-        guard let a = active else { return L("Talk to Polly", "Parla con Polly", "Parle avec Polly", "Polly와 대화") }
-        return a.displayTitle
-    }
-    private var subtitle: String {
-        guard let a = active else {
-            return loaded ? L("Start a chat, then clean it up", "Inizia una chat, poi sistemala", "Commence, puis range-la", "대화를 시작하고 정리해요")
-                          : L("Loading…", "Caricamento…", "Chargement…", "불러오는 중…")
-        }
-        let n = chats.count
-        let tail = n > 1 ? L(" · \(n) chats", " · \(n) chat", " · \(n) discussions", " · 대화 \(n)개") : ""
-        if a.isMastered { return L("Mastered", "Padroneggiata", "Maîtrisée", "마스터") + tail }
-        if a.hasAnalysis { return L("Quiz to master it", "Fai il quiz per padroneggiarla", "Quiz pour la maîtriser", "퀴즈로 마스터하기") + tail }
-        return L("Ready to clean up", "Da sistemare", "À ranger", "정리 전") + tail
-    }
-    private var cta: String {
-        guard let a = active else { return L("Start", "Inizia", "Commencer", "시작") }
-        if a.hasAnalysis && !a.isMastered { return L("Quiz", "Quiz", "Quiz", "퀴즈") }
-        if a.isMastered { return L("Study", "Studia", "Réviser", "학습") }
-        return L("Clean up", "Sistema", "Ranger", "정리") }
 
     private func load() async {
-        chats = (try? await PollyAPI.shared.listInfinityChats(threadId: topicId)) ?? []
-        loaded = true
+        if let fetched = try? await PollyAPI.shared.getInfinityChat(id: chatId) { chat = fetched }
     }
 }
-

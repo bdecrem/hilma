@@ -9,7 +9,8 @@ import SwiftUI
 //                       menu holds Talk again / Start over / Hide.
 //   PlacementFlowView   intro → the voice level check → "building your
 //                       plan" → the result (level, can do, shaky, lesson 1).
-//   LessonStepsCard     on a lesson's topic screen: Talk, Words, Grammar.
+//   (A lesson's own screen — read it, the pair, the three steps — is
+//   LessonTopicView in TopicScreens.swift.)
 
 // MARK: - Topics card
 
@@ -502,87 +503,5 @@ struct PlacementFlowView: View {
                 stage = .failed(error.localizedDescription)
             }
         }
-    }
-}
-
-// MARK: - A lesson's three steps
-
-struct LessonStepsCard: View {
-    let thread: PollyThread
-    /// True while a step's card set is being fetched.
-    var startingStep: String? = nil
-    var onPlan: () -> Void
-    var onTalk: () -> Void
-    var onCards: (String) -> Void
-
-    var body: some View {
-        let steps = thread.lessonSteps
-        let done = thread.lessonDoneAt != nil
-        return VStack(alignment: .leading, spacing: 10) {
-            Button(action: onPlan) {
-                HStack(spacing: 11) {
-                    MiniTopicGlyph(kind: "lesson", size: 30, verified: done)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(thread.pathPosition.map { "Lesson \($0)" } ?? "Lesson")
-                            .font(.system(size: 13.5, weight: .semibold))
-                            .foregroundStyle(PollyTheme.text)
-                        Text(thread.lesson?.scene ?? "")
-                            .font(.system(size: 11.5))
-                            .foregroundStyle(PollyTheme.text3)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                    }
-                    Spacer(minLength: 8)
-                    Text(L("Read it", "Leggila", "Lis-la", "읽기"))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(PollyTheme.accent)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(PollyTheme.text3)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            HStack(spacing: 8) {
-                step(L("Talk", "Parla", "Parle", "말하기"), "mic.fill", done: steps?.talk != nil, busy: false) { onTalk() }
-                step(L("Words", "Parole", "Mots", "단어"), "rectangle.on.rectangle.angled", done: steps?.words != nil,
-                     busy: startingStep == "words") { onCards("words") }
-                step(L("Grammar", "Grammatica", "Grammaire", "문법"), "puzzlepiece.fill", done: steps?.grammar != nil,
-                     busy: startingStep == "grammar") { onCards("grammar") }
-            }
-        }
-        .padding(.horizontal, 13)
-        .padding(.vertical, 11)
-        .background(PollyTheme.surface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(done ? PollyTheme.accentDim : PollyTheme.border, lineWidth: 1))
-        .padding(.horizontal, 16)
-    }
-
-    private func step(_ title: String, _ symbol: String, done: Bool, busy: Bool,
-                      action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 5) {
-                ZStack {
-                    if busy {
-                        ProgressView().tint(PollyTheme.text3).scaleEffect(0.8)
-                    } else {
-                        Image(systemName: done ? "checkmark" : symbol)
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(done ? PollyTheme.inkOnAccent : PollyTheme.accent)
-                    }
-                }
-                .frame(width: 34, height: 34)
-                .background(done ? PollyTheme.accent : PollyTheme.accentSoft, in: Circle())
-                Text(title)
-                    .font(.system(size: 12.5, weight: .semibold))
-                    .foregroundStyle(PollyTheme.text)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 9)
-            .background(PollyTheme.surface2.opacity(0.6), in: RoundedRectangle(cornerRadius: 11))
-        }
-        .buttonStyle(.plain)
-        .disabled(busy)
     }
 }

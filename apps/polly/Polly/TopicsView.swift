@@ -44,6 +44,8 @@ struct TopicsView: View {
     @State private var loadError: String? = nil
     @State private var renameTarget: PollyTopic? = nil
     @State private var showNewTopic = false
+    /// "Ask Polly" from anywhere: the text chat with no topic behind it.
+    @State private var askPolly: TextChatContext? = nil
     @State private var showProfile = false
     @State private var contextTarget: TopicContextTarget? = nil
     @State private var reviewsTarget: TopicContextTarget? = nil
@@ -302,11 +304,15 @@ struct TopicsView: View {
                         DeepLinkRouter.shared.requestTopicChat(threadId: id, draft: "")
                     }
                 },
-                onQuickChat: { id in
-                    Task { await load() }
-                    DeepLinkRouter.shared.requestQuickChat(topicId: id)
+                onAskPolly: {
+                    showNewTopic = false
+                    Task { try? await Task.sleep(for: .milliseconds(350)); askPolly = TextChatContext(threadId: nil, title: "Polly") }
                 }
             )
+        }
+        .fullScreenCover(item: $askPolly, onDismiss: { Task { await load() } }) { context in
+            TextChatView(context: context) { _ in askPolly = nil }
+                .environment(session)
         }
         .alert("Audio summary",
                isPresented: Binding(get: { audioError != nil },
@@ -336,6 +342,13 @@ struct TopicsView: View {
             #if targetEnvironment(simulator)
             // `-OpenCommunity 1` — straight to the community directory for
             // screenshot loops.
+            // `-OpenAskPolly 1` — the text chat with no topic.
+            if UserDefaults.standard.bool(forKey: "OpenAskPolly"), LaunchOnce.take("OpenAskPolly") {
+                Task {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    askPolly = TextChatContext(threadId: nil, title: "Polly")
+                }
+            }
             if UserDefaults.standard.bool(forKey: "OpenCommunity") {
                 UserDefaults.standard.removeObject(forKey: "OpenCommunity")
                 Task {
@@ -387,7 +400,13 @@ struct TopicsView: View {
     /// Floating + in the bottom-right corner. With the Chat tab gone this
     /// is THE way to start anything new, so it's a full-size FAB.
     private var newTopicButton: some View {
-        Button { showNewTopic = true } label: {
+        Menu {
+            Button { showNewTopic = true } label: { Label("New topic", systemImage: "plus") }
+            // No topic, no pair: ask for anything ("make me 20 cards about food").
+            Button { askPolly = TextChatContext(threadId: nil, title: "Polly") } label: {
+                Label(L("Ask Polly", "Chiedi a Polly", "Demande à Polly", "Polly에게 묻기"), systemImage: "keyboard")
+            }
+        } label: {
             Image(systemName: "plus")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(PollyTheme.inkOnAccent)
@@ -1001,7 +1020,8 @@ struct NewTopicSheet: View {
     /// Called after the topic was created server-side — (id, title).
     let onCreated: (String, String) -> Void
     /// Called after a quick-chat placeholder topic was created — (id).
-    let onQuickChat: (String) -> Void
+    /// "Ask Polly": the text chat with no topic (the host presents it).
+    var onAskPolly: () -> Void = {}
 
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
@@ -1070,12 +1090,12 @@ struct NewTopicSheet: View {
                         .disabled(busy || quickBusy)
                         .listRowBackground(Color.clear)
                     }
-                    Button { startQuickChat() } label: {
+                    Button { onAskPolly() } label: {
                         VStack(spacing: 3) {
-                            Text(quickBusy ? "Starting…" : "Just chat")
+                            Text(L("Ask Polly", "Chiedi a Polly", "Demande à Polly", "Polly에게 묻기"))
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(PollyTheme.accent)
-                            Text("No topic — name it later if it's a keeper.")
+                            Text("No topic — type to Polly about anything.")
                                 .font(.system(size: 12))
                                 .foregroundStyle(PollyTheme.text3)
                         }
@@ -1120,23 +1140,6 @@ struct NewTopicSheet: View {
         }
     }
 
-    /// "Just chat": create the placeholder topic, dismiss, and let the host
-    /// push the quick-chat screen.
-    private func startQuickChat() {
-        guard !busy && !quickBusy else { return }
-        quickBusy = true
-        Task {
-            do {
-                let id = try await PollyAPI.shared.createTopic(
-                    title: quickChatPlaceholderTitle, kind: "chat")
-                onQuickChat(id)
-                closeModal(dismiss)
-            } catch {
-                errorMessage = "Couldn't start a chat: \(error.localizedDescription)"
-                quickBusy = false
-            }
-        }
-    }
 }
 
 /// Rename + type editor. The type is the small glyph on the topic row —

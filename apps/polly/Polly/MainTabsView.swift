@@ -37,11 +37,7 @@ struct MainTabsView: View {
                         TopicsView()
                             .toolbar(.hidden, for: .navigationBar)
                             .navigationDestination(for: PollyTopic.self) { topic in
-                                TopicDetailView(topicId: topic.id)
-                                    .toolbar(.hidden, for: .navigationBar)
-                            }
-                            .navigationDestination(for: QuickChatRoute.self) { route in
-                                TopicDetailView(topicId: route.topicId, quickChat: true)
+                                TopicDetailView(topicId: topic.id, kind: topic.kind ?? "general", title: topic.topic)
                                     .toolbar(.hidden, for: .navigationBar)
                             }
                     }
@@ -105,16 +101,6 @@ struct MainTabsView: View {
                     try? await Task.sleep(for: .milliseconds(450))
                     topicsPath.append(t)
                 }
-            }
-        }
-        // "Just chat" from the New Topic sheet: push the fresh placeholder
-        // topic in quick-chat mode once the sheet has settled.
-        .onChange(of: DeepLinkRouter.shared.quickChatSignal) {
-            guard let id = DeepLinkRouter.shared.consumeQuickChat() else { return }
-            active = .topics
-            Task {
-                try? await Task.sleep(for: .milliseconds(400))
-                topicsPath.append(QuickChatRoute(topicId: id))
             }
         }
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in

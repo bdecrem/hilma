@@ -1,6 +1,6 @@
 # Polly — Infinity Chat rebuild, Direction 2b: "text as a peer to voice"
 
-Status: **decided 2026-09-19** (Bart). Build spec for Claude Code.
+Status: **decided 2026-09-19** (Bart); **built 2026-09-20** — what shipped, and where the things the design didn't draw went, is in `apps/polly/CLAUDE.md` ("Direction 2b").
 Design pages (read them first, they are the source of truth for the screens):
 `public/polly/design/index.html` (diagnosis), `direction-2b.html` (the chosen
 direction), `direction-2.html` / `direction-1.html` (rejected, for context).

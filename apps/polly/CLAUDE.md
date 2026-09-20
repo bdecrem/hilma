@@ -241,6 +241,67 @@ in the studied language must be correct in that language — Dodo's "same idea,
 any wording" bar only applies to English-side answers.
 `npx tsx scripts/polly/quality-bench.ts <cleanup|plan|cards|grammar|judge>`.
 
+## Direction 2b — text as a peer to voice (2026-09-20)
+
+Spec: [`docs/polly-infinity-2b.md`](../../docs/polly-infinity-2b.md); design:
+`public/polly/design/direction-2b.html`. No topic screen has a composer any
+more. Wherever Polly offers to talk, typing is the quieter line under the
+voice button, and it opens one full-screen text chat.
+
+- **The lanes (server, `src/lib/polly/talk.ts`).** `/api/polly/messages` takes
+  `talk: { chat_id?, open?, ephemeral?, card_id?, history? }`. No client mode:
+  rules first (a leading "Polly, …" forces the agent; text with no English in
+  it is practice), one Haiku call otherwise, which sees Polly's last line.
+  practice → the studied language at the learner's level, one question, at
+  most one folded fix (dropped in code unless its slip is verbatim in the new
+  message and is not English); question → forty words of English; instruction →
+  `runPollyAgent({ brief })`, which reports in two sentences and returns what
+  it made as a card. After either, Polly's resume line (written in parallel).
+  `npx tsx scripts/polly/lanes-check.ts` — 25 messages through the classifier,
+  then the whole thing over HTTP on a throwaway guest (lanes, stored chats,
+  agent tools, delta clean-up, text → voice).
+- **Typed chats are chats** (schema 009, `src/lib/polly/infinity.ts`): the chat
+  row owns its transcript (`ChatTurn`: via voice|text, lane, fix, card), `input`
+  is voice|text|mixed, `ended_at` null = still open. The first typed turn on a
+  topic opens a chat; Finish (or ✕) closes and titles it; an hour of quiet does
+  the same when chats are listed; one nobody spoke in is dropped. A voice
+  session continues a chat with `continue_chat_id` (start: Polly gets the
+  conversation so far; finish: the turns are appended). Cleaning up a continued
+  chat reads only the new part — `analysis.fresh_fixes` are the ones the walk
+  covers, and the star has to be earned again. `chatForClient` adds `open`,
+  `needs_cleanup`, `minutes`, `fixes_so_far` (+ `transcript` on the single GET).
+  Every topic kind gets chats, not only Infinity.
+- **Agent tools:** `list_chats`, `rename_chat`, `cards_from_chats(n, focus,
+  chat_ids?)`, `weak_spots(days)`.
+- **App.** `TalkPair` (the pair), `TextChatView` + `TextChatContext` (the text
+  chat: folded fix, deck card, context pill, mic handoff, "Finish & clean up"),
+  `ChatFlow` + `.chatFlow()` (voice / text / clean-up / quiz and the handoffs
+  between them, shared by every host) and `ChatRail` (the journey) in
+  ChatFlow.swift. `TopicDetailView` is now a router: infinity →
+  `InfinityHomeView` (hero + journey; a chat opens `InfinityChatPage`: fixes,
+  word chips, grammar, transcript, Quiz, the pair as Continue), lesson →
+  `LessonTopicView`, everything else → `SourceTopicView` (source, plan, the
+  pair, Cards · Quiz/Final Review/Refresher · Quotes, "Your chats about this").
+  The header's model button moved into the "···". The Topics "+" is a menu
+  (New topic / Ask Polly); "Ask Polly" and the miss clinic's "Talk it through"
+  open `TextChatView` unstored (no topic / the card as context).
+- **What the design didn't draw, and where it went:** the star-1 quiz was an
+  exchange in the old chat window — it is `TopicQuizView` now, full screen from
+  the Quiz step (anything typed on a topic before 2b is still there above it).
+  Context, the audio summary and "open source" are in the "···". A path
+  lesson's typed scene is a chat too (shown under the steps when there is one);
+  its Talk step stays voice-only.
+- **Hooks:** `-OpenInfinityDrill text|quiz|cleanup|page|vocab|grammar|voice|type`,
+  `-OpenTextChat 1`, `-OpenTopicQuiz 1`, `-OpenAskPolly 1`, and
+  `-AutoTalk "one|two" [-AutoTalkEnd finish|leave|voice] [-AutoTalkHold s]`,
+  which types a scripted conversation. Launch arguments outlive
+  `removeObject`, so new hooks use `LaunchOnce.take` (a re-fired `.task` once
+  replayed a whole script into a finished chat).
+- **Not driven here:** the radio. On 2026-09-20 every voice session crashed the
+  simulator in `AUVoiceIO` (an audio-service RPC timeout — the untouched level
+  check too), so continue-by-voice and the keyboard handoff were checked at the
+  server (Part D of the lanes check) and by build only.
+
 ## The screenshot set (2026-09-19)
 
 `scripts/polly/shots-seed.mjs <dir>` makes a throwaway demo guest on

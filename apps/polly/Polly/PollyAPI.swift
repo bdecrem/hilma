@@ -834,18 +834,21 @@ final class PollyAPI {
     /// `cardIds` is required for mode "flash" — the deck the quizmaster reads
     /// from, in question order. `sdp` is the phone's WebRTC offer.
     func startLiveSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
-                          chatId: String? = nil, holdToTalk: Bool = false, sdp: String) async throws -> LiveSessionResponse {
+                          chatId: String? = nil, continueChatId: String? = nil,
+                          holdToTalk: Bool = false, sdp: String) async throws -> LiveSessionResponse {
         struct Body: Encodable {
             let mode: String
             let thread_id: String?
             let card_ids: [String]?
             let chat_id: String?
+            let continue_chat_id: String?
             let hold_to_talk: Bool
             let sdp: String
         }
         return try await post("/api/polly/live/session",
                               body: Body(mode: mode, thread_id: threadId, card_ids: cardIds,
-                                         chat_id: chatId, hold_to_talk: holdToTalk, sdp: sdp))
+                                         chat_id: chatId, continue_chat_id: continueChatId,
+                                         hold_to_talk: holdToTalk, sdp: sdp))
     }
 
     // MARK: Infinity Chat
@@ -859,6 +862,44 @@ final class PollyAPI {
         let res: InfinityChatResponse = try await post("/api/polly/infinity/chats",
                                                        body: Body(thread_id: threadId, voice_session_id: voiceSessionId))
         return res.chat
+    }
+
+    /// One turn of the text chat (Direction 2b). The server picks the lane; on
+    /// a topic it also keeps the conversation (`chatId` continues one, nil
+    /// opens one). `text` nil asks Polly to speak first. `history` is only
+    /// read when nothing is stored (no topic, or the miss clinic's `cardId`).
+    func talk(text: String?, threadId: String?, chatId: String?, cardId: String? = nil,
+              history: [ChatTurn] = [], model: String? = nil) async throws -> TalkResponse {
+        struct Turn: Encodable { let role: String; let text: String; let lane: String? }
+        struct Talk: Encodable {
+            let chat_id: String?
+            let open: Bool
+            let ephemeral: Bool
+            let card_id: String?
+            let history: [Turn]
+        }
+        struct Body: Encodable { let text: String?; let thread_id: String?; let model: String?; let talk: Talk }
+        let stored = threadId != nil && cardId == nil
+        return try await post("/api/polly/messages", body: Body(
+            text: text, thread_id: threadId, model: model,
+            talk: Talk(chat_id: chatId, open: text == nil, ephemeral: !stored, card_id: cardId,
+                       history: stored ? [] : history.map { Turn(role: $0.role, text: $0.text, lane: $0.lane) })))
+    }
+
+    /// Close an open typed chat (titles it). Nil when nothing was said in it.
+    func finishInfinityChat(id: String) async throws -> InfinityChat? {
+        struct Res: Codable { let chat: InfinityChat? }
+        let res: Res = try await request("/api/polly/infinity/chats/\(id)/finish", method: "POST", body: EmptyBody())
+        return res.chat
+    }
+
+    func renameInfinityChat(id: String, title: String) async throws {
+        struct Body: Encodable { let title: String }
+        let _: EmptyResponse = try await request("/api/polly/infinity/chats/\(id)", method: "PATCH", body: Body(title: title))
+    }
+
+    func deleteInfinityChat(id: String) async throws {
+        let _: EmptyResponse = try await request("/api/polly/infinity/chats/\(id)", method: "DELETE", body: EmptyBody())
     }
 
     /// The conversations in an Infinity topic, newest first.
@@ -1195,14 +1236,16 @@ final class PollyAPI {
     }
 
     func finishLiveSession(id: String, transcript: [[String: String]], summary: String? = nil,
-                           usage: [String: Int]? = nil) async throws {
+                           usage: [String: Int]? = nil, continueChatId: String? = nil) async throws {
         struct Body: Encodable {
             let transcript: [[String: String]]
             let summary: String?
             let usage: [String: Int]?
+            let continue_chat_id: String?
         }
         let _: EmptyResponse = try await request("/api/polly/live/session/\(id)", method: "PATCH",
-                                                 body: Body(transcript: transcript, summary: summary, usage: usage))
+                                                 body: Body(transcript: transcript, summary: summary, usage: usage,
+                                                            continue_chat_id: continueChatId))
     }
 
     // MARK: The path (Agentic Learning Mode)

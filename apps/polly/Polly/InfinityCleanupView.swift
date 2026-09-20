@@ -19,7 +19,8 @@ struct InfinityCleanupView: View {
 
     private enum Phase { case walking, allDone, practicing }
 
-    private var fixes: [InfinityFix] { chat.analysis?.fixes ?? [] }
+    /// A continued chat walks only its new fixes.
+    private var fixes: [InfinityFix] { chat.analysis?.walkFixes ?? [] }
 
     init(chat: InfinityChat, onDone: @escaping () -> Void) {
         self.chat = chat

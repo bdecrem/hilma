@@ -350,14 +350,18 @@ export async function talkTurn(input: {
 
   // The agent's work and the line that resumes the conversation don't depend
   // on each other — run them together so the resume costs no extra wait.
-  const resume = resumeLine(f, input.userName, history)
+  // "Ask Polly" with no topic and no conversation under way has nothing to
+  // resume: the answer is the whole reply.
+  const nothingToResume = !thread && !about && lastPractice(history) === null
+  const resume = nothingToResume ? Promise.resolve(null) : resumeLine(f, input.userName, history)
+  const resumed = (line: string | null): TalkTurn[] => (line ? [{ role: 'assistant', text: line, lane: 'practice' }] : [])
   if (intent === 'question') {
     const [answer, line] = await Promise.all([answerQuestion(f, history, text), resume])
     return {
       lane: 'agent', intent,
       messages: [
         { role: 'assistant', text: answer, lane: 'agent' },
-        { role: 'assistant', text: line, lane: 'practice' },
+        ...resumed(line),
       ],
       thread_id: thread?.id,
     }
@@ -383,7 +387,7 @@ export async function talkTurn(input: {
     lane: 'agent', intent,
     messages: [
       { role: 'assistant', text: agent.reply.replace(/^Polly:\s*/i, ''), lane: 'agent', card },
-      { role: 'assistant', text: line, lane: 'practice' },
+      ...resumed(line),
     ],
     thread_id: thread?.id,
     ...(agent.write_document ? { write_document: agent.write_document } : {}),

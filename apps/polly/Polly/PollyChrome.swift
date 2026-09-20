@@ -973,6 +973,7 @@ struct SourceCard: View {
 struct PollyComposer: View {
     @Binding var draft: String
     let busy: Bool
+    var placeholder: String = "Send a URL or ask a question…"
     let onSend: () -> Void
 
     private var canSend: Bool {
@@ -984,7 +985,7 @@ struct PollyComposer: View {
             // Custom pill. No `.regularMaterial` — sits flat on PollyTheme.bg.
             ZStack(alignment: .leading) {
                 if draft.isEmpty {
-                    Text("Send a URL or ask a question…")
+                    Text(placeholder)
                         .font(.system(size: 16))
                         .foregroundStyle(PollyTheme.text3)
                         .padding(.leading, 16)
@@ -1206,5 +1207,36 @@ struct TabPill: View {
                 .lineLimit(1)
         }
         .fixedSize()
+    }
+}
+
+// MARK: - Flow layout (chips that wrap)
+
+/// Lays subviews out left to right and wraps to the next line — word chips.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, widest: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > 0 && x + size.width > width { x = 0; y += rowHeight + spacing; rowHeight = 0 }
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+            widest = max(widest, x - spacing)
+        }
+        return CGSize(width: width.isFinite ? width : widest, height: y + rowHeight)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
+        for view in subviews {
+            let size = view.sizeThatFits(.unspecified)
+            if x > bounds.minX && x + size.width > bounds.maxX { x = bounds.minX; y += rowHeight + spacing; rowHeight = 0 }
+            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+        }
     }
 }
