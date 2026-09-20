@@ -20,6 +20,8 @@
 //   --answer    what the test user says, one per turn (repeatable)
 //   --text      send the answers as text messages instead of speech
 //   --interrupt start speaking 1.5 s into Dodo's second reply (barge-in)
+//   --guest     sign in as a fresh guest account (use with mode `global`); for
+//               production runs: ELEVEN_SPEECH_ENGINE_ID=<prod engine> … --base https://feynd.cc --guest
 //
 // Needs ELEVENLABS_API_KEY and ELEVEN_SPEECH_ENGINE_ID in .env.local (and
 // F2_TEST_PASS to log in rather than self-sign). Test account only.
@@ -31,7 +33,8 @@ import WebSocket from 'ws'
 
 for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
   const m = line.match(/^([A-Z0-9_]+)=(.*)$/)
-  if (m) process.env[m[1]] = m[2].replace(/^"|"$/g, '')
+  // Values already in the environment win, so a run can name another engine.
+  if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^"|"$/g, '')
 }
 
 const TEST_USER = 'newx-test@example.com' // never Bart's
@@ -94,8 +97,15 @@ async function main() {
   // 1. Sign in as the test account and start the session through the route.
   //    With F2_TEST_PASS it logs in; without it, it signs the session cookie
   //    itself (works when the backend shares .env.local's session secret).
+  //    --guest makes a throwaway guest account instead — the way to drive
+  //    production from a machine that has neither (delete the user afterwards).
   let cookie: string
-  if (process.env.F2_TEST_PASS) {
+  if (args.includes('--guest')) {
+    const guest = await fetch(`${base}/api/f2/auth/guest`, { method: 'POST' })
+    if (!guest.ok) throw new Error(`guest sign-up failed (${guest.status})`)
+    cookie = (guest.headers.getSetCookie?.() ?? []).map((c) => c.split(';')[0]).join('; ')
+    console.log(at(), 'guest account', JSON.stringify(await guest.json()).slice(0, 160))
+  } else if (process.env.F2_TEST_PASS) {
     const login = await fetch(`${base}/api/f2/auth/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

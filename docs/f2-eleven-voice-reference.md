@@ -1,6 +1,6 @@
 # Dodo voice on ElevenLabs + Claude — reference
 
-Last updated: 2026-09-20 (the day it was built).
+Last updated: 2026-09-20 (the day it was built). Setup on another machine, the bridge, Vercel and troubleshooting: [`f2-eleven-voice-setup.md`](f2-eleven-voice-setup.md).
 
 Dodo's second voice engine. **GPT-Live stays the default** (`docs/f2-gpt-live-reference.md`); this one is a per-device setting — Profile → Voice → **Voice engine: GPT-Live / ElevenLabs + Claude** (`VoiceEngine` in `DodoVoiceClient.swift`, UserDefaults key `voiceEngine`, read when a session starts). Every voice surface honours it: Talk to Dodo (global / topic), spoken flash rounds, the Final Review, the Second Chance and the recert refresher. Same screens, same hold-to-talk and mute, same finish route, same graders.
 
@@ -72,6 +72,7 @@ Two engines because an engine has ONE `ws_url`: "Dodo (dev)" → `/ws/dev` → `
 ## Verifying
 
 - **Server + bridge + ElevenLabs, headless:** `npx tsx scripts/test-eleven-dodo.ts [mode] [threadId] [--base URL] [--answer "…"]… [--text] [--interrupt]` — signs in as the test account, starts a session through the route, talks to ElevenLabs over its WebSocket transport, answers out loud with macOS `say` (so speech-to-text and turn-taking are in the loop), and finishes through the PATCH. `--interrupt` barges into Dodo's second reply. Needs the bridge running (`bash apps/dodo-voice-bridge/run.sh`) and, for the default base, `npx next dev --turbopack -p 3100`.
+- **Production, headless:** `ELEVEN_SPEECH_ENGINE_ID=<prod engine id> npx tsx scripts/test-eleven-dodo.ts global --base https://feynd.cc --guest` — a throwaway guest account (delete its `f2_users` row afterwards). Passed 2026-09-20, first text ≈ 0.8 s.
 - **iOS, simulator:** the same drill as GPT-Live with the engine switched: add `-voiceEngine eleven` to the `-OpenTopic <id> -OpenVoice 1 -VoiceLiveTest 1` launch (or `-OpenFinalReview 1`). Lines are tagged `F2_ELEVEN_*`; the drill's own lines stay `F2_LIVE_TEST`.
 
 ## Official docs
