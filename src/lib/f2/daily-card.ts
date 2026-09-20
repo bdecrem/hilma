@@ -174,6 +174,9 @@ export async function sendDailyCards(): Promise<
     try {
       const handle = dailyHandle(u.imessage_handles)
       if (!u.daily_chat_guid && !handle) {
+        // Enabled with nowhere to send: the profile route forbids reaching
+        // this state, so say so loudly rather than skip in silence.
+        console.error(`[f2/daily-card] ${u.username} has the daily card ON but no paired iMessage handle — nothing sent`)
         out.push({ user: u.username, status: 'no-handle' })
         continue
       }

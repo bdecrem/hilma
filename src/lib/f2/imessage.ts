@@ -198,6 +198,19 @@ export async function removeImessageHandle(
   const next = current.filter(h => h !== handle)
   if (next.length === current.length) return
   await sb.from('f2_users').update({ imessage_handles: next }).eq('id', userId)
+
+  // The daily card is delivered to a paired handle. With the last one gone it
+  // has nowhere to go, so switch it off: left on, the toggle keeps saying ON
+  // while the cron skips the user as "no-handle" every day, silently (Bart's
+  // Polly account, 2026-09-20). The profile route refuses to switch it back on
+  // until a handle is paired again.
+  if (next.length === 0) {
+    await sb
+      .from('f2_users')
+      .update({ daily_card_enabled: false })
+      .eq('id', userId)
+      .is('daily_chat_guid', null)
+  }
 }
 
 /// Webhook-side: given an inbound iMessage handle, find the owning user.

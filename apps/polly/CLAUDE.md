@@ -408,3 +408,13 @@ Profile → Voice → **Voice engine**, per device (`VoiceEngine` in `Polly/Poll
 - `-TestSessionToken <polly_session value>` signs the simulator in with a cookie (a guest's works against production). **Every guest sign-up texts Bart** — reuse one account.
 
 **Signing moved onto the target** (`project.yml`): the ElevenLabs/LiveKit packages ship resource bundles, command-line build settings reach every target, and a resource bundle given a provisioning profile fails the build. Debug device builds use `POLLY_PROFILE` (default "polly dev"), Release "polly appstore" / `POLLY_MAC_PROFILE` "polly catalyst appstore"; `testflight/ship.sh` now passes `POLLY_PROFILE=… POLLY_MAC_PROFILE=…` instead of `CODE_SIGN_STYLE` / `PROVISIONING_PROFILE_SPECIFIER`. A device build is just `xcodebuild … -destination 'generic/platform=iOS' build`. The Release/TestFlight path resolves correctly (`-showBuildSettings`) but has not been archived since the change — treat the next `ship.sh` as its test.
+
+
+## Daily card: "sent" is the only proof (2026-09-20)
+
+Bart's Polly daily card never arrived even after the cron was added (2026-09-19): his account had `daily_card_enabled = true` but `imessage_handles = {}`, so every run ended `no-handle` — silently. The profile route only lets the card be switched on with a handle paired, so the pairing had succeeded on 09-18 and the handle was removed afterwards (the app's unpair or the agent's `remove_imessage` tool; nothing recorded which). Two changes: removing the LAST handle now switches the daily card off (Polly and Dodo, `removeImessageHandle`), so the toggle tells the truth, and the cron logs an error for an enabled user with no handle.
+
+When the daily card "doesn't arrive", check in this order — do not stop at "the cron exists":
+1. `curl -s https://hilma-nine.vercel.app/api/polly/daily-card -H "Authorization: Bearer $CRON_SECRET"` → per-user `status`. Only `sent` means a message left. `no-handle` = not paired; `no-cards` = nothing due; `error` carries the send failure (mini unreachable). Running it sends today's card to everyone enabled — fine while that is only Bart.
+2. `select username, daily_card_enabled, imessage_handles, daily_chat_guid from polly_users` for the account — each LANGUAGE is its own row; the card goes to the rows that are enabled.
+3. `polly_imessage_outbound` is written BEFORE the send, so a row there is an attempt, not a delivery.
