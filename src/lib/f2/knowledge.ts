@@ -398,7 +398,9 @@ export async function buildKnowledgeMap(userId: string): Promise<KnowledgeMap> {
 // Search
 // ---------------------------------------------------------------------------
 
-export type Passage = { threadId: string; topic: string; text: string; score: number }
+/// `similarity` is the cosine similarity to the query — what decides whether a
+/// passage's topic is shown to the user as a source (global-chat.ts).
+export type Passage = { threadId: string; topic: string; text: string; score: number; similarity: number }
 
 export async function searchKnowledge(
   userId: string,
@@ -417,7 +419,7 @@ export async function searchKnowledge(
     p_thread: opts.threadId ?? null,
   })
   if (error) throw new Error(`knowledge search failed: ${error.message}`)
-  const rows = (data ?? []) as { thread_id: string; content: string; score: number }[]
+  const rows = (data ?? []) as { thread_id: string; content: string; score: number; similarity: number }[]
   if (rows.length === 0) return []
 
   const ids = [...new Set(rows.map((r) => r.thread_id))]
@@ -432,6 +434,7 @@ export async function searchKnowledge(
     topic: titles.get(r.thread_id) ?? 'Untitled topic',
     text: r.content.slice(0, PASSAGE_CHARS),
     score: r.score,
+    similarity: r.similarity,
   }))
 }
 

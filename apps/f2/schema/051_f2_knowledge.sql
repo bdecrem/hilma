@@ -62,7 +62,7 @@ create or replace function f2_search_chunks(
   p_thread    uuid default null,
   p_min_sim   double precision default 0.22
 )
-returns table (chunk_id uuid, thread_id uuid, idx integer, content text, score double precision)
+returns table (chunk_id uuid, thread_id uuid, idx integer, content text, score double precision, similarity double precision)
 language sql stable
 as $$
   with vec as (
@@ -87,7 +87,7 @@ as $$
     from (select id, rnk from vec union all select id, rnk from fts) r
     group by id
   )
-  select c.id, c.thread_id, c.idx, c.text, f.score
+  select c.id, c.thread_id, c.idx, c.text, f.score, 1 - (c.embedding <=> p_embedding)
   from fused f
   join f2_topic_chunks c on c.id = f.id
   order by f.score desc

@@ -188,9 +188,17 @@ export type GlobalTurnResult = {
   }
 }
 
+/// A passage reaches the model on a loose match (full-text hits included), but
+/// its topic is only SHOWN as a source when it is clearly about the question —
+/// otherwise "what have I saved?" would cite whichever topic scored least badly.
+const SOURCE_MIN_SIMILARITY = 0.3
+
 function dedupeSources(passages: Passage[]): GlobalSource[] {
   const seen = new Map<string, GlobalSource>()
-  for (const p of passages) if (!seen.has(p.threadId)) seen.set(p.threadId, { thread_id: p.threadId, topic: p.topic })
+  for (const p of passages) {
+    if (p.similarity < SOURCE_MIN_SIMILARITY || seen.has(p.threadId)) continue
+    seen.set(p.threadId, { thread_id: p.threadId, topic: p.topic })
+  }
   return [...seen.values()]
 }
 
