@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- launchd job for the Dodo voice bridge. install.sh fills in __DIR__ and
+     __HOME__ and loads it; KeepAlive restarts run.sh (bridge + tunnel +
+     engine update) whenever either half dies. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.dodo.voicebridge</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__DIR__/run.sh</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>20</integer>
+  <key>StandardOutPath</key><string>__HOME__/Library/Logs/dodo-voice-bridge.log</string>
+  <key>StandardErrorPath</key><string>__HOME__/Library/Logs/dodo-voice-bridge.log</string>
+</dict>
+</plist>

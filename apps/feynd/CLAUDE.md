@@ -37,15 +37,14 @@ xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
-Bart's iPhone (device id `9FBCF85E-F1E3-5646-93DC-F51E897B1C27`) — **manual signing required** since the Associated Domains entitlement landed (2026-08-13): no Xcode account is signed in on this iMac, so `-allowProvisioningUpdates` fails ("No Accounts") and the old auto team profile lacks the capability anyway. Use the ASC-minted profile "feynd dev domains" (expires 2027-08, includes `applinks:feynd.cc`; the minting flow is documented in `apps/taptapdodo/CLAUDE.md` — same key, Feynd bundle-ID resource `L74V9QD69L`):
+Bart's iPhone (device id `9FBCF85E-F1E3-5646-93DC-F51E897B1C27`) — **manual signing**, since the Associated Domains entitlement landed (2026-08-13): no Xcode account is signed in on these Macs, so `-allowProvisioningUpdates` fails ("No Accounts"). Signing is set ON THE TARGET in `project.yml` (since 2026-09-20), never on the command line: the ElevenLabs/LiveKit packages ship resource bundles, command-line build settings reach every target, and a resource bundle given a provisioning profile fails the build ("requires a development team" / "does not support provisioning profiles"). Debug device builds use the profile named by `FEYND_PROFILE` (default "feynd dev domains", the iMac's, expires 2027-08); Release uses "feynd appstore" and, for Catalyst, `FEYND_MAC_PROFILE` = "feynd catalyst appstore". A machine with a differently named profile passes `FEYND_PROFILE=…` — only the app target reads it. The MacBook Air's is **"feynd dev air"** (minted 2026-09-20 via the ASC API with key `FA7268Q94U` against bundle-ID resource `L74V9QD69L`, all four development certs, both registered iPhones; expires 2027-09). The minting flow is documented in `apps/taptapdodo/CLAUDE.md`.
 ```bash
 xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd \
-  -destination 'generic/platform=iOS' -derivedDataPath <dd> \
-  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=feynd dev domains" \
-  "CODE_SIGN_IDENTITY=Apple Development" build
+  -destination 'generic/platform=iOS' -derivedDataPath <dd> build      # add "FEYND_PROFILE=feynd dev air" on the MacBook Air
 xcrun devicectl device install app --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27 <dd>/Build/Products/Debug-iphoneos/Feynd.app
 xcrun devicectl device process launch --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27 com.bartdecrem.Feynd
 ```
+The first build on a machine can hang while Xcode downloads LiveKit's binary frameworks (it sat at 0 % CPU for 13 minutes on 2026-09-20 while `curl` fetched the same zips in 3 s). Fix: download the two URLs in the `webrtc-xcframework` and `livekit-uniffi-xcframework` checkouts' `Package.swift` into `~/Library/Caches/org.swift.swiftpm/artifacts/`, named as the URL with every non-alphanumeric character turned into `_`, and resolve again.
 The entitlement applies to device builds only (`CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]` in project.yml) — simulator and Catalyst builds sign exactly as before.
 Launch fails with `FBSOpenApplicationErrorDomain error 7` when the phone is locked — the install still succeeded; say so rather than treating it as a failure.
 
@@ -61,6 +60,8 @@ The marketing captures (site tour/hero, App Store shots, video) are driven by th
 - `-OpenTopic <threadId>` — push into that topic's detail (add `-FreshTopic 1` to show the first-session "give Dodo something to read" banner); add `-OpenFlashCards 1` for its flash hub, `-EditFirstCard 1` (+ `-ShowCardList 1`) for the card-edit sheet, or `-OpenTopicQuotes 1` for the per-topic Quotes shelf. `-OpenFinalReview 1` (with `-OpenTopic <id>`) starts the topic's final review as the user would (it connects a real voice session).
 - `-OpenCommunity 1` — open the community-topics directory sheet from the Topics tab.
 - `-OpenVoice 1` (with `-OpenTopic <id>`) — straight into that topic's voice session; `-voiceHoldToTalk 1` for push-to-talk. Add `-VoiceLiveTest 1` (also works with `-OpenFinalReview 1`) to run the GPT-Live drill: waits for `session.started` (PASS/FAIL `session-started`), nudges a greeting in Talk mode (scripted modes open on their own), waits for Dodo's words (`dodo-spoke`), measures inbound-rtp audio energy to prove sound actually arrives (`audio-arrived`), does one press/release in hold-to-talk (`ptt-settled`), then Ends and checks `session.closed` came back (`closed-gracefully`) and the transcript PATCH landed (`transcript-uploaded turns=N`). Read the `F2_LIVE_TEST` / `F2_LIVE_EV` / `F2_LIVE_EVENT_ERROR` lines via `xcrun simctl spawn <udid> log show --start "<time>" --predicate 'composedMessage CONTAINS "F2_LIVE"'`. Before the first run: `xcrun simctl privacy <udid> grant microphone com.bartdecrem.Feynd` (the permission alert otherwise blocks and, once shown, survives relaunches until the sim reboots) and `-recertEnabled 0`. The simulator mic is digitally silent, so the drill proves the protocol (connection, opening, audio out, close, upload), never the listening side — for that use `scripts/test-live-dodo.ts`, which speaks to the same session config over WebSocket. Test login: `-TestLoginUser newx-test@example.com -TestLoginPass $F2_TEST_PASS` (`F2_TEST_PASS` in `.env.local`; the account's password was set to it on 2026-09-11). The Catalyst Debug binary ignores a HOME override and shares Bart's login, so don't run `-TestLoginUser` there.
+- `-voiceEngine eleven` — run any of the voice hooks above on the ElevenLabs + Claude engine instead of GPT-Live (it is the same UserDefaults key the Profile picker writes). The drill is the same one; the engine's own lines are tagged `F2_ELEVEN_*` (agent-ready, agent-state, PTT, transcript) and `audio-arrived` is measured on the rendered PCM of the agent's track. Needs the voice bridge running and pointed at the backend under test (`bash apps/dodo-voice-bridge/run.sh`; with `Secrets` on `.dev` = `http://localhost:3100` that is the "Dodo (dev)" engine, whose id is `ELEVEN_SPEECH_ENGINE_ID` in `.env.local`). For the listening side use `scripts/test-eleven-dodo.ts`.
+- `-TestSessionToken <signed f2_session value>` — sign in without the test password: `signSession('<test user id>')` from `src/lib/f2/auth.ts` makes the value (the backend must share that `.env.local`'s session secret, so: local dev). Used on the MacBook Air, which has no `F2_TEST_PASS`.
 - `-MockPeckDue N` — fake the weekly Peck deadline N days out (0 = today; fakes a 12-day streak when there is none) so the streak-at-risk banner (Peck + Topics, shows at N ≤ 1) and the flame modal's due line can be screenshotted. `-OpenStreakModal 1` — open the flame's status card without a tap. The real rule lives in `src/lib/f2/streak.ts`; `npx tsx scripts/f2-peck-week-check.ts` drives every transition against the test account (`--reset` zeroes it afterwards).
 - `-HoldSplash 1` — pin the launch splash for screenshots. `-TickleDodo 1` — auto-play the map traveler's tickle.
 - `-ExportPeckWorld <host dir>` — write the Peck island scenery (the map's drawn-in-code background) to `<dir>/peck-world-10|20|30.png` at 3x, one file per region count. No sign-in needed; it's how the map art leaves the app for design handoff.
@@ -76,9 +77,8 @@ App Store Connect app record is **"Feynd"** (id 6773165027) — same bundle ID; 
 ./apps/feynd/bump-build.sh                      # unique CFBundleVersion per upload
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer   # RELEASE Xcode — ASC rejects beta-SDK uploads, and the beta is the selected default on this iMac
 xcodebuild archive -project Feynd.xcodeproj -scheme Feynd \
-  -destination 'generic/platform=iOS' -archivePath <path>/Feynd.xcarchive -configuration Release \
-  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=feynd appstore" \
-  "CODE_SIGN_IDENTITY=Apple Distribution"
+  -destination 'generic/platform=iOS' -archivePath <path>/Feynd.xcarchive -configuration Release
+  # signing comes from project.yml's Release config ("feynd appstore", Apple Distribution) — no overrides here
 xcodebuild -exportArchive -archivePath <path>/Feynd.xcarchive \
   -exportOptionsPlist testflight/export.plist -exportPath <out> \
   -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8 \
@@ -110,9 +110,8 @@ TestFlight app on macOS.
 export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 xcodebuild archive -project Feynd.xcodeproj -scheme Feynd \
   -destination 'generic/platform=macOS,variant=Mac Catalyst' \
-  -archivePath <path>/FeyndMac.xcarchive -configuration Release \
-  CODE_SIGN_STYLE=Manual "PROVISIONING_PROFILE_SPECIFIER=feynd catalyst appstore" \
-  "CODE_SIGN_IDENTITY=Apple Distribution"
+  -archivePath <path>/FeyndMac.xcarchive -configuration Release
+  # signing comes from project.yml's Release config ("feynd catalyst appstore") — no overrides here
 xcodebuild -exportArchive -archivePath <path>/FeyndMac.xcarchive \
   -exportOptionsPlist testflight/export-mac.plist -exportPath <out> \
   -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8 \

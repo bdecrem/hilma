@@ -10,13 +10,18 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "109"
+    CURRENT_PROJECT_VERSION: "110"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
   WebRTC:
     url: https://github.com/stasel/WebRTC.git
     exactVersion: 147.0.0
+  # The ElevenLabs voice engine (ElevenVoiceClient.swift). Rides on LiveKit,
+  # whose WebRTC build has prefixed symbols, so it coexists with the one above.
+  ElevenLabs:
+    url: https://github.com/elevenlabs/elevenlabs-swift-sdk.git
+    exactVersion: 3.3.1
 
 targets:
   Feynd:
@@ -28,6 +33,7 @@ targets:
           - "Secrets.swift.example"
     dependencies:
       - package: WebRTC
+      - package: ElevenLabs
     info:
       path: Feynd/Info.plist
       properties:
@@ -81,6 +87,14 @@ targets:
         # need it either (dodo:// covers deep-link testing there).
         CODE_SIGN_ENTITLEMENTS: ""
         "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": Feynd/Feynd.entitlements
+        # Device + App Store signing is manual and lives HERE, on the target,
+        # not on the xcodebuild command line: command-line settings apply to
+        # every target, and the Swift packages' resource bundles
+        # (LiveKit_LiveKit, ElevenLabs_ElevenLabs) refuse a provisioning
+        # profile. Pick another profile per machine with FEYND_PROFILE=… /
+        # FEYND_MAC_PROFILE=… on the command line — only this target reads them.
+        "CODE_SIGN_STYLE[sdk=iphoneos*]": Manual
+        "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]": $(FEYND_PROFILE)
         # 1 = iPhone, 2 = iPad. Catalyst piggybacks on the iPad device family,
         # but device/simulator builds are iPhone-only — App Store validation
         # otherwise demands iPad multitasking orientations + iPad icons.
@@ -105,5 +119,14 @@ targets:
         # debug build deliberately isn't, so the locally installed
         # /Applications/Dodo.app keeps its unsandboxed container (cookies,
         # defaults) across updates.
+        Debug:
+          FEYND_PROFILE: feynd dev domains
+          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Development
         Release:
           "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Feynd/Feynd-macOS.entitlements
+          FEYND_PROFILE: feynd appstore
+          FEYND_MAC_PROFILE: feynd catalyst appstore
+          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Distribution
+          "CODE_SIGN_STYLE[sdk=macosx*]": Manual
+          "PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]": $(FEYND_MAC_PROFILE)
+          "CODE_SIGN_IDENTITY[sdk=macosx*]": Apple Distribution

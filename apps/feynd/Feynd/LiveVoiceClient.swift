@@ -24,17 +24,8 @@ import Observation
 ///   output-transcript activity.
 @MainActor
 @Observable
-final class LiveVoiceClient: NSObject {
-    enum Phase: Equatable {
-        case idle
-        case requestingPermission
-        case creatingSession
-        case connecting
-        case connected
-        case speaking
-        case failed(String)
-        case ended
-    }
+final class LiveVoiceClient: NSObject, DodoVoiceClient {
+    typealias Phase = VoicePhase
 
     private(set) var phase: Phase = .idle
     private(set) var status = "Ready"

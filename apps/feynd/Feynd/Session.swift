@@ -35,6 +35,17 @@ final class Session {
             NSLog("F2_SESSION test-login state=%@ home=%@", String(describing: state), NSHomeDirectory())
             if case .signedIn = state { return }
         }
+        // `-TestSessionToken <signed f2_session value>` — same purpose on a
+        // machine without the test password: the harness signs the cookie
+        // (signSession in src/lib/f2/auth.ts) and the normal bootstrap below
+        // validates it.
+        if let token = defaults.string(forKey: "TestSessionToken"),
+           let host = Secrets.backendBaseURL.host,
+           let cookie = HTTPCookie(properties: [
+               .name: "f2_session", .value: token, .domain: host, .path: "/",
+           ]) {
+            HTTPCookieStorage.shared.setCookie(cookie)
+        }
         #endif
         // Instant start: restore the last signed-in user from disk so the
         // tabs (and their cached screens) render immediately, then validate
