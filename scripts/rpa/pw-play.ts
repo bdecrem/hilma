@@ -48,6 +48,7 @@ async function main() {
 
   let shot = 0
   let refusalsDone = false
+  let bossShot = false
   const deadline = Date.now() + 8 * 60_000
   while (Date.now() < deadline) {
     if (await page.getByTestId('over').count()) break
@@ -57,6 +58,10 @@ async function main() {
     const foes = await page.locator('.rpa-foe:not(.dead)').evaluateAll((els) =>
       els.map((el) => ({ id: el.getAttribute('data-enemy-id')!, y: el.getBoundingClientRect().top })).sort((a, b) => b.y - a.y))
     if (!foes.length) { await page.waitForTimeout(300); continue }
+    if (!bossShot && foes.some((f) => f.id.startsWith('boss-')) && foes[0].y > 250) {
+      bossShot = true
+      await page.screenshot({ path: `${dir}/5b-boss.png` })
+    }
 
     if (!refusalsDone && foes.length >= 2) {
       refusalsDone = true
