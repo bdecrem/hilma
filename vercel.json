@@ -15,6 +15,10 @@
     {
       "path": "/api/onething/tick",
       "schedule": "5 * * * *"
+    },
+    {
+      "path": "/api/f2/knowledge/backfill",
+      "schedule": "20 10 * * *"
     }
   ]
 }

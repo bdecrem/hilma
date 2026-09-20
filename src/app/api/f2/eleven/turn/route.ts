@@ -1,7 +1,9 @@
 import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
+import { runGlobalTurn } from '@/lib/f2/global-chat'
 import {
   bridgeSecret,
+  elevenModel,
   elevenOpeningInstruction,
   getElevenSession,
   setElevenConversationId,
@@ -63,13 +65,30 @@ export async function POST(req: Request) {
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        for await (const text of streamElevenTurn({
-          systemPrompt: session.system_prompt,
-          messages,
-          signal: req.signal,
-          onDone: (usage) =>
-            console.log('[f2/eleven] turn', session.id, body.event_id, JSON.stringify(usage)),
-        })) {
+        // A GLOBAL session answers from the whole library: the map is in the
+        // stored prompt, and each turn searches the user's material first.
+        const turn =
+          session.mode === 'global'
+            ? runGlobalTurn({
+                userId: session.user_id,
+                system: session.system_prompt,
+                messages,
+                model: elevenModel(),
+                thinking: 'disabled',
+                effort: 'low',
+                maxTokens: 2048,
+                signal: req.signal,
+                onDone: (r) =>
+                  console.log('[f2/eleven] global turn', session.id, body.event_id, JSON.stringify(r.usage), 'searches', r.searches),
+              })
+            : streamElevenTurn({
+                systemPrompt: session.system_prompt,
+                messages,
+                signal: req.signal,
+                onDone: (usage) =>
+                  console.log('[f2/eleven] turn', session.id, body.event_id, JSON.stringify(usage)),
+              })
+        for await (const text of turn) {
           controller.enqueue(encoder.encode(text))
         }
         controller.close()

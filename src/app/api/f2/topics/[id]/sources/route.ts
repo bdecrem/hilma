@@ -1,3 +1,4 @@
+import { scheduleTopicIndex } from '@/lib/f2/knowledge-hooks'
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import {
@@ -274,6 +275,7 @@ export async function POST(
     console.error('[f2] add source failed:', error)
     return NextResponse.json({ error: 'update failed' }, { status: 500 })
   }
+  scheduleTopicIndex(id, user.id)
 
   return NextResponse.json({
     source: entry,
@@ -391,6 +393,7 @@ export async function DELETE(
       console.error('[f2] delete additional source failed:', error)
       return NextResponse.json({ error: 'delete failed' }, { status: 500 })
     }
+    scheduleTopicIndex(id, user.id)
     return NextResponse.json({ ok: true, total: next.length })
   }
 

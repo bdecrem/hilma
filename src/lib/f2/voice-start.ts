@@ -7,7 +7,9 @@ import { getThreadById, type F2Thread } from './threads'
 import { f2Supabase } from './supabase'
 import { getFlashCardsByIds, getSecondChanceState, openFormQuestion } from './flash'
 import { applyVoiceStyle, getVoicePrefs, type RealtimeMode, type VoicePrefs } from './realtime'
+import { buildGlobalMapBlocks, buildGlobalSystem, getGlobalMessages } from './global-chat'
 import {
+  elevenPersona,
   buildLiveFinalReviewInstructions,
   buildLiveFlashInstructions,
   buildLiveRecertInstructions,
@@ -38,6 +40,8 @@ export type VoiceStart =
       /** The conversation prompt with the user's delivery style applied. */
       instructions: string
       prefs: VoicePrefs
+      /** Global mode: the full library map, for GPT-Live's backend prompt. */
+      libraryMap?: string
     }
 
 export async function resolveVoiceStart(
@@ -66,6 +70,7 @@ export async function resolveVoiceStart(
   }
 
   let instructions: string
+  let libraryMap: string | undefined
   let cards: { question: string; answer: string }[] | undefined
   if (mode === 'flash') {
     const ids = body.card_ids ?? []
@@ -136,18 +141,44 @@ export async function resolveVoiceStart(
       weaknesses,
       engine,
     })
+  } else if (mode === 'topic') {
+    instructions = buildLiveTalkInstructions({ mode: 'topic', userName: user.username, thread, engine })
   } else {
-    instructions = buildLiveTalkInstructions({
-      mode: mode === 'topic' ? 'topic' : 'global',
-      userName: user.username,
-      thread,
-      engine,
-    })
+    // GLOBAL: the conversation across all of THIS user's topics. It is the
+    // same conversation as the typed global chat, so what was said before
+    // this call comes along.
+    const recent = (await getGlobalMessages(user.id))
+      .slice(-12)
+      .map((m) => `${m.role === 'user' ? 'them' : 'you'}: ${m.text}`)
+      .join('\n')
+      .slice(-4000)
+    if (engine === 'eleven') {
+      // Claude carries the whole map and searches the material per turn
+      // (runGlobalTurn in /api/f2/eleven/turn).
+      const built = await buildGlobalSystem({
+        userId: user.id,
+        userName: user.username,
+        surface: 'eleven',
+        voicePersona: elevenPersona(user.username),
+      })
+      instructions = recent
+        ? `${built.system}\n\nEARLIER IN THIS CONVERSATION (typed or spoken before this call):\n${recent}`
+        : built.system
+    } else {
+      const blocks = await buildGlobalMapBlocks(user.id)
+      libraryMap = blocks.full
+      instructions = buildLiveTalkInstructions({
+        mode: 'global',
+        userName: user.username,
+        engine,
+        library: { compact: blocks.compact, topics: blocks.topics, recent },
+      })
+    }
   }
 
   // Per-user voice + delivery style, account-wide across all voice surfaces.
   const prefs = await getVoicePrefs(user.id)
   instructions = applyVoiceStyle(instructions, prefs.style)
 
-  return { ok: true, mode, thread, cards, instructions, prefs }
+  return { ok: true, mode, thread, cards, instructions, prefs, libraryMap }
 }

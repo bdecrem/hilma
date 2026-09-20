@@ -47,7 +47,7 @@ export async function POST(req: Request) {
   if (!start.ok) {
     return NextResponse.json({ error: start.error }, { status: start.status })
   }
-  const { mode, thread, cards, instructions, prefs } = start
+  const { mode, thread, cards, instructions, prefs, libraryMap } = start
   const voice = prefs.voice ?? realtimeVoice()
 
   const holdToTalk = body.hold_to_talk === true
@@ -58,6 +58,7 @@ export async function POST(req: Request) {
       userName: user.username,
       thread,
       cards,
+      libraryMap,
     }),
     voice,
     holdToTalk,

@@ -139,6 +139,12 @@ function persona(name: string, engine: VoiceEngine): string {
   return engine === 'eleven' ? ELEVEN_PERSONA(name) : PERSONA(name)
 }
 
+/// The spoken-engine persona on its own — the global chat builds its voice
+/// prompt around it (src/lib/f2/global-chat.ts).
+export function elevenPersona(userName: string): string {
+  return ELEVEN_PERSONA(friendlyName(userName))
+}
+
 export function holdToTalkNote(userName: string): string {
   return HOLD_TO_TALK_NOTE(friendlyName(userName))
 }
@@ -192,6 +198,9 @@ export function buildLiveTalkInstructions(input: {
   userName: string
   thread?: F2Thread | null
   engine?: VoiceEngine
+  /** Global mode on GPT-Live: the compact library map (titles + standing)
+   *  and the conversation so far. The full map goes to the backend. */
+  library?: { compact: string; topics: number; recent: string } | null
 }): string {
   const name = friendlyName(input.userName)
   const engine = input.engine ?? 'gpt-live'
@@ -207,7 +216,18 @@ You are in topic voice mode. Treat this topic as the default referent for "this"
 ${summarizeThreadForLive(input.thread, engine)}${engine === 'eleven' ? '' : topicDelegationPolicy(name)}`
   }
 
-  const global = `${base}
+  const library = input.library
+  const global = library
+    ? `${base}
+
+You are in GLOBAL voice mode: this conversation is about everything ${name} has saved in Dodo — ${library.topics} topics, listed below with where they stand on each. Only their own library exists here. Use the list to say what they have, to connect ideas across topics, and to suggest what to review. You do NOT hold the material itself: for anything beyond a topic's title, delegate to the backend, which has a summary of every topic.
+
+Their library (most recently touched first):
+${library.compact || '(empty — they have not saved anything yet)'}${library.recent ? `
+
+Earlier in this conversation (typed or spoken before this call):
+${library.recent}` : ''}`
+    : `${base}
 
 You are in global voice mode: ${name} has no particular topic open and may ask about anything they are learning. For source-grounded discussion of something they saved, suggest they open that topic.`
   if (engine === 'eleven') return global
@@ -216,7 +236,7 @@ You are in global voice mode: ${name} has no particular topic open and may ask a
 
 Delegation policy:
 Backend tools:
-- General knowledge: the backend can reason carefully about any subject and check facts you are unsure of.
+- ${library ? "Library and general knowledge: the backend holds a summary of every topic in their library (key ideas, names and terms) and can reason carefully about any subject." : 'General knowledge: the backend can reason carefully about any subject and check facts you are unsure of.'}
 
 Delegate to the backend when:
 - The question needs careful reasoning, precise facts, or a structured explanation.
@@ -383,6 +403,8 @@ export function buildBackendInstructions(input: {
   userName: string
   thread?: F2Thread | null
   cards?: { question: string; answer: string }[]
+  /** Global mode: the full library map (a digest per topic). */
+  libraryMap?: string | null
 }): string {
   const name = friendlyName(input.userName)
   const head = BACKEND_PREAMBLE(name)
@@ -398,6 +420,18 @@ The live model is running a spoken flash-card round from this deck and asks you 
 
 ## The deck
 ${deck || '(empty)'}
+
+${BACKEND_RETURN}`
+  }
+
+  if (!input.thread && input.libraryMap) {
+    return `${head}
+
+## Your job
+${name} is in a GLOBAL conversation about everything they have saved in Dodo. Below is their whole library: one summary per topic, with where they stand on it. Only their own library exists here. When the live model delegates, answer from these summaries — what a topic covers, how topics connect, what to review — and say which topic something comes from. The summaries are not the full text: when a detail is not in them, say the summary does not cover it and answer from general knowledge, marked as such.
+
+## Their library
+${input.libraryMap.slice(0, MAX_BACKEND_CONTENT_CHARS)}
 
 ${BACKEND_RETURN}`
   }

@@ -1,3 +1,4 @@
+import { scheduleTopicIndex } from './knowledge-hooks'
 import { f2Supabase } from './supabase'
 import type { F2Client } from './agent'
 import type { VideoBand } from './videos'
@@ -246,6 +247,8 @@ export async function createThread(
     console.error('[f2] createThread failed:', error)
     return null
   }
+  // New material → its digest + search index (the global chat's knowledge).
+  scheduleTopicIndex((data as F2Thread).id, input.userId)
   return data as F2Thread
 }
 
@@ -424,6 +427,7 @@ export async function setAdditionalSources(
     .eq('id', threadId)
     .eq('user_id', userId)
   if (error) console.error('[f2] setAdditionalSources failed:', error)
+  else scheduleTopicIndex(threadId, userId)
 }
 
 /// Set (or clear, with null) a topic's study focus. Same write the topics

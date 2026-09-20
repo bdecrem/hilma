@@ -5,6 +5,7 @@
 // calls this one needs live web search, so it goes straight to the Anthropic
 // API with the web_search server tool rather than through llm.ts.
 
+import { scheduleTopicIndex } from './knowledge-hooks'
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
 import { gatherUserNotes, type F2Thread } from './threads'
@@ -31,6 +32,8 @@ export async function setBookSummary(
     .eq('id', threadId)
     .eq('user_id', userId)
   if (error) console.error('[f2/book-summary] setBookSummary failed:', error)
+  // Only a finished summary is material (buildFullContent reads it then).
+  else if (value.status === 'ready') scheduleTopicIndex(threadId, userId)
 }
 
 /// List-payload projection: status only, never the ~1,300-word markdown.
