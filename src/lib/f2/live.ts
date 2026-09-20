@@ -75,14 +75,25 @@ function threadSubject(thread: F2Thread): string {
   return thread.topic || thread.url || 'Untitled topic'
 }
 
-/// The topic block for the LIVE prompt: metadata, recent chat, an excerpt.
-function summarizeThreadForLive(thread: F2Thread): string {
+/// Which voice stack the prompt is for. 'gpt-live' is the full-duplex OpenAI
+/// model with a Responses backend behind it; 'eleven' is ElevenLabs Speech
+/// Engine with Claude writing every turn as text (src/lib/f2/eleven.ts) —
+/// Claude's context holds the whole material, so there is no excerpt and no
+/// delegation there.
+export type VoiceEngine = 'gpt-live' | 'eleven'
+
+/// The topic block for the LIVE prompt: metadata, recent chat, an excerpt
+/// (gpt-live) or the whole saved material (eleven).
+function summarizeThreadForLive(thread: F2Thread, engine: VoiceEngine = 'gpt-live'): string {
   const fullContent = buildFullContent(thread)
-  const excerpt = fullContent.slice(0, MAX_LIVE_EXCERPT_CHARS)
+  const limit = engine === 'eleven' ? MAX_BACKEND_CONTENT_CHARS : MAX_LIVE_EXCERPT_CHARS
+  const excerpt = fullContent.slice(0, limit)
   const truncated = fullContent.length > excerpt.length
-  const source = excerpt
-    ? `\n\nSource excerpt${truncated ? ' (the backend has the complete material)' : ''}:\n${excerpt}`
-    : ''
+  const source = !excerpt
+    ? ''
+    : engine === 'eleven'
+      ? `\n\nSource material${truncated ? ' (truncated)' : ''}:\n${excerpt}`
+      : `\n\nSource excerpt${truncated ? ' (the backend has the complete material)' : ''}:\n${excerpt}`
   const recent = formatMessages(thread.messages.slice(-MAX_RECENT_MESSAGES))
   return `Current topic:
 Title: ${threadSubject(thread)}
@@ -113,6 +124,24 @@ Speak directly, warmly and naturally, at an unhurried pace. Be clear, not overly
 Backchannel policy: Use moderate backchannels. Acknowledge naturally without competing with the main response.
 
 Interruption policy: Stop speaking when ${name} interrupts. Listen to what they say.`
+
+/// Persona for the 'eleven' stack: Claude never hears audio. It reads a
+/// speech-to-text transcript and everything it writes is read aloud.
+const ELEVEN_PERSONA = (name: string) =>
+  `You are Dodo, a learning companion, in a live voice conversation with ${name}. Address them by their first name when it feels natural — not in every sentence.
+Speak directly, warmly and naturally. Be clear, not overly cheerful. Ask one question at a time. Never mention tools, transcripts, models, or implementation details.
+
+How this conversation works: everything you write is spoken aloud by a text-to-speech voice, and what you read from ${name} is a speech-to-text transcript of what they said. Write only the words to be spoken — plain sentences, no markdown, lists, headings, emoji, parentheticals or stage directions; write numbers, symbols and abbreviations the way a person would say them. Do not include internal or system XML tags in your response. The transcript can contain mis-hearings, unfinished phrases and later corrections: go with the most sensible reading, and ask when a mis-hearing matters.
+
+${name} can interrupt you at any moment. When one of your earlier turns ends mid-sentence, they cut in — do not repeat it or apologize; respond to what they said.`
+
+function persona(name: string, engine: VoiceEngine): string {
+  return engine === 'eleven' ? ELEVEN_PERSONA(name) : PERSONA(name)
+}
+
+export function holdToTalkNote(userName: string): string {
+  return HOLD_TO_TALK_NOTE(friendlyName(userName))
+}
 
 const HOLD_TO_TALK_NOTE = (name: string) =>
   `
@@ -162,9 +191,11 @@ export function buildLiveTalkInstructions(input: {
   mode: 'global' | 'topic'
   userName: string
   thread?: F2Thread | null
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
-  const base = `${PERSONA(name)}
+  const engine = input.engine ?? 'gpt-live'
+  const base = `${persona(name, engine)}
 
 Keep answers conversational — usually 30 to 90 seconds unless ${name} asks for more. When teaching, help them understand the idea, not just memorize facts. Never pretend you have read source text that has not been provided; if you are unsure, say what you can infer and ask whether to go deeper.`
 
@@ -173,12 +204,15 @@ Keep answers conversational — usually 30 to 90 seconds unless ${name} asks for
 
 You are in topic voice mode. Treat this topic as the default referent for "this", "it", "the article", "the topic", or "what I saved".
 
-${summarizeThreadForLive(input.thread)}${topicDelegationPolicy(name)}`
+${summarizeThreadForLive(input.thread, engine)}${engine === 'eleven' ? '' : topicDelegationPolicy(name)}`
   }
 
-  return `${base}
+  const global = `${base}
 
-You are in global voice mode: ${name} has no particular topic open and may ask about anything they are learning. For source-grounded discussion of something they saved, suggest they open that topic.
+You are in global voice mode: ${name} has no particular topic open and may ask about anything they are learning. For source-grounded discussion of something they saved, suggest they open that topic.`
+  if (engine === 'eleven') return global
+
+  return `${global}
 
 Delegation policy:
 Backend tools:
@@ -202,8 +236,10 @@ export function buildLiveFlashInstructions(input: {
   userName: string
   topicLabel: string | null
   cards: { question: string; answer: string }[]
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
+  const engine = input.engine ?? 'gpt-live'
   const deck = input.cards
     .map((c, i) => `${i + 1}. Q: ${c.question}\n   A: ${c.answer}`)
     .join('\n')
@@ -211,7 +247,7 @@ export function buildLiveFlashInstructions(input: {
     ? `on the topic "${input.topicLabel}"`
     : 'mixing questions from across everything they are learning'
 
-  return `${PERSONA(name)}
+  const round = `${persona(name, engine)}
 
 You are running a spoken flash-card round with ${name} ${scope}. You speak first.
 
@@ -225,7 +261,10 @@ How to run the round:
 - If ${name} is silent for a while or says they don't know, give the answer briefly and move on.
 - Never skip a question and never invent extra ones.
 - After the last question, tell them the round is over and roughly how they did, thank them, and say goodbye. Keep the whole wrap-up under 15 seconds.
-- Keep everything brisk and fun — this is a game show, not a seminar.
+- Keep everything brisk and fun — this is a game show, not a seminar.`
+  if (engine === 'eleven') return round
+
+  return `${round}
 
 Delegation policy:
 Backend tools:
@@ -246,13 +285,15 @@ Do not guess the result while waiting.`
 export function buildLiveFinalReviewInstructions(input: {
   userName: string
   thread: F2Thread
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
-  return `${PERSONA(name)}
+  const engine = input.engine ?? 'gpt-live'
+  return `${persona(name, engine)}
 
 You are conducting ${name}'s FINAL REVIEW — a spoken oral exam on a topic they have been studying. Passing at the highest level earns their mastery star, so be thorough and fair. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}
+${summarizeThreadForLive(input.thread, engine)}${studyFocusBlock(name, input.thread, 'examined')}
 
 How to conduct the review:
 - Open by telling ${name} this is their Final Review and there's a star on the line, then ask the first question: what's their main takeaway from this material?
@@ -262,7 +303,7 @@ How to conduct the review:
 - Corrections are allowed and useful. When they get something wrong or leave out something essential, say so briefly — one or two plain, specific sentences — then move on. No lectures: this is still an exam, and the grade rests on what THEY demonstrate, so keep the floor mostly theirs.
 - A short follow-up probe ("and why does that matter?") is good whenever an answer is thin.
 - Keep the whole thing a fluid conversation — their thinking, your questions, your brief corrections — not a quiz script.
-- Once the material has been covered, thank them, tell them the review is complete and that their grade is being tallied, and say goodbye. Do not announce a grade yourself.${examDelegationPolicy(name)}`
+- Once the material has been covered, thank them, tell them the review is complete and that their grade is being tallied, and say goodbye. Do not announce a grade yourself.${engine === 'eleven' ? '' : examDelegationPolicy(name)}`
 }
 
 /// The Second Chance: exactly three questions after a failed Final Review.
@@ -270,14 +311,16 @@ export function buildLiveSecondChanceInstructions(input: {
   userName: string
   thread: F2Thread
   weaknesses?: string[]
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
+  const engine = input.engine ?? 'gpt-live'
   const weak = (input.weaknesses ?? []).filter((w) => w.trim())
-  return `${PERSONA(name)}
+  return `${persona(name, engine)}
 
 You are giving ${name} their SECOND CHANCE — a short spoken retake after a Final Review that fell just short. Exactly THREE questions. Their mastery star is on the line: to pass, their three answers together must be A-level. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${weak.length > 0 ? `
+${summarizeThreadForLive(input.thread, engine)}${studyFocusBlock(name, input.thread, 'examined')}${weak.length > 0 ? `
 
 WHERE THEY FELL SHORT LAST TIME — build your three questions primarily from these areas, so they can prove they've closed the gaps:
 ${weak.map((w) => `- ${w}`).join('\n')}` : ''}
@@ -287,7 +330,7 @@ How to run it:
 - Ask EXACTLY three substantive questions — "explain", "why", "how" — one at a time. No more, no fewer.
 - One short follow-up probe per question is allowed when an answer is thin, but it belongs to the same question.
 - Brief corrections are fine, but the grade rests on what THEY demonstrate — keep the floor theirs.
-- After the third answer, thank them, say their grade is being tallied, and say goodbye. Do not announce a result yourself.${examDelegationPolicy(name)}`
+- After the third answer, thank them, say their grade is being tallied, and say goodbye. Do not announce a result yourself.${engine === 'eleven' ? '' : examDelegationPolicy(name)}`
 }
 
 /// The recertification refresher: 3 questions that keep a badge gold.
@@ -295,14 +338,16 @@ export function buildLiveRecertInstructions(input: {
   userName: string
   thread: F2Thread
   weaknesses?: string[]
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
+  const engine = input.engine ?? 'gpt-live'
   const weak = (input.weaknesses ?? []).filter((w) => w.trim())
-  return `${PERSONA(name)}
+  return `${persona(name, engine)}
 
 You are giving ${name} a quick REFRESHER on a topic they mastered a while ago — the check that keeps their gold badge shining. Exactly THREE questions, about five minutes. This is a retention check, not the original exam: warm, brisk, and confidence-building. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${weak.length > 0 ? `
+${summarizeThreadForLive(input.thread, engine)}${studyFocusBlock(name, input.thread, 'examined')}${weak.length > 0 ? `
 
 FLAGGED LAST TIME — make one of your three questions revisit these, so the refresher closes old gaps:
 ${weak.map((w) => `- ${w}`).join('\n')}` : ''}
@@ -312,7 +357,7 @@ How to run it:
 - Shape: question 1 on the topic's central idea; question 2 on the flagged areas above (or a second core idea when there are none); question 3 on a supporting detail worth retaining.
 - Ask EXACTLY three questions, one at a time. One short follow-up probe per question when an answer is thin.
 - Brief corrections are fine — this is also a chance to re-learn — but the grade rests on what THEY recall unaided.
-- After the third answer, thank them, say the badge check is being tallied, and say goodbye. Do not announce a result yourself.${examDelegationPolicy(name)}`
+- After the third answer, thank them, say the badge check is being tallied, and say goodbye. Do not announce a result yourself.${engine === 'eleven' ? '' : examDelegationPolicy(name)}`
 }
 
 // ---------------------------------------------------------------------------

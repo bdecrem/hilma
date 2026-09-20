@@ -1,0 +1,12 @@
+{
+  "name": "dodo-voice-bridge",
+  "private": true,
+  "type": "module",
+  "description": "WebSocket server ElevenLabs Speech Engine connects to; forwards each turn to the F2 backend, which runs Claude.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
