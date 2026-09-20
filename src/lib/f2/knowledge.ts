@@ -438,6 +438,11 @@ export async function searchKnowledge(
   }))
 }
 
+/// Every topic's id + title, for deciding which topics an answer talked about.
+export async function listTopicTitles(userId: string): Promise<{ threadId: string; topic: string }[]> {
+  return (await listTopicRows(userId)).map((t) => ({ threadId: t.id, topic: topicTitle(t) }))
+}
+
 /// The thread a (possibly partial) topic title refers to, for the search tool.
 export async function findTopicByTitle(userId: string, title: string): Promise<string | null> {
   const needle = title.trim().toLowerCase()

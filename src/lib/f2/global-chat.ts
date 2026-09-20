@@ -17,6 +17,7 @@ import {
   buildKnowledgeMap,
   findTopicByTitle,
   formatPassages,
+  listTopicTitles,
   searchKnowledge,
   worthSearching,
   type Passage,
@@ -188,16 +189,37 @@ export type GlobalTurnResult = {
   }
 }
 
-/// A passage reaches the model on a loose match (full-text hits included), but
-/// its topic is only SHOWN as a source when it is clearly about the question —
-/// otherwise "what have I saved?" would cite whichever topic scored least badly.
-const SOURCE_MIN_SIMILARITY = 0.3
+const STOPWORDS = new Set(
+  'about above after again against because before being below between could doing during every first found great their there these thing things think those three through under until where which while whose would should other others still might never always really something someone topic topics notes saved library'.split(' '),
+)
 
-function dedupeSources(passages: Passage[]): GlobalSource[] {
+function distinctiveTokens(text: string): Set<string> {
+  const out = new Set<string>()
+  for (const raw of text.toLowerCase().match(/[\p{L}]{5,}|\d{2,}/gu) ?? []) {
+    if (!STOPWORDS.has(raw)) out.add(raw)
+  }
+  return out
+}
+
+/// Which topics did the ANSWER draw on? Not "which passages were retrieved" —
+/// a loose match reaches the model on purpose, and similarity scores do not
+/// separate used from unused. A topic is a source when the reply names it, or
+/// when the reply shares enough distinctive words with one of its passages
+/// that the passage was evidently used.
+function sourcesOf(reply: string, passages: Passage[], titles: { threadId: string; topic: string }[]): GlobalSource[] {
   const seen = new Map<string, GlobalSource>()
+  const replyLower = reply.toLowerCase()
+  const replyTokens = distinctiveTokens(reply)
+  for (const t of titles) {
+    if (t.topic.length >= 6 && replyLower.includes(t.topic.toLowerCase())) {
+      seen.set(t.threadId, { thread_id: t.threadId, topic: t.topic })
+    }
+  }
   for (const p of passages) {
-    if (p.similarity < SOURCE_MIN_SIMILARITY || seen.has(p.threadId)) continue
-    seen.set(p.threadId, { thread_id: p.threadId, topic: p.topic })
+    if (seen.has(p.threadId)) continue
+    let shared = 0
+    for (const token of distinctiveTokens(p.text)) if (replyTokens.has(token)) shared++
+    if (shared >= 4) seen.set(p.threadId, { thread_id: p.threadId, topic: p.topic })
   }
   return [...seen.values()]
 }
@@ -217,6 +239,7 @@ export async function* runGlobalTurn(input: {
 }): AsyncGenerator<string> {
   const started = Date.now()
   let firstTextAt: number | null = null
+  let reply = ''
   const used: Passage[] = []
   let searches = 0
   const totals = { input_tokens: 0, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }
@@ -262,6 +285,7 @@ export async function* runGlobalTurn(input: {
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
         if (firstTextAt === null) firstTextAt = Date.now()
+        reply += event.delta.text
         yield event.delta.text
       }
     }
@@ -307,7 +331,7 @@ export async function* runGlobalTurn(input: {
   }
 
   input.onDone?.({
-    sources: dedupeSources(used),
+    sources: sourcesOf(reply, used, await listTopicTitles(input.userId)),
     searches,
     usage: {
       ...totals,

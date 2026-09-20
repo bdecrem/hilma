@@ -91,9 +91,11 @@ async function main() {
 
   const a2 = await ask('What topics do I have saved, and is there any idea that connects them?')
   check('knows the whole library', /light/i.test(a2.reply) && /sourdough|ferment|bread/i.test(a2.reply))
-  check('a library question cites no topic', a2.sources.length === 0, a2.sources.join(' | '))
+  check('a library overview cites the topics it names', a2.sources.length >= 2, a2.sources.join(' | '))
+
 
   const a3 = await ask('What does my library say about the causes of the French Revolution?')
+  check('an off-library question cites nothing', a3.sources.length === 0, a3.sources.join(' | '))
   check('admits what the library lacks', /(don.t|do not|doesn.t|does not|nothing|no topic|haven.t|isn.t|not (in|something|covered))/i.test(a3.reply))
 
   const a4 = await ask('And what temperature is the starter kept at? Just the number.')
