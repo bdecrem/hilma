@@ -42,12 +42,12 @@ for _ in $(seq 1 30); do
 done
 [ -n "$ORIGIN" ] || { echo "no tunnel hostname after 30 s:"; cat "$TUNNEL_LOG"; exit 1; }
 
-# The hostname resolves a few seconds after it is announced.
-for _ in $(seq 1 20); do
-  curl -fsS -m 5 "$ORIGIN/health" >/dev/null 2>&1 && break
-  sleep 2
-done
-curl -fsS -m 5 "$ORIGIN/health" >/dev/null || { echo "tunnel $ORIGIN never answered /health"; exit 1; }
+# The hostname resolves a few seconds after it is announced. Ask Cloudflare's
+# resolver directly (DNS over HTTPS): macOS caches the first "no such host"
+# for a while, which would fail this check on a perfectly good tunnel.
+healthy() { curl -fsS -m 6 --doh-url https://cloudflare-dns.com/dns-query "$ORIGIN/health" >/dev/null 2>&1; }
+for _ in $(seq 1 30); do healthy && break; sleep 2; done
+healthy || { echo "tunnel $ORIGIN never answered /health"; exit 1; }
 
 node engines.mjs "$ORIGIN"
 echo "$(date -u +%FT%TZ) bridge up at $ORIGIN"

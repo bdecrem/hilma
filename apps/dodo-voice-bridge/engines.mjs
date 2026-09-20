@@ -37,7 +37,10 @@ function engineBody(engine) {
     tts: {
       // Jessica — playful, bright, warm; a conversational voice.
       voice_id: process.env.DODO_ELEVEN_VOICE_ID || 'cgSgspJ2msm6clMCkdW9',
-      model_id: process.env.DODO_ELEVEN_TTS_MODEL || 'eleven_flash_v2_5',
+      // The expressive conversational model. 'eleven_flash_v2' is ≈ 0.5 s
+      // quicker to first sound and flatter; English engines accept only
+      // flash/turbo v2 or this one (v2.5 is refused).
+      model_id: process.env.DODO_ELEVEN_TTS_MODEL || 'eleven_v3_conversational',
     },
     turn: {
       // Exams need room to think: no "are you still there?" for half a minute.
