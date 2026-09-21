@@ -3,7 +3,7 @@
 // is where a text turns into an entry, a name, or a yes.
 
 import { f2Supabase } from '@/lib/f2/supabase'
-import { sendText } from './send'
+import { isDemoPhone, sendText } from './send'
 import {
   GRACE_HOUR, addDays, buddyCopy, confirmText, dueFor, ensureUser, findEntry, findUserByPhone, listEntries,
   localDay, localHour, looksLikeOurs, normalizeHandle, promptText, recordEntry, reminderText, scoreboard,
@@ -21,6 +21,9 @@ export async function tick(now = new Date()): Promise<{ prompted: string[]; remi
   if (error) throw new Error(`onething: tick load failed: ${error.message}`)
   const failed: string[] = []
   for (const user of (data ?? []) as User[]) {
+    // The demo account gets no daily texts: they land on Bart's own phone, every
+    // day. Its sign-in code and welcome still go out, so the account still works.
+    if (isDemoPhone(user.phone)) continue
     // One number that cannot be reached (a test account, a dead line) must not
     // stop the loop: everyone after it still gets their text this hour, and the
     // failed one is retried next hour because its day markers stay unset.

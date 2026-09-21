@@ -1,7 +1,8 @@
 // Every text Onething sends leaves through here. Real numbers go out as
-// iMessages; the demo number's texts (sign-in code, welcome, the daily
-// question, the reminder) go to Bart's own phone instead, marked "[demo]", so
-// a demo account works end to end without a phone that can receive iMessages.
+// iMessages; the demo number's texts (sign-in code, welcome) go to Bart's own
+// phone instead, marked "[demo]", so a demo account works without a phone that
+// can receive iMessages. The hourly tick skips the demo number, so it gets no
+// daily question or reminder (2026-09-20).
 // (Email was the first choice — SendGrid is out of credit, 2026-09-18.)
 // Nothing else knows the difference.
 
