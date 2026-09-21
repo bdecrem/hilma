@@ -4,15 +4,27 @@
 // owns the audio, the voice bridge forwards each transcribed turn to
 // /api/polly/eleven/turn, Claude answers as a text stream that is spoken.
 //
-// PHASE 1 (2026-09-20): conversation only — `topic` (lessons, guest lessons,
-// the free Infinity chat, a chat continued out loud) and `global`. The level
-// check, the clean-up walk, flash rounds and the spoken exams stay on GPT-Live
-// until their scripts are tuned for a turn-based voice; the app's client
-// factory sends those there whatever the setting says.
+// Every voice mode runs here since 2026-09-21 (phase 1 was conversations
+// only), and it is the app's default engine. What GPT-Live did with appended
+// instructions — the clean-up walk's "next card" cue, the level check's
+// silence nudge — is a text message from the app here (ELEVEN_CUE_PREFIX in
+// src/lib/f2/eleven.ts), which Claude reads as a note from the app.
 import { pollySupabase } from './supabase'
 import { type RealtimeMode } from './realtime'
+import { ELEVEN_CUE_PREFIX } from '@/lib/f2/eleven'
+import { livePlacementNudge } from './live'
+import { type LanguageCode } from './language'
 
-export const ELEVEN_MODES: RealtimeMode[] = ['topic', 'global']
+/// The level check's silence nudge on this engine: when the learner says
+/// nothing for `after_ms` after the greeting, the app sends `cue` as a text
+/// message and Polly tries again, in English too.
+export function elevenPlacementNudge(
+  userName: string,
+  language: LanguageCode,
+): { after_ms: number; cue: string } {
+  const nudge = livePlacementNudge(userName, language)
+  return { after_ms: nudge.after_ms, cue: `${ELEVEN_CUE_PREFIX}${nudge.instruction}` }
+}
 
 export function pollyElevenEngineId(): string {
   const id = process.env.POLLY_ELEVEN_SPEECH_ENGINE_ID

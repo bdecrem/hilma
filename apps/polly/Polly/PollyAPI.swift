@@ -848,12 +848,30 @@ final class PollyAPI {
             /// Sent as a text message once connected so Polly speaks first.
             /// Nil = she waits for the learner.
             let kickoff: String?
+            /// What a text message from the APP (not the learner) starts
+            /// with; such turns stay out of the transcript.
+            let cuePrefix: String?
+            /// The level check only: send `cue` when the learner says
+            /// nothing for `afterMs` after Polly's greeting.
+            let silenceNudge: SilenceNudge?
+
+            struct SilenceNudge: Codable {
+                let afterMs: Int
+                let cue: String
+
+                enum CodingKeys: String, CodingKey {
+                    case cue
+                    case afterMs = "after_ms"
+                }
+            }
 
             enum CodingKeys: String, CodingKey {
                 case model, kickoff
                 case conversationToken = "conversation_token"
                 case holdToTalk = "hold_to_talk"
                 case dynamicVariables = "dynamic_variables"
+                case cuePrefix = "cue_prefix"
+                case silenceNudge = "silence_nudge"
             }
         }
 
@@ -864,18 +882,20 @@ final class PollyAPI {
     }
 
     func startElevenSession(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
-                            continueChatId: String? = nil,
+                            chatId: String? = nil, continueChatId: String? = nil,
                             holdToTalk: Bool = false) async throws -> ElevenSessionResponse {
         struct Body: Encodable {
             let mode: String
             let thread_id: String?
             let card_ids: [String]?
+            let chat_id: String?
             let continue_chat_id: String?
             let hold_to_talk: Bool
         }
         return try await post("/api/polly/eleven/session",
                               body: Body(mode: mode, thread_id: threadId, card_ids: cardIds,
-                                         continue_chat_id: continueChatId, hold_to_talk: holdToTalk))
+                                         chat_id: chatId, continue_chat_id: continueChatId,
+                                         hold_to_talk: holdToTalk))
     }
 
     /// `cardIds` is required for mode "flash" — the deck the quizmaster reads

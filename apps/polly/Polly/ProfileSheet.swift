@@ -31,7 +31,7 @@ struct ProfileSheet: View {
     @State private var showHelp = false
     @State private var showVoice = false
     @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
-    @AppStorage(VoiceEngine.defaultsKey) private var voiceEngine = VoiceEngine.gptLive.rawValue
+    @AppStorage(VoiceEngine.defaultsKey) private var voiceEngine = VoiceEngine.fallback.rawValue
     @State private var recertEnabled = true
     @State private var isGuest = false
     @State private var showClaim = false
@@ -497,7 +497,7 @@ struct ProfileSheet: View {
                             }
                         }
                         .pickerStyle(.segmented)
-                        Text((VoiceEngine(rawValue: voiceEngine) ?? .gptLive).detail)
+                        Text((VoiceEngine(rawValue: voiceEngine) ?? .fallback).detail)
                             .font(.system(size: 12.5))
                             .foregroundStyle(PollyTheme.text3)
                             .fixedSize(horizontal: false, vertical: true)

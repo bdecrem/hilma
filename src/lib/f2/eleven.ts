@@ -24,6 +24,11 @@ const MAX_TURN_TOKENS = 2048
 /// swaps it for the opening instruction, and clients keep it out of the
 /// transcript they upload.
 export const ELEVEN_KICKOFF = '[begin]'
+/// A text message the APP sends mid-session (Polly's clean-up "next card",
+/// the level check's silence nudge). It reaches the bridge as a user turn;
+/// turnMessages() presents it to Claude as a note from the app, and clients
+/// keep it out of the transcript they upload.
+export const ELEVEN_CUE_PREFIX = '[app] '
 
 export function elevenModel(): string {
   return process.env.F2_ELEVEN_MODEL || DEFAULT_MODEL
@@ -158,6 +163,8 @@ export function turnMessages(
     let text = (turn.content ?? '').trim()
     if (turn.role === 'user' && text === ELEVEN_KICKOFF) {
       text = opening ?? '(The session has just connected.)'
+    } else if (turn.role === 'user' && text.startsWith(ELEVEN_CUE_PREFIX.trim())) {
+      text = `(A note from the app — they did not say this, and they cannot see it: ${text.slice(ELEVEN_CUE_PREFIX.trim().length).trim()})`
     }
     if (!text) continue
     const role = turn.role === 'agent' ? 'assistant' : 'user'

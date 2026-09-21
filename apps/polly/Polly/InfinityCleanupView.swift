@@ -12,7 +12,7 @@ struct InfinityCleanupView: View {
 
     @Environment(\.dismiss) private var dismiss
     @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
-    @State private var client: LiveVoiceClient
+    @State private var client: any PollyVoiceClient
     @State private var index = 0
     @State private var phase: Phase = .walking
     @State private var finishing = false
@@ -25,7 +25,10 @@ struct InfinityCleanupView: View {
     init(chat: InfinityChat, onDone: @escaping () -> Void) {
         self.chat = chat
         self.onDone = onDone
-        _client = State(initialValue: LiveVoiceClient(mode: "cleanup", chatId: chat.id))
+        let hold = UserDefaults.standard.bool(forKey: VoiceSettingsView.holdToTalkKey)
+        _client = State(initialValue: makePollyVoiceClient(mode: "cleanup", threadId: nil, cardIds: nil,
+                                                           chatId: chat.id, continueChatId: nil,
+                                                           holdToTalk: hold))
     }
 
     var body: some View {

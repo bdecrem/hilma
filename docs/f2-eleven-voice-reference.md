@@ -2,7 +2,7 @@
 
 Last updated: 2026-09-20 (the day it was built). Setup on another machine, the bridge, Vercel and troubleshooting: [`f2-eleven-voice-setup.md`](f2-eleven-voice-setup.md).
 
-Dodo's second voice engine. **GPT-Live stays the default** (`docs/f2-gpt-live-reference.md`); this one is a per-device setting — Profile → Voice → **Voice engine: GPT-Live / ElevenLabs + Claude** (`VoiceEngine` in `DodoVoiceClient.swift`, UserDefaults key `voiceEngine`, read when a session starts). Every voice surface honours it: Talk to Dodo (global / topic), spoken flash rounds, the Final Review, the Second Chance and the recert refresher. Same screens, same hold-to-talk and mute, same finish route, same graders.
+Dodo's default voice engine since 2026-09-21 (`VoiceEngine.fallback`; GPT-Live, `docs/f2-gpt-live-reference.md`, is the other choice). It is a per-device setting — Profile → Voice → **Voice engine: GPT-Live / ElevenLabs + Claude** (`VoiceEngine` in `DodoVoiceClient.swift`, UserDefaults key `voiceEngine`, read when a session starts). Every voice surface honours it: Talk to Dodo (global / topic), spoken flash rounds, the Final Review, the Second Chance and the recert refresher. Same screens, same hold-to-talk and mute, same finish route, same graders.
 
 ## The shape of a session
 

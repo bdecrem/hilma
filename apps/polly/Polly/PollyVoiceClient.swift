@@ -15,11 +15,13 @@ enum VoicePhase: Equatable {
 /// Which stack runs Polly's voice. A per-device setting (Profile → Voice),
 /// read once when a session starts.
 enum VoiceEngine: String, CaseIterable, Identifiable {
-    /// OpenAI GPT-Live — the default (LiveVoiceClient).
-    case gptLive = "gpt-live"
     /// ElevenLabs Speech Engine for the audio, Claude for the words
-    /// (ElevenVoiceClient).
+    /// (ElevenVoiceClient). The default since 2026-09-21.
     case eleven = "eleven"
+    /// OpenAI GPT-Live (LiveVoiceClient).
+    case gptLive = "gpt-live"
+
+    static let fallback: VoiceEngine = .eleven
 
     static let defaultsKey = "voiceEngine"
 
@@ -34,24 +36,13 @@ enum VoiceEngine: String, CaseIterable, Identifiable {
 
     var detail: String {
         switch self {
-        case .gptLive: return "OpenAI's live voice model. The default."
-        case .eleven: return "ElevenLabs listens and speaks in its own voice; Claude Opus does the thinking. Conversations only for now — the level check, clean-up, flash rounds and exams stay on GPT-Live. Experimental."
+        case .gptLive: return "OpenAI's live voice model."
+        case .eleven: return "ElevenLabs listens and speaks in its own voice; Claude Opus does the thinking. The default."
         }
     }
 
     static var current: VoiceEngine {
-        VoiceEngine(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? .gptLive
-    }
-
-    /// Phase 1 of the ElevenLabs engine runs conversations: a topic or lesson's
-    /// Talk, the Infinity chat, a chat continued out loud. Everything scripted
-    /// around GPT-Live's cues and nudges stays there (server: ELEVEN_MODES in
-    /// src/lib/polly/eleven.ts).
-    func runs(mode: String) -> Bool {
-        switch self {
-        case .gptLive: return true
-        case .eleven: return mode == "topic" || mode == "global"
-        }
+        VoiceEngine(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? fallback
     }
 }
 
@@ -73,6 +64,10 @@ protocol PollyVoiceClient: AnyObject {
     func setMuted(_ on: Bool)
     func beginTalking()
     func endTalking()
+    /// The app steers Polly mid-session (the clean-up walk's next card).
+    /// `speak` is what she says; GPT-Live needs it spelled out to talk
+    /// unprompted, the ElevenLabs engine answers the instruction itself.
+    func sendCue(instruction: String, speak: String)
 
     #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
     var debugLastAssistantText: String { get }
@@ -89,12 +84,14 @@ protocol PollyVoiceClient: AnyObject {
 
 @MainActor
 func makePollyVoiceClient(mode: String, threadId: String?, cardIds: [String]?,
+                          chatId: String? = nil,
                           continueChatId: String?, holdToTalk: Bool) -> any PollyVoiceClient {
-    let engine = VoiceEngine.current
-    if engine == .eleven, engine.runs(mode: mode) {
-        return ElevenVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
+    switch VoiceEngine.current {
+    case .eleven:
+        return ElevenVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds, chatId: chatId,
                                  continueChatId: continueChatId, holdToTalk: holdToTalk)
+    case .gptLive:
+        return LiveVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds, chatId: chatId,
+                               continueChatId: continueChatId, holdToTalk: holdToTalk)
     }
-    return LiveVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
-                           continueChatId: continueChatId, holdToTalk: holdToTalk)
 }

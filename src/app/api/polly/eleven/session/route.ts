@@ -3,8 +3,8 @@ import { getSessionUser } from '@/lib/polly/auth'
 import { createVoiceSession } from '@/lib/polly/realtime'
 import { resolveVoiceStart, type VoiceStartBody } from '@/lib/polly/voice-start'
 import { holdToTalkNote } from '@/lib/polly/live'
-import { ELEVEN_KICKOFF, elevenModel, mintElevenConversationToken } from '@/lib/f2/eleven'
-import { ELEVEN_MODES, pollyElevenEngineId, savePollyElevenPrompt, withOpening } from '@/lib/polly/eleven'
+import { ELEVEN_CUE_PREFIX, ELEVEN_KICKOFF, elevenModel, mintElevenConversationToken } from '@/lib/f2/eleven'
+import { elevenPlacementNudge, pollyElevenEngineId, savePollyElevenPrompt, withOpening } from '@/lib/polly/eleven'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -28,18 +28,11 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  if (!ELEVEN_MODES.includes(body.mode ?? 'global')) {
-    return NextResponse.json(
-      { error: `The ElevenLabs engine does not run "${body.mode}" sessions yet.` },
-      { status: 400 },
-    )
-  }
-
   const start = await resolveVoiceStart(user, body, 'eleven')
   if (!start.ok) {
     return NextResponse.json({ error: start.error }, { status: start.status })
   }
-  const { mode } = start
+  const { mode, language } = start
   const holdToTalk = body.hold_to_talk === true
   let systemPrompt = withOpening(start.instructions, start.opening)
   if (holdToTalk) systemPrompt += holdToTalkNote(user.username)
@@ -79,6 +72,12 @@ export async function POST(req: Request) {
       // Sent by the client as a text message once connected, so Polly speaks
       // first; null = she waits for the learner.
       kickoff: start.opening ? ELEVEN_KICKOFF : null,
+      // Text messages the app sends mid-session start with this; the client
+      // keeps them out of the transcript.
+      cue_prefix: ELEVEN_CUE_PREFIX,
+      // The level check only: what to send when the learner says nothing for
+      // `after_ms` after Polly's greeting. Null elsewhere.
+      silence_nudge: mode === 'placement' && language ? elevenPlacementNudge(user.username, language) : null,
     },
   })
 }

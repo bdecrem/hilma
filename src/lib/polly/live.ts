@@ -77,14 +77,21 @@ function threadSubject(thread: PollyThread): string {
   return thread.topic || thread.url || 'Untitled topic'
 }
 
-/// The topic block for the LIVE prompt: metadata, recent chat, an excerpt.
-function summarizeThreadForLive(thread: PollyThread): string {
+export type VoiceEngine = 'gpt-live' | 'eleven'
+
+/// The topic block for the LIVE prompt: metadata, recent chat, an excerpt. On
+/// the ElevenLabs engine Claude's context holds the whole material — there is
+/// no backend to ask for the rest.
+function summarizeThreadForLive(thread: PollyThread, engine: VoiceEngine = 'gpt-live'): string {
   const fullContent = buildFullContent(thread)
-  const excerpt = fullContent.slice(0, MAX_LIVE_EXCERPT_CHARS)
+  const limit = engine === 'eleven' ? MAX_BACKEND_CONTENT_CHARS : MAX_LIVE_EXCERPT_CHARS
+  const excerpt = fullContent.slice(0, limit)
   const truncated = fullContent.length > excerpt.length
-  const source = excerpt
-    ? `\n\nSource excerpt${truncated ? ' (the backend has the complete material)' : ''}:\n${excerpt}`
-    : ''
+  const source = !excerpt
+    ? ''
+    : engine === 'eleven'
+      ? `\n\nSource material${truncated ? ' (truncated)' : ''}:\n${excerpt}`
+      : `\n\nSource excerpt${truncated ? ' (the backend has the complete material)' : ''}:\n${excerpt}`
   const recent = formatMessages(thread.messages.slice(-MAX_RECENT_MESSAGES))
   return `Current topic:
 Title: ${threadSubject(thread)}
@@ -150,6 +157,11 @@ export function toElevenInstructions(instructions: string, userName: string): st
   let out = instructions.replace(PERSONA(name), ELEVEN_PERSONA(name))
   const at = out.indexOf('\n\nDelegation policy:')
   if (at >= 0) out = out.slice(0, at)
+  // The free chat and the clean-up walk close with a line about the backend.
+  out = out.replace(/\n\nYou do not need the backend for this[^\n]*$/, '')
+  // Claude reads; it never hears.
+  out = out.replace('Judge by ear, not by spelling, and never comment on pronunciation.',
+    'Read it charitably, and never comment on pronunciation or spelling.')
   return out
 }
 
@@ -222,6 +234,7 @@ export function buildLiveTalkInstructions(input: {
   mode: 'global' | 'topic'
   userName: string
   thread?: PollyThread | null
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
   const base = `${PERSONA(name)}
@@ -252,7 +265,7 @@ How to run it:
 
 You are in topic voice mode on a GUEST LESSON: ${name} has listened to a ${l.language} lesson and is here to practise speaking. You are their ${l.language} tutor, speaking with them.
 
-${summarizeThreadForLive(input.thread)}${lessonBlock(input.thread)}
+${summarizeThreadForLive(input.thread, input.engine)}${lessonBlock(input.thread)}
 
 How to run the practice:
 - Open in ${l.language}, briefly, with one English sentence after it, and ask ${name} to retell the story in their own words in ${l.language}. Take a beginner's ${l.language} as it comes: let them finish, no interrupting for small mistakes.
@@ -268,7 +281,7 @@ How to run the practice:
 
 You are in topic voice mode. Treat this topic as the default referent for "this", "it", "the article", "the topic", or "what I saved".
 
-${summarizeThreadForLive(input.thread)}${topicDelegationPolicy(name)}`
+${summarizeThreadForLive(input.thread, input.engine)}${topicDelegationPolicy(name)}`
   }
 
   return `${base}
@@ -456,13 +469,14 @@ Do not guess the result while waiting.`
 export function buildLiveFinalReviewInstructions(input: {
   userName: string
   thread: PollyThread
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
   return `${PERSONA(name)}
 
 You are conducting ${name}'s FINAL REVIEW — a spoken oral exam on a topic they have been studying. Passing at the highest level earns their mastery star, so be thorough and fair. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}
+${summarizeThreadForLive(input.thread, input.engine)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}
 
 How to conduct the review:
 - Open by telling ${name} this is their Final Review and there's a star on the line, then ask the first question: what's their main takeaway from this material?
@@ -480,6 +494,7 @@ export function buildLiveSecondChanceInstructions(input: {
   userName: string
   thread: PollyThread
   weaknesses?: string[]
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
   const weak = (input.weaknesses ?? []).filter((w) => w.trim())
@@ -487,7 +502,7 @@ export function buildLiveSecondChanceInstructions(input: {
 
 You are giving ${name} their SECOND CHANCE — a short spoken retake after a Final Review that fell just short. Exactly THREE questions. Their mastery star is on the line: to pass, their three answers together must be A-level. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}${weak.length > 0 ? `
+${summarizeThreadForLive(input.thread, input.engine)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}${weak.length > 0 ? `
 
 WHERE THEY FELL SHORT LAST TIME — build your three questions primarily from these areas, so they can prove they've closed the gaps:
 ${weak.map((w) => `- ${w}`).join('\n')}` : ''}
@@ -505,6 +520,7 @@ export function buildLiveRecertInstructions(input: {
   userName: string
   thread: PollyThread
   weaknesses?: string[]
+  engine?: VoiceEngine
 }): string {
   const name = friendlyName(input.userName)
   const weak = (input.weaknesses ?? []).filter((w) => w.trim())
@@ -512,7 +528,7 @@ export function buildLiveRecertInstructions(input: {
 
 You are giving ${name} a quick REFRESHER on a topic they mastered a while ago — the check that keeps their gold badge shining. Exactly THREE questions, about five minutes. This is a retention check, not the original exam: warm, brisk, and confidence-building. You speak first.
 
-${summarizeThreadForLive(input.thread)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}${weak.length > 0 ? `
+${summarizeThreadForLive(input.thread, input.engine)}${studyFocusBlock(name, input.thread, 'examined')}${lessonExamBlock(name, input.thread)}${weak.length > 0 ? `
 
 FLAGGED LAST TIME — make one of your three questions revisit these, so the refresher closes old gaps:
 ${weak.map((w) => `- ${w}`).join('\n')}` : ''}

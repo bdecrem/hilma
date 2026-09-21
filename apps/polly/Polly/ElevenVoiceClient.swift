@@ -7,8 +7,8 @@ import Observation
 
 /// Polly's voice client on the ElevenLabs engine — a per-device setting next
 /// to GPT-Live (LiveVoiceClient). Ported from Dodo's on 2026-09-20; see
-/// docs/f2-eleven-voice-reference.md and apps/polly/CLAUDE.md. Phase 1 runs
-/// conversations only (VoiceEngine.runs(mode:)).
+/// docs/f2-eleven-voice-reference.md and apps/polly/CLAUDE.md. Runs every
+/// voice mode and is the default engine since 2026-09-21.
 ///
 /// How it differs from GPT-Live, in one place:
 /// - ElevenLabs owns the audio: speech-to-text, turn-taking, barge-in and the
@@ -32,6 +32,8 @@ final class ElevenVoiceClient: PollyVoiceClient {
     let mode: String
     let threadId: String?
     let cardIds: [String]?
+    /// 'cleanup' mode: the Infinity Chat conversation being tidied up.
+    let chatId: String?
     /// Direction 2b: the chat this call continues; its turns are appended to
     /// that chat when the call ends.
     let continueChatId: String?
@@ -60,6 +62,12 @@ final class ElevenVoiceClient: PollyVoiceClient {
     }
     private var turns: [Turn] = []
 
+    /// The level check's one-time nudge: armed when Polly's greeting ends,
+    /// spent the moment the learner makes a sound.
+    private var nudgeTask: Task<Void, Never>?
+    private var nudgeArmed = false
+    private var nudgeSpent = false
+
     private var thinkingTimer: Task<Void, Never>?
     private var releaseTask: Task<Void, Never>?
     private static let releaseGrace: Duration = .milliseconds(300)
@@ -75,11 +83,12 @@ final class ElevenVoiceClient: PollyVoiceClient {
     private var probeAttached = false
     #endif
 
-    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
+    init(mode: String, threadId: String? = nil, cardIds: [String]? = nil, chatId: String? = nil,
          continueChatId: String? = nil, holdToTalk: Bool = false) {
         self.mode = mode
         self.threadId = threadId
         self.cardIds = cardIds
+        self.chatId = chatId
         self.continueChatId = continueChatId
         self.holdToTalk = holdToTalk
     }
@@ -98,6 +107,7 @@ final class ElevenVoiceClient: PollyVoiceClient {
         releaseTask?.cancel()
         releaseTask = nil
         thinkingTimer?.cancel()
+        learnerMadeSound()
         talking = true
         if phase == .speaking {
             Task { try? await conversation?.interruptAgent() }
@@ -182,7 +192,7 @@ final class ElevenVoiceClient: PollyVoiceClient {
             phase = .creatingSession
             status = "Creating voice session..."
             let session = try await PollyAPI.shared.startElevenSession(
-                mode: mode, threadId: threadId, cardIds: cardIds,
+                mode: mode, threadId: threadId, cardIds: cardIds, chatId: chatId,
                 continueChatId: continueChatId, holdToTalk: holdToTalk)
             sessionResponse = session
             model = session.eleven.model
@@ -205,6 +215,15 @@ final class ElevenVoiceClient: PollyVoiceClient {
                 },
                 onInterruption: { _ in
                     NSLog("F2_ELEVEN_EV interruption")
+                },
+                onVadScore: { [weak self] score in
+                    guard score > 0.6 else { return }
+                    // Only once the greeting is over: before that the mic
+                    // can be hearing Polly herself.
+                    Task { @MainActor in
+                        guard let self, self.nudgeArmed, self.phase != .speaking else { return }
+                        self.learnerMadeSound()
+                    }
                 }
             )
             // The ready / disconnect callbacks go here, not on the config: this
@@ -257,6 +276,7 @@ final class ElevenVoiceClient: PollyVoiceClient {
         status = "Ended"
         thinkingTimer?.cancel()
         releaseTask?.cancel()
+        nudgeTask?.cancel()
         if let conversation {
             try? await conversation.setMuted(true)
             await conversation.endConversation()
@@ -322,7 +342,10 @@ final class ElevenVoiceClient: PollyVoiceClient {
             if phase == .speaking { phase = .connected }
             setThinking()
         case .listening:
-            if phase == .speaking { phase = .connected }
+            if phase == .speaking {
+                phase = .connected
+                armSilenceNudge()
+            }
             if status != "Thinking" { status = talking ? "Listening" : "Connected" }
         @unknown default:
             break
@@ -362,9 +385,49 @@ final class ElevenVoiceClient: PollyVoiceClient {
         }
     }
 
+    // MARK: App cues
+
+    /// A text message from the app: Claude reads it as a note, answers it out
+    /// loud, and it stays out of the transcript. `speak` is GPT-Live's.
+    func sendCue(instruction: String, speak: String) {
+        guard agentReady, let conversation, let prefix = sessionResponse?.eleven.cuePrefix else { return }
+        NSLog("F2_ELEVEN_CUE %@", String(instruction.prefix(120)))
+        Task {
+            do {
+                try await conversation.sendMessage(prefix + instruction)
+            } catch {
+                NSLog("F2_ELEVEN_CUE_ERROR %@", error.localizedDescription)
+            }
+        }
+        setThinking()
+    }
+
+    private func learnerMadeSound() {
+        nudgeSpent = true
+        nudgeTask?.cancel()
+    }
+
+    /// Level check: once Polly's greeting has ended, if the learner makes no
+    /// sound for the server's `after_ms`, send the nudge — once per session.
+    private func armSilenceNudge() {
+        guard !nudgeSpent, !nudgeArmed, let nudge = sessionResponse?.eleven.silenceNudge else { return }
+        nudgeArmed = true
+        nudgeTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(nudge.afterMs))
+            guard let self, !Task.isCancelled, !self.nudgeSpent, !self.talking,
+                  self.phase == .connected, let conversation = self.conversation else { return }
+            self.nudgeSpent = true
+            NSLog("F2_ELEVEN_NUDGE sent")
+            try? await conversation.sendMessage(nudge.cue)
+        }
+    }
+
     private func appendTurn(role: String, text: String, eventId: Int) {
-        // The kickoff is plumbing, not something the user said.
+        // The kickoff and the app's cues are plumbing, not something the user said.
         if role == "user", text == sessionResponse?.eleven.kickoff { return }
+        if role == "user", let prefix = sessionResponse?.eleven.cuePrefix,
+           text.hasPrefix(prefix.trimmingCharacters(in: .whitespaces)) { return }
+        if role == "user" { learnerMadeSound() }
         turns.append(Turn(role: role, text: text, at: Date(), eventId: eventId))
         if role == "assistant" {
             thinkingTimer?.cancel()

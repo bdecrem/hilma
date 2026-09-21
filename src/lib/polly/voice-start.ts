@@ -20,11 +20,12 @@ import {
   buildLiveTalkInstructions,
   liveOpeningInstruction,
   toElevenInstructions,
+  type VoiceEngine,
 } from './live'
 import { activeLanguage, type LanguageCode } from './language'
 import { chatRows, getInfinityChat, walkFixes } from './infinity'
 
-export type VoiceEngine = 'gpt-live' | 'eleven'
+export type { VoiceEngine }
 
 export const VOICE_MODES = ['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert', 'placement', 'cleanup']
 
@@ -137,7 +138,7 @@ export async function resolveVoiceStart(
     if ((thread?.stars ?? 0) < 2) {
       return fail(403, 'Final Review unlocks at 2 stars.')
     }
-    instructions = buildLiveFinalReviewInstructions({ userName: user.username, thread: thread! })
+    instructions = buildLiveFinalReviewInstructions({ userName: user.username, thread: thread!, engine })
   } else if (mode === 'second_chance') {
     // Only within the 24h window after a failed 2nd+ Final Review attempt,
     // and never once the topic is mastered.
@@ -152,6 +153,7 @@ export async function resolveVoiceStart(
       userName: user.username,
       thread: thread!,
       weaknesses: sc.last_weaknesses,
+      engine,
     })
   } else if (mode === 'recert') {
     // Refreshers exist only for certified topics. Taking one early (before
@@ -175,6 +177,7 @@ export async function resolveVoiceStart(
       userName: user.username,
       thread: thread!,
       weaknesses,
+      engine,
     })
   } else if (mode === 'topic' && thread?.kind === 'infinity') {
     // Infinity Chat free conversation: just talk, no corrections.
@@ -185,6 +188,7 @@ export async function resolveVoiceStart(
       mode: mode === 'topic' ? 'topic' : 'global',
       userName: user.username,
       thread,
+      engine,
     })
   }
 

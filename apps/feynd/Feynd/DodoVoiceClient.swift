@@ -15,11 +15,13 @@ enum VoicePhase: Equatable {
 /// Which stack runs Dodo's voice. A per-device setting (Profile → Voice),
 /// read once when a session starts.
 enum VoiceEngine: String, CaseIterable, Identifiable {
-    /// OpenAI GPT-Live — the default (LiveVoiceClient).
-    case gptLive = "gpt-live"
     /// ElevenLabs Speech Engine for the audio, Claude for the words
-    /// (ElevenVoiceClient).
+    /// (ElevenVoiceClient). The default since 2026-09-21.
     case eleven = "eleven"
+    /// OpenAI GPT-Live (LiveVoiceClient).
+    case gptLive = "gpt-live"
+
+    static let fallback: VoiceEngine = .eleven
 
     static let defaultsKey = "voiceEngine"
 
@@ -34,13 +36,13 @@ enum VoiceEngine: String, CaseIterable, Identifiable {
 
     var detail: String {
         switch self {
-        case .gptLive: return "OpenAI's live voice model. The default."
-        case .eleven: return "ElevenLabs listens and speaks in its own voice; Claude Opus does the thinking. Experimental."
+        case .gptLive: return "OpenAI's live voice model."
+        case .eleven: return "ElevenLabs listens and speaks in its own voice; Claude Opus does the thinking. The default."
         }
     }
 
     static var current: VoiceEngine {
-        VoiceEngine(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? .gptLive
+        VoiceEngine(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? fallback
     }
 }
 
