@@ -48,13 +48,18 @@ tunnel or WebSocket support in tunn3l would make the URL permanent.
 
 ## Where it runs
 
-Meant for the Mac mini (always on). On 2026-09-20 the mini answered ping and
-its tunnels were up but refused SSH from the network the work was done on, so
-it was installed on **Bart's MacBook Air** as a stand-in — which only serves
-while that laptop is awake and online. Move it: `install.sh uninstall` on the
-Air, then on the mini `brew install cloudflared`, pull the repo and run
-`install.sh` (it needs `~/.dodo-voice-bridge.env` with the two secrets there,
-since the mini's checkout has no `.env.local`).
+The **Mac mini** (`admin@171.66.240.175`, always on), since 2026-09-21. It ran
+on Bart's MacBook Air for a day before that; the Air's launchd job is still
+installed and must be removed (`install.sh uninstall` there) — if it restarts
+while the Air is awake it re-points all four engines at the Air's tunnel.
+
+The mini has no checkout of this folder: the files were copied to
+`~/dodo-voice-bridge-src` and installed from there. To ship a change:
+`scp apps/dodo-voice-bridge/* admin@171.66.240.175:dodo-voice-bridge-src/`
+then `ssh admin@171.66.240.175 'bash ~/dodo-voice-bridge-src/install.sh'`.
+`~/.dodo-voice-bridge.env` on the mini holds the two secrets (both can be read
+back from Vercel with `vercel env pull <file> --environment production` — pull
+to a scratch file, never over `.env.local`).
 
 ## Checking it
 

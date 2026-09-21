@@ -8,7 +8,7 @@ For picking this work up on another machine, moving the bridge, or rebuilding it
 |---|---|---|---|
 | 1 | ElevenLabs account + API key | elevenlabs.io → Developers → API Keys | Starter plan; key in `.env.local`, Vercel and the bridge's env file |
 | 2 | Four Speech Engines: "Dodo", "Dodo (dev)", "Polly", "Polly (dev)" | ElevenLabs (created by `engines.mjs`) | Dodo `seng_4101m2zmzxjhfzztr0yry2y1hmyn` (prod) / `seng_0201m2zkd3xbey28ey55e7v86hjp` (dev); Polly `seng_3101m2zv3xxrey3ssf3s19mq7pkb` (prod) / `seng_4601m2zv3xmwf7k9zwk5dsd9f1na` (dev) |
-| 3 | The voice bridge, publicly reachable over `wss://` | a Mac that stays on | launchd job on Bart's MacBook Air — a stand-in; belongs on the Mac mini |
+| 3 | The voice bridge, publicly reachable over `wss://` | a Mac that stays on | launchd job on the Mac mini since 2026-09-21 (installed from `~/dodo-voice-bridge-src`, see the bridge README) |
 | 4 | Four env vars on Vercel (Production): the three below + `POLLY_ELEVEN_SPEECH_ENGINE_ID` (Polly's prod engine) | `vercel env` | set |
 | 5 | `f2_voice_sessions.system_prompt` column | Supabase | applied (`apps/f2/schema/050_f2_eleven_voice.sql`) |
 | 6 | Dodo build 0.2 (110) or later | the phone | installed on Bart's iPhone |
@@ -51,7 +51,7 @@ It **overwrites `.env.local`** with the project's handful of *development* varia
 4. Check: `tail ~/Library/Logs/dodo-voice-bridge.log` ends with `bridge up at https://….trycloudflare.com`, and `curl <that>/health` answers.
 5. Re-run `install.sh` after changing anything in the folder (the job runs the copy).
 
-Moving it to the Mac mini is steps 1–4 there after `uninstall` on the Air. On 2026-09-20 the mini refused SSH from the network this was built on, which is the only reason it is not there.
+It moved to the Mac mini on 2026-09-21 (steps 2–4; node and cloudflared were already there). The MacBook Air that hosted it first was off at the time, so its job still needs `install.sh uninstall` the next time it is on.
 
 The tunnel hostname changes on every restart; nothing else depends on it because `run.sh` updates the engines each time. A permanent URL needs a named Cloudflare tunnel (an account) or WebSocket support in tunn3l (its HTTP mode answers upgrades with 502).
 
