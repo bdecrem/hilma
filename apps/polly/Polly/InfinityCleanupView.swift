@@ -47,9 +47,52 @@ struct InfinityCleanupView: View {
             }
             .pollyContentColumn()
         }
-        .task { await client.start() }
+        .task {
+            #if targetEnvironment(simulator)
+            if UserDefaults.standard.bool(forKey: "VoiceLiveTest") {
+                Task { await runCleanupDrill() }
+            }
+            #endif
+            await client.start()
+        }
         .onDisappear { client.stop() }
     }
+
+    #if targetEnvironment(simulator)
+    /// `-VoiceLiveTest 1` (with `-OpenInfinityDrill cleanup`) — headless walk:
+    /// Polly opens on number 1, every "Got it" is the app's cue and must get a
+    /// spoken reply of its own, then End uploads the transcript.
+    private func runCleanupDrill() async {
+        func log(_ m: String) { NSLog("F2_LIVE_TEST cleanup %@ phase=%@ status=%@", m, String(describing: client.phase), client.status) }
+        func waitFor(_ ok: @escaping () -> Bool, _ seconds: Double) async -> Bool {
+            let deadline = Date().addingTimeInterval(seconds)
+            while Date() < deadline {
+                if ok() { return true }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            return ok()
+        }
+        let up = await waitFor({ client.debugSessionStarted && client.debugChannelOpen }, 30)
+        log(up ? "PASS session-started" : "FAIL never-started")
+        guard up else { log("done"); return }
+        let spoke = await waitFor({ !client.debugLastAssistantText.isEmpty }, 25)
+        log(spoke ? "PASS polly-opened text=\(client.debugLastAssistantText.prefix(140))" : "FAIL polly-silent")
+
+        for step in 0..<fixes.count {
+            _ = await waitFor({ client.phase == .connected && client.status != "Thinking" }, 30)
+            let before = client.debugLastAssistantText
+            advance()
+            let answered = await waitFor({ client.debugLastAssistantText != before }, 25)
+            log(answered ? "PASS cue-\(step + 1)-answered text=\(client.debugLastAssistantText.prefix(140))"
+                         : "FAIL cue-\(step + 1)-unanswered")
+        }
+        _ = await waitFor({ client.phase == .connected && client.status != "Thinking" }, 30)
+        let turns = client.debugTurnCount
+        let id = await client.end()
+        log(id != nil && client.debugTranscriptUploaded ? "PASS transcript-uploaded turns=\(turns)" : "FAIL transcript-not-uploaded")
+        log("done")
+    }
+    #endif
 
     // MARK: top bar — progress + close
 

@@ -12,6 +12,9 @@
 //   npx tsx scripts/polly/test-eleven-polly.ts [--base URL] [--lang it|fr|ko]
 //       [--cookie "polly_session=…"] [--answer "text"]... [--text]
 //
+//   --mode    topic (default, the Infinity chat) or placement (the level check:
+//             stays silent after the greeting and sends the server's silence
+//             nudge as the app would — a text cue — then answers out loud)
 //   --base    default https://hilma-nine.vercel.app (then ELEVEN engine = "Polly";
 //             pass POLLY_ELEVEN_SPEECH_ENGINE_ID=<dev id> for a local backend)
 //   --cookie  reuse an account. Without it a guest is created — and EVERY guest
@@ -46,18 +49,22 @@ const answers: string[] = []
 let base = 'https://hilma-nine.vercel.app'
 let lang = 'it'
 let cookieArg = ''
+let modeArg = 'topic'
 const positional: string[] = []
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--answer') answers.push(args[++i])
   else if (args[i] === '--base') base = args[++i]
   else if (args[i] === '--lang') lang = args[++i]
   else if (args[i] === '--cookie') cookieArg = args[++i]
+  else if (args[i] === '--mode') modeArg = args[++i]
   else if (!args[i].startsWith('--')) positional.push(args[i])
 }
 const asText = args.includes('--text')
 const interrupt = args.includes('--interrupt')
-const mode = 'topic'
-if (answers.length === 0) answers.push(...DEFAULT_ANSWERS[lang])
+const mode = modeArg
+/// An "answer" starting with this is sent as a text message from the app.
+const CUE = 'cue:'
+if (answers.length === 0) answers.push(...(mode === 'placement' ? [DEFAULT_ANSWERS[lang][0]] : DEFAULT_ANSWERS[lang]))
 
 /// Spoken PCM16 mono @ 16 kHz from macOS `say`.
 function speak(text: string): Buffer {
@@ -119,13 +126,18 @@ async function main() {
   const startRes = await fetch(`${base}/api/polly/eleven/session`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', cookie },
-    body: JSON.stringify({ mode, thread_id: threadId }),
+    body: JSON.stringify(mode === 'placement' ? { mode } : { mode, thread_id: threadId }),
   })
   const start = await startRes.json()
   if (!startRes.ok) throw new Error(`session start failed (${startRes.status}): ${JSON.stringify(start)}`)
   const voiceSessionId: string = start.voice_session.id
   console.log(at(), 'session', voiceSessionId, 'model', start.eleven.model, 'kickoff', start.eleven.kickoff)
   check('token-minted', typeof start.eleven.conversation_token === 'string' && start.eleven.conversation_token.length > 20)
+  const cuePrefix: string = start.eleven.cue_prefix ?? '[app] '
+  if (mode === 'placement') {
+    check('nudge-offered', typeof start.eleven.silence_nudge?.cue === 'string', `after ${start.eleven.silence_nudge?.after_ms} ms`)
+    if (start.eleven.silence_nudge) answers.unshift(CUE + start.eleven.silence_nudge.cue)
+  }
 
   // 2. Open the conversation (WebSocket transport, same dynamic variable).
   const signed = await fetch(
@@ -141,12 +153,22 @@ async function main() {
   let firstAudioLogged = true
   let pendingAnswer = 0
   let interrupted = false
+  let cueSentAtReply = -1
+  let cueReply = ''
   let done: () => void = () => {}
   const finished = new Promise<void>((resolve) => (done = resolve))
 
   const sendAnswer = () => {
     const text = answers[pendingAnswer++]
     if (text === undefined) return done()
+    if (text.startsWith(CUE)) {
+      console.log(at(), 'APP CUE:', text.slice(CUE.length, CUE.length + 90) + '…')
+      turnSentAt = Date.now()
+      firstAudioLogged = false
+      cueSentAtReply = agentReplies
+      ws.send(JSON.stringify({ type: 'user_message', text: text.slice(CUE.length) }))
+      return
+    }
     console.log(at(), `USER (${asText ? 'text' : 'speech'}):`, text)
     turnSentAt = Date.now()
     firstAudioLogged = false
@@ -205,13 +227,16 @@ async function main() {
       case 'user_transcript': {
         const text = event.user_transcription_event.user_transcript
         console.log(at(), 'HEARD:', text)
-        if (text !== start.eleven.kickoff) transcript.push({ role: 'user', text, created_at: new Date().toISOString() })
+        if (text !== start.eleven.kickoff && !text.startsWith(cuePrefix.trim())) {
+          transcript.push({ role: 'user', text, created_at: new Date().toISOString() })
+        }
         break
       }
       case 'agent_response': {
         const text = event.agent_response_event.agent_response
         console.log(at(), 'POLLY:', text)
         transcript.push({ role: 'assistant', text, created_at: new Date().toISOString() })
+        if (cueSentAtReply === agentReplies) cueReply = text
         agentReplies++
         // Let the speech play out (≈ 15 chars/s) before answering — except
         // for the reply being barged into, whose answer is already on its way.
@@ -247,6 +272,10 @@ async function main() {
   check('polly-spoke', agentReplies > 0, `${agentReplies} replies`)
   check('audio-arrived', audioChunks > 0, `${audioChunks} chunks`)
   check('all-turns-answered', agentReplies >= answers.length, `${agentReplies}/${answers.length + (start.eleven.kickoff ? 1 : 0)}`)
+  if (mode === 'placement') {
+    check('cue-answered', /english/i.test(cueReply), cueReply.slice(0, 90))
+    check('cue-kept-out-of-transcript', !transcript.some((t) => t.text.includes('[app]')))
+  }
   if (!asText) check('speech-heard', transcript.some((t) => t.role === 'user'))
 
   // 3. Finish through the same route the phone uses.
