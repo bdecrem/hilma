@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ElohaX — Choose the next Alzheimer’s experiment with stronger evidence</title>
+<meta name="description" content="ElohaX turns a candidate list into a ranked experimental plan for Alzheimer’s preclinical studies, with the reasoning in view before you commit.">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-2: #f4f6f5;
+    --ink: #14191c;
+    --ink-2: #566068;
+    --rule: #e2e6e4;
+    --teal: #1b5a5e;
+    --teal-ink: #0f3c3f;
+    --teal-tint: #e6f0ef;
+    --serif: "Newsreader", Georgia, serif;
+    --sans: "IBM Plex Sans", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--sans); font-size: 17px; line-height: 1.55;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  a { color: inherit; }
+  a:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; letter-spacing: -0.01em; }
+  p { margin: 0; }
+  .wrap { width: min(1080px, 100% - 48px); margin-inline: auto; }
+  @media (max-width: 640px) { .wrap { width: calc(100% - 40px); } }
+
+  .btn {
+    display: inline-block; font-weight: 500; font-size: 16px; text-decoration: none;
+    background: var(--teal); color: #fff; padding: 14px 22px; border-radius: 6px;
+  }
+  .btn:hover { background: var(--teal-ink); }
+  .btn.light { background: #fff; color: var(--teal); }
+  .btn.light:hover { background: var(--teal-tint); }
+
+  /* nav */
+  .nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; border-bottom: 1px solid var(--rule); }
+  .wordmark { font-weight: 600; font-size: 20px; text-decoration: none; letter-spacing: -0.01em; }
+  .wordmark span { color: var(--teal); }
+  .nav ul { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; font-size: 15px; }
+  .nav ul a { text-decoration: none; color: var(--ink-2); }
+  .nav ul a:hover { color: var(--ink); }
+  .nav .btn { padding: 10px 16px; font-size: 15px; }
+  @media (max-width: 760px) { .nav ul { display: none; } }
+
+  /* hero */
+  .hero { text-align: center; padding: 88px 0 56px; }
+  .hero h1 { font-size: clamp(40px, 5.6vw, 64px); line-height: 1.06; font-weight: 300; max-width: 16ch; margin-inline: auto; letter-spacing: -0.02em; }
+  .hero p { font-size: 20px; color: var(--ink-2); max-width: 46ch; margin: 24px auto 32px; line-height: 1.5; }
+  .hero .cta { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .hero .note { font-size: 14px; color: var(--ink-2); margin-top: 14px; }
+
+  /* product visual */
+  .visual { padding: 24px 0 96px; }
+  .sheet {
+    max-width: 720px; margin-inline: auto; background: #fff; border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: 0 24px 60px -30px rgba(20, 60, 62, .35), 0 1px 2px rgba(0,0,0,.04); font-size: 15px; overflow: hidden;
+  }
+  .sheet-top { display: flex; justify-content: space-between; align-items: center; padding: 18px 24px; background: var(--bg-2); border-bottom: 1px solid var(--rule); }
+  .sheet-top .name { font-family: var(--serif); font-size: 24px; }
+  .sheet-top .verdict { background: var(--teal-tint); color: var(--teal); font-weight: 500; font-size: 14px; padding: 6px 12px; border-radius: 999px; }
+  .sheet dl { margin: 0; padding: 8px 24px 12px; }
+  .row { display: grid; grid-template-columns: 140px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .row:last-child { border-bottom: 0; }
+  .row dt { color: var(--ink-2); }
+  .row dd { margin: 0; }
+  .ev { display: flex; gap: 18px; }
+  .ev b { font-weight: 600; }
+  .warn { color: #a0521d; font-weight: 500; }
+  .caption { text-align: center; font-size: 15px; color: var(--ink-2); margin: 20px auto 0; max-width: 60ch; }
+
+  /* sections */
+  section { padding: 80px 0; }
+  #proof { padding: 64px 0; }
+  section.alt { background: var(--bg-2); }
+  .head { text-align: center; max-width: 60ch; margin: 0 auto 48px; }
+  .head h2 { font-size: clamp(30px, 3.6vw, 42px); line-height: 1.15; font-weight: 300; letter-spacing: -0.015em; }
+  .head p { color: var(--ink-2); font-size: 18px; margin-top: 16px; }
+
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .card { background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 28px; }
+  .card h3 { font-size: 24px; font-style: italic; font-weight: 300; margin-bottom: 10px; }
+  .card p { color: var(--ink-2); font-size: 15.5px; }
+  .alt .card { border-color: transparent; }
+  @media (max-width: 820px) { .cols { grid-template-columns: 1fr; } }
+
+  /* what: two columns */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .split h2 { font-size: clamp(30px, 3.6vw, 42px); line-height: 1.15; font-weight: 300; letter-spacing: -0.015em; }
+  .split p { color: var(--ink-2); font-size: 18px; margin-top: 16px; }
+  .checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .checks li { display: flex; gap: 12px; align-items: flex-start; background: var(--bg-2); border-radius: 8px; padding: 14px 16px; }
+  .checks svg { flex: none; width: 20px; height: 20px; margin-top: 2px; }
+  .checks b { font-weight: 500; display: block; }
+  .checks span { color: var(--ink-2); font-size: 15px; }
+  @media (max-width: 820px) { .split { grid-template-columns: 1fr; gap: 36px; } }
+
+  /* pilot */
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 760px; margin: 0 auto 40px; text-align: center; }
+  .stats div { padding: 24px 12px; border-top: 2px solid var(--teal); }
+  .stats strong { display: block; font-family: var(--serif); font-weight: 300; font-size: 40px; line-height: 1; letter-spacing: -0.02em; }
+  .stats small { display: block; color: var(--ink-2); font-size: 14px; margin-top: 10px; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; counter-reset: s; }
+  .step { background: #fff; border-radius: 12px; padding: 28px; counter-increment: s; position: relative; }
+  .step::before { content: counter(s); display: inline-flex; width: 30px; height: 30px; border-radius: 50%; background: var(--teal); color: #fff; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+  .step h3 { font-family: var(--sans); font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .step p { color: var(--ink-2); font-size: 15.5px; }
+  .fine { text-align: center; font-size: 14px; color: var(--ink-2); max-width: 70ch; margin: 36px auto 0; }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr; gap: 0; } }
+
+  /* how it works */
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .fcard { background: #fff; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; }
+  .fhead { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .num { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: var(--teal); color: #fff; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex: none; }
+  .fcard h3 { font-family: var(--sans); font-size: 17px; font-weight: 600; }
+  .fcard > p { color: var(--ink-2); font-size: 15px; margin-bottom: 18px; }
+  .mini { margin-top: auto; border: 1px solid var(--rule); border-radius: 8px; padding: 6px 12px; font-size: 13.5px; }
+  .mrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+  .mrow:last-child { border-bottom: 0; }
+  .mrow.dim, .bar.dim { color: var(--ink-2); }
+  .tag { font-size: 12px; color: var(--teal); background: var(--teal-tint); padding: 2px 8px; border-radius: 999px; }
+  .ck { color: var(--teal); font-weight: 600; flex: none; }
+  .mrow .ck + span { flex: 1; text-align: left; }
+  .bar { display: grid; grid-template-columns: 96px 1fr 36px; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+  .bar:last-child { border-bottom: 0; }
+  .bar i { display: block; height: 8px; border-radius: 4px; background: var(--rule); position: relative; overflow: hidden; }
+  .bar i::after { content: ""; position: absolute; inset: 0; width: var(--w); background: var(--teal); border-radius: 4px; }
+  .bar.dim i::after { background: #9fb3b4; }
+  .bar b { font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+  .dots { display: none; justify-content: center; gap: 8px; margin-top: 18px; }
+  .dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); }
+  .dots span.on { background: var(--teal); }
+  @media (max-width: 820px) {
+    .flow { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 16px; margin-inline: -20px; padding-inline: 20px; scrollbar-width: none; }
+    .flow::-webkit-scrollbar { display: none; }
+    .fcard { flex: 0 0 84%; scroll-snap-align: center; }
+    .dots { display: flex; }
+  }
+
+  /* track record */
+  .proof { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+  .proof div { border-left: 2px solid var(--teal); padding: 4px 0 4px 18px; font-size: 16px; }
+  .proof strong { display: block; font-family: var(--serif); font-size: 26px; font-weight: 300; line-height: 1.15; margin-bottom: 8px; letter-spacing: -0.01em; }
+  .proof span { color: var(--ink-2); font-size: 15px; }
+  @media (max-width: 820px) { .proof { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .proof { grid-template-columns: 1fr; } }
+
+  /* cta band */
+  .band { background: var(--teal); color: #fff; text-align: center; padding: 88px 0; }
+  .band h2 { font-size: clamp(30px, 3.8vw, 44px); line-height: 1.12; font-weight: 300; max-width: 22ch; margin: 0 auto 28px; letter-spacing: -0.015em; }
+
+  footer { padding: 32px 0; font-size: 14px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <nav class="nav">
+    <a class="wordmark" href="#">Eloha<span>X</span></a>
+    <a class="btn" href="#contact">Book a call</a>
+  </nav>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Choose the next Alzheimer’s experiment with stronger evidence.</h1>
+    <p>More promising compounds than you can test? ElohaX ranks them, and shows the reasoning.</p>
+    <div class="cta">
+      <a class="btn" href="#contact">Book a 30-minute scoping conversation</a>
+    </div>
+  </div>
+</header>
+
+<div class="visual">
+  <div class="wrap">
+    <div class="sheet" aria-label="Example candidate assessment">
+      <div class="sheet-top">
+        <span class="name">Compound 14</span>
+        <span class="verdict">Advance, ranked 2 of 20</span>
+      </div>
+      <dl>
+        <div class="row"><dt>Mechanism</dt><dd>Acts on an upstream driver of microglial dysregulation linked to tau progression.</dd></div>
+        <div class="row"><dt>Evidence</dt><dd class="ev"><span><b>6</b> supporting</span><span><b>2</b> conflicting</span></dd></div>
+        <div class="row"><dt>Safety</dt><dd><span class="warn">Uncertain.</span> Off-target activity in one hepatic screen, not replicated.</dd></div>
+        <div class="row"><dt>Next experiment</dt><dd>Confirm target engagement at the two lowest doses.</dd></div>
+      </dl>
+    </div>
+    <p class="caption">Every recommendation looks like this: mechanism, evidence for and against, safety, next experiment.</p>
+  </div>
+</div>
+
+<section id="how" class="alt">
+  <div class="wrap">
+    <div class="head">
+      <h2>How it works</h2>
+    </div>
+    <div class="flow" id="flow">
+      <div class="fcard">
+        <div class="fhead"><span class="num">1</span><h3>Send your candidates</h3></div>
+        <p>Up to 20 compounds and the biological question.</p>
+        <div class="mini">
+          <div class="mrow"><span>Compound 03</span><span class="tag">kinase inhibitor</span></div>
+          <div class="mrow"><span>Compound 07</span><span class="tag">antibody</span></div>
+          <div class="mrow"><span>Compound 14</span><span class="tag">small molecule</span></div>
+          <div class="mrow dim"><span>+17 more</span><span></span></div>
+        </div>
+      </div>
+      <div class="fcard">
+        <div class="fhead"><span class="num">2</span><h3>DeepDrug ranks them</h3></div>
+        <p>Causal AI maps upstream disease drivers and scores each compound against the evidence.</p>
+        <div class="mini">
+          <div class="bar"><span>Compound 07</span><i style="--w:88%"></i><b>0.88</b></div>
+          <div class="bar"><span>Compound 14</span><i style="--w:81%"></i><b>0.81</b></div>
+          <div class="bar"><span>Compound 03</span><i style="--w:52%"></i><b>0.52</b></div>
+          <div class="bar dim"><span>Compound 11</span><i style="--w:23%"></i><b>0.23</b></div>
+        </div>
+      </div>
+      <div class="fcard">
+        <div class="fhead"><span class="num">3</span><h3>You get a plan</h3></div>
+        <p>A shortlist of 3–5, the reasoning for each, and the next experiment. 8–10 weeks.</p>
+        <div class="mini">
+          <div class="mrow"><span class="ck">✓</span><span>Shortlist with selection criteria</span></div>
+          <div class="mrow"><span class="ck">✓</span><span>Mechanism, evidence, safety per candidate</span></div>
+          <div class="mrow"><span class="ck">✓</span><span>Next experiment and expected readout</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="dots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
+  </div>
+</section>
+
+<section id="proof">
+  <div class="wrap">
+    <div class="proof">
+      <div><strong>HKU spin-off</strong><span>With Cambridge scientists.</span></div>
+      <div><strong>4 NAM awards</strong><span>Healthy Longevity Catalyst, 2021 to 2024.</span></div>
+      <div><strong>2026 semi-finalist</strong><span>NAM HLCA Innovation Summit.</span></div>
+      <div><strong>Lab-tested</strong><span>AI-prioritized hypotheses tested preclinically.</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="band" id="contact">
+  <div class="wrap">
+    <h2>Bring your next candidate-selection decision to a 30-minute conversation.</h2>
+    <a class="btn light" href="#contact">Book a scoping conversation</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <footer>
+    <span>ElohaX, Hong Kong</span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var flow = document.getElementById('flow'), dots = document.querySelectorAll('.dots span');
+    if (!flow) return;
+    flow.addEventListener('scroll', function () {
+      var cards = flow.children, i = 0, best = Infinity, mid = flow.scrollLeft + flow.clientWidth / 2;
+      for (var k = 0; k < cards.length; k++) {
+        var c = cards[k].offsetLeft + cards[k].offsetWidth / 2, d = Math.abs(c - mid);
+        if (d < best) { best = d; i = k; }
+      }
+      dots.forEach(function (d, k) { d.classList.toggle('on', k === i); });
+    }, { passive: true });
+  })();
+</script>
+</body>
+</html>
