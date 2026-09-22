@@ -3,7 +3,7 @@
 // is saved as the person's thought), and no plausible human sentence may be.
 //   npx tsx scripts/onething/copy-check.ts
 import copy from '../../src/lib/onething/copy.json'
-import { confirmText, looksLikeOurs, promptText, reminderText, SITE_URL } from '../../src/lib/onething/core'
+import { confirmText, looksLikeOurs, MARK, promptText, reminderText, SITE_URL } from '../../src/lib/onething/core'
 
 let failures = 0
 const check = (ok: boolean, label: string) => {
@@ -41,6 +41,8 @@ for (let i = 0; i < 200; i++) {
   if (!m.includes('Day 7. Milestone: 50 bonus points.') || !m.includes("You're a Sprout now.")) { built = false; console.log(`  milestone tail wrong: ${m}`) }
   const q = promptText()
   if (!looksLikeOurs(q)) { built = false; console.log(`  builder produced unrecognised text: ${q}`) }
+  if (!q.startsWith(`${MARK} `) || !reminderText(3).startsWith(`${MARK} `)) { built = false; console.log(`  daily text missing the mark: ${q}`) }
+  if (looksLikeOurs(q.slice(MARK.length).trim()) !== true) { built = false; console.log(`  echo without the mark not recognised: ${q}`) }
   if (q.includes(SITE_URL)) { built = false; console.log(`  morning question must not carry a link: ${q}`) }
 }
 check(built, '200 random builds: recognised, URL on reminder and milestone kept only, placeholders replaced')

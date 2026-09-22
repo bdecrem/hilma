@@ -383,11 +383,16 @@ export function buddyCopy(key: BuddyKey, vars: Record<string, string | number> =
   return COPY.buddy[key].replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m))
 }
 
+/// The daily texts (morning question, evening reminder) open with this mark so
+/// they read as Onething's at a glance in a shared iMessage inbox (2026-09-22).
+/// A sapling, after the levels (Seed → Old Growth). looksLikeOurs() strips it.
+export const MARK = '🌱'
+
 /// The morning question; `extra` lines (a buddy-streak reset) go under it.
 /// No site link here (2026-09-16): the question is a text to reply to, not a
 /// page to open. The link rides on the "kept" reply and the reminder instead.
 export function promptText(extra: string[] = []): string {
-  return [pick(COPY.morning), ...extra].join('\n')
+  return [`${MARK} ${pick(COPY.morning)}`, ...extra].join('\n')
 }
 
 /// The first text a new account gets: what this is, and today's question.
@@ -403,7 +408,7 @@ export function reminderText(_streak: number, buddiesIn: string[] = []): string 
     : buddiesIn.length === 1
       ? buddyCopy('reminderOne', { name: buddiesIn[0] })
       : buddyCopy('reminderMany', { names: joinNames(buddiesIn) })
-  return `${line}\n${SITE_URL}`
+  return `${MARK} ${line}\n${SITE_URL}`
 }
 
 /// "Sam", "Sam and Priya", "Sam, Priya and Lee".
@@ -441,7 +446,8 @@ const OWN_TEXT = [
 
 export function looksLikeOurs(text: string): boolean {
   // The demo account's texts land in Bart's own chat, prefixed; the echo is ours too.
-  const t = text.trim().startsWith(DEMO_PREFIX.trim()) ? text.trim().slice(DEMO_PREFIX.trim().length).trim() : text.trim()
+  let t = text.trim().startsWith(DEMO_PREFIX.trim()) ? text.trim().slice(DEMO_PREFIX.trim().length).trim() : text.trim()
+  if (t.startsWith(MARK)) t = t.slice(MARK.length).trim()
   if (OWN_TEXT.some((re) => re.test(t))) return true
   const body = t.endsWith(SITE_URL) ? t.slice(0, -SITE_URL.length).trim() : t
   // Every text of ours opens with a line from copy.json; buddy tails, reset
