@@ -82,8 +82,15 @@ const httpServer = createServer((req, res) => {
   res.end('{"error":"not found"}')
 })
 
-const wss = new WebSocketServer({ noServer: true })
+// No compression: proxies mishandle deflated WebSocket frames on long streams.
+const wss = new WebSocketServer({ noServer: true, perMessageDeflate: false })
 const sessions = new Set()
+// Railway's edge drops a TCP connection that carries nothing for a while, and a
+// long user monologue is exactly that: ElevenLabs sends the transcript only when
+// the turn ends, and the bridge sends nothing until then. A protocol-level ping
+// every 20 s keeps the connection alive through the proxy (2026-09-22: a Final
+// Review died mid-answer with "Failed to send message to Speech Engine").
+const KEEPALIVE_MS = 20_000
 
 httpServer.on('upgrade', (req, socket, head) => {
   const match = /^\/ws\/([a-z0-9-]+)\/?$/.exec((req.url || '').split('?')[0])
@@ -149,9 +156,15 @@ function handleConnection(ws, name, backend, voiceSessionId) {
     }
   })
 
-  ws.on('close', () => {
+  const keepalive = setInterval(() => {
+    if (ws.readyState === ws.OPEN) ws.ping()
+  }, KEEPALIVE_MS)
+
+  ws.on('close', (code, reason) => {
+    clearInterval(keepalive)
     state.inflight?.abort()
     sessions.delete(ws)
+    log(`[${name}] closed`, state.conversationId, code, reason?.toString() || '')
   })
   ws.on('error', (err) => log(`[${name}] socket error:`, err.message))
 
