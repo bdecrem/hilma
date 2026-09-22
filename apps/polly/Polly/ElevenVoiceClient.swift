@@ -283,8 +283,23 @@ final class ElevenVoiceClient: PollyVoiceClient {
         }
         agentStateSink = nil
         conversation = nil
+        await releaseAudioEngine()
         await finishSession()
         return voiceSessionId
+    }
+
+    /// ElevenLabs' SDK leaves LiveKit's audio engine warm after a conversation
+    /// ("recording always prepared": mic pipeline up, `.playAndRecord`) and
+    /// never turns it off; the next thing to touch the audio session (a sound
+    /// effect setting `.ambient`) breaks that engine and the next voice session
+    /// fails to start with "Audio engine returned error code: -3001" (seen in
+    /// Dodo 2026-09-22). Release it.
+    private func releaseAudioEngine() async {
+        do {
+            try await AudioManager.shared.setRecordingAlwaysPreparedMode(false)
+        } catch {
+            NSLog("F2_ELEVEN_AUDIO_RELEASE_ERROR %@", error.localizedDescription)
+        }
     }
 
     private func requestMicrophonePermission() async -> Bool {

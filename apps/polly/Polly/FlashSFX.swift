@@ -56,10 +56,16 @@ final class FlashSFX {
 
     func play(_ effect: Effect) {
         guard !muted, let buffer = buffers[effect] else { return }
-        // Ambient: silent-switch aware, never interrupts other audio. Re-set
-        // each time — a voice session may have claimed .playAndRecord since.
-        try? AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
-        try? AVAudioSession.sharedInstance().setActive(true)
+        // Ambient: silent-switch aware, never interrupts other audio. But a
+        // voice session owns `.playAndRecord` while its engine is up (LiveKit
+        // keeps it warm after a conversation ends): switching the category out
+        // from under it breaks that engine and the next voice session fails
+        // to start (Dodo, 2026-09-22). Play through whatever it set instead.
+        let session = AVAudioSession.sharedInstance()
+        if session.category != .playAndRecord {
+            try? session.setCategory(.ambient, options: [.mixWithOthers])
+        }
+        try? session.setActive(true)
         if !engine.isRunning {
             try? engine.start()
         }
