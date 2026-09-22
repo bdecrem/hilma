@@ -1,7 +1,9 @@
 #!/bin/bash
-# Run the Dodo voice bridge and make it reachable: the bridge, a Cloudflare
-# quick tunnel in front of it, and the two Speech Engines pointed at the
-# tunnel's hostname (a quick tunnel gets a new one on every start).
+# Run the Dodo voice bridge on a dev machine and make it reachable: the bridge,
+# a Cloudflare quick tunnel in front of it, and the two DEV Speech Engines
+# pointed at the tunnel's hostname (a quick tunnel gets a new one on every
+# start). The production engines stay on the hosted bridge (Railway, see
+# README.md) — this script never touches them.
 #
 #   bash apps/dodo-voice-bridge/run.sh            # foreground; Ctrl-C stops all
 #
@@ -50,7 +52,7 @@ healthy() { curl -fsS -m 6 --doh-url https://cloudflare-dns.com/dns-query "$ORIG
 for _ in $(seq 1 30); do healthy && break; sleep 2; done
 healthy || { echo "tunnel $ORIGIN never answered /health"; exit 1; }
 
-node engines.mjs "$ORIGIN"
+node engines.mjs "$ORIGIN" dev
 echo "$(date -u +%FT%TZ) bridge up at $ORIGIN"
 
 # If either process dies, exit so launchd (KeepAlive) starts the pair again.

@@ -14,55 +14,78 @@ to be spoken. Prompts, tables and the Anthropic key stay on Vercel.
 |---|---|
 | `server.mjs` | the bridge: JWT check on upgrade, `init` / `user_transcript` / `ping` / `close`, abort on barge-in |
 | `engines.mjs` | creates / updates the two Speech Engines (voice, turn-taking, `ws_url`) — idempotent, by name |
-| `run.sh` | bridge + Cloudflare quick tunnel + `engines.mjs` with the tunnel's hostname |
-| `install.sh`, `com.dodo.voicebridge.plist` | the launchd job (`KeepAlive`) |
+| `railway.json` | the Railway service: start command, `/health` check, always restart |
+| `run.sh` | a bridge on a dev machine: bridge + Cloudflare quick tunnel + `engines.mjs … dev` (the two dev engines only) |
+| `install.sh`, `com.dodo.voicebridge.plist` | a launchd job for a Mac standing in for Railway (`KeepAlive`); not in use since 2026-09-21 |
 
-## Running it
+## Where it runs — Railway (since 2026-09-21)
+
+Railway project **`dodo-voice-bridge`**, service **`dodo-voice-bridge`**,
+environment `production`, at **`https://dodo-voice-bridge-production.up.railway.app`**
+(a permanent hostname, so the four engines are pointed at it once and stay
+there). Railway builds this folder alone (Railpack: `npm install`, then
+`node server.mjs` from `railway.json`, which also sets the `/health` check and
+an always-restart policy) and passes WebSocket upgrades through its edge.
+
+The service's variables: `ELEVENLABS_API_KEY` and `DODO_BRIDGE_SECRET` (the
+same values as Vercel — pull them with
+`vercel env pull <scratch file> --environment production`, never over
+`.env.local`), `DODO_BRIDGE_BACKENDS` (the JSON below) and `PORT=3901` (the
+domain's target port). The `dev` and `polly-dev` backends point at
+`localhost:3100`, which on Railway is nothing — the dev engines are for a
+bridge on a dev machine (next section).
+
+Working with it, from this folder (the Railway CLI is linked here — on another
+machine: `railway link --project dodo-voice-bridge --environment production`
+then `railway service link dodo-voice-bridge`):
 
 ```bash
-bash apps/dodo-voice-bridge/run.sh          # foreground, from a dev machine
-bash apps/dodo-voice-bridge/install.sh      # launchd job on this machine; re-run after code changes
-tail -f ~/Library/Logs/dodo-voice-bridge.log
+railway up --ci --service dodo-voice-bridge     # ship a change (uploads this folder, builds, deploys)
+railway logs --service dodo-voice-bridge        # the live log (Ctrl-C to stop streaming)
+railway variables --service dodo-voice-bridge   # the env
+curl https://dodo-voice-bridge-production.up.railway.app/health
+node engines.mjs https://dodo-voice-bridge-production.up.railway.app   # only if the engines ever stop pointing here
 ```
-
-Needs `node`, `cloudflared` (`brew install cloudflared`), and two secrets:
-`ELEVENLABS_API_KEY` (verifies the JWT ElevenLabs signs every connection with)
-and `DODO_BRIDGE_SECRET` (must equal the backend's). `install.sh` copies the
-code to `~/Library/Application Support/dodo-voice-bridge` and the secrets to
-`~/.dodo-voice-bridge.env` because launchd jobs cannot read `~/Documents`.
 
 One process serves every engine by path: Dodo's `/ws/prod` → `https://feynd.cc`
 and `/ws/dev` → `http://localhost:3100` (turn route `/api/f2/eleven/turn`), and
 Polly's `/ws/polly-prod` → `https://hilma-nine.vercel.app/api/polly/eleven/turn`
 and `/ws/polly-dev` → the same path on localhost (`DODO_BRIDGE_BACKENDS`
-overrides; a bare origin means Dodo's route). Run
-**one** bridge at a time: each start re-points both engines at its own tunnel.
+overrides; a bare origin means Dodo's route).
 
-## Why a Cloudflare quick tunnel
+Before Railway the bridge lived a day on Bart's MacBook Air (2026-09-20) and an
+afternoon on the Mac mini (2026-09-21, launchd `com.dodo.voicebridge` behind a
+Cloudflare quick tunnel; stopped and uninstalled the same evening, the copy in
+`~/dodo-voice-bridge-src` and `~/.dodo-voice-bridge.env` left in place). **The
+Air's launchd job was never uninstalled** — its old `run.sh` re-points all
+four engines at the Air's tunnel whenever it restarts while the Air is awake.
+Run `bash apps/dodo-voice-bridge/install.sh uninstall` there, then
+`node engines.mjs https://dodo-voice-bridge-production.up.railway.app` if the engines moved.
+
+## Running it on a dev machine
+
+```bash
+bash apps/dodo-voice-bridge/run.sh          # foreground; Ctrl-C stops the bridge and the tunnel
+```
+
+Needs `node`, `cloudflared` (`brew install cloudflared`), and the two secrets
+in `.env.local` (`ELEVENLABS_API_KEY` verifies the JWT ElevenLabs signs every
+connection with; `DODO_BRIDGE_SECRET` must equal the backend's). It starts the
+bridge on :3901, a Cloudflare quick tunnel in front of it, and re-points **only
+the two dev engines** ("Dodo (dev)", "Polly (dev)") at the tunnel's hostname —
+`engines.mjs <origin> dev`. The production engines stay on Railway; nothing on
+a dev machine touches them. (`install.sh` turns the same thing into a launchd
+job for a Mac that has to stand in for Railway.)
 
 ElevenLabs needs a public `wss://` URL. tunn3l's HTTP mode does not pass
-WebSocket upgrades (502, tried 2026-09-20), and ngrok's token on the MacBook Air was
-revoked. A quick tunnel needs no account; its hostname changes on every start,
-which is why `run.sh` re-runs `engines.mjs` each time. A named Cloudflare
-tunnel or WebSocket support in tunn3l would make the URL permanent.
-
-## Where it runs
-
-The **Mac mini** (`admin@171.66.240.175`, always on), since 2026-09-21. It ran
-on Bart's MacBook Air for a day before that; the Air's launchd job is still
-installed and must be removed (`install.sh uninstall` there) — if it restarts
-while the Air is awake it re-points all four engines at the Air's tunnel.
-
-The mini has no checkout of this folder: the files were copied to
-`~/dodo-voice-bridge-src` and installed from there. To ship a change:
-`scp apps/dodo-voice-bridge/* admin@171.66.240.175:dodo-voice-bridge-src/`
-then `ssh admin@171.66.240.175 'bash ~/dodo-voice-bridge-src/install.sh'`.
-`~/.dodo-voice-bridge.env` on the mini holds the two secrets (both can be read
-back from Vercel with `vercel env pull <file> --environment production` — pull
-to a scratch file, never over `.env.local`).
+WebSocket upgrades (502, tried 2026-09-20), hence Cloudflare's quick tunnels for
+dev machines: no account, a new hostname on every start, which is why `run.sh`
+re-runs `engines.mjs` each time.
 
 ## Checking it
 
-`curl https://<tunnel>/health` → `{ ok, backends, sessions }`. The log has one
-line per turn: `turn 3: first text 1185 ms, 385 chars, 2631 ms`. End to end:
-`npx tsx scripts/test-eleven-dodo.ts` (see the reference doc).
+`curl https://dodo-voice-bridge-production.up.railway.app/health` → `{ ok, backends, sessions }`.
+The log (`railway logs`) has one line per turn:
+`[prod] turn 3: first text 1185 ms, 385 chars, 2631 ms`. End to end, against
+production: `ELEVEN_SPEECH_ENGINE_ID=<prod engine> npx tsx scripts/test-eleven-dodo.ts global --base https://feynd.cc --guest`
+(see the reference doc).
