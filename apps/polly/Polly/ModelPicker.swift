@@ -5,9 +5,9 @@ import SwiftUI
 /// backend registry (src/lib/f2/llm.ts) maps keys to providers. Keys must
 /// match that registry exactly.
 enum PollyChatModel: String, CaseIterable, Identifiable {
-    // A stored legacy "opus-4-8" / "fable-5" selection fails rawValue init
+    // A stored legacy "opus-5" / "opus-4-8" / "fable-5" selection fails rawValue init
     // and falls back to defaultModel, so old installs migrate automatically.
-    case opus = "opus-5"
+    case opus = "opus-5-5"
     case fable = "fable-5-1"
     case glm = "glm-5.2"
 
@@ -15,7 +15,7 @@ enum PollyChatModel: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .opus: return "Opus 5"
+        case .opus: return "Opus 5.5"
         case .fable: return "Fable 5.1"
         case .glm: return "GLM-5.2"
         }

@@ -231,9 +231,9 @@ Polly. The learner's setting is Profile → Learning → **Polly's care**
 (`polly_users.content_quality`, schema 008, account-wide via `PUT
 /api/polly/profile { content_quality }`; new language profiles inherit it);
 generators call `qualityFor(userId)` themselves, so background work honours
-it. Thorough changes the Infinity clean-up (Sonnet 5 medium → Opus 5 high),
-lesson/grammar/topic cards (Opus 5 medium → high) and answer grading (Haiku →
-Opus 5 low). Lesson-plan extraction is Opus 5 high for everyone. Analyses and
+it. Thorough changes the Infinity clean-up (Sonnet 5 medium → Opus 5.5 high),
+lesson/grammar/topic cards (Opus 5.5 medium → high) and answer grading (Haiku →
+Opus 5.5 low). Lesson-plan extraction is Opus 5.5 high for everyone. Analyses and
 lesson plans record what made them (`curated_by`, `model`).
 `LlmRequest.effort` overrides a model's registry effort per call.
 Answer grading uses a language rubric (`judgeRubric` in flash.ts): an answer
@@ -397,7 +397,7 @@ Database: `apps/polly/schema/` applied with `~/.local/bin/supabase db query --li
 
 ## Voice engine: ElevenLabs + Claude (default, every mode) or GPT-Live (2026-09-21)
 
-Profile → Voice → **Voice engine**, per device (`VoiceEngine` in `Polly/PollyVoiceClient.swift`, UserDefaults `voiceEngine`). Ported from Dodo — read `docs/f2-eleven-voice-reference.md` for how it works and `docs/f2-eleven-voice-setup.md` for the bridge, engines and env vars. ElevenLabs does the hearing and the voice (Alice, a multilingual voice, on `eleven_v3_conversational`); Claude Opus 5 writes every turn in `/api/polly/eleven/turn`.
+Profile → Voice → **Voice engine**, per device (`VoiceEngine` in `Polly/PollyVoiceClient.swift`, UserDefaults `voiceEngine`). Ported from Dodo — read `docs/f2-eleven-voice-reference.md` for how it works and `docs/f2-eleven-voice-setup.md` for the bridge, engines and env vars. ElevenLabs does the hearing and the voice (Alice, a multilingual voice, on `eleven_v3_conversational`); Claude Opus 5.5 writes every turn in `/api/polly/eleven/turn`.
 
 **Every mode runs on it and it is the default** (`VoiceEngine.fallback = .eleven`, 2026-09-21; phase 1 the day before was `topic` + `global` only). What GPT-Live did by appending instructions is a text message from the app here: `sendCue` is on the `PollyVoiceClient` protocol (the clean-up walk's "next card", built through `makePollyVoiceClient(chatId:)`), and the level check's silence nudge comes back from the session route as `eleven.silence_nudge { after_ms, cue }` — armed when the greeting ends, spent on any voice activity (`onVadScore`), a hold-to-talk press or a user transcript. Such messages start with `eleven.cue_prefix` (`[app] `, `ELEVEN_CUE_PREFIX` in `src/lib/f2/eleven.ts`): `turnMessages()` hands them to Claude as "a note from the app" and the client keeps them out of the transcript. The exams get the whole material (120,000 chars) where GPT-Live gets an excerpt (`engine` on the builders in `live.ts`). Prompt-level check of placement, clean-up and flash with scripted transcripts, no audio: `npx tsx scripts/polly/test-eleven-modes.ts`. The audio path for the level check, including the nudge sent as the app would: `scripts/polly/test-eleven-polly.ts --mode placement`. On the phone client, `-OpenInfinityDrill cleanup -VoiceLiveTest 1` walks the clean-up headlessly (`F2_LIVE_TEST cleanup` lines: `polly-opened`, one `cue-N-answered` per card, `transcript-uploaded`); the test account's Italian profile has one analysed chat for it. All three passed against production on 2026-09-21.
 

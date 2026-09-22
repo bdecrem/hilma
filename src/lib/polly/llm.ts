@@ -16,13 +16,14 @@ import Anthropic from '@anthropic-ai/sdk'
 // ---------------------------------------------------------------------------
 // Registry
 
-export type LlmModelKey = 'sonnet-5' | 'opus-5' | 'fable-5-1' | 'glm-5.2'
+export type LlmModelKey = 'sonnet-5' | 'opus-5-5' | 'fable-5-1' | 'glm-5.2'
 
 /** Retired keys still sent by older clients (stored iOS picker selections),
  *  mapped onto their successor. */
 const MODEL_ALIASES: Record<string, LlmModelKey> = {
   'fable-5': 'fable-5-1',
-  'opus-4-8': 'opus-5',
+  'opus-5': 'opus-5-5',
+  'opus-4-8': 'opus-5-5',
   'sonnet-4-6': 'sonnet-5',
 }
 
@@ -31,7 +32,7 @@ type ModelSpec = {
   apiModel: string
   label: string
   /** Anthropic thinking config. Omit entirely for models where thinking is
-   *  always on (Fable 5.1) or not wanted (Sonnet legacy path). */
+   *  always on (Fable 5.1, Opus 5.5) or not wanted (Sonnet legacy path). */
   thinking?: { type: 'adaptive' }
   /** output_config.effort — only sent when set. */
   effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
@@ -48,16 +49,19 @@ type ModelSpec = {
   /** On stop_reason "refusal" (Fable safety classifiers), retry the same
    *  request once on this model key. */
   refusalFallback?: LlmModelKey
-  /** Fable 5.1 returns 400 on tool_choice "any"/"tool". When false, forceTool
+  /** Fable 5.1 and Opus 5.5 return 400 on tool_choice "any"/"tool". When false, forceTool
    *  is emulated: tool_choice "auto", strict tool schemas, and a system-prompt
    *  instruction that one tool call is required. */
   supportsForcedToolChoice?: boolean
+  /** Effort a live turn (LlmRequest.noThinking) runs at on a model whose
+   *  thinking cannot be switched off. Unset = the model's normal effort. */
+  quickEffort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
 }
 
-// Always the latest of each tier (Bart, 2026-09-19): Sonnet 5, Opus 5,
-// Fable 5.1. Retired keys resolve through MODEL_ALIASES. 'sonnet-5' is the
-// default — requests that don't name a model (the web app, the background
-// jobs) run on it. The iOS/macOS picker exposes the other three.
+// Always the latest of each tier (Bart, 2026-09-19): Sonnet 5, Opus 5.5
+// (since 2026-09-22), Fable 5.1. Retired keys resolve through MODEL_ALIASES.
+// 'sonnet-5' is the default — requests that don't name a model (the web app,
+// the background jobs) run on it. The iOS/macOS picker exposes the other three.
 const MODELS: Record<LlmModelKey, ModelSpec> = {
   'sonnet-5': {
     provider: 'anthropic',
@@ -73,14 +77,19 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     maxTokensFloor: 8192,
     contextCharBudget: 2_400_000,
   },
-  'opus-5': {
+  'opus-5-5': {
     provider: 'anthropic',
-    apiModel: 'claude-opus-5',
-    label: 'Opus 5',
-    // Adaptive thinking
-    // (budget_tokens unsupported), 1M context standard, full effort range.
-    thinking: { type: 'adaptive' },
+    apiModel: 'claude-opus-5-5',
+    label: 'Opus 5.5',
+    // Thinking is always on (`disabled` is a 400, like Fable 5.1) — never
+    // send a thinking config; effort is the only dial (unset = the API's
+    // default, high, as Opus 5 ran). 1M context standard. Forced tool_choice
+    // is a 400 too, so forceTool is emulated (both checked live 2026-09-22).
     maxTokensFloor: 8192,
+    // A live turn (noThinking) cannot switch thinking off here, so it runs
+    // at low effort instead.
+    quickEffort: 'low',
+    supportsForcedToolChoice: false,
     contextCharBudget: 3_000_000,
   },
   'fable-5-1': {
@@ -90,8 +99,9 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     // Thinking is always on for Fable 5.1 — never send a thinking config.
     effort: 'medium',
     maxTokensFloor: 8192,
-    // Permitted fallback targets on Fable 5.1 are opus-4-8 and opus-5.
-    refusalFallback: 'opus-5',
+    // A client-side retry (llmComplete again on this key), not the API's
+    // server-side fallbacks parameter, so any registry key works here.
+    refusalFallback: 'opus-5-5',
     supportsForcedToolChoice: false,
     contextCharBudget: 3_000_000,
   },
@@ -108,7 +118,7 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
 }
 
 /** Keys the clients may select. The default (Sonnet 5) stays internal. */
-export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-5', 'fable-5-1', 'glm-5.2']
+export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-5-5', 'fable-5-1', 'glm-5.2']
 
 export const DEFAULT_MODEL: LlmModelKey = 'sonnet-5'
 
@@ -145,8 +155,9 @@ export type LlmRequest = {
    *  (Anthropic models only). */
   effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
   /** A live chat turn: thinking off, no effort config and no max-token floor,
-   *  so the reply comes back in a second or two (Anthropic models that accept
-   *  a thinking config only — Fable always thinks). */
+   *  so the reply comes back in a second or two — where the model can switch
+   *  thinking off (Sonnet 5). Opus 5.5 and Fable 5.1 always think; there the
+   *  turn keeps its floor and runs at the registry's quickEffort when set. */
   noThinking?: boolean
 }
 
@@ -236,7 +247,11 @@ async function anthropicComplete(
   const quick = Boolean(req.noThinking && spec.thinking)
   if (quick) params.thinking = { type: 'disabled' }
   else if (spec.thinking) params.thinking = spec.thinking
-  const effort = quick ? undefined : (req.effort ?? spec.effort)
+  const effort = quick
+    ? undefined
+    : req.noThinking && spec.quickEffort
+      ? spec.quickEffort
+      : (req.effort ?? spec.effort)
   if (effort) params.output_config = { effort }
   if (req.tools && req.tools.length > 0) {
     if (req.forceTool && canForce) {

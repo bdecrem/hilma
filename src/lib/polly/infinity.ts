@@ -52,7 +52,7 @@ export type InfinityAnalysis = {
   /// The quiz deck built from this conversation (polly_flash_cards ids on the
   /// Infinity topic; Peck-eligible by default). Set after clean-up.
   card_ids?: string[]
-  /// Which model and effort curated this ("opus-5:high") — for comparing qualities later.
+  /// Which model and effort curated this ("opus-5-5:high") — for comparing qualities later.
   curated_by?: string
   /// When the learner passed the quiz for this conversation.
   mastered_at?: string | null

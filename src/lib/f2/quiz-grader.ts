@@ -1,11 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { buildBudgetedContent, type F2Thread } from './threads'
 
-// Opus 5: quiz verdicts gate stars, and its 1M-token window means the FULL
+// Opus 5.5: quiz verdicts gate stars, and its 1M-token window means the FULL
 // book (plus summary/sources/quotes) is always in front of the grader.
 // Haiku's 200K window overflowed on book-sized topics and the failure path
 // silently credited the answer.
-const MODEL = 'claude-opus-5'
+const MODEL = 'claude-opus-5-5'
 const MAX_TRANSCRIPT_MESSAGES = 24
 
 // Structured-output schema: the API constrains the response to valid JSON of

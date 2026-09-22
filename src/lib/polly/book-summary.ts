@@ -9,7 +9,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { pollySupabase } from './supabase'
 import { gatherUserNotes, type PollyThread } from './threads'
 
-const BOOK_SUMMARY_MODEL = 'claude-opus-5'
+const BOOK_SUMMARY_MODEL = 'claude-opus-5-5'
 const MAX_WEB_SEARCHES = 8
 
 export type BookSummary = {

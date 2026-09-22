@@ -4,7 +4,7 @@
 import { llmComplete } from '../../src/lib/polly/llm'
 const tools = [{ name: 'reply', description: 'Reply to the learner.', input_schema: { type: 'object' as const, properties: { text: { type: 'string' } }, required: ['text'] } }]
 async function main() {
-  for (const model of [undefined, 'sonnet-4-6', 'opus-4-8', 'fable-5-1'] as const) {
+  for (const model of [undefined, 'sonnet-4-6', 'opus-4-8', 'opus-5', 'fable-5-1'] as const) {
     const t = Date.now()
     try {
       const r = await llmComplete({ model, system: 'You are a terse Italian tutor.', messages: [{ role: 'user', content: 'Say "good morning" in Italian.' }], maxTokens: 300, tools, forceTool: true } as never)

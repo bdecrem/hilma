@@ -1,7 +1,7 @@
 // The content-quality setting over HTTP, as the app does it, on ONE fresh
 // guest (deleted at the end): default is fast → a clean-up is stamped
 // sonnet-5:medium → PUT deep → a French profile inherits it → a second
-// clean-up is stamped opus-5:high → typed answers are graded with the
+// clean-up is stamped opus-5-5:high → typed answers are graded with the
 // language rubric (a wrong form fails, a missing accent passes).
 //   node scripts/polly/quality-http-check.mjs <transcripts.json> [base-url]
 // transcripts.json: supabase db query output with { rows: [{ title, transcript }] }.
@@ -34,7 +34,7 @@ try {
   check(bad === 1, 'an unknown quality is refused')
   check((await api('/api/polly/profile', 'PUT', { content_quality: 'deep' })).content_quality === 'deep', 'PUT deep')
   check((await api('/api/polly/profile')).content_quality === 'deep', 'the setting persists')
-  check((await cleanup(rows[1] ?? rows[0])).curated_by === 'opus-5:high', 'thorough clean-up is curated by opus-5:high')
+  check((await cleanup(rows[1] ?? rows[0])).curated_by === 'opus-5-5:high', 'thorough clean-up is curated by opus-5-5:high')
 
   // Grading: the language rubric, through the app's own submit call.
   const cards = sql(`select id, question, answer from polly_flash_cards where user_id='${uid}' and cloze_text is null and question like 'How do you say%' limit 2`)

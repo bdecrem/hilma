@@ -1184,7 +1184,7 @@ const JUDGE_MODEL = 'claude-haiku-4-5'
 /// on a huge context, and the verdict gates a mastery star — that's a
 /// strategic-reading job, not a per-card check, so it gets the big model.
 /// High-volume per-card judges stay on Haiku.
-const GRADER_MODEL = 'claude-opus-5'
+const GRADER_MODEL = 'claude-opus-5-5'
 
 let _anthropic: Anthropic | null = null
 function anthropic(): Anthropic {

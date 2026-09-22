@@ -4,6 +4,7 @@ import { runGlobalTurn } from '@/lib/f2/global-chat'
 import {
   bridgeSecret,
   elevenModel,
+  elevenThinking,
   elevenOpeningInstruction,
   getElevenSession,
   setElevenConversationId,
@@ -74,7 +75,7 @@ export async function POST(req: Request) {
                 system: session.system_prompt,
                 messages,
                 model: elevenModel(),
-                thinking: 'disabled',
+                thinking: elevenThinking(),
                 effort: 'low',
                 maxTokens: 2048,
                 signal: req.signal,

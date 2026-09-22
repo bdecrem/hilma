@@ -117,11 +117,11 @@ async function testModel(key: string | null): Promise<boolean> {
 async function main() {
   const keys = process.argv.slice(2).length
     ? process.argv.slice(2).map((k) => (k === 'default' ? null : k))
-    : [null, 'opus-5', 'fable-5-1', 'glm-5.2']
+    : [null, 'opus-5-5', 'fable-5-1', 'glm-5.2']
 
   let allOk = true
   for (const key of keys) {
-    console.log(`\nModel: ${key ?? '(default → sonnet-4-6)'}`)
+    console.log(`\nModel: ${key ?? '(default → sonnet-5)'}`)
     if (!(await testModel(key))) allOk = false
   }
   console.log(allOk ? '\nAll models passed.' : '\nFAILURES — see above.')

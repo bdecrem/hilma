@@ -27,8 +27,8 @@ export type Feature =
   | 'answerJudge'   // grading typed and spoken card answers
 
 const SONNET: Tier = { model: 'sonnet-5', effort: 'medium' }
-const OPUS: Tier = { model: 'opus-5', effort: 'medium' }
-const OPUS_HIGH: Tier = { model: 'opus-5', effort: 'high' }
+const OPUS: Tier = { model: 'opus-5-5', effort: 'medium' }
+const OPUS_HIGH: Tier = { model: 'opus-5-5', effort: 'high' }
 
 export const TIERS: Record<Feature, Record<Quality, Tier>> = {
   // The learner is waiting on a spinner right after talking, and Sonnet's
@@ -46,7 +46,7 @@ export const TIERS: Record<Feature, Record<Quality, Tier>> = {
   topicCards: { fast: OPUS, deep: OPUS_HIGH },
   // One call per finished set. With the language rubric Haiku is 18/20 in
   // 2 s; Opus at low effort is 20/20 in ~6 s.
-  answerJudge: { fast: { model: 'claude-haiku-4-5' }, deep: { model: 'claude-opus-5', effort: 'low' } },
+  answerJudge: { fast: { model: 'claude-haiku-4-5' }, deep: { model: 'claude-opus-5-5', effort: 'low' } },
 }
 
 export function isQuality(v: unknown): v is Quality {

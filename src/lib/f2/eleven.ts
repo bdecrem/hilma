@@ -16,7 +16,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
 import { type RealtimeMode } from './realtime'
 
-const DEFAULT_MODEL = 'claude-opus-5'
+const DEFAULT_MODEL = 'claude-opus-5-5'
 const DEFAULT_EFFORT = 'low'
 const MAX_TURN_TOKENS = 2048
 /// What the client sends as a text message to make Dodo open a scripted
@@ -34,12 +34,17 @@ export function elevenModel(): string {
   return process.env.F2_ELEVEN_MODEL || DEFAULT_MODEL
 }
 
-/// Thinking is OFF by default: in a spoken turn the wait before the first
-/// word is what people feel. Measured 2026-09-20 on a topic session, time to
-/// first text was 1.0–1.3 s disabled against 2.9 s adaptive at low effort.
-/// F2_ELEVEN_THINKING=adaptive turns it back on.
-function elevenThinking(): 'adaptive' | 'disabled' {
-  return process.env.F2_ELEVEN_THINKING === 'adaptive' ? 'adaptive' : 'disabled'
+/// Thinking runs ADAPTIVE at low effort: Opus 5.5 (the default model since
+/// 2026-09-22) rejects `disabled` with a 400, like Fable. In a spoken turn
+/// the wait before the first word is what people feel; measured headless
+/// 2026-09-22 on a one-line tutor prompt, Opus 5.5 adaptive at low effort
+/// reached its first text in 1.4–1.6 s, against 0.9–2.1 s for Opus 5 with
+/// thinking off (the 2026-09-20 topic-session numbers were 1.0–1.3 s off,
+/// 2.9 s adaptive). F2_ELEVEN_THINKING=disabled is honoured for a
+/// F2_ELEVEN_MODEL that still accepts it (claude-opus-5); on Opus 5.5 it
+/// would fail every turn.
+export function elevenThinking(): 'adaptive' | 'disabled' {
+  return process.env.F2_ELEVEN_THINKING === 'disabled' ? 'disabled' : 'adaptive'
 }
 
 function elevenEffort(): 'low' | 'medium' | 'high' {

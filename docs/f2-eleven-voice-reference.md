@@ -6,7 +6,7 @@ Dodo's default voice engine since 2026-09-21 (`VoiceEngine.fallback`; GPT-Live, 
 
 ## The shape of a session
 
-**ElevenLabs Speech Engine** owns the audio: speech-to-text (`scribe_realtime`), turn-taking (`turn_v3`), barge-in, and the voice (Jessica on `eleven_v3_conversational`). **Claude Opus 5** owns the words. Speech Engine is ElevenLabs' bring-your-own-LLM product: for each user turn it sends the running transcript to OUR WebSocket server and speaks whatever text comes back.
+**ElevenLabs Speech Engine** owns the audio: speech-to-text (`scribe_realtime`), turn-taking (`turn_v3`), barge-in, and the voice (Jessica on `eleven_v3_conversational`). **Claude Opus 5.5** owns the words. Speech Engine is ElevenLabs' bring-your-own-LLM product: for each user turn it sends the running transcript to OUR WebSocket server and speaks whatever text comes back.
 
 ```
 phone ⇄ ElevenLabs (WebRTC, their Swift SDK)
@@ -15,10 +15,10 @@ phone ⇄ ElevenLabs (WebRTC, their Swift SDK)
    apps/dodo-voice-bridge   (a Node process; Vercel cannot host a WebSocket server)
             │  POST /api/f2/eleven/turn  { voice_session_id, transcript }   x-bridge-secret
             ▼
-   Vercel: Claude Opus 5, streamed plain text  →  bridge  →  ElevenLabs speaks it
+   Vercel: Claude Opus 5.5, streamed plain text  →  bridge  →  ElevenLabs speaks it
 ```
 
-It is a cascade, not a full-duplex model: there are no backchannels while the user talks, and a turn costs Claude's time-to-first-token plus the voice's. Measured 2026-09-20 on a topic session: first text 1.0–1.6 s (thinking off), first audio ≈ 2.0–2.4 s after the user stops (`eleven_flash_v2` is ≈ 0.5 s quicker and flatter). Barge-in stops Dodo in about a second.
+It is a cascade, not a full-duplex model: there are no backchannels while the user talks, and a turn costs Claude's time-to-first-token plus the voice's. Measured 2026-09-20 on a topic session: first text 1.0–1.6 s (thinking off), first audio ≈ 2.0–2.4 s after the user stops (`eleven_flash_v2` is ≈ 0.5 s quicker and flatter). Barge-in stops Dodo in about a second. Re-measured 2026-09-22 on Opus 5.5 (thinking cannot be switched off there): first text 1.4–1.6 s at low effort, headless, one-line tutor prompt.
 
 | Piece | Path |
 |---|---|
@@ -42,7 +42,7 @@ It is a cascade, not a full-duplex model: there are no backchannels while the us
 
 ## Connection flow
 
-1. `POST /api/f2/eleven/session` `{ mode, thread_id, card_ids, hold_to_talk }` → gates + prompt (`resolveVoiceStart`), a `f2_voice_sessions` row (`realtime_model` = `claude-opus-5`, `realtime_voice` = `elevenlabs`, the prompt in `system_prompt`), a WebRTC conversation token (`GET /v1/convai/conversation/token?agent_id=<engine id>`). Response:
+1. `POST /api/f2/eleven/session` `{ mode, thread_id, card_ids, hold_to_talk }` → gates + prompt (`resolveVoiceStart`), a `f2_voice_sessions` row (`realtime_model` = `claude-opus-5-5`, `realtime_voice` = `elevenlabs`, the prompt in `system_prompt`), a WebRTC conversation token (`GET /v1/convai/conversation/token?agent_id=<engine id>`). Response:
    ```json
    { "voice_session": { "id", "mode", "thread_id" },
      "eleven": { "conversation_token", "model", "hold_to_talk",
@@ -56,7 +56,7 @@ It is a cascade, not a full-duplex model: there are no backchannels while the us
 
 ## The Claude call (`streamElevenTurn`)
 
-`claude-opus-5` (`F2_ELEVEN_MODEL`), `max_tokens` 2048, **thinking disabled** — time to first word is what people feel (1.0–1.3 s against 2.9 s with adaptive thinking at low effort; `F2_ELEVEN_THINKING=adaptive` turns it back on), effort `low` (`F2_ELEVEN_EFFORT`). The system prompt is one cached block (it never changes within a session) and the conversation is cached behind it; the turn log line (`[f2/eleven] turn …`) carries `cache_read_input_tokens`, `first_text_ms`, `total_ms`. The persona carries the "no internal XML tags" line the Opus 5 notes ask for when thinking is off. No tools.
+`claude-opus-5-5` (`F2_ELEVEN_MODEL`), `max_tokens` 2048, **adaptive thinking at low effort** — Opus 5.5 rejects `disabled` with a 400 (moved 2026-09-22; measured headless on a one-line tutor prompt, its first text came at 1.4–1.6 s against 0.9–2.1 s for Opus 5 with thinking off; `F2_ELEVEN_THINKING=disabled` is honoured only for a `F2_ELEVEN_MODEL` that accepts it, such as `claude-opus-5`), effort `low` (`F2_ELEVEN_EFFORT`). The system prompt is one cached block (it never changes within a session) and the conversation is cached behind it; the turn log line (`[f2/eleven] turn …`) carries `cache_read_input_tokens`, `first_text_ms`, `total_ms`. The persona still carries the "no internal XML tags" line from the thinking-off days. No tools.
 
 ## Env
 

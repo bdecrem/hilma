@@ -61,7 +61,7 @@ async function main() {
     return
   }
   const file = rest[0]
-  const configs = rest.slice(1).length ? rest.slice(1) : ['sonnet-5:medium', 'opus-5:high']
+  const configs = rest.slice(1).length ? rest.slice(1) : ['sonnet-5:medium', 'opus-5-5:high']
   for (const cfg of configs) {
     const tier = tierOf(cfg)
     for (const row of rowsOf(file)) {

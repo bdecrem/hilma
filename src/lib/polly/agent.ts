@@ -1086,7 +1086,7 @@ ${instruction}`
     ]
     for (let turn = 0; turn < 10; turn++) {
       const res = await anthropic.messages.create({
-        model: 'claude-opus-5',
+        model: 'claude-opus-5-5',
         max_tokens: 6000,
         system,
         tools,
@@ -1805,7 +1805,7 @@ async function writeTopicDocument(
   const { default: Anthropic } = await import('@anthropic-ai/sdk')
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const res = await anthropic.messages.create({
-    model: 'claude-opus-5',
+    model: 'claude-opus-5-5',
     max_tokens: 8192,
     system: `You write a study document for a learner's personal library. Ground every claim in the source material; use web search when the brief calls for outside, related, or current information — otherwise skip it. Where you add general knowledge, make it accurate. Write in plain, direct prose — no filler, no hype, none of the tics of AI writing. Markdown structure (headings, lists, tables) only where it genuinely helps the format the user asked for.
 

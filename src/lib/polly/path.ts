@@ -31,7 +31,7 @@ export const LESSON_STEPS: LessonStep[] = ['talk', 'words', 'grammar']
 /// A Talk step counts once the learner actually said something, this often.
 const TALK_MIN_USER_TURNS = 3
 
-const PATH_MODEL = process.env.POLLY_PATH_MODEL || 'opus-5'
+const PATH_MODEL = process.env.POLLY_PATH_MODEL || 'opus-5-5'
 const WRITING_CLAIM_MS = 4 * 60 * 1000
 
 export type PathEntry = {

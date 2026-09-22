@@ -16,6 +16,10 @@ The rule for a row: the base is the right model for the job at the speed the
 moment allows; a deep tier exists only where a bake-off showed it buys
 something. Where the best model costs no wait, it is simply the base.
 
+Since 2026-09-22 the Opus tier is **Opus 5.5** (`claude-opus-5-5`; registry
+key `opus-5-5`). The rows and timings below were measured on Opus 5; the tier
+choices carried over unchanged. Re-run the bench before moving one.
+
 ## The table
 
 | Feature | Learner waiting? | Base (Fast) | Thorough | Why |
