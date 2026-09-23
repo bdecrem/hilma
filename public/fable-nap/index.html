@@ -3,68 +3,75 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#140a24">
+<meta name="theme-color" content="#f4ecdc">
 <title>Fable Naptime</title>
 <meta property="og:title" content="Fable 5.5 on Low, Getting Ready for a Nap">
 <meta property="og:image" content="https://hilma-nine.vercel.app/fable-nap/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Fraunces:ital@1&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;background:#140a24}
-body{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:16px;font-family:'Press Start 2P';color:#fff;overflow:hidden}
-body::after{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.3) 0 2px,transparent 2px 4px)}
-h1{font-size:13px;line-height:1.6;text-align:center;color:#ffe23f;text-shadow:3px 3px 0 #ff3fa4}
-.cap{font-size:10px;color:#2ef2ff;height:14px}
-.stage{width:min(90vw,420px);aspect-ratio:1;border:4px solid #2ef2ff;box-shadow:0 0 0 4px #140a24,0 0 0 8px #ff3fa4,0 0 40px rgba(255,63,164,.5);position:relative;background:#241650;overflow:hidden}
-.dim{position:absolute;inset:0;background:#05020c;opacity:0;animation:dim 12s steps(6) infinite;z-index:5;pointer-events:none}
-@keyframes dim{0%,55%{opacity:0}70%,95%{opacity:.72}100%{opacity:0}}
-svg{position:absolute;inset:0;width:100%;height:100%;shape-rendering:crispEdges}
-.fable{animation:walk 12s steps(24) infinite}
-@keyframes walk{0%{transform:translate(-30px,0)}20%{transform:translate(8px,0)}25%{transform:translate(8px,-6px)}35%,45%{transform:translate(8px,0)}55%,100%{transform:translate(8px,6px) }}
-.eyes-open{animation:eo 12s steps(1) infinite}.eyes-shut{animation:es 12s steps(1) infinite}
-@keyframes eo{0%,26%{opacity:1}27%,29%{opacity:0}30%,52%{opacity:1}53%,100%{opacity:0}}
-@keyframes es{0%,26%{opacity:0}27%,29%{opacity:1}30%,52%{opacity:0}53%,100%{opacity:1}}
-.yawn{animation:yawn 12s steps(1) infinite}@keyframes yawn{0%,24%{opacity:0}25%,32%{opacity:1}33%,100%{opacity:0}}
-.blanket{animation:blank 12s steps(8) infinite}@keyframes blank{0%,45%{transform:translateY(-60px);opacity:0}46%{opacity:1}55%,97%{transform:translateY(0);opacity:1}100%{opacity:0}}
-.z{fill:#ffe23f;opacity:0;animation:z 3s steps(6) infinite}
-.z2{animation-delay:1s}.z3{animation-delay:2s}
-.zs{animation:zs 12s steps(1) infinite}@keyframes zs{0%,58%{opacity:0}59%,96%{opacity:1}97%{opacity:0}}
-@keyframes z{0%{opacity:0;transform:translate(0,0)}30%{opacity:1}100%{opacity:0;transform:translate(14px,-40px)}}
-.lamp{animation:lamp 12s steps(1) infinite}@keyframes lamp{0%,55%{fill:#ffe23f}56%,100%{fill:#5a4a20}}
-.star{animation:tw 1.6s steps(2) infinite}
+html,body{height:100%}
+body{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;overflow:hidden;color:#2b2320;
+ background:radial-gradient(circle at 30% 20%,#fbf5e8,#f4ecdc 55%,#e9dcc4)}
+h1{font-family:'Fraunces',serif;font-style:italic;font-weight:400;font-size:clamp(20px,5vw,28px);text-align:center}
+.cap{font-family:'Caveat',cursive;font-size:24px;color:#b4543a;height:30px;transition:opacity .6s}
+svg{width:min(92vw,520px);height:auto;overflow:visible}
+.ink{fill:none;stroke:#2b2320;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw var(--d,2.4s) var(--t,0s) cubic-bezier(.6,0,.3,1) forwards}
+.wash{opacity:0;animation:wash 2s var(--t) ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes wash{to{opacity:1}}
+.breathe{transform-origin:200px 215px;animation:br 4.5s 13s ease-in-out infinite}
+@keyframes br{50%{transform:scaleY(1.035)}}
+.z{font-family:'Caveat';font-size:26px;fill:#b4543a;opacity:0;animation:z 5s ease-in-out infinite}
+@keyframes z{0%{opacity:0;transform:translate(0,0) rotate(0)}25%{opacity:.9}100%{opacity:0;transform:translate(30px,-70px) rotate(18deg)}}
+.moon{animation:sway 9s ease-in-out infinite;transform-origin:320px 20px}
+@keyframes sway{50%{transform:rotate(3deg)}}
+.awake{animation:gone 1.2s 9.8s ease forwards}@keyframes gone{to{opacity:0;transform:translateY(40px)}}
+.again{font-family:'Caveat';font-size:18px;color:#8a7c6c;background:none;border:0;cursor:pointer;text-decoration:underline;opacity:0;animation:wash 1s 16s forwards}
 </style>
 </head>
 <body>
-<h1>FABLE 5.5 ON LOW<br>NAPTIME.EXE</h1>
-<div class="stage">
-<svg viewBox="0 0 64 64">
-  <rect x="0" y="0" width="64" height="44" fill="#241650"/>
-  <rect x="0" y="44" width="64" height="20" fill="#3a2270"/>
-  <rect x="6" y="6" width="16" height="12" fill="#0b0616"/><rect x="6" y="6" width="16" height="12" fill="none" stroke="#2ef2ff" stroke-width="1"/>
-  <rect class="star" x="10" y="9" width="1" height="1" fill="#fff"/><rect class="star" x="17" y="13" width="1" height="1" fill="#fff" style="animation-delay:.8s"/>
-  <rect x="16" y="8" width="3" height="3" fill="#ffe23f"/><rect x="17" y="8" width="2" height="2" fill="#0b0616"/>
-  <rect x="52" y="22" width="2" height="22" fill="#8a4dff"/><rect class="lamp" x="48" y="16" width="10" height="6"/>
-  <rect x="26" y="40" width="32" height="6" fill="#8a4dff"/><rect x="26" y="46" width="2" height="4" fill="#8a4dff"/><rect x="56" y="46" width="2" height="4" fill="#8a4dff"/>
-  <rect x="26" y="38" width="32" height="3" fill="#fff"/><rect x="48" y="35" width="9" height="4" fill="#ffffff"/>
-  <g class="fable">
-    <rect x="34" y="28" width="12" height="10" fill="#5dff6a"/><rect x="33" y="30" width="14" height="6" fill="#5dff6a"/>
-    <rect x="35" y="26" width="2" height="2" fill="#5dff6a"/><rect x="43" y="26" width="2" height="2" fill="#5dff6a"/>
-    <g class="eyes-open"><rect x="37" y="31" width="2" height="2" fill="#0b0616"/><rect x="41" y="31" width="2" height="2" fill="#0b0616"/></g>
-    <g class="eyes-shut"><rect x="37" y="32" width="2" height="1" fill="#0b0616"/><rect x="41" y="32" width="2" height="1" fill="#0b0616"/></g>
-    <rect class="yawn" x="39" y="34" width="2" height="3" fill="#ff3fa4"/>
-    <rect x="31" y="21" width="18" height="2" fill="#ff3fa4"/><rect x="36" y="15" width="8" height="6" fill="#ff3fa4"/><rect x="44" y="13" width="2" height="2" fill="#ffe23f"/>
+<h1>Fable 5.5, on low, getting ready for a nap</h1>
+<svg viewBox="0 0 400 300" id="art">
+  <defs><filter id="w"><feTurbulence baseFrequency=".04" numOctaves="3" seed="4"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter></defs>
+  <!-- watercolor washes -->
+  <ellipse class="wash" style="--t:1s" cx="320" cy="78" rx="46" ry="42" fill="#f2c97a" opacity=".5" filter="url(#w)"/>
+  <path class="wash" style="--t:6s" d="M70 210 Q200 180 340 205 L345 250 Q200 262 65 250Z" fill="#9fb8d6" filter="url(#w)" opacity=".55"/>
+  <ellipse class="wash" style="--t:9s" cx="120" cy="196" rx="30" ry="16" fill="#e8a38c" filter="url(#w)"/>
+  <!-- hanging moon -->
+  <g class="moon">
+    <path class="ink" pathLength="1" style="--t:.3s;--d:1s" d="M320 0 V40"/>
+    <path class="ink" pathLength="1" style="--t:1s;--d:2.2s" d="M338 58 a34 34 0 1 0 6 44 a26 26 0 1 1 -6 -44z"/>
+    <path class="ink" pathLength="1" style="--t:2.6s;--d:1s" d="M300 78 q4 3 8 0"/>
   </g>
-  <g class="blanket"><rect x="28" y="36" width="28" height="6" fill="#ff3fa4"/><rect x="28" y="36" width="28" height="1" fill="#ff8ac8"/><rect x="32" y="38" width="2" height="2" fill="#ffe23f"/><rect x="42" y="38" width="2" height="2" fill="#ffe23f"/><rect x="50" y="38" width="2" height="2" fill="#ffe23f"/></g>
-  <g class="zs" style="font-family:'Press Start 2P'"><text class="z" x="46" y="30" font-size="5">Z</text><text class="z z2" x="49" y="28" font-size="4">z</text><text class="z z3" x="51" y="26" font-size="3">z</text></g>
+  <!-- stars -->
+  <path class="ink" pathLength="1" style="--t:2s;--d:.8s" d="M60 50 l4 10 l-10 -6 h12 l-10 6z"/>
+  <path class="ink" pathLength="1" style="--t:2.4s;--d:.8s" d="M180 30 v10 M175 35 h10"/>
+  <!-- Fable: one looping line, stretching, yawning -->
+  <g class="awake">
+  <path class="ink" pathLength="1" style="--t:3.2s;--d:3.2s" d="M100 170 c-10 -30 10 -60 38 -52 c20 6 24 30 12 44 c-6 8 -18 10 -26 6 M138 118 c4 -20 -14 -38 -6 -52 c6 -10 18 0 10 12 M112 124 c-14 -16 -30 -30 -24 -44 c4 -9 16 -2 12 8"/>
+  <path class="ink" pathLength="1" style="--t:6s;--d:.9s" d="M114 140 q5 -4 10 0 M132 138 q5 -4 10 0"/>
+  <path class="ink" pathLength="1" style="--t:6.8s;--d:.8s" d="M124 154 a5 6 0 1 0 0.1 0"/>
+  </g>
+  <!-- bed -->
+  <g class="breathe">
+    <path class="ink" pathLength="1" style="--t:4.5s;--d:3s" d="M60 250 V190 q0 -14 14 -14 q12 0 14 14 V206 H320 V180 q0 -12 12 -12 q12 0 12 12 V250 M60 230 H344"/>
+    <path class="ink" pathLength="1" style="--t:7.5s;--d:2.2s" d="M92 210 c10 -18 44 -20 56 -6 M160 208 q80 -22 168 0 q-14 20 -30 22 q-110 10 -150 -4 q-10 -8 12 -18"/>
+    <path class="ink" pathLength="1" style="--t:9.5s;--d:1.6s" d="M190 220 q10 -8 20 0 q10 8 20 0 q10 -8 20 0 q10 8 20 0"/>
+  </g>
+  <!-- the wisp, now asleep on the pillow -->
+  <path class="ink" pathLength="1" style="--t:10.5s;--d:1.8s" d="M104 196 c0 -16 20 -22 32 -12 c6 6 2 16 -6 14 M112 194 q4 3 8 0 M124 193 q4 3 8 0"/>
+  <text class="z" x="150" y="170" style="animation-delay:12s">z</text>
+  <text class="z" x="160" y="160" style="animation-delay:13.6s;font-size:32px">Z</text>
+  <text class="z" x="145" y="165" style="animation-delay:15.2s;font-size:20px">z</text>
 </svg>
-<div class="dim"></div>
-</div>
 <div class="cap" id="cap"></div>
+<button class="again" onclick="location.reload()">again</button>
 <script>
-const lines=[[0,'WALKING TO BED...'],[2.9,'*YAAAWN*'],[4.1,'THINKING: MINIMAL'],[5.5,'BLANKET DEPLOYED'],[6.7,'LIGHTS OUT'],[7.5,'Zzz... (EFFORT: NONE)']];
-const cap=document.getElementById('cap'),t0=performance.now();
-(function tick(){const t=((performance.now()-t0)/1000)%12;let s='';for(const[a,l]of lines)if(t>=a)s=l;cap.textContent=s;requestAnimationFrame(tick)})();
+const lines=[[0,'first, a moon.'],[3.2,'a small stretch…'],[6,'a yawn, low effort.'],[7.5,'one blanket, no planning.'],[10.5,'and down.'],[12.5,'z z z']];
+const cap=document.getElementById('cap'),t0=performance.now();let last='';
+(function tick(){const t=(performance.now()-t0)/1000;let s='';for(const[a,l]of lines)if(t>=a)s=l;if(s!==last){last=s;cap.textContent=s}requestAnimationFrame(tick)})();
 </script>
 </body>
 </html>
