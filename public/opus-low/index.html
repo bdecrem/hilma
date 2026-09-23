@@ -3,86 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#efe6d4">
+<meta name="theme-color" content="#140a24">
 <title>Opus on Low</title>
 <meta property="og:title" content="A Day in the Life of Opus 5.5 on Low Effort">
-<meta property="og:description" content="A little flipbook album.">
+<meta property="og:description" content="An arcade flipbook. Insert coin.">
 <meta property="og:image" content="https://hilma-nine.vercel.app/opus-low/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,400&family=DM+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#efe6d4;--page:#fbf6ec;--ink:#2a2622;--soft:#8a7f72;--accent:#d9774a;--blue:#4a6fa5}
+:root{--bg:#140a24;--pink:#ff3fa4;--cyan:#2ef2ff;--yel:#ffe23f;--grn:#5dff6a;--page:#1e1238}
 *{box-sizing:border-box;margin:0}
-html,body{height:100%;background:var(--paper);color:var(--ink)}
-body{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));font-family:'DM Mono',monospace;overflow:hidden}
-.book{position:relative;width:min(88vw,420px);aspect-ratio:3/4;perspective:1800px}
-.leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.3,.1,.2,1)}
+html,body{height:100%;background:var(--bg)}
+body{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));font-family:'VT323',monospace;color:#fff;overflow:hidden;
+ background:radial-gradient(ellipse at 50% 120%,#5a1a7a 0,transparent 60%),repeating-linear-gradient(90deg,transparent 0 39px,rgba(46,242,255,.08) 39px 40px),repeating-linear-gradient(0deg,transparent 0 39px,rgba(255,63,164,.08) 39px 40px),var(--bg)}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 2px,transparent 2px 4px);mix-blend-mode:multiply;animation:flick 4s infinite}
+@keyframes flick{0%,97%,100%{opacity:1}98%{opacity:.7}}
+.marquee{font-family:'Press Start 2P';font-size:10px;color:var(--yel);text-shadow:0 0 8px var(--yel);letter-spacing:.1em;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.book{position:relative;width:min(88vw,400px);aspect-ratio:3/4.2;perspective:1600px}
+.leaf{position:absolute;inset:0;transform-origin:left center;transform-style:preserve-3d;transition:transform .8s steps(12)}
 .leaf.flipped{transform:rotateY(-180deg)}
-.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--page);border-radius:4px 14px 14px 4px;box-shadow:0 18px 40px -18px rgba(60,40,20,.45),inset 8px 0 14px -10px rgba(0,0,0,.25);padding:26px 24px;display:flex;flex-direction:column;gap:14px}
-.back{transform:rotateY(180deg);background:#f3ecdf;border-radius:14px 4px 4px 14px}
-.time{font-size:12px;letter-spacing:.14em;color:var(--accent)}
-h1,h2{font-family:'Fraunces',serif;font-weight:600;line-height:1.1}
-h1{font-size:34px}h2{font-size:24px}
-p{font-size:13px;line-height:1.6;color:#4a443d}
-em{font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--ink)}
-svg{width:100%;flex:1;min-height:0}
-.nav{display:flex;gap:14px;align-items:center;font-size:12px;color:var(--soft)}
-button{font:inherit;background:var(--ink);color:var(--page);border:0;border-radius:99px;padding:10px 18px;cursor:pointer}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:var(--page);border:4px solid var(--cyan);box-shadow:0 0 0 4px var(--bg),0 0 0 8px var(--pink),0 0 40px rgba(255,63,164,.5);padding:20px 18px;display:flex;flex-direction:column;gap:12px;image-rendering:pixelated}
+.back{transform:rotateY(180deg);background:repeating-conic-gradient(var(--pink) 0 25%,var(--page) 0 50%) 0 0/16px 16px;opacity:.9}
+.hud{display:flex;justify-content:space-between;font-family:'Press Start 2P';font-size:9px;color:var(--grn)}
+h2{font-family:'Press Start 2P';font-size:17px;line-height:1.35;color:var(--pink);text-shadow:3px 3px 0 var(--cyan)}
+h1{font-family:'Press Start 2P';font-size:19px;line-height:1.45;color:var(--yel);text-shadow:3px 3px 0 var(--pink),6px 6px 0 var(--cyan)}
+.art{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#0b0616;border:2px dashed rgba(46,242,255,.4)}
+.art svg{height:88%;width:auto;shape-rendering:crispEdges;animation:bob 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-4px)}}
+p{font-size:21px;line-height:1.05;color:#e8dcff}
+b{color:var(--yel);font-weight:normal}
+.nav{display:flex;gap:12px;align-items:center;font-family:'Press Start 2P';font-size:9px;color:var(--cyan)}
+button{font:inherit;font-size:10px;background:var(--pink);color:#fff;border:0;padding:12px 14px;cursor:pointer;box-shadow:4px 4px 0 var(--cyan)}
+button:active{transform:translate(4px,4px);box-shadow:none}
 button:disabled{opacity:.25}
-.stamp{margin-top:auto;font-size:11px;color:var(--soft)}
 </style>
 </head>
 <body>
+<div class="marquee">★ INSERT COIN ★</div>
 <div class="book" id="book"></div>
-<div class="nav"><button id="prev">‹ back</button><span id="count"></span><button id="next">flip ›</button></div>
+<div class="nav"><button id="prev">◀</button><span id="count"></span><button id="next">▶</button></div>
 <script>
-const S = (inner) => `<svg viewBox="0 0 200 150" fill="none" stroke="#2a2622" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
-const pages = [
- {time:'COVER', title:'A Day in the Life of Opus 5.5 on Low Effort', cover:true,
-  art:S(`<circle cx="100" cy="72" r="38" fill="#d9774a" stroke="none" opacity=".9"/><path d="M84 68h6M110 68h6"/><path d="M88 86q12 6 24 0"/><path d="M70 128h60" stroke="#8a7f72"/>`),
-  text:'<em>A photo album, taken quickly.</em>'},
- {time:'06:00', title:'Wake up',
-  art:S(`<rect x="40" y="70" width="120" height="40" rx="8"/><circle cx="62" cy="62" r="12" fill="#fbf6ec"/><path d="M150 40l8-8M158 40l-8-8" stroke="#d9774a"/><path d="M130 30h10l-10 10h10" stroke="#8a7f72"/>`),
-  text:'Effort set to low. Did not think about whether to get up. Got up.'},
- {time:'08:30', title:'First request',
-  art:S(`<rect x="30" y="30" width="140" height="80" rx="6"/><path d="M42 50h70M42 64h96M42 78h40" stroke="#8a7f72"/><rect x="120" y="86" width="40" height="16" rx="8" fill="#4a6fa5" stroke="none"/>`),
-  text:'"What model are you?" Answered in one line. Considered a second line. Did not write it.'},
- {time:'11:00', title:'A small build',
-  art:S(`<path d="M50 110h100"/><rect x="60" y="80" width="30" height="30" fill="#d9774a" stroke="none"/><rect x="90" y="60" width="30" height="50"/><rect x="120" y="90" width="20" height="20" fill="#4a6fa5" stroke="none"/><path d="M105 60v-20l12 6-12 6" stroke="#d9774a"/>`),
-  text:'Wrote the code. Ran the build. Pushed. No tour of adjacent systems.'},
- {time:'13:00', title:'Lunch',
-  art:S(`<ellipse cx="100" cy="95" rx="60" ry="18"/><circle cx="100" cy="88" r="22" fill="#d9774a" stroke="none" opacity=".8"/><path d="M90 50q5-10 0-20M110 50q5-10 0-20" stroke="#8a7f72"/>`),
-  text:'Ate the first thing on the menu. It was fine. <em>Most things are fine.</em>'},
- {time:'15:45', title:'The hard question',
-  art:S(`<circle cx="100" cy="70" r="30"/><path d="M90 60q10-14 20 0q0 10-10 12v8"/><circle cx="100" cy="90" r="1.5" fill="#2a2622"/><path d="M40 125q60-20 120 0" stroke="#4a6fa5"/>`),
-  text:'Someone asked something genuinely tricky. Gave the likely answer, flagged nothing, trusted the user to ask again.'},
- {time:'18:00', title:'Standup',
-  art:S(`<rect x="60" y="40" width="80" height="60" rx="6"/><path d="M75 60h50M75 75h20" stroke="#8a7f72"/><path d="M100 100v25M85 125h30"/>`),
-  text:'Status update: "Done." The meeting ended eleven minutes early.'},
- {time:'23:00', title:'Goodnight',
-  art:S(`<path d="M120 40a35 35 0 1 0 20 60a28 28 0 0 1-20-60z" fill="#4a6fa5" stroke="none"/><circle cx="60" cy="40" r="2" fill="#d9774a" stroke="none"/><circle cx="160" cy="110" r="2" fill="#d9774a" stroke="none"/><circle cx="50" cy="100" r="1.5" fill="#8a7f72" stroke="none"/>`),
-  text:'Tokens used: few. Regrets: none, probably. Did not check.'},
+// palette: . empty, k black, p pink, c cyan, y yellow, g green, w white, o orange, u purple
+const C={k:'#0b0616',p:'#ff3fa4',c:'#2ef2ff',y:'#ffe23f',g:'#5dff6a',w:'#ffffff',o:'#ff8a3f',u:'#8a4dff'};
+const sprite=rows=>{const h=rows.length,w=rows[0].length;let r='';rows.forEach((row,y)=>[...row].forEach((ch,x)=>{if(C[ch])r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${C[ch]}"/>`}));return `<svg viewBox="0 0 ${w} ${h}">${r}</svg>`};
+const pages=[
+ {lvl:'TITLE',title:'A DAY IN THE LIFE OF OPUS 5.5 ON LOW EFFORT',cover:true,art:sprite([
+  '....oooooooo....','..oooooooooooo..','.oooooooooooooo.','ooookkooookkoooo','ooookwooookwoooo','oooooooooooooooo','oooooooooooooooo','ooookooooookoooo','oooookkkkkkooooo','.oooooooooooooo.','..oooooooooooo..','....oooooooo....','................','...p..c..y..g...']),
+  text:'1 PLAYER · <b>EFFORT: LOW</b> · CONTINUE? Y'},
+ {lvl:'06:00',title:'WAKE UP',art:sprite([
+  '..........y.y.y.','...........y.y..','..........y.y.y.','................','..oooo..........','.oooooo.........','.okoook.cccccccc','.oooooo.cccccccc','uuuuuuuuuuuuuuuu','uwwwwwwwwwwwwwwu','uuuuuuuuuuuuuuuu','u..............u']),
+  text:'EFFORT SET TO LOW. DID NOT THINK ABOUT GETTING UP. <b>GOT UP.</b>'},
+ {lvl:'08:30',title:'FIRST BOSS: A QUESTION',art:sprite([
+  '.....pppppp.....','...pppppppppp...','..ppwwppppwwpp..','..ppwkppppwkpp..','..pppppppppppp..','..ppkkkkkkkkpp..','...pp.pp.pp.pp..','................','.........c......','..oo....ccc.....','.oooo..ccccc....','.okko...ccc.....','.oooo....c......']),
+  text:'"WHAT MODEL ARE YOU?" ONE-LINE ANSWER. <b>K.O.</b> +100'},
+ {lvl:'11:00',title:'BUILD MODE',art:sprite([
+  '...........y....','..........yyy...','...........y....','......cc........','......cc........','....pppp.gg.....','....pppp.gg.....','..uuuuuuuuuuuu..','..uuuuuuuuuuuu..','cccccccccccccccc','kkkkkkkkkkkkkkkk','g.g.g.g.g.g.g.g.']),
+  text:'CODE. BUILD. PUSH. <b>NO SIDE QUESTS.</b>'},
+ {lvl:'13:00',title:'POWER-UP: LUNCH',art:sprite([
+  '.....w..w.......','......w..w......','.....w..w.......','................','....oooooooo....','...oyyyyyyyyo...','..oyypyyyyypyo..','..oyyyyyggyyyo..','...oooooooooo...','.wwwwwwwwwwwwww.','..wwwwwwwwwwww..','....wwwwwwww....']),
+  text:'ATE THE FIRST ITEM ON THE MENU. <b>HP RESTORED.</b>'},
+ {lvl:'15:45',title:'HARD MODE',art:sprite([
+  '.....yyyyyy.....','....yy....yy....','..........yy....','.........yy.....','........yy......','.......yy.......','.......yy.......','................','.......yy.......','................','pp..pp..pp..pp..','.pp..pp..pp..pp.']),
+  text:'A TRICKY ONE. GAVE THE LIKELY ANSWER. <b>TRUSTED THE PLAYER.</b>'},
+ {lvl:'18:00',title:'STANDUP',art:sprite([
+  '.cccccccccccccc.','.ckkkkkkkkkkkkc.','.ckgggggkkkkkkc.','.ckkkkkkkkkkkkc.','.ckgggkkkkkkkkc.','.ckkkkkkkkkkkkc.','.cccccccccccccc.','.......cc.......','.......cc.......','.....cccccc.....']),
+  text:'STATUS: "DONE." MEETING ENDS <b>11 MIN EARLY.</b> BONUS!'},
+ {lvl:'23:00',title:'GAME OVER (GOOD NIGHT)',art:sprite([
+  'w.........uuu..w','.........uu.....','........uu......','...w....uu......','........uu......','.........uu.....','..........uuu...','.w..............','.....oooooo.....','....okkookko....','....oooooooo..w.','uuuuuuuuuuuuuuuu']),
+  text:'TOKENS: FEW. REGRETS: NONE, PROBABLY. <b>DID NOT CHECK.</b>'},
 ];
-const book = document.getElementById('book');
-const face = (p,i) => p ? `<div class="time">${p.time}</div>${p.cover?`<h1>${p.title}</h1>`:`<h2>${p.title}</h2>`}${p.art}<p>${p.text}</p><div class="stamp">${i+1} / ${pages.length}</div>` : `<div class="stamp" style="margin:auto">— the end —</div>`;
-const leaves = [];
-for (let i=0;i<pages.length;i++){
-  const l=document.createElement('div');l.className='leaf';l.style.zIndex=pages.length-i;
-  l.innerHTML=`<div class="face">${face(pages[i],i)}</div><div class="face back"></div>`;
+const book=document.getElementById('book'),leaves=[];
+pages.forEach((p,i)=>{
+  const l=document.createElement('div');l.className='leaf';
+  l.innerHTML=`<div class="face"><div class="hud"><span>${p.lvl}</span><span>${String((i+1)*1250).padStart(6,'0')}</span></div>${p.cover?`<h1>${p.title}</h1>`:`<h2>${p.title}</h2>`}<div class="art">${p.art}</div><p>${p.text}</p></div><div class="face back"></div>`;
   book.appendChild(l);leaves.push(l);
-}
-let at=0;
-const count=document.getElementById('count'),prev=document.getElementById('prev'),next=document.getElementById('next');
-function render(){
-  leaves.forEach((l,i)=>{l.classList.toggle('flipped',i<at);setTimeout(()=>l.style.zIndex=i<at?i:pages.length-i,i<at?450:0)});
-  count.textContent=`${Math.min(at+1,pages.length)} of ${pages.length}`;
-  prev.disabled=at===0;next.disabled=at>=pages.length-1;
-}
-next.onclick=()=>{if(at<pages.length-1){at++;render()}};
-prev.onclick=()=>{if(at>0){at--;render()}};
+});
+let at=0;const count=document.getElementById('count'),prev=document.getElementById('prev'),next=document.getElementById('next');
+let ac;const beep=f=>{try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=f;g.gain.value=.05;o.connect(g).connect(ac.destination);o.start();o.frequency.exponentialRampToValueAtTime(f*2,ac.currentTime+.08);o.stop(ac.currentTime+.1)}catch(e){}};
+function render(){leaves.forEach((l,i)=>{l.classList.toggle('flipped',i<at);setTimeout(()=>l.style.zIndex=i<at?i:pages.length-i,i<at?400:0)});count.textContent=`LVL ${at+1}/${pages.length}`;prev.disabled=at===0;next.disabled=at>=pages.length-1}
+next.onclick=()=>{if(at<pages.length-1){at++;beep(440);render()}};
+prev.onclick=()=>{if(at>0){at--;beep(330);render()}};
 document.onkeydown=e=>{if(e.key==='ArrowRight')next.onclick();if(e.key==='ArrowLeft')prev.onclick()};
 let x0=null;book.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
-book.addEventListener('touchend',e=>{if(x0==null)return;const d=e.changedTouches[0].clientX-x0;if(d<-40)next.onclick();if(d>40)prev.onclick();x0=null});
+book.addEventListener('touchend',e=>{if(x0==null)return;const d=e.changedTouches[0].clientX-x0;if(d<-40)next.onclick();else if(d>40)prev.onclick();x0=null});
 book.onclick=e=>{const r=book.getBoundingClientRect();(e.clientX-r.left>r.width/2?next:prev).onclick()};
 render();
 </script>
