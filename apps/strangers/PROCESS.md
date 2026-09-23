@@ -179,3 +179,12 @@ Bugs found this way, worth knowing next time:
 5. Pick a palette: black, paper and **one** loud accent, plus one secondary colour for glow.
 6. Copy `scene.js` and replace the characters, palette, `BEATS`/`HITS` and the shot list. Keep the primitives and the post pipeline.
 7. Check a stills contact sheet, fix, render, check a motion contact sheet, fix, then deliver.
+
+## 9. The second one (Peck or Perish trailer) and what it added
+
+`apps/peck-trailer/` is the same pipeline with a product as the subject. What changed:
+- **Music chosen by measurement.** I pulled three candidate phonk tracks, printed RMS in 0.5 s steps for each, and picked the 30 s window with a quiet intro, a drop at 4 s, a lull in the middle and a second drop for the title card. The lull carries the story beat ("history says you lose").
+- **Reuse the product's own art.** The dodo, egg, rats, pig, monkey and ship are the game's Path2D geometry, re-inked with a heavier outline (×1.4), flat fills and halftone dots. For shading, use a dot pattern whose transform is `ctx.getTransform().inverse()`, so the dots stay screen-sized at any scale.
+- **Trailer structure:** a setup typed on in mono → the drop naming the threats, one per bar → the hero → a gameplay montage, one peck per beat → a meter climbing → the lull (the specimen under glass) → the turn (the eye opens, the glass breaks) → the title slammed word by word.
+- **Palette.** The game's teal and hot pink looked like synthwave and read as "AI slop" to Bart. The fix is an indie riso set: vermillion, ultramarine, sunflower and lime on cream and ink.
+- **Overlap.** In action shots, place the foe so its head touches the hero's outline at the moment of contact, rather than at the hero's centre. Compute it from the shapes' real extents.

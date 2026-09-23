@@ -111,7 +111,19 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Openlab** | `apps/openlab/` + `src/app/openlab/` | Vercel (`/openlab`) + Mac mini (Ollama behind `com.openlab.proxy` and tunn3l `openlab-mini`) | Open-source AI explorations, 2026-09 to 2027-03: local models on the Stanford mini (`qwen3.5:9b` via Ollama), constitution-as-prompt baseline, evals, corpus, fine-tuning. Frame, hardware notes and dated log in `apps/openlab/README.md`; each exploration is a numbered folder with its own README and `out/`. `/openlab` is a chat with the mini's model under the constitution; wiring in the README's "The chat page" |
 | **Jam (web)** | `src/app/jam/` + `public/jam/` | Vercel (`/jam`) | Mobile chat UI for Jambot: the whole groovebox (session, tools, agent loop, rendering) runs in the browser from a committed bundle; the server only signs LLM calls. See "Jam" below |
 | **Rock Paper Anything** | `src/app/rpa/` + `src/app/api/rpa/` + `src/lib/rpa/` + `apps/rpa/schema/` | Vercel (`/rpa`) | Showcase game for Jev, TypeSafe's System One model: things march on your gate, you type anything, and one Jev call judges the phrase against every enemy on screen at once; the probability is the damage. See "Rock Paper Anything" below |
+| **Code-drawn videos** (Strangers, Peck or Perish trailer) | `apps/strangers/` + `apps/peck-trailer/` | Rendered MP4 → `~/Desktop/<project>/` | Beat-synced vertical music edits drawn frame by frame on canvas (halftone, manga speed lines, RGB split, slammed type), rendered with Playwright + ffmpeg in about a minute. **The method is `apps/strangers/PROCESS.md`**: reference analysis, beat/lyric measurement, storyboard, characters, art style, render, checks. See "Making a video" below |
 | **Socratic** | `src/app/socratic/` + `src/lib/socratic/` | Vercel (`/socratic`) | Socratic law-tutor prototype for the Daniel Chen / Kathy Zeiler study: one Torts module, three study arms (plain assistant / Socratic / Socratic + coach agent), an observer agent grading every student turn, a key-gated researcher view. See "Socratic" below |
+
+### Making a video — the code-drawn edit method (2026-09-23)
+
+When Bart asks for a video, edit, trailer or "something that goes hard" to a song, use this method. The full recipe is `apps/strangers/PROCESS.md`; the two finished examples are `apps/strangers/` ("Strangers", Volt ⚡ vs Boo 👻, to "Speed is Life") and `apps/peck-trailer/` (the Peck or Perish trailer starring Dodo, to INTERWORLD's METAMORPHOSIS). Start a new one by copying `apps/peck-trailer/` (scene.js, index.html, render.mjs) and replacing the cast, palette, `BEATS`/`HITS` and shot list.
+
+- Look at a reference video with ffmpeg contact sheets (`fps=1,tile=4x3`) and scene-cut times (`select='gt(scene,0.25)'`).
+- Get music with `yt-dlp` (brew) and cut 30 s with ffmpeg. Measure beats, hits and loudness with librosa in a scratch venv, and get lyric word times from OpenAI `whisper-1` with word timestamps. Big moments land on hits, and something changes on every beat.
+- `scene.js` exposes a stateless `renderAt(t)`: seeded randomness per frame, 1080×1920, shots as `[start, end, draw]`, and a post pass for RGB split, slices, invert, flash, grain and vignette. `node render.mjs --stills … --sheet …` gives a contact sheet; `node render.mjs` renders the MP4.
+- Check stills sheets before the full render, then 4 fps sheets from the MP4.
+- Deliver the CRF-20 master (~90 MB) to `~/Desktop/<project>/`, plus a 6.5 Mbps copy (~25 MB) through SendUserFile, whose limit is 30 MB. Audio isn't committed (each README has the download command).
+- Palette: Bart called teal + hot pink "AI slop". The approved palette is indie riso: vermillion `#ff4b1f`, ultramarine `#3d3bff`, sunflower `#ffc31f`, lime `#b6f23a` on cream `#f7efdf` and ink `#16121c`. Keep one loud full-bleed colour, and never put a character on a background of its own colour.
 
 ### Jam — Jambot in the browser
 
