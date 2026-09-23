@@ -15,6 +15,7 @@
   --y1: #e9bd3a; --y2: #f6dc85; --y3: #fbeec0;
   --m1: #c9645a; --m2: #e0a39b;   /* the red margin, two strokes */
   --g1: #dfe8d4; --g2: #eef2e6;   /* the frame behind the plant */
+  --outline: #2a251c; --trunk: #7a5236; --soil: rgba(122,82,54,.07); --hatch: rgba(42,37,28,.13); /* the payoff scene (grow-scene.ts) */
   --mono: var(--font-mono), 'Courier Prime', 'Courier New', monospace;
   --hand: var(--font-hand), 'Caveat', cursive;
   position: relative;
@@ -263,3 +264,39 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; }
 .ot-plant .p-seed { fill: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) { .ot-btn, .ot-gear, .ot-thought .edit { transition: none; } }
+
+/* ---------- the payoff: a milestone day, the whole page becomes the garden ---------- */
+.ot-payoff {
+  position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
+  background: var(--paper);
+  background-image: repeating-linear-gradient(90deg, rgba(42,37,28,.02) 0 1px, transparent 1px 5px);
+  padding-top: env(safe-area-inset-top);
+}
+.ot-payoff-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  width: 100%; max-width: 640px; margin: 0 auto; padding: 14px calc(env(safe-area-inset-right) + 20px) 0 calc(env(safe-area-inset-left) + 20px);
+}
+.ot-payoff-stage { position: relative; flex: 1; min-height: 0; }
+.ot-payoff-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+.ot-payoff-hud { position: absolute; left: max(calc(env(safe-area-inset-left) + 20px), calc(50% - 300px)); top: 10px; pointer-events: none; }
+.ot-payoff-hud > * { text-shadow: 0 0 3px var(--paper), 0 0 6px var(--paper), 0 0 12px var(--paper), 0 0 20px var(--paper), 0 0 32px var(--paper); } /* legible over the canopy at old growth */
+.ot-payoff-name { font-family: var(--hand); font-weight: 600; font-size: clamp(40px, 8vw, 64px); line-height: 1; color: var(--ink); transform-origin: left bottom; }
+.ot-payoff-name.pop { animation: ot-pop .5s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes ot-pop { 0% { transform: scale(.8) rotate(-3deg); opacity: .3; } 100% { transform: none; opacity: 1; } }
+.ot-payoff-days { margin-top: 6px; font-size: 14px; color: var(--mute); }
+.ot-payoff-hint { margin: 0 0 2px; font-size: 11px; line-height: 1.5; letter-spacing: .3px; color: var(--dim); transition: opacity .8s; }
+.ot-payoff-hint.gone { opacity: 0; }
+/* the foot keeps its height from the start, so the plant never jumps when the words arrive */
+.ot-payoff-foot {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 166px;
+  width: 100%; max-width: 640px; margin: 0 auto;
+  padding: 10px calc(env(safe-area-inset-right) + 20px) calc(env(safe-area-inset-bottom) + 20px) calc(env(safe-area-inset-left) + 20px);
+}
+.ot-payoff-line { margin: 0; font-family: var(--hand); font-weight: 600; font-size: 38px; line-height: 1.05; color: var(--ink); opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
+.ot-payoff-sub { margin: 0; font-size: 12px; line-height: 1.5; color: var(--mute); opacity: 0; transition: opacity .6s .25s; }
+.ot-payoff-foot .ot-btn { margin-top: 8px; opacity: 0; transition: opacity .6s .5s; }
+.ot-payoff-foot.in .ot-payoff-line { opacity: 1; transform: none; }
+.ot-payoff-foot.in .ot-payoff-sub, .ot-payoff-foot.in .ot-btn { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .ot-payoff-name.pop { animation: none; } .ot-payoff-line, .ot-payoff-sub, .ot-payoff-foot .ot-btn { transition: none; } }
+/* the replay link on a milestone day, beside the streak's i */
+.ot-replay { font-size: 11px; }

@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LEVELS, pointsForEntry, type Level } from '@/lib/onething/levels';
+import { LEVELS, MILESTONES, pointsForEntry, type Level } from '@/lib/onething/levels';
 import Plant from './Plant';
+import Payoff from './Payoff';
 import copy from '@/lib/onething/copy.json';
 import { squareJpeg } from './picture';
 
@@ -59,6 +60,13 @@ function initials(name: string | null | undefined, phone: string): string {
   const n = (name ?? '').trim();
   if (n) return n.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return phone.replace(/\D/g, '').slice(-2) || '·';
+}
+/// Today's entry, if it landed on a streak milestone: what the payoff scene shows.
+function todayMilestone(me: Me | null): { day: string; streak: number; bonus: number; points: number } | null {
+  if (!me?.user || !me.today || !me.board?.doneToday) return null;
+  const e = me.entries?.find((x) => x.day === me.today);
+  const bonus = e ? MILESTONES[e.streak] : undefined;
+  return e && bonus ? { day: e.day, streak: e.streak, bonus, points: e.points } : null;
 }
 /// Days until the next level at one sentence a day from here; 0 = with today's sentence.
 function daysToNext(b: Board): number | null {
@@ -266,12 +274,23 @@ export default function Onething() {
   const [ending, setEnding] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const [payoff, setPayoff] = useState<{ streak: number; bonus: number; points: number } | null>(null);
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
     setMe((await r.json()) as Me);
   }, []);
   useEffect(() => { load(); }, [load]);
+  // A milestone day (streak 3, 7, 14, 30, 60, 100, 365) plays the payoff scene once per
+  // browser: on the visit the kept text links to, or right after the sentence is saved
+  // here. The key is written as it opens, so a reload doesn't play it twice.
+  useEffect(() => {
+    const m = todayMilestone(me);
+    if (!m) return;
+    const key = `onething:payoff:${m.day}:${m.streak}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { return; }
+    setPayoff(m);
+  }, [me]);
 
   async function post(url: string, body: unknown) {
     setBusy(true); setErr('');
@@ -396,6 +415,7 @@ export default function Onething() {
 
   const b = me.board!;
   const levels = me.levels ?? LEVELS;
+  const milestone = todayMilestone(me);
   const thoughtProps = {
     editing, editText, busy, err,
     onEditText: setEditText, onStart: startEdit, onSave: saveEdit,
@@ -522,6 +542,7 @@ export default function Onething() {
   return (
     <>
     <Defs />
+    {payoff && <Payoff streak={payoff.streak} bonus={payoff.bonus} points={payoff.points} onClose={() => setPayoff(null)} />}
     <main className="ot-page">
       <Mast me={me.user} view={view} onView={go} onSignout={signout} />
 
@@ -535,6 +556,7 @@ export default function Onething() {
           <div className="ot-streak">
             {streakWord}
             <button type="button" className="ot-info" aria-label="streak details" aria-expanded={details} aria-controls="ot-details" onClick={() => setDetails((d) => !d)}>i</button>
+            {milestone && <button type="button" className="ot-link quiet ot-replay" onClick={() => setPayoff(milestone)}>replay</button>}
           </div>
           {details && (
             <div className="ot-stats" id="ot-details">
