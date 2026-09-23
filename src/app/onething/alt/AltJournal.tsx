@@ -3,33 +3,34 @@
 import { useEffect, useState } from 'react';
 import './alt.css';
 
-/* The margins experiment. One ruled page for the month; every kept day is
- * a few lines of handwriting, and its doodle is a pen drawing that landed
- * wherever there was room — in the right margin beside the words, out in the
- * gutter over the red rule, or sprawled under the sentence and across the
- * next line. Which of the three, and the tilt, come from the day number, so
- * the page looks the same every visit and no two neighbours pose alike.
+/* The margins experiment, take two: literally in the margin. The lined
+ * block is narrower than the page and the words run its full width; every
+ * doodle sits in the blank margin to the right of the rules, its inner third
+ * overlapping the lined edge the way a drawing spills off the writing area.
+ * The tilt and a small vertical shove come from the day number, so the
+ * column of drawings does not line up like stamps.
  *
- * The grid: 28px rules. Every row is padding 6 + content + 22, and the
- * content is either n lines of 28px or a floated figure whose box is a whole
- * number of rules tall (112 = 4 rules beside the words, 140 = 5 rules under
- * them, minus the one rule it spills over), so rows stay on the grid whatever
- * the doodle does; the text wraps under a figure like ink around a sketch. */
+ * The grid: 28px rules on the block. A row is 6 + n×28 + 22; a row with a
+ * doodle is at least 4 rules tall so neighbouring drawings keep clear of
+ * each other. The doodle is absolutely placed off the row's right edge and
+ * takes no room in the flow. */
 
 type Entry = { id: string; day: string; text: string; doodle?: string | null; doodle_alt?: string | null };
 type Me = { user: { name?: string | null } | null; today?: string; entries?: Entry[] };
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-type Pose = 'margin' | 'gutter' | 'under';
-function poseFor(dayNo: number, lines: number): Pose {
-  if (dayNo % 5 === 0) return 'under';
-  if (dayNo % 3 === 0 && lines <= 2) return 'gutter';
-  return 'margin';
-}
 /// -5 … +5 degrees, spread so neighbours differ.
 function tiltFor(dayNo: number): number {
   return ((dayNo * 7) % 11) - 5;
+}
+/// How far the drawing is shoved down from the row's first line: 0, 14 or 28px.
+function shoveFor(dayNo: number): number {
+  return (dayNo % 3) * 14;
+}
+/// One day in four the drawing is bigger.
+function bigFor(dayNo: number): boolean {
+  return dayNo % 4 === 1;
 }
 
 function lines(text: string): string[] {
@@ -42,8 +43,7 @@ function addDays(day: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** The drawing in a box that is a whole number of rules tall (the float keeps
- * the row on the grid); the svg inside is what tilts. */
+/** The drawing, placed off the row's right edge into the margin. */
 function Fig({ svg, alt }: { svg: string; alt?: string | null }) {
   return (
     <div className="alt-fig">
@@ -75,25 +75,25 @@ export default function AltJournal() {
         <a className="ot-wordmark" href="/onething">onething<span>.</span>ink</a>
         <span className="ot-month-tag">{MONTHS[m - 1].toUpperCase()} {y} · MARGINS</span>
       </header>
+      <div className="alt-sheet">
       <ol className="alt-lines" aria-label={`${MONTHS[m - 1]} ${y}`}>
         {days.map((day) => {
           const n = Number(day.slice(8));
           const e = byDay.get(day);
           if (!e) return <li key={day} className="alt-row empty"><span className="alt-dayno faint">{n}</span></li>;
           const ts = lines(e.text);
-          const pose = e.doodle ? poseFor(n, ts.length) : 'none';
           return (
-            <li key={day} className={`alt-row pose-${pose}${day === today ? ' today' : ''}`} style={{ ['--tilt' as string]: `${tiltFor(n)}deg` }}>
-              <span className={`alt-dayno${pose === 'gutter' ? ' ringed' : ''}`}>{n}</span>
-              {e.doodle && pose !== 'under' && <Fig svg={e.doodle} alt={e.doodle_alt} />}
+            <li key={day} className={`alt-row${e.doodle ? ' drawn' : ''}${bigFor(n) ? ' big' : ''}${day === today ? ' today' : ''}`} style={{ ['--tilt' as string]: `${tiltFor(n)}deg`, ['--shove' as string]: `${shoveFor(n)}px` }}>
+              <span className="alt-dayno">{n}</span>
               <div className="alt-text">
                 {ts.map((t, i) => <p key={i} className="t">{t}</p>)}
               </div>
-              {e.doodle && pose === 'under' && <Fig svg={e.doodle} alt={e.doodle_alt} />}
+              {e.doodle && <Fig svg={e.doodle} alt={e.doodle_alt} />}
             </li>
           );
         })}
       </ol>
+      </div>
       <p className="alt-note">an experiment · <a href="/onething">back to the page</a></p>
     </main>
   );
