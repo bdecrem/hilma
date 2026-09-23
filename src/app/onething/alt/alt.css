@@ -1,0 +1,58 @@
+/* the margins experiment — see AltJournal.tsx for the grid maths */
+.ot-page.alt { padding-top: 22px; }
+.alt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+
+/* the ruled page: 28px rules, drawn on the list so drawings sit on paper, not in boxes */
+.alt-lines {
+  position: relative; list-style: none; margin: 0 -8px 0 0; padding: 0 0 28px 46px;
+  background-image: repeating-linear-gradient(transparent 0 26.5px, var(--rule) 26.5px 28px);
+  background-attachment: local;
+}
+.alt-lines::before, .alt-lines::after { content: ''; position: absolute; top: -18px; bottom: 0; pointer-events: none; }
+.alt-lines::before { left: 30px; width: 1.5px; background: var(--m1); }
+.alt-lines::after { left: 34px; width: 1px; background: var(--m2); }
+
+/* rows: 6 + n×28 + 22 keeps every row on the grid; empty days are one rule */
+.alt-row { position: relative; min-height: 84px; padding: 6px 0 22px; }
+.alt-row.empty { min-height: 28px; padding: 0; }
+.alt-dayno { position: absolute; left: -46px; top: 8px; width: 22px; text-align: right; font-size: 12px; line-height: 1.5; color: var(--dim); }
+.alt-dayno.faint { top: 4px; color: var(--faint); }
+.alt-row.today .alt-dayno { color: var(--ink); font-weight: 700; }
+/* the gutter days get their number circled, the way you'd mark the day the drawing spilled over */
+.alt-dayno.ringed { color: var(--red); }
+.alt-dayno.ringed::after { content: ''; position: absolute; left: -7px; top: -5px; width: 30px; height: 26px; border: 1.5px solid var(--red); border-radius: 55% 45% 50% 50% / 50% 55% 45% 50%; transform: rotate(-8deg); }
+
+.alt-text { position: relative; z-index: 1; }
+.alt-text .t { margin: 0; font-family: var(--hand); font-weight: 600; font-size: 22px; line-height: 28px; color: var(--ink); overflow-wrap: anywhere; }
+
+/* the drawings: a figure box a whole number of rules tall; the svg inside tilts */
+.alt-fig { position: relative; z-index: 0; }
+.alt-doodle { display: block; width: 100%; height: auto; transform: rotate(var(--tilt)); pointer-events: none; }
+.alt-doodle * { stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.alt-doodle .r { stroke: var(--red); }
+.alt-doodle .thin { stroke-width: 1.2; }
+.alt-doodle .f { fill: var(--ink); }
+.alt-doodle .fr { fill: var(--red); stroke: var(--red); }
+.alt-doodle text { stroke: none; fill: var(--ink); font-family: var(--hand); font-weight: 600; font-size: 20px; }
+
+/* margin: beside the words, hanging 18px off the right edge; 200 × 100 in a 4-rule box, words wrap under */
+.pose-margin { min-height: 140px; }                                    /* 6 + 112 + 22 */
+.pose-margin .alt-fig { float: right; width: 200px; height: 112px; margin: 0 -18px 0 10px; padding-top: 6px; }
+
+/* gutter: out over the red rule, the day number circled above it; 200 × 100, words step in */
+.pose-gutter { min-height: 140px; }
+.pose-gutter .alt-fig { float: left; width: 200px; height: 112px; margin: 0 8px 0 -34px; padding-top: 6px; }
+.pose-gutter .alt-dayno.ringed { top: -14px; }
+
+/* under: sprawled beneath the sentence, off to the right, its tail across the next rule */
+.pose-under .alt-fig { width: 260px; height: 140px; margin: 0 -22px -28px auto; padding-top: 4px; position: relative; z-index: 2; }
+
+.alt-note { margin-top: 18px; font-size: 11px; color: var(--dim); }
+.alt-note a { color: var(--red); }
+
+@media (max-width: 400px) {
+  .alt-lines { padding-left: 40px; }
+  .alt-lines::before { left: 24px; } .alt-lines::after { left: 28px; }
+  .alt-dayno { left: -40px; width: 18px; }
+  .pose-gutter .alt-fig { margin-left: -30px; }
+}
