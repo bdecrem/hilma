@@ -12,8 +12,9 @@ to be spoken. Prompts, tables and the Anthropic key stay on Vercel.
 
 | File | What |
 |---|---|
-| `server.mjs` | the bridge: JWT check on upgrade, `init` / `user_transcript` / `ping` / `close`, abort on barge-in |
-| `engines.mjs` | creates / updates the two Speech Engines (voice, turn-taking, `ws_url`) — idempotent, by name |
+| `server.mjs` | the bridge: JWT check on upgrade, `init` / `user_transcript` / `ping` / `close`, abort on barge-in. A `user_transcript` with the same `event_id` and transcript as the turn in flight is ElevenLabs re-sending it (no words within the engine's `cascade_timeout_seconds`): the reply in flight is kept, or replayed if it already finished |
+| `drill-slow-turn.mjs` | runs this folder's bridge behind a quick tunnel in front of a fake backend that waits `--delay` ms, on a throwaway engine with `--cascade` s, and checks the answer arrives. `CLOUDFLARED=<path> node drill-slow-turn.mjs --delay 25000 --cascade 15` (needs `npm ci` here once) |
+| `engines.mjs` | creates / updates the Speech Engines (voice, turn-taking, `ws_url`, `cascade_timeout_seconds: 15`) — idempotent, by name |
 | `railway.json` | the Railway service: start command, `/health` check, always restart |
 | `run.sh` | a bridge on a dev machine: bridge + Cloudflare quick tunnel + `engines.mjs … dev` (the two dev engines only) |
 | `install.sh`, `com.dodo.voicebridge.plist` | a launchd job for a Mac standing in for Railway (`KeepAlive`); not in use since 2026-09-21 |

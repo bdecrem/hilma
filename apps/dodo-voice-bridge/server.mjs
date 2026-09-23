@@ -118,7 +118,8 @@ httpServer.on('upgrade', (req, socket, head) => {
 })
 
 function handleConnection(ws, name, backend, voiceSessionId) {
-  const state = { conversationId: null, inflight: null }
+  // turn: the reply being produced (or last produced) — { eventId, key, controller, text, done, started }
+  const state = { conversationId: null, turn: null }
   sessions.add(ws)
 
   const send = (message) => {
@@ -140,12 +141,32 @@ function handleConnection(ws, name, backend, voiceSessionId) {
       case 'ping':
         send({ type: 'pong' })
         break
-      case 'user_transcript':
-        // A newer transcript means the user cut in: drop the turn in flight.
-        state.inflight?.abort()
-        state.inflight = new AbortController()
-        runTurn(message, state.inflight.signal).catch((err) => log(`[${name}] turn crashed:`, err))
+      case 'user_transcript': {
+        // ElevenLabs re-sends a turn it has had no text for within the engine's
+        // cascade_timeout_seconds — same event_id, same transcript. That is a
+        // retry, not a cut-in: cancelling the reply in flight and asking Claude
+        // again only restarts the clock, and after three tries ElevenLabs ends
+        // the conversation ("LLM Cascade Error", a Final Review lost that way
+        // on 2026-09-23). Keep the reply coming; replay it if it already ended.
+        const key = JSON.stringify(message.user_transcript ?? null)
+        const turn = state.turn
+        if (turn && turn.eventId === message.event_id && turn.key === key) {
+          const waited = Date.now() - turn.started
+          if (turn.done && turn.text) {
+            log(`[${name}] turn ${turn.eventId} re-sent after ${waited} ms, replaying the finished reply`)
+            send({ type: 'agent_response', content: turn.text, event_id: turn.eventId, is_final: false })
+            send({ type: 'agent_response', content: '', event_id: turn.eventId, is_final: true })
+          } else {
+            log(`[${name}] turn ${turn.eventId} re-sent after ${waited} ms, keeping the reply in flight`)
+          }
+          break
+        }
+        // A new turn means the user cut in: drop the reply in flight.
+        turn?.controller.abort()
+        state.turn = { eventId: message.event_id, key, controller: new AbortController(), text: '', done: false, started: Date.now() }
+        runTurn(message, state.turn).catch((err) => log(`[${name}] turn crashed:`, err))
         break
+      }
       case 'close':
         log(`[${name}] close`, state.conversationId)
         ws.close()
@@ -162,14 +183,15 @@ function handleConnection(ws, name, backend, voiceSessionId) {
 
   ws.on('close', (code, reason) => {
     clearInterval(keepalive)
-    state.inflight?.abort()
+    state.turn?.controller.abort()
     sessions.delete(ws)
     log(`[${name}] closed`, state.conversationId, code, reason?.toString() || '')
   })
   ws.on('error', (err) => log(`[${name}] socket error:`, err.message))
 
-  async function runTurn(message, signal) {
+  async function runTurn(message, turn) {
     const eventId = message.event_id
+    const signal = turn.controller.signal
     const started = Date.now()
     let firstChunkAt = null
     let chars = 0
@@ -195,9 +217,11 @@ function handleConnection(ws, name, backend, voiceSessionId) {
         if (!text) continue
         if (firstChunkAt === null) firstChunkAt = Date.now()
         chars += text.length
+        turn.text += text
         send({ type: 'agent_response', content: text, event_id: eventId, is_final: false })
       }
       if (chars === 0) throw new Error('backend returned no text')
+      turn.done = true
       send({ type: 'agent_response', content: '', event_id: eventId, is_final: true })
       log(`[${name}] turn ${eventId}: first text ${firstChunkAt - started} ms, ${chars} chars, ${Date.now() - started} ms`)
     } catch (err) {
@@ -209,6 +233,8 @@ function handleConnection(ws, name, backend, voiceSessionId) {
       // Mid-stream failures just end the sentence; a turn with no text gets the line.
       if (chars === 0) send({ type: 'agent_response', content: TURN_FAILED_LINE, event_id: eventId, is_final: false })
       send({ type: 'agent_response', content: '', event_id: eventId, is_final: true })
+      // A failed turn is not replayed: a retry of it asks the backend again.
+      if (state.turn === turn) state.turn = null
     }
   }
 }

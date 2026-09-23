@@ -64,6 +64,13 @@ function engineBody(engine) {
       // Dodo began answering half a question and was cut off by the rest of it.
       turn_eagerness: 'patient',
     },
+    // How long ElevenLabs waits for the first words of a reply before it
+    // re-sends the turn (three tries, then the conversation fails with "LLM
+    // Cascade Error"). The default is 4 s; Claude's first words after a long
+    // exam answer take 3.5–4 s plus the hop through Vercel, so long answers
+    // died (2026-09-23). 15 is the API's maximum. The bridge keeps a reply in
+    // flight across the re-sends, so the whole window is usable.
+    cascade_timeout_seconds: 15,
     conversation: {
       // A Final Review can run long; the default cap is ten minutes.
       max_duration_seconds: 3600,

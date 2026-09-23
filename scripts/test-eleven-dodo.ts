@@ -39,7 +39,8 @@ for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
   if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^"|"$/g, '')
 }
 
-const TEST_USER = 'newx-test@example.com' // never Bart's
+// F2_TEST_USER names another test account (the iMac's: newx-test-imac@example.com). Never Bart's.
+const TEST_USER = process.env.F2_TEST_USER || 'newx-test@example.com'
 const TEST_USER_ID = '853d0054-7de2-4359-9133-8c14ff3f2653'
 const DEFAULT_THREAD = 'a2b5d604-eb61-4538-b7fa-0470ea54c2c4' // French Revolution Overview
 const RATE = 16000
