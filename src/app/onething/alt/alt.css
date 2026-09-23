@@ -1,12 +1,12 @@
-/* the margins experiment, take two — see AltJournal.tsx for the grid maths */
-.ot-page.alt { max-width: 760px; padding-top: 22px; }
+/* the margins experiment, take three — see AltJournal.tsx for the grid maths */
+.ot-page.alt { max-width: 780px; padding-top: 22px; }
 .alt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 18px; }
 
-/* the sheet: the lined block on the left, a blank margin on the right where the drawings live.
-   Desktop: 480px of rules and the rest is margin. Phone: the rules give up 120px to the margin. */
-.alt-sheet { --paper-w: 480px; --gutter: 46px; position: relative; }
+/* the sheet: rules the full width; the words keep left of --margin; the drawings own the margin.
+   Desktop: slot 232 × 140 (five rules). Phone: slot 132 × 112 (four rules). */
+.alt-sheet { --gutter: 46px; --margin: 264px; --slot-w: 232px; --slot-h: 140px; position: relative; }
 .alt-lines {
-  position: relative; width: var(--paper-w); list-style: none; margin: 0; padding: 0 0 28px var(--gutter);
+  position: relative; list-style: none; margin: 0; padding: 0 0 28px var(--gutter);
   background-image: repeating-linear-gradient(transparent 0 26.5px, var(--rule) 26.5px 28px);
   background-attachment: local;
 }
@@ -14,35 +14,31 @@
 .alt-lines::before { left: calc(var(--gutter) - 16px); width: 1.5px; background: var(--m1); }
 .alt-lines::after { left: calc(var(--gutter) - 12px); width: 1px; background: var(--m2); }
 
-/* rows: 6 + n×28 + 22 keeps every row on the grid; a drawn row is at least four rules; empty days are one */
-.alt-row { position: relative; min-height: 56px; padding: 6px 0 22px; }
-.alt-row.drawn { min-height: 140px; }
-.alt-row.empty { min-height: 28px; padding: 0; }
-.alt-dayno { position: absolute; left: calc(0px - var(--gutter)); top: 8px; width: calc(var(--gutter) - 24px); text-align: right; font-size: 12px; line-height: 1.5; color: var(--dim); }
+/* rows: 6 + content + 22 keeps every row on the grid; a drawn row is the slot plus one rule; a gap is two rules */
+.alt-row { position: relative; min-height: 84px; padding: 6px var(--margin) 22px 0; }
+.alt-row.drawn { min-height: calc(var(--slot-h) + 28px); }
+.alt-row.gap { min-height: 56px; padding: 0; }
+.alt-dayno { position: absolute; right: calc(100% + 24px); top: 8px; text-align: right; font-size: 12px; line-height: 1.5; color: var(--dim); white-space: nowrap; }
 .alt-dayno.faint { top: 4px; color: var(--faint); }
 .alt-row.today .alt-dayno { color: var(--ink); font-weight: 700; }
 
-.alt-text { position: relative; z-index: 1; padding-right: 6px; }
 .alt-text .t { margin: 0; font-family: var(--hand); font-weight: 600; font-size: 22px; line-height: 28px; color: var(--ink); overflow-wrap: anywhere; }
 
-/* the drawing: off the row's right edge, a third of it back over the rules, shoved and tilted per day */
-.alt-fig { position: absolute; z-index: 0; top: var(--shove); left: calc(100% - 60px); width: 220px; pointer-events: none; }
-.alt-row.big .alt-fig { width: 270px; left: calc(100% - 90px); top: calc(var(--shove) - 10px); }
-.alt-doodle { display: block; width: 100%; height: auto; transform: rotate(var(--tilt)); }
-.alt-doodle * { stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+/* the slot: top-aligned with the entry's first line, flush with the page's right edge */
+.alt-fig { position: absolute; top: 6px; right: 0; width: var(--slot-w); height: var(--slot-h); pointer-events: none; }
+.alt-doodle { display: block; width: 100%; height: 100%; overflow: visible; transform: rotate(var(--tilt)); }
+/* one pen for every drawing, whatever its scale */
+.alt-doodle * { stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .alt-doodle .r { stroke: var(--red); }
 .alt-doodle .thin { stroke-width: 1.2; }
 .alt-doodle .f { fill: var(--ink); }
 .alt-doodle .fr { fill: var(--red); stroke: var(--red); }
-.alt-doodle text { stroke: none; fill: var(--ink); font-family: var(--hand); font-weight: 600; font-size: 20px; }
+.alt-doodle text { stroke: none; fill: var(--ink); font-family: var(--hand); font-weight: 600; font-size: 26px; }
 
 .alt-note { margin-top: 18px; font-size: 11px; color: var(--dim); }
 .alt-note a { color: var(--red); }
 
-/* phones and small tablets: the rules take the page minus a 120px margin; drawings 180 (big 210), 55 back over the rules */
 @media (max-width: 640px) {
-  .alt-sheet { --paper-w: calc(100% - 120px); --gutter: 40px; }
-  .alt-fig { width: 180px; left: calc(100% - 45px); }
-  .alt-row.big .alt-fig { width: 210px; left: calc(100% - 70px); }
+  .alt-sheet { --gutter: 40px; --margin: 140px; --slot-w: 132px; --slot-h: 112px; }
   .alt-text .t { font-size: 20px; }
 }
