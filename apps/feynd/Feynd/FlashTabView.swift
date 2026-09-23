@@ -38,6 +38,10 @@ struct FlashTabView: View {
     /// Set when the just-played set cleared a band-ending level for the
     /// first time; presented once its results cover is gone.
     @State private var pendingCrossing: Int? = nil
+    /// Peck or Perish, the rest-stop minigame (5, 15, 25, …): the one on
+    /// screen, and a first clear waiting for its results cover to close.
+    @State private var gameStop: PeckGameStop? = nil
+    @State private var pendingGame: Int? = nil
     /// The level in flight and whether it was still unlocked (first clear).
     @State private var playingLevel: Int? = nil
     @State private var playingWasFirstClear = false
@@ -135,6 +139,9 @@ struct FlashTabView: View {
                 regionCrossing = nil
             }
         }
+        .fullScreenCover(item: $gameStop) { stop in
+            PeckGameView(level: stop.level) { gameStop = nil }
+        }
         .fullScreenCover(isPresented: $showDemoReel) {
             DemoReelView { showDemoReel = false }
         }
@@ -145,6 +152,12 @@ struct FlashTabView: View {
                 pendingCrossing = nil
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
                     regionCrossing = RegionCrossing(clearedLevel: cleared)
+                }
+            }
+            if coversGone, let stop = pendingGame {
+                pendingGame = nil
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    gameStop = PeckGameStop(level: stop)
                 }
             }
         }
@@ -248,6 +261,14 @@ struct FlashTabView: View {
                                    highestPassed: st.highestPassed, levels: st.levels,
                                    dailyStreak: streak, xpMultiplier: mult,
                                    peckDue: f.string(from: due), peckDaysLeft: left)
+            }
+            #endif
+            #if targetEnvironment(simulator) || (targetEnvironment(macCatalyst) && DEBUG)
+            // `-PlayPeckGame 5` — open that rest stop's minigame, no taps.
+            let game = UserDefaults.standard.integer(forKey: "PlayPeckGame")
+            if game > 0 {
+                UserDefaults.standard.removeObject(forKey: "PlayPeckGame")
+                gameStop = PeckGameStop(level: game)
             }
             #endif
             checkStreakMilestone()
@@ -560,6 +581,25 @@ struct FlashTabView: View {
                                 .id(level.level)
                         }
 
+                        // A cleared rest stop's signpost replays its game
+                        // (the sign is drawn by PeckTrailLayer at ±78, +20).
+                        ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
+                            if PeckMilestone.isRest(level.level) && level.status == "passed" {
+                                let side: CGFloat = world.zig(i) > 0 ? -1 : 1
+                                Button {
+                                    FlashSFX.shared.play(.tap)
+                                    gameStop = PeckGameStop(level: level.level)
+                                } label: {
+                                    Color.clear
+                                        .frame(width: 100, height: 64)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Play Peck or Perish, rest stop \(level.level)")
+                                .position(x: xFor(i) + side * 78, y: yFor(i) - 8)
+                            }
+                        }
+
                         // The traveler stands on the road just below the
                         // current stone, backpack on, sprout up.
                         if let i = currentIdx {
@@ -758,16 +798,17 @@ struct FlashTabView: View {
         }
     }
 
-    /// A finished set on a band-ending level (10, 20), first clear, passing
-    /// score → queue the region transition for when the cover closes.
+    /// A finished set that cleared a level for the first time: a band-ending
+    /// level (10, 20) queues the region transition, a rest stop (5, 15, 25, …)
+    /// queues Peck or Perish, both for when the results cover closes.
     private func noteRegionCrossing(start: FlashStart, result: FlashSubmitResult) {
         guard let lvl = start.jumboLevel ?? playingLevel,
-              lvl == 10 || lvl == 20,
               playingWasFirstClear,
               result.total >= 10,
               result.score >= jumboPassScore(mode: start.mode)
         else { return }
-        pendingCrossing = lvl
+        if lvl == 10 || lvl == 20 { pendingCrossing = lvl }
+        if PeckMilestone.isRest(lvl) { pendingGame = lvl }
     }
 
     private func play(_ level: JumboLevelInfo, mode: String) {

@@ -51,6 +51,10 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>Fredoka.ttf</string>
+		<string>Ultra-Regular.ttf</string>
+		<string>IMFeENrm28P.ttf</string>
+		<string>IMFeENit28P.ttf</string>
+		<string>IMFeENsc28P.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

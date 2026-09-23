@@ -54,6 +54,10 @@ targets:
           UIColorName: LaunchBackground
         UIAppFonts:
           - Fredoka.ttf
+          - Ultra-Regular.ttf
+          - IMFeENrm28P.ttf
+          - IMFeENit28P.ttf
+          - IMFeENsc28P.ttf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:

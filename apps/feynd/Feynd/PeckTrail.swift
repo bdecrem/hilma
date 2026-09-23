@@ -272,8 +272,11 @@ struct PeckTrailCanvas: View {
             if PeckMilestone.isRest(lvl) {
                 let r0 = (i / 10) * 10
                 let cleared = max(0, min(10, cur - r0))
+                // A cleared rest stop's sign is the way back into its game
+                // (FlashTabView puts the tap target over it).
                 drawSignpost(&ctx, at: CGPoint(x: p.x + side * 78, y: p.y + 20),
-                             title: "REST STOP", sub: "\(cleared) of 10 cleared here")
+                             title: "REST STOP",
+                             sub: level.status == "passed" ? "▶ Peck or Perish" : "\(cleared) of 10 cleared here")
             }
             if PeckMilestone.hasChest(lvl) {
                 drawChest(&ctx, at: CGPoint(x: p.x + side * 60, y: p.y + 16),

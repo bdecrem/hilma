@@ -991,6 +991,18 @@ final class F2API {
         return try await post("/api/f2/flash/start", body: Body(mode: mode, thread_id: threadId))
     }
 
+    /// Peck or Perish: the board for one rest stop (5, 15, 25, …).
+    func peckGameBoard(level: Int) async throws -> PeckGameBoard {
+        try await get("/api/f2/peck-game/\(level)")
+    }
+
+    /// Peck or Perish: record a finished round (the year the dodo went
+    /// extinct) and get the updated board back.
+    func submitPeckGame(level: Int, year: Int) async throws -> PeckGameBoard {
+        struct Body: Encodable { let year: Int }
+        return try await post("/api/f2/peck-game/\(level)", body: Body(year: year))
+    }
+
     /// Start a Jumbo level (mode fixed by the level).
     /// Start a Jumbo set in the given mode (choice | text | voice). Nil
     /// falls back to the level's default mode server-side.

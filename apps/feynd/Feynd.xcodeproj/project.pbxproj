@@ -15,15 +15,18 @@
 		0FA243A66767AA35B699BE73 /* BookSummaryReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */; };
 		10B1D2F87038A86CCA5D73B6 /* voice-marin.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 895F213807633430DF5ABD89 /* voice-marin.m4a */; };
 		10BEA785EEA3FDC166572F22 /* PeckWeekBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */; };
+		10C1F2DE020A6147D00A4530 /* IMFell-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 056B8879BDDD6BE23621854D /* IMFell-OFL.txt */; };
 		13E521D2E87C8EC6DF8BFE61 /* AudioSummaryPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */; };
 		1654FB2047C765ABA53E6523 /* VoiceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */; };
 		16E7DC3843C38B1750CD4B06 /* PeckTrail.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */; };
 		19C524D5397F5550C8A33970 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = DAABD116A19EBEA378D604DA /* WebRTC */; };
 		1EDEEC852280CDCA8031E3CC /* Fredoka.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */; };
+		20657350CA897C0B65FAF73F /* Ultra-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = F4585EED1AEEE5B6C501946C /* Ultra-LICENSE.txt */; };
 		218ABA777516B132F345D2FD /* FeyndApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A077252957BBEE41DCF582D /* FeyndApp.swift */; };
 		2509D46E5183C1909B186FB0 /* ThisWeekBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D50815A6970CB706216ED4 /* ThisWeekBanner.swift */; };
 		2653F9928D7A0873DFC35016 /* DoubleThumbsUp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */; };
 		2852108A2759A3A9CDED5275 /* DodoVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = E90564312835B42808FCEFEE /* DodoVoiceClient.swift */; };
+		2D0083CE0D788D95457BF787 /* Ultra-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 81CBB2AD8DAD6CF98F76290B /* Ultra-Regular.ttf */; };
 		36BE08CA63307A15CECFDBEA /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFCEF68207C8EC05D3B4760 /* Models.swift */; };
 		3C49C0024049020E4395B2D0 /* voice-ballad.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 072B2FB661710AC500114B62 /* voice-ballad.m4a */; };
 		3D73165286DE16C5C7A00FAF /* voice-gleam.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 12E8929D1275BD9EE7743E3F /* voice-gleam.m4a */; };
@@ -37,8 +40,10 @@
 		4860FA3E933A27649FF2F725 /* TopicContextSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057BE0BC148176D8DF6A2A52 /* TopicContextSheet.swift */; };
 		48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */; };
 		52DA33691DDC73C791B7BC44 /* voice-stone.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 19CA4150E082D4716B06A291 /* voice-stone.m4a */; };
+		548BC970FE17CCD55FAF7219 /* PeckGameAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6966166949249E168A8669D /* PeckGameAudio.swift */; };
 		5DE663128BAC796DF32F68D2 /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB38EBAB179201757DE149C1 /* FlashSFX.swift */; };
 		6156096DDC14A9F27155EB67 /* SourceReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB209A33541127135A75E53 /* SourceReaderView.swift */; };
+		626CA92CFB3D7AD88C79D0DF /* IMFeENrm28P.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 45325E81B76887A99FE305A1 /* IMFeENrm28P.ttf */; };
 		681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */; };
 		69465CB76129F3A8475D3837 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A806446C086649CAB62568A4 /* FlashVoiceView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
@@ -48,12 +53,15 @@
 		75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */; };
 		75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7811C80A73490F1D2B650D /* SettingsView.swift */; };
 		760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87227276409128E69ABE7D61 /* ReviewsSheet.swift */; };
+		78E445E53943B2E6C590FD3C /* PeckGameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35B293106D84E4F82F9766C /* PeckGameEngine.swift */; };
+		7B26E8347A83F499588895AE /* IMFeENit28P.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A3F611E2DE17ECB7C645F2D2 /* IMFeENit28P.ttf */; };
 		80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8E1D52867446105B46D06E /* FeyndChrome.swift */; };
 		81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97210D8088451B57557247DA /* DeepLink.swift */; };
 		8386C28BBB0F9D1DBC9C32D6 /* PeckOddsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */; };
 		880554CC1BB76AA2496A93E8 /* voice-sage.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8B64197A30336810679C8C35 /* voice-sage.m4a */; };
 		8C5899A6BFD81D5A277D3076 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 0F8075BAC89D55FD0B4519A3 /* ElevenLabs */; };
 		8C6244F78751CFD513251E76 /* FlashDeckBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */; };
+		8D199EA37B024BA466ACD8F9 /* PeckGameArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B2BE3082F40D6C0A70D8DCB /* PeckGameArt.swift */; };
 		92AB59F1F628D34B68CB6AD4 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */; };
 		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
 		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
@@ -65,11 +73,13 @@
 		A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */; };
 		B851800165C832A57121823A /* voice-ripple.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CBA27F1CD26EE7CDBE8DF1CF /* voice-ripple.m4a */; };
 		BAAC60F85C46126DD1C602C8 /* voice-bossa.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6D745CD9003F8592CD5D2558 /* voice-bossa.m4a */; };
+		BC42DA3E1E974346A22F5AD6 /* PeckGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E23E37B0D330C54293A885A /* PeckGameView.swift */; };
 		BCA3E817690080EE71E51E2C /* voice-coral.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 0EE0E84744AAE194B9B22E6A /* voice-coral.m4a */; };
 		C02FF279EBE99A648B79D4C6 /* voice-beacon.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 0309B05E2E0C5C6485384EB5 /* voice-beacon.m4a */; };
 		C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F75E071CC1F646CA33327FAB /* RecertNotifications.swift */; };
 		C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */; };
 		C1147912E81813D4CCADA12B /* voice-shimmer.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */; };
+		C2EED514C560ECE6D56770DC /* IMFeENsc28P.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 94FAB5F99B8DB1C1714D6996 /* IMFeENsc28P.ttf */; };
 		C573E836F4F99984E9A8409E /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC5668529933DC6749CB3D06 /* Session.swift */; };
 		C6BFFAA50289BD779BE5DEFE /* voice-quartz.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 2C39FCB6435BB29B02FE8583 /* voice-quartz.m4a */; };
 		CA6A43AB698791A05B576ED4 /* TranscriptReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */; };
@@ -96,6 +106,7 @@
 
 /* Begin PBXFileReference section */
 		0309B05E2E0C5C6485384EB5 /* voice-beacon.m4a */ = {isa = PBXFileReference; path = "voice-beacon.m4a"; sourceTree = "<group>"; };
+		056B8879BDDD6BE23621854D /* IMFell-OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "IMFell-OFL.txt"; sourceTree = "<group>"; };
 		057BE0BC148176D8DF6A2A52 /* TopicContextSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicContextSheet.swift; sourceTree = "<group>"; };
 		072B2FB661710AC500114B62 /* voice-ballad.m4a */ = {isa = PBXFileReference; path = "voice-ballad.m4a"; sourceTree = "<group>"; };
 		0A077252957BBEE41DCF582D /* FeyndApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndApp.swift; sourceTree = "<group>"; };
@@ -108,6 +119,7 @@
 		13BF17EF46B1A50AAF435164 /* voice-delta.m4a */ = {isa = PBXFileReference; path = "voice-delta.m4a"; sourceTree = "<group>"; };
 		178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckWeekBanner.swift; sourceTree = "<group>"; };
 		19CA4150E082D4716B06A291 /* voice-stone.m4a */ = {isa = PBXFileReference; path = "voice-stone.m4a"; sourceTree = "<group>"; };
+		1B2BE3082F40D6C0A70D8DCB /* PeckGameArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckGameArt.swift; sourceTree = "<group>"; };
 		1E287D1D1B6F0189E5D780AC /* voice-vesper.m4a */ = {isa = PBXFileReference; path = "voice-vesper.m4a"; sourceTree = "<group>"; };
 		21950791B59DF2C423867D07 /* voice-cedar.m4a */ = {isa = PBXFileReference; path = "voice-cedar.m4a"; sourceTree = "<group>"; };
 		21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptReaderView.swift; sourceTree = "<group>"; };
@@ -118,6 +130,7 @@
 		2DC595F43B551E0DEEA7A658 /* AudioSummaryPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayerView.swift; sourceTree = "<group>"; };
 		3C7811C80A73490F1D2B650D /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		3D886D7625C13A1ABF92B7EF /* DemoReelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoReelView.swift; sourceTree = "<group>"; };
+		45325E81B76887A99FE305A1 /* IMFeENrm28P.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = IMFeENrm28P.ttf; sourceTree = "<group>"; };
 		4BB209A33541127135A75E53 /* SourceReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReaderView.swift; sourceTree = "<group>"; };
 		4E8E1D52867446105B46D06E /* FeyndChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndChrome.swift; sourceTree = "<group>"; };
 		5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
@@ -130,6 +143,8 @@
 		72A59EA7DC85C350CED60317 /* StreakCelebrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreakCelebrationView.swift; sourceTree = "<group>"; };
 		78E1F1203E78919DA10B73C9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndTheme.swift; sourceTree = "<group>"; };
+		7E23E37B0D330C54293A885A /* PeckGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckGameView.swift; sourceTree = "<group>"; };
+		81CBB2AD8DAD6CF98F76290B /* Ultra-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ultra-Regular.ttf"; sourceTree = "<group>"; };
 		82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */ = {isa = PBXFileReference; path = "voice-shimmer.m4a"; sourceTree = "<group>"; };
 		86525326E43598D9B251CB8E /* DodoRadioDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoRadioDial.swift; sourceTree = "<group>"; };
 		87227276409128E69ABE7D61 /* ReviewsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewsSheet.swift; sourceTree = "<group>"; };
@@ -140,6 +155,7 @@
 		8BE40ACBCE23969C211C1B42 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		8D6854393131D5ADEB1B75CE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */ = {isa = PBXFileReference; path = "voice-ash.m4a"; sourceTree = "<group>"; };
+		94FAB5F99B8DB1C1714D6996 /* IMFeENsc28P.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = IMFeENsc28P.ttf; sourceTree = "<group>"; };
 		97210D8088451B57557247DA /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
 		9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleThumbsUp.swift; sourceTree = "<group>"; };
 		9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
@@ -147,8 +163,10 @@
 		A0B51F13157C08741A506C42 /* PebblesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PebblesView.swift; sourceTree = "<group>"; };
 		A2D50815A6970CB706216ED4 /* ThisWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThisWeekBanner.swift; sourceTree = "<group>"; };
 		A324C9D7C35449A353CA58A8 /* BookSummaryReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookSummaryReaderView.swift; sourceTree = "<group>"; };
+		A3F611E2DE17ECB7C645F2D2 /* IMFeENit28P.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = IMFeENit28P.ttf; sourceTree = "<group>"; };
 		A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSessionView.swift; sourceTree = "<group>"; };
 		A62FA8AD3B3E792810622A3A /* F2API.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F2API.swift; sourceTree = "<group>"; };
+		A6966166949249E168A8669D /* PeckGameAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckGameAudio.swift; sourceTree = "<group>"; };
 		A806446C086649CAB62568A4 /* FlashVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashVoiceView.swift; sourceTree = "<group>"; };
 		A838C8293EE5A7B38D62679D /* FlashCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardsView.swift; sourceTree = "<group>"; };
 		AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckRegionTransitionView.swift; sourceTree = "<group>"; };
@@ -164,6 +182,7 @@
 		C034E8A6E1CC456DE623630F /* HelpSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSheet.swift; sourceTree = "<group>"; };
 		C0564EA3B927E26544E7655B /* PasteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteView.swift; sourceTree = "<group>"; };
 		C0FB2FF36963A5F7793FAF80 /* voice-echo.m4a */ = {isa = PBXFileReference; path = "voice-echo.m4a"; sourceTree = "<group>"; };
+		C35B293106D84E4F82F9766C /* PeckGameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckGameEngine.swift; sourceTree = "<group>"; };
 		C70AD9918E6BD770826DEE32 /* CommunitySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunitySheet.swift; sourceTree = "<group>"; };
 		C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
 		CA5770B256EB23C2E2FAEE63 /* MainTabsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabsView.swift; sourceTree = "<group>"; };
@@ -181,6 +200,7 @@
 		EE7DB0ED0D66A78BC46C7BEB /* FlashModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashModels.swift; sourceTree = "<group>"; };
 		EFFCEF68207C8EC05D3B4760 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDeckBuilder.swift; sourceTree = "<group>"; };
+		F4585EED1AEEE5B6C501946C /* Ultra-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Ultra-LICENSE.txt"; sourceTree = "<group>"; };
 		F75E071CC1F646CA33327FAB /* RecertNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecertNotifications.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -243,6 +263,10 @@
 				703834C76580CEF4C08B88F3 /* OnboardingView.swift */,
 				C0564EA3B927E26544E7655B /* PasteView.swift */,
 				A0B51F13157C08741A506C42 /* PebblesView.swift */,
+				1B2BE3082F40D6C0A70D8DCB /* PeckGameArt.swift */,
+				A6966166949249E168A8669D /* PeckGameAudio.swift */,
+				C35B293106D84E4F82F9766C /* PeckGameEngine.swift */,
+				7E23E37B0D330C54293A885A /* PeckGameView.swift */,
 				9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */,
 				AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */,
 				CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */,
@@ -275,6 +299,12 @@
 			children = (
 				2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */,
 				B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */,
+				A3F611E2DE17ECB7C645F2D2 /* IMFeENit28P.ttf */,
+				45325E81B76887A99FE305A1 /* IMFeENrm28P.ttf */,
+				94FAB5F99B8DB1C1714D6996 /* IMFeENsc28P.ttf */,
+				056B8879BDDD6BE23621854D /* IMFell-OFL.txt */,
+				F4585EED1AEEE5B6C501946C /* Ultra-LICENSE.txt */,
+				81CBB2AD8DAD6CF98F76290B /* Ultra-Regular.ttf */,
 			);
 			path = Fonts;
 			sourceTree = "<group>";
@@ -391,6 +421,12 @@
 				9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */,
 				A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */,
 				1EDEEC852280CDCA8031E3CC /* Fredoka.ttf in Resources */,
+				7B26E8347A83F499588895AE /* IMFeENit28P.ttf in Resources */,
+				626CA92CFB3D7AD88C79D0DF /* IMFeENrm28P.ttf in Resources */,
+				C2EED514C560ECE6D56770DC /* IMFeENsc28P.ttf in Resources */,
+				10C1F2DE020A6147D00A4530 /* IMFell-OFL.txt in Resources */,
+				20657350CA897C0B65FAF73F /* Ultra-LICENSE.txt in Resources */,
+				2D0083CE0D788D95457BF787 /* Ultra-Regular.ttf in Resources */,
 				681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */,
 				3C49C0024049020E4395B2D0 /* voice-ballad.m4a in Resources */,
 				C02FF279EBE99A648B79D4C6 /* voice-beacon.m4a in Resources */,
@@ -460,6 +496,10 @@
 				D728F8652741BA0ADE44FB1F /* OnboardingView.swift in Sources */,
 				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
 				4203B4F2027D753324C80557 /* PebblesView.swift in Sources */,
+				8D199EA37B024BA466ACD8F9 /* PeckGameArt.swift in Sources */,
+				548BC970FE17CCD55FAF7219 /* PeckGameAudio.swift in Sources */,
+				78E445E53943B2E6C590FD3C /* PeckGameEngine.swift in Sources */,
+				BC42DA3E1E974346A22F5AD6 /* PeckGameView.swift in Sources */,
 				8386C28BBB0F9D1DBC9C32D6 /* PeckOddsSheet.swift in Sources */,
 				75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */,
 				16E7DC3843C38B1750CD4B06 /* PeckTrail.swift in Sources */,
