@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Peck or Perish — trailer</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=VT323&family=Ultra&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; }
+  #c { display: block; height: 100dvh; max-width: 100vw; aspect-ratio: 9 / 16; margin: 0 auto; object-fit: contain; }
+  #ui { position: fixed; left: 12px; bottom: 12px; color: #888; font: 12px ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">tap = play / pause · ←/→ = step · ?t=12.3 = still</div>
+<audio id="a" src="audio/clip.wav" preload="auto"></audio>
+<script src="scene.js"></script>
+<script>
+  // Preview: plays the edit in sync with the song. The renderer ignores this and calls renderAt itself.
+  (async () => {
+    const q = new URLSearchParams(location.search);
+    await document.fonts.load('100px Anton'); await document.fonts.load('100px VT323'); await document.fonts.load('100px Ultra'); await document.fonts.load('italic 100px "IM Fell English"'); await document.fonts.load('100px "IM Fell English SC"');
+    if (q.has('render')) { document.getElementById('ui').remove(); window.READY = true; return; }
+    const a = document.getElementById('a');
+    let t = parseFloat(q.get('t') || '0');
+    renderAt(t);
+    const loop = () => { if (!a.paused) { t = a.currentTime; renderAt(Math.min(t, DURATION - 0.001)); } requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    const toggle = () => { if (a.paused) { a.currentTime = t; a.play(); } else a.pause(); };
+    document.body.addEventListener('click', toggle);
+    addEventListener('keydown', (e) => {
+      if (e.key === ' ') toggle();
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { a.pause(); t = Math.max(0, t + (e.key === 'ArrowRight' ? 1 : -1) / FPS); renderAt(t); }
+    });
+  })();
+</script>
+</body>
+</html>
