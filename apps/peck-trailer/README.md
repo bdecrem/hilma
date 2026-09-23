@@ -3,7 +3,7 @@
 A 30-second vertical trailer for the Dodo rest-stop game, drawn frame by frame in code with the same
 pipeline and style recipe as `apps/strangers` (see its PROCESS.md). The dodo, egg, rats, pig, monkey
 and VOC ship reuse the game's geometry (`public/peck-or-perish/index.html`), re-inked for the trailer:
-heavier outlines, flat riso colour (teal / pink / marigold on ink and paper), halftone dots for shading.
+heavier outlines, flat riso colour (vermillion, ultramarine dodo, sunflower, lime spark on ink and cream — the game's teal/pink read as synthwave, so the trailer drops them), halftone dots for shading.
 
 Music: INTERWORLD — METAMORPHOSIS, 0:07 → 0:37 (172 BPM; drop at 4.0 s, break 14.7 → 25.3 s, second
 drop at 25.3 s). Not committed; `audio/clip.wav` is cut with:
