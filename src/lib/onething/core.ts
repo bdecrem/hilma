@@ -13,6 +13,7 @@ import { f2Supabase } from '@/lib/f2/supabase'
 import { DEMO_PREFIX, isDemoPhone, sendText } from './send'
 import { notifySignup, type SignupSource } from './notify'
 import { LEVELS, pointsForEntry, type Level } from './levels'
+import { scheduleDoodle } from './doodle'
 import copy from './copy.json'
 
 export const TZ = 'America/Los_Angeles' // default zone; every user carries their own (User.tz)
@@ -54,6 +55,11 @@ export type Entry = {
   points: number
   created_at: string
   updated_at: string
+  /// the day's margin doodle: SVG element markup for a 340×170 viewBox (doodle.ts)
+  doodle?: string | null
+  doodle_word?: string | null
+  doodle_alt?: string | null
+  doodled_at?: string | null
 }
 
 export { LEVELS, pointsForEntry, type Level }
@@ -318,6 +324,7 @@ export async function recordEntry(user: User, day: string, text: string): Promis
       .select('*')
       .single()
     if (error) throw new Error(`onething: append failed: ${error.message}`)
+    scheduleDoodle((data as Entry).id)
     return {
       entry: data as Entry, edited: false, added: all.length, streak: same.streak, points: same.points,
       earned: 0, bonus: 0, level: levelFor(same.points).level, leveledUp: false,
@@ -333,6 +340,7 @@ export async function recordEntry(user: User, day: string, text: string): Promis
     .select('*')
     .single()
   if (error) throw new Error(`onething: save failed: ${error.message}`)
+  scheduleDoodle((data as Entry).id)
   const level = levelFor(points)
   const leveledUp = level.index > levelFor(prev?.points ?? 0).index
   return { entry: data as Entry, edited: false, streak, points, earned: base + bonus, bonus, level: level.level, leveledUp }
@@ -362,6 +370,7 @@ export async function editEntryLine(user: User, day: string, index: number, text
     .select('*')
     .single()
   if (error) throw new Error(`onething: edit failed: ${error.message}`)
+  scheduleDoodle((data as Entry).id)
   return data as Entry
 }
 

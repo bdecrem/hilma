@@ -7,7 +7,7 @@ import Payoff from './Payoff';
 import copy from '@/lib/onething/copy.json';
 import { squareJpeg } from './picture';
 
-type Entry = { id: string; day: string; text: string; streak: number; points: number };
+type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
 type BuddyView = { id: string; name: string; avatar: string | null; streak: number; best: number; inToday: boolean; nextBonusIn: number; startsTomorrow: boolean };
 type InviteView = { id: string; name: string; since: string };
@@ -211,6 +211,14 @@ function Thoughts({ day, text, editing, editText, busy, err, onEditText, onStart
         </li>
       ))}
     </ol>
+  );
+}
+
+/** The day's margin doodle: element markup drawn by the model (sanitized on
+ * the server, doodle.ts) inside the viewBox the page styles. */
+function Doodle({ svg, alt }: { svg: string; alt?: string | null }) {
+  return (
+    <svg className="ot-doodle" viewBox="0 0 340 170" role="img" aria-label={alt || 'a doodle'} dangerouslySetInnerHTML={{ __html: svg }} />
   );
 }
 
@@ -599,6 +607,7 @@ export default function Onething() {
               <li key={r.day} className="ot-row">
                 <span className="ot-dayno">{r.n}</span>
                 <Thoughts day={r.day} text={r.entry!.text} {...thoughtProps} />
+                {r.entry!.doodle && <Doodle svg={r.entry!.doodle} alt={r.entry!.doodle_alt} />}
               </li>
             );
           }
@@ -613,6 +622,7 @@ export default function Onething() {
                   <span className="ot-stamp">kept!</span>
                 </div>
               )}
+              {r.entry?.doodle && <Doodle svg={r.entry.doodle} alt={r.entry.doodle_alt} />}
               {open ? (
                 <form onSubmit={(e) => { e.preventDefault(); save(); }}>
                   <p className="ot-q">{r.entry ? 'One more thing?' : 'One thing that happened today?'}</p>

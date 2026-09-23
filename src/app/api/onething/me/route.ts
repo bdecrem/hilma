@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { COOKIE, findUserById, listEntries, localDay, scoreboard, sessionCookie, setUserName, tzFor, verifySession, LEVELS } from '@/lib/onething/core'
 import { BONUS_EVERY, BONUS_POINTS, buddyViews } from '@/lib/onething/buddies'
 import { avatarUrlFor } from '@/lib/onething/avatar'
+import { scheduleDoodle } from '@/lib/onething/doodle'
 
 export const runtime = 'nodejs'
 
@@ -16,6 +17,9 @@ export async function GET() {
   const entries = await listEntries(user.id)
   const today = localDay(new Date(), tzFor(user))
   const [views, avatar] = await Promise.all([buddyViews(user, today), avatarUrlFor(user.id)])
+  // Days that never got their doodle (a failed draw, an older entry): draw a
+  // few after this response, newest first; the next visit shows them.
+  for (const e of entries.filter((x) => !x.doodle).slice(0, 4)) scheduleDoodle(e.id)
   const res = NextResponse.json({
     user: { phone: user.phone, since: user.created_at, tz: tzFor(user), name: user.name, avatar },
     today,
