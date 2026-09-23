@@ -21,6 +21,7 @@ async function main() {
     const t0 = Date.now()
     try {
       const d = await doodleEntry(r.id)
+      if (!d) { console.log(`${r.day} ${r.user_id.slice(0, 8)} skipped (doodles off)`); continue }
       n++
       console.log(`${r.day} ${r.user_id.slice(0, 8)} ${((Date.now() - t0) / 1000).toFixed(1)}s  "${r.text.split('\n')[0].slice(0, 60)}"\n   → ${d.alt}${d.word ? `  [word: ${d.word}]` : ''}`)
     } catch (e) {

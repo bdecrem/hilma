@@ -44,6 +44,8 @@ export type User = {
   name: string | null
   /// when the name was asked for by text — asked once, never again
   name_asked_at: string | null
+  /// a doodle for every kept day (schema 006); on until turned off in settings
+  doodles: boolean
 }
 
 export type Entry = {
@@ -200,6 +202,12 @@ export function prettyHandle(h: string): string {
 /// What other people see: the name if there is one, else the number.
 export function displayName(u: Pick<User, 'name' | 'phone'>): string {
   return u.name?.trim() || prettyHandle(u.phone)
+}
+
+export async function setUserDoodles(user: User, doodles: boolean): Promise<User> {
+  const { error } = await f2Supabase().from('onething_users').update({ doodles }).eq('id', user.id)
+  if (error) throw new Error(`onething: doodles update failed: ${error.message}`)
+  return { ...user, doodles }
 }
 
 export async function setUserName(user: User, name: string | null): Promise<User> {

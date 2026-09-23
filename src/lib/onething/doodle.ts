@@ -196,13 +196,17 @@ function textContent(svg: string): string | null {
 
 // ---------- storage ----------
 
-/// Draw and store the doodle for one entry row. Returns what was drawn.
-export async function doodleEntry(entryId: string): Promise<Drawn> {
+/// Draw and store the doodle for one entry row. Returns what was drawn, or
+/// null when the person has doodles turned off.
+export async function doodleEntry(entryId: string): Promise<Drawn | null> {
   const sb = f2Supabase()
   const { data: entry, error } = await sb.from('onething_entries').select('*').eq('id', entryId).maybeSingle()
   if (error) throw new Error(`onething doodle: load failed: ${error.message}`)
   if (!entry) throw new Error('onething doodle: no such entry')
   const e = entry as Entry
+  const { data: owner, error: e0 } = await sb.from('onething_users').select('doodles').eq('id', e.user_id).maybeSingle()
+  if (e0) throw new Error(`onething doodle: owner failed: ${e0.message}`)
+  if (owner && owner.doodles === false) return null
   const { data: before, error: e2 } = await sb
     .from('onething_entries')
     .select('day, text, doodle_alt, doodle_word')

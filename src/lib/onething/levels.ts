@@ -25,3 +25,10 @@ export function pointsForEntry(streak: number): { base: number; bonus: number } 
   const bonus = MILESTONES[streak] ?? 0
   return { base, bonus }
 }
+
+/// The points an unbroken run of `n` days earns, milestone bonuses included.
+export function pointsAfterRun(n: number): number {
+  let pts = 0
+  for (let k = 1; k <= n; k++) { const { base, bonus } = pointsForEntry(k); pts += base + bonus }
+  return pts
+}

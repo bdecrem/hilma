@@ -133,6 +133,9 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; }
 .ot-info:hover, .ot-info:focus-visible { outline: none; color: var(--red); border-color: var(--red); }
 .ot-info[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .ot-stats { margin-top: -2px; font-size: 12px; line-height: 1.4; color: var(--ink); }
+/* the milestone scenes, on request: day 3 · 7 · 14 · 30 · 60 · 100 · 365 */
+.ot-replays { margin-top: 4px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 10px; font-size: 11px; color: var(--dim); }
+.ot-replays .ot-link { font-size: 11px; }
 .ot-bar { position: relative; height: 12px; overflow: hidden; border: 1.5px solid var(--ink); }
 .ot-bar i { position: absolute; top: 0; bottom: 0; left: 0; width: var(--w, 0%); border-right: 1.5px solid var(--ink); background: repeating-linear-gradient(45deg, var(--y1) 0 5px, var(--y2) 5px 10px); }
 .ot-bar i.full { border-right: 0; }
@@ -157,61 +160,83 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; }
 .ot-buddy-tag b { letter-spacing: .5px; text-transform: uppercase; }
 .ot-hr { border-bottom: 2px solid var(--ink); margin: 14px 0 12px; }
 
-/* ---------- ruled lines with the red double margin ---------- */
-.ot-lines { position: relative; padding-left: 46px; list-style: none; margin: 0; }
-.ot-lines::before, .ot-lines::after { content: ''; position: absolute; top: -14px; bottom: -10px; pointer-events: none; }
-.ot-lines::before { left: 30px; width: 1.5px; background: var(--m1); }
-.ot-lines::after { left: 34px; width: 1px; background: var(--m2); }
-.ot-lines.peek { padding-left: 38px; margin-bottom: 30px; }
-.ot-lines.peek::before { left: 22px; top: 0; bottom: 0; }
-.ot-lines.peek::after { left: 26px; top: 2px; bottom: -2px; }
-.ot-row { position: relative; padding: 12px 0 6px; border-bottom: 1.5px solid var(--rule); }
-.ot-row.sys { padding: 8px 0 6px; font-size: 13px; line-height: 1.5; color: var(--mute); }
-.ot-row.hand { padding: 8px 0 4px; font-family: var(--hand); font-weight: 600; font-size: 23px; line-height: 1.25; color: var(--ink); }
-.ot-dayno { position: absolute; left: -46px; top: 14px; width: 22px; text-align: right; font-size: 12px; line-height: 1.5; color: var(--dim); }
-.ot-dayno.now { color: var(--ink); font-weight: 700; }
-.ot-dayno.faint { color: var(--faint); }
-.ot-row-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
-.ot-row-head > :first-child { flex: 1; min-width: 0; }
-.ot-row.missed { height: 44px; }
-.ot-droop { display: block; padding-top: 6px; font-size: 10px; letter-spacing: 1px; color: var(--faint); }
-.ot-plus { margin-top: 8px; font-size: 12px; }
-@media (max-width: 400px) {
-  .ot-lines { padding-left: 40px; }
-  .ot-lines::before { left: 24px; } .ot-lines::after { left: 28px; }
-  .ot-dayno { left: -40px; width: 18px; }
+/* ---------- the ruled page: 28px rules the full width, the red double margin, a drawing margin on the right ----------
+   The words keep left of --margin; every doodle sits in one slot there (desktop 200 × 140 = five rules,
+   phone 132 × 112 = four), top-aligned with its entry's first line. A row is 6 + content + 22 and
+   useRuledRows() tops the padding up to the next rule, so every row is a whole number of rules. */
+.ot-lines {
+  --gutter: 46px; --margin: 224px; --slot-w: 200px; --slot-h: 140px;
+  position: relative; list-style: none; margin: 0; padding: 0 0 28px var(--gutter);
+  background-image: repeating-linear-gradient(transparent 0 26.5px, var(--rule) 26.5px 28px);
+  background-attachment: local;
 }
-
-/* the day's doodle: the model's strokes in the page's ink, one red accent (doodle.ts) */
-.ot-doodle { display: block; width: 100%; max-width: 220px; height: auto; margin: 6px 0 2px -6px; }
-.ot-doodle * { stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ot-lines.plain { --margin: 0px; }
+.ot-lines::before, .ot-lines::after { content: ''; position: absolute; top: -14px; bottom: 0; pointer-events: none; }
+.ot-lines::before { left: calc(var(--gutter) - 16px); width: 1.5px; background: var(--m1); }
+.ot-lines::after { left: calc(var(--gutter) - 12px); width: 1px; background: var(--m2); }
+.ot-row { position: relative; min-height: 84px; padding: 6px 0 22px; }
+.ot-row.drawn { min-height: calc(var(--slot-h) + 28px); }
+.ot-row.missed { min-height: 28px; padding: 0; }
+.ot-dayno { position: absolute; right: calc(100% + 24px); top: 8px; font-size: 12px; line-height: 1.5; color: var(--dim); white-space: nowrap; }
+.ot-dayno.now { color: var(--ink); font-weight: 700; }
+.ot-dayno.faint { top: 4px; color: var(--faint); }
+.ot-droop { display: block; font-size: 10px; line-height: 28px; letter-spacing: 1px; color: var(--faint); }
+/* the words: left of the margin */
+.ot-text { padding-right: var(--margin); }
+.ot-compose { margin-top: 0; }
+.ot-plus { margin: 0; font-size: 12px; line-height: 28px; }
+/* the slot: top-aligned with the entry's first line, flush with the page's right edge */
+.ot-fig { position: absolute; top: 6px; right: 0; width: var(--slot-w); height: var(--slot-h); pointer-events: none; }
+.ot-doodle { display: block; width: 100%; height: 100%; overflow: visible; }
+.ot-row:nth-child(odd) .ot-doodle { transform: rotate(-2deg); }
+.ot-row:nth-child(even) .ot-doodle { transform: rotate(2deg); }
+/* one pen for every drawing, whatever its scale */
+.ot-doodle * { stroke: var(--ink); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
 .ot-doodle .r { stroke: var(--red); }
 .ot-doodle .thin { stroke-width: 1.2; }
 .ot-doodle .f { fill: var(--ink); }
 .ot-doodle .fr { fill: var(--red); stroke: var(--red); }
-.ot-doodle text { stroke: none; fill: var(--ink); font-family: var(--hand); font-weight: 600; font-size: 20px; }
+.ot-doodle text { stroke: none; fill: var(--ink); font-family: var(--hand); font-weight: 600; font-size: 26px; }
+/* "kept!" waits in the margin until the drawing arrives (or stays, with doodles off) */
+.ot-stamp.in-margin { position: absolute; top: 10px; right: 6px; }
+.ot-lines.plain .ot-stamp.in-margin { right: 0; }
+.ot-row.today .ot-thoughts { padding-right: 56px; }
+.ot-row.today.drawn .ot-thoughts { padding-right: 0; }
+
+/* the demo exchange on the landing keeps its plain rows */
+.ot-lines.peek { padding-left: 38px; margin-bottom: 30px; background: none; }
+.ot-lines.peek::before { left: 22px; top: 0; bottom: 0; }
+.ot-lines.peek::after { left: 26px; top: 2px; bottom: -2px; }
+.ot-lines.peek .ot-row { min-height: 0; padding: 12px 0 6px; border-bottom: 1.5px solid var(--rule); }
+.ot-row.sys { padding: 8px 0 6px; font-size: 13px; line-height: 1.5; color: var(--mute); }
+.ot-row.hand { padding: 8px 0 4px; font-family: var(--hand); font-weight: 600; font-size: 23px; line-height: 1.25; color: var(--ink); }
+.ot-row-head { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.ot-row-head > :first-child { flex: 1; min-width: 0; }
+@media (max-width: 640px) {
+  .ot-lines { --gutter: 40px; --margin: 140px; --slot-w: 132px; --slot-h: 112px; }
+  .ot-thought .t { font-size: 20px; }
+}
 
 /* thoughts: every one on a day in the same hand, peers on their own lines, each editable */
 .ot-thoughts { list-style: none; margin: 0; padding: 0; }
 .ot-thought { display: flex; align-items: baseline; gap: 8px; }
-.ot-thought .t { margin: 0; flex: 1; min-width: 0; font-family: var(--hand); font-weight: 600; font-size: 22px; line-height: 1.25; color: var(--ink); overflow-wrap: anywhere; }
-.ot-thought + .ot-thought { margin-top: 6px; }
+.ot-thought .t { margin: 0; flex: 1; min-width: 0; font-family: var(--hand); font-weight: 600; font-size: 22px; line-height: 28px; color: var(--ink); overflow-wrap: anywhere; }
+.ot-thought + .ot-thought { margin-top: 0; }
 .ot-thought .edit { flex: none; font-size: 10px; color: var(--faint); border-bottom-color: transparent; opacity: 0; transition: opacity .12s ease; }
 .ot-thought:hover .edit, .ot-thought:focus-within .edit, .ot-thought .edit:focus-visible { opacity: 1; }
 @media (hover: none) { .ot-thought .edit { opacity: 1; } }
 .ot-thought .edit:hover, .ot-thought .edit:focus-visible { color: var(--red); border-bottom-color: var(--red); }
 .ot-editing { flex: 1; min-width: 0; }
 .ot-ta {
-  display: block; width: 100%; min-height: 84px; margin-top: 6px; padding: 0 2px; resize: vertical; outline: none;
+  display: block; width: 100%; min-height: 84px; margin-top: 0; padding: 0 2px; resize: vertical; outline: none;
   border: 0; border-radius: 0; background: transparent; color: var(--ink);
   font-family: var(--hand); font-weight: 600; font-size: 22px; line-height: 28px;
-  background-image: repeating-linear-gradient(transparent 0 26.5px, var(--rule) 26.5px 28px); background-attachment: local;
 }
 .ot-ta::placeholder { color: var(--faint); font-weight: 400; }
 .ot-ta.small { min-height: 56px; }
 .ot-nudge { font-size: 11px; line-height: 1.5; color: var(--dim); }
 .ot-nudge .ot-link { margin-left: 8px; font-size: 11px; }
-.ot-q { margin: 0; font-size: 13px; line-height: 1.5; color: var(--mute); }
+.ot-q { margin: 0; font-size: 13px; line-height: 28px; color: var(--mute); }
 
 /* the way to other months, at the foot of the page */
 .ot-months { margin-top: 22px; display: flex; justify-content: flex-end; gap: 16px; font-size: 11px; letter-spacing: .5px; }
@@ -240,6 +265,9 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; }
 
 /* ---------- settings ---------- */
 .ot-back { margin: -6px 0 18px; font-size: 12px; }
+.ot-toggle { margin-top: 14px; display: flex; gap: 12px; align-items: flex-start; font-size: 12px; line-height: 1.5; color: var(--body); cursor: pointer; }
+.ot-toggle input { flex: none; width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--red); cursor: pointer; }
+.ot-toggle b { color: var(--ink); }
 .ot-section { margin-top: 22px; }
 .ot-section h2 { margin: 0; font-family: var(--hand); font-weight: 600; font-size: 30px; line-height: 1; color: var(--ink); }
 .ot-section .ot-sys { margin-top: 6px; }

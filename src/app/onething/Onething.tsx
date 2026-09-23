@@ -1,17 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { LEVELS, MILESTONES, pointsForEntry, type Level } from '@/lib/onething/levels';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { LEVELS, MILESTONES, pointsAfterRun, pointsForEntry, type Level } from '@/lib/onething/levels';
 import Plant from './Plant';
 import Payoff from './Payoff';
+import Doodle from './Doodle';
 import copy from '@/lib/onething/copy.json';
 import { squareJpeg } from './picture';
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null };
+const RULE = 28; // the page's rules, in px: every row is a whole number of them
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
 type BuddyView = { id: string; name: string; avatar: string | null; streak: number; best: number; inToday: boolean; nextBonusIn: number; startsTomorrow: boolean };
 type InviteView = { id: string; name: string; since: string };
-type Person = { phone: string; since: string; tz?: string; name?: string | null; avatar?: string | null };
+type Person = { phone: string; since: string; tz?: string; name?: string | null; avatar?: string | null; doodles?: boolean };
 type Me = {
   user: Person | null;
   today?: string; board?: Board; entries?: Entry[]; levels?: Level[];
@@ -214,12 +216,28 @@ function Thoughts({ day, text, editing, editText, busy, err, onEditText, onStart
   );
 }
 
-/** The day's margin doodle: element markup drawn by the model (sanitized on
- * the server, doodle.ts) inside the viewBox the page styles. */
-function Doodle({ svg, alt }: { svg: string; alt?: string | null }) {
-  return (
-    <svg className="ot-doodle" viewBox="0 0 340 170" role="img" aria-label={alt || 'a doodle'} dangerouslySetInnerHTML={{ __html: svg }} />
-  );
+/** Keeps every row of the ruled page a whole number of rules tall: a row is
+ * 6 + content + 22, and content of any height (the composer, an edit box, a
+ * wrapped nudge) gets its bottom padding topped up to the next rule, so the
+ * rows below never drift off the lines. Re-measured whenever a row resizes. */
+function useRuledRows(ref: React.RefObject<HTMLOListElement | null>, deps: unknown[]) {
+  useLayoutEffect(() => {
+    const ol = ref.current;
+    if (!ol || typeof ResizeObserver === 'undefined') return;
+    const fit = (row: HTMLElement) => {
+      row.style.paddingBottom = '';
+      const base = parseFloat(getComputedStyle(row).paddingBottom) || 0;
+      const h = row.getBoundingClientRect().height;
+      const over = h % RULE;
+      if (over > 0.5) row.style.paddingBottom = `${base + (RULE - over)}px`;
+    };
+    const rows = Array.from(ol.children) as HTMLElement[];
+    rows.forEach(fit);
+    const ro = new ResizeObserver((es) => es.forEach((e) => fit(e.target as HTMLElement)));
+    rows.forEach((r) => ro.observe(r));
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 }
 
 /** The demo exchange on the landing page: what the texts actually look like. */
@@ -283,12 +301,14 @@ export default function Onething() {
   const [note, setNote] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const [payoff, setPayoff] = useState<{ streak: number; bonus: number; points: number } | null>(null);
+  const linesRef = useRef<HTMLOListElement>(null);
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
     setMe((await r.json()) as Me);
   }, []);
   useEffect(() => { load(); }, [load]);
+  useRuledRows(linesRef, [me, monthsBack, view, adding, editing]);
   // A milestone day (streak 3, 7, 14, 30, 60, 100, 365) plays the payoff scene once per
   // browser: on the visit the kept text links to, or right after the sentence is saved
   // here. The key is written as it opens, so a reload doesn't play it twice.
@@ -318,7 +338,35 @@ export default function Onething() {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // the 10am / 10pm texts follow this clock
     if (await post('/api/onething/auth/verify', { phone, code, tz })) { setCode(''); setStage('phone'); await load(); }
   }
-  async function save() { if (await post('/api/onething/entry', { text })) { setText(''); setAdding(false); await load(); } }
+  async function save() { if (await post('/api/onething/entry', { text })) { setText(''); setAdding(false); await load(); awaitDoodle(); } }
+  /// The drawing lands a few seconds after the sentence: look again, a few times, until today has one.
+  function awaitDoodle() {
+    let tries = 0;
+    const tick = async () => {
+      const r = await fetch('/api/onething/me', { cache: 'no-store' });
+      const m = (await r.json()) as Me;
+      setMe(m);
+      const t = m.entries?.find((e) => e.day === m.today);
+      if (m.user?.doodles === false || t?.doodle || ++tries >= 8) return;
+      setTimeout(tick, 4000);
+    };
+    setTimeout(tick, 5000);
+  }
+  async function setDoodles(on: boolean) {
+    setMe((m) => (m && m.user ? { ...m, user: { ...m.user, doodles: on } } : m)); // flip at once; the save follows
+    setBusy(true); setYou({ err: '', note: '' });
+    try {
+      const r = await fetch('/api/onething/me', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ doodles: on }) });
+      if (!r.ok) setYou({ err: 'Could not save that.', note: '' });
+      await load(); // the server's word either way: a failed save flips the box back
+    } catch { setYou({ err: 'Network error. Try again.', note: '' }); await load(); }
+    finally { setBusy(false); }
+  }
+  /// Play a milestone's scene again: at the points the day actually had, or as a run of that length would.
+  function replay(streak: number) {
+    const at = (me?.entries ?? []).find((e) => e.streak === streak);
+    setPayoff({ streak, bonus: MILESTONES[streak] ?? 0, points: at ? at.points : pointsAfterRun(streak) });
+  }
   async function saveEdit() {
     if (!editing) return;
     setBusy(true); setErr('');
@@ -327,7 +375,7 @@ export default function Onething() {
       const j = await r.json();
       if (!r.ok) { setErr(j.error ?? 'Something went wrong.'); return; }
       setEditing(null); setEditText('');
-      await load();
+      await load(); awaitDoodle();
     } catch { setErr('Network error. Try again.'); }
     finally { setBusy(false); }
   }
@@ -472,6 +520,16 @@ export default function Onething() {
 
         <div className="ot-hr" />
 
+        <section className="ot-section" aria-label="the page">
+          <h2>The page</h2>
+          <label className="ot-toggle">
+            <input type="checkbox" checked={me.user.doodles !== false} disabled={busy} onChange={(e) => setDoodles(e.target.checked)} />
+            <span><b>Doodles.</b> A small drawing in the margin for every day, made from what you wrote.</span>
+          </label>
+        </section>
+
+        <div className="ot-hr" />
+
         <section className="ot-section" aria-label="buddies">
           <h2>Buddies</h2>
           <p className="ot-sys">Pick anyone. A buddy streak counts a day when you both wrote, a miss by either one resets it, and every {bonus.every} days it holds you both get {bonus.points} points. Your own streak and points are never touched.</p>
@@ -541,6 +599,7 @@ export default function Onething() {
   const [vy, vm] = monthBack(ty, tm, back);
   const byDay = new Map(entries.map((e) => [e.day, e]));
   const rows = monthRows(vy, vm, today, me.user.since, byDay);
+  const drawn = me.user.doodles !== false; // the margin exists only while doodles are on
   const span = b.next ? b.next.min - b.level.min : 1;
   const progress = b.next ? Math.min(1, (b.points - b.level.min) / span) : 1;
   const perDay = pointsForEntry(b.streak + 1).base;
@@ -569,6 +628,12 @@ export default function Onething() {
           {details && (
             <div className="ot-stats" id="ot-details">
               <b>{b.points} pts</b> · +{perDay} a day{b.best > b.streak ? ` · best ${b.best}` : ''}
+              <div className="ot-replays" aria-label="replay a milestone">
+                <span>replay</span>
+                {Object.keys(MILESTONES).map(Number).map((m) => (
+                  <button key={m} type="button" className={`ot-link${b.best >= m ? '' : ' quiet'}`} title={b.best >= m ? `day ${m}` : `day ${m} — not yet`} onClick={() => replay(m)}>{m}</button>
+                ))}
+              </div>
             </div>
           )}
           <div className="ot-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
@@ -597,34 +662,34 @@ export default function Onething() {
 
       <div className="ot-hr" />
 
-      <ol className="ot-lines" aria-label={`${MONTHS[vm - 1]} ${vy}`}>
+      <ol ref={linesRef} className={`ot-lines${drawn ? '' : ' plain'}`} aria-label={`${MONTHS[vm - 1]} ${vy}`}>
         {rows.map((r) => {
           if (r.kind === 'missed') {
             return <li key={r.day} className="ot-row missed"><span className="ot-dayno faint">{r.n}</span><span className="ot-droop">— A LEAF DROOPED —</span></li>;
           }
+          const doodle = drawn && r.entry?.doodle ? r.entry : null;
           if (r.kind === 'kept') {
             return (
-              <li key={r.day} className="ot-row">
+              <li key={r.day} className={`ot-row${doodle ? ' drawn' : ''}`}>
                 <span className="ot-dayno">{r.n}</span>
-                <Thoughts day={r.day} text={r.entry!.text} {...thoughtProps} />
-                {r.entry!.doodle && <Doodle svg={r.entry!.doodle} alt={r.entry!.doodle_alt} />}
+                <div className="ot-text"><Thoughts day={r.day} text={r.entry!.text} {...thoughtProps} /></div>
+                {doodle && <Doodle svg={doodle.doodle!} alt={doodle.doodle_alt} />}
               </li>
             );
           }
           // today: kept, or still open
           const open = !r.entry || adding;
           return (
-            <li key={r.day} className="ot-row today">
+            <li key={r.day} className={`ot-row today${doodle ? ' drawn' : ''}`}>
               <span className="ot-dayno now">{r.n}</span>
               {r.entry && (
-                <div className="ot-row-head">
-                  <Thoughts day={r.day} text={r.entry.text} {...thoughtProps} />
-                  <span className="ot-stamp">kept!</span>
-                </div>
+                <>
+                  <div className="ot-text"><Thoughts day={r.day} text={r.entry.text} {...thoughtProps} /></div>
+                  {doodle ? <Doodle svg={doodle.doodle!} alt={doodle.doodle_alt} /> : <span className="ot-stamp in-margin">kept!</span>}
+                </>
               )}
-              {r.entry?.doodle && <Doodle svg={r.entry.doodle} alt={r.entry.doodle_alt} />}
               {open ? (
-                <form onSubmit={(e) => { e.preventDefault(); save(); }}>
+                <form className="ot-compose" onSubmit={(e) => { e.preventDefault(); save(); }}>
                   <p className="ot-q">{r.entry ? 'One more thing?' : 'One thing that happened today?'}</p>
                   <textarea className="ot-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder="One sentence." rows={3} aria-label="today's sentence" />
                   <div className="ot-acts">
