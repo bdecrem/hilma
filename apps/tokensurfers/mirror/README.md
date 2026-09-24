@@ -11,7 +11,7 @@ Splat says what he's doing out loud. You can type or hold the mic to talk back w
 
 iPhone and Mac (Catalyst), SwiftUI, no dependencies. The web side is a small Next.js app: the agent's LLM route, accounts, a gallery of published creations, and the leaderboard.
 
-> This repo is a read-only mirror. The code lives in [bdecrem/hilma](https://github.com/bdecrem/hilma) and is synced here on every change.
+> This repo is a snapshot. The code is developed in [bdecrem/hilma](https://github.com/bdecrem/hilma) and released here periodically, one commit per snapshot naming the hilma commit it came from. MIT licensed — see [LICENSE](LICENSE).
 
 ## Layout
 

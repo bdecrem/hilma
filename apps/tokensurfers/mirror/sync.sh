@@ -12,8 +12,9 @@
 #
 # hilma stays the source of truth; the mirror is overwritten on every sync
 # (its history is kept: one commit per sync, naming the hilma commit).
-# The secret scan at the end fails the sync if anything that looks like a
-# key made it into the tree.
+# The tree comes from hilma's committed HEAD (git archive), never from the
+# working tree, so half-done edits can't leak into a release. The secret scan
+# at the end fails the sync if anything that looks like a key made it in.
 set -euo pipefail
 
 OUT="${1:?usage: sync.sh <out-dir> [--push <git-url>]}"
@@ -21,9 +22,15 @@ PUSH_URL=""
 if [[ "${2:-}" == "--push" ]]; then PUSH_URL="${3:?--push needs a git url}"; fi
 
 HILMA="$(cd "$(dirname "$0")/../../.." && pwd)"
-APP="$HILMA/apps/tokensurfers"
-MIRROR="$APP/mirror"
 SHA="$(git -C "$HILMA" rev-parse --short HEAD)"
+if ! git -C "$HILMA" diff --quiet HEAD -- apps/tokensurfers src/app/surf src/app/api/surf src/lib/surf public/surf; then
+  echo "note: uncommitted changes in the Token Surfers paths are NOT in this snapshot (it is hilma@$SHA)"
+fi
+SRC="$(mktemp -d "${TMPDIR:-/tmp}/tokensurfers-src.XXXXXX")"
+trap 'rm -rf "$SRC"' EXIT
+git -C "$HILMA" archive HEAD apps/tokensurfers src/app/api/surf src/app/surf src/lib/surf public/surf misc/splat.svg misc/splat-back.svg misc/splat-back-smooth.svg misc/splat-back-rig.svg | tar -x -C "$SRC"
+APP="$SRC/apps/tokensurfers"
+MIRROR="$APP/mirror"
 
 if [[ -n "$PUSH_URL" ]]; then
   rm -rf "$OUT"
@@ -42,16 +49,17 @@ rsync -a \
   "$APP/" "$OUT/ios/"
 rsync -a "$APP/schema/" "$OUT/schema/"
 mkdir -p "$OUT/art"
-cp "$HILMA"/misc/splat*.svg "$OUT/art/"
+cp "$SRC"/misc/splat*.svg "$OUT/art/"
 
 rsync -a --exclude node_modules --exclude .next "$MIRROR/web/" "$OUT/web/"
 mkdir -p "$OUT/web/src/app/api" "$OUT/web/src/lib" "$OUT/web/public"
-rsync -a "$HILMA/src/app/api/surf/" "$OUT/web/src/app/api/surf/"
-rsync -a "$HILMA/src/app/surf/" "$OUT/web/src/app/surf/"
-rsync -a "$HILMA/src/lib/surf/" "$OUT/web/src/lib/surf/"
-rsync -a "$HILMA/public/surf/" "$OUT/web/public/surf/"
+rsync -a "$SRC/src/app/api/surf/" "$OUT/web/src/app/api/surf/"
+rsync -a "$SRC/src/app/surf/" "$OUT/web/src/app/surf/"
+rsync -a "$SRC/src/lib/surf/" "$OUT/web/src/lib/surf/"
+rsync -a "$SRC/public/surf/" "$OUT/web/public/surf/"
 
 cp "$MIRROR/README.md" "$OUT/README.md"
+cp "$MIRROR/LICENSE" "$OUT/LICENSE"
 cp "$MIRROR/gitignore" "$OUT/.gitignore"
 
 # --- secret scan -------------------------------------------------------------
@@ -80,6 +88,11 @@ for v in ${SCAN_VALUES:-}; do
 done
 if [[ $fail -ne 0 ]]; then echo "secret scan FAILED — nothing pushed"; exit 1; fi
 echo "secret scan: clean"
+# the web side must build on its own: every import is @/lib/surf/*, @/app/surf/* or a package
+if bad=$(grep -rhoE "from '@/(lib|app)/[a-z0-9-]+" "$OUT/web/src" | grep -vE "@/(lib|app)/surf" | sort -u); [[ -n "$bad" ]]; then
+  echo "import scan: the web code reaches outside surf/ — the mirror would not build:"; echo "$bad" | sed 's/^/  /'; exit 1
+fi
+echo "import scan: clean"
 
 if [[ -n "$PUSH_URL" ]]; then
   cd "$OUT"

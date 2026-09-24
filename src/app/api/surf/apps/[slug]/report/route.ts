@@ -2,15 +2,15 @@
 //
 // Anyone can report a gallery creation, signed in or not (Apple's guideline
 // 1.2: user-generated content needs a way to flag it). The report is stored
-// (surf_reports) and Bart gets a text and an email right away; either note
-// failing never fails the report.
+// (surf_reports) and the owner of the site gets a text and an email right
+// away (src/lib/surf/notify.ts, env-configured); a failed note never fails
+// the report.
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getSurfUser } from '@/lib/surf/auth'
 import { getApp, SITE } from '@/lib/surf/apps'
 import { surfDb } from '@/lib/surf/db'
-import { sendIMessage } from '@/lib/f2/bluebubbles'
-import { BART, emailBart } from '@/lib/onething/notify'
+import { notifyReport } from '@/lib/surf/notify'
 
 export const runtime = 'nodejs'
 
@@ -31,10 +31,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ slug: stri
     const { error } = await surfDb().from('surf_reports').insert({ app_id: app.id, reporter_id: user?.id ?? null, reason })
     if (error) throw new Error(error.message)
     const line = `Token Surfers report: ${app.emoji} ${app.title} by @${app.owner}${reason ? ` — "${reason}"` : ''}${user ? ` (from @${user.handle})` : ''} ${SITE}/a/${app.slug}`
-    await Promise.all([
-      sendIMessage({ addresses: [BART], text: line }).catch((e) => console.error('[surf/report] text', (e as Error).message)),
-      emailBart(`Token Surfers: report on ${app.emoji} ${app.title}`, `<p style="font-family:-apple-system,Helvetica,Arial,sans-serif">${line.replace(/</g, '&lt;')}</p>`),
-    ])
+    await notifyReport(`Token Surfers: report on ${app.emoji} ${app.title}`, line)
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('[surf/report]', (e as Error).message)
