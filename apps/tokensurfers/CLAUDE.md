@@ -151,7 +151,7 @@ back into their own apps. One handle for all of it (and the leaderboard).
   `RootView.handle(_:)`).
 - **The web** — `src/app/surf/`: `/surf` landing (one paragraph, the
   studio screenshot `public/surf/hero.jpg` — a simulator shot of a
-  `TS_AUTORUN` build, retake it when Splat's art changes — and the gallery /
+  `TS_AUTORUN` build, retake it with `scripts/surf/sim-record.sh` (see "Promo video") when Splat's art changes — and the gallery /
   TestFlight / GitHub buttons; the only motion is the falling coins and the
   caption swap, on purpose). Splat on the web is `public/surf/splat.svg`
   (misc/splat.svg with its metadata stripped), used by `TubeMan` in `parts.tsx`, `/surf/gallery` (top/new),
@@ -500,6 +500,44 @@ Test hooks (environment variables):
 Verify with `xcrun simctl io … screenshot` every few seconds. A build
 takes about 40–90 s. On the Mac, run the binary directly with the environment
 variable set and capture with `screencapture -l <window id>`.
+
+## Promo video and screenshots — the recording workflow (2026-09-24)
+
+The landing-page video (`~/Desktop/tokensurfers/tokensurfers-promo-900x1956.mp4`,
+28.5 s, silent) and every simulator screenshot come out of one recorded build.
+Two scripts, both exercised on 2026-09-24:
+
+```bash
+# 1. record one build: screen recording + a still every 5 s + 1 fps contact sheets
+STILL_EVERY=5 scripts/surf/sim-record.sh <out-dir> "a pomodoro timer that screams at me" --build
+# 2. pick cut points on the sheets (seconds), then cut → master, 900×1956 web, poster, 2 fps check sheet
+scripts/surf/cut.sh <out-dir>/rec.mov ~/Desktop/tokensurfers/tokensurfers-promo 17.9:23.1 27.6:31.4 …
+```
+
+- **Frame:** the whole phone screen incl. status bar, the same 900×1956 frame as
+  `public/surf/hero.jpg` (`.sq-shot` rotates it 3° and rounds the corners). The
+  clock is pinned to 3:00, full bars, charged. Any still in `<out-dir>/stills/`
+  is a drop-in replacement for `hero.jpg` (scale 1206×2622 → 900×1956).
+- **Shape of a good cut** (the 09-24 one, 8 hard cuts, list in `cut.sh`): build
+  starts (Splat's first lines, the Bash train) → code streaming + trains →
+  Tokenur cutaway + x5 → coin flood → a crash and the instant restart →
+  patch/check/deploy ("praying loudly") → "YOU'RE ABSOLUTELY RIGHT!" + SHIPPED
+  confetti + the game tucking away → four seconds on the finished app. A build
+  takes 2–3 min on the mini; the first ~15 s after launch are idle (the Studio
+  settles before it sends), and the app only fills the screen ~5 s after the
+  mini goes idle — the script waits 14 s for that.
+- **What bit (all handled by the script, listed so nobody re-learns them):**
+  Xcode 27 has no Simulator.app; headless works, but `simctl install/launch`
+  hang forever on a device that is "Booted" and still booting — `bootstatus -b`
+  first. `Secrets.swift` must exist before `xcodegen generate`. `status_bar
+  --time` wants ISO with milliseconds and shows it 5 h ahead of the Z hour on
+  this runtime. The simulator records video only, no audio. ffmpeg is in
+  `~/bin` on the Neo. `-i` with no output exits 1, which kills a `set -o
+  pipefail` script mid-way.
+- **After:** the test build made a Vercel project `surf-<id8>` (the id is in the
+  first Bash train's `$ cd …/surf-<id8>` subtitle on the stills); delete it with
+  the API call in the script header. Nothing is published to the gallery when the
+  simulator is signed out.
 
 ## The mirror repo
 
