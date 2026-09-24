@@ -3,6 +3,8 @@ import SwiftUI
 /// Home: the AITA-card-on-a-sunburst from the video's opening shot, turned
 /// into a prompt box, plus a shelf of the apps you've made.
 struct HomeView: View {
+    /// A Studio is open on top: the hero and the stars hold still instead of animating behind it.
+    var covered = false
     @Environment(AppModel.self) private var model
     var open: (UUID, String?) -> Void
 
@@ -101,7 +103,7 @@ struct HomeView: View {
                     .padding(.top, 12)
             }
             Spacer()
-            BlobHero(unit: 58)
+            BlobHero(unit: 58, running: !covered)
         }
         .padding(.top, 14)
         .overlay(alignment: .topTrailing) {
@@ -216,7 +218,7 @@ struct HomeView: View {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.navy)
-                    Starfield().clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous)).opacity(0.7)
+                    Starfield(paused: covered).clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous)).opacity(0.7)
                     Text("🖼️").font(.system(size: 26))
                 }
                 .frame(width: 56, height: 56)

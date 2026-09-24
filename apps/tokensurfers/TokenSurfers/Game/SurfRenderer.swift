@@ -117,37 +117,19 @@ struct SurfRenderer {
                  with: .color(Color(hex: 0xFCE7B0).opacity(0.28)))
         ctx.fill(Path(ellipseIn: CGRect(x: sx - r, y: sy - r, width: r * 2, height: r * 2)),
                  with: .color(Color(hex: 0xFCEBB8)))
-        // two skyline layers, parallax with the camera and a slow drift with distance
-        let layers: [(Int, Color, Double, Double)] = [(0, Color(hex: 0xC46A8B), 0.6, 0.006), (1, Color(hex: 0x9B3F6E), 1.0, 0.012)]
-        for (layer, tint, hmul, drift) in layers {
-            var rng = SeededRandom(seed: UInt64(11 + layer))
-            let period = 900.0
+        // two skyline layers, parallax with the camera and a slow drift with distance.
+        // Each layer is one period-wide strip, rendered once per size (blocks and
+        // lit windows are hundreds of rects) and blitted twice at the offset.
+        let period = 900.0
+        for layer in 0..<2 {
+            let drift = layer == 0 ? 0.006 : 0.012
             let shift = (e.distance * drift * 60).truncatingRemainder(dividingBy: period) + camX * (6 + Double(layer) * 6)
-            var x = -period
-            while x < size.width + period {
-                let w = 20 + rng.unit() * 36
-                let h = size.height * (0.035 + rng.unit() * 0.075) * hmul
-                let bx = x - shift
-                if bx + w > -2, bx < size.width + 2 {
-                    ctx.fill(Path(CGRect(x: bx, y: horizon - h, width: w + 1, height: h + 1)), with: .color(tint))
-                    if layer == 1, w > 26 {
-                        var wy = horizon - h + 6
-                        while wy < horizon - 8 {
-                            var wx = bx + 5
-                            while wx < bx + w - 6 {
-                                if rng.unit() < 0.4 {
-                                    ctx.fill(Path(CGRect(x: wx, y: wy, width: 3, height: 4)), with: .color(Color(hex: 0xFFE3A6).opacity(0.7)))
-                                }
-                                wx += 8
-                            }
-                            wy += 9
-                        }
-                    }
-                } else {
-                    // keep the random stream in step with the visible blocks
-                    _ = rng.unit()
-                }
-                x += w + (layer == 0 ? 0 : 3)
+            let strip = SkylineCache.strip(layer: layer, height: size.height, period: period)
+            let stripH = strip.size.height
+            var bx = -shift.truncatingRemainder(dividingBy: period) - period
+            while bx < size.width {
+                ctx.draw(Image(uiImage: strip), in: CGRect(x: bx, y: horizon - stripH + 1, width: period, height: stripH))
+                bx += period
             }
         }
         ctx.fill(Path(CGRect(x: 0, y: horizon - 12, width: size.width, height: 14)),
@@ -581,5 +563,53 @@ struct SurfRenderer {
             c.fill(Path(CGRect(x: -s / 2, y: -s / 2, width: s, height: s * 0.7)),
                    with: .color(palette[Int(p.hue * Double(palette.count)) % palette.count].opacity(min(1, p.life))))
         }
+    }
+}
+
+
+/// The skyline strips, rendered once per size (they were hundreds of rect
+/// fills per frame). One period wide; the renderer tiles them.
+enum SkylineCache {
+    nonisolated(unsafe) private static var strips: [String: UIImage] = [:]
+
+    static func strip(layer: Int, height: Double, period: Double) -> UIImage {
+        let key = "\(layer)-\(Int(height))"
+        if let hit = strips[key] { return hit }
+        let tint = layer == 0 ? UIColor(Theme.color(0xC46A8B)) : UIColor(Theme.color(0x9B3F6E))
+        let hmul = layer == 0 ? 0.6 : 1.0
+        let stripH = ceil(height * 0.11 * hmul) + 2
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 3
+        format.opaque = false
+        let img = UIGraphicsImageRenderer(size: CGSize(width: period, height: stripH), format: format).image { rc in
+            let c = rc.cgContext
+            var rng = SeededRandom(seed: UInt64(11 + layer))
+            var x = 0.0
+            // the blocks wrap: draw one period plus the block that straddles the seam
+            while x < period + 60 {
+                let w = 20 + rng.unit() * 36
+                let h = height * (0.035 + rng.unit() * 0.075) * hmul
+                for bx in [x, x - period] where bx + w > -2 && bx < period + 2 {
+                    c.setFillColor(tint.cgColor)
+                    c.fill(CGRect(x: bx, y: stripH - h, width: w + 1, height: h + 1))
+                    if layer == 1, w > 26 {
+                        var wrng = SeededRandom(seed: UInt64(x * 7) + 3)
+                        c.setFillColor(UIColor(Theme.color(0xFFE3A6)).withAlphaComponent(0.7).cgColor)
+                        var wy = stripH - h + 6
+                        while wy < stripH - 8 {
+                            var wx = bx + 5
+                            while wx < bx + w - 6 {
+                                if wrng.unit() < 0.4 { c.fill(CGRect(x: wx, y: wy, width: 3, height: 4)) }
+                                wx += 8
+                            }
+                            wy += 9
+                        }
+                    }
+                }
+                x += w + (layer == 0 ? 0 : 3)
+            }
+        }
+        strips[key] = img
+        return img
     }
 }

@@ -22,6 +22,7 @@
 		7A5D93A65154DEBF5A9D5651 /* SurfGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C0C57F401EF078A6B831D2 /* SurfGameView.swift */; };
 		84A68F44B8741EE69424AA8D /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D433691AFF940E0ADCBF5569 /* GalleryView.swift */; };
 		9883E656538BE9E9F2AB98D4 /* SurfAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6570E755A3C2C0B71A922680 /* SurfAudio.swift */; };
+		9D8A0F26263507FCCCA4486F /* PerfMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5178F875F424DAC10F39CB73 /* PerfMeter.swift */; };
 		9DFC203CDFFC61F0AEFE6D6E /* VoiceInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB0709843D752547B9D0619D /* VoiceInput.swift */; };
 		B1242E55BDB8FC63BD2F815D /* Mascots.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF9F75B597B47D8F471BCD95 /* Mascots.swift */; };
 		B1A1A8B58802E1AA938C6D22 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CF2ED5858A738C214CE367 /* Secrets.swift */; };
@@ -49,6 +50,7 @@
 		3F1ADBD84EC242FF2E17DBFA /* Secrets.swift.example */ = {isa = PBXFileReference; path = Secrets.swift.example; sourceTree = "<group>"; };
 		434FE7FD5886BC3CBA6C1007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		50E086AD51AB083526161C1A /* SurfEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfEngine.swift; sourceTree = "<group>"; };
+		5178F875F424DAC10F39CB73 /* PerfMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PerfMeter.swift; sourceTree = "<group>"; };
 		57435456BCD7F64360803E98 /* Montserrat-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-ExtraBold.ttf"; sourceTree = "<group>"; };
 		5850B90F7438A0C8643A6792 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		61687D57C5AA1DB02355FEDB /* SurfRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfRenderer.swift; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 			children = (
 				C7527D8A15A97053FD86758F /* BlobArt.swift */,
 				CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */,
+				5178F875F424DAC10F39CB73 /* PerfMeter.swift */,
 				6570E755A3C2C0B71A922680 /* SurfAudio.swift */,
 				50E086AD51AB083526161C1A /* SurfEngine.swift */,
 				B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */,
@@ -248,6 +251,7 @@
 				EF1900240C01A65BFF0F000A /* Leaderboard.swift in Sources */,
 				67B389CF94F703FECEC5F0A5 /* LiveFeed.swift in Sources */,
 				B1242E55BDB8FC63BD2F815D /* Mascots.swift in Sources */,
+				9D8A0F26263507FCCCA4486F /* PerfMeter.swift in Sources */,
 				3CBD418F2D284FB8232C44AF /* ProjectStore.swift in Sources */,
 				4A486C215DEDFF7C7E1ADF3E /* RemoteEngine.swift in Sources */,
 				B1A1A8B58802E1AA938C6D22 /* Secrets.swift in Sources */,
@@ -304,7 +308,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -385,7 +389,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

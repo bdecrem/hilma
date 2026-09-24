@@ -28,16 +28,29 @@ struct SurfGameView: View {
     @Environment(\.scenePhase) private var scenePhase
     @FocusState private var focused: Bool
 
+    /// Canvas points per screen point: the scene draws smaller and is scaled up.
+    static let canvasScale: CGFloat = 1.5
+
     private var active: Bool { running && !paused && (solo ? armed : true) && scenePhase == .active }
 
     var body: some View {
         TimelineView(.animation(paused: !active)) { tl in
             let now = tl.date
             ZStack {
-                Canvas { ctx, size in
-                    let dt = clock.tick(now)
-                    engine.step(dt)
-                    SurfRenderer(e: engine, size: size).draw(&ctx)
+                // The scene is rasterized at 2/3 of the screen scale (2× on a 3× phone)
+                // and scaled up on the GPU: the same flat shapes, less than half the
+                // CoreGraphics work per frame (2026-09-24 profile: rasterizing the
+                // canvas was most of the main thread).
+                GeometryReader { g in
+                    let k = Self.canvasScale
+                    Canvas(rendersAsynchronously: true) { ctx, size in
+                        let dt = clock.tick(now)
+                        engine.step(dt)
+                        SurfRenderer(e: engine, size: size).draw(&ctx)
+                        PerfMeter.frames += 1
+                    }
+                    .frame(width: g.size.width / k, height: g.size.height / k)
+                    .scaleEffect(k, anchor: .topLeading)
                 }
                 hud(now)
             }

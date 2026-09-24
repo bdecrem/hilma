@@ -104,7 +104,7 @@ struct CodeView: View {
                                             .font(Theme.mono(11))
                                             .foregroundStyle(Theme.lavender.opacity(0.35))
                                             .frame(width: 34, alignment: .trailing)
-                                        Text(Syntax.color(lines[i]))
+                                        Text(Syntax.colored(lines[i]))
                                             .font(Theme.mono(12.5))
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
@@ -176,6 +176,16 @@ struct CodeView: View {
 
 /// A small tokenizer for HTML/CSS/JS lines: good enough to read like an editor.
 enum Syntax {
+    /// Coloured lines by their text: a streaming file repeats every line but
+    /// the last few on each update, so the colouring runs once per line.
+    nonisolated(unsafe) private static var cache: [String: AttributedString] = [:]
+    static func colored(_ line: String) -> AttributedString {
+        if let hit = cache[line] { return hit }
+        if cache.count > 4000 { cache.removeAll(keepingCapacity: true) }
+        let v = color(line)
+        cache[line] = v
+        return v
+    }
     static let keywords: Set<String> = ["let", "const", "var", "function", "return", "if", "else", "for", "while",
                                         "class", "new", "true", "false", "null", "this", "import", "export", "async",
                                         "await", "switch", "case", "break", "of", "in", "typeof", "undefined", "try", "catch"]
@@ -314,16 +324,34 @@ struct CutawayView: View {
     }
 }
 
+/// Twinkling stars. Paths, not text glyphs, at 24 fps: the text version at
+/// 60 fps was the single biggest CPU cost in the whole app (2026-09-24
+/// profile), and it kept running on Home behind an open Studio.
 struct Starfield: View {
+    var paused = false
+
+    private static let star: Path = {
+        var p = Path()
+        for i in 0..<10 {
+            let a = Double(i) * .pi / 5 - .pi / 2
+            let r = i % 2 == 0 ? 1.0 : 0.42
+            let pt = CGPoint(x: cos(a) * r, y: sin(a) * r)
+            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+        }
+        p.closeSubpath()
+        return p
+    }()
+
     var body: some View {
-        TimelineView(.animation) { tl in
+        TimelineView(.animation(minimumInterval: 1 / 24, paused: paused)) { tl in
             Canvas { ctx, size in
                 var rng = SeededRandom(seed: 5)
                 let t = tl.date.timeIntervalSinceReferenceDate
                 for i in 0..<40 {
                     let x = rng.unit() * size.width, y = rng.unit() * size.height
-                    let s = 4 + rng.unit() * 6 + sin(t * 3 + Double(i)) * 1.5
-                    ctx.draw(Text("★").font(.system(size: s)).foregroundStyle(Theme.yellow), at: CGPoint(x: x, y: y))
+                    let s = (4 + rng.unit() * 6 + sin(t * 3 + Double(i)) * 1.5) * 0.55
+                    let path = Self.star.applying(CGAffineTransform(translationX: x, y: y).scaledBy(x: s, y: s))
+                    ctx.fill(path, with: .color(Theme.yellow))
                 }
             }
         }

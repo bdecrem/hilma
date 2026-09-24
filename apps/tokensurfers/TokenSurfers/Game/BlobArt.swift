@@ -16,6 +16,8 @@ final class BlobState {
     var rate = 0.0
     var lastT = -1.0
     var wasAirborne = false
+    var twitchIn = 0.3
+    var rng = SeededRandom(seed: 4242)
 }
 
 enum BlobArt {
@@ -39,7 +41,7 @@ enum BlobArt {
     /// Fixed per-arm character: base length and breathing phase.
     private static let seeds: [(len: Double, phase: Double, w: Double, thick: Double)] = (0..<arms).map { i in
         var rng = SeededRandom(seed: 91 + UInt64(i) * 7)
-        return (0.6 + 0.4 * rng.unit(), rng.unit() * 2 * .pi, 1.6 + rng.unit() * 1.5, 0.8 + rng.unit() * 0.4)
+        return (0.6 + 0.4 * rng.unit(), rng.unit() * 2 * .pi, 2.0 + rng.unit() * 1.8, 0.8 + rng.unit() * 0.4)
     }
 
     /// `origin` is the ground point under the character on screen; `unit` is pixels per world unit.
@@ -55,7 +57,7 @@ enum BlobArt {
 
         let dead = p.dead >= 0
         let drop = dead ? min(1, p.dead * 2.5) : 0          // crashed: it sinks to the ground
-        let bob = dead ? 0 : 0.018 * sin(p.t * 5.1) + 0.006 * sin(p.t * 19.3)   // never quite still, never much
+        let bob = dead ? 0 : 0.022 * sin(p.t * 6.3) + 0.008 * sin(p.t * 23.1)   // never quite still, never much
         let centreY = -(hover + p.lift + bob) * unit + drop * (hover - body) * unit
         c.translateBy(x: 0, y: centreY)
         c.scaleBy(x: unit, y: unit)
@@ -123,15 +125,24 @@ enum BlobArt {
         let dead = p.dead >= 0
         let air = p.lift > 0.03
         // spin: steady, faster with speed, a boost in the air and in a roll, none when dead
-        var target = dead ? 0 : 1.5 + 1.0 * p.speed
-        if air { target += 3.5 }
-        if p.rolling > 0 { target += 6 }
-        s.rate += (target - s.rate) * min(1, 6 * dt)
+        // nervous: the spin wanders ±25% around its target instead of holding it
+        let nervous = 1 + 0.25 * sin(p.t * 3.7) * sin(p.t * 1.3 + 0.8)
+        var target = dead ? 0 : (1.8 + 1.2 * p.speed) * nervous
+        if air { target += 4.2 }
+        if p.rolling > 0 { target += 7 }
+        s.rate += (target - s.rate) * min(1, 8 * dt)
         s.theta += s.rate * dt
+        // a twitch: every so often one arm gets a kick, in or out
+        s.twitchIn -= dt
+        if s.twitchIn <= 0 && !dead {
+            s.twitchIn = 0.18 + s.rng.unit() * 0.32
+            let i = s.rng.int(arms)
+            s.vel[i] += (s.rng.unit() < 0.5 ? -1 : 1) * (1.6 + s.rng.unit() * 2.2)
+        }
 
         let landed = s.wasAirborne && !air
         s.wasAirborne = air
-        let k = 50.0, damp = 8.0
+        let k = 70.0, damp = 7.0
         for i in 0..<arms {
             let seed = seeds[i]
             // the arm's direction on screen, after the spin

@@ -21,6 +21,8 @@ enum Theme {
     static let sky = Color(hex: 0x4FA6E0)         // contextino sea
     static let mint = Color(hex: 0x57D19A)
 
+    static func color(_ hex: UInt32) -> Color { Color(hex: hex) }
+
     static func anton(_ size: CGFloat) -> Font { .custom("Anton-Regular", size: size) }
     static func black(_ size: CGFloat) -> Font { .custom("Montserrat-Black", size: size) }
     static func heavy(_ size: CGFloat) -> Font { .custom("Montserrat-ExtraBold", size: size) }

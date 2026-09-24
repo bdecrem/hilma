@@ -446,6 +446,41 @@ what Claude Code does all day. The phone is a client of the feed.
   `apps/<uuid>.html`, all on the device. Each project previews on its own
   origin (`https://<id8>.tokensurfers.app/`), so `localStorage` is per app.
 
+## Performance (2026-09-24 profile, simulator)
+
+Bart asked whether the app is heavy on the phone and whether the blob is.
+Instruments can't attach to the iOS 27 beta from this Xcode and every
+`devicectl … launch --console` needs the phone unlocked for minutes, so the
+numbers come from the simulator (relative, not the phone's) — never burn his
+phone time on this again (memory: `feedback_dont_experiment_on_barts_phone`).
+
+- **Tools**: `TS_PERF=1` prints `[perf] cpu N% of one core · mem · thermal ·
+  fps` every 2 s (`Game/PerfMeter.swift`: thread CPU via `thread_info`,
+  `phys_footprint`, the game's frames); `scripts/sim-console.py <log>` gets
+  the simulator app's console into a file from a non-tty shell (`script`
+  refuses: "tcgetattr: not supported on socket"); `sample <pid> 10` on the
+  simulator process shows where the main thread goes.
+- **Findings** (a coding session in split screen, then idle): the blob is
+  nothing (a dozen springs). The main thread's time was mostly CoreGraphics
+  rasterizing the game Canvas (under `_UIApplicationFlushCATransaction`),
+  then the **Starfield** — 40 `Text("★")` glyphs redrawn at 60 fps, and Home
+  kept doing it *behind* an open Studio (the biggest single hog, 18% of the
+  main thread while idle), then the music synth (a `pow` per sample per
+  voice, ~10% of a core), then the code view re-colouring every visible line
+  on every streamed update.
+- **Done**: stars as paths at 24 fps, paused while a Studio covers Home
+  (`HomeView(covered:)`, also pauses the hero); the synth recomputes pitch
+  and envelope every 8 samples and writes zeros when nothing plays;
+  `Syntax.colored` memoizes coloured lines; the two skyline layers are
+  rendered once per size into images (`SkylineCache`, they were hundreds of
+  rect fills per frame) and tiled; the game Canvas renders asynchronously at
+  2/3 of the screen scale and is scaled up (`SurfGameView.canvasScale` 1.5:
+  2× on a 3× phone). Simulator, same coding session: idle 39% → 15% of a
+  core, build 46% → 38%; the game alone 21 → 31 fps at the same CPU.
+- **Left**: the HUD's `StrokedText` (9 Text copies per label) re-lays out
+  every frame; the trains are ~15 paths each; a 40 fps cap would save
+  battery on the phone if it ever runs warm.
+
 ## Build and run
 
 ```bash
