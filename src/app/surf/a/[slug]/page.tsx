@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getSurfUser } from '@/lib/surf/auth'
-import { getApp } from '@/lib/surf/apps'
+import { getApp, ogImageURL } from '@/lib/surf/apps'
 import { Player, Upvote } from '../../client'
 import { Footer, TESTFLIGHT, TopBar } from '../../parts'
 
@@ -17,7 +17,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: `${app.emoji} ${app.title} · Token Surfers`,
     description: app.prompt ? `“${app.prompt}” — by @${app.owner}` : `by @${app.owner}`,
-    openGraph: { title: `${app.emoji} ${app.title}`, description: `by @${app.owner} on Token Surfers`, images: ['/surf/og.png'] },
+    openGraph: { title: `${app.emoji} ${app.title}`, description: `by @${app.owner} on Token Surfers`, images: [ogImageURL(app)] },
+    twitter: { card: 'summary_large_image', images: [ogImageURL(app)] },
   }
 }
 

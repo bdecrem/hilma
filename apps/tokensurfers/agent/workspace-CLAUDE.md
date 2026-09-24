@@ -19,6 +19,21 @@ vercel deploy --prod --yes --token "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --nam
 
 The app's address is `https://<directory name>.vercel.app` (the short alias, not the long per-deployment URL). When it answers 200, print exactly one line `DEPLOYED: https://<directory name>.vercel.app` (the phone reads it). If the deploy fails, read the error, fix it, deploy again — the build isn't done until the app is live. Never ask the user to deploy or to run anything.
 
+## The share card (every app, every build)
+
+A shared link to the app has to show a card. The page's `<head>` carries a `<title>`, a `<meta name="description">` and these tags (a framework app puts the same ones through its head/metadata API):
+
+```
+<meta property="og:title" content="<the app name>">
+<meta property="og:description" content="<one line about it>">
+<meta property="og:url" content="https://<directory name>.vercel.app">
+<meta property="og:image" content="https://tokensurfers.app/api/surf/og?emoji=<url-encoded emoji>&title=<url-encoded name>&line=<url-encoded one line>">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="<the same og:image URL>">
+```
+
+That URL draws the card for you (the emoji, the name, the line); keep it in exactly that shape and encode the values (`encodeURIComponent`). No card, no done: the app reports a missing og:image after the deploy.
+
 ## How to work
 
 1. Say what you're about to do in one short line before each step (see "Your voice"). Then do it.

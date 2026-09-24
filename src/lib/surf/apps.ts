@@ -25,6 +25,14 @@ export type AppCard = {
 
 export type AppFull = AppCard & { html: string; remixes: number; ownerId: string }
 
+/** The share card for a creation (the same one its deployed page links to). */
+export function ogImageURL(a: { emoji: string; title: string; prompt?: string; owner?: string }): string {
+  const q = new URLSearchParams({ emoji: a.emoji, title: a.title })
+  if (a.prompt) q.set('line', a.prompt.slice(0, 90))
+  if (a.owner) q.set('by', a.owner)
+  return `${SITE}/api/surf/og?${q.toString()}`
+}
+
 const SELECT = 'id, slug, title, emoji, prompt, upvotes, created_at, updated_at, owner_id, remix_of, site_url'
 
 type Row = {

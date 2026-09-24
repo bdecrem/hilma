@@ -138,7 +138,7 @@ class Project {
   /// Idle: start a build. Running: a note for Splat's next step (`now` interrupts).
   async send(text, { now = false } = {}) {
     if (this.state.running) {
-      this.notes.push(text)
+      this.notes.push({ text })
       this.emit('queued', { text })
       if (now) await this.interrupt()
       return { queued: true }
@@ -155,7 +155,7 @@ class Project {
 
   async stop() {
     if (!this.state.running) return { notes: [] }
-    const notes = this.notes.splice(0)
+    const notes = this.notes.splice(0).filter(n => !n.app).map(n => n.text)
     this.stopping = true
     await this.interrupt()
     return { notes }
@@ -197,9 +197,9 @@ class Project {
       PostToolUse: [{ hooks: [async () => {
         if (!self.notes.length) return {}
         const notes = self.notes.splice(0)
-        for (const n of notes) self.emit('note_in', { text: n, via: 'tool' })
-        log(self.id, 'notes in with a tool result:', notes.join(' | ').slice(0, 120))
-        return { hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: notes.map(n => `[user, mid-build]: ${n}`).join('\n') } }
+        for (const n of notes) if (!n.app) self.emit('note_in', { text: n.text, via: 'tool' })
+        log(self.id, 'notes in with a tool result:', notes.map(noteLine).join(' | ').slice(0, 160))
+        return { hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: notes.map(noteLine).join('\n') } }
       }] }],
     }
     const options = {
@@ -318,9 +318,9 @@ class Project {
         if (this.stopping) { this.close?.(); break }
         if (this.notes.length) {
           const notes = this.notes.splice(0)
-          for (const n of notes) this.emit('note_in', { text: n, via: 'message' })
-          log(this.id, 'notes in as the next message:', notes.join(' | ').slice(0, 120))
-          this.push?.(notes.map(n => `[user, mid-build]: ${n}`).join('\n'))
+          for (const n of notes) if (!n.app) this.emit('note_in', { text: n.text, via: 'message' })
+          log(this.id, 'notes in as the next message:', notes.map(noteLine).join(' | ').slice(0, 160))
+          this.push?.(notes.map(noteLine).join('\n'))
         } else {
           this.close?.()
         }
@@ -341,6 +341,23 @@ class Project {
     this.state.deployUrl = url
     this.emit('deployed', { url })
     log(this.id, 'deployed:', url)
+    this.checkShareCard(url)
+  }
+
+  /// Every app gets a share card: if the deployed page has no og:image, the
+  /// app tells Splat so before the build is over (as an [app] note).
+  async checkShareCard(url) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000), headers: { 'user-agent': 'tokensurfers-agent' } })
+      const html = (await res.text()).slice(0, 200_000)
+      if (/property=["']og:image["']/i.test(html)) { this.emit('share_card', { ok: true }); return }
+      if (!this.state.running) { this.emit('share_card', { ok: false }); return }
+      this.notes.push({ text: `the deployed page at ${url} has no og:image meta tag. Add the share-card tags from the rules (og:title, og:description, og:url, og:image with the tokensurfers.app/api/surf/og URL, twitter:card, twitter:image) to the <head> and deploy again.`, app: true })
+      this.emit('share_card', { ok: false, nudged: true })
+      log(this.id, 'no og:image on the deployed page — Splat gets a note')
+    } catch (e) {
+      log(this.id, 'share card check failed:', e?.message || e)
+    }
   }
 
   async emitFile(p) {
@@ -364,6 +381,9 @@ class Project {
     return fs.readFile(abs, 'utf8')
   }
 }
+
+/// How a queued note reads to the model: the user's words, or the app's own line.
+function noteLine(n) { return n.app ? `[app]: ${n.text}` : `[user, mid-build]: ${n.text}` }
 
 function summarize(name, input = {}) {
   const s = (v, n = 160) => (typeof v === 'string' ? (v.length > n ? v.slice(0, n) + '…' : v) : v)
@@ -448,7 +468,7 @@ const server = http.createServer(async (req, res) => {
         return json(res, 200, { events, gap, seq: p.seq, state: p.state })
       }
       case 'state':
-        return json(res, 200, { seq: p.seq, state: p.state, notes: p.notes })
+        return json(res, 200, { seq: p.seq, state: p.state, notes: p.notes.filter(n => !n.app).map(n => n.text) })
       case 'file': {
         const content = await p.readFile(url.searchParams.get('path'))
         res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' })

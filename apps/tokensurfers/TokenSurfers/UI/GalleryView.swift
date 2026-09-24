@@ -208,7 +208,7 @@ struct GalleryAppView: View {
                         ChunkyButton(title: busy ? "…" : "REMIX IT 🔁", fill: Theme.splat, height: 46, action: remix)
                             .disabled(html == nil || busy)
                     }
-                    ShareLink(item: URL(string: app.url)!) {
+                    ShareLink(item: URL(string: app.siteUrl ?? app.url)!) {   // the app itself when it has its own address
                         Image(systemName: "square.and.arrow.up").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.ink)
                             .frame(width: 46, height: 46)
                             .background(Circle().fill(.white).overlay(Circle().strokeBorder(Theme.ink, lineWidth: 2.5)))

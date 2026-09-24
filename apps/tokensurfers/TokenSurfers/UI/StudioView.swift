@@ -281,7 +281,7 @@ struct StudioView: View {
             Button { fullscreenApp = true } label: { Label("Open app fullscreen", systemImage: "arrow.up.left.and.arrow.down.right") }
                 .disabled(studio.html.isEmpty && studio.siteURL == nil)
             if let site = studio.siteURL {
-                ShareLink(item: site) { Label("Share the app link", systemImage: "link") }
+                ShareLink(item: site) { Label("Share the app", systemImage: "link") }
             }
             ShareLink(item: studio.store.exportURL(for: studio.project)) { Label("Share HTML", systemImage: "square.and.arrow.up") }
                 .disabled(studio.html.isEmpty)
@@ -291,7 +291,7 @@ struct StudioView: View {
             }
             .disabled((studio.html.isEmpty && studio.siteURL == nil) || studio.building || publishing)
             if let slug = studio.project.remoteSlug, let url = URL(string: "\(backendURL().absoluteString)/surf/a/\(slug)") {
-                ShareLink(item: url) { Label("Share the link", systemImage: "link") }
+                ShareLink(item: url) { Label(studio.siteURL == nil ? "Share the link" : "Share its gallery page", systemImage: "square.grid.2x2") }
                 Button(role: .destructive) { unpublish() } label: { Label("Unpublish", systemImage: "eye.slash") }
             }
             Divider()
@@ -712,8 +712,10 @@ struct StudioView: View {
             do {
                 let app = try await account.publish(project: studio.project, html: studio.html, siteURL: studio.siteURL?.absoluteString)
                 studio.setRemoteSlug(app.slug)
-                publishedURL = URL(string: app.url)
-                publishNote = "It's live at \(app.url)"
+                // the app itself is the link to hand out; the gallery page is where it's listed
+                let link = studio.siteURL?.absoluteString ?? app.url
+                publishedURL = URL(string: link)
+                publishNote = studio.siteURL == nil ? "It's live at \(app.url)" : "It's live at \(link) and listed in the gallery."
                 SurfAudio.shared.play(.celebrate)
             } catch {
                 publishNote = "Couldn't publish: \(error.localizedDescription)"
