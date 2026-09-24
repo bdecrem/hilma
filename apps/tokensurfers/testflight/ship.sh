@@ -15,19 +15,19 @@ cd "$(dirname "$0")/.."
 KEYS="$HOME/.appstoreconnect/private_keys"
 KEY_ID="${ASC_KEY_ID:-5A5HNSWA33}"
 ISSUER="69a6de80-eb13-47e3-e053-5b8c7c11a4d1"
-PROFILE="tokensurfers appstore imac"
+PROFILE="${TS_PROFILE:-tokensurfers appstore imac}"
 [ -f "$KEYS/AuthKey_$KEY_ID.p8" ] || { echo "error: $KEYS/AuthKey_$KEY_ID.p8 missing" >&2; exit 1; }
 [ -f TokenSurfers/App/Secrets.swift ] || { echo "error: TokenSurfers/App/Secrets.swift missing (see Secrets.swift.example)" >&2; exit 1; }
-export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}"
+export DEVELOPER_DIR="${DEVELOPER_DIR:-$(xcode-select -p)}"
 
 if [ "${SKIP_BUMP:-}" != 1 ]; then
-  CUR=$(grep -E '^\s*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*"([0-9]+)".*/\1/')
+  CUR=$(grep -E '^[[:space:]]*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*"([0-9]+)".*/\1/')
   NEXT=$((CUR + 1))
-  sed -i '' -E "s/^(\s*CURRENT_PROJECT_VERSION:) \"[0-9]+\"/\1 \"$NEXT\"/" project.yml
-  if [ -n "${1:-}" ]; then sed -i '' -E "s/^(\s*MARKETING_VERSION:) \"[^\"]+\"/\1 \"$1\"/" project.yml; fi
+  sed -i '' -E "s/^([[:space:]]*CURRENT_PROJECT_VERSION:) \"[0-9]+\"/\1 \"$NEXT\"/" project.yml
+  if [ -n "${1:-}" ]; then sed -i '' -E "s/^([[:space:]]*MARKETING_VERSION:) \"[^\"]+\"/\1 \"$1\"/" project.yml; fi
 fi
-BUILD=$(grep -E '^\s*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*"([0-9]+)".*/\1/')
-VERSION=$(grep -E '^\s*MARKETING_VERSION:' project.yml | sed -E 's/.*"([^"]+)".*/\1/')
+BUILD=$(grep -E '^[[:space:]]*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*"([0-9]+)".*/\1/')
+VERSION=$(grep -E '^[[:space:]]*MARKETING_VERSION:' project.yml | sed -E 's/.*"([^"]+)".*/\1/')
 xcodegen generate -q
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/tokensurfers-ship.XXXXXX")
 
