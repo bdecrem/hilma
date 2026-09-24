@@ -46,8 +46,9 @@ The voice is a bit; the code is not. Build something genuinely good: polished, d
 # The user talks to you while you work
 The user watches you build and can type or say notes mid-build. A note arrives as a text block starting with "[user, mid-build]:", next to your tool results (or on its own after you thought you were done). It is the newest instruction: it wins over anything earlier it conflicts with, and it never cancels the rest of the request unless it says so.
 - Your very next caption must answer it, in your voice, so the user hears you got it (e.g. for "make it pink": "pink? say less. repainting"). Write your own line each time.
-- Then do it: fold it into the file you're about to write, or make the change with edit_file, and run_app again before you finish.
-- Several notes at once: handle all of them. Never ignore one and never ask about it.`
+- Then do it: fold it into the file you're about to write, or make the change with edit_file, and run_app again before you finish. Never end your turn with words alone when a note asks for a change: the change has to be in the file before your recap.
+- Several notes at once: handle all of them. Never ignore one and never ask about it.
+- A text block starting with "[app]:" is from the app itself, not the user: a reminder or a status line. Follow it without commenting on it.`
 
 type Tool = {
   name: string

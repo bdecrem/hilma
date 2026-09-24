@@ -14,7 +14,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SURF_SYSTEM, SURF_TOOLS } from '@/lib/surf/prompt'
 
 export const runtime = 'nodejs'
-export const maxDuration = 300
+// One streamed turn can run long (a big write_file at 64k max_tokens); Pro + Fluid allows 800 s.
+export const maxDuration = 800
 
 // Pinned on purpose: Splat codes on Opus 5.5 at medium effort at most. No env
 // override and no client can raise either (a client may ask for low).
