@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { AppCard } from '@/lib/surf/apps'
 import { AccountPill } from './client'
 
-export const GITHUB = 'https://github.com/bdecrem/hilma/tree/main/apps/tokensurfers'
+export const GITHUB = process.env.SURF_GITHUB_URL || 'https://github.com/bdecrem/tokensurfers'
 export const TESTFLIGHT = process.env.SURF_TESTFLIGHT_URL || ''
 
 /** Splat, the tube man (public/surf/splat.svg, from misc/splat.svg). */

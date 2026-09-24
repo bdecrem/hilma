@@ -1,7 +1,7 @@
 import { CaptionCycler } from './client'
+import { GITHUB } from './parts'
 
 const TESTFLIGHT = process.env.SURF_TESTFLIGHT_URL || ''
-const GITHUB = process.env.SURF_GITHUB_URL || ''
 
 // One paragraph, one image, two links. A sidequest, not a landing page.
 export default function SurfLanding() {
@@ -37,7 +37,7 @@ export default function SurfLanding() {
       <div className="sq-links">
         <a className="key yellow" href="/surf/gallery">stuff people made at 3am 🌙</a>
         {TESTFLIGHT ? <a className="key" href={TESTFLIGHT}>get it on testflight 🏄</a> : <span className="key" aria-disabled="true">testflight · soon 🏄</span>}
-        {GITHUB ? <a className="key ink" href={GITHUB} target="_blank" rel="noreferrer">github</a> : <span className="key ink" aria-disabled="true">github · soon</span>}
+        <a className="key ink" href={GITHUB} target="_blank" rel="noreferrer">it's open source 🐙</a>
       </div>
     </main>
   )

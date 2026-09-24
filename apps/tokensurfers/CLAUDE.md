@@ -547,7 +547,7 @@ State after the Splat / mid-build notes / mirror session (commits `a6077262`,
 - **The mirror is prepared, not live.** Bart said no to creating
   `bdecrem/tokensurfers` for now. Don't create the repo or add the deploy key
   without asking. The workflow is a no-op until `TOKENSURFERS_DEPLOY_KEY`
-  exists. `GITHUB` in `src/app/surf/parts.tsx` still points at the hilma tree.
+  exists. `GITHUB` in `src/app/surf/parts.tsx` points at bdecrem/tokensurfers (2026-09-24).
 - **The app key is extractable** from any shipped build (it's in the binary by
   design), so `/api/surf/llm` has a global daily budget: `surf_usage` (schema
   004, applied 2026-09-24) counts calls and tokens per UTC day, read out of the
