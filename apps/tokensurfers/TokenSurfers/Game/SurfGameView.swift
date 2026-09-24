@@ -254,7 +254,7 @@ struct SurfGameView: View {
         ZStack {
             Color.black.opacity(0.35)
             VStack(spacing: 14) {
-                SurferHero(unit: compact ? 36 : 54)
+                BlobHero(unit: compact ? 36 : 54)
                 VStack(spacing: -8) {
                     StrokedText(text: "TOKEN", font: Theme.anton(compact ? 30 : 44), stroke: 3)
                     StrokedText(text: "SURFERS", font: Theme.anton(compact ? 36 : 54), color: Theme.yellow, stroke: 3.5)
@@ -313,7 +313,7 @@ struct SurfGameView: View {
             Color.black.opacity(0.35)
             VStack(spacing: 10 * s) {
                 HStack(spacing: 10) {
-                    SurferHero(unit: 22 * s, mood: .dead, running: false)
+                    BlobHero(unit: 22 * s, mood: .dead, running: false)
                     VStack(alignment: .leading, spacing: -6) {
                         StrokedText(text: "GAME OVER", font: Theme.anton(26 * s), stroke: 2.5)
                         Text(engine.score >= board.localBest && engine.score > 0 && engine.runs >= 0 && submitted?.best == engine.score

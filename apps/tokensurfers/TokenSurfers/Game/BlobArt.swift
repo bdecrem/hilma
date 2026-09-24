@@ -19,14 +19,14 @@ final class BlobState {
 }
 
 enum BlobArt {
-    static let arms = 10
+    static let arms = 14
     /// Tip radius at rest, body radius, arm width, sticker edge (world units).
-    static let R = 0.50
-    static let body = 0.21
-    static let width = 0.21
-    static let edge = 0.06
+    static let R = 0.43
+    static let body = 0.18
+    static let width = 0.16
+    static let edge = 0.05
     /// The blob floats: its centre sits this high above the ground it runs on.
-    static let hover = 0.52
+    static let hover = 0.5
 
     static let fill = Color(hex: 0xF08A55)
     static let discOuter = Color(hex: 0xFFE9CC)
@@ -36,7 +36,7 @@ enum BlobArt {
     /// Fixed per-arm character: base length and breathing phase.
     private static let seeds: [(len: Double, phase: Double, w: Double, thick: Double)] = (0..<arms).map { i in
         var rng = SeededRandom(seed: 91 + UInt64(i) * 7)
-        return (0.58 + 0.57 * rng.unit(), rng.unit() * 2 * .pi, 1.5 + rng.unit() * 1.4, 0.75 + rng.unit() * 0.55)
+        return (0.55 + 0.6 * rng.unit(), rng.unit() * 2 * .pi, 2.4 + rng.unit() * 2.2, 0.7 + rng.unit() * 0.65)
     }
 
     /// `origin` is the ground point under the character on screen; `unit` is pixels per world unit.
@@ -52,7 +52,8 @@ enum BlobArt {
 
         let dead = p.dead >= 0
         let drop = dead ? min(1, p.dead * 2.5) : 0          // crashed: it sinks to the ground
-        let centreY = -(hover + p.lift) * unit + drop * (hover - body) * unit
+        let bob = dead ? 0 : 0.045 * sin(p.t * 7.3) + 0.012 * sin(p.t * 23.7)   // never quite still
+        let centreY = -(hover + p.lift + bob) * unit + drop * (hover - body) * unit
         c.translateBy(x: 0, y: centreY)
         c.scaleBy(x: unit, y: unit)
 
@@ -119,20 +120,21 @@ enum BlobArt {
         let dead = p.dead >= 0
         let air = p.lift > 0.03
         // spin: steady, faster with speed, a boost in the air and in a roll, none when dead
-        var target = dead ? 0 : 1.3 + 0.9 * p.speed
-        if air { target += 3.5 }
-        if p.rolling > 0 { target += 6 }
+        var target = dead ? 0 : 2.1 + 1.3 * p.speed
+        if air { target += 4 }
+        if p.rolling > 0 { target += 7 }
         s.rate += (target - s.rate) * min(1, 6 * dt)
         s.theta += s.rate * dt
 
         let landed = s.wasAirborne && !air
         s.wasAirborne = air
-        let k = 48.0, damp = 8.0
+        let k = 62.0, damp = 8.5
         for i in 0..<arms {
             let seed = seeds[i]
             // the arm's direction on screen, after the spin
             let a = Double(i) / Double(arms) * 2 * .pi + s.theta
-            var goal = seed.len * R * (1 + 0.10 * sin(seed.w * p.t + seed.phase) + 0.05 * sin(seed.w * 1.9 * p.t + seed.phase * 2))
+            var goal = seed.len * R * (1 + 0.11 * sin(seed.w * p.t + seed.phase) + 0.05 * sin(seed.w * 1.9 * p.t + seed.phase * 2)
+                                       + 0.03 * sin(seed.w * 4.7 * p.t + seed.phase * 3))   // the jitter
             // trailing arms stretch behind a lane change
             goal += 0.30 * R * max(0, -cos(a) * p.sway)
             // hanging arms dangle in the air
@@ -143,5 +145,33 @@ enum BlobArt {
             s.len[i] += s.vel[i] * dt
             s.len[i] = max(body * 0.6, s.len[i])
         }
+    }
+}
+
+/// The blob as a view: Home, the composer's status pill, the cards, the
+/// cutaways, the game-over card. The same drawing, spinning and breathing in
+/// place. `energy` is how lively it is (the status pill idles low while Splat
+/// thinks); `.dead` shows the wilted one with X eyes.
+struct BlobHero: View {
+    var unit: CGFloat = 80
+    var mood: SurferPose.Mood = .happy
+    var running = true
+    var front = true
+    var energy: Double = 1
+    @State private var state = BlobState()
+
+    var body: some View {
+        TimelineView(.animation(paused: !running)) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            Canvas { ctx, size in
+                var p = SurferPose()
+                p.t = running ? t : 0.4
+                p.speed = running ? energy : 0
+                p.dead = mood == .dead ? 1 : -1
+                // px per world unit, so the blob's height is about the tube man's was
+                BlobArt.draw(&ctx, origin: CGPoint(x: size.width / 2, y: size.height - unit * 0.12), unit: unit * 1.55, pose: p, state: state)
+            }
+        }
+        .frame(width: unit * 1.7, height: unit * 1.7)
     }
 }

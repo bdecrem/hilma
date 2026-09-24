@@ -166,7 +166,7 @@ struct AccountSheet: View {
             PaperGrain(opacity: 0.09).ignoresSafeArea()
             ScrollView {
                 VStack(spacing: 16) {
-                    SurferHero(unit: 40, mood: .cool)
+                    BlobHero(unit: 40, mood: .cool)
                     VStack(spacing: -8) {
                         StrokedText(text: create ? "JOIN THE" : "WELCOME", font: Theme.anton(30), stroke: 3)
                         StrokedText(text: create ? "SURFERS" : "BACK", font: Theme.anton(40), color: Theme.yellow, stroke: 3.5)

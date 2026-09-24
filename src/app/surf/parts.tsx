@@ -6,8 +6,9 @@ export const GITHUB = 'https://github.com/bdecrem/hilma/tree/main/apps/tokensurf
 export const TESTFLIGHT = process.env.SURF_TESTFLIGHT_URL || ''
 
 /** Splat, the tube man (public/surf/splat.svg, from misc/splat.svg). */
+/** Splat: the spinning splat blob (the runner in the game since 2026-09-24; the tube man before it). */
 export function TubeMan({ className }: { className?: string }) {
-  return <img className={className} src="/surf/splat.svg" alt="" aria-hidden="true" width={380} height={520} />
+  return <img className={className} src="/surf/blob.svg" alt="" aria-hidden="true" width={400} height={400} />
 }
 
 export function TopBar({ section }: { section?: string }) {

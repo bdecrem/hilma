@@ -101,7 +101,7 @@ struct HomeView: View {
                     .padding(.top, 12)
             }
             Spacer()
-            SurferHero(unit: 58)
+            BlobHero(unit: 58)
         }
         .padding(.top, 14)
         .overlay(alignment: .topTrailing) {
@@ -243,7 +243,7 @@ struct HomeView: View {
                     Text(surfLine).font(Theme.rounded(12.5, .heavy)).foregroundStyle(Theme.ink2)
                 }
                 Spacer()
-                SurferHero(unit: 22, mood: .cool)
+                BlobHero(unit: 22, mood: .cool)
             }
             ChunkyButton(title: "SURF NOW 🏄", fill: Theme.splat) { showGame = true }
             if !board.top.isEmpty {
@@ -288,7 +288,7 @@ struct HomeView: View {
             StrokedText(text: "YOUR APPS", font: Theme.anton(26), stroke: 2.5)
             if projects.isEmpty {
                 HStack(spacing: 12) {
-                    SurferHero(unit: 30, energy: 0.12)
+                    BlobHero(unit: 30, energy: 0.12)
                     Text("no apps yet. the splat is bored.\ntype something up there ↑")
                         .font(Theme.rounded(14, .bold)).foregroundStyle(Theme.ink)
                 }

@@ -309,7 +309,7 @@ struct CutawayView: View {
         case .tokenur: Tokenur(size: m * 0.5)
         case .contextino: Contextino(size: m * 0.45)
         case .hallucinello: Hallucinello(size: m * 0.5)
-        case .absolutelyRight: SurferHero(unit: m * 0.3, mood: .wow)
+        case .absolutelyRight: BlobHero(unit: m * 0.3, mood: .wow)
         }
     }
 }
@@ -338,7 +338,7 @@ struct EmptyStage: View {
             Sunburst(spin: true)
             PaperGrain(opacity: 0.1)
             VStack(spacing: 16) {
-                SurferHero(unit: 70)
+                BlobHero(unit: 70)
                 StrokedText(text: "WHAT ARE WE", font: Theme.black(26), stroke: 2.5)
                 StrokedText(text: "BUILDING?", font: Theme.black(34), color: Theme.yellow, stroke: 3)
                 Text("type it below ↓").font(Theme.rounded(15, .bold)).foregroundStyle(.white.opacity(0.9))

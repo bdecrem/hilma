@@ -254,7 +254,7 @@ struct HandleSheet: View {
             Sunburst(spin: false).ignoresSafeArea()
             PaperGrain(opacity: 0.09).ignoresSafeArea()
             VStack(spacing: 18) {
-                SurferHero(unit: 46, mood: .cool)
+                BlobHero(unit: 46, mood: .cool)
                 StrokedText(text: "WHO'S SURFING?", font: Theme.anton(34), stroke: 3)
                 TextField("your name", text: $text)
                     .font(Theme.heavy(24))

@@ -154,7 +154,7 @@ struct StudioView: View {
                             Sunburst(spin: false)
                             PaperGrain(opacity: 0.1)
                             VStack(spacing: 14) {
-                                SurferHero(unit: 60)
+                                BlobHero(unit: 60)
                                 Button { withAnimation { gameOpen = true } } label: {
                                     Label("Surf while you wait", systemImage: "figure.surfing")
                                         .font(Theme.black(15)).foregroundStyle(Theme.ink)
@@ -505,7 +505,7 @@ struct StudioView: View {
 
     private var statusPill: some View {
         HStack(spacing: 6) {
-            SurferHero(unit: 13, energy: splatEnergy)
+            BlobHero(unit: 13, energy: splatEnergy)
                 .frame(height: 30)
             // with notes waiting, room goes to them: just Splat and the count
             if studio.queue.isEmpty {

@@ -48,9 +48,17 @@ Token Surfers is a real endless runner now, not a screensaver. `Game/`:
   out, the crash wilts them to half and drops the body with X eyes on the
   token. Lane-sized: tip radius 0.5 world units, centre 0.52 above the
   ground, the same shadow, squash and roll transforms as the tube man had.
-  The springs live in `BlobState` on the engine (animation only). The tube
-  man below stays the Splat of Home, the cards, the composer and the
-  cutaways, where there is a face to see.
+  The springs live in `BlobState` on the engine (animation only). Second
+  pass the same day (Bart: "too large and not quite fun enough"): 14 arms,
+  tip radius 0.43, a vertical bob (0.045 at 7.3 Hz plus a 0.012 jitter),
+  spin 2.1 + 1.3·speed, springs k 62. **`BlobHero` replaces `SurferHero`
+  everywhere** (Home, the composer's status pill, the cards, the cutaways,
+  the game-over card, the empty shelf): the same drawing spinning in place,
+  `energy` = liveliness, `.dead` = the wilted one. On the web, `TubeMan` in
+  `parts.tsx` now serves `public/surf/blob.svg` (a static 14-arm splat) with
+  a slow `sf-spin`; `public/surf/hero.jpg` is a fresh Studio frame with the
+  blob in the game, `public/surf/og.png` regenerated with
+  `node scripts/surf/og-shot.mjs` against a dev server on 3219.
 - **The tube man** (`SurferArt.swift`, 2026-09-24): Splat is the inflatable
   tube man from `misc/splat-back-smooth.svg` (back) and `misc/splat.svg`
   (front: shades, grin, shaka hand; Home, the cards, the Studio). Drawn in the SVG's own coordinates (y down, feet on 532, `k` =
@@ -179,7 +187,11 @@ back into their own apps. One handle for all of it (and the leaderboard).
 - Not built: passwords can't be reset (no email); moderation is
   unpublish-your-own plus a Report button on every creation (app and web,
   `POST /api/surf/apps/:slug/report`, no account needed → `surf_reports` +
-  a text and an email to Bart).
+  a text and an email to Bart through `src/lib/surf/notify.ts`, which only
+  reads env: `SURF_REPORT_EMAIL` + `SENDGRID_API_KEY`, and
+  `SURF_REPORT_TEXT_URL/_SECRET/_TO` pointing at
+  `/api/f2/imessage/notify`, the secret-gated route that sends through the
+  normal ledgered iMessage sender — surf code must not import f2).
 
 ## The screen
 
@@ -491,18 +503,22 @@ variable set and capture with `screencapture -l <window id>`.
 
 ## The mirror repo
 
-Token Surfers can be mirrored into its own repo (`bdecrem/tokensurfers`):
-`mirror/sync.sh <out>` assembles `ios/` (this folder minus CLAUDE.md),
+Token Surfers is released as periodic snapshots into its own public MIT
+repo, `bdecrem/tokensurfers` (checkout `../tokensurfers`) — **how: `mirror/RELEASE.md`**.
+`mirror/sync.sh <out>` takes hilma's committed HEAD (git archive, never the
+working tree) and assembles `ios/` (this folder minus CLAUDE.md),
 `web/` (a minimal Next.js app — `mirror/web` — around `src/app/surf`,
 `src/app/api/surf`, `src/lib/surf`, `public/surf`), `schema/` and `art/`
 (the Splat SVGs), then scans the tree for keys (Anthropic/OpenAI/JWT/pem/
 SendGrid/GitHub patterns, `Secrets.swift`, and exact values in
-`SCAN_VALUES`) and refuses to continue on a hit. `--push <url>` commits
+`SCAN_VALUES`) and refuses to continue on a hit, and an import scan that fails if the web
+code reaches outside `@/lib/surf` / `@/app/surf`. `--push <url>` commits
 "Sync from hilma@<sha>" onto the mirror's history. The workflow
 `.github/workflows/sync-tokensurfers.yml` runs it on every push that
 touches those paths once the `TOKENSURFERS_DEPLOY_KEY` secret exists (and
-`SURF_APP_KEY` for the exact-value scan). The mirror's `web/` builds on its
-own (`pnpm install && pnpm build`, verified 2026-09-24). The server code
+`SURF_APP_KEY` for the exact-value scan) — not wired yet; releases are run by
+hand from RELEASE.md. The mirror's `web/` builds on its own (`pnpm install &&
+pnpm build`, verified 2026-09-24). LICENSE (MIT, shipped from `mirror/LICENSE`). The server code
 only imports `@/lib/surf/*` and npm packages — keep it that way or the
 mirror breaks. When the mirror is live, point `GITHUB` in
 `src/app/surf/parts.tsx` / `SURF_GITHUB_URL` at it.

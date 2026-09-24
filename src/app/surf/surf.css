@@ -71,7 +71,8 @@
 .sf .hero .art { position: relative; min-height: 320px; display: flex; align-items: flex-end; justify-content: center; }
 .sf .phone { width: 250px; border-radius: 34px; border: 8px solid var(--ink); overflow: hidden; background: var(--ink); box-shadow: 0 18px 0 rgba(0, 0, 0, 0.18); }
 .sf .phone img { display: block; width: 100%; height: auto; }
-.sf .tube { position: absolute; left: -2%; bottom: 0; width: 32%; max-width: 160px; transform-origin: 50% 100%; animation: sf-flop 1.6s ease-in-out infinite; }
+.sf .tube { position: absolute; left: -2%; bottom: 0; width: 32%; max-width: 160px; transform-origin: 50% 50%; animation: sf-spin 7s linear infinite; }
+@keyframes sf-spin { to { transform: rotate(360deg); } }
 @keyframes sf-flop { 0%, 100% { transform: skewX(-4deg) rotate(-2deg); } 50% { transform: skewX(4deg) rotate(2deg); } }
 
 /* sections */
