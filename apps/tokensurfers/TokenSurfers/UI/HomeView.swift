@@ -41,8 +41,8 @@ struct HomeView: View {
                         header
                         promptCard
                         galleryCard
-                        surfCard
                         shelf.id("shelf")
+                        surfCard
                     }
                     .padding(.horizontal, 16)
                     .padding(.bottom, 40)
