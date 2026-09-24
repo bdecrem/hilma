@@ -16,11 +16,13 @@ import { SURF_SYSTEM, SURF_TOOLS } from '@/lib/surf/prompt'
 export const runtime = 'nodejs'
 export const maxDuration = 300
 
-const DEFAULT_MODEL = 'claude-opus-5-5'
-const DEFAULT_EFFORT = 'medium'
+// Pinned on purpose: Splat codes on Opus 5.5 at medium effort at most. No env
+// override and no client can raise either (a client may ask for low).
+const MODEL = 'claude-opus-5-5'
+const MAX_EFFORT = 'medium'
 const MAX_TOKENS = 64000
 const MAX_MESSAGES = 80
-const EFFORTS = new Set(['low', 'medium', 'high'])
+const EFFORTS = new Set(['low', MAX_EFFORT])
 
 let _client: Anthropic | null = null
 function getClient() {
@@ -48,12 +50,10 @@ export async function POST(req: NextRequest) {
   const { messages } = body
   if (!Array.isArray(messages) || messages.length === 0) return err('messages required', 400)
   if (messages.length > MAX_MESSAGES) return err('conversation too long', 400)
-  const effort = typeof body.effort === 'string' && EFFORTS.has(body.effort)
-    ? body.effort
-    : (process.env.SURF_EFFORT || DEFAULT_EFFORT)
+  const effort = typeof body.effort === 'string' && EFFORTS.has(body.effort) ? body.effort : MAX_EFFORT
 
   const params = {
-    model: process.env.SURF_MODEL || DEFAULT_MODEL,
+    model: MODEL,
     max_tokens: MAX_TOKENS,
     stream: true,
     // Opus 5.5 always thinks; "updates" returns its between-tool notes as

@@ -36,16 +36,24 @@ Token Surfers is a real endless runner now, not a screensaver. `Game/`:
   runs never reach the leaderboard), and it is the regression check — a
   death prints `[bot] DEATH …` with the nearby entities, so a survivable
   course means an empty log. 70-second runs on 2026-09-24 had none.
-- **The surfer** (`SurferArt.swift`): Splat with legs. Orange paper
-  starburst body, dark-orange legs in chunky white sneakers (orange stripe,
-  ink sole), mitten arms that pump, a red scarf whipping off to the right at
-  neck height, an antenna with a pulsing yellow bulb, a goggles strap across
-  the back of the head (goggles on the forehead from the front; down over
-  the eyes for the `.cool` mood), and a navy laptop backpack with a green
-  `>_` sticker. Poses: run cycle with foreshortened forward leg, jump (legs
-  tucked, arms up), roll (spinning ball with speed streaks), stumble lean,
-  landing squash, and the death tumble (front view, X eyes). `SurferHero`
-  is the SwiftUI front view used on Home, the cards and the name sheet.
+- **The surfer** (`SurferArt.swift`, 2026-09-24): Splat is the inflatable
+  tube man from `misc/splat-back-smooth.svg` (back, in the runner) and
+  `misc/splat.svg` (front: shades, grin, shaka hand; Home, the cards, the
+  Studio). Drawn in the SVG's own coordinates (y down, feet on 532, `k` =
+  world units per SVG px), layer order as in the SVG: white sticker edge,
+  one merged ink silhouette, fills. Kept: the eight-ray gradient crown, the
+  token on a spring antenna, the goggles strap, the `>_` patch, the sneakers.
+  Dropped for the vibe: the seam lines and the static tilt. Animated the way
+  `misc/splat-back-rig.svg` intends (arms rotate about the shoulders, the
+  antenna and each ray about their roots) but as an air dancer: `Rig.bend(y)`
+  bends the tube (base planted, top whipping, leaning against lane changes
+  via `pose.sway`), every part rides the bend with `attach`, arm points turn
+  a little more toward the hand so they curl. Poses: run (heels kick up and
+  show their soles, drawn over the tube), jump (arms up), roll = the tube
+  deflates into a squashed crumple, landing squash, stumble lean, crash
+  tumble (front view, X eyes). `SurferHero(unit:mood:running:energy:)` is
+  the front view as a view; `energy` 0…1 is how hard it dances (the Studio's
+  status pill uses it per phase).
 - **Renderer** (`SurfRenderer.swift`): camera 6 units back with a long lens
   (`f = min(1.58 W, 0.71 H · 6 / 3)`), feet at 86% of the height, horizon
   near 40% (short panes shorten the lens so the horizon stays on screen),
@@ -171,8 +179,33 @@ back into their own apps. One handle for all of it (and the leaderboard).
     1–3 word chunks with one word in yellow, and it doubles as the resize
     handle.
   - **Token Surfers** is below the seam, in attract mode until you swipe.
-  - A **composer** sits at the bottom. While a build runs it becomes a status
-    pill (phase and token count) plus a Stop button.
+  - A **composer** sits at the bottom and stays open during a build: a
+    status strip on top (a dancing mini Splat, the phase, the token count,
+    queued notes, Stop) and "tell splat… he'll catch it next step" with a
+    hold-to-talk mic below.
+  - **Talking to Splat mid-build** (`Studio.Note`, `queue`): what you send
+    while he works waits for the current step to end, then rides into the
+    next user message as `[user, mid-build]: …` text blocks next to the tool
+    results (Claude Code's queued-message shape). A note that arrives while
+    he writes the recap makes the loop go one more round instead of ending.
+    "⚡ now" cancels the half-streamed turn (`deliverNow` → the `call` task)
+    and appends the notes to the last user message; a tool that is already
+    running (the test drive) still finishes. × takes a note back. Stopped or
+    failed builds put queued notes back in the composer. The prompt tells
+    Splat to acknowledge a note in his very next caption. Delivered notes
+    join `project.prompts`, so later builds remember them.
+  - **Voice** (`Agent/VoiceInput.swift`): hold the mic, talk, let go (slide
+    up to cancel). SFSpeechRecognizer with partial results into the field;
+    the audio session switches to play-and-record while held, the music
+    ducks to 12% and the narrator holds. Idle, the words start a build;
+    building, they queue like a typed note (🎙️ chip).
+  - **Live feed** (`UI/LiveFeed.swift`): a TikTok-live comment stream over
+    the stage during a build — Splat's spoken captions with the tool's icon
+    (✍️ 🩹 👀 🧪), 🐞/✅ from run_app, your notes ("next step" → "✓ heard").
+    ••• → "What Splat did" shows the whole session.
+  - The **narrator** no longer cuts itself off: a new line waits for the
+    current one (only the newest waits, dropped after 5 s), and it uses the
+    best installed en-US voice (premium/enhanced when downloaded).
   - After a build the game tucks away and the app fills the screen. The
     "🏄 surf" chip or the ⌄ button toggles the game, and follow-up chips
     ("make it prettier ✨") appear.
@@ -199,7 +232,8 @@ back into their own apps. One handle for all of it (and the leaderboard).
   - Gate: an `x-surf-key` header must equal `SURF_APP_KEY` (in `.env.local`
     and on Vercel Production + Preview, and in the app's gitignored
     `TokenSurfers/App/Secrets.swift`; copy `Secrets.swift.example`).
-  - Model: `claude-opus-5-5`, effort `medium`, `thinking.display: "updates"`
+  - Model: `claude-opus-5-5`, effort `medium` — both pinned in code, no env
+    override; a client may ask for `low` but never more. `thinking.display: "updates"`
     (so between-tool notes come back as short thinking text for the subtitle
     box), max_tokens 64k, prompt caching on the system block.
   - Tune the prompt there; no app build is needed.
@@ -257,6 +291,14 @@ xcrun devicectl device install app --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27
 
 Test hooks (environment variables):
 
+- `TS_INJECT="<note>"` sends a mid-build note after `TS_INJECT_AT` seconds
+  (default 12); `TS_INJECT_NOW=1` also presses ⚡ now 1.5 s later.
+  `TS_HEAR=/path/audio.aiff` sends a file through the speech recognizer
+  (fails to initialize in the iOS 27 simulator — voice needs a device).
+  Test against a local server with `TS_BACKEND=http://localhost:3219` so
+  prompt edits are live (never run `pnpm build` while that dev server is
+  up: it rewrites `.next` under it).
+
 - `TS_AUTORUN="<prompt>"` creates a project and builds it.
 - `TS_OPEN=first` opens the newest project.
 - `TS_OPEN=first TS_SEND="<change>"` asks that project for a change.
@@ -270,6 +312,24 @@ Test hooks (environment variables):
 Verify with `xcrun simctl io … screenshot` every few seconds. A build
 takes about 40–90 s. On the Mac, run the binary directly with the environment
 variable set and capture with `screencapture -l <window id>`.
+
+## The mirror repo
+
+Token Surfers can be mirrored into its own repo (`bdecrem/tokensurfers`):
+`mirror/sync.sh <out>` assembles `ios/` (this folder minus CLAUDE.md),
+`web/` (a minimal Next.js app — `mirror/web` — around `src/app/surf`,
+`src/app/api/surf`, `src/lib/surf`, `public/surf`), `schema/` and `art/`
+(the Splat SVGs), then scans the tree for keys (Anthropic/OpenAI/JWT/pem/
+SendGrid/GitHub patterns, `Secrets.swift`, and exact values in
+`SCAN_VALUES`) and refuses to continue on a hit. `--push <url>` commits
+"Sync from hilma@<sha>" onto the mirror's history. The workflow
+`.github/workflows/sync-tokensurfers.yml` runs it on every push that
+touches those paths once the `TOKENSURFERS_DEPLOY_KEY` secret exists (and
+`SURF_APP_KEY` for the exact-value scan). The mirror's `web/` builds on its
+own (`pnpm install && pnpm build`, verified 2026-09-24). The server code
+only imports `@/lib/surf/*` and npm packages — keep it that way or the
+mirror breaks. When the mirror is live, point `GITHUB` in
+`src/app/surf/parts.tsx` / `SURF_GITHUB_URL` at it.
 
 ## Ideas not built yet
 

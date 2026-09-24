@@ -1,0 +1,50 @@
+name: Sync Token Surfers mirror
+
+# Mirrors Token Surfers (apps/tokensurfers + the /surf web code) into its own
+# repo. Needs two repo secrets: TOKENSURFERS_DEPLOY_KEY (an SSH deploy key with
+# write access on the mirror) and SURF_APP_KEY (only used by the secret scan,
+# so the real app key can never be pushed). Until the deploy key exists the
+# job reports "not configured" and stops.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/tokensurfers/**'
+      - 'src/app/api/surf/**'
+      - 'src/app/surf/**'
+      - 'src/lib/surf/**'
+      - 'public/surf/**'
+      - 'misc/splat*.svg'
+      - '.github/workflows/sync-tokensurfers.yml'
+  workflow_dispatch:
+
+concurrency: sync-tokensurfers
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check configuration
+        id: cfg
+        env:
+          DEPLOY_KEY: ${{ secrets.TOKENSURFERS_DEPLOY_KEY }}
+        run: |
+          if [ -z "$DEPLOY_KEY" ]; then
+            echo "::notice::TOKENSURFERS_DEPLOY_KEY is not set; the mirror is not configured yet."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Sync
+        if: steps.cfg.outputs.ready == 'true'
+        env:
+          DEPLOY_KEY: ${{ secrets.TOKENSURFERS_DEPLOY_KEY }}
+          SCAN_VALUES: ${{ secrets.SURF_APP_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/mirror && chmod 600 ~/.ssh/mirror
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/mirror -o IdentitiesOnly=yes"
+          bash apps/tokensurfers/mirror/sync.sh "$RUNNER_TEMP/tokensurfers" --push git@github.com:bdecrem/tokensurfers.git
