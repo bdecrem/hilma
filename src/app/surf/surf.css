@@ -50,7 +50,9 @@
   cursor: pointer; transition: transform 0.12s; white-space: nowrap;
 }
 .sf .key:active { transform: translateY(2px) scale(0.98); box-shadow: 0 2px 0 var(--ink); }
-.sf .key.ink { background: var(--ink); }
+/* ink on ink has no edge: the dark key wears the same white sticker outline as the phone frame */
+.sf .key.ink { background: var(--ink); border-color: #fff; box-shadow: 0 4px 0 #fff; }
+.sf .key.ink:active { box-shadow: 0 2px 0 #fff; }
 .sf .key.white { background: #fff; color: var(--ink); }
 .sf .key.yellow { background: var(--yellow); color: var(--ink); }
 .sf .key[aria-disabled="true"] { opacity: 0.6; pointer-events: none; }
