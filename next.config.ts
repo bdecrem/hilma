@@ -153,6 +153,27 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.onething.ink' }],
           destination: '/onething',
         },
+        // tokensurfers.app + brainrot.surf root → /surf (Token Surfers)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'tokensurfers.app' }],
+          destination: '/surf',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.tokensurfers.app' }],
+          destination: '/surf',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'brainrot.surf' }],
+          destination: '/surf',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.brainrot.surf' }],
+          destination: '/surf',
+        },
         // dogear.bar root → /book-scout (the Dog-Ear app)
         {
           source: '/',
@@ -265,6 +286,27 @@ const nextConfig: NextConfig = {
           source: '/:path((?!(?:onething|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.onething.ink' }],
           destination: '/onething/:path',
+        },
+        // tokensurfers.app + brainrot.surf /anything → /surf/anything (gallery, /a/<slug>, og)
+        {
+          source: '/:path((?!(?:surf|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'tokensurfers.app' }],
+          destination: '/surf/:path',
+        },
+        {
+          source: '/:path((?!(?:surf|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.tokensurfers.app' }],
+          destination: '/surf/:path',
+        },
+        {
+          source: '/:path((?!(?:surf|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'brainrot.surf' }],
+          destination: '/surf/:path',
+        },
+        {
+          source: '/:path((?!(?:surf|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.brainrot.surf' }],
+          destination: '/surf/:path',
         },
         // feynd.cc/anything → /f2/anything
         // Excludes /f2/* (avoid /f2/f2/…) AND /api/* and /_next/* — afterFiles

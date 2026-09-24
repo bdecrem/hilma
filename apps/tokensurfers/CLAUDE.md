@@ -133,6 +133,18 @@ back into their own apps. One handle for all of it (and the leaderboard).
   check (desktop + phone shots of the three pages, a throwaway web sign-up,
   an upvote, full screen). `SURF_TESTFLIGHT_URL` (unset = "soon") and
   `SURF_SITE_URL` are the only knobs.
+- **Domains** (2026-09-23): `tokensurfers.app` and `brainrot.surf` (+ www)
+  are on the Vercel project; `next.config.ts` rewrites their root to
+  `/surf` and `/anything` to `/surf/anything` (`/surf/*`, `/api/*` and
+  `/_next/*` pass through, so `/surf/a/<slug>` and `/a/<slug>` both work).
+  DNS is Namecheap: A `@` → `216.150.1.1`, CNAME `www` →
+  `cname.vercel-dns.com` (never `76.76.21.21`, see the Vercel DNS
+  migration note in memory). Once the domain resolves, flip the
+  `SURF_SITE_URL` default in `src/lib/surf/apps.ts` and
+  `src/app/surf/layout.tsx` to `https://tokensurfers.app` so share links
+  and the OG card use it. Setting DNS from here needs this machine's IP
+  whitelisted in Namecheap → Profile → Tools → API Access (the
+  `../tunn3l/plumb/plumb.js dns <domain> add …` tool).
 - **Simulator hooks**: `TS_BACKEND=http://localhost:3219` points the app at
   a dev server (ATS allows local networking), `TS_LOGIN=handle:password`
   signs in (creating the account if needed), `TS_PUBLISH=1` with
