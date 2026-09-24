@@ -281,13 +281,21 @@ SIMCTL_CHILD_TS_AUTORUN="a coin flip app" xcrun simctl launch --terminate-runnin
 xcodebuild -project TokenSurfers.xcodeproj -scheme TokenSurfers \
   -destination 'platform=macOS,variant=Mac Catalyst' -derivedDataPath build/mac \
   CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build
-# iPhone (MacBook Air profile "tokensurfers dev air", minted 2026-09-23 via the
-# ASC API with key FA7268Q94U, bundle-ID resource UXN2VTZCGY, expires 2027-09)
+# iPhone — one profile per Mac, each minted via the ASC API for that Mac's
+# development cert (bundle-ID resource UXN2VTZCGY, device HS63K263D5):
+#   MacBook Air: "tokensurfers dev air" (key FA7268Q94U, 2026-09-23, expires 2027-09)
+#   iMac M4:     "tokensurfers dev imac" (key 5A5HNSWA33, cert 9AYMK558AW, 2026-09-24,
+#                expires 2027-09; the taptapdodo memory has the issuer id and flow).
+# Secrets.swift is gitignored, so a fresh checkout needs it written from
+# Secrets.swift.example (appKey = SURF_APP_KEY, `vercel env pull`), then
+# `xcodegen generate` again or the build says "cannot find 'Secrets' in scope".
 xcodebuild -project TokenSurfers.xcodeproj -scheme TokenSurfers -destination 'generic/platform=iOS' \
-  -derivedDataPath build/device CODE_SIGN_STYLE=Manual \
-  "PROVISIONING_PROFILE_SPECIFIER=tokensurfers dev air" "CODE_SIGN_IDENTITY=Apple Development" build
+  -derivedDataPath build/device CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=274T5WCVD2 \
+  "PROVISIONING_PROFILE_SPECIFIER=tokensurfers dev imac" "CODE_SIGN_IDENTITY=Apple Development" build
 xcrun devicectl device install app --device 9FBCF85E-F1E3-5646-93DC-F51E897B1C27 \
   build/device/Build/Products/Debug-iphoneos/TokenSurfers.app
+# Over WiFi at Stanford the install fails with CoreDevice 4016 even with the
+# phone unlocked and "available"; a cable to the Mac works first try (2026-09-24).
 ```
 
 Test hooks (environment variables):
@@ -337,13 +345,10 @@ mirror breaks. When the mirror is live, point `GITHUB` in
 State after the Splat / mid-build notes / mirror session (commits `a6077262`,
 `bef4da9b`). Everything is pushed; these are what's left:
 
-- **Not on Bart's phone yet.** Build 2 is signed (automatic signing works on
-  the iMac: `-allowProvisioningUpdates CODE_SIGN_STYLE=Automatic`) but
-  `devicectl` said "Bart iPhone Air" was unavailable (CoreDevice 4016 — off
-  the LAN or asleep). Rebuild for `generic/platform=iOS` into `build/device`
-  and install over WiFi to `00008150-000038820EFB801C` once it shows as
-  available in `xcrun devicectl list devices`. The UDID and Air profile in
-  "Build and run" above are the MacBook Air's setup, not the iMac's.
+- **On Bart's phone since 2026-09-24 (build 3)**, installed from the iMac
+  over a cable with the "tokensurfers dev imac" profile (see "Build and
+  run"; automatic signing does NOT work on the iMac — no Xcode account,
+  "No Accounts").
 - **Voice is unverified end to end.** Typed notes and ⚡ now were verified in
   the simulator against a local server. Hold-to-talk was never heard: the
   iOS 27 simulator's recognizer says "Failed to initialize recognizer", and
