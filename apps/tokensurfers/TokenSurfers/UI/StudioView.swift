@@ -24,6 +24,10 @@ struct StudioView: View {
     @State private var publishing = false
     @State private var publishNote: String?
     @State private var publishedURL: URL?
+    @State private var voice = VoiceInput()
+    @State private var holding = false
+    @State private var cancelArmed = false
+    @State private var showLog = false
     @AppStorage("muted") private var muted = false
     @AppStorage("narrator") private var narrator = true
     @AppStorage("music") private var music = true
@@ -48,10 +52,15 @@ struct StudioView: View {
             if ProcessInfo.processInfo.environment["TS_PUBLISH"] != nil {
                 Task { try? await Task.sleep(for: .seconds(2)); publish() }
             }
+            simulatorHooks()
         }
         .onChange(of: studio.building) { _, b in
             if b {
                 withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) { gameOpen = true; if !userSized { split = 0.5 } }
+            } else {
+                // stopped or failed with notes still waiting: hand them back, nothing is lost
+                let left = studio.takeQueue()
+                if !left.isEmpty { draft = ([draft] + left).filter { !$0.isEmpty }.joined(separator: ". ") }
             }
         }
         .onChange(of: studio.phase) { _, p in
@@ -67,6 +76,10 @@ struct StudioView: View {
             }
         }
         .fullScreenCover(isPresented: $fullscreenApp) { fullscreen }
+        .sheet(isPresented: $showLog) { BuildLog(items: studio.feed) }
+        .alert(voice.problem ?? "", isPresented: Binding(get: { voice.problem != nil }, set: { if !$0 { voice.problem = nil } })) {
+            Button("OK", role: .cancel) { voice.problem = nil }
+        }
         .sheet(isPresented: $showAccount) { AccountSheet { publish() } }
         .alert(publishNote ?? "", isPresented: Binding(get: { publishNote != nil }, set: { if !$0 { publishNote = nil } })) {
             if let url = publishedURL {
@@ -94,7 +107,7 @@ struct StudioView: View {
     // MARK: tall (iPhone, narrow windows)
 
     private func tallLayout(_ size: CGSize) -> some View {
-        let composerH: CGFloat = chipsVisible ? 108 : 70
+        let composerH = composerHeight
         let avail = size.height - composerH
         let stageH = gameOpen ? max(160, avail * split) : avail
         let gameH = avail - stageH
@@ -136,7 +149,7 @@ struct StudioView: View {
                             Sunburst(spin: false)
                             PaperGrain(opacity: 0.1)
                             VStack(spacing: 14) {
-                                SplatMascot(size: 110)
+                                SurferHero(unit: 60)
                                 Button { withAnimation { gameOpen = true } } label: {
                                     Label("Surf while you wait", systemImage: "figure.surfing")
                                         .font(Theme.black(15)).foregroundStyle(Theme.ink)
@@ -150,7 +163,7 @@ struct StudioView: View {
                     captionOverlay
                         .padding(.top, 70)
                 }
-                composer.frame(height: chipsVisible ? 108 : 70)
+                composer.frame(height: composerHeight)
             }
             .frame(width: side)
         }
@@ -180,7 +193,16 @@ struct StudioView: View {
                     .transition(.opacity)
             }
         }
+        .overlay(alignment: .bottomLeading) {
+            if studio.building || showDone, studio.cutaway == nil, !studio.feed.isEmpty {
+                LiveFeed(items: studio.feed)
+                    .padding(.leading, 10)
+                    .padding(.bottom, gameOpen ? 44 : 12)
+                    .transition(.opacity)
+            }
+        }
         .animation(.easeInOut(duration: 0.2), value: studio.cutaway)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: studio.feed)
     }
 
     private var topBar: some View {
@@ -245,6 +267,8 @@ struct StudioView: View {
             Toggle(isOn: Binding(get: { !muted }, set: { muted = !$0 })) { Label("Sound", systemImage: "speaker.wave.2") }
             Toggle(isOn: $music) { Label("Music", systemImage: "music.note") }
             Toggle(isOn: $narrator) { Label("Narrator voice", systemImage: "waveform") }
+            Button { showLog = true } label: { Label("What Splat did", systemImage: "list.bullet.rectangle") }
+                .disabled(studio.feed.isEmpty)
             Divider()
             Button(role: .destructive) { confirmDelete = true } label: { Label("Delete app", systemImage: "trash") }
         } label: {
@@ -335,11 +359,17 @@ struct StudioView: View {
 
     private static let followUps = ["make it prettier ✨", "add sound effects 🔊", "more chaos 🌀", "add a high score 🏆", "dark mode 🌚"]
 
-    private var chipsVisible: Bool { !studio.building && !studio.html.isEmpty && !composerFocused && draft.isEmpty }
+    private var chipsVisible: Bool { !studio.building && !studio.html.isEmpty && !composerFocused && draft.isEmpty && !voice.listening }
 
+    private var composerHeight: CGFloat { chipsVisible || studio.building ? 108 : 70 }
+
+    /// Always open, even mid-build: what you send while Splat works waits for
+    /// his next step (or goes right now with ⚡). The mic is hold-to-talk.
     private var composer: some View {
         VStack(spacing: 8) {
-            if chipsVisible {
+            if studio.building {
+                buildStrip
+            } else if chipsVisible {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         if !gameOpen {
@@ -352,16 +382,10 @@ struct StudioView: View {
                 .frame(height: 32)
             }
             HStack(spacing: 10) {
-                if studio.building {
-                    statusPill
-                    Button { studio.stop() } label: {
-                        Image(systemName: "stop.fill").font(.system(size: 15, weight: .black)).foregroundStyle(.white)
-                            .frame(width: 46, height: 46).background(Circle().fill(Theme.red))
-                    }
-                    .buttonStyle(SquishStyle())
-                    .accessibilityLabel("Stop")
+                if voice.listening || holding {
+                    listeningField
                 } else {
-                    TextField(studio.html.isEmpty ? "what are we building?" : "change something…", text: $draft, axis: .vertical)
+                    TextField(placeholder, text: $draft, axis: .vertical)
                         .font(Theme.rounded(16, .semibold))
                         .lineLimit(1...3)
                         .focused($composerFocused)
@@ -370,12 +394,14 @@ struct StudioView: View {
                         .padding(.horizontal, 16).padding(.vertical, 12)
                         .background(RoundedRectangle(cornerRadius: 23, style: .continuous).fill(.white))
                         .overlay(RoundedRectangle(cornerRadius: 23, style: .continuous).strokeBorder(Theme.ink, lineWidth: 2))
-                    if case .failed = studio.phase, draft.isEmpty {
-                        roundButton("arrow.clockwise", fill: Theme.yellow, fg: Theme.ink, label: "Retry") { studio.retry() }
-                    } else {
-                        roundButton("arrow.up", fill: draft.isEmpty ? Theme.ink2.opacity(0.4) : Theme.splat, fg: .white, label: "Send", action: send)
-                            .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
+                }
+                if case .failed = studio.phase, draft.isEmpty, !holding {
+                    roundButton("arrow.clockwise", fill: Theme.yellow, fg: Theme.ink, label: "Retry") { studio.retry() }
+                }
+                if draft.trimmingCharacters(in: .whitespaces).isEmpty || holding {
+                    micButton
+                } else {
+                    roundButton("arrow.up", fill: Theme.splat, fg: .white, label: studio.building ? "Tell Splat" : "Send", action: send)
                 }
             }
             .padding(.horizontal, 12)
@@ -385,21 +411,65 @@ struct StudioView: View {
         .background(Theme.orange.overlay(PaperGrain(opacity: 0.08)))
     }
 
+    private var placeholder: String {
+        if studio.building { return "tell splat… he'll catch it next step" }
+        return studio.html.isEmpty ? "what are we building?" : "change something…"
+    }
+
+    /// Splat's status, your queued notes, and Stop.
+    private var buildStrip: some View {
+        HStack(spacing: 6) {
+            statusPill
+                .padding(.leading, 12)
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(studio.queue) { n in queuedChip(n).id(n.id) }
+                    }
+                }
+                .onChange(of: studio.queue.count) { _, _ in
+                    if let last = studio.queue.last { withAnimation { proxy.scrollTo(last.id, anchor: .trailing) } }
+                }
+            }
+            Button { studio.stop() } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "stop.fill").font(.system(size: 11, weight: .black))
+                    Text("stop").font(Theme.black(13))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 12).frame(height: 32)
+                .background(Capsule().fill(Theme.red))
+                .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
+                .fixedSize()
+            }
+            .buttonStyle(SquishStyle())
+            .accessibilityLabel("Stop")
+            .padding(.trailing, 12)
+        }
+        .frame(height: 32)
+    }
+
     private var statusPill: some View {
-        HStack(spacing: 10) {
-            SplatMascot(size: 28, face: false)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(phaseLabel).font(Theme.black(14)).foregroundStyle(Theme.ink)
-                Text("\(studio.outputTokens.formatted()) tokens · tokens = coins")
-                    .font(Theme.rounded(11.5, .semibold)).foregroundStyle(Theme.ink2)
+        HStack(spacing: 6) {
+            SurferHero(unit: 13, energy: splatEnergy)
+                .frame(height: 30)
+            // with notes waiting, room goes to them: just Splat and the count
+            if studio.queue.isEmpty {
+                Text(phaseLabel).font(Theme.black(13)).foregroundStyle(Theme.ink)
+                Text("· \(studio.outputTokens.formatted()) tok")
+                    .font(Theme.rounded(11.5, .bold)).foregroundStyle(Theme.ink2)
+                    .monospacedDigit()
+            } else {
+                Text(studio.outputTokens.formatted())
+                    .font(Theme.rounded(11.5, .bold)).foregroundStyle(Theme.ink2)
                     .monospacedDigit()
             }
-            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 12)
-        .frame(height: 46)
-        .background(RoundedRectangle(cornerRadius: 23, style: .continuous).fill(.white))
-        .overlay(RoundedRectangle(cornerRadius: 23, style: .continuous).strokeBorder(Theme.ink, lineWidth: 2))
+        .padding(.leading, 4).padding(.trailing, 10)
+        .fixedSize()
+        .frame(height: 32)
+        .background(Capsule().fill(.white))
+        .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
     }
 
     private var phaseLabel: String {
@@ -410,6 +480,140 @@ struct StudioView: View {
         case .reading: return "reading the code"
         case .running: return "test-driving it"
         default: return "…"
+        }
+    }
+
+    /// How hard the little Splat dances: flat out while writing, idling while he thinks.
+    private var splatEnergy: Double {
+        switch studio.phase {
+        case .writing: return 1
+        case .editing: return 0.85
+        case .running: return 0.7
+        case .reading: return 0.45
+        default: return 0.3
+        }
+    }
+
+    private func queuedChip(_ n: Studio.Note) -> some View {
+        HStack(spacing: 6) {
+            Text(n.voice ? "🎙️" : "⏳").font(.system(size: 12))
+            Text(n.text).font(Theme.rounded(13, .bold)).foregroundStyle(Theme.ink).lineLimit(1)
+                .frame(maxWidth: 170, alignment: .leading)
+            Button { studio.deliverNow() } label: {
+                Text("⚡ now").font(Theme.black(11)).foregroundStyle(.white)
+                    .padding(.horizontal, 7).frame(height: 22)
+                    .background(Capsule().fill(Theme.ink))
+            }
+            .buttonStyle(SquishStyle())
+            .accessibilityLabel("Send to Splat now")
+            Button { studio.unqueue(n.id) } label: {
+                Image(systemName: "xmark").font(.system(size: 10, weight: .black)).foregroundStyle(Theme.ink)
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Take it back")
+        }
+        .padding(.leading, 10).padding(.trailing, 4)
+        .frame(height: 32)
+        .background(Capsule().fill(Theme.yellow))
+        .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
+        .transition(.scale.combined(with: .opacity))
+    }
+
+    private var listeningField: some View {
+        HStack(spacing: 10) {
+            TimelineView(.animation) { tl in
+                let t = tl.date.timeIntervalSinceReferenceDate
+                HStack(spacing: 3) {
+                    ForEach(0..<4) { i in
+                        Capsule().fill(cancelArmed ? Theme.ink2 : Theme.red)
+                            .frame(width: 4, height: 8 + 12 * abs(sin(t * 7 + Double(i) * 0.9)))
+                    }
+                }
+                .frame(width: 26)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(voice.transcript.isEmpty ? "listening…" : voice.transcript)
+                    .font(Theme.rounded(15, .semibold)).foregroundStyle(Theme.ink)
+                    .lineLimit(2).truncationMode(.head)
+                Text(cancelArmed ? "let go to cancel" : "let go to send · slide up to cancel")
+                    .font(Theme.rounded(11, .bold)).foregroundStyle(Theme.ink2)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 50)
+        .background(RoundedRectangle(cornerRadius: 23, style: .continuous).fill(.white))
+        .overlay(RoundedRectangle(cornerRadius: 23, style: .continuous).strokeBorder(cancelArmed ? Theme.ink2 : Theme.red, lineWidth: 2.5))
+    }
+
+    /// Hold to talk. Idle: the words start a build. Building: they queue for Splat's next step.
+    private var micButton: some View {
+        let live = voice.listening || holding
+        return Image(systemName: live ? "waveform" : "mic.fill")
+            .font(.system(size: 18, weight: .black))
+            .foregroundStyle(.white)
+            .frame(width: 46, height: 46)
+            .background(Circle().fill(live ? Theme.red : Theme.ink))
+            .overlay(Circle().strokeBorder(Theme.ink, lineWidth: 2))
+            .scaleEffect(live ? 1.18 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: live)
+            .contentShape(Circle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { v in
+                        if !holding { beginTalking() }
+                        cancelArmed = v.translation.height < -60
+                    }
+                    .onEnded { _ in endTalking(send: !cancelArmed) }
+            )
+            .accessibilityLabel("Hold to talk to Splat")
+    }
+
+    private func beginTalking() {
+        holding = true
+        cancelArmed = false
+        composerFocused = false
+        studio.setListening(true)
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        Task { await voice.start() }
+    }
+
+    private func endTalking(send: Bool) {
+        holding = false
+        Task {
+            let text = await voice.stop()
+            studio.setListening(false)
+            cancelArmed = false
+            if send, !text.isEmpty { studio.send(text, voice: true) }
+        }
+    }
+
+    // MARK: simulator hooks
+
+    /// TS_INJECT="note" (+ TS_INJECT_AT=seconds, TS_INJECT_NOW=1) sends a note
+    /// mid-build; TS_HEAR=/path/to/audio.aiff transcribes a file through the
+    /// voice path and sends it the same way.
+    private func simulatorHooks() {
+        let env = ProcessInfo.processInfo.environment
+        let at = Double(env["TS_INJECT_AT"] ?? "") ?? 12
+        if let note = env["TS_INJECT"], !note.isEmpty {
+            Task {
+                try? await Task.sleep(for: .seconds(at))
+                studio.send(note)
+                if env["TS_INJECT_NOW"] != nil {
+                    try? await Task.sleep(for: .seconds(1.5))
+                    studio.deliverNow()
+                }
+            }
+        }
+        if let path = env["TS_HEAR"], !path.isEmpty {
+            Task {
+                try? await Task.sleep(for: .seconds(at))
+                let text = await voice.transcribe(file: URL(fileURLWithPath: path))
+                print("[voice] heard: \(text)")
+                if !text.isEmpty { studio.send(text, voice: true) }
+            }
         }
     }
 
@@ -438,7 +642,7 @@ struct StudioView: View {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         draft = ""
-        composerFocused = false
+        if !studio.building { composerFocused = false }   // mid-build, keep typing notes if you like
         studio.send(text)
     }
 

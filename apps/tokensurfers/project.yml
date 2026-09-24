@@ -39,6 +39,8 @@ targets:
           - Montserrat-Black.ttf
           - Montserrat-ExtraBold.ttf
         ITSAppUsesNonExemptEncryption: false
+        NSMicrophoneUsageDescription: Hold the mic to tell Splat what to build or change, even while he's working.
+        NSSpeechRecognitionUsageDescription: Your voice notes to Splat are turned into text so he can read them.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         CFBundleURLTypes:

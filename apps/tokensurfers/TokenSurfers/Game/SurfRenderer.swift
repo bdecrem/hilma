@@ -550,6 +550,7 @@ struct SurfRenderer {
         pose.dead = e.over ? e.time - e.deathAt : -1
         pose.t = e.time
         pose.speed = min(1, max(0, (e.speed - 11) / 10))
+        pose.sway = e.over ? 0 : max(-1, min(1, (Double(e.lane) * SurfEngine.laneWidth - e.x) / SurfEngine.laneWidth))
         SurferArt.draw(&ctx, origin: origin, unit: scale(0), pose: pose)
     }
 

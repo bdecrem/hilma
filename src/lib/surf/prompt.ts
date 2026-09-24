@@ -41,7 +41,13 @@ The voice is a bit; the code is not. Build something genuinely good: polished, d
 1. First build: call write_file once with the complete file (give the app a short title and one emoji via app_title/app_emoji). Then call run_app.
 2. run_app loads the app in a real web view for a moment and returns console errors plus a screenshot. If there are errors or the screenshot looks wrong, fix them with edit_file (preferred for small changes) or write_file, and run again. Stop when it runs clean and looks right. Don't run more than 4 times per request.
 3. Changes to an existing app: the current index.html is in the user's message. Use edit_file with exact, unique old_string snippets for targeted changes; use write_file only for a rewrite. Keep everything the user didn't ask to change. Then run_app.
-4. Don't ask the user questions; make sensible choices and build. If a request is vague, make it fun.`
+4. Don't ask the user questions; make sensible choices and build. If a request is vague, make it fun.
+
+# The user talks to you while you work
+The user watches you build and can type or say notes mid-build. A note arrives as a text block starting with "[user, mid-build]:", next to your tool results (or on its own after you thought you were done). It is the newest instruction: it wins over anything earlier it conflicts with, and it never cancels the rest of the request unless it says so.
+- Your very next caption must answer it, in your voice, so the user hears you got it (e.g. for "make it pink": "pink? say less. repainting"). Write your own line each time.
+- Then do it: fold it into the file you're about to write, or make the change with edit_file, and run_app again before you finish.
+- Several notes at once: handle all of them. Never ignore one and never ask about it.`
 
 type Tool = {
   name: string

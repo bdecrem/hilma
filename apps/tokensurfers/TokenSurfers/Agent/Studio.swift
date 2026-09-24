@@ -19,6 +19,24 @@ final class Studio {
     enum StageTab: String { case app, code }
     enum Cutaway: Equatable { case tokenur, contextino, hallucinello, absolutelyRight }
 
+    /// Something the user said while Splat was working. It waits in `queue`
+    /// until the current step ends, then rides into the model's next turn next
+    /// to the tool results (the way Claude Code injects queued messages).
+    struct Note: Identifiable, Equatable {
+        let id = UUID()
+        let text: String
+        var voice = false
+    }
+
+    /// One line of the live feed: Splat's actions and your notes, interleaved.
+    struct FeedItem: Identifiable, Equatable {
+        enum Kind: Equatable { case splat(tool: String), you(delivered: Bool), bug, clean, done }
+        let id = UUID()
+        var kind: Kind
+        var text: String
+        var noteID: UUID?
+    }
+
     let store: ProjectStore
     private(set) var project: Project
     let game = SurfEngine()
@@ -42,6 +60,10 @@ final class Studio {
     private(set) var lastBugs = 0
     private(set) var steps = 0
     private(set) var lastPrompt = ""
+    private(set) var queue: [Note] = []
+    private(set) var feed: [FeedItem] = []
+    /// Notes that reached the model this build (saved with the project's prompts).
+    private var delivered: [String] = []
 
     var building: Bool {
         switch phase {
@@ -51,6 +73,8 @@ final class Studio {
     }
 
     private var task: Task<Void, Never>?
+    private var call: Task<Turn, Error>?
+    private var interrupting = false
     private let narrator = Narrator()
     private var lastCaptionAt = Date()
     private var usedFillers: Set<String> = []
@@ -65,15 +89,52 @@ final class Studio {
 
     // MARK: public
 
-    func send(_ prompt: String) {
+    /// Idle: start a build. Building: queue it for the next step.
+    func send(_ prompt: String, voice: Bool = false) {
         let p = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !p.isEmpty, !building else { return }
+        guard !p.isEmpty else { return }
+        if building {
+            let n = Note(text: p, voice: voice)
+            queue.append(n)
+            log(.you(delivered: false), p, note: n.id)
+            SurfAudio.shared.play(.swipe)
+            return
+        }
+        log(.you(delivered: true), p)
         task = Task { await run(p) }
     }
+
+    /// Take a queued note back before Splat sees it.
+    func unqueue(_ id: UUID) {
+        queue.removeAll { $0.id == id }
+        feed.removeAll { $0.noteID == id }
+    }
+
+    /// Don't wait for the step to end: drop the half-streamed turn and hand
+    /// Splat the queued notes right now. (A tool that is already running, like
+    /// the test drive, still finishes; the notes go with its result.)
+    func deliverNow() {
+        guard !queue.isEmpty, let call else { return }
+        interrupting = true
+        call.cancel()
+    }
+
+    /// Anything still queued when a build ends early goes back to the composer.
+    func takeQueue() -> [String] {
+        let texts = queue.map(\.text)
+        for n in queue { feed.removeAll { $0.noteID == n.id } }
+        queue = []
+        return texts
+    }
+
+    /// The mic is open: Splat stops talking so he doesn't hear himself.
+    func setListening(_ on: Bool) { narrator.held = on }
 
     func stop() {
         task?.cancel()
         task = nil
+        call?.cancel()
+        call = nil
         narrator.stop()
         phase = .idle
         setCaption("ok ok. i stopped 🛑", speak: false)
@@ -107,6 +168,7 @@ final class Studio {
         steps = 0
         usedFillers = []
         shownCutaways = []
+        delivered = []
         subtitle = ""
         liveCode = ""
         isPatch = false
@@ -118,10 +180,35 @@ final class Studio {
 
         var messages: [[String: Any]] = [["role": "user", "content": firstMessage(prompt)]]
         var recap = ""
+        var budget = 14
+        var calls = 0
         do {
-            for _ in 0..<14 {
+            while calls < budget {
+                calls += 1
                 try Task.checkCancellation()
-                let turn = try await callModel(messages)
+                let turn: Turn
+                do {
+                    let c = Task { try await self.callModel(messages) }
+                    call = c
+                    turn = try await c.value
+                    call = nil
+                } catch where interrupting && !Task.isCancelled {
+                    // "send now": forget the half-written turn, add the notes to the last user message
+                    interrupting = false
+                    call = nil
+                    liveCode = ""
+                    isPatch = false
+                    phase = .thinking
+                    if var last = messages.popLast() {
+                        var content: [[String: Any]] = (last["content"] as? [[String: Any]])
+                            ?? [["type": "text", "text": last["content"] as? String ?? ""]]
+                        content += takeNotes()
+                        last["content"] = content
+                        messages.append(last)
+                    }
+                    budget = min(26, budget + 4)
+                    continue
+                }
                 messages.append(["role": "assistant", "content": turn.content])
                 if !turn.text.isEmpty { recap = turn.text }
 
@@ -132,21 +219,30 @@ final class Studio {
                         try Task.checkCancellation()
                         results.append(await execute(call))
                     }
+                    if !queue.isEmpty { results += takeNotes(); budget = min(26, budget + 4) }
                     messages.append(["role": "user", "content": results])
                     phase = .thinking
                 case "pause_turn":
                     continue
                 case "max_tokens":
                     guard !turn.toolCalls.isEmpty else { break }
-                    let results: [[String: Any]] = turn.toolCalls.map {
+                    var results: [[String: Any]] = turn.toolCalls.map {
                         ["type": "tool_result", "tool_use_id": $0.id, "is_error": true,
                          "content": "Your output hit max_tokens and this tool input was cut off. Make smaller edits with edit_file."]
                     }
+                    results += takeNotes()
                     messages.append(["role": "user", "content": results])
                     continue
                 case "refusal":
                     throw SurfAPIError(message: "the model declined this one")
                 default:
+                    // notes that came in while the recap was being written: one more round
+                    if !queue.isEmpty {
+                        messages.append(["role": "user", "content": takeNotes()])
+                        budget = min(26, budget + 4)
+                        phase = .thinking
+                        continue
+                    }
                     finish(recap: recap, prompt: prompt)
                     return
                 }
@@ -166,10 +262,30 @@ final class Studio {
         }
     }
 
+    /// The queued notes as text blocks for the next user message.
+    private func takeNotes() -> [[String: Any]] {
+        let notes = queue
+        queue = []
+        guard !notes.isEmpty else { return [] }
+        for n in notes {
+            delivered.append(n.text)
+            if let i = feed.firstIndex(where: { $0.noteID == n.id }) { feed[i].kind = .you(delivered: true) }
+        }
+        let heard = notes.map(\.text).joined(separator: " + ")
+        setCaption("👂 \(shortPrompt(heard))", speak: false, filler: true)
+        return notes.map { ["type": "text", "text": "[user, mid-build]: \($0.text)"] }
+    }
+
+    private func log(_ kind: FeedItem.Kind, _ text: String, note: UUID? = nil) {
+        feed.append(FeedItem(kind: kind, text: text, noteID: note))
+        if feed.count > 80 { feed.removeFirst(feed.count - 80) }
+    }
+
     private func finish(recap: String, prompt: String) {
         phase = .done
         project.builds += 1
         project.prompts.append(prompt)
+        project.prompts += delivered
         project.recap = recap
         project.tokens += outputTokens
         project.updated = .now
@@ -183,6 +299,7 @@ final class Studio {
         game.celebrate()
         showCutaway(.absolutelyRight, force: true)
         subtitle = recap
+        log(.done, recap)
         Task {
             try? await Task.sleep(for: .seconds(2.2))
             setCaption(recap, speak: true)
@@ -251,6 +368,7 @@ final class Studio {
                 break
             }
         }
+        try Task.checkCancellation()
         steps = outputTokens
 
         var content: [[String: Any]] = []
@@ -321,6 +439,7 @@ final class Studio {
             if done && !b.spokenCaption {
                 b.spokenCaption = true
                 narrator.say(cap)
+                log(.splat(tool: b.name), cap)
             }
         }
         switch b.name {
@@ -393,6 +512,7 @@ final class Studio {
             lastBugs = r.errors.count
             previewVersion += 1
             if !stagePinned { stageTab = .app }
+            log(r.errors.isEmpty ? .clean : .bug, r.errors.isEmpty ? "runs clean" : "\(r.errors.count) bug\(r.errors.count == 1 ? "" : "s")")
             if !r.errors.isEmpty {
                 game.bugs(r.errors.count)
                 showCutaway(.hallucinello, force: true)
@@ -479,24 +599,64 @@ final class Studio {
     private func lineCount(_ s: String) -> Int { s.reduce(1) { $1 == "\n" ? $0 + 1 : $0 } }
 }
 
-/// Reads captions aloud in a flat TikTok-TTS voice. Muted with the game.
+/// Reads captions aloud. A new line waits for the current one to finish
+/// (only the newest waits; a line older than 5 s is dropped), so Splat never
+/// cuts himself off mid-sentence. Held silent while the mic is open.
 @MainActor
-final class Narrator {
+final class Narrator: NSObject, AVSpeechSynthesizerDelegate {
     private let synth = AVSpeechSynthesizer()
+    private var pending: (text: String, at: Date)?
+    var held = false {
+        didSet { if held { stop() } }
+    }
+
+    override init() {
+        super.init()
+        synth.delegate = self
+    }
+
+    /// The best installed en-US voice (premium or enhanced if downloaded), never a novelty one.
+    private static let voice: AVSpeechSynthesisVoice? = {
+        let best = AVSpeechSynthesisVoice.speechVoices()
+            .filter { $0.language == "en-US" && !$0.voiceTraits.contains(.isNoveltyVoice) && $0.quality != .default }
+            .max { $0.quality.rawValue < $1.quality.rawValue }
+        return best ?? AVSpeechSynthesisVoice(language: "en-US")
+    }()
 
     func say(_ text: String) {
-        guard !SurfAudio.shared.muted, UserDefaults.standard.object(forKey: "narrator") as? Bool ?? true else { return }
+        guard !held, !SurfAudio.shared.muted, UserDefaults.standard.object(forKey: "narrator") as? Bool ?? true else { return }
         let clean = text.unicodeScalars.filter { !$0.properties.isEmojiPresentation && $0.properties.generalCategory != .otherSymbol }
         let s = String(String.UnicodeScalarView(clean)).trimmingCharacters(in: .whitespaces)
         guard !s.isEmpty else { return }
         SurfAudio.shared.start()
-        if synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
+        if synth.isSpeaking {
+            pending = (s, .now)
+            return
+        }
+        speak(s)
+    }
+
+    private func speak(_ s: String) {
         let u = AVSpeechUtterance(string: s)
-        u.voice = AVSpeechSynthesisVoice(language: "en-US")
+        u.voice = Self.voice
         u.rate = 0.53
         u.pitchMultiplier = 1.15
         synth.speak(u)
     }
 
-    func stop() { synth.stopSpeaking(at: .immediate) }
+    private func next() {
+        guard let p = pending else { return }
+        pending = nil
+        guard !held, Date().timeIntervalSince(p.at) < 5 else { return }
+        speak(p.text)
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in self.next() }
+    }
+
+    func stop() {
+        pending = nil
+        synth.stopSpeaking(at: .immediate)
+    }
 }

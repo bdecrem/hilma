@@ -92,7 +92,7 @@ struct HomeView: View {
                     .padding(.top, 12)
             }
             Spacer()
-            SurferHero(unit: 40)
+            SurferHero(unit: 58)
         }
         .padding(.top, 14)
         .overlay(alignment: .topTrailing) {
@@ -274,7 +274,7 @@ struct HomeView: View {
             StrokedText(text: "YOUR APPS", font: Theme.anton(26), stroke: 2.5)
             if projects.isEmpty {
                 HStack(spacing: 12) {
-                    SplatMascot(size: 52, mood: .dead, animate: false)
+                    SurferHero(unit: 30, energy: 0.12)
                     Text("no apps yet. the splat is bored.\ntype something up there ↑")
                         .font(Theme.rounded(14, .bold)).foregroundStyle(Theme.ink)
                 }

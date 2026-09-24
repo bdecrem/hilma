@@ -187,7 +187,7 @@ struct GalleryAppView: View {
                     PreviewWebView(html: html, version: 1, projectID: UUID(uuidString: app.id) ?? UUID())
                 } else {
                     VStack(spacing: 10) {
-                        SplatMascot(size: 60)
+                        SurferHero(unit: 34)
                         Text(error ?? "loading…").font(Theme.rounded(14, .bold)).foregroundStyle(Theme.ink)
                     }
                 }

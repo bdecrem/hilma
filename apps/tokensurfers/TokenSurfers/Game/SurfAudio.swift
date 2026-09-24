@@ -38,6 +38,8 @@ final class SurfAudio {
 
     /// 0 = silent, 1 = full. Set by the screens (fades over ~0.4 s).
     var musicTarget = 0.0
+    /// The mic is open (hold-to-talk): music drops way down.
+    private(set) var listening = false
     /// 0..1 from the engine's speed; tempo runs 128..150 BPM.
     var pace = 0.0
     private var musicLevel = 0.0
@@ -93,6 +95,20 @@ final class SurfAudio {
         engine.connect(node, to: engine.mainMixerNode, format: format)
         engine.mainMixerNode.outputVolume = 0.6
         try? engine.start()
+    }
+
+    /// Hold-to-talk needs the mic: switch the session to play-and-record (the
+    /// game keeps playing, ducked) and back to ambient after.
+    func setRecording(_ on: Bool) {
+        listening = on
+        let session = AVAudioSession.sharedInstance()
+        if on {
+            try? session.setCategory(.playAndRecord, mode: .default, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothA2DP])
+        } else {
+            try? session.setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        }
+        try? session.setActive(true)
+        if started, !engine.isRunning { try? engine.start() }
     }
 
     // MARK: effects
@@ -189,7 +205,7 @@ final class SurfAudio {
         lock.lock()
         defer { lock.unlock() }
         let dt = 1.0 / sampleRate
-        let wantMusic = musicOn && !muted ? musicTarget : 0
+        let wantMusic = (musicOn && !muted ? musicTarget : 0) * (listening ? 0.12 : 1)
         let bpm = 128 + pace * 22
         stepSamples = sampleRate * 60 / (bpm * 4)
 
