@@ -155,6 +155,15 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;bac
 .notes li{font-size:14.5px;line-height:1.55;padding-left:26px;position:relative}
 .notes li::before{content:attr(data-n);position:absolute;left:0;top:1px;width:19px;height:19px;border-radius:50%;background:#23263b;color:#fff;font-size:10px;font-weight:900;display:grid;place-items:center}
 .notes b{font-family:"Shippori Mincho B1",serif}
+.art{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;align-items:end}
+.art figure{margin:0;text-align:center;font-size:12px;font-weight:700}
+.art a{display:block;color:inherit;text-decoration:none}
+.art img{display:block;width:100%;height:auto;border:1.5px solid #23263b;background:#fffdf7}
+.art .icon img{border-radius:22.4%;border:0;box-shadow:0 6px 18px rgba(20,30,80,.25)}
+.art .cut img{background:repeating-conic-gradient(#e6e1d4 0 25%,#fffdf7 0 50%) 0 0/16px 16px}
+.art figcaption{margin-top:6px}
+.art figcaption span{display:block;font-weight:500;color:#5a5f78;font-size:11px}
+@media (max-width:720px){.art{grid-template-columns:1fr 1fr}}
 .manpu{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
 .manpu figure{margin:0;text-align:center;font-size:11px;font-weight:700}
 .manpu svg{width:100%;height:auto;max-height:70px;background:#fffdf7;border:1.5px solid #23263b}
@@ -1096,6 +1105,13 @@ function paintSettei() {
     <div class="manpu">${manpu.map(([jp, en, svg]) => `<figure><svg viewBox="0 0 80 48">${svg}</svg>${jp}<br><span style="font-weight:500;color:#5a5f78">${en}</span></figure>`).join('')}</div>
     <h3>色彩設計 <span>COLOUR MODELS · one per time of day, like a studio's 昼 / 夕 / 夜 sheets</span></h3>
     <div class="models">${models.map(([jp, en, m, bg]) => `<figure style="background:${bg}">${dodoSVG({ model: m, view: 'front', vb: '-50 -60 100 124' })}<figcaption><b>${jp}</b>${en}</figcaption><div class="sw">${MV[m].map(c => `<i style="background:${c}"></i>`).join('')}</div><code>${MV[m][0]} · ${MV[m][1]}</code></figure>`).join('')}</div>
+    <h3>宣伝素材 <span>KEY ART · tap to download</span></h3>
+    <div class="art">
+      <figure class="icon"><a href="/dodo/anime-art/icon-1024.png" download><img src="/dodo/anime-art/icon-1024.png" alt="Dodo app icon: the anime Dodo's bust against a summer sky and cloud tower" loading="lazy"></a><figcaption>アイコン App icon<span>1024², full bleed</span></figcaption></figure>
+      <figure><a href="/dodo/anime-art/poster.png" download><img src="/dodo/anime-art/poster.png" alt="Character poster: Dodo under a cumulonimbus with the title ドードー" loading="lazy"></a><figcaption>ポスター Poster<span>2000×3000</span></figcaption></figure>
+      <figure><a href="/dodo/anime-art/poster-clean.png" download><img src="/dodo/anime-art/poster-clean.png" alt="The same poster without type" loading="lazy"></a><figcaption>文字なし No type<span>2000×3000</span></figcaption></figure>
+      <figure class="cut"><a href="/dodo/anime-art/dodo-transparent.png" download><img src="/dodo/anime-art/dodo-transparent.png" alt="Dodo on a transparent background" loading="lazy"></a><figcaption>単体 Cutout<span>2048², transparent</span></figcaption></figure>
+    </div>
     <h3>演出メモ <span>DIRECTOR'S NOTES</span></h3>
     <ul class="notes">
       <li data-n="1"><b>The sprout is the ahoge.</b> Anime gives a character one stray hair that acts. Dodo's sprout perks up on a right answer, wilts on a wrong one, curls into a question mark while thinking, and holds the umbrella, because the wings are too short.</li>
