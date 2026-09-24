@@ -153,3 +153,23 @@ export function Upvote({ slug, upvotes, voted }: { slug: string; upvotes: number
     </>
   )
 }
+
+const CAPTIONS = [
+  ['ANGER', 'ISSUES'], ['SO IT’S', '3AM'], ['NO', 'COMMENTS'], ['TOK TOK', 'TOKENUR'], ['LET HIM', 'COOK'],
+  ['47', 'BUGS 💀'], ['X_FINAL', '_FINAL'], ['YOU’RE ABSOLUTELY', 'RIGHT'], ['SAY', 'LESS'], ['BRUH', '💀'],
+]
+
+/** The video's karaoke caption, cycling. */
+export function CaptionCycler() {
+  const [i, setI] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setI((n) => (n + 1) % CAPTIONS.length), 900)
+    return () => clearInterval(t)
+  }, [])
+  const [a, b] = CAPTIONS[i]
+  return (
+    <div className="sq-cap cap" key={i} aria-hidden="true">
+      <span className="stroke">{a}</span> <span className="stroke yellow">{b}</span>
+    </div>
+  )
+}

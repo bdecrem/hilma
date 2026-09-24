@@ -1,72 +1,43 @@
-import Link from 'next/link'
-import { listApps, type AppCard } from '@/lib/surf/apps'
-import { AppTile, Footer, GITHUB, TESTFLIGHT, TopBar, TubeMan } from './parts'
+import { CaptionCycler } from './client'
 
-export const dynamic = 'force-dynamic'
+const TESTFLIGHT = process.env.SURF_TESTFLIGHT_URL || ''
+const GITHUB = process.env.SURF_GITHUB_URL || ''
 
-export default async function SurfLanding() {
-  let top: AppCard[] = []
-  try {
-    top = await listApps('top', null, 8)
-  } catch (e) {
-    console.error('[surf] landing gallery', (e as Error).message)
-  }
-
+// One paragraph, one image, two links. A sidequest, not a landing page.
+export default function SurfLanding() {
   return (
-    <main className="wrap">
-      <TopBar />
+    <main className="sq">
+      <div className="sq-rays" aria-hidden="true" />
+      <div className="sq-coins" aria-hidden="true">
+        {Array.from({ length: 14 }, (_, i) => (
+          <span key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i * 0.73) % 5}s`, animationDuration: `${4 + (i % 4)}s` }} />
+        ))}
+      </div>
 
-      <section className="hero">
-        <div>
-          <h1 className="head">
-            <span className="stroke">Token</span><br />
-            <span className="stroke yellow">Surfers</span>
-          </h1>
-          <p className="tag">vibe code while you surf. a brainrot coding agent builds little apps on your phone; you play a runner while it types. every token is a coin.</p>
-          <div className="ctas">
-            {TESTFLIGHT ? (
-              <a className="key" href={TESTFLIGHT}>get the beta on TestFlight 🏄</a>
-            ) : (
-              <span className="key" aria-disabled="true">TestFlight beta: soon 🏄</span>
-            )}
-            <a className="key ink" href={GITHUB} target="_blank" rel="noreferrer">source on GitHub</a>
-            <Link className="key white" href="/surf/gallery">browse the gallery</Link>
-          </div>
-        </div>
-        <div className="art">
-          <div className="phone"><img src="/surf/shots/studio.jpg" alt="Splat writing an app while the runner plays underneath" width={540} height={1174} /></div>
-          <TubeMan className="tube" />
-        </div>
-      </section>
+      <h1 className="sq-title head">
+        <span className="stroke">TOKEN</span>
+        <span className="stroke yellow">SURFERS</span>
+      </h1>
 
-      <section className="section">
-        <h2 className="head stroke">how it goes</h2>
-        <div className="steps">
-          <div className="card step"><div className="n">1</div><h3>you type a thing</h3><p>"a pomodoro timer that screams at me". Splat, the agent, writes it as one file, live, with a brainrot voiceover. so it's 3am. my user pastes 2,000 lines.</p></div>
-          <div className="card step"><div className="n">2</div><h3>you surf while it cooks</h3><p>every streamed token is a coin on the track. every tool call is a train. bugs it finds crawl onto the rails; stomp them. a shipped build rains confetti.</p></div>
-          <div className="card step"><div className="n">3</div><h3>it runs. you ship it.</h3><p>the app runs on your phone. publish it to the gallery, get upvotes, remix other people's. one handle for the gallery and the world leaderboard.</p></div>
-        </div>
-      </section>
+      <CaptionCycler />
 
-      <section className="section">
-        <div className="shots">
-          <figure><div className="phone"><img src="/surf/shots/game.jpg" alt="Token Surfers, the runner" width={540} height={1174} /></div><figcaption>trains, coins, ramps</figcaption></figure>
-          <figure><div className="phone"><img src="/surf/shots/gameover.jpg" alt="game over card with the world rank" width={540} height={1174} /></div><figcaption>#n in the world</figcaption></figure>
-          <figure><div className="phone"><img src="/surf/shots/home.jpg" alt="the home screen" width={540} height={1174} /></div><figcaption>AITA for wanting an app that…</figcaption></figure>
-        </div>
-      </section>
+      <div className="sq-shot">
+        <img src="/surf/hero.jpg" alt="Splat writing a scream timer at 11pm while the surfer runs the rails underneath" width={900} height={1954} />
+        <span className="sq-sticker s1">tokens = coins</span>
+        <span className="sq-sticker s2">made with code<br /><small>(free trial)</small></span>
+      </div>
 
-      <section className="section">
-        <h2 className="head stroke">fresh off the rails</h2>
-        {top.length ? (
-          <div className="grid">{top.map((a) => <AppTile key={a.id} app={a} />)}</div>
-        ) : (
-          <div className="card empty">nothing published yet. the first one gets the throne.</div>
-        )}
-        <p style={{ marginTop: 14 }}><Link className="key white" href="/surf/gallery">the whole gallery →</Link></p>
-      </section>
+      <p className="sq-para">
+        so it&apos;s 3am. you ask a brainrot coding agent for &quot;a timer that screams at me&quot; and it just… starts
+        writing it, live, on your phone, narrating like a tiktok voiceover, while you surf a subway track underneath
+        where every token it types is a coin, every tool call is a train, and every bug it finds crawls onto the rails
+        for you to stomp. it ships. you publish it. someone remixes it. nobody asked for this. you&apos;re absolutely right.
+      </p>
 
-      <Footer />
+      <div className="sq-links">
+        {TESTFLIGHT ? <a className="key" href={TESTFLIGHT}>get it on testflight 🏄</a> : <span className="key" aria-disabled="true">testflight · soon 🏄</span>}
+        {GITHUB ? <a className="key ink" href={GITHUB} target="_blank" rel="noreferrer">github</a> : <span className="key ink" aria-disabled="true">github · soon</span>}
+      </div>
     </main>
   )
 }
