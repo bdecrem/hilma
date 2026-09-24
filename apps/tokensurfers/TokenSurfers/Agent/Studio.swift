@@ -501,6 +501,20 @@ final class Studio {
         }
         task = nil
         finish(recap: recap, prompt: lastPrompt)
+        // deployed = published: the gallery gets it (or the update) without a tap, when signed in
+        if let u = state.deployUrl, SurfAccount.shared.signedIn {
+            let p = project
+            Task {
+                do {
+                    let app = try await SurfAccount.shared.publish(project: p, html: "", siteURL: u)
+                    setRemoteSlug(app.slug)
+                    agentLog("in the gallery: \(app.url)")
+                    log(.clean, "in the gallery")
+                } catch {
+                    agentLog("gallery publish failed: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     private func failRemote(_ message: String) {

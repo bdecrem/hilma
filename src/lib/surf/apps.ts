@@ -1,5 +1,6 @@
 // Token Surfers creations: publish, list, read, upvote, unpublish.
-// The whole index.html lives in surf_apps.html (apps are a few tens of KB).
+// The whole index.html lives in surf_apps.html (apps are a few tens of KB), or,
+// for an app Claude Code built on the mini, site_url points at it on Vercel.
 
 import { surfDb } from './db'
 
@@ -19,15 +20,16 @@ export type AppCard = {
   updatedAt: string
   voted: boolean
   url: string
+  siteUrl: string | null
 }
 
 export type AppFull = AppCard & { html: string; remixes: number; ownerId: string }
 
-const SELECT = 'id, slug, title, emoji, prompt, upvotes, created_at, updated_at, owner_id, remix_of'
+const SELECT = 'id, slug, title, emoji, prompt, upvotes, created_at, updated_at, owner_id, remix_of, site_url'
 
 type Row = {
   id: string; slug: string; title: string; emoji: string; prompt: string; upvotes: number
-  created_at: string; updated_at: string; owner_id: string; remix_of: string | null; html?: string
+  created_at: string; updated_at: string; owner_id: string; remix_of: string | null; html?: string; site_url?: string | null
 }
 
 type Lookups = { owners: Map<string, string>; parents: Map<string, { slug: string; title: string }> }
@@ -53,6 +55,7 @@ function toCard(r: Row, l: Lookups, voted = false): AppCard {
     id: r.id, slug: r.slug, title: r.title, emoji: r.emoji, prompt: r.prompt,
     owner: l.owners.get(r.owner_id) ?? 'someone', upvotes: r.upvotes,
     remixOf: parent, createdAt: r.created_at, updatedAt: r.updated_at, voted, url: `${SITE}/a/${r.slug}`,
+    siteUrl: r.site_url ?? null,
   }
 }
 
@@ -113,7 +116,7 @@ function newSlug(): string {
 
 /** Publish (insert) or re-publish (update the row this device's project already has). */
 export async function publish(args: {
-  ownerId: string; clientId: string; title: string; emoji: string; prompt: string; html: string; remixOfSlug?: string | null
+  ownerId: string; clientId: string; title: string; emoji: string; prompt: string; html: string; siteUrl?: string | null; remixOfSlug?: string | null
 }): Promise<AppCard> {
   const db = surfDb()
   let remixOf: string | null = null
@@ -124,7 +127,7 @@ export async function publish(args: {
   const { data: existing } = await db.from('surf_apps').select('id, slug').eq('owner_id', args.ownerId).eq('client_id', args.clientId).maybeSingle()
   if (existing) {
     const { data, error } = await db.from('surf_apps')
-      .update({ title: args.title, emoji: args.emoji, prompt: args.prompt, html: args.html, published: true, updated_at: new Date().toISOString() })
+      .update({ title: args.title, emoji: args.emoji, prompt: args.prompt, html: args.html, site_url: args.siteUrl ?? null, published: true, updated_at: new Date().toISOString() })
       .eq('id', existing.id).select(SELECT).single()
     if (error) throw new Error(error.message)
     const row = data as unknown as Row
@@ -133,7 +136,7 @@ export async function publish(args: {
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data, error } = await db.from('surf_apps').insert({
       slug: newSlug(), owner_id: args.ownerId, client_id: args.clientId, title: args.title, emoji: args.emoji,
-      prompt: args.prompt, html: args.html, remix_of: remixOf,
+      prompt: args.prompt, html: args.html, site_url: args.siteUrl ?? null, remix_of: remixOf,
     }).select(SELECT).single()
     if (!error) {
       const row = data as unknown as Row

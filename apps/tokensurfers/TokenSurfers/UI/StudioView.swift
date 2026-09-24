@@ -230,10 +230,29 @@ struct StudioView: View {
             .buttonStyle(SquishStyle())
             Spacer(minLength: 4)
             tabs
+            layoutButton
             menu
         }
         .padding(.horizontal, 10)
         .padding(.top, 8)
+    }
+
+    /// The way back from a full-screen stage, always in the bar: shows or hides the game pane.
+    private var layoutButton: some View {
+        Button {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                gameOpen.toggle()
+                if gameOpen { split = 0.5; userSized = false }
+            }
+        } label: {
+            Image(systemName: gameOpen ? "rectangle.split.1x2.fill" : "rectangle.split.1x2")
+                .font(.system(size: 15, weight: .black))
+                .foregroundStyle(Theme.ink)
+                .frame(width: 38, height: 38)
+                .background(Circle().fill(.white.opacity(0.94)))
+        }
+        .buttonStyle(SquishStyle())
+        .accessibilityLabel(gameOpen ? "Hide the game" : "Show the game")
     }
 
     private var tabs: some View {
@@ -268,7 +287,7 @@ struct StudioView: View {
             Button { publish() } label: {
                 Label(studio.project.remoteSlug == nil ? "Publish to the gallery" : "Update in the gallery", systemImage: "square.and.arrow.up.on.square")
             }
-            .disabled(studio.html.isEmpty || studio.building || publishing)
+            .disabled((studio.html.isEmpty && studio.siteURL == nil) || studio.building || publishing)
             if let slug = studio.project.remoteSlug, let url = URL(string: "\(backendURL().absoluteString)/surf/a/\(slug)") {
                 ShareLink(item: url) { Label("Share the link", systemImage: "link") }
                 Button(role: .destructive) { unpublish() } label: { Label("Unpublish", systemImage: "eye.slash") }
@@ -330,10 +349,9 @@ struct StudioView: View {
         VStack(spacing: 4) {
             captionOverlay
                 .frame(height: 60)
-            if gameOpen {
-                Capsule().fill(.white.opacity(0.5)).frame(width: 44, height: 5)
-                    .shadow(color: .black.opacity(0.3), radius: 1, y: 1)
-            }
+            // the grab handle: drag down to give the stage the screen, drag up to bring the game back
+            Capsule().fill(gameOpen ? .white.opacity(0.5) : Theme.ink.opacity(0.28)).frame(width: 44, height: 5)
+                .shadow(color: (gameOpen ? Color.black : .white).opacity(0.3), radius: 1, y: 1)
         }
         .frame(width: width, height: 72)
         .contentShape(Rectangle())
@@ -351,7 +369,13 @@ struct StudioView: View {
     private func resize(total: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 4)
             .onChanged { v in
-                guard gameOpen else { return }
+                if !gameOpen {
+                    if v.translation.height < -28 {
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { gameOpen = true; split = 0.5 }
+                        userSized = false
+                    }
+                    return
+                }
                 if dragStart == nil { dragStart = split }
                 split = min(0.8, max(0.22, (dragStart ?? split) + v.translation.height / total))
                 userSized = true
@@ -684,7 +708,7 @@ struct StudioView: View {
         publishing = true
         Task {
             do {
-                let app = try await account.publish(project: studio.project, html: studio.html)
+                let app = try await account.publish(project: studio.project, html: studio.html, siteURL: studio.siteURL?.absoluteString)
                 studio.setRemoteSlug(app.slug)
                 publishedURL = URL(string: app.url)
                 publishNote = "It's live at \(app.url)"

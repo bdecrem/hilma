@@ -11,9 +11,17 @@ fix('localStorage');fix('sessionStorage');})();</script>`
 
 /** The creation runs in a sandboxed iframe (opaque origin: it can't touch our
  *  cookies); a shim gives it an in-memory localStorage since the sandbox has none. */
-export function AppFrame({ html, full, onClose }: { html: string; full?: boolean; onClose?: () => void }) {
+export function AppFrame({ html, siteUrl, full, onClose }: { html: string; siteUrl?: string | null; full?: boolean; onClose?: () => void }) {
   const doc = /<head[^>]*>/i.test(html) ? html.replace(/<head[^>]*>/i, (m) => m + STORAGE_SHIM) : STORAGE_SHIM + html
-  const frame = (
+  // an app on Vercel has its own origin, so it may keep same-origin (its own localStorage)
+  const frame = siteUrl ? (
+    <iframe
+      title="the app"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-modals allow-popups"
+      src={siteUrl}
+      allow="autoplay"
+    />
+  ) : (
     <iframe
       title="the app"
       sandbox="allow-scripts allow-forms allow-pointer-lock allow-modals allow-popups"
@@ -32,14 +40,14 @@ export function AppFrame({ html, full, onClose }: { html: string; full?: boolean
   return <div className="frame">{frame}</div>
 }
 
-export function Player({ html }: { html: string }) {
+export function Player({ html, siteUrl }: { html: string; siteUrl?: string | null }) {
   const [full, setFull] = useState(false)
   useEffect(() => {
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('full') === '1') setFull(true)
   }, [])
   return (
     <>
-      <AppFrame html={html} full={full} onClose={() => setFull(false)} />
+      <AppFrame html={html} siteUrl={siteUrl} full={full} onClose={() => setFull(false)} />
       {!full && (
         <button className="key white" style={{ marginTop: 12 }} onClick={() => setFull(true)}>
           ⤢ play full screen

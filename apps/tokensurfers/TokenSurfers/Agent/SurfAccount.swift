@@ -24,6 +24,7 @@ struct GalleryApp: Identifiable, Decodable, Equatable {
     let updatedAt: String
     var voted: Bool
     let url: String
+    var siteUrl: String? = nil     // built on the mini: the app on Vercel (html is empty)
     var html: String? = nil
     var remixes: Int? = nil
 }
@@ -108,11 +109,13 @@ final class SurfAccount {
     private struct Wrapped: Decodable { let app: GalleryApp }
     private struct Wrapped2: Decodable { let apps: [GalleryApp] }
 
-    func publish(project: Project, html: String) async throws -> GalleryApp {
-        let data = try await request("api/surf/apps", method: "POST", body: [
+    func publish(project: Project, html: String, siteURL: String? = nil) async throws -> GalleryApp {
+        var body: [String: Any] = [
             "client_id": project.id.uuidString.lowercased(), "title": project.title, "emoji": project.emoji,
             "prompt": project.prompts.first ?? "", "html": html, "remix_of": project.remixOf ?? "",
-        ])
+        ]
+        if let siteURL { body["site_url"] = siteURL }
+        let data = try await request("api/surf/apps", method: "POST", body: body)
         return try JSONDecoder().decode(Wrapped.self, from: data).app
     }
 

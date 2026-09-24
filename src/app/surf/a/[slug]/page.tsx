@@ -31,7 +31,7 @@ export default async function AppPage({ params }: Params) {
     <main className="wrap">
       <TopBar />
       <div className="play">
-        <div><Player html={app.html} /></div>
+        <div><Player html={app.html} siteUrl={app.siteUrl} /></div>
         <div className="meta">
           <h1 className="head stroke">{app.emoji} {app.title}</h1>
           <div className="by">
@@ -44,12 +44,18 @@ export default async function AppPage({ params }: Params) {
           ) : null}
           <div className="actions">
             <Upvote slug={app.slug} upvotes={app.upvotes} voted={app.voted} />
-            <a className="key" href={deep}>remix it in the app 🔁</a>
+            {app.siteUrl
+              ? <a className="key" href={app.siteUrl} target="_blank" rel="noopener">open it ↗</a>
+              : <a className="key" href={deep}>remix it in the app 🔁</a>}
           </div>
-          <p className="note">
-            remixing opens Token Surfers on your phone with a copy of this app to change.{' '}
-            {TESTFLIGHT ? <a href={TESTFLIGHT} style={{ textDecoration: 'underline' }}>don't have it? TestFlight →</a> : 'the TestFlight beta is coming.'}
-          </p>
+          {app.siteUrl ? (
+            <p className="note">built by Claude Code on the Token Surfers agent and deployed on Vercel; it opens in its own tab.</p>
+          ) : (
+            <p className="note">
+              remixing opens Token Surfers on your phone with a copy of this app to change.{' '}
+              {TESTFLIGHT ? <a href={TESTFLIGHT} style={{ textDecoration: 'underline' }}>don't have it? TestFlight →</a> : 'the TestFlight beta is coming.'}
+            </p>
+          )}
         </div>
       </div>
       <Footer />

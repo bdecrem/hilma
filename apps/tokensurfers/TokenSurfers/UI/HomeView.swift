@@ -291,15 +291,33 @@ struct HomeView: View {
                     ForEach(projects) { p in
                         Button { open(p.id, nil) } label: { AppCard(project: p, building: model.studios[p.id]?.building ?? false) }
                             .buttonStyle(SquishStyle())
-                            .contextMenu {
-                                Button { newTitle = p.title; renaming = p } label: { Label("Rename", systemImage: "pencil") }
-                                ShareLink(item: model.store.exportURL(for: p)) { Label("Share HTML", systemImage: "square.and.arrow.up") }
-                                Button(role: .destructive) { deleting = p } label: { Label("Delete", systemImage: "trash") }
+                            .contextMenu { cardMenu(p) }
+                            .overlay(alignment: .topTrailing) {
+                                Menu { cardMenu(p) } label: {
+                                    Image(systemName: "ellipsis")
+                                        .font(.system(size: 13, weight: .black)).foregroundStyle(Theme.ink)
+                                        .frame(width: 28, height: 28)
+                                        .background(Circle().fill(.white.opacity(0.94)))
+                                        .overlay(Circle().strokeBorder(Theme.ink.opacity(0.35), lineWidth: 1))
+                                }
+                                .padding(16)
+                                .accessibilityLabel("More")
                             }
                     }
                 }
             }
         }
+    }
+
+    /// Rename, share, delete — the same list on the card's "…" and on a long press.
+    @ViewBuilder private func cardMenu(_ p: Project) -> some View {
+        Button { newTitle = p.title; renaming = p } label: { Label("Rename", systemImage: "pencil") }
+        if let s = p.siteURL, let u = URL(string: s) {
+            ShareLink(item: u) { Label("Share the link", systemImage: "link") }
+        } else {
+            ShareLink(item: model.store.exportURL(for: p)) { Label("Share HTML", systemImage: "square.and.arrow.up") }
+        }
+        Button(role: .destructive) { deleting = p } label: { Label("Delete", systemImage: "trash") }
     }
 
     private func start() {
@@ -326,11 +344,11 @@ struct AppCard: View {
                 if building {
                     VStack {
                         HStack {
-                            Spacer()
                             Text("COOKING")
                                 .font(Theme.black(9)).foregroundStyle(.white)
                                 .padding(.horizontal, 7).padding(.vertical, 3)
                                 .background(Capsule().fill(Theme.red))
+                            Spacer()
                         }
                         Spacer()
                     }

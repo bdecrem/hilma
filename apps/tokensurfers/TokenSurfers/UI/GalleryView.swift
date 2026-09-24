@@ -183,7 +183,9 @@ struct GalleryAppView: View {
 
             ZStack {
                 Color.white
-                if let html {
+                if let site = app.siteUrl.flatMap({ URL(string: $0) }) {
+                    SiteWebView(url: site, version: 1)
+                } else if let html {
                     PreviewWebView(html: html, version: 1, projectID: UUID(uuidString: app.id) ?? UUID())
                 } else {
                     VStack(spacing: 10) {
@@ -199,8 +201,13 @@ struct GalleryAppView: View {
                         .lineLimit(2).multilineTextAlignment(.center)
                 }
                 HStack(spacing: 10) {
-                    ChunkyButton(title: busy ? "…" : "REMIX IT 🔁", fill: Theme.splat, height: 46, action: remix)
-                        .disabled(html == nil || busy)
+                    if let site = app.siteUrl.flatMap({ URL(string: $0) }) {
+                        // built on the mini: nothing to copy yet, open it big instead
+                        ChunkyButton(title: "OPEN IT ↗", fill: Theme.splat, height: 46) { UIApplication.shared.open(site) }
+                    } else {
+                        ChunkyButton(title: busy ? "…" : "REMIX IT 🔁", fill: Theme.splat, height: 46, action: remix)
+                            .disabled(html == nil || busy)
+                    }
                     ShareLink(item: URL(string: app.url)!) {
                         Image(systemName: "square.and.arrow.up").font(.system(size: 17, weight: .black)).foregroundStyle(Theme.ink)
                             .frame(width: 46, height: 46)
@@ -218,6 +225,7 @@ struct GalleryAppView: View {
             do {
                 let full = try await account.fetch(slug: app.slug)
                 html = full.html ?? ""
+                if let s = full.siteUrl { app.siteUrl = s }
                 app.upvotes = full.upvotes
                 app.voted = full.voted
             } catch {
