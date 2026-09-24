@@ -147,12 +147,13 @@ back into their own apps. One handle for all of it (and the leaderboard).
   `/_next/*` pass through, so `/surf/a/<slug>` and `/a/<slug>` both work).
   DNS is Namecheap: A `@` → `216.150.1.1`, CNAME `www` →
   `cname.vercel-dns.com` (never `76.76.21.21`, see the Vercel DNS
-  migration note in memory). Once the domain resolves, flip the
-  `SURF_SITE_URL` default in `src/lib/surf/apps.ts` and
-  `src/app/surf/layout.tsx` to `https://tokensurfers.app` so share links
-  and the OG card use it. Setting DNS from here needs this machine's IP
-  whitelisted in Namecheap → Profile → Tools → API Access (the
-  `../tunn3l/plumb/plumb.js dns <domain> add …` tool).
+  migration note in memory), set 2026-09-24 with
+  `../tunn3l/plumb/plumb.js dns <domain> add …` — Namecheap's API only
+  answers whitelisted IPs (Profile → Tools → API Access; the M4 iMac at
+  Stanford is on the list). `SITE` (`src/lib/surf/apps.ts`) and the
+  `metadataBase` (`src/app/surf/layout.tsx`) default to
+  `https://tokensurfers.app`, so share links are `tokensurfers.app/a/<slug>`
+  and the OG card resolves there; `SURF_SITE_URL` overrides both.
 - **Simulator hooks**: `TS_BACKEND=http://localhost:3219` points the app at
   a dev server (ATS allows local networking), `TS_LOGIN=handle:password`
   signs in (creating the account if needed), `TS_PUBLISH=1` with

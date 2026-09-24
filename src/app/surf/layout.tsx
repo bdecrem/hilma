@@ -8,7 +8,7 @@ const body = Montserrat({ weight: ['600', '800', '900'], subsets: ['latin'], var
 export const metadata: Metadata = {
   title: 'Token Surfers',
   description: 'Vibe code while you surf. A brainrot coding agent builds little apps on your phone while you play a runner. Every token is a coin.',
-  metadataBase: new URL(process.env.SURF_SITE_URL || 'https://hilma-nine.vercel.app'),
+  metadataBase: new URL(process.env.SURF_SITE_URL || 'https://tokensurfers.app'),
   openGraph: {
     title: 'Token Surfers',
     description: 'Vibe code while you surf. Tokens become coins, tool calls become trains.',

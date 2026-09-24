@@ -4,7 +4,7 @@
 import { surfDb } from './db'
 
 export const HTML_MAX = 400_000
-export const SITE = process.env.SURF_SITE_URL || 'https://hilma-nine.vercel.app'
+export const SITE = process.env.SURF_SITE_URL || 'https://tokensurfers.app'
 
 export type AppCard = {
   id: string
@@ -52,7 +52,7 @@ function toCard(r: Row, l: Lookups, voted = false): AppCard {
   return {
     id: r.id, slug: r.slug, title: r.title, emoji: r.emoji, prompt: r.prompt,
     owner: l.owners.get(r.owner_id) ?? 'someone', upvotes: r.upvotes,
-    remixOf: parent, createdAt: r.created_at, updatedAt: r.updated_at, voted, url: `${SITE}/surf/a/${r.slug}`,
+    remixOf: parent, createdAt: r.created_at, updatedAt: r.updated_at, voted, url: `${SITE}/a/${r.slug}`,
   }
 }
 
