@@ -19,24 +19,27 @@ final class BlobState {
 }
 
 enum BlobArt {
-    static let arms = 14
+    static let arms = 12
     /// Tip radius at rest, body radius, arm width, sticker edge (world units).
-    static let R = 0.43
-    static let body = 0.18
-    static let width = 0.16
-    static let edge = 0.05
+    /// Measured off the reference video (2026-09-24): arms about a quarter of
+    /// the tip radius wide, a core about a quarter of it, a hairline edge —
+    /// more tentacle, less body. A fat edge is what fused the first version
+    /// into a cloud.
+    static let R = 0.52
+    static let body = 0.115
+    static let width = 0.115
+    static let edge = 0.014
     /// The blob floats: its centre sits this high above the ground it runs on.
     static let hover = 0.5
 
-    static let fill = Color(hex: 0xF08A55)
-    static let discOuter = Color(hex: 0xFFE9CC)
-    static let discInner = Color(hex: 0xF8B27C)
+    static let fill = Color(hex: 0xE68A5C)        // the reference's matte terracotta
+    static let seed = Color(hex: 0xF7D66B)        // the pale-yellow dot at its heart
     static let ink = Color(hex: 0x1D1530)
 
     /// Fixed per-arm character: base length and breathing phase.
     private static let seeds: [(len: Double, phase: Double, w: Double, thick: Double)] = (0..<arms).map { i in
         var rng = SeededRandom(seed: 91 + UInt64(i) * 7)
-        return (0.55 + 0.6 * rng.unit(), rng.unit() * 2 * .pi, 2.4 + rng.unit() * 2.2, 0.7 + rng.unit() * 0.65)
+        return (0.6 + 0.4 * rng.unit(), rng.unit() * 2 * .pi, 1.6 + rng.unit() * 1.5, 0.8 + rng.unit() * 0.4)
     }
 
     /// `origin` is the ground point under the character on screen; `unit` is pixels per world unit.
@@ -52,7 +55,7 @@ enum BlobArt {
 
         let dead = p.dead >= 0
         let drop = dead ? min(1, p.dead * 2.5) : 0          // crashed: it sinks to the ground
-        let bob = dead ? 0 : 0.045 * sin(p.t * 7.3) + 0.012 * sin(p.t * 23.7)   // never quite still
+        let bob = dead ? 0 : 0.018 * sin(p.t * 5.1) + 0.006 * sin(p.t * 19.3)   // never quite still, never much
         let centreY = -(hover + p.lift + bob) * unit + drop * (hover - body) * unit
         c.translateBy(x: 0, y: centreY)
         c.scaleBy(x: unit, y: unit)
@@ -89,17 +92,17 @@ enum BlobArt {
 
         // the token in the middle (it doesn't spin with the arms)
         c.rotate(by: .radians(-s.theta))
-        let ro = 0.16, ri = 0.085
-        c.fill(Path(ellipseIn: CGRect(x: -ro, y: -ro, width: ro * 2, height: ro * 2)), with: .color(discOuter))
-        c.fill(Path(ellipseIn: CGRect(x: -ri, y: -ri + 0.02, width: ri * 2, height: ri * 2)), with: .color(discInner))
+        let ro = 0.045, ri = 0.02
+        c.fill(Path(ellipseIn: CGRect(x: -ro + 0.01, y: -ro + 0.02, width: ro * 2, height: ro * 2)), with: .color(seed))
+        c.fill(Path(ellipseIn: CGRect(x: 0.02 - ri, y: -0.085 - ri, width: ri * 2, height: ri * 2)), with: .color(seed))
         if dead {
             // X eyes on the token
             var x = Path()
-            for dx in [-0.075, 0.075] {
-                x.move(to: CGPoint(x: dx - 0.035, y: -0.04)); x.addLine(to: CGPoint(x: dx + 0.035, y: 0.03))
-                x.move(to: CGPoint(x: dx + 0.035, y: -0.04)); x.addLine(to: CGPoint(x: dx - 0.035, y: 0.03))
+            for dx in [-0.05, 0.05] {
+                x.move(to: CGPoint(x: dx - 0.025, y: -0.03)); x.addLine(to: CGPoint(x: dx + 0.025, y: 0.02))
+                x.move(to: CGPoint(x: dx + 0.025, y: -0.03)); x.addLine(to: CGPoint(x: dx - 0.025, y: 0.02))
             }
-            c.stroke(x, with: .color(ink), style: StrokeStyle(lineWidth: 0.025, lineCap: .round))
+            c.stroke(x, with: .color(ink), style: StrokeStyle(lineWidth: 0.02, lineCap: .round))
         }
     }
 
@@ -120,21 +123,21 @@ enum BlobArt {
         let dead = p.dead >= 0
         let air = p.lift > 0.03
         // spin: steady, faster with speed, a boost in the air and in a roll, none when dead
-        var target = dead ? 0 : 2.1 + 1.3 * p.speed
-        if air { target += 4 }
-        if p.rolling > 0 { target += 7 }
+        var target = dead ? 0 : 1.5 + 1.0 * p.speed
+        if air { target += 3.5 }
+        if p.rolling > 0 { target += 6 }
         s.rate += (target - s.rate) * min(1, 6 * dt)
         s.theta += s.rate * dt
 
         let landed = s.wasAirborne && !air
         s.wasAirborne = air
-        let k = 62.0, damp = 8.5
+        let k = 50.0, damp = 8.0
         for i in 0..<arms {
             let seed = seeds[i]
             // the arm's direction on screen, after the spin
             let a = Double(i) / Double(arms) * 2 * .pi + s.theta
-            var goal = seed.len * R * (1 + 0.11 * sin(seed.w * p.t + seed.phase) + 0.05 * sin(seed.w * 1.9 * p.t + seed.phase * 2)
-                                       + 0.03 * sin(seed.w * 4.7 * p.t + seed.phase * 3))   // the jitter
+            var goal = seed.len * R * (1 + 0.14 * sin(seed.w * p.t + seed.phase) + 0.06 * sin(seed.w * 1.9 * p.t + seed.phase * 2)
+                                       + 0.025 * sin(seed.w * 4.7 * p.t + seed.phase * 3))   // the jitter
             // trailing arms stretch behind a lane change
             goal += 0.30 * R * max(0, -cos(a) * p.sway)
             // hanging arms dangle in the air
@@ -143,7 +146,7 @@ enum BlobArt {
             if landed { s.vel[i] += 2.2 }
             s.vel[i] += (-k * (s.len[i] - goal) - damp * s.vel[i]) * dt
             s.len[i] += s.vel[i] * dt
-            s.len[i] = max(body * 0.6, s.len[i])
+            s.len[i] = max(R * 0.3, s.len[i])
         }
     }
 }

@@ -50,8 +50,18 @@ Token Surfers is a real endless runner now, not a screensaver. `Game/`:
   ground, the same shadow, squash and roll transforms as the tube man had.
   The springs live in `BlobState` on the engine (animation only). Second
   pass the same day (Bart: "too large and not quite fun enough"): 14 arms,
-  tip radius 0.43, a vertical bob (0.045 at 7.3 Hz plus a 0.012 jitter),
-  spin 2.1 + 1.3·speed, springs k 62. **`BlobHero` replaces `SurferHero`
+  tip radius 0.43, a vertical bob, spin 2.1 + 1.3·speed. Third pass, against
+  the reference video (`~/Downloads/ScreenRecording_09-24-2026 15-26-25_1.MP4`,
+  Bart: "it is the tentacle to body ratio — more tentacle, less body — and
+  then the motion"): measured off 30 frames with a colour mask (spin
+  ≈ 75–150°/s, bob ≈ ±3% of the radius, tips ≈ 28% of the screen width,
+  arms about a quarter of the tip radius wide, core about a quarter, a
+  hairline edge — the fat sticker edge was what fused the first versions
+  into a cloud). Now: 12 arms, R 0.52, body 0.115, width 0.115, edge 0.014,
+  matte terracotta `E68A5C` with one pale-yellow seed dot off centre (no
+  disc), spin 1.5 + 1.0·speed (+3.5 in the air, +6 in a roll), bob 0.018 at
+  5.1 Hz + 0.006 jitter, breathing ±14% at 1.6–3.1 rad/s, springs k 50.
+  Frames to compare against are in the session's scratch (`ref2/crop*.png`). **`BlobHero` replaces `SurferHero`
   everywhere** (Home, the composer's status pill, the cards, the cutaways,
   the game-over card, the empty shelf): the same drawing spinning in place,
   `energy` = liveliness, `.dead` = the wilted one. On the web, `TubeMan` in
