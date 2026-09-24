@@ -36,10 +36,24 @@ Token Surfers is a real endless runner now, not a screensaver. `Game/`:
   runs never reach the leaderboard), and it is the regression check — a
   death prints `[bot] DEATH …` with the nearby entities, so a survivable
   course means an empty log. 70-second runs on 2026-09-24 had none.
-- **The surfer** (`SurferArt.swift`, 2026-09-24): Splat is the inflatable
-  tube man from `misc/splat-back-smooth.svg` (back, in the runner) and
-  `misc/splat.svg` (front: shades, grin, shaka hand; Home, the cards, the
-  Studio). Drawn in the SVG's own coordinates (y down, feet on 532, `k` =
+- **The runner is the splat blob** (`BlobArt.swift`, 2026-09-24, Bart's pick
+  over the tube man for the track: "constantly rotating and tentacles gently
+  changing length with a subtle physics feel", the original mockup's
+  character): ten round-capped arms of uneven length and thickness (fixed
+  per-arm seeds) around a body, a white sticker edge, the token in the
+  middle (it doesn't spin with the arms). It spins all the time (1.3 rad/s +
+  speed, +3.5 in the air, +6 in a roll, 0 when dead); every arm is a spring
+  (k 48, damping 8) chasing a breathing target, trailing arms stretch behind
+  a lane change, hanging arms dangle in the air, a landing kicks them all
+  out, the crash wilts them to half and drops the body with X eyes on the
+  token. Lane-sized: tip radius 0.5 world units, centre 0.52 above the
+  ground, the same shadow, squash and roll transforms as the tube man had.
+  The springs live in `BlobState` on the engine (animation only). The tube
+  man below stays the Splat of Home, the cards, the composer and the
+  cutaways, where there is a face to see.
+- **The tube man** (`SurferArt.swift`, 2026-09-24): Splat is the inflatable
+  tube man from `misc/splat-back-smooth.svg` (back) and `misc/splat.svg`
+  (front: shades, grin, shaka hand; Home, the cards, the Studio). Drawn in the SVG's own coordinates (y down, feet on 532, `k` =
   world units per SVG px), layer order as in the SVG: white sticker edge,
   one merged ink silhouette, fills. Kept: the eight-ray gradient crown, the
   token on a spring antenna, the goggles strap, the `>_` patch, the sneakers.

@@ -43,6 +43,8 @@ final class SurfEngine {
 
     // Player
     private(set) var lane = 0
+    /// The in-game Splat's springs (animation only, see BlobArt).
+    let blob = BlobState()
     private var prevLane = 0
     private(set) var x = 0.0
     private(set) var y = 0.0
