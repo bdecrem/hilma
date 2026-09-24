@@ -18,6 +18,7 @@
 		50280016A75A4A1C28681C3F /* TokenSurfersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */; };
 		5CE1740CC0D49C8669535958 /* SurferArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */; };
 		67B389CF94F703FECEC5F0A5 /* LiveFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD2104364CBB1C2BA94BD72 /* LiveFeed.swift */; };
+		6A58AD0AB616E179A14AD79C /* BlobArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7527D8A15A97053FD86758F /* BlobArt.swift */; };
 		7A5D93A65154DEBF5A9D5651 /* SurfGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C0C57F401EF078A6B831D2 /* SurfGameView.swift */; };
 		84A68F44B8741EE69424AA8D /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D433691AFF940E0ADCBF5569 /* GalleryView.swift */; };
 		9883E656538BE9E9F2AB98D4 /* SurfAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6570E755A3C2C0B71A922680 /* SurfAudio.swift */; };
@@ -57,6 +58,7 @@
 		963B511C7542AE5F703AE85D /* TokenSurfers.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TokenSurfers.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1959D3F66992E31FC1270A6 /* Montserrat-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-Black.ttf"; sourceTree = "<group>"; };
 		B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurferArt.swift; sourceTree = "<group>"; };
+		C7527D8A15A97053FD86758F /* BlobArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobArt.swift; sourceTree = "<group>"; };
 		CA460FC7B0A043146FFD0784 /* RemoteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteEngine.swift; sourceTree = "<group>"; };
 		CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leaderboard.swift; sourceTree = "<group>"; };
 		CFD2104364CBB1C2BA94BD72 /* LiveFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveFeed.swift; sourceTree = "<group>"; };
@@ -128,6 +130,7 @@
 		CED77B59545BDD7A60F3A2D0 /* Game */ = {
 			isa = PBXGroup;
 			children = (
+				C7527D8A15A97053FD86758F /* BlobArt.swift */,
 				CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */,
 				6570E755A3C2C0B71A922680 /* SurfAudio.swift */,
 				50E086AD51AB083526161C1A /* SurfEngine.swift */,
@@ -238,6 +241,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				154CC1BB3CF1989B2201B1AC /* AppRunner.swift in Sources */,
+				6A58AD0AB616E179A14AD79C /* BlobArt.swift in Sources */,
 				237FDF18278B29B8E299D4DD /* CaptionBand.swift in Sources */,
 				84A68F44B8741EE69424AA8D /* GalleryView.swift in Sources */,
 				FEC528561C0E29F0E6419676 /* HomeView.swift in Sources */,
@@ -314,7 +318,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -401,7 +405,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

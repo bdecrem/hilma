@@ -568,3 +568,18 @@ Goal: a public TestFlight beta, not an App Store release.
   uploads with the API key, then `testflight/asc-submit.mjs <build>` waits
   for processing, adds the build to every public-link group and submits it
   for beta review. Another Mac needs its own profile on its own cert.
+- **This iMac only has the Xcode 27 beta, and App Store Connect refuses
+  uploads built with a beta** ("Unsupported SDK or Xcode version", 2026-09-24).
+  The way around it, used for the first build: archive on the Mac mini
+  (`admin@171.66.240.175`, Xcode 26.3 release, checkout `~/ts-ship`, no
+  signing — its keychain can't be unlocked over ssh), tar the `.xcarchive`
+  back here, and `xcodebuild -exportArchive` it from this Mac with the
+  distribution profile and the API key; the export re-signs and uploads, and
+  ASC judges the SDK from the archive. Exact commands are in the 2026-09-24
+  session; the plist for the export is what `ship.sh` writes. `ship.sh`
+  itself works once a release Xcode is installed here (set `DEVELOPER_DIR`).
+- The first upload went up as **1.0 (1)**: `Info.plist` carried literal
+  version strings, so project.yml's `0.1 (8)` never reached the bundle. Fixed
+  the same day (the plist now reads `$(MARKETING_VERSION)` /
+  `$(CURRENT_PROJECT_VERSION)`, project.yml says 1.0) — the next upload must
+  be 1.0 with a build number above 1, so bump before every archive.
