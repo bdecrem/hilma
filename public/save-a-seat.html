@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1a1714">
+<title>save a seat</title>
+<meta name="description" content="What makes a home, anyway? A torn-paper collage short about a big house, a perfect view, a very safe box, and some friends in the rain.">
+<meta property="og:title" content="save a seat">
+<meta property="og:description" content="What makes a home, anyway? A torn-paper collage short, drawn and scored in the browser.">
+<meta property="og:image" content="/save-a-seat-og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Caveat+Brush&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #1a1714; }
+  body {
+    min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; box-sizing: border-box;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    font: 500 15px/1.4 "Caveat Brush", cursive; color: #a09380; -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: relative; width: min(100%, calc((100dvh - 70px) * 16 / 9), 1400px); aspect-ratio: 16 / 9; }
+  canvas { display: block; width: 100%; height: 100%; cursor: pointer; border-radius: 4px; box-shadow: 0 30px 90px rgba(0,0,0,.5); }
+  #cover { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; transition: opacity .5s; }
+  #cover span { font: 400 clamp(18px, 2.6vw, 26px)/1 "Caveat Brush", cursive; color: #2a2522; background: #f3ecd9; padding: .45em 1em; transform: rotate(-2deg); box-shadow: 4px 5px 0 rgba(0,0,0,.25); }
+  #cover.gone { opacity: 0; }
+  #meta { display: flex; gap: 16px; font-size: 18px; }
+  #meta b { color: #e8dcc6; font-weight: 400; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="c" aria-label="save a seat — an animated short with sound"></canvas>
+  <div id="cover"><span>▶ tap to play · sound on</span></div>
+</div>
+<div id="meta"><b>save a seat</b><span id="hint">tap to play</span></div>
+<script>
+'use strict';
+/* ============================================================
+   save a seat — what makes a home, anyway?
+   A torn-paper collage short. Everything is drawn on canvas
+   and synthesised with Web Audio; no image or audio files.
+   ============================================================ */
+
+const VW = 1600, VH = 900, GY = 770;              // logical size, ground line
+const BPM = 100, BEAT = 60 / BPM, BAR = BEAT * 4; // .6 / 2.4
+const S0 = [0, 4.8, 12.0, 19.2, 26.4], DUR = [4.8, 7.2, 7.2, 7.2, 14.4];
+const T = 40.8, WIPE = .7;
+const HAND = '"Caveat Brush", cursive', BLOCK = '"Bowlby One", sans-serif';
+const C = {
+  sky: '#b5d5e5', mint: '#c3dfc9', ochre: '#ecd290', navy: '#27315b', dusk: '#eab39c', plum: '#40355f',
+  grass: '#2f6a3d', grassN: '#24503a', tan: '#b8895a', tan2: '#a37a52',
+  cream: '#f3ecd9', fringe: '#fbf7ec', ink: '#221f1d', red: '#df5a37', pink: '#e9a2b0', teal: '#5aa894',
+  blue: '#3d6cb5', yellow: '#edc04a', orange: '#e8a33a', green: '#4f9a62', brick: '#cf5f3f', wood: '#9a6a45',
+};
+
+// ---------- utils ----------
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, u) => a + (b - a) * u;
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const eInOut = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+const eOut = u => 1 - Math.pow(1 - u, 3);
+const eIn = u => u * u * u;
+const eBack = u => { const c = 1.9; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
+function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hash = (a, b) => { const s = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return s - Math.floor(s); };
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+const cv = document.getElementById('c');
+const g = cv.getContext('2d');
+let S = 1, PW = 1600, PH = 900, BF = 0;
+const tex = {};
+function mk(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
+function noiseImg(x, w, h, amt, fn) {
+  const im = x.getImageData(0, 0, w, h), d = im.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (Math.random() - .5) * amt; d[i] += n; d[i + 1] += n; d[i + 2] += n; if (fn) fn(d, i); }
+  x.putImageData(im, 0, 0);
+}
+
+// ============================================================
+//  TORN PAPER
+// ============================================================
+// Every shape is a polygon whose edges are subdivided and pushed in/out a little.
+// A second, slightly bigger polygon in off-white sits under it: the torn fibre edge.
+// The jitter "boils" a touch (BF steps at 8 fps), like cut paper under a camera.
+const PCACHE = new Map();
+function torn(pts, seed, amp = 1.8, step = 7) {
+  const key = seed + '|' + BF + '|' + amp + '|' + pts.length + '|' + pts[0][0].toFixed(1) + ',' + pts[0][1].toFixed(1) + '|' + pts[1][0].toFixed(1);
+  let p = PCACHE.get(key); if (p) return p;
+  p = new Path2D(); let k = 0;
+  for (let e = 0; e < pts.length; e++) {
+    const [ax, ay] = pts[e], [bx, by] = pts[(e + 1) % pts.length];
+    const L = Math.hypot(bx - ax, by - ay) || 1, n = Math.max(1, Math.round(L / step)), nx = -(by - ay) / L, ny = (bx - ax) / L;
+    for (let j = 0; j < n; j++, k++) {
+      const u = j / n, d = (hash(seed, k) - .5) * 2 * amp + (hash(seed + BF * 37, k) - .5) * amp * .6;
+      const x = lerp(ax, bx, u) + nx * d, y = lerp(ay, by, u) + ny * d;
+      k === 0 ? p.moveTo(x, y) : p.lineTo(x, y);
+    }
+  }
+  p.closePath();
+  if (PCACHE.size > 6000) PCACHE.clear();
+  PCACHE.set(key, p); return p;
+}
+const grow = (pts, d) => { let cx = 0, cy = 0; pts.forEach(p => { cx += p[0]; cy += p[1]; }); cx /= pts.length; cy /= pts.length; return pts.map(([x, y]) => { const L = Math.hypot(x - cx, y - cy) || 1; return [x + (x - cx) / L * d, y + (y - cy) / L * d]; }); };
+const rectPts = (w, h) => [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
+const ellPts = (rx, ry, n = 22) => Array.from({ length: n }, (_, i) => { const a = i / n * 6.283; return [Math.cos(a) * rx, Math.sin(a) * ry]; });
+function rrPts(w, h, r) { const out = []; const c = [[w / 2 - r, -h / 2 + r, -Math.PI / 2], [w / 2 - r, h / 2 - r, 0], [-w / 2 + r, h / 2 - r, Math.PI / 2], [-w / 2 + r, -h / 2 + r, Math.PI]]; c.forEach(([x, y, a0]) => { for (let i = 0; i <= 3; i++) { const a = a0 + i / 3 * Math.PI / 2; out.push([x + Math.cos(a) * r, y + Math.sin(a) * r]); } }); return out; }
+
+// paper(pts, fill, seed): shadow + fibre edge + fill, in the current transform
+function paper(pts, fill, seed, o = {}) {
+  const amp = o.amp ?? 1.8, main = torn(pts, seed, amp), fr = torn(grow(pts, o.edge ?? 2.2), seed + 17, amp * 1.3);
+  if (o.shadow !== false) { g.save(); g.translate(o.sx ?? 3, o.sy ?? 4); g.fillStyle = o.shadowCol || 'rgba(45,28,18,.2)'; g.fill(fr); g.restore(); }
+  if (o.fringe !== false) { g.fillStyle = o.fringeCol || C.fringe; g.save(); g.translate(-.8, -1); g.fill(fr); g.restore(); }
+  g.fillStyle = fill; g.fill(main);
+  return main;
+}
+
+// ============================================================
+//  TEXTURES
+// ============================================================
+function bgTex(col, seed, extra) {
+  const c = mk(PW, PH), x = c.getContext('2d'); x.scale(S, S);
+  x.fillStyle = col; x.fillRect(0, 0, VW, VH);
+  const r = rng(seed);
+  for (let i = 0; i < 26; i++) {
+    const px = r() * VW, py = r() * VH, rr = 160 + r() * 380, light = r() < .5;
+    const gr = x.createRadialGradient(px, py, 0, px, py, rr);
+    gr.addColorStop(0, light ? 'rgba(255,255,255,.07)' : 'rgba(60,40,30,.06)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = gr; x.fillRect(px - rr, py - rr, rr * 2, rr * 2);
+  }
+  // paper fibres
+  x.lineWidth = .7;
+  for (let i = 0; i < 500; i++) { const px = r() * VW, py = r() * VH, a = r() * 6.28, L = 6 + r() * 18; x.strokeStyle = r() < .5 ? 'rgba(255,255,255,.08)' : 'rgba(40,30,20,.05)'; x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + Math.cos(a + 1) * L / 2, py + Math.sin(a + 1) * L / 2, px + Math.cos(a) * L, py + Math.sin(a) * L); x.stroke(); }
+  if (extra) extra(x, r);
+  const vg = x.createRadialGradient(VW / 2, VH / 2, VH * .4, VW / 2, VH / 2, VW * .62);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(40,25,15,.22)');
+  x.fillStyle = vg; x.fillRect(0, 0, VW, VH);
+  x.setTransform(1, 0, 0, 1, 0, 0);
+  noiseImg(x, PW, PH, 12);
+  return c;
+}
+function buildTextures() {
+  tex.sky = bgTex(C.sky, 1); tex.mint = bgTex(C.mint, 2); tex.ochre = bgTex(C.ochre, 3); tex.dusk = bgTex(C.dusk, 5); tex.plum = bgTex(C.plum, 6);
+  tex.navy = bgTex(C.navy, 4, (x, r) => { for (let i = 0; i < 90; i++) { x.fillStyle = `rgba(245,240,225,${.4 + r() * .6})`; x.beginPath(); x.arc(r() * VW, r() * 700, .8 + r() * 1.8, 0, 6.28); x.fill(); } });
+  const c = mk(256, 256), x = c.getContext('2d');
+  noiseImg(x, 256, 256, 0, (d, i) => { const w = Math.random() < .5; d[i] = d[i + 1] = d[i + 2] = w ? 255 : 30; d[i + 3] = Math.random() * 24; });
+  tex.grain = g.createPattern(c, 'repeat');
+  const gl = mk(64, 64), gx = gl.getContext('2d'), gr = gx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,226,150,1)'); gr.addColorStop(.25, 'rgba(255,200,110,.5)'); gr.addColorStop(1, 'rgba(255,180,90,0)');
+  gx.fillStyle = gr; gx.fillRect(0, 0, 64, 64); tex.glow = gl;
+}
+
+// paper backgrounds are screen-fixed (the sheet under the camera), so zooming never shows an edge
+function bg(img) { g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(img, 0, 0, PW, PH); g.restore(); }
+
+// ============================================================
+//  SET PIECES
+// ============================================================
+function ground(col, seed = 3) {
+  g.save(); g.translate(0, 0);
+  const pts = [[-30, GY], [VW + 30, GY], [VW + 30, VH + 30], [-30, VH + 30]];
+  const main = torn(pts, seed, 3.2, 9), fr = torn(pts.map(([x, y]) => [x, y - 3]), seed + 5, 4.2, 9);
+  g.fillStyle = C.fringe; g.fill(fr); g.fillStyle = col; g.fill(main);
+  g.restore();
+}
+function cloud(x, y, s, seed, col = C.cream, fringe) {
+  g.save(); g.translate(x, y); g.scale(s, s);
+  const pts = []; const n = 30;
+  for (let i = 0; i < n; i++) { const a = i / n * 6.283, lob = 1 + .16 * Math.sin(a * 4 + seed) + .08 * Math.sin(a * 7 + seed * 2); pts.push([Math.cos(a) * 90 * lob, Math.sin(a) * 30 * lob - (Math.sin(a) < 0 ? 6 : 0)]); }
+  paper(pts, col, seed, { amp: 2.4, shadow: false, fringeCol: fringe || C.fringe, edge: 2.6 });
+  g.restore();
+}
+function tape(x, y, rot, w = 56) {
+  g.save(); g.translate(x, y); g.rotate(rot);
+  g.fillStyle = 'rgba(214,196,150,.78)';
+  g.fill(torn(rectPts(w, 18), 900 + Math.round(x), 1.2, 5));
+  g.restore();
+}
+// a taped paper caption; text types in character by character
+function caption(text, x, y, n, alpha = 1, pop = 1, size = 40) {
+  g.save(); g.globalAlpha *= alpha;
+  g.font = `${size}px ${HAND}`;
+  const tw = g.measureText(text).width, w = tw + 70, h = size * 1.45;
+  g.translate(x, y); g.rotate(-.012); g.scale(pop, pop);
+  paper(rectPts(w, h), C.cream, 700 + text.length, { amp: 2.2 });
+  tape(-w / 2 + 16, -h / 2 + 2, -.6, 46); tape(w / 2 - 16, -h / 2 + 2, .6, 46);
+  g.fillStyle = C.ink; g.textBaseline = 'middle'; g.textAlign = 'left';
+  g.fillText(text.slice(0, n), -tw / 2, 2);
+  g.restore();
+}
+// ransom-note letter tile
+const TILE = [['#e9a2b0', '#1f1c1a'], ['#5aa894', '#1f1c1a'], ['#3d6cb5', '#f6efe2'], ['#e8a33a', '#1f1c1a'], ['#df5a37', '#f6efe2'], ['#f1e8d6', '#df5a37'], ['#2b2826', '#f6efe2'], ['#f1e8d6', '#3d6cb5']];
+function tile(ch, x, y, size, k, rot = 0, sc = 1) {
+  g.save(); g.translate(x, y); g.rotate(rot); g.scale(sc, sc);
+  g.font = `${size}px ${BLOCK}`;
+  const tw = g.measureText(ch).width, w = tw + size * .34, h = size * 1.14;
+  const [bg, fg] = TILE[k % TILE.length];
+  paper(rectPts(w, h), bg, 300 + k * 7, { amp: 1.6 });
+  g.fillStyle = fg; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(ch, 0, size * .06);
+  g.restore();
+}
+function tileW(ch, size) { g.font = `${size}px ${BLOCK}`; return g.measureText(ch).width + size * .34; }
+
+// ============================================================
+//  CHARACTERS
+// ============================================================
+function face(x, y, s, o) {
+  const lk = (o.look || 0) * 4 * s, ly = (o.lookY || 0) * 3 * s;
+  g.fillStyle = C.ink; g.strokeStyle = C.ink; g.lineCap = 'round'; g.lineWidth = 2.4 * s;
+  [-1, 1].forEach(d => {
+    const ex = x + d * 10 * s + lk, ey = y - 3 * s + ly;
+    if (o.eyes === 'happy') { g.beginPath(); g.arc(ex, ey + 2 * s, 4.5 * s, Math.PI * 1.1, Math.PI * 1.9); g.stroke(); }
+    else if (o.eyes === 'closed') { g.beginPath(); g.moveTo(ex - 4 * s, ey); g.lineTo(ex + 4 * s, ey); g.stroke(); }
+    else if (o.eyes === 'sad') { g.beginPath(); g.moveTo(ex - 4 * s, ey - d * 1.5 * s); g.lineTo(ex + 4 * s, ey + d * 1.5 * s); g.stroke(); g.beginPath(); g.arc(ex, ey + 2 * s, 2.2 * s, 0, 6.28); g.fill(); }
+    else { g.beginPath(); g.arc(ex, ey, (o.eyes === 'wide' ? 3.6 : 2.8) * s, 0, 6.28); g.fill(); }
+  });
+  g.fillStyle = 'rgba(233,120,120,.55)';
+  g.beginPath(); g.ellipse(x - 17 * s, y + 6 * s, 5 * s, 3.2 * s, 0, 0, 6.28); g.ellipse(x + 17 * s, y + 6 * s, 5 * s, 3.2 * s, 0, 0, 6.28); g.fill();
+  const mx = x + lk * .6, my = y + 10 * s;
+  g.strokeStyle = C.ink; g.fillStyle = '#5a2418'; g.lineWidth = 2.2 * s;
+  switch (o.mouth) {
+    case 'o': g.beginPath(); g.ellipse(mx, my + 1 * s, 3 * s, 4 * s, 0, 0, 6.28); g.fill(); break;
+    case 'yawn': g.beginPath(); g.ellipse(mx, my + 2 * s, 4.5 * s, 7 * s, 0, 0, 6.28); g.fill(); break;
+    case 'flat': g.beginPath(); g.moveTo(mx - 5 * s, my + 1 * s); g.lineTo(mx + 5 * s, my + 1 * s); g.stroke(); break;
+    case 'sad': g.beginPath(); g.arc(mx, my + 7 * s, 6 * s, Math.PI * 1.2, Math.PI * 1.8); g.stroke(); break;
+    case 'grin': g.beginPath(); g.moveTo(mx - 7 * s, my - 1 * s); g.quadraticCurveTo(mx, my - 1 * s, mx + 7 * s, my - 1 * s); g.quadraticCurveTo(mx, my + 11 * s, mx - 7 * s, my - 1 * s); g.fill(); break;
+    default: g.beginPath(); g.arc(mx, my - 3 * s, 6 * s, Math.PI * .22, Math.PI * .78); g.stroke();
+  }
+}
+function limb(pts, s) { g.strokeStyle = C.ink; g.lineWidth = 3 * s; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); pts.forEach((p, i) => i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1])); g.stroke(); }
+function armPts(side, sx, sy, s, pose, t) {
+  const d = side;
+  switch (pose) {
+    case 'up': return [[sx, sy], [sx + d * 18 * s, sy - 18 * s], [sx + d * 24 * s, sy - 38 * s]];
+    case 'wave': return d > 0 ? [[sx, sy], [sx + 20 * s, sy - 16 * s], [sx + (26 + Math.sin(t * 18) * 8) * s, sy - 38 * s]] : [[sx, sy], [sx - 8 * s, sy + 20 * s], [sx - 10 * s, sy + 38 * s]];
+    case 'shrug': return [[sx, sy], [sx + d * 18 * s, sy + 10 * s], [sx + d * 26 * s, sy - 8 * s]];
+    case 'pat': return d < 0 ? [[sx, sy], [sx - 20 * s, sy + 16 * s], [sx - 40 * s, sy + (30 + Math.abs(Math.sin(t * 14)) * -8) * s]] : [[sx, sy], [sx + 8 * s, sy + 20 * s], [sx + 10 * s, sy + 38 * s]];
+    case 'hold': return d > 0 ? [[sx, sy], [sx + 12 * s, sy + 6 * s], [sx + 22 * s, sy - 4 * s]] : [[sx, sy], [sx - 8 * s, sy + 20 * s], [sx - 10 * s, sy + 36 * s]];
+    case 'hug': return [[sx, sy], [sx + d * 6 * s, sy + 20 * s], [sx - d * 10 * s, sy + 30 * s]];
+    default: return [[sx, sy], [sx + d * 8 * s, sy + 20 * s], [sx + d * 10 * s, sy + 38 * s]];
+  }
+}
+// Pip: cream head, red body, stick limbs. y = feet (standing) or seat (sitting). returns the hand position for 'hold'
+function pip(x, y, o = {}, t = 0) {
+  const s = o.s || 1, sit = o.sit, sd = o.seed || 11;
+  let hip = sit ? y - 2 * s : y - 38 * s;
+  hip += o.bob || 0;
+  const top = hip - 58 * s, hy = top - 22 * s + (o.headDy || 0);
+  // legs
+  if (sit) { limb([[x - 8 * s, hip], [x + 4 * s, hip + 4 * s], [x + 2 * s, GY - 2]], s); limb([[x + 8 * s, hip], [x + 18 * s, hip + 4 * s], [x + 16 * s, GY - 2]], s); }
+  else { const w = o.walk ? Math.sin(o.walk) * 9 * s : 0; limb([[x - 8 * s, hip], [x - 9 * s + w, y]], s); limb([[x + 8 * s, hip], [x + 9 * s - w, y]], s); g.fillStyle = C.ink; g.fillRect(x - 15 * s + w, y - 2, 8 * s, 3); g.fillRect(x + 7 * s - w, y - 2, 8 * s, 3); }
+  // arms behind? no: body first, then arms over
+  g.save(); g.translate(x, hip - 27 * s); g.rotate(o.tilt || 0);
+  paper(rrPts(56 * s, 64 * s, 16 * s), C.red, sd, { amp: 1.4 });
+  g.restore();
+  const shY = top + 16 * s;
+  limb(armPts(-1, x - 24 * s, shY, s, o.armsL || o.arms, t), s);
+  const R = armPts(1, x + 24 * s, shY, s, o.armsR || o.arms, t); limb(R, s);
+  g.save(); g.translate(x + (o.headDx || 0), hy); g.rotate((o.tilt || 0) * .6);
+  paper(ellPts(30 * s, 29 * s), '#f1e9da', sd + 3, { amp: 1.5 });
+  g.restore();
+  face(x + (o.headDx || 0), hy, s, o);
+  return R[R.length - 1];
+}
+// a friend: one round coloured blob, face on the body, stick arms and legs
+function blob(x, y, col, o = {}, t = 0) {
+  const s = o.s || 1, sit = o.sit, sd = o.seed || 21, r = 34 * s;
+  const by = (sit ? y - r + 6 * s : y - 24 * s - r) + (o.bob || 0);
+  if (sit) { limb([[x - 10 * s, by + r - 4], [x - 6 * s, GY - 2]], s); limb([[x + 10 * s, by + r - 4], [x + 14 * s, GY - 2]], s); }
+  else { const w = o.walk ? Math.sin(o.walk) * 8 * s : 0; limb([[x - 10 * s, by + r - 4], [x - 10 * s + w, y]], s); limb([[x + 10 * s, by + r - 4], [x + 10 * s - w, y]], s); }
+  const L = armPts(-1, x - r + 4 * s, by + 4 * s, s, o.armsL || o.arms, t), R = armPts(1, x + r - 4 * s, by + 4 * s, s, o.armsR || o.arms, t);
+  limb(L, s); limb(R, s);
+  g.save(); g.translate(x, by); g.rotate(o.tilt || 0);
+  paper(ellPts(r, r * .96), col, sd, { amp: 1.6 });
+  g.restore();
+  face(x, by - 2 * s, s * .9, o);
+  return R[R.length - 1];
+}
+function umbrella(gx, gy, col, tilt = 0, sc = 1, seed = 41) {
+  g.save(); g.translate(gx, gy); g.rotate(tilt); g.scale(sc, sc);
+  g.strokeStyle = C.ink; g.lineWidth = 3; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -118); g.stroke();
+  g.beginPath(); g.arc(-6, 0, 6, 0, Math.PI); g.stroke();
+  const pts = [];
+  for (let i = 0; i <= 16; i++) { const a = Math.PI + i / 16 * Math.PI; pts.push([Math.cos(a) * 82, -118 + Math.sin(a) * 74]); }
+  for (let k = 4; k > 0; k--) for (let i = 1; i < 6; i++) { const cx = -82 + (k - .5) * 41, a = i / 6 * Math.PI; pts.push([cx + Math.cos(a) * 20.5, -118 - Math.sin(a) * 9]); }
+  paper(pts, col, seed, { amp: 1.4 });
+  g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 2;
+  [-41, 0, 41].forEach(x => { g.beginPath(); g.moveTo(0, -190); g.lineTo(x, -122); g.stroke(); });
+  g.fillStyle = C.ink; g.beginPath(); g.arc(0, -194, 4, 0, 6.28); g.fill();
+  g.restore();
+}
+
+// ============================================================
+//  CAPTIONS (shared by picture and sound)
+// ============================================================
+const CAPS = [
+  { k: 1, text: "Maybe it's a BIG house?", tin: .4, type: [.6, 1.8], ghost: 5.5 },
+  { k: 1, text: '...big. and very echoey.', tin: 5.8, type: [5.9, 6.9] },
+  { k: 2, text: "Maybe it's the perfect VIEW?", tin: .4, type: [.6, 1.9], ghost: 4.9 },
+  { k: 2, text: '...but every view gets old.', tin: 5.1, type: [5.2, 6.3] },
+  { k: 3, text: "Maybe it's being SAFE?", tin: .4, type: [.6, 1.6], ghost: 4.8 },
+  { k: 3, text: '...safe. and kinda lonely.', tin: 5.0, type: [5.1, 6.2] },
+  { k: 4, text: "Maybe it's...", tin: .4, type: [.6, 1.6], ghost: 8.8 },
+  { k: 4, text: "home isn't a place.", tin: 9.0, type: [9.1, 10.1], y: 96 },
+  { k: 4, text: "it's whoever saves you a seat.", tin: 10.4, type: [10.5, 11.9], y: 176, size: 44 },
+];
+// a ghosted caption leaves when the next one arrives; the rest stay to the end of their scene
+CAPS.forEach((c, i) => { const nx = CAPS[i + 1]; c.tout = c.ghost && nx && nx.k === c.k ? nx.tin : DUR[c.k] + WIPE; });
+function drawCaps(k, tau) {
+  for (const c of CAPS) {
+    if (c.k !== k || tau < c.tin || tau > c.tout) continue;
+    const n = Math.floor(seg(tau, c.type[0], c.type[1]) * c.text.length);
+    const a = c.ghost && tau > c.ghost ? lerp(1, .3, seg(tau, c.ghost, c.ghost + .25)) : 1;
+    const pop = lerp(1.12, 1, eOut(seg(tau, c.tin, c.tin + .18)));
+    caption(c.text, 800, c.y || 96, n, a * seg(tau, c.tin, c.tin + .08), pop, c.size || 40);
+  }
+}
+
+// ============================================================
+//  SCENES (tau = seconds into the scene)
+// ============================================================
+// --- 0: the question
+const TITLE = { r1: 'WHAT MAKES A', r2: 'HOME' };
+let LAYOUT = null;
+function layoutTitle() {
+  const L = [], place = (str, size, y, gap, t0, dt, k0) => {
+    const ws = [...str].map(ch => ch === ' ' ? size * .45 : tileW(ch, size));
+    const W = ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1); let x = 800 - W / 2;
+    [...str].forEach((ch, i) => { if (ch !== ' ') L.push({ ch, size, x: x + ws[i] / 2, y, ta: t0 + L.filter(l => l.size === size).length * dt, k: k0 + i, rot: (hash(i, size) - .5) * .16, sx: (hash(i, size + 1) - .5) * 1000, sy: -250 - hash(i, size + 2) * 300, sr: (hash(i, size + 3) - .5) * 4 }); x += ws[i] + gap; });
+  };
+  place(TITLE.r1, 46, 190, 6, .55, .07, 0);
+  place(TITLE.r2, 150, 345, 16, 1.6, .22, 3);
+  LAYOUT = L;
+}
+function sceneTitle(tau, t) {
+  bg(tex.sky);
+  cloud(250 + t * 6, 250, 1, 1); cloud(1320 - t * 4, 200, .8, 2); cloud(1180 + t * 3, 520, .6, 3);
+  ground(C.grass);
+  // the ? that bonks Pip
+  const q = { x: 830, y: -80, r: 0 };
+  if (tau > 3.6) {
+    if (tau < 4.0) { const u = eIn(seg(tau, 3.6, 4.0)); q.y = lerp(-80, 598, u); q.x = 812; }
+    else { const u = seg(tau, 4.0, 4.5); q.x = lerp(812, 900, u); q.y = 598 - Math.sin(u * Math.PI) * 90 + u * 150; q.r = u * 2.2; }
+    tile('?', q.x, q.y, 36, 3, q.r);
+  }
+  const bonk = tau > 4.0 && tau < 4.35;
+  pip(800, GY, {
+    arms: tau > 4.35 ? 'shrug' : (tau > 2.5 && tau < 3.6 ? 'up' : 'down'),
+    lookY: tau > 1.2 && tau < 4.0 ? -1 : (tau > 4.35 ? .5 : 0), look: tau > 4.35 ? 1 : 0,
+    mouth: bonk ? 'o' : (tau > 1.2 && tau < 2.6 ? 'o' : (tau > 4.35 ? 'o' : 'smile')), eyes: bonk ? 'closed' : 'dot',
+    headDy: bonk ? 4 : 0,
+  }, t);
+  // letters fly in
+  for (const L of LAYOUT) {
+    const u = seg(tau, L.ta, L.ta + .42); if (u <= 0) continue;
+    const e = eBack(u), x = lerp(L.x + L.sx, L.x, e), y = lerp(L.sy, L.y, e) + Math.sin(t * 2 + L.k) * 2 * (u >= 1 ? 1 : 0);
+    tile(L.ch, x, y, L.size, L.k, lerp(L.sr, L.rot, eOut(u)), u >= 1 ? 1 + .12 * Math.exp(-(tau - L.ta - .42) * 14) : 1);
+  }
+  // "anyway?" handwritten, with a red underline
+  const ap = seg(tau, 2.8, 3.35);
+  if (ap > 0) {
+    g.save(); g.font = `70px ${HAND}`; const tw = g.measureText('anyway?').width;
+    g.beginPath(); g.rect(800 - tw / 2 - 10, 440, (tw + 20) * ap, 90); g.clip();
+    g.fillStyle = C.ink; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('anyway?', 800, 480); g.restore();
+    const up = seg(tau, 3.35, 3.6);
+    if (up > 0) { g.strokeStyle = C.red; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); for (let i = 0; i <= 30 * up; i++) { const x = 800 - tw / 2 + i / 30 * tw; g.lineTo(x, 522 + Math.sin(i * .9) * 2.5); } g.stroke(); }
+  }
+}
+
+// --- 1: a big house
+const BRICK = { x0: 560, w: 480, rows: 8, cols: 6, bw: 80, bh: 50 };
+const WINS = [[620, 450], [980, 450], [620, 580], [980, 580]];
+function sceneHouse(tau, t) {
+  bg(tex.mint);
+  cloud(260 + t * 5, 250, .9, 4); cloud(1380 - t * 3, 300, .75, 5);
+  ground(C.grass, 7);
+  const B = BRICK;
+  // bricks
+  g.save(); g.beginPath(); g.rect(B.x0, 0, B.w, GY); g.clip();
+  for (let r = 0; r < B.rows; r++) for (let c = -1; c < B.cols; c++) {
+    const idx = r * B.cols + Math.max(0, c), ta = 1.9 + idx * .038 + (c < 0 ? .02 : 0);
+    const u = seg(tau, ta, ta + .3); if (u <= 0) continue;
+    const off = r % 2 ? B.bw / 2 : 0, x = B.x0 + c * B.bw + off + B.bw / 2, y = GY - (r + .5) * B.bh;
+    const yy = lerp(y - 460, y, eIn(u)) - (u >= 1 ? Math.max(0, Math.sin((tau - ta - .3) * 20)) * 5 * Math.exp(-(tau - ta - .3) * 9) : 0);
+    g.save(); g.translate(x, yy); g.rotate((hash(r, c) - .5) * .04);
+    paper(rectPts(B.bw - 4, B.bh - 4), ['#cf5f3f', '#c4553a', '#d86c4a', '#bf4f37'][(r * 3 + c + 8) % 4], 60 + r * 11 + c, { amp: 1.3, sx: 2, sy: 2 });
+    g.restore();
+  }
+  g.restore();
+  // roof
+  const ru = seg(tau, 3.9, 4.25);
+  if (ru > 0) {
+    g.save(); g.translate(800, lerp(-300, 0, eBack(ru)));
+    paper([[800 - 800, 150], [1080 - 800, 372], [520 - 800, 372]].map(([x, y]) => [x, y]), C.blue, 81, { amp: 2.2 });
+    g.fillStyle = 'rgba(255,255,255,.14)'; [0, 1, 2].forEach(i => { g.fillRect(-220 + i * 30, 320 - i * 55, 440 - i * 60, 10); });
+    g.restore();
+  }
+  // door + windows pop
+  const du = eBack(seg(tau, 4.05, 4.3));
+  if (du > 0) { g.save(); g.translate(800, GY - 70); g.scale(du, du); paper(rrPts(96, 140, 30).map(([x, y]) => [x, y + (y < 0 ? 0 : 0)]), '#2f5a52', 90); g.fillStyle = C.yellow; g.beginPath(); g.arc(30, 6, 5, 0, 6.28); g.fill(); g.restore(); }
+  WINS.forEach(([x, y], i) => {
+    const w = eBack(seg(tau, 4.2 + i * .1, 4.45 + i * .1)); if (w <= 0) return;
+    g.save(); g.translate(x, y); g.scale(w, w);
+    paper(rectPts(84, 76), C.cream, 95 + i); g.fillStyle = '#2f5a52'; g.fillRect(-3, -36, 6, 72); g.fillRect(-40, -3, 80, 6);
+    g.restore();
+  });
+  // Pip: looks up as it grows, cheers, calls out, hears himself
+  const cheer = tau > 4.3 && tau < 4.7, call = tau > 4.75 && tau < 5.1, deflate = tau > 5.6;
+  pip(800, GY, {
+    arms: cheer ? 'up' : (call ? 'up' : (deflate ? 'shrug' : 'down')), lookY: tau > 1.9 && tau < 4.75 ? -1 : (deflate ? .3 : -.4),
+    look: tau > 5.1 && tau < 5.6 ? Math.sin((tau - 5.1) * 12) : 0,
+    mouth: cheer ? 'grin' : call ? 'o' : deflate ? 'flat' : (tau > 1.9 ? 'o' : 'smile'), eyes: cheer ? 'happy' : 'dot',
+    bob: cheer ? -Math.abs(Math.sin((tau - 4.3) * 16)) * 10 : 0,
+  }, t);
+  if (call) { g.save(); g.font = `36px ${HAND}`; g.fillStyle = C.ink; g.textAlign = 'center'; g.fillText('hello?', 890, 610); g.restore(); }
+  // the echo comes back from every window, smaller each time
+  [[5.0, 2, .85, 32], [5.25, 1, .6, 27], [5.5, 3, .4, 23], [5.72, 0, .25, 20]].forEach(([t0, w, a, sz]) => {
+    const u = seg(tau, t0, t0 + .9); if (u <= 0 || u >= 1) return;
+    g.save(); g.globalAlpha = a * Math.sin(u * Math.PI); g.font = `${sz}px ${HAND}`; g.fillStyle = C.ink; g.textAlign = 'center';
+    g.fillText('hello?', WINS[w][0] + (w % 2 ? 1 : -1) * 90, WINS[w][1] - 30 - u * 14); g.restore();
+  });
+}
+
+// --- 2: the perfect view
+const FR = { x: 980, y: 440, w: 440, h: 300 };
+const CARD_T = [1.4, 2.5, 3.4, 4.0];
+function postcard(k) {
+  const w = FR.w - 20, h = FR.h - 20;
+  g.save(); g.beginPath(); g.rect(-w / 2, -h / 2, w, h); g.clip();
+  const r = rng(40 + k);
+  if (k === 0) { // beach
+    g.fillStyle = '#9ccde3'; g.fillRect(-w / 2, -h / 2, w, h);
+    g.fillStyle = '#3f7fb5'; g.fillRect(-w / 2, 10, w, 60); g.fillStyle = '#efd49a'; g.fillRect(-w / 2, 64, w, 100);
+    g.save(); g.translate(110, -60); paper(ellPts(38, 38), C.yellow, 402, { shadow: false }); g.restore();
+    g.strokeStyle = '#7a5334'; g.lineWidth = 9; g.beginPath(); g.moveTo(-120, 120); g.quadraticCurveTo(-110, 40, -140, -30); g.stroke();
+    [0, 1, 2, 3, 4].forEach(i => { g.save(); g.translate(-140, -30); g.rotate(-2.6 + i * .7); paper(ellPts(46, 12), C.green, 410 + i, { shadow: false }); g.restore(); });
+    g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 2; for (let i = 0; i < 8; i++) { const x = -w / 2 + r() * w; g.beginPath(); g.moveTo(x, 30 + r() * 30); g.lineTo(x + 18, 30 + r() * 30); g.stroke(); }
+  } else if (k === 1) { // mountains
+    g.fillStyle = '#cfe0ec'; g.fillRect(-w / 2, -h / 2, w, h);
+    [[-120, 150, '#6b86a8'], [60, 190, '#56708f'], [180, 120, '#7c96b5']].forEach(([x, hh, c], i) => {
+      paper([[x - 150, 150], [x, 60 - hh], [x + 150, 150]], c, 420 + i, { shadow: false });
+      paper([[x - 38, 60 - hh + 50], [x, 60 - hh], [x + 38, 60 - hh + 50], [x + 12, 60 - hh + 40], [x - 10, 60 - hh + 52]], C.cream, 430 + i, { shadow: false });
+    });
+    g.fillStyle = '#6fa45d'; g.fillRect(-w / 2, 100, w, 60);
+  } else if (k === 2) { // city at dusk
+    const gr = g.createLinearGradient(0, -h / 2, 0, h / 2); gr.addColorStop(0, '#f1a37a'); gr.addColorStop(1, '#f6d19a'); g.fillStyle = gr; g.fillRect(-w / 2, -h / 2, w, h);
+    for (let i = 0; i < 11; i++) { const bw = 30 + r() * 22, bh = 60 + r() * 160, x = -w / 2 + i * 40 - 10; g.fillStyle = i % 2 ? '#3a4a6b' : '#2e3b58'; g.fillRect(x, h / 2 - bh, bw, bh); g.fillStyle = '#f6d36a'; for (let yy = h / 2 - bh + 10; yy < h / 2 - 10; yy += 16) for (let xx = x + 6; xx < x + bw - 8; xx += 10) if (r() < .55) g.fillRect(xx, yy, 5, 7); }
+  } else { // northern lights
+    g.fillStyle = '#1d2748'; g.fillRect(-w / 2, -h / 2, w, h);
+    for (let i = 0; i < 40; i++) { g.fillStyle = 'rgba(255,255,240,.8)'; g.fillRect(-w / 2 + r() * w, -h / 2 + r() * h * .6, 2, 2); }
+    [['rgba(110,230,170,.55)', -40], ['rgba(90,200,210,.45)', -10], ['rgba(160,240,150,.35)', 20]].forEach(([c, y0]) => { g.strokeStyle = c; g.lineWidth = 22; g.beginPath(); for (let x = -w / 2; x <= w / 2; x += 10) g.lineTo(x, y0 + Math.sin(x / 50) * 26); g.stroke(); });
+    for (let i = 0; i < 9; i++) { const x = -w / 2 + i * 50 + 10; g.fillStyle = '#132016'; g.beginPath(); g.moveTo(x, h / 2); g.lineTo(x + 20, h / 2 - 70 - (i % 3) * 20); g.lineTo(x + 40, h / 2); g.fill(); }
+  }
+  g.restore();
+}
+function sceneView(tau, t) {
+  bg(tex.ochre);
+  cloud(300 + t * 4, 230, .7, 6); cloud(1420 - t * 3, 170, .6, 7);
+  ground(C.tan, 9);
+  // the frame (a paper window on a stand)
+  const fu = eBack(seg(tau, .15, .45));
+  g.save(); g.translate(FR.x, lerp(-400, FR.y, fu));
+  g.strokeStyle = C.ink; g.lineWidth = 4; g.beginPath(); g.moveTo(-120, FR.h / 2); g.lineTo(-150, GY - FR.y); g.moveTo(120, FR.h / 2); g.lineTo(150, GY - FR.y); g.stroke();
+  paper(rectPts(FR.w + 40, FR.h + 40), '#7a5334', 500, { amp: 2 });
+  g.fillStyle = '#e8dcc0'; g.fillRect(-FR.w / 2, -FR.h / 2, FR.w, FR.h);
+  // postcards slap in, then peel away
+  CARD_T.forEach((ta, k) => {
+    const u = seg(tau, ta, ta + .3); if (u <= 0) return;
+    const fall = seg(tau, 5.35 + (3 - k) * .14, 6.3 + (3 - k) * .14);
+    let x = lerp(900, 0, eOut(u)), y = lerp(-500, 0, eOut(u)), rot = lerp(1.1, (k % 2 ? 1 : -1) * .035, eOut(u));
+    if (fall > 0) { x += (k - 1.5) * 90 * fall; y += eIn(fall) * (GY - FR.y + 40); rot += (k % 2 ? 1 : -1) * 1.3 * eOut(fall); }
+    g.save(); g.translate(x, y); g.rotate(rot); g.scale(fall > 0 ? lerp(1, .55, fall) : 1, fall > 0 ? lerp(1, .55, fall) : 1);
+    paper(rectPts(FR.w - 12, FR.h - 12), '#fbf6ea', 510 + k, { amp: 1.2 });
+    postcard(k);
+    g.restore();
+  });
+  g.restore();
+  // Pip: delighted, pleased, fine, bored
+  const phase = tau < 1.6 ? 0 : tau < 2.6 ? 1 : tau < 3.5 ? 2 : tau < 4.2 ? 3 : tau < 5.0 ? 4 : 5;
+  const o = [{ mouth: 'smile' }, { mouth: 'grin', eyes: 'happy', arms: 'up' }, { mouth: 'smile', arms: 'up' }, { mouth: 'flat' }, { mouth: 'yawn', eyes: 'closed' }, { mouth: 'sad', arms: 'shrug', lookY: .5 }][phase];
+  pip(560, GY, Object.assign({ look: 1, arms: 'down', bob: phase === 1 ? -Math.abs(Math.sin(tau * 16)) * 10 : 0 }, o), t);
+  // a heart floats up at the first card
+  const hu = seg(tau, 1.8, 2.9);
+  if (hu > 0 && hu < 1) { g.save(); g.globalAlpha = Math.sin(hu * Math.PI); g.translate(600 + Math.sin(hu * 9) * 10, 560 - hu * 140); const hp = []; for (let i = 0; i < 24; i++) { const a = i / 24 * 6.283, x = 16 * Math.pow(Math.sin(a), 3), y = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)); hp.push([x * 1.4, y * 1.4]); } paper(hp, C.red, 520, { amp: 1 }); g.restore(); }
+}
+
+// --- 3: being safe
+const PLANKS = [
+  { x: 725, y: 672, w: 26, h: 196, ta: 1.5, from: [-400, 0] },
+  { x: 875, y: 672, w: 26, h: 196, ta: 1.7, from: [400, 0] },
+  { x: 800, y: 562, w: 230, h: 30, ta: 1.95, from: [0, -500] },
+  { x: 800, y: 604, w: 176, h: 46, ta: 2.2, from: [-600, 0] },
+  { x: 800, y: 670, w: 176, h: 34, ta: 2.4, from: [600, 0] },
+  { x: 800, y: 709, w: 176, h: 36, ta: 2.6, from: [-600, 0] },
+  { x: 800, y: 749, w: 176, h: 38, ta: 2.8, from: [600, 0] },
+];
+const LOCKS = [[760, 676, 3.1], [846, 712, 3.35], [790, 752, 3.6]];
+function rain(tau, a, excl) {
+  if (a <= 0) return;
+  g.save(); g.globalAlpha = a; g.strokeStyle = 'rgba(214,230,244,.85)'; g.lineWidth = 3; g.lineCap = 'round';
+  for (let i = 0; i < 150; i++) {
+    const sp = 620 + hash(i, 3) * 300, x = (hash(i, 1) * 1720 + tau * 90) % 1720 - 60, y = (hash(i, 2) * 950 + tau * sp) % 950 - 60;
+    if (y > GY - 8) continue;
+    if (excl && excl.some(([x0, x1, y0]) => x > x0 && x < x1 && y > y0)) continue;
+    g.beginPath(); g.moveTo(x, y); g.lineTo(x - 5, y + 20); g.stroke();
+  }
+  for (let i = 0; i < 20; i++) { const u = (tau * 2.2 + hash(i, 5)) % 1, x = hash(i, 6) * VW; if (excl && excl.some(([x0, x1]) => x > x0 && x < x1)) continue; g.globalAlpha = a * (1 - u); g.beginPath(); g.ellipse(x, GY + 4, 4 + u * 16, 2 + u * 3, 0, 0, 6.28); g.stroke(); }
+  g.restore();
+}
+function sceneSafe(tau, t) {
+  bg(tex.navy);
+  g.save(); g.translate(1300, 160); const moon = []; for (let i = 0; i <= 20; i++) { const a = -Math.PI / 2 + i / 20 * Math.PI; moon.push([Math.cos(a) * 44, Math.sin(a) * 44]); } for (let i = 20; i >= 0; i--) { const a = -Math.PI / 2 + i / 20 * Math.PI; moon.push([Math.cos(a) * 20, Math.sin(a) * 40]); } paper(moon, C.cream, 600, { shadow: false }); g.restore();
+  cloud(560 + t * 4, 220, .7, 8, '#35457a'); cloud(1080 - t * 3, 320, .55, 9, '#35457a');
+  ground(C.grassN, 11);
+  rain(tau - 4.0, seg(tau, 4.0, 4.6), [[700, 900, 540]]);
+  // Pip, eyes peeking through the slit
+  const look = tau < 3.9 ? 0 : tau < 4.3 ? -1 : tau < 4.7 ? 1 : 0;
+  pip(800, GY, { look, lookY: tau > 4.9 ? .5 : 0, eyes: tau > 4.9 ? 'sad' : (tau > 1.4 && tau < 2.9 ? 'wide' : 'dot'), mouth: 'o', arms: tau < 1.4 ? 'down' : 'hug' }, t);
+  PLANKS.forEach((P, i) => {
+    const u = seg(tau, P.ta, P.ta + .22); if (u <= 0) return;
+    let x = P.x + P.from[0] * (1 - eIn(u)), y = P.y + P.from[1] * (1 - eIn(u)), rot = (hash(i, 9) - .5) * .05;
+    if (i === 3 && tau > 6.3) { const s = seg(tau, 6.3, 6.9); rot = eOut(s) * .5 + Math.sin(s * 14) * .06 * (1 - s); x += 50 * eOut(s); y += 28 * eOut(s); }
+    g.save(); g.translate(x, y); g.rotate(rot);
+    paper(rectPts(P.w, P.h), ['#9a6a45', '#8d5f3e', '#a8764f'][i % 3], 610 + i, { amp: 1.5 });
+    g.fillStyle = C.ink; if (P.w > 100) { g.beginPath(); g.arc(-P.w / 2 + 10, 0, 2.6, 0, 6.28); g.arc(P.w / 2 - 10, 0, 2.6, 0, 6.28); g.fill(); }
+    g.strokeStyle = 'rgba(40,20,10,.25)'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-P.w / 2 + 6, -P.h / 5); g.lineTo(P.w / 2 - 6, -P.h / 5); g.stroke();
+    g.restore();
+  });
+  LOCKS.forEach(([x, y, ta], i) => {
+    const u = eBack(seg(tau, ta, ta + .25)); if (u <= 0) return;
+    g.save(); g.translate(x, y - (1 - u) * 60); g.scale(u, u);
+    g.strokeStyle = C.ink; g.lineWidth = 5; g.beginPath(); g.arc(0, -14, 11, Math.PI, 0); g.stroke();
+    paper(rrPts(36, 30, 6), C.yellow, 640 + i, { amp: 1 }); g.fillStyle = C.ink; g.beginPath(); g.arc(0, -2, 3.5, 0, 6.28); g.fill(); g.fillRect(-1.5, 0, 3, 8);
+    g.restore();
+  });
+}
+
+// --- 4: some friends in the rain
+const F = [
+  { col: C.teal, um: C.yellow, from: 1700, x: 850, walk: [1.6, 2.6], seed: 71 },
+  { col: C.pink, um: C.blue, from: -100, x: 610, walk: [2.6, 3.5], seed: 72 },
+  { col: C.yellow, um: C.green, from: 1700, x: 950, walk: [3.4, 4.4], seed: 73 },
+];
+const SEAT = 730, SCOOT = [5.7, 6.2], ROOF = [7.0, 7.7], LIGHTS = [7.9, 9.1];
+const TILT = { pip: -.13, 0: .14, 1: -.42, 2: .42 };
+function lightPts() { const pts = []; for (let i = 0; i < 16; i++) { const x = 525 + i * 34; pts.push([x, 545 + 22 * Math.abs(Math.sin((x - 525) / 130 * Math.PI))]); } return pts; }
+function sceneHome(tau, t) {
+  bg(tex.dusk);
+  const dark = eInOut(seg(tau, .5, 9.5));
+  g.globalAlpha = dark * .92; bg(tex.plum); g.globalAlpha = 1;
+  // stars after the rain
+  const st = seg(tau, 9.4, 10.4);
+  if (st > 0) for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(250,240,215,${st * (.4 + .6 * Math.abs(Math.sin(t * 1.7 + i)))})`; const x = hash(i, 31) * VW, y = 300 + hash(i, 32) * 200, r = 1.4 + hash(i, 33) * 1.6; g.beginPath(); g.arc(x, y, r, 0, 6.28); g.fill(); }
+  cloud(300 + t * 3, 200, .8, 10, dark > .5 ? '#5c4f84' : C.cream, dark > .5 ? '#8a7fb0' : null);
+  cloud(1350 - t * 2, 260, .65, 12, dark > .5 ? '#5c4f84' : C.cream, dark > .5 ? '#8a7fb0' : null);
+  ground(C.tan2, 13);
+  const scoot = eInOut(seg(tau, SCOOT[0], SCOOT[1])) * 50, roof = eInOut(seg(tau, ROOF[0], ROOF[1]));
+  const happy = tau > 7.9, sway = tau > 7.0 ? Math.sin(t / BEAT * Math.PI) * 3 : 0;
+  const excl = [[640 + scoot - 80, 640 + scoot + 80, 560]];
+  if (roof > .3) excl.push([480, 1060, 480]);
+  F.forEach((f, i) => { if (tau > f.walk[1]) excl.push([f.x + scoot - 80, f.x + scoot + 80, 560]); });
+  rain(tau + 7, 1 - seg(tau, 8.8, 9.6), excl);
+  // bench
+  g.save(); g.translate(760, SEAT + 16); paper(rrPts(520, 30, 12), '#7a5334', 700, { amp: 1.6 }); g.restore();
+  [540, 980].forEach(x => { g.fillStyle = '#6a4629'; g.fillRect(x - 6, SEAT + 28, 12, GY - SEAT - 26); });
+  const drawn = [];
+  // friends walk in and sit down
+  F.forEach((f, i) => {
+    if (tau < f.walk[0]) return;
+    const u = seg(tau, f.walk[0], f.walk[1]), sat = tau > f.walk[1] + .1;
+    const x = (sat ? f.x : lerp(f.from, f.x, u)) + (sat ? scoot : 0);
+    const hand = blob(x, sat ? SEAT : GY, f.col, { sit: sat, walk: sat ? 0 : tau * 16, arms: 'hold', armsL: i === 1 && tau > 6.2 && tau < 6.8 ? 'pat' : 'down', eyes: happy ? 'happy' : 'dot', mouth: happy ? 'grin' : 'smile', look: sat ? (i === 1 && tau > 5.2 && tau < 6.9 ? -1 : 0) : (f.from > 800 ? -1 : 1), seed: f.seed, bob: sat ? sway : -Math.abs(Math.sin(tau * 16)) * 4 }, t);
+    drawn.push([hand, f.um, lerp(0, TILT[i], roof), 1 + .22 * roof, 720 + i]);
+  });
+  // the little one: no umbrella, soaked, no room... then room
+  if (tau > 4.8) {
+    const run = seg(tau, 4.8, 5.4), hop = seg(tau, 6.7, 7.05);
+    let x = lerp(-100, 470, run), y = GY, sit = false;
+    if (hop > 0) { x = lerp(470, 560, hop); y = lerp(GY, SEAT, hop) - Math.sin(hop * Math.PI) * 50; sit = hop >= 1; }
+    blob(x, sit ? SEAT : y, '#4a79c2', { s: .7, sit, walk: run < 1 ? tau * 22 : 0, arms: tau > 6.2 && tau < 6.7 ? 'up' : 'down', eyes: happy ? 'happy' : (tau > 5.4 && tau < 6.2 ? 'sad' : 'dot'), mouth: happy || tau > 6.2 ? 'grin' : 'o', look: run < 1 ? 1 : .8, seed: 79, bob: sit ? sway * .8 : 0 }, t);
+  }
+  // Pip on the bench under his red umbrella
+  const ph = pip(700 + scoot, SEAT, { sit: true, arms: 'hold', eyes: happy ? 'happy' : (tau < 1.8 ? 'sad' : 'dot'), mouth: happy ? 'grin' : (tau < 1.8 ? 'sad' : (tau < 4.6 ? 'smile' : 'o')), look: tau < 1.8 ? 0 : (tau < 3 ? 1 : (tau < 4.6 ? -1 : (tau < 6.8 ? -1 : 0))), lookY: tau < 1.8 ? .6 : 0, bob: sway }, t);
+  drawn.push([ph, C.red, lerp(-.05, TILT.pip, roof), 1 + .22 * roof, 730]);
+  // umbrellas last: once they tilt together they are a roof
+  drawn.sort((a, b) => Math.abs(b[2]) - Math.abs(a[2]));
+  drawn.forEach(([h, col, tl, sc, sd]) => umbrella(h[0], h[1], col, tl, sc, sd));
+  // fairy lights along the eaves
+  const lp = lightPts(), lu = seg(tau, LIGHTS[0] - .4, LIGHTS[0]);
+  if (lu > 0) {
+    g.save(); g.globalAlpha = lu; g.strokeStyle = C.ink; g.lineWidth = 1.6; g.beginPath(); lp.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke();
+    lp.forEach(([x, y], i) => { const on = tau > LIGHTS[0] + i * (LIGHTS[1] - LIGHTS[0]) / lp.length; g.save(); g.translate(x, y + 9); paper(ellPts(5, 8, 10), on ? '#ffd66b' : '#8d8778', 740 + i, { amp: .6, shadow: false }); g.restore(); });
+    g.restore();
+  }
+  // HOME settles on the roof
+  [...'HOME'].forEach((ch, i) => {
+    const ta = 12.2 + i * .22, u = seg(tau, ta, ta + .7); if (u <= 0) return;
+    const x = 740 + i * 42, y = lerp(-80, 418 + (i % 2) * 4, eOut(u)) , rot = lerp(2.5 * (i % 2 ? 1 : -1), (hash(i, 50) - .5) * .2, eOut(u));
+    tile(ch, x + Math.sin(u * 9 + i) * 20 * (1 - u), y, 34, [0, 4, 1, 2][i], rot);
+  });
+  // warm light on top of the paper
+  if (lu > 0) {
+    g.save(); g.globalCompositeOperation = 'lighter';
+    lp.forEach(([x, y], i) => { const on = seg(tau, LIGHTS[0] + i * (LIGHTS[1] - LIGHTS[0]) / lp.length, LIGHTS[0] + i * (LIGHTS[1] - LIGHTS[0]) / lp.length + .15); if (on <= 0) return; const R = 34 + 6 * Math.sin(t * 3 + i); g.globalAlpha = .55 * on; g.drawImage(tex.glow, x - R, y + 9 - R, R * 2, R * 2); });
+    const wg = seg(tau, 8.6, 10); if (wg > 0) { g.globalAlpha = .28 * wg; g.drawImage(tex.glow, 760 - 420, 650 - 260, 840, 520); }
+    g.restore();
+  }
+}
+
+const SCENES = [sceneTitle, sceneHouse, sceneView, sceneSafe, sceneHome];
+// camera per scene: {x, y, z} in world units. The fort pushes in as it gets lonely; the bench is always close.
+const CAMS = [
+  () => ({ x: 800, y: 450, z: 1 }),
+  tau => ({ x: 800, y: 450, z: 1 + .03 * seg(tau, 0, 7.2) }),
+  tau => ({ x: 800, y: 450, z: 1 + .03 * seg(tau, 0, 7.2) }),
+  tau => { const u = eInOut(seg(tau, 3.6, 5.2)); return { x: lerp(800, 800, u), y: lerp(450, 610, u), z: lerp(1, 1.65, u) }; },
+  tau => { const u = eInOut(seg(tau, 12.0, 14.4)); return { x: 770, y: lerp(610, 560, u), z: lerp(1.5, 1.3, u) }; },
+];
+function drawScene(k, tau, t) {
+  const c = CAMS[k](tau);
+  g.save(); g.transform(c.z, 0, 0, c.z, VW / 2 - c.x * c.z, VH / 2 - c.y * c.z);
+  SCENES[k](tau, t);
+  g.restore();
+  drawCaps(k, tau);
+}
+
+// ============================================================
+//  FRAME: scenes, torn-paper wipes, grain
+// ============================================================
+function tornEdge(x) {
+  const pts = []; for (let y = -20; y <= VH + 20; y += 9) pts.push([x + (hash(y, 3) - .5) * 14 + Math.sin(y / 60) * 6, y]);
+  return pts;
+}
+function render(tRaw) {
+  const t = ((tRaw % T) + T) % T;
+  BF = Math.floor(t * 8) % 4;
+  let k = 0; while (k < 4 && t >= S0[k + 1]) k++;
+  const tau = t - S0[k];
+  g.setTransform(S, 0, 0, S, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  if (tau < WIPE) {
+    const pk = (k + 4) % 5; drawScene(pk, DUR[pk] + tau, t);
+    const ex = lerp(VW + 40, -60, eInOut(tau / WIPE)), edge = tornEdge(ex);
+    const reg = new Path2D(); reg.moveTo(VW + 60, -20); edge.forEach(([x, y]) => reg.lineTo(x, y)); reg.lineTo(VW + 60, VH + 20); reg.closePath();
+    g.save(); g.translate(-10, 0); g.fillStyle = 'rgba(30,20,10,.25)'; g.fill(reg); g.restore();
+    g.save(); g.translate(-4, 0); g.fillStyle = C.fringe; g.fill(reg); g.restore();
+    g.save(); g.clip(reg); drawScene(k, tau, t); g.restore();
+  } else drawScene(k, tau, t);
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  const ox = Math.floor(hash(BF, 1) * 256), oy = Math.floor(hash(BF, 2) * 256);
+  g.save(); g.translate(-ox, -oy); g.fillStyle = tex.grain; g.fillRect(ox, oy, PW, PH); g.restore();
+}
+
+// ============================================================
+//  AUDIO
+// ============================================================
+function makeAudio(ac) {
+  const out = ac.createGain(); out.gain.value = 2.3;
+  const shelf = ac.createBiquadFilter(); shelf.type = 'highshelf'; shelf.frequency.value = 2600; shelf.gain.value = -8;
+  const warm = ac.createBiquadFilter(); warm.type = 'lowshelf'; warm.frequency.value = 180; warm.gain.value = 1.5;
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -22; comp.knee.value = 6; comp.ratio.value = 6; comp.attack.value = .003; comp.release.value = .2;
+  const trim = ac.createGain(); trim.gain.value = 1.25;
+  out.connect(shelf); shelf.connect(warm); warm.connect(comp); comp.connect(trim); trim.connect(ac.destination);
+  const len = Math.floor(ac.sampleRate * 1.8), ir = ac.createBuffer(2, len, ac.sampleRate), nr = rng(9);
+  for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); let s = 0; for (let i = 0; i < len; i++) { s += ((nr() * 2 - 1) - s) * .45; d[i] = s * Math.pow(1 - i / len, 3); } }
+  const conv = ac.createConvolver(); conv.buffer = ir;
+  const rv = ac.createGain(), rvo = ac.createGain(); rvo.gain.value = .4; rv.connect(conv); conv.connect(rvo); rvo.connect(out);
+  const nb = ac.createBuffer(1, ac.sampleRate * 3, ac.sampleRate), nd = nb.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = nr() * 2 - 1;
+  return { ac, out, rv, noise: nb, o: 0 };
+}
+function route(A, node, pan, send) { const p = A.ac.createStereoPanner(); p.pan.value = pan || 0; node.connect(p); p.connect(A.out); if (send) { const s = A.ac.createGain(); s.gain.value = send; p.connect(s); s.connect(A.rv); } return p; }
+function noiseSrc(A, t, dur) { const s = A.ac.createBufferSource(); s.buffer = A.noise; s.loop = true; s.start(t, Math.random() * 2); s.stop(t + dur + .05); return s; }
+function env(A, t, a, peak, dec) { const gg = A.ac.createGain(); gg.gain.setValueAtTime(.0001, t); gg.gain.linearRampToValueAtTime(peak, t + a); gg.gain.exponentialRampToValueAtTime(.0001, t + a + dec); return gg; }
+
+const SND = {
+  pizz(A, t, m, v = 1, pan = 0) {
+    const ac = A.ac, f = mtof(m), o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = f;
+    const o2 = ac.createOscillator(); o2.frequency.value = f * 2;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(1800, t); lp.frequency.exponentialRampToValueAtTime(420, t + .25);
+    const gg = env(A, t, .006, .68 * v, .42); o.connect(lp); o2.connect(lp); lp.connect(gg); route(A, gg, pan, .1);
+    [o, o2].forEach(x => { x.start(t); x.stop(t + .5); });
+  },
+  strum(A, t, notes, v = 1, up = false) {
+    const ac = A.ac, ns = up ? [...notes].reverse() : notes;
+    ns.forEach((m, i) => {
+      const tt = t + i * .014, f = mtof(m), o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f;
+      const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(f * 3, tt); lp.frequency.exponentialRampToValueAtTime(f * 1.2, tt + .3);
+      const gg = env(A, tt, .004, .15 * v, .42); o.connect(lp); lp.connect(gg); route(A, gg, -.25 + i * .12, .15); o.start(tt); o.stop(tt + .45);
+    });
+  },
+  glock(A, t, m, v = .5, pan = 0, dec = 1.1) {
+    const ac = A.ac, f = mtof(m);
+    [[1, 1], [2.76, .3], [5.4, .12]].forEach(([r, a]) => { const o = ac.createOscillator(); o.frequency.value = f * r; const gg = env(A, t, .002, .15 * v * a, dec / r); o.connect(gg); route(A, gg, pan, .35); o.start(t); o.stop(t + dec + .1); });
+  },
+  whistle(A, t, m, dur, v = .5, m2) {
+    const ac = A.ac, o = ac.createOscillator(); o.frequency.setValueAtTime(mtof(m), t); if (m2) o.frequency.linearRampToValueAtTime(mtof(m2), t + dur);
+    const vib = ac.createOscillator(); vib.frequency.value = 5.6; const vg = ac.createGain(); vg.gain.value = mtof(m) * .012; vib.connect(vg); vg.connect(o.frequency);
+    const gg = ac.createGain(); gg.gain.setValueAtTime(.0001, t); gg.gain.linearRampToValueAtTime(.07 * v, t + .05); gg.gain.setValueAtTime(.07 * v, t + dur - .06); gg.gain.linearRampToValueAtTime(.0001, t + dur);
+    o.connect(gg); route(A, gg, .15, .4); o.start(t); o.stop(t + dur + .05); vib.start(t); vib.stop(t + dur + .05);
+  },
+  thump(A, t, v = 1) { const ac = A.ac, o = ac.createOscillator(); o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(48, t + .14); const gg = env(A, t, .004, .55 * v, .26); o.connect(gg); route(A, gg, 0, 0); o.start(t); o.stop(t + .32); },
+  pop(A, t, m, v = .6, pan = 0) {
+    const ac = A.ac, o = ac.createOscillator(); o.frequency.setValueAtTime(mtof(m) * .6, t); o.frequency.exponentialRampToValueAtTime(mtof(m), t + .04);
+    const gg = env(A, t, .003, .22 * v, .12); o.connect(gg); route(A, gg, pan, .2); o.start(t); o.stop(t + .2);
+    const s = noiseSrc(A, t, .03), hp = ac.createBiquadFilter(); hp.type = 'bandpass'; hp.frequency.value = 2600; const ng = env(A, t, .001, .08 * v, .03); s.connect(hp); hp.connect(ng); route(A, ng, pan, 0);
+  },
+  pen(A, t, pan = 0) { const ac = A.ac, s = noiseSrc(A, t, .03), bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2800 + Math.random() * 1400; bp.Q.value = 2; const gg = env(A, t, .002, .05, .025); s.connect(bp); bp.connect(gg); route(A, gg, pan, 0); },
+  slap(A, t, v = 1, pan = 0) { const ac = A.ac, s = noiseSrc(A, t, .12), lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2400; const gg = env(A, t, .002, .35 * v, .09); s.connect(lp); lp.connect(gg); route(A, gg, pan, .15); SND.thump(A, t, .35 * v); },
+  knock(A, t, f = 180, v = 1, pan = 0) {
+    const ac = A.ac, o = ac.createOscillator(); o.frequency.setValueAtTime(f * 1.3, t); o.frequency.exponentialRampToValueAtTime(f, t + .04);
+    const gg = env(A, t, .002, .4 * v, .12); o.connect(gg); route(A, gg, pan, .1); o.start(t); o.stop(t + .18);
+    const s = noiseSrc(A, t, .05), bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f * 5; bp.Q.value = 3; const ng = env(A, t, .001, .2 * v, .05); s.connect(bp); bp.connect(ng); route(A, ng, pan, 0);
+  },
+  rip(A, t, dur = .7, v = .35) {
+    const ac = A.ac, r = rng(Math.floor(t * 991)), s = noiseSrc(A, t, dur), hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 800;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(6500, t); lp.frequency.exponentialRampToValueAtTime(1800, t + dur);
+    const gg = ac.createGain(); gg.gain.setValueAtTime(.0001, t);
+    for (let x = 0; x < dur; x += .012 + r() * .02) gg.gain.setValueAtTime((r() < .3 ? 1 : .35) * v * Math.min(1, x / .05) * Math.pow(1 - x / dur, .5) * (.4 + r() * .6) + .0001, t + x);
+    gg.gain.setValueAtTime(.0001, t + dur);
+    const p = ac.createStereoPanner(); p.pan.setValueAtTime(.7, t); p.pan.linearRampToValueAtTime(-.7, t + dur);
+    s.connect(hp); hp.connect(lp); lp.connect(gg); gg.connect(p); p.connect(A.out);
+  },
+  slide(A, t, m0, m1, dur, v = .6) { SND.whistle(A, t, m0, dur, v, m1); },
+  echo(A, t) {
+    const ac = A.ac, dl = ac.createDelay(1), fb = ac.createGain(), lp = ac.createBiquadFilter(), wet = ac.createGain();
+    dl.delayTime.value = .27; fb.gain.value = .55; lp.type = 'lowpass'; lp.frequency.value = 2200; wet.gain.value = .9;
+    dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(wet); route(A, wet, .4, .5);
+    const tap = ac.createGain(); tap.connect(dl);
+    [[t, 79, .16], [t + .17, 84, .22]].forEach(([tt, m, d]) => {
+      const o = ac.createOscillator(); o.frequency.setValueAtTime(mtof(m) * .97, tt); o.frequency.linearRampToValueAtTime(mtof(m), tt + .04);
+      const gg = ac.createGain(); gg.gain.setValueAtTime(.0001, tt); gg.gain.linearRampToValueAtTime(.1, tt + .03); gg.gain.setValueAtTime(.1, tt + d - .04); gg.gain.linearRampToValueAtTime(.0001, tt + d);
+      o.connect(gg); gg.connect(tap); route(A, gg, 0, .2); o.start(tt); o.stop(tt + d + .02);
+    });
+  },
+  click(A, t, pan = 0) { [0, .035].forEach(d => { const s = noiseSrc(A, t + d, .02), hp = A.ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 3000; const gg = env(A, t + d, .001, .18, .015); s.connect(hp); hp.connect(gg); route(A, gg, pan, .1); }); },
+  creak(A, t) { const ac = A.ac, o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(140, t); o.frequency.linearRampToValueAtTime(95, t + .5); const am = ac.createOscillator(); am.frequency.value = 38; const ag = ac.createGain(); ag.gain.value = 60; am.connect(ag); ag.connect(o.frequency); const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 4; const gg = env(A, t, .05, .09, .5); o.connect(bp); bp.connect(gg); route(A, gg, .2, .3); o.start(t); am.start(t); o.stop(t + .6); am.stop(t + .6); },
+  rain(A, t, dur, v = 1) {
+    const ac = A.ac, s = noiseSrc(A, t, dur), hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1300; const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 5500;
+    const gg = ac.createGain(); gg.gain.setValueAtTime(.0001, t); gg.gain.linearRampToValueAtTime(.05 * v, t + .5); gg.gain.setValueAtTime(.05 * v, t + dur - .6); gg.gain.linearRampToValueAtTime(.0001, t + dur);
+    s.connect(hp); hp.connect(lp); lp.connect(gg); route(A, gg, 0, .15);
+    const r = rng(Math.floor(t * 13)); for (let i = 0; i < dur * 9; i++) { const tt = t + r() * dur, o = ac.createOscillator(); o.frequency.setValueAtTime(1400 + r() * 1600, tt); o.frequency.exponentialRampToValueAtTime(700, tt + .05); const g2 = env(A, tt, .002, .035 * v, .06); o.connect(g2); route(A, g2, r() * 1.6 - .8, .2); o.start(tt); o.stop(tt + .1); }
+  },
+  boing(A, t, m, v = .5, pan = 0) { const ac = A.ac, o = ac.createOscillator(); o.frequency.setValueAtTime(mtof(m), t); o.frequency.exponentialRampToValueAtTime(mtof(m + 12), t + .18); const vib = ac.createOscillator(); vib.frequency.value = 14; const vg = ac.createGain(); vg.gain.value = mtof(m) * .05; vib.connect(vg); vg.connect(o.frequency); const gg = env(A, t, .005, .13 * v, .3); o.connect(gg); route(A, gg, pan, .2); o.start(t); vib.start(t); o.stop(t + .4); vib.stop(t + .4); },
+  step(A, t, pan) { SND.knock(A, t, 120 + Math.random() * 30, .25, pan); },
+};
+
+// F major. chord per bar (17 bars), as [bass root, strum voicing]
+const CH = {
+  F: [41, [65, 69, 72, 77]], C: [36, [64, 67, 72, 76]], Bb: [34, [65, 70, 74, 77]], Dm: [38, [62, 65, 69, 74]], Am: [45, [64, 69, 72, 76]],
+};
+const BARS = ['F', 'C', 'F', 'Bb', 'C', 'Dm', 'Bb', 'C', 'Dm', 'Am', 'Bb', 'Bb', 'F', 'Dm', 'Bb', 'C', 'F'];
+function buildScore() {
+  const E = [], r = rng(7);
+  const add = (t, fn) => E.push({ t: ((t % T) + T) % T, fn });
+  const at = (k, tau) => S0[k] + tau;
+  const DUCK = [[10.4, 12.0], [16.9, 19.2], [24.0, 26.4]];      // the "...but" moments: the band stops
+  const ducked = t => DUCK.some(([a, b]) => t >= a && t < b);
+  // home layers join one friend at a time
+  const joins = { bass: at(4, 2.4), strum: at(4, 3.4), thump: at(4, 4.3), whistle: at(4, 6.9), glock: at(4, 7.9) };
+  const on = (layer, t) => t < S0[4] ? true : t >= joins[layer];
+  BARS.forEach((name, b) => {
+    const [root, v] = CH[name], t0 = b * BAR, safe = b >= 8 && b <= 10;
+    for (let q = 0; q < 4; q++) {
+      const tq = t0 + q * BEAT; if (ducked(tq)) continue;
+      if (on('bass', tq) && (q === 0 || q === 2 || !safe)) { if (q === 0 || q === 2) add(tq, A => SND.pizz(A, tq + A.o, q === 2 ? root + 7 : root, 1)); }
+      if (!safe && on('bass', tq) && q === 3) { const te = tq + BEAT / 2; add(te, A => SND.pizz(A, te + A.o, root + 12, .6)); }
+      if (on('thump', tq) && !safe && (q === 0 || q === 2)) add(tq, A => SND.thump(A, tq + A.o, .8));
+      if (on('strum', tq) && (q === 1 || q === 3) && !(safe && q === 1)) { add(tq, A => SND.strum(A, tq + A.o, v, 1)); if (!safe) { const tu = tq + BEAT / 2; add(tu, A => SND.strum(A, tu + A.o, v.slice(1), .55, true)); } }
+    }
+    // glockenspiel: a bouncy line on the chord, sparser when safe, only the music box at first at home
+    const pent = [0, 2, 4, 7, 9].map(i => 72 + i).concat([84, 86, 88]);
+    for (let e = 0; e < 8; e++) {
+      const te = t0 + e * BEAT / 2; if (ducked(te)) continue;
+      const home = b >= 11, lonely = home && te < joins.glock;
+      const p = safe ? .22 : lonely ? (e % 4 === 0 ? 1 : 0) : (b <= 1 ? .45 : .5);
+      if (r() > p) continue;
+      let m = lonely ? v[e % 4] + 12 : pent[Math.floor(r() * pent.length)];
+      if (e % 4 === 0 && !lonely) m = v[Math.floor(r() * 4)] + 12;
+      add(te, A => SND.glock(A, te + A.o, m, lonely ? .7 : .45, r() - .5, lonely ? 1.8 : 1));
+    }
+  });
+  // the tune the little one brings, whistled
+  const TUNE = [[13, [[0, 81, .55], [.5, 84, .55], [1, 86, 1.1], [2.5, 84, .5], [3, 81, .9]]], [14, [[0, 82, .55], [.5, 86, .55], [1, 89, 1.1], [2.5, 86, .5], [3, 84, .9]]], [15, [[0, 84, .55], [.5, 88, .55], [1, 91, .9], [2, 88, .5], [2.5, 86, .5], [3, 84, .9]]], [16, [[0, 89, 2.2]]]];
+  TUNE.forEach(([b, notes]) => notes.forEach(([q, m, d]) => { const t = b * BAR + q * BEAT; if (t >= joins.whistle) add(t, A => SND.whistle(A, t + A.o, m, d * BEAT * 1.6 > 2 ? 2 : d * BEAT * 1.6, .6)); }));
+  // title: letters pop in, rising
+  LAYOUT_T().forEach((L, i) => add(L.ta + .38, A => SND.pop(A, L.ta + .38 + A.o, [72, 74, 76, 79, 81, 84, 86, 88][i % 8] + (L.size > 100 ? -12 : 0), L.size > 100 ? 1 : .6, (L.x - 800) / 900)));
+  [0, 1, 2, 3, 4, 5, 6].forEach(i => { const t = 2.8 + i * .08; add(t, A => SND.pen(A, t + A.o)); });
+  add(4.0, A => { SND.knock(A, 4.0 + A.o, 400, .8, .1); SND.boing(A, 4.02 + A.o, 67, .6, .1); });
+  // wipes
+  S0.forEach(s => add(s, A => SND.rip(A, s + A.o)));
+  // captions: tape slap + pen ticks per letter
+  CAPS.forEach(c => {
+    const tin = at(c.k, c.tin); add(tin, A => SND.slap(A, tin + A.o, .5));
+    const n = c.text.replace(/ /g, '').length; for (let i = 0; i < n; i++) { const tt = at(c.k, lerp(c.type[0], c.type[1], i / n)); add(tt, A => SND.pen(A, tt + A.o, -.1)); }
+  });
+  // house: bricks knock in, roof lands, windows pop, hello echoes, sad slide
+  for (let i = 0; i < 54; i += 2) { const tt = at(1, 1.9 + i * .038 + .3); add(tt, A => SND.knock(A, tt + A.o, 150 + (i % 7) * 12, .55, (i % 6 - 2.5) / 5)); }
+  add(at(1, 4.25), A => SND.slap(A, at(1, 4.25) + A.o, 1.2));
+  [0, 1, 2, 3, 4].forEach(i => { const tt = at(1, 4.1 + i * .1 + .15); add(tt, A => SND.glock(A, tt + A.o, [84, 88, 91, 93, 96][i], .6, (i - 2) / 3)); });
+  add(at(1, 4.75), A => SND.echo(A, at(1, 4.75) + A.o));
+  add(at(1, 5.6), A => SND.slide(A, at(1, 5.6) + A.o, 79, 67, .7, .7));
+  add(at(1, 6.9), A => SND.pizz(A, at(1, 6.9) + A.o, 36, .8));
+  // view: cards slap, delight / boredom
+  CARD_T.forEach((ta, i) => add(at(2, ta + .3), A => SND.slap(A, at(2, ta + .3) + A.o, 1, .4)));
+  add(at(2, 1.8), A => SND.slide(A, at(2, 1.8) + A.o, 72, 84, .35, .6));
+  add(at(2, 2.8), A => SND.slide(A, at(2, 2.8) + A.o, 74, 81, .3, .45));
+  add(at(2, 4.25), A => SND.slide(A, at(2, 4.25) + A.o, 72, 62, .9, .5));
+  add(at(2, 4.9), A => SND.slide(A, at(2, 4.9) + A.o, 76, 64, .7, .7));
+  [0, 1, 2, 3].forEach(i => { const tt = at(2, 5.35 + (3 - i) * .14 + .5); add(tt, A => SND.slap(A, tt + A.o, .35, .3)); });
+  // safe: planks slam, locks click, rain, creak
+  PLANKS.forEach((P, i) => add(at(3, P.ta + .22), A => { SND.knock(A, at(3, P.ta + .22) + A.o, 110 + i * 6, 1, (P.x - 800) / 400); SND.thump(A, at(3, P.ta + .22) + A.o, .5); }));
+  LOCKS.forEach(([x, y, ta]) => add(at(3, ta + .2), A => SND.click(A, at(3, ta + .2) + A.o, (x - 800) / 300)));
+  add(at(3, 4.0), A => SND.rain(A, at(3, 4.0) + A.o, 3.2 + WIPE, .8));
+  add(at(3, 4.8), A => SND.glock(A, at(3, 4.8) + A.o, 69, .5, 0, 2));
+  add(at(3, 6.3), A => SND.creak(A, at(3, 6.3) + A.o));
+  // home: rain, friends arrive (a boing each), scoot, pat, hop, lights, letters
+  add(at(4, 0), A => SND.rain(A, at(4, 0) + A.o, 9.4, 1));
+  F.forEach((f, i) => { for (let s = f.walk[0]; s < f.walk[1]; s += .2) { const tt = at(4, s); add(tt, A => SND.step(A, tt + A.o, f.from > 800 ? .5 : -.5)); } const ts = at(4, f.walk[1] + .1); add(ts, A => SND.boing(A, ts + A.o, [60, 64, 67][i], .7, (f.x - 800) / 400)); });
+  for (let s = 4.8; s < 5.4; s += .11) { const tt = at(4, s); add(tt, A => SND.step(A, tt + A.o, -.6)); }
+  add(at(4, 5.7), A => SND.slide(A, at(4, 5.7) + A.o, 67, 74, .45, .5));
+  [6.25, 6.45].forEach(s => add(at(4, s), A => SND.knock(A, at(4, s) + A.o, 200, .4, -.3)));
+  add(at(4, 6.7), A => SND.boing(A, at(4, 6.7) + A.o, 72, .8, -.3));
+  add(at(4, 7.0), A => SND.slide(A, at(4, 7.0) + A.o, 72, 84, .6, .4));
+  for (let i = 0; i < 16; i++) { const tt = at(4, LIGHTS[0] + i * (LIGHTS[1] - LIGHTS[0]) / 16); add(tt, A => SND.glock(A, tt + A.o, [84, 86, 88, 91, 93][i % 5] + (i > 9 ? 12 : 0), .35, (i - 8) / 10, 1.4)); }
+  [...'HOME'].forEach((c, i) => { const tt = at(4, 12.2 + i * .22 + .7); add(tt, A => SND.pop(A, tt + A.o, [77, 81, 84, 89][i], .9)); });
+  E.sort((a, b) => a.t - b.t);
+  return E;
+}
+function LAYOUT_T() { if (!LAYOUT) layoutTitle(); return LAYOUT; }
+
+let EV = [], AC = null, AUD = null, startAt = 0, loopN = 0, evIdx = 0, playing = false;
+function schedule() {
+  if (!AC || AC.state !== 'running') return;
+  const now = AC.currentTime, horizon = now + .35;
+  for (let guard = 0; guard < 4000; guard++) {
+    const ev = EV[evIdx], when = startAt + loopN * T + ev.t;
+    if (when > horizon) break;
+    if (when >= now - .03) { AUD.o = when - ev.t; try { ev.fn(AUD); } catch (e) { console.error(e); } }
+    evIdx++; if (evIdx >= EV.length) { evIdx = 0; loopN++; }
+  }
+}
+function audioTime() { return AC ? AC.currentTime - (AC.outputLatency || 0) - (AC.baseLatency || 0) - startAt : 0; }
+async function start() {
+  AC = new (window.AudioContext || window.webkitAudioContext)();
+  AUD = makeAudio(AC); await AC.resume();
+  startAt = AC.currentTime + .15; loopN = 0; evIdx = 0; playing = true;
+  schedule(); setInterval(schedule, 40);
+  document.getElementById('cover').classList.add('gone');
+  document.getElementById('hint').textContent = 'tap to pause';
+}
+window.renderOffline = async function (dur = T) {
+  const sr = 44100, oac = new OfflineAudioContext(2, Math.ceil(sr * dur), sr), A = makeAudio(oac);
+  for (const ev of EV) { A.o = 0; if (ev.t < dur) ev.fn(A); }
+  const buf = await oac.startRendering(), L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length;
+  const ab = new ArrayBuffer(44 + n * 4), v = new DataView(ab), ws = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  ws(0, 'RIFF'); v.setUint32(4, 36 + n * 4, true); ws(8, 'WAVE'); ws(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 2, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 4, true); v.setUint16(32, 4, true); v.setUint16(34, 16, true); ws(36, 'data'); v.setUint32(40, n * 4, true);
+  for (let i = 0, o = 44; i < n; i++, o += 4) { v.setInt16(o, clamp(L[i], -1, 1) * 32767, true); v.setInt16(o + 2, clamp(R[i], -1, 1) * 32767, true); }
+  let s = ''; const b = new Uint8Array(ab); for (let i = 0; i < b.length; i += 32768) s += String.fromCharCode.apply(null, b.subarray(i, i + 32768));
+  return btoa(s);
+};
+
+// ============================================================
+//  BOOT
+// ============================================================
+const params = new URLSearchParams(location.search);
+const stillT = params.has('t') ? parseFloat(params.get('t')) : null;
+function resize() {
+  const rect = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const pw = Math.max(640, Math.min(2000, Math.round(rect.width * dpr)));
+  if (pw === PW && tex.sky) return;
+  PW = pw; PH = Math.round(pw * 9 / 16); cv.width = PW; cv.height = PH; S = PW / VW;
+  buildTextures();
+}
+function loop() {
+  render(stillT !== null ? stillT : (playing ? Math.max(0, audioTime()) : 3.9));
+  if (stillT === null) requestAnimationFrame(loop);
+}
+(async function boot() {
+  try { await Promise.all([document.fonts.load(`40px ${HAND}`), document.fonts.load(`40px ${BLOCK}`)]); } catch (e) {}
+  resize(); layoutTitle(); EV = buildScore(); window.__ready = true;
+  if (stillT !== null) { document.getElementById('cover').remove(); document.getElementById('meta').style.display = 'none'; }
+  loop();
+  let rz = 0; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { resize(); if (stillT !== null) render(stillT); }, 150); });
+})();
+function toggle() {
+  if (stillT !== null) return;
+  if (!AC) { start(); return; }
+  if (AC.state === 'running') { AC.suspend(); document.getElementById('hint').textContent = 'tap to play'; }
+  else { AC.resume(); document.getElementById('hint').textContent = 'tap to pause'; }
+}
+cv.addEventListener('click', toggle);
+window.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); toggle(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) schedule(); });
+</script>
+</body>
+</html>
