@@ -17,6 +17,13 @@ final class Studio {
         case failed(String)
     }
     enum StageTab: String { case app, code }
+    /// Where the agent runs: Claude Code on the mini (`apps/tokensurfers/agent`),
+    /// or the original four-tool loop on the phone (one index.html, no deploy).
+    enum Engine: String { case remote, local }
+    static var engine: Engine {
+        get { Engine(rawValue: UserDefaults.standard.string(forKey: "surf.engine") ?? "") ?? .remote }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: "surf.engine") }
+    }
     enum Cutaway: Equatable { case tokenur, contextino, hallucinello, absolutelyRight }
 
     /// Something the user said while Splat was working. It waits in `queue`
@@ -81,11 +88,24 @@ final class Studio {
     private var shownCutaways: Set<Cutaway> = []
     private var buildStart = Date()
 
+    // the remote engine
+    /// The deployed app, when Claude Code on the mini built it.
+    private(set) var siteURL: URL?
+    /// The last file the agent wrote, for the CODE stage between builds.
+    private(set) var remoteCode = ""
+    private(set) var codePath = ""
+    private var lastSeq = 0
+    private var inputSeen: [String: Int] = [:]
+
+    /// A project built on the mini stays there; a fresh one follows the setting.
+    var remote: Bool { project.siteURL != nil || (html.isEmpty && Self.engine == .remote) }
+
     init(store: ProjectStore, project: Project) {
         self.store = store
         self.project = project
         self.html = store.html(for: project.id)
-        self.stageTab = html.isEmpty ? .code : .app
+        self.siteURL = project.siteURL.flatMap { URL(string: $0) }
+        self.stageTab = (html.isEmpty && project.siteURL == nil) ? .code : .app
     }
 
     // MARK: public
@@ -99,10 +119,16 @@ final class Studio {
             queue.append(n)
             log(.you(delivered: false), p, note: n.id)
             SurfAudio.shared.play(.swipe)
+            if remote {
+                // the server keeps the note for Splat's next tool result; `note_in` flips the chip
+                let id = project.id
+                Task { do { _ = try await AgentAPI.prompt(id, text: p) } catch { self.agentLog("note didn't reach the mini: \(error.localizedDescription)") } }
+            }
             return
         }
         log(.you(delivered: true), p)
-        task = Task { await run(p) }
+        let useRemote = remote
+        task = Task { if useRemote { await runRemote(p) } else { await run(p) } }
     }
 
     /// Take a queued note back before Splat sees it.
@@ -115,7 +141,13 @@ final class Studio {
     /// Splat the queued notes right now. (A tool that is already running, like
     /// the test drive, still finishes; the notes go with its result.)
     func deliverNow() {
-        guard !queue.isEmpty, let call else { return }
+        guard !queue.isEmpty else { return }
+        if remote {
+            let id = project.id
+            Task { do { try await AgentAPI.now(id, text: nil) } catch { self.agentLog("⚡ now failed: \(error.localizedDescription)") } }
+            return
+        }
+        guard let call else { return }
         interrupting = true
         call.cancel()
     }
@@ -133,6 +165,10 @@ final class Studio {
 
     func stop() {
         agentLog("stopped by the user")
+        if remote {
+            let id = project.id
+            Task { _ = try? await AgentAPI.stop(id) }
+        }
         task?.cancel()
         task = nil
         call?.cancel()
@@ -158,7 +194,7 @@ final class Studio {
         store.update(project)
     }
 
-    var codeForDisplay: String { liveCode.isEmpty ? html : liveCode }
+    var codeForDisplay: String { liveCode.isEmpty ? (html.isEmpty ? remoteCode : html) : liveCode }
 
     // MARK: the loop
 
@@ -374,6 +410,216 @@ final class Studio {
         }
     }
 
+
+    // MARK: the remote engine — Claude Code on the mini
+
+    /// Start (or queue on) the agent server, then follow its event feed.
+    private func runRemote(_ prompt: String) async {
+        lastPrompt = prompt
+        phase = .thinking
+        outputTokens = 0
+        inputTokens = 0
+        lastBugs = 0
+        steps = 0
+        usedFillers = []
+        shownCutaways = []
+        delivered = []
+        subtitle = ""
+        liveCode = ""
+        isPatch = false
+        inputSeen = [:]
+        buildStart = .now
+        if !stagePinned { stageTab = .code }
+        setCaption(project.builds == 0 ? "so it's \(clockString()). new app just dropped" : "they said: \(shortPrompt(prompt))", speak: true)
+        agentLog("build on the mini: \(shortPrompt(prompt)) → \(AgentAPI.base().host ?? "?")")
+        let filler = Task { await fillerLoop() }
+        defer { filler.cancel() }
+        do {
+            let (seq, _) = try await AgentAPI.state(project.id)
+            lastSeq = seq
+            if try await AgentAPI.prompt(project.id, text: prompt) {
+                agentLog("the mini was still building; the prompt went in as a note")
+            }
+        } catch {
+            guard !Task.isCancelled else { return }
+            failRemote(error.localizedDescription)
+            return
+        }
+        await followRemote()
+    }
+
+    /// A build that kept running on the mini while nobody watched (the app was
+    /// closed, or on another screen): pick it up where it is.
+    func attach() {
+        guard remote, !building, task == nil else { return }
+        task = Task {
+            guard let r = try? await AgentAPI.state(project.id), r.state.running else { task = nil; return }
+            phase = .thinking
+            lastSeq = max(0, r.seq - 60)
+            buildStart = .now
+            agentLog("attached to a running build at seq \(r.seq)")
+            let filler = Task { await fillerLoop() }
+            defer { filler.cancel() }
+            await followRemote()
+        }
+    }
+
+    /// Long-poll the server's events until the build is idle.
+    private func followRemote() async {
+        var failures = 0
+        var recap = ""
+        while !Task.isCancelled {
+            do {
+                let poll = try await AgentAPI.events(project.id, after: lastSeq, wait: 20)
+                failures = 0
+                lastSeq = poll.seq
+                var idle = false
+                for e in poll.events {
+                    if let r = apply(e) { recap = r }
+                    if e.type == "idle" { idle = true }
+                    if e.type == "error" { return }
+                }
+                if idle || (!poll.state.running && poll.events.isEmpty) {
+                    finishRemote(recap: recap.isEmpty ? (poll.state.recap ?? "it's live. go look.") : recap, state: poll.state)
+                    return
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                failures += 1
+                agentLog("poll failed (\(failures)): \(error.localizedDescription)")
+                if failures >= 6 { failRemote("lost the mini: \(error.localizedDescription)"); return }
+                setCaption("mini's not answering. retrying 🔁", speak: false, filler: true)
+                try? await Task.sleep(for: .seconds(min(10, Double(failures) * 2)))
+            }
+        }
+    }
+
+    private func finishRemote(recap: String, state: AgentAPI.State) {
+        if let u = state.deployUrl, let url = URL(string: u) {
+            project.siteURL = u
+            siteURL = url
+        }
+        task = nil
+        finish(recap: recap, prompt: lastPrompt)
+    }
+
+    private func failRemote(_ message: String) {
+        agentLog("build on the mini failed: \(message)")
+        phase = .failed(message)
+        setCaption("the mini said no 💀", speak: true)
+        subtitle = message
+        game.bugs(3)
+        task = nil
+    }
+
+    /// One server event → the same screen state the local loop drives. Returns a recap when the event carries one.
+    private func apply(_ e: AgentAPI.Event) -> String? {
+        let d = e.data
+        switch e.type {
+        case "text":
+            let delta = d["delta"] as? String ?? ""
+            count(delta)
+            subtitle = String((subtitle + delta).suffix(220))
+        case "say":
+            let text = d["text"] as? String ?? ""
+            let line = text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty && !$0.hasPrefix("DEPLOYED:") && !$0.hasPrefix("NAME:") }.last ?? ""
+            if !line.isEmpty {
+                setCaption(line, speak: true)
+                log(.splat(tool: "say"), line)
+            }
+            subtitle = ""
+        case "name":
+            if let t = d["title"] as? String, !t.isEmpty { project.title = t }
+            if let em = d["emoji"] as? String, !em.isEmpty { project.emoji = String(em.prefix(2)) }
+            store.update(project)
+        case "tool_start":
+            let name = d["name"] as? String ?? ""
+            game.toolTrain(name)
+            switch name {
+            case "Write", "NotebookEdit":
+                phase = .writing; liveCode = ""; isPatch = false
+                if !stagePinned { stageTab = .code }
+            case "Edit", "MultiEdit":
+                phase = .editing; isPatch = true; patchOld = ""; patchNew = ""
+                if !stagePinned { stageTab = .code }
+            case "Read", "Glob", "Grep": phase = .reading
+            case "Bash": phase = .running
+            default: phase = .thinking
+            }
+        case "tool_input":
+            let id = d["id"] as? String ?? ""
+            let name = d["name"] as? String ?? ""
+            let json = d["json"] as? String ?? ""
+            let seen = inputSeen[id] ?? 0
+            if json.count > seen { count(chars: json.count - seen); inputSeen[id] = json.count }
+            switch name {
+            case "Write":
+                if let c = PartialJSON.string("content", in: json) { liveCode = c }
+                if let f = PartialJSON.field2("file_path", in: json), f.1 { codePath = (f.0 as NSString).lastPathComponent }
+            case "Edit":
+                patchOld = PartialJSON.string("old_string", in: json) ?? ""
+                patchNew = PartialJSON.string("new_string", in: json) ?? ""
+            case "Bash":
+                if let c = PartialJSON.string("command", in: json) { subtitle = "$ " + String(c.suffix(200)) }
+            default: break
+            }
+        case "tool_call":
+            let name = d["name"] as? String ?? ""
+            log(.splat(tool: name), Self.describe(name, d["input"] as? [String: Any] ?? [:]))
+        case "tool_result":
+            if !(d["ok"] as? Bool ?? true) {
+                lastBugs += 1
+                game.bugs(1)
+                log(.bug, String((d["summary"] as? String ?? "error").replacingOccurrences(of: "\n", with: " ").prefix(80)))
+                showCutaway(.hallucinello, force: true)
+            }
+            phase = .thinking
+        case "file":
+            if let c = d["content"] as? String {
+                remoteCode = c
+                liveCode = c
+                codePath = ((d["path"] as? String ?? "") as NSString).lastPathComponent
+            }
+        case "deployed":
+            if let u = d["url"] as? String, let url = URL(string: u) {
+                siteURL = url
+                project.siteURL = u
+                store.update(project)
+                previewVersion += 1
+                if !stagePinned { stageTab = .app }
+                log(.clean, "live at \(url.host ?? u)")
+            }
+        case "note_in":
+            let text = d["text"] as? String ?? ""
+            if let i = queue.firstIndex(where: { $0.text == text }) {
+                let n = queue.remove(at: i)
+                delivered.append(n.text)
+                if let f = feed.firstIndex(where: { $0.noteID == n.id }) { feed[f].kind = .you(delivered: true) }
+            }
+            setCaption("👂 \(shortPrompt(text))", speak: false, filler: true)
+        case "turn_end":
+            if d["ok"] as? Bool ?? false, let r = d["recap"] as? String, !r.isEmpty { return r }
+        case "error":
+            failRemote(d["message"] as? String ?? "error")
+        default:
+            break
+        }
+        return nil
+    }
+
+    private static func describe(_ name: String, _ input: [String: Any]) -> String {
+        let file = (input["file_path"] as? String).map { ($0 as NSString).lastPathComponent } ?? ""
+        switch name {
+        case "Write": return "wrote \(file)"
+        case "Edit", "MultiEdit": return "patched \(file)"
+        case "Read": return "read \(file)"
+        case "Bash": return "$ " + String((input["command"] as? String ?? "").prefix(60))
+        case "Glob", "Grep": return "searched \(input["pattern"] as? String ?? "")"
+        default: return name.lowercased()
+        }
+    }
+
     // MARK: one streamed model call
 
     private struct ToolCall { let id: String; let name: String; let input: [String: Any]?; let raw: String }
@@ -466,8 +712,10 @@ final class Studio {
 
     /// Streamed characters → an estimate of tokens → coins on the track.
     private var tokenCarry = 0.0
-    private func count(_ s: String) {
-        let t = Double(s.count) / 3.6
+    private func count(_ s: String) { count(chars: s.count) }
+    private func count(chars: Int) {
+        guard chars > 0 else { return }
+        let t = Double(chars) / 3.6
         game.feedTokens(t)
         tokenCarry += t
         if tokenCarry >= 1 {

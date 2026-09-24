@@ -42,6 +42,36 @@ struct PreviewWebView: UIViewRepresentable {
     }
 }
 
+/// The deployed app (Claude Code on the mini built it): a plain web view on
+/// the Vercel URL, reloaded past the cache when `version` changes.
+struct SiteWebView: UIViewRepresentable {
+    let url: URL
+    let version: Int
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        config.allowsInlineMediaPlayback = true
+        config.mediaTypesRequiringUserActionForPlayback = []
+        let w = WKWebView(frame: .zero, configuration: config)
+        w.isOpaque = false
+        w.backgroundColor = .white
+        w.scrollView.contentInsetAdjustmentBehavior = .never
+        if #available(iOS 16.4, *) { w.isInspectable = true }
+        return w
+    }
+
+    func updateUIView(_ w: WKWebView, context: Context) {
+        let key = "\(url.absoluteString)-\(version)"
+        guard context.coordinator.loadedKey != key else { return }
+        context.coordinator.loadedKey = key
+        w.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 30))
+    }
+
+    final class Coordinator { var loadedKey = "" }
+}
+
 // MARK: - the code screen (the video's 3:00 AM monitor)
 
 struct CodeView: View {

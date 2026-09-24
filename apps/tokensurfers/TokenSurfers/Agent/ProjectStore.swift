@@ -15,6 +15,7 @@ struct Project: Codable, Identifiable, Hashable {
     var hue: Double = Double.random(in: 0...1)
     var remoteSlug: String? = nil     // published in the gallery as /surf/a/<slug>
     var remixOf: String? = nil        // the gallery slug this was remixed from
+    var siteURL: String? = nil        // built by Claude Code on the mini: the deployed app (no local html)
 }
 
 @Observable

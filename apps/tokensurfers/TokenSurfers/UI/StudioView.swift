@@ -41,7 +41,7 @@ struct StudioView: View {
                 if wide { wideLayout(g.size) } else { tallLayout(g.size) }
             }
             .background(alignment: .top) {
-                (studio.stageTab == .app && !studio.html.isEmpty ? Color.white : Theme.navy).ignoresSafeArea()
+                (studio.stageTab == .app && (!studio.html.isEmpty || studio.siteURL != nil) ? Color.white : Theme.navy).ignoresSafeArea()
             }
         }
         .ignoresSafeArea(.container, edges: wideEdges)
@@ -49,8 +49,9 @@ struct StudioView: View {
         .onAppear {
             SurfAudio.shared.start()
             voice.warmUp()
-            gameOpen = studio.html.isEmpty || studio.building
-            if let p = initialPrompt, !p.isEmpty, studio.html.isEmpty, !studio.building { studio.send(p) }
+            gameOpen = (studio.html.isEmpty && studio.siteURL == nil) || studio.building
+            if let p = initialPrompt, !p.isEmpty, studio.html.isEmpty, studio.siteURL == nil, !studio.building { studio.send(p) }
+            studio.attach()   // a build still running on the mini
             if ProcessInfo.processInfo.environment["TS_PUBLISH"] != nil {
                 Task { try? await Task.sleep(for: .seconds(2)); publish() }
             }
@@ -177,7 +178,11 @@ struct StudioView: View {
         ZStack {
             switch studio.stageTab {
             case .app:
-                if studio.html.isEmpty {
+                if let site = studio.siteURL {
+                    SiteWebView(url: site, version: studio.previewVersion)
+                        .padding(.top, 52)
+                        .background(Color.white)
+                } else if studio.html.isEmpty {
                     if studio.building { CodeView(code: studio.codeForDisplay, streaming: true) } else { EmptyStage() }
                 } else {
                     PreviewWebView(html: studio.html, version: studio.previewVersion, projectID: studio.project.id)
@@ -253,7 +258,10 @@ struct StudioView: View {
     private var menu: some View {
         Menu {
             Button { fullscreenApp = true } label: { Label("Open app fullscreen", systemImage: "arrow.up.left.and.arrow.down.right") }
-                .disabled(studio.html.isEmpty)
+                .disabled(studio.html.isEmpty && studio.siteURL == nil)
+            if let site = studio.siteURL {
+                ShareLink(item: site) { Label("Share the app link", systemImage: "link") }
+            }
             ShareLink(item: studio.store.exportURL(for: studio.project)) { Label("Share HTML", systemImage: "square.and.arrow.up") }
                 .disabled(studio.html.isEmpty)
             Divider()
@@ -526,12 +534,14 @@ struct StudioView: View {
             }
             .buttonStyle(SquishStyle())
             .accessibilityLabel("Send to Splat now")
-            Button { studio.unqueue(n.id) } label: {
-                Image(systemName: "xmark").font(.system(size: 10, weight: .black)).foregroundStyle(Theme.ink)
-                    .frame(width: 22, height: 22)
+            if !studio.remote {   // the mini already has it; there is no taking it back
+                Button { studio.unqueue(n.id) } label: {
+                    Image(systemName: "xmark").font(.system(size: 10, weight: .black)).foregroundStyle(Theme.ink)
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Take it back")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Take it back")
         }
         .padding(.leading, 10).padding(.trailing, 4)
         .frame(height: 32)
@@ -705,8 +715,13 @@ struct StudioView: View {
     private var fullscreen: some View {
         ZStack(alignment: .topTrailing) {
             Color.white.ignoresSafeArea()
-            PreviewWebView(html: studio.html, version: studio.previewVersion, projectID: studio.project.id)
-                .ignoresSafeArea(.container, edges: .bottom)
+            if let site = studio.siteURL {
+                SiteWebView(url: site, version: studio.previewVersion)
+                    .ignoresSafeArea(.container, edges: .bottom)
+            } else {
+                PreviewWebView(html: studio.html, version: studio.previewVersion, projectID: studio.project.id)
+                    .ignoresSafeArea(.container, edges: .bottom)
+            }
             Button { fullscreenApp = false } label: {
                 Image(systemName: "xmark").font(.system(size: 14, weight: .black)).foregroundStyle(.white)
                     .frame(width: 34, height: 34).background(Circle().fill(.black.opacity(0.5)))

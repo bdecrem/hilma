@@ -54,10 +54,10 @@ struct FeedRow: View {
         switch item.kind {
         case .splat(let tool):
             switch tool {
-            case "write_file": return "✍️"
-            case "edit_file": return "🩹"
-            case "read_file": return "👀"
-            case "run_app": return "🧪"
+            case "write_file", "Write", "NotebookEdit": return "✍️"
+            case "edit_file", "Edit", "MultiEdit": return "🩹"
+            case "read_file", "Read", "Glob", "Grep": return "👀"
+            case "run_app", "Bash": return "🧪"
             default: return "🟠"
             }
         case .you(let delivered): return delivered ? "💬" : "⏳"

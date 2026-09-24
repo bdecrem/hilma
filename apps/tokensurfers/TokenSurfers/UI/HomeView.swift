@@ -116,6 +116,11 @@ struct HomeView: View {
                     Toggle(isOn: Binding(get: { !muted }, set: { muted = !$0 })) { Label("Sound", systemImage: "speaker.wave.2") }
                     Toggle(isOn: $music) { Label("Music", systemImage: "music.note") }
                     Toggle(isOn: $narrator) { Label("Narrator voice", systemImage: "waveform") }
+                    Divider()
+                    // new apps only; an app keeps the engine that built it
+                    Toggle(isOn: Binding(get: { Studio.engine == .remote }, set: { Studio.engine = $0 ? .remote : .local })) {
+                        Label("Claude Code on the mini", systemImage: "desktopcomputer")
+                    }
                 } label: {
                     Image(systemName: "gearshape.fill").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.ink)
                         .frame(width: 34, height: 34).background(Circle().fill(.white.opacity(0.9)))

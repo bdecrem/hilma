@@ -14,6 +14,7 @@
 		345A7E99A895417B4ED8D8E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 434FE7FD5886BC3CBA6C1007 /* Assets.xcassets */; };
 		3CBD418F2D284FB8232C44AF /* ProjectStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75795D20D8E4C54625BBD1C /* ProjectStore.swift */; };
 		40FE5FDF05EFEFD6DD4BB10B /* SurfAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */; };
+		4A486C215DEDFF7C7E1ADF3E /* RemoteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460FC7B0A043146FFD0784 /* RemoteEngine.swift */; };
 		50280016A75A4A1C28681C3F /* TokenSurfersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */; };
 		5CE1740CC0D49C8669535958 /* SurferArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */; };
 		67B389CF94F703FECEC5F0A5 /* LiveFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD2104364CBB1C2BA94BD72 /* LiveFeed.swift */; };
@@ -56,6 +57,7 @@
 		963B511C7542AE5F703AE85D /* TokenSurfers.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TokenSurfers.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1959D3F66992E31FC1270A6 /* Montserrat-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-Black.ttf"; sourceTree = "<group>"; };
 		B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurferArt.swift; sourceTree = "<group>"; };
+		CA460FC7B0A043146FFD0784 /* RemoteEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteEngine.swift; sourceTree = "<group>"; };
 		CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leaderboard.swift; sourceTree = "<group>"; };
 		CFD2104364CBB1C2BA94BD72 /* LiveFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveFeed.swift; sourceTree = "<group>"; };
 		D433691AFF940E0ADCBF5569 /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 			children = (
 				6D215114C01717BE69A091A8 /* AppRunner.swift */,
 				D75795D20D8E4C54625BBD1C /* ProjectStore.swift */,
+				CA460FC7B0A043146FFD0784 /* RemoteEngine.swift */,
 				E30074E3ADEA5B6BD6B2EDC1 /* Studio.swift */,
 				1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */,
 				00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */,
@@ -242,6 +245,7 @@
 				67B389CF94F703FECEC5F0A5 /* LiveFeed.swift in Sources */,
 				B1242E55BDB8FC63BD2F815D /* Mascots.swift in Sources */,
 				3CBD418F2D284FB8232C44AF /* ProjectStore.swift in Sources */,
+				4A486C215DEDFF7C7E1ADF3E /* RemoteEngine.swift in Sources */,
 				B1A1A8B58802E1AA938C6D22 /* Secrets.swift in Sources */,
 				B746CB91F818BA16F78063C9 /* StageViews.swift in Sources */,
 				D1A78F9AD8B6ED2698416CA2 /* Studio.swift in Sources */,
