@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getSurfUser } from '@/lib/surf/auth'
 import { getApp, ogImageURL } from '@/lib/surf/apps'
-import { Player, Upvote } from '../../client'
+import { Player, Report, Upvote } from '../../client'
 import { Footer, TESTFLIGHT, TopBar } from '../../parts'
 
 export const dynamic = 'force-dynamic'
@@ -57,6 +57,7 @@ export default async function AppPage({ params }: Params) {
               {TESTFLIGHT ? <a href={TESTFLIGHT} style={{ textDecoration: 'underline' }}>don't have it? TestFlight →</a> : 'the TestFlight beta is coming.'}
             </p>
           )}
+          <Report slug={app.slug} />
         </div>
       </div>
       <Footer />

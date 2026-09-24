@@ -140,6 +140,11 @@ final class SurfAccount {
         let v = try JSONDecoder().decode(Vote.self, from: data)
         return (v.voted, v.upvotes)
     }
+
+    /// Flags a creation; works signed out too.
+    func report(slug: String, reason: String) async throws {
+        _ = try await request("api/surf/apps/\(slug)/report", method: "POST", body: ["reason": reason])
+    }
 }
 
 // MARK: - sign in / sign up

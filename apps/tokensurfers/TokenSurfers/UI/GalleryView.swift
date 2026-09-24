@@ -147,6 +147,8 @@ struct GalleryAppView: View {
     @State private var error: String?
     @State private var signIn = false
     @State private var pendingVote = false
+    @State private var reportSheet = false
+    @State private var reported = false
     var onOpenProject: (UUID) -> Void
 
     var body: some View {
@@ -217,9 +219,21 @@ struct GalleryAppView: View {
                     .buttonStyle(SquishStyle())
                 }
                 if let error { Text(error).font(Theme.rounded(11.5, .bold)).foregroundStyle(Theme.red) }
+                Button(reported ? "reported. thanks." : "report this creation") { if !reported { reportSheet = true } }
+                    .font(Theme.rounded(11.5, .semibold)).foregroundStyle(Theme.ink2).underline(!reported)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Report this creation")
             }
             .padding(12)
             .background(Theme.orange.overlay(PaperGrain(opacity: 0.08)))
+        }
+        .confirmationDialog("Report this creation?", isPresented: $reportSheet, titleVisibility: .visible) {
+            ForEach(["it's offensive or hateful", "it's harmful or a scam", "it's someone else's work", "something else"], id: \.self) { why in
+                Button(why) { report(why) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("We look at every report. Owners can also unpublish their own creations.")
         }
         .task {
             do {
@@ -243,6 +257,18 @@ struct GalleryAppView: View {
                 app.voted = v.voted
                 app.upvotes = v.upvotes
                 SurfAudio.shared.play(v.voted ? .coin : .tick)
+            } catch {
+                self.error = error.localizedDescription
+            }
+        }
+    }
+
+    private func report(_ why: String) {
+        Task {
+            do {
+                try await account.report(slug: app.slug, reason: why)
+                reported = true
+                SurfAudio.shared.play(.tick)
             } catch {
                 self.error = error.localizedDescription
             }

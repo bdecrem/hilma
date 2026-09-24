@@ -12,6 +12,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 import { SURF_SYSTEM, SURF_TOOLS } from '@/lib/surf/prompt'
+import { meterStream, overDailyCap, recordUsage } from '@/lib/surf/usage'
 
 export const runtime = 'nodejs'
 // One streamed turn can run long (a big write_file at 64k max_tokens); Pro + Fluid allows 800 s.
@@ -41,6 +42,13 @@ export async function POST(req: NextRequest) {
   const expected = process.env.SURF_APP_KEY
   if (!expected) return err('SURF_APP_KEY is not configured', 500)
   if (req.headers.get('x-surf-key') !== expected) return err('bad key', 403)
+  // The key ships in every build, so the day has a token ceiling (surf_usage).
+  try {
+    if (await overDailyCap()) return err("Splat is out of tokens for today. He's back tomorrow.", 429)
+  } catch (e) {
+    console.error('[surf/llm] usage', (e as Error).message)
+    return err('budget unavailable', 503)
+  }
 
   let body: { messages?: unknown; effort?: unknown }
   try {
@@ -73,7 +81,7 @@ export async function POST(req: NextRequest) {
         headers: { 'anthropic-beta': 'thinking-display-updates-2026-08-18' },
       })
       .asResponse()
-    return new Response(upstream.body, {
+    return new Response(meterStream(upstream.body!, recordUsage), {
       headers: {
         'content-type': 'text/event-stream; charset=utf-8',
         'cache-control': 'no-cache, no-transform',

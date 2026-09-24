@@ -162,9 +162,10 @@ back into their own apps. One handle for all of it (and the leaderboard).
   signs in (creating the account if needed), `TS_PUBLISH=1` with
   `TS_OPEN=first` publishes the newest project, `TS_GALLERY=1|<slug>` opens
   the gallery (and that app), `TS_ACCOUNT=1` the sign-in sheet.
-- Not built: passwords can't be reset (no email), no moderation beyond
-  unpublish-your-own, no TestFlight build yet (create the App Store Connect
-  record, upload, then set `SURF_TESTFLIGHT_URL`).
+- Not built: passwords can't be reset (no email); moderation is
+  unpublish-your-own plus a Report button on every creation (app and web,
+  `POST /api/surf/apps/:slug/report`, no account needed → `surf_reports` +
+  a text and an email to Bart).
 
 ## The screen
 
@@ -518,9 +519,11 @@ State after the Splat / mid-build notes / mirror session (commits `a6077262`,
   without asking. The workflow is a no-op until `TOKENSURFERS_DEPLOY_KEY`
   exists. `GITHUB` in `src/app/surf/parts.tsx` still points at the hilma tree.
 - **The app key is extractable** from any shipped build (it's in the binary by
-  design) and `/api/surf/llm` has no daily token budget or rate limit — the
-  model and effort are pinned, so a leaked key buys Opus 5.5 at medium, but
-  unmetered. Add a budget before a public TestFlight.
+  design), so `/api/surf/llm` has a global daily budget: `surf_usage` (schema
+  004, applied 2026-09-24) counts calls and tokens per UTC day, read out of the
+  SSE stream as it passes through (`meterStream` in `src/lib/surf/usage.ts`);
+  `SURF_DAILY_TOKENS` (default 10M input + output) → 429 with a "Splat is out
+  of tokens for today" message the app shows. Per-user limits: none yet.
 - **Pitfalls hit this session:** `pnpm build` while a `next dev` is running on
   the same checkout breaks the dev server (shared `.next`); SourceKit shows
   false "cannot find X in scope" errors for new files until `xcodegen
@@ -533,3 +536,35 @@ State after the Splat / mid-build notes / mirror session (commits `a6077262`,
 - A daily token budget on the LLM route (today only the key gates it).
 - Power-ups (magnet, 2x, hoverboard), daily challenges, a second track
   theme (night), unlockable scarves.
+
+## App Store Connect / TestFlight (set up 2026-09-24, from the iMac M4)
+
+Goal: a public TestFlight beta, not an App Store release.
+
+- App record **"Token Surfers"**, id `6815840420`, SKU `ts001`, bundle-ID
+  resource `UXN2VTZCGY`. Bart created the record; everything else was filled
+  over the ASC API with key `5A5HNSWA33` (issuer in the taptapdodo memory).
+- Category Entertainment; age rating answered (mild cartoon violence, UGC on,
+  no unrestricted web access — the creations are sandboxed).
+- Test Information (en-US): beta description, feedback email, marketing URL
+  tokensurfers.app, privacy policy **tokensurfers.app/privacy**
+  (`src/app/surf/privacy/page.tsx` — keep it true to the tables and the LLM
+  route). Beta review contact = Bart; demo account `applereview` (password in
+  the review details on ASC; not required — nothing needs a sign-in except
+  publish/upvote/remix); review notes explain the sandboxed web view, the
+  Report button and the optional mic.
+- Beta group **"Public beta"** (`14902f7d-…`), public link
+  https://testflight.apple.com/join/aqDXBFQn, cap 10,000. Set
+  `SURF_TESTFLIGHT_URL` to it on Vercel once the first build clears beta
+  review (the site's buttons say "soon" until then).
+- Wording for Apple (guidelines 2.5.2 and 1.2): a runner game with a coding
+  buddy who makes "web toys" / "creations" previewed in a sandboxed web view;
+  never "install apps", "run any code", "build real apps"; no other
+  companies' model names in store text.
+- **Ship: `./apps/tokensurfers/testflight/ship.sh [version]`** — bumps
+  `CURRENT_PROJECT_VERSION`, regenerates the project, archives with profile
+  "tokensurfers appstore imac" (IOS_APP_STORE on this Mac's distribution cert
+  `4YB38SZ2F2`, minted over the API, installed in the Xcode profiles dir),
+  uploads with the API key, then `testflight/asc-submit.mjs <build>` waits
+  for processing, adds the build to every public-link group and submits it
+  for beta review. Another Mac needs its own profile on its own cert.

@@ -162,6 +162,40 @@ export function Upvote({ slug, upvotes, voted }: { slug: string; upvotes: number
   )
 }
 
+/** Flag a creation. No account needed; the reason is optional. */
+export function Report({ slug }: { slug: string }) {
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState('')
+  const [state, setState] = useState<'idle' | 'busy' | 'sent' | 'failed'>('idle')
+
+  async function send() {
+    if (state === 'busy') return
+    setState('busy')
+    try {
+      const r = await fetch(`/api/surf/apps/${slug}/report`, {
+        method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reason }),
+      })
+      setState(r.ok ? 'sent' : 'failed')
+    } catch {
+      setState('failed')
+    }
+  }
+
+  if (state === 'sent') return <p className="note">reported. thanks — we'll take a look.</p>
+  if (!open) return <button className="note" style={{ background: 'none', border: 0, padding: 0, textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setOpen(true)}>report this creation</button>
+  return (
+    <div className="card" style={{ display: 'grid', gap: 8, padding: 12 }}>
+      <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="what's wrong with it? (optional)" rows={2} maxLength={500}
+        style={{ font: 'inherit', fontSize: 14, padding: 8, borderRadius: 10, border: '2px solid #17131f' }} />
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button className="key" onClick={send} disabled={state === 'busy'}>{state === 'busy' ? '…' : 'send report'}</button>
+        <button className="key white" onClick={() => setOpen(false)}>cancel</button>
+      </div>
+      {state === 'failed' ? <small style={{ color: '#d2321f' }}>that didn't go through — try again or email bdecrem@gmail.com</small> : null}
+    </div>
+  )
+}
+
 const CAPTIONS = [
   ['ANGER', 'ISSUES'], ['SO IT’S', '3AM'], ['NO', 'COMMENTS'], ['TOK TOK', 'TOKENUR'], ['LET HIM', 'COOK'],
   ['47', 'BUGS 💀'], ['X_FINAL', '_FINAL'], ['YOU’RE ABSOLUTELY', 'RIGHT'], ['SAY', 'LESS'], ['BRUH', '💀'],
