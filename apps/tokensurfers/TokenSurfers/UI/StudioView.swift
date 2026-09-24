@@ -129,8 +129,10 @@ struct StudioView: View {
                 .frame(height: composerH)
         }
         .overlay(alignment: .top) {
+            // open: the caption straddles the seam and the handle sits on the game;
+            // closed: the whole thing rides the stage's bottom edge, handle just above the composer
             seam(width: size.width)
-                .offset(y: stageH - 34)
+                .offset(y: gameOpen ? stageH - 34 : stageH - 76)
                 .gesture(resize(total: avail))
         }
     }
