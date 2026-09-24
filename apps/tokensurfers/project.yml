@@ -23,6 +23,10 @@ targets:
       path: TokenSurfers/Info.plist
       properties:
         CFBundleDisplayName: Token Surfers
+        # XcodeGen's generated Info.plist otherwise pins these to 1 / 1.0, so the
+        # build number above never reached the phone (found 2026-09-24, build 10 read "1")
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
         UILaunchScreen:
           UIColorName: LaunchBackground
         UISupportedInterfaceOrientations:
