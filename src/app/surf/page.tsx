@@ -22,19 +22,20 @@ export default function SurfLanding() {
       <CaptionCycler />
 
       <div className="sq-shot">
-        <img src="/surf/hero.jpg" alt="Splat writing a scream timer at 11pm while the surfer runs the rails underneath" width={900} height={1954} />
+        <img src="/surf/hero.jpg" alt="Splat writing a scream timer at 11pm while the surfer runs the rails underneath" width={900} height={1956} />
         <span className="sq-sticker s1">tokens = coins</span>
-        <span className="sq-sticker s2">made with code<br /><small>(free trial)</small></span>
+        <span className="sq-sticker s2">made with code</span>
       </div>
 
       <p className="sq-para">
-        so it&apos;s 3am. you ask a brainrot coding agent for &quot;a timer that screams at me&quot; and it just… starts
+        it&apos;s 3am. you ask your brainrot coding agent for &quot;a timer that screams at me&quot; and it just… starts
         writing it, live, on your phone, narrating like a tiktok voiceover, while you surf a subway track underneath
         where every token it types is a coin, every tool call is a train, and every bug it finds crawls onto the rails
         for you to stomp. it ships. you publish it. someone remixes it. nobody asked for this. you&apos;re absolutely right.
       </p>
 
       <div className="sq-links">
+        <a className="key yellow" href="/surf/gallery">stuff people made at 3am 🌙</a>
         {TESTFLIGHT ? <a className="key" href={TESTFLIGHT}>get it on testflight 🏄</a> : <span className="key" aria-disabled="true">testflight · soon 🏄</span>}
         {GITHUB ? <a className="key ink" href={GITHUB} target="_blank" rel="noreferrer">github</a> : <span className="key ink" aria-disabled="true">github · soon</span>}
       </div>

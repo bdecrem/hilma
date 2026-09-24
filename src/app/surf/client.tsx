@@ -163,7 +163,7 @@ const CAPTIONS = [
 export function CaptionCycler() {
   const [i, setI] = useState(0)
   useEffect(() => {
-    const t = setInterval(() => setI((n) => (n + 1) % CAPTIONS.length), 900)
+    const t = setInterval(() => setI((n) => (n + 1) % CAPTIONS.length), 2000)
     return () => clearInterval(t)
   }, [])
   const [a, b] = CAPTIONS[i]

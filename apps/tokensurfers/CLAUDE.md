@@ -127,9 +127,12 @@ back into their own apps. One handle for all of it (and the leaderboard).
   prompt edits it). The web's "remix it in the app" button is the deep link
   `tokensurfers://remix/<slug>` (URL scheme in `project.yml`; handled in
   `RootView.handle(_:)`).
-- **The web** — `src/app/surf/`: `/surf` landing (hero with the tube man in
-  SVG, TestFlight + GitHub + gallery buttons, how it goes, phone shots from
-  `public/surf/shots/`, the top creations), `/surf/gallery` (top/new),
+- **The web** — `src/app/surf/`: `/surf` landing (one paragraph, the
+  studio screenshot `public/surf/hero.jpg` — a simulator shot of a
+  `TS_AUTORUN` build, retake it when Splat's art changes — and the gallery /
+  TestFlight / GitHub buttons; the only motion is the falling coins and the
+  caption swap, on purpose). Splat on the web is `public/surf/splat.svg`
+  (misc/splat.svg with its metadata stripped), used by `TubeMan` in `parts.tsx`, `/surf/gallery` (top/new),
   `/surf/a/<slug>` (the creation in a phone frame, ▲, remix deep link, full
   screen with `?full=1`). Server components + `client.tsx` (sign-in modal,
   upvote, the player). **User HTML never runs on our origin**: the player is

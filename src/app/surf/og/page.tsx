@@ -11,9 +11,9 @@ export default function OG() {
       </div>
       <TubeMan className="ogtube" />
       <div className="phone" style={{ width: 230, position: 'absolute', right: 80, bottom: -60, transform: 'rotate(-6deg)' }}>
-        <img src="/surf/shots/game.jpg" alt="" width={540} height={1174} />
+        <img src="/surf/hero.jpg" alt="" width={900} height={1956} />
       </div>
-      <style>{`.sf .ogtube{position:absolute;right:340px;bottom:0;width:230px}`}</style>
+      <style>{`.sf .ogtube{position:absolute;right:300px;bottom:-10px;width:280px;height:auto}`}</style>
     </div>
   )
 }
