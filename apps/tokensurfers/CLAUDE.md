@@ -246,7 +246,97 @@ back into their own apps. One handle for all of it (and the leaderboard).
   narrower than 720 pt, or taller than wide, uses the phone layout. Catalyst
   windows are freely resizable (minimum 400×700).
 
-## The agent
+## The agent — Claude Code on the mini (2026-09-24)
+
+The agent is Claude Code itself, run headless with the Agent SDK on the Mac
+mini: `apps/tokensurfers/agent/` (Node, `server.mjs`). Bart's call after the
+first real session: the four-tool loop below (one index.html on the phone, no
+shell, no repo, no deploy) "doesn't sound like a coding agent at all"; the aim
+is real web apps on our stack (Supabase, deployed to Vercel), and that is
+what Claude Code does all day. The phone is a client of the feed.
+
+- **Server** (`agent/server.mjs`, port 3910, launchd `com.tokensurfers.agent`,
+  tunn3l `surf-mini` → `https://surf-mini.tunn3l.sh`): one workspace per app
+  at `~/surf-apps/surf-<first 8 of the project UUID>/` (a git repo; the
+  workspace rules are written into its `CLAUDE.md` from
+  `agent/workspace-CLAUDE.md` on every build, so edit the template, not the
+  copies), one Claude Code **session** per app (`.surf.json` keeps the session
+  id, the deploy URL, the recap, cost; a follow-up build `resume`s it, so it
+  remembers). `query()` with streaming input, `permissionMode:
+  'bypassPermissions'`, `settingSources: ['project']` (the workspace CLAUDE.md
+  loads, the mini's user settings don't), `includePartialMessages`, model
+  `claude-opus-5-5` at `medium` (`SURF_AGENT_MODEL` / `SURF_AGENT_EFFORT`),
+  `maxTurns` 80. Billed to the mini's Claude login (`CLAUDE_CODE_OAUTH_TOKEN`
+  in `~/.surf-agent.env`, same as GolemBot; a build shows "$0.31" at list
+  price, i.e. nothing extra). Verified 2026-09-24: a coin page from the iMac,
+  a smiley page through the tunnel, a follow-up on the same session, a note
+  delivered with ⚡ now (the interrupted turn ends `ok: false`, the note goes
+  in, both changes land in one redeploy).
+- **Mid-build notes** (the part Bart asked for explicitly): `POST prompt`
+  while a build runs queues the note; a **PostToolUse hook** hands every
+  queued note to the model as `additionalContext` on the very next tool
+  result (`[user, mid-build]: …`, `note_in` event `via: tool`); a note that
+  arrives after the last tool call goes in as the next user message when the
+  turn ends (`via: message`). **⚡ now** = `POST now`: `Query.interrupt()`
+  (Claude Code's own Escape), the turn's result comes back, the queued notes
+  go in as the next message of the same session. **Stop** = `POST stop`:
+  interrupt, close the input, return the notes.
+- **Feed**: `GET events?after=N&wait=S` long-polls (returns as soon as there
+  is something new, or after S seconds) because **tunn3l buffers a streamed
+  response until it ends and passes no WebSocket upgrade** (SSE ticks all
+  arrived at once through it). Events, coalesced at 120 ms: `start`,
+  `session`, `text {delta}` (Splat's lines as they stream), `say {text}`
+  (a complete text block), `name {emoji,title}` (from the `NAME:` line),
+  `tool_start {id,name}`, `tool_input {id,name,json}` (the half-streamed
+  input — Write's content, Edit's strings, Bash's command), `tool_call
+  {id,name,input}` (summarized), `tool_result {id,name,ok,summary}`, `file
+  {path,size,content}` (after every Write/Edit, ≤ 200 KB), `deployed {url}`,
+  `queued`, `note_in {text,via}`, `turn_end {ok,recap,cost,turns,deployUrl}`,
+  `error {message}`, `idle`. A ring of 6000 per project, so a phone that
+  comes back re-attaches with `after`. The deploy URL is taken from Splat's
+  `DEPLOYED:` line (a bare `surf-xxxxxxxx.vercel.app` alias in a tool result
+  is a stand-in), never the long per-deployment URL.
+- **Deploy**: the workspace rules say `vercel deploy --prod --yes --token
+  "$VERCEL_TOKEN" --scope "$VERCEL_SCOPE" --name <dir>`; `VERCEL_TOKEN` is
+  plumb's full-account token (in `~/.surf-agent.env` on the mini; the
+  `vercel` CLI there is not logged in and doesn't need to be),
+  `VERCEL_SCOPE` defaults to `bart-r-decrems-projects` (without `--scope`
+  the CLI refuses in non-interactive mode). Every app is a Vercel project
+  named `surf-<id8>` under that team — remove test ones with the API
+  (`curl -X DELETE "https://api.vercel.com/v9/projects/<name>?slug=bart-r-decrems-projects" -H "Authorization: Bearer $VERCEL_TOKEN"`;
+  `vercel project rm` only works interactively). Files go through Write/Edit (the
+  rules say so; the first run wrote the whole page through a Bash heredoc,
+  invisible to the phone). Supabase is not wired yet (needs an access token
+  and a project decision).
+- **Ops**: secrets `~/.surf-agent.env` (chmod 600: `SURF_APP_KEY` = the
+  phone's key, `VERCEL_TOKEN`, `CLAUDE_CODE_OAUTH_TOKEN`); install once with
+  `bash ~/hilma-deploy/apps/tokensurfers/agent/install.sh` (writes both
+  plists, bootstraps them); ship a change with
+  `ssh admin@171.66.240.175 'bash ~/hilma-deploy/apps/tokensurfers/agent/update.sh'`
+  (pull, npm install, kickstart, health); logs
+  `~/Library/Logs/tokensurfers/agent.{out,err}.log` on the mini; health
+  `https://surf-mini.tunn3l.sh/health`. Run it on this Mac for development:
+  `SURF_APP_KEY=… VERCEL_TOKEN=… SURF_AGENT_ROOT=<scratch> node server.mjs`
+  with `ANTHROPIC_API_KEY` unset (the SDK's CLI uses the Mac's Claude
+  login), and point the simulator at it with `TS_AGENT=http://localhost:3910`.
+- **Phone** (`Agent/RemoteEngine.swift` = `AgentAPI`; `Studio.runRemote`,
+  `followRemote`, `apply`): `Studio.engine` (UserDefaults `surf.engine`,
+  default `remote`, Home gear → "Claude Code on the mini") decides for a NEW
+  app; an app with `Project.siteURL` stays remote, one with local html stays
+  local. The same screen: text deltas → coins + subtitle, `say` → the caption
+  (spoken) and the feed, every tool → a train (`Write` streams onto the CODE
+  stage through `PartialJSON`, `Edit` shows the patch, `Bash` puts `$ cmd` in
+  the subtitle), errors → bugs + Hallucinello, `deployed` → `SiteWebView` on
+  the APP stage (reloaded past the cache per `previewVersion`), `idle` →
+  `finish`. Notes: the chip goes ⏳ → ✓ heard on `note_in`; no × on remote
+  notes (the mini already has it). `attach()` on Studio appear picks up a
+  build that kept running while the app was closed. `Secrets.agentURL` is
+  the server; `TS_AGENT` overrides it in the simulator. Checked in the
+  simulator against a local server: "a tip calculator" with "use a dark
+  purple theme" injected at 35 s — the note went in with a tool result, the
+  app deployed dark purple, the APP stage showed it, 94 s.
+
+## The agent (the original loop, kept behind the toggle)
 
 - **Server** (`src/app/api/surf/llm/route.ts`, prompt and tools in
   `src/lib/surf/prompt.ts`): it adds the key, the system prompt and the tools,
