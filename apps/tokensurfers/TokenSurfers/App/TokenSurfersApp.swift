@@ -65,6 +65,9 @@ struct RootView: View {
         }
         .onOpenURL { url in handle(url) }
         .task { autorun() }
+        // Every colour in the app is fixed paper and ink; system Dark Mode would
+        // only flip the parts that follow it (text fields, menus, the keyboard).
+        .preferredColorScheme(.light)
     }
 
     /// tokensurfers://remix/<slug> (from the web gallery): copy it into your apps and open it.

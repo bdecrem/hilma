@@ -79,6 +79,7 @@ final class Studio {
     private var lastCaptionAt = Date()
     private var usedFillers: Set<String> = []
     private var shownCutaways: Set<Cutaway> = []
+    private var buildStart = Date()
 
     init(store: ProjectStore, project: Project) {
         self.store = store
@@ -131,10 +132,12 @@ final class Studio {
     func setListening(_ on: Bool) { narrator.held = on }
 
     func stop() {
+        agentLog("stopped by the user")
         task?.cancel()
         task = nil
         call?.cancel()
         call = nil
+        interrupting = false
         narrator.stop()
         phase = .idle
         setCaption("ok ok. i stopped 🛑", speak: false)
@@ -172,16 +175,23 @@ final class Studio {
         subtitle = ""
         liveCode = ""
         isPatch = false
+        interrupting = false
+        buildStart = .now
         if !stagePinned { stageTab = .code }
         setCaption(html.isEmpty ? "so it's \(clockString()). new app just dropped" : "they said: \(shortPrompt(prompt))", speak: true)
+        agentLog("build: \(shortPrompt(prompt)) (\(html.isEmpty ? "new app" : "\(lineCount(html)) lines"))")
 
         let filler = Task { await fillerLoop() }
         defer { filler.cancel() }
 
         var messages: [[String: Any]] = [["role": "user", "content": firstMessage(prompt)]]
         var recap = ""
-        var budget = 14
+        var budget = 20
         var calls = 0
+        var retries = 0
+        /// A note batch is in the conversation and the file hasn't been touched since.
+        var noteOpen = false
+        var nudged = false
         do {
             while calls < budget {
                 calls += 1
@@ -192,6 +202,7 @@ final class Studio {
                     call = c
                     turn = try await c.value
                     call = nil
+                    interrupting = false
                 } catch where interrupting && !Task.isCancelled {
                     // "send now": forget the half-written turn, add the notes to the last user message
                     interrupting = false
@@ -199,27 +210,43 @@ final class Studio {
                     liveCode = ""
                     isPatch = false
                     phase = .thinking
-                    if var last = messages.popLast() {
-                        var content: [[String: Any]] = (last["content"] as? [[String: Any]])
-                            ?? [["type": "text", "text": last["content"] as? String ?? ""]]
-                        content += takeNotes()
-                        last["content"] = content
-                        messages.append(last)
-                    }
-                    budget = min(26, budget + 4)
+                    agentLog("call \(calls) interrupted (⚡ now), \(queue.count) note(s) go in")
+                    Self.append(takeNotes(), toLastUserMessageOf: &messages)
+                    noteOpen = true
+                    nudged = false
+                    budget = min(32, budget + 4)
+                    continue
+                } catch let e where !Task.isCancelled && Self.isTransient(e) && retries < 2 {
+                    // overloaded, rate limited, a dropped connection: the conversation is intact, go again
+                    retries += 1
+                    call = nil
+                    calls -= 1
+                    liveCode = ""
+                    isPatch = false
+                    phase = .thinking
+                    agentLog("call failed: \(e.localizedDescription) — retry \(retries) in \(retries * 3) s")
+                    setCaption("server hiccup. retrying 🔁", speak: false, filler: true)
+                    try await Task.sleep(for: .seconds(Double(retries) * 3))
                     continue
                 }
                 messages.append(["role": "assistant", "content": turn.content])
                 if !turn.text.isEmpty { recap = turn.text }
+                agentLog("call \(calls): \(turn.stopReason), tools \(turn.toolCalls.map(\.name)), \(outputTokens) tok out, \(inputTokens) in\(turn.text.isEmpty ? "" : ", text: \(shortPrompt(turn.text))")")
 
                 switch turn.stopReason {
                 case "tool_use":
                     var results: [[String: Any]] = []
-                    for call in turn.toolCalls {
+                    for c in turn.toolCalls {
                         try Task.checkCancellation()
-                        results.append(await execute(call))
+                        results.append(await execute(c))
+                        if c.name == "write_file" || c.name == "edit_file" { noteOpen = false }
                     }
-                    if !queue.isEmpty { results += takeNotes(); budget = min(26, budget + 4) }
+                    if !queue.isEmpty {
+                        results += takeNotes()
+                        noteOpen = true
+                        nudged = false
+                        budget = min(32, budget + 4)
+                    }
                     messages.append(["role": "user", "content": results])
                     phase = .thinking
                 case "pause_turn":
@@ -230,7 +257,7 @@ final class Studio {
                         ["type": "tool_result", "tool_use_id": $0.id, "is_error": true,
                          "content": "Your output hit max_tokens and this tool input was cut off. Make smaller edits with edit_file."]
                     }
-                    results += takeNotes()
+                    if !queue.isEmpty { results += takeNotes(); noteOpen = true; nudged = false }
                     messages.append(["role": "user", "content": results])
                     continue
                 case "refusal":
@@ -239,7 +266,17 @@ final class Studio {
                     // notes that came in while the recap was being written: one more round
                     if !queue.isEmpty {
                         messages.append(["role": "user", "content": takeNotes()])
-                        budget = min(26, budget + 4)
+                        noteOpen = true
+                        nudged = false
+                        budget = min(32, budget + 4)
+                        phase = .thinking
+                        continue
+                    }
+                    // he answered a note in words but never touched the file: one reminder
+                    if noteOpen && !nudged {
+                        nudged = true
+                        agentLog("ended with a note unapplied — one nudge")
+                        messages.append(["role": "user", "content": [["type": "text", "text": Self.nudge]]])
                         phase = .thinking
                         continue
                     }
@@ -255,11 +292,40 @@ final class Studio {
             return
         } catch {
             guard !Task.isCancelled else { return }
+            agentLog("build failed: \(error.localizedDescription)")
             phase = .failed(error.localizedDescription)
             setCaption("the server said no 💀", speak: true)
             subtitle = error.localizedDescription
             game.bugs(3)
         }
+    }
+
+    private static let nudge = "[app]: the user's note above is still open. If it asks for a change, make it now (edit_file or write_file) and run_app, then your one-line recap. If it needs no change, just finish with the recap."
+
+    /// Queued notes belong with the user's last message (after its tool results);
+    /// if the last message is Splat's own, they start a new one.
+    private static func append(_ blocks: [[String: Any]], toLastUserMessageOf messages: inout [[String: Any]]) {
+        guard !blocks.isEmpty else { return }
+        if var last = messages.last, last["role"] as? String == "user" {
+            var content = (last["content"] as? [[String: Any]])
+                ?? [["type": "text", "text": last["content"] as? String ?? ""]]
+            content += blocks
+            last["content"] = content
+            messages[messages.count - 1] = last
+        } else {
+            messages.append(["role": "user", "content": blocks])
+        }
+    }
+
+    private static func isTransient(_ e: Error) -> Bool {
+        if let u = e as? URLError { return u.code != .cancelled }
+        if let a = e as? SurfAPIError { return a.transient }
+        return false
+    }
+
+    /// The build as it happened, in the console (`[agent] +12.3s …`).
+    private func agentLog(_ line: String) {
+        print(String(format: "[agent] +%.1fs %@", Date().timeIntervalSince(buildStart), line))
     }
 
     /// The queued notes as text blocks for the next user message.
@@ -272,6 +338,7 @@ final class Studio {
             if let i = feed.firstIndex(where: { $0.noteID == n.id }) { feed[i].kind = .you(delivered: true) }
         }
         let heard = notes.map(\.text).joined(separator: " + ")
+        agentLog("notes in: \(heard)")
         setCaption("👂 \(shortPrompt(heard))", speak: false, filler: true)
         return notes.map { ["type": "text", "text": "[user, mid-build]: \($0.text)"] }
     }
@@ -282,6 +349,7 @@ final class Studio {
     }
 
     private func finish(recap: String, prompt: String) {
+        agentLog("done: \(shortPrompt(recap)) — \(outputTokens) tok, \(lineCount(html)) lines")
         phase = .done
         project.builds += 1
         project.prompts.append(prompt)
@@ -463,6 +531,16 @@ final class Studio {
     // MARK: tools
 
     private func execute(_ call: ToolCall) async -> [String: Any] {
+        let r = await perform(call)
+        let failed = r["is_error"] as? Bool == true
+        var summary = "ok"
+        if let t = r["content"] as? String { summary = t }
+        else if let parts = r["content"] as? [[String: Any]], let t = parts.first?["text"] as? String { summary = t }
+        agentLog("  \(call.name)\(failed ? " ✗" : "") → \(summary.replacingOccurrences(of: "\n", with: " ").prefix(100))")
+        return r
+    }
+
+    private func perform(_ call: ToolCall) async -> [String: Any] {
         func result(_ text: String, error: Bool = false) -> [String: Any] {
             var r: [String: Any] = ["type": "tool_result", "tool_use_id": call.id, "content": text]
             if error { r["is_error"] = true }

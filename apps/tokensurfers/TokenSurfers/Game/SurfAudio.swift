@@ -95,6 +95,23 @@ final class SurfAudio {
         engine.connect(node, to: engine.mainMixerNode, format: format)
         engine.mainMixerNode.outputVolume = 0.6
         try? engine.start()
+        // The category flip for hold-to-talk (and a phone call, or AirPods coming
+        // and going) rebuilds the engine's graph and stops it; bring it back.
+        let center = NotificationCenter.default
+        center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
+            self?.resume()
+        }
+        center.addObserver(forName: AVAudioSession.interruptionNotification, object: session, queue: .main) { [weak self] n in
+            let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            guard raw == AVAudioSession.InterruptionType.ended.rawValue else { return }
+            try? AVAudioSession.sharedInstance().setActive(true)
+            self?.resume()
+        }
+    }
+
+    private func resume() {
+        guard started, !engine.isRunning else { return }
+        try? engine.start()
     }
 
     /// Hold-to-talk needs the mic: switch the session to play-and-record (the

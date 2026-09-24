@@ -16,6 +16,8 @@ enum StreamEvent {
 
 struct SurfAPIError: LocalizedError {
     let message: String
+    /// Worth one more try in a few seconds (overloaded, rate limited, a 5xx).
+    var transient = false
     var errorDescription: String? { message }
 }
 
@@ -43,7 +45,8 @@ enum SurfAPI {
                         var body = ""
                         for try await line in bytes.lines { body += line; if body.count > 2000 { break } }
                         let msg = (try? JSONSerialization.jsonObject(with: Data(body.utf8)) as? [String: Any])?["error"] as? String
-                        throw SurfAPIError(message: msg ?? "server said \(status)")
+                        throw SurfAPIError(message: msg ?? "server said \(status)",
+                                           transient: [408, 409, 425, 429, 500, 502, 503, 504, 529].contains(status))
                     }
 
                     var eventName = ""
@@ -97,7 +100,9 @@ enum SurfAPI {
             return .messageStop
         case "error":
             let e = obj["error"] as? [String: Any]
-            throw SurfAPIError(message: e?["message"] as? String ?? "stream error")
+            let kind = e?["type"] as? String ?? ""
+            throw SurfAPIError(message: e?["message"] as? String ?? "stream error",
+                               transient: ["overloaded_error", "api_error", "rate_limit_error", "timeout_error"].contains(kind))
         default:
             return nil
         }

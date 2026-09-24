@@ -182,8 +182,15 @@ back into their own apps. One handle for all of it (and the leaderboard).
   - **Token Surfers** is below the seam, in attract mode until you swipe.
   - A **composer** sits at the bottom and stays open during a build: a
     status strip on top (a dancing mini Splat, the phase, the token count,
-    queued notes, Stop) and "tell splat… he'll catch it next step" with a
-    hold-to-talk mic below.
+    queued notes, Stop — two taps, "stop" then "sure?", because it sits next
+    to the note chips and one stray tap used to end a build) and "tell
+    splat… he'll catch it next step" with a hold-to-talk mic below. Return
+    sends (a vertical-axis TextField turns Return into a newline on its own)
+    and the keyboard drops after a send so the stage and the game get the
+    screen back. The field's text is `Theme.ink` explicitly and the whole app
+    runs `.preferredColorScheme(.light)`: every colour is fixed paper and ink,
+    and with the phone in Dark Mode the field's text followed the system and
+    was white on white (Bart, 2026-09-24).
   - **Talking to Splat mid-build** (`Studio.Note`, `queue`): what you send
     while he works waits for the current step to end, then rides into the
     next user message as `[user, mid-build]: …` text blocks next to the tool
@@ -199,7 +206,19 @@ back into their own apps. One handle for all of it (and the leaderboard).
     up to cancel). SFSpeechRecognizer with partial results into the field;
     the audio session switches to play-and-record while held, the music
     ducks to 12% and the narrator holds. Idle, the words start a build;
-    building, they queue like a typed note (🎙️ chip).
+    building, they queue like a typed note (🎙️ chip). Made to feel instant
+    (2026-09-24, after "a big lag between hitting the mic and anything
+    happening"): permissions are checked synchronously when already granted
+    (the old path awaited two prompts every hold), recognition runs
+    **on-device** when the phone supports it (`requiresOnDeviceRecognition`:
+    first words a few hundred ms in, the final result right after release
+    instead of a server round trip; the release wait is 0.9 s on-device,
+    1.5 s server), the recognition task is armed before the engine starts so
+    the first word isn't dropped, a fresh AVAudioEngine per hold, and the
+    field says "opening the mic…" until it is open. `[voice]` console lines
+    carry the timings (open in N ms, closed in N ms). The game's engine
+    observes `AVAudioEngineConfigurationChange` and session interruptions
+    and restarts itself, so the music survives the category flip.
   - **Live feed** (`UI/LiveFeed.swift`): a TikTok-live comment stream over
     the stage during a build — Splat's spoken captions with the tool's icon
     (✍️ 🩹 👀 🧪), 🐞/✅ from run_app, your notes ("next step" → "✓ heard").
@@ -241,7 +260,24 @@ back into their own apps. One handle for all of it (and the leaderboard).
 - **Loop** (`Agent/Studio.swift`): Jambot's `runAgent` shape, in Swift.
   - Each call is streamed. Every `tool_use` runs in order, and all the
     results go back in one user message. It stops at `end_turn`, after at
-    most 14 calls.
+    most 20 calls (+4 per note round, cap 32).
+  - Hardened 2026-09-24 after "comments mid-build stopped the process":
+    a transient failure (dropped connection, 429/5xx/529, an `overloaded_error`
+    or `api_error` event mid-stream — `SurfAPIError.transient`) retries the
+    same call up to twice (3 s, 6 s; the conversation is intact, the
+    half-streamed turn is dropped) with a "server hiccup. retrying" caption;
+    if Splat answers a note in words and ends his turn without touching the
+    file, one `[app]:` nudge asks him to apply it or finish (never twice);
+    ⚡ now merges the notes into the last message only when it is the user's
+    (else a new user message), and the interrupt flag is cleared on every
+    successful call. `[agent] +12.3s …` console lines log every call (stop
+    reason, tools, tokens), every tool result, notes going in, retries,
+    nudges and the finish — read them with `simctl launch --console-pty`
+    (through `script -q <log>` when unattended; a plain pipe buffers
+    `print`). Checked in the simulator against production: a typed note
+    injected during the first write_file (delivered with the tool results,
+    applied with edits, build done at 127 s) and the ⚡ now interrupt
+    (turn dropped at 27 s, rewritten with the note, done at 95 s).
   - Each request starts a **fresh conversation** that carries the current
     file plus the last 8 prompts, so history never grows past one build and
     thinking blocks are always replayed untouched (Opus 5.5's preserved
@@ -302,6 +338,14 @@ Test hooks (environment variables):
 
 - `TS_INJECT="<note>"` sends a mid-build note after `TS_INJECT_AT` seconds
   (default 12); `TS_INJECT_NOW=1` also presses ⚡ now 1.5 s later.
+  `TS_DRAFT="<text>"` pre-fills the composer (to screenshot typed text).
+  `xcrun simctl privacy booted grant microphone com.bartdecrem.tokensurfers`
+  skips the mic prompt; the speech prompt can't be pre-granted. If the iOS 27
+  simulator shows the speech prompt on every launch, even at Home, it is a
+  stale prompt the simulator keeps re-showing after one went unanswered
+  (uninstall and `privacy reset` don't clear it; a debugger trap on
+  `TCCAccessRequest` showed the app never asks at launch) — reboot the
+  simulator (`simctl shutdown` + `boot`). Cost 20 minutes on 2026-09-24.
   `TS_HEAR=/path/audio.aiff` sends a file through the speech recognizer
   (fails to initialize in the iOS 27 simulator — voice needs a device).
   Test against a local server with `TS_BACKEND=http://localhost:3219` so
@@ -350,12 +394,17 @@ State after the Splat / mid-build notes / mirror session (commits `a6077262`,
   run"; automatic signing does NOT work on the iMac — no Xcode account,
   "No Accounts").
 - **Voice is unverified end to end.** Typed notes and ⚡ now were verified in
-  the simulator against a local server. Hold-to-talk was never heard: the
-  iOS 27 simulator's recognizer says "Failed to initialize recognizer", and
-  the Catalyst binary launched from a shell never showed its speech prompt.
-  First real test is on a device: hold the mic mid-build, check the 🎙️ chip,
-  that music ducks and the narrator holds, and that the session goes back to
-  ambient after (game sound should keep playing).
+  the simulator against production (2026-09-24, see "Loop"). Hold-to-talk was
+  never heard: the iOS 27 simulator's recognizer says "Failed to initialize
+  recognizer", and the Catalyst binary launched from a shell never showed its
+  speech prompt. Bart's report from the phone (2026-09-24) was a big lag
+  between the mic press and anything happening; the rewrite (on-device
+  recognition, no permission round trips, the task armed before the engine)
+  is on his phone as build 4 but not yet heard. First real test is on a
+  device: hold the mic mid-build, watch for "opening the mic…" → "listening…"
+  → words, the `[voice] open in N ms` / `closed in N ms` console lines, the
+  🎙️ chip, that music ducks and the narrator holds, and that the session
+  goes back to ambient after (game sound should keep playing).
 - **The mirror is prepared, not live.** Bart said no to creating
   `bdecrem/tokensurfers` for now. Don't create the repo or add the deploy key
   without asking. The workflow is a no-op until `TOKENSURFERS_DEPLOY_KEY`

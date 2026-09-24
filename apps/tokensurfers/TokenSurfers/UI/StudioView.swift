@@ -28,6 +28,7 @@ struct StudioView: View {
     @State private var holding = false
     @State private var cancelArmed = false
     @State private var showLog = false
+    @State private var stopArmed = false
     @AppStorage("muted") private var muted = false
     @AppStorage("narrator") private var narrator = true
     @AppStorage("music") private var music = true
@@ -47,6 +48,7 @@ struct StudioView: View {
         .statusBarHidden(false)
         .onAppear {
             SurfAudio.shared.start()
+            voice.warmUp()
             gameOpen = studio.html.isEmpty || studio.building
             if let p = initialPrompt, !p.isEmpty, studio.html.isEmpty, !studio.building { studio.send(p) }
             if ProcessInfo.processInfo.environment["TS_PUBLISH"] != nil {
@@ -110,7 +112,7 @@ struct StudioView: View {
         let composerH = composerHeight
         let avail = size.height - composerH
         let stageH = gameOpen ? max(160, avail * split) : avail
-        let gameH = avail - stageH
+        let gameH = max(0, avail - stageH)   // the keyboard can shrink avail below the stage minimum
         return VStack(spacing: 0) {
             stage
                 .frame(height: stageH)
@@ -387,10 +389,18 @@ struct StudioView: View {
                 } else {
                     TextField(placeholder, text: $draft, axis: .vertical)
                         .font(Theme.rounded(16, .semibold))
+                        .foregroundStyle(Theme.ink)   // the field is white whatever the system scheme is
+                        .tint(Theme.splat)
                         .lineLimit(1...3)
                         .focused($composerFocused)
                         .submitLabel(.send)
                         .onSubmit(send)
+                        // a vertical-axis field turns Return into a newline; here Return sends
+                        .onChange(of: draft) { _, v in
+                            guard v.hasSuffix("\n") else { return }
+                            draft = String(v.dropLast())
+                            send()
+                        }
                         .padding(.horizontal, 16).padding(.vertical, 12)
                         .background(RoundedRectangle(cornerRadius: 23, style: .continuous).fill(.white))
                         .overlay(RoundedRectangle(cornerRadius: 23, style: .continuous).strokeBorder(Theme.ink, lineWidth: 2))
@@ -431,19 +441,29 @@ struct StudioView: View {
                     if let last = studio.queue.last { withAnimation { proxy.scrollTo(last.id, anchor: .trailing) } }
                 }
             }
-            Button { studio.stop() } label: {
+            // two taps: it sits next to the note chips, and one stray tap used to end the build
+            Button {
+                if stopArmed {
+                    stopArmed = false
+                    studio.stop()
+                } else {
+                    stopArmed = true
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    Task { try? await Task.sleep(for: .seconds(2.5)); stopArmed = false }
+                }
+            } label: {
                 HStack(spacing: 5) {
                     Image(systemName: "stop.fill").font(.system(size: 11, weight: .black))
-                    Text("stop").font(Theme.black(13))
+                    Text(stopArmed ? "sure?" : "stop").font(Theme.black(13))
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(stopArmed ? Theme.ink : .white)
                 .padding(.horizontal, 12).frame(height: 32)
-                .background(Capsule().fill(Theme.red))
+                .background(Capsule().fill(stopArmed ? Theme.yellow : Theme.red))
                 .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
                 .fixedSize()
             }
             .buttonStyle(SquishStyle())
-            .accessibilityLabel("Stop")
+            .accessibilityLabel(stopArmed ? "Tap again to stop" : "Stop")
             .padding(.trailing, 12)
         }
         .frame(height: 32)
@@ -533,8 +553,8 @@ struct StudioView: View {
                 .frame(width: 26)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text(voice.transcript.isEmpty ? "listening…" : voice.transcript)
-                    .font(Theme.rounded(15, .semibold)).foregroundStyle(Theme.ink)
+                Text(!voice.listening ? "opening the mic…" : voice.transcript.isEmpty ? "listening…" : voice.transcript)
+                    .font(Theme.rounded(15, .semibold)).foregroundStyle(voice.listening ? Theme.ink : Theme.ink2)
                     .lineLimit(2).truncationMode(.head)
                 Text(cancelArmed ? "let go to cancel" : "let go to send · slide up to cancel")
                     .font(Theme.rounded(11, .bold)).foregroundStyle(Theme.ink2)
@@ -596,6 +616,7 @@ struct StudioView: View {
     /// voice path and sends it the same way.
     private func simulatorHooks() {
         let env = ProcessInfo.processInfo.environment
+        if let d = env["TS_DRAFT"], !d.isEmpty { draft = d }
         let at = Double(env["TS_INJECT_AT"] ?? "") ?? 12
         if let note = env["TS_INJECT"], !note.isEmpty {
             Task {
@@ -642,7 +663,7 @@ struct StudioView: View {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         draft = ""
-        if !studio.building { composerFocused = false }   // mid-build, keep typing notes if you like
+        composerFocused = false   // the keyboard would otherwise squash the stage and the game
         studio.send(text)
     }
 
