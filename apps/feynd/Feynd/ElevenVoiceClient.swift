@@ -4,6 +4,7 @@ import ElevenLabs
 import Foundation
 import LiveKit
 import Observation
+import UIKit
 
 /// Dodo's voice client on the ElevenLabs engine — a per-device setting next
 /// to GPT-Live (LiveVoiceClient). See docs/f2-eleven-voice-reference.md.
@@ -56,6 +57,17 @@ final class ElevenVoiceClient: DodoVoiceClient {
     private var turns: [Turn] = []
 
     private var thinkingTimer: Task<Void, Never>?
+    /// Runs while Dodo listens; after ten minutes of one unbroken user turn
+    /// it chimes once, so a long answer gets a nudge to wrap up.
+    private var longTurnTimer: Task<Void, Never>?
+    private static var longTurnSeconds: Double {
+        #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
+        // `-voiceLongTurnWarnSeconds 10` shortens it for the drill.
+        let s = UserDefaults.standard.double(forKey: "voiceLongTurnWarnSeconds")
+        if s > 0 { return s }
+        #endif
+        return 600
+    }
     private var releaseTask: Task<Void, Never>?
     private static let releaseGrace: Duration = .milliseconds(300)
 
@@ -248,6 +260,7 @@ final class ElevenVoiceClient: DodoVoiceClient {
         phase = .ended
         status = "Ended"
         thinkingTimer?.cancel()
+        longTurnTimer?.cancel()
         releaseTask?.cancel()
         if let conversation {
             try? await conversation.setMuted(true)
@@ -320,6 +333,7 @@ final class ElevenVoiceClient: DodoVoiceClient {
         switch state {
         case .speaking:
             thinkingTimer?.cancel()
+            stopTurnClock()
             if !talking {
                 phase = .speaking
                 status = "Speaking"
@@ -327,13 +341,38 @@ final class ElevenVoiceClient: DodoVoiceClient {
             attachAudioProbe()
         case .thinking:
             if phase == .speaking { phase = .connected }
+            stopTurnClock()
             setThinking()
         case .listening:
             if phase == .speaking { phase = .connected }
             if status != "Thinking" { status = talking ? "Listening" : "Connected" }
+            startTurnClock()
         @unknown default:
             break
         }
+    }
+
+    /// The user's turn: from Dodo going quiet until Dodo speaks or thinks again.
+    /// A silent user is prompted by ElevenLabs after 30 s, so a clock that
+    /// reaches ten minutes means one long answer.
+    private func startTurnClock() {
+        guard longTurnTimer == nil else { return }
+        let seconds = Self.longTurnSeconds
+        longTurnTimer = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard let self, !Task.isCancelled, self.phase != .ended, !self.ending else { return }
+            NSLog("F2_ELEVEN_EV long-turn-warning after %.0f s", seconds)
+            FlashSFX.shared.play(.ding)
+            #if !targetEnvironment(macCatalyst)
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            #endif
+            self.status = "\(max(1, Int(seconds / 60))) minutes in"
+        }
+    }
+
+    private func stopTurnClock() {
+        longTurnTimer?.cancel()
+        longTurnTimer = nil
     }
 
     /// Test rig only: the agent's track can arrive after agent-ready, so this
