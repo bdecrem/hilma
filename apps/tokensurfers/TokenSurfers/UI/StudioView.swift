@@ -19,6 +19,11 @@ struct StudioView: View {
     @State private var confirmDelete = false
     @State private var showDone = false
     @State private var dragStart: CGFloat?
+    @State private var account = SurfAccount.shared
+    @State private var showAccount = false
+    @State private var publishing = false
+    @State private var publishNote: String?
+    @State private var publishedURL: URL?
     @AppStorage("muted") private var muted = false
     @AppStorage("narrator") private var narrator = true
     @AppStorage("music") private var music = true
@@ -40,6 +45,9 @@ struct StudioView: View {
             SurfAudio.shared.start()
             gameOpen = studio.html.isEmpty || studio.building
             if let p = initialPrompt, !p.isEmpty, studio.html.isEmpty, !studio.building { studio.send(p) }
+            if ProcessInfo.processInfo.environment["TS_PUBLISH"] != nil {
+                Task { try? await Task.sleep(for: .seconds(2)); publish() }
+            }
         }
         .onChange(of: studio.building) { _, b in
             if b {
@@ -59,6 +67,13 @@ struct StudioView: View {
             }
         }
         .fullScreenCover(isPresented: $fullscreenApp) { fullscreen }
+        .sheet(isPresented: $showAccount) { AccountSheet { publish() } }
+        .alert(publishNote ?? "", isPresented: Binding(get: { publishNote != nil }, set: { if !$0 { publishNote = nil } })) {
+            if let url = publishedURL {
+                ShareLink(item: url) { Text("Share the link") }
+            }
+            Button("OK", role: .cancel) { publishNote = nil }
+        }
         .alert("Rename app", isPresented: $renaming) {
             TextField("name", text: $newTitle)
             Button("Save") { if !newTitle.isEmpty { studio.rename(newTitle) } }
@@ -217,6 +232,15 @@ struct StudioView: View {
                 .disabled(studio.html.isEmpty)
             ShareLink(item: studio.store.exportURL(for: studio.project)) { Label("Share HTML", systemImage: "square.and.arrow.up") }
                 .disabled(studio.html.isEmpty)
+            Divider()
+            Button { publish() } label: {
+                Label(studio.project.remoteSlug == nil ? "Publish to the gallery" : "Update in the gallery", systemImage: "square.and.arrow.up.on.square")
+            }
+            .disabled(studio.html.isEmpty || studio.building || publishing)
+            if let slug = studio.project.remoteSlug, let url = URL(string: "\(backendURL().absoluteString)/surf/a/\(slug)") {
+                ShareLink(item: url) { Label("Share the link", systemImage: "link") }
+                Button(role: .destructive) { unpublish() } label: { Label("Unpublish", systemImage: "eye.slash") }
+            }
             Divider()
             Toggle(isOn: Binding(get: { !muted }, set: { muted = !$0 })) { Label("Sound", systemImage: "speaker.wave.2") }
             Toggle(isOn: $music) { Label("Music", systemImage: "music.note") }
@@ -416,6 +440,39 @@ struct StudioView: View {
         draft = ""
         composerFocused = false
         studio.send(text)
+    }
+
+    // MARK: publishing
+
+    private func publish() {
+        guard account.signedIn else { showAccount = true; return }
+        publishing = true
+        Task {
+            do {
+                let app = try await account.publish(project: studio.project, html: studio.html)
+                studio.setRemoteSlug(app.slug)
+                publishedURL = URL(string: app.url)
+                publishNote = "It's live at \(app.url)"
+                SurfAudio.shared.play(.celebrate)
+            } catch {
+                publishNote = "Couldn't publish: \(error.localizedDescription)"
+            }
+            publishing = false
+        }
+    }
+
+    private func unpublish() {
+        guard let slug = studio.project.remoteSlug else { return }
+        Task {
+            do {
+                try await account.unpublish(slug: slug)
+                studio.setRemoteSlug(nil)
+                publishedURL = nil
+                publishNote = "Taken down."
+            } catch {
+                publishNote = "Couldn't unpublish: \(error.localizedDescription)"
+            }
+        }
     }
 
     // MARK: fullscreen app

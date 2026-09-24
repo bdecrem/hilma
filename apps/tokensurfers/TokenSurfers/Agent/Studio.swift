@@ -89,6 +89,11 @@ final class Studio {
         store.update(project)
     }
 
+    func setRemoteSlug(_ slug: String?) {
+        project.remoteSlug = slug
+        store.update(project)
+    }
+
     var codeForDisplay: String { liveCode.isEmpty ? html : liveCode }
 
     // MARK: the loop

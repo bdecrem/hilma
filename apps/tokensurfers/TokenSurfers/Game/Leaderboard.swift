@@ -74,7 +74,7 @@ final class Leaderboard {
         loading = true
         defer { loading = false }
         do {
-            var comps = URLComponents(url: Secrets.backendURL.appendingPathComponent("api/surf/scores"), resolvingAgainstBaseURL: false)!
+            var comps = URLComponents(url: backendURL().appendingPathComponent("api/surf/scores"), resolvingAgainstBaseURL: false)!
             comps.queryItems = [URLQueryItem(name: "device", value: deviceID), URLQueryItem(name: "limit", value: "50")]
             var req = URLRequest(url: comps.url!)
             req.timeoutInterval = 15
@@ -104,7 +104,7 @@ final class Leaderboard {
         noteRun(score: score)
         guard hasHandle, score > 0 else { return nil }
         do {
-            var req = URLRequest(url: Secrets.backendURL.appendingPathComponent("api/surf/scores"))
+            var req = URLRequest(url: backendURL().appendingPathComponent("api/surf/scores"))
             req.httpMethod = "POST"
             req.timeoutInterval = 15
             req.setValue("application/json", forHTTPHeaderField: "content-type")

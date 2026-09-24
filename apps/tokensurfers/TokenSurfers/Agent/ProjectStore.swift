@@ -13,6 +13,8 @@ struct Project: Codable, Identifiable, Hashable {
     var builds: Int = 0
     var tokens: Int = 0
     var hue: Double = Double.random(in: 0...1)
+    var remoteSlug: String? = nil     // published in the gallery as /surf/a/<slug>
+    var remixOf: String? = nil        // the gallery slug this was remixed from
 }
 
 @Observable

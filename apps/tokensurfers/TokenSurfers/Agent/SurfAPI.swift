@@ -19,12 +19,18 @@ struct SurfAPIError: LocalizedError {
     var errorDescription: String? { message }
 }
 
+/// hilma, or TS_BACKEND=http://localhost:3219 in the simulator to hit a dev server.
+func backendURL() -> URL {
+    if let raw = ProcessInfo.processInfo.environment["TS_BACKEND"], let url = URL(string: raw) { return url }
+    return Secrets.backendURL
+}
+
 enum SurfAPI {
     static func stream(messages: [[String: Any]], effort: String = "medium") -> AsyncThrowingStream<StreamEvent, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    var req = URLRequest(url: Secrets.backendURL.appendingPathComponent("api/surf/llm"))
+                    var req = URLRequest(url: backendURL().appendingPathComponent("api/surf/llm"))
                     req.httpMethod = "POST"
                     req.timeoutInterval = 300
                     req.setValue("application/json", forHTTPHeaderField: "content-type")

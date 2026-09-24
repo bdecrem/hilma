@@ -58,22 +58,41 @@ struct SurfRenderer {
         drawWalls(&ctx)
         drawTrack(&ctx)
 
-        // Painter's order by near z. The player sits at z = 0; things nearer
-        // than that draw over them, except the train they are standing on.
-        let drawables = e.entities.filter { !$0.dead && $0.z < SurfEngine.viewDepth && !($0.kind == .coin && $0.z < -0.9) }.sorted { $0.z > $1.z }
+        // Painter's order: lanes from the one farthest from the camera to the
+        // nearest (a car beside you can't be drawn through a car in the next
+        // lane), then within a lane by near z. Coins over a train sort right
+        // after that train so they sit on its roof. The player is drawn in
+        // their lane after everything ahead of or under them.
+        let lw = SurfEngine.laneWidth
+        let laneOrder = [-1, 0, 1].sorted { abs(Double($0) * lw - camX) > abs(Double($1) * lw - camX) }
+        let trains = e.entities.filter { !$0.dead && ($0.kind == .train || $0.kind == .rampTrain) }
+        var byLane: [Int: [(key: Double, ent: SurfEngine.Entity)]] = [:]
+        for ent in e.entities where !ent.dead && ent.z < SurfEngine.viewDepth {
+            if ent.kind == .coin, ent.z < -0.9 { continue }
+            var key = ent.z
+            if ent.kind == .coin, let t = trains.first(where: { $0.lane == ent.lane && $0.z <= ent.z && $0.z + $0.length >= ent.z }) {
+                key = t.z - 0.001
+            }
+            byLane[ent.lane, default: []].append((key, ent))
+        }
         var playerDrawn = false
-        for ent in drawables {
-            let underfoot = ent.lane == e.lane && (ent.kind == .train || ent.kind == .rampTrain) && ent.z <= 0.35 && ent.z + ent.length >= -0.35
-            if !playerDrawn && ent.z < -0.5 && !underfoot {
-                drawPlayer(&ctx); playerDrawn = true
+        for lane in laneOrder {
+            let items = (byLane[lane] ?? []).sorted { $0.key > $1.key }
+            for item in items {
+                let ent = item.ent
+                if lane == e.lane, !playerDrawn, item.key < -0.35 {
+                    let underfoot = (ent.kind == .train || ent.kind == .rampTrain) && ent.z <= 0.35 && ent.z + ent.length >= -0.35
+                    if !underfoot { drawPlayer(&ctx); playerDrawn = true }
+                }
+                switch ent.kind {
+                case .train, .rampTrain: drawTrain(&ctx, ent)
+                case .coin: drawCoin(&ctx, ent)
+                case .barrier: drawBarrier(&ctx, ent)
+                case .gate: drawGate(&ctx, ent)
+                case .bug: drawBug(&ctx, ent)
+                }
             }
-            switch ent.kind {
-            case .train, .rampTrain: drawTrain(&ctx, ent)
-            case .coin: drawCoin(&ctx, ent)
-            case .barrier: drawBarrier(&ctx, ent)
-            case .gate: drawGate(&ctx, ent)
-            case .bug: drawBug(&ctx, ent)
-            }
+            if lane == e.lane, !playerDrawn { drawPlayer(&ctx); playerDrawn = true }
         }
         if !playerDrawn { drawPlayer(&ctx) }
         drawSpeedLines(&ctx)
@@ -197,15 +216,18 @@ struct SurfRenderer {
                     ctx.fill(p, with: .color(color))
                     ctx.stroke(p, with: .color(.white.opacity(0.85)), lineWidth: max(0.5, 0.05 * scale(z)))
                 }
-                if z < 34, let c = P(x, 1.52, z + 1.8) {
-                    let s = scale(z + 1.8)
-                    let t = Text(texts[idx % texts.count])
-                        .font(.system(size: max(5, s * 0.24), weight: .black, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.95))
-                    var cc = ctx
-                    cc.translateBy(x: c.x, y: c.y)
-                    cc.rotate(by: .degrees(side > 0 ? -8 : 8))
-                    cc.draw(t, at: .zero)
+                if z < 34, z + 3.6 > -1, let poster = quad(P(x, 0.9, z), P(x, 0.9, z + 3.6), P(x, 2.15, z + 3.6), P(x, 2.15, z)),
+                   let c = P(x, 1.52, z + 1.8), let a = P(x, 1.52, z), let b = P(x, 1.52, z + 3.6), let top = P(x, 2.15, z + 1.8) {
+                    let word = texts[idx % texts.count]
+                    let pw = abs(b.x - a.x), ph = abs(c.y - top.y) * 2
+                    let fontSize = min(ph * 0.42, pw / (0.62 * Double(word.count)))
+                    if fontSize > 5 {
+                        var cc = ctx
+                        cc.clip(to: poster)
+                        cc.translateBy(x: c.x, y: c.y)
+                        cc.rotate(by: .degrees(side > 0 ? -6 : 6))
+                        cc.draw(Text(word).font(.system(size: fontSize, weight: .black, design: .rounded)).foregroundStyle(.white.opacity(0.95)), at: .zero)
+                    }
                 }
                 z -= spacing
             }
@@ -390,12 +412,7 @@ struct SurfRenderer {
         let glass = Path(roundedRect: win, cornerRadius: win.width * 0.08)
         ctx.fill(glass, with: .color(livery.glass))
         if t.tool {
-            if rect.width > 30 {
-                let label = Text("> \(t.label)")
-                    .font(.system(size: max(6, rect.width * 0.11), weight: .bold, design: .monospaced))
-                    .foregroundStyle(Self.terminal.stripe)
-                ctx.draw(label, in: win.insetBy(dx: win.width * 0.06, dy: 0))
-            }
+            fitText(&ctx, "> \(t.label)", in: win.insetBy(dx: win.width * 0.05, dy: 0), maxHeight: 0.5, mono: true, color: Self.terminal.stripe)
         } else {
             ctx.fill(Path(roundedRect: CGRect(x: win.minX + win.width * 0.06, y: win.minY + win.height * 0.12, width: win.width * 0.88, height: win.height * 0.16), cornerRadius: 2),
                      with: .color(.white.opacity(0.22)))
@@ -423,6 +440,18 @@ struct SurfRenderer {
                 .foregroundStyle(livery.dark)
             ctx.draw(letter, at: c)
         }
+    }
+
+    /// One line of text sized to fit a board on screen, clipped to it.
+    private func fitText(_ ctx: inout GraphicsContext, _ text: String, in rect: CGRect, maxHeight: Double, mono: Bool = false, color: Color = .white) {
+        guard rect.width > 24, rect.height > 6 else { return }
+        let perChar = mono ? 0.62 : 0.58
+        let size = min(rect.height * maxHeight, rect.width * 0.92 / (perChar * Double(max(1, text.count))))
+        guard size > 5 else { return }
+        var c = ctx
+        c.clip(to: Path(rect))
+        c.draw(Text(text).font(.system(size: size, weight: mono ? .bold : .heavy, design: mono ? .monospaced : .rounded)).foregroundStyle(color),
+               at: CGPoint(x: rect.midX, y: rect.midY))
     }
 
     // MARK: props
@@ -461,12 +490,7 @@ struct SurfRenderer {
         let board = CGRect(x: a.x, y: a.y, width: d.x - a.x, height: d.y - a.y)
         ctx.fill(Path(roundedRect: board, cornerRadius: 2), with: .color(Theme.red))
         ctx.stroke(Path(roundedRect: board, cornerRadius: 2), with: .color(.white), lineWidth: max(1, board.width * 0.025))
-        if board.width > 34, board.width < 420 {
-            let t = Text("made with code")
-                .font(.system(size: max(6, board.height * 0.36), weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-            ctx.draw(t, at: CGPoint(x: board.midX, y: board.midY))
-        }
+        fitText(&ctx, "made with code", in: board, maxHeight: 0.4)
     }
 
     private func drawGate(_ ctx: inout GraphicsContext, _ g: SurfEngine.Entity) {
@@ -480,12 +504,7 @@ struct SurfRenderer {
         let board = CGRect(x: a.x, y: a.y, width: d.x - a.x, height: d.y - a.y)
         ctx.fill(Path(roundedRect: board, cornerRadius: 3), with: .color(Color(hex: 0x3FB5A5)))
         ctx.stroke(Path(roundedRect: board, cornerRadius: 3), with: .color(.white), lineWidth: max(1, board.width * 0.02))
-        if board.width > 34, board.width < 420 {
-            let t = Text("LGTM ↓ roll")
-                .font(.system(size: max(6, board.height * 0.36), weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-            ctx.draw(t, at: CGPoint(x: board.midX, y: board.midY))
-        }
+        fitText(&ctx, "LGTM ↓ roll", in: board, maxHeight: 0.4)
     }
 
     private func drawBug(_ ctx: inout GraphicsContext, _ b: SurfEngine.Entity) {

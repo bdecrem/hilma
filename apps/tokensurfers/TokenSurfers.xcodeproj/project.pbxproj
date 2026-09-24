@@ -17,6 +17,7 @@
 		50280016A75A4A1C28681C3F /* TokenSurfersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */; };
 		5CE1740CC0D49C8669535958 /* SurferArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */; };
 		7A5D93A65154DEBF5A9D5651 /* SurfGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C0C57F401EF078A6B831D2 /* SurfGameView.swift */; };
+		84A68F44B8741EE69424AA8D /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D433691AFF940E0ADCBF5569 /* GalleryView.swift */; };
 		9883E656538BE9E9F2AB98D4 /* SurfAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6570E755A3C2C0B71A922680 /* SurfAudio.swift */; };
 		B1242E55BDB8FC63BD2F815D /* Mascots.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF9F75B597B47D8F471BCD95 /* Mascots.swift */; };
 		B1A1A8B58802E1AA938C6D22 /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CF2ED5858A738C214CE367 /* Secrets.swift */; };
@@ -25,6 +26,7 @@
 		B746CB91F818BA16F78063C9 /* StageViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F30D2D848D8A6976591A7680 /* StageViews.swift */; };
 		B944C92AD9C453C9A44AB0A3 /* Anton-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 757A510603274E66D6F74FCF /* Anton-Regular.ttf */; };
 		D1A78F9AD8B6ED2698416CA2 /* Studio.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30074E3ADEA5B6BD6B2EDC1 /* Studio.swift */; };
+		E077DCA4B7117D31E5CB6732 /* SurfAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */; };
 		E50D89B5A3F2E21990B7436D /* SurfRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61687D57C5AA1DB02355FEDB /* SurfRenderer.swift */; };
 		E797D8BAECA7774FAF8C033F /* SurfEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E086AD51AB083526161C1A /* SurfEngine.swift */; };
 		EF1900240C01A65BFF0F000A /* Leaderboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */; };
@@ -38,6 +40,7 @@
 		00F022A3922F46B8820472A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		09CF2ED5858A738C214CE367 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenSurfersApp.swift; sourceTree = "<group>"; };
+		1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfAccount.swift; sourceTree = "<group>"; };
 		200232E278F9AC3DF43FA397 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		3F1ADBD84EC242FF2E17DBFA /* Secrets.swift.example */ = {isa = PBXFileReference; path = Secrets.swift.example; sourceTree = "<group>"; };
 		434FE7FD5886BC3CBA6C1007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -52,6 +55,7 @@
 		A1959D3F66992E31FC1270A6 /* Montserrat-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Montserrat-Black.ttf"; sourceTree = "<group>"; };
 		B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurferArt.swift; sourceTree = "<group>"; };
 		CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leaderboard.swift; sourceTree = "<group>"; };
+		D433691AFF940E0ADCBF5569 /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
 		D75795D20D8E4C54625BBD1C /* ProjectStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectStore.swift; sourceTree = "<group>"; };
 		E30074E3ADEA5B6BD6B2EDC1 /* Studio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Studio.swift; sourceTree = "<group>"; };
 		E8C0C57F401EF078A6B831D2 /* SurfGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfGameView.swift; sourceTree = "<group>"; };
@@ -107,6 +111,7 @@
 				6D215114C01717BE69A091A8 /* AppRunner.swift */,
 				D75795D20D8E4C54625BBD1C /* ProjectStore.swift */,
 				E30074E3ADEA5B6BD6B2EDC1 /* Studio.swift */,
+				1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */,
 				00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */,
 			);
 			path = Agent;
@@ -139,6 +144,7 @@
 			isa = PBXGroup;
 			children = (
 				F86B61EEC8EF7742EF1EFB91 /* CaptionBand.swift */,
+				D433691AFF940E0ADCBF5569 /* GalleryView.swift */,
 				200232E278F9AC3DF43FA397 /* HomeView.swift */,
 				FF9F75B597B47D8F471BCD95 /* Mascots.swift */,
 				F30D2D848D8A6976591A7680 /* StageViews.swift */,
@@ -224,6 +230,7 @@
 			files = (
 				154CC1BB3CF1989B2201B1AC /* AppRunner.swift in Sources */,
 				237FDF18278B29B8E299D4DD /* CaptionBand.swift in Sources */,
+				84A68F44B8741EE69424AA8D /* GalleryView.swift in Sources */,
 				FEC528561C0E29F0E6419676 /* HomeView.swift in Sources */,
 				EF1900240C01A65BFF0F000A /* Leaderboard.swift in Sources */,
 				B1242E55BDB8FC63BD2F815D /* Mascots.swift in Sources */,
@@ -233,6 +240,7 @@
 				D1A78F9AD8B6ED2698416CA2 /* Studio.swift in Sources */,
 				0C8EBC38E25613522A603B20 /* StudioView.swift in Sources */,
 				40FE5FDF05EFEFD6DD4BB10B /* SurfAPI.swift in Sources */,
+				E077DCA4B7117D31E5CB6732 /* SurfAccount.swift in Sources */,
 				9883E656538BE9E9F2AB98D4 /* SurfAudio.swift in Sources */,
 				E797D8BAECA7774FAF8C033F /* SurfEngine.swift in Sources */,
 				7A5D93A65154DEBF5A9D5651 /* SurfGameView.swift in Sources */,

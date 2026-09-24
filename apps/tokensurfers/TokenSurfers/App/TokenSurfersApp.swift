@@ -63,14 +63,45 @@ struct RootView: View {
                 .zIndex(1)
             }
         }
-        .onOpenURL { _ in }
+        .onOpenURL { url in handle(url) }
         .task { autorun() }
+    }
+
+    /// tokensurfers://remix/<slug> (from the web gallery): copy it into your apps and open it.
+    private func handle(_ url: URL) {
+        guard url.scheme == "tokensurfers" else { return }
+        let parts = url.pathComponents.filter { $0 != "/" }
+        let slug = url.host == "remix" ? parts.first : (parts.first == "remix" ? parts.dropFirst().first : nil)
+        guard let slug, !slug.isEmpty else { return }
+        Task {
+            guard let app = try? await SurfAccount.shared.fetch(slug: slug), let html = app.html else { return }
+            var p = Project()
+            p.title = app.title + " remix"
+            p.emoji = app.emoji
+            p.prompts = app.prompt.isEmpty ? [] : [app.prompt]
+            p.recap = "remixed from @\(app.owner)"
+            p.builds = 1
+            p.remixOf = app.slug
+            model.store.saveHTML(html, for: p.id)
+            model.store.update(p)
+            openPrompt = nil
+            withAnimation(.spring(response: 0.42, dampingFraction: 0.9)) { openID = p.id }
+        }
     }
 
     /// Test hook: TS_AUTORUN="<prompt>" opens a new project and builds it;
     /// TS_OPEN="first" opens the most recent project (TS_SEND="<prompt>" then asks for a change).
     private func autorun() {
         let env = ProcessInfo.processInfo.environment
+        // TS_LOGIN="handle:password" signs in (creating the account if needed) before anything else.
+        if let creds = env["TS_LOGIN"], let sep = creds.firstIndex(of: ":") {
+            let h = String(creds[..<sep]), pw = String(creds[creds.index(after: sep)...])
+            Task {
+                if await !SurfAccount.shared.authenticate(handle: h, password: pw, create: false) {
+                    await SurfAccount.shared.authenticate(handle: h, password: pw, create: true)
+                }
+            }
+        }
         if let prompt = env["TS_AUTORUN"], !prompt.isEmpty {
             let p = model.store.create(prompt: prompt)
             openPrompt = prompt

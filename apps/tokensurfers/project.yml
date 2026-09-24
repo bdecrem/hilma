@@ -39,6 +39,12 @@ targets:
           - Montserrat-Black.ttf
           - Montserrat-ExtraBold.ttf
         ITSAppUsesNonExemptEncryption: false
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        CFBundleURLTypes:
+          - CFBundleURLName: com.bartdecrem.tokensurfers.remix
+            CFBundleURLSchemes:
+              - tokensurfers
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.tokensurfers

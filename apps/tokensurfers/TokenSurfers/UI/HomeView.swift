@@ -12,7 +12,10 @@ struct HomeView: View {
     @State private var deleting: Project?
     @State private var showGame = false
     @State private var showBoard = false
+    @State private var showGallery = false
+    @State private var showAccount = false
     @State private var board = Leaderboard.shared
+    @State private var account = SurfAccount.shared
     @AppStorage("muted") private var muted = false
     @AppStorage("music") private var music = true
     @AppStorage("narrator") private var narrator = true
@@ -36,6 +39,7 @@ struct HomeView: View {
                 VStack(spacing: 22) {
                     header
                     promptCard
+                    galleryCard
                     surfCard
                     shelf
                 }
@@ -49,10 +53,17 @@ struct HomeView: View {
         .task {
             if ProcessInfo.processInfo.environment["TS_SOLO"] != nil { showGame = true }
             if ProcessInfo.processInfo.environment["TS_BOARD"] != nil { showBoard = true }
+            if ProcessInfo.processInfo.environment["TS_GALLERY"] != nil {
+                try? await Task.sleep(for: .seconds(1.5))
+                showGallery = true
+            }
+            if ProcessInfo.processInfo.environment["TS_ACCOUNT"] != nil { showAccount = true }
             await board.refresh()
         }
         .fullScreenCover(isPresented: $showGame) { GameScreen().onDisappear { Task { await board.refresh(force: true) } } }
         .sheet(isPresented: $showBoard) { LeaderboardView() }
+        .sheet(isPresented: $showAccount) { AccountSheet() }
+        .fullScreenCover(isPresented: $showGallery) { GalleryView { id in open(id, nil) }.environment(model) }
         .alert("Rename app", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("name", text: $newTitle)
             Button("Save") {
@@ -85,13 +96,30 @@ struct HomeView: View {
         }
         .padding(.top, 14)
         .overlay(alignment: .topTrailing) {
-            Menu {
-                Toggle(isOn: Binding(get: { !muted }, set: { muted = !$0 })) { Label("Sound", systemImage: "speaker.wave.2") }
-                Toggle(isOn: $music) { Label("Music", systemImage: "music.note") }
-                Toggle(isOn: $narrator) { Label("Narrator voice", systemImage: "waveform") }
-            } label: {
-                Image(systemName: "gearshape.fill").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.ink)
-                    .frame(width: 34, height: 34).background(Circle().fill(.white.opacity(0.9)))
+            HStack(spacing: 8) {
+                if account.signedIn {
+                    Menu {
+                        Button { showGallery = true } label: { Label("The gallery", systemImage: "square.grid.2x2") }
+                        Button(role: .destructive) { account.signOut() } label: { Label("Sign out", systemImage: "rectangle.portrait.and.arrow.right") }
+                    } label: {
+                        Text("@\(account.handle)").font(Theme.black(12)).foregroundStyle(Theme.ink).lineLimit(1)
+                            .padding(.horizontal, 10).frame(height: 34).background(Capsule().fill(.white.opacity(0.9)))
+                    }
+                } else {
+                    Button { showAccount = true } label: {
+                        Text("sign in").font(Theme.black(12)).foregroundStyle(Theme.ink)
+                            .padding(.horizontal, 10).frame(height: 34).background(Capsule().fill(.white.opacity(0.9)))
+                    }
+                    .buttonStyle(SquishStyle())
+                }
+                Menu {
+                    Toggle(isOn: Binding(get: { !muted }, set: { muted = !$0 })) { Label("Sound", systemImage: "speaker.wave.2") }
+                    Toggle(isOn: $music) { Label("Music", systemImage: "music.note") }
+                    Toggle(isOn: $narrator) { Label("Narrator voice", systemImage: "waveform") }
+                } label: {
+                    Image(systemName: "gearshape.fill").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.ink)
+                        .frame(width: 34, height: 34).background(Circle().fill(.white.opacity(0.9)))
+                }
             }
             .offset(y: -6)
         }
@@ -166,6 +194,30 @@ struct HomeView: View {
         }
         .padding(16)
         .paperCard(radius: 22)
+    }
+
+    // Everyone's creations: play, upvote, remix.
+    private var galleryCard: some View {
+        Button { showGallery = true } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.navy)
+                    Starfield().clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous)).opacity(0.7)
+                    Text("🖼️").font(.system(size: 26))
+                }
+                .frame(width: 56, height: 56)
+                VStack(alignment: .leading, spacing: 2) {
+                    StrokedText(text: "THE GALLERY", font: Theme.anton(22), color: Theme.yellow, stroke: 2.5)
+                    Text("what everyone made · play · upvote · remix")
+                        .font(Theme.rounded(12, .heavy)).foregroundStyle(Theme.ink2)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.ink)
+            }
+            .padding(12)
+            .paperCard(radius: 20)
+        }
+        .buttonStyle(SquishStyle())
     }
 
     // Play the runner on its own; the world's top three and your rank.

@@ -88,6 +88,60 @@ Token Surfers is a real endless runner now, not a screensaver. `Game/`:
   space to run it back. `TS_SOLO=1` opens it, `TS_BOARD=1` opens the
   leaderboard, `TS_BOT=…` as above.
 
+## Accounts, the gallery and the web (2026-09-24)
+
+The product model: Splat builds little apps on the phone; you can **publish**
+one to the gallery on hilma, where anyone can play it, upvote it and remix it
+back into their own apps. One handle for all of it (and the leaderboard).
+
+- **Accounts** — `surf_users` (handle + bcrypt), `src/lib/surf/auth.ts`: an
+  HMAC token (`SURF_SESSION_SECRET`, on Vercel Production + Preview) that the
+  app sends as `Authorization: Bearer` and the web keeps in the httpOnly
+  cookie `surf_session`. Routes `POST /api/surf/auth/{signup,login,logout}`,
+  `GET …/me`. No email. In the app: `Agent/SurfAccount.swift` (token +
+  user in UserDefaults, `AccountSheet`), the "sign in" / "@handle" chip on
+  Home; signing in sets the leaderboard handle.
+- **Creations** — `surf_apps` holds the whole `index.html` (≤ 400 KB) with
+  slug, owner, title, emoji, the first prompt, `remix_of`, `upvotes`;
+  `surf_upvotes` one row per (app, user), the counter kept exact by the
+  `surf_toggle_upvote` function. `src/lib/surf/apps.ts` (plain lookups, no
+  PostgREST embedded joins: the self-join wasn't in the schema cache).
+  Routes: `GET /api/surf/apps?sort=top|new` (public, `voted` when signed
+  in), `POST /api/surf/apps` (publish; the same `client_id` = the project's
+  UUID re-publishes in place), `GET|DELETE /api/surf/apps/:slug`,
+  `POST …/:slug/upvote` (toggle). Schema
+  `apps/tokensurfers/schema/002_surf_accounts.sql`, applied 2026-09-24.
+- **In the app** — Studio ••• → Publish / Update in the gallery, Share the
+  link, Unpublish (`Project.remoteSlug`); Home → THE GALLERY card
+  (`UI/GalleryView.swift`: top/new grid, `GalleryAppView` plays it in a
+  WKWebView, ▲ upvote, **REMIX IT** copies it into your apps as
+  "<title> remix" with `Project.remixOf` and opens the Studio, so the next
+  prompt edits it). The web's "remix it in the app" button is the deep link
+  `tokensurfers://remix/<slug>` (URL scheme in `project.yml`; handled in
+  `RootView.handle(_:)`).
+- **The web** — `src/app/surf/`: `/surf` landing (hero with the tube man in
+  SVG, TestFlight + GitHub + gallery buttons, how it goes, phone shots from
+  `public/surf/shots/`, the top creations), `/surf/gallery` (top/new),
+  `/surf/a/<slug>` (the creation in a phone frame, ▲, remix deep link, full
+  screen with `?full=1`). Server components + `client.tsx` (sign-in modal,
+  upvote, the player). **User HTML never runs on our origin**: the player is
+  a `sandbox="allow-scripts …"` iframe with `srcdoc` (opaque origin, so no
+  cookies), plus a shim that gives the app an in-memory `localStorage`
+  because the sandbox has none. Look: `surf.css` under `.sf` (Anton +
+  Montserrat via next/font). OG card: `/surf/og` screenshotted to
+  `public/surf/og.png` by `scripts/surf/pw-shots.mjs`, which is also the
+  check (desktop + phone shots of the three pages, a throwaway web sign-up,
+  an upvote, full screen). `SURF_TESTFLIGHT_URL` (unset = "soon") and
+  `SURF_SITE_URL` are the only knobs.
+- **Simulator hooks**: `TS_BACKEND=http://localhost:3219` points the app at
+  a dev server (ATS allows local networking), `TS_LOGIN=handle:password`
+  signs in (creating the account if needed), `TS_PUBLISH=1` with
+  `TS_OPEN=first` publishes the newest project, `TS_GALLERY=1|<slug>` opens
+  the gallery (and that app), `TS_ACCOUNT=1` the sign-in sheet.
+- Not built: passwords can't be reset (no email), no moderation beyond
+  unpublish-your-own, no TestFlight build yet (create the App Store Connect
+  record, upload, then set `SURF_TESTFLIGHT_URL`).
+
 ## The screen
 
 - **Home** (`UI/HomeView.swift`): the video's AITA card on a sunburst, used as
