@@ -331,6 +331,39 @@ only imports `@/lib/surf/*` and npm packages — keep it that way or the
 mirror breaks. When the mirror is live, point `GITHUB` in
 `src/app/surf/parts.tsx` / `SURF_GITHUB_URL` at it.
 
+## Handoff — open items (2026-09-24)
+
+State after the Splat / mid-build notes / mirror session (commits `a6077262`,
+`bef4da9b`). Everything is pushed; these are what's left:
+
+- **Not on Bart's phone yet.** Build 2 is signed (automatic signing works on
+  the iMac: `-allowProvisioningUpdates CODE_SIGN_STYLE=Automatic`) but
+  `devicectl` said "Bart iPhone Air" was unavailable (CoreDevice 4016 — off
+  the LAN or asleep). Rebuild for `generic/platform=iOS` into `build/device`
+  and install over WiFi to `00008150-000038820EFB801C` once it shows as
+  available in `xcrun devicectl list devices`. The UDID and Air profile in
+  "Build and run" above are the MacBook Air's setup, not the iMac's.
+- **Voice is unverified end to end.** Typed notes and ⚡ now were verified in
+  the simulator against a local server. Hold-to-talk was never heard: the
+  iOS 27 simulator's recognizer says "Failed to initialize recognizer", and
+  the Catalyst binary launched from a shell never showed its speech prompt.
+  First real test is on a device: hold the mic mid-build, check the 🎙️ chip,
+  that music ducks and the narrator holds, and that the session goes back to
+  ambient after (game sound should keep playing).
+- **The mirror is prepared, not live.** Bart said no to creating
+  `bdecrem/tokensurfers` for now. Don't create the repo or add the deploy key
+  without asking. The workflow is a no-op until `TOKENSURFERS_DEPLOY_KEY`
+  exists. `GITHUB` in `src/app/surf/parts.tsx` still points at the hilma tree.
+- **The app key is extractable** from any shipped build (it's in the binary by
+  design) and `/api/surf/llm` has no daily token budget or rate limit — the
+  model and effort are pinned, so a leaked key buys Opus 5.5 at medium, but
+  unmetered. Add a budget before a public TestFlight.
+- **Pitfalls hit this session:** `pnpm build` while a `next dev` is running on
+  the same checkout breaks the dev server (shared `.next`); SourceKit shows
+  false "cannot find X in scope" errors for new files until `xcodegen
+  generate` + a build; zsh aborts a `&&` chain on an unmatched glob
+  (`rm -f dir/*` on an empty dir).
+
 ## Ideas not built yet
 
 - Publishing a made app to a public link (it would need storage on hilma).
