@@ -170,9 +170,10 @@ back into their own apps. One handle for all of it (and the leaderboard).
 
 - **Home** (`UI/HomeView.swift`): the video's AITA card on a sunburst, used as
   the prompt box ("AITA for wanting an app that…"), idea chips, SURF IT, the
-  Token Surfers card (solo play + leaderboard), and a shelf of your apps
-  (long-press to rename, share the HTML or delete). The surfer runs in place
-  next to the title.
+  Token Surfers card (solo play + leaderboard), and a shelf of your apps —
+  every card has a "…" at the top right of its thumbnail (rename, share the
+  link or the HTML, delete; the same list on a long press — Bart asked for a
+  visible menu, 2026-09-24). The surfer runs in place next to the title.
 - **Studio** (`UI/StudioView.swift`):
   - The **stage** on top has two tabs. APP is the running app in a
     WKWebView; CODE is the navy "3:00 AM monitor" with a line counter and
@@ -231,7 +232,20 @@ back into their own apps. One handle for all of it (and the leaderboard).
     best installed en-US voice (premium/enhanced when downloaded).
   - After a build the game tucks away and the app fills the screen. The
     "🏄 surf" chip or the ⌄ button toggles the game, and follow-up chips
-    ("make it prettier ✨") appear.
+    ("make it prettier ✨") appear. **The way back from a full-screen stage
+    is always in the top bar** (2026-09-24, after Bart lost the split view
+    mid-build): a split/full button next to the APP·CODE tabs shows or hides
+    the game, and the seam handle (drawn in both states, just above the
+    composer when the game is hidden) drags it back up. Nothing about the
+    layout is gated on the build state any more.
+  - **Deployed = published** (2026-09-24): when a build on the mini ends with
+    a deploy URL and the user is signed in, the Studio publishes it to the
+    gallery on its own (`surf_apps.site_url`, schema 003; the same
+    `client_id` re-publishes in place on later builds), the card says "in the
+    gallery" and `Project.remoteSlug` is set. The gallery plays site apps
+    from Vercel (web: an iframe on the URL with `allow-same-origin`, "open it
+    ↗" instead of remix; phone: `SiteWebView`, "OPEN IT ↗"). Signed out,
+    nothing is published; the ••• menu's Publish still works for both kinds.
   - The ••• menu has Open fullscreen, Share HTML, the Sound, Music and
     Narrator toggles, and Delete.
 - **Cutaways** (`UI/StageViews.swift`, characters in `UI/Mascots.swift`) take
@@ -431,7 +445,8 @@ Test hooks (environment variables):
 
 - `TS_INJECT="<note>"` sends a mid-build note after `TS_INJECT_AT` seconds
   (default 12); `TS_INJECT_NOW=1` also presses ⚡ now 1.5 s later.
-  `TS_DRAFT="<text>"` pre-fills the composer (to screenshot typed text).
+  `TS_DRAFT="<text>"` pre-fills the composer (to screenshot typed text);
+  `TS_SCROLL=apps` scrolls Home to the app shelf.
   `xcrun simctl privacy booted grant microphone com.bartdecrem.tokensurfers`
   skips the mic prompt; the speech prompt can't be pre-granted. If the iOS 27
   simulator shows the speech prompt on every launch, even at Home, it is a

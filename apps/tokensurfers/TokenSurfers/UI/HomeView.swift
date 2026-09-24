@@ -35,20 +35,29 @@ struct HomeView: View {
             Sunburst(spin: false)
                 .ignoresSafeArea()
             PaperGrain(opacity: 0.09).ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: 22) {
-                    header
-                    promptCard
-                    galleryCard
-                    surfCard
-                    shelf
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 22) {
+                        header
+                        promptCard
+                        galleryCard
+                        surfCard
+                        shelf.id("shelf")
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 40)
+                    .frame(maxWidth: 680)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 40)
-                .frame(maxWidth: 680)
-                .frame(maxWidth: .infinity)
+                .scrollDismissesKeyboard(.interactively)
+                .task {
+                    // TS_SCROLL=apps: the shelf in a screenshot without a finger
+                    if ProcessInfo.processInfo.environment["TS_SCROLL"] == "apps" {
+                        try? await Task.sleep(for: .seconds(1.2))
+                        withAnimation { proxy.scrollTo("shelf", anchor: .top) }
+                    }
+                }
             }
-            .scrollDismissesKeyboard(.interactively)
         }
         .task {
             if ProcessInfo.processInfo.environment["TS_SOLO"] != nil { showGame = true }
