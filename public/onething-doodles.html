@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f7f1e1">
+<title>Margin doodles</title>
+<meta name="description" content="One sentence a day, and Opus 5.5 on low effort draws a small pen doodle in the margin beside it. From Onething.">
+<meta property="og:title" content="Margin doodles — Opus 5.5 on low, with a pen">
+<meta property="og:description" content="One sentence a day, one doodle in the margin: a few confident strokes, one red accent.">
+<meta property="og:image" content="https://hilma-nine.vercel.app/onething-doodles-og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* The doodles as they sit on the Onething journal (src/app/onething): ink, one red accent,
+   stroke-only, 2.2 wide, on a ruled page with a red double margin. Drawings from src/lib/onething/doodle.ts. */
+:root{--paper:#f7f1e1;--ink:#2a251c;--red:#a8341f;--rule:#cdb999;--margin:min(38vw,230px)}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:"Courier Prime",ui-monospace,monospace;min-height:100dvh;padding:calc(env(safe-area-inset-top) + 36px) 16px calc(env(safe-area-inset-bottom) + 40px)}
+main{max-width:760px;margin:0 auto}
+h1{margin:0;font-weight:700;font-size:22px;letter-spacing:-.5px}
+h1 span{color:var(--red)}
+.lede{margin:8px 0 26px;font-size:15px;line-height:1.5;max-width:52ch}
+.page{position:relative;background:repeating-linear-gradient(to bottom,transparent 0 27px,var(--rule) 27px 28px);padding-top:6px}
+.page::before,.page::after{content:"";position:absolute;top:0;bottom:0;right:var(--margin);width:1px;background:#d98b7a}
+.page::after{right:calc(var(--margin) + 4px)}
+.row{display:grid;grid-template-columns:1fr var(--margin);gap:0;min-height:168px}
+.words{padding:0 22px 0 0;font-size:16px;line-height:28px}
+.day{display:block;font-family:Caveat,cursive;font-weight:600;font-size:21px;color:var(--red);line-height:28px}
+.doodle{width:100%;height:auto;max-height:140px;overflow:visible;padding-left:14px}
+.row:nth-child(odd) .doodle{transform:rotate(-2deg)}
+.row:nth-child(even) .doodle{transform:rotate(2deg)}
+.doodle *{stroke:var(--ink);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:900;stroke-dashoffset:900;animation:draw 1.6s ease-out forwards}
+.doodle .r{stroke:var(--red)}
+.doodle .thin{stroke-width:1.2}
+.doodle .f{fill:var(--ink)}
+.doodle .fr{fill:var(--red);stroke:var(--red)}
+.row:nth-child(2) .doodle *{animation-delay:.6s}
+.row:nth-child(3) .doodle *{animation-delay:1.2s}
+@keyframes draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion:reduce){.doodle *{animation:none;stroke-dashoffset:0}}
+.foot{margin-top:26px;font-size:13px;line-height:1.6;color:#6a604e}
+.foot a{color:var(--red)}
+@media (max-width:560px){:root{--margin:132px}.words{font-size:14px}.row{min-height:140px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>margin doodles<span>.</span></h1>
+  <p class="lede">On <a href="https://onething.ink" style="color:inherit">Onething</a> you keep one sentence a day. Opus 5.5, on low effort, reads it and draws one small doodle in the margin, the way someone with a pen would in twenty seconds: one image, a few confident strokes, one red accent, a little wit.</p>
+  <div class="page">
+  <div class="row">
+    <div class="words"><span class="day">Sept 3</span>Woke up with the answer to the thing that stumped me all week, before the sun was even up.</div>
+    <svg class="doodle" viewBox="0 0 340 170" aria-hidden="true"><path d="M20 140 L320 140"/><path d="M110 140 A60 60 0 0 1 230 140"/><path d="M170 60 L170 40 M120 80 L106 66 M220 80 L234 66 M95 115 L75 110 M245 115 L265 110"/><path d="M150 118 Q170 90 190 118 Q180 128 170 128 Q160 128 150 118Z" class="r"/><path d="M162 128 L162 134 L178 134 L178 128" class="r"/><path d="M280 40 Q300 20 310 45 Q290 60 280 40Z"/><path d="M40 60 q10 -10 20 0 q10 -10 20 0" class="thin"/></svg>
+  </div>
+  <div class="row">
+    <div class="words"><span class="day">Sept 7</span>Walked the cliffs with the dog, then came home to find the kids had built a castle out of every cushion in the house.</div>
+    <svg class="doodle" viewBox="0 0 340 170" aria-hidden="true"><path d="M10 120 Q60 70 110 95 Q140 60 180 90"/><path d="M10 150 Q100 135 200 150"/><path d="M230 150 L230 90 L320 90 L320 150Z"/><path d="M225 90 Q275 55 325 90" class="r"/><path d="M262 150 L262 118 L288 118 L288 150"/><ellipse cx="80" cy="140" rx="20" ry="11"/><circle cx="102" cy="130" r="8"/><path d="M58 138 q-10 -12 -4 -20"/><path d="M60 108 L64 100 M72 106 L72 97" class="r"/></svg>
+  </div>
+  <div class="row">
+    <div class="words"><span class="day">Sept 11</span>Finally untangled the dependency mess that has been eating the afternoons.</div>
+    <svg class="doodle" viewBox="0 0 340 170" aria-hidden="true"><path d="M60 40 Q140 20 120 70 Q100 110 170 90 Q240 70 200 120 Q170 150 260 140"/><path d="M90 60 q20 -30 40 0 q20 30 40 0 M150 110 q15 -20 30 0" class="thin"/><path d="M40 150 L120 150 L130 120 L50 120Z"/><path d="M130 120 L150 60"/><path d="M270 130 l10 10 l24 -30" class="r"/></svg>
+  </div>
+  </div>
+  <p class="foot">These three are from Bart's own September page. They are also the examples in the prompt, so every new doodle is drawn in this hand. The recipe: <a href="https://github.com/bdecrem/hilma/blob/main/docs/opus55/onething-doodles.md">docs/opus55/onething-doodles.md</a>.</p>
+</main>
+</body>
+</html>

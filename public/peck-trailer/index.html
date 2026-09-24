@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Peck or Perish — trailer</title>
+<meta name="description" content="A 30-second trailer for Dodo’s rest-stop game, every frame drawn in code by Opus 5.5.">
+<meta property="og:title" content="Peck or Perish — the trailer">
+<meta property="og:description" content="A 30-second trailer for Dodo’s rest-stop game, every frame drawn in code by Opus 5.5.">
+<meta property="og:image" content="https://hilma-nine.vercel.app/peck-trailer/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=VT323&family=Ultra&family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+  #c { display: block; height: 100dvh; max-width: 100vw; aspect-ratio: 9 / 16; margin: 0 auto; object-fit: contain; }
+  #ui { position: fixed; left: 0; right: 0; bottom: calc(env(safe-area-inset-bottom) + 10px); text-align: center; color: #9a9a9a; font: 12px ui-monospace, Menlo, monospace; pointer-events: none; transition: opacity .6s; text-shadow: 0 1px 4px #000; }
+</style>
+</head>
+<body>
+<!-- Web preview of apps/peck-trailer/ (the render pipeline). scene.js is a copy: scripts/opus55/sync-videos.sh. -->
+<canvas id="c"></canvas>
+<div id="ui">silent preview · the edit is cut to INTERWORLD — METAMORPHOSIS, 0:07–0:37 · tap to pause</div>
+<script src="scene.js"></script>
+<script>
+  (async () => {
+    await document.fonts.load('100px Anton'); await document.fonts.load('100px VT323'); await document.fonts.load('100px Ultra'); await document.fonts.load('100px "IM Fell English"'); await document.fonts.load('100px "IM Fell English SC"');
+    const q = new URLSearchParams(location.search);
+    if (q.has('t')) { renderAt(parseFloat(q.get('t'))); document.getElementById('ui').remove(); window.READY = true; return; }
+    // Every frame is a pure function of t: play it on the clock, looping.
+    let t0 = performance.now(), paused = false, held = 0;
+    const loop = (now) => { if (!paused) renderAt(((now - t0) / 1000) % DURATION); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    document.body.addEventListener('click', () => { const now = performance.now(); if (paused) { t0 += now - held; } else held = now; paused = !paused; });
+    setTimeout(() => document.getElementById('ui').style.opacity = '0', 6000);
+  })();
+</script>
+</body>
+</html>

@@ -9,11 +9,42 @@ It uses no image or audio assets.
 For each new piece, add a row to the table, a section below it, and a recipe
 in `docs/opus55/`.
 
+**Gallery:** [hilma-nine.vercel.app/opus55.html](https://hilma-nine.vercel.app/opus55.html)
+(`public/opus55.html`) has a thumbnail, an Open link and a Recipe link for
+every piece on this page, including the ones below that aren't reference
+cousins. Add each new piece to its `ITEMS` list too, then rebuild the
+thumbnails and OG cards with `node scripts/opus55/gallery-shots.mjs`
+(serve `public/` on :8765 first).
+
 | # | Piece | Live | File | Recipe | Reference | Made |
 |---|-------|------|------|--------|-----------|------|
 | 1 | **p.s.** | [/postscript.html](https://hilma-nine.vercel.app/postscript.html) | `public/postscript.html` (+ `-og.png`) | [recipe](opus55/postscript.md) | `misc/1.MP4` ("small print") | 2026-09-23 |
 | 2 | **a little wind** | [/little-wind.html](https://hilma-nine.vercel.app/little-wind.html) | `public/little-wind.html` (+ `-og.png`) | [recipe](opus55/little-wind.md) | `misc/2.mov` (Claude mascot stop motion) | 2026-09-23 |
 | 3 | **one seed** | [/one-seed.html](https://hilma-nine.vercel.app/one-seed.html) | `public/one-seed.html` (+ `-og.png`) | [recipe](opus55/one-seed.md) | `misc/5.MP4` ("one drop") | 2026-09-23 |
+
+### More Opus 5.5 pieces (not reference cousins)
+
+These pieces are from the same two days, but they follow other recipes:
+restyles, flipbooks, music edits and a feature that draws.
+
+| # | Piece | Live | Files | Recipe | Made |
+|---|-------|------|-------|--------|------|
+| 4 | **ドードー — The Road to the Sea** (anime) | [dodo.foo/anime](https://dodo.foo/anime) | `public/dodo/anime.html`, `src/app/dodo/anime/route.ts`, `scripts/dodo-anime/`, key art in `public/dodo/anime-art/` | [recipe](opus55/dodo-anime.md) | 2026-09-23 |
+| 5 | **Opus on Low** (arcade flipbook) | [/opus-low/](https://hilma-nine.vercel.app/opus-low/index.html) | `public/opus-low/` | [recipe](opus55/opus-low.md) | 2026-09-23 |
+| 6 | **Fable Naptime** (ink + watercolour) | [/fable-nap/](https://hilma-nine.vercel.app/fable-nap/index.html) | `public/fable-nap/` | [recipe](opus55/fable-nap.md) | 2026-09-23 |
+| 7 | **Strangers** (music video) | [/strangers/](https://hilma-nine.vercel.app/strangers/index.html) (silent preview) | `apps/strangers/` (render), `public/strangers/` (preview) | [PROCESS.md](../apps/strangers/PROCESS.md) | 2026-09-23 |
+| 8 | **Peck or Perish** (trailer) | [/peck-trailer/](https://hilma-nine.vercel.app/peck-trailer/index.html) (silent preview) | `apps/peck-trailer/` (render), `public/peck-trailer/` (preview) | [PROCESS.md](../apps/strangers/PROCESS.md) | 2026-09-23 |
+| 9 | **Margin doodles** (Onething, minimal art) | [/onething-doodles.html](https://hilma-nine.vercel.app/onething-doodles.html) | `src/lib/onething/doodle.ts`, `public/onething-doodles.html` | [recipe](opus55/onething-doodles.md) | 2026-09-23 |
+
+Notes:
+- **Videos (7, 8):** the MP4 masters come from `node render.mjs` in each
+  `apps/` folder. They are delivered to `~/Desktop/<project>/`, and their
+  music isn't committed or hosted. The web previews run the same
+  `scene.js`, silently and looping. After editing a scene, re-copy it with
+  `scripts/opus55/sync-videos.sh`.
+- **Margin doodles (9):** a live feature, not a page. Opus 5.5 at low
+  effort draws one for every Onething entry. The showcase page shows the
+  three examples from the prompt.
 
 ## How to make the next one
 
