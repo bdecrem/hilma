@@ -13,6 +13,7 @@ in `docs/opus55/`.
 |---|-------|------|------|--------|-----------|------|
 | 1 | **p.s.** | [/postscript.html](https://hilma-nine.vercel.app/postscript.html) | `public/postscript.html` (+ `-og.png`) | [recipe](opus55/postscript.md) | `misc/1.MP4` ("small print") | 2026-09-23 |
 | 2 | **a little wind** | [/little-wind.html](https://hilma-nine.vercel.app/little-wind.html) | `public/little-wind.html` (+ `-og.png`) | [recipe](opus55/little-wind.md) | `misc/2.mov` (Claude mascot stop motion) | 2026-09-23 |
+| 3 | **one seed** | [/one-seed.html](https://hilma-nine.vercel.app/one-seed.html) | `public/one-seed.html` (+ `-og.png`) | [recipe](opus55/one-seed.md) | `misc/5.MP4` ("one drop") | 2026-09-23 |
 
 ## How to make the next one
 
@@ -167,3 +168,44 @@ clock is the audio clock. Tap or press space to pause.
 
 **Run locally:** same server as piece 1, then open
 http://localhost:5178/little-wind.html.
+
+## 3. one seed
+
+**Reference:** `misc/5.MP4`, "one drop". It follows a raindrop's journey
+through the water cycle in portrait. Hard cuts alternate between a textured
+storybook illustration (diagonal cream-and-mint stripes, bold ink outlines,
+hatching, faint measuring rings) and a navy scientific-instrument diagram
+of the same moment (cream hairlines drawing themselves on, circular
+magnifier insets, rulers, a pink ring on the key detail, a small dial in
+the top-right corner). The sound starts quiet with water plinks, then a
+deep drone arrives, then thunder.
+
+**The cousin:** a dandelion's year, told in 12 shots of 2.6 s:
+1. The seed head lets one seed go.
+2. Diagram: the seed's ~100 filaments, and the ring of air (a separated
+   vortex ring) that holds it up.
+3. Drifting over farmland, seen from above.
+4. Diagram: the wind field, a thermal and the flight path.
+5. Rain, and a crack in the ground.
+6. Diagram: germination, with H₂O molecules and the root emerging.
+7. The sprout's leaves unfurl.
+8. Diagram: leaves at the golden angle, 137.5°.
+9. The flower, and a bee.
+10. Diagram: the florets' spiral pattern (21 and 34 arms).
+11. Dusk: the flower closes and reopens as a seed head.
+12. Diagram: a rotating sphere of seeds, one marked, captioned "one seed".
+    That seed lifts off and the loop restarts.
+
+**Sound:** a quiet opening, then the drone arrives. Ticks as the diagram
+lines draw on, rain and thunder, a root bloom, a note per leaf by the golden
+angle, a bee buzz, a floret shimmer, dusk crickets, and one bell for "one
+seed". The mix is matched to the reference within about 2 dB per band up to
+8 kHz.
+
+**Specs:** a 31.2 s loop on a 900×1600 logical canvas (portrait, 9:16). The
+animation clock is the audio clock. Tap or press space to pause.
+
+**Recipe:** [docs/opus55/one-seed.md](opus55/one-seed.md)
+
+**Run locally:** same server as piece 1, then open
+http://localhost:5178/one-seed.html.

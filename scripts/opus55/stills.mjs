@@ -13,6 +13,8 @@ const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width, height: Math.round(width * .95) }, deviceScaleFactor: 1 });
 const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
 const files = [];
+// warm-up: the very first load in a fresh browser sometimes screenshots before the canvas is composited
+await p.goto(`http://localhost:${port}/${page}?t=${times[0]}`); await p.waitForFunction(() => window.__ready); await p.waitForTimeout(400);
 for (const t of times.map(Number)) {
   await p.goto(`http://localhost:${port}/${page}?t=${t}`);
   await p.waitForFunction(() => window.__ready); await p.waitForTimeout(120);
