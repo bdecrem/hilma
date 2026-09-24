@@ -10,6 +10,12 @@ struct HomeView: View {
     @State private var renaming: Project?
     @State private var newTitle = ""
     @State private var deleting: Project?
+    @State private var showGame = false
+    @State private var showBoard = false
+    @State private var board = Leaderboard.shared
+    @AppStorage("muted") private var muted = false
+    @AppStorage("music") private var music = true
+    @AppStorage("narrator") private var narrator = true
     @FocusState private var focused: Bool
 
     private static let ideas = [
@@ -30,6 +36,7 @@ struct HomeView: View {
                 VStack(spacing: 22) {
                     header
                     promptCard
+                    surfCard
                     shelf
                 }
                 .padding(.horizontal, 16)
@@ -39,6 +46,13 @@ struct HomeView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
+        .task {
+            if ProcessInfo.processInfo.environment["TS_SOLO"] != nil { showGame = true }
+            if ProcessInfo.processInfo.environment["TS_BOARD"] != nil { showBoard = true }
+            await board.refresh()
+        }
+        .fullScreenCover(isPresented: $showGame) { GameScreen().onDisappear { Task { await board.refresh(force: true) } } }
+        .sheet(isPresented: $showBoard) { LeaderboardView() }
         .alert("Rename app", isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })) {
             TextField("name", text: $newTitle)
             Button("Save") {
@@ -67,9 +81,20 @@ struct HomeView: View {
                     .padding(.top, 12)
             }
             Spacer()
-            SplatMascot(size: 104)
+            SurferHero(unit: 40)
         }
         .padding(.top, 14)
+        .overlay(alignment: .topTrailing) {
+            Menu {
+                Toggle(isOn: Binding(get: { !muted }, set: { muted = !$0 })) { Label("Sound", systemImage: "speaker.wave.2") }
+                Toggle(isOn: $music) { Label("Music", systemImage: "music.note") }
+                Toggle(isOn: $narrator) { Label("Narrator voice", systemImage: "waveform") }
+            } label: {
+                Image(systemName: "gearshape.fill").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.ink)
+                    .frame(width: 34, height: 34).background(Circle().fill(.white.opacity(0.9)))
+            }
+            .offset(y: -6)
+        }
         .overlay(alignment: .bottomTrailing) {
             if model.store.totalTokens > 0 {
                 Text("🪙 \(model.store.totalTokens.formatted()) tokens surfed")
@@ -131,7 +156,7 @@ struct HomeView: View {
             .padding(.horizontal, -16)
             HStack(spacing: 14) {
                 Label("\(model.store.projects.count)", systemImage: "square.stack.fill")
-                Label(model.store.bestScore > 0 ? "best \(model.store.bestScore.formatted())" : "no runs yet", systemImage: "trophy.fill")
+                Label(model.store.totalTokens > 0 ? "\(model.store.totalTokens.formatted()) tokens" : "no builds yet", systemImage: "circle.hexagongrid.fill")
                 Spacer()
             }
             .font(Theme.rounded(12, .bold))
@@ -141,6 +166,54 @@ struct HomeView: View {
         }
         .padding(16)
         .paperCard(radius: 22)
+    }
+
+    // Play the runner on its own; the world's top three and your rank.
+    private var surfCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    StrokedText(text: "TOKEN SURFERS", font: Theme.anton(24), color: Theme.yellow, stroke: 2.5)
+                    Text(surfLine).font(Theme.rounded(12.5, .heavy)).foregroundStyle(Theme.ink2)
+                }
+                Spacer()
+                SurferHero(unit: 22, mood: .cool)
+            }
+            ChunkyButton(title: "SURF NOW 🏄", fill: Theme.splat) { showGame = true }
+            if !board.top.isEmpty {
+                VStack(spacing: 6) {
+                    ForEach(board.top.prefix(3)) { row in
+                        HStack(spacing: 8) {
+                            Text(["🥇", "🥈", "🥉"][row.rank - 1]).font(.system(size: 16))
+                            Text(row.handle).font(Theme.black(13)).foregroundStyle(Theme.ink).lineLimit(1)
+                            if row.you { Text("you").font(Theme.black(9)).foregroundStyle(Theme.splat) }
+                            Spacer()
+                            Text(row.score.formatted()).font(Theme.anton(16)).foregroundStyle(Theme.ink).monospacedDigit()
+                        }
+                    }
+                }
+                .padding(10)
+                .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Theme.cream))
+            }
+            Button { showBoard = true } label: {
+                HStack(spacing: 6) {
+                    Text("🏆").font(.system(size: 14))
+                    Text(board.top.isEmpty ? "the leaderboard" : "full leaderboard · \(board.surfers) surfers")
+                        .font(Theme.rounded(13, .bold))
+                    Image(systemName: "chevron.right").font(.system(size: 11, weight: .black))
+                }
+                .foregroundStyle(Theme.ink)
+            }
+            .buttonStyle(SquishStyle())
+        }
+        .padding(16)
+        .paperCard(radius: 22)
+    }
+
+    private var surfLine: String {
+        if let you = board.you { return "best \(you.best.formatted()) · #\(you.rank) in the world" }
+        if board.localBest > 0 { return "best \(board.localBest.formatted()) · unranked" }
+        return "trains, coins, ramps. tokens make it faster."
     }
 
     @ViewBuilder private var shelf: some View {

@@ -21,6 +21,7 @@ struct StudioView: View {
     @State private var dragStart: CGFloat?
     @AppStorage("muted") private var muted = false
     @AppStorage("narrator") private var narrator = true
+    @AppStorage("music") private var music = true
     @FocusState private var composerFocused: Bool
 
     var body: some View {
@@ -218,6 +219,7 @@ struct StudioView: View {
                 .disabled(studio.html.isEmpty)
             Divider()
             Toggle(isOn: Binding(get: { !muted }, set: { muted = !$0 })) { Label("Sound", systemImage: "speaker.wave.2") }
+            Toggle(isOn: $music) { Label("Music", systemImage: "music.note") }
             Toggle(isOn: $narrator) { Label("Narrator voice", systemImage: "waveform") }
             Divider()
             Button(role: .destructive) { confirmDelete = true } label: { Label("Delete app", systemImage: "trash") }
@@ -244,7 +246,7 @@ struct StudioView: View {
     }
 
     private func game(compact: Bool) -> some View {
-        SurfGameView(engine: studio.game, running: gameRunning, compact: compact) { studio.store.reportScore($0) }
+        SurfGameView(engine: studio.game, running: gameRunning, compact: compact, mode: "build")
             .overlay(alignment: .bottomLeading) {
                 SubtitleBox(text: studio.subtitle)
                     .padding(10)
@@ -364,7 +366,7 @@ struct StudioView: View {
             SplatMascot(size: 28, face: false)
             VStack(alignment: .leading, spacing: 1) {
                 Text(phaseLabel).font(Theme.black(14)).foregroundStyle(Theme.ink)
-                Text("\(studio.outputTokens.formatted()) tokens · swipe to surf")
+                Text("\(studio.outputTokens.formatted()) tokens · tokens = coins")
                     .font(Theme.rounded(11.5, .semibold)).foregroundStyle(Theme.ink2)
                     .monospacedDigit()
             }

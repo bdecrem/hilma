@@ -9,11 +9,92 @@ trails, each tool call is a train with the tool's name on its front, bugs found 
 `run_app` crawl onto the track (jump on them), and a finished build rains
 confetti. The result runs live in the stage above.
 
+## The game (2026-09-24 rebuild)
+
+Token Surfers is a real endless runner now, not a screensaver. `Game/`:
+
+- **Rules** (`SurfEngine.swift`, a plain class the view steps every frame):
+  three lanes, the track laid in authored chunks like Subway Surfers'
+  prefabs (`layChunk`: gauntlet, ramp ride, roof hop, hurdles, gates, coin
+  field, oncoming train, breather), picked harder with distance, with a gap
+  between chunks so there is always a way through. Box trains kill from
+  the front and bump from the side (bounce back a lane, lose the streak);
+  **ramp trains** (yellow chevrons + arrow) carry you onto the roofs, where
+  coins run along the top; low red barriers are jumped; teal overhead gates
+  ("LGTM ↓ roll") are rolled under; bugs are stomped mid-air or bite. A crash
+  ends the run: `over`, the tumble, the card. `restart()` keeps the agent's
+  pending trains, bugs and token bank. Score = 1.5 × distance + coins ×
+  10 × multiplier (+25-coin streaks raise it to x5) + 250 per stomp.
+- **Agent feed** (unchanged API): `feedTokens` → coin trails far ahead (or
+  along a ramp train's roof), `toolTrain(name)` → a terminal-liveried train
+  (navy, green `> tool_name` on the windshield), `bugs(n)`, `celebrate()`.
+- **Autopilot** (`autopilot`, `TS_BOT=1|restart|die`): a bot that reads the
+  track ahead (jumps barriers, rolls gates, stomps bugs, switches to a clear
+  lane or a ramp when a box train is coming, drifts toward coins). Two
+  uses: the build pane runs it as **attract mode** until the player swipes
+  ("swipe to take over" → `takeOver()` restarts a run that counts; bot
+  runs never reach the leaderboard), and it is the regression check — a
+  death prints `[bot] DEATH …` with the nearby entities, so a survivable
+  course means an empty log. 70-second runs on 2026-09-24 had none.
+- **The surfer** (`SurferArt.swift`): Splat with legs. Orange paper
+  starburst body, dark-orange legs in chunky white sneakers (orange stripe,
+  ink sole), mitten arms that pump, a red scarf whipping off to the right at
+  neck height, an antenna with a pulsing yellow bulb, a goggles strap across
+  the back of the head (goggles on the forehead from the front; down over
+  the eyes for the `.cool` mood), and a navy laptop backpack with a green
+  `>_` sticker. Poses: run cycle with foreshortened forward leg, jump (legs
+  tucked, arms up), roll (spinning ball with speed streaks), stumble lean,
+  landing squash, and the death tumble (front view, X eyes). `SurferHero`
+  is the SwiftUI front view used on Home, the cards and the name sheet.
+- **Renderer** (`SurfRenderer.swift`): camera 6 units back with a long lens
+  (`f = min(1.58 W, 0.71 H · 6 / 3)`), feet at 86% of the height, horizon
+  near 40% (short panes shorten the lens so the horizon stays on screen),
+  the camera lifts with the player on roofs. Sky gradient, sun with halo,
+  two parallax skyline layers with lit windows, station platforms with the
+  yellow safety line, walls with scrolling posters ("made with code",
+  "LGTM", "brb 3am"…), sleepers, rails, ballast. Trains are proper cars:
+  undercarriage band, body, stripe, doors with seams, window rows (green
+  code bars on tool trains), a roof with a highlight strip, dark gaps
+  between 9-unit cars, a rounded front with windshield, headlights (lit and
+  glowing on oncoming trains), a route badge; ramp trains get the striped
+  wedge. Coins are Tokenur's token (gold with the orange diamond).
+  Painter's order by near z, with the player drawn over the train they
+  stand on. Speed lines above 15.5 units/s; a red flash, a shake and a
+  greyscale fade on death.
+- **Audio** (`SurfAudio.swift`): one AVAudioSourceNode. A chiptune loop
+  (kick, snare, hats, a square bass on I–V–vi–IV, a lead over 4 bars, an
+  arp on the second pass, sidechain duck on the kick) whose tempo runs
+  128→150 BPM with the run speed (`pace`), faded by `musicTarget`
+  (1 playing, 0.3 on the card, 0 off screen). Effects: coin ping climbing a
+  scale, jump, land, roof clang, roll, swipe, bump bonk, crash + minor
+  "womp", stomp squish, streak, celebrate fanfare, game-over sting. Music
+  and sound toggles live in the gear menu on Home and the ••• menu in the
+  Studio (`music`, `muted`, `narrator` in UserDefaults).
+- **Leaderboard** (`Leaderboard.swift`, server in `src/lib/surf/scores.ts`
+  + `src/app/api/surf/scores/route.ts`, schema
+  `apps/tokensurfers/schema/001_surf_scores.sql` — applied 2026-09-24):
+  every install mints a device id (`surf.device`) and picks a handle
+  (`surf.handle`, 16 chars, emoji fine); `surf_scores` keeps every run,
+  the `surf_leaderboard` view is each device's best. `GET
+  /api/surf/scores?device=…` → top 50 + your rank; `POST` a run → rank,
+  best. The route is gated by `x-surf-key` and rejects scores the engine
+  can't produce for the run's distance and coins. Screens: the game-over
+  card ("#n in the world", "claim a spot" → `HandleSheet`), `LeaderboardView`
+  (purple starfield, medals, your row pinned, rename), the "TOKEN SURFERS"
+  card on Home (best, rank, top 3, SURF NOW).
+- **Solo mode**: SURF NOW on Home → `GameScreen` (start screen with the
+  controls, pause, quit). Controls everywhere: swipe ← → ↑ ↓, tap the
+  left/middle/right third, or arrow keys / WASD / space, `p` pause, `r` or
+  space to run it back. `TS_SOLO=1` opens it, `TS_BOARD=1` opens the
+  leaderboard, `TS_BOT=…` as above.
+
 ## The screen
 
 - **Home** (`UI/HomeView.swift`): the video's AITA card on a sunburst, used as
-  the prompt box ("AITA for wanting an app that…"), idea chips, SURF IT, and a
-  shelf of your apps (long-press to rename, share the HTML or delete).
+  the prompt box ("AITA for wanting an app that…"), idea chips, SURF IT, the
+  Token Surfers card (solo play + leaderboard), and a shelf of your apps
+  (long-press to rename, share the HTML or delete). The surfer runs in place
+  next to the title.
 - **Studio** (`UI/StudioView.swift`):
   - The **stage** on top has two tabs. APP is the running app in a
     WKWebView; CODE is the navy "3:00 AM monitor" with a line counter and
@@ -23,14 +104,14 @@ confetti. The result runs live in the stage above.
   - A **caption band** sits on the seam. It plays the agent's caption in
     1–3 word chunks with one word in yellow, and it doubles as the resize
     handle.
-  - **Token Surfers** is below the seam.
+  - **Token Surfers** is below the seam, in attract mode until you swipe.
   - A **composer** sits at the bottom. While a build runs it becomes a status
     pill (phase and token count) plus a Stop button.
   - After a build the game tucks away and the app fills the screen. The
     "🏄 surf" chip or the ⌄ button toggles the game, and follow-up chips
     ("make it prettier ✨") appear.
-  - The ••• menu has Open fullscreen, Share HTML, the Sound and Narrator
-    toggles, and Delete.
+  - The ••• menu has Open fullscreen, Share HTML, the Sound, Music and
+    Narrator toggles, and Delete.
 - **Cutaways** (`UI/StageViews.swift`, characters in `UI/Mascots.swift`) take
   over the stage for about 2 s:
   - Tok Tok Tok Tokenur: at 1,500 output tokens.
@@ -42,10 +123,6 @@ confetti. The result runs live in the stage above.
   caption + game + composer in a 360–460 pt column on the right. A window
   narrower than 720 pt, or taller than wide, uses the phone layout. Catalyst
   windows are freely resizable (minimum 400×700).
-- **Game controls**: swipe (left/right lanes, up jump, down roll), tap the
-  left, middle or right third, or arrow keys / WASD / space. A crash never
-  ends the run: it turns the frame grey ("BRUH 💀"), resets the multiplier and
-  gives 1.6 s of blinking immunity.
 
 ## The agent
 
@@ -117,6 +194,12 @@ Test hooks (environment variables):
 - `TS_AUTORUN="<prompt>"` creates a project and builds it.
 - `TS_OPEN=first` opens the newest project.
 - `TS_OPEN=first TS_SEND="<change>"` asks that project for a change.
+- `TS_SOLO=1` opens solo play; `TS_BOT=1` lets the autopilot play,
+  `TS_BOT=restart` runs it back after every death, `TS_BOT=die` hands the
+  bot's controls to nobody after 14 s (to see the game-over card);
+  `TS_BOARD=1` opens the leaderboard. Set a handle first with
+  `xcrun simctl spawn "iPhone 17 Pro" defaults write com.bartdecrem.tokensurfers surf.handle "sim bot"`.
+  The bot prints `[bot] DEATH …` to the console (`launch --console-pty`).
 
 Verify with `xcrun simctl io … screenshot` every few seconds. A build
 takes about 40–90 s. On the Mac, run the binary directly with the environment
@@ -125,5 +208,6 @@ variable set and capture with `screencapture -l <window id>`.
 ## Ideas not built yet
 
 - Publishing a made app to a public link (it would need storage on hilma).
-- A daily token budget on the route (today only the key gates it).
-- A sound bed. Today there are only synth sound effects and the narrator.
+- A daily token budget on the LLM route (today only the key gates it).
+- Power-ups (magnet, 2x, hoverboard), daily challenges, a second track
+  theme (night), unlockable scarves.
