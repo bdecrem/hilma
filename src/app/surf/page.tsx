@@ -28,10 +28,9 @@ export default function SurfLanding() {
       </div>
 
       <p className="sq-para">
-        it&apos;s 3am. you ask your brainrot coding agent for &quot;a timer that screams at me&quot; and it just… starts
-        writing it, live, on your phone. underneath, you run the rails: every token it types is a coin, every tool
-        call is a train, every bug it finds crawls onto the track for you to stomp. it ships. you publish it. someone
-        remixes it. nobody asked for this. you&apos;re absolutely right.
+        it&apos;s 3am. you ask your brainrot coding agent for &quot;a timer that screams at me.&quot; it writes the code.
+        you do the hard part: dodging trains. it ships. someone remixes it. nobody asked for this. you&apos;re
+        absolutely right.
       </p>
 
       <div className="sq-links">
