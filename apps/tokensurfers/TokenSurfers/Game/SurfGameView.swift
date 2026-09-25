@@ -297,17 +297,18 @@ struct SurfGameView: View {
         .allowsHitTesting(false)
     }
 
+    /// Under the HUD, not at the bottom: the subtitle box (what the mini is doing) lives down there.
     private var attractHint: some View {
         VStack {
-            Spacer()
             TimelineView(.periodic(from: .now, by: 0.7)) { tl in
                 Text("swipe to take over")
-                    .font(Theme.black(compact ? 12 : 14)).foregroundStyle(.white)
-                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .font(Theme.black(compact ? 11 : 13)).foregroundStyle(.white)
+                    .padding(.horizontal, 11).padding(.vertical, 5)
                     .background(Capsule().fill(.black.opacity(0.45)))
                     .opacity(Int(tl.date.timeIntervalSinceReferenceDate / 0.7) % 2 == 0 ? 1 : 0.6)
             }
-            .padding(.bottom, compact ? 8 : 14)
+            .padding(.top, compact ? 46 : 60)
+            Spacer()
         }
         .allowsHitTesting(false)
     }

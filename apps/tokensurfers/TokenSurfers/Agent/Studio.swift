@@ -87,6 +87,15 @@ final class Studio {
     private var usedFillers: Set<String> = []
     private var shownCutaways: Set<Cutaway> = []
     private var buildStart = Date()
+    // the warm-up: what's true while the feed is quiet (the model is thinking)
+    private var quietSince = Date()
+    private var warmFacts: [String] = []
+    private var evergreen: [String] = []
+    private var warmTick = 0
+    private var sessionLine: String?
+    private var lastCommand: [String: String] = [:]
+    private var miniApps: Int?
+    private var thinkingText = ""
 
     // the remote engine
     /// The deployed app, when Claude Code on the mini built it.
@@ -161,7 +170,8 @@ final class Studio {
             return AgentAPI.Event(seq: seq, type: type, data: e)
         }
         let filler = Task { await fillerLoop() }
-        defer { filler.cancel() }
+        let warm = Task { await warmupLoop() }
+        defer { filler.cancel(); warm.cancel() }
         agentLog("replay: \(events.count) events from \((path as NSString).lastPathComponent) at \(speed)x")
         var recap = ""
         let t0 = (events.first?.data["t"] as? NSNumber)?.doubleValue ?? 0
@@ -481,7 +491,8 @@ final class Studio {
         setCaption(project.builds == 0 ? "so it's \(clockString()). new app just dropped" : "they said: \(shortPrompt(prompt))", speak: true)
         agentLog("build on the mini: \(shortPrompt(prompt)) → \(AgentAPI.base().host ?? "?")")
         let filler = Task { await fillerLoop() }
-        defer { filler.cancel() }
+        let warm = Task { await warmupLoop() }
+        defer { filler.cancel(); warm.cancel() }
         do {
             let (seq, _) = try await AgentAPI.state(project.id)
             lastSeq = seq
@@ -507,7 +518,8 @@ final class Studio {
             buildStart = .now
             agentLog("attached to a running build at seq \(r.seq)")
             let filler = Task { await fillerLoop() }
-            defer { filler.cancel() }
+            let warm = Task { await warmupLoop() }
+            defer { filler.cancel(); warm.cancel() }
             await followRemote()
         }
     }
@@ -577,10 +589,28 @@ final class Studio {
     /// One server event → the same screen state the local loop drives. Returns a recap when the event carries one.
     private func apply(_ e: AgentAPI.Event) -> String? {
         let d = e.data
+        if ["text", "say", "tool_input", "tool_call", "file", "deployed", "note_in"].contains(e.type) { quietSince = .now }
         switch e.type {
+        case "start":
+            let resumed = d["resumed"] as? Bool ?? false
+            warmFacts.append(resumed ? "session resumed on the mini · it remembers this app" : "fresh workspace on the mini · surf-\(project.id.uuidString.lowercased().prefix(8))")
+        case "session":
+            let id = (d["sessionId"] as? String ?? "").prefix(8)
+            let model = d["model"] as? String ?? "claude"
+            let tools = d["tools"] as? Int ?? 0
+            sessionLine = "claude code session \(id)… · \(model) · \(tools) tools"
+            warmFacts.append(sessionLine!)
+        case "thinking":
+            // the mini forwarding the model's own planning (if it does): the realest warm-up there is
+            if let delta = d["delta"] as? String, !delta.isEmpty {
+                thinkingText = String((thinkingText + delta).suffix(200))
+                subtitle = "💭 " + thinkingText
+                quietSince = .now
+            }
         case "text":
             let delta = d["delta"] as? String ?? ""
             count(delta)
+            thinkingText = ""
             subtitle = String((subtitle + delta).suffix(220))
         case "say":
             let text = d["text"] as? String ?? ""
@@ -648,10 +678,17 @@ final class Studio {
             if let id = d["id"] as? String {
                 if let w = inputFields[id]?["content"], w.done { lastDecodedWrite = w.text }
                 inputJSON[id] = nil; inputFields[id] = nil
+                if let cmd = (d["input"] as? [String: Any])?["command"] as? String { lastCommand[id] = cmd }
             }
             let name = d["name"] as? String ?? ""
             log(.splat(tool: name), Self.describe(name, d["input"] as? [String: Any] ?? [:]))
         case "tool_result":
+            if let id = d["id"] as? String, let cmd = lastCommand.removeValue(forKey: id) {
+                let out = d["summary"] as? String ?? ""
+                let lines = out.split(separator: "\n").count
+                let short = cmd.replacingOccurrences(of: " --token \"$VERCEL_TOKEN\" --scope \"$VERCEL_SCOPE\"", with: "")
+                warmFacts.append("$ \(short.prefix(48))\(short.count > 48 ? "…" : "") → \(lines) line\(lines == 1 ? "" : "s") back")
+            }
             if !(d["ok"] as? Bool ?? true) {
                 lastBugs += 1
                 game.bugs(1)
@@ -989,6 +1026,66 @@ final class Studio {
         "consulting the vibes", "hold my tokens", "no thoughts. just code", "one sec. lock in",
         "reading the prompt again", "it's giving… almost", "pixel by pixel",
     ]
+
+    /// The warm-up: while the feed is quiet (the model is planning; thinking
+    /// doesn't stream, code does) the subtitle shows things that are true —
+    /// the session and model, what the last command found, a live clock on
+    /// the wait, the ask, the workspace and where it will deploy, tokens so
+    /// far, the mini's count — instead of "reticulating splines".
+    private func warmupLoop() async {
+        quietSince = .now
+        warmTick = 0
+        warmFacts = []
+        thinkingText = ""
+        let id8 = project.id.uuidString.lowercased().prefix(8)
+        evergreen = [
+            "the ask: “\(shortPrompt(lastPrompt))”",
+            "workspace surf-\(id8) on the mini · deploys to surf-\(id8).vercel.app",
+            project.builds == 0 ? "first build of this app" : "build #\(project.builds + 1) of this app · it edits, it doesn't start over",
+            "the code streams; the plan before it doesn't",
+        ]
+        // one cheap fact from the mini itself
+        Task {
+            if let n = await Self.miniProjectCount() {
+                miniApps = n
+                warmFacts.append("the mini has \(n) apps on disk · yours is the one running")
+            }
+        }
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .seconds(1))
+            guard building, Date().timeIntervalSince(quietSince) > 2.5, thinkingText.isEmpty else { continue }
+            warmTick += 1
+            let waited = Int(Date().timeIntervalSince(quietSince))
+            if warmTick % 4 == 2, let fact = nextWarmFact() {
+                subtitle = fact
+            } else {
+                let tokens = outputTokens
+                let clocks = [
+                    "thinking · \(waited)s — the plan doesn't stream, the code will",
+                    "opus 5.5 · medium effort · \(waited)s in its head",
+                    tokens > 0 ? "\(tokens.formatted()) tokens out so far · \(waited)s of quiet" : "0 tokens out so far · \(waited)s of quiet · all of it is upstairs",
+                    "quiet for \(waited)s · a bigger file means a longer think",
+                ]
+                subtitle = clocks[(warmTick / 4) % clocks.count]
+            }
+        }
+    }
+
+    private func nextWarmFact() -> String? {
+        if !warmFacts.isEmpty { return warmFacts.removeFirst() }
+        guard !evergreen.isEmpty else { return nil }
+        let f = evergreen.removeFirst()
+        evergreen.append(f)   // cycle the evergreens
+        return f
+    }
+
+    private static func miniProjectCount() async -> Int? {
+        var req = URLRequest(url: AgentAPI.base().appendingPathComponent("health"))
+        req.timeoutInterval = 8
+        guard let (data, _) = try? await URLSession.shared.data(for: req),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return obj["projects"] as? Int
+    }
 
     /// Something on screen while the model thinks silently.
     private func fillerLoop() async {

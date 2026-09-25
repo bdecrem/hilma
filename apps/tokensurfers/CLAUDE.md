@@ -203,6 +203,30 @@ back into their own apps. One handle for all of it (and the leaderboard).
   `/api/f2/imessage/notify`, the secret-gated route that sends through the
   normal ledgered iMessage sender — surf code must not import f2).
 
+## The blob and the warm-up (2026-09-25)
+
+- **The blob** (`Game/BlobArt.swift`): ~8% smaller than build 12 (R 0.48),
+  spins a quarter faster with a ±35% nervous wander, twitches every
+  0.1–0.34 s (each kick jolts the whole body 3.5%; sometimes the opposite arm
+  answers), a quicker bob and a sideways jitter. It reads as solid: the arms
+  are lit from the upper left in *screen* space (`lightAngle`), so the shading
+  sweeps across them as it spins; the arms pointing at the camera draw last,
+  8% thicker and 5% longer; a soft dark ring where they root into the core; the
+  core has a radial highlight and a specular dot. Costs ~24 extra strokes a
+  frame — nothing (main thread ~10% in the solo simulator run).
+- **The warm-up** (`Studio.warmupLoop`): while a remote build is quiet for
+  2.5 s+ (the model planning — thinking doesn't stream, code does; the first
+  Write of a bigger app comes 30–60 s after `ls -la; git log`), the subtitle
+  box shows true things: a live "thinking · Ns" clock in four phrasings, and
+  facts queued from the feed — the `start` (resumed or fresh workspace), the
+  `session` (id, model, tool count), each Bash command with how many lines
+  came back, the ask, the workspace and deploy target, the build number, the
+  mini's app count (one `/health` GET per build), tokens so far. A `thinking
+  {delta}` event, if the mini ever sends one, shows as "💭 …" and pauses the
+  clock (request sent to the mini agent 2026-09-25). The big-caption fillers
+  stay as they were. Check: replay `scripts/perf/feed-v2.json` at
+  `TS_REPLAY_SPEED=0.3` and screenshot the game pane's bottom-left.
+
 ## The screen
 
 - **Home** (`UI/HomeView.swift`): the video's AITA card on a sunburst, used as
