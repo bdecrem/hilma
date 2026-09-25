@@ -16,6 +16,11 @@ import SwiftUI
 ///
 /// The springs live in `BlobState` (one per engine) because the renderer is a
 /// struct built every frame; everything else is a function of the pose.
+///
+/// The Home character (`HomeSplat`) drives the same drawing through the
+/// override fields on `BlobState` — dozing, stretching, spin kicks, a bigger
+/// core with a face instead of the seed dots, tints and a flash. The track
+/// never sets them, so their defaults are the track's behaviour.
 final class BlobState {
     var len: [Double] = []
     var vel: [Double] = []
@@ -26,6 +31,20 @@ final class BlobState {
     var twitchIn = 0.3
     var jolt = 0.0             // the body's flinch after an arm kick, decays
     var rng = SeededRandom(seed: 4242)
+
+    // Overrides for the Home character (HomeSplat's brain writes these every frame).
+    var doze = 0.0             // 0 awake … 1 asleep: the spin stops, the arms give in to gravity, the breathing slows
+    var puff = 0.0             // every arm stretches by this fraction (a yawn, the big morning stretch)
+    var spinScale = 1.0        // multiplies the spin target (winding down, held still)
+    var spinKick = 0.0         // an impulse on the spin rate, either direction; decays here
+    var fidget = 1.0           // how often an arm twitches, × the track's rate (0 = never)
+    var bodyScale = 1.0        // a bigger core: room for a face
+    var squash = CGSize(width: 1, height: 1)   // extra scale from the brain (crouch, stretch, sit)
+    var sink = 0.0             // the centre sits this much lower (world units)
+    var tint: (r: Double, g: Double, b: Double) = (0, 0, 0)
+    var tintK = 0.0            // how far the skin leans toward `tint`
+    var flash = 0.0            // 0…1, whitens the skin (a startle); decays here
+    var hideToken = false      // the face replaces the seed dots
 }
 
 enum BlobArt {
@@ -50,6 +69,8 @@ enum BlobArt {
     private static let fillRGB = (r: 0.902, g: 0.541, b: 0.361)
     private static let litRGB = (r: 1.0, g: 0.72, b: 0.55)
     private static let shadeRGB = (r: 0.72, g: 0.37, b: 0.22)
+    private static let coreHiRGB = (r: 1.0, g: 0.698, b: 0.498)     // FFB27F
+    private static let coreLoRGB = (r: 0.722, g: 0.353, b: 0.192)   // B85A31
 
     /// Fixed per-arm character: base length and breathing phase.
     private static let seeds: [(len: Double, phase: Double, w: Double, thick: Double)] = (0..<arms).map { i in
@@ -57,16 +78,31 @@ enum BlobArt {
         return (0.6 + 0.4 * rng.unit(), rng.unit() * 2 * .pi, 2.0 + rng.unit() * 1.8, 0.8 + rng.unit() * 0.4)
     }
 
-    private static func blend(_ lit: Double, dead: Bool) -> Color {
+    /// A colour after the brain's tint and flash.
+    private static func mood(_ c: (r: Double, g: Double, b: Double), _ s: BlobState) -> Color {
+        var r = c.r, g = c.g, b = c.b
+        if s.tintK > 0 { r += (s.tint.r - r) * s.tintK; g += (s.tint.g - g) * s.tintK; b += (s.tint.b - b) * s.tintK }
+        if s.flash > 0 { let k = s.flash * 0.85; r += (1 - r) * k; g += (1 - g) * k; b += (1 - b) * k }
+        return Color(red: r, green: g, blue: b)
+    }
+
+    /// The skin colour right now (the Home face paints its eyelids with it).
+    static func skin(_ s: BlobState) -> Color { mood(fillRGB, s) }
+
+    private static func blend(_ lit: Double, dead: Bool, _ s: BlobState) -> Color {
         if dead { return Color(hex: 0xC98B6A) }
         let base = fillRGB
         let to = lit >= 0 ? litRGB : shadeRGB
         let k = min(1, abs(lit)) * (lit >= 0 ? 0.42 : 0.38)
-        return Color(red: base.r + (to.r - base.r) * k, green: base.g + (to.g - base.g) * k, blue: base.b + (to.b - base.b) * k)
+        return mood((r: base.r + (to.r - base.r) * k, g: base.g + (to.g - base.g) * k, b: base.b + (to.b - base.b) * k), s)
     }
 
     /// `origin` is the ground point under the character on screen; `unit` is pixels per world unit.
-    static func draw(_ ctx: inout GraphicsContext, origin: CGPoint, unit: CGFloat, pose p: SurferPose, state s: BlobState) {
+    /// `face` draws on top of the core in world units, centred and unrotated (the Home character's face).
+    /// Returns the centre of the body in the caller's pixels (before squash and lean), for anything drawn around it.
+    @discardableResult
+    static func draw(_ ctx: inout GraphicsContext, origin: CGPoint, unit: CGFloat, pose p: SurferPose, state s: BlobState,
+                     face: ((inout GraphicsContext) -> Void)? = nil) -> CGPoint {
         step(s, p)
         var c = ctx
         c.translateBy(x: origin.x, y: origin.y)
@@ -78,12 +114,16 @@ enum BlobArt {
 
         let dead = p.dead >= 0
         let drop = dead ? min(1, p.dead * 2.5) : 0          // crashed: it sinks to the ground
-        // never quite still, never much: a quick bob, a faster flutter, a sideways jitter
-        let bob = dead ? 0 : 0.022 * sin(p.t * 7.1) + 0.010 * sin(p.t * 27.0)
-        let jitterX = dead ? 0 : 0.012 * sin(p.t * 19.0) * sin(p.t * 3.3)
-        let centreY = -(hover + p.lift + bob) * unit + drop * (hover - body) * unit
+        // never quite still, never much: a quick bob, a faster flutter, a sideways jitter — asleep, one slow breath instead
+        let calm: Double = 1 - 0.85 * s.doze
+        let quick: Double = 0.022 * sin(p.t * 7.1) + 0.010 * sin(p.t * 27.0)
+        let breath: Double = s.doze * 0.014 * sin(p.t * 2.0)
+        let bob: Double = dead ? 0 : quick * calm + breath
+        let jitterX: Double = dead ? 0 : 0.012 * sin(p.t * 19.0) * sin(p.t * 3.3) * calm
+        let centreY = -(hover + p.lift + bob - s.sink) * unit + drop * (hover - body) * unit
         c.translateBy(x: jitterX * unit, y: centreY)
         c.scaleBy(x: unit, y: unit)
+        let centre = CGPoint(x: origin.x + jitterX * unit, y: origin.y + centreY)
 
         // squash on landing, flatten in a roll, lean in a stumble, a jolt after a kick
         if p.rolling > 0 {
@@ -96,7 +136,7 @@ enum BlobArt {
             let sy = squash * (p.lift > 0.03 ? 1.05 : 1.0)
             let jolt = 1 + 0.035 * s.jolt
             c.rotate(by: .radians(p.lean * 0.8))
-            c.scaleBy(x: jolt / sy, y: sy * jolt)
+            c.scaleBy(x: jolt / sy * s.squash.width, y: sy * jolt * s.squash.height)
         }
 
         // Each arm's direction on screen decides its shade (fixed light) and its
@@ -108,7 +148,8 @@ enum BlobArt {
         order.sort { sin(screenAngle[$0]) < sin(screenAngle[$1]) }
 
         c.rotate(by: .radians(s.theta))
-        let bodyRect = CGRect(x: -body, y: -body, width: body * 2, height: body * 2)
+        let bodyR = body * s.bodyScale
+        let bodyRect = CGRect(x: -bodyR, y: -bodyR, width: bodyR * 2, height: bodyR * 2)
         // the white hairline silhouette
         for i in 0..<arms {
             let a = Double(i) / Double(arms) * 2 * .pi
@@ -130,7 +171,7 @@ enum BlobArt {
             var arm = Path()
             arm.move(to: .zero)
             arm.addLine(to: CGPoint(x: cos(a) * len, y: sin(a) * len))
-            c.stroke(arm, with: .color(blend(lit, dead: dead)), style: StrokeStyle(lineWidth: w, lineCap: .round))
+            c.stroke(arm, with: .color(blend(lit, dead: dead, s)), style: StrokeStyle(lineWidth: w, lineCap: .round))
             // a thin highlight down the lit side of the near, lit arms: a rounded tube, not a stripe
             if !dead, lit > 0.25, depth > -0.3 {
                 var hi = Path()
@@ -142,22 +183,24 @@ enum BlobArt {
             }
         }
         // where the arms root into the core: a soft dark ring, then the core itself, lit from the upper left
-        c.fill(Path(ellipseIn: bodyRect.insetBy(dx: -body * 0.55, dy: -body * 0.55)), with: .color(ink.opacity(dead ? 0.06 : 0.11)))
+        c.fill(Path(ellipseIn: bodyRect.insetBy(dx: -bodyR * 0.55, dy: -bodyR * 0.55)), with: .color(ink.opacity(dead ? 0.06 : 0.11)))
         c.rotate(by: .radians(-s.theta))
         if dead {
             c.fill(Path(ellipseIn: bodyRect), with: .color(Color(hex: 0xC98B6A)))
         } else {
-            let hl = CGPoint(x: cos(lightAngle) * body * 0.45, y: sin(lightAngle) * body * 0.45)
+            let hl = CGPoint(x: cos(lightAngle) * bodyR * 0.45, y: sin(lightAngle) * bodyR * 0.45)
             c.fill(Path(ellipseIn: bodyRect), with: .radialGradient(
-                Gradient(stops: [.init(color: Color(hex: 0xFFB27F), location: 0), .init(color: fill, location: 0.55), .init(color: Color(hex: 0xB85A31), location: 1)]),
-                center: hl, startRadius: 0, endRadius: body * 1.5))
+                Gradient(stops: [.init(color: mood(coreHiRGB, s), location: 0), .init(color: mood(fillRGB, s), location: 0.55), .init(color: mood(coreLoRGB, s), location: 1)]),
+                center: hl, startRadius: 0, endRadius: bodyR * 1.5))
             c.fill(Path(ellipseIn: CGRect(x: hl.x - 0.014, y: hl.y - 0.014, width: 0.028, height: 0.028)), with: .color(.white.opacity(0.55)))
         }
 
         // the token in the middle (it doesn't spin with the arms)
-        let ro = 0.042, ri = 0.019
-        c.fill(Path(ellipseIn: CGRect(x: -ro + 0.01, y: -ro + 0.02, width: ro * 2, height: ro * 2)), with: .color(seed))
-        c.fill(Path(ellipseIn: CGRect(x: 0.02 - ri, y: -0.08 - ri, width: ri * 2, height: ri * 2)), with: .color(seed))
+        if !s.hideToken {
+            let ro = 0.042, ri = 0.019
+            c.fill(Path(ellipseIn: CGRect(x: -ro + 0.01, y: -ro + 0.02, width: ro * 2, height: ro * 2)), with: .color(seed))
+            c.fill(Path(ellipseIn: CGRect(x: 0.02 - ri, y: -0.08 - ri, width: ri * 2, height: ri * 2)), with: .color(seed))
+        }
         if dead {
             // X eyes on the token
             var x = Path()
@@ -167,6 +210,8 @@ enum BlobArt {
             }
             c.stroke(x, with: .color(ink), style: StrokeStyle(lineWidth: 0.02, lineCap: .round))
         }
+        face?(&c)
+        return centre
     }
 
     /// The springs: every arm chases a breathing target with a little lag and
@@ -185,17 +230,20 @@ enum BlobArt {
 
         let dead = p.dead >= 0
         let air = p.lift > 0.03
-        // spin: steady, faster with speed, a boost in the air and in a roll, none when dead
+        // spin: steady, faster with speed, a boost in the air and in a roll, none when dead or asleep
         // nervous: the spin wanders ±35% around its target instead of holding it
         let nervous = 1 + 0.35 * sin(p.t * 4.6) * sin(p.t * 1.7 + 0.8)
-        var target = dead ? 0 : (2.25 + 1.5 * p.speed) * nervous
-        if air { target += 4.8 }
+        var target = dead ? 0 : (2.25 + 1.5 * p.speed) * nervous * s.spinScale * (1 - s.doze)
+        if air { target += 4.8 * s.spinScale * (1 - s.doze) }
         if p.rolling > 0 { target += 8 }
+        target += s.spinKick
+        s.spinKick -= s.spinKick * min(1, 2.4 * dt)
+        s.flash = max(0, s.flash - dt * 3.5)
         s.rate += (target - s.rate) * min(1, 8 * dt)
         s.theta += s.rate * dt
         s.jolt = max(0, s.jolt - dt * 7)
         // a twitch: every so often one arm gets a kick, in or out, and the body flinches
-        s.twitchIn -= dt
+        s.twitchIn -= dt * s.fidget
         if s.twitchIn <= 0 && !dead {
             s.twitchIn = 0.1 + s.rng.unit() * 0.24
             let i = s.rng.int(arms)
@@ -207,16 +255,22 @@ enum BlobArt {
         let landed = s.wasAirborne && !air
         s.wasAirborne = air
         let k = 70.0, damp = 7.0
+        let calm = 1 - 0.7 * s.doze
         for i in 0..<arms {
             let seed = seeds[i]
             // the arm's direction on screen, after the spin
             let a = Double(i) / Double(arms) * 2 * .pi + s.theta
-            var goal = seed.len * R * (1 + 0.14 * sin(seed.w * p.t + seed.phase) + 0.06 * sin(seed.w * 1.9 * p.t + seed.phase * 2)
-                                       + 0.03 * sin(seed.w * 4.7 * p.t + seed.phase * 3))   // the jitter
+            let jitter: Double = 0.14 * sin(seed.w * p.t + seed.phase) + 0.06 * sin(seed.w * 1.9 * p.t + seed.phase * 2)
+                + 0.03 * sin(seed.w * 4.7 * p.t + seed.phase * 3)
+            let breath: Double = 0.05 * s.doze * sin(p.t * 2.0 + seed.phase * 0.3)   // the sleeper's slow one
+            var goal = seed.len * R * (1 + jitter * calm + breath)
+            goal *= 1 + s.puff
             // trailing arms stretch behind a lane change
             goal += 0.30 * R * max(0, -cos(a) * p.sway)
             // hanging arms dangle in the air
             if air { goal += 0.22 * R * max(0, sin(a)) * min(1, p.lift / 0.5) }
+            // asleep, the arms give in to gravity: the ones pointing up shorten, the ones hanging down lengthen
+            goal += s.doze * R * (-0.34 * max(0, -sin(a)) + 0.10 * max(0, sin(a)))
             if dead { goal = seed.len * R * 0.5 }
             if landed { s.vel[i] += 2.2 }
             s.vel[i] += (-k * (s.len[i] - goal) - damp * s.vel[i]) * dt

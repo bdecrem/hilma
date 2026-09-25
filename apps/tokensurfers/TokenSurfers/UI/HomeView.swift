@@ -103,9 +103,10 @@ struct HomeView: View {
                     .padding(.top, 12)
             }
             Spacer()
-            BlobHero(unit: 58, running: !covered)
+            HomeSplat(unit: 62, running: !covered, excited: focused || !draft.isEmpty)
+                .offset(y: 8)
         }
-        .padding(.top, 14)
+        .padding(.top, 18)
         .overlay(alignment: .topTrailing) {
             HStack(spacing: 8) {
                 if account.signedIn {

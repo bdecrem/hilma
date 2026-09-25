@@ -69,6 +69,32 @@ Token Surfers is a real endless runner now, not a screensaver. `Game/`:
   a slow `sf-spin`; `public/surf/hero.jpg` is a fresh Studio frame with the
   blob in the game, `public/surf/og.png` regenerated with
   `node scripts/surf/og-shot.mjs` against a dev server on 3219.
+- **The Home splat** (`UI/HomeSplat.swift`, 2026-09-25, Bart: "think like a
+  motion designer … make it MUCH MORE AWESOME"): the top-right hero on Home
+  is the track's blob with a face and a brain (`SplatBrain`, stepped once per
+  frame from the view's Canvas, like `BlobState`). Awake it spins, fidgets,
+  blinks, looks around and does a bit every 6–14 s (a hop with a crouch
+  first, a shiver, a double take, a spin burst, a wiggle); after 22–48 s it
+  yawns (all arms stretch, mouth round), the lids drop, it nods off twice and
+  slumps asleep for 13–30 s (spin 0, arms give in to gravity, a cooler tint,
+  slow breathing, z's, a mumble), then wakes with a big stretch and a shake.
+  A tap while it sleeps, or focusing the composer, STARTLES it (jump, every
+  arm out, white flash, wide eyes, a "!", then it looks left and right). A
+  tap awake POKES it (pushed away, a squish that wobbles back, a spin kick
+  the way it was hit, a happy squint, sparks and a ring; haptics on iPhone);
+  three quick taps make it DIZZY (wild spin, wobble, spiral gaze, stars
+  around the head, a sickly tint, a shake to clear). Hold 0.28 s and it is
+  PICKED UP (rises into the hand, dangles, kicks, looks up at you; bored
+  after 3 s); let go and it drops with a bounce and a sulk. Text in the
+  composer keeps it excited (a hop, a grin, glances at the card, no naps).
+  The body is `BlobArt.draw` with the override fields on `BlobState` (doze,
+  puff, spinScale/spinKick, fidget, bodyScale 1.5 + hideToken for the face,
+  squash, sink, tint, flash); the face closure draws in world units on the
+  core. The layout box is `unit × 1.7` like `BlobHero`; the Canvas beneath is
+  4.6 units with hit-testing off so jumps, glyphs and a dragged splat are not
+  clipped, and the hold target is leashed to stay inside it. Verify with
+  `TS_SPLAT` (below) and `xcrun simctl io … recordVideo` → ffmpeg contact
+  sheets; the simulator has no finger and no Simulator.app on Xcode 27.
 - **The tube man** (`SurferArt.swift`, 2026-09-24): Splat is the inflatable
   tube man from `misc/splat-back-smooth.svg` (back) and `misc/splat.svg`
   (front: shades, grin, shaka hand; Home, the cards, the Studio). Drawn in the SVG's own coordinates (y down, feet on 532, `k` =
@@ -578,6 +604,9 @@ Test hooks (environment variables):
 
 - `TS_INJECT="<note>"` sends a mid-build note after `TS_INJECT_AT` seconds
   (default 12); `TS_INJECT_NOW=1` also presses ⚡ now 1.5 s later.
+  `TS_SPLAT="2:poke,6:poke,6.3:poke,6.6:poke,14:hold,15:drag,17:release,22:nap,32:poke,38:excite"`
+  scripts the Home splat (verbs: poke, pokeleft, hold, drag, release, nap,
+  wake, excite, calm at those seconds) for screenshots and recordings.
   `TS_DRAFT="<text>"` pre-fills the composer (to screenshot typed text);
   `TS_SCROLL=apps` scrolls Home to the app shelf.
   `xcrun simctl privacy booted grant microphone com.bartdecrem.tokensurfers`
