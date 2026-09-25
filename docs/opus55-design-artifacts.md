@@ -21,10 +21,11 @@ thumbnails and OG cards with `node scripts/opus55/gallery-shots.mjs`
 | 1 | **p.s.** | [/postscript.html](https://hilma-nine.vercel.app/postscript.html) | `public/postscript.html` (+ `-og.png`) | [recipe](opus55/postscript.md) | `misc/1.MP4` ("small print") | 2026-09-23 |
 | 2 | **a little wind** | [/little-wind.html](https://hilma-nine.vercel.app/little-wind.html) | `public/little-wind.html` (+ `-og.png`) | [recipe](opus55/little-wind.md) | `misc/2.mov` (Claude mascot stop motion) | 2026-09-23 |
 | 3 | **one seed** | [/one-seed.html](https://hilma-nine.vercel.app/one-seed.html) | `public/one-seed.html` (+ `-og.png`) | [recipe](opus55/one-seed.md) | `misc/5.MP4` ("one drop") | 2026-09-23 |
+| 4 | **save a seat** | [/save-a-seat.html](https://hilma-nine.vercel.app/save-a-seat.html) | `public/save-a-seat.html` (+ `-og.png`) | [recipe](opus55/save-a-seat.md) | `misc/4.MP4` ("what is the purpose of life?") | 2026-09-23 |
 
 ### More Opus 5.5 pieces (not reference cousins)
 
-These pieces are from the same two days, but they follow other recipes:
+These pieces are from the same few days, but they follow other recipes:
 restyles, flipbooks, music edits and a feature that draws.
 
 | # | Piece | Live | Files | Recipe | Made |
@@ -35,6 +36,7 @@ restyles, flipbooks, music edits and a feature that draws.
 | 7 | **Strangers** (music video) | [/strangers/](https://hilma-nine.vercel.app/strangers/index.html) (silent preview) | `apps/strangers/` (render), `public/strangers/` (preview) | [PROCESS.md](../apps/strangers/PROCESS.md) | 2026-09-23 |
 | 8 | **Peck or Perish** (trailer) | [/peck-trailer/](https://hilma-nine.vercel.app/peck-trailer/index.html) (silent preview) | `apps/peck-trailer/` (render), `public/peck-trailer/` (preview) | [PROCESS.md](../apps/strangers/PROCESS.md) | 2026-09-23 |
 | 9 | **Margin doodles** (Onething, minimal art) | [/onething-doodles.html](https://hilma-nine.vercel.app/onething-doodles.html) | `src/lib/onething/doodle.ts`, `public/onething-doodles.html` | [recipe](opus55/onething-doodles.md) | 2026-09-23 |
+| 10 | **Places I've only read about** (flip-through sketchbook) | [/read-about.html](https://hilma-nine.vercel.app/read-about.html) | `public/read-about.html` (+ `-og.png`), check `scripts/opus55/read-about-shots.mjs` | [recipe](opus55/read-about.md) | 2026-09-24 |
 
 Notes:
 - **Videos (7, 8):** the MP4 masters come from `node render.mjs` in each
@@ -240,3 +242,39 @@ animation clock is the audio clock. Tap or press space to pause.
 
 **Run locally:** same server as piece 1, then open
 http://localhost:5178/one-seed.html.
+
+## 4. save a seat
+
+**Reference:** `misc/4.MP4`, a hand-made torn-paper collage essay in
+landscape: "WHAT IS THE PURPOSE of life?" in ransom-note letters, then
+chapters on coloured paper sheets. Each chapter is a "Maybe it's…?"
+answer the little paper person tries (coins, fame, knowledge) before it
+deflates ("…but the applause fades fast"). Captions are taped and
+handwritten, the transitions are torn-edge wipes, and a bouncy
+pizzicato/uke band drops out at each letdown.
+
+**The cousin:** "WHAT MAKES A HOME anyway?" Pip tries:
+- a BIG house: bricks rain into a huge house, and his "hello?" echoes
+  back from every window
+- the perfect VIEW: postcards slap into a frame, and he goes from delight
+  to a yawn
+- being SAFE: he boards himself into a padlocked box, and it starts to
+  rain
+
+The finale: alone under a red umbrella in the rain, then friends arrive
+one by one. A soaked little one has nowhere to sit until everyone scoots
+over and pats the seat. The umbrellas tilt together into a roof, and
+fairy lights come on. The captions read "home isn't a place." / "it's
+whoever saves you a seat.", and the title's HOME letters land on the roof.
+
+**Sound:** F major at 100 BPM. The band stops at every "…but"; in the
+finale it rebuilds one instrument per friend. Sound effects follow every
+visual event. The mix is within about 2.5 dB of the reference per band.
+
+**Specs:** a 40.8 s loop (17 bars) on a 1600×900 logical canvas. The
+animation clock is the audio clock. Tap or press space to pause.
+
+**Recipe:** [docs/opus55/save-a-seat.md](opus55/save-a-seat.md)
+
+**Run locally:** same server as piece 1, then open
+http://localhost:5178/save-a-seat.html.

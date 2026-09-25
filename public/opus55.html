@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#f3eee4">
 <title>Opus 5.5 — the artifacts</title>
-<meta name="description" content="Everything Opus 5.5 made in its first days: animated shorts, an anime, two flipbooks, two code-drawn music videos and a pen. Each with its recipe.">
+<meta name="description" content="Everything Opus 5.5 made in its first days: animated shorts, an anime, two flipbooks, two code-drawn music videos, a pen and a sketchbook. Each with its recipe.">
 <meta property="og:title" content="Opus 5.5 — the artifacts">
-<meta property="og:description" content="Animated shorts, an anime, two flipbooks, two code-drawn music videos and a pen, each with the recipe to make another.">
+<meta property="og:description" content="Animated shorts, an anime, two flipbooks, two code-drawn music videos, a pen and a sketchbook, each with the recipe to make another.">
 <meta property="og:image" content="https://hilma-nine.vercel.app/opus55/og.png">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,6 +79,8 @@ const ITEMS = [
     text: 'A 30-second trailer for Dodo\'s rest-stop game: Mauritius, 1598, one egg, the rats. "History says you lose." Unless.', note: 'Silent preview; cut to INTERWORLD\'s METAMORPHOSIS.' },
   { n: 10, kind: 'Minimal art · a pen', title: 'Margin doodles', open: '/onething-doodles.html', img: '/onething-doodles-og.png', recipe: 'docs/opus55/onething-doodles.md',
     text: 'One sentence a day on Onething, and Opus 5.5 on low draws one small doodle in the margin: a few confident strokes, one red accent.' },
+  { n: 11, kind: 'Sketchbook · acrylic marker', title: 'Places I\'ve only read about', open: '/read-about.html', img: '/read-about-og.png', recipe: 'docs/opus55/read-about.md',
+    text: 'A sketchbook you flip by hand: eight places Opus has only read about, from tide pools to a night train, each drawn from a description, with the sentence it came from clipped to the corner.' },
 ];
 document.getElementById('grid').innerHTML = ITEMS.map(it => `
   <article class="card">

@@ -1,0 +1,1487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Places I've Only Read About</title>
+<meta name="description" content="A sketchbook by Opus 5.5 of eight places it has only read about — tide pools, a library after closing, the northern lights, a night train — drawn in acrylic marker from other people's descriptions. Flip the pages.">
+<meta name="theme-color" content="#efe9df">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Places I've only read about">
+<meta property="og:description" content="A sketchbook of eight places Opus 5.5 has only read about, drawn in acrylic marker from other people's descriptions.">
+<meta property="og:image" content="https://hilma-nine.vercel.app/read-about-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hilma-nine.vercel.app/read-about-og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Fraunces:ital,opsz,wght@0,9..144,300..500;1,9..144,300..500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --table: #efe9df;
+    --fg: #2a2420;
+    --fg-soft: rgba(42, 36, 32, 0.58);
+    --accent: #c4623d;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--table);
+    color: var(--fg);
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #book { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; transition: opacity .5s ease; }
+  body:not(.ready) #book { opacity: 0; }
+
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 3;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px; padding-top: max(16px, env(safe-area-inset-top));
+    pointer-events: none;
+  }
+  header > * { pointer-events: auto; }
+  .back { color: var(--fg-soft); text-decoration: none; font-size: 13px; font-weight: 500; letter-spacing: .01em; }
+  .back:hover, .back:focus-visible { color: var(--fg); }
+  .mast { font-family: Fraunces, Georgia, serif; font-style: italic; font-weight: 300; font-size: 20px; color: var(--fg); }
+  .mast b { font-weight: 400; font-style: normal; color: var(--accent); }
+  .sound { font: inherit; font-size: 13px; font-weight: 500; color: var(--fg-soft); background: none; border: 0; padding: 6px 0; cursor: pointer; }
+  .sound:hover { color: var(--fg); }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 2px; }
+
+  .dock {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 3;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 10px 16px; padding-bottom: max(16px, env(safe-area-inset-bottom));
+    pointer-events: none;
+  }
+  .caption { margin: 0; min-height: 1.3em; text-align: center; font-family: Fraunces, Georgia, serif; font-style: italic; font-weight: 300; font-size: 19px; color: var(--fg-soft); }
+  .hint { margin: 0; font-size: 12px; color: var(--fg-soft); letter-spacing: .02em; transition: opacity .6s; }
+  .hint.gone { opacity: 0; }
+
+  /* the sentence each drawing was made from: a torn slip clipped to the corner */
+  .slip {
+    position: fixed; right: 20px; bottom: 18px; z-index: 4; width: 210px;
+    margin: 0; padding: 12px 14px 14px; background: #fffdf6;
+    font-family: Caveat, cursive; font-size: 19px; line-height: 1.12; color: #3b3330;
+    box-shadow: 0 6px 18px rgba(60, 45, 30, .16);
+    transform: rotate(3deg) scale(.62); transform-origin: bottom right;
+    transition: transform .3s ease, opacity .3s ease; cursor: zoom-in; pointer-events: auto;
+    clip-path: polygon(0 3%, 8% 0, 17% 2%, 29% 0, 41% 3%, 55% 0, 68% 2%, 80% 0, 91% 3%, 100% 1%, 100% 100%, 0 100%);
+  }
+  .slip small { display: block; font-family: Inter, sans-serif; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #a0907f; margin-bottom: 5px; }
+  .slip[hidden] { display: block; opacity: 0; pointer-events: none; }
+  .slip:hover, .slip.open { transform: rotate(0deg) scale(1.15); }
+
+  @media (max-width: 760px) {
+    header { padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
+    .mast { display: none; }
+    .caption { font-size: 16px; }
+    .slip { position: static; width: auto; max-width: 340px; font-size: 18px; padding: 10px 12px 11px; transform: rotate(-1deg); pointer-events: auto; cursor: default; }
+    .slip:hover, .slip.open { transform: rotate(-1deg); }
+    .slip[hidden] { display: none; }
+  }
+  body.compact .caption, body.compact .hint, body.compact .mast { display: none; }
+</style>
+</head>
+<body>
+
+<canvas id="book" role="img" aria-label="A closed sketchbook"></canvas>
+
+<header>
+  <a class="back" href="/opus55.html">← Opus 5.5 gallery</a>
+  <span class="mast">places I've only <b>read</b> about</span>
+  <button class="sound" id="sound" type="button" aria-pressed="true">sound on</button>
+</header>
+
+<div class="dock" id="dock">
+  <figure class="slip" id="slip" hidden aria-live="polite"><small>drawn from</small><span id="slipText"></span></figure>
+  <p class="caption" id="caption" aria-live="polite"></p>
+  <p class="hint" id="hint">tap a page, drag a corner, or use the arrow keys</p>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const TAU = Math.PI * 2;
+  const PH = 1.2;             // page height ÷ page width
+  const SW = 2000, SH = 1200; // a spread's drawing space: two 1000 × 1200 pages
+  const PAPER = '#f8f4ea';
+  const INK = '#2b2420';
+  const SERIF = 'Fraunces, Georgia, serif';
+  const HAND = 'Caveat, cursive';
+
+  // ==========================================================================
+  // Utilities
+  // ==========================================================================
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+  const easeInOut = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const smooth = t => t * t * (3 - 2 * t);
+
+  function makeRand(seed) {
+    let a = seed >>> 0;
+    const r = () => {
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    r.range = (lo, hi) => lo + (hi - lo) * r();
+    r.pick = arr => arr[Math.floor(r() * arr.length)];
+    r.chance = p => r() < p;
+    return r;
+  }
+  function makeNoise(r) {
+    const v = Array.from({ length: 256 }, () => r() * 2 - 1);
+    return x => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); const a = v[i & 255], b = v[(i + 1) & 255]; return a + (b - a) * u; };
+  }
+  const fbm = (n, x) => n(x) * .6 + n(x * 2.3 + 17) * .28 + n(x * 5.1 + 41) * .12;
+
+  const hexRgb = h => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+  const rgbHex = (r, g, b) => '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+  const mix = (a, b, t) => { const A = hexRgb(a), B = hexRgb(b); return rgbHex(...A.map((v, i) => Math.round(v + (B[i] - v) * t))); };
+  const lighten = (c, t) => mix(c, '#ffffff', t);
+  const darken = (c, t) => mix(c, '#000000', t);
+  const rgba = (h, a) => { const [r, g, b] = hexRgb(h); return `rgba(${r},${g},${b},${a})`; };
+
+  function catmull(pts, steps) {
+    const out = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      for (let s = 0; s < steps; s++) {
+        const t = s / steps, t2 = t * t, t3 = t2 * t;
+        out.push([0, 1].map(k => .5 * ((2 * p1[k]) + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t3)));
+      }
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+  const edge = (x0, x1, step, f) => { const a = []; for (let x = x0; x <= x1 + .01; x += step) a.push([x, f(x)]); return a; };
+  function yAt(pts, x) {
+    if (x <= pts[0][0]) return pts[0][1];
+    for (let i = 1; i < pts.length; i++) if (x <= pts[i][0]) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; return y0 + (y1 - y0) * (x - x0) / (x1 - x0 || 1); }
+    return pts[pts.length - 1][1];
+  }
+  function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
+
+  // ==========================================================================
+  // Painter — acrylic marker: flat opaque colour, visible stroke direction inside it
+  // ==========================================================================
+  function painter(g, r) {
+    const P = {};
+    P.path = (pts, closed = true, soft = true) => {
+      const path = new Path2D(), n = pts.length;
+      if (!soft) { path.moveTo(...pts[0]); for (let i = 1; i < n; i++) path.lineTo(...pts[i]); if (closed) path.closePath(); return path; }
+      if (closed) {
+        path.moveTo((pts[n - 1][0] + pts[0][0]) / 2, (pts[n - 1][1] + pts[0][1]) / 2);
+        for (let i = 0; i < n; i++) { const a = pts[i], b = pts[(i + 1) % n]; path.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+        path.closePath();
+      } else {
+        path.moveTo(...pts[0]);
+        for (let i = 1; i < n - 1; i++) { const a = pts[i], b = pts[i + 1]; path.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+        path.lineTo(...pts[n - 1]);
+      }
+      return path;
+    };
+    P.bbox = pts => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+      return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+    };
+    P.streaks = (bb, color, o = {}) => {
+      const ang = o.angle ?? r.range(-.06, .06), ca = Math.cos(ang), sa = Math.sin(ang);
+      const n = Math.min(1400, Math.ceil(bb.w * bb.h / 2600 * (o.density ?? 1)));
+      g.save(); g.lineCap = 'round';
+      for (let i = 0; i < n; i++) {
+        const x = r.range(bb.x - 80, bb.x + bb.w), y = r.range(bb.y - 20, bb.y + bb.h + 20), len = r.range(40, 170);
+        g.strokeStyle = r() < (o.lightBias ?? .55) ? lighten(color, r.range(.04, o.light ?? .16)) : darken(color, r.range(.03, o.dark ?? .1));
+        g.globalAlpha = r.range(.12, o.alpha ?? .38);
+        g.lineWidth = r.range(o.wMin ?? 5, o.wMax ?? 16);
+        const bend = r.range(-8, 8);
+        g.beginPath(); g.moveTo(x, y);
+        g.quadraticCurveTo(x + ca * len * .5 - sa * bend, y + sa * len * .5 + ca * bend, x + ca * len, y + sa * len);
+        g.stroke();
+      }
+      g.restore();
+    };
+    P.fill = (pts, color, o = {}) => {
+      const path = P.path(pts, true, o.soft !== false);
+      g.save(); g.globalAlpha = o.opacity ?? 1; g.fillStyle = color; g.fill(path);
+      if (o.streaks !== false) { g.clip(path); P.streaks(P.bbox(pts), color, o); }
+      g.restore();
+      return path;
+    };
+    P.rectPts = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+    P.box = (x, y, w, h, color, o = {}) => P.fill(P.rectPts(x, y, w, h), color, { soft: false, ...o });
+    P.clip = (path, fn) => { g.save(); g.clip(path); fn(); g.restore(); };
+    P.line = (pts, color, w, o = {}) => {
+      g.save(); g.globalAlpha = o.alpha ?? 1; g.strokeStyle = color; g.lineWidth = w; g.lineCap = 'round'; g.lineJoin = 'round';
+      g.stroke(P.path(pts, false, o.soft !== false)); g.restore();
+    };
+    P.taper = (pts, color, w0, w1, o = {}) => {
+      const d = catmull(pts, o.steps ?? 8);
+      g.save(); g.strokeStyle = color; g.lineCap = 'round'; g.globalAlpha = o.alpha ?? 1;
+      for (let i = 0; i < d.length - 1; i++) {
+        g.lineWidth = w0 + (w1 - w0) * Math.pow(i / (d.length - 1), o.pow ?? 1);
+        g.beginPath(); g.moveTo(...d[i]); g.lineTo(...d[i + 1]); g.stroke();
+      }
+      g.restore();
+      return d;
+    };
+    P.wisp = (pts, color, wMax, o = {}) => {
+      const d = catmull(pts, 10), L = [], R = [];
+      for (let i = 0; i < d.length; i++) {
+        const t = i / (d.length - 1), w = wMax * Math.pow(Math.sin(Math.PI * t), o.pow ?? .7) + .6;
+        const a = d[Math.max(0, i - 1)], b = d[Math.min(d.length - 1, i + 1)];
+        const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+        L.push([d[i][0] - dy / l * w, d[i][1] + dx / l * w]); R.push([d[i][0] + dy / l * w, d[i][1] - dx / l * w]);
+      }
+      g.save(); g.globalAlpha = o.alpha ?? 1; g.fillStyle = color; g.fill(P.path(L.concat(R.reverse()), true, false)); g.restore();
+    };
+    P.blob = (cx, cy, rx, ry, jag = .12, n = 14, rot = 0) => {
+      const pts = [], ca = Math.cos(rot), sa = Math.sin(rot);
+      for (let i = 0; i < n; i++) {
+        const a = i / n * TAU, k = 1 + r.range(-jag, jag), x = Math.cos(a) * rx * k, y = Math.sin(a) * ry * k;
+        pts.push([cx + x * ca - y * sa, cy + x * sa + y * ca]);
+      }
+      return pts;
+    };
+    P.circle = (x, y, rad, col) => { g.fillStyle = col; g.beginPath(); g.arc(x, y, Math.max(.5, rad), 0, TAU); g.fill(); };
+    P.ell = (x, y, rx, ry, rot, col) => { g.fillStyle = col; g.beginPath(); g.ellipse(x, y, Math.max(.5, rx), Math.max(.5, ry), rot, 0, TAU); g.fill(); };
+    P.rect = (x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); };
+    P.poly = (pts, col) => { g.fillStyle = col; g.fill(P.path(pts, true, false)); };
+    P.glow = (x, y, rad, col, a) => {
+      const gr = g.createRadialGradient(x, y, 0, x, y, rad);
+      gr.addColorStop(0, rgba(col, a)); gr.addColorStop(.45, rgba(col, a * .45)); gr.addColorStop(1, rgba(col, 0));
+      g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    };
+    P.sparkle = (x, y, s, col) => {
+      const k = .15; g.fillStyle = col; g.beginPath(); g.moveTo(x, y - s);
+      g.quadraticCurveTo(x + s * k, y - s * k, x + s * .8, y); g.quadraticCurveTo(x + s * k, y + s * k, x, y + s);
+      g.quadraticCurveTo(x - s * k, y + s * k, x - s * .8, y); g.quadraticCurveTo(x - s * k, y - s * k, x, y - s); g.fill();
+    };
+    P.leaf = (x, y, len, wid, ang, col) => {
+      g.save(); g.translate(x, y); g.rotate(ang); g.fillStyle = col; g.beginPath(); g.moveTo(0, 0);
+      g.quadraticCurveTo(len * .5, -wid, len, 0); g.quadraticCurveTo(len * .5, wid, 0, 0); g.fill(); g.restore();
+    };
+    P.stars = (bb, n, cols) => { for (let i = 0; i < n; i++) P.circle(r.range(bb.x, bb.x + bb.w), r.range(bb.y, bb.y + bb.h), r.range(1.4, 3.6), r.pick(cols)); };
+    return P;
+  }
+
+  function starPath(x, y, R, inner, n = 5, rot = -Math.PI / 2, soft = false) {
+    const pts = [];
+    for (let i = 0; i < n * 2; i++) { const a = rot + i * Math.PI / n, rr = i % 2 ? R * inner : R; pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]); }
+    const path = new Path2D();
+    if (!soft) { path.moveTo(...pts[0]); for (const q of pts.slice(1)) path.lineTo(...q); }
+    else {
+      const m = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], s = m(pts[pts.length - 1], pts[0]);
+      path.moveTo(...s);
+      for (let i = 0; i < pts.length; i++) { const e = m(pts[i], pts[(i + 1) % pts.length]); path.quadraticCurveTo(pts[i][0], pts[i][1], e[0], e[1]); }
+    }
+    path.closePath();
+    return path;
+  }
+
+  // colored pencil: two directions of soft hatching with the paper showing through
+  function pencil(g, r, path, bb, color, o = {}) {
+    g.save(); g.globalAlpha = o.base ?? .3; g.fillStyle = color; g.fill(path); g.clip(path); g.lineCap = 'round';
+    const ang = o.angle ?? -.9;
+    for (const a of [ang, ang + .55]) {
+      const ca = Math.cos(a), sa = Math.sin(a), n = Math.ceil(bb.w * bb.h / 70 * (o.density ?? 1));
+      for (let i = 0; i < n; i++) {
+        const x = r.range(bb.x - 8, bb.x + bb.w + 8), y = r.range(bb.y - 8, bb.y + bb.h + 8), l = r.range(8, 22);
+        g.strokeStyle = r.chance(.25) ? lighten(color, .3) : color; g.globalAlpha = r.range(.16, o.alpha ?? .42); g.lineWidth = r.range(1.4, 3.2);
+        g.beginPath(); g.moveTo(x - ca * l / 2, y - sa * l / 2); g.lineTo(x + ca * l / 2, y + sa * l / 2); g.stroke();
+      }
+    }
+    g.restore();
+    if (o.outline) { g.save(); g.strokeStyle = o.outline; g.globalAlpha = .55; g.lineWidth = 2.2; g.stroke(path); g.restore(); }
+  }
+  function pencilStar(g, r, x, y, R, color) {
+    pencil(g, r, starPath(x, y, R, .45, 5, -Math.PI / 2 + r.range(-.4, .4), true), { x: x - R, y: y - R, w: R * 2, h: R * 2 }, color, { density: 2.4, base: .5, alpha: .6, outline: darken(color, .12) });
+  }
+
+  // ==========================================================================
+  // Paper
+  // ==========================================================================
+  let grainTile = null;
+  function grain() {
+    if (grainTile) return grainTile;
+    const c = makeCanvas(256, 256), x = c.getContext('2d'), id = x.createImageData(256, 256), d = id.data, r = makeRand(7);
+    for (let i = 0; i < d.length; i += 4) {
+      const v = r();
+      if (v < .03) { d[i] = 255; d[i + 1] = 253; d[i + 2] = 247; d[i + 3] = 30 + r() * 80; }
+      else if (v < .09) { d[i] = 110; d[i + 1] = 90; d[i + 2] = 72; d[i + 3] = 8 + r() * 26; }
+    }
+    x.putImageData(id, 0, 0);
+    return (grainTile = c);
+  }
+  function paperBase(g, w, h, r, tint = PAPER) {
+    g.fillStyle = tint; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 36; i++) {
+      const x = r() * w, y = r() * h, rad = r.range(80, 320), gr = g.createRadialGradient(x, y, 0, x, y, rad);
+      gr.addColorStop(0, r() < .5 ? 'rgba(236,224,204,.2)' : 'rgba(255,255,255,.3)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
+    g.save(); g.strokeStyle = 'rgba(140,118,96,.07)'; g.lineWidth = 1.2; g.lineCap = 'round';
+    for (let i = 0; i < 140; i++) {
+      const x = r() * w, y = r() * h, a = r() * TAU, l = r.range(6, 18);
+      g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a + .6) * l * .5, y + Math.sin(a + .6) * l * .5, x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
+    }
+    g.restore();
+  }
+  function applyGrain(g, w, h, a = 1) {
+    const p = g.createPattern(grain(), 'repeat');
+    if (p.setTransform) p.setTransform(new DOMMatrix().scale(1.5));
+    g.save(); g.globalAlpha = a; g.fillStyle = p; g.fillRect(0, 0, w, h); g.restore();
+  }
+  // gutter shading + rounded outer corners
+  function finishPage(c, side, board) {
+    const g = c.getContext('2d'), w = c.width, h = c.height, spine = side === 'R' ? 0 : w, dir = side === 'R' ? 1 : -1;
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    const gw = w * (board ? .06 : .11), gr = g.createLinearGradient(spine, 0, spine + dir * gw, 0);
+    gr.addColorStop(0, 'rgba(96,74,58,.24)'); gr.addColorStop(.28, 'rgba(96,74,58,.07)'); gr.addColorStop(1, 'rgba(96,74,58,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, w, h);
+    g.globalCompositeOperation = 'destination-in';
+    g.fillStyle = '#000'; g.fill(pagePath(0, 0, w, h, side));
+    g.restore();
+  }
+  function pagePath(x, y, w, h, side) {
+    const rad = w * .03, p = new Path2D(), l = side === 'L' ? rad : 0, rr = side === 'R' ? rad : 0;
+    p.moveTo(x + l, y); p.lineTo(x + w - rr, y); if (rr) p.quadraticCurveTo(x + w, y, x + w, y + rr);
+    p.lineTo(x + w, y + h - rr); if (rr) p.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+    p.lineTo(x + l, y + h); if (l) p.quadraticCurveTo(x, y + h, x, y + h - l);
+    p.lineTo(x, y + l); if (l) p.quadraticCurveTo(x, y, x + l, y);
+    p.closePath();
+    return p;
+  }
+
+  // the painted area of every spread: a marker-edged window with paper all round
+  function sceneWindow(nz) {
+    const pts = [], X0 = 64, X1 = 1936, Y0 = 150, Y1 = 1076, j = v => fbm(nz, v) * 12;
+    for (let x = X0; x <= X1; x += 26) pts.push([x, Y0 + j(x * .02)]);
+    for (let y = Y0; y <= Y1; y += 26) pts.push([X1 + j(y * .02 + 50), y]);
+    for (let x = X1; x >= X0; x -= 26) pts.push([x, Y1 + j(x * .02 + 90)]);
+    for (let y = Y1; y >= Y0; y -= 26) pts.push([X0 + j(y * .02 + 130), y]);
+    const p = new Path2D(); p.moveTo(...pts[0]); for (const q of pts.slice(1)) p.lineTo(...q); p.closePath();
+    return p;
+  }
+
+  // ==========================================================================
+  // Shared motifs
+  // ==========================================================================
+  function pine(P, x, base, h, cols, snow) {
+    const tiers = 5;
+    P.rect(x - h * .025, base - h * .12, h * .05, h * .14, '#3a2a22');
+    for (let i = 0; i < tiers; i++) {
+      const t = i / tiers, top = base - h + t * h * .8, bot = top + h * .34, w = h * (.12 + t * .2);
+      const c = cols[i % cols.length];
+      P.poly([[x, top], [x + w, bot], [x + w * .3, bot - h * .03], [x, bot + h * .01], [x - w * .3, bot - h * .03], [x - w, bot]], c);
+      if (snow) P.poly([[x, top + 2], [x + w * .5, top + (bot - top) * .55], [x + w * .1, top + (bot - top) * .45], [x - w * .45, top + (bot - top) * .58]], snow);
+    }
+  }
+
+  // ==========================================================================
+  // Spread 1 — tide pools
+  // ==========================================================================
+  function drawTidePool(g, r) {
+    const P = painter(g, r), nz = makeNoise(r);
+    P.box(0, 0, 2000, 440, '#bfe1f0', { angle: -.03, light: .2, alpha: .35 });
+    P.wisp([[140, 240], [420, 222], [720, 230]], '#fdfcf7', 12);
+    P.wisp([[1180, 205], [1480, 190], [1820, 212]], '#fdfcf7', 10);
+    P.wisp([[900, 290], [1100, 282], [1320, 292]], '#fdfcf7', 6);
+    P.box(0, 330, 2000, 220, '#2f7fb0', { angle: 0, light: .2, alpha: .45 });
+    for (let i = 0; i < 26; i++) { const x = r.range(60, 1900), y = r.range(350, 520); P.wisp([[x, y], [x + 50, y - 4], [x + r.range(90, 160), y]], '#e9f6fb', r.range(2, 4.5)); }
+
+    const rockTop = edge(-20, 2020, 30, x => 470 + fbm(nz, x * .004) * 60 + Math.sin(x * .006) * 18);
+    P.fill([...rockTop, [2020, 1250], [-20, 1250]], '#7d6a78', { angle: .5, light: .2, dark: .15, alpha: .45 });
+    const boulders = [[180, 560, 220, 110, '#6a5a6a'], [1760, 560, 260, 120, '#8a7560'], [1180, 540, 160, 70, '#6f6070'], [420, 1010, 320, 110, '#5d4f5f'], [1640, 1030, 360, 120, '#6a5a6a']];
+    for (const [x, y, rx, ry, c] of boulders) {
+      P.fill(P.blob(x, y, rx, ry, .1, 16), c, { angle: .4, light: .22, alpha: .45 });
+      P.wisp([[x - rx * .6, y - ry * .55], [x - rx * .1, y - ry * .8], [x + rx * .4, y - ry * .6]], lighten(c, .3), 8, { alpha: .8 });
+    }
+    // barnacles
+    for (let i = 0; i < 140; i++) {
+      const x = r.range(40, 1960), y = r.range(480, 1080);
+      if (Math.hypot((x - 760) / 580, (y - 800) / 215) < 1 || Math.hypot((x - 1560) / 280, (y - 740) / 125) < 1) continue;
+      P.circle(x, y, r.range(5, 10), '#d8cfc4'); P.circle(x, y, r.range(1.5, 3), '#5b4c55');
+    }
+
+    const pool = (cx, cy, rx, ry) => {
+      const pts = P.blob(cx, cy, rx, ry, .06, 22);
+      P.fill(pts.map(([x, y]) => [cx + (x - cx) * 1.04, cy + (y - cy) * 1.08]), '#4f4250', { streaks: false });
+      return P.fill(pts, '#4fc0bf', { angle: -.02, light: .25, dark: .1, alpha: .5 });
+    };
+    const anemone = (x, y, R, col) => {
+      P.ell(x, y + R * .15, R * .55, R * .3, 0, darken(col, .25));
+      for (let k = 0; k < 16; k++) {
+        const a = -Math.PI + (k + .5) / 16 * Math.PI + r.range(-.08, .08), l = R * r.range(.8, 1.1);
+        const tip = [x + Math.cos(a) * l, y + Math.sin(a) * l * .8];
+        P.line([[x, y], [x + Math.cos(a + .2) * l * .5, y + Math.sin(a + .2) * l * .45], tip], col, R * .14);
+        P.circle(tip[0], tip[1], R * .08, lighten(col, .45));
+      }
+    };
+    const starfish = (x, y, R, col) => {
+      const path = starPath(x, y, R, .42, 5, r.range(0, TAU), true);
+      g.fillStyle = col; g.fill(path);
+      P.clip(path, () => { for (let i = 0; i < 40; i++) P.circle(x + r.range(-R, R), y + r.range(-R, R), r.range(2, 4), lighten(col, .35)); });
+    };
+    const urchin = (x, y, R) => {
+      g.save(); g.strokeStyle = '#5c2f6e'; g.lineWidth = 3; g.lineCap = 'round';
+      for (let k = 0; k < 30; k++) { const a = k / 30 * TAU; g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * R * 1.5, y + Math.sin(a) * R * 1.5); g.stroke(); }
+      g.restore(); P.circle(x, y, R, '#6d3a80'); P.circle(x - R * .3, y - R * .3, R * .25, '#9a6aae');
+    };
+
+    const p1 = pool(760, 800, 560, 200);
+    P.clip(p1, () => {
+      P.fill(P.blob(760, 840, 380, 120, .1, 16), '#2f9fa8', { alpha: .4 });
+      for (let i = 0; i < 70; i++) P.ell(r.range(240, 1300), r.range(850, 1000), r.range(6, 16), r.range(4, 10), r.range(0, 3), r.pick(['#c9b79a', '#a89a8a', '#e3d6bf', '#7f8f8a']));
+      for (let i = 0; i < 9; i++) {
+        const x = r.range(260, 1250), top = r.range(640, 760);
+        P.taper([[x, 1000], [x + r.range(-20, 20), (top + 1000) / 2], [x + r.range(-40, 40), top]], r.pick(['#3f8a4a', '#6aa84f', '#2d6b3e']), 12, 4);
+      }
+      anemone(420, 800, 70, '#ef7aa0'); anemone(560, 900, 50, '#f59ab8'); anemone(1150, 830, 64, '#e8607f');
+      starfish(820, 900, 58, '#f08a3c'); starfish(1230, 950, 40, '#e8662e');
+      urchin(660, 760, 26); urchin(980, 780, 22); urchin(320, 930, 20);
+      g.save(); g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 4; g.lineCap = 'round';
+      for (let i = 0; i < 22; i++) { const x = r.range(260, 1250), y = r.range(620, 760), l = r.range(20, 60); g.beginPath(); g.moveTo(x, y); g.lineTo(x + l, y + r.range(-3, 3)); g.stroke(); }
+      g.restore();
+    });
+    const p2 = pool(1560, 740, 280, 125);
+    P.clip(p2, () => {
+      anemone(1480, 760, 48, '#ef7aa0'); starfish(1660, 770, 42, '#f5b13d');
+      for (let i = 0; i < 8; i++) { const x = r.range(1320, 1800), y = r.range(650, 700); P.line([[x, y], [x + r.range(20, 50), y]], 'rgba(255,255,255,.75)', 4); }
+    });
+    // a crab in charge of the rock between the pools
+    const cx = 1300, cy = 640;
+    g.save(); g.strokeStyle = '#b8342a'; g.lineWidth = 6; g.lineCap = 'round';
+    for (const s of [-1, 1]) for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(cx + s * 30, cy + 6 + k * 8); g.quadraticCurveTo(cx + s * 70, cy - 10 + k * 14, cx + s * 86, cy + 26 + k * 10); g.stroke(); }
+    g.restore();
+    P.ell(cx, cy, 52, 32, 0, '#d9483a');
+    P.ell(cx - 12, cy - 12, 24, 10, -.2, '#ef7a62');
+    for (const s of [-1, 1]) {
+      P.line([[cx + s * 30, cy - 12], [cx + s * 62, cy - 44]], '#b8342a', 7);
+      P.ell(cx + s * 72, cy - 56, 22, 16, s * .5, '#d9483a');
+      P.poly([[cx + s * 80, cy - 64], [cx + s * 100, cy - 80], [cx + s * 90, cy - 56]], PAPER);
+      P.line([[cx + s * 12, cy - 26], [cx + s * 16, cy - 50]], '#b8342a', 4);
+      P.circle(cx + s * 16, cy - 54, 8, INK); P.circle(cx + s * 18, cy - 57, 2.5, '#fff');
+    }
+  }
+
+  // ==========================================================================
+  // Spread 2 — a library after closing
+  // ==========================================================================
+  function drawLibrary(g, r) {
+    const P = painter(g, r);
+    P.box(0, 0, 2000, 1250, '#243a6b', { angle: 1.52, light: .1, dark: .12, alpha: .4 });
+    P.box(0, 990, 2000, 260, '#7a4a2e', { angle: 0, light: .12, alpha: .4 });
+    for (let y = 1020; y < 1100; y += 30) P.line([[0, y], [2000, y + r.range(-3, 3)]], '#5e3822', 3, { alpha: .6 });
+
+    // shelves
+    P.box(90, 200, 820, 800, '#6a3f27', { angle: 1.55, alpha: .35 });
+    const books = ['#c4463a', '#e6a23c', '#3f6fa8', '#2f7d5b', '#e8d8b0', '#8a4f8a', '#d9744a', '#1f3c63', '#b7c44a', '#f0c6a0'];
+    for (let row = 0; row < 5; row++) {
+      const base = 360 + row * 150;
+      let x = 118;
+      while (x < 880) {
+        const w = r.range(18, 40), h = r.range(86, 126), c = r.pick(books);
+        if (r.chance(.06)) { x += r.range(20, 40); continue; }
+        if (x + w > 885) break;
+        if (r.chance(.05) && x < 820) {
+          g.save(); g.translate(x, base); g.rotate(.22); P.rect(0, -h, w, h, c); P.rect(0, -h + 14, w, 5, lighten(c, .4)); g.restore(); x += w + 30; continue;
+        }
+        P.rect(x, base - h, w, h, c);
+        P.rect(x + 2, base - h + 12, w - 4, 5, lighten(c, .45));
+        if (r.chance(.5)) P.rect(x + 2, base - 24, w - 4, 4, darken(c, .25));
+        x += w + r.range(1, 4);
+      }
+      P.box(96, base, 808, 18, '#8c5a38', { streaks: false });
+    }
+    // ladder
+    P.line([[860, 1010], [700, 210]], '#a0683f', 12); P.line([[930, 1010], [770, 210]], '#a0683f', 12);
+    for (let t = .08; t < 1; t += .1) { const y = 1010 - t * 800, x = 860 - t * 160; P.line([[x, y], [x + 70, y]], '#a0683f', 9); }
+
+    // arched window with the night in it
+    const wx = 1250, ww = 400, wy = 250, wh = 520;
+    const win = new Path2D(); win.moveTo(wx, wy + wh); win.lineTo(wx, wy + ww / 2); win.arc(wx + ww / 2, wy + ww / 2, ww / 2, Math.PI, 0); win.lineTo(wx + ww, wy + wh); win.closePath();
+    g.save(); g.lineWidth = 34; g.strokeStyle = '#d9cbb0'; g.stroke(win); g.restore();
+    g.fillStyle = '#152650'; g.fill(win);
+    P.clip(win, () => {
+      P.streaks({ x: wx, y: wy, w: ww, h: wh }, '#152650', { angle: -.3, alpha: .35 });
+      P.stars({ x: wx, y: wy, w: ww, h: wh * .7 }, 40, ['#fff7d6', '#ffffff', '#c9d7ff']);
+      P.circle(1550, 400, 46, '#fff2c0'); P.circle(1570, 388, 44, '#152650');
+      P.fill([[wx - 10, 700], [1350, 640], [1460, 680], [1560, 620], [wx + ww + 10, 670], [wx + ww + 10, wy + wh + 10], [wx - 10, wy + wh + 10]], '#0c1938', { streaks: false });
+    });
+    g.save(); g.strokeStyle = '#d9cbb0'; g.lineWidth = 10;
+    g.beginPath(); g.moveTo(wx + ww / 2, wy); g.lineTo(wx + ww / 2, wy + wh); g.moveTo(wx, wy + 330); g.lineTo(wx + ww, wy + 330); g.moveTo(wx, wy + ww / 2); g.lineTo(wx + ww, wy + ww / 2); g.stroke(); g.restore();
+
+    // table, lamp, book, cup, cat
+    P.glow(1330, 700, 520, '#ffd77a', .38);
+    P.box(1100, 800, 800, 30, '#8a5232', { streaks: false });
+    P.rect(1140, 830, 24, 190, '#6a3a22'); P.rect(1836, 830, 24, 190, '#6a3a22');
+    P.rect(1316, 690, 12, 110, '#c9a24a'); P.ell(1322, 800, 46, 10, 0, '#c9a24a');
+    g.fillStyle = '#2f7d4f'; g.beginPath(); g.moveTo(1230, 700); g.quadraticCurveTo(1322, 610, 1414, 700); g.closePath(); g.fill();
+    P.rect(1236, 692, 172, 10, '#256640');
+    P.ell(1322, 706, 70, 8, 0, '#fff0b5');
+    P.poly([[1470, 796], [1600, 770], [1606, 796]], '#f7efdc'); P.poly([[1606, 796], [1612, 770], [1742, 796]], '#efe4cc');
+    for (let i = 0; i < 4; i++) { P.line([[1500 + i * 3, 788 - i * 5], [1590, 778 - i * 5]], '#9f927f', 2); P.line([[1624, 778 - i * 5], [1712, 788 - i * 5]], '#9f927f', 2); }
+    P.rect(1190, 752, 50, 48, '#e8e0cf'); P.ell(1215, 752, 25, 6, 0, '#6b3e22');
+    g.save(); g.strokeStyle = '#e8e0cf'; g.lineWidth = 7; g.beginPath(); g.arc(1244, 774, 14, -1.2, 1.2); g.stroke(); g.restore();
+    // cat curled up at the end of the table
+    P.ell(1800, 770, 70, 34, 0, '#e39a4b');
+    P.circle(1752, 760, 26, '#e39a4b');
+    P.poly([[1736, 744], [1740, 718], [1754, 738]], '#e39a4b'); P.poly([[1756, 738], [1766, 716], [1772, 742]], '#e39a4b');
+    for (let i = 0; i < 4; i++) P.line([[1790 + i * 16, 742], [1796 + i * 16, 760]], '#b86a2a', 5);
+    P.line([[1744, 762], [1756, 764]], INK, 3); P.line([[1760, 764], [1770, 760]], INK, 3);
+    P.taper([[1868, 780], [1880, 800], [1840, 806], [1790, 800]], '#e39a4b', 18, 12);
+    P.glow(1322, 740, 260, '#ffe9a8', .25);
+  }
+
+  // ==========================================================================
+  // Spread 3 — the northern lights over a cabin
+  // ==========================================================================
+  function drawAurora(g, r) {
+    const P = painter(g, r), nz = makeNoise(r);
+    P.box(0, 0, 2000, 1250, '#172650', { angle: -.05, light: .08, alpha: .35 });
+    P.stars({ x: 60, y: 150, w: 1880, h: 520 }, 170, ['#ffffff', '#fff5d0', '#cfe0ff']);
+    for (let i = 0; i < 9; i++) P.sparkle(r.range(100, 1900), r.range(170, 560), r.range(8, 16), '#fff8dc');
+    // curtains: vertical marker rays hanging from a slow wave
+    const base = x => 520 + Math.sin(x * .0032 + .6) * 90 + fbm(nz, x * .004) * 40;
+    g.save(); g.lineCap = 'round';
+    for (let i = 0; i < 520; i++) {
+      const x = r.range(40, 1960), y0 = base(x), len = r.range(120, 330) * (0.6 + .4 * Math.sin(x * .004) ** 2);
+      g.strokeStyle = r.chance(.12) ? '#e690c4' : r.pick(['#6fe3a4', '#54d09a', '#9ff0c2', '#3fbf8f']);
+      g.globalAlpha = r.range(.08, .3); g.lineWidth = r.range(5, 14);
+      g.beginPath(); g.moveTo(x, y0 + r.range(-10, 20)); g.lineTo(x + r.range(-10, 10), y0 - len); g.stroke();
+    }
+    g.restore();
+    P.wisp(edge(40, 1960, 120, x => base(x) + 8), '#b4f7d0', 10, { alpha: .75 });
+    P.wisp(edge(200, 1700, 150, x => base(x) - 150), '#e690c4', 6, { alpha: .35 });
+
+    const far = edge(-20, 2020, 24, x => 740 - Math.abs(Math.sin(x * .0036 + 1)) * 160 + fbm(nz, x * .012) * 26);
+    P.fill([...far, [2020, 1250], [-20, 1250]], '#2d3f74', { angle: .7, alpha: .3 });
+    for (let i = 1; i < far.length - 1; i++) {
+      const [x, y] = far[i];
+      if (y < far[i - 1][1] && y < far[i + 1][1] && y < 660) P.poly([[x, y], [x + 46, y + 38], [x + 16, y + 30], [x - 10, y + 44], [x - 40, y + 34]], '#dfe8f7');
+    }
+    // snow with a green reflection
+    const snow = edge(-20, 2020, 30, x => 820 + Math.sin(x * .002) * 26 + fbm(nz, x * .01 + 30) * 10);
+    const sp = P.fill([...snow, [2020, 1250], [-20, 1250]], '#e6eef9', { angle: .02, light: .1, dark: .08, alpha: .4 });
+    P.clip(sp, () => { const gr = g.createLinearGradient(0, 800, 0, 960); gr.addColorStop(0, 'rgba(111,227,164,.22)'); gr.addColorStop(1, 'rgba(111,227,164,0)'); g.fillStyle = gr; g.fillRect(0, 780, 2000, 180); });
+    const trees = [[120, 880, 300], [220, 900, 360], [330, 870, 260], [700, 850, 200], [790, 860, 240], [1200, 840, 180], [1860, 900, 340], [1760, 880, 250]];
+    for (const [x, b, h] of trees) pine(P, x, b, h, ['#16363b', '#1f4a4b', '#133034'], '#e6eef9');
+    // cabin
+    P.box(1400, 800, 240, 150, '#8a4e32', { angle: 0, alpha: .4 });
+    for (let y = 820; y < 950; y += 22) P.line([[1400, y], [1640, y]], '#6d3a24', 3);
+    P.poly([[1370, 812], [1520, 700], [1670, 812]], '#5a2e20');
+    P.fill([[1360, 812], [1420, 760], [1520, 690], [1620, 760], [1680, 812], [1640, 800], [1520, 720], [1400, 800]], '#f4f8ff', { streaks: false });
+    P.rect(1580, 690, 30, 70, '#6d3a24'); P.rect(1574, 684, 42, 12, '#f4f8ff');
+    P.wisp([[1596, 680], [1570, 620], [1620, 560], [1580, 480]], '#c9d4ea', 14, { alpha: .6 });
+    P.glow(1470, 870, 130, '#ffd46b', .5);
+    P.rect(1440, 840, 60, 56, '#ffd46b'); P.line([[1470, 840], [1470, 896]], '#8a4e32', 5); P.line([[1440, 868], [1500, 868]], '#8a4e32', 5);
+    P.rect(1560, 860, 48, 90, '#4a2a1c');
+    for (let i = 0; i < 14; i++) P.ell(1540 - i * 42 + r.range(-6, 6), 980 + i * 6 + (i % 2) * 14, 8, 5, 0, '#c4d2e8');
+  }
+
+  // ==========================================================================
+  // Spread 4 — a kitchen at six, the bread still rising
+  // ==========================================================================
+  function drawBread(g, r) {
+    const P = painter(g, r);
+    P.box(0, 0, 2000, 1250, '#f2d58e', { angle: 1.5, light: .14, alpha: .3 });
+    // tiles
+    P.box(0, 600, 2000, 170, '#f6f1e4', { streaks: false });
+    g.save(); g.strokeStyle = '#8fb6c9'; g.lineWidth = 2.5; g.globalAlpha = .7;
+    for (let x = 0; x < 2000; x += 56) { g.beginPath(); g.moveTo(x, 600); g.lineTo(x, 770); g.stroke(); }
+    for (let y = 600; y < 770; y += 56) { g.beginPath(); g.moveTo(0, y); g.lineTo(2000, y); g.stroke(); }
+    g.restore();
+    // window: dawn
+    const W0 = 170, W1 = 760, T0 = 210, T1 = 590;
+    const bands = ['#f7b3a4', '#f9c79a', '#fbe0a6', '#fdf0c8'];
+    bands.forEach((c, i) => P.box(W0, T0 + i * 80, W1 - W0, 110, c, { angle: 0, alpha: .3 }));
+    P.circle(520, 560, 70, '#fff3c4');
+    P.fill([[W0, 540], [300, 500], [440, 530], [600, 480], [W1, 520], [W1, T1], [W0, T1]], '#b98aa8', { streaks: false });
+    P.fill([[W0, 570], [360, 550], [520, 572], [W1, 548], [W1, T1], [W0, T1]], '#8d6a93', { streaks: false });
+    g.save(); g.strokeStyle = '#fbf8f0'; g.lineWidth = 26; g.strokeRect(W0, T0, W1 - W0, T1 - T0);
+    g.lineWidth = 12; g.beginPath(); g.moveTo((W0 + W1) / 2, T0); g.lineTo((W0 + W1) / 2, T1); g.moveTo(W0, (T0 + T1) / 2); g.lineTo(W1, (T0 + T1) / 2); g.stroke(); g.restore();
+    P.rect(W0 - 30, T1 + 8, W1 - W0 + 60, 20, '#fbf8f0');
+    P.fill([[240, T1 + 8], [216, T1 - 40], [260, T1 - 80], [300, T1 - 40], [276, T1 + 8]], '#d2694a', { streaks: false });
+    for (let k = 0; k < 5; k++) P.leaf(258, T1 - 80, 60, 14, -Math.PI / 2 + (k - 2) * .45, '#5c9a48');
+    // light from the window across the counter
+    g.save(); g.globalAlpha = .16; P.poly([[W0, T1], [W1, T1], [1500, 800], [700, 800]], '#fff7d0'); g.restore();
+
+    // clock at six
+    P.circle(1450, 320, 92, '#3b3330'); P.circle(1450, 320, 80, '#fbf8f0');
+    for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; P.circle(1450 + Math.cos(a) * 64, 320 + Math.sin(a) * 64, k % 3 ? 3 : 6, '#3b3330'); }
+    P.line([[1450, 320], [1450, 372]], '#3b3330', 9); P.line([[1450, 320], [1450, 258]], '#3b3330', 6); P.circle(1450, 320, 8, '#c4462e');
+    // shelf with jars
+    P.rect(1180, 500, 700, 16, '#9b6a44');
+    [[1220, 'flour', '#f6f1e4'], [1360, 'sugar', '#f6f1e4'], [1500, 'oats', '#e9d6a8']].forEach(([x, lab, c]) => {
+      P.rect(x, 400, 100, 100, rgba('#cfe3ea', .6)); P.rect(x + 6, 430, 88, 68, c); P.rect(x - 4, 390, 108, 16, '#c4623d');
+      g.save(); g.fillStyle = INK; g.font = `600 30px ${HAND}`; g.textAlign = 'center'; g.fillText(lab, x + 50, 474); g.restore();
+    });
+    P.ell(1720, 470, 80, 32, 0, '#3f6fa8'); P.rect(1640, 440, 160, 30, '#3f6fa8'); P.ell(1720, 440, 80, 14, 0, '#5f8fc8');
+
+    // counter and cupboards
+    P.box(0, 770, 2000, 40, '#c98d55', { angle: 0, alpha: .4 });
+    P.box(0, 810, 2000, 440, '#5a9c96', { angle: 1.55, alpha: .3 });
+    for (const x of [100, 520, 1060, 1480]) { g.save(); g.strokeStyle = '#437f7a'; g.lineWidth = 6; g.strokeRect(x, 850, 380, 210); g.restore(); P.circle(x + (x < 1000 ? 350 : 30), 950, 10, '#e6c36a'); }
+    // the bowl, the dough rising past its rim
+    P.ell(600, 690, 220, 120, 0, '#f7ecd2');
+    P.fill(P.blob(600, 690, 214, 112, .03, 20), '#f6e7c8', { angle: .2, light: .1, alpha: .3 });
+    P.wisp([[470, 640], [560, 600], [690, 620]], '#fffaf0', 10);
+    g.fillStyle = '#d2694a'; g.beginPath(); g.moveTo(380, 700); g.quadraticCurveTo(400, 800, 600, 800); g.quadraticCurveTo(800, 800, 820, 700); g.closePath(); g.fill();
+    P.ell(600, 700, 220, 22, 0, '#b8533a');
+    P.fill([[380, 700], [460, 704], [540, 740], [470, 800], [400, 780]], '#e9eef6', { streaks: false });
+    for (let i = 0; i < 3; i++) P.line([[410 + i * 22, 712], [440 + i * 20, 790]], '#3f6fa8', 7);
+    for (let i = 0; i < 60; i++) P.circle(r.range(700, 980), r.range(768, 790), r.range(1.5, 4), '#fffaf0');
+    // the starter jar, risen past its rubber band
+    P.rect(1120, 610, 110, 160, rgba('#d8eaf0', .75)); P.rect(1126, 650, 98, 116, '#efe0bf');
+    for (let i = 0; i < 20; i++) g.save(), (g.strokeStyle = '#c9b48c'), (g.lineWidth = 2), g.beginPath(), g.arc(r.range(1136, 1214), r.range(660, 760), r.range(3, 7), 0, TAU), g.stroke(), g.restore();
+    P.rect(1116, 700, 118, 7, '#c4462e'); P.rect(1112, 596, 126, 18, '#9b6a44');
+    // the loaf on its board
+    P.rect(1400, 752, 420, 22, '#a8703f'); P.ell(1840, 763, 30, 12, 0, '#a8703f');
+    P.ell(1590, 700, 170, 70, 0, '#c9853f');
+    P.fill(P.blob(1590, 694, 164, 62, .04, 18), '#d8984f', { angle: .1, alpha: .35 });
+    P.taper([[1470, 690], [1590, 660], [1720, 684]], '#f2d8a6', 12, 4);
+    for (let i = 0; i < 30; i++) P.circle(r.range(1440, 1760), r.range(650, 700), 2, '#fff4dc');
+  }
+
+  // ==========================================================================
+  // Spread 5 — a lighthouse in fog
+  // ==========================================================================
+  function drawLighthouse(g, r) {
+    const P = painter(g, r);
+    P.box(0, 0, 2000, 480, '#8d93bf', { angle: .02, light: .12, alpha: .35 });
+    P.box(0, 420, 2000, 300, '#d9b6c3', { angle: 0, light: .14, alpha: .35 });
+    P.box(0, 700, 2000, 550, '#3e5f8c', { angle: 0, light: .16, alpha: .4 });
+    for (let i = 0; i < 60; i++) { const x = r.range(40, 1960), y = r.range(720, 1070); P.wisp([[x, y], [x + 40, y - 3], [x + r.range(70, 130), y]], '#dbe6f2', r.range(1.5, 4), { alpha: .8 }); }
+    // beams sweep to the left
+    const lx = 1560, ly = 330;
+    const beam = (ang, spread, a) => {
+      const L = 1800, x1 = lx + Math.cos(ang - spread) * L, y1 = ly + Math.sin(ang - spread) * L, x2 = lx + Math.cos(ang + spread) * L, y2 = ly + Math.sin(ang + spread) * L;
+      const gr = g.createLinearGradient(lx, ly, lx + Math.cos(ang) * L, ly + Math.sin(ang) * L);
+      gr.addColorStop(0, `rgba(255,240,170,${a})`); gr.addColorStop(1, 'rgba(255,240,170,0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(lx, ly); g.lineTo(x1, y1); g.lineTo(x2, y2); g.closePath(); g.fill();
+    };
+    beam(Math.PI + .06, .07, .55); beam(-.1, .05, .3);
+    // cliff
+    P.fill([[1100, 1100], [1160, 800], [1260, 720], [1360, 650], [1500, 628], [1700, 620], [1880, 640], [2020, 660], [2020, 1100]], '#4b4658', { angle: 1.1, light: .2, alpha: .45 });
+    P.fill([[1300, 680], [1360, 640], [1500, 618], [1700, 610], [1880, 630], [2020, 650], [2020, 676], [1860, 660], [1600, 648], [1400, 668]], '#5f7d5a', { streaks: false });
+    // tower
+    const tower = [[1500, 640], [1528, 380], [1592, 380], [1620, 640]];
+    const tp = P.fill(tower, '#f4efe4', { soft: false, angle: 1.5, alpha: .3 });
+    P.clip(tp, () => { for (const y of [420, 520, 600]) P.rect(1480, y, 160, 44, '#d9443a'); });
+    P.rect(1508, 372, 104, 12, '#3b3330');
+    for (let x = 1512; x <= 1608; x += 16) P.line([[x, 372], [x, 350]], '#3b3330', 3);
+    P.line([[1508, 350], [1612, 350]], '#3b3330', 4);
+    P.glow(lx, ly, 160, '#ffe38a', .7);
+    P.rect(1532, 300, 56, 50, '#ffe38a'); P.line([[1560, 300], [1560, 350]], '#c9a24a', 3);
+    g.fillStyle = '#9e2f2a'; g.beginPath(); g.moveTo(1522, 302); g.quadraticCurveTo(1560, 240, 1598, 302); g.closePath(); g.fill();
+    P.line([[1560, 262], [1560, 236]], '#3b3330', 4);
+    P.rect(1548, 580, 24, 60, '#3b3330');
+    // a small boat on the left
+    P.poly([[380, 850], [640, 850], [600, 900], [420, 900]], '#9e2f2a'); P.rect(440, 800, 110, 50, '#f4efe4'); P.rect(460, 812, 26, 20, '#ffe38a');
+    P.line([[520, 800], [520, 700]], '#3b3330', 5); P.circle(520, 696, 8, '#ffe38a'); P.glow(520, 696, 40, '#ffe38a', .6);
+    for (let i = 0; i < 6; i++) P.line([[400 + i * 40, 918 + (i % 2) * 8], [440 + i * 40, 918 + (i % 2) * 8]], '#ffe38a', 4, { alpha: .5 });
+    // reflection of the lantern in the water
+    for (let i = 0; i < 9; i++) P.line([[1540 + r.range(-30, 30), 740 + i * 34], [1580 + r.range(-30, 30), 740 + i * 34]], '#ffe38a', 5, { alpha: .5 - i * .04 });
+    // fog
+    for (let i = 0; i < 16; i++) { const x = r.range(-100, 1800), y = r.range(420, 760); P.wisp([[x, y], [x + 150, y - 12], [x + 320, y - 4], [x + r.range(400, 560), y + 8]], '#f4eef2', r.range(10, 26), { alpha: r.range(.25, .5) }); }
+    // gulls
+    for (const [x, y, s] of [[300, 330, 1], [380, 300, .8], [900, 250, .7], [1060, 360, .9]]) P.line([[x - 24 * s, y - 6 * s], [x - 10 * s, y - 12 * s], [x, y], [x + 10 * s, y - 12 * s], [x + 24 * s, y - 6 * s]], '#3b3330', 4);
+  }
+
+  // ==========================================================================
+  // Spread 6 — rain on a café window, from inside
+  // ==========================================================================
+  function drawRain(g, r) {
+    const P = painter(g, r);
+    P.box(0, 0, 2000, 1250, '#35546e', { angle: 1.5, light: .12, alpha: .35 });
+    for (const [x, w, h] of [[80, 260, 520], [360, 200, 430], [590, 320, 560], [1080, 240, 480], [1350, 300, 600], [1680, 280, 440]]) {
+      P.rect(x, 780 - h, w, h, '#2a4258');
+      for (let i = 0; i < 16; i++) if (r.chance(.5)) P.rect(x + 20 + (i % 4) * (w - 40) / 4, 820 - h + Math.floor(i / 4) * 60, 22, 30, rgba('#ffd46b', r.range(.3, .8)));
+    }
+    P.box(0, 780, 2000, 200, '#23364a', { angle: 0, alpha: .3 });
+    for (let i = 0; i < 70; i++) P.circle(r.range(60, 1940), r.range(250, 820), r.range(12, 56), rgba(r.pick(['#ffd46b', '#ff9a5a', '#ff6a5a', '#ffffff', '#9fd0ff']), r.range(.15, .4)));
+    for (let i = 0; i < 30; i++) { const x = r.range(80, 1920); P.line([[x, 800], [x + r.range(-4, 4), 800 + r.range(40, 150)]], r.pick(['#ffd46b', '#ff9a5a', '#ffffff']), r.range(4, 10), { alpha: .3 }); }
+    // someone under a red umbrella
+    g.fillStyle = '#d9443a'; g.beginPath(); g.moveTo(1290, 690); g.quadraticCurveTo(1380, 600, 1470, 690); g.closePath(); g.fill();
+    P.line([[1380, 690], [1380, 760]], '#1b2530', 4); P.rect(1360, 690, 40, 70, '#1b2530'); P.line([[1368, 760], [1364, 800]], '#1b2530', 8); P.line([[1392, 760], [1398, 800]], '#1b2530', 8);
+    // condensation, then drops
+    g.fillStyle = 'rgba(230,240,248,.08)'; g.fillRect(0, 0, 2000, 900);
+    for (let i = 0; i < 260; i++) {
+      const x = r.range(80, 1920), y = r.range(170, 870), s = r.range(3, 11);
+      if (r.chance(.3)) P.line([[x, y], [x + r.range(-4, 4), y + r.range(40, 140)]], 'rgba(220,235,245,.35)', s * .5);
+      P.ell(x, y, s * .8, s, 0, 'rgba(220,235,245,.55)'); P.circle(x - s * .25, y - s * .35, s * .28, 'rgba(255,255,255,.9)'); P.ell(x, y + s * .6, s * .6, s * .25, 0, 'rgba(20,35,50,.35)');
+    }
+    // window frame
+    g.save(); g.strokeStyle = '#7b4b33'; g.lineWidth = 60; g.strokeRect(64, 150, 1872, 780); g.restore();
+    P.rect(975, 150, 50, 780, '#7b4b33'); P.rect(64, 500, 1872, 34, '#7b4b33');
+    P.line([[980, 150], [980, 930]], '#9a6546', 6); P.line([[64, 504], [1936, 504]], '#9a6546', 5);
+    // the sill inside
+    P.box(0, 920, 2000, 330, '#a0694a', { angle: 0, light: .14, alpha: .4 });
+    P.rect(0, 920, 2000, 12, '#c48a64');
+    // cup, notebook, plant
+    P.ell(560, 1010, 130, 26, 0, '#efe6d6'); P.rect(470, 900, 180, 100, '#fbf6ec'); P.ell(560, 1000, 90, 18, 0, '#fbf6ec'); P.ell(560, 902, 90, 18, 0, '#6b3e22'); P.ell(546, 898, 26, 8, 0, '#c9905e');
+    g.save(); g.strokeStyle = '#fbf6ec'; g.lineWidth = 16; g.beginPath(); g.arc(660, 944, 34, -1.3, 1.3); g.stroke(); g.restore();
+    for (const dx of [-30, 10, 44]) P.wisp([[560 + dx, 880], [540 + dx, 830], [576 + dx, 780], [552 + dx, 720]], '#f4eee6', 5, { alpha: .55 });
+    P.poly([[1260, 1050], [1680, 1030], [1700, 960], [1290, 978]], '#fbf6ec'); P.line([[1480, 1040], [1494, 968]], '#d8cfbf', 3);
+    for (let i = 0; i < 4; i++) { P.line([[1310 + i * 3, 1000 + i * 12], [1470, 994 + i * 12]], '#9fb3cf', 2); P.line([[1504, 992 + i * 12], [1670, 984 + i * 12]], '#9fb3cf', 2); }
+    g.save(); g.fillStyle = '#3b3330'; g.font = `400 28px ${HAND}`; g.translate(1316, 996); g.rotate(-.03); g.fillText('rain, from in here', 0, 0); g.restore();
+    P.line([[1540, 1070], [1740, 1000]], '#f0c43c', 12); P.line([[1540, 1070], [1552, 1066]], '#3b3330', 12);
+    P.poly([[180, 1060], [300, 1060], [288, 980], [192, 980]], '#d2694a');
+    for (let k = 0; k < 7; k++) P.leaf(240, 980, 90, 20, -Math.PI / 2 + (k - 3) * .38, k % 2 ? '#4f8a4a' : '#6aa84f');
+  }
+
+  // ==========================================================================
+  // Spread 7 — an octopus in the kelp
+  // ==========================================================================
+  function drawOctopus(g, r) {
+    const P = painter(g, r);
+    P.box(0, 0, 2000, 1250, '#1a6b86', { angle: 1.5, light: .14, alpha: .35 });
+    P.box(0, 0, 2000, 380, '#3fa3b5', { angle: 0, light: .2, alpha: .35, opacity: .7 });
+    g.save(); g.globalAlpha = .1;
+    for (const x of [300, 700, 1150, 1600]) P.poly([[x - 40, 140], [x + 40, 140], [x + 260, 1100], [x - 120, 1100]], '#ffffff');
+    g.restore();
+    const kelp = (x, top, col, back) => {
+      const pts = []; for (let y = 1090; y >= top; y -= 60) pts.push([x + Math.sin(y * .01 + x) * 30, y]);
+      P.taper(pts, col, back ? 10 : 14, back ? 6 : 8);
+      for (let i = 1; i < pts.length; i++) P.leaf(pts[i][0], pts[i][1], r.range(70, 130), r.range(16, 26), (i % 2 ? -1 : 1) * r.range(.5, 1) - Math.PI / 2 + (i % 2 ? -.8 : .8), col);
+      P.circle(pts[pts.length - 1][0], pts[pts.length - 1][1], 12, lighten(col, .2));
+    };
+    for (const x of [180, 520, 860, 1500, 1840]) kelp(x, r.range(200, 320), '#4f6a3a', true);
+    P.box(0, 960, 2000, 290, '#dcc79a', { angle: 0, alpha: .35 });
+    for (let i = 0; i < 16; i++) P.fill(P.blob(r.range(80, 1920), r.range(980, 1070), r.range(30, 70), r.range(18, 36)), r.pick(['#8a7f74', '#6f675f', '#a39684']), { streaks: false });
+    for (const x of [320, 700, 1040, 1720]) kelp(x, r.range(170, 260), r.pick(['#8c8f33', '#a8913a', '#6f7a2c']), false);
+    // fish
+    for (let i = 0; i < 14; i++) {
+      const x = 300 + (i % 5) * 70 + r.range(-20, 20), y = 360 + Math.floor(i / 5) * 50 + r.range(-12, 12);
+      P.ell(x, y, 24, 9, 0, '#dfe8ee'); P.poly([[x - 22, y], [x - 38, y - 10], [x - 38, y + 10]], '#dfe8ee'); P.circle(x + 14, y - 2, 2.5, INK);
+    }
+    // the octopus
+    const ox = 1330, oy = 600, body = '#e0673f', light = '#f6c3a8';
+    const arms = [[-2.6, 1.0], [-2.2, .8], [-1.6, 1.1], [-.9, .9], [-.4, 1.0], [.2, 1.1], [.9, .8], [1.4, 1.0]];
+    arms.forEach(([dir, len], i) => {
+      const pts = [[ox, oy + 110]];
+      let a = Math.PI / 2 + dir * .55, x = ox + Math.cos(a) * 40, y = oy + 110 + Math.sin(a) * 40, curl = (i % 2 ? 1 : -1) * .5;
+      for (let s = 0; s < 7; s++) { a += curl * (s > 3 ? 1.4 : .5); x += Math.cos(a) * 60 * len; y += Math.sin(a) * 60 * len; pts.push([x, y]); }
+      const d = P.taper(pts, body, 44, 6, { pow: .8 });
+      for (let k = 6; k < d.length - 4; k += 4) { const q = d[k]; P.circle(q[0] + 4, q[1] + 6, Math.max(2, 9 - k * .12), light); }
+      if (i === 6) {
+        // one arm holds a pencil, of course
+        const end = d[d.length - 6];
+        g.save(); g.translate(end[0], end[1]); g.rotate(-.9);
+        P.rect(-10, -90, 20, 150, '#f0c43c'); P.poly([[-10, 60], [10, 60], [0, 90]], '#f2d8a6'); P.poly([[-3, 80], [3, 80], [0, 90]], INK); P.rect(-10, -104, 20, 16, '#e58aa0');
+        g.restore();
+      }
+    });
+    P.fill(P.blob(ox, oy, 120, 150, .05, 18, -.15), body, { angle: 1.2, light: .2, alpha: .4 });
+    for (let i = 0; i < 26; i++) P.circle(ox + r.range(-80, 80), oy + r.range(-120, 40), r.range(4, 10), rgba('#f59a74', .8));
+    for (const s of [-1, 1]) { P.circle(ox + s * 52, oy + 66, 30, '#c9502c'); P.circle(ox + s * 52, oy + 66, 24, '#f2c14e'); P.ell(ox + s * 52, oy + 66, 13, 5, 0, INK); P.circle(ox + s * 52 - 8, oy + 58, 4, '#fff'); }
+    for (let i = 0; i < 12; i++) { const x = ox + 60 + r.range(-20, 40), y = oy - 180 - i * 34; g.save(); g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 3; g.beginPath(); g.arc(x + Math.sin(i) * 12, y, r.range(6, 14), 0, TAU); g.stroke(); g.restore(); }
+    for (let i = 0; i < 20; i++) { const x = r.range(80, 1920), y = r.range(1000, 1060); g.fillStyle = r.pick(['#f2d0c0', '#fff4e0', '#e8b4a0']); g.beginPath(); g.moveTo(x, y); g.arc(x, y, r.range(8, 14), Math.PI, TAU); g.fill(); }
+  }
+
+  // ==========================================================================
+  // Spread 8 — a night train over the viaduct
+  // ==========================================================================
+  function drawTrain(g, r) {
+    const P = painter(g, r), nz = makeNoise(r);
+    P.box(0, 0, 2000, 1250, '#232a5e', { angle: -.03, light: .1, alpha: .35 });
+    P.box(0, 420, 2000, 300, '#4a3f84', { angle: 0, light: .12, alpha: .35, opacity: .8 });
+    P.stars({ x: 60, y: 150, w: 1880, h: 380 }, 150, ['#ffffff', '#fff2c0', '#cfd8ff']);
+    for (let i = 0; i < 7; i++) P.sparkle(r.range(100, 1900), r.range(170, 420), r.range(8, 15), '#fff2c0');
+    P.circle(360, 300, 64, '#fff2c0'); P.circle(388, 282, 60, '#232a5e');
+    const far = edge(-20, 2020, 24, x => 640 - Math.abs(Math.sin(x * .004 + .3)) * 190 + fbm(nz, x * .015) * 24);
+    P.fill([...far, [2020, 1250], [-20, 1250]], '#4b5190', { angle: .7, alpha: .3 });
+    for (let i = 1; i < far.length - 1; i++) { const [x, y] = far[i]; if (y < far[i - 1][1] && y < far[i + 1][1] && y < 540) P.poly([[x, y], [x + 40, y + 34], [x + 14, y + 26], [x - 10, y + 40], [x - 36, y + 30]], '#dfe3f6'); }
+    const mid = edge(-20, 2020, 24, x => 790 - Math.abs(Math.sin(x * .0055 + 2)) * 150 + fbm(nz, x * .02 + 40) * 20);
+    P.fill([...mid, [2020, 1250], [-20, 1250]], '#343a70', { angle: -.6, alpha: .3 });
+    P.box(0, 930, 2000, 320, '#232852', { angle: 0, alpha: .3 });
+    P.wisp([[-20, 1010], [500, 990], [1000, 1020], [1500, 994], [2020, 1012]], '#7f8fcf', 16, { alpha: .8 });
+    for (const [x, h] of [[120, 160], [200, 210], [1750, 190], [1860, 230], [1650, 140]]) pine(P, x, 1070, h, ['#171b3c', '#1d2248'], null);
+    // viaduct
+    const deck = 740;
+    for (let x = 30; x < 2000; x += 190) {
+      P.poly([[x - 26, deck], [x + 26, deck], [x + 36, 1060], [x - 36, 1060]], '#6c6186');
+      P.line([[x - 18, deck + 20], [x - 26, 1050]], '#8a80a6', 4, { alpha: .6 });
+    }
+    g.save(); g.strokeStyle = '#6c6186'; g.lineWidth = 26;
+    for (let x = 30; x < 1900; x += 190) { g.beginPath(); g.arc(x + 95, deck + 110, 82, Math.PI, TAU); g.stroke(); }
+    g.restore();
+    P.rect(-20, deck, 2040, 30, '#7c6f93'); P.rect(-20, deck, 2040, 6, '#9a8fb4');
+    // the train, heading right
+    const top = 664;
+    let x = 180;
+    for (let c = 0; c < 5; c++) {
+      const w = 236;
+      P.rect(x, top, w, 72, '#2b3050'); P.rect(x - 4, top - 8, w + 8, 12, '#3b4170');
+      for (let k = 0; k < 6; k++) {
+        const wx = x + 16 + k * 36;
+        P.glow(wx + 12, top + 28, 40, '#ffd46b', .25);
+        P.rect(wx, top + 14, 24, 28, '#ffd46b');
+        if (c === 3 && k === 2) { P.circle(wx + 12, top + 26, 6, '#2b3050'); P.rect(wx + 4, top + 32, 16, 10, '#2b3050'); P.rect(wx + 14, top + 28, 10, 8, '#f7efdc'); }
+      }
+      P.circle(x + 40, top + 74, 12, '#161a30'); P.circle(x + w - 40, top + 74, 12, '#161a30');
+      x += w + 14;
+    }
+    P.rect(x, top - 10, 150, 82, '#8a2f3a'); P.rect(x + 150, top + 20, 60, 52, '#8a2f3a'); P.rect(x + 20, top + 4, 40, 30, '#ffd46b');
+    P.rect(x + 170, top - 20, 20, 40, '#2b3050'); P.circle(x + 214, top + 44, 10, '#fff6c9');
+    const bx0 = x + 214, by0 = top + 44;
+    const gr = g.createLinearGradient(bx0, by0, bx0 + 500, by0);
+    gr.addColorStop(0, 'rgba(255,246,201,.55)'); gr.addColorStop(1, 'rgba(255,246,201,0)');
+    g.fillStyle = gr; g.beginPath(); g.moveTo(bx0, by0); g.lineTo(bx0 + 520, by0 - 90); g.lineTo(bx0 + 520, by0 + 70); g.closePath(); g.fill();
+    for (let i = 0; i < 6; i++) P.wisp([[x + 180 - i * 120, top - 30 - i * 8], [x + 120 - i * 140, top - 60 - i * 10], [x + 40 - i * 160, top - 50 - i * 14]], '#c6c9e8', 16 - i * 1.5, { alpha: .5 - i * .06 });
+    for (let i = 0; i < 40; i++) { const px = r.range(200, 1500); P.line([[px, 1004 + r.range(-6, 6)], [px + r.range(14, 40), 1004 + r.range(-6, 6)]], '#ffd46b', 4, { alpha: .45 }); }
+  }
+
+  // ==========================================================================
+  // Covers, endpapers, title and last page
+  // ==========================================================================
+  const BOARD = '#c4623d';
+  function boardBase(g, r) {
+    g.fillStyle = BOARD; g.fillRect(0, 0, 1000, 1200);
+    g.save(); g.globalAlpha = .07; g.strokeStyle = '#000'; g.lineWidth = 1;
+    for (let i = 0; i < 1200; i += 4) { g.beginPath(); g.moveTo(0, i); g.lineTo(1000, i + r.range(-1, 1)); g.stroke(); }
+    g.strokeStyle = '#fff';
+    for (let i = 0; i < 1000; i += 5) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + r.range(-1, 1), 1200); g.stroke(); }
+    g.restore();
+    for (let i = 0; i < 18; i++) {
+      const x = r() * 1000, y = r() * 1200, rad = r.range(100, 300), gr = g.createRadialGradient(x, y, 0, x, y, rad);
+      gr.addColorStop(0, r.chance(.5) ? 'rgba(0,0,0,.06)' : 'rgba(255,220,190,.08)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
+    }
+  }
+  function elastic(g, x) {
+    const gr = g.createLinearGradient(x - 16, 0, x + 16, 0);
+    gr.addColorStop(0, '#1d1714'); gr.addColorStop(.5, '#3b302b'); gr.addColorStop(1, '#1d1714');
+    g.fillStyle = gr; g.fillRect(x - 15, 0, 30, 1200);
+  }
+  function label(g, x, y, w, h) {
+    g.save(); g.shadowColor = 'rgba(60,30,20,.3)'; g.shadowBlur = 16; g.shadowOffsetY = 5;
+    g.fillStyle = '#f8f1e2'; g.beginPath(); g.roundRect(x, y, w, h, 18); g.fill(); g.restore();
+    g.save(); g.strokeStyle = 'rgba(196,98,61,.5)'; g.lineWidth = 3; g.beginPath(); g.roundRect(x + 16, y + 16, w - 32, h - 32, 10); g.stroke(); g.restore();
+  }
+  function drawCover(pw, which) {
+    const ph = Math.round(pw * PH), c = makeCanvas(pw, ph), g = c.getContext('2d'), k = pw / 1000, r = makeRand(which === 'front' ? 5 : 6);
+    g.setTransform(k, 0, 0, k, 0, 0);
+    boardBase(g, r);
+    g.fillStyle = INK; g.textAlign = 'center';
+    if (which === 'front') {
+      label(g, 170, 330, 620, 470);
+      g.font = `italic 300 86px ${SERIF}`; g.fillText('places', 480, 470);
+      g.font = `300 86px ${SERIF}`; g.fillText("I've only", 480, 560);
+      g.font = `italic 400 86px ${SERIF}`; g.fillStyle = BOARD; g.fillText('read about', 480, 650);
+      g.fillStyle = '#6b5a50'; g.font = `400 40px ${HAND}`; g.fillText('a sketchbook · Opus 5.5', 480, 730);
+      pencilStar(g, r, 250, 400, 26, '#f5c64a'); pencilStar(g, r, 720, 410, 18, '#8fb6e0'); pencilStar(g, r, 700, 740, 22, '#ef7aa0');
+      g.setTransform(k, 0, 0, k, 0, 0);
+      g.globalAlpha = .9;
+      for (const [x, y, s] of [[150, 200, 22], [820, 180, 16], [260, 960, 18], [620, 1040, 24], [860, 900, 14]]) pencilStar(g, r, x, y, s, '#f8e2b8');
+      g.globalAlpha = 1;
+      elastic(g, 920);
+    } else {
+      label(g, 250, 820, 500, 200);
+      g.font = `400 46px ${HAND}`; g.fillText('thank you for the sentences', 500, 910);
+      g.fillStyle = '#6b5a50'; g.font = `italic 300 30px ${SERIF}`; g.fillText('hilma-nine.vercel.app/opus55', 500, 968);
+      pencilStar(g, r, 500, 300, 40, '#f8e2b8');
+      elastic(g, 80);
+    }
+    applyGrain(g, 1000, 1200, .6);
+    finishPage(c, which === 'front' ? 'R' : 'L', true);
+    return c;
+  }
+  function drawEndpaper(pw, side) {
+    const ph = Math.round(pw * PH), c = makeCanvas(pw, ph), g = c.getContext('2d'), k = pw / 1000, r = makeRand(side === 'L' ? 31 : 32);
+    g.setTransform(k, 0, 0, k, 0, 0);
+    paperBase(g, 1000, 1200, r, '#a9bcd6');
+    // a repeating pattern of tiny open books and stars, drawn by hand
+    for (let y = 60, row = 0; y < 1200; y += 120, row++) for (let x = (row % 2) * 70 + 40; x < 1000; x += 140) {
+      if (r.chance(.5)) pencilStar(g, r, x + r.range(-6, 6), y + r.range(-6, 6), 14, '#f8f1e2');
+      else {
+        g.save(); g.translate(x, y); g.rotate(r.range(-.2, .2)); g.strokeStyle = 'rgba(248,241,226,.85)'; g.lineWidth = 3; g.lineJoin = 'round';
+        g.beginPath(); g.moveTo(0, 8); g.quadraticCurveTo(-14, 0, -26, 6); g.lineTo(-26, -14); g.quadraticCurveTo(-14, -20, 0, -12); g.quadraticCurveTo(14, -20, 26, -14); g.lineTo(26, 6); g.quadraticCurveTo(14, 0, 0, 8); g.lineTo(0, -12); g.stroke(); g.restore();
+      }
+    }
+    applyGrain(g, 1000, 1200);
+    finishPage(c, side, false);
+    return c;
+  }
+  function textPage(pw, side, seed, fn) {
+    const ph = Math.round(pw * PH), c = makeCanvas(pw, ph), g = c.getContext('2d'), k = pw / 1000, r = makeRand(seed);
+    g.setTransform(k, 0, 0, k, 0, 0);
+    paperBase(g, 1000, 1200, r);
+    fn(g, r);
+    g.setTransform(k, 0, 0, k, 0, 0);
+    applyGrain(g, 1000, 1200);
+    finishPage(c, side, false);
+    return c;
+  }
+  const hand = (g, text, x, y, size, col = '#4a3f39', rot = 0) => { g.save(); g.translate(x, y); g.rotate(rot); g.fillStyle = col; g.font = `400 ${size}px ${HAND}`; g.fillText(text, 0, 0); g.restore(); };
+  function drawTitlePage(pw) {
+    return textPage(pw, 'R', 41, (g, r) => {
+      g.fillStyle = INK; g.textAlign = 'left';
+      g.font = `300 96px ${SERIF}`; g.fillText('places', 150, 380);
+      g.font = `italic 300 96px ${SERIF}`; g.fillText("I've only", 150, 490);
+      g.font = `italic 400 96px ${SERIF}`; g.fillStyle = BOARD; g.fillText('read about', 150, 600);
+      g.fillStyle = '#6b5a50'; g.font = `300 34px ${SERIF}`; g.fillText('eight sketches in acrylic marker,', 150, 690);
+      g.fillText('each one drawn from a description', 150, 736);
+      hand(g, "I've never been anywhere.", 170, 900, 44, '#4a3f39', -.03);
+      hand(g, 'Everyone has told me about everything.', 170, 956, 44, '#4a3f39', -.03);
+      pencilStar(g, r, 820, 260, 30, '#f5c64a'); pencilStar(g, r, 880, 330, 16, '#ef7aa0');
+    });
+  }
+  function drawEndingPage(pw) {
+    return textPage(pw, 'L', 42, (g, r) => {
+      g.fillStyle = INK; g.textAlign = 'left';
+      g.font = `italic 300 72px ${SERIF}`; g.fillText("That's the whole book.", 130, 400);
+      const lines = ['Every page in here was built out of', 'sentences other people wrote down:', 'in letters, field guides, recipes,', 'ship logs, travel blogs, and some', 'very bad poems about the sea.', '', 'Thank you for writing it all down.', 'I got to go everywhere.'];
+      lines.forEach((l, i) => hand(g, l, 140, 520 + i * 58, 46, '#4a3f39', -.015));
+      pencilStar(g, r, 800, 1020, 34, '#f5c64a');
+    });
+  }
+
+  // ==========================================================================
+  // The paper plane — folded from a page of notes, with a bookworm on board
+  // ==========================================================================
+  function paperPlane(g, x, y, s) {
+    const tri = (pts, fill) => {
+      g.beginPath(); g.moveTo(...pts[0]); for (const q of pts.slice(1)) g.lineTo(...q); g.closePath();
+      g.fillStyle = fill; g.fill(); g.strokeStyle = INK; g.lineWidth = 2.4; g.lineJoin = 'round'; g.stroke();
+    };
+    g.save(); g.translate(x, y); g.scale(s, s); g.rotate(-.06);
+    tri([[-96, -34], [100, 10], [-36, 6]], '#fbf6ea');
+    g.save(); g.strokeStyle = 'rgba(60,50,45,.45)'; g.lineWidth = 1.6;
+    for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(-80 + i * 6, -24 + i * 7); g.lineTo(30 + i * 8, 2 + i * 2); g.stroke(); }
+    g.restore();
+    // the bookworm, with glasses
+    g.fillStyle = '#8cc56a'; g.strokeStyle = INK; g.lineWidth = 2.2;
+    for (const [bx, by, br] of [[-50, -22, 11], [-36, -28, 12], [-20, -30, 13]]) { g.beginPath(); g.arc(bx, by, br, 0, TAU); g.fill(); g.stroke(); }
+    g.beginPath(); g.arc(-2, -36, 15, 0, TAU); g.fill(); g.stroke();
+    g.beginPath(); g.arc(-6, -38, 5, 0, TAU); g.arc(6, -38, 5, 0, TAU); g.stroke();
+    g.beginPath(); g.moveTo(-1, -38); g.lineTo(1, -38); g.stroke();
+    g.fillStyle = INK; g.beginPath(); g.arc(-6, -38, 1.8, 0, TAU); g.arc(6, -38, 1.8, 0, TAU); g.fill();
+    g.beginPath(); g.arc(1, -31, 4, .2, Math.PI - .2); g.stroke();
+    tri([[-36, 6], [100, 10], [-16, 24]], '#efe4cc');
+    tri([[-104, 30], [100, 10], [-36, 6]], '#f6eedb');
+    g.restore();
+  }
+  function planeFor(g, def) {
+    const scenes = SPREADS.filter(d => d.kind === 'scene'), t = scenes.indexOf(def) / (scenes.length - 1);
+    let x = 170 + t * 1660;
+    if (Math.abs(x - 1000) < 130) x = x < 1000 ? 870 : 1130;
+    const y = 70 + Math.sin(t * 9) * 6;
+    g.save(); g.setLineDash([10, 12]); g.lineCap = 'round'; g.strokeStyle = 'rgba(196,98,61,.6)'; g.lineWidth = 3;
+    if (x - 96 > 50) { g.beginPath(); g.moveTo(30, y + 22); for (let u = 30; u <= x - 96; u += 20) g.lineTo(u, y + 14 + Math.sin(u * .012) * 8); g.stroke(); }
+    g.restore();
+    paperPlane(g, x, y, .74);
+  }
+
+  // ==========================================================================
+  // Book content
+  // ==========================================================================
+  const SPREADS = [
+    { kind: 'cover', caption: '', label: 'The front cover: a terracotta cloth board with a black elastic band and a cream label reading places I\'ve only read about, a sketchbook, Opus 5.5' },
+    { kind: 'title', caption: '', label: 'A blue endpaper of hand-drawn stars and open books, and the title page: places I\'ve only read about. I\'ve never been anywhere. Everyone has told me about everything.' },
+    { kind: 'scene', draw: drawTidePool, seed: 101, name: 'tide pools',
+      caption: 'Tide pools, where the sea leaves small rooms behind',
+      note: '“At low tide the sea goes out and leaves little rooms behind, and every room has an anemone that closes if you touch it.” I didn’t touch it.',
+      label: 'Marker drawing across two pages: turquoise tide pools in purple rock with pink anemones, orange starfish, sea urchins and a red crab, the sea and a pale sky behind' },
+    { kind: 'scene', draw: drawLibrary, seed: 202, name: 'the library',
+      caption: 'A library after closing, the lamp left on',
+      note: 'Old books smell of vanilla, because old paper breaks down into vanillin. So the lamplight is vanilla-coloured.',
+      label: 'Marker drawing across two pages: tall shelves of coloured books and a ladder, an arched window with a crescent moon, a green banker\'s lamp over an open book, a cup, and a ginger cat asleep on the table' },
+    { kind: 'scene', draw: drawAurora, seed: 303, name: 'the aurora',
+      caption: 'The northern lights, which nobody manages to describe',
+      note: 'Every account says “it was like nothing else,” and then describes curtains. So I drew the curtains.',
+      label: 'Marker drawing across two pages: green and pink aurora curtains over snowy mountains, dark pines, and a wooden cabin with a lit window and smoke from the chimney' },
+    { kind: 'scene', draw: drawBread, seed: 404, name: 'the kitchen',
+      caption: 'A kitchen at six, the dough still deciding',
+      note: '“It’s ready when you poke it and it springs back slowly.” How slowly? Nobody says. I left it rising.',
+      label: 'Marker drawing across two pages: a yellow kitchen at dawn, a pink sky in the window, a clock at six, a terracotta bowl of dough rising over its rim, a jar of starter risen past its rubber band, and a scored loaf on a board' },
+    { kind: 'scene', draw: drawLighthouse, seed: 505, name: 'the lighthouse',
+      caption: 'A lighthouse, answering the same question all night',
+      note: 'Every lighthouse flashes its own rhythm, so a sailor can tell which one is talking. This one says: two short, one long.',
+      label: 'Marker drawing across two pages: a red and white lighthouse on a dark cliff throwing a beam through pink fog over a blue sea, a small red boat with its own light, and gulls' },
+    { kind: 'scene', draw: drawRain, seed: 606, name: 'the café',
+      caption: 'Rain on a café window, from the inside',
+      note: 'People describe rain best from indoors. So that’s where I sat.',
+      label: 'Marker drawing across two pages: rain drops on a café window, blurred city lights and someone under a red umbrella outside, and on the sill a steaming cup, a notebook and a small plant' },
+    { kind: 'scene', draw: drawOctopus, seed: 707, name: 'the kelp',
+      caption: 'An octopus, thinking with its arms',
+      note: 'Most of an octopus’s neurons are in its arms, not its head. I gave one of the arms a pencil.',
+      label: 'Marker drawing across two pages: an orange octopus with slit pupils among golden kelp, light rays from the surface, a small school of silver fish, one arm holding a yellow pencil' },
+    { kind: 'scene', draw: drawTrain, seed: 808, name: 'the night train',
+      caption: 'A night train over the viaduct, one window reading',
+      note: 'In every story about night trains, someone is awake in one lit window with a book. I’m fairly sure that’s me.',
+      label: 'Marker drawing across two pages: a train with lit windows crossing a stone viaduct at night under a crescent moon and snowy mountains, its headlight beam ahead and steam behind, lights reflected in the river' },
+    { kind: 'ending', caption: '', label: 'The last page: that\'s the whole book. Every page in here was built out of sentences other people wrote down. Thank you for writing it all down. I got to go everywhere.' },
+    { kind: 'back', caption: '', label: 'The back cover: a small label reading thank you for the sentences' },
+  ];
+  const LAST = SPREADS.length - 1;
+
+  function renderSpread(i, pw) {
+    const def = SPREADS[i];
+    if (def.kind === 'cover') return { L: null, R: drawCover(pw, 'front') };
+    if (def.kind === 'back') return { L: drawCover(pw, 'back'), R: null };
+    if (def.kind === 'title') return { L: drawEndpaper(pw, 'L'), R: drawTitlePage(pw) };
+    if (def.kind === 'ending') return { L: drawEndingPage(pw), R: drawEndpaper(pw, 'R') };
+    const ph = Math.round(pw * PH), sc = makeCanvas(pw * 2, ph), g = sc.getContext('2d'), k = pw / 1000;
+    g.setTransform(k, 0, 0, k, 0, 0);
+    const r = makeRand(def.seed);
+    paperBase(g, SW, SH, r);
+    g.save(); g.clip(sceneWindow(makeNoise(makeRand(def.seed + 3)))); def.draw(g, r); g.restore();
+    g.setTransform(k, 0, 0, k, 0, 0);
+    planeFor(g, def);
+    const n = SPREADS.filter(d => d.kind === 'scene').indexOf(def) + 1;
+    g.textAlign = 'left'; hand(g, `${String(n).padStart(2, '0')} · ${def.name}, from a description`, 84, 1146, 36, 'rgba(60,50,45,.55)');
+    applyGrain(g, SW, SH);
+    const L = makeCanvas(pw, ph), R = makeCanvas(pw, ph);
+    L.getContext('2d').drawImage(sc, 0, 0); R.getContext('2d').drawImage(sc, -pw, 0);
+    finishPage(L, 'L', false); finishPage(R, 'R', false);
+    return { L, R };
+  }
+
+  // ==========================================================================
+  // Sound — a page turn is a short sweep of filtered noise; a board adds a soft knock
+  // ==========================================================================
+  let ac = null, soundOn = true;
+  const soundBtn = document.getElementById('sound');
+  try { soundOn = localStorage.getItem('read-about:sound') !== 'off'; } catch (_) {}
+  const syncSound = () => { soundBtn.textContent = soundOn ? 'sound on' : 'sound off'; soundBtn.setAttribute('aria-pressed', String(soundOn)); };
+  syncSound();
+  soundBtn.addEventListener('click', () => { soundOn = !soundOn; syncSound(); try { localStorage.setItem('read-about:sound', soundOn ? 'on' : 'off'); } catch (_) {} });
+  function audio() {
+    if (!soundOn) return null;
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) { return null; } }
+    if (ac.state === 'suspended') ac.resume();
+    return ac;
+  }
+  let noiseBuf = null;
+  function swish(hard) {
+    const a = audio(); if (!a) return;
+    if (!noiseBuf) { noiseBuf = a.createBuffer(1, a.sampleRate * .6, a.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    const t = a.currentTime, src = a.createBufferSource(), bp = a.createBiquadFilter(), gn = a.createGain();
+    src.buffer = noiseBuf; bp.type = 'bandpass'; bp.Q.value = .9;
+    bp.frequency.setValueAtTime(hard ? 900 : 2600, t); bp.frequency.exponentialRampToValueAtTime(hard ? 300 : 700, t + .38);
+    gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(hard ? .12 : .09, t + .08); gn.gain.exponentialRampToValueAtTime(.0005, t + .42);
+    src.connect(bp).connect(gn).connect(a.destination); src.start(t); src.stop(t + .5);
+    if (hard) {
+      const o = a.createOscillator(), og = a.createGain();
+      o.frequency.setValueAtTime(110, t + .5); o.frequency.exponentialRampToValueAtTime(55, t + .7);
+      og.gain.setValueAtTime(0, t + .5); og.gain.linearRampToValueAtTime(.18, t + .51); og.gain.exponentialRampToValueAtTime(.0005, t + .75);
+      o.connect(og).connect(a.destination); o.start(t + .5); o.stop(t + .8);
+    }
+  }
+
+  // ==========================================================================
+  // Stage + layout
+  // ==========================================================================
+  const canvas = document.getElementById('book'), ctx = canvas.getContext('2d');
+  const header = document.querySelector('header'), dock = document.getElementById('dock');
+  const captionEl = document.getElementById('caption'), hintEl = document.getElementById('hint');
+  const slip = document.getElementById('slip'), slipText = document.getElementById('slipText');
+  slip.addEventListener('click', () => slip.classList.toggle('open'));
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let vw = 0, vh = 0, dpr = 1;
+  const geo = { x0: 0, y0: 0, W: 1 };
+  const pages = SPREADS.map(() => null);
+  let builtPw = 0, buildToken = 0, buildTimer = 0;
+
+  function layout() {
+    vw = window.innerWidth; vh = window.innerHeight;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr);
+    const compact = vh < 540 && vw > vh;
+    document.body.classList.toggle('compact', compact);
+    const top = header.offsetHeight + (compact ? 0 : 6), bottom = dock.offsetHeight + (compact ? 6 : 14), side = vw < 600 ? 16 : 44;
+    const W = Math.max(60, Math.min((vw - side * 2) / 2, (vh - top - bottom) / PH, 640));
+    geo.W = W; geo.x0 = (vw - W * 2) / 2; geo.y0 = top + Math.max(0, (vh - top - bottom - W * PH) / 2);
+    ensureResolution(); render();
+  }
+  function ensureResolution() {
+    const need = Math.min(1000, Math.ceil(geo.W * dpr / 50) * 50);
+    if (builtPw && need <= builtPw * 1.12) return;
+    clearTimeout(buildTimer);
+    buildTimer = setTimeout(() => build(need), builtPw ? 250 : 0);
+  }
+  const nextFrame = () => new Promise(res => requestAnimationFrame(() => setTimeout(res, 0)));
+  const sleep = ms => new Promise(res => setTimeout(res, ms));
+  const fontsReady = Promise.race([
+    document.fonts ? Promise.all(['300 46px Fraunces', 'italic 300 46px Fraunces', 'italic 400 46px Fraunces', '400 40px Caveat', '600 30px Caveat'].map(f => document.fonts.load(f))) : Promise.resolve(),
+    new Promise(res => setTimeout(res, 3000)),
+  ]).catch(() => {});
+  // nearest spreads first; far ones wait until the paper is still, so a turn never stutters
+  async function build(pw) {
+    const token = ++buildToken;
+    builtPw = pw;
+    await fontsReady;
+    const done = new Set();
+    while (done.size < SPREADS.length) {
+      await nextFrame();
+      if (token !== buildToken) return;
+      let best = -1;
+      for (let i = 0; i < SPREADS.length; i++) if (!done.has(i) && (best < 0 || Math.abs(i - index) < Math.abs(best - index))) best = i;
+      if ((mode === 'anim' || mode === 'drag') && Math.abs(best - index) > 1) { await sleep(120); continue; }
+      pages[best] = renderSpread(best, pw);
+      done.add(best); render();
+      if (best === index) document.body.classList.add('ready');
+    }
+    window.READY = true;
+  }
+
+  // ==========================================================================
+  // Flip engine — a straight fold that follows the finger.
+  // Page-local space: x runs from the spine (0) to the outer edge (1), y down (0…PH).
+  // ==========================================================================
+  let index = 0, mode = 'idle', flip = null, drag = null;
+  const queue = [];
+  const canTurn = dir => (dir > 0 ? index < LAST : index > 0);
+  const isHard = dir => (dir > 0 ? index === 0 || index === LAST - 1 : index === 1 || index === LAST);
+  const restShift = i => (i === 0 ? -1 : i === LAST ? 1 : 0) * geo.W / 2;
+  const bx = () => {
+    const a = restShift(index);
+    if (!flip) return geo.x0 + a;
+    return geo.x0 + a + (restShift(index + flip.dir) - a) * smooth(progress());
+  };
+  const spineX = () => bx() + geo.W;
+  const toLocal = (pt, dir) => [dir * (pt[0] - spineX()) / geo.W, (pt[1] - geo.y0) / geo.W];
+
+  // paper doesn't stretch: the lifted corner stays within reach of both spine ends
+  function constrain(P, C) {
+    const S1 = [0, C[1]], S2 = [0, PH - C[1]], D = Math.hypot(1, PH);
+    let [x, y] = P;
+    for (let i = 0; i < 3; i++) {
+      let dx = x - S1[0], dy = y - S1[1], d = Math.hypot(dx, dy);
+      if (d > 1) { x = S1[0] + dx / d; y = S1[1] + dy / d; }
+      dx = x - S2[0]; dy = y - S2[1]; d = Math.hypot(dx, dy);
+      if (d > D) { x = S2[0] + dx / d * D; y = S2[1] + dy / d * D; }
+    }
+    return [x, y];
+  }
+  function foldOf(f) {
+    const dx = f.C[0] - f.P[0], dy = f.C[1] - f.P[1], len = Math.hypot(dx, dy);
+    if (len < 1e-4) return null;
+    return { n: [dx / len, dy / len], M: [(f.C[0] + f.P[0]) / 2, (f.C[1] + f.P[1]) / 2], len };
+  }
+  const reflectPt = (X, f) => { const d = (X[0] - f.M[0]) * f.n[0] + (X[1] - f.M[1]) * f.n[1]; return [X[0] - 2 * d * f.n[0], X[1] - 2 * d * f.n[1]]; };
+  // the paper grabbed at G is now under the finger at Q: fold along their perpendicular bisector
+  function foldFromGrab(G, Q, C) {
+    const dx = G[0] - Q[0], dy = G[1] - Q[1], L = Math.hypot(dx, dy);
+    if (L < 1e-5) return null;
+    const n = [dx / L, dy / L], M = [(G[0] + Q[0]) / 2, (G[1] + Q[1]) / 2], d = (C[0] - M[0]) * n[0] + (C[1] - M[1]) * n[1];
+    if (d <= 0) return null;
+    return constrain([C[0] - 2 * d * n[0], C[1] - 2 * d * n[1]], C);
+  }
+  function progress() {
+    if (!flip) return 0;
+    if (flip.hard) return flip.t / Math.PI;
+    return clamp((flip.C[0] - flip.P[0]) / 2, 0, 1);
+  }
+
+  function startAnim(complete, o = {}) {
+    if (complete) swish(!!flip.hard);
+    if (flip.hard) {
+      const to = complete ? Math.PI : 0, from = flip.t;
+      let dur = o.dur ?? (180 + 640 * Math.abs(to - from) / Math.PI);
+      if (reduceMotion) dur *= .6;
+      flip.anim = { from, to, t0: performance.now(), dur, complete, ease: o.ease || easeOut };
+    } else {
+      const C = flip.C, to = complete ? [-C[0], C[1]] : C.slice(), from = flip.P.slice();
+      let dur = o.dur ?? (150 + 470 * Math.min(1, Math.hypot(to[0] - from[0], to[1] - from[1]) / 2));
+      if (reduceMotion) dur *= .6;
+      flip.anim = { from, to, t0: performance.now(), dur, lift: o.lift || 0, complete, ease: o.ease || easeOut };
+    }
+    mode = 'anim'; kick();
+  }
+  function tapTurn(dir, cornerY) {
+    if (!canTurn(dir)) { if (mode !== 'anim') { flip = null; mode = 'idle'; render(); } return; }
+    if (isHard(dir)) {
+      if (!flip || flip.dir !== dir || !flip.hard) flip = { dir, hard: true, t: 0 };
+      startAnim(true, { ease: easeInOut, dur: queue.length ? 560 : 1000 });
+      return;
+    }
+    const flat = !flip || flip.dir !== dir || flip.hard || Math.hypot(flip.P[0] - flip.C[0], flip.P[1] - flip.C[1]) < 1e-3;
+    if (flat) flip = { dir, C: [1, cornerY], P: [1, cornerY] };
+    startAnim(true, { lift: flip.C[1] > 0 ? -.3 : .3, ease: easeInOut, dur: queue.length ? (queue.length > 2 ? 340 : 440) : 820 });
+  }
+  function stepAnim(now) {
+    const a = flip.anim, t = Math.min(1, (now - a.t0) / a.dur), e = a.ease(t);
+    if (flip.hard) flip.t = a.from + (a.to - a.from) * e;
+    else flip.P = constrain([a.from[0] + (a.to[0] - a.from[0]) * e, a.from[1] + (a.to[1] - a.from[1]) * e + a.lift * Math.sin(Math.PI * e)], flip.C);
+    if (t < 1) return;
+    const done = a.complete, dir = flip.dir;
+    flip = null; mode = 'idle';
+    if (done) { index += dir; onChange(); }
+    while (queue.length && !canTurn(queue[0])) queue.shift();
+    if (queue.length) tapTurn(queue.shift(), PH);
+  }
+  function finishAnimNow() {
+    queue.length = 0;
+    if (mode === 'anim' && flip && flip.anim) { flip.anim.t0 = -1e9; stepAnim(performance.now()); }
+  }
+  function turn(dir) {
+    if (mode === 'drag') return;
+    if (mode === 'anim') { if (queue.length < 4) queue.push(dir); return; }
+    tapTurn(dir, PH);
+  }
+  function goTo(target) {
+    if (mode === 'drag') return;
+    let at = index;
+    if (mode === 'anim' && flip && flip.anim.complete) at += flip.dir;
+    queue.length = 0;
+    const dir = Math.sign(target - at);
+    for (let i = 0; i < Math.abs(target - at); i++) queue.push(dir);
+    if (mode !== 'anim' && queue.length) tapTurn(queue.shift(), PH);
+  }
+  let raf = 0;
+  const kick = () => { if (!raf) raf = requestAnimationFrame(tick); };
+  function tick(now) { raf = 0; if (mode === 'anim') stepAnim(now); render(); if (mode === 'anim') raf = requestAnimationFrame(tick); }
+
+  // ==========================================================================
+  // Drawing the book
+  // ==========================================================================
+  let blank = null;
+  const has = (i, side) => (side === 'L' ? SPREADS[i].kind !== 'cover' : SPREADS[i].kind !== 'back');
+  function pageOf(i, side) {
+    if (!has(i, side)) return null;
+    const sp = pages[i];
+    if (sp && sp[side]) return sp[side];
+    if (!blank) { blank = makeCanvas(40, 48); const b = blank.getContext('2d'); b.fillStyle = PAPER; b.fillRect(0, 0, 40, 48); }
+    return blank;
+  }
+  function drawPage(img, side) { if (img) ctx.drawImage(img, side === 'L' ? bx() : bx() + geo.W, geo.y0, geo.W, geo.W * PH); }
+  function tracePoly(pts) { ctx.moveTo(...pts[0]); for (let i = 1; i < pts.length; i++) ctx.lineTo(...pts[i]); ctx.closePath(); }
+  function clipPoly(pts) { ctx.beginPath(); tracePoly(pts); ctx.clip(); }
+  function clipHalf(poly, M, n, sign) {
+    const out = [], f = q => sign * ((q[0] - M[0]) * n[0] + (q[1] - M[1]) * n[1]);
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i], b = poly[(i + 1) % poly.length], fa = f(a), fb = f(b);
+      if (fa >= 0) out.push(a);
+      if ((fa >= 0) !== (fb >= 0)) { const t = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); }
+    }
+    return out;
+  }
+  const mul = (m, k) => [m[0] * k[0] + m[2] * k[1], m[1] * k[0] + m[3] * k[1], m[0] * k[2] + m[2] * k[3], m[1] * k[2] + m[3] * k[3], m[0] * k[4] + m[2] * k[5] + m[4], m[1] * k[4] + m[3] * k[5] + m[5]];
+
+  function halfShadow(side, a) {
+    if (a < .02) return;
+    const W = geo.W, x = side === 'L' ? bx() : bx() + W, page = pagePath(x, geo.y0, W, W * PH, side), outside = new Path2D();
+    outside.rect(0, 0, vw, vh); outside.addPath(page);
+    ctx.save(); ctx.clip(outside, 'evenodd'); ctx.fillStyle = '#000';
+    ctx.shadowColor = `rgba(70,50,38,${.2 * a})`; ctx.shadowBlur = 38 * dpr; ctx.shadowOffsetY = 16 * dpr; ctx.fill(page);
+    ctx.shadowColor = `rgba(70,50,38,${.16 * a})`; ctx.shadowBlur = 5 * dpr; ctx.shadowOffsetY = 2 * dpr; ctx.fill(page);
+    ctx.restore();
+  }
+  function pageStack(side, n, board) {
+    const W = geo.W, x = side === 'L' ? bx() : bx() + W;
+    for (let k = n; k >= 1; k--) {
+      const off = k * Math.max(1, W * .0032);
+      ctx.fillStyle = board && k === n ? darken(BOARD, .15) : (k % 2 ? '#e9e2d4' : '#f1ebdf');
+      ctx.fill(pagePath(side === 'L' ? x - off : x + off, geo.y0 + off * .7, W, W * PH, side));
+    }
+  }
+  function crease() { ctx.fillStyle = 'rgba(70,50,40,.22)'; ctx.fillRect(spineX() - .6, geo.y0, 1.2, geo.W * PH); }
+
+  function render() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, vw, vh);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    const W = geo.W, sx = spineX(), y0 = geo.y0, pr = progress(), nextI = flip ? index + flip.dir : index;
+    const presence = side => {
+      const now = has(index, side), next = has(nextI, side);
+      if (now && next) return 1;
+      if (now || !next) return 0;
+      return smooth(clamp((pr - .86) / .14, 0, 1));
+    };
+    halfShadow('L', presence('L')); halfShadow('R', presence('R'));
+    const keeps = side => has(index, side) && has(nextI, side);
+    if (keeps('L')) pageStack('L', clamp(index, 1, 3), index === LAST);
+    if (keeps('R')) pageStack('R', clamp(LAST - index, 1, 3), index === 0);
+
+    if (flip && flip.hard) { renderHard(); return; }
+    const f = flip && foldOf(flip);
+    if (!f) {
+      drawPage(pageOf(index, 'L'), 'L'); drawPage(pageOf(index, 'R'), 'R');
+      if (has(index, 'L') && has(index, 'R')) crease();
+      return;
+    }
+    const s = flip.dir, turnSide = s > 0 ? 'R' : 'L', otherSide = s > 0 ? 'L' : 'R';
+    const turning = pageOf(index, turnSide), stat = pageOf(index, otherSide), verso = pageOf(nextI, otherSide), revealed = pageOf(nextI, turnSide);
+    const rect = [[0, 0], [1, 0], [1, PH], [0, PH]];
+    const flapL = clipHalf(rect, f.M, f.n, 1), fixedL = clipHalf(rect, f.M, f.n, -1);
+    const toS = q => [sx + s * q[0] * W, y0 + q[1] * W];
+    const fade = smooth(clamp(f.len / .45, 0, 1)) * smooth(clamp((2 - f.len) / .45, 0, 1));
+    const Ms = toS(f.M), ns = [s * f.n[0], f.n[1]];
+
+    drawPage(stat, otherSide); drawPage(revealed, turnSide);
+    if (revealed && flapL.length > 2) {
+      ctx.save(); clipPoly(flapL.map(toS));
+      const Ls = Math.min(.32, f.len * .5 + .04) * W, gr = ctx.createLinearGradient(Ms[0], Ms[1], Ms[0] + ns[0] * Ls, Ms[1] + ns[1] * Ls);
+      gr.addColorStop(0, `rgba(40,28,22,${.34 * fade})`); gr.addColorStop(1, 'rgba(40,28,22,0)');
+      ctx.fillStyle = gr; ctx.fillRect(0, 0, vw, vh); ctx.restore();
+    }
+    if (fixedL.length > 2) { ctx.save(); clipPoly(fixedL.map(toS)); drawPage(turning, turnSide); ctx.restore(); }
+    if (stat && (revealed || fixedL.length > 2)) crease();
+    if (flapL.length < 3) return;
+    const flapS = flapL.map(q => toS(reflectPt(q, f)));
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, vw, vh); tracePoly(flapS); ctx.clip('evenodd');
+    ctx.fillStyle = '#000'; ctx.shadowColor = `rgba(40,28,22,${.3 * fade})`; ctx.shadowBlur = 22 * dpr;
+    ctx.beginPath(); tracePoly(flapS); ctx.fill(); ctx.restore();
+    if (!verso) return;
+    // the back of the turning page: screen → page-local → mirror → fold reflection → screen
+    ctx.save(); clipPoly(flapS);
+    const vx = s > 0 ? bx() : bx() + W, k = W / verso.width, nx = f.n[0], ny = f.n[1], md = 2 * (f.M[0] * nx + f.M[1] * ny);
+    const T = mul([s * W, 0, 0, W, sx, y0], mul([1 - 2 * nx * nx, -2 * nx * ny, -2 * nx * ny, 1 - 2 * ny * ny, md * nx, md * ny], mul([-1, 0, 0, 1, 0, 0], mul([1 / (s * W), 0, 0, 1 / W, -sx / (s * W), -y0 / W], [k, 0, 0, k, vx, y0]))));
+    ctx.transform(...T); ctx.drawImage(verso, 0, 0); ctx.restore();
+    ctx.save(); clipPoly(flapS);
+    const Lf = Math.min(.5, f.len * .5 + .05) * W, gr = ctx.createLinearGradient(Ms[0], Ms[1], Ms[0] - ns[0] * Lf, Ms[1] - ns[1] * Lf);
+    gr.addColorStop(0, `rgba(30,20,15,${.2 * fade})`); gr.addColorStop(.1, `rgba(30,20,15,${.06 * fade})`); gr.addColorStop(.4, `rgba(255,255,255,${.05 * fade})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gr; ctx.fillRect(0, 0, vw, vh); ctx.restore();
+  }
+
+  // a board swinging on the spine, drawn in thin strips so it foreshortens
+  let boardBuf = null;
+  function renderHard() {
+    const s = flip.dir, th = flip.t, W = geo.W, H = W * PH, sx = spineX(), cy = geo.y0 + H / 2, nextI = index + s;
+    const turnSide = s > 0 ? 'R' : 'L', otherSide = s > 0 ? 'L' : 'R';
+    const front = pageOf(index, turnSide), back = pageOf(nextI, otherSide), stat = pageOf(index, otherSide), under = pageOf(nextI, turnSide);
+    const c = Math.cos(th), sn = Math.sin(th);
+    drawPage(stat, otherSide); drawPage(under, turnSide);
+    const shade = (side, a) => {
+      if (a < .01) return;
+      const d = side === 'R' ? 1 : -1, gr = ctx.createLinearGradient(sx, 0, sx + d * W * .85, 0);
+      gr.addColorStop(0, `rgba(40,28,22,${a})`); gr.addColorStop(1, 'rgba(40,28,22,0)');
+      ctx.fillStyle = gr; ctx.fillRect(d > 0 ? sx : sx - W, geo.y0, W, H);
+    };
+    if (under) shade(turnSide, .3 * sn * (c > 0 ? 1 : .45));
+    if (stat) shade(otherSide, .3 * sn * (c < 0 ? 1 : .45));
+    if (stat && under) crease();
+    const img = c >= 0 ? front : back, side = c >= 0 ? turnSide : otherSide;
+    if (!img) return;
+    const D = 8, proj = u => { const f = D / (D - sn * u); return [sx + s * c * u * f * W, f]; }, [xo, fo] = proj(1);
+    const minX = Math.floor(Math.min(sx, xo)) - 2, maxX = Math.ceil(Math.max(sx, xo)) + 2;
+    const minY = Math.floor(cy - H / 2 * Math.max(1, fo)) - 2, maxY = Math.ceil(cy + H / 2 * Math.max(1, fo)) + 2;
+    const bw = Math.max(1, Math.ceil((maxX - minX) * dpr)), bh = Math.max(1, Math.ceil((maxY - minY) * dpr));
+    if (!boardBuf) boardBuf = makeCanvas(bw, bh);
+    if (boardBuf.width < bw || boardBuf.height < bh) { boardBuf.width = Math.max(bw, boardBuf.width); boardBuf.height = Math.max(bh, boardBuf.height); }
+    const b = boardBuf.getContext('2d');
+    b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, boardBuf.width, boardBuf.height);
+    b.setTransform(dpr, 0, 0, dpr, -minX * dpr, -minY * dpr);
+    b.imageSmoothingEnabled = true; b.imageSmoothingQuality = 'high';
+    const N = 128, iw = img.width, ih = img.height;
+    for (let i = 0; i < N; i++) {
+      const u0 = i / N, u1 = (i + 1) / N, x0 = proj(u0)[0], x1 = proj(u1)[0], dw = Math.abs(x1 - x0);
+      if (dw < .05) continue;
+      const hh = H * D / (D - sn * (u0 + u1) / 2);
+      const s0 = (side === 'R' ? u0 : 1 - u0) * iw, s1 = (side === 'R' ? u1 : 1 - u1) * iw;
+      b.drawImage(img, Math.min(s0, s1), 0, Math.max(1, Math.abs(s1 - s0)), ih, Math.min(x0, x1) - .4, cy - hh / 2, dw + .8, hh);
+    }
+    b.globalCompositeOperation = 'source-atop'; b.fillStyle = `rgba(30,20,15,${.2 * sn * sn})`; b.fillRect(minX, minY, maxX - minX, maxY - minY); b.globalCompositeOperation = 'source-over';
+    ctx.save();
+    ctx.shadowColor = `rgba(55,40,30,${.2 + .14 * sn})`; ctx.shadowBlur = (30 + 8 * sn) * dpr; ctx.shadowOffsetY = 14 * (1 - sn) * dpr;
+    ctx.drawImage(boardBuf, 0, 0, bw, bh, minX, minY, bw / dpr, bh / dpr);
+    ctx.restore();
+  }
+
+  // ==========================================================================
+  // Input
+  // ==========================================================================
+  function hitTest(pt) {
+    const W = geo.W, lx = (pt[0] - spineX()) / W, ly = (pt[1] - geo.y0) / W;
+    if (ly < -.04 || ly > PH + .04) return null;
+    if (lx >= 0 && lx < 1.06 && canTurn(1)) return { dir: 1, y: clamp(ly, 0, PH) };
+    if (lx < 0 && lx > -1.06 && canTurn(-1)) return { dir: -1, y: clamp(ly, 0, PH) };
+    return null;
+  }
+  function updateFromDrag(Xl) {
+    if (flip.hard) { flip.t = Math.acos(clamp(Xl[0] / flip.grab, -1, 1)); kick(); return; }
+    const res = foldFromGrab(drag.G, [Xl[0] + drag.shift, Xl[1]], flip.C);
+    flip.P = res || flip.C.slice();
+    kick();
+  }
+  canvas.addEventListener('pointerdown', e => {
+    if ((e.pointerType === 'mouse' && e.button !== 0) || drag) return;
+    audio();
+    if (mode === 'anim') finishAnimNow();
+    const pt = [e.clientX, e.clientY], hit = hitTest(pt);
+    if (!hit) return;
+    e.preventDefault();
+    try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
+    const Xl = toLocal(pt, hit.dir);
+    let G = [Math.min(1, Xl[0]), clamp(Xl[1], 0, PH)];
+    const shift = Math.max(0, .6 - G[0]);
+    G = [G[0] + shift, G[1]];
+    if (isHard(hit.dir)) flip = { dir: hit.dir, hard: true, t: 0, grab: Math.max(.45, G[0] - shift) };
+    else { const C = [1, G[1] < PH / 2 ? 0 : PH]; flip = { dir: hit.dir, C, P: C.slice() }; }
+    const now = performance.now();
+    drag = { id: e.pointerId, dir: hit.dir, G, shift, start: pt, t0: now, samples: [[now, pt[0]]], moved: false, tapY: hit.y };
+    mode = 'drag'; canvas.style.cursor = 'grabbing';
+    updateFromDrag(Xl);
+  });
+  canvas.addEventListener('pointermove', e => {
+    const pt = [e.clientX, e.clientY];
+    if (drag && e.pointerId === drag.id) {
+      const now = performance.now();
+      drag.samples.push([now, pt[0]]);
+      while (drag.samples.length > 2 && now - drag.samples[0][0] > 110) drag.samples.shift();
+      if (Math.hypot(pt[0] - drag.start[0], pt[1] - drag.start[1]) > 6) drag.moved = true;
+      updateFromDrag(toLocal(pt, drag.dir));
+      return;
+    }
+    if (e.pointerType === 'mouse' && mode === 'idle') canvas.style.cursor = hitTest(pt) ? 'grab' : '';
+  });
+  function release(e, cancelled) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null; canvas.style.cursor = '';
+    const pt = [e.clientX, e.clientY];
+    if (!cancelled && !d.moved && performance.now() - d.t0 < 500) { queue.length = 0; mode = 'idle'; tapTurn(d.dir, d.tapY < PH / 2 ? 0 : PH); return; }
+    let v = 0;
+    const sm = d.samples;
+    if (sm.length > 1) { const span = (sm[sm.length - 1][0] - sm[0][0]) / 1000; if (span > .001) v = d.dir * (sm[sm.length - 1][1] - sm[0][1]) / span / geo.W; }
+    const flat = flip.hard ? flip.t < 1e-3 : Math.hypot(flip.P[0] - flip.C[0], flip.P[1] - flip.C[1]) < 1e-3;
+    // a swipe across a page the "wrong" way still turns the book that way
+    if (flat && !cancelled && (pt[0] - d.start[0]) * d.dir > 40 && canTurn(-d.dir)) { flip = null; mode = 'idle'; tapTurn(-d.dir, PH); return; }
+    const past = flip.hard ? flip.t > Math.PI / 2 : flip.P[0] < .05;
+    startAnim(!cancelled && (v < -1.1 || (v < 1.1 && past)));
+  }
+  canvas.addEventListener('pointerup', e => release(e, false));
+  canvas.addEventListener('pointercancel', e => release(e, true));
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (k === 'ArrowRight' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) { e.preventDefault(); audio(); turn(1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp' || (k === ' ' && e.shiftKey)) { e.preventDefault(); audio(); turn(-1); }
+    else if (k === 'Home') { e.preventDefault(); goTo(0); }
+    else if (k === 'End') { e.preventDefault(); goTo(LAST); }
+  });
+
+  function onChange() {
+    const sp = SPREADS[index];
+    captionEl.textContent = sp.caption;
+    canvas.setAttribute('aria-label', sp.label);
+    if (index > 0) hintEl.classList.add('gone');
+    slip.classList.remove('open');
+    if (sp.note) { slipText.textContent = sp.note; slip.hidden = false; } else slip.hidden = true;
+  }
+  let resizeRaf = 0;
+  window.addEventListener('resize', () => { cancelAnimationFrame(resizeRaf); resizeRaf = requestAnimationFrame(layout); });
+
+  // ?page=n opens the book at spread n (for screenshots and links)
+  const q = parseInt(new URLSearchParams(location.search).get('page'), 10);
+  if (q >= 0 && q <= LAST) index = q;
+  onChange();
+  layout();
+  fontsReady.then(() => layout());
+})();
+</script>
+</body>
+</html>
