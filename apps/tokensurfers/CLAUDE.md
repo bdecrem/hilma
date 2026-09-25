@@ -338,8 +338,15 @@ what Claude Code does all day. The phone is a client of the feed.
   arrived at once through it). Events, coalesced at 120 ms: `start`,
   `session`, `text {delta}` (Splat's lines as they stream), `say {text}`
   (a complete text block), `name {emoji,title}` (from the `NAME:` line),
-  `tool_start {id,name}`, `tool_input {id,name,json}` (the half-streamed
-  input — Write's content, Edit's strings, Bash's command), `tool_call
+  `tool_start {id,name}`, `tool_input {id,name,delta,offset,len}` (the
+  half-streamed input — Write's content, Edit's strings, Bash's command — as
+  deltas since 2026-09-24: the first shape re-sent the whole input on every
+  120 ms flush, quadratic, 829 KB of feed for a 12 KB app; now 74 KB. Ask
+  with `v=2`; without it the server rebuilds the old `{json}` shape from a
+  per-build map of each block's input, so older phones keep streaming code.
+  `hold=<ms>` (≤ 1000) on the long-poll waits that long after something new
+  arrives, so a build answers ~4×/s instead of once per flush — the phone
+  sends `hold=250` while building), `tool_call
   {id,name,input}` (summarized), `tool_result {id,name,ok,summary}`, `file
   {path,size,content}` (after every Write/Edit, ≤ 200 KB), `deployed {url}`,
   `queued`, `note_in {text,via}`, `turn_end {ok,recap,cost,turns,deployUrl}`,
