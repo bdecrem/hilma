@@ -80,6 +80,24 @@ const jambotRev = (() => {
 })();
 const stamp = `${new Date().toISOString().slice(0, 10)}+jambot@${jambotRev}`;
 
+// Never roll jambot.to back: the jambot commit in the committed bundle must be in this
+// checkout's history. (2026-09-25: the live bundle was built from jambot@80486c216,
+// which exists only on another machine; a rebuild from this iMac's older checkout would
+// have silently removed mills_minimal and the library exemplars.) JAM_BUILD_FORCE=1 overrides.
+{
+  let prev = null;
+  try { prev = JSON.parse(readFileSync(join(HILMA, 'public', 'jam', 'jambot-web.meta.json'), 'utf8')).stamp?.split('@')[1]; } catch {}
+  if (prev && prev !== 'unknown' && !process.env.JAM_BUILD_FORCE) {
+    let ok = false;
+    try { execSync(`git merge-base --is-ancestor ${prev} HEAD`, { cwd: JAMBOT, stdio: 'ignore' }); ok = true; } catch {}
+    if (!ok) {
+      console.error(`\n✗ The committed bundle was built from jambot@${prev}, which is not in ${JAMBOT}'s history`);
+      console.error('  (missing commit, or an older checkout). Pull/push vibeceo until it is, or set JAM_BUILD_FORCE=1.\n');
+      process.exit(1);
+    }
+  }
+}
+
 mkdirSync(dirname(OUT), { recursive: true });
 
 const result = await esbuild.build({
