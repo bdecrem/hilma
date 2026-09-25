@@ -7,7 +7,7 @@ low-end mono, clicks, true peak, tempo), this checks the first-principles claims
 - the kick really ends on A1 (55 Hz) and the sub sits on 55.0 Hz
 - phase lock: the low end (kick + sub) is the same waveform on every beat, and
   the kick-to-sub phase doesn't drift across the track
-- just intonation: the stab's partials sit on the JI frequencies, not equal temperament
+- just intonation: the sequence's notes sit on the JI frequencies, not equal temperament
 """
 import argparse
 import json
@@ -92,7 +92,7 @@ def main():
 
     if a.stems:
         st = lambda k: sf.read(os.path.join(a.stems, f'{k}.wav'))[0]
-        kick, sub, stab = st('kick'), st('sub'), st('stab')
+        kick, sub, seq = st('kick'), st('sub'), st('seq')
         # 1. kick end pitch: the tail of a mid-track kick
         t0 = TR.T(70)
         seg = kick[int((t0 + 0.12) * SR): int((t0 + 0.42) * SR)]
@@ -130,17 +130,16 @@ def main():
             ph.append(((lag * 55.0 + 0.5) % 1.0) - 0.5)
         if ph:
             rep['kick_sub_phase_spread_deg'] = round(float(np.std(ph) * 360), 2)
-        # 4. just intonation: stab partials in Main A
-        seg = stab[int(TR.T(64) * SR): int(TR.T(72) * SR)]
-        targets = {'G3 (9/5)': (198.0, 196.00), 'C4 (6/5)': (264.0, 261.63), 'E3 (3/2)': (165.0, 164.81),
-                   'A2 (1/1)': (110.0, 110.0), 'E4 (3/2)': (330.0, 329.63)}
+        # 4. just intonation: the metallic sequence's notes in Peak B (the chord stabs were cut)
+        seg = seq[int(TR.T(128) * SR): int(TR.T(144) * SR)]
+        targets = {'C5 (6/5)': (528.0, 523.25), 'G5 (9/5)': (792.0, 783.99), 'E5 (3/2)': (660.0, 659.26),
+                   'A4 (1/1)': (440.0, 440.0)}
         ji_rep = {}
         for name, (fji, fet) in targets.items():
-            fpk = centroid_freq(seg, fji - 1.3, fji + 1.3) if abs(fji - fet) > 1.5 else \
-                centroid_freq(seg, (fji + fet) / 2 - 1.3, (fji + fet) / 2 + 1.3)
+            fpk = centroid_freq(seg, min(fji, fet) - 1.5, max(fji, fet) + 1.5)
             ji_rep[name] = {'measured': round(fpk, 2), 'ji': fji, 'et': fet,
                             'closer_to': 'JI' if abs(fpk - fji) <= abs(fpk - fet) else 'ET'}
-        rep['stab_tuning'] = ji_rep
+        rep['seq_tuning'] = ji_rep
         # 5. tempo
         import librosa
         seg = kick[int(TR.T(64) * SR): int(TR.T(96) * SR)].astype(np.float32)

@@ -1,19 +1,20 @@
 """Phase Lock — Berlin techno at 132 BPM in A (55 Hz), just intonation. Arrangement, mix, master.
 
-Twelve 16-bar sections (5:49 + the last hit's tail):
+Twelve 16-bar sections (5:49 + the last hit's tail). No chord stabs (cut 2026-09-25; the
+instrument is still in synth.py): the pitch lives in the rumble, the sub, the toms and the wind.
   0:00 Intro A   kick, rumble swelling in, offbeat hats          (a DJ's first 16)
   0:29 Intro B   16th hats with a 3-bar decay cycle, the tuned wind, the sub, the toms (12 against 16)
-  0:58 Build A   the A minor 7 stab, one hit every two bars, filter nearly shut; open hats
-  1:27 Build B   the stab every bar, opening; the ride
-  1:56 Main A    clap, 12-step tom polymeter, the stab on two hits with a 7-bar filter drift
-  2:25 Main B    a third stab hit on odd bars
-  2:54 Breakdown the kick stops; the stab turns to the Phrygian bII (Bb) over the A wind,
-                 echoing longer; at 3:09 the kick climbs back through a high-pass that opens
-                 downward (no sub), hats rise, a riser, half a beat of nothing
-  3:23 Peak A    the drop: A minor 9 on three hits, a 5-step metallic sequence (5 against 16 against 3)
+  0:58 Build A   open hats
+  1:27 Build B   the ride
+  1:56 Main A    clap
+  2:25 Main B    (Main A continues; the rumble drive keeps climbing)
+  2:54 Breakdown the kick stops; the Phrygian bII (Bb) partials rise in the wind over the A;
+                 at 3:09 the kick climbs back through a high-pass that opens downward (no sub),
+                 hats rise, a riser, half a beat of nothing
+  3:23 Peak A    the drop; at 3:38 a 5-step metallic sequence (5 against 16 against 3)
   3:52 Peak B    the rumble at full drive
-  4:21 Peak C    the sequence leaves, the stab settles
-  4:50 Outro A   the stab closes down, clap and ride out
+  4:21 Peak C    the sequence leaves
+  4:50 Outro A   clap and ride out, the toms and the wind go
   5:19 Outro B   kick, rumble, hats — and the last hit
 
   python3 track.py [--out DIR] [--stems none|check]
@@ -48,11 +49,8 @@ def in_(bar, *ranges):
     return any(a <= bar < b for a, b in ranges)
 
 
-# --- harmony, all just intonation against A1 = 55 Hz -------------------------
-AM7 = [ji('1', 2), ji('5', 2), ji('b7', 2), ji('b3', 3), ji('5', 3)]      # A2 E3 G3 C4 E4: 110 165 198 264 330
-AM9 = AM7 + [ji('2', 3)]                                                  # + B3 247.5
-BII = [ji('b2', 2), ji('b6', 2), ji('b2', 3), ji('4', 3)]                 # Bb2 F3 Bb3 D4: 117.3 176 234.7 293.3
-SEQ = [ji('1', 4), ji('5', 4), ji('b3', 4), ji('b7', 4), ji('5', 4)]      # A4 E5 C5 G5 E5: 440 660 528 792 660
+# --- pitches, all just intonation against A1 = 55 Hz -------------------------
+SEQ =[ji('1', 4), ji('5', 4), ji('b3', 4), ji('b7', 4), ji('5', 4)]      # A4 E5 C5 G5 E5: 440 660 528 792 660
 TOMS = {0: (ji('1', 2), 0.9, -0.2), 3: (ji('5', 2), 0.6, 0.25), 7: (ji('1', 2), 0.7, -0.2), 10: (ji('1', 3), 0.5, 0.1)}
 WIND_AM = [(ji('1', 3), 1.0), (ji('5', 3), 0.8), (ji('1', 4), 0.6), (ji('b3', 4), 0.45), (ji('5', 4), 0.35)]
 WIND_BII = [(ji('b2', 3), 1.0), (ji('b6', 3), 0.7), (ji('b2', 4), 0.5)]
@@ -136,37 +134,6 @@ def build(mix, rng):
                     f, v, p = TOMS[pos]
                     mix.add('toms', t, Y.tom(f, v), pan=p)
 
-    # stabs
-    def hit(bus, bar, st, chord, fc, **kw):
-        mix.add(bus, T(bar, st), Y.stab(chord, fc, **kw))
-
-    for bar in range(32, 176):
-        lfo = np.sin(2 * np.pi * bar / 7)                                        # 7-bar filter drift
-        if bar < 48:
-            if bar % 2 == 0:
-                hit('stab', bar, 2, AM7, 220 * (500 / 220) ** ((bar - 32) / 16), env_amt=2.0)
-        elif bar < 64:
-            fc = 500 * (1300 / 500) ** ((bar - 48) / 16)
-            for st in ([2, 11] if bar >= 56 else [2]):
-                hit('stab', bar, st, AM7, fc)
-        elif bar < 96:
-            steps = [2, 11] + ([7] if bar >= 80 and bar % 2 else [])
-            for st in steps:
-                hit('stab', bar, st, AM7, 1300 * (1 + 0.4 * lfo))
-        elif bar < 112:
-            if bar < 104 and bar % 2 == 0:
-                hit('stab_bd', bar, 2, BII, 700, decay=0.22)
-            elif 104 <= bar < 111:
-                hit('stab_bd', bar, 2, BII, 700 * (2000 / 700) ** ((bar - 104) / 7), decay=0.2)
-        elif bar < 144:
-            for st in (2, 7, 11):
-                hit('stab', bar, st, AM9, 2400 * (1 + 0.45 * lfo))
-        elif bar < 160:
-            for st in [2, 11] + ([14] if bar % 4 == 3 else []):
-                hit('stab', bar, st, AM9, 3000 * (1 + 0.3 * lfo))
-        else:
-            hit('stab', bar, 2, AM7, 1500 * (250 / 1500) ** ((bar - 160) / 16))
-
     # the metallic sequence: 5 notes against 16 steps, accents every 3rd step
     for bar in range(120, 152):
         for st in range(16):
@@ -196,7 +163,7 @@ def build(mix, rng):
 # mix
 # ---------------------------------------------------------------------------
 GAINS = {'kick': 0.0, 'kickfar': -4.0, 'rumble': -6.0, 'sub': -12.0, 'hats': -16.0, 'ohats': -20.0, 'ride': -24.0,
-         'clap': -12.0, 'toms': -12.0, 'stab': -10.0, 'stab_bd': -10.0, 'seq': -18.0, 'drone': -8.0, 'fx': -10.0}
+         'clap': -12.0, 'toms': -12.0, 'seq': -18.0, 'drone': -8.0, 'fx': -10.0}
 # per-section rides (dB), 12 sections; planned from the measured bus loudness
 RIDES = {   # IntroA IntroB BuildA BuildB MainA MainB Break PeakA PeakB PeakC OutroA OutroB
     'kick': [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.0, 0.5, 0.5, 0.5, 0.5, 0.5],
@@ -208,8 +175,6 @@ RIDES = {   # IntroA IntroB BuildA BuildB MainA MainB Break PeakA PeakB PeakC Ou
     'ride': [0.0, 0.0, 0.0, 13.2, 13.1, 13.2, 13.2, 13.2, 13.2, 13.2, 13.2, 0.0],
     'clap': [0.0, 0.0, 0.0, 0.0, 13.3, 13.2, 13.2, 13.3, 13.2, 13.3, 13.3, 0.0],
     'toms': [0.0, 4.8, 2.9, 3.3, 3.9, 3.9, 3.9, 3.9, 3.9, 3.8, 3.9, 0.0],
-    'stab': [0.0, 0.0, 12.5, 9.2, 9.8, 9.2, 9.2, 9.2, 9.2, 10.0, 9.2, 9.2],
-    'stab_bd': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.5, 0.0, 0.0, 0.0, 0.0, 0.0],
     'seq': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 12.2, 12.2, 12.2, 0.0, 0.0],
     'drone': [0.0, 1.6, -1.5, -2.1, -2.6, -2.4, -1.0, -0.9, -0.9, -0.8, -0.8, 0.0],
     'fx': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -3.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -221,10 +186,10 @@ AUTO = {
     'seq': [(0, -120), (120, -120), (124, 0), (148, 0), (152, -120), (BARS + 3, -120)],
     'kickfar': [(0, 0), (BARS + 3, 0)],
 }
-DUCK = {'rumble': (0.0, 0.13), 'sub': (0.0, 0.1), 'stab': (0.5, 0.1), 'stab_bd': (0.5, 0.1), 'drone': (0.75, 0.12),
+DUCK = {'rumble': (0.0, 0.13), 'sub': (0.0, 0.1), 'drone': (0.75, 0.12),
         'toms': (0.85, 0.08), 'seq': (0.7, 0.08), 'ride': (0.85, 0.06), 'hall': (0.5, 0.12)}
 MASTER_DB = -0.5
-ORDER = ['kick', 'kickfar', 'rumble', 'sub', 'hats', 'ohats', 'ride', 'clap', 'toms', 'stab', 'stab_bd', 'seq', 'drone', 'fx']
+ORDER = ['kick', 'kickfar', 'rumble', 'sub', 'hats', 'ohats', 'ride', 'clap', 'toms', 'seq', 'drone', 'fx']
 
 
 def process(mix, kicks, tail_phase, out, stems):
@@ -255,8 +220,7 @@ def process(mix, kicks, tail_phase, out, stems):
     b['hats'] = eq(b['hats'], signal.butter(2, 4200, 'high', fs=SR, output='sos'))
     b['ohats'] = eq(b['ohats'], signal.butter(2, 3500, 'high', fs=SR, output='sos'))
     b['toms'] = eq(b['toms'], signal.butter(2, 70, 'high', fs=SR, output='sos'))
-    for k in ('stab', 'stab_bd', 'seq'):
-        b[k] = eq(b[k], signal.butter(2, 120, 'high', fs=SR, output='sos'))
+    b['seq'] = eq(b['seq'], signal.butter(2, 120, 'high', fs=SR, output='sos'))
     b['drone'] = eq(b['drone'], signal.butter(2, 150, 'high', fs=SR, output='sos'))
     b['fx'] = eq(b['fx'], signal.butter(4, 200, 'high', fs=SR, output='sos'))
 
@@ -277,15 +241,13 @@ def process(mix, kicks, tail_phase, out, stems):
         wet = Y.dub_delay(b[k].mean(axis=0).astype(np.float64), dotted8, fb, Y.one_pole(lp), Y.one_pole(hp), drv)
         return (wet * db(wet_db)).astype(np.float32)
 
-    b['stab'] += echo('stab', 0.5, 2600, 280, 1.6, -3)
-    b['stab_bd'] += echo('stab_bd', 0.68, 2200, 250, 1.4, -1)
     b['toms'] += echo('toms', 0.32, 3000, 300, 1.2, -12)
     b['seq'] += echo('seq', 0.42, 4000, 400, 1.2, -6)
 
     # rooms: a concrete hall, a small room for the hats
     hall = make_ir([(125, 2.6), (500, 2.3), (2000, 1.8), (8000, 1.0), (16000, 0.6)], 3.5, 0.025, seed=1989)
     room = make_ir([(500, 0.45), (4000, 0.35), (12000, 0.2)], 0.8, 0.004, seed=12)
-    sends = {'stab': -6, 'stab_bd': -3, 'toms': -14, 'seq': -10, 'drone': -8, 'fx': -6, 'clap': -26, 'ride': -20}
+    sends = {'toms': -14, 'seq': -10, 'drone': -8, 'fx': -6, 'clap': -26, 'ride': -20}
     send = sum(b[k] * db(v) for k, v in sends.items())
     from engine import convolve
     wet_hall = convolve(send, hall)
@@ -308,7 +270,7 @@ def process(mix, kicks, tail_phase, out, stems):
 
     if stems == 'check':
         os.makedirs(f'{out}/stems', exist_ok=True)
-        for k in ('kick', 'rumble', 'sub', 'stab', 'stab_bd', 'seq', 'toms', 'hats'):
+        for k in ('kick', 'rumble', 'sub', 'seq', 'toms', 'hats'):
             sf.write(f'{out}/stems/{k}.wav', np.clip(b[k].mean(axis=0), -1, 1), SR, subtype='PCM_16')
 
     mixdown = sum(b[k] for k in ORDER) + b['hall'] + b['room']
