@@ -15,7 +15,12 @@
 //   POST /p/:id/now {text?}     interrupt the turn; queued notes (+ text) go in
 //                               as the next message of the same session.
 //   POST /p/:id/stop            interrupt and end the build; queued notes come back.
-//   GET  /p/:id/events?after=N&wait=S   events with seq > N, held up to S seconds.
+//   GET  /p/:id/events?after=N&wait=S&hold=MS&v=2
+//                               events with seq > N, held up to S seconds; with
+//                               something new, hold MS more (≤ 1000) so a streaming
+//                               build answers ~4×/s, not once per flush. v=2 gets
+//                               tool_input as deltas {delta, offset, len}; without it
+//                               the old whole-json shape is rebuilt at serve time.
 //   GET  /p/:id/state           running, session, deployUrl, recap, cost.
 //   GET  /p/:id/file?path=      a file of the workspace (text, ≤ 200 KB).
 //   GET  /health
@@ -54,6 +59,8 @@ class Project {
     this.state = { running: false, sessionId: null, deployUrl: null, recap: null, cost: 0, turns: 0, builds: 0, startedAt: null }
     this.notes = []
     this.calls = new Map()
+    /// Each tool_use block's input json so far, by block id (for old clients and late joiners).
+    this.inputs = {}
     this.q = null
     this.push = null
     this.close = null
@@ -74,10 +81,19 @@ class Project {
     return ev
   }
 
-  since(after) {
+  since(after, v = 1) {
     const first = this.events[0]?.seq ?? this.seq + 1
     const gap = after + 1 < first && this.events.length > 0
-    return { events: this.events.filter(e => e.seq > after), gap }
+    let events = this.events.filter(e => e.seq > after)
+    if (v < 2) {
+      // the old shape: the whole input so far on every tick (quadratic; v=2 gets deltas)
+      events = events.map(e => {
+        if (e.type !== 'tool_input') return e
+        const { delta, offset, len, ...rest } = e
+        return { ...rest, json: (this.inputs[e.id] || '').slice(0, offset + delta.length) }
+      })
+    }
+    return { events, gap }
   }
 
   wait(after, seconds) {
@@ -100,8 +116,10 @@ class Project {
     this.flushTimer = null
     if (this.textBuf) { this.emit('text', { delta: this.textBuf }); this.textBuf = '' }
     if (this.block && this.block.json.length > this.block.sent) {
-      this.emit('tool_input', { id: this.block.id, name: this.block.name, json: this.block.json })
-      this.block.sent = this.block.json.length
+      const b = this.block
+      this.inputs[b.id] = b.json
+      this.emit('tool_input', { id: b.id, name: b.name, delta: b.json.slice(b.sent), offset: b.sent, len: b.json.length })
+      b.sent = b.json.length
     }
   }
 
@@ -173,6 +191,7 @@ class Project {
     this.state.builds++
     this.stopping = false
     this.calls.clear()
+    this.inputs = {}
     this.emit('start', { text, sessionId: this.state.sessionId, resumed: !!this.state.sessionId })
     log(this.id, 'build:', text.slice(0, 80), this.state.sessionId ? `(resume ${this.state.sessionId.slice(0, 8)})` : '(new session)')
 
@@ -463,8 +482,11 @@ const server = http.createServer(async (req, res) => {
       case 'events': {
         const after = Number(url.searchParams.get('after') || 0)
         const wait = Math.min(25, Math.max(0, Number(url.searchParams.get('wait') || 0)))
+        const hold = Math.min(1000, Math.max(0, Number(url.searchParams.get('hold') || 0)))
+        const v = Number(url.searchParams.get('v') || 1)
         await p.wait(after, wait)
-        const { events, gap } = p.since(after)
+        if (hold > 0 && p.seq > after) await new Promise(r => setTimeout(r, hold))
+        const { events, gap } = p.since(after, v)
         return json(res, 200, { events, gap, seq: p.seq, state: p.state })
       }
       case 'state':
