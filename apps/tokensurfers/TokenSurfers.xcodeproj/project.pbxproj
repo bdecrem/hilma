@@ -16,6 +16,7 @@
 		40FE5FDF05EFEFD6DD4BB10B /* SurfAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */; };
 		4A486C215DEDFF7C7E1ADF3E /* RemoteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460FC7B0A043146FFD0784 /* RemoteEngine.swift */; };
 		50280016A75A4A1C28681C3F /* TokenSurfersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */; };
+		5A8D79EBAD193B194AA94533 /* HomeSplat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1514EFEBA340E63D1D2FBD59 /* HomeSplat.swift */; };
 		5CE1740CC0D49C8669535958 /* SurferArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */; };
 		67B389CF94F703FECEC5F0A5 /* LiveFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD2104364CBB1C2BA94BD72 /* LiveFeed.swift */; };
 		6A58AD0AB616E179A14AD79C /* BlobArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7527D8A15A97053FD86758F /* BlobArt.swift */; };
@@ -47,6 +48,7 @@
 		00F022A3922F46B8820472A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		09CF2ED5858A738C214CE367 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenSurfersApp.swift; sourceTree = "<group>"; };
+		1514EFEBA340E63D1D2FBD59 /* HomeSplat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSplat.swift; sourceTree = "<group>"; };
 		1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfAccount.swift; sourceTree = "<group>"; };
 		200232E278F9AC3DF43FA397 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		3F1ADBD84EC242FF2E17DBFA /* Secrets.swift.example */ = {isa = PBXFileReference; path = Secrets.swift.example; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 			children = (
 				F86B61EEC8EF7742EF1EFB91 /* CaptionBand.swift */,
 				D433691AFF940E0ADCBF5569 /* GalleryView.swift */,
+				1514EFEBA340E63D1D2FBD59 /* HomeSplat.swift */,
 				200232E278F9AC3DF43FA397 /* HomeView.swift */,
 				CFD2104364CBB1C2BA94BD72 /* LiveFeed.swift */,
 				FF9F75B597B47D8F471BCD95 /* Mascots.swift */,
@@ -250,6 +253,7 @@
 				6A58AD0AB616E179A14AD79C /* BlobArt.swift in Sources */,
 				237FDF18278B29B8E299D4DD /* CaptionBand.swift in Sources */,
 				84A68F44B8741EE69424AA8D /* GalleryView.swift in Sources */,
+				5A8D79EBAD193B194AA94533 /* HomeSplat.swift in Sources */,
 				FEC528561C0E29F0E6419676 /* HomeView.swift in Sources */,
 				EF1900240C01A65BFF0F000A /* Leaderboard.swift in Sources */,
 				67B389CF94F703FECEC5F0A5 /* LiveFeed.swift in Sources */,
@@ -312,7 +316,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 14;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -393,7 +397,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 14;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

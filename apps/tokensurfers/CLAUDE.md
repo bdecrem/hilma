@@ -781,6 +781,12 @@ Goal: a public TestFlight beta, not an App Store release.
   ASC judges the SDK from the archive. Exact commands are in the 2026-09-24
   session; the plist for the export is what `ship.sh` writes. `ship.sh`
   itself works once a release Xcode is installed here (set `DEVELOPER_DIR`).
+- **Shipping from the iMac M1** (2026-09-25): it has the release Xcode
+  26.4.1 at `/Applications/Xcode.app`, its own Apple Distribution cert
+  `78245T6FR5`, ASC key `748UX45NAP` and profile **"tokensurfers appstore
+  m1"** (IOS_APP_STORE, minted over the API that day). Run
+  `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer ASC_KEY_ID=748UX45NAP TS_PROFILE="tokensurfers appstore m1" ./apps/tokensurfers/testflight/ship.sh`
+  — no Mac mini round trip needed.
 - The first upload went up as **1.0 (1)**: `Info.plist` carried literal
   version strings, so project.yml's `0.1 (8)` never reached the bundle. Fixed
   the same day (the plist now reads `$(MARKETING_VERSION)` /
