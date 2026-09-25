@@ -60,8 +60,10 @@ enum AgentAPI {
         return r["notes"] as? [String] ?? []
     }
 
-    static func events(_ id: UUID, after: Int, wait: Int) async throws -> Poll {
-        let r = try await get("events", id, query: "after=\(after)&wait=\(wait)", timeout: Double(wait) + 20)
+    /// v2: `tool_input` comes as `{delta, offset, len}` (only the new bytes of the
+    /// half-streamed input); `hold` batches a streaming build into ~4 answers/s.
+    static func events(_ id: UUID, after: Int, wait: Int, hold: Int = 250) async throws -> Poll {
+        let r = try await get("events", id, query: "after=\(after)&wait=\(wait)&v=2&hold=\(hold)", timeout: Double(wait) + 20)
         let events = (r["events"] as? [[String: Any]] ?? []).compactMap { e -> Event? in
             guard let seq = e["seq"] as? Int, let type = e["type"] as? String else { return nil }
             return Event(seq: seq, type: type, data: e)

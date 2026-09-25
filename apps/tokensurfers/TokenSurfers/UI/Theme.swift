@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// The look of misc/3.MP4: cut paper on sunset orange, Claude-orange splat,
 /// fat stroked captions in white + highlighter yellow, a navy code screen.
@@ -86,31 +87,55 @@ struct CaptionLine: View {
     }
 }
 
-/// Paper grain, drawn once per size: faint specks and fibres over any fill.
+/// Paper grain over any fill: faint specks and fibres, rasterized once per
+/// size (a Canvas here was redrawn on every parent update — thousands of
+/// ellipses each time the Studio's state changed).
 struct PaperGrain: View {
     var opacity: Double = 0.10
     var body: some View {
-        Canvas { ctx, size in
-            var rng = SeededRandom(seed: 7)
-            let n = Int(size.width * size.height / 90)
-            for _ in 0..<n {
-                let x = rng.unit() * size.width, y = rng.unit() * size.height
-                let r = 0.4 + rng.unit() * 0.9
-                let dark = rng.unit() < 0.55
-                ctx.fill(Path(ellipseIn: CGRect(x: x, y: y, width: r, height: r)),
-                         with: .color(dark ? .black.opacity(0.5) : .white.opacity(0.8)))
-            }
-            for _ in 0..<(n / 40) {
-                let x = rng.unit() * size.width, y = rng.unit() * size.height
-                var p = Path()
-                p.move(to: CGPoint(x: x, y: y))
-                p.addLine(to: CGPoint(x: x + (rng.unit() - 0.5) * 14, y: y + (rng.unit() - 0.5) * 3))
-                ctx.stroke(p, with: .color(.white.opacity(0.6)), lineWidth: 0.6)
-            }
+        GeometryReader { g in
+            Image(uiImage: GrainCache.image(for: g.size))
+                .resizable()
+                .frame(width: g.size.width, height: g.size.height)
         }
         .opacity(opacity)
         .allowsHitTesting(false)
-        .drawingGroup()
+    }
+}
+
+enum GrainCache {
+    nonisolated(unsafe) private static var cache: [String: UIImage] = [:]
+
+    static func image(for size: CGSize) -> UIImage {
+        // bucket sizes to 16 pt so a resizing pane doesn't mint a new image per pixel
+        let w = max(16, (Int(size.width) / 16 + 1) * 16), h = max(16, (Int(size.height) / 16 + 1) * 16)
+        let key = "\(w)x\(h)"
+        if let img = cache[key] { return img }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 2
+        format.opaque = false
+        let img = UIGraphicsImageRenderer(size: CGSize(width: w, height: h), format: format).image { ctx in
+            var rng = SeededRandom(seed: 7)
+            let n = w * h / 90
+            let c = ctx.cgContext
+            for _ in 0..<n {
+                let x = rng.unit() * Double(w), y = rng.unit() * Double(h)
+                let r = 0.4 + rng.unit() * 0.9
+                c.setFillColor(rng.unit() < 0.55 ? UIColor.black.withAlphaComponent(0.5).cgColor : UIColor.white.withAlphaComponent(0.8).cgColor)
+                c.fillEllipse(in: CGRect(x: x, y: y, width: r, height: r))
+            }
+            c.setStrokeColor(UIColor.white.withAlphaComponent(0.6).cgColor)
+            c.setLineWidth(0.6)
+            for _ in 0..<(n / 40) {
+                let x = rng.unit() * Double(w), y = rng.unit() * Double(h)
+                c.move(to: CGPoint(x: x, y: y))
+                c.addLine(to: CGPoint(x: x + (rng.unit() - 0.5) * 14, y: y + (rng.unit() - 0.5) * 3))
+                c.strokePath()
+            }
+        }
+        if cache.count > 24 { cache.removeAll() }
+        cache[key] = img
+        return img
     }
 }
 

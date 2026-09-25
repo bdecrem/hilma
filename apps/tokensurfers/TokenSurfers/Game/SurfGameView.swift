@@ -30,17 +30,19 @@ struct SurfGameView: View {
 
     /// Canvas points per screen point: the scene draws smaller and is scaled up.
     static let canvasScale: CGFloat = 1.5
+    /// TS_FPS=30 caps the game's frame rate (benchmarks compare at a fixed rate); nil = the display's.
+    static let frameInterval: Double? = ProcessInfo.processInfo.environment["TS_FPS"].flatMap { Double($0) }.map { 1 / $0 }
 
     private var active: Bool { running && !paused && (solo ? armed : true) && scenePhase == .active }
 
     var body: some View {
-        TimelineView(.animation(paused: !active)) { tl in
-            let now = tl.date
-            ZStack {
-                // The scene is rasterized at 2/3 of the screen scale (2× on a 3× phone)
-                // and scaled up on the GPU: the same flat shapes, less than half the
-                // CoreGraphics work per frame (2026-09-24 profile: rasterizing the
-                // canvas was most of the main thread).
+        ZStack {
+            // The scene is rasterized at 2/3 of the screen scale (2× on a 3× phone)
+            // and scaled up on the GPU: the same flat shapes, less than half the
+            // CoreGraphics work per frame (2026-09-24 profile: rasterizing the
+            // canvas was most of the main thread).
+            TimelineView(.animation(minimumInterval: Self.frameInterval, paused: !active)) { tl in
+                let now = tl.date
                 GeometryReader { g in
                     let k = Self.canvasScale
                     Canvas(rendersAsynchronously: true) { ctx, size in
@@ -52,7 +54,11 @@ struct SurfGameView: View {
                     .frame(width: g.size.width / k, height: g.size.height / k)
                     .scaleEffect(k, anchor: .topLeading)
                 }
-                hud(now)
+            }
+            // The HUD (nine stacked Texts per stroked label) is laid out at 10 Hz, not
+            // per frame: it was a third of the frame's main-thread time.
+            TimelineView(.animation(minimumInterval: 0.1, paused: !active)) { tl in
+                hud(tl.date)
             }
         }
         .contentShape(Rectangle())

@@ -74,15 +74,25 @@ struct SiteWebView: UIViewRepresentable {
 
 // MARK: - the code screen (the video's 3:00 AM monitor)
 
-struct CodeView: View {
+struct CodeView: View, Equatable {
     let code: String
     let streaming: Bool
     var isPatch = false
     var patchOld = ""
     var patchNew = ""
 
+    /// The last split, so an unchanged file isn't re-split on every parent update.
+    nonisolated(unsafe) private static var lastCode = ""
+    nonisolated(unsafe) private static var lastLines: [String] = []
+    private static func lines(of code: String) -> [String] {
+        if code == lastCode { return lastLines }
+        lastCode = code
+        lastLines = code.isEmpty ? [] : code.components(separatedBy: "\n")
+        return lastLines
+    }
+
     var body: some View {
-        let lines = code.isEmpty ? [] : code.components(separatedBy: "\n")
+        let lines = Self.lines(of: code)
         ZStack(alignment: .top) {
             Theme.navy
             PaperGrain(opacity: 0.05)

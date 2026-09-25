@@ -95,7 +95,12 @@ final class Studio {
     private(set) var remoteCode = ""
     private(set) var codePath = ""
     private var lastSeq = 0
+    /// The remote feed's half-streamed tool inputs, per tool id: the JSON text so far
+    /// (v2 deltas appended; v1 sends it whole) and each field decoded incrementally.
+    private var inputJSON: [String: String] = [:]
+    private var inputFields: [String: [String: StreamedField]] = [:]
     private var inputSeen: [String: Int] = [:]
+    private var lastDecodedWrite: String?
 
     /// A project built on the mini stays there; a fresh one follows the setting.
     var remote: Bool { project.siteURL != nil || (html.isEmpty && Self.engine == .remote) }
@@ -127,8 +132,51 @@ final class Studio {
             return
         }
         log(.you(delivered: true), p)
+        if let tape = ProcessInfo.processInfo.environment["TS_REPLAY"] {
+            task = Task { await runReplay(tape, prompt: p) }
+            return
+        }
         let useRemote = remote
         task = Task { if useRemote { await runRemote(p) } else { await run(p) } }
+    }
+
+    /// TS_REPLAY=<feed.json>: replays a recorded event feed (a saved
+    /// `GET events?after=0` response) with its original timing, no mini
+    /// needed — the performance benchmark. TS_REPLAY_SPEED scales the clock.
+    private func runReplay(_ path: String, prompt: String) async {
+        guard let data = FileManager.default.contents(atPath: path),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let raw = obj["events"] as? [[String: Any]] else { failRemote("no feed at \(path)"); return }
+        lastPrompt = prompt
+        phase = .thinking
+        outputTokens = 0; inputTokens = 0; lastBugs = 0; steps = 0
+        usedFillers = []; shownCutaways = []; delivered = []
+        subtitle = ""; liveCode = ""; isPatch = false; inputSeen = [:]; inputJSON = [:]; inputFields = [:]
+        buildStart = .now
+        if !stagePinned { stageTab = .code }
+        setCaption("replaying the tape 📼", speak: false)
+        let speed = Double(ProcessInfo.processInfo.environment["TS_REPLAY_SPEED"] ?? "") ?? 1
+        let events = raw.compactMap { e -> AgentAPI.Event? in
+            guard let seq = e["seq"] as? Int, let type = e["type"] as? String else { return nil }
+            return AgentAPI.Event(seq: seq, type: type, data: e)
+        }
+        let filler = Task { await fillerLoop() }
+        defer { filler.cancel() }
+        agentLog("replay: \(events.count) events from \((path as NSString).lastPathComponent) at \(speed)x")
+        var recap = ""
+        let t0 = (events.first?.data["t"] as? NSNumber)?.doubleValue ?? 0
+        let start = Date()
+        for e in events {
+            let at = (((e.data["t"] as? NSNumber)?.doubleValue ?? t0) - t0) / 1000 / speed
+            let wait = at - Date().timeIntervalSince(start)
+            if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+            if Task.isCancelled { return }
+            if let r = apply(e) { recap = r }
+            if e.type == "idle" { break }
+        }
+        let state = AgentAPI.State(obj["state"] as? [String: Any] ?? [:])
+        agentLog(String(format: "replay done in %.0f s", Date().timeIntervalSince(start)))
+        finishRemote(recap: recap.isEmpty ? (state.recap ?? "replayed") : recap, state: state)
     }
 
     /// Take a queued note back before Splat sees it.
@@ -427,7 +475,7 @@ final class Studio {
         subtitle = ""
         liveCode = ""
         isPatch = false
-        inputSeen = [:]
+        inputSeen = [:]; inputJSON = [:]; inputFields = [:]
         buildStart = .now
         if !stagePinned { stageTab = .code }
         setCaption(project.builds == 0 ? "so it's \(clockString()). new app just dropped" : "they said: \(shortPrompt(prompt))", speak: true)
@@ -564,21 +612,43 @@ final class Studio {
         case "tool_input":
             let id = d["id"] as? String ?? ""
             let name = d["name"] as? String ?? ""
-            let json = d["json"] as? String ?? ""
+            // v2 sends the new bytes; v1 the whole input so far. Either way we keep
+            // one growing string per tool and only ever decode its new tail.
+            if let delta = d["delta"] as? String {
+                inputJSON[id, default: ""].append(delta)
+            } else if var json = d["json"] as? String {
+                json.makeContiguousUTF8()      // JSONSerialization hands out NSStrings: O(n) per index otherwise
+                inputJSON[id] = json
+            }
+            let json = inputJSON[id] ?? ""
             let seen = inputSeen[id] ?? 0
-            if json.count > seen { count(chars: json.count - seen); inputSeen[id] = json.count }
+            let bytes = json.utf8.count
+            if bytes > seen { count(chars: (bytes - seen) * 3 / 4); inputSeen[id] = bytes }
+            func field(_ f: String) -> StreamedField {
+                var sf = inputFields[id]?[f] ?? StreamedField(f)
+                sf.feed(json)
+                inputFields[id, default: [:]][f] = sf
+                return sf
+            }
             switch name {
             case "Write":
-                if let c = PartialJSON.string("content", in: json) { liveCode = c }
-                if let f = PartialJSON.field2("file_path", in: json), f.1 { codePath = (f.0 as NSString).lastPathComponent }
+                let c = field("content")
+                if !c.text.isEmpty { liveCode = c.text }
+                let f = field("file_path")
+                if f.done { codePath = (f.text as NSString).lastPathComponent }
             case "Edit":
-                patchOld = PartialJSON.string("old_string", in: json) ?? ""
-                patchNew = PartialJSON.string("new_string", in: json) ?? ""
+                patchOld = field("old_string").text
+                patchNew = field("new_string").text
             case "Bash":
-                if let c = PartialJSON.string("command", in: json) { subtitle = "$ " + String(c.suffix(200)) }
+                let c = field("command")
+                if !c.text.isEmpty { subtitle = "$ " + String(c.text.suffix(200)) }
             default: break
             }
         case "tool_call":
+            if let id = d["id"] as? String {
+                if let w = inputFields[id]?["content"], w.done { lastDecodedWrite = w.text }
+                inputJSON[id] = nil; inputFields[id] = nil
+            }
             let name = d["name"] as? String ?? ""
             log(.splat(tool: name), Self.describe(name, d["input"] as? [String: Any] ?? [:]))
         case "tool_result":
@@ -591,6 +661,12 @@ final class Studio {
             phase = .thinking
         case "file":
             if let c = d["content"] as? String {
+                // replay/benchmark runs double as the decoder's check: the streamed
+                // Write must equal the file the server then sent
+                if ProcessInfo.processInfo.environment["TS_REPLAY"] != nil || ProcessInfo.processInfo.environment["TS_PERF"] != nil, let w = lastDecodedWrite {
+                    agentLog(w == c ? "decoder ok (\(c.utf8.count) bytes)" : "decoder MISMATCH: \(w.utf8.count) vs \(c.utf8.count) bytes")
+                    lastDecodedWrite = nil
+                }
                 remoteCode = c
                 liveCode = c
                 codePath = ((d["path"] as? String ?? "") as NSString).lastPathComponent
@@ -649,6 +725,14 @@ final class Studio {
         var name = ""
         var json = ""
         var spokenCaption = false
+        var fields: [String: StreamedField] = [:]
+        /// A field of this block's input, decoded up to the bytes seen so far.
+        func field(_ f: String) -> StreamedField {
+            var sf = fields[f] ?? StreamedField(f)
+            sf.feed(json)
+            fields[f] = sf
+            return sf
+        }
     }
 
     private func callModel(_ messages: [[String: Any]]) async throws -> Turn {
@@ -726,7 +810,7 @@ final class Studio {
 
     /// Streamed characters → an estimate of tokens → coins on the track.
     private var tokenCarry = 0.0
-    private func count(_ s: String) { count(chars: s.count) }
+    private func count(_ s: String) { count(chars: s.utf8.count) }
     private func count(chars: Int) {
         guard chars > 0 else { return }
         let t = Double(chars) / 3.6
@@ -774,14 +858,17 @@ final class Studio {
         }
         switch b.name {
         case "write_file":
-            if let c = PartialJSON.string("content", in: b.json) { liveCode = c }
-            if let t = PartialJSON.field2("app_title", in: b.json), t.1, project.title != t.0 {
-                project.title = t.0
-                if let em = PartialJSON.field2("app_emoji", in: b.json), em.1 { project.emoji = em.0 }
+            let c = b.field("content")
+            if !c.text.isEmpty { liveCode = c.text }
+            let t = b.field("app_title")
+            if t.done, project.title != t.text {
+                project.title = t.text
+                let em = b.field("app_emoji")
+                if em.done { project.emoji = em.text }
             }
         case "edit_file":
-            patchOld = PartialJSON.string("old_string", in: b.json) ?? ""
-            patchNew = PartialJSON.string("new_string", in: b.json) ?? ""
+            patchOld = b.field("old_string").text
+            patchNew = b.field("new_string").text
         default:
             break
         }

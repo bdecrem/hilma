@@ -185,16 +185,14 @@ struct StudioView: View {
                         .padding(.top, 52)
                         .background(Color.white)
                 } else if studio.html.isEmpty {
-                    if studio.building { CodeView(code: studio.codeForDisplay, streaming: true) } else { EmptyStage() }
+                    if studio.building { CodeStage(studio: studio) } else { EmptyStage() }
                 } else {
                     PreviewWebView(html: studio.html, version: studio.previewVersion, projectID: studio.project.id)
                         .padding(.top, 52)
                         .background(Color.white)
                 }
             case .code:
-                CodeView(code: studio.codeForDisplay, streaming: studio.building,
-                         isPatch: studio.isPatch && studio.phase == .editing,
-                         patchOld: studio.patchOld, patchNew: studio.patchNew)
+                CodeStage(studio: studio)
             }
             if let c = studio.cutaway {
                 CutawayView(cutaway: c, bugs: studio.lastBugs)
@@ -327,7 +325,7 @@ struct StudioView: View {
     private func game(compact: Bool) -> some View {
         SurfGameView(engine: studio.game, running: gameRunning, compact: compact, mode: "build")
             .overlay(alignment: .bottomLeading) {
-                SubtitleBox(text: studio.subtitle)
+                SubtitleStage(studio: studio)
                     .padding(10)
                     .opacity(studio.building || showDone ? 1 : 0)
             }
@@ -359,13 +357,8 @@ struct StudioView: View {
         .contentShape(Rectangle())
     }
 
-    @ViewBuilder private var captionOverlay: some View {
-        if (studio.building || showDone || studio.phase != .idle && studio.phase != .done) && !studio.caption.isEmpty {
-            CaptionBand(caption: studio.caption, id: studio.captionID, size: 32, filler: studio.captionIsFiller)
-                .frame(maxWidth: .infinity)
-        } else {
-            Color.clear.frame(height: 1)
-        }
+    private var captionOverlay: some View {
+        CaptionStage(studio: studio, showDone: showDone)
     }
 
     private func resize(total: CGFloat) -> some Gesture {
@@ -503,50 +496,8 @@ struct StudioView: View {
         .frame(height: 32)
     }
 
-    private var statusPill: some View {
-        HStack(spacing: 6) {
-            BlobHero(unit: 13, energy: splatEnergy)
-                .frame(height: 30)
-            // with notes waiting, room goes to them: just Splat and the count
-            if studio.queue.isEmpty {
-                Text(phaseLabel).font(Theme.black(13)).foregroundStyle(Theme.ink)
-                Text("· \(studio.outputTokens.formatted()) tok")
-                    .font(Theme.rounded(11.5, .bold)).foregroundStyle(Theme.ink2)
-                    .monospacedDigit()
-            } else {
-                Text(studio.outputTokens.formatted())
-                    .font(Theme.rounded(11.5, .bold)).foregroundStyle(Theme.ink2)
-                    .monospacedDigit()
-            }
-        }
-        .padding(.leading, 4).padding(.trailing, 10)
-        .fixedSize()
-        .frame(height: 32)
-        .background(Capsule().fill(.white))
-        .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
-    }
+    private var statusPill: some View { StatusPill(studio: studio) }
 
-    private var phaseLabel: String {
-        switch studio.phase {
-        case .thinking: return "cooking…"
-        case .writing: return "writing the app"
-        case .editing: return "patching"
-        case .reading: return "reading the code"
-        case .running: return "test-driving it"
-        default: return "…"
-        }
-    }
-
-    /// How hard the little Splat dances: flat out while writing, idling while he thinks.
-    private var splatEnergy: Double {
-        switch studio.phase {
-        case .writing: return 1
-        case .editing: return 0.85
-        case .running: return 0.7
-        case .reading: return 0.45
-        default: return 0.3
-        }
-    }
 
     private func queuedChip(_ n: Studio.Note) -> some View {
         HStack(spacing: 6) {
@@ -756,6 +707,89 @@ struct StudioView: View {
             }
             .padding(10)
             .accessibilityLabel("Close")
+        }
+    }
+}
+
+// MARK: - the parts that change on every streamed event
+//
+// Each reads the fast-changing Studio state itself, so only that part is
+// re-evaluated per event; StudioView.body stays out of the per-event update
+// (2026-09-24 profile: the whole screen's view graph was being diffed for every
+// tool_input tick).
+
+private struct CodeStage: View {
+    let studio: Studio
+    var body: some View {
+        CodeView(code: studio.codeForDisplay, streaming: studio.building,
+                 isPatch: studio.isPatch && studio.phase == .editing,
+                 patchOld: studio.patchOld, patchNew: studio.patchNew)
+            .equatable()
+    }
+}
+
+private struct SubtitleStage: View {
+    let studio: Studio
+    var body: some View { SubtitleBox(text: studio.subtitle) }
+}
+
+private struct CaptionStage: View {
+    let studio: Studio
+    let showDone: Bool
+    var body: some View {
+        if (studio.building || showDone || studio.phase != .idle && studio.phase != .done) && !studio.caption.isEmpty {
+            CaptionBand(caption: studio.caption, id: studio.captionID, size: 32, filler: studio.captionIsFiller)
+                .frame(maxWidth: .infinity)
+        } else {
+            Color.clear.frame(height: 1)
+        }
+    }
+}
+
+private struct StatusPill: View {
+    let studio: Studio
+    var body: some View {
+        HStack(spacing: 6) {
+            BlobHero(unit: 13, energy: splatEnergy)
+                .frame(height: 30)
+            // with notes waiting, room goes to them: just Splat and the count
+            if studio.queue.isEmpty {
+                Text(phaseLabel).font(Theme.black(13)).foregroundStyle(Theme.ink)
+                Text("· \(studio.outputTokens.formatted()) tok")
+                    .font(Theme.rounded(11.5, .bold)).foregroundStyle(Theme.ink2)
+                    .monospacedDigit()
+            } else {
+                Text(studio.outputTokens.formatted())
+                    .font(Theme.rounded(11.5, .bold)).foregroundStyle(Theme.ink2)
+                    .monospacedDigit()
+            }
+        }
+        .padding(.leading, 4).padding(.trailing, 10)
+        .fixedSize()
+        .frame(height: 32)
+        .background(Capsule().fill(.white))
+        .overlay(Capsule().strokeBorder(Theme.ink, lineWidth: 1.5))
+    }
+
+    private var phaseLabel: String {
+        switch studio.phase {
+        case .thinking: return "cooking…"
+        case .writing: return "writing the app"
+        case .editing: return "patching"
+        case .reading: return "reading the code"
+        case .running: return "test-driving it"
+        default: return "…"
+        }
+    }
+
+    /// How hard the little Splat dances: flat out while writing, idling while he thinks.
+    private var splatEnergy: Double {
+        switch studio.phase {
+        case .writing: return 1
+        case .editing: return 0.85
+        case .running: return 0.7
+        case .reading: return 0.45
+        default: return 0.3
         }
     }
 }

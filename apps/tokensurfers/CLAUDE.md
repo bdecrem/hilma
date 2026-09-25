@@ -453,40 +453,70 @@ what Claude Code does all day. The phone is a client of the feed.
   `apps/<uuid>.html`, all on the device. Each project previews on its own
   origin (`https://<id8>.tokensurfers.app/`), so `localStorage` is per app.
 
-## Performance (2026-09-24 profile, simulator)
+## Performance (2026-09-24, phone + simulator)
 
-Bart asked whether the app is heavy on the phone and whether the blob is.
-Instruments can't attach to the iOS 27 beta from this Xcode and every
-`devicectl … launch --console` needs the phone unlocked for minutes, so the
-numbers come from the simulator (relative, not the phone's) — never burn his
-phone time on this again (memory: `feedback_dont_experiment_on_barts_phone`).
+Bart's iPhone Air was sluggish in split screen while a build ran. Measured on
+the phone through `devicectl … launch --console` with `TS_PERF=1` (a real
+build, the game running underneath): **55–79% of one core sustained, 60 fps,
+150–235 MB, thermal nominal; 16–26% after the build with the game hidden**.
+The tunnel to the phone works over Wi-Fi (`xcrun devicectl device info details`
+brings it up; installs work while it's locked, launches don't). Instruments
+still can't attach (Xcode 26.2 vs iOS 27.2), so symbols come from the
+simulator: `sample <pid> 12` on the simulator process, summarized with
+`scripts/sample-report.py <sample.txt>` (the main thread's busy share and
+where it went).
 
-- **Tools**: `TS_PERF=1` prints `[perf] cpu N% of one core · mem · thermal ·
-  fps` every 2 s (`Game/PerfMeter.swift`: thread CPU via `thread_info`,
-  `phys_footprint`, the game's frames); `scripts/sim-console.py <log>` gets
-  the simulator app's console into a file from a non-tty shell (`script`
-  refuses: "tcgetattr: not supported on socket"); `sample <pid> 10` on the
-  simulator process shows where the main thread goes.
-- **Findings** (a coding session in split screen, then idle): the blob is
-  nothing (a dozen springs). The main thread's time was mostly CoreGraphics
-  rasterizing the game Canvas (under `_UIApplicationFlushCATransaction`),
-  then the **Starfield** — 40 `Text("★")` glyphs redrawn at 60 fps, and Home
-  kept doing it *behind* an open Studio (the biggest single hog, 18% of the
-  main thread while idle), then the music synth (a `pow` per sample per
-  voice, ~10% of a core), then the code view re-colouring every visible line
-  on every streamed update.
-- **Done**: stars as paths at 24 fps, paused while a Studio covers Home
-  (`HomeView(covered:)`, also pauses the hero); the synth recomputes pitch
-  and envelope every 8 samples and writes zeros when nothing plays;
-  `Syntax.colored` memoizes coloured lines; the two skyline layers are
-  rendered once per size into images (`SkylineCache`, they were hundreds of
-  rect fills per frame) and tiled; the game Canvas renders asynchronously at
-  2/3 of the screen scale and is scaled up (`SurfGameView.canvasScale` 1.5:
-  2× on a 3× phone). Simulator, same coding session: idle 39% → 15% of a
-  core, build 46% → 38%; the game alone 21 → 31 fps at the same CPU.
-- **Left**: the HUD's `StrokedText` (9 Text copies per label) re-lays out
-  every frame; the trains are ~15 paths each; a 40 fps cap would save
-  battery on the phone if it ever runs warm.
+- **Tools**: `TS_PERF=1` prints `[perf] cpu N% of one core (N% of cores) ·
+  main N% · mem · thermal · fps` every 2 s (`Game/PerfMeter.swift`, thread
+  CPU via `thread_info`, the main thread listed separately; stdout is
+  line-buffered so the lines reach the console). `TS_REPLAY=<feed.json>`
+  replays a saved event feed (`GET events?after=0`) with its original
+  timing, no mini needed (`Studio.runReplay`; `TS_REPLAY_SPEED` scales it);
+  in replay/perf runs the decoded Write is compared with the `file` event
+  ("decoder ok / MISMATCH" in the console). `TS_FPS=30` caps the game.
+  `scripts/perf-replay.sh <feed.json> <label> [sample-at-s]` runs a replay
+  in the simulator, samples it, and prints averages/medians over the
+  replay. `scripts/perf/feed-v2.json` is a recorded real build (v2 shape,
+  285 events, 53 s); `scripts/perf/make-stress-feed.py <feed> <out>` turns a
+  v1-shape recording into the stress case (a 40 KB Write streamed over 45 s).
+  Record a tape with `curl "$AGENT/p/<id>/events?after=0&wait=0[&v=2]" -H
+  "x-surf-key: …"` while the mini still has the build in its ring (a restart
+  empties it).
+- **Findings**: (1) the feed was quadratic — `tool_input` re-sent the whole
+  half-streamed input every 120 ms (a 6 KB app: 1 MB of feed; a 60 KB app
+  would be ~100 MB), and the phone decoded the whole thing each time on
+  NSString-bridged strings (`String.count`/`distance` are O(n) on those);
+  (2) the game frame spent a third of its time on the HUD (nine stacked
+  `Text`s per stroked label laid out every frame because it sat inside the
+  animation timeline), 29% of the canvas on my entity sort (it copied
+  entities and searched trains per coin), ~270 sleeper fills as separate
+  paths, and Canvas text resolution (posters, signs, badges) every frame;
+  (3) every streamed event re-evaluated the whole `StudioView.body` (it read
+  `codeForDisplay`, `outputTokens`, `subtitle`, `caption` directly) and
+  redrew every `PaperGrain` canvas.
+- **Done**: the mini emits `tool_input {delta, offset, len}` for `v=2` (old
+  shape kept for old clients) and batches the long-poll with `hold=250`; the
+  phone asks for `v=2&hold=250` and decodes fields incrementally
+  (`Agent/StreamedField.swift`, only the new bytes; both engines) with
+  utf8 counts. HUD on its own 10 Hz timeline; index-based lane ordering;
+  sleepers/ballast/rails batched into single paths; words rasterized once
+  (`GlyphCache`); coin rings as fills; `CodeView` is `Equatable` and
+  memoizes the line split; `PaperGrain` is a cached image (`GrainCache`);
+  the per-event state is read by four small child views (`CodeStage`,
+  `SubtitleStage`, `CaptionStage`, `StatusPill`) so the rest of the screen
+  stays out of the update.
+- **Numbers** (simulator, stress feed, medians over the replay):
+  baseline main thread 17% at 17 fps → after the feed + frame fixes 18% at
+  26 fps (the CPU-bound simulator turns a cheaper frame into more frames) →
+  after the view split 16% at 26 fps; memory peak 151 → 118 MB; the
+  feed-side work (`apply`, `PartialJSON`) fell out of the profile entirely
+  (it was 39% of the main thread's busy time in the baseline sample). On the
+  phone the frame rate is pinned at 60, so the same savings show as CPU:
+  install and read `[perf] … main N%` during a build (was 55–79% of a core
+  total before; see the git log for the after number when Bart has run it).
+- **Left**: the trains are still ~15 paths each; a 40 fps cap during builds
+  would save the phone battery if it runs warm (`TS_FPS` shows the effect);
+  the Starfield behind the gallery/leaderboard sheets.
 
 ## Build and run
 

@@ -34,6 +34,7 @@
 		E077DCA4B7117D31E5CB6732 /* SurfAccount.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */; };
 		E50D89B5A3F2E21990B7436D /* SurfRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61687D57C5AA1DB02355FEDB /* SurfRenderer.swift */; };
 		E797D8BAECA7774FAF8C033F /* SurfEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50E086AD51AB083526161C1A /* SurfEngine.swift */; };
+		EC5863478CAA880E4F1883C6 /* StreamedField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 006029C3BC310871F26DE8E9 /* StreamedField.swift */; };
 		EF1900240C01A65BFF0F000A /* Leaderboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */; };
 		F1CC3774AEBE4145B8D943B0 /* Montserrat-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 57435456BCD7F64360803E98 /* Montserrat-ExtraBold.ttf */; };
 		FEC528561C0E29F0E6419676 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200232E278F9AC3DF43FA397 /* HomeView.swift */; };
@@ -41,6 +42,7 @@
 
 /* Begin PBXFileReference section */
 		0042B7B1D3CD30FE59B77EB4 /* StudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioView.swift; sourceTree = "<group>"; };
+		006029C3BC310871F26DE8E9 /* StreamedField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamedField.swift; sourceTree = "<group>"; };
 		00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfAPI.swift; sourceTree = "<group>"; };
 		00F022A3922F46B8820472A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		09CF2ED5858A738C214CE367 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 				6D215114C01717BE69A091A8 /* AppRunner.swift */,
 				D75795D20D8E4C54625BBD1C /* ProjectStore.swift */,
 				CA460FC7B0A043146FFD0784 /* RemoteEngine.swift */,
+				006029C3BC310871F26DE8E9 /* StreamedField.swift */,
 				E30074E3ADEA5B6BD6B2EDC1 /* Studio.swift */,
 				1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */,
 				00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */,
@@ -256,6 +259,7 @@
 				4A486C215DEDFF7C7E1ADF3E /* RemoteEngine.swift in Sources */,
 				B1A1A8B58802E1AA938C6D22 /* Secrets.swift in Sources */,
 				B746CB91F818BA16F78063C9 /* StageViews.swift in Sources */,
+				EC5863478CAA880E4F1883C6 /* StreamedField.swift in Sources */,
 				D1A78F9AD8B6ED2698416CA2 /* Studio.swift in Sources */,
 				0C8EBC38E25613522A603B20 /* StudioView.swift in Sources */,
 				40FE5FDF05EFEFD6DD4BB10B /* SurfAPI.swift in Sources */,
