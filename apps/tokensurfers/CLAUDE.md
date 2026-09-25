@@ -757,9 +757,9 @@ Goal: a public TestFlight beta, not an App Store release.
   publish/upvote/remix); review notes explain the sandboxed web view, the
   Report button and the optional mic.
 - Beta group **"Public beta"** (`14902f7d-…`), public link
-  https://testflight.apple.com/join/aqDXBFQn, cap 10,000. Set
-  `SURF_TESTFLIGHT_URL` to it on Vercel once the first build clears beta
-  review (the site's buttons say "soon" until then).
+  https://testflight.apple.com/join/aqDXBFQn, cap 10,000. Beta review
+  approved 2026-09-25; `SURF_TESTFLIGHT_URL` is set to it on Vercel
+  (Production + Preview), so the site's buttons link there.
 - Wording for Apple (guidelines 2.5.2 and 1.2): a runner game with a coding
   buddy who makes "web toys" / "creations" previewed in a sandboxed web view;
   never "install apps", "run any code", "build real apps"; no other
