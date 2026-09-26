@@ -116,6 +116,9 @@ final class Studio {
     /// A project built on the mini stays there; a fresh one follows the setting.
     var remote: Bool { project.siteURL != nil || (html.isEmpty && Self.engine == .remote) }
 
+    /// The Studio is on screen: get the narrator's voice loaded before a build needs it.
+    func warmNarrator() { narrator.warm() }
+
     init(store: ProjectStore, project: Project) {
         self.store = store
         self.project = project
@@ -183,7 +186,9 @@ final class Studio {
             let wait = at - Date().timeIntervalSince(start)
             if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
             if Task.isCancelled { return }
+            let t0 = PerfMeter.frameStart()
             if let r = apply(e) { recap = r }
+            PerfMeter.applied(t0)
             if e.type == "idle" { break }
         }
         let state = AgentAPI.State(obj["state"] as? [String: Any] ?? [:])
@@ -536,11 +541,13 @@ final class Studio {
                 failures = 0
                 lastSeq = poll.seq
                 var idle = false
+                let t0 = PerfMeter.frameStart()
                 for e in poll.events {
                     if let r = apply(e) { recap = r }
                     if e.type == "idle" { idle = true }
                     if e.type == "error" { return }
                 }
+                if !poll.events.isEmpty { PerfMeter.applied(t0) }
                 if idle || (!poll.state.running && poll.events.isEmpty) {
                     finishRemote(recap: recap.isEmpty ? (poll.state.recap ?? "it's live. go look.") : recap, state: poll.state)
                     return
@@ -1163,6 +1170,16 @@ final class Narrator: NSObject, AVSpeechSynthesizerDelegate {
             .max { $0.quality.rawValue < $1.quality.rawValue }
         return best ?? AVSpeechSynthesisVoice(language: "en-US")
     }()
+
+    /// Loads the voice before the first real line: the first `speak` of a
+    /// session loads the voice's assets synchronously on the main thread
+    /// (a ~0.7 s stall, seen as a frozen game 8 s into every build, 2026-09-26).
+    func warm() {
+        let u = AVSpeechUtterance(string: ".")
+        u.voice = Self.voice
+        u.volume = 0
+        synth.speak(u)
+    }
 
     func say(_ text: String) {
         guard !held, !SurfAudio.shared.muted, UserDefaults.standard.object(forKey: "narrator") as? Bool ?? true else { return }

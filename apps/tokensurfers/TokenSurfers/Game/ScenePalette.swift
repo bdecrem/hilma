@@ -107,9 +107,11 @@ struct ScenePalette {
 enum StarCache {
     nonisolated(unsafe) private static var images: [String: UIImage] = [:]
 
-    static func image(width: Double, height: Double) -> UIImage {
-        let key = "\(Int(width))x\(Int(height))"
+    static func image(width: Double, height: Double, alpha: Double = 1) -> UIImage {
+        let a = min(10, max(1, Int((alpha * 10).rounded())))
+        let key = "\(Int(width))x\(Int(height))@\(a)"
         if let hit = images[key] { return hit }
+        let alpha = Double(a) / 10
         let format = UIGraphicsImageRendererFormat()
         format.scale = 2
         format.opaque = false
@@ -118,7 +120,7 @@ enum StarCache {
             var rng = SeededRandom(seed: 7)
             for _ in 0..<Int(width * height / 900) {
                 let r = 0.5 + rng.unit() * 1.1
-                c.setFillColor(UIColor.white.withAlphaComponent(0.35 + rng.unit() * 0.6).cgColor)
+                c.setFillColor(UIColor.white.withAlphaComponent((0.35 + rng.unit() * 0.6) * alpha).cgColor)
                 c.fillEllipse(in: CGRect(x: rng.unit() * width, y: rng.unit() * height, width: r * 2, height: r * 2))
             }
         }

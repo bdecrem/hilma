@@ -54,16 +54,39 @@ struct StrokedText: View {
 
     var body: some View {
         let base = Text(text).font(font)
-        ZStack {
-            // Eight offset copies make a solid outline that survives any font.
-            ForEach(0..<8, id: \.self) { i in
-                let a = Double(i) / 8 * 2 * .pi
-                base.foregroundStyle(Theme.ink)
-                    .offset(x: cos(a) * stroke, y: sin(a) * stroke)
+        // One layer per label. It was nine stacked Texts plus a CA shadow pass
+        // (an offscreen render of the group) that the system re-rendered every
+        // time a score or a line count changed; with a dozen of them on screen
+        // the phone's display clocked down to 30 fps during a build (2026-09-26).
+        // The hidden Text gives the layout; the canvas draws outline, hard
+        // shadow and fill (eight offset copies make a solid outline in any font).
+        base.hidden()
+            .padding(.horizontal, stroke * 1.5)
+            .padding(.vertical, stroke * 2.2)
+            .overlay {
+                Canvas { ctx, size in
+                    var t = ctx.resolve(base)
+                    let m = t.measure(in: CGSize(width: 4000, height: 4000))
+                    let center = CGPoint(x: size.width / 2, y: size.height / 2 - stroke * 0.6)
+                    let avail = size.width - stroke * 3
+                    if m.width > avail, m.width > 0 {   // the layout shrank it (minimumScaleFactor): follow
+                        let k = avail / m.width
+                        ctx.translateBy(x: center.x, y: center.y); ctx.scaleBy(x: k, y: k); ctx.translateBy(x: -center.x, y: -center.y)
+                    }
+                    let drop = stroke * 1.2
+                    t.shading = .color(Theme.ink)
+                    for pass in 0..<2 {
+                        let dy = pass == 0 ? drop : 0        // the shadow first, then the outline
+                        for i in 0..<8 {
+                            let a = Double(i) / 8 * 2 * .pi
+                            ctx.draw(t, at: CGPoint(x: center.x + cos(a) * stroke, y: center.y + sin(a) * stroke + dy), anchor: .center)
+                        }
+                        if pass == 0 { ctx.draw(t, at: CGPoint(x: center.x, y: center.y + dy), anchor: .center) }
+                    }
+                    t.shading = .color(color)
+                    ctx.draw(t, at: center, anchor: .center)
+                }
             }
-            base.foregroundStyle(color)
-        }
-        .shadow(color: Theme.ink.opacity(0.9), radius: 0, x: 0, y: stroke * 1.2)
     }
 }
 

@@ -545,6 +545,60 @@ what Claude Code does all day. The phone is a client of the feed.
   `apps/<uuid>.html`, all on the device. Each project previews on its own
   origin (`https://<id8>.tokensurfers.app/`), so `localStorage` is per app.
 
+## Performance, round two (2026-09-26): the split-screen stutter
+
+Bart: "almost unplayable" on the iPhone Air while a build streamed code.
+Measured on the phone (`TS_PERF=1`, a real build, the bot playing under it):
+**60 fps in attract mode, then 20–45 fps from the first streamed line to the
+end** — stepping through 45/40/30/24/20/15, ProMotion's discrete rates — with
+our main thread only 25–35% busy, and the thermal state going nominal → fair →
+serious in two minutes. The frame budget was being blown outside our code, in
+the system's render server: the code stage was one Text layer per line (a
+LazyVStack of the whole file with a `scrollTo` per tick), under a gradient
+`.mask` (an offscreen pass of the stage every frame), and every `StrokedText`
+was nine Text layers plus a CA shadow pass, re-rendered at 10 Hz as the score
+changed. Our own game frame was ~2 ms.
+
+- **Code stage while streaming** (`CodeView`): the lines that fit, as ONE
+  attributed Text with a number gutter, bottom-aligned; the top fade is a
+  gradient painted over the edge, not a mask. The scrollable full file is
+  back once the build ends. Edit patches are one Text per block.
+- **`StrokedText`**: one Canvas layer (the hidden Text gives the layout; the
+  canvas draws the eight outline copies, the hard shadow and the fill).
+- **Renderer**: no clips or opacity groups in the per-frame path (each is an
+  offscreen pass in SwiftUI's Metal renderer): poster words are drawn
+  unclipped, train fronts inset their bands instead of clipping, the
+  vaporwave sun's stripes are chords, the stars' fade is baked into the cached
+  image. Coins are cached sprites (8 spin angles × 2 kinds; one textured quad
+  instead of four ellipse fills, forty a frame). Ballast specks are rects.
+  `GlyphCache.warm()` rasterizes every word, emoji and coin before the first
+  frame (the first pickup used to be a 40 ms hitch).
+- **The status pill's blob** runs at 20 fps, not the display's rate.
+- **Web view freeze** (`FreezableWebView`): after a deploy the finished app
+  on the stage kept animating under the game (15–29 fps while surfing). When
+  the player takes the controls or moves in a live run (`SurfGameView.onPlay`),
+  the stage swaps the web view for a snapshot of itself and the web view
+  leaves the window (WebKit stops painting a hidden page); "tap to wake the
+  app" brings it back, as does a new deploy or closing the game pane. Never
+  freezes a page mid-load.
+- **Narrator warm-up**: the first `speak` of a session loads the voice
+  synchronously (~0.7 s stall 8 s into every build); the Studio speaks a
+  silent "." on appear.
+- **Result on the phone**, same test: **60 fps median (min 40) for the whole
+  build** vs 32 (min 15); hitches (≥ 40 ms gaps) median 0 per 2 s; feed apply
+  ≤ 4 ms per poll; thermal nominal throughout.
+- **Tools**: the `[perf]` line now carries `frame N ms (max)` (engine step +
+  scene draw), `apply N× ms (max)` (feed events per poll) and `hitches N (max
+  gap ms)`. `scripts/perf-replay.sh` samples a replay in the simulator; the
+  session's `threads.py`/`tree.py` (per-thread totals and one thread's call
+  tree from a `sample` file) were what showed the render server, not our
+  code, holding the frame — and, in the simulator only, an AttributeGraph
+  type-descriptor prefetch thread and a CoreAudio os_log storm burning two
+  cores (neither seen on the phone). On the phone: `xcrun devicectl device
+  process launch --console --environment-variables '{"TS_PERF":"1",…}'`; it
+  needs the phone unlocked. `TS_GAME=1` opens the game pane under a finished
+  app, `TS_PLAY=1` has the player take the controls 6 s in.
+
 ## Performance (2026-09-24, phone + simulator)
 
 Bart's iPhone Air was sluggish in split screen while a build ran. Measured on

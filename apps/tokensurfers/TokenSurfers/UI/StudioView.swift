@@ -29,6 +29,8 @@ struct StudioView: View {
     @State private var cancelArmed = false
     @State private var showLog = false
     @State private var stopArmed = false
+    /// The app on the stage is a still while the player surfs (tap it to wake it).
+    @State private var stageFrozen = false
     @AppStorage("muted") private var muted = false
     @AppStorage("narrator") private var narrator = true
     @AppStorage("music") private var music = true
@@ -49,6 +51,7 @@ struct StudioView: View {
         .onAppear {
             SurfAudio.shared.start()
             voice.warmUp()
+            studio.warmNarrator()
             gameOpen = (studio.html.isEmpty && studio.siteURL == nil) || studio.building
             if let p = initialPrompt, !p.isEmpty, studio.html.isEmpty, studio.siteURL == nil, !studio.building { studio.send(p) }
             studio.attach()   // a build still running on the mini
@@ -66,6 +69,7 @@ struct StudioView: View {
                 if !left.isEmpty { draft = ([draft] + left).filter { !$0.isEmpty }.joined(separator: ". ") }
             }
         }
+        .onChange(of: studio.previewVersion) { _, _ in stageFrozen = false }   // a fresh deploy shows live, whatever the player was doing
         .onChange(of: studio.phase) { _, p in
             guard p == .done else { return }
             showDone = true
@@ -181,15 +185,17 @@ struct StudioView: View {
             switch studio.stageTab {
             case .app:
                 if let site = studio.siteURL {
-                    SiteWebView(url: site, version: studio.previewVersion)
+                    SiteWebView(url: site, version: studio.previewVersion, frozen: frozen)
                         .padding(.top, 52)
                         .background(Color.white)
+                        .overlay { if frozen { wakeStage } }
                 } else if studio.html.isEmpty {
                     if studio.building { CodeStage(studio: studio) } else { EmptyStage() }
                 } else {
-                    PreviewWebView(html: studio.html, version: studio.previewVersion, projectID: studio.project.id)
+                    PreviewWebView(html: studio.html, version: studio.previewVersion, projectID: studio.project.id, frozen: frozen)
                         .padding(.top, 52)
                         .background(Color.white)
+                        .overlay { if frozen { wakeStage } }
                 }
             case .code:
                 CodeStage(studio: studio)
@@ -210,6 +216,22 @@ struct StudioView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: studio.cutaway)
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: studio.feed)
+    }
+
+    private var frozen: Bool { stageFrozen && gameOpen && !fullscreenApp }
+
+    /// Over a frozen app: one tap brings it back to life.
+    private var wakeStage: some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .onTapGesture { stageFrozen = false }
+            .overlay(alignment: .bottom) {
+                Text("tap to wake the app")
+                    .font(Theme.black(11)).foregroundStyle(.white)
+                    .padding(.horizontal, 10).padding(.vertical, 5)
+                    .background(Capsule().fill(.black.opacity(0.45)))
+                    .padding(.bottom, 52)
+            }
     }
 
     private var topBar: some View {
@@ -323,7 +345,7 @@ struct StudioView: View {
     }
 
     private func game(compact: Bool) -> some View {
-        SurfGameView(engine: studio.game, running: gameRunning, compact: compact, mode: "build")
+        SurfGameView(engine: studio.game, running: gameRunning, compact: compact, mode: "build", onPlay: { stageFrozen = true })
             .overlay(alignment: .bottomLeading) {
                 SubtitleStage(studio: studio)
                     .padding(10)
@@ -604,6 +626,7 @@ struct StudioView: View {
     private func simulatorHooks() {
         let env = ProcessInfo.processInfo.environment
         if let d = env["TS_DRAFT"], !d.isEmpty { draft = d }
+        if env["TS_GAME"] != nil { gameOpen = true }        // the pane open under a finished app (with TS_PLAY: the freeze)
         let at = Double(env["TS_INJECT_AT"] ?? "") ?? 12
         if let note = env["TS_INJECT"], !note.isEmpty {
             Task {
@@ -750,7 +773,7 @@ private struct StatusPill: View {
     let studio: Studio
     var body: some View {
         HStack(spacing: 6) {
-            BlobHero(unit: 13, energy: splatEnergy)
+            BlobHero(unit: 13, energy: splatEnergy, fps: 20)
                 .frame(height: 30)
             // with notes waiting, room goes to them: just Splat and the count
             if studio.queue.isEmpty {

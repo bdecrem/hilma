@@ -290,10 +290,12 @@ struct BlobHero: View {
     var running = true
     var front = true
     var energy: Double = 1
+    /// Frames per second; the status pill's tiny one doesn't need the display's rate.
+    var fps: Double? = nil
     @State private var state = BlobState()
 
     var body: some View {
-        TimelineView(.animation(paused: !running)) { tl in
+        TimelineView(.animation(minimumInterval: fps.map { 1 / $0 }, paused: !running)) { tl in
             let t = tl.date.timeIntervalSinceReferenceDate
             Canvas { ctx, size in
                 var p = SurferPose()

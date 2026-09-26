@@ -9,6 +9,8 @@ struct SurfGameView: View {
     var mode = "build"                  // "build" (under a build) | "solo"
     var autoplay = false                // solo: skip the start screen
     var onClose: (() -> Void)? = nil
+    /// The player is playing (took the controls, or moved in a live run).
+    var onPlay: (() -> Void)? = nil
 
     private var solo: Bool { mode == "solo" }
 
@@ -47,10 +49,12 @@ struct SurfGameView: View {
                 GeometryReader { g in
                     let k = Self.canvasScale
                     Canvas(rendersAsynchronously: true) { ctx, size in
+                        let t0 = PerfMeter.frameStart()
                         let dt = clock.tick(now)
                         engine.step(dt)
                         SurfRenderer(e: engine, size: size).draw(&ctx)
                         PerfMeter.frames += 1
+                        PerfMeter.frameEnd(t0)
                     }
                     .frame(width: g.size.width / k, height: g.size.height / k)
                     .scaleEffect(k, anchor: .topLeading)
@@ -92,6 +96,7 @@ struct SurfGameView: View {
             return .handled
         }
         .onAppear {
+            GlyphCache.warm()
             engine.onSound = { SurfAudio.shared.play($0) }
             engine.onCrash = { oofAt = .now }
             engine.onSpeed = { SurfAudio.shared.pace = $0 }
@@ -108,6 +113,10 @@ struct SurfGameView: View {
             engine.paused = !active
             SurfAudio.shared.start()
             if solo { Task { await board.refresh() } }
+            // TS_PLAY=1: the player takes the controls 3 s in (the simulator has no finger)
+            if !solo, ProcessInfo.processInfo.environment["TS_PLAY"] != nil {
+                Task { try? await Task.sleep(for: .seconds(6)); if attract { takeOver() } }
+            }
         }
         .onDisappear { SurfAudio.shared.musicTarget = 0 }
         .task(id: attract) {
@@ -142,6 +151,7 @@ struct SurfGameView: View {
                 if attract { takeOver(); return }
                 if engine.over { if canRunBack { restart() }; return }
                 guard !paused else { return }
+                onPlay?()
                 if abs(dx) > abs(dy) { dx < 0 ? engine.left() : engine.right() }
                 else { dy < 0 ? engine.jump() : engine.roll() }
             }
@@ -155,6 +165,7 @@ struct SurfGameView: View {
         if attract { takeOver(); return }
         if engine.over { if canRunBack { restart() }; return }
         guard !paused else { return }
+        onPlay?()
         if p.x < width / 3 { engine.left() }
         else if p.x > width * 2 / 3 { engine.right() }
         else { engine.jump() }
@@ -168,6 +179,7 @@ struct SurfGameView: View {
         engine.restart()
         engine.toast("YOU'RE UP")
         SurfAudio.shared.play(.streak)
+        onPlay?()
     }
 
     // MARK: game over
@@ -302,7 +314,7 @@ struct SurfGameView: View {
                 }
             }
             if solo, !armed { intro }
-            if attract { attractHint }
+            if attract, ProcessInfo.processInfo.environment["TS_QUIET"] == nil { attractHint }   // TS_QUIET=1: no hint (recordings)
             if paused, !engine.over { pauseCard }
             if overCard { if height < 250 { slimOverCard } else { gameOverCard } }
         }
