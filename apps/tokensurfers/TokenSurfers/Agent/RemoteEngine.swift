@@ -77,6 +77,12 @@ enum AgentAPI {
         return (r["seq"] as? Int ?? 0, State(r["state"] as? [String: Any] ?? [:]))
     }
 
+    /// Who is asking: the account's handle, else the device (the leaderboard's id).
+    @MainActor static func who() -> String {
+        let h = SurfAccount.shared.handle
+        return h.isEmpty ? "device:\(Leaderboard.shared.deviceID)" : h
+    }
+
     // MARK: plumbing
 
     private static func path(_ verb: String, _ id: UUID) -> String { "p/\(id.uuidString.lowercased())/\(verb)" }
@@ -87,6 +93,7 @@ enum AgentAPI {
         req.timeoutInterval = 30
         req.setValue("application/json", forHTTPHeaderField: "content-type")
         req.setValue(Secrets.appKey, forHTTPHeaderField: "x-surf-key")
+        req.setValue(await Self.who(), forHTTPHeaderField: "x-surf-user")   // the daily allowance is per user
         req.httpBody = try JSONSerialization.data(withJSONObject: body)
         return try await send(req)
     }

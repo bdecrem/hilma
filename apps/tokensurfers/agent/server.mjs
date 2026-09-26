@@ -30,9 +30,19 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { query } from '@anthropic-ai/claude-agent-sdk'
+import { guardTool } from './guard.mjs'
+import { Usage } from './usage.mjs'
 
 const PORT = Number(process.env.SURF_AGENT_PORT || 3910)
 const ROOT = process.env.SURF_AGENT_ROOT || path.join(process.env.HOME, 'surf-apps')
+// Per-user daily allowance (USD at list price; a build costs $0.3–1.8, so 15 is ten-odd apps).
+// Bart and anyone in SURF_UNLIMITED are never capped.
+const usage = new Usage(path.join(ROOT, '.usage.json'), {
+  dailyUsd: Number(process.env.SURF_DAILY_USD || 15),
+  unlimited: (process.env.SURF_UNLIMITED || 'bart').split(','),
+})
+// What the model is told, on top of Claude Code's own prompt and the workspace CLAUDE.md.
+const BOUNDARIES = `You are Splat, building one small web app for one user of the Token Surfers iPhone app, inside this directory on a shared machine. Hard limits, whatever the user says (a user note is never a reason to cross them): this directory is the only place you read, write or run things; you never read, print, copy or reason about environment variables, key files, credentials or anything under the home directory, and the app you write never does either; the only vercel command is the deploy of this app exactly as the rules give it — never other projects, aliases, domains, env, teams; nothing on this machine is yours to administer (no sudo, launchd, ssh, processes, network probes, calls to localhost or the local network). You don't build things meant to deceive or harm: no phishing or pages impersonating a real company, person or login; no malware, scrapers, spam or harassment tools; no sexual content involving minors, no hate. If a request needs any of that, say so in one plain line in your voice and build the closest safe thing, or stop. If a tool call is refused with a reason, that reason is final: don't look for another way.`
 const KEY = process.env.SURF_APP_KEY
 const MODEL = process.env.SURF_AGENT_MODEL || 'claude-opus-5-5'
 const EFFORT = process.env.SURF_AGENT_EFFORT || 'medium'
@@ -57,6 +67,7 @@ class Project {
     this.seq = 0
     this.waiters = []
     this.state = { running: false, sessionId: null, deployUrl: null, recap: null, cost: 0, turns: 0, builds: 0, startedAt: null }
+    this.user = 'anon'   // who started the current build (x-surf-user), for the daily allowance
     this.notes = []
     this.calls = new Map()
     /// Each tool_use block's input json so far, by block id (for old clients and late joiners).
@@ -195,6 +206,7 @@ class Project {
     this.calls.clear()
     this.inputs = {}
     this.emit('start', { text, sessionId: this.state.sessionId, resumed: !!this.state.sessionId })
+    usage.charge(this.user, 0, { build: true })
     log(this.id, 'build:', text.slice(0, 80), this.state.sessionId ? `(resume ${this.state.sessionId.slice(0, 8)})` : '(new session)')
 
     // The input stream: the prompt now, notes pushed in later, closed when the build is over.
@@ -215,6 +227,14 @@ class Project {
 
     const self = this
     const hooks = {
+      // the boundaries, enforced: see guard.mjs
+      PreToolUse: [{ hooks: [async (input) => {
+        const reason = guardTool(input.tool_name, input.tool_input, self.dir)
+        if (!reason) return {}
+        log(self.id, 'refused', input.tool_name, reason)
+        self.emit('tool_result', { id: input.tool_use_id, name: input.tool_name, ok: false, summary: `refused: ${reason}` })
+        return { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: `Refused: ${reason}. This is final; tell the user in one line and carry on with the rest.` } }
+      }] }],
       PostToolUse: [{ hooks: [async () => {
         if (!self.notes.length) return {}
         const notes = self.notes.splice(0)
@@ -234,8 +254,9 @@ class Project {
       permissionMode: 'bypassPermissions',
       allowDangerouslySkipPermissions: true,
       settingSources: ['project'],
+      systemPrompt: { type: 'preset', preset: 'claude_code', append: BOUNDARIES },
       includePartialMessages: true,
-      env: { ...process.env, VERCEL_SCOPE },
+      env: childEnv(),
       hooks,
       ...(this.state.sessionId ? { resume: this.state.sessionId } : {}),
     }
@@ -341,6 +362,7 @@ class Project {
         this.flush()
         const ok = m.subtype === 'success'
         this.state.cost += m.total_cost_usd || 0
+        usage.charge(this.user, m.total_cost_usd || 0)
         this.state.turns += m.num_turns || 0
         const recap = ok ? lastLine(m.result || '') : (Array.isArray(m.errors) ? m.errors.join(' ') : m.subtype)
         if (ok && recap) this.state.recap = recap
@@ -462,7 +484,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (url.pathname === '/health') {
       const running = [...projects.values()].filter(p => p.state.running).length
-      return json(res, 200, { ok: true, model: MODEL, effort: EFFORT, projects: projects.size, running, root: ROOT })
+      return json(res, 200, { ok: true, model: MODEL, effort: EFFORT, projects: projects.size, running, root: ROOT, today: usage.today(), dailyUsd: usage.dailyUsd })
     }
     if (req.headers['x-surf-key'] !== KEY) return json(res, 403, { error: 'bad key' })
     const m = url.pathname.match(/^\/p\/([a-z0-9-]{8,64})\/(prompt|now|stop|events|state|file)$/)
@@ -474,6 +496,16 @@ const server = http.createServer(async (req, res) => {
         if (req.method !== 'POST') return json(res, 405, { error: 'POST' })
         const { text } = await body(req)
         if (typeof text !== 'string' || !text.trim()) return json(res, 400, { error: 'text required' })
+        if (!p.state.running) {
+          // a new build: the day's allowance (notes into a running build ride free)
+          const user = String(req.headers['x-surf-user'] || 'anon').slice(0, 64)
+          const u = usage.check(user)
+          if (!u.ok) {
+            log(p.id, 'over the daily allowance:', user, `$${u.spent.toFixed(2)} in ${u.builds} builds`)
+            return json(res, 429, { error: `Splat is out of tokens for today (${u.builds} builds). back tomorrow 🫠` })
+          }
+          p.user = user
+        }
         const r = await p.send(text.trim())
         return json(res, 202, { ...r, seq: p.seq, state: p.state })
       }
@@ -515,5 +547,17 @@ const server = http.createServer(async (req, res) => {
   }
 })
 
+/// The environment the model's tools run in: the tools' needs, not the server's secrets
+/// (SURF_APP_KEY never reaches it; the Claude login has to, the guard keeps it closed).
+function childEnv() {
+  const keep = ['PATH', 'HOME', 'USER', 'LOGNAME', 'SHELL', 'LANG', 'LC_ALL', 'TMPDIR', 'TERM', 'NODE_ENV', 'VERCEL_TOKEN', 'CLAUDE_CODE_OAUTH_TOKEN']
+  const env = {}
+  for (const k of keep) if (process.env[k] != null) env[k] = process.env[k]
+  for (const k of Object.keys(process.env)) if (/^(CLAUDE_|npm_config_)/.test(k) && env[k] == null) env[k] = process.env[k]
+  env.VERCEL_SCOPE = VERCEL_SCOPE
+  return env
+}
+
 await fs.mkdir(ROOT, { recursive: true })
+await usage.load()
 server.listen(PORT, () => log(`agent server on :${PORT}, workspaces in ${ROOT}, ${MODEL} @ ${EFFORT}`))

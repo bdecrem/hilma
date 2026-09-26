@@ -508,6 +508,14 @@ final class Studio {
             }
         } catch {
             guard !Task.isCancelled else { return }
+            if error.localizedDescription.contains("out of tokens") {
+                // the day's allowance: plain words, no bugs on the track
+                phase = .failed(error.localizedDescription)
+                setCaption("out of tokens for today 🫠", speak: true)
+                subtitle = error.localizedDescription
+                task = nil
+                return
+            }
             failRemote(error.localizedDescription)
             return
         }

@@ -545,6 +545,46 @@ what Claude Code does all day. The phone is a client of the feed.
   `apps/<uuid>.html`, all on the device. Each project previews on its own
   origin (`https://<id8>.tokensurfers.app/`), so `localStorage` is per app.
 
+## The allowance and the boundaries (2026-09-26)
+
+Two layers on the mini's agent, because the phone's key is in every shipped
+build and Splat runs with `bypassPermissions` on a shared machine:
+
+- **Daily allowance per user** (`agent/usage.mjs`, `<root>/.usage.json`, UTC
+  days): the phone sends `x-surf-user` (the account handle, else
+  `device:<leaderboard id>`); a new build is refused with 429 "Splat is out of
+  tokens for today (n builds)" once the user's day has cost `SURF_DAILY_USD`
+  (default 15 — a build is $0.3–1.8, so ten-odd apps); notes into a running
+  build ride free. `SURF_UNLIMITED` (default `bart`) is never capped, spend
+  still recorded. `/health` shows `today` (users, usd, builds). The phone
+  shows the message as the caption, no bugs on the track.
+- **What Splat may not do, whatever the user asks** (`agent/guard.mjs`, a
+  PreToolUse hook, plus the same rules in the system prompt and the workspace
+  CLAUDE.md "Boundaries"): file tools stay inside the workspace (real paths,
+  so /var → /private/var doesn't fool it) and may not write code that reads
+  the machine's environment or secrets; Bash is refused for secrets and key
+  files, the agent's own credentials (`~/.claude`, `CLAUDE_CODE_OAUTH…`),
+  dumping the environment, `$…TOKEN/KEY/SECRET` anywhere but the one
+  sanctioned deploy line, any `vercel` command other than that deploy of its
+  own name, machine administration (sudo, launchd, ssh, processes…), network
+  tools, calls to localhost/the LAN/tunn3l, and paths outside the workspace
+  (tool and OS prefixes excepted). A refusal reaches the model as the tool's
+  denial reason ("final; tell the user in one line and carry on") and the
+  phone as a `tool_result` "refused: …". The child environment carries only
+  what the tools need (never `SURF_APP_KEY`; the Claude login has to be there
+  and the guard keeps it closed). Content rules (no phishing/impersonation,
+  malware, spam tools, CSAM, hate) are prompt-only. Not a sandbox: a separate
+  OS user on the mini would be the next layer.
+- **Web-side ceilings**: 60 creations per account and 30 publishes a day
+  (`PublishCap` → 429), 400 posted runs per device a day (`ScoreCap` → 429),
+  10 reports per creation a day (more are acknowledged and dropped). Env:
+  `SURF_MAX_APPS`, `SURF_MAX_PUBLISHES_PER_DAY`, `SURF_MAX_RUNS_PER_DAY`.
+- **Checks**: `node agent/guard-check.mjs` (45 cases), `node
+  agent/check-live.mjs` (the real server on this Mac's Claude login with a
+  scratch root and a $0.01 allowance: a boundary-crossing prompt, the refusals,
+  the 429, the exemption), `npx tsx scripts/surf/caps-check.ts` (env loaded;
+  throwaway rows on the real tables, cleaned up).
+
 ## Performance, round two (2026-09-26): the split-screen stutter
 
 Bart: "almost unplayable" on the iPhone Air while a build streamed code.

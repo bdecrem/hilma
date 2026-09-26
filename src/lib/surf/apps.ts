@@ -123,10 +123,24 @@ function newSlug(): string {
 }
 
 /** Publish (insert) or re-publish (update the row this device's project already has). */
+/// Per-user ceilings on what the gallery will hold (2026-09-26): a creation is
+/// up to 400 KB of HTML, so one account must not be able to fill the table.
+export const MAX_APPS_PER_USER = Number(process.env.SURF_MAX_APPS || 60)
+export const MAX_PUBLISHES_PER_DAY = Number(process.env.SURF_MAX_PUBLISHES_PER_DAY || 30)
+
+export class PublishCap extends Error {}
+
+const utcDayStart = () => new Date(new Date().toISOString().slice(0, 10) + 'T00:00:00Z').toISOString()
+
 export async function publish(args: {
   ownerId: string; clientId: string; title: string; emoji: string; prompt: string; html: string; siteUrl?: string | null; remixOfSlug?: string | null
 }): Promise<AppCard> {
   const db = surfDb()
+  const [{ count: total }, { count: today }] = await Promise.all([
+    db.from('surf_apps').select('id', { count: 'exact', head: true }).eq('owner_id', args.ownerId),
+    db.from('surf_apps').select('id', { count: 'exact', head: true }).eq('owner_id', args.ownerId).gte('updated_at', utcDayStart()),
+  ])
+  if ((today ?? 0) >= MAX_PUBLISHES_PER_DAY) throw new PublishCap(`that's ${MAX_PUBLISHES_PER_DAY} publishes today — back tomorrow`)
   let remixOf: string | null = null
   if (args.remixOfSlug) {
     const { data } = await db.from('surf_apps').select('id').eq('slug', args.remixOfSlug).maybeSingle()
@@ -141,6 +155,7 @@ export async function publish(args: {
     const row = data as unknown as Row
     return toCard(row, await lookups([row]))
   }
+  if ((total ?? 0) >= MAX_APPS_PER_USER) throw new PublishCap(`the gallery holds ${MAX_APPS_PER_USER} creations per account — unpublish one first`)
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data, error } = await db.from('surf_apps').insert({
       slug: newSlug(), owner_id: args.ownerId, client_id: args.clientId, title: args.title, emoji: args.emoji,
