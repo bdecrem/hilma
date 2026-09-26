@@ -1,4 +1,4 @@
-// Token Surfers creations: publish, list, read, upvote, unpublish.
+// Token Surfers creations: publish, list, read, upvote, unpublish. Comments: ./comments.ts
 // The whole index.html lives in surf_apps.html (apps are a few tens of KB), or,
 // for an app Claude Code built on the mini, site_url points at it on Vercel.
 
@@ -15,6 +15,7 @@ export type AppCard = {
   prompt: string
   owner: string
   upvotes: number
+  comments: number
   remixOf: { slug: string; title: string } | null
   createdAt: string
   updatedAt: string
@@ -33,10 +34,10 @@ export function ogImageURL(a: { emoji: string; title: string; prompt?: string; o
   return `${SITE}/api/surf/og?${q.toString()}`
 }
 
-const SELECT = 'id, slug, title, emoji, prompt, upvotes, created_at, updated_at, owner_id, remix_of, site_url'
+const SELECT = 'id, slug, title, emoji, prompt, upvotes, comments, created_at, updated_at, owner_id, remix_of, site_url'
 
 type Row = {
-  id: string; slug: string; title: string; emoji: string; prompt: string; upvotes: number
+  id: string; slug: string; title: string; emoji: string; prompt: string; upvotes: number; comments?: number | null
   created_at: string; updated_at: string; owner_id: string; remix_of: string | null; html?: string; site_url?: string | null
 }
 
@@ -61,7 +62,7 @@ function toCard(r: Row, l: Lookups, voted = false): AppCard {
   const parent = r.remix_of ? l.parents.get(r.remix_of) ?? null : null
   return {
     id: r.id, slug: r.slug, title: r.title, emoji: r.emoji, prompt: r.prompt,
-    owner: l.owners.get(r.owner_id) ?? 'someone', upvotes: r.upvotes,
+    owner: l.owners.get(r.owner_id) ?? 'someone', upvotes: r.upvotes, comments: r.comments ?? 0,
     remixOf: parent, createdAt: r.created_at, updatedAt: r.updated_at, voted, url: `${SITE}/a/${r.slug}`,
     siteUrl: r.site_url ?? null,
   }

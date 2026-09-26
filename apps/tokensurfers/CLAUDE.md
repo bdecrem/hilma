@@ -229,6 +229,67 @@ back into their own apps. One handle for all of it (and the leaderboard).
   `/api/f2/imessage/notify`, the secret-gated route that sends through the
   normal ledgered iMessage sender — surf code must not import f2).
 
+## Comments and the "new for you" card (2026-09-26)
+
+Anyone signed in can comment on a gallery creation; the owner hears about
+comments and upvotes on Home. Schema `apps/tokensurfers/schema/005_surf_comments.sql`
+(applied 2026-09-26 — the Supabase CLI on this iMac M1 was linked to the
+`sms-bot` project for it): `surf_comments`, `surf_apps.comments` (the count,
+kept exact by `surf_add_comment` / `surf_delete_comment`), and on `surf_users`
+the two toggles `notify_upvotes` / `notify_comments` plus `inbox_seen_at`.
+
+- **Comments** — `src/lib/surf/comments.ts`: ≤ 500 characters, control
+  characters out, 100 a day per user (`SURF_MAX_COMMENTS_PER_DAY`); the author
+  or the creation's owner may delete one. Routes `GET|POST
+  /api/surf/apps/:slug/comments`, `DELETE …/comments/:id`. `AppCard.comments`
+  rides on every list/get, so the web tile shows `▲ 3 · 💬 2` and the app's
+  creation header has a 💬 pill.
+- **Web** (`/surf/a/<slug>`): a `Comments` card under the actions
+  (`client.tsx`, `.cmts` in `surf.css`) — count, composer (⌘/Ctrl-Enter posts;
+  signed out, posting opens the sign-in modal and then posts), the list newest
+  first with `@handle · 2m` and × on the ones you may delete. The list is
+  server-rendered; the times are filled in after hydration.
+- **The inbox** — `src/lib/surf/inbox.ts`, `GET|PATCH /api/surf/inbox`.
+  Nothing is stored per notification: it is the `surf_upvotes` and
+  `surf_comments` rows on the user's published creations newer than
+  `inbox_seen_at`, by other people, filtered by the two toggles — upvotes
+  grouped per creation (count + up to three handles), comments one each with
+  the text, newest first, 30 at most. `PATCH { seen: true }` moves the mark
+  to now; `{ upvotes, comments }` sets the toggles; both answer with the
+  fresh inbox.
+- **The card** (`UI/InboxCard.swift`, `Agent/SurfInbox.swift`): "NEW FOR
+  YOU" above THE GALLERY on Home, only while signed in and something is new
+  (a spring in and out). A 🔔 tile, "2 upvotes · 2 comments", up to three
+  rows ("▲ 1 upvote on 🍅 screaming pomodoro / @jo · 2m", "💬 @jo on 🐍
+  snake with rizz / “the comment” · 2m") and "+ n more"; a row opens that
+  creation as a sheet (`GalleryAppView(openComments:)`, straight to the
+  comments sheet for a comment); × clears (PATCH seen); "…" holds the two
+  toggles, which the gear menu on Home repeats so they can be turned back on
+  once the card is gone. `CommentsSheet` (same file) is the app's comments
+  UI: list, composer that asks for a sign-in on send, × on deletable ones;
+  the 💬 pill in a creation's header opens it too.
+- **Cost** (Bart's ask): no polling and no timers. One GET when Home first
+  shows (the last answer is cached in UserDefaults, so the card is there at
+  launch), then at most one an hour when the app comes back to the front
+  (`SurfInbox.minInterval`), a forced one on sign-in; × and the toggles PATCH
+  and take the answer back, so they add no GET. The card is static SwiftUI —
+  nothing per frame.
+- **Checks**: `node scripts/surf/inbox-check.mjs [base]` (26 API steps on the
+  fixed throwaway accounts `surftest_a` / `surftest_b`: publish, upvote,
+  comment, the cleaning, the inbox and its grouping, both toggles, seen,
+  owner/author/stranger deletes, the count on the card; unpublishes after)
+  and `node scripts/surf/pw-comments.mjs <shots-dir> [base]` (the creation
+  page in a phone viewport: sign-in modal on post, the comment with its
+  handle, the count, 💬 on the gallery tile, × delete). Both need
+  `SURF_APP_KEY` in the env (`set -a; source ./.env.local; set +a`) and a dev
+  server whose process has `SURF_SESSION_SECRET` — this iMac's `.env.local`
+  has none, so start it as `SURF_SESSION_SECRET=anything pnpm exec next dev
+  --turbopack -p 3219` (local tokens only). In the simulator, `TS_INBOX=open`
+  taps the first row 1.5 s after the fetch and `TS_INBOX=seen` taps ×; seed
+  an inbox by publishing as `surftest_a` and voting/commenting as
+  `surftest_b` through the API first. A cold debug launch in the simulator
+  takes 12 s+ before Home is up, so screenshot late.
+
 ## Powerups, scenes and the split-pane game over (2026-09-25)
 
 - **Powerups** (`SurfEngine.Power`, entity kind `.power`): a bubble in the gap

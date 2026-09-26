@@ -18,6 +18,9 @@ struct HomeView: View {
     @State private var showAccount = false
     @State private var board = Leaderboard.shared
     @State private var account = SurfAccount.shared
+    @State private var inbox = SurfInbox.shared
+    @State private var inboxOpen: InboxOpen?         // a creation opened from the "new for you" card
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("muted") private var muted = false
     @AppStorage("music") private var music = true
     @AppStorage("narrator") private var narrator = true
@@ -42,6 +45,10 @@ struct HomeView: View {
                     VStack(spacing: 22) {
                         header
                         promptCard
+                        if account.signedIn, !inbox.items.isEmpty {
+                            InboxCard(onOpen: openFromInbox)
+                                .transition(.scale(scale: 0.92).combined(with: .opacity))
+                        }
                         galleryCard
                         shelf.id("shelf")
                         surfCard
@@ -52,6 +59,7 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .scrollDismissesKeyboard(.interactively)
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: inbox.items.isEmpty)
                 .task {
                     // TS_SCROLL=apps: the shelf in a screenshot without a finger
                     if ProcessInfo.processInfo.environment["TS_SCROLL"] == "apps" {
@@ -70,6 +78,23 @@ struct HomeView: View {
             }
             if ProcessInfo.processInfo.environment["TS_ACCOUNT"] != nil { showAccount = true }
             await board.refresh()
+            await inbox.refresh()          // once per launch; then at most hourly (SurfInbox.minInterval)
+            // TS_INBOX=open taps the first row of the new-for-you card; TS_INBOX=seen taps its ×
+            switch ProcessInfo.processInfo.environment["TS_INBOX"] {
+            case "open":
+                try? await Task.sleep(for: .seconds(1.5))
+                if let first = inbox.items.first { openFromInbox(first) }
+            case "seen":
+                try? await Task.sleep(for: .seconds(2.5))
+                await inbox.markSeen()
+            default: break
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await inbox.refresh() } } }
+        .onChange(of: account.signedIn) { _, on in Task { on ? await inbox.refresh(force: true) : inbox.clearCache() } }
+        .sheet(item: $inboxOpen) { o in
+            GalleryAppView(app: o.app, openComments: o.comments, onOpenProject: { id in inboxOpen = nil; open(id, nil) })
+                .environment(model)
         }
         .fullScreenCover(isPresented: $showGame) { GameScreen().onDisappear { Task { await board.refresh(force: true) } } }
         .sheet(isPresented: $showBoard) { LeaderboardView() }
@@ -132,6 +157,17 @@ struct HomeView: View {
                     // new apps only; an app keeps the engine that built it
                     Toggle(isOn: Binding(get: { Studio.engine == .remote }, set: { Studio.engine = $0 ? .remote : .local })) {
                         Label("Claude Code on the mini", systemImage: "desktopcomputer")
+                    }
+                    if account.signedIn {
+                        // the same two toggles as the "…" on the new-for-you card, so they can be turned back on once it is gone
+                        Section("Tell me about") {
+                            Toggle(isOn: Binding(get: { inbox.prefs.upvotes }, set: { v in Task { await inbox.set(upvotes: v) } })) {
+                                Label("Upvotes", systemImage: "arrowtriangle.up.fill")
+                            }
+                            Toggle(isOn: Binding(get: { inbox.prefs.comments }, set: { v in Task { await inbox.set(comments: v) } })) {
+                                Label("Comments", systemImage: "bubble.left.fill")
+                            }
+                        }
                     }
                 } label: {
                     Image(systemName: "gearshape.fill").font(.system(size: 14, weight: .black)).foregroundStyle(Theme.ink)
@@ -332,6 +368,20 @@ struct HomeView: View {
         Button(role: .destructive) { deleting = p } label: { Label("Delete", systemImage: "trash") }
     }
 
+    /// A row on the "new for you" card: open that creation (straight to its comments for a comment).
+    private func openFromInbox(_ item: InboxItem) {
+        SurfAudio.shared.play(.tick)
+        Task {
+            do {
+                let app = try await account.fetch(slug: item.slug)
+                // the intent rides in the item: a @State read inside the sheet closure is stale (seen 2026-09-26)
+                inboxOpen = InboxOpen(app: app, comments: item.isComment)
+            } catch {
+                print("[inbox] open \(item.slug): \(error.localizedDescription)")
+            }
+        }
+    }
+
     private func start() {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
@@ -340,6 +390,13 @@ struct HomeView: View {
         let p = model.store.create(prompt: text)
         open(p.id, text)
     }
+}
+
+/// What a row on the "new for you" card opens: the creation, and whether to go straight to its comments.
+struct InboxOpen: Identifiable {
+    let app: GalleryApp
+    let comments: Bool
+    var id: String { app.id }
 }
 
 struct AppCard: View {

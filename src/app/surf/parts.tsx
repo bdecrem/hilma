@@ -40,7 +40,7 @@ export function AppTile({ app }: { app: AppCard }) {
     <Link className="card app" href={`/surf/a/${app.slug}`}>
       <div className="tile" style={{ background: `hsl(${hue(app.slug)} 55% 88%)` }}>
         <span>{app.emoji}</span>
-        <span className={`votes ${app.voted ? 'on' : ''}`}>▲ {app.upvotes}</span>
+        <span className={`votes ${app.voted ? 'on' : ''}`}>▲ {app.upvotes}{app.comments > 0 ? ` · 💬 ${app.comments}` : ''}</span>
       </div>
       <div className="t">{app.title}</div>
       <div className="by">@{app.owner}{app.remixOf ? ' · remix' : ''}</div>
