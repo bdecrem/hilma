@@ -775,7 +775,7 @@ struct HomeSplat: View {
         for k in 0..<8 {
             let rad = k % 2 == 0 ? r : r * 0.42
             let a = spin + Double(k) * .pi / 4
-            let q = CGPoint(x: pt.x + cos(a) * rad, y: pt.y + sin(a) * rad)
+            let q = CGPoint(x: pt.x + CGFloat(cos(a)) * rad, y: pt.y + CGFloat(sin(a)) * rad)   // explicit: Xcode 26.3 finds cos ambiguous here
             if k == 0 { path.move(to: q) } else { path.addLine(to: q) }
         }
         path.closeSubpath()
