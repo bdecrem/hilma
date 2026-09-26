@@ -12,9 +12,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 MINI=${MINI:-admin@100.95.51.98}
 KEYS="$HOME/.appstoreconnect/private_keys"
-KEY_ID="${ASC_KEY_ID:?ASC_KEY_ID (this Mac's App Store Connect key id)}"
+KEY_ID="${ASC_KEY_ID:?set ASC_KEY_ID, the App Store Connect key id on this Mac}"
 ISSUER="69a6de80-eb13-47e3-e053-5b8c7c11a4d1"
-PROFILE="${TS_PROFILE:?TS_PROFILE (this Mac's IOS_APP_STORE profile name)}"
+PROFILE="${TS_PROFILE:?set TS_PROFILE, the IOS_APP_STORE profile name on this Mac}"
 [ -f "$KEYS/AuthKey_$KEY_ID.p8" ] || { echo "error: $KEYS/AuthKey_$KEY_ID.p8 missing" >&2; exit 1; }
 BUILD=$(grep -E '^[[:space:]]*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*"([0-9]+)".*/\1/')
 VERSION=$(grep -E '^[[:space:]]*MARKETING_VERSION:' project.yml | sed -E 's/.*"([^"]+)".*/\1/')
