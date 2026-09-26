@@ -13,13 +13,11 @@ export async function notifyReport(subject: string, line: string): Promise<void>
   await Promise.all([sendEmail(subject, line), sendText(line)])
 }
 
-/** A new account (Bart's ask, 2026-09-26): an email only, sent after the response. */
+/** A new account (Bart's ask, 2026-09-26): one iMessage, sent after the response.
+ *  (Email was the first choice; SendGrid's free plan has no credits.) */
 export async function notifySignup(args: { handle: string; via: 'the app' | 'the web'; total: number | null }): Promise<void> {
-  const nth = args.total ? ` — surfer #${args.total}` : ''
-  await sendEmail(
-    `Token Surfers: new surfer @${args.handle}`,
-    `@${args.handle} just signed up from ${args.via}${nth}.\n${new Date().toISOString()}`,
-  )
+  const nth = args.total ? ` · surfer #${args.total}` : ''
+  await sendText(`🏄 Token Surfers: @${args.handle} just signed up from ${args.via}${nth}`)
 }
 
 export async function sendEmail(subject: string, line: string): Promise<void> {

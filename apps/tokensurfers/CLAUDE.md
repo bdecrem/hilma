@@ -166,14 +166,14 @@ back into their own apps. One handle for all of it (and the leaderboard).
   cookie `surf_session`. Routes `POST /api/surf/auth/{signup,login,logout}`,
   `GET …/me`. No email. In the app: `Agent/SurfAccount.swift` (token +
   user in UserDefaults, `AccountSheet`), the "sign in" / "@handle" chip on
-  Home; signing in sets the leaderboard handle. **A new account emails Bart**
+  Home; signing in sets the leaderboard handle. **A new account texts Bart**
   (2026-09-26: `notifySignup` in `src/lib/surf/notify.ts`, scheduled with
-  `after()` in `authRoutes.ts` so the response never waits; subject "Token
-  Surfers: new surfer @handle", says the app or the web and the surfer count;
-  `SURF_REPORT_EMAIL` + `SENDGRID_API_KEY`). SendGrid's free plan had 0 credits
-  that day ("Maximum credits exceeded", `/v3/user/credits`), so the email is
-  logged and dropped until the plan is paid or the sender is swapped — the
-  same wall Onething's sign-up emails hit on 09-18.
+  `after()` in `authRoutes.ts` so the response never waits; "🏄 Token
+  Surfers: @handle just signed up from the app · surfer #N", through the same
+  `SURF_REPORT_TEXT_*` iMessage route the Report button uses, so it needs the
+  mini). It was an email for an hour: SendGrid's free plan has 0 credits
+  ("Maximum credits exceeded", `/v3/user/credits`), the wall Onething's
+  sign-up emails hit on 09-18, so Bart switched it to iMessage.
 - **Creations** — `surf_apps` holds the whole `index.html` (≤ 400 KB) with
   slug, owner, title, emoji, the first prompt, `remix_of`, `upvotes`;
   `surf_upvotes` one row per (app, user), the counter kept exact by the
