@@ -96,6 +96,8 @@ final class Studio {
     private var lastCommand: [String: String] = [:]
     private var miniApps: Int?
     private var thinkingText = ""
+    private var lastThoughtAt = Date()
+    private var thinkTokens = 0     // the mini's running estimate for the current think
 
     // the remote engine
     /// The deployed app, when Claude Code on the mini built it.
@@ -606,11 +608,16 @@ final class Studio {
                 thinkingText = String((thinkingText + delta).suffix(200))
                 subtitle = "💭 " + thinkingText
                 quietSince = .now
+                lastThoughtAt = .now
             }
+        case "thinking_tokens":
+            // proof of life: the model is planning, here is how much so far
+            if let n = d["tokens"] as? Int { thinkTokens = n }
         case "text":
             let delta = d["delta"] as? String ?? ""
             count(delta)
             thinkingText = ""
+            thinkTokens = 0
             subtitle = String((subtitle + delta).suffix(220))
         case "say":
             let text = d["text"] as? String ?? ""
@@ -627,6 +634,8 @@ final class Studio {
             store.update(project)
         case "tool_start":
             let name = d["name"] as? String ?? ""
+            thinkingText = ""
+            thinkTokens = 0
             game.toolTrain(name)
             switch name {
             case "Write", "NotebookEdit":
@@ -1037,12 +1046,13 @@ final class Studio {
         warmTick = 0
         warmFacts = []
         thinkingText = ""
+        thinkTokens = 0
         let id8 = project.id.uuidString.lowercased().prefix(8)
         evergreen = [
             "the ask: “\(shortPrompt(lastPrompt))”",
             "workspace surf-\(id8) on the mini · deploys to surf-\(id8).vercel.app",
             project.builds == 0 ? "first build of this app" : "build #\(project.builds + 1) of this app · it edits, it doesn't start over",
-            "the code streams; the plan before it doesn't",
+            "splat plans before he types · the plan shows up as 💭",
         ]
         // one cheap fact from the mini itself
         Task {
@@ -1053,15 +1063,22 @@ final class Studio {
         }
         while !Task.isCancelled {
             try? await Task.sleep(for: .seconds(1))
-            guard building, Date().timeIntervalSince(quietSince) > 2.5, thinkingText.isEmpty else { continue }
+            // a 💭 line stays up while summaries keep coming; after 4 s without one the clock takes over again
+            guard building, Date().timeIntervalSince(quietSince) > 2.5,
+                  thinkingText.isEmpty || Date().timeIntervalSince(lastThoughtAt) > 4 else { continue }
             warmTick += 1
             let waited = Int(Date().timeIntervalSince(quietSince))
             if warmTick % 4 == 2, let fact = nextWarmFact() {
                 subtitle = fact
             } else {
                 let tokens = outputTokens
+                let plan = thinkTokens
+                if plan > 0 && warmTick % 2 == 1 {
+                    subtitle = "💭 thinking · \(waited)s · \(plan.formatted()) tokens of plan so far"
+                    continue
+                }
                 let clocks = [
-                    "thinking · \(waited)s — the plan doesn't stream, the code will",
+                    "thinking · \(waited)s — the plan comes first, then the code",
                     "opus 5.5 · medium effort · \(waited)s in its head",
                     tokens > 0 ? "\(tokens.formatted()) tokens out so far · \(waited)s of quiet" : "0 tokens out so far · \(waited)s of quiet · all of it is upstairs",
                     "quiet for \(waited)s · a bigger file means a longer think",

@@ -108,12 +108,14 @@ class Project {
   /// hundreds of events, not tens of thousands.
   buffer(kind, delta) {
     if (kind === 'text') this.textBuf += delta
+    if (kind === 'thinking') this.thinkBuf = (this.thinkBuf || '') + delta
     if (!this.flushTimer) this.flushTimer = setTimeout(() => this.flush(), 120)
   }
 
   flush() {
     clearTimeout(this.flushTimer)
     this.flushTimer = null
+    if (this.thinkBuf) { this.emit('thinking', { delta: this.thinkBuf }); this.thinkBuf = '' }
     if (this.textBuf) { this.emit('text', { delta: this.textBuf }); this.textBuf = '' }
     if (this.block && this.block.json.length > this.block.sent) {
       const b = this.block
@@ -225,6 +227,9 @@ class Project {
       cwd: this.dir,
       model: MODEL,
       effort: EFFORT,
+      // summarized, not omitted (the default): the plan streams as thinking_delta,
+      // so a long think shows on the phone instead of looking like a hang
+      thinking: { type: 'adaptive', display: 'summarized' },
       maxTurns: MAX_TURNS,
       permissionMode: 'bypassPermissions',
       allowDangerouslySkipPermissions: true,
@@ -271,6 +276,12 @@ class Project {
         if (m.subtype === 'init') {
           this.state.sessionId = m.session_id
           this.emit('session', { sessionId: m.session_id, model: m.model, tools: (m.tools || []).length })
+        } else if (m.subtype === 'thinking_tokens') {
+          // proof of life during a think, even when no summary text comes back (≤ 1/s)
+          if (Date.now() - (this.thinkTokensAt || 0) >= 1000) {
+            this.thinkTokensAt = Date.now()
+            this.emit('thinking_tokens', { tokens: m.estimated_tokens || 0 })
+          }
         }
         break
 
@@ -283,6 +294,7 @@ class Project {
           this.emit('tool_start', { id: this.block.id, name: this.block.name })
         } else if (e.type === 'content_block_delta') {
           if (e.delta?.type === 'text_delta') this.buffer('text', e.delta.text)
+          else if (e.delta?.type === 'thinking_delta' && e.delta.thinking) this.buffer('thinking', e.delta.thinking)
           else if (e.delta?.type === 'input_json_delta' && this.block && e.index === this.block.index) {
             this.block.json += e.delta.partial_json
             this.buffer('input')
