@@ -166,7 +166,14 @@ back into their own apps. One handle for all of it (and the leaderboard).
   cookie `surf_session`. Routes `POST /api/surf/auth/{signup,login,logout}`,
   `GET …/me`. No email. In the app: `Agent/SurfAccount.swift` (token +
   user in UserDefaults, `AccountSheet`), the "sign in" / "@handle" chip on
-  Home; signing in sets the leaderboard handle.
+  Home; signing in sets the leaderboard handle. **A new account emails Bart**
+  (2026-09-26: `notifySignup` in `src/lib/surf/notify.ts`, scheduled with
+  `after()` in `authRoutes.ts` so the response never waits; subject "Token
+  Surfers: new surfer @handle", says the app or the web and the surfer count;
+  `SURF_REPORT_EMAIL` + `SENDGRID_API_KEY`). SendGrid's free plan had 0 credits
+  that day ("Maximum credits exceeded", `/v3/user/credits`), so the email is
+  logged and dropped until the plan is paid or the sender is swapped — the
+  same wall Onething's sign-up emails hit on 09-18.
 - **Creations** — `surf_apps` holds the whole `index.html` (≤ 400 KB) with
   slug, owner, title, emoji, the first prompt, `remix_of`, `upvotes`;
   `surf_upvotes` one row per (app, user), the counter kept exact by the
