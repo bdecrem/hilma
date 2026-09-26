@@ -13,6 +13,7 @@
 		237FDF18278B29B8E299D4DD /* CaptionBand.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86B61EEC8EF7742EF1EFB91 /* CaptionBand.swift */; };
 		345A7E99A895417B4ED8D8E4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 434FE7FD5886BC3CBA6C1007 /* Assets.xcassets */; };
 		3CBD418F2D284FB8232C44AF /* ProjectStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D75795D20D8E4C54625BBD1C /* ProjectStore.swift */; };
+		3E34496E820A98AC40DA8785 /* ScenePalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10180023FFBB6ED01AABBE1A /* ScenePalette.swift */; };
 		40FE5FDF05EFEFD6DD4BB10B /* SurfAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */; };
 		4A486C215DEDFF7C7E1ADF3E /* RemoteEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA460FC7B0A043146FFD0784 /* RemoteEngine.swift */; };
 		50280016A75A4A1C28681C3F /* TokenSurfersApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */; };
@@ -47,6 +48,7 @@
 		00A6FAF26B8D3A44B59426C7 /* SurfAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfAPI.swift; sourceTree = "<group>"; };
 		00F022A3922F46B8820472A6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		09CF2ED5858A738C214CE367 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		10180023FFBB6ED01AABBE1A /* ScenePalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenePalette.swift; sourceTree = "<group>"; };
 		140A555B1BF75510782BFEAC /* TokenSurfersApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenSurfersApp.swift; sourceTree = "<group>"; };
 		1514EFEBA340E63D1D2FBD59 /* HomeSplat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSplat.swift; sourceTree = "<group>"; };
 		1C269BFDE560E4C7E6F0D63B /* SurfAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurfAccount.swift; sourceTree = "<group>"; };
@@ -140,6 +142,7 @@
 				C7527D8A15A97053FD86758F /* BlobArt.swift */,
 				CB5885B3E61D2A54BC8A0D3F /* Leaderboard.swift */,
 				5178F875F424DAC10F39CB73 /* PerfMeter.swift */,
+				10180023FFBB6ED01AABBE1A /* ScenePalette.swift */,
 				6570E755A3C2C0B71A922680 /* SurfAudio.swift */,
 				50E086AD51AB083526161C1A /* SurfEngine.swift */,
 				B20AC0B691B5EFFA7A806C18 /* SurferArt.swift */,
@@ -261,6 +264,7 @@
 				9D8A0F26263507FCCCA4486F /* PerfMeter.swift in Sources */,
 				3CBD418F2D284FB8232C44AF /* ProjectStore.swift in Sources */,
 				4A486C215DEDFF7C7E1ADF3E /* RemoteEngine.swift in Sources */,
+				3E34496E820A98AC40DA8785 /* ScenePalette.swift in Sources */,
 				B1A1A8B58802E1AA938C6D22 /* Secrets.swift in Sources */,
 				B746CB91F818BA16F78063C9 /* StageViews.swift in Sources */,
 				EC5863478CAA880E4F1883C6 /* StreamedField.swift in Sources */,

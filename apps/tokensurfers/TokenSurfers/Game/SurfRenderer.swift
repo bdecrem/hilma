@@ -8,6 +8,14 @@ import UIKit
 struct SurfRenderer {
     let e: SurfEngine
     let size: CGSize
+    /// This frame's backdrop colours (the scene, or a fade between two).
+    let pal: ScenePalette
+
+    init(e: SurfEngine, size: CGSize) {
+        self.e = e
+        self.size = size
+        pal = ScenePalette.current(e)
+    }
 
     // Camera well behind and above the player with a long lens (the Subway
     // Surfers look: a big runner, little perspective distortion). Lane
@@ -104,6 +112,7 @@ struct SurfRenderer {
                 case .barrier: drawBarrier(&ctx, ent)
                 case .gate: drawGate(&ctx, ent)
                 case .bug: drawBug(&ctx, ent)
+                case .power: drawPower(&ctx, ent)
                 }
             }
             if lane == e.lane, !playerDrawn { drawPlayer(&ctx); playerDrawn = true }
@@ -121,16 +130,38 @@ struct SurfRenderer {
     private func drawSky(_ ctx: inout GraphicsContext) {
         let skyRect = CGRect(x: 0, y: 0, width: size.width, height: horizon + 2)
         ctx.fill(Path(skyRect), with: .linearGradient(
-            Gradient(colors: [Color(hex: 0xEE7F52), Color(hex: 0xF6B47C), Color(hex: 0xFAD8A0)]),
+            Gradient(colors: pal.sky),
             startPoint: .zero, endPoint: CGPoint(x: 0, y: horizon)))
-        // sun with a halo
+        if pal.stars > 0.01 {
+            // one cached image of stars, faded in with the scene
+            var st = ctx
+            st.opacity = pal.stars
+            st.draw(Image(uiImage: StarCache.image(width: size.width, height: horizon * 0.8)),
+                    in: CGRect(x: 0, y: 0, width: size.width, height: horizon * 0.8))
+        }
+        // sun (or moon) with a halo
         let r = size.width * 0.12
         let sx = size.width * 0.5 - camX * 4
         let sy = horizon - size.height * 0.1 - r * 0.7
         ctx.fill(Path(ellipseIn: CGRect(x: sx - r * 1.5, y: sy - r * 1.5, width: r * 3, height: r * 3)),
-                 with: .color(Color(hex: 0xFCE7B0).opacity(0.28)))
-        ctx.fill(Path(ellipseIn: CGRect(x: sx - r, y: sy - r, width: r * 2, height: r * 2)),
-                 with: .color(Color(hex: 0xFCEBB8)))
+                 with: .color(pal.halo.opacity(0.28)))
+        let sunPath = Path(ellipseIn: CGRect(x: sx - r, y: sy - r, width: r * 2, height: r * 2))
+        ctx.fill(sunPath, with: .color(pal.sun))
+        if pal.bite > 0.01 {
+            // the night's crescent: a bite of sky out of the disc
+            ctx.fill(Path(ellipseIn: CGRect(x: sx - r * 0.55, y: sy - r * 1.2, width: r * 2, height: r * 2)),
+                     with: .color(pal.sky[1].opacity(pal.bite)))
+        }
+        if pal.stripes > 0.01 {
+            // the vaporwave sun: bands of sky across its lower half
+            var sc = ctx
+            sc.clip(to: sunPath)
+            for k in 0..<4 {
+                let y = sy + r * (0.08 + Double(k) * 0.24)
+                sc.fill(Path(CGRect(x: sx - r, y: y, width: r * 2, height: r * (0.05 + Double(k) * 0.035))),
+                        with: .color(pal.sky[2].opacity(pal.stripes)))
+            }
+        }
         // two skyline layers, parallax with the camera and a slow drift with distance.
         // Each layer is one period-wide strip, rendered once per size (blocks and
         // lit windows are hundreds of rects) and blitted twice at the offset.
@@ -138,22 +169,28 @@ struct SurfRenderer {
         for layer in 0..<2 {
             let drift = layer == 0 ? 0.006 : 0.012
             let shift = (e.distance * drift * 60).truncatingRemainder(dividingBy: period) + camX * (6 + Double(layer) * 6)
-            let strip = SkylineCache.strip(layer: layer, height: size.height, period: period)
-            let stripH = strip.size.height
-            var bx = -shift.truncatingRemainder(dividingBy: period) - period
-            while bx < size.width {
-                ctx.draw(Image(uiImage: strip), in: CGRect(x: bx, y: horizon - stripH + 1, width: period, height: stripH))
-                bx += period
+            // in a fade the old scene's strip goes under the new one's
+            let t = e.sceneBlend
+            for (scene, alpha) in t < 1 ? [(e.scenePrev, 1.0), (e.sceneNow, t)] : [(e.sceneNow, 1.0)] {
+                let strip = SkylineCache.strip(scene: scene, layer: layer, height: size.height, period: period)
+                let stripH = strip.size.height
+                var sc = ctx
+                sc.opacity = alpha
+                var bx = -shift.truncatingRemainder(dividingBy: period) - period
+                while bx < size.width {
+                    sc.draw(Image(uiImage: strip), in: CGRect(x: bx, y: horizon - stripH + 1, width: period, height: stripH))
+                    bx += period
+                }
             }
         }
         ctx.fill(Path(CGRect(x: 0, y: horizon - 12, width: size.width, height: 14)),
-                 with: .linearGradient(Gradient(colors: [Color(hex: 0xF9D39A, alpha: 0), Color(hex: 0xF3C3A0, alpha: 0.85)]),
+                 with: .linearGradient(Gradient(colors: [pal.haze[0].opacity(0), pal.haze[1].opacity(0.85)]),
                                        startPoint: CGPoint(x: 0, y: horizon - 12), endPoint: CGPoint(x: 0, y: horizon + 2)))
     }
 
     private func drawGround(_ ctx: inout GraphicsContext) {
         ctx.fill(Path(CGRect(x: 0, y: horizon, width: size.width, height: size.height - horizon)),
-                 with: .linearGradient(Gradient(colors: [Color(hex: 0x9C8FAE), Color(hex: 0x6E6388), Color(hex: 0x584D70)]),
+                 with: .linearGradient(Gradient(colors: pal.ground),
                                        startPoint: CGPoint(x: 0, y: horizon), endPoint: CGPoint(x: 0, y: size.height)))
         // ballast: all the dots in one path, one fill
         var rng = SeededRandom(seed: 99)
@@ -170,7 +207,7 @@ struct SurfRenderer {
             }
             z -= gap
         }
-        ctx.fill(dots, with: .color(Color(hex: 0x3F3552).opacity(0.5)))
+        ctx.fill(dots, with: .color(pal.ballast.opacity(0.5)))
     }
 
     /// Station platforms beside the tracks, with a yellow safety line.
@@ -179,15 +216,15 @@ struct SurfRenderer {
         for side in [-1.0, 1.0] {
             let x0 = edge * side, x1 = wall * side
             if let top = quad(P(x0, h, near), P(x0, h, far), P(x1, h, far), P(x1, h, near)) {
-                ctx.fill(top, with: .color(Color(hex: 0xB7ACC6)))
+                ctx.fill(top, with: .color(pal.platTop))
             }
             if (side < 0 && camX > x0) || (side > 0 && camX < x0),
                let face = quad(P(x0, 0, near), P(x0, 0, far), P(x0, h, far), P(x0, h, near)) {
-                ctx.fill(face, with: .color(Color(hex: 0x8C819F)))
+                ctx.fill(face, with: .color(pal.platFace))
             }
             let lineX = x0 + side * 0.12
             if let line = quad(P(lineX - 0.05, h + 0.005, near), P(lineX - 0.05, h + 0.005, far), P(lineX + 0.05, h + 0.005, far), P(lineX + 0.05, h + 0.005, near)) {
-                ctx.fill(line, with: .color(Color(hex: 0xF2C94C).opacity(0.85)))
+                ctx.fill(line, with: .color(pal.safety.opacity(0.85)))
             }
         }
     }
@@ -195,15 +232,15 @@ struct SurfRenderer {
     /// Station walls with posters scrolling past.
     private func drawWalls(_ ctx: inout GraphicsContext) {
         let wallX = 2.95, far = SurfEngine.viewDepth, near = -5.0, h = 2.7, base = 0.28
-        let texts = ["TOKEN SURFERS", "made with code", "LGTM", "SHIP IT", "brb 3am", "no comments", "x_final_final", "let him cook"]
-        let colors = [Color(hex: 0xF2C14E), Color(hex: 0xE25C4B), Color(hex: 0x8C6BE0), Color(hex: 0x3FB5A5), Color(hex: 0xF08BB0), Color(hex: 0x4F8FD6)]
+        let texts = pal.words
+        let colors = pal.posters
         for side in [-1.0, 1.0] {
             let x = wallX * side
             if let p = quad(P(x, base, near), P(x, base, far), P(x, h, far), P(x, h, near)) {
-                ctx.fill(p, with: .color(Color(hex: 0x7C7299)))
+                ctx.fill(p, with: .color(pal.wall))
             }
             if let trim = quad(P(x, h - 0.12, near), P(x, h - 0.12, far), P(x, h, far), P(x, h, near)) {
-                ctx.fill(trim, with: .color(Color(hex: 0x9A90B8)))
+                ctx.fill(trim, with: .color(pal.trim))
             }
             let spacing = 12.0
             var z = far - e.distance.truncatingRemainder(dividingBy: spacing)
@@ -239,7 +276,7 @@ struct SurfRenderer {
         // sleepers: ~90 rows × 3 lanes as two paths (near, far), two fills
         let gap = 1.1
         var z = far - e.distance.truncatingRemainder(dividingBy: gap)
-        let sleeper = Color(hex: 0x4B3440)
+        let sleeper = pal.sleeper
         var nearPath = Path(), farPath = Path()
         while z > near {
             for l in -1...1 {
@@ -266,8 +303,8 @@ struct SurfRenderer {
                 if let sh = quad(P(x + 0.05, 0.0, near), P(x + 0.09, 0.0, near), P(x + 0.09, 0.0, far), P(x + 0.05, 0.0, far)) { shadows.addPath(sh) }
             }
         }
-        ctx.fill(shadows, with: .color(Color(hex: 0x4B3440).opacity(0.35)))
-        ctx.fill(rails, with: .color(Color(hex: 0xE4DDF7)))
+        ctx.fill(shadows, with: .color(pal.sleeper.opacity(0.35)))
+        ctx.fill(rails, with: .color(pal.rail))
     }
 
     // MARK: trains
@@ -463,9 +500,15 @@ struct SurfRenderer {
     // MARK: props
 
     private func drawCoin(_ ctx: inout GraphicsContext, _ c: SurfEngine.Entity) {
-        let cx = Double(c.lane) * SurfEngine.laneWidth
-        let bob = sin(e.time * 4 + c.z) * 0.06
-        guard let p = P(cx, c.y + bob, c.z) else { return }
+        var cx = Double(c.lane) * SurfEngine.laneWidth
+        var cy = c.y + sin(e.time * 4 + c.z) * 0.06
+        if e.magnet > 0, c.z < 7, c.y > e.y - 0.5 {
+            // the magnet: coins in reach curve in toward the runner
+            let t = pow(1 - max(0, c.z) / 7, 2)
+            cx += (e.x - cx) * t
+            cy += (e.y + 0.6 - cy) * t
+        }
+        guard let p = P(cx, cy, c.z) else { return }
         let r = 0.28 * scale(c.z)
         guard r > 0.8 else { return }
         let spin = abs(cos(e.time * 5 + c.z * 0.7))
@@ -481,6 +524,24 @@ struct SurfRenderer {
             d.move(to: CGPoint(x: p.x, y: p.y - s)); d.addLine(to: CGPoint(x: p.x + s * wf, y: p.y))
             d.addLine(to: CGPoint(x: p.x, y: p.y + s)); d.addLine(to: CGPoint(x: p.x - s * wf, y: p.y)); d.closeSubpath()
             ctx.fill(d, with: .color(Color(hex: 0xF0703C)))
+        }
+    }
+
+    /// A pickup: a coloured bubble with its emoji, bobbing and pulsing.
+    private func drawPower(_ ctx: inout GraphicsContext, _ pw: SurfEngine.Entity) {
+        let cx = Double(pw.lane) * SurfEngine.laneWidth
+        guard let c = P(cx, pw.y + sin(e.time * 3 + pw.z) * 0.1, pw.z) else { return }
+        let r = 0.42 * scale(pw.z)
+        guard r > 1.2 else { return }
+        let fill = [Color(hex: 0xE25C4B), Color(hex: 0xF2C14E), Color(hex: 0x3FB5A5), Color(hex: 0x8C6BE0)][pw.power.rawValue]
+        let glow = r * 1.4 * (1 + sin(e.time * 6) * 0.07)
+        ctx.fill(Path(ellipseIn: CGRect(x: c.x - glow, y: c.y - glow, width: glow * 2, height: glow * 2)), with: .color(.white.opacity(0.3)))
+        let disc = Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2))
+        ctx.fill(disc, with: .color(fill))
+        ctx.stroke(disc, with: .color(.white), lineWidth: max(1, r * 0.13))
+        if let glyph = GlyphCache.image(pw.power.emoji, style: .emoji) {
+            let h = r * 1.15, w = h * glyph.aspect
+            ctx.draw(glyph.image, in: CGRect(x: c.x - w / 2, y: c.y - h / 2, width: w, height: h))
         }
     }
 
@@ -558,7 +619,23 @@ struct SurfRenderer {
         pose.t = e.time
         pose.speed = min(1, max(0, (e.speed - 11) / 10))
         pose.sway = e.over ? 0 : max(-1, min(1, (Double(e.lane) * SurfEngine.laneWidth - e.x) / SurfEngine.laneWidth))
-        BlobArt.draw(&ctx, origin: origin, unit: scale(0), pose: pose, state: e.blob)
+        let u = scale(0)
+        if e.rocket > 0, let base = P(e.x, e.y + 0.1, 0) {
+            // rocket exhaust under the blob: two flickering flames
+            let flick = 1 + sin(e.time * 41) * 0.12 + sin(e.time * 23) * 0.08
+            for (w, h, color) in [(0.34, 1.1, Color(hex: 0xFF7A2F)), (0.18, 0.7, Color(hex: 0xFFE27A))] {
+                ctx.fill(Path(ellipseIn: CGRect(x: base.x - w * u / 2, y: base.y - w * u * 0.2, width: w * u, height: h * u * flick)),
+                         with: .color(color.opacity(0.9)))
+            }
+        }
+        BlobArt.draw(&ctx, origin: origin, unit: u, pose: pose, state: e.blob)
+        if e.shield, !e.over, let c = P(e.x, e.y + 0.52, 0) {
+            // the armed revert: a bubble around the runner
+            let r = 0.78 * u * (1 + sin(e.time * 5) * 0.04)
+            let bubble = Path(ellipseIn: CGRect(x: c.x - r, y: c.y - r, width: r * 2, height: r * 2))
+            ctx.fill(bubble, with: .color(Color(hex: 0x7DF9FF).opacity(0.12)))
+            ctx.stroke(bubble, with: .color(Color(hex: 0x7DF9FF).opacity(0.85)), lineWidth: max(1.5, u * 0.05))
+        }
     }
 
     private func drawSpeedLines(_ ctx: inout GraphicsContext) {
@@ -597,10 +674,12 @@ struct SurfRenderer {
 enum SkylineCache {
     nonisolated(unsafe) private static var strips: [String: UIImage] = [:]
 
-    static func strip(layer: Int, height: Double, period: Double) -> UIImage {
-        let key = "\(layer)-\(Int(height))"
+    static func strip(scene: Int, layer: Int, height: Double, period: Double) -> UIImage {
+        let key = "\(scene)-\(layer)-\(Int(height))"
         if let hit = strips[key] { return hit }
-        let tint = layer == 0 ? UIColor(Theme.color(0xC46A8B)) : UIColor(Theme.color(0x9B3F6E))
+        let def = ScenePalette.defs[scene]
+        let tint = ScenePalette.RGB(def.skyline[layer]).ui
+        let windows = ScenePalette.RGB(def.windows).ui
         let hmul = layer == 0 ? 0.6 : 1.0
         let stripH = ceil(height * 0.11 * hmul) + 2
         let format = UIGraphicsImageRendererFormat()
@@ -619,7 +698,7 @@ enum SkylineCache {
                     c.fill(CGRect(x: bx, y: stripH - h, width: w + 1, height: h + 1))
                     if layer == 1, w > 26 {
                         var wrng = SeededRandom(seed: UInt64(x * 7) + 3)
-                        c.setFillColor(UIColor(Theme.color(0xFFE3A6)).withAlphaComponent(0.7).cgColor)
+                        c.setFillColor(windows.withAlphaComponent(0.7).cgColor)
                         var wy = stripH - h + 6
                         while wy < stripH - 8 {
                             var wx = bx + 5
@@ -645,7 +724,7 @@ enum SkylineCache {
 /// images — text layout in a Canvas was a measurable slice of every frame.
 enum GlyphCache {
     struct Glyph { let image: Image; let aspect: Double }
-    enum Style: Hashable { case poster, board, terminal, badge(Int) }
+    enum Style: Hashable { case poster, board, terminal, badge(Int), emoji }
     nonisolated(unsafe) private static var cache: [String: Glyph] = [:]
 
     static func image(_ text: String, style: Style) -> Glyph? {
@@ -657,6 +736,7 @@ enum GlyphCache {
         case .poster: font = UIFont.systemFont(ofSize: 48, weight: .black); color = UIColor.white.withAlphaComponent(0.95)
         case .board: font = UIFont.systemFont(ofSize: 48, weight: .heavy); color = .white
         case .terminal: font = UIFont.monospacedSystemFont(ofSize: 48, weight: .bold); color = UIColor(red: 0.18, green: 0.88, blue: 0.54, alpha: 1)
+        case .emoji: font = UIFont.systemFont(ofSize: 48); color = .white
         case .badge(let i):
             font = UIFont.systemFont(ofSize: 48, weight: .black)
             let darks: [UInt32] = [0xC4522A, 0x1E746A, 0xBE8C22, 0x4E3AA0]

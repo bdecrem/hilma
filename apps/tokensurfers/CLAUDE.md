@@ -229,6 +229,42 @@ back into their own apps. One handle for all of it (and the leaderboard).
   `/api/f2/imessage/notify`, the secret-gated route that sends through the
   normal ledgered iMessage sender — surf code must not import f2).
 
+## Powerups, scenes and the split-pane game over (2026-09-25)
+
+- **Powerups** (`SurfEngine.Power`, entity kind `.power`): a bubble in the gap
+  after a track piece, every 380–640 m from 220 m, in a lane nothing parks in
+  or rolls into (`layPower`). 🧲 magnet 9 s (every coin level with you or
+  above comes in; the renderer curves them toward the runner over the last 7
+  units), 💰 double 10 s (coins and stomps ×2), 🛡️ git revert (one charge:
+  `die()` deletes what hit you and carries on, "REVERTED"), 🚀 rocket 6 s
+  (cruise at y 3.6 over everything along a zigzag of sky coins, 1.2 s grace
+  to land). HUD chips under the title show the seconds left; the bot ignores
+  pickups and sits out rockets.
+- **Scenes** (`ScenePalette.swift`, names in `SurfEngine.sceneNames`): golden
+  hour → night shift (stars, crescent, neon posters) → vaporwave (striped
+  sun) → server room (terminal green), every 650 m, cross-faded over 50 m, a
+  toast on arrival. A scene is a palette on the draws that already happen;
+  the skyline strips are cached per scene (both drawn only during a fade),
+  stars are one cached image. Posters carry each scene's own words. The solo
+  screen's status-bar strip follows the sky.
+- **Cost**: none measurable. Simulator, bot restarting, 45 s from 0 m:
+  baseline 28/27 fps at 41–42% CPU; golden hour 30/30 at 41–42%; vaporwave
+  (the heaviest: stars + clipped stripes) 27/29 at 44%. Main thread 12–13%
+  throughout.
+- **Split-pane game over**: the engine belongs to the Studio, the card to the
+  view, so a pane rebuilt after a death (the game tucking away after a build
+  and coming back, the split button, a layout flip) showed a frozen grey run
+  that ignored every tap. Now the card is restored on appear, a tap or swipe
+  anywhere on a dead pane runs it back (after 0.8 s, so the crash's own swipe
+  can't skip the card), and a pane under 250 pt gets a one-row card
+  (`slimOverCard`) because the full one clipped RUN IT BACK off the bottom.
+- **Hooks**: `TS_SCENE=n` (start in scene n, 60 m in), `TS_SCENE_FIXED=n`
+  (one scene the whole run, from 0 m — use this for perf comparisons, since
+  `TS_SCENE` also moves you to denser track), `TS_POWER=rocket,magnet,…`
+  (granted 3 s in), `TS_SPLIT=<height>` with `TS_SOLO=1` (the build pane at
+  that height; the run dies, the pane is unmounted and remounted at 8 s —
+  the card must come back). Screenshots need ~9 s after launch.
+
 ## The blob and the warm-up (2026-09-25)
 
 - **The blob** (`Game/BlobArt.swift`): ~8% smaller than build 12 (R 0.48),
@@ -248,8 +284,9 @@ back into their own apps. One handle for all of it (and the leaderboard).
   `session` (id, model, tool count), each Bash command with how many lines
   came back, the ask, the workspace and deploy target, the build number, the
   mini's app count (one `/health` GET per build), tokens so far. A `thinking
-  {delta}` event, if the mini ever sends one, shows as "💭 …" and pauses the
-  clock (request sent to the mini agent 2026-09-25). The big-caption fillers
+  {delta}` event shows as "💭 …" and pauses the clock; `thinking_tokens
+  {tokens}` puts "💭 thinking · Ns · N tokens of plan so far" in the clock's
+  rotation (both sent by the mini since 2026-09-25, see "Feed"). The big-caption fillers
   stay as they were. Check: replay `scripts/perf/feed-v2.json` at
   `TS_REPLAY_SPEED=0.3` and screenshot the game pane's bottom-left.
 
@@ -386,7 +423,12 @@ what Claude Code does all day. The phone is a client of the feed.
   is something new, or after S seconds) because **tunn3l buffers a streamed
   response until it ends and passes no WebSocket upgrade** (SSE ticks all
   arrived at once through it). Events, coalesced at 120 ms: `start`,
-  `session`, `text {delta}` (Splat's lines as they stream), `say {text}`
+  `session`, `text {delta}` (Splat's lines as they stream), `thinking {delta}`
+  (the model's plan: the query asks for `thinking: { type: 'adaptive',
+  display: 'summarized' }` — the SDK default is `omitted`, which sent empty
+  thinking blocks and made a 3–8 minute plan look like a hang, 2026-09-25),
+  `thinking_tokens {tokens}` (the SDK's running estimate, ≤ 1/s, proof of life
+  even without summary text), `say {text}`
   (a complete text block), `name {emoji,title}` (from the `NAME:` line),
   `tool_start {id,name}`, `tool_input {id,name,delta,offset,len}` (the
   half-streamed input — Write's content, Edit's strings, Bash's command — as
@@ -737,8 +779,7 @@ State after the Splat / mid-build notes / mirror session (commits `a6077262`,
 
 - Publishing a made app to a public link (it would need storage on hilma).
 - A daily token budget on the LLM route (today only the key gates it).
-- Power-ups (magnet, 2x, hoverboard), daily challenges, a second track
-  theme (night), unlockable scarves.
+- Daily challenges, unlockable scarves.
 
 ## App Store Connect / TestFlight (set up 2026-09-24, from the iMac M4)
 
