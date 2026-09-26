@@ -24,12 +24,13 @@ are immutable), writes the new one into
 (.provisionprofile for Catalyst) and prints the PROVISIONING_PROFILE_SPECIFIER
 to use with CODE_SIGN_STYLE=Manual.
 
-Key: ~/.appstoreconnect/private_keys/AuthKey_5A5HNSWA33.p8 (team key).
+Key: ~/.appstoreconnect/private_keys/AuthKey_<ASC_KEY_ID>.p8, default 5A5HNSWA33
+(team key); the iMac M1 has 748UX45NAP.
 """
 import base64, json, os, plistlib, subprocess, sys, time, urllib.parse, urllib.request
 import jwt  # PyJWT
 
-KEY_ID = '5A5HNSWA33'
+KEY_ID = os.environ.get('ASC_KEY_ID', '5A5HNSWA33')
 ISSUER = '69a6de80-eb13-47e3-e053-5b8c7c11a4d1'
 KEY_PATH = os.path.expanduser(f'~/.appstoreconnect/private_keys/AuthKey_{KEY_ID}.p8')
 API = 'https://api.appstoreconnect.apple.com/v1'

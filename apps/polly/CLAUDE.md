@@ -370,6 +370,11 @@ machines apart by which API key file is present:
   `polly-*.mobileprovision` / `.provisionprofile` in the Xcode profiles dir.
   The iMac also holds a Mac Installer key, so **Mac (Catalyst) builds ship
   from here** — 0.1 (10) went up for both platforms on 2026-09-18.
+- **iMac M1** (2026-09-25): API key `748UX45NAP`, profile "polly appstore m1"
+  on this Mac's distribution cert `78245T6FR5`, minted with
+  `ASC_KEY_ID=748UX45NAP python3 scripts/ios/asc-profile.py com.bartdecrem.Polly "polly appstore m1" appstore`.
+  iOS only (no Mac Installer key, no Catalyst profile). ship.sh uses the
+  release Xcode 26.4.1 at `/Applications/Xcode.app` by default.
 - **MacBook Air**: key `FA7268Q94U`, profiles "polly appstore" /
   "polly catalyst appstore" (cert `94KFQFP9A4`); iOS only.
 "Another build is in review" on the submit step is harmless: the build is
