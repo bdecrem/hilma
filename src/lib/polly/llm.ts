@@ -253,17 +253,20 @@ async function anthropicComplete(
       ? spec.quickEffort
       : (req.effort ?? spec.effort)
   if (effort) params.output_config = { effort }
+  // A forced tool is a structured answer, so its schema is strict: without it
+  // Sonnet 5 sometimes packs the whole answer as a JSON string into the first
+  // field (the Infinity clean-up's `fixes`, 6 runs in 8 on 2026-09-25).
+  const strictTools = () => req.tools!.map((t) => ({
+    ...t,
+    strict: true,
+    input_schema: strictSchema(t.input_schema) as LlmTool['input_schema'],
+  }))
   if (req.tools && req.tools.length > 0) {
     if (req.forceTool && canForce) {
-      params.tools = req.tools
+      params.tools = strictTools()
       params.tool_choice = { type: 'any' }
     } else if (emulateForce) {
-      // Strict schemas keep the valid-arguments guarantee "any" gave us.
-      params.tools = req.tools.map((t) => ({
-        ...t,
-        strict: true,
-        input_schema: strictSchema(t.input_schema) as LlmTool['input_schema'],
-      }))
+      params.tools = strictTools()
       params.tool_choice = { type: 'auto', disable_parallel_tool_use: true }
     } else {
       params.tools = req.tools
