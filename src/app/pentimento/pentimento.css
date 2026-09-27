@@ -1,0 +1,25 @@
+html, body { background: #0e0b09 !important; margin: 0; }
+.pm {
+  min-height: 100dvh; background: #0e0b09; color: #e8dcc4;
+  font-family: var(--pm-fell), Georgia, serif; font-size: 19px; line-height: 1.62;
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+.pm main { max-width: 620px; margin: 0 auto; padding: 44px 24px 96px; }
+.pm .film { display: flex; justify-content: center; }
+.pm video {
+  width: min(100%, 440px, calc((100dvh - 120px) * 0.5625)); aspect-ratio: 9 / 16; display: block;
+  background: #000; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.pm .caption { text-align: center; margin: 22px 0 56px; }
+.pm h1 { font-family: var(--pm-sc), serif; font-weight: 400; font-size: 44px; letter-spacing: 0.04em; margin: 0; line-height: 1.1; }
+.pm .caption p { font-style: italic; opacity: 0.72; margin: 6px 0 0; font-size: 17px; }
+.pm h2 {
+  font-family: var(--pm-sc), serif; font-weight: 400; font-size: 21px; letter-spacing: 0.06em;
+  margin: 48px 0 10px; color: #c9b48f;
+}
+.pm p { margin: 0 0 1em; }
+.pm em { color: #f3e9d4; }
+.pm .rule { text-align: center; margin: 44px 0 0; opacity: 0.5; letter-spacing: 0.5em; }
+.pm .colophon { font-size: 15px; opacity: 0.62; font-style: italic; text-align: center; margin-top: 28px; }
+.pm a { color: #e8dcc4; text-decoration-color: rgba(232, 220, 196, 0.35); text-underline-offset: 3px; }
+@media (max-width: 480px) { .pm { font-size: 18px; } .pm h1 { font-size: 38px; } .pm main { padding-top: 28px; } }
