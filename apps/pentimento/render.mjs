@@ -15,7 +15,7 @@ mkdirSync(outDir, { recursive: true });
 const browser = await chromium.launch({ args: ['--ignore-gpu-blocklist', '--enable-gpu-rasterization'] });
 const page = await browser.newPage({ viewport: { width: 540, height: 960 } });
 page.on('pageerror', (e) => { console.error('page error:', e.message); process.exitCode = 1; });
-await page.goto('file://' + path.join(dir, 'index.html') + '?render=1');
+await page.goto('file://' + path.join(dir, 'index.html') + '?render=1' + (arg('--variant') ? '&variant=' + arg('--variant') : ''));
 await page.waitForFunction(() => window.READY === true, null, { timeout: 30000 });
 const frame = (t, type = 'image/jpeg') => page.evaluate(([t, type]) => {
   renderAt(t);

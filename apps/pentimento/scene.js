@@ -17,6 +17,7 @@
 const W = 1080, H = 1920, FPS = 30
 const S = window.SCORE
 const DURATION = S.duration
+const VARIANT = new URLSearchParams(location.search).get('variant') ?? ''
 const PX = 90, PY = 280, PW = 900, PH = 1350
 const HORIZON = 560
 
@@ -687,7 +688,15 @@ function card(ctx, t) {
   ctx.fillText('an earlier image showing through the paint', W / 2, 1032)
   ctx.font = '30px "IM Fell English SC"'
   ctx.fillStyle = `rgba(236,226,206,${a * 0.6})`
-  ctx.fillText('painted and scored in code by Claude Opus 5.5', W / 2, 1170)
+  if (VARIANT === 'dodo') {
+    // the Dodo app's cut: the payoff for clearing Peck level 10
+    ctx.font = '44px "IM Fell English SC"'
+    ctx.fillStyle = `rgba(236,226,206,${a * 0.85})`
+    ctx.fillText('Level 10 cleared', W / 2, 1190)
+    ctx.font = 'italic 36px "IM Fell English"'
+    ctx.fillStyle = `rgba(236,226,206,${a * 0.6})`
+    ctx.fillText('What you learned is still under there too.', W / 2, 1250)
+  } else ctx.fillText('painted and scored in code by Claude Opus 5.5', W / 2, 1170)
   ctx.restore()
 }
 

@@ -42,6 +42,11 @@ struct FlashTabView: View {
     /// screen, and a first clear waiting for its results cover to close.
     @State private var gameStop: PeckGameStop? = nil
     @State private var pendingGame: Int? = nil
+    /// Pentimento, the film that pays off level 10: the one on screen, and a
+    /// first clear waiting for its results cover (the region transition then
+    /// waits for the film).
+    @State private var film: PentimentoFilm? = nil
+    @State private var pendingFilm = false
     /// The level in flight and whether it was still unlocked (first clear).
     @State private var playingLevel: Int? = nil
     @State private var playingWasFirstClear = false
@@ -142,13 +147,31 @@ struct FlashTabView: View {
         .fullScreenCover(item: $gameStop) { stop in
             PeckGameView(level: stop.level) { gameStop = nil }
         }
+        .fullScreenCover(item: $film) { f in
+            PentimentoView {
+                film = nil
+                // After a first clear the walk into Fern Hollow follows the film.
+                if f.firstClear, let cleared = pendingCrossing {
+                    pendingCrossing = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                        regionCrossing = RegionCrossing(clearedLevel: cleared)
+                    }
+                }
+            }
+        }
         .fullScreenCover(isPresented: $showDemoReel) {
             DemoReelView { showDemoReel = false }
         }
         // The results cover just closed — if that set opened a region, play
         // the transition now, over the freshly reloaded map.
         .onChange(of: activeSet == nil && voiceSet == nil) { _, coversGone in
-            if coversGone, let cleared = pendingCrossing {
+            if coversGone, pendingFilm {
+                // Level 10: the film first; its close starts the region transition.
+                pendingFilm = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    film = PentimentoFilm(firstClear: true)
+                }
+            } else if coversGone, let cleared = pendingCrossing {
                 pendingCrossing = nil
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
                     regionCrossing = RegionCrossing(clearedLevel: cleared)
@@ -269,6 +292,15 @@ struct FlashTabView: View {
             if game > 0 {
                 UserDefaults.standard.removeObject(forKey: "PlayPeckGame")
                 gameStop = PeckGameStop(level: game)
+            }
+            // `-PlayPentimento 1` — the level-10 film as a replay;
+            // `-PlayPentimento 2` — as a first clear, so the Fern Hollow
+            // transition should follow when it closes.
+            let pent = UserDefaults.standard.integer(forKey: "PlayPentimento")
+            if pent > 0 {
+                UserDefaults.standard.removeObject(forKey: "PlayPentimento")
+                if pent == 2 { pendingCrossing = 10 }
+                film = PentimentoFilm(firstClear: pent == 2)
             }
             #endif
             checkStreakMilestone()
@@ -583,6 +615,23 @@ struct FlashTabView: View {
 
                         // A cleared rest stop's signpost replays its game
                         // (the sign is drawn by PeckTrailLayer at ±78, +20).
+                        // Level 10's gate, once cleared, has a sign that replays Pentimento.
+                        ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
+                            if level.level == 10 && level.status == "passed" {
+                                let side: CGFloat = world.zig(i) > 0 ? -1 : 1
+                                Button {
+                                    FlashSFX.shared.play(.tap)
+                                    film = PentimentoFilm(firstClear: false)
+                                } label: {
+                                    Color.clear
+                                        .frame(width: 100, height: 64)
+                                        .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Watch Pentimento, the level 10 film")
+                                .position(x: xFor(i) + side * 112, y: yFor(i) + 2)
+                            }
+                        }
                         ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
                             if PeckMilestone.isRest(level.level) && level.status == "passed" {
                                 let side: CGFloat = world.zig(i) > 0 ? -1 : 1
@@ -808,6 +857,7 @@ struct FlashTabView: View {
               result.score >= jumboPassScore(mode: start.mode)
         else { return }
         if lvl == 10 || lvl == 20 { pendingCrossing = lvl }
+        if lvl == 10 { pendingFilm = true }
         if PeckMilestone.isRest(lvl) { pendingGame = lvl }
     }
 

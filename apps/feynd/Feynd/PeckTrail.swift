@@ -278,6 +278,12 @@ struct PeckTrailCanvas: View {
                              title: "REST STOP",
                              sub: level.status == "passed" ? "▶ Peck or Perish" : "\(cleared) of 10 cleared here")
             }
+            // Level 10 pays off with a film; once cleared, its sign replays it
+            // (FlashTabView puts the tap target over it).
+            if lvl == 10 && level.status == "passed" {
+                drawSignpost(&ctx, at: CGPoint(x: p.x + side * 112, y: p.y + 30),
+                             title: "LEVEL 10", sub: "▶ Pentimento")
+            }
             if PeckMilestone.hasChest(lvl) {
                 drawChest(&ctx, at: CGPoint(x: p.x + side * 60, y: p.y + 16),
                           open: level.status == "passed")

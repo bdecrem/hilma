@@ -49,12 +49,14 @@
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
 		723ECD9F46D4C7C8F54AEC05 /* voice-willow.m4a in Resources */ = {isa = PBXBuildFile; fileRef = E0356363115F2363D08C8FD5 /* voice-willow.m4a */; };
 		736D500FA5BEBDB5511D8BBB /* voice-delta.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 13BF17EF46B1A50AAF435164 /* voice-delta.m4a */; };
+		73F6CCF0A20AF6780AC4BE5B /* pentimento.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = BE22514D8F93F67F6C1E3A7D /* pentimento.mp4 */; };
 		7544C2674BBB478E832E676C /* LiveVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */; };
 		75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */; };
 		75D90C556EC76F35B8EC37D9 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C7811C80A73490F1D2B650D /* SettingsView.swift */; };
 		760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87227276409128E69ABE7D61 /* ReviewsSheet.swift */; };
 		78E445E53943B2E6C590FD3C /* PeckGameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35B293106D84E4F82F9766C /* PeckGameEngine.swift */; };
 		7B26E8347A83F499588895AE /* IMFeENit28P.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A3F611E2DE17ECB7C645F2D2 /* IMFeENit28P.ttf */; };
+		7C83CEA6DD03CD5E129B7582 /* PentimentoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B29EC5C8A868DA37BB7513 /* PentimentoView.swift */; };
 		80F24DACA3400A8DF12C230C /* FeyndChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8E1D52867446105B46D06E /* FeyndChrome.swift */; };
 		81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97210D8088451B57557247DA /* DeepLink.swift */; };
 		8386C28BBB0F9D1DBC9C32D6 /* PeckOddsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */; };
@@ -177,6 +179,7 @@
 		B8A45C3716AD92CA7A7C0E54 /* Fredoka.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fredoka.ttf; sourceTree = "<group>"; };
 		BB38EBAB179201757DE149C1 /* FlashSFX.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSFX.swift; sourceTree = "<group>"; };
 		BC895B8CB2C8A0BE3AC51AE3 /* FlashTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashTabView.swift; sourceTree = "<group>"; };
+		BE22514D8F93F67F6C1E3A7D /* pentimento.mp4 */ = {isa = PBXFileReference; path = pentimento.mp4; sourceTree = "<group>"; };
 		BEC72F31FAF938D3D638D39F /* FlashSetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashSetView.swift; sourceTree = "<group>"; };
 		BFEDFCF9BE3FE6A5CFA1E1D9 /* Feynd.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Feynd.entitlements; sourceTree = "<group>"; };
 		C034E8A6E1CC456DE623630F /* HelpSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpSheet.swift; sourceTree = "<group>"; };
@@ -202,6 +205,7 @@
 		F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDeckBuilder.swift; sourceTree = "<group>"; };
 		F4585EED1AEEE5B6C501946C /* Ultra-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Ultra-LICENSE.txt"; sourceTree = "<group>"; };
 		F75E071CC1F646CA33327FAB /* RecertNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecertNotifications.swift; sourceTree = "<group>"; };
+		F7B29EC5C8A868DA37BB7513 /* PentimentoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PentimentoView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -271,6 +275,7 @@
 				AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */,
 				CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */,
 				178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */,
+				F7B29EC5C8A868DA37BB7513 /* PentimentoView.swift */,
 				9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */,
 				F75E071CC1F646CA33327FAB /* RecertNotifications.swift */,
 				87227276409128E69ABE7D61 /* ReviewsSheet.swift */,
@@ -289,9 +294,18 @@
 				A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */,
 				B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */,
 				68FEE442C5A8149F8F4D7A36 /* Fonts */,
+				4C5421CC4DF45CA8338A8D0C /* Media */,
 				E90BB6D8A48A8C1F0DFA068C /* VoicePreviews */,
 			);
 			path = Feynd;
+			sourceTree = "<group>";
+		};
+		4C5421CC4DF45CA8338A8D0C /* Media */ = {
+			isa = PBXGroup;
+			children = (
+				BE22514D8F93F67F6C1E3A7D /* pentimento.mp4 */,
+			);
+			path = Media;
 			sourceTree = "<group>";
 		};
 		68FEE442C5A8149F8F4D7A36 /* Fonts */ = {
@@ -427,6 +441,7 @@
 				10C1F2DE020A6147D00A4530 /* IMFell-OFL.txt in Resources */,
 				20657350CA897C0B65FAF73F /* Ultra-LICENSE.txt in Resources */,
 				2D0083CE0D788D95457BF787 /* Ultra-Regular.ttf in Resources */,
+				73F6CCF0A20AF6780AC4BE5B /* pentimento.mp4 in Resources */,
 				681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */,
 				3C49C0024049020E4395B2D0 /* voice-ballad.m4a in Resources */,
 				C02FF279EBE99A648B79D4C6 /* voice-beacon.m4a in Resources */,
@@ -504,6 +519,7 @@
 				75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */,
 				16E7DC3843C38B1750CD4B06 /* PeckTrail.swift in Sources */,
 				10BEA785EEA3FDC166572F22 /* PeckWeekBanner.swift in Sources */,
+				7C83CEA6DD03CD5E129B7582 /* PentimentoView.swift in Sources */,
 				C0E502FD2968118D30ADCACD /* ProfileSheet.swift in Sources */,
 				C08DB63B3DEB05CA67B67303 /* RecertNotifications.swift in Sources */,
 				760B70DCACC30E1992AE4E1B /* ReviewsSheet.swift in Sources */,
