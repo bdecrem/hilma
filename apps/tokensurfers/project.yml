@@ -19,6 +19,31 @@ targets:
     platform: iOS
     sources:
       - path: TokenSurfers
+        excludes:
+          - App/Secrets.swift
+          - App/Secrets.swift.example
+      # Secrets.swift is gitignored. Listed as optional so the project references it
+      # even when it is missing, and made by the "Secrets.swift" phase below from
+      # Secrets.swift.example on a fresh clone, so clone -> open -> build just works.
+      - path: TokenSurfers/App/Secrets.swift
+        optional: true
+        group: TokenSurfers/App
+      - path: TokenSurfers/App/Secrets.swift.example
+        group: TokenSurfers/App
+        buildPhase: none
+    preBuildScripts:
+      - name: Secrets.swift
+        basedOnDependencyAnalysis: false
+        inputFiles:
+          - $(SRCROOT)/TokenSurfers/App/Secrets.swift.example
+        outputFiles:
+          - $(SRCROOT)/TokenSurfers/App/Secrets.swift
+        script: |
+          # Fresh clone: write Secrets.swift from the example. An existing one is never touched.
+          if [ ! -f "$SRCROOT/TokenSurfers/App/Secrets.swift" ]; then
+            cp "$SRCROOT/TokenSurfers/App/Secrets.swift.example" "$SRCROOT/TokenSurfers/App/Secrets.swift"
+            echo "note: wrote TokenSurfers/App/Secrets.swift from Secrets.swift.example; set backendURL and appKey there"
+          fi
     info:
       path: TokenSurfers/Info.plist
       properties:

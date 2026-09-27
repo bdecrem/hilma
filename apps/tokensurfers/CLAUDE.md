@@ -562,7 +562,8 @@ what Claude Code does all day. The phone is a client of the feed.
   `{ messages, effort }`.
   - Gate: an `x-surf-key` header must equal `SURF_APP_KEY` (in `.env.local`
     and on Vercel Production + Preview, and in the app's gitignored
-    `TokenSurfers/App/Secrets.swift`; copy `Secrets.swift.example`).
+    `TokenSurfers/App/Secrets.swift`; the first build writes it from
+    `Secrets.swift.example` if it is missing).
   - Model: `claude-opus-5-5`, effort `medium` — both pinned in code, no env
     override; a client may ask for `low` but never more. `thinking.display: "updates"`
     (so between-tool notes come back as short thinking text for the subtitle
@@ -792,9 +793,9 @@ xcodebuild -project TokenSurfers.xcodeproj -scheme TokenSurfers \
 #   MacBook Air: "tokensurfers dev air" (key FA7268Q94U, 2026-09-23, expires 2027-09)
 #   iMac M4:     "tokensurfers dev imac" (key 5A5HNSWA33, cert 9AYMK558AW, 2026-09-24,
 #                expires 2027-09; the taptapdodo memory has the issuer id and flow).
-# Secrets.swift is gitignored, so a fresh checkout needs it written from
-# Secrets.swift.example (appKey = SURF_APP_KEY, `vercel env pull`), then
-# `xcodegen generate` again or the build says "cannot find 'Secrets' in scope".
+# Secrets.swift is gitignored; on a fresh checkout the "Secrets.swift" pre-build
+# phase (project.yml) writes it from Secrets.swift.example so the project builds,
+# but set appKey = SURF_APP_KEY (`vercel env pull`) before talking to the backend.
 xcodebuild -project TokenSurfers.xcodeproj -scheme TokenSurfers -destination 'generic/platform=iOS' \
   -derivedDataPath build/device CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=274T5WCVD2 \
   "PROVISIONING_PROFILE_SPECIFIER=tokensurfers dev imac" "CODE_SIGN_IDENTITY=Apple Development" build
@@ -868,7 +869,7 @@ scripts/surf/cut.sh <out-dir>/rec.mov ~/Desktop/tokensurfers/tokensurfers-promo 
 - **What bit (all handled by the script, listed so nobody re-learns them):**
   Xcode 27 has no Simulator.app; headless works, but `simctl install/launch`
   hang forever on a device that is "Booted" and still booting — `bootstatus -b`
-  first. `Secrets.swift` must exist before `xcodegen generate`. `status_bar
+  first. `status_bar
   --time` wants ISO with milliseconds and shows it 5 h ahead of the Z hour on
   this runtime. The simulator records video only, no audio. ffmpeg is in
   `~/bin` on the Neo. `-i` with no output exits 1, which kills a `set -o
@@ -921,10 +922,10 @@ State after the Splat / mid-build notes / mirror session (commits `a6077262`,
   → words, the `[voice] open in N ms` / `closed in N ms` console lines, the
   🎙️ chip, that music ducks and the narrator holds, and that the session
   goes back to ambient after (game sound should keep playing).
-- **The mirror is prepared, not live.** Bart said no to creating
-  `bdecrem/tokensurfers` for now. Don't create the repo or add the deploy key
-  without asking. The workflow is a no-op until `TOKENSURFERS_DEPLOY_KEY`
-  exists. `GITHUB` in `src/app/surf/parts.tsx` points at bdecrem/tokensurfers (2026-09-24).
+- **The mirror is live** at https://github.com/bdecrem/tokensurfers (public;
+  first pushed 2026-09-24), released by hand per `mirror/RELEASE.md`. Don't
+  add the deploy key without asking; the workflow is a no-op until
+  `TOKENSURFERS_DEPLOY_KEY` exists. `GITHUB` in `src/app/surf/parts.tsx` points at bdecrem/tokensurfers (2026-09-24).
 - **The app key is extractable** from any shipped build (it's in the binary by
   design), so `/api/surf/llm` has a global daily budget: `surf_usage` (schema
   004, applied 2026-09-24) counts calls and tokens per UTC day, read out of the
