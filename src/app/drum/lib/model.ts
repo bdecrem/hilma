@@ -235,16 +235,17 @@ export function swatchMarks(dens: number[], seed: number): Mark[] {
 }
 
 // A whole sheet printed straight from a master at full ink — the share card.
-export function proofMarks(p: PressState): Mark[] {
+export function proofMarks(p: PressState, dens = 1, sheetNo = 0): Mark[] {
   const marks: Mark[] = []
-  marks.push(...frameMarks(true, p.drums, [1, 1, 1, 1], 7))
+  const d4 = [dens, dens, dens, dens]
+  marks.push(...frameMarks(true, p.drums, d4, 7 + sheetNo))
   for (let k = 0; k < STEPS_PER_SHEET; k++) {
     p.drums.forEach((m, d) => {
       const holes = m.holes.filter((h) => h.step === k % STEPS)
-      if (holes.length) marks.push(...marksForStep(d, holes, k, 0, m, 1, 0))
+      if (holes.length) marks.push(...marksForStep(d, holes, k, 0, m, dens, sheetNo))
     })
   }
-  marks.push(...frameMarks(false, p.drums, [1, 1, 1, 1], 11))
-  marks.push(...swatchMarks([1, 1, 1, 1], 13))
+  marks.push(...frameMarks(false, p.drums, d4, 11 + sheetNo))
+  marks.push(...swatchMarks(d4, 13 + sheetNo))
   return marks
 }
