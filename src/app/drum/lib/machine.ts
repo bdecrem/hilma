@@ -243,7 +243,7 @@ export class Machine {
     x.fillStyle = INK
     x.font = `${Math.max(11, fs * 0.075)}px ${fonts.mono}`
     x.fillText('DESIGNED AND BUILT BY CLAUDE OPUS 5.5 · SEPTEMBER 2026', x0, 40 + fs * 1.62)
-    // 33⅓, very large, bottom right, in sunflower
+    // 33⅓, very large, bottom right, in flat gold
     const rx0 = this.ox + VW * this.s + 44
     const rw = this.vw - 44 - rx0
     if (rw > 160) {
@@ -692,7 +692,7 @@ export class Machine {
     c.textAlign = 'left'
     if (state) {
       const blink = dr.ink < 0.3 ? Math.sin(now * 9) > 0 : true
-      c.fillStyle = blink ? (dr.ink > 1.02 ? ink.hex : '#ff4b1f') : 'rgba(247,239,223,0.15)'
+      c.fillStyle = blink ? (dr.ink > 1.02 ? ink.hex : INKS[2].hex) : 'rgba(247,239,223,0.15)'
       c.beginPath()
       c.arc(x0 + w - c.measureText(`${state} · ${pct}%`).width - 7, rowY0(i) + 4.6, 2.3, 0, TAU)
       c.fill()

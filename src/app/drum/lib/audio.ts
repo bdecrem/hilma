@@ -2,7 +2,7 @@
 //
 // Kick and sub are chamber's, verbatim (src/app/amber/chamber/page.tsx): the
 // proven sound. The stab is chamber's too, with its filter opened or closed by
-// where the hole sits across the red drum. Hats, the sunflower wash and the
+// where the hole sits across the brick drum. Hats, the gold wash and the
 // machine's own noises (paper feed, tearing, punching, ink) are new.
 //
 // Routing: every voice goes into its drum's chain (flood drive → pan) and the
@@ -458,7 +458,7 @@ export class PressAudio {
     src.stop(time + dur + 0.02)
   }
 
-  // Sunflower: a rootless voicing of the chord, one octave down, slow to
+  // Flat gold: a rootless voicing of the chord, one octave down, slow to
   // open, sent to the plate. Left is low and dark, right is high and open.
   wash(time: number, semis: number[], amp: number, reg: number, dur: number, o: Out) {
     const ctx = this.ctx

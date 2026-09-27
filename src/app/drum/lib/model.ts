@@ -30,23 +30,23 @@ export type Ink = {
   rgb: [number, number, number]
   // what the ink lets through when printed over paper or another ink
   // (multiply). Blue passes a little more green than its screen color so
-  // blue over sunflower goes dark green, the way real riso overprints do.
+  // blue over gold goes dark olive, the way real riso overprints do.
   mul: [number, number, number]
 }
 
 // Top to bottom on the machine = last to first under the paper.
 export const INKS: Ink[] = [
-  { name: 'Black', short: 'BLACK', voice: 'kick', hex: '#16121c', rgb: [22, 18, 28], mul: [22, 18, 28] },
-  { name: 'Medium Blue', short: 'BLUE', voice: 'hat', hex: '#3d3bff', rgb: [61, 59, 255], mul: [50, 68, 255] },
-  { name: 'Bright Red', short: 'RED', voice: 'stab', hex: '#ff4b1f', rgb: [255, 75, 31], mul: [255, 75, 31] },
-  { name: 'Sunflower', short: 'SUNFLOWER', voice: 'wash', hex: '#ffc31f', rgb: [255, 195, 31], mul: [255, 199, 44] },
+  { name: 'Black', short: 'BLACK', voice: 'kick', hex: '#1d1b1e', rgb: [29, 27, 30], mul: [29, 27, 30] },
+  { name: 'Federal Blue', short: 'FEDERAL BLUE', voice: 'hat', hex: '#3d5588', rgb: [61, 85, 136], mul: [58, 90, 150] },
+  { name: 'Brick', short: 'BRICK', voice: 'stab', hex: '#a75154', rgb: [167, 81, 84], mul: [176, 84, 84] },
+  { name: 'Flat Gold', short: 'FLAT GOLD', voice: 'wash', hex: '#bb8b41', rgb: [187, 139, 65], mul: [200, 150, 72] },
 ]
 export const PAPER: [number, number, number] = [247, 239, 223]
 export const VERMILLION = '#ff4b1f'
 export const STONE = '#b7b1a6' // the background: neutral, so the inks and the paper carry the color
 export const INK = '#16121c'
 export const CREAM = '#f7efdf'
-export const LIME = '#b6f23a'
+export const LIME = '#bb8b41' // START, the motor light, the impression flash: flat gold
 
 export type Hole = { step: number; col: number }
 export type Master = { holes: Hole[]; regX: number; regY: number }

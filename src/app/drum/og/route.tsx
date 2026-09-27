@@ -38,7 +38,7 @@ export async function GET(req: Request) {
   return new ImageResponse(
     (
       <div style={{ width: 1200, height: 630, display: 'flex', background: '#b7b1a6', position: 'relative' }}>
-        <div style={{ position: 'absolute', left: 65, top: 66, fontFamily: "Archivo Black", fontSize: 184, color: "#3d3bff", lineHeight: 1 }}>DRUM</div>
+        <div style={{ position: 'absolute', left: 65, top: 66, fontFamily: "Archivo Black", fontSize: 184, color: "#3d5588", lineHeight: 1 }}>DRUM</div>
         <div style={{ position: 'absolute', left: 58, top: 72, fontFamily: "Archivo Black", fontSize: 184, color: "#16121c", lineHeight: 1 }}>DRUM</div>
         <div style={{ position: 'absolute', left: 62, top: 300, display: 'flex', flexDirection: 'column', fontFamily: 'Instrument Serif', fontStyle: 'italic', fontSize: 58, color: '#16121c', lineHeight: 1.05 }}>
           <div>a four-color stencil</div>
