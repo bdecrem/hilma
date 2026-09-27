@@ -14,7 +14,7 @@ import { OPENING_MESSAGE, TUTOR_OUTPUT_SCHEMA, systemBlocks, systemPrompt } from
 import type { Arm, Module, Turn, TutorMeta } from './types'
 import { ANSWER_TYPES, MASTERY_KEYS, MOVES, PHASES } from './types'
 
-const DEFAULT_MODEL = 'claude-opus-5'
+const DEFAULT_MODEL = 'claude-opus-5-5'
 type Effort = NonNullable<Anthropic.OutputConfig['effort']>
 const EFFORTS: Effort[] = ['low', 'medium', 'high', 'xhigh', 'max']
 

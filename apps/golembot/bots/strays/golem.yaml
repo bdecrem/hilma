@@ -14,7 +14,7 @@ engine: claude-code
 # credits" and the bot looks broken. patches/model-fallback.mjs catches that,
 # replays the turn on fallbackModel and stays there for fallbackHoldMinutes.
 model: claude-fable-5-1
-fallbackModel: claude-opus-5
+fallbackModel: claude-opus-5-5
 fallbackHoldMinutes: 360
 
 # Claude Code runs INSIDE the repo (patches/repo-workdir.mjs), so the repo's

@@ -59,8 +59,10 @@ function transcript(conv, maxChars = 30000) {
 async function makeQuiz(conv, topic) {
   const text = transcript(conv);
   const r = await client.messages.create({
-    model: 'claude-sonnet-4-6',
+    model: 'claude-sonnet-5',
     max_tokens: 2000,
+    // Sonnet 5 thinks by default; this is a JSON extraction sized for the answer alone.
+    thinking: { type: 'disabled' },
     system: `You turn a conversation where Claude explained a concept into a short quiz that tests the user's understanding and recall.
 
 Rules:
@@ -82,7 +84,7 @@ Output ONLY JSON matching this schema:
 }`,
     messages: [{ role: 'user', content: `Topic (hint): ${topic || 'unknown'}\n\nConversation transcript:\n${text}` }],
   });
-  const raw = r.content[0]?.text ?? '{}';
+  const raw = r.content.find((b) => b.type === 'text')?.text ?? '{}';
   const json = raw.match(/\{[\s\S]*\}/)?.[0] ?? '{}';
   return JSON.parse(json);
 }

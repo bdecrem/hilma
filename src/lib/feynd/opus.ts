@@ -56,11 +56,12 @@ export async function opusAsk(opts: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-opus-5',
-      max_tokens: opts.maxTokens ?? 700,
-      // Opus 5 rejects non-default sampling params and thinks by default;
-      // these are short spoken answers sized without thinking.
-      thinking: { type: 'disabled' },
+      model: 'claude-opus-5-5',
+      // Opus 5.5 rejects non-default sampling params and cannot switch thinking
+      // off; low effort keeps these spoken answers short, and the max_tokens
+      // floor leaves room for the thinking tokens that count against it.
+      max_tokens: Math.max(opts.maxTokens ?? 700, 8192),
+      output_config: { effort: 'low' },
       system: systemBlocks,
       messages,
     }),

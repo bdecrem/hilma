@@ -6,7 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { systemPrompt, MOOD_CODE, type Mood } from './persona.ts';
 
-const MODEL = process.env.MOOSE_MODEL || 'claude-opus-4-8';
+const MODEL = process.env.MOOSE_MODEL || 'claude-opus-5-5';
 
 let _client: Anthropic | null = null;
 function client(): Anthropic {
@@ -91,7 +91,7 @@ export async function compose(task: string, onTick?: (s: number) => void): Promi
   try {
     const stream = client().messages.stream({
       model: MODEL,
-      max_tokens: 4000,
+      max_tokens: 8192,
       thinking: { type: 'adaptive' },
       system: systemPrompt(),
       messages: [{ role: 'user', content: task }],

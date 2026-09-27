@@ -27,7 +27,7 @@ import { appendTaste, getTasteNote, mineCorrection, recentSignals, startingPoint
 export const runtime = 'nodejs'
 export const maxDuration = 120
 
-const DEFAULT_MODEL = 'claude-opus-5'
+const DEFAULT_MODEL = 'claude-opus-5-5'
 /** "jambot max": the newest Fable, extra-high effort (JAM_MAX_MODEL overrides). */
 const MAX_MODEL = 'claude-fable-5-1'
 const MAX_TOKENS_CAP = 16384
@@ -122,7 +122,8 @@ export async function POST(req: NextRequest) {
     res = await getClient().messages.create({
       model,
       max_tokens: maxTokens,
-      ...(maxMode ? { output_config: { effort: 'xhigh' as const } } : {}),
+      // Opus 5.5 defaults to medium effort; keep the standard model on high.
+      output_config: { effort: maxMode ? ('xhigh' as const) : ('high' as const) },
       system: systemPrompt as Anthropic.MessageCreateParams['system'],
       tools: tools as Anthropic.MessageCreateParams['tools'],
       messages: messages as Anthropic.MessageParam[],

@@ -40,7 +40,7 @@ still runs at home.
    `bash apps/golembot/set-token.sh strays`.
 
 3. **~~No `model` is pinned.~~ Done 2026-09-11 — `model: claude-fable-5-1`
-   with `fallbackModel: claude-opus-5`.** Fable is covered by the Max plan but
+   with `fallbackModel: claude-opus-5-5`.** (Opus 5.5 since 2026-09-26; it needs Claude Code ≥ 2.1.280 on the mini, updated to 2.1.283 that day.) Fable is covered by the Max plan but
    has its *own* weekly bucket (`/usage` shows "Current week (Fable)" next to the
    all-models bar); when that bucket empties before the weekly reset the CLI
    answers every call with "You're out of usage credits. Run /usage-credits to

@@ -66,7 +66,7 @@ function detectLLM(): LLMConfig {
     return {
       provider: 'anthropic',
       apiKey: process.env.ANTHROPIC_API_KEY,
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5',
       baseUrl: 'https://api.anthropic.com',
     }
   }
@@ -109,9 +109,9 @@ async function callLLM(config: LLMConfig, messages: Message[], maxTokens = 8192)
         messages: chatMessages.map(m => ({ role: m.role, content: m.content })),
       }),
     })
-    const data = await res.json() as { content?: { text: string }[]; error?: { message: string } }
+    const data = await res.json() as { content?: { type: string; text: string }[]; error?: { message: string } }
     if (data.error) throw new Error(data.error.message)
-    return data.content?.[0]?.text || ''
+    return data.content?.find((b) => b.type === 'text')?.text || ''
   }
 
   const res = await fetch(`${config.baseUrl}/v1/chat/completions`, {
@@ -205,9 +205,9 @@ async function callLLMWithVision(
         messages: [{ role: 'user', content: contentBlocks }],
       }),
     })
-    const data = await res.json() as { content?: { text: string }[]; error?: { message: string } }
+    const data = await res.json() as { content?: { type: string; text: string }[]; error?: { message: string } }
     if (data.error) throw new Error(data.error.message)
-    return data.content?.[0]?.text || ''
+    return data.content?.find((b) => b.type === 'text')?.text || ''
   }
 
   if (config.provider === 'openai') {

@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const MODEL = process.env.FOUNDRY_MODEL || 'claude-opus-4-8';
+const MODEL = process.env.FOUNDRY_MODEL || 'claude-opus-5-5';
 
 let _client: Anthropic | null = null;
 function client(): Anthropic {

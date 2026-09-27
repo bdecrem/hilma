@@ -114,7 +114,7 @@ ${src}`
 }
 
 export function draftModel(): string {
-  return process.env.SOC_MODULE_MODEL || 'claude-opus-5'
+  return process.env.SOC_MODULE_MODEL || 'claude-opus-5-5'
 }
 
 export type DraftResult = { draft: Draft; model: string; latencyMs: number; costUsd: number | null }

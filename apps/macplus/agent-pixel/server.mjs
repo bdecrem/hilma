@@ -28,7 +28,7 @@
  *
  * State: PIXEL_STATE (default ~/.pixel-canvas.json), written atomically.
  * Secrets: ANTHROPIC_API_KEY from ~/.macplus-backend.env via run-service.sh.
- * Env: PIXEL_MODEL (default claude-opus-4-8), PIXEL_AI_HOURS, PIXEL_FAKE_AI=1
+ * Env: PIXEL_MODEL (default claude-opus-5-5), PIXEL_AI_HOURS, PIXEL_FAKE_AI=1
  * (canned strokes instead of the API — used by selftest.mjs).
  */
 import net from 'node:net';
@@ -42,7 +42,7 @@ const PORT = (() => {
   return i >= 0 ? parseInt(process.argv[i + 1], 10) : 2337;
 })();
 const STATE = process.env.PIXEL_STATE || join(homedir(), '.pixel-canvas.json');
-const MODEL = process.env.PIXEL_MODEL || 'claude-opus-4-8';
+const MODEL = process.env.PIXEL_MODEL || 'claude-opus-5-5';
 const AI_MS = Math.max(0, parseFloat(process.env.PIXEL_AI_HOURS ?? '24')) * 3600 * 1000;
 const FAKE_AI = process.env.PIXEL_FAKE_AI === '1';
 const INVITE_GUARD_MS = 2 * 60 * 1000;   // min gap between CLAUDE invites
@@ -206,7 +206,7 @@ async function askClaude() {
   const notes = state.history.slice(-6).map(h => `- ${h.note}`).join('\n') || '(none yet)';
   const body = {
     model: MODEL,
-    max_tokens: 3000,
+    max_tokens: 8192,
     system:
       'You are a pixel artist contributing to a shared 64x64 1-bit canvas that ' +
       'lives on a 1986 Macintosh Plus. A human adds pixels by mouse; you visit ' +

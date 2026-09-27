@@ -28,7 +28,7 @@ function parseArgs() {
   };
   return {
     cols: Math.max(20, Math.min(200, parseInt(get('--cols', '80'), 10) || 80)),
-    model: get('--model', 'claude-opus-5'),
+    model: get('--model', 'claude-opus-5-5'),
     cwd: get('--cwd', process.cwd()),
     // Knowledge repo of markdown docs (the docsrepo sibling). Searchable in
     // addition to --cwd; override with --docs <dir>.
@@ -208,8 +208,8 @@ function handleMsg(msg: any): void {
 // because `current` is seeded by the first entry matching --model.
 type ModelChoice = { label: string; model: string; effort?: 'medium' | 'high' | 'xhigh' };
 const MODELS: ModelChoice[] = [
-  { label: 'Opus 5',     model: 'claude-opus-5',    effort: 'high' },
-  { label: 'Opus 5',     model: 'claude-opus-5',    effort: 'medium' },
+  { label: 'Opus 5.5',   model: 'claude-opus-5-5',  effort: 'high' },
+  { label: 'Opus 5.5',   model: 'claude-opus-5-5',  effort: 'medium' },
   { label: 'Sonnet 5',   model: 'claude-sonnet-5' },
   { label: 'Fable 5.1',  model: 'claude-fable-5-1', effort: 'high' },
   { label: 'Fable 5.1',  model: 'claude-fable-5-1', effort: 'medium' },

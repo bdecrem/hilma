@@ -7,7 +7,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Extracted } from './extract.ts';
 
-const MODEL = process.env.SURF_MODEL || 'claude-opus-4-8';
+const MODEL = process.env.SURF_MODEL || 'claude-opus-5-5';
 
 let _client: Anthropic | null = null;
 function client(): Anthropic {
@@ -47,7 +47,7 @@ export async function readerify(page: Extracted): Promise<string> {
 
   const resp = await client().messages.create({
     model: MODEL,
-    max_tokens: 8000,
+    max_tokens: 8192,
     system: `You convert scraped web pages into clean reader-mode text for a 1986 Macintosh Plus with a tiny 1-bit screen on a 9600-baud link. You are the entire rendering engine: whatever you emit is exactly what the reader sees.
 
 Your job:
@@ -78,7 +78,7 @@ export async function searchPage(query: string): Promise<string> {
 
   let resp = await client().messages.create({
     model: MODEL,
-    max_tokens: 8000,
+    max_tokens: 8192,
     tools: [{ type: 'web_search_20260209', name: 'web_search' }],
     messages,
   });
@@ -88,7 +88,7 @@ export async function searchPage(query: string): Promise<string> {
     messages = [...messages, { role: 'assistant', content: resp.content }];
     resp = await client().messages.create({
       model: MODEL,
-      max_tokens: 8000,
+      max_tokens: 8192,
       tools: [{ type: 'web_search_20260209', name: 'web_search' }],
       messages,
     });
@@ -109,7 +109,7 @@ export async function aboutPage(
 
   const resp = await client().messages.create({
     model: MODEL,
-    max_tokens: 4000,
+    max_tokens: 8192,
     system: `You answer about a web page for a reader on a 1986 Macintosh Plus. Be brief and concrete.${FORMAT_RULES}`,
     messages: [
       {

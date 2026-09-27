@@ -11,7 +11,7 @@
 //   npx tsx scripts/noon.ts 2026-04-20 reddit
 //
 // Environment flags:
-//   SKETCH_MODEL=claude-opus-4-7             (richer sketches; slower)
+//   SKETCH_MODEL=claude-opus-5-5             (richer sketches; slower)
 //   SKIP_SKETCH=1                            (skip sketch-concepts — useful when
 //                                             the concepts file was hand-drafted
 //                                             via scripts/draw-*.ts)

@@ -10,7 +10,7 @@ rmSync(dir, { recursive: true, force: true });
 mkdirSync(dir, { recursive: true });
 writeFileSync(join(dir, 'golem.yaml'), [
   'name: Strays', 'engine: claude-code', 'model: claude-fable-5-1',
-  'fallbackModel: claude-opus-5', 'fallbackHoldMinutes: 1', 'skipPermissions: true', '',
+  'fallbackModel: claude-opus-5-5', 'fallbackHoldMinutes: 1', 'skipPermissions: true', '',
 ].join('\n'));
 
 const calls = [];
@@ -46,12 +46,12 @@ const check = (cond, what) => { if (!cond) { fails++; console.log('FAIL', what);
 const ev1 = await turn(`turn 1 (${mode})`);
 const done = ev1.find((e) => e.type === 'completion');
 check(ev1.some((e) => e.type === 'warning' && e.message.startsWith('Switching to fallback model')), 'switch warning emitted');
-check(done?.status === 'completed' && /hello from claude-opus-5/.test(done.finalText ?? ''), 'turn completed with the fallback reply');
-check(calls.join(',') === 'claude-fable-5-1,claude-opus-5', `engine called primary then fallback (${calls.join(',')})`);
+check(done?.status === 'completed' && /hello from claude-opus-5-5/.test(done.finalText ?? ''), 'turn completed with the fallback reply');
+check(calls.join(',') === 'claude-fable-5-1,claude-opus-5-5', `engine called primary then fallback (${calls.join(',')})`);
 
 calls.length = 0;
 const ev2 = await turn('turn 2');
-check(calls.join(',') === 'claude-opus-5', `second turn goes straight to fallback (${calls.join(',')})`);
+check(calls.join(',') === 'claude-opus-5-5', `second turn goes straight to fallback (${calls.join(',')})`);
 check(!ev2.some((e) => e.type === 'warning' && e.message.startsWith('Switching')), 'no second switch warning');
 
 console.log(fails ? `${fails} FAILED` : 'ALL OK');

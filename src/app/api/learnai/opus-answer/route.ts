@@ -52,10 +52,11 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-opus-5',
-      max_tokens: maxTokens,
-      // Opus 5 thinks by default; the caller's max_tokens is sized for the answer alone.
-      thinking: { type: 'disabled' },
+      model: 'claude-opus-5-5',
+      // Opus 5.5 cannot switch thinking off, and thinking tokens count against
+      // max_tokens: low effort keeps the answer short, the floor leaves room.
+      max_tokens: Math.max(maxTokens, 8192),
+      output_config: { effort: 'low' },
       system: systemPrompt,
       messages,
     }),

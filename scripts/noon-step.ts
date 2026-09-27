@@ -23,7 +23,7 @@
 // go straight to step 3.
 //
 // Environment flags:
-//   SKETCH_MODEL=claude-opus-4-7    (richer sketches; only used in step 2)
+//   SKETCH_MODEL=claude-opus-5-5    (richer sketches; only used in step 2)
 
 import { spawn } from 'node:child_process'
 import { join, dirname } from 'node:path'

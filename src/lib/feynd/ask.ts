@@ -89,9 +89,10 @@ export async function askWithTopic(opts: AskOptions): Promise<AskResult> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-opus-5',
-      max_tokens: opts.maxTokens ?? 1200,
-      thinking: { type: 'disabled' },
+      model: 'claude-opus-5-5',
+      // Opus 5.5 cannot switch thinking off: low effort + a max_tokens floor.
+      max_tokens: Math.max(opts.maxTokens ?? 1200, 8192),
+      output_config: { effort: 'low' },
       system: systemBlocks,
       messages,
     }),
