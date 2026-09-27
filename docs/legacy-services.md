@@ -117,6 +117,15 @@ Found while checking whether pushes reach production (2026-09-26):
 - The sites keep serving the last good deployment, so nothing looks broken from outside, but
   **no vibeceo push since those dates has reached production**, including the 2026-09-26
   model migration.
+- **Fixed 2026-09-27.** smsbot: `sms-bot/.dockerignore` excluded `package-lock.json` and the
+  Dockerfile ran a fresh `npm install`, which nested a second google-auth-library under
+  googleapis-common; now the lockfile ships and the build runs `npm ci` (vibeceo `d6ca3c7c7`,
+  deployed SUCCESS 15:21 UTC). www.kochi.to: the module-not-found failure hit one build only
+  (2026-09-25, `d9d5eaaac`); the next two (`85589ee78`, `d6ca3c7c7`) built with no change, so it
+  looks transient. The PressStart2P font error is a warning (that `.woff2` is base64 text).
+- Still failing, not touched: service **websocket** (root `web/`, `npm run start:ws`) has never
+  deployed in its 20 listed attempts: it builds, then fails the `/api/health` healthcheck that the
+  shared `/railway.toml` gives every service (the WebSocket server has no HTTP route).
 
 ## Model migration of the same day (services that stayed up)
 
