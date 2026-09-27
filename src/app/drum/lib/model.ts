@@ -43,6 +43,7 @@ export const INKS: Ink[] = [
 ]
 export const PAPER: [number, number, number] = [247, 239, 223]
 export const VERMILLION = '#ff4b1f'
+export const STONE = '#b7b1a6' // the background: neutral, so the inks and the paper carry the color
 export const INK = '#16121c'
 export const CREAM = '#f7efdf'
 export const LIME = '#b6f23a'

@@ -22,7 +22,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#ff4b1f',
+  themeColor: '#b7b1a6',
 }
 
 export default function DrumLayout({ children }: { children: React.ReactNode }) {

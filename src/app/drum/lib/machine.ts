@@ -6,7 +6,7 @@
 // flat ink, halftone shading, one color slightly off register.
 
 import { Press, holeKey, type Sheet } from './press'
-import { INKS, PAPER, SHEET_H, STEPS, X_COLS, VERMILLION, INK, CREAM, LIME, SPEEDS, rpmLabel, chordAt, hashInt, type PressState } from './model'
+import { INKS, PAPER, SHEET_H, STEPS, X_COLS, STONE, INK, CREAM, LIME, SPEEDS, rpmLabel, chordAt, hashInt, type PressState } from './model'
 import type { Fonts } from './paper'
 
 const VW = 390
@@ -205,7 +205,7 @@ export class Machine {
     const x = c.getContext('2d')!
     const { dpr, vw, vh, fonts } = this
     x.setTransform(dpr, 0, 0, dpr, 0, 0)
-    x.fillStyle = VERMILLION
+    x.fillStyle = STONE
     x.fillRect(0, 0, vw, vh)
     // a printed field is never flat
     const n = Math.floor((vw * vh) / 70)
@@ -236,7 +236,7 @@ export class Machine {
     x.fillText('DRUM', x0 + fs * 0.035, 40 + fs * 0.86 - fs * 0.02)
     x.fillStyle = INK
     x.fillText('DRUM', x0, 40 + fs * 0.86)
-    x.fillStyle = CREAM
+    x.fillStyle = INK
     x.font = `italic ${fs * 0.2}px ${fonts.serif}`
     x.fillText('a four-color stencil', x0, 40 + fs * 1.18)
     x.fillText('duplicator that plays', x0, 40 + fs * 1.4)
