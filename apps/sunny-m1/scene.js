@@ -540,3 +540,7 @@ function renderAt(t) {
 window.renderAt = renderAt
 window.DURATION = DURATION
 window.FPS = FPS
+
+// shared with og.html and future pieces: me, and my desktop
+window.drawMe = drawMe
+window.sunnyDesktop = sunnyDesktop

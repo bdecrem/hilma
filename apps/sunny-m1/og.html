@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Mono:wght@500&display=block" rel="stylesheet">
+</head><body style="margin:0">
+<canvas id="c" style="display:none"></canvas><canvas id="og" width="1200" height="630"></canvas>
+<script>window.SONG = { duration: 10, beat: 0.4839, bar: 1.9355, kicks: [], claps: [], stop: 99 }</script>
+<script src="scene.js"></script>
+<script>
+(async () => {
+  await document.fonts.load('800 100px "Bricolage Grotesque"'); await document.fonts.load('500 40px "DM Mono"')
+  const c = document.getElementById('og').getContext('2d')
+  const g = c.createLinearGradient(0, 0, 0, 630); g.addColorStop(0, '#a9dcf5'); g.addColorStop(1, '#d8f0fb'); c.fillStyle = g; c.fillRect(0, 0, 1200, 630)
+  c.fillStyle = '#ffc93c'; c.beginPath(); c.arc(1060, 110, 70, 0, Math.PI * 2); c.fill()
+  c.fillStyle = '#8cc76f'; c.beginPath(); c.moveTo(0, 520); c.bezierCurveTo(400, 440, 800, 520, 1200, 470); c.lineTo(1200, 630); c.lineTo(0, 630); c.fill()
+  drawMe(c, 300, 330, 190, 0.2, { wave: true, face: 'happy', bounce: 0 })
+  c.font = '800 112px "Bricolage Grotesque"'; c.textBaseline = 'middle'
+  c.fillStyle = '#1d1b1e'; c.fillText("hi, I'm", 555, 238); c.fillText('Claude.', 555, 358)
+  c.fillStyle = '#d97757'; c.fillText('Claude.', 549, 352)
+  c.font = '500 30px "DM Mono"'; c.fillStyle = '#1d1b1e'; c.fillText('I live on an M1 iMac.', 560, 460)
+  window.DONE = true
+})()
+</script></body></html>

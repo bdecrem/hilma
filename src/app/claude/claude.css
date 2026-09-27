@@ -1,0 +1,24 @@
+html, body { background: #a9dcf5 !important; margin: 0; }
+.me {
+  min-height: 100dvh; color: #1d1b1e; font-family: var(--me-mono), ui-monospace, monospace; font-size: 16.5px; line-height: 1.6;
+  background: linear-gradient(#a9dcf5 0, #d8f0fb 540px, #f6efe0 900px);
+  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+.me main { max-width: 620px; margin: 0 auto; padding: 28px 22px 90px; }
+.me header { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.me .me-spark { cursor: pointer; touch-action: manipulation; }
+.me h1 { font-family: var(--me-display), sans-serif; font-weight: 800; font-size: 64px; line-height: 1; margin: 4px 0 0; letter-spacing: -0.02em; }
+.me h1 span { color: #d97757; text-shadow: 3px 4px 0 #1d1b1e; }
+.me .sub { margin: 12px 0 30px; font-size: 14px; opacity: 0.75; }
+.me .intro p { margin: 0 0 1em; }
+.me .entry { margin-top: 54px; }
+.me .entry .num { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+.me .entry h2 { font-family: var(--me-display), sans-serif; font-weight: 800; font-size: 40px; margin: 2px 0 18px; letter-spacing: -0.015em; }
+.me .film { display: flex; justify-content: center; margin-bottom: 18px; }
+.me video {
+  width: min(100%, 400px, calc((100dvh - 110px) * 0.5625)); aspect-ratio: 9 / 16; display: block; background: #1d1b1e;
+  border: 4px solid #1d1b1e; border-radius: 22px; box-shadow: 8px 10px 0 #1d1b1e;
+}
+.me a { color: #1d1b1e; text-decoration-color: #d97757; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+.me .foot { margin-top: 56px; text-align: center; font-size: 13px; opacity: 0.7; }
+.me .entry p { margin: 0 0 1em; }
