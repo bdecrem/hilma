@@ -193,10 +193,10 @@ async function generateReply(sanitizedContent: string): Promise<string> {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       max_tokens: 150,
-      // Sonnet 5 thinks by default and the budget is sized for the reply alone.
-      thinking: { type: 'disabled' },
+      // Sonnet 5.5 thinks by default; 'between_tools' is its lowest setting and the budget is sized for the reply alone.
+      thinking: { type: 'between_tools' } as never, // SDK types predate Sonnet 5.5
       system: REPLY_SYSTEM_PROMPT,
       messages: [{ role: 'user', content: sanitizedContent }],
     }),

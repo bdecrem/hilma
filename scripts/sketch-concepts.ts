@@ -226,7 +226,7 @@ Output ONLY a JSON array, no code fence:
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: process.env.SKETCH_MODEL || 'claude-sonnet-5',
+      model: process.env.SKETCH_MODEL || 'claude-sonnet-5-5',
       max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],

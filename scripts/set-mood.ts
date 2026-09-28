@@ -235,7 +235,7 @@ async function callClaude(userPrompt: string, useWebSearch: boolean) {
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
 
   const body: Record<string, unknown> = {
-    model: 'claude-sonnet-5',
+    model: 'claude-sonnet-5-5',
     max_tokens: 2048,
     system: SYSTEM_PROMPT,
     messages: [{ role: 'user', content: userPrompt }],

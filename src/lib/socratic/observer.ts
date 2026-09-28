@@ -12,7 +12,7 @@ import { runClaudeCode, useClaudeCode } from './claude-code'
 import type { Module, Move, Verdict } from './types'
 import { ANSWER_TYPES, MOVES } from './types'
 
-const DEFAULT_MODEL = 'claude-sonnet-5'
+const DEFAULT_MODEL = 'claude-sonnet-5-5'
 
 export function observerModel(): string {
   return process.env.SOC_OBSERVER_MODEL || DEFAULT_MODEL

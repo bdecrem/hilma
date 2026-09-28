@@ -53,7 +53,7 @@ export type TalkResult = {
   write_document?: { thread_id: string; title: string; brief: string }
 }
 
-const PRACTICE_MODEL = process.env.POLLY_TALK_MODEL || 'sonnet-5'
+const PRACTICE_MODEL = process.env.POLLY_TALK_MODEL || 'sonnet-5-5'
 const CLASSIFIER_MODEL = process.env.POLLY_LANE_MODEL || 'claude-haiku-4-5'
 /// How much of the conversation each call sees.
 const HISTORY_TURNS = 24

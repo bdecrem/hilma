@@ -23,7 +23,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { jamDb } from './db'
 
-export const TASTE_MODEL = process.env.JAM_TASTE_MODEL || 'claude-sonnet-5'
+export const TASTE_MODEL = process.env.JAM_TASTE_MODEL || 'claude-sonnet-5-5'
 export const MINER_MODEL = process.env.JAM_MINER_MODEL || 'claude-haiku-4-5-20251001'
 /** Signals (votes, corrections, ratings, bounces …) before the first note. */
 export const TASTE_MIN_SIGNALS = 5

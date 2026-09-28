@@ -18,7 +18,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 
 const PLAN_MODEL = 'claude-haiku-4-5'
-const RANK_MODEL = 'claude-sonnet-5'
+const RANK_MODEL = 'claude-sonnet-5-5'
 
 // Length bands ("new short / medium / long"). Each band collects a slightly
 // wider net than its target so the ranker has room to choose, and the rank
@@ -131,7 +131,7 @@ async function planSearch(
       system: planSystem(band),
       messages: [{ role: 'user', content: `Today is ${today}.\n\nRequest: ${request}` }],
     })
-    const block = res.content[0]
+    const block = res.content.find((b) => b.type === 'text')
     const raw = block?.type === 'text' ? block.text : ''
     const parsed = extractJson(raw) as Partial<SearchPlan> | null
     if (!parsed || !Array.isArray(parsed.queries) || parsed.queries.length === 0) return null
@@ -258,9 +258,9 @@ async function rankPicks(
     const res = await anthropic().messages.create({
       model: RANK_MODEL,
       max_tokens: 500,
-      // A short ranking: no thinking (Sonnet 5 thinks by default, and
+      // A short ranking: no thinking (Sonnet 5.5 thinks by default; 'between_tools' is its lowest setting, and
       // thinking tokens would eat this small budget).
-      thinking: { type: 'disabled' },
+      thinking: { type: 'between_tools' } as never, // SDK types predate Sonnet 5.5
       system: rankSystem(band),
       messages: [
         {

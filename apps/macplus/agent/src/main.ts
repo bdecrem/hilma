@@ -210,7 +210,7 @@ type ModelChoice = { label: string; model: string; effort?: 'medium' | 'high' | 
 const MODELS: ModelChoice[] = [
   { label: 'Opus 5.5',   model: 'claude-opus-5-5',  effort: 'high' },
   { label: 'Opus 5.5',   model: 'claude-opus-5-5',  effort: 'medium' },
-  { label: 'Sonnet 5',   model: 'claude-sonnet-5' },
+  { label: 'Sonnet 5.5',  model: 'claude-sonnet-5-5' },
   { label: 'Fable 5.1',  model: 'claude-fable-5-1', effort: 'high' },
   { label: 'Fable 5.1',  model: 'claude-fable-5-1', effort: 'medium' },
 ];

@@ -23,12 +23,13 @@ export const maxDuration = 120
 //   POST   { text, model? } → { reply, sources, messages }
 //   DELETE → start a new conversation
 const TEXT_MODELS: Record<string, string> = {
-  'sonnet-5': 'claude-sonnet-5',
+  'sonnet-5-5': 'claude-sonnet-5-5',
+  'sonnet-5': 'claude-sonnet-5-5',
   'opus-5-5': 'claude-opus-5-5',
   // Older app builds still send 'opus-5'.
   'opus-5': 'claude-opus-5-5',
 }
-const DEFAULT_TEXT_MODEL = 'claude-sonnet-5'
+const DEFAULT_TEXT_MODEL = 'claude-sonnet-5-5'
 
 export async function GET() {
   const user = await getSessionUser()

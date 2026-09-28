@@ -59,10 +59,10 @@ function transcript(conv, maxChars = 30000) {
 async function makeQuiz(conv, topic) {
   const text = transcript(conv);
   const r = await client.messages.create({
-    model: 'claude-sonnet-5',
+    model: 'claude-sonnet-5-5',
     max_tokens: 2000,
-    // Sonnet 5 thinks by default; this is a JSON extraction sized for the answer alone.
-    thinking: { type: 'disabled' },
+    // Sonnet 5.5 thinks by default; 'between_tools' is its lowest setting; this is a JSON extraction sized for the answer alone.
+    thinking: { type: 'between_tools' },
     system: `You turn a conversation where Claude explained a concept into a short quiz that tests the user's understanding and recall.
 
 Rules:

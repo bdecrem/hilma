@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 const yaml = readFileSync(new URL('../../bots/strays/golem.yaml', import.meta.url), 'utf8');
 const triageRules = (yaml.match(/triageRules: \|\n((?:    .*\n)+)/) ?? [])[1]?.replace(/^    /gm, '');
 if (!triageRules) throw new Error('triageRules block not found in bots/strays/golem.yaml');
-const config = { name: 'Strays', groupChat: { triageModel: 'claude-sonnet-5', triageRules } };
+const config = { name: 'Strays', groupChat: { triageModel: 'claude-sonnet-5-5', triageRules } };
 const gc = { groupPolicy: 'smart', historyLimit: 20, maxTurns: 10 };
 
 let t = Date.now() - 600_000;

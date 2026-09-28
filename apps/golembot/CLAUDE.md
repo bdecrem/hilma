@@ -162,7 +162,7 @@ of two humans chatting. Two dist patches change that:
   between humans stays PASS. `patches/test/triage-harness.mjs` reads the rules
   from `bots/strays/golem.yaml`, so re-run it after editing them. A gate failure logs `triage failed … staying silent` and does
   NOT fall open into an agent run. Every decision logs one line:
-  `[discord] triage respond · claude-sonnet-5 · 2126ms · 898 in · "…"`.
+  `[discord] triage respond · claude-sonnet-5-5 · 2126ms · 898 in · "…"`.
 - **`patches/model-fallback.mjs`** (index.js + gateway.js + workspace.js). When
   the pinned model fails with an out-of-usage / limit message (as an error event
   or as a short reply text), the assistant switches to `fallbackModel` for

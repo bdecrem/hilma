@@ -26,7 +26,7 @@ export type Feature =
   | 'topicCards'    // cards for any other topic, when the app names no model
   | 'answerJudge'   // grading typed and spoken card answers
 
-const SONNET: Tier = { model: 'sonnet-5', effort: 'medium' }
+const SONNET: Tier = { model: 'sonnet-5-5', effort: 'medium' }
 const OPUS: Tier = { model: 'opus-5-5', effort: 'medium' }
 const OPUS_HIGH: Tier = { model: 'opus-5-5', effort: 'high' }
 

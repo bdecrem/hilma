@@ -66,7 +66,7 @@ function detectLLM(): LLMConfig {
     return {
       provider: 'anthropic',
       apiKey: process.env.ANTHROPIC_API_KEY,
-      model: 'claude-sonnet-5',
+      model: 'claude-sonnet-5-5',
       baseUrl: 'https://api.anthropic.com',
     }
   }

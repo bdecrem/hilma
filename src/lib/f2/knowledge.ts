@@ -17,7 +17,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
 import { buildFullContent, type F2Thread } from './threads'
 
-const DIGEST_MODEL = 'claude-sonnet-5'
+const DIGEST_MODEL = 'claude-sonnet-5-5'
 const EMBEDDING_MODEL = 'text-embedding-3-small'
 /// What the digest writer reads of a topic (≈ 45K tokens). Longer material is
 /// sampled head + middle + tail so a book's later chapters are represented.
@@ -149,7 +149,7 @@ export async function writeDigest(thread: F2Thread, content: string): Promise<st
   const response = await anthropic().messages.create({
     model: DIGEST_MODEL,
     max_tokens: 1200,
-    thinking: { type: 'disabled' },
+    thinking: { type: 'between_tools' } as never, // SDK types predate Sonnet 5.5
     system: DIGEST_SYSTEM,
     messages: [
       {

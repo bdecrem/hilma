@@ -16,7 +16,7 @@ import Anthropic from '@anthropic-ai/sdk'
 // ---------------------------------------------------------------------------
 // Registry
 
-export type LlmModelKey = 'sonnet-5' | 'opus-5-5' | 'fable-5-1' | 'glm-5.2'
+export type LlmModelKey = 'sonnet-5-5' | 'opus-5-5' | 'fable-5-1' | 'glm-5.2'
 
 /** Retired keys still sent by older clients (stored iOS picker selections),
  *  mapped onto their successor. */
@@ -24,7 +24,8 @@ const MODEL_ALIASES: Record<string, LlmModelKey> = {
   'fable-5': 'fable-5-1',
   'opus-5': 'opus-5-5',
   'opus-4-8': 'opus-5-5',
-  'sonnet-4-6': 'sonnet-5',
+  'sonnet-5': 'sonnet-5-5',
+  'sonnet-4-6': 'sonnet-5-5',
 }
 
 type ModelSpec = {
@@ -58,15 +59,18 @@ type ModelSpec = {
   quickEffort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
 }
 
-// Always the latest of each tier (Bart, 2026-09-19): Sonnet 5, Opus 5.5
+// Always the latest of each tier (Bart, 2026-09-19): Sonnet 5.5 (since 2026-09-28), Opus 5.5
 // (since 2026-09-22), Fable 5.1. Retired keys resolve through MODEL_ALIASES.
-// 'sonnet-5' is the default — requests that don't name a model (the web app,
+// 'sonnet-5-5' is the default — requests that don't name a model (the web app,
 // the background jobs) run on it. The iOS/macOS picker exposes the other three.
 const MODELS: Record<LlmModelKey, ModelSpec> = {
-  'sonnet-5': {
+  'sonnet-5-5': {
     provider: 'anthropic',
-    apiModel: 'claude-sonnet-5',
-    label: 'Sonnet 5',
+    apiModel: 'claude-sonnet-5-5',
+    label: 'Sonnet 5.5',
+    // Sonnet 5.5 (2026-09-28): thinking "disabled" and forced tool_choice are
+    // both 400s — the lowest thinking setting is { type: 'between_tools' },
+    // and forceTool is emulated like Opus 5.5 / Fable 5.1.
     // Thinking is on by default on Sonnet 5 (4.6 ran without); 'medium'
     // effort is about Sonnet 4.6 at 'high'. 1M context is standard — the old
     // context-1m beta header is gone. Thinking tokens count against
@@ -75,6 +79,7 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
     thinking: { type: 'adaptive' },
     effort: 'medium',
     maxTokensFloor: 8192,
+    supportsForcedToolChoice: false,
     contextCharBudget: 2_400_000,
   },
   'opus-5-5': {
@@ -117,10 +122,10 @@ const MODELS: Record<LlmModelKey, ModelSpec> = {
   },
 }
 
-/** Keys the clients may select. The default (Sonnet 5) stays internal. */
+/** Keys the clients may select. The default (Sonnet 5.5) stays internal. */
 export const SELECTABLE_MODELS: LlmModelKey[] = ['opus-5-5', 'fable-5-1', 'glm-5.2']
 
-export const DEFAULT_MODEL: LlmModelKey = 'sonnet-5'
+export const DEFAULT_MODEL: LlmModelKey = 'sonnet-5-5'
 
 export function isModelKey(key: string): key is LlmModelKey {
   return key in MODELS || key in MODEL_ALIASES
@@ -156,9 +161,11 @@ export type LlmRequest = {
   effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max'
   /** A live chat turn: thinking off, no effort config and no max-token floor,
    *  so the reply comes back in a second or two — where the model can switch
-   *  thinking off (Sonnet 5). Opus 5.5 and Fable 5.1 always think; there the
+   *  thinking down to 'between_tools' (Sonnet 5.5). Opus 5.5 and Fable 5.1 always think; there the
    *  turn keeps its floor and runs at the registry's quickEffort when set. */
   noThinking?: boolean
+  /** Internal: set on the one retry of an emulated forceTool call. */
+  _forceRetried?: boolean
 }
 
 export type LlmResult =
@@ -245,7 +252,8 @@ async function anthropicComplete(
     messages: req.messages,
   }
   const quick = Boolean(req.noThinking && spec.thinking)
-  if (quick) params.thinking = { type: 'disabled' }
+  // Sonnet 5.5 rejects 'disabled'; 'between_tools' is its lowest setting.
+  if (quick) params.thinking = { type: 'between_tools' } as unknown as Anthropic.ThinkingConfigParam
   else if (spec.thinking) params.thinking = spec.thinking
   const effort = quick
     ? undefined
@@ -289,6 +297,11 @@ async function anthropicComplete(
   }
 
   const toolUse = response.content.find((b) => b.type === 'tool_use')
+  // Emulated forceTool: the model may still answer in plain text. Retry once;
+  // after that the caller gets the text result and handles it.
+  if (!toolUse && emulateForce && !req._forceRetried) {
+    return llmComplete({ ...req, _forceRetried: true })
+  }
   if (toolUse && toolUse.type === 'tool_use') {
     return {
       type: 'tool_call',

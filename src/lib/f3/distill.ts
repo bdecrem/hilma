@@ -5,7 +5,7 @@ import { buildFullContent, type F2Thread } from '@/lib/f2/threads'
 // turn a source + the user's conversation about it into a handful of atomic
 // idea cards the scheduler can drill. Sonnet, because extraction quality is
 // the whole product here — bad cards make every future review worthless.
-const MODEL = 'claude-sonnet-5'
+const MODEL = 'claude-sonnet-5-5'
 
 // Keep the prompt bounded for very long transcripts/books. ~60K chars of
 // source is plenty to find the core ideas.
@@ -87,8 +87,8 @@ Extract the idea cards.`
   const res = await anthropic().messages.create({
     model: MODEL,
     max_tokens: 2000,
-    // Sonnet 5 thinks by default; this small extraction budget has no room for it.
-    thinking: { type: 'disabled' },
+    // Sonnet 5.5 thinks by default; 'between_tools' is its lowest setting; this small extraction budget has no room for it.
+    thinking: { type: 'between_tools' } as never, // SDK types predate Sonnet 5.5
     system,
     output_config: { format: { type: 'json_schema', schema: CARDS_SCHEMA } },
     messages: [{ role: 'user', content: user }],

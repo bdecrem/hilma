@@ -67,7 +67,7 @@ groupChat:
   # ten jobs (2026-09-12). patches/group-turn-reset.mjs makes any human message
   # reset the counter, so this now caps consecutive bot-triggered replies only.
   maxTurns: 10
-  triageModel: claude-sonnet-5
+  triageModel: claude-sonnet-5-5
   triageTimeoutSeconds: 45
   triageRules: |
     RESPOND when the newest message is an instruction, request or question aimed at the bot, even without an @mention.
