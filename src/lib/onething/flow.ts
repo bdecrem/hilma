@@ -77,7 +77,7 @@ export async function promptNow(phone: string): Promise<User> {
 
 // ---------- inbound (called from Dodo's BlueBubbles webhook) ----------
 
-const FORCE_PREFIX = /^(1|one|onething)\s*[:\-]\s*/i
+const FORCE_PREFIX = /^onething\s*[:\-]\s*/i
 // A number we have never heard from joins by texting "onething" (optionally with a
 // first sentence after a colon). Plain "1:" from a stranger is left to Dodo.
 const JOIN_PREFIX = /^(onething|one thing)\b\s*[:\-]?\s*/i
