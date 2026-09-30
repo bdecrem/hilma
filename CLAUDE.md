@@ -394,6 +394,9 @@ fetches too: `scripts/f2-youtube-proxy.mjs` (launchd `sh.f2.youtube-proxy`, :300
 `https://f2-mini.tunn3l.sh` with header `X-F2-Secret: $F2_YOUTUBE_FETCH_SECRET` (read from `.env.local`).
 Dodo's paste flow uses the same proxy. The proxy runs from the mini's dev tree, so after changing it,
 pull there and `launchctl kickstart -k gui/501/sh.f2.youtube-proxy`.
+A 401 means the client's secret differs from the mini's: the proxy reads the value in the mini's
+`~/Documents/code/hilma/.env.local`, and that is the copy to match (the iMac carried a stale one until
+2026-09-30; a second `F2_YOUTUBE_FETCH_SECRET=` line doesn't help, the first match wins).
 
 ## Tunn3l tunnel service
 
