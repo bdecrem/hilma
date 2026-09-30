@@ -50,9 +50,10 @@ node engines.mjs https://dodo-voice-bridge-production.up.railway.app   # only if
 
 One process serves every engine by path: Dodo's `/ws/prod` → `https://feynd.cc`
 and `/ws/dev` → `http://localhost:3100` (turn route `/api/f2/eleven/turn`), and
-Polly's `/ws/polly-prod` → `https://hilma-nine.vercel.app/api/polly/eleven/turn`
-and `/ws/polly-dev` → the same path on localhost (`DODO_BRIDGE_BACKENDS`
-overrides; a bare origin means Dodo's route).
+Polly's `/ws/polly-prod` → `https://polly-iota.vercel.app/api/polly/eleven/turn`
+(the polly repo's backend since 2026-09-30) and `/ws/polly-dev` → the same
+path on `localhost:3101` (`DODO_BRIDGE_BACKENDS` overrides; a bare origin
+means Dodo's route).
 
 Before Railway the bridge lived a day on Bart's MacBook Air (2026-09-20) and an
 afternoon on the Mac mini (2026-09-21, launchd `com.dodo.voicebridge` behind a

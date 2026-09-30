@@ -20,7 +20,7 @@
 //   DODO_BRIDGE_BACKENDS JSON map of path name → the URL a turn is POSTed to. A
 //                        bare origin means Dodo's route (/api/f2/eleven/turn):
 //                        {"prod":"https://feynd.cc",
-//                         "polly-prod":"https://hilma-nine.vercel.app/api/polly/eleven/turn"}
+//                         "polly-prod":"https://polly-iota.vercel.app/api/polly/eleven/turn"}
 //   PORT                 default 3901
 import { createServer } from 'node:http'
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'

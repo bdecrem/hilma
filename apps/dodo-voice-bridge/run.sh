@@ -21,7 +21,8 @@ else
   set -a; eval "$(grep -E '^(ELEVENLABS_API_KEY|DODO_BRIDGE_SECRET)=' ../../.env.local)"; set +a
 fi
 export PORT="${PORT:-3901}"
-DEFAULT_BACKENDS='{"prod":"https://feynd.cc","dev":"http://localhost:3100","polly-prod":"https://hilma-nine.vercel.app/api/polly/eleven/turn","polly-dev":"http://localhost:3100/api/polly/eleven/turn"}'
+# Polly's backend is its own repo (../polly) since 2026-09-30: prod on polly-iota, dev on :3101.
+DEFAULT_BACKENDS='{"prod":"https://feynd.cc","dev":"http://localhost:3100","polly-prod":"https://polly-iota.vercel.app/api/polly/eleven/turn","polly-dev":"http://localhost:3101/api/polly/eleven/turn"}'
 export DODO_BRIDGE_BACKENDS="${DODO_BRIDGE_BACKENDS:-$DEFAULT_BACKENDS}"
 
 [ -d node_modules ] || npm install --no-audit --no-fund

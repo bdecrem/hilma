@@ -1,4 +1,4 @@
-> **2026-09-18:** the webhook now feeds a dispatcher shared by Dodo, Polly and Onething (`src/lib/imessage/dispatch.ts`; root CLAUDE.md "iMessage — one inbox, three apps"). Nothing below changes on the mini side; Polly's webhook URL is an alias of Dodo's.
+> **2026-09-18:** the webhook now feeds a dispatcher shared by Dodo and Onething (`src/lib/imessage/dispatch.ts`; root CLAUDE.md "iMessage — one inbox, two backends"). **2026-09-30:** Polly moved to its own repo and backend (`../polly`, polly-iota.vercel.app); BlueBubbles on the mini now posts every message to both webhooks — registered through its API, `http://localhost:1234/api/v1/webhook?password=…` on the mini.
 
 # BlueBubbles ↔ F2 — iMessage pairing (Mac mini setup notes)
 

@@ -1,11 +1,9 @@
 import { NextResponse, after } from 'next/server'
 import { authWebhook, isRecentOutbound } from '@/lib/f2/bluebubbles'
-import { isRecentOutbound as isRecentPollyOutbound } from '@/lib/polly/bluebubbles'
 import { findUserByDailyChatGuid } from '@/lib/f2/imessage'
-import { findUserByDailyChatGuid as findPollyUserByDailyChatGuid } from '@/lib/polly/imessage'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { isOnethingChat } from '@/lib/onething/inbound'
-import { dispatchInbound } from '@/lib/imessage/dispatch'
+import { dispatchInbound, POLLY_MARK } from '@/lib/imessage/dispatch'
 
 export const runtime = 'nodejs'
 // BlueBubbles fire-and-forget: if we don't ack fast it drops the message
@@ -69,14 +67,20 @@ export async function POST(req: Request) {
   // that chat's from-me messages are accepted unless the text matches
   // something we ourselves sent recently.
   let userLabel = handle
-  let owner: { app: 'dodo' | 'polly'; id: string } | null = null
+  let owner: { app: 'dodo'; id: string } | null = null
   if (data.isFromMe) {
     if (!text || !chatGuid || !guid) {
       return NextResponse.json({ ok: true, skipped: 'from-me' })
     }
+    // Polly (its own backend since 2026-09-30) sends through the same Apple
+    // ID and its ledger is not ours to check; its texts all start with the
+    // mark. Without this a Polly daily card to a Dodo user would be graded
+    // as their answer.
+    if (text.startsWith(POLLY_MARK)) {
+      return NextResponse.json({ ok: true, skipped: 'polly-echo' })
+    }
     const dodoOwner = await findUserByDailyChatGuid(chatGuid)
-    const pollyOwner = dodoOwner ? null : await findPollyUserByDailyChatGuid(chatGuid)
-    owner = dodoOwner ? { app: 'dodo', id: dodoOwner.id } : pollyOwner ? { app: 'polly', id: pollyOwner.id } : null
+    owner = dodoOwner ? { app: 'dodo', id: dodoOwner.id } : null
     // Onething users answer in a chat that can also register as from-me
     // (the mini sends as the user's own Apple ID); let those through too.
     if (!owner && !(await isOnethingChat(chatGuid))) {
@@ -101,8 +105,7 @@ export async function POST(req: Request) {
   }
 
   if (data.isFromMe) {
-    // Either app may have sent it — both ledgers count as an echo.
-    if ((await isRecentOutbound(text)) || (await isRecentPollyOutbound(text))) {
+    if (await isRecentOutbound(text)) {
       console.log(`[f2/imessage] echo ${guid}: our own send in ${chatGuid}`)
       return NextResponse.json({ ok: true, skipped: 'echo' })
     }
@@ -112,8 +115,9 @@ export async function POST(req: Request) {
 
   console.log(`[f2/imessage] accepted ${guid} from ${userLabel}: ${text.slice(0, 80)}`)
 
-  // Onething, Polly or Dodo — the dispatcher decides (src/lib/imessage/
-  // dispatch.ts) and runs the app that owns the message.
+  // Onething or Dodo — the dispatcher decides (src/lib/imessage/dispatch.ts)
+  // and runs the app that owns the message. Polly gets its own copy of every
+  // message from BlueBubbles and decides for itself.
   after(async () => {
     try {
       await dispatchInbound({ guid, handle, chatGuid, text, fromMeOwner: owner, replyLabel: userLabel })

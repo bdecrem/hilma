@@ -187,6 +187,13 @@ const nextConfig: NextConfig = {
         },
       ],
       afterFiles: [
+        // Polly moved to its own backend on 2026-09-30 (../polly, its own repo;
+        // polly-iota.vercel.app). App builds from before the move still call
+        // this host, so /api/polly/* is forwarded there — cookies included.
+        {
+          source: '/api/polly/:path*',
+          destination: 'https://polly-iota.vercel.app/api/polly/:path*',
+        },
         // intheamber.com/anything → /amber/anything (only if no file matched above)
         // Exclude paths already under /amber/* — those resolve to actual routes;
         // without this, dynamic routes (e.g. /amber/noon/[date]) get caught by this

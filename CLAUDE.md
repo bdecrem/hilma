@@ -103,7 +103,7 @@ Hilma hosts several apps. Some are standalone in `apps/`, some are Next.js route
 | **Peri (iOS)** | `apps/peri/` | Xcode (XcodeGen, same workflow as Feynd) | Voice-only walking tutor — OpenAI Realtime over WebRTC (`/api/f4/walk/*`, `src/lib/f4/`). Peri speaks first, quizzes the Loci card deck conversationally, records reviews via server-authed tools. Harness: `scripts/test-walk-realtime.mjs` |
 | **Dodo voice bridge** | `apps/dodo-voice-bridge/` | Railway, project + service `dodo-voice-bridge` (`railway up` from the folder; `https://dodo-voice-bridge-production.up.railway.app`) since 2026-09-21 | The WebSocket server ElevenLabs Speech Engine connects to for Dodo's ElevenLabs + Claude voice engine; forwards each turn to `/api/f2/eleven/turn`. See "Dodo voice, second engine" below and the folder's README |
 | **MacPlus** | `apps/macplus/` | Retro68 → BlueSCSI SD card (manual) | Native classic-Mac (System 6, 68000) apps for Bart's real Macintosh Plus. See `apps/macplus/CLAUDE.md` |
-| **Polly (iOS)** | `apps/polly/` | Xcode (XcodeGen, same workflow as Feynd) | Language-learning app cloned from Dodo (2026-09-17), diverging: pick a language, linear chapters, cards, Peck, voice, iMessage streaks. Agentic Learning Mode (2026-09-18): a voice level check, a planned path, lessons Polly writes as their own topic kind. Direction 2b (2026-09-20): no topic screen has a chat window; typing is the line under every voice button and opens one no-modes text chat, and a typed chat is the same object as a spoken one (`docs/polly-infinity-2b.md`). Plan: `docs/polly-plan.md`. See `apps/polly/CLAUDE.md` |
+| **Polly (iOS)** | `../polly/` (own repo: `bdecrem/polly`) | Vercel project `polly` (polly-iota.vercel.app) + its own Supabase project | Language-learning app cloned from Dodo (2026-09-17). **Moved out of hilma on 2026-09-30** so it can be handed to someone else without access to the rest: iOS app (`ios/`), backend (`/api/polly/*`), `polly_*` schema, docs and checks all live in that repo, with the data copied to a fresh Supabase project. hilma keeps only a rewrite that forwards `/api/polly/*` on this host to the new backend (for app builds older than the move) and the shared iMessage plumbing (see "iMessage — one inbox" below). The voice bridge (`apps/dodo-voice-bridge`) still serves Polly's engines: `DODO_BRIDGE_BACKENDS` `polly-prod` points at the new backend |
 | **Tap Tap Dodo (iOS)** | `apps/taptapdodo/` | Xcode (XcodeGen, same workflow as Feynd) | Three-lane rhythm game starring a dodo — SpriteKit + AVAudioEngine synthesis, zero audio files, seeded procedural charts, 5 synth-genre sets. See `apps/taptapdodo/CLAUDE.md` |
 | **GolemBot** (Strays / Bang) | `apps/golembot/` | Mac mini `admin@171.66.240.175`, launchd `com.golembot.strays` | **Discord → Claude Code.** @mention **Strays** in the kochitolabs server (`#straykids`, `#bangbang`) and an agent on the mini builds, verifies, commits, pushes and replies with a link. It works in its own checkout `~/hilma-bot`. This folder is config + runbook; the bridge is the open-source [golembot](https://github.com/0xranx/golembot). **Read [`apps/golembot/CLAUDE.md`](apps/golembot/CLAUDE.md) before touching it** |
 | **Onething** | `src/app/onething/` + `src/app/api/onething/` + `src/lib/onething/` + `apps/onething/schema/` | Vercel (onething.ink) | One sentence a day over iMessage, with a streak and a small paper-journal page. Built by Strays from Discord 2026-09-12. See "Onething" below |
@@ -212,26 +212,31 @@ How it is wired:
 
 The six fixes of 2026-09-13 were all behaviour bugs in one-line-from-a-phone features: every user on Pacific time, a reminder an hour after a late sign-up's question, a React component declared inside the page component (remounted per keystroke), the webhook echo, "latest row" for "today", and cookies split across two hosts. Each would have been caught by a written spec or a focused test — which is what the Strays persona now requires (see `apps/golembot/CLAUDE.md`, "Reliability").
 
-### iMessage — one inbox, three apps (2026-09-18)
+### iMessage — one inbox, two backends (2026-09-18; split 2026-09-30)
 
-BlueBubbles on the Mac mini posts every new message to one webhook
-(`/api/f2/clients/imessage/webhook`; `/api/polly/clients/imessage/webhook` is
-an alias of it, same dedup table). The mini is a dumb pipe — BlueBubbles in,
-the `imsghttp` send agent out (`F2_IMESSAGE_SEND_URL`, tunnel `imsg-mini`) —
-because the tables that say who a handle belongs to live on Vercel. The
-webhook authenticates, drops from-me echoes (both apps' outbound ledgers),
-claims the guid, then `dispatchInbound` in `src/lib/imessage/dispatch.ts`
-decides: Onething claims first (its own rules); then the handle's pairings —
-Dodo only or Polly only goes straight there, unpaired is dropped; paired to
-both → a `polly …` / `dodo …` prefix wins (the same words that address each
-app's agent), else the app that handled this handle's last message — or sent it
-its daily card (`rememberRoute`, `src/lib/imessage/routes.ts`) — within
-six hours keeps it (`imessage_routes`, schema f2/049), else one Haiku call
-(`IMESSAGE_CLASSIFIER_MODEL`) says language-learning or not, default Dodo.
-Check: the decision table in the 2026-09-18 session ran on two throwaway
-users sharing a handle (prefix, sticky, expired sticky, classifier, unpaired).
+BlueBubbles on the Mac mini posts every new message to TWO webhooks: this
+app's (`/api/f2/clients/imessage/webhook` — Dodo and Onething) and Polly's
+(`https://polly-iota.vercel.app/api/polly/clients/imessage/webhook`, the
+polly repo). The mini is a dumb pipe — BlueBubbles in, the `imsghttp` send
+agent out (`F2_IMESSAGE_SEND_URL`, tunnel `imsg-mini`, used by both backends)
+— because the tables that say who a handle belongs to live on Vercel. Each
+backend keeps what is its own. Here the webhook authenticates, drops from-me
+echoes (our outbound ledger, plus any text starting with 🦜 — Polly marks
+every text it sends, because its ledger is in a database we cannot see; the
+`POLLY_MARK` in `dispatch.ts`), claims the guid, then `dispatchInbound` in
+`src/lib/imessage/dispatch.ts` decides: Onething claims first (its own rules);
+a text starting `polly` is dropped (Polly's webhook answers it); a handle
+paired to Dodo (`f2_users.imessage_handles` or the daily-card chat) goes to
+Dodo; anything else is dropped as unpaired. A handle paired to both apps
+(Bart's) is listed in Polly's `POLLY_PREFIX_ONLY_HANDLES`, so Polly answers
+only `polly …` texts from it and Dodo the rest — the sticky/classifier routing
+of the 2026-09-18 dispatcher is gone with the split, and `imessage_routes` is
+only a record now. Webhooks are registered through BlueBubbles' own API on the
+mini (`curl "http://localhost:1234/api/v1/webhook?password=$PW"`; `POST` the
+same with `{"url","events":["new-message"]}`; the password is in its
+`~/Library/Application Support/bluebubbles-server/config.db`).
 
-Pairing codes (`/api/{f2,polly}/imessage/start`) send synchronously and
+Pairing codes (`/api/f2/imessage/start`, and Polly's own) send synchronously and
 return 502 with "the iMessage server is unreachable" when the mini's tunnels
 are down; the code stays stored so a retry reuses it. When every `*-mini`
 tunnel answers "No tunnel found", the mini is off the network (2026-09-18:
@@ -320,7 +325,7 @@ Two engines on ElevenLabs because an engine has one `ws_url`: "Dodo (dev)" → b
 
 Verify with `npx tsx scripts/test-eleven-dodo.ts [mode] [--interrupt]` (headless: real route, spoken answers through ElevenLabs' speech-to-text, a barge-in) and the simulator drill with `-voiceEngine eleven` added (see `apps/feynd/CLAUDE.md`). In the simulator run it with `-voiceHoldToTalk 1`: the sim listens through the Mac's real microphone, and room noise (or the Mac's own speakers) keeps interrupting a hands-free session until nothing gets said.
 
-**Polly has the same engine, also the default, for every voice mode** (2026-09-21; phase 1 on 09-20 was conversations only): the clean-up walk's "next card" and the level check's silence nudge are text messages from the app (`ELEVEN_CUE_PREFIX` = `[app] `, which `turnMessages()` hands Claude as a note from the app and clients keep out of the transcript). Same switch in its Profile → Voice, `apps/polly/Polly/ElevenVoiceClient.swift`, `/api/polly/eleven/{session,turn}`, its own two engines on the bridge (`/ws/polly-prod`, `/ws/polly-dev`, a multilingual voice). See `apps/polly/CLAUDE.md`.
+**Polly has the same engine, also the default, for every voice mode** (2026-09-21; phase 1 on 09-20 was conversations only): the clean-up walk's "next card" and the level check's silence nudge are text messages from the app (`ELEVEN_CUE_PREFIX` = `[app] `, which `turnMessages()` hands Claude as a note from the app and clients keep out of the transcript). Same switch in its Profile → Voice, `ios/Polly/ElevenVoiceClient.swift` and `/api/polly/eleven/{session,turn}` in the polly repo (`../polly`, since 2026-09-30), its own two engines on the bridge (`/ws/polly-prod` → polly-iota.vercel.app, `/ws/polly-dev` → localhost:3101, a multilingual voice). See the polly repo's `CLAUDE.md`.
 
 ### Peck or Perish — the rest-stop minigame (2026-09-23)
 
