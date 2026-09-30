@@ -71,7 +71,12 @@ function json(res, status, body) {
 }
 
 const server = createServer(async (req, res) => {
-  const url = new URL(req.url, `http://localhost:${PORT}`)
+  let url
+  try {
+    url = new URL(req.url, `http://localhost:${PORT}`)
+  } catch {
+    return json(res, 400, { error: 'bad url' })
+  }
 
   if (url.pathname === '/health') {
     return json(res, 200, { ok: true })

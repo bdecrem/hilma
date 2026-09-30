@@ -385,6 +385,16 @@ The knowledge behind it (`src/lib/f2/knowledge.ts`, schema 051) is two layers, b
 | **Tunn3l relay** (`apps/tunnel/relay/`) | GitHub Action auto-deploys to DigitalOcean droplet on push to `main` |
 | **Tunn3l CLI binaries** | Manual: esbuild bundle → pkg compile → GitHub Release (see Tunn3l section below) |
 
+## YouTube transcripts — from any machine
+
+When Bart asks for a YouTube transcript (on any machine), run
+`node scripts/yt-transcript.mjs <url or id> [-o file.txt]` from the repo. It prints plain text (English
+preferred). The fetch runs on the Mac mini, because YouTube blocks datacenter IPs and often blocks direct
+fetches too: `scripts/f2-youtube-proxy.mjs` (launchd `sh.f2.youtube-proxy`, :3000) is reached through
+`https://f2-mini.tunn3l.sh` with header `X-F2-Secret: $F2_YOUTUBE_FETCH_SECRET` (read from `.env.local`).
+Dodo's paste flow uses the same proxy. The proxy runs from the mini's dev tree, so after changing it,
+pull there and `launchctl kickstart -k gui/501/sh.f2.youtube-proxy`.
+
 ## Tunn3l tunnel service
 
 **Tunn3l now lives in its own repo:** `../tunn3l/` ([github.com/bdecrem/tunn3l](https://github.com/bdecrem/tunn3l)). See that repo's `TUNN3L.md` for full docs. The `apps/tunnel/` folder in hilma is legacy — do not modify it, use the standalone repo instead.
