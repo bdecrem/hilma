@@ -76,14 +76,14 @@ step = 'journal'
   await page.click('button:has-text("Back to the page")')
   await page.waitForTimeout(300)
   check(!(await page.locator('.ot-payoff').count()), 'back closes the overlay')
-  check(await page.locator('.ot-replay').count() === 1, 'replay link on the streak line')
+  check(await page.locator('.oj-replay').count() === 1, 'replay button under today')
   await page.screenshot({ path: `${out}/journal-after.png` })
   step = 'journal-reload'
   await page.reload({ waitUntil: 'networkidle' })
   await page.waitForTimeout(2000)
   check(!(await page.locator('.ot-payoff').count()), 'a reload does not replay it')
   step = 'journal-replay'
-  await page.click('.ot-replay')
+  await page.click('.oj-replay')
   await page.waitForSelector('.ot-payoff', { timeout: 3000 })
   check(true, 'replay opens it again')
   await page.keyboard.press('Escape')

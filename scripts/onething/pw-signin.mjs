@@ -22,10 +22,10 @@ for (const [i, v] of inputs.entries()) {
   await page.fill('input[aria-label="Phone number"]', v)
   await page.click('button:has-text("Text me a code")')
   await page.waitForTimeout(Number(process.env.OT_WAIT || 4000))
-  const err = await page.locator('.ot-err').allTextContents()
+  const err = await page.locator('#start .oj-err').allTextContents()
   const stage = await page.locator('input[aria-label="Code"]').count()
-  const notes = await page.locator('.ot-box .ot-note').allTextContents()
+  const notes = await page.locator('#start .oj-note').allTextContents()
   console.log(JSON.stringify({ v, err, codeStage: stage, notes }))
-  await page.locator('.ot-box').screenshot({ path: `${out}/signin-${i}.png` })
+  await page.locator('#start').screenshot({ path: `${out}/signin-${i}.png` })
 }
 await b.close()

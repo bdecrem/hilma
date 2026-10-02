@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Bricolage_Grotesque, Nunito, Patrick_Hand } from 'next/font/google';
 import './onething.css';
+import './journal.css';
 
 // Three voices: Bricolage Grotesque for what you wrote and the big words,
 // Nunito for everything the app says, Patrick Hand for the doodler's notes.

@@ -1,13 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { LEVELS, MILESTONES, pointsAfterRun, pointsForEntry, type Level } from '@/lib/onething/levels';
 import { EXAMPLES } from '@/lib/onething/examples';
+import copy from '@/lib/onething/copy.json';
 import Plant from './Plant';
 import Payoff from './Payoff';
 import Doodle from './Doodle';
-import copy from '@/lib/onething/copy.json';
 import { squareJpeg } from './picture';
+
+/* onething, the jelly journal (2026-10-02). Drawn with the craft of the Dodo
+ * redesign — glossy jelly, squash and stretch, a lot of colour — with
+ * onething's own cast: the ink drop is the character, the six day colours are
+ * the palette, today's colour floods the top of the page, and every kept day
+ * is a drop of ink in the month's jar. Styles: journal.css (.oj-*), plus
+ * onething.css for the doodles, the plant and the payoff scene. */
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
@@ -30,9 +37,21 @@ const NUDGES = [
   'A thing you finished. Or started.',
 ];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-/// Every day of the month has its colour, in this order: the 1st is violet, the 2nd orange, …
+
+/// onething's six day colours (the 1st is violet, the 2nd orange, …), as jelly: light, base, deep.
 const COLORS = ['violet', 'orange', 'sky', 'yellow', 'pink', 'lime'] as const;
-type Color = (typeof COLORS)[number];
+type Color = (typeof COLORS)[number] | 'ash';
+const INK: Record<Color, [string, string, string]> = {
+  violet: ['#ddd0ff', '#7b4dff', '#4a1fc4'],
+  orange: ['#ffd6b5', '#ff7a2f', '#cf4805'],
+  sky: ['#cdeeff', '#33b6ff', '#0872b5'],
+  yellow: ['#fff4bd', '#ffd23f', '#d39300'],
+  pink: ['#ffd3e8', '#ff5fa8', '#c92170'],
+  lime: ['#e6f9c8', '#93d94e', '#4a9419'],
+  ash: ['#f4f0f7', '#cdc4d8', '#958aa6'],
+};
+/// The drop that hosts a day sits on a colour that isn't its own: violet, the brand ink, unless the day is violet.
+const hostOf = (c: Color): Color => (c === 'violet' ? 'yellow' : 'violet');
 
 // ---------- days ----------
 function parts(day: string): [number, number, number] {
@@ -45,44 +64,36 @@ function ymd(y: number, m: number, d: number): string {
 function daysInMonth(y: number, m: number): number {
   return new Date(Date.UTC(y, m, 0)).getUTCDate();
 }
-/// `n` months before (y, m).
 function monthBack(y: number, m: number, n: number): [number, number] {
   const i = y * 12 + (m - 1) - n;
   return [Math.floor(i / 12), (i % 12) + 1];
 }
 function fmt(day: string, o: Intl.DateTimeFormatOptions): string {
   const [y, m, d] = parts(day);
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { ...o, timeZone: 'UTC' }).replace('Sept', 'Sep');
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', { ...o, timeZone: 'UTC' }).replace(/\bSept\b/, 'Sep');
 }
-const longDay = (day: string) => fmt(day, { weekday: 'short', day: 'numeric', month: 'short' }); // "Thu 1 Oct"
-const cardDay = (day: string) => fmt(day, { day: 'numeric', month: 'short' }); // "30 Sep"
+const longDay = (day: string) => fmt(day, { weekday: 'long', day: 'numeric', month: 'long' }); // "Friday 2 October"
+const weekday = (day: string) => fmt(day, { weekday: 'short' }); // "Thu"
+const dayMonth = (day: string) => fmt(day, { day: 'numeric', month: 'short' }); // "30 Sep"
 const colorOf = (day: string): Color => COLORS[(parts(day)[2] - 1) % COLORS.length];
 function lines(text: string): string[] {
   return text.split('\n').map((t) => t.trim()).filter(Boolean);
 }
-/// Big words for a short day, smaller for a long one.
 function sizeFor(text: string): 'xl' | 'l' | 'm' {
   const n = text.length;
   return n <= 70 ? 'xl' : n <= 150 ? 'l' : 'm';
 }
-function prettyPhone(p: string): string {
-  const m = p.match(/^\+1(\d{3})(\d{3})(\d{4})$/);
-  return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
-}
-/// What goes in the circle when there is no picture: initials, or the last two digits.
 function initials(name: string | null | undefined, phone: string): string {
   const n = (name ?? '').trim();
   if (n) return n.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
   return phone.replace(/\D/g, '').slice(-2) || '·';
 }
-/// Today's entry, if it landed on a streak milestone: what the payoff scene shows.
 function todayMilestone(me: Me | null): { day: string; streak: number; bonus: number; points: number } | null {
   if (!me?.user || !me.today || !me.board?.doneToday) return null;
   const e = me.entries?.find((x) => x.day === me.today);
   const bonus = e ? MILESTONES[e.streak] : undefined;
   return e && bonus ? { day: e.day, streak: e.streak, bonus, points: e.points } : null;
 }
-/// Days until the next level at one sentence a day from here; 0 = with today's sentence.
 function daysToNext(b: Board): number | null {
   if (!b.next) return null;
   let s = b.streak, p = b.points;
@@ -94,10 +105,13 @@ function daysToNext(b: Board): number | null {
   }
   return null;
 }
+/// A small seeded random: the jar's drops sit still between renders.
+function rng(seed: number) {
+  let s = seed >>> 0;
+  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
+}
 
 type Cell = { day: string; entry?: Entry; missed: boolean; from?: string; count?: number };
-/// The month's wall, newest first, today left out (it has the big card):
-/// kept days, and missed days since the account began.
 function monthCells(y: number, m: number, today: string, since: string, byDay: Map<string, Entry>): Cell[] {
   const [ty, tm, td] = parts(today);
   const last = y === ty && m === tm ? td - 1 : daysInMonth(y, m);
@@ -108,7 +122,6 @@ function monthCells(y: number, m: number, today: string, since: string, byDay: M
     const entry = byDay.get(day);
     if (entry) cells.push({ day, entry, missed: false });
     else if (day >= sinceDay) {
-      // a run of missed days is one card: "14 – 22 Sep", not nine grey tiles
       const prev = cells[cells.length - 1];
       if (prev?.missed) { prev.from = day; prev.count = (prev.count ?? 1) + 1; }
       else cells.push({ day, missed: true, count: 1 });
@@ -117,11 +130,103 @@ function monthCells(y: number, m: number, today: string, since: string, byDay: M
   return cells;
 }
 
-// ---------- small pieces ----------
+// ---------- the splash ----------
 
-/** Pencil hatching for the plant's leaves, and the three turbulence filters
- * that make every doodle boil (Doodle.tsx). In user units of the doodle's
- * 340×170 canvas: a wobble of a couple of units, over strokes ~25 units long. */
+/** A splash of jelly ink from a point on the screen: round drops in the six colours, falling. */
+function splash(x: number, y: number, n = 40) {
+  if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const layer = document.createElement('div');
+  layer.className = 'oj-splash';
+  document.body.appendChild(layer);
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('i');
+    const [l, b] = INK[COLORS[i % COLORS.length]];
+    const size = 7 + Math.random() * 11;
+    s.style.width = s.style.height = `${size}px`;
+    s.style.background = `radial-gradient(circle at 35% 30%, ${l} 0 22%, ${b} 60%)`;
+    s.style.left = `${x}px`; s.style.top = `${y}px`;
+    layer.appendChild(s);
+    const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.4;
+    const v = 110 + Math.random() * 210;
+    const dx = Math.cos(a) * v, dy = Math.sin(a) * v;
+    s.animate([
+      { transform: 'translate(-50%,-50%) scale(.4)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx * 0.8}px), calc(-50% + ${dy * 0.8}px)) scale(1)`, opacity: 1, offset: 0.4 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy + 280}px)) scale(.7, 1.2)`, opacity: 0 },
+    ], { duration: 1000 + Math.random() * 500, easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' });
+  }
+  setTimeout(() => layer.remove(), 1700);
+}
+
+/** The ink drop, as jelly: onething's character. A tap squishes it (> < eyes) and splashes.
+ * `mood` asleep closes its eyes (a missed day). */
+function Ink({ color, size, className = '', mood = 'happy', onTap, label, delay = 0, still }: {
+  color: Color; size: number; className?: string; mood?: 'happy' | 'asleep'; onTap?: () => void; label?: string; delay?: number; still?: boolean;
+}) {
+  const id = useId().replace(/:/g, '');
+  const [squish, setSquish] = useState(false);
+  const t = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [l, b, d] = INK[color];
+  function poke(e: React.PointerEvent) {
+    e.stopPropagation();
+    setSquish(true);
+    if (t.current) clearTimeout(t.current);
+    t.current = setTimeout(() => setSquish(false), 440);
+    const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    splash(r.left + r.width / 2, r.top + r.height * 0.45, Math.round(10 + size / 8));
+  }
+  const ink = '#2a1f2b';
+  const eyes = squish ? (
+    <g fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M34 64 L42 70 L34 76" /><path d="M66 64 L58 70 L66 76" />
+    </g>
+  ) : mood === 'asleep' ? (
+    <g fill="none" stroke={ink} strokeWidth="3.4" strokeLinecap="round">
+      <path d="M34 71 Q40 76 46 71" /><path d="M54 71 Q60 76 66 71" />
+    </g>
+  ) : (
+    <g className="oj-eyes">
+      <ellipse cx="40" cy="70" rx="5" ry="5.6" fill={ink} /><ellipse cx="60" cy="70" rx="5" ry="5.6" fill={ink} />
+      <circle cx="41.8" cy="67.8" r="1.9" fill="#fff" /><circle cx="61.8" cy="67.8" r="1.9" fill="#fff" />
+    </g>
+  );
+  const mouth = squish
+    ? <ellipse cx="50" cy="83" rx="4.4" ry="5" fill="#7a1f3d" />
+    : mood === 'asleep'
+      ? <path d="M47 83 Q50 85 53 83" fill="none" stroke={ink} strokeWidth="2.6" strokeLinecap="round" />
+      : <path d="M45 80 Q50 85.5 55 80" fill="none" stroke={ink} strokeWidth="2.8" strokeLinecap="round" />;
+  return (
+    <span
+      className={`oj-ink${squish ? ' squish' : ''}${still ? ' still' : ''} ${className}`}
+      style={{ ['--s' as string]: `${size}px`, animationDelay: `${delay}s` }}
+      onPointerDown={poke}
+      onClick={onTap}
+      role={label ? 'button' : undefined}
+      aria-label={label}
+      aria-hidden={label ? undefined : true}
+    >
+      <svg viewBox="0 0 100 112" width={size} height={size * 1.12}>
+        <defs>
+          <radialGradient id={`g${id}`} cx="38%" cy="46%" r="70%">
+            <stop offset="0" stopColor={l} /><stop offset=".52" stopColor={b} /><stop offset="1" stopColor={d} />
+          </radialGradient>
+          <radialGradient id={`h${id}`} cx="50%" cy="100%" r="60%">
+            <stop offset="0" stopColor={l} stopOpacity=".75" /><stop offset="1" stopColor={l} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        <path d="M50 3 C63 29 89 46 89 71 A39 37 0 0 1 11 71 C11 46 37 29 50 3 Z" fill={`url(#g${id})`} stroke={d} strokeOpacity=".55" strokeWidth="2.4" />
+        <ellipse cx="50" cy="96" rx="26" ry="10" fill={`url(#h${id})`} />
+        <ellipse cx="33" cy="52" rx="7" ry="14.5" transform="rotate(28 33 52)" fill="#fff" opacity=".82" />
+        <circle cx="27" cy="75" r="3" fill="#fff" opacity=".55" />
+        {eyes}
+        {mouth}
+        <ellipse cx="29" cy="80" rx="6.5" ry="3.6" fill="#ff5a82" opacity=".38" /><ellipse cx="71" cy="80" rx="6.5" ry="3.6" fill="#ff5a82" opacity=".38" />
+      </svg>
+    </span>
+  );
+}
+
+/** The doodle filters (Doodle.tsx boils through these) and the plant's hatching. */
 function Defs() {
   return (
     <svg className="ot-defs" aria-hidden>
@@ -146,53 +251,24 @@ function Defs() {
   );
 }
 
-/** The ink drop: onething's mark. */
-function Drop({ size = 22, face }: { size?: number; face?: boolean }) {
-  return (
-    <svg className="ot-drop" viewBox="0 0 100 100" width={size} height={size} aria-hidden>
-      <defs>
-        <radialGradient id={`ot-drop-${size}`} cx="36%" cy="40%" r="70%">
-          <stop offset="0" stopColor="#e8dbff" /><stop offset=".5" stopColor="#a77bf2" /><stop offset="1" stopColor="#5a2fb2" />
-        </radialGradient>
-      </defs>
-      <ellipse cx="50" cy="95" rx="24" ry="3.5" fill="#5a2fb2" opacity=".16" />
-      <path d="M50 6 C60 28 82 44 82 64 A32 30 0 0 1 18 64 C18 44 40 28 50 6 Z" fill={`url(#ot-drop-${size})`} />
-      <ellipse cx="36" cy="46" rx="6" ry="11" transform="rotate(30 36 46)" fill="#fff" opacity=".7" />
-      {face && (
-        <>
-          <circle cx="40" cy="66" r="3.6" fill="#2a1650" /><circle cx="60" cy="66" r="3.6" fill="#2a1650" />
-          <path d="M45 74 Q50 78 55 74" fill="none" stroke="#2a1650" strokeWidth="2.6" strokeLinecap="round" />
-          <ellipse cx="32" cy="74" rx="5" ry="3" fill="#ff8fc4" opacity=".7" /><ellipse cx="68" cy="74" rx="5" ry="3" fill="#ff8fc4" opacity=".7" />
-        </>
-      )}
-    </svg>
-  );
-}
-
-function Wordmark({ h1 }: { h1?: boolean }) {
-  const inner = <>onething<Drop size={20} /></>;
-  return h1 ? <h1 className="ot-wordmark">{inner}</h1> : <a className="ot-wordmark" href="/onething">{inner}</a>;
-}
-
 function Flame() {
   return (
-    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden>
-      <path d="M10 1.5c.6 3.2 4.8 5 4.8 9.6A4.8 4.8 0 0 1 5.2 11c0-2.2 1.1-3.4 2.2-4.4.1 1.6.8 2.6 1.7 2.9C8.8 6.6 9 4 10 1.5Z" fill="#ff6a1f" />
-      <path d="M10 9.5c.4 1.4 2.2 2.2 2.2 4.2a2.2 2.2 0 0 1-4.4 0c0-1.1.6-1.7 1.1-2.2.1.6.4 1 .7 1.1-.1-1 .1-2 .4-3.1Z" fill="#ffd23f" />
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
+      <path d="M10 1.5c.6 3.2 4.8 5 4.8 9.6A4.8 4.8 0 0 1 5.2 11c0-2.2 1.1-3.4 2.2-4.4.1 1.6.8 2.6 1.7 2.9C8.8 6.6 9 4 10 1.5Z" fill="#ff5a1f" />
+      <path d="M10 9.5c.4 1.4 2.2 2.2 2.2 4.2a2.2 2.2 0 0 1-4.4 0c0-1.1.6-1.7 1.1-2.2.1.6.4 1 .7 1.1-.1-1 .1-2 .4-3.1Z" fill="#fff3a8" />
     </svg>
   );
 }
 
-/** The circle: their picture, or initials. */
-function Avatar({ person, size = 28 }: { person: { name?: string | null; phone: string; avatar?: string | null }; size?: number }) {
+function Avatar({ person, size = 40 }: { person: { name?: string | null; phone: string; avatar?: string | null }; size?: number }) {
   return (
-    <span className="ot-avatar" style={{ ['--s' as string]: `${size}px` }} aria-hidden={!person.avatar}>
+    <span className="oj-avatar" style={{ ['--s' as string]: `${size}px` }}>
       {person.avatar ? <img src={person.avatar} alt="" /> : initials(person.name, person.phone)}
     </span>
   );
 }
 
-/** Signed-in top bar: the wordmark, the streak, and the picture, which opens
+/** The top of the flood: the wordmark, the streak, and the picture, which opens
  * a small menu (the other screen, sign out). */
 function Top({ me, streak, view, onView, onSignout }: { me: Person; streak: number; view: 'journal' | 'settings'; onView: (v: 'journal' | 'settings') => void; onSignout: () => void }) {
   const [open, setOpen] = useState(false);
@@ -206,28 +282,24 @@ function Top({ me, streak, view, onView, onSignout }: { me: Person; streak: numb
     return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', key); };
   }, [open]);
   return (
-    <header className="ot-top">
-      <Wordmark />
-      <div className="ot-top-right" ref={ref}>
-        <span className="ot-streak-pill" aria-label={`${streak}-day streak`} title={`${streak}-day streak`}><Flame />{streak}</span>
-        <button type="button" className="ot-me" aria-label="menu" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-          <Avatar person={me} size={36} />
+    <div className="oj-top">
+      <a className="oj-wordmark" href="/onething">onething</a>
+      <div className="oj-top-right" ref={ref}>
+        <span className="oj-streak" aria-label={`${streak}-day streak`} title={`${streak}-day streak`}><Flame />{streak}</span>
+        <button type="button" className="oj-me" aria-label="menu" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          <Avatar person={me} size={42} />
         </button>
         {open && (
-          <ul className="ot-menu" role="menu">
+          <ul className="oj-menu" role="menu">
             <li><button type="button" role="menuitem" onClick={() => { setOpen(false); onView(view === 'journal' ? 'settings' : 'journal'); }}>{view === 'journal' ? 'Settings' : 'Your page'}</button></li>
             <li><button type="button" role="menuitem" className="quiet" onClick={() => { setOpen(false); onSignout(); }}>Sign out</button></li>
           </ul>
         )}
       </div>
-    </header>
+    </div>
   );
 }
 
-/** Every thought kept on a day, in order, each one editable in place.
- * A top-level component on purpose: defined inside Onething() it was a new
- * component type on every render, so React remounted the whole list — and the
- * edit textarea — on each keystroke (caret jumping to the end, keyboard flicker). */
 type ThoughtsProps = {
   day: string; text: string;
   editing: { day: string; index: number } | null; editText: string; busy: boolean; err: string;
@@ -237,23 +309,23 @@ type ThoughtsProps = {
 function Thoughts({ day, text, editing, editText, busy, err, onEditText, onStart, onSave, onCancel }: ThoughtsProps) {
   const all = lines(text);
   return (
-    <ol className="ot-thoughts">
+    <ol className="oj-thoughts">
       {all.map((t, i) => (
-        <li key={i} className="ot-thought">
+        <li key={i} className="oj-thought">
           {editing && editing.day === day && editing.index === i ? (
-            <form className="ot-editing" onSubmit={(e) => { e.preventDefault(); onSave(); }}>
-              <textarea className="ot-ta" value={editText} maxLength={600} onChange={(e) => onEditText(e.target.value)} rows={3} autoFocus aria-label="edit this thought" />
-              <div className="ot-acts">
-                <button className="ot-btn" type="submit" disabled={busy || editText.trim().length === 1}>{busy ? 'Saving…' : 'Save'}</button>
-                <button type="button" className="ot-link" onClick={onCancel}>Cancel</button>
+            <form onSubmit={(e) => { e.preventDefault(); onSave(); }}>
+              <textarea className="oj-ta" value={editText} maxLength={600} onChange={(e) => onEditText(e.target.value)} rows={3} autoFocus aria-label="edit this thought" />
+              <div className="oj-acts">
+                <button className="oj-btn" type="submit" disabled={busy || editText.trim().length === 1}>{busy ? 'Saving…' : 'Save'}</button>
+                <button type="button" className="oj-text-btn" onClick={onCancel}>Cancel</button>
               </div>
-              {all.length > 1 && <p className="ot-note">Leave it empty to remove this one.</p>}
-              {err && <p className="ot-err">{err}</p>}
+              {all.length > 1 && <p className="oj-note">Leave it empty to remove this one.</p>}
+              {err && <p className="oj-err">{err}</p>}
             </form>
           ) : (
             <p className="t">
               {t}
-              <button type="button" className="ot-edit" onClick={() => onStart(day, i, t)} aria-label={`edit thought ${i + 1}`}>edit</button>
+              <button type="button" className="oj-edit" onClick={() => onStart(day, i, t)} aria-label={`edit thought ${i + 1}`}>edit</button>
             </p>
           )}
         </li>
@@ -262,7 +334,6 @@ function Thoughts({ day, text, editing, editText, busy, err, onEditText, onStart
   );
 }
 
-/** A pencil scribbling: the drawing is on its way. */
 function Drawing({ label = 'drawing…' }: { label?: string }) {
   return (
     <div className="ot-drawing" role="status">
@@ -275,59 +346,77 @@ function Drawing({ label = 'drawing…' }: { label?: string }) {
   );
 }
 
-/** One day, big: the doodle in its white blob, the date, every thought.
- * Today's card at the top of the page, and the sheet a past day opens into. */
-function DayView({ day, entry, today, drawn, thoughts, onClose, children }: {
-  day: string; entry?: Entry; today?: boolean; drawn: boolean;
-  thoughts: Omit<ThoughtsProps, 'day' | 'text'>; onClose?: () => void; children?: React.ReactNode;
-}) {
-  const text = entry?.text ?? '';
+/** The doodle in its white blob, and every thought of the day. */
+function DayBody({ day, entry, drawn, thoughts }: { day: string; entry: Entry; drawn: boolean; thoughts: Omit<ThoughtsProps, 'day' | 'text'> }) {
   return (
-    <article className={`ot-day${drawn ? '' : ' plain'}`} data-c={colorOf(day)} aria-label={today ? 'today' : longDay(day)}>
-      <div className="ot-day-top">
-        <span className="ot-chip">{today ? `Today · ${longDay(day)}` : longDay(day)}</span>
-        {onClose && <button type="button" className="ot-x" aria-label="close" onClick={onClose}>×</button>}
-      </div>
-      {drawn && entry && (
-        <div className="ot-blob-wrap">
-          <div className="ot-blob">
-            {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.4} /> : <Drawing />}
-          </div>
+    <>
+      {drawn && (
+        <div className="oj-blob">
+          {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.4} /> : <Drawing />}
         </div>
       )}
-      {entry && <div className={`ot-said ${sizeFor(text)}`}><Thoughts day={day} text={text} {...thoughts} /></div>}
-      {children}
-    </article>
+      <div className={`oj-said ${sizeFor(entry.text)}`}><Thoughts day={day} text={entry.text} {...thoughts} /></div>
+    </>
   );
 }
 
-/** A day on the month's wall. A tap opens it. */
-function DayCard({ cell, drawn, onOpen }: { cell: Cell; drawn: boolean; onOpen: () => void }) {
+/** A day on the month's wall: a jelly tile in the day's colour. */
+function Tile({ cell, drawn, i, onOpen }: { cell: Cell; drawn: boolean; i: number; onOpen: () => void }) {
   if (cell.missed) {
+    const n = cell.count ?? 1;
     return (
-      <div className="ot-card missed">
-        <span className="ot-card-date">{cell.from ? `${parts(cell.from)[2]}–${cardDay(cell.day)}` : cardDay(cell.day)}</span>
-        <span className="ot-card-miss">{(cell.count ?? 1) > 1 ? `${cell.count} days off` : 'a day off'}<br />a leaf drooped</span>
+      <div className="oj-tile missed">
+        <Ink color="ash" mood="asleep" size={46} still />
+        <span className="oj-tile-miss"><b>{cell.from ? `${parts(cell.from)[2]}–${dayMonth(cell.day)}` : dayMonth(cell.day)}</b>{n > 1 ? `${n} days off.` : 'A day off.'} The ink slept in.</span>
       </div>
     );
   }
   const e = cell.entry!;
   const all = lines(e.text);
   return (
-    <button type="button" className={`ot-card${drawn ? '' : ' plain'}`} data-c={colorOf(cell.day)} onClick={onOpen} aria-label={`${longDay(cell.day)}: ${all[0]}`}>
-      <span className="ot-card-date">{cardDay(cell.day)}</span>
+    <button type="button" className="oj-tile" data-j={colorOf(cell.day)} style={{ ['--tilt' as string]: `${i % 2 ? 0.8 : -0.8}deg` }} onClick={onOpen} aria-label={`${longDay(cell.day)}: ${all[0]}`}>
+      <span className="oj-tile-date"><b>{parts(cell.day)[2]}</b>{weekday(cell.day)}</span>
       {drawn && (
-        <span className="ot-card-blob">
-          {e.doodle ? <Doodle svg={e.doodle} alt={e.doodle_alt} pen={0.75} boil="hover" /> : <span className="ot-card-wait">…</span>}
+        <span className="oj-tile-blob">
+          {e.doodle ? <Doodle svg={e.doodle} alt={e.doodle_alt} pen={0.75} boil="hover" /> : <span className="oj-wait">…</span>}
         </span>
       )}
-      <span className="ot-card-text">{all[0]}</span>
-      {all.length > 1 && <span className="ot-card-more">+{all.length - 1} more</span>}
+      <span className="oj-tile-text">{all[0]}</span>
+      {all.length > 1 && <span className="oj-tile-more">+{all.length - 1} more</span>}
     </button>
   );
 }
 
-/** A dialog over the page: Escape or the backdrop closes it, the page stops scrolling. */
+/** The month's jar: one drop of ink for every kept day, oldest at the bottom. A tap opens the day. */
+function Jar({ days, onOpen }: { days: string[]; onOpen?: (day: string) => void }) {
+  // Six to a row (five on odd rows, shifted half a drop), 37px apart, rows 33px apart:
+  // a full row spans 14 + 5 × 37 + 46 = 245px of the 255px inside. The jar is sized for a
+  // whole month, so it visibly fills: 31 drops are six rows, the top one at 10 + 5 × 33 = 175px,
+  // its tip at 175 + 46 × 1.12 ≈ 227px, under a 240px glass.
+  const PER = 6, DX = 37, DY = 33, SIZE = 46; // SIZE: the drop's width; it stands 1.12 × as tall
+  const r = rng(days.length * 7919 + 13);
+  const placed = [] as { day: string; x: number; y: number; rot: number }[];
+  let row = 0, col = 0;
+  for (const day of days) {
+    const per = row % 2 ? PER - 1 : PER;
+    placed.push({ day, x: 14 + col * DX + (row % 2 ? DX / 2 : 0) + (r() - 0.5) * 5, y: 10 + row * DY + (r() - 0.5) * 4, rot: (r() - 0.5) * 26 });
+    if (++col >= per) { col = 0; row++; }
+  }
+  const h = 240;
+  return (
+    <div className="oj-jar" style={{ height: h + 26 }}>
+      <span className="oj-jar-lid" />
+      <div className="oj-jar-glass" style={{ height: h }}>
+        {placed.map((p, i) => (
+          <span key={p.day} className="oj-jar-drop" style={{ left: p.x, bottom: p.y, transform: `rotate(${p.rot}deg)`, zIndex: 100 - i }}>
+            <Ink color={colorOf(p.day)} size={SIZE} delay={-(i % 6) * 0.5} label={onOpen ? `open ${longDay(p.day)}` : undefined} onTap={onOpen && (() => onOpen(p.day))} />
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: React.ReactNode }) {
   const close = useRef(onClose);
   close.current = onClose;
@@ -339,13 +428,30 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
     return () => { document.removeEventListener('keydown', key); document.body.style.overflow = prev; };
   }, []);
   return (
-    <div className="ot-sheet" role="dialog" aria-modal="true" aria-label={label} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="ot-sheet-in">{children}</div>
+    <div className="oj-sheet" role="dialog" aria-modal="true" aria-label={label} onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="oj-sheet-in">{children}</div>
     </div>
   );
 }
 
-/** Redraw: Opus draws three new takes on the day; the person keeps one, or keeps the old one. */
+/** A past day, opened from the wall or the jar: a jelly card in its colour, its drop on top. */
+function DaySheet({ entry, drawn, thoughts, onClose, onRedraw }: { entry: Entry; drawn: boolean; thoughts: Omit<ThoughtsProps, 'day' | 'text'>; onClose: () => void; onRedraw: () => void }) {
+  const c = colorOf(entry.day);
+  return (
+    <Sheet label={longDay(entry.day)} onClose={onClose}>
+      <article className="oj-card" data-j={c}>
+        <Ink color={hostOf(c)} size={84} className="oj-card-host" />
+        <div className="oj-card-top">
+          <span className="oj-chip">{longDay(entry.day)}</span>
+          <button type="button" className="oj-x" aria-label="close" onClick={onClose}>×</button>
+        </div>
+        <DayBody day={entry.day} entry={entry} drawn={drawn} thoughts={thoughts} />
+        {drawn && entry.doodle && <div className="oj-acts"><button type="button" className="oj-pill" onClick={onRedraw}><Redo />Redraw</button></div>}
+      </article>
+    </Sheet>
+  );
+}
+
 function Redraw({ entry, onKept, onClose }: { entry: Entry; onKept: () => void; onClose: () => void }) {
   const [takes, setTakes] = useState<Drawn[] | null>(null);
   const [pick, setPick] = useState(0);
@@ -361,161 +467,209 @@ function Redraw({ entry, onKept, onClose }: { entry: Entry; onKept: () => void; 
     } catch { setErr('Network error. Try again.'); setState('ready'); }
   }, [entry.id]);
   useEffect(() => { draw(); }, [draw]);
-  async function keep() {
+  async function keep(e: React.MouseEvent) {
     if (!takes?.[pick]) return;
+    const r0 = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setState('saving'); setErr('');
     try {
       const r = await fetch('/api/onething/redraw', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: entry.id, svg: takes[pick].svg, alt: takes[pick].alt }) });
       const j = await r.json();
       if (!r.ok) { setErr(j.error ?? 'Could not keep that one.'); setState('ready'); return; }
+      splash(r0.left + r0.width / 2, r0.top);
       onKept();
     } catch { setErr('Network error. Try again.'); setState('ready'); }
   }
   const n = takes?.length ?? 3;
   return (
     <Sheet label="redraw the doodle" onClose={onClose}>
-      <section className="ot-redraw" data-c={colorOf(entry.day)}>
-        <div className="ot-day-top">
-          <span className="ot-chip">{longDay(entry.day)}</span>
-          <button type="button" className="ot-x" aria-label="close" onClick={onClose}>×</button>
+      <section className="oj-card oj-redraw" data-j={colorOf(entry.day)}>
+        <div className="oj-card-top">
+          <span className="oj-chip">{longDay(entry.day)}</span>
+          <button type="button" className="oj-x" aria-label="close" onClick={onClose}>×</button>
         </div>
-        <h2 className="ot-redraw-h">{state === 'drawing' ? 'Opus is drawing three…' : takes ? `Opus drew ${n === 3 ? 'three' : n}. Pick one.` : 'Redraw'}</h2>
-        <p className="ot-redraw-sub">{state === 'drawing' ? 'about ten seconds' : 'tap one, then keep it'}</p>
-        <div className="ot-takes" role="radiogroup" aria-label="three takes">
+        <h2 className="oj-redraw-h">{state === 'drawing' ? 'Drawing three…' : takes ? `${n === 3 ? 'Three' : n} takes. Pick one.` : 'Redraw'}</h2>
+        <p className="oj-sub">{state === 'drawing' ? 'about ten seconds' : 'tap one, then keep it'}</p>
+        <div className="oj-takes" role="radiogroup" aria-label="three takes">
           {state === 'drawing' || !takes
-            ? [0, 1, 2].map((i) => <div key={i} className="ot-take"><div className="ot-blob">{state === 'drawing' ? <Drawing label="" /> : null}</div></div>)
+            ? [0, 1, 2].map((i) => <div key={i} className="oj-take"><div className="oj-blob">{state === 'drawing' ? <Drawing label="" /> : null}</div></div>)
             : takes.map((t, i) => (
-                <button key={i} type="button" role="radio" aria-checked={pick === i} className={`ot-take${pick === i ? ' on' : ''}`} onClick={() => setPick(i)} aria-label={t.alt}>
-                  <div className="ot-blob"><Doodle svg={t.svg} alt={t.alt} pen={0.9} boil={pick === i ? 'on' : 'off'} /></div>
+                <button key={i} type="button" role="radio" aria-checked={pick === i} className={`oj-take${pick === i ? ' on' : ''}`} onClick={() => setPick(i)} aria-label={t.alt}>
+                  <div className="oj-blob"><Doodle svg={t.svg} alt={t.alt} pen={0.9} boil={pick === i ? 'on' : 'off'} /></div>
                 </button>
               ))}
         </div>
-        <p className="ot-redraw-sentence">{lines(entry.text)[0]}</p>
-        {err && <p className="ot-err">{err}</p>}
-        <div className="ot-redraw-acts">
-          <button type="button" className="ot-btn big" disabled={state !== 'ready' || !takes} onClick={keep}>{state === 'saving' ? 'Keeping…' : 'Keep this one'}</button>
-          <button type="button" className="ot-btn ghost" disabled={state !== 'ready'} onClick={draw}>Three more</button>
+        <p className="oj-redraw-sentence">{lines(entry.text)[0]}</p>
+        {err && <p className="oj-err">{err}</p>}
+        <div className="oj-acts">
+          <button type="button" className="oj-btn big" disabled={state !== 'ready' || !takes} onClick={keep}>{state === 'saving' ? 'Keeping…' : 'Keep this one'}</button>
+          <button type="button" className="oj-btn ghost" disabled={state !== 'ready'} onClick={draw}>Three more</button>
         </div>
-        <p className="ot-redraw-foot"><button type="button" className="ot-link" onClick={onClose}>Keep the old one</button></p>
+        <p className="oj-redraw-foot"><button type="button" className="oj-text-btn" onClick={onClose}>Keep the old one</button></p>
       </section>
     </Sheet>
   );
 }
 
-/** The seven stages, left to right, growing. Every other label steps back on a phone. */
-function Stages({ levels }: { levels: Level[] }) {
+function Redo() {
   return (
-    <div className="ot-stages" aria-label="levels">
-      {levels.map((l, i) => (
-        <div key={l.name} className={`ot-stage-item${i % 2 === 1 ? ' quiet' : ''}`} style={{ ['--grow' as string]: 1 + i * 0.22, ['--max' as string]: `${44 + i * 7}px` }}>
-          <Plant level={i} size={44 + i * 7} />
-          <span className="n">{l.name}</span>
-          <span className="p">{i === 0 ? 'day 1' : `${l.min} pts`}</span>
-        </div>
+    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 10a6 6 0 1 1-1.8-4.3" /><path d="M16 3.5v3.6h-3.6" />
+    </svg>
+  );
+}
+
+/** Big soft jelly bubbles drifting up behind today: the day's colour, lighter. */
+function Bubbles() {
+  return (
+    <div className="oj-bubbles" aria-hidden>
+      {[[8, 30, 120, 0], [78, 12, 180, -4], [62, 70, 90, -9], [20, 85, 60, -2], [92, 60, 70, -6], [40, 6, 44, -11]].map(([x, y, s, d], i) => (
+        <i key={i} style={{ left: `${x}%`, top: `${y}%`, width: s, height: s, animationDelay: `${d}s` }} />
       ))}
     </div>
   );
 }
 
+function prettyPhone(p: string): string {
+  const m = p.match(/^\+1(\d{3})(\d{3})(\d{4})$/);
+  return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
+}
+
+/** The browser bar takes the flood's colour, so it runs right up under it. */
+function useFlood(c: Color | null) {
+  useEffect(() => {
+    if (!c) return;
+    const v = INK[c][1];
+    let tag = document.querySelector('meta[name="theme-color"]');
+    if (!tag) { tag = document.createElement('meta'); tag.setAttribute('name', 'theme-color'); document.head.appendChild(tag); }
+    tag.setAttribute('content', v);
+    document.documentElement.style.setProperty('--oj-top', v);
+  }, [c]);
+}
+
 function Foot({ tz }: { tz?: string }) {
   return (
-    <footer className="ot-foot">
+    <footer className="oj-foot">
       {tz !== undefined && <p>Texts come at ten in the morning, and at ten at night if the day is still empty{tz ? ` (${tz.replace(/_/g, ' ')} time)` : ''}. Reply to either, or start any text with <code>1:</code>.</p>}
-      <p className="ot-sign">made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
+      <p>made with care by <a href="https://www.decremental.com" target="_blank" rel="noopener">Bart</a></p>
     </footer>
   );
 }
 
 // ---------- the landing page ----------
 
-/** A sample day card for the landing page, from one of the real examples. */
-function SampleCard({ ex, date, c, tilt }: { ex: number; date: string; c: Color; tilt: number }) {
+/** A sample day for the landing page, from one of the real September examples. */
+function SampleTile({ ex, day, c, tilt }: { ex: number; day: string; c: Color; tilt: number }) {
   const e = EXAMPLES[ex];
   return (
-    <div className="ot-card sample" data-c={c} style={{ ['--tilt' as string]: `${tilt}deg` }} aria-hidden>
-      <span className="ot-card-date">{date}</span>
-      <span className="ot-card-blob"><Doodle svg={e.svg} alt={e.alt} pen={0.9} /></span>
-      <span className="ot-card-text">{e.sentence}</span>
+    <div className="oj-tile sample" data-j={c} style={{ ['--tilt' as string]: `${tilt}deg` }} aria-hidden>
+      <span className="oj-tile-date"><b>{day.split(' ')[0]}</b>{day.split(' ')[1]}</span>
+      <span className="oj-tile-blob"><Doodle svg={e.svg} alt={e.alt} pen={0.9} /></span>
+      <span className="oj-tile-text">{e.sentence}</span>
     </div>
   );
 }
 
-/** What the texts actually look like: the morning question, the answer, the line back. */
-function Chat() {
-  return (
-    <div className="ot-chat" aria-label="an example exchange">
-      <div className="ot-chat-head">
-        <span className="ot-chat-face"><Drop size={34} face /></span>
-        <div><b>onething</b><span>iMessage · 10:00</span></div>
-      </div>
-      <p className="ot-bubble in">{copy.morning[0]}</p>
-      <p className="ot-bubble out">{EXAMPLES[0].sentence}</p>
-      <p className="ot-bubble in">{copy.kept[0].replace('{n}', '12')}</p>
-    </div>
-  );
-}
+/** A sample jar for the landing page: a fortnight of drops. */
+const SAMPLE_JAR = Array.from({ length: 13 }, (_, i) => ymd(2026, 9, i + 1));
 
 function Landing(props: {
   phone: string; code: string; stage: 'phone' | 'code'; busy: boolean; err: string;
   setPhone: (s: string) => void; setCode: (s: string) => void; start: () => void; verify: () => void; back: () => void;
 }) {
   const { phone, code, stage, busy, err } = props;
+  useFlood('violet');
   const toStart = () => document.getElementById('start')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   return (
-    <main className="ot-page land">
-      <header className="ot-top">
-        <Wordmark h1 />
-        <button type="button" className="ot-btn small" onClick={toStart}>Sign in</button>
+    <>
+      <header className="oj-hero land" data-j="violet">
+        <Bubbles />
+        <div className="oj-wrap">
+          <div className="oj-top">
+            <h1 className="oj-wordmark">onething</h1>
+            <button type="button" className="oj-pill small" onClick={toStart}>Sign in</button>
+          </div>
+          <div className="oj-today">
+            <Ink color="yellow" size={128} className="oj-host" />
+            <h2 className="oj-q big">One sentence a day. A doodle for every one.</h2>
+            <p className="oj-lede">Every morning at ten, a text asks what happened. You answer in one sentence, Opus doodles it, and by December you have a year.</p>
+            <div className="oj-acts">
+              <button type="button" className="oj-btn big" data-j="yellow" onClick={toStart}>Start your year</button>
+            </div>
+          </div>
+          <div className="oj-fan">
+            <SampleTile ex={2} day="28 Mon" c="orange" tilt={-7} />
+            <SampleTile ex={0} day="29 Tue" c="sky" tilt={2} />
+            <SampleTile ex={1} day="30 Wed" c="lime" tilt={8} />
+          </div>
+        </div>
       </header>
 
-      <section className="ot-hero" data-c="violet">
-        <h2 className="ot-hero-h"><span>One sentence a day.</span> <span>A doodle for every one.</span></h2>
-        <p className="ot-hero-lede">Every morning at ten, a text asks what happened. You answer in one sentence, Opus draws it, and by December you have a year.</p>
-        <button type="button" className="ot-btn big light" onClick={toStart}>Start your year</button>
-        <div className="ot-fan">
-          <SampleCard ex={2} date="28 Sep" c="orange" tilt={-7} />
-          <SampleCard ex={0} date="29 Sep" c="sky" tilt={1} />
-          <SampleCard ex={1} date="30 Sep" c="yellow" tilt={8} />
-        </div>
-      </section>
+      <main className="oj-page land">
+        <section className="oj-how">
+          <div className="oj-chat" aria-label="an example exchange">
+            <div className="oj-chat-head">
+              <Ink color="violet" size={40} still />
+              <div><b>onething</b><span>iMessage · 10:00</span></div>
+            </div>
+            <p className="oj-bubble in">{copy.morning[0]}</p>
+            <p className="oj-bubble out">{EXAMPLES[0].sentence}</p>
+            <p className="oj-bubble in">{copy.kept[0].replace('{n}', '12')}</p>
+          </div>
+          <ol className="oj-steps">
+            <li><Ink color="orange" size={42} still /><span><b>At ten, a text.</b> One question about your day, by iMessage. Nothing to install.</span></li>
+            <li><Ink color="sky" size={42} still /><span><b>One sentence back.</b> Whatever comes to you. Small is fine. If the day is still empty at ten at night, one gentle reminder.</span></li>
+            <li><Ink color="pink" size={42} still /><span><b>It lands on your page.</b> Opus doodles every day. Don&apos;t like the drawing? Ask for three more and pick one.</span></li>
+          </ol>
+        </section>
 
-      <section className="ot-how">
-        <div className="ot-how-chat" data-c="yellow"><Chat /></div>
-        <ol className="ot-steps">
-          <li><b>At ten, a text.</b> One question about your day, by iMessage. Nothing to install.</li>
-          <li><b>One sentence back.</b> Whatever comes to you. Small is fine. If the day is still empty at ten at night, one gentle reminder.</li>
-          <li><b>It lands on your page.</b> Opus 5.5 doodles every day. Don&apos;t like the drawing? Ask for three more and pick one.</li>
-        </ol>
-      </section>
+        <section className="oj-land-jar">
+          <div className="oj-jar-row">
+            <Jar days={SAMPLE_JAR} />
+            <div className="oj-jar-say">
+              <p className="oj-jar-n">13</p>
+              <p className="oj-jar-l">drops of ink, two weeks in</p>
+              <p className="oj-jar-sub">Every day you keep is a drop in the month&apos;s jar. Poke one.</p>
+            </div>
+          </div>
+        </section>
 
-      <section className="ot-grow">
-        <h2 className="ot-h2">Streaks grow a plant.</h2>
-        <p className="ot-p">Every day you write earns points, more the longer the streak runs. Points grow a plant from a seed to old growth, and a missed day never takes them back.</p>
-        <Stages levels={LEVELS} />
-        <p className="ot-p small">Bring a buddy: every week you both keep it up, you both get bonus points. You never see their words, only that they showed up.</p>
-      </section>
+        <section className="oj-grow">
+          <h2 className="oj-h2">Streaks grow a plant.</h2>
+          <p className="oj-p">Every day you write earns points, more the longer the streak runs. Points grow a plant from a seed to old growth, and a missed day never takes them back.</p>
+          <div className="oj-stages" aria-label="levels">
+            {LEVELS.map((l, i) => (
+              <div key={l.name} className="oj-stage-item">
+                <span className="oj-stage-pot" style={{ ['--p' as string]: `${46 + i * 6}px` }}><Plant level={i} size={40 + i * 6} /></span>
+                <span className="n">{l.name}</span>
+                <span className="p">{i === 0 ? 'day 1' : `${l.min} pts`}</span>
+              </div>
+            ))}
+          </div>
+          <p className="oj-p small">Bring a buddy: every week you both keep it up, you both get bonus points. You never see their words, only that they showed up.</p>
+        </section>
 
-      <section className="ot-start" id="start">
-        <Drop size={48} face />
-        <h2 className="ot-h2">Start your year.</h2>
-        {stage === 'phone' ? (
-          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); props.start(); }}>
-            <input className="ot-in" inputMode="tel" autoComplete="tel" placeholder="Phone number" aria-label="Phone number" value={phone} onChange={(e) => props.setPhone(e.target.value)} />
-            <button className="ot-btn" disabled={busy} type="submit">{busy ? 'Sending…' : 'Text me a code'}</button>
-          </form>
-        ) : (
-          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); props.verify(); }}>
-            <input className="ot-in code" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" aria-label="Code" value={code} onChange={(e) => props.setCode(e.target.value)} autoFocus />
-            <button className="ot-btn" disabled={busy} type="submit">{busy ? 'Checking…' : 'Sign in'}</button>
-          </form>
-        )}
-        {stage === 'code' && <p className="ot-note">We texted a code to {phone}. <button className="ot-link" onClick={props.back}>Wrong number?</button></p>}
-        {err && <p className="ot-err">{err}</p>}
-        <p className="ot-note">iMessage only. No password, nothing to install.</p>
-      </section>
+        <section className="oj-card oj-start" data-j="violet" id="start">
+          <Ink color="yellow" size={88} className="oj-card-host" />
+          <h2 className="oj-redraw-h">Start your year.</h2>
+          {stage === 'phone' ? (
+            <form className="oj-form" onSubmit={(e) => { e.preventDefault(); props.start(); }}>
+              <input className="oj-in" inputMode="tel" autoComplete="tel" placeholder="Phone number" aria-label="Phone number" value={phone} onChange={(e) => props.setPhone(e.target.value)} />
+              <button className="oj-btn" data-j="yellow" disabled={busy} type="submit">{busy ? 'Sending…' : 'Text me a code'}</button>
+            </form>
+          ) : (
+            <form className="oj-form" onSubmit={(e) => { e.preventDefault(); props.verify(); }}>
+              <input className="oj-in code" inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" aria-label="Code" value={code} onChange={(e) => props.setCode(e.target.value)} autoFocus />
+              <button className="oj-btn" data-j="yellow" disabled={busy} type="submit">{busy ? 'Checking…' : 'Sign in'}</button>
+            </form>
+          )}
+          {stage === 'code' && <p className="oj-note">We texted a code to {phone}. <button type="button" className="oj-text-btn" onClick={props.back}>Wrong number?</button></p>}
+          {err && <p className="oj-err">{err}</p>}
+          <p className="oj-note">iMessage only. No password, nothing to install.</p>
+        </section>
 
-      <Foot />
-    </main>
+        <Foot />
+      </main>
+    </>
   );
 }
 
@@ -542,8 +696,9 @@ export default function Onething() {
   const [ending, setEnding] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const keepRef = useRef<HTMLButtonElement>(null);
   const [payoff, setPayoff] = useState<{ streak: number; bonus: number; points: number } | null>(null);
-  const [openDay, setOpenDay] = useState<string | null>(null); // a past day, opened from the wall
+  const [openDay, setOpenDay] = useState<string | null>(null); // a past day, opened from the wall or the jar
   const [redraw, setRedraw] = useState<string | null>(null); // the day whose doodle is being redrawn
 
   const load = useCallback(async () => {
@@ -561,6 +716,7 @@ export default function Onething() {
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { return; }
     setPayoff(m);
   }, [me]);
+  useFlood(me?.user && me.today ? colorOf(me.today) : null);
 
   async function post(url: string, body: unknown) {
     setBusy(true); setErr('');
@@ -580,7 +736,13 @@ export default function Onething() {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; // the 10am / 10pm texts follow this clock
     if (await post('/api/onething/auth/verify', { phone, code, tz })) { setCode(''); setStage('phone'); await load(); }
   }
-  async function save() { if (await post('/api/onething/entry', { text })) { setText(''); setAdding(false); await load(); awaitDoodle(); } }
+  async function save() {
+    const r0 = keepRef.current?.getBoundingClientRect();
+    if (await post('/api/onething/entry', { text })) {
+      if (r0) splash(r0.left + r0.width / 2, r0.top + r0.height / 2, 56);
+      setText(''); setAdding(false); await load(); awaitDoodle();
+    }
+  }
   /// The drawing lands a few seconds after the sentence: look again, a few times, until today has one.
   function awaitDoodle() {
     let tries = 0;
@@ -664,27 +826,26 @@ export default function Onething() {
     await fetch('/api/onething/auth/signout', { method: 'POST' });
     setMe({ user: null }); setView('journal'); setErr(''); setNote('');
   }
-  function go(v: 'journal' | 'settings') { setView(v); setErr(''); setNote(''); setYou({ err: '', note: '' }); setEnding(null); setOpenDay(null); }
+  function go(v: 'journal' | 'settings') { setView(v); setErr(''); setNote(''); setYou({ err: '', note: '' }); setEnding(null); setOpenDay(null); window.scrollTo(0, 0); }
 
   if (me === null) {
-    return <><Defs /><main className="ot-page"><header className="ot-top"><Wordmark h1 /></header></main></>;
+    return <div className="oj"><header className="oj-hero" data-j="violet"><div className="oj-wrap"><div className="oj-top"><span className="oj-wordmark">onething</span></div></div></header></div>;
   }
 
   if (!me.user) {
     return (
-      <>
+      <div className="oj">
         <Defs />
         <Landing
           phone={phone} code={code} stage={stage} busy={busy} err={err}
           setPhone={setPhone} setCode={setCode} start={start} verify={verify}
           back={() => { setStage('phone'); setErr(''); }}
         />
-      </>
+      </div>
     );
   }
 
   const b = me.board!;
-  const levels = me.levels ?? LEVELS;
   const milestone = todayMilestone(me);
   const thoughtProps = {
     editing, editText, busy, err,
@@ -693,6 +854,7 @@ export default function Onething() {
   };
   const entries = me.entries ?? [];
   const today = me.today ?? '';
+  const tc = colorOf(today);
   const buddies = me.buddies ?? [];
   const sent = me.sent ?? [];
   const received = me.received ?? [];
@@ -704,104 +866,113 @@ export default function Onething() {
 
   if (view === 'settings') {
     return (
-      <>
-      <Defs />
-      <main className="ot-page">
-        <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
-        <p className="ot-back"><button className="ot-link" onClick={() => go('journal')}>← Back to your page</button></p>
-
-        <section className="ot-panel" aria-label="you">
-          <h2>You</h2>
-          <p className="ot-p">What buddies see instead of your number.</p>
-          <div className="ot-you">
-            <Avatar person={me.user} size={72} />
-            <div className="ot-you-acts">
-              <label className="ot-link" style={{ cursor: busy ? 'default' : 'pointer' }}>
-                {busy ? 'Saving…' : me.user.avatar ? 'Change picture' : 'Add a picture'}
-                <input ref={fileRef} type="file" accept="image/*" hidden disabled={busy} onChange={(e) => pickPicture(e.target.files?.[0])} aria-label="profile picture" />
-              </label>
-              {me.user.avatar && <button type="button" className="ot-link quiet" disabled={busy} onClick={removePicture}>Remove</button>}
-              <p className="ot-note">A square works best. It is cropped and shrunk before it leaves your phone.</p>
+      <div className="oj">
+        <Defs />
+        <header className="oj-hero short" data-j={tc}>
+          <Bubbles />
+          <div className="oj-wrap">
+            <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
+            <div className="oj-today">
+              <Ink color={hostOf(tc)} size={92} className="oj-host" />
+              <p className="oj-date"><button type="button" className="oj-text-btn" onClick={() => go('journal')}>← Back to your page</button></p>
+              <h1 className="oj-q">Settings</h1>
             </div>
           </div>
-          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); saveName(); }}>
-            <input className="ot-in" placeholder={prettyPhone(me.user.phone)} aria-label="Your name" maxLength={24} value={nameDraft ?? me.user.name ?? ''} onChange={(e) => setNameDraft(e.target.value)} />
-            <button className="ot-btn" type="submit" disabled={busy || nameDraft === null}>{busy ? 'Saving…' : 'Save'}</button>
-          </form>
-          {you.err && <p className="ot-err">{you.err}</p>}
-          {you.note && <p className="ot-note">{you.note}</p>}
-        </section>
+        </header>
+        <main className="oj-page">
+          <section className="oj-panel" aria-label="you">
+            <h2>You</h2>
+            <p className="oj-p">What buddies see instead of your number.</p>
+            <div className="oj-you">
+              <Avatar person={me.user} size={76} />
+              <div className="oj-you-acts">
+                <label className="oj-pill small" style={{ cursor: busy ? 'default' : 'pointer' }}>
+                  {busy ? 'Saving…' : me.user.avatar ? 'Change picture' : 'Add a picture'}
+                  <input ref={fileRef} type="file" accept="image/*" hidden disabled={busy} onChange={(e) => pickPicture(e.target.files?.[0])} aria-label="profile picture" />
+                </label>
+                {me.user.avatar && <button type="button" className="oj-text-btn quiet" disabled={busy} onClick={removePicture}>Remove</button>}
+                <p className="oj-note">A square works best. It is cropped and shrunk before it leaves your phone.</p>
+              </div>
+            </div>
+            <form className="oj-form" onSubmit={(e) => { e.preventDefault(); saveName(); }}>
+              <input className="oj-in" placeholder={prettyPhone(me.user.phone)} aria-label="Your name" maxLength={24} value={nameDraft ?? me.user.name ?? ''} onChange={(e) => setNameDraft(e.target.value)} />
+              <button className="oj-btn" type="submit" disabled={busy || nameDraft === null}>{busy ? 'Saving…' : 'Save'}</button>
+            </form>
+            {you.err && <p className="oj-err">{you.err}</p>}
+            {you.note && <p className="oj-note">{you.note}</p>}
+          </section>
 
-        <section className="ot-panel" aria-label="the page">
-          <h2>Your page</h2>
-          <label className="ot-toggle">
-            <input type="checkbox" checked={me.user.doodles !== false} disabled={busy} onChange={(e) => setDoodles(e.target.checked)} />
-            <span><b>Doodles.</b> Opus draws a small doodle for every day, from what you wrote.</span>
-          </label>
-        </section>
+          <section className="oj-panel" aria-label="the page">
+            <h2>Your page</h2>
+            <label className="oj-toggle">
+              <input type="checkbox" checked={me.user.doodles !== false} disabled={busy} onChange={(e) => setDoodles(e.target.checked)} />
+              <i aria-hidden />
+              <span><b>Doodles.</b> Opus draws a small doodle for every day, from what you wrote.</span>
+            </label>
+          </section>
 
-        <section className="ot-panel" aria-label="buddies">
-          <h2>Buddies</h2>
-          <p className="ot-p">Pick anyone. A buddy streak counts a day when you both wrote, a miss by either one resets it, and every {bonus.every} days it holds you both get {bonus.points} points. Your own streak and points are never touched.</p>
+          <section className="oj-panel" aria-label="buddies">
+            <h2>Buddies</h2>
+            <p className="oj-p">Pick anyone. A buddy streak counts a day when you both wrote, a miss by either one resets it, and every {bonus.every} days it holds you both get {bonus.points} points. Your own streak and points are never touched.</p>
 
-          {received.length > 0 && (
-            <ul className="ot-buddies" aria-label="invites waiting on you">
-              {received.map((i) => (
-                <li key={i.id} className="ot-buddy">
-                  <span className="who">{i.name} invited you.</span>
-                  <span className="acts">
-                    <button className="ot-link" onClick={() => buddy({ action: 'accept', id: i.id })} disabled={busy}>Say yes</button>
-                    <button className="ot-link quiet" onClick={() => buddy({ action: 'cancel', id: i.id })} disabled={busy}>Not now</button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+            {received.length > 0 && (
+              <ul className="oj-buddy-list" aria-label="invites waiting on you">
+                {received.map((i) => (
+                  <li key={i.id} className="oj-buddy">
+                    <span className="who">{i.name} invited you.</span>
+                    <span className="acts">
+                      <button type="button" className="oj-text-btn" onClick={() => buddy({ action: 'accept', id: i.id })} disabled={busy}>Say yes</button>
+                      <button type="button" className="oj-text-btn quiet" onClick={() => buddy({ action: 'cancel', id: i.id })} disabled={busy}>Not now</button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {(buddies.length > 0 || sent.length > 0) && (
-            <ul className="ot-buddies" aria-label="your buddies">
-              {buddies.map((x) => (
-                <li key={x.id} className={`ot-buddy${ending === x.id ? ' ending' : ''}`}>
-                  <Avatar person={{ name: x.name, phone: x.name, avatar: x.avatar }} size={36} />
-                  <span className="who">{x.name}<small>{together(x)}{bestNext(x) ? ` · ${bestNext(x)}` : ''}</small></span>
-                  <span className="acts">
-                    {ending === x.id ? (
-                      <>
-                        <span className="ot-note" style={{ margin: 0 }}>Sure?</span>
-                        <button className="ot-link" onClick={() => buddy({ action: 'end', id: x.id })} disabled={busy}>End it</button>
-                        <button className="ot-link quiet" onClick={() => setEnding(null)}>Keep going</button>
-                      </>
-                    ) : (
-                      <button className="ot-link quiet" onClick={() => setEnding(x.id)}>End</button>
-                    )}
-                  </span>
-                </li>
-              ))}
-              {sent.map((i) => (
-                <li key={i.id} className="ot-buddy">
-                  <span className="who">{i.name}<small>invited {longDay(i.since.slice(0, 10))} · waiting for a yes</small></span>
-                  <span className="acts"><button className="ot-link quiet" onClick={() => buddy({ action: 'cancel', id: i.id })} disabled={busy}>Cancel</button></span>
-                </li>
-              ))}
-            </ul>
-          )}
+            {(buddies.length > 0 || sent.length > 0) && (
+              <ul className="oj-buddy-list" aria-label="your buddies">
+                {buddies.map((x) => (
+                  <li key={x.id} className={`oj-buddy${ending === x.id ? ' ending' : ''}`}>
+                    <Avatar person={{ name: x.name, phone: x.name, avatar: x.avatar }} size={40} />
+                    <span className="who">{x.name}<small>{together(x)}{bestNext(x) ? ` · ${bestNext(x)}` : ''}</small></span>
+                    <span className="acts">
+                      {ending === x.id ? (
+                        <>
+                          <span className="oj-note" style={{ margin: 0 }}>Sure?</span>
+                          <button type="button" className="oj-text-btn" onClick={() => buddy({ action: 'end', id: x.id })} disabled={busy}>End it</button>
+                          <button type="button" className="oj-text-btn quiet" onClick={() => setEnding(null)}>Keep going</button>
+                        </>
+                      ) : (
+                        <button type="button" className="oj-text-btn quiet" onClick={() => setEnding(x.id)}>End</button>
+                      )}
+                    </span>
+                  </li>
+                ))}
+                {sent.map((i) => (
+                  <li key={i.id} className="oj-buddy">
+                    <span className="who">{i.name}<small>invited {longDay(i.since.slice(0, 10))} · waiting for a yes</small></span>
+                    <span className="acts"><button type="button" className="oj-text-btn quiet" onClick={() => buddy({ action: 'cancel', id: i.id })} disabled={busy}>Cancel</button></span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          <form className="ot-form" onSubmit={(e) => { e.preventDefault(); buddy({ action: 'invite', to: inviteTo }); }}>
-            <input className="ot-in" inputMode="email" autoComplete="off" placeholder="Phone or iCloud email" aria-label="Phone number or iCloud email" value={inviteTo} onChange={(e) => setInviteTo(e.target.value)} />
-            <button className="ot-btn" type="submit" disabled={busy || inviteTo.trim().length < 5}>{busy ? 'Sending…' : 'Invite'}</button>
-          </form>
-          <p className="ot-note">They get one text from us. Nothing changes until they say yes.</p>
-          {err && <p className="ot-err">{err}</p>}
-          {note && <p className="ot-note">{note}</p>}
-        </section>
+            <form className="oj-form" onSubmit={(e) => { e.preventDefault(); buddy({ action: 'invite', to: inviteTo }); }}>
+              <input className="oj-in" inputMode="email" autoComplete="off" placeholder="Phone or iCloud email" aria-label="Phone number or iCloud email" value={inviteTo} onChange={(e) => setInviteTo(e.target.value)} />
+              <button className="oj-btn" type="submit" disabled={busy || inviteTo.trim().length < 5}>{busy ? 'Sending…' : 'Invite'}</button>
+            </form>
+            <p className="oj-note">They get one text from us. Nothing changes until they say yes.</p>
+            {err && <p className="oj-err">{err}</p>}
+            {note && <p className="oj-note">{note}</p>}
+          </section>
 
-        <Foot />
-      </main>
-      </>
+          <Foot />
+        </main>
+      </div>
     );
   }
 
-  // ----- the page -----
+  // ----- the journal -----
   const [ty, tm] = parts(today);
   const [sy, sm] = parts(me.user.since.slice(0, 10));
   const oldest = (ty * 12 + tm) - (sy * 12 + sm); // months back to the account's first month
@@ -811,8 +982,9 @@ export default function Onething() {
   const back = Math.min(monthsBack ?? auto, Math.max(0, oldest));
   const [vy, vm] = monthBack(ty, tm, back);
   const cells = monthCells(vy, vm, today, me.user.since, byDay);
-  const drawn = me.user.doodles !== false;
   const todayEntry = byDay.get(today);
+  const jar = [...cells.filter((c) => !c.missed).map((c) => c.day), ...(back === 0 && todayEntry ? [today] : [])].sort();
+  const drawn = me.user.doodles !== false;
   const composing = !todayEntry || adding;
   const span = b.next ? b.next.min - b.level.min : 1;
   const progress = b.next ? Math.min(1, (b.points - b.level.min) / span) : 1;
@@ -821,74 +993,79 @@ export default function Onething() {
   const opened = openDay ? byDay.get(openDay) : undefined;
   const redrawing = redraw ? byDay.get(redraw) : undefined;
   const nextLine = !b.next ? 'The top. Nothing left to grow into.'
-    : toNext === 0 ? 'with today\'s sentence'
-    : toNext !== null ? `${toNext} ${toNext === 1 ? 'day' : 'days'} to go` : `at ${b.next.min} pts`;
+    : toNext === 0 ? `${b.next.name} with today's sentence`
+    : toNext !== null ? `${toNext} ${toNext === 1 ? 'day' : 'days'} to ${b.next.name}` : `${b.next.name} at ${b.next.min} pts`;
+  const closeDay = () => { setOpenDay(null); setEditing(null); setErr(''); };
+  const openFrom = (d: string) => { setOpenDay(d); setEditing(null); setErr(''); };
 
   return (
-    <>
+    <div className="oj">
     <Defs />
     {payoff && <Payoff streak={payoff.streak} bonus={payoff.bonus} points={payoff.points} onClose={() => setPayoff(null)} />}
-    {opened && !redraw && (
-      <Sheet label={longDay(opened.day)} onClose={() => { setOpenDay(null); setEditing(null); setErr(''); }}>
-        <DayView day={opened.day} entry={opened} drawn={drawn} thoughts={thoughtProps} onClose={() => { setOpenDay(null); setEditing(null); setErr(''); }}>
-          {drawn && opened.doodle && <div className="ot-day-acts"><button type="button" className="ot-pill" onClick={() => setRedraw(opened.day)}><Redo />Redraw</button></div>}
-        </DayView>
-      </Sheet>
-    )}
+    {opened && !redraw && <DaySheet entry={opened} drawn={drawn} thoughts={thoughtProps} onClose={closeDay} onRedraw={() => setRedraw(opened.day)} />}
     {redrawing && <Redraw entry={redrawing} onClose={() => setRedraw(null)} onKept={async () => { setRedraw(null); await load(); }} />}
-    <main className="ot-page">
-      <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
 
-      <DayView day={today} entry={todayEntry} today drawn={drawn} thoughts={thoughtProps}>
-        {composing ? (
-          <form className="ot-compose" onSubmit={(e) => { e.preventDefault(); save(); }}>
-            {!todayEntry && <h2 className="ot-q">One thing that happened today?</h2>}
-            <textarea className="ot-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder={todayEntry ? 'One more thing.' : 'One sentence.'} rows={3} aria-label="today's sentence" autoFocus={adding} />
-            <div className="ot-acts">
-              <button className="ot-btn" disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Keeping…' : 'Keep it'}</button>
-              {adding
-                ? <button type="button" className="ot-link" onClick={() => { setAdding(false); setText(''); setErr(''); }}>Cancel</button>
-                : <span className="ot-nudge">{NUDGES[nudge]} <button type="button" className="ot-link" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)}>another</button></span>}
+    {/* today: the whole top of the page in today's colour */}
+    <header className="oj-hero" data-j={tc}>
+      <Bubbles />
+      <div className="oj-wrap">
+        <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
+        <div className="oj-today">
+          <Ink color={hostOf(tc)} size={118} className={`oj-host${composing && text.trim().length >= 2 && !busy ? ' eager' : ''}`} />
+          <p className="oj-date">{longDay(today)}</p>
+          {todayEntry && <DayBody day={today} entry={todayEntry} drawn={drawn} thoughts={thoughtProps} />}
+          {composing ? (
+            <form className="oj-compose" onSubmit={(e) => { e.preventDefault(); save(); }}>
+              {!todayEntry && <h1 className="oj-q">One thing that happened today?</h1>}
+              <textarea className="oj-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder={todayEntry ? 'One more thing.' : 'One sentence.'} rows={3} aria-label="today's sentence" autoFocus={adding} />
+              <div className="oj-acts">
+                <button ref={keepRef} className="oj-btn big" data-j={hostOf(tc)} disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Keeping…' : 'Keep it'}</button>
+                {adding
+                  ? <button type="button" className="oj-text-btn" onClick={() => { setAdding(false); setText(''); setErr(''); }}>Cancel</button>
+                  : <button type="button" className="oj-nudge" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)} title="another idea">{NUDGES[nudge]}<span aria-hidden>↻</span></button>}
+              </div>
+              {err && !editing && <p className="oj-err">{err}</p>}
+              {drawn && !todayEntry && <p className="oj-promise">Keep it, and Opus doodles it a few seconds later.</p>}
+            </form>
+          ) : (
+            <div className="oj-acts">
+              <button type="button" className="oj-pill" onClick={() => { setAdding(true); setErr(''); }}>+ Another thought</button>
+              {drawn && todayEntry?.doodle && <button type="button" className="oj-pill" onClick={() => setRedraw(today)}><Redo />Redraw</button>}
+              {milestone && <button type="button" className="oj-pill oj-replay" onClick={() => setPayoff(milestone)}>Replay day {milestone.streak}</button>}
             </div>
-            {err && !editing && <p className="ot-err">{err}</p>}
-            {drawn && !todayEntry && <p className="ot-promise">Opus doodles it a few seconds after you keep it.</p>}
-          </form>
-        ) : (
-          <div className="ot-day-acts">
-            <button type="button" className="ot-pill" onClick={() => { setAdding(true); setErr(''); }}>+ Another thought</button>
-            {drawn && todayEntry?.doodle && <button type="button" className="ot-pill" onClick={() => setRedraw(today)}><Redo />Redraw</button>}
-          </div>
-        )}
-      </DayView>
-
-      <section className="ot-garden" aria-label="level, streak and points">
-        <div className="ot-garden-plant"><Plant level={b.index} size={72} /></div>
-        <div className="ot-garden-text">
-          <div className="ot-garden-head">
-            <h2 className="ot-stage">{b.level.name}</h2>
-            <button type="button" className="ot-info" aria-label="the numbers" aria-expanded={details} aria-controls="ot-details" onClick={() => setDetails((d) => !d)}>i</button>
-            {milestone && <button type="button" className="ot-link ot-replay" onClick={() => setPayoff(milestone)}>replay day {milestone.streak}</button>}
-          </div>
-          <p className="ot-garden-sub">{b.points.toLocaleString('en-US')} points{b.streak === 0 ? ' · write today to start a streak' : ''}</p>
-          <div className="ot-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
-            <i style={{ ['--w' as string]: `${progress * 100}%` }} />
-          </div>
-          <div className="ot-bar-k"><span>{nextLine}</span>{b.next && <b>{b.next.name}</b>}</div>
+          )}
         </div>
+      </div>
+    </header>
+
+    <main className="oj-page">
+      <section className="oj-level" aria-label="level, streak and points">
+        <div className="oj-level-row">
+          <div className="oj-pot"><Plant level={b.index} size={80} /></div>
+          <div className="oj-level-text">
+            <h2 className="oj-stage">{b.level.name}</h2>
+            <p className="oj-pts"><b>{b.points.toLocaleString('en-US')}</b> points{b.streak === 0 ? ' · write today to start a streak' : ''}</p>
+          </div>
+          <button type="button" className="oj-info" aria-label="the numbers" aria-expanded={details} aria-controls="oj-details" onClick={() => setDetails((d) => !d)}>{details ? '×' : 'i'}</button>
+        </div>
+        <div className="oj-tube" style={{ ['--w' as string]: `${Math.max(progress * 100, 9)}%` }} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
+          <i />
+          <Ink color="violet" size={40} className="oj-rider" />
+        </div>
+        <p className="oj-tube-k">{nextLine}</p>
         {details && (
-          <div className="ot-stats" id="ot-details">
-            <p><b>{b.points} pts</b> · +{perDay} for tomorrow&apos;s sentence{b.best > b.streak ? ` · best streak ${b.best}` : ''}</p>
-            <div className="ot-replays" aria-label="replay a milestone">
-              <span>Milestones</span>
+          <div className="oj-details" id="oj-details">
+            <p><b>+{perDay}</b> for tomorrow&apos;s sentence{b.best > b.streak ? ` · best streak ${b.best}` : ''}</p>
+            <div className="oj-dots" aria-label="replay a milestone">
               {Object.keys(MILESTONES).map(Number).map((m) => (
-                <button key={m} type="button" className={`ot-dot${b.best >= m ? ' on' : ''}`} title={b.best >= m ? `replay day ${m}` : `day ${m}, not yet`} onClick={() => replay(m)}>{m}</button>
+                <button key={m} type="button" className={`oj-dot${b.best >= m ? ' on' : ''}`} title={b.best >= m ? `replay day ${m}` : `day ${m}, not yet`} onClick={() => replay(m)}>{m}</button>
               ))}
             </div>
             {buddies.length > 0 && (
-              <ul className="ot-buddy-tags" aria-label="buddy streaks">
+              <ul className="oj-buddies" aria-label="buddy streaks">
                 {buddies.map((x) => (
-                  <li className="ot-buddy-tag" key={x.id}>
-                    <Avatar person={{ name: x.name, phone: x.name, avatar: x.avatar }} size={22} />
+                  <li key={x.id}>
+                    <Avatar person={{ name: x.name, phone: x.name, avatar: x.avatar }} size={26} />
                     <span><b>{x.name}</b> · {together(x)}{x.startsTomorrow ? '' : ` · +${bonus.points} in ${x.nextBonusIn} ${x.nextBonusIn === 1 ? 'day' : 'days'} · ${x.inToday ? 'wrote today ✓' : 'still to come'}`}</span>
                   </li>
                 ))}
@@ -898,33 +1075,37 @@ export default function Onething() {
         )}
       </section>
 
-      <section className="ot-month" aria-label={`${MONTHS[vm - 1]} ${vy}`}>
-        <div className="ot-month-head">
+      <section className="oj-month" aria-label={`${MONTHS[vm - 1]} ${vy}`}>
+        <div className="oj-month-head">
           <h2>{MONTHS[vm - 1]} <span>{vy}</span></h2>
-          <div className="ot-month-nav">
-            <button type="button" className="ot-round" disabled={back >= oldest} aria-label="previous month" onClick={() => setMonthsBack(back + 1)}>‹</button>
-            <button type="button" className="ot-round" disabled={back <= 0} aria-label="next month" onClick={() => setMonthsBack(back - 1)}>›</button>
+          <div className="oj-month-nav">
+            <button type="button" className="oj-round" disabled={back >= oldest} aria-label="previous month" onClick={() => setMonthsBack(back + 1)}>‹</button>
+            <button type="button" className="oj-round" disabled={back <= 0} aria-label="next month" onClick={() => setMonthsBack(back - 1)}>›</button>
           </div>
         </div>
+
+        {jar.length > 0 && (
+          <div className="oj-jar-row">
+            <Jar days={jar} onOpen={openFrom} />
+            <div className="oj-jar-say">
+              <p className="oj-jar-n">{jar.length}</p>
+              <p className="oj-jar-l">{jar.length === 1 ? 'drop of ink' : 'drops of ink'} in {MONTHS[vm - 1]}</p>
+              <p className="oj-jar-sub">Every day you keep is a drop in the jar. Poke one.</p>
+            </div>
+          </div>
+        )}
+
         {cells.length === 0 ? (
-          <p className="ot-empty">{back === 0 ? `The rest of ${MONTHS[vm - 1]} fills in here, one day at a time.` : 'Nothing kept this month.'}</p>
+          <p className="oj-empty">{back === 0 ? `The rest of ${MONTHS[vm - 1]} fills in here, a drop a day.` : 'Nothing kept this month.'}</p>
         ) : (
-          <div className="ot-wall">
-            {cells.map((c) => <DayCard key={c.day} cell={c} drawn={drawn} onOpen={() => { setOpenDay(c.day); setEditing(null); setErr(''); }} />)}
+          <div className="oj-wall">
+            {cells.map((c, i) => <Tile key={c.day} cell={c} i={i} drawn={drawn} onOpen={() => openFrom(c.day)} />)}
           </div>
         )}
       </section>
 
       <Foot tz={me.user.tz ?? ''} />
     </main>
-    </>
-  );
-}
-
-function Redo() {
-  return (
-    <svg viewBox="0 0 20 20" width="15" height="15" aria-hidden fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 10a6 6 0 1 1-1.8-4.3" /><path d="M16 3.5v3.6h-3.6" />
-    </svg>
+    </div>
   );
 }
