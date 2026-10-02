@@ -11,8 +11,8 @@ import { squareJpeg } from './picture';
 /* onething, the jelly journal (2026-10-02). Drawn with the craft of the Dodo
  * redesign — glossy jelly, squash and stretch, a lot of colour — with
  * onething's own cast: the ink drop is the character, the six day colours are
- * the palette, today's colour floods the top of the page, and every kept day
- * is a drop of ink in the month's jar. Styles: journal.css (.oj-*), plus
+ * the palette, today's colour floods the top of the page, and the month is a wall
+ * of day cards. Styles: journal.css (.oj-*), plus
  * onething.css for the doodles, the plant and the payoff scene. */
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null };
@@ -108,11 +108,6 @@ function daysToNext(b: Board): number | null {
     if (p >= b.next.min) return b.doneToday ? d : d - 1;
   }
   return null;
-}
-/// A small seeded random: the jar's drops sit still between renders.
-function rng(seed: number) {
-  let s = seed >>> 0;
-  return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
 }
 
 type Cell = { day: string; entry?: Entry; missed: boolean; from?: string; count?: number };
@@ -391,36 +386,6 @@ function Tile({ cell, drawn, i, onOpen }: { cell: Cell; drawn: boolean; i: numbe
   );
 }
 
-/** The month's jar: one drop of ink for every kept day, oldest at the bottom. A tap opens the day. */
-function Jar({ days, onOpen }: { days: string[]; onOpen?: (day: string) => void }) {
-  // Six to a row (five on odd rows, shifted half a drop), 37px apart, rows 33px apart:
-  // a full row spans 14 + 5 × 37 + 46 = 245px of the 255px inside. The jar is sized for a
-  // whole month, so it visibly fills: 31 drops are six rows, the top one at 10 + 5 × 33 = 175px,
-  // its tip at 175 + 46 × 1.12 ≈ 227px, under a 240px glass.
-  const PER = 6, DX = 37, DY = 33, SIZE = 46; // SIZE: the drop's width; it stands 1.12 × as tall
-  const r = rng(days.length * 7919 + 13);
-  const placed = [] as { day: string; x: number; y: number; rot: number }[];
-  let row = 0, col = 0;
-  for (const day of days) {
-    const per = row % 2 ? PER - 1 : PER;
-    placed.push({ day, x: 14 + col * DX + (row % 2 ? DX / 2 : 0) + (r() - 0.5) * 5, y: 10 + row * DY + (r() - 0.5) * 4, rot: (r() - 0.5) * 26 });
-    if (++col >= per) { col = 0; row++; }
-  }
-  const h = 240;
-  return (
-    <div className="oj-jar" style={{ height: h + 26 }}>
-      <span className="oj-jar-lid" />
-      <div className="oj-jar-glass" style={{ height: h }}>
-        {placed.map((p, i) => (
-          <span key={p.day} className="oj-jar-drop" style={{ left: p.x, bottom: p.y, transform: `rotate(${p.rot}deg)`, zIndex: 100 - i }}>
-            <Ink color={colorOf(p.day)} size={SIZE} delay={-(i % 6) * 0.5} label={onOpen ? `open ${longDay(p.day)}` : undefined} onTap={onOpen && (() => onOpen(p.day))} />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function Sheet({ label, onClose, children }: { label: string; onClose: () => void; children: React.ReactNode }) {
   const close = useRef(onClose);
   close.current = onClose;
@@ -438,7 +403,7 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
   );
 }
 
-/** A past day, opened from the wall or the jar: a jelly card in its colour, its drop on top. */
+/** A past day, opened from the wall: a jelly card in its colour, its drop on top. */
 function DaySheet({ entry, drawn, thoughts, onClose, onRedraw }: { entry: Entry; drawn: boolean; thoughts: Omit<ThoughtsProps, 'day' | 'text'>; onClose: () => void; onRedraw: () => void }) {
   const c = colorOf(entry.day);
   return (
@@ -656,7 +621,7 @@ export default function Onething() {
   const fileRef = useRef<HTMLInputElement>(null);
   const keepRef = useRef<HTMLButtonElement>(null);
   const [payoff, setPayoff] = useState<{ streak: number; bonus: number; points: number } | null>(null);
-  const [openDay, setOpenDay] = useState<string | null>(null); // a past day, opened from the wall or the jar
+  const [openDay, setOpenDay] = useState<string | null>(null); // a past day, opened from the wall
   const [redraw, setRedraw] = useState<string | null>(null); // the day whose doodle is being redrawn
 
   const load = useCallback(async () => {
@@ -941,7 +906,6 @@ export default function Onething() {
   const [vy, vm] = monthBack(ty, tm, back);
   const cells = monthCells(vy, vm, today, me.user.since, byDay);
   const todayEntry = byDay.get(today);
-  const jar = [...cells.filter((c) => !c.missed).map((c) => c.day), ...(back === 0 && todayEntry ? [today] : [])].sort();
   const drawn = me.user.doodles !== false;
   const composing = !todayEntry || adding;
   const span = b.next ? b.next.min - b.level.min : 1;
@@ -1038,17 +1002,6 @@ export default function Onething() {
             <button type="button" className="oj-round" disabled={back <= 0} aria-label="next month" onClick={() => setMonthsBack(back - 1)}>›</button>
           </div>
         </div>
-
-        {jar.length > 0 && (
-          <div className="oj-jar-row">
-            <Jar days={jar} onOpen={openFrom} />
-            <div className="oj-jar-say">
-              <p className="oj-jar-n">{jar.length}</p>
-              <p className="oj-jar-l">{jar.length === 1 ? 'drop of ink' : 'drops of ink'} in {MONTHS[vm - 1]}</p>
-              <p className="oj-jar-sub">Every day you keep is a drop in the jar. Poke one.</p>
-            </div>
-          </div>
-        )}
 
         {cells.length === 0 ? (
           <p className="oj-empty">{back === 0 ? `The rest of ${MONTHS[vm - 1]} fills in here, a drop a day.` : 'Nothing kept this month.'}</p>

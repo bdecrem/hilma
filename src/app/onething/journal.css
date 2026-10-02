@@ -222,29 +222,6 @@ html:has(.oj) { background: linear-gradient(var(--oj-top, #7b4dff) 50%, #fbf7f0 
 .oj-round:disabled { opacity: .35; cursor: default; box-shadow: none; }
 .oj-empty { margin: 18px 0 0; font-size: 16px; color: var(--mute); }
 
-/* ---------- the jar ---------- */
-.oj-jar-row { margin-top: 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 22px; }
-.oj-jar { position: relative; flex: none; width: 260px; isolation: isolate; } /* its drops stack among themselves, never over a sheet */
-.oj-jar-lid {
-  position: absolute; top: 0; left: 26px; right: 26px; height: 30px; border-radius: 12px 12px 8px 8px; z-index: 2;
-  background: radial-gradient(80% 90% at 25% 0%, #ddd0ff 0%, transparent 70%), linear-gradient(175deg, #7b4dff 40%, #4a1fc4 140%);
-  box-shadow: inset 0 3px 0 rgba(255,255,255,.5), inset 0 -4px 8px rgba(40,10,120,.35), 0 6px 10px -4px rgba(40,10,120,.4);
-}
-.oj-jar-glass {
-  position: absolute; left: 0; right: 0; bottom: 0; overflow: hidden;
-  border-radius: 26px 26px 52px 52px;
-  background: linear-gradient(90deg, rgba(255,255,255,.95) 0, rgba(255,255,255,.55) 16%, rgba(238,230,250,.4) 62%, rgba(255,255,255,.8) 100%);
-  box-shadow: inset 0 0 0 2.5px rgba(74,31,196,.14), inset 0 -14px 24px rgba(74,31,196,.07), 0 20px 30px -18px rgba(60,30,120,.45);
-}
-/* the glass's own shine, over the drops */
-.oj-jar-glass::after { content: ''; position: absolute; left: 14px; top: 22px; bottom: 34px; width: 9px; border-radius: 9px; background: rgba(255,255,255,.85); z-index: 200; pointer-events: none; }
-.oj-jar-drop { position: absolute; line-height: 0; }
-.oj-jar-say { text-align: left; min-width: 0; }
-@media (max-width: 420px) { .oj-jar-say { text-align: center; } }
-.oj-jar-n { margin: 0; font-family: var(--display); font-weight: 800; font-size: 72px; line-height: .9; letter-spacing: -.05em; color: #7b4dff; }
-.oj-jar-l { margin: 2px 0 0; font-family: var(--display); font-weight: 800; font-size: 22px; line-height: 1.05; letter-spacing: -.025em; }
-.oj-jar-sub { margin: 6px 0 0; max-width: 220px; font-family: var(--hand); font-size: 19px; line-height: 1.15; color: var(--mute); }
-
 /* ---------- the wall ---------- */
 .oj-wall { margin-top: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (min-width: 640px) { .oj-wall { grid-template-columns: repeat(3, 1fr); gap: 18px; } }
