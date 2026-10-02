@@ -18,7 +18,7 @@ export default function DodoAltPage() {
       <header className="da-top">
         <div className="da-mark">
           <div className="da-mini" aria-hidden="true">
-            <DodoMascot size={32} shadow={false} crop="face" />
+            <DodoMascot size={36} shadow={false} crop="face" />
           </div>
           <span className="da-word">dodo</span>
         </div>
@@ -242,10 +242,9 @@ const css = `
   flex-wrap: wrap; gap: 12px 16px;
 }
 .da-mark { display: flex; align-items: center; gap: 10px; }
-/* Masthead tile = the app icon: the jelly dodo on its sunrise-peach ground. Fixed across modes. */
-.da-mini { width: 32px; height: 32px; border-radius: 9px; overflow: hidden;
-  background: linear-gradient(180deg, #FFECD6, #FFC9A6); box-shadow: 0 1px 2px rgba(80,50,90,0.18); }
-.da-mini svg { width: 32px; height: 32px; }
+/* Masthead: the jelly dodo itself, no icon tile behind it. */
+.da-mini { width: 36px; height: 36px; overflow: visible; }
+.da-mini svg { width: 36px; height: 36px; }
 .da-word { font-family: var(--display); font-weight: 600; font-size: 21px; letter-spacing: -0.015em; }
 .da-nav { display: flex; gap: 20px; font-family: var(--display); font-weight: 500; font-size: 14.5px; }
 .da-nav a { text-decoration: none; border-bottom: 2px solid var(--accent-bright); padding-bottom: 1px; }
