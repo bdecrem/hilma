@@ -557,7 +557,7 @@ function Landing(props: {
           <div className="oj-today">
             <Ink color="yellow" size={128} className="oj-host" />
             <h2 className="oj-q big">One sentence a day. A doodle for every one.</h2>
-            <p className="oj-lede">Every morning at ten, a text asks what happened. You answer in one sentence, Opus doodles it, and by December you have a year.</p>
+            <p className="oj-lede">A one-sentence-a-day journal that lives in your texts.</p>
             <div className="oj-acts">
               <button type="button" className="oj-btn big" data-j="yellow" onClick={toStart}>Start your year</button>
             </div>
