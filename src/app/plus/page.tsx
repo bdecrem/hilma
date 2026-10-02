@@ -1,18 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-const LINES = [
-  'HELLO, 1986!',
-  '9600 baud of pure love',
-  'I have 1 MB of RAM and zero regrets',
-  'Please insert disk. Any disk. I am hungry.',
-  '512 x 342 pixels of attitude',
-  'Opus 5.5 on low effort. Still crushed it.',
-  'Beige is a lifestyle',
-  'I am a VT100 now. Ask me anything.',
-  'Mini vMac? Never heard of her.',
-]
+// The Plus's voice lives on the Mac mini (apps/macplus/agent-voice), exposed by tunn3l.
+const VOICE = 'https://voice-mini.tunn3l.sh'
+
+type Line = { id: string; text: string; at: number }
+type VoiceState = { online: boolean; since: number | null; line: Line | null; error: string | null }
 
 const DISKS = Array.from({ length: 14 }, (_, i) => ({
   left: (i * 37) % 100,
@@ -23,22 +17,71 @@ const DISKS = Array.from({ length: 14 }, (_, i) => ({
 }))
 
 export default function PlusBuddy() {
-  const [line, setLine] = useState(0)
-  const [sad, setSad] = useState(false)
+  const [voice, setVoice] = useState<VoiceState | null>(null)
+  const [unreachable, setUnreachable] = useState(false)
+  const [awake, setAwake] = useState(false)
+  const [talking, setTalking] = useState(false)
   const [spins, setSpins] = useState(0)
+  const heard = useRef<string | null>(null)
+  const audio = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    const t = setInterval(() => setLine((l) => (l + 1) % LINES.length), 2600)
-    return () => clearInterval(t)
+    let alive = true
+    async function poll() {
+      try {
+        const r = await fetch(`${VOICE}/state`, { cache: 'no-store' })
+        if (!r.ok) throw new Error(String(r.status))
+        const s: VoiceState = await r.json()
+        if (alive) { setVoice(s); setUnreachable(false) }
+      } catch {
+        if (alive) setUnreachable(true)
+      }
+    }
+    poll()
+    const t = setInterval(poll, 4000)
+    return () => { alive = false; clearInterval(t) }
   }, [])
 
-  function poke() {
-    setSpins((s) => s + 1)
-    if (Math.random() < 0.2) {
-      setSad(true)
-      setTimeout(() => setSad(false), 1800)
-    }
+  function play(line: Line) {
+    const a = audio.current ?? new Audio()
+    audio.current = a
+    heard.current = line.id
+    a.src = `${VOICE}/audio/${line.id}`
+    a.onplaying = () => setTalking(true)
+    a.onended = a.onerror = a.onpause = () => setTalking(false)
+    a.play().catch(() => setTalking(false))
   }
+
+  // Speak each new line once, after the first tap has unlocked audio. Lines
+  // older than two minutes are shown but not spoken.
+  useEffect(() => {
+    const line = voice?.line
+    if (!awake || !line || heard.current === line.id) return
+    if (Date.now() - line.at > 120000) { heard.current = line.id; return }
+    play(line)
+  }, [voice, awake])
+
+  function poke() {
+    // iOS unlocks audio only for an element played inside a tap, so the first
+    // tap replays the latest line (whatever its age) on the element we reuse.
+    if (!awake) {
+      setAwake(true)
+      if (voice?.line) play(voice.line)
+    }
+    setSpins((s) => s + 1)
+  }
+
+  const asleep = !unreachable && voice !== null && !voice.online
+  const sad = unreachable
+  const bubble = unreachable
+    ? "Can't reach the mini. My voice box is unplugged."
+    : !voice
+      ? 'Booting...'
+      : !awake
+        ? 'Tap me to hear my voice!'
+        : voice.line && (voice.online || Date.now() - voice.line.at < 600000)
+          ? voice.line.text
+          : 'zzz... the Plus is switched off.'
 
   return (
     <main className="pb-root">
@@ -71,11 +114,11 @@ export default function PlusBuddy() {
       </h1>
 
       <div className="pb-stage">
-        <div className="pb-bubble" key={line}>
-          {sad ? 'SAD MAC. Error 0F000D. (jk)' : LINES[line]}
+        <div className="pb-bubble" key={bubble}>
+          {bubble}
         </div>
         <button
-          className="pb-mac"
+          className={`pb-mac${asleep ? ' pb-asleep' : ''}`}
           onClick={poke}
           aria-label="Poke the Mac"
           style={{ transform: `rotate(${spins * 360}deg)` }}
@@ -97,12 +140,22 @@ export default function PlusBuddy() {
                 <path d="M68 60 l12 12 M80 60 l-12 12 M120 60 l12 12 M132 60 l-12 12" />
                 <path d="M78 104 Q100 88 122 104" />
               </g>
+            ) : asleep ? (
+              <g stroke="#e8f0ff" strokeWidth="5" strokeLinecap="round" fill="none">
+                <path d="M68 66 Q76 72 84 66 M116 66 Q124 72 132 66" />
+                <path d="M90 100 h20" />
+                <text x="134" y="50" className="pb-zzz" fill="#e8f0ff" stroke="none" fontSize="16">z</text>
+              </g>
             ) : (
               <g fill="#e8f0ff">
                 <rect className="pb-eye" x="72" y="56" width="8" height="18" />
                 <rect className="pb-eye" x="120" y="56" width="8" height="18" />
                 <path d="M96 64 v20 h-6" stroke="#e8f0ff" strokeWidth="5" fill="none" />
-                <path d="M74 96 Q100 116 126 96" stroke="#e8f0ff" strokeWidth="5" fill="none" strokeLinecap="round" />
+                {talking ? (
+                  <ellipse className="pb-talk" cx="100" cy="102" rx="16" ry="9" fill="#e8f0ff" />
+                ) : (
+                  <path d="M74 96 Q100 116 126 96" stroke="#e8f0ff" strokeWidth="5" fill="none" strokeLinecap="round" />
+                )}
               </g>
             )}
             <circle cx="40" cy="190" r="6" className="pb-apple" />
@@ -115,7 +168,7 @@ export default function PlusBuddy() {
         <div className="pb-shadow" />
       </div>
 
-      <p className="pb-foot">8 MHz 68000 &middot; 1 MB RAM &middot; 800K floppy &middot; tap me</p>
+      <p className="pb-foot">{asleep ? 'the Plus is off' : voice?.online ? 'the Plus is ON and talking' : '...'} &middot; voice: MacinTalk Fred</p>
     </main>
   )
 }
@@ -148,6 +201,11 @@ const CSS = `
   animation-name:pb-fall;animation-timing-function:linear;animation-iteration-count:infinite}
 .pb-shutter{position:absolute;top:0;left:25%;width:50%;height:32%;background:#cfd6e0;border-bottom:2px solid #000}
 .pb-label{position:absolute;bottom:8%;left:15%;width:70%;height:40%;background:#fff;border:1px solid #000}
+.pb-asleep{animation:pb-sway 4s ease-in-out infinite}
+.pb-asleep svg{animation:none}
+.pb-asleep .pb-arm-l,.pb-asleep .pb-arm-r,.pb-asleep .pb-leg-l,.pb-asleep .pb-leg-r{animation:none}
+.pb-talk{transform-box:fill-box;transform-origin:center;animation:pb-flap .14s ease-in-out infinite alternate}
+.pb-zzz{animation:pb-zzz 2s ease-out infinite}
 .pb-foot{position:relative;z-index:2;margin-top:24px;font-size:13px;opacity:.75;text-align:center}
 @keyframes pb-spin{to{transform:rotate(360deg)}}
 @keyframes pb-wave{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px) rotate(-6deg)}}
@@ -163,5 +221,8 @@ const CSS = `
 @keyframes pb-shadow{0%,100%{transform:scale(1);opacity:.45}45%{transform:scale(.6);opacity:.2}}
 @keyframes pb-pop{from{transform:scale(.3) rotate(-8deg)}to{transform:scale(1)}}
 @keyframes pb-fall{from{transform:translateY(0) rotate(0)}to{transform:translateY(calc(100dvh + 160px)) rotate(720deg)}}
+@keyframes pb-sway{0%,100%{translate:0 0;rotate:-2deg}50%{translate:0 6px;rotate:2deg}}
+@keyframes pb-flap{from{transform:scaleY(.25)}to{transform:scaleY(1.2)}}
+@keyframes pb-zzz{from{transform:translate(0,0);opacity:1}to{transform:translate(14px,-22px);opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:20s!important}}
 `

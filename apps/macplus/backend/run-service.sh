@@ -20,13 +20,14 @@
 #   rsh      :2329  node:net INSTANT shell for Plutonix (raw TCP -> pty, no SSH)
 #   pixel    :2337  node:net Daily Pixel collaborative canvas (+ daily Claude strokes)
 #   dodo     :2339  node:net Dodo for Macintosh -> feynd.cc (F2 chat as one user)
+#   voice    :2341  node:http the Plus's voice (Fred lines for hilma-nine.vercel.app/plus)
 #
 # Secrets come from ~/.macplus-backend.env (chmod 600, NOT in git, NOT in the
 # plists). backend/update.sh re-syncs it from the dev tree's .env.local when
 # that file is readable.
 set -u
 
-NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen|netspeed|porthole|pssh|rsh|pixel|imsghttp|dodo>}"
+NAME="${1:?usage: run-service.sh <code|paint|surf|mux|imessage|diag|quote|bridge|screen|netspeed|porthole|pssh|rsh|pixel|imsghttp|dodo|voice>}"
 DEPLOY="${MACPLUS_DEPLOY:-/Users/admin/hilma-deploy}"
 BASE="$DEPLOY/apps/macplus"
 SOCAT=/opt/homebrew/bin/socat
@@ -95,6 +96,10 @@ case "$NAME" in
     # from F2_SESSION_SECRET + DODO_F2_USER_ID (env file) and proxies the Plus's
     # line protocol to feynd.cc /api/f2/*.
     cd "$BASE/agent-dodo"; exec /usr/bin/env node server.mjs --listen 2339 ;;
+  voice)
+    # The Plus's voice — dependency-free node. Needs ANTHROPIC_API_KEY. Public
+    # via tunn3l voice-mini.tunn3l.sh (sh.tunn3l.voice-mini, mini-local plist).
+    cd "$BASE/agent-voice"; exec /usr/bin/env node server.mjs --listen 2341 ;;
   rsh)
     # INSTANT shell for Plutonix — raw TCP -> pty -> login shell. No SSH, no
     # handshake, no per-key crypto; trusted-LAN only (same model as :2323).
