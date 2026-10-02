@@ -18,7 +18,7 @@ export default function DodoAltPage() {
       <header className="da-top">
         <div className="da-mark">
           <div className="da-mini" aria-hidden="true">
-            <DodoMascot size={30} shadow={false} crop="face" />
+            <DodoMascot size={32} shadow={false} crop="face" />
           </div>
           <span className="da-word">dodo</span>
         </div>
@@ -191,19 +191,28 @@ export default function DodoAltPage() {
 
 const css = `
 .da {
-  --paper: #FBF5E6;
-  --surface: #FFFDF7;
-  --surface2: #F2EAD6;
-  --border: #E3D9C2;
-  --ink: #33383E;
-  --ink2: #606C75;
-  --ink3: #939DA5;
-  --marigold: #DD9420;
-  --marigold-deep: #B97A14;
-  --slate: #6A8FA3;
-  --sprout: #5F9E4C;
-  --peach: #FCE5D0;
-  --shadow: rgba(62,51,36,0.14);
+  /* The jelly palette (apps/feynd/branding/BRANDING.md): lavender paper,
+     sky as the accent, grape and lemon in support, the icon's sunrise peach
+     behind the hero. Nothing pure black or pure white. */
+  --paper: #F8F2F8;
+  --surface: #FFFCFF;
+  --surface2: #F1E8F5;
+  --surface3: #E4D8EA;
+  --border: #E6DBEC;
+  --ink: #2D2537;
+  --ink2: #6A5F73;
+  --ink3: #9A8FA4;
+  --accent: #2689BD;
+  --accent-bright: #5EC6EC;
+  --accent-light: #DCF6FF;
+  --grape: #7A4FD6;
+  --gold: #E0A100;
+  --gold-bright: #FFD43A;
+  --gold-light: #FFF8C8;
+  --blush: #FF9FC8;
+  --peach: #FFE2C8;
+  --peach2: #FFC9A6;
+  --shadow: rgba(80,50,90,0.16);
   --display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
   --body: var(--font-nunito), 'Nunito', 'Avenir Next', system-ui, sans-serif;
 
@@ -217,10 +226,11 @@ const css = `
 }
 @media (prefers-color-scheme: dark) {
   .da {
-    --paper: #14191D; --surface: #202830; --surface2: #2B343D; --border: #333E48;
-    --ink: #F7F0DE; --ink2: #A0ACB4; --ink3: #64717B;
-    --marigold: #F0A830; --marigold-deep: #F6C46A; --slate: #8FB0C4; --sprout: #7BB662;
-    --peach: #243038; --shadow: rgba(0,0,0,0.4);
+    --paper: #17131D; --surface: #271F31; --surface2: #332A3F; --surface3: #3F354C; --border: #3D3349;
+    --ink: #F3EBF6; --ink2: #B3A8BC; --ink3: #7A6F85;
+    --accent: #5EC6EC; --accent-bright: #5EC6EC; --accent-light: #1C4A63;
+    --grape: #B994FF; --gold: #FFD43A; --gold-bright: #FFD43A; --gold-light: #5A4710;
+    --peach: #4A3468; --peach2: #2E2246; --shadow: rgba(0,0,0,0.45);
   }
 }
 .da * { box-sizing: border-box; }
@@ -232,37 +242,40 @@ const css = `
   flex-wrap: wrap; gap: 12px 16px;
 }
 .da-mark { display: flex; align-items: center; gap: 10px; }
-/* Masthead tile: the bird's deep slate, not the icon peach — peach was the one
-   low-contrast element on paper and the loudest one on slate ink. Fixed across modes. */
-.da-mini { width: 30px; height: 30px; border-radius: 8px; background: #34505F; overflow: hidden; }
-.da-mini svg { width: 30px; height: 30px; }
-.da-word { font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -0.02em; }
+/* Masthead tile = the app icon: the jelly dodo on its sunrise-peach ground. Fixed across modes. */
+.da-mini { width: 32px; height: 32px; border-radius: 9px; overflow: hidden;
+  background: linear-gradient(180deg, #FFECD6, #FFC9A6); box-shadow: 0 1px 2px rgba(80,50,90,0.18); }
+.da-mini svg { width: 32px; height: 32px; }
+.da-word { font-family: var(--display); font-weight: 600; font-size: 21px; letter-spacing: -0.015em; }
 .da-nav { display: flex; gap: 20px; font-family: var(--display); font-weight: 500; font-size: 14.5px; }
-.da-nav a { text-decoration: none; border-bottom: 2px solid var(--marigold); padding-bottom: 1px; }
-.da-nav a:hover { border-color: var(--slate); }
+.da-nav a { text-decoration: none; border-bottom: 2px solid var(--accent-bright); padding-bottom: 1px; }
+.da-nav a:hover { border-color: var(--grape); }
 
 .da-body { max-width: 660px; margin: 0 auto; padding: 46px 24px 72px; }
 .da-body h1 {
-  font-family: var(--display); font-weight: 500;
-  font-size: clamp(25px, 4.6vw, 32px); line-height: 1.28;
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(25px, 4.6vw, 32px); line-height: 1.26;
   letter-spacing: -0.012em; margin: 0 0 40px; text-wrap: balance;
 }
-.da-body h1 em { font-style: normal; color: var(--marigold-deep); }
+.da-body h1 em { font-style: normal; color: var(--accent); }
 
 .da-label {
   font-family: var(--display); font-weight: 600; font-size: 12px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate);
-  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--grape);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 9px;
 }
-.da-label::before { content: ""; width: 8px; height: 8px; border-radius: 2.5px; background: var(--marigold); }
+/* A little jelly ball marks every section. */
+.da-label::before { content: ""; width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #DCF6FF 0%, #5EC6EC 45%, #2689BD 100%);
+  box-shadow: inset -1px -1.5px 2px rgba(8,75,120,0.35); }
 .da-body section { margin: 56px 0 0; padding-top: 44px; border-top: 1px solid var(--border); }
 .da-body section:last-child { padding-bottom: 8px; }
 /* The hero is the statement's demonstration, so its break sits closer than a chapter gap. */
 .da-body section.dh { margin-top: 38px; padding-top: 36px; }
 .da-body p { font-size: 17px; line-height: 1.6; color: var(--ink); margin: 0 0 16px; }
-.da-quote { margin: 26px 0 22px; padding: 6px 0 6px 20px; border-left: 3px solid var(--slate); }
+.da-quote { margin: 26px 0 22px; padding: 6px 0 6px 20px; border-left: 3px solid var(--grape); }
 .da-quote-text { font-family: var(--display); font-weight: 500; font-size: 21px; line-height: 1.4; color: var(--ink); margin: 0 0 6px; }
-.da-quote-mark { color: var(--marigold); }
+.da-quote-mark { color: var(--accent); }
 .da-quote-cite { font-style: normal; font-size: 14px; color: var(--ink2); }
 .da-feyn-lead { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); margin: 0 0 12px; }
 .da-feyn { list-style: none; counter-reset: step; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
@@ -270,29 +283,47 @@ const css = `
   counter-increment: step; position: relative; padding-left: 38px;
   font-size: 15.5px; line-height: 1.55; color: var(--ink2);
 }
+/* Steps on lemon jelly balls, the map's numeral style. */
 .da-feyn li::before {
   content: counter(step); position: absolute; left: 0; top: 0;
   font-family: var(--display); font-weight: 600; font-size: 13px;
-  color: #261C06; background: var(--marigold); width: 24px; height: 24px; border-radius: 50%;
+  color: #2D2537; width: 25px; height: 25px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #FFF8C8 0%, #FFD43A 50%, #E0A100 100%);
+  box-shadow: inset -1px -2px 3px rgba(140,85,0,0.3), 0 1px 2px rgba(80,50,90,0.14);
   display: grid; place-items: center;
 }
 .da-name { font-size: 15.5px; line-height: 1.55; color: var(--ink2); margin: 0 0 14px; }
-.da-name a { color: var(--slate); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--slate) 50%, transparent); }
+.da-name a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent); }
 .da-more { font-family: var(--display); font-weight: 500; font-size: 15px; margin: 4px 0 0; }
-.da-more a { color: var(--marigold-deep); text-decoration: none; }
+.da-more a { color: var(--accent); text-decoration: none; }
 .da-more a:hover { text-decoration: underline; }
 
 .da-feat { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 12px; }
-.da-feat li { position: relative; padding-left: 22px; font-size: 15.5px; line-height: 1.55; color: var(--ink2); }
-.da-feat li::before { content: ""; position: absolute; left: 0; top: 8px; width: 8px; height: 8px; border-radius: 2.5px; background: var(--marigold); }
-.da-feat strong { font-family: var(--display); font-weight: 500; font-size: 15px; color: var(--ink); }
+.da-feat li { position: relative; padding-left: 24px; font-size: 15.5px; line-height: 1.55; color: var(--ink2); }
+/* Jelly dots in the eight colourways, one per feature. */
+.da-feat li::before { content: ""; position: absolute; left: 0; top: 6px; width: 12px; height: 12px; border-radius: 50%;
+  --j1: #DCF6FF; --j2: #5EC6EC; --j3: #2689BD;
+  background: radial-gradient(circle at 35% 30%, var(--j1) 0%, var(--j2) 48%, var(--j3) 100%);
+  box-shadow: inset -1px -1.5px 2px rgba(45,37,55,0.22); }
+.da-feat li:nth-child(8n+2)::before { --j1: #FFE0EF; --j2: #FF9FC8; --j3: #E9649D; }
+.da-feat li:nth-child(8n+3)::before { --j1: #FFF8C8; --j2: #FFD43A; --j3: #E0A100; }
+.da-feat li:nth-child(8n+4)::before { --j1: #E2FFF4; --j2: #91E9CC; --j3: #4DC5A2; }
+.da-feat li:nth-child(8n+5)::before { --j1: #EFE2FF; --j2: #A77BF2; --j3: #6A3FC4; }
+.da-feat li:nth-child(8n+6)::before { --j1: #FFE6CF; --j2: #FFAA82; --j3: #F06C55; }
+.da-feat li:nth-child(8n+7)::before { --j1: #EFFFD0; --j2: #A3E45C; --j3: #4C9F2A; }
+.da-feat li:nth-child(8n+8)::before { --j1: #FF9A96; --j2: #FF2B36; --j3: #BF0D1C; }
+.da-feat strong { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); }
 .da-feat code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; background: var(--surface2); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
 
 .da-fine p { color: var(--ink2); font-size: 16px; }
+/* The button is a sky jelly key, like the app's talk key. */
 .da a.da-btn {
   display: inline-block; font-family: var(--display); font-weight: 600; font-size: 15px;
   padding: 12px 22px; border-radius: 999px; text-decoration: none;
-  background: var(--ink); color: var(--paper);
+  background: linear-gradient(180deg, #5EC6EC 0%, #2689BD 100%); color: #FFFFFF;
+  box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.55), inset 0 -2px 3px rgba(8,75,120,0.35), 0 6px 14px rgba(38,137,189,0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.da a.da-btn:hover { background: var(--slate); color: #FFFDF7; }
+.da a.da-btn:hover { transform: translateY(-1px); box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.6), inset 0 -2px 3px rgba(8,75,120,0.35), 0 9px 18px rgba(38,137,189,0.32); }
+.da a.da-btn:active { transform: translateY(1px) scale(0.98); }
 `

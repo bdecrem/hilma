@@ -31,6 +31,13 @@ const args = process.argv.slice(2)
 const flag = (f) => args.includes(f)
 const opt = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i + 1] : null }
 
+// Sign-in: the demo password (DODO_DEMO_PASS) against production, or on a
+// machine without it `--token <signed f2_session> --backend http://localhost:3100`
+// — a session signed with the local F2_SESSION_SECRET (signSession in
+// src/lib/f2/auth.ts) against a local dev server, which reads the same
+// database, so the frames are the same.
+const backend = opt('--backend')
+const token = opt('--token') || process.env.DODO_DEMO_TOKEN || null
 const manifest = JSON.parse(fs.readFileSync(path.join(HERE, 'scenes.json'), 'utf8'))
 const themes = flag('--dark') ? ['light', 'dark'] : manifest.themes
 const only = opt('--only')?.split(',')
@@ -68,7 +75,13 @@ function pickSim() {
     const want = manifest.runtime.replace(/[ .]/g, '-')
     const hit = hits.find((h) => h.runtime.endsWith(want))
     if (hit) return hit
-    log(`runtime ${manifest.runtime} not installed — using ${hits[0].runtime.split('.').pop()}`)
+    // Same major version next (every 26.x renders every scene); the newest
+    // runtime only as a last resort — a beta can drop launch hooks.
+    const major = want.replace(/-\d+$/, '')
+    const near = hits.find((h) => h.runtime.includes(major + '-'))
+    const pick = near ?? hits[0]
+    log(`runtime ${manifest.runtime} not installed — using ${pick.runtime.split('.').pop()}`)
+    return pick
   }
   return hits[0]
 }
@@ -112,7 +125,7 @@ async function capture() {
   await renderMockups()
   if (!scenes.some((s) => s.launch)) return
   const pass = process.env.DODO_DEMO_PASS
-  if (!pass) throw new Error('DODO_DEMO_PASS is not set in .env.local')
+  if (!pass && !token) throw new Error('DODO_DEMO_PASS is not set in .env.local (or pass --token <signed f2_session> --backend <url>)')
   const sim = pickSim()
   const app = findApp()
   log('sim', manifest.sim, sim.udid, sim.runtime.split('.').pop())
@@ -130,13 +143,21 @@ async function capture() {
 
   const launch = (...extra) => {
     try { sh('xcrun', ['simctl', 'terminate', sim.udid, BUNDLE]) } catch { /* not running */ }
-    sh('xcrun', ['simctl', 'launch', sim.udid, BUNDLE, '-SkipNotifPrompt', '1', '-NoSFX', '1', ...extra])
+    const common = ['-SkipNotifPrompt', '1', '-NoSFX', '1', '-hasSeenOnboarding', '1']
+    if (backend) common.push('-BackendURL', backend)
+    // The token cookie is a session cookie (no expiry), so it does not
+    // survive a relaunch the way the server's login cookie does: re-set it
+    // on every launch.
+    if (token) common.push('-TestSessionToken', token)
+    sh('xcrun', ['simctl', 'launch', sim.udid, BUNDLE, ...common, ...extra])
   }
 
   for (const theme of themes) {
     sh('xcrun', ['simctl', 'ui', sim.udid, 'appearance', theme])
     log(`theme ${theme}: warming up (sign-in + caches)`)
-    launch('-TestLoginUser', state.username, '-TestLoginPass', pass, '-StartTab', 'topics'); await sleep(12)
+    if (token) launch('-StartTab', 'topics')
+    else launch('-TestLoginUser', state.username, '-TestLoginPass', pass, '-StartTab', 'topics')
+    await sleep(12)
     launch('-StartTab', 'peck'); await sleep(12)
 
     for (const s of scenes) {

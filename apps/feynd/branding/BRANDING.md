@@ -6,8 +6,14 @@ pages in `misc/dodo-redesign/` (`jelly-dodos.html`, `jelly-critters.html`,
 `dodo-jelly-map.html`). The pages are the source of truth for the look —
 every colour, outline and face below is read out of their code. The
 bookworm bird that preceded it (Claude Design, `dodo-logo.dc.html`,
-`dodo-mark.svg`, `dodo-icon.svg`) is kept in this folder for history and
-still drives the website until the site is redone.
+`dodo-mark.svg`, `dodo-icon.svg`) is kept in this folder for history only.
+The website (dodo.foo, `src/app/dodo/`) moved to the jelly on 2026-10-02:
+`DodoMascot.tsx` is a live SVG port of the same body (the page's outline
+maths, rim shading and face, posed by the old bird's beat model), the page
+and `DodoFrame.tsx` use the palette below (lavender paper, sky accent,
+grape labels, lemon numerals, the icon's sunrise peach behind the hero),
+the favicon and OG card are the icon's picture, and the screenshot gallery
+is recaptured from the jelly build through `scripts/dodo-scenes`.
 
 ## The mascot
 

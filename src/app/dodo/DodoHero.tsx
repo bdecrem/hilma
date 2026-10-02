@@ -101,10 +101,10 @@ const heroCss = `
   align-items: center; margin: 4px 0 0; }
 .dh-stage { position: relative; width: 318px; height: 512px; }
 .dh-bloom { position: absolute; inset: -30px -40px; pointer-events: none;
-  background: radial-gradient(ellipse 58% 52% at 56% 50%, var(--peach) 0%, transparent 70%); }
+  background: radial-gradient(ellipse 58% 52% at 56% 50%, var(--peach) 0%, var(--peach2) 36%, transparent 72%); }
 .dh-phone { position: absolute; left: 82px; top: 0; width: 226px; aspect-ratio: 1260 / 2736; padding: 0; border: 0;
   background: transparent; cursor: pointer; border-radius: 30px; }
-.dh-phone:focus-visible { outline: 3px solid var(--marigold); outline-offset: 4px; }
+.dh-phone:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 .dh-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; }
 .dh-slide.on { opacity: 1; }
 .dh-screen { width: 100%; height: 100%; border-radius: 30px; }
@@ -115,12 +115,14 @@ const heroCss = `
 .dh-words { animation: dh-in 0.5s ease both; }
 .dh-line { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 5.4vw, 36px); line-height: 1.1;
   letter-spacing: -0.015em; color: var(--ink); margin: 0 0 12px; text-wrap: balance; }
-.dh-line em { font-style: normal; color: var(--marigold-deep); }
+.dh-line em { font-style: normal; color: var(--accent); }
 .dh-sub { font-family: var(--body); font-size: 16px; line-height: 1.5; color: var(--ink2); margin: 0; max-width: 34ch; }
-.dh-dots { display: flex; gap: 6px; margin-top: 22px; }
-.dh-dots button { width: 24px; height: 4px; border-radius: 2px; border: 0; padding: 0; background: var(--surface2); cursor: pointer; }
-.dh-dots button.on { background: var(--marigold); }
-.dh-dots button:focus-visible { outline: 2px solid var(--marigold); outline-offset: 3px; }
+.dh-dots { display: flex; gap: 7px; margin-top: 22px; }
+.dh-dots button { width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0; background: var(--surface3); cursor: pointer;
+  transition: width 0.25s ease, background 0.25s ease; }
+.dh-dots button.on { width: 26px; border-radius: 5px; background: linear-gradient(180deg, var(--accent-bright), var(--accent));
+  box-shadow: inset 0 1.5px 1px rgba(255,255,255,0.55); }
+.dh-dots button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @keyframes dh-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @media (max-width: 660px) {
   .dh { grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px; margin-top: 10px; }

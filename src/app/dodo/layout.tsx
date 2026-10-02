@@ -9,7 +9,7 @@ const fredoka = Fredoka({
 
 const nunito = Nunito({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
+  weight: ['400', '600', '700', '800'],
   variable: '--font-nunito',
 })
 
@@ -23,7 +23,10 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#FBF5E6',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F8F2F8' },
+    { media: '(prefers-color-scheme: dark)', color: '#17131D' },
+  ],
 }
 
 export default function DodoLayout({ children }: { children: React.ReactNode }) {

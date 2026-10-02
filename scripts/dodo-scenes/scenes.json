@@ -1,5 +1,5 @@
 {
-  "$comment": "Dodo showcase manifest. One entry per app moment; every showcase surface (site hero, tour, App Store shots, video) renders from this list. Lines use **word** to mark the one marigold word. $T_<KEY> in launch args resolves to a demo-account topic id from seed-state.json. capture: still | mockup (an HTML screen under mockups/, rendered at 3x) | clip (an mp4 under clips/) | record (simctl recordVideo for `seconds`, then `trim` [start, length]). Run `pnpm dodo:scenes` after editing; see README.md.",
+  "$comment": "Dodo showcase manifest. One entry per app moment; every showcase surface (site hero, tour, App Store shots, video) renders from this list. Lines use **word** to mark the one sky-blue word. $T_<KEY> in launch args resolves to a demo-account topic id from seed-state.json. capture: still | mockup (an HTML screen under mockups/, rendered at 3x) | clip (an mp4 under clips/) | record (simctl recordVideo for `seconds`, then `trim` [start, length]). Run `pnpm dodo:scenes` after editing; see README.md.",
   "sim": "iPhone Air",
   "runtime": "iOS 26.4",
   "$runtime": "Preferred simulator runtime. The iOS 27 beta drops some launch hooks (the profile sheet never renders); 26.4 renders every scene. Falls back to the newest runtime when this one is not installed.",
@@ -83,7 +83,7 @@
         "-OpenTopic",
         "$T_ODYSSEY"
       ],
-      "settle": 6,
+      "settle": 12,
       "capture": "still",
       "bird": "idle",
       "sets": [
@@ -152,9 +152,11 @@
         "-OpenTopic",
         "$T_ODYSSEY",
         "-OpenFinalReview",
-        "1"
+        "1",
+        "-VoiceMockMood",
+        "speaking"
       ],
-      "settle": 12,
+      "settle": 8,
       "legacy": "scripts/dodo-scenes/legacy/exam.png",
       "capture": "still",
       "bird": "hop",
@@ -175,7 +177,20 @@
       "sets": [
         "tour",
         "video"
-      ]
+      ],
+      "launch": [
+        "-StartTab",
+        "topics",
+        "-OpenTopic",
+        "$T_ODYSSEY",
+        "-OpenFinalReview",
+        "1",
+        "-VoiceMockMood",
+        "tuning",
+        "-MockFinalGrade",
+        "C"
+      ],
+      "settle": 8
     },
     {
       "id": "second-chance",

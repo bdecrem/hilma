@@ -35,7 +35,7 @@ React frame (`DodoFrame.tsx`) the hero uses, so exports match the page.
 on port 3077 itself. `capture.mjs` needs a simulator build of the Feynd scheme in DerivedData
 (`xcodebuild -project apps/feynd/Feynd.xcodeproj -scheme Feynd -destination
 'platform=iOS Simulator,name=iPhone Air' build`). Look at `contact-sheet.png`
-after every run: legacy and missing frames are labelled in marigold.
+after every run: legacy and missing frames are labelled in gold.
 
 ## A scene
 
@@ -53,7 +53,7 @@ after every run: legacy and missing frames are labelled in marigold.
 }
 ```
 
-- `line` — the hero/App Store caption; `**word**` is the one marigold word.
+- `line` — the hero/App Store caption; `**word**` is the one sky-blue word.
 - `tour` — the longer caption under the tour phone.
 - `launch` — simulator launch arguments (the app's Debug-only hooks, listed
   in `apps/feynd/CLAUDE.md`). `$T_<KEY>` resolves to a demo topic id from
@@ -78,3 +78,12 @@ lapsed one, past rounds, four Peck levels, a seven-day streak, three
 pebbles, an avatar. Content goes through the real `/api/f2` endpoints;
 progress state is written to Supabase. Credentials: username `demo`,
 password `DODO_DEMO_PASS` in `.env.local`. `--fresh` wipes and rebuilds.
+
+On a machine without that password (the iMac M4), capture against a local
+dev server with a session you sign yourself — same database, same frames:
+
+```bash
+set -a; source ./.env.local; set +a
+T=$(npx tsx -e "import { signSession } from './src/lib/f2/auth'; console.log(signSession('<user_id from seed-state.json>'))" | tail -1)
+pnpm dodo:capture --token "$T" --backend http://localhost:3100   # with `pnpm dev -p 3100` running
+```

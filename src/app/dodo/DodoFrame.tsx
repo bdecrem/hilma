@@ -1,13 +1,13 @@
 'use client'
 
 import type { CSSProperties, ReactNode } from 'react'
-import DodoMascot from './DodoMascot'
+import DodoMascot, { BODY_CENTER_Y } from './DodoMascot'
 import { SCREEN, heroScenes, lineRuns, stillFor, type Scene } from './scenes'
 
 // The frame: the one way the app is shown everywhere. Four things composed
-// the same way — the ground (butter paper, slate ink in dark), the
-// bezel-less screen, the bird at the screen's foot, and one Fredoka line
-// with a single marigold word. The live hero (DodoHero) uses the same
+// the same way — the ground (lavender paper, indigo night in dark), the
+// bezel-less screen, the jelly dodo at the screen's foot, and one Fredoka
+// line with a single sky-blue word. The live hero (DodoHero) uses the same
 // primitives; the static formats below are what /dodo/scene/[id] renders
 // for Playwright to screenshot (App Store, video frames, feature cards,
 // the README strip).
@@ -118,26 +118,37 @@ export default function DodoFrame({ scene, format, theme = 'light', layer = 'all
   const rectAttr = (r: ScreenRect) => JSON.stringify({ ...r, w: W, h: H })
 
   if (spec.kind === 'og') {
-    // The link card: one marigold ground, the bird rising into frame from
-    // the bottom-left and looking at the two words that name the app's
-    // promise. Fixed colours — a link preview has no theme.
-    const bird = 700
-    const headX = 340, headY = 432
-    const left = headX - bird / 2
-    const top = headY - (66 / 124) * bird
-    const motes = [[90, 110, 7, 0.55], [210, 62, 5, 0.45], [560, 92, 9, 0.5], [1090, 118, 6, 0.45], [1146, 332, 8, 0.5], [1010, 548, 5, 0.4], [700, 572, 7, 0.45], [150, 330, 4, 0.4], [470, 196, 6, 0.5]]
+    // The link card: the app icon's picture at 1200 × 630 — the jelly dodo on
+    // the sunrise-peach ground with a white bloom behind it, glancing at the
+    // two words that name the app's promise. Fixed colours — a link preview
+    // has no theme.
+    const bird = 620
+    const feetY = 584
+    const left = 56
+    const top = feetY - bird * BIRD_H * FEET
+    const bodyCX = left + bird / 2
+    const bodyCY = top + ((BODY_CENTER_Y + 66) / 134) * bird * BIRD_H
+    // Jelly bubbles drifting up the ground: [x, y, r, colour].
+    const bubbles: [number, number, number, string][] = [
+      [92, 128, 16, '#5EC6EC'], [206, 70, 10, '#FF9FC8'], [612, 96, 13, '#FFD43A'], [1084, 92, 12, '#A77BF2'],
+      [1140, 318, 17, '#91E9CC'], [1012, 548, 10, '#FFAA82'], [740, 568, 13, '#5EC6EC'], [150, 420, 8, '#FFD43A'], [530, 540, 9, '#FF9FC8'],
+    ]
     return (
       <div className="df df-og" data-theme="light" data-screen={rectAttr({ left: 0, top: 0, width: 0, height: 0, radius: 0 })}
-        style={{ width: W, height: H, background: `radial-gradient(circle at ${headX}px ${headY + 10}px, #F8CB6B 0%, #F3B443 34%, #F0A830 64%)` }}>
-        {motes.map(([x, y, r, o], i) => (
-          <span key={i} style={{ position: 'absolute', left: x - r, top: y - r, width: r * 2, height: r * 2, borderRadius: '50%', background: '#FFFBF0', opacity: o }} />
+        style={{ width: W, height: H, background: 'linear-gradient(180deg, #FFECD6 0%, #FFD9BC 55%, #FFC9A6 100%)' }}>
+        <div style={{ position: 'absolute', left: bodyCX - 420, top: bodyCY - 420, width: 840, height: 840, borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.55) 32%, rgba(255,255,255,0) 64%)' }} />
+        {bubbles.map(([x, y, r, c], i) => (
+          <span key={i} style={{ position: 'absolute', left: x - r, top: y - r, width: r * 2, height: r * 2, borderRadius: '50%',
+            background: `radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0%, ${c}66 38%, ${c}99 100%)`,
+            boxShadow: `inset -2px -3px 6px ${c}55, inset 1px 1px 2px rgba(255,255,255,0.9)` }} />
         ))}
-        <div className="df-og-words" style={{ left: 618, top: 186 }}>
+        <div className="df-og-words" style={{ left: 652, top: 206 }}>
           <div className="df-og-learn">Learn it.</div>
           <div className="df-og-keep">Keep it.</div>
         </div>
         <div className="df-bird" style={{ position: 'absolute', left, top, width: bird, height: bird * BIRD_H }}>
-          <DodoMascot size={bird} still={0} gaze={2.4} shadow={false} />
+          <DodoMascot size={bird} still={0} gaze={2.4} />
         </div>
       </div>
     )
@@ -250,10 +261,11 @@ export default function DodoFrame({ scene, format, theme = 'light', layer = 'all
 
 export const frameCss = `
 .df {
-  --paper: #FBF5E6; --surface: #FFFDF7; --surface2: #F2EAD6; --border: #E3D9C2;
-  --ink: #33383E; --ink2: #606C75; --ink3: #939DA5;
-  --marigold: #DD9420; --marigold-deep: #B97A14; --slate: #6A8FA3; --peach: #FCE5D0;
-  --shadow: rgba(62,51,36,0.16);
+  --paper: #F8F2F8; --surface: #FFFCFF; --surface2: #F1E8F5; --surface3: #E4D8EA; --border: #E6DBEC;
+  --ink: #2D2537; --ink2: #6A5F73; --ink3: #9A8FA4;
+  --accent: #2689BD; --accent-bright: #5EC6EC; --grape: #7A4FD6; --gold: #E0A100; --blush: #FF9FC8;
+  --peach: #FFE2C8; --peach2: #FFC9A6;
+  --shadow: rgba(80,50,90,0.18);
   --display: var(--font-fredoka), 'Fredoka', system-ui, sans-serif;
   --body: var(--font-nunito), 'Nunito', 'Avenir Next', system-ui, sans-serif;
   position: relative; overflow: hidden; background: var(--paper); color: var(--ink);
@@ -261,21 +273,24 @@ export const frameCss = `
 }
 @media (prefers-color-scheme: dark) {
   .df:not([data-theme="light"]) {
-    --paper: #14191D; --surface: #202830; --surface2: #2B343D; --border: #333E48;
-    --ink: #F7F0DE; --ink2: #A0ACB4; --ink3: #64717B;
-    --marigold: #F0A830; --marigold-deep: #F6C46A; --slate: #8FB0C4; --peach: #243038;
-    --shadow: rgba(0,0,0,0.45);
+    --paper: #17131D; --surface: #271F31; --surface2: #332A3F; --surface3: #3F354C; --border: #3D3349;
+    --ink: #F3EBF6; --ink2: #B3A8BC; --ink3: #7A6F85;
+    --accent: #5EC6EC; --accent-bright: #5EC6EC; --grape: #B994FF; --gold: #FFD43A; --blush: #FF9FC8;
+    --peach: #4A3468; --peach2: #2E2246;
+    --shadow: rgba(0,0,0,0.5);
   }
 }
 .df[data-theme="dark"] {
-  --paper: #14191D; --surface: #202830; --surface2: #2B343D; --border: #333E48;
-  --ink: #F7F0DE; --ink2: #A0ACB4; --ink3: #64717B;
-  --marigold: #F0A830; --marigold-deep: #F6C46A; --slate: #8FB0C4; --peach: #243038;
-  --shadow: rgba(0,0,0,0.45);
+  --paper: #17131D; --surface: #271F31; --surface2: #332A3F; --surface3: #3F354C; --border: #3D3349;
+  --ink: #F3EBF6; --ink2: #B3A8BC; --ink3: #7A6F85;
+  --accent: #5EC6EC; --accent-bright: #5EC6EC; --grape: #B994FF; --gold: #FFD43A; --blush: #FF9FC8;
+  --peach: #4A3468; --peach2: #2E2246;
+  --shadow: rgba(0,0,0,0.5);
 }
 .df * { box-sizing: border-box; }
+/* The bloom is the icon's ground: sunrise peach by day, the same sky at dusk at night. */
 .df-bloom { position: absolute; pointer-events: none; border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, var(--peach) 0%, transparent 62%); }
+  background: radial-gradient(circle at 50% 50%, var(--peach) 0%, var(--peach2) 30%, transparent 64%); }
 .df-screen { position: relative; overflow: hidden; background: var(--surface2);
   border: 1px solid var(--border); box-shadow: 0 18px 40px var(--shadow); border-radius: 28px; }
 .df-img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top;
@@ -283,20 +298,20 @@ export const frameCss = `
 .df-img-push { transform: scale(var(--push, 1.05)); }
 .df-line { position: absolute; text-align: center; font-family: var(--display); font-weight: 600;
   line-height: 1.1; letter-spacing: -0.015em; color: var(--ink); text-wrap: balance; }
-.df-line em { font-style: normal; color: var(--marigold-deep); }
+.df-line em { font-style: normal; color: var(--accent); }
 .df-sub { font-family: var(--body); color: var(--ink2); line-height: 1.45; margin: 0.6em 0 0; }
 .df-card-copy { position: absolute; display: flex; flex-direction: column; justify-content: center; text-align: left; }
 .df-card-copy .df-line { text-align: left; }
-.df-site { position: absolute; font-family: var(--display); font-weight: 600; color: var(--marigold-deep); letter-spacing: 0.01em; }
-.df-strip-line { position: absolute; text-align: center; font-family: var(--display); font-weight: 500; line-height: 1.2; color: var(--ink); }
-.df-strip-line em { font-style: normal; color: var(--marigold-deep); }
+.df-site { position: absolute; font-family: var(--display); font-weight: 600; color: var(--accent); letter-spacing: 0.01em; }
+.df-strip-line { position: absolute; text-align: center; font-family: var(--display); font-weight: 600; line-height: 1.2; color: var(--ink); }
+.df-strip-line em { font-style: normal; color: var(--accent); }
 .df-word { position: absolute; left: 0; right: 0; text-align: center; font-family: var(--display); font-weight: 600;
-  letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+  letter-spacing: -0.015em; line-height: 1; color: var(--ink); }
 .df-tag { position: absolute; left: 0; right: 0; text-align: center; font-family: var(--display); font-weight: 500; line-height: 1; color: var(--ink2); }
-.df-tag-site { font-weight: 600; color: var(--marigold-deep); }
-.df-og-words { position: absolute; font-family: var(--display); font-weight: 600; font-size: 112px; line-height: 1.06; letter-spacing: -0.025em; }
-.df-og-learn { color: #33383E; }
-.df-og-keep { color: #FFFBF0; }
+.df-tag-site { font-weight: 600; color: var(--accent); }
+.df-og-words { position: absolute; font-family: var(--display); font-weight: 600; font-size: 112px; line-height: 1.06; letter-spacing: -0.02em; }
+.df-og-learn { color: #2D2537; }
+.df-og-keep { color: #2689BD; }
 .df-bird { pointer-events: none; }
 .df-bird svg { display: block; }
 @media (prefers-reduced-motion: reduce) { .df-img { transition: none; } .df-img-push { transform: none; } }
