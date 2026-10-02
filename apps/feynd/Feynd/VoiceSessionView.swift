@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// Voice mode — the Dodo Radio (v3, "the dial": DodoRadioDial.swift). A
-/// small tabletop set with a sprout antenna and a glass tuning window; the
-/// red needle is the expression. Hands-free shows a speaker with a VU
-/// meter; hold-to-talk swaps it for one big press-to-talk key. The sky
-/// behind it matches the app's modes: sunny morning in light, starry dusk
-/// in dark. Palette comes straight from BRANDING.md / the Peck map.
+/// Voice mode, jelly edition (JellyVoice.swift): the dodo itself is the
+/// voice. It stands on a jelly cushion and performs the session — looking
+/// around while it tunes in, wide-eyed while you talk, eyes up while it
+/// thinks, talking with ripples behind it. Hands-free shows a row of jelly
+/// bars under it; hold-to-talk swaps them for one big squishy key. The
+/// subject rides on a ribbon; jelly bubbles drift up the backdrop.
 struct VoiceSessionView: View {
     let mode: String
     let threadId: String?
@@ -24,6 +24,8 @@ struct VoiceSessionView: View {
     /// Hold-to-talk (Voice settings, per device). Read once at init so the
     /// session and its controls agree for the whole call.
     private let holdToTalk: Bool
+    /// `-VoiceMockMood <mood>` (simulator): show that mood with no session.
+    private let mockMood: VoiceMood?
 
     init(mode: String, threadId: String? = nil, cardIds: [String]? = nil,
          title: String? = nil, onFinished: ((String?) -> Void)? = nil) {
@@ -33,6 +35,11 @@ struct VoiceSessionView: View {
         self.onFinished = onFinished
         let hold = UserDefaults.standard.bool(forKey: VoiceSettingsView.holdToTalkKey)
         self.holdToTalk = hold
+        #if targetEnvironment(simulator)
+        self.mockMood = UserDefaults.standard.string(forKey: "VoiceMockMood").flatMap(VoiceMood.init(rawValue:))
+        #else
+        self.mockMood = nil
+        #endif
         // GPT-Live or ElevenLabs + Claude — the Voice engine setting.
         _client = State(initialValue: makeDodoVoiceClient(mode: mode, threadId: threadId, cardIds: cardIds,
                                                           holdToTalk: hold))
@@ -41,7 +48,7 @@ struct VoiceSessionView: View {
     var body: some View {
         ZStack {
             FeyndTheme.bg.ignoresSafeArea()
-            VoiceSkyBackdrop().ignoresSafeArea()
+            JellyBubbleBackdrop().ignoresSafeArea()
 
             VStack(spacing: 0) {
                 headerRow
@@ -51,16 +58,24 @@ struct VoiceSessionView: View {
                     .tracking(2.2)
                     .foregroundStyle(FeyndTheme.text3)
                     .padding(.top, 14)
+                JellyRibbonView(text: tapeText, col: 0x8F63F2, size: 12.5)
+                    .frame(maxWidth: 310)
+                    .padding(.top, 8)
 
                 Spacer(minLength: 0)
 
-                DodoRadioDial(
-                    tape: tapeText,
-                    mood: mood,
-                    holdToTalk: holdToTalk,
-                    onKeyDown: { client.beginTalking() },
-                    onKeyUp: { client.endTalking() }
-                )
+                JellyVoiceStage(mood: mood)
+
+                Group {
+                    if holdToTalk {
+                        JellyTalkKey(mood: mood,
+                                     onKeyDown: { client.beginTalking() },
+                                     onKeyUp: { client.endTalking() })
+                    } else {
+                        JellyVoiceBars(mood: mood)
+                    }
+                }
+                .padding(.top, 2)
 
                 Spacer(minLength: 0)
 
@@ -72,11 +87,12 @@ struct VoiceSessionView: View {
                     .padding(.horizontal, 36)
 
                 controls
-                    .padding(.top, 26)
-                    .padding(.bottom, 50)
+                    .padding(.top, 24)
+                    .padding(.bottom, 44)
             }
         }
         .task {
+            if mockMood != nil { return }
             await client.start()
             #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
             // `-VoiceLiveTest 1` — headless GPT-Live drill; read the
@@ -89,14 +105,15 @@ struct VoiceSessionView: View {
         .onDisappear { client.stop() }
     }
 
-    /// What the radio's label tape reads — the session's subject.
+    /// What the ribbon reads — the session's subject.
     private var tapeText: String {
         (title ?? "Dodo voice session").uppercased()
     }
 
-    /// The radio's mood, derived from the client's phase and, in hold-to-talk,
+    /// The dodo's mood, derived from the client's phase and, in hold-to-talk,
     /// whether the key is held or a reply is pending.
-    private var mood: DodoRadioDial.Mood {
+    private var mood: VoiceMood {
+        if let mockMood { return mockMood }
         switch client.phase {
         case .idle, .requestingPermission, .creatingSession, .connecting:
             return .tuning
@@ -125,11 +142,11 @@ struct VoiceSessionView: View {
                     .font(.system(size: 12.5, weight: .medium))
                     .foregroundStyle(FeyndTheme.text2)
             }
-            .padding(.leading, 8)
-            .padding(.trailing, 10)
-            .padding(.vertical, 6)
-            .background(FeyndTheme.surface.opacity(0.7), in: Capsule())
-            .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+            .padding(.leading, 10)
+            .padding(.trailing, 12)
+            .padding(.vertical, 7)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().stroke(.white.opacity(0.35), lineWidth: 1))
 
             Spacer()
 
@@ -140,11 +157,11 @@ struct VoiceSessionView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(FeyndTheme.text2)
-                    .frame(width: 32, height: 32)
-                    .background(FeyndTheme.surface2, in: Circle())
-                    .overlay(Circle().stroke(FeyndTheme.border, lineWidth: 1))
+                    .frame(width: 34, height: 34)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay(Circle().stroke(.white.opacity(0.35), lineWidth: 1))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(JellyPressStyle())
             .keyboardShortcut(.cancelAction)
         }
         .padding(.horizontal, 18)
@@ -153,6 +170,16 @@ struct VoiceSessionView: View {
     }
 
     private var transcriptText: String {
+        if let mockMood {
+            switch mockMood {
+            case .tuning: return "Tuning in…"
+            case .listening: return holdToTalk ? "Press and hold the button to talk." : "Dodo is listening — just talk."
+            case .talking: return "Listening…"
+            case .thinking: return "Dodo is thinking…"
+            case .speaking: return holdToTalk ? "Dodo is speaking — press the button to cut in." : "Dodo is speaking…"
+            case .ended: return "Session ended."
+            }
+        }
         switch client.phase {
         case .idle, .requestingPermission, .creatingSession, .connecting:
             return "Tuning in…"
@@ -226,12 +253,12 @@ struct VoiceSessionView: View {
 
     private var controls: some View {
         HStack(spacing: 16) {
-            // Hold-to-talk: the radio's key is the mic control; only End
+            // Hold-to-talk: the jelly key is the mic control; only End
             // lives down here.
             if !holdToTalk {
                 CircleControlButton(
                     label: muted ? "Unmute" : "Mute", systemImage: muted ? "mic.slash.fill" : "mic.fill",
-                    danger: false
+                    danger: false, active: muted
                 ) {
                     muted.toggle()
                     client.setMuted(muted)
@@ -257,86 +284,49 @@ struct VoiceSessionView: View {
     }
 }
 
-// MARK: - Sky backdrop (starry dusk / sunny morning, like the Peck map)
+// MARK: - Jelly control button
 
-private struct VoiceSkyBackdrop: View {
-    @Environment(\.colorScheme) private var scheme
-
-    var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            if scheme == .dark {
-                // Dusk glow + crescent moon + a few calm stars.
-                RadialGradient(
-                    colors: [Color(hex: 0x4A3D63).opacity(0.55), Color(hex: 0x4A3D63).opacity(0)],
-                    center: UnitPoint(x: 0.5, y: 0.30),
-                    startRadius: 10, endRadius: w * 0.85
-                )
-                ZStack {
-                    Circle().fill(Color(hex: 0xF3E3B2))
-                        .frame(width: 44, height: 44)
-                    Circle().fill(Color(hex: 0x1E2440).opacity(0.92))
-                        .frame(width: 44, height: 44)
-                        .offset(x: 13, y: -4)
-                }
-                .position(x: 62, y: 118)
-                ForEach(0..<8, id: \.self) { i in
-                    let fi = Double(i)
-                    let alpha: Double = 0.30 + 0.35 * (fi * 0.618).truncatingRemainder(dividingBy: 1)
-                    let sx: Double = w * (0.10 + 0.82 * (fi * 0.618 + 0.21).truncatingRemainder(dividingBy: 1))
-                    let sy: Double = 70 + 620 * (fi * 0.755).truncatingRemainder(dividingBy: 1)
-                    Circle()
-                        .fill(Color(hex: 0xF3E9C8).opacity(alpha))
-                        .frame(width: 3, height: 3)
-                        .position(x: sx, y: sy)
-                }
-            } else {
-                // Morning: one soft sun.
-                Circle()
-                    .fill(Color(hex: 0xFFD469))
-                    .frame(width: 56, height: 56)
-                    .background(
-                        Circle().fill(Color(hex: 0xFFD469).opacity(0.28))
-                            .frame(width: 92, height: 92)
-                    )
-                    .position(x: 66, y: 122)
-            }
-        }
-        .allowsHitTesting(false)
-    }
-
-}
-
-// MARK: - Circle control button
-
+/// A round jelly control under the stage: frosted jelly for the quiet ones,
+/// lemon while a toggle is on (muted), cherry for End. Squashes on press.
 struct CircleControlButton: View {
     let label: String
     let systemImage: String
     let danger: Bool
+    var active: Bool = false
     var action: () -> Void
 
+    @Environment(\.colorScheme) private var scheme
+
+    private var triad: JellyTriad {
+        if danger { return .cherry }
+        if active { return .gold }
+        return scheme == .dark ? .glassNight : .glass
+    }
+
+    private var iconColor: Color {
+        if danger { return .white }
+        if active { return Color(hex: Jelly.ink) }
+        return FeyndTheme.text
+    }
+
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             Button(action: action) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(danger ? .white : FeyndTheme.text)
-                    .frame(width: 58, height: 58)
-                    .background(
-                        Circle().fill(danger ? Color(hex: 0xC84A3C) : FeyndTheme.surface2)
-                    )
-                    .overlay(
-                        Circle().stroke(danger ? Color(hex: 0xE0635A) : FeyndTheme.border, lineWidth: 1)
-                    )
-                    .shadow(color: danger ? Color(hex: 0xC84A3C).opacity(0.4) : .black.opacity(0.3),
-                            radius: danger ? 18 : 14, y: 4)
+                ZStack {
+                    JellyBall(triad: triad, diameter: 60, drop: 5)
+                    Image(systemName: systemImage)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(iconColor)
+                        .shadow(color: danger ? Color(hex: 0x7A0A12).opacity(0.5) : .clear, radius: 1, y: 1)
+                }
+                .shadow(color: danger ? Color(hex: 0xFF2B36).opacity(0.35) : jellyRGBA(60, 30, 60, 0.18),
+                        radius: danger ? 14 : 10, y: 6)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(JellyPressStyle())
 
             Text(label)
-                .font(.system(size: 11, weight: .semibold))
-                .tracking(0.2)
-                .foregroundStyle(danger ? Color(hex: 0xE88A82) : FeyndTheme.text2)
+                .font(.custom("Fredoka", size: 12.5).weight(.medium))
+                .foregroundStyle(danger ? Color(hex: 0xE8444C) : FeyndTheme.text2)
         }
     }
 }

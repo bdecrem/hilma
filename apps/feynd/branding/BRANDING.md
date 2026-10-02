@@ -134,3 +134,14 @@ is the sky jelly dodo, standing on the current stone. Implemented in `FlashTabVi
 `PeckJelly.swift` (the shared drawing helpers), `PeckRegionTransitionView.swift`.
 Peck or Perish, the rest-stop minigame, keeps its riso engraving look on
 purpose.
+
+## Voice
+
+The voice screen is the dodo itself on a peach jelly cushion, performing the
+session (see `Feynd/JellyVoice.swift`): a turning dashed ring while it tunes
+in, a mint ring while it listens, a lemon ring while you hold the key, three
+bouncing jelly dots while it thinks, sky ripples while it speaks. The talk
+key is a sky jelly slab that turns lemon when held; hands-free shows seven
+jelly bars in the palette's order (pink, peach, lemon, mint, sky, grape,
+pink). End is cherry jelly. The subject is a grape ribbon. The old tabletop
+radio (`design/dodo-radio-*.html`) is retired with the bookworm brand.

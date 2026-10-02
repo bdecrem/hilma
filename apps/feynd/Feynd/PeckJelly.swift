@@ -549,6 +549,8 @@ struct JellyRibbonView: View {
         Text(text)
             .font(.custom("Fredoka", size: size).weight(.bold))
             .foregroundStyle(.white)
+            .lineLimit(1)
+            .truncationMode(.tail)
             .padding(.horizontal, 14)
             .frame(height: 24)
             .background {

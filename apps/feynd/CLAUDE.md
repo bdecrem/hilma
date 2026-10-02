@@ -227,6 +227,26 @@ The app was rebranded to the jelly dodo in one pass — see
   traveler keep their day colours and glow; the region-crossing scene is a
   daytime postcard in both modes. The Peck header follows the system scheme
   (the old "night chrome over Starfall" switch is gone with the night region).
+- **Voice screens** (2026-10-02): `Feynd/JellyVoice.swift`. The bone "Dodo
+  Radio" (`DodoRadioDial`, in git history) is gone; the dodo is the voice.
+  `JellyVoiceStage` stands it on a peach jelly cushion and poses it per
+  `VoiceMood` (tuning: looks around inside a turning dashed ring; listening:
+  leans in, a mint ring breathes; talking = you hold the key: pressed down,
+  wide-eyed, a lemon ring; thinking: eyes up and three jelly dots bounce by
+  its head; speaking: the mouth flaps on a fake syllable rhythm and sky
+  ripples leave it; ended: eyes closed) — poses blend over 0.28 s. Under it:
+  `JellyTalkKey` in hold-to-talk (one squishy sky key that turns lemon and
+  wobbles back, haptics on press and release; the gesture logic is the old
+  key's) or `JellyVoiceBars` hands-free. The subject rides a `JellyRibbonView`;
+  `JellyBubbleBackdrop` drifts bubbles behind (cool colours only at night);
+  the round controls are `JellyBall`s with `JellyPressStyle` (End = cherry,
+  Mute turns lemon while on). The grading wait is `JellyGradingView`; the
+  Final Review letter sits on a `JellyGradeBall` (lemon when passed, the
+  map's locked grey when not). Nothing about the session logic changed.
+  Simulator: `-OpenTopic <id> -OpenVoice 1 -VoiceMockMood tuning|listening|talking|thinking|speaking|ended`
+  shows a mood with no session and no mic prompt (add `-voiceHoldToTalk 1`
+  for the key); `-OpenFinalReview 1 -VoiceMockMood tuning -MockFinalGrade A|C|grading`
+  shows the grade ball or the wait. `.shots/voiceshots.sh` shoots them all.
 - **Icon:** composited by PIL from `scripts/dodo-jelly/out/dodo-1024.png`
   (BRANDING.md has the recipe).
 

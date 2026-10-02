@@ -41,12 +41,9 @@ struct FlashVoiceView: View {
                     grade(voiceSessionId)
                 }
             case .grading:
-                VStack(spacing: 16) {
-                    ProgressView().tint(FeyndTheme.accent).scaleEffect(1.4)
-                    ReactionDodoView(reaction: .thinking)
-                    Text("Dodo is scoring your round…")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(FeyndTheme.text2)
+                ZStack {
+                    JellyBubbleBackdrop().ignoresSafeArea()
+                    JellyGradingView(text: "Dodo is scoring your round…")
                 }
             case .results(let r):
                 FlashResultsView(result: r, jumboLevel: start.jumboLevel, mode: "voice") {
@@ -156,11 +153,9 @@ struct FinalReviewView: View {
                     grade(voiceSessionId)
                 }
             case .grading:
-                VStack(spacing: 16) {
-                    ProgressView().tint(FeyndTheme.gold).scaleEffect(1.4)
-                    Text("Tallying your grade…")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(FeyndTheme.text2)
+                ZStack {
+                    JellyBubbleBackdrop().ignoresSafeArea()
+                    JellyGradingView(text: "Tallying your grade…")
                 }
             case .graded(let r):
                 gradeReveal(r)
@@ -181,6 +176,22 @@ struct FinalReviewView: View {
             }
         }
         .interactiveDismissDisabled(phase == .grading)
+        #if targetEnvironment(simulator)
+        // `-MockFinalGrade A|C|grading` — the grade reveal (or the wait)
+        // with no session, for screenshots.
+        .onAppear {
+            guard let g = UserDefaults.standard.string(forKey: "MockFinalGrade") else { return }
+            UserDefaults.standard.removeObject(forKey: "MockFinalGrade")
+            if g == "grading" { phase = .grading; return }
+            let pass = g == "A"
+            phase = .graded(FinalReviewResult(
+                grade: g, passed: pass,
+                notes: pass ? "Clear, confident answers with the right details in the right places."
+                            : "The outline was there; the dates and the why behind them need another pass.",
+                strengths: ["The big picture"], weaknesses: pass ? [] : ["Dates and sequence"],
+                stars: pass ? 3 : 2, mastered: pass, secondChance: nil, renewed: nil, recertDueAt: nil))
+        }
+        #endif
     }
 
     private func renewalDateSuffix(_ r: FinalReviewResult) -> String {
@@ -207,16 +218,8 @@ struct FinalReviewView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 30)
 
-                    // The big letter.
-                    ZStack {
-                        Circle()
-                            .fill(r.passed ? FeyndTheme.gold.opacity(0.14) : FeyndTheme.surface)
-                            .frame(width: 160, height: 160)
-                            .overlay(Circle().stroke(r.passed ? FeyndTheme.gold : FeyndTheme.border, lineWidth: 2))
-                        Text(r.grade)
-                            .font(.system(size: 84, weight: .bold))
-                            .foregroundStyle(r.passed ? FeyndTheme.gold : FeyndTheme.text)
-                    }
+                    // The big letter, on a jelly ball.
+                    JellyGradeBall(grade: r.grade, passed: r.passed)
                     .scaleEffect(revealed ? 1 : 0.4)
                     .opacity(revealed ? 1 : 0)
                     .padding(.vertical, 8)
@@ -318,7 +321,8 @@ struct FinalReviewView: View {
         }
         .onAppear {
             FlashSFX.shared.play(r.passed ? .fanfare : .done)
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.65).delay(0.2)) {
+            // Under-damped: the ball lands with a jelly wobble.
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.48).delay(0.2)) {
                 revealed = true
             }
         }

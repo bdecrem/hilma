@@ -65,6 +65,7 @@
 		8C5899A6BFD81D5A277D3076 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 0F8075BAC89D55FD0B4519A3 /* ElevenLabs */; };
 		8C6244F78751CFD513251E76 /* FlashDeckBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4040F5FD6A7C7D7F618AE97 /* FlashDeckBuilder.swift */; };
 		8D199EA37B024BA466ACD8F9 /* PeckGameArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B2BE3082F40D6C0A70D8DCB /* PeckGameArt.swift */; };
+		9081907F9E55D18DDA858A22 /* JellyVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184F56612E2F2388428D9D12 /* JellyVoice.swift */; };
 		92AB59F1F628D34B68CB6AD4 /* FlashDecksSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */; };
 		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
 		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
@@ -102,7 +103,6 @@
 		F207ADD007B3CABED4CB07D0 /* voice-cinder.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CAF7BFCB023B149F6210E972 /* voice-cinder.m4a */; };
 		F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */; };
 		FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */; };
-		FBE77E0653886CD4C301FEE2 /* DodoRadioDial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86525326E43598D9B251CB8E /* DodoRadioDial.swift */; };
 		FC2B7B81593EDE072478C682 /* voice-vesper.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1E287D1D1B6F0189E5D780AC /* voice-vesper.m4a */; };
 		FE2BACEB2CA038ABCDC43E1F /* voice-tempo.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 2465A0B903321CF2C9D04761 /* voice-tempo.m4a */; };
 		FEA31118A9D37348F2BE1AA5 /* voice-echo.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C0FB2FF36963A5F7793FAF80 /* voice-echo.m4a */; };
@@ -123,6 +123,7 @@
 		12E8929D1275BD9EE7743E3F /* voice-gleam.m4a */ = {isa = PBXFileReference; path = "voice-gleam.m4a"; sourceTree = "<group>"; };
 		13BF17EF46B1A50AAF435164 /* voice-delta.m4a */ = {isa = PBXFileReference; path = "voice-delta.m4a"; sourceTree = "<group>"; };
 		178FAD27034E412EBC964E3C /* PeckWeekBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckWeekBanner.swift; sourceTree = "<group>"; };
+		184F56612E2F2388428D9D12 /* JellyVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyVoice.swift; sourceTree = "<group>"; };
 		19CA4150E082D4716B06A291 /* voice-stone.m4a */ = {isa = PBXFileReference; path = "voice-stone.m4a"; sourceTree = "<group>"; };
 		1B2BE3082F40D6C0A70D8DCB /* PeckGameArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckGameArt.swift; sourceTree = "<group>"; };
 		1E287D1D1B6F0189E5D780AC /* voice-vesper.m4a */ = {isa = PBXFileReference; path = "voice-vesper.m4a"; sourceTree = "<group>"; };
@@ -153,7 +154,6 @@
 		7E23E37B0D330C54293A885A /* PeckGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckGameView.swift; sourceTree = "<group>"; };
 		81CBB2AD8DAD6CF98F76290B /* Ultra-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Ultra-Regular.ttf"; sourceTree = "<group>"; };
 		82209DFCAE2E059AF327A090 /* voice-shimmer.m4a */ = {isa = PBXFileReference; path = "voice-shimmer.m4a"; sourceTree = "<group>"; };
-		86525326E43598D9B251CB8E /* DodoRadioDial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoRadioDial.swift; sourceTree = "<group>"; };
 		87227276409128E69ABE7D61 /* ReviewsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewsSheet.swift; sourceTree = "<group>"; };
 		895F213807633430DF5ABD89 /* voice-marin.m4a */ = {isa = PBXFileReference; path = "voice-marin.m4a"; sourceTree = "<group>"; };
 		8B17F973B5D4B53D0D054D2E /* AudioSummaryPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSummaryPlayer.swift; sourceTree = "<group>"; };
@@ -241,7 +241,6 @@
 				97210D8088451B57557247DA /* DeepLink.swift */,
 				3D886D7625C13A1ABF92B7EF /* DemoReelView.swift */,
 				EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */,
-				86525326E43598D9B251CB8E /* DodoRadioDial.swift */,
 				E90564312835B42808FCEFEE /* DodoVoiceClient.swift */,
 				9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */,
 				B5574DD31FFF4A41EAF6EC1D /* ElevenVoiceClient.swift */,
@@ -266,6 +265,7 @@
 				B119830CA567768C3502310E /* Info.plist */,
 				5032D3B4080E880E4B3A56EA /* JellyAvatar.swift */,
 				5FE6ACE7021F270C8986D7FD /* JellyDodo.swift */,
+				184F56612E2F2388428D9D12 /* JellyVoice.swift */,
 				CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */,
 				CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */,
 				78E1F1203E78919DA10B73C9 /* LoginView.swift */,
@@ -491,7 +491,6 @@
 				81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */,
 				41A4306B14D9973624451800 /* DemoReelView.swift in Sources */,
 				F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */,
-				FBE77E0653886CD4C301FEE2 /* DodoRadioDial.swift in Sources */,
 				2852108A2759A3A9CDED5275 /* DodoVoiceClient.swift in Sources */,
 				2653F9928D7A0873DFC35016 /* DoubleThumbsUp.swift in Sources */,
 				E86CBC49BDEA2F1505BB8754 /* ElevenVoiceClient.swift in Sources */,
@@ -513,6 +512,7 @@
 				0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */,
 				620B6520AD9935B14AB3E944 /* JellyAvatar.swift in Sources */,
 				A45080FCA5B2605D51EC1D8E /* JellyDodo.swift in Sources */,
+				9081907F9E55D18DDA858A22 /* JellyVoice.swift in Sources */,
 				470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */,
 				7544C2674BBB478E832E676C /* LiveVoiceClient.swift in Sources */,
 				E837DB371B838AB27BC85493 /* LoginView.swift in Sources */,
