@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { LEVELS, type Level } from '@/lib/onething/levels';
-import { createScene } from './grow-scene';
+import { createScene, themeFor } from './grow-scene';
 
 // The payoff for a streak milestone (day 3, 7, 14, 30, 60, 100, 365): the whole
 // page becomes the garden. The seed cracks and the plant grows from day 1 to
@@ -40,6 +40,7 @@ export default function Payoff({ streak, bonus, points, onClose }: PayoffProps) 
     const { p } = growthFor(points);
     const scene = createScene(cv, {
       reduceMotion: reduce,
+      theme: themeFor(streak),
       // the counter runs day 1 → day N in step with the growth, written straight to the node (60×/s is no place for a re-render)
       onProgress: (k) => { const el = daysRef.current; if (el) el.textContent = `day ${1 + Math.floor(k * (streak - 1))}`; },
       onArrive: () => { scene.burst(); setArrived(true); },
@@ -65,10 +66,10 @@ export default function Payoff({ streak, bonus, points, onClose }: PayoffProps) 
   const worth = [what, bonus > 0 ? `${bonus.toLocaleString('en-US')} bonus points` : '', `${points.toLocaleString('en-US')} pts`, level.name].filter(Boolean).join(' · ');
 
   return (
-    <div className="ot-payoff" role="dialog" aria-modal="true" aria-label={`Day ${streak}, a milestone`}>
+    <div className="ot-payoff" data-c={themeFor(streak).name} role="dialog" aria-modal="true" aria-label={`Day ${streak}, a milestone`}>
       <header className="ot-payoff-head">
         <span className="ot-wordmark">onething</span>
-        <span className="ot-month-tag">MILESTONE</span>
+        <span className="ot-chip">Day {streak}</span>
       </header>
       <div className="ot-payoff-stage">
         <canvas ref={cvRef} aria-label="Your plant, growing from seed to where it is today. Tap to plant a flower, swipe to make wind." />

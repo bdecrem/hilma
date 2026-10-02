@@ -289,12 +289,11 @@ function DayView({ day, entry, today, drawn, thoughts, onClose, children }: {
         {onClose && <button type="button" className="ot-x" aria-label="close" onClick={onClose}>×</button>}
       </div>
       {drawn && entry && (
-        <figure className="ot-blob-wrap">
+        <div className="ot-blob-wrap">
           <div className="ot-blob">
             {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.4} /> : <Drawing />}
           </div>
-          {entry.doodle && <figcaption className="ot-credit">drawn by Opus 5.5 · low effort</figcaption>}
-        </figure>
+        </div>
       )}
       {entry && <div className={`ot-said ${sizeFor(text)}`}><Thoughts day={day} text={text} {...thoughts} /></div>}
       {children}
@@ -381,7 +380,7 @@ function Redraw({ entry, onKept, onClose }: { entry: Entry; onKept: () => void; 
           <button type="button" className="ot-x" aria-label="close" onClick={onClose}>×</button>
         </div>
         <h2 className="ot-redraw-h">{state === 'drawing' ? 'Opus is drawing three…' : takes ? `Opus drew ${n === 3 ? 'three' : n}. Pick one.` : 'Redraw'}</h2>
-        <p className="ot-redraw-sub">{state === 'drawing' ? 'about ten seconds' : 'all on low effort, obviously'}</p>
+        <p className="ot-redraw-sub">{state === 'drawing' ? 'about ten seconds' : 'tap one, then keep it'}</p>
         <div className="ot-takes" role="radiogroup" aria-label="three takes">
           {state === 'drawing' || !takes
             ? [0, 1, 2].map((i) => <div key={i} className="ot-take"><div className="ot-blob">{state === 'drawing' ? <Drawing label="" /> : null}</div></div>)

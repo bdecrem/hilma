@@ -1,29 +1,39 @@
-// The payoff scene: a hand-drawn plant growing from a seed to old growth, on
-// canvas. Ported from Bart's "onething — grow a year" sketch (2026-09-22).
-// This module only draws. The HUD, the copy and the buttons are React
-// (Payoff.tsx), which drives it through the Scene handle.
+// The payoff scene: a plant growing from a seed to old growth, on canvas, in
+// the candy journal's style (2026-10-01; the pencil-on-paper original was a
+// port of Bart's "onething — grow a year" sketch, 2026-09-22). This module
+// only draws. The HUD, the copy and the buttons are React (Payoff.tsx), which
+// drives it through the Scene handle.
 //
 // Growth is one number P in [0, 6]: the level index plus the fraction of the
 // way to the next level, so a Sapling at 60% is a sapling well on its way to
 // a tree. Companion trees, a meadow, pollen and butterflies arrive at fixed
 // points along the way; petals fall from P 4.2 on and the leaves warm from 5.
 //
-// Colours come from the `.ot` tokens on the canvas's ancestors, so the scene
-// sits on the same paper as the page.
+// The look: a sky in the milestone's colour, rolling grass, glossy candy
+// leaves under an ink outline that sits a little off register and boils at
+// 5 fps like the doodles. The story: the ink drop falls onto the seed, the
+// plant grows (a pop at the crown on every new stage), and on arrival the
+// drop pops up beside it to cheer while the milestone's finale plays —
+// confetti always, plus a rainbow, balloons, fireworks or a blossom storm
+// (themeFor). 365 gets all of it under a sky that turns through every colour.
 
 export type Scene = {
   /** Jump straight to a growth value. */
   setP(p: number): void
   /** Grow (or shrink) to `p` over `seconds`; `onProgress` ticks, `onArrive` fires once at the end. */
   growTo(p: number, seconds: number): void
-  /** Petals and rings from the branch tips — the moment of arrival. */
+  /** The moment of arrival: confetti from the branch tips, the drop, the milestone's finale. */
   burst(): void
   readonly p: number
   destroy(): void
 }
 
+export type Finale = 'rainbow' | 'balloons' | 'fireworks' | 'blossom'
+export type Theme = { name: string; sky: [string, string]; finale: Finale[]; cycle?: boolean }
+
 export type SceneOpts = {
   reduceMotion?: boolean
+  theme?: Theme
   /** While a growTo runs: the fraction done (0..1) and the current P. */
   onProgress?: (fraction: number, p: number) => void
   onArrive?: () => void
@@ -33,36 +43,74 @@ export type SceneOpts = {
   onFirstTouch?: () => void
 }
 
+// ---------- the milestones ----------
+const SKIES: Record<string, [string, string]> = {
+  violet: ['#b9a2ff', '#7b4dff'],
+  orange: ['#ffc08f', '#ff7a2f'],
+  sky: ['#a8e2ff', '#33b6ff'],
+  yellow: ['#fff3b0', '#ffc71f'],
+  pink: ['#ffbcdc', '#ff5fa8'],
+  lime: ['#ddf7b4', '#7fcf3a'],
+}
+const THEMES: Record<number, Theme> = {
+  3: { name: 'violet', sky: SKIES.violet, finale: [] },
+  7: { name: 'orange', sky: SKIES.orange, finale: ['rainbow'] },
+  14: { name: 'sky', sky: SKIES.sky, finale: ['balloons'] },
+  30: { name: 'yellow', sky: SKIES.yellow, finale: ['fireworks'] },
+  60: { name: 'pink', sky: SKIES.pink, finale: ['blossom', 'balloons'] },
+  100: { name: 'lime', sky: SKIES.lime, finale: ['fireworks', 'rainbow'] },
+  365: { name: 'violet', sky: SKIES.violet, finale: ['rainbow', 'balloons', 'fireworks', 'blossom'], cycle: true },
+}
+/// The milestone at or below `streak` (a replay or a preview may pass any number).
+export function themeFor(streak: number): Theme {
+  const keys = Object.keys(THEMES).map(Number).sort((a, b) => a - b)
+  let k = keys[0]
+  for (const m of keys) if (streak >= m) k = m
+  return THEMES[k]
+}
+
 type Leaf = { da: number; dist: number; s: number; ci: number; ph: number; warm: number }
 type Branch = { depth: number; len: number; ang: number; phase: number; bend: number; kids: Branch[]; bloom: number; bc: number; leaves: Leaf[] }
 type Tree = { root: Branch; maxDepth: number }
 type Flower = { x: number; y: number; h: number; c: string; ph: number; kind: number; s: number; appear: number; born: number }
 type Blade = { x: number; y: number; h: number; appear: number; ph: number }
 type Mote = { x: number; y: number; sp: number; ph: number; s: number; appear: number }
-type Petal = { x: number; y: number; vx: number; vy: number; rot: number; vr: number; col: string; s: number; life: number; max: number; burst: boolean; ph: number }
-type Ring = { x: number; y: number; life: number }
+/** shape 0 = petal, 1 = confetti strip, 2 = dot, 3 = water drop */
+type Bit = { x: number; y: number; vx: number; vy: number; rot: number; vr: number; col: string; s: number; life: number; max: number; burst: boolean; ph: number; shape: number }
+type Ring = { x: number; y: number; life: number; col: string }
 type Butterfly = { x: number; y: number; vx: number; vy: number; tx: number; ty: number; retarget: number; c: [string, string]; flap: number; s: number; leaving: boolean }
+type Balloon = { x: number; y: number; vy: number; ph: number; c: string; s: number; pop: number }
+type Rocket = { x: number; y: number; ty: number; vy: number; c: string; trail: number[] }
+type Spark = { x: number; y: number; vx: number; vy: number; c: string; life: number; max: number }
+type Cloud = { x: number; y: number; s: number; sp: number }
 type Pal = keyof typeof PAL
 type Companion = { tree: Tree; fx: number; appear: number; size: number; pal: Pal; back: number }
 type RenderOpts = { t: number; wind: number; warm?: number; bloom?: number; baseAng?: number; noLeaves?: boolean; rootStyle?: string; trunk?: string; tips?: number[] }
-type Colors = { ink: string; muted: string; rust: string; outline: string; trunk: string; soil: string; hatch: string; paper: string; hatchPat: CanvasPattern | null }
 
+const INK = '#1d1625'
+const TRUNK = '#c27a3e'
+const CANDY = ['#7b4dff', '#ff7a2f', '#33b6ff', '#ffd23f', '#ff5fa8', '#93d94e']
 const PAL = {
-  green: ['#2f7d4f', '#4fa35a', '#7cc36a', '#a9d86e', '#3c9a78'],
-  autumn: ['#f4a237', '#e8743b', '#f6c945', '#d9542f', '#ffb84d'],
-  cherry: ['#f48fb1', '#ec6593', '#f8bbd0', '#e2447c', '#ffd1dc'],
-  amber: ['#f4a237', '#e8743b', '#f6c945', '#d9542f', '#ffb84d'],
-  teal: ['#2bb3a3', '#3fc1c9', '#1f8a91', '#6fd6c1', '#48a9a6'],
-  violet: ['#9b7fe6', '#7e6bd6', '#b89cf0', '#6c8ef0', '#c7a6f7'],
+  green: ['#4cae3c', '#6fcf4a', '#9be35c', '#3f9a36', '#86d957'],
+  autumn: ['#ffb02e', '#ff7a2f', '#ffd23f', '#f25a2a', '#ffc35a'],
+  cherry: ['#ff8fc4', '#ff5fa8', '#ffc2de', '#f0418f', '#ffd6ea'],
+  amber: ['#ffb02e', '#ff7a2f', '#ffd23f', '#f25a2a', '#ffc35a'],
+  teal: ['#38c7c0', '#33b6ff', '#1fa1a8', '#7fe0d3', '#4fb8e8'],
+  violet: ['#a98bff', '#7b4dff', '#c7b3ff', '#6a8cff', '#d6c7ff'],
 }
-const BLOOM = ['#ff5d8f', '#ffc93c', '#ff7a59', '#fff3df', '#b388eb', '#4fc3f7']
-const BFLY: [string, string][] = [['#ff8a3d', '#ffd166'], ['#3fa7f0', '#b3e5fc'], ['#ff5d8f', '#ffc1d6'], ['#9b7fe6', '#e3d6ff'], ['#ffc93c', '#fff1a8'], ['#2bb3a3', '#b8f0e6']]
+const BLOOM = ['#ff5fa8', '#ffd23f', '#ff7a2f', '#ffffff', '#a98bff', '#33b6ff']
+const BFLY: [string, string][] = [['#ff7a2f', '#ffd23f'], ['#33b6ff', '#bfe9ff'], ['#ff5fa8', '#ffc2de'], ['#7b4dff', '#d6c7ff'], ['#ffd23f', '#fff3b0'], ['#93d94e', '#ddf7b4']]
+/** The ink sits a little off the colour, and moves: three positions, five times a second. */
+const BOIL: [number, number][] = [[0.9, 0.7], [-0.6, 1.1], [0.4, -0.5]]
 
 const TAU = Math.PI * 2
 const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3)
 const smooth = (a: number, b: number, x: number) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t) }
+const pick = <T,>(xs: T[]) => xs[(Math.random() * xs.length) | 0]
+/** Elastic settle: overshoots, then rests at 1. */
+const elastic = (t: number) => (t <= 0 ? 0 : t >= 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (TAU / 3)) + 1)
 
 function mulberry32(a: number) {
   return function () {
@@ -71,6 +119,14 @@ function mulberry32(a: number) {
     t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
+}
+function hexToRgb(h: string): [number, number, number] {
+  const n = parseInt(h.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+function mix(a: string, b: string, t: number): string {
+  const A = hexToRgb(a), B = hexToRgb(b)
+  return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], t))).join(',')})`
 }
 
 // ---------- tree generation (deterministic: the same plant every time) ----------
@@ -114,47 +170,44 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
   const ctx = cv.getContext('2d')
   if (!ctx) throw new Error('no 2d context')
   const reduceMotion = !!opts.reduceMotion
-
-  // ---------- colours from the page ----------
-  const C: Colors = { ink: '#2a251c', muted: '#6f665a', rust: '#a8341f', outline: '#2a251c', trunk: '#7a5236', soil: 'rgba(122,82,54,.07)', hatch: 'rgba(42,37,28,.13)', paper: '#f7f1e1', hatchPat: null }
-  function readColors() {
-    const s = getComputedStyle(cv)
-    const get = (name: string, fallback: string) => s.getPropertyValue(name).trim() || fallback
-    C.ink = get('--ink', C.ink); C.muted = get('--mute', C.muted); C.rust = get('--red', C.rust); C.paper = get('--paper', C.paper)
-    C.outline = get('--outline', C.ink); C.trunk = get('--trunk', C.trunk); C.soil = get('--soil', C.soil); C.hatch = get('--hatch', C.hatch)
-    const pc = document.createElement('canvas'); pc.width = pc.height = 7
-    const p = pc.getContext('2d')
-    if (p) { p.strokeStyle = C.hatch; p.lineWidth = 1.2; p.beginPath(); p.moveTo(-1, 8); p.lineTo(8, -1); p.stroke() }
-    C.hatchPat = ctx!.createPattern(pc, 'repeat')
-  }
-  readColors()
+  const theme = opts.theme ?? THEMES[3]
+  const has = (f: Finale) => theme.finale.includes(f)
 
   // ---------- scene state ----------
   let W = 0, H = 0, DPR = 1, groundY = 0, TL = 0, cx = 0
-  const meadow: Flower[] = [], grass: Blade[] = [], motes: Mote[] = [], planted: Flower[] = [], parts: Petal[] = [], rings: Ring[] = [], bflies: Butterfly[] = []
+  const meadow: Flower[] = [], grass: Blade[] = [], motes: Mote[] = [], planted: Flower[] = [], bits: Bit[] = [], rings: Ring[] = [], bflies: Butterfly[] = []
+  const balloons: Balloon[] = [], rockets: Rocket[] = [], sparks: Spark[] = [], clouds: Cloud[] = []
   let tips: number[] = []
   let P = 0
   let grow: { from: number; to: number; t0: number; dur: number } | null = null
   let wind = 0, gust = 0
   let now = 0, last = 0, raf = 0, shownStage = -1, touched = false
+  let boil = 0
+  // the story: the drop falls (intro), and comes back to cheer (finale)
+  const introT0 = reduceMotion ? -99 : 0.05
+  let splashed = reduceMotion
+  let finaleT0 = -1
+  let nextRocket = Infinity
   const pointer = { x: -999, y: -999, active: false, lastX: 0, downX: 0, downY: 0, downT: 0, moved: 0 }
 
   function layout() {
-    groundY = H * 0.84
-    TL = Math.min(groundY * 0.21, W * 0.2)
+    groundY = H * 0.8
+    // Old Growth's crown reaches ~5.6 trunk lengths up: keep it under the stage name (the HUD's ~170px)
+    TL = Math.max(30, Math.min(groundY * 0.21, W * 0.2, (groundY - 170) / 5.6))
     cx = W * 0.5
-    meadow.length = 0; grass.length = 0; motes.length = 0
+    meadow.length = 0; grass.length = 0; motes.length = 0; clouds.length = 0
     const r = mulberry32(5)
     const nM = Math.round(Math.min(60, W / 11))
     for (let i = 0; i < nM; i++) {
       let x = r() * W
       if (Math.abs(x - cx) < TL * 0.35) x += (x < cx ? -1 : 1) * TL * 0.4
-      meadow.push({ x, y: groundY + 2 + r() * (H - groundY) * 0.55, h: 8 + r() * 18, c: BLOOM[(r() * BLOOM.length) | 0], appear: 1.3 + r() * 4.6, ph: r() * TAU, kind: (r() * 3) | 0, s: 0.8 + r() * 0.6, born: 0 })
+      meadow.push({ x, y: groundY + 8 + r() * (H - groundY) * 0.6, h: 8 + r() * 18, c: BLOOM[(r() * BLOOM.length) | 0], appear: 1.3 + r() * 4.6, ph: r() * TAU, kind: (r() * 3) | 0, s: 0.8 + r() * 0.6, born: 0 })
     }
     meadow.sort((a, b) => a.y - b.y)
-    for (let i = 0; i < Math.round(W / 14); i++) grass.push({ x: r() * W, y: groundY + 1 + r() * (H - groundY) * 0.6, h: 5 + r() * 9, appear: 0.5 + r() * 3.5, ph: r() * TAU })
+    for (let i = 0; i < Math.round(W / 12); i++) grass.push({ x: r() * W, y: groundY + 6 + r() * (H - groundY) * 0.7, h: 6 + r() * 10, appear: 0.5 + r() * 3.5, ph: r() * TAU })
     grass.sort((a, b) => a.y - b.y)
     for (let i = 0; i < 34; i++) motes.push({ x: r() * W, y: r() * groundY, sp: 6 + r() * 14, ph: r() * TAU, s: 1 + r() * 2, appear: 2.4 + r() * 3.4 })
+    for (let i = 0; i < 4; i++) clouds.push({ x: r() * W, y: H * (0.1 + r() * 0.3), s: 0.6 + r() * 0.7, sp: 4 + r() * 8 })
   }
   function resize() {
     DPR = Math.min(2, window.devicePixelRatio || 1) // DPR 3 canvases are too large on phones
@@ -164,13 +217,18 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     ctx!.setTransform(DPR, 0, 0, DPR, 0, 0)
     layout()
   }
+  /** The ground's top edge: a gentle roll, level under the tree. */
+  function groundAt(x: number): number {
+    const away = smooth(0, 1, Math.abs(x - cx) / (W * 0.5))
+    return groundY + Math.sin((x / W) * TAU * 1.2 + 0.6) * 10 * away
+  }
 
   // ---------- tree rendering ----------
   function renderTree(T: Tree, ox: number, oy: number, tl: number, g: number, pal: string[], o: RenderOpts) {
     const c = ctx!
     const md = T.maxDepth, G = g * (md + 1)
     const segs: Path2D[] = []; for (let d = 0; d <= md; d++) segs.push(new Path2D())
-    const leafOut = new Path2D(), leafAll = new Path2D(), fills = new Map<string, Path2D>()
+    const leafOut = new Path2D(), shine = new Path2D(), fills = new Map<string, Path2D>()
     const petOut = new Path2D(), pets = new Map<string, Path2D>(), centers = new Path2D()
     const t = o.t, w = o.wind, warm = o.warm || 0, bloom = o.bloom || 0
     function ell(path: Path2D, x: number, y: number, rx: number, ry: number, rot: number) {
@@ -198,15 +256,16 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
           const la = a + l.da + Math.sin(t * 2.4 + l.ph) * 0.13 + w * 0.14
           const d = Rr * l.dist
           const lx = x1 + Math.sin(la) * d, ly = y1 - Math.cos(la) * d
-          const rx = Rr * 0.6 * l.s, ry = Rr * 0.3 * l.s, rot = la - Math.PI / 2
-          ell(leafOut, lx, ly, rx + 1.7, ry + 1.7, rot)
+          const rx = Rr * 0.62 * l.s, ry = Rr * 0.36 * l.s, rot = la - Math.PI / 2
+          ell(leafOut, lx, ly, rx + 2, ry + 2, rot)
           const col = l.warm < warm ? PAL.autumn[l.ci] : pal[l.ci]
           let fp = fills.get(col); if (!fp) { fp = new Path2D(); fills.set(col, fp) }
           ell(fp, lx, ly, rx, ry, rot)
-          ell(leafAll, lx, ly, rx, ry, rot)
+          // the candy shine: a small highlight toward the top-left of every leaf
+          if (rx > 7) ell(shine, lx - rx * 0.28 * Math.cos(rot) - 0.5, ly - ry * 0.45, rx * 0.3, ry * 0.26, rot)
         }
         if (terminal && b.bloom < bloom) {
-          const fr = Math.max(2.2, tl * 0.047 * lw) * (1 + 0.08 * Math.sin(t * 1.5 + b.phase))
+          const fr = Math.max(2.4, tl * 0.05 * lw) * (1 + 0.08 * Math.sin(t * 1.5 + b.phase))
           const fx = x1 + Math.sin(a) * Rr * 0.3, fy = y1 - Math.cos(a) * Rr * 0.3
           const col = BLOOM[b.bc]
           let pp = pets.get(col); if (!pp) { pp = new Path2D(); pets.set(col, pp) }
@@ -214,7 +273,7 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
           for (let i = 0; i < 5; i++) {
             const pa2 = spin + (i * TAU) / 5
             const px = fx + Math.cos(pa2) * fr, py = fy + Math.sin(pa2) * fr
-            circ(petOut, px, py, fr * 0.78 + 1.1); circ(pp, px, py, fr * 0.78)
+            circ(petOut, px, py, fr * 0.8 + 1.4); circ(pp, px, py, fr * 0.8)
           }
           circ(centers, fx, fy, fr * 0.5)
         }
@@ -225,38 +284,55 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     rec(T.root, ox, oy, o.baseAng || 0)
 
     c.lineCap = 'round'; c.lineJoin = 'round'
-    const ws: number[] = []; for (let d = 0; d <= md; d++) ws.push(tl * 0.13 * Math.pow(0.64, d) + 0.7)
+    const ws: number[] = []; for (let d = 0; d <= md; d++) ws.push(tl * 0.14 * Math.pow(0.64, d) + 0.9)
     if (o.rootStyle) {
       c.strokeStyle = o.rootStyle
       for (let d = 0; d <= md; d++) { c.lineWidth = Math.max(0.8, ws[d] * 0.45); c.stroke(segs[d]) }
       return
     }
-    c.strokeStyle = C.outline
-    for (let d = 0; d <= md; d++) { c.lineWidth = ws[d] + 2.6; c.stroke(segs[d]) }
-    c.strokeStyle = o.trunk || C.trunk
+    const [bx, by] = BOIL[boil]
+    // ink first (off register), colour on top
+    c.save(); c.translate(bx, by)
+    c.strokeStyle = INK
+    for (let d = 0; d <= md; d++) { c.lineWidth = ws[d] + 3.2; c.stroke(segs[d]) }
+    c.fillStyle = INK; c.fill(leafOut)
+    if (pets.size) c.fill(petOut)
+    c.restore()
+    c.strokeStyle = o.trunk || TRUNK
     for (let d = 0; d <= md; d++) { c.lineWidth = ws[d]; c.stroke(segs[d]) }
-    c.fillStyle = C.outline; c.fill(leafOut)
     for (const [col, p] of fills) { c.fillStyle = col; c.fill(p) }
-    if (C.hatchPat) { c.fillStyle = C.hatchPat; c.fill(leafAll) }
+    c.fillStyle = 'rgba(255,255,255,.5)'; c.fill(shine)
     if (pets.size) {
-      c.fillStyle = C.outline; c.fill(petOut)
       for (const [col, p] of pets) { c.fillStyle = col; c.fill(p) }
-      c.fillStyle = '#ffcf33'; c.fill(centers)
-      c.lineWidth = 1; c.strokeStyle = C.outline; c.stroke(centers)
+      c.fillStyle = '#ffd23f'; c.fill(centers)
+      c.lineWidth = 1.2; c.strokeStyle = INK; c.stroke(centers)
     }
   }
 
   // ---------- particles ----------
-  function spawnPetal(x: number, y: number, burst: boolean) {
-    if (parts.length > 220) parts.shift()
+  function spawnBit(x: number, y: number, burst: boolean, shape?: number, col?: string) {
+    if (bits.length > 320) bits.shift()
     const leaf = !burst && Math.random() < 0.35 + Math.max(0, P - 5) * 0.3
-    const col = leaf ? PAL.autumn[(Math.random() * 5) | 0] : BLOOM[(Math.random() * BLOOM.length) | 0]
-    const a = Math.random() * TAU, sp = burst ? 80 + Math.random() * 220 : 5 + Math.random() * 20
-    parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - (burst ? 60 : 0), rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 6, col, s: burst ? 3 + Math.random() * 4 : 3 + Math.random() * 3, life: 0, max: burst ? 1.4 + Math.random() * 0.8 : 5 + Math.random() * 3, burst, ph: Math.random() * TAU })
+    const s = shape ?? (burst ? (Math.random() < 0.55 ? 1 : 2) : 0)
+    const c = col ?? (leaf ? pick(PAL.autumn) : burst ? pick(CANDY) : pick(BLOOM))
+    const a = Math.random() * TAU, sp = burst ? 90 + Math.random() * 240 : 5 + Math.random() * 20
+    bits.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - (burst ? 80 : 0), rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 9, col: c, s: burst ? 3.5 + Math.random() * 3.5 : 3 + Math.random() * 3, life: 0, max: burst ? 1.6 + Math.random() * 1 : 5 + Math.random() * 3, burst, ph: Math.random() * TAU, shape: s })
+  }
+  /** Confetti falling from the top of the sky. */
+  function rainConfetti(n: number) {
+    for (let i = 0; i < n; i++) {
+      if (bits.length > 320) bits.shift()
+      bits.push({ x: Math.random() * W, y: -10 - Math.random() * H * 0.4, vx: 0, vy: 0, rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 8, col: pick(CANDY), s: 4 + Math.random() * 3, life: 0, max: 5 + Math.random() * 2, burst: false, ph: Math.random() * TAU, shape: Math.random() < 0.7 ? 1 : 2 })
+    }
   }
   function plantFlower(x: number) {
     if (planted.length > 40) planted.shift()
-    planted.push({ x, y: groundY + 2 + Math.random() * Math.max(4, (H - groundY) * 0.35), h: 14 + Math.random() * 20, c: BLOOM[(Math.random() * BLOOM.length) | 0], born: now, ph: Math.random() * TAU, kind: (Math.random() * 3) | 0, s: 1 + Math.random() * 0.5, appear: 0 })
+    const y = groundAt(x) + 6 + Math.random() * Math.max(4, (H - groundY) * 0.4)
+    planted.push({ x, y, h: 14 + Math.random() * 20, c: pick(BLOOM), born: now, ph: Math.random() * TAU, kind: (Math.random() * 3) | 0, s: 1 + Math.random() * 0.5, appear: 0 })
+  }
+  function popAt(x: number, y: number, n: number, col?: string) {
+    rings.push({ x, y, life: 0, col: col ?? '#ffffff' })
+    for (let i = 0; i < n; i++) spawnBit(x, y, true)
   }
 
   // ---------- drawing helpers ----------
@@ -267,21 +343,17 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     const lean = Math.sin(t * 1.6 + f.ph) * 0.08 + wind * 0.12
     const h = f.h * g
     const tx = f.x + Math.sin(lean) * h, ty = f.y - Math.cos(lean) * h
-    c.strokeStyle = '#3f8f4a'; c.lineWidth = 1.6
+    c.strokeStyle = '#2f7d2a'; c.lineWidth = 2
     c.beginPath(); c.moveTo(f.x, f.y); c.quadraticCurveTo(f.x, f.y - h * 0.5, tx, ty); c.stroke()
-    if (g > 0.5) {
-      c.fillStyle = '#5bb35f'
-      c.beginPath(); c.ellipse(f.x + Math.sin(lean) * h * 0.4 + 4, f.y - h * 0.35, 4 * g, 1.8 * g, -0.5, 0, TAU); c.fill()
-    }
-    const r = 3.2 * f.s * smooth(0.45, 1, g0)
+    const r = 3.6 * f.s * smooth(0.45, 1, g0)
     if (r <= 0.2) return
-    c.lineWidth = 1; c.strokeStyle = C.outline; c.fillStyle = f.c
+    c.lineWidth = 1.4; c.strokeStyle = INK; c.fillStyle = f.c
     if (f.kind === 0) {
       for (let i = 0; i < 5; i++) {
         const a = (i * TAU) / 5 + t * 0.3 + f.ph
-        c.beginPath(); c.arc(tx + Math.cos(a) * r, ty + Math.sin(a) * r, r * 0.75, 0, TAU); c.fill(); c.stroke()
+        c.beginPath(); c.arc(tx + Math.cos(a) * r, ty + Math.sin(a) * r, r * 0.78, 0, TAU); c.fill(); c.stroke()
       }
-      c.fillStyle = '#ffcf33'; c.beginPath(); c.arc(tx, ty, r * 0.55, 0, TAU); c.fill(); c.stroke()
+      c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(tx, ty, r * 0.55, 0, TAU); c.fill(); c.stroke()
     } else if (f.kind === 1) {
       c.beginPath()
       c.moveTo(tx - r * 1.1, ty - r * 0.2)
@@ -289,8 +361,8 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
       c.quadraticCurveTo(tx, ty + r * 1.3, tx - r * 1.1, ty - r * 0.2)
       c.fill(); c.stroke()
     } else {
-      c.beginPath(); c.arc(tx, ty, r * 1.1, 0, TAU); c.fill(); c.stroke()
-      c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.arc(tx - r * 0.35, ty - r * 0.35, r * 0.35, 0, TAU); c.fill()
+      c.beginPath(); c.arc(tx, ty, r * 1.15, 0, TAU); c.fill(); c.stroke()
+      c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(tx - r * 0.38, ty - r * 0.38, r * 0.36, 0, TAU); c.fill()
     }
   }
 
@@ -298,20 +370,19 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     const c = ctx!
     const flap = Math.abs(Math.cos(b.flap))
     c.save(); c.translate(b.x, b.y); c.rotate(Math.max(-0.5, Math.min(0.5, b.vx * 0.004)))
-    c.lineWidth = 1; c.strokeStyle = C.outline
+    c.lineWidth = 1.4; c.strokeStyle = INK
     const s = b.s
     for (const side of [-1, 1]) {
       c.save(); c.scale(side * (0.25 + 0.75 * flap), 1)
       c.fillStyle = b.c[0]
-      c.beginPath(); c.ellipse(5 * s, -4 * s, 6 * s, 4.5 * s, -0.5, 0, TAU); c.fill(); c.stroke()
+      c.beginPath(); c.ellipse(5.5 * s, -4 * s, 6.5 * s, 5 * s, -0.5, 0, TAU); c.fill(); c.stroke()
       c.fillStyle = b.c[1]
-      c.beginPath(); c.ellipse(4 * s, 3 * s, 4 * s, 3.2 * s, 0.5, 0, TAU); c.fill(); c.stroke()
-      c.fillStyle = C.outline; c.beginPath(); c.arc(6 * s, -5 * s, 1.1 * s, 0, TAU); c.fill()
+      c.beginPath(); c.ellipse(4 * s, 3.2 * s, 4.4 * s, 3.4 * s, 0.5, 0, TAU); c.fill(); c.stroke()
       c.restore()
     }
-    c.strokeStyle = C.outline; c.lineWidth = 2 * s
+    c.strokeStyle = INK; c.lineWidth = 2.4 * s
     c.beginPath(); c.moveTo(0, -5 * s); c.lineTo(0, 6 * s); c.stroke()
-    c.lineWidth = 0.8
+    c.lineWidth = 1
     c.beginPath(); c.moveTo(0, -5 * s); c.quadraticCurveTo(-2 * s, -10 * s, -4 * s, -11 * s); c.moveTo(0, -5 * s); c.quadraticCurveTo(2 * s, -10 * s, 4 * s, -11 * s); c.stroke()
     c.restore()
   }
@@ -321,7 +392,7 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     const active = bflies.filter((b) => !b.leaving)
     if (active.length < want && Math.random() < dt * 1.5) {
       const left = Math.random() < 0.5
-      bflies.push({ x: left ? -20 : W + 20, y: groundY * (0.2 + Math.random() * 0.5), vx: 0, vy: 0, tx: 0, ty: 0, retarget: 0, c: BFLY[(Math.random() * BFLY.length) | 0], flap: Math.random() * TAU, s: 0.8 + Math.random() * 0.5, leaving: false })
+      bflies.push({ x: left ? -20 : W + 20, y: groundY * (0.2 + Math.random() * 0.5), vx: 0, vy: 0, tx: 0, ty: 0, retarget: 0, c: pick(BFLY), flap: Math.random() * TAU, s: 0.85 + Math.random() * 0.5, leaving: false })
     } else if (active.length > want) {
       active[0].leaving = true
     }
@@ -348,41 +419,115 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     }
   }
 
+  /** The ink drop, standing on its tip-less bottom at (x, y). `sq` squashes (+) or stretches (−). */
+  function drawDrop(x: number, y: number, size: number, sq: number, happy: boolean) {
+    const c = ctx!
+    const s = size / 100
+    c.save(); c.translate(x, y); c.scale(1 + sq, 1 - sq); c.translate(-50 * s, -96 * s); c.scale(s, s)
+    const body = new Path2D('M50 6 C60 28 82 44 82 64 A32 30 0 0 1 18 64 C18 44 40 28 50 6 Z')
+    c.save(); c.translate(BOIL[boil][0] / s, BOIL[boil][1] / s); c.lineWidth = 7; c.strokeStyle = INK; c.lineJoin = 'round'; c.stroke(body); c.restore()
+    const g = c.createRadialGradient(36, 40, 2, 44, 52, 62)
+    g.addColorStop(0, '#efe6ff'); g.addColorStop(0.5, '#a77bf2'); g.addColorStop(1, '#5a2fb2')
+    c.fillStyle = g; c.fill(body)
+    c.fillStyle = 'rgba(255,255,255,.75)'; c.beginPath(); c.ellipse(35, 46, 6, 11, 0.5, 0, TAU); c.fill()
+    c.strokeStyle = '#2a1650'; c.fillStyle = '#2a1650'; c.lineWidth = 3.4; c.lineCap = 'round'
+    if (happy) {
+      c.beginPath(); c.arc(40, 68, 4.5, Math.PI * 1.1, Math.PI * 1.9); c.stroke()
+      c.beginPath(); c.arc(60, 68, 4.5, Math.PI * 1.1, Math.PI * 1.9); c.stroke()
+      c.beginPath(); c.arc(50, 74, 6, 0.15 * Math.PI, 0.85 * Math.PI); c.fill()
+    } else {
+      c.beginPath(); c.arc(40, 66, 3.6, 0, TAU); c.fill(); c.beginPath(); c.arc(60, 66, 3.6, 0, TAU); c.fill()
+      c.beginPath(); c.arc(50, 72, 4.5, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke()
+    }
+    c.fillStyle = 'rgba(255,143,196,.75)'
+    c.beginPath(); c.ellipse(31, 75, 5.5, 3.2, 0, 0, TAU); c.fill(); c.beginPath(); c.ellipse(69, 75, 5.5, 3.2, 0, 0, TAU); c.fill()
+    c.restore()
+  }
+
   // ---------- scene ----------
+  function skyColors(t: number): [string, string] {
+    if (!theme.cycle) return theme.sky
+    // 365: the sky turns slowly through all six colours
+    const names = ['violet', 'pink', 'orange', 'yellow', 'lime', 'sky'] // hue order, so neighbours blend clean
+    const k = (t * 0.12) % names.length
+    const a = SKIES[names[Math.floor(k)]], b = SKIES[names[(Math.floor(k) + 1) % names.length]]
+    const f = smooth(0, 1, k % 1)
+    return [mix(a[0], b[0], f), mix(a[1], b[1], f)]
+  }
   function drawSky(t: number) {
     const c = ctx!
-    const k = P / 6
-    const glows = [
-      { x: 0.5 + Math.sin(t * 0.07) * 0.05, y: 0.35, r: 0.6, a: [255, 214, 120], b: [255, 170, 110] },
-      { x: 0.18 + Math.sin(t * 0.05 + 1) * 0.04, y: 0.22, r: 0.42, a: [255, 190, 160], b: [255, 120, 170] },
-      { x: 0.84 + Math.sin(t * 0.06 + 2) * 0.04, y: 0.4, r: 0.45, a: [190, 230, 170], b: [110, 210, 200] },
-      { x: 0.62, y: 0.08, r: 0.35, a: [230, 210, 255], b: [170, 150, 245] },
-    ]
-    for (const g of glows) {
-      const col = g.a.map((v, i) => Math.round(lerp(v, g.b[i], k)))
-      const R0 = Math.max(W, H) * g.r
-      const gr = c.createRadialGradient(g.x * W, g.y * H, 0, g.x * W, g.y * H, R0)
-      const al = 0.12 + 0.26 * smooth(0, 6, P)
-      gr.addColorStop(0, `rgba(${col},${al})`); gr.addColorStop(1, `rgba(${col},0)`)
-      c.fillStyle = gr; c.fillRect(0, 0, W, H)
+    const [top, bottom] = skyColors(t)
+    const g = c.createLinearGradient(0, 0, 0, groundY)
+    g.addColorStop(0, bottom); g.addColorStop(1, top)
+    c.fillStyle = g; c.fillRect(0, 0, W, H)
+    // two soft riso washes drifting
+    for (const [fx, fy, fr, al] of [[0.2 + Math.sin(t * 0.07) * 0.05, 0.25, 0.45, 0.22], [0.85 + Math.sin(t * 0.05 + 2) * 0.04, 0.55, 0.4, 0.18]] as const) {
+      const R = Math.max(W, H) * fr
+      const rg = c.createRadialGradient(fx * W, fy * H, 0, fx * W, fy * H, R)
+      rg.addColorStop(0, `rgba(255,255,255,${al})`); rg.addColorStop(1, 'rgba(255,255,255,0)')
+      c.fillStyle = rg; c.fillRect(0, 0, W, H)
     }
-    // sun
-    const sx = W * 0.86, sy = Math.min(H * 0.16, 110), sr = 14 + 10 * smooth(0, 4, P)
-    c.save(); c.translate(sx, sy); c.rotate(t * 0.1)
-    c.strokeStyle = C.rust; c.lineWidth = 1.6; c.setLineDash([3, 5])
-    c.beginPath(); c.arc(0, 0, sr + 9, 0, TAU); c.stroke(); c.setLineDash([])
-    for (let i = 0; i < 10; i++) { const a = (i * TAU) / 10; c.beginPath(); c.moveTo(Math.cos(a) * (sr + 15), Math.sin(a) * (sr + 15)); c.lineTo(Math.cos(a) * (sr + 21), Math.sin(a) * (sr + 21)); c.stroke() }
+    // clouds: white puffs
+    for (const cl of clouds) {
+      cl.x += cl.sp * 0.016 * (1 + wind * 0.5)
+      if (cl.x > W + 80) cl.x = -80
+      const s = cl.s * Math.max(0.8, W / 500)
+      c.fillStyle = 'rgba(255,255,255,.85)'
+      c.beginPath()
+      c.arc(cl.x, cl.y, 16 * s, 0, TAU); c.arc(cl.x + 18 * s, cl.y - 8 * s, 20 * s, 0, TAU); c.arc(cl.x + 38 * s, cl.y, 15 * s, 0, TAU)
+      c.rect(cl.x, cl.y - 2 * s, 38 * s, 16 * s)
+      c.fill()
+    }
+    // the jelly sun, smiling with its eyes shut
+    const sx = W * 0.84, sy = Math.min(H * 0.17, 120), sr = 18 + 10 * smooth(0, 4, P)
+    c.save(); c.translate(sx, sy); c.rotate(t * 0.15)
+    c.fillStyle = '#ffe680'
+    for (let i = 0; i < 10; i++) {
+      c.save(); c.rotate((i * TAU) / 10)
+      c.beginPath(); c.roundRect(sr + 6, -3.5, 12, 7, 3.5); c.fill(); c.restore()
+    }
     c.restore()
-    c.fillStyle = '#ffcf4a'; c.strokeStyle = C.outline; c.lineWidth = 1.6
-    c.beginPath(); c.arc(sx, sy, sr, 0, TAU); c.fill(); c.stroke()
-    if (C.hatchPat) { c.fillStyle = C.hatchPat; c.fill() }
+    c.save(); c.translate(BOIL[boil][0], BOIL[boil][1]); c.fillStyle = INK; c.beginPath(); c.arc(sx, sy, sr + 2.2, 0, TAU); c.fill(); c.restore()
+    const sg = c.createRadialGradient(sx - sr * 0.35, sy - sr * 0.4, 1, sx, sy, sr)
+    sg.addColorStop(0, '#fff7c9'); sg.addColorStop(0.55, '#ffd43a'); sg.addColorStop(1, '#f0a800')
+    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, sr, 0, TAU); c.fill()
+    c.strokeStyle = INK; c.lineWidth = 2.2; c.lineCap = 'round'
+    c.beginPath(); c.arc(sx - sr * 0.33, sy, sr * 0.16, Math.PI * 1.1, Math.PI * 1.9); c.stroke()
+    c.beginPath(); c.arc(sx + sr * 0.33, sy, sr * 0.16, Math.PI * 1.1, Math.PI * 1.9); c.stroke()
+    c.beginPath(); c.arc(sx, sy + sr * 0.22, sr * 0.2, 0.15 * Math.PI, 0.85 * Math.PI); c.stroke()
+  }
+
+  function drawRainbow() {
+    if (!has('rainbow') || finaleT0 < 0) return
+    const c = ctx!
+    const k = reduceMotion ? 1 : easeOut(clamp01((now - finaleT0 - 0.3) / 1.8))
+    if (k <= 0) return
+    const R = Math.min(W * 0.62, groundY * 0.8)
+    const bands = ['#ff5fa8', '#ff7a2f', '#ffd23f', '#93d94e', '#33b6ff', '#7b4dff']
+    const bw = Math.max(7, R * 0.045)
+    c.save(); c.lineCap = 'round'; c.globalAlpha = 0.9
+    bands.forEach((col, i) => {
+      const r = R - i * bw
+      c.strokeStyle = col; c.lineWidth = bw + 0.6
+      c.beginPath(); c.arc(cx, groundY + 4, r, Math.PI, Math.PI + Math.PI * k); c.stroke()
+    })
+    c.restore()
   }
 
   function drawGround() {
     const c = ctx!
-    c.fillStyle = C.soil; c.fillRect(0, groundY, W, H - groundY)
-    c.strokeStyle = C.ink; c.lineWidth = 2; c.setLineDash([7, 5])
-    c.beginPath(); c.moveTo(0, groundY); c.lineTo(W, groundY); c.stroke(); c.setLineDash([])
+    const edge = new Path2D()
+    edge.moveTo(-20, groundAt(0))
+    for (let x = 0; x <= W + 20; x += 8) edge.lineTo(x, groundAt(x))
+    const fill = new Path2D(edge)
+    fill.lineTo(W + 20, H + 20); fill.lineTo(-20, H + 20); fill.closePath()
+    // a back hill, lighter, for depth
+    c.fillStyle = 'rgba(255,255,255,.28)'
+    c.beginPath(); c.ellipse(W * 0.2, groundY + 6, W * 0.45, 40, 0, Math.PI, TAU); c.ellipse(W * 0.82, groundY + 4, W * 0.4, 30, 0, Math.PI, TAU); c.fill()
+    const g = c.createLinearGradient(0, groundY - 10, 0, H)
+    g.addColorStop(0, theme.name === 'lime' && !theme.cycle ? '#5fb52f' : '#9ee05a'); g.addColorStop(1, theme.name === 'lime' && !theme.cycle ? '#3f8f22' : '#6cc23a')
+    c.fillStyle = g; c.fill(fill)
+    c.save(); c.translate(BOIL[boil][0], BOIL[boil][1]); c.strokeStyle = INK; c.lineWidth = 3; c.lineJoin = 'round'; c.stroke(edge); c.restore()
   }
 
   function drawSeed(t: number) {
@@ -394,24 +539,126 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     const sx = cx, sy = groundY + 16
     c.save(); c.globalAlpha = vis; c.translate(sx, sy); c.rotate(-0.3 + wob)
     const pulse = 1 + Math.sin(t * 2) * 0.04
-    const gl = c.createRadialGradient(0, 0, 0, 0, 0, 34)
-    gl.addColorStop(0, 'rgba(255,205,80,.45)'); gl.addColorStop(1, 'rgba(255,205,80,0)')
-    c.fillStyle = gl; c.beginPath(); c.arc(0, 0, 34 * pulse, 0, TAU); c.fill()
-    c.fillStyle = '#b07a45'; c.strokeStyle = C.outline; c.lineWidth = 1.8
-    c.beginPath(); c.ellipse(0, 0, 11 * pulse, 7 * pulse, 0, 0, TAU); c.fill(); c.stroke()
-    if (C.hatchPat) { c.fillStyle = C.hatchPat; c.fill() }
+    const gl = c.createRadialGradient(0, 0, 0, 0, 0, 38)
+    gl.addColorStop(0, 'rgba(255,230,128,.7)'); gl.addColorStop(1, 'rgba(255,230,128,0)')
+    c.fillStyle = gl; c.beginPath(); c.arc(0, 0, 38 * pulse, 0, TAU); c.fill()
+    c.fillStyle = INK; c.beginPath(); c.ellipse(BOIL[boil][0], BOIL[boil][1], 13 * pulse + 2, 8.5 * pulse + 2, 0, 0, TAU); c.fill()
+    const sg = c.createRadialGradient(-4, -3, 1, 0, 0, 13)
+    sg.addColorStop(0, '#f2b77a'); sg.addColorStop(1, '#a8622c')
+    c.fillStyle = sg; c.beginPath(); c.ellipse(0, 0, 13 * pulse, 8.5 * pulse, 0, 0, TAU); c.fill()
+    c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.ellipse(-4, -3.5, 4, 2, -0.2, 0, TAU); c.fill()
     if (crack > 0) {
-      c.strokeStyle = C.outline; c.lineWidth = 1.4
-      c.beginPath(); c.moveTo(-6, -1); c.lineTo(-2, 2 * crack); c.lineTo(2, -2 * crack); c.lineTo(6 * crack, 1); c.stroke()
-      c.strokeStyle = '#6fbf5a'; c.lineWidth = 2.2
-      c.beginPath(); c.moveTo(2, -5); c.quadraticCurveTo(4, -12 * crack, 1, -16 * crack); c.stroke()
+      c.strokeStyle = INK; c.lineWidth = 1.8
+      c.beginPath(); c.moveTo(-7, -1); c.lineTo(-2, 2 * crack); c.lineTo(2, -2 * crack); c.lineTo(7 * crack, 1); c.stroke()
+      c.strokeStyle = '#4cae3c'; c.lineWidth = 3
+      c.beginPath(); c.moveTo(2, -6); c.quadraticCurveTo(4, -13 * crack, 1, -18 * crack); c.stroke()
     }
     c.restore()
   }
 
+  /** The drop falls from the sky onto the seed, and splashes. */
+  function drawIntro() {
+    if (splashed) return
+    const k = (now - introT0) / 0.6
+    if (k < 0) return
+    const y = lerp(-70, groundY + 8, k * k)
+    if (k >= 1) {
+      splashed = true
+      rings.push({ x: cx, y: groundY + 6, life: 0, col: '#ffffff' })
+      for (let i = 0; i < 16; i++) spawnBit(cx, groundY + 4, true, 3, pick(['#a77bf2', '#c7b3ff', '#7b4dff', '#e8dbff']))
+      return
+    }
+    drawDrop(cx, y, 44, -0.18 * k, false) // stretched as it falls
+  }
+
+  /** On arrival the drop pops up beside the tree and cheers, hopping now and then. */
+  function drawMascot() {
+    if (finaleT0 < 0) return
+    const k = reduceMotion ? 1 : clamp01((now - finaleT0 - 0.4) / 0.9)
+    if (k <= 0) return
+    const mx = Math.min(W - 34, Math.max(34, cx + Math.max(TL * 1.75, 92)))
+    const base = groundAt(mx) + 4
+    const e = elastic(k)
+    let y = base + (1 - e) * 60, sq = 0
+    if (!reduceMotion && k >= 1) {
+      const h = ((now - finaleT0) % 1.6) / 1.6 // a hop every 1.6 s
+      if (h < 0.12) sq = 0.12 * Math.sin((h / 0.12) * Math.PI) // crouch
+      else if (h < 0.5) { const j = (h - 0.12) / 0.38; y -= Math.sin(j * Math.PI) * 26; sq = -0.08 * Math.sin(j * Math.PI) }
+      else if (h < 0.6) sq = 0.1 * Math.sin(((h - 0.5) / 0.1) * Math.PI) // land
+    }
+    const size = Math.max(54, Math.min(84, W * 0.14))
+    // its shadow
+    const c = ctx!
+    c.fillStyle = 'rgba(29,22,37,.18)'; c.beginPath(); c.ellipse(mx, base, size * 0.3 * (1 - (base - y) / 80), 4, 0, 0, TAU); c.fill()
+    c.save(); c.beginPath(); c.rect(0, 0, W, base + 2); c.clip() // rises out of the ground
+    drawDrop(mx, y, size, sq, true)
+    c.restore()
+  }
+
+  function updateBalloons(dt: number, t: number) {
+    if (!has('balloons') || finaleT0 < 0 || reduceMotion) return
+    const want = Math.min(9, Math.floor((now - finaleT0) * 4))
+    if (balloons.length < want || (balloons.length < 7 && Math.random() < dt * 0.6)) {
+      balloons.push({ x: W * (0.08 + Math.random() * 0.84), y: H + 30, vy: 38 + Math.random() * 34, ph: Math.random() * TAU, c: pick(CANDY), s: 0.85 + Math.random() * 0.45, pop: -1 })
+    }
+    const c = ctx!
+    for (let i = balloons.length - 1; i >= 0; i--) {
+      const b = balloons[i]
+      b.y -= b.vy * dt; b.x += (Math.sin(t * 1.3 + b.ph) * 14 + wind * 30) * dt
+      if (b.y < -60) { balloons.splice(i, 1); continue }
+      const r = 17 * b.s
+      // string
+      c.strokeStyle = INK; c.lineWidth = 1.3
+      c.beginPath(); c.moveTo(b.x, b.y + r * 1.2)
+      c.bezierCurveTo(b.x + Math.sin(t * 3 + b.ph) * 6, b.y + r * 2, b.x - Math.sin(t * 2 + b.ph) * 6, b.y + r * 2.8, b.x, b.y + r * 3.6); c.stroke()
+      c.fillStyle = INK; c.beginPath(); c.ellipse(b.x + BOIL[boil][0], b.y + BOIL[boil][1], r + 2, r * 1.2 + 2, 0, 0, TAU); c.fill()
+      c.fillStyle = b.c; c.beginPath(); c.ellipse(b.x, b.y, r, r * 1.2, 0, 0, TAU); c.fill()
+      c.beginPath(); c.moveTo(b.x - 3, b.y + r * 1.2 + 4); c.lineTo(b.x + 3, b.y + r * 1.2 + 4); c.lineTo(b.x, b.y + r * 1.15); c.fill()
+      c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.ellipse(b.x - r * 0.38, b.y - r * 0.45, r * 0.22, r * 0.34, -0.4, 0, TAU); c.fill()
+    }
+  }
+
+  function updateFireworks(dt: number) {
+    if (!has('fireworks') || finaleT0 < 0 || reduceMotion) return
+    const c = ctx!
+    if (now >= nextRocket) {
+      rockets.push({ x: W * (0.15 + Math.random() * 0.7), y: groundY, ty: H * (0.1 + Math.random() * 0.28), vy: -(H * 0.9), c: pick(CANDY), trail: [] })
+      const since = now - finaleT0
+      nextRocket = now + (since < 4 ? 0.45 + Math.random() * 0.4 : 2 + Math.random() * 1.5)
+    }
+    for (let i = rockets.length - 1; i >= 0; i--) {
+      const r = rockets[i]
+      r.y += r.vy * dt; r.vy *= Math.pow(0.35, dt)
+      r.trail.push(r.x, r.y); if (r.trail.length > 16) r.trail.splice(0, 2)
+      c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 2.5; c.lineCap = 'round'
+      c.beginPath(); for (let k = 0; k < r.trail.length; k += 2) (k ? c.lineTo : c.moveTo).call(c, r.trail[k], r.trail[k + 1]); c.stroke()
+      if (r.y <= r.ty) {
+        rockets.splice(i, 1)
+        rings.push({ x: r.x, y: r.y, life: 0, col: '#ffffff' })
+        const n = 46
+        for (let k = 0; k < n; k++) {
+          const a = (k / n) * TAU + Math.random() * 0.1, sp = 120 + Math.random() * 90
+          sparks.push({ x: r.x, y: r.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, c: Math.random() < 0.25 ? '#ffffff' : r.c, life: 0, max: 1.1 + Math.random() * 0.5 })
+        }
+        if (sparks.length > 600) sparks.splice(0, sparks.length - 600)
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i]; s.life += dt
+      if (s.life > s.max) { sparks.splice(i, 1); continue }
+      s.vx *= Math.pow(0.3, dt); s.vy = s.vy * Math.pow(0.3, dt) + 90 * dt
+      s.x += s.vx * dt; s.y += s.vy * dt
+      const a = 1 - s.life / s.max
+      c.globalAlpha = a
+      c.fillStyle = INK; c.beginPath(); c.arc(s.x + 0.8, s.y + 0.8, 3.4 * a + 1.2, 0, TAU); c.fill()
+      c.fillStyle = s.c; c.beginPath(); c.arc(s.x, s.y, 3 * a + 1, 0, TAU); c.fill()
+      c.globalAlpha = 1
+    }
+  }
+
   function drawLife(dt: number, t: number) {
     const c = ctx!
-    // pollen / fireflies
+    // pollen
     const moteVis = smooth(2.4, 4.5, P)
     if (moteVis > 0) {
       for (const m of motes) {
@@ -419,39 +666,50 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
         m.y -= m.sp * dt; m.x += (Math.sin(t * 0.8 + m.ph) * 10 + wind * 20) * dt
         if (m.y < -10) { m.y = groundY - 10; m.x = Math.random() * W }
         const tw = 0.5 + 0.5 * Math.sin(t * 2.5 + m.ph)
-        c.fillStyle = `rgba(255,200,70,${0.18 * v * tw})`; c.beginPath(); c.arc(m.x, m.y, m.s * 4, 0, TAU); c.fill()
-        c.fillStyle = `rgba(255,236,160,${0.9 * v * tw})`; c.beginPath(); c.arc(m.x, m.y, m.s, 0, TAU); c.fill()
+        c.fillStyle = `rgba(255,255,255,${0.25 * v * tw})`; c.beginPath(); c.arc(m.x, m.y, m.s * 4, 0, TAU); c.fill()
+        c.fillStyle = `rgba(255,250,210,${0.95 * v * tw})`; c.beginPath(); c.arc(m.x, m.y, m.s * 1.2, 0, TAU); c.fill()
       }
     }
-    // falling petals
-    const rate = P > 4.2 ? (P - 4.2) * 5 : 0
-    if (tips.length && Math.random() < rate * dt) { const k = ((Math.random() * tips.length) / 2 | 0) * 2; spawnPetal(tips[k], tips[k + 1], false) }
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const p = parts[i]; p.life += dt
-      if (p.burst) { p.vy += 260 * dt; p.vx *= Math.pow(0.2, dt); p.vy *= Math.pow(0.5, dt) }
-      else { p.vy = 22 + Math.sin(p.life * 2 + p.ph) * 8; p.vx = Math.sin(p.life * 1.6 + p.ph) * 24 + wind * 40 }
+    // falling petals; the blossom finale is a storm
+    const storm = has('blossom') && finaleT0 >= 0 && !reduceMotion ? Math.max(0, 1 - (now - finaleT0) / 7) : 0
+    const rate = (P > 4.2 ? (P - 4.2) * 5 : 0) + storm * 60
+    if (Math.random() < rate * dt) {
+      if (storm > 0 && Math.random() < 0.7) {
+        if (bits.length > 320) bits.shift()
+        bits.push({ x: -10, y: Math.random() * groundY * 0.9, vx: 0, vy: 0, rot: Math.random() * TAU, vr: (Math.random() - 0.5) * 6, col: pick(PAL.cherry), s: 3.5 + Math.random() * 3, life: 0, max: 6, burst: false, ph: Math.random() * TAU, shape: 0 })
+      } else if (tips.length) { const k = ((Math.random() * tips.length) / 2 | 0) * 2; spawnBit(tips[k], tips[k + 1], false) }
+    }
+    if (storm > 0) gust = Math.max(gust, 1.2 * storm)
+    for (let i = bits.length - 1; i >= 0; i--) {
+      const p = bits[i]; p.life += dt
+      if (p.burst) { p.vy += 300 * dt; p.vx *= Math.pow(0.25, dt); p.vy *= Math.pow(0.55, dt) }
+      else { p.vy = (p.shape === 1 || p.shape === 2 ? 60 : 22) + Math.sin(p.life * 2 + p.ph) * 10; p.vx = Math.sin(p.life * 1.6 + p.ph) * 26 + wind * 50 }
       p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt
-      if (!p.burst && p.y > groundY - 1) { p.y = groundY - 1; p.vx = 0; p.vr = 0 }
+      const floor = groundAt(p.x) + 2
+      if (!p.burst && p.y > floor) { p.y = floor; p.vx = 0; p.vr = 0 }
       const a = 1 - smooth(p.max * 0.7, p.max, p.life)
-      if (p.life > p.max) { parts.splice(i, 1); continue }
+      if (p.life > p.max || p.x > W + 40) { bits.splice(i, 1); continue }
       c.save(); c.globalAlpha = a; c.translate(p.x, p.y); c.rotate(p.rot)
-      c.fillStyle = p.col; c.strokeStyle = C.outline; c.lineWidth = 0.8
-      c.beginPath(); c.ellipse(0, 0, p.s, p.s * 0.55, 0, 0, TAU); c.fill(); c.stroke()
+      c.fillStyle = p.col; c.strokeStyle = INK; c.lineWidth = 1.1
+      if (p.shape === 1) { c.scale(Math.cos(p.life * 7 + p.ph), 1); c.beginPath(); c.roundRect(-p.s, -p.s * 0.45, p.s * 2, p.s * 0.9, 1.5); c.fill(); c.stroke() }
+      else if (p.shape === 2) { c.beginPath(); c.arc(0, 0, p.s * 0.7, 0, TAU); c.fill(); c.stroke() }
+      else if (p.shape === 3) { c.beginPath(); c.arc(0, 0, p.s * 0.6, 0, TAU); c.fill() }
+      else { c.beginPath(); c.ellipse(0, 0, p.s, p.s * 0.58, 0, 0, TAU); c.fill(); c.stroke() }
       c.restore()
     }
     updateButterflies(dt, t)
     for (const b of bflies) drawButterfly(b)
     for (let i = rings.length - 1; i >= 0; i--) {
       const r = rings[i]; r.life += dt
-      if (r.life > 0.9) { rings.splice(i, 1); continue }
-      const k = r.life / 0.9
-      c.strokeStyle = C.rust; c.globalAlpha = 1 - k; c.lineWidth = 2 * (1 - k) + 0.5
-      c.setLineDash([4, 4]); c.beginPath(); c.arc(r.x, r.y, 8 + k * 50, 0, TAU); c.stroke(); c.setLineDash([])
+      if (r.life > 0.8) { rings.splice(i, 1); continue }
+      const k = r.life / 0.8
+      c.strokeStyle = r.col; c.globalAlpha = 1 - k; c.lineWidth = 4 * (1 - k) + 1
+      c.beginPath(); c.arc(r.x, r.y, 8 + easeOut(k) * 60, 0, TAU); c.stroke()
       c.globalAlpha = 1
     }
   }
 
-  // ---------- pointer: tap plants a flower or shakes the tree, a swipe is wind ----------
+  // ---------- pointer: tap plants a flower, shakes the tree or pops a balloon; a swipe is wind ----------
   function localXY(e: PointerEvent): [number, number] { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top] }
   function touch() { if (!touched) { touched = true; opts.onFirstTouch?.() } }
   const onDown = (e: PointerEvent) => {
@@ -470,13 +728,19 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     const [x, y] = localXY(e)
     if (pointer.moved < 12 && now - pointer.downT < 0.6) {
       touch()
-      rings.push({ x, y, life: 0 })
-      for (let i = 0; i < 22; i++) spawnPetal(x, y, true)
-      if (y > groundY - 50) plantFlower(Math.max(6, Math.min(W - 6, x)))
-      else {
-        gust += (x < cx ? 1 : -1) * 1.3
-        for (let i = 0; i < tips.length && i < 400; i += 2) {
-          if (Math.hypot(tips[i] - x, tips[i + 1] - y) < 60 && Math.random() < 0.5) spawnPetal(tips[i], tips[i + 1], false)
+      const hit = balloons.findIndex((b) => Math.hypot(b.x - x, b.y - y) < 26 * b.s)
+      if (hit >= 0) {
+        const b = balloons[hit]; balloons.splice(hit, 1)
+        rings.push({ x: b.x, y: b.y, life: 0, col: '#ffffff' })
+        for (let i = 0; i < 26; i++) spawnBit(b.x, b.y, true, Math.random() < 0.6 ? 1 : 2, Math.random() < 0.5 ? b.c : undefined)
+      } else {
+        popAt(x, y, 22)
+        if (y > groundY - 50) plantFlower(Math.max(6, Math.min(W - 6, x)))
+        else {
+          gust += (x < cx ? 1 : -1) * 1.3
+          for (let i = 0; i < tips.length && i < 400; i += 2) {
+            if (Math.hypot(tips[i] - x, tips[i + 1] - y) < 60 && Math.random() < 0.5) spawnBit(tips[i], tips[i + 1], false)
+          }
         }
       }
     }
@@ -492,6 +756,7 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
   function frame(ms: number) {
     const dt = Math.min(0.05, (ms - last) / 1000); last = ms; now += dt
     const t = now
+    boil = reduceMotion ? 0 : Math.floor(now * 5) % 3
 
     if (grow) {
       const k = clamp01((now - grow.t0) / grow.dur)
@@ -506,6 +771,7 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     const c = ctx!
     c.clearRect(0, 0, W, H)
     drawSky(t)
+    drawRainbow()
 
     // companion trees (behind)
     for (const co of COMPANIONS) {
@@ -513,19 +779,17 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
       if (g <= 0) continue
       const gg = Math.pow(g, 0.8)
       const tl = TL * co.size * (0.35 + 0.65 * gg)
-      c.globalAlpha = 0.96
-      renderTree(co.tree, W * co.fx, groundY - co.back * (H / 700), tl, 0.12 + 0.88 * gg, PAL[co.pal], { t: t + co.fx * 9, wind: wind * 0.8, bloom: co.pal === 'cherry' ? 0.3 * g : 0 })
-      c.globalAlpha = 1
+      renderTree(co.tree, W * co.fx, groundAt(W * co.fx) - co.back * (H / 700) + 6, tl, 0.12 + 0.88 * gg, PAL[co.pal], { t: t + co.fx * 9, wind: wind * 0.8, bloom: co.pal === 'cherry' ? 0.3 * g : 0 })
     }
 
     drawGround()
 
-    // roots
+    // roots, faint under the grass
     const rg = smooth(0.7, 5, P)
     if (rg > 0) {
-      c.save(); c.beginPath(); c.rect(0, groundY + 1, W, H); c.clip()
-      c.globalAlpha = 0.35
-      renderTree(ROOTS, cx, groundY + 2, TL * 0.55 * (0.3 + 0.7 * rg), rg, PAL.green, { t, wind: 0, baseAng: Math.PI, noLeaves: true, rootStyle: C.trunk })
+      c.save(); c.beginPath(); c.rect(0, groundY + 3, W, H); c.clip()
+      c.globalAlpha = 0.22
+      renderTree(ROOTS, cx, groundY + 2, TL * 0.55 * (0.3 + 0.7 * rg), rg, PAL.green, { t, wind: 0, baseAng: Math.PI, noLeaves: true, rootStyle: INK })
       c.restore(); c.globalAlpha = 1
     }
     drawSeed(t)
@@ -535,7 +799,7 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     for (const gr of grass) {
       const v = smooth(gr.appear, gr.appear + 0.6, P); if (v <= 0) continue
       const l = gr.h * v, sw = Math.sin(t * 1.8 + gr.ph) * 2 + wind * 3
-      c.strokeStyle = '#4f9a4f'; c.lineWidth = 1.3
+      c.strokeStyle = '#3f9a36'; c.lineWidth = 1.8
       c.beginPath()
       c.moveTo(gr.x, gr.y); c.quadraticCurveTo(gr.x - 2, gr.y - l * 0.6, gr.x - 3 + sw, gr.y - l)
       c.moveTo(gr.x, gr.y); c.quadraticCurveTo(gr.x + 1, gr.y - l * 0.7, gr.x + 3 + sw, gr.y - l * 0.8)
@@ -553,10 +817,23 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
       renderTree(CENTRAL, cx, groundY, tl, g, PAL.green, { t, wind, tips, bloom: 0.32 * smooth(3.6, 5.2, P), warm: 0.35 * smooth(5, 6, P) })
     } else tips = []
 
+    drawMascot()
+    updateBalloons(dt, t)
     drawLife(dt, t)
+    updateFireworks(dt)
+    drawIntro()
 
     const si = stageIndex(P)
-    if (si !== shownStage) { shownStage = si; opts.onStage?.(si) }
+    if (si !== shownStage) {
+      // a new stage while growing: a pop at the crown
+      if (shownStage >= 0 && grow && !reduceMotion) {
+        let top = 0
+        for (let i = 1; i < tips.length; i += 2) if (tips[i] < tips[top + 1]) top = i - 1
+        const x = tips.length ? tips[top] : cx, y = tips.length ? tips[top + 1] : groundY - 20
+        popAt(x, y, 14)
+      }
+      shownStage = si; opts.onStage?.(si)
+    }
     raf = requestAnimationFrame(frame)
   }
 
@@ -570,15 +847,18 @@ export function createScene(cv: HTMLCanvasElement, opts: SceneOpts = {}): Scene 
     setP(p) { grow = null; P = Math.max(0, Math.min(6, p)) },
     growTo(p, seconds) { grow = { from: P, to: Math.max(0, Math.min(6, p)), t0: now, dur: Math.max(0.01, seconds) } },
     burst() {
-      // petals from up to eight branch tips, a ring on each, and a shake
+      finaleT0 = now
+      if (reduceMotion) return
+      // confetti from up to eight branch tips, and from the top of the sky
       const n = Math.min(8, tips.length / 2)
       const from = tips.length ? tips : [cx, groundY - 24]
       for (let i = 0; i < Math.max(1, n); i++) {
         const k = ((Math.random() * from.length) / 2 | 0) * 2
-        rings.push({ x: from[k], y: from[k + 1], life: 0 })
-        for (let j = 0; j < 14; j++) spawnPetal(from[k], from[k + 1], true)
+        popAt(from[k], from[k + 1], 16)
       }
+      rainConfetti(90)
       gust += 1.2
+      if (has('fireworks')) nextRocket = now + 0.3
     },
     destroy() {
       cancelAnimationFrame(raf)

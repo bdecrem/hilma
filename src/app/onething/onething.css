@@ -160,11 +160,6 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; background: #fbf7f0; }
 }
 .ot-blob > *, .ot-card-blob > * { position: relative; }
 .ot-blob > .ot-boil { width: 100%; height: 100%; }
-.ot-credit {
-  margin-top: -6px; position: relative; z-index: 1; padding: 3px 12px 2px; border-radius: 6px;
-  font-family: var(--hand); font-size: 16px; line-height: 1.3; color: #2a2200;
-  background: linear-gradient(180deg, #ffe680, #ffd23f); box-shadow: 0 4px 10px rgba(80,60,0,.18); transform: rotate(-2deg);
-}
 .ot-said { margin-top: 18px; }
 .ot-day.plain .ot-said { margin-top: 10px; }
 .ot-thoughts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -420,8 +415,6 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; background: #fbf7f0; }
 
 @media (prefers-reduced-motion: reduce) { .ot-btn, .ot-card, .ot-pill, .ot-sheet, .ot-sheet-in { transition: none; animation: none; } }
 
-/* the payoff's masthead, in the new voice */
-.ot-payoff-head .ot-wordmark span { color: var(--violet); }
 .ot-month-tag { font-size: 12px; font-weight: 900; letter-spacing: 1.5px; color: var(--violet-d); white-space: nowrap; }
 
 /* ---------- the plant, pencilled: graphite outlines, green pencil hatching ---------- */
@@ -435,36 +428,43 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; background: #fbf7f0; }
 
 @media (prefers-reduced-motion: reduce) { .ot-btn, .ot-gear, .ot-thought .edit { transition: none; } }
 
-/* ---------- the payoff: a milestone day, the whole page becomes the garden ---------- */
+/* ---------- the payoff: a milestone day, the whole screen becomes the garden ----------
+   The canvas (grow-scene.ts) paints the sky in the milestone's colour and the grass below; the head
+   sits in the sky's colour and the foot in the grass's, so the three read as one picture. */
 .ot-payoff {
-  position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column;
-  background: var(--paper);
-  background-image: repeating-linear-gradient(90deg, rgba(42,37,28,.02) 0 1px, transparent 1px 5px);
-  padding-top: env(safe-area-inset-top);
+  --foot: calc(190px + env(safe-area-inset-bottom));
+  position: fixed; inset: 0; z-index: 50; overflow: hidden;
+  background: var(--c); color: var(--on);
 }
+/* the canvas runs from the top of the screen to the foot; the head and the HUD float on its sky */
+.ot-payoff-stage { position: absolute; left: 0; right: 0; top: 0; bottom: var(--foot); }
+.ot-payoff-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: pointer; }
 .ot-payoff-head {
-  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
-  width: 100%; max-width: 640px; margin: 0 auto; padding: 14px calc(env(safe-area-inset-right) + 20px) 0 calc(env(safe-area-inset-left) + 20px);
+  position: relative; z-index: 2; pointer-events: none;
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  width: 100%; max-width: 680px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 16px) 0 calc(env(safe-area-inset-left) + 16px);
 }
-.ot-payoff-stage { position: relative; flex: 1; min-height: 0; }
-.ot-payoff-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
-.ot-payoff-hud { position: absolute; left: max(calc(env(safe-area-inset-left) + 20px), calc(50% - 300px)); top: 10px; pointer-events: none; }
-.ot-payoff-hud > * { text-shadow: 0 0 3px var(--paper), 0 0 6px var(--paper), 0 0 12px var(--paper), 0 0 20px var(--paper), 0 0 32px var(--paper); } /* legible over the canopy at old growth */
-.ot-payoff-name { font-family: var(--hand); font-weight: 600; font-size: clamp(40px, 8vw, 64px); line-height: 1; color: var(--ink); transform-origin: left bottom; }
-.ot-payoff-name.pop { animation: ot-pop .5s cubic-bezier(.3, 1.6, .5, 1); }
-@keyframes ot-pop { 0% { transform: scale(.8) rotate(-3deg); opacity: .3; } 100% { transform: none; opacity: 1; } }
-.ot-payoff-days { margin-top: 6px; font-size: 14px; color: var(--mute); }
-.ot-payoff-hint { margin: 0 0 2px; font-size: 11px; line-height: 1.5; letter-spacing: .3px; color: var(--dim); transition: opacity .8s; }
+.ot-payoff-head .ot-wordmark { color: var(--on); }
+.ot-payoff-hud { position: absolute; left: max(calc(env(safe-area-inset-left) + 16px), calc(50% - 324px)); top: calc(env(safe-area-inset-top) + 64px); pointer-events: none; }
+.ot-payoff-name {
+  font-family: var(--display); font-weight: 800; font-size: clamp(44px, 12vw, 76px); line-height: .95; letter-spacing: -.045em;
+  color: var(--on); transform-origin: left bottom; text-shadow: 0 3px 0 rgba(29,22,37,.12);
+}
+.ot-payoff-name.pop { animation: ot-pop .55s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes ot-pop { 0% { transform: scale(.7) rotate(-4deg); opacity: .2; } 100% { transform: none; opacity: 1; } }
+.ot-payoff-days { margin-top: 8px; display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--chip); font-weight: 900; font-size: 14px; color: var(--on); font-variant-numeric: tabular-nums; }
+.ot-payoff-hint { margin: 0 0 4px; font-family: var(--hand); font-size: 17px; line-height: 1.3; color: rgba(29,22,37,.7); transition: opacity .8s; }
 .ot-payoff-hint.gone { opacity: 0; }
-/* the foot keeps its height from the start, so the plant never jumps when the words arrive */
+/* the foot is the grass, the full width; its words keep to the page's column */
 .ot-payoff-foot {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 166px;
-  width: 100%; max-width: 640px; margin: 0 auto;
-  padding: 10px calc(env(safe-area-inset-right) + 20px) calc(env(safe-area-inset-bottom) + 20px) calc(env(safe-area-inset-left) + 20px);
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--foot); z-index: 2;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; color: var(--ink); background: #6cc23a;
+  padding: 10px max(calc(env(safe-area-inset-right) + 16px), calc(50% - 324px)) calc(env(safe-area-inset-bottom) + 18px) max(calc(env(safe-area-inset-left) + 16px), calc(50% - 324px));
 }
-.ot-payoff-line { margin: 0; font-family: var(--hand); font-weight: 600; font-size: 38px; line-height: 1.05; color: var(--ink); opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
-.ot-payoff-sub { margin: 0; font-size: 12px; line-height: 1.5; color: var(--mute); opacity: 0; transition: opacity .6s .25s; }
-.ot-payoff-foot .ot-btn { margin-top: 8px; opacity: 0; transition: opacity .6s .5s; }
+.ot-payoff[data-c="lime"] .ot-payoff-foot { background: #3f8f22; }
+.ot-payoff-line { margin: 0; font-family: var(--display); font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -.04em; color: var(--ink); opacity: 0; transform: translateY(8px); transition: opacity .6s, transform .6s cubic-bezier(.3, 1.5, .5, 1); }
+.ot-payoff-sub { margin: 4px 0 0; font-size: 15px; font-weight: 800; line-height: 1.4; color: rgba(29,22,37,.78); opacity: 0; transition: opacity .6s .25s; }
+.ot-payoff-foot .ot-btn { margin-top: 12px; background: var(--ink); color: #fff; box-shadow: 0 8px 18px rgba(29,22,37,.3); opacity: 0; transition: opacity .6s .5s; }
 .ot-payoff-foot.in .ot-payoff-line { opacity: 1; transform: none; }
 .ot-payoff-foot.in .ot-payoff-sub, .ot-payoff-foot.in .ot-btn { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .ot-payoff-name.pop { animation: none; } .ot-payoff-line, .ot-payoff-sub, .ot-payoff-foot .ot-btn { transition: none; } }
