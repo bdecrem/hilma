@@ -46,7 +46,10 @@ const VARIANTS = {
 // onto them and settles; phase 3 is still in the air when the shutter goes.
 const CAST = {
   base: 2.0,
-  floor: 92,                       // floor height from the bottom (the Dock sits over it)
+  // Floor height from the bottom, in stage points. The Dock's top edge on
+  // the 13" Air is ~55pt of a 956pt screen = 48 here, so at 49 the critters
+  // stand on the Dock itself (92 left a tall empty band above it).
+  floor: 49,
   look: [640, 150],                // everyone watches the ones coming down
   phases: [
     { steps: 40, items: [
