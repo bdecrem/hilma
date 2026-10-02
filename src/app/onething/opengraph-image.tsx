@@ -23,57 +23,87 @@ async function loadFont(family: string, weight: number): Promise<ArrayBuffer | n
 
 const INK = '#1d1625';
 const svgUri = (s: string) => `data:image/svg+xml;base64,${Buffer.from(s).toString('base64')}`;
-const DROP = svgUri(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="g" cx="36%" cy="40%" r="70%"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#e8dbff"/><stop offset="1" stop-color="#c3a8ff"/></radialGradient></defs><path d="M50 6 C60 28 82 44 82 64 A32 30 0 0 1 18 64 C18 44 40 28 50 6 Z" fill="url(#g)"/><ellipse cx="36" cy="46" rx="6" ry="11" transform="rotate(30 36 46)" fill="#fff" opacity=".9"/></svg>',
-);
 
-/** A day card, as on the page: its colour, the date, the doodle in a white blob, the sentence. */
-function Card({ ex, date, bg, bg2, accent, tilt, x, y }: { ex: number; date: string; bg: string; bg2: string; accent: string; tilt: number; x: number; y: number }) {
-  const e = EXAMPLES[ex];
-  const doodle = svgUri(standaloneSvg(e.svg, { ink: INK, accent, width: 7, viewBox: '0 20 340 140' }));
+// Three more doodles in the same hand, for the pile (the other three are the real September ones).
+const MORE = {
+  cup: '<path d="M120 62 L132 140 L198 140 L210 62 Z"/><path d="M210 80 Q244 86 232 112 Q226 124 204 120"/><path d="M146 50 q9 -12 0 -26 M168 50 q9 -12 0 -26 M190 50 q9 -12 0 -26" class="thin"/><path d="M104 152 L226 152" class="r"/>',
+  kite: '<path d="M170 14 L218 66 L170 128 L122 66 Z"/><path d="M170 14 L170 128 M122 66 L218 66" class="thin"/><path d="M170 128 Q148 146 174 156 Q200 166 178 178" class="r"/>',
+  balloon: '<ellipse cx="170" cy="62" rx="40" ry="48"/><path d="M170 110 L163 120 L177 120 Z"/><path d="M170 120 Q158 138 172 152 Q184 166 168 176" class="r"/><path d="M152 44 q6 -10 16 -12" class="thin"/>',
+};
+
+type Card = { svg: string; date: string; bg: string; deep: string; x: number; y: number; tilt: number; w: number };
+const CARDS: Card[] = [
+  { svg: MORE.kite, date: '2 Sep', bg: '#ff7a2f', deep: '#e2560c', x: 600, y: 300, tilt: -9, w: 210 },
+  { svg: EXAMPLES[1].svg, date: '6 Sep', bg: '#93d94e', deep: '#4f9a1f', x: 960, y: 330, tilt: 8, w: 220 },
+  { svg: MORE.cup, date: '4 Sep', bg: '#ffd23f', deep: '#d99a00', x: 940, y: 36, tilt: 6, w: 210 },
+  { svg: EXAMPLES[2].svg, date: '1 Sep', bg: '#7b4dff', deep: '#6a3df0', x: 640, y: 40, tilt: -6, w: 220 },
+  { svg: MORE.balloon, date: '5 Sep', bg: '#ff5fa8', deep: '#e0307f', x: 760, y: 360, tilt: 3, w: 200 },
+  { svg: EXAMPLES[0].svg, date: '3 Sep', bg: '#33b6ff', deep: '#0a86d0', x: 790, y: 168, tilt: -2, w: 240 },
+];
+
+function DayCard({ c }: { c: Card }) {
+  const h = Math.round(c.w * 0.92);
+  const blobW = c.w - 46, blobH = Math.round(blobW * 0.78);
+  const doodle = svgUri(standaloneSvg(c.svg, { ink: INK, accent: c.deep, width: 8, viewBox: '10 0 320 180' }));
   return (
     <div
       style={{
-        position: 'absolute', left: x, top: y, width: 300, height: 380, display: 'flex', flexDirection: 'column', padding: 22, borderRadius: 34,
-        backgroundImage: `radial-gradient(130% 90% at 20% 0%, ${bg2} 0%, ${bg} 65%)`, transform: `rotate(${tilt}deg)`,
-        boxShadow: '0 30px 60px rgba(29,10,80,.35)',
+        position: 'absolute', left: c.x, top: c.y, width: c.w, height: h, display: 'flex', flexDirection: 'column', padding: '12px 18px',
+        background: c.bg, border: `5px solid ${INK}`, borderRadius: 30, transform: `rotate(${c.tilt}deg)`, boxShadow: `7px 8px 0 ${INK}`,
       }}
     >
-      <div style={{ fontFamily: 'Bricolage', fontWeight: 800, fontSize: 26, color: INK }}>{date}</div>
-      <div style={{ marginTop: 14, alignSelf: 'center', width: 220, height: 206, borderRadius: 110, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 24px rgba(20,10,40,.18)' }}>
-        <img src={doodle} width={196} height={81} alt="" />
-      </div>
-      <div style={{ marginTop: 16, fontFamily: 'Bricolage', fontWeight: 800, fontSize: 22, lineHeight: 1.15, color: INK, display: 'flex' }}>
-        {e.sentence.length > 62 ? `${e.sentence.slice(0, 60).replace(/\s+\S*$/, '')}…` : e.sentence}
+      <div style={{ fontFamily: 'Bricolage', fontWeight: 800, fontSize: 24, color: INK, lineHeight: 1 }}>{c.date}</div>
+      <div style={{ marginTop: 8, width: blobW, height: blobH, borderRadius: '50%', background: '#fff', border: `4px solid ${INK}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src={doodle} width={Math.round(blobW * 0.96)} height={Math.round(blobW * 0.96 * 180 / 340)} alt="" />
       </div>
     </div>
   );
 }
 
-/** The landing page's hero as a card: violet, the drop, the line, two real days fanned on the right. */
+/** Confetti: rounded bits in the day colours, each with an ink edge. */
+const BITS: [number, number, string, number, 'dot' | 'strip'][] = [
+  [70, 30, '#ff5fa8', 0, 'dot'], [520, 70, '#33b6ff', 30, 'strip'], [540, 575, '#ffd23f', -20, 'strip'], [40, 570, '#93d94e', 0, 'dot'],
+  [30, 420, '#ff7a2f', 0, 'dot'], [1160, 290, '#7b4dff', 0, 'dot'], [1150, 595, '#ff5fa8', 40, 'strip'], [600, 250, '#93d94e', -30, 'strip'],
+];
+
+const FLOWER = svgUri(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${[['#ffd23f', 50, 25], ['#33b6ff', 74, 42], ['#93d94e', 66, 71], ['#ff7a2f', 34, 71], ['#7b4dff', 26, 42]].map(([c, x, y]) => `<ellipse cx="${x}" cy="${y}" rx="15" ry="13" fill="${c}" stroke="${INK}" stroke-width="5"/>`).join('')}<circle cx="50" cy="51" r="13" fill="#fff" stroke="${INK}" stroke-width="5"/><path d="M45 50 q2 -3 4 0 M52 50 q2 -3 4 0" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"/></svg>`,
+);
+
+const H1 = { fontFamily: 'Bricolage', fontWeight: 800, fontSize: 68, lineHeight: 1, letterSpacing: -3, color: INK } as const;
+
+/** A warm page with a pile of days on the right: each day its colour, each with its doodle. */
 export default async function Image() {
-  const [bricolage, nunito] = await Promise.all([loadFont('Bricolage Grotesque', 800), loadFont('Nunito', 800)]);
+  const [bricolage, hand] = await Promise.all([loadFont('Bricolage Grotesque', 800), loadFont('Patrick Hand', 400)]);
   const fonts = [
     bricolage && { name: 'Bricolage', data: bricolage, weight: 800 as const, style: 'normal' as const },
-    nunito && { name: 'Nunito', data: nunito, weight: 800 as const, style: 'normal' as const },
+    hand && { name: 'Hand', data: hand, weight: 400 as const, style: 'normal' as const },
   ].filter((f): f is NonNullable<typeof f> => !!f);
 
   return new ImageResponse(
     (
-      <div style={{ width: 1200, height: 630, display: 'flex', position: 'relative', overflow: 'hidden', backgroundImage: 'radial-gradient(120% 110% at 15% 0%, #b39bff 0%, #7b4dff 55%, #5a2fd6 100%)' }}>
-        <div style={{ position: 'absolute', left: 72, top: 64, display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ fontFamily: 'Bricolage', fontWeight: 800, fontSize: 52, letterSpacing: -2, color: '#fff', lineHeight: 1 }}>onething</div>
-          <img src={DROP} width={40} height={40} alt="" style={{ marginLeft: 2 }} />
+      <div style={{ width: 1200, height: 630, display: 'flex', position: 'relative', overflow: 'hidden', background: '#fbf7f0' }}>
+        {BITS.map(([x, y, c, r, kind], i) => (
+          <div key={i} style={{ position: 'absolute', left: x, top: y, width: kind === 'dot' ? 22 : 34, height: kind === 'dot' ? 22 : 14, borderRadius: kind === 'dot' ? 11 : 6, background: c, border: `3.5px solid ${INK}`, transform: `rotate(${r}deg)` }} />
+        ))}
+        {CARDS.map((c, i) => <DayCard key={i} c={c} />)}
+
+        <div style={{ position: 'absolute', left: 70, top: 62, display: 'flex', alignItems: 'center' }}>
+          <img src={FLOWER} width={64} height={64} alt="" />
+          <div style={{ marginLeft: 12, fontFamily: 'Bricolage', fontWeight: 800, fontSize: 54, letterSpacing: -2, color: INK, lineHeight: 1 }}>onething</div>
         </div>
-        <div style={{ position: 'absolute', left: 72, top: 160, width: 500, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontFamily: 'Bricolage', fontWeight: 800, fontSize: 76, lineHeight: 0.98, letterSpacing: -3.2, color: '#fff' }}>One sentence a day.</div>
-          <div style={{ marginTop: 10, fontFamily: 'Bricolage', fontWeight: 800, fontSize: 76, lineHeight: 0.98, letterSpacing: -3.2, color: '#ffd23f' }}>A doodle for every one.</div>
-          <div style={{ marginTop: 26, fontFamily: 'Nunito', fontWeight: 800, fontSize: 26, lineHeight: 1.35, color: 'rgba(255,255,255,.86)' }}>
-            A text at ten asks what happened. You answer, Opus draws it.
+        <div style={{ position: 'absolute', left: 70, top: 176, width: 540, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ ...H1, display: 'flex' }}>One sentence</div>
+          <div style={{ ...H1, marginTop: 10, display: 'flex', alignItems: 'flex-end' }}>
+            <span style={{ display: 'flex' }}>a day. A</span>
+            <div style={{ display: 'flex', position: 'relative', marginLeft: 18, padding: '0 8px' }}>
+              <div style={{ position: 'absolute', left: 0, right: 0, bottom: 2, height: 36, background: '#ffd23f', borderRadius: 12, transform: 'rotate(-2deg)' }} />
+              <span style={{ display: 'flex', position: 'relative' }}>doodle</span>
+            </div>
           </div>
+          <div style={{ ...H1, marginTop: 10, display: 'flex' }}>for every one.</div>
+          <div style={{ marginTop: 26, display: 'flex', fontFamily: 'Hand', fontSize: 34, lineHeight: 1.2, color: '#5a2fd6', transform: 'rotate(-1.5deg)' }}>a text at ten asks what happened</div>
         </div>
-        <Card ex={2} date="28 Sep" bg="#ff7a2f" bg2="#ffa86a" accent="#e2560c" tilt={-8} x={640} y={140} />
-        <Card ex={0} date="29 Sep" bg="#33b6ff" bg2="#86d6ff" accent="#0a86d0" tilt={6} x={860} y={70} />
       </div>
     ),
     { ...size, fonts },
