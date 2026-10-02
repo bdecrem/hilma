@@ -291,7 +291,7 @@ function DayView({ day, entry, today, drawn, thoughts, onClose, children }: {
       {drawn && entry && (
         <figure className="ot-blob-wrap">
           <div className="ot-blob">
-            {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.1} /> : <Drawing />}
+            {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.4} /> : <Drawing />}
           </div>
           {entry.doodle && <figcaption className="ot-credit">drawn by Opus 5.5 · low effort</figcaption>}
         </figure>
@@ -319,7 +319,7 @@ function DayCard({ cell, drawn, onOpen }: { cell: Cell; drawn: boolean; onOpen: 
       <span className="ot-card-date">{cardDay(cell.day)}</span>
       {drawn && (
         <span className="ot-card-blob">
-          {e.doodle ? <Doodle svg={e.doodle} alt={e.doodle_alt} pen={0.7} boil="hover" /> : <span className="ot-card-wait">…</span>}
+          {e.doodle ? <Doodle svg={e.doodle} alt={e.doodle_alt} pen={0.75} boil="hover" /> : <span className="ot-card-wait">…</span>}
         </span>
       )}
       <span className="ot-card-text">{all[0]}</span>
@@ -435,7 +435,7 @@ function SampleCard({ ex, date, c, tilt }: { ex: number; date: string; c: Color;
   return (
     <div className="ot-card sample" data-c={c} style={{ ['--tilt' as string]: `${tilt}deg` }} aria-hidden>
       <span className="ot-card-date">{date}</span>
-      <span className="ot-card-blob"><Doodle svg={e.svg} alt={e.alt} pen={0.7} /></span>
+      <span className="ot-card-blob"><Doodle svg={e.svg} alt={e.alt} pen={0.9} /></span>
       <span className="ot-card-text">{e.sentence}</span>
     </div>
   );
@@ -822,8 +822,8 @@ export default function Onething() {
   const opened = openDay ? byDay.get(openDay) : undefined;
   const redrawing = redraw ? byDay.get(redraw) : undefined;
   const nextLine = !b.next ? 'The top. Nothing left to grow into.'
-    : toNext === 0 ? `${b.next.name} with today's sentence.`
-    : toNext !== null ? `${b.next.name} in ${toNext} ${toNext === 1 ? 'day' : 'days'}` : `${b.next.name} at ${b.next.min} pts`;
+    : toNext === 0 ? 'with today\'s sentence'
+    : toNext !== null ? `${toNext} ${toNext === 1 ? 'day' : 'days'} to go` : `at ${b.next.min} pts`;
 
   return (
     <>
@@ -852,6 +852,7 @@ export default function Onething() {
                 : <span className="ot-nudge">{NUDGES[nudge]} <button type="button" className="ot-link" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)}>another</button></span>}
             </div>
             {err && !editing && <p className="ot-err">{err}</p>}
+            {drawn && !todayEntry && <p className="ot-promise">Opus doodles it a few seconds after you keep it.</p>}
           </form>
         ) : (
           <div className="ot-day-acts">
@@ -869,13 +870,11 @@ export default function Onething() {
             <button type="button" className="ot-info" aria-label="the numbers" aria-expanded={details} aria-controls="ot-details" onClick={() => setDetails((d) => !d)}>i</button>
             {milestone && <button type="button" className="ot-link ot-replay" onClick={() => setPayoff(milestone)}>replay day {milestone.streak}</button>}
           </div>
-          <p className="ot-garden-sub">{b.streak === 0 ? 'No streak yet' : `${b.streak}-day streak`} · {nextLine}</p>
+          <p className="ot-garden-sub">{b.points.toLocaleString('en-US')} points{b.streak === 0 ? ' · write today to start a streak' : ''}</p>
           <div className="ot-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
             <i style={{ ['--w' as string]: `${progress * 100}%` }} />
           </div>
-          <div className="ot-ruler" aria-hidden>
-            {levels.map((l, i) => <span key={l.name} className={i < b.index ? 'past' : i === b.index ? 'now' : ''} />)}
-          </div>
+          <div className="ot-bar-k"><span>{nextLine}</span>{b.next && <b>{b.next.name}</b>}</div>
         </div>
         {details && (
           <div className="ot-stats" id="ot-details">
