@@ -1025,7 +1025,6 @@ export default function Onething() {
                   : <button type="button" className="oj-nudge" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)} title="another idea">{NUDGES[nudge]}<span aria-hidden>↻</span></button>}
               </div>
               {err && !editing && <p className="oj-err">{err}</p>}
-              {drawn && !todayEntry && <p className="oj-promise">Keep it, and Opus doodles it a few seconds later.</p>}
             </form>
           ) : (
             <div className="oj-acts">

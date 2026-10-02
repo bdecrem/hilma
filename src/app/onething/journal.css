@@ -153,7 +153,6 @@ html:has(.oj) { background: linear-gradient(var(--oj-top, #7b4dff) 50%, #fbf7f0 
   font: 800 14px/1.25 var(--body); color: var(--on); background: var(--chip);
 }
 .oj-nudge span { font-size: 17px; opacity: .7; }
-.oj-promise { margin: 14px 0 0; font-family: var(--hand); font-size: 19px; color: var(--on-2); }
 .oj-note { margin: 10px 0 0; font-size: 13px; color: var(--on-2); }
 .oj-err { display: inline-block; margin: 10px 0 0; padding: 5px 12px; border-radius: 12px; background: #e0234b; color: #fff; font-size: 14px; font-weight: 800; }
 
