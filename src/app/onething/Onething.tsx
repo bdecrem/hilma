@@ -1,9 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { LEVELS, MILESTONES, pointsAfterRun, pointsForEntry, type Level } from '@/lib/onething/levels';
+import { MILESTONES, pointsAfterRun, pointsForEntry, type Level } from '@/lib/onething/levels';
 import { EXAMPLES } from '@/lib/onething/examples';
-import copy from '@/lib/onething/copy.json';
 import Plant from './Plant';
 import Payoff from './Payoff';
 import Doodle from './Doodle';
@@ -569,9 +568,6 @@ function SampleTile({ ex, day, c, tilt }: { ex: number; day: string; c: Color; t
   );
 }
 
-/** A sample jar for the landing page: a fortnight of drops. */
-const SAMPLE_JAR = Array.from({ length: 13 }, (_, i) => ymd(2026, 9, i + 1));
-
 function Landing(props: {
   phone: string; code: string; stage: 'phone' | 'code'; busy: boolean; err: string;
   setPhone: (s: string) => void; setCode: (s: string) => void; start: () => void; verify: () => void; back: () => void;
@@ -605,49 +601,6 @@ function Landing(props: {
       </header>
 
       <main className="oj-page land">
-        <section className="oj-how">
-          <div className="oj-chat" aria-label="an example exchange">
-            <div className="oj-chat-head">
-              <Ink color="violet" size={40} still />
-              <div><b>onething</b><span>iMessage · 10:00</span></div>
-            </div>
-            <p className="oj-bubble in">{copy.morning[0]}</p>
-            <p className="oj-bubble out">{EXAMPLES[0].sentence}</p>
-            <p className="oj-bubble in">{copy.kept[0].replace('{n}', '12')}</p>
-          </div>
-          <ol className="oj-steps">
-            <li><Ink color="orange" size={42} still /><span><b>At ten, a text.</b> One question about your day, by iMessage. Nothing to install.</span></li>
-            <li><Ink color="sky" size={42} still /><span><b>One sentence back.</b> Whatever comes to you. Small is fine. If the day is still empty at ten at night, one gentle reminder.</span></li>
-            <li><Ink color="pink" size={42} still /><span><b>It lands on your page.</b> Opus doodles every day. Don&apos;t like the drawing? Ask for three more and pick one.</span></li>
-          </ol>
-        </section>
-
-        <section className="oj-land-jar">
-          <div className="oj-jar-row">
-            <Jar days={SAMPLE_JAR} />
-            <div className="oj-jar-say">
-              <p className="oj-jar-n">13</p>
-              <p className="oj-jar-l">drops of ink, two weeks in</p>
-              <p className="oj-jar-sub">Every day you keep is a drop in the month&apos;s jar. Poke one.</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="oj-grow">
-          <h2 className="oj-h2">Streaks grow a plant.</h2>
-          <p className="oj-p">Every day you write earns points, more the longer the streak runs. Points grow a plant from a seed to old growth, and a missed day never takes them back.</p>
-          <div className="oj-stages" aria-label="levels">
-            {LEVELS.map((l, i) => (
-              <div key={l.name} className="oj-stage-item">
-                <span className="oj-stage-pot" style={{ ['--p' as string]: `${46 + i * 6}px` }}><Plant level={i} size={40 + i * 6} /></span>
-                <span className="n">{l.name}</span>
-                <span className="p">{i === 0 ? 'day 1' : `${l.min} pts`}</span>
-              </div>
-            ))}
-          </div>
-          <p className="oj-p small">Bring a buddy: every week you both keep it up, you both get bonus points. You never see their words, only that they showed up.</p>
-        </section>
-
         <section className="oj-card oj-start" data-j="violet" id="start">
           <Ink color="yellow" size={88} className="oj-card-host" />
           <h2 className="oj-redraw-h">Start your year.</h2>

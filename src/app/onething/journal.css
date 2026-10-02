@@ -386,34 +386,8 @@ html:has(.oj) { background: linear-gradient(var(--oj-top, #7b4dff) 50%, #fbf7f0 
 .oj-fan .oj-tile { flex: 0 0 auto; width: 44%; max-width: 220px; margin: 0 -4%; cursor: default; }
 .oj-fan .oj-tile:nth-child(2) { z-index: 1; transform: rotate(var(--tilt)) translateY(-14px); }
 .oj-fan .oj-tile-text { font-size: 14px; }
-.oj-page.land { padding-top: 96px; }
-.oj-how { display: grid; gap: 22px; }
-@media (min-width: 640px) { .oj-how { grid-template-columns: 1fr 1fr; align-items: center; } }
-.oj-chat { padding: 16px; border-radius: 30px; background: #fff; box-shadow: 0 0 0 1.5px rgba(29,22,37,.05), 0 18px 36px -22px rgba(60,30,120,.4); }
-.oj-chat-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.oj-chat-head b { display: block; font-family: var(--display); font-weight: 800; font-size: 17px; }
-.oj-chat-head span { display: block; font-size: 12px; color: var(--mute); }
-.oj-bubble { max-width: 84%; margin: 8px 0 0; padding: 10px 14px; border-radius: 22px; font-size: 15px; line-height: 1.35; }
-.oj-bubble.in { background: #efeaf5; border-bottom-left-radius: 6px; }
-.oj-bubble.out { margin-left: auto; color: #fff; border-bottom-right-radius: 6px; background: linear-gradient(170deg, #33b6ff 30%, #0872b5 150%); box-shadow: inset 0 2px 0 rgba(255,255,255,.35); }
-.oj-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
-.oj-steps li { display: flex; align-items: flex-start; gap: 14px; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
-.oj-steps b { color: var(--ink); }
-.oj-land-jar { margin-top: 44px; }
-.oj-grow { margin-top: 44px; }
-.oj-h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(30px, 8vw, 40px); line-height: 1; letter-spacing: -.04em; }
-.oj-stages { margin: 20px -16px 0; padding: 0 16px 6px; display: flex; gap: 10px; align-items: flex-end; overflow-x: auto; scrollbar-width: none; }
-.oj-stages::-webkit-scrollbar { display: none; }
-.oj-stage-item { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 74px; text-align: center; }
-.oj-stage-pot {
-  display: grid; place-items: end center; width: var(--p); height: var(--p); border-radius: 50%; overflow: hidden;
-  background: radial-gradient(circle at 35% 26%, #f4fde6 0%, #c9efa0 60%, #93d94e 100%);
-  box-shadow: inset 0 3px 0 rgba(255,255,255,.8), inset 0 -6px 10px rgba(74,148,25,.28);
-}
-.oj-stage-item .n { font-family: var(--display); font-weight: 800; font-size: 14px; letter-spacing: -.01em; }
-.oj-stage-item .p { font-size: 12px; color: var(--mute); }
-.oj-grow .oj-p.small { margin-top: 16px; }
-.oj-start { margin-top: 90px; padding-top: 50px; text-align: left; }
+.oj-page.land { padding-top: 140px; } /* the fan hangs 64px into the paper, the card's drop stands 58px above it, 18px of air */
+.oj-start { margin-top: 0; padding-top: 50px; text-align: left; }
 .oj-start .oj-note { color: var(--on-2); }
 .oj-start .oj-in { box-shadow: inset 0 3px 8px rgba(29,22,37,.1); }
 .oj-foot code { padding: 1px 6px; border-radius: 6px; background: #efeaf5; font-weight: 800; }
