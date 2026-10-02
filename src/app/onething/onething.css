@@ -417,14 +417,16 @@ html:has(.ot), body:has(.ot) { overflow-x: hidden; background: #fbf7f0; }
 
 .ot-month-tag { font-size: 12px; font-weight: 900; letter-spacing: 1.5px; color: var(--violet-d); white-space: nowrap; }
 
-/* ---------- the plant, pencilled: graphite outlines, green pencil hatching ---------- */
+/* ---------- the plant, candy (Plant.tsx): glossy greens under ink, a brown trunk, a grass mound ---------- */
 .ot-plant { display: block; overflow: visible; }
-.ot-plant .p-ground { stroke: #9a968f; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 6 5; }
-.ot-plant .p-trunk { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; }
-.ot-plant .p-leaf { fill: url(#ot-hatch-green); stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
-.ot-plant .p-leaf-light { fill: url(#ot-hatch-green-light); stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
-.ot-plant .p-soil { fill: url(#ot-hatch-wood); stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
-.ot-plant .p-seed { fill: var(--ink); }
+.ot-plant .p-hill { fill: #9ee05a; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.ot-plant .p-trunk-ink { fill: none; stroke: var(--ink); stroke-width: 5.2; stroke-linecap: round; stroke-linejoin: round; }
+.ot-plant .p-trunk { fill: none; stroke: #c27a3e; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.ot-plant .p-leaf { fill: #5fbf3f; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.ot-plant .p-leaf-light { fill: #9be35c; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.ot-plant .p-shine { fill: #fff; opacity: .55; }
+.ot-plant .p-seed { fill: #b8723a; stroke: var(--ink); stroke-width: 1.8; }
+.ot-plant .p-bloom { stroke: var(--ink); stroke-width: 1.2; }
 
 @media (prefers-reduced-motion: reduce) { .ot-btn, .ot-gear, .ot-thought .edit { transition: none; } }
 
