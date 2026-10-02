@@ -17,6 +17,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { after } from 'next/server'
 import { f2Supabase } from '@/lib/f2/supabase'
 import type { Entry } from './core'
+import { EXAMPLES } from './examples'
 
 export const DOODLE_MODEL = process.env.ONETHING_DOODLE_MODEL || 'claude-opus-5-5'
 export const DOODLE_EFFORT = 'low' as const
@@ -36,20 +37,6 @@ function anthropic(): Anthropic {
 
 // Three of the doodles Opus 5.5 drew for Bart's own September (the page this
 // feature copies): the style, in the model's own hand.
-const EXAMPLES: { sentence: string; svg: string }[] = [
-  {
-    sentence: 'Woke up with the answer to the thing that stumped me all week, before the sun was even up.',
-    svg: '<path d="M20 140 L320 140"/><path d="M110 140 A60 60 0 0 1 230 140"/><path d="M170 60 L170 40 M120 80 L106 66 M220 80 L234 66 M95 115 L75 110 M245 115 L265 110"/><path d="M150 118 Q170 90 190 118 Q180 128 170 128 Q160 128 150 118Z" class="r"/><path d="M162 128 L162 134 L178 134 L178 128" class="r"/><path d="M280 40 Q300 20 310 45 Q290 60 280 40Z"/><path d="M40 60 q10 -10 20 0 q10 -10 20 0" class="thin"/>',
-  },
-  {
-    sentence: 'Walked the cliffs with the dog, then came home to find the kids had built a castle out of every cushion in the house.',
-    svg: '<path d="M10 120 Q60 70 110 95 Q140 60 180 90"/><path d="M10 150 Q100 135 200 150"/><path d="M230 150 L230 90 L320 90 L320 150Z"/><path d="M225 90 Q275 55 325 90" class="r"/><path d="M262 150 L262 118 L288 118 L288 150"/><ellipse cx="80" cy="140" rx="20" ry="11"/><circle cx="102" cy="130" r="8"/><path d="M58 138 q-10 -12 -4 -20"/><path d="M60 108 L64 100 M72 106 L72 97" class="r"/>',
-  },
-  {
-    sentence: 'Finally untangled the dependency mess that has been eating the afternoons.',
-    svg: '<path d="M60 40 Q140 20 120 70 Q100 110 170 90 Q240 70 200 120 Q170 150 260 140"/><path d="M90 60 q20 -30 40 0 q20 30 40 0 M150 110 q15 -20 30 0" class="thin"/><path d="M40 150 L120 150 L130 120 L50 120Z"/><path d="M130 120 L150 60"/><path d="M270 130 l10 10 l24 -30" class="r"/>',
-  },
-]
 
 const SYSTEM = [
   'You doodle in the margin of a paper journal. Each day the person keeps one sentence (sometimes a few) about their day, and you draw one small doodle beside it, the way someone with a pen would in twenty seconds: one image, a few confident strokes, a little wit.',
@@ -79,12 +66,20 @@ export type Drawn = { svg: string; alt: string; word: string | null }
 
 /// Draw a doodle for `text` (the day's sentences, one per line). `recent` is
 /// what the days just before looked like, so the doodle does not repeat them.
-export async function drawDoodle(text: string, opts: { wordAllowed: boolean; recent?: { text: string; alt: string | null }[] }): Promise<Drawn> {
+export async function drawDoodle(
+  text: string,
+  opts: { wordAllowed: boolean; recent?: { text: string; alt: string | null }[]; avoid?: string[]; take?: string },
+): Promise<Drawn> {
   const lines = text.split('\n').map((t) => t.trim()).filter(Boolean)
   const parts: string[] = []
   if (opts.recent?.length) {
     parts.push('The last few days on this page (do not draw these again):')
     for (const r of opts.recent) parts.push(`- "${r.text.split('\n')[0]}"${r.alt ? ` → drawn as: ${r.alt}` : ''}`)
+    parts.push('')
+  }
+  if (opts.avoid?.length) {
+    parts.push('This day has been drawn before. Draw something different from each of these:')
+    for (const a of opts.avoid) parts.push(`- ${a}`)
     parts.push('')
   }
   parts.push(lines.length > 1 ? "Today's sentences:" : "Today's sentence:")
@@ -95,6 +90,7 @@ export async function drawDoodle(text: string, opts: { wordAllowed: boolean; rec
       ? 'Words today: a word or two is allowed, as a single <text x=".." y="..">…</text> element (the page sets its handwriting font at 20px) — a label, a sound, a small aside in the margin, like "surf day!" or "again today" on earlier pages. Use it when it makes the doodle land better; skip it when the drawing says it alone. Put the same word in "word", or null.'
       : 'Words today: none at all. No <text>. "word" is null.',
   )
+  if (opts.take) parts.push('', opts.take)
 
   const res = await anthropic().messages.create({
     model: DOODLE_MODEL,
@@ -196,13 +192,16 @@ function textContent(svg: string): string | null {
 
 // ---------- storage ----------
 
-/// Draw and store the doodle for one entry row. Returns what was drawn, or
-/// null when the person has doodles turned off.
-export async function doodleEntry(entryId: string): Promise<Drawn | null> {
+type Context = { entry: Entry; allowed: boolean; recent: { text: string; alt: string | null }[] }
+
+/// What drawing one entry needs: the row, whether a word is allowed that day,
+/// and the days just before. Null when the owner has doodles turned off.
+/// With `userId`, the entry must belong to that user.
+async function drawContext(entryId: string, userId?: string): Promise<Context | null> {
   const sb = f2Supabase()
   const { data: entry, error } = await sb.from('onething_entries').select('*').eq('id', entryId).maybeSingle()
   if (error) throw new Error(`onething doodle: load failed: ${error.message}`)
-  if (!entry) throw new Error('onething doodle: no such entry')
+  if (!entry || (userId && (entry as Entry).user_id !== userId)) throw new Error('onething doodle: no such entry')
   const e = entry as Entry
   const { data: owner, error: e0 } = await sb.from('onething_users').select('doodles').eq('id', e.user_id).maybeSingle()
   if (e0) throw new Error(`onething doodle: owner failed: ${e0.message}`)
@@ -215,16 +214,68 @@ export async function doodleEntry(entryId: string): Promise<Drawn | null> {
     .order('day', { ascending: false })
     .limit(5)
   if (e2) throw new Error(`onething doodle: recent failed: ${e2.message}`)
-  const recent = (before ?? []) as Pick<Entry, 'day' | 'text' | 'doodle_alt' | 'doodle_word'>[]
-  const allowed = wordAllowed(recent, e.day)
-  const drawn = await drawDoodle(e.text, { wordAllowed: allowed, recent: recent.slice(0, 3).map((r) => ({ text: r.text, alt: r.doodle_alt ?? null })) })
-  const { error: e3 } = await sb
+  const rows = (before ?? []) as Pick<Entry, 'day' | 'text' | 'doodle_alt' | 'doodle_word'>[]
+  return { entry: e, allowed: wordAllowed(rows, e.day), recent: rows.slice(0, 3).map((r) => ({ text: r.text, alt: r.doodle_alt ?? null })) }
+}
+
+/// Draw and store the doodle for one entry row. Returns what was drawn, or
+/// null when the person has doodles turned off.
+export async function doodleEntry(entryId: string): Promise<Drawn | null> {
+  const ctx = await drawContext(entryId)
+  if (!ctx) return null
+  const { entry: e } = ctx
+  const drawn = await drawDoodle(e.text, { wordAllowed: ctx.allowed, recent: ctx.recent })
+  const { error: e3 } = await f2Supabase()
     .from('onething_entries')
     .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodled_at: new Date().toISOString() })
     .eq('id', entryId)
     // The text may have changed while we drew; a newer save redraws it.
     .eq('updated_at', e.updated_at)
   if (e3) throw new Error(`onething doodle: save failed: ${e3.message}`)
+  return drawn
+}
+
+// ---------- redraws: three takes, the person keeps one ----------
+
+export const REDRAW_TAKES = 3
+// Each take gets its own push, so three parallel calls don't come back as the same drawing.
+const TAKES = [
+  'Take 1 of 3: the most obvious good image, drawn well.',
+  'Take 2 of 3: a different subject from the sentence than the obvious one — a detail, a side object, the setting.',
+  'Take 3 of 3: a sideways, slightly funny angle on the day; still one clear image.',
+]
+
+/// Three new drawings for one of the user's entries, drawn in parallel and
+/// NOT stored: the person picks one (keepRedraw) or none. A take that fails
+/// is dropped; all three failing throws.
+export async function redrawOptions(entryId: string, userId: string): Promise<Drawn[]> {
+  const ctx = await drawContext(entryId, userId)
+  if (!ctx) throw new Error('Doodles are off. Turn them on in settings.')
+  const avoid = ctx.entry.doodle_alt ? [ctx.entry.doodle_alt] : []
+  const got = await Promise.allSettled(
+    TAKES.slice(0, REDRAW_TAKES).map((take) => drawDoodle(ctx.entry.text, { wordAllowed: ctx.allowed, recent: ctx.recent, avoid, take })),
+  )
+  const ok = got.flatMap((g) => (g.status === 'fulfilled' ? [g.value] : []))
+  for (const g of got) if (g.status === 'rejected') console.error('[onething] redraw take failed', entryId, g.reason)
+  if (!ok.length) throw new Error('The pen slipped. Try again.')
+  return ok
+}
+
+/// Store the take the person picked. The markup comes back from the browser,
+/// so it goes through the sanitizer again, with words only on a day that allows them.
+export async function keepRedraw(entryId: string, userId: string, pick: { svg: string; alt: string }): Promise<Drawn> {
+  const ctx = await drawContext(entryId, userId)
+  if (!ctx) throw new Error('Doodles are off. Turn them on in settings.')
+  const svg = sanitizeSvg(pick.svg, { allowText: ctx.allowed })
+  if (!svg) throw new Error('That drawing came back empty.')
+  const word = ctx.allowed ? textContent(svg) : null
+  const drawn = { svg, alt: String(pick.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null }
+  const { error } = await f2Supabase()
+    .from('onething_entries')
+    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodled_at: new Date().toISOString() })
+    .eq('id', entryId)
+    .eq('user_id', userId)
+  if (error) throw new Error(`onething doodle: save failed: ${error.message}`)
   return drawn
 }
 

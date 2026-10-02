@@ -67,7 +67,7 @@ export default function Payoff({ streak, bonus, points, onClose }: PayoffProps) 
   return (
     <div className="ot-payoff" role="dialog" aria-modal="true" aria-label={`Day ${streak}, a milestone`}>
       <header className="ot-payoff-head">
-        <span className="ot-wordmark">onething<span>.ink</span></span>
+        <span className="ot-wordmark">onething</span>
         <span className="ot-month-tag">MILESTONE</span>
       </header>
       <div className="ot-payoff-stage">
