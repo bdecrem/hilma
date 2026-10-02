@@ -39,20 +39,40 @@ async function api(method, p, body) {
   return j
 }
 
+// --register-device <udid> --device-name "<name>": add an iPhone to the
+// account first (a new phone must be registered before a development
+// profile can include it).
+if (args['register-device']) {
+  const udid = String(args['register-device'])
+  const have = (await api('GET', `/v1/devices?filter[udid]=${udid}`)).data
+  if (have.length) console.log('device already registered', have[0].id, have[0].attributes.name, have[0].attributes.status)
+  else {
+    const d = (await api('POST', '/v1/devices', { data: { type: 'devices', attributes: { name: args['device-name'] || 'iPhone', platform: 'IOS', udid } } })).data
+    console.log('registered device', d.id, d.attributes.name)
+  }
+}
 const certs = (await api('GET', '/v1/certificates?limit=200')).data
 if (args['list-certs']) {
   for (const c of certs) console.log(c.id, c.attributes.certificateType, c.attributes.serialNumber, c.attributes.displayName, c.attributes.expirationDate?.slice(0, 10))
   process.exit(0)
 }
-for (const k of ['name', 'type', 'bundle', 'cert-serial']) if (!args[k]) { console.error(`--${k} required`); process.exit(1) }
-const serial = String(args['cert-serial']).toUpperCase().replace(/^0+/, '')
-const cert = certs.find((c) => c.attributes.serialNumber.toUpperCase().replace(/^0+/, '') === serial)
-if (!cert) { console.error('no ASC certificate with serial', serial, '— run --list-certs'); process.exit(1) }
-console.log('cert', cert.id, cert.attributes.certificateType, cert.attributes.displayName)
+for (const k of ['name', 'type', 'bundle']) if (!args[k]) { console.error(`--${k} required`); process.exit(1) }
+// --cert-serial <hex> picks one cert; --all-dev-certs takes every development
+// cert (one profile that signs on every Mac).
+let picked
+if (args['all-dev-certs']) {
+  picked = certs.filter((c) => ['DEVELOPMENT', 'IOS_DEVELOPMENT'].includes(c.attributes.certificateType))
+} else {
+  if (!args['cert-serial']) { console.error('--cert-serial or --all-dev-certs required'); process.exit(1) }
+  const serial = String(args['cert-serial']).toUpperCase().replace(/^0+/, '')
+  picked = certs.filter((c) => c.attributes.serialNumber.toUpperCase().replace(/^0+/, '') === serial)
+}
+if (!picked.length) { console.error('no matching ASC certificate — run --list-certs'); process.exit(1) }
+for (const c of picked) console.log('cert', c.id, c.attributes.certificateType, c.attributes.displayName)
 
 const rel = {
   bundleId: { data: { type: 'bundleIds', id: args.bundle } },
-  certificates: { data: [{ type: 'certificates', id: cert.id }] },
+  certificates: { data: picked.map((c) => ({ type: 'certificates', id: c.id })) },
 }
 if (args.devices) {
   const devices = (await api('GET', '/v1/devices?limit=200&filter[platform]=IOS&filter[status]=ENABLED')).data

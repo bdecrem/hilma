@@ -43,6 +43,7 @@
 		548BC970FE17CCD55FAF7219 /* PeckGameAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6966166949249E168A8669D /* PeckGameAudio.swift */; };
 		5DE663128BAC796DF32F68D2 /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB38EBAB179201757DE149C1 /* FlashSFX.swift */; };
 		6156096DDC14A9F27155EB67 /* SourceReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB209A33541127135A75E53 /* SourceReaderView.swift */; };
+		620B6520AD9935B14AB3E944 /* JellyAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5032D3B4080E880E4B3A56EA /* JellyAvatar.swift */; };
 		626CA92CFB3D7AD88C79D0DF /* IMFeENrm28P.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 45325E81B76887A99FE305A1 /* IMFeENrm28P.ttf */; };
 		681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */; };
 		69465CB76129F3A8475D3837 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A806446C086649CAB62568A4 /* FlashVoiceView.swift */; };
@@ -68,11 +69,13 @@
 		935711C56D494A35C4B1A4A9 /* F2API.swift in Sources */ = {isa = PBXBuildFile; fileRef = A62FA8AD3B3E792810622A3A /* F2API.swift */; };
 		965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */; };
 		98F0EA996D408AAFFF3C436C /* AnimatedDodo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8487F9BE215DF2E21F43AB5 /* AnimatedDodo.swift */; };
+		9AB08EFED5EAAD8E56B9803D /* PeckJelly.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A7EEED51D8FB446FF779C0 /* PeckJelly.swift */; };
 		9D2D1B20EFC1B223E21BA48C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8D6854393131D5ADEB1B75CE /* Assets.xcassets */; };
 		9FF7D9F5ED7DF8FA04046359 /* GlobalChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DAD4659DAF66B25182287FB /* GlobalChatView.swift */; };
 		A043B8101D3167D55BD186E6 /* Fredoka-OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2D57BDB41A0CA1E917D3B6B6 /* Fredoka-OFL.txt */; };
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
 		A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */; };
+		A45080FCA5B2605D51EC1D8E /* JellyDodo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE6ACE7021F270C8986D7FD /* JellyDodo.swift */; };
 		B851800165C832A57121823A /* voice-ripple.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CBA27F1CD26EE7CDBE8DF1CF /* voice-ripple.m4a */; };
 		BAAC60F85C46126DD1C602C8 /* voice-bossa.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6D745CD9003F8592CD5D2558 /* voice-bossa.m4a */; };
 		BC42DA3E1E974346A22F5AD6 /* PeckGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E23E37B0D330C54293A885A /* PeckGameView.swift */; };
@@ -135,7 +138,9 @@
 		45325E81B76887A99FE305A1 /* IMFeENrm28P.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = IMFeENrm28P.ttf; sourceTree = "<group>"; };
 		4BB209A33541127135A75E53 /* SourceReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourceReaderView.swift; sourceTree = "<group>"; };
 		4E8E1D52867446105B46D06E /* FeyndChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeyndChrome.swift; sourceTree = "<group>"; };
+		5032D3B4080E880E4B3A56EA /* JellyAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyAvatar.swift; sourceTree = "<group>"; };
 		5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
+		5FE6ACE7021F270C8986D7FD /* JellyDodo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyDodo.swift; sourceTree = "<group>"; };
 		6B09246FF15307342083E574 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		6D745CD9003F8592CD5D2558 /* voice-bossa.m4a */ = {isa = PBXFileReference; path = "voice-bossa.m4a"; sourceTree = "<group>"; };
 		6DDC42B73E361C8473ADE137 /* ChatSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSupport.swift; sourceTree = "<group>"; };
@@ -173,6 +178,7 @@
 		A838C8293EE5A7B38D62679D /* FlashCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardsView.swift; sourceTree = "<group>"; };
 		AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckRegionTransitionView.swift; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B3A7EEED51D8FB446FF779C0 /* PeckJelly.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckJelly.swift; sourceTree = "<group>"; };
 		B5574DD31FFF4A41EAF6EC1D /* ElevenVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenVoiceClient.swift; sourceTree = "<group>"; };
 		B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSettingsView.swift; sourceTree = "<group>"; };
 		B8487F9BE215DF2E21F43AB5 /* AnimatedDodo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedDodo.swift; sourceTree = "<group>"; };
@@ -258,6 +264,8 @@
 				C034E8A6E1CC456DE623630F /* HelpSheet.swift */,
 				121E0BE9E072AD99E1332F9D /* IMessagePairingView.swift */,
 				B119830CA567768C3502310E /* Info.plist */,
+				5032D3B4080E880E4B3A56EA /* JellyAvatar.swift */,
+				5FE6ACE7021F270C8986D7FD /* JellyDodo.swift */,
 				CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */,
 				CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */,
 				78E1F1203E78919DA10B73C9 /* LoginView.swift */,
@@ -271,6 +279,7 @@
 				A6966166949249E168A8669D /* PeckGameAudio.swift */,
 				C35B293106D84E4F82F9766C /* PeckGameEngine.swift */,
 				7E23E37B0D330C54293A885A /* PeckGameView.swift */,
+				B3A7EEED51D8FB446FF779C0 /* PeckJelly.swift */,
 				9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */,
 				AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */,
 				CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */,
@@ -502,6 +511,8 @@
 				9FF7D9F5ED7DF8FA04046359 /* GlobalChatView.swift in Sources */,
 				08003C48F17C70F2C60C142B /* HelpSheet.swift in Sources */,
 				0F482062A8FA07B02447EF37 /* IMessagePairingView.swift in Sources */,
+				620B6520AD9935B14AB3E944 /* JellyAvatar.swift in Sources */,
+				A45080FCA5B2605D51EC1D8E /* JellyDodo.swift in Sources */,
 				470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */,
 				7544C2674BBB478E832E676C /* LiveVoiceClient.swift in Sources */,
 				E837DB371B838AB27BC85493 /* LoginView.swift in Sources */,
@@ -515,6 +526,7 @@
 				548BC970FE17CCD55FAF7219 /* PeckGameAudio.swift in Sources */,
 				78E445E53943B2E6C590FD3C /* PeckGameEngine.swift in Sources */,
 				BC42DA3E1E974346A22F5AD6 /* PeckGameView.swift in Sources */,
+				9AB08EFED5EAAD8E56B9803D /* PeckJelly.swift in Sources */,
 				8386C28BBB0F9D1DBC9C32D6 /* PeckOddsSheet.swift in Sources */,
 				75755AC8773FB9447267E869 /* PeckRegionTransitionView.swift in Sources */,
 				16E7DC3843C38B1750CD4B06 /* PeckTrail.swift in Sources */,
@@ -577,7 +589,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 118;
+				CURRENT_PROJECT_VERSION = 119;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -673,7 +685,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 118;
+				CURRENT_PROJECT_VERSION = 119;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

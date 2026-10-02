@@ -30,7 +30,9 @@ onboarding figure and the Peck traveler are this one drawing.
 Launch (`LaunchSplashView`): the dodo drops in from above, lands in a big
 squash and wobbles out of it with a surprised "o", the lowercase wordmark
 rises letter by letter, a double blink, a hello hop, then the idle loop —
-over a sky bloom with little rising jelly bubbles. ~2.5 s.
+on the icon's sunrise-peach ground (a dusk version of the same sky in dark
+mode), with a white bloom behind the bird and little rising jelly bubbles.
+~2.5 s.
 
 ## The critters
 
@@ -125,9 +127,10 @@ the region's colours (locked ones grey with a padlock), the current one has a
 lemon ring and a "START" ribbon, gates are white arches with a pink
 candy-cane stripe, signs are wooden with cream plates, chests are pink jelly
 with a lemon band. The critters live along the trail (tap: squish and a
-sound; long-press: make it your avatar). Dark mode is the same place at
-dusk (every colour darkened ~22%, highlights stay white). The traveler is
-the sky jelly dodo. Implemented in `FlashTabView.swift`, `PeckTrail.swift`,
+sound; long-press: make it your avatar). Dark mode is the same place by
+moonlight: the scenery goes through a blue night filter while the stones,
+the critters and the traveler keep their day colours and glow. The traveler
+is the sky jelly dodo, standing on the current stone. Implemented in `FlashTabView.swift`, `PeckTrail.swift`,
 `PeckJelly.swift` (the shared drawing helpers), `PeckRegionTransitionView.swift`.
 Peck or Perish, the rest-stop minigame, keeps its riso engraving look on
 purpose.

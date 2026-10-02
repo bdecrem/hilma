@@ -161,8 +161,8 @@ enum PeckWeekNotifications {
 
 /// A little wooden board planted beside the current stone on the Peck
 /// map — "DUE IN 5 DAYS", the weekly deadline, always in view where the
-/// map opens. Same wood, 92pt width, and proportions as the trail's
-/// rest-stop signposts (`PeckTrailLayer.drawSignpost`), one line instead
+/// map opens. The jelly map's sign (`jellySign`): a cream plate on a
+/// peach post, 92pt wide like the rest-stop signposts, one line instead
 /// of two; the copy is chosen to fit that width ("DUE IN 1 DAY", not
 /// "DUE TOMORROW!"). Only stands while there is a streak to keep.
 struct PeckDueSign: View {
@@ -188,22 +188,22 @@ struct PeckDueSign: View {
     var body: some View {
         VStack(spacing: 0) {
             Text("DUE \(when)".uppercased())
-                .font(.custom("Fredoka", size: 11).weight(.semibold))
-                .foregroundStyle(atRisk ? Color(hex: 0xA8321F) : Color(hex: 0x3E3324))
+                .font(.custom("Fredoka", size: 11.5).weight(.bold))
+                .foregroundStyle(atRisk ? JellyInk.adaptive(0xD9507F) : JellyInk.adaptive(0x8A4F3A))
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .frame(width: 92, height: Self.boardHeight)
                 .background(
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(atRisk ? Color(hex: 0xE0A36A) : Color(hex: 0xB78B5A))
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(JellyInk.adaptive(atRisk ? 0xE07F8F : 0xC98A63))
+                            .offset(y: 2)
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(JellyInk.adaptive(atRisk ? 0xFFE1EA : 0xFFF3E2))
+                    }
                 )
-                .overlay(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(.white.opacity(0.25))
-                        .frame(height: 4)
-                }
-            RoundedRectangle(cornerRadius: 2)
-                .fill(Color(hex: 0x8A6B4A))
+            RoundedRectangle(cornerRadius: 1.5)
+                .fill(JellyInk.adaptive(0xD79A72))
                 .frame(width: 6, height: Self.postHeight)
         }
         .accessibilityElement(children: .ignore)

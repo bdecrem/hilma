@@ -381,7 +381,13 @@ struct LaunchSplashView: View {
 
     private var content: some View {
         ZStack {
-            FeyndTheme.bg.ignoresSafeArea()
+            // The icon's ground, full bleed: sunrise peach by day, the same
+            // sky at dusk by night — so icon → launch is one picture.
+            LinearGradient(colors: colorScheme == .dark
+                               ? [Color(hex: 0x3A2850), Color(hex: 0x241A33), Color(hex: 0x17131D)]
+                               : [Color(hex: 0xFFECD6), Color(hex: 0xFFD9BC), Color(hex: 0xFFC9A6)],
+                           startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
             TimelineView(.animation(minimumInterval: 1.0 / 40.0)) { timeline in
                 let t = reduceMotion ? 3.0 : CGFloat(timeline.date.timeIntervalSince(start))
                 SplashFrame(t: t, pose: pose(t), reduceMotion: reduceMotion, dark: colorScheme == .dark)
@@ -404,7 +410,7 @@ private struct SplashFrame: View {
                 SplashGround(t: t, reduceMotion: reduceMotion, dark: dark, size: geo.size)
                 VStack(spacing: 14) {
                     SplashMascot(pose: pose, dark: dark)
-                    SplashWordmark(t: t, reduceMotion: reduceMotion)
+                    SplashWordmark(t: t, reduceMotion: reduceMotion, dark: dark)
                 }
                 .frame(width: geo.size.width, height: geo.size.height)
                 .offset(y: -12)
@@ -422,8 +428,9 @@ private struct SplashGround: View {
     let size: CGSize
 
     var body: some View {
-        let bloom = Color(hex: dark ? 0x1B3A4C : 0xDCF6FF)
-        let sun = Color(hex: dark ? 0x4A3E14 : 0xFFF2B0)
+        // A white bloom behind the bird by day (the icon's), a warm one at dusk.
+        let bloom = Color(hex: dark ? 0x5A3A58 : 0xFFFFFF).opacity(dark ? 0.75 : 0.7)
+        let sun = Color(hex: dark ? 0xB994FF : 0xFFF2B0)
         let breath: Double = reduceMotion ? 0 : Double(0.35 + 0.35 * sin(t * 2 * CGFloat.pi / 6.4))
         ZStack {
             RadialGradient(colors: [sun, .clear], center: .init(x: 0.5, y: 0.16), startRadius: 0, endRadius: size.width * 0.36)
@@ -491,6 +498,7 @@ private struct SplashMascot: View {
 private struct SplashWordmark: View {
     let t: CGFloat
     let reduceMotion: Bool
+    var dark: Bool = false
 
     var body: some View {
         HStack(spacing: 0) {
@@ -499,7 +507,7 @@ private struct SplashWordmark: View {
                 let u: CGFloat = reduceMotion ? 1 : max(0, min(1, raw))
                 Text(i % 2 == 0 ? "d" : "o")
                     .font(.custom("Fredoka", size: 34).weight(.semibold))
-                    .foregroundStyle(FeyndTheme.text)
+                    .foregroundStyle(dark ? Color(hex: 0xFBEEF6) : Color(hex: 0x3A2433))
                     .opacity(Double(u))
                     .offset(y: 10 * (1 - easeOutBack(u)))
             }

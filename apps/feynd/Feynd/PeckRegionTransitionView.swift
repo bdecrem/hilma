@@ -14,18 +14,36 @@ struct RegionCrossing: Identifiable {
     var id: Int { clearedLevel }
 
     var nextLevel: Int { clearedLevel + 1 }
-    var regionName: String { clearedLevel == 10 ? "Fern Hollow" : "Starfall Summit" }
+    var regionName: String { clearedLevel == 10 ? "Jelly Lagoon" : "Sprinkle Peaks" }
     var regionSpan: String { clearedLevel == 10 ? "Levels 11–20" : "Levels 21–30" }
     /// World sky, bottom (old region) → top (new region).
     var skyStops: [(CGFloat, UInt32)] {
         clearedLevel == 10
-            ? [(0, 0xF2A87B), (0.24, 0xFFCF9A), (0.5, 0xFFE9C4), (0.75, 0xFFEFD1), (1, 0xFFF3DC)]
-            : [(0, 0x1B2A38), (0.2, 0x33405C), (0.5, 0xB27A7E), (0.75, 0xF2A87B), (1, 0xFFDCA8)]
+            ? [(0, 0xC8EDB4), (0.3, 0xE8F4DC), (0.55, 0xCDEFF8), (0.8, 0x9BE3F5), (1, 0xDCF6FF)]
+            : [(0, 0x8FDAF2), (0.3, 0xB7E6F5), (0.55, 0xEADFF8), (0.8, 0xF1DEFB), (1, 0xF8DCEE)]
     }
-    var upperTree: (c: UInt32, d: UInt32, t: UInt32) {
-        clearedLevel == 10 ? (0x4F7D4A, 0x3E6B42, 0x5C4632) : (0x2C3B4A, 0x1D2934, 0x2A2E33)
+    /// Two candy colours for the new region's trees.
+    var upperTree: (c: UInt32, d: UInt32) {
+        clearedLevel == 10 ? (0xFF9FC8, 0x7FD3FF) : (0xB994FF, 0xFF7AB0)
     }
-    var glowColor: UInt32 { clearedLevel == 10 ? 0xFFD98A : 0xEDE6D2 }
+    var lowerTree: (c: UInt32, d: UInt32) {
+        clearedLevel == 10 ? (0x91E9CC, 0xFFD27A) : (0x7FD3FF, 0xFFD27A)
+    }
+    /// The old region's ground (bottom of the world) and the new one's hills.
+    var lowerHills: [(CGFloat, UInt32)] {
+        clearedLevel == 10
+            ? [(1056, 0xC8EDB4), (1190, 0xB6E4A3), (1340, 0xA5DA94), (1490, 0x96D088)]
+            : [(1056, 0x9BE3F5), (1190, 0x8FDAF2), (1340, 0x7FD2EF), (1490, 0x8FDAF2)]
+    }
+    var upperHills: [(CGFloat, UInt32)] {
+        clearedLevel == 10
+            ? [(430, 0xFFE7C2), (560, 0x9BE3F5), (680, 0x7FD2EF), (790, 0x8FDAF2)]
+            : [(430, 0xEFDCFF), (560, 0xF7DCF3), (680, 0xFBE3EF), (790, 0xF3D6EE)]
+    }
+    var shore: (UInt32, UInt32) { clearedLevel == 10 ? (0xFFE7C2, 0xFFF6E8) : (0xEFDCFF, 0xFFFFFF) }
+    var glowColor: UInt32 { clearedLevel == 10 ? 0xFFFFFF : 0xFFD43A }
+    var clearedColors: JellyTriad { clearedLevel == 10 ? .meadow : .lagoon }
+    var nextColors: JellyTriad { clearedLevel == 10 ? .lagoon : .peaks }
 }
 
 // Choreography cues (authored seconds).
@@ -64,19 +82,19 @@ private func trailAt(_ s: CGFloat) -> CGPoint {
 
 private let CONFETTI: [(a: CGFloat, r: CGFloat, c: UInt32)] = (0..<10).map { i in
     (a: CGFloat(i) / 10 * 2 * .pi + 0.4, r: 46 + CGFloat(i % 3) * 22,
-     c: [0xF0A830, 0xF2A19A, 0x7BB662][i % 3])
+     c: Jelly.gdCols[i % 6])
 }
 private let FLIES: [CGPoint] = [
     CGPoint(x: 300, y: 560), CGPoint(x: 90, y: 640), CGPoint(x: 330, y: 700),
     CGPoint(x: 150, y: 610), CGPoint(x: 250, y: 500),
 ]
-private let STAR = "M0,-7 L2.1,-2.2 L7,-2.2 L3,0.8 L4.3,5.8 L0,2.8 L-4.3,5.8 L-3,0.8 L-7,-2.2 L-2.1,-2.2"
 
 struct PeckRegionTransitionView: View {
     let crossing: RegionCrossing
     var onDone: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
     @State private var start = Date()
     @State private var finished = false
 
@@ -92,7 +110,7 @@ struct PeckRegionTransitionView: View {
                         scene(t: t)
                             .frame(width: 390, height: 800)
                             .clipShape(RoundedRectangle(cornerRadius: 44))
-                            .shadow(color: Color(hex: 0x3E3324).opacity(0.18), radius: 15, y: 5)
+                            .shadow(color: Color(hex: 0x3A2433).opacity(0.18), radius: 15, y: 5)
                             .scaleEffect(min(w / 400, h / 810))
                         banner(t: t)
                         caption(t: t)
@@ -120,6 +138,9 @@ struct PeckRegionTransitionView: View {
             let camTop = anim(800, 0, t, Cue.walk + 0.2, Cue.gate + 0.2, easeInOutCubic)
             var g = ctx
             g.translateBy(x: 0, y: -camTop)
+            // The crossing is a daytime postcard in both modes: its sky and
+            // water are fixed colours, so its props stay unfiltered too.
+            let ink = JellyInk(dark: false)
 
             func fill(_ p: Path, _ hex: UInt32, _ o: CGFloat = 1) {
                 g.fill(p, with: .color(Color(hex: hex).opacity(o)))
@@ -132,8 +153,8 @@ struct PeckRegionTransitionView: View {
                                          startPoint: CGPoint(x: 0, y: 1600), endPoint: .zero))
 
             // Low sun in the new region; pale echo higher up.
-            fill(Path(ellipseIn: CGRect(x: 280, y: 908, width: 76, height: 76)), 0xF0A830, 0.25)
-            fill(Path(ellipseIn: CGRect(x: 294, y: 922, width: 48, height: 48)), 0xF5B94E)
+            fill(Path(ellipseIn: CGRect(x: 280, y: 908, width: 76, height: 76)), 0xFFD43A, 0.25)
+            fill(Path(ellipseIn: CGRect(x: 294, y: 922, width: 48, height: 48)), 0xFFE27A)
             fill(Path(ellipseIn: CGRect(x: 68, y: 288, width: 84, height: 84)), 0xFFE9C4, 0.45)
             fill(Path(ellipseIn: CGRect(x: 83, y: 303, width: 54, height: 54)), 0xFFE9C4)
 
@@ -145,11 +166,10 @@ struct PeckRegionTransitionView: View {
                      crossing.glowColor, glow * tw)
             }
 
-            // Old-region water strip + meadow hills (bottom of the world).
-            fill(Path(CGRect(x: 0, y: 1006, width: 390, height: 46)), 0xA8D8D8)
-            fill(Path(CGRect(x: 0, y: 1006, width: 390, height: 7)), 0xC4E6E2)
-            let meadowHills: [(CGFloat, UInt32)] = [(1056, 0xCDE3B4), (1190, 0xB5D89A), (1340, 0x9CCB80), (1490, 0x7FBA66)]
-            for (y0, c) in meadowHills {
+            // The new region's shore strip + the old region's ground (bottom of the world).
+            fill(Path(CGRect(x: 0, y: 1006, width: 390, height: 46)), crossing.shore.0)
+            fill(Path(CGRect(x: 0, y: 1006, width: 390, height: 7)), crossing.shore.1)
+            for (y0, c) in crossing.lowerHills {
                 var p = Path()
                 p.move(to: CGPoint(x: 0, y: y0))
                 p.addCurve(to: CGPoint(x: 300, y: y0 - 24), control1: CGPoint(x: 90, y: y0 - 20), control2: CGPoint(x: 200, y: y0 - 10))
@@ -158,9 +178,7 @@ struct PeckRegionTransitionView: View {
                 fill(p, c)
             }
             // New-region hills (upper half).
-            let newHills: [(CGFloat, UInt32)] = [(430, 0xA3B871), (560, 0x84A765), (680, 0x668F57), (790, 0x4E7B4A)]
-            for (y0, c) in (crossing.clearedLevel == 10 ? newHills
-                            : [(430, 0x2C3B4A), (560, 0x24313D), (680, 0x1D2934), (790, 0x16202A)]) {
+            for (y0, c) in crossing.upperHills {
                 var p = Path()
                 p.move(to: CGPoint(x: 0, y: y0))
                 p.addCurve(to: CGPoint(x: 254, y: y0 - 32), control1: CGPoint(x: 74, y: y0 - 26), control2: CGPoint(x: 170, y: y0 - 10))
@@ -169,33 +187,30 @@ struct PeckRegionTransitionView: View {
                 fill(p, c)
             }
 
-            // Trees: meadow greens below, the new region's palette above.
-            let up = crossing.upperTree
-            let trees: [(CGFloat, CGFloat, CGFloat, UInt32, UInt32, UInt32)] = [
-                (56, 1188, 1.0, 0x6FAE5C, 0x5F9E4C, 0x8A6B4A),
-                (334, 1240, 0.85, 0x6FAE5C, 0x5F9E4C, 0x8A6B4A),
-                (48, 1430, 1.05, 0x6FAE5C, 0x5F9E4C, 0x8A6B4A),
-                (326, 1470, 0.9, 0x6FAE5C, 0x5F9E4C, 0x8A6B4A),
-                (342, 560, 1.05, up.c, up.d, up.t),
-                (50, 700, 1.2, up.c, up.d, up.t),
-                (330, 740, 1.35, up.c, up.d, up.t),
+            // Candy trees: the old region's colours below, the new one's above.
+            let up = crossing.upperTree, low = crossing.lowerTree
+            let trees: [(CGFloat, CGFloat, CGFloat, UInt32)] = [
+                (56, 1188, 1.0, low.c), (334, 1240, 0.85, low.d), (48, 1430, 1.05, low.d), (326, 1470, 0.9, low.c),
+                (342, 560, 1.05, up.c), (50, 700, 1.2, up.d), (330, 740, 1.35, up.c),
             ]
-            for (x, y, k, c, d, tr) in trees { drawTree(&g, x: x, y: y, k: k, canopy: c, shade: d, trunk: tr) }
+            for (x, y, k, c) in trees { jellyTree(&g, ink, x: x, y: y, s: k, col: c) }
 
-            // The trail — stepping-stone dots.
+            // The trail — white dots ahead.
             var trail = Path()
             trail.move(to: TRAIL[0])
             for pt in TRAIL.dropFirst() { trail.addLine(to: pt) }
-            g.stroke(trail, with: .color(Color(hex: 0xFFF3DC).opacity(0.8)),
-                     style: StrokeStyle(lineWidth: 4.5, lineCap: .round, dash: [0.1, 13]))
+            g.stroke(trail, with: .color(.white.opacity(0.85)),
+                     style: StrokeStyle(lineWidth: 6, lineCap: .round, dash: [0.1, 16]))
 
             // Node 10 — the burst.
-            drawClearedNode(&g, t: t)
+            drawClearedNode(&g, ink, t: t)
             // Node 11 — pulse + START.
-            drawNextNode(&g, t: t)
-            // Padlock beyond 11.
-            fill(Path(ellipseIn: CGRect(x: 260, y: 434, width: 36, height: 36)), 0xFFF3DC, 0.35)
-            fill(Path(roundedRect: CGRect(x: 272.4, y: 450.5, width: 11.2, height: 8.6), cornerRadius: 2.2), 0x4A3B2A, 0.6)
+            drawNextNode(&g, ink, t: t)
+            // The locked stone beyond 11.
+            jellyGlossBall(&g, ink, x: 278, y: 452, r: 18, .locked)
+            g.stroke(jellyArcPath(center: CGPoint(x: 278, y: 450), r: 3.5, from: .pi, to: 2 * .pi, steps: 8),
+                     with: .color(jellyRGBA(90, 75, 110, 0.75)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            g.fill(Path(roundedRect: CGRect(x: 272.5, y: 450, width: 11, height: 8), cornerRadius: 2), with: .color(jellyRGBA(90, 75, 110, 0.75)))
 
             // The dodo — celebrate, then walk the trail.
             let s = anim(0, 1, t, Cue.walk, Cue.gate + 0.5, easeInOutSine)
@@ -222,54 +237,25 @@ struct PeckRegionTransitionView: View {
         }
     }
 
-    private func drawTree(_ g: inout GraphicsContext, x: CGFloat, y: CGFloat, k: CGFloat, canopy: UInt32, shade: UInt32, trunk: UInt32) {
-        var c = g
-        c.translateBy(x: x, y: y)
-        c.scaleBy(x: k, y: k)
-        var trunkP = Path()
-        trunkP.move(to: CGPoint(x: -2, y: 0))
-        trunkP.addCurve(to: CGPoint(x: 0, y: -37), control1: CGPoint(x: -3.5, y: -13), control2: CGPoint(x: -2.5, y: -25))
-        trunkP.addCurve(to: CGPoint(x: 2, y: 0), control1: CGPoint(x: 2.5, y: -25), control2: CGPoint(x: 3.5, y: -13))
-        trunkP.closeSubpath()
-        c.fill(trunkP, with: .color(Color(hex: trunk)))
-        var can = Path()
-        can.move(to: CGPoint(x: 0, y: -28))
-        can.addCurve(to: CGPoint(x: -26, y: -54), control1: CGPoint(x: -22, y: -24), control2: CGPoint(x: -35, y: -38))
-        can.addCurve(to: CGPoint(x: -2, y: -78), control1: CGPoint(x: -35, y: -70), control2: CGPoint(x: -18, y: -85))
-        can.addCurve(to: CGPoint(x: 28, y: -60), control1: CGPoint(x: 12, y: -89), control2: CGPoint(x: 33, y: -77))
-        can.addCurve(to: CGPoint(x: 9, y: -33), control1: CGPoint(x: 39, y: -46), control2: CGPoint(x: 27, y: -30))
-        can.addCurve(to: CGPoint(x: 0, y: -28), control1: CGPoint(x: 6, y: -31), control2: CGPoint(x: 3, y: -29))
-        can.closeSubpath()
-        c.fill(can, with: .color(Color(hex: canopy)))
-        var sh = Path()
-        sh.move(to: CGPoint(x: -4, y: -32))
-        sh.addCurve(to: CGPoint(x: -22, y: -50), control1: CGPoint(x: -18, y: -30), control2: CGPoint(x: -27, y: -40))
-        sh.addCurve(to: CGPoint(x: 2, y: -42), control1: CGPoint(x: -14, y: -44), control2: CGPoint(x: -6, y: -40))
-        sh.addCurve(to: CGPoint(x: -4, y: -32), control1: CGPoint(x: 0, y: -38), control2: CGPoint(x: -2, y: -34))
-        sh.closeSubpath()
-        c.fill(sh, with: .color(Color(hex: shade).opacity(0.7)))
-    }
-
-    private func drawClearedNode(_ g: inout GraphicsContext, t: CGFloat) {
+    private func drawClearedNode(_ g: inout GraphicsContext, _ ink: JellyInk, t: CGFloat) {
         var c = g
         c.translateBy(x: 140, y: 1480)
         let ringU = clamp01((t - 0.4) / 0.8)
         var ring = Path(ellipseIn: CGRect(x: 0, y: 0, width: 0, height: 0))
         let rr = 30 + 45 * easeOutCubic(ringU)
         ring = Path(ellipseIn: CGRect(x: -rr, y: -rr, width: rr * 2, height: rr * 2))
-        c.stroke(ring, with: .color(Color(hex: 0xF0A830).opacity(0.7 * (1 - ringU))), lineWidth: 3)
-        c.fill(Path(ellipseIn: CGRect(x: -30, y: -30, width: 60, height: 60)), with: .color(Color(hex: 0xF0A830)))
-        c.draw(Text("\(crossing.clearedLevel)").font(.custom("Fredoka", size: 24).weight(.semibold)).foregroundColor(Color(hex: 0x7A4A12)), at: CGPoint(x: 0, y: 1))
+        c.stroke(ring, with: .color(Color(hex: 0xFFD43A).opacity(0.7 * (1 - ringU))), lineWidth: 3)
+        c.fill(jellyEllipse(0, 20, 32, 10), with: .color(jellyRGBA(60, 30, 60, 0.2)))
+        jellyGlossBall(&c, ink, x: 0, y: 0, r: 30, crossing.clearedColors)
+        c.draw(Text("\(crossing.clearedLevel)").font(.custom("Fredoka", size: 26).weight(.bold)).foregroundColor(.white.opacity(0.55)), at: CGPoint(x: 0, y: 2.5))
+        c.draw(Text("\(crossing.clearedLevel)").font(.custom("Fredoka", size: 26).weight(.bold)).foregroundColor(Color(hex: Jelly.ink)), at: CGPoint(x: 0, y: 1))
         // Three stars pop above.
-        if let star = Path(STAR) {
-            for (i, k) in [-1, 0, 1].enumerated() {
-                let sc = clamp01(anim(0, 1, t, 0.5 + CGFloat(i) * 0.16, 0.95 + CGFloat(i) * 0.16, easeOutBack))
-                var sg = c
-                sg.translateBy(x: CGFloat(k) * 24, y: -44 + abs(CGFloat(k)) * 6)
-                sg.scaleBy(x: sc, y: sc)
-                sg.fill(star, with: .color(Color(hex: 0xF0A830)))
-                sg.stroke(star, with: .color(Color(hex: 0xFFF3DC)), lineWidth: 1.5)
-            }
+        for (i, k) in [-1, 0, 1].enumerated() {
+            let sc = clamp01(anim(0, 1, t, 0.5 + CGFloat(i) * 0.16, 0.95 + CGFloat(i) * 0.16, easeOutBack))
+            var sg = c
+            sg.translateBy(x: CGFloat(k) * 24, y: -44 + abs(CGFloat(k)) * 6)
+            sg.scaleBy(x: sc, y: sc)
+            jellyStar(&sg, x: 0, y: 0, r: k == 0 ? 9 : 7.5, filled: true)
         }
         // Confetti radiates and falls.
         let u = clamp01((t - 0.45) / 0.95)
@@ -285,22 +271,26 @@ struct PeckRegionTransitionView: View {
         }
     }
 
-    private func drawNextNode(_ g: inout GraphicsContext, t: CGFloat) {
+    private func drawNextNode(_ g: inout GraphicsContext, _ ink: JellyInk, t: CGFloat) {
         var c = g
         c.translateBy(x: 195, y: 540)
         let pulse = t > Cue.settle ? 0.55 + 0.25 * sin((t - Cue.settle) * 3.2) : 0
         if pulse > 0 {
-            let pr = 33 + 5 * sin((t - Cue.settle) * 3.2)
-            c.stroke(Path(ellipseIn: CGRect(x: -pr, y: -pr, width: pr * 2, height: pr * 2)),
-                     with: .color(Color(hex: 0xF0A830).opacity(pulse)), lineWidth: 3)
+            let pr = 40 + 6 * sin((t - Cue.settle) * 3.2)
+            c.stroke(Path(ellipseIn: CGRect(x: -pr, y: -pr + 3, width: pr * 2, height: pr * 2)),
+                     with: .color(.white.opacity(pulse)), lineWidth: 3)
+            c.stroke(Path(ellipseIn: CGRect(x: -37, y: -34, width: 74, height: 74)),
+                     with: .color(jellyRGBA(255, 210, 90, 0.9 * pulse)), lineWidth: 5)
         }
-        c.fill(Path(ellipseIn: CGRect(x: -30, y: -30, width: 60, height: 60)), with: .color(Color(hex: 0xFFF9EC)))
-        c.stroke(Path(ellipseIn: CGRect(x: -30, y: -30, width: 60, height: 60)), with: .color(Color(hex: 0xF0A830)), lineWidth: 3)
-        c.draw(Text("\(crossing.nextLevel)").font(.custom("Fredoka", size: 24).weight(.semibold)).foregroundColor(Color(hex: 0x33383E)), at: CGPoint(x: 0, y: 1))
+        c.fill(jellyEllipse(0, 20, 32, 10), with: .color(jellyRGBA(60, 30, 60, 0.2)))
+        jellyGlossBall(&c, ink, x: 0, y: 0, r: 30, crossing.nextColors)
+        c.draw(Text("\(crossing.nextLevel)").font(.custom("Fredoka", size: 26).weight(.bold)).foregroundColor(.white.opacity(0.55)), at: CGPoint(x: 0, y: 2.5))
+        c.draw(Text("\(crossing.nextLevel)").font(.custom("Fredoka", size: 26).weight(.bold)).foregroundColor(Color(hex: Jelly.ink)), at: CGPoint(x: 0, y: 1))
         let startOp = anim(0, 1, t, Cue.settle + 0.2, Cue.settle + 0.7, easeOutCubic)
         if startOp > 0 {
-            c.draw(Text("START").font(.custom("Fredoka", size: 13).weight(.semibold)).tracking(3)
-                    .foregroundColor(Color(hex: 0xC77E2B).opacity(startOp)), at: CGPoint(x: 0, y: 52))
+            var r = c
+            r.opacity = Double(startOp)
+            jellyRibbon(&r, ink, x: 0, y: 44, text: "START", col: Jelly.ink)
         }
     }
 
@@ -313,25 +303,25 @@ struct PeckRegionTransitionView: View {
             * (1 - clamp01((t - (Cue.settle + 0.35)) / 0.5))
         if op > 0.01 {
             VStack(spacing: 4) {
-                SproutGlyph()
-                    .frame(width: 64, height: 28)
+                JellyCrest()
+                    .frame(width: 52, height: 46)
                 Text("NEW REGION")
                     .font(.system(size: 11, weight: .heavy))
                     .tracking(3)
-                    .foregroundStyle(Color(hex: 0xC77E2B))
+                    .foregroundStyle(Color(hex: 0x7A4FD6))
                 Text(crossing.regionName)
                     .font(.custom("Fredoka", size: 34).weight(.semibold))
-                    .foregroundStyle(Color(hex: 0x2A2E33))
+                    .foregroundStyle(Color(hex: Jelly.ink))
                 Text(crossing.regionSpan)
                     .font(.custom("Fredoka", size: 15).weight(.medium))
-                    .foregroundStyle(Color(hex: 0x5C554A))
+                    .foregroundStyle(Color(hex: 0x6A5F73))
                     .padding(.top, 2)
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 26)
             .frame(width: 264)
-            .background(Color(hex: 0xFBF4E6), in: RoundedRectangle(cornerRadius: 28))
-            .shadow(color: Color(hex: 0x141A12).opacity(0.35), radius: 20, y: 7)
+            .background(Color(hex: 0xFFF7FB), in: RoundedRectangle(cornerRadius: 28))
+            .shadow(color: Color(hex: 0x3A2433).opacity(0.35), radius: 20, y: 7)
             .scaleEffect(sc)
             .opacity(op)
             .offset(y: -80)
@@ -343,10 +333,10 @@ struct PeckRegionTransitionView: View {
         if t > 0.35 && t < 2.2 {
             Text("Level \(crossing.clearedLevel) cleared!")
                 .font(.custom("Fredoka", size: 17).weight(.semibold))
-                .foregroundStyle(Color(hex: 0x2A2E33))
+                .foregroundStyle(Color(hex: Jelly.ink))
                 .padding(.horizontal, 18)
                 .padding(.vertical, 9)
-                .background(Color(hex: 0xFFF9EC).opacity(0.92), in: Capsule())
+                .background(Color(hex: 0xFFF7FB).opacity(0.94), in: Capsule())
                 .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
                 .frame(maxHeight: .infinity, alignment: .bottom)
                 .padding(.bottom, 54)
@@ -355,31 +345,14 @@ struct PeckRegionTransitionView: View {
     }
 }
 
-/// The three-leaf sprout, standalone (banner crest).
-private struct SproutGlyph: View {
+/// The banner's crest: the jelly dodo, small and pleased.
+private struct JellyCrest: View {
     var body: some View {
         Canvas { ctx, size in
             var g = ctx
-            g.translateBy(x: size.width / 2, y: size.height)
-            g.scaleBy(x: 1.9, y: 1.9)
-            var stem = Path()
-            stem.move(to: CGPoint(x: -0.9, y: 0))
-            stem.addCurve(to: CGPoint(x: 2.2, y: -6), control1: CGPoint(x: -1.1, y: -2.6), control2: CGPoint(x: -0.4, y: -4.3))
-            stem.addCurve(to: CGPoint(x: 1.3, y: 0), control1: CGPoint(x: 2.8, y: -4.7), control2: CGPoint(x: 2.2, y: -2.6))
-            stem.closeSubpath()
-            g.fill(stem, with: .color(Color(hex: 0x6FAE5C)))
-            var l = Path()
-            l.move(to: CGPoint(x: 0.9, y: -4.9))
-            l.addCurve(to: CGPoint(x: -16.1, y: -8.4), control1: CGPoint(x: -3.9, y: -10.5), control2: CGPoint(x: -11.3, y: -11.4))
-            l.addCurve(to: CGPoint(x: 0.9, y: -4.9), control1: CGPoint(x: -13.9, y: -2.7), control2: CGPoint(x: -5.7, y: -1.4))
-            l.closeSubpath()
-            g.fill(l, with: .color(Color(hex: 0x7BB662)))
-            var r = Path()
-            r.move(to: CGPoint(x: 1.7, y: -6.2))
-            r.addCurve(to: CGPoint(x: 16.1, y: -11.8), control1: CGPoint(x: 3.9, y: -11.8), control2: CGPoint(x: 10.9, y: -13.6))
-            r.addCurve(to: CGPoint(x: 1.7, y: -6.2), control1: CGPoint(x: 15.2, y: -6.2), control2: CGPoint(x: 8.3, y: -3.2))
-            r.closeSubpath()
-            g.fill(r, with: .color(Color(hex: 0x5F9E4C)))
+            var pose = DodoPose()
+            pose.cheekOpacity = 0.9
+            drawJellyDodo(&g, at: CGPoint(x: size.width / 2, y: size.height - 2), height: size.height - 6, pose: pose, groundShadow: true)
         }
     }
 }

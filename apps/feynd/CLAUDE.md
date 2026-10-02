@@ -2,7 +2,7 @@
 
 Native client for F2. **The app's product name is Dodo** — that's the springboard name (`CFBundleDisplayName`), the in-app name, and the brand. The folder, scheme, bundle ID, and type names remain `Feynd` (renaming them would churn provisioning and every build command for zero user-visible gain). SwiftUI + XcodeGen — `project.yml` is the source of truth, `Feynd.xcodeproj` is generated. Bundle ID `com.bartdecrem.Feynd`, Team ID `274T5WCVD2`, iOS 17+. Talks to the same `/api/f2/*` backend as the web app.
 
-**Branding lives in [`branding/`](branding/BRANDING.md)** — the bookworm-dodo mark, app icon SVG source, Fredoka text mark spec, and the official color palette (dark "slate ink" / light "butter paper", marigold accent). The app icon PNGs are rendered from `branding/dodo-icon.svg` via `rsvg-convert`; regenerate all sizes from there, never hand-edit the PNGs.
+**Branding lives in [`branding/`](branding/BRANDING.md)** — the jelly dodo (since 2026-10-01): mascot, critters, palette, tokens, icon recipe. The icon PNGs in `AppIcon.appiconset` are composited from `scripts/dodo-jelly/out/dodo-1024.png`; regenerate all sizes together, never hand-edit one.
 
 ## Versioning: smallest possible increment, always
 
@@ -70,6 +70,8 @@ The marketing captures (site tour/hero, App Store shots, video) are driven by th
 - `-HoldSplash 1` — pin the launch splash for screenshots. `-TickleDodo 1` — auto-play the map traveler's tickle.
 - `-BackendURL http://localhost:3100` — point a simulator run at a local dev server whatever `Secrets.swift` says (the `-TestSessionToken` cookie follows it). With zsh, build the launch arguments as an array (`ARGS=(-TestSessionToken "$T" -BackendURL …); simctl launch … "${ARGS[@]}"`): an unquoted `$ARGS` string is NOT word-split by zsh, so every hook after the first silently becomes part of the first one's value (cost half an hour on 2026-10-01).
 - `-OpenProfile 1` (with `-StartTab topics`) — the profile sheet; add `-OpenAvatarPicker 1` for the jelly avatar picker, or `-PickCritter bunny` (any `JellyCritter` raw value: `dodo`, `dodo-pink`, …, `bunny`, `octo`, …) to make that critter the avatar straight away through the real upload.
+- `-MockLevelCount 30 -MockCurrentLevel 8` — a 30-level map standing on level 8 (9–30 locked); without `-MockCurrentLevel` the last level is the current one. `-OpenLevelSheet 1` opens the current level's start sheet. `-streakCelebrated 12` keeps the streak celebration from covering a `-MockPeckDue` map shot. `-ScrollToLevel N` is approximate (it can land a region away); no scroll hook = the bottom of the map, `-ScrollTop 1` = the castle.
+- Dark-mode shots: the iOS 26.2 simulators on the MacBook Air ignore `simctl ui … appearance dark` for this app (2026-10-01); the iOS 26.0 iPhone 17 (`62B3A7D8-…`) follows it. `apps/feynd/.shots/mapshots.sh <light|dark>` and `moreshots.sh` are the map / sheet / transition capture loops used for the jelly rebrand (they need the local dev server and a token in `.shots/test-token.txt`; `.shots/` is not committed).
 - `-ExportPeckWorld <host dir>` — write the Peck island scenery (the map's drawn-in-code background) to `<dir>/peck-world-10|20|30.png` at 3x, one file per region count. No sign-in needed; it's how the map art leaves the app for design handoff.
 - `-NoSFX 1` — never start the flash sound-effects audio engine. The simulator's audio server can abort the process (AURemoteIO RPC timeout) when the engine first initialises, which kills any run that opens a flash set headlessly. The showcase capture in `scripts/dodo-scenes` passes it on every launch.
 - `-SkipNotifPrompt 1` — suppress the recert notification-permission request so the system alert never covers screenshots. If the alert is already pending from a run without the flag, uninstall the app AND reboot the sim to clear it — it survives app relaunches.
@@ -198,12 +200,31 @@ The app was rebranded to the jelly dodo in one pass — see
   iOS, `.fileImporter` on Catalyst). The sprites come from
   `node scripts/dodo-jelly/sprites.mjs` (Playwright over the art pages, into
   `Assets.xcassets/Jelly/`, namespaced) — rerun it after the art changes.
+- **Launch screen:** the icon's ground, full bleed — sunrise peach
+  (`#FFECD6 → #FFC9A6`) by day, the same sky at dusk (`#3A2850 → #17131D`) in
+  dark mode — so icon → launch is one picture; `LaunchBackground` (the
+  system launch colour shown before SwiftUI draws) is the gradient's middle.
+  The first cut was the lavender paper and Bart asked "is white background
+  the right design call??" — it wasn't.
 - **Theme:** `FeyndTheme.swift` tokens; `inkOnAccent` is adaptive now (white on
   the deep daytime sky, sea-ink on the bright night one). `LaunchBackground`
   colourset matches `bg`.
 - **Map:** `PeckJelly.swift` holds the shared jelly drawing (gloss balls,
-  ribbons, signs, chests, candy trees, mountains, islands); regions are
-  Gumdrop Meadow / Jelly Lagoon / Sprinkle Peaks / Sugar Castle.
+  ribbons, signs, chests, candy trees, mountains, islands) and the SwiftUI
+  pieces (`JellyNodeView`, `JellyChestView`, the critter seats); regions are
+  Gumdrop Meadow / Jelly Lagoon / Sprinkle Peaks, with Sugar Castle on a
+  cloud bank ABOVE the last level (`PeckFinale` in `PeckTrail.swift`: the
+  world has 590pt of finale above the top stone, so the castle clears the
+  floating header when the map is scrolled to the top). The traveler stands
+  ON the current stone (`PeckGeometry.travelerPoint`), START hangs under it,
+  the due board beside it. Chests open with a tap once their level is passed
+  (UserDefaults `peckChestsOpened`; no currency behind them). Critters along
+  the trail squish on a tap and offer "Make this my avatar" on a long press.
+  Dark mode is a moonlit filter over the scenery (`Jelly.dusk`: reds and
+  greens roughly halved, blues kept) while unlocked stones, critters and the
+  traveler keep their day colours and glow; the region-crossing scene is a
+  daytime postcard in both modes. The Peck header follows the system scheme
+  (the old "night chrome over Starfall" switch is gone with the night region).
 - **Icon:** composited by PIL from `scripts/dodo-jelly/out/dodo-1024.png`
   (BRANDING.md has the recipe).
 
