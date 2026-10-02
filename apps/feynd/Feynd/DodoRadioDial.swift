@@ -30,8 +30,8 @@ struct DodoRadioDial: View {
     private let bodyWidth: CGFloat = 244
     private let ink = Color(hex: 0x2B3036)
     private let inkDeep = Color(hex: 0x14181C)
-    private let marigold = Color(hex: 0xF0A830)
-    private let marigoldDeep = Color(hex: 0xC9821F)
+    private let marigold = Color(hex: 0x5EC6EC)
+    private let marigoldDeep = Color(hex: 0x2689BD)
     private let bone = Color(hex: 0xF6EFDF)
     private let boneShade = Color(hex: 0xE6DCC6)
     private let boneEdge = Color(hex: 0xD9CDB4)
@@ -75,9 +75,9 @@ struct DodoRadioDial: View {
 
             // Feet.
             HStack {
-                Capsule().fill(Color(hex: 0x33383E)).frame(width: 26, height: 8)
+                Capsule().fill(Color(hex: 0x2D2537)).frame(width: 26, height: 8)
                 Spacer()
-                Capsule().fill(Color(hex: 0x33383E)).frame(width: 26, height: 8)
+                Capsule().fill(Color(hex: 0x2D2537)).frame(width: 26, height: 8)
             }
             .padding(.horizontal, 34)
             .offset(y: -1)
@@ -116,7 +116,7 @@ struct DodoRadioDial: View {
                 .frame(width: 3, height: 22)
                 .offset(y: 4)
             Ellipse()
-                .fill(Color(hex: 0x7BB662))
+                .fill(Color(hex: 0x4DC5A2))
                 .frame(width: 24, height: 12)
                 .rotationEffect(.degrees(-22))
                 .offset(x: -11, y: -4)
@@ -198,7 +198,7 @@ struct DodoRadioDial: View {
                     ctx.fill(Path(roundedRect: CGRect(x: x - 1, y: 8, width: 2, height: 66), cornerRadius: 1),
                              with: .color(Color(hex: 0xC84A3C)))
                     ctx.fill(Path(roundedRect: CGRect(x: x - 3, y: 70, width: 6, height: 6), cornerRadius: 1.5),
-                             with: .color(Color(hex: 0x33383E)))
+                             with: .color(Color(hex: 0x2D2537)))
                 }
             }
             .animation(.spring(response: 0.45, dampingFraction: 0.6), value: needleX)

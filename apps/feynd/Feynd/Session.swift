@@ -40,7 +40,7 @@ final class Session {
         // (signSession in src/lib/f2/auth.ts) and the normal bootstrap below
         // validates it.
         if let token = defaults.string(forKey: "TestSessionToken"),
-           let host = Secrets.backendBaseURL.host,
+           let host = Backend.primary.host,
            let cookie = HTTPCookie(properties: [
                .name: "f2_session", .value: token, .domain: host, .path: "/",
            ]) {

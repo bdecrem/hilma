@@ -68,6 +68,8 @@ The marketing captures (site tour/hero, App Store shots, video) are driven by th
 - `-TestSessionToken <signed f2_session value>` — sign in without the test password: `signSession('<test user id>')` from `src/lib/f2/auth.ts` makes the value (the backend must share that `.env.local`'s session secret, so: local dev). Against PRODUCTION use a guest's cookie value instead (`curl -si -X POST https://feynd.cc/api/f2/auth/guest` — it texts Bart, so reuse one and delete it after). Used on the MacBook Air, which has no `F2_TEST_PASS`.
 - `-MockPeckDue N` — fake the weekly Peck deadline N days out (0 = today; fakes a 12-day streak when there is none) so the streak-at-risk banner (Peck + Topics, shows at N ≤ 1) and the flame modal's due line can be screenshotted. `-OpenStreakModal 1` — open the flame's status card without a tap. The real rule lives in `src/lib/f2/streak.ts`; `npx tsx scripts/f2-peck-week-check.ts` drives every transition against the test account (`--reset` zeroes it afterwards).
 - `-HoldSplash 1` — pin the launch splash for screenshots. `-TickleDodo 1` — auto-play the map traveler's tickle.
+- `-BackendURL http://localhost:3100` — point a simulator run at a local dev server whatever `Secrets.swift` says (the `-TestSessionToken` cookie follows it). With zsh, build the launch arguments as an array (`ARGS=(-TestSessionToken "$T" -BackendURL …); simctl launch … "${ARGS[@]}"`): an unquoted `$ARGS` string is NOT word-split by zsh, so every hook after the first silently becomes part of the first one's value (cost half an hour on 2026-10-01).
+- `-OpenProfile 1` (with `-StartTab topics`) — the profile sheet; add `-OpenAvatarPicker 1` for the jelly avatar picker, or `-PickCritter bunny` (any `JellyCritter` raw value: `dodo`, `dodo-pink`, …, `bunny`, `octo`, …) to make that critter the avatar straight away through the real upload.
 - `-ExportPeckWorld <host dir>` — write the Peck island scenery (the map's drawn-in-code background) to `<dir>/peck-world-10|20|30.png` at 3x, one file per region count. No sign-in needed; it's how the map art leaves the app for design handoff.
 - `-NoSFX 1` — never start the flash sound-effects audio engine. The simulator's audio server can abort the process (AURemoteIO RPC timeout) when the engine first initialises, which kills any run that opens a flash set headlessly. The showcase capture in `scripts/dodo-scenes` passes it on every launch.
 - `-SkipNotifPrompt 1` — suppress the recert notification-permission request so the system alert never covers screenshots. If the alert is already pending from a run without the flag, uninstall the app AND reboot the sim to clear it — it survives app relaunches.
@@ -174,3 +176,34 @@ mid-session and destroy client-side state (a Final Review transcript died
 this way on 2026-08-14). Install only synchronously, at the moment the
 install was asked for. If the phone is locked, report that the install is
 pending and stop — never leave a retry loop running.
+
+## The jelly brand (2026-10-01)
+
+The app was rebranded to the jelly dodo in one pass — see
+`branding/BRANDING.md` for the mark, palette and tokens. Where things live:
+
+- **Mascot:** `Feynd/JellyDodo.swift` draws it (`drawJellyDodo`, a native port
+  of the `dodo` body in `misc/dodo-redesign/jelly-dodos.html`); `AnimatedDodo.swift`
+  keeps the pose model, the moods and the views, and `drawAnimatedDodo` just
+  forwards. `DodoPose` has `squint` and `mouth` since the jelly has a face
+  the bird didn't. The splash choreography is the drop-and-squash in
+  `LaunchSplashView.pose`. Peck or Perish's riso dodo (`PeckGameArt.drawDodo`)
+  is deliberately not the jelly.
+- **Critters + avatar:** `Feynd/JellyAvatar.swift` — `JellyCritter` (the
+  catalog; `imageName` = `Jelly/<kind>`), `JellyAvatar.apply` (renders the
+  critter on its tinted disc with `UIGraphicsImageRenderer`, uploads it as
+  the profile picture, remembers kind + URL in UserDefaults so `ProfileBadge`
+  and the profile hero draw the sprite locally while the server still serves
+  that URL), `JellyAvatarDisc`, `JellyAvatarPicker` (the sheet; PhotosPicker on
+  iOS, `.fileImporter` on Catalyst). The sprites come from
+  `node scripts/dodo-jelly/sprites.mjs` (Playwright over the art pages, into
+  `Assets.xcassets/Jelly/`, namespaced) — rerun it after the art changes.
+- **Theme:** `FeyndTheme.swift` tokens; `inkOnAccent` is adaptive now (white on
+  the deep daytime sky, sea-ink on the bright night one). `LaunchBackground`
+  colourset matches `bg`.
+- **Map:** `PeckJelly.swift` holds the shared jelly drawing (gloss balls,
+  ribbons, signs, chests, candy trees, mountains, islands); regions are
+  Gumdrop Meadow / Jelly Lagoon / Sprinkle Peaks / Sugar Castle.
+- **Icon:** composited by PIL from `scripts/dodo-jelly/out/dodo-1024.png`
+  (BRANDING.md has the recipe).
+

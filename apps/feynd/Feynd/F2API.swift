@@ -29,7 +29,16 @@ enum F2APIError: Error, LocalizedError {
 /// failure the client retries once, then retries on the other host, and if
 /// that works it sticks with it (persisted) so every later request just works.
 enum Backend {
+    #if targetEnvironment(simulator)
+    /// `-BackendURL http://localhost:3100` — a simulator run against a local
+    /// dev server, whatever Secrets.swift says (headless verification).
+    static let primary: URL = {
+        if let s = UserDefaults.standard.string(forKey: "BackendURL"), let u = URL(string: s) { return u }
+        return Secrets.backendBaseURL
+    }()
+    #else
     static let primary = Secrets.backendBaseURL
+    #endif
     static let fallback = URL(string: "https://hilma-nine.vercel.app")!
     private static let key = "f2.backend.useFallback"
 

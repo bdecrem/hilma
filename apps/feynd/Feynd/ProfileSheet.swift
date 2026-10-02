@@ -19,9 +19,9 @@ struct ProfileSheet: View {
     @AppStorage("colorSchemePreference") private var colorSchemeRaw = ColorSchemePreference.system.rawValue
 
     @State private var pickerItem: PhotosPickerItem? = nil
-    @State private var showFileImporter = false  // Mac Catalyst fallback
     @State private var uploadingAvatar = false
     @State private var uploadError: String? = nil
+    @State private var showAvatarPicker = false
 
     @State private var imessageHandles: [String] = []
     @State private var showPairing = false
@@ -53,6 +53,29 @@ struct ProfileSheet: View {
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
             uploadAvatar(item: item)
+        }
+        #if targetEnvironment(simulator)
+        // `-OpenAvatarPicker 1` opens the jelly picker; `-PickCritter <kind>`
+        // makes that critter the avatar straight away (screenshot runs).
+        .onAppear {
+            if UserDefaults.standard.bool(forKey: "OpenAvatarPicker") {
+                UserDefaults.standard.removeObject(forKey: "OpenAvatarPicker")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { showAvatarPicker = true }
+            }
+            if let kind = UserDefaults.standard.string(forKey: "PickCritter"), let c = JellyCritter(rawValue: kind) {
+                UserDefaults.standard.removeObject(forKey: "PickCritter")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { pickCritter(c) }
+            }
+        }
+        #endif
+        .sheet(isPresented: $showAvatarPicker) {
+            JellyAvatarPicker(current: JellyAvatar.current(avatarUrl: currentAvatarUrl),
+                              hasPicture: currentAvatarUrl != nil,
+                              pickerItem: $pickerItem,
+                              onFile: { handleImportedFile(result: $0) },
+                              onPick: { pickCritter($0) },
+                              onRemove: { Task { await removeAvatar() } })
+                .presentationDetents([.large])
         }
         .alert("Couldn't upload avatar",
                isPresented: Binding(get: { uploadError != nil }, set: { if !$0 { uploadError = nil } })) {
@@ -183,30 +206,15 @@ struct ProfileSheet: View {
     private var hero: some View {
         VStack(spacing: 0) {
             HStack(spacing: 16) {
-                // Mac Catalyst doesn't surface a usable PhotosPicker the same
-                // way iOS does — tapping it crashes the app when the system
-                // tries to bring up the photo library. Use the SwiftUI native
-                // .fileImporter on Catalyst (works for jpg/png as required).
-                #if targetEnvironment(macCatalyst)
+                // One entry point: the jelly picker, which also offers a
+                // photo (PhotosPicker on iOS; Mac Catalyst crashes on it, so
+                // the picker uses .fileImporter there).
                 Button {
-                    showFileImporter = true
+                    showAvatarPicker = true
                 } label: {
                     avatarWithCamera
                 }
                 .buttonStyle(.plain)
-                .fileImporter(
-                    isPresented: $showFileImporter,
-                    allowedContentTypes: [.jpeg, .png],
-                    allowsMultipleSelection: false
-                ) { result in
-                    handleImportedFile(result: result)
-                }
-                #else
-                PhotosPicker(selection: $pickerItem, matching: .images, photoLibrary: .shared()) {
-                    avatarWithCamera
-                }
-                .buttonStyle(.plain)
-                #endif
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(username)
@@ -256,8 +264,8 @@ struct ProfileSheet: View {
                         .controlSize(.mini)
                         .tint(FeyndTheme.text)
                 } else {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 11, weight: .semibold))
+                    Image(systemName: "face.smiling.inverse")
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(FeyndTheme.text)
                 }
             }
@@ -282,7 +290,9 @@ struct ProfileSheet: View {
                 .rotationEffect(.degrees(-90))
                 .frame(width: ring, height: ring)
 
-            if let urlStr = currentAvatarUrl, let url = URL(string: urlStr) {
+            if let critter = JellyAvatar.current(avatarUrl: currentAvatarUrl) {
+                JellyAvatarDisc(critter: critter, size: s)
+            } else if let urlStr = currentAvatarUrl, let url = URL(string: urlStr) {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let img): img.resizable().scaledToFill()
@@ -561,7 +571,7 @@ struct ProfileSheet: View {
                     }
                     if currentAvatarUrl != nil {
                         SettingsDivider()
-                        SettingsRow(label: "Remove profile photo", labelColor: FeyndTheme.text2) {
+                        SettingsRow(label: "Remove profile picture", labelColor: FeyndTheme.text2) {
                             Task { await removeAvatar() }
                         }
                     }
@@ -633,6 +643,7 @@ struct ProfileSheet: View {
                 let mime = item.supportedContentTypes.contains(where: { $0.identifier.contains("png") })
                     ? "image/png" : "image/jpeg"
                 let url = try await F2API.shared.uploadAvatar(imageData: data, mime: mime)
+                JellyAvatar.forget()
                 session.setAvatarUrl(url)
             } catch {
                 uploadError = error.localizedDescription
@@ -661,6 +672,7 @@ struct ProfileSheet: View {
                     }
                     let mime = fileURL.pathExtension.lowercased() == "png" ? "image/png" : "image/jpeg"
                     let url = try await F2API.shared.uploadAvatar(imageData: data, mime: mime)
+                    JellyAvatar.forget()
                     session.setAvatarUrl(url)
                 } catch {
                     uploadError = error.localizedDescription
@@ -669,10 +681,24 @@ struct ProfileSheet: View {
         }
     }
 
+    /// A jelly critter as the avatar — rendered on-device, uploaded like a photo.
+    private func pickCritter(_ critter: JellyCritter) {
+        uploadingAvatar = true
+        Task {
+            defer { uploadingAvatar = false }
+            do {
+                try await JellyAvatar.apply(critter, session: session)
+            } catch {
+                uploadError = error.localizedDescription
+            }
+        }
+    }
+
     private func removeAvatar() async {
         do {
             try await F2API.shared.deleteAvatar()
             session.setAvatarUrl(nil)
+            JellyAvatar.forget()
         } catch {
             uploadError = error.localizedDescription
         }

@@ -990,8 +990,9 @@ enum PeckGameArt {
         if flash { k.tint(liq, PGC.ink, 0.35) }
         k.shade(glass, 3, nil, 0.5)
         k.ink(glass, 2)
+        let gaugeSpan: CGFloat = by - j - top - 8
         for i in 1..<4 {
-            let y = by - j - (by - j - top - 8) * CGFloat(i) / 4
+            let y: CGFloat = by - j - gaugeSpan * CGFloat(i) / 4
             k.lines([cx - 9, y, cx - 15, y], 1.2)
         }
         k.text("\(Int(clampD(game.P, 0, 100).rounded()))%", PGFont.ultra(10), PGC.paper, CGPoint(x: cx, y: by + 0.5))

@@ -54,18 +54,29 @@ struct ProfileBadge: View {
         return nil
     }
 
+    private var critter: JellyCritter? {
+        if case let .signedIn(user) = session.state { return JellyAvatar.current(avatarUrl: user.avatarUrl) }
+        return nil
+    }
+
     var body: some View {
         let p = session.progress
         let ring = size + 4
         ZStack {
-            // Solid slate ring — the mascot's body color framing its marigold
-            // disc. No progress semantics; the L chip below carries level.
+            // Solid ring — the mascot's sky, or a chosen critter's own
+            // colour. No progress semantics; the L chip below carries level.
             Circle()
-                .stroke(FeyndTheme.slate, lineWidth: 2.5)
+                .stroke(critter.map { Color(hex: $0.base) } ?? FeyndTheme.accent, lineWidth: 2.5)
                 .frame(width: ring, height: ring)
 
-            // Avatar disc — uploaded photo if present, otherwise warm gradient + initial.
-            avatarDisc(size: size)
+            // Avatar disc — a jelly critter from its sprite, an uploaded
+            // photo, otherwise the sky gradient + initial.
+            if let critter {
+                JellyAvatarDisc(critter: critter, size: size)
+                    .shadow(color: .black.opacity(0.25), radius: 1, y: 1)
+            } else {
+                avatarDisc(size: size)
+            }
         }
         // L chip docks BELOW the badge, centered. The frame height includes
         // room for the overhang so nothing clips.

@@ -311,6 +311,14 @@ struct TopicsView: View {
                 Self.hookSpent = true
                 Task { try? await Task.sleep(for: .milliseconds(900)); showGlobalChat = true }
             }
+            // `-OpenProfile 1` — the profile sheet (avatar, settings).
+            if UserDefaults.standard.bool(forKey: "OpenProfile") {
+                UserDefaults.standard.removeObject(forKey: "OpenProfile")
+                Task {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    showProfile = true
+                }
+            }
             // `-OpenCommunity 1` — straight to the community directory for
             // screenshot loops.
             if UserDefaults.standard.bool(forKey: "OpenCommunity") {

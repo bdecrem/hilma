@@ -45,7 +45,7 @@ struct StreakCelebrationView: View {
                         .font(.system(size: 88, weight: .bold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color(hex: 0xF0A830), Color(hex: 0xE0635A)],
+                                colors: [Color(hex: 0xFFD43A), Color(hex: 0xFF9FC8)],
                                 startPoint: .top, endPoint: .bottom
                             )
                         )

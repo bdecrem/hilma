@@ -1,112 +1,133 @@
 # Dodo — official branding
 
-Source of truth: Claude Design project
-https://claude.ai/design/p/24e0db26-c902-42e7-b7b8-db5697b591dc (archived here
-as `dodo-logo.dc.html`). The official mark is the newest turn (t4/4a): the
-bookworm dodo reading a book.
+Since 2026-10-01 the brand is the **jelly dodo**: a sky-blue jelly bird with
+a tuft, two wing nubs, a marigold beak and blush cheeks, from Bart's art
+pages in `misc/dodo-redesign/` (`jelly-dodos.html`, `jelly-critters.html`,
+`dodo-jelly-map.html`). The pages are the source of truth for the look —
+every colour, outline and face below is read out of their code. The
+bookworm bird that preceded it (Claude Design, `dodo-logo.dc.html`,
+`dodo-mark.svg`, `dodo-icon.svg`) is kept in this folder for history and
+still drives the website until the site is redone.
 
-## The mark
+## The mascot
 
-`dodo-mark.svg` — the bookworm on transparent. Slate-blue dodo with a sprout
-on its head (still learning), cream face, marigold beak, blush cheeks, mitten
-wings gripping an open cream book. Drawn on a 200×200 viewBox.
+The `dodo` spec of `jelly-dodos.html`, sky colourway: jelly gradient
+`#DCF6FF → #5EC6EC → #2689BD`, rim `rgba(8,75,120,.5)`; outline a
+superellipse `a:39 bt:36 bb:42 n:2.4` with six gaussian bumps (tuft, brow,
+two wing nubs, two feet); eyes ink `#2A1F2B` at (±14, −9) r 4.6 with two
+highlights; blush `rgba(255,90,130,.42)` at (±23, 4); beak `#FFD56C →
+#F3962A` with an `#E0742A` nostril; world-fixed speculars.
 
-## The mascot, v3 (2026-09-01)
+The app draws it natively in `Feynd/JellyDodo.swift` (`drawJellyDodo`), posed
+by the same `DodoPose` / `DodoMood` model the previous mascot used
+(`AnimatedDodo.swift`, from `design/mascot-animation-spec.md`): squash and
+stretch anchored at the feet, hops, rolls, blinks, a look-around; the tuft
+leans with `sproutAngle`, the wing nubs puff with `wingAngle`, `squint` gives
+the > < eyes and `mouth` opens the little honk mouth. Every reaction view
+(`AnimatedDodoView`, `ReactionDodoView`), the chat mark (`DodoMiniMark`), the
+onboarding figure and the Peck traveler are this one drawing.
 
-Same bird, same front camera, same proportions as the mark — with volume:
-radial shading on head and body, an iris ring and twin highlights, soft-edged
-blush, a gradient beak with a highlight and smile crease, leaf midribs, three
-crown feathers, toe notches, and a ground shadow. The app draws it in
-`Feynd/AnimatedDodo.swift` (`drawAnimatedDodo`); the web draws the identical
-geometry in `src/app/dodo/DodoMascot.tsx`. Both share the pose math from
-`design/mascot-animation-spec.md`.
+Launch (`LaunchSplashView`): the dodo drops in from above, lands in a big
+squash and wobbles out of it with a surprised "o", the lowercase wordmark
+rises letter by letter, a double blink, a hello hop, then the idle loop —
+over a sky bloom with little rising jelly bubbles. ~2.5 s.
 
-Launch screen (`LaunchSplashView`): pop in from the feet, sprout boing,
-wing flap, eyes open with overshoot then a double blink, cheeks warm in,
-the lowercase wordmark rises letter by letter, a small hello hop, then the
-idle loop — over a peach bloom, a faint sun, and drifting motes on the
-theme ground. ~2.1s; the app holds the splash 2.5s.
+## The critters
 
-Site (dodo.foo): Fredoka for display, Nunito for body; butter paper ground
-with the splash's peach bloom behind the tour; marigold for action, slate for
-wayfinding, sprout for the "open source" tag. The masthead tile is the bird's
-deep slate `#34505F` (fixed across modes), not the icon peach. OG image is baked at
-`src/app/dodo/opengraph-image.png` (source: the launch page's bird + wordmark).
+The fifteen critters of `jelly-critters.html` (bunny, peach, cat, dragon,
+gummy, penguin, octo, red panda, blob, hamster, bat, bee, cloud, mushroom,
+sprite) and the eight dodo colourways (sky, pink, peach, mint, lemon, grape,
+cherry, lime) are rendered out of the pages' own drawing code by
+`scripts/dodo-jelly/sprites.mjs` (Playwright; a hook inside each page's
+IIFE renders one still body on a transparent 128 pt box, eyes open and a
+`-squish` tap frame with > < eyes) into `Feynd/Assets.xcassets/Jelly/`
+(`Jelly/<kind>`, `Jelly/<kind>-squish`, @2x/@3x). `scripts/dodo-jelly/sprites.json`
+records each kind's colours and bounds. Re-run the script after the art
+pages change. `JellyCritter` (`JellyAvatar.swift`) is the catalog in code.
+
+They are the avatar choices (Profile → tap the avatar → "Your avatar": the
+grid, "Use a photo", "Remove picture"; a critter is rendered on its tinted
+disc and uploaded through the same `/api/f2/avatar` route a photo uses, the
+pick remembered on the device so the badge draws the sprite itself) and the
+map's inhabitants (long-press one on the trail → "Make this my avatar").
 
 ## App icon
 
-`dodo-icon.svg` — the mark full-bleed over peach `#FCE5D0`. Export square
-PNGs; iOS masks its own corners (never bake rounded corners). The exported
-set lives in `Feynd/Assets.xcassets/AppIcon.appiconset/`.
+The sky dodo on a sunrise peach ground (`#FFECD6 → #FFC9A6`, a white bloom
+behind the bird, a soft ground shadow), composited from a 1024 px render
+(`scripts/dodo-jelly/out/dodo-1024.png`) — the PIL recipe is in the
+2026-10-01 session; `sprites.mjs` writes the 1024 render. Square PNGs; iOS
+masks its own corners. The set lives in `Feynd/Assets.xcassets/AppIcon.appiconset/`.
 
 ## Text mark
 
-Lowercase **dodo** in **Fredoka SemiBold (600)**, ink `#3E4A52`, letter
-spacing −0.4px at 27px (≈ −0.015em). Google Fonts, OFL license; the variable
-TTF is bundled in the app (`Feynd/Fonts/Fredoka.ttf`) and used via
-`Font.custom("Fredoka", …).weight(.semibold)`.
-
-Lockup: mini icon tile (22.4% corner radius, peach bg) + 9px gap + wordmark;
-tile height ≈ wordmark cap height (26px tile against 27px type).
-
-`dodo-wordmark-drawn.svg` is the display variant from turn 2 — hand-drawn
-"dod" letterforms with the teal bird as the final o. Use for splash/marketing
-moments, not chrome.
+Lowercase **dodo** in **Fredoka SemiBold (600)**, the theme's text ink,
+letter spacing ≈ −0.015em. Google Fonts, OFL license; the variable TTF is
+bundled in the app (`Feynd/Fonts/Fredoka.ttf`) and used via
+`Font.custom("Fredoka", …).weight(.semibold)`. Fredoka is also the type on
+the Peck map's numerals, ribbons, signs and headers.
 
 ## Palette
 
-### Brand (from the mark — fixed across modes)
+### Jelly colours (from the art pages — fixed across modes)
 
-| Name | Hex | Source |
-|------|-----|--------|
-| Marigold | `#F0A830` | beak — the primary accent |
-| Marigold deep | `#C9821F` | beak nostrils / pressed states |
-| Slate blue | `#7C9EB2` | body |
-| Slate wing | `#6A8FA3` | wings / secondary slate |
-| Sprout | `#7BB662` | head sprout (also `#6FAE5C`, `#5F9E4C`) |
-| Face cream | `#F9EFDA` | face — dark-mode text color |
-| Ink | `#33383E` | eyes — light-mode text color |
-| Wordmark ink | `#3E4A52` | text mark |
-| Blush | `#F2A19A` | cheeks |
-| Icon peach | `#FCE5D0` | icon background |
-| Book cream | `#FFFBF0` / `#F0E6CC` | pages — light-mode surfaces |
+| Name | Light · base · deep | Used for |
+|------|---------------------|----------|
+| Sky (the mascot) | `#DCF6FF` `#5EC6EC` `#2689BD` | accent, avatar disc, lagoon |
+| Pink | `#FFE0EF` `#FF9FC8` `#E9649D` | blush, bunny, chests |
+| Peach | `#FFE6CF` `#FFAA82` `#F06C55` | icon ground, meadow nodes |
+| Mint | `#E2FFF4` `#91E9CC` `#4DC5A2` | success / growth |
+| Lemon | `#FFF8C8` `#FFD43A` `#E0A100` | stars, XP, the current-node ring |
+| Grape | `#EFE2FF` `#A77BF2` `#6A3FC4` | secondary accent, peaks |
+| Cherry | `#FF9A96` `#FF2B36` `#BF0D1C` | octo, cherry dodo |
+| Lime | `#EFFFD0` `#A3E45C` `#4C9F2A` | lime dodo, meadow |
+| Ink | `#2D2537` (pages) / `#3A2433` (map) | text on paper |
 
 ### App UI tokens (FeyndTheme.swift)
 
-Dark mode is "slate ink" — the bird's eye color family, never pure black.
-Light mode is "butter paper" — the book's cream family, never pure white.
-Marigold is the accent in both; slate blue and sprout green are supporting
-accents; star gold stays its own warmer tone so stars read apart from
-buttons.
+Light mode is lavender paper (the art pages' `--bg1 #F8F2F8`), dark mode an
+indigo night (`#17131D`). Sky is the accent in both modes — bright on the
+night, deep on paper so text set in it stays legible — and the ink on it
+flips with it. Grape and mint support; lemon is the star gold; pink the
+blush. Nothing is pure black or pure white.
 
 | Token | Dark | Light |
 |-------|------|-------|
-| bg | `#14191D` | `#FBF5E6` |
-| bgRaised | `#1B2127` | `#F2EAD6` |
-| surface | `#202830` | `#FFFDF7` |
-| surface2 | `#2B343D` | `#F0E6CC` |
-| surface3 | `#36414B` | `#E2D7BA` |
-| border | `#333E48` | `#E3D9C2` |
-| borderSoft | `#273038` | `#F0E9D8` |
-| text | `#F7F0DE` | `#33383E` |
-| text2 | `#A0ACB4` | `#606C75` |
-| text3 | `#64717B` | `#939DA5` |
-| text4 | `#3C4854` | `#CEC9B8` |
-| accent (marigold) | `#F0A830` | `#DD9420` |
-| slate | `#8FB0C4` | `#6A8FA3` |
-| sprout | `#7BB662` | `#5F9E4C` |
-| gold (stars/XP) | `#FFB44A` | `#E89C2C` |
-| ink-on-accent | `#261C06` | `#261C06` |
+| bg | `#17131D` | `#F8F2F8` |
+| bgRaised | `#1E1826` | `#EFE7F3` |
+| surface | `#271F31` | `#FFFCFF` |
+| surface2 | `#332A3F` | `#F1E8F5` |
+| surface3 | `#3F354C` | `#E4D8EA` |
+| border | `#3D3349` | `#E6DBEC` |
+| borderSoft | `#2E2639` | `#F0E8F4` |
+| text | `#F3EBF6` | `#2D2537` |
+| text2 | `#B3A8BC` | `#6A5F73` |
+| text3 | `#7A6F85` | `#9A8FA4` |
+| text4 | `#463D52` | `#D6CCDD` |
+| accent (sky) | `#5EC6EC` | `#2689BD` |
+| inkOnAccent | `#0B2A3D` | `#FFFFFF` |
+| slate (grape) | `#B994FF` | `#7A4FD6` |
+| sprout (mint) | `#7FE0C4` | `#2FA482` |
+| gold (lemon) | `#FFD43A` | `#E0A100` |
+| blush (pink) | `#FF9FC8` | `#FF9FC8` |
 
-Avatar gradient: marigold radial `#F6C46A → #F0A830 → #B97A14`.
+Avatar gradient (no picture): sky radial `#DCF6FF → #5EC6EC → #2689BD`.
 
-## Peck — the game map (design turn 5)
+## Peck — the jelly map
 
-Setting: the dodo's island (Mauritius) — lagoon, offshore islet, palms,
-rolling meadows. The traveler dodo from the logo walks the trail beside the
-current level. Same scene both modes: sunny morning in light, starry dusk in
-dark. Implemented natively in `FlashTabView.swift` (`PeckIslandScenery` +
-`PeckPalette`, colors straight from the design's two CSS var sets) and
-`DodoArt.swift` (`DodoTraveler`). Node numerals, START, and all screen
-headers (Chat / Topics / Peck) are Fredoka SemiBold. The game and tab are
-named **Peck**.
+Setting: the candy world of `dodo-jelly-map.html`, bottom to top in bands of
+ten levels: **Gumdrop Meadow** (1–10: green hills, gumdrops, candy trees,
+sprinkles), **Jelly Lagoon** (11–20: water, sand islands under every node,
+lily pads, floating stepping stones for the road), **Sprinkle Peaks** (21–30:
+lavender sky, frosted candy mountains, lollipops) and **Sugar Castle** on a
+cloud bank as the finale above the top band. Nodes are glossy jelly balls in
+the region's colours (locked ones grey with a padlock), the current one has a
+lemon ring and a "START" ribbon, gates are white arches with a pink
+candy-cane stripe, signs are wooden with cream plates, chests are pink jelly
+with a lemon band. The critters live along the trail (tap: squish and a
+sound; long-press: make it your avatar). Dark mode is the same place at
+dusk (every colour darkened ~22%, highlights stay white). The traveler is
+the sky jelly dodo. Implemented in `FlashTabView.swift`, `PeckTrail.swift`,
+`PeckJelly.swift` (the shared drawing helpers), `PeckRegionTransitionView.swift`.
+Peck or Perish, the rest-stop minigame, keeps its riso engraving look on
+purpose.

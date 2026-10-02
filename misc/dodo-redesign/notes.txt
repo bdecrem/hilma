@@ -1,0 +1,7 @@
+Grape Dodo stands on level 8, the current one. It has the "DUE IN 4 DAYS" sign and a START tag, and finished levels show their stars.
+Tap a finished level: Dodo hops there node by node, squishing on each landing, and the camera follows.
+Tap the level Dodo is standing on: a card slides up with the topic (I used an "How LLMs work" curriculum to match your banner) and a "Peck it" button.
+Tap a locked level: it shakes and tells you to finish level 8 first.
+Tap a chest: the first two open with confetti and +50 bolts. The third stays locked until level 11.
+Tap any critter: it squishes and makes its sound. The cloud rains.
+Tap your avatar: cycles Dodo through all 8 colors.
