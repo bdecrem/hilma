@@ -148,11 +148,6 @@ html:has(.oj) { background: linear-gradient(var(--oj-top, #7b4dff) 50%, #fbf7f0 
 .oj-pill:hover { transform: translateY(-2px); }
 .oj-pill:active { transform: scale(1.06, .9); }
 .oj-text-btn { font: inherit; font-weight: 800; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
-.oj-nudge {
-  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 8px 14px; border: 0; border-radius: 16px; cursor: pointer; text-align: left;
-  font: 800 14px/1.25 var(--body); color: var(--on); background: var(--chip);
-}
-.oj-nudge span { font-size: 17px; opacity: .7; }
 .oj-note { margin: 10px 0 0; font-size: 13px; color: var(--on-2); }
 .oj-err { display: inline-block; margin: 10px 0 0; padding: 5px 12px; border-radius: 12px; background: #e0234b; color: #fff; font-size: 14px; font-weight: 800; }
 

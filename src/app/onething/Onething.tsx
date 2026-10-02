@@ -27,13 +27,18 @@ type Me = {
 };
 type Drawn = { svg: string; alt: string; word: string | null };
 
-const NUDGES = [
-  'Something small that worked.',
-  'Something you noticed that nobody else did.',
-  'The best ten minutes.',
-  'A thing you changed your mind about.',
-  'Who you talked to, and one line they said.',
-  'A thing you finished. Or started.',
+/// The question over the composer, one picked per visit.
+const QUESTIONS = [
+  'So?',
+  'Anything good?',
+  "How'd it go?",
+  'Today, quick.',
+  "What's new?",
+  'Tell me something.',
+  'Any news?',
+  'One thing, quick.',
+  'Best bit?',
+  'Well?',
 ];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -636,7 +641,7 @@ export default function Onething() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [text, setText] = useState('');
-  const [nudge, setNudge] = useState(0);
+  const [question] = useState(() => QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)]);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<{ day: string; index: number } | null>(null);
   const [editText, setEditText] = useState('');
@@ -969,13 +974,11 @@ export default function Onething() {
           {todayEntry && <DayBody day={today} entry={todayEntry} drawn={drawn} thoughts={thoughtProps} />}
           {composing ? (
             <form className="oj-compose" onSubmit={(e) => { e.preventDefault(); save(); }}>
-              {!todayEntry && <h1 className="oj-q">One thing that happened today?</h1>}
+              {!todayEntry && <h1 className="oj-q">{question}</h1>}
               <textarea className="oj-ta" value={text} maxLength={600} onChange={(e) => setText(e.target.value)} placeholder={todayEntry ? 'One more thing.' : 'One sentence.'} rows={3} aria-label="today's sentence" autoFocus={adding} />
               <div className="oj-acts">
-                <button ref={keepRef} className="oj-btn big" data-j={hostOf(tc)} disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Keeping…' : 'Keep it'}</button>
-                {adding
-                  ? <button type="button" className="oj-text-btn" onClick={() => { setAdding(false); setText(''); setErr(''); }}>Cancel</button>
-                  : <button type="button" className="oj-nudge" onClick={() => setNudge((n) => (n + 1) % NUDGES.length)} title="another idea">{NUDGES[nudge]}<span aria-hidden>↻</span></button>}
+                <button ref={keepRef} className="oj-btn big" data-j={hostOf(tc)} disabled={busy || text.trim().length < 2} type="submit">{busy ? 'Saving…' : 'OK'}</button>
+                {adding && <button type="button" className="oj-text-btn" onClick={() => { setAdding(false); setText(''); setErr(''); }}>Cancel</button>}
               </div>
               {err && !editing && <p className="oj-err">{err}</p>}
             </form>
