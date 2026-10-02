@@ -6,7 +6,7 @@
  * mouth. While the Plus is on (= a Macinclaude Code session is connected to
  * :2324 from a non-loopback host), Claude Haiku writes a one-liner in the
  * Plus's voice every few minutes, `say -v Fred` renders it as crunchy 8-bit
- * 16 kHz WAV, and the page polls /state and plays it.
+ * 16 kHz audio (served as 16-bit WAV), and the page polls /state and plays it.
  *
  * Context for the lines: time of day, how long the Plus has been on, and the
  * latest prompt typed into Claude Code on the mini (from the session
@@ -16,6 +16,8 @@
  * Exposed to the internet by tunn3l (sh.tunn3l.voice-mini -> voice-mini.tunn3l.sh).
  *
  *   node server.mjs --listen 2341 [--test "text"]   (--test: render one wav and exit)
+ *
+ * Post a line yourself: echo "text" > ~/.plus-voice-inbox  (spoken verbatim)
  *
  * HTTP:
  *   GET /state        {online, since, line:{id,text,at}|null, error}
@@ -42,8 +44,13 @@ const log = (...a) => console.log(new Date().toISOString(), ...a);
 fs.mkdirSync(AUDIO, { recursive: true });
 
 async function render(id, text) {
+  // Render 8-bit for the crunch, then re-wrap as 16-bit PCM, which every
+  // browser decodes (8-bit WAV is spotty outside Chrome).
   const out = path.join(AUDIO, `${id}.wav`);
-  await run('/usr/bin/say', ['-v', 'Fred', '--file-format=WAVE', '--data-format=UI8@16000', '-o', out, text]);
+  const raw = path.join(os.tmpdir(), `plus-voice-${id}.wav`);
+  await run('/usr/bin/say', ['-v', 'Fred', '--file-format=WAVE', '--data-format=UI8@16000', '-o', raw, text]);
+  await run('/usr/bin/afconvert', ['-f', 'WAVE', '-d', 'LEI16@16000', raw, out]);
+  fs.unlinkSync(raw);
   return out;
 }
 
@@ -161,6 +168,16 @@ async function tick() {
 setInterval(tick, 5000);
 tick();
 
+// Posting from the mini: write text to ~/.plus-voice-inbox and the Plus says
+// it verbatim on the page (no Claude), whether or not the Plus is on.
+const INBOX = path.join(os.homedir(), '.plus-voice-inbox');
+setInterval(() => {
+  if (!fs.existsSync(INBOX)) return;
+  const text = fs.readFileSync(INBOX, 'utf8').trim().replace(/\s+/g, ' ').slice(0, 300);
+  fs.unlinkSync(INBOX);
+  if (text) speak(text).catch(e => { state.error = String(e.message || e); log('ERROR', state.error); });
+}, 1000);
+
 http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
@@ -170,9 +187,23 @@ http.createServer((req, res) => {
     return res.end(JSON.stringify(state));
   }
   const m = url.pathname.match(/^\/audio\/([a-z0-9]+)$/);
-  if (m && fs.existsSync(path.join(AUDIO, `${m[1]}.wav`))) {
+  const file = m && path.join(AUDIO, `${m[1]}.wav`);
+  if (file && fs.existsSync(file)) {
+    // Safari won't play media unless the server honors Range requests.
+    const size = fs.statSync(file).size;
     res.setHeader('content-type', 'audio/wav');
-    return fs.createReadStream(path.join(AUDIO, `${m[1]}.wav`)).pipe(res);
+    res.setHeader('accept-ranges', 'bytes');
+    const r = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range || '');
+    if (r) {
+      const start = r[1] ? Number(r[1]) : size - Number(r[2]);
+      const end = r[1] && r[2] ? Math.min(Number(r[2]), size - 1) : size - 1;
+      res.statusCode = 206;
+      res.setHeader('content-range', `bytes ${start}-${end}/${size}`);
+      res.setHeader('content-length', end - start + 1);
+      return fs.createReadStream(file, { start, end }).pipe(res);
+    }
+    res.setHeader('content-length', size);
+    return fs.createReadStream(file).pipe(res);
   }
   res.statusCode = 404;
   res.end('not found\n');

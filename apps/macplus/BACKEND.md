@@ -55,7 +55,7 @@ they still start at boot. Each plist is a thin shim that runs
 | 2336 | `sh.macplus.porthole`| remote-framebuffer web browser: headless Chromium renders, dithered to 1-bit, streamed to the Plus (`porthole/`). One-time setup on the mini: `cd ~/hilma-deploy/apps/macplus/agent-porthole && npx playwright install chromium` | node:net, long-running |
 | 2337 | `sh.macplus.pixel`   | Daily Pixel — persistent collaborative 64x64 canvas; Claude adds strokes daily (`agent-pixel/`, dependency-free node) | node:net, long-running |
 | 2339 | `sh.macplus.dodo`    | Dodo for Macintosh — proxies the Plus chat app to feynd.cc `/api/f2/*` as one user (`agent-dodo/`, dependency-free node). Needs `F2_SESSION_SECRET` + `DODO_F2_USER_ID` in the env file. | node:net, long-running |
-| 2341 | `sh.macplus.voice`  | the Plus's voice: while a Plus holds :2324, Claude Haiku writes a line every 2-6 min, `say -v Fred` renders 16 kHz 8-bit WAV; `hilma-nine.vercel.app/plus` polls it via tunn3l `voice-mini.tunn3l.sh` (`agent-voice/`, dependency-free) | node:http, long-running |
+| 2341 | `sh.macplus.voice`  | the Plus's voice: while a Plus holds :2324, Claude Haiku writes a line every 2-6 min, `say -v Fred` renders crunchy 16 kHz WAV; `hilma-nine.vercel.app/plus` polls it; `echo text > ~/.plus-voice-inbox` makes it say your own line via tunn3l `voice-mini.tunn3l.sh` (`agent-voice/`, dependency-free) | node:http, long-running |
 | 2222 | `sh.macplus.pssh`    | SSH server with NO login-grace limit so the Plus 68000 handshake completes (system sshd on :22 kills it); shell to admin. Used by Plutonix `ssh` (the encrypted path; `mini` is now the instant :2329 path). | node:net (ssh2), long-running |
 
 Logs: `~/Library/Logs/macplus-<name>.{out,err}.log` on the mini.
