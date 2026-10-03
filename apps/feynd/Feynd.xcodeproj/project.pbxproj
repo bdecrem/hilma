@@ -39,8 +39,10 @@
 		470EE57CD8309A462D14930E /* LevelUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB94F86140C9C5E5DFB136C8 /* LevelUpView.swift */; };
 		4860FA3E933A27649FF2F725 /* TopicContextSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 057BE0BC148176D8DF6A2A52 /* TopicContextSheet.swift */; };
 		48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */; };
+		4ED521B6649C294577A7ACC4 /* DeepDiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE0069CA4B450EF3160988 /* DeepDiveView.swift */; };
 		52DA33691DDC73C791B7BC44 /* voice-stone.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 19CA4150E082D4716B06A291 /* voice-stone.m4a */; };
 		548BC970FE17CCD55FAF7219 /* PeckGameAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6966166949249E168A8669D /* PeckGameAudio.swift */; };
+		57A701A7FBBDE9FC824DC9D0 /* DeepDiveArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = D16E24567C7854C063B3BA29 /* DeepDiveArt.swift */; };
 		5DE663128BAC796DF32F68D2 /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB38EBAB179201757DE149C1 /* FlashSFX.swift */; };
 		6156096DDC14A9F27155EB67 /* SourceReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB209A33541127135A75E53 /* SourceReaderView.swift */; };
 		620B6520AD9935B14AB3E944 /* JellyAvatar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5032D3B4080E880E4B3A56EA /* JellyAvatar.swift */; };
@@ -77,6 +79,7 @@
 		A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0564EA3B927E26544E7655B /* PasteView.swift */; };
 		A22A93520E3A587FFD55C5E7 /* FeyndApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEF62D64008E8FAFF44C466 /* FeyndApplication.swift */; };
 		A45080FCA5B2605D51EC1D8E /* JellyDodo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FE6ACE7021F270C8986D7FD /* JellyDodo.swift */; };
+		B63FA384A82F0A0CAAF596D0 /* DeepDiveEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3ED74C2903ED4DD214E212 /* DeepDiveEngine.swift */; };
 		B851800165C832A57121823A /* voice-ripple.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CBA27F1CD26EE7CDBE8DF1CF /* voice-ripple.m4a */; };
 		BAAC60F85C46126DD1C602C8 /* voice-bossa.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6D745CD9003F8592CD5D2558 /* voice-bossa.m4a */; };
 		BC42DA3E1E974346A22F5AD6 /* PeckGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E23E37B0D330C54293A885A /* PeckGameView.swift */; };
@@ -101,6 +104,7 @@
 		ED0532A13EF17F943FC56DE3 /* FlashSetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC72F31FAF938D3D638D39F /* FlashSetView.swift */; };
 		ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */; };
 		F207ADD007B3CABED4CB07D0 /* voice-cinder.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CAF7BFCB023B149F6210E972 /* voice-cinder.m4a */; };
+		F2C0AA3FD3A7ED99B9BF10F3 /* DeepDiveAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88FFB4D557BC1376E6E6F78 /* DeepDiveAudio.swift */; };
 		F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */; };
 		FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */; };
 		FC2B7B81593EDE072478C682 /* voice-vesper.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 1E287D1D1B6F0189E5D780AC /* voice-vesper.m4a */; };
@@ -178,6 +182,7 @@
 		A838C8293EE5A7B38D62679D /* FlashCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardsView.swift; sourceTree = "<group>"; };
 		AE5983265D567A138FC8F494 /* PeckRegionTransitionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckRegionTransitionView.swift; sourceTree = "<group>"; };
 		B119830CA567768C3502310E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B2BE0069CA4B450EF3160988 /* DeepDiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepDiveView.swift; sourceTree = "<group>"; };
 		B3A7EEED51D8FB446FF779C0 /* PeckJelly.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckJelly.swift; sourceTree = "<group>"; };
 		B5574DD31FFF4A41EAF6EC1D /* ElevenVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenVoiceClient.swift; sourceTree = "<group>"; };
 		B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSettingsView.swift; sourceTree = "<group>"; };
@@ -201,7 +206,9 @@
 		CDB062EECC8F7EA1D99CB581 /* voice-meridian.m4a */ = {isa = PBXFileReference; path = "voice-meridian.m4a"; sourceTree = "<group>"; };
 		CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceClient.swift; sourceTree = "<group>"; };
 		CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckTrail.swift; sourceTree = "<group>"; };
+		D16E24567C7854C063B3BA29 /* DeepDiveArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepDiveArt.swift; sourceTree = "<group>"; };
 		D7F0A9210791EF3A42D9CABF /* Feynd-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Feynd-macOS.entitlements"; sourceTree = "<group>"; };
+		D88FFB4D557BC1376E6E6F78 /* DeepDiveAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepDiveAudio.swift; sourceTree = "<group>"; };
 		E0356363115F2363D08C8FD5 /* voice-willow.m4a */ = {isa = PBXFileReference; path = "voice-willow.m4a"; sourceTree = "<group>"; };
 		E90564312835B42808FCEFEE /* DodoVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DodoVoiceClient.swift; sourceTree = "<group>"; };
 		EC5668529933DC6749CB3D06 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
@@ -212,6 +219,7 @@
 		F4585EED1AEEE5B6C501946C /* Ultra-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Ultra-LICENSE.txt"; sourceTree = "<group>"; };
 		F75E071CC1F646CA33327FAB /* RecertNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecertNotifications.swift; sourceTree = "<group>"; };
 		F7B29EC5C8A868DA37BB7513 /* PentimentoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PentimentoView.swift; sourceTree = "<group>"; };
+		FD3ED74C2903ED4DD214E212 /* DeepDiveEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepDiveEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -238,6 +246,10 @@
 				6DDC42B73E361C8473ADE137 /* ChatSupport.swift */,
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
 				C70AD9918E6BD770826DEE32 /* CommunitySheet.swift */,
+				D16E24567C7854C063B3BA29 /* DeepDiveArt.swift */,
+				D88FFB4D557BC1376E6E6F78 /* DeepDiveAudio.swift */,
+				FD3ED74C2903ED4DD214E212 /* DeepDiveEngine.swift */,
+				B2BE0069CA4B450EF3160988 /* DeepDiveView.swift */,
 				97210D8088451B57557247DA /* DeepLink.swift */,
 				3D886D7625C13A1ABF92B7EF /* DemoReelView.swift */,
 				EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */,
@@ -488,6 +500,10 @@
 				DFDA422D8540593189FE7815 /* ChatSupport.swift in Sources */,
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
 				0A8249C1501816EDBB802A2F /* CommunitySheet.swift in Sources */,
+				57A701A7FBBDE9FC824DC9D0 /* DeepDiveArt.swift in Sources */,
+				F2C0AA3FD3A7ED99B9BF10F3 /* DeepDiveAudio.swift in Sources */,
+				B63FA384A82F0A0CAAF596D0 /* DeepDiveEngine.swift in Sources */,
+				4ED521B6649C294577A7ACC4 /* DeepDiveView.swift in Sources */,
 				81B77896EA0AD49E85BB319C /* DeepLink.swift in Sources */,
 				41A4306B14D9973624451800 /* DemoReelView.swift in Sources */,
 				F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */,
@@ -589,7 +605,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 124;
+				CURRENT_PROJECT_VERSION = 125;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -685,7 +701,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 124;
+				CURRENT_PROJECT_VERSION = 125;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

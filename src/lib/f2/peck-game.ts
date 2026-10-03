@@ -12,6 +12,24 @@ export function isRestStop(level: number): boolean {
   return Number.isInteger(level) && level > 0 && level % 5 === 0 && level % 10 !== 0
 }
 
+/**
+ * The game at a rest stop: Peck or Perish at 5, 25, 45, … (score = the
+ * extinction year, 1598–2200); Deep Dive at 15, 35, 55, … (score = depth in
+ * metres plus three per pearl, 0–100000). Both keep their best in
+ * f2_peck_game_scores.best_year — the column name predates the second
+ * game (2026-10-02); the app's PeckMilestone.restGame mirrors this.
+ */
+export type RestGame = 'peck' | 'dive'
+export function restGame(level: number): RestGame {
+  return level % 20 === 15 ? 'dive' : 'peck'
+}
+
+/** Whether a posted score is sane for the rest stop's game. */
+export function validScore(level: number, score: number): boolean {
+  if (!Number.isInteger(score)) return false
+  return restGame(level) === 'dive' ? score >= 0 && score <= 100_000 : score >= PECK_GAME_FIRST_YEAR && score <= 2200
+}
+
 /** What the board shows for a player: never a full email address. */
 export function boardHandle(username: string, isGuest: boolean): string {
   if (isGuest || username.startsWith('guest-')) {

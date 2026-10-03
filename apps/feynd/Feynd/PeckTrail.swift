@@ -86,10 +86,20 @@ enum PeckFinale {
 
 /// Level-node roles that give the trail its rhythm: gates every ten, rest
 /// stops every five, a chest beside a few levels in each region.
+enum PeckRestGame {
+    case peckOrPerish, deepDive
+
+    var name: String { self == .deepDive ? "Deep Dive" : "Peck or Perish" }
+    var signTitle: String { self == .deepDive ? "DEEP DIVE" : "PECK OR PERISH" }
+}
+
 enum PeckMilestone {
     static func isGate(_ level: Int) -> Bool { level % 10 == 0 }
     static func isRest(_ level: Int) -> Bool { level % 5 == 0 && !isGate(level) }
     static func hasChest(_ level: Int) -> Bool { [3, 7, 12, 16, 22, 26].contains(level) }
+    /// The game at a rest stop: Peck or Perish at 5, 25, 45, …; Deep Dive at
+    /// 15, 35, 55, … (a big payoff or game every five levels, 2026-10-02).
+    static func restGame(_ level: Int) -> PeckRestGame { level % 20 == 15 ? .deepDive : .peckOrPerish }
     static func gateBanner(_ level: Int) -> String {
         JellyRegion.of(index: level - 1).gateBanner.text
     }
@@ -252,7 +262,7 @@ struct PeckTrailCanvas: View {
                 let cleared = max(0, min(10, cur - r0))
                 // A cleared rest stop's sign is the way back into its game
                 // (FlashTabView puts the tap target over it).
-                jellySign(&ctx, ink, x: p.x + side * 78, y: p.y + 20, text: "PECK OR PERISH",
+                jellySign(&ctx, ink, x: p.x + side * 78, y: p.y + 20, text: PeckMilestone.restGame(lvl).signTitle,
                           sub: level.status == "passed" ? "▶ play again" : "\(cleared) of 10 cleared here")
             }
             // Level 10 pays off with a film; once cleared, its sign replays it

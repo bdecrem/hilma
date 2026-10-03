@@ -100,64 +100,11 @@ final class FlashSFX {
 
     // MARK: - Jelly synthesis
 
-    private enum JellyWave { case sine, tri, noise }
-
-    /// One voice of a jelly sound: an exponential pitch sweep f0 → f1 over
-    /// `dur`, an optional decaying pitch wobble, a one-pole lowpass, and a
-    /// fast-attack / exponential-decay envelope that reaches zero at the end.
-    private struct Part {
-        var wave: JellyWave = .sine
-        var f0: Double = 1
-        var f1: Double = 1
-        var dur: Double
-        var peak: Double
-        var delay: Double = 0
-        var attack: Double = 0.004
-        var lowpass: Double = 0      // Hz; 0 = off
-        var wobRate: Double = 0      // Hz
-        var wobDepth: Double = 0     // fraction of the pitch
-    }
+    private typealias Part = JellySynth.Part
 
     /// Render the parts into one buffer (summed, soft-clipped).
     private func jelly(_ parts: [Part]) -> AVAudioPCMBuffer? {
-        let sr = format.sampleRate
-        let total = parts.reduce(0.0) { max($0, $1.delay + $1.dur) } + 0.02
-        let frames = AVAudioFrameCount(total * sr)
-        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames) else { return nil }
-        buffer.frameLength = frames
-        guard let out = buffer.floatChannelData?[0] else { return nil }
-        let count = Int(frames)
-        for i in 0..<count { out[i] = 0 }
-        var rng: UInt32 = 0x9E37_79B9
-        for p in parts {
-            let start = Int(p.delay * sr)
-            let n = Int(p.dur * sr)
-            var phase = 0.0
-            var lp = 0.0
-            let lpk = p.lowpass > 0 ? 1 - exp(-2 * .pi * p.lowpass / sr) : 1
-            for i in 0..<n {
-                let idx = start + i
-                if idx >= count { break }
-                let t = Double(i) / sr
-                let u = t / p.dur
-                var f = p.f0 * pow(p.f1 / p.f0, u)
-                if p.wobRate > 0 { f *= 1 + p.wobDepth * exp(-3 * u) * sin(2 * .pi * p.wobRate * t) }
-                phase += 2 * .pi * f / sr
-                var s: Double
-                switch p.wave {
-                case .sine: s = sin(phase)
-                case .tri: s = 2 / .pi * asin(sin(phase))
-                case .noise:
-                    rng = rng &* 1_664_525 &+ 1_013_904_223
-                    s = Double(Int32(bitPattern: rng)) / Double(Int32.max)
-                }
-                if p.lowpass > 0 { lp += lpk * (s - lp); s = lp }
-                let env = min(1, t / p.attack) * exp(-t / (p.dur * 0.3)) * (1 - u * u)
-                out[idx] += Float(s * env * p.peak)
-            }
-        }
-        for i in 0..<count { out[i] = Float(tanh(Double(out[i]) * 1.2)) * 0.65 }
-        return buffer
+        JellySynth.render(parts, sampleRate: format.sampleRate)
     }
 
     func play(_ effect: Effect) {
@@ -220,6 +167,73 @@ final class FlashSFX {
                 frame += 1
             }
         }
+        return buffer
+    }
+}
+
+
+/// The jelly sound renderer, shared by FlashSFX (the map and the mascot) and
+/// DeepDiveAudio: sines and triangles with pitch bends and a decaying
+/// wobble, lowpassed noise for the wet part, summed and soft-clipped into
+/// one mono buffer.
+enum JellySynth {
+    enum JellyWave { case sine, tri, noise }
+
+    /// One voice of a jelly sound: an exponential pitch sweep f0 → f1 over
+    /// `dur`, an optional decaying pitch wobble, a one-pole lowpass, and a
+    /// fast-attack / exponential-decay envelope that reaches zero at the end.
+    struct Part {
+        var wave: JellyWave = .sine
+        var f0: Double = 1
+        var f1: Double = 1
+        var dur: Double
+        var peak: Double
+        var delay: Double = 0
+        var attack: Double = 0.004
+        var lowpass: Double = 0      // Hz; 0 = off
+        var wobRate: Double = 0      // Hz
+        var wobDepth: Double = 0     // fraction of the pitch
+    }
+
+    /// Render the parts into one mono buffer (summed, soft-clipped).
+    static func render(_ parts: [Part], sampleRate sr: Double) -> AVAudioPCMBuffer? {
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sr, channels: 1) else { return nil }
+        let total = parts.reduce(0.0) { max($0, $1.delay + $1.dur) } + 0.02
+        let frames = AVAudioFrameCount(total * sr)
+        guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frames) else { return nil }
+        buffer.frameLength = frames
+        guard let out = buffer.floatChannelData?[0] else { return nil }
+        let count = Int(frames)
+        for i in 0..<count { out[i] = 0 }
+        var rng: UInt32 = 0x9E37_79B9
+        for p in parts {
+            let start = Int(p.delay * sr)
+            let n = Int(p.dur * sr)
+            var phase = 0.0
+            var lp = 0.0
+            let lpk = p.lowpass > 0 ? 1 - exp(-2 * .pi * p.lowpass / sr) : 1
+            for i in 0..<n {
+                let idx = start + i
+                if idx >= count { break }
+                let t = Double(i) / sr
+                let u = t / p.dur
+                var f = p.f0 * pow(p.f1 / p.f0, u)
+                if p.wobRate > 0 { f *= 1 + p.wobDepth * exp(-3 * u) * sin(2 * .pi * p.wobRate * t) }
+                phase += 2 * .pi * f / sr
+                var s: Double
+                switch p.wave {
+                case .sine: s = sin(phase)
+                case .tri: s = 2 / .pi * asin(sin(phase))
+                case .noise:
+                    rng = rng &* 1_664_525 &+ 1_013_904_223
+                    s = Double(Int32(bitPattern: rng)) / Double(Int32.max)
+                }
+                if p.lowpass > 0 { lp += lpk * (s - lp); s = lp }
+                let env = min(1, t / p.attack) * exp(-t / (p.dur * 0.3)) * (1 - u * u)
+                out[idx] += Float(s * env * p.peak)
+            }
+        }
+        for i in 0..<count { out[i] = Float(tanh(Double(out[i]) * 1.2)) * 0.65 }
         return buffer
     }
 }

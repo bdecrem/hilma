@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/f2/auth'
 import { getJumboState } from '@/lib/f2/flash'
-import { PECK_GAME_FIRST_YEAR, getPeckGameBoard, isRestStop, recordPeckGameRound } from '@/lib/f2/peck-game'
+import { getPeckGameBoard, isRestStop, recordPeckGameRound, validScore } from '@/lib/f2/peck-game'
 
 export const runtime = 'nodejs'
 
@@ -23,22 +23,23 @@ export async function GET(_req: Request, ctx: Ctx) {
   }
 }
 
-// POST /api/f2/peck-game/5 { year } — one finished round. Only players who
-// have cleared that rest stop land on its board.
+// POST /api/f2/peck-game/5 { year } (Peck or Perish) or
+// POST /api/f2/peck-game/15 { score } (Deep Dive) — one finished round. Only
+// players who have cleared that rest stop land on its board.
 export async function POST(req: Request, ctx: Ctx) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
-  let body: { year?: unknown }
+  let body: { year?: unknown; score?: unknown }
   try {
     body = await req.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
   const level = Number((await ctx.params).level)
-  const year = Number(body.year)
+  const year = Number(body.score ?? body.year)
   if (!isRestStop(level)) return NextResponse.json({ error: 'Not a rest stop.' }, { status: 400 })
-  if (!Number.isInteger(year) || year < PECK_GAME_FIRST_YEAR || year > 2200) {
-    return NextResponse.json({ error: 'Invalid year.' }, { status: 400 })
+  if (!validScore(level, year)) {
+    return NextResponse.json({ error: 'Invalid score.' }, { status: 400 })
   }
   const jumbo = await getJumboState(user.id)
   if (jumbo.highest_passed < level) {

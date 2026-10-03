@@ -146,7 +146,10 @@ struct FlashTabView: View {
             }
         }
         .fullScreenCover(item: $gameStop) { stop in
-            PeckGameView(level: stop.level) { gameStop = nil }
+            switch PeckMilestone.restGame(stop.level) {
+            case .deepDive: DeepDiveView(level: stop.level) { gameStop = nil }
+            case .peckOrPerish: PeckGameView(level: stop.level) { gameStop = nil }
+            }
         }
         .fullScreenCover(item: $film) { f in
             PentimentoView {
@@ -668,7 +671,7 @@ struct FlashTabView: View {
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("Play Peck or Perish, rest stop \(level.level)")
+                                .accessibilityLabel("Play \(PeckMilestone.restGame(level.level).name), rest stop \(level.level)")
                                 .position(x: xFor(i) + side * 78, y: yFor(i) - 8)
                             }
                         }

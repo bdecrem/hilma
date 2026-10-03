@@ -1012,6 +1012,14 @@ final class F2API {
         return try await post("/api/f2/peck-game/\(level)", body: Body(year: year))
     }
 
+    /// Deep Dive (rest stops 15, 35, …): record a finished dive — depth in
+    /// metres plus three per pearl — on the same board route; the server
+    /// stores it in the board's score column.
+    func submitDeepDive(level: Int, score: Int) async throws -> PeckGameBoard {
+        struct Body: Encodable { let score: Int }
+        return try await post("/api/f2/peck-game/\(level)", body: Body(score: score))
+    }
+
     /// Start a Jumbo level (mode fixed by the level).
     /// Start a Jumbo set in the given mode (choice | text | voice). Nil
     /// falls back to the level's default mode server-side.
