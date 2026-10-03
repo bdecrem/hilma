@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F8F2F8">
+<title>Level 15 · two games</title>
+<style>
+  html, body { margin: 0; min-height: 100%; background: #F8F2F8; }
+  body { font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, -apple-system, sans-serif; color: #2D2537; padding: calc(env(safe-area-inset-top, 0px) + 28px) calc(env(safe-area-inset-right, 0px) + 20px) calc(env(safe-area-inset-bottom, 0px) + 40px) calc(env(safe-area-inset-left, 0px) + 20px); -webkit-font-smoothing: antialiased; }
+  main { max-width: 420px; margin: 0 auto; }
+  .head { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+  .head canvas { width: 64px; height: 64px; flex: none; }
+  .kicker { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #7A4FD6; font-weight: 700; margin: 0 0 4px; }
+  h1 { font-size: 30px; margin: 0; letter-spacing: -.02em; line-height: 1.05; }
+  .lede { color: #6A5F73; font-size: 15px; line-height: 1.45; margin: 14px 0 24px; }
+  .lede b { color: #2D2537; }
+  a.card { display: block; text-decoration: none; color: inherit; background: #FFFCFF; border-radius: 26px; overflow: hidden; box-shadow: 0 10px 30px rgba(60, 30, 90, .12), 0 1px 0 #fff inset; margin-bottom: 18px; border: 1px solid #E6DBEC; transition: transform .12s; }
+  a.card:active { transform: scale(.985); }
+  .art { height: 150px; position: relative; overflow: hidden; }
+  .art canvas { width: 100%; height: 100%; display: block; }
+  .tag { position: absolute; top: 12px; left: 14px; background: rgba(255, 255, 255, .85); color: #6A3FC4; font-size: 11px; font-weight: 800; letter-spacing: .1em; padding: 5px 9px; border-radius: 999px; }
+  .body { padding: 16px 18px 18px; }
+  h2 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.015em; }
+  .body p { margin: 0 0 14px; color: #6A5F73; font-size: 14.5px; line-height: 1.45; }
+  .play { display: inline-block; font-weight: 800; font-size: 14px; color: #fff; padding: 9px 18px; border-radius: 999px; background: linear-gradient(180deg, #7FD7F3, #2689BD); box-shadow: 0 4px 0 #1C6A94, inset 0 2px 0 rgba(255, 255, 255, .5); }
+  .play.grape { background: linear-gradient(180deg, #C4A4FF, #6A3FC4); box-shadow: 0 4px 0 #4A2A92, inset 0 2px 0 rgba(255, 255, 255, .5); }
+  .foot { color: #9A8FA4; font-size: 12.5px; line-height: 1.5; margin-top: 10px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="head">
+    <canvas id="mascot" width="128" height="128"></canvas>
+    <div><p class="kicker">Peck · Jelly Lagoon · Level 15</p><h1>Two games for the rest stop</h1></div>
+  </div>
+  <p class="lede">Level 15 sits in the middle of the lagoon, so both payoffs are on the water at dusk. <b>Pick one.</b> Each is a self-contained HTML mockup with sound, a start card, a score and a best; phone first, in a phone frame on a desktop.</p>
+
+  <a class="card" href="pebble-skip.html">
+    <div class="art"><canvas id="artA" width="780" height="300"></canvas><span class="tag">A · RHYTHM</span></div>
+    <div class="body">
+      <h2>Pebble Skip</h2>
+      <p>Drag back and let go to throw a pebble across the lagoon, then tap in rhythm each time it is about to touch the water — every skip lights a floating lantern, and the window shrinks as the run grows. Five pebbles, the dodo cheering from the shore.</p>
+      <span class="play">Play Pebble Skip</span>
+    </div>
+  </a>
+
+  <a class="card" href="deep-dive.html">
+    <div class="art"><canvas id="artB" width="780" height="300"></canvas><span class="tag">B · DIVE</span></div>
+    <div class="body">
+      <h2>Deep Dive</h2>
+      <p>The dodo in a bubble helmet sinks while you hold and floats when you let go: collect pearls, slip past gummy jellyfish, and breathe at bubble pockets as the water turns dark and bioluminescent. Score is depth in metres plus pearls.</p>
+      <span class="play grape">Play Deep Dive</span>
+    </div>
+  </a>
+
+  <p class="foot">Mockups only — nothing here talks to the app. Each page exposes <code>window.__game</code> for headless checks (<code>scripts/dodo-level15/pw-check.mjs</code>).</p>
+</main>
+<script>
+// Small jelly dodo + two card illustrations, all drawn in code so the picker needs no images.
+(() => {
+  const TAU = Math.PI * 2, HP = Math.PI / 2;
+  const O = { a: 39, bt: 36, bb: 42, n: 2.4, np: 60 }, BUMPS = [{ at: -HP + .05, h: 9, w: .07, dir: -HP - .15 }, { at: -.38, h: 9, w: .09, dir: -.95 }, { at: .3, h: 6, w: .16 }, { at: Math.PI - .3, h: 6, w: .16 }, { at: HP - .42, h: 4, w: .11 }, { at: HP + .42, h: 4, w: .11 }];
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return d; };
+  function body(ctx, x, y, s, face) {
+    const pts = [];
+    for (let i = 0; i < O.np; i++) { const t = -HP + i / O.np * TAU, c = Math.cos(t), sn = Math.sin(t); let px = O.a * Math.sign(c) * Math.pow(Math.abs(c), 2 / O.n), py = (sn < 0 ? O.bt : O.bb) * Math.sign(sn) * Math.pow(Math.abs(sn), 2 / O.n); for (const b of BUMPS) { const da = Math.abs(angDiff(t, b.at)) / b.w, d = b.h * Math.exp(-da * da / 2); if (d < .01) continue; if (b.dir !== undefined) { px += Math.cos(b.dir) * d; py += Math.sin(b.dir) * d; } else { const L = Math.hypot(px, py) || 1; px += px / L * d; py += py / L * d; } } pts.push([px, py]); }
+    ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.translate(0, -O.bb);
+    ctx.beginPath(); const N = pts.length; ctx.moveTo((pts[N - 1][0] + pts[0][0]) / 2, (pts[N - 1][1] + pts[0][1]) / 2); for (let i = 0; i < N; i++) { const j = (i + 1) % N; ctx.quadraticCurveTo(pts[i][0], pts[i][1], (pts[i][0] + pts[j][0]) / 2, (pts[i][1] + pts[j][1]) / 2); } ctx.closePath();
+    const g = ctx.createRadialGradient(-15, -21, 2, 0, 0, 57); g.addColorStop(0, '#dcf6ff'); g.addColorStop(.5, '#5ec6ec'); g.addColorStop(1, '#2689bd'); ctx.fillStyle = g; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.strokeStyle = 'rgba(8,75,120,.35)'; ctx.lineWidth = 10; ctx.stroke(); ctx.restore();
+    const soft = (sx, sy, r, col) => { const gg = ctx.createRadialGradient(sx, sy, 0, sx, sy, r); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(sx, sy, r, 0, TAU); ctx.fill(); };
+    soft(0, 24, 18, 'rgba(240,252,255,.7)'); soft(-23, 4, 7, 'rgba(255,90,130,.45)'); soft(23, 4, 7, 'rgba(255,90,130,.45)');
+    ctx.fillStyle = '#2a1f2b'; ctx.lineWidth = 2; ctx.strokeStyle = '#2a1f2b'; ctx.lineCap = 'round';
+    if (face === 'happy') { for (const ex of [-14, 14]) { ctx.beginPath(); ctx.arc(ex, -7, 4, 1.15 * Math.PI, 1.85 * Math.PI); ctx.stroke(); } }
+    else for (const ex of [-14, 14]) { ctx.beginPath(); ctx.ellipse(ex, -9, 4.6, 5.2, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(ex - 1.5, -10.8, 1.7, 0, TAU); ctx.fill(); ctx.fillStyle = '#2a1f2b'; }
+    const bg = ctx.createLinearGradient(0, -4, 0, 13); bg.addColorStop(0, '#ffd56c'); bg.addColorStop(1, '#f3962a'); ctx.fillStyle = bg; ctx.beginPath(); ctx.moveTo(-8, -1); ctx.quadraticCurveTo(0, -6, 8, -1); ctx.quadraticCurveTo(8, 7, 2, 12); ctx.quadraticCurveTo(0, 14, -2, 12); ctx.quadraticCurveTo(-8, 7, -8, -1); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.ellipse(-19, -20, 7, 3.5, -.6, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  const m = document.getElementById('mascot').getContext('2d'); body(m, 64, 118, 1.4, 'happy');
+  // A: dusk lagoon with lanterns and a skipping stone
+  const a = document.getElementById('artA').getContext('2d'), W = 780, H = 300;
+  let g = a.createLinearGradient(0, 0, 0, 120); g.addColorStop(0, '#3A2850'); g.addColorStop(.6, '#8C5BD8'); g.addColorStop(1, '#FFB49A'); a.fillStyle = g; a.fillRect(0, 0, W, 120);
+  g = a.createLinearGradient(0, 120, 0, H); g.addColorStop(0, '#9C7FD8'); g.addColorStop(.3, '#3E8FC6'); g.addColorStop(1, '#1D5A8E'); a.fillStyle = g; a.fillRect(0, 120, W, H - 120);
+  a.fillStyle = '#FFD43A'; a.beginPath(); a.arc(660, 58, 26, 0, TAU); a.fill();
+  a.strokeStyle = 'rgba(255,255,255,.14)'; a.lineWidth = 3; for (let i = 0; i < 9; i++) { a.beginPath(); for (let x = 0; x <= W; x += 20) { const y = 135 + i * 18 + Math.sin(x * .02 + i) * 4; x ? a.lineTo(x, y) : a.moveTo(x, y); } a.stroke(); }
+  [[180, 210, '#A77BF2', 0], [300, 180, '#FFD43A', 1], [420, 160, '#FFAA82', 1], [540, 150, '#FF9FC8', 1], [640, 200, '#A77BF2', 0]].forEach(([x, y, c, lit], i) => { const s = 1.2 - i * .12; if (lit) { const gg = a.createRadialGradient(x, y, 4, x, y, 60 * s); gg.addColorStop(0, c + 'aa'); gg.addColorStop(1, c + '00'); a.fillStyle = gg; a.fillRect(x - 60, y - 60, 120, 120); } a.fillStyle = c; a.beginPath(); a.roundRect(x - 14 * s, y - 36 * s, 28 * s, 36 * s, 8 * s); a.fill(); a.fillStyle = '#2D2537'; a.fillRect(x - 6 * s, y - 40 * s, 12 * s, 4 * s); });
+  a.fillStyle = 'rgba(255,255,255,.6)'; a.lineWidth = 2; a.strokeStyle = 'rgba(255,255,255,.7)'; [[260, 262], [360, 232], [450, 210], [530, 195]].forEach(([x, y], i) => { a.beginPath(); a.ellipse(x, y, 34 - i * 6, 10 - i * 2, 0, 0, TAU); a.stroke(); });
+  a.fillStyle = '#B9ABD0'; a.beginPath(); a.ellipse(590, 175, 11, 8, .3, 0, TAU); a.fill();
+  g = a.createLinearGradient(0, 230, 0, H); g.addColorStop(0, '#FFE6CF'); g.addColorStop(1, '#F7A47A'); a.fillStyle = g; a.beginPath(); a.ellipse(90, 300, 220, 60, 0, 0, TAU); a.fill();
+  body(a, 110, 262, 1.1, 'happy');
+  // B: deep water, bubble helmet, pearls, a jelly
+  const b = document.getElementById('artB').getContext('2d');
+  g = b.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2689BD'); g.addColorStop(.5, '#1F4E8F'); g.addColorStop(1, '#17183D'); b.fillStyle = g; b.fillRect(0, 0, W, H);
+  for (let i = 0; i < 60; i++) { b.fillStyle = ['#91E9CC', '#DCF6FF', '#C4A4FF', '#FFF8C8'][i % 4]; b.globalAlpha = .3 + (i % 5) * .14; b.beginPath(); b.arc((i * 137) % W, 60 + (i * 83) % 240, 1 + (i % 3), 0, TAU); b.fill(); } b.globalAlpha = 1;
+  [[120, 150], [200, 120], [280, 150], [560, 90]].forEach(([x, y]) => { const gg = b.createRadialGradient(x - 4, y - 4, 1, x, y, 13); gg.addColorStop(0, '#fff'); gg.addColorStop(.6, '#FFF8C8'); gg.addColorStop(1, '#E0C98A'); b.fillStyle = gg; b.beginPath(); b.arc(x, y, 13, 0, TAU); b.fill(); });
+  const jx = 640, jy = 190; b.strokeStyle = 'rgba(239,226,255,.7)'; b.lineWidth = 4; for (let i = 0; i < 5; i++) { b.beginPath(); b.moveTo(jx + (i - 2) * 14, jy + 14); b.bezierCurveTo(jx + (i - 2) * 14 + 10, jy + 40, jx + (i - 2) * 14 - 10, jy + 60, jx + (i - 2) * 14 + 4, jy + 80); b.stroke(); }
+  g = b.createRadialGradient(jx - 12, jy - 16, 3, jx, jy, 48); g.addColorStop(0, '#EFE2FF'); g.addColorStop(.5, '#A77BF2'); g.addColorStop(1, '#6A3FC4'); b.fillStyle = g; b.beginPath(); b.ellipse(jx, jy, 38, 30, 0, Math.PI, TAU); b.quadraticCurveTo(jx, jy + 18, jx - 38, jy); b.fill();
+  b.fillStyle = '#2a1f2b'; b.beginPath(); b.arc(jx - 11, jy - 2, 3, 0, TAU); b.arc(jx + 11, jy - 2, 3, 0, TAU); b.fill();
+  const hx = 400, hy = 170; b.fillStyle = 'rgba(220,246,255,.14)'; b.beginPath(); b.arc(hx, hy, 72, 0, TAU); b.fill(); body(b, hx, hy + 52, 1.25, 'neutral');
+  b.strokeStyle = 'rgba(255,255,255,.75)'; b.lineWidth = 3; b.beginPath(); b.arc(hx, hy, 72, 0, TAU); b.stroke(); b.fillStyle = 'rgba(255,255,255,.85)'; b.beginPath(); b.ellipse(hx - 36, hy - 40, 16, 7, -.75, 0, TAU); b.fill();
+  for (let i = 0; i < 4; i++) { b.strokeStyle = 'rgba(255,255,255,.5)'; b.lineWidth = 1.5; b.beginPath(); b.arc(hx + 20 + i * 12, hy - 90 - i * 22, 5 + i * 2, 0, TAU); b.stroke(); }
+})();
+</script>
+</body>
+</html>

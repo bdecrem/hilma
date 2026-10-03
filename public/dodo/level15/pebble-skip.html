@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#2A1E45">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Pebble Skip · Dodo</title>
+<style>
+  :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px); }
+  html, body { margin: 0; height: 100%; background: #2A1E45; overflow: hidden; overscroll-behavior: none; }
+  body { font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, -apple-system, sans-serif; color: #2D2537; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  #frame { position: fixed; inset: 0; width: 100%; height: 100dvh; touch-action: none; }
+  canvas { position: absolute; inset: 0; display: block; }
+  .card { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: calc(var(--sat) + 16px) calc(var(--sar) + 20px) calc(var(--sab) + 20px) calc(var(--sal) + 20px); background: rgba(40, 24, 60, .28); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); transition: opacity .35s; }
+  .card.hidden { opacity: 0; pointer-events: none; }
+  .sheet { width: 100%; max-width: 320px; background: #F8F2F8; border-radius: 28px; padding: 26px 24px 22px; text-align: center; box-shadow: 0 18px 50px rgba(20, 10, 40, .45), inset 0 1px 0 #fff; }
+  .kicker { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #7A4FD6; font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 34px; margin: 0 0 10px; color: #2D2537; letter-spacing: -.02em; line-height: 1; }
+  .sheet p { margin: 0 0 18px; color: #6A5F73; font-size: 15px; line-height: 1.4; }
+  .score { font-size: 60px; font-weight: 800; color: #2689BD; letter-spacing: -.03em; line-height: 1; margin: 6px 0 2px; }
+  .sub { color: #9A8FA4; font-size: 13px; margin-bottom: 18px; }
+  .sub b { color: #6A5F73; }
+  .key { display: inline-block; border: 0; font: inherit; font-weight: 800; font-size: 18px; color: #fff; padding: 14px 34px; border-radius: 999px; background: linear-gradient(180deg, #7FD7F3 0%, #2689BD 100%); box-shadow: 0 6px 0 #1C6A94, 0 10px 24px rgba(38, 137, 189, .35), inset 0 2px 0 rgba(255, 255, 255, .55); cursor: pointer; transform: translateY(0); transition: transform .08s, box-shadow .08s; }
+  .key:active { transform: translateY(4px); box-shadow: 0 2px 0 #1C6A94, 0 6px 14px rgba(38, 137, 189, .35), inset 0 2px 0 rgba(255, 255, 255, .55); }
+  .tiny { font-size: 12px; color: #9A8FA4; margin-top: 14px; }
+  @media (min-width: 720px) and (min-height: 760px) {
+    body { display: grid; place-items: center; background: radial-gradient(120% 90% at 50% 0%, #6A3FC4 0%, #3A2850 55%, #17131D 100%); }
+    #frame { position: relative; width: 390px; height: 844px; border-radius: 54px; overflow: hidden; border: 10px solid #1B1620; box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 0 2px #3B3049; }
+    :root { --sat: 44px; --sab: 24px; --sal: 0px; --sar: 0px; }
+  }
+</style>
+</head>
+<body>
+<div id="frame">
+  <canvas id="c"></canvas>
+  <div class="card" id="start">
+    <div class="sheet">
+      <p class="kicker">Jelly Lagoon · Level 15</p>
+      <h1>Pebble Skip</h1>
+      <p>Drag back from the pebble and let go. Then tap each time it's about to touch the water — the window gets smaller with every skip.</p>
+      <button class="key" id="go">Throw</button>
+      <div class="tiny">Five pebbles. Every skip lights a lantern.</div>
+    </div>
+  </div>
+  <div class="card hidden" id="end">
+    <div class="sheet">
+      <p class="kicker">Dusk on the lagoon</p>
+      <div class="score" id="final">0</div>
+      <div class="sub">skips · best run <b id="frun">0</b> · best ever <b id="fbest">0</b></div>
+      <button class="key" id="again">Play again</button>
+      <div class="tiny" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<script>
+// ---------- the jelly dodo (port of misc/dodo-redesign/jelly-dodos.html `dodo`) ----------
+const DODO = (() => {
+  const TAU = Math.PI * 2, HP = Math.PI / 2, INK = '#2a1f2b';
+  const C = ['#dcf6ff', '#5ec6ec', '#2689bd'], RIM = 'rgba(8,75,120,.5)';
+  const O = { a: 39, bt: 36, bb: 42, n: 2.4, np: 72 };
+  const BUMPS = [{ at: -HP + .05, h: 9, w: .07, dir: -HP - .15 }, { at: -.38, h: 9, w: .09, dir: -.95 },
+    { at: .3, h: 6, w: .16 }, { at: Math.PI - .3, h: 6, w: .16 }, { at: HP - .42, h: 4, w: .11 }, { at: HP + .42, h: 4, w: .11 }];
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return d; };
+  function outline(tuft, wing) {
+    const pts = [];
+    for (let i = 0; i < O.np; i++) {
+      const t = -HP + i / O.np * TAU, c = Math.cos(t), s = Math.sin(t);
+      let x = O.a * Math.sign(c) * Math.pow(Math.abs(c), 2 / O.n), y = (s < 0 ? O.bt : O.bb) * Math.sign(s) * Math.pow(Math.abs(s), 2 / O.n);
+      for (let bi = 0; bi < BUMPS.length; bi++) {
+        const b = BUMPS[bi]; let at = b.at, dir = b.dir, h = b.h;
+        if (bi === 0) { at += tuft * .25; dir += tuft * .9; }
+        if (bi === 2 || bi === 3) h += wing * 4;
+        const da = Math.abs(angDiff(t, at)) / b.w, d = h * Math.exp(-da * da / 2);
+        if (Math.abs(d) < .01) continue;
+        if (dir !== undefined) { x += Math.cos(dir) * d; y += Math.sin(dir) * d; } else { const L = Math.hypot(x, y) || 1; x += x / L * d; y += y / L * d; }
+      }
+      pts.push([x, y]);
+    }
+    return pts;
+  }
+  function trace(ctx, p) {
+    const N = p.length; ctx.moveTo((p[N - 1][0] + p[0][0]) / 2, (p[N - 1][1] + p[0][1]) / 2);
+    for (let i = 0; i < N; i++) { const j = (i + 1) % N; ctx.quadraticCurveTo(p[i][0], p[i][1], (p[i][0] + p[j][0]) / 2, (p[i][1] + p[j][1]) / 2); }
+    ctx.closePath();
+  }
+  const ell = (ctx, x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, TAU); };
+  function soft(ctx, x, y, rx, ry, col) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(1, ry / rx);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, col); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rx, 0, TAU); ctx.fill(); ctx.restore();
+  }
+  const stroke = (ctx, w, col) => { ctx.lineWidth = w; ctx.strokeStyle = col || INK; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; };
+  function eye(ctx, p, x, y, r) {
+    const f = p.face;
+    if (f === 'squint') { const s = x < 0 ? 1 : -1; stroke(ctx, Math.max(2, r * .42)); ctx.beginPath(); ctx.moveTo(x - s * r * .7, y - r * .6); ctx.lineTo(x + s * r * .55, y); ctx.lineTo(x - s * r * .7, y + r * .6); ctx.stroke(); return; }
+    if (f === 'happy') { stroke(ctx, Math.max(2, r * .36)); ctx.beginPath(); ctx.arc(x, y + r * .45, r * .85, 1.15 * Math.PI, 1.85 * Math.PI); ctx.stroke(); return; }
+    const lid = f === 'sleepy' ? 1 : p.blink;
+    if (lid > .7) { stroke(ctx, Math.max(2, r * .38)); ctx.beginPath(); ctx.arc(x, y - r * .5, r * .85, .25 * Math.PI, .75 * Math.PI); ctx.stroke(); return; }
+    if (f === 'wow') r *= 1.3;
+    const lx = x + p.lookX * r * .35, ly = y + p.lookY * r * .35;
+    ctx.fillStyle = INK; ell(ctx, lx, ly, r, r * 1.12 * (1 - lid * .8)); ctx.fill();
+    ctx.fillStyle = '#fff'; ell(ctx, lx - r * .32, ly - r * .38, r * .36, r * .36 * (1 - lid)); ctx.fill();
+    ctx.globalAlpha = .8; ell(ctx, lx + r * .35, ly + r * .4, r * .15, r * .15); ctx.fill(); ctx.globalAlpha = 1;
+  }
+  function face(ctx, p) {
+    soft(ctx, 0, 24, 20, 16, 'rgba(240,252,255,.7)');
+    soft(ctx, -23, 4, 6.5, 4.5, 'rgba(255,90,130,.42)'); soft(ctx, 23, 4, 6.5, 4.5, 'rgba(255,90,130,.42)');
+    eye(ctx, p, -14, -9, 4.6); eye(ctx, p, 14, -9, 4.6);
+    const g = ctx.createLinearGradient(0, -4, 0, 13); g.addColorStop(0, '#ffd56c'); g.addColorStop(1, '#f3962a');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-8, -1); ctx.quadraticCurveTo(0, -6, 8, -1); ctx.quadraticCurveTo(8, 7, 2, 12); ctx.quadraticCurveTo(0, 14, -2, 12); ctx.quadraticCurveTo(-8, 7, -8, -1); ctx.fill();
+    ctx.fillStyle = '#e0742a'; ell(ctx, 0, 10.6, 2.6, 2.2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ell(ctx, -3.6, 0, 2.2, 1.1, -.2); ctx.fill();
+    if (p.face === 'wow' || p.face === 'squint') { ctx.fillStyle = '#7a1f33'; ell(ctx, 0, 17.5, 2.6, 3.2); ctx.fill(); }
+    if (p.face === 'sweat') {
+      stroke(ctx, 1.8); ctx.beginPath(); ctx.moveTo(-3, 17); ctx.lineTo(3, 17); ctx.stroke();
+      ctx.fillStyle = '#9fe0f7'; ctx.beginPath(); ctx.moveTo(27, -22); ctx.quadraticCurveTo(32, -14, 27, -12); ctx.quadraticCurveTo(22, -14, 27, -22); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.8)'; ell(ctx, 26, -15.5, 1.2, 1.8); ctx.fill();
+    }
+    if (p.face === 'sleepy') { stroke(ctx, 1.6); ctx.beginPath(); ctx.arc(0, 15.5, 2.2, .1 * Math.PI, .9 * Math.PI); ctx.stroke(); }
+  }
+  // (x,y) is the feet point; k = device pixels per body unit (for the inset shadows)
+  function draw(ctx, x, y, s, p) {
+    p = Object.assign({ sx: 1, sy: 1, blink: 0, face: 'neutral', lookX: 0, lookY: 0, tilt: 0, tuft: 0, wing: 0, k: 1, alpha: 1 }, p || {});
+    const pts = outline(p.tuft, p.wing), k = p.k, R = O.bb;
+    ctx.save(); ctx.globalAlpha = p.alpha;
+    ctx.translate(x, y); ctx.rotate(p.tilt); ctx.scale(s * p.sx, s * p.sy); ctx.translate(0, -O.bb);
+    ctx.beginPath(); trace(ctx, pts);
+    const g = ctx.createRadialGradient(-R * .35, -R * .5, R * .05, 0, 0, R * 1.35);
+    g.addColorStop(0, C[0]); g.addColorStop(.5, C[1]); g.addColorStop(1, C[2]); ctx.fillStyle = g; ctx.fill();
+    ctx.save(); ctx.clip();
+    const big = 300;
+    ctx.shadowColor = RIM; ctx.shadowBlur = 14 * k; ctx.shadowOffsetX = -2 * k; ctx.shadowOffsetY = -5 * k;
+    ctx.beginPath(); ctx.rect(-big, -big, big * 2, big * 2); trace(ctx, pts); ctx.fillStyle = '#000'; ctx.fill('evenodd');
+    ctx.shadowColor = 'rgba(255,255,255,.75)'; ctx.shadowBlur = 8 * k; ctx.shadowOffsetX = 1.5 * k; ctx.shadowOffsetY = 4 * k; ctx.fill('evenodd');
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    soft(ctx, R * .1, O.bb - R * .32, R * .75, R * .35, 'rgba(255,255,255,.28)');
+    face(ctx, p);
+    const hx = -O.a * .42, hy = -O.bt * .5;
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(-.55); ctx.scale(1, .5);
+    const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, O.a * .38); hg.addColorStop(0, 'rgba(255,255,255,.85)'); hg.addColorStop(.45, 'rgba(255,255,255,.35)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, 0, O.a * .38, 0, TAU); ctx.fill(); ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(ctx, hx - O.a * .08, hy - O.bt * .02, O.a * .07, O.a * .045, -.6); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; ell(ctx, O.a * .62, O.bb * .56, O.a * .035, O.a * .1, -.35); ctx.fill();
+    ctx.restore(); ctx.restore();
+  }
+  return { draw, soft, ell };
+})();
+
+// ---------- sound: synthesized, unlocked on the first pointer event ----------
+const SFX = (() => {
+  let ac = null, master, padOn = false;
+  function unlock() {
+    if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    master = ac.createGain(); master.gain.value = .55; master.connect(ac.destination);
+    pad();
+  }
+  function pad() {
+    if (padOn || !ac) return; padOn = true;
+    const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260; lp.Q.value = .4;
+    const g = ac.createGain(); g.gain.value = .0; g.gain.linearRampToValueAtTime(.09, ac.currentTime + 4);
+    lp.connect(g); g.connect(master);
+    [[55, 'triangle'], [82.4, 'triangle'], [110.5, 'sine'], [164.8, 'sine']].forEach(([f, t], i) => {
+      const o = ac.createOscillator(); o.type = t; o.frequency.value = f; o.detune.value = (i % 2 ? 6 : -5);
+      const og = ac.createGain(); og.gain.value = i < 2 ? .5 : .22;
+      const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = .05 + i * .021; lg.gain.value = og.gain.value * .5;
+      lfo.connect(lg); lg.connect(og.gain); lfo.start();
+      o.connect(og); og.connect(lp); o.start();
+    });
+  }
+  function tone(f0, f1, dur, vol, type, bend) {
+    if (!ac) return; const t = ac.currentTime;
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t); if (bend) o.frequency.exponentialRampToValueAtTime(f0 * 1.18, t + .06); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05);
+  }
+  function noise(dur, f0, f1, vol, type, q) {
+    if (!ac) return; const t = ac.currentTime, n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = ac.createBufferSource(); s.buffer = b; const f = ac.createBiquadFilter(); f.type = type || 'lowpass'; f.Q.value = q || 1;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur + .02);
+  }
+  const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+  return {
+    unlock,
+    skip(n) { const f = 262 * Math.pow(2, Math.min(n, 14) / 12); tone(f, f * .62, .32, .22, 'triangle', true); tone(f * 2, f * 1.3, .14, .05, 'sine'); noise(.06, 2400, 900, .05, 'bandpass', 2); },
+    lantern(n) { const f = PENTA[n % PENTA.length]; tone(f, f * .995, .9, .09, 'sine'); tone(f * 2, f * 1.99, .5, .025, 'sine'); },
+    plop() { noise(.22, 320, 70, .35, 'lowpass', 1.5); tone(240, 70, .28, .25, 'sine'); },
+    fizzle() { noise(.3, 600, 120, .12, 'lowpass', 1); tone(330, 180, .4, .08, 'sine'); },
+    whoosh() { noise(.3, 300, 1500, .09, 'bandpass', .8); },
+    pop() { noise(.035, 1800, 600, .09, 'bandpass', 3); tone(760, 520, .05, .05, 'sine'); },
+    early() { tone(220, 190, .12, .07, 'triangle'); },
+    record() { PENTA.slice(0, 5).forEach((f, i) => setTimeout(() => { tone(f, f, .7, .1, 'sine'); tone(f * 2, f * 2, .35, .03, 'sine'); }, i * 90)); },
+    hop() { tone(420, 640, .14, .08, 'sine'); },
+  };
+})();
+
+// ---------- the game ----------
+(() => {
+  const TAU = Math.PI * 2, frame = document.getElementById('frame'), cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t, rnd = (a, b) => a + Math.random() * (b - a);
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  let W = 390, H = 844, DPR = 1, SAT = 0, SAB = 0;
+  const L = {}; // layout
+  const G = { phase: 'title', score: 0, run: 0, bestRun: 0, pebbles: 5, time: 0, msg: null, hint: 0, sessionRecord: false };
+  const best = { score: +localStorage.getItem('dodo-pebble-skip-best') || 0, run: +localStorage.getItem('dodo-pebble-skip-bestrun') || 0 };
+  const stone = { d: 0, l: 0, h: 0, vd: 0, vl: 0, vy: 0, skips: 0, armed: false, early: false, state: 'rest', touchT: 0, sinceSkip: 9, spin: 0, t: 0 };
+  const dodo = { face: 'neutral', faceT: 0, blink: 0, blinkT: 2, hop: 0, hopT: 9, sq: 0, look: 0, lean: 0 };
+  let lanterns = [], pads = [], bubbles = [], rings = [], drops = [], texts = [], stars = [], clouds = [], drag = null, resultT = 0, lit = 0;
+  const WORDS = ['keep', 'going', 'still', 'here', 'again', 'breathe', 'steady', 'soft', 'light', 'onward', 'yes', 'now'];
+
+  function resize() {
+    const r = frame.getBoundingClientRect(); W = Math.round(r.width); H = Math.round(r.height); DPR = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    const cs = getComputedStyle(document.documentElement); SAT = parseFloat(cs.getPropertyValue('--sat')) || 0; SAB = parseFloat(cs.getPropertyValue('--sab')) || 0;
+    L.HY = H * .36; L.SX0 = W * .4; L.SY0 = H * .79; L.VX = W * .6; L.PX = Math.min(W, 430) * .036; L.K = 26;
+    L.dodoX = W * .19; L.dodoY = H * .805; L.dodoS = Math.min(W, 430) / 390 * 1.02;
+  }
+  const scl = d => L.K / (L.K + d);
+  function proj(d, l, h) { const s = scl(d); return { x: L.VX + (L.SX0 + l * L.PX - L.VX) * s, y: L.HY + (L.SY0 - L.HY) * s - (h || 0) * L.PX * 1.7 * s, s }; }
+
+  function newWorld() {
+    lanterns = []; pads = []; bubbles = []; rings = []; drops = []; texts = []; lit = 0;
+    for (let i = 0; i < 11; i++) lanterns.push({ d: 2.5 + i * 3.8 + rnd(0, 2.4), l: (i % 2 ? 1 : -1) * rnd(2, 17) + rnd(-2, 2), lit: 0, hue: ['#FFD43A', '#FFAA82', '#FF9FC8'][i % 3], bob: rnd(0, TAU) });
+    clouds = Array.from({ length: 4 }, (_, i) => ({ x: .1 + i * .26 + rnd(-.05, .05), y: .08 + rnd(0, .14), w: rnd(50, 90), sp: rnd(2, 5) }));
+    for (let i = 0; i < 7; i++) pads.push({ d: .6 + i * 2.1 + rnd(0, 1), l: (i % 2 ? -1 : 1) * rnd(3, 12), r: rnd(.9, 1.5), bob: rnd(0, TAU), flower: i === 1 || i === 4 });
+    stars = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random() * .3, r: rnd(.5, 1.5), tw: rnd(0, TAU) }));
+  }
+  function resetStone() { Object.assign(stone, { d: 0, l: 0, h: .22, vd: 0, vl: 0, vy: 0, skips: 0, armed: false, early: false, state: 'rest', touchT: 0, sinceSkip: 9, spin: 0, t: 0 }); }
+  function start() {
+    G.score = 0; G.run = 0; G.bestRun = 0; G.pebbles = 5; G.phase = 'aim'; G.msg = null; G.sessionRecord = false; newWorld(); resetStone();
+    $('start').classList.add('hidden'); $('end').classList.add('hidden'); setFace('neutral', 0);
+  }
+  function setFace(f, t) { dodo.face = f; dodo.faceT = t; }
+  const windowFor = n => Math.max(.07, .175 - n * .012);
+  const tti = () => stone.state !== 'flight' ? 0 : (stone.vy + Math.sqrt(stone.vy * stone.vy + 19.6 * Math.max(0, stone.h))) / 9.8;
+
+  function throwStone(angle, power) {
+    if (G.phase !== 'aim') return;
+    angle = clamp(angle, -.55, .55); power = clamp(power, .08, 1);
+    const sp = 7.5 + 12 * power; stone.vd = Math.cos(angle) * sp; stone.vl = Math.sin(angle) * sp; stone.vy = 2.1 + 1.3 * power; stone.h = .25;
+    stone.state = 'flight'; stone.skips = 0; stone.t = 0; stone.sinceSkip = 9; G.run = 0; G.phase = 'flight'; G.hint++;
+    SFX.whoosh(); dodo.lean = 0; dodo.sq = .35; setFace('neutral', 0);
+  }
+  function tap() {
+    if (G.phase === 'title') return;
+    if (G.phase !== 'flight') return;
+    if (stone.state === 'touch') { doSkip(); return; }
+    if (stone.state !== 'flight' || stone.sinceSkip < .1 || stone.lock > 0) return;
+    const t = tti();
+    if (t <= windowFor(stone.skips)) { stone.armed = true; }
+    else if (t > windowFor(stone.skips) + .05) { // too early: no late grace on this contact, and taps are ignored for a beat so mashing doesn't work
+      stone.lock = .16; if (!stone.early) { stone.early = true; const p = proj(stone.d, stone.l, stone.h); texts.push({ x: p.x, y: p.y - 26, s: 'early', t: 0, col: '#FF9FC8', small: true }); SFX.early(); }
+    }
+  }
+  function doSkip() {
+    const p = proj(stone.d, stone.l, 0);
+    stone.skips++; G.run = stone.skips; G.score++; stone.sinceSkip = 0; stone.armed = false; stone.early = false; stone.state = 'flight';
+    stone.vy = Math.abs(stone.vy) * .9; stone.h = .01; stone.vd *= .88; stone.vl *= .88;
+    rings.push({ d: stone.d, l: stone.l, t: 0, big: .7 });
+    SFX.skip(stone.skips);
+    const idx = nearestUnlitLantern(); if (idx >= 0) { lanterns[idx].lit = .001; lit++; SFX.lantern(lit); }
+    bubbles.push({ x: p.x, y: p.y - 6, r: 9 + Math.min(stone.skips, 6) * 1.6, vy: -38, vx: rnd(-6, 6), t: 0, life: 1.25, word: WORDS[(stone.skips - 1 + Math.floor(G.score / 7)) % WORDS.length], ph: rnd(0, TAU) });
+    texts.push({ x: clamp(p.x + 34 + p.s * 14, 30, W - 30), y: p.y - 30 - p.s * 24, s: '×' + stone.skips, t: 0, col: '#FFF8C8' });
+    dodo.sq = .22;
+    if (stone.skips >= 4 && stone.skips % 2 === 0) { dodo.hopT = 0; SFX.hop(); }
+    if (stone.skips === 5) setFace('happy', 1.2);
+    if (stone.skips > best.run && stone.skips >= 3 && !G.sessionRecord) { G.sessionRecord = true; setFace('wow', 2.2); SFX.record(); texts.push({ x: W / 2, y: H * .5, s: 'new record!', t: 0, col: '#FFD43A' }); }
+    const sp = Math.hypot(stone.vd, stone.vl);
+    if (sp < 2.8 || stone.vy < .95) endRun('fizzle');
+  }
+  function nearestUnlitLantern() {
+    let bi = -1, bd = 1e9; lanterns.forEach((ln, i) => { if (ln.lit) return; const dd = Math.hypot(ln.d - stone.d, (ln.l - stone.l) * .6); if (dd < bd) { bd = dd; bi = i; } }); return bi;
+  }
+  function endRun(how) {
+    const p = proj(stone.d, stone.l, 0);
+    if (how === 'plop') { SFX.plop(); rings.push({ d: stone.d, l: stone.l, t: 0, big: 1.4 }); rings.push({ d: stone.d, l: stone.l, t: -.12, big: 1 }); for (let i = 0; i < 9; i++) drops.push({ x: p.x, y: p.y, vx: rnd(-50, 50) * p.s, vy: rnd(-150, -60) * p.s, r: rnd(1.5, 3.5) * p.s + .6, t: 0 }); }
+    else { SFX.fizzle(); rings.push({ d: stone.d, l: stone.l, t: 0, big: .8 }); }
+    stone.state = 'sunk'; G.phase = 'result'; resultT = 0;
+    if (stone.skips > G.bestRun) G.bestRun = stone.skips;
+    if (stone.skips <= 1 && how === 'plop') { setFace('sweat', 1.6); G.msg = stone.skips === 0 ? 'plop.' : 'one skip.'; }
+    else if (how === 'plop') G.msg = stone.skips + ' skips';
+    else { G.msg = stone.skips + ' skips, out of steam'; if (stone.skips >= 4) { setFace('happy', 1.5); dodo.hopT = 0; } }
+    if (stone.skips >= 7) { setFace('happy', 1.6); dodo.hopT = 0; }
+  }
+  function finish() {
+    G.phase = 'end'; let note = '';
+    if (G.score > best.score) { best.score = G.score; localStorage.setItem('dodo-pebble-skip-best', best.score); note = 'A new best. The lagoon remembers.'; }
+    if (G.bestRun > best.run) { best.run = G.bestRun; localStorage.setItem('dodo-pebble-skip-bestrun', best.run); note = note || 'Longest run yet.'; }
+    $('final').textContent = G.score; $('frun').textContent = G.bestRun; $('fbest').textContent = best.score;
+    $('fnote').textContent = note || (lit + ' of ' + lanterns.length + ' lanterns lit.');
+    $('end').classList.remove('hidden'); setFace(G.score >= 20 ? 'happy' : 'sleepy', 99);
+  }
+
+  // ---------- update ----------
+  function update(dt) {
+    G.time += dt;
+    dodo.blinkT -= dt; if (dodo.blinkT < 0) { dodo.blinkT = rnd(2.2, 5); dodo.blink = 1; } dodo.blink = Math.max(0, dodo.blink - dt * 7);
+    if (dodo.faceT > 0) { dodo.faceT -= dt; if (dodo.faceT <= 0 && dodo.faceT > -50) dodo.face = 'neutral'; }
+    dodo.hopT += dt; dodo.sq = Math.max(0, dodo.sq - dt * 2.2);
+    const lookTarget = stone.state === 'flight' ? clamp((proj(stone.d, stone.l, stone.h).x - L.dodoX) / 200, -1, 1) : (drag ? -.5 : .4);
+    dodo.look = lerp(dodo.look, lookTarget, 1 - Math.exp(-dt * 6));
+    dodo.lean = lerp(dodo.lean, drag ? clamp(drag.len / 160, 0, 1) : 0, 1 - Math.exp(-dt * 10));
+    lanterns.forEach(ln => { if (ln.lit) ln.lit = Math.min(1, ln.lit + dt * 1.6); });
+    if (stone.state === 'flight') {
+      stone.t += dt; stone.sinceSkip += dt; stone.spin += dt * 9; stone.lock = Math.max(0, (stone.lock || 0) - dt);
+      stone.d += stone.vd * dt; stone.l += stone.vl * dt; stone.vy -= 9.8 * dt; stone.h += stone.vy * dt;
+      if (stone.h <= 0) {
+        stone.h = 0;
+        if (stone.armed) doSkip();
+        else if (stone.early) endRun('plop');
+        else { stone.state = 'touch'; stone.touchT = .05; }
+      }
+    } else if (stone.state === 'touch') { stone.touchT -= dt; if (stone.touchT <= 0) endRun('plop'); }
+    if (G.phase === 'result') {
+      resultT += dt;
+      if (resultT > 1.25) { G.pebbles--; G.msg = null; if (G.pebbles > 0) { G.phase = 'aim'; resetStone(); } else { finish(); } }
+    }
+    if (Math.random() < dt * 1.2) { const d = rnd(1, 30), l = rnd(-10, 10), p = proj(d, l, 0); bubbles.push({ x: p.x, y: p.y, r: rnd(2.5, 5) * p.s + 1.5, vy: -rnd(14, 26), vx: 0, t: 0, life: rnd(2, 4), ph: rnd(0, TAU) }); }
+    bubbles.forEach(b => { b.t += dt; b.y += b.vy * dt; b.x += b.vx * dt + Math.sin(G.time * 3 + b.ph) * 10 * dt; });
+    bubbles = bubbles.filter(b => { if (b.t >= b.life) { if (b.word) SFX.pop(); return false; } return true; });
+    rings.forEach(r => r.t += dt); rings = rings.filter(r => r.t < 1.3);
+    drops.forEach(p => { p.t += dt; p.vy += 420 * dt; p.x += p.vx * dt; p.y += p.vy * dt; }); drops = drops.filter(p => p.t < .8);
+    texts.forEach(t => t.t += dt); texts = texts.filter(t => t.t < 1.1);
+  }
+
+  // ---------- draw ----------
+  function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function drawSky() {
+    const g = ctx.createLinearGradient(0, 0, 0, L.HY); g.addColorStop(0, '#2A1E45'); g.addColorStop(.45, '#6A3FC4'); g.addColorStop(.8, '#C97BC9'); g.addColorStop(1, '#FFB49A');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, L.HY + 1);
+    stars.forEach(s => { const a = .35 + .35 * Math.sin(G.time * 1.3 + s.tw); ctx.globalAlpha = a * (1 - s.y / .3 * .6); ctx.fillStyle = '#FFF8C8'; ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, TAU); ctx.fill(); }); ctx.globalAlpha = 1;
+    const mx = W * .78, my = L.HY * .42, mr = Math.min(W, H) * .06; // moon
+    const mg = ctx.createRadialGradient(mx, my, mr * .3, mx, my, mr * 3); mg.addColorStop(0, 'rgba(255,248,200,.35)'); mg.addColorStop(1, 'rgba(255,248,200,0)'); ctx.fillStyle = mg; ctx.fillRect(mx - mr * 3, my - mr * 3, mr * 6, mr * 6);
+    const m2 = ctx.createRadialGradient(mx - mr * .3, my - mr * .3, mr * .1, mx, my, mr); m2.addColorStop(0, '#FFFCE6'); m2.addColorStop(1, '#FFD43A'); ctx.fillStyle = m2; ctx.beginPath(); ctx.arc(mx, my, mr, 0, TAU); ctx.fill();
+    clouds.forEach(c => { const x = ((c.x + G.time * c.sp / 1000) % 1.2 - .1) * W, y = c.y * H; DODO.soft(ctx, x, y, c.w * 1.1, c.w * .22, 'rgba(255,205,235,.28)'); DODO.soft(ctx, x + c.w * .25, y - c.w * .1, c.w * .6, c.w * .16, 'rgba(255,230,245,.22)'); });
+  }
+  function drawIslands() { // small sand islands on the horizon, the lagoon's far shore
+    [[.12, 1.3, 0], [.38, .9, 1], [.66, 1.1, 2], [.93, .75, 0]].forEach(([fx, sz, v]) => {
+      const x = W * fx, y = L.HY + 5 * sz, w = 22 * sz * (W / 390), h = 3.2 * sz;
+      ctx.fillStyle = 'rgba(30,70,120,.22)'; ctx.beginPath(); ctx.ellipse(x, y + h, w * 1.05, h * 1.2, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#F7B48E'; ctx.beginPath(); ctx.ellipse(x, y, w, h, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#3FB08E'; ctx.beginPath(); ctx.arc(x - w * .25, y - h * .9, h * 1.9, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#7ADDBD'; ctx.beginPath(); ctx.arc(x + w * .25, y - h, h * 1.5, 0, TAU); ctx.fill();
+      if (v !== 1) { ctx.fillStyle = '#A77BF2'; ctx.beginPath(); ctx.arc(x + w * .62, y - h * 1.3, h * 1.1, 0, TAU); ctx.fill(); }
+      ctx.strokeStyle = '#6A3FC4'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x - w * .7, y - h * 3.4); ctx.lineTo(x - w * .7, y - h * .3); ctx.stroke();
+      ctx.fillStyle = '#FFD43A'; ctx.beginPath(); ctx.arc(x - w * .7, y - h * 3.6, h * .55 + .6, 0, TAU); ctx.fill();
+    });
+  }
+  function drawWater() {
+    const g = ctx.createLinearGradient(0, L.HY, 0, H); g.addColorStop(0, '#F3A5A6'); g.addColorStop(.08, '#9C7FD8'); g.addColorStop(.3, '#3E8FC6'); g.addColorStop(.7, '#2689BD'); g.addColorStop(1, '#1D5A8E');
+    ctx.fillStyle = g; ctx.fillRect(0, L.HY, W, H - L.HY);
+    // moon streak
+    ctx.save(); ctx.globalAlpha = .18; ctx.fillStyle = '#FFF8C8'; for (let i = 0; i < 14; i++) { const t = i / 14, y = L.HY + 4 + t * t * (H - L.HY) * .5, w = (8 + t * 60) * (W / 390), x = W * .78 + Math.sin(G.time * 1.1 + i) * 6 * (1 + t); ctx.beginPath(); ctx.ellipse(x, y, w, 1.2 + t * 3, 0, 0, TAU); ctx.fill(); } ctx.restore();
+    // layered wave lines, compressed toward the horizon
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 26; i++) {
+      const d = 1 + i * i * .09 + i * .4, s = scl(d), y0 = L.HY + (L.SY0 - L.HY) * s, amp = 1.5 + s * 3, ph = G.time * (.6 + s * .8) + i * 1.7;
+      ctx.globalAlpha = .05 + s * .11; ctx.strokeStyle = i % 3 ? '#DCF6FF' : '#FFE0EF'; ctx.lineWidth = .8 + s * 1.6;
+      ctx.beginPath(); for (let x = -10; x <= W + 10; x += 12) { const y = y0 + Math.sin(x * .03 / (s + .2) + ph) * amp + Math.sin(x * .011 + ph * .7) * amp * .6; x === -10 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); } ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    // bottom water, slightly darker at the near edge for depth
+    const g2 = ctx.createLinearGradient(0, H * .86, 0, H); g2.addColorStop(0, 'rgba(20,60,110,0)'); g2.addColorStop(1, 'rgba(20,60,110,.35)'); ctx.fillStyle = g2; ctx.fillRect(0, H * .86, W, H * .14);
+  }
+  function drawLantern(ln) {
+    const p = proj(ln.d, ln.l, 0), s = p.s, bob = Math.sin(G.time * 1.4 + ln.bob) * 2 * s, w = (9 + 20 * s) * (W / 390), h = w * 1.25, x = p.x, y = p.y + bob;
+    const lit = ln.lit;
+    if (lit > 0) { // reflection + glow
+      ctx.save(); ctx.globalAlpha = .33 * lit; ctx.fillStyle = ln.hue;
+      for (let i = 1; i <= 7; i++) { const yy = y + h * .2 + i * h * .5, ww = w * (.5 - i * .05) * (1 + .3 * Math.sin(G.time * 3 + i + ln.bob)); if (yy > H) break; ctx.beginPath(); ctx.ellipse(x + Math.sin(G.time * 2 + i) * 2 * s, yy, Math.max(.5, ww), Math.max(.7, h * .09), 0, 0, TAU); ctx.fill(); }
+      ctx.globalAlpha = 1; const gg = ctx.createRadialGradient(x, y - h * .45, w * .2, x, y - h * .45, w * 2.6); gg.addColorStop(0, hexA(ln.hue, .55 * lit)); gg.addColorStop(1, hexA(ln.hue, 0)); ctx.fillStyle = gg; ctx.fillRect(x - w * 3, y - h * .45 - w * 3, w * 6, w * 6); ctx.restore();
+    }
+    ctx.save(); ctx.globalAlpha = .25; ctx.fillStyle = '#163E66'; ctx.beginPath(); ctx.ellipse(x, y + h * .06, w * .62, h * .12, 0, 0, TAU); ctx.fill(); ctx.restore(); // float shadow
+    const body = ctx.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
+    if (lit > 0) { body.addColorStop(0, mix(ln.hue, '#FFFFFF', .1 + .2 * lit)); body.addColorStop(.5, mix(ln.hue, '#FFFFFF', .55 * lit)); body.addColorStop(1, mix(ln.hue, '#6A3FC4', .25 * (1 - lit))); }
+    else { body.addColorStop(0, '#6E57A6'); body.addColorStop(.5, '#9B84D6'); body.addColorStop(1, '#5B4790'); }
+    ctx.fillStyle = body; roundRect(x - w / 2, y - h, w, h, w * .3); ctx.fill();
+    ctx.strokeStyle = lit ? 'rgba(255,255,255,.45)' : 'rgba(255,255,255,.18)'; ctx.lineWidth = Math.max(.6, s * 1.1); for (let i = 1; i < 3; i++) { ctx.beginPath(); ctx.moveTo(x - w / 2 + 1, y - h * i / 3); ctx.lineTo(x + w / 2 - 1, y - h * i / 3); ctx.stroke(); }
+    ctx.fillStyle = '#2D2537'; roundRect(x - w * .22, y - h - h * .1, w * .44, h * .12, w * .05); ctx.fill(); roundRect(x - w * .3, y - h * .06, w * .6, h * .09, w * .04); ctx.fill();
+    if (lit > 0) { ctx.fillStyle = 'rgba(255,255,255,' + .55 * lit + ')'; ctx.beginPath(); ctx.ellipse(x, y - h * .5, w * .22, h * .22, 0, 0, TAU); ctx.fill(); }
+  }
+  function drawPad(pd) {
+    const p = proj(pd.d, pd.l, 0), s = p.s, rx = (10 + 26 * s) * pd.r * (W / 390), ry = rx * .36, bob = Math.sin(G.time * 1.2 + pd.bob) * 1.5 * s, x = p.x, y = p.y + bob;
+    ctx.save(); ctx.translate(x, y); ctx.scale(1, ry / rx);
+    const g = ctx.createRadialGradient(-rx * .3, -rx * .3, rx * .1, 0, 0, rx); g.addColorStop(0, '#CFFFEF'); g.addColorStop(.5, '#91E9CC'); g.addColorStop(1, '#3AAE8B');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, rx, .22, TAU - .22); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(0, 0, rx * .82, Math.PI * 1.1, Math.PI * 1.6); ctx.stroke(); ctx.restore();
+    if (pd.flower) { const fr = rx * .22; ctx.save(); ctx.translate(x + rx * .15, y - ry * .25); for (let i = 0; i < 6; i++) { ctx.fillStyle = i % 2 ? '#FF9FC8' : '#FFE0EF'; ctx.beginPath(); ctx.ellipse(Math.cos(i / 6 * TAU) * fr * .7, Math.sin(i / 6 * TAU) * fr * .45, fr * .5, fr * .3, i / 6 * TAU, 0, TAU); ctx.fill(); } ctx.fillStyle = '#FFD43A'; ctx.beginPath(); ctx.arc(0, 0, fr * .32, 0, TAU); ctx.fill(); ctx.restore(); }
+  }
+  function drawShore() {
+    const x = W * .12, y = H * .86, rx = W * .42, ry = H * .07;
+    ctx.save(); ctx.globalAlpha = .35; ctx.fillStyle = '#143C66'; ctx.beginPath(); ctx.ellipse(x + 6, y + 8, rx * 1.03, ry * 1.1, 0, 0, TAU); ctx.fill(); ctx.restore();
+    const g = ctx.createLinearGradient(0, y - ry, 0, y + ry); g.addColorStop(0, '#FFE6CF'); g.addColorStop(.55, '#FFC9A6'); g.addColorStop(1, '#F7A47A');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(x - rx * .2, y - ry * .45, rx * .5, ry * .22, 0, 0, TAU); ctx.fill();
+    // the pebble pile: the remaining pebbles
+    const pile = [[0, 0], [15, 2], [30, 0], [8, -9], [23, -9]], left = G.pebbles - (G.phase === 'aim' || G.phase === 'flight' || G.phase === 'result' ? 1 : 0);
+    for (let i = 0; i < left; i++) drawPebble(W * .27 + pile[i][0], H * .84 + pile[i][1], 6.5, i * .5);
+    // a mint tuft and a wooden sign post
+    ctx.fillStyle = '#4DC5A2'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.ellipse(W * .04 + i * 7, H * .83, 4, 9 + (i % 2) * 4, (i - 2) * .12, 0, TAU); ctx.fill(); }
+  }
+  function drawPebble(x, y, r, rot, shadow) {
+    if (shadow) { ctx.save(); ctx.globalAlpha = .3; ctx.fillStyle = '#143C66'; ctx.beginPath(); ctx.ellipse(x, y + r * .9, r * 1.1, r * .4, 0, 0, TAU); ctx.fill(); ctx.restore(); }
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot || 0);
+    const g = ctx.createRadialGradient(-r * .35, -r * .4, r * .1, 0, 0, r * 1.2); g.addColorStop(0, '#E9DDF5'); g.addColorStop(.5, '#A89BC2'); g.addColorStop(1, '#5B4C78');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, r * 1.15, r * .85, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.ellipse(-r * .4, -r * .35, r * .3, r * .17, -.5, 0, TAU); ctx.fill(); ctx.restore();
+  }
+  function drawRing(r) {
+    const p = proj(r.d, r.l, 0), t = Math.max(0, r.t), k = ease(Math.min(1, t / 1.3)), rx = (6 + 70 * k) * r.big * p.s * (W / 390) + 2, ry = rx * .36;
+    ctx.save(); ctx.globalAlpha = (1 - k) * .75; ctx.strokeStyle = '#DCF6FF'; ctx.lineWidth = Math.max(.8, 2.4 * (1 - k) * (p.s + .3));
+    ctx.beginPath(); ctx.ellipse(p.x, p.y, rx, ry, 0, 0, TAU); ctx.stroke();
+    if (k > .25) { ctx.globalAlpha = (1 - k) * .4; ctx.beginPath(); ctx.ellipse(p.x, p.y, rx * .6, ry * .6, 0, 0, TAU); ctx.stroke(); } ctx.restore();
+  }
+  function drawBubble(b) {
+    const k = b.t / b.life, a = k > .85 ? (1 - k) / .15 : 1, r = b.r * (1 + Math.sin(G.time * 5 + b.ph) * .05) * (b.word ? 1 + k * .25 : 1);
+    ctx.save(); ctx.globalAlpha = a * .9;
+    const g = ctx.createRadialGradient(b.x - r * .3, b.y - r * .35, r * .1, b.x, b.y, r); g.addColorStop(0, 'rgba(255,255,255,.22)'); g.addColorStop(.75, 'rgba(220,246,255,.12)'); g.addColorStop(1, 'rgba(255,255,255,.55)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = Math.max(.7, r * .08); ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, TAU); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(b.x - r * .38, b.y - r * .38, r * .22, r * .12, -.7, 0, TAU); ctx.fill();
+    if (b.word) { ctx.fillStyle = '#FFF8C8'; ctx.font = '700 ' + Math.max(11, r * .9) + 'px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'rgba(40,20,60,.5)'; ctx.shadowBlur = 4; ctx.fillText(b.word, b.x, b.y + 1); }
+    ctx.restore();
+  }
+  function drawStone() {
+    if (stone.state === 'sunk') return;
+    const p = proj(stone.d, stone.l, stone.h), r = (4.5 + 12 * p.s) * (W / 390);
+    if (stone.state === 'flight' || stone.state === 'touch') {
+      const sh = proj(stone.d, stone.l, 0); // water shadow and the timing ring
+      ctx.save(); ctx.globalAlpha = .35; ctx.fillStyle = '#123A66'; ctx.beginPath(); ctx.ellipse(sh.x, sh.y, r * 1.1, r * .4, 0, 0, TAU); ctx.fill(); ctx.restore();
+      const t = tti(), w = windowFor(stone.skips), inWin = t <= w, R0 = r * 1.9 + 3;
+      ctx.save(); ctx.lineWidth = inWin ? 3 : 2; ctx.strokeStyle = stone.armed ? '#91E9CC' : (inWin ? '#FFD43A' : 'rgba(255,255,255,.75)');
+      ctx.globalAlpha = stone.early ? .35 : .95; ctx.beginPath(); ctx.ellipse(sh.x, sh.y, R0 + t * 150, (R0 + t * 150) * .45, 0, 0, TAU); ctx.stroke();
+      ctx.globalAlpha = inWin ? .9 : .5; ctx.strokeStyle = inWin ? '#FFD43A' : 'rgba(255,255,255,.6)'; ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.ellipse(sh.x, sh.y, R0, R0 * .45, 0, 0, TAU); ctx.stroke(); ctx.restore();
+    }
+    drawPebble(p.x, p.y, r, stone.spin, stone.state === 'rest');
+  }
+  function drawAim() {
+    if (!drag || G.phase !== 'aim') return;
+    const a = aimFromDrag(drag), sp = 7.5 + 12 * a.power, vd = Math.cos(a.angle) * sp, vl = Math.sin(a.angle) * sp;
+    let vy = 2.1 + 1.3 * a.power, d = 0, l = 0, h = .25, hops = 0; ctx.save(); ctx.fillStyle = '#FFF8C8'; ctx.globalAlpha = .9;
+    for (let i = 0; i < 90 && hops < 3; i++) { d += vd * .04; l += vl * .04; vy -= 9.8 * .04; h += vy * .04; if (h <= 0) { hops++; vy = Math.abs(vy) * .9; h = .01; } if (i % 2 === 0) { const p = proj(d, l, h); ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1, 2.4 * p.s + .6), 0, TAU); ctx.fill(); } }
+    ctx.restore();
+    const p0 = proj(0, 0, .25); ctx.save(); ctx.strokeStyle = 'rgba(106,63,196,.6)'; ctx.lineWidth = 2; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(drag.x, drag.y); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle = '#FFD43A'; roundRect(p0.x - 22, p0.y + 16, 44, 6, 3); ctx.globalAlpha = .35; ctx.fill(); ctx.globalAlpha = 1; roundRect(p0.x - 22, p0.y + 16, 44 * a.power, 6, 3); ctx.fill(); ctx.restore();
+  }
+  function drawDodoAt() {
+    const hop = dodo.hopT < .55 ? Math.sin(dodo.hopT / .55 * Math.PI) * 26 : 0, land = (dodo.hopT > .5 && dodo.hopT < .75) ? (1 - Math.abs(dodo.hopT - .62) / .13) * .18 : 0;
+    const breathe = Math.sin(G.time * 2.1) * .015, sq = dodo.sq + land, lean = dodo.lean;
+    const sx = 1 + sq * .28 - breathe + lean * .08, sy = 1 - sq * .3 + breathe - lean * .1 + (hop > 0 ? .06 : 0);
+    const faceNow = dodo.face === 'neutral' && (G.phase === 'end') ? 'sleepy' : dodo.face;
+    ctx.save(); ctx.globalAlpha = .3; ctx.fillStyle = '#143C66'; ctx.beginPath(); ctx.ellipse(L.dodoX, L.dodoY + 3, 42 * L.dodoS * (1 - hop / 90), 9 * L.dodoS, 0, 0, TAU); ctx.fill(); ctx.restore();
+    DODO.draw(ctx, L.dodoX, L.dodoY - hop, L.dodoS, { sx, sy, blink: dodo.blink, face: faceNow, lookX: dodo.look, lookY: stone.state === 'flight' ? -.4 : .2, tilt: -lean * .22 + (hop > 0 ? .05 : 0), tuft: lean * .8 + (hop > 0 ? .5 : 0), wing: hop > 0 ? 1 : lean * .6, k: L.dodoS * DPR });
+  }
+  function drawHUD() {
+    const top = SAT + 14;
+    ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.shadowColor = 'rgba(30,15,50,.55)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = '#fff'; ctx.font = '800 44px ' + FONT; ctx.fillText(G.score, W / 2, top);
+    ctx.font = '700 12px ' + FONT; ctx.fillStyle = '#FFE0EF'; ctx.fillText(G.phase === 'flight' && stone.skips > 0 ? 'RUN ×' + stone.skips : 'SKIPS', W / 2, top + 48);
+    ctx.textAlign = 'left'; ctx.fillStyle = '#FFF8C8'; ctx.font = '700 12px ' + FONT; ctx.fillText('PEBBLES', 18, top + 2);
+    ctx.shadowBlur = 0; for (let i = 0; i < 5; i++) { ctx.globalAlpha = i < G.pebbles ? 1 : .25; drawPebble(26 + i * 17, top + 28, 6, i * .4); } ctx.globalAlpha = 1;
+    ctx.shadowBlur = 8; ctx.textAlign = 'right'; ctx.fillStyle = '#FFF8C8'; ctx.fillText('BEST RUN', W - 18, top + 2); ctx.font = '800 22px ' + FONT; ctx.fillStyle = '#fff'; ctx.fillText(G.bestRun, W - 18, top + 18);
+    if (best.run) { ctx.font = '700 11px ' + FONT; ctx.fillStyle = '#FFE0EF'; ctx.fillText('ever ' + best.run, W - 18, top + 44); }
+    if (G.msg) { ctx.textAlign = 'center'; ctx.font = '800 30px ' + FONT; ctx.fillStyle = '#FFF8C8'; ctx.fillText(G.msg, W / 2, H * .45); }
+    if (G.phase === 'aim' && G.hint < 2 && !drag) { ctx.textAlign = 'center'; ctx.font = '700 14px ' + FONT; ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.fillText(G.hint === 0 ? 'drag back from the pebble, then let go' : 'tap when the ring closes on the shadow', W / 2, H - SAB - 44 - 14 * (G.hint === 0 ? 0 : 1)); }
+    texts.forEach(t => { const k = t.t / 1.1; ctx.globalAlpha = 1 - k * k; ctx.textAlign = 'center'; ctx.font = (t.small ? '700 14px ' : '800 26px ') + FONT; ctx.fillStyle = t.col; ctx.fillText(t.s, t.x, t.y - k * 34); });
+    ctx.restore();
+  }
+  const FONT = 'ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, sans-serif';
+  const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
+  const mix = (h1, h2, t) => { const a = parseInt(h1.slice(1), 16), b = parseInt(h2.slice(1), 16), c = i => Math.round(lerp((a >> i) & 255, (b >> i) & 255, t)); return 'rgb(' + c(16) + ',' + c(8) + ',' + c(0) + ')'; };
+
+  function draw() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawSky(); drawWater(); drawIslands();
+    const far = [...lanterns.map(o => ({ d: o.d, f: () => drawLantern(o) })), ...pads.map(o => ({ d: o.d, f: () => drawPad(o) }))].sort((a, b) => b.d - a.d);
+    far.forEach(o => o.f());
+    rings.forEach(drawRing);
+    drawShore(); drawDodoAt(); drawAim(); drawStone();
+    drops.forEach(p => { ctx.globalAlpha = 1 - p.t / .8; ctx.fillStyle = '#DCF6FF'; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, TAU); ctx.fill(); }); ctx.globalAlpha = 1;
+    bubbles.forEach(drawBubble);
+    drawHUD();
+  }
+
+  // ---------- input ----------
+  function pos(e) { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  function aimFromDrag(dg) { const vx = dg.x - dg.x0, vy = dg.y - dg.y0, len = Math.hypot(vx, vy); return { angle: clamp(Math.atan2(-vx, Math.max(vy, 18)), -.55, .55), power: clamp((len - 12) / 150, 0, 1), len }; }
+  cv.addEventListener('pointerdown', e => {
+    SFX.unlock(); if (G.phase === 'title' || G.phase === 'end') return;
+    const p = pos(e);
+    if (G.phase === 'aim') { drag = { x0: p.x, y0: p.y, x: p.x, y: p.y, len: 0, id: e.pointerId }; cv.setPointerCapture(e.pointerId); }
+    else tap();
+  });
+  cv.addEventListener('pointermove', e => { if (!drag || e.pointerId !== drag.id) return; const p = pos(e); drag.x = p.x; drag.y = p.y; drag.len = Math.hypot(p.x - drag.x0, p.y - drag.y0); });
+  function release(e) { if (!drag || (e && e.pointerId !== drag.id)) return; const a = aimFromDrag(drag); drag = null; if (a.len > 16) throwStone(a.angle, a.power); }
+  cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+  window.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); if (G.phase === 'aim') throwStone(0, .75); else tap(); } });
+  $('go').addEventListener('click', () => { SFX.unlock(); start(); }); $('again').addEventListener('click', () => { SFX.unlock(); start(); });
+  document.addEventListener('pointerdown', SFX.unlock, { once: true });
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function loop(now) { const dt = Math.min(.05, (now - last) / 1000); last = now; update(dt); draw(); requestAnimationFrame(loop); }
+  window.addEventListener('resize', resize); resize(); newWorld(); resetStone(); requestAnimationFrame(loop);
+
+  window.__game = {
+    start, tap, throw: throwStone,
+    state: () => ({ phase: G.phase, score: G.score, run: stone.skips, bestRun: G.bestRun, pebbles: G.pebbles, stoneState: stone.state, tti: tti(), window: windowFor(stone.skips), lit, best: { ...best } }),
+  };
+})();
+</script>
+</body>
+</html>

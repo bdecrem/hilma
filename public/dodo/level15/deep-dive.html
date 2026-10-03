@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#2A1E45">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Deep Dive · Dodo</title>
+<style>
+  :root { --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px); --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px); }
+  html, body { margin: 0; height: 100%; background: #2A1E45; overflow: hidden; overscroll-behavior: none; }
+  body { font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, -apple-system, sans-serif; color: #2D2537; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  #frame { position: fixed; inset: 0; width: 100%; height: 100dvh; touch-action: none; }
+  canvas { position: absolute; inset: 0; display: block; }
+  .card { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: calc(var(--sat) + 16px) calc(var(--sar) + 20px) calc(var(--sab) + 20px) calc(var(--sal) + 20px); background: rgba(10, 30, 60, .3); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); transition: opacity .35s; }
+  .card.hidden { opacity: 0; pointer-events: none; }
+  .sheet { width: 100%; max-width: 320px; background: #F8F2F8; border-radius: 28px; padding: 26px 24px 22px; text-align: center; box-shadow: 0 18px 50px rgba(5, 20, 50, .5), inset 0 1px 0 #fff; }
+  .kicker { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #2689BD; font-weight: 700; margin: 0 0 6px; }
+  h1 { font-size: 34px; margin: 0 0 10px; color: #2D2537; letter-spacing: -.02em; line-height: 1; }
+  .sheet p { margin: 0 0 18px; color: #6A5F73; font-size: 15px; line-height: 1.4; }
+  .score { font-size: 60px; font-weight: 800; color: #6A3FC4; letter-spacing: -.03em; line-height: 1; margin: 6px 0 2px; }
+  .sub { color: #9A8FA4; font-size: 13px; margin-bottom: 18px; }
+  .sub b { color: #6A5F73; }
+  .key { display: inline-block; border: 0; font: inherit; font-weight: 800; font-size: 18px; color: #fff; padding: 14px 34px; border-radius: 999px; background: linear-gradient(180deg, #C4A4FF 0%, #6A3FC4 100%); box-shadow: 0 6px 0 #4A2A92, 0 10px 24px rgba(106, 63, 196, .35), inset 0 2px 0 rgba(255, 255, 255, .55); cursor: pointer; transition: transform .08s, box-shadow .08s; }
+  .key:active { transform: translateY(4px); box-shadow: 0 2px 0 #4A2A92, 0 6px 14px rgba(106, 63, 196, .35), inset 0 2px 0 rgba(255, 255, 255, .55); }
+  .tiny { font-size: 12px; color: #9A8FA4; margin-top: 14px; }
+  @media (min-width: 720px) and (min-height: 760px) {
+    body { display: grid; place-items: center; background: radial-gradient(120% 90% at 50% 0%, #2689BD 0%, #1B3F7A 50%, #120F2A 100%); }
+    #frame { position: relative; width: 390px; height: 844px; border-radius: 54px; overflow: hidden; border: 10px solid #1B1620; box-shadow: 0 30px 80px rgba(0, 0, 0, .6), 0 0 0 2px #3B3049; }
+    :root { --sat: 44px; --sab: 24px; --sal: 0px; --sar: 0px; }
+  }
+</style>
+</head>
+<body>
+<div id="frame">
+  <canvas id="c"></canvas>
+  <div class="card" id="start">
+    <div class="sheet">
+      <p class="kicker">Jelly Lagoon · Level 15</p>
+      <h1>Deep Dive</h1>
+      <p>Hold anywhere to sink, let go to float up. Grab pearls, slip past the jellies, and breathe at the bubble pockets before the air runs out.</p>
+      <button class="key" id="go">Dive</button>
+      <div class="tiny">Score = metres of depth + 3 per pearl.</div>
+    </div>
+  </div>
+  <div class="card hidden" id="end">
+    <div class="sheet">
+      <p class="kicker">Surfaced</p>
+      <div class="score" id="final">0</div>
+      <div class="sub"><b id="fdepth">0 m</b> deep · <b id="fpearls">0</b> pearls · best <b id="fbest">0</b></div>
+      <button class="key" id="again">Dive again</button>
+      <div class="tiny" id="fnote"></div>
+    </div>
+  </div>
+</div>
+<script>
+// ---------- the jelly dodo (port of misc/dodo-redesign/jelly-dodos.html `dodo`) ----------
+const DODO = (() => {
+  const TAU = Math.PI * 2, HP = Math.PI / 2, INK = '#2a1f2b';
+  const C = ['#dcf6ff', '#5ec6ec', '#2689bd'], RIM = 'rgba(8,75,120,.5)';
+  const O = { a: 39, bt: 36, bb: 42, n: 2.4, np: 72 };
+  const BUMPS = [{ at: -HP + .05, h: 9, w: .07, dir: -HP - .15 }, { at: -.38, h: 9, w: .09, dir: -.95 },
+    { at: .3, h: 6, w: .16 }, { at: Math.PI - .3, h: 6, w: .16 }, { at: HP - .42, h: 4, w: .11 }, { at: HP + .42, h: 4, w: .11 }];
+  const angDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return d; };
+  function outline(tuft, wing) {
+    const pts = [];
+    for (let i = 0; i < O.np; i++) {
+      const t = -HP + i / O.np * TAU, c = Math.cos(t), s = Math.sin(t);
+      let x = O.a * Math.sign(c) * Math.pow(Math.abs(c), 2 / O.n), y = (s < 0 ? O.bt : O.bb) * Math.sign(s) * Math.pow(Math.abs(s), 2 / O.n);
+      for (let bi = 0; bi < BUMPS.length; bi++) {
+        const b = BUMPS[bi]; let at = b.at, dir = b.dir, h = b.h;
+        if (bi === 0) { at += tuft * .25; dir += tuft * .9; }
+        if (bi === 2 || bi === 3) h += wing * 4;
+        const da = Math.abs(angDiff(t, at)) / b.w, d = h * Math.exp(-da * da / 2);
+        if (Math.abs(d) < .01) continue;
+        if (dir !== undefined) { x += Math.cos(dir) * d; y += Math.sin(dir) * d; } else { const L = Math.hypot(x, y) || 1; x += x / L * d; y += y / L * d; }
+      }
+      pts.push([x, y]);
+    }
+    return pts;
+  }
+  function trace(ctx, p) {
+    const N = p.length; ctx.moveTo((p[N - 1][0] + p[0][0]) / 2, (p[N - 1][1] + p[0][1]) / 2);
+    for (let i = 0; i < N; i++) { const j = (i + 1) % N; ctx.quadraticCurveTo(p[i][0], p[i][1], (p[i][0] + p[j][0]) / 2, (p[i][1] + p[j][1]) / 2); }
+    ctx.closePath();
+  }
+  const ell = (ctx, x, y, rx, ry, rot) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, TAU); };
+  function soft(ctx, x, y, rx, ry, col) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(1, ry / rx);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, col); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rx, 0, TAU); ctx.fill(); ctx.restore();
+  }
+  const stroke = (ctx, w, col) => { ctx.lineWidth = w; ctx.strokeStyle = col || INK; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; };
+  function eye(ctx, p, x, y, r) {
+    const f = p.face;
+    if (f === 'squint') { const s = x < 0 ? 1 : -1; stroke(ctx, Math.max(2, r * .42)); ctx.beginPath(); ctx.moveTo(x - s * r * .7, y - r * .6); ctx.lineTo(x + s * r * .55, y); ctx.lineTo(x - s * r * .7, y + r * .6); ctx.stroke(); return; }
+    if (f === 'happy') { stroke(ctx, Math.max(2, r * .36)); ctx.beginPath(); ctx.arc(x, y + r * .45, r * .85, 1.15 * Math.PI, 1.85 * Math.PI); ctx.stroke(); return; }
+    const lid = f === 'sleepy' ? 1 : p.blink;
+    if (lid > .7) { stroke(ctx, Math.max(2, r * .38)); ctx.beginPath(); ctx.arc(x, y - r * .5, r * .85, .25 * Math.PI, .75 * Math.PI); ctx.stroke(); return; }
+    if (f === 'wow') r *= 1.3;
+    const lx = x + p.lookX * r * .35, ly = y + p.lookY * r * .35;
+    ctx.fillStyle = INK; ell(ctx, lx, ly, r, r * 1.12 * (1 - lid * .8)); ctx.fill();
+    ctx.fillStyle = '#fff'; ell(ctx, lx - r * .32, ly - r * .38, r * .36, r * .36 * (1 - lid)); ctx.fill();
+    ctx.globalAlpha = .8; ell(ctx, lx + r * .35, ly + r * .4, r * .15, r * .15); ctx.fill(); ctx.globalAlpha = 1;
+  }
+  function face(ctx, p) {
+    soft(ctx, 0, 24, 20, 16, 'rgba(240,252,255,.7)');
+    soft(ctx, -23, 4, 6.5, 4.5, 'rgba(255,90,130,.42)'); soft(ctx, 23, 4, 6.5, 4.5, 'rgba(255,90,130,.42)');
+    eye(ctx, p, -14, -9, 4.6); eye(ctx, p, 14, -9, 4.6);
+    const g = ctx.createLinearGradient(0, -4, 0, 13); g.addColorStop(0, '#ffd56c'); g.addColorStop(1, '#f3962a');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(-8, -1); ctx.quadraticCurveTo(0, -6, 8, -1); ctx.quadraticCurveTo(8, 7, 2, 12); ctx.quadraticCurveTo(0, 14, -2, 12); ctx.quadraticCurveTo(-8, 7, -8, -1); ctx.fill();
+    ctx.fillStyle = '#e0742a'; ell(ctx, 0, 10.6, 2.6, 2.2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ell(ctx, -3.6, 0, 2.2, 1.1, -.2); ctx.fill();
+    if (p.face === 'wow' || p.face === 'squint') { ctx.fillStyle = '#7a1f33'; ell(ctx, 0, 17.5, 2.6, 3.2); ctx.fill(); }
+    if (p.face === 'sweat') {
+      stroke(ctx, 1.8); ctx.beginPath(); ctx.moveTo(-3, 17); ctx.lineTo(3, 17); ctx.stroke();
+      ctx.fillStyle = '#9fe0f7'; ctx.beginPath(); ctx.moveTo(27, -22); ctx.quadraticCurveTo(32, -14, 27, -12); ctx.quadraticCurveTo(22, -14, 27, -22); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.8)'; ell(ctx, 26, -15.5, 1.2, 1.8); ctx.fill();
+    }
+    if (p.face === 'sleepy') { stroke(ctx, 1.6); ctx.beginPath(); ctx.arc(0, 15.5, 2.2, .1 * Math.PI, .9 * Math.PI); ctx.stroke(); }
+  }
+  // (x,y) is the feet point; k = device pixels per body unit (for the inset shadows)
+  function draw(ctx, x, y, s, p) {
+    p = Object.assign({ sx: 1, sy: 1, blink: 0, face: 'neutral', lookX: 0, lookY: 0, tilt: 0, tuft: 0, wing: 0, k: 1, alpha: 1 }, p || {});
+    const pts = outline(p.tuft, p.wing), k = p.k, R = O.bb;
+    ctx.save(); ctx.globalAlpha = p.alpha;
+    ctx.translate(x, y); ctx.rotate(p.tilt); ctx.scale(s * p.sx, s * p.sy); ctx.translate(0, -O.bb);
+    ctx.beginPath(); trace(ctx, pts);
+    const g = ctx.createRadialGradient(-R * .35, -R * .5, R * .05, 0, 0, R * 1.35);
+    g.addColorStop(0, C[0]); g.addColorStop(.5, C[1]); g.addColorStop(1, C[2]); ctx.fillStyle = g; ctx.fill();
+    ctx.save(); ctx.clip();
+    const big = 300;
+    ctx.shadowColor = RIM; ctx.shadowBlur = 14 * k; ctx.shadowOffsetX = -2 * k; ctx.shadowOffsetY = -5 * k;
+    ctx.beginPath(); ctx.rect(-big, -big, big * 2, big * 2); trace(ctx, pts); ctx.fillStyle = '#000'; ctx.fill('evenodd');
+    ctx.shadowColor = 'rgba(255,255,255,.75)'; ctx.shadowBlur = 8 * k; ctx.shadowOffsetX = 1.5 * k; ctx.shadowOffsetY = 4 * k; ctx.fill('evenodd');
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+    soft(ctx, R * .1, O.bb - R * .32, R * .75, R * .35, 'rgba(255,255,255,.28)');
+    face(ctx, p);
+    const hx = -O.a * .42, hy = -O.bt * .5;
+    ctx.save(); ctx.translate(hx, hy); ctx.rotate(-.55); ctx.scale(1, .5);
+    const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, O.a * .38); hg.addColorStop(0, 'rgba(255,255,255,.85)'); hg.addColorStop(.45, 'rgba(255,255,255,.35)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, 0, O.a * .38, 0, TAU); ctx.fill(); ctx.restore();
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ell(ctx, hx - O.a * .08, hy - O.bt * .02, O.a * .07, O.a * .045, -.6); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; ell(ctx, O.a * .62, O.bb * .56, O.a * .035, O.a * .1, -.35); ctx.fill();
+    ctx.restore(); ctx.restore();
+  }
+  return { draw, soft, ell };
+})();
+
+// ---------- sound: synthesized, unlocked on the first pointer event ----------
+const SFX = (() => {
+  let ac = null, master, lp = null, padOn = false;
+  function unlock() {
+    if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+    try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    master = ac.createGain(); master.gain.value = .55; master.connect(ac.destination); pad();
+  }
+  function pad() {
+    if (padOn || !ac) return; padOn = true;
+    lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 320; lp.Q.value = .5;
+    const g = ac.createGain(); g.gain.value = 0; g.gain.linearRampToValueAtTime(.1, ac.currentTime + 4); lp.connect(g); g.connect(master);
+    [[41.2, 'triangle'], [61.7, 'triangle'], [123.5, 'sine'], [185, 'sine']].forEach(([f, t], i) => {
+      const o = ac.createOscillator(); o.type = t; o.frequency.value = f; o.detune.value = i % 2 ? 7 : -6;
+      const og = ac.createGain(); og.gain.value = i < 2 ? .5 : .18;
+      const lfo = ac.createOscillator(), lg = ac.createGain(); lfo.frequency.value = .04 + i * .017; lg.gain.value = og.gain.value * .5; lfo.connect(lg); lg.connect(og.gain); lfo.start();
+      o.connect(og); og.connect(lp); o.start();
+    });
+  }
+  function tone(f0, f1, dur, vol, type, bend) {
+    if (!ac) return; const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t); if (bend) o.frequency.exponentialRampToValueAtTime(f0 * 1.15, t + .05); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .012); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .05);
+  }
+  function noise(dur, f0, f1, vol, type, q) {
+    if (!ac) return; const t = ac.currentTime, n = Math.floor(ac.sampleRate * dur), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = ac.createBufferSource(); s.buffer = b; const f = ac.createBiquadFilter(); f.type = type || 'lowpass'; f.Q.value = q || 1;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur + .02);
+  }
+  const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.7];
+  return {
+    unlock,
+    depth(k) { if (lp) lp.frequency.setTargetAtTime(320 - 190 * k, ac.currentTime, .5); },
+    pearl(n) { const f = PENTA[Math.min(n, PENTA.length - 1)]; tone(f, f * 1.003, .55, .12, 'sine'); tone(f * 2, f * 2, .25, .03, 'sine'); noise(.04, 2500, 1200, .04, 'bandpass', 3); },
+    bump() { tone(300, 180, .14, .12, 'sine', true); noise(.05, 900, 400, .08, 'bandpass', 2); },
+    pop() { noise(.03, 1600, 700, .07, 'bandpass', 3); tone(640, 470, .05, .04, 'sine'); },
+    air() { [392, 523.25, 659.25, 783.99].forEach((f, i) => setTimeout(() => tone(f, f * 1.01, .4, .09, 'sine'), i * 70)); noise(.5, 500, 2200, .08, 'bandpass', 1); },
+    sting() { tone(190, 120, .35, .16, 'triangle'); tone(260, 150, .3, .06, 'sine'); noise(.12, 400, 150, .1, 'lowpass', 1); },
+    warn() { tone(220, 200, .12, .06, 'sine'); },
+    exhale() { noise(.08, 800, 2000, .025, 'bandpass', 1.5); },
+    surface() { noise(1.2, 200, 3000, .14, 'bandpass', .7); [523.25, 659.25, 783.99].forEach((f, i) => setTimeout(() => tone(f, f, 1.1, .08, 'sine'), 700 + i * 120)); },
+  };
+})();
+
+// ---------- the game ----------
+(() => {
+  const TAU = Math.PI * 2, frame = document.getElementById('frame'), cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  const $ = id => document.getElementById(id), FONT = 'ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, sans-serif';
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t, rnd = (a, b) => a + Math.random() * (b - a);
+  let W = 390, H = 844, DPR = 1, SAT = 0, SAB = 0, PPM = 60;
+  const G = { phase: 'title', time: 0, air: 100, pearls: 0, maxDepth: 0, score: 0, camZ: -2.2, held: false, targetX: 195, genZ: 0, warnT: 0, surfaceT: 0, combo: 0, comboT: 0 };
+  const best = +localStorage.getItem('dodo-deep-dive-best') || 0;
+  const D = { x: 195, z: .6, vx: 0, vz: 0, face: 'neutral', faceT: 0, blink: 0, blinkT: 2, inv: 0, exhale: 0, tilt: 0 };
+  let pearls = [], jellies = [], bubbles = [], pockets = [], kelp = [], specks = [], sparks = [], texts = [], lilies = [], lanterns = [], stars = [];
+  const JELLY = [['#EFE2FF', '#A77BF2', '#6A3FC4'], ['#FFE0EF', '#FF9FC8', '#E9649D'], ['#FF9A96', '#FF2B36', '#BF0D1C'], ['#E2FFF4', '#91E9CC', '#4DC5A2']];
+
+  function resize() {
+    const r = frame.getBoundingClientRect(); W = Math.round(r.width); H = Math.round(r.height); DPR = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    const cs = getComputedStyle(document.documentElement); SAT = parseFloat(cs.getPropertyValue('--sat')) || 0; SAB = parseFloat(cs.getPropertyValue('--sab')) || 0;
+    PPM = H / 14;
+  }
+  const sy = z => (z - G.camZ) * PPM; // world depth (m) → screen y
+  const S = () => Math.min(W, 430) / 390; // ui scale
+
+  function newWorld() {
+    pearls = []; jellies = []; bubbles = []; pockets = []; kelp = []; sparks = []; texts = []; G.genZ = 2;
+    specks = Array.from({ length: 110 }, () => ({ x: Math.random(), z: Math.random() * 16, r: rnd(.6, 1.6), tw: rnd(0, TAU), hue: ['#91E9CC', '#DCF6FF', '#C4A4FF', '#FFF8C8'][Math.floor(Math.random() * 4)] }));
+    lilies = Array.from({ length: 5 }, (_, i) => ({ x: (.1 + i * .2 + rnd(-.04, .04)) * W, r: rnd(22, 40), ph: rnd(0, TAU) }));
+    lanterns = Array.from({ length: 4 }, (_, i) => ({ x: (.18 + i * .22 + rnd(-.05, .05)) * W, hue: ['#FFD43A', '#FFAA82', '#FF9FC8', '#FFD43A'][i], ph: rnd(0, TAU) }));
+    stars = Array.from({ length: 40 }, () => ({ x: Math.random(), y: Math.random(), tw: rnd(0, TAU) }));
+    while (G.genZ < 20) genChunk();
+  }
+  function genChunk() { // populate world depths [genZ, genZ+6)
+    const z0 = G.genZ, z1 = z0 + 6, deep = z0 / 60;
+    const nP = 2 + Math.floor(Math.random() * 2);
+    for (let i = 0; i < nP; i++) {
+      const kind = Math.random(), x = rnd(40, W - 40), z = rnd(z0, z1);
+      if (kind < .45) for (let k = 0; k < 4; k++) pearls.push({ x: clamp(x + (k - 1.5) * 26, 20, W - 20), z: z + Math.sin(k * 1.1) * .25, r: 8.5, ph: rnd(0, TAU) });
+      else if (kind < .75) for (let k = 0; k < 4; k++) pearls.push({ x, z: z + k * .42, r: 8.5, ph: rnd(0, TAU) });
+      else pearls.push({ x, z, r: 11, ph: rnd(0, TAU), big: true });
+    }
+    const nJ = 1 + Math.floor(z0 / 32) + (Math.random() < deep * .6 ? 1 : 0);
+    for (let i = 0; i < nJ; i++) { const r = rnd(16, 26) + deep * 8; jellies.push({ x0: rnd(40, W - 40), z: rnd(z0 + .5, z1), r, amp: rnd(30, 90) + deep * 50, w: rnd(.5, .9) + deep * .3, ph: rnd(0, TAU), vz: rnd(-.25, .12), col: JELLY[Math.floor(Math.random() * JELLY.length)], pulse: rnd(0, TAU), x: 0 }); }
+    if (Math.floor(z1 / 11) > Math.floor(z0 / 11) || (z0 > 50 && Math.random() < .25)) pockets.push({ x: rnd(60, W - 60), z: rnd(z0 + 1, z1 - 1), r: 34 * S(), bubs: Array.from({ length: 9 }, () => ({ a: rnd(0, TAU), d: rnd(.2, 1), r: rnd(4, 9), ph: rnd(0, TAU) })), ph: rnd(0, TAU), taken: 0 });
+    for (let i = 0; i < 2; i++) kelp.push({ x: Math.random() < .5 ? rnd(8, 44) : W - rnd(8, 44), z: rnd(z0, z1), h: rnd(1.6, 3.4), ph: rnd(0, TAU), col: Math.random() < .5 ? '#4DC5A2' : '#A77BF2' });
+    G.genZ = z1;
+  }
+  function start() {
+    Object.assign(G, { phase: 'dive', air: 100, pearls: 0, maxDepth: 0, score: 0, camZ: -2.2, held: false, warnT: 0, surfaceT: 0, combo: 0, comboT: 0, startT: G.time });
+    Object.assign(D, { x: W / 2, z: .7, vx: 0, vz: 0, face: 'happy', faceT: 1.5, inv: 0, tilt: 0 });
+    newWorld(); $('start').classList.add('hidden'); $('end').classList.add('hidden');
+  }
+  function setFace(f, t) { D.face = f; D.faceT = t; }
+  function press(x) { if (G.phase === 'title' || G.phase === 'end') return; G.held = true; if (typeof x === 'number') G.targetX = clamp(x, 28, W - 28); }
+  function release() { G.held = false; }
+  function finish() {
+    G.phase = 'end'; const depth = Math.floor(G.maxDepth); let note = '';
+    if (G.score > best) { localStorage.setItem('dodo-deep-dive-best', G.score); note = 'A new best. The lagoon keeps the pearls.'; }
+    $('final').textContent = G.score; $('fdepth').textContent = depth + ' m'; $('fpearls').textContent = G.pearls; $('fbest').textContent = Math.max(best, G.score);
+    $('fnote').textContent = note || (depth >= 60 ? 'Down where the plants glow.' : depth >= 30 ? 'Past the caustics, into the dark.' : 'The shallows. Deeper next time?');
+    $('end').classList.remove('hidden');
+  }
+
+  // ---------- update ----------
+  function update(dt) {
+    G.time += dt;
+    D.blinkT -= dt; if (D.blinkT < 0) { D.blinkT = rnd(2, 5); D.blink = 1; } D.blink = Math.max(0, D.blink - dt * 7);
+    if (D.faceT > 0) { D.faceT -= dt; if (D.faceT <= 0) D.face = 'neutral'; }
+    D.inv = Math.max(0, D.inv - dt); G.comboT = Math.max(0, G.comboT - dt); if (G.comboT === 0) G.combo = 0;
+    const viewM = H / PPM;
+    if (G.phase === 'dive') {
+      // buoyancy, hold to sink
+      D.vz += (G.held ? 3.4 : -2.8) * dt; D.vz -= D.vz * Math.abs(D.vz) * .14 * dt; D.vz = clamp(D.vz, -2.7, 3.1);
+      if (G.held) D.vx += ((G.targetX - D.x) * 9 - D.vx * 5) * dt; else D.vx -= D.vx * 1.8 * dt;
+      D.vx = clamp(D.vx, -420, 420); D.x = clamp(D.x + D.vx * dt, 28, W - 28); D.z += D.vz * dt;
+      if (D.z < .55) { D.z = .55; if (D.vz < 0) D.vz = 0; }
+      G.maxDepth = Math.max(G.maxDepth, D.z); G.score = Math.floor(G.maxDepth) + G.pearls * 3;
+      G.air -= dt * 100 / 32; if (G.air < 25) { G.warnT -= dt; if (G.warnT <= 0) { G.warnT = 1.1; SFX.warn(); if (D.face === 'neutral') setFace('sweat', .9); } }
+      if (G.air <= 0) { G.air = 0; G.phase = 'surfacing'; G.surfaceT = 0; G.held = false; setFace('sleepy', 99); SFX.surface(); for (let i = 0; i < 16; i++) bubbles.push({ x: D.x + rnd(-20, 20), z: D.z + rnd(0, .6), r: rnd(3, 8), vz: -rnd(1, 2), ph: rnd(0, TAU), mine: true }); }
+      D.exhale -= dt; if (D.exhale <= 0) { D.exhale = G.held ? .7 : 1.1; SFX.exhale(); for (let i = 0; i < 2; i++) bubbles.push({ x: D.x + rnd(-8, 8), z: D.z - .9, r: rnd(2.5, 4.5), vz: -rnd(.9, 1.4), ph: rnd(0, TAU), mine: true }); }
+      SFX.depth(clamp(D.z / 70, 0, 1));
+      // ambient rising bubbles from below
+      if (Math.random() < dt * 1.6) bubbles.push({ x: rnd(10, W - 10), z: G.camZ + viewM + .5, r: rnd(5, 13), vz: -rnd(.7, 1.4), ph: rnd(0, TAU) });
+    } else if (G.phase === 'surfacing') {
+      G.surfaceT += dt; D.vz = -Math.max(10, G.maxDepth / 2.4); D.z += D.vz * dt; D.vx -= D.vx * 2 * dt; D.x += D.vx * dt;
+      if (Math.random() < dt * 30) bubbles.push({ x: D.x + rnd(-24, 24), z: D.z + rnd(.2, 1.2), r: rnd(3, 9), vz: -rnd(.5, 1.5), ph: rnd(0, TAU), mine: true });
+      if (D.z <= .6) { D.z = .6; D.vz = 0; if (G.surfaceT > 0 && G.phase === 'surfacing') { G.phase = 'done'; G.surfaceT = 0; } }
+    } else if (G.phase === 'done') { G.surfaceT += dt; if (G.surfaceT > .7) finish(); }
+    // camera
+    const camTarget = G.phase === 'surfacing' || G.phase === 'done' || G.phase === 'end' ? Math.max(-2.2, D.z - .5 * viewM) : Math.max(-2.2, D.z - .36 * viewM);
+    G.camZ += (camTarget - G.camZ) * (1 - Math.exp(-dt * (G.phase === 'surfacing' ? 9 : 4)));
+    while (G.genZ < G.camZ + viewM + 8) genChunk();
+    D.tilt = lerp(D.tilt, clamp(D.vx * .0009, -.35, .35), 1 - Math.exp(-dt * 6));
+    // objects
+    jellies.forEach(j => { j.z += j.vz * dt; j.x = j.x0 + Math.sin(G.time * j.w + j.ph) * j.amp; j.pulse += dt * 2.2; });
+    bubbles.forEach(b => { b.z += b.vz * dt; b.x += Math.sin(G.time * 2.5 + b.ph) * 14 * dt; });
+    bubbles = bubbles.filter(b => b.z > 0.05 && b.z > G.camZ - 1);
+    sparks.forEach(s => { s.t += dt; s.x += s.vx * dt; s.z += s.vz * dt; s.vz += .6 * dt; }); sparks = sparks.filter(s => s.t < s.life);
+    texts.forEach(t => t.t += dt); texts = texts.filter(t => t.t < 1);
+    const cull = G.camZ - 3; pearls = pearls.filter(p => p.z > cull); jellies = jellies.filter(j => j.z > cull); pockets = pockets.filter(p => p.z > cull && p.taken < 1); kelp = kelp.filter(k => k.z + k.h > cull);
+    pockets.forEach(p => { if (p.taken > 0) p.taken += dt * 2; });
+    if (G.phase !== 'dive') return;
+    // collisions (dodo collider: centre at feet - .55 m, radius ~.5 m)
+    const cx = D.x, cz = D.z - .55, R = 30 * S();
+    pearls = pearls.filter(p => {
+      if (Math.hypot(p.x - cx, (p.z - cz) * PPM) < R + p.r) {
+        G.pearls++; G.combo++; G.comboT = 2.2; SFX.pearl(G.combo - 1); setFace('wow', .45);
+        for (let i = 0; i < 7; i++) sparks.push({ x: p.x, z: p.z, vx: rnd(-90, 90), vz: rnd(-1.6, -.4), t: 0, life: rnd(.4, .7), col: i % 2 ? '#FFF8C8' : '#FF9FC8' });
+        texts.push({ x: p.x, z: p.z - .3, s: '+3', t: 0, col: '#FFF8C8' }); return false;
+      } return true;
+    });
+    jellies.forEach(j => {
+      if (D.inv > 0) return;
+      const dx = j.x - cx, dz = (j.z - cz) * PPM, hitDome = Math.hypot(dx, dz) < R + j.r * .85, hitTent = Math.abs(dx) < j.r * .6 && dz < 0 && dz > -j.r * 1.9;
+      if (hitDome || hitTent) {
+        D.inv = 1.3; G.air = Math.max(0, G.air - 11); D.vz = -2.4; D.vx = (cx < j.x ? -1 : 1) * 260; setFace('squint', .7); SFX.sting(); G.combo = 0;
+        texts.push({ x: cx, z: cz - .6, s: 'ouch', t: 0, col: '#FF9FC8' }); j.pulse = 0;
+      }
+    });
+    bubbles.forEach(b => {
+      if (b.mine || b.hit) return;
+      if (Math.hypot(b.x - cx, (b.z - cz) * PPM) < R + b.r) { b.hit = true; b.z = -5; D.vz = Math.min(D.vz, -1.5) ; SFX.bump(); for (let i = 0; i < 4; i++) sparks.push({ x: b.x, z: b.z, vx: rnd(-60, 60), vz: rnd(-1, -.3), t: 0, life: .35, col: '#DCF6FF' }); }
+    });
+    pockets.forEach(p => {
+      if (p.taken > 0) return;
+      if (Math.hypot(p.x - cx, (p.z - cz) * PPM) < R + p.r * .8) { p.taken = .001; G.air = Math.min(100, G.air + 40); SFX.air(); setFace('happy', 1.2); texts.push({ x: p.x, z: p.z - .7, s: 'breathe', t: 0, col: '#CFFFEF' }); for (let i = 0; i < 9; i++) bubbles.push({ x: p.x + rnd(-30, 30), z: p.z + rnd(-.3, .3), r: rnd(3, 7), vz: -rnd(1, 2), ph: rnd(0, TAU), mine: true }); }
+    });
+  }
+
+  // ---------- draw ----------
+  function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  const STOPS = [[0, [59, 167, 219]], [10, [38, 137, 189]], [25, [31, 78, 143]], [45, [28, 47, 107]], [70, [23, 24, 61]], [110, [18, 15, 42]]];
+  function waterRGB(z) { z = Math.max(0, z); for (let i = 1; i < STOPS.length; i++) if (z <= STOPS[i][0]) { const [z0, a] = STOPS[i - 1], [z1, b] = STOPS[i], t = (z - z0) / (z1 - z0); return a.map((v, k) => Math.round(lerp(v, b[k], t))); } return STOPS[STOPS.length - 1][1]; }
+  const rgb = a => 'rgb(' + a.join(',') + ')';
+  function drawWater() {
+    const zTop = Math.max(0, G.camZ), zBot = G.camZ + H / PPM, yTop = Math.max(0, sy(0));
+    const g = ctx.createLinearGradient(0, yTop, 0, H); g.addColorStop(0, rgb(waterRGB(zTop))); g.addColorStop(.5, rgb(waterRGB((zTop + zBot) / 2))); g.addColorStop(1, rgb(waterRGB(zBot)));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    const dark = clamp((D.z - 8) / 50, 0, 1);
+    // caustics near the surface
+    if (zTop < 9) {
+      ctx.save(); ctx.lineCap = 'round';
+      for (let i = 0; i < 7; i++) {
+        const z = i * 1.3 + .4, y = sy(z); if (y < -20 || y > H + 20) continue;
+        ctx.globalAlpha = .12 * (1 - z / 9); ctx.strokeStyle = '#DCF6FF'; ctx.lineWidth = 6 + i * 1.5;
+        ctx.beginPath(); for (let x = -10; x <= W + 10; x += 10) { const yy = y + Math.sin(x * .025 + G.time * 1.3 + i * 2) * 9 + Math.sin(x * .06 - G.time * .9 + i) * 4; x === -10 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy); } ctx.stroke();
+      }
+      ctx.restore();
+    }
+    // bioluminescent specks (the field repeats every 16 m)
+    specks.forEach(s => {
+      const z = s.z + Math.floor((G.camZ - s.z) / 16 + 1) * 16, y = sy(z); if (y < -5 || y > H + 5) return;
+      const a = (.2 + .8 * dark) * (.5 + .5 * Math.sin(G.time * 1.7 + s.tw)); ctx.globalAlpha = a * .9; ctx.fillStyle = s.hue; ctx.beginPath(); ctx.arc(s.x * W, y, s.r * (1 + dark * .6), 0, TAU); ctx.fill();
+      if (dark > .3 && s.r > 1.2) DODO.soft(ctx, s.x * W, y, s.r * 6, s.r * 6, 'rgba(145,233,204,' + .15 * dark * a + ')');
+    }); ctx.globalAlpha = 1;
+  }
+  function drawSurface() {
+    const y0 = sy(0); if (y0 < -40) return;
+    // night sky above the lagoon, seen through the surface
+    const g = ctx.createLinearGradient(0, 0, 0, y0); g.addColorStop(0, '#2A1E45'); g.addColorStop(1, '#6A3FC4'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, Math.max(0, y0));
+    stars.forEach(s => { const y = s.y * y0; if (y > y0 - 6) return; ctx.globalAlpha = .4 + .4 * Math.sin(G.time + s.tw); ctx.fillStyle = '#FFF8C8'; ctx.beginPath(); ctx.arc(s.x * W, y, 1.1, 0, TAU); ctx.fill(); }); ctx.globalAlpha = 1;
+    lanterns.forEach(l => { const bob = Math.sin(G.time * 1.3 + l.ph) * 3, x = l.x, y = y0 - 14 + bob; DODO.soft(ctx, x, y + 10, 46, 30, hexA(l.hue, .4)); ctx.fillStyle = l.hue; roundRect(x - 9, y - 24, 18, 24, 6); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.ellipse(x, y - 13, 4, 5, 0, 0, TAU); ctx.fill(); ctx.fillStyle = '#2D2537'; roundRect(x - 4, y - 27, 8, 3, 1); ctx.fill(); });
+    // the surface: a bright wavy band, lily pads as dark discs with lit rims
+    ctx.save(); ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, y0);
+    for (let x = 0; x <= W; x += 8) ctx.lineTo(x, y0 + Math.sin(x * .03 + G.time * 1.6) * 4 + Math.sin(x * .07 - G.time * 1.1) * 2.5);
+    ctx.lineTo(W, H); ctx.closePath(); ctx.clip();
+    ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillRect(0, y0 - 10, W, 16); ctx.fillStyle = 'rgba(220,246,255,.14)'; ctx.fillRect(0, y0, W, 34);
+    lilies.forEach(l => { const x = l.x + Math.sin(G.time * .7 + l.ph) * 6; ctx.fillStyle = '#1F6D55'; ctx.beginPath(); ctx.ellipse(x, y0 + 4, l.r, l.r * .32, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(145,233,204,.6)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y0 + 4, l.r, l.r * .32, 0, 0, TAU); ctx.stroke(); });
+    lanterns.forEach(l => { const x = l.x + Math.sin(G.time * 1.1 + l.ph) * 2; ctx.globalAlpha = .35; for (let i = 0; i < 5; i++) { ctx.fillStyle = l.hue; ctx.beginPath(); ctx.ellipse(x + Math.sin(G.time * 2 + i) * 3, y0 + 10 + i * 12, 10 - i * 1.5, 3, 0, 0, TAU); ctx.fill(); } ctx.globalAlpha = 1; });
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 2.2; ctx.beginPath(); for (let x = 0; x <= W; x += 8) { const yy = y0 + Math.sin(x * .03 + G.time * 1.6) * 4 + Math.sin(x * .07 - G.time * 1.1) * 2.5; x === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy); } ctx.stroke();
+  }
+  function drawKelp(k) { // glowing lagoon weed: a swaying stem with jelly leaves and a lit tip
+    const yb = sy(k.z + k.h), yt = sy(k.z); if (yb < -10 || yt > H + 10) return;
+    const dark = clamp((k.z - 6) / 30, 0, 1), sway = Math.sin(G.time * .8 + k.ph) * 16, len = yb - yt, n = 7;
+    ctx.save(); ctx.globalAlpha = .5 + .4 * dark; ctx.lineCap = 'round';
+    for (let s = -1; s <= 1; s += 2) {
+      const pts = []; for (let i = 0; i <= n; i++) { const t = i / n; pts.push([k.x + s * 6 + Math.sin(t * 2.6 + G.time * 1.1 + k.ph) * 9 * t + sway * t * t, yb - len * t]); }
+      ctx.strokeStyle = k.col; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i <= n; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
+      for (let i = 2; i < n; i++) { const [px, py] = pts[i], side = (i % 2 ? 1 : -1) * s, ang = side * .9 + Math.sin(G.time + i) * .15; ctx.fillStyle = hexA(k.col, .85); ctx.beginPath(); ctx.ellipse(px + side * 9, py - 2, 10, 4.5, ang, 0, TAU); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(px + side * 8, py - 4, 4, 1.6, ang, 0, TAU); ctx.fill(); }
+      const [tx, ty] = pts[n]; DODO.soft(ctx, tx, ty, 22, 22, 'rgba(255,248,200,' + (.4 * dark + .1) + ')'); ctx.fillStyle = '#FFF8C8'; ctx.beginPath(); ctx.arc(tx, ty, 4.5, 0, TAU); ctx.fill();
+    }
+    ctx.restore();
+  }
+  function drawPearl(p) {
+    const y = sy(p.z), bob = Math.sin(G.time * 2 + p.ph) * 3; if (y < -20 || y > H + 20) return;
+    const r = p.r; ctx.save(); DODO.soft(ctx, p.x, y + bob, r * 2.6, r * 2.6, 'rgba(255,248,200,.28)');
+    const g = ctx.createRadialGradient(p.x - r * .35, y + bob - r * .4, r * .1, p.x, y + bob, r); g.addColorStop(0, '#FFFFFF'); g.addColorStop(.55, p.big ? '#FFE0EF' : '#FFF8C8'); g.addColorStop(1, p.big ? '#FF9FC8' : '#E0C98A');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, y + bob, r, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.beginPath(); ctx.ellipse(p.x - r * .35, y + bob - r * .4, r * .28, r * .18, -.6, 0, TAU); ctx.fill(); ctx.restore();
+  }
+  function drawJelly(j) {
+    const y = sy(j.z); if (y < -80 || y > H + 120) return;
+    const r = j.r, pulse = 1 + Math.sin(j.pulse) * .07, rx = r * pulse, ry = r * (2 - pulse) * .85, [lt, base, deep] = j.col, dark = clamp((j.z - 10) / 40, 0, 1);
+    ctx.save();
+    if (dark > .2) DODO.soft(ctx, j.x, y, r * 2.6, r * 2.6, hexA(base, .25 * dark));
+    ctx.strokeStyle = hexA(lt, .7); ctx.lineWidth = 2.6; ctx.lineCap = 'round'; // tentacles
+    for (let i = 0; i < 5; i++) { const tx = j.x + (i - 2) * rx * .4, len = r * (1.5 + (i % 2) * .4), wob = Math.sin(G.time * 3 + i + j.ph) * r * .3; ctx.beginPath(); ctx.moveTo(tx, y + ry * .5); ctx.bezierCurveTo(tx + wob, y + ry * .5 + len * .4, tx - wob, y + ry * .5 + len * .7, tx + wob * .6, y + ry * .5 + len); ctx.stroke(); }
+    const g = ctx.createRadialGradient(j.x - rx * .35, y - ry * .5, r * .1, j.x, y, r * 1.3); g.addColorStop(0, lt); g.addColorStop(.5, base); g.addColorStop(1, deep); // dome
+    ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(j.x, y, rx, ry, 0, Math.PI, TAU); ctx.quadraticCurveTo(j.x + rx * .5, y + ry * .55, j.x, y + ry * .45); ctx.quadraticCurveTo(j.x - rx * .5, y + ry * .55, j.x - rx, y); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.ellipse(j.x - rx * .4, y - ry * .5, rx * .22, ry * .14, -.6, 0, TAU); ctx.fill();
+    ctx.fillStyle = '#2a1f2b'; ctx.beginPath(); ctx.arc(j.x - rx * .3, y - ry * .1, 2.2, 0, TAU); ctx.arc(j.x + rx * .3, y - ry * .1, 2.2, 0, TAU); ctx.fill(); // a tiny face
+    ctx.strokeStyle = '#2a1f2b'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(j.x, y + ry * .05, 3.5, .15 * Math.PI, .85 * Math.PI); ctx.stroke();
+    ctx.restore();
+  }
+  function drawBubble(b) {
+    const y = sy(b.z); if (y < -20 || y > H + 20) return; const r = b.r;
+    ctx.save(); const g = ctx.createRadialGradient(b.x - r * .3, y - r * .35, r * .1, b.x, y, r); g.addColorStop(0, 'rgba(255,255,255,.2)'); g.addColorStop(.75, 'rgba(220,246,255,.1)'); g.addColorStop(1, 'rgba(255,255,255,.5)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, y, r, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = Math.max(.7, r * .09); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.beginPath(); ctx.ellipse(b.x - r * .38, y - r * .38, r * .22, r * .12, -.7, 0, TAU); ctx.fill(); ctx.restore();
+  }
+  function drawPocket(p) {
+    const y = sy(p.z); if (y < -80 || y > H + 80) return; const k = p.taken, fade = k > 0 ? 1 - k : 1;
+    ctx.save(); ctx.globalAlpha = fade; DODO.soft(ctx, p.x, y, p.r * 2.2, p.r * 2.2, 'rgba(207,255,239,.3)');
+    ctx.strokeStyle = 'rgba(207,255,239,.8)'; ctx.lineWidth = 2; ctx.setLineDash([6, 7]); ctx.lineDashOffset = -G.time * 30; ctx.beginPath(); ctx.arc(p.x, y, p.r * (1 + k * .6), 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    p.bubs.forEach(b => { const a = b.a + G.time * .6, d = b.d * p.r * .75 * (1 + k), bx = p.x + Math.cos(a) * d, by = y + Math.sin(a) * d * .8 + Math.sin(G.time * 3 + b.ph) * 2; drawBubble({ x: bx, z: G.camZ + by / PPM, r: b.r }); });
+    ctx.fillStyle = '#CFFFEF'; ctx.font = '800 11px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('AIR', p.x, y); ctx.restore();
+  }
+  function drawDodo() {
+    const y = sy(D.z), s = .72 * S(), speed = clamp(D.vz / 3, -1, 1), sx = 1 - speed * .08, syy = 1 + speed * .1;
+    const flash = D.inv > 0 && Math.floor(D.inv * 12) % 2 === 0, bodyY = y - 40 * s, hr = 54 * s;
+    ctx.save(); if (flash) ctx.globalAlpha = .55;
+    DODO.soft(ctx, D.x, bodyY, hr * 1.6, hr * 1.6, 'rgba(220,246,255,.16)');
+    ctx.save(); ctx.beginPath(); ctx.arc(D.x, bodyY, hr, 0, TAU); ctx.fillStyle = 'rgba(220,246,255,.14)'; ctx.fill(); ctx.clip();
+    DODO.draw(ctx, D.x, y, s, { sx, sy: syy, blink: D.blink, face: D.face, lookX: clamp(D.vx / 300, -1, 1), lookY: G.held ? .5 : -.3, tilt: D.tilt, tuft: -D.tilt * 1.4 - speed * .5, wing: G.held ? .8 : .2, k: s * DPR });
+    ctx.restore();
+    // the bubble helmet: rim, specular, inner glow
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(D.x, bodyY, hr, 0, TAU); ctx.stroke();
+    ctx.strokeStyle = 'rgba(38,137,189,.35)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(D.x, bodyY, hr - 4, .15 * Math.PI, .6 * Math.PI); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.ellipse(D.x - hr * .5, bodyY - hr * .55, hr * .22, hr * .1, -.75, 0, TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.beginPath(); ctx.ellipse(D.x + hr * .55, bodyY + hr * .45, hr * .06, hr * .14, -.5, 0, TAU); ctx.fill();
+    ctx.restore();
+  }
+  function drawHUD() {
+    const top = SAT + 12, s = S();
+    const scrim = ctx.createLinearGradient(0, 0, 0, top + 100 * s); scrim.addColorStop(0, 'rgba(10,20,50,.55)'); scrim.addColorStop(1, 'rgba(10,20,50,0)'); ctx.fillStyle = scrim; ctx.fillRect(0, 0, W, top + 100 * s);
+    ctx.save(); ctx.shadowColor = 'rgba(5,20,50,.6)'; ctx.shadowBlur = 8; ctx.shadowOffsetY = 2; ctx.textBaseline = 'top';
+    ctx.textAlign = 'left'; ctx.fillStyle = '#fff'; ctx.font = '800 ' + 40 * s + 'px ' + FONT; ctx.fillText(Math.floor(D.z) + ' m', 18, top);
+    ctx.font = '700 12px ' + FONT; ctx.fillStyle = '#CFFFEF'; ctx.fillText(G.maxDepth > D.z + .5 ? 'DEEPEST ' + Math.floor(G.maxDepth) + ' m' : 'DEPTH', 18, top + 44 * s);
+    ctx.textAlign = 'right'; ctx.fillStyle = '#fff'; ctx.font = '800 ' + 28 * s + 'px ' + FONT; ctx.fillText(G.pearls, W - 18, top + 4);
+    ctx.shadowBlur = 0; drawPearl({ x: W - 18 - ctx.measureText(G.pearls).width - 16, z: G.camZ + (top + 18) / PPM, r: 8, ph: 0 }); ctx.shadowBlur = 8;
+    ctx.font = '700 12px ' + FONT; ctx.fillStyle = '#FFF8C8'; ctx.fillText('PEARLS', W - 18, top + 44 * s);
+    if (G.combo > 1) { ctx.fillStyle = '#FF9FC8'; ctx.fillText('×' + G.combo + ' combo', W - 18, top + 60 * s); }
+    // air meter
+    const ax = 18, ay = top + 70 * s, aw = W - 36, ah = 18, low = G.air < 25, pulse = low ? .6 + .4 * Math.sin(G.time * 7) : 1;
+    ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(10,30,60,.45)'; roundRect(ax, ay, aw, ah, 9); ctx.fill();
+    const fw = Math.max(ah, aw * G.air / 100), fg = ctx.createLinearGradient(0, ay, 0, ay + ah);
+    if (low) { fg.addColorStop(0, '#FF9A96'); fg.addColorStop(1, '#FF2B36'); } else { fg.addColorStop(0, '#CFFFEF'); fg.addColorStop(.5, '#91E9CC'); fg.addColorStop(1, '#4DC5A2'); }
+    ctx.globalAlpha = pulse; ctx.fillStyle = fg; roundRect(ax, ay, fw, ah, 9); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(255,255,255,.55)'; roundRect(ax + 6, ay + 3, Math.max(4, fw - 12), 5, 2.5); ctx.fill();
+    ctx.font = '800 11px ' + FONT; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillStyle = G.air > 14 ? '#17131D' : '#fff'; ctx.fillText('AIR', ax + 10, ay + ah / 2 + .5);
+    ctx.textBaseline = 'top'; ctx.shadowBlur = 8;
+    if (G.phase === 'dive' && G.time - G.startT < 4) { ctx.textAlign = 'center'; ctx.font = '700 14px ' + FONT; ctx.fillStyle = 'rgba(255,255,255,' + clamp(4 - (G.time - G.startT), 0, 1) + ')'; ctx.fillText('hold to sink · let go to float', W / 2, H - SAB - 48); }
+    if (G.phase === 'surfacing') { ctx.textAlign = 'center'; ctx.font = '800 26px ' + FONT; ctx.fillStyle = '#FFF8C8'; ctx.fillText('out of air', W / 2, H * .3); }
+    texts.forEach(t => { const y = sy(t.z) - t.t * 40; ctx.globalAlpha = 1 - t.t * t.t; ctx.textAlign = 'center'; ctx.font = '800 20px ' + FONT; ctx.fillStyle = t.col; ctx.fillText(t.s, t.x, y); });
+    ctx.restore();
+  }
+  const hexA = (h, a) => { const n = parseInt(h.slice(1), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
+  function draw() {
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawWater(); drawSurface();
+    kelp.forEach(drawKelp); pockets.forEach(drawPocket); pearls.forEach(drawPearl);
+    bubbles.forEach(b => { if (!b.mine) drawBubble(b); });
+    jellies.forEach(drawJelly); drawDodo();
+    bubbles.forEach(b => { if (b.mine) drawBubble(b); });
+    sparks.forEach(s => { const y = sy(s.z); ctx.globalAlpha = 1 - s.t / s.life; ctx.fillStyle = s.col; ctx.beginPath(); ctx.arc(s.x, y, 2.5, 0, TAU); ctx.fill(); }); ctx.globalAlpha = 1;
+    const dark = clamp((D.z - 10) / 60, 0, 1); // depth vignette
+    if (dark > 0) { const v = ctx.createRadialGradient(W / 2, H / 2, H * .25, W / 2, H / 2, H * .75); v.addColorStop(0, 'rgba(10,8,30,0)'); v.addColorStop(1, 'rgba(10,8,30,' + .5 * dark + ')'); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H); }
+    drawHUD();
+  }
+
+  // ---------- input ----------
+  const pos = e => { const r = cv.getBoundingClientRect(); return e.clientX - r.left; };
+  cv.addEventListener('pointerdown', e => { SFX.unlock(); press(pos(e)); try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+  cv.addEventListener('pointermove', e => { if (G.held) G.targetX = clamp(pos(e), 28, W - 28); });
+  cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release); window.addEventListener('blur', release);
+  window.addEventListener('keydown', e => { if (e.code === 'Space') { e.preventDefault(); press(); } if (e.code === 'ArrowLeft') G.targetX = clamp(D.x - 120, 28, W - 28); if (e.code === 'ArrowRight') G.targetX = clamp(D.x + 120, 28, W - 28); });
+  window.addEventListener('keyup', e => { if (e.code === 'Space') release(); });
+  $('go').addEventListener('click', () => { SFX.unlock(); start(); }); $('again').addEventListener('click', () => { SFX.unlock(); start(); });
+  document.addEventListener('pointerdown', SFX.unlock, { once: true });
+
+  let last = performance.now();
+  function loop(now) { const dt = Math.min(.05, (now - last) / 1000); last = now; update(dt); draw(); requestAnimationFrame(loop); }
+  window.addEventListener('resize', resize); resize(); newWorld(); D.x = W / 2; requestAnimationFrame(loop);
+
+  window.__game = {
+    start, press, release, drainAir: () => { if (G.phase === 'dive') G.air = Math.min(G.air, 4); },
+    warp: z => { if (G.phase !== 'dive') return; D.z = z; G.camZ = Math.max(-2.2, z - .36 * H / PPM); G.maxDepth = Math.max(G.maxDepth, z); while (G.genZ < z + 20) genChunk(); },
+    state: () => {
+      const below = o => o.z > D.z - .3 && o.z < D.z + 9;
+      const pocket = pockets.filter(p => !p.taken && below(p)).sort((a, b) => a.z - b.z)[0], pearl = pearls.filter(below).sort((a, b) => a.z - b.z)[0];
+      const t = (G.air < 60 && pocket) || pearl || pocket;
+      return { phase: G.phase, depth: Math.floor(D.z), maxDepth: Math.floor(G.maxDepth), air: Math.round(G.air), pearls: G.pearls, score: G.score, x: Math.round(D.x), target: t ? { x: Math.round(t.x), z: +t.z.toFixed(1), kind: t.bubs ? 'air' : 'pearl' } : null, best };
+    },
+  };
+})();
+</script>
+</body>
+</html>
