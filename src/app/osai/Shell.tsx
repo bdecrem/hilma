@@ -87,6 +87,32 @@ export default function Shell({
   const [memOpen, setMemOpen] = useState(false)
   const [hasPassword, setHasPassword] = useState(initialHasPassword)
 
+  // While the phone chat sheet is open: no page scroll behind it, and the sheet
+  // follows the visual viewport (iOS shrinks it when the keyboard is up).
+  useEffect(() => {
+    if (!chatOpen) return
+    const root = document.documentElement
+    const prevOverflow = root.style.overflow
+    root.style.overflow = 'hidden'
+    const vv = window.visualViewport
+    const apply = () => {
+      root.style.setProperty('--vvh', `${Math.round(vv ? vv.height : window.innerHeight)}px`)
+      root.style.setProperty('--vvt', `${Math.round(vv ? vv.offsetTop : 0)}px`)
+    }
+    apply()
+    vv?.addEventListener('resize', apply)
+    vv?.addEventListener('scroll', apply)
+    window.addEventListener('resize', apply)
+    return () => {
+      root.style.overflow = prevOverflow
+      root.style.removeProperty('--vvh')
+      root.style.removeProperty('--vvt')
+      vv?.removeEventListener('resize', apply)
+      vv?.removeEventListener('scroll', apply)
+      window.removeEventListener('resize', apply)
+    }
+  }, [chatOpen])
+
   async function signOut() {
     await fetch('/api/osai/auth/logout', { method: 'POST' })
     router.refresh()
