@@ -91,12 +91,12 @@ function Box({
 export default function Details() {
   return (
     <article className="osai-dt">
-      <div className="eyebrow"><Link href="/osai/overview">← Landscape</Link> · Companion to the one-pager</div>
+      <div className="eyebrow"><Link href="/osai/overview">← Landscape</Link></div>
       <h1 style={{ marginTop: 8 }}>Public Benefit AI: the map</h1>
       <p className="lede" style={{ marginTop: 12 }}>
         Eight boxes, drawn by what each produces, so the empty ones show. A map, not a census. Built to open one question: which areas of interest to all of us are under-served?
       </p>
-      <div className="meta"><span>As of 2 Oct 2026</span><span>Items marked <Unv /> were not confirmed from a primary source</span></div>
+      <div className="meta"><span>As of 2 Oct 2026</span></div>
       <div className="legend">
         <span className="muted">Crowding</span>
         <span><i className="swatch" style={{ background: 'var(--lv-empty)' }} />Empty</span>
@@ -299,7 +299,7 @@ export default function Details() {
 
       <div className="sources">
         <h2 id="sources">Sources and caveats</h2>
-        <p>Compiled 2 Oct 2026 from three web research passes. A few org sites blocked fetches (mozillafoundation.org, the HAI people page). Not found despite trying: Mozilla&apos;s official headcount, Mozilla Ventures&apos; current managing partner, budgets for CAIS, Apollo, Redwood and ARC, HAI&apos;s annual budget, whether Humanity AI&apos;s $10M open call opened. Ask the assistant for the link behind any claim; it has the full text with every source.</p>
+        <p>Compiled 2 Oct 2026. Items marked <Unv /> were not confirmed from a primary source. Ask the assistant for the link behind any claim.</p>
       </div>
     </article>
   )

@@ -44,13 +44,11 @@ function BlockView({ block }: { block: Block }) {
   }
 }
 
-export default function CoreDoc({ doc, stamp }: { doc: Doc; stamp: string | null }) {
+export default function CoreDoc({ doc }: { doc: Doc }) {
   return (
     <article className="osai-core">
-      <div className="eyebrow">The one-pager</div>
-      <h1 style={{ marginTop: 8 }}>{doc.title || 'Open Source AI'}</h1>
+      <h1>{doc.title || 'Open Source AI'}</h1>
       {doc.lede && <p className="lede"><Inline text={doc.lede} /></p>}
-      {stamp && <div className="stamp eyebrow">From the Pages document · exported {stamp}</div>}
       {doc.sections.map((s, i) => (
         <section key={i}>
           {s.heading && <h2>{s.heading}</h2>}

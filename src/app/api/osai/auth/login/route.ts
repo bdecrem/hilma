@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isOsaiUser, passcodeOk, setSessionCookie } from '@/lib/osai/auth'
+import { E2E_USER, e2eOk, isOsaiUser, passcodeOk, setSessionCookie } from '@/lib/osai/auth'
 import { checkPassword, getPasswordHash } from '@/lib/osai/password'
 
 export const runtime = 'nodejs'
@@ -17,6 +17,12 @@ export async function POST(req: NextRequest) {
   if (!isOsaiUser(user)) return NextResponse.json({ error: "That name isn't on the list." }, { status: 400 })
   const secret = typeof body.passcode === 'string' ? body.passcode : typeof body.password === 'string' ? body.password : ''
 
+  if (user === E2E_USER) {
+    if (!e2eOk(secret)) return NextResponse.json({ error: 'That password is not right.' }, { status: 403 })
+    const res = NextResponse.json({ ok: true, user, ownPassword: false })
+    setSessionCookie(res, user)
+    return res
+  }
   const hash = await getPasswordHash(user)
   const ok = hash ? await checkPassword(secret, hash) : passcodeOk(secret)
   if (!ok) {

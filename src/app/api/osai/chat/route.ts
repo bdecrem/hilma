@@ -139,8 +139,8 @@ export async function POST(req: NextRequest) {
             convo = [...convo, { role: 'assistant', content: final.content }]
             continue
           }
-          if (final.stop_reason === 'refusal') send('\n\n(The model declined to answer that one.)')
-          else if (final.stop_reason === 'max_tokens') send('\n\n(Cut off at the length limit.)')
+          if (final.stop_reason === 'refusal') send('\n\n(Declined.)')
+          else if (final.stop_reason === 'max_tokens') send('\n\n(Cut off.)')
           break
         }
         if (sources.size) {
@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
       } catch (e) {
         const msg = e instanceof Anthropic.APIError ? `API error ${e.status}: ${e.message}` : (e as Error).message
         console.error('[osai/chat]', msg)
-        controller.enqueue(encoder.encode(`\n\n(Something went wrong: ${msg})`))
+        controller.enqueue(encoder.encode(`\n\n(${msg})`))
         settle(null)
       } finally {
         controller.close()

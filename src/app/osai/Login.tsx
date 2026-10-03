@@ -40,41 +40,20 @@ export default function Login() {
       <form className="card" onSubmit={submit}>
         <div>
           <div className="wordmark">osai</div>
-          <h1 style={{ marginTop: 8 }}>Open Source AI, the working notes.</h1>
-          <p className="lede" style={{ marginTop: 8 }}>
-            The one-pager, the public-benefit AI map, and an assistant that has read both. For three readers.
-          </p>
+          <div className="sub">Open Source AI</div>
         </div>
         <label>
-          Your name
-          <input
-            id="osai-name"
-            type="text"
-            className="name"
-            autoComplete="username"
-            autoCapitalize="none"
-            spellCheck={false}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="First name"
-          />
+          Name
+          <input id="osai-name" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
         <label>
           Password
-          <input
-            id="osai-passcode"
-            type="password"
-            autoComplete="current-password"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
-          <span className="hint">The shared passcode, until you set a password of your own.</span>
+          <input id="osai-passcode" type="password" autoComplete="current-password" value={code} onChange={(e) => setCode(e.target.value)} />
         </label>
         {error && <div className="err" role="alert">{error}</div>}
         <button className="go" type="submit" disabled={!name.trim() || !code.trim() || busy}>
           {busy ? 'Signing in…' : 'Continue'}
         </button>
-        <div className="fine">Private. Nothing here is indexed or shared beyond the three of us.</div>
       </form>
     </main>
   )

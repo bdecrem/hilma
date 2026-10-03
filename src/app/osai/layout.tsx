@@ -38,7 +38,7 @@ export default async function OsaiLayout({ children }: { children: React.ReactNo
   const own = user ? await hasPassword(user) : false
   return (
     <div className={`osai ${serif.variable} ${sans.variable}`}>
-      {user ? <Shell user={user} name={DISPLAY[user]} hasPassword={own}>{children}</Shell> : <Login />}
+      {user ? <Shell name={DISPLAY[user]} hasPassword={own}>{children}</Shell> : <Login />}
     </div>
   )
 }

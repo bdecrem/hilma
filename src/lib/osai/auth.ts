@@ -7,25 +7,42 @@ import { cookies } from 'next/headers'
 import type { NextResponse } from 'next/server'
 
 export const OSAI_USERS = ['mitchell', 'songyee', 'bart'] as const
-export type OsaiUser = (typeof OSAI_USERS)[number]
+/** The three readers, plus the test account scripts/osai/e2e.mjs signs in as. */
+export type OsaiUser = (typeof OSAI_USERS)[number] | typeof E2E_USER
+
+export const E2E_USER = 'e2e' as const
 
 export const DISPLAY: Record<OsaiUser, string> = {
   mitchell: 'Mitchell',
   songyee: 'Songyee',
   bart: 'Bart',
+  e2e: 'Test account',
 }
 
 export const FULL_NAME: Record<OsaiUser, string> = {
   mitchell: 'Mitchell Baker',
   songyee: 'Songyee Yoon',
   bart: 'Bart Decrem',
+  e2e: 'the test account',
 }
 
 const COOKIE_NAME = 'osai_session'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 90 // 90 days
 
 export function isOsaiUser(s: unknown): s is OsaiUser {
-  return typeof s === 'string' && (OSAI_USERS as readonly string[]).includes(s)
+  return typeof s === 'string' && ((OSAI_USERS as readonly string[]).includes(s) || s === E2E_USER)
+}
+
+/**
+ * The test account exists only where OSAI_E2E_PASSCODE is set, and signs in
+ * with that secret, never the shared passcode. Its rows can be wiped freely.
+ */
+export function e2eOk(code: unknown): boolean {
+  const expected = process.env.OSAI_E2E_PASSCODE
+  if (!expected || typeof code !== 'string') return false
+  const a = Buffer.from(code.trim())
+  const b = Buffer.from(expected)
+  return a.length === b.length && timingSafeEqual(a, b)
 }
 
 function secret(): string {

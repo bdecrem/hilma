@@ -42,7 +42,7 @@ export default function PasswordDialog({
       })
       const j = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) return setError(j.error ?? `Could not save (${res.status}).`)
-      setDone('Saved. From now on you sign in with this password; the shared passcode no longer works for you.')
+      setDone('Saved. Use it from now on.')
       onChanged(true)
     } catch (err) {
       setError((err as Error).message)
@@ -58,7 +58,7 @@ export default function PasswordDialog({
     try {
       const res = await fetch('/api/osai/auth/password', { method: 'DELETE' })
       if (!res.ok) return setError(`Could not remove it (${res.status}).`)
-      setDone('Removed. The shared passcode works for you again.')
+      setDone('Removed. The shared passcode works again.')
       onChanged(false)
     } finally {
       setBusy(false)
@@ -76,7 +76,7 @@ export default function PasswordDialog({
           </>
         ) : (
           <>
-            <p>{hasPassword ? 'It replaces the one you have now.' : 'It replaces the shared passcode for you. At least 8 characters, typed twice.'}</p>
+            <p>{hasPassword ? 'Replaces your current password.' : 'At least 8 characters. It replaces the shared passcode for you.'}</p>
             <label>
               New password
               <input ref={first} id="osai-pw-new" type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} />
@@ -88,7 +88,7 @@ export default function PasswordDialog({
             {error && <div className="err" role="alert">{error}</div>}
             <div className="actions">
               {hasPassword ? (
-                <button type="button" className="link" onClick={useShared} disabled={busy}>Go back to the shared passcode</button>
+                <button type="button" className="link" onClick={useShared} disabled={busy}>Use the shared passcode instead</button>
               ) : (
                 <span />
               )}

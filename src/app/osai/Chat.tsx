@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { inlines } from '@/lib/osai/core'
 
-type Msg = { role: 'user' | 'assistant'; content: string; model?: string | null }
+type Msg = { role: 'user' | 'assistant'; content: string; model?: string | null; searching?: boolean }
 type ModelKey = 'opus' | 'fable'
 type State = {
   history: Msg[]
-  notes: string
   models: Record<ModelKey, { id: string; label: string }>
   defaultModel: ModelKey
 }
@@ -15,11 +14,11 @@ type State = {
 const STARTERS = [
   'What is the case for Decentralized AI over open weights?',
   'Where is the field thinnest, and why?',
-  'What should the three of us ask each other first?',
+  'What should we ask each other first?',
 ]
 
 const MODEL_KEY = 'osai:model'
-const MORE_ON_WEB = 'Search the web for anything newer or missing on this, and keep it separate from what the documents say.'
+const CHECK_WEB = 'Check the web for anything newer on this.'
 
 function labelFor(models: State['models'] | null, id?: string | null) {
   if (!models || !id) return null
@@ -27,36 +26,19 @@ function labelFor(models: State['models'] | null, id?: string | null) {
   return id
 }
 
-/** Paragraphs, "- " lists and *em* / **strong**; nothing more. */
-function Rich({ text }: { text: string }) {
-  const blocks = text.split(/\n{2,}/)
-  return (
-    <>
-      {blocks.map((b, i) => {
-        const lines = b.split('\n')
-        const isList = lines.length > 0 && lines.every((l) => /^\s*(?:[-•*]|\d+[.)])\s+/.test(l))
-        if (isList) {
-          const ordered = /^\s*\d+[.)]/.test(lines[0])
-          const items = lines.map((l) => l.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, ''))
-          return ordered ? (
-            <ol key={i}>{items.map((it, j) => <li key={j}><Inline text={it} /></li>)}</ol>
-          ) : (
-            <ul key={i}>{items.map((it, j) => <li key={j}><Inline text={it} /></li>)}</ul>
-          )
-        }
-        return (
-          <p key={i}>
-            {lines.map((l, j) => (
-              <span key={j}>
-                {j > 0 && <br />}
-                <Inline text={l.replace(/^#+\s*/, '')} />
-              </span>
-            ))}
-          </p>
-        )
-      })}
-    </>
-  )
+/** The route appends "Sources:" + markdown links after a search turn; show them as chips. */
+function splitSources(text: string): { body: string; sources: { url: string; host: string }[] } {
+  const at = text.lastIndexOf('\n\nSources:\n')
+  if (at < 0) return { body: text, sources: [] }
+  const sources: { url: string; host: string }[] = []
+  for (const m of text.slice(at).matchAll(/\]\((https?:\/\/[^\s)]+)\)/g)) {
+    let host = m[1]
+    try {
+      host = new URL(m[1]).hostname.replace(/^www\./, '')
+    } catch { /* keep the url */ }
+    if (!sources.some((s) => s.url === m[1])) sources.push({ url: m[1], host })
+  }
+  return { body: text.slice(0, at), sources }
 }
 
 function Inline({ text }: { text: string }) {
@@ -69,22 +51,62 @@ function Inline({ text }: { text: string }) {
   )
 }
 
-export default function Chat({
-  user,
-  name,
-  onClose,
-  onSignOut,
-  onPassword,
-}: {
-  user: string
-  name: string
-  onClose: () => void
-  onSignOut: () => void
-  onPassword: () => void
-}) {
+/** Paragraphs, lists, *em* / **strong** / links, and a chip row for sources. */
+function Rich({ text }: { text: string }) {
+  const { body, sources } = splitSources(text)
+  const blocks = body.split(/\n{2,}/)
+  return (
+    <>
+      {blocks.map((b, i) => {
+        const lines = b.split('\n').filter((l) => l.trim())
+        if (!lines.length) return null
+        const isList = lines.every((l) => /^\s*(?:[-•*]|\d+[.)])\s+/.test(l))
+        if (isList) {
+          const ordered = /^\s*\d+[.)]/.test(lines[0])
+          const items = lines.map((l) => l.replace(/^\s*(?:[-•*]|\d+[.)])\s+/, ''))
+          return ordered ? (
+            <ol key={i}>{items.map((it, j) => <li key={j}><Inline text={it} /></li>)}</ol>
+          ) : (
+            <ul key={i}>{items.map((it, j) => <li key={j}><Inline text={it} /></li>)}</ul>
+          )
+        }
+        if (lines.length === 1 && /^(From the web|Sources)[:]?$/i.test(lines[0].trim())) {
+          return <div key={i} className="section">{lines[0].replace(/:$/, '')}</div>
+        }
+        return (
+          <p key={i}>
+            {lines.map((l, j) => (
+              <span key={j}>
+                {j > 0 && <br />}
+                <Inline text={l.replace(/^#+\s*/, '')} />
+              </span>
+            ))}
+          </p>
+        )
+      })}
+      {sources.length > 0 && (
+        <div className="sources">
+          {sources.map((s, i) => (
+            <a key={s.url} href={s.url} target="_blank" rel="noreferrer" title={s.url}>
+              <span className="n">{i + 1}</span>{s.host}
+            </a>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+const Globe = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.4">
+    <circle cx="8" cy="8" r="6.3" />
+    <path d="M1.7 8h12.6M8 1.7c2.2 2.1 2.2 10.5 0 12.6M8 1.7c-2.2 2.1-2.2 10.5 0 12.6" />
+  </svg>
+)
+
+export default function Chat({ onClose }: { onClose: () => void }) {
   const [state, setState] = useState<State | null>(null)
   const [messages, setMessages] = useState<Msg[]>([])
-  const [notes, setNotes] = useState('')
   const [model, setModel] = useState<ModelKey>('opus')
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -97,14 +119,13 @@ export default function Chat({
     let cancelled = false
     fetch('/api/osai/chat')
       .then(async (r) => {
-        if (!r.ok) throw new Error(`could not load the conversation (${r.status})`)
+        if (!r.ok) throw new Error(`Could not load the conversation (${r.status}).`)
         return (await r.json()) as State
       })
       .then((s) => {
         if (cancelled) return
         setState(s)
         setMessages(s.history)
-        setNotes(s.notes)
         let m: ModelKey = s.defaultModel
         try {
           const saved = localStorage.getItem(MODEL_KEY)
@@ -116,7 +137,7 @@ export default function Chat({
     return () => {
       cancelled = true
     }
-  }, [user])
+  }, [])
 
   useEffect(() => {
     const el = logRef.current
@@ -138,7 +159,8 @@ export default function Chat({
       setInput('')
       if (inputRef.current) inputRef.current.style.height = 'auto'
       const next: Msg[] = [...messages, { role: 'user', content }]
-      setMessages([...next, { role: 'assistant', content: '', model: state?.models[model].id }])
+      const modelId = state?.models[model].id
+      setMessages([...next, { role: 'assistant', content: '', model: modelId, searching: search }])
       setBusy(true)
       try {
         const res = await fetch('/api/osai/chat', {
@@ -151,7 +173,6 @@ export default function Chat({
           setMessages(next)
           return
         }
-        const modelId = res.headers.get('x-osai-model') ?? state?.models[model].id
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
         let acc = ''
@@ -160,19 +181,14 @@ export default function Chat({
           if (done) break
           acc += decoder.decode(value, { stream: true })
           const snapshot = acc
-          setMessages([...next, { role: 'assistant', content: snapshot, model: modelId }])
+          setMessages([...next, { role: 'assistant', content: snapshot, model: modelId, searching: search && !snapshot.trim() }])
         }
         if (!acc.trim()) {
           setError('Empty reply.')
           setMessages(next)
+        } else {
+          setMessages([...next, { role: 'assistant', content: acc, model: modelId }])
         }
-        // The memory note is updated after the reply lands; refresh it shortly after.
-        setTimeout(() => {
-          fetch('/api/osai/memory')
-            .then((r) => (r.ok ? r.json() : null))
-            .then((j: { notes?: string } | null) => j && setNotes(j.notes ?? ''))
-            .catch(() => {})
-        }, 6000)
       } catch (e) {
         setError((e as Error).message)
         setMessages(next)
@@ -184,17 +200,11 @@ export default function Chat({
     [busy, messages, model, state, webNext],
   )
 
-  async function clearConversation() {
+  async function newConversation() {
     if (busy) return
     const res = await fetch('/api/osai/chat', { method: 'DELETE' })
     if (res.ok) setMessages([])
     else setError('Could not clear the conversation.')
-  }
-
-  async function forget() {
-    const res = await fetch('/api/osai/memory', { method: 'DELETE' })
-    if (res.ok) setNotes('')
-    else setError('Could not clear the memory.')
   }
 
   function onKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -210,15 +220,13 @@ export default function Chat({
   }
 
   const models = state?.models ?? null
+  const last = messages.length - 1
 
   return (
     <section className="osai-chat">
       <div className="head">
-        <div>
-          <h2>Ask the notes</h2>
-          <div className="sub">Answers from the documents first. Remembers you.</div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h2>Ask</h2>
+        <div className="tools">
           <div className="seg" role="group" aria-label="Model">
             <button type="button" aria-pressed={model === 'opus'} onClick={() => pickModel('opus')} title="claude-opus-5-5">
               {models?.opus.label ?? 'Opus 5.5'}
@@ -227,14 +235,14 @@ export default function Chat({
               {models?.fable.label ?? 'Fable 5.1'}
             </button>
           </div>
-          <button className="close" type="button" onClick={onClose} aria-label="Close">Done</button>
+          {messages.length > 0 && <button type="button" className="new" onClick={newConversation} disabled={busy}>New</button>}
+          <button className="close" type="button" onClick={onClose}>Done</button>
         </div>
       </div>
 
       <div className="log" ref={logRef}>
         {state && messages.length === 0 && (
           <div className="starters">
-            <p>Hi {name}. Ask anything about the one-pager or the map, or start with one of these.</p>
             {STARTERS.map((s) => (
               <button key={s} type="button" className="starter" onClick={() => void send(s)}>{s}</button>
             ))}
@@ -246,11 +254,15 @@ export default function Chat({
           ) : (
             <div key={i} className="msg assistant">
               <div className="model">{labelFor(models, m.model) ?? 'Assistant'}</div>
-              <Rich text={m.content} />
-              {busy && i === messages.length - 1 && <span className="cursor" aria-hidden="true" />}
-              {!busy && i === messages.length - 1 && !/^Sources:$/m.test(m.content) && (
-                <button type="button" className="more-web" onClick={() => void send(MORE_ON_WEB, { search: true })}>
-                  Search the web for more on this?
+              {m.searching && !m.content.trim() ? (
+                <div className="searching">Searching the web…</div>
+              ) : (
+                <Rich text={m.content} />
+              )}
+              {busy && i === last && !m.searching && <span className="cursor" aria-hidden="true" />}
+              {!busy && i === last && !/\n\nSources:\n/.test(m.content) && (
+                <button type="button" className="check-web" onClick={() => void send(CHECK_WEB, { search: true })}>
+                  <Globe /> Check the web
                 </button>
               )}
             </div>
@@ -261,43 +273,30 @@ export default function Chat({
       {error && <div className="err" role="alert">{error}</div>}
 
       <div className="compose">
-        <div className="row">
-          <textarea
-            id="osai-chat-input"
-            ref={inputRef}
-            rows={1}
-            value={input}
-            placeholder={state ? 'Ask…' : 'Loading…'}
-            disabled={!state}
-            onChange={(e) => { setInput(e.target.value); grow(e.target) }}
-            onKeyDown={onKey}
-          />
-          <button
-            type="button"
-            className="web"
-            aria-pressed={webNext}
-            disabled={!state || busy}
-            title="Search the web for this message (the documents still come first)"
-            onClick={() => setWebNext((v) => !v)}
-          >
-            Web
-          </button>
-          <button className="send" type="button" disabled={!state || busy || !input.trim()} onClick={() => void send(input)}>
-            Send
-          </button>
-        </div>
-        <div className="foot">
-          <details className="memory">
-            <summary>Memory</summary>
-            <div className={`notes${notes.trim() ? '' : ' empty'}`}>{notes.trim() || 'Nothing yet. It takes notes as you talk.'}</div>
-            {notes.trim() && <button type="button" className="forget" onClick={forget}>Forget all of this</button>}
-          </details>
-          <div className="links">
-            {messages.length > 0 && <button type="button" onClick={clearConversation}>New conversation</button>}
-            <button type="button" onClick={onPassword}>Password</button>
-            <button type="button" onClick={onSignOut}>Sign out</button>
-          </div>
-        </div>
+        <textarea
+          id="osai-chat-input"
+          ref={inputRef}
+          rows={1}
+          value={input}
+          placeholder={state ? 'Ask…' : ''}
+          disabled={!state}
+          onChange={(e) => { setInput(e.target.value); grow(e.target) }}
+          onKeyDown={onKey}
+        />
+        <button
+          type="button"
+          className="web"
+          aria-pressed={webNext}
+          aria-label="Search the web"
+          disabled={!state || busy}
+          title="Search the web"
+          onClick={() => setWebNext((v) => !v)}
+        >
+          <Globe />
+        </button>
+        <button className="send" type="button" disabled={!state || busy || !input.trim()} onClick={() => void send(input)}>
+          Send
+        </button>
       </div>
     </section>
   )

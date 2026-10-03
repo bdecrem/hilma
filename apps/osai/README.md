@@ -32,7 +32,7 @@ Pros/cons tables and two-column bullet tables become lists.
 
 ## Readers, passcode, memory
 
-- Names are fixed in `src/lib/osai/auth.ts` (`mitchell`, `songyee`, `bart`); the reader types their first name (any case) plus the passcode.
+- Names are fixed in `src/lib/osai/auth.ts` (`mitchell`, `songyee`, `bart`); the reader types their first name (any case) plus the passcode. A fourth name, `e2e`, exists only where `OSAI_E2E_PASSCODE` is set and signs in with that secret alone: it is what `scripts/osai/e2e.mjs` uses, so the check never touches a real reader's rows.
 - `OSAI_PASSCODE` (shared) and `OSAI_SESSION_SECRET` live in `.env.local` and
   on Vercel (Production). The cookie is `osai_session`, 90 days.
 - A reader can set their own password ("Set a password" in the top bar or

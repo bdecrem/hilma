@@ -54,30 +54,27 @@
   padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
 }
 .osai-login .card {
-  width: min(440px, 100%);
+  width: min(380px, 100%);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 32px 28px 28px;
+  padding: 30px 28px 26px;
   display: grid;
-  gap: 22px;
+  gap: 16px;
 }
-.osai-login .wordmark { font-family: var(--sans); font-weight: 600; font-size: 15px; letter-spacing: .02em; color: var(--accent); }
-.osai-login h1 { font-size: 30px; font-weight: 600; line-height: 1.15; }
-.osai-login .lede { color: var(--muted); font-size: 16px; }
+.osai-login .wordmark { font-family: var(--sans); font-weight: 600; font-size: 26px; letter-spacing: .01em; color: var(--accent); line-height: 1; }
+.osai-login .sub { font-size: 15px; color: var(--muted); margin-top: 6px; }
 .osai-login label { font-family: var(--sans); font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
 .osai-login input {
   font-family: var(--sans); font-size: 17px; width: 100%;
   padding: 11px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink);
 }
-.osai-login .hint { font-size: 12px; color: var(--muted); }
 .osai-login .go {
   font-family: var(--sans); font-size: 15px; font-weight: 600; color: #fff; background: var(--accent);
-  border: 0; border-radius: 10px; padding: 13px 16px; cursor: pointer;
+  border: 0; border-radius: 10px; padding: 13px 16px; cursor: pointer; margin-top: 4px;
 }
 .osai-login .go[disabled] { opacity: .5; cursor: default; }
 .osai-login .err { font-family: var(--sans); font-size: 14px; color: var(--room); }
-.osai-login .fine { font-family: var(--sans); font-size: 12.5px; color: var(--muted); text-align: center; }
 
 /* ---- shell -------------------------------------------------------------- */
 .osai-top {
@@ -92,19 +89,33 @@
   height: var(--topbar); max-width: 1320px; margin: 0 auto; padding: 0 20px;
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
 }
-.osai-top .brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.osai-top .wordmark { font-family: var(--sans); font-weight: 600; font-size: 17px; color: var(--accent); text-decoration: none; letter-spacing: .01em; }
-.osai-top .tag { font-family: var(--sans); font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.osai-top .wordmark { font-family: var(--sans); font-weight: 600; font-size: 17px; color: var(--accent); text-decoration: none; letter-spacing: .01em; justify-self: start; }
 .osai-nav { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
 .osai-nav a {
   font-family: var(--sans); font-size: 13.5px; font-weight: 500; color: var(--muted); text-decoration: none;
   padding: 6px 14px; border-radius: 999px; white-space: nowrap;
 }
 .osai-nav a[aria-current="page"] { background: var(--accent); color: #fff; }
-.osai-top .right { display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-family: var(--sans); font-size: 13px; color: var(--muted); }
-.osai-top .right .who { white-space: nowrap; }
-.osai-top .linkbtn { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
+.osai-top .right { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
 .osai-top .ask { display: none; font-family: var(--sans); font-size: 13.5px; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+
+.osai-user { position: relative; }
+.osai-user-btn {
+  font-family: var(--sans); font-size: 13.5px; font-weight: 500; color: var(--ink);
+  display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid transparent; border-radius: 999px; padding: 3px 10px 3px 3px; cursor: pointer;
+}
+.osai-user-btn:hover, .osai-user-btn[aria-expanded="true"] { background: var(--surface); border-color: var(--line); }
+.osai-user-btn .avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; display: inline-grid; place-items: center; font-size: 12.5px; font-weight: 600; }
+.osai-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); min-width: 180px; z-index: 30;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px;
+  box-shadow: 0 10px 30px rgba(28, 32, 39, .12); display: grid;
+}
+.osai-menu button {
+  font-family: var(--sans); font-size: 13.5px; color: var(--ink); text-align: left;
+  background: none; border: 0; border-radius: 7px; padding: 8px 10px; cursor: pointer;
+}
+.osai-menu button:hover { background: var(--paper); }
 
 .osai-body {
   max-width: 1320px; margin: 0 auto; padding: 0 20px;
@@ -124,16 +135,17 @@
   background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
   font-family: var(--sans);
 }
-.osai-chat .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.osai-chat .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px 10px 14px; border-bottom: 1px solid var(--line); }
 .osai-chat .head h2 { font-family: var(--sans); font-size: 14px; font-weight: 600; }
-.osai-chat .head .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.osai-chat .tools { display: flex; align-items: center; gap: 8px; }
 .osai-chat .seg { display: inline-flex; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
 .osai-chat .seg button { font: inherit; font-size: 12px; font-weight: 500; color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
 .osai-chat .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
-.osai-chat .close { display: none; font: inherit; font-size: 13px; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px; }
+.osai-chat .new, .osai-chat .close { font: inherit; font-size: 12.5px; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px 2px; }
+.osai-chat .new[disabled] { opacity: .4; cursor: default; }
+.osai-chat .close { display: none; }
 .osai-chat .log { overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-.osai-chat .starters { display: grid; gap: 8px; margin-top: 6px; }
-.osai-chat .starters p { font-size: 13px; color: var(--muted); }
+.osai-chat .starters { display: grid; gap: 8px; }
 .osai-chat .starter { font: inherit; font-size: 13.5px; text-align: left; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; cursor: pointer; }
 .osai-chat .starter:hover { border-color: var(--accent); }
 .osai-chat .msg { max-width: 100%; font-size: 14.5px; line-height: 1.5; }
@@ -145,36 +157,33 @@
 .osai-chat .msg.assistant ul { margin: 0 0 8px; padding-left: 20px; list-style: disc; }
 .osai-chat .msg.assistant ol { margin: 0 0 8px; padding-left: 20px; list-style: decimal; }
 .osai-chat .msg.assistant li { margin-bottom: 3px; }
+.osai-chat .msg.assistant a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.osai-chat .msg.assistant .section { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 12px 0 6px; padding-top: 8px; border-top: 1px solid var(--line); }
+.osai-chat .msg.assistant .searching { color: var(--muted); font-style: italic; animation: osai-pulse 1.6s ease-in-out infinite; }
 .osai-chat .msg.assistant .cursor { display: inline-block; width: 7px; height: 14px; background: var(--accent); vertical-align: -2px; margin-left: 2px; animation: osai-blink 1s steps(2) infinite; }
 @keyframes osai-blink { to { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .osai-chat .msg.assistant .cursor { animation: none; } }
+@keyframes osai-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .osai-chat .msg.assistant .cursor, .osai-chat .msg.assistant .searching { animation: none; } }
+.osai-chat .sources { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.osai-chat .sources a { font-size: 12px; color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px 2px 4px; display: inline-flex; align-items: center; gap: 6px; }
+.osai-chat .msg.assistant .sources a { text-decoration: none; color: var(--muted); }
+.osai-chat .msg.assistant .sources a:hover { color: var(--accent); border-color: var(--accent); }
+.osai-chat .sources .n { width: 16px; height: 16px; border-radius: 50%; background: var(--paper); display: inline-grid; place-items: center; font-size: 10.5px; font-weight: 600; }
+.osai-chat .check-web { font: inherit; font-size: 12.5px; color: var(--accent); background: none; border: 0; padding: 0; margin-top: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+.osai-chat .check-web:hover { text-decoration: underline; text-underline-offset: 2px; }
 .osai-chat .err { font-size: 13px; color: var(--room); padding: 0 14px 8px; }
-.osai-chat .compose { border-top: 1px solid var(--line); padding: 10px 12px 10px; display: grid; gap: 8px; }
-.osai-chat .row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
-.osai-chat .web { font: inherit; font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 0 11px; height: 42px; cursor: pointer; }
-.osai-chat .web[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
-.osai-chat .web[disabled] { opacity: .45; cursor: default; }
-.osai-chat .more-web { font: inherit; font-size: 12.5px; color: var(--accent); background: none; border: 1px dashed color-mix(in oklab, var(--accent) 45%, var(--line)); border-radius: 999px; padding: 4px 10px; margin-top: 8px; cursor: pointer; }
-.osai-chat .more-web:hover { background: var(--accent-soft); }
-.osai-chat .msg.assistant a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.osai-chat .compose { border-top: 1px solid var(--line); padding: 10px 12px; display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
 .osai-chat textarea {
   font: inherit; font-size: 14.5px; line-height: 1.4; color: var(--ink); background: var(--paper);
   border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; resize: none; min-height: 42px; max-height: 160px; width: 100%;
 }
+.osai-chat .web { width: 42px; height: 42px; display: inline-grid; place-items: center; color: var(--muted); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.osai-chat .web[aria-pressed="true"] { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+.osai-chat .web[disabled] { opacity: .45; cursor: default; }
 .osai-chat .send { font: inherit; font-size: 13.5px; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 10px; padding: 0 14px; height: 42px; cursor: pointer; }
 .osai-chat .send[disabled] { opacity: .45; cursor: default; }
-.osai-chat .foot { display: flex; justify-content: space-between; align-items: center; gap: 6px 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
-.osai-chat .foot .links { display: flex; gap: 12px; white-space: nowrap; }
-.osai-chat .foot button, .osai-chat .foot summary { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
-.osai-chat .memory { font-size: 12.5px; flex: 1 1 100%; order: 2; }
-.osai-chat .memory:not([open]) { flex: 0 1 auto; order: 0; }
-.osai-chat .memory summary { list-style: none; }
-.osai-chat .memory summary::-webkit-details-marker { display: none; }
-.osai-chat .memory .notes { margin-top: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--ink); white-space: pre-wrap; line-height: 1.45; }
-.osai-chat .memory .notes.empty { color: var(--muted); font-style: italic; }
-.osai-chat .memory .forget { margin-top: 6px; display: inline-block; }
 
-/* ---- password dialog -------------------------------------------------- */
+/* ---- dialogs ---------------------------------------------------------- */
 .osai-dialog-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(28, 32, 39, .35); display: grid; place-items: center; padding: 16px; }
 .osai-dialog {
   width: min(420px, 100%); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px;
@@ -184,6 +193,8 @@
 .osai-dialog p { font-size: 14px; color: var(--muted); }
 .osai-dialog label { font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
 .osai-dialog input { font: inherit; font-size: 16px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); width: 100%; }
+.osai-dialog .notes { font-size: 13.5px; line-height: 1.5; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; white-space: pre-wrap; max-height: 40vh; overflow-y: auto; }
+.osai-dialog .notes.empty { color: var(--muted); font-style: italic; }
 .osai-dialog .actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .osai-dialog .actions > div { display: flex; gap: 8px; }
 .osai-dialog .primary { font: inherit; font-size: 14px; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; }
@@ -329,11 +340,11 @@
   .osai-chat { border-radius: 0; border: 0; height: 100%; }
   .osai-chat .close { display: inline-block; }
   .osai-top .ask { display: inline-block; }
-  .osai-top .right .who, .osai-top .right .out { display: none; }
   .osai-top .inner { grid-template-columns: auto 1fr auto; }
-  .osai-top .tag { display: none; }
   .osai-nav { justify-self: center; }
   .osai-nav a { padding: 6px 10px; font-size: 13px; }
+  .osai-user-btn .uname { display: none; }
+  .osai-user-btn { padding: 3px; }
 }
 @media (max-width: 560px) {
   .osai { font-size: 16px; }
