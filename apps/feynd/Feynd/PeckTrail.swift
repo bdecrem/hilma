@@ -227,18 +227,18 @@ struct PeckTrailCanvas: View {
             let p = geo.point(i)
             let lvl = level.level
             let side: CGFloat = geo.zig(i) > 0 ? -1 : 1
-            // A region's name on a sign by its first stone.
-            if i % 10 == 0 {
+            // A region's name on a sign: by the first stone for the meadow
+            // (the start of the trail), and two stones past the gate for the
+            // regions after it — the gate's banner already names the region
+            // at its first stone, and a name sign right beside it read as a
+            // duplicate (2026-10-02). Stone 3 of a region is a centre stone,
+            // with no chest (chests sit at 3, 7, 12, 16, 22, 26) and the
+            // rest-stop sign two stones further.
+            if i == 0 || (i >= 10 && i % 10 == 2) {
                 // Beside the stone, away from the next one up the trail.
                 let next = i + 1 < geo.count ? geo.zig(i + 1) : 0
                 let away: CGFloat = next < 0 ? 1 : -1
-                // Past the first region, the gate banner of the stone below
-                // hangs at this stone's level on the same side (both land at
-                // x ± 106), so the sign stands 30pt higher and its post ends
-                // above the banner (2026-10-02: JELLY LAGOON's post ran
-                // through "To Jelly Lagoon").
-                let lift: CGFloat = i == 0 ? 0 : 30
-                jellySign(&ctx, ink, x: p.x + away * 106, y: p.y + 8 - lift, text: JellyRegion.of(index: i).signName)
+                jellySign(&ctx, ink, x: p.x + away * 106, y: p.y + 8, text: JellyRegion.of(index: i).signName)
             }
             if PeckMilestone.isGate(lvl) {
                 let banner = JellyRegion.of(index: i).gateBanner

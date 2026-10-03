@@ -172,8 +172,11 @@ func jellyRibbon(_ g: inout GraphicsContext, _ ink: JellyInk, x: CGFloat, y: CGF
     g.fill(Path(roundedRect: CGRect(x: x - w / 2, y: y, width: w, height: hgt), cornerRadius: hgt / 2),
            with: .linearGradient(Gradient(colors: [ink.c(Jelly.tint(col, 0.3)), ink.c(col)]),
                                  startPoint: CGPoint(x: x, y: y), endPoint: CGPoint(x: x, y: y + hgt)))
-    g.fill(Path(roundedRect: CGRect(x: x - w / 2 + 8, y: y + 3, width: w - 16, height: 5), cornerRadius: 2.5),
-           with: .color(.white.opacity(0.55)))
+    // The gloss: a short soft highlight, not a bar across the top — at the
+    // art page's full-width 55 % white it read as a stray line over the
+    // sky-blue gate banner, worst in dark mode (2026-10-02).
+    g.fill(Path(roundedRect: CGRect(x: x - w / 2 + 14, y: y + 3.5, width: (w - 28) * 0.55, height: 4), cornerRadius: 2),
+           with: .color(.white.opacity(ink.dark ? 0.22 : 0.32)))
     g.draw(label, at: CGPoint(x: x, y: y + hgt / 2))
 }
 

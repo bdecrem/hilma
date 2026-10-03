@@ -262,9 +262,13 @@ The app was rebranded to the jelly dodo in one pass — see
 - **Map signs** (2026-10-02): the due-date board picks its side in
   `FlashTabView.dueBoardX` — on a region's first stone it takes the side
   opposite the name sign and the gate banner below; on a gate stone it
-  stands outside the arch. A region sign past the first stands 30pt higher
-  than the gate banner under it, and the gate's ribbon rises 40pt while the
-  traveler stands on that stone (`PeckTrail.drawMilestones`). Check with a
+  stands outside the arch. A region's name sign stands by stone 1 for the
+  meadow and two stones past the gate for the regions after it (the gate
+  banner already names the region; beside each other they read as a
+  duplicate, and the sign's post ran through the banner), and the gate's
+  ribbon rises 40pt while the traveler stands on that stone
+  (`PeckTrail.drawMilestones`). Ribbons' gloss is a short soft highlight,
+  not the art page's full-width bar (it read as a stray line). Check with a
   short mock map so the stones are on screen: `-StartTab peck
   -MockLevelCount 11 -MockCurrentLevel 11 -MockPeckDue 7 -ScrollTop 1`
   (and `… 10 … 10` for the gate case); `-ScrollToLevel` stays approximate
