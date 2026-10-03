@@ -1,0 +1,323 @@
+/* osai — the Open Source AI reading room at /osai.
+   One light theme, set explicitly. Paper is a cool off-white, documents are
+   set in Source Serif 4, the interface in IBM Plex Sans. One warm colour
+   (--room) marks "room to work" on the overview; everything else is quiet. */
+
+.osai {
+  --paper: #f4f5f7;
+  --surface: #ffffff;
+  --ink: #1c2027;
+  --muted: #5b6370;
+  --line: #d6dbe2;
+  --accent: #155e63;
+  --accent-soft: #e3eff0;
+  --room: #c2410c;
+  --room-soft: #f6e3d8;
+  --mark-m: #7a3e00;
+  --mark-h: #8c1d2f;
+  --lv-empty: #c2410c;
+  --lv-thin: #d98a0b;
+  --lv-split: #b9a35a;
+  --lv-moderate: #8f99a6;
+  --lv-crowded: #4a6a8f;
+  --serif: var(--font-serif), Charter, Georgia, 'Times New Roman', serif;
+  --sans: var(--font-sans), 'Helvetica Neue', Arial, sans-serif;
+  --topbar: 56px;
+  --chat-w: 400px;
+
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.osai *, .osai *::before, .osai *::after { box-sizing: border-box; }
+.osai a { color: var(--accent); }
+.osai a:focus-visible, .osai button:focus-visible, .osai input:focus-visible, .osai textarea:focus-visible, .osai summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.osai h1, .osai h2, .osai h3 { margin: 0; text-wrap: balance; }
+.osai p { margin: 0; }
+.osai .ui { font-family: var(--sans); }
+.osai .eyebrow { font-family: var(--sans); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.osai .muted { color: var(--muted); }
+.osai .unv { font-family: var(--sans); font-size: 11px; color: var(--muted); border: 1px dashed var(--line); border-radius: 3px; padding: 0 4px; white-space: nowrap; }
+
+/* ---- sign in ---------------------------------------------------------- */
+.osai-login {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+}
+.osai-login .card {
+  width: min(440px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 32px 28px 28px;
+  display: grid;
+  gap: 22px;
+}
+.osai-login .wordmark { font-family: var(--sans); font-weight: 600; font-size: 15px; letter-spacing: .02em; color: var(--accent); }
+.osai-login h1 { font-size: 30px; font-weight: 600; line-height: 1.15; }
+.osai-login .lede { color: var(--muted); font-size: 16px; }
+.osai-login .names { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.osai-login .name {
+  font-family: var(--sans); font-size: 15px; font-weight: 500; color: var(--ink);
+  background: var(--paper); border: 1.5px solid var(--line); border-radius: 10px;
+  padding: 12px 8px; cursor: pointer; text-align: center;
+}
+.osai-login .name[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.osai-login label { font-family: var(--sans); font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+.osai-login input {
+  font-family: var(--sans); font-size: 22px; letter-spacing: .3em; text-align: center;
+  padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink);
+}
+.osai-login .go {
+  font-family: var(--sans); font-size: 15px; font-weight: 600; color: #fff; background: var(--accent);
+  border: 0; border-radius: 10px; padding: 13px 16px; cursor: pointer;
+}
+.osai-login .go[disabled] { opacity: .5; cursor: default; }
+.osai-login .err { font-family: var(--sans); font-size: 14px; color: var(--room); }
+.osai-login .fine { font-family: var(--sans); font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* ---- shell -------------------------------------------------------------- */
+.osai-top {
+  position: sticky; top: 0; z-index: 20;
+  height: calc(var(--topbar) + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+  background: color-mix(in oklab, var(--paper) 88%, white);
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+.osai-top .inner {
+  height: var(--topbar); max-width: 1320px; margin: 0 auto; padding: 0 20px;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+}
+.osai-top .brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.osai-top .wordmark { font-family: var(--sans); font-weight: 600; font-size: 17px; color: var(--accent); text-decoration: none; letter-spacing: .01em; }
+.osai-top .tag { font-family: var(--sans); font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.osai-nav { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.osai-nav a {
+  font-family: var(--sans); font-size: 13.5px; font-weight: 500; color: var(--muted); text-decoration: none;
+  padding: 6px 14px; border-radius: 999px; white-space: nowrap;
+}
+.osai-nav a[aria-current="page"] { background: var(--accent); color: #fff; }
+.osai-top .right { display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-family: var(--sans); font-size: 13px; color: var(--muted); }
+.osai-top .right .who { white-space: nowrap; }
+.osai-top .linkbtn { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
+.osai-top .ask { display: none; font-family: var(--sans); font-size: 13.5px; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+
+.osai-body {
+  max-width: 1320px; margin: 0 auto; padding: 0 20px;
+  display: grid; grid-template-columns: minmax(0, 1fr) var(--chat-w); gap: 36px; align-items: start;
+}
+.osai-doc { min-width: 0; padding: 36px 0 80px; }
+.osai-doc .reading { max-width: 720px; }
+.osai-aside {
+  position: sticky; top: calc(var(--topbar) + env(safe-area-inset-top) + 16px);
+  height: calc(100dvh - var(--topbar) - env(safe-area-inset-top) - 32px);
+  margin: 16px 0;
+}
+
+/* ---- chat ------------------------------------------------------------- */
+.osai-chat {
+  height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;
+  font-family: var(--sans);
+}
+.osai-chat .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.osai-chat .head h2 { font-family: var(--sans); font-size: 14px; font-weight: 600; }
+.osai-chat .head .sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.osai-chat .seg { display: inline-flex; background: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+.osai-chat .seg button { font: inherit; font-size: 12px; font-weight: 500; color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
+.osai-chat .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.osai-chat .close { display: none; font: inherit; font-size: 13px; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px; }
+.osai-chat .log { overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+.osai-chat .starters { display: grid; gap: 8px; margin-top: 6px; }
+.osai-chat .starters p { font-size: 13px; color: var(--muted); }
+.osai-chat .starter { font: inherit; font-size: 13.5px; text-align: left; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; cursor: pointer; }
+.osai-chat .starter:hover { border-color: var(--accent); }
+.osai-chat .msg { max-width: 100%; font-size: 14.5px; line-height: 1.5; }
+.osai-chat .msg.user { align-self: flex-end; max-width: 88%; background: var(--accent-soft); color: var(--ink); border-radius: 14px 14px 4px 14px; padding: 9px 12px; white-space: pre-wrap; }
+.osai-chat .msg.assistant { align-self: stretch; padding: 2px 2px 0; }
+.osai-chat .msg.assistant .model { font-size: 11px; color: var(--muted); margin-bottom: 4px; letter-spacing: .04em; text-transform: uppercase; }
+.osai-chat .msg.assistant p { margin: 0 0 8px; }
+.osai-chat .msg.assistant p:last-child { margin-bottom: 0; }
+.osai-chat .msg.assistant ul { margin: 0 0 8px; padding-left: 20px; list-style: disc; }
+.osai-chat .msg.assistant ol { margin: 0 0 8px; padding-left: 20px; list-style: decimal; }
+.osai-chat .msg.assistant li { margin-bottom: 3px; }
+.osai-chat .msg.assistant .cursor { display: inline-block; width: 7px; height: 14px; background: var(--accent); vertical-align: -2px; margin-left: 2px; animation: osai-blink 1s steps(2) infinite; }
+@keyframes osai-blink { to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .osai-chat .msg.assistant .cursor { animation: none; } }
+.osai-chat .err { font-size: 13px; color: var(--room); padding: 0 14px 8px; }
+.osai-chat .compose { border-top: 1px solid var(--line); padding: 10px 12px 10px; display: grid; gap: 8px; }
+.osai-chat .row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+.osai-chat textarea {
+  font: inherit; font-size: 14.5px; line-height: 1.4; color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; resize: none; min-height: 42px; max-height: 160px; width: 100%;
+}
+.osai-chat .send { font: inherit; font-size: 13.5px; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 10px; padding: 0 14px; height: 42px; cursor: pointer; }
+.osai-chat .send[disabled] { opacity: .45; cursor: default; }
+.osai-chat .foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 12.5px; color: var(--muted); }
+.osai-chat .foot button, .osai-chat .foot summary { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; }
+.osai-chat .memory { font-size: 12.5px; }
+.osai-chat .memory summary { list-style: none; }
+.osai-chat .memory summary::-webkit-details-marker { display: none; }
+.osai-chat .memory .notes { margin-top: 8px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--ink); white-space: pre-wrap; line-height: 1.45; }
+.osai-chat .memory .notes.empty { color: var(--muted); font-style: italic; }
+.osai-chat .memory .forget { margin-top: 6px; display: inline-block; }
+
+/* ---- core document ---------------------------------------------------- */
+.osai-core h1 { font-size: clamp(34px, 4.5vw, 46px); font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; }
+.osai-core .lede { font-size: 20px; line-height: 1.45; margin-top: 14px; max-width: 62ch; }
+.osai-core .stamp { margin-top: 10px; }
+.osai-core section { margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--ink); }
+.osai-core h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+.osai-core p { margin-bottom: 10px; max-width: 66ch; }
+.osai-core ul { margin: 0 0 10px; padding-left: 20px; max-width: 66ch; list-style: disc; }
+.osai-core li { margin-bottom: 4px; }
+.osai-core .note { display: flex; gap: 10px; align-items: baseline; margin: 6px 0; font-size: 16px; }
+.osai-core .note .label { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.osai-core .proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 14px 0 6px; }
+.osai-core .proscons > div { border-top: 1px solid var(--line); padding-top: 8px; min-width: 0; }
+.osai-core .proscons .label { font-family: var(--sans); font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.osai-core .proscons ul { list-style: none; padding: 0; margin: 0; }
+.osai-core .proscons li { display: grid; grid-template-columns: 14px 1fr; gap: 6px; font-size: 16px; }
+.osai-core .proscons .pm { font-family: var(--sans); color: var(--muted); }
+
+/* ---- overview --------------------------------------------------------- */
+.osai-ov h1 { font-size: clamp(32px, 4.5vw, 44px); font-weight: 600; line-height: 1.08; letter-spacing: -0.015em; }
+.osai-ov .lede { font-size: 19px; max-width: 62ch; margin-top: 14px; }
+.osai-ov .legend { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; font-family: var(--sans); font-size: 13px; color: var(--muted); margin-top: 18px; }
+.osai-ov .legend .item { display: inline-flex; align-items: center; gap: 8px; }
+.osai .gauge { display: inline-grid; grid-template-columns: repeat(5, 22px); gap: 3px; }
+.osai .gauge i { display: block; height: 11px; border-radius: 2px; border: 1px solid color-mix(in oklab, var(--room) 45%, var(--line)); }
+.osai .gauge i.on { background: var(--room); border-color: var(--room); }
+.osai .gauge-label { font-family: var(--sans); font-size: 12.5px; font-weight: 600; color: var(--room); margin-top: 5px; display: block; }
+.osai .mark { font-family: var(--sans); font-size: 11px; font-weight: 600; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; border: 1.5px solid currentColor; }
+.osai .mark.m { color: var(--mark-m); }
+.osai .mark.h { color: var(--mark-h); }
+.osai .mark.off { opacity: .22; }
+.osai-ov .rows { display: grid; gap: 10px; margin-top: 24px; }
+.osai-ov .row {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr) 150px 110px; gap: 16px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+  text-decoration: none; color: inherit;
+}
+.osai-ov .row:hover { border-color: color-mix(in oklab, var(--accent) 50%, var(--line)); }
+.osai-ov .rank { font-family: var(--sans); font-size: 20px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.osai-ov .name { font-size: 19px; font-weight: 600; line-height: 1.2; }
+.osai-ov .name .tag { font-family: var(--sans); font-size: 10.5px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-left: 8px; vertical-align: 2px; white-space: nowrap; }
+.osai-ov .why { margin-top: 4px; font-size: 15.5px; max-width: 60ch; }
+.osai-ov .eg { margin-top: 5px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); }
+.osai-ov .who { display: flex; align-items: center; gap: 6px; font-family: var(--sans); font-size: 12.5px; color: var(--muted); }
+.osai-ov .who .faint { opacity: .6; }
+.osai-ov .takes { margin-top: 36px; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.osai-ov .take { background: var(--room-soft); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+.osai-ov .take h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.osai-ov .take p { font-size: 15px; }
+.osai-ov .more { margin-top: 28px; font-size: 16px; }
+
+/* ---- details ---------------------------------------------------------- */
+.osai-dt h1 { font-size: clamp(30px, 4.5vw, 42px); font-weight: 600; line-height: 1.1; letter-spacing: -0.01em; }
+.osai-dt h2 { font-size: 22px; font-weight: 600; margin: 44px 0 12px; }
+.osai-dt h3 { font-size: 17px; font-weight: 600; }
+.osai-dt p { margin: 0 0 10px; max-width: 68ch; }
+.osai-dt .lede { font-size: 18px; max-width: 70ch; }
+.osai-dt .meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--sans); font-size: 13px; color: var(--muted); margin-top: 12px; }
+.osai-dt .legend { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-family: var(--sans); font-size: 13px; margin-top: 12px; }
+.osai-dt .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+.osai-dt .scope { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px 24px; margin-top: 16px; }
+.osai-dt .scope > div { min-width: 0; }
+.osai-dt .scope p { font-size: 15px; }
+.osai-dt .tier { margin-top: 18px; }
+.osai-dt .tier-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.osai-dt .tier-label .eyebrow { color: var(--ink); }
+.osai-dt .tier-label .what { font-size: 14px; color: var(--muted); }
+.osai-dt .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.osai-dt .box {
+  background: color-mix(in oklab, var(--lv) 10%, var(--surface));
+  border: 1px solid color-mix(in oklab, var(--lv) 35%, var(--line));
+  border-radius: 8px; padding: 14px 16px 12px; min-width: 0;
+  display: grid; gap: 8px; align-content: start; scroll-margin-top: 80px;
+}
+.osai-dt .box.span { grid-column: 1 / -1; }
+.osai-dt .box-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.osai-dt .box-head h3 { font-size: 18px; }
+.osai-dt .box-head .num { font-family: var(--sans); font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+.osai-dt .marks { display: flex; gap: 4px; flex-shrink: 0; }
+.osai-dt .output { font-size: 14px; color: var(--muted); font-style: italic; }
+.osai-dt .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.osai-dt .pill { font-family: var(--sans); font-size: 12px; font-weight: 500; border-radius: 999px; padding: 2px 9px; color: var(--ink); background: color-mix(in oklab, var(--pv) 26%, var(--surface)); border: 1px solid color-mix(in oklab, var(--pv) 55%, transparent); }
+.osai-dt .pill.empty { --pv: var(--lv-empty); } .osai-dt .pill.thin { --pv: var(--lv-thin); } .osai-dt .pill.split { --pv: var(--lv-split); } .osai-dt .pill.moderate { --pv: var(--lv-moderate); } .osai-dt .pill.crowded { --pv: var(--lv-crowded); }
+.osai-dt .orgs { display: flex; flex-wrap: wrap; gap: 5px; }
+.osai-dt .org { font-family: var(--sans); font-size: 12.5px; line-height: 1.3; padding: 3px 8px; border-radius: 4px; background: var(--surface); border: 1px solid var(--line); }
+.osai-dt .org.edge { border-style: dashed; color: var(--muted); background: transparent; }
+.osai-dt .presence { font-family: var(--sans); font-size: 12.5px; color: var(--muted); display: grid; gap: 2px; }
+.osai-dt .presence b { color: var(--ink); font-weight: 600; }
+.osai-dt details { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 6px; }
+.osai-dt summary { cursor: pointer; font-family: var(--sans); font-size: 13px; color: var(--accent); list-style: none; }
+.osai-dt summary::-webkit-details-marker { display: none; }
+.osai-dt summary::before { content: "+ "; }
+.osai-dt details[open] summary::before { content: "− "; }
+.osai-dt details ul { margin: 8px 0 4px; padding-left: 18px; font-size: 14.5px; list-style: disc; }
+.osai-dt details li { margin-bottom: 6px; }
+.osai-dt details li.verdict { list-style: none; margin-left: -18px; font-weight: 600; }
+.osai-dt .people { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.osai-dt .person { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.osai-dt .person .eyebrow { margin-bottom: 4px; }
+.osai-dt .person p { font-size: 15px; margin-bottom: 6px; }
+.osai-dt .person .boxes { font-family: var(--sans); font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+.osai-dt .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.osai-dt table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+.osai-dt th, .osai-dt td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.osai-dt th { font-family: var(--sans); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.osai-dt tr:last-child td { border-bottom: 0; }
+.osai-dt ol.ranked { padding-left: 0; list-style: none; counter-reset: r; display: grid; gap: 10px; max-width: 78ch; }
+.osai-dt ol.ranked li { counter-increment: r; display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+.osai-dt ol.ranked li::before { content: counter(r); font-family: var(--sans); font-weight: 600; font-size: 15px; color: var(--lv-empty); border: 1.5px solid var(--lv-empty); border-radius: 50%; width: 28px; height: 28px; display: grid; place-items: center; margin-top: 1px; }
+.osai-dt ul.plain { padding-left: 18px; max-width: 70ch; list-style: disc; }
+.osai-dt ul.plain li { margin-bottom: 6px; }
+.osai-dt ol.q { padding-left: 22px; max-width: 70ch; list-style: decimal; }
+.osai-dt ol.q li { margin-bottom: 8px; }
+.osai-dt .two { display: grid; gap: 28px 40px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.osai-dt .two > div { min-width: 0; }
+.osai-dt .two h2:first-child { margin-top: 44px; }
+.osai-dt .sources details { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; background: var(--surface); margin-top: 0; }
+.osai-dt .sources ul { font-size: 13.5px; padding-left: 18px; }
+.osai-dt .sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+
+/* ---- narrow ----------------------------------------------------------- */
+@media (max-width: 1000px) {
+  .osai-body { grid-template-columns: minmax(0, 1fr); }
+  .osai-aside { display: none; position: fixed; inset: 0; z-index: 40; height: auto; margin: 0; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); background: var(--paper); }
+  .osai-aside.open { display: block; }
+  .osai-chat { border-radius: 0; border: 0; height: 100%; }
+  .osai-chat .close { display: inline-block; }
+  .osai-top .ask { display: inline-block; }
+  .osai-top .right .who, .osai-top .right .out { display: none; }
+  .osai-top .inner { grid-template-columns: auto 1fr auto; }
+  .osai-top .tag { display: none; }
+  .osai-nav { justify-self: center; }
+  .osai-nav a { padding: 6px 10px; font-size: 13px; }
+}
+@media (max-width: 560px) {
+  .osai { font-size: 16px; }
+  .osai-top .inner { padding: 0 12px; gap: 8px; }
+  .osai-nav a { padding: 6px 8px; font-size: 12.5px; }
+  .osai-body { padding: 0 16px; }
+  .osai-core .proscons { grid-template-columns: 1fr; }
+  .osai-ov .row { grid-template-columns: 30px minmax(0, 1fr); grid-template-areas: "rank text" "rank gauge" "rank who"; row-gap: 10px; padding: 14px; }
+  .osai-ov .rank { grid-area: rank; align-self: start; }
+  .osai-ov .text { grid-area: text; }
+  .osai-ov .gcell { grid-area: gauge; }
+  .osai-ov .who { grid-area: who; }
+  .osai-ov .name { font-size: 18px; }
+  .osai-ov .name .tag { display: block; margin: 4px 0 0; }
+  .osai-login .names { grid-template-columns: 1fr; }
+}

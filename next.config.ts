@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/api/openlab/chat': ['./apps/openlab/01-constitution/constitution.md'],
     '/openlab/about': ['./apps/openlab/README.md'],
+    // osai reads its documents from apps/osai/content at request time.
+    '/osai': ['./apps/osai/content/*.md'],
+    '/api/osai/chat': ['./apps/osai/content/*.md'],
   },
   async rewrites() {
     return {

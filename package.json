@@ -12,7 +12,8 @@
     "dodo:export": "node scripts/dodo-scenes/export.mjs",
     "dodo:scenes": "node scripts/dodo-scenes/capture.mjs && pnpm build && node scripts/dodo-scenes/export.mjs",
     "dodo:video": "node scripts/dodo-scenes/video.mjs",
-    "jam:build": "node scripts/jam/build-jambot.mjs"
+    "jam:build": "node scripts/jam/build-jambot.mjs",
+    "osai:slurp": "node scripts/osai/slurp.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",
