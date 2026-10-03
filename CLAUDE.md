@@ -48,7 +48,7 @@ audio regeneration. Bart missed his train.
 
 Do not publish pages, previews, or any work product for Bart as claude.ai Artifacts (the `Artifact` tool), even "private" ones. Everything Bart needs to open lives on our own infrastructure:
 
-- **Web pages / creations:** the right home in this repo (Vercel: hilma-nine.vercel.app and its domains), or the sibling project the work belongs to (daskollektiv.rip for DK tracks, intheamber.com for Amber). When Bart asks for "a link I can click", the answer is a link on our hosting, never an artifact.
+- **Web pages / creations:** the right home in this repo (Vercel: **ola.cx** and its domains, see "Default domain" below), or the sibling project the work belongs to (daskollektiv.rip for DK tracks, intheamber.com for Amber). When Bart asks for "a link I can click", the answer is a link on our hosting, never an artifact.
 - **Quick previews before a push:** a tunn3l URL from this machine (see the Tunn3l section; `../tunn3l/`), pointed at a local static server or the dev server.
 - **Files he just needs to open (audio, video, images, PDFs):** send them with `SendUserFile`, and keep a copy under `~/Desktop/<project>/` so they outlive the session scratchpad.
 
@@ -72,7 +72,13 @@ This repo CLAUDE.md is for general best practices, conventions, and project know
 - **Language:** TypeScript (strict)
 - **Styling:** Tailwind CSS v4, Canvas API for generative art
 - **Build:** Turbopack (dev), pnpm (packages)
-- **Deploy:** Vercel (project: `hilma`, URL: hilma-nine.vercel.app)
+- **Deploy:** Vercel (project: `hilma`, root domain **https://ola.cx**; `hilma-nine.vercel.app` is the same deployment and still answers, but never give out that URL)
+
+## Default domain: ola.cx (since 2026-10-03)
+
+**`https://ola.cx` is the root URL of the hilma deployment and the default domain for anything new.** A new page, route, prototype or creation that has no domain of its own lives at `https://ola.cx/<path>` — that is the link to hand Bart, to put in OG tags (`og:url`, `og:image`, `metadataBase`), in share cards, READMEs, tweets and Discord replies. `hilma-nine.vercel.app` serves the identical deployment and keeps working for old links and the iOS apps' backend URLs, but it is a Vercel-generated name and must not appear in anything new. Projects with their own domain keep it (dodo.foo, feynd.cc, jambot.to, onething.ink, intheamber.com, decremental.com, …; the table above and the host rewrites in `next.config.ts` are the map).
+
+Plumbing: registered on Namecheap 2026-10-03 (three letters, a nonsense word, $19.98/yr), DNS on Namecheap BasicDNS (`A @ → 76.76.21.21`, `CNAME www → cname.vercel-dns.com`), both `ola.cx` and `www.ola.cx` on the Vercel project `hilma`, all done with `node ../tunn3l/plumb/plumb.js link ola.cx --vercel hilma`. The root `/` serves `src/app/page.tsx` (the Hilma af Klint orbs), with no host rewrite. Next domain: register, then the same plumb command (the Namecheap API key is in `~/.plumb/config.json` on this iMac; the calling IP must be whitelisted on Namecheap → Profile → Tools → API Access). `scripts/domains/` finds cheap short names (`tld-prices.mjs`, `short-names.mjs`).
 
 ## Commands
 
