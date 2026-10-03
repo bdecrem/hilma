@@ -5,7 +5,7 @@ function Inline({ text }: { text: string }) {
   return (
     <>
       {inlines(text).map((t, i) =>
-        t.kind === 'em' ? <em key={i}>{t.text}</em> : t.kind === 'strong' ? <strong key={i}>{t.text}</strong> : <span key={i}>{t.text}</span>,
+        t.kind === 'link' ? <a key={i} href={t.href} target="_blank" rel="noreferrer">{t.text}</a> : t.kind === 'em' ? <em key={i}>{t.text}</em> : t.kind === 'strong' ? <strong key={i}>{t.text}</strong> : <span key={i}>{t.text}</span>,
       )}
     </>
   )

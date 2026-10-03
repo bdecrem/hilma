@@ -33,16 +33,23 @@ if (!existsSync(pagesFile)) {
   process.exit(1)
 }
 
-// 1. Pages → RTF (export only; the document is closed without saving).
+// 1. Pages → RTF (export only). A document already open in Pages is left open;
+//    one this script opened is closed without saving.
 const tmp = mkdtempSync(path.join(tmpdir(), 'osai-slurp-'))
 const rtf = path.join(tmp, 'core.rtf')
 const script = `
 set src to POSIX file "${pagesFile}"
 set dst to POSIX file "${rtf}"
 tell application "Pages"
+  set wasOpen to false
+  repeat with doc in documents
+    try
+      if (POSIX path of (file of doc as alias)) is "${pagesFile}" then set wasOpen to true
+    end try
+  end repeat
   set d to open src
   export d to dst as formatted text
-  close d saving no
+  if not wasOpen then close d saving no
 end tell`
 execFileSync('osascript', ['-e', script], { stdio: ['ignore', 'ignore', 'inherit'] })
 

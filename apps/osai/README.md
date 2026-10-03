@@ -7,11 +7,11 @@ shared passcode, three documents and an assistant that has read them.
 
 | Piece | Path |
 |---|---|
-| Pages | `src/app/osai/` — `layout.tsx` gates everything (sign-in or the shell), `page.tsx` the one-pager, `overview/`, `details/`, `Chat.tsx` the sidebar |
-| API | `src/app/api/osai/` — `auth/login`, `auth/logout`, `chat` (GET history, POST a turn, DELETE to clear), `memory` (GET, DELETE) |
+| Pages | `src/app/osai/` — `layout.tsx` gates everything (sign-in or the shell), `page.tsx` the one-pager (tab "Open Source"), `overview/` (tab "Landscape"), `details/` (no tab; reached from the card at the top of Landscape and from each row), `Chat.tsx` the sidebar |
+| API | `src/app/api/osai/` — `auth/login`, `auth/logout`, `auth/password` (GET has one?, POST set, DELETE back to the shared passcode), `chat` (GET history, POST a turn, DELETE to clear), `memory` (GET, DELETE) |
 | Logic | `src/lib/osai/` — `auth.ts` (names + passcode + cookie), `prompt.ts` (system prompt, model ids), `memory.ts` (Haiku-maintained note), `core.ts` (one-pager parser), `overview.ts` (the eight rows), `content.ts`, `db.ts` |
 | Content | `apps/osai/content/core.md` (generated, see below) and `map.md` (copied from docsrepo) |
-| Schema | `apps/osai/schema/001_osai.sql` — `osai_messages`, `osai_memory`; apply with `supabase db query --linked -f` |
+| Schema | `apps/osai/schema/` — `001` `osai_messages`, `osai_memory`; `002` `osai_users` (own passwords); apply with `supabase db query --linked -f` |
 | Checks | `scripts/osai/e2e.mjs` — Playwright run against a dev server (see the header) |
 
 ## The one-pager is canonical in Pages
@@ -32,13 +32,26 @@ Pros/cons tables and two-column bullet tables become lists.
 
 ## Readers, passcode, memory
 
-- Names are fixed in `src/lib/osai/auth.ts` (`mitchell`, `songyee`, `bart`).
+- Names are fixed in `src/lib/osai/auth.ts` (`mitchell`, `songyee`, `bart`); the reader types their first name (any case) plus the passcode.
 - `OSAI_PASSCODE` (shared) and `OSAI_SESSION_SECRET` live in `.env.local` and
   on Vercel (Production). The cookie is `osai_session`, 90 days.
+- A reader can set their own password ("Set a password" in the top bar or
+  the chat footer; typed twice, 8+ characters). It is bcrypt-hashed into
+  `osai_users` and replaces the shared passcode for that reader until they
+  remove it from the same dialog.
 - Each reader has a chat history (`osai_messages`) and a memory note
   (`osai_memory.notes`). After every reply, `claude-haiku-4-5` folds the
   exchange into the note (≤150 words); the note is shown in the chat panel
   under "What it remembers about you" and can be cleared there.
+
+## Web search
+
+Off by default, so every answer starts from the documents. A turn runs with
+the `web_search` server tool only when the client sends `search: true`: the
+"Search the web for more on this?" prompt under the latest answer, or the
+Web toggle in the composer (one message, then it resets). On a search turn
+the system prompt asks for the documents' answer first and "From the web"
+after, and the route appends a Sources list from the citations.
 
 ## Models
 

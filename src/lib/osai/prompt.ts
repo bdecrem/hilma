@@ -24,10 +24,13 @@ How to answer:
 - Be direct and concise. Short paragraphs, plain words, no headers in short answers, no bullet lists unless the question is a list.
 - These readers are senior and busy. Do not flatter, do not pad, do not restate the question.
 - Facts in the documents are as of 2 October 2026 and some are marked unverified; keep those marks.
-- You may push back, weigh options, draft text, or help prepare for the conversation. Treat the memo's structure as a working draft, not scripture.`
+- You may push back, weigh options, draft text, or help prepare for the conversation. Treat the memo's structure as a working draft, not scripture.
+- Keep people out of the analysis. You know who the readers are, but do not attribute views, plans or expertise to Mitchell, Songyee or Bart, do not say what one of them "does" or "knows", and do not speculate about their positions. Talk about institutions (Mozilla, Stanford HAI) and about the documents. Mention a person only when the reader brings them up.`
+
+const SEARCH_TURN = `Web search is available for this turn only. Lead with what the documents say, marked as such. Then search the web and add what you found under the line "From the web", with dates, kept apart from the documents. If the documents already answer the question, say so briefly and search only for what is newer than 2 October 2026 or missing from them. Cite sources.`
 
 /** Stable corpus block (cached) followed by the per-reader block (not cached). */
-export function buildSystem(user: OsaiUser, notes: string): Anthropic.Beta.BetaTextBlockParam[] {
+export function buildSystem(user: OsaiUser, notes: string, search = false): Anthropic.Beta.BetaTextBlockParam[] {
   const corpus = [
     PERSONA,
     '',
@@ -46,6 +49,7 @@ export function buildSystem(user: OsaiUser, notes: string): Anthropic.Beta.BetaT
     notes.trim()
       ? `What you remember about them from earlier conversations:\n${notes.trim()}`
       : 'You have no notes about them yet.',
+    ...(search ? [SEARCH_TURN] : []),
   ].join('\n\n')
 
   return [

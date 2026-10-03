@@ -20,6 +20,12 @@ export default function Overview() {
       <p className="lede">
         Public-benefit AI is everything built to make AI serve the public rather than a private return. It comes in eight kinds of work. Each row shows how much room is left in one of them, and whether Mozilla or Stanford HAI already works there. Most room first.
       </p>
+      <Link href="/osai/details" className="detail-card">
+        <span className="detail-card-text">
+          <b>The full map.</b> Every organization, the dollar figures, the notes behind each verdict, and the sources.
+        </span>
+        <span className="detail-card-go">Open the details →</span>
+      </Link>
       <div className="legend">
         <span className="item"><span className="gauge" aria-hidden="true"><i className="on" /><i className="on" /><i className="on" /><i className="on" /><i className="on" /></span> wide open</span>
         <span className="item"><span className="gauge" aria-hidden="true"><i className="on" /><i /><i /><i /><i /></span> packed</span>
@@ -56,9 +62,7 @@ export default function Overview() {
         ))}
       </div>
 
-      <p className="more">
-        Want the detail? <Link href="/osai/details">The full map</Link> has every organization, the dollar figures, where each of us sits, and the sources. Any row above jumps to its section.
-      </p>
+      <p className="more muted">Any row above opens its section of the full map.</p>
       <p className="eyebrow" style={{ marginTop: 28 }}>Facts as of 2 Oct 2026</p>
     </article>
   )

@@ -91,10 +91,10 @@ function Box({
 export default function Details() {
   return (
     <article className="osai-dt">
-      <div className="eyebrow"><Link href="/osai/overview">← The simple view</Link> · Companion to the one-pager</div>
+      <div className="eyebrow"><Link href="/osai/overview">← Landscape</Link> · Companion to the one-pager</div>
       <h1 style={{ marginTop: 8 }}>Public Benefit AI: the map</h1>
       <p className="lede" style={{ marginTop: 12 }}>
-        Eight boxes, drawn by what each produces, so the empty ones show. A map, not a census. Built to open one question with Songyee Yoon and Mitchell Baker: which areas of interest to all of us are under-served?
+        Eight boxes, drawn by what each produces, so the empty ones show. A map, not a census. Built to open one question: which areas of interest to all of us are under-served?
       </p>
       <div className="meta"><span>As of 2 Oct 2026</span><span>Items marked <Unv /> were not confirmed from a primary source</span></div>
       <div className="legend">
@@ -246,32 +246,6 @@ export default function Details() {
         </div>
       </div>
 
-      <h2 id="people">Where the three of us already sit</h2>
-      <div className="people">
-        <div className="person">
-          <div className="eyebrow">Mitchell Baker</div>
-          <div className="boxes">Historically boxes 1, 3, 5, 8 via Mozilla</div>
-          <p>Left all Mozilla boards on 19 Feb 2025. Nicole Wong chairs the Foundation; Mark Surman chairs the Leadership Council. Identifies as Mozilla co-founder; last public writing Apr 2025, on open-source AI in Africa. No new formal affiliation found.</p>
-          <p><b>Implication:</b> she cannot commit Mozilla. The one-pager&apos;s &quot;the real Mozilla move&quot; should read &quot;a Mozilla-style move.&quot;</p>
-        </div>
-        <div className="person">
-          <div className="eyebrow">Songyee Yoon</div>
-          <div className="boxes">Boxes 5 and 8, and Asia on box 1</div>
-          <p>Inaugural member of the Stanford HAI Advisory Council since 2019, not staff or faculty. Whether she is on the post-merger council list is <Unv />. Also MIT Corporation, HP board (Feb 2025), Carnegie Endowment trustee, founder of Principal Venture Partners (2024). Former NCSOFT president and CSO.</p>
-          <p><b>Implication:</b> her Korea link matters. Korea&apos;s sovereign model program and its Aug 2026 release of 1.56T tokens of public training data are a pattern the West has not copied.</p>
-        </div>
-        <div className="person">
-          <div className="eyebrow">Stanford HAI</div>
-          <div className="boxes">Boxes 2, 5, 6, 7, 8</div>
-          <p>Merged with Stanford Data Science on 4 May 2026 under the HAI name: three pillars (discovery, education, societal impact), 400+ scholars, $60M cumulative grants, the Marlowe cluster. James Landay is sole director; Fei-Fei Li and John Hennessy co-chair the Advisory Council. HELM in maintenance mode since Jun 2026.</p>
-        </div>
-        <div className="person">
-          <div className="eyebrow">Bart</div>
-          <div className="boxes">Box 8, with 1 and 3 by practice</div>
-          <p>Co-founded Mozilla Builders. The HIT, Positive Sum and AI-impact-incubator research. A year of shipping with AI. The &quot;now what&quot; project is the only thing in this folder aimed at the meaning question.</p>
-        </div>
-      </div>
-
       <h2 id="money">Money map</h2>
       <p className="muted">Orders of magnitude for 2026, to show where dollars pool. Pledged and annual figures are mixed, so this is not drawn to scale.</p>
       <div className="tablewrap">
@@ -314,10 +288,10 @@ export default function Details() {
           <h2>Questions to open with</h2>
           <ol className="q">
             <li>Does the boundary hold? Purpose, structure, centrality. Where do mission-locked companies belong?</li>
-            <li>Which boxes do the three of us have unfair advantages in? Mozilla&apos;s inheritance is product and community; HAI&apos;s is measurement and convening; Bart&apos;s is builder programs and shipping.</li>
+            <li>Which boxes do we have unfair advantages in? Mozilla&apos;s inheritance is product and community; Stanford HAI&apos;s is measurement and convening; builder programs and shipping are the third.</li>
             <li>Is &quot;operators, not dollars&quot; the real gap? If yes, the move is a builders program or field vehicle, not another fund.</li>
             <li>Is the client layer a Mozilla move that Mozilla will not make? Can it be made outside Mozilla with Mozilla&apos;s blessing?</li>
-            <li>What does Korea and the wider Asian sovereign-AI effort look like from Songyee&apos;s seat, and is it on anyone&apos;s map in the West?</li>
+            <li>What does Korea and the wider Asian sovereign-AI effort look like from inside Korea, and is it on anyone&apos;s map in the West?</li>
             <li>Who owns the &quot;now what&quot; question: time, distribution, meaning? Nobody on this map is a box for it.</li>
           </ol>
         </div>

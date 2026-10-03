@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google'
 import { DISPLAY, getOsaiUser } from '@/lib/osai/auth'
+import { hasPassword } from '@/lib/osai/password'
 import Login from './Login'
 import Shell from './Shell'
 import './osai.css'
@@ -34,9 +35,10 @@ export const viewport: Viewport = {
 
 export default async function OsaiLayout({ children }: { children: React.ReactNode }) {
   const user = await getOsaiUser()
+  const own = user ? await hasPassword(user) : false
   return (
     <div className={`osai ${serif.variable} ${sans.variable}`}>
-      {user ? <Shell user={user} name={DISPLAY[user]}>{children}</Shell> : <Login />}
+      {user ? <Shell user={user} name={DISPLAY[user]} hasPassword={own}>{children}</Shell> : <Login />}
     </div>
   )
 }

@@ -2,6 +2,9 @@
 // documents (src/lib/osai/prompt.ts), with the reader's history and memory
 // note from Supabase. Streams plain text. Opus 5.5 by default, Fable 5.1 on
 // request; both run with server-side refusal fallbacks on.
+//
+// Web search is off unless the client asks for it on a turn ({ search: true }):
+// the tool is only attached then, so the default answer is document-only.
 
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse, after } from 'next/server'
@@ -16,6 +19,8 @@ export const maxDuration = 300
 const MAX_TURNS = 40
 const MAX_INPUT = 8000
 const MAX_TOKENS = 8192
+const MAX_SEARCHES = 5
+const MAX_CONTINUATIONS = 2 // pause_turn resumes for long searches
 
 let _client: Anthropic | null = null
 function client() {
@@ -40,6 +45,13 @@ async function history(user: OsaiUser, limit: number): Promise<Row[]> {
   return ((data ?? []) as Row[]).reverse()
 }
 
+function searchTool(key: ModelKey): Anthropic.Beta.BetaToolUnion {
+  // The dynamic-filtering variant is documented for the Opus line; Fable keeps the basic one.
+  return key === 'fable'
+    ? { type: 'web_search_20250305', name: 'web_search', max_uses: MAX_SEARCHES }
+    : { type: 'web_search_20260209', name: 'web_search', max_uses: MAX_SEARCHES }
+}
+
 export async function GET() {
   const user = await getOsaiUser()
   if (!user) return NextResponse.json({ error: 'sign in' }, { status: 401 })
@@ -59,7 +71,7 @@ export async function POST(req: NextRequest) {
   const user = await getOsaiUser()
   if (!user) return new Response('sign in', { status: 401 })
 
-  let body: { message?: unknown; model?: unknown }
+  let body: { message?: unknown; model?: unknown; search?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -69,9 +81,10 @@ export async function POST(req: NextRequest) {
   if (!text) return new Response('message required', { status: 400 })
   const key: ModelKey = body.model === 'fable' ? 'fable' : DEFAULT_MODEL
   const model = MODELS[key].id
+  const search = body.search === true
 
   const [rows, notes] = await Promise.all([history(user, MAX_TURNS), getNotes(user)])
-  const messages: Anthropic.Beta.BetaMessageParam[] = [
+  let convo: Anthropic.Beta.BetaMessageParam[] = [
     ...rows.map((r) => ({ role: r.role, content: r.content })),
     { role: 'user', content: text },
   ]
@@ -86,36 +99,58 @@ export async function POST(req: NextRequest) {
     if (r && r.reply.trim()) await updateNotes(user, notes, text, r.reply)
   })
 
-  const stream = client().beta.messages.stream({
-    model,
-    max_tokens: MAX_TOKENS,
-    system: buildSystem(user, notes),
-    messages,
-    output_config: { effort: 'medium' },
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-  })
+  const system = buildSystem(user, notes, search)
+  let current: ReturnType<Anthropic['beta']['messages']['stream']> | null = null
 
   const encoder = new TextEncoder()
   const out = new ReadableStream<Uint8Array>({
     async start(controller) {
       let reply = ''
+      const sources = new Map<string, string>()
       const send = (s: string) => {
         reply += s
         controller.enqueue(encoder.encode(s))
       }
       try {
-        for await (const ev of stream) {
-          if (ev.type === 'content_block_delta' && ev.delta.type === 'text_delta') send(ev.delta.text)
+        let finalModel = model
+        for (let turn = 0; ; turn++) {
+          const stream = client().beta.messages.stream({
+            model,
+            max_tokens: MAX_TOKENS,
+            system,
+            messages: convo,
+            ...(search ? { tools: [searchTool(key)] } : {}),
+            output_config: { effort: 'medium' },
+            betas: ['server-side-fallback-2026-07-01'],
+            fallbacks: 'default',
+          })
+          current = stream
+          for await (const ev of stream) {
+            if (ev.type !== 'content_block_delta') continue
+            if (ev.delta.type === 'text_delta') send(ev.delta.text)
+            else if (ev.delta.type === 'citations_delta') {
+              const c = ev.delta.citation
+              if (c.type === 'web_search_result_location' && c.url) sources.set(c.url, c.title ?? c.url)
+            }
+          }
+          const final = await stream.finalMessage()
+          finalModel = final.model
+          if (final.stop_reason === 'pause_turn' && turn < MAX_CONTINUATIONS) {
+            convo = [...convo, { role: 'assistant', content: final.content }]
+            continue
+          }
+          if (final.stop_reason === 'refusal') send('\n\n(The model declined to answer that one.)')
+          else if (final.stop_reason === 'max_tokens') send('\n\n(Cut off at the length limit.)')
+          break
         }
-        const final = await stream.finalMessage()
-        if (final.stop_reason === 'refusal') send('\n\n(The model declined to answer that one.)')
-        else if (final.stop_reason === 'max_tokens') send('\n\n(Cut off at the length limit.)')
+        if (sources.size) {
+          send('\n\nSources:\n' + [...sources].map(([url, title]) => `- [${title.replace(/[\[\]]/g, '')}](${url})`).join('\n'))
+        }
         const { error } = await osaiDb()
           .from('osai_messages')
           .insert([
             { user_name: user, role: 'user', content: text, model },
-            { user_name: user, role: 'assistant', content: reply, model: final.model },
+            { user_name: user, role: 'assistant', content: reply, model: finalModel },
           ])
         if (error) console.error('[osai/chat] save failed:', error.message)
         settle({ reply })
@@ -129,7 +164,7 @@ export async function POST(req: NextRequest) {
       }
     },
     cancel() {
-      stream.controller.abort()
+      current?.controller.abort()
       settle(null)
     },
   })

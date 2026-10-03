@@ -19,6 +19,7 @@ const STARTERS = [
 ]
 
 const MODEL_KEY = 'osai:model'
+const MORE_ON_WEB = 'Search the web for anything newer or missing on this, and keep it separate from what the documents say.'
 
 function labelFor(models: State['models'] | null, id?: string | null) {
   if (!models || !id) return null
@@ -62,7 +63,7 @@ function Inline({ text }: { text: string }) {
   return (
     <>
       {inlines(text).map((t, i) =>
-        t.kind === 'em' ? <em key={i}>{t.text}</em> : t.kind === 'strong' ? <strong key={i}>{t.text}</strong> : <span key={i}>{t.text}</span>,
+        t.kind === 'link' ? <a key={i} href={t.href} target="_blank" rel="noreferrer">{t.text}</a> : t.kind === 'em' ? <em key={i}>{t.text}</em> : t.kind === 'strong' ? <strong key={i}>{t.text}</strong> : <span key={i}>{t.text}</span>,
       )}
     </>
   )
@@ -73,11 +74,13 @@ export default function Chat({
   name,
   onClose,
   onSignOut,
+  onPassword,
 }: {
   user: string
   name: string
   onClose: () => void
   onSignOut: () => void
+  onPassword: () => void
 }) {
   const [state, setState] = useState<State | null>(null)
   const [messages, setMessages] = useState<Msg[]>([])
@@ -85,6 +88,7 @@ export default function Chat({
   const [model, setModel] = useState<ModelKey>('opus')
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
+  const [webNext, setWebNext] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const logRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -125,9 +129,11 @@ export default function Chat({
   }
 
   const send = useCallback(
-    async (text: string) => {
+    async (text: string, opts: { search?: boolean } = {}) => {
       const content = text.trim()
       if (!content || busy) return
+      const search = opts.search ?? webNext
+      setWebNext(false)
       setError(null)
       setInput('')
       if (inputRef.current) inputRef.current.style.height = 'auto'
@@ -138,7 +144,7 @@ export default function Chat({
         const res = await fetch('/api/osai/chat', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ message: content, model }),
+          body: JSON.stringify({ message: content, model, search }),
         })
         if (!res.ok || !res.body) {
           setError(await res.text())
@@ -175,7 +181,7 @@ export default function Chat({
         inputRef.current?.focus()
       }
     },
-    [busy, messages, model, state],
+    [busy, messages, model, state, webNext],
   )
 
   async function clearConversation() {
@@ -210,7 +216,7 @@ export default function Chat({
       <div className="head">
         <div>
           <h2>Ask the notes</h2>
-          <div className="sub">Has read all three documents. Remembers you.</div>
+          <div className="sub">Answers from the documents first. Remembers you.</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div className="seg" role="group" aria-label="Model">
@@ -242,6 +248,11 @@ export default function Chat({
               <div className="model">{labelFor(models, m.model) ?? 'Assistant'}</div>
               <Rich text={m.content} />
               {busy && i === messages.length - 1 && <span className="cursor" aria-hidden="true" />}
+              {!busy && i === messages.length - 1 && !/^Sources:$/m.test(m.content) && (
+                <button type="button" className="more-web" onClick={() => void send(MORE_ON_WEB, { search: true })}>
+                  Search the web for more on this?
+                </button>
+              )}
             </div>
           ),
         )}
@@ -261,19 +272,30 @@ export default function Chat({
             onChange={(e) => { setInput(e.target.value); grow(e.target) }}
             onKeyDown={onKey}
           />
+          <button
+            type="button"
+            className="web"
+            aria-pressed={webNext}
+            disabled={!state || busy}
+            title="Search the web for this message (the documents still come first)"
+            onClick={() => setWebNext((v) => !v)}
+          >
+            Web
+          </button>
           <button className="send" type="button" disabled={!state || busy || !input.trim()} onClick={() => void send(input)}>
             Send
           </button>
         </div>
         <div className="foot">
           <details className="memory">
-            <summary>What it remembers about you</summary>
+            <summary>Memory</summary>
             <div className={`notes${notes.trim() ? '' : ' empty'}`}>{notes.trim() || 'Nothing yet. It takes notes as you talk.'}</div>
             {notes.trim() && <button type="button" className="forget" onClick={forget}>Forget all of this</button>}
           </details>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div className="links">
             {messages.length > 0 && <button type="button" onClick={clearConversation}>New conversation</button>}
-            <button type="button" onClick={onSignOut} className="ui">Sign out</button>
+            <button type="button" onClick={onPassword}>Password</button>
+            <button type="button" onClick={onSignOut}>Sign out</button>
           </div>
         </div>
       </div>

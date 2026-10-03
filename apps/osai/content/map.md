@@ -6,7 +6,7 @@ sources: web research compiled 2026-10-02 (links at the end); wiki/aibuilders/*;
 
 # Public Benefit AI: a map of the field
 
-Prepared 2026-10-02 for the conversation with Songyee Yoon and Mitchell Baker. Companion to the Open Source AI one-pager, which picks one lane (decentralized AI). This document draws the whole field so we can ask which lanes are empty.
+Prepared 2026-10-02 for a conversation about where public-benefit AI is under-served. Companion to the Open Source AI one-pager, which picks one lane (decentralized AI). This document draws the whole field so we can ask which lanes are empty.
 
 It is a map, not a census: representative names, not every name. Facts are as of this week. Anything not confirmed from a primary source is marked *(unverified)*.
 
@@ -44,7 +44,7 @@ The map is organized by what an organization *produces*, because gaps show up by
 | Apply | 7. AI for education, government, journalism, civic life | Public services and the information commons |
 | Cross-cutting | 8. Funders, field-builders, talent | Money, coalitions, fellowships, accelerators |
 
-Bart's starting list maps onto this as: coding projects → box 1 (and 3); alignment research and labs → box 4; AI & society → box 5.
+The starting list (coding projects, alignment research and labs, AI & society) maps onto this as: coding projects → box 1 (and 3); alignment research and labs → box 4; AI & society → box 5.
 
 ## 3. The map at a glance
 
@@ -123,19 +123,10 @@ NP = nonprofit, ACAD = academic, CO = company, LF = Linux Foundation, LMIC = low
 
 - **Coalitions.** Humanity AI ($500M over five years; MacArthur and Omidyar co-chairs; Doris Duke, Ford, Kapor, Lumina, Mellon, Mozilla, Packard, Siegel) made its first grants in May 2026: >$18M to 12 coastal grantees at ~$500K each, plus a $10M open call; it was still hiring an executive director seven months after launch. Current AI: $400M committed, ~$3.2M deployed. Public AI Network: 350+ members.
 - **Philanthropies.** Gates ($1B/2y), Coefficient (~$1B in 2026), OpenAI Foundation ($25B pledged; ~$200M disbursed; $50M People-First AI Fund to 208 nonprofits), McGovern ($75.8M in 2025; $500M/decade), Schmidt Sciences, Hewlett ($100M Emerging Technology & Security, Jul 2026), Rockefeller ($100M jobs), Omidyar (~$30M generative-AI portfolio), Siegel, Knight, FLI, SFF, Longview, Macroscopic, Lightcone Commons.
-- **Field-builders and talent.** Mozilla Builders ran one accelerator cohort (Sep–Dec 2024, 14 projects, up to $100K each) and appears dormant since. Mozilla Ventures ($35M, 55+ investments, exploring a raise). Fast Forward's 2026 cohort is 7/10 AI. AI2050 fellows, HAI's Hoffman-Yee and seed grants, MATS, Anthropic and OpenAI fellows. Bart's own research files: HIT Initiative, Project Positive Sum, Nevo Labs, Open Athena.
+- **Field-builders and talent.** Mozilla Builders ran one accelerator cohort (Sep–Dec 2024, 14 projects, up to $100K each) and appears dormant since. Mozilla Ventures ($35M, 55+ investments, exploring a raise). Fast Forward's 2026 cohort is 7/10 AI. AI2050 fellows, HAI's Hoffman-Yee and seed grants, MATS, Anthropic and OpenAI fellows. Related research files in this repo: HIT Initiative, Project Positive Sum, Nevo Labs, Open Athena.
 - **Verdict.** Crowded in pledges, thin in operators. Coefficient says it has more fundable work than it can evaluate; Inside Philanthropy says Humanity AI funded "the usual suspects"; Current AI has deployed under 1% of commitments in 20 months.
 
-## 5. Where the three of us already sit
-
-| | Boxes | Notes |
-|---|---|---|
-| **Mitchell Baker** | Historically 1, 3, 5, 8 via Mozilla | Left all Mozilla boards on 19 Feb 2025 (Nicole Wong now chairs the Foundation; Mark Surman chairs the Leadership Council). Identifies as Mozilla co-founder; last public writing Apr 2025 on open-source AI in Africa. No new formal affiliation found. She cannot commit Mozilla; the one-pager's "the real Mozilla move" should read "a Mozilla-style move." |
-| **Songyee Yoon** | 5, 8, and Asia on box 1 | Inaugural member of the Stanford HAI Advisory Council since 2019 (not staff or faculty); whether she is on the post-merger council list is *(unverified)*, the page is script-rendered. Also MIT Corporation, HP board (Feb 2025), Carnegie Endowment trustee, founder of Principal Venture Partners (2024). Former NCSOFT president and CSO. Her Korea link matters: Korea's sovereign model program and its Aug 2026 release of 1.56T tokens of public training data. |
-| **Stanford HAI** | 2, 5, 6, 7, 8 | Merged with Stanford Data Science on 4 May 2026 under the HAI name, three pillars (discovery, education, societal impact), 400+ scholars, $60M cumulative grants, Marlowe cluster. James Landay is sole director; Fei-Fei Li and John Hennessy co-chair the Advisory Council. HELM in maintenance mode since Jun 2026. |
-| **Bart** | 8, with 1 and 3 by practice | Co-founded Mozilla Builders; the HIT, Positive Sum and AI-impact-incubator research in this repo; a year of shipping with AI. The "now what" project is the only thing in this folder aimed at the meaning question. |
-
-## 6. Money map
+## 5. Money map
 
 Orders of magnitude, 2026, to show where dollars pool. Not a budget.
 
@@ -150,30 +141,30 @@ Orders of magnitude, 2026, to show where dollars pool. Not a budget.
 | 8. Field and talent | Large pledges, small deployment | Everyone, slowly |
 | 3. Products | No dedicated funding found | Nobody |
 
-## 7. Under-served: a ranked view
+## 6. Under-served: a ranked view
 
 1. **The public-interest product layer (box 3).** Nobody ships. The need: an open client that routes across models, with a public-interest default. Nearest live pieces are Firefox Smart Window, the Public AI utility, Current AI's AlphaChat. Mozilla is the natural owner and is spending 80% on the browser.
 2. **Independent measurement (box 2).** HELM in maintenance, LMArena commercial, transparency falling, "safety" dropped from the international network's name. Cheap relative to models, and HAI already owns the AI Index.
 3. **Licensed, multilingual data commons and reciprocity (box 2).** Wikimedia and the Internet Archive are strained; Mozilla Data Collective is the live vehicle; Current AI's language pilot is $3.2M. Korea's public data release is a model other states could copy.
 4. **Public compute outside government (box 2).** NAIRR unlegislated, OpenEuroLLM compute-starved, philanthropy one-off. Open Athena's "lend engineers and GPUs to academics" is the only institutional pattern.
-5. **Labor transition, distribution, and meaning (box 5 and nowhere).** No federal workforce data; effects show up in entry-level hiring; Rockefeller's $100M is the largest dedicated program. No institution owns "what will people do all day." This is the "now what" project's question.
+5. **Labor transition, distribution, and meaning (box 5 and nowhere).** No federal workforce data; effects show up in entry-level hiring; Rockefeller's $100M is the largest dedicated program. No institution owns "what will people do all day." This is the "now what" question.
 6. **Fully open model recipes (box 1).** Ai2's core left for Microsoft; Apertus is the only scale-up; Europe is late. The recipe matters more than any one model.
 7. **Operators and grantmakers (box 8).** Coefficient cannot evaluate what it could fund; Humanity AI took seven months to hire a director; Current AI has deployed <1%. The scarce input is people who can run programs, not dollars.
 
-## 8. Crowded: where not to go without a twist
+## 7. Crowded: where not to go without a twist
 
 - Technical safety research funding (box 4).
 - Governance and policy shops in DC, NYC and London (box 5).
 - AI-for-biology mega-institutes (box 6).
 - Teacher AI training funded by labs (box 7).
 
-## 9. Questions to open the conversation
+## 8. Questions to open the conversation
 
 1. Does the boundary hold? Three tests: purpose, structure, centrality. Where do mission-locked companies belong?
-2. Which boxes do the three of us have unfair advantages in? Mozilla's inheritance is product and community; HAI's is measurement and convening; Bart's is builder programs and shipping.
+2. Which boxes do we have unfair advantages in? Mozilla's inheritance is product and community; Stanford HAI's is measurement and convening; builder programs and shipping are the third.
 3. Is "operators, not dollars" the real gap? If yes, the move is a builders program or field vehicle, not another fund.
 4. Is the client layer a Mozilla move that Mozilla will not make? If so, can it be made outside Mozilla with Mozilla's blessing?
-5. What does Korea and the wider Asian sovereign-AI effort look like from Songyee's seat, and is it on anyone's map in the West?
+5. What does Korea and the wider Asian sovereign-AI effort look like from inside Korea, and is it on anyone's map in the West?
 6. Who owns the "now what" question: time, distribution, meaning? Nobody on this map is a box for it.
 
 ## Sources and caveats
@@ -182,13 +173,12 @@ Compiled 2 Oct 2026 from web research across three passes; the open-model and Mo
 
 Load-bearing links:
 
-- Mitchell Baker leaves Mozilla boards (Feb 2025): https://blog.mozilla.org/en/mozilla/mozilla-leadership-growth-planning-updates/
+- Mozilla leadership changes (Feb 2025): https://blog.mozilla.org/en/mozilla/mozilla-leadership-growth-planning-updates/
 - Mozilla 2026 strategy and 80/20 spend: https://www.cnbc.com/2026/01/27/mozilla-building-an-ai-rebel-alliance-to-take-on-openai-anthropic-.html
 - Mila–Mozilla foundation layer: https://blog.mozilla.org/en/mozilla/mila-canada-open-source-ai-initiative/
 - Mozilla Data Collective $5M: https://www.hpcwire.com/aiwire/2026/09/18/mozilla-data-collective-raises-5m-to-scale-a-more-equitable-data-ecosystem-for-ai/
 - Mozilla.ai pivot: https://siliconangle.com/2025/08/22/mozilla-ai-charts-new-course-turn-toward-profitability/
 - HAI merger with Stanford Data Science: https://hai.stanford.edu/news/stanford-merges-ai-and-data-science-efforts-under-single-institute
-- Songyee Yoon profile: https://www.songyeeyoon.org/ and https://news.mit.edu/2023/school-engineering-welcomes-songyee-yoon-visiting-innovation-scholar-0920
 - HELM maintenance mode: https://github.com/stanford-crfm/helm
 - Foundation Model Transparency Index Dec 2025: https://crfm.stanford.edu/fmti/December-2025
 - Ai2 departures: https://www.geekwire.com/2026/microsoft-hires-former-ai2-ceo-ali-farhadi-and-key-researchers-for-suleymans-ai-team/ and https://www.interconnects.ai/p/farewell-ai2

@@ -4,7 +4,7 @@
 // Anything else renders as a paragraph, so a new shape in the Pages
 // document degrades to readable text instead of breaking the page.
 
-export type Inline = { kind: 'text' | 'em' | 'strong'; text: string }
+export type Inline = { kind: 'text' | 'em' | 'strong'; text: string } | { kind: 'link'; text: string; href: string }
 
 export type Block =
   | { type: 'p'; text: string }
@@ -97,16 +97,17 @@ export function parseCore(md: string): CoreDoc {
   return doc
 }
 
-/** `*em*` and `**strong**` runs, nothing more. */
+/** `*em*`, `**strong**` and `[text](https://…)` runs, nothing more. */
 export function inlines(text: string): Inline[] {
   const out: Inline[] = []
-  const re = /\*\*([^*]+)\*\*|\*([^*]+)\*/g
+  const re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*/g
   let last = 0
   for (const m of text.matchAll(re)) {
     const at = m.index ?? 0
     if (at > last) out.push({ kind: 'text', text: text.slice(last, at) })
-    if (m[1] !== undefined) out.push({ kind: 'strong', text: m[1] })
-    else out.push({ kind: 'em', text: m[2] })
+    if (m[1] !== undefined) out.push({ kind: 'link', text: m[1], href: m[2] })
+    else if (m[3] !== undefined) out.push({ kind: 'strong', text: m[3] })
+    else out.push({ kind: 'em', text: m[4] })
     last = at + m[0].length
   }
   if (last < text.length) out.push({ kind: 'text', text: text.slice(last) })
