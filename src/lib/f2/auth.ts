@@ -12,6 +12,8 @@ export type F2User = {
   is_guest?: boolean
   /// The Settings "Refresher" toggle; false = mastery is forever.
   recert_enabled?: boolean
+  /// Admin (schema 054): the app shows admin-only settings such as Dev mode.
+  is_admin?: boolean
 }
 
 const COOKIE_NAME = 'f2_session'
@@ -65,7 +67,7 @@ export async function getSessionUser(): Promise<F2User | null> {
   if (!verified) return null
   const { data, error } = await f2Supabase()
     .from('f2_users')
-    .select('id, username, avatar_url, is_guest, recert_enabled')
+    .select('id, username, avatar_url, is_guest, recert_enabled, is_admin')
     .eq('id', verified.userId)
     .maybeSingle()
   if (error || !data) return null

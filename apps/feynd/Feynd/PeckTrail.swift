@@ -115,15 +115,18 @@ struct PeckTrailLayer: View {
     let geo: PeckGeometry
     let levels: [JumboLevelInfo]
     let currentIdx: Int?
+    /// Admin Dev mode: every rest stop's game and the level-10 film are
+    /// open from the map, cleared or not (the signs say so).
+    var devMode: Bool = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         if reduceMotion {
-            PeckTrailCanvas(geo: geo, levels: levels, currentIdx: currentIdx, dark: scheme == .dark, t: 0)
+            PeckTrailCanvas(geo: geo, levels: levels, currentIdx: currentIdx, dark: scheme == .dark, devMode: devMode, t: 0)
         } else {
             TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
-                PeckTrailCanvas(geo: geo, levels: levels, currentIdx: currentIdx, dark: scheme == .dark,
+                PeckTrailCanvas(geo: geo, levels: levels, currentIdx: currentIdx, dark: scheme == .dark, devMode: devMode,
                                 t: CGFloat(timeline.date.timeIntervalSinceReferenceDate))
             }
         }
@@ -135,6 +138,7 @@ struct PeckTrailCanvas: View {
     let levels: [JumboLevelInfo]
     let currentIdx: Int?
     var dark: Bool = false
+    var devMode: Bool = false
     let t: CGFloat
 
     /// Frontier: the current level, or one past the last level when all
@@ -263,12 +267,13 @@ struct PeckTrailCanvas: View {
                 // A cleared rest stop's sign is the way back into its game
                 // (FlashTabView puts the tap target over it).
                 jellySign(&ctx, ink, x: p.x + side * 78, y: p.y + 20, text: PeckMilestone.restGame(lvl).signTitle,
-                          sub: level.status == "passed" ? "▶ play again" : "\(cleared) of 10 cleared here")
+                          sub: level.status == "passed" ? "▶ play again" : devMode ? "▶ dev mode" : "\(cleared) of 10 cleared here")
             }
             // Level 10 pays off with a film; once cleared, its sign replays it
             // (FlashTabView puts the tap target over it).
-            if lvl == 10 && level.status == "passed" {
-                jellySign(&ctx, ink, x: p.x + side * 112, y: p.y + 30, text: "PENTIMENTO", sub: "▶ the level 10 film")
+            if lvl == 10 && (level.status == "passed" || devMode) {
+                jellySign(&ctx, ink, x: p.x + side * 112, y: p.y + 30, text: "PENTIMENTO",
+                          sub: level.status == "passed" ? "▶ the level 10 film" : "▶ dev mode")
             }
         }
     }

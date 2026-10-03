@@ -33,6 +33,8 @@ struct ProfileSheet: View {
     @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
     @AppStorage(VoiceEngine.defaultsKey) private var voiceEngine = VoiceEngine.fallback.rawValue
     @State private var recertEnabled = true
+    /// Admin-only Dev mode: every Peck minigame open from the map.
+    @AppStorage("devMode") private var devMode = false
     @State private var isGuest = false
     @State private var showClaim = false
     @State private var showIntro = false
@@ -559,6 +561,31 @@ struct ProfileSheet: View {
                     }
                 }
             }
+            if isAdmin {
+                SettingsSection(label: "Developer") {
+                    SettingsCard {
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Dev mode")
+                                    .font(.system(size: 15))
+                                    .tracking(-0.2)
+                                    .foregroundStyle(FeyndTheme.text)
+                                Text(devMode
+                                     ? "On — every Peck minigame and the film are open from the map"
+                                     : "Open every Peck minigame from the map, cleared or not")
+                                    .font(.system(size: 12.5))
+                                    .foregroundStyle(FeyndTheme.text3)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $devMode)
+                                .labelsHidden()
+                                .tint(FeyndTheme.accent)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                    }
+                }
+            }
             SettingsSection(label: "Account") {
                 SettingsCard {
                     SettingsRow(label: "Signed in as", detail: username)
@@ -596,6 +623,12 @@ struct ProfileSheet: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 44)
+    }
+
+    /// Admins (f2_users.is_admin, Bart only) see the Developer section.
+    private var isAdmin: Bool {
+        if case let .signedIn(user) = session.state { return user.isAdmin }
+        return false
     }
 
     private var username: String {

@@ -41,6 +41,9 @@ struct FlashTabView: View {
     /// Peck or Perish, the rest-stop minigame (5, 15, 25, …): the one on
     /// screen, and a first clear waiting for its results cover to close.
     @State private var gameStop: PeckGameStop? = nil
+    /// Admin Dev mode (Settings → Developer): every rest-stop game and the
+    /// level-10 film are open from the map, cleared or not.
+    @AppStorage("devMode") private var devMode = false
     @State private var pendingGame: Int? = nil
     /// Pentimento, the film that pays off level 10: the one on screen, and a
     /// first clear waiting for its results cover (the region transition then
@@ -614,7 +617,7 @@ struct FlashTabView: View {
 
                         // The road: worn behind you, stepping stones ahead,
                         // fog beyond — plus gates, signposts, chests.
-                        PeckTrailLayer(geo: world, levels: state.levels, currentIdx: currentIdx)
+                        PeckTrailLayer(geo: world, levels: state.levels, currentIdx: currentIdx, devMode: devMode)
 
                         // Critters seated along the sides (tap to poke, hold
                         // to make one your avatar) and the chests beside a
@@ -644,7 +647,7 @@ struct FlashTabView: View {
                         // (the sign is drawn by PeckTrailLayer at ±78, +20).
                         // Level 10's gate, once cleared, has a sign that replays Pentimento.
                         ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
-                            if level.level == 10 && level.status == "passed" {
+                            if level.level == 10 && (level.status == "passed" || devMode) {
                                 let side: CGFloat = world.zig(i) > 0 ? -1 : 1
                                 Button {
                                     FlashSFX.shared.play(.pop)
@@ -660,7 +663,7 @@ struct FlashTabView: View {
                             }
                         }
                         ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
-                            if PeckMilestone.isRest(level.level) && level.status == "passed" {
+                            if PeckMilestone.isRest(level.level) && (level.status == "passed" || devMode) {
                                 let side: CGFloat = world.zig(i) > 0 ? -1 : 1
                                 Button {
                                     FlashSFX.shared.play(.pop)

@@ -6,19 +6,23 @@ struct F2User: Codable, Equatable {
     var avatarUrl: String?
     /// Try-before-signup account; claiming keeps the id and all progress.
     var isGuest: Bool = false
+    /// Admin: Settings shows the admin-only rows (Dev mode). Bart only.
+    var isAdmin: Bool = false
 
     enum CodingKeys: String, CodingKey {
         case id, username
         case avatarUrl = "avatar_url"
         case isGuest = "is_guest"
+        case isAdmin = "is_admin"
     }
 
     // Tolerant decode — handles backends that don't yet return avatar_url.
-    init(id: String, username: String, avatarUrl: String? = nil, isGuest: Bool = false) {
+    init(id: String, username: String, avatarUrl: String? = nil, isGuest: Bool = false, isAdmin: Bool = false) {
         self.id = id
         self.username = username
         self.avatarUrl = avatarUrl
         self.isGuest = isGuest
+        self.isAdmin = isAdmin
     }
 
     init(from decoder: Decoder) throws {
@@ -27,6 +31,7 @@ struct F2User: Codable, Equatable {
         username = try c.decode(String.self, forKey: .username)
         avatarUrl = try c.decodeIfPresent(String.self, forKey: .avatarUrl)
         isGuest = try c.decodeIfPresent(Bool.self, forKey: .isGuest) ?? false
+        isAdmin = try c.decodeIfPresent(Bool.self, forKey: .isAdmin) ?? false
     }
 }
 
