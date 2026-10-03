@@ -17,6 +17,24 @@ function isCurrent(href: string, pathname: string) {
   return pathname === href
 }
 
+type Theme = 'dark' | 'light'
+const THEME_KEY = 'osai:theme'
+
+function readTheme(): Theme {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'
+  } catch {
+    return 'dark'
+  }
+}
+
+function applyTheme(t: Theme) {
+  const root = document.documentElement
+  if (t === 'light') root.setAttribute('data-osai-theme', 'light')
+  else root.removeAttribute('data-osai-theme')
+  try { localStorage.setItem(THEME_KEY, t) } catch { /* ignore */ }
+}
+
 function UserMenu({
   name,
   hasPassword,
@@ -31,7 +49,18 @@ function UserMenu({
   onSignOut: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const [theme, setTheme] = useState<Theme>('dark')
   const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setTheme(readTheme())
+  }, [])
+
+  function toggleTheme() {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    applyTheme(next)
+  }
 
   useEffect(() => {
     if (!open) return
@@ -64,6 +93,8 @@ function UserMenu({
         <div className="osai-menu" role="menu">
           <button type="button" role="menuitem" onClick={pick(onMemory)}>Memory</button>
           <button type="button" role="menuitem" onClick={pick(onPassword)}>{hasPassword ? 'Change password' : 'Set a password'}</button>
+          <button type="button" role="menuitem" onClick={toggleTheme}>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</button>
+          <div className="sep" role="separator" />
           <button type="button" role="menuitem" onClick={pick(onSignOut)}>Sign out</button>
         </div>
       )}

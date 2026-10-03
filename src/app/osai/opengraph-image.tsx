@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
-export const alt = 'osai: Open Source AI, the working notes'
+export const alt = 'osai: Open Source AI'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -23,24 +23,29 @@ export default function Image() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: '#f4f5f7',
-          color: '#1c2027',
+          background: '#0f1115',
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1.5px)',
+          backgroundSize: '24px 24px',
+          color: '#e9ecf1',
           padding: '56px 64px',
-          fontFamily: 'Georgia, serif',
+          fontFamily: 'Helvetica, Arial, sans-serif',
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', fontSize: 26, color: '#155e63', fontWeight: 700, letterSpacing: 1 }}>osai</div>
-          <div style={{ display: 'flex', fontSize: 64, fontWeight: 700, lineHeight: 1.05, marginTop: 18, maxWidth: 1000 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 34, fontWeight: 700, letterSpacing: -1 }}>
+            osai
+            <div style={{ width: 11, height: 11, borderRadius: 3, background: '#8fe9cb', marginTop: 6 }} />
+          </div>
+          <div style={{ display: 'flex', fontSize: 62, fontWeight: 700, lineHeight: 1.04, marginTop: 22, maxWidth: 1000, letterSpacing: -2 }}>
             Open Source AI, the working notes.
           </div>
-          <div style={{ display: 'flex', fontSize: 28, color: '#5b6370', marginTop: 18 }}>
+          <div style={{ display: 'flex', fontSize: 26, color: '#8b93a1', marginTop: 18 }}>
             The one-pager, the public-benefit AI map, and an assistant that has read both.
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {ROWS.map((r) => (
-            <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 24 }}>
+            <div key={r.name} style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 23 }}>
               <div style={{ display: 'flex', gap: 4 }}>
                 {[1, 2, 3, 4, 5].map((n) => (
                   <div
@@ -49,8 +54,8 @@ export default function Image() {
                       width: 34,
                       height: 14,
                       borderRadius: 3,
-                      background: n <= r.room ? '#c2410c' : 'transparent',
-                      border: '1.5px solid #c2410c',
+                      background: n <= r.room ? '#f2a93b' : 'transparent',
+                      border: '1.5px solid #f2a93b',
                     }}
                   />
                 ))}

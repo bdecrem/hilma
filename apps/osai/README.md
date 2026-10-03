@@ -44,6 +44,16 @@ Pros/cons tables and two-column bullet tables become lists.
   exchange into the note (≤150 words); the note is shown in the chat panel
   under "What it remembers about you" and can be cleared there.
 
+## Look
+
+Dark by default, light mode from the user menu (`data-osai-theme="light"` on
+`<html>`, remembered in `localStorage` as `osai:theme`). Tokens live at the top
+of `src/app/osai/osai.css`: graphite-blue ground with a faint graph-paper
+grid, mint for everything interactive, amber for the one data colour ("room
+to work"). Type: Bricolage Grotesque for display, Instrument Sans for reading,
+JetBrains Mono for labels and numbers (all via `next/font/google` in
+`layout.tsx`). Keep new UI on these tokens.
+
 ## Web search
 
 Off by default, so every answer starts from the documents. A turn runs with

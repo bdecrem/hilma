@@ -1,22 +1,27 @@
 import type { Metadata, Viewport } from 'next'
-import { IBM_Plex_Sans, Source_Serif_4 } from 'next/font/google'
+import { Bricolage_Grotesque, Instrument_Sans, JetBrains_Mono } from 'next/font/google'
 import { DISPLAY, getOsaiUser } from '@/lib/osai/auth'
 import { hasPassword } from '@/lib/osai/password'
 import Login from './Login'
 import Shell from './Shell'
 import './osai.css'
 
-const serif = Source_Serif_4({
+const display = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['400', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-serif',
+  weight: ['500', '600', '700'],
+  variable: '--font-display',
   display: 'swap',
 })
-const sans = IBM_Plex_Sans({
+const sans = Instrument_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '600'],
   variable: '--font-sans',
+  display: 'swap',
+})
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-mono',
   display: 'swap',
 })
 
@@ -30,14 +35,18 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#f4f5f7',
+  themeColor: '#0f1115',
 }
+
+// Applies the saved theme before first paint (dark is the default).
+const THEME_SCRIPT = `try{var t=localStorage.getItem('osai:theme');if(t==='light')document.documentElement.setAttribute('data-osai-theme','light')}catch(e){}`
 
 export default async function OsaiLayout({ children }: { children: React.ReactNode }) {
   const user = await getOsaiUser()
   const own = user ? await hasPassword(user) : false
   return (
-    <div className={`osai ${serif.variable} ${sans.variable}`}>
+    <div className={`osai ${display.variable} ${sans.variable} ${mono.variable}`}>
+      <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       {user ? <Shell name={DISPLAY[user]} hasPassword={own}>{children}</Shell> : <Login />}
     </div>
   )
