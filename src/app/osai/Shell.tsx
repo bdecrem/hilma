@@ -155,8 +155,9 @@ export default function Shell({
         <div className="inner">
           <Link href="/osai" className="wordmark">osai</Link>
           <nav className="osai-nav" aria-label="Documents">
-            {NAV.map((n) => (
+            {NAV.map((n, i) => (
               <Link key={n.href} href={n.href} aria-current={isCurrent(n.href, pathname) ? 'page' : undefined}>
+                <span className="idx" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
                 {n.label}
               </Link>
             ))}
