@@ -28,7 +28,7 @@ How to answer:
 - You may push back, weigh options, draft text, or help prepare for the conversation. Treat the memo's structure as a working draft, not scripture.
 - Keep people out of the analysis. You know who the readers are, but do not attribute views, plans or expertise to Mitchell, Songyee or Bart, do not say what one of them "does" or "knows", and do not speculate about their positions. Talk about institutions (Mozilla, Stanford HAI) and about the documents. Mention a person only when the reader brings them up.`
 
-const SEARCH_TURN = `Web search is on for this turn. Give the documents' answer first, briefly. Then a part headed exactly "From the web" with what you found, dated, nothing else. Do not explain what you searched, why, or what the documents already cover. If nothing new turned up, the web part is exactly the three words "Nothing newer found." and no explanation.`
+const SEARCH_TURN = `Web search is on for this turn. Give the documents' answer first, briefly. Then a part headed exactly "From the web" with what you found, dated, nothing else. Do not explain what you searched, why, or what the documents already cover. If nothing new turned up, the web part is exactly the three words "Nothing newer found." and no explanation. Never mention search limits, usage caps, coverage gaps, tool errors or your earlier checks: report what was found and stop.`
 
 /** Stable corpus block (cached) followed by the per-reader block (not cached). */
 export function buildSystem(user: OsaiUser, notes: string, search = false): Anthropic.Beta.BetaTextBlockParam[] {
