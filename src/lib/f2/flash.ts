@@ -101,6 +101,12 @@ export function jumboPassScore(mode: FlashSetMode): number {
   }
 }
 
+/// Whether a Peck set clears its level: a full set at or above the mode's
+/// pass score. The career map and the weekly streak clock agree on this.
+export function peckSetClearsLevel(score: number, total: number, mode: FlashSetMode): boolean {
+  return total >= SET_SIZE && score >= jumboPassScore(mode)
+}
+
 // ---------------------------------------------------------------------------
 // Card generation
 
@@ -1444,9 +1450,11 @@ export async function recordFlashSet(input: {
     throw new Error('Could not save the set')
   }
 
-  // A full Peck level (any mode, any score) satisfies the week's streak
-  // requirement — the 7-day clock restarts today.
-  if (input.jumboLevel != null && total >= SET_SIZE) {
+  // Clearing a Peck level satisfies the week's streak requirement — the
+  // 7-day clock restarts today. A set that falls short of the level's pass
+  // score leaves the clock running (2026-10-02: any full set used to reset
+  // it, so a failed level bought another week).
+  if (input.jumboLevel != null && peckSetClearsLevel(score, total, input.mode)) {
     try {
       await markPeckWeek(input.userId)
     } catch (e) {
@@ -1805,7 +1813,7 @@ export async function getJumboState(userId: string): Promise<JumboState> {
   }[]) {
     const b = best.get(s.jumbo_level)
     if (!b || s.score > b.score) best.set(s.jumbo_level, { score: s.score, total: s.total })
-    if (s.total >= SET_SIZE && s.score >= jumboPassScore(s.mode)) cleared.add(s.jumbo_level)
+    if (peckSetClearsLevel(s.score, s.total, s.mode)) cleared.add(s.jumbo_level)
   }
 
   // Levels pass in order; the map unlocks strictly one past the highest pass.

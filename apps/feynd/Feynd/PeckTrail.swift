@@ -232,11 +232,20 @@ struct PeckTrailCanvas: View {
                 // Beside the stone, away from the next one up the trail.
                 let next = i + 1 < geo.count ? geo.zig(i + 1) : 0
                 let away: CGFloat = next < 0 ? 1 : -1
-                jellySign(&ctx, ink, x: p.x + away * 106, y: p.y + 8, text: JellyRegion.of(index: i).signName)
+                // Past the first region, the gate banner of the stone below
+                // hangs at this stone's level on the same side (both land at
+                // x ± 106), so the sign stands 30pt higher and its post ends
+                // above the banner (2026-10-02: JELLY LAGOON's post ran
+                // through "To Jelly Lagoon").
+                let lift: CGFloat = i == 0 ? 0 : 30
+                jellySign(&ctx, ink, x: p.x + away * 106, y: p.y + 8 - lift, text: JellyRegion.of(index: i).signName)
             }
             if PeckMilestone.isGate(lvl) {
                 let banner = JellyRegion.of(index: i).gateBanner
-                jellyArch(&ctx, ink, x: p.x, y: p.y, r: 70, banner: banner.text, col: banner.col, shift: geo.zig(i) * 34)
+                // With the traveler standing on the gate stone, the ribbon
+                // rises 40pt so the dodo's head is not under it.
+                jellyArch(&ctx, ink, x: p.x, y: p.y, r: 70, banner: banner.text, col: banner.col, shift: geo.zig(i) * 34,
+                          lift: i == cur ? 40 : 0)
             }
             if PeckMilestone.isRest(lvl) {
                 let r0 = (i / 10) * 10

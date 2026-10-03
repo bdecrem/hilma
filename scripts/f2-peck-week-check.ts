@@ -53,6 +53,18 @@ async function main() {
     return
   }
 
+  // 0. Which sets restart the clock: only a cleared level (pass score per
+  //    mode), never a full set that fell short. (recordFlashSet gates
+  //    markPeckWeek on this; 2026-10-02 a 7/10 text set reset the week.)
+  const flash = await import('../src/lib/f2/flash')
+  const clears = flash.peckSetClearsLevel
+  check('0 text 8/10 clears', clears(8, 10, 'text') === true, null)
+  check('0 text 7/10 does not', clears(7, 10, 'text') === false, null)
+  check('0 mixed 8/10 clears', clears(8, 10, 'mixed') === true, null)
+  check('0 choice 9/10 clears, 8/10 does not', clears(9, 10, 'choice') && !clears(8, 10, 'choice'), null)
+  check('0 voice 7/10 clears, 6/10 does not', clears(7, 10, 'voice') && !clears(6, 10, 'voice'), null)
+  check('0 a short set never clears', clears(5, 5, 'text') === false, null)
+
   // A. mid-week: 4 days left
   await set(5, 0, -3)
   let s = await streak.getDailyStreak(TEST_USER)

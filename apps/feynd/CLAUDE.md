@@ -249,4 +249,24 @@ The app was rebranded to the jelly dodo in one pass — see
   shows the grade ball or the wait. `.shots/voiceshots.sh` shoots them all.
 - **Icon:** composited by PIL from `scripts/dodo-jelly/out/dodo-1024.png`
   (BRANDING.md has the recipe).
+- **Sound** (2026-10-02): `FlashSFX.swift` keeps the chip blips for the
+  flash sets and adds a jelly set rendered by `jelly(_:)` — sines and
+  triangles with pitch bends and a decaying wobble, lowpassed noise for the
+  wet part, nothing above ~2 kHz: `.boing` (the dodo tapped), `.pop`
+  (stones, the replay signs, an opened chest), `.squish` (a critter poked),
+  `.chest` (a chest opening), `.nope` (locked), `.splash` + `.hop` (the
+  launch: landing at 0.5 s, hello hop at 1.9 s, from a `.task` on
+  `LaunchSplashView`). Peck or Perish's `.peck` is a woody knock now (the
+  1.1–1.8 kHz tick read as a high-pitched dot), its off-beat 6 kHz hi-hat is
+  gone and the monkey squeak sits an octave lower (`PeckGameAudio.swift`).
+- **Map signs** (2026-10-02): the due-date board picks its side in
+  `FlashTabView.dueBoardX` — on a region's first stone it takes the side
+  opposite the name sign and the gate banner below; on a gate stone it
+  stands outside the arch. A region sign past the first stands 30pt higher
+  than the gate banner under it, and the gate's ribbon rises 40pt while the
+  traveler stands on that stone (`PeckTrail.drawMilestones`). Check with a
+  short mock map so the stones are on screen: `-StartTab peck
+  -MockLevelCount 11 -MockCurrentLevel 11 -MockPeckDue 7 -ScrollTop 1`
+  (and `… 10 … 10` for the gate case); `-ScrollToLevel` stays approximate
+  even at its 5 s delay.
 

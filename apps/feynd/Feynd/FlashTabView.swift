@@ -644,7 +644,7 @@ struct FlashTabView: View {
                             if level.level == 10 && level.status == "passed" {
                                 let side: CGFloat = world.zig(i) > 0 ? -1 : 1
                                 Button {
-                                    FlashSFX.shared.play(.tap)
+                                    FlashSFX.shared.play(.pop)
                                     film = PentimentoFilm(firstClear: false)
                                 } label: {
                                     Color.clear
@@ -660,7 +660,7 @@ struct FlashTabView: View {
                             if PeckMilestone.isRest(level.level) && level.status == "passed" {
                                 let side: CGFloat = world.zig(i) > 0 ? -1 : 1
                                 Button {
-                                    FlashSFX.shared.play(.tap)
+                                    FlashSFX.shared.play(.pop)
                                     gameStop = PeckGameStop(level: level.level)
                                 } label: {
                                     Color.clear
@@ -689,10 +689,9 @@ struct FlashTabView: View {
                             // board never runs off the screen edge.
                             if state.peckDue != nil, let left = state.peckDaysLeft {
                                 let stone = world.point(i)
-                                let side: CGFloat = world.zig(i) < 0 ? 1 : -1
-                                let x = min(max(stone.x + side * 86, 54), geo.size.width - 54)
                                 PeckDueSign(daysLeft: left)
-                                    .position(x: x, y: stone.y + PeckDueSign.centerOffsetY)
+                                    .position(x: dueBoardX(i, world: world, levels: state.levels, width: geo.size.width),
+                                              y: stone.y + PeckDueSign.centerOffsetY)
                             }
                         }
                     }
@@ -735,7 +734,10 @@ struct FlashTabView: View {
                     let target = UserDefaults.standard.integer(forKey: "ScrollToLevel")
                     if target > 0 {
                         UserDefaults.standard.removeObject(forKey: "ScrollToLevel")
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                        // Late enough for the map to have its final height
+                        // (the state, and any -MockLevelCount, land after the
+                        // first layout); at 1.2 s it was a region off (2026-10-02).
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                             proxy.scrollTo(target, anchor: .center)
                         }
                     }
@@ -743,6 +745,28 @@ struct FlashTabView: View {
                 #endif
             }
         }
+    }
+
+    /// Where the due-date board stands beside the current stone: on the side
+    /// with room — right of a stone on the left of the zigzag, left otherwise
+    /// (rest-stop and Pentimento signs stand on the right of centre stones).
+    /// A region's first stone has its name sign on the side away from the
+    /// next stone, and the gate banner below leans the same way, so there
+    /// the board takes the other side (2026-10-02, on level 11: the board sat
+    /// on JELLY LAGOON and its post ran through "To Jelly Lagoon"). On a gate
+    /// stone it stands outside the arch (r 70 plus its stroke). Clamped so it
+    /// never runs off the screen edge.
+    private func dueBoardX(_ i: Int, world: PeckGeometry, levels: [JumboLevelInfo], width: CGFloat) -> CGFloat {
+        let stone = world.point(i)
+        var side: CGFloat = world.zig(i) < 0 ? 1 : -1
+        var reach: CGFloat = 86
+        if i % 10 == 0 {
+            let next = i + 1 < world.count ? world.zig(i + 1) : 0
+            side = next < 0 ? -1 : 1
+        } else if i < levels.count, PeckMilestone.isGate(levels[i].level) {
+            reach = 130
+        }
+        return min(max(stone.x + side * reach, 54), width - 54)
     }
 
     /// One level stone — the jelly ball (`JellyNodeView` in PeckJelly.swift).

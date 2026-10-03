@@ -141,7 +141,8 @@ final class PeckGameAudio {
             for (i, m) in [62.0, 66, 69, 74].enumerated() { v += marimba(m + 12, 0.3, delay: Double(i) * 0.07) }
         case .peck(let c):
             let k = Double(min(c, 8))
-            v = [noise(0.045, 0.8, .bandpass, 1700 + k * 170, q: 1.3), tone(.triangle, 1100 + k * 90, 240, 0.05, 0.45)]
+            // A woody knock, not a tick (2026-10-02: the 1.1–1.8 kHz version read as a high-pitched dot on every tap).
+            v = [noise(0.05, 0.6, .lowpass, 900 + k * 60, q: 0.9), tone(.triangle, 520 + k * 40, 160, 0.07, 0.4)]
         case .thud:
             v = [tone(.sine, 170, 70, 0.08, 0.35), noise(0.05, 0.2, .lowpass, 500, q: 0.7)]
         case .chomp:
@@ -150,7 +151,7 @@ final class PeckGameAudio {
         case .oink:
             v = [tone(.saw, 320, 210, 0.08, 0.3, lowpass: 700), tone(.saw, 260, 170, 0.1, 0.3, delay: 0.09, lowpass: 700)]
         case .squeak:
-            v = [tone(.sine, 1500, 2300, 0.07, 0.25), tone(.sine, 2100, 800, 0.14, 0.22, delay: 0.08)]
+            v = [tone(.sine, 900, 1400, 0.07, 0.2), tone(.sine, 1300, 500, 0.14, 0.18, delay: 0.08)]
         case .horn:
             v = [tone(.saw, 73, 71, 1.2, 0.5, attack: 0.12, lowpass: 700), tone(.saw, 110, 108, 1.2, 0.35, attack: 0.12, lowpass: 700)]
         case .boom:
@@ -189,7 +190,6 @@ final class PeckGameAudio {
             voices.append(noise(0.03, 0.25, .lowpass, 900, q: 0.7, music: true))
         }
         if i % 8 == 4 { voices.append(noise(0.07, 0.35, .bandpass, 1500, q: 0.9, music: true)) }
-        if i % 2 == 1 { voices.append(noise(0.025, 0.07, .highpass, 6000, q: 0.7, music: true)) }
     }
 
     private func render(_ out: UnsafeMutablePointer<Float>, _ frames: Int) {

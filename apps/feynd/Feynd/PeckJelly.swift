@@ -398,7 +398,7 @@ func jellyCastle(_ g: inout GraphicsContext, _ ink: JellyInk, x: CGFloat, base: 
 /// The page's `arch`: a white candy-cane gate around `(x, y)`, posts down
 /// to y + 40, and the banner above (nudged by `shift` so it clears the
 /// next stone).
-func jellyArch(_ g: inout GraphicsContext, _ ink: JellyInk, x: CGFloat, y: CGFloat, r: CGFloat, banner: String, col: UInt32, shift: CGFloat = 0) {
+func jellyArch(_ g: inout GraphicsContext, _ ink: JellyInk, x: CGFloat, y: CGFloat, r: CGFloat, banner: String, col: UInt32, shift: CGFloat = 0, lift: CGFloat = 0) {
     g.stroke(jellyArcPath(center: CGPoint(x: x, y: y + 4), r: r, from: .pi, to: 2 * .pi, steps: 24),
              with: .color(jellyRGBA(120, 40, 80, 0.18)), style: StrokeStyle(lineWidth: 18, lineCap: .butt))
     var frame = jellyArcPath(center: CGPoint(x: x, y: y), r: r, from: .pi, to: 2 * .pi, steps: 24)
@@ -408,7 +408,7 @@ func jellyArch(_ g: inout GraphicsContext, _ ink: JellyInk, x: CGFloat, y: CGFlo
     g.stroke(frame, with: .color(ink.c(0xFF4D6D)), style: StrokeStyle(lineWidth: 16, lineCap: .butt, dash: [10, 10]))
     g.stroke(jellyArcPath(center: CGPoint(x: x, y: y), r: r - 4, from: 1.1 * .pi, to: 1.45 * .pi, steps: 10),
              with: .color(.white.opacity(0.55)), style: StrokeStyle(lineWidth: 4, lineCap: .round))
-    jellyRibbon(&g, ink, x: x + shift, y: y - r - 44, text: banner, col: col)
+    jellyRibbon(&g, ink, x: x + shift, y: y - r - 44 - lift, text: banner, col: col)
 }
 
 /// The page's `star`: a ten-point star, lemon jelly when earned.
@@ -611,12 +611,12 @@ struct JellyNodeView: View {
         let tri = isLocked ? JellyInk(dark: scheme == .dark).triad(.locked) : region.node
         Button {
             if isLocked {
-                FlashSFX.shared.play(.wrong)
+                FlashSFX.shared.play(.nope)
                 UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
                 withAnimation(.linear(duration: 0.4)) { shakes += 1 }
                 return
             }
-            FlashSFX.shared.play(.tap)
+            FlashSFX.shared.play(.pop)
             withAnimation(.spring(response: 0.16, dampingFraction: 0.5)) { squish = 1 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.13) {
                 withAnimation(.spring(response: 0.32, dampingFraction: 0.42)) { squish = 0 }
@@ -775,17 +775,17 @@ struct JellyChestView: View {
     private func tap() {
         switch state {
         case .locked:
-            FlashSFX.shared.play(.wrong)
+            FlashSFX.shared.play(.nope)
             UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
             withAnimation(.linear(duration: 0.4)) { shakes += 1 }
         case .open:
-            FlashSFX.shared.play(.tap)
+            FlashSFX.shared.play(.pop)
             withAnimation(.spring(response: 0.16, dampingFraction: 0.5)) { squish = 1 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.13) {
                 withAnimation(.spring(response: 0.32, dampingFraction: 0.42)) { squish = 0 }
             }
         case .closed:
-            FlashSFX.shared.play(.fanfare)
+            FlashSFX.shared.play(.chest)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             opened = true
             openedAt = Date()
@@ -846,7 +846,7 @@ struct JellyCritterView: View {
     }
 
     private func poke() {
-        FlashSFX.shared.play(.tap)
+        FlashSFX.shared.play(.squish)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         squished = true
         withAnimation(.spring(response: 0.16, dampingFraction: 0.5)) { squish = 1 }

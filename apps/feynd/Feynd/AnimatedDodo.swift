@@ -252,7 +252,7 @@ struct AnimatedDodoView: View {
             reactionKind += 1
             reactionStart = Date()
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            FlashSFX.shared.play(.tap)
+            FlashSFX.shared.play(.boing)
         }
         #if targetEnvironment(simulator)
         // `-TickleDodo 1` — auto-play a tickle for screenshot runs.
@@ -325,7 +325,18 @@ struct LaunchSplashView: View {
     @State private var start = Date()
 
     var body: some View {
-        content.onAppear { start = Date() }
+        content
+            .onAppear { start = Date() }
+            // The sound of the choreography below: the landing squash and
+            // the hello hop (2026-10-02). Reduced motion skips the drop, so
+            // it skips the sounds too.
+            .task {
+                guard !reduceMotion else { return }
+                try? await Task.sleep(for: .milliseconds(500))
+                FlashSFX.shared.play(.splash)
+                try? await Task.sleep(for: .milliseconds(1400))
+                FlashSFX.shared.play(.hop)
+            }
     }
 
     // The jelly launch (2026-10-01):
