@@ -101,13 +101,26 @@ export async function POST(
       stars = 3
     }
 
-    // After a failed FULL attempt, tell the client whether the Second
-    // Chance offer applies (2+ attempts, latest below A, 24h window).
+    // An already-certified topic has nothing left to earn here, but a full
+    // exam is a superset of the three-question refresher: a grade that
+    // would renew the badge from a refresher renews it from here too
+    // (2026-10-02: three refreshers were taken as Final Reviews, got a B
+    // each and renewed nothing, so the badges dimmed).
+    let renewed = false
+    let recert_due_at = thread.recert_due_at ?? null
+    if (thread.stars >= 3 && recertRenews(grade.grade)) {
+      recert_due_at = await applyRecertRenewal(user.id, thread.id, thread.recert_stage ?? 0)
+      renewed = true
+    }
+
+    // After a failed FULL attempt on an unmastered topic, tell the client
+    // whether the Second Chance offer applies (2+ attempts, latest below A,
+    // 24h window). A certified topic has no star to retake for.
     let second_chance: { eligible: boolean; until: string | null } = {
       eligible: false,
       until: null,
     }
-    if (!grade.passed && !isSecondChance) {
+    if (!grade.passed && !isSecondChance && thread.stars < 3) {
       const sc = await getSecondChanceState(user.id, thread.id)
       second_chance = { eligible: sc.eligible, until: sc.until }
     }
@@ -121,6 +134,8 @@ export async function POST(
       stars,
       mastered: grade.passed,
       second_chance,
+      renewed,
+      recert_due_at,
     })
   } catch (e) {
     console.error('[f2/final-review] grading failed:', e)

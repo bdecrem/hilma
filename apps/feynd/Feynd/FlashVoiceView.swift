@@ -224,11 +224,15 @@ struct FinalReviewView: View {
                     .opacity(revealed ? 1 : 0)
                     .padding(.vertical, 8)
 
-                    if r.passed {
+                    // A full exam on an already-certified topic renews the
+                    // badge too (server, 2026-10-02) — say so instead of
+                    // announcing a third star it already had.
+                    let renewed = r.renewed == true
+                    if r.passed || renewed {
                         HStack(spacing: 8) {
-                            Image(systemName: variant == .recert ? "seal.fill" : "star.fill")
+                            Image(systemName: renewed ? "seal.fill" : "star.fill")
                                 .foregroundStyle(FeyndTheme.gold)
-                            Text(variant == .recert
+                            Text(renewed
                                 ? "Badge renewed — gold\(renewalDateSuffix(r))!"
                                 : "Third star earned — topic mastered!")
                                 .font(.system(size: 15, weight: .bold))

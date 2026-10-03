@@ -23,8 +23,12 @@ struct TopicDetailView: View {
     @State private var quotesPresented = false
     /// Mirror of the server-side Refresher toggle (Profile keeps it fresh).
     @AppStorage("recertEnabled") private var recertEnabledPref = true
-    @State private var finalReviewPresented = false
-    @State private var finalReviewVariant: FinalReviewView.Variant = .full
+    /// The Final Review cover is item-driven: `fullScreenCover(isPresented:)`
+    /// read the variant stale and opened a full exam from the Refresher
+    /// button (every refresher since the GPT-Live switch ran as a Final
+    /// Review; reproduced in the simulator 2026-10-02). The item carries
+    /// the variant, so the cover can only ever show what was asked for.
+    @State private var finalReviewLaunch: FinalReviewLaunch?
     @State private var secondChanceDialogPresented = false
     @State private var contextPresented = false
     /// Redraw hook for the first-session banner's dismissal.
@@ -91,11 +95,11 @@ struct TopicDetailView: View {
         .sheet(isPresented: $quotesPresented) {
             PebblesView(threadId: topicId, topicLabel: thread?.topic)
         }
-        .fullScreenCover(isPresented: $finalReviewPresented) {
+        .fullScreenCover(item: $finalReviewLaunch) { launch in
             FinalReviewView(
                 topicId: topicId,
                 topicLabel: thread?.topic ?? "Topic",
-                variant: finalReviewVariant
+                variant: launch.variant
             ) { result in
                 if var t = thread {
                     t.stars = result.stars
@@ -113,12 +117,10 @@ struct TopicDetailView: View {
             titleVisibility: .visible
         ) {
             Button("Second Chance — 3 questions") {
-                finalReviewVariant = .secondChance
-                finalReviewPresented = true
+                finalReviewLaunch = FinalReviewLaunch(variant: .secondChance)
             }
             Button("Full Final Review") {
-                finalReviewVariant = .full
-                finalReviewPresented = true
+                finalReviewLaunch = FinalReviewLaunch(variant: .full)
             }
             Button("Cancel", role: .cancel) {}
         } message: {
@@ -155,8 +157,14 @@ struct TopicDetailView: View {
             if UserDefaults.standard.bool(forKey: "OpenFinalReview") {
                 UserDefaults.standard.removeObject(forKey: "OpenFinalReview")
                 try? await Task.sleep(for: .milliseconds(600))
-                finalReviewVariant = .full
-                finalReviewPresented = true
+                finalReviewLaunch = FinalReviewLaunch(variant: .full)
+            }
+            // `-OpenRefresher 1` — the certified topic's refresher, through
+            // the same code the Refresher chip and the dimmed-badge banner run.
+            if UserDefaults.standard.bool(forKey: "OpenRefresher") {
+                UserDefaults.standard.removeObject(forKey: "OpenRefresher")
+                try? await Task.sleep(for: .milliseconds(600))
+                finalReviewLaunch = FinalReviewLaunch(variant: .recert)
             }
             // `-OpenTopicQuotes 1` — this topic's Quotes shelf.
             if UserDefaults.standard.bool(forKey: "OpenTopicQuotes") {
@@ -309,8 +317,7 @@ struct TopicDetailView: View {
     private var recertBanner: some View {
         if let t = thread, t.recertLapsed {
             Button {
-                finalReviewVariant = .recert
-                finalReviewPresented = true
+                finalReviewLaunch = FinalReviewLaunch(variant: .recert)
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "seal")
@@ -342,8 +349,7 @@ struct TopicDetailView: View {
             .padding(.bottom, 6)
         } else if let t = thread, t.recertDueSoon, let due = t.recertDueAt {
             Button {
-                finalReviewVariant = .recert
-                finalReviewPresented = true
+                finalReviewLaunch = FinalReviewLaunch(variant: .recert)
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.clockwise")
@@ -456,8 +462,7 @@ struct TopicDetailView: View {
                             if thread?.secondChanceAvailable == true {
                                 secondChanceDialogPresented = true
                             } else {
-                                finalReviewVariant = .full
-                                finalReviewPresented = true
+                                finalReviewLaunch = FinalReviewLaunch(variant: .full)
                             }
                         }
                         .opacity(busy ? 0.5 : 1)
@@ -467,8 +472,7 @@ struct TopicDetailView: View {
                     if thread?.isCertified == true && recertEnabledPref {
                         ActionChip(label: "Refresher", systemImage: "arrow.clockwise",
                                    iconTint: (thread?.recertLapsed == true || thread?.recertDueSoon == true) ? FeyndTheme.gold : FeyndTheme.accent) {
-                            finalReviewVariant = .recert
-                            finalReviewPresented = true
+                            finalReviewLaunch = FinalReviewLaunch(variant: .recert)
                         }
                         .opacity(busy ? 0.5 : 1)
                         .allowsHitTesting(!busy)
@@ -643,4 +647,11 @@ struct TopicDetailView: View {
         }
         return ""
     }
+}
+
+/// What the Final Review cover was asked to show. Identifiable so the cover
+/// is driven by `fullScreenCover(item:)` and gets its variant from the item.
+private struct FinalReviewLaunch: Identifiable {
+    let id = UUID()
+    let variant: FinalReviewView.Variant
 }
