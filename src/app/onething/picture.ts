@@ -23,3 +23,30 @@ export async function squareJpeg(file: File, size = 512): Promise<Blob> {
     URL.revokeObjectURL(url)
   }
 }
+
+// A day's picture: the whole photo, long edge scaled to `edge` px, as a JPEG
+// of a few hundred KB — so an iPhone photo does not cross the wire at 4 MB.
+// HEIC is decoded by the browser (Safari can; Chrome cannot, and says so).
+export async function fitJpeg(file: File, edge = 1600): Promise<Blob> {
+  const url = URL.createObjectURL(file)
+  try {
+    const img = await new Promise<HTMLImageElement>((ok, no) => {
+      const i = new Image()
+      i.onload = () => ok(i)
+      i.onerror = () => no(new Error('That file is not a picture this browser can read.'))
+      i.src = url
+    })
+    const w = img.naturalWidth, h = img.naturalHeight
+    if (!w || !h) throw new Error('That file is not a picture.')
+    const k = Math.min(1, edge / Math.max(w, h))
+    const c = document.createElement('canvas')
+    c.width = Math.round(w * k)
+    c.height = Math.round(h * k)
+    const ctx = c.getContext('2d')
+    if (!ctx) throw new Error('Could not read that picture.')
+    ctx.drawImage(img, 0, 0, c.width, c.height)
+    return await new Promise<Blob>((ok, no) => c.toBlob((b) => (b ? ok(b) : no(new Error('Could not read that picture.'))), 'image/jpeg', 0.86))
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}

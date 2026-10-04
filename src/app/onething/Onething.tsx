@@ -6,7 +6,8 @@ import { EXAMPLES } from '@/lib/onething/examples';
 import Plant from './Plant';
 import Payoff from './Payoff';
 import Doodle from './Doodle';
-import { squareJpeg } from './picture';
+import { fitJpeg, squareJpeg } from './picture';
+import { plainText, splitLinks } from '@/lib/onething/links';
 
 /* onething, the jelly journal (2026-10-02). Drawn with the craft of the Dodo
  * redesign — glossy jelly, squash and stretch, a lot of colour — with
@@ -15,7 +16,7 @@ import { squareJpeg } from './picture';
  * of day cards. Styles: journal.css (.oj-*), plus
  * onething.css for the doodles, the plant and the payoff scene. */
 
-type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null };
+type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null; photo?: string | null; photo_w?: number | null; photo_h?: number | null };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
 type BuddyView = { id: string; name: string; avatar: string | null; streak: number; best: number; inToday: boolean; nextBonusIn: number; startsTomorrow: boolean };
 type InviteView = { id: string; name: string; since: string };
@@ -299,6 +300,8 @@ function Top({ me, streak, view, onView, onSignout }: { me: Person; streak: numb
   );
 }
 
+/** Picking, opening and the state of a day's picture (one per day). */
+type PhotoProps = { busy: boolean; err: string; onPick: (day: string) => void; onOpen: (day: string) => void };
 type ThoughtsProps = {
   day: string; text: string;
   editing: { day: string; index: number } | null; editText: string; busy: boolean; err: string;
@@ -323,13 +326,80 @@ function Thoughts({ day, text, editing, editText, busy, err, onEditText, onStart
             </form>
           ) : (
             <p className="t">
-              {t}
+              <Rich text={t} />
               <button type="button" className="oj-edit" onClick={() => onStart(day, i, t)} aria-label={`edit thought ${i + 1}`}>edit</button>
             </p>
           )}
         </li>
       ))}
     </ol>
+  );
+}
+
+/** A sentence with its links: a URL shows as its bare domain, underlined in the
+ *  day's ink, no preview card — the sentence stays the entry. */
+function Rich({ text }: { text: string }) {
+  return (
+    <>
+      {splitLinks(text).map((part, i) =>
+        'href' in part
+          ? <span key={i}><a className="oj-link" href={part.href} target="_blank" rel="noopener noreferrer">{part.label}</a>{part.tail}</span>
+          : <span key={i}>{part.text}</span>,
+      )}
+    </>
+  );
+}
+
+/** The day's picture, a small snapshot taped to the card under the sentence.
+ *  Fixed small; a tap shows it big. Never above the sentence, never full bleed. */
+function Snapshot({ entry, onOpen }: { entry: Entry; onOpen: () => void }) {
+  const w = entry.photo_w || 4, h = entry.photo_h || 3;
+  // tall pictures are cropped to 3:4 by the card, wide ones to 16:9 — the print stays a small rectangle
+  const ratio = Math.min(16 / 9, Math.max(3 / 4, w / h));
+  return (
+    <button type="button" className="oj-snap" style={{ ['--ratio' as string]: ratio }} onClick={onOpen} aria-label="the day's picture, bigger">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={entry.photo ?? ''} alt="" loading="lazy" />
+    </button>
+  );
+}
+
+/** A paperclip, for the "add a picture" pill. */
+function Clip() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13.5 6.5l-6 6a2.1 2.1 0 0 0 3 3l6.5-6.5a4.2 4.2 0 0 0-6-6L4.6 9.4" />
+    </svg>
+  );
+}
+
+/** The picture, big, in a sheet: the day, the sentence under it, and the way to take it off. */
+function PhotoSheet({ entry, busy, err, onRemove, onClose }: { entry: Entry; busy: boolean; err: string; onRemove: () => void; onClose: () => void }) {
+  const c = colorOf(entry.day);
+  const [sure, setSure] = useState(false);
+  return (
+    <Sheet label={`picture from ${longDay(entry.day)}`} onClose={onClose}>
+      <article className="oj-card oj-photo" data-j={c}>
+        <div className="oj-card-top">
+          <span className="oj-chip">{longDay(entry.day)}</span>
+          <button type="button" className="oj-x" aria-label="close" onClick={onClose}>×</button>
+        </div>
+        <div className="oj-photo-print">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={entry.photo ?? ''} alt={`picture from ${longDay(entry.day)}`} />
+        </div>
+        <p className="oj-photo-cap"><Rich text={lines(entry.text)[0] ?? ''} /></p>
+        <div className="oj-acts">
+          {sure
+            ? <>
+                <button type="button" className="oj-btn" disabled={busy} onClick={onRemove}>{busy ? 'Removing…' : 'Take it off'}</button>
+                <button type="button" className="oj-text-btn" onClick={() => setSure(false)}>Keep it</button>
+              </>
+            : <button type="button" className="oj-text-btn quiet-on" onClick={() => setSure(true)}>Remove this picture</button>}
+        </div>
+        {err && <p className="oj-err">{err}</p>}
+      </article>
+    </Sheet>
   );
 }
 
@@ -346,7 +416,7 @@ function Drawing({ label = 'drawing…' }: { label?: string }) {
 }
 
 /** The doodle in its white blob, and every thought of the day. */
-function DayBody({ day, entry, drawn, thoughts }: { day: string; entry: Entry; drawn: boolean; thoughts: Omit<ThoughtsProps, 'day' | 'text'> }) {
+function DayBody({ day, entry, drawn, thoughts, onPhoto }: { day: string; entry: Entry; drawn: boolean; thoughts: Omit<ThoughtsProps, 'day' | 'text'>; onPhoto: (day: string) => void }) {
   return (
     <>
       {drawn && (
@@ -354,7 +424,8 @@ function DayBody({ day, entry, drawn, thoughts }: { day: string; entry: Entry; d
           {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.4} /> : <Drawing />}
         </div>
       )}
-      <div className={`oj-said ${sizeFor(entry.text)}`}><Thoughts day={day} text={entry.text} {...thoughts} /></div>
+      <div className={`oj-said ${sizeFor(plainText(entry.text))}`}><Thoughts day={day} text={entry.text} {...thoughts} /></div>
+      {entry.photo && <Snapshot entry={entry} onOpen={() => onPhoto(day)} />}
     </>
   );
 }
@@ -373,14 +444,20 @@ function Tile({ cell, drawn, i, onOpen }: { cell: Cell; drawn: boolean; i: numbe
   const e = cell.entry!;
   const all = lines(e.text);
   return (
-    <button type="button" className="oj-tile" data-j={colorOf(cell.day)} style={{ ['--tilt' as string]: `${i % 2 ? 0.8 : -0.8}deg` }} onClick={onOpen} aria-label={`${longDay(cell.day)}: ${all[0]}`}>
+    <button type="button" className="oj-tile" data-j={colorOf(cell.day)} style={{ ['--tilt' as string]: `${i % 2 ? 0.8 : -0.8}deg` }} onClick={onOpen} aria-label={`${longDay(cell.day)}: ${plainText(all[0])}${e.photo ? ' (with a picture)' : ''}`}>
       <span className="oj-tile-date"><b>{parts(cell.day)[2]}</b>{weekday(cell.day)}</span>
+      {e.photo && (
+        <span className="oj-tile-peek" aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={e.photo} alt="" loading="lazy" />
+        </span>
+      )}
       {drawn && (
         <span className="oj-tile-blob">
           {e.doodle ? <Doodle svg={e.doodle} alt={e.doodle_alt} pen={0.75} boil="hover" /> : <span className="oj-wait">…</span>}
         </span>
       )}
-      <span className="oj-tile-text">{all[0]}</span>
+      <span className="oj-tile-text">{plainText(all[0])}</span>
       {all.length > 1 && <span className="oj-tile-more">+{all.length - 1} more</span>}
     </button>
   );
@@ -404,7 +481,7 @@ function Sheet({ label, onClose, children }: { label: string; onClose: () => voi
 }
 
 /** A past day, opened from the wall: a jelly card in its colour, its drop on top. */
-function DaySheet({ entry, drawn, thoughts, onClose, onRedraw }: { entry: Entry; drawn: boolean; thoughts: Omit<ThoughtsProps, 'day' | 'text'>; onClose: () => void; onRedraw: () => void }) {
+function DaySheet({ entry, drawn, thoughts, photo, onClose, onRedraw }: { entry: Entry; drawn: boolean; thoughts: Omit<ThoughtsProps, 'day' | 'text'>; photo: PhotoProps; onClose: () => void; onRedraw: () => void }) {
   const c = colorOf(entry.day);
   return (
     <Sheet label={longDay(entry.day)} onClose={onClose}>
@@ -414,8 +491,12 @@ function DaySheet({ entry, drawn, thoughts, onClose, onRedraw }: { entry: Entry;
           <span className="oj-chip">{longDay(entry.day)}</span>
           <button type="button" className="oj-x" aria-label="close" onClick={onClose}>×</button>
         </div>
-        <DayBody day={entry.day} entry={entry} drawn={drawn} thoughts={thoughts} />
-        {drawn && entry.doodle && <div className="oj-acts"><button type="button" className="oj-pill" onClick={onRedraw}><Redo />Redraw</button></div>}
+        <DayBody day={entry.day} entry={entry} drawn={drawn} thoughts={thoughts} onPhoto={photo.onOpen} />
+        <div className="oj-acts">
+          {drawn && entry.doodle && <button type="button" className="oj-pill" onClick={onRedraw}><Redo />Redraw</button>}
+          <button type="button" className="oj-pill" disabled={photo.busy} onClick={() => photo.onPick(entry.day)}><Clip />{entry.photo ? 'Another picture' : 'Add a picture'}</button>
+        </div>
+        {photo.err && <p className="oj-err">{photo.err}</p>}
       </article>
     </Sheet>
   );
@@ -623,6 +704,11 @@ export default function Onething() {
   const [payoff, setPayoff] = useState<{ streak: number; bonus: number; points: number } | null>(null);
   const [openDay, setOpenDay] = useState<string | null>(null); // a past day, opened from the wall
   const [redraw, setRedraw] = useState<string | null>(null); // the day whose doodle is being redrawn
+  const [photoOpen, setPhotoOpen] = useState<string | null>(null); // the day whose picture is shown big
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoErr, setPhotoErr] = useState('');
+  const photoRef = useRef<HTMLInputElement>(null);
+  const photoDay = useRef<string>(''); // the day the file picker was opened for
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
@@ -707,6 +793,38 @@ export default function Onething() {
     finally { setBusy(false); }
   }
   function startEdit(day: string, index: number, current: string) { setEditing({ day, index }); setEditText(current); setErr(''); }
+  /// A picture for a day: scaled down here, posted as JPEG, one per day (a new one replaces it).
+  function pickPhoto(day: string) {
+    photoDay.current = day; setPhotoErr('');
+    if (photoRef.current) { photoRef.current.value = ''; photoRef.current.click(); }
+  }
+  async function addPhoto(f: File | undefined) {
+    const day = photoDay.current;
+    if (!f || !day) return;
+    setPhotoBusy(true); setPhotoErr('');
+    try {
+      const blob = await fitJpeg(f);
+      const form = new FormData();
+      form.set('day', day);
+      form.set('file', blob, 'picture.jpg');
+      const r = await fetch('/api/onething/photo', { method: 'POST', body: form });
+      const j = await r.json();
+      if (!r.ok) { setPhotoErr(j.error ?? 'Could not save that picture.'); return; }
+      await load();
+    } catch (e) { setPhotoErr((e as Error).message || 'Could not read that picture.'); }
+    finally { setPhotoBusy(false); }
+  }
+  async function removePhoto(day: string) {
+    setPhotoBusy(true); setPhotoErr('');
+    try {
+      const r = await fetch(`/api/onething/photo?day=${day}`, { method: 'DELETE' });
+      const j = await r.json();
+      if (!r.ok) { setPhotoErr(j.error ?? 'Could not remove that picture.'); return; }
+      setPhotoOpen(null);
+      await load();
+    } catch { setPhotoErr('Network error. Try again.'); }
+    finally { setPhotoBusy(false); }
+  }
   async function saveName() {
     setBusy(true); setYou({ err: '', note: '' });
     try {
@@ -775,6 +893,7 @@ export default function Onething() {
     onEditText: setEditText, onStart: startEdit, onSave: saveEdit,
     onCancel: () => { setEditing(null); setErr(''); },
   };
+  const photoProps: PhotoProps = { busy: photoBusy, err: photoErr, onPick: pickPhoto, onOpen: (d) => { setPhotoErr(''); setPhotoOpen(d); } };
   const entries = me.entries ?? [];
   const today = me.today ?? '';
   const tc = colorOf(today);
@@ -914,6 +1033,7 @@ export default function Onething() {
   const toNext = daysToNext(b);
   const opened = openDay ? byDay.get(openDay) : undefined;
   const redrawing = redraw ? byDay.get(redraw) : undefined;
+  const photoShown = photoOpen ? byDay.get(photoOpen) : undefined;
   const nextLine = !b.next ? 'The top. Nothing left to grow into.'
     : toNext === 0 ? `${b.next.name} with today's sentence`
     : toNext !== null ? `${toNext} ${toNext === 1 ? 'day' : 'days'} to ${b.next.name}` : `${b.next.name} at ${b.next.min} pts`;
@@ -924,8 +1044,10 @@ export default function Onething() {
     <div className="oj">
     <Defs />
     {payoff && <Payoff streak={payoff.streak} bonus={payoff.bonus} points={payoff.points} onClose={() => setPayoff(null)} />}
-    {opened && !redraw && <DaySheet entry={opened} drawn={drawn} thoughts={thoughtProps} onClose={closeDay} onRedraw={() => setRedraw(opened.day)} />}
+    {opened && !redraw && !photoShown && <DaySheet entry={opened} drawn={drawn} thoughts={thoughtProps} photo={photoProps} onClose={closeDay} onRedraw={() => setRedraw(opened.day)} />}
     {redrawing && <Redraw entry={redrawing} onClose={() => setRedraw(null)} onKept={async () => { setRedraw(null); await load(); }} />}
+    {photoShown?.photo && <PhotoSheet entry={photoShown} busy={photoBusy} err={photoErr} onRemove={() => removePhoto(photoShown.day)} onClose={() => setPhotoOpen(null)} />}
+    <input ref={photoRef} type="file" accept="image/*" hidden aria-hidden tabIndex={-1} onChange={(e) => addPhoto(e.target.files?.[0])} />
 
     {/* today: the whole top of the page in today's colour */}
     <header className="oj-hero" data-j={tc}>
@@ -935,7 +1057,7 @@ export default function Onething() {
         <div className="oj-today">
           <Ink color={hostOf(tc)} size={118} className={`oj-host${composing && text.trim().length >= 2 && !busy ? ' eager' : ''}`} />
           <p className="oj-date">{longDay(today)}</p>
-          {todayEntry && <DayBody day={today} entry={todayEntry} drawn={drawn} thoughts={thoughtProps} />}
+          {todayEntry && <DayBody day={today} entry={todayEntry} drawn={drawn} thoughts={thoughtProps} onPhoto={photoProps.onOpen} />}
           {composing ? (
             <form className="oj-compose" onSubmit={(e) => { e.preventDefault(); save(); }}>
               {!todayEntry && <h1 className="oj-q">{question}</h1>}
@@ -949,10 +1071,12 @@ export default function Onething() {
           ) : (
             <div className="oj-acts">
               <button type="button" className="oj-pill" onClick={() => { setAdding(true); setErr(''); }}>+ Another thought</button>
+              <button type="button" className="oj-pill" disabled={photoBusy} onClick={() => pickPhoto(today)}><Clip />{photoBusy ? 'Keeping…' : todayEntry?.photo ? 'Another picture' : 'Add a picture'}</button>
               {drawn && todayEntry?.doodle && <button type="button" className="oj-pill" onClick={() => setRedraw(today)}><Redo />Redraw</button>}
               {milestone && <button type="button" className="oj-pill oj-replay" onClick={() => setPayoff(milestone)}>Replay day {milestone.streak}</button>}
             </div>
           )}
+          {photoErr && !photoOpen && !opened && <p className="oj-err">{photoErr}</p>}
         </div>
       </div>
     </header>

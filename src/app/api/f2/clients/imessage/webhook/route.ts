@@ -1,5 +1,5 @@
 import { NextResponse, after } from 'next/server'
-import { authWebhook, isRecentOutbound } from '@/lib/f2/bluebubbles'
+import { authWebhook, isImageAttachment, isRecentOutbound, type BBAttachment } from '@/lib/f2/bluebubbles'
 import { findUserByDailyChatGuid } from '@/lib/f2/imessage'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { isOnethingChat } from '@/lib/onething/inbound'
@@ -18,6 +18,7 @@ type BBWebhook = {
     isFromMe?: boolean
     handle?: { address?: string; service?: string } | null
     chats?: Array<{ guid?: string }>
+    attachments?: Array<Partial<BBAttachment> & { guid?: string | null }> | null
   }
 }
 
@@ -55,7 +56,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, skipped: 'empty' })
   }
 
-  const text = (data.text ?? '').trim()
+  // A picture's slot in the text is U+FFFC; it is not words.
+  const text = (data.text ?? '').replace(/\uFFFC/g, '').trim()
+  const attachments = (data.attachments ?? []).filter((a): a is BBAttachment => typeof a?.guid === 'string' && a.guid.length > 0)
+  const hasImage = attachments.some(isImageAttachment)
   const chatGuid = data.chats?.[0]?.guid
   const handle = data.handle?.address ?? ''
   const guid = data.guid ?? ''
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
   let userLabel = handle
   let owner: { app: 'dodo'; id: string } | null = null
   if (data.isFromMe) {
-    if (!text || !chatGuid || !guid) {
+    if ((!text && !hasImage) || !chatGuid || !guid) {
       return NextResponse.json({ ok: true, skipped: 'from-me' })
     }
     // Polly (its own backend since 2026-09-30) sends through the same Apple
@@ -88,8 +92,8 @@ export async function POST(req: Request) {
     }
   }
 
-  if (!text || !chatGuid || !guid || (!data.isFromMe && !handle)) {
-    console.log(`[f2/imessage] skip ${guid || '?'}: missing fields (text=${!!text} chat=${!!chatGuid} handle=${!!handle} guid=${!!guid})`)
+  if ((!text && !hasImage) || !chatGuid || !guid || (!data.isFromMe && !handle)) {
+    console.log(`[f2/imessage] skip ${guid || '?'}: missing fields (text=${!!text} image=${hasImage} chat=${!!chatGuid} handle=${!!handle} guid=${!!guid})`)
     return NextResponse.json({ ok: true, skipped: 'missing-fields' })
   }
 
@@ -105,7 +109,8 @@ export async function POST(req: Request) {
   }
 
   if (data.isFromMe) {
-    if (await isRecentOutbound(text)) {
+    // (we never send pictures, so a picture with no words cannot be an echo)
+    if (text && (await isRecentOutbound(text))) {
       console.log(`[f2/imessage] echo ${guid}: our own send in ${chatGuid}`)
       return NextResponse.json({ ok: true, skipped: 'echo' })
     }
@@ -113,14 +118,14 @@ export async function POST(req: Request) {
     console.log(`[f2/imessage] self-chat reply ${guid} in ${chatGuid}: ${text.slice(0, 80)}`)
   }
 
-  console.log(`[f2/imessage] accepted ${guid} from ${userLabel}: ${text.slice(0, 80)}`)
+  console.log(`[f2/imessage] accepted ${guid} from ${userLabel}: ${text.slice(0, 80)}${hasImage ? ' [+image]' : ''}`)
 
   // Onething or Dodo — the dispatcher decides (src/lib/imessage/dispatch.ts)
   // and runs the app that owns the message. Polly gets its own copy of every
   // message from BlueBubbles and decides for itself.
   after(async () => {
     try {
-      await dispatchInbound({ guid, handle, chatGuid, text, fromMeOwner: owner, replyLabel: userLabel })
+      await dispatchInbound({ guid, handle, chatGuid, text, attachments: hasImage ? attachments : undefined, fromMeOwner: owner, replyLabel: userLabel })
     } catch (e) {
       console.error(`[f2/imessage] processing failed for ${guid}`, e)
     }

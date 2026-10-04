@@ -1,5 +1,6 @@
 // Thin seam between Dodo's BlueBubbles webhook and Onething, so the webhook
 // imports one small module and Onething's failures can never break Dodo.
+import type { BBAttachment } from '@/lib/f2/bluebubbles'
 import { findUserByPhone, normalizeHandle } from './core'
 import { handleInbound as core } from './flow'
 
@@ -13,7 +14,7 @@ export async function isOnethingChat(chatGuid: string): Promise<boolean> {
   }
 }
 
-export async function handleInbound(args: { handle: string; chatGuid: string; text: string }): Promise<boolean> {
+export async function handleInbound(args: { handle: string; chatGuid: string; text: string; attachments?: BBAttachment[] }): Promise<boolean> {
   try {
     return await core(args)
   } catch (e) {

@@ -24,7 +24,7 @@ import {
   findUserByDailyChatGuid as dodoDailyChat,
   findUserByImessageHandle as dodoByHandle,
 } from '@/lib/f2/imessage'
-import { sendIMessage as dodoSend } from '@/lib/f2/bluebubbles'
+import { sendIMessage as dodoSend, type BBAttachment } from '@/lib/f2/bluebubbles'
 import { handleInbound as onethingInbound } from '@/lib/onething/inbound'
 import { rememberRoute as remember, type Route } from './routes'
 
@@ -39,6 +39,9 @@ export type Inbound = {
   handle: string
   chatGuid: string
   text: string
+  /** Image attachments ride along for Onething (a picture stuck to a day);
+   *  Dodo's iMessage side is text-only. */
+  attachments?: BBAttachment[]
   /** From-me messages in a daily-card chat: the owner already resolved by
    *  the webhook, so the handle lookup is skipped. */
   fromMeOwner?: { app: 'dodo'; id: string } | null
@@ -69,12 +72,16 @@ export async function decide(
 /// Route the message and run the app that owns it. Returns the route taken.
 export async function dispatchInbound(m: Inbound): Promise<Route> {
   // Onething first — it claims only what is clearly its own.
-  if (await onethingInbound({ handle: m.handle, chatGuid: m.chatGuid, text: m.text })) {
+  if (await onethingInbound({ handle: m.handle, chatGuid: m.chatGuid, text: m.text, attachments: m.attachments })) {
     await remember(m.handle, 'onething', 'claimed')
     console.log(`[imessage] ${m.guid} → onething`)
     return 'onething'
   }
 
+  if (!m.text) {
+    console.log(`[imessage] ${m.guid} dropped — a picture with no words, and not Onething's (${m.handle})`)
+    return 'drop'
+  }
   const d = await decide(m)
   if (d.route === 'drop') {
     console.log(`[imessage] ${m.guid} dropped — ${d.reason} (${m.handle})`)

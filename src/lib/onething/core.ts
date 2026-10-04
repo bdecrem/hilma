@@ -14,6 +14,7 @@ import { DEMO_PREFIX, isDemoPhone, sendText } from './send'
 import { notifySignup, type SignupSource } from './notify'
 import { LEVELS, pointsForEntry, type Level } from './levels'
 import { scheduleDoodle } from './doodle'
+import { adoptPendingPhoto } from './photo'
 import copy from './copy.json'
 
 export const TZ = 'America/Los_Angeles' // default zone; every user carries their own (User.tz)
@@ -62,6 +63,11 @@ export type Entry = {
   doodle_word?: string | null
   doodle_alt?: string | null
   doodled_at?: string | null
+  /// a picture stuck to the day (schema 007, photo.ts): public URL and size
+  photo?: string | null
+  photo_w?: number | null
+  photo_h?: number | null
+  photo_at?: string | null
 }
 
 export { LEVELS, pointsForEntry, type Level }
@@ -304,6 +310,8 @@ export function lines(text: string): string[] {
   return text.split('\n').map((t) => t.trim()).filter(Boolean)
 }
 
+export { URL_RE, linkLabel, plainText } from './links'
+
 export type Recorded = {
   entry: Entry
   edited: boolean
@@ -349,9 +357,11 @@ export async function recordEntry(user: User, day: string, text: string): Promis
     .single()
   if (error) throw new Error(`onething: save failed: ${error.message}`)
   scheduleDoodle((data as Entry).id)
+  // A picture that came by text before this sentence (photo.ts) joins the day now.
+  const withPhoto = await adoptPendingPhoto(user.id, day)
   const level = levelFor(points)
   const leveledUp = level.index > levelFor(prev?.points ?? 0).index
-  return { entry: data as Entry, edited: false, streak, points, earned: base + bonus, bonus, level: level.level, leveledUp }
+  return { entry: (withPhoto ?? data) as Entry, edited: false, streak, points, earned: base + bonus, bonus, level: level.level, leveledUp }
 }
 
 /// Replace one thought on one day (by its position). An empty text removes
@@ -459,6 +469,7 @@ const OWN_TEXT = [
   /^New Onething sign-up:/i,
   /^Onething: new sign-up /i, // wording before 2026-09-13; echoes of it still arrive
   /^One sentence, anything at all\. What happened\?$/i,
+  /^(Picture kept|Kept the picture|Could not read that picture)\b/i, // the photo replies (flow.ts, photoText)
 ]
 
 export function looksLikeOurs(text: string): boolean {
@@ -485,6 +496,15 @@ export function confirmText(r: Recorded, tail: string[] = []): string {
   if (r.leveledUp) lines.push(COPY.levelUp.replace('{level}', r.level.name))
   if (r.bonus > 0 || r.leveledUp) lines.push(SITE_URL)
   return lines.join('\n')
+}
+
+/// The line back after a picture lands by text. `withSentence`: the same
+/// text carried the day's sentence (or a thought), so the kept line precedes
+/// this. `waiting`: no sentence for the day yet — the picture waits for it.
+export function photoText(r: { waiting?: boolean; failed?: string }): string {
+  if (r.failed) return `Could not read that picture (${r.failed}). A JPG, PNG or HEIC photo works.`
+  if (r.waiting) return 'Picture kept for today. Now the sentence?'
+  return 'Kept the picture with today\'s sentence.'
 }
 
 // ---------- sessions (stateless HMAC cookie, same secret family as F2) ----------

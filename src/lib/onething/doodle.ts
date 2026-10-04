@@ -16,6 +16,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { after } from 'next/server'
 import { f2Supabase } from '@/lib/f2/supabase'
+import { plainText } from './links'
 import type { Entry } from './core'
 import { EXAMPLES } from './examples'
 
@@ -70,7 +71,8 @@ export async function drawDoodle(
   text: string,
   opts: { wordAllowed: boolean; recent?: { text: string; alt: string | null }[]; avoid?: string[]; take?: string },
 ): Promise<Drawn> {
-  const lines = text.split('\n').map((t) => t.trim()).filter(Boolean)
+  // A link in the sentence is drawn as its domain, not its path.
+  const lines = plainText(text).split('\n').map((t) => t.trim()).filter(Boolean)
   const parts: string[] = []
   if (opts.recent?.length) {
     parts.push('The last few days on this page (do not draw these again):')

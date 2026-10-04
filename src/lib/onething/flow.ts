@@ -3,12 +3,14 @@
 // is where a text turns into an entry, a name, or a yes.
 
 import { f2Supabase } from '@/lib/f2/supabase'
+import { downloadAttachment, isImageAttachment, type BBAttachment } from '@/lib/f2/bluebubbles'
 import { isDemoPhone, sendText } from './send'
 import {
   GRACE_HOUR, addDays, buddyCopy, confirmText, dueFor, ensureUser, findEntry, findUserByPhone, listEntries,
-  localDay, localHour, looksLikeOurs, normalizeHandle, promptText, recordEntry, reminderText, scoreboard,
+  localDay, localHour, looksLikeOurs, normalizeHandle, photoText, promptText, recordEntry, reminderText, scoreboard,
   setUserName, tzFor, welcomeText, SITE_URL, type User,
 } from './core'
+import { PHOTO_EDGE, PhotoError, holdPhoto, setPhoto } from './photo'
 import { NAME_REPLY_WINDOW_MS, accept, afterKept, buddiesInToday, cleanName, isYes, looksLikeName, pendingInvitesFor, resetLines } from './buddies'
 
 // ---------- the hourly tick (Vercel cron) ----------
@@ -107,14 +109,31 @@ export async function askName(user: User, now = new Date()): Promise<string[]> {
   return [buddyCopy('nameAsk')]
 }
 
+/// A picture that came by text: onto the day's row when the day has its
+/// sentence, otherwise held until the sentence lands. Never throws — the
+/// reply says what happened.
+async function takePhoto(user: User, day: string, image: BBAttachment, hasEntry: boolean): Promise<{ waiting?: boolean; failed?: string }> {
+  try {
+    const { bytes } = await downloadAttachment(image.guid, { width: PHOTO_EDGE })
+    if (hasEntry) await setPhoto(user.id, day, bytes)
+    else await holdPhoto(user.id, day, bytes)
+    return { waiting: !hasEntry }
+  } catch (e) {
+    console.error(`[onething] photo from ${user.phone} failed`, e)
+    return { failed: e instanceof PhotoError ? e.message.replace(/^Could not read that picture \((.*)\)\.$/, '$1') : 'it did not come through' }
+  }
+}
+
 /// Returns true when Onething claimed the message: the sender is an
-/// Onething user AND (a prompt is outstanding OR the text starts "1:"), a
+/// Onething user AND (a prompt is outstanding OR the text starts "1:" OR
+/// the message carries a picture — Dodo's iMessage side is text-only), a
 /// new number texting "onething" to join, a YES to a buddy invite, or the
 /// name we asked for. Otherwise false, and Dodo handles it as before.
 export async function handleInbound(args: {
   handle: string
   chatGuid: string
   text: string
+  attachments?: BBAttachment[]
 }): Promise<boolean> {
   const phone = normalizeHandle(args.handle) ?? handleFromChatGuid(args.chatGuid)
   if (!phone) return false
@@ -122,7 +141,8 @@ export async function handleInbound(args: {
   // not become a thought — the sign-up note and the daily question both start
   // "Onething:", which is also the force prefix — and it must not fall through
   // to Dodo either, which would grade it as an answer in the same chat.
-  if (looksLikeOurs(args.text)) {
+  const image = (args.attachments ?? []).find(isImageAttachment) ?? null
+  if (args.text && looksLikeOurs(args.text)) {
     console.log(`[onething] ignoring our own text echoed from ${phone}: ${args.text.slice(0, 60)}`)
     return true
   }
@@ -145,7 +165,7 @@ export async function handleInbound(args: {
   }
 
   if (!user) {
-    if (!JOIN_PREFIX.test(args.text)) return false
+    if (!JOIN_PREFIX.test(args.text)) return false // (a stranger's picture is not ours either)
     const fresh = await ensureUser(phone, 'imessage')
     const first = args.text.replace(JOIN_PREFIX, '').trim()
     if (first.length < 2) {
@@ -172,19 +192,38 @@ export async function handleInbound(args: {
   if (hour < GRACE_HOUR && user.prompt_day === addDays(today, -1) && !(await findEntry(user.id, user.prompt_day))) {
     day = user.prompt_day
   }
-  const pending = user.prompt_day === day && !(await findEntry(user.id, day))
+  const existing = await findEntry(user.id, day)
+  const pending = user.prompt_day === day && !existing
 
-  // The name we asked for, if this reads as one.
-  const name = nameReplyFor(user, args.text, pending, now)
+  // The name we asked for, if this reads as one (a caption under a picture is not a name).
+  const name = image ? null : nameReplyFor(user, args.text, pending, now)
   if (name && !forced) {
     await setUserName(user, name)
     await sendText({ chatGuid: args.chatGuid, text: `${buddyCopy('nameSet', { name })}\n${SITE_URL}` })
     return true
   }
 
-  if (!pending && !forced) return false
+  if (!pending && !forced && !image) return false
 
   const text = args.text.replace(FORCE_PREFIX, '').trim()
+  if (image) {
+    // A picture, with or without words. Words are the day's sentence (or one
+    // more thought); the picture sticks to the day, or waits for its sentence.
+    const out: string[] = []
+    let hasEntry = !!existing
+    if (text.length >= 2) {
+      const r = await recordEntry(user, day, text)
+      const tail = r.added || r.edited ? [] : await afterKept(user, day)
+      out.push(...confirmText(r, tail).split('\n'))
+      hasEntry = true
+    }
+    const line = photoText(await takePhoto(user, day, image, hasEntry))
+    // The site link, when there is one, stays the last line.
+    if (out[out.length - 1] === SITE_URL) out.splice(out.length - 1, 0, line)
+    else out.push(line)
+    await sendText({ chatGuid: args.chatGuid, text: out.join('\n') })
+    return true
+  }
   if (text.length < 2) {
     await sendText({ chatGuid: args.chatGuid, text: 'One sentence, anything at all. What happened?' })
     return true

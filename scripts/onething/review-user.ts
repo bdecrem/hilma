@@ -8,6 +8,7 @@
 //   set -a; . .env.local; set +a; npx tsx scripts/onething/review-user.ts down  # removes everything
 import { f2Supabase } from '../../src/lib/f2/supabase'
 import { addDays, localDay, pointsForEntry, type User } from '../../src/lib/onething/core'
+import { removeAllPhotos } from '../../src/lib/onething/photo'
 
 const PHONES = { me: '+19990000011', buddy: '+19990000012', out: '+19990000013', waiting: '+19990000014' }
 const sb = f2Supabase()
@@ -22,6 +23,7 @@ async function down() {
   for (const id of ids) {
     const { data: objs } = await sb.storage.from('onething-avatars').list(id)
     if (objs?.length) await sb.storage.from('onething-avatars').remove(objs.map((o) => `${id}/${o.name}`))
+    await removeAllPhotos(id)
   }
   await sb.from('onething_users').delete().in('id', ids)
   console.log('removed', ids.length, 'accounts')

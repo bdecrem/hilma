@@ -367,3 +367,42 @@ html:has(.oj) { background: linear-gradient(var(--oj-top, #7b4dff) 50%, #fbf7f0 
 @media (prefers-reduced-motion: reduce) {
   .oj-ink, .oj-ink.eager, .oj-ink .oj-eyes, .oj-bubbles i { animation: none !important; }
 }
+
+/* ---------- a link, a picture (2026-10-03) ---------- */
+/* a link is a word in the sentence: the bare domain, a wavy underline in the day's ink, no card */
+.oj-link { color: inherit; text-decoration: underline wavy; text-decoration-thickness: 2px; text-underline-offset: 5px; text-decoration-color: color-mix(in srgb, currentColor 65%, transparent); }
+.oj-link::after { content: '↗'; margin-left: .08em; font-size: .62em; vertical-align: .55em; font-weight: 800; text-decoration: none; display: inline-block; }
+.oj-link:hover { text-decoration-color: currentColor; }
+.oj-text-btn.quiet-on { color: var(--on-2); font-weight: 700; }
+/* the snapshot: a small print taped under the sentence, a degree off, never above it, never wide */
+.oj-snap {
+  clear: both; position: relative; display: block; width: min(62%, 250px); margin: 22px 0 0; padding: 6px 6px 8px; border: 0; cursor: pointer;
+  background: #fff; border-radius: 6px; transform: rotate(-2deg);
+  box-shadow: 0 1px 0 rgba(29,22,37,.08), 0 16px 26px -12px rgba(30,10,80,.55);
+  transition: transform .2s var(--squish);
+}
+.oj-snap img { display: block; width: 100%; aspect-ratio: var(--ratio, 4 / 3); object-fit: cover; border-radius: 3px; background: #eee6f3; }
+/* a strip of translucent tape in the day's light jelly, holding the top edge */
+.oj-snap::before, .oj-tile-peek::before {
+  content: ''; position: absolute; left: 50%; top: -9px; width: 72px; height: 20px; margin-left: -36px; transform: rotate(-3deg);
+  background: color-mix(in srgb, var(--jl) 72%, rgba(255,255,255,.5)); opacity: .9; border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(29,22,37,.12);
+}
+.oj-snap:hover { transform: rotate(-1deg) translateY(-2px); }
+.oj-snap:active { transform: rotate(-2deg) scale(.98); }
+.oj-snap:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.oj-card .oj-snap, .oj-hero .oj-snap { margin-left: 6px; }
+/* on the wall, a corner of the print is taped over the tile's top-right corner — beside the
+   date, where nothing else sits, never over the sentence */
+.oj-tile-peek {
+  position: absolute; right: -6px; top: -8px; z-index: 2; width: 44px; height: 44px; padding: 3px 3px 5px; border-radius: 3px;
+  background: #fff; transform: rotate(8deg); box-shadow: 0 6px 10px -4px rgba(30,10,80,.45);
+}
+.oj-tile-peek img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 2px; }
+.oj-tile-peek::before { width: 30px; height: 11px; margin-left: -15px; top: -5px; }
+/* the picture, big */
+.oj-card.oj-photo { padding-top: 18px; }
+.oj-photo-print { margin-top: 14px; padding: 8px 8px 10px; background: #fff; border-radius: 10px; box-shadow: 0 18px 30px -16px rgba(20,8,60,.6); }
+.oj-photo-print img { display: block; width: 100%; max-height: min(70vh, 640px); object-fit: contain; border-radius: 4px; background: #eee6f3; }
+.oj-photo-cap { margin: 14px 0 0; font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1.25; letter-spacing: -.015em; color: var(--on); }
+.oj-photo .oj-acts { justify-content: flex-start; }

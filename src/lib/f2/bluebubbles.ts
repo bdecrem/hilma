@@ -64,6 +64,31 @@ async function recordOutbound(args: SendArgs): Promise<void> {
   }
 }
 
+/// An inbound attachment as the webhook (and /api/v1/message/query with
+/// `with: ['attachment']`) describes it. Only the fields we read.
+export type BBAttachment = { guid: string; mimeType?: string | null; transferName?: string | null; totalBytes?: number | null }
+
+export function isImageAttachment(a: BBAttachment): boolean {
+  const m = (a.mimeType ?? '').toLowerCase()
+  if (m.startsWith('image/')) return true
+  return !m && /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(a.transferName ?? '')
+}
+
+const ATTACHMENT_TIMEOUT_MS = 60000
+
+/// Fetch an attachment's bytes from BlueBubbles on the mini. `original=false`
+/// lets the server convert what Messages stored (a HEIC from an iPhone comes
+/// back as a JPEG) and `width` caps it before it crosses the tunnel.
+export async function downloadAttachment(guid: string, opts: { width?: number } = {}): Promise<{ bytes: Buffer; contentType: string }> {
+  const q = new URLSearchParams({ password: bbPassword(), original: 'false', quality: 'good' })
+  if (opts.width) q.set('width', String(opts.width))
+  const res = await fetch(`${bbBase()}/api/v1/attachment/${encodeURIComponent(guid)}/download?${q}`, {
+    signal: AbortSignal.timeout(ATTACHMENT_TIMEOUT_MS),
+  })
+  if (!res.ok) throw new Error(`bluebubbles attachment ${guid} download failed (${res.status}): ${(await res.text()).slice(0, 200)}`)
+  return { bytes: Buffer.from(await res.arrayBuffer()), contentType: res.headers.get('content-type') ?? '' }
+}
+
 /// How far back the echo check looks. Echoes are usually seconds behind the
 /// send, but Messages-in-iCloud can replay a send into chat.db hours later
 /// (2026-09-13: an Onething sign-up note came back 5.5 h after it went out,
