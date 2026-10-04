@@ -15,7 +15,10 @@ export async function GET() {
   const user = await findUserById(userId)
   if (!user) return NextResponse.json({ user: null })
   const entries = await listEntries(user.id)
-  const today = localDay(new Date(), tzFor(user))
+  // Local screenshots only, like ONETHING_DEV_AS: pretend it is another day
+  // (so a day with a picture can be seen as a card on the wall before it is one).
+  const devToday = process.env.NODE_ENV !== 'production' ? process.env.ONETHING_DEV_TODAY : undefined
+  const today = devToday && /^\d{4}-\d{2}-\d{2}$/.test(devToday) ? devToday : localDay(new Date(), tzFor(user))
   const [views, avatar] = await Promise.all([buddyViews(user, today), avatarUrlFor(user.id)])
   // Days that never got their doodle (a failed draw, an older entry): draw a
   // few after this response, newest first; the next visit shows them.
