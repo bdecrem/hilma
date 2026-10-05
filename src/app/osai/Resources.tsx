@@ -5,9 +5,6 @@ export default function Resources({ items }: { items: Resource[] }) {
     <article className="osai-res">
       <div className="eyebrow">Open Source AI</div>
       <h1 style={{ marginTop: 8 }}>Resources</h1>
-      <p className="lede">
-        The reading behind the memo: the industry case for open weights, the safety consensus, the definitions and scorecards, and the institutions in the room. The assistant has read all of it.
-      </p>
       {items.length === 0 ? (
         <p className="blurb" style={{ marginTop: 28 }}>Nothing here yet.</p>
       ) : (
