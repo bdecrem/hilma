@@ -1,29 +1,46 @@
 # osai — the Open Source AI reading room
 
 `/osai` (ola.cx/osai, also hilma-nine.vercel.app/osai). Three readers, one
-shared passcode, three documents and an assistant that has read them.
+shared passcode, the reading list, three documents and an assistant that has
+read all of it.
 
 ## What is where
 
 | Piece | Path |
 |---|---|
-| Pages | `src/app/osai/` — `layout.tsx` gates everything (sign-in or the shell), `page.tsx` the one-pager (tab "Open Source"), `overview/` (tab "Landscape"), `details/` (no tab; reached from the card at the top of Landscape and from each row), `Chat.tsx` the sidebar |
+| Pages | `src/app/osai/` — `layout.tsx` gates everything (sign-in or the shell), `page.tsx` the reading list (tab "Resources", the landing page), `memo/` the one-pager (tab "Open Source") with the Landscape card under it, `overview/` the Landscape (no tab; reached from that card), `details/` (no tab; reached from the card at the top of Landscape and from each row), `Chat.tsx` the sidebar |
 | API | `src/app/api/osai/` — `auth/login`, `auth/logout`, `auth/password` (GET has one?, POST set, DELETE back to the shared passcode), `chat` (GET history, POST a turn, DELETE to clear), `memory` (GET, DELETE) |
-| Logic | `src/lib/osai/` — `auth.ts` (names + passcode + cookie), `prompt.ts` (system prompt, model ids), `memory.ts` (Haiku-maintained note), `core.ts` (one-pager parser), `overview.ts` (the eight rows), `content.ts`, `db.ts` |
-| Content | `apps/osai/content/core.md` (generated, see below) and `map.md` (copied from docsrepo) |
+| Logic | `src/lib/osai/` — `auth.ts` (names + passcode + cookie), `prompt.ts` (system prompt, model ids), `memory.ts` (Haiku-maintained note), `core.ts` (one-pager parser), `resources.ts` (page-2 parser, resource docs), `overview.ts` (the eight rows), `content.ts`, `db.ts` |
+| Content | `apps/osai/content/core.md` (generated, see below), `map.md`, `resources.txt` and `resources/*.md` (all copied from docsrepo by the same script) |
 | Schema | `apps/osai/schema/` — `001` `osai_messages`, `osai_memory`; `002` `osai_users` (own passwords); apply with `supabase db query --linked -f` |
 | Checks | `scripts/osai/e2e.mjs` — Playwright run against a dev server (see the header) |
 
-## The one-pager is canonical in Pages
+## The content is canonical in docsrepo
 
-`../docsrepo/opensourceai/1pager.pages` is the source of truth and is edited
-by hand in Pages. Never edit `apps/osai/content/core.md` directly. After
-changing the Pages document:
+Everything under `apps/osai/content/` is a copy; never edit it directly.
+The sources, all in `../docsrepo/opensourceai/`:
+
+- `1pager.pages` — the one-pager, edited by hand in Pages.
+- `public-benefit-ai-map.md` — the Landscape's long form.
+- `page2.txt` — "page 2" of the one-pager: the reading list that is the
+  Resources tab. Plain text, edited in TextEdit. One entry per block, blocks
+  separated by two blank lines: a title line, byline line(s), the URL on its
+  own line, a blank line, the blurb. The heading block (no URL) is skipped.
+- `resources/NN-slug.md` — the text of each linked document (or an excerpt,
+  for a book-length report), with `title`, `byline`, `url` and `note` in the
+  frontmatter. `url` matches the file to its page-2 entry; `note` says what
+  was captured. These are what the assistant reads; the tab shows page 2.
+
+After changing any of them:
 
 ```bash
-pnpm osai:slurp        # Pages → RTF → markdown into apps/osai/content/core.md, plus map.md
-git commit -am "osai: refresh the one-pager" && git push
+pnpm osai:slurp                          # Pages → core.md, plus map.md, resources.txt, resources/
+node scripts/osai/slurp.mjs --copy-only  # the copies only, when the one-pager has not changed
+git commit -am "osai: refresh the content" && git push
 ```
+
+If page 2 is pasted into the Pages document as well, the slurp stops the
+memo at the "Page 2" heading, so it does not show up twice.
 
 The script drives Pages over AppleScript (export only, the document is closed
 without saving), so it runs on a Mac with Pages. The battery glyph after
@@ -67,5 +84,6 @@ after, and the route appends a Sources list from the citations.
 
 `claude-opus-5-5` by default, `claude-fable-5-1` on the toggle (remembered per
 device). Both run at `effort: medium` with server-side refusal fallbacks
-(`fallbacks: "default"`). The system prompt carries all three documents with a
-cache breakpoint, then the reader's name and note.
+(`fallbacks: "default"`). The system prompt carries the one-pager, the map,
+the overview and the whole reading list (every `resources/*.md`, about 25k
+words) with a cache breakpoint, then the reader's name and note.

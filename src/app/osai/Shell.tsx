@@ -8,12 +8,14 @@ import MemoryDialog from './MemoryDialog'
 import PasswordDialog from './PasswordDialog'
 
 const NAV = [
-  { href: '/osai', label: 'Open Source' },
-  { href: '/osai/overview', label: 'Landscape' },
+  { href: '/osai', label: 'Resources' },
+  { href: '/osai/memo', label: 'Open Source' },
 ]
 
+// The Landscape (/osai/overview) and its details page hang off the memo now,
+// reached from the card under it, so the memo's tab stays lit there.
 function isCurrent(href: string, pathname: string) {
-  if (href === '/osai/overview') return pathname.startsWith('/osai/overview') || pathname.startsWith('/osai/details')
+  if (href === '/osai/memo') return ['/osai/memo', '/osai/overview', '/osai/details'].some((p) => pathname.startsWith(p))
   return pathname === href
 }
 

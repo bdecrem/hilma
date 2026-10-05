@@ -417,3 +417,41 @@
   .osai-ov .name { font-size: 18px; }
   .osai-ov .name .tag { display: block; margin: 4px 0 0; }
 }
+
+/* ---- resources -------------------------------------------------------- */
+/* The reading list: an index of cards, each a numbered entry with the title
+   as the link, a mono byline, the blurb, and the host as the way out. */
+.osai-res h1 { font-size: clamp(38px, 5vw, 54px); line-height: 1.02; letter-spacing: -0.025em; }
+.osai-res .lede { font-size: 19px; line-height: 1.45; margin-top: 16px; max-width: 60ch; color: var(--ink); }
+.osai-res .list { list-style: none; margin: 32px 0 0; padding: 0; display: grid; gap: 12px; }
+.osai-res .entry {
+  display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 14px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px 16px;
+  transition: border-color .15s ease;
+}
+.osai-res .entry:hover { border-color: var(--line-strong); }
+.osai-res .idx { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); padding-top: 7px; }
+.osai-res .text { min-width: 0; }
+.osai-res h2 { font-size: 21px; line-height: 1.2; }
+.osai-res h2 a { color: var(--ink); text-decoration: none; }
+.osai-res h2 a:hover { color: var(--accent); }
+.osai-res .byline { font-family: var(--mono); font-size: 11.5px; letter-spacing: .02em; color: var(--muted); margin-top: 6px; }
+.osai-res .blurb { margin-top: 10px; font-size: 15.5px; max-width: 66ch; }
+.osai-res .go { display: inline-block; margin-top: 12px; font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--accent); text-decoration: none; }
+.osai-res .go:hover { text-decoration: underline; }
+
+/* The Landscape, demoted to a small dashed card under the memo. */
+.osai-landscape {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 44px; padding: 13px 16px; background: var(--surface); border: 1px dashed var(--line-strong); border-radius: 12px;
+  text-decoration: none; color: var(--muted); font-size: 14.5px; transition: border-color .15s ease, color .15s ease;
+}
+.osai-landscape:hover { border-color: var(--accent); color: var(--ink); }
+.osai-landscape .emoji { font-size: 18px; line-height: 1; }
+.osai-landscape .t { flex: 1 1 24ch; min-width: 0; }
+.osai-landscape strong { color: var(--ink); font-weight: 600; }
+.osai-landscape .go { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--accent); white-space: nowrap; }
+@media (max-width: 560px) {
+  .osai-res .entry { grid-template-columns: 26px minmax(0, 1fr); gap: 10px; padding: 14px; }
+  .osai-res h2 { font-size: 19px; }
+}

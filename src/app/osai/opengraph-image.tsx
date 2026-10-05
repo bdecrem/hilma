@@ -40,7 +40,7 @@ export default function Image() {
             Open Source AI, the working notes.
           </div>
           <div style={{ display: 'flex', fontSize: 26, color: '#8b93a1', marginTop: 18 }}>
-            The one-pager, the public-benefit AI map, and an assistant that has read both.
+            The reading list, the one-pager, the map, and an assistant that has read all of it.
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

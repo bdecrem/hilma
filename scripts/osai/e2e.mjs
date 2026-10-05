@@ -1,7 +1,7 @@
 // osai end-to-end check against a dev server (default localhost:3240):
 //   OUT=/tmp/shots node scripts/osai/e2e.mjs            # or BASE=https://… for production
 // Signs in as the test account (name "e2e", secret OSAI_E2E_PASSCODE from
-// .env.local), reads the two tabs and the details page, chats on both models,
+// .env.local), reads the two tabs, the Landscape and the details page, chats on both models,
 // runs two web-search turns, waits for the memory note, sets and removes an
 // own password, checks the phone layout, then wipes the test account's rows.
 // It never signs in as a real reader, so nothing of theirs can be touched.
@@ -60,15 +60,15 @@ try {
   log('shared passcode on the test account →', await page.textContent('.osai-login .err'))
   await page.fill('#osai-passcode', SECRET)
   await page.getByRole('button', { name: 'Continue' }).click()
-  await page.waitForSelector('.osai-core h1', { timeout: 30000 })
-  log('signed in; core title =', await page.textContent('.osai-core h1'))
+  await page.waitForSelector('.osai-res h1', { timeout: 30000 })
+  log('signed in; landing =', await page.textContent('.osai-res h1'), '| resources =', await page.locator('.osai-res .entry').count())
 
   // Start clean: the test account's rows are disposable.
   await ctx.request.delete(`${BASE}/api/osai/chat`)
   await ctx.request.delete(`${BASE}/api/osai/memory`)
   await ctx.request.delete(`${BASE}/api/osai/auth/password`)
   await page.reload()
-  await page.waitForSelector('.osai-core h1')
+  await page.waitForSelector('.osai-res h1')
   snapshot = { notes: '' }
   const existing = (await (await ctx.request.get(`${BASE}/api/osai/chat`)).json()).history.length
   log('test account reset; messages =', existing)
@@ -78,10 +78,14 @@ try {
   log('tabs =', tabs.join(' | '))
   if (tabs.length !== 2) throw new Error('expected two tabs')
   const base = await page.locator('.osai-chat .msg.assistant').count()
-  await page.screenshot({ path: `${OUT}/02-core.png`, fullPage: true })
+  await page.screenshot({ path: `${OUT}/02-resources.png`, fullPage: true })
 
-  // 2. Landscape + details
-  await page.click('.osai-nav a[href="/osai/overview"]')
+  // 2. The memo, then the Landscape (reached from the card under the memo) + details
+  await page.click('.osai-nav a[href="/osai/memo"]')
+  await page.waitForSelector('.osai-core h1')
+  log('core title =', await page.textContent('.osai-core h1'), '| landscape card:', (await page.locator('a.osai-landscape').count()) === 1 ? 'yes' : 'MISSING')
+  await page.screenshot({ path: `${OUT}/02b-core.png`, fullPage: true })
+  await page.click('a.osai-landscape')
   await page.waitForSelector('.osai-ov .row')
   log('landscape rows =', await page.locator('.osai-ov .row').count(), '| details card:', (await page.locator('.osai-ov .detail-card').count()) === 1 ? 'yes' : 'MISSING')
   await page.screenshot({ path: `${OUT}/03-landscape.png`, fullPage: true })

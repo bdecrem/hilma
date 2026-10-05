@@ -1,0 +1,71 @@
+PAGE 2: FURTHER READING
+
+
+Open Weights and American AI Leadership
+NVIDIA open letter, July 24, 2026
+https://images.nvidia.com/pdf/Open-Weights-and-American-AI-Leadership.pdf
+
+The industry case, co-signed by 235 companies including OpenAI, Google, Meta, Microsoft, Mistral, Hugging Face and Mozilla. Open weights expand access, drive competition, prevent lock-in, and are safer than closed models because more people can inspect and test them. Asks policymakers for shared compute, datasets and evaluation frameworks, and no restrictions on open models or on distillation.
+
+
+The Case for Open-Weight AI
+Songyee Yoon, September 15, 2026
+https://principalvc.substack.com/p/the-case-for-open-weight-ai
+
+A pragmatic middle. Open weights keep AI progress collaborative and give startups and universities leverage, as AlphaFold showed. But weights cannot be withdrawn and safeguards can be stripped, so government should judge each model on its capabilities and potential harm, with independent testing at the frontier and rules that don't entrench incumbents. "The challenge is deciding where to draw that line."
+
+
+International AI Safety Report 2026
+Yoshua Bengio (chair) and 100+ experts, backed by 30+ countries, February 3, 2026
+https://internationalaisafetyreport.org/
+
+The closest thing to a scientific consensus. Section 3.4: open weights facilitate research and innovation, but their safeguards are easier to remove, their use is harder to monitor, and release is irreversible. Leading open models now trail closed ones by less than a year. Proposes judging each release by its "marginal risk," while warning that small increases add up.
+
+
+Stanford Institute for Human-Centered AI (HAI)
+Founded March 2019. Director James Landay, founding director Fei-Fei Li.
+https://hai.stanford.edu/about
+
+Mission: "to advance humanity through AI and data science." Draws on all seven Stanford schools, organized around three pillars: accelerating discovery, transforming education, and guiding AI for societal good. Commits to open science, open source and open class. Runs the AI Index, the Center for Research on Foundation Models, the Marlowe compute cluster and a Congressional boot camp for lawmakers.
+
+
+Europe and Open Source AI: Beyond Licenses
+Mitchell Baker, AI and Society Institute (ENS-PSL), July 2026
+https://www.ens.psl.eu/sites/default/files/2026-08/Europe%20and%20Open%20Source%20AI_%20Beyond%20Licenses.pdf
+
+A playbook for the EU's Open Source Strategy from the person who ran Mozilla for 25 years. Open source is six layers, not a license: license terms, technology, team, governance, products people choose, and an organization that locks in the public mission through any acquisition or restructuring. Thirteen recommendations, including an openness floor for public funding, reserved public compute for open projects, and success measured by voluntary adoption. Names "secret is safer" as the recurring argument against openness and tells the EU to treat openness as a security method rather than a security risk.
+
+
+The Open Source AI Definition (OSAID 1.0)
+Open Source Initiative, October 2024
+https://opensource.org/ai/open-source-ai-definition
+
+The reference definition. An AI system is open source only if anyone can use, study, modify and share it without permission, and only if three things are released: the weights, the complete code to train and run the system, and enough detail about the training data for a skilled person to rebuild a substantially equivalent system. The data itself need not be published, which is the definition's most contested compromise. By this test, Llama, DeepSeek and gpt-oss are open weight, not open source. Baker recommends it as the funding floor for Europe.
+
+
+Mozilla.ai
+Public benefit corporation backed by the Mozilla Foundation, founded March 2023 with $30M from Mozilla. CEO John Dickerson.
+https://www.mozilla.ai/
+
+Mission: "Build open source AI products and infrastructure that give people and organisations greater choice, transparency and control over how they use AI." Started as a research lab, pivoted in 2025 to revenue. Ships two commercial products, Otari (a control plane for LLMs) and Octonous (an agent platform for running tasks), plus open-source tools: any-llm, any-guardrail, mcpd, llamafile. The closest thing Mozilla has to the "serving and interop" layer in the decentralized AI lane, and a test of whether a mission-locked company can fund itself there.
+
+
+Model Openness Framework (isitopen.ai)
+Generative AI Commons, LF AI & Data Foundation (Linux Foundation)
+https://isitopen.ai
+
+The scorecard. Sixteen questions about which parts of a model's lifecycle are released, and under what licenses, sort a model into one of three classes: Open Model (weights, architecture, inference code), Open Tooling (plus the training, data-processing and evaluation code) and Open Science (plus the data and the research). The Model Openness Tool on the site produces the score. Baker recommends it, with the DPG Standard, as the way to scale EU funding and compute above the OSAID floor.
+
+
+Digital Public Goods Standard
+Digital Public Goods Alliance
+https://www.digitalpublicgoods.net/standard
+
+Nine indicators a piece of software, a dataset, an AI system or a content collection must meet to be listed as a digital public good: relevance to the UN development goals, an approved open license, clear ownership, platform independence, documentation, data extraction in open formats, privacy and legal compliance, open standards, and do-no-harm by design. Extended in 2025 to AI systems, with openly licensed training data as the bar. Few AI systems have cleared it so far.
+
+
+The EU Artificial Intelligence Act
+Future of Life Institute's AI Act site: explorer, compliance checker, timeline
+https://artificialintelligenceact.eu
+
+The first comprehensive AI law from a major regulator, in force since August 2024. Four risk tiers: banned practices (social scoring, manipulative systems), high-risk uses with heavy obligations, limited-risk uses with transparency duties, and everything else unregulated. General-purpose model providers must document their models, respect copyright and publish a training-data summary. Free and open-source models with public weights are exempt from most of that unless they cross the systemic-risk line, set at 10^25 FLOPs of training compute. Prohibitions applied February 2025, model rules August 2025, high-risk rules delayed to December 2027.
