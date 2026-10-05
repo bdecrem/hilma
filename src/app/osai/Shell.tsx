@@ -9,7 +9,7 @@ import PasswordDialog from './PasswordDialog'
 
 const NAV = [
   { href: '/osai', label: 'Resources' },
-  { href: '/osai/memo', label: 'Open Source' },
+  { href: '/osai/memo', label: 'Building OAI' },
 ]
 
 // The Landscape (/osai/overview) and its details page hang off the memo now,

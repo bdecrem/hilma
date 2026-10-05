@@ -8,7 +8,7 @@ read all of it.
 
 | Piece | Path |
 |---|---|
-| Pages | `src/app/osai/` — `layout.tsx` gates everything (sign-in or the shell), `page.tsx` the reading list (tab "Resources", the landing page), `memo/` the one-pager (tab "Open Source") with the Landscape card under it, `overview/` the Landscape (no tab; reached from that card), `details/` (no tab; reached from the card at the top of Landscape and from each row), `Chat.tsx` the sidebar |
+| Pages | `src/app/osai/` — `layout.tsx` gates everything (sign-in or the shell), `page.tsx` the reading list (tab "Resources", the landing page), `memo/` the one-pager (tab "Building OAI") with the Landscape card under it, `overview/` the Landscape (no tab; reached from that card), `details/` (no tab; reached from the card at the top of Landscape and from each row), `Chat.tsx` the sidebar |
 | API | `src/app/api/osai/` — `auth/login`, `auth/logout`, `auth/password` (GET has one?, POST set, DELETE back to the shared passcode), `chat` (GET history, POST a turn, DELETE to clear), `memory` (GET, DELETE) |
 | Logic | `src/lib/osai/` — `auth.ts` (names + passcode + cookie), `prompt.ts` (system prompt, model ids), `memory.ts` (Haiku-maintained note), `core.ts` (one-pager parser), `resources.ts` (page-2 parser, resource docs), `overview.ts` (the eight rows), `content.ts`, `db.ts` |
 | Content | `apps/osai/content/core.md` (generated, see below), `map.md`, `resources.txt` and `resources/*.md` (all copied from docsrepo by the same script) |
