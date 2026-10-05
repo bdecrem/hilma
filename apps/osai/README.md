@@ -25,7 +25,8 @@ The sources, all in `../docsrepo/opensourceai/`:
 - `page2.txt` — "page 2" of the one-pager: the reading list that is the
   Resources tab. Plain text, edited in TextEdit. One entry per block, blocks
   separated by two blank lines: a title line, byline line(s), the URL on its
-  own line, a blank line, the blurb. The heading block (no URL) is skipped.
+  own line, a blank line, the blurb. A one-line block with no URL ("Papers",
+  "Sites") is a section heading for the entries after it; the page heading is skipped.
 - `resources/NN-slug.md` — the text of each linked document (or an excerpt,
   for a book-length report), with `title`, `byline`, `url` and `note` in the
   frontmatter. `url` matches the file to its page-2 entry; `note` says what

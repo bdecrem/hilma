@@ -1,11 +1,7 @@
 PAGE 2: FURTHER READING
 
 
-Open Weights and American AI Leadership
-NVIDIA open letter, July 24, 2026
-https://images.nvidia.com/pdf/Open-Weights-and-American-AI-Leadership.pdf
-
-The industry case, co-signed by 235 companies including OpenAI, Google, Meta, Microsoft, Mistral, Hugging Face and Mozilla. Open weights expand access, drive competition, prevent lock-in, and are safer than closed models because more people can inspect and test them. Asks policymakers for shared compute, datasets and evaluation frameworks, and no restrictions on open models or on distillation.
+Papers
 
 
 The Case for Open-Weight AI
@@ -13,6 +9,23 @@ Songyee Yoon, September 15, 2026
 https://principalvc.substack.com/p/the-case-for-open-weight-ai
 
 A pragmatic middle. Open weights keep AI progress collaborative and give startups and universities leverage, as AlphaFold showed. But weights cannot be withdrawn and safeguards can be stripped, so government should judge each model on its capabilities and potential harm, with independent testing at the frontier and rules that don't entrench incumbents. "The challenge is deciding where to draw that line."
+
+
+Europe and Open Source AI: Beyond Licenses
+Mitchell Baker, AI and Society Institute (ENS-PSL), July 2026
+https://www.ens.psl.eu/sites/default/files/2026-08/Europe%20and%20Open%20Source%20AI_%20Beyond%20Licenses.pdf
+
+A playbook for the EU's Open Source Strategy from the person who ran Mozilla for 25 years. Open source is six layers, not a license: license terms, technology, team, governance, products people choose, and an organization that locks in the public mission through any acquisition or restructuring. Thirteen recommendations, including an openness floor for public funding, reserved public compute for open projects, and success measured by voluntary adoption. Names "secret is safer" as the recurring argument against openness and tells the EU to treat openness as a security method rather than a security risk.
+
+
+Sites
+
+
+Open Weights and American AI Leadership
+NVIDIA open letter, July 24, 2026
+https://images.nvidia.com/pdf/Open-Weights-and-American-AI-Leadership.pdf
+
+The industry case, co-signed by 235 companies including OpenAI, Google, Meta, Microsoft, Mistral, Hugging Face and Mozilla. Open weights expand access, drive competition, prevent lock-in, and are safer than closed models because more people can inspect and test them. Asks policymakers for shared compute, datasets and evaluation frameworks, and no restrictions on open models or on distillation.
 
 
 International AI Safety Report 2026
@@ -27,13 +40,6 @@ Founded March 2019. Director James Landay, founding director Fei-Fei Li.
 https://hai.stanford.edu/about
 
 Mission: "to advance humanity through AI and data science." Draws on all seven Stanford schools, organized around three pillars: accelerating discovery, transforming education, and guiding AI for societal good. Commits to open science, open source and open class. Runs the AI Index, the Center for Research on Foundation Models, the Marlowe compute cluster and a Congressional boot camp for lawmakers.
-
-
-Europe and Open Source AI: Beyond Licenses
-Mitchell Baker, AI and Society Institute (ENS-PSL), July 2026
-https://www.ens.psl.eu/sites/default/files/2026-08/Europe%20and%20Open%20Source%20AI_%20Beyond%20Licenses.pdf
-
-A playbook for the EU's Open Source Strategy from the person who ran Mozilla for 25 years. Open source is six layers, not a license: license terms, technology, team, governance, products people choose, and an organization that locks in the public mission through any acquisition or restructuring. Thirteen recommendations, including an openness floor for public funding, reserved public compute for open projects, and success measured by voluntary adoption. Names "secret is safer" as the recurring argument against openness and tells the EU to treat openness as a security method rather than a security risk.
 
 
 The Open Source AI Definition (OSAID 1.0)

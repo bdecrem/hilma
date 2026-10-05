@@ -13,7 +13,7 @@ export default function Resources({ items }: { items: Resource[] }) {
       ) : (
         <ol className="list">
           {items.map((r, i) => (
-            <li key={r.url} className="entry">
+            <li key={r.url} className="entry" data-section={i === 0 || items[i - 1].section !== r.section ? r.section || undefined : undefined}>
               <span className="idx" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
               <div className="text">
                 <h2>
