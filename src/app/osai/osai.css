@@ -272,7 +272,7 @@
 /* ---- core document ---------------------------------------------------- */
 .osai-core h1 { font-size: clamp(38px, 5vw, 54px); line-height: 1.02; letter-spacing: -0.025em; }
 .osai-core .lede { font-size: 20px; line-height: 1.45; margin-top: 16px; max-width: 60ch; color: var(--ink); }
-.osai-core section { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line-strong); }
+.osai-core section { margin-top: 48px; } /* no rule above the lanes; the pros/cons keep theirs */
 .osai-core h2 { font-size: 27px; margin-bottom: 10px; }
 .osai-core p { margin-bottom: 10px; max-width: 66ch; }
 .osai-core ul { margin: 0 0 10px; padding-left: 20px; max-width: 66ch; list-style: disc; }
