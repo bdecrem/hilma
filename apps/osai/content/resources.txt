@@ -15,7 +15,7 @@ Europe and Open Source AI: Beyond Licenses
 Mitchell Baker, AI and Society Institute (ENS-PSL), July 2026
 https://www.ens.psl.eu/sites/default/files/2026-08/Europe%20and%20Open%20Source%20AI_%20Beyond%20Licenses.pdf
 
-A playbook for the EU's Open Source Strategy from the person who ran Mozilla for 25 years. Open source is six layers, not a license: license terms, technology, team, governance, products people choose, and an organization that locks in the public mission through any acquisition or restructuring. Thirteen recommendations, including an openness floor for public funding, reserved public compute for open projects, and success measured by voluntary adoption. Names "secret is safer" as the recurring argument against openness and tells the EU to treat openness as a security method rather than a security risk.
+Mitchell Baker argues that a license is only one of six layers that make open source work. The others are the technology, the team, how development is governed, products people choose to use, and an organization whose public mission survives an acquisition. She wrote the paper for the EU as it sets its Open Source Strategy. Her thirteen recommendations include using the OSI definition as the floor for public funding, measuring success by voluntary adoption, and treating openness as a security method. A section on the "secret is safer" argument follows it from early Firefox to the NHS making its code private after Anthropic's Mythos.
 
 
 Sites
@@ -25,7 +25,7 @@ Open Weights and American AI Leadership
 NVIDIA open letter, July 24, 2026
 https://images.nvidia.com/pdf/Open-Weights-and-American-AI-Leadership.pdf
 
-The industry case, co-signed by 235 companies including OpenAI, Google, Meta, Microsoft, Mistral, Hugging Face and Mozilla. Open weights expand access, drive competition, prevent lock-in, and are safer than closed models because more people can inspect and test them. Asks policymakers for shared compute, datasets and evaluation frameworks, and no restrictions on open models or on distillation.
+This paper, posted by NVIDIA, and cosigned by 235 companies, argues that open weights widen access and competition, prevent lock-in, and are safer because more people can inspect them. The signers include OpenAI, Google, Meta, Microsoft, Mistral, Hugging Face and Mozilla. It asks policymakers for shared compute, datasets and evaluation tools, and for no restrictions on open models or on distillation.
 
 
 International AI Safety Report 2026
@@ -46,7 +46,7 @@ The Open Source AI Definition (OSAID 1.0)
 Open Source Initiative, October 2024
 https://opensource.org/ai/open-source-ai-definition
 
-The reference definition. An AI system is open source only if anyone can use, study, modify and share it without permission, and only if three things are released: the weights, the complete code to train and run the system, and enough detail about the training data for a skilled person to rebuild a substantially equivalent system. The data itself need not be published, which is the definition's most contested compromise. By this test, Llama, DeepSeek and gpt-oss are open weight, not open source. Baker recommends it as the funding floor for Europe.
+This is the Open Source Initiative's test for when an AI system counts as open source. Anyone must be free to use, study, modify and share it. Three things must be released: the weights, the full code to train and run it, and enough about the training data for a skilled person to build a substantially equivalent system. The data itself doesn't have to be published, and that is the part people argue about most. By this test Llama, DeepSeek and gpt-oss are open weight, not open source. Baker's paper proposes it as the EU's floor for funding.
 
 
 Mozilla.ai
@@ -60,7 +60,7 @@ Model Openness Framework (isitopen.ai)
 Generative AI Commons, LF AI & Data Foundation (Linux Foundation)
 https://isitopen.ai
 
-The scorecard. Sixteen questions about which parts of a model's lifecycle are released, and under what licenses, sort a model into one of three classes: Open Model (weights, architecture, inference code), Open Tooling (plus the training, data-processing and evaluation code) and Open Science (plus the data and the research). The Model Openness Tool on the site produces the score. Baker recommends it, with the DPG Standard, as the way to scale EU funding and compute above the OSAID floor.
+The Linux Foundation built this scorecard for how open a model is. Sixteen questions about which parts are released, and under which licenses, place a model in one of three classes. Open Model means the weights, architecture and inference code. Open Tooling adds the training, data and evaluation code. Open Science adds the data and the research. The tool on isitopen.ai does the scoring. Baker's paper suggests using it, with the DPG Standard, to reward projects that go further than the OSI floor.
 
 
 Digital Public Goods Standard
@@ -74,4 +74,4 @@ The EU Artificial Intelligence Act
 Future of Life Institute's AI Act site: explorer, compliance checker, timeline
 https://artificialintelligenceact.eu
 
-The first comprehensive AI law from a major regulator, in force since August 2024. Four risk tiers: banned practices (social scoring, manipulative systems), high-risk uses with heavy obligations, limited-risk uses with transparency duties, and everything else unregulated. General-purpose model providers must document their models, respect copyright and publish a training-data summary. Free and open-source models with public weights are exempt from most of that unless they cross the systemic-risk line, set at 10^25 FLOPs of training compute. Prohibitions applied February 2025, model rules August 2025, high-risk rules delayed to December 2027.
+The EU's AI law has been in force since August 2024. It sorts uses into four tiers: banned practices such as social scoring, high-risk uses with heavy obligations, limited-risk uses with transparency duties, and everything else. Providers of general-purpose models must document them, respect copyright and publish a summary of their training data. Open models with public weights are exempt from most of that unless they pass the systemic-risk threshold of 10^25 FLOPs of training compute. The bans took effect in February 2025 and the model rules in August 2025. The high-risk rules are delayed to December 2027.
