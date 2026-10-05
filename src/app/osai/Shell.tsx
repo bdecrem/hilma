@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Chat from './Chat'
 import MemoryDialog from './MemoryDialog'
 import PasswordDialog from './PasswordDialog'
@@ -21,6 +21,16 @@ function isCurrent(href: string, pathname: string) {
 
 type Theme = 'dark' | 'light'
 const THEME_KEY = 'osai:theme'
+const CHAT_KEY = 'osai:chat'
+const NARROW = '(max-width: 1000px)'
+
+function ChatGlyph() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M8 2.5c3.3 0 6 2.1 6 4.75S11.3 12 8 12c-.6 0-1.2-.07-1.75-.2L3 13l.8-2.4C2.7 9.7 2 8.5 2 7.25 2 4.6 4.7 2.5 8 2.5Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 function readTheme(): Theme {
   try {
@@ -117,13 +127,39 @@ export default function Shell({
   const router = useRouter()
   const [chatOpen, setChatOpen] = useState(false)
   const [pwOpen, setPwOpen] = useState(false)
+
+  // Closed by default. A wide screen remembers the last choice; a phone always
+  // starts with the sheet down.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(CHAT_KEY) === '1' && !window.matchMedia(NARROW).matches) setChatOpen(true)
+    } catch { /* ignore */ }
+  }, [])
+
+  const toggleChat = useCallback((next?: boolean) => {
+    setChatOpen((v) => {
+      const on = next ?? !v
+      try { localStorage.setItem(CHAT_KEY, on ? '1' : '0') } catch { /* ignore */ }
+      return on
+    })
+  }, [])
+
+  // ⌘/ (Ctrl+/) toggles the assistant; Esc closes it.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === '/') { e.preventDefault(); toggleChat() }
+      else if (e.key === 'Escape' && chatOpen && !document.querySelector('.osai-dialog')) toggleChat(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [chatOpen, toggleChat])
   const [memOpen, setMemOpen] = useState(false)
   const [hasPassword, setHasPassword] = useState(initialHasPassword)
 
   // While the phone chat sheet is open: no page scroll behind it, and the sheet
   // follows the visual viewport (iOS shrinks it when the keyboard is up).
   useEffect(() => {
-    if (!chatOpen) return
+    if (!chatOpen || !window.matchMedia(NARROW).matches) return
     const root = document.documentElement
     const prevOverflow = root.style.overflow
     root.style.overflow = 'hidden'
@@ -165,7 +201,16 @@ export default function Shell({
             ))}
           </nav>
           <div className="right">
-            <button className="ask" type="button" onClick={() => setChatOpen(true)}>Ask</button>
+            <button
+              className="osai-chat-toggle"
+              type="button"
+              aria-pressed={chatOpen}
+              aria-label="Assistant"
+              title={chatOpen ? 'Close the assistant (⌘/)' : 'Ask the assistant (⌘/)'}
+              onClick={() => toggleChat()}
+            >
+              <ChatGlyph />
+            </button>
             <UserMenu
               name={name}
               hasPassword={hasPassword}
@@ -176,12 +221,12 @@ export default function Shell({
           </div>
         </div>
       </header>
-      <div className="osai-body">
+      <div className={`osai-body${chatOpen ? ' chat' : ''}`}>
         <main className="osai-doc">
           <div className="reading">{children}</div>
         </main>
-        <aside className={`osai-aside${chatOpen ? ' open' : ''}`} aria-label="Assistant">
-          <Chat onClose={() => setChatOpen(false)} />
+        <aside className={`osai-aside${chatOpen ? ' open' : ''}`} aria-label="Assistant" aria-hidden={!chatOpen}>
+          <Chat onClose={() => toggleChat(false)} />
         </aside>
       </div>
       {pwOpen && <PasswordDialog hasPassword={hasPassword} onClose={() => setPwOpen(false)} onChanged={setHasPassword} />}

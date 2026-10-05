@@ -150,7 +150,14 @@
 .osai-nav a[aria-current="page"]::after { transform: scaleX(1); }
 @media (prefers-reduced-motion: reduce) { .osai-nav a::after { transition: none; } }
 .osai-top .right { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
-.osai-top .ask { display: none; font-family: var(--sans); font-size: 13.5px; font-weight: 600; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+/* The assistant's switch: a quiet glyph in the bar that lights mint while the panel is open. */
+.osai-chat-toggle {
+  width: 30px; height: 30px; display: inline-grid; place-items: center;
+  color: var(--muted); background: none; border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+  transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+}
+.osai-chat-toggle:hover { color: var(--ink); background: var(--surface-2); border-color: var(--line); }
+.osai-chat-toggle[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); border-color: color-mix(in oklab, var(--accent) 30%, transparent); }
 
 .osai-user { position: relative; }
 .osai-user-btn {
@@ -173,15 +180,19 @@
 
 .osai-body {
   max-width: 1320px; margin: 0 auto; padding: 0 20px;
-  display: grid; grid-template-columns: minmax(0, 1fr) var(--chat-w); gap: 36px; align-items: start;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px; align-items: start;
 }
+.osai-body.chat { grid-template-columns: minmax(0, 1fr) var(--chat-w); }
 .osai-doc { min-width: 0; padding: 40px 0 88px; }
-.osai-doc .reading { max-width: 720px; }
+.osai-doc .reading { max-width: 720px; margin: 0 auto; }
+.osai-body.chat .osai-doc .reading { margin: 0; }
 .osai-aside {
+  display: none;
   position: sticky; top: calc(var(--topbar) + env(safe-area-inset-top) + 16px);
   height: calc(100dvh - var(--topbar) - env(safe-area-inset-top) - 32px);
   margin: 16px 0;
 }
+.osai-aside.open { display: block; }
 
 /* ---- chat ------------------------------------------------------------- */
 .osai-chat {
@@ -195,13 +206,11 @@
 .osai-chat .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
 .osai-chat .seg button { font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .02em; color: var(--muted); background: none; border: 0; border-radius: 999px; padding: 4px 10px; cursor: pointer; white-space: nowrap; }
 .osai-chat .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
-.osai-chat .new, .osai-chat .close { font: inherit; font-size: 12.5px; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px 2px; }
+.osai-chat .new { font: inherit; font-size: 12.5px; color: var(--accent); background: none; border: 0; cursor: pointer; padding: 4px 2px; }
 .osai-chat .new[disabled] { opacity: .4; cursor: default; }
-.osai-chat .close { display: none; }
+.osai-chat .close { width: 26px; height: 26px; display: inline-grid; place-items: center; font: inherit; font-size: 18px; line-height: 1; color: var(--muted); background: none; border: 0; border-radius: 6px; cursor: pointer; }
+.osai-chat .close:hover { color: var(--ink); background: var(--surface-2); }
 .osai-chat .log { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 14px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-.osai-chat .starters { display: grid; gap: 8px; }
-.osai-chat .starter { font: inherit; font-size: 13.5px; text-align: left; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; cursor: pointer; transition: border-color .15s ease; }
-.osai-chat .starter:hover { border-color: var(--accent); }
 .osai-chat .msg { max-width: 100%; min-width: 0; font-size: 14.5px; line-height: 1.55; overflow-wrap: anywhere; }
 .osai-chat .msg.user { align-self: flex-end; max-width: 88%; background: var(--accent-soft); border: 1px solid color-mix(in oklab, var(--accent) 25%, transparent); color: var(--ink); border-radius: 14px 14px 4px 14px; padding: 9px 12px; white-space: pre-wrap; }
 .osai-chat .msg.assistant { align-self: stretch; padding: 2px 2px 0; }
@@ -385,7 +394,8 @@
 
 /* ---- narrow ----------------------------------------------------------- */
 @media (max-width: 1000px) {
-  .osai-body { grid-template-columns: minmax(0, 1fr); }
+  .osai-body.chat { grid-template-columns: minmax(0, 1fr); }
+  .osai-body.chat .osai-doc .reading { margin: 0 auto; }
   /* The open chat is a fixed sheet sized to the visual viewport (Shell sets --vvh/--vvt
      from window.visualViewport), so the iOS keyboard never covers the composer. */
   .osai-aside { display: none; position: fixed; left: 0; right: 0; top: var(--vvt, 0px); height: var(--vvh, 100dvh); z-index: 40; margin: 0; padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); background: var(--bg); box-sizing: border-box; }
@@ -393,8 +403,6 @@
   .osai-chat { border-radius: 0; border: 0; height: 100%; }
   /* 16px stops iOS Safari from zooming the page when the composer is focused. */
   .osai-chat textarea { font-size: 16px; }
-  .osai-chat .close { display: inline-block; }
-  .osai-top .ask { display: inline-block; }
   .osai-top .inner { grid-template-columns: auto 1fr auto; }
   .osai-nav { justify-self: center; gap: 22px; }
   .osai-nav a { font-size: 13.5px; }

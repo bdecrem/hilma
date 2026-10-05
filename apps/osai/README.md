@@ -72,6 +72,10 @@ to work"). Type: Bricolage Grotesque for display, Instrument Sans for reading,
 JetBrains Mono for labels and numbers (all via `next/font/google` in
 `layout.tsx`). Keep new UI on these tokens.
 
+The assistant panel is closed by default; the glyph at the right of the bar
+(or ⌘/) opens it, Esc closes it, and a wide screen remembers the choice in
+`localStorage` as `osai:chat`. There are no starter prompts.
+
 ## Web search
 
 Off by default, so every answer starts from the documents. A turn runs with

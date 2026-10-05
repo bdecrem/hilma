@@ -11,12 +11,6 @@ type State = {
   defaultModel: ModelKey
 }
 
-const STARTERS = [
-  'What is the case for Decentralized AI over open weights?',
-  'Where is the field thinnest, and why?',
-  'What should we ask each other first?',
-]
-
 const MODEL_KEY = 'osai:model'
 const CHECK_WEB = 'Check the web for anything newer on this.'
 
@@ -236,18 +230,11 @@ export default function Chat({ onClose }: { onClose: () => void }) {
             </button>
           </div>
           {messages.length > 0 && <button type="button" className="new" onClick={newConversation} disabled={busy}>New</button>}
-          <button className="close" type="button" onClick={onClose}>Done</button>
+          <button className="close" type="button" onClick={onClose} aria-label="Close the assistant" title="Close (Esc)">×</button>
         </div>
       </div>
 
       <div className="log" ref={logRef}>
-        {state && messages.length === 0 && (
-          <div className="starters">
-            {STARTERS.map((s) => (
-              <button key={s} type="button" className="starter" onClick={() => void send(s)}>{s}</button>
-            ))}
-          </div>
-        )}
         {messages.map((m, i) =>
           m.role === 'user' ? (
             <div key={i} className="msg user">{m.content}</div>

@@ -73,6 +73,7 @@ try {
   const existing = (await (await ctx.request.get(`${BASE}/api/osai/chat`)).json()).history.length
   log('test account reset; messages =', existing)
 
+  await page.click('.osai-chat-toggle') // closed by default
   await page.waitForSelector('#osai-chat-input:not([disabled])')
   const tabs = await page.locator('.osai-nav a').allTextContents()
   log('tabs =', tabs.join(' | '))
@@ -187,7 +188,7 @@ try {
   const sw = await p.evaluate(() => document.documentElement.scrollWidth)
   log('phone scrollWidth =', sw, sw > 390 ? 'OVERFLOW' : 'ok')
   await p.screenshot({ path: `${OUT}/09-phone-core.png`, fullPage: true })
-  await p.click('.osai-top .ask')
+  await p.click('.osai-chat-toggle')
   await p.waitForSelector('.osai-aside.open .osai-chat')
   await p.waitForSelector('.osai-chat .msg.assistant')
   await p.screenshot({ path: `${OUT}/10-phone-chat.png` })
