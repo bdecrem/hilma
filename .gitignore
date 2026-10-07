@@ -70,3 +70,6 @@ apps/*/build-device/
 # jam song builds (scripts/jam/songs/*.mjs outputs)
 /scripts/jam/songs/out/
 /apps/jamnative/build-device/
+
+# overclock-video renders (masters live in ~/Desktop/overclock)
+/apps/overclock-video/out/

@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overclock — projections</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&family=Big+Shoulders+Display:wght@800&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; }
+  #c { display: block; width: 100vw; max-height: 100dvh; aspect-ratio: 16 / 9; margin: auto; object-fit: contain; }
+  #ui { position: fixed; left: 12px; bottom: 12px; color: #666; font: 12px ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">?act=act-i|act-ii|act-iii · tap = play / pause · ←/→ = step a frame · ?t=12.3 = still</div>
+<script src="engine.js"></script>
+<script>
+  // Preview, synced to the track (serve this folder over http — `python3 -m http.server` here —
+  // so the stills can be drawn). The renderer ignores the audio and calls renderAt itself.
+  const AUDIO = { 'act-i': 'overclock-i', 'act-ii': 'overclock-ii', 'act-iii': 'overclock' };
+  const load = (src) => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.appendChild(s); });
+  (async () => {
+    const q = new URLSearchParams(location.search), act = q.get('act') || 'act-i';
+    await load(`score/${act}.js`); await load(`${act}.js`);
+    await document.fonts.load('20px "JetBrains Mono"'); await document.fonts.load('800 100px "Big Shoulders Display"');
+    await bootAct();
+    if (q.has('render')) { document.getElementById('ui').remove(); window.READY = true; return; }
+    const a = new Audio(`../../scripts/jam/songs/out/${AUDIO[act]}/song.wav`);
+    let t = parseFloat(q.get('t') || '0');
+    renderAt(t);
+    const loop = () => { if (!a.paused) { t = a.currentTime; renderAt(Math.min(t, DURATION - 0.001)); } requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    const toggle = () => { if (a.paused) { a.currentTime = t; a.play(); } else a.pause(); };
+    document.body.addEventListener('click', toggle);
+    addEventListener('keydown', (e) => {
+      if (e.key === ' ') toggle();
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { a.pause(); t = Math.max(0, t + (e.key === 'ArrowRight' ? 1 : -1) / FPS); renderAt(t); }
+    });
+  })();
+</script>
+</body>
+</html>

@@ -224,7 +224,7 @@ if (/fail/i.test(r.message)) throw new Error(`render reported failures: ${r.mess
 writeFileSync(`${OUT}/song.wav`, r.wav)
 const stems = Object.entries(r.stems).map(([id, st]) => `${id} ${st.peakDb.toFixed(1)} dBFS crest ${st.crestDb.toFixed(1)} dB`).join(', ')
 console.log(`STEMS: ${stems}`)
-if (r.stems.jt30.crestDb < 7) throw new Error(`bass crest ${r.stems.jt30.crestDb.toFixed(1)} dB — the line is squashed`)
+if (r.stems.jt30 && r.stems.jt30.crestDb < 7) throw new Error(`bass crest ${r.stems.jt30.crestDb.toFixed(1)} dB — the line is squashed`)
 const metrics = formatRows(r.rows)
 const table = r.rows.map((row, i) => `${row.bars.padEnd(9)} ${plan[i].name}`).join('\n')
 const levels = NODES.map((id) => `${id} ${session.getNode(id).getLevel().toFixed(1)} dB`).join(', ')
