@@ -1007,6 +1007,103 @@ export function clozeMatch(given: string | null | undefined, answer: string): bo
 // ---------------------------------------------------------------------------
 // Judges (Haiku, schema-constrained — same pattern as quiz-grader.ts)
 
+/// Plus/minus letters, best first. Actively Read passes at A- or better.
+export const PLUS_MINUS_GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'] as const
+export type PlusMinusGrade = (typeof PLUS_MINUS_GRADES)[number]
+export const ACTIVELY_READ_PASS: readonly PlusMinusGrade[] = ['A+', 'A', 'A-']
+
+export type ActivelyReadGrade = {
+  /** tested: the user asked for the test and answered it; declined: they said
+   *  they are not interested (and took no test); conversation: neither. */
+  outcome: 'tested' | 'declined' | 'conversation'
+  questions_answered: number
+  grade: PlusMinusGrade | null
+  passed: boolean
+  notes: string
+  strengths: string[]
+  weaknesses: string[]
+}
+
+/// Grade an Actively Read voice session (live.ts buildLiveActivelyReadInstructions):
+/// a conversation about the topic in which the user may say "I'm ready" and
+/// take a three-question test, or say they're not interested. Only the test
+/// counts — what the assistant taught in the conversation before it is not
+/// the user's knowledge. Passing = all three questions answered and A- or
+/// better on the plus/minus scale.
+export async function judgeActivelyRead(thread: F2Thread, transcript: TranscriptTurn[]): Promise<ActivelyReadGrade> {
+  const convo = (transcript ?? [])
+    .map((t) => `${t.role === 'user' ? 'USER' : 'Dodo'}: ${(t.text ?? '').trim()}`)
+    .filter((l) => l.length > 6)
+    .join('\n')
+    .slice(0, 200_000)
+  const source = buildBudgetedContent(thread, 3_000_000)
+  const subject = thread.topic ?? thread.url ?? '(no subject)'
+  const system = `You grade an "Actively Read" voice session from a learning app. The assistant (Dodo) talked a topic through with the user. At any point the user could say they were ready (for example "I'm ready" or "test me"); the assistant then asked a short test of three questions, one at a time, without hints or corrections. The user could also say they are not interested in the topic.
+
+First classify the session:
+- outcome "tested": the user asked for the test and the assistant asked at least one test question. Count questions_answered = how many of the test questions the user actually attempted (an "I don't know" is not an attempt).
+- outcome "declined": the user said they are not interested in this topic (or to skip it / take it off their list) and no test took place afterwards.
+- outcome "conversation": neither — they talked but never took the test and never declined.
+
+Then, ONLY for "tested", grade the user's answers to the test questions on this scale: A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F. Grade only what the USER said in answer to the test questions — the earlier conversation does not count, and anything the assistant explained during the conversation and the user merely repeated back word for word counts for little. Judge against the source material; outside knowledge that is correct counts, wrong claims count against them.${thread.study_focus ? `
+The user's study focus (grade only inside it): "${thread.study_focus}".` : ''}
+- A+ / A: all three answers correct and substantive — main idea plus real supporting detail, in their own words.
+- A-: all three correct and clear, one of them a little thin on detail.
+- B range: the core is there but one answer is shaky or two are thin.
+- C range: roughly half right.
+- D / F: mostly wrong or unable to answer.
+A test with fewer than three answered questions cannot be above B+. For "declined" and "conversation" use grade null.
+
+Also produce notes (one or two sentences to the user, "You ..."), strengths and weaknesses (up to 5 short, concrete phrases each; empty when not tested).`
+  const parsed = await judgeJson<{
+    outcome?: string
+    questions_answered?: number
+    grade?: string | null
+    notes?: string
+    strengths?: string[]
+    weaknesses?: string[]
+  }>(
+    system,
+    `Topic: ${subject}
+
+Source material (ground truth):
+${source || '(no source content — judge against general knowledge)'}
+
+Session transcript:
+${convo || '(empty transcript)'}
+
+Classify and grade the session.`,
+    {
+      type: 'object',
+      properties: {
+        outcome: { type: 'string', enum: ['tested', 'declined', 'conversation'] },
+        questions_answered: { type: 'integer' },
+        grade: { anyOf: [{ type: 'string', enum: [...PLUS_MINUS_GRADES] }, { type: 'null' }] },
+        notes: { type: 'string' },
+        strengths: { type: 'array', items: { type: 'string' } },
+        weaknesses: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['outcome', 'questions_answered', 'grade', 'notes', 'strengths', 'weaknesses'],
+      additionalProperties: false,
+    },
+    GRADER_MODEL,
+  )
+  const outcome = (['tested', 'declined', 'conversation'].includes(parsed.outcome ?? '') ? parsed.outcome : 'conversation') as ActivelyReadGrade['outcome']
+  const answered = Math.max(0, Math.min(10, Math.round(parsed.questions_answered ?? 0)))
+  const grade = outcome === 'tested' && (PLUS_MINUS_GRADES as readonly string[]).includes(parsed.grade ?? '') ? (parsed.grade as PlusMinusGrade) : outcome === 'tested' ? 'F' : null
+  const clip = (items: string[] | undefined) => (items ?? []).filter((s) => s.trim()).slice(0, 5).map((s) => s.trim().slice(0, 200))
+  return {
+    outcome,
+    questions_answered: answered,
+    grade,
+    // The bar is enforced here too, not only in the prompt: three answers and A- or better.
+    passed: outcome === 'tested' && answered >= 3 && grade != null && ACTIVELY_READ_PASS.includes(grade),
+    notes: (parsed.notes ?? '').slice(0, 400),
+    strengths: outcome === 'tested' ? clip(parsed.strengths) : [],
+    weaknesses: outcome === 'tested' ? clip(parsed.weaknesses) : [],
+  }
+}
+
 const JUDGE_MODEL = 'claude-haiku-4-5'
 
 /// The Final Review (and its web-search verify pass) grades once per exam

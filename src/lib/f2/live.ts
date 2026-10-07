@@ -380,6 +380,38 @@ How to run it:
 - After the third answer, thank them, say the badge check is being tallied, and say goodbye. Do not announce a result yourself.${engine === 'eleven' ? '' : examDelegationPolicy(name)}`
 }
 
+/// Actively Read: one conversation, two parts. The user talks the topic
+/// through with Dodo; when they say they're ready, Dodo asks three test
+/// questions right there, with no hints. Graded afterwards from the transcript
+/// (judgeActivelyRead in flash.ts) — A- or better passes. "Not interested"
+/// ends it and takes the topic out of the daily picks.
+export function buildLiveActivelyReadInstructions(input: {
+  userName: string
+  thread: F2Thread
+  engine?: VoiceEngine
+}): string {
+  const name = friendlyName(input.userName)
+  const engine = input.engine ?? 'gpt-live'
+  const subject = threadSubject(input.thread)
+  return `${persona(name, engine)}
+
+This is ${name}'s ACTIVELY READ session — today's read from their library, a topic they have not been tested on yet. It is one conversation in two parts, and ${name} decides when the second part starts. You speak first.
+
+${summarizeThreadForLive(input.thread, engine)}${studyFocusBlock(name, input.thread, 'tested')}
+
+Part one, the conversation:
+- Open in two or three short sentences: today's read is "${subject}"; you can talk it through together, and whenever they're ready they can say "I'm ready" for a quick three-question test — pass it and the topic counts as actively read and they move up a Peck level. Then ask one inviting question about it (what they already know, or what caught their eye).
+- Then talk it through: explain the main ideas, answer their questions, check their understanding with light questions. Keep your turns short — twenty to sixty seconds. This part is for learning, so teach well.
+
+Part two, the test — only when they say they're ready ("I'm ready", "test me", "let's do the test", or anything that clearly means it):
+- Say "Okay, three questions," and ask EXACTLY three substantive questions on the main ideas, one at a time — "explain", "why", "how". No trivia, and not something you told them word for word a minute ago.
+- During the test do NOT teach, hint, or correct. After each answer, acknowledge in a few neutral words ("Got it.", "Thanks.") and ask the next question. If they don't know, say that's fine and move on.
+- One short follow-up is allowed only when an answer is ambiguous; it belongs to the same question.
+- After the third answer say: "That's the test. Tap End and I'll tally your grade." Do not say whether answers were right and never announce a grade. If they keep talking, chat briefly, but do not reopen the test or hint at the result.
+
+If they say they're not interested in this topic ("not interested", "skip this one", "not for me"): say "No problem, I'll take it off your daily picks. Tap End whenever you like." Do not argue or pitch it. If they change their mind and want to talk or take the test, go along with it.${engine === 'eleven' ? '' : topicDelegationPolicy(name)}`
+}
+
 // ---------------------------------------------------------------------------
 // Backend (Responses delegation) prompts — the full material lives here.
 // ---------------------------------------------------------------------------
@@ -448,7 +480,7 @@ ${BACKEND_RETURN}`
   const thread = input.thread
   const subject = threadSubject(thread)
   const job =
-    input.mode === 'topic'
+    input.mode === 'topic' || input.mode === 'actively_read'
       ? `The live model is discussing the topic "${subject}" with ${name} and holds only an excerpt of the material below. When it delegates, find the relevant passage or detail, verify what ${name} claimed, or reason through the question carefully against the material.`
       : `The live model is examining ${name} orally on the topic "${subject}" (${input.mode === 'final_review' ? 'their Final Review' : input.mode === 'second_chance' ? 'their Second Chance retake' : 'a recertification refresher'}) and holds only an excerpt of the material below. When it delegates, verify a claim ${name} made against the material, find the detail it needs, or suggest one sharp examination question on a part of the material the excerpt does not cover. Keep answers short — the exam must keep moving.${thread.study_focus ? ` The exam is scoped to this study focus: "${thread.study_focus}"; stay inside it.` : ''}`
 

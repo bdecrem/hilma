@@ -50,7 +50,7 @@ export async function PATCH(
   }
   const { id } = await ctx.params
 
-  let body: { topic?: string; pinned?: boolean; study_focus?: string | null; kind?: string; peck_excluded?: boolean; peck_weight?: number }
+  let body: { topic?: string; pinned?: boolean; study_focus?: string | null; kind?: string; peck_excluded?: boolean; peck_weight?: number; ar_inactive?: boolean }
   try {
     body = await req.json()
   } catch {
@@ -61,6 +61,11 @@ export async function PATCH(
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
   if (typeof body.pinned === 'boolean') {
     update.pinned_at = body.pinned ? new Date().toISOString() : null
+  }
+  // Actively Read: "not interested" (true) takes the topic out of the daily
+  // picks; false is the undo on the topic page.
+  if (typeof body.ar_inactive === 'boolean') {
+    update.ar_inactive_at = body.ar_inactive ? new Date().toISOString() : null
   }
   if (typeof body.peck_excluded === 'boolean') {
     update.peck_excluded = body.peck_excluded
@@ -99,7 +104,8 @@ export async function PATCH(
     update.study_focus === undefined &&
     update.kind === undefined &&
     update.peck_excluded === undefined &&
-    update.peck_weight === undefined
+    update.peck_weight === undefined &&
+    update.ar_inactive_at === undefined
   ) {
     return NextResponse.json({ error: 'nothing to update' }, { status: 400 })
   }

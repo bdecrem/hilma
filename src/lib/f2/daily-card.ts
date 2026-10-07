@@ -111,7 +111,7 @@ async function topicLabelFor(card: FlashCard): Promise<string | null> {
 
 /// The iMessage address the daily card goes to: the user's paired handle,
 /// preferring a phone-shaped one when several are paired.
-function dailyHandle(handles: string[] | null): string | null {
+export function dailyHandle(handles: string[] | null): string | null {
   if (!handles || handles.length === 0) return null
   return handles.find((h) => h.startsWith('+')) ?? handles[0]
 }

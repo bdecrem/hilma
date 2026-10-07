@@ -9,9 +9,10 @@ import {
 // 'walk' belongs to Peri (src/lib/f4) but shares this table + session helpers.
 // 'flash' = a spoken 10-card flash set; 'final_review' = the star-3 oral exam;
 // 'second_chance' = the 3-question retake offered after a failed Final Review;
-// 'recert' = the 3-question refresher that keeps a certified badge gold.
+// 'recert' = the 3-question refresher that keeps a certified badge gold;
+// 'actively_read' = the daily pick: talk it through, "I'm ready" → a 3-question test.
 export type RealtimeMode =
-  | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance' | 'recert'
+  | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance' | 'recert' | 'actively_read'
 
 export type VoiceSession = {
   id: string

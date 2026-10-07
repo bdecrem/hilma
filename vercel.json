@@ -13,6 +13,10 @@
       "schedule": "5 * * * *"
     },
     {
+      "path": "/api/f2/actively-read/nudge",
+      "schedule": "0 19,20 * * *"
+    },
+    {
       "path": "/api/f2/knowledge/backfill",
       "schedule": "20 10 * * *"
     }

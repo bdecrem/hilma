@@ -10,6 +10,7 @@ import { applyVoiceStyle, getVoicePrefs, type RealtimeMode, type VoicePrefs } fr
 import { buildGlobalMapBlocks, buildGlobalSystem, getGlobalMessages } from './global-chat'
 import {
   elevenPersona,
+  buildLiveActivelyReadInstructions,
   buildLiveFinalReviewInstructions,
   buildLiveFlashInstructions,
   buildLiveRecertInstructions,
@@ -18,7 +19,7 @@ import {
   type VoiceEngine,
 } from './live'
 
-export const VOICE_MODES = ['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert']
+export const VOICE_MODES = ['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert', 'actively_read']
 
 export type VoiceStartBody = {
   mode?: RealtimeMode
@@ -57,7 +58,7 @@ export async function resolveVoiceStart(
   let thread: F2Thread | null = null
   if (
     mode === 'topic' || mode === 'final_review' || mode === 'second_chance' ||
-    mode === 'recert' ||
+    mode === 'recert' || mode === 'actively_read' ||
     (mode === 'flash' && body.thread_id)
   ) {
     if (!body.thread_id) {
@@ -141,6 +142,12 @@ export async function resolveVoiceStart(
       weaknesses,
       engine,
     })
+  } else if (mode === 'actively_read') {
+    // The test is for topics that are not Actively Read yet.
+    if ((thread?.stars ?? 0) >= 1) {
+      return { ok: false, status: 403, error: 'This topic is already actively read.' }
+    }
+    instructions = buildLiveActivelyReadInstructions({ userName: user.username, thread: thread!, engine })
   } else if (mode === 'topic') {
     instructions = buildLiveTalkInstructions({ mode: 'topic', userName: user.username, thread, engine })
   } else {

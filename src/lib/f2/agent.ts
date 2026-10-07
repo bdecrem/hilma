@@ -88,6 +88,7 @@ import { llmComplete } from './llm'
 import { setAudioSummary } from './audio-summary'
 import { getDailyStreak, setDailyStreak, streakMultiplier } from './streak'
 import { IMESSAGE_DAILY_ONLY_REPLY, maybeHandleDailyAnswer } from './daily-card'
+import { maybeHandleActivelyReadReply } from './actively-read'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -159,6 +160,10 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   // ran that topic's open quiz over iMessage (2026-09-04, the Fresco mini).
   // Regression check: scripts/f2-imessage-gate-check.ts.
   if (client === 'imessage' || client === 'sms') {
+    // "2" to the Actively Read text = not interested (when that text is the
+    // newest one waiting on a reply); everything else is the daily card's.
+    const arReply = await maybeHandleActivelyReadReply(userId, text)
+    if (arReply) return { reply: arReply }
     const dailyReply = await maybeHandleDailyAnswer(userId, text)
     return { reply: dailyReply ?? IMESSAGE_DAILY_ONLY_REPLY }
   }
