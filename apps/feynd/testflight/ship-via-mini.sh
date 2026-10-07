@@ -46,6 +46,21 @@ cat > "$OUT/export.plist" <<PLIST
 <key>provisioningProfiles</key><dict><key>com.bartdecrem.Feynd</key><string>$PROFILE</string></dict>
 </dict></plist>
 PLIST
+# Export to disk first and check what the re-signed app is entitled to: the
+# archive is unsigned, so this is where push (aps-environment) and universal
+# links (associated domains) either make it into the build or don't.
+sed 's#<string>upload</string>#<string>export</string>#' "$OUT/export.plist" > "$OUT/export-disk.plist"
+echo "== checking the signed app's entitlements"
+xcodebuild -exportArchive -archivePath "$OUT/dodo.xcarchive" -exportOptionsPlist "$OUT/export-disk.plist" -exportPath "$OUT/disk" \
+  > "$OUT/export-disk.log" 2>&1 || { grep -E "error" "$OUT/export-disk.log" | head; echo "disk export failed — $OUT/export-disk.log"; exit 1; }
+mkdir -p "$OUT/unz" && unzip -q "$OUT"/disk/*.ipa -d "$OUT/unz"
+codesign -d --entitlements - --xml "$OUT/unz/Payload/Feynd.app" > "$OUT/entitlements.plist" 2>/dev/null
+plutil -p "$OUT/entitlements.plist"
+grep -q "<key>aps-environment</key>" "$OUT/entitlements.plist" && grep -A1 "aps-environment" "$OUT/entitlements.plist" | grep -q production \
+  || { echo "error: the signed app has no aps-environment=production — push would not work; not uploading" >&2; exit 1; }
+grep -q "applinks:feynd.cc" "$OUT/entitlements.plist" \
+  || { echo "error: the signed app has no applinks:feynd.cc — universal links would not work; not uploading" >&2; exit 1; }
+
 echo "== signing with \"$PROFILE\" and uploading"
 # The log goes to a file, never through a pipe: a closed pipe killed an
 # upload at 94% once (apps/feynd/CLAUDE.md).

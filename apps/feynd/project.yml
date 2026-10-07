@@ -10,7 +10,7 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: 274T5WCVD2
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "127"
+    CURRENT_PROJECT_VERSION: "128"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -91,6 +91,8 @@ targets:
         # need it either (dodo:// covers deep-link testing there).
         CODE_SIGN_ENTITLEMENTS: ""
         "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": Feynd/Feynd.entitlements
+        # Simulator: only aps-environment (push testing); no associated domains.
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": Feynd/Feynd-Simulator.entitlements
         # Device + App Store signing is manual and lives HERE, on the target,
         # not on the xcodebuild command line: command-line settings apply to
         # every target, and the Swift packages' resource bundles
@@ -126,7 +128,11 @@ targets:
         Debug:
           FEYND_PROFILE: feynd dev domains
           "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Development
+          # Push (Feynd.entitlements aps-environment): Debug device builds talk
+          # to the APNs sandbox, Release (TestFlight / App Store) to production.
+          APS_ENVIRONMENT: development
         Release:
+          APS_ENVIRONMENT: production
           "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Feynd/Feynd-macOS.entitlements
           FEYND_PROFILE: feynd appstore
           FEYND_MAC_PROFILE: feynd catalyst appstore

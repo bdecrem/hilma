@@ -77,6 +77,7 @@ async function main() {
     await AR.undoDeclineActivelyRead(T, pick.thread_id)
     const { data: undone } = await sb.from('f2_threads').select('ar_inactive_at').eq('id', pick.thread_id).single()
     check('undo clears not interested', undone?.ar_inactive_at === null, undone)
+    check('undo reopens today\'s pick', (await AR.ensureTodaysPick(T))?.resolved === null)
 
     // --- 3. the award -----------------------------------------------------------
     await sb.from('f2_users').update({ actively_read: { day: ptDay(), thread_id: pick.thread_id, picked_at: new Date().toISOString() } }).eq('id', T)
@@ -90,6 +91,8 @@ async function main() {
     check('award: XP paid', reward.xp_awarded > 0 && (xpAfter.xp as number) === xpBefore + reward.xp_awarded, { reward, xpBefore, xpAfter })
     check('award: weekly Peck streak marked today', xpAfter.peck_week_start === ptDay(), xpAfter)
     const twice = await AR.awardActivelyRead(T, pick.thread_id)
+    await AR.declineActivelyRead(T, pick.thread_id)
+    check('a later decline never overrides a pass', (await AR.ensureTodaysPick(T))?.resolved === 'passed')
     check('award: never twice', twice.peck_level === null && (await getJumboState(T)).highest_passed === afterJumbo.highest_passed, twice)
     check('award resolves today\'s pick as passed', (await AR.ensureTodaysPick(T))?.resolved === 'passed')
     const text = AR.activelyReadText(pick.topic, pick.thread_id)

@@ -28,6 +28,23 @@ final class DeepLinkRouter {
         return true
     }
 
+    // MARK: Actively Read
+
+    /// Open today's Actively Read session (banner, push, feynd.cc/read/<id>).
+    /// MainTabsView presents it; `pending` covers a cold start from a push.
+    var activelyReadSignal = 0
+    var pendingActivelyRead: (threadId: String, label: String?)?
+
+    func requestActivelyRead(threadId: String, label: String?) {
+        pendingActivelyRead = (threadId, label)
+        activelyReadSignal += 1
+    }
+
+    func consumeActivelyRead() -> (threadId: String, label: String?)? {
+        defer { pendingActivelyRead = nil }
+        return pendingActivelyRead
+    }
+
     // MARK: Discuss-a-card handoff
 
     /// "Discuss with Dodo" from the card clinic: land in the card's topic

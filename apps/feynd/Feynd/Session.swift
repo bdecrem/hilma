@@ -103,6 +103,8 @@ final class Session {
     }
 
     func logout() async {
+        // This device stops getting the old account's pushes (needs the cookie, so first).
+        await PushRegistry.unregister()
         try? await F2API.shared.logout()
         state = .signedOut
         progress = .zero

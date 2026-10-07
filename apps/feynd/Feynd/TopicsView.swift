@@ -558,10 +558,9 @@ struct TopicsView: View {
                 titleRow.padding(.horizontal, -14)
                     .id("topics-top")
                 metaStrip
-                PeckWeekBanner(state: jumbo)
-                    .padding(.top, 2)
-                    .padding(.bottom, 4)
-                ThisWeekBanner(topics: topics, navigable: true)
+                // One banner at a time: today's read, else a streak at risk,
+                // else this week's refresher.
+                HomeBannerSlot(jumbo: jumbo, topics: topics, navigable: true)
                     .padding(.top, 2)
                     .padding(.bottom, 4)
                 if let sections {

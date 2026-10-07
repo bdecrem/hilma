@@ -100,6 +100,8 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
     var recertDueAt: Date?
     /// Listed in the community directory. Nil on older backends.
     var shared: Bool?
+    /// Actively Read: declined for the daily pick ("not interested"). Nil otherwise.
+    var arInactiveAt: Date?
 
     var isPinned: Bool { pinnedAt != nil }
 
@@ -150,6 +152,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         case studyFocus = "study_focus"
         case secondChanceUntil = "second_chance_until"
         case recertDueAt = "recert_due_at"
+        case arInactiveAt = "ar_inactive_at"
     }
 
     // Custom init so the iOS app keeps working against backends that don't
@@ -175,6 +178,7 @@ struct F2Topic: Codable, Identifiable, Equatable, Hashable {
         secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
         recertDueAt = try c.decodeIfPresent(Date.self, forKey: .recertDueAt)
         shared = try c.decodeIfPresent(Bool.self, forKey: .shared)
+        arInactiveAt = try c.decodeIfPresent(Date.self, forKey: .arInactiveAt)
     }
 }
 
@@ -206,6 +210,8 @@ struct F2Thread: Codable {
     /// See F2Topic.secondChanceUntil — topic-detail payload only.
     var secondChanceUntil: Date?
     var recertDueAt: Date?
+    /// See F2Topic.arInactiveAt.
+    var arInactiveAt: Date?
 
     var isCertified: Bool { stars >= 3 }
     var recertLapsed: Bool {
@@ -238,6 +244,7 @@ struct F2Thread: Codable {
         case studyFocus = "study_focus"
         case secondChanceUntil = "second_chance_until"
         case recertDueAt = "recert_due_at"
+        case arInactiveAt = "ar_inactive_at"
     }
 
     init(from decoder: Decoder) throws {
@@ -255,6 +262,7 @@ struct F2Thread: Codable {
         studyFocus = try c.decodeIfPresent(String.self, forKey: .studyFocus)
         secondChanceUntil = try c.decodeIfPresent(Date.self, forKey: .secondChanceUntil)
         recertDueAt = try c.decodeIfPresent(Date.self, forKey: .recertDueAt)
+        arInactiveAt = try c.decodeIfPresent(Date.self, forKey: .arInactiveAt)
     }
 }
 

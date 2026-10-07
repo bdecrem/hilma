@@ -130,7 +130,9 @@ async function pickFromState(userId: string, state: ActivelyReadState): Promise<
 
 async function resolveToday(userId: string, threadId: string, how: 'passed' | 'declined'): Promise<void> {
   const state = await readState(userId)
-  if (!state || state.thread_id !== threadId || state.resolved) return
+  if (!state || state.thread_id !== threadId) return
+  // A pass settles the day whatever came before; a decline never overrides a pass.
+  if (state.resolved === 'passed' || (state.resolved && how === 'declined')) return
   await writeState(userId, { ...state, resolved: how, resolved_at: new Date().toISOString() })
 }
 
@@ -155,6 +157,12 @@ export async function undoDeclineActivelyRead(userId: string, threadId: string):
     .eq('id', threadId)
     .eq('user_id', userId)
   if (error) throw new Error(`undo decline failed: ${error.message}`)
+  // Today's pick was this topic and was declined: it's open again.
+  const state = await readState(userId)
+  if (state?.thread_id === threadId && state.resolved === 'declined') {
+    const { resolved: _r, resolved_at: _a, ...open } = state
+    await writeState(userId, open)
+  }
 }
 
 export type ActivelyReadReward = {

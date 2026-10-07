@@ -5,6 +5,7 @@
 //   node apps/feynd/testflight/mint-profile.mjs --name "feynd appstore air" \
 //     --type IOS_APP_STORE --bundle L74V9QD69L --cert-serial <hex serial> [--devices all]
 //   node apps/feynd/testflight/mint-profile.mjs --list-certs
+//   node apps/feynd/testflight/mint-profile.mjs --enable-capability PUSH_NOTIFICATIONS --bundle L74V9QD69L
 //
 // The cert serial is the local signing cert's:
 //   security find-certificate -c "Apple Distribution: Bart Decrem" -p | openssl x509 -noout -serial
@@ -50,6 +51,20 @@ if (args['register-device']) {
     const d = (await api('POST', '/v1/devices', { data: { type: 'devices', attributes: { name: args['device-name'] || 'iPhone', platform: 'IOS', udid } } })).data
     console.log('registered device', d.id, d.attributes.name)
   }
+}
+// --enable-capability PUSH_NOTIFICATIONS --bundle <id>: turn a capability on
+// for the App ID before minting (profiles minted afterwards carry it; ones
+// minted before do NOT — re-mint them). Exits after when no --name is given.
+if (args['enable-capability']) {
+  const type = String(args['enable-capability'])
+  if (!args.bundle) { console.error('--bundle required with --enable-capability'); process.exit(1) }
+  const have = (await api('GET', `/v1/bundleIds/${args.bundle}/bundleIdCapabilities`)).data
+  if (have.some((c) => c.attributes.capabilityType === type)) console.log('capability already on:', type)
+  else {
+    await api('POST', '/v1/bundleIdCapabilities', { data: { type: 'bundleIdCapabilities', attributes: { capabilityType: type }, relationships: { bundleId: { data: { type: 'bundleIds', id: args.bundle } } } } })
+    console.log('capability enabled:', type)
+  }
+  if (!args.name) process.exit(0)
 }
 const certs = (await api('GET', '/v1/certificates?limit=200')).data
 if (args['list-certs']) {

@@ -432,6 +432,36 @@ struct TopicDetailView: View {
                         .allowsHitTesting(!busy)
                     }
 
+                    // Actively Read: talk it through by voice, say "I'm ready",
+                    // three questions — A- or better is star 1 plus a Peck level.
+                    // A topic declined for the daily pick can come back here.
+                    if let t = thread, t.stars < 1 {
+                        ActionChip(label: "Actively Read", systemImage: "book.fill", iconTint: ActivelyReadBanner.sky) {
+                            DeepLinkRouter.shared.requestActivelyRead(threadId: topicId, label: t.topic)
+                        }
+                        .opacity(busy ? 0.5 : 1)
+                        .allowsHitTesting(!busy)
+                        if t.arInactiveAt != nil {
+                            Button {
+                                Task {
+                                    try? await F2API.shared.setActivelyReadInactive(id: topicId, inactive: false)
+                                    thread?.arInactiveAt = nil
+                                    await ActivelyReadStore.shared.refresh()
+                                }
+                            } label: {
+                                Text("Back in daily picks")
+                                    .font(.system(size: 12.5, weight: .semibold))
+                                    .foregroundStyle(FeyndTheme.text2)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(FeyndTheme.surface, in: Capsule())
+                                    .overlay(Capsule().stroke(FeyndTheme.border, lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Not interested is on. Put this topic back in the daily picks")
+                        }
+                    }
+
                     ActionChip(label: "Flash", systemImage: "bolt.fill") {
                         flashPresented = true
                     }

@@ -3,6 +3,7 @@ import { getSessionUser } from '@/lib/f2/auth'
 import { ALL_TOPIC_KINDS, getThreadById, type TopicKind } from '@/lib/f2/threads'
 import { getSecondChanceState, listFlashCards } from '@/lib/f2/flash'
 import { f2Supabase } from '@/lib/f2/supabase'
+import { declineActivelyRead, undoDeclineActivelyRead } from '@/lib/f2/actively-read'
 
 export const runtime = 'nodejs'
 
@@ -59,6 +60,7 @@ export async function PATCH(
 
   // Pin/unpin — orthogonal to rename. A PATCH sets whichever field it carries.
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  let arChange: boolean | null = null
   if (typeof body.pinned === 'boolean') {
     update.pinned_at = body.pinned ? new Date().toISOString() : null
   }
@@ -66,6 +68,7 @@ export async function PATCH(
   // picks; false is the undo on the topic page.
   if (typeof body.ar_inactive === 'boolean') {
     update.ar_inactive_at = body.ar_inactive ? new Date().toISOString() : null
+    arChange = body.ar_inactive
   }
   if (typeof body.peck_excluded === 'boolean') {
     update.peck_excluded = body.peck_excluded
@@ -125,6 +128,10 @@ export async function PATCH(
   if (!data) {
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
+
+  // Actively Read: a decline/undo also settles or reopens today's pick.
+  if (arChange === true) await declineActivelyRead(user.id, id)
+  else if (arChange === false) await undoDeclineActivelyRead(user.id, id)
 
   // When the focus changed, tell the client how big the existing deck is so
   // it can kick off a rebuild (the deck was generated under the old focus).

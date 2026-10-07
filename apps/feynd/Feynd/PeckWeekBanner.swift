@@ -57,6 +57,12 @@ struct PeckWeekBanner: View {
         }
     }
 
+    /// Whether this banner has something to show (the slot shows one banner at a time).
+    static func isActive(_ state: JumboState?) -> Bool {
+        guard PeckWeek.atRisk(state), let state, let due = state.peckDue, let left = state.peckDaysLeft else { return false }
+        return UserDefaults.standard.string(forKey: "peckWeekBannerDismissed") != "\(due)|\(left)"
+    }
+
     private struct Warning {
         let streak: Int
         let daysLeft: Int

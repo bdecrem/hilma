@@ -17,6 +17,8 @@ struct MainTabsView: View {
     }()
     @State private var topicsPath = NavigationPath()
     @State private var flashPath = NavigationPath()
+    /// Today's Actively Read session, presented over either tab.
+    @State private var activelyRead: ActivelyReadLaunch?
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -121,6 +123,21 @@ struct MainTabsView: View {
         .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
             if let url = activity.webpageURL { route(url) }
         }
+        // Actively Read: the banner, a push tap, or feynd.cc/read/<id>.
+        .onChange(of: DeepLinkRouter.shared.activelyReadSignal) { openPendingActivelyRead() }
+        .fullScreenCover(item: $activelyRead) { launch in
+            ActivelyReadView(topicId: launch.threadId, topicLabel: launch.label)
+                .environment(session)
+        }
+        .task {
+            // Signed in and on the main UI: ask for notifications once, upload
+            // the push token, and load today's read for the banner slot.
+            PushRegistry.requestAndRegister()
+            await PushRegistry.upload()
+            await ActivelyReadStore.shared.refresh()
+            // A push tapped before the UI existed.
+            openPendingActivelyRead()
+        }
         #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
         // `simctl launch … -OpenURL dodo://peck` — drives route() without
         // SpringBoard's untappable "Open in Dodo?" dialog, so screenshot
@@ -130,6 +147,12 @@ struct MainTabsView: View {
                let url = URL(string: raw) {
                 UserDefaults.standard.removeObject(forKey: "OpenURL")
                 route(url)
+            }
+            // `-OpenActivelyRead <topic id>` — today's Actively Read session, as a push tap would.
+            if let id = UserDefaults.standard.string(forKey: "OpenActivelyRead") {
+                UserDefaults.standard.removeObject(forKey: "OpenActivelyRead")
+                try? await Task.sleep(for: .seconds(1))
+                DeepLinkRouter.shared.requestActivelyRead(threadId: id, label: nil)
             }
             // `-OpenTopic <id>` — push straight into a topic's detail screen.
             if let id = UserDefaults.standard.string(forKey: "OpenTopic") {
@@ -158,9 +181,30 @@ struct MainTabsView: View {
     /// answers already counted, so the user lands on the next question.
     private func route(_ url: URL) {
         let target = (url.host ?? "") + url.path
+        // https://feynd.cc/read/<topic id> (the daily text) or dodo://read/<id>.
+        let parts = target.split(separator: "/").map(String.init)
+        if let i = parts.firstIndex(where: { $0.lowercased() == "read" }), i + 1 < parts.count {
+            DeepLinkRouter.shared.requestActivelyRead(threadId: parts[i + 1], label: nil)
+            return
+        }
         if target.lowercased().contains("peck") {
             active = .flash
             DeepLinkRouter.shared.requestPeckPlay()
+        }
+    }
+
+    /// Present the pending Actively Read session. The label comes with the
+    /// banner; from a push or a link the topic list supplies it.
+    private func openPendingActivelyRead() {
+        guard let req = DeepLinkRouter.shared.consumeActivelyRead() else { return }
+        Task {
+            var label = req.label
+            if label == nil {
+                label = (try? await F2API.shared.listTopics())?.first(where: { $0.id == req.threadId })?.displayLabel
+            }
+            // A beat for any sheet or cover in the way to settle.
+            try? await Task.sleep(for: .milliseconds(350))
+            activelyRead = ActivelyReadLaunch(threadId: req.threadId, label: label ?? "Today's read")
         }
     }
 }

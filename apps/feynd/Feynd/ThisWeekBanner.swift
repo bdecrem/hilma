@@ -26,6 +26,12 @@ struct ThisWeekBanner: View {
         }
     }
 
+    /// Whether this banner has something to show (the slot shows one banner at a time).
+    static func isActive(_ topics: [F2Topic]) -> Bool {
+        guard UserDefaults.standard.string(forKey: "thisWeekBannerDismissed") != weekKey() else { return false }
+        return ThisWeekBanner(topics: topics).dueThisWeek != nil
+    }
+
     private func card(_ hit: (topic: F2Topic, due: Date)) -> some View {
         HStack(spacing: 11) {
             Image(systemName: "arrow.clockwise")

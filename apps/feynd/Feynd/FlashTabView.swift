@@ -84,11 +84,7 @@ struct FlashTabView: View {
                 // keep the classic framed chrome.
                 VStack(spacing: 0) {
                     classicTopBar
-                    PeckWeekBanner(state: state)
-                        .padding(.horizontal, 14)
-                        .padding(.top, 4)
-                        .padding(.bottom, 2)
-                    ThisWeekBanner(topics: bannerTopics)
+                    HomeBannerSlot(jumbo: state, topics: bannerTopics)
                         .padding(.horizontal, 14)
                         .padding(.top, 4)
                         .padding(.bottom, 2)
@@ -494,8 +490,7 @@ struct FlashTabView: View {
                 deckStackButton
                 xpPill
             }
-            PeckWeekBanner(state: state)
-            ThisWeekBanner(topics: bannerTopics)
+            HomeBannerSlot(jumbo: state, topics: bannerTopics)
             Spacer()
         }
         .padding(.horizontal, 14)

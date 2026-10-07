@@ -297,6 +297,47 @@ struct JumboState: Codable, Equatable {
     }
 }
 
+// MARK: - Actively Read
+
+/// Today's Actively Read pick: one unstarred topic a day (server, actively-read.ts).
+struct ActivelyReadPick: Codable, Equatable {
+    let day: String
+    let threadId: String
+    let topic: String
+    /// "passed" | "declined" once today's pick is settled; nil while open.
+    let resolved: String?
+
+    enum CodingKeys: String, CodingKey {
+        case day, topic, resolved
+        case threadId = "thread_id"
+    }
+}
+
+/// The verdict on an Actively Read voice session.
+struct ActivelyReadResult: Codable, Equatable {
+    /// "tested" | "declined" | "conversation"
+    let outcome: String
+    /// A+ … F; nil unless tested.
+    let grade: String?
+    let passed: Bool
+    let questionsAnswered: Int
+    let notes: String
+    let strengths: [String]
+    let weaknesses: [String]
+    let stars: Int
+    let peckLevelCleared: Int?
+    let xpAwarded: Int
+    let notInterested: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case outcome, grade, passed, notes, strengths, weaknesses, stars
+        case questionsAnswered = "questions_answered"
+        case peckLevelCleared = "peck_level_cleared"
+        case xpAwarded = "xp_awarded"
+        case notInterested = "not_interested"
+    }
+}
+
 // MARK: - Final Review
 
 struct FinalReviewResult: Codable, Equatable {

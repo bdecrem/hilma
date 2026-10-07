@@ -1085,6 +1085,46 @@ final class F2API {
         return res.cards
     }
 
+    // MARK: - Actively Read
+
+    /// Today's pick (chosen server-side if the noon send hasn't yet). Nil when
+    /// the user has no unstarred, undeclined topic.
+    func activelyReadPick() async throws -> ActivelyReadPick? {
+        struct Response: Decodable { let pick: ActivelyReadPick? }
+        let res: Response = try await get("/api/f2/actively-read")
+        return res.pick
+    }
+
+    /// "Not interested" from the banner or the push action.
+    func declineActivelyRead(threadId: String) async throws {
+        struct Body: Encodable { let thread_id: String; let action = "decline" }
+        let _: EmptyResponse = try await post("/api/f2/actively-read", body: Body(thread_id: threadId))
+    }
+
+    /// Topic page: take a topic out of (true) or back into (false) the daily picks.
+    func setActivelyReadInactive(id: String, inactive: Bool) async throws {
+        struct Body: Encodable { let ar_inactive: Bool }
+        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(ar_inactive: inactive))
+    }
+
+    /// Grade a finished Actively Read voice session.
+    func submitActivelyRead(topicId: String, voiceSessionId: String) async throws -> ActivelyReadResult {
+        struct Body: Encodable { let voice_session_id: String }
+        return try await post("/api/f2/topics/\(topicId)/actively-read", body: Body(voice_session_id: voiceSessionId))
+    }
+
+    // MARK: - Push
+
+    func registerPushToken(_ token: String, environment: String, bundleId: String) async throws {
+        struct Body: Encodable { let token: String; let environment: String; let bundle_id: String }
+        let _: EmptyResponse = try await post("/api/f2/push/register", body: Body(token: token, environment: environment, bundle_id: bundleId))
+    }
+
+    func unregisterPushToken(_ token: String) async throws {
+        struct Body: Encodable { let token: String }
+        let _: EmptyResponse = try await request("/api/f2/push/register", method: "DELETE", body: Body(token: token))
+    }
+
     /// Grade a finished Final Review voice session. A → star 3.
     func submitFinalReview(topicId: String, voiceSessionId: String) async throws -> FinalReviewResult {
         struct Body: Encodable { let voice_session_id: String }

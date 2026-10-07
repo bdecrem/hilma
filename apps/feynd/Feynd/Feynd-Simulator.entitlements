@@ -2,12 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Simulator only: push registration gets a real APNs sandbox token, so the
+	     token → server → APNs path is testable headlessly (-RegisterPushNow 1). -->
 	<key>aps-environment</key>
-	<string>$(APS_ENVIRONMENT)</string>
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:feynd.cc</string>
-		<string>applinks:www.feynd.cc</string>
-	</array>
+	<string>development</string>
 </dict>
 </plist>

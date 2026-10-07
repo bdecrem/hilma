@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct FeyndApp: App {
+    /// Push notifications (APNs registration, taps, the "Not interested" action).
+    @UIApplicationDelegateAdaptor(DodoAppDelegate.self) private var appDelegate
     @State private var session = Session()
     @AppStorage("colorSchemePreference") private var colorSchemeRaw = ColorSchemePreference.system.rawValue
 
