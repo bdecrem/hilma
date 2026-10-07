@@ -34,6 +34,23 @@ scp -q "$MINI:/tmp/dodo.xcarchive.tgz" "$OUT/" && tar xzf "$OUT/dodo.xcarchive.t
 GOT=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$OUT/dodo.xcarchive/Products/Applications/Feynd.app/Info.plist")
 [ "$GOT" = "$BUILD" ] || { echo "error: the mini archived build $GOT, project.yml says $BUILD" >&2; exit 1; }
 
+# The archive is UNSIGNED, and an unsigned app exports with no entitlements at
+# all: no aps-environment (push) and no associated domains (universal links —
+# builds 126 and 127 shipped without them). Sign it here first, nested
+# frameworks plain and the app with Feynd.entitlements (APS_ENVIRONMENT =
+# production) plus the identity keys; the export keeps what the signature carries.
+APP="$OUT/dodo.xcarchive/Products/Applications/Feynd.app"
+IDENTITY="Apple Distribution: Bart Decrem (274T5WCVD2)"
+ENT="$OUT/release.entitlements"
+sed 's/$(APS_ENVIRONMENT)/production/' Feynd/Feynd.entitlements > "$ENT"
+/usr/libexec/PlistBuddy -c "Add :application-identifier string 274T5WCVD2.com.bartdecrem.Feynd" \
+  -c "Add :com.apple.developer.team-identifier string 274T5WCVD2" \
+  -c "Add :get-task-allow bool false" -c "Add :beta-reports-active bool true" "$ENT" >/dev/null
+find "$APP/Frameworks" -maxdepth 1 \( -name "*.framework" -o -name "*.dylib" \) 2>/dev/null | while read -r f; do
+  codesign -f -s "$IDENTITY" --timestamp=none "$f" 2>&1 | grep -v "replacing existing signature" || true
+done
+codesign -f -s "$IDENTITY" --timestamp=none --entitlements "$ENT" "$APP" 2>&1 | grep -v "replacing existing signature" || true
+
 cat > "$OUT/export.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
