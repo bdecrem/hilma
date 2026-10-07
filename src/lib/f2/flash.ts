@@ -1045,11 +1045,12 @@ First classify the session:
 - outcome "declined": the user said they are not interested in this topic (or to skip it / take it off their list) and no test took place afterwards.
 - outcome "conversation": neither — they talked but never took the test and never declined.
 
-Then, ONLY for "tested", grade the user's answers to the test questions on this scale: A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F. Grade only what the USER said in answer to the test questions — the earlier conversation does not count, and anything the assistant explained during the conversation and the user merely repeated back word for word counts for little. Judge against the source material; outside knowledge that is correct counts, wrong claims count against them.${thread.study_focus ? `
+Then, ONLY for "tested", grade the user's answers to the test questions on this scale: A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F. Grade only what the USER said in answer to the test questions — the earlier conversation does not count. Using the source's own terms and facts is fine (that is what reading it looks like); what counts for little is repeating back, nearly word for word, an explanation Dodo gave earlier in this same conversation. Judge each answer against the question that was actually asked — never mark down for material the question did not ask about. Judge against the source material; outside knowledge that is correct counts, wrong claims count against them.${thread.study_focus ? `
 The user's study focus (grade only inside it): "${thread.study_focus}".` : ''}
-- A+ / A: all three answers correct and substantive — main idea plus real supporting detail, in their own words.
-- A-: all three correct and clear, one of them a little thin on detail.
-- B range: the core is there but one answer is shaky or two are thin.
+This test decides whether the topic counts as actively read — real understanding of the main ideas — not mastery of every detail.
+- A+ / A: all three answers correct, with the reasons or mechanisms and some supporting detail.
+- A-: all three answers correct and explained — the key reason or mechanism is there — with minor gaps in detail or precision.
+- B range: one answer wrong, missing its key reason, or vague; or several answers thin.
 - C range: roughly half right.
 - D / F: mostly wrong or unable to answer.
 A test with fewer than three answered questions cannot be above B+. For "declined" and "conversation" use grade null.

@@ -151,7 +151,7 @@ async function main() {
     const strong = await run('strong', async (turn, last) => {
       if (turn === 0) return 'I know he founded an empire, but tell me the main idea in a nutshell.'
       if (turn === 1) return "Okay, I'm ready."
-      return student('You studied this material well (you are a strong student): answer each question correctly, with specific supporting detail, in your own words.', [{ role: 'agent', content: last }])
+      return student('You studied this material well some days ago (you are a strong student): answer each question correctly, in your own words (never quote the material), with the key reason or mechanism and a supporting detail.', [{ role: 'agent', content: last }])
     })
     const sDodo = strong.filter((t) => t.role === 'assistant').map((t) => t.text).join('\n')
     check('voice: "I\'m ready" starts the three-question test', /three questions/i.test(sDodo), sDodo.slice(0, 600))
