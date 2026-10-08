@@ -43,19 +43,21 @@ const ACTS = {
     ['feet', 'Close-up of bare feet standing on a rough concrete floor, a crack running between them, hard light from above.'],
     ['stairs', 'A steep steel staircase inside a brutalist concrete building climbing into darkness, one caged bulb, worn steps.'],
     ['door', 'A heavy steel door in a raw concrete wall with a small square window glowing with light from the other side, night.'],
-    // The night is told by the room and the traces of bodies, never by a crowd
-    // (crowd shots read as a football match — 2026-10-08).
-    ['shadows', 'Long human shadows thrown onto a raw concrete wall by a single hard light, several overlapping silhouettes of dancers caught mid-movement, the people themselves out of frame, motion blur.'],
-    ['speakers', 'A towering stack of black bass speakers in a dark concrete hall, the speaker cones catching a thin rim of light, haze drifting in front, no people.'],
-    ['haze', 'Two hard beams of white light cutting diagonally through thick haze in a dark industrial hall with steel beams overhead, no people.'],
+    // The night is a flood rising through the empty building — no crowd (read as
+    // a football match) and no club (2026-10-08).
+    ['leak', 'Water streaming down a raw concrete wall from a crack near the ceiling at night, a dark wet stain spreading, one hard light from the side, no people.'],
+    ['flooded-hall', 'The vast empty concrete hall of a power station at night with a sheet of still black water covering the whole floor, the pillars and high windows reflected in it, no people.'],
+    ['flooded-stairs', 'A concrete stairwell at night half underwater, the lower steps disappearing into black water, a caged bulb reflected on the surface, no people.'],
     ['crack', 'Macro of a deep crack splitting a concrete floor, dust and small fragments at its edges, raking light.'],
     ['water', 'A person floating on their back in dark still water seen from directly above, arms spread wide, calm, ripples around the body, weightless.'],
     ['birds', 'A large flock of birds wheeling against a bright white overcast sky, scattered dark shapes, seen from below.'],
     ['beam', 'A single shaft of light falling through a high window into a dark empty hall, dust particles floating in the beam.'],
     ['morning', 'The same vast concrete hall at dawn, pale light pouring through the high windows onto an empty floor, a lone figure walking away toward a bright doorway, long shadow.'],
-    ['figure', 'A single dancer reduced to a silhouette, frozen by a stroboscope flash against total black, limbs blurred, the face not visible, smoke around the edges.'],
+    ['underwater', 'Looking up from under dark water toward the surface, shafts of pale light breaking through, a trail of bubbles rising, nothing else.'],
     ['condensation', 'Macro of condensation droplets gathering on a cold concrete ceiling and a steel pipe in the dark, one drop about to fall, raking light.'],
-    ['ripples', 'Concentric ripples on a shallow puddle on a concrete floor in the dark, shaken by bass, a single light reflected and broken up in the water.'],
+    ['ripples', 'Concentric ripples spreading across a shallow sheet of water on a concrete floor in the dark, a single light reflected and broken up in the water, no people, nobody in the frame.'],
+    ['surge', 'White water surging violently through a dark concrete corridor, spray frozen mid-air by a flash, the force of a flood, no people.'],
+    ['rebar', 'Broken concrete slab with twisted exposed rebar hanging over dark water, macro, raking light, drops falling from the steel.'],
   ],
   'act-iii': [ // OVERCLOCK — a machine pushed past its rating until it melts
     ['gears', 'Macro of an old clock mechanism, brass gears and a balance wheel, sharp detail, hard side light, black background.'],
