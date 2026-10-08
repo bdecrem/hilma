@@ -4,11 +4,14 @@
 // receiver. It finds a sleeper (the hats drop out: the city goes quiet, the
 // signal keeps rolling), the eye opens at the peak (bar 89: RECEIVED), and the
 // path runs backwards to the mast at dawn while the bass leaves and only the
-// kick, a heartbeat on a flat line, is left.
+// kick, a heartbeat, is left.
 //
-// The trace across the frame is the bass itself: an oscilloscope line whose
-// pitch follows the off-beat line (A, a glide to C, A, a glide to E, a glide
-// down to G) and whose harmonics grow as the filter opens.
+// The signal is a dot on a hairline route across the bottom of the frame, one
+// tick per place it passes. It pulses with the bass, crosses to the far end by
+// the peak, sends out a ring on every kick while it is received, travels back
+// during the close and blinks with the kick at the mast. On the right edge a TV
+// test band slips and tears on the bass accents. (Replaced the oscilloscope
+// trace of the bass line, which read too literally — 2026-10-08.)
 defineAct({
   id: 'act-i', number: 'I', title: 'SIGNAL',
   stills: { tower: '01-tower', lines: '02-lines', substation: '03-substation', street: '04-street', tunnel: '05-tunnel', servers: '06-servers', scope: '07-scope', window: '08-window', hand: '09-hand', 'eye-closed': '10-eye-closed', 'eye-open': '11-eye-open', dawn: '12-dawn' },
@@ -17,91 +20,125 @@ defineAct({
   fadeIn: 0.8, fadeOut: [232.5, 240.5],
 
   shots: [
-    { at: 0, still: 'tower', light: 'kick', floor: 0.03, level: 1.05, zoom: [1.0, 1.12], panY: [-0.3, 0.2], ramp: [0.5, 1], trace: { y: 0.66, amp: 0.35 } },
-    { at: 8, still: 'lines', light: 'kick', floor: 0.06, zoom: [1.05, 1.18], pan: [0.5, -0.4], flash: { list: ['tower'], prob: 0.22, mode: 'threshold' }, trace: { y: 0.62, amp: 0.4 } },
-    { at: 16, still: 'substation', mode: 'raster', light: 'kick', floor: 0.1, zoom: [1.0, 1.14], flash: { list: ['lines', 'tower'], prob: 0.2, frames: 1 }, glitch: 0.15, trace: { y: 0.3 } },
-    { at: 24, still: 'street', light: 'kick', floor: 0.12, zoom: [1.12, 1.0], pan: [-0.3, 0.3], flash: { list: ['substation', 'tunnel'], prob: 0.25, mode: 'dither' }, glitch: 0.2, trace: { y: 0.72 } },
-    { at: 32, still: 'tunnel', mode: 'dither', light: 'kick', floor: 0.14, zoom: [1.0, 1.45], pan: [0.2, 0.25], flash: { list: ['street', 'servers'], prob: 0.25 }, glitch: 0.25, trace: { y: 0.5, amp: 0.45 } },
-    { at: 40, still: 'servers', mode: 'raster', light: 'kick', floor: 0.15, zoom: [1.0, 1.55], flash: { list: ['scope', 'tunnel'], prob: 0.4, on: 'accent', mode: 'threshold' }, glitch: 0.35, trace: { y: 0.5, amp: 0.5 } },
+    { at: 0, still: 'tower', light: 'kick', floor: 0.03, level: 1.05, zoom: [1.0, 1.12], panY: [-0.3, 0.2], ramp: [0.5, 1] },
+    { at: 8, still: 'lines', light: 'kick', floor: 0.06, zoom: [1.05, 1.18], pan: [0.5, -0.4], flash: { list: ['tower'], prob: 0.22, mode: 'threshold' } },
+    { at: 16, still: 'substation', mode: 'raster', light: 'kick', floor: 0.1, zoom: [1.0, 1.14], flash: { list: ['lines', 'tower'], prob: 0.2, frames: 1 }, glitch: 0.15 },
+    { at: 24, still: 'street', light: 'kick', floor: 0.12, zoom: [1.12, 1.0], pan: [-0.3, 0.3], flash: { list: ['substation', 'tunnel'], prob: 0.25, mode: 'dither' }, glitch: 0.2 },
+    { at: 32, still: 'tunnel', mode: 'dither', light: 'kick', floor: 0.14, zoom: [1.0, 1.45], pan: [0.2, 0.25], flash: { list: ['street', 'servers'], prob: 0.25 }, glitch: 0.25 },
+    { at: 40, still: 'servers', mode: 'raster', light: 'kick', floor: 0.15, zoom: [1.0, 1.55], flash: { list: ['scope', 'tunnel'], prob: 0.4, on: 'accent', mode: 'threshold' }, glitch: 0.35 },
     // Hats out: the city goes quiet; the signal keeps searching.
-    { at: 48, still: 'scope', light: 'kick', floor: 0.4, zoom: [1.12, 1.32], contrast: 1.4, glitch: 0.08, trace: { y: 0.46, amp: 0.55, alpha: 1 } },
-    { at: 52, still: 'window', light: 'kick', floor: 0.32, zoom: [1.0, 1.12], pan: [-0.2, 0.2], glitch: 0.08, trace: { y: 0.82, amp: 0.3, alpha: 0.6 } },
-    { at: 56, still: 'hand', light: 'kick', floor: 0.12, zoom: [1.0, 1.22], flash: { list: ['tunnel', 'servers', 'street'], prob: 0.22, mode: 'dither' }, glitch: 0.3, trace: { y: 0.3, amp: 0.45 } },
-    { at: 64, montage: { list: ['eye-closed', 'hand'], every: 'bar' }, mode: 'raster', light: 'kick', floor: 0.15, zoom: [1.0, 1.16], glitch: 0.4, trace: { y: 0.5, amp: 0.55 } },
+    { at: 48, still: 'scope', light: 'kick', floor: 0.4, zoom: [1.12, 1.32], contrast: 1.4, glitch: 0.08 },
+    { at: 52, still: 'window', light: 'kick', floor: 0.32, zoom: [1.0, 1.12], pan: [-0.2, 0.2], glitch: 0.08 },
+    { at: 56, still: 'hand', light: 'kick', floor: 0.12, zoom: [1.0, 1.22], flash: { list: ['tunnel', 'servers', 'street'], prob: 0.22, mode: 'dither' }, glitch: 0.3 },
+    { at: 64, montage: { list: ['eye-closed', 'hand'], every: 'bar' }, mode: 'raster', light: 'kick', floor: 0.15, zoom: [1.0, 1.16], glitch: 0.4 },
     // The path again, backwards and fast, one place per beat.
-    { at: 72, montage: { list: ['eye-closed', 'window', 'servers', 'tunnel', 'street', 'substation', 'lines', 'tower'], every: 'beat' }, mode: 'threshold', light: 'kick', floor: 0.2, glitch: 0.5, trace: { y: 0.5, amp: 0.65 } },
-    { at: 80, still: 'eye-closed', light: 'kick', floor: 0.2, zoom: [1.1, 1.75], pan: [0, 0.15], flash: { list: ['eye-open'], prob: (f) => 0.1 + 0.6 * ((f.bar - 80) / 8), frames: 1, mode: 'threshold' }, glitch: 0.6, trace: { y: 0.5, amp: 0.75 } },
+    { at: 72, montage: { list: ['eye-closed', 'window', 'servers', 'tunnel', 'street', 'substation', 'lines', 'tower'], every: 'beat' }, mode: 'threshold', light: 'kick', floor: 0.2, glitch: 0.5 },
+    { at: 80, still: 'eye-closed', light: 'kick', floor: 0.2, zoom: [1.1, 1.75], pan: [0, 0.15], flash: { list: ['eye-open'], prob: (f) => 0.1 + 0.6 * ((f.bar - 80) / 8), frames: 1, mode: 'threshold' }, glitch: 0.6 },
     // The peak: RECEIVED.
-    { at: 88, still: 'eye-open', modes: { list: ['photo', 'threshold', 'photo', 'edges'], every: 'beat' }, light: 'kick', floor: 0.3, level: 1.3, zoom: [1.35, 1.0], glitch: 0.8, flash: { list: ['tower', 'servers', 'lines'], prob: 0.3, frames: 1, invert: true }, trace: { n: 5, amp: 0.7 } },
-    { at: 96, still: 'window', light: 'kick', floor: 0.15, ramp: [1, 0.3], zoom: [1.0, 1.2], flash: { list: ['eye-open'], prob: 0.16, frames: 1 }, glitch: 0.3, trace: { y: 0.82, amp: 0.5 } },
-    { at: 104, montage: { list: ['servers', 'tunnel', 'street', 'substation', 'lines', 'lines', 'tower', 'tower'], every: 'bar' }, mode: 'dither', light: 'kick', floor: 0.1, glitch: 0.2, trace: { y: 0.5, amp: 0.4 } },
+    { at: 88, still: 'eye-open', modes: { list: ['photo', 'threshold', 'photo', 'edges'], every: 'beat' }, light: 'kick', floor: 0.3, level: 1.3, zoom: [1.35, 1.0], glitch: 0.8, flash: { list: ['tower', 'servers', 'lines'], prob: 0.3, frames: 1, invert: true } },
+    { at: 96, still: 'window', light: 'kick', floor: 0.15, ramp: [1, 0.3], zoom: [1.0, 1.2], flash: { list: ['eye-open'], prob: 0.16, frames: 1 }, glitch: 0.3 },
+    { at: 104, montage: { list: ['servers', 'tunnel', 'street', 'substation', 'lines', 'lines', 'tower', 'tower'], every: 'bar' }, mode: 'dither', light: 'kick', floor: 0.1, glitch: 0.2 },
     // Bass out: only the heartbeat on a flat line, the mast at dawn.
-    { at: 112, still: 'dawn', light: 'kick', floor: 0.35, level: 0.9, zoom: [1.16, 1.05], trace: { mode: 'flat', y: 0.78 } },
-    { at: 120, still: 'dawn', light: 'kick', floor: 0.3, level: 0.85, zoom: [1.05, 1.0], ramp: [1, 0.55], trace: { mode: 'flat', y: 0.78, alpha: 0.5 } },
+    { at: 112, still: 'dawn', light: 'kick', floor: 0.35, level: 0.9, zoom: [1.16, 1.05] },
+    { at: 120, still: 'dawn', light: 'kick', floor: 0.3, level: 0.85, zoom: [1.05, 1.0], ramp: [1, 0.55] },
   ],
 
   text: [
     { from: 0.5, to: 7, str: 'OVERCLOCK', x: 0.045, y: 0.075, size: 18 },
     { from: 1.5, to: 7, str: 'ACT I — SIGNAL', x: 0.045, y: 0.11, size: 18, alpha: 0.75 },
-    { from: 16, to: 19, str: 'TRANSMISSION 01', x: 0.045, y: 0.86, size: 20 },
-    { from: 32, to: 35, str: 'LINE 7 / 380 KV', x: 0.045, y: 0.86, size: 20 },
+    { from: 16, to: 19, str: 'TRANSMISSION 01', x: 0.045, y: 0.8, size: 20 },
+    { from: 32, to: 35, str: 'LINE 7 / 380 KV', x: 0.045, y: 0.8, size: 20 },
     { from: 40, to: 48, str: 'SEARCHING', x: 0.5, y: 0.5, size: 26, align: 'center', type: 'static', blink: 'hat' },
-    { from: 48, to: 56, str: 'NO RECEIVER', x: 0.045, y: 0.86, size: 20 },
-    { from: 56, to: 60, str: 'RECEIVER FOUND', x: 0.045, y: 0.86, size: 20 },
-    { from: 64, to: 68, str: 'HANDSHAKE', x: 0.045, y: 0.86, size: 20 },
+    { from: 48, to: 56, str: 'NO RECEIVER', x: 0.045, y: 0.8, size: 20 },
+    { from: 56, to: 60, str: 'RECEIVER FOUND', x: 0.045, y: 0.8, size: 20 },
+    { from: 64, to: 68, str: 'HANDSHAKE', x: 0.045, y: 0.8, size: 20 },
     { from: 88, to: 90, str: 'RECEIVED', x: 0.5, y: 0.5, size: 230, font: 'big', align: 'center', type: 'slam' },
-    { from: 104, to: 108, str: 'END OF CARRIER', x: 0.045, y: 0.86, size: 20 },
+    { from: 104, to: 108, str: 'END OF CARRIER', x: 0.045, y: 0.8, size: 20 },
     { from: 121, to: 127.5, str: 'OVERCLOCK (ACT I) — SIGNAL', x: 0.045, y: 0.9, size: 18, alpha: 0.8 },
   ],
 
-  // The oscilloscope trace: the bass line drawn as a band-limited saw.
+  // The signal: a dot on its route, and a test band on the side.
   under(g, f, shot, H) {
-    const tr = { y: 0.5, amp: 0.5, alpha: 0.9, n: 1, mode: 'saw', ...(shot.trace || {}) };
     const { w, h } = H;
+    const x0 = w * 0.08, x1 = w * 0.92, y = h * 0.86;
+    // Where the signal is: out to the receiver by the peak, held there while
+    // it is received, back to the mast during the close, home after.
+    const smooth = (u) => u * u * (3 - 2 * u);
+    let u, moving = true;
+    if (f.bar < 88) u = f.bar / 88;
+    else if (f.bar < 96) { u = 1; moving = false; }
+    else if (f.bar < 112) u = 1 - smooth((f.bar - 96) / 16);
+    else { u = 0; moving = false; }
+    const x = x0 + (x1 - x0) * u;
+    const home = f.bar >= 112;
     g.save();
     g.globalCompositeOperation = 'lighter';
-    if (tr.mode === 'flat') { // the heartbeat: a flat line with a blip on each kick
-      const cy = tr.y * h, k = f.kickEnv;
-      g.strokeStyle = `rgba(255,255,255,${tr.alpha * (0.35 + 0.65 * k)})`; g.lineWidth = 1.4;
-      g.beginPath();
-      for (let x = 0; x <= w; x += 2) {
-        const d = (x - w * 0.5) / 18, blip = Math.exp(-d * d) * Math.sin(d * 2.4) * 60 * k;
-        x ? g.lineTo(x, cy - blip) : g.moveTo(x, cy - blip);
-      }
-      g.stroke(); g.restore(); return;
+
+    // The route: a hairline with one tick per place on the way.
+    g.fillStyle = 'rgba(255,255,255,0.16)';
+    g.fillRect(x0, y, x1 - x0, 1);
+    const STOPS = 8;
+    for (let i = 0; i < STOPS; i++) {
+      const tx = x0 + (x1 - x0) * (i / (STOPS - 1));
+      g.fillStyle = `rgba(255,255,255,${tx <= x + 0.5 ? 0.55 : 0.22})`;
+      g.fillRect(Math.round(tx), y - 4, 1, 9);
     }
-    // Pitch: A, glide to C, A, glide to E, glide down to G — the line's own notes.
-    const k = f.step % 16, within = f.t / H.STEP - f.step, R = (st) => Math.pow(2, st / 12);
-    const held = { 0: R(-2), 1: R(-2), 2: 1, 3: H.lerp(1, R(3), H.ease(within)), 4: R(3), 5: R(3), 6: 1, 7: 1, 8: 1, 9: 1, 10: 1, 11: H.lerp(1, R(7), H.ease(within)), 12: R(7), 13: R(7), 14: 1, 15: H.lerp(1, R(-2), H.ease(within)) };
-    const ratio = held[k];
-    const env = Math.min(1, f.acid * 1.15 + f.acidEnv * 0.35);
-    const K = Math.max(1, Math.round(1 + 22 * Math.pow(f.p, 1.4))); // harmonics open with the filter
-    const cycles = 3.2 * ratio;
-    for (let n = 0; n < tr.n; n++) {
-      const cy = tr.n > 1 ? h * (0.14 + 0.72 * n / (tr.n - 1)) : tr.y * h;
-      const A = tr.amp * h * 0.5 * env * (tr.n > 1 ? 0.45 : 1);
-      const phase = f.t * 2.1 + n * 1.3;
-      for (const [lw, a] of [[5, 0.12], [1.6, 0.95]]) {
-        g.strokeStyle = `rgba(255,255,255,${a * tr.alpha})`; g.lineWidth = lw;
-        g.beginPath();
-        for (let x = 0; x <= w; x += 2) {
-          const th = (x / w) * cycles * Math.PI * 2 + phase;
-          let s = 0; for (let q = 1; q <= K; q++) s += Math.sin(q * th) / q;
-          const y = cy - A * s * 0.64;
-          x ? g.lineTo(x, y) : g.moveTo(x, y);
-        }
-        g.stroke();
+
+    // The dot: pulses with each bass note, trails when it travels; at home it
+    // only shows on the kick, a heartbeat.
+    const pulse = Math.min(1, f.acidEnv * 1.2 + (f.sec.acid ? 0 : 0.2 * f.kickEnv));
+    const alpha = home ? Math.pow(f.kickEnv, 0.7) : 1;
+    if (moving && !home) {
+      const dir = f.bar >= 96 ? 1 : -1; // the trail points back along the way it came
+      for (let k = 1; k <= 12; k++) {
+        g.fillStyle = `rgba(255,255,255,${0.35 * (1 - k / 13)})`;
+        g.fillRect(x + dir * k * 3 - 1, y - 1, 2, 2);
+      }
+    }
+    const r = 2.6 + 3.4 * pulse;
+    const glow = g.createRadialGradient(x, y, 0, x, y, 6 + 18 * pulse);
+    glow.addColorStop(0, `rgba(255,255,255,${0.5 * alpha})`);
+    glow.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = glow;
+    g.fillRect(x - 30, y - 30, 60, 60);
+    g.fillStyle = `rgba(255,255,255,${alpha})`;
+    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    // On an accent the dot tears into a second, offset copy.
+    if (f.accEnv > 0.45 && !home) {
+      g.fillStyle = `rgba(255,255,255,${0.45 * f.accEnv})`;
+      g.beginPath(); g.arc(x + (f.rnd(31) - 0.5) * 18, y + (f.rnd(32) < 0.5 ? -7 : 7), r * 0.8, 0, Math.PI * 2); g.fill();
+    }
+    // Received: a ring goes out on every kick.
+    if (f.bar >= 88 && f.bar < 96 && f.kick) {
+      const age = f.t - f.kick.t;
+      if (age < 0.5) {
+        g.strokeStyle = `rgba(255,255,255,${0.7 * (1 - age / 0.5)})`;
+        g.lineWidth = 1.5;
+        g.beginPath(); g.arc(x, y, 6 + age * 170, 0, Math.PI * 2); g.stroke();
+      }
+    }
+
+    // The test band: grey bars stacked down the right edge, slipping and
+    // tearing on the accents; full strength at the peak, gone at home.
+    const bandA = f.bar < 8 ? (f.bar / 8) * 0.55 : f.bar >= 112 ? Math.max(0, 0.55 * (1 - (f.bar - 112) / 4)) : f.bar >= 88 && f.bar < 96 ? 0.95 : 0.55;
+    if (bandA > 0.01) {
+      const bx = w - 34, bw = 18, top = h * 0.2, bh = h * 0.6, BARS = 8;
+      const tear = f.accEnv > 0.35 ? f.accEnv : 0;
+      const r2 = H.rng(f.accent ? f.accent.n : 0, 77);
+      for (let i = 0; i < BARS; i++) {
+        let v = 235 - i * 30;
+        let dx = 0, dy = 0;
+        if (tear && r2() < 0.45) { dx = Math.round((r2() - 0.5) * 26 * tear); dy = Math.round((r2() - 0.5) * 10 * tear); if (r2() < 0.3) v = 255 - v; }
+        g.fillStyle = `rgba(${v},${v},${v},${bandA})`;
+        g.fillRect(bx + dx, top + i * (bh / BARS) + dy, bw, bh / BARS - 1);
+      }
+      // A thin torn copy beside it when an accent hits hard.
+      if (tear > 0.7) {
+        g.fillStyle = `rgba(255,255,255,${0.25 * tear})`;
+        g.fillRect(bx - 10 - Math.round(r2() * 8), top + Math.round(r2() * bh * 0.8), 3, Math.round(bh * (0.1 + r2() * 0.2)));
       }
     }
     g.restore();
-  },
-
-  // Readout: the carrier is the bass root; the bandwidth is the filter.
-  over(o, f, shot, H) {
-    if (f.bar >= 2 && f.bar < 112) {
-      const bw = Math.round(300 + 2600 * f.p * f.p);
-      H.text({ str: `CARRIER 110.0 HZ   BW ${String(bw).padStart(4, ' ')} HZ`, x: 0.045, y: 0.93, size: 16, alpha: 0.6 });
-    }
   },
 
   glitch(f) {

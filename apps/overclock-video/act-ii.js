@@ -7,7 +7,9 @@
 // floor gives way: weightless, water, birds. The kick's return at 89 is the
 // one peak — the count reads 1, everyone one body. Then dawn in the high
 // windows, people leaving by the stairs, and the figure alone again,
-// walking toward a doorway of light as the voice fades.
+// walking toward a doorway of light as the voice fades. No crowd shots: the
+// night is told by the room and the traces of bodies — shadows on concrete,
+// the speaker stack, beams in haze, one strobe-frozen silhouette (2026-10-08).
 //
 // The grid is the floor: a perspective plane that pulses with the kick,
 // cracks, falls away at 81, and slams back at 89.
@@ -17,7 +19,7 @@ const interp = (K, bar) => { for (let i = 1; i < K.length; i++) if (bar <= K[i][
 
 defineAct({
   id: 'act-ii', number: 'II', title: 'THE FLOOR',
-  stills: { hall: '01-hall', feet: '02-feet', stairs: '03-stairs', door: '04-door', crowd: '05-crowd', back: '06-back', hands: '07-hands', crack: '08-crack', water: '09-water', birds: '10-birds', beam: '11-beam', morning: '12-morning' },
+  stills: { hall: '01-hall', feet: '02-feet', stairs: '03-stairs', door: '04-door', shadows: '05-shadows', speakers: '06-speakers', haze: '07-haze', crack: '08-crack', water: '09-water', birds: '10-birds', beam: '11-beam', morning: '12-morning', figure: '13-figure', condensation: '14-condensation', ripples: '15-ripples' },
   acid: { onsets: [0, 1, 2, 3, 4, 6, 7, 8, 9, 10, 12, 13, 14, 15], accents: [0, 3, 6, 9, 12] },
   minFloor: 0.28, // pictures stay readable between kicks
   fadeIn: 1.5, fadeOut: [233, 240.5],
@@ -27,22 +29,22 @@ defineAct({
     { at: 0, still: 'hall', light: 'acid', floor: 0.06, level: 0.95, zoom: [1.0, 1.4], pan: [0, 0.12], panY: [0, 0.3], contrast: 1.3, grid: { alpha: 0.18 } },
     { at: 16, still: 'feet', light: 'kick', floor: 0.1, zoom: [1.12, 1.0], grid: { alpha: 0.5 }, flash: { list: ['hall'], prob: 0.15 } },
     { at: 20, still: 'hall', light: 'kick', floor: 0.1, zoom: [1.4, 1.5], pan: [0.12, 0.14], panY: [0.3, 0.35], grid: { alpha: 0.45 } },
-    { at: 24, still: 'stairs', mode: 'raster', light: 'kick', floor: 0.12, zoom: [1.0, 1.22], flash: { list: ['crowd'], prob: 0.12, frames: 1 }, grid: { alpha: 0.3 } },
-    { at: 28, still: 'door', light: 'kick', floor: 0.12, zoom: [1.0, 1.35], pan: [0, 0.25], panY: [0, -0.2], flash: { list: ['crowd', 'hands'], prob: 0.22, frames: 1 }, glitch: 0.15, grid: { alpha: 0.3 } },
-    // Inside: the crowd.
-    { at: 32, still: 'crowd', light: 'kick', floor: 0.14, zoom: [1.0, 1.14], flash: { list: ['back', 'hands'], prob: 0.25 }, glitch: 0.25, grid: { alpha: 0.4 } },
-    { at: 40, still: 'back', mode: 'raster', light: 'kick', floor: 0.12, zoom: [1.1, 1.28], flash: { list: ['crowd', 'hands'], prob: 0.3 }, glitch: 0.3, grid: { alpha: 0.35 } },
-    { at: 48, montage: { list: ['crowd', 'back'], every: 'half' }, modes: { list: ['photo', 'raster'], every: 'bar' }, light: 'kick', floor: 0.15, glitch: 0.35, grid: { alpha: 0.4 } },
-    { at: 56, montage: { list: ['hands', 'crowd', 'back'], every: 'beat' }, mode: 'threshold', light: 'kick', floor: 0.2, glitch: 0.45, grid: { alpha: 0.45 } },
-    { at: 64, montage: { list: ['crowd', 'hands', 'back', 'feet'], every: 'beat' }, modes: { list: ['photo', 'dither'], every: '2bar' }, light: 'kick', floor: 0.18, flash: { list: ['crack'], prob: 0.25, mode: 'threshold' }, glitch: 0.5, grid: { alpha: 0.5, crack: 0.4 } },
-    { at: 72, montage: { list: ['crack', 'crowd', 'crack', 'hands'], every: 'bar' }, light: 'kick', floor: 0.2, zoom: [1.0, 1.2], glitch: 0.6, grid: { alpha: 0.55, crack: 1, shake: 1 } },
+    { at: 24, still: 'stairs', mode: 'raster', light: 'kick', floor: 0.12, zoom: [1.0, 1.22], flash: { list: ['shadows'], prob: 0.12, frames: 1 }, grid: { alpha: 0.3 } },
+    { at: 28, still: 'door', light: 'kick', floor: 0.12, zoom: [1.0, 1.35], pan: [0, 0.25], panY: [0, -0.2], flash: { list: ['shadows', 'haze'], prob: 0.22, frames: 1 }, glitch: 0.15, grid: { alpha: 0.3 } },
+    // Inside: the room, and the bodies only as shadows and one silhouette.
+    { at: 32, still: 'haze', light: 'kick', floor: 0.14, zoom: [1.0, 1.14], flash: { list: ['shadows', 'speakers'], prob: 0.25 }, glitch: 0.25, grid: { alpha: 0.4 } },
+    { at: 40, still: 'shadows', mode: 'raster', light: 'kick', floor: 0.12, zoom: [1.0, 1.18], pan: [-0.3, 0.3], flash: { list: ['figure', 'haze'], prob: 0.3 }, glitch: 0.3, grid: { alpha: 0.35 } },
+    { at: 48, montage: { list: ['speakers', 'figure'], every: 'half' }, modes: { list: ['photo', 'raster'], every: 'bar' }, light: 'kick', floor: 0.15, glitch: 0.35, grid: { alpha: 0.4 } },
+    { at: 56, montage: { list: ['shadows', 'speakers', 'figure'], every: 'beat' }, mode: 'threshold', light: 'kick', floor: 0.2, glitch: 0.45, grid: { alpha: 0.45 } },
+    { at: 64, montage: { list: ['haze', 'shadows', 'figure', 'feet'], every: 'beat' }, modes: { list: ['photo', 'dither'], every: '2bar' }, light: 'kick', floor: 0.18, flash: { list: ['crack'], prob: 0.25, mode: 'threshold' }, glitch: 0.5, grid: { alpha: 0.5, crack: 0.4 } },
+    { at: 72, montage: { list: ['crack', 'ripples', 'condensation', 'shadows'], every: 'bar' }, light: 'kick', floor: 0.2, zoom: [1.0, 1.2], glitch: 0.6, grid: { alpha: 0.55, crack: 1, shake: 1 } },
     // The floor gives way.
     { at: 80, still: 'water', light: 'steady', level: 0.95, zoom: [1.0, 1.18], contrast: 1.15, grid: { fall: true } },
     { at: 84, still: 'birds', light: 'steady', level: 1.0, zoom: [1.0, 1.12], panY: [0.2, -0.2], contrast: 1.1 },
     { at: 86, still: 'water', mode: 'dither', light: 'steady', level: 0.9, zoom: [1.3, 1.0] },
     // It comes back: one body.
-    { at: 88, montage: { list: ['crowd', 'hands', 'back', 'crowd'], every: 'beat' }, modes: { list: ['threshold', 'photo'], every: 'beat' }, light: 'kick', floor: 0.3, level: 1.3, glitch: 0.85, grid: { alpha: 0.8, slam: true } },
-    { at: 96, still: 'beam', light: 'kick', floor: 0.2, zoom: [1.0, 1.18], flash: { list: ['crowd', 'hands'], prob: (f) => 0.3 * (1 - (f.bar - 96) / 8), frames: 1 }, glitch: 0.2, grid: { alpha: 0.3 } },
+    { at: 88, montage: { list: ['figure', 'shadows', 'speakers', 'haze'], every: 'beat' }, modes: { list: ['threshold', 'photo'], every: 'beat' }, light: 'kick', floor: 0.3, level: 1.3, glitch: 0.85, grid: { alpha: 0.8, slam: true } },
+    { at: 96, still: 'beam', light: 'kick', floor: 0.2, zoom: [1.0, 1.18], flash: { list: ['shadows', 'figure'], prob: (f) => 0.3 * (1 - (f.bar - 96) / 8), frames: 1 }, glitch: 0.2, grid: { alpha: 0.3 } },
     { at: 104, still: 'morning', light: 'kick', floor: 0.25, zoom: [1.0, 1.15], glitch: 0.1, grid: { alpha: 0.25 } },
     { at: 112, still: 'stairs', mode: 'raster', light: 'kick', floor: 0.15, zoom: [1.22, 1.0], grid: { alpha: 0.2 } },
     { at: 116, still: 'door', light: 'kick', floor: 0.15, zoom: [1.35, 1.0], grid: { alpha: 0.2 } },
