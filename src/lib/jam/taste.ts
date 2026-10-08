@@ -20,11 +20,12 @@
 //     agent's own units) — so a new track starts from their numbers.
 // Rows live in jam_votes (schemas 005 + 007); nothing is trained.
 
+import { completedText } from '@/lib/anthropic-response'
 import Anthropic from '@anthropic-ai/sdk'
 import { jamDb } from './db'
 
 export const TASTE_MODEL = process.env.JAM_TASTE_MODEL || 'claude-sonnet-5-5'
-export const MINER_MODEL = process.env.JAM_MINER_MODEL || 'claude-haiku-4-5-20251001'
+export const MINER_MODEL = process.env.JAM_MINER_MODEL || 'claude-haiku-5-5'
 /** Signals (votes, corrections, ratings, bounces …) before the first note. */
 export const TASTE_MIN_SIGNALS = 5
 /** New signals between rewrites of the note. */
@@ -304,14 +305,15 @@ export type Verdict = { kind: 'correction' | 'praise' | 'new' | 'unclear'; stren
 async function classify(input: { asked: string; calls: ToolCall[]; reply: string; now: string }): Promise<Verdict> {
   const res = await client().messages.create({
     model: MINER_MODEL,
-    max_tokens: 200,
+    max_tokens: 2048,
+    output_config: { effort: 'low' },
     system: MINER_SYSTEM,
     messages: [{
       role: 'user',
       content: `Previous request: ${JSON.stringify(squash(input.asked, 400))}\nAgent did: ${JSON.stringify(input.calls.slice(0, 20))}\nAgent said: ${JSON.stringify(squash(input.reply, 400))}\nNEW message: ${JSON.stringify(squash(input.now, 500))}`,
     }],
   })
-  const text = res.content.filter((b): b is Anthropic.TextBlock => b.type === 'text').map((b) => b.text).join('')
+  const text = completedText(res)
   const m = text.match(/\{[\s\S]*\}/)
   if (!m) throw new Error(`miner returned no JSON: ${text.slice(0, 120)}`)
   const j = JSON.parse(m[0]) as Partial<Verdict>

@@ -14,6 +14,7 @@
  * Does NOT affect the live site.
  */
 
+import { completedText } from '../src/lib/anthropic-response'
 import { promises as fs } from 'fs'
 import path from 'path'
 
@@ -42,7 +43,8 @@ async function callAnthropic(model: string, system: string, prompt: string): Pro
     },
     body: JSON.stringify({
       model,
-      max_tokens: 2048,
+      max_tokens: 4096,
+      output_config: { effort: 'low' },
       system,
       messages: [{ role: 'user', content: prompt }],
     }),
@@ -52,7 +54,7 @@ async function callAnthropic(model: string, system: string, prompt: string): Pro
     throw new Error(`Anthropic API ${res.status}: ${err}`)
   }
   const data = await res.json()
-  return data.content[0].text
+  return completedText(data)
 }
 
 // ── Step 1: Generate word dictionary ──
@@ -80,7 +82,7 @@ Return ONLY a JSON array of strings, no explanation.`
 
 async function generateWords(): Promise<string[]> {
   console.log('  generating word dictionary...')
-  const raw = await callAnthropic('claude-haiku-4-5-20251001', WORD_SYSTEM, WORD_PROMPT)
+  const raw = await callAnthropic('claude-haiku-5-5', WORD_SYSTEM, WORD_PROMPT)
   const match = raw.match(/\[[\s\S]*\]/)
   if (!match) throw new Error('Failed to parse word list from Haiku response')
   const words: string[] = JSON.parse(match[0])
@@ -176,7 +178,7 @@ function printGrid(grid: number[][]) {
 
 async function generateShape(concept: string): Promise<{ name: string; grid: number[][] } | null> {
   try {
-    const raw = await callAnthropic('claude-haiku-4-5-20251001', SHAPE_SYSTEM, SHAPE_PROMPT(concept))
+    const raw = await callAnthropic('claude-haiku-5-5', SHAPE_SYSTEM, SHAPE_PROMPT(concept))
     const match = raw.match(/\{[\s\S]*\}/)
     if (!match) return null
     const parsed = JSON.parse(match[0])

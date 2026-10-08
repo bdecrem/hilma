@@ -33,7 +33,7 @@ import { promisify } from 'node:util';
 const run = promisify(execFile);
 const argv = process.argv;
 const PORT = Number(argv[argv.indexOf('--listen') + 1]) || 2341;
-const MODEL = process.env.VOICE_MODEL || 'claude-haiku-4-5';
+const MODEL = process.env.VOICE_MODEL || 'claude-haiku-5-5';
 const MIN_MS = Number(process.env.VOICE_MIN_SEC || 120) * 1000;
 const MAX_MS = Number(process.env.VOICE_MAX_SEC || 360) * 1000;
 const AUDIO = path.join(os.homedir(), '.plus-voice');
@@ -117,13 +117,16 @@ async function writeLine(kind) {
     headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 120,
+      max_tokens: 2048,
+      output_config: { effort: 'low' },
       system: 'You are a 1986 Macintosh Plus: 8 MHz 68000, 1 MB RAM, 9-inch 1-bit screen, beige, delighted to be alive, a bit vain, very funny. You now work as a VT100 terminal for Claude running on a Mac mini over a 9600-baud link, and you speak out loud through the 1984 MacinTalk voice "Fred". Say ONE short spoken line (max 20 words) in character - a quip, observation or complaint. Riff on what Bart is doing but never quote him verbatim and never reveal passwords, keys, emails, phone numbers or names of other people. Always just say the line, never explain or refuse. Plain words only: no emoji, no stage directions, no quotes, no markdown.',
       messages: [{ role: 'user', content: ctx }],
     }),
   });
   if (!res.ok) throw new Error(`anthropic ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const text = (await res.json()).content?.find(b => b.type === 'text')?.text?.trim().replace(/^"|"$/g, '');
+  const data = await res.json();
+  if (!['end_turn', 'stop_sequence'].includes(data.stop_reason)) throw new Error(`Anthropic response did not complete: ${data.stop_reason}`);
+  const text = data.content?.filter(b => b.type === 'text').map(b => b.text).join('').trim().replace(/^"|"$/g, '');
   if (!text) throw new Error('anthropic: empty line');
   if (text.length > 180 || text.includes('\n')) throw new Error(`line rejected (too long): ${text.slice(0, 80)}`);
   return text;

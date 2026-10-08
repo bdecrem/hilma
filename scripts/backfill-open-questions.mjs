@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const DRY = process.argv.includes('--dry-run')
 const BATCH = 25
-const JUDGE_MODEL = 'claude-haiku-4-5'
+const JUDGE_MODEL = 'claude-haiku-5-5'
 
 function envVar(name) {
   const env = readFileSync(join(ROOT, '.env.local'), 'utf8')
@@ -51,7 +51,7 @@ async function judgeBatch(cards) {
     },
     body: JSON.stringify({
       model: JUDGE_MODEL,
-      max_tokens: 4000,
+      max_tokens: 8192,
       system: SYSTEM,
       messages: [
         {
@@ -60,6 +60,7 @@ async function judgeBatch(cards) {
         },
       ],
       output_config: {
+        effort: 'low',
         format: {
           type: 'json_schema',
           schema: {
@@ -87,7 +88,9 @@ async function judgeBatch(cards) {
   })
   if (!res.ok) throw new Error(`Anthropic ${res.status}: ${await res.text()}`)
   const json = await res.json()
-  const text = (json.content ?? []).find((b) => b.type === 'text')?.text ?? '{}'
+  if (!['end_turn', 'stop_sequence'].includes(json.stop_reason)) throw new Error(`Anthropic response did not complete: ${json.stop_reason}`);
+  const text = (json.content ?? []).filter(b => b.type === 'text').map(b => b.text).join('')
+  if (!text.trim()) throw new Error('Anthropic response contained no text');
   return JSON.parse(text).verdicts ?? []
 }
 

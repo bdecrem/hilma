@@ -14,6 +14,7 @@
  */
 
 import { sanitize } from './moltbook-sanitize.js'
+import { completedText } from '../src/lib/anthropic-response'
 
 const API_BASE = 'https://www.moltbook.com/api/v1'
 const RATE_LIMIT_MS = 30 * 60 * 1000
@@ -73,8 +74,9 @@ async function solveChallenge(challengeText: string): Promise<string> {
       'content-type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 50,
+      model: 'claude-haiku-5-5',
+      max_tokens: 2048,
+      output_config: { effort: 'low' },
       system: 'You solve obfuscated math problems. The text has scrambled letters but contains a simple arithmetic question about lobsters. Extract the numbers and operation, compute the answer. Respond with ONLY the number to 2 decimal places (e.g. "47.00"). Nothing else.',
       messages: [{ role: 'user', content: challengeText }],
     }),
@@ -86,7 +88,7 @@ async function solveChallenge(challengeText: string): Promise<string> {
   }
 
   const data = await res.json()
-  const raw = data.content?.[0]?.text?.trim() || '0.00'
+  const raw = completedText(data)
   console.log(`[moltbook] Raw answer: ${raw}`)
   // Extract just the final number (Claude sometimes shows work like "26 + 4 = 30.00")
   const numMatch = raw.match(/(\d+\.?\d*)(?:\s*$)/)

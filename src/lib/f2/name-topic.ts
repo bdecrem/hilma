@@ -6,9 +6,10 @@
 // can override the hint when the hint is unhelpful (e.g. a hostname,
 // "YouTube", clickbait, or marketing fluff).
 
+import { completedText } from '@/lib/anthropic-response'
 import Anthropic from '@anthropic-ai/sdk'
 
-const MODEL = 'claude-haiku-4-5'
+const MODEL = 'claude-haiku-5-5'
 const SAMPLE_CHARS = 4000
 
 let _client: Anthropic | null = null
@@ -48,12 +49,12 @@ export async function nameTopic(input: NameTopicInput): Promise<string | null> {
   try {
     const res = await anthropic().messages.create({
       model: MODEL,
-      max_tokens: 40,
+      max_tokens: 2048,
+      output_config: { effort: 'low' },
       system: INSTRUCTION,
       messages: [{ role: 'user', content: prompt }],
     })
-    const block = res.content[0]
-    const raw = block?.type === 'text' ? block.text : ''
+    const raw = completedText(res)
     const title = cleanTitle(raw)
     return title.length >= 3 && title.length <= 70 ? title : null
   } catch (err) {

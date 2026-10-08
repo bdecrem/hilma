@@ -1,3 +1,4 @@
+import { completedText } from '@/lib/anthropic-response'
 import { NextResponse } from 'next/server'
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -137,8 +138,9 @@ Be selective but not impossible. Accept roughly 30-40% of patterns. Reject pure 
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 150,
+        model: 'claude-haiku-5-5',
+        max_tokens: 2048,
+        output_config: { effort: 'low' },
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -150,7 +152,7 @@ Be selective but not impossible. Accept roughly 30-40% of patterns. Reject pure 
     }
 
     const data = await response.json()
-    const text = data.content?.[0]?.text || ''
+    const text = completedText(data)
 
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {

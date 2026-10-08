@@ -2,11 +2,12 @@
 // exchange. The note goes into the system prompt (src/lib/osai/prompt.ts)
 // and is shown to the reader in the chat panel, who can clear it.
 
+import { completedText } from '@/lib/anthropic-response'
 import Anthropic from '@anthropic-ai/sdk'
 import { FULL_NAME, type OsaiUser } from './auth'
 import { osaiDb } from './db'
 
-const MEMORY_MODEL = 'claude-haiku-4-5'
+const MEMORY_MODEL = 'claude-haiku-5-5'
 const MAX_NOTE_WORDS = 150
 
 let _client: Anthropic | null = null
@@ -43,7 +44,8 @@ export async function updateNotes(user: OsaiUser, current: string, userText: str
   try {
     const res = await client().messages.create({
       model: MEMORY_MODEL,
-      max_tokens: 600,
+      max_tokens: 3072,
+      output_config: { effort: 'low' },
       system: SYSTEM,
       messages: [
         {
@@ -61,7 +63,7 @@ export async function updateNotes(user: OsaiUser, current: string, userText: str
         },
       ],
     })
-    const text = res.content.find((b) => b.type === 'text')?.text.trim() ?? ''
+    const text = completedText(res, true)
     const next = text === '(empty)' ? '' : text
     if (next !== current.trim()) await setNotes(user, next)
   } catch (e) {

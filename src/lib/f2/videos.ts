@@ -15,9 +15,10 @@
 // model free-associate URLs, so durations and links are real. `excludeIds`
 // supports "give me 3 other ones" — already-shown videos never resurface.
 
+import { completedText } from '@/lib/anthropic-response'
 import Anthropic from '@anthropic-ai/sdk'
 
-const PLAN_MODEL = 'claude-haiku-4-5'
+const PLAN_MODEL = 'claude-haiku-5-5'
 const RANK_MODEL = 'claude-sonnet-5-5'
 
 // Length bands ("new short / medium / long"). Each band collects a slightly
@@ -127,12 +128,12 @@ async function planSearch(
   try {
     const res = await anthropic().messages.create({
       model: PLAN_MODEL,
-      max_tokens: 400,
+      max_tokens: 2048,
+      output_config: { effort: 'low' },
       system: planSystem(band),
       messages: [{ role: 'user', content: `Today is ${today}.\n\nRequest: ${request}` }],
     })
-    const block = res.content.find((b) => b.type === 'text')
-    const raw = block?.type === 'text' ? block.text : ''
+    const raw = completedText(res)
     const parsed = extractJson(raw) as Partial<SearchPlan> | null
     if (!parsed || !Array.isArray(parsed.queries) || parsed.queries.length === 0) return null
     return {

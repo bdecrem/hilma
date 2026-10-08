@@ -1,8 +1,9 @@
+import { completedText } from '@/lib/anthropic-response'
 import Anthropic from '@anthropic-ai/sdk'
 
 // Grades one free-text recall attempt against the card's canonical answer.
 // Haiku — it's a tight comparison task, called once per card per review.
-const MODEL = 'claude-haiku-4-5'
+const MODEL = 'claude-haiku-5-5'
 
 const GRADE_SCHEMA = {
   type: 'object',
@@ -63,13 +64,12 @@ The user's answer (typed from memory): ${input.userAnswer || '(blank)'}`
 
   const res = await anthropic().messages.create({
     model: MODEL,
-    max_tokens: 200,
+    max_tokens: 2048,
     system,
-    output_config: { format: { type: 'json_schema', schema: GRADE_SCHEMA } },
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: GRADE_SCHEMA } },
     messages: [{ role: 'user', content: user }],
   })
-  const block = res.content.find((b) => b.type === 'text')
-  const raw = block?.type === 'text' ? block.text.trim() : ''
+  const raw = completedText(res)
   const parsed = JSON.parse(raw) as { grade: number; feedback: string }
   const grade = ([0, 1, 2].includes(parsed.grade) ? parsed.grade : 1) as 0 | 1 | 2
   return { grade, feedback: String(parsed.feedback ?? '').slice(0, 300) }

@@ -58,7 +58,7 @@ Pros/cons tables and two-column bullet tables become lists.
   `osai_users` and replaces the shared passcode for that reader until they
   remove it from the same dialog.
 - Each reader has a chat history (`osai_messages`) and a memory note
-  (`osai_memory.notes`). After every reply, `claude-haiku-4-5` folds the
+  (`osai_memory.notes`). After every reply, `claude-haiku-5-5` folds the
   exchange into the note (≤150 words); the note is shown in the chat panel
   under "What it remembers about you" and can be cleared there.
 

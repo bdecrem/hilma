@@ -1,3 +1,4 @@
+import { completedText } from '@/lib/anthropic-response'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
@@ -27,15 +28,16 @@ async function callHaiku(apiKey: string, system: string, prompt: string): Promis
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 4096,
+      model: 'claude-haiku-5-5',
+      max_tokens: 8192,
+      output_config: { effort: 'low' },
       system,
       messages: [{ role: 'user', content: prompt }],
     }),
   })
   if (!res.ok) throw new Error(`Haiku ${res.status}`)
   const data = await res.json()
-  return data.content[0].text
+  return completedText(data)
 }
 
 async function searchWeb(query: string): Promise<string[]> {

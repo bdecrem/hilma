@@ -1,3 +1,4 @@
+import { completedText } from '@/lib/anthropic-response'
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { buildFullContent, type F2Thread } from '@/lib/f2/threads'
@@ -6,7 +7,7 @@ import { buildFullContent, type F2Thread } from '@/lib/f2/threads'
 // in mind WHILE reading/watching/listening, generated the moment a source
 // lands — before the user consumes it. Reading with a question in mind is
 // active reading; that's the entire feature.
-const MODEL = 'claude-haiku-4-5'
+const MODEL = 'claude-haiku-5-5'
 const MAX_SOURCE_CHARS = 30_000
 
 const PRIMER_SCHEMA = {
@@ -51,13 +52,12 @@ Write the 3 questions.`
 
   const res = await anthropic().messages.create({
     model: MODEL,
-    max_tokens: 300,
+    max_tokens: 2048,
     system,
-    output_config: { format: { type: 'json_schema', schema: PRIMER_SCHEMA } },
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: PRIMER_SCHEMA } },
     messages: [{ role: 'user', content: user }],
   })
-  const block = res.content.find((b) => b.type === 'text')
-  const raw = block?.type === 'text' ? block.text.trim() : ''
+  const raw = completedText(res)
   const parsed = raw ? (JSON.parse(raw) as { questions?: string[] }) : null
   return (parsed?.questions ?? []).filter((q) => q.trim()).slice(0, 3)
 }

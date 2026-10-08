@@ -466,6 +466,15 @@ generation ships, move everything in one pass (code defaults, this file,
   and room for thinking plus the newer tokenizer. Read text blocks by type and
   reject refusals/truncation before storing results. Omit sampling parameters
   and assistant prefill. Guide: https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide
+  Every Haiku call site moved on 2026-10-08 (the F2/F3 judges, name-topic,
+  video planning, the jam taste miner, the osai memory note, the nowwhat routes,
+  the macplus voice line, the backfill / quiz-me / moltbook scripts) reads the
+  reply through `completedText()` in `src/lib/anthropic-response.ts`: it throws
+  on any `stop_reason` but `end_turn`/`stop_sequence` and joins the text blocks,
+  so a refusal or a thinking-only truncation never becomes a title, grade or
+  note. `node scripts/haiku-migration-check.cjs` runs every call site against
+  mocked thinking-first, refusal and truncated replies — run it after touching
+  one, and add the new function to its `cases` list.
 - **Sonnet 5.5 request shape** (live probes, 2026-09-28): `thinking:
   { type: 'disabled' }` is a 400 — use `{ type: 'between_tools' }` (lowest
   setting, plain text back; the SDK types lack it, so cast `as never`) or omit
@@ -475,8 +484,9 @@ generation ships, move everything in one pass (code defaults, this file,
   or `output_config.format` when the tool only existed to get JSON;
   `temperature` / `top_p` / `top_k` stay a 400.
 - Not covered by the 2026-09-19 pass (retired one-offs, left as they were):
-  `scripts/` Amber/noon/moltbook scripts, `apps/macplus/agent-*`,
-  `apps/design-agent`. Move them if they come back to life.
+  `scripts/` Amber/noon scripts, `apps/macplus/agent`, `apps/design-agent`.
+  Move them if they come back to life. (The moltbook script and
+  `apps/macplus/agent-voice` were moved to Haiku 5.5 on 2026-10-08.)
 
 ## Sending Email
 

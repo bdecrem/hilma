@@ -6,6 +6,7 @@
 // across all topics) feed the level map. Career state is derived entirely
 // from f2_flash_sets history — only XP is stored (f2_users.xp).
 
+import { completedText } from '@/lib/anthropic-response'
 import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from './supabase'
 import { getDailyStreak, markPeckWeek } from './streak'
@@ -1105,7 +1106,7 @@ Classify and grade the session.`,
   }
 }
 
-const JUDGE_MODEL = 'claude-haiku-4-5'
+const JUDGE_MODEL = 'claude-haiku-5-5'
 
 /// The Final Review (and its web-search verify pass) grades once per exam
 /// on a huge context, and the verdict gates a mastery star — that's a
@@ -1139,23 +1140,24 @@ async function judgeJson<T>(
       model,
       max_tokens: 16000,
       system,
-      output_config: { format: { type: 'json_schema', schema } },
+      output_config: { ...(model === JUDGE_MODEL ? { effort: 'low' as const } : {}), format: { type: 'json_schema', schema } },
       messages: [{ role: 'user', content: user }],
     })
-    const block = res.content.find((b) => b.type === 'text')
-    const raw = block?.type === 'text' ? block.text.trim() : ''
-    if (raw) {
-      try {
-        return JSON.parse(raw) as T
-      } catch (e) {
-        lastErr = `unparseable JSON (stop_reason=${res.stop_reason}): ${raw.slice(0, 200)} — ${e}`
-      }
-    } else {
+    // completedText throws on a refusal, a truncation (thinking counts against
+    // the budget) or a reply with no text — a half-written verdict is never parsed.
+    let raw = ''
+    try {
+      raw = completedText(res)
+      return JSON.parse(raw) as T
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
       const detail =
         res.stop_reason === 'refusal' && res.stop_details
           ? ` category=${res.stop_details.category ?? 'null'} ${res.stop_details.explanation ?? ''}`
           : ''
-      lastErr = `empty response (stop_reason=${res.stop_reason}${detail}, blocks=${res.content.map((b) => b.type).join(',') || 'none'})`
+      lastErr = raw
+        ? `unparseable JSON (stop_reason=${res.stop_reason}): ${raw.slice(0, 200)} — ${msg}`
+        : `${msg}${detail} (blocks=${res.content.map((b) => b.type).join(',') || 'none'})`
     }
     console.error(`[f2/flash] judgeJson attempt ${attempt + 1} on ${model}: ${lastErr}`)
   }

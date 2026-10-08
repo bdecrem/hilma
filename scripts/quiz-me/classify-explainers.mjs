@@ -60,8 +60,9 @@ async function classify(conv) {
   const text = preview(conv);
   if (!text.trim()) return { isExplainer: false, topic: null, reason: 'empty' };
   const r = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 200,
+    model: 'claude-haiku-5-5',
+    max_tokens: 2048,
+    output_config: { effort: 'low' },
     system: [{
       type: 'text',
       text: `You classify Claude conversations. An "explainer" is one where the user asked Claude to explain, teach, or define a concept (e.g. "what are hormones", "explain gradient descent", "how does X work"), AND Claude responded with a substantive conceptual explanation. NOT explainers: coding tasks, writing help, debugging, casual chat, edits, "fix this", "write X". Borderline cases (how-to guides, tutorials for using a tool) are NOT explainers unless they explain a concept. Respond ONLY with JSON: {"is_explainer": true|false, "topic": "short phrase" or null, "reason": "one short sentence"}`,
@@ -69,7 +70,9 @@ async function classify(conv) {
     }],
     messages: [{ role: 'user', content: text }],
   });
-  const raw = r.content[0]?.text ?? '{}';
+  if (!['end_turn', 'stop_sequence'].includes(r.stop_reason)) throw new Error(`Anthropic response did not complete: ${r.stop_reason}`);
+  const raw = r.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  if (!raw.trim()) throw new Error('Anthropic response contained no text');
   const json = raw.match(/\{[\s\S]*\}/)?.[0] ?? '{}';
   try {
     const parsed = JSON.parse(json);
