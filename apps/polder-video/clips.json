@@ -232,7 +232,8 @@
   "year": 1920,
   "shot": 15,
   "seconds": 7.8,
-  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000146320-0000154120.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00"
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000146320-0000154120.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00",
+  "crop": "1440:1072:240:4"
  },
  "great-day": {
   "id": "28bd64d6-4aad-5967-bfd1-2531b37a790e",
@@ -272,7 +273,8 @@
   "shot": 38,
   "seconds": 32.52,
   "out": 20,
-  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000285080-0000317600.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00"
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000285080-0000317600.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00",
+  "crop": "1440:1072:240:4"
  },
  "cows": {
   "id": "f4555259-4848-58de-ab5f-3740b13ec830",
@@ -357,7 +359,8 @@
   "shot": 1,
   "seconds": 25.46,
   "out": 20,
-  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/293c62d6-6b7b-5957-916d-ea4194ab8741/v5-windowed-clip-split-1/clips/bc9eeed5-d30b-5aa7-a1a8-6662dc267ac7.mp4?v=2026-08-24%2023%3A04%3A24.072855%2B00"
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/293c62d6-6b7b-5957-916d-ea4194ab8741/v5-windowed-clip-split-1/clips/bc9eeed5-d30b-5aa7-a1a8-6662dc267ac7.mp4?v=2026-08-24%2023%3A04%3A24.072855%2B00",
+  "crop": "1440:1072:240:4"
  },
  "skaters-couple": {
   "id": "ebaa90f1-5c53-5782-8718-1dd64f3c3a31",
@@ -375,7 +378,8 @@
   "year": 1923,
   "shot": 7,
   "seconds": 8,
-  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/ijs-in-holland/clips/0000225240-0000233238.mp4?v=2026-08-24%2023%3A04%3A24.072855%2B00"
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/ijs-in-holland/clips/0000225240-0000233238.mp4?v=2026-08-24%2023%3A04%3A24.072855%2B00",
+  "crop": "1440:1072:240:4"
  },
  "skating-canal": {
   "id": "6db13759-3ca9-5128-a7d9-aa8a4f717fb4",
@@ -384,7 +388,8 @@
   "year": 1920,
   "shot": 57,
   "seconds": 8.16,
-  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000546080-0000554240.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00"
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000546080-0000554240.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00",
+  "crop": "1440:1072:240:4"
  },
  "windmill": {
   "id": "bfe6b899-ed3f-509d-ad34-61aa3019c180",

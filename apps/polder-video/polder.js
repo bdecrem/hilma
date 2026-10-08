@@ -20,8 +20,8 @@ const interp = (K, bar) => { for (let i = 1; i < K.length; i++) if (bar <= K[i][
 
 defineAct({
   id: 'polder', title: 'POLDER',
-  minFloor: 0.5, speed: 0.8, loop: 'pingpong', damage: 0.25, grain: 0.16, scan: 0.5, weave: 1.2, prints: 0.9, echoWindow: 0.16,
-  fadeIn: 2, fadeOut: [247, 253],
+  minFloor: 0.5, speed: 0.8, loop: 'pingpong', damage: 0.25, grain: 0.16, scan: 0.5, weave: 1.2, prints: 0.7, echoWindow: 0.16,
+  fadeIn: 2, fadeOut: [249.5, 253.5],
 
   shots: [
     // Dawn: the sea, the drone, the chord thrown into the delay.
@@ -44,8 +44,8 @@ defineAct({
     { at: 44, clip: 'dike-canal', light: 'kick', floor: 0.55, speed: 0.8, zoom: [1.0, 1.12], dissolve: 1, glitch: 0.12, water: 1 },
     { at: 46, clip: 'cyclist', light: 'kick', floor: 0.55, speed: 0.8, zoom: [1.0, 1.08], dissolve: 0.5, glitch: 0.12, water: 1 },
     // The throws: the sea pressing at the gap — only the echoes of the chord remain.
-    { at: 48, clip: 'current', offset: 6, light: 'kick', floor: 0.45, speed: 0.7, zoom: [1.0, 1.18], dissolve: 1, prints: 1.4, glitch: 0.2, water: 1 },
-    { at: 52, clip: 'current-2', light: 'kick', floor: 0.45, speed: 0.7, zoom: [1.18, 1.0], dissolve: 1.5, prints: 1.4, glitch: 0.2, water: 1 },
+    { at: 48, clip: 'current', offset: 6, light: 'kick', floor: 0.45, speed: 0.7, zoom: [1.0, 1.18], dissolve: 1, prints: 1.1, glitch: 0.2, water: 1 },
+    { at: 52, clip: 'current-2', light: 'kick', floor: 0.45, speed: 0.7, zoom: [1.18, 1.0], dissolve: 1.5, prints: 1.1, glitch: 0.2, water: 1 },
     // The work: cranes, clay, the barge dumping.
     { at: 56, clip: 'cranes', light: 'kick', floor: 0.55, speed: 0.85, zoom: [1.0, 1.1], pan: [0.2, -0.2], dissolve: 1, glitch: 0.2, water: 1 },
     { at: 60, clip: 'bucket', light: 'kick', floor: 0.55, speed: 0.85, zoom: [1.0, 1.15], dissolve: 1, glitch: 0.25, flash: { list: ['splash'], prob: 0.2, frames: 2 }, water: 1 },
@@ -67,17 +67,17 @@ defineAct({
     // The dub mix: the evening. A boat past the pier light, the steamer, a sail.
     { at: 96, clip: 'village-canal', light: 'kick', floor: 0.55, speed: 0.8, zoom: [1.0, 1.1], dissolve: 1.5, water: 1 },
     { at: 100, clip: 'pier-light', offset: 2, light: 'kick', floor: 0.55, speed: 0.8, zoom: [1.0, 1.12], dissolve: 1.5, water: 1 },
-    { at: 104, clip: 'steamer', light: 'kick', floor: 0.5, speed: 0.75, zoom: [1.0, 1.1], dissolve: 2, prints: 1.3, water: 1 },
-    { at: 108, clip: 'sea-piers', offset: 8, light: 'kick', floor: 0.5, speed: 0.6, zoom: [1.08, 1.0], dissolve: 2, prints: 1.3, contrast: 1.1, water: 1 },
-    { at: 110, clip: 'sail-silhouette', light: 'kick', floor: 0.5, speed: 0.6, zoom: [1.0, 1.1], dissolve: 1, prints: 1.3, water: 1 },
+    { at: 104, clip: 'steamer', light: 'kick', floor: 0.5, speed: 0.75, zoom: [1.0, 1.1], dissolve: 2, prints: 1.0, water: 1 },
+    { at: 108, clip: 'sea-piers', offset: 8, light: 'kick', floor: 0.5, speed: 0.6, zoom: [1.08, 1.0], dissolve: 2, prints: 1.0, contrast: 1.1, water: 1 },
+    { at: 110, clip: 'sail-silhouette', light: 'kick', floor: 0.5, speed: 0.6, zoom: [1.0, 1.1], dissolve: 1, prints: 1.0, water: 1 },
     // The sub leaves: the land dry and quiet; the water freezes.
     { at: 112, clip: 'church-land', offset: 6, light: 'kick', floor: 0.55, speed: 0.75, zoom: [1.0, 1.12], dissolve: 2, water: 0.4 },
     { at: 116, clip: 'still-water', offset: 3, light: 'kick', floor: 0.55, speed: 0.7, zoom: [1.1, 1.0], dissolve: 2, contrast: 1.1, water: 0.3 },
     { at: 118, clip: 'skating-canal', light: 'kick', floor: 0.55, speed: 0.75, zoom: [1.0, 1.1], dissolve: 2, water: 0.2 },
     // The kick leaves, the drone fades: skaters, one skater, the sea.
     { at: 120, clip: 'skaters-park', light: 'steady', level: 0.9, speed: 0.7, zoom: [1.0, 1.1], dissolve: 2, water: 0.1 },
-    { at: 122, clip: 'skater', light: 'steady', level: 0.9, speed: 0.65, zoom: [1.0, 1.14], pan: [0.1, -0.1], dissolve: 2, contrast: 1.1, water: 0 },
-    { at: 126, clip: 'sea-far', offset: 8, light: 'steady', level: 0.8, speed: 0.5, zoom: [1.0, 1.06], dissolve: 2, contrast: 1.05, water: 0 },
+    { at: 121.5, clip: 'skater', light: 'steady', level: 0.9, speed: 0.65, zoom: [1.0, 1.14], pan: [0.1, -0.1], dissolve: 1.5, contrast: 1.1, water: 0 },
+    { at: 124.5, clip: 'sea-far', offset: 8, light: 'steady', level: 0.8, speed: 0.5, zoom: [1.0, 1.06], dissolve: 2, contrast: 1.05, water: 0 },
   ],
 
   text: [

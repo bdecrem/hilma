@@ -107,7 +107,7 @@ if (cmd === 'search') {
       if (c.in) args.push('-ss', String(c.in));
       args.push('-i', mp4);
       if (c.out) args.push('-t', String(c.out - (c.in || 0)));
-      args.push('-vf', `fps=${FPS},scale=960:-2:flags=lanczos,format=gray`, '-q:v', '4', path.join(frames, '%04d.jpg'));
+      args.push('-vf', `${c.crop ? `crop=${c.crop},` : ''}fps=${FPS},scale=960:-2:flags=lanczos,format=gray`, '-q:v', '4', path.join(frames, '%04d.jpg'));
       const p = spawnSync('ffmpeg', args, { encoding: 'utf8' });
       if (p.status !== 0) throw new Error(`${name}: ${p.stderr.slice(-300)}`);
     }

@@ -364,13 +364,20 @@
     FOOT = await (await fetch('footage/manifest.json')).json();
     for (const name of new Set([...ACT.shots.flatMap((s) => s.clip ? [s.clip] : s.montage.list)])) {
       if (!FOOT[name]) throw new Error(`clip "${name}" is not in footage/manifest.json — run archive.mjs fetch`);
-      // Gain so the brightest 2% of the first frame reaches ~225 (never down, at most ×2.2; the act can pin one).
-      const img = await loadFrame(name, 1);
-      const c = mk(160, 90), x = c.getContext('2d'); x.drawImage(img, 0, 0, 160, 90);
-      const d = x.getImageData(0, 0, 160, 90).data, v = [];
-      for (let i = 0; i < d.length; i += 4) v.push(d[i]);
-      v.sort((a, b) => a - b);
-      GAIN[name] = ACT.gain?.[name] ?? Math.min(2.2, Math.max(1, 225 / Math.max(1, v[Math.floor(v.length * 0.98)])));
+      // Gain so the brightest 2% of the picture reaches ~225 (never down, at most ×2.2; the act can pin one) —
+      // measured on four frames across the clip and the smallest wins, so a clip that opens on a title card or a
+      // black frame does not blow out later.
+      let gain = 2.2;
+      const n = FOOT[name].frames;
+      for (const idx of [1, Math.round(n * 0.3), Math.round(n * 0.6), n].map((i) => Math.max(1, Math.min(n, i)))) {
+        const img = await loadFrame(name, idx);
+        const c = mk(160, 90), x = c.getContext('2d'); x.drawImage(img, 0, 0, 160, 90);
+        const d = x.getImageData(0, 0, 160, 90).data, v = [];
+        for (let i = 0; i < d.length; i += 4) v.push(d[i]);
+        v.sort((a, b) => a - b);
+        gain = Math.min(gain, Math.max(1, 225 / Math.max(1, v[Math.floor(v.length * 0.98)])));
+      }
+      GAIN[name] = ACT.gain?.[name] ?? gain;
     }
     window.DURATION = S.duration; window.FPS = S.fps; window.renderAt = renderAt; window.prepare = prepare;
     window.GAINS = GAIN;
