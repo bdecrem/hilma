@@ -1,0 +1,435 @@
+{
+ "sea-dawn": {
+  "id": "4470cfba-87aa-5d69-8863-d65428ac0ed4",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 2,
+  "seconds": 22.48,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000054120-0000076600.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "sea-waves": {
+  "id": "ab9abc06-051a-5945-b2e0-4b61687fa32b",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 1,
+  "seconds": 47.6,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000006520-0000054120.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "dike-edge": {
+  "id": "3820a87e-073f-5ed9-b807-a0d4f9105deb",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 8,
+  "seconds": 13.8,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000117760-0000131560.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "dike-road": {
+  "id": "6fb4d072-127c-51bc-8a0d-269068e08802",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 23,
+  "seconds": 13.2,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000305240-0000318440.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "canal-farm": {
+  "id": "014ffda4-be00-5c49-b4c2-1730c0d0a307",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 30,
+  "seconds": 21.56,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000373200-0000394760.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "canal-trees": {
+  "id": "e48b47e8-4cfb-5356-92df-68b01c359d00",
+  "source": "uitstapje-naar-de-kager-plassen",
+  "title": "Uitstapje naar de Kager-plassen",
+  "year": 1922,
+  "shot": 1,
+  "seconds": 16.6,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/uitstapje-naar-de-kager-plassen/clips/0000004160-0000020760.mp4?v=2026-08-24%2023%3A06%3A23.528304%2B00"
+ },
+ "reeds-dusk": {
+  "id": "72f8e10b-3c48-5c13-9f0b-ee5c918fd566",
+  "source": "zuivel-friesche-coop-fabriek",
+  "title": "Zuivel Friesche Coop. fabriek",
+  "year": 1923,
+  "shot": 0,
+  "seconds": 27.28,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuivel-friesche-coop-fabriek/clips/0000000000-0000027280.mp4?v=2026-08-24%2022%3A31%3A03.467439%2B00"
+ },
+ "barge-glitter": {
+  "id": "4a90bf11-01db-59fe-b05f-4d1ad3137624",
+  "source": "onze-eigen-industrie-kreeftenvangst",
+  "title": "Onze eigen industrie: kreeftenvangst",
+  "year": 1923,
+  "shot": 28,
+  "seconds": 16.44,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onze-eigen-industrie-kreeftenvangst/clips/0000218840-0000235280.mp4?v=2026-08-24%2023%3A06%3A50.823533%2B00"
+ },
+ "barge-field": {
+  "id": "d39fece3-6513-56fe-b12f-d27ce1063f25",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 65,
+  "seconds": 14.36,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000847840-0000862200.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "quay": {
+  "id": "3420e468-568f-587b-b97d-f31122bc9e1c",
+  "source": "harlingen",
+  "title": "Harlingen",
+  "year": 1922,
+  "shot": 2,
+  "seconds": 30.84,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/harlingen/clips/0000018440-0000049280.mp4?v=2026-08-24%2023%3A02%3A39.497644%2B00"
+ },
+ "dike-canal": {
+  "id": "c6d29f7f-d7bb-54af-bb3e-c8519f525f0e",
+  "source": "stavoren",
+  "title": "Stavoren",
+  "year": 1923,
+  "shot": 7,
+  "seconds": 7.4,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/stavoren/clips/0000064680-0000072080.mp4?v=2026-08-24%2023%3A02%3A41.456339%2B00"
+ },
+ "cyclist": {
+  "id": "a6674233-f199-5172-a64e-9b0471432d73",
+  "source": "weesp",
+  "title": "Weesp",
+  "year": 1928,
+  "shot": 2,
+  "seconds": 5.2,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/weesp/clips/0000018600-0000023800.mp4?v=2026-08-24%2022%3A23%3A57.42334%2B00"
+ },
+ "current": {
+  "id": "d9b963f4-6814-59bb-b63c-ccd5485b92a9",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 21,
+  "seconds": 37.5,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/3ac487aa-4cac-5a1c-bf42-ec055ae9a6e1/v5-windowed-clip-split-1/clips/d9b963f4-6814-59bb-b63c-ccd5485b92a9.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "current-2": {
+  "id": "2f35a723-8898-56c0-9f6c-88d9b1d8ed96",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 22,
+  "seconds": 24.94,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/3ac487aa-4cac-5a1c-bf42-ec055ae9a6e1/v5-windowed-clip-split-1/clips/2f35a723-8898-56c0-9f6c-88d9b1d8ed96.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "cranes": {
+  "id": "77881bdd-8c89-575d-b9e7-3b461928e2cf",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 17,
+  "seconds": 26.36,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000192720-0000219080.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "bucket": {
+  "id": "fd693743-abda-5ec5-bbaf-579f24a1edbc",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 29,
+  "seconds": 18.48,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000472280-0000490760.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "dump": {
+  "id": "f65fe4f8-3c01-5071-b67b-b947f23978f5",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 7,
+  "seconds": 11.44,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000106320-0000117760.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "splash": {
+  "id": "b2ddf50a-0a42-5595-8c57-5eb9019fa1f1",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 13,
+  "seconds": 2.68,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000142120-0000144800.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "figure": {
+  "id": "0143d900-447e-56dc-b199-5f682e801c7a",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 63,
+  "seconds": 10.64,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000810800-0000821440.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "clouds": {
+  "id": "32098444-baf2-5252-8074-add7d1ecd3bb",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 64,
+  "seconds": 26.4,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000821440-0000847840.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "rowboat": {
+  "id": "373d221f-6fb0-50cb-af52-1832c0ab76e6",
+  "source": "onze-eigen-industrie-kreeftenvangst",
+  "title": "Onze eigen industrie: kreeftenvangst",
+  "year": 1923,
+  "shot": 12,
+  "seconds": 20.96,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onze-eigen-industrie-kreeftenvangst/clips/0000074080-0000095040.mp4?v=2026-08-24%2023%3A06%3A50.823533%2B00"
+ },
+ "liquid-light": {
+  "id": "6a2d0c48-982e-5434-8260-6ea9e7ae9bc4",
+  "source": "zuivel-friesche-coop-fabriek",
+  "title": "Zuivel Friesche Coop. fabriek",
+  "year": 1923,
+  "shot": 36,
+  "seconds": 14.84,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuivel-friesche-coop-fabriek/clips/0000512920-0000527760.mp4?v=2026-08-24%2022%3A31%3A03.467439%2B00"
+ },
+ "liquid-hand": {
+  "id": "e65745bb-fc7b-55bd-a431-e18d12fb9699",
+  "source": "zuivel-friesche-coop-fabriek",
+  "title": "Zuivel Friesche Coop. fabriek",
+  "year": 1923,
+  "shot": 35,
+  "seconds": 3.6,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuivel-friesche-coop-fabriek/clips/0000507920-0000511520.mp4?v=2026-08-24%2022%3A31%3A03.467439%2B00"
+ },
+ "net": {
+  "id": "1d131fec-c44d-547c-9233-43f25abe0af0",
+  "source": "onze-eigen-industrie-kreeftenvangst",
+  "title": "Onze eigen industrie: kreeftenvangst",
+  "year": 1923,
+  "shot": 39,
+  "seconds": 7.28,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onze-eigen-industrie-kreeftenvangst/clips/0000304960-0000312240.mp4?v=2026-08-24%2023%3A06%3A50.823533%2B00"
+ },
+ "dark-canal": {
+  "id": "62270eb3-a2db-575f-aa27-1ca8de7b2ca2",
+  "source": "onbekende-film-legerparade",
+  "title": "Onbekende film legerparade",
+  "year": 1920,
+  "shot": 15,
+  "seconds": 7.8,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000146320-0000154120.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00"
+ },
+ "great-day": {
+  "id": "28bd64d6-4aad-5967-bfd1-2531b37a790e",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 18,
+  "seconds": 24.64,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000219080-0000243720.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "gap-dredgers": {
+  "id": "36cb4cb5-fccf-5d6e-8035-434e48483a63",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 37,
+  "seconds": 46.96,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000568840-0000615800.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "gap-cranes": {
+  "id": "534fc26e-16ef-518d-bb19-5feb5c5262be",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 36,
+  "seconds": 24.04,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000544800-0000568840.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "flats": {
+  "id": "7d5cb37d-5222-5f5a-be42-9a53057127f2",
+  "source": "onbekende-film-legerparade",
+  "title": "Onbekende film legerparade",
+  "year": 1920,
+  "shot": 38,
+  "seconds": 32.52,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000285080-0000317600.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00"
+ },
+ "cows": {
+  "id": "f4555259-4848-58de-ab5f-3740b13ec830",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 4,
+  "seconds": 41.04,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000037200-0000078240.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "village-canal": {
+  "id": "4aef1bb2-87ae-5fd9-8d81-0f6aa54981f9",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 58,
+  "seconds": 16.08,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000756640-0000772720.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "pier-light": {
+  "id": "20c6d82b-1d34-5857-9ec2-e80f716f108b",
+  "source": "stavoren",
+  "title": "Stavoren",
+  "year": 1923,
+  "shot": 0,
+  "seconds": 18.16,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/stavoren/clips/0000000000-0000018160.mp4?v=2026-08-24%2023%3A02%3A41.456339%2B00"
+ },
+ "steamer": {
+  "id": "4eb61624-7e4d-5b78-9cd2-4a7a85fcd817",
+  "source": "stavoren",
+  "title": "Stavoren",
+  "year": 1923,
+  "shot": 8,
+  "seconds": 27.48,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/stavoren/clips/0000073880-0000101360.mp4?v=2026-08-24%2023%3A02%3A41.456339%2B00"
+ },
+ "sail-silhouette": {
+  "id": "023c4117-b375-569e-bb16-90a85653a5c4",
+  "source": "uitstapje-naar-de-kager-plassen",
+  "title": "Uitstapje naar de Kager-plassen",
+  "year": 1922,
+  "shot": 20,
+  "seconds": 4.36,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/uitstapje-naar-de-kager-plassen/clips/0000164040-0000168400.mp4?v=2026-08-24%2023%3A06%3A23.528304%2B00"
+ },
+ "sea-piers": {
+  "id": "a4fe1896-d766-53c8-97e2-d0776d835d9b",
+  "source": "muller-en-co-n-v-rotterdam",
+  "title": "Muller en co n.v. Rotterdam",
+  "year": 1928,
+  "shot": 24,
+  "seconds": 21.24,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/muller-en-co-n-v-rotterdam/clips/0000442040-0000463280.mp4?v=2026-08-24%2023%3A06%3A54.895684%2B00"
+ },
+ "church-land": {
+  "id": "773e38ab-b4b7-5900-92ba-72241185f473",
+  "source": "harlingen",
+  "title": "Harlingen",
+  "year": 1922,
+  "shot": 7,
+  "seconds": 17.92,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/harlingen/clips/0000069480-0000087400.mp4?v=2026-08-24%2023%3A02%3A39.497644%2B00"
+ },
+ "reflection": {
+  "id": "406606cf-3b1d-50f1-86f3-90afb445ce91",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 37,
+  "seconds": 2.64,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000487480-0000490120.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "skater": {
+  "id": "bc9eeed5-d30b-5aa7-a1a8-6662dc267ac7",
+  "source": "ijs-in-holland",
+  "title": "IJs in Holland",
+  "year": 1923,
+  "shot": 1,
+  "seconds": 25.46,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/293c62d6-6b7b-5957-916d-ea4194ab8741/v5-windowed-clip-split-1/clips/bc9eeed5-d30b-5aa7-a1a8-6662dc267ac7.mp4?v=2026-08-24%2023%3A04%3A24.072855%2B00"
+ },
+ "skaters-couple": {
+  "id": "ebaa90f1-5c53-5782-8718-1dd64f3c3a31",
+  "source": "winter-in-den-haag-ijs-in-den-haag",
+  "title": "Winter in Den haag / IJs in Den Haag",
+  "year": 1922,
+  "shot": 12,
+  "seconds": 13.76,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/winter-in-den-haag-ijs-in-den-haag/clips/0000173920-0000187680.mp4?v=2026-08-24%2023%3A04%3A49.749457%2B00"
+ },
+ "skaters-park": {
+  "id": "ff86cace-beba-5b1b-a27c-b06fd254adcc",
+  "source": "ijs-in-holland",
+  "title": "IJs in Holland",
+  "year": 1923,
+  "shot": 7,
+  "seconds": 8,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/ijs-in-holland/clips/0000225240-0000233238.mp4?v=2026-08-24%2023%3A04%3A24.072855%2B00"
+ },
+ "skating-canal": {
+  "id": "6db13759-3ca9-5128-a7d9-aa8a4f717fb4",
+  "source": "onbekende-film-legerparade",
+  "title": "Onbekende film legerparade",
+  "year": 1920,
+  "shot": 57,
+  "seconds": 8.16,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/onbekende-film-legerparade/clips/0000546080-0000554240.mp4?v=2026-08-24%2023%3A09%3A25.584775%2B00"
+ },
+ "windmill": {
+  "id": "bfe6b899-ed3f-509d-ad34-61aa3019c180",
+  "source": "gouda",
+  "title": "Gouda",
+  "year": 1923,
+  "shot": 1,
+  "seconds": 5.48,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/gouda/clips/0000004440-0000009920.mp4?v=2026-08-24%2023%3A03%3A32.566398%2B00"
+ },
+ "still-water": {
+  "id": "68dea3b8-67a2-51e1-bc68-00957f2a0973",
+  "source": "nederlandsche-heide-maatschappij-en-haar-werk",
+  "title": "Nederlandsche Heide Maatschappij en haar werk",
+  "year": 1934,
+  "shot": 46,
+  "seconds": 12.24,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/nederlandsche-heide-maatschappij-en-haar-werk/clips/0000608280-0000620520.mp4?v=2026-08-24%2023%3A08%3A20.058903%2B00"
+ },
+ "sea-far": {
+  "id": "c63d9e51-9860-534a-a4b5-1d9157e37084",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 24,
+  "seconds": 25.64,
+  "out": 20,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000375600-0000401240.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "sea-swell": {
+  "id": "a9172d4b-0bbf-5c8b-a0cf-530a47716d6a",
+  "source": "zuyderzee-works",
+  "title": "Zuyderzee works",
+  "year": 1930,
+  "shot": 25,
+  "seconds": 13.52,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/zuyderzee-works/clips/0000401240-0000414760.mp4?v=2026-08-24%2023%3A06%3A37.14447%2B00"
+ },
+ "sea-flat": {
+  "id": "4d666c58-cb3e-5711-a849-0e3e00cab679",
+  "source": "muller-en-co-n-v-rotterdam",
+  "title": "Muller en co n.v. Rotterdam",
+  "year": 1928,
+  "shot": 22,
+  "seconds": 18,
+  "url": "https://pub-075ff01374c04555b51c9bc50f258b42.r2.dev/sources/muller-en-co-n-v-rotterdam/clips/0000412360-0000430360.mp4?v=2026-08-24%2023%3A06%3A54.895684%2B00"
+ }
+}

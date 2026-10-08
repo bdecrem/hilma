@@ -73,3 +73,7 @@ apps/*/build-device/
 
 # overclock-video renders (masters live in ~/Desktop/overclock)
 /apps/overclock-video/out/
+/apps/polder-video/footage/
+/apps/polder-video/out/
+/apps/polder-video/search/.thumbs-*/
+/apps/polder-video/search/
