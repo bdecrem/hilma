@@ -383,7 +383,7 @@ How to run it:
 /// Actively Read: one conversation, two parts. The user talks the topic
 /// through with Dodo; when they say they're ready, Dodo asks three test
 /// questions right there, with no hints. Graded afterwards from the transcript
-/// (judgeActivelyRead in flash.ts) — A- or better passes. "Not interested"
+/// (judgeActivelyRead in flash.ts) — B+ or better passes. "Not interested"
 /// ends it and takes the topic out of the daily picks.
 export function buildLiveActivelyReadInstructions(input: {
   userName: string

@@ -1008,10 +1008,10 @@ export function clozeMatch(given: string | null | undefined, answer: string): bo
 // ---------------------------------------------------------------------------
 // Judges (Haiku, schema-constrained — same pattern as quiz-grader.ts)
 
-/// Plus/minus letters, best first. Actively Read passes at A- or better.
+/// Plus/minus letters, best first. Actively Read passes at B+ or better.
 export const PLUS_MINUS_GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'] as const
 export type PlusMinusGrade = (typeof PLUS_MINUS_GRADES)[number]
-export const ACTIVELY_READ_PASS: readonly PlusMinusGrade[] = ['A+', 'A', 'A-']
+export const ACTIVELY_READ_PASS: readonly PlusMinusGrade[] = ['A+', 'A', 'A-', 'B+']
 
 export type ActivelyReadGrade = {
   /** tested: the user asked for the test and answered it; declined: they said
@@ -1029,7 +1029,7 @@ export type ActivelyReadGrade = {
 /// a conversation about the topic in which the user may say "I'm ready" and
 /// take a three-question test, or say they're not interested. Only the test
 /// counts — what the assistant taught in the conversation before it is not
-/// the user's knowledge. Passing = all three questions answered and A- or
+/// the user's knowledge. Passing = all three questions answered and B+ or
 /// better on the plus/minus scale.
 export async function judgeActivelyRead(thread: F2Thread, transcript: TranscriptTurn[]): Promise<ActivelyReadGrade> {
   const convo = (transcript ?? [])
@@ -1051,10 +1051,11 @@ The user's study focus (grade only inside it): "${thread.study_focus}".` : ''}
 This test decides whether the topic counts as actively read — real understanding of the main ideas — not mastery of every detail.
 - A+ / A: all three answers correct, with the reasons or mechanisms and some supporting detail.
 - A-: all three answers correct and explained — the key reason or mechanism is there — with minor gaps in detail or precision.
-- B range: one answer wrong, missing its key reason, or vague; or several answers thin.
+- B+: all three answers right in substance, but one is thin — the fact without its reason — or one has a small error next to two solid answers.
+- B / B-: one answer wrong or missing its key reason; or several answers thin.
 - C range: roughly half right.
 - D / F: mostly wrong or unable to answer.
-A test with fewer than three answered questions cannot be above B+. For "declined" and "conversation" use grade null.
+A test with fewer than three answered questions cannot be above B. For "declined" and "conversation" use grade null.
 
 Also produce notes (one or two sentences to the user, "You ..."), strengths and weaknesses (up to 5 short, concrete phrases each; empty when not tested).`
   const parsed = await judgeJson<{
@@ -1098,7 +1099,7 @@ Classify and grade the session.`,
     outcome,
     questions_answered: answered,
     grade,
-    // The bar is enforced here too, not only in the prompt: three answers and A- or better.
+    // The bar is enforced here too, not only in the prompt: three answers and B+ or better.
     passed: outcome === 'tested' && answered >= 3 && grade != null && ACTIVELY_READ_PASS.includes(grade),
     notes: (parsed.notes ?? '').slice(0, 400),
     strengths: outcome === 'tested' ? clip(parsed.strengths) : [],

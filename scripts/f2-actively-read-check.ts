@@ -11,7 +11,7 @@
 //    never twice for the same topic.
 // 4. --voice: three simulated conversations through the real voice prompt and
 //    model (the ElevenLabs engine's Claude turn) with a simulated student, then
-//    the real grader: a strong test passes (A- or better), a weak test fails,
+//    the real grader: a strong test passes (B+ or better), a weak test fails,
 //    "not interested" grades as declined.
 import { readFileSync } from 'node:fs'
 for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
@@ -161,7 +161,7 @@ async function main() {
     check('voice: the test ends with "Tap End"', /tap end/i.test(strong[strong.length - 1]?.text ?? ''), strong[strong.length - 1])
     const gStrong = await judgeActivelyRead(thread, strong)
     console.log('  strong grade:', JSON.stringify(gStrong))
-    check('grade: a strong test passes (A- or better, 3 answered)', gStrong.outcome === 'tested' && gStrong.passed, gStrong)
+    check('grade: a strong test passes (B+ or better, 3 answered)', gStrong.outcome === 'tested' && gStrong.passed, gStrong)
 
     const weak = await run('weak', async (turn) => {
       if (turn === 0) return "I'm ready, test me."

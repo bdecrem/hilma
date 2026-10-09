@@ -12,7 +12,7 @@ export const maxDuration = 300
 type GradeDetail = Omit<ActivelyReadGrade, 'grade' | 'passed'> & { passed: boolean; reward: ActivelyReadReward | null; not_interested: boolean }
 
 // POST /api/f2/topics/[id]/actively-read { voice_session_id } — grade a
-// finished Actively Read voice session. Tested at A- or better: first star +
+// finished Actively Read voice session. Tested at B+ or better: first star +
 // the next Peck level. Declined in the conversation: out of the daily picks.
 // Idempotent: a second call for the same session returns the first verdict.
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {

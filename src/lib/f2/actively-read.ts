@@ -4,7 +4,7 @@
 // (users with a device token), and the top banner in the app. The topic is
 // talked through in an 'actively_read' voice session (live.ts); "I'm ready"
 // starts a three-question test in the same conversation; the transcript is
-// graded afterwards (judgeActivelyRead in flash.ts). A- or better: the topic
+// graded afterwards (judgeActivelyRead in flash.ts). B+ or better: the topic
 // gets its first star and the next Peck level is cleared — streak credit and
 // the level's XP included. "Not interested" (in the conversation, from the
 // banner or the push, or "2" over iMessage) takes the topic out of the daily

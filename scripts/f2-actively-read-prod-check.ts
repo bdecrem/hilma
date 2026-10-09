@@ -88,7 +88,7 @@ async function main() {
     const t0 = Date.now()
     const g = await api(`/api/f2/topics/${threadId}/actively-read`, { method: 'POST', body: JSON.stringify({ voice_session_id: vsId }) })
     console.log(`  grade (${((Date.now() - t0) / 1000).toFixed(0)} s):`, JSON.stringify(g.body))
-    check('production grades it tested and passed (A- or better)', g.status === 200 && g.body.outcome === 'tested' && g.body.passed === true && ['A+', 'A', 'A-'].includes(g.body.grade), g)
+    check('production grades it tested and passed (B+ or better)', g.status === 200 && g.body.outcome === 'tested' && g.body.passed === true && ['A+', 'A', 'A-', 'B+'].includes(g.body.grade), g)
     check('the reward is the next Peck level', g.body.peck_level_cleared === jumboBefore.highest_passed + 1, { got: g.body.peck_level_cleared, expected: jumboBefore.highest_passed + 1 })
     check('the topic now has its first star', g.body.stars === 1 && (await sb.from('f2_threads').select('stars').eq('id', threadId).single()).data?.stars === 1)
     const again = await api(`/api/f2/topics/${threadId}/actively-read`, { method: 'POST', body: JSON.stringify({ voice_session_id: vsId }) })

@@ -5,7 +5,7 @@ import Observation
 /// topics that isn't Actively Read yet. The app offers it in the main UI's
 /// one banner slot; tapping it (or the push, or the iMessage link) opens an
 /// `actively_read` voice session where "I'm ready" starts a three-question
-/// test. A- or better: first star + the next Peck level.
+/// test. B+ or better: first star + the next Peck level.
 @Observable
 @MainActor
 final class ActivelyReadStore {
@@ -212,7 +212,7 @@ struct ActivelyReadView: View {
             let passed = m == "passed"
             phase = .result(ActivelyReadResult(
                 outcome: m == "declined" ? "declined" : m == "conversation" ? "conversation" : "tested",
-                grade: m == "passed" ? "A-" : m == "failed" ? "B" : nil,
+                grade: m == "passed" ? "B+" : m == "failed" ? "B" : nil,
                 passed: passed,
                 questionsAnswered: m == "passed" || m == "failed" ? 3 : 0,
                 notes: passed ? "You explained all three clearly; the second answer could use one more concrete example."
@@ -347,7 +347,7 @@ struct ActivelyReadView: View {
             Text(r.outcome == "tested"
                  ? (r.questionsAnswered < 3
                     ? "All three questions count. Talk it through again and take the test from the topic page."
-                    : "A- or better makes it actively read. Talk it through again and retake it from the topic page.")
+                    : "B+ or better makes it actively read. Talk it through again and retake it from the topic page.")
                  : r.outcome == "declined"
                     ? (undone ? "It's back in your daily picks." : "Got it. This one is off your daily picks.")
                     : "No test this time. Say \"I'm ready\" in the conversation when you want the three questions.")
