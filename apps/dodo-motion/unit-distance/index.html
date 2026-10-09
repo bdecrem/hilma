@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <link rel="stylesheet" href="assets/fonts.css" />
+    <script src="assets/gsap.min.js"></script>
+    <script src="script.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #f7efdf; }
+      #root {
+        position: relative; width: 1920px; height: 1080px;
+        font-family: 'Bricolage', ui-sans-serif, system-ui, sans-serif; color: #16121c;
+      }
+      #stage { position: absolute; inset: 0; }
+      .scene { position: absolute; inset: 0; }
+      .left {
+        position: absolute; left: 120px; top: 0; bottom: 0; width: 900px;
+        display: flex; flex-direction: column; justify-content: center; gap: 30px;
+      }
+      .center {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 30px; text-align: center;
+      }
+      .bottom { position: absolute; left: 120px; right: 120px; bottom: 150px; }
+      .kicker {
+        font-family: 'JBMono', ui-monospace, monospace; font-weight: 600; font-size: 26px;
+        letter-spacing: .14em; text-transform: uppercase; color: rgba(22, 18, 28, .72);
+      }
+      .title { font-weight: 700; font-size: 78px; line-height: 1.04; letter-spacing: -.02em; }
+      .credit { font-family: 'JBMono', monospace; font-size: 30px; font-weight: 500; color: rgba(22, 18, 28, .7); }
+      .caption { font-weight: 500; font-size: 44px; line-height: 1.15; letter-spacing: -.01em; max-width: 1200px; }
+      .rule { font-weight: 700; font-size: 54px; line-height: 1.1; letter-spacing: -.015em; }
+      .red { color: #ff4b1f; }
+      .blue { color: #3d3bff; }
+      .math { font-family: 'JBMono', monospace; font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+      .math sup { font-size: .5em; vertical-align: baseline; position: relative; top: -.6em; letter-spacing: -.02em; }
+      .big { font-size: 230px; }
+      .mid { font-size: 128px; }
+      .count { font-size: 150px; color: #ff4b1f; }
+      .names { font-size: 40px; font-weight: 500; color: rgba(22, 18, 28, .75); }
+      .year { font-family: 'JBMono', monospace; font-weight: 600; font-size: 36px; color: #3d3bff; }
+      .note { font-weight: 500; font-size: 36px; color: rgba(22, 18, 28, .7); }
+      .footer {
+        position: absolute; left: 120px; bottom: 72px; font-family: 'JBMono', monospace; font-size: 22px;
+        letter-spacing: .1em; text-transform: uppercase; color: rgba(22, 18, 28, .45);
+      }
+      .on-blue { color: #f7efdf; }
+      .on-blue .kicker, .on-blue .footer, .on-blue .note { color: rgba(247, 239, 223, .72); }
+      .line { font-weight: 500; font-size: 48px; line-height: 1.2; max-width: 1560px; letter-spacing: -.01em; }
+      .counter {
+        font-family: 'JBMono', monospace; font-weight: 800; font-size: 360px; line-height: 1;
+        letter-spacing: -.06em; font-variant-numeric: tabular-nums;
+      }
+      .claim {
+        position: relative; display: inline-block; font-family: 'JBMono', monospace; font-weight: 600;
+        font-size: 44px; padding: 20px 32px; border: 3px solid #16121c; margin-top: 30px;
+      }
+      .strikeline {
+        position: absolute; left: -14px; right: -14px; top: 50%; height: 9px; margin-top: -4px;
+        background: #ff4b1f; transform-origin: left center;
+      }
+      .strike { font-weight: 500; font-size: 40px; color: #ff4b1f; }
+      .marker { position: absolute; top: 650px; transform: translateX(-50%); text-align: center; font-family: 'JBMono', monospace; }
+      .marker .v { font-weight: 800; font-size: 76px; letter-spacing: -.04em; line-height: 1; }
+      .marker .l { font-size: 24px; font-weight: 500; margin-top: 12px; letter-spacing: .08em; text-transform: uppercase; color: rgba(22, 18, 28, .72); }
+      .q {
+        position: absolute; top: 380px; transform: translateX(-50%); font-family: 'JBMono', monospace;
+        font-weight: 800; font-size: 170px; color: #ffc31f; line-height: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="45" data-width="1920" data-height="1080" data-fps="30">
+      <canvas id="stage" width="1920" height="1080"></canvas>
+    </div>
+    <script>
+      (() => {
+        const S = window.SCRIPT
+        const C = S.colors
+        const W = S.width, H = S.height, U = S.unit
+        const root = document.getElementById('root')
+        const canvas = document.getElementById('stage')
+        const ctx = canvas.getContext('2d')
+
+        // Scenes play back to back.
+        let t0 = 0
+        for (const sc of S.scenes) { sc.start = t0; t0 += sc.duration }
+        const TOTAL = t0
+        root.dataset.duration = String(TOTAL)
+        root.dataset.fps = String(S.fps)
+
+        const tl = gsap.timeline({ paused: true })
+
+        // ---- DOM helpers ---------------------------------------------------
+        const el = (tag, cls, html) => {
+          const e = document.createElement(tag)
+          if (cls) e.className = cls
+          if (html != null) e.innerHTML = html
+          return e
+        }
+        const mathHTML = (m) => `${m.pre ?? ''}${m.base}<sup>${m.exp}</sup>${m.post ?? ''}`
+        const fadeUp = (target, at, dur = 0.7, dy = 28) =>
+          tl.fromTo(target, { opacity: 0, y: dy }, { opacity: 1, y: 0, duration: dur, ease: 'power3.out' }, at)
+        const fadeOut = (target, at, dur = 0.4) => tl.to(target, { opacity: 0, duration: dur, ease: 'power2.in' }, at)
+        const popIn = (target, at, dur = 0.8) =>
+          tl.fromTo(target, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: dur, ease: 'back.out(1.6)' }, at)
+        const scene = (sc, extra) => {
+          const d = el('div', 'clip scene' + (extra ? ' ' + extra : ''))
+          d.id = 'scene-' + sc.id
+          d.dataset.start = String(sc.start)
+          d.dataset.duration = String(sc.duration)
+          d.appendChild(el('div', 'footer', S.footer))
+          root.appendChild(d)
+          return d
+        }
+
+        // ---- canvas helpers ------------------------------------------------
+        const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v)
+        const easeOut = (t) => 1 - Math.pow(1 - clamp01(t), 3)
+        const easeInOut = (t) => { t = clamp01(t); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2 }
+        const back = (t) => { t = clamp01(t); const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2) }
+        const dot = (p, r, color) => { ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0, r), 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill() }
+        const seg = (a, b, k, color, w) => {
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x + (b.x - a.x) * k, a.y + (b.y - a.y) * k)
+          ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.stroke()
+        }
+        const ring = (p, r, color, w, alpha = 1) => {
+          if (r <= 0 || alpha <= 0) return
+          ctx.globalAlpha = alpha; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2)
+          ctx.strokeStyle = color; ctx.lineWidth = w; ctx.stroke(); ctx.globalAlpha = 1
+        }
+        const pairsAt = (pts, dist) => {
+          const out = []
+          for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+            if (Math.abs(Math.hypot(pts[i].x - pts[j].x, pts[i].y - pts[j].y) - dist) < 0.5) out.push([i, j])
+          }
+          return out
+        }
+
+        // ---- geometry shared by scenes 1 + 2 ---------------------------------
+        const ask = S.scenes.find((s) => s.id === 'ask')
+        const LAT = (() => {
+          const r = (ask.rotate * Math.PI) / 180, cos = Math.cos(r), sin = Math.sin(r)
+          const raw = ask.points.map(([i, j]) => {
+            const x = (i + j / 2) * U, y = (j * Math.sqrt(3)) / 2 * U
+            return { x: x * cos - y * sin, y: x * sin + y * cos }
+          })
+          const xs = raw.map((p) => p.x), ys = raw.map((p) => p.y)
+          const cx = (Math.min(...xs) + Math.max(...xs)) / 2, cy = (Math.min(...ys) + Math.max(...ys)) / 2
+          return raw.map((p) => ({ x: p.x - cx + 1420, y: p.y - cy + 540 }))
+        })()
+        const LAT_PAIRS = pairsAt(LAT, U)
+
+        // ---- scene 3 geometry: the grid --------------------------------------
+        const grid = S.scenes.find((s) => s.id === 'grid')
+        const G0 = 150 // grid spacing before rescaling, px (the rescale shrinks it by 1/√5)
+        const GC = { x: 1400, y: 500 }
+        const GRID = []
+        for (let j = 0; j < grid.side; j++) for (let i = 0; i < grid.side; i++) {
+          GRID.push({ x: (i - (grid.side - 1) / 2) * G0, y: (j - (grid.side - 1) / 2) * G0, i, j })
+        }
+        const KNIGHT = Math.sqrt(5) * G0 // the common distance we rescale to one unit
+        const GRID_PAIRS = pairsAt(GRID, KNIGHT)
+        const GRID_SCALE = U / KNIGHT
+
+        const drawers = {}
+
+        // ---- 1. ask ----------------------------------------------------------
+        {
+          const sc = ask, d = scene(sc)
+          const col = el('div', 'left')
+          const k = el('div', 'kicker', sc.kicker), t = el('div', 'title', sc.title), c = el('div', 'credit', sc.credit)
+          col.append(k, t, c); d.appendChild(col)
+          fadeUp(k, sc.start + 0.2); fadeUp(t, sc.start + 0.5, 0.9); fadeUp(c, sc.start + 1.4)
+          drawers.ask = (local) => {
+            LAT.forEach((p, i) => {
+              const a = (local - 0.4 - i * (2.4 / LAT.length)) / 0.5
+              if (a > 0) dot(p, 14 * back(a), C.ink)
+            })
+          }
+        }
+
+        // ---- 2. circles ------------------------------------------------------
+        {
+          const sc = S.scenes.find((s) => s.id === 'circles'), d = scene(sc)
+          const bottom = el('div', 'bottom')
+          const cap = el('div', 'caption', sc.caption), rule = el('div', 'rule', sc.rule)
+          rule.style.position = 'absolute'; rule.style.left = '0'; rule.style.bottom = '0'
+          bottom.append(cap, rule); d.appendChild(bottom)
+          const col = el('div', 'left')
+          const n = el('div', 'math count', String(LAT_PAIRS.length)), lab = el('div', 'note', sc.pairsLabel)
+          col.append(n, lab); d.appendChild(col)
+          fadeUp(cap, sc.start + 0.3)
+          fadeOut(cap, sc.start + sc.ruleAt - 0.4)
+          fadeUp(rule, sc.start + sc.ruleAt)
+          popIn(n, sc.start + sc.pairsAt); fadeUp(lab, sc.start + sc.pairsAt + 0.3)
+          drawers.circles = (local) => {
+            const a = clamp01(local / 1.6)
+            const fade = clamp01((local - 4.2) / 0.8)
+            const ringAlpha = 0.55 - 0.42 * fade
+            LAT.forEach((p, i) => {
+              if (i === 0) ring(p, U * easeOut(a), C.yellow, 3, local < 1.6 ? 1 : ringAlpha)
+              else {
+                const s = clamp01((local - 1.6 - i * 0.12) / 0.5)
+                if (s > 0) ring(p, U * easeOut(s), C.yellow, 2, ringAlpha * s)
+              }
+            })
+            LAT_PAIRS.forEach(([i, j], k) => {
+              const s = clamp01((local - 2.0 - k * (1.8 / LAT_PAIRS.length)) / 0.4)
+              if (s > 0) seg(LAT[i], LAT[j], easeOut(s), C.red, 5)
+            })
+            LAT.forEach((p, i) => {
+              const partner = LAT_PAIRS.some(([x, y]) => (x === 0 && y === i) || (y === 0 && x === i))
+              const flash = i !== 0 && partner && local > 1.5 && local < 2.2 ? 1 + 0.6 * Math.sin(((local - 1.5) / 0.7) * Math.PI) : 1
+              dot(p, 14 * flash, C.ink)
+            })
+          }
+        }
+
+        // ---- 3. grid ---------------------------------------------------------
+        {
+          const sc = grid, d = scene(sc)
+          const bottom = el('div', 'bottom'), cap = el('div', 'caption', sc.caption)
+          bottom.appendChild(cap); d.appendChild(bottom)
+          const col = el('div', 'left')
+          const m = el('div', 'math mid', mathHTML(sc.conjecture)), note = el('div', 'note', sc.conjectureNote)
+          col.append(m, note); d.appendChild(col)
+          fadeUp(cap, sc.start + 0.4)
+          popIn(m, sc.start + sc.conjectureAt); fadeUp(note, sc.start + sc.conjectureAt + 0.4)
+          drawers.grid = (local) => {
+            const k = 1 + (GRID_SCALE - 1) * easeInOut((local - 4.2) / 2)
+            const P = GRID.map((p) => ({ x: GC.x + p.x * k, y: GC.y + p.y * k }))
+            GRID_PAIRS.forEach(([i, j], n) => {
+              const s = clamp01((local - 2.0 - n * (1.8 / GRID_PAIRS.length)) / 0.35)
+              if (s > 0) seg(P[i], P[j], easeOut(s), C.blue, 3)
+            })
+            GRID.forEach((p, i) => {
+              const a = (local - 0.2 - p.j * 0.22 - p.i * 0.05) / 0.4
+              if (a > 0) dot(P[i], 9 * back(a), C.ink)
+            })
+            const ra = easeOut((local - 4.6) / 0.6)
+            if (ra > 0) {
+              const y = 900, x0 = GC.x - U / 2, x1 = GC.x + U / 2
+              ctx.globalAlpha = ra
+              ctx.strokeStyle = C.red; ctx.lineWidth = 5; ctx.lineCap = 'butt'
+              ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke()
+              ctx.beginPath(); ctx.moveTo(x0, y - 16); ctx.lineTo(x0, y + 16); ctx.moveTo(x1, y - 16); ctx.lineTo(x1, y + 16); ctx.stroke()
+              ctx.fillStyle = C.red; ctx.font = '700 44px JBMono'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'
+              ctx.fillText(sc.rulerLabel, GC.x, y - 18)
+              ctx.globalAlpha = 1
+            }
+          }
+        }
+
+        // ---- 4. ceiling ------------------------------------------------------
+        {
+          const sc = S.scenes.find((s) => s.id === 'ceiling'), d = scene(sc)
+          const col = el('div', 'center')
+          const k = el('div', 'kicker', sc.kicker), b = el('div', 'math big', mathHTML(sc.bound))
+          const who = el('div', 'names', sc.who), yr = el('div', 'year', sc.year)
+          const claim = el('div', 'claim', sc.claim), line = el('div', 'strikeline'), strike = el('div', 'strike', sc.strike)
+          claim.appendChild(line)
+          col.append(k, b, who, yr, claim, strike); d.appendChild(col)
+          fadeUp(k, sc.start + 0.2); popIn(b, sc.start + 0.5, 0.9); fadeUp(who, sc.start + 1.3); fadeUp(yr, sc.start + 1.6)
+          fadeUp(claim, sc.start + sc.claimAt)
+          tl.fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: 0.45, ease: 'power2.inOut' }, sc.start + sc.strikeAt)
+          fadeUp(strike, sc.start + sc.strikeAt + 0.35)
+          drawers.ceiling = () => {}
+        }
+
+        // ---- 5. exact --------------------------------------------------------
+        let counterEl = null, exactScene = null
+        const countAt = (sc, local) => Math.min(sc.to, sc.from + Math.floor((clamp01(local / sc.countSeconds)) * (sc.to - sc.from)))
+        {
+          const sc = S.scenes.find((s) => s.id === 'exact'), d = scene(sc)
+          exactScene = sc
+          const col = el('div', 'center')
+          const k = el('div', 'kicker', sc.kicker), n = el('div', 'counter', String(sc.from))
+          col.append(k, n); d.appendChild(col)
+          const bottom = el('div', 'bottom'), cap = el('div', 'caption', sc.caption)
+          cap.style.textAlign = 'center'; cap.style.maxWidth = 'none'
+          bottom.appendChild(cap); d.appendChild(bottom)
+          counterEl = n
+          fadeUp(k, sc.start + 0.2); fadeUp(n, sc.start + 0.3, 0.6)
+          fadeUp(cap, sc.start + sc.captionAt)
+          drawers.exact = (local) => {
+            const count = countAt(sc, local)
+            const gap = 64, x0 = W / 2 - ((sc.to - 1) * gap) / 2, y = 780
+            for (let i = 0; i < sc.to; i++) {
+              const on = i < count
+              dot({ x: x0 + i * gap, y }, on ? 11 : 5, on ? C.red : 'rgba(22,18,28,0.18)')
+            }
+          }
+        }
+
+        // ---- 6. result -------------------------------------------------------
+        {
+          const sc = S.scenes.find((s) => s.id === 'result'), d = scene(sc, 'on-blue')
+          const a = el('div', 'center')
+          const date = el('div', 'kicker', sc.date), l1 = el('div', 'line', sc.line1), l2 = el('div', 'line', sc.line2)
+          const used = el('div', 'note', sc.used), ver = el('div', 'note', sc.verified)
+          ver.style.marginTop = '-18px'
+          a.append(date, l1, l2, used, ver); d.appendChild(a)
+          const b = el('div', 'center')
+          const ex = el('div', 'math big', mathHTML(sc.exponent)), note = el('div', 'note', sc.exponentNote)
+          b.append(ex, note); d.appendChild(b)
+          fadeUp(date, sc.start + 0.2); fadeUp(l1, sc.start + 0.6, 0.8); fadeUp(l2, sc.start + 1.1, 0.8)
+          fadeUp(used, sc.start + 2.3); fadeUp(ver, sc.start + 2.8)
+          fadeOut(a, sc.start + sc.exponentAt - 0.45)
+          popIn(ex, sc.start + sc.exponentAt, 0.9); fadeUp(note, sc.start + sc.exponentAt + 0.5)
+          drawers.result = () => {}
+        }
+
+        // ---- 7. gap ----------------------------------------------------------
+        {
+          const sc = S.scenes.find((s) => s.id === 'gap'), d = scene(sc)
+          const AX0 = 260, AX1 = 1660, AY = 600
+          const xOf = (e) => AX0 + ((e - sc.axis.from) / (sc.axis.to - sc.axis.from)) * (AX1 - AX0)
+          const mk = (m, cls) => {
+            const w = el('div', 'marker ' + cls)
+            w.style.left = xOf(m.value) + 'px'
+            w.append(el('div', 'v', m.text), el('div', 'l', m.label))
+            return w
+          }
+          const lo = mk(sc.low, 'red'), hi = mk(sc.high, 'blue')
+          const q = el('div', 'q', sc.question)
+          q.style.left = (xOf(sc.low.value) + xOf(sc.high.value)) / 2 + 'px'
+          const bottom = el('div', 'bottom'), cap = el('div', 'caption', sc.caption)
+          cap.style.textAlign = 'center'; cap.style.maxWidth = 'none'
+          bottom.appendChild(cap)
+          d.append(lo, hi, q, bottom)
+          fadeUp(lo, sc.start + 0.5); fadeUp(hi, sc.start + 0.9)
+          popIn(q, sc.start + 1.4, 0.7)
+          tl.to(q, { scale: 1.08, duration: 0.5, yoyo: true, repeat: 3, ease: 'sine.inOut' }, sc.start + 2.1)
+          fadeUp(cap, sc.start + sc.captionAt)
+          drawers.gap = (local) => {
+            ctx.strokeStyle = C.ink; ctx.lineWidth = 4; ctx.lineCap = 'butt'
+            ctx.beginPath(); ctx.moveTo(AX0, AY); ctx.lineTo(AX1, AY); ctx.stroke()
+            ctx.fillStyle = 'rgba(22,18,28,0.6)'; ctx.font = '500 26px JBMono'; ctx.textAlign = 'center'; ctx.textBaseline = 'top'
+            for (let e = sc.axis.from; e <= sc.axis.to + 1e-9; e += 0.1) {
+              const x = xOf(e)
+              ctx.beginPath(); ctx.moveTo(x, AY - 12); ctx.lineTo(x, AY + 12); ctx.stroke()
+              ctx.fillText(e.toFixed(1), x, AY + 22)
+            }
+            const drop = (m, color, at) => {
+              const a = clamp01((local - at) / 0.5)
+              if (a <= 0) return
+              dot({ x: xOf(m.value), y: AY - 90 * (1 - back(a)) }, 16, color)
+            }
+            drop(sc.low, C.red, 0.3); drop(sc.high, C.blue, 0.7)
+            const g = easeOut((local - 1.2) / 0.6)
+            if (g > 0) {
+              const x0 = xOf(sc.low.value) + 24, x1 = xOf(sc.high.value) - 24
+              ctx.globalAlpha = g * 0.55; ctx.setLineDash([10, 14]); ctx.strokeStyle = C.ink; ctx.lineWidth = 6
+              ctx.beginPath(); ctx.moveTo(x0, AY); ctx.lineTo(x0 + (x1 - x0) * g, AY); ctx.stroke()
+              ctx.setLineDash([]); ctx.globalAlpha = 1
+            }
+          }
+        }
+
+        // ---- the clock: one tween across the whole piece drives the canvas ----
+        const clock = { t: 0 }
+        function draw(t) {
+          const sc = S.scenes.find((s) => t >= s.start && t < s.start + s.duration) || S.scenes[S.scenes.length - 1]
+          const local = Math.min(t - sc.start, sc.duration)
+          ctx.setTransform(1, 0, 0, 1, 0, 0)
+          ctx.clearRect(0, 0, W, H)
+          ctx.fillStyle = C[sc.bg]; ctx.fillRect(0, 0, W, H)
+          drawers[sc.id](local, sc)
+          if (counterEl && sc === exactScene) counterEl.textContent = String(countAt(sc, local))
+        }
+        tl.to(clock, { t: TOTAL, duration: TOTAL, ease: 'none', onUpdate: () => draw(clock.t) }, 0)
+        draw(0)
+
+        window.__timelines = window.__timelines || {}
+        window.__timelines['main'] = tl
+        tl.seek(0)
+      })()
+    </script>
+  </body>
+</html>
