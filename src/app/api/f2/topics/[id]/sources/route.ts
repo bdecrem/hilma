@@ -201,12 +201,14 @@ export async function GET(
 }
 
 // POST /api/f2/topics/[id]/sources
-// Body: { url: string }            → fetch the URL and attach its content
-//   or: { text: string, title? }   → attach the text as the user's own NOTES
+// Body: { url: string }                       → fetch the URL and attach its content
+//   or: { text: string, title? }              → attach the text as the user's own NOTES
+//   or: { text: string, title?, note: false } → attach the text as pasted source material
 //
-// The notes path (Upload Notes in the app) stores the raw text with
+// The notes path (Upload notes in the app) stores the raw text with
 // note:true, which guarantees point-by-point coverage in audio summaries no
-// matter how long the notes are.
+// matter how long the notes are. The paste path (Paste text on the context
+// sheet, 2026-10-09) stores it like a fetched article's body instead.
 const NOTES_UPLOAD_MAX_CHARS = 200_000
 
 export async function POST(
@@ -224,7 +226,7 @@ export async function POST(
     return NextResponse.json({ error: 'not found' }, { status: 404 })
   }
 
-  let body: { url?: string; text?: string; title?: string }
+  let body: { url?: string; text?: string; title?: string; note?: boolean }
   try {
     body = await req.json()
   } catch {
@@ -236,16 +238,22 @@ export async function POST(
   if (text) {
     if (text.length > NOTES_UPLOAD_MAX_CHARS) {
       return NextResponse.json(
-        { error: `notes too large (max ${NOTES_UPLOAD_MAX_CHARS.toLocaleString()} characters)` },
+        { error: `text too large (max ${NOTES_UPLOAD_MAX_CHARS.toLocaleString()} characters)` },
         { status: 413 },
       )
     }
+    // Text is the user's own notes (Upload notes, and every client from
+    // before 2026-10-09, which sends no flag) unless the client says
+    // note:false — the app's Paste text, which is source material like a
+    // fetched URL's body. gatherUserNotes still counts a short paste as
+    // annotations and a long one as bulk material.
+    const isNote = body.note !== false
     entry = {
       url: null,
-      title: body.title?.trim() || 'My notes',
+      title: body.title?.trim() || (isNote ? 'My notes' : 'Pasted text'),
       content: text,
       added_at: new Date().toISOString(),
-      note: true,
+      ...(isNote ? { note: true } : {}),
     }
   } else {
     const url = body.url?.trim()

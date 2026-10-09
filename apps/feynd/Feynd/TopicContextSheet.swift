@@ -35,6 +35,10 @@ struct TopicContextSheet: View {
     @State private var showNotesImporter = false
     @State private var notesBusy = false
     @State private var notesError: String? = nil
+    // Paste text — a multi-line field for text copied from anywhere (the
+    // phone's way in: no file needed, and on the Mac ⌘V). Stored as source
+    // material, not notes — see PasteTextSheet.
+    @State private var showPasteText = false
     // Study focus — scopes flash cards, quizzes, and the Final Review to the
     // part of the material the user actually studied. Seeded from the server
     // in load() (the list's F2Topic can be stale after an earlier edit).
@@ -59,6 +63,13 @@ struct TopicContextSheet: View {
                     .padding(.horizontal, 18)
                     .padding(.top, 12)
                     .padding(.bottom, 4)
+                    // Full width under the pair: three labels in one row
+                    // truncate on a phone (390pt − gutters − gaps ≈ 112pt
+                    // per button, "Upload notes" + its glyph is ~112pt).
+                    // 4 + 4 above, 0 + the focus section's 8 below = 8pt gaps.
+                    pasteTextButton
+                        .padding(.horizontal, 18)
+                        .padding(.top, 4)
                     studyFocusSection
                     if loading {
                         ProgressView()
@@ -100,7 +111,18 @@ struct TopicContextSheet: View {
             .scrollIndicators(.hidden)
         }
         .background(FeyndTheme.bgRaised.ignoresSafeArea())
-        .task { await load() }
+        .task {
+            await load()
+            #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
+            // `-OpenPasteText 1` (with `-OpenTopic <id> -OpenTopicContext 1`)
+            // — straight to the Paste text form for screenshot loops.
+            if UserDefaults.standard.bool(forKey: "OpenPasteText") {
+                UserDefaults.standard.removeObject(forKey: "OpenPasteText")
+                try? await Task.sleep(for: .milliseconds(600))
+                showPasteText = true
+            }
+            #endif
+        }
         .alert("Add context",
                isPresented: $showAddContext) {
             TextField("https://…", text: $addURL)
@@ -159,6 +181,11 @@ struct TopicContextSheet: View {
         .sheet(item: $sourceReaderTarget) { src in
             SourceReaderView(topicId: topicId, source: src, heading: readerHeading(src))
         }
+        .sheet(isPresented: $showPasteText) {
+            PasteTextSheet(topicId: topicId, topicLabel: topicLabel) {
+                await load()
+            }
+        }
     }
 
     // MARK: - Add context
@@ -209,6 +236,27 @@ struct TopicContextSheet: View {
         }
         .buttonStyle(.plain)
         .disabled(notesBusy)
+    }
+
+    /// Paste text — whatever is on the clipboard (an email, a chapter, a
+    /// transcript) becomes source material on this topic. The form is a
+    /// sheet because an alert's text field is one line.
+    private var pasteTextButton: some View {
+        Button { showPasteText = true } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "doc.on.clipboard")
+                    .font(.system(size: 15, weight: .semibold))
+                Text("Paste text")
+                    .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(FeyndTheme.accent)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(FeyndTheme.surface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(FeyndTheme.border, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     private func importNotes(_ result: Result<[URL], Error>) {
@@ -546,7 +594,9 @@ struct TopicContextSheet: View {
                     Text("Your notes — audio summaries cover these point by point")
                         .font(.system(size: 11))
                         .foregroundStyle(FeyndTheme.text2)
-                } else if src.kind == "primary" {
+                } else if (src.url ?? "").isEmpty {
+                    // A primary paste (the Paste tab) or an additional one
+                    // (Paste text on this sheet).
                     Text("Pasted text")
                         .font(.system(size: 11))
                         .foregroundStyle(FeyndTheme.text2)

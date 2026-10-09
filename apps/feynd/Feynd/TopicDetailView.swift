@@ -172,6 +172,13 @@ struct TopicDetailView: View {
                 try? await Task.sleep(for: .milliseconds(600))
                 quotesPresented = true
             }
+            // `-OpenTopicContext 1` — this topic's context sheet (sources,
+            // notes, study focus); add `-OpenPasteText 1` for its Paste text form.
+            if UserDefaults.standard.bool(forKey: "OpenTopicContext") {
+                UserDefaults.standard.removeObject(forKey: "OpenTopicContext")
+                try? await Task.sleep(for: .milliseconds(600))
+                contextPresented = true
+            }
             #endif
         }
     }

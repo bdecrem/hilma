@@ -535,6 +535,19 @@ final class F2API {
         )
     }
 
+    /// Paste text into a topic (Paste text on the context sheet). Stored as
+    /// source material like a fetched URL's body — NOT flagged as notes; the
+    /// server still counts a short paste as the user's own annotations and a
+    /// long one as bulk material (gatherUserNotes).
+    func pasteTopicText(id: String, text: String, title: String?) async throws -> AddSourceResponse {
+        struct Body: Encodable { let text: String; let title: String?; let note: Bool }
+        return try await request(
+            "/api/f2/topics/\(id)/sources",
+            method: "POST",
+            body: Body(text: text, title: title, note: false),
+        )
+    }
+
     /// One display row in the View Context modal. Media URLs with a transcript
     /// (YouTube + audio hosts) are split server-side into two items — one with
     /// part="url", one with part="transcript" — sharing the same kind/index.

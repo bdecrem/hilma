@@ -42,6 +42,7 @@
 		4ED521B6649C294577A7ACC4 /* DeepDiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE0069CA4B450EF3160988 /* DeepDiveView.swift */; };
 		52DA33691DDC73C791B7BC44 /* voice-stone.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 19CA4150E082D4716B06A291 /* voice-stone.m4a */; };
 		548BC970FE17CCD55FAF7219 /* PeckGameAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6966166949249E168A8669D /* PeckGameAudio.swift */; };
+		5623C2CC538517546FF06895 /* PasteTextSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D366C70E9D607B1FDE70F692 /* PasteTextSheet.swift */; };
 		57A701A7FBBDE9FC824DC9D0 /* DeepDiveArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = D16E24567C7854C063B3BA29 /* DeepDiveArt.swift */; };
 		5DE663128BAC796DF32F68D2 /* FlashSFX.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB38EBAB179201757DE149C1 /* FlashSFX.swift */; };
 		6156096DDC14A9F27155EB67 /* SourceReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BB209A33541127135A75E53 /* SourceReaderView.swift */; };
@@ -211,6 +212,7 @@
 		CEA1624119BABE06DF4CC137 /* LiveVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceClient.swift; sourceTree = "<group>"; };
 		CEE6B033811CD1DBD520EDFD /* PeckTrail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckTrail.swift; sourceTree = "<group>"; };
 		D16E24567C7854C063B3BA29 /* DeepDiveArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepDiveArt.swift; sourceTree = "<group>"; };
+		D366C70E9D607B1FDE70F692 /* PasteTextSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteTextSheet.swift; sourceTree = "<group>"; };
 		D7F0A9210791EF3A42D9CABF /* Feynd-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Feynd-macOS.entitlements"; sourceTree = "<group>"; };
 		D88FFB4D557BC1376E6E6F78 /* DeepDiveAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepDiveAudio.swift; sourceTree = "<group>"; };
 		E0356363115F2363D08C8FD5 /* voice-willow.m4a */ = {isa = PBXFileReference; path = "voice-willow.m4a"; sourceTree = "<group>"; };
@@ -292,6 +294,7 @@
 				C7F6CED71B770E7CA2FFB13C /* ModelPicker.swift */,
 				EFFCEF68207C8EC05D3B4760 /* Models.swift */,
 				703834C76580CEF4C08B88F3 /* OnboardingView.swift */,
+				D366C70E9D607B1FDE70F692 /* PasteTextSheet.swift */,
 				C0564EA3B927E26544E7655B /* PasteView.swift */,
 				A0B51F13157C08741A506C42 /* PebblesView.swift */,
 				1B2BE3082F40D6C0A70D8DCB /* PeckGameArt.swift */,
@@ -545,6 +548,7 @@
 				0E7694CF618B45FF234EB3CB /* ModelPicker.swift in Sources */,
 				36BE08CA63307A15CECFDBEA /* Models.swift in Sources */,
 				D728F8652741BA0ADE44FB1F /* OnboardingView.swift in Sources */,
+				5623C2CC538517546FF06895 /* PasteTextSheet.swift in Sources */,
 				A06C97171BC76BB9A85D2A94 /* PasteView.swift in Sources */,
 				4203B4F2027D753324C80557 /* PebblesView.swift in Sources */,
 				8D199EA37B024BA466ACD8F9 /* PeckGameArt.swift in Sources */,
@@ -615,7 +619,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 129;
+				CURRENT_PROJECT_VERSION = 130;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -713,7 +717,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 129;
+				CURRENT_PROJECT_VERSION = 130;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
