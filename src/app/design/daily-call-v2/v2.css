@@ -102,21 +102,6 @@
   color: var(--p-ink-2);
 }
 
-.hf-main {
-  display: grid;
-  grid-template-columns: 420px minmax(0, 1fr);
-  gap: 48px;
-  align-items: start;
-  margin-top: 36px;
-}
-.hf-left {
-  position: sticky;
-  top: 20px;
-  min-width: 0;
-}
-.hf-right {
-  min-width: 0;
-}
 .hf-phone-slot {
   position: relative;
   width: 100%;
@@ -189,45 +174,6 @@
   color: #fff;
 }
 
-.hf-section {
-  padding: 8px 0 36px;
-}
-.hf-section + .hf-section {
-  border-top: 1px solid #ddd9d0;
-  padding-top: 32px;
-}
-.hf-h2 {
-  font-family: var(--display);
-  font-size: 28px;
-  line-height: 32px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  margin: 0 0 18px;
-}
-.hf-h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin: 0 0 8px;
-}
-.hf-strip {
-  display: flex;
-  align-items: flex-start;
-  gap: 4px;
-  overflow-x: auto;
-  padding: 4px 2px 10px;
-  scrollbar-width: thin;
-}
-.hf-step {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: none;
-}
-.hf-arrow {
-  color: var(--p-ink-3);
-  font-size: 16px;
-  margin: 0 2px 28px;
-}
 .hf-thumb {
   display: flex;
   flex-direction: column;
@@ -280,261 +226,6 @@
   pointer-events: none;
   border-radius: 0;
 }
-.hf-screens {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.hf-note {
-  display: grid;
-  grid-template-columns: 110px minmax(0, 1fr);
-  gap: 18px;
-  padding: 16px;
-  border-radius: 16px;
-  background: var(--paper);
-  border: 1px solid #ddd9d0;
-}
-.hf-note.on {
-  border-color: var(--p-ink);
-}
-.hf-note h3 {
-  margin: 2px 0 4px;
-  font-family: var(--display);
-  font-size: 19px;
-  font-weight: 700;
-}
-.hf-note-title:hover {
-  text-decoration: underline;
-}
-.hf-purpose {
-  margin: 0 0 10px;
-  color: var(--p-ink-2);
-  font-size: 15px;
-  line-height: 22px;
-}
-.hf-note ul {
-  font-size: 14px;
-  line-height: 21px;
-}
-
-/* three looks: just the art, right under the header */
-.hf-looks-bar {
-  margin-top: 26px;
-}
-.hf-looks {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 10px;
-}
-.hf-look {
-  position: relative;
-  display: block;
-  border-radius: 18px;
-  overflow: hidden;
-  color: inherit;
-  text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.hf-look:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px rgba(22, 18, 28, 0.18);
-}
-.hf-look-stage {
-  position: relative;
-  display: block;
-  height: 230px;
-  background: var(--sl-bg);
-  overflow: hidden;
-}
-.hf-look-ph {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  width: 375px;
-  height: 812px;
-  margin-left: -104px;
-  transform: scale(0.38);
-  transform-origin: top left;
-  border-radius: 44px;
-  box-shadow: 0 0 0 10px var(--w-bezel), 0 20px 40px rgba(0, 0, 0, 0.25);
-}
-.hf-look-ph.second {
-  top: 62px;
-  margin-left: -4px;
-  transform: scale(0.32);
-}
-.hf-look-ph .w {
-  display: block;
-  pointer-events: none;
-}
-.hf-look-name {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--p-ink);
-  color: #fff;
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 15px;
-}
-@media (max-width: 720px) {
-  .hf-looks {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* look & feel */
-.hf-swatches {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 6px 0 28px;
-}
-.hf-swatch {
-  border-radius: 14px;
-  overflow: hidden;
-  border: 1px solid #ddd9d0;
-  background: var(--paper);
-  font-size: 13px;
-  line-height: 18px;
-}
-.hf-swatch i {
-  display: block;
-  height: 72px;
-}
-.hf-swatch div {
-  padding: 10px 12px 12px;
-  color: var(--p-ink-2);
-}
-.hf-swatch b {
-  display: block;
-  color: var(--p-ink);
-  font-weight: 600;
-}
-.hf-swatch code {
-  display: block;
-  margin-bottom: 4px;
-  color: var(--p-ink-3);
-}
-.hf-type {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 28px;
-}
-.hf-specimen {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 24px;
-  align-items: center;
-  padding: 18px 20px;
-  border-radius: 16px;
-  background: var(--p-paper);
-  border: 1px solid #ddd9d0;
-}
-.hf-sample {
-  font-size: 40px;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-.hf-sample.display {
-  font-family: var(--display);
-  font-weight: 800;
-}
-.hf-sample.serif {
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  font-size: 46px;
-  letter-spacing: 0;
-}
-.hf-sample.ui {
-  font-family: var(--ui);
-  font-weight: 600;
-  font-size: 30px;
-  letter-spacing: -0.01em;
-}
-.hf-specimen div {
-  font-size: 14px;
-  line-height: 21px;
-  color: var(--p-ink-2);
-}
-.hf-specimen b {
-  display: block;
-  color: var(--p-ink);
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.hf-moods {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 28px;
-}
-.hf-mood {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 18px 12px 14px;
-  border-radius: 16px;
-  background: var(--p-paper);
-  border: 1px solid #ddd9d0;
-  font-size: 13px;
-  color: var(--p-ink-2);
-}
-.hf-mood b {
-  color: var(--p-ink);
-  font-weight: 600;
-}
-.hf-two {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  font-size: 14px;
-  line-height: 21px;
-  color: var(--p-ink-2);
-}
-
-@media (max-width: 1120px) {
-  .hf-main {
-    grid-template-columns: 380px minmax(0, 1fr);
-    gap: 32px;
-  }
-}
-@media (max-width: 979px) {
-  .hf-wrap {
-    padding-top: 24px;
-  }
-  .hf-h1 {
-    font-size: 40px;
-  }
-  .hf-main {
-    grid-template-columns: 1fr;
-    gap: 28px;
-  }
-  .hf-left {
-    position: static;
-  }
-  .hf-note {
-    grid-template-columns: 1fr;
-  }
-  .hf-note .hf-thumb {
-    display: none;
-  }
-  .hf-swatches,
-  .hf-moods {
-    grid-template-columns: 1fr 1fr;
-  }
-  .hf-specimen,
-  .hf-two {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* =====================================================================
    The phone (375 x 812)
    ===================================================================== */
@@ -1618,35 +1309,321 @@ button.p2-mic:active {
   color: var(--p-ink-3);
 }
 
-/* the screens: a line of purpose, short bullets */
-.hf-motion {
+/* =====================================================================
+   Page layout: four numbered chapters.
+   1 The day (phone + the five steps), 2 The look (color, type, mascot),
+   3 Other directions (art tiles), 4 Dodo (one lavender panel).
+   ===================================================================== */
+.hf-wrap {
+  max-width: 1120px;
+}
+.hf-head {
+  max-width: 720px;
+}
+.hf-dek {
+  font-size: 19px;
+  line-height: 28px;
+}
+.hf-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.hf-toc a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 7px;
+  border-radius: 999px;
+  background: var(--paper);
+  border: 1px solid #ddd9d0;
   font-size: 14px;
-  line-height: 21px;
-  color: var(--p-ink-2);
-  margin-top: 18px !important;
+  font-weight: 600;
+  text-decoration: none;
+}
+.hf-toc a:hover {
+  border-color: var(--p-ink);
+}
+.hf-toc i,
+.hf-h2 i {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--p-ink);
+  color: #fff;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--ui);
+}
+.hf-toc .hf-toc-out {
+  padding-left: 14px;
+  background: none;
+  border-color: transparent;
+  color: var(--p-ink-3);
 }
 
-/* Dodo, for reference: a tap-through gallery beside a jar of jellies */
+.hf-ch {
+  margin-top: 64px;
+  scroll-margin-top: 20px;
+}
+.hf-h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  font-family: var(--display);
+  font-size: 30px;
+  line-height: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 22px;
+}
+.hf-h2 i {
+  width: 30px;
+  height: 30px;
+  font-size: 15px;
+}
+.hf-h2 small {
+  flex-basis: 100%;
+  padding-left: 42px;
+  font-family: var(--ui);
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--p-ink-2);
+}
+
+/* 1 · the day */
+.hf-day {
+  display: grid;
+  grid-template-columns: 400px minmax(0, 1fr);
+  gap: 56px;
+  align-items: start;
+  margin-top: 44px;
+}
+.hf-day-phone {
+  min-width: 0;
+}
+.hf-current {
+  display: grid;
+  justify-items: center;
+}
+.hf-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.hf-steps li {
+  margin: 0;
+}
+.hf-stepr {
+  width: 100%;
+  display: grid !important;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 8px 16px 8px 8px !important;
+  border-radius: 18px;
+  border: 1.5px solid transparent !important;
+  transition: background 0.15s, border-color 0.15s;
+}
+.hf-stepr:hover {
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+.hf-stepr.on {
+  background: var(--paper) !important;
+  border-color: var(--p-ink) !important;
+}
+.hf-stepr .hf-thumb {
+  padding: 0;
+  pointer-events: none;
+}
+.hf-stepr .hf-thumb-ph {
+  width: 64px;
+  height: 138px;
+  border-radius: 10px;
+}
+.hf-stepr .hf-thumb-label {
+  display: none;
+}
+.hf-stepr .p2.thumb {
+  transform: scale(0.1707);
+}
+.hf-stepr-text b {
+  display: block;
+  font-family: var(--display);
+  font-size: 19px;
+  line-height: 24px;
+  font-weight: 700;
+}
+.hf-stepr-text span {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 21px;
+  color: var(--p-ink-2);
+}
+.hf-loopline {
+  margin: 18px 0 0 8px;
+  font-size: 15px;
+  color: var(--p-ink-2);
+}
+
+/* 2 · the look */
+.hf-sys {
+  display: grid;
+  gap: 14px;
+}
+.hf-sys-colors {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+.hf-chip i {
+  display: block;
+  height: 64px;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(22, 18, 28, 0.08);
+}
+.hf-chip b {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  line-height: 17px;
+}
+.hf-chip code {
+  display: block;
+  font-size: 11px;
+  color: var(--p-ink-3);
+}
+.hf-sys-type {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.hf-spec,
+.hf-moodc {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 18px;
+  background: var(--paper);
+}
+.hf-spec .hf-sample {
+  font-size: 28px;
+  line-height: 32px;
+}
+.hf-spec small,
+.hf-moodc small {
+  font-size: 12px;
+  color: var(--p-ink-3);
+}
+.hf-sys-moods {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.hf-moodc {
+  justify-items: center;
+  background: var(--p-paper);
+  text-transform: capitalize;
+}
+.hf-moodc svg {
+  width: 88px;
+  max-width: 100%;
+  height: auto;
+}
+
+/* 3 · other directions */
+.hf-looks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.hf-look {
+  position: relative;
+  display: block;
+  border-radius: 20px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.hf-look:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(22, 18, 28, 0.18);
+}
+.hf-look-stage {
+  position: relative;
+  display: block;
+  height: 260px;
+  background: var(--sl-bg);
+  overflow: hidden;
+}
+.hf-look-ph {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: 375px;
+  height: 812px;
+  margin-left: -112px;
+  transform: scale(0.42);
+  transform-origin: top left;
+  border-radius: 44px;
+  box-shadow: 0 0 0 10px var(--w-bezel), 0 20px 40px rgba(0, 0, 0, 0.25);
+}
+.hf-look-ph.second {
+  top: 70px;
+  margin-left: -6px;
+  transform: scale(0.36);
+}
+.hf-look-ph .w {
+  display: block;
+  pointer-events: none;
+}
+.hf-look-name {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: var(--p-ink);
+  color: #fff;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* 4 · Dodo: one panel in Dodo's own lavender, the gallery and three jelly slots */
 .hf-dodo {
   display: grid;
-  grid-template-columns: 250px minmax(0, 1fr);
-  gap: 28px;
-  align-items: start;
-  margin-top: 18px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 40px;
+  align-items: center;
+  padding: 36px 44px;
+  border-radius: 28px;
+  background: radial-gradient(120% 90% at 85% 30%, #e9f6ff 0%, #f8f2f8 55%, #f1e8f5 100%);
 }
 .hf-gal {
   display: grid;
   justify-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .hf-gal-ph {
   position: relative;
-  width: 230px !important;
+  width: 220px;
   aspect-ratio: 840 / 1824;
-  border-radius: 28px;
+  border-radius: 30px;
   overflow: hidden;
   background: #f1e8f5;
-  box-shadow: 0 0 0 7px #16121c, 0 18px 36px rgba(22, 18, 28, 0.22);
+  box-shadow: 0 0 0 7px #2d2537, 0 20px 40px rgba(80, 50, 90, 0.25);
   cursor: pointer;
 }
 .hf-gal-slide {
@@ -1665,12 +1642,14 @@ button.p2-mic:active {
 .hf-gal-line {
   margin-top: 8px;
   min-height: 40px;
+  max-width: 240px;
   font-family: var(--display);
   font-weight: 700;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 20px;
   text-align: center;
   text-wrap: balance;
+  color: #2d2537;
 }
 .hf-gal-line em {
   font-style: normal;
@@ -1681,53 +1660,31 @@ button.p2-mic:active {
   align-items: center;
   gap: 14px;
   font-size: 13px;
-  color: var(--p-ink-3);
+  color: #9a8fa4;
   font-variant-numeric: tabular-nums;
 }
 .hf-gal-nav button {
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 1.5px solid var(--p-ink) !important;
-  text-align: center !important;
-  font-size: 16px;
-}
-.hf-jar {
-  border-radius: 26px;
-  padding: 18px 18px 20px;
-  background: linear-gradient(160deg, #f8f2f8 0%, #e9f6ff 55%, #fff4e0 100%);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.8), 0 10px 26px rgba(80, 50, 90, 0.12);
-  border: 1px solid #e6dbec;
-}
-.hf-jar-head {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-}
-.hf-jar-head b {
-  font-family: var(--display);
-  font-size: 20px;
+  border: 1.5px solid #2d2537;
+  text-align: center;
+  font-size: 15px;
   color: #2d2537;
 }
-.hf-jar-head span {
-  font-size: 13px;
-  color: #6a5f73;
-}
+
 .hf .dj {
-  list-style: none;
-  padding: 0;
-  margin: 14px 0 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
-  gap: 8px;
-}
-.hf .dj li {
-  margin: 0;
-  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 520px;
+  justify-self: center;
+  width: 100%;
 }
 .hf .dj-cell {
+  position: relative;
   width: 100%;
+  aspect-ratio: 1;
   display: block;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -1735,36 +1692,46 @@ button.p2-mic:active {
   -webkit-user-select: none;
 }
 .hf .dj-disc {
-  width: 100%;
-  aspect-ratio: 1;
+  position: absolute;
+  inset: 4%;
   border-radius: 50%;
   background: var(--t);
-  box-shadow: inset 0 -3px 6px rgba(45, 37, 55, 0.07), inset 0 2px 3px rgba(255, 255, 255, 0.8);
-  display: grid;
-  place-items: center;
+  box-shadow: inset 0 -4px 8px rgba(45, 37, 55, 0.07), inset 0 3px 4px rgba(255, 255, 255, 0.85), 0 10px 24px rgba(80, 50, 90, 0.12);
+  transition: background 0.4s ease;
+}
+.hf .dj-cell:nth-child(2) {
+  transform: translateY(-18px);
 }
 .hf .dj-cell:focus-visible {
   outline: none;
 }
 .hf .dj-cell:focus-visible .dj-disc {
-  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #2689bd;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 6px #2689bd;
 }
 .hf .dj-stack {
-  position: relative;
-  width: 108%;
-  aspect-ratio: 1;
+  position: absolute;
+  inset: -2%;
   display: block;
-  transform-origin: 50% 92%;
-  transition: transform 0.42s cubic-bezier(0.34, 1.8, 0.64, 1);
-  filter: drop-shadow(0 3px 4px rgba(45, 37, 55, 0.16));
+  transform-origin: 50% 90%;
+  animation: dj-pop 0.55s cubic-bezier(0.34, 1.7, 0.64, 1) both;
+  filter: drop-shadow(0 5px 6px rgba(45, 37, 55, 0.16));
 }
-.hf .dj-cell:hover .dj-stack {
-  transform: translateY(-4px) rotate(-4deg);
+@keyframes dj-pop {
+  0% {
+    transform: translateY(18%) scale(0.3, 0.2);
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
 }
 .hf .dj-cell.is-squish .dj-stack {
-  transform: scale(1.18, 0.78);
-  transition-duration: 0.1s;
-  transition-timing-function: ease-out;
+  animation: none;
+  transform: scale(1.16, 0.8);
+  transition: transform 0.1s ease-out;
 }
 .hf .dj-img {
   position: absolute;
@@ -1781,118 +1748,205 @@ button.p2-mic:active {
 .hf .dj-cell.is-squish .dj-squish {
   opacity: 1;
 }
-@media (max-width: 720px) {
+
+/* tablet: the day stacks, the phone leads */
+@media (max-width: 979px) {
+  .hf-wrap {
+    padding-top: 24px;
+  }
+  .hf-h1 {
+    font-size: 40px;
+  }
+  .hf-day {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .hf-day-steps {
+    order: -1;
+  }
+  .hf-day-steps .hf-steps,
+  .hf-day-steps .hf-loopline {
+    display: none;
+  }
+  .hf-day-phone {
+    max-width: 420px;
+    width: 100%;
+    justify-self: center;
+  }
+  .hf-sys-colors {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
   .hf-dodo {
     grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 28px 20px 32px;
+    gap: 28px;
+  }
+}
+
+/* phone: one column, everything compact */
+@media (max-width: 640px) {
+  .hf-h1 {
+    font-size: 36px;
+  }
+  .hf-dek {
+    font-size: 17px;
+    line-height: 25px;
+  }
+  .hf-toc {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -20px;
+    padding: 0 20px 4px;
+    scrollbar-width: none;
+  }
+  .hf-toc::-webkit-scrollbar {
+    display: none;
+  }
+  .hf-toc a {
+    flex: none;
+  }
+  .hf-ch {
+    margin-top: 48px;
+  }
+  .hf-h2 {
+    font-size: 26px;
+    margin-bottom: 16px;
+  }
+  .hf-h2 small {
+    padding-left: 0;
+  }
+  .hf-chip i {
+    height: 44px;
+    border-radius: 12px;
+  }
+  .hf-sys-type {
+    grid-template-columns: 1fr;
+    margin-top: 6px;
+  }
+  .hf-spec {
+    padding: 14px 16px;
+    gap: 4px;
+  }
+  .hf-spec .hf-sample {
+    font-size: 24px;
+    line-height: 28px;
+  }
+  .hf-moodc {
+    padding: 10px 4px 8px;
+    gap: 4px;
+  }
+  .hf-looks {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 80%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    margin-inline: -20px;
+    padding: 0 20px 4px;
+    scroll-padding-inline: 20px;
+    scrollbar-width: none;
+  }
+  .hf-looks::-webkit-scrollbar {
+    display: none;
+  }
+  .hf-look {
+    scroll-snap-align: start;
+  }
+  .hf-look-stage {
+    height: 230px;
+  }
+  .hf-gal-ph {
+    width: 200px;
+  }
+  .hf .dj {
+    gap: 12px;
+  }
+  .hf .dj-cell:nth-child(2) {
+    transform: translateY(-10px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .hf .dj-stack {
-    transition: none;
+    animation: none;
   }
 }
 
-/* tighter look and feel: eight chips in a row, three specimens side by side */
-.hf .hf-swatches {
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0 0 18px;
+/* the caption under the phone only shows when the step list is hidden */
+.hf-current-cap {
+  display: none;
 }
-.hf .hf-swatch i {
-  height: 46px;
+.hf-stepr .hf-thumb-ph {
+  flex: none;
 }
-.hf .hf-swatch div {
-  padding: 7px 8px 9px;
-  font-size: 12px;
-  line-height: 16px;
+@media (max-width: 979px) {
+  .hf-current-cap {
+    display: block;
+    text-align: center;
+    margin: 4px 0 10px;
+  }
+  .hf-current-cap b {
+    display: block;
+    font-family: var(--display);
+    font-size: 19px;
+    line-height: 24px;
+  }
+  .hf-current-cap span {
+    display: block;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--p-ink-2);
+  }
 }
-.hf .hf-swatch code {
-  font-size: 10.5px;
-  margin-bottom: 1px;
+.hf-stepr {
+  cursor: pointer;
 }
-.hf .hf-type {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 18px;
+.hf-stepr:focus-visible {
+  outline: 3px solid var(--p-blue);
+  outline-offset: 2px;
 }
-.hf .hf-specimen {
-  grid-template-columns: 1fr;
-  gap: 10px;
-  padding: 16px;
-  align-content: space-between;
+
+/* type specimens, each in its own face */
+.hf-sample {
+  letter-spacing: -0.02em;
 }
-.hf .hf-specimen .hf-sample {
+.hf-sample.display {
+  font-family: var(--display);
+  font-weight: 800;
+}
+.hf-sample.serif {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.hf-spec .hf-sample.serif {
+  font-size: 32px;
+}
+.hf-sample.ui {
+  font-family: var(--ui);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.hf-spec .hf-sample.ui {
   font-size: 24px;
-  line-height: 28px;
 }
-.hf .hf-specimen div {
-  font-size: 13px;
-  line-height: 18px;
-}
-.hf .hf-moods {
-  gap: 10px;
-  margin-bottom: 0;
-}
-.hf .hf-mood {
-  padding: 14px 8px 10px;
-}
-@media (max-width: 1120px) {
-  .hf .hf-swatches {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+
+/* Dodo panel on wide screens: a smaller phone, bigger jellies */
+@media (min-width: 980px) {
+  .hf-dodo {
+    grid-template-columns: 240px minmax(0, 1fr);
+    padding: 36px 56px;
   }
-}
-@media (max-width: 720px) {
-  .hf .hf-type {
-    grid-template-columns: 1fr;
+  .hf-gal-ph {
+    width: 200px;
+  }
+  .hf .dj {
+    max-width: 600px;
+    gap: 28px;
   }
 }
 
-/* screen notes: text cards in two columns; the loop strip carries the thumbnails */
-.hf .hf-screens {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-.hf .hf-note-tight {
-  display: block;
-  padding: 14px 16px 12px;
-}
-.hf .hf-note-tight ul {
-  margin-top: 6px;
-}
-.hf .hf-note-tight li {
-  margin: 3px 0;
-}
-@media (max-width: 720px) {
-  .hf .hf-screens {
-    grid-template-columns: 1fr;
-  }
-}
-.hf .hf-gal-ph {
-  width: 210px !important;
-}
-.hf .hf-dodo {
-  grid-template-columns: 230px minmax(0, 1fr);
-}
-
-/* on a phone the three looks swipe sideways instead of stacking */
-@media (max-width: 720px) {
-  .hf .hf-looks {
-    grid-template-columns: none;
-    grid-auto-flow: column;
-    grid-auto-columns: 78%;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    margin-inline: -20px;
-    padding: 0 20px 6px;
-    scroll-padding-inline: 20px;
-    scrollbar-width: none;
-  }
-  .hf .hf-looks::-webkit-scrollbar {
-    display: none;
-  }
-  .hf .hf-look {
-    scroll-snap-align: start;
-  }
+.hf .dj-stack {
+  filter: none;
 }

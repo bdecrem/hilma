@@ -127,6 +127,7 @@ export const SCREENS: ScreenNote[] = [
   },
 ]
 
+
 export const LOOP: { id: ScreenId; state?: MapState; label: string }[] = [
   { id: 'map', state: 'morning', label: 'Map, morning' },
   { id: 'talk', label: 'Talk' },
@@ -135,7 +136,6 @@ export const LOOP: { id: ScreenId; state?: MapState; label: string }[] = [
   { id: 'done', label: 'Day complete' },
   { id: 'map', state: 'done', label: 'Map, done' },
 ]
-
 export const PALETTE = [
   { name: 'Paper', value: '#FFF4E3', role: 'Background' },
   { name: 'Ink', value: '#16121C', role: 'Text, trail' },
@@ -153,11 +153,6 @@ export const TYPE = [
   { name: 'Instrument Sans', role: 'Everything else', sample: 'Say it in Spanish' },
 ]
 
-export const MOTION = [
-  'The parrot is always a little alive: a breath, a blink.',
-  'Answers snap to lime or vermillion; “got it” bursts sunflower dots.',
-  'A soft chime for got it, a warmer one for day complete, nothing for a miss.',
-]
 
 
 /* ---------- the three looks (2026-10-09) ---------- */

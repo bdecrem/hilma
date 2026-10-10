@@ -93,50 +93,87 @@ export const JELLIES: Jelly[] = [
   { id: 'sprite', name: 'Sprite', tint: '#E4FFF7', color: '#62CFB5' },
 ]
 
-const SIZES = '64px'
 const src = (id: string, squish = false) => {
   const base = `/dodo/jelly/${id}${squish ? '-squish' : ''}`
-  return { src: `${base}.webp`, srcSet: `${base}.webp 512w, ${base}@2x.webp 1024w` }
+  return { src: `${base}.webp`, srcSet: `${base}.webp 1x, ${base}@2x.webp 2x` }
 }
 
-/** The avatar sheet. Tap a jelly and it squishes, like a critter on the Peck map. */
+/**
+ * Three slots, twenty-three jellies taking turns: every 1.4 s one slot pops
+ * a new character in. Runs only while on screen; poke one and it squishes.
+ */
 export function Jellies() {
-  const [down, setDown] = useState<string | null>(null)
+  const n = JELLIES.length
+  const [slots, setSlots] = useState([0, 8, 13])
+  const [down, setDown] = useState<number | null>(null)
+  const [seen, setSeen] = useState(false)
+  const turn = useRef(0)
+  const nextUp = useRef(1)
+  const box = useRef<HTMLDivElement>(null)
   const timer = useRef(0)
-  const squish = (id: string) => {
-    setDown(id)
+
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setSeen(e.isIntersecting), { threshold: 0.4 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  useEffect(() => {
+    if (!seen) return
+    JELLIES.forEach((j) => {
+      const im = new Image()
+      im.src = src(j.id).src
+    })
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const t = window.setInterval(() => {
+      setSlots((cur) => {
+        let k = nextUp.current
+        while (cur.includes(k)) k = (k + 1) % n
+        nextUp.current = (k + 1) % n
+        const out = [...cur]
+        out[turn.current % 3] = k
+        turn.current++
+        return out
+      })
+    }, 1400)
+    return () => window.clearInterval(t)
+  }, [seen, n])
+
+  const squish = (slot: number) => {
+    setDown(slot)
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => setDown(null), 260)
   }
   return (
-    <ul className="dj" aria-label="Every avatar in Dodo">
-      {JELLIES.map((j) => (
-        <li key={j.id}>
+    <div className="dj" ref={box} role="group" aria-label="Dodo's avatars, three at a time">
+      {slots.map((k, slot) => {
+        const j = JELLIES[k]
+        return (
           <button
+            key={slot}
             type="button"
-            className={'dj-cell' + (down === j.id ? ' is-squish' : '')}
+            className={'dj-cell' + (down === slot ? ' is-squish' : '')}
             style={{ '--t': j.tint, '--c': j.color } as CSSProperties}
-            onPointerDown={() => squish(j.id)}
+            onPointerDown={() => squish(slot)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault()
-                squish(j.id)
+                squish(slot)
               }
             }}
             aria-label={`${j.name}. Tap to squish.`}
-            title={j.name}
           >
-            <span className="dj-disc">
-              <span className="dj-stack">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="dj-img" {...src(j.id)} sizes={SIZES} alt="" loading="lazy" decoding="async" draggable={false} />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="dj-img dj-squish" {...src(j.id, true)} sizes={SIZES} alt="" loading="lazy" decoding="async" draggable={false} aria-hidden />
-              </span>
+            <span className="dj-disc" />
+            <span className="dj-stack" key={j.id}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="dj-img" {...src(j.id)} alt="" decoding="async" draggable={false} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="dj-img dj-squish" {...src(j.id, true)} alt="" decoding="async" draggable={false} aria-hidden />
             </span>
           </button>
-        </li>
-      ))}
-    </ul>
+        )
+      })}
+    </div>
   )
 }
