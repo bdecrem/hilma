@@ -6,7 +6,7 @@ Dodo's default voice engine since 2026-09-21 (`VoiceEngine.fallback`; GPT-Live, 
 
 ## The shape of a session
 
-**ElevenLabs Speech Engine** owns the audio: speech-to-text (`scribe_realtime`), turn-taking (`turn_v3`), barge-in, and the voice (Jessica on `eleven_v3_conversational`). **Claude Opus 5.5** owns the words. Speech Engine is ElevenLabs' bring-your-own-LLM product: for each user turn it sends the running transcript to OUR WebSocket server and speaks whatever text comes back.
+**ElevenLabs Speech Engine** owns the audio: speech-to-text (`scribe_realtime`), turn-taking (`turn_v3`), barge-in, and the voice (Jessica on `eleven_v4_turbo`, expressive mode off, stability 0.5 — since 2026-10-09; it was `eleven_v3_conversational` with expressive mode on before, and that model performed every line with drawn-out emphasis and a playful lilt. The `tts` block in `apps/dodo-voice-bridge/engines.mjs` has the story; the comparison samples are in `~/Desktop/dodo-voice` on the iMac). **Claude Opus 5.5** owns the words. Speech Engine is ElevenLabs' bring-your-own-LLM product: for each user turn it sends the running transcript to OUR WebSocket server and speaks whatever text comes back.
 
 ```
 phone ⇄ ElevenLabs (WebRTC, their Swift SDK)
@@ -36,7 +36,7 @@ It is a cascade, not a full-duplex model: there are no backchannels while the us
 ## What differs from the GPT-Live prompt
 
 `engine: 'eleven'` on the builders in `live.ts`:
-- **Persona** (`ELEVEN_PERSONA`): Claude never hears audio. It is told that everything it writes is spoken, to write only the words to be said (no markdown, lists, stage directions; numbers as spoken), that what it reads is a transcript with mis-hearings, and that an earlier turn of its own ending mid-sentence means the user cut in.
+- **Persona** (`ELEVEN_PERSONA`): Claude never hears audio. It is told that everything it writes is spoken, to write only the words to be said (no markdown, lists, stage directions; numbers as spoken; ordinary punctuation — no exclamation marks, ellipses, capitals or bracketed cues, because the voice performs those — and no "oh" / "great question" openers), that what it reads is a transcript with mis-hearings, and that an earlier turn of its own ending mid-sentence means the user cut in.
 - **The whole material**, up to 120,000 chars, where GPT-Live gets a 24,000-char excerpt. Claude's context holds it, so there is **no backend model and no delegation policy**.
 - Everything else — the scripts per mode, study focus, weaknesses, the user's delivery style, the hold-to-talk note — is the same text.
 

@@ -1,9 +1,10 @@
 // Create or update the Speech Engines on ElevenLabs — two for Dodo, two for
 // Polly — and point them at this bridge. Idempotent: engines are found by name.
 //
-//   node engines.mjs <public https origin of the bridge> [all|dev|prod]
+//   node engines.mjs <public https origin of the bridge> [all|dev|prod] [all|dodo|polly]
 //   node engines.mjs https://dodo-voice-bridge-production.up.railway.app   # all four
 //   node engines.mjs https://something.trycloudflare.com dev              # the two dev ones
+//   node engines.mjs https://dodo-voice-bridge-production.up.railway.app prod dodo   # Dodo's prod engine only
 //
 //   "Dodo (dev)"   → wss://<host>/ws/dev         (a local dev server)
 //   "Dodo"         → wss://<host>/ws/prod        (https://feynd.cc)
@@ -24,7 +25,9 @@ if (!KEY) throw new Error('ELEVENLABS_API_KEY is not set')
 const origin = (process.argv[2] || '').replace(/\/$/, '')
 if (!/^https:\/\//.test(origin)) throw new Error('usage: node engines.mjs https://<bridge host> [all|dev|prod]')
 const which = process.argv[3] || 'all'
-if (!['all', 'dev', 'prod'].includes(which)) throw new Error('usage: node engines.mjs https://<bridge host> [all|dev|prod]')
+if (!['all', 'dev', 'prod'].includes(which)) throw new Error('usage: node engines.mjs https://<bridge host> [all|dev|prod] [all|dodo|polly]')
+const app = process.argv[4] || 'all'
+if (!['all', 'dodo', 'polly'].includes(app)) throw new Error('usage: node engines.mjs https://<bridge host> [all|dev|prod] [all|dodo|polly]')
 const wsBase = origin.replace(/^https:/, 'wss:')
 
 // Polly's voice speaks Italian, French and Korean as well as English: Alice
@@ -32,12 +35,41 @@ const wsBase = origin.replace(/^https:/, 'wss:')
 // POLLY_ELEVEN_VOICE_ID override.
 const DODO_VOICE = process.env.DODO_ELEVEN_VOICE_ID || 'cgSgspJ2msm6clMCkdW9' // Jessica — playful, bright, warm
 const POLLY_VOICE = process.env.POLLY_ELEVEN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2' // Alice — clear, engaging educator
+
+// How each app's voice is rendered. Everything else in `tts` keeps the API
+// defaults (similarity 0.8, pcm_16000, numbers normalised by the LLM).
+//
+// Dodo (2026-10-09): Eleven v4 Turbo, the agent model since v4 shipped on
+// 2026-09-28, with expressive mode OFF. Before this it was
+// 'eleven_v3_conversational' with expressive mode on — the API default for
+// that model, which this script never set, so production had it — and the
+// voice performed every line: drawn-out emphasis, dramatic pauses, a playful
+// lilt. Bart stopped enjoying voice mode over it. Whisper found no inserted
+// words in the samples (~/Desktop/dodo-voice): it was prosody. v4 turbo reads
+// the same paragraph in 24 s where v3 conversational took 27–28 s, with the
+// same time to first sound. v4 has no speed or style settings; stability 0.5
+// and similarity 0.8 are what the sample Bart chose used. Expressive mode is
+// only honoured on v3 models anyway, but stays false so a model change can't
+// bring it back. 'eleven_flash_v2' is the flatter, older fallback.
+const DODO_TTS = {
+  model_id: process.env.DODO_ELEVEN_TTS_MODEL || 'eleven_v4_turbo',
+  expressive_mode: false,
+  stability: 0.5,
+  similarity_boost: 0.8,
+}
+// Polly: unchanged — the expressive conversational model with its defaults.
+const POLLY_TTS = {
+  model_id: process.env.POLLY_ELEVEN_TTS_MODEL || 'eleven_v3_conversational',
+}
+
 const ENGINES = [
-  { name: 'Dodo (dev)', path: '/ws/dev', voice: DODO_VOICE, dev: true },
-  { name: 'Dodo', path: '/ws/prod', voice: DODO_VOICE, dev: false },
-  { name: 'Polly (dev)', path: '/ws/polly-dev', voice: POLLY_VOICE, dev: true },
-  { name: 'Polly', path: '/ws/polly-prod', voice: POLLY_VOICE, dev: false },
-].filter((e) => which === 'all' || (which === 'dev') === e.dev)
+  { name: 'Dodo (dev)', path: '/ws/dev', voice: DODO_VOICE, tts: DODO_TTS, dev: true, app: 'dodo' },
+  { name: 'Dodo', path: '/ws/prod', voice: DODO_VOICE, tts: DODO_TTS, dev: false, app: 'dodo' },
+  { name: 'Polly (dev)', path: '/ws/polly-dev', voice: POLLY_VOICE, tts: POLLY_TTS, dev: true, app: 'polly' },
+  { name: 'Polly', path: '/ws/polly-prod', voice: POLLY_VOICE, tts: POLLY_TTS, dev: false, app: 'polly' },
+]
+  .filter((e) => which === 'all' || (which === 'dev') === e.dev)
+  .filter((e) => app === 'all' || app === e.app)
 
 /// Everything about how Dodo sounds and takes turns lives here.
 function engineBody(engine) {
@@ -49,13 +81,7 @@ function engineBody(engine) {
       // from /api/f2/eleven/session) reaches the bridge as this header.
       request_headers: { 'x-dodo-voice-session': { variable_name: 'dodo_voice_session' } },
     },
-    tts: {
-      voice_id: engine.voice,
-      // The expressive conversational model. 'eleven_flash_v2' is ≈ 0.5 s
-      // quicker to first sound and flatter; English engines accept only
-      // flash/turbo v2 or this one (v2.5 is refused).
-      model_id: process.env.DODO_ELEVEN_TTS_MODEL || 'eleven_v3_conversational',
-    },
+    tts: { voice_id: engine.voice, ...engine.tts },
     turn: {
       // Exams need room to think: no "are you still there?" for half a minute.
       turn_timeout: 30,
@@ -100,5 +126,6 @@ for (const engine of ENGINES) {
   const result = found
     ? await call('PATCH', `${API}/${found.speech_engine_id}`, engineBody(engine))
     : await call('POST', API, engineBody(engine))
-  console.log(`${found ? 'updated' : 'created'} ${engine.name}: ${result.speech_engine_id} → ${result.speech_engine.ws_url} (${result.tts.voice_id}, ${result.tts.model_id})`)
+  const tts = result.tts
+  console.log(`${found ? 'updated' : 'created'} ${engine.name}: ${result.speech_engine_id} → ${result.speech_engine.ws_url} (${tts.voice_id}, ${tts.model_id}, expressive ${tts.expressive_mode}, stability ${tts.stability})`)
 }
