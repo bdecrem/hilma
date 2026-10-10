@@ -1,0 +1,196 @@
+/* Arcade: deep space, neon magenta and cyan, glowing panels, a pixel parrot. */
+.theme-arcade {
+  --w-bg: #0f1030;
+  --w-card: #181a4d;
+  --w-ink: #ffffff;
+  --w-ink-2: #b9bbea;
+  --w-ink-3: #7f82c4;
+  --w-line: #2b2e74;
+  --w-stroke: #19e6ff;
+  --w-border: 2px;
+  --w-primary: #ff2fd2;
+  --w-primary-deep: #a8128c;
+  --w-primary-ink: #ffffff;
+  --w-voice: #07081f;
+  --w-voice-ink: #ffffff;
+  --w-voice-bubble: #181a4d;
+  --w-voice-bubble-ink: #ffffff;
+  --w-voice-you: rgba(25, 230, 255, 0.14);
+  --w-voice-you-line: #19e6ff;
+  --w-voice-you-ink: #ffffff;
+  --w-stage: #181a4d;
+  --w-ring: rgba(25, 230, 255, 0.8);
+  --w-reward: #ffe600;
+  --w-on-reward: #15163a;
+  --w-good: #7dff5a;
+  --w-on-good: #0f1030;
+  --w-bad: #ff3d5a;
+  --w-on-bad: #ffffff;
+  --w-fix: #ff2fd2;
+  --w-word: #19e6ff;
+  --w-tag-ink: #0f1030;
+  --w-trail: #19e6ff;
+  --w-trail-next: #2b2e74;
+  --w-r-screen: 44px;
+  --w-r-card: 10px;
+  --w-r-btn: 8px;
+  --w-r-chip: 6px;
+  --w-r-input: 8px;
+  --w-sh-card: 0 0 0 1px rgba(25, 230, 255, 0.25), 0 0 26px rgba(25, 230, 255, 0.16);
+  --w-sh-btn: 0 0 20px rgba(255, 47, 210, 0.65), inset 0 -3px 0 rgba(0, 0, 0, 0.3);
+  --w-sh-mic: 0 0 34px rgba(255, 47, 210, 0.75), inset 0 -4px 0 rgba(0, 0, 0, 0.3);
+  --w-sh-streak: 0 0 14px rgba(255, 230, 0, 0.55);
+  --w-display: var(--font-display), 'Bungee', Impact, sans-serif;
+  --w-ui: var(--font-ui), 'Space Grotesk', system-ui, sans-serif;
+  --w-lang: var(--font-lang), 'Space Mono', ui-monospace, monospace;
+  --w-lang-style: normal;
+  --w-bezel: #05051a;
+  --m-body: #ff2fd2;
+  --m-crest: #19e6ff;
+  --m-beak: #ffe600;
+  --m-beak-low: #e0c200;
+  --m-cheek: #ff7ae6;
+  --m-eye: #ffffff;
+  --m-pupil: #0f1030;
+
+  --sl-bg: #06061a;
+  --sl-ink: #ffffff;
+  --sl-ink-2: #8f92cf;
+  --sl-panel: #15163a;
+  --sl-dot: #2b2e74;
+  --sl-dot-on: #19e6ff;
+  --sl-phone-shadow: 0 0 0 2px #19e6ff, 0 0 60px rgba(25, 230, 255, 0.35), 0 30px 80px rgba(0, 0, 0, 0.6);
+  --sl-arrow-border: 2px solid #19e6ff;
+  --sl-arrow-shadow: 0 0 14px rgba(25, 230, 255, 0.45);
+  --sl-title-tracking: 0.02em;
+}
+.theme-arcade.sl {
+  background-image: linear-gradient(rgba(25, 230, 255, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(25, 230, 255, 0.07) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 110%, rgba(255, 47, 210, 0.35), transparent 60%);
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+}
+.theme-arcade .sl-title {
+  text-shadow: 0 0 18px rgba(25, 230, 255, 0.7);
+}
+.theme-arcade .w-screen {
+  background-image: linear-gradient(rgba(25, 230, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(25, 230, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.theme-arcade .w-talk {
+  background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px), radial-gradient(ellipse at 50% 30%, rgba(25, 230, 255, 0.25), transparent 55%);
+}
+.theme-arcade .w-day-n,
+.theme-arcade .w-sec-title,
+.theme-arcade .w-done-title,
+.theme-arcade .w-talk-topic,
+.theme-arcade .w-wordmark {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  text-shadow: 0 0 14px rgba(25, 230, 255, 0.55);
+}
+.theme-arcade .w-day-n {
+  font-size: 34px;
+  color: var(--w-reward);
+  text-shadow: 0 0 16px rgba(255, 230, 0, 0.6);
+}
+.theme-arcade .w-btn,
+.theme-arcade .w-check {
+  font-family: var(--w-display);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 15px;
+}
+.theme-arcade .w-btn.ghost {
+  border-color: var(--w-stroke);
+  color: var(--w-stroke);
+}
+.theme-arcade .w-tag {
+  border-radius: 4px;
+  font-family: var(--w-lang);
+  letter-spacing: 0.1em;
+}
+.theme-arcade .w-tag.fix {
+  color: #fff;
+}
+.theme-arcade .w-es,
+.theme-arcade .w-option,
+.theme-arcade .w-input,
+.theme-arcade .w-chip {
+  color: var(--w-good);
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(125, 255, 90, 0.5);
+}
+.theme-arcade .w-es {
+  font-size: 30px;
+  line-height: 36px;
+}
+.theme-arcade .w-es.sm {
+  font-size: 22px;
+  line-height: 26px;
+}
+.theme-arcade .w-option,
+.theme-arcade .w-chip,
+.theme-arcade .w-input {
+  font-size: 18px;
+  text-shadow: none;
+}
+.theme-arcade .w-option.right,
+.theme-arcade .w-flash.ok .w-band .w-es {
+  color: var(--w-on-good);
+}
+.theme-arcade .w-option.wrong,
+.theme-arcade .w-flash.miss .w-band .w-es {
+  color: var(--w-on-bad);
+}
+.theme-arcade .w-option.right {
+  box-shadow: 0 0 18px rgba(125, 255, 90, 0.6);
+}
+.theme-arcade .w-step-n {
+  border-radius: 4px;
+  font-family: var(--w-lang);
+}
+.theme-arcade .w-streak {
+  color: var(--w-reward);
+  border-color: var(--w-reward);
+}
+.theme-arcade .w-segs i {
+  border-radius: 2px;
+}
+.theme-arcade .w-segs i.ok,
+.theme-arcade .w-segs i.done {
+  box-shadow: 0 0 10px rgba(125, 255, 90, 0.7);
+}
+.theme-arcade .w-mic {
+  border-radius: 12px;
+}
+.theme-arcade .w-speech {
+  font-family: var(--w-lang);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.theme-arcade .w-sun i {
+  box-shadow: 0 0 60px rgba(255, 230, 0, 0.6);
+}
+.theme-arcade .w-home i {
+  background: var(--w-stroke);
+}
+/* pixel parrot: the beak drops a pixel instead of rotating */
+.theme-arcade .w-mascot.talking .m-beak-low {
+  animation: w-pixflap 0.26s steps(1) infinite alternate;
+}
+.theme-arcade .w-mascot.happy .m-beak-low {
+  transform: translateY(8px);
+}
+.theme-arcade .w-mascot.listening {
+  transform: none;
+}
+@keyframes w-pixflap {
+  to {
+    transform: translateY(8px);
+  }
+}
+.theme-arcade .w-sec-title {
+  font-size: 16px;
+  line-height: 20px;
+}

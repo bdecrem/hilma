@@ -1,0 +1,233 @@
+/* Sticker: zine white with halftone, fat black outlines, hard offset
+   shadows, tilted die-cut stickers, marker-pen Spanish. */
+.theme-sticker {
+  --w-bg: #fffdf5;
+  --w-card: #ffffff;
+  --w-ink: #111111;
+  --w-ink-2: #444444;
+  --w-ink-3: #8a8a8a;
+  --w-line: #e6e2d6;
+  --w-stroke: #111111;
+  --w-border: 3px;
+  --w-primary: #ff3b30;
+  --w-primary-deep: #111111;
+  --w-primary-ink: #ffffff;
+  --w-voice: #2962ff;
+  --w-voice-ink: #ffffff;
+  --w-voice-bubble: #ffffff;
+  --w-voice-bubble-ink: #111111;
+  --w-voice-you: #ffd60a;
+  --w-voice-you-line: #111111;
+  --w-voice-you-ink: #111111;
+  --w-stage: #ffffff;
+  --w-ring: rgba(255, 255, 255, 0.9);
+  --w-reward: #ffd60a;
+  --w-on-reward: #111111;
+  --w-good: #30d158;
+  --w-on-good: #111111;
+  --w-bad: #ff3b30;
+  --w-on-bad: #ffffff;
+  --w-fix: #ff3b30;
+  --w-word: #2962ff;
+  --w-tag-ink: #ffffff;
+  --w-trail: #111111;
+  --w-trail-next: #b9b5a8;
+  --w-r-screen: 44px;
+  --w-r-card: 16px;
+  --w-r-btn: 12px;
+  --w-r-chip: 999px;
+  --w-r-input: 12px;
+  --w-sh-card: 6px 6px 0 #111111;
+  --w-sh-btn: 4px 4px 0 #111111;
+  --w-sh-mic: 6px 6px 0 #111111;
+  --w-sh-streak: 3px 3px 0 #111111;
+  --w-display: var(--font-display), 'Bangers', Impact, sans-serif;
+  --w-ui: var(--font-ui), 'Nunito', system-ui, sans-serif;
+  --w-lang: var(--font-lang), 'Permanent Marker', cursive;
+  --w-lang-style: normal;
+  --w-bezel: #111111;
+  --m-body: #ff3b30;
+  --m-crest: #2962ff;
+  --m-beak: #ffd60a;
+  --m-beak-lo: #e0b800;
+  --m-cheek: #ff8a80;
+  --m-eye: #ffffff;
+  --m-pupil: #111111;
+  --m-outline: #111111;
+
+  --sl-bg: #fffdf5;
+  --sl-ink: #111111;
+  --sl-ink-2: #666666;
+  --sl-panel: #ffffff;
+  --sl-dot: #d9d5c8;
+  --sl-dot-on: #ff3b30;
+  --sl-phone-shadow: 10px 10px 0 #111111;
+  --sl-arrow-border: 3px solid #111111;
+  --sl-arrow-shadow: 3px 3px 0 #111111;
+  --sl-title-tracking: 0.03em;
+}
+.theme-sticker.sl {
+  background-image: radial-gradient(circle at 0 0, rgba(17, 17, 17, 0.14) 1.2px, transparent 1.8px), radial-gradient(circle at 100% 100%, rgba(255, 59, 48, 0.25) 1.2px, transparent 1.8px);
+  background-size: 10px 10px, 14px 14px;
+  background-position: 0 0, 7px 7px;
+}
+.theme-sticker .sl-title {
+  font-size: 30px;
+  text-shadow: 3px 3px 0 #ffd60a;
+}
+.theme-sticker .sl-phone {
+  border-radius: 48px;
+  border: 3px solid #111;
+}
+.theme-sticker .w-screen {
+  background-image: radial-gradient(rgba(17, 17, 17, 0.07) 1px, transparent 1.5px);
+  background-size: 8px 8px;
+}
+.theme-sticker .w-talk {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1.5px);
+  background-size: 8px 8px;
+}
+.theme-sticker .w-day-n,
+.theme-sticker .w-sec-title,
+.theme-sticker .w-done-title,
+.theme-sticker .w-talk-topic,
+.theme-sticker .w-wordmark,
+.theme-sticker .w-btn,
+.theme-sticker .w-check,
+.theme-sticker .w-speech,
+.theme-sticker .w-streak,
+.theme-sticker .w-count {
+  font-family: var(--w-display);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+.theme-sticker .w-day-n {
+  font-size: 46px;
+  text-shadow: 3px 3px 0 #ffd60a;
+}
+.theme-sticker .w-done-title {
+  font-size: 44px;
+  text-shadow: 3px 3px 0 #ffd60a;
+}
+.theme-sticker .w-btn,
+.theme-sticker .w-check {
+  font-size: 24px;
+  border: 3px solid #111;
+}
+.theme-sticker .w-btn.ghost {
+  border-width: 3px;
+  box-shadow: 4px 4px 0 #111;
+}
+.theme-sticker .w-streak {
+  font-size: 20px;
+  background: var(--w-reward);
+  transform: rotate(3deg);
+}
+.theme-sticker .w-card.w-thing {
+  transform: rotate(-1.5deg);
+}
+.theme-sticker .w-card.w-flash {
+  transform: rotate(1deg);
+}
+.theme-sticker .w-card.w-back {
+  transform: rotate(-1deg);
+}
+.theme-sticker .w-tag {
+  border: 2px solid #111;
+  box-shadow: 2px 2px 0 #111;
+  transform: rotate(-3deg);
+  font-family: var(--w-ui);
+  font-weight: 800;
+}
+.theme-sticker .w-es {
+  font-size: 34px;
+  line-height: 40px;
+  color: var(--w-voice);
+}
+.theme-sticker .w-es.sm {
+  font-size: 24px;
+  line-height: 28px;
+}
+.theme-sticker .w-option,
+.theme-sticker .w-chip,
+.theme-sticker .w-input {
+  font-size: 20px;
+  color: var(--w-voice);
+}
+.theme-sticker .w-option {
+  box-shadow: 3px 3px 0 #111;
+}
+.theme-sticker .w-option.right,
+.theme-sticker .w-option.wrong {
+  color: var(--w-on-good);
+  transform: rotate(-1deg);
+}
+.theme-sticker .w-option.wrong {
+  color: var(--w-on-bad);
+}
+.theme-sticker .w-step-n {
+  border-width: 2.5px;
+  box-shadow: 2px 2px 0 #111;
+}
+.theme-sticker .w-segs i {
+  border: 2px solid #111;
+  height: 10px;
+}
+.theme-sticker .w-speech {
+  font-size: 20px;
+  border-radius: 14px;
+  position: relative;
+}
+.theme-sticker .w-speech::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 14px;
+  border: 7px solid transparent;
+  border-right-color: #111;
+}
+.theme-sticker .w-mic {
+  border-width: 3px;
+}
+.theme-sticker .w-mic.off {
+  border-color: #111;
+  box-shadow: 6px 6px 0 #c9c5b8;
+}
+.theme-sticker .w-bubble {
+  border: 2.5px solid #111;
+  box-shadow: 3px 3px 0 #111;
+}
+.theme-sticker .w-fixchip {
+  border: 2px solid #111;
+  box-shadow: 2px 2px 0 #111;
+}
+.theme-sticker .w-pill {
+  background: #fff;
+  color: #111;
+  border: 3px solid #111;
+  box-shadow: 4px 4px 0 #111;
+  opacity: 1;
+  font-family: var(--w-display);
+  font-size: 20px;
+  letter-spacing: 0.04em;
+}
+.theme-sticker .w-stage-rings {
+  border-width: 3px;
+  box-shadow: 6px 6px 0 #111;
+}
+.theme-sticker .w-sun i {
+  box-shadow: 8px 8px 0 #111;
+}
+.theme-sticker .w-gotmark {
+  border-width: 2.5px;
+  box-shadow: 2px 2px 0 #111;
+}
+.theme-sticker .w-band.inline {
+  box-shadow: 3px 3px 0 #111;
+}
+.theme-sticker .w-input:focus {
+  box-shadow: 3px 3px 0 #111, 0 0 0 3px #ffd60a;
+}
+.theme-sticker .w-mascot.listening {
+  transform: rotate(-9deg);
+}
