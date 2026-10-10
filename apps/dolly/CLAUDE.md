@@ -66,8 +66,9 @@ The voice bridge must route the dev engine here: `bash apps/dodo-voice-bridge/ru
 `.env.local` is that engine, Vercel's is "Dolly").
 
 Without `-TestSessionToken` a fresh install opens on onboarding; the sign-in
-code goes out by iMessage for real numbers (test phones in `src/lib/dolly/send.ts`
-get none — they sign in by minted cookie only).
+code goes out by iMessage for real numbers. The test phones in
+`src/lib/dolly/send.ts` get no text: their code is `DOLLY_TEST_CODE` (`.env.local`
+and Vercel), which is how `e2e.ts` signs in against production too.
 
 ## Ship to TestFlight
 
