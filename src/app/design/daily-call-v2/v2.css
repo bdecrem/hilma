@@ -1968,3 +1968,76 @@ button.p2-mic:active {
     padding: 36px 16px 28px;
   }
 }
+
+.hf-cast-all {
+  margin-top: 26px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2689bd;
+  text-decoration: none;
+}
+.hf-cast-all:hover {
+  text-decoration: underline;
+}
+
+/* /cast: everyone side by side, named */
+.hf-back {
+  font-size: 14px;
+  color: var(--p-ink-3);
+  text-decoration: none;
+}
+.hf-castpage .hf-h1 {
+  margin-top: 18px;
+}
+.dj-sheet {
+  list-style: none;
+  margin: 36px 0 0;
+  padding: 36px 28px;
+  border-radius: 28px;
+  background: radial-gradient(120% 100% at 50% 0%, #e9f6ff 0%, #f8f2f8 55%, #f1e8f5 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 26px 18px;
+}
+.dj-sheet li {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+.dj-sheet .dj-cell {
+  width: 100%;
+  max-width: 128px;
+}
+.dj-sheet .dj-stack {
+  animation: none;
+  transition: transform 0.42s cubic-bezier(0.34, 1.8, 0.64, 1);
+}
+.dj-sheet .dj-cell:hover .dj-stack {
+  transform: translateY(-4px) rotate(-4deg);
+}
+.dj-name {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 15px;
+  color: #2d2537;
+}
+@media (max-width: 640px) {
+  .dj-sheet {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 24px 12px;
+    gap: 18px 8px;
+  }
+  .dj-name {
+    font-size: 13px;
+  }
+}
+/* sixteen: two rows of eight, four rows of four on a phone */
+.dj-sheet {
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+  .dj-sheet {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -150,6 +150,15 @@ const browser = await chromium.launch()
   const jellyImgs = await page.$$eval('#cast .dj-img:not(.dj-squish)', (els) => els.filter((i) => !(i.complete && i.naturalWidth > 0)).length)
   const jellyWords = await page.$eval('#cast .dj', (e) => e.innerText.trim())
   console.log('jellies:', j0.join(', '), '→', j1.join(', '))
+  // Watch long enough for every character to come through: the dodo and all fifteen critters.
+  const everyone = new Set([...j0, ...j1])
+  for (let k = 0; k < 16 && everyone.size < 16; k++) {
+    await page.waitForTimeout(1450)
+    ;(await shown()).forEach((x) => everyone.add(x))
+  }
+  console.log('jellies seen:', everyone.size)
+  if (everyone.size !== 16) fail(`expected the dodo and 15 critters to take turns, saw ${everyone.size}: ${[...everyone].join(', ')}`)
+  if ([...everyone].filter((x) => /dodo/i.test(x)).length !== 1) fail('only one dodo should be in the cast')
   if (j0.length !== 3) fail(`expected 3 jelly slots, got ${j0.length}`)
   if (j0.join() === j1.join()) fail('jellies did not take turns')
   if (new Set(j1).size !== 3) fail(`a jelly is in two slots: ${j1.join(', ')}`)
@@ -190,6 +199,29 @@ const browser = await chromium.launch()
   if (jw < 280) fail(`on a phone the jelly slots should span the width, are ${jw}px`)
   await page.screenshot({ path: path.join(out, 'mobile-dodo.png') })
   await page.screenshot({ path: path.join(out, 'mobile-full.png'), fullPage: true })
+  await page.close()
+}
+
+{
+  // The cast page: everyone side by side with names, linked from chapter 5.
+  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+  page.on('pageerror', (e) => fail(`cast pageerror: ${e.message}`))
+  await page.goto(`${base}/design/daily-call-v2`, { waitUntil: 'networkidle' })
+  await page.click('#cast .hf-cast-all')
+  await page.waitForURL('**/design/daily-call-v2/cast')
+  await page.waitForLoadState('networkidle')
+  const names = await page.$$eval('.dj-sheet .dj-name', (els) => els.map((e) => e.textContent))
+  const bad = await page.$$eval('.dj-sheet .dj-img:not(.dj-squish)', (els) => els.filter((i) => !(i.complete && i.naturalWidth > 0)).length)
+  console.log('cast page:', names.length, names.join(', '))
+  if (names.length !== 16) fail(`the cast page should show 16, shows ${names.length}`)
+  if (names.filter((n) => /dodo/i.test(n)).length !== 1) fail('the cast page should have exactly one dodo')
+  if (bad) fail(`${bad} cast images not loaded`)
+  await page.screenshot({ path: path.join(out, 'cast-page.png'), fullPage: true })
+  await page.setViewportSize({ width: 420, height: 912 })
+  await page.waitForTimeout(300)
+  const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+  if (over > 0) fail(`cast page overflows a phone by ${over}px`)
+  await page.screenshot({ path: path.join(out, 'cast-page-phone.png'), fullPage: true })
   await page.close()
 }
 

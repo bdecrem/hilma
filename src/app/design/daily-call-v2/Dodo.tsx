@@ -68,14 +68,7 @@ export function DodoGallery() {
 type Jelly = { id: string; name: string; tint: string; color: string }
 
 export const JELLIES: Jelly[] = [
-  { id: 'dodo', name: 'Sky dodo', tint: '#DCF6FF', color: '#5EC6EC' },
-  { id: 'dodo-pink', name: 'Pink dodo', tint: '#FFE0EF', color: '#FF9FC8' },
-  { id: 'dodo-peach', name: 'Peach dodo', tint: '#FFE6CF', color: '#FFAA82' },
-  { id: 'dodo-mint', name: 'Mint dodo', tint: '#E2FFF4', color: '#91E9CC' },
-  { id: 'dodo-lemon', name: 'Lemon dodo', tint: '#FFF8C8', color: '#FFD43A' },
-  { id: 'dodo-grape', name: 'Grape dodo', tint: '#EFE2FF', color: '#A77BF2' },
-  { id: 'dodo-cherry', name: 'Cherry dodo', tint: '#FFD9D7', color: '#FF6B70' },
-  { id: 'dodo-lime', name: 'Lime dodo', tint: '#EFFFD0', color: '#A3E45C' },
+  { id: 'dodo', name: 'Dodo', tint: '#DCF6FF', color: '#5EC6EC' },
   { id: 'bunny', name: 'Bunny', tint: '#FFE0EF', color: '#FF9FC8' },
   { id: 'peach', name: 'Peach', tint: '#FFE6CF', color: '#FFAA82' },
   { id: 'cat', name: 'Cat', tint: '#E2FFF4', color: '#91E9CC' },
@@ -104,7 +97,8 @@ const src = (id: string, squish = false) => {
  */
 export function Jellies() {
   const n = JELLIES.length
-  const [slots, setSlots] = useState([0, 8, 13])
+  const [slots, setSlots] = useState([0, 1, 6])
+  const shown = useRef([0, 1, 6])
   const [down, setDown] = useState<number | null>(null)
   const [seen, setSeen] = useState(false)
   const turn = useRef(0)
@@ -127,15 +121,16 @@ export function Jellies() {
     })
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     const t = window.setInterval(() => {
-      setSlots((cur) => {
-        let k = nextUp.current
-        while (cur.includes(k)) k = (k + 1) % n
-        nextUp.current = (k + 1) % n
-        const out = [...cur]
-        out[turn.current % 3] = k
-        turn.current++
-        return out
-      })
+      // bookkeeping lives outside the state updater (React may run an updater twice)
+      const cur = shown.current
+      let k = nextUp.current
+      while (cur.includes(k)) k = (k + 1) % n
+      nextUp.current = (k + 1) % n
+      const out = [...cur]
+      out[turn.current % 3] = k
+      turn.current++
+      shown.current = out
+      setSlots(out)
     }, 1400)
     return () => window.clearInterval(t)
   }, [seen, n])
@@ -175,5 +170,40 @@ export function Jellies() {
         )
       })}
     </div>
+  )
+}
+
+/** Everyone at once, named: /design/daily-call-v2/cast. Tap one and it squishes. */
+export function CastSheet() {
+  const [down, setDown] = useState<string | null>(null)
+  const timer = useRef(0)
+  const squish = (id: string) => {
+    setDown(id)
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => setDown(null), 260)
+  }
+  return (
+    <ul className="dj-sheet">
+      {JELLIES.map((j) => (
+        <li key={j.id}>
+          <button
+            type="button"
+            className={'dj-cell' + (down === j.id ? ' is-squish' : '')}
+            style={{ '--t': j.tint, '--c': j.color } as CSSProperties}
+            onPointerDown={() => squish(j.id)}
+            aria-label={`${j.name}. Tap to squish.`}
+          >
+            <span className="dj-disc" />
+            <span className="dj-stack">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="dj-img" {...src(j.id)} alt="" decoding="async" draggable={false} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="dj-img dj-squish" {...src(j.id, true)} alt="" decoding="async" draggable={false} aria-hidden />
+            </span>
+          </button>
+          <span className="dj-name">{j.name}</span>
+        </li>
+      ))}
+    </ul>
   )
 }

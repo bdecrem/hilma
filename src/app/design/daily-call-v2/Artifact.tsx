@@ -267,6 +267,9 @@ export default function Artifact() {
           </h2>
           <div className="hf-cast">
             <Jellies />
+            <a className="hf-cast-all" href="/design/daily-call-v2/cast">
+              See all sixteen →
+            </a>
           </div>
         </section>
       </div>
