@@ -5,7 +5,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import { cookies } from 'next/headers'
 import { normalizePhone as onethingNormalizePhone, type PhoneHint } from '@/lib/onething/core'
 import { findUserById, supabase, type User } from './core'
-import { sendText } from './send'
+import { isTestPhone, sendText } from './send'
 
 export const COOKIE = 'dolly_session'
 const CODE_TTL_MIN = 10
@@ -67,7 +67,15 @@ function hashCode(phone: string, code: string): string {
 }
 
 export async function startCode(phone: string): Promise<void> {
-  const code = (randomBytes(4).readUInt32BE(0) % 1_000_000).toString().padStart(6, '0')
+  let code = (randomBytes(4).readUInt32BE(0) % 1_000_000).toString().padStart(6, '0')
+  // The test accounts (fictional numbers, no texts) sign in with a fixed
+  // code from the environment, so a check can go through the real routes
+  // against production too.
+  if (isTestPhone(phone)) {
+    const fixed = process.env.DOLLY_TEST_CODE
+    if (!fixed) throw new Error('DOLLY_TEST_CODE is not set')
+    code = fixed
+  }
   const expires_at = new Date(Date.now() + CODE_TTL_MIN * 60 * 1000).toISOString()
   const { error } = await supabase().from('dolly_codes').insert({ phone, code_hash: hashCode(phone, code), expires_at })
   if (error) throw new Error(`dolly: code insert failed: ${error.message}`)

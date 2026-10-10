@@ -202,9 +202,25 @@ async function main() {
     await sb.from('dolly_items').delete().eq('user_id', user.id)
     await sb.from('dolly_users').update({ streak: 0, best_streak: 0, last_done_day: null, next_topic: null, prompt_day: null, prompted_at: null, reminder_day: null }).eq('id', user.id)
   }
-  const sig = createHmac('sha256', process.env.F2_SESSION_SECRET!).update(`dolly:${user.id}`).digest('hex')
-  const cookie = `dolly_session=${user.id}.${sig}`
-  console.log('test user', user.id, 'cookie value', `${user.id}.${sig}`)
+  // Sign in through the real routes: a test phone's code is DOLLY_TEST_CODE
+  // (set on Vercel and in .env.local), so this works against production too.
+  const startRes = await fetch(`${base}/api/dolly/auth/start`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone: TEST_PHONE, tz: 'America/Los_Angeles' }) })
+  check('auth: code started', startRes.ok, String(startRes.status))
+  const verifyRes = await fetch(`${base}/api/dolly/auth/verify`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ phone: TEST_PHONE, code: process.env.DOLLY_TEST_CODE, tz: 'America/Los_Angeles', language: 'es', level: 'some', daily_hour: 8 }),
+  })
+  const setCookie = (verifyRes.headers.getSetCookie?.() ?? []).find((c) => c.startsWith('dolly_session='))
+  check('auth: code verified', verifyRes.ok && !!setCookie, String(verifyRes.status))
+  if (!setCookie) {
+    console.log(results.join('\n'))
+    process.exit(1)
+  }
+  const cookie = setCookie.split(';')[0]
+  console.log('test user', user.id, 'cookie value', cookie.slice('dolly_session='.length))
+  check('auth: wrong code is 401', (await fetch(`${base}/api/dolly/auth/verify`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone: TEST_PHONE, code: '000000' }) })).status === 401)
+  void createHmac
 
   // Who am I, and today.
   const me = await api('/api/dolly/me', { cookie })
