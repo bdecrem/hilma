@@ -39,6 +39,10 @@ export async function PUT(req: Request) {
     if (typeof body.tz !== 'string' || !isValidTz(body.tz)) return NextResponse.json({ error: 'bad tz' }, { status: 400 })
     patch.tz = body.tz
   }
+  if ('objectives' in body) {
+    if (typeof body.objectives !== 'boolean') return NextResponse.json({ error: 'bad objectives' }, { status: 400 })
+    patch.objectives = body.objectives
+  }
   const next = Object.keys(patch).length ? await updateUser(user.id, patch) : user
   return NextResponse.json({ user: userView(next) })
 }

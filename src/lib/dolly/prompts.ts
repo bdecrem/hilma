@@ -7,6 +7,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { completedText } from '@/lib/anthropic-response'
 import { ELEVEN_CUE_PREFIX } from '@/lib/f2/eleven'
 import { type Day, type Item, type Question, type Thing, type ThingKind, type User } from './core'
+import { type CanDo } from './curriculum'
 import { LANGUAGES, levelLine, type LanguageCode } from './language'
 
 const MODEL = 'claude-opus-5-5'
@@ -78,6 +79,124 @@ export function talkOpening(user: User, day: Day): string {
 
 export function talkWrapCue(): string {
   return `${ELEVEN_CUE_PREFIX}Time is nearly up. In one or two lines, wrap up warmly in the language and say you will see them tomorrow. Do not ask another question.`
+}
+
+// ---------- talk more: a free extra call ----------
+
+export function morePrompt(user: User, day: Day, comingBack: Item[]): string {
+  const lang = LANGUAGES[user.language]
+  return `${persona(lang.speak)}
+
+This is an extra call they asked for after finishing today's three parts: no agenda, theirs to steer. Talk about whatever they bring up; if they have nothing in mind, offer today's topic from another angle (${day.topic}) or ask about their day. Keep asking.
+${levelLine(user.level, lang.speak)}${comingBackLine(comingBack, lang.speak)}
+
+Corrections: when they make a mistake that matters, give the right form once, briefly and kindly, inside your reply, and carry on. Never list their mistakes. If they say something in English, answer in ${lang.speak} and hand them the words they were missing.
+
+The call lasts about three minutes. The app will tell you when to wrap up.`
+}
+
+export function moreOpening(user: User): string {
+  const lang = LANGUAGES[user.language]
+  return `Say hello again in one short line in ${lang.speak}${user.name ? ` to ${user.name}` : ''}, glad they are back, and ask what they would like to talk about now. Then listen.`
+}
+
+// ---------- the star round: guided, on the level's objectives ----------
+
+export const STAR_WRAP_MS = 110_000
+export const STAR_END_MS = 140_000
+
+export function starPrompt(user: User, targets: CanDo[]): string {
+  const lang = LANGUAGES[user.language]
+  const list = targets
+    .map((t, i) => `${i + 1}. ${t.title} — words and chunks: ${t.items.map((x) => `"${x.t}"${x.p ? ` (${x.p})` : ''} = ${x.n}`).join(', ')}. Grammar: ${t.grammar}. Questions that draw it out: ${t.elicit.join(' / ')}`)
+    .join('\n')
+  return `${persona(lang.speak)}
+
+This is a star round: a short practice they chose after finishing their day. Unlike the daily call, here you may say what you are practicing, in a few English words, then do it in ${lang.speak}. The objectives, in order:
+${list}
+
+For each objective: name it in a few words of English ("let's do: saying what you did yesterday"), then ask one of its questions in ${lang.speak} or set up a tiny situation, and get them to produce it. If they can't, give them the words once and ask again. Recast mistakes inside your reply. One or two exchanges per objective, then move to the next; keep the whole round to about two minutes, so be brisk and warm, never a lecture. Use the objective's own words and chunks in your questions so they hear them before they need them.
+${levelLine(user.level, lang.speak)}
+
+The app will tell you when to wrap up.`
+}
+
+export function starOpening(user: User, targets: CanDo[]): string {
+  const lang = LANGUAGES[user.language]
+  const first = targets[0]
+  return `In one line, in English, say this is a quick practice round with ${targets.length} things to try, then start the first one, "${first.title}": ask in ${lang.speak}: ${first.elicit[0]}`
+}
+
+export function starWrapCue(): string {
+  return `${ELEVEN_CUE_PREFIX}Time is nearly up. Finish the current objective in one line, then say warmly in the language that the round is done and the three things are next. No new questions.`
+}
+
+const STAR_SCHEMA = {
+  type: 'object',
+  properties: {
+    results: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          demonstrated: { type: 'boolean' },
+          evidence: { type: 'string' },
+          practice_target: { type: 'string' },
+          practice_native: { type: 'string' },
+          practice_pinyin: { type: 'string' },
+        },
+        required: ['id', 'demonstrated', 'evidence', 'practice_target', 'practice_native', 'practice_pinyin'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['results'],
+  additionalProperties: false,
+} as const
+
+export type StarResult = { id: string; demonstrated: boolean; evidence: string; practice: Omit<Thing, 'item_id'> }
+
+/** Read the star round's transcript against its targets: which objectives
+ *  the learner demonstrated, with the line that shows it, and for each one
+ *  the single item worth saying back. */
+export async function annotateStar(user: User, targets: CanDo[], transcript: TranscriptRow[]): Promise<StarResult[]> {
+  const lang = LANGUAGES[user.language]
+  const lines = transcript
+    .filter((r) => r.text.trim())
+    .map((r) => `${r.role === 'user' ? 'Learner' : 'Dolly'}: ${r.text.trim()}`)
+    .join('\n')
+    .slice(-12_000)
+  const list = targets
+    .map((t) => `- id "${t.id}": ${t.title}. Its words and chunks: ${t.items.map((x) => x.t).join(', ')}. Grammar: ${t.grammar}.`)
+    .join('\n')
+  const res = await anthropic().messages.create({
+    model: MODEL,
+    max_tokens: 8192,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: STAR_SCHEMA } },
+    system: `You read the transcript of a short guided ${lang.speak} practice between Dolly (the tutor) and a learner, against a list of objectives. For each objective, in the order given, say whether the LEARNER demonstrated it: they produced its language themselves (any of its words or chunks, or the grammar it names) at least once, recognizably, on their own or after one prompt, even imperfectly. Dolly saying it does not count; the learner repeating a single word after Dolly counts only if they then used it in their own sentence. Quote the learner's line as evidence (or say "not attempted"). Then name the one item from that objective worth saying back right now, in ${lang.speak}: the one they missed, avoided or got wrong, or, if they did well, its most useful chunk (practice_target, with its English meaning as practice_native${user.language === 'zh' ? ', and its pinyin with tone marks as practice_pinyin' : '; practice_pinyin is an empty string'}).`,
+    messages: [{ role: 'user', content: `Objectives:\n${list}\n\nTranscript:\n${lines}` }],
+  })
+  const out = JSON.parse(completedText(res)) as { results: { id: string; demonstrated: boolean; evidence: string; practice_target: string; practice_native: string; practice_pinyin: string }[] }
+  return targets.map((t) => {
+    const r = out.results.find((x) => x.id === t.id)
+    const target = r?.practice_target.trim() || t.items[0].t
+    const native = r?.practice_native.trim() || t.items[0].n
+    const pinyin = user.language === 'zh' ? r?.practice_pinyin.trim() || t.items[0].p || null : null
+    return {
+      id: t.id,
+      demonstrated: r?.demonstrated ?? false,
+      evidence: r?.evidence.trim() ?? 'not attempted',
+      practice: {
+        kind: target.includes(' ') ? 'phrase' : 'word',
+        target,
+        native,
+        pinyin,
+        source: `From: ${t.title}`,
+        distractors: t.items.filter((x) => x.t !== target).slice(0, 3).map((x) => x.t),
+      },
+    }
+  })
 }
 
 // ---------- part 2: the three things ----------
@@ -239,9 +358,9 @@ type Card = { target: string; native: string; pinyin: string | null; distractors
 /** Ten questions, a pick and a type by turns. The three new things are
  *  picked today; the rest come from the pool, misses first, then the least
  *  recently seen. Early days have a smaller pool and get fewer questions. */
-export function buildQuestions(lang: LanguageCode, day: Day, pool: Item[]): Question[] {
-  const rnd = seeded(day.id)
-  const fresh: Card[] = (day.things ?? []).map((t) => ({
+export function buildQuestions(lang: LanguageCode, day: Day, pool: Item[], opts: { things?: Thing[]; max?: number } = {}): Question[] {
+  const rnd = seeded(day.id + (opts.things ? ':star' : ''))
+  const fresh: Card[] = (opts.things ?? day.things ?? []).map((t) => ({
     target: t.target,
     native: t.native,
     pinyin: t.pinyin,
@@ -282,5 +401,5 @@ export function buildQuestions(lang: LanguageCode, day: Day, pool: Item[]): Ques
     if (p[i]) out.push(p[i])
     if (t[i]) out.push(t[i])
   }
-  return out
+  return opts.max ? out.slice(0, opts.max) : out
 }

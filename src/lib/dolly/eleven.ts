@@ -8,13 +8,19 @@
 // enum leave the slot, and a second session route would build the same
 // prompt through startVoice() below.
 import { ELEVEN_CUE_PREFIX, ELEVEN_KICKOFF, elevenModel, mintElevenConversationToken } from '@/lib/f2/eleven'
-import { ensureToday } from './day'
-import { insertVoiceSession, type Day, type User, type VoiceMode, type VoiceSession } from './core'
-import { comingBackItems } from './day'
+import { activeThings, insertVoiceSession, updateDay, type Day, type User, type VoiceMode, type VoiceSession } from './core'
+import { comingBackItems, ensureToday, starTargets } from './day'
 import {
   CALL_END_MS,
   CALL_WRAP_MS,
   holdToTalkNote,
+  moreOpening,
+  morePrompt,
+  STAR_END_MS,
+  STAR_WRAP_MS,
+  starOpening,
+  starPrompt,
+  starWrapCue,
   talkOpening,
   talkPrompt,
   talkWrapCue,
@@ -38,27 +44,64 @@ OPENING: the first message you receive will be "(The session has just connected.
 
 export type VoiceStart =
   | { ok: false; status: number; error: string }
-  | { ok: true; day: Day; mode: VoiceMode; systemPrompt: string; cues: string[]; wrap: { after_ms: number; end_ms: number; cue: string } | null }
+  | {
+      ok: true
+      day: Day
+      mode: VoiceMode
+      systemPrompt: string
+      cues: string[]
+      wrap: { after_ms: number; end_ms: number; cue: string } | null
+      /** The star round: what it practices, for the screen. */
+      targets: { id: string; title: string }[]
+    }
 
 /** The gate and the prompt for a mode, against today's state. */
 export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolean): Promise<VoiceStart> {
   const day = await ensureToday(user)
+  const note = holdToTalk ? holdToTalkNote() : ''
   if (mode === 'talk') {
     if (day.state !== 'morning') return { ok: false, status: 409, error: 'Today’s call is done.' }
     const comingBack = await comingBackItems(user)
-    let systemPrompt = withOpening(talkPrompt(user, day, comingBack), talkOpening(user, day))
-    if (holdToTalk) systemPrompt += holdToTalkNote()
-    return { ok: true, day, mode, systemPrompt, cues: [], wrap: { after_ms: CALL_WRAP_MS, end_ms: CALL_END_MS, cue: talkWrapCue() } }
+    const systemPrompt = withOpening(talkPrompt(user, day, comingBack), talkOpening(user, day)) + note
+    return { ok: true, day, mode, systemPrompt, cues: [], wrap: { after_ms: CALL_WRAP_MS, end_ms: CALL_END_MS, cue: talkWrapCue() }, targets: [] }
   }
-  if (day.state !== 'after_talk') {
+  if (mode === 'more') {
+    if (day.state !== 'done') return { ok: false, status: 409, error: 'Finish today first.' }
+    const comingBack = await comingBackItems(user)
+    const systemPrompt = withOpening(morePrompt(user, day, comingBack), moreOpening(user)) + note
+    return { ok: true, day, mode, systemPrompt, cues: [], wrap: { after_ms: CALL_WRAP_MS, end_ms: CALL_END_MS, cue: talkWrapCue() }, targets: [] }
+  }
+  if (mode === 'star') {
+    if (!user.objectives) return { ok: false, status: 409, error: 'Turn on Learning objectives in Settings.' }
+    if (day.state !== 'done') return { ok: false, status: 409, error: 'Finish today first.' }
+    if (day.starred_at || day.star_state === 'done') return { ok: false, status: 409, error: 'Today is starred already.' }
+    if (day.star_state) return { ok: false, status: 409, error: 'The star round is under way: the three things are next.' }
+    const targets = await starTargets(user)
+    if (targets.length === 0) return { ok: false, status: 409, error: 'Nothing left to practice at this level yet.' }
+    const systemPrompt = withOpening(starPrompt(user, targets), starOpening(user, targets)) + note
+    const withTargets = await updateDay(day.id, { star_targets: targets.map((t) => t.id) })
+    return {
+      ok: true,
+      day: withTargets,
+      mode,
+      systemPrompt,
+      cues: [],
+      wrap: { after_ms: STAR_WRAP_MS, end_ms: STAR_END_MS, cue: starWrapCue() },
+      targets: targets.map((t) => ({ id: t.id, title: t.title })),
+    }
+  }
+  // things: the day's, or the star round's.
+  const star = day.star_state === 'after_talk'
+  if (!star && day.state !== 'after_talk') {
     return { ok: false, status: 409, error: day.state === 'morning' ? 'Talk first.' : 'The three things are done.' }
   }
-  if (!day.things || day.things.length === 0) return { ok: false, status: 409, error: 'No things to say back.' }
-  let systemPrompt = withOpening(thingsPrompt(user, day), thingsOpening(day))
-  if (holdToTalk) systemPrompt += holdToTalkNote()
+  const things = activeThings(day)
+  if (things.length === 0) return { ok: false, status: 409, error: 'No things to say back.' }
+  const view = { ...day, things }
+  const systemPrompt = withOpening(thingsPrompt(user, view), thingsOpening(view)) + note
   // The first thing rides in the opening; the app sends the rest, then the close.
-  const cues = [...day.things.map((t, i) => thingCue(i, t)), thingsDoneCue()]
-  return { ok: true, day, mode, systemPrompt, cues, wrap: null }
+  const cues = [...things.map((t, i) => thingCue(i, t)), thingsDoneCue()]
+  return { ok: true, day, mode, systemPrompt, cues, wrap: null, targets: [] }
 }
 
 /** The response the app starts the conversation with — Polly's shape, so
@@ -84,8 +127,10 @@ export async function openSession(user: User, start: Extract<VoiceStart, { ok: t
       // Things: one cue per thing after the first (which is the opening),
       // then the close. The app sends cues[i] when thing i becomes current.
       cues: start.cues,
-      // Talk: the wrap-up note at after_ms, and the app ends the call at end_ms.
+      // Calls: the wrap-up note at after_ms, and the app ends the call at end_ms.
       wrap: start.wrap,
+      // The star round's objectives, for the screen.
+      targets: start.targets,
     },
   }
 }

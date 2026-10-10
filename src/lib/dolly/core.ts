@@ -20,6 +20,9 @@ export type User = {
   prompt_day: string | null
   prompted_at: string | null
   reminder_day: string | null
+  /** Learning objectives (Settings): the star round and the level ladder. */
+  objectives: boolean
+  rung: number
   created_at: string
 }
 
@@ -42,6 +45,7 @@ export type Question =
 export type Answer = { q: number; ok: boolean; answer: string }
 
 export type DayState = 'morning' | 'after_talk' | 'after_things' | 'done'
+export type StarState = 'after_talk' | 'after_things' | 'done'
 
 export type Day = {
   id: string
@@ -57,7 +61,40 @@ export type Day = {
   questions: Question[] | null
   answers: Answer[]
   done_at: string | null
+  /** "Talk more": free extra calls after the day is done. */
+  extra_calls: number
+  extra_seconds: number
+  /** The star round: a guided call on the level's objectives, then three
+   *  things from its targets, then cards. Its own mini-day beside the day. */
+  starred_at: string | null
+  star_state: StarState | null
+  star_targets: string[] | null
+  star_session_id: string | null
+  star_seconds: number | null
+  star_things: Thing[] | null
+  star_things_session_id: string | null
+  star_questions: Question[] | null
+  star_answers: Answer[]
+  star_earned: string[] | null
+  star_level_up: boolean
   created_at: string
+}
+
+/** Is a star round under way (its things or cards still to do)? */
+export function starInProgress(day: Day): boolean {
+  return day.star_state === 'after_talk' || day.star_state === 'after_things'
+}
+
+/** The things / questions / answers of whichever flow is live: the star
+ *  round while it is under way, else the day's own. */
+export function activeThings(day: Day): Thing[] {
+  return (starInProgress(day) ? day.star_things : day.things) ?? []
+}
+export function activeQuestions(day: Day): Question[] {
+  return (starInProgress(day) ? day.star_questions : day.questions) ?? []
+}
+export function activeAnswers(day: Day): Answer[] {
+  return starInProgress(day) ? day.star_answers : day.answers
 }
 
 export type Item = {
@@ -76,7 +113,9 @@ export type Item = {
   created_at: string
 }
 
-export type VoiceMode = 'talk' | 'things'
+/** talk = the day's call; things = said back (the day's or the star
+ *  round's); more = a free extra call; star = the guided round. */
+export type VoiceMode = 'talk' | 'things' | 'more' | 'star'
 
 export type VoiceSession = {
   id: string
@@ -284,6 +323,24 @@ export async function scoreItem(id: string, ok: boolean, day: string): Promise<v
     .from('dolly_items')
     .update({ hits: row.hits + (ok ? 1 : 0), misses: row.misses + (ok ? 0 : 1), last_seen: day })
     .eq('id', id)
+}
+
+// ---------- can-dos earned ----------
+
+export type Earned = { cando_id: string; level: number; evidence: string | null; earned_at: string }
+
+export async function listEarned(userId: string): Promise<Earned[]> {
+  const { data, error } = await supabase().from('dolly_cando').select('cando_id, level, evidence, earned_at').eq('user_id', userId)
+  if (error) throw new Error(`dolly: list earned failed: ${error.message}`)
+  return (data ?? []) as Earned[]
+}
+
+/** Once earned, a can-do stays earned; a second demonstration changes nothing. */
+export async function earnCanDo(userId: string, candoId: string, level: number, evidence: string | null): Promise<void> {
+  const { error } = await supabase()
+    .from('dolly_cando')
+    .upsert({ user_id: userId, cando_id: candoId, level, evidence }, { onConflict: 'user_id,cando_id', ignoreDuplicates: true })
+  if (error) throw new Error(`dolly: earn failed: ${error.message}`)
 }
 
 // ---------- voice sessions ----------

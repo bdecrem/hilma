@@ -12,6 +12,8 @@ export type UserView = {
   tz: string
   streak: number
   best_streak: number
+  objectives: boolean
+  rung: number
 }
 
 export function userView(user: User, now = new Date()): UserView {
@@ -26,5 +28,7 @@ export function userView(user: User, now = new Date()): UserView {
     tz: user.tz,
     streak: currentStreak(user, now),
     best_streak: user.best_streak,
+    objectives: user.objectives,
+    rung: user.rung,
   }
 }

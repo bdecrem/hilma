@@ -13,8 +13,8 @@ export async function POST(req: Request) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   const body = (await req.json().catch(() => ({}))) as { mode?: string; hold_to_talk?: boolean }
-  const mode = body.mode === 'things' ? 'things' : body.mode === 'talk' ? 'talk' : null
-  if (!mode) return NextResponse.json({ error: 'mode must be talk or things' }, { status: 400 })
+  const mode = body.mode === 'things' || body.mode === 'talk' || body.mode === 'more' || body.mode === 'star' ? body.mode : null
+  if (!mode) return NextResponse.json({ error: 'mode must be talk, things, more or star' }, { status: 400 })
   const holdToTalk = body.hold_to_talk === true
   const start = await startVoice(user, mode, holdToTalk)
   if (!start.ok) return NextResponse.json({ error: start.error }, { status: start.status })

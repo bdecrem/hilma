@@ -200,7 +200,8 @@ async function main() {
     await sb.from('dolly_voice_sessions').delete().eq('user_id', user.id)
     await sb.from('dolly_days').delete().eq('user_id', user.id)
     await sb.from('dolly_items').delete().eq('user_id', user.id)
-    await sb.from('dolly_users').update({ streak: 0, best_streak: 0, last_done_day: null, next_topic: null, prompt_day: null, prompted_at: null, reminder_day: null }).eq('id', user.id)
+    await sb.from('dolly_cando').delete().eq('user_id', user.id)
+    await sb.from('dolly_users').update({ streak: 0, best_streak: 0, last_done_day: null, next_topic: null, prompt_day: null, prompted_at: null, reminder_day: null, objectives: false, rung: 1 }).eq('id', user.id)
   }
   // Sign in through the real routes: a test phone's code is DOLLY_TEST_CODE
   // (set on Vercel and in .env.local), so this works against production too.
@@ -290,6 +291,60 @@ async function main() {
   check('coming back', (last?.day.coming_back.length ?? 0) > 0, last?.day.coming_back.join(', '))
   const again = await api<{ day: DayView }>('/api/dolly/today', { cookie })
   check('today reads done', again.body.day?.state === 'done')
+
+  // Talk more: a free extra call, counted.
+  type DayPlus = DayView & { extra_calls: number; starred: boolean; star: { state: string; targets: { id: string; title: string }[]; earned: { id: string; title: string }[]; level_up: boolean } | null; objectives: { on: boolean; level: number; name: string; earned: number; total: number; star_available: boolean; can_dos: { id: string; title: string; earned: boolean }[]; ladder: { n: number }[] } }
+  const more = await api<Start>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'more' }) })
+  check('talk more opens after done', more.status === 200, String(more.status))
+  const moreFin = await api<{ day: DayPlus }>(`/api/dolly/voice/${more.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: CANNED_TALK.slice(0, 4), seconds: 95 }) })
+  check('talk more counted', moreFin.status === 200 && moreFin.body.day?.extra_calls === 1 && moreFin.body.day?.state === 'done', `${moreFin.status} extra ${moreFin.body.day?.extra_calls}`)
+
+  // Learning objectives: off by default, the star round refused.
+  check('objectives off by default', again.body.day && (again.body.day as DayPlus).objectives?.on === false)
+  check('star refused when off', (await api('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star' }) })).status === 409)
+  const on = await api<{ user: { objectives: boolean; rung: number } }>('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ objectives: true }) })
+  check('objectives on', on.status === 200 && on.body.user?.objectives === true && on.body.user?.rung === 1, JSON.stringify(on.body).slice(0, 80))
+  const t2 = await api<{ day: DayPlus }>('/api/dolly/today', { cookie })
+  const ob = t2.body.day?.objectives
+  check('level 1 with ten objectives', ob?.on === true && ob.level === 1 && ob.total === 10 && ob.earned === 0 && ob.star_available && ob.ladder?.length === 8, JSON.stringify({ level: ob?.level, name: ob?.name, total: ob?.total }))
+
+  // The star round: a guided call on the first four objectives.
+  type StarStart = Start & { eleven: Start['eleven'] & { targets: { id: string; title: string }[] } }
+  const star = await api<StarStart>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star' }) })
+  check('star round opens', star.status === 200 && star.body.eleven?.targets?.length === 4 && (star.body.eleven?.wrap?.after_ms ?? 0) < 120_000, `${star.status} targets ${star.body.eleven?.targets?.map((t) => t.title).join(' | ')}`)
+  const starTalk: Row[] = [
+    { role: 'assistant', text: 'Quick practice round, four things. First, greetings: ¡Hola! ¿Qué tal?', created_at: now() },
+    { role: 'user', text: 'Hola, buenos días. Muy bien, ¿y tú?', created_at: now() },
+    { role: 'assistant', text: 'Muy bien. Now, who you are: ¿Cómo te llamas y de dónde eres?', created_at: now() },
+    { role: 'user', text: 'Me llamo Test, soy de California y vivo en San Francisco.', created_at: now() },
+    { role: 'assistant', text: 'Perfecto. Next, what you do: ¿En qué trabajas?', created_at: now() },
+    { role: 'user', text: 'Eh... I work in software. No sé cómo se dice.', created_at: now() },
+    { role: 'assistant', text: 'Trabajo en una empresa de software. ¿Puedes decirlo? Last one, what you like: ¿Qué te gusta hacer?', created_at: now() },
+    { role: 'user', text: 'Me gusta la música y me gusta el café.', created_at: now() },
+    { role: 'assistant', text: '¡Genial! The round is done; the three things are next.', created_at: now() },
+  ]
+  const starFin = await api<{ day: DayPlus }>(`/api/dolly/voice/${star.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: starTalk, seconds: 120 }) })
+  const sd = starFin.body.day
+  check('star call read → star_after_talk', starFin.status === 200 && sd?.state === 'star_after_talk', `${starFin.status} ${sd?.state}`)
+  check('objectives earned from the round', (sd?.star?.earned.length ?? 0) >= 2 && (sd?.star?.earned.length ?? 0) <= 3, sd?.star?.earned.map((e) => e.title).join(' | '))
+  check('star things are the targets’ items', sd?.things.length === 3 && sd.things.every((t) => t.target.length > 0), sd?.things.map((t) => `${t.target} = ${t.native}`).join(' | '))
+  check('star again while under way is 409', (await api('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star' }) })).status === 409)
+  const st = await api<Start>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'things' }) })
+  check('star things session', st.status === 200 && st.body.eleven?.cues?.length === 4, String(st.status))
+  const stFin = await api<{ day: DayPlus }>(`/api/dolly/voice/${st.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: saidBack.slice(0, 6), seconds: 50 }) })
+  check('star things → star_after_things with six cards', stFin.status === 200 && stFin.body.day?.state === 'star_after_things' && stFin.body.day?.questions.length === 6, `${stFin.body.day?.state} ${stFin.body.day?.questions.length}`)
+  let starLast: { complete: boolean; day: DayPlus } | null = null
+  for (let i = 0; i < (stFin.body.day?.questions.length ?? 0); i++) {
+    const q = stFin.body.day!.questions[i]
+    const r = await api<{ ok: boolean; complete: boolean; day: DayPlus }>('/api/dolly/cards/answer', { method: 'POST', cookie, body: JSON.stringify({ q: i, answer: q.target }) })
+    if (r.status !== 200) check(`star card ${i + 1}`, false, String(r.status))
+    starLast = r.body
+  }
+  check('star round complete → starred', starLast?.complete === true && starLast.day.starred === true && starLast.day.star?.state === 'done' && starLast.day.state === 'done', `${starLast?.day.state} starred ${starLast?.day.starred}`)
+  check('earned count on the map', (starLast?.day.objectives.earned ?? 0) >= 2, `${starLast?.day.objectives.earned} of ${starLast?.day.objectives.total}`)
+  check('trail marks the star', starLast?.day.trail.some((t) => t.today && (t as { starred?: boolean }).starred) ?? false)
+  check('second star today is 409', (await api('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star' }) })).status === 409)
+  await api('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ objectives: false }) })
 
   // Settings.
   const put = await api<{ user: { daily_hour: number; daily_label: string } }>('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ daily_hour: 19 }) })
