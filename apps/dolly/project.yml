@@ -1,0 +1,95 @@
+name: Dolly
+options:
+  bundleIdPrefix: com.bartdecrem
+  deploymentTarget:
+    iOS: "17.0"
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    DEVELOPMENT_TEAM: 274T5WCVD2
+    # Dolly ships under Polly's App Store record (renamed), so the build
+    # number carries on from Polly's last (0.1 (32)).
+    MARKETING_VERSION: "0.2"
+    CURRENT_PROJECT_VERSION: "33"
+    SWIFT_STRICT_CONCURRENCY: minimal
+
+packages:
+  # The ElevenLabs + Claude voice engine (ElevenVoiceClient.swift), Polly's.
+  # Rides on LiveKit. GPT-Live would add stasel/WebRTC here, as in
+  # ../../../polly/ios/project.yml.
+  ElevenLabs:
+    url: https://github.com/elevenlabs/elevenlabs-swift-sdk.git
+    exactVersion: 3.3.1
+
+targets:
+  Dolly:
+    type: application
+    platform: iOS
+    sources:
+      - path: Dolly
+        excludes:
+          - "Secrets.swift.example"
+    dependencies:
+      - package: ElevenLabs
+    info:
+      path: Dolly/Info.plist
+      properties:
+        CFBundleDisplayName: Dolly
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleName: Dolly
+        ITSAppUsesNonExemptEncryption: false
+        LSApplicationCategoryType: public.app-category.education
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIAppFonts:
+          - Baloo2-ExtraBold.ttf
+          - Baloo2-SemiBold.ttf
+          - Quicksand-Medium.ttf
+          - Quicksand-Bold.ttf
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        # dolly://today — the second try on the /dolly/today web page when the
+        # universal link did not open the app.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.bartdecrem.Polly
+            CFBundleURLSchemes:
+              - dolly
+        NSMicrophoneUsageDescription: Dolly uses the microphone for your daily call.
+        # Never used — the voice-call framework links camera APIs and App Store
+        # processing demands the string.
+        NSCameraUsageDescription: Dolly does not take photos or video; this permission is only required by the voice-call framework.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        UIBackgroundModes:
+          - audio
+    settings:
+      base:
+        # Polly's bundle id: Dolly is the new build on Polly's TestFlight.
+        PRODUCT_BUNDLE_IDENTIFIER: com.bartdecrem.Polly
+        # Universal links (applinks:ola.cx, Dolly/Dolly.entitlements) on
+        # device builds; the simulator gets none.
+        CODE_SIGN_ENTITLEMENTS: ""
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": Dolly/Dolly.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        GENERATE_INFOPLIST_FILE: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        # The debug-dylib launch path aborts at startup on the iOS 27 beta.
+        ENABLE_DEBUG_DYLIB: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SUPPORTS_MACCATALYST: NO
+      configs:
+        # App Store signing is manual and on the target (the packages'
+        # resource bundles refuse a profile); DOLLY_PROFILE names this Mac's
+        # profile for com.bartdecrem.Polly.
+        Release:
+          "CODE_SIGN_STYLE[sdk=iphoneos*]": Manual
+          "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]": $(DOLLY_PROFILE)
+          DOLLY_PROFILE: polly appstore m1
+          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Distribution
+        Debug:
+          "CODE_SIGN_STYLE[sdk=iphoneos*]": Automatic

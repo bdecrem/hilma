@@ -90,6 +90,18 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat',
         },
+        // ola.cx universal-link manifest — Dolly (apps/dolly) opens
+        // https://ola.cx/dolly/today, the daily text's link, on its map.
+        {
+          source: '/.well-known/apple-app-site-association',
+          has: [{ type: 'host', value: 'ola.cx' }],
+          destination: '/api/dolly/aasa',
+        },
+        {
+          source: '/.well-known/apple-app-site-association',
+          has: [{ type: 'host', value: 'www.ola.cx' }],
+          destination: '/api/dolly/aasa',
+        },
         // feynd.cc universal-link manifest — Apple fetches this exact path
         // to let https://feynd.cc/peck open the Dodo app.
         {

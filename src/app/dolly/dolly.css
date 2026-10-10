@@ -1,0 +1,114 @@
+/* Dolly's two web pages: the landing and the "open the app" page the daily
+   text links to. The candy skin from the design package. */
+.dolly {
+  --bg: #ebdfff;
+  --ink: #3b2a5a;
+  --ink-2: #7a6a99;
+  --primary: #ff4fa3;
+  --primary-deep: #d9307f;
+  --voice: #7b5cff;
+  --reward: #ffd93d;
+  --good: #5ff0c0;
+  min-height: 100dvh;
+  padding: calc(24px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, #ebdfff 0%, #ffe6f3 55%, #dffff4 100%);
+  color: var(--ink);
+  font-family: var(--dolly-ui), 'Quicksand', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dolly-card {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.dolly-mascot {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 24px rgba(123, 92, 255, 0.22));
+  animation: dolly-bob 3.2s ease-in-out infinite;
+}
+@keyframes dolly-bob {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.02, 0.98);
+  }
+}
+.dolly h1 {
+  margin: 4px 0 0;
+  font-family: var(--dolly-display), 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--primary);
+}
+.dolly .dolly-dek {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.35;
+  max-width: 300px;
+}
+.dolly .dolly-steps {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  gap: 8px;
+}
+.dolly .dolly-steps li {
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 0 #e4d4f5;
+}
+.dolly .dolly-steps li b {
+  color: var(--voice);
+  margin-right: 5px;
+}
+.dolly .dolly-btn {
+  margin-top: 14px;
+  display: inline-block;
+  background: linear-gradient(180deg, #ff7fc0 0%, #ff3d97 100%);
+  color: #fff;
+  text-decoration: none;
+  font-family: var(--dolly-display), 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  padding: 16px 30px;
+  border-radius: 999px;
+  box-shadow: 0 6px 0 var(--primary-deep), 0 12px 22px rgba(255, 79, 163, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.55);
+}
+.dolly .dolly-btn.ghost {
+  background: #fff;
+  color: var(--primary);
+  box-shadow: 0 5px 0 #ffd3ea;
+}
+.dolly .dolly-note {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--ink-2);
+  font-weight: 500;
+  max-width: 300px;
+}
+.dolly .dolly-foot {
+  margin-top: auto;
+  padding-top: 40px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.dolly .dolly-foot a {
+  color: inherit;
+}

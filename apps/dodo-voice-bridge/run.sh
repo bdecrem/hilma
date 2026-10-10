@@ -22,7 +22,8 @@ else
 fi
 export PORT="${PORT:-3901}"
 # Polly's backend is its own repo (../polly) since 2026-09-30: prod on polly-iota, dev on :3101.
-DEFAULT_BACKENDS='{"prod":"https://feynd.cc","dev":"http://localhost:3100","polly-prod":"https://polly-iota.vercel.app/api/polly/eleven/turn","polly-dev":"http://localhost:3101/api/polly/eleven/turn"}'
+# Dolly (hilma's apps/dolly, 2026-10-10): prod on ola.cx, dev on :3260.
+DEFAULT_BACKENDS='{"prod":"https://feynd.cc","dev":"http://localhost:3100","polly-prod":"https://polly-iota.vercel.app/api/polly/eleven/turn","polly-dev":"http://localhost:3101/api/polly/eleven/turn","dolly-prod":"https://ola.cx/api/dolly/eleven/turn","dolly-dev":"http://localhost:3260/api/dolly/eleven/turn"}'
 export DODO_BRIDGE_BACKENDS="${DODO_BRIDGE_BACKENDS:-$DEFAULT_BACKENDS}"
 
 [ -d node_modules ] || npm install --no-audit --no-fund

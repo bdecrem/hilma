@@ -1,0 +1,427 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A98F595585BD3A177EBC01A /* ElevenVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */; };
+		1CBB68C36B08D3D2D6324A4C /* DollyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B070E3786684AF6D8EB03143 /* DollyApp.swift */; };
+		395F955A98AD2D570F63DDDB /* Skin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */; };
+		4D842C01586F5BE6EE87AE78 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E83D4816DB2B314E41EBB9A /* Assets.xcassets */; };
+		6AC387C875922EEC625535C9 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3660364F0B75DBCE4617E6 /* ElevenLabs */; };
+		7028B1FD21D2A718765B25EB /* VoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACEFFC491A33CE02F4195784 /* VoiceClient.swift */; };
+		735700B81CF4D087E6E4C4D0 /* DollyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3895D14152F5D3935DF075 /* DollyAPI.swift */; };
+		7C6A5DD80DE784BA9F09237D /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1D7C1BFFDE7F77F90FCF4B /* MapView.swift */; };
+		7FD8749641708D28547E7D89 /* Mascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C59EB20FA58A8FDACE48AF /* Mascot.swift */; };
+		9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA4D8B1546392D9142BB179 /* Models.swift */; };
+		9F4693E0D51EEC9761382E58 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF955F0B5D7166AC219C99C1 /* TalkView.swift */; };
+		B6A7485EE8FA2C2C574AA669 /* CardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7179E09AC45B5F4E9F34E53 /* CardsView.swift */; };
+		BB4E40AA224BCE64A8C975F4 /* DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12FCCD7FABF0295FC43E35A /* DoneView.swift */; };
+		C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08793AEC3DBECFE259B029C9 /* Secrets.swift */; };
+		C801744CAFFAA9E03828D3DE /* ThingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F67961CC796459CB5B830A /* ThingsView.swift */; };
+		CD7252E6C0FEA47E2F041A43 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = D104FCD2299C3BDA56F7A217 /* Components.swift */; };
+		D14D81EA2A7C2C688B3572E1 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8132C7C8432ADBE5DBCC84 /* AppState.swift */; };
+		D42463998CAB38DEB8D4C8CB /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47D278063D8D4D04FF60B17C /* OnboardingView.swift */; };
+		F3B968447A9180183ED839D7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		08793AEC3DBECFE259B029C9 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
+		0D3895D14152F5D3935DF075 /* DollyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DollyAPI.swift; sourceTree = "<group>"; };
+		0E5E36E574FC10AB78344256 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1D8132C7C8432ADBE5DBCC84 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		2E83D4816DB2B314E41EBB9A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3531DA8037F0A80723F696FF /* Dolly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Dolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		47D278063D8D4D04FF60B17C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		69F67961CC796459CB5B830A /* ThingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingsView.swift; sourceTree = "<group>"; };
+		71394AAD3C828B4DA4977412 /* Dolly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dolly.entitlements; sourceTree = "<group>"; };
+		ACEFFC491A33CE02F4195784 /* VoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceClient.swift; sourceTree = "<group>"; };
+		B070E3786684AF6D8EB03143 /* DollyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DollyApp.swift; sourceTree = "<group>"; };
+		B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenVoiceClient.swift; sourceTree = "<group>"; };
+		B7179E09AC45B5F4E9F34E53 /* CardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsView.swift; sourceTree = "<group>"; };
+		C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skin.swift; sourceTree = "<group>"; };
+		CAA4D8B1546392D9142BB179 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		D104FCD2299C3BDA56F7A217 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		D8C59EB20FA58A8FDACE48AF /* Mascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mascot.swift; sourceTree = "<group>"; };
+		DC1D7C1BFFDE7F77F90FCF4B /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		DF955F0B5D7166AC219C99C1 /* TalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkView.swift; sourceTree = "<group>"; };
+		E12FCCD7FABF0295FC43E35A /* DoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoneView.swift; sourceTree = "<group>"; };
+		E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		5FB7E7C70386C805CC20037C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6AC387C875922EEC625535C9 /* ElevenLabs in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		43EF655DE574D0F89A2F6C13 = {
+			isa = PBXGroup;
+			children = (
+				E970CB92150BD96ADF4BBDC3 /* Dolly */,
+				BF5AC8957635EF2661FCF25A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BF5AC8957635EF2661FCF25A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3531DA8037F0A80723F696FF /* Dolly.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E970CB92150BD96ADF4BBDC3 /* Dolly */ = {
+			isa = PBXGroup;
+			children = (
+				1D8132C7C8432ADBE5DBCC84 /* AppState.swift */,
+				2E83D4816DB2B314E41EBB9A /* Assets.xcassets */,
+				B7179E09AC45B5F4E9F34E53 /* CardsView.swift */,
+				D104FCD2299C3BDA56F7A217 /* Components.swift */,
+				71394AAD3C828B4DA4977412 /* Dolly.entitlements */,
+				0D3895D14152F5D3935DF075 /* DollyAPI.swift */,
+				B070E3786684AF6D8EB03143 /* DollyApp.swift */,
+				E12FCCD7FABF0295FC43E35A /* DoneView.swift */,
+				B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */,
+				0E5E36E574FC10AB78344256 /* Info.plist */,
+				DC1D7C1BFFDE7F77F90FCF4B /* MapView.swift */,
+				D8C59EB20FA58A8FDACE48AF /* Mascot.swift */,
+				CAA4D8B1546392D9142BB179 /* Models.swift */,
+				47D278063D8D4D04FF60B17C /* OnboardingView.swift */,
+				08793AEC3DBECFE259B029C9 /* Secrets.swift */,
+				E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */,
+				C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */,
+				DF955F0B5D7166AC219C99C1 /* TalkView.swift */,
+				69F67961CC796459CB5B830A /* ThingsView.swift */,
+				ACEFFC491A33CE02F4195784 /* VoiceClient.swift */,
+			);
+			path = Dolly;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8002FA889579F4D75F69F6E6 /* Dolly */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B0989F8205773D056337506E /* Build configuration list for PBXNativeTarget "Dolly" */;
+			buildPhases = (
+				A269BCEE93B744A9560E35EF /* Sources */,
+				900CB61087DBCAF79DF7A0B0 /* Resources */,
+				5FB7E7C70386C805CC20037C /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Dolly;
+			packageProductDependencies = (
+				5D3660364F0B75DBCE4617E6 /* ElevenLabs */,
+			);
+			productName = Dolly;
+			productReference = 3531DA8037F0A80723F696FF /* Dolly.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5FC2321167CFFC493C8C6255 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					8002FA889579F4D75F69F6E6 = {
+						DevelopmentTeam = 274T5WCVD2;
+					};
+				};
+			};
+			buildConfigurationList = 58E72F3F66B0A7CD0F88F42A /* Build configuration list for PBXProject "Dolly" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 43EF655DE574D0F89A2F6C13;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				07B059D158F8EE7CED7C521D /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = BF5AC8957635EF2661FCF25A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8002FA889579F4D75F69F6E6 /* Dolly */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		900CB61087DBCAF79DF7A0B0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D842C01586F5BE6EE87AE78 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A269BCEE93B744A9560E35EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D14D81EA2A7C2C688B3572E1 /* AppState.swift in Sources */,
+				B6A7485EE8FA2C2C574AA669 /* CardsView.swift in Sources */,
+				CD7252E6C0FEA47E2F041A43 /* Components.swift in Sources */,
+				735700B81CF4D087E6E4C4D0 /* DollyAPI.swift in Sources */,
+				1CBB68C36B08D3D2D6324A4C /* DollyApp.swift in Sources */,
+				BB4E40AA224BCE64A8C975F4 /* DoneView.swift in Sources */,
+				0A98F595585BD3A177EBC01A /* ElevenVoiceClient.swift in Sources */,
+				7C6A5DD80DE784BA9F09237D /* MapView.swift in Sources */,
+				7FD8749641708D28547E7D89 /* Mascot.swift in Sources */,
+				9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */,
+				D42463998CAB38DEB8D4C8CB /* OnboardingView.swift in Sources */,
+				C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */,
+				F3B968447A9180183ED839D7 /* SettingsView.swift in Sources */,
+				395F955A98AD2D570F63DDDB /* Skin.swift in Sources */,
+				9F4693E0D51EEC9761382E58 /* TalkView.swift in Sources */,
+				C801744CAFFAA9E03828D3DE /* ThingsView.swift in Sources */,
+				7028B1FD21D2A718765B25EB /* VoiceClient.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		5D7D782C252F235C0AF45AEA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Dolly/Dolly.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution";
+				"CODE_SIGN_STYLE[sdk=iphoneos*]" = Manual;
+				DOLLY_PROFILE = "polly appstore m1";
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Dolly/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Polly;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "$(DOLLY_PROFILE)";
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		A25E93C700D1C7D477CF26B7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 33;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		C7C09165D28D9A0D449CF15B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 33;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		F89524DAEBE44172CB042B93 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = "";
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]" = Dolly/Dolly.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_STYLE[sdk=iphoneos*]" = Automatic;
+				ENABLE_DEBUG_DYLIB = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Dolly/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Polly;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = NO;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		58E72F3F66B0A7CD0F88F42A /* Build configuration list for PBXProject "Dolly" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C7C09165D28D9A0D449CF15B /* Debug */,
+				A25E93C700D1C7D477CF26B7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		B0989F8205773D056337506E /* Build configuration list for PBXNativeTarget "Dolly" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F89524DAEBE44172CB042B93 /* Debug */,
+				5D7D782C252F235C0AF45AEA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		07B059D158F8EE7CED7C521D /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elevenlabs/elevenlabs-swift-sdk.git";
+			requirement = {
+				kind = exactVersion;
+				version = 3.3.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5D3660364F0B75DBCE4617E6 /* ElevenLabs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 07B059D158F8EE7CED7C521D /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */;
+			productName = ElevenLabs;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 5FC2321167CFFC493C8C6255 /* Project object */;
+}

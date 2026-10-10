@@ -9,7 +9,9 @@
 //   "Dodo (dev)"   → wss://<host>/ws/dev         (a local dev server)
 //   "Dodo"         → wss://<host>/ws/prod        (https://feynd.cc)
 //   "Polly (dev)"  → wss://<host>/ws/polly-dev   (a local dev server, Polly's turn route)
-//   "Polly"        → wss://<host>/ws/polly-prod  (https://hilma-nine.vercel.app)
+//   "Polly"        → wss://<host>/ws/polly-prod  (https://polly-iota.vercel.app)
+//   "Dolly (dev)"  → wss://<host>/ws/dolly-dev   (a local dev server on :3260, /api/dolly/eleven/turn)
+//   "Dolly"        → wss://<host>/ws/dolly-prod  (https://ola.cx)
 //
 // Prints the engine ids — ELEVEN_SPEECH_ENGINE_ID / POLLY_ELEVEN_SPEECH_ENGINE_ID
 // in .env.local are the dev ones, on Vercel the prod ones. The production
@@ -27,7 +29,7 @@ if (!/^https:\/\//.test(origin)) throw new Error('usage: node engines.mjs https:
 const which = process.argv[3] || 'all'
 if (!['all', 'dev', 'prod'].includes(which)) throw new Error('usage: node engines.mjs https://<bridge host> [all|dev|prod] [all|dodo|polly]')
 const app = process.argv[4] || 'all'
-if (!['all', 'dodo', 'polly'].includes(app)) throw new Error('usage: node engines.mjs https://<bridge host> [all|dev|prod] [all|dodo|polly]')
+if (!['all', 'dodo', 'polly', 'dolly'].includes(app)) throw new Error('usage: node engines.mjs https://<bridge host> [all|dev|prod] [all|dodo|polly|dolly]')
 const wsBase = origin.replace(/^https:/, 'wss:')
 
 // Polly's voice speaks Italian, French and Korean as well as English: Alice
@@ -61,12 +63,24 @@ const DODO_TTS = {
 const POLLY_TTS = {
   model_id: process.env.POLLY_ELEVEN_TTS_MODEL || 'eleven_v3_conversational',
 }
+// Dolly (2026-10-10, hilma's apps/dolly — a three-minute call a day in
+// Spanish or Mandarin): Polly's multilingual voice on Dodo's settings — v4
+// turbo, expressive off, so a learner hears the words, not a performance.
+const DOLLY_VOICE = process.env.DOLLY_ELEVEN_VOICE_ID || POLLY_VOICE
+const DOLLY_TTS = {
+  model_id: process.env.DOLLY_ELEVEN_TTS_MODEL || 'eleven_v4_turbo',
+  expressive_mode: false,
+  stability: 0.5,
+  similarity_boost: 0.8,
+}
 
 const ENGINES = [
   { name: 'Dodo (dev)', path: '/ws/dev', voice: DODO_VOICE, tts: DODO_TTS, dev: true, app: 'dodo' },
   { name: 'Dodo', path: '/ws/prod', voice: DODO_VOICE, tts: DODO_TTS, dev: false, app: 'dodo' },
   { name: 'Polly (dev)', path: '/ws/polly-dev', voice: POLLY_VOICE, tts: POLLY_TTS, dev: true, app: 'polly' },
   { name: 'Polly', path: '/ws/polly-prod', voice: POLLY_VOICE, tts: POLLY_TTS, dev: false, app: 'polly' },
+  { name: 'Dolly (dev)', path: '/ws/dolly-dev', voice: DOLLY_VOICE, tts: DOLLY_TTS, dev: true, app: 'dolly' },
+  { name: 'Dolly', path: '/ws/dolly-prod', voice: DOLLY_VOICE, tts: DOLLY_TTS, dev: false, app: 'dolly' },
 ]
   .filter((e) => which === 'all' || (which === 'dev') === e.dev)
   .filter((e) => app === 'all' || app === e.app)

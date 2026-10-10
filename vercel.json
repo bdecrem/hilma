@@ -13,6 +13,10 @@
       "schedule": "5 * * * *"
     },
     {
+      "path": "/api/dolly/tick",
+      "schedule": "5 * * * *"
+    },
+    {
       "path": "/api/f2/actively-read/nudge",
       "schedule": "0 19,20 * * *"
     },
