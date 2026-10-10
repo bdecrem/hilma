@@ -1,9 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { DodoScreens, Jellies } from './Dodo'
+import { DodoGallery, Jellies } from './Dodo'
 import { Parrot, type Mood } from './Parrot'
-import { CHANGES, LOOKS, LOOP, MOTION, ORDER, PALETTE, SCREENS, TYPE, WORKING_NAME, type MapState, type ScreenId } from './content'
+import { LOOKS, LOOP, MOTION, ORDER, PALETTE, SCREENS, TYPE, WORKING_NAME, type MapState, type ScreenId } from './content'
 import { ThemeProvider } from '../_walk/Mascot'
 import { Screen as WalkScreen } from '../_walk/Walk'
 import { Screen, resetGame, type Go } from './screens'
@@ -109,23 +109,46 @@ export default function Artifact() {
     <div className="hf">
       <div className="hf-wrap">
         <header className="hf-head">
-          <div className="hf-eyebrow">Design artifact · v2 · high fidelity · October 9, 2026</div>
+          <div className="hf-eyebrow">Design artifact · v2 · October 9, 2026</div>
           <h1 className="hf-h1">Daily call, in color</h1>
           <p className="hf-dek">
-            Three minutes of conversation a day, then three things to say back, then ten flash cards. The day is done
-            when all three are, and the map keeps the streak. This pass sets a visual direction to react to: paper, ink and
-            a riso palette, a parrot for a mascot, the language set in an italic serif. Working name: {WORKING_NAME}. The phone plays a shortened day: the whole call, one of the three things, two of the ten cards.
+            Talk for three minutes, say three things back, play ten cards. The map keeps the streak. Working name:{' '}
+            {WORKING_NAME}.
           </p>
           <div className="hf-meta">
-            <span>5 screens</span>
-            <span>1 loop</span>
-            <span>Tap anything in the phone</span>
-            <span>← → moves through the screens</span>
-            <a href="/design/daily-call">v1, the unbranded spec →</a>
-            <a href="#looks">three looks ↓</a>
-            <a href="#dodo">Dodo, for reference ↓</a>
+            <a href="#screens">Screens</a>
+            <a href="#look">Look and feel</a>
+            <a href="#dodo">Dodo, for reference</a>
+            <a href="/design/daily-call">v1 spec →</a>
           </div>
         </header>
+
+        <section className="hf-looks-bar" id="looks" aria-label="Three looks">
+          <div className="hf-cap">Three looks · tap one to play it</div>
+          <div className="hf-looks">
+            {LOOKS.map((l) => (
+              <a key={l.slug} className="hf-look" href={`/design/daily-call-${l.slug}`} title={l.blurb}>
+                <ThemeProvider value={l.slug}>
+                  <span className={`theme-${l.slug} hf-look-stage`} aria-hidden>
+                    <span className="hf-look-ph">
+                      <span className="w" inert>
+                        <WalkScreen id="map" state="morning" go={() => {}} still />
+                      </span>
+                    </span>
+                    <span className="hf-look-ph second">
+                      <span className="w" inert>
+                        <WalkScreen id="things" go={() => {}} still />
+                      </span>
+                    </span>
+                  </span>
+                </ThemeProvider>
+                <span className="hf-look-name">
+                  {l.name} <span aria-hidden>↗</span>
+                </span>
+              </a>
+            ))}
+          </div>
+        </section>
 
         <div className="hf-main">
           <aside className="hf-left">
@@ -161,10 +184,10 @@ export default function Artifact() {
                     </button>
                     <span className="hf-hint">
                       {pos.id === 'talk'
-                        ? 'Plays itself at about 9× speed'
+                        ? 'Plays at 9×'
                         : pos.id === 'things'
-                          ? 'Walkthrough plays one of the three. Tap the mic when it turns red.'
-                          : 'Walkthrough plays one pick and one type. × leaves and keeps your place.'}
+                          ? 'Tap the mic when it turns red'
+                          : 'One pick, one type. × keeps your place'}
                     </span>
                   </div>
                 )}
@@ -178,16 +201,15 @@ export default function Artifact() {
           <main className="hf-right">
             <section className="hf-section" id="loop">
               <h2 className="hf-h2">The loop</h2>
-              <p className="hf-p">One day, start to finish. Each thumbnail is the real screen; tap one to put it on the phone.</p>
-              <div className="hf-strip" style={{ marginTop: 14 }}>
-                {LOOP.map((s, i) => (
-                  <div key={`${s.id}-${i}`} className="hf-step">
+              <div className="hf-strip">
+                {LOOP.map((st, i) => (
+                  <div key={`${st.id}-${i}`} className="hf-step">
                     {i > 0 ? (
                       <span className="hf-arrow" aria-hidden>
                         →
                       </span>
                     ) : null}
-                    <Thumb id={s.id} state={s.state} label={s.label} on={isOn(s.id, s.state)} onClick={() => show(s.id, s.state)} />
+                    <Thumb id={st.id} state={st.state} label={st.label} on={isOn(st.id, st.state)} onClick={() => show(st.id, st.state)} />
                   </div>
                 ))}
               </div>
@@ -196,18 +218,17 @@ export default function Artifact() {
             <section className="hf-section" id="screens">
               <h2 className="hf-h2">Screens</h2>
               <div className="hf-screens">
-                {SCREENS.map((s) => (
-                  <article key={s.id} className={`hf-note ${pos.id === s.id ? 'on' : ''}`}>
-                    <Thumb id={s.id} state={s.id === 'map' ? pos.map : undefined} label={s.name} on={pos.id === s.id} onClick={() => show(s.id)} />
+                {SCREENS.map((sc) => (
+                  <article key={sc.id} className={`hf-note hf-note-tight ${pos.id === sc.id ? 'on' : ''}`}>
                     <div>
                       <h3>
-                        <button className="hf-note-title" onClick={() => show(s.id)}>
-                          {s.name}
+                        <button className="hf-note-title" onClick={() => show(sc.id)}>
+                          {sc.name}
                         </button>
                       </h3>
-                      <p className="hf-purpose">{s.purpose}</p>
+                      <p className="hf-purpose">{sc.purpose}</p>
                       <ul>
-                        {s.notes.map((n) => (
+                        {sc.notes.map((n) => (
                           <li key={n}>{n}</li>
                         ))}
                       </ul>
@@ -217,78 +238,21 @@ export default function Artifact() {
               </div>
             </section>
 
-            <section className="hf-section" id="looks">
-              <h2 className="hf-h2">Three looks to react to</h2>
-              <p className="hf-p">
-                The same walkthrough in three skins, each its own page with the phone on a stage. Pick a direction, or pick
-                parts: the loop underneath never changes.
-              </p>
-              <div className="hf-looks">
-                {LOOKS.map((l) => (
-                  <a key={l.slug} className="hf-look" href={`/design/daily-call-${l.slug}`}>
-                    <ThemeProvider value={l.slug}>
-                      <span className={`theme-${l.slug} hf-look-stage`} aria-hidden>
-                        <span className="hf-look-ph">
-                          <span className="w" inert>
-                            <WalkScreen id="map" state="morning" go={() => {}} still />
-                          </span>
-                        </span>
-                        <span className="hf-look-ph second">
-                          <span className="w" inert>
-                            <WalkScreen id="things" go={() => {}} still />
-                          </span>
-                        </span>
-                      </span>
-                    </ThemeProvider>
-                    <span className="hf-look-body">
-                      <b>{l.name}</b>
-                      <span className="hf-look-blurb">{l.blurb}</span>
-                      <ul>
-                        {l.notes.map((n) => (
-                          <li key={n}>{n}</li>
-                        ))}
-                      </ul>
-                      <span className="hf-look-cta">Open the walkthrough →</span>
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </section>
-
-            <section className="hf-section" id="dodo">
-              <h2 className="hf-h2">Dodo, for reference</h2>
-              <p className="hf-p">
-                The team&rsquo;s other app, here for the craft rather than the cast: glossy jelly with a rim, a specular
-                and an inner glow, squash and stretch, saturated color on lavender paper, one accent word per line. These
-                are the real screens from <a href="https://dodo.foo">dodo.foo</a>, in the order the site tells them; click
-                one to open it at full size.
-              </p>
-              <DodoScreens />
-              <h3 className="hf-h3">The jellies</h3>
-              <p className="hf-p">
-                Everyone in Dodo is a jelly. The avatar choices: the dodo in eight colors and the fifteen critters who live
-                along the Peck trail. Tap one.
-              </p>
-              <Jellies />
-            </section>
-
             <section className="hf-section" id="look">
               <h2 className="hf-h2">Look and feel</h2>
-              <h3 className="hf-h3">Palette</h3>
               <div className="hf-swatches">
-                {PALETTE.map((p) => (
-                  <div key={p.name} className="hf-swatch">
-                    <i style={{ background: p.value, borderBottom: p.value === '#FFF4E3' || p.value === '#FFFDF8' ? '1px solid #ddd9d0' : undefined }} />
+                {PALETTE.map((pl) => (
+                  <div key={pl.name} className="hf-swatch">
+                    <i style={{ background: pl.value, borderBottom: pl.value === '#FFF4E3' || pl.value === '#FFFDF8' ? '1px solid #ddd9d0' : undefined }} />
                     <div>
-                      <b>{p.name}</b>
-                      <code>{p.value}</code>
-                      {p.role}
+                      <b>{pl.name}</b>
+                      <code>{pl.value}</code>
+                      {pl.role}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <h3 className="hf-h3">Type</h3>
               <div className="hf-type">
                 {TYPE.map((t, i) => (
                   <div key={t.name} className="hf-specimen">
@@ -301,41 +265,41 @@ export default function Artifact() {
                 ))}
               </div>
 
-              <h3 className="hf-h3">The mascot and its four states</h3>
               <div className="hf-moods">
                 {(
                   [
-                    ['idle', 'Idle', 'Breathes, blinks. On the map and while calling.'],
-                    ['talking', 'Talking', 'Beak flaps, body bobs. Whenever Polly speaks.'],
-                    ['listening', 'Listening', 'Head tilts toward you. Whenever it is your turn.'],
-                    ['happy', 'Happy', 'Hops. "You got it" and day complete.'],
-                  ] as [Mood, string, string][]
-                ).map(([m, label, body]) => (
+                    ['idle', 'Idle'],
+                    ['talking', 'Talking'],
+                    ['listening', 'Listening'],
+                    ['happy', 'Happy'],
+                  ] as [Mood, string][]
+                ).map(([m, label]) => (
                   <div key={m} className="hf-mood">
                     <Parrot size={96} mood={m} />
                     <b>{label}</b>
-                    <span>{body}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="hf-two">
-                <div>
-                  <h3 className="hf-h3">Motion and sound</h3>
-                  <ul>
-                    {MOTION.map((m) => (
-                      <li key={m}>{m}</li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h3 className="hf-h3">What changed from v1</h3>
-                  <ul>
-                    {CHANGES.map((c) => (
-                      <li key={c}>{c}</li>
-                    ))}
-                  </ul>
-                </div>
+              <ul className="hf-motion">
+                {MOTION.map((m) => (
+                  <li key={m}>{m}</li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="hf-section" id="dodo">
+              <h2 className="hf-h2">Dodo, for reference</h2>
+              <p className="hf-p">The team&rsquo;s other app. Borrow the craft, not the cast.</p>
+              <div className="hf-dodo">
+                <DodoGallery />
+                <aside className="hf-jar">
+                  <div className="hf-jar-head">
+                    <b>The jellies</b>
+                    <span>Every Dodo avatar. Poke one.</span>
+                  </div>
+                  <Jellies />
+                </aside>
               </div>
             </section>
           </main>

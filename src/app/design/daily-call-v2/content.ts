@@ -79,59 +79,50 @@ export const SCREENS: ScreenNote[] = [
   {
     id: 'map',
     name: 'Map',
-    purpose: 'The place you come back to. Today’s three steps on top, the trail of days underneath.',
+    purpose: 'Home. Today’s three steps on top, the trail of days below.',
     notes: [
-      'The streak is the one number up top, with the flame. It counts days where all three steps were done.',
-      'Today’s card lists the three parts in order and has one button: whichever part is next. Done parts get a check.',
-      'The trail is a winding path of day nodes: done days filled in vermillion, today pulsing in sunflower, future days dashed. Every seventh day is a bonus node with a star.',
-      'Five states, driven by the day: morning, after the talk, after the three things, cards paused, done. Leaving a part mid-way lands here with the place kept.',
+      'One button: whichever part is next. The streak is the only number.',
+      'Done days vermillion, today pulsing sunflower, every seventh a star.',
+      'Five states: morning, after the talk, after the things, paused, done.',
     ],
   },
   {
     id: 'talk',
     name: 'Part 1 · Talk',
-    purpose: 'Three minutes of conversation. Full-bleed ultramarine: this is the voice mode and it should feel like a different room.',
+    purpose: 'Three minutes of conversation, full-bleed ultramarine: a different room.',
     notes: [
-      'The parrot is the whole top half. Beak flaps while Polly talks; head tilts and the lime bars move while she listens.',
-      'Last three turns as bubbles. Polly’s are paper, yours are glass. A fix shows once under your turn as a sunflower chip.',
-      'Nothing to tap but End. The call ends itself and hands straight into the three things.',
-      'Prototype plays itself at about nine times speed.',
+      'The parrot fills the top half: beak flaps to talk, head tilts to listen.',
+      'Last three turns as bubbles. A fix shows once as a sunflower chip.',
+      'Nothing to tap but End. It hands straight into the three things.',
     ],
   },
   {
     id: 'things',
     name: 'Part 2 · Three things',
-    purpose: 'What today taught, one card at a time: Polly says it, you say it back, she says you got it.',
+    purpose: 'Polly says it, you say it back, she says you got it.',
     notes: [
-      'Three cards, three kinds, three colors on the tag: Fix (vermillion), New word (ultramarine), Phrase (sunflower).',
-      'The Spanish is set big in the italic serif. That face is reserved for the language, nowhere else in the app.',
-      'Each card runs listen → your turn → got it. The mic button is the only control; it is disabled while Polly speaks and becomes a lime check when you got it.',
-      'Where it came from is on the card ("You said: era mucho gente"), so the thing is tied to a moment, not a list.',
-      'A \u00d7 at the top left leaves to the map. Three things is short, so leaving restarts it next time.',
+      'Three tags, three colors: Fix, New word, Phrase.',
+      'The Spanish is the italic serif, and nothing else is.',
+      'The mic is the only control; it turns into a lime check.',
     ],
   },
   {
     id: 'cards',
     name: 'Part 3 \u00b7 Cards',
-    purpose: 'The daily game, no voice: ten questions, five you pick and five you type. Leave any time; the map keeps your place.',
+    purpose: 'Ten questions, no voice: pick five, type five. Leave any time.',
     notes: [
-      'Two halves with a label on the card: Pick it (four Spanish options, tap one) for questions one to five, then Type it (a field, Check or Enter) for six to ten. Easy first, then harder.',
-      'Ten segments across the top fill lime or vermillion. The counter is a running score, not points.',
-      'Right: the option or the band turns lime with "Nice". Wrong: vermillion, and the right answer is shown next to it. Nothing comes back today; a miss is weighted into tomorrow\u2019s call.',
-      'Typing is forgiving: case, accents and a leading el/la are ignored. Skip reveals the answer and counts as a miss.',
-      'The \u00d7 at the top left leaves the game with progress kept. The map then reads "4 of 10, paused" and its button says Resume. There is no tunnel.',
-      'Today\u2019s three things are in the ten, tagged New today; the rest are tagged by the day they were learned.',
+      'Ten segments fill lime or vermillion. A miss shows the answer.',
+      'Typing ignores case, accents and a leading el/la.',
+      '\u00d7 keeps your place; the map says Resume.',
     ],
   },
   {
     id: 'done',
     name: 'Day complete',
-    purpose: 'The payoff: the streak ticks, the sun comes out, and you see what Polly will bring back tomorrow.',
+    purpose: 'The streak ticks, and you see what comes back tomorrow.',
     notes: [
-      'One big sunflower disc behind a happy parrot. The number is the streak, not points.',
-      'Three totals for the three parts: the talk\u2019s length, three things, the card score out of ten.',
-      '"Coming back tomorrow" lists today’s new things and anything you missed. These are weighted into tomorrow’s conversation, which is what makes the loop a loop.',
-      'One button, back to the map, where today’s node is now filled.',
+      'A big sunflower disc behind a happy parrot.',
+      'Misses and new things feed tomorrow’s call. That closes the loop.',
     ],
   },
 ]
@@ -146,57 +137,45 @@ export const LOOP: { id: ScreenId; state?: MapState; label: string }[] = [
 ]
 
 export const PALETTE = [
-  { name: 'Paper', value: '#FFF4E3', role: 'Screen background. Warm, not white.' },
-  { name: 'Ink', value: '#16121C', role: 'Text, the trail, outlines.' },
-  { name: 'Vermillion', value: '#FF4B1F', role: 'The action color: buttons, done days, the parrot. Also the Fix tag and a miss.' },
-  { name: 'Ultramarine', value: '#3D3BFF', role: 'Voice. The whole call screen, the crest, the New word tag.' },
-  { name: 'Sunflower', value: '#FFC31F', role: 'Reward. Streak, today’s node, the beak, the Phrase tag, "got it".' },
-  { name: 'Lime', value: '#B6F23A', role: 'Right answers and the listening bars.' },
-  { name: 'Card', value: '#FFFDF8', role: 'Cards on paper.' },
-  { name: 'Line', value: '#E8DECB', role: 'Hairlines and pending segments.' },
+  { name: 'Paper', value: '#FFF4E3', role: 'Background' },
+  { name: 'Ink', value: '#16121C', role: 'Text, trail' },
+  { name: 'Vermillion', value: '#FF4B1F', role: 'Action, miss' },
+  { name: 'Ultramarine', value: '#3D3BFF', role: 'Voice' },
+  { name: 'Sunflower', value: '#FFC31F', role: 'Reward' },
+  { name: 'Lime', value: '#B6F23A', role: 'Right' },
+  { name: 'Card', value: '#FFFDF8', role: 'Cards' },
+  { name: 'Line', value: '#E8DECB', role: 'Hairlines' },
 ]
 
 export const TYPE = [
-  { name: 'Bricolage Grotesque', role: 'Display: titles, the day number, the streak. Heavy, a little condensed, friendly without being round.', sample: 'Day 12 complete' },
-  { name: 'Instrument Serif italic', role: 'The language. Every Spanish phrase on a card is set in this and nothing else is.', sample: 'había mucha gente', italic: true },
-  { name: 'Instrument Sans', role: 'Everything else: body, labels, buttons.', sample: 'Say it in Spanish' },
+  { name: 'Bricolage Grotesque', role: 'Display', sample: 'Day 12 complete' },
+  { name: 'Instrument Serif italic', role: 'The language, only', sample: 'había mucha gente', italic: true },
+  { name: 'Instrument Sans', role: 'Everything else', sample: 'Say it in Spanish' },
 ]
 
 export const MOTION = [
-  'The parrot is always slightly alive: a slow breath at rest, a blink every few seconds.',
-  'Talking: beak flaps and the body bobs. Listening: head tilts toward you, the lime bars move. Happy: a hop.',
-  'Cards slide left when answered; the next one rises from underneath. A picked option snaps to lime or vermillion; a "got it" bursts a few sunflower dots.',
-  'On the map, today’s node pulses until the day is done, then fills with a short pop and the path to the next node draws itself.',
-  'Sound: a soft two-note chime for "got it", a warmer three-note one for day complete. Nothing on a miss.',
+  'The parrot is always a little alive: a breath, a blink.',
+  'Answers snap to lime or vermillion; “got it” bursts sunflower dots.',
+  'A soft chime for got it, a warmer one for day complete, nothing for a miss.',
 ]
 
-export const CHANGES = [
-  'Three parts instead of one: the call, the three things, the cards. The day is complete only when all three are.',
-  'The summary receipt became an activity: Polly says each thing, you say it back.',
-  'The card round is a ten-question game with no voice: pick five, type five, leave any time.',
-  'A map with a streak replaced the quiet Today screen as the home.',
-  'Onboarding, the text message, Level, Notebook and Settings are out of scope for this pass.',
-]
 
 /* ---------- the three looks (2026-10-09) ---------- */
-export type Look = { slug: 'arcade' | 'candy' | 'sticker'; name: string; blurb: string; notes: string[] }
+export type Look = { slug: 'arcade' | 'candy' | 'sticker'; name: string; blurb: string }
 export const LOOKS: Look[] = [
   {
     slug: 'arcade',
     name: 'Arcade',
     blurb: 'Neon on deep space, a pixel parrot.',
-    notes: ['Magenta for actions, cyan for edges, sunflower for reward, lime for right. Everything glows.', 'Bungee headlines, Space Grotesk body, Space Mono for the Spanish.', 'The call screen gets scanlines. The parrot is twelve pixels wide.'],
   },
   {
     slug: 'candy',
     name: 'Candy',
     blurb: 'Pastel sky, jelly buttons, a gummy parrot.',
-    notes: ['Bubblegum, grape, lemon and mint on a lavender-to-mint gradient. No outlines; everything is a soft jelly with a lip.', 'Baloo 2 headlines and Spanish, Quicksand body.', 'Buttons have a gloss. The parrot has highlights and a shadow.'],
   },
   {
     slug: 'sticker',
     name: 'Sticker',
     blurb: 'Zine white, fat outlines, die-cut stickers.',
-    notes: ['Red, blue, yellow and green inside three-pixel black outlines with hard offset shadows. Cards and tags sit slightly tilted.', 'Bangers headlines, Nunito body, Permanent Marker for the Spanish.', 'Halftone dots on the paper. The parrot has a white die-cut edge.'],
   },
 ]

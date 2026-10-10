@@ -1,42 +1,66 @@
 'use client'
 
-import { useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { clipFor, lineRuns, scenes, stillFor } from '@/app/dodo/scenes'
 
 // "Dodo, for reference" on the Polly design package: the team's other app as
-// the craft reference. The screens are the real captures the Dodo site uses
-// (scripts/dodo-scenes → public/dodo/scenes, the manifest's own order and
-// captions); the jellies are every avatar a person can be in Dodo — the dodo
+// the craft reference. The gallery taps through the real captures the Dodo
+// site uses (scripts/dodo-scenes → public/dodo/scenes, the manifest's order
+// and one-line captions); the jellies are every avatar a person can be in Dodo — the dodo
 // in eight colours and fifteen critters — rendered at 1024 px from the art
 // pages in misc/dodo-redesign by scripts/dodo-jelly/web.mjs into
 // public/dodo/jelly (a still and a squish frame each). Names and colours
 // mirror JellyCritter in apps/feynd/Feynd/JellyAvatar.swift.
 
-export function DodoScreens() {
+/** One phone that taps through every screen, like the hero on dodo.foo. */
+export function DodoGallery() {
+  const [i, setI] = useState(0)
+  const [auto, setAuto] = useState(true)
+  const [seen, setSeen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  const n = scenes.length
+  useEffect(() => {
+    const el = box.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setSeen(e.isIntersecting), { threshold: 0.6 })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  useEffect(() => {
+    // advances only while on screen, until someone taps
+    if (!auto || !seen || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const t = window.setTimeout(() => setI((k) => (k + 1) % n), 3600)
+    return () => window.clearTimeout(t)
+  }, [i, auto, seen, n])
+  const step = (d: number) => {
+    setAuto(false)
+    setI((k) => (k + d + n) % n)
+  }
+  const s = scenes[i]
   return (
-    <div className="hf-shots">
-      {scenes.map((s) => {
-        const clip = clipFor(s)
-        const plain = s.line.replace(/\*\*/g, '').trim()
-        return (
-          <figure className="hf-shot" key={s.id}>
-            <a className="hf-shot-ph" href={stillFor(s)} target="_blank" rel="noopener" aria-label={`${s.tour} Open at full size.`}>
-              {clip ? (
-                <video src={clip} poster={stillFor(s)} muted loop autoPlay playsInline preload="metadata" />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={stillFor(s)} alt="" loading="lazy" decoding="async" />
-              )}
-            </a>
-            <figcaption>
-              <div className="hf-shot-line">
-                {lineRuns(s.line).map((r, i) => (r.em ? <em key={i}>{r.text}</em> : <span key={i}>{r.text}</span>))}
-              </div>
-              {s.tour.trim() !== plain && <p className="hf-shot-tour">{s.tour}</p>}
-            </figcaption>
-          </figure>
-        )
-      })}
+    <div className="hf-gal" ref={box}>
+      <button type="button" className="hf-gal-ph" onClick={() => step(1)} aria-label="Next screen">
+        {scenes.map((sc, k) => {
+          const clip = clipFor(sc)
+          const cls = 'hf-gal-slide' + (k === i ? ' on' : '')
+          return clip ? (
+            k === i ? <video key={sc.id} className={cls} src={clip} poster={stillFor(sc)} muted loop autoPlay playsInline /> : null
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={sc.id} className={cls} src={stillFor(sc)} alt={k === i ? sc.tour : ''} loading={k < 2 ? 'eager' : 'lazy'} decoding="async" />
+          )
+        })}
+      </button>
+      <div className="hf-gal-line">
+        {lineRuns(s.line).map((r, k) => (r.em ? <em key={k}>{r.text}</em> : <span key={k}>{r.text}</span>))}
+      </div>
+      <div className="hf-gal-nav">
+        <button type="button" onClick={() => step(-1)} aria-label="Previous screen">←</button>
+        <span>
+          {i + 1} / {n}
+        </span>
+        <button type="button" onClick={() => step(1)} aria-label="Next screen">→</button>
+      </div>
     </div>
   )
 }
@@ -69,7 +93,7 @@ export const JELLIES: Jelly[] = [
   { id: 'sprite', name: 'Sprite', tint: '#E4FFF7', color: '#62CFB5' },
 ]
 
-const SIZES = '(min-width: 640px) 100px, 22vw'
+const SIZES = '64px'
 const src = (id: string, squish = false) => {
   const base = `/dodo/jelly/${id}${squish ? '-squish' : ''}`
   return { src: `${base}.webp`, srcSet: `${base}.webp 512w, ${base}@2x.webp 1024w` }
@@ -100,6 +124,7 @@ export function Jellies() {
               }
             }}
             aria-label={`${j.name}. Tap to squish.`}
+            title={j.name}
           >
             <span className="dj-disc">
               <span className="dj-stack">
@@ -109,7 +134,6 @@ export function Jellies() {
                 <img className="dj-img dj-squish" {...src(j.id, true)} sizes={SIZES} alt="" loading="lazy" decoding="async" draggable={false} aria-hidden />
               </span>
             </span>
-            <span className="dj-name">{j.name}</span>
           </button>
         </li>
       ))}
