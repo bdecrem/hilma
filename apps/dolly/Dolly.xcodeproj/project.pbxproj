@@ -24,6 +24,7 @@
 		B6A7485EE8FA2C2C574AA669 /* CardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7179E09AC45B5F4E9F34E53 /* CardsView.swift */; };
 		B98D9C5248F63DC0B9EE9C18 /* Quicksand-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A827E147E4DEC8F3FC182DFB /* Quicksand-Bold.ttf */; };
 		BB4E40AA224BCE64A8C975F4 /* DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12FCCD7FABF0295FC43E35A /* DoneView.swift */; };
+		C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08793AEC3DBECFE259B029C9 /* Secrets.swift */; };
 		C801744CAFFAA9E03828D3DE /* ThingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F67961CC796459CB5B830A /* ThingsView.swift */; };
 		CD7252E6C0FEA47E2F041A43 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = D104FCD2299C3BDA56F7A217 /* Components.swift */; };
 		D14D81EA2A7C2C688B3572E1 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8132C7C8432ADBE5DBCC84 /* AppState.swift */; };
@@ -32,6 +33,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		08793AEC3DBECFE259B029C9 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		0D3895D14152F5D3935DF075 /* DollyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DollyAPI.swift; sourceTree = "<group>"; };
 		0E5E36E574FC10AB78344256 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		1D8132C7C8432ADBE5DBCC84 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 				D8C59EB20FA58A8FDACE48AF /* Mascot.swift */,
 				CAA4D8B1546392D9142BB179 /* Models.swift */,
 				47D278063D8D4D04FF60B17C /* OnboardingView.swift */,
+				08793AEC3DBECFE259B029C9 /* Secrets.swift */,
 				E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */,
 				C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */,
 				DF955F0B5D7166AC219C99C1 /* TalkView.swift */,
@@ -214,6 +217,7 @@
 				7FD8749641708D28547E7D89 /* Mascot.swift in Sources */,
 				9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */,
 				D42463998CAB38DEB8D4C8CB /* OnboardingView.swift in Sources */,
+				C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */,
 				F3B968447A9180183ED839D7 /* SettingsView.swift in Sources */,
 				395F955A98AD2D570F63DDDB /* Skin.swift in Sources */,
 				9F4693E0D51EEC9761382E58 /* TalkView.swift in Sources */,
