@@ -82,6 +82,17 @@ code goes out by iMessage for real numbers. The test phones in
 `src/lib/dolly/send.ts` get no text: their code is `DOLLY_TEST_CODE` (`.env.local`
 and Vercel), which is how `e2e.ts` signs in against production too.
 
+**Never mint an ElevenLabs token a check will not use.** Every conversation
+token holds one of the workspace's concurrent-conversation slots until it
+expires, across Dodo, Polly and Dolly, dev and prod engines alike. On
+2026-10-10 the day check minting three per run filled the cap
+(`concurrent_limit_exceeded`), which fails real calls with "Voice failed"
+until the tokens expire. Checks that only exercise the day pass `dry: true`
+(test phones only, `/api/dolly/eleven/session`); only `e2e.ts --voice` and the
+simulator's `-VoiceDrill` connect for real, and both end their conversation.
+Never poll the token endpoint to see whether the cap has cleared: a successful
+probe takes a slot.
+
 **Server first, then the app.** A build that reads new fields must not land on a
 phone before the server that sends them is READY on Vercel (check
 `vercel inspect <deployment>`; a Google Fonts hiccup can fail an unrelated
