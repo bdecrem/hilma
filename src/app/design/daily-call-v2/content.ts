@@ -2,7 +2,7 @@
 // things, cards), a map with a streak, no setup screens. All copy here.
 
 export type ScreenId = 'map' | 'talk' | 'things' | 'cards' | 'done'
-export type MapState = 'morning' | 'after-talk' | 'after-things' | 'done'
+export type MapState = 'morning' | 'after-talk' | 'after-things' | 'paused' | 'done'
 
 export const ORDER: ScreenId[] = ['map', 'talk', 'things', 'cards', 'done']
 export const WORKING_NAME = 'Polly'
@@ -43,19 +43,25 @@ export const THINGS: Thing[] = [
 export const KIND_LABEL: Record<Thing['kind'], string> = { fix: 'Fix', word: 'New word', phrase: 'Phrase' }
 
 /* ---------- part 3: the cards ---------- */
-export type Card = { en: string; es: string; from: 'new' | number; ok: boolean }
-// Scripted outcome for the prototype: one miss, which comes back at the end.
-export const DECK: Card[] = [
-  { en: 'to get up very early', es: 'madrugar', from: 'new', ok: true },
-  { en: 'traffic jam', es: 'el atasco', from: 10, ok: false },
-  { en: 'there were a lot of people', es: 'había mucha gente', from: 'new', ok: true },
-  { en: 'frying pan', es: 'la sartén', from: 11, ok: true },
-  { en: 'something tasty', es: 'algo rico', from: 'new', ok: true },
-  { en: 'I go by train', es: 'voy en tren', from: 10, ok: true },
-  { en: 'to have breakfast', es: 'desayunar', from: 8, ok: true },
-  { en: 'neighborhood', es: 'el barrio', from: 7, ok: true },
+// Ten questions, no voice: five pick-the-answer, then five type-it. Fixed
+// order so the game has a shape (easy first). A miss does not return; it
+// shows the right answer and is weighted into tomorrow's call.
+export type Question =
+  | { kind: 'pick'; en: string; es: string; options: string[]; from: 'new' | number }
+  | { kind: 'type'; en: string; es: string; from: 'new' | number }
+export const QUESTIONS: Question[] = [
+  { kind: 'pick', en: 'to get up very early', es: 'madrugar', options: ['madrugar', 'desayunar', 'acostarse', 'levantarse'], from: 'new' },
+  { kind: 'pick', en: 'traffic jam', es: 'el atasco', options: ['el barrio', 'el atasco', 'la sart\u00e9n', 'el tren'], from: 10 },
+  { kind: 'pick', en: 'there were a lot of people', es: 'hab\u00eda mucha gente', options: ['era mucha gente', 'estaba mucha gente', 'hab\u00eda mucha gente', 'hay mucho gente'], from: 'new' },
+  { kind: 'pick', en: 'frying pan', es: 'la sart\u00e9n', options: ['la olla', 'la sart\u00e9n', 'el horno', 'el plato'], from: 11 },
+  { kind: 'pick', en: 'something tasty', es: 'algo rico', options: ['algo raro', 'algo caro', 'algo nuevo', 'algo rico'], from: 'new' },
+  { kind: 'type', en: 'I go by train', es: 'voy en tren', from: 10 },
+  { kind: 'type', en: 'to have breakfast', es: 'desayunar', from: 8 },
+  { kind: 'type', en: 'neighborhood', es: 'el barrio', from: 7 },
+  { kind: 'type', en: 'close, nearby', es: 'cercano', from: 6 },
+  { kind: 'type', en: 'I like to cook', es: 'me gusta cocinar', from: 11 },
 ]
-export const COMING_BACK = ['madrugar', 'el atasco', 'algo rico']
+export const COMING_BACK = ['madrugar', 'hab\u00eda mucha gente', 'algo rico', 'cercano']
 
 /* ---------- the map ---------- */
 // Days shown on the map, bottom to top. 14 is a weekly bonus node.
@@ -73,7 +79,7 @@ export const SCREENS: ScreenNote[] = [
       'The streak is the one number up top, with the flame. It counts days where all three steps were done.',
       'Today’s card lists the three parts in order and has one button: whichever part is next. Done parts get a check.',
       'The trail is a winding path of day nodes: done days filled in vermillion, today pulsing in sunflower, future days dashed. Every seventh day is a bonus node with a star.',
-      'Four states, driven by the day: morning, after the talk, after the three things, done.',
+      'Five states, driven by the day: morning, after the talk, after the three things, cards paused, done. Leaving a part mid-way lands here with the place kept.',
     ],
   },
   {
@@ -96,17 +102,20 @@ export const SCREENS: ScreenNote[] = [
       'The Spanish is set big in the italic serif. That face is reserved for the language, nowhere else in the app.',
       'Each card runs listen → your turn → got it. The mic button is the only control; it is disabled while Polly speaks and becomes a lime check when you got it.',
       'Where it came from is on the card ("You said: era mucho gente"), so the thing is tied to a moment, not a list.',
+      'A \u00d7 at the top left leaves to the map. Three things is short, so leaving restarts it next time.',
     ],
   },
   {
     id: 'cards',
-    name: 'Part 3 · Cards',
-    purpose: 'The daily game: today’s three new cards plus five coming back. Eight to clear; a miss returns at the end.',
+    name: 'Part 3 \u00b7 Cards',
+    purpose: 'The daily game, no voice: ten questions, five you pick and five you type. Leave any time; the map keeps your place.',
     notes: [
-      'English prompt, say it in Spanish. Tap the mic; "Show me" is the escape hatch and counts as a miss.',
-      'Eight segments across the top fill lime or vermillion as you go. Score is a running count, not points.',
-      'A right answer shows the Spanish in the serif with a lime band; a miss shows the right answer with a vermillion band and Polly says it.',
-      'Cards carry where they came from: NEW for today, DAY 10 for an older one, so the memory game feels like your history.',
+      'Two halves with a label on the card: Pick it (four Spanish options, tap one) for questions one to five, then Type it (a field, Check or Enter) for six to ten. Easy first, then harder.',
+      'Ten segments across the top fill lime or vermillion. The counter is a running score, not points.',
+      'Right: the option or the band turns lime with "Nice". Wrong: vermillion, and the right answer is shown next to it. Nothing comes back today; a miss is weighted into tomorrow\u2019s call.',
+      'Typing is forgiving: case, accents and a leading el/la are ignored. Skip reveals the answer and counts as a miss.',
+      'The \u00d7 at the top left leaves the game with progress kept. The map then reads "4 of 10, paused" and its button says Resume. There is no tunnel.',
+      'Today\u2019s three things are in the ten, tagged New today; the rest are tagged by the day they were learned.',
     ],
   },
   {
@@ -115,7 +124,7 @@ export const SCREENS: ScreenNote[] = [
     purpose: 'The payoff: the streak ticks, the sun comes out, and you see what Polly will bring back tomorrow.',
     notes: [
       'One big sunflower disc behind a happy parrot. The number is the streak, not points.',
-      'Three totals for the three parts.',
+      'Three totals for the three parts: the talk\u2019s length, three things, the card score out of ten.',
       '"Coming back tomorrow" lists today’s new things and anything you missed. These are weighted into tomorrow’s conversation, which is what makes the loop a loop.',
       'One button, back to the map, where today’s node is now filled.',
     ],
@@ -151,7 +160,7 @@ export const TYPE = [
 export const MOTION = [
   'The parrot is always slightly alive: a slow breath at rest, a blink every few seconds.',
   'Talking: beak flaps and the body bobs. Listening: head tilts toward you, the lime bars move. Happy: a hop.',
-  'Cards slide left when done; the next one rises from underneath. A "got it" bursts a few sunflower dots.',
+  'Cards slide left when answered; the next one rises from underneath. A picked option snaps to lime or vermillion; a "got it" bursts a few sunflower dots.',
   'On the map, today’s node pulses until the day is done, then fills with a short pop and the path to the next node draws itself.',
   'Sound: a soft two-note chime for "got it", a warmer three-note one for day complete. Nothing on a miss.',
 ]
@@ -159,6 +168,7 @@ export const MOTION = [
 export const CHANGES = [
   'Three parts instead of one: the call, the three things, the cards. The day is complete only when all three are.',
   'The summary receipt became an activity: Polly says each thing, you say it back.',
+  'The card round is a ten-question game with no voice: pick five, type five, leave any time.',
   'A map with a streak replaced the quiet Today screen as the home.',
   'Onboarding, the text message, Level, Notebook and Settings are out of scope for this pass.',
 ]

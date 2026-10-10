@@ -33,6 +33,7 @@ const browser = await chromium.launch()
     ['Morning', 'Start today'],
     ['After the talk', 'Next: Three things'],
     ['After three things', 'Next: Cards'],
+    ['Cards paused', 'Resume cards'],
     ['Done', 'Tomorrow'],
   ]) {
     await page.click(`.hf-pill:text-is("${label}")`)
@@ -70,28 +71,65 @@ const browser = await chromium.launch()
   await page.waitForSelector('.hf-phone .p2-cards', { timeout: 8000 })
   if ((await current()) !== 'Part 3 · Cards') fail('three things did not hand into cards')
 
-  // Cards: answer until the deck is clear (eight, one comes back = nine).
-  let answered = 0
-  for (let k = 0; k < 12; k++) {
-    const mic = page.locator('.hf-phone button.p2-mic')
-    try {
-      await mic.waitFor({ timeout: 6000 })
-    } catch {
-      break
-    }
-    if (k === 1) await snap('cards-ask')
-    await mic.click()
-    await page.waitForSelector('.hf-phone .p2-flash.ok, .hf-phone .p2-flash.miss', { timeout: 5000 })
-    if (k === 1) await snap('cards-miss')
-    if (k === 0) await snap('cards-ok')
-    answered++
-    await page.waitForTimeout(1600)
-    if (await page.locator('.hf-phone .p2-done').count()) break
+  // Cards: ten questions. Pick two right, leave, resume from the map, then
+  // one wrong pick, two right, and five typed (one wrong, one via Skip).
+  const ANS = ['madrugar', 'el atasco', 'había mucha gente', 'la sartén', 'algo rico', 'voy en tren', 'desayunar', 'el barrio', 'cercano', 'me gusta cocinar']
+  const pickOpt = async (text) => {
+    await page.click(`.hf-phone .p2-option:text-is("${text}")`)
+    await page.waitForSelector('.hf-phone .p2-option.right', { timeout: 3000 })
+    await page.waitForTimeout(1500)
   }
-  console.log('answered', answered)
-  if (answered !== 9) fail(`expected 9 answers (8 + the miss returning), got ${answered}`)
+  await page.waitForSelector('.hf-phone .p2-option', { timeout: 8000 })
+  await snap('cards-pick')
+  await pickOpt(ANS[0])
+  await pickOpt(ANS[1])
+  // Leave with two answered; the map must say so and offer Resume.
+  await page.click('.hf-phone .p2-close')
+  await page.waitForTimeout(300)
+  const pausedTxt = await page.textContent('.hf-phone .p2-today')
+  if (!pausedTxt.includes('2 of 10')) fail(`paused map should say "2 of 10", got: ${pausedTxt}`)
+  await snap('map-paused')
+  await page.click('.hf-phone .p2-btn:text-is("Resume cards")')
+  await page.waitForSelector('.hf-phone .p2-option', { timeout: 5000 })
+  const countTxt = await page.textContent('.hf-phone .p2-mode')
+  if (!countTxt.startsWith('3')) fail(`resume should land on question 3, got "${countTxt}"`)
+  // Wrong pick on question 3: the right one is shown too.
+  await page.click('.hf-phone .p2-option:text-is("era mucha gente")')
+  await page.waitForSelector('.hf-phone .p2-option.wrong', { timeout: 3000 })
+  if (!(await page.locator('.hf-phone .p2-option.right').count())) fail('wrong pick did not reveal the right option')
+  await snap('cards-wrong')
+  await page.waitForTimeout(1500)
+  await pickOpt(ANS[3])
+  await pickOpt(ANS[4])
+  // Typed half.
+  const typeIt = async (text, viaEnter = true) => {
+    await page.waitForSelector('.hf-phone .p2-input:not([disabled])', { timeout: 5000 })
+    await page.fill('.hf-phone .p2-input', text)
+    if (viaEnter) await page.press('.hf-phone .p2-input', 'Enter')
+    else await page.click('.hf-phone .p2-check')
+    await page.waitForSelector('.hf-phone .p2-band.inline', { timeout: 3000 })
+    await page.waitForTimeout(1700)
+  }
+  await page.waitForSelector('.hf-phone .p2-input', { timeout: 5000 })
+  await snap('cards-type')
+  await typeIt('Voy en tren', false)
+  await typeIt('desayunar')
+  await typeIt('barrio') // article dropped, accepted
+  await page.waitForSelector('.hf-phone .p2-input:not([disabled])', { timeout: 5000 })
+  await page.fill('.hf-phone .p2-input', 'cerca')
+  await page.press('.hf-phone .p2-input', 'Enter')
+  await page.waitForSelector('.hf-phone .p2-flash.miss', { timeout: 3000 })
+  await snap('cards-type-miss')
+  await page.waitForTimeout(1700)
+  await page.waitForSelector('.hf-phone .p2-link:text-is("Skip")', { timeout: 5000 })
+  await page.click('.hf-phone .p2-link:text-is("Skip")')
+  await page.waitForTimeout(1700)
   await page.waitForSelector('.hf-phone .p2-done', { timeout: 8000 })
   if ((await current()) !== 'Day complete') fail('cards did not hand into day complete')
+  const totals = await page.textContent('.hf-phone .p2-totals')
+  if (!totals.includes('7 / 10')) fail(`expected 7 / 10 cards on the done screen, got: ${totals}`)
+  const backTxt = await page.textContent('.hf-phone .p2-back')
+  if (!backTxt.includes('cercano')) fail('the typed miss should come back tomorrow')
   await snap('done')
   await page.click('.hf-phone .p2-btn:text-is("Back to the map")')
   await page.waitForTimeout(300)

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Parrot, type Mood } from './Parrot'
 import { CHANGES, LOOP, MOTION, ORDER, PALETTE, SCREENS, TYPE, WORKING_NAME, type MapState, type ScreenId } from './content'
-import { Screen, type Go } from './screens'
+import { Screen, resetGame, type Go } from './screens'
 
 type Pos = { id: ScreenId; map: MapState; key: number }
 const noop: Go = () => {}
@@ -69,6 +69,7 @@ const MAP_STATES: { s: MapState; label: string }[] = [
   { s: 'morning', label: 'Morning' },
   { s: 'after-talk', label: 'After the talk' },
   { s: 'after-things', label: 'After three things' },
+  { s: 'paused', label: 'Cards paused' },
   { s: 'done', label: 'Done' },
 ]
 
@@ -108,7 +109,7 @@ export default function Artifact() {
           <div className="hf-eyebrow">Design artifact · v2 · high fidelity · October 9, 2026</div>
           <h1 className="hf-h1">Daily call, in color</h1>
           <p className="hf-dek">
-            Three minutes of conversation a day, then three things to say back, then a round of cards. The day is done
+            Three minutes of conversation a day, then three things to say back, then ten flash cards. The day is done
             when all three are, and the map keeps the streak. This pass sets a visual direction to react to: paper, ink and
             a riso palette, a parrot for a mascot, the language set in an italic serif. Working name: {WORKING_NAME}.
           </p>
@@ -144,10 +145,18 @@ export default function Artifact() {
                   <span className="hf-hint">{current?.purpose}</span>
                 ) : (
                   <div className="hf-pills">
-                    <button className="hf-pill" onClick={() => go(pos.id)}>
+                    <button
+                      className="hf-pill"
+                      onClick={() => {
+                        if (pos.id === 'cards') resetGame()
+                        go(pos.id)
+                      }}
+                    >
                       Replay
                     </button>
-                    <span className="hf-hint">{pos.id === 'talk' ? 'Plays itself at about 9× speed' : 'Tap the mic when it turns red'}</span>
+                    <span className="hf-hint">
+                      {pos.id === 'talk' ? 'Plays itself at about 9× speed' : pos.id === 'things' ? 'Tap the mic when it turns red' : 'Pick or type. × leaves and keeps your place.'}
+                    </span>
                   </div>
                 )}
               </div>

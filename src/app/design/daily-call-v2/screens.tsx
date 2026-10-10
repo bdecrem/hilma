@@ -9,7 +9,7 @@ import {
   CONNECT_MS,
   DAILY_TIME,
   DAY,
-  DECK,
+  QUESTIONS,
   KIND_LABEL,
   MAP_DAYS,
   BONUS_EVERY,
@@ -147,11 +147,13 @@ function trail(from: number, to: number) {
 }
 
 export function MapScreen({ go, state = 'morning' }: P) {
-  const stepDone = state === 'morning' ? 0 : state === 'after-talk' ? 1 : state === 'after-things' ? 2 : 3
+  const paused = state === 'paused'
+  const stepDone = state === 'morning' ? 0 : state === 'after-talk' ? 1 : state === 'after-things' || paused ? 2 : 3
+  const answered = GAME.results.length || 4
   const steps: { label: string; sub: string; id: ScreenId }[] = [
     { label: 'Talk', sub: '3 min with Polly', id: 'talk' },
     { label: 'Three things', sub: 'say them back', id: 'things' },
-    { label: 'Cards', sub: '8 to clear', id: 'cards' },
+    { label: 'Cards', sub: paused ? `${answered} of ${QUESTIONS.length} · paused` : `${QUESTIONS.length} questions`, id: 'cards' },
   ]
   const next = steps[stepDone]
   const todayIdx = MAP_DAYS.indexOf(DAY)
@@ -193,7 +195,14 @@ export function MapScreen({ go, state = 'morning' }: P) {
             <b>{TOMORROW}</b>
           </div>
         ) : (
-          <Button onClick={() => go(next.id)}>{stepDone === 0 ? 'Start today' : `Next: ${next.label}`}</Button>
+          <Button
+            onClick={() => {
+              if (next.id === 'cards' && !paused) resetGame()
+              go(next.id)
+            }}
+          >
+            {paused ? 'Resume cards' : stepDone === 0 ? 'Start today' : `Next: ${next.label}`}
+          </Button>
         )}
       </div>
 
@@ -377,6 +386,9 @@ export function ThingsScreen({ go, still = false }: P) {
   return (
     <Frame className="p2-things">
       <div className="p2-sec-head">
+        <button className="p2-close" onClick={() => go('map', 'after-talk')} aria-label="Leave three things">
+          ×
+        </button>
         <span className="p2-sec-title">Three things from today</span>
         <span className="p2-segs" aria-label={`${i + 1} of 3`}>
           {THINGS.map((_, k) => (
@@ -428,99 +440,140 @@ export function ThingsScreen({ go, still = false }: P) {
 
 /* ---------- part 3: cards ---------- */
 
-type CardPhase = 'ask' | 'hearing' | 'result'
-type Res = { idx: number; ok: boolean }
+type Res = { q: number; ok: boolean }
+// Progress lives outside the screen so leaving and resuming keeps the place.
+export const GAME: { results: Res[] } = { results: [] }
+export function resetGame() {
+  GAME.results = []
+}
+
+// What you type is compared loosely: case, accents and a leading article are ignored.
+function norm(v: string) {
+  return v
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z\s]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/^(el|la|los|las) /, '')
+}
 
 export function CardsScreen({ go, still = false }: P) {
-  const [queue, setQueue] = useState<number[]>(() => DECK.map((_, k) => k))
-  const [results, setResults] = useState<Res[]>(still ? [{ idx: 0, ok: true }] : [])
-  const [phase, setPhase] = useState<CardPhase>('ask')
-  const [forced, setForced] = useState<boolean | null>(null)
-  const pos = still ? 1 : 0
-  const cur = queue[pos]
-  const card = cur === undefined ? null : DECK[cur]
-  // A card missed once comes back at the end and is answered right the second time.
-  const retried = cur !== undefined && results.some((r) => r.idx === cur)
-  const ok = forced ?? (card ? card.ok || retried : true)
-  const total = DECK.length + results.filter((r) => !r.ok).length
+  // Opening the game after a finished round starts a fresh one.
+  const [results, setResults] = useState<Res[]>(() => (still ? [{ q: 0, ok: true }, { q: 1, ok: false }] : GAME.results.length === QUESTIONS.length ? [] : GAME.results))
+  const [pick, setPick] = useState<number | null>(null)
+  const [typed, setTyped] = useState('')
+  const [checked, setChecked] = useState<boolean | null>(null)
+  const i = results.length
+  const q = QUESTIONS[i]
+  const answered = pick !== null || checked !== null
+  const ok = q ? (q.kind === 'pick' ? pick !== null && q.options[pick] === q.es : checked === true) : false
 
   useEffect(() => {
-    if (still) return
-    let t: ReturnType<typeof setTimeout> | undefined
-    if (phase === 'hearing') t = setTimeout(() => setPhase('result'), 1000)
-    if (phase === 'result')
-      t = setTimeout(() => {
-        if (cur === undefined) return
-        setResults((r) => [...r, { idx: cur, ok }])
-        setQueue((q) => (ok ? q.slice(1) : [...q.slice(1), cur]))
-        setForced(null)
-        setPhase('ask')
-      }, 1400)
+    if (!still) GAME.results = results
+  }, [results, still])
+
+  useEffect(() => {
+    if (!still && results.length === QUESTIONS.length) go('done')
+  }, [results.length, still, go])
+
+  useEffect(() => {
+    if (still || !answered || !q) return
+    const t = setTimeout(
+      () => {
+        setResults((r) => [...r, { q: i, ok }])
+        setPick(null)
+        setTyped('')
+        setChecked(null)
+      },
+      q.kind === 'pick' ? 1200 : 1500,
+    )
     return () => clearTimeout(t)
-  }, [phase, cur, ok, still])
+  }, [answered, ok, i, q, still])
 
-  useEffect(() => {
-    if (!still && queue.length === 0) go('done')
-  }, [queue.length, still, go])
+  if (!q) return <Frame className="p2-cards" />
 
-  if (!card) return <Frame className="p2-cards" />
+  const right = results.filter((r) => r.ok).length
+  const check = () => {
+    if (!typed.trim()) return
+    setChecked(norm(typed) === norm(q.es))
+  }
 
-  const seen = results.length
   return (
     <Frame className="p2-cards">
       <div className="p2-sec-head">
+        <button className="p2-close" onClick={() => go('map', results.length ? 'paused' : 'after-things')} aria-label="Leave the cards, keep your place">
+          ×
+        </button>
         <span className="p2-sec-title">Cards</span>
         <span className="p2-count">
-          {Math.min(seen + 1, total)} / {total}
+          {right} / {QUESTIONS.length}
         </span>
       </div>
-      <span className="p2-segs wide" aria-label={`${seen} of ${total} answered`}>
-        {Array.from({ length: total }, (_, k) => {
+      <span className="p2-segs wide" aria-label={`${results.length} of ${QUESTIONS.length} answered`}>
+        {QUESTIONS.map((_, k) => {
           const r = results[k]
-          return <i key={k} className={r ? (r.ok ? 'ok' : 'miss') : k === seen ? 'cur' : ''} />
+          return <i key={k} className={r ? (r.ok ? 'ok' : 'miss') : k === i ? 'cur' : ''} />
         })}
       </span>
 
-      <div key={`${cur}-${seen}`} className={`p2-card p2-flash ${phase === 'result' ? (ok ? 'ok' : 'miss') : ''}`}>
-        <span className={`p2-tag ${card.from === 'new' ? 'new' : 'old'}`}>{card.from === 'new' ? 'New today' : `Day ${card.from}`}</span>
-        <span className="p2-prompt">{card.en}</span>
-        <span className="p2-ask">Say it in Spanish</span>
-        <div className="p2-band">
-          {phase === 'result' ? (
-            <>
-              <span className="p2-es sm">{card.es}</span>
-              <span className="p2-verdict">{ok ? <>Nice <Check size={14} color="var(--p-ink)" /></> : 'Not yet, it comes back'}</span>
-            </>
-          ) : null}
+      <div key={i} className={`p2-card p2-flash ${answered ? (ok ? 'ok' : 'miss') : ''}`}>
+        <div className="p2-flash-top">
+          <span className={`p2-tag ${q.from === 'new' ? 'new' : 'old'}`}>{q.from === 'new' ? 'New today' : `Day ${q.from}`}</span>
+          <span className="p2-mode">
+            {i + 1} · {q.kind === 'pick' ? 'Pick it' : 'Type it'}
+          </span>
         </div>
+        <span className="p2-prompt">{q.en}</span>
+
+        {q.kind === 'pick' ? (
+          <div className="p2-options" role="group" aria-label="Options">
+            {q.options.map((o, k) => {
+              const cls = pick === null ? '' : o === q.es ? 'right' : k === pick ? 'wrong' : 'dim'
+              return (
+                <button key={o} className={`p2-option ${cls}`} disabled={pick !== null} onClick={() => setPick(k)}>
+                  {o}
+                </button>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="p2-typeit">
+            <input
+              className="p2-input"
+              value={typed}
+              placeholder="Type it in Spanish"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              disabled={checked !== null}
+              onChange={(e) => setTyped(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') check()
+              }}
+              aria-label="Your answer"
+            />
+            {checked === null ? (
+              <div className="p2-typeit-row">
+                <button className="p2-check" onClick={check} disabled={!typed.trim()}>
+                  Check
+                </button>
+                <button className="p2-link" onClick={() => setChecked(false)}>
+                  Skip
+                </button>
+              </div>
+            ) : (
+              <div className="p2-band inline">
+                <span className="p2-es sm">{q.es}</span>
+                <span className="p2-verdict">{checked ? <>Nice <Check size={14} color="var(--p-ink)" /></> : 'Not yet'}</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="p2-things-foot">
-        {phase === 'ask' ? (
-          <button className="p2-mic" onClick={() => setPhase('hearing')} aria-label="Say it">
-            <MicIcon />
-          </button>
-        ) : phase === 'hearing' ? (
-          <span className="p2-mic hearing">
-            <Bars color="#fff" />
-          </span>
-        ) : (
-          <span className={`p2-mic ${ok ? 'got' : 'missed'}`}>{ok ? <Check size={30} color="var(--p-ink)" /> : <SpeakerIcon />}</span>
-        )}
-        {phase === 'ask' ? (
-          <button
-            className="p2-link"
-            onClick={() => {
-              setForced(false)
-              setPhase('result')
-            }}
-          >
-            Show me
-          </button>
-        ) : (
-          <span className="p2-foot-hint"> </span>
-        )}
-      </div>
+      <span className="p2-cards-hint">{q.kind === 'pick' ? 'Tap the one that matches.' : 'Accents and el/la are optional.'}</span>
     </Frame>
   )
 }
@@ -528,6 +581,11 @@ export function CardsScreen({ go, still = false }: P) {
 /* ---------- day complete ---------- */
 
 export function DoneScreen({ go }: P) {
+  const played = GAME.results.length === QUESTIONS.length ? GAME.results : null
+  const right = played ? played.filter((r) => r.ok).length : 8
+  const back = played
+    ? Array.from(new Set([...THINGS.map((t) => t.es), ...played.filter((r) => !r.ok).map((r) => QUESTIONS[r.q].es)])).slice(0, 4)
+    : COMING_BACK
   return (
     <Frame className="p2-done">
       <div className="p2-sun">
@@ -548,14 +606,16 @@ export function DoneScreen({ go }: P) {
           <span>things</span>
         </div>
         <div>
-          <b>8 / 9</b>
+          <b>
+            {right} / {QUESTIONS.length}
+          </b>
           <span>cards</span>
         </div>
       </div>
       <div className="p2-card p2-back">
         <span className="p2-cap">Coming back tomorrow</span>
         <span className="p2-chips">
-          {COMING_BACK.map((w) => (
+          {back.map((w) => (
             <span key={w} className="p2-chip">
               {w}
             </span>
