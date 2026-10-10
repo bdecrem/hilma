@@ -164,6 +164,8 @@ What we must not do: announce the targets ("today we're practicing the past tens
 
 ## 4.5 "Now what": the star round
 
+> **Decided and built, 2026-10-10 (evening):** Talk more is always there after the day. Learning objectives is an opt-in toggle in Settings; with it on, the star round is where the agent makes sure the objectives are met, and everyone starts at level 1 and climbs. The curriculum file is `src/lib/dolly/curriculum.ts` (Spanish levels 1–3, Mandarin 1–2 authored); the morning call is untouched for now. What follows is the reasoning as written before the decision.
+
 Bart finished day 1 and wanted to keep going, and couldn't. Two ideas came out of that: (1) let the conversation simply continue, or (2) let the learner **max-star the day**: a second conversation, more guided, that hits the vocabulary and grammar goals for the level. The worry is whether (2) can be done without ruining the fun, and how we would even know "the level for that day", which is this whole document's subject. The two are the same question from two ends, and the star round is, I think, the right home for the curriculum:
 
 **The day stays sacred.** Three parts, three minutes, one streak. Nothing in section 4 announces a target, and that stays true.

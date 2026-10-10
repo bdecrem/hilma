@@ -13,9 +13,12 @@ struct UserView: Codable, Equatable {
     let tz: String
     let streak: Int
     let bestStreak: Int
+    /// Learning objectives (Settings) and the rung of the ladder.
+    let objectives: Bool
+    let rung: Int
 
     enum CodingKeys: String, CodingKey {
-        case id, phone, name, language, level, tz, streak
+        case id, phone, name, language, level, tz, streak, objectives, rung
         case dailyHour = "daily_hour"
         case dailyLabel = "daily_label"
         case bestStreak = "best_streak"
@@ -90,13 +93,71 @@ struct TrailNode: Codable, Equatable, Identifiable {
     let n: Int
     let done: Bool
     let today: Bool
+    let starred: Bool
     var id: Int { n }
+}
+
+struct Named: Codable, Equatable, Identifiable {
+    let id: String
+    let title: String
+}
+
+/// The star round in progress or done today.
+struct StarView: Codable, Equatable {
+    let state: String
+    let targets: [Named]
+    let earned: [Named]
+    let levelUp: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case state, targets, earned
+        case levelUp = "level_up"
+    }
+}
+
+struct CanDoView: Codable, Equatable, Identifiable {
+    let id: String
+    let title: String
+    let earned: Bool
+}
+
+struct Rung: Codable, Equatable, Identifiable {
+    let n: Int
+    let name: String
+    let tagline: String
+    let cefr: String
+    let authored: Bool
+    var id: Int { n }
+}
+
+struct ObjectivesView: Codable, Equatable {
+    let on: Bool
+    let level: Int
+    let name: String
+    let tagline: String
+    let cefr: String
+    let earned: Int
+    let total: Int
+    let starAvailable: Bool
+    let canDos: [CanDoView]
+    let ladder: [Rung]
+
+    enum CodingKeys: String, CodingKey {
+        case on, level, name, tagline, cefr, earned, total, ladder
+        case starAvailable = "star_available"
+        case canDos = "can_dos"
+    }
 }
 
 enum DayState: String {
     case morning, paused, done
     case afterTalk = "after_talk"
     case afterThings = "after_things"
+    case starAfterTalk = "star_after_talk"
+    case starAfterThings = "star_after_things"
+    case starPaused = "star_paused"
+
+    var inStarRound: Bool { self == .starAfterTalk || self == .starAfterThings || self == .starPaused }
 }
 
 struct DayView: Codable, Equatable {
@@ -116,6 +177,11 @@ struct DayView: Codable, Equatable {
     let trail: [TrailNode]
     let comingBack: [String]
     let tomorrow: String?
+    let extraCalls: Int
+    let extraMinutes: Int
+    let starred: Bool
+    let star: StarView?
+    let objectives: ObjectivesView
 
     var dayState: DayState { DayState(rawValue: state) ?? .morning }
 
@@ -125,19 +191,21 @@ struct DayView: Codable, Equatable {
         case .morning: return 0
         case .afterTalk: return 1
         case .afterThings, .paused: return 2
-        case .done: return 3
+        case .done, .starAfterTalk, .starAfterThings, .starPaused: return 3
         }
     }
 
     var rightCount: Int { answers.filter(\.ok).count }
 
     enum CodingKeys: String, CodingKey {
-        case id, day, n, topic, state, streak, things, questions, answers, trail, tomorrow
+        case id, day, n, topic, state, streak, things, questions, answers, trail, tomorrow, starred, star, objectives
         case bestStreak = "best_streak"
         case dailyHour = "daily_hour"
         case dailyLabel = "daily_label"
         case callSeconds = "call_seconds"
         case comingBack = "coming_back"
+        case extraCalls = "extra_calls"
+        case extraMinutes = "extra_minutes"
     }
 }
 
@@ -210,9 +278,11 @@ struct ElevenSessionResponse: Codable {
         let cues: [String]
         /// The call: send `cue` at afterMs, end at endMs.
         let wrap: Wrap?
+        /// The star round's objectives, for the screen.
+        let targets: [Named]?
 
         enum CodingKeys: String, CodingKey {
-            case model, kickoff, cues, wrap
+            case model, kickoff, cues, wrap, targets
             case conversationToken = "conversation_token"
             case holdToTalk = "hold_to_talk"
             case dynamicVariables = "dynamic_variables"

@@ -12,6 +12,16 @@ Backend: hilma, `src/lib/dolly/` + `/api/dolly/*` (see the project CLAUDE.md
 row). Voice: Polly's ElevenLabs + Claude engine, ported — `ElevenVoiceClient.swift`
 is Polly's with Dolly's finish; GPT-Live is the gap left in `VoiceClient.swift`.
 
+After the day is done (2026-10-10, later the same day): **Talk more** (mode
+`more`, a free extra call, counted on the map) for everyone, and with
+**Settings → Learning objectives** on, **★ Star the day** (mode `star`): a
+two-minute guided call on the next four unearned objectives of the learner's
+rung (`src/lib/dolly/curriculum.ts`, eight levels, Spanish 1–3 and Mandarin
+1–2 authored), read by Claude for what was demonstrated, then three things
+from the targets, then six cards; the day's node gets a star, all objectives
+earned moves the rung up. The map line "Level 1 · Hello · 3 of 10" opens
+`ObjectivesSheet` (the ladder). The thinking is `docs/dolly-pedagogy.md`.
+
 ## Files (`Dolly/`)
 
 - `DollyApp.swift` — `@main`, `RootView` (loading / onboarding / map), `FlowView`
@@ -50,9 +60,11 @@ with zsh build the arguments as an array):
 - `-BackendURL http://localhost:3260` — a local dev server (the worktree's `next dev -p 3260`).
 - `-TestSessionToken <value>` — sign in as the test account: the value is what
   `npx tsx scripts/dolly/e2e.ts` prints ("cookie value"). Never Bart's account.
-- `-Open map|settings|talk|things|cards|done` — where to open. `talk` needs
-  the day at `morning`, `things` at `after_talk`, `cards` at `after_things`:
-  `scripts/dolly/e2e.ts --until talk|things|cards` leaves the test account there.
+- `-Open map|settings|objectives|talk|things|cards|done|more|star` — where to
+  open. `talk` needs the day at `morning`, `things` at `after_talk`, `cards` at
+  `after_things`: `scripts/dolly/e2e.ts --until talk|things|cards` leaves the
+  test account there; `more` and `star` need the day done (a full `e2e.ts` run
+  leaves it done and starred, objectives off).
 - `-VoiceDrill 1` (with `-Open talk`) — the protocol drill: session up, Dolly
   spoke, audio arrived, a clean end with the finish landing. Read the
   `DOLLY_DRILL` lines: `xcrun simctl spawn <udid> log show --start "<time>"

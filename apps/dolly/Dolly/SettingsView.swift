@@ -48,6 +48,16 @@ struct SettingsView: View {
                                 .tint(skin.primary)
                             }
                         }
+                        section("Learning objectives") {
+                            row("Learning objectives") {
+                                Toggle("", isOn: Binding(get: { user.objectives }, set: { v in Task { await save(objectives: v) } }))
+                                    .labelsHidden().tint(skin.primary)
+                            }
+                            Text(user.objectives
+                                 ? "On. After your day, ★ Star the day: a short guided call that works through your level’s objectives. You’re on Level \(user.rung)."
+                                 : "Off. Turn it on for a ladder of levels and a star round after your day that works through each level’s objectives. Everyone starts at Level 1.")
+                                .font(skin.ui(13)).foregroundStyle(skin.ink3).frame(maxWidth: .infinity, alignment: .leading)
+                        }
                         section("Voice") {
                             row("Hold to talk") {
                                 Toggle("", isOn: $holdToTalk).labelsHidden().tint(skin.primary)
@@ -104,11 +114,11 @@ struct SettingsView: View {
         return "\(v) (\(b))"
     }
 
-    private func save(dailyHour: Int? = nil, language: String? = nil, level: String? = nil) async {
+    private func save(dailyHour: Int? = nil, language: String? = nil, level: String? = nil, objectives: Bool? = nil) async {
         saving = true
         defer { saving = false }
         do {
-            state.user = try await DollyAPI.shared.updateMe(language: language, level: level, dailyHour: dailyHour)
+            state.user = try await DollyAPI.shared.updateMe(language: language, level: level, dailyHour: dailyHour, objectives: objectives)
             error = nil
             await state.refresh()
         } catch {

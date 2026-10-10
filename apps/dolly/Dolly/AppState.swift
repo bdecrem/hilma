@@ -1,9 +1,10 @@
 import Foundation
 import Observation
 
-/// Which part of the day a full-screen flow starts on.
+/// Which part of the day a full-screen flow starts on. `more` is a free
+/// extra call after the day; `star` the guided round (Learning objectives).
 enum FlowStep: String {
-    case talk, things, cards, done
+    case talk, things, cards, done, more, star
 }
 
 /// The app's one piece of shared state: who is signed in, today, and what
@@ -24,6 +25,7 @@ final class AppState {
     /// The full-screen day flow, when one is up.
     var flow: FlowStep?
     var showSettings = false
+    var showObjectives = false
     /// Hold-to-talk, a device-side voice setting (UserDefaults).
     static let holdToTalkKey = "voiceHoldToTalk"
 
@@ -38,7 +40,8 @@ final class AppState {
         if phase == .signedIn, let open = defaults.string(forKey: "Open") {
             switch open {
             case "settings": showSettings = true
-            case "talk", "things", "cards", "done": flow = FlowStep(rawValue: open)
+            case "objectives": showObjectives = true
+            case "talk", "things", "cards", "done", "more", "star": flow = FlowStep(rawValue: open)
             default: break
             }
         }
@@ -87,8 +90,8 @@ final class AppState {
         guard let day else { return nil }
         switch day.dayState {
         case .morning: return .talk
-        case .afterTalk: return .things
-        case .afterThings, .paused: return .cards
+        case .afterTalk, .starAfterTalk: return .things
+        case .afterThings, .paused, .starAfterThings, .starPaused: return .cards
         case .done: return nil
         }
     }

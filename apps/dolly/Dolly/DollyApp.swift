@@ -38,11 +38,15 @@ struct RootView: View {
             case .signedIn:
                 MapView()
                     .fullScreenCover(item: Binding(get: { state.flow }, set: { state.flow = $0 })) { step in
-                        FlowView(start: step)
+                        FlowView(start: step, day: state.day)
                             .environment(state)
                     }
                     .sheet(isPresented: $state.showSettings) {
                         SettingsView()
+                            .environment(state)
+                    }
+                    .sheet(isPresented: $state.showObjectives) {
+                        ObjectivesSheet()
                             .environment(state)
                     }
             }
@@ -55,20 +59,28 @@ extension FlowStep: Identifiable {
 }
 
 /// The full-screen day: talk → three things → cards → done, each handing
-/// to the next inside one cover so the map never flashes between them.
+/// to the next inside one cover so the map never flashes between them. The
+/// star round runs the same three screens after the day; "Talk more" is a
+/// call with nothing after it.
 struct FlowView: View {
     @Environment(AppState.self) private var state
     @State private var step: FlowStep
+    /// A star round (started here, or resumed mid-way from the map).
+    @State private var starFlow: Bool
+    @State private var moreFlow: Bool
 
-    init(start: FlowStep) {
+    init(start: FlowStep, day: DayView?) {
         _step = State(initialValue: start)
+        _starFlow = State(initialValue: start == .star || (day?.dayState.inStarRound ?? false))
+        _moreFlow = State(initialValue: start == .more)
     }
 
     var body: some View {
         ZStack {
             switch step {
-            case .talk:
-                TalkView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
+            case .talk, .more, .star:
+                TalkView(mode: step.rawValue, onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
+                    .id(step)
                     .transition(.opacity)
             case .things:
                 ThingsView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
@@ -77,7 +89,7 @@ struct FlowView: View {
                 CardsView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
                     .transition(.opacity)
             case .done:
-                DoneView(onDone: { state.flow = nil })
+                DoneView(star: starFlow, onDone: { state.flow = nil }, onMore: { startMore() }, onStar: { startStar() })
                     .transition(.opacity)
             }
         }
@@ -89,9 +101,29 @@ struct FlowView: View {
         state.apply(day)
         switch day.dayState {
         case .morning: state.flow = nil
-        case .afterTalk: step = .things
-        case .afterThings, .paused: step = .cards
-        case .done: step = .done
+        case .afterTalk, .starAfterTalk: step = .things
+        case .afterThings, .paused, .starAfterThings, .starPaused: step = .cards
+        case .done:
+            if moreFlow {
+                state.flow = nil
+            } else if starFlow, day.star?.state != "done" {
+                // A star call where nothing was said: back to the map.
+                state.flow = nil
+            } else {
+                step = .done
+            }
         }
+    }
+
+    private func startMore() {
+        moreFlow = true
+        starFlow = false
+        step = .more
+    }
+
+    private func startStar() {
+        starFlow = true
+        moreFlow = false
+        step = .star
     }
 }

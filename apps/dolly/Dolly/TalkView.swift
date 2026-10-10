@@ -4,6 +4,8 @@ import SwiftUI
 /// different room. The mascot fills the top half, the last turns are bubbles,
 /// nothing to tap but End (and the hold-to-talk key when that is on).
 struct TalkView: View {
+    /// talk (the day's call), more (a free extra call), star (the guided round).
+    let mode: String
     let onDone: (DayView) -> Void
     let onLeave: () -> Void
 
@@ -14,12 +16,37 @@ struct TalkView: View {
     private let holdToTalk: Bool
     private let skin = Skin.current
 
-    init(onDone: @escaping (DayView) -> Void, onLeave: @escaping () -> Void) {
+    init(mode: String = "talk", onDone: @escaping (DayView) -> Void, onLeave: @escaping () -> Void) {
+        self.mode = mode
         self.onDone = onDone
         self.onLeave = onLeave
         let hold = UserDefaults.standard.bool(forKey: AppState.holdToTalkKey)
         holdToTalk = hold
-        _client = State(initialValue: makeVoiceClient(mode: "talk", holdToTalk: hold))
+        _client = State(initialValue: makeVoiceClient(mode: mode, holdToTalk: hold))
+    }
+
+    private var eyebrow: String {
+        switch mode {
+        case "more": return "Day \(state.day?.n ?? 0) · Talk more"
+        case "star": return "Day \(state.day?.n ?? 0) · Star round"
+        default: return "Day \(state.day?.n ?? 0) · Talk"
+        }
+    }
+
+    private var subject: String {
+        if mode == "star" {
+            let n = client.config?.targets?.count ?? state.day?.objectives.canDos.filter { !$0.earned }.prefix(4).count ?? 0
+            return n > 0 ? "\(n) things to try" : "Practice"
+        }
+        return state.day?.topic ?? ""
+    }
+
+    private var finishingLine: String {
+        switch mode {
+        case "more": return "Saving the call…"
+        case "star": return "Reading the round…"
+        default: return "Picking three things…"
+        }
     }
 
     var body: some View {
@@ -28,8 +55,8 @@ struct TalkView: View {
             VStack(spacing: 0) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Day \(state.day?.n ?? 0) · Talk".uppercased()).font(skin.uiBold(11)).tracking(1.2).foregroundStyle(.white.opacity(0.7))
-                        Text(state.day?.topic ?? "").font(skin.displayMedium(18)).foregroundStyle(.white)
+                        Text(eyebrow.uppercased()).font(skin.uiBold(11)).tracking(1.2).foregroundStyle(.white.opacity(0.7))
+                        Text(subject).font(skin.displayMedium(18)).foregroundStyle(.white)
                     }
                     Spacer()
                     TimelineView(.periodic(from: .now, by: 1)) { _ in
@@ -39,8 +66,22 @@ struct TalkView: View {
                 .padding(.horizontal, 22)
                 .padding(.top, 10)
 
+                if mode == "star", let targets = client.config?.targets, !targets.isEmpty {
+                    FlowLayout(spacing: 6) {
+                        ForEach(targets) { t in
+                            Text(t.title)
+                                .font(skin.uiBold(12))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 10).padding(.vertical, 5)
+                                .background(Capsule().fill(Color.white.opacity(0.2)))
+                        }
+                    }
+                    .padding(.horizontal, 22)
+                    .padding(.top, 10)
+                }
+
                 Spacer(minLength: 8)
-                Mascot(size: 200, mood: mood)
+                Mascot(size: mode == "star" ? 170 : 200, mood: mood)
                 Text(statusLine).font(skin.uiBold(14)).foregroundStyle(.white.opacity(0.75)).padding(.top, 6)
                 Spacer(minLength: 8)
 
@@ -55,7 +96,7 @@ struct TalkView: View {
             if ending {
                 VStack(spacing: 14) {
                     Mascot(size: 110, mood: .thinking)
-                    Text("Picking three things…").font(skin.display(22)).foregroundStyle(.white)
+                    Text(finishingLine).font(skin.display(22)).foregroundStyle(.white)
                     ProgressView().tint(.white)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)

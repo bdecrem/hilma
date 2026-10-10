@@ -63,11 +63,25 @@ struct MapView: View {
     }
 
     private func dayLine(_ day: DayView) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text("Day \(day.n)").font(skin.display(34)).foregroundStyle(skin.word)
-            Spacer()
-            Text(day.dayState == .done ? "Done for today" : "\(weekday()) · \(day.stepsDone) of 3 done")
-                .font(skin.uiBold(14)).foregroundStyle(skin.ink2)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Day \(day.n)").font(skin.display(34)).foregroundStyle(skin.word)
+                Spacer()
+                Text(day.stepsDone == 3 ? "Done for today" : "\(weekday()) · \(day.stepsDone) of 3 done")
+                    .font(skin.uiBold(14)).foregroundStyle(skin.ink2)
+            }
+            if day.objectives.on {
+                Button { state.showObjectives = true } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "star.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(skin.reward)
+                        Text("Level \(day.objectives.level) · \(day.objectives.name) · \(day.objectives.earned) of \(day.objectives.total)")
+                            .font(skin.uiBold(14)).foregroundStyle(skin.ink2)
+                        Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(skin.ink3)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Your objectives")
+            }
         }
     }
 
@@ -100,7 +114,7 @@ struct MapView: View {
                     }
                     .opacity(i > day.stepsDone ? 0.6 : 1)
                 }
-                if day.dayState == .done {
+                if day.stepsDone == 3 {
                     VStack(spacing: 4) {
                         Text("Tomorrow \(day.dailyLabel)".uppercased()).font(skin.uiBold(11)).tracking(1).foregroundStyle(skin.ink3)
                         Text(day.tomorrow ?? "A new topic").font(skin.displayMedium(19)).foregroundStyle(skin.ink)
@@ -109,6 +123,7 @@ struct MapView: View {
                     .padding(.vertical, 12)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(skin.bgTop.opacity(0.6)))
                     .padding(.top, 4)
+                    afterDay(day)
                 } else {
                     BigButton(title: buttonTitle(day)) {
                         if let next = state.nextStep { state.flow = next }
@@ -119,13 +134,43 @@ struct MapView: View {
         }
     }
 
+    /// Below the tomorrow block: the star round (Learning objectives), Talk
+    /// more, and today's extras.
+    @ViewBuilder
+    private func afterDay(_ day: DayView) -> some View {
+        VStack(spacing: 10) {
+            if day.dayState.inStarRound {
+                BigButton(title: day.dayState == .starAfterTalk ? "Star round: three things" : day.dayState == .starPaused ? "Star round: resume cards" : "Star round: cards") {
+                    if let next = state.nextStep { state.flow = next }
+                }
+            } else if day.objectives.on, !day.starred, day.objectives.starAvailable {
+                BigButton(title: "★ Star the day") { state.flow = .star }
+                BigButton(title: "Talk more", ghost: true) { state.flow = .more }
+            } else {
+                BigButton(title: "Talk more") { state.flow = .more }
+            }
+            HStack(spacing: 6) {
+                if day.starred {
+                    Image(systemName: "star.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(skin.reward)
+                    Text("Starred").font(skin.uiBold(13)).foregroundStyle(skin.ink2)
+                }
+                if day.extraCalls > 0 {
+                    if day.starred { Text("·").foregroundStyle(skin.ink3) }
+                    Text("\(day.extraCalls) extra \(day.extraCalls == 1 ? "call" : "calls") · \(max(day.extraMinutes, 1)) min").font(skin.uiBold(13)).foregroundStyle(skin.ink2)
+                }
+            }
+            .frame(height: day.starred || day.extraCalls > 0 ? nil : 0)
+        }
+        .padding(.top, 4)
+    }
+
     private func buttonTitle(_ day: DayView) -> String {
         switch day.dayState {
         case .morning: return "Start today"
         case .afterTalk: return "Next: Three things"
         case .afterThings: return "Next: Cards"
         case .paused: return "Resume cards"
-        case .done: return "Done"
+        case .done, .starAfterTalk, .starAfterThings, .starPaused: return "Done"
         }
     }
 
@@ -179,6 +224,11 @@ struct Trail: View {
                                 Circle().fill(skin.primary).frame(width: 30, height: 30)
                                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
                                 Image(systemName: "checkmark").font(.system(size: 13, weight: .heavy)).foregroundStyle(skin.onPrimary)
+                                if node.starred {
+                                    Image(systemName: "star.fill").font(.system(size: 13)).foregroundStyle(skin.reward)
+                                        .shadow(color: .white, radius: 1)
+                                        .offset(x: 13, y: -13)
+                                }
                             }
                         } else if node.today {
                             ZStack {
