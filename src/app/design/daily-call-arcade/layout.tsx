@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { Bungee, Space_Grotesk, Space_Mono } from 'next/font/google'
 
-const display = Bungee({ subsets: ['latin'], weight: '400', variable: '--font-display', display: 'swap' })
-const ui = Space_Grotesk({ subsets: ['latin'], variable: '--font-ui', display: 'swap' })
-const lang = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-lang', display: 'swap' })
+const display = Bungee({ subsets: ['latin'], weight: '400', variable: '--font-arcade-display', display: 'swap' })
+const ui = Space_Grotesk({ subsets: ['latin'], variable: '--font-arcade-ui', display: 'swap' })
+const lang = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-arcade-lang', display: 'swap' })
 import '../_walk/walk.css'
 import '../_walk/arcade.css'
 

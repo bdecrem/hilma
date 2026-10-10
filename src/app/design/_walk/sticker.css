@@ -41,9 +41,9 @@
   --w-sh-btn: 4px 4px 0 #111111;
   --w-sh-mic: 6px 6px 0 #111111;
   --w-sh-streak: 3px 3px 0 #111111;
-  --w-display: var(--font-display), 'Bangers', Impact, sans-serif;
-  --w-ui: var(--font-ui), 'Nunito', system-ui, sans-serif;
-  --w-lang: var(--font-lang), 'Permanent Marker', cursive;
+  --w-display: var(--font-sticker-display), 'Bangers', Impact, sans-serif;
+  --w-ui: var(--font-sticker-ui), 'Nunito', system-ui, sans-serif;
+  --w-lang: var(--font-sticker-lang), 'Permanent Marker', cursive;
   --w-lang-style: normal;
   --w-bezel: #111111;
   --m-body: #ff3b30;

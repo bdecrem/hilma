@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Baloo_2, Quicksand } from 'next/font/google'
 
-const display = Baloo_2({ subsets: ['latin'], variable: '--font-display', display: 'swap' })
-const ui = Quicksand({ subsets: ['latin'], variable: '--font-ui', display: 'swap' })
+const display = Baloo_2({ subsets: ['latin'], variable: '--font-candy-display', display: 'swap' })
+const ui = Quicksand({ subsets: ['latin'], variable: '--font-candy-ui', display: 'swap' })
 import '../_walk/walk.css'
 import '../_walk/candy.css'
 

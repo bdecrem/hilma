@@ -40,9 +40,9 @@
   --w-sh-btn: 0 0 20px rgba(255, 47, 210, 0.65), inset 0 -3px 0 rgba(0, 0, 0, 0.3);
   --w-sh-mic: 0 0 34px rgba(255, 47, 210, 0.75), inset 0 -4px 0 rgba(0, 0, 0, 0.3);
   --w-sh-streak: 0 0 14px rgba(255, 230, 0, 0.55);
-  --w-display: var(--font-display), 'Bungee', Impact, sans-serif;
-  --w-ui: var(--font-ui), 'Space Grotesk', system-ui, sans-serif;
-  --w-lang: var(--font-lang), 'Space Mono', ui-monospace, monospace;
+  --w-display: var(--font-arcade-display), 'Bungee', Impact, sans-serif;
+  --w-ui: var(--font-arcade-ui), 'Space Grotesk', system-ui, sans-serif;
+  --w-lang: var(--font-arcade-lang), 'Space Mono', ui-monospace, monospace;
   --w-lang-style: normal;
   --w-bezel: #05051a;
   --m-body: #ff2fd2;

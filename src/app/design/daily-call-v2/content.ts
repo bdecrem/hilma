@@ -177,3 +177,26 @@ export const CHANGES = [
   'A map with a streak replaced the quiet Today screen as the home.',
   'Onboarding, the text message, Level, Notebook and Settings are out of scope for this pass.',
 ]
+
+/* ---------- the three looks (2026-10-09) ---------- */
+export type Look = { slug: 'arcade' | 'candy' | 'sticker'; name: string; blurb: string; notes: string[] }
+export const LOOKS: Look[] = [
+  {
+    slug: 'arcade',
+    name: 'Arcade',
+    blurb: 'Neon on deep space, a pixel parrot.',
+    notes: ['Magenta for actions, cyan for edges, sunflower for reward, lime for right. Everything glows.', 'Bungee headlines, Space Grotesk body, Space Mono for the Spanish.', 'The call screen gets scanlines. The parrot is twelve pixels wide.'],
+  },
+  {
+    slug: 'candy',
+    name: 'Candy',
+    blurb: 'Pastel sky, jelly buttons, a gummy parrot.',
+    notes: ['Bubblegum, grape, lemon and mint on a lavender-to-mint gradient. No outlines; everything is a soft jelly with a lip.', 'Baloo 2 headlines and Spanish, Quicksand body.', 'Buttons have a gloss. The parrot has highlights and a shadow.'],
+  },
+  {
+    slug: 'sticker',
+    name: 'Sticker',
+    blurb: 'Zine white, fat outlines, die-cut stickers.',
+    notes: ['Red, blue, yellow and green inside three-pixel black outlines with hard offset shadows. Cards and tags sit slightly tilted.', 'Bangers headlines, Nunito body, Permanent Marker for the Spanish.', 'Halftone dots on the paper. The parrot has a white die-cut edge.'],
+  },
+]

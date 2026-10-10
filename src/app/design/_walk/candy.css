@@ -40,9 +40,9 @@
   --w-sh-btn: 0 6px 0 var(--w-primary-deep), 0 12px 22px rgba(255, 79, 163, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.55);
   --w-sh-mic: 0 8px 0 var(--w-primary-deep), 0 16px 28px rgba(255, 79, 163, 0.4), inset 0 3px 0 rgba(255, 255, 255, 0.55);
   --w-sh-streak: 0 4px 0 #e2b800, 0 8px 16px rgba(123, 92, 255, 0.18);
-  --w-display: var(--font-display), 'Baloo 2', system-ui, sans-serif;
-  --w-ui: var(--font-ui), 'Quicksand', system-ui, sans-serif;
-  --w-lang: var(--font-display), 'Baloo 2', system-ui, sans-serif;
+  --w-display: var(--font-candy-display), 'Baloo 2', system-ui, sans-serif;
+  --w-ui: var(--font-candy-ui), 'Quicksand', system-ui, sans-serif;
+  --w-lang: var(--font-candy-display), 'Baloo 2', system-ui, sans-serif;
   --w-lang-style: normal;
   --w-bezel: #ffffff;
   --m-body: #ff4fa3;

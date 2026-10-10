@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import { Bangers, Nunito, Permanent_Marker } from 'next/font/google'
 
-const display = Bangers({ subsets: ['latin'], weight: '400', variable: '--font-display', display: 'swap' })
-const ui = Nunito({ subsets: ['latin'], variable: '--font-ui', display: 'swap' })
-const lang = Permanent_Marker({ subsets: ['latin'], weight: '400', variable: '--font-lang', display: 'swap' })
+const display = Bangers({ subsets: ['latin'], weight: '400', variable: '--font-sticker-display', display: 'swap' })
+const ui = Nunito({ subsets: ['latin'], variable: '--font-sticker-ui', display: 'swap' })
+const lang = Permanent_Marker({ subsets: ['latin'], weight: '400', variable: '--font-sticker-lang', display: 'swap' })
 import '../_walk/walk.css'
 import '../_walk/sticker.css'
 

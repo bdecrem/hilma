@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Parrot, type Mood } from './Parrot'
-import { CHANGES, LOOP, MOTION, ORDER, PALETTE, SCREENS, TYPE, WORKING_NAME, type MapState, type ScreenId } from './content'
+import { CHANGES, LOOKS, LOOP, MOTION, ORDER, PALETTE, SCREENS, TYPE, WORKING_NAME, type MapState, type ScreenId } from './content'
+import { ThemeProvider } from '../_walk/Mascot'
+import { Screen as WalkScreen } from '../_walk/Walk'
 import { Screen, resetGame, type Go } from './screens'
 
 type Pos = { id: ScreenId; map: MapState; key: number }
@@ -119,6 +121,7 @@ export default function Artifact() {
             <span>Tap anything in the phone</span>
             <span>← → moves through the screens</span>
             <a href="/design/daily-call">v1, the unbranded spec →</a>
+            <a href="#looks">three looks ↓</a>
           </div>
         </header>
 
@@ -208,6 +211,44 @@ export default function Artifact() {
                       </ul>
                     </div>
                   </article>
+                ))}
+              </div>
+            </section>
+
+            <section className="hf-section" id="looks">
+              <h2 className="hf-h2">Three looks to react to</h2>
+              <p className="hf-p">
+                The same walkthrough in three skins, each its own page with the phone on a stage. Pick a direction, or pick
+                parts: the loop underneath never changes.
+              </p>
+              <div className="hf-looks">
+                {LOOKS.map((l) => (
+                  <a key={l.slug} className="hf-look" href={`/design/daily-call-${l.slug}`}>
+                    <ThemeProvider value={l.slug}>
+                      <span className={`theme-${l.slug} hf-look-stage`} aria-hidden>
+                        <span className="hf-look-ph">
+                          <span className="w" inert>
+                            <WalkScreen id="map" state="morning" go={() => {}} still />
+                          </span>
+                        </span>
+                        <span className="hf-look-ph second">
+                          <span className="w" inert>
+                            <WalkScreen id="things" go={() => {}} still />
+                          </span>
+                        </span>
+                      </span>
+                    </ThemeProvider>
+                    <span className="hf-look-body">
+                      <b>{l.name}</b>
+                      <span className="hf-look-blurb">{l.blurb}</span>
+                      <ul>
+                        {l.notes.map((n) => (
+                          <li key={n}>{n}</li>
+                        ))}
+                      </ul>
+                      <span className="hf-look-cta">Open the walkthrough →</span>
+                    </span>
+                  </a>
                 ))}
               </div>
             </section>

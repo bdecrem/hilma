@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from 'next'
-import { Bricolage_Grotesque, Instrument_Sans, Instrument_Serif } from 'next/font/google'
+import { Baloo_2, Bangers, Bricolage_Grotesque, Bungee, Instrument_Sans, Instrument_Serif, Nunito, Permanent_Marker, Quicksand, Space_Grotesk, Space_Mono } from 'next/font/google'
 import './v2.css'
+import '../_walk/walk.css'
+import '../_walk/arcade.css'
+import '../_walk/candy.css'
+import '../_walk/sticker.css'
 
 // Display: heavy, slightly condensed, friendly without being round.
 const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-display', display: 'swap' })
@@ -8,6 +12,16 @@ const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-disp
 const ui = Instrument_Sans({ subsets: ['latin'], variable: '--font-ui', display: 'swap' })
 // The language: every Spanish phrase on a card, and nothing else.
 const serif = Instrument_Serif({ subsets: ['latin'], weight: '400', style: ['normal', 'italic'], variable: '--font-serif', display: 'swap' })
+// The three looks' faces, so their live previews on this page render true.
+const arcadeDisplay = Bungee({ subsets: ['latin'], weight: '400', variable: '--font-arcade-display', display: 'swap' })
+const arcadeUi = Space_Grotesk({ subsets: ['latin'], variable: '--font-arcade-ui', display: 'swap' })
+const arcadeLang = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-arcade-lang', display: 'swap' })
+const candyDisplay = Baloo_2({ subsets: ['latin'], variable: '--font-candy-display', display: 'swap' })
+const candyUi = Quicksand({ subsets: ['latin'], variable: '--font-candy-ui', display: 'swap' })
+const stickerDisplay = Bangers({ subsets: ['latin'], weight: '400', variable: '--font-sticker-display', display: 'swap' })
+const stickerUi = Nunito({ subsets: ['latin'], variable: '--font-sticker-ui', display: 'swap' })
+const stickerLang = Permanent_Marker({ subsets: ['latin'], weight: '400', variable: '--font-sticker-lang', display: 'swap' })
+const lookFonts = [arcadeDisplay, arcadeUi, arcadeLang, candyDisplay, candyUi, stickerDisplay, stickerUi, stickerLang].map((f) => f.variable).join(' ')
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),
@@ -32,5 +46,5 @@ export const viewport: Viewport = {
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <div className={`${display.variable} ${ui.variable} ${serif.variable}`}>{children}</div>
+  return <div className={`${display.variable} ${ui.variable} ${serif.variable} ${lookFonts}`}>{children}</div>
 }
