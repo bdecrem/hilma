@@ -111,7 +111,7 @@ export default function Artifact() {
           <p className="hf-dek">
             Three minutes of conversation a day, then three things to say back, then ten flash cards. The day is done
             when all three are, and the map keeps the streak. This pass sets a visual direction to react to: paper, ink and
-            a riso palette, a parrot for a mascot, the language set in an italic serif. Working name: {WORKING_NAME}.
+            a riso palette, a parrot for a mascot, the language set in an italic serif. Working name: {WORKING_NAME}. The phone plays a shortened day: the whole call, one of the three things, two of the ten cards.
           </p>
           <div className="hf-meta">
             <span>5 screens</span>
@@ -155,7 +155,11 @@ export default function Artifact() {
                       Replay
                     </button>
                     <span className="hf-hint">
-                      {pos.id === 'talk' ? 'Plays itself at about 9× speed' : pos.id === 'things' ? 'Tap the mic when it turns red' : 'Pick or type. × leaves and keeps your place.'}
+                      {pos.id === 'talk'
+                        ? 'Plays itself at about 9× speed'
+                        : pos.id === 'things'
+                          ? 'Walkthrough plays one of the three. Tap the mic when it turns red.'
+                          : 'Walkthrough plays one pick and one type. × leaves and keeps your place.'}
                     </span>
                   </div>
                 )}

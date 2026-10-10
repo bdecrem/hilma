@@ -61,7 +61,12 @@ export const QUESTIONS: Question[] = [
   { kind: 'type', en: 'close, nearby', es: 'cercano', from: 6 },
   { kind: 'type', en: 'I like to cook', es: 'me gusta cocinar', from: 11 },
 ]
-export const COMING_BACK = ['madrugar', 'hab\u00eda mucha gente', 'algo rico', 'cercano']
+export const COMING_BACK = ['madrugar', 'hab\u00eda mucha gente', 'algo rico', 'voy en tren']
+
+// The prototype plays a shortened day so a click-through takes about a
+// minute: one of the three things, then one pick and one type question of
+// the ten. Counters and segments keep the real shape and visibly skip ahead.
+export const WALK = { things: [0], questions: [0, 5] }
 
 /* ---------- the map ---------- */
 // Days shown on the map, bottom to top. 14 is a weekly bonus node.

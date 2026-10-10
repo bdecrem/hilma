@@ -18,6 +18,7 @@ import {
   THINGS,
   TOMORROW,
   TOPIC,
+  WALK,
   WORKING_NAME,
   type MapState,
   type ScreenId,
@@ -149,7 +150,7 @@ function trail(from: number, to: number) {
 export function MapScreen({ go, state = 'morning' }: P) {
   const paused = state === 'paused'
   const stepDone = state === 'morning' ? 0 : state === 'after-talk' ? 1 : state === 'after-things' || paused ? 2 : 3
-  const answered = GAME.results.length || 4
+  const answered = GAME.results.length || 1
   const steps: { label: string; sub: string; id: ScreenId }[] = [
     { label: 'Talk', sub: '3 min with Polly', id: 'talk' },
     { label: 'Three things', sub: 'say them back', id: 'things' },
@@ -359,7 +360,8 @@ export function TalkScreen({ go, still = false }: P) {
 type ThingPhase = 'listen' | 'repeat' | 'hearing' | 'got'
 
 export function ThingsScreen({ go, still = false }: P) {
-  const [i, setI] = useState(0)
+  const [step, setStep] = useState(0)
+  const i = WALK.things[step]
   const [phase, setPhase] = useState<ThingPhase>(still ? 'repeat' : 'listen')
 
   useEffect(() => {
@@ -369,15 +371,15 @@ export function ThingsScreen({ go, still = false }: P) {
     if (phase === 'hearing') t = setTimeout(() => setPhase('got'), 1100)
     if (phase === 'got')
       t = setTimeout(() => {
-        if (i + 1 < THINGS.length) {
-          setI(i + 1)
+        if (step + 1 < WALK.things.length) {
+          setStep(step + 1)
           setPhase('listen')
         } else {
           go('cards')
         }
       }, 1400)
     return () => clearTimeout(t)
-  }, [phase, i, still, go])
+  }, [phase, step, still, go])
 
   const th = THINGS[i]
   const mood: Mood = phase === 'listen' ? 'talking' : phase === 'got' ? 'happy' : 'listening'
@@ -461,12 +463,13 @@ function norm(v: string) {
 
 export function CardsScreen({ go, still = false }: P) {
   // Opening the game after a finished round starts a fresh one.
-  const [results, setResults] = useState<Res[]>(() => (still ? [{ q: 0, ok: true }, { q: 1, ok: false }] : GAME.results.length === QUESTIONS.length ? [] : GAME.results))
+  const [results, setResults] = useState<Res[]>(() => (still ? [] : GAME.results.length === WALK.questions.length ? [] : GAME.results))
   const [pick, setPick] = useState<number | null>(null)
   const [typed, setTyped] = useState('')
   const [checked, setChecked] = useState<boolean | null>(null)
-  const i = results.length
-  const q = QUESTIONS[i]
+  const qi = WALK.questions[results.length]
+  const i = qi ?? QUESTIONS.length
+  const q = qi === undefined ? undefined : QUESTIONS[qi]
   const answered = pick !== null || checked !== null
   const ok = q ? (q.kind === 'pick' ? pick !== null && q.options[pick] === q.es : checked === true) : false
 
@@ -475,7 +478,7 @@ export function CardsScreen({ go, still = false }: P) {
   }, [results, still])
 
   useEffect(() => {
-    if (!still && results.length === QUESTIONS.length) go('done')
+    if (!still && results.length === WALK.questions.length) go('done')
   }, [results.length, still, go])
 
   useEffect(() => {
@@ -513,7 +516,7 @@ export function CardsScreen({ go, still = false }: P) {
       </div>
       <span className="p2-segs wide" aria-label={`${results.length} of ${QUESTIONS.length} answered`}>
         {QUESTIONS.map((_, k) => {
-          const r = results[k]
+          const r = results.find((x) => x.q === k)
           return <i key={k} className={r ? (r.ok ? 'ok' : 'miss') : k === i ? 'cur' : ''} />
         })}
       </span>
@@ -581,8 +584,9 @@ export function CardsScreen({ go, still = false }: P) {
 /* ---------- day complete ---------- */
 
 export function DoneScreen({ go }: P) {
-  const played = GAME.results.length === QUESTIONS.length ? GAME.results : null
-  const right = played ? played.filter((r) => r.ok).length : 8
+  const played = GAME.results.length === WALK.questions.length ? GAME.results : null
+  const skipped = QUESTIONS.length - WALK.questions.length
+  const right = played ? played.filter((r) => r.ok).length + skipped : 9
   const back = played
     ? Array.from(new Set([...THINGS.map((t) => t.es), ...played.filter((r) => !r.ok).map((r) => QUESTIONS[r.q].es)])).slice(0, 4)
     : COMING_BACK
