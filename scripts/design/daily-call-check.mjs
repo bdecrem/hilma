@@ -121,6 +121,8 @@ const fail = (m) => {
   await page.waitForSelector('.dc-phone .ph-screen')
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   if (over > 0) fail(`horizontal overflow on phone: ${over}px`)
+  const edge = await page.$eval('.dc-phone', (e) => e.getBoundingClientRect().right - window.innerWidth)
+  if (edge > 0) fail(`phone frame past the right edge by ${Math.round(edge)}px`)
   await shot(page, 'mobile-top')
   await page.screenshot({ path: path.join(out, 'mobile-full.png'), fullPage: true })
   await page.close()

@@ -112,19 +112,23 @@
 .hf-left {
   position: sticky;
   top: 20px;
+  min-width: 0;
 }
 .hf-right {
   min-width: 0;
 }
 .hf-phone-slot {
-  display: flex;
-  justify-content: center;
+  position: relative;
   width: 100%;
+  min-width: 0;
 }
 .hf-phone {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  margin-left: -197.5px;
   width: 395px;
   height: 832px;
-  flex: none;
   transform-origin: top center;
   background: #1a1720;
   border-radius: 54px;

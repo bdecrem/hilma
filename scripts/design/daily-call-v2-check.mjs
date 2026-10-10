@@ -121,6 +121,8 @@ const browser = await chromium.launch()
   await page.waitForSelector('.hf-phone .p2-screen')
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   if (over > 0) fail(`horizontal overflow on phone: ${over}px`)
+  const edge = await page.$eval('.hf-phone', (e) => e.getBoundingClientRect().right - window.innerWidth)
+  if (edge > 0) fail(`phone frame past the right edge by ${Math.round(edge)}px`)
   await page.screenshot({ path: path.join(out, 'mobile-top.png') })
   await page.close()
 }
