@@ -82,6 +82,14 @@ code goes out by iMessage for real numbers. The test phones in
 `src/lib/dolly/send.ts` get no text: their code is `DOLLY_TEST_CODE` (`.env.local`
 and Vercel), which is how `e2e.ts` signs in against production too.
 
+**Server first, then the app.** A build that reads new fields must not land on a
+phone before the server that sends them is READY on Vercel (check
+`vercel inspect <deployment>`; a Google Fonts hiccup can fail an unrelated
+page's prerender and leave production on the old server — `vercel redeploy`
+fixes that). The models decode new fields with defaults since 0.2 (36), and a
+non-401 error keeps the session, so the skew now shows an error card instead
+of the sign-in screen; keep it that way when adding fields.
+
 ## Ship to TestFlight
 
 ```bash

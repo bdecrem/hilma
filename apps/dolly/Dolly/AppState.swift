@@ -60,9 +60,16 @@ final class AppState {
             day = nil
             phase = .signedOut
         } catch {
+            // Anything but a 401 (offline, a server error, a reply this build
+            // cannot read) keeps the session: the map shows the error and a
+            // Try again, nobody is sent back to sign in.
             loadError = error.localizedDescription
-            if phase == .loading { phase = user == nil ? .signedOut : .signedIn }
+            if phase == .loading { phase = hasSessionCookie ? .signedIn : .signedOut }
         }
+    }
+
+    private var hasSessionCookie: Bool {
+        (HTTPCookieStorage.shared.cookies ?? []).contains { $0.name == "dolly_session" && !$0.value.isEmpty }
     }
 
     func signedIn(_ user: UserView) async {

@@ -23,6 +23,24 @@ struct UserView: Codable, Equatable {
         case dailyLabel = "daily_label"
         case bestStreak = "best_streak"
     }
+
+    /// Fields a newer app knows and an older server does not yet send
+    /// decode with defaults, so a deploy in flight never signs anyone out.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        phone = try c.decode(String.self, forKey: .phone)
+        name = try c.decodeIfPresent(String.self, forKey: .name)
+        language = try c.decode(String.self, forKey: .language)
+        level = try c.decode(String.self, forKey: .level)
+        dailyHour = try c.decodeIfPresent(Int.self, forKey: .dailyHour) ?? 8
+        dailyLabel = try c.decodeIfPresent(String.self, forKey: .dailyLabel) ?? ""
+        tz = try c.decodeIfPresent(String.self, forKey: .tz) ?? TimeZone.current.identifier
+        streak = try c.decodeIfPresent(Int.self, forKey: .streak) ?? 0
+        bestStreak = try c.decodeIfPresent(Int.self, forKey: .bestStreak) ?? 0
+        objectives = try c.decodeIfPresent(Bool.self, forKey: .objectives) ?? false
+        rung = try c.decodeIfPresent(Int.self, forKey: .rung) ?? 1
+    }
 }
 
 struct Thing: Codable, Equatable, Identifiable {
@@ -95,6 +113,14 @@ struct TrailNode: Codable, Equatable, Identifiable {
     let today: Bool
     let starred: Bool
     var id: Int { n }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        n = try c.decode(Int.self, forKey: .n)
+        done = try c.decodeIfPresent(Bool.self, forKey: .done) ?? false
+        today = try c.decodeIfPresent(Bool.self, forKey: .today) ?? false
+        starred = try c.decodeIfPresent(Bool.self, forKey: .starred) ?? false
+    }
 }
 
 struct Named: Codable, Equatable, Identifiable {
@@ -147,6 +173,9 @@ struct ObjectivesView: Codable, Equatable {
         case starAvailable = "star_available"
         case canDos = "can_dos"
     }
+
+    /// Objectives off, level 1, nothing earned: what an older server implies.
+    static let off = ObjectivesView(on: false, level: 1, name: "Hello", tagline: "", cefr: "A1.1", earned: 0, total: 0, starAvailable: false, canDos: [], ladder: [])
 }
 
 enum DayState: String {
@@ -206,6 +235,32 @@ struct DayView: Codable, Equatable {
         case comingBack = "coming_back"
         case extraCalls = "extra_calls"
         case extraMinutes = "extra_minutes"
+    }
+
+    /// The fields added after the first build decode with defaults (see UserView).
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        day = try c.decode(String.self, forKey: .day)
+        n = try c.decode(Int.self, forKey: .n)
+        topic = try c.decode(String.self, forKey: .topic)
+        state = try c.decode(String.self, forKey: .state)
+        streak = try c.decodeIfPresent(Int.self, forKey: .streak) ?? 0
+        bestStreak = try c.decodeIfPresent(Int.self, forKey: .bestStreak) ?? 0
+        dailyHour = try c.decodeIfPresent(Int.self, forKey: .dailyHour) ?? 8
+        dailyLabel = try c.decodeIfPresent(String.self, forKey: .dailyLabel) ?? ""
+        things = try c.decodeIfPresent([Thing].self, forKey: .things) ?? []
+        questions = try c.decodeIfPresent([Question].self, forKey: .questions) ?? []
+        answers = try c.decodeIfPresent([Answer].self, forKey: .answers) ?? []
+        callSeconds = try c.decodeIfPresent(Int.self, forKey: .callSeconds)
+        trail = try c.decodeIfPresent([TrailNode].self, forKey: .trail) ?? []
+        comingBack = try c.decodeIfPresent([String].self, forKey: .comingBack) ?? []
+        tomorrow = try c.decodeIfPresent(String.self, forKey: .tomorrow)
+        extraCalls = try c.decodeIfPresent(Int.self, forKey: .extraCalls) ?? 0
+        extraMinutes = try c.decodeIfPresent(Int.self, forKey: .extraMinutes) ?? 0
+        starred = try c.decodeIfPresent(Bool.self, forKey: .starred) ?? false
+        star = try c.decodeIfPresent(StarView.self, forKey: .star)
+        objectives = try c.decodeIfPresent(ObjectivesView.self, forKey: .objectives) ?? .off
     }
 }
 

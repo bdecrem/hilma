@@ -11,7 +11,7 @@ enum DollyAPIError: LocalizedError {
         case .unauthenticated: return "Signed out."
         case .http(_, let message): return message
         case .transport(let e): return e.localizedDescription
-        case .decode: return "Unexpected reply."
+        case .decode: return "Dolly's server answered in a shape this build can't read. A newer build or a moment's wait fixes it."
         }
     }
 }
