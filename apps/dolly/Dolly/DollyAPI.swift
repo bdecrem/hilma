@@ -147,7 +147,9 @@ final class DollyAPI {
             throw DollyAPIError.transport(error)
         }
         guard let http = response as? HTTPURLResponse else { throw DollyAPIError.http(0, "non-HTTP response") }
-        if http.statusCode == 401 { throw DollyAPIError.unauthenticated }
+        // A 401 from the sign-in routes is a refused code, not a lost session:
+        // show the server's words ("That code is wrong or expired.").
+        if http.statusCode == 401, !path.hasPrefix("/api/dolly/auth/") { throw DollyAPIError.unauthenticated }
         if http.statusCode >= 400 {
             let message = (try? decoder.decode(ErrorBody.self, from: data))?.error ?? "Request failed (\(http.statusCode))."
             throw DollyAPIError.http(http.statusCode, message)

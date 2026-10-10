@@ -10,6 +10,7 @@
 import { ELEVEN_CUE_PREFIX, ELEVEN_KICKOFF, elevenModel, mintElevenConversationToken } from '@/lib/f2/eleven'
 import { activeThings, insertVoiceSession, updateDay, type Day, type User, type VoiceMode, type VoiceSession } from './core'
 import { comingBackItems, ensureToday, starTargets } from './day'
+import { isTestPhone } from './send'
 import {
   CALL_END_MS,
   CALL_WRAP_MS,
@@ -105,9 +106,14 @@ export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolea
 }
 
 /** The response the app starts the conversation with — Polly's shape, so
- *  the ported client reads it unchanged. */
-export async function openSession(user: User, start: Extract<VoiceStart, { ok: true }>, holdToTalk: boolean) {
-  const token = await mintElevenConversationToken(dollyEngineId())
+ *  the ported client reads it unchanged. A test account that is not going
+ *  to connect (`dry`) gets no real token: every minted token holds one of
+ *  the workspace's concurrent-conversation slots until it expires, and the
+ *  checks minting three per run hit ElevenLabs' concurrency cap on
+ *  2026-10-10 — which would have failed Bart's own call. */
+export async function openSession(user: User, start: Extract<VoiceStart, { ok: true }>, holdToTalk: boolean, dry = false) {
+  if (dry && !isTestPhone(user.phone)) throw new Error('dry sessions are for test accounts')
+  const token = dry ? 'dry-run-no-token' : await mintElevenConversationToken(dollyEngineId())
   const session: VoiceSession = await insertVoiceSession({
     user_id: user.id,
     day_id: start.day.id,
