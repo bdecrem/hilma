@@ -236,9 +236,9 @@ function shuffle<T>(xs: T[], rnd: () => number): T[] {
 
 type Card = { target: string; native: string; pinyin: string | null; distractors: string[]; from: 'new' | number; item_id: string | null }
 
-/** Ten questions: five pick, five type. The three new things are picked
- *  today; the rest come from the pool, misses first, then the least recently
- *  seen. Early days have a smaller pool and get fewer questions. */
+/** Ten questions, a pick and a type by turns. The three new things are
+ *  picked today; the rest come from the pool, misses first, then the least
+ *  recently seen. Early days have a smaller pool and get fewer questions. */
 export function buildQuestions(lang: LanguageCode, day: Day, pool: Item[]): Question[] {
   const rnd = seeded(day.id)
   const fresh: Card[] = (day.things ?? []).map((t) => ({
@@ -274,5 +274,13 @@ export function buildQuestions(lang: LanguageCode, day: Day, pool: Item[]): Ques
   }
   const toType = (c: Card): Question => ({ kind: 'type', native: c.native, target: c.target, pinyin: c.pinyin, from: c.from, item_id: c.item_id })
   void lang
-  return [...shuffle(picks, rnd).map(toPick), ...shuffle(types, rnd).map(toType)]
+  // Every other one is typed: pick, type, pick, type…
+  const p = shuffle(picks, rnd).map(toPick)
+  const t = shuffle(types, rnd).map(toType)
+  const out: Question[] = []
+  for (let i = 0; i < Math.max(p.length, t.length); i++) {
+    if (p[i]) out.push(p[i])
+    if (t[i]) out.push(t[i])
+  }
+  return out
 }

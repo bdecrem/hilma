@@ -347,18 +347,29 @@ final class ElevenVoiceClient: DollyVoiceClient {
         setThinking()
     }
 
+    private var nextTurnId = 0
+
     private func appendTurn(role: String, text: String, eventId: Int) {
         // The kickoff and the app's cues are plumbing, not something the user said.
         if role == "user", text == sessionResponse?.eleven.kickoff { return }
         if role == "user", let prefix = sessionResponse?.eleven.cuePrefix,
            text.hasPrefix(prefix.trimmingCharacters(in: .whitespaces)) { return }
-        turns.append(VoiceTurn(id: eventId, role: role, text: text, at: Date()))
+        // ElevenLabs can send a user turn twice (a transcript refined after
+        // the first copy): the same event, or the same words right after
+        // themselves, replaces the earlier bubble instead of adding one.
+        if role == "user", let last = turns.last, last.role == "user",
+           last.eventId == eventId || last.text == text {
+            turns[turns.count - 1].text = text
+            return
+        }
+        nextTurnId += 1
+        turns.append(VoiceTurn(id: nextTurnId, eventId: eventId, role: role, text: text, at: Date()))
         if role == "assistant" { thinkingTimer?.cancel() }
     }
 
     /// The learner cut in: keep what Dolly actually got to say.
     private func correctTurn(eventId: Int, spoken: String) {
-        guard let idx = turns.lastIndex(where: { $0.role == "assistant" && $0.id == eventId }) else { return }
+        guard let idx = turns.lastIndex(where: { $0.role == "assistant" && $0.eventId == eventId }) else { return }
         turns[idx].text = spoken
     }
 

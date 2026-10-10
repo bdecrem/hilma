@@ -12,7 +12,7 @@ settings:
     # Dolly ships under Polly's App Store record (renamed), so the build
     # number carries on from Polly's last (0.1 (32)).
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "33"
+    CURRENT_PROJECT_VERSION: "34"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:

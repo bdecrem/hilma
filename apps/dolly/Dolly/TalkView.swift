@@ -39,14 +39,13 @@ struct TalkView: View {
                 .padding(.horizontal, 22)
                 .padding(.top, 10)
 
-                Spacer(minLength: 10)
-                Mascot(size: 230, mood: mood)
+                Spacer(minLength: 8)
+                Mascot(size: 200, mood: mood)
                 Text(statusLine).font(skin.uiBold(14)).foregroundStyle(.white.opacity(0.75)).padding(.top, 6)
-                Spacer(minLength: 10)
+                Spacer(minLength: 8)
 
                 bubbles
                     .padding(.horizontal, 20)
-                    .frame(maxHeight: 220, alignment: .bottom)
 
                 controls
                     .padding(.top, 18)
@@ -95,12 +94,21 @@ struct TalkView: View {
         }
     }
 
+    /// The last exchange, both sides: the latest line from each of them, in
+    /// the order they were said.
+    private var exchange: [VoiceTurn] {
+        let lastUser = client.turns.last { $0.role == "user" }
+        let lastDolly = client.turns.last { $0.role == "assistant" }
+        return [lastUser, lastDolly].compactMap { $0 }.sorted { $0.at < $1.at }
+    }
+
     private var bubbles: some View {
         VStack(spacing: 8) {
-            ForEach(client.turns.suffix(3)) { turn in
+            ForEach(exchange) { turn in
                 let you = turn.role == "user"
                 Text(turn.text)
                     .font(skin.uiBold(16))
+                    .lineLimit(5)
                     .foregroundStyle(you ? .white : skin.ink)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 11)
@@ -113,7 +121,7 @@ struct TalkView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: client.turns.count)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: exchange.map(\.id))
     }
 
     private var controls: some View {

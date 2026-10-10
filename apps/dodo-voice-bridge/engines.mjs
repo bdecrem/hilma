@@ -64,9 +64,12 @@ const POLLY_TTS = {
   model_id: process.env.POLLY_ELEVEN_TTS_MODEL || 'eleven_v3_conversational',
 }
 // Dolly (2026-10-10, hilma's apps/dolly — a three-minute call a day in
-// Spanish or Mandarin): Polly's multilingual voice on Dodo's settings — v4
+// Spanish or Mandarin): an American voice (Bart heard Alice's British accent
+// on the first build and asked for American English) on Dodo's settings — v4
 // turbo, expressive off, so a learner hears the words, not a performance.
-const DOLLY_VOICE = process.env.DOLLY_ELEVEN_VOICE_ID || POLLY_VOICE
+// Bella is one of the library's educational voices; the premade American
+// alternatives are Sarah, Matilda, Laura and Jessica (Dodo's).
+const DOLLY_VOICE = process.env.DOLLY_ELEVEN_VOICE_ID || 'hpp4J3VqNfWAUOO0d1Us' // Bella — professional, bright, warm
 const DOLLY_TTS = {
   model_id: process.env.DOLLY_ELEVEN_TTS_MODEL || 'eleven_v4_turbo',
   expressive_mode: false,

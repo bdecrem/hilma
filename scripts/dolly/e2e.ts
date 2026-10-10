@@ -265,6 +265,7 @@ async function main() {
   check('things finished → after_things', fin2.status === 200 && fin2.body.day?.state === 'after_things', `${fin2.status} ${fin2.body.day?.state}`)
   check('cards written', questions.length >= 6 && questions.length <= 10, `${questions.length}: ${questions.map((q) => q.kind[0]).join('')}`)
   check('picks have four options with the answer', questions.filter((q) => q.kind === 'pick').every((q) => q.options?.length === 4 && q.options.includes(q.target)))
+  check('pick and type by turns', questions.every((q, i) => q.kind === (i % 2 === 0 ? 'pick' : 'type')), questions.map((q) => q.kind[0]).join(''))
   if (until === 'cards') return stopHere('after_things')
 
   // The cards, in order, half right.

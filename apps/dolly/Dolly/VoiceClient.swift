@@ -36,8 +36,11 @@ enum VoiceEngine: String, CaseIterable, Identifiable {
 }
 
 /// One turn of a session as the screens show it and the server keeps it.
+/// `id` is the client's own sequence — ElevenLabs' event ids can repeat
+/// across a user turn and the reply to it, which doubled bubbles in a ForEach.
 struct VoiceTurn: Equatable, Identifiable {
     let id: Int
+    let eventId: Int
     let role: String
     var text: String
     let at: Date
