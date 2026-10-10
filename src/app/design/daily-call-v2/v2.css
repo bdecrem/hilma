@@ -1950,3 +1950,21 @@ button.p2-mic:active {
 .hf .dj-stack {
   filter: none;
 }
+
+/* 5 · the cast: the jellies on their own, in Dodo's lavender */
+.hf-cast {
+  display: grid;
+  justify-items: center;
+  padding: 52px 32px 40px;
+  border-radius: 28px;
+  background: radial-gradient(120% 100% at 50% 0%, #e9f6ff 0%, #f8f2f8 55%, #f1e8f5 100%);
+}
+.hf-dodo {
+  grid-template-columns: 1fr !important;
+  justify-items: center;
+}
+@media (max-width: 640px) {
+  .hf-cast {
+    padding: 36px 16px 28px;
+  }
+}

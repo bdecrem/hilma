@@ -100,6 +100,9 @@ export default function Artifact() {
             <a href="#dodo">
               <i>4</i>Dodo
             </a>
+            <a href="#cast">
+              <i>5</i>The cast
+            </a>
             <a className="hf-toc-out" href="/design/daily-call">
               v1 spec ↗
             </a>
@@ -254,6 +257,15 @@ export default function Artifact() {
           </h2>
           <div className="hf-dodo">
             <DodoGallery />
+          </div>
+        </section>
+
+        <section className="hf-ch" id="cast">
+          <h2 className="hf-h2">
+            <i>5</i>The cast
+            <small>On second thought, borrow the cast.</small>
+          </h2>
+          <div className="hf-cast">
             <Jellies />
           </div>
         </section>
