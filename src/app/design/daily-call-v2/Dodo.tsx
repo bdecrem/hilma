@@ -1,17 +1,49 @@
 'use client'
 
 import { useRef, useState, type CSSProperties } from 'react'
+import { clipFor, lineRuns, scenes, stillFor } from '@/app/dodo/scenes'
 
-// The avatar sheet: everyone a person can be in Dodo — the dodo in its eight
-// colours and the fifteen critters who live along the Peck trail. The art is
-// the drawing code in misc/dodo-redesign (jelly-dodos.html, jelly-critters.html),
-// rendered to public/dodo/jelly/ by scripts/dodo-jelly/web.mjs: a still and a
-// squish frame each, 512 and 1024 px. Tap one and it squishes, like on the map.
-// Names and colours mirror JellyCritter in apps/feynd/Feynd/JellyAvatar.swift.
+// "Dodo, for reference" on the Polly design package: the team's other app as
+// the craft reference. The screens are the real captures the Dodo site uses
+// (scripts/dodo-scenes → public/dodo/scenes, the manifest's own order and
+// captions); the jellies are every avatar a person can be in Dodo — the dodo
+// in eight colours and fifteen critters — rendered at 1024 px from the art
+// pages in misc/dodo-redesign by scripts/dodo-jelly/web.mjs into
+// public/dodo/jelly (a still and a squish frame each). Names and colours
+// mirror JellyCritter in apps/feynd/Feynd/JellyAvatar.swift.
+
+export function DodoScreens() {
+  return (
+    <div className="hf-shots">
+      {scenes.map((s) => {
+        const clip = clipFor(s)
+        const plain = s.line.replace(/\*\*/g, '').trim()
+        return (
+          <figure className="hf-shot" key={s.id}>
+            <a className="hf-shot-ph" href={stillFor(s)} target="_blank" rel="noopener" aria-label={`${s.tour} Open at full size.`}>
+              {clip ? (
+                <video src={clip} poster={stillFor(s)} muted loop autoPlay playsInline preload="metadata" />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={stillFor(s)} alt="" loading="lazy" decoding="async" />
+              )}
+            </a>
+            <figcaption>
+              <div className="hf-shot-line">
+                {lineRuns(s.line).map((r, i) => (r.em ? <em key={i}>{r.text}</em> : <span key={i}>{r.text}</span>))}
+              </div>
+              {s.tour.trim() !== plain && <p className="hf-shot-tour">{s.tour}</p>}
+            </figcaption>
+          </figure>
+        )
+      })}
+    </div>
+  )
+}
 
 type Jelly = { id: string; name: string; tint: string; color: string }
 
-const JELLIES: Jelly[] = [
+export const JELLIES: Jelly[] = [
   { id: 'dodo', name: 'Sky dodo', tint: '#DCF6FF', color: '#5EC6EC' },
   { id: 'dodo-pink', name: 'Pink dodo', tint: '#FFE0EF', color: '#FF9FC8' },
   { id: 'dodo-peach', name: 'Peach dodo', tint: '#FFE6CF', color: '#FFAA82' },
@@ -37,13 +69,14 @@ const JELLIES: Jelly[] = [
   { id: 'sprite', name: 'Sprite', tint: '#E4FFF7', color: '#62CFB5' },
 ]
 
-const SIZES = '(min-width: 640px) 108px, 22vw'
+const SIZES = '(min-width: 640px) 100px, 22vw'
 const src = (id: string, squish = false) => {
   const base = `/dodo/jelly/${id}${squish ? '-squish' : ''}`
   return { src: `${base}.webp`, srcSet: `${base}.webp 512w, ${base}@2x.webp 1024w` }
 }
 
-export default function DodoCritters() {
+/** The avatar sheet. Tap a jelly and it squishes, like a critter on the Peck map. */
+export function Jellies() {
   const [down, setDown] = useState<string | null>(null)
   const timer = useRef(0)
   const squish = (id: string) => {
@@ -70,7 +103,9 @@ export default function DodoCritters() {
           >
             <span className="dj-disc">
               <span className="dj-stack">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="dj-img" {...src(j.id)} sizes={SIZES} alt="" loading="lazy" decoding="async" draggable={false} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="dj-img dj-squish" {...src(j.id, true)} sizes={SIZES} alt="" loading="lazy" decoding="async" draggable={false} aria-hidden />
               </span>
             </span>

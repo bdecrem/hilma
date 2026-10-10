@@ -1,5 +1,6 @@
-// Renders the avatar sheet for the landing page (dodo.foo, "The jellies"):
-// every dodo colourway and critter out of misc/dodo-redesign's drawing code,
+// Renders the avatar sheet for the web — the "Dodo, for reference" section of
+// the Polly design package (ola.cx/design/daily-call-v2): every dodo colourway
+// and critter out of misc/dodo-redesign's drawing code,
 // a 1024 px still and a -squish tap frame each, as transparent WebP at 1024
 // and 512 px into public/dodo/jelly/. Re-run after the art pages change.
 // usage: node scripts/dodo-jelly/web.mjs

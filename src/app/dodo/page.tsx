@@ -1,4 +1,3 @@
-import DodoCritters from './DodoCritters'
 import DodoHero from './DodoHero'
 import DodoMascot from './DodoMascot'
 
@@ -172,16 +171,6 @@ export default function DodoAltPage() {
           </p>
         </section>
 
-        <section className="da-cast">
-          <div className="da-label">The jellies</div>
-          <p>
-            Everyone in Dodo is a jelly. Your avatar is the dodo in one of
-            eight colors, or one of the fifteen critters who live along the
-            Peck trail. Tap one.
-          </p>
-          <DodoCritters />
-        </section>
-
         <section className="da-fine">
           <div className="da-label">The fine print</div>
           <p>
@@ -324,51 +313,6 @@ const css = `
 .da-feat li:nth-child(8n+8)::before { --j1: #FF9A96; --j2: #FF2B36; --j3: #BF0D1C; }
 .da-feat strong { font-family: var(--display); font-weight: 600; font-size: 15px; color: var(--ink); }
 .da-feat code { font-family: ui-monospace, 'SF Mono', Menlo, monospace; font-size: 13px; background: var(--surface2); padding: 1px 6px; border-radius: 6px; color: var(--ink); }
-
-/* The avatar sheet: wider than the column (up to 920px), eight across so the
-   dodos make the first row, four across on a phone. The sheet's side margins
-   are (column width - sheet width) / 2, both capped by the viewport. */
-.da-cast p { color: var(--ink2); font-size: 16px; }
-.dj {
-  list-style: none; padding: 0; margin: 26px 0 0;
-  width: min(920px, 100vw - 48px);
-  margin-inline: calc((min(612px, 100vw - 48px) - min(920px, 100vw - 48px)) / 2);
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 8px;
-}
-@media (min-width: 640px) { .dj { grid-template-columns: repeat(8, 1fr); } }
-.dj li { min-width: 0; }
-.dj .dj-cell {
-  appearance: none; -webkit-appearance: none; border: 0; background: none; padding: 0; margin: 0;
-  width: 100%; display: grid; justify-items: center; gap: 7px; cursor: pointer;
-  font: inherit; color: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-  user-select: none; -webkit-user-select: none;
-}
-.dj-disc {
-  width: 100%; aspect-ratio: 1; border-radius: 50%; background: var(--t);
-  box-shadow: inset 0 -3px 6px rgba(45,37,55,0.07), inset 0 2px 3px rgba(255,255,255,0.7);
-  display: grid; place-items: center; overflow: visible;
-  transition: box-shadow 0.2s ease;
-}
-.dj-cell:focus-visible { outline: none; }
-.dj-cell:focus-visible .dj-disc { box-shadow: 0 0 0 3px var(--paper), 0 0 0 6px var(--accent); }
-.dj-stack {
-  position: relative; width: 106%; aspect-ratio: 1; display: block;
-  transform-origin: 50% 92%;
-  transition: transform 0.42s cubic-bezier(0.34, 1.8, 0.64, 1);
-  filter: drop-shadow(0 4px 6px rgba(45,37,55,0.14));
-}
-.dj-cell:hover .dj-stack { transform: translateY(-3px); }
-.dj-cell.is-squish .dj-stack { transform: scale(1.14, 0.82); transition-duration: 0.1s; transition-timing-function: ease-out; }
-.dj-img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
-.dj-squish { opacity: 0; }
-.dj-cell.is-squish .dj-img { opacity: 0; }
-.dj-cell.is-squish .dj-squish { opacity: 1; }
-.dj-name { font-family: var(--display); font-weight: 500; font-size: 12.5px; line-height: 1.2; color: var(--ink2); text-align: center; }
-@media (prefers-color-scheme: dark) {
-  .dj-disc { background: color-mix(in srgb, var(--c) 22%, transparent);
-    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.2), 0 0 28px color-mix(in srgb, var(--c) 18%, transparent); }
-}
-@media (prefers-reduced-motion: reduce) { .dj-stack { transition: none; } .dj-cell:hover .dj-stack { transform: none; } }
 
 .da-fine p { color: var(--ink2); font-size: 16px; }
 /* The button is a sky jelly key, like the app's talk key. */

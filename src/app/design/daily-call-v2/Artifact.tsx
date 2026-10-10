@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { DodoScreens, Jellies } from './Dodo'
 import { Parrot, type Mood } from './Parrot'
 import { CHANGES, LOOKS, LOOP, MOTION, ORDER, PALETTE, SCREENS, TYPE, WORKING_NAME, type MapState, type ScreenId } from './content'
 import { ThemeProvider } from '../_walk/Mascot'
@@ -122,6 +123,7 @@ export default function Artifact() {
             <span>← → moves through the screens</span>
             <a href="/design/daily-call">v1, the unbranded spec →</a>
             <a href="#looks">three looks ↓</a>
+            <a href="#dodo">Dodo, for reference ↓</a>
           </div>
         </header>
 
@@ -251,6 +253,23 @@ export default function Artifact() {
                   </a>
                 ))}
               </div>
+            </section>
+
+            <section className="hf-section" id="dodo">
+              <h2 className="hf-h2">Dodo, for reference</h2>
+              <p className="hf-p">
+                The team&rsquo;s other app, here for the craft rather than the cast: glossy jelly with a rim, a specular
+                and an inner glow, squash and stretch, saturated color on lavender paper, one accent word per line. These
+                are the real screens from <a href="https://dodo.foo">dodo.foo</a>, in the order the site tells them; click
+                one to open it at full size.
+              </p>
+              <DodoScreens />
+              <h3 className="hf-h3">The jellies</h3>
+              <p className="hf-p">
+                Everyone in Dodo is a jelly. The avatar choices: the dodo in eight colors and the fifteen critters who live
+                along the Peck trail. Tap one.
+              </p>
+              <Jellies />
             </section>
 
             <section className="hf-section" id="look">
