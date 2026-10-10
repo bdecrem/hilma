@@ -73,8 +73,6 @@ struct ThingsView: View {
                     .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
 
-                Spacer(minLength: 0)
-
                 HStack(spacing: 14) {
                     Mascot(size: 96, mood: mood)
                     Text(coachLine)
@@ -86,6 +84,9 @@ struct ThingsView: View {
                         .shadow(color: skin.shadow, radius: 10, y: 8)
                 }
                 .padding(.horizontal, 24)
+                .padding(.top, 10)
+
+                Spacer(minLength: 0)
 
                 foot
                     .padding(.bottom, 28)

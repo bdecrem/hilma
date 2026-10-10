@@ -60,7 +60,7 @@ struct TalkView: View {
                     ProgressView().tint(.white)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(skin.voiceBottom.opacity(0.92).ignoresSafeArea())
+                .background(skin.voiceBottom.ignoresSafeArea())
                 .transition(.opacity)
             }
         }

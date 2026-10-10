@@ -68,30 +68,11 @@ struct FlowChips: View {
     private let skin = Skin.current
 
     var body: some View {
-        var width: CGFloat = 0
-        var height: CGFloat = 0
-        return GeometryReader { geo in
-            ZStack(alignment: .topLeading) {
-                ForEach(Array(items.enumerated()), id: \.offset) { i, item in
-                    chip(item)
-                        .alignmentGuide(.leading) { d in
-                            if abs(width - d.width) > geo.size.width {
-                                width = 0
-                                height -= d.height + 8
-                            }
-                            let result = width
-                            if i == items.count - 1 { width = 0 } else { width -= d.width + 8 }
-                            return result
-                        }
-                        .alignmentGuide(.top) { _ in
-                            let result = height
-                            if i == items.count - 1 { height = 0 }
-                            return result
-                        }
-                }
+        FlowLayout(spacing: 8) {
+            ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                chip(item)
             }
         }
-        .frame(height: CGFloat((items.count + 2) / 3) * 44)
     }
 
     private func chip(_ text: String) -> some View {

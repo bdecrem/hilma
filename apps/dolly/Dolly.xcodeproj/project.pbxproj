@@ -8,8 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		0A98F595585BD3A177EBC01A /* ElevenVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */; };
+		0DE802A3B45CA4A9E690B764 /* Baloo2-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B951B6EE80D56F849C87D30E /* Baloo2-SemiBold.ttf */; };
 		1CBB68C36B08D3D2D6324A4C /* DollyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B070E3786684AF6D8EB03143 /* DollyApp.swift */; };
 		395F955A98AD2D570F63DDDB /* Skin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */; };
+		4CB76C855AB791DC5D918A20 /* Quicksand-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */; };
 		4D842C01586F5BE6EE87AE78 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E83D4816DB2B314E41EBB9A /* Assets.xcassets */; };
 		6AC387C875922EEC625535C9 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3660364F0B75DBCE4617E6 /* ElevenLabs */; };
 		7028B1FD21D2A718765B25EB /* VoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACEFFC491A33CE02F4195784 /* VoiceClient.swift */; };
@@ -18,7 +20,9 @@
 		7FD8749641708D28547E7D89 /* Mascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C59EB20FA58A8FDACE48AF /* Mascot.swift */; };
 		9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA4D8B1546392D9142BB179 /* Models.swift */; };
 		9F4693E0D51EEC9761382E58 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF955F0B5D7166AC219C99C1 /* TalkView.swift */; };
+		AA5540FC8088458AEEAEA7F4 /* Baloo2-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A42C56D6FCC65E69CC809C26 /* Baloo2-ExtraBold.ttf */; };
 		B6A7485EE8FA2C2C574AA669 /* CardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7179E09AC45B5F4E9F34E53 /* CardsView.swift */; };
+		B98D9C5248F63DC0B9EE9C18 /* Quicksand-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A827E147E4DEC8F3FC182DFB /* Quicksand-Bold.ttf */; };
 		BB4E40AA224BCE64A8C975F4 /* DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12FCCD7FABF0295FC43E35A /* DoneView.swift */; };
 		C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08793AEC3DBECFE259B029C9 /* Secrets.swift */; };
 		C801744CAFFAA9E03828D3DE /* ThingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F67961CC796459CB5B830A /* ThingsView.swift */; };
@@ -36,12 +40,16 @@
 		2E83D4816DB2B314E41EBB9A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3531DA8037F0A80723F696FF /* Dolly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Dolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		47D278063D8D4D04FF60B17C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Medium.ttf"; sourceTree = "<group>"; };
 		69F67961CC796459CB5B830A /* ThingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingsView.swift; sourceTree = "<group>"; };
 		71394AAD3C828B4DA4977412 /* Dolly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dolly.entitlements; sourceTree = "<group>"; };
+		A42C56D6FCC65E69CC809C26 /* Baloo2-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Baloo2-ExtraBold.ttf"; sourceTree = "<group>"; };
+		A827E147E4DEC8F3FC182DFB /* Quicksand-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Bold.ttf"; sourceTree = "<group>"; };
 		ACEFFC491A33CE02F4195784 /* VoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceClient.swift; sourceTree = "<group>"; };
 		B070E3786684AF6D8EB03143 /* DollyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DollyApp.swift; sourceTree = "<group>"; };
 		B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenVoiceClient.swift; sourceTree = "<group>"; };
 		B7179E09AC45B5F4E9F34E53 /* CardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsView.swift; sourceTree = "<group>"; };
+		B951B6EE80D56F849C87D30E /* Baloo2-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Baloo2-SemiBold.ttf"; sourceTree = "<group>"; };
 		C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Skin.swift; sourceTree = "<group>"; };
 		CAA4D8B1546392D9142BB179 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		D104FCD2299C3BDA56F7A217 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
@@ -64,6 +72,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		33EC55B099CC966310686932 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				A42C56D6FCC65E69CC809C26 /* Baloo2-ExtraBold.ttf */,
+				B951B6EE80D56F849C87D30E /* Baloo2-SemiBold.ttf */,
+				A827E147E4DEC8F3FC182DFB /* Quicksand-Bold.ttf */,
+				6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		43EF655DE574D0F89A2F6C13 = {
 			isa = PBXGroup;
 			children = (
@@ -103,6 +122,7 @@
 				DF955F0B5D7166AC219C99C1 /* TalkView.swift */,
 				69F67961CC796459CB5B830A /* ThingsView.swift */,
 				ACEFFC491A33CE02F4195784 /* VoiceClient.swift */,
+				33EC55B099CC966310686932 /* Fonts */,
 			);
 			path = Dolly;
 			sourceTree = "<group>";
@@ -172,6 +192,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D842C01586F5BE6EE87AE78 /* Assets.xcassets in Resources */,
+				AA5540FC8088458AEEAEA7F4 /* Baloo2-ExtraBold.ttf in Resources */,
+				0DE802A3B45CA4A9E690B764 /* Baloo2-SemiBold.ttf in Resources */,
+				B98D9C5248F63DC0B9EE9C18 /* Quicksand-Bold.ttf in Resources */,
+				4CB76C855AB791DC5D918A20 /* Quicksand-Medium.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
