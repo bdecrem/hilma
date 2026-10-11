@@ -13,7 +13,9 @@ row). Voice: Polly's ElevenLabs + Claude engine, ported — `ElevenVoiceClient.s
 is Polly's with Dolly's finish; GPT-Live is the gap left in `VoiceClient.swift`.
 
 After the day is done (2026-10-10, later the same day): **Talk more** (mode
-`more`, a free extra call, counted on the map) for everyone, and with
+`more`, a free extra call of up to ten minutes, counted on the map; after End
+its three things are picked, shown in `MoreDoneView` and put in the pool for
+tomorrow, with no say-back round and no cards) for everyone, and with
 **Settings → Learning objectives** on, **★ Star the day** (mode `star`): a
 two-minute guided call on the next four unearned objectives of the learner's
 rung (`src/lib/dolly/curriculum.ts`, eight levels, Spanish 1–3 and Mandarin
