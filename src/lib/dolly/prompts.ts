@@ -6,7 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { completedText } from '@/lib/anthropic-response'
 import { ELEVEN_CUE_PREFIX } from '@/lib/f2/eleven'
-import { type Day, type Item, type Question, type Thing, type ThingKind, type User } from './core'
+import { type Day, type Item, type Question, type ScriptStep, type Thing, type ThingKind, type User } from './core'
 import { type CanDo } from './curriculum'
 import { LANGUAGES, levelLine, type LanguageCode } from './language'
 
@@ -110,35 +110,120 @@ export function moreOpening(user: User): string {
   return `Say hello again in one short line in ${lang.speak}${user.name ? ` to ${user.name}` : ''}, glad they are back, and ask what they would like to talk about now. Then listen.`
 }
 
-// ---------- the star round: guided, on the level's objectives ----------
+// ---------- the star round: a scripted dialogue on the level's objectives ----------
 
-export const STAR_WRAP_MS = 110_000
-export const STAR_END_MS = 140_000
-
-export function starPrompt(user: User, targets: CanDo[]): string {
-  const lang = LANGUAGES[user.language]
-  const list = targets
-    .map((t, i) => `${i + 1}. ${t.title} — words and chunks: ${t.items.map((x) => `"${x.t}"${x.p ? ` (${x.p})` : ''} = ${x.n}`).join(', ')}. Grammar: ${t.grammar}. Questions that draw it out: ${t.elicit.join(' / ')}`)
-    .join('\n')
-  return `${persona(lang.speak)}
-
-This is a star round: a short practice they chose after finishing their day. Unlike the daily call, here you may say what you are practicing, in a few English words, then do it in ${lang.speak}. The objectives, in order:
-${list}
-
-For each objective: name it in a few words of English ("let's do: saying what you did yesterday"), then ask one of its questions in ${lang.speak} or set up a tiny situation, and get them to produce it. If they can't, give them the words once and ask again. Recast mistakes inside your reply. One or two exchanges per objective, then move to the next; keep the whole round to about two minutes, so be brisk and warm, never a lecture. Use the objective's own words and chunks in your questions so they hear them before they need them.
-${levelLine(user.level, lang.speak)}
-
-The app will tell you when to wrap up.`
+/** The round's clock follows the script: ~14 s a line, 3 minutes at most. */
+export function starClock(steps: number): { after_ms: number; end_ms: number } {
+  const after_ms = Math.min(180_000, 25_000 + steps * 14_000)
+  return { after_ms, end_ms: after_ms + 35_000 }
 }
 
-export function starOpening(user: User, targets: CanDo[]): string {
+/** The hidden marker Dolly ends each turn with in a star round; the turn
+ *  route strips it before the voice gets the text and keeps the number. */
+export const STEP_TAG = /\[\[\s*step\s*:\s*(\d+)\s*\]\]/gi
+
+const SCRIPT_SCHEMA = {
+  type: 'object',
+  properties: {
+    steps: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          dolly: { type: 'string' },
+          dolly_en: { type: 'string' },
+          you_en: { type: 'string' },
+          you: { type: 'string' },
+          target_id: { type: 'string' },
+        },
+        required: ['dolly', 'dolly_en', 'you_en', 'you', 'target_id'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['steps'],
+  additionalProperties: false,
+} as const
+
+/** Claude writes the round's dialogue: two exchanges per objective, in
+ *  order, beginner-simple, each Dolly line short enough to say in one breath. */
+export async function writeStarScript(user: User, targets: CanDo[]): Promise<ScriptStep[]> {
   const lang = LANGUAGES[user.language]
-  const first = targets[0]
-  return `In one line, in English, say this is a quick practice round with ${targets.length} things to try, then start the first one, "${first.title}": ask in ${lang.speak}: ${first.elicit[0]}`
+  const list = targets
+    .map((t, i) => `${i + 1}. id "${t.id}": ${t.title}. Words and chunks to use: ${t.items.map((x) => `"${x.t}" = ${x.n}`).join(', ')}. Grammar: ${t.grammar}. Questions that draw it out: ${t.elicit.join(' / ')}`)
+    .join('\n')
+  const res = await anthropic().messages.create({
+    model: MODEL,
+    max_tokens: 8192,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: SCRIPT_SCHEMA } },
+    system: `You write a short practice dialogue in ${lang.speak} between Dolly, a warm tutor, and a learner (${levelLine(user.level, lang.speak)}). It covers the objectives below in order, two exchanges per objective, so 2 × the number of objectives steps, the first exchange a greeting that opens the first objective, the last a short goodbye. Each step: "dolly" — what Dolly says in ${lang.speak}, a question or a prompt the learner can answer, at most twelve words, one idea, beginner-simple, using the objective's own words; "dolly_en" — its English; "you_en" — a natural answer the learner could give, in English, three to ten words, written so that the ${lang.speak} version uses the objective's words and chunks; "you" — that answer in ${lang.speak}; "target_id" — the objective's id. No names for the learner. No English inside "dolly" or "you".${user.language === 'zh' ? ' Write "dolly" and "you" in characters.' : ''}`,
+    messages: [{ role: 'user', content: `Objectives:\n${list}` }],
+  })
+  const out = JSON.parse(completedText(res)) as { steps: ScriptStep[] }
+  const steps = out.steps
+    .map((s) => ({ dolly: s.dolly.trim(), dolly_en: s.dolly_en.trim(), you_en: s.you_en.trim(), you: s.you.trim(), target_id: s.target_id.trim() }))
+    .filter((s) => s.dolly && s.dolly_en && s.you_en && s.you)
+  if (steps.length < 2) throw new Error('dolly: the script came back empty')
+  return steps.slice(0, 12)
+}
+
+export function starPrompt(user: User, targets: CanDo[], script: ScriptStep[]): string {
+  const lang = LANGUAGES[user.language]
+  const lines = script.map((s, i) => `${i + 1}. Dolly: "${s.dolly}"   (they might answer: "${s.you}")`).join('\n')
+  const objectives = targets.map((t) => `- ${t.title}: ${t.items.map((x) => x.t).join(', ')}`).join('\n')
+  return `${persona(lang.speak)}
+
+This is a star round: a short scripted practice they chose after finishing their day. The learner sees the script line by line on their screen, in ${lang.speak} with the English under it, and a suggested answer in English, so they can follow it or wander off. Your job is to say your lines, in order, and keep them company.
+
+The script:
+${lines}
+
+The objectives behind it:
+${objectives}
+
+How to run it: say line 1 as your opening, word for word. After each answer from the learner, reply in ONE turn: first a reaction of two to six words in ${lang.speak} (confirm, or recast what they said if it was off: "Casi. Tengo veinte años."), then the next script line, word for word. If they ask a question or go somewhere else, answer it in one short sentence and then say the next script line. If they say nothing useful or ask you to repeat, say the current line again. Never skip lines, never say two script lines in one turn, never add a question of your own. After the last line, say goodbye and stop.
+
+Every turn ends with a marker the app reads and the voice never speaks: [[step:N]], where N is the number of the script line you said in that turn, or [[step:0]] if you said no script line (a repeat counts as the line's own number). Write it last, after your words, exactly like that.
+${levelLine(user.level, lang.speak)}`
+}
+
+export function starOpening(script: ScriptStep[]): string {
+  return `Say script line 1, word for word: "${script[0]?.dolly ?? '¡Hola!'}" Nothing else. End with [[step:1]].`
 }
 
 export function starWrapCue(): string {
-  return `${ELEVEN_CUE_PREFIX}Time is nearly up. Finish the current objective in one line, then say warmly in the language that the round is done and the three things are next. No new questions.`
+  return `${ELEVEN_CUE_PREFIX}Time is nearly up. Finish with the current line's answer in a few words, then say goodbye in the language. No new script lines. End with [[step:0]].`
+}
+
+/** Strip the markers from Dolly's spoken text, reporting the last one seen.
+ *  Chunk-safe: a marker split across chunks is held back until it closes. */
+export function stepStripper(onStep: (n: number) => void): { push: (chunk: string) => string; flush: () => string } {
+  let pending = ''
+  const take = (text: string): string => {
+    return text.replace(STEP_TAG, (_m, n: string) => {
+      onStep(Number(n))
+      return ''
+    })
+  }
+  return {
+    push(chunk: string) {
+      pending += chunk
+      const open = pending.lastIndexOf('[[')
+      if (open >= 0 && !pending.slice(open).includes(']]')) {
+        const out = take(pending.slice(0, open))
+        pending = pending.slice(open)
+        return out
+      }
+      const out = take(pending)
+      pending = ''
+      return out
+    },
+    flush() {
+      const out = take(pending)
+      pending = ''
+      return out
+    },
+  }
 }
 
 const STAR_SCHEMA = {

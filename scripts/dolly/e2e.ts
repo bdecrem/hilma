@@ -311,9 +311,21 @@ async function main() {
   check('level 1 with ten objectives', ob?.on === true && ob.level === 1 && ob.total === 10 && ob.earned === 0 && ob.star_available && ob.ladder?.length === 8, JSON.stringify({ level: ob?.level, name: ob?.name, total: ob?.total }))
 
   // The star round: a guided call on the first four objectives.
-  type StarStart = Start & { eleven: Start['eleven'] & { targets: { id: string; title: string }[] } }
+  type StarStart = Start & { eleven: Start['eleven'] & { targets: { id: string; title: string }[]; script: { dolly: string; dolly_en: string; you_en: string; you: string; target_id: string }[] | null } }
   const star = await api<StarStart>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star', dry: true }) })
-  check('star round opens', star.status === 200 && star.body.eleven?.targets?.length === 4 && (star.body.eleven?.wrap?.after_ms ?? 0) < 120_000, `${star.status} targets ${star.body.eleven?.targets?.map((t) => t.title).join(' | ')}`)
+  check('star round opens', star.status === 200 && star.body.eleven?.targets?.length === 4 && (star.body.eleven?.wrap?.after_ms ?? 0) <= 180_000, `${star.status} targets ${star.body.eleven?.targets?.map((t) => t.title).join(' | ')}`)
+  const script = star.body.eleven?.script ?? []
+  check('star round has a script', script.length >= 6 && script.length <= 12 && script.every((s) => s.dolly && s.dolly_en && s.you_en && s.you), `${script.length} lines: ${script.slice(0, 2).map((s) => `"${s.dolly}" / "${s.you_en}"`).join(' | ')}`)
+  const step0 = await api<{ step: number }>(`/api/dolly/voice/${star.body.voice_session.id}`, { cookie })
+  check('script step starts at 0', step0.status === 200 && step0.body.step === 0, String(step0.body.step))
+  {
+    // The marker stripper, chunk by chunk, including a marker split across chunks.
+    const { stepStripper } = await import('../../src/lib/dolly/prompts')
+    const seen: number[] = []
+    const s = stepStripper((n) => seen.push(n))
+    const out = ['Muy bien. ¿De dón', 'de eres? [[st', 'ep:2]]', ' Adiós. [[step:3]]'].map((c) => s.push(c)).join('') + s.flush()
+    check('step markers stripped from speech', out === 'Muy bien. ¿De dónde eres?  Adiós. ' && seen.join() === '2,3', JSON.stringify({ out, seen }))
+  }
   const starTalk: Row[] = [
     { role: 'assistant', text: 'Quick practice round, four things. First, greetings: ¡Hola! ¿Qué tal?', created_at: now() },
     { role: 'user', text: 'Hola, buenos días. Muy bien, ¿y tú?', created_at: now() },
@@ -346,6 +358,10 @@ async function main() {
   check('earned count on the map', (starLast?.day.objectives.earned ?? 0) >= 2, `${starLast?.day.objectives.earned} of ${starLast?.day.objectives.total}`)
   check('trail marks the star', starLast?.day.trail.some((t) => t.today && (t as { starred?: boolean }).starred) ?? false)
   check('second star today is 409', (await api('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star' }) })).status === 409)
+  // Start today over.
+  const reset = await api<{ day: DayPlus }>('/api/dolly/day/reset', { method: 'POST', cookie })
+  check('start today over', reset.status === 200 && reset.body.day?.state === 'morning' && reset.body.day?.extra_calls === 0 && reset.body.day?.starred === false && reset.body.day?.things.length === 0, `${reset.status} ${reset.body.day?.state}`)
+  check('objectives earned survive a reset', (reset.body.day?.objectives.earned ?? 0) >= 2)
   await api('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ objectives: false }) })
 
   // Settings.

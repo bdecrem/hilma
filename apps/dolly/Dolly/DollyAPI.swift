@@ -122,6 +122,20 @@ final class DollyAPI {
         return res.day
     }
 
+    /// A star round: the script line Dolly last said (0 before the first).
+    func voiceStep(id: String) async throws -> Int {
+        struct Res: Decodable { let step: Int }
+        let res: Res = try await request("/api/dolly/voice/\(id)", method: "GET", body: Optional<String>.none)
+        return res.step
+    }
+
+    /// Start today over.
+    func resetToday() async throws -> DayView {
+        struct Empty: Encodable {}
+        let res: DayResponse = try await request("/api/dolly/day/reset", method: "POST", body: Empty())
+        return res.day
+    }
+
     // MARK: Cards
 
     func answer(q: Int, answer: String) async throws -> AnswerResponse {

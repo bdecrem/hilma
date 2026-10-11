@@ -8,6 +8,17 @@ export const runtime = 'nodejs'
 // The talk's finish runs Claude over the transcript for the three things.
 export const maxDuration = 60
 
+// GET /api/dolly/voice/:id — where a star round's script is: the line Dolly
+// last said (0 before the first). The app asks after each of her turns.
+export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
+  const user = await getSessionUser()
+  if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
+  const { id } = await ctx.params
+  const session = await findVoiceSession(id)
+  if (!session || session.user_id !== user.id) return NextResponse.json({ error: 'not found' }, { status: 404 })
+  return NextResponse.json({ step: session.script_step ?? 0, ended: !!session.ended_at })
+}
+
 // PATCH /api/dolly/voice/:id { transcript: [{role, text, created_at}], seconds }
 // — the session ended: the transcript is kept and the day moves on (talk →
 // three things picked; things → the cards written). Returns the day.

@@ -141,6 +141,22 @@ struct StarView: Codable, Equatable {
     }
 }
 
+/// One exchange of a star round's dialogue.
+struct ScriptStep: Codable, Equatable {
+    let dolly: String
+    let dollyEn: String
+    let youEn: String
+    let you: String
+    let targetId: String
+
+    enum CodingKeys: String, CodingKey {
+        case dolly, you
+        case dollyEn = "dolly_en"
+        case youEn = "you_en"
+        case targetId = "target_id"
+    }
+}
+
 struct CanDoView: Codable, Equatable, Identifiable {
     let id: String
     let title: String
@@ -340,11 +356,12 @@ struct ElevenSessionResponse: Codable {
         let cues: [String]
         /// The call: send `cue` at afterMs, end at endMs.
         let wrap: Wrap?
-        /// The star round's objectives, for the screen.
+        /// The star round's objectives, for the screen, and its dialogue.
         let targets: [Named]?
+        let script: [ScriptStep]?
 
         enum CodingKeys: String, CodingKey {
-            case model, kickoff, cues, wrap, targets
+            case model, kickoff, cues, wrap, targets, script
             case conversationToken = "conversation_token"
             case holdToTalk = "hold_to_talk"
             case dynamicVariables = "dynamic_variables"

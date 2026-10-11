@@ -17,12 +17,21 @@ After the day is done (2026-10-10, later the same day): **Talk more** (mode
 its three things are picked, shown in `MoreDoneView` and put in the pool for
 tomorrow, with no say-back round and no cards) for everyone, and with
 **Settings → Learning objectives** on, **★ Star the day** (mode `star`): a
-two-minute guided call on the next four unearned objectives of the learner's
-rung (`src/lib/dolly/curriculum.ts`, eight levels, Spanish 1–3 and Mandarin
-1–2 authored), read by Claude for what was demonstrated, then three things
-from the targets, then six cards; the day's node gets a star, all objectives
-earned moves the rung up. The map line "Level 1 · Hello · 3 of 10" opens
-`ObjectivesSheet` (the ladder). The thinking is `docs/dolly-pedagogy.md`.
+scripted dialogue on the next four unearned objectives of the learner's rung
+(`src/lib/dolly/curriculum.ts`, eight levels, Spanish 1–3 and Mandarin 1–2
+authored). Claude writes the script when the round starts (`writeStarScript`:
+two exchanges per objective, Dolly's line + its English + a suggested reply in
+English with the language behind a tap), Dolly says her lines in order, and
+`StarScriptView` shows the current one: each of her turns ends with a hidden
+`[[step:N]]` marker that `/api/dolly/eleven/turn` strips before the voice and
+stores on the session (`script_step`); the app reads it back through
+`GET /api/dolly/voice/:id` after each of her turns. The transcript is then read
+for what was demonstrated, three things from the targets, six cards; the day's
+node gets a star, all objectives earned moves the rung up. The map line
+"Level 1 · Hello · 3 of 10" opens `ObjectivesSheet` (the ladder). **↻ Start
+today over** at the bottom of the map (`POST /api/dolly/day/reset`) puts the
+day back to the morning; kept words and earned objectives stay. The thinking
+is `docs/dolly-pedagogy.md`.
 
 ## Files (`Dolly/`)
 

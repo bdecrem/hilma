@@ -2,6 +2,7 @@ import { timingSafeEqual } from 'node:crypto'
 import { NextResponse } from 'next/server'
 import { bridgeSecret, streamElevenTurn, turnMessages, type ElevenTranscriptMessage } from '@/lib/f2/eleven'
 import { findVoiceSession, updateVoiceSession } from '@/lib/dolly/core'
+import { stepStripper } from '@/lib/dolly/prompts'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -11,6 +12,9 @@ export const maxDuration = 60
 // transcribed what the learner said and sent the running transcript; Claude
 // answers from the session's stored prompt as a plain-text stream the bridge
 // forwards to be spoken. The bridge aborts the request when the learner cuts in.
+// In a star round Dolly ends each turn with [[step:N]]; it is stripped here
+// before the voice gets the text, and the number is kept on the session row
+// for the app's screen (GET /api/dolly/voice/:id).
 type TurnBody = {
   voice_session_id?: string
   conversation_id?: string
@@ -46,6 +50,11 @@ export async function POST(req: Request) {
   const systemPrompt = session.system_prompt
   const messages = turnMessages(body.transcript, null)
   const encoder = new TextEncoder()
+  // The transcript ElevenLabs keeps is what was spoken, so Claude never sees
+  // its own markers again; the session row remembers the step instead.
+  const stripper = stepStripper((n) => {
+    void updateVoiceSession(session.id, { script_step: n }).catch(() => {})
+  })
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
@@ -55,8 +64,11 @@ export async function POST(req: Request) {
           signal: req.signal,
           onDone: (usage) => console.log('[dolly/eleven] turn', session.id, body.event_id, JSON.stringify(usage)),
         })) {
-          controller.enqueue(encoder.encode(text))
+          const out = stripper.push(text)
+          if (out) controller.enqueue(encoder.encode(out))
         }
+        const tail = stripper.flush()
+        if (tail) controller.enqueue(encoder.encode(tail))
         controller.close()
       } catch (err) {
         if (!req.signal.aborted) console.error('[dolly/eleven] turn failed:', session.id, err)

@@ -79,7 +79,19 @@ export type Day = {
   star_answers: Answer[]
   star_earned: string[] | null
   star_level_up: boolean
+  /** The round's dialogue: Dolly's lines and suggested replies, in order. */
+  star_script: ScriptStep[] | null
   created_at: string
+}
+
+export type ScriptStep = {
+  /** Dolly's line in the language, and its English. */
+  dolly: string
+  dolly_en: string
+  /** What the learner could say back: English, and the language (behind a tap). */
+  you_en: string
+  you: string
+  target_id: string
 }
 
 /** Is a star round under way (its things or cards still to do)? */
@@ -129,6 +141,8 @@ export type VoiceSession = {
   conversation_id: string | null
   transcript: unknown[] | null
   seconds: number | null
+  /** Star round: the script line Dolly last said (the [[step:N]] marker). */
+  script_step: number | null
   started_at: string
   ended_at: string | null
 }

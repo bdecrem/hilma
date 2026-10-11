@@ -17,6 +17,7 @@ struct MapView: View {
                     Trail(nodes: day.trail)
                         .frame(height: 300)
                         .padding(.top, 6)
+                    startOver(day)
                 } else if let err = state.loadError {
                     Card {
                         VStack(spacing: 12) {
@@ -162,6 +163,39 @@ struct MapView: View {
             .frame(height: day.starred || day.extraCalls > 0 ? nil : 0)
         }
         .padding(.top, 4)
+    }
+
+    /// A small way back to the morning, for doing today over.
+    @State private var confirmReset = false
+    @State private var resetting = false
+
+    private func startOver(_ day: DayView) -> some View {
+        Button {
+            confirmReset = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "arrow.counterclockwise").font(.system(size: 12, weight: .bold))
+                Text(resetting ? "Starting over…" : "Start today over").font(skin.uiBold(13))
+            }
+            .foregroundStyle(skin.ink3)
+            .padding(.vertical, 8)
+        }
+        .buttonStyle(.plain)
+        .disabled(resetting || day.dayState == .morning)
+        .opacity(day.dayState == .morning ? 0.35 : 1)
+        .confirmationDialog("Start today over?", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("Start over", role: .destructive) {
+                Task {
+                    resetting = true
+                    defer { resetting = false }
+                    if let fresh = try? await DollyAPI.shared.resetToday() { state.apply(fresh) }
+                    await state.refresh()
+                }
+            }
+            Button("Keep today", role: .cancel) {}
+        } message: {
+            Text("The call, the three things, the cards, any extra calls and the star round go back to the morning. What you've learned stays.")
+        }
     }
 
     private func buttonTitle(_ day: DayView) -> String {

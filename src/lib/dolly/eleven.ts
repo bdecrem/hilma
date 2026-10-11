@@ -8,7 +8,7 @@
 // enum leave the slot, and a second session route would build the same
 // prompt through startVoice() below.
 import { ELEVEN_CUE_PREFIX, ELEVEN_KICKOFF, elevenModel, mintElevenConversationToken } from '@/lib/f2/eleven'
-import { activeThings, insertVoiceSession, updateDay, type Day, type User, type VoiceMode, type VoiceSession } from './core'
+import { activeThings, insertVoiceSession, updateDay, type Day, type ScriptStep, type User, type VoiceMode, type VoiceSession } from './core'
 import { comingBackItems, ensureToday, starTargets } from './day'
 import { isTestPhone } from './send'
 import {
@@ -20,8 +20,7 @@ import {
   moreOpening,
   morePrompt,
   moreWrapCue,
-  STAR_END_MS,
-  STAR_WRAP_MS,
+  starClock,
   starOpening,
   starPrompt,
   starWrapCue,
@@ -32,6 +31,7 @@ import {
   thingsDoneCue,
   thingsOpening,
   thingsPrompt,
+  writeStarScript,
 } from './prompts'
 
 export function dollyEngineId(): string {
@@ -57,6 +57,8 @@ export type VoiceStart =
       wrap: { after_ms: number; end_ms: number; cue: string } | null
       /** The star round: what it practices, for the screen. */
       targets: { id: string; title: string }[]
+      /** The star round's dialogue. */
+      script?: ScriptStep[]
     }
 
 /** The gate and the prompt for a mode, against today's state. */
@@ -82,16 +84,23 @@ export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolea
     if (day.star_state) return { ok: false, status: 409, error: 'The star round is under way: the three things are next.' }
     const targets = await starTargets(user)
     if (targets.length === 0) return { ok: false, status: 409, error: 'Nothing left to practice at this level yet.' }
-    const systemPrompt = withOpening(starPrompt(user, targets), starOpening(user, targets)) + note
-    const withTargets = await updateDay(day.id, { star_targets: targets.map((t) => t.id) })
+    // The dialogue is written once per round; a round started again today
+    // (abandoned before anyone spoke) keeps its script.
+    const script = day.star_script && day.star_targets?.join() === targets.map((t) => t.id).join()
+      ? day.star_script
+      : await writeStarScript(user, targets)
+    const systemPrompt = withOpening(starPrompt(user, targets, script), starOpening(script)) + note
+    const withTargets = await updateDay(day.id, { star_targets: targets.map((t) => t.id), star_script: script })
+    const clock = starClock(script.length)
     return {
       ok: true,
       day: withTargets,
       mode,
       systemPrompt,
       cues: [],
-      wrap: { after_ms: STAR_WRAP_MS, end_ms: STAR_END_MS, cue: starWrapCue() },
+      wrap: { ...clock, cue: starWrapCue() },
       targets: targets.map((t) => ({ id: t.id, title: t.title })),
+      script,
     }
   }
   // things: the day's, or the star round's.
@@ -138,8 +147,9 @@ export async function openSession(user: User, start: Extract<VoiceStart, { ok: t
       cues: start.cues,
       // Calls: the wrap-up note at after_ms, and the app ends the call at end_ms.
       wrap: start.wrap,
-      // The star round's objectives, for the screen.
+      // The star round's objectives and its dialogue, for the screen.
       targets: start.targets,
+      script: start.script ?? null,
     },
   }
 }

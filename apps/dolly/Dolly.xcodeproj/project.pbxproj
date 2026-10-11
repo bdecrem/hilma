@@ -14,6 +14,7 @@
 		4CB76C855AB791DC5D918A20 /* Quicksand-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */; };
 		4D842C01586F5BE6EE87AE78 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E83D4816DB2B314E41EBB9A /* Assets.xcassets */; };
 		6AC387C875922EEC625535C9 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3660364F0B75DBCE4617E6 /* ElevenLabs */; };
+		6C9AA7632A14E6D4974695D1 /* StarScriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157409FF28ABFBE504BAE0AC /* StarScriptView.swift */; };
 		7028B1FD21D2A718765B25EB /* VoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACEFFC491A33CE02F4195784 /* VoiceClient.swift */; };
 		735700B81CF4D087E6E4C4D0 /* DollyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3895D14152F5D3935DF075 /* DollyAPI.swift */; };
 		798FB4792BF3770D51B4A947 /* ObjectivesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9C028B32760E9F96337688 /* ObjectivesSheet.swift */; };
@@ -38,6 +39,7 @@
 		08793AEC3DBECFE259B029C9 /* Secrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Secrets.swift; sourceTree = "<group>"; };
 		0D3895D14152F5D3935DF075 /* DollyAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DollyAPI.swift; sourceTree = "<group>"; };
 		0E5E36E574FC10AB78344256 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		157409FF28ABFBE504BAE0AC /* StarScriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarScriptView.swift; sourceTree = "<group>"; };
 		1D8132C7C8432ADBE5DBCC84 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		2E83D4816DB2B314E41EBB9A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3531DA8037F0A80723F696FF /* Dolly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Dolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -125,6 +127,7 @@
 				08793AEC3DBECFE259B029C9 /* Secrets.swift */,
 				E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */,
 				C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */,
+				157409FF28ABFBE504BAE0AC /* StarScriptView.swift */,
 				DF955F0B5D7166AC219C99C1 /* TalkView.swift */,
 				69F67961CC796459CB5B830A /* ThingsView.swift */,
 				ACEFFC491A33CE02F4195784 /* VoiceClient.swift */,
@@ -228,6 +231,7 @@
 				C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */,
 				F3B968447A9180183ED839D7 /* SettingsView.swift in Sources */,
 				395F955A98AD2D570F63DDDB /* Skin.swift in Sources */,
+				6C9AA7632A14E6D4974695D1 /* StarScriptView.swift in Sources */,
 				9F4693E0D51EEC9761382E58 /* TalkView.swift in Sources */,
 				C801744CAFFAA9E03828D3DE /* ThingsView.swift in Sources */,
 				7028B1FD21D2A718765B25EB /* VoiceClient.swift in Sources */,
@@ -297,7 +301,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -357,7 +361,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

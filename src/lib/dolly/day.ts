@@ -101,6 +101,36 @@ export async function ensureToday(user: User, now = new Date()): Promise<Day> {
   return day
 }
 
+/** Today back to the morning. Kept words stay kept; the streak and the
+ *  objectives earned stay as they are. */
+export async function resetToday(day: Day): Promise<Day> {
+  return updateDay(day.id, {
+    state: 'morning',
+    call_session_id: null,
+    call_seconds: null,
+    things: null,
+    things_session_id: null,
+    questions: null,
+    answers: [],
+    done_at: null,
+    extra_calls: 0,
+    extra_seconds: 0,
+    extra_things: [],
+    starred_at: null,
+    star_state: null,
+    star_targets: null,
+    star_session_id: null,
+    star_seconds: null,
+    star_things: null,
+    star_things_session_id: null,
+    star_questions: null,
+    star_answers: [],
+    star_earned: null,
+    star_level_up: false,
+    star_script: null,
+  })
+}
+
 // ---------- objectives ----------
 
 export async function objectivesView(user: User): Promise<ObjectivesView> {

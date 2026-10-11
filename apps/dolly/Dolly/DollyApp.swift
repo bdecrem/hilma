@@ -78,9 +78,12 @@ struct FlowView: View {
     var body: some View {
         ZStack {
             switch step {
-            case .talk, .more, .star:
+            case .talk, .more:
                 TalkView(mode: step.rawValue, onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
                     .id(step)
+                    .transition(.opacity)
+            case .star:
+                StarScriptView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
                     .transition(.opacity)
             case .things:
                 ThingsView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
