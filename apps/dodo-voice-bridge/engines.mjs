@@ -88,8 +88,11 @@ const ENGINES = [
   { name: 'Dodo', path: '/ws/prod', voice: DODO_VOICE, tts: DODO_TTS, dev: false, app: 'dodo' },
   { name: 'Polly (dev)', path: '/ws/polly-dev', voice: POLLY_VOICE, tts: POLLY_TTS, dev: true, app: 'polly' },
   { name: 'Polly', path: '/ws/polly-prod', voice: POLLY_VOICE, tts: POLLY_TTS, dev: false, app: 'polly' },
-  { name: 'Dolly (dev)', path: '/ws/dolly-dev', voice: DOLLY_VOICE, tts: DOLLY_TTS, dev: true, app: 'dolly' },
-  { name: 'Dolly', path: '/ws/dolly-prod', voice: DOLLY_VOICE, tts: DOLLY_TTS, dev: false, app: 'dolly' },
+  // Dolly's engines are Spanish: ElevenLabs allows turbo v2.5 (the model
+  // with a speed setting) only on a non-English engine, and the language
+  // also steers its speech-to-text. A Mandarin engine would be a third one.
+  { name: 'Dolly (dev)', path: '/ws/dolly-dev', voice: DOLLY_VOICE, tts: DOLLY_TTS, dev: true, app: 'dolly', language: 'es' },
+  { name: 'Dolly', path: '/ws/dolly-prod', voice: DOLLY_VOICE, tts: DOLLY_TTS, dev: false, app: 'dolly', language: 'es' },
 ]
   .filter((e) => which === 'all' || (which === 'dev') === e.dev)
   .filter((e) => app === 'all' || app === e.app)
@@ -98,6 +101,7 @@ const ENGINES = [
 function engineBody(engine) {
   return {
     name: engine.name,
+    ...(engine.language ? { language: engine.language } : {}),
     speech_engine: {
       ws_url: `${wsBase}${engine.path}`,
       // The conversation's `dodo_voice_session` variable (the phone sets it
