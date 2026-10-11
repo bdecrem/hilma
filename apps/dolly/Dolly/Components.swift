@@ -239,3 +239,109 @@ struct FlowLayout: Layout {
 func mmss(_ seconds: Int) -> String {
     String(format: "%d:%02d", seconds / 60, seconds % 60)
 }
+
+/// "+12 XP": the reward pill that counts up when it appears.
+struct XpChip: View {
+    let amount: Int
+    var big = false
+    @State private var shown = 0
+
+    var body: some View {
+        let skin = Skin.current
+        HStack(spacing: 5) {
+            Image(systemName: "sparkles").font(.system(size: big ? 15 : 12, weight: .bold))
+            Text("+\(shown) XP").font(skin.display(big ? 20 : 15)).contentTransition(.numericText())
+        }
+        .foregroundStyle(skin.onReward)
+        .padding(.horizontal, big ? 16 : 12)
+        .padding(.vertical, big ? 9 : 6)
+        .background(Capsule().fill(LinearGradient(colors: [Color(hex: 0xFFF2A8), skin.reward], startPoint: .top, endPoint: .bottom)))
+        .background(Capsule().fill(skin.rewardDeep).offset(y: 3))
+        .task(id: amount) {
+            shown = 0
+            guard amount > 0 else { return }
+            let steps = min(amount, 18)
+            for i in 1...steps {
+                try? await Task.sleep(for: .milliseconds(650 / steps))
+                withAnimation(.easeOut(duration: 0.08)) { shown = amount * i / steps }
+            }
+        }
+        .accessibilityLabel("\(amount) XP earned")
+    }
+}
+
+/// The thin bar from this rank to the next.
+struct RankBar: View {
+    let progress: Double
+    var height: CGFloat = 6
+
+    var body: some View {
+        let skin = Skin.current
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(skin.line)
+                Capsule().fill(LinearGradient(colors: [Color(hex: 0xFFF2A8), skin.reward], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(height, geo.size.width * CGFloat(min(max(progress, 0), 1))))
+            }
+        }
+        .frame(height: height)
+    }
+}
+
+/// A new rank: the bird's name on a reward card, for the finish screens.
+struct RankUpCard: View {
+    let rank: Rank
+
+    var body: some View {
+        let skin = Skin.current
+        HStack(spacing: 14) {
+            ZStack {
+                Circle().fill(skin.reward).frame(width: 46, height: 46)
+                    .background(Circle().fill(skin.rewardDeep).offset(y: 3))
+                Image(systemName: "bird.fill").font(.system(size: 20, weight: .bold)).foregroundStyle(skin.onReward)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("New rank".uppercased()).font(skin.uiBold(11)).tracking(1).foregroundStyle(skin.ink3)
+                Text(rank.name).font(skin.display(24)).foregroundStyle(skin.primary)
+            }
+            Spacer()
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Color.white))
+        .shadow(color: skin.reward.opacity(0.35), radius: 14, y: 8)
+    }
+}
+
+/// One of the two things always on offer after the day: an icon on a
+/// colored disc, a title, a line under it. Two sit side by side.
+struct ActionTile: View {
+    let icon: String
+    let title: String
+    let sub: String
+    let color: Color
+    var action: () -> Void
+
+    var body: some View {
+        let skin = Skin.current
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 10) {
+                ZStack {
+                    Circle().fill(color).frame(width: 40, height: 40)
+                        .background(Circle().fill(color.opacity(0.55)).offset(y: 3))
+                    Image(systemName: icon).font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(skin.display(17)).foregroundStyle(skin.ink)
+                    Text(sub).font(skin.ui(12)).foregroundStyle(skin.ink3)
+                }
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(skin.bgTop.opacity(0.55)))
+            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.white.opacity(0.9), lineWidth: 2))
+        }
+        .buttonStyle(PressStyle())
+        .accessibilityLabel("\(title). \(sub)")
+    }
+}

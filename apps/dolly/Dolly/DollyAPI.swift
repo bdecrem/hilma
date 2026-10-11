@@ -93,9 +93,10 @@ final class DollyAPI {
         return res.user
     }
 
-    func updateMe(name: String?? = nil, language: String? = nil, level: String? = nil, dailyHour: Int? = nil, objectives: Bool? = nil) async throws -> UserView {
+    func updateMe(name: String?? = nil, language: String? = nil, level: String? = nil, dailyHour: Int? = nil, objectives: Bool? = nil, avatar: String?? = nil) async throws -> UserView {
         var body: [String: AnyCodable] = [:]
         if let name { body["name"] = AnyCodable(name) }
+        if let avatar { body["avatar"] = AnyCodable(avatar) }
         if let language { body["language"] = AnyCodable(language) }
         if let level { body["level"] = AnyCodable(level) }
         if let dailyHour { body["daily_hour"] = AnyCodable(dailyHour) }
@@ -141,6 +142,27 @@ final class DollyAPI {
     func answer(q: Int, answer: String) async throws -> AnswerResponse {
         struct Body: Encodable { let q: Int; let answer: String }
         return try await request("/api/dolly/cards/answer", method: "POST", body: Body(q: q, answer: answer))
+    }
+
+    // MARK: Flash cards
+
+    /// The set under way, if any.
+    func openFlash() async throws -> FlashView? {
+        let res: FlashResponse = try await request("/api/dolly/flash", method: "GET", body: Optional<String>.none)
+        return res.set
+    }
+
+    /// Deal ten; an open set is dropped.
+    func dealFlash() async throws -> FlashView {
+        struct Empty: Encodable {}
+        let res: FlashResponse = try await request("/api/dolly/flash", method: "POST", body: Empty())
+        guard let set = res.set else { throw DollyAPIError.http(500, "no set came back") }
+        return set
+    }
+
+    func answerFlash(id: String, q: Int, answer: String) async throws -> FlashAnswerResponse {
+        struct Body: Encodable { let id: String; let q: Int; let answer: String }
+        return try await request("/api/dolly/flash/answer", method: "POST", body: Body(id: id, q: q, answer: answer))
     }
 
     // MARK: Plumbing

@@ -85,6 +85,36 @@ export function normalizeAnswer(lang: LanguageCode, v: string): string {
     .replace(/^(el|la|los|las|un|una) /, '')
 }
 
+/** English, typed back on a reversed flash card. Same looseness: case,
+ *  punctuation and accents are noise, a leading "to" / "the" / "a" / "an"
+ *  is optional, and any one of a list ("one, two, three") or an alternative
+ *  ("hello / hi") counts. */
+export function normalizeNative(v: string): string {
+  return v
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\([^)]*\)/g, ' ')
+    .replace(/[^a-z\s]/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
+function stripLead(v: string): string {
+  return v.replace(/^(to|the|a|an|i am|im|i) /, '')
+}
+
+export function nativeMatches(typed: string, answer: string): boolean {
+  const a = normalizeNative(typed)
+  if (!a) return false
+  const alts = answer.split(/[,/]/).map(normalizeNative).filter(Boolean)
+  const whole = normalizeNative(answer)
+  for (const b of [whole, ...alts]) {
+    if (a === b || stripLead(a) === stripLead(b)) return true
+  }
+  return false
+}
+
 /** Does a typed answer count? Loose on purpose: this is a drill, not an exam. */
 export function answerMatches(lang: LanguageCode, typed: string, item: { target: string; pinyin?: string | null }): boolean {
   const a = normalizeAnswer(lang, typed)

@@ -1,4 +1,5 @@
 // What the app sees of a user.
+import { avatarFor, type AvatarKind } from './avatar'
 import { currentStreak, hourLabel, type User } from './core'
 
 export type UserView = {
@@ -14,6 +15,8 @@ export type UserView = {
   best_streak: number
   objectives: boolean
   rung: number
+  /** The jelly critter on the map's header. */
+  avatar: AvatarKind
 }
 
 export function userView(user: User, now = new Date()): UserView {
@@ -30,5 +33,6 @@ export function userView(user: User, now = new Date()): UserView {
     best_streak: user.best_streak,
     objectives: user.objectives,
     rung: user.rung,
+    avatar: avatarFor(user),
   }
 }

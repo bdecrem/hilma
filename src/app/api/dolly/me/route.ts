@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser, sessionCookie } from '@/lib/dolly/auth'
+import { isAvatarKind } from '@/lib/dolly/avatar'
 import { isValidTz, updateUser, type User } from '@/lib/dolly/core'
 import { isLanguage, isLevel } from '@/lib/dolly/language'
 import { userView } from '@/lib/dolly/view'
@@ -15,7 +16,7 @@ export async function GET() {
   return res
 }
 
-// PUT /api/dolly/me { name?, language?, level?, daily_hour?, tz? } — settings.
+// PUT /api/dolly/me { name?, language?, level?, daily_hour?, tz?, objectives?, avatar? } — settings.
 export async function PUT(req: Request) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
@@ -42,6 +43,10 @@ export async function PUT(req: Request) {
   if ('objectives' in body) {
     if (typeof body.objectives !== 'boolean') return NextResponse.json({ error: 'bad objectives' }, { status: 400 })
     patch.objectives = body.objectives
+  }
+  if ('avatar' in body) {
+    if (body.avatar !== null && !isAvatarKind(body.avatar)) return NextResponse.json({ error: 'bad avatar' }, { status: 400 })
+    patch.avatar = body.avatar as string | null
   }
   const next = Object.keys(patch).length ? await updateUser(user.id, patch) : user
   return NextResponse.json({ user: userView(next) })

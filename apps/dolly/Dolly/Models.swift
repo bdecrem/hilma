@@ -16,9 +16,11 @@ struct UserView: Codable, Equatable {
     /// Learning objectives (Settings) and the rung of the ladder.
     let objectives: Bool
     let rung: Int
+    /// A jelly critter kind (JellyCritter); the server picks one from the id until the learner does.
+    let avatar: String
 
     enum CodingKeys: String, CodingKey {
-        case id, phone, name, language, level, tz, streak, objectives, rung
+        case id, phone, name, language, level, tz, streak, objectives, rung, avatar
         case dailyHour = "daily_hour"
         case dailyLabel = "daily_label"
         case bestStreak = "best_streak"
@@ -40,6 +42,7 @@ struct UserView: Codable, Equatable {
         bestStreak = try c.decodeIfPresent(Int.self, forKey: .bestStreak) ?? 0
         objectives = try c.decodeIfPresent(Bool.self, forKey: .objectives) ?? false
         rung = try c.decodeIfPresent(Int.self, forKey: .rung) ?? 1
+        avatar = try c.decodeIfPresent(String.self, forKey: .avatar) ?? "dodo"
     }
 }
 
@@ -68,15 +71,24 @@ struct Question: Codable, Equatable {
     let options: [String]?
     let from: From
     let itemId: String?
+    /// "to_target" (the default): English prompt, answer in the language.
+    /// "to_native" (flash sets): the language is the prompt (`native` holds
+    /// it), the English is the answer (`target` holds it).
+    let dir: String?
 
-    /// "new" or a day number.
+    var reversed: Bool { dir == "to_native" }
+
+    /// "new", a day number, or "grammar" (a level's chunk, on flash cards).
     enum From: Codable, Equatable {
         case new
         case day(Int)
+        case grammar
 
         init(from decoder: Decoder) throws {
             let c = try decoder.singleValueContainer()
-            if let n = try? c.decode(Int.self) { self = .day(n) } else { self = .new }
+            if let n = try? c.decode(Int.self) { self = .day(n) }
+            else if (try? c.decode(String.self)) == "grammar" { self = .grammar }
+            else { self = .new }
         }
 
         func encode(to encoder: Encoder) throws {
@@ -84,6 +96,7 @@ struct Question: Codable, Equatable {
             switch self {
             case .new: try c.encode("new")
             case .day(let n): try c.encode(n)
+            case .grammar: try c.encode("grammar")
             }
         }
 
@@ -91,14 +104,123 @@ struct Question: Codable, Equatable {
             switch self {
             case .new: return "New today"
             case .day(let n): return "Day \(n)"
+            case .grammar: return "Grammar"
             }
         }
     }
 
     enum CodingKeys: String, CodingKey {
-        case kind, native, target, pinyin, options, from
+        case kind, native, target, pinyin, options, from, dir
         case itemId = "item_id"
     }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try c.decode(String.self, forKey: .kind)
+        native = try c.decode(String.self, forKey: .native)
+        target = try c.decode(String.self, forKey: .target)
+        pinyin = try c.decodeIfPresent(String.self, forKey: .pinyin)
+        options = try c.decodeIfPresent([String].self, forKey: .options)
+        from = try c.decodeIfPresent(From.self, forKey: .from) ?? .new
+        itemId = try c.decodeIfPresent(String.self, forKey: .itemId)
+        dir = try c.decodeIfPresent(String.self, forKey: .dir)
+    }
+}
+
+/// A rank on the XP ladder: birds that talk and sing, Hatchling to Lyrebird.
+struct Rank: Codable, Equatable, Identifiable {
+    let n: Int
+    let name: String
+    let at: Int
+    var id: Int { n }
+}
+
+struct XpAward: Codable, Equatable {
+    let kind: String
+    let label: String
+    let amount: Int
+}
+
+/// XP and rank (src/lib/dolly/xp.ts): the header, the You sheet, the chips.
+struct XpView: Codable, Equatable {
+    let total: Int
+    let today: Int
+    let rank: Rank
+    let next: Rank?
+    let progress: Double
+    /// The rank today's XP reached, when it crossed one.
+    let rankedUp: Rank?
+    let awardsToday: [XpAward]
+    let ranks: [Rank]
+
+    enum CodingKeys: String, CodingKey {
+        case total, today, rank, next, progress, ranks
+        case rankedUp = "ranked_up"
+        case awardsToday = "awards_today"
+    }
+
+    init(total: Int, today: Int, rank: Rank, next: Rank?, progress: Double, rankedUp: Rank?, awardsToday: [XpAward], ranks: [Rank]) {
+        self.total = total; self.today = today; self.rank = rank; self.next = next; self.progress = progress
+        self.rankedUp = rankedUp; self.awardsToday = awardsToday; self.ranks = ranks
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        total = try c.decodeIfPresent(Int.self, forKey: .total) ?? 0
+        today = try c.decodeIfPresent(Int.self, forKey: .today) ?? 0
+        rank = try c.decodeIfPresent(Rank.self, forKey: .rank) ?? Rank(n: 1, name: "Hatchling", at: 0)
+        next = try c.decodeIfPresent(Rank.self, forKey: .next)
+        progress = try c.decodeIfPresent(Double.self, forKey: .progress) ?? 0
+        rankedUp = try c.decodeIfPresent(Rank.self, forKey: .rankedUp)
+        awardsToday = try c.decodeIfPresent([XpAward].self, forKey: .awardsToday) ?? []
+        ranks = try c.decodeIfPresent([Rank].self, forKey: .ranks) ?? []
+    }
+
+    static let zero = XpView(total: 0, today: 0, rank: Rank(n: 1, name: "Hatchling", at: 0), next: Rank(n: 2, name: "Fledgling", at: 100), progress: 0, rankedUp: nil, awardsToday: [], ranks: [])
+
+    /// Today's XP from these kinds (a finish screen's own share).
+    func sum(_ kinds: Set<String>) -> Int {
+        awardsToday.filter { kinds.contains($0.kind) }.reduce(0) { $0 + $1.amount }
+    }
+
+    /// "260 XP to Mockingbird", or the top.
+    var toNext: String {
+        if let next { return "\(next.at - total) XP to \(next.name)" }
+        return "The top of the ladder"
+    }
+}
+
+/// A flash card set (src/lib/dolly/flash.ts).
+struct FlashView: Codable, Equatable {
+    let id: String
+    let state: String
+    let questions: [Question]
+    let answers: [Answer]
+    let right: Int
+    let total: Int
+    let xp: Int
+    let setsToday: Int
+    let paidLeft: Int
+
+    enum CodingKeys: String, CodingKey {
+        case id, state, questions, answers, right, total, xp
+        case setsToday = "sets_today"
+        case paidLeft = "paid_left"
+    }
+
+    var done: Bool { state == "done" }
+}
+
+struct FlashResponse: Codable {
+    let set: FlashView?
+}
+
+struct FlashAnswerResponse: Codable {
+    let ok: Bool
+    let target: String
+    let complete: Bool
+    let set: FlashView
+    let day: DayView?
 }
 
 struct Answer: Codable, Equatable {
@@ -353,6 +475,9 @@ struct DayView: Codable, Equatable {
     let levels: [LevelView]
     let refresh: RefreshView?
     let banner: Banner?
+    /// XP and rank; flash sets finished today.
+    let xp: XpView
+    let flashToday: Int
 
     var dayState: DayState { DayState(rawValue: state) ?? .morning }
 
@@ -379,6 +504,8 @@ struct DayView: Codable, Equatable {
         case extraMinutes = "extra_minutes"
         case extraThings = "extra_things"
         case lastExtraThings = "last_extra_things"
+        case xp
+        case flashToday = "flash_today"
     }
 
     /// The fields added after the first build decode with defaults (see UserView).
@@ -410,6 +537,8 @@ struct DayView: Codable, Equatable {
         levels = try c.decodeIfPresent([LevelView].self, forKey: .levels) ?? []
         refresh = try c.decodeIfPresent(RefreshView.self, forKey: .refresh)
         banner = try c.decodeIfPresent(Banner.self, forKey: .banner)
+        xp = try c.decodeIfPresent(XpView.self, forKey: .xp) ?? .zero
+        flashToday = try c.decodeIfPresent(Int.self, forKey: .flashToday) ?? 0
     }
 }
 

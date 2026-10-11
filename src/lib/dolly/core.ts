@@ -23,6 +23,8 @@ export type User = {
   /** Learning objectives (Settings): the star round and the level ladder. */
   objectives: boolean
   rung: number
+  /** A jelly critter kind (avatar.ts), or null: one picked from the id. */
+  avatar: string | null
   created_at: string
 }
 
@@ -38,9 +40,16 @@ export type Thing = {
   item_id: string | null
 }
 
+/** Where a card's item came from: today's things, a past day, or the level's grammar chunks. */
+export type QuestionFrom = 'new' | number | 'grammar'
+/** Which way a card asks. `to_target` (the default, every day card): the
+ *  English is the prompt and the language is the answer. `to_native` (flash
+ *  sets): the language is the prompt (`native` holds it) and the English is
+ *  the answer (`target` holds it) — the fields keep their grading roles. */
+export type QuestionDir = 'to_target' | 'to_native'
 export type Question =
-  | { kind: 'pick'; native: string; target: string; pinyin: string | null; options: string[]; from: 'new' | number; item_id: string | null }
-  | { kind: 'type'; native: string; target: string; pinyin: string | null; from: 'new' | number; item_id: string | null }
+  | { kind: 'pick'; native: string; target: string; pinyin: string | null; options: string[]; from: QuestionFrom; item_id: string | null; dir?: QuestionDir }
+  | { kind: 'type'; native: string; target: string; pinyin: string | null; from: QuestionFrom; item_id: string | null; dir?: QuestionDir }
 
 export type Answer = { q: number; ok: boolean; answer: string }
 
@@ -165,6 +174,21 @@ export type Refresher = {
   questions: Question[] | null
   answers: Answer[]
   passed: boolean | null
+  created_at: string
+  done_at: string | null
+}
+
+/** A flash card set: ten cards dealt after the day, open until its last
+ *  answer; a new deal drops an open one. */
+export type FlashSet = {
+  id: string
+  user_id: string
+  language: LanguageCode
+  day: string
+  state: 'open' | 'done'
+  questions: Question[]
+  answers: Answer[]
+  xp: number
   created_at: string
   done_at: string | null
 }
@@ -462,6 +486,49 @@ export async function updateRefresher(id: string, patch: Partial<Omit<Refresher,
 
 export async function deleteRefresher(id: string): Promise<void> {
   await supabase().from('dolly_refreshers').delete().eq('id', id)
+}
+
+// ---------- flash card sets ----------
+
+export async function insertFlashSet(input: { user_id: string; language: LanguageCode; day: string; questions: Question[] }): Promise<FlashSet> {
+  const { data, error } = await supabase().from('dolly_flash_sets').insert(input).select('*').single()
+  if (error) throw new Error(`dolly: insert flash set failed: ${error.message}`)
+  return data as FlashSet
+}
+
+export async function findFlashSet(userId: string, id: string): Promise<FlashSet | null> {
+  const { data } = await supabase().from('dolly_flash_sets').select('*').eq('user_id', userId).eq('id', id).maybeSingle()
+  return (data as FlashSet | null) ?? null
+}
+
+/** The set under way, if any (newest). */
+export async function findOpenFlashSet(userId: string): Promise<FlashSet | null> {
+  const { data } = await supabase()
+    .from('dolly_flash_sets')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('state', 'open')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as FlashSet | null) ?? null
+}
+
+export async function deleteOpenFlashSets(userId: string): Promise<void> {
+  await supabase().from('dolly_flash_sets').delete().eq('user_id', userId).eq('state', 'open')
+}
+
+/** Sets finished on a local day, and what they paid. */
+export async function listFlashSetsDone(userId: string, day: string): Promise<Pick<FlashSet, 'id' | 'xp' | 'answers' | 'questions'>[]> {
+  const { data, error } = await supabase().from('dolly_flash_sets').select('id, xp, answers, questions').eq('user_id', userId).eq('day', day).eq('state', 'done')
+  if (error) throw new Error(`dolly: list flash sets failed: ${error.message}`)
+  return (data ?? []) as Pick<FlashSet, 'id' | 'xp' | 'answers' | 'questions'>[]
+}
+
+export async function updateFlashSet(id: string, patch: Partial<Omit<FlashSet, 'id' | 'user_id' | 'created_at'>>): Promise<FlashSet> {
+  const { data, error } = await supabase().from('dolly_flash_sets').update(patch).eq('id', id).select('*').single()
+  if (error) throw new Error(`dolly: update flash set failed: ${error.message}`)
+  return data as FlashSet
 }
 
 // ---------- voice sessions ----------

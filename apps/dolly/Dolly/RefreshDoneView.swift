@@ -32,6 +32,8 @@ struct RefreshDoneView: View {
                          ? "Next refresher \(r?.nextDue.map { "around \(pretty($0))" } ?? "in a while")."
                          : "Level \(r?.level ?? 0) is still due. Try it again whenever you like.")
                         .font(skin.uiBold(15)).foregroundStyle(skin.ink2).multilineTextAlignment(.center).padding(.horizontal, 30)
+                    if passed, let xp = state.day?.xp, xp.sum(["refresh"]) > 0 { XpChip(amount: xp.sum(["refresh"]), big: true) }
+                    if let up = state.day?.xp.rankedUp { RankUpCard(rank: up).padding(.horizontal, 20) }
 
                     if let r {
                         Card {

@@ -53,6 +53,15 @@ struct DoneView: View {
                         .foregroundStyle(skin.primary)
                     }
 
+                    // What this finish paid: the day's parts, or the star round's.
+                    let gained = starDone
+                        ? (day?.xp.sum(["star", "cando", "level"]) ?? 0) + (day?.rightCount ?? 0)
+                        : (day?.xp.sum(["talk", "things", "day", "cards_clean", "streak"]) ?? 0) + (day?.rightCount ?? 0)
+                    if gained > 0 { XpChip(amount: gained, big: true) }
+                    if let up = day?.xp.rankedUp {
+                        RankUpCard(rank: up).padding(.horizontal, 20)
+                    }
+
                     if starDone, let s = day?.star {
                         Card {
                             VStack(alignment: .leading, spacing: 10) {
@@ -115,7 +124,7 @@ struct DoneView: View {
                     .padding(.bottom, 28)
                 }
             }
-            if starDone, day?.star?.levelUp == true {
+            if (starDone && day?.star?.levelUp == true) || day?.xp.rankedUp != nil {
                 Confetti().ignoresSafeArea()
             }
         }

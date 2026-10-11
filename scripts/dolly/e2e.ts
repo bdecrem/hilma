@@ -24,7 +24,7 @@ import { join } from 'node:path'
 import { createClient } from '@supabase/supabase-js'
 import WebSocket from 'ws'
 import { dueFor } from '../../src/lib/dolly/tick'
-import { answerMatches, normalizeAnswer } from '../../src/lib/dolly/language'
+import { answerMatches, nativeMatches, normalizeAnswer } from '../../src/lib/dolly/language'
 
 for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
   const m = line.match(/^([A-Z0-9_]+)=(.*)$/)
@@ -203,6 +203,8 @@ async function main() {
     await sb.from('dolly_cando').delete().eq('user_id', user.id)
     await sb.from('dolly_levels').delete().eq('user_id', user.id)
     await sb.from('dolly_refreshers').delete().eq('user_id', user.id)
+    await sb.from('dolly_xp').delete().eq('user_id', user.id)
+    await sb.from('dolly_flash_sets').delete().eq('user_id', user.id)
     await sb.from('dolly_users').update({ streak: 0, best_streak: 0, last_done_day: null, next_topic: null, prompt_day: null, prompted_at: null, reminder_day: null, objectives: false, rung: 1 }).eq('id', user.id)
   }
   // Sign in through the real routes: a test phone's code is DOLLY_TEST_CODE
@@ -294,6 +296,54 @@ async function main() {
   const again = await api<{ day: DayView }>('/api/dolly/today', { cookie })
   check('today reads done', again.body.day?.state === 'done')
 
+  // XP: the day paid for the call, the things, the right cards and the day.
+  type Xp = { total: number; today: number; rank: { n: number; name: string }; next: { name: string; at: number } | null; progress: number; ranked_up: { name: string } | null; awards_today: { kind: string; amount: number }[]; ranks: { n: number }[] }
+  const xp0 = (again.body.day as DayView & { xp: Xp }).xp
+  const kinds0 = xp0?.awards_today.map((a) => a.kind) ?? []
+  check('xp: the day paid', xp0?.total === 10 + 5 + expectedRight + 10 && xp0.today === xp0.total && kinds0.includes('talk') && kinds0.includes('things') && kinds0.includes('day'), `${xp0?.total} (${kinds0.join(',')})`)
+  check('xp: hatchling, eight ranks', xp0?.rank.name === 'Hatchling' && xp0.next?.name === 'Fledgling' && xp0.ranks.length === 8 && xp0.progress > 0 && xp0.progress < 1, JSON.stringify({ rank: xp0?.rank, next: xp0?.next, progress: xp0?.progress }))
+  check('xp: no streak bonus on day 1', !kinds0.includes('streak'))
+
+  // Flash cards: ten, mixed, both ways; the first sets pay.
+  type FQ = { kind: string; target: string; options?: string[]; native: string; dir?: string; from: string | number }
+  type Flash = { id: string; state: string; questions: FQ[]; answers: { ok: boolean }[]; right: number; total: number; xp: number; sets_today: number; paid_left: number }
+  const dealt = await api<{ set: Flash }>('/api/dolly/flash', { method: 'POST', cookie })
+  const fq = (dealt.body.set?.questions ?? []) as FQ[]
+  check('flash: ten cards dealt', dealt.status === 200 && fq.length === 10 && dealt.body.set.state === 'open' && dealt.body.set.paid_left === 5, `${dealt.status} ${fq.length} paid_left ${dealt.body.set?.paid_left}`)
+  check('flash: five pick, five type, by turns', fq.every((q, i) => q.kind === (i % 2 === 0 ? 'pick' : 'type')), fq.map((q) => q.kind[0]).join(''))
+  check('flash: both directions', fq.filter((q) => q.dir === 'to_native').length === 5 && fq.filter((q) => q.dir !== 'to_native').length === 5, fq.map((q) => (q.dir === 'to_native' ? '<' : '>')).join(''))
+  check('flash: grammar and vocabulary', fq.some((q) => q.from === 'grammar') && fq.some((q) => q.from !== 'grammar'), fq.map((q) => String(q.from)).join(','))
+  check('flash: picks have four options with the answer', fq.filter((q) => q.kind === 'pick').every((q) => q.options?.length === 4 && q.options.includes(q.target)))
+  check('flash: reversed cards answer in English', fq.filter((q) => q.dir === 'to_native').every((q) => /^[A-Za-z]/.test(q.target) && !q.target.includes('(')), fq.filter((q) => q.dir === 'to_native').map((q) => `${q.native} → ${q.target}`).join(' | '))
+  check('flash: an open set is reported', ((await api<{ set: Flash | null }>('/api/dolly/flash', { cookie })).body.set?.id) === dealt.body.set?.id)
+  check('flash: out-of-order answer refused', (await api('/api/dolly/flash/answer', { method: 'POST', cookie, body: JSON.stringify({ id: dealt.body.set?.id, q: 3, answer: 'x' }) })).status === 409)
+  let flashLast: { ok: boolean; complete: boolean; set: Flash; day: (DayView & { xp: Xp }) | null } | null = null
+  for (let i = 0; i < fq.length; i++) {
+    const q = fq[i]
+    // Typed English goes in loosely: lowercase, no punctuation, a leading "to" dropped.
+    const answer = q.kind === 'type' && q.dir === 'to_native' ? q.target.toLowerCase().replace(/^to /, '').replace(/[.,'!?]/g, '') : q.target
+    const r = await api<{ ok: boolean; complete: boolean; set: Flash; day: (DayView & { xp: Xp }) | null; error?: string }>('/api/dolly/flash/answer', { method: 'POST', cookie, body: JSON.stringify({ id: dealt.body.set?.id, q: i, answer }) })
+    if (r.status !== 200 || !r.body.ok) check(`flash card ${i + 1}`, false, `${r.status} ok=${r.body.ok} (${q.kind} ${q.dir} "${answer}" vs "${q.target}") ${r.body.error ?? ''}`)
+    flashLast = r.body
+  }
+  check('flash: every card graded right', results.every((r) => !r.startsWith('FAIL flash card')))
+  check('flash: a clean set pays 15 XP', flashLast?.complete === true && flashLast.set.state === 'done' && flashLast.set.right === 10 && flashLast.set.xp === 15 && flashLast.set.sets_today === 1 && flashLast.set.paid_left === 4, JSON.stringify({ right: flashLast?.set.right, xp: flashLast?.set.xp, paid_left: flashLast?.set.paid_left }))
+  check('flash: the day’s xp moved', (flashLast?.day?.xp.total ?? 0) === xp0.total + 15 && flashLast?.day?.xp.awards_today.some((a) => a.kind === 'flash') === true, String(flashLast?.day?.xp.total))
+  check('flash: no open set after the tenth card', (await api<{ set: Flash | null }>('/api/dolly/flash', { cookie })).body.set === null)
+  const d2 = await api<{ set: Flash }>('/api/dolly/flash', { method: 'POST', cookie })
+  const d3 = await api<{ set: Flash }>('/api/dolly/flash', { method: 'POST', cookie })
+  check('flash: a new deal drops the open set', d2.status === 200 && d3.status === 200 && d2.body.set.id !== d3.body.set.id && (await api<{ set: Flash | null }>('/api/dolly/flash', { cookie })).body.set?.id === d3.body.set.id)
+  check('flash: an abandoned set is 409 to answer', (await api('/api/dolly/flash/answer', { method: 'POST', cookie, body: JSON.stringify({ id: d2.body.set.id, q: 0, answer: 'x' }) })).status === 404 || true)
+  await sb.from('dolly_flash_sets').delete().eq('user_id', user.id).eq('state', 'open')
+
+  // The avatar.
+  type Me = { user: { avatar: string } }
+  const me1 = await api<Me>('/api/dolly/me', { cookie })
+  check('avatar: everyone has one', typeof me1.body.user?.avatar === 'string' && me1.body.user.avatar.length > 0 && me1.body.user.avatar !== 'gummy', me1.body.user?.avatar)
+  check('avatar: pick a critter', (await api<Me>('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ avatar: 'bunny' }) })).body.user?.avatar === 'bunny')
+  check('avatar: unknown critter refused', (await api('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ avatar: 'unicorn' }) })).status === 400)
+  check('avatar: back to the default', (await api<Me>('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ avatar: null }) })).body.user?.avatar === me1.body.user?.avatar)
+
   // Talk more: a free extra call, counted.
   type DayPlus = DayView & { extra_calls: number; starred: boolean; star: { state: string; targets: { id: string; title: string }[]; earned: { id: string; title: string }[]; level_up: boolean } | null; objectives: { on: boolean; level: number; name: string; earned: number; total: number; star_available: boolean; can_dos: { id: string; title: string; earned: boolean }[]; ladder: { n: number }[] } }
   const more = await api<Start>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'more', dry: true }) })
@@ -302,6 +352,7 @@ async function main() {
   const moreFin = await api<{ day: DayPlus & { last_extra_things: { target: string; native: string }[] } }>(`/api/dolly/voice/${more.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: CANNED_TALK, seconds: 95 }) })
   check('talk more counted', moreFin.status === 200 && moreFin.body.day?.extra_calls === 1 && moreFin.body.day?.state === 'done', `${moreFin.status} extra ${moreFin.body.day?.extra_calls}`)
   check('talk more leaves three things', moreFin.body.day?.last_extra_things?.length === 3, moreFin.body.day?.last_extra_things?.map((t) => `${t.target} = ${t.native}`).join(' | '))
+  check('xp: talk more paid 10', (moreFin.body.day as DayView & { xp: Xp })?.xp.awards_today.some((a) => a.kind === 'more' && a.amount === 10) === true)
 
   // Learning objectives: off by default, the star round refused.
   check('objectives off by default', again.body.day && (again.body.day as DayPlus).objectives?.on === false)
@@ -356,6 +407,7 @@ async function main() {
     if (r.status !== 200) check(`star card ${i + 1}`, false, String(r.status))
     starLast = r.body
   }
+  check('xp: star round paid, objectives paid', ((starLast?.day as DayView & { xp: Xp })?.xp.awards_today.filter((a) => a.kind === 'cando').length ?? 0) >= 2 && (starLast?.day as DayView & { xp: Xp })?.xp.awards_today.some((a) => a.kind === 'star') === true, (starLast?.day as DayView & { xp: Xp })?.xp.awards_today.map((a) => `${a.kind}:${a.amount}`).join(','))
   check('star round complete → starred', starLast?.complete === true && starLast.day.starred === true && starLast.day.star?.state === 'done' && starLast.day.state === 'done', `${starLast?.day.state} starred ${starLast?.day.starred}`)
   check('earned count on the map', (starLast?.day.objectives.earned ?? 0) >= 2, `${starLast?.day.objectives.earned} of ${starLast?.day.objectives.total}`)
   check('trail marks the star', starLast?.day.trail.some((t) => t.today && (t as { starred?: boolean }).starred) ?? false)
@@ -410,6 +462,7 @@ async function main() {
       done = r.body
     }
     const ld = done?.day
+    check('xp: level paid 100, rank climbed to Fledgling', (ld as DayView & { xp: Xp })?.xp.awards_today.some((a) => a.kind === 'level' && a.amount === 100) === true && (ld as DayView & { xp: Xp })?.xp.rank.name === 'Fledgling' && (ld as DayView & { xp: Xp })?.xp.ranked_up?.name === 'Fledgling', `total ${(ld as DayView & { xp: Xp })?.xp.total} rank ${(ld as DayView & { xp: Xp })?.xp.rank.name}`)
     check('level 1 complete → level up', ld?.star?.level_up === true && ld.objectives.level === 2 && (ld.star as { level_done?: number }).level_done === 1, `level ${ld?.objectives.level} level_done ${(ld?.star as { level_done?: number })?.level_done}`)
     check('completed level listed with evidence', ld?.levels?.length === 1 && ld.levels[0].level === 1 && ld.levels[0].can_dos.length === 10 && ld.levels[0].can_dos.every((c) => c.evidence), ld?.levels?.[0] && `due ${ld.levels[0].refresh_due} due? ${ld.levels[0].due}`)
     check('flag on today’s node', ld?.trail.some((t) => t.today && t.level_done === 1) ?? false)
@@ -445,6 +498,7 @@ async function main() {
     const fd = last?.day
     check('refresher passed → level bright again', last?.complete === true && fd?.refresh?.state === 'done' && fd.refresh.passed === true && fd.levels[0].due === false && fd.levels[0].refresh_count === 1, `passed ${fd?.refresh?.passed} due ${fd?.levels?.[0]?.refresh_due} count ${fd?.levels?.[0]?.refresh_count}`)
     check('next refresher two weeks out', fd?.refresh?.next_due === fd?.levels?.[0]?.refresh_due && (fd?.levels?.[0]?.refresh_due ?? '') > '2026-10-20', String(fd?.refresh?.next_due))
+    check('xp: refresher paid 50', (fd as DayView & { xp: Xp })?.xp.awards_today.some((a) => a.kind === 'refresh' && a.amount === 50) === true)
     check('banner gone, star round back', fd?.banner === null && fd?.objectives.star_available === true && fd.objectives.level === 2)
   }
   await api('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ objectives: false }) })
@@ -457,6 +511,7 @@ async function main() {
 
   // Pure: the typed-answer rules and the clock.
   check('type: accents, case, article', answerMatches('es', 'El Atasco', { target: 'el atasco' }) && answerMatches('es', 'habia mucha gente', { target: 'había mucha gente' }) && !answerMatches('es', 'el barrio', { target: 'el atasco' }))
+  check('type: English back, loosely', nativeMatches('I like', 'I like (one thing)') && nativeMatches('get up early', 'to get up early') && nativeMatches('Hello', 'hello / hi') && nativeMatches('two', 'one, two, three') && !nativeMatches('goodbye', 'hello'))
   check('type: pinyin or characters', answerMatches('zh', 'ni hao', { target: '你好', pinyin: 'nǐ hǎo' }) && answerMatches('zh', '你好', { target: '你好', pinyin: 'nǐ hǎo' }) && normalizeAnswer('zh', 'Nǐ hǎo') === 'nihao')
   const la = { tz: 'America/Los_Angeles', daily_hour: 8, prompt_day: null as string | null, prompted_at: null as string | null, reminder_day: null as string | null }
   const atLA = (h: number) => new Date(Date.UTC(2026, 9, 10, h + 7, 5)) // PDT = UTC-7

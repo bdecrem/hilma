@@ -19,6 +19,9 @@ struct MoreDoneView: View {
                     Text("From that call").font(skin.display(32)).foregroundStyle(skin.ink)
                     Text("\(state.day?.extraCalls ?? 1) extra \((state.day?.extraCalls ?? 1) == 1 ? "call" : "calls") today · \(max(state.day?.extraMinutes ?? 0, 1)) min")
                         .font(skin.uiBold(14)).foregroundStyle(skin.ink2)
+                    // The first three extra calls a day pay.
+                    if (state.day?.extraCalls ?? 0) <= 3 { XpChip(amount: 10) }
+                    if let up = state.day?.xp.rankedUp { RankUpCard(rank: up).padding(.horizontal, 20) }
 
                     VStack(spacing: 12) {
                         ForEach(things) { t in

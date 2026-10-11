@@ -60,13 +60,32 @@ struct MapView: View {
         }
     }
 
+    /// Top left: you — the jelly avatar, your rank and XP, a tap for the whole
+    /// story. Top right: the streak and the gear. (Dolly's own face, Gummy, is
+    /// on the voice and finish screens; the map is yours.)
     private var header: some View {
-        HStack {
-            HStack(spacing: 8) {
-                Mascot(size: 36, mood: .idle)
-                Text("Dolly").font(skin.display(24)).foregroundStyle(skin.primary)
+        let xp = state.day?.xp ?? .zero
+        let critter = JellyCritter.from(state.user?.avatar)
+        return HStack(spacing: 10) {
+            Button {
+                state.showYou = true
+            } label: {
+                HStack(spacing: 10) {
+                    JellyAvatarDisc(critter: critter, size: 46)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(state.user?.name ?? xp.rank.name).font(skin.display(18)).foregroundStyle(skin.ink).lineLimit(1)
+                        HStack(spacing: 6) {
+                            Text(state.user?.name == nil ? "\(xp.total) XP" : "\(xp.rank.name) · \(xp.total) XP")
+                                .font(skin.uiBold(12)).foregroundStyle(skin.ink2).lineLimit(1)
+                            RankBar(progress: xp.progress, height: 5).frame(width: 44)
+                        }
+                    }
+                }
+                .contentShape(Rectangle())
             }
-            Spacer()
+            .buttonStyle(PressStyle())
+            .accessibilityLabel("You: \(xp.rank.name), \(xp.total) XP")
+            Spacer(minLength: 4)
             StreakPill(streak: state.day?.streak ?? state.user?.streak ?? 0)
             Button { state.showSettings = true } label: {
                 Image(systemName: "gearshape.fill").font(.system(size: 16, weight: .bold))
@@ -208,11 +227,12 @@ struct MapView: View {
         }
     }
 
-    /// Below the tomorrow block: the star round (Learning objectives), Talk
-    /// more, and today's extras.
+    /// Below the tomorrow block: one big thing when there is one (the star
+    /// round, a refresher, or either resumed), then the two tiles that are
+    /// always there — Talk more and Flash cards — and today's tally.
     @ViewBuilder
     private func afterDay(_ day: DayView) -> some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             if day.dayState.inRefresher {
                 BigButton(title: day.dayState == .refreshPaused ? "Refresher: resume cards" : "Refresher: cards") {
                     if let next = state.nextStep { state.flow = next }
@@ -227,26 +247,32 @@ struct MapView: View {
                     state.refreshLevel = due.level
                     state.flow = .refresh
                 }
-                BigButton(title: "Talk more", ghost: true) { state.flow = .more }
             } else if day.objectives.on, !day.starred, day.objectives.starAvailable {
                 BigButton(title: "★ Star the day") { state.flow = .star }
-                BigButton(title: "Talk more", ghost: true) { state.flow = .more }
-            } else {
-                BigButton(title: "Talk more") { state.flow = .more }
             }
-            HStack(spacing: 6) {
-                if day.starred {
-                    Image(systemName: "star.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(skin.reward)
-                    Text("Starred").font(skin.uiBold(13)).foregroundStyle(skin.ink2)
-                }
-                if day.extraCalls > 0 {
-                    if day.starred { Text("·").foregroundStyle(skin.ink3) }
-                    Text("\(day.extraCalls) extra \(day.extraCalls == 1 ? "call" : "calls") · \(max(day.extraMinutes, 1)) min").font(skin.uiBold(13)).foregroundStyle(skin.ink2)
+            HStack(spacing: 12) {
+                ActionTile(icon: "phone.fill", title: "Talk more", sub: "Up to 10 min", color: skin.voiceTop) { state.flow = .more }
+                ActionTile(icon: "rectangle.on.rectangle.angled", title: "Flash cards", sub: "Ten quick ones", color: skin.word) {
+                    state.flash = nil
+                    state.flow = .flash
                 }
             }
-            .frame(height: day.starred || day.extraCalls > 0 ? nil : 0)
+            let tally = tallyLine(day)
+            if !tally.isEmpty {
+                Text(tally).font(skin.uiBold(13)).foregroundStyle(skin.ink2).multilineTextAlignment(.center)
+            }
         }
         .padding(.top, 4)
+    }
+
+    /// "Starred · 2 extra calls · 3 sets of cards · +48 XP today"
+    private func tallyLine(_ day: DayView) -> String {
+        var parts: [String] = []
+        if day.starred { parts.append("★ Starred") }
+        if day.extraCalls > 0 { parts.append("\(day.extraCalls) extra \(day.extraCalls == 1 ? "call" : "calls")") }
+        if day.flashToday > 0 { parts.append("\(day.flashToday) \(day.flashToday == 1 ? "set" : "sets") of cards") }
+        if day.xp.today > 0 { parts.append("+\(day.xp.today) XP today") }
+        return parts.joined(separator: " · ")
     }
 
     /// A small way back to the morning, for doing today over.

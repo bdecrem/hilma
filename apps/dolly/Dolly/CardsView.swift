@@ -1,25 +1,49 @@
 import SwiftUI
 
+/// Where the cards come from: the day's (or the star round's / a refresher's,
+/// which the server hands over as the day's while they are open), or a flash
+/// set of ten dealt here.
+enum CardSource {
+    case day
+    case flash
+}
+
 /// Part 3: ten questions, no voice. Pick five, type five. The server grades
 /// every answer and keeps the place, so × leaves and the map says Resume.
+/// Flash sets run through the same screen, both ways round.
 struct CardsView: View {
-    let onDone: (DayView) -> Void
+    var source: CardSource = .day
+    let onDone: () -> Void
     let onLeave: () -> Void
 
     @Environment(AppState.self) private var state
     @State private var pick: Int?
     @State private var typed = ""
-    @State private var result: AnswerResponse?
+    @State private var result: (ok: Bool, target: String)?
     @State private var busy = false
+    @State private var dealing = false
     @State private var error: String?
     @FocusState private var focused: Bool
     private let skin = Skin.current
 
     private var day: DayView? { state.day }
-    private var index: Int { day?.answers.count ?? 0 }
+    private var questions: [Question] {
+        switch source {
+        case .day: return day?.questions ?? []
+        case .flash: return state.flash?.questions ?? []
+        }
+    }
+    private var answers: [Answer] {
+        switch source {
+        case .day: return day?.answers ?? []
+        case .flash: return state.flash?.answers ?? []
+        }
+    }
+    private var rightCount: Int { answers.filter(\.ok).count }
+    private var index: Int { answers.count }
     private var question: Question? {
-        guard let day, day.questions.indices.contains(index) else { return nil }
-        return day.questions[index]
+        guard questions.indices.contains(index) else { return nil }
+        return questions[index]
     }
 
     var body: some View {
@@ -29,17 +53,17 @@ struct CardsView: View {
                 HStack {
                     CloseButton { onLeave() }
                     Spacer()
-                    Text("Cards").font(skin.displayMedium(17)).foregroundStyle(skin.ink)
+                    Text(source == .flash ? "Flash cards" : "Cards").font(skin.displayMedium(17)).foregroundStyle(skin.ink)
                     Spacer()
-                    Text("\(day?.rightCount ?? 0) / \(day?.questions.count ?? 0)").font(skin.display(17)).foregroundStyle(skin.ink2)
+                    Text("\(rightCount) / \(questions.count)").font(skin.display(17)).foregroundStyle(skin.ink2)
                         .frame(width: 56, alignment: .trailing)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
 
-                if let day {
-                    Segments(states: day.questions.indices.map { k in
-                        if let a = day.answers.first(where: { $0.q == k }) { return a.ok ? .ok : .miss }
+                if !questions.isEmpty {
+                    Segments(states: questions.indices.map { k in
+                        if let a = answers.first(where: { $0.q == k }) { return a.ok ? .ok : .miss }
                         if let result, k == index { return result.ok ? .ok : .miss }
                         return k == index ? .cur : .todo
                     }, wide: true)
@@ -51,11 +75,15 @@ struct CardsView: View {
                         .padding(.horizontal, 20)
                         .id(index)
                         .transition(.move(edge: .trailing).combined(with: .opacity))
-                    Text(q.kind == "pick" ? "Tap the one that matches." : state.user?.language == "zh" ? "Characters or pinyin; tones are optional." : "Accents and el/la are optional.")
-                        .font(skin.ui(13)).foregroundStyle(skin.ink3)
-                } else if day?.dayState == .done {
+                    Text(hint(q)).font(skin.ui(13)).foregroundStyle(skin.ink3)
+                } else if dealing {
+                    ProgressView().padding(.top, 60)
+                    Text("Dealing ten…").font(skin.uiBold(14)).foregroundStyle(skin.ink2)
+                } else if source == .day, day?.dayState == .done {
                     Spacer()
-                } else {
+                } else if source == .flash, error != nil {
+                    BigButton(title: "Back to the map", ghost: true) { onLeave() }.padding(.horizontal, 24).padding(.top, 20)
+                } else if source == .day {
                     Text("No cards today.").font(skin.uiBold(16)).foregroundStyle(skin.ink2).padding(.top, 40)
                 }
                 if let error {
@@ -66,9 +94,28 @@ struct CardsView: View {
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: index)
         .animation(.easeInOut(duration: 0.2), value: result?.ok)
-        .onAppear {
-            if let day, day.dayState == .done { onDone(day) }
+        .task {
+            switch source {
+            case .day:
+                if let day, day.dayState == .done { onDone() }
+            case .flash:
+                // A fresh set unless one is under way.
+                if let set = state.flash, !set.done { return }
+                dealing = true
+                defer { dealing = false }
+                do {
+                    state.flash = try await DollyAPI.shared.dealFlash()
+                } catch {
+                    self.error = error.localizedDescription
+                }
+            }
         }
+    }
+
+    private func hint(_ q: Question) -> String {
+        if q.reversed { return q.kind == "pick" ? "Tap the English." : "Type the English; close is fine." }
+        if q.kind == "pick" { return "Tap the one that matches." }
+        return state.user?.language == "zh" ? "Characters or pinyin; tones are optional." : "Accents and el/la are optional."
     }
 
     private func card(_ q: Question) -> some View {
@@ -77,11 +124,14 @@ struct CardsView: View {
         return Card(padding: 22) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Tag(text: q.from.label, color: q.from == .new ? skin.primary : skin.ink3)
+                    Tag(text: q.from.label, color: q.from == .new ? skin.primary : q.from == .grammar ? skin.word : skin.ink3)
                     Spacer()
-                    Text("\(index + 1) · \(q.kind == "pick" ? "Pick it" : "Type it")").font(skin.uiBold(13)).foregroundStyle(skin.ink3)
+                    Text("\(index + 1) · \(q.reversed ? (q.kind == "pick" ? "In English" : "Type the English") : (q.kind == "pick" ? "Pick it" : "Type it"))").font(skin.uiBold(13)).foregroundStyle(skin.ink3)
                 }
-                Text(q.native).font(skin.display(28)).foregroundStyle(skin.ink).fixedSize(horizontal: false, vertical: true)
+                Text(q.native).font(skin.display(28)).foregroundStyle(q.reversed ? skin.word : skin.ink).fixedSize(horizontal: false, vertical: true)
+                if q.reversed, let p = q.pinyin, !p.isEmpty {
+                    Text(p).font(skin.uiBold(15)).foregroundStyle(skin.ink2)
+                }
 
                 if q.kind == "pick", let options = q.options {
                     VStack(spacing: 10) {
@@ -108,7 +158,7 @@ struct CardsView: View {
                     }
                 } else {
                     VStack(spacing: 12) {
-                        InputField(placeholder: state.user?.language == "zh" ? "Type it in Mandarin or pinyin" : "Type it in Spanish", text: $typed, disabled: answered) { Task { await submit(typed) } }
+                        InputField(placeholder: q.reversed ? "Type it in English" : state.user?.language == "zh" ? "Type it in Mandarin or pinyin" : "Type it in Spanish", text: $typed, disabled: answered) { Task { await submit(typed) } }
                             .focused($focused)
                             .onAppear { focused = true }
                         if answered {
@@ -151,21 +201,39 @@ struct CardsView: View {
         busy = true
         error = nil
         do {
-            let res = try await DollyAPI.shared.answer(q: index, answer: answer)
-            result = res
-            busy = false
-            try? await Task.sleep(for: .milliseconds(res.ok ? 1100 : 1600))
-            result = nil
-            pick = nil
-            typed = ""
-            state.apply(res.day)
-            if res.complete { onDone(res.day) }
+            switch source {
+            case .day:
+                let res = try await DollyAPI.shared.answer(q: index, answer: answer)
+                result = (res.ok, res.target)
+                busy = false
+                try? await Task.sleep(for: .milliseconds(res.ok ? 1100 : 1600))
+                result = nil
+                pick = nil
+                typed = ""
+                state.apply(res.day)
+                if res.complete { onDone() }
+            case .flash:
+                guard let id = state.flash?.id else { return }
+                let res = try await DollyAPI.shared.answerFlash(id: id, q: index, answer: answer)
+                result = (res.ok, res.target)
+                busy = false
+                try? await Task.sleep(for: .milliseconds(res.ok ? 1100 : 1600))
+                result = nil
+                pick = nil
+                typed = ""
+                state.flash = res.set
+                if let day = res.day { state.apply(day) }
+                if res.complete { onDone() }
+            }
         } catch {
             busy = false
             pick = nil
             self.error = error.localizedDescription
             // The server may be a card ahead (a retried request): re-sync.
-            await state.refresh()
+            switch source {
+            case .day: await state.refresh()
+            case .flash: if let set = try? await DollyAPI.shared.openFlash() { state.flash = set }
+            }
         }
     }
 }

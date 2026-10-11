@@ -12,6 +12,7 @@ import {
   earnCanDo,
   findDay,
   findOpenRefresher,
+  listFlashSetsDone,
   hourLabel,
   insertDay,
   insertLevel,
@@ -40,6 +41,7 @@ import {
 import { canDos, LEVELS, levelInfo, topAuthoredLevel, type CanDo } from './curriculum'
 import { answerMatches, LANGUAGES } from './language'
 import { annotateStar, buildQuestions, extractThings, pickTopic, seedTopic, type TranscriptRow } from './prompts'
+import { award, listXp, MORE_PAID_CALLS_PER_DAY, STREAK_MILESTONES, XP, xpView, type XpView } from './xp'
 
 export type MapState =
   | 'morning'
@@ -137,6 +139,10 @@ export type DayView = {
   levels: LevelView[]
   refresh: RefreshView | null
   banner: Banner | null
+  /** XP and rank (xp.ts): the header, the You sheet, the finish screens' chips. */
+  xp: XpView
+  /** Flash sets finished today. */
+  flash_today: number
 }
 
 export function mapState(day: Day, refresher: Refresher | null = null): MapState {
@@ -365,6 +371,8 @@ export async function dayView(user: User, day: Day, now = new Date()): Promise<D
     levels,
     refresh,
     banner: user.objectives ? bannerFor(levels) : null,
+    xp: xpView(await listXp(user.id), day.day),
+    flash_today: (await listFlashSetsDone(user.id, day.day)).length,
   }
 }
 
@@ -403,6 +411,7 @@ export async function finishTalk(user: User, day: Day, sessionId: string, transc
     const item = await upsertItem(user.id, t, day.n)
     things.push({ ...t, item_id: item.id })
   }
+  await award(user.id, day.day, 'talk', day.id, XP.talk)
   return updateDay(day.id, { call_session_id: sessionId, call_seconds: seconds, things, state: 'after_talk' })
 }
 
@@ -423,6 +432,8 @@ export async function finishMore(user: User, day: Day, transcript: TranscriptRow
       things = []
     }
   }
+  // The first extra calls of the day pay; the rest are for the love of it.
+  if (spoken > 0 && day.extra_calls < MORE_PAID_CALLS_PER_DAY) await award(user.id, day.day, 'more', `${day.id}:${day.extra_calls + 1}`, XP.more)
   return updateDay(day.id, {
     extra_calls: day.extra_calls + 1,
     extra_seconds: day.extra_seconds + (seconds ?? 0),
@@ -444,6 +455,7 @@ export async function finishStar(user: User, day: Day, sessionId: string, transc
   for (const r of results) {
     if (!r.demonstrated) continue
     await earnCanDo(user.id, r.id, user.rung, r.evidence)
+    await award(user.id, day.day, 'cando', r.id, XP.cando)
     earned.push(r.id)
   }
   // Three things: the not-yet-demonstrated objectives' items first.
@@ -488,6 +500,7 @@ export async function finishThings(user: User, day: Day, sessionId: string): Pro
   }
   if (day.state !== 'after_talk') return day
   const questions = buildQuestions(user.language, day, pool)
+  await award(user.id, day.day, 'things', day.id, XP.things)
   return updateDay(day.id, { things_session_id: sessionId, questions, state: 'after_things', answers: [] })
 }
 
@@ -509,18 +522,23 @@ export async function answerCard(user: User, day: Day, q: number, answer: string
   const ok = question.kind === 'pick' ? answer === question.target : answerMatches(user.language, answer, question)
   const next: Answer[] = [...answers, { q, ok, answer: answer.slice(0, 200) }]
   if (question.item_id) await scoreItem(question.item_id, ok, day.day)
+  if (ok) await award(user.id, day.day, 'card', `${day.id}:${star ? 'star:' : ''}${q}`, XP.card)
   const complete = next.length >= questions.length
   let updated: Day
   if (star) {
     if (complete) {
       const levelDone = await maybeLevelUp(user, day)
+      await award(user.id, day.day, 'star', day.id, XP.star)
       updated = await updateDay(day.id, { star_answers: next, star_state: 'done', starred_at: now.toISOString(), star_level_up: levelDone !== null, star_level_done: levelDone })
     } else {
       updated = await updateDay(day.id, { star_answers: next })
     }
   } else if (complete) {
     updated = await updateDay(day.id, { answers: next, state: 'done', done_at: now.toISOString() })
-    await completeDay(user, updated, now)
+    const streak = await completeDay(user, updated, now)
+    await award(user.id, day.day, 'day', day.id, XP.day)
+    if (next.every((a) => a.ok)) await award(user.id, day.day, 'cards_clean', day.id, XP.cards_clean)
+    if (STREAK_MILESTONES.includes(streak)) await award(user.id, day.day, 'streak', `${day.id}:${streak}`, XP.streak)
   } else {
     updated = await updateDay(day.id, { answers: next })
   }
@@ -546,6 +564,7 @@ async function answerRefreshCard(user: User, day: Day, r: Refresher, q: number, 
   const passed = r.targets.every((id) => (r.demonstrated ?? []).includes(id))
   await updateRefresher(r.id, { answers: next, state: 'done', passed, done_at: now.toISOString() })
   if (passed) {
+    await award(user.id, day.day, 'refresh', r.id, XP.refresh)
     const row = (await listLevels(user.id, user.language)).find((l) => l.level === r.level)
     if (row) {
       const count = row.refresh_count + 1
@@ -565,12 +584,13 @@ async function maybeLevelUp(user: User, day: Day): Promise<number | null> {
   if (!list.every((c) => earned.has(c.id))) return null
   const level = user.rung
   await insertLevel({ user_id: user.id, language: user.language, level, completed_day: day.day, refresh_due: addDays(day.day, refreshInterval(0)) })
+  await award(user.id, day.day, 'level', `${user.language}:${level}`, XP.level)
   await updateUser(user.id, { rung: level + 1 })
   return level
 }
 
-/** The streak ticks and tomorrow's topic is picked. */
-async function completeDay(user: User, day: Day, now: Date): Promise<void> {
+/** The streak ticks and tomorrow's topic is picked. Returns the streak. */
+async function completeDay(user: User, day: Day, now: Date): Promise<number> {
   const yesterday = addDays(day.day, -1)
   const streak = user.last_done_day === day.day ? user.streak : user.last_done_day === yesterday ? user.streak + 1 : 1
   const recent = await listDays(user.id, 10)
@@ -588,6 +608,7 @@ async function completeDay(user: User, day: Day, now: Date): Promise<void> {
     last_done_day: day.day,
     next_topic: nextTopic,
   })
+  return streak
 }
 
 export { LANGUAGES, starInProgress, topAuthoredLevel }

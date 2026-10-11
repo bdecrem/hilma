@@ -9,6 +9,8 @@ enum FlowStep: String {
     case moreDone
     /// A completed level's refresher: a short scripted call, then four cards, then the verdict.
     case refresh, refreshDone
+    /// Flash cards: a set of ten, then the score.
+    case flash, flashDone
 }
 
 /// The app's one piece of shared state: who is signed in, today, and what
@@ -30,6 +32,10 @@ final class AppState {
     var flow: FlowStep?
     var showSettings = false
     var showObjectives = false
+    /// The You sheet (avatar, rank, XP), from the header.
+    var showYou = false
+    /// The flash set on screen (dealt when the flow opens; nil = deal a new one).
+    var flash: FlashView?
     /// A completed level's sheet (a flag on the trail, tapped).
     var showLevel: Int?
     /// Which level the next refresher is for (nil: the server picks the due one).
@@ -49,7 +55,17 @@ final class AppState {
             switch open {
             case "settings": showSettings = true
             case "objectives": showObjectives = true
-            case "talk", "things", "cards", "done", "more", "star", "refresh", "refreshDone": flow = FlowStep(rawValue: open)
+            case "you": showYou = true
+            case "talk", "things", "cards", "done", "more", "star", "refresh", "refreshDone", "flash": flow = FlowStep(rawValue: open)
+            case "flashDone":
+                // A set dealt and answered right through the real routes (test account), then its score.
+                if let set = try? await DollyAPI.shared.dealFlash() {
+                    var last: FlashAnswerResponse?
+                    for (i, q) in set.questions.enumerated() { last = try? await DollyAPI.shared.answerFlash(id: set.id, q: i, answer: q.target) }
+                    flash = last?.set
+                    if let d = last?.day { day = d }
+                    flow = .flashDone
+                }
             case "level": showLevel = day?.levels.last?.level ?? 1
             default: break
             }

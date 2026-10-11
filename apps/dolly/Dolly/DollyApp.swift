@@ -53,6 +53,10 @@ struct RootView: View {
                         LevelSheet(level: state.showLevel ?? 1)
                             .environment(state)
                     }
+                    .sheet(isPresented: $state.showYou) {
+                        YouSheet()
+                            .environment(state)
+                    }
             }
         }
     }
@@ -74,12 +78,15 @@ struct FlowView: View {
     @State private var moreFlow: Bool
     /// A completed level's refresher (started here, or its cards resumed from the map).
     @State private var refreshFlow: Bool
+    /// A flash set: ten cards, then the score.
+    @State private var flashFlow: Bool
 
     init(start: FlowStep, day: DayView?) {
         _step = State(initialValue: start)
         _starFlow = State(initialValue: start == .star || (day?.dayState.inStarRound ?? false))
         _moreFlow = State(initialValue: start == .more)
         _refreshFlow = State(initialValue: start == .refresh || start == .refreshDone || (day?.dayState.inRefresher ?? false))
+        _flashFlow = State(initialValue: start == .flash || start == .flashDone)
     }
 
     var body: some View {
@@ -103,7 +110,14 @@ struct FlowView: View {
                 ThingsView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
                     .transition(.opacity)
             case .cards:
-                CardsView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
+                CardsView(source: .day, onDone: { if let day = state.day { advance(after: day) } }, onLeave: { state.flow = nil })
+                    .transition(.opacity)
+            case .flash:
+                CardsView(source: .flash, onDone: { step = .flashDone }, onLeave: { state.flow = nil })
+                    .id("flash-\(flashDeals)")
+                    .transition(.opacity)
+            case .flashDone:
+                FlashDoneView(onDone: { state.flow = nil }, onAgain: { startFlash() })
                     .transition(.opacity)
             case .done:
                 DoneView(star: starFlow, onDone: { state.flow = nil }, onMore: { startMore() }, onStar: { startStar() })
@@ -158,5 +172,14 @@ struct FlowView: View {
         starFlow = false
         moreFlow = false
         step = .refresh
+    }
+
+    @State private var flashDeals = 0
+
+    private func startFlash() {
+        flashFlow = true
+        state.flash = nil
+        flashDeals += 1
+        step = .flash
     }
 }

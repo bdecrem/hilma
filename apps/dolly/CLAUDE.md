@@ -70,6 +70,39 @@ slid in and out of an American accent in Spanish. Library voices with live
 moderation on are refused by the Speech Engine API (Lucia was); pick one
 without it. `apps/dodo-voice-bridge/engines.mjs`, `DOLLY_ELEVEN_VOICE_ID`.
 
+**XP, ranks, the avatar, flash cards** (2026-10-11, later): XP is a ledger
+(`dolly_xp`, schema 006, `src/lib/dolly/xp.ts`): one row per thing earned,
+unique on (kind, ref), so a retried request or a day done over never pays
+twice and nothing is ever taken away — the call 10, the three things 5, a
+card right 1, all ten +5, the day 10, streak days 3/7/14/30/60/100/365 +25,
+Talk more 10 (the first three a day), a star round 15 and +5 an objective, a
+level 100, a refresher passed 50, a flash set 1 a card and +5 clean (the
+first five sets a day). The rank is a threshold on the total, birds that talk
+and sing: Hatchling 0, Fledgling 100, Chirper 300, Songbird 700, Mockingbird
+1,500, Parrot 3,000, Nightingale 6,000, Lyrebird 12,000 — independent of the
+CEFR level, which keeps the word "level". `DayView.xp` carries the total, the
+rank, the road to the next, today's awards (each finish screen sums the kinds
+it is about into an `XpChip`) and `ranked_up` when today's XP crossed a rank
+(`RankUpCard` + confetti). The map's header is **you**: the jelly avatar
+(Dodo's critters, `Assets.xcassets/Jelly`, `JellyAvatar.swift`; the pick is
+`dolly_users.avatar`, everyone gets a stable default from their id, never
+Gummy), your name or rank, "Fledgling · 256 XP" and a thin rank bar; a tap
+opens `YouSheet` (change the avatar, your name, the ladder, how XP works).
+Dolly's own face left the header for the voice and finish screens. After
+the day the two tiles **Talk more** and **Flash cards** (`ActionTile`) sit
+under the tomorrow block, with the one big button (star round, refresher)
+above them when there is one, and a tally line ("★ Starred · 2 sets of cards
+· +48 XP today"). A flash set (`dolly_flash_sets`, `src/lib/dolly/flash.ts`;
+`POST /api/dolly/flash` deals, `GET` reports the open one, `POST
+/api/dolly/flash/answer`) is ten cards: five from the learner's pool (misses
+first) and five grammar chunks from the levels up to their rung (`from:
+"grammar"`), five pick and five type by turns, five each way — a reversed
+card (`dir: "to_native"`) shows the language and takes the English, graded
+loosely by `nativeMatches` — through the same `CardsView(source: .flash)`,
+then `FlashDoneView` (right of ten, the XP chip, "Another set"). Dealing a
+new set drops an open one. `scripts/dolly/backfill-xp.ts` writes the ledger
+for everything from before it existed (run 2026-10-11).
+
 ## Files (`Dolly/`)
 
 - `DollyApp.swift` — `@main`, `RootView` (loading / onboarding / map), `FlowView`
@@ -108,7 +141,8 @@ with zsh build the arguments as an array):
 - `-BackendURL http://localhost:3260` — a local dev server (the worktree's `next dev -p 3260`).
 - `-TestSessionToken <value>` — sign in as the test account: the value is what
   `npx tsx scripts/dolly/e2e.ts` prints ("cookie value"). Never Bart's account.
-- `-Open map|settings|objectives|level|talk|things|cards|done|more|star|refresh|refreshDone`
+- `-Open map|settings|objectives|level|you|talk|things|cards|done|more|star|refresh|refreshDone|flash|flashDone`
+  (`flashDone` deals a set and answers it right through the real routes first)
   — where to open. `talk` needs the day at `morning`, `things` at `after_talk`,
   `cards` at `after_things`: `scripts/dolly/e2e.ts --until talk|things|cards`
   leaves the test account there; `more` and `star` need the day done (a full
