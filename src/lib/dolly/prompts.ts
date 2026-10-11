@@ -85,6 +85,10 @@ export function talkWrapCue(): string {
 
 // ---------- talk more: a free extra call ----------
 
+/** An extra call runs up to ten minutes; the app says when to wrap. */
+export const MORE_WRAP_MS = 570_000
+export const MORE_END_MS = 600_000
+
 export function morePrompt(user: User, day: Day, comingBack: Item[]): string {
   const lang = LANGUAGES[user.language]
   return `${persona(lang.speak)}
@@ -94,7 +98,11 @@ ${levelLine(user.level, lang.speak)}${comingBackLine(comingBack, lang.speak)}
 
 Corrections: when they make a mistake that matters, give the right form once, briefly and kindly, inside your reply, and carry on. Never list their mistakes. If they say something in English, answer in ${lang.speak} and hand them the words they were missing.
 
-The call lasts about three minutes. The app will tell you when to wrap up.`
+The call can run up to ten minutes; they end it when they like, and the app will tell you if time is nearly up.`
+}
+
+export function moreWrapCue(): string {
+  return `${ELEVEN_CUE_PREFIX}Ten minutes are nearly up. In one or two lines, wrap up warmly in the language; they can always call again. No new questions.`
 }
 
 export function moreOpening(user: User): string {

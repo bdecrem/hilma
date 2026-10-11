@@ -43,7 +43,6 @@ struct TalkView: View {
 
     private var finishingLine: String {
         switch mode {
-        case "more": return "Saving the call…"
         case "star": return "Reading the round…"
         default: return "Picking three things…"
         }

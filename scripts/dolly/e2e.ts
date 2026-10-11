@@ -296,8 +296,10 @@ async function main() {
   type DayPlus = DayView & { extra_calls: number; starred: boolean; star: { state: string; targets: { id: string; title: string }[]; earned: { id: string; title: string }[]; level_up: boolean } | null; objectives: { on: boolean; level: number; name: string; earned: number; total: number; star_available: boolean; can_dos: { id: string; title: string; earned: boolean }[]; ladder: { n: number }[] } }
   const more = await api<Start>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'more', dry: true }) })
   check('talk more opens after done', more.status === 200, String(more.status))
-  const moreFin = await api<{ day: DayPlus }>(`/api/dolly/voice/${more.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: CANNED_TALK.slice(0, 4), seconds: 95 }) })
+  check('talk more runs long', (more.body.eleven?.wrap?.after_ms ?? 0) >= 500_000, String(more.body.eleven?.wrap?.after_ms))
+  const moreFin = await api<{ day: DayPlus & { last_extra_things: { target: string; native: string }[] } }>(`/api/dolly/voice/${more.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: CANNED_TALK, seconds: 95 }) })
   check('talk more counted', moreFin.status === 200 && moreFin.body.day?.extra_calls === 1 && moreFin.body.day?.state === 'done', `${moreFin.status} extra ${moreFin.body.day?.extra_calls}`)
+  check('talk more leaves three things', moreFin.body.day?.last_extra_things?.length === 3, moreFin.body.day?.last_extra_things?.map((t) => `${t.target} = ${t.native}`).join(' | '))
 
   // Learning objectives: off by default, the star round refused.
   check('objectives off by default', again.body.day && (again.body.day as DayPlus).objectives?.on === false)

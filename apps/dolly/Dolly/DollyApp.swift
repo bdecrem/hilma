@@ -91,6 +91,9 @@ struct FlowView: View {
             case .done:
                 DoneView(star: starFlow, onDone: { state.flow = nil }, onMore: { startMore() }, onStar: { startStar() })
                     .transition(.opacity)
+            case .moreDone:
+                MoreDoneView(onDone: { state.flow = nil }, onMore: { startMore() })
+                    .transition(.opacity)
             }
         }
         .animation(.easeInOut(duration: 0.35), value: step)
@@ -105,7 +108,8 @@ struct FlowView: View {
         case .afterThings, .paused, .starAfterThings, .starPaused: step = .cards
         case .done:
             if moreFlow {
-                state.flow = nil
+                // The extra call's three things, when it produced any.
+                if day.lastExtraThings.isEmpty { state.flow = nil } else { step = .moreDone }
             } else if starFlow, day.star?.state != "done" {
                 // A star call where nothing was said: back to the map.
                 state.flow = nil

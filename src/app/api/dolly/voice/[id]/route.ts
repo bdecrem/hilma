@@ -30,7 +30,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   if (!day) return NextResponse.json({ error: 'day not found' }, { status: 404 })
   try {
     if (session.mode === 'talk') day = await finishTalk(user, day, session.id, transcript, seconds)
-    else if (session.mode === 'more') day = await finishMore(day, seconds)
+    else if (session.mode === 'more') day = await finishMore(user, day, transcript, seconds)
     else if (session.mode === 'star') day = await finishStar(user, day, session.id, transcript, seconds)
     else day = await finishThings(user, day, session.id)
   } catch (e) {

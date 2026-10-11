@@ -19,6 +19,7 @@
 		798FB4792BF3770D51B4A947 /* ObjectivesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9C028B32760E9F96337688 /* ObjectivesSheet.swift */; };
 		7C6A5DD80DE784BA9F09237D /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC1D7C1BFFDE7F77F90FCF4B /* MapView.swift */; };
 		7FD8749641708D28547E7D89 /* Mascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8C59EB20FA58A8FDACE48AF /* Mascot.swift */; };
+		84FD199A7F8631A580BA6AFC /* MoreDoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4467C9C2BA27B448BC70C223 /* MoreDoneView.swift */; };
 		9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA4D8B1546392D9142BB179 /* Models.swift */; };
 		9F4693E0D51EEC9761382E58 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF955F0B5D7166AC219C99C1 /* TalkView.swift */; };
 		AA5540FC8088458AEEAEA7F4 /* Baloo2-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A42C56D6FCC65E69CC809C26 /* Baloo2-ExtraBold.ttf */; };
@@ -40,6 +41,7 @@
 		1D8132C7C8432ADBE5DBCC84 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		2E83D4816DB2B314E41EBB9A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3531DA8037F0A80723F696FF /* Dolly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Dolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4467C9C2BA27B448BC70C223 /* MoreDoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreDoneView.swift; sourceTree = "<group>"; };
 		47D278063D8D4D04FF60B17C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Medium.ttf"; sourceTree = "<group>"; };
 		69F67961CC796459CB5B830A /* ThingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingsView.swift; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 				DC1D7C1BFFDE7F77F90FCF4B /* MapView.swift */,
 				D8C59EB20FA58A8FDACE48AF /* Mascot.swift */,
 				CAA4D8B1546392D9142BB179 /* Models.swift */,
+				4467C9C2BA27B448BC70C223 /* MoreDoneView.swift */,
 				9D9C028B32760E9F96337688 /* ObjectivesSheet.swift */,
 				47D278063D8D4D04FF60B17C /* OnboardingView.swift */,
 				08793AEC3DBECFE259B029C9 /* Secrets.swift */,
@@ -219,6 +222,7 @@
 				7C6A5DD80DE784BA9F09237D /* MapView.swift in Sources */,
 				7FD8749641708D28547E7D89 /* Mascot.swift in Sources */,
 				9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */,
+				84FD199A7F8631A580BA6AFC /* MoreDoneView.swift in Sources */,
 				798FB4792BF3770D51B4A947 /* ObjectivesSheet.swift in Sources */,
 				D42463998CAB38DEB8D4C8CB /* OnboardingView.swift in Sources */,
 				C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */,
@@ -293,7 +297,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -353,7 +357,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

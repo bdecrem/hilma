@@ -15,8 +15,11 @@ import {
   CALL_END_MS,
   CALL_WRAP_MS,
   holdToTalkNote,
+  MORE_END_MS,
+  MORE_WRAP_MS,
   moreOpening,
   morePrompt,
+  moreWrapCue,
   STAR_END_MS,
   STAR_WRAP_MS,
   starOpening,
@@ -70,7 +73,7 @@ export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolea
     if (day.state !== 'done') return { ok: false, status: 409, error: 'Finish today first.' }
     const comingBack = await comingBackItems(user)
     const systemPrompt = withOpening(morePrompt(user, day, comingBack), moreOpening(user)) + note
-    return { ok: true, day, mode, systemPrompt, cues: [], wrap: { after_ms: CALL_WRAP_MS, end_ms: CALL_END_MS, cue: talkWrapCue() }, targets: [] }
+    return { ok: true, day, mode, systemPrompt, cues: [], wrap: { after_ms: MORE_WRAP_MS, end_ms: MORE_END_MS, cue: moreWrapCue() }, targets: [] }
   }
   if (mode === 'star') {
     if (!user.objectives) return { ok: false, status: 409, error: 'Turn on Learning objectives in Settings.' }

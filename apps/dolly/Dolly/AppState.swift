@@ -5,6 +5,8 @@ import Observation
 /// extra call after the day; `star` the guided round (Learning objectives).
 enum FlowStep: String {
     case talk, things, cards, done, more, star
+    /// After an extra call: the three things it produced.
+    case moreDone
 }
 
 /// The app's one piece of shared state: who is signed in, today, and what

@@ -208,6 +208,9 @@ struct DayView: Codable, Equatable {
     let tomorrow: String?
     let extraCalls: Int
     let extraMinutes: Int
+    /// What the extra calls produced today, and the latest call's own three.
+    let extraThings: [Thing]
+    let lastExtraThings: [Thing]
     let starred: Bool
     let star: StarView?
     let objectives: ObjectivesView
@@ -235,6 +238,8 @@ struct DayView: Codable, Equatable {
         case comingBack = "coming_back"
         case extraCalls = "extra_calls"
         case extraMinutes = "extra_minutes"
+        case extraThings = "extra_things"
+        case lastExtraThings = "last_extra_things"
     }
 
     /// The fields added after the first build decode with defaults (see UserView).
@@ -258,6 +263,8 @@ struct DayView: Codable, Equatable {
         tomorrow = try c.decodeIfPresent(String.self, forKey: .tomorrow)
         extraCalls = try c.decodeIfPresent(Int.self, forKey: .extraCalls) ?? 0
         extraMinutes = try c.decodeIfPresent(Int.self, forKey: .extraMinutes) ?? 0
+        extraThings = try c.decodeIfPresent([Thing].self, forKey: .extraThings) ?? []
+        lastExtraThings = try c.decodeIfPresent([Thing].self, forKey: .lastExtraThings) ?? []
         starred = try c.decodeIfPresent(Bool.self, forKey: .starred) ?? false
         star = try c.decodeIfPresent(StarView.self, forKey: .star)
         objectives = try c.decodeIfPresent(ObjectivesView.self, forKey: .objectives) ?? .off

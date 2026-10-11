@@ -73,6 +73,9 @@ export type DayView = {
   tomorrow: string | null
   extra_calls: number
   extra_minutes: number
+  /** Everything the extra calls produced today, and the latest call's own. */
+  extra_things: Thing[]
+  last_extra_things: Thing[]
   starred: boolean
   star: { state: 'after_talk' | 'after_things' | 'done' | null; targets: { id: string; title: string }[]; earned: { id: string; title: string }[]; level_up: boolean } | null
   objectives: ObjectivesView
@@ -159,6 +162,8 @@ export async function dayView(user: User, day: Day, now = new Date()): Promise<D
     tomorrow: day.state === 'done' ? user.next_topic : null,
     extra_calls: day.extra_calls,
     extra_minutes: Math.round(day.extra_seconds / 60),
+    extra_things: (day.extra_things ?? []).flat(),
+    last_extra_things: (day.extra_things ?? []).at(-1) ?? [],
     starred: !!day.starred_at,
     star: day.star_state
       ? {
@@ -203,9 +208,28 @@ export async function finishTalk(user: User, day: Day, sessionId: string, transc
   return updateDay(day.id, { call_session_id: sessionId, call_seconds: seconds, things, state: 'after_talk' })
 }
 
-/** An extra call: counted, nothing else changes. */
-export async function finishMore(day: Day, seconds: number | null): Promise<Day> {
-  return updateDay(day.id, { extra_calls: day.extra_calls + 1, extra_seconds: day.extra_seconds + (seconds ?? 0) })
+/** An extra call: counted, and its three things kept — shown once, then
+ *  into the pool for tomorrow. No say-back round and no cards. */
+export async function finishMore(user: User, day: Day, transcript: TranscriptRow[], seconds: number | null): Promise<Day> {
+  const spoken = transcript.filter((r) => r.role === 'user' && r.text.trim()).length
+  let things: Thing[] = []
+  if (spoken > 0) {
+    try {
+      const raw = await extractThings(user, transcript)
+      for (const t of raw) {
+        const item = await upsertItem(user.id, t, day.n)
+        things.push({ ...t, item_id: item.id })
+      }
+    } catch (e) {
+      console.error('[dolly] extra call: things failed, call kept anyway:', e)
+      things = []
+    }
+  }
+  return updateDay(day.id, {
+    extra_calls: day.extra_calls + 1,
+    extra_seconds: day.extra_seconds + (seconds ?? 0),
+    extra_things: [...(day.extra_things ?? []), things],
+  })
 }
 
 /** The star round's call finished: read it against the targets, earn what

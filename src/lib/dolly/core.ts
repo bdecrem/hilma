@@ -61,9 +61,11 @@ export type Day = {
   questions: Question[] | null
   answers: Answer[]
   done_at: string | null
-  /** "Talk more": free extra calls after the day is done. */
+  /** "Talk more": free extra calls after the day is done, and the three
+   *  things each one produced (one list per call). */
   extra_calls: number
   extra_seconds: number
+  extra_things: Thing[][]
   /** The star round: a guided call on the level's objectives, then three
    *  things from its targets, then cards. Its own mini-day beside the day. */
   starred_at: string | null
