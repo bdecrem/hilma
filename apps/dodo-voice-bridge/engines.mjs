@@ -70,10 +70,16 @@ const POLLY_TTS = {
 // Bella is one of the library's educational voices; the premade American
 // alternatives are Sarah, Matilda, Laura and Jessica (Dodo's).
 const DOLLY_VOICE = process.env.DOLLY_ELEVEN_VOICE_ID || 'hpp4J3VqNfWAUOO0d1Us' // Bella — professional, bright, warm
+// Slow and clear, a language teacher for a level-1 learner (Bart, 2026-10-10
+// evening). `speed` is honoured by eleven_turbo_v2_5 / flash_v2_5 /
+// multilingual_v2 and ignored by the v3/v4 models (measured on the same
+// Spanish paragraph: v4 turbo 9.25 s at 1.0 and 9.33 s at 0.8; turbo v2.5
+// 9.69 s → 11.31 s at 0.8; the range is 0.7–1.2). Later the pace follows the
+// learner's rung: one engine per pace, picked when the token is minted.
 const DOLLY_TTS = {
-  model_id: process.env.DOLLY_ELEVEN_TTS_MODEL || 'eleven_v4_turbo',
-  expressive_mode: false,
-  stability: 0.5,
+  model_id: process.env.DOLLY_ELEVEN_TTS_MODEL || 'eleven_turbo_v2_5',
+  speed: Number(process.env.DOLLY_ELEVEN_SPEED || 0.8),
+  stability: 0.6,
   similarity_boost: 0.8,
 }
 
@@ -144,5 +150,5 @@ for (const engine of ENGINES) {
     ? await call('PATCH', `${API}/${found.speech_engine_id}`, engineBody(engine))
     : await call('POST', API, engineBody(engine))
   const tts = result.tts
-  console.log(`${found ? 'updated' : 'created'} ${engine.name}: ${result.speech_engine_id} → ${result.speech_engine.ws_url} (${tts.voice_id}, ${tts.model_id}, expressive ${tts.expressive_mode}, stability ${tts.stability})`)
+  console.log(`${found ? 'updated' : 'created'} ${engine.name}: ${result.speech_engine_id} → ${result.speech_engine.ws_url} (${tts.voice_id}, ${tts.model_id}, expressive ${tts.expressive_mode}, stability ${tts.stability}, speed ${tts.speed ?? 'default'})`)
 }

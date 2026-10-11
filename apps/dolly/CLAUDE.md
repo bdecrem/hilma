@@ -82,6 +82,15 @@ code goes out by iMessage for real numbers. The test phones in
 `src/lib/dolly/send.ts` get no text: their code is `DOLLY_TEST_CODE` (`.env.local`
 and Vercel), which is how `e2e.ts` signs in against production too.
 
+**The voice is slow and clear** (Bart, 2026-10-10 evening): Bella on
+`eleven_turbo_v2_5` at `speed: 0.8`, stability 0.6 (`apps/dodo-voice-bridge/engines.mjs`,
+`DOLLY_ELEVEN_SPEED` to tune; the v3/v4 models ignore speed, measured), and
+the persona in `src/lib/dolly/prompts.ts` asks for a teacher's pace: short
+sentences, one idea each, a new word said on its own once. The plan for later
+is a pace per rung (one engine per pace, picked at the mint in
+`src/lib/dolly/eleven.ts`); for now everyone gets the level-1 pace. Samples
+at `~/Desktop/dolly-voice/`.
+
 **Never mint an ElevenLabs token a check will not use.** Every conversation
 token holds one of the workspace's concurrent-conversation slots until it
 expires, across Dodo, Polly and Dolly, dev and prod engines alike. On
