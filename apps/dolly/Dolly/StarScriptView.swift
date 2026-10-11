@@ -7,6 +7,9 @@ import SwiftUI
 /// step marker the server strips and keeps; the screen asks for it after
 /// each of her turns.
 struct StarScriptView: View {
+    /// star (the day's star round) or refresh (a completed level's refresher).
+    let mode: String
+    let level: Int?
     let onDone: (DayView) -> Void
     let onLeave: () -> Void
 
@@ -18,13 +21,32 @@ struct StarScriptView: View {
     private let holdToTalk: Bool
     private let skin = Skin.current
 
-    init(onDone: @escaping (DayView) -> Void, onLeave: @escaping () -> Void) {
+    init(mode: String = "star", level: Int? = nil, onDone: @escaping (DayView) -> Void, onLeave: @escaping () -> Void) {
+        self.mode = mode
+        self.level = level
         self.onDone = onDone
         self.onLeave = onLeave
         let hold = UserDefaults.standard.bool(forKey: AppState.holdToTalkKey)
         holdToTalk = hold
-        _client = State(initialValue: makeVoiceClient(mode: "star", holdToTalk: hold))
+        _client = State(initialValue: makeVoiceClient(mode: mode, holdToTalk: hold, level: level))
     }
+
+    private var refresh: Bool { mode == "refresh" }
+    private var eyebrow: String {
+        if refresh {
+            let n = client.config?.level?.n ?? level
+            return n.map { "Level \($0) · Refresher" } ?? "Refresher"
+        }
+        return "Day \(state.day?.n ?? 0) · Star round"
+    }
+    /// The dialogue is over: the last line was said and Dolly is quiet, or
+    /// the call ended on its own. The hang-up becomes a Next.
+    private var over: Bool {
+        if client.phase == .ended { return true }
+        if case .failed = client.phase { return false }
+        return !script.isEmpty && step >= script.count && client.phase == .connected && client.status != "Thinking"
+    }
+    private var nextTitle: String { refresh ? "Next: Cards" : "Next: Three things" }
 
     private var script: [ScriptStep] { client.config?.script ?? [] }
     /// The line on screen: the one Dolly last said, or the first while she starts.
@@ -37,7 +59,7 @@ struct StarScriptView: View {
             VStack(spacing: 0) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Day \(state.day?.n ?? 0) · Star round".uppercased()).font(skin.uiBold(11)).tracking(1.2).foregroundStyle(.white.opacity(0.7))
+                        Text(eyebrow.uppercased()).font(skin.uiBold(11)).tracking(1.2).foregroundStyle(.white.opacity(0.7))
                         Text(script.isEmpty ? "Writing the dialogue…" : "Line \(shown) of \(script.count)").font(skin.displayMedium(18)).foregroundStyle(.white)
                     }
                     Spacer()
@@ -110,7 +132,7 @@ struct StarScriptView: View {
             if ending {
                 VStack(spacing: 14) {
                     Mascot(size: 110, mood: .thinking)
-                    Text("Reading the round…").font(skin.display(22)).foregroundStyle(.white)
+                    Text(refresh ? "Checking…" : "Reading the round…").font(skin.display(22)).foregroundStyle(.white)
                     ProgressView().tint(.white)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -175,18 +197,27 @@ struct StarScriptView: View {
 
     private var statusLine: String {
         switch client.phase {
-        case .idle, .requestingPermission, .creatingSession, .connecting: return "Calling…"
+        case .idle, .requestingPermission, .creatingSession, .connecting: return "Connecting…"
         case .connected:
+            if over { return "That's the dialogue" }
             if holdToTalk { return client.talking ? "Listening" : client.status == "Thinking" ? "Dolly is thinking" : "Your turn — hold the key" }
             return client.status == "Thinking" ? "Dolly is thinking" : "Your turn — just talk"
         case .speaking: return "Dolly is speaking"
         case .failed(let m): return m
-        case .ended: return "Round ended"
+        case .ended: return "That's the dialogue"
         }
     }
 
     private var controls: some View {
         HStack(spacing: 18) {
+            if case .failed = client.phase {
+                // Nothing to end: the way back.
+                BigButton(title: "Back to the map", ghost: true) { onLeave() }
+            } else if over {
+                // The dialogue is done: what comes next, not a hang-up.
+                BigButton(title: nextTitle) { Task { await finish() } }
+                    .disabled(ending)
+            } else {
             if holdToTalk {
                 Text(client.talking ? "Listening…" : "Hold to talk")
                     .font(skin.display(18))
@@ -214,8 +245,10 @@ struct StarScriptView: View {
             }
             .buttonStyle(PressStyle())
             .disabled(ending)
+            }
         }
         .padding(.horizontal, 24)
+        .animation(.easeInOut(duration: 0.25), value: over)
     }
 
     private func runClock() async {

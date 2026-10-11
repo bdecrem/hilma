@@ -35,10 +35,17 @@ struct ObjectivesSheet: View {
                         if !below.isEmpty {
                             Text("Climbed".uppercased()).font(skin.uiBold(11)).tracking(1).foregroundStyle(skin.ink3)
                                 .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 6)
-                            ForEach(Array(below)) { rungRow($0, ob) }
+                            ForEach(Array(below)) { rung in
+                                Button {
+                                    dismiss()
+                                    state.showLevel = rung.n
+                                } label: { rungRow(rung, ob) }
+                                .buttonStyle(.plain)
+                            }
                         }
-                        Text("A star round after your day works through the next objectives. Earn them all and the level goes up.")
+                        Text("A star round after your day works through the next objectives. Earn them all and the level is complete: a flag on your map, kept bright by a short refresher now and then.")
                             .font(skin.ui(13)).foregroundStyle(skin.ink3).multilineTextAlignment(.center).padding(.top, 6)
+                        LevelsLink(level: ob.level).padding(.top, 2)
                     }
                 }
                 .padding(.horizontal, 22)
@@ -71,7 +78,12 @@ struct ObjectivesSheet: View {
                                 Circle().fill(c.earned ? skin.good : skin.line).frame(width: 24, height: 24)
                                 if c.earned { Image(systemName: "checkmark").font(.system(size: 11, weight: .heavy)).foregroundStyle(skin.onGood) }
                             }
-                            Text(c.title).font(c.earned ? skin.uiBold(16) : skin.ui(16)).foregroundStyle(c.earned ? skin.ink : skin.ink2)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(c.title).font(c.earned ? skin.uiBold(16) : skin.ui(16)).foregroundStyle(c.earned ? skin.ink : skin.ink2)
+                                if c.earned, let e = c.evidence, !e.isEmpty, !e.hasPrefix("by hand") {
+                                    Text("You said: \(e)").font(skin.ui(13)).foregroundStyle(skin.word).fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
                         }
                     }
                 }
@@ -92,6 +104,13 @@ struct ObjectivesSheet: View {
                     Text(rung.authored ? rung.tagline : "\(rung.tagline) Coming later.").font(skin.ui(13)).foregroundStyle(skin.ink3)
                 }
                 Spacer()
+                if done, let lv = state.day?.levels.first(where: { $0.level == rung.n }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "flag.fill").font(.system(size: 11, weight: .bold))
+                        Text(lv.due ? "due" : "bright").font(skin.uiBold(11))
+                    }
+                    .foregroundStyle(lv.due ? skin.ink3 : skin.rewardDeep)
+                }
                 Text(rung.cefr).font(skin.uiBold(11)).foregroundStyle(skin.ink3)
             }
             .padding(.horizontal, 6)

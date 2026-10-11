@@ -55,6 +55,9 @@ final class ElevenVoiceClient: DollyVoiceClient {
     private var probeAttached = false
     #endif
 
+    /// A refresher's level, when the screen chose one.
+    var level: Int?
+
     init(mode: String, holdToTalk: Bool = false) {
         self.mode = mode
         self.holdToTalk = holdToTalk
@@ -145,7 +148,7 @@ final class ElevenVoiceClient: DollyVoiceClient {
 
             phase = .creatingSession
             status = "Creating voice session..."
-            let session = try await DollyAPI.shared.startElevenSession(mode: mode, holdToTalk: holdToTalk)
+            let session = try await DollyAPI.shared.startElevenSession(mode: mode, holdToTalk: holdToTalk, level: level)
             sessionResponse = session
 
             phase = .connecting

@@ -44,9 +44,18 @@ struct TalkView: View {
     private var finishingLine: String {
         switch mode {
         case "star": return "Reading the round…"
+        case "more": return "Keeping three things…"
         default: return "Picking three things…"
         }
     }
+
+    /// The call is over (Dolly wrapped up, or it ended on its own): the
+    /// hang-up becomes a Next, so the screen says what comes after.
+    private var over: Bool {
+        if client.phase == .ended { return true }
+        return wrapSent && client.phase == .connected && client.status != "Thinking"
+    }
+    private var nextTitle: String { mode == "talk" ? "Next: Three things" : "Done" }
 
     var body: some View {
         ZStack {
@@ -130,7 +139,7 @@ struct TalkView: View {
             return client.status == "Thinking" ? "Dolly is thinking" : "Dolly is listening — just talk"
         case .speaking: return holdToTalk ? "Dolly is speaking — hold the key to cut in" : "Dolly is speaking"
         case .failed(let m): return m
-        case .ended: return "Call ended"
+        case .ended: return "Call over"
         }
     }
 
@@ -166,6 +175,12 @@ struct TalkView: View {
 
     private var controls: some View {
         HStack(spacing: 18) {
+            if case .failed = client.phase {
+                BigButton(title: "Back to the map", ghost: true) { onLeave() }
+            } else if over {
+                BigButton(title: nextTitle) { Task { await finish() } }
+                    .disabled(ending)
+            } else {
             if holdToTalk {
                 Text(client.talking ? "Listening…" : "Hold to talk")
                     .font(skin.display(18))
@@ -193,8 +208,10 @@ struct TalkView: View {
             }
             .buttonStyle(PressStyle())
             .disabled(ending)
+            }
         }
         .padding(.horizontal, 24)
+        .animation(.easeInOut(duration: 0.25), value: over)
     }
 
     /// The wrap-up cue at the server's time, and the end after it.

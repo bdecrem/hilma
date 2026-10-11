@@ -112,3 +112,98 @@
 .dolly .dolly-foot a {
   color: inherit;
 }
+
+/* ola.cx/dolly/levels — the ladder as a plain document. */
+.dolly .dolly-doc {
+  width: 100%;
+  max-width: 680px;
+  text-align: left;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.dolly .dolly-doc a {
+  color: var(--primary-deep);
+}
+.dolly .dolly-doc-crumb {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.dolly .dolly-doc h1 {
+  font-size: 40px;
+  text-align: left;
+  margin: 0 0 14px;
+}
+.dolly .dolly-doc h2 {
+  font-family: var(--dolly-display), 'Baloo 2', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1.15;
+  margin: 40px 0 4px;
+  padding-top: 16px;
+  border-top: 2px solid rgba(123, 92, 255, 0.18);
+  color: var(--ink);
+}
+.dolly .dolly-doc h3 {
+  font-family: var(--dolly-display), 'Baloo 2', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 19px;
+  margin: 18px 0 4px;
+  color: var(--ink);
+}
+.dolly .dolly-doc-cefr {
+  font-family: var(--dolly-ui), 'Quicksand', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-2);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.dolly .dolly-doc-tag {
+  margin: 0 0 10px;
+  color: var(--ink-2);
+  font-weight: 700;
+}
+.dolly .dolly-doc-toc ol {
+  margin: 14px 0 0;
+  padding: 0 0 0 22px;
+}
+.dolly .dolly-doc-toc span {
+  color: var(--ink-2);
+  font-size: 13px;
+  margin-left: 6px;
+}
+.dolly .dolly-doc-cando {
+  padding-left: 22px;
+  margin: 0;
+}
+.dolly .dolly-doc-cando > li {
+  margin: 0 0 10px;
+}
+.dolly .dolly-doc-cando ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+.dolly .dolly-doc-cando li li {
+  margin: 1px 0;
+}
+.dolly .dolly-doc-cando li li span {
+  font-weight: 700;
+  color: var(--ink);
+}
+.dolly .dolly-doc-cando li li i {
+  color: var(--ink-2);
+  font-style: normal;
+}
+.dolly .dolly-doc-grammar,
+.dolly .dolly-doc-soon,
+.dolly .dolly-doc-foot {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 4px 0 0;
+}
+.dolly .dolly-doc-foot {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 2px solid rgba(123, 92, 255, 0.18);
+}

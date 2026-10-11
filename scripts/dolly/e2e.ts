@@ -201,6 +201,8 @@ async function main() {
     await sb.from('dolly_days').delete().eq('user_id', user.id)
     await sb.from('dolly_items').delete().eq('user_id', user.id)
     await sb.from('dolly_cando').delete().eq('user_id', user.id)
+    await sb.from('dolly_levels').delete().eq('user_id', user.id)
+    await sb.from('dolly_refreshers').delete().eq('user_id', user.id)
     await sb.from('dolly_users').update({ streak: 0, best_streak: 0, last_done_day: null, next_topic: null, prompt_day: null, prompted_at: null, reminder_day: null, objectives: false, rung: 1 }).eq('id', user.id)
   }
   // Sign in through the real routes: a test phone's code is DOLLY_TEST_CODE
@@ -362,6 +364,89 @@ async function main() {
   const reset = await api<{ day: DayPlus }>('/api/dolly/day/reset', { method: 'POST', cookie })
   check('start today over', reset.status === 200 && reset.body.day?.state === 'morning' && reset.body.day?.extra_calls === 0 && reset.body.day?.starred === false && reset.body.day?.things.length === 0, `${reset.status} ${reset.body.day?.state}`)
   check('objectives earned survive a reset', (reset.body.day?.objectives.earned ?? 0) >= 2)
+
+  // ---------- a level completes, then its refresher ----------
+  // The day again, quickly (canned), so a star round is allowed.
+  {
+    const t = await api<Start>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'talk', dry: true }) })
+    const f = await api<{ day: DayView }>(`/api/dolly/voice/${t.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: CANNED_TALK, seconds: 170 }) })
+    const th2 = await api<Start>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'things', dry: true }) })
+    const back: Row[] = (f.body.day?.things ?? []).flatMap((t) => [{ role: 'assistant', text: `${t.target}. Dilo tú.`, created_at: now() }, { role: 'user', text: t.target, created_at: now() }])
+    const f2 = await api<{ day: DayView }>(`/api/dolly/voice/${th2.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: back, seconds: 60 }) })
+    for (let i = 0; i < (f2.body.day?.questions.length ?? 0); i++) {
+      await api('/api/dolly/cards/answer', { method: 'POST', cookie, body: JSON.stringify({ q: i, answer: f2.body.day!.questions[i].target }) })
+    }
+    const d = await api<{ day: DayPlus }>('/api/dolly/today', { cookie })
+    check('day done again after the reset', d.body.day?.state === 'done', d.body.day?.state)
+  }
+  // Nine of ten earned by hand (the test account's rows), so the next star
+  // round's one target completes the level.
+  type Levels = { levels: { level: number; name: string; due: boolean; refresh_due: string; refresh_count: number; can_dos: { id: string; evidence: string | null }[] }[]; banner: { kind: string; level: number; title: string } | null; refresh: { id: string; level: number; state: string; targets: { id: string }[]; demonstrated: { id: string }[]; passed: boolean | null; next_due: string | null } | null; trail: { n: number; today: boolean; level_done: number | null }[] }
+  {
+    const { canDos } = await import('../../src/lib/dolly/curriculum')
+    const all = canDos('es', 1)
+    const { data: have } = await sb.from('dolly_cando').select('cando_id').eq('user_id', user.id)
+    const haveIds = new Set((have ?? []).map((r: { cando_id: string }) => r.cando_id))
+    const missing = all.filter((c) => !haveIds.has(c.id))
+    const byHand = missing.slice(0, missing.length - 1)
+    if (byHand.length) await sb.from('dolly_cando').insert(byHand.map((c) => ({ user_id: user.id, cando_id: c.id, level: 1, evidence: 'by hand (e2e)' })))
+    const lastOne = missing[missing.length - 1]
+    const s2 = await api<StarStart>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star', dry: true }) })
+    check('last star round has one target', s2.status === 200 && s2.body.eleven?.targets?.length === 1 && s2.body.eleven.targets[0].id === lastOne.id, `${s2.status} ${s2.body.eleven?.targets?.map((t) => t.id).join()}`)
+    const say = s2.body.eleven?.script?.[0]
+    const lastTalk: Row[] = [
+      { role: 'assistant', text: say?.dolly ?? '¿Y tú?', created_at: now() },
+      { role: 'user', text: say?.you ?? 'Sí, claro. No, no me gusta, porque es tarde.', created_at: now() },
+      { role: 'assistant', text: s2.body.eleven?.script?.[1]?.dolly ?? 'Muy bien.', created_at: now() },
+      { role: 'user', text: s2.body.eleven?.script?.[1]?.you ?? 'Sí, también. Quizás mañana, porque hoy estoy cansado.', created_at: now() },
+    ]
+    const sf = await api<{ day: DayPlus }>(`/api/dolly/voice/${s2.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: lastTalk, seconds: 60 }) })
+    check('last objective demonstrated', sf.body.day?.star?.earned.some((e) => e.id === lastOne.id) ?? false, sf.body.day?.star?.earned.map((e) => e.id).join())
+    const st2 = await api<Start>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'things', dry: true }) })
+    const stf = await api<{ day: DayPlus }>(`/api/dolly/voice/${st2.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: saidBack.slice(0, 6), seconds: 40 }) })
+    let done: { day: DayPlus & Levels } | null = null
+    for (let i = 0; i < (stf.body.day?.questions.length ?? 0); i++) {
+      const r = await api<{ day: DayPlus & Levels }>('/api/dolly/cards/answer', { method: 'POST', cookie, body: JSON.stringify({ q: i, answer: stf.body.day!.questions[i].target }) })
+      done = r.body
+    }
+    const ld = done?.day
+    check('level 1 complete → level up', ld?.star?.level_up === true && ld.objectives.level === 2 && (ld.star as { level_done?: number }).level_done === 1, `level ${ld?.objectives.level} level_done ${(ld?.star as { level_done?: number })?.level_done}`)
+    check('completed level listed with evidence', ld?.levels?.length === 1 && ld.levels[0].level === 1 && ld.levels[0].can_dos.length === 10 && ld.levels[0].can_dos.every((c) => c.evidence), ld?.levels?.[0] && `due ${ld.levels[0].refresh_due} due? ${ld.levels[0].due}`)
+    check('flag on today’s node', ld?.trail.some((t) => t.today && t.level_done === 1) ?? false)
+    check('no banner while the level is bright', ld?.banner === null)
+    check('refresher refused for a level not completed', (await api('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'refresh', dry: true, level: 3 }) })).status === 409)
+  }
+  // Time passes: the refresher comes due.
+  {
+    await sb.from('dolly_levels').update({ refresh_due: '2026-01-01' }).eq('user_id', user.id).eq('level', 1)
+    const d = await api<{ day: DayPlus & Levels }>('/api/dolly/today', { cookie })
+    check('refresher due → banner', d.body.day?.banner?.kind === 'refresh' && d.body.day.banner.level === 1, d.body.day?.banner?.title)
+    check('refresher due → level dimmed', d.body.day?.levels?.[0]?.due === true)
+    check('refresher due → star round waits', d.body.day?.objectives.star_available === false && (await api('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'star', dry: true }) })).status === 409)
+    type RefreshStart = StarStart & { eleven: StarStart['eleven'] & { level: { n: number; name: string } | null } }
+    const rf = await api<RefreshStart>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'refresh', dry: true }) })
+    check('refresher opens on level 1 with two targets', rf.status === 200 && rf.body.eleven?.targets?.length === 2 && rf.body.eleven.level?.n === 1 && (rf.body.eleven.script?.length ?? 0) >= 2, `${rf.status} ${rf.body.eleven?.targets?.map((t) => t.title).join(' | ')} script ${rf.body.eleven?.script?.length}`)
+    const again = await api<RefreshStart>('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'refresh', dry: true }) })
+    check('refresher restarted keeps its script', again.status === 200 && JSON.stringify(again.body.eleven?.script) === JSON.stringify(rf.body.eleven?.script))
+    const script = again.body.eleven?.script ?? []
+    const talk: Row[] = script.flatMap((s) => [{ role: 'assistant', text: s.dolly, created_at: now() }, { role: 'user', text: s.you, created_at: now() }])
+    const rff = await api<{ day: DayPlus & Levels }>(`/api/dolly/voice/${again.body.voice_session.id}`, { method: 'PATCH', cookie, body: JSON.stringify({ transcript: talk, seconds: 70 }) })
+    const rd = rff.body.day
+    check('refresher call read → refresh_cards with four cards', rff.status === 200 && rd?.state === 'refresh_cards' && rd.questions.length === 4 && rd.refresh?.state === 'cards', `${rd?.state} ${rd?.questions.length} demonstrated ${rd?.refresh?.demonstrated.length}`)
+    check('both targets demonstrated', rd?.refresh?.demonstrated.length === 2, rd?.refresh?.demonstrated.map((d) => d.id).join())
+    check('star refused while the refresher’s cards are open', (await api('/api/dolly/eleven/session', { method: 'POST', cookie, body: JSON.stringify({ mode: 'refresh', dry: true }) })).status === 409)
+    let last: { complete: boolean; day: DayPlus & Levels } | null = null
+    for (let i = 0; i < (rd?.questions.length ?? 0); i++) {
+      const r = await api<{ ok: boolean; complete: boolean; day: DayPlus & Levels }>('/api/dolly/cards/answer', { method: 'POST', cookie, body: JSON.stringify({ q: i, answer: rd!.questions[i].target }) })
+      if (r.status !== 200 || !r.body.ok) check(`refresher card ${i + 1}`, false, String(r.status))
+      if (i === 0) check('refresher paused state after one card', r.body.day.state === 'refresh_paused', r.body.day.state)
+      last = r.body
+    }
+    const fd = last?.day
+    check('refresher passed → level bright again', last?.complete === true && fd?.refresh?.state === 'done' && fd.refresh.passed === true && fd.levels[0].due === false && fd.levels[0].refresh_count === 1, `passed ${fd?.refresh?.passed} due ${fd?.levels?.[0]?.refresh_due} count ${fd?.levels?.[0]?.refresh_count}`)
+    check('next refresher two weeks out', fd?.refresh?.next_due === fd?.levels?.[0]?.refresh_due && (fd?.levels?.[0]?.refresh_due ?? '') > '2026-10-20', String(fd?.refresh?.next_due))
+    check('banner gone, star round back', fd?.banner === null && fd?.objectives.star_available === true && fd.objectives.level === 2)
+  }
   await api('/api/dolly/me', { method: 'PUT', cookie, body: JSON.stringify({ objectives: false }) })
 
   // Settings.

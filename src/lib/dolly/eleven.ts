@@ -8,8 +8,24 @@
 // enum leave the slot, and a second session route would build the same
 // prompt through startVoice() below.
 import { ELEVEN_CUE_PREFIX, ELEVEN_KICKOFF, elevenModel, mintElevenConversationToken } from '@/lib/f2/eleven'
-import { activeThings, insertVoiceSession, updateDay, type Day, type ScriptStep, type User, type VoiceMode, type VoiceSession } from './core'
-import { comingBackItems, ensureToday, starTargets } from './day'
+import {
+  activeThings,
+  findOpenRefresher,
+  insertRefresher,
+  insertVoiceSession,
+  listLevels,
+  localDay,
+  updateDay,
+  updateRefresher,
+  type Day,
+  type Refresher,
+  type ScriptStep,
+  type User,
+  type VoiceMode,
+  type VoiceSession,
+} from './core'
+import { comingBackItems, dueLevels, ensureToday, refreshTargets, starTargets } from './day'
+import { levelInfo } from './curriculum'
 import { isTestPhone } from './send'
 import {
   CALL_END_MS,
@@ -59,10 +75,13 @@ export type VoiceStart =
       targets: { id: string; title: string }[]
       /** The star round's dialogue. */
       script?: ScriptStep[]
+      /** A refresher: its row (the finish finds it by the session). */
+      refresher?: Refresher
     }
 
-/** The gate and the prompt for a mode, against today's state. */
-export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolean): Promise<VoiceStart> {
+/** The gate and the prompt for a mode, against today's state. `level` is
+ *  the refresher's level (default: the one due, else the latest completed). */
+export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolean, level?: number): Promise<VoiceStart> {
   const day = await ensureToday(user)
   const note = holdToTalk ? holdToTalkNote() : ''
   if (mode === 'talk') {
@@ -82,6 +101,8 @@ export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolea
     if (day.state !== 'done') return { ok: false, status: 409, error: 'Finish today first.' }
     if (day.starred_at || day.star_state === 'done') return { ok: false, status: 409, error: 'Today is starred already.' }
     if (day.star_state) return { ok: false, status: 409, error: 'The star round is under way: the three things are next.' }
+    const due = (await dueLevels(user))[0]
+    if (due) return { ok: false, status: 409, error: `Level ${due.level} needs its refresher first.` }
     const targets = await starTargets(user)
     if (targets.length === 0) return { ok: false, status: 409, error: 'Nothing left to practice at this level yet.' }
     // The dialogue is written once per round; a round started again today
@@ -101,6 +122,41 @@ export async function startVoice(user: User, mode: VoiceMode, holdToTalk: boolea
       wrap: { ...clock, cue: starWrapCue() },
       targets: targets.map((t) => ({ id: t.id, title: t.title })),
       script,
+    }
+  }
+  if (mode === 'refresh') {
+    if (!user.objectives) return { ok: false, status: 409, error: 'Turn on Learning objectives in Settings.' }
+    const open = await findOpenRefresher(user.id)
+    if (open?.state === 'cards') return { ok: false, status: 409, error: 'Finish the refresher’s cards first.' }
+    const levels = await listLevels(user.id, user.language)
+    if (levels.length === 0) return { ok: false, status: 409, error: 'No completed level to refresh yet.' }
+    const due = levels.filter((l) => l.refresh_due <= localDay(new Date(), user.tz))
+    const pick = level ?? due[0]?.level ?? levels[levels.length - 1].level
+    if (!levels.some((l) => l.level === pick)) return { ok: false, status: 409, error: `Level ${pick} is not completed yet.` }
+    const targets = await refreshTargets(user, pick)
+    if (targets.length === 0) return { ok: false, status: 409, error: 'Nothing to refresh at that level.' }
+    const today = localDay(new Date(), user.tz)
+    // A refresher started today and abandoned before anyone spoke keeps its script.
+    let refresher: Refresher
+    if (open && open.state === 'talk' && open.level === pick && open.day === today && open.script && open.targets.join() === targets.map((t) => t.id).join()) {
+      refresher = open
+    } else {
+      const script = await writeStarScript(user, targets)
+      refresher = await insertRefresher({ user_id: user.id, language: user.language, level: pick, day: today, targets: targets.map((t) => t.id), script })
+    }
+    const script = refresher.script ?? []
+    const systemPrompt = withOpening(starPrompt(user, targets, script, 'refresh'), starOpening(script)) + note
+    const clock = starClock(script.length)
+    return {
+      ok: true,
+      day,
+      mode,
+      systemPrompt,
+      cues: [],
+      wrap: { ...clock, cue: starWrapCue() },
+      targets: targets.map((t) => ({ id: t.id, title: t.title })),
+      script,
+      refresher,
     }
   }
   // things: the day's, or the star round's.
@@ -132,6 +188,7 @@ export async function openSession(user: User, start: Extract<VoiceStart, { ok: t
     mode: start.mode,
     system_prompt: start.systemPrompt,
   })
+  if (start.refresher) await updateRefresher(start.refresher.id, { session_id: session.id })
   return {
     voice_session: { id: session.id, mode: start.mode, day_id: start.day.id },
     eleven: {
@@ -147,9 +204,11 @@ export async function openSession(user: User, start: Extract<VoiceStart, { ok: t
       cues: start.cues,
       // Calls: the wrap-up note at after_ms, and the app ends the call at end_ms.
       wrap: start.wrap,
-      // The star round's objectives and its dialogue, for the screen.
+      // The star round's (or refresher's) objectives and its dialogue, for the screen.
       targets: start.targets,
       script: start.script ?? null,
+      // A refresher: which level it keeps bright.
+      level: start.refresher ? { n: start.refresher.level, name: levelInfo(start.refresher.level).name } : null,
     },
   }
 }

@@ -112,7 +112,14 @@ struct TrailNode: Codable, Equatable, Identifiable {
     let done: Bool
     let today: Bool
     let starred: Bool
+    /// The level completed on this day, when its star round earned the last objective: the flag.
+    let levelDone: Int?
     var id: Int { n }
+
+    enum CodingKeys: String, CodingKey {
+        case n, done, today, starred
+        case levelDone = "level_done"
+    }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -120,6 +127,7 @@ struct TrailNode: Codable, Equatable, Identifiable {
         done = try c.decodeIfPresent(Bool.self, forKey: .done) ?? false
         today = try c.decodeIfPresent(Bool.self, forKey: .today) ?? false
         starred = try c.decodeIfPresent(Bool.self, forKey: .starred) ?? false
+        levelDone = try c.decodeIfPresent(Int.self, forKey: .levelDone)
     }
 }
 
@@ -134,11 +142,93 @@ struct StarView: Codable, Equatable {
     let targets: [Named]
     let earned: [Named]
     let levelUp: Bool
+    let levelDone: Int?
 
     enum CodingKeys: String, CodingKey {
         case state, targets, earned
         case levelUp = "level_up"
+        case levelDone = "level_done"
     }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        state = try c.decode(String.self, forKey: .state)
+        targets = try c.decodeIfPresent([Named].self, forKey: .targets) ?? []
+        earned = try c.decodeIfPresent([Named].self, forKey: .earned) ?? []
+        levelUp = try c.decodeIfPresent(Bool.self, forKey: .levelUp) ?? false
+        levelDone = try c.decodeIfPresent(Int.self, forKey: .levelDone)
+    }
+}
+
+/// A completed level: bright until its refresher is due.
+struct LevelView: Codable, Equatable, Identifiable {
+    let level: Int
+    let name: String
+    let cefr: String
+    let tagline: String
+    let completedDay: String
+    let refreshDue: String
+    let refreshedAt: String?
+    let refreshCount: Int
+    let due: Bool
+    let canDos: [LevelCanDo]
+    var id: Int { level }
+
+    struct LevelCanDo: Codable, Equatable, Identifiable {
+        let id: String
+        let title: String
+        let evidence: String?
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case level, name, cefr, tagline, due
+        case completedDay = "completed_day"
+        case refreshDue = "refresh_due"
+        case refreshedAt = "refreshed_at"
+        case refreshCount = "refresh_count"
+        case canDos = "can_dos"
+    }
+}
+
+/// The refresher under way, or the one done today.
+struct RefreshView: Codable, Equatable {
+    let id: String
+    let level: Int
+    let name: String
+    let state: String
+    let targets: [Named]
+    let demonstrated: [Named]
+    let passed: Bool?
+    let nextDue: String?
+    let right: Int
+    let total: Int
+
+    enum CodingKeys: String, CodingKey {
+        case id, level, name, state, targets, demonstrated, passed, right, total
+        case nextDue = "next_due"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        level = try c.decodeIfPresent(Int.self, forKey: .level) ?? 1
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        state = try c.decodeIfPresent(String.self, forKey: .state) ?? "talk"
+        targets = try c.decodeIfPresent([Named].self, forKey: .targets) ?? []
+        demonstrated = try c.decodeIfPresent([Named].self, forKey: .demonstrated) ?? []
+        passed = try c.decodeIfPresent(Bool.self, forKey: .passed)
+        nextDue = try c.decodeIfPresent(String.self, forKey: .nextDue)
+        right = try c.decodeIfPresent(Int.self, forKey: .right) ?? 0
+        total = try c.decodeIfPresent(Int.self, forKey: .total) ?? 0
+    }
+}
+
+/// The one banner slot above the day.
+struct Banner: Codable, Equatable {
+    let kind: String
+    let level: Int
+    let title: String
+    let text: String
 }
 
 /// One exchange of a star round's dialogue.
@@ -161,6 +251,7 @@ struct CanDoView: Codable, Equatable, Identifiable {
     let id: String
     let title: String
     let earned: Bool
+    let evidence: String?
 }
 
 struct Rung: Codable, Equatable, Identifiable {
@@ -181,17 +272,42 @@ struct ObjectivesView: Codable, Equatable {
     let earned: Int
     let total: Int
     let starAvailable: Bool
+    /// A completed level whose refresher is due: it comes before the star round.
+    let refreshDue: RefreshDue?
+
+    struct RefreshDue: Codable, Equatable { let level: Int; let name: String }
     let canDos: [CanDoView]
     let ladder: [Rung]
 
     enum CodingKeys: String, CodingKey {
         case on, level, name, tagline, cefr, earned, total, ladder
         case starAvailable = "star_available"
+        case refreshDue = "refresh_due"
         case canDos = "can_dos"
     }
 
+    init(on: Bool, level: Int, name: String, tagline: String, cefr: String, earned: Int, total: Int, starAvailable: Bool, refreshDue: RefreshDue?, canDos: [CanDoView], ladder: [Rung]) {
+        self.on = on; self.level = level; self.name = name; self.tagline = tagline; self.cefr = cefr
+        self.earned = earned; self.total = total; self.starAvailable = starAvailable; self.refreshDue = refreshDue; self.canDos = canDos; self.ladder = ladder
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        on = try c.decodeIfPresent(Bool.self, forKey: .on) ?? false
+        level = try c.decodeIfPresent(Int.self, forKey: .level) ?? 1
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? "Hello"
+        tagline = try c.decodeIfPresent(String.self, forKey: .tagline) ?? ""
+        cefr = try c.decodeIfPresent(String.self, forKey: .cefr) ?? "A1.1"
+        earned = try c.decodeIfPresent(Int.self, forKey: .earned) ?? 0
+        total = try c.decodeIfPresent(Int.self, forKey: .total) ?? 0
+        starAvailable = try c.decodeIfPresent(Bool.self, forKey: .starAvailable) ?? false
+        refreshDue = try c.decodeIfPresent(RefreshDue.self, forKey: .refreshDue)
+        canDos = try c.decodeIfPresent([CanDoView].self, forKey: .canDos) ?? []
+        ladder = try c.decodeIfPresent([Rung].self, forKey: .ladder) ?? []
+    }
+
     /// Objectives off, level 1, nothing earned: what an older server implies.
-    static let off = ObjectivesView(on: false, level: 1, name: "Hello", tagline: "", cefr: "A1.1", earned: 0, total: 0, starAvailable: false, canDos: [], ladder: [])
+    static let off = ObjectivesView(on: false, level: 1, name: "Hello", tagline: "", cefr: "A1.1", earned: 0, total: 0, starAvailable: false, refreshDue: nil, canDos: [], ladder: [])
 }
 
 enum DayState: String {
@@ -201,8 +317,11 @@ enum DayState: String {
     case starAfterTalk = "star_after_talk"
     case starAfterThings = "star_after_things"
     case starPaused = "star_paused"
+    case refreshCards = "refresh_cards"
+    case refreshPaused = "refresh_paused"
 
     var inStarRound: Bool { self == .starAfterTalk || self == .starAfterThings || self == .starPaused }
+    var inRefresher: Bool { self == .refreshCards || self == .refreshPaused }
 }
 
 struct DayView: Codable, Equatable {
@@ -230,6 +349,10 @@ struct DayView: Codable, Equatable {
     let starred: Bool
     let star: StarView?
     let objectives: ObjectivesView
+    /// Every level completed, oldest first; the refresher under way or done today; the banner slot.
+    let levels: [LevelView]
+    let refresh: RefreshView?
+    let banner: Banner?
 
     var dayState: DayState { DayState(rawValue: state) ?? .morning }
 
@@ -239,14 +362,14 @@ struct DayView: Codable, Equatable {
         case .morning: return 0
         case .afterTalk: return 1
         case .afterThings, .paused: return 2
-        case .done, .starAfterTalk, .starAfterThings, .starPaused: return 3
+        case .done, .starAfterTalk, .starAfterThings, .starPaused, .refreshCards, .refreshPaused: return 3
         }
     }
 
     var rightCount: Int { answers.filter(\.ok).count }
 
     enum CodingKeys: String, CodingKey {
-        case id, day, n, topic, state, streak, things, questions, answers, trail, tomorrow, starred, star, objectives
+        case id, day, n, topic, state, streak, things, questions, answers, trail, tomorrow, starred, star, objectives, levels, refresh, banner
         case bestStreak = "best_streak"
         case dailyHour = "daily_hour"
         case dailyLabel = "daily_label"
@@ -284,6 +407,9 @@ struct DayView: Codable, Equatable {
         starred = try c.decodeIfPresent(Bool.self, forKey: .starred) ?? false
         star = try c.decodeIfPresent(StarView.self, forKey: .star)
         objectives = try c.decodeIfPresent(ObjectivesView.self, forKey: .objectives) ?? .off
+        levels = try c.decodeIfPresent([LevelView].self, forKey: .levels) ?? []
+        refresh = try c.decodeIfPresent(RefreshView.self, forKey: .refresh)
+        banner = try c.decodeIfPresent(Banner.self, forKey: .banner)
     }
 }
 
@@ -356,12 +482,16 @@ struct ElevenSessionResponse: Codable {
         let cues: [String]
         /// The call: send `cue` at afterMs, end at endMs.
         let wrap: Wrap?
-        /// The star round's objectives, for the screen, and its dialogue.
+        /// The star round's (or refresher's) objectives, for the screen, and its dialogue.
         let targets: [Named]?
         let script: [ScriptStep]?
+        /// A refresher: the level it keeps bright.
+        let level: RefreshLevel?
+
+        struct RefreshLevel: Codable { let n: Int; let name: String }
 
         enum CodingKeys: String, CodingKey {
-            case model, kickoff, cues, wrap, targets, script
+            case model, kickoff, cues, wrap, targets, script, level
             case conversationToken = "conversation_token"
             case holdToTalk = "hold_to_talk"
             case dynamicVariables = "dynamic_variables"

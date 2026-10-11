@@ -49,6 +49,10 @@ struct RootView: View {
                         ObjectivesSheet()
                             .environment(state)
                     }
+                    .sheet(isPresented: Binding(get: { state.showLevel != nil }, set: { if !$0 { state.showLevel = nil } })) {
+                        LevelSheet(level: state.showLevel ?? 1)
+                            .environment(state)
+                    }
             }
         }
     }
@@ -68,11 +72,14 @@ struct FlowView: View {
     /// A star round (started here, or resumed mid-way from the map).
     @State private var starFlow: Bool
     @State private var moreFlow: Bool
+    /// A completed level's refresher (started here, or its cards resumed from the map).
+    @State private var refreshFlow: Bool
 
     init(start: FlowStep, day: DayView?) {
         _step = State(initialValue: start)
         _starFlow = State(initialValue: start == .star || (day?.dayState.inStarRound ?? false))
         _moreFlow = State(initialValue: start == .more)
+        _refreshFlow = State(initialValue: start == .refresh || start == .refreshDone || (day?.dayState.inRefresher ?? false))
     }
 
     var body: some View {
@@ -83,7 +90,14 @@ struct FlowView: View {
                     .id(step)
                     .transition(.opacity)
             case .star:
-                StarScriptView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
+                StarScriptView(mode: "star", onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
+                    .transition(.opacity)
+            case .refresh:
+                StarScriptView(mode: "refresh", level: state.refreshLevel, onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
+                    .id("refresh-\(state.refreshLevel ?? 0)")
+                    .transition(.opacity)
+            case .refreshDone:
+                RefreshDoneView(onDone: { state.flow = nil }, onAgain: { startRefresh() })
                     .transition(.opacity)
             case .things:
                 ThingsView(onDone: { day in advance(after: day) }, onLeave: { state.flow = nil })
@@ -108,9 +122,12 @@ struct FlowView: View {
         switch day.dayState {
         case .morning: state.flow = nil
         case .afterTalk, .starAfterTalk: step = .things
-        case .afterThings, .paused, .starAfterThings, .starPaused: step = .cards
+        case .afterThings, .paused, .starAfterThings, .starPaused, .refreshCards, .refreshPaused: step = .cards
         case .done:
-            if moreFlow {
+            if refreshFlow {
+                // The refresher's cards are done (its verdict), or its call went nowhere.
+                if day.refresh?.state == "done" { step = .refreshDone } else { state.flow = nil }
+            } else if moreFlow {
                 // The extra call's three things, when it produced any.
                 if day.lastExtraThings.isEmpty { state.flow = nil } else { step = .moreDone }
             } else if starFlow, day.star?.state != "done" {
@@ -125,12 +142,21 @@ struct FlowView: View {
     private func startMore() {
         moreFlow = true
         starFlow = false
+        refreshFlow = false
         step = .more
     }
 
     private func startStar() {
         starFlow = true
         moreFlow = false
+        refreshFlow = false
         step = .star
+    }
+
+    private func startRefresh() {
+        refreshFlow = true
+        starFlow = false
+        moreFlow = false
+        step = .refresh
     }
 }

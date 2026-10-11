@@ -54,9 +54,11 @@ struct SettingsView: View {
                                     .labelsHidden().tint(skin.primary)
                             }
                             Text(user.objectives
-                                 ? "On. After your day, ★ Star the day: a short guided call that works through your level’s objectives. You’re on Level \(user.rung)."
-                                 : "Off. Turn it on for a ladder of levels and a star round after your day that works through each level’s objectives. Everyone starts at Level 1.")
+                                 ? "On. After your day, ★ Star the day: a short guided call that works through your level’s objectives. A completed level gets a flag on your map and a short refresher every so often to stay bright. You’re on Level \(user.rung)."
+                                 : "Off. Turn it on for a ladder of eight levels (A1 to B2) and a star round after your day that works through each level’s objectives. Everyone starts at Level 1.")
                                 .font(skin.ui(13)).foregroundStyle(skin.ink3).frame(maxWidth: .infinity, alignment: .leading)
+                            LevelsLink(title: "See all the levels", level: user.objectives ? user.rung : nil)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         section("Voice") {
                             row("Hold to talk") {

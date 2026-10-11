@@ -81,6 +81,8 @@ export type Day = {
   star_level_up: boolean
   /** The round's dialogue: Dolly's lines and suggested replies, in order. */
   star_script: ScriptStep[] | null
+  /** The level completed on this day (its star round earned the last can-do): the flag on the trail. */
+  star_level_done: number | null
   created_at: string
 }
 
@@ -128,8 +130,44 @@ export type Item = {
 }
 
 /** talk = the day's call; things = said back (the day's or the star
- *  round's); more = a free extra call; star = the guided round. */
-export type VoiceMode = 'talk' | 'things' | 'more' | 'star'
+ *  round's); more = a free extra call; star = the guided round; refresh = a
+ *  completed level's refresher (two can-dos, then four cards). */
+export type VoiceMode = 'talk' | 'things' | 'more' | 'star' | 'refresh'
+
+/** A completed level: bright until `refresh_due`, due from that day on. */
+export type LevelRow = {
+  id: string
+  user_id: string
+  language: LanguageCode
+  level: number
+  completed_at: string
+  completed_day: string
+  refresh_due: string
+  refreshed_at: string | null
+  refresh_count: number
+}
+
+export type RefreshState = 'talk' | 'cards' | 'done'
+
+/** One refresher attempt on a completed level. */
+export type Refresher = {
+  id: string
+  user_id: string
+  language: LanguageCode
+  level: number
+  day: string
+  state: RefreshState
+  targets: string[]
+  script: ScriptStep[] | null
+  session_id: string | null
+  seconds: number | null
+  demonstrated: string[] | null
+  questions: Question[] | null
+  answers: Answer[]
+  passed: boolean | null
+  created_at: string
+  done_at: string | null
+}
 
 export type VoiceSession = {
   id: string
@@ -357,6 +395,73 @@ export async function earnCanDo(userId: string, candoId: string, level: number, 
     .from('dolly_cando')
     .upsert({ user_id: userId, cando_id: candoId, level, evidence }, { onConflict: 'user_id,cando_id', ignoreDuplicates: true })
   if (error) throw new Error(`dolly: earn failed: ${error.message}`)
+}
+
+// ---------- levels completed, and their refreshers ----------
+
+export async function listLevels(userId: string, language: LanguageCode): Promise<LevelRow[]> {
+  const { data, error } = await supabase().from('dolly_levels').select('*').eq('user_id', userId).eq('language', language).order('level')
+  if (error) throw new Error(`dolly: list levels failed: ${error.message}`)
+  return (data ?? []) as LevelRow[]
+}
+
+export async function insertLevel(input: { user_id: string; language: LanguageCode; level: number; completed_day: string; refresh_due: string }): Promise<LevelRow> {
+  const { data, error } = await supabase()
+    .from('dolly_levels')
+    .upsert(input, { onConflict: 'user_id,language,level', ignoreDuplicates: true })
+    .select('*')
+    .maybeSingle()
+  if (error) throw new Error(`dolly: insert level failed: ${error.message}`)
+  if (data) return data as LevelRow
+  const { data: existing } = await supabase().from('dolly_levels').select('*').eq('user_id', input.user_id).eq('language', input.language).eq('level', input.level).single()
+  return existing as LevelRow
+}
+
+export async function updateLevel(id: string, patch: Partial<Omit<LevelRow, 'id' | 'user_id'>>): Promise<LevelRow> {
+  const { data, error } = await supabase().from('dolly_levels').update(patch).eq('id', id).select('*').single()
+  if (error) throw new Error(`dolly: update level failed: ${error.message}`)
+  return data as LevelRow
+}
+
+export async function insertRefresher(input: { user_id: string; language: LanguageCode; level: number; day: string; targets: string[]; script: ScriptStep[] }): Promise<Refresher> {
+  const { data, error } = await supabase().from('dolly_refreshers').insert(input).select('*').single()
+  if (error) throw new Error(`dolly: insert refresher failed: ${error.message}`)
+  return data as Refresher
+}
+
+/** The refresher under way (its call or its cards still to do), if any. */
+export async function findOpenRefresher(userId: string): Promise<Refresher | null> {
+  const { data } = await supabase()
+    .from('dolly_refreshers')
+    .select('*')
+    .eq('user_id', userId)
+    .neq('state', 'done')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as Refresher | null) ?? null
+}
+
+export async function findRefresherBySession(userId: string, sessionId: string): Promise<Refresher | null> {
+  const { data } = await supabase().from('dolly_refreshers').select('*').eq('user_id', userId).eq('session_id', sessionId).maybeSingle()
+  return (data as Refresher | null) ?? null
+}
+
+/** The refreshers of a local day, newest first. */
+export async function listRefreshers(userId: string, day: string): Promise<Refresher[]> {
+  const { data, error } = await supabase().from('dolly_refreshers').select('*').eq('user_id', userId).eq('day', day).order('created_at', { ascending: false })
+  if (error) throw new Error(`dolly: list refreshers failed: ${error.message}`)
+  return (data ?? []) as Refresher[]
+}
+
+export async function updateRefresher(id: string, patch: Partial<Omit<Refresher, 'id' | 'user_id' | 'created_at'>>): Promise<Refresher> {
+  const { data, error } = await supabase().from('dolly_refreshers').update(patch).eq('id', id).select('*').single()
+  if (error) throw new Error(`dolly: update refresher failed: ${error.message}`)
+  return data as Refresher
+}
+
+export async function deleteRefresher(id: string): Promise<void> {
+  await supabase().from('dolly_refreshers').delete().eq('id', id)
 }
 
 // ---------- voice sessions ----------

@@ -191,7 +191,7 @@ struct ThingsView: View {
 
     private var coachLine: String {
         switch phase {
-        case .listen: return client.phase == .speaking ? "Listen." : "Calling…"
+        case .listen: return client.phase == .speaking ? "Listen." : "Connecting…"
         case .repeatIt: return holdToTalk ? "Your turn. Hold the mic and say it." : "Your turn. Say it."
         case .hearing: return "Listening…"
         case .got: return "You got it!"

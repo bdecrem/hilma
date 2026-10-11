@@ -13,8 +13,10 @@
 		395F955A98AD2D570F63DDDB /* Skin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */; };
 		4CB76C855AB791DC5D918A20 /* Quicksand-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */; };
 		4D842C01586F5BE6EE87AE78 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E83D4816DB2B314E41EBB9A /* Assets.xcassets */; };
+		53B516C3986E9A0B353F9F30 /* LevelSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF5043C6A6247024C49AED1 /* LevelSheet.swift */; };
 		6AC387C875922EEC625535C9 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = 5D3660364F0B75DBCE4617E6 /* ElevenLabs */; };
 		6C9AA7632A14E6D4974695D1 /* StarScriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157409FF28ABFBE504BAE0AC /* StarScriptView.swift */; };
+		6F426D9676FF49D29337EE4D /* RefreshDoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E59C23A18D78EB03372CAE63 /* RefreshDoneView.swift */; };
 		7028B1FD21D2A718765B25EB /* VoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACEFFC491A33CE02F4195784 /* VoiceClient.swift */; };
 		735700B81CF4D087E6E4C4D0 /* DollyAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D3895D14152F5D3935DF075 /* DollyAPI.swift */; };
 		798FB4792BF3770D51B4A947 /* ObjectivesSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9C028B32760E9F96337688 /* ObjectivesSheet.swift */; };
@@ -28,10 +30,12 @@
 		B98D9C5248F63DC0B9EE9C18 /* Quicksand-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A827E147E4DEC8F3FC182DFB /* Quicksand-Bold.ttf */; };
 		BB4E40AA224BCE64A8C975F4 /* DoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12FCCD7FABF0295FC43E35A /* DoneView.swift */; };
 		C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08793AEC3DBECFE259B029C9 /* Secrets.swift */; };
+		C70CD002D7E41E524D896A69 /* SafariView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 774652343B29419AE35BD69D /* SafariView.swift */; };
 		C801744CAFFAA9E03828D3DE /* ThingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69F67961CC796459CB5B830A /* ThingsView.swift */; };
 		CD7252E6C0FEA47E2F041A43 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = D104FCD2299C3BDA56F7A217 /* Components.swift */; };
 		D14D81EA2A7C2C688B3572E1 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8132C7C8432ADBE5DBCC84 /* AppState.swift */; };
 		D42463998CAB38DEB8D4C8CB /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47D278063D8D4D04FF60B17C /* OnboardingView.swift */; };
+		D69BE79351729D64A5457E26 /* Confetti.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84FD1136DD96425EBD86870 /* Confetti.swift */; };
 		F3B968447A9180183ED839D7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
@@ -48,9 +52,11 @@
 		6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Medium.ttf"; sourceTree = "<group>"; };
 		69F67961CC796459CB5B830A /* ThingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingsView.swift; sourceTree = "<group>"; };
 		71394AAD3C828B4DA4977412 /* Dolly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dolly.entitlements; sourceTree = "<group>"; };
+		774652343B29419AE35BD69D /* SafariView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariView.swift; sourceTree = "<group>"; };
 		9D9C028B32760E9F96337688 /* ObjectivesSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectivesSheet.swift; sourceTree = "<group>"; };
 		A42C56D6FCC65E69CC809C26 /* Baloo2-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Baloo2-ExtraBold.ttf"; sourceTree = "<group>"; };
 		A827E147E4DEC8F3FC182DFB /* Quicksand-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Bold.ttf"; sourceTree = "<group>"; };
+		ABF5043C6A6247024C49AED1 /* LevelSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelSheet.swift; sourceTree = "<group>"; };
 		ACEFFC491A33CE02F4195784 /* VoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceClient.swift; sourceTree = "<group>"; };
 		B070E3786684AF6D8EB03143 /* DollyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DollyApp.swift; sourceTree = "<group>"; };
 		B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevenVoiceClient.swift; sourceTree = "<group>"; };
@@ -63,6 +69,8 @@
 		DC1D7C1BFFDE7F77F90FCF4B /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		DF955F0B5D7166AC219C99C1 /* TalkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkView.swift; sourceTree = "<group>"; };
 		E12FCCD7FABF0295FC43E35A /* DoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoneView.swift; sourceTree = "<group>"; };
+		E59C23A18D78EB03372CAE63 /* RefreshDoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshDoneView.swift; sourceTree = "<group>"; };
+		E84FD1136DD96425EBD86870 /* Confetti.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Confetti.swift; sourceTree = "<group>"; };
 		E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -112,18 +120,22 @@
 				2E83D4816DB2B314E41EBB9A /* Assets.xcassets */,
 				B7179E09AC45B5F4E9F34E53 /* CardsView.swift */,
 				D104FCD2299C3BDA56F7A217 /* Components.swift */,
+				E84FD1136DD96425EBD86870 /* Confetti.swift */,
 				71394AAD3C828B4DA4977412 /* Dolly.entitlements */,
 				0D3895D14152F5D3935DF075 /* DollyAPI.swift */,
 				B070E3786684AF6D8EB03143 /* DollyApp.swift */,
 				E12FCCD7FABF0295FC43E35A /* DoneView.swift */,
 				B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */,
 				0E5E36E574FC10AB78344256 /* Info.plist */,
+				ABF5043C6A6247024C49AED1 /* LevelSheet.swift */,
 				DC1D7C1BFFDE7F77F90FCF4B /* MapView.swift */,
 				D8C59EB20FA58A8FDACE48AF /* Mascot.swift */,
 				CAA4D8B1546392D9142BB179 /* Models.swift */,
 				4467C9C2BA27B448BC70C223 /* MoreDoneView.swift */,
 				9D9C028B32760E9F96337688 /* ObjectivesSheet.swift */,
 				47D278063D8D4D04FF60B17C /* OnboardingView.swift */,
+				E59C23A18D78EB03372CAE63 /* RefreshDoneView.swift */,
+				774652343B29419AE35BD69D /* SafariView.swift */,
 				08793AEC3DBECFE259B029C9 /* Secrets.swift */,
 				E8A4C790DFC75F8DCE2A4E16 /* SettingsView.swift */,
 				C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */,
@@ -218,16 +230,20 @@
 				D14D81EA2A7C2C688B3572E1 /* AppState.swift in Sources */,
 				B6A7485EE8FA2C2C574AA669 /* CardsView.swift in Sources */,
 				CD7252E6C0FEA47E2F041A43 /* Components.swift in Sources */,
+				D69BE79351729D64A5457E26 /* Confetti.swift in Sources */,
 				735700B81CF4D087E6E4C4D0 /* DollyAPI.swift in Sources */,
 				1CBB68C36B08D3D2D6324A4C /* DollyApp.swift in Sources */,
 				BB4E40AA224BCE64A8C975F4 /* DoneView.swift in Sources */,
 				0A98F595585BD3A177EBC01A /* ElevenVoiceClient.swift in Sources */,
+				53B516C3986E9A0B353F9F30 /* LevelSheet.swift in Sources */,
 				7C6A5DD80DE784BA9F09237D /* MapView.swift in Sources */,
 				7FD8749641708D28547E7D89 /* Mascot.swift in Sources */,
 				9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */,
 				84FD199A7F8631A580BA6AFC /* MoreDoneView.swift in Sources */,
 				798FB4792BF3770D51B4A947 /* ObjectivesSheet.swift in Sources */,
 				D42463998CAB38DEB8D4C8CB /* OnboardingView.swift in Sources */,
+				6F426D9676FF49D29337EE4D /* RefreshDoneView.swift in Sources */,
+				C70CD002D7E41E524D896A69 /* SafariView.swift in Sources */,
 				C1A11B6C24A6970A99C74CFC /* Secrets.swift in Sources */,
 				F3B968447A9180183ED839D7 /* SettingsView.swift in Sources */,
 				395F955A98AD2D570F63DDDB /* Skin.swift in Sources */,
@@ -301,7 +317,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -361,7 +377,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

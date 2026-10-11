@@ -33,6 +33,43 @@ today over** at the bottom of the map (`POST /api/dolly/day/reset`) puts the
 day back to the morning; kept words and earned objectives stay. The thinking
 is `docs/dolly-pedagogy.md`.
 
+**One map** (2026-10-11): the trail stays a calendar (nodes are days, never
+sessions); the skill axis rides on it. A starred day is a bigger golden node;
+the day whose star round earned a level's last objective carries a **flag**
+("Level 1", `dolly_days.star_level_done`, `trail[].level_done`) — tap it for
+`LevelSheet`: every objective with the learner's own line ("You said: …"),
+bright or due, Refresh now, a link into the public curriculum. `DoneView`
+throws confetti (`Confetti.swift`) on a level-up. A completed level is a
+`dolly_levels` row (schema 005): bright for 7 days, then its **refresher** is
+due (14, 30, 60, 90 days after each pass — `REFRESH_INTERVALS` in `day.ts`).
+Due = the map's one **banner slot** ("Level 1 refresher is due", dismissable
+for the day, `bannerDismissed:` in UserDefaults), the flag dims, the level
+line says "Level 1 due", the done card's first button becomes "Refresh Level
+1", and the next level's star round is refused (409) until it passes. The
+refresher (mode `refresh`, `dolly_refreshers`): a scripted call on the level's
+two weakest can-dos (`refreshTargets`: the ones whose practice items were
+missed most on the cards) in `StarScriptView(mode: "refresh")`, then four
+cards through the same `CardsView` (the day's `questions`/`answers` are the
+refresher's while it is open; map states `refresh_cards` / `refresh_paused`),
+then `RefreshDoneView`: passed when both can-dos were demonstrated in the call
+(the same reader as the star round), which keeps the level bright and sets
+the next due date; not passed leaves it due with "Try again". A refresher can
+also be started from a bright level's sheet ("Refresh it anyway"). With the
+toggle off: no level line, no flags, no banner — the trail, the streak and
+the done card. **Voice screens end with a Next, not a hang-up**: when a call
+is over (the wrap-up said, the script's last line said, or the engine ended
+it) the red End becomes "Next: Three things" / "Next: Cards" / "Done", and a
+failed call offers "Back to the map". The public curriculum is
+`ola.cx/dolly/levels` (`src/app/dolly/levels/page.tsx`, generated from
+`curriculum.ts`; `?lang=zh`; `#level-N`), linked from Settings → Learning
+objectives, the ladder sheet and a level's sheet (`SafariView.swift`).
+
+**The voice is a native speaker** (2026-10-11): Norah, a Latin American
+Spanish library voice, not Bella — an English voice on a multilingual model
+slid in and out of an American accent in Spanish. Library voices with live
+moderation on are refused by the Speech Engine API (Lucia was); pick one
+without it. `apps/dodo-voice-bridge/engines.mjs`, `DOLLY_ELEVEN_VOICE_ID`.
+
 ## Files (`Dolly/`)
 
 - `DollyApp.swift` — `@main`, `RootView` (loading / onboarding / map), `FlowView`
@@ -71,11 +108,14 @@ with zsh build the arguments as an array):
 - `-BackendURL http://localhost:3260` — a local dev server (the worktree's `next dev -p 3260`).
 - `-TestSessionToken <value>` — sign in as the test account: the value is what
   `npx tsx scripts/dolly/e2e.ts` prints ("cookie value"). Never Bart's account.
-- `-Open map|settings|objectives|talk|things|cards|done|more|star` — where to
-  open. `talk` needs the day at `morning`, `things` at `after_talk`, `cards` at
-  `after_things`: `scripts/dolly/e2e.ts --until talk|things|cards` leaves the
-  test account there; `more` and `star` need the day done (a full `e2e.ts` run
-  leaves it done and starred, objectives off).
+- `-Open map|settings|objectives|level|talk|things|cards|done|more|star|refresh|refreshDone`
+  — where to open. `talk` needs the day at `morning`, `things` at `after_talk`,
+  `cards` at `after_things`: `scripts/dolly/e2e.ts --until talk|things|cards`
+  leaves the test account there; `more` and `star` need the day done (a full
+  `e2e.ts` run leaves it done and starred, level 1 completed and refreshed
+  once, objectives off — turn them on with `PUT /api/dolly/me`; back-date
+  `dolly_levels.refresh_due` with the service key to see the due state).
+  `-ScrollTo trail` scrolls the map to the trail for a screenshot.
 - `-VoiceDrill 1` (with `-Open talk`) — the protocol drill: session up, Dolly
   spoke, audio arrived, a clean end with the finish landing. Read the
   `DOLLY_DRILL` lines: `xcrun simctl spawn <udid> log show --start "<time>"

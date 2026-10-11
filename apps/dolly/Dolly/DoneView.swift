@@ -32,8 +32,14 @@ struct DoneView: View {
                     .padding(.top, 24)
 
                     if starDone, day?.star?.levelUp == true {
-                        Text("Level \(day?.objectives.level ?? 0)!").font(skin.display(38)).foregroundStyle(skin.primary)
-                        Text(day?.objectives.name ?? "").font(skin.displayMedium(20)).foregroundStyle(skin.ink)
+                        Text("Level \(day?.star?.levelDone ?? max((day?.objectives.level ?? 2) - 1, 1)) complete!").font(skin.display(36)).foregroundStyle(skin.primary)
+                            .multilineTextAlignment(.center)
+                        HStack(spacing: 6) {
+                            Image(systemName: "flag.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(skin.reward)
+                            Text("A flag on today. You're on Level \(day?.objectives.level ?? 0) · \(day?.objectives.name ?? "") now.").font(skin.uiBold(15)).foregroundStyle(skin.ink2)
+                        }
+                        .multilineTextAlignment(.center).padding(.horizontal, 24)
+                        Text("It stays bright for a week, then a short refresher keeps it.").font(skin.ui(13)).foregroundStyle(skin.ink3)
                     } else if starDone {
                         Text("Star day").font(skin.display(34)).foregroundStyle(skin.ink)
                         Text("Level \(day?.objectives.level ?? 1) · \(day?.objectives.earned ?? 0) of \(day?.objectives.total ?? 0)")
@@ -108,6 +114,9 @@ struct DoneView: View {
                     .padding(.top, 8)
                     .padding(.bottom, 28)
                 }
+            }
+            if starDone, day?.star?.levelUp == true {
+                Confetti().ignoresSafeArea()
             }
         }
     }

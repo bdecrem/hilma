@@ -167,13 +167,16 @@ export async function writeStarScript(user: User, targets: CanDo[]): Promise<Scr
   return steps.slice(0, 12)
 }
 
-export function starPrompt(user: User, targets: CanDo[], script: ScriptStep[]): string {
+export function starPrompt(user: User, targets: CanDo[], script: ScriptStep[], kind: 'star' | 'refresh' = 'star'): string {
   const lang = LANGUAGES[user.language]
   const lines = script.map((s, i) => `${i + 1}. Dolly: "${s.dolly}"   (they might answer: "${s.you}")`).join('\n')
   const objectives = targets.map((t) => `- ${t.title}: ${t.items.map((x) => x.t).join(', ')}`).join('\n')
+  const what = kind === 'refresh'
+    ? `This is a refresher: a short scripted practice on two things from a level they completed a while ago, to keep it fresh.`
+    : `This is a star round: a short scripted practice they chose after finishing their day.`
   return `${persona(lang.speak)}
 
-This is a star round: a short scripted practice they chose after finishing their day. The learner sees the script line by line on their screen, in ${lang.speak} with the English under it, and a suggested answer in English, so they can follow it or wander off. Your job is to say your lines, in order, and keep them company.
+${what} The learner sees the script line by line on their screen, in ${lang.speak} with the English under it, and a suggested answer in English, so they can follow it or wander off. Your job is to say your lines, in order, and keep them company.
 
 The script:
 ${lines}
@@ -453,7 +456,7 @@ type Card = { target: string; native: string; pinyin: string | null; distractors
 /** Ten questions, a pick and a type by turns. The three new things are
  *  picked today; the rest come from the pool, misses first, then the least
  *  recently seen. Early days have a smaller pool and get fewer questions. */
-export function buildQuestions(lang: LanguageCode, day: Day, pool: Item[], opts: { things?: Thing[]; max?: number } = {}): Question[] {
+export function buildQuestions(lang: LanguageCode, day: Pick<Day, 'id' | 'things'>, pool: Item[], opts: { things?: Thing[]; max?: number } = {}): Question[] {
   const rnd = seeded(day.id + (opts.things ? ':star' : ''))
   const fresh: Card[] = (opts.things ?? day.things ?? []).map((t) => ({
     target: t.target,

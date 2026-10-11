@@ -80,9 +80,11 @@ protocol DollyVoiceClient: AnyObject {
 }
 
 @MainActor
-func makeVoiceClient(mode: String, holdToTalk: Bool) -> any DollyVoiceClient {
+func makeVoiceClient(mode: String, holdToTalk: Bool, level: Int? = nil) -> any DollyVoiceClient {
     switch VoiceEngine.current {
     case .eleven:
-        return ElevenVoiceClient(mode: mode, holdToTalk: holdToTalk)
+        let client = ElevenVoiceClient(mode: mode, holdToTalk: holdToTalk)
+        client.level = level
+        return client
     }
 }

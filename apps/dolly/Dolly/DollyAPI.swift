@@ -111,9 +111,9 @@ final class DollyAPI {
 
     // MARK: Voice
 
-    func startElevenSession(mode: String, holdToTalk: Bool) async throws -> ElevenSessionResponse {
-        struct Body: Encodable { let mode: String; let hold_to_talk: Bool }
-        return try await request("/api/dolly/eleven/session", method: "POST", body: Body(mode: mode, hold_to_talk: holdToTalk))
+    func startElevenSession(mode: String, holdToTalk: Bool, level: Int? = nil) async throws -> ElevenSessionResponse {
+        struct Body: Encodable { let mode: String; let hold_to_talk: Bool; let level: Int? }
+        return try await request("/api/dolly/eleven/session", method: "POST", body: Body(mode: mode, hold_to_talk: holdToTalk, level: level))
     }
 
     func finishVoice(id: String, transcript: [[String: String]], seconds: Int?) async throws -> DayView {

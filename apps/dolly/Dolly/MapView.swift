@@ -8,15 +8,23 @@ struct MapView: View {
     private let skin = Skin.current
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(spacing: 18) {
                 header
                 if let day = state.day {
+                    if day.objectives.on, let b = day.banner, !bannerDismissed(b, day) {
+                        banner(b, day)
+                    }
                     dayLine(day)
                     todayCard(day)
-                    Trail(nodes: day.trail)
+                    Trail(nodes: day.trail,
+                          dueLevels: Set(day.levels.filter(\.due).map(\.level)),
+                          showFlags: day.objectives.on,
+                          onLevel: { n in state.showLevel = n })
                         .frame(height: 300)
                         .padding(.top, 6)
+                        .id("trail")
                     startOver(day)
                 } else if let err = state.loadError {
                     Card {
@@ -42,6 +50,14 @@ struct MapView: View {
         .onChange(of: state.flow) { _, flow in
             if flow == nil { Task { await state.refresh() } }
         }
+        .task {
+            // `-ScrollTo trail`: a simulator drive looks at the trail.
+            guard UserDefaults.standard.string(forKey: "ScrollTo") == "trail" else { return }
+            while state.day == nil { try? await Task.sleep(for: .milliseconds(200)) }
+            try? await Task.sleep(for: .seconds(1))
+            withAnimation { proxy.scrollTo("trail", anchor: .bottom) }
+        }
+        }
     }
 
     private var header: some View {
@@ -63,6 +79,59 @@ struct MapView: View {
         }
     }
 
+    // MARK: The banner slot — one thing at a time, dismissable for the day.
+
+    @State private var dismissedBanner: String?
+
+    private func bannerKey(_ b: Banner, _ day: DayView) -> String { "bannerDismissed:\(b.kind):\(b.level):\(day.day)" }
+
+    private func bannerDismissed(_ b: Banner, _ day: DayView) -> Bool {
+        dismissedBanner == bannerKey(b, day) || UserDefaults.standard.bool(forKey: bannerKey(b, day))
+    }
+
+    private func banner(_ b: Banner, _ day: DayView) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            ZStack {
+                Circle().fill(skin.line).frame(width: 40, height: 40)
+                Image(systemName: "flag.fill").font(.system(size: 17, weight: .bold)).foregroundStyle(skin.ink3)
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(b.title).font(skin.displayMedium(17)).foregroundStyle(skin.ink)
+                Text(b.text).font(skin.ui(13)).foregroundStyle(skin.ink2).fixedSize(horizontal: false, vertical: true)
+                Button {
+                    if day.dayState.inRefresher {
+                        state.flow = .cards
+                    } else {
+                        state.refreshLevel = b.level
+                        state.flow = .refresh
+                    }
+                } label: {
+                    Text(day.dayState.inRefresher ? "Finish the cards" : "Refresh now")
+                        .font(skin.uiBold(14)).foregroundStyle(skin.onPrimary)
+                        .padding(.horizontal, 14).padding(.vertical, 8)
+                        .background(Capsule().fill(skin.primary))
+                        .background(Capsule().fill(skin.primaryDeep).offset(y: 3))
+                }
+                .buttonStyle(PressStyle())
+                .padding(.top, 4)
+            }
+            Spacer(minLength: 0)
+            Button {
+                let key = bannerKey(b, day)
+                UserDefaults.standard.set(true, forKey: key)
+                withAnimation { dismissedBanner = key }
+            } label: {
+                Image(systemName: "xmark").font(.system(size: 12, weight: .bold)).foregroundStyle(skin.ink3).frame(width: 28, height: 28)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Dismiss")
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(Color.white.opacity(0.78)))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(skin.line, lineWidth: 2))
+    }
+
     private func dayLine(_ day: DayView) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
@@ -77,6 +146,10 @@ struct MapView: View {
                         Image(systemName: "star.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(skin.reward)
                         Text("Level \(day.objectives.level) · \(day.objectives.name) · \(day.objectives.earned) of \(day.objectives.total)")
                             .font(skin.uiBold(14)).foregroundStyle(skin.ink2)
+                        if let due = day.objectives.refreshDue {
+                            Image(systemName: "flag.fill").font(.system(size: 11, weight: .bold)).foregroundStyle(skin.ink3)
+                            Text("Level \(due.level) due").font(skin.uiBold(12)).foregroundStyle(skin.ink3)
+                        }
                         Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(skin.ink3)
                     }
                 }
@@ -140,10 +213,21 @@ struct MapView: View {
     @ViewBuilder
     private func afterDay(_ day: DayView) -> some View {
         VStack(spacing: 10) {
-            if day.dayState.inStarRound {
+            if day.dayState.inRefresher {
+                BigButton(title: day.dayState == .refreshPaused ? "Refresher: resume cards" : "Refresher: cards") {
+                    if let next = state.nextStep { state.flow = next }
+                }
+            } else if day.dayState.inStarRound {
                 BigButton(title: day.dayState == .starAfterTalk ? "Star round: three things" : day.dayState == .starPaused ? "Star round: resume cards" : "Star round: cards") {
                     if let next = state.nextStep { state.flow = next }
                 }
+            } else if day.objectives.on, let due = day.objectives.refreshDue {
+                // A completed level's refresher comes before the next star round.
+                BigButton(title: "Refresh Level \(due.level): \(due.name)") {
+                    state.refreshLevel = due.level
+                    state.flow = .refresh
+                }
+                BigButton(title: "Talk more", ghost: true) { state.flow = .more }
             } else if day.objectives.on, !day.starred, day.objectives.starAvailable {
                 BigButton(title: "★ Star the day") { state.flow = .star }
                 BigButton(title: "Talk more", ghost: true) { state.flow = .more }
@@ -204,7 +288,7 @@ struct MapView: View {
         case .afterTalk: return "Next: Three things"
         case .afterThings: return "Next: Cards"
         case .paused: return "Resume cards"
-        case .done, .starAfterTalk, .starAfterThings, .starPaused: return "Done"
+        case .done, .starAfterTalk, .starAfterThings, .starPaused, .refreshCards, .refreshPaused: return "Done"
         }
     }
 
@@ -219,6 +303,10 @@ struct MapView: View {
 /// 335 × 300 stage scaled to the width.
 struct Trail: View {
     let nodes: [TrailNode]
+    /// Completed levels whose refresher is due: their flags are dimmed.
+    var dueLevels: Set<Int> = []
+    var showFlags = true
+    var onLevel: ((Int) -> Void)? = nil
     private let skin = Skin.current
     private static let xs: [CGFloat] = [70, 160, 250, 292, 236, 142, 68, 112]
     private static let stage = CGSize(width: 335, height: 300)
@@ -253,16 +341,35 @@ struct Trail: View {
                     let p = point(i, s)
                     let bonus = node.n % 7 == 0
                     Group {
-                        if node.done {
+                        if node.done, node.starred {
+                            // A starred day: a bigger, golden node. With a flag when it completed a level.
+                            let flag = showFlags ? node.levelDone : nil
+                            let dim = flag.map { dueLevels.contains($0) } ?? false
+                            ZStack {
+                                Circle().fill(LinearGradient(colors: [Color(hex: 0xFFF2A8), skin.reward], startPoint: .top, endPoint: .bottom)).frame(width: 40, height: 40)
+                                    .background(Circle().fill(skin.rewardDeep).offset(y: 3))
+                                    .overlay(Circle().stroke(Color.white, lineWidth: 2.4))
+                                Image(systemName: "star.fill").font(.system(size: 18, weight: .bold)).foregroundStyle(skin.onReward)
+                                if let flag {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "flag.fill").font(.system(size: 13, weight: .bold))
+                                        Text("Level \(flag)").font(skin.uiBold(12))
+                                    }
+                                    .foregroundStyle(dim ? skin.ink3 : skin.primaryDeep)
+                                    .padding(.horizontal, 9).padding(.vertical, 4)
+                                    .background(Capsule().fill(Color.white))
+                                    .shadow(color: skin.shadow, radius: 5, y: 3)
+                                    .offset(x: 0, y: -34)
+                                }
+                            }
+                            .contentShape(Rectangle().size(width: 110, height: 80))
+                            .onTapGesture { if let flag { onLevel?(flag) } }
+                            .accessibilityLabel(flag.map { "Day \(node.n), starred, level \($0) completed" } ?? "Day \(node.n), starred")
+                        } else if node.done {
                             ZStack {
                                 Circle().fill(skin.primary).frame(width: 30, height: 30)
                                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
                                 Image(systemName: "checkmark").font(.system(size: 13, weight: .heavy)).foregroundStyle(skin.onPrimary)
-                                if node.starred {
-                                    Image(systemName: "star.fill").font(.system(size: 13)).foregroundStyle(skin.reward)
-                                        .shadow(color: .white, radius: 1)
-                                        .offset(x: 13, y: -13)
-                                }
                             }
                         } else if node.today {
                             ZStack {

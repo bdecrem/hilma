@@ -64,12 +64,18 @@ const POLLY_TTS = {
   model_id: process.env.POLLY_ELEVEN_TTS_MODEL || 'eleven_v3_conversational',
 }
 // Dolly (2026-10-10, hilma's apps/dolly — a three-minute call a day in
-// Spanish or Mandarin): an American voice (Bart heard Alice's British accent
-// on the first build and asked for American English) on Dodo's settings — v4
-// turbo, expressive off, so a learner hears the words, not a performance.
-// Bella is one of the library's educational voices; the premade American
-// alternatives are Sarah, Matilda, Laura and Jessica (Dodo's).
-const DOLLY_VOICE = process.env.DOLLY_ELEVEN_VOICE_ID || 'hpp4J3VqNfWAUOO0d1Us' // Bella — professional, bright, warm
+// Spanish or Mandarin). The voice is a NATIVE speaker of the language being
+// taught (2026-10-11): the first build used Bella, an American premade voice,
+// and her Spanish drifted in and out of an American accent from sentence to
+// sentence — a multilingual model keeps the voice's own accent, so an English
+// voice can never be trusted to sound Spanish. Norah is a Latin American
+// Spanish library voice ("warm, friendly and clear", the most-used agent
+// voice in the Spanish library), added to the workspace from the shared
+// library; her English asides carry a Spanish accent, which is what a Spanish
+// teacher sounds like. The library voice must NOT have live moderation on
+// (Lucia did; the engine PATCH refused her). A Mandarin engine gets a native
+// Mandarin voice the same way. Samples: ~/Desktop/dolly-voice/.
+const DOLLY_VOICE = process.env.DOLLY_ELEVEN_VOICE_ID || 'kcQkGnn0HAT2JRDQ4Ljp' // Norah — warm, friendly and clear, Latin American Spanish
 // Slow and clear, a language teacher for a level-1 learner (Bart, 2026-10-10
 // evening). `speed` is honoured by eleven_turbo_v2_5 / flash_v2_5 /
 // multilingual_v2 and ignored by the v3/v4 models (measured on the same

@@ -7,6 +7,8 @@ enum FlowStep: String {
     case talk, things, cards, done, more, star
     /// After an extra call: the three things it produced.
     case moreDone
+    /// A completed level's refresher: a short scripted call, then four cards, then the verdict.
+    case refresh, refreshDone
 }
 
 /// The app's one piece of shared state: who is signed in, today, and what
@@ -28,6 +30,10 @@ final class AppState {
     var flow: FlowStep?
     var showSettings = false
     var showObjectives = false
+    /// A completed level's sheet (a flag on the trail, tapped).
+    var showLevel: Int?
+    /// Which level the next refresher is for (nil: the server picks the due one).
+    var refreshLevel: Int?
     /// Hold-to-talk, a device-side voice setting (UserDefaults).
     static let holdToTalkKey = "voiceHoldToTalk"
 
@@ -43,7 +49,8 @@ final class AppState {
             switch open {
             case "settings": showSettings = true
             case "objectives": showObjectives = true
-            case "talk", "things", "cards", "done", "more", "star": flow = FlowStep(rawValue: open)
+            case "talk", "things", "cards", "done", "more", "star", "refresh", "refreshDone": flow = FlowStep(rawValue: open)
+            case "level": showLevel = day?.levels.last?.level ?? 1
             default: break
             }
         }
@@ -100,7 +107,7 @@ final class AppState {
         switch day.dayState {
         case .morning: return .talk
         case .afterTalk, .starAfterTalk: return .things
-        case .afterThings, .paused, .starAfterThings, .starPaused: return .cards
+        case .afterThings, .paused, .starAfterThings, .starPaused, .refreshCards, .refreshPaused: return .cards
         case .done: return nil
         }
     }

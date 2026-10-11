@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSessionUser } from '@/lib/dolly/auth'
-import { findDayById, findVoiceSession, updateVoiceSession } from '@/lib/dolly/core'
-import { dayView, finishMore, finishStar, finishTalk, finishThings } from '@/lib/dolly/day'
+import { findDayById, findRefresherBySession, findVoiceSession, updateVoiceSession } from '@/lib/dolly/core'
+import { dayView, finishMore, finishRefresh, finishStar, finishTalk, finishThings } from '@/lib/dolly/day'
 import { type TranscriptRow } from '@/lib/dolly/prompts'
 
 export const runtime = 'nodejs'
@@ -43,7 +43,10 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
     if (session.mode === 'talk') day = await finishTalk(user, day, session.id, transcript, seconds)
     else if (session.mode === 'more') day = await finishMore(user, day, transcript, seconds)
     else if (session.mode === 'star') day = await finishStar(user, day, session.id, transcript, seconds)
-    else day = await finishThings(user, day, session.id)
+    else if (session.mode === 'refresh') {
+      const refresher = await findRefresherBySession(user.id, session.id)
+      if (refresher) await finishRefresh(user, refresher, session.id, transcript, seconds)
+    } else day = await finishThings(user, day, session.id)
   } catch (e) {
     console.error('[dolly] finish failed:', session.mode, e)
     return NextResponse.json({ error: 'Could not finish the session.' }, { status: 500 })
