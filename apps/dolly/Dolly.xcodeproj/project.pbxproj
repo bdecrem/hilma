@@ -10,6 +10,7 @@
 		0A98F595585BD3A177EBC01A /* ElevenVoiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */; };
 		0DE802A3B45CA4A9E690B764 /* Baloo2-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B951B6EE80D56F849C87D30E /* Baloo2-SemiBold.ttf */; };
 		1CBB68C36B08D3D2D6324A4C /* DollyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B070E3786684AF6D8EB03143 /* DollyApp.swift */; };
+		34080C0CB4CFA1C48104EE1B /* Grader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51699F5D9B1A83FD17BD7CBF /* Grader.swift */; };
 		395F955A98AD2D570F63DDDB /* Skin.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0ED3AA3CD631AFDEA82CA7E /* Skin.swift */; };
 		3D6D881E39568C4DFF2BE2EC /* YouSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 533F8469ADD3EB12761E32A8 /* YouSheet.swift */; };
 		4CB76C855AB791DC5D918A20 /* Quicksand-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */; };
@@ -27,6 +28,7 @@
 		84FD199A7F8631A580BA6AFC /* MoreDoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4467C9C2BA27B448BC70C223 /* MoreDoneView.swift */; };
 		9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA4D8B1546392D9142BB179 /* Models.swift */; };
 		9F4693E0D51EEC9761382E58 /* TalkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF955F0B5D7166AC219C99C1 /* TalkView.swift */; };
+		A17CCEEEFEB8AC18D4CD2FE0 /* MyCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A758F063D56758CBCB759E9 /* MyCardsView.swift */; };
 		AA5540FC8088458AEEAEA7F4 /* Baloo2-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A42C56D6FCC65E69CC809C26 /* Baloo2-ExtraBold.ttf */; };
 		B6A7485EE8FA2C2C574AA669 /* CardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7179E09AC45B5F4E9F34E53 /* CardsView.swift */; };
 		B98D9C5248F63DC0B9EE9C18 /* Quicksand-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A827E147E4DEC8F3FC182DFB /* Quicksand-Bold.ttf */; };
@@ -52,7 +54,9 @@
 		3531DA8037F0A80723F696FF /* Dolly.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Dolly.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4467C9C2BA27B448BC70C223 /* MoreDoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreDoneView.swift; sourceTree = "<group>"; };
 		47D278063D8D4D04FF60B17C /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		51699F5D9B1A83FD17BD7CBF /* Grader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grader.swift; sourceTree = "<group>"; };
 		533F8469ADD3EB12761E32A8 /* YouSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouSheet.swift; sourceTree = "<group>"; };
+		5A758F063D56758CBCB759E9 /* MyCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyCardsView.swift; sourceTree = "<group>"; };
 		6395B3512DCB9AD1712CABC2 /* Quicksand-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Medium.ttf"; sourceTree = "<group>"; };
 		69F67961CC796459CB5B830A /* ThingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThingsView.swift; sourceTree = "<group>"; };
 		71394AAD3C828B4DA4977412 /* Dolly.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Dolly.entitlements; sourceTree = "<group>"; };
@@ -133,6 +137,7 @@
 				E12FCCD7FABF0295FC43E35A /* DoneView.swift */,
 				B4DD2CE0473903FC01B7DE29 /* ElevenVoiceClient.swift */,
 				7793A7223BF05B6C39B180F9 /* FlashDoneView.swift */,
+				51699F5D9B1A83FD17BD7CBF /* Grader.swift */,
 				0E5E36E574FC10AB78344256 /* Info.plist */,
 				DA4125716BF8C9EC21D59348 /* JellyAvatar.swift */,
 				ABF5043C6A6247024C49AED1 /* LevelSheet.swift */,
@@ -140,6 +145,7 @@
 				D8C59EB20FA58A8FDACE48AF /* Mascot.swift */,
 				CAA4D8B1546392D9142BB179 /* Models.swift */,
 				4467C9C2BA27B448BC70C223 /* MoreDoneView.swift */,
+				5A758F063D56758CBCB759E9 /* MyCardsView.swift */,
 				9D9C028B32760E9F96337688 /* ObjectivesSheet.swift */,
 				47D278063D8D4D04FF60B17C /* OnboardingView.swift */,
 				E59C23A18D78EB03372CAE63 /* RefreshDoneView.swift */,
@@ -245,12 +251,14 @@
 				BB4E40AA224BCE64A8C975F4 /* DoneView.swift in Sources */,
 				0A98F595585BD3A177EBC01A /* ElevenVoiceClient.swift in Sources */,
 				E1221145F9BB58092F8D5E80 /* FlashDoneView.swift in Sources */,
+				34080C0CB4CFA1C48104EE1B /* Grader.swift in Sources */,
 				755C0756A2FE4175B7CE94CD /* JellyAvatar.swift in Sources */,
 				53B516C3986E9A0B353F9F30 /* LevelSheet.swift in Sources */,
 				7C6A5DD80DE784BA9F09237D /* MapView.swift in Sources */,
 				7FD8749641708D28547E7D89 /* Mascot.swift in Sources */,
 				9A3B54D6FAA307B60AD187D0 /* Models.swift in Sources */,
 				84FD199A7F8631A580BA6AFC /* MoreDoneView.swift in Sources */,
+				A17CCEEEFEB8AC18D4CD2FE0 /* MyCardsView.swift in Sources */,
 				798FB4792BF3770D51B4A947 /* ObjectivesSheet.swift in Sources */,
 				D42463998CAB38DEB8D4C8CB /* OnboardingView.swift in Sources */,
 				6F426D9676FF49D29337EE4D /* RefreshDoneView.swift in Sources */,
@@ -329,7 +337,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 41;
+				CURRENT_PROJECT_VERSION = 42;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -389,7 +397,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 41;
+				CURRENT_PROJECT_VERSION = 42;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

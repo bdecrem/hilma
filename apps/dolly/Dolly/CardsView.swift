@@ -8,9 +8,11 @@ enum CardSource {
     case flash
 }
 
-/// Part 3: ten questions, no voice. Pick five, type five. The server grades
-/// every answer and keeps the place, so × leaves and the map says Resume.
-/// Flash sets run through the same screen, both ways round.
+/// Part 3: ten questions, no voice. Pick five, type five. The card reacts
+/// at once (Grader.swift decides as the server will) and moves on; the
+/// answer goes to the server behind it, in order, which grades it for real
+/// and keeps the place, so × leaves and the map says Resume. Flash sets run
+/// through the same screen, both ways round.
 struct CardsView: View {
     var source: CardSource = .day
     let onDone: () -> Void
@@ -22,7 +24,13 @@ struct CardsView: View {
     @State private var result: (ok: Bool, target: String)?
     @State private var busy = false
     @State private var dealing = false
+    /// Waiting for the server's word on the last card (the day completes there).
+    @State private var finishing = false
     @State private var error: String?
+    /// Answers shown before the server has them (ahead of `serverAnswers`).
+    @State private var localAnswers: [Answer] = []
+    /// The sends, one after another.
+    @State private var queue: Task<Bool, Never>?
     @FocusState private var focused: Bool
     private let skin = Skin.current
 
@@ -33,11 +41,15 @@ struct CardsView: View {
         case .flash: return state.flash?.questions ?? []
         }
     }
-    private var answers: [Answer] {
+    private var serverAnswers: [Answer] {
         switch source {
         case .day: return day?.answers ?? []
         case .flash: return state.flash?.answers ?? []
         }
+    }
+    private var answers: [Answer] {
+        let server = serverAnswers
+        return localAnswers.count > server.count ? localAnswers : server
     }
     private var rightCount: Int { answers.filter(\.ok).count }
     private var index: Int { answers.count }
@@ -76,9 +88,9 @@ struct CardsView: View {
                         .id(index)
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     Text(hint(q)).font(skin.ui(13)).foregroundStyle(skin.ink3)
-                } else if dealing {
+                } else if dealing || finishing {
                     ProgressView().padding(.top, 60)
-                    Text("Dealing ten…").font(skin.uiBold(14)).foregroundStyle(skin.ink2)
+                    Text(dealing ? "Dealing ten…" : "Adding it up…").font(skin.uiBold(14)).foregroundStyle(skin.ink2)
                 } else if source == .day, day?.dayState == .done {
                     Spacer()
                 } else if source == .flash, error != nil {
@@ -100,7 +112,7 @@ struct CardsView: View {
                 if let day, day.dayState == .done { onDone() }
             case .flash:
                 // A fresh set unless one is under way.
-                if let set = state.flash, !set.done { return }
+                if let set = state.flash, !set.done { break }
                 dealing = true
                 defer { dealing = false }
                 do {
@@ -109,6 +121,7 @@ struct CardsView: View {
                     self.error = error.localizedDescription
                 }
             }
+            localAnswers = serverAnswers
         }
     }
 
@@ -197,43 +210,55 @@ struct CardsView: View {
     }
 
     private func submit(_ answer: String) async {
-        guard !busy, result == nil else { return }
-        busy = true
+        guard result == nil, !finishing, let q = question else { return }
         error = nil
-        do {
-            switch source {
-            case .day:
-                let res = try await DollyAPI.shared.answer(q: index, answer: answer)
-                result = (res.ok, res.target)
-                busy = false
-                try? await Task.sleep(for: .milliseconds(res.ok ? 1100 : 1600))
-                result = nil
-                pick = nil
-                typed = ""
-                state.apply(res.day)
-                if res.complete { onDone() }
-            case .flash:
-                guard let id = state.flash?.id else { return }
-                let res = try await DollyAPI.shared.answerFlash(id: id, q: index, answer: answer)
-                result = (res.ok, res.target)
-                busy = false
-                try? await Task.sleep(for: .milliseconds(res.ok ? 1100 : 1600))
-                result = nil
-                pick = nil
-                typed = ""
-                state.flash = res.set
-                if let day = res.day { state.apply(day) }
-                if res.complete { onDone() }
+        let qIndex = index
+        let lang = state.user?.language ?? "es"
+        // The verdict, now.
+        let ok = Grader.grade(lang: lang, question: q, answer: answer)
+        result = (ok, q.target)
+        if ok { UIImpactFeedbackGenerator(style: .light).impactOccurred() } else { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
+        // The send, behind it and in order; `true` when it completed the set.
+        let setId = state.flash?.id
+        let previous = queue
+        let send = Task<Bool, Never> { @MainActor in
+            _ = await previous?.value
+            do {
+                switch source {
+                case .day:
+                    let res = try await DollyAPI.shared.answer(q: qIndex, answer: answer)
+                    state.apply(res.day)
+                    return res.complete
+                case .flash:
+                    guard let setId else { return false }
+                    let res = try await DollyAPI.shared.answerFlash(id: setId, q: qIndex, answer: answer)
+                    state.flash = res.set
+                    if let day = res.day { state.apply(day) }
+                    return res.complete
+                }
+            } catch {
+                self.error = error.localizedDescription
+                // The server may be a card ahead (a retried request): re-sync and fall back in line.
+                switch source {
+                case .day: await state.refresh()
+                case .flash: if let set = try? await DollyAPI.shared.openFlash() { state.flash = set }
+                }
+                localAnswers = serverAnswers
+                return false
             }
-        } catch {
-            busy = false
-            pick = nil
-            self.error = error.localizedDescription
-            // The server may be a card ahead (a retried request): re-sync.
-            switch source {
-            case .day: await state.refresh()
-            case .flash: if let set = try? await DollyAPI.shared.openFlash() { state.flash = set }
-            }
+        }
+        queue = send
+        try? await Task.sleep(for: .milliseconds(ok ? 800 : 1400))
+        // On to the next card without waiting for the server.
+        if localAnswers.count == qIndex { localAnswers.append(Answer(q: qIndex, ok: ok, answer: answer)) }
+        result = nil
+        pick = nil
+        typed = ""
+        if qIndex + 1 >= questions.count {
+            finishing = true
+            let complete = await send.value
+            finishing = false
+            if complete { onDone() }
         }
     }
 }

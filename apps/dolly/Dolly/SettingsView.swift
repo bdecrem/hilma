@@ -1,26 +1,17 @@
 import SwiftUI
 
-/// Time, language, starting point, voice, the number, sign out, version.
-struct SettingsView: View {
+/// The settings — time, language, starting point, objectives, voice, sign
+/// out, version — as sections inside the You sheet (no separate Settings
+/// screen or gear since build 42).
+struct SettingsSections: View {
     @Environment(AppState.self) private var state
-    @Environment(\.dismiss) private var dismiss
     @State private var holdToTalk = UserDefaults.standard.bool(forKey: AppState.holdToTalkKey)
     @State private var saving = false
     @State private var error: String?
     private let skin = Skin.current
 
     var body: some View {
-        ZStack {
-            skin.background.ignoresSafeArea()
-            ScrollView {
                 VStack(spacing: 16) {
-                    HStack {
-                        Text("Settings").font(skin.display(28)).foregroundStyle(skin.ink)
-                        Spacer()
-                        CloseButton { dismiss() }
-                    }
-                    .padding(.top, 18)
-
                     if let user = state.user {
                         section("The daily text") {
                             row("Time") {
@@ -76,10 +67,7 @@ struct SettingsView: View {
                     }
 
                     BigButton(title: "Sign out", ghost: true) {
-                        Task {
-                            await state.signOut()
-                            dismiss()
-                        }
+                        Task { await state.signOut() }
                     }
                     .padding(.top, 8)
 
@@ -87,11 +75,6 @@ struct SettingsView: View {
                         .font(skin.ui(12)).foregroundStyle(skin.ink3).multilineTextAlignment(.center)
                         .padding(.top, 6)
                 }
-                .padding(.horizontal, 22)
-                .padding(.bottom, 30)
-            }
-        }
-        .presentationDragIndicator(.visible)
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: @escaping () -> Content) -> some View {

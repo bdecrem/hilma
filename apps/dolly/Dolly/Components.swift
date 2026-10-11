@@ -313,35 +313,24 @@ struct RankUpCard: View {
     }
 }
 
-/// One of the two things always on offer after the day: an icon on a
-/// colored disc, a title, a line under it. Two sit side by side.
-struct ActionTile: View {
-    let icon: String
-    let title: String
-    let sub: String
-    let color: Color
+/// Flash cards: a small jelly pill, the ghost button's little sibling.
+struct FlashPill: View {
     var action: () -> Void
 
     var body: some View {
         let skin = Skin.current
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 10) {
-                ZStack {
-                    Circle().fill(color).frame(width: 40, height: 40)
-                        .background(Circle().fill(color.opacity(0.55)).offset(y: 3))
-                    Image(systemName: icon).font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(skin.display(17)).foregroundStyle(skin.ink)
-                    Text(sub).font(skin.ui(12)).foregroundStyle(skin.ink3)
-                }
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles").font(.system(size: 12, weight: .bold))
+                Text("Flash cards").font(skin.display(15))
             }
-            .padding(14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(skin.bgTop.opacity(0.55)))
-            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.white.opacity(0.9), lineWidth: 2))
+            .foregroundStyle(skin.word)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 9)
+            .background(Capsule().fill(Color.white))
+            .background(Capsule().fill(skin.trailNext).offset(y: 4))
         }
         .buttonStyle(PressStyle())
-        .accessibilityLabel("\(title). \(sub)")
+        .accessibilityLabel("Flash cards, ten quick ones")
     }
 }

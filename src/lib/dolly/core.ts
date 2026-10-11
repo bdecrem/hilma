@@ -392,6 +392,13 @@ export async function upsertItem(userId: string, thing: Omit<Thing, 'item_id'>, 
   return data as Item
 }
 
+/** Drop a kept word (the learner's choice). True when a row went. */
+export async function deleteItem(userId: string, id: string): Promise<boolean> {
+  const { data, error } = await supabase().from('dolly_items').delete().eq('user_id', userId).eq('id', id).select('id')
+  if (error) throw new Error(`dolly: delete item failed: ${error.message}`)
+  return (data ?? []).length > 0
+}
+
 export async function scoreItem(id: string, ok: boolean, day: string): Promise<void> {
   const sb = supabase()
   const { data } = await sb.from('dolly_items').select('hits, misses').eq('id', id).maybeSingle()

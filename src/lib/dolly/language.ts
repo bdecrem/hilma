@@ -86,15 +86,17 @@ export function normalizeAnswer(lang: LanguageCode, v: string): string {
 }
 
 /** English, typed back on a reversed flash card. Same looseness: case,
- *  punctuation and accents are noise, a leading "to" / "the" / "a" / "an"
- *  is optional, and any one of a list ("one, two, three") or an alternative
- *  ("hello / hi") counts. */
+ *  punctuation and accents are noise (an apostrophe or a hyphen vanishes,
+ *  so "dont" is "don't" and "soso" is "so-so"), a leading "to" / "the" /
+ *  "a" / "an" is optional, and any one of a list ("one, two, three") or an
+ *  alternative ("hello / hi") counts. Mirrored in the app's Grader.swift. */
 export function normalizeNative(v: string): string {
   return v
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\([^)]*\)/g, ' ')
+    .replace(/['’-]/g, '')
     .replace(/[^a-z\s]/g, ' ')
     .trim()
     .replace(/\s+/g, ' ')
@@ -109,8 +111,9 @@ export function nativeMatches(typed: string, answer: string): boolean {
   if (!a) return false
   const alts = answer.split(/[,/]/).map(normalizeNative).filter(Boolean)
   const whole = normalizeNative(answer)
+  const tight = (s: string) => s.replace(/\s/g, '')
   for (const b of [whole, ...alts]) {
-    if (a === b || stripLead(a) === stripLead(b)) return true
+    if (a === b || stripLead(a) === stripLead(b) || tight(a) === tight(b)) return true
   }
   return false
 }

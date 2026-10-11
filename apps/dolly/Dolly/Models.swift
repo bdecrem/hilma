@@ -211,6 +211,43 @@ struct FlashView: Codable, Equatable {
     var done: Bool { state == "done" }
 }
 
+/// A kept word, phrase or fix (the pool), as "Your cards" lists it.
+struct ItemView: Codable, Equatable, Identifiable {
+    let id: String
+    let kind: String
+    let target: String
+    let native: String
+    let pinyin: String?
+    let source: String?
+    let dayN: Int
+    let hits: Int
+    let misses: Int
+
+    enum CodingKeys: String, CodingKey {
+        case id, kind, target, native, pinyin, source, hits, misses
+        case dayN = "day_n"
+    }
+
+    var kindLabel: String {
+        switch kind {
+        case "fix": return "Fix"
+        case "word": return "Word"
+        default: return "Phrase"
+        }
+    }
+
+    /// "Day 3 · 4 right · 1 miss"
+    var footer: String {
+        var parts = [dayN > 0 ? "Day \(dayN)" : "From a level"]
+        if hits + misses > 0 { parts.append("\(hits) right"); if misses > 0 { parts.append("\(misses) \(misses == 1 ? "miss" : "misses")") } } else { parts.append("not on a card yet") }
+        return parts.joined(separator: " · ")
+    }
+}
+
+struct ItemsResponse: Codable {
+    let items: [ItemView]
+}
+
 struct FlashResponse: Codable {
     let set: FlashView?
 }

@@ -30,7 +30,6 @@ final class AppState {
     var loadError: String?
     /// The full-screen day flow, when one is up.
     var flow: FlowStep?
-    var showSettings = false
     var showObjectives = false
     /// The You sheet (avatar, rank, XP), from the header.
     var showYou = false
@@ -53,9 +52,8 @@ final class AppState {
         await refresh()
         if phase == .signedIn, let open = defaults.string(forKey: "Open") {
             switch open {
-            case "settings": showSettings = true
+            case "settings", "you", "mycards": showYou = true
             case "objectives": showObjectives = true
-            case "you": showYou = true
             case "talk", "things", "cards", "done", "more", "star", "refresh", "refreshDone", "flash": flow = FlowStep(rawValue: open)
             case "flashDone":
                 // A set dealt and answered right through the real routes (test account), then its score.
@@ -108,7 +106,7 @@ final class AppState {
         user = nil
         day = nil
         flow = nil
-        showSettings = false
+        showYou = false
         phase = .signedOut
     }
 
@@ -131,7 +129,7 @@ final class AppState {
     /// ola.cx/dolly/today and dolly://today: the map, or the flow already in progress.
     func openToday() {
         guard phase == .signedIn else { return }
-        showSettings = false
+        showYou = false
         if flow == nil, let next = nextStep { flow = next }
     }
 }

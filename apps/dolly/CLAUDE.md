@@ -104,6 +104,21 @@ then `FlashDoneView` (right of ten, the XP chip, "Another set"). Dealing a
 new set drops an open one. `scripts/dolly/backfill-xp.ts` writes the ledger
 for everything from before it existed (run 2026-10-11).
 
+**Build 42, the same evening** (Bart's pass for tightness): the cards grade
+on the phone (`Grader.swift` mirrors `language.ts` exactly — Spanish
+accents/articles, Mandarin characters or pinyin, English with apostrophes
+and hyphens as noise) so a tap or Check reacts at once and the next card
+comes without waiting; the answer goes to the server behind it, in order
+(`CardsView.queue`), which grades it for real; only the last card waits
+("Adding it up…") because the day completes there. **Settings moved into
+the You sheet** (`SettingsSections` in SettingsView.swift; no gear, `-Open
+settings` opens You) under a slimmer hero and a one-row ladder. **Your
+cards** (`MyCardsView`, `GET /api/dolly/items`, `DELETE /api/dolly/items/:id`,
+`-Open mycards`): every kept word with its record, swipe left to drop one;
+linked from the You sheet and the flash score screen. The done card shows
+the three parts as one row of checks; Flash cards is a small jelly pill
+(`FlashPill`) under the pink Talk more; the tally line is quiet.
+
 ## Files (`Dolly/`)
 
 - `DollyApp.swift` — `@main`, `RootView` (loading / onboarding / map), `FlowView`
@@ -142,7 +157,7 @@ with zsh build the arguments as an array):
 - `-BackendURL http://localhost:3260` — a local dev server (the worktree's `next dev -p 3260`).
 - `-TestSessionToken <value>` — sign in as the test account: the value is what
   `npx tsx scripts/dolly/e2e.ts` prints ("cookie value"). Never Bart's account.
-- `-Open map|settings|objectives|level|you|talk|things|cards|done|more|star|refresh|refreshDone|flash|flashDone`
+- `-Open map|settings|objectives|level|you|mycards|talk|things|cards|done|more|star|refresh|refreshDone|flash|flashDone`
   (`flashDone` deals a set and answers it right through the real routes first)
   — where to open. `talk` needs the day at `morning`, `things` at `after_talk`,
   `cards` at `after_things`: `scripts/dolly/e2e.ts --until talk|things|cards`

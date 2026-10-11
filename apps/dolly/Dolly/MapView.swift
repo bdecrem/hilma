@@ -87,14 +87,6 @@ struct MapView: View {
             .accessibilityLabel("You: \(xp.rank.name), \(xp.total) XP")
             Spacer(minLength: 4)
             StreakPill(streak: state.day?.streak ?? state.user?.streak ?? 0)
-            Button { state.showSettings = true } label: {
-                Image(systemName: "gearshape.fill").font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(skin.ink2).frame(width: 38, height: 38)
-                    .background(Circle().fill(Color.white))
-                    .shadow(color: skin.shadow, radius: 6, y: 4)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Settings")
         }
     }
 
@@ -188,7 +180,20 @@ struct MapView: View {
             VStack(spacing: 14) {
                 Text(day.topic).font(skin.displayMedium(18)).foregroundStyle(skin.ink2)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                if day.stepsDone == 3 {
+                    // Done: the three parts in one quiet row.
+                    HStack(spacing: 14) {
+                        ForEach(Array(steps.enumerated()), id: \.offset) { _, s in
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill").font(.system(size: 15, weight: .bold)).foregroundStyle(skin.goodDeep)
+                                Text(s.0).font(skin.uiBold(13)).foregroundStyle(skin.ink2)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
                 ForEach(Array(steps.enumerated()), id: \.offset) { i, s in
+                    if day.stepsDone < 3 {
                     let done = i < day.stepsDone
                     let cur = i == day.stepsDone
                     HStack(spacing: 12) {
@@ -206,6 +211,7 @@ struct MapView: View {
                         Text(s.1).font(skin.ui(14)).foregroundStyle(skin.ink3)
                     }
                     .opacity(i > day.stepsDone ? 0.6 : 1)
+                    }
                 }
                 if day.stepsDone == 3 {
                     VStack(spacing: 4) {
@@ -215,7 +221,6 @@ struct MapView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(skin.bgTop.opacity(0.6)))
-                    .padding(.top, 4)
                     afterDay(day)
                 } else {
                     BigButton(title: buttonTitle(day)) {
@@ -254,27 +259,18 @@ struct MapView: View {
             } else {
                 BigButton(title: "Talk more") { state.flow = .more }
             }
-            // Flash cards: a small link under the buttons.
-            Button {
+            // Flash cards: a small jelly pill under the button.
+            FlashPill {
                 state.flash = nil
                 state.flow = .flash
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "rectangle.on.rectangle.angled").font(.system(size: 13, weight: .bold))
-                    Text("Flash cards").font(skin.uiBold(15))
-                    Text("· ten quick ones").font(skin.ui(13)).foregroundStyle(skin.ink3)
-                }
-                .foregroundStyle(skin.word)
-                .padding(.vertical, 6)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Flash cards, ten quick ones")
+            .padding(.top, 2)
             let tally = tallyLine(day)
             if !tally.isEmpty {
-                Text(tally).font(skin.uiBold(13)).foregroundStyle(skin.ink2).multilineTextAlignment(.center)
+                Text(tally).font(skin.ui(12)).foregroundStyle(skin.ink3).multilineTextAlignment(.center)
             }
         }
-        .padding(.top, 4)
+        .padding(.top, 2)
     }
 
     /// "Starred · 2 extra calls · 3 sets of cards · +48 XP today"

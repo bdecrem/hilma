@@ -7,6 +7,7 @@ struct FlashDoneView: View {
     let onAgain: () -> Void
 
     @Environment(AppState.self) private var state
+    @State private var showCards = false
     private let skin = Skin.current
 
     var body: some View {
@@ -64,6 +65,14 @@ struct FlashDoneView: View {
                     VStack(spacing: 12) {
                         BigButton(title: "Another set", action: onAgain)
                         BigButton(title: "Back to the map", ghost: true, action: onDone)
+                        Button { showCards = true } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "square.stack.fill").font(.system(size: 12, weight: .bold))
+                                Text("See all your cards").font(skin.uiBold(15))
+                            }
+                            .foregroundStyle(skin.word).padding(.top, 4)
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(.horizontal, 24)
                     .padding(.top, 8)
@@ -74,5 +83,6 @@ struct FlashDoneView: View {
                 Confetti().ignoresSafeArea()
             }
         }
+        .sheet(isPresented: $showCards) { MyCardsView().environment(state) }
     }
 }

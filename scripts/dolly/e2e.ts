@@ -336,6 +336,17 @@ async function main() {
   check('flash: an abandoned set is 409 to answer', (await api('/api/dolly/flash/answer', { method: 'POST', cookie, body: JSON.stringify({ id: d2.body.set.id, q: 0, answer: 'x' }) })).status === 404 || true)
   await sb.from('dolly_flash_sets').delete().eq('user_id', user.id).eq('state', 'open')
 
+  // Your cards: the pool, and dropping one.
+  type ItemRow = { id: string; target: string; native: string; day_n: number }
+  const items = await api<{ items: ItemRow[] }>('/api/dolly/items', { cookie })
+  check('items: the pool is listed', items.status === 200 && (items.body.items?.length ?? 0) >= 3 && items.body.items.every((i) => i.id && i.target && i.native), `${items.body.items?.length} items`)
+  const victim = items.body.items?.[items.body.items.length - 1]
+  const del = await api('/api/dolly/items/' + victim?.id, { method: 'DELETE', cookie })
+  const after = await api<{ items: ItemRow[] }>('/api/dolly/items', { cookie })
+  check('items: one dropped', del.status === 200 && after.body.items.length === items.body.items.length - 1 && !after.body.items.some((i) => i.id === victim?.id), `${del.status} ${after.body.items?.length}`)
+  check('items: dropping it again is 404', (await api('/api/dolly/items/' + victim?.id, { method: 'DELETE', cookie })).status === 404)
+  if (victim) await sb.from('dolly_items').insert({ user_id: user.id, kind: 'word', target: victim.target, native: victim.native, day_n: victim.day_n })
+
   // The avatar.
   type Me = { user: { avatar: string } }
   const me1 = await api<Me>('/api/dolly/me', { cookie })
@@ -512,6 +523,7 @@ async function main() {
   // Pure: the typed-answer rules and the clock.
   check('type: accents, case, article', answerMatches('es', 'El Atasco', { target: 'el atasco' }) && answerMatches('es', 'habia mucha gente', { target: 'había mucha gente' }) && !answerMatches('es', 'el barrio', { target: 'el atasco' }))
   check('type: English back, loosely', nativeMatches('I like', 'I like (one thing)') && nativeMatches('get up early', 'to get up early') && nativeMatches('Hello', 'hello / hi') && nativeMatches('two', 'one, two, three') && !nativeMatches('goodbye', 'hello'))
+  check('type: English punctuation is noise', nativeMatches('dont understand', 'I don’t understand') && nativeMatches("I don't understand", 'I don’t understand') && nativeMatches('soso', 'so-so') && nativeMatches('how are you', 'how are you?') && nativeMatches('nice to meet you', 'Nice to meet you!'))
   check('type: pinyin or characters', answerMatches('zh', 'ni hao', { target: '你好', pinyin: 'nǐ hǎo' }) && answerMatches('zh', '你好', { target: '你好', pinyin: 'nǐ hǎo' }) && normalizeAnswer('zh', 'Nǐ hǎo') === 'nihao')
   const la = { tz: 'America/Los_Angeles', daily_hour: 8, prompt_day: null as string | null, prompted_at: null as string | null, reminder_day: null as string | null }
   const atLA = (h: number) => new Date(Date.UTC(2026, 9, 10, h + 7, 5)) // PDT = UTC-7

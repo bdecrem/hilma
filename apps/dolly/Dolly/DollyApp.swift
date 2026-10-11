@@ -41,10 +41,6 @@ struct RootView: View {
                         FlowView(start: step, day: state.day)
                             .environment(state)
                     }
-                    .sheet(isPresented: $state.showSettings) {
-                        SettingsView()
-                            .environment(state)
-                    }
                     .sheet(isPresented: $state.showObjectives) {
                         ObjectivesSheet()
                             .environment(state)

@@ -165,6 +165,17 @@ final class DollyAPI {
         return try await request("/api/dolly/flash/answer", method: "POST", body: Body(id: id, q: q, answer: answer))
     }
 
+    // MARK: Your cards
+
+    func items() async throws -> [ItemView] {
+        let res: ItemsResponse = try await request("/api/dolly/items", method: "GET", body: Optional<String>.none)
+        return res.items
+    }
+
+    func deleteItem(id: String) async throws {
+        let _: EmptyResponse = try await request("/api/dolly/items/\(id)", method: "DELETE", body: Optional<String>.none)
+    }
+
     // MARK: Plumbing
 
     private func request<B: Encodable, R: Decodable>(_ path: String, method: String, body: B?) async throws -> R {
