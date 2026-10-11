@@ -89,9 +89,10 @@ it is about into an `XpChip`) and `ranked_up` when today's XP crossed a rank
 Gummy), your name or rank, "Fledgling · 256 XP" and a thin rank bar; a tap
 opens `YouSheet` (change the avatar, your name, the ladder, how XP works).
 Dolly's own face left the header for the voice and finish screens. After
-the day the two tiles **Talk more** and **Flash cards** (`ActionTile`) sit
-under the tomorrow block, with the one big button (star round, refresher)
-above them when there is one, and a tally line ("★ Starred · 2 sets of cards
+the day, **Talk more** stays the pink full-width button (ghost under the
+star round or a refresher), **Flash cards** is a small link under it (Bart
+tried them as two tiles in build 40 and wanted the button back), then a
+tally line ("★ Starred · 2 sets of cards
 · +48 XP today"). A flash set (`dolly_flash_sets`, `src/lib/dolly/flash.ts`;
 `POST /api/dolly/flash` deals, `GET` reports the open one, `POST
 /api/dolly/flash/answer`) is ten cards: five from the learner's pool (misses

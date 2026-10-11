@@ -227,9 +227,9 @@ struct MapView: View {
         }
     }
 
-    /// Below the tomorrow block: one big thing when there is one (the star
-    /// round, a refresher, or either resumed), then the two tiles that are
-    /// always there — Talk more and Flash cards — and today's tally.
+    /// Below the tomorrow block: the star round or a refresher when there is
+    /// one, Talk more (pink and full width otherwise), a small Flash cards
+    /// link, and today's tally.
     @ViewBuilder
     private func afterDay(_ day: DayView) -> some View {
         VStack(spacing: 12) {
@@ -247,16 +247,28 @@ struct MapView: View {
                     state.refreshLevel = due.level
                     state.flow = .refresh
                 }
+                BigButton(title: "Talk more", ghost: true) { state.flow = .more }
             } else if day.objectives.on, !day.starred, day.objectives.starAvailable {
                 BigButton(title: "★ Star the day") { state.flow = .star }
+                BigButton(title: "Talk more", ghost: true) { state.flow = .more }
+            } else {
+                BigButton(title: "Talk more") { state.flow = .more }
             }
-            HStack(spacing: 12) {
-                ActionTile(icon: "phone.fill", title: "Talk more", sub: "Up to 10 min", color: skin.voiceTop) { state.flow = .more }
-                ActionTile(icon: "rectangle.on.rectangle.angled", title: "Flash cards", sub: "Ten quick ones", color: skin.word) {
-                    state.flash = nil
-                    state.flow = .flash
+            // Flash cards: a small link under the buttons.
+            Button {
+                state.flash = nil
+                state.flow = .flash
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "rectangle.on.rectangle.angled").font(.system(size: 13, weight: .bold))
+                    Text("Flash cards").font(skin.uiBold(15))
+                    Text("· ten quick ones").font(skin.ui(13)).foregroundStyle(skin.ink3)
                 }
+                .foregroundStyle(skin.word)
+                .padding(.vertical, 6)
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Flash cards, ten quick ones")
             let tally = tallyLine(day)
             if !tally.isEmpty {
                 Text(tally).font(skin.uiBold(13)).foregroundStyle(skin.ink2).multilineTextAlignment(.center)
