@@ -11,7 +11,14 @@ import { REFRESH_INTERVALS } from '@/lib/dolly/day'
 export const metadata: Metadata = {
   title: 'Dolly’s levels',
   description: 'The eight levels Dolly teaches, A1 to B2, and every objective in each one.',
-  openGraph: { title: 'Dolly’s levels', description: 'The eight levels Dolly teaches, A1 to B2, and every objective in each one.', url: 'https://ola.cx/dolly/levels' },
+  // A nested openGraph replaces the parent's whole block, so the card's image
+  // (the /dolly segment's opengraph-image) is named again here.
+  openGraph: {
+    title: 'Dolly’s levels',
+    description: 'The eight levels Dolly teaches, A1 to B2, and every objective in each one.',
+    url: 'https://ola.cx/dolly/levels',
+    images: [{ url: 'https://ola.cx/dolly/opengraph-image', width: 1200, height: 630 }],
+  },
 }
 
 export default async function LevelsPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
