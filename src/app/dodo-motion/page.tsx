@@ -38,6 +38,7 @@ export default function DodoMotionPage() {
           <span>First piece 2026-10-09</span>
           <span>HyperFrames 0.8.143 + GSAP</span>
           <span>1920 × 1080 · 30 fps · 30–60 s</span>
+          <span>This page 2026-10-12</span>
         </div>
       </header>
 
