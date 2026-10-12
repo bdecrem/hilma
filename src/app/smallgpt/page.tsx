@@ -46,10 +46,14 @@ export default function SmallGptPage() {
               {s.status === 'next' && <span className="sg-tag">up next</span>}
             </div>
             <p className="sg-idea">{s.idea}</p>
-            {s.status === 'done' && s.summary && (
+            {s.status === 'done' && (s.summary || s.saw) && (
               <div className="sg-note">
-                <h3>In Bart’s words</h3>
-                <p>{s.summary}</p>
+                {s.summary && (
+                  <>
+                    <h3>In Bart’s words</h3>
+                    <p>{s.summary}</p>
+                  </>
+                )}
                 {s.saw && (
                   <>
                     <h3>What we saw</h3>

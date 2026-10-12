@@ -43,6 +43,13 @@ which doesn't matter at this scale.
   nanoGPT's Shakespeare config is character-level, so a word like "king" has
   no embedding to plot. TinyStories is a corpus small models visibly learn,
   and word-level embeddings exist.
+- **The corpus is a mix: TinyStories + 1980s Usenet, about 3:1** (decided at
+  step 2, 2026-10-12). The persona Bart wants at the end is a semi-sane coder
+  from 1985 stuck inside a Mac Plus. The voice goes in at SFT/DPO, but the
+  tokenizer and the base model need to have seen "SCSI" and "Macintosh", so
+  the Oracle's cleaned Usenet corpus (`apps/macplus/drunk85/data/`) is in the
+  pretraining pile. Vocabulary 8,192 — at 4,096 "queen", "Macintosh" and
+  "unix" were still in pieces.
 - **About 10M parameters, not 124M.** GPT-2 small on an M4 is days of
   pretraining; 10M is an afternoon. Scaling up is the last, optional step.
 - **GRPO for RLVR; reward model + PPO is optional.** TRL's PPO trainer has
