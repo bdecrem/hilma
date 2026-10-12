@@ -19,6 +19,7 @@ struct MainTabsView: View {
     @State private var flashPath = NavigationPath()
     /// Today's Actively Read session, presented over either tab.
     @State private var activelyRead: ActivelyReadLaunch?
+    @State private var voiceCheckin: VoiceCheckinLaunch?
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -129,6 +130,12 @@ struct MainTabsView: View {
             ActivelyReadView(topicId: launch.threadId, topicLabel: launch.label)
                 .environment(session)
         }
+        // Daily Voice Checkin: feynd.cc/checkin/<id> from the 5 pm text.
+        .onChange(of: DeepLinkRouter.shared.voiceCheckinSignal) { openPendingVoiceCheckin() }
+        .fullScreenCover(item: $voiceCheckin) { launch in
+            VoiceCheckinView(topicId: launch.threadId, topicLabel: launch.label)
+                .environment(session)
+        }
         .task {
             // Signed in and on the main UI: ask for notifications once, upload
             // the push token, and load today's read for the banner slot.
@@ -137,6 +144,7 @@ struct MainTabsView: View {
             await ActivelyReadStore.shared.refresh()
             // A push tapped before the UI existed.
             openPendingActivelyRead()
+            openPendingVoiceCheckin()
         }
         #if targetEnvironment(simulator) || (DEBUG && targetEnvironment(macCatalyst))
         // `simctl launch … -OpenURL dodo://peck` — drives route() without
@@ -153,6 +161,12 @@ struct MainTabsView: View {
                 UserDefaults.standard.removeObject(forKey: "OpenActivelyRead")
                 try? await Task.sleep(for: .seconds(1))
                 DeepLinkRouter.shared.requestActivelyRead(threadId: id, label: nil)
+            }
+            // `-OpenVoiceCheckin <topic id>` — that topic's Daily Voice Checkin, as the text link would.
+            if let id = UserDefaults.standard.string(forKey: "OpenVoiceCheckin") {
+                UserDefaults.standard.removeObject(forKey: "OpenVoiceCheckin")
+                try? await Task.sleep(for: .seconds(1))
+                DeepLinkRouter.shared.requestVoiceCheckin(threadId: id, label: nil)
             }
             // `-OpenTopic <id>` — push straight into a topic's detail screen.
             if let id = UserDefaults.standard.string(forKey: "OpenTopic") {
@@ -187,9 +201,27 @@ struct MainTabsView: View {
             DeepLinkRouter.shared.requestActivelyRead(threadId: parts[i + 1], label: nil)
             return
         }
+        // https://feynd.cc/checkin/<topic id> (the 5 pm text) or dodo://checkin/<id>.
+        if let i = parts.firstIndex(where: { $0.lowercased() == "checkin" }), i + 1 < parts.count {
+            DeepLinkRouter.shared.requestVoiceCheckin(threadId: parts[i + 1], label: nil)
+            return
+        }
         if target.lowercased().contains("peck") {
             active = .flash
             DeepLinkRouter.shared.requestPeckPlay()
+        }
+    }
+
+    /// Present the pending Daily Voice Checkin; the topic list supplies the label.
+    private func openPendingVoiceCheckin() {
+        guard let req = DeepLinkRouter.shared.consumeVoiceCheckin() else { return }
+        Task {
+            var label = req.label
+            if label == nil {
+                label = (try? await F2API.shared.listTopics())?.first(where: { $0.id == req.threadId })?.displayLabel
+            }
+            try? await Task.sleep(for: .milliseconds(350))
+            voiceCheckin = VoiceCheckinLaunch(threadId: req.threadId, label: label ?? "Daily checkin")
         }
     }
 

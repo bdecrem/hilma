@@ -143,6 +143,7 @@ struct TopicsView: View {
                 ("book", "Books"), ("mini", "Mini topics"), ("general", "General topics"),
                 ("web", "Web pages"), ("video", "Videos"), ("audio", "Audio"),
                 ("paste", "Pasted text"), ("chat", "Chats"), ("fallback", "Other"),
+                ("inactive", "Inactive"),
             ]
             return order.compactMap { entry in
                 let matches = topics.filter { ($0.kind ?? "fallback") == entry.kind }
@@ -1109,6 +1110,7 @@ struct RenameTopicSheet: View {
         ("paste", "Pasted text"),
         ("chat", "Chat"),
         ("fallback", "Default"),
+        ("inactive", "Inactive"),
     ]
 
     init(topic: F2Topic, onSave: @escaping (String, String?) -> Void) {

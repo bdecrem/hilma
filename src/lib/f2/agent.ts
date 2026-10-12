@@ -89,6 +89,7 @@ import { setAudioSummary } from './audio-summary'
 import { getDailyStreak, setDailyStreak, streakMultiplier } from './streak'
 import { IMESSAGE_DAILY_ONLY_REPLY, maybeHandleDailyAnswer } from './daily-card'
 import { maybeHandleActivelyReadReply } from './actively-read'
+import { maybeHandleVoiceCheckinReply } from './voice-checkin'
 
 export type F2Client = 'imessage' | 'web' | 'ios' | 'sms'
 
@@ -162,6 +163,10 @@ export async function processMessage(input: F2Message): Promise<F2Reply> {
   if (client === 'imessage' || client === 'sms') {
     // "2" to the Actively Read text = not interested (when that text is the
     // newest one waiting on a reply); everything else is the daily card's.
+    // "9" to the voice checkin text = this topic is done (Inactive), by the
+    // same newest-text-owns-the-reply rule.
+    const vcReply = await maybeHandleVoiceCheckinReply(userId, text)
+    if (vcReply) return { reply: vcReply }
     const arReply = await maybeHandleActivelyReadReply(userId, text)
     if (arReply) return { reply: arReply }
     const dailyReply = await maybeHandleDailyAnswer(userId, text)

@@ -14,7 +14,7 @@ export async function GET() {
   }
   const { data } = await f2Supabase()
     .from('f2_users')
-    .select('daily_card_enabled, imessage_handles, daily_chat_guid, recert_enabled, is_guest')
+    .select('daily_card_enabled, imessage_handles, daily_chat_guid, recert_enabled, is_guest, voice_checkin_enabled')
     .eq('id', user.id)
     .maybeSingle()
   const handles = (data?.imessage_handles as string[] | null) ?? []
@@ -22,6 +22,8 @@ export async function GET() {
     daily_card_enabled: Boolean(data?.daily_card_enabled),
     imessage_paired: handles.length > 0 || data?.daily_chat_guid != null,
     recert_enabled: data?.recert_enabled !== false,
+    // Daily Voice Checkin: on by default; delivered to the paired handle.
+    voice_checkin_enabled: data?.voice_checkin_enabled !== false,
     is_guest: Boolean(data?.is_guest),
   })
 }
@@ -33,7 +35,7 @@ export async function PUT(req: Request) {
   if (!user) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
-  let body: { daily_card_enabled?: boolean; recert_enabled?: boolean }
+  let body: { daily_card_enabled?: boolean; recert_enabled?: boolean; voice_checkin_enabled?: boolean }
   try {
     body = await req.json()
   } catch {
@@ -52,6 +54,35 @@ export async function PUT(req: Request) {
     }
     if (typeof body.daily_card_enabled !== 'boolean') {
       return NextResponse.json({ recert_enabled: body.recert_enabled })
+    }
+  }
+
+  // The Daily Voice Checkin toggle — its text goes to the same paired handle.
+  if (typeof body.voice_checkin_enabled === 'boolean') {
+    if (body.voice_checkin_enabled) {
+      const { data } = await f2Supabase()
+        .from('f2_users')
+        .select('imessage_handles, daily_chat_guid')
+        .eq('id', user.id)
+        .maybeSingle()
+      const handles = (data?.imessage_handles as string[] | null) ?? []
+      if (handles.length === 0 && data?.daily_chat_guid == null) {
+        return NextResponse.json(
+          { error: 'Pair iMessage first — the daily voice checkin is delivered there.' },
+          { status: 409 },
+        )
+      }
+    }
+    const { error } = await f2Supabase()
+      .from('f2_users')
+      .update({ voice_checkin_enabled: body.voice_checkin_enabled })
+      .eq('id', user.id)
+    if (error) {
+      console.error('[f2/profile] voice_checkin_enabled update failed:', error)
+      return NextResponse.json({ error: 'Could not save.' }, { status: 500 })
+    }
+    if (typeof body.daily_card_enabled !== 'boolean') {
+      return NextResponse.json({ voice_checkin_enabled: body.voice_checkin_enabled })
     }
   }
 

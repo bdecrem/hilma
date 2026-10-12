@@ -51,6 +51,7 @@
 		681EC4FB998C33B54B85777A /* voice-ash.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 8F533A6D195C6BC2BE54B4FF /* voice-ash.m4a */; };
 		69465CB76129F3A8475D3837 /* FlashVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A806446C086649CAB62568A4 /* FlashVoiceView.swift */; };
 		6E05AEE9F059450ABF93C7AB /* Secrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BE40ACBCE23969C211C1B42 /* Secrets.swift */; };
+		6FE43FFFF22F4F0B0EF91691 /* VoiceCheckin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63EE4DEEC8217A1A6BAA31AF /* VoiceCheckin.swift */; };
 		723ECD9F46D4C7C8F54AEC05 /* voice-willow.m4a in Resources */ = {isa = PBXBuildFile; fileRef = E0356363115F2363D08C8FD5 /* voice-willow.m4a */; };
 		736D500FA5BEBDB5511D8BBB /* voice-delta.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 13BF17EF46B1A50AAF435164 /* voice-delta.m4a */; };
 		73F6CCF0A20AF6780AC4BE5B /* pentimento.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = BE22514D8F93F67F6C1E3A7D /* pentimento.mp4 */; };
@@ -149,6 +150,7 @@
 		5032D3B4080E880E4B3A56EA /* JellyAvatar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyAvatar.swift; sourceTree = "<group>"; };
 		5AB771DF7EEA0301FDB493A9 /* FlashDecksSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashDecksSheet.swift; sourceTree = "<group>"; };
 		5FE6ACE7021F270C8986D7FD /* JellyDodo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JellyDodo.swift; sourceTree = "<group>"; };
+		63EE4DEEC8217A1A6BAA31AF /* VoiceCheckin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceCheckin.swift; sourceTree = "<group>"; };
 		6B09246FF15307342083E574 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
 		6D745CD9003F8592CD5D2558 /* voice-bossa.m4a */ = {isa = PBXFileReference; path = "voice-bossa.m4a"; sourceTree = "<group>"; };
 		6DDC42B73E361C8473ADE137 /* ChatSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSupport.swift; sourceTree = "<group>"; };
@@ -323,6 +325,7 @@
 				0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */,
 				0D29B16BBFC92FC7BFF6F903 /* TopicsView.swift */,
 				21B0CC756693588C7DFDADA7 /* TranscriptReaderView.swift */,
+				63EE4DEEC8217A1A6BAA31AF /* VoiceCheckin.swift */,
 				A4260097DE4F4C7C18C85AE4 /* VoiceSessionView.swift */,
 				B56771658F28FFF804BA5CC7 /* VoiceSettingsView.swift */,
 				68FEE442C5A8149F8F4D7A36 /* Fonts */,
@@ -577,6 +580,7 @@
 				FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */,
 				965EA1719015EA9FF7845F5C /* TopicsView.swift in Sources */,
 				CA6A43AB698791A05B576ED4 /* TranscriptReaderView.swift in Sources */,
+				6FE43FFFF22F4F0B0EF91691 /* VoiceCheckin.swift in Sources */,
 				FFA5374E5597480E2E937C90 /* VoiceSessionView.swift in Sources */,
 				1654FB2047C765ABA53E6523 /* VoiceSettingsView.swift in Sources */,
 			);
@@ -619,7 +623,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 132;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -717,7 +721,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 131;
+				CURRENT_PROJECT_VERSION = 132;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

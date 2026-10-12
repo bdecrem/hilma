@@ -169,13 +169,16 @@ export type QuizKind = 'standard' | 'hard' | 'reflection'
 /// Stored on the thread (computed at creation time, see classifyTopicKind).
 /// 'book' | 'mini' | 'general' are user-set types (Rename Topic sheet) that
 /// classification never produces — the user picks them to say what a topic
-/// IS rather than where it came from.
+/// IS rather than where it came from. 'inactive' (2026-10-12) is the type a
+/// topic gets when the user is done with it — "9" to the daily voice checkin
+/// text, or the Rename sheet: it leaves every daily pool (voice checkin,
+/// Actively Read, the daily card, Peck sets) and keeps its chat and stars.
 export type TopicKind =
   | 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
-  | 'book' | 'mini' | 'general'
+  | 'book' | 'mini' | 'general' | 'inactive'
 
 export const ALL_TOPIC_KINDS: TopicKind[] = [
-  'chat', 'web', 'audio', 'video', 'paste', 'fallback', 'book', 'mini', 'general',
+  'chat', 'web', 'audio', 'video', 'paste', 'fallback', 'book', 'mini', 'general', 'inactive',
 ]
 
 const VIDEO_HOSTS = /^(?:[\w-]+\.)*(?:youtube\.com|youtu\.be|vimeo\.com)$/i

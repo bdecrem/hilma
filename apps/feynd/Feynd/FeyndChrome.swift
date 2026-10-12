@@ -228,6 +228,7 @@ struct MiniTopicGlyph: View {
         case "book":  BookGlyph()
         case "mini":  MiniKindGlyph()
         case "general": GeneralGlyph()
+        case "inactive": InactiveGlyph()
         default:      FallbackGlyph()
         }
     }
@@ -402,6 +403,26 @@ private struct MiniKindGlyph: View {
             }
             let r = 2.2 * s
             ctx.fill(Path(ellipseIn: CGRect(x: 10 * s - r, y: 10 * s - r, width: r*2, height: r*2)), with: coral)
+        }
+    }
+}
+
+private struct InactiveGlyph: View {
+    // A paused topic: a circle, dimmed, with a pause bar pair inside.
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 20.0
+            let ink = GraphicsContext.Shading.color(FeyndTheme.text3)
+            ctx.stroke(
+                Path(ellipseIn: CGRect(x: 3 * s, y: 3 * s, width: 14 * s, height: 14 * s)),
+                with: ink, lineWidth: 1.2 * s
+            )
+            for x in [8.2, 11.8] as [CGFloat] {
+                var bar = Path()
+                bar.move(to: CGPoint(x: x * s, y: 7.2 * s))
+                bar.addLine(to: CGPoint(x: x * s, y: 12.8 * s))
+                ctx.stroke(bar, with: ink, style: StrokeStyle(lineWidth: 1.6 * s, lineCap: .round))
+            }
         }
     }
 }

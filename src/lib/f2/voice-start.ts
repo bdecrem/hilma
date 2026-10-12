@@ -16,10 +16,12 @@ import {
   buildLiveRecertInstructions,
   buildLiveSecondChanceInstructions,
   buildLiveTalkInstructions,
+  buildLiveVoiceCheckinInstructions,
   type VoiceEngine,
 } from './live'
+import { questionForCheckin } from './voice-checkin'
 
-export const VOICE_MODES = ['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert', 'actively_read']
+export const VOICE_MODES = ['global', 'topic', 'flash', 'final_review', 'second_chance', 'recert', 'actively_read', 'voice_checkin']
 
 export type VoiceStartBody = {
   mode?: RealtimeMode
@@ -58,7 +60,7 @@ export async function resolveVoiceStart(
   let thread: F2Thread | null = null
   if (
     mode === 'topic' || mode === 'final_review' || mode === 'second_chance' ||
-    mode === 'recert' || mode === 'actively_read' ||
+    mode === 'recert' || mode === 'actively_read' || mode === 'voice_checkin' ||
     (mode === 'flash' && body.thread_id)
   ) {
     if (!body.thread_id) {
@@ -148,6 +150,11 @@ export async function resolveVoiceStart(
       return { ok: false, status: 403, error: 'This topic is already actively read.' }
     }
     instructions = buildLiveActivelyReadInstructions({ userName: user.username, thread: thread!, engine })
+  } else if (mode === 'voice_checkin') {
+    // Today's question when this is today's topic; a fresh one otherwise
+    // (a replay, or a topic opened from its page).
+    const question = await questionForCheckin(user.id, thread!)
+    instructions = buildLiveVoiceCheckinInstructions({ userName: user.username, thread: thread!, question, engine })
   } else if (mode === 'topic') {
     instructions = buildLiveTalkInstructions({ mode: 'topic', userName: user.username, thread, engine })
   } else {

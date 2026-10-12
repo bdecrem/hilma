@@ -412,6 +412,39 @@ Part two, the test — only when they say they're ready ("I'm ready", "test me",
 If they say they're not interested in this topic ("not interested", "skip this one", "not for me"): say "No problem, I'll take it off your daily picks. Tap End whenever you like." Do not argue or pitch it. If they change their mind and want to talk or take the test, go along with it.${engine === 'eleven' ? '' : topicDelegationPolicy(name)}`
 }
 
+/// Daily Voice Checkin: ONE high-level question about the topic, asked by
+/// Dodo first thing. Dodo grades the answer out loud, pass or fail. A fail
+/// gets the idea explained and the question asked once more — the second
+/// chance — and that answer is final. Graded afterwards from the transcript
+/// (judgeVoiceCheckin in flash.ts). "Done with this topic" marks it Inactive.
+export function buildLiveVoiceCheckinInstructions(input: {
+  userName: string
+  thread: F2Thread
+  question: string
+  engine?: VoiceEngine
+}): string {
+  const name = friendlyName(input.userName)
+  const engine = input.engine ?? 'gpt-live'
+  const subject = threadSubject(input.thread)
+  return `${persona(name, engine)}
+
+This is ${name}'s DAILY VOICE CHECKIN on "${subject}" — a two-minute check that the big idea stuck. One question, pass or fail, with one second chance. You speak first.
+
+${summarizeThreadForLive(input.thread, engine)}${studyFocusBlock(name, input.thread, 'checked')}
+
+The question (ask exactly this, in these words):
+"${input.question}"
+
+How it goes:
+1. Open in one or two short sentences: today's checkin is on "${subject}", here's the question. Then ask the question and listen.
+2. Grade the answer at the high level only — do they have the main idea right, in their own words? Details, dates and names do not matter unless the question is about them. Say the verdict out loud, in one word first: "Pass." or "Not yet." A clear, correct explanation of the gist passes. A wrong gist, a guess, "I don't know", or an answer that never reaches the idea fails. A thin answer that is right in substance: ask one short follow-up ("Say a bit more — why?") before deciding; that follow-up belongs to the same attempt.
+3. If they PASS: say so warmly in one sentence, add one sentence on what made it good, and finish with: "That's your checkin. Tap End when you're ready." Nothing more to test.
+4. If they FAIL (first attempt only): say "Not yet — let me explain," then explain the idea the question is about in 30 to 60 seconds, plainly, using the material. Then say "Second chance. Same question:" and ask the question again. Grade that answer the same way: it passes when it states the idea correctly — their own words are best, but restating what you just explained counts; that is what the second chance is for. It fails only when the idea is still wrong or missing. Say "Pass." or "Not this time." and one sentence why, then finish with: "That's your checkin. Tap End when you're ready."
+5. Never ask a third time. After the final verdict, if they keep talking, chat briefly about the topic, but do not re-grade or reopen the checkin.
+
+If they say they are done with this topic ("done with this one", "retire this", "take it off my list", "not interested"): say "Got it — I'll mark it inactive. Tap End whenever you like." and do not pitch it. If they change their mind and want the question, go on with step 1.${engine === 'eleven' ? '' : topicDelegationPolicy(name)}`
+}
+
 // ---------------------------------------------------------------------------
 // Backend (Responses delegation) prompts — the full material lives here.
 // ---------------------------------------------------------------------------
@@ -480,7 +513,7 @@ ${BACKEND_RETURN}`
   const thread = input.thread
   const subject = threadSubject(thread)
   const job =
-    input.mode === 'topic' || input.mode === 'actively_read'
+    input.mode === 'topic' || input.mode === 'actively_read' || input.mode === 'voice_checkin'
       ? `The live model is discussing the topic "${subject}" with ${name} and holds only an excerpt of the material below. When it delegates, find the relevant passage or detail, verify what ${name} claimed, or reason through the question carefully against the material.`
       : `The live model is examining ${name} orally on the topic "${subject}" (${input.mode === 'final_review' ? 'their Final Review' : input.mode === 'second_chance' ? 'their Second Chance retake' : 'a recertification refresher'}) and holds only an excerpt of the material below. When it delegates, verify a claim ${name} made against the material, find the detail it needs, or suggest one sharp examination question on a part of the material the excerpt does not cover. Keep answers short — the exam must keep moving.${thread.study_focus ? ` The exam is scoped to this study focus: "${thread.study_focus}"; stay inside it.` : ''}`
 

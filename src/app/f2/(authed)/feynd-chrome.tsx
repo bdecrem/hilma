@@ -190,7 +190,7 @@ export function ProfileBadge({
 
 export type TopicKind =
   | 'chat' | 'web' | 'audio' | 'video' | 'paste' | 'fallback'
-  | 'book' | 'mini' | 'general'
+  | 'book' | 'mini' | 'general' | 'inactive'
 
 /// 36pt rounded-square chip whose inner glyph reflects the topic's source
 /// kind. Source-of-truth SVG paths were prototyped in
@@ -234,8 +234,19 @@ function renderGlyph(kind: TopicKind) {
     case 'book':  return <BookGlyph />
     case 'mini':  return <MiniKindGlyph />
     case 'general': return <GeneralGlyph />
+    case 'inactive': return <InactiveGlyph />
     default:      return <FallbackGlyph />
   }
+}
+
+/// Inactive (2026-10-12): a paused topic — a dimmed ring with a pause pair.
+function InactiveGlyph() {
+  return (
+    <svg width="100%" height="100%" viewBox="0 0 20 20" aria-hidden>
+      <circle cx="10" cy="10" r="7" fill="none" stroke="var(--feynd-text-3)" strokeWidth={GLYPH_STROKE} />
+      <path d="M8.2 7.2 V12.8 M11.8 7.2 V12.8" stroke="var(--feynd-text-3)" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+    </svg>
+  )
 }
 
 // All glyphs share the 20×20 viewBox the preview page used.

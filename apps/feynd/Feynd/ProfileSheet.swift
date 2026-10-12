@@ -33,6 +33,7 @@ struct ProfileSheet: View {
     @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
     @AppStorage(VoiceEngine.defaultsKey) private var voiceEngine = VoiceEngine.fallback.rawValue
     @State private var recertEnabled = true
+    @State private var voiceCheckinEnabled = true
     /// Admin-only Dev mode: every Peck minigame open from the map.
     @AppStorage("devMode") private var devMode = false
     @State private var isGuest = false
@@ -128,6 +129,7 @@ struct ProfileSheet: View {
                 dailyCardEnabled = status.dailyCardEnabled
                 dailyCardPaired = status.imessagePaired
                 recertEnabled = status.recertEnabled
+                voiceCheckinEnabled = status.voiceCheckinEnabled
                 isGuest = status.isGuest
                 // Mirror for views that render before this sheet ever loads
                 // (the topic screen's Refresher chip, notification sync).
@@ -143,6 +145,15 @@ struct ProfileSheet: View {
             if !recertEnabled { RecertNotifications.clearAll() }
         } catch {
             recertEnabled = !enabled
+            dailyCardError = error.localizedDescription
+        }
+    }
+
+    private func setVoiceCheckin(_ enabled: Bool) async {
+        do {
+            voiceCheckinEnabled = try await F2API.shared.setVoiceCheckinEnabled(enabled)
+        } catch {
+            voiceCheckinEnabled = !enabled // revert the optimistic flip
             dailyCardError = error.localizedDescription
         }
     }
@@ -523,6 +534,34 @@ struct ProfileSheet: View {
                         .labelsHidden()
                         .tint(FeyndTheme.accent)
                         .disabled(!dailyCardPaired && imessageHandles.isEmpty && !dailyCardEnabled)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    SettingsDivider()
+                    // The Daily Voice Checkin: one spoken question a day, same handle.
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Daily voice checkin")
+                                .font(.system(size: 15))
+                                .tracking(-0.2)
+                                .foregroundStyle(FeyndTheme.text)
+                            Text(voiceCheckinEnabled
+                                 ? "One big-picture question a day, answered out loud. Pass or fail, with a second chance."
+                                 : "Off — no daily voice question")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { voiceCheckinEnabled },
+                            set: { on in
+                                voiceCheckinEnabled = on
+                                Task { await setVoiceCheckin(on) }
+                            }
+                        ))
+                        .labelsHidden()
+                        .tint(FeyndTheme.accent)
+                        .disabled(!dailyCardPaired && imessageHandles.isEmpty && !voiceCheckinEnabled)
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)

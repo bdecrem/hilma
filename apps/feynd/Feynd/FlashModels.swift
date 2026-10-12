@@ -338,6 +338,44 @@ struct ActivelyReadResult: Codable, Equatable {
     }
 }
 
+/// Today's Daily Voice Checkin: one topic, one high-level question.
+struct VoiceCheckin: Codable, Equatable {
+    let day: String
+    let threadId: String
+    let topic: String
+    let question: String
+    /// "passed" | "failed" | "inactive" once settled; nil while open.
+    let resolved: String?
+
+    enum CodingKeys: String, CodingKey {
+        case day, topic, question, resolved
+        case threadId = "thread_id"
+    }
+}
+
+/// The verdict on a Daily Voice Checkin session.
+struct VoiceCheckinResult: Codable, Equatable {
+    /// "passed" | "failed" | "no_answer" | "inactive"
+    let outcome: String
+    let passed: Bool
+    /// 1 or 2 — which attempt passed; nil unless passed.
+    let passedOn: Int?
+    let attempts: Int
+    let notes: String
+    let question: String
+    /// Whether this session counted for today (streak + XP).
+    let counted: Bool
+    let streak: Int
+    let xpAwarded: Int
+    let inactive: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case outcome, passed, attempts, notes, question, counted, streak, inactive
+        case passedOn = "passed_on"
+        case xpAwarded = "xp_awarded"
+    }
+}
+
 // MARK: - Final Review
 
 struct FinalReviewResult: Codable, Equatable {

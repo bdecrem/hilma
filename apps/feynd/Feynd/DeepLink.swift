@@ -45,6 +45,22 @@ final class DeepLinkRouter {
         return pendingActivelyRead
     }
 
+    // MARK: Daily Voice Checkin
+
+    /// Open the Daily Voice Checkin on a topic (feynd.cc/checkin/<id>).
+    var voiceCheckinSignal = 0
+    var pendingVoiceCheckin: (threadId: String, label: String?)?
+
+    func requestVoiceCheckin(threadId: String, label: String?) {
+        pendingVoiceCheckin = (threadId, label)
+        voiceCheckinSignal += 1
+    }
+
+    func consumeVoiceCheckin() -> (threadId: String, label: String?)? {
+        defer { pendingVoiceCheckin = nil }
+        return pendingVoiceCheckin
+    }
+
     // MARK: Discuss-a-card handoff
 
     /// "Discuss with Dodo" from the card clinic: land in the card's topic

@@ -450,11 +450,13 @@ export async function listFlashCards(
 
 /// Threads the user opted out of Peck. Cheap set for jumbo filtering.
 export async function peckExcludedThreadIds(userId: string): Promise<Set<string>> {
+  // Opted out of Peck, or marked Inactive (the topic type): neither feeds a
+  // set, the daily card, or any other daily pool.
   const { data } = await f2Supabase()
     .from('f2_threads')
     .select('id')
     .eq('user_id', userId)
-    .eq('peck_excluded', true)
+    .or('peck_excluded.eq.true,kind.eq.inactive')
   return new Set(((data ?? []) as { id: string }[]).map((t) => t.id))
 }
 
@@ -1113,6 +1115,83 @@ const JUDGE_MODEL = 'claude-haiku-5-5'
 /// on a huge context, and the verdict gates a mastery star — that's a
 /// strategic-reading job, not a per-card check, so it gets the big model.
 /// High-volume per-card judges stay on Haiku.
+export type VoiceCheckinGrade = {
+  /** passed: a pass on the first or second attempt; failed: both attempts
+   *  fell short; no_answer: the question was never really answered;
+   *  inactive: they said they are done with this topic. */
+  outcome: 'passed' | 'failed' | 'no_answer' | 'inactive'
+  /** Which attempt passed (1 or 2); null unless passed. */
+  passed_on: 1 | 2 | null
+  attempts: number
+  notes: string
+}
+
+/// Grade a Daily Voice Checkin session (live.ts buildLiveVoiceCheckinInstructions):
+/// Dodo asked one high-level question; a failed first answer got an
+/// explanation and the same question again. The grade is pass/fail on the
+/// main idea, judged against the source — Dodo's spoken verdict in the
+/// transcript is evidence, not the decision. A second-attempt answer may
+/// restate Dodo's explanation; it fails only when the idea is still missing.
+export async function judgeVoiceCheckin(thread: F2Thread, question: string, transcript: TranscriptTurn[]): Promise<VoiceCheckinGrade> {
+  const convo = (transcript ?? [])
+    .map((t) => `${t.role === 'user' ? 'USER' : 'Dodo'}: ${(t.text ?? '').trim()}`)
+    .filter((l) => l.length > 6)
+    .join('\n')
+    .slice(0, 120_000)
+  const source = buildBudgetedContent(thread, 1_500_000)
+  const subject = thread.topic ?? thread.url ?? '(no subject)'
+  const system = `You grade a "Daily Voice Checkin" from a learning app: a short spoken session in which the assistant (Dodo) asked the user ONE high-level question about a topic and graded the answer pass or fail. If the first answer failed, Dodo explained the idea and asked the same question once more (the second chance). The user could also say they are done with the topic.
+
+Classify the session:
+- outcome "inactive": the user said they are done with this topic / want it retired / not interested, and did not go on to answer.
+- outcome "no_answer": the user never gave a real answer to the question (silence, "I don't know" only, off-topic talk, the session ended before an answer).
+- otherwise count the attempts (1 or 2: the answers given to the question, the second only after Dodo's explanation) and decide for each whether it PASSES: the user states the main idea the question asks about, correctly in substance, in their own words. This is a high-level check, not a detail test: wrong or missing details, dates and names do not fail an answer unless the question is about them; a wrong gist, a guess, or an answer that never reaches the idea fails. On the second attempt, restating what Dodo just explained is fine — that is what the second chance is for; the attempt fails only when the idea is still wrong or missing.
+- outcome "passed" with passed_on = the first attempt that passed (1 or 2); "failed" when no attempt passed.
+Dodo's own spoken verdicts ("Pass.", "Not yet.") are evidence of how the session went, not the decision — judge the user's words against the source material.${thread.study_focus ? `
+The user's study focus (grade only inside it): "${thread.study_focus}".` : ''}
+
+Also write notes: one or two sentences to the user ("You ..."), concrete, about what was right or what was missing.`
+  const parsed = await judgeJson<{
+    outcome?: string
+    passed_on?: number | null
+    attempts?: number
+    notes?: string
+  }>(
+    system,
+    `Topic: ${subject}
+
+The question Dodo asked: "${question}"
+
+Source material (ground truth):
+${source || '(no source content — judge against general knowledge)'}
+
+Session transcript:
+${convo || '(empty transcript)'}
+
+Classify and grade the session.`,
+    {
+      type: 'object',
+      properties: {
+        outcome: { type: 'string', enum: ['passed', 'failed', 'no_answer', 'inactive'] },
+        passed_on: { anyOf: [{ type: 'integer', enum: [1, 2] }, { type: 'null' }] },
+        attempts: { type: 'integer' },
+        notes: { type: 'string' },
+      },
+      required: ['outcome', 'passed_on', 'attempts', 'notes'],
+      additionalProperties: false,
+    },
+    GRADER_MODEL,
+  )
+  const outcome = (['passed', 'failed', 'no_answer', 'inactive'].includes(parsed.outcome ?? '') ? parsed.outcome : 'no_answer') as VoiceCheckinGrade['outcome']
+  const passedOn = outcome === 'passed' ? (parsed.passed_on === 2 ? 2 : 1) : null
+  return {
+    outcome,
+    passed_on: passedOn,
+    attempts: Math.max(0, Math.min(2, Math.round(parsed.attempts ?? 0))),
+    notes: (parsed.notes ?? '').slice(0, 400),
+  }
+}
+
 const GRADER_MODEL = 'claude-opus-5-5'
 
 let _anthropic: Anthropic | null = null

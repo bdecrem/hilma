@@ -50,7 +50,7 @@ type Candidate = { id: string; topic: string | null; url: string | null }
 
 const subjectOf = (t: { topic: string | null; url: string | null }) => (t.topic ?? t.url ?? 'a topic').trim()
 
-/** Topics the daily pick may choose: no star yet, not declined, something to talk about. */
+/** Topics the daily pick may choose: no star yet, not declined, not Inactive, something to talk about. */
 async function candidates(userId: string): Promise<Candidate[]> {
   const { data, error } = await f2Supabase()
     .from('f2_threads')
@@ -58,6 +58,7 @@ async function candidates(userId: string): Promise<Candidate[]> {
     .eq('user_id', userId)
     .eq('stars', 0)
     .is('ar_inactive_at', null)
+    .neq('kind', 'inactive')
     .or('topic.not.is.null,url.not.is.null')
   if (error) throw new Error(`actively-read candidates failed: ${error.message}`)
   return (data ?? []) as Candidate[]

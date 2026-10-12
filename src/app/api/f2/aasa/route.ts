@@ -3,14 +3,15 @@ import { NextResponse } from 'next/server'
 // Apple App Site Association for feynd.cc — served at
 // /.well-known/apple-app-site-association via a rewrite in next.config.ts.
 // Lets https://feynd.cc/peck open the Dodo app (Peck tab) directly, and
-// https://feynd.cc/read/<topic id> open today's Actively Read session.
+// https://feynd.cc/read/<topic id> open today's Actively Read session, and
+// https://feynd.cc/checkin/<topic id> the Daily Voice Checkin.
 const AASA = {
   applinks: {
     apps: [],
     details: [
       {
         appIDs: ['274T5WCVD2.com.bartdecrem.Feynd'],
-        components: [{ '/': '/peck' }, { '/': '/read/*' }],
+        components: [{ '/': '/peck' }, { '/': '/read/*' }, { '/': '/checkin/*' }],
       },
     ],
   },

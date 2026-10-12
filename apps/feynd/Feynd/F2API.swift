@@ -263,6 +263,12 @@ final class F2API {
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(topic: newTopic, kind: kind))
     }
 
+    /// Set only the topic type (kind) — e.g. back to "general" after Inactive.
+    func setTopicKind(id: String, kind: String) async throws {
+        struct Body: Encodable { let kind: String }
+        let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(kind: kind))
+    }
+
     func setPinned(id: String, pinned: Bool) async throws {
         struct Body: Encodable { let pinned: Bool }
         let _: EmptyResponse = try await request("/api/f2/topics/\(id)", method: "PATCH", body: Body(pinned: pinned))
@@ -1126,6 +1132,28 @@ final class F2API {
         return try await post("/api/f2/topics/\(topicId)/actively-read", body: Body(voice_session_id: voiceSessionId))
     }
 
+    // MARK: - Daily Voice Checkin
+
+    /// Today's checkin (chosen server-side, with its question, if the 5 pm send
+    /// hasn't yet). Nil when the user has no active topic.
+    func voiceCheckinToday() async throws -> VoiceCheckin? {
+        struct Response: Decodable { let checkin: VoiceCheckin? }
+        let res: Response = try await get("/api/f2/voice-checkin")
+        return res.checkin
+    }
+
+    /// "Done with this topic": it becomes Inactive and leaves every daily pool.
+    func markTopicInactive(threadId: String) async throws {
+        struct Body: Encodable { let thread_id: String; let action = "inactive" }
+        let _: EmptyResponse = try await post("/api/f2/voice-checkin", body: Body(thread_id: threadId))
+    }
+
+    /// Grade a finished Daily Voice Checkin session.
+    func submitVoiceCheckin(topicId: String, voiceSessionId: String) async throws -> VoiceCheckinResult {
+        struct Body: Encodable { let voice_session_id: String }
+        return try await post("/api/f2/topics/\(topicId)/voice-checkin", body: Body(voice_session_id: voiceSessionId))
+    }
+
     // MARK: - Push
 
     func registerPushToken(_ token: String, environment: String, bundleId: String) async throws {
@@ -1220,12 +1248,15 @@ final class F2API {
         let imessagePaired: Bool
         /// The Refresher toggle; false = mastery is forever.
         var recertEnabled: Bool = true
+        /// The Daily Voice Checkin toggle (one spoken question a day over iMessage).
+        var voiceCheckinEnabled: Bool = true
         var isGuest: Bool = false
 
         enum CodingKeys: String, CodingKey {
             case dailyCardEnabled = "daily_card_enabled"
             case imessagePaired = "imessage_paired"
             case recertEnabled = "recert_enabled"
+            case voiceCheckinEnabled = "voice_checkin_enabled"
             case isGuest = "is_guest"
         }
 
@@ -1234,6 +1265,7 @@ final class F2API {
             dailyCardEnabled = try c.decodeIfPresent(Bool.self, forKey: .dailyCardEnabled) ?? false
             imessagePaired = try c.decodeIfPresent(Bool.self, forKey: .imessagePaired) ?? false
             recertEnabled = try c.decodeIfPresent(Bool.self, forKey: .recertEnabled) ?? true
+            voiceCheckinEnabled = try c.decodeIfPresent(Bool.self, forKey: .voiceCheckinEnabled) ?? true
             isGuest = try c.decodeIfPresent(Bool.self, forKey: .isGuest) ?? false
         }
     }
@@ -1250,6 +1282,14 @@ final class F2API {
         struct Res: Codable { let recert_enabled: Bool }
         let res: Res = try await put("/api/f2/profile", body: Body(recert_enabled: enabled))
         return res.recert_enabled
+    }
+
+    /// Flip the Daily Voice Checkin. Server rejects enabling with no paired handle.
+    func setVoiceCheckinEnabled(_ enabled: Bool) async throws -> Bool {
+        struct Body: Encodable { let voice_checkin_enabled: Bool }
+        struct Res: Codable { let voice_checkin_enabled: Bool }
+        let res: Res = try await put("/api/f2/profile", body: Body(voice_checkin_enabled: enabled))
+        return res.voice_checkin_enabled
     }
 
     /// Flip the daily card. Server rejects enabling with no paired handle.

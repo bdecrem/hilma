@@ -11,8 +11,9 @@ import {
 // 'second_chance' = the 3-question retake offered after a failed Final Review;
 // 'recert' = the 3-question refresher that keeps a certified badge gold;
 // 'actively_read' = the daily pick: talk it through, "I'm ready" → a 3-question test.
+// 'voice_checkin' = the daily voice checkin: one high-level question, pass/fail, a second chance.
 export type RealtimeMode =
-  | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance' | 'recert' | 'actively_read'
+  | 'global' | 'topic' | 'walk' | 'flash' | 'final_review' | 'second_chance' | 'recert' | 'actively_read' | 'voice_checkin'
 
 export type VoiceSession = {
   id: string
