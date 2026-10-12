@@ -32,7 +32,7 @@ net = MLP(3, [4, 4, 1])
 print(f"{len(net.parameters())} weights, all random to start\n")
 
 losses = []
-for step in range(20):
+for step in range(40):
     # 1. forward: a guess for every example
     preds = [net(x) for x in xs]
     # 2. loss: how wrong the guesses are, one number (sum of squared errors)
@@ -56,7 +56,7 @@ plt.figure(figsize=(6, 3.5))
 plt.plot(losses, marker="o")
 plt.xlabel("step")
 plt.ylabel("loss")
-plt.title("micrograd: loss over 20 steps of gradient descent")
+plt.title("micrograd: loss over 40 steps of gradient descent")
 plt.tight_layout()
 plt.savefig(out, dpi=150)
 print(f"wrote {out}")

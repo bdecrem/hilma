@@ -35,7 +35,7 @@ export const STEPS: Step[] = [
     doneOn: '2026-10-12',
     summary:
       'We built a backpropagation machine from scratch. This is the machinery that calculates the gradients for gradient descent: for each step of training, it figures out in which direction and by how much to nudge each weight. PyTorch does this for us, but we built it from scratch for educational purposes. To test it we made a data set of 4 cards, each with 3 numbers and a hidden correct answer (+1 or −1), and a 41-parameter model to go with it — think of it as a Tiny Small Numbers Model. We ran the 4 cards through the model and ran backprop 20 times to nudge the weights, to see if our gradient descent machine works. It does. Yeay.',
-    saw: 'The loss fell from 6.0 to 0.06 in 20 rounds; the guesses came out +0.86, −0.98, −0.86, +0.86 for answers +1, −1, −1, +1. And a drawing of one neuron’s math with every number’s gradient on it.',
+    saw: 'The loss fell from 6.0 to 0.06 in 20 rounds; the guesses came out +0.86, −0.98, −0.86, +0.86 for answers +1, −1, −1, +1. Another 20 rounds took the loss to 0.017 and the guesses to ±0.92, each round gaining less than the one before — tanh never quite reaches ±1. And a drawing of one neuron’s math with every number’s gradient on it.',
   },
   { n: 2, name: 'Tokenizer', idea: 'How text becomes numbers (byte-pair encoding)', status: 'next' },
   { n: 3, name: 'The dataset and the objective', idea: 'Next-token prediction is the whole game', status: 'todo' },
