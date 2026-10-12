@@ -9,7 +9,7 @@ Status is one of: **not started · approved · building · done**.
 | 0 | Environment | Python, PyTorch on Apple silicon, the repo layout | done 2026-10-12 (iMac + mini) |
 | 1 | Backpropagation from scratch (micrograd) | The chain rule, written as code | done 2026-10-12 |
 | 2 | Tokenizer (BPE) | How text becomes numbers | done 2026-10-12 (vocab 8,192) |
-| 3 | The dataset and the training objective | Next-token prediction is the whole game | not started |
+| 3 | The dataset and the training objective | Next-token prediction is the whole game | done 2026-10-12 (100.1 M tokens) |
 | 4 | The simplest language model (bigram) | Embeddings, logits, softmax, cross-entropy | not started |
 | 5 | Attention and the Transformer block | How tokens look at each other | not started |
 | 6 | Pretraining the GPT | Random weights become a language model | not started |
