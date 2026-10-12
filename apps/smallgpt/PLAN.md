@@ -6,7 +6,7 @@ Status is one of: **not started · approved · building · done**.
 
 | # | Step | The idea | Status |
 |---|------|----------|--------|
-| 0 | Environment | Python, PyTorch on Apple silicon, the repo layout | not started |
+| 0 | Environment | Python, PyTorch on Apple silicon, the repo layout | done 2026-10-12 (iMac + mini) |
 | 1 | Backpropagation from scratch (micrograd) | The chain rule, written as code | not started |
 | 2 | Tokenizer (BPE) | How text becomes numbers | not started |
 | 3 | The dataset and the training objective | Next-token prediction is the whole game | not started |
