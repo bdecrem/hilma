@@ -345,7 +345,7 @@ export async function dayView(user: User, day: Day, now = new Date()): Promise<D
     streak: currentStreak(user, now),
     best_streak: user.best_streak,
     daily_hour: user.daily_hour,
-    daily_label: hourLabel(user.daily_hour),
+    daily_label: user.daily_texts ? hourLabel(user.daily_hour) : '',
     things: activeThings(day),
     questions: live ? (live.questions ?? []) : activeQuestionsOf(day),
     answers: live ? live.answers : activeAnswersOf(day),

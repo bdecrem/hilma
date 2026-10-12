@@ -16,7 +16,7 @@ export async function GET() {
   return res
 }
 
-// PUT /api/dolly/me { name?, language?, level?, daily_hour?, tz?, objectives?, avatar? } — settings.
+// PUT /api/dolly/me { name?, language?, level?, daily_hour?, daily_texts?, tz?, objectives?, avatar? } — settings.
 export async function PUT(req: Request) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
@@ -35,6 +35,10 @@ export async function PUT(req: Request) {
     const h = body.daily_hour
     if (!Number.isInteger(h) || (h as number) < 0 || (h as number) > 23) return NextResponse.json({ error: 'bad hour' }, { status: 400 })
     patch.daily_hour = h as number
+  }
+  if ('daily_texts' in body) {
+    if (typeof body.daily_texts !== 'boolean') return NextResponse.json({ error: 'bad daily_texts' }, { status: 400 })
+    patch.daily_texts = body.daily_texts
   }
   if ('tz' in body) {
     if (typeof body.tz !== 'string' || !isValidTz(body.tz)) return NextResponse.json({ error: 'bad tz' }, { status: 400 })

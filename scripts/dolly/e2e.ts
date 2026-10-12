@@ -543,10 +543,11 @@ async function main() {
   check('type: English back, loosely', nativeMatches('I like', 'I like (one thing)') && nativeMatches('get up early', 'to get up early') && nativeMatches('Hello', 'hello / hi') && nativeMatches('two', 'one, two, three') && !nativeMatches('goodbye', 'hello'))
   check('type: English punctuation is noise', nativeMatches('dont understand', 'I don’t understand') && nativeMatches("I don't understand", 'I don’t understand') && nativeMatches('soso', 'so-so') && nativeMatches('how are you', 'how are you?') && nativeMatches('nice to meet you', 'Nice to meet you!'))
   check('type: pinyin or characters', answerMatches('zh', 'ni hao', { target: '你好', pinyin: 'nǐ hǎo' }) && answerMatches('zh', '你好', { target: '你好', pinyin: 'nǐ hǎo' }) && normalizeAnswer('zh', 'Nǐ hǎo') === 'nihao')
-  const la = { tz: 'America/Los_Angeles', daily_hour: 8, prompt_day: null as string | null, prompted_at: null as string | null, reminder_day: null as string | null }
+  const la = { tz: 'America/Los_Angeles', daily_hour: 8, daily_texts: true, prompt_day: null as string | null, prompted_at: null as string | null, reminder_day: null as string | null }
   const atLA = (h: number) => new Date(Date.UTC(2026, 9, 10, h + 7, 5)) // PDT = UTC-7
   check('tick: before the hour', dueFor(la, atLA(7)) === null)
   check('tick: at the hour', dueFor(la, atLA(8)) === 'prompt')
+  check('tick: texts off, no text and no reminder', dueFor({ ...la, daily_texts: false }, atLA(8)) === null && dueFor({ ...la, daily_texts: false, prompt_day: '2026-10-10', prompted_at: atLA(8).toISOString() }, atLA(20)) === null)
   check('tick: once a day', dueFor({ ...la, prompt_day: '2026-10-10', prompted_at: atLA(8).toISOString() }, atLA(12)) === null)
   check('tick: reminder at 8 pm', dueFor({ ...la, prompt_day: '2026-10-10', prompted_at: atLA(8).toISOString() }, atLA(20)) === 'reminder')
   check('tick: no reminder within 4 h of the text', dueFor({ ...la, daily_hour: 17, prompt_day: '2026-10-10', prompted_at: atLA(17).toISOString() }, atLA(20)) === null)

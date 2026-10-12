@@ -10,6 +10,8 @@ struct UserView: Codable, Equatable {
     let level: String
     let dailyHour: Int
     let dailyLabel: String
+    /// The daily text and the 8 pm reminder (Settings → The daily text).
+    let dailyTexts: Bool
     let tz: String
     let streak: Int
     let bestStreak: Int
@@ -23,6 +25,7 @@ struct UserView: Codable, Equatable {
         case id, phone, name, language, level, tz, streak, objectives, rung, avatar
         case dailyHour = "daily_hour"
         case dailyLabel = "daily_label"
+        case dailyTexts = "daily_texts"
         case bestStreak = "best_streak"
     }
 
@@ -37,6 +40,7 @@ struct UserView: Codable, Equatable {
         level = try c.decode(String.self, forKey: .level)
         dailyHour = try c.decodeIfPresent(Int.self, forKey: .dailyHour) ?? 8
         dailyLabel = try c.decodeIfPresent(String.self, forKey: .dailyLabel) ?? ""
+        dailyTexts = try c.decodeIfPresent(Bool.self, forKey: .dailyTexts) ?? true
         tz = try c.decodeIfPresent(String.self, forKey: .tz) ?? TimeZone.current.identifier
         streak = try c.decodeIfPresent(Int.self, forKey: .streak) ?? 0
         bestStreak = try c.decodeIfPresent(Int.self, forKey: .bestStreak) ?? 0

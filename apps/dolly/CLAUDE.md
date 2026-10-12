@@ -125,6 +125,28 @@ five of those chunks (the Grammar cards) beside five of the learner's own. The d
 the three parts as one row of checks; Flash cards is a small jelly pill
 (`FlashPill`) under the pink Talk more; the tally line is quiet.
 
+**The daily text can be turned off** (2026-10-12, build 45): Settings → The
+daily text → a **Daily text** toggle above the Time row (`dolly_users.daily_texts`,
+schema 008, default on; `PUT /api/dolly/me { daily_texts }`). Off = `dueFor` in
+`tick.ts` returns null for the user, so neither the text nor the 8 pm reminder
+goes; sign-in codes and the welcome still do. The Time row dims and is disabled
+while off, and the done card's "Tomorrow 8 am" line drops the hour
+(`daily_label` is empty when off). `e2e.ts` checks the pure rule.
+
+**Installing a Debug build on Bart's phone from this iMac** (2026-10-12): the
+Debug config signs device builds manually with the development profile
+"polly dev" (`DOLLY_DEV_PROFILE` in `project.yml`; the 2026-09-30 profile that
+lists the iPhone Air and this Mac's development cert — the older same-named
+one was deleted from the profiles folder). `Dolly/Secrets.swift` must exist
+(copy the example). Then:
+
+```bash
+./apps/dolly/bump-build.sh
+xcodebuild -project apps/dolly/Dolly.xcodeproj -scheme Dolly -destination 'generic/platform=iOS' -derivedDataPath <dd> build
+xcrun devicectl device install app --device 2435FC30-6E25-5A07-BAA2-989B3F93D4E1 <dd>/Build/Products/Debug-iphoneos/Dolly.app
+xcrun devicectl device process launch --device 2435FC30-6E25-5A07-BAA2-989B3F93D4E1 com.bartdecrem.Polly
+```
+
 ## Files (`Dolly/`)
 
 - `DollyApp.swift` — `@main`, `RootView` (loading / onboarding / map), `FlowView`

@@ -14,12 +14,22 @@ struct SettingsSections: View {
                 VStack(spacing: 16) {
                     if let user = state.user {
                         section("The daily text") {
+                            row("Daily text") {
+                                Toggle("", isOn: Binding(get: { user.dailyTexts }, set: { v in Task { await save(dailyTexts: v) } }))
+                                    .labelsHidden().tint(skin.primary)
+                            }
                             row("Time") {
                                 Picker("Time", selection: Binding(get: { user.dailyHour }, set: { h in Task { await save(dailyHour: h) } })) {
                                     ForEach(5...22, id: \.self) { h in Text(hourLabel(h)).tag(h) }
                                 }
                                 .tint(skin.primary)
                             }
+                            .disabled(!user.dailyTexts)
+                            .opacity(user.dailyTexts ? 1 : 0.4)
+                            Text(user.dailyTexts
+                                 ? "A text with the day’s link at your hour, and a reminder at 8 pm if the day isn’t done."
+                                 : "Off. No texts; your day is here in the app whenever you open it.")
+                                .font(skin.ui(13)).foregroundStyle(skin.ink3).frame(maxWidth: .infinity, alignment: .leading)
                             row("Number") { Text(user.phone).font(skin.uiBold(15)).foregroundStyle(skin.ink2) }
                         }
                         section("Learning") {
@@ -99,11 +109,11 @@ struct SettingsSections: View {
         return "\(v) (\(b))"
     }
 
-    private func save(dailyHour: Int? = nil, language: String? = nil, level: String? = nil, objectives: Bool? = nil) async {
+    private func save(dailyHour: Int? = nil, dailyTexts: Bool? = nil, language: String? = nil, level: String? = nil, objectives: Bool? = nil) async {
         saving = true
         defer { saving = false }
         do {
-            state.user = try await DollyAPI.shared.updateMe(language: language, level: level, dailyHour: dailyHour, objectives: objectives)
+            state.user = try await DollyAPI.shared.updateMe(language: language, level: level, dailyHour: dailyHour, dailyTexts: dailyTexts, objectives: objectives)
             error = nil
             await state.refresh()
         } catch {

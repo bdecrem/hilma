@@ -1,6 +1,7 @@
 // The hourly tick (Vercel cron at :05): each user's daily text at their
 // hour, in their zone, and one reminder at 8 pm if the day is not done —
-// never within four hours of the daily text itself (Onething's rule).
+// never within four hours of the daily text itself (Onething's rule). A user
+// with the daily text off (Settings) gets neither.
 import { dailyText, reminderText, welcomeText } from './copy'
 import { findDay, listUsers, localClock, localDay, updateUser, type User } from './core'
 import { ensureToday } from './day'
@@ -10,7 +11,8 @@ export const REMIND_HOUR = 20
 export const REMIND_MIN_GAP_MS = 4 * 60 * 60 * 1000
 
 /** Pure, so it can be checked across zones. */
-export function dueFor(user: Pick<User, 'tz' | 'daily_hour' | 'prompt_day' | 'prompted_at' | 'reminder_day'>, now = new Date()): 'prompt' | 'reminder' | null {
+export function dueFor(user: Pick<User, 'tz' | 'daily_hour' | 'daily_texts' | 'prompt_day' | 'prompted_at' | 'reminder_day'>, now = new Date()): 'prompt' | 'reminder' | null {
+  if (!user.daily_texts) return null
   const { day: today, hour } = localClock(now, user.tz)
   if (hour >= user.daily_hour && hour < REMIND_HOUR && user.prompt_day !== today) return 'prompt'
   if (hour >= REMIND_HOUR && user.prompt_day === today && user.reminder_day !== today) {

@@ -93,13 +93,14 @@ final class DollyAPI {
         return res.user
     }
 
-    func updateMe(name: String?? = nil, language: String? = nil, level: String? = nil, dailyHour: Int? = nil, objectives: Bool? = nil, avatar: String?? = nil) async throws -> UserView {
+    func updateMe(name: String?? = nil, language: String? = nil, level: String? = nil, dailyHour: Int? = nil, dailyTexts: Bool? = nil, objectives: Bool? = nil, avatar: String?? = nil) async throws -> UserView {
         var body: [String: AnyCodable] = [:]
         if let name { body["name"] = AnyCodable(name) }
         if let avatar { body["avatar"] = AnyCodable(avatar) }
         if let language { body["language"] = AnyCodable(language) }
         if let level { body["level"] = AnyCodable(level) }
         if let dailyHour { body["daily_hour"] = AnyCodable(dailyHour) }
+        if let dailyTexts { body["daily_texts"] = AnyCodable(dailyTexts) }
         if let objectives { body["objectives"] = AnyCodable(objectives) }
         body["tz"] = AnyCodable(TimeZone.current.identifier)
         let res: UserResponse = try await request("/api/dolly/me", method: "PUT", body: body)

@@ -12,6 +12,8 @@ export type User = {
   language: LanguageCode
   level: Level
   daily_hour: number
+  /** The daily text and the 8 pm reminder (Settings → The daily text); off = the tick skips this user. */
+  daily_texts: boolean
   tz: string
   streak: number
   best_streak: number

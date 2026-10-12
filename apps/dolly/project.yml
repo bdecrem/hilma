@@ -12,7 +12,7 @@ settings:
     # Dolly ships under Polly's App Store record (renamed), so the build
     # number carries on from Polly's last (0.1 (32)).
     MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "44"
+    CURRENT_PROJECT_VERSION: "45"
     SWIFT_STRICT_CONCURRENCY: minimal
 
 packages:
@@ -92,4 +92,13 @@ targets:
           DOLLY_PROFILE: polly appstore m1
           "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Distribution
         Debug:
-          "CODE_SIGN_STYLE[sdk=iphoneos*]": Automatic
+          # Device Debug builds (xcodebuild → devicectl onto Bart's phone): no
+          # Xcode account is signed in on these Macs, so Automatic can't fetch
+          # a profile. "polly dev" is the development profile for
+          # com.bartdecrem.Polly (associated domains, the iPhone Air, this
+          # Mac's development cert; minted 2026-09-30, expires 2027-09). A Mac
+          # whose profile is named differently passes DOLLY_DEV_PROFILE=….
+          "CODE_SIGN_STYLE[sdk=iphoneos*]": Manual
+          "PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]": $(DOLLY_DEV_PROFILE)
+          DOLLY_DEV_PROFILE: polly dev
+          "CODE_SIGN_IDENTITY[sdk=iphoneos*]": Apple Development

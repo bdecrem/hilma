@@ -215,7 +215,7 @@ struct MapView: View {
                 }
                 if day.stepsDone == 3 {
                     VStack(spacing: 4) {
-                        Text("Tomorrow \(day.dailyLabel)".uppercased()).font(skin.uiBold(11)).tracking(1).foregroundStyle(skin.ink3)
+                        Text((day.dailyLabel.isEmpty ? "Tomorrow" : "Tomorrow \(day.dailyLabel)").uppercased()).font(skin.uiBold(11)).tracking(1).foregroundStyle(skin.ink3)
                         Text(day.tomorrow ?? "A new topic").font(skin.displayMedium(19)).foregroundStyle(skin.ink)
                     }
                     .frame(maxWidth: .infinity)

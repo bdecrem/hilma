@@ -10,6 +10,7 @@ export type UserView = {
   level: User['level']
   daily_hour: number
   daily_label: string
+  daily_texts: boolean
   tz: string
   streak: number
   best_streak: number
@@ -28,6 +29,7 @@ export function userView(user: User, now = new Date()): UserView {
     level: user.level,
     daily_hour: user.daily_hour,
     daily_label: hourLabel(user.daily_hour),
+    daily_texts: user.daily_texts,
     tz: user.tz,
     streak: currentStreak(user, now),
     best_streak: user.best_streak,
