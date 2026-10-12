@@ -104,7 +104,7 @@ struct Question: Codable, Equatable {
             switch self {
             case .new: return "New today"
             case .day(let n): return "Day \(n)"
-            case .grammar: return "Grammar"
+            case .grammar: return "Level"
             }
         }
     }

@@ -137,7 +137,7 @@ struct CardsView: View {
         return Card(padding: 22) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Tag(text: q.from.label, color: q.from == .new ? skin.primary : q.from == .grammar ? skin.word : skin.ink3)
+                    Tag(text: q.from.label, color: q.from == .new ? skin.primary : q.from == .grammar ? skin.phrase : skin.ink3)
                     Spacer()
                     Text("\(index + 1) · \(q.reversed ? (q.kind == "pick" ? "In English" : "Type the English") : (q.kind == "pick" ? "Pick it" : "Type it"))").font(skin.uiBold(13)).foregroundStyle(skin.ink3)
                 }

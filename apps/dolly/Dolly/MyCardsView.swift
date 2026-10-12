@@ -130,7 +130,9 @@ struct MyCardsView: View {
                 }
                 .buttonStyle(PressStyle())
             } else {
-                Tag(text: "Grammar", color: skin.word)
+                // A single word is vocabulary; anything longer is a phrase.
+                let word = !chunk.target.trimmingCharacters(in: .punctuationCharacters).contains(" ")
+                Tag(text: word ? "Word" : "Phrase", color: word ? skin.word : skin.phrase)
             }
         }
         .padding(14)
