@@ -1,0 +1,219 @@
+/* smallgpt — a lab notebook on warm paper. Scoped under .sg. */
+
+.sg {
+  --paper: #f7efdf;
+  --paper-2: #efe4cd;
+  --ink: #16121c;
+  --ink-2: #5a5261;
+  --ink-3: #9a9198;
+  --rule: #d9cdb4;
+  --blue: #3d3bff;
+  --red: #ff4b1f;
+  --yellow: #ffc31f;
+
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-font-smoothing: antialiased;
+}
+
+.sg-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 56px 16px 96px;
+}
+
+.sg-kicker {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: 0 0 14px;
+}
+
+.sg h1 {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: clamp(34px, 7vw, 52px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin: 0 0 20px;
+  text-wrap: balance;
+}
+
+.sg-lead {
+  font-size: 19px;
+  color: var(--ink);
+  margin: 0 0 10px;
+  max-width: 36em;
+}
+.sg-lead + .sg-lead {
+  color: var(--ink-2);
+  font-size: 17px;
+}
+
+.sg-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 36px 0 40px;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.sg-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--paper-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.sg-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+  border-radius: 3px;
+}
+
+/* The step list. A left rail runs the whole way; each step hangs a marker on it. */
+.sg-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+.sg-steps::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 16px;
+  bottom: 16px;
+  width: 2px;
+  background: var(--rule);
+}
+
+.sg-step {
+  position: relative;
+  padding: 0 0 0 52px;
+  margin: 0 0 26px;
+}
+.sg-step:last-child {
+  margin-bottom: 0;
+}
+
+.sg-mark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--paper);
+  border: 2px solid var(--rule);
+  color: var(--ink-3);
+}
+.sg-step.done .sg-mark {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.sg-step.next .sg-mark {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.sg-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-height: 32px;
+}
+.sg-name {
+  font-family: var(--font-display), sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  line-height: 32px;
+  margin: 0;
+}
+.sg-step.todo .sg-name {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.sg-tag {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+.sg-step.done .sg-tag {
+  color: var(--blue);
+  background: rgba(61, 59, 255, 0.1);
+}
+.sg-step.next .sg-tag {
+  color: var(--red);
+  background: rgba(255, 75, 31, 0.12);
+}
+
+.sg-idea {
+  margin: 2px 0 0;
+  color: var(--ink-2);
+}
+.sg-step.todo .sg-idea {
+  color: var(--ink-3);
+}
+
+/* Bart's summary of a done step: a note in the margin of the notebook. */
+.sg-note {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--yellow);
+  border-radius: 6px;
+}
+.sg-note h3 {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 0 8px;
+}
+.sg-note p {
+  margin: 0;
+}
+.sg-note p + h3 {
+  margin-top: 14px;
+}
+.sg-saw {
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+.sg-foot {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  color: var(--ink-3);
+}
+.sg-foot code {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+}
