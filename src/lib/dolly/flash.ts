@@ -19,7 +19,7 @@ import {
   type QuestionDir,
   type User,
 } from './core'
-import { chunkId } from './chunks'
+import { activeTopLevel, chunkId } from './chunks'
 import { canDos } from './curriculum'
 import { answerMatches, nativeMatches, type LanguageCode } from './language'
 import { award, FLASH_CLEAN_BONUS, FLASH_PAID_SETS_PER_DAY, XP } from './xp'
@@ -182,7 +182,7 @@ export async function flashView(user: User, set: FlashSet, now = new Date()): Pr
 /** Deal a set: an open one is dropped. */
 export async function dealFlashSet(user: User, now = new Date()): Promise<FlashSet | { error: string; status: number }> {
   const pool = await listItems(user.id)
-  const questions = buildFlashCards(user.language, user.rung, pool, FLASH_SET_SIZE, user.hidden_chunks ?? [])
+  const questions = buildFlashCards(user.language, await activeTopLevel(user), pool, FLASH_SET_SIZE, user.hidden_chunks ?? [])
   if (questions.length === 0) return { error: 'Nothing to practice yet: finish a day first.', status: 409 }
   await deleteOpenFlashSets(user.id)
   return insertFlashSet({ user_id: user.id, language: user.language, day: localDay(now, user.tz), questions })

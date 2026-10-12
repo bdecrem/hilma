@@ -2,8 +2,18 @@
 // can-dos of the levels they are on or have climbed, grouped by level. They
 // are the curriculum's (never deleted); a learner can hide one, which keeps
 // it out of flash sets too. A chunk's id is "<cando id>:<target>".
+import { listEarned, type User } from './core'
 import { canDos, levelInfo } from './curriculum'
 import { type LanguageCode } from './language'
+
+/** The highest level whose chunks are the learner's: the levels climbed,
+ *  plus the current one once it is started (an objective earned there).
+ *  Level 1 counts from day one. */
+export async function activeTopLevel(user: Pick<User, 'id' | 'rung'>): Promise<number> {
+  if (user.rung <= 1) return 1
+  const earned = await listEarned(user.id)
+  return earned.some((e) => e.level === user.rung) ? user.rung : user.rung - 1
+}
 
 export type ChunkView = { id: string; cando: string; title: string; target: string; native: string; pinyin: string | null; hidden: boolean }
 export type LevelChunks = { level: number; name: string; items: ChunkView[] }

@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
 import { ImageResponse } from 'next/og'
 
 export const alt = 'dog ear — a little library on the internet'
@@ -8,7 +10,8 @@ export const contentType = 'image/png'
 // google/fonts repo). This image is prerendered at build time; fetching the
 // font from Google Fonts failed deploys on 2026-09-05 and 2026-10-11.
 async function loadFont(file: string): Promise<ArrayBuffer> {
-  return (await fetch(new URL(`./fonts/${file}`, import.meta.url))).arrayBuffer()
+  const buf = await readFile(path.join(process.cwd(), 'src/app/book-scout/fonts', file))
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
 }
 
 export default async function OG() {

@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { ImageResponse } from 'next/og';
 import { EXAMPLES, standaloneSvg } from '@/lib/onething/examples';
 
@@ -10,7 +12,8 @@ export const contentType = 'image/png';
 // repo): this image is prerendered at build time, and fetching them from
 // Google Fonts failed builds on 2026-09-05 and twice on 2026-10-11.
 async function loadFont(file: string): Promise<ArrayBuffer> {
-  return (await fetch(new URL(`./fonts/${file}`, import.meta.url))).arrayBuffer();
+  const buf = await readFile(path.join(process.cwd(), 'src/app/onething/fonts', file));
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
 }
 
 const INK = '#1d1625';
